@@ -1,0 +1,123 @@
+.formDiv{
+    font-family:Arial, Sans-Serif;
+    font-size:83%;
+}
+
+.formContainer{
+    border:none;
+    padding:5px;
+}
+
+.rowContainer{
+    width:100%;
+    overflow:hidden;
+    padding-bottom:5px;
+}
+
+.rowContainer label{
+    width:120px;
+    float:left;
+    color: #758656;
+    font-weight:bold;
+}
+
+.rowContainer label.short{
+    width:60px;
+}
+
+.rowContainer label.sublabel{
+    float:left;
+    color: black;
+    font-size: .9em;
+}
+
+.rowContainer input{
+    width:220px;
+    float:left;
+    margin-right:20px;
+}
+
+.rowContainer textarea{
+    width:220px;
+    float:left;
+    padding-right:20px;
+}
+
+.rowContainer input.short{
+    width:100px;
+}
+
+.rowContainer select{
+    width:220px;
+    float:left;
+}
+
+.rowContainer input.nofloat{
+    float:none;
+}
+
+.rowContainer input.nowidth{
+    width:10px;
+}
+
+input.error { border: 1px solid red; }
+
+label.error {
+		font-size:11px;
+		height:16px;
+		float:left;
+		background: url('../images/error.gif') no-repeat;
+		padding-left: 20px;
+		margin-left: 4px;
+		white-space:nowrap;
+		width:75%;
+}
+
+label.errorshort {
+		font-size:11px;
+		height:16px;
+		float:left;
+		background: url('../images/error.gif') no-repeat;
+		padding-left: 20px;
+		margin-left: 4px;
+		white-space:nowrap;
+		width:140px;
+}
+	
+label.valid {
+		background: url('../images/checked.gif') no-repeat;
+		display: block;
+		margin-top:3px;
+		width: 16px;
+		padding-left:10px;
+		height: 16px;
+		margin-left: -16px;
+}
+
+.tooltipContainer{
+    height:16px;
+    font-size:11px;
+    color: #666666;
+    display:none;
+    float:none;
+    background-repeat:no-repeat;
+    background-position:left center;
+    padding:0px 20px 7px 0px;
+    white-space: normal;
+}
+
+.info{
+	float:left;
+    background-image:url('../images/info.gif');
+	margin: 2px 2px 10px 4px;
+	padding-left: 20px;
+    width: initial;
+}
+
+.infoshort{
+	float:left;
+    background-image:url('../images/info.gif');
+	margin-left: 4px;
+	padding-left: 20px;
+    width:140px;
+}

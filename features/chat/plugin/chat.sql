@@ -1,0 +1,31 @@
+
+DROP TABLE IF EXISTS ajax_chat_online;
+CREATE TABLE ajax_chat_online (
+	userID INT(11) NOT NULL DEFAULT '0',
+	userName VARCHAR(64) DEFAULT NULL,
+	userRole INT(1) NOT NULL DEFAULT '0',
+	channel INT(11) NOT NULL DEFAULT '0',
+	dateTime DATETIME DEFAULT NULL,
+	ip int(11) UNSIGNED NOT NULL default '0'
+) DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+DROP TABLE IF EXISTS ajax_chat_messages;
+CREATE TABLE ajax_chat_messages (
+	id INT(11) NOT NULL AUTO_INCREMENT,
+	userID INT(11) NOT NULL DEFAULT '0',
+	userName VARCHAR(64) DEFAULT NULL,
+	userRole INT(1) NOT NULL DEFAULT '0',
+	channel INT(11) NOT NULL DEFAULT '0',
+	dateTime DATETIME DEFAULT NULL,
+	ip int(11) UNSIGNED NOT NULL default '0',
+	text TEXT,
+	PRIMARY KEY  (id)
+) DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+DROP TABLE IF EXISTS ajax_chat_bans;
+CREATE TABLE ajax_chat_bans (
+	userID INT(11) NOT NULL DEFAULT '0',
+	userName VARCHAR(64) DEFAULT NULL,
+	dateTime DATETIME DEFAULT NULL,
+	ip int(11) UNSIGNED NOT NULL default '0'
+) DEFAULT CHARSET=utf8 COLLATE=utf8_bin;

@@ -1,0 +1,40 @@
+<div id="ajaxChatContent">
+	<script type="text/javascript" src="../../../../../min/?b=features/chat/plugin/js&amp;f=chat.js,custom.js,config.js,shoutbox.js" charset="UTF-8"></script>
+	<script src="js/lang/[LANG_CODE/].js" type="text/javascript" charset="UTF-8"></script>
+	<div id="ajaxChatChatList"></div>
+	<form action="./" method="post" enctype="application/x-www-form-urlencoded" onsubmit="ajaxChat.sendMessage(); return false;">
+		<div id="ajaxChatMessageContainer">
+			<input type="hidden" name="ajaxChatChatBotName" id="ajaxChatChatBotNameField" value="[CHAT_BOT_NAME/]"/>
+			<div id="ajaxChatMessageTextContainer"><input id="ajaxChatMessageText" type="text" name="ajaxChatMessageText" maxlength="[MESSAGE_TEXT_MAX_LENGTH/]"/></div>
+		</div>
+	</form>
+	<script type="text/javascript">
+		// <![CDATA[
+			ajaxChatConfig.url = '[AJAX_CHAT_URL/]?ajax=true&shoutbox=true';
+	
+			ajaxChatConfig.sessionName = '[SESSION_NAME/]';
+			ajaxChatConfig.chatBotName = document.getElementById('ajaxChatChatBotNameField').value;
+			ajaxChatConfig.chatBotID = '[CHAT_BOT_ID/]';
+	
+			ajaxChatConfig.chatListID = 'ajaxChatChatList';
+			ajaxChatConfig.inputFieldID = 'ajaxChatMessageText';
+
+			ajaxChatConfig.autoFocus = false;
+	
+			ajaxChatConfig.maxWordLength = 11;
+			
+			ajaxChatConfig.emoticonPath = '[AJAX_CHAT_URL/]img/emoticons/';
+			
+			ajaxChat.init(ajaxChatConfig, ajaxChatLang, false, false, true);
+		// ]]>
+	</script>
+	<!--
+		Please retain the full copyright notice below including the link to blueimp.net.
+		This not only gives respect to the amount of time given freely by the developer
+		but also helps build interest, traffic and use of AJAX Chat.
+		
+		Thanks,
+		Sebastian Tschan
+	//-->
+	<div id="ajaxChatCopyright"><a href="https://blueimp.net/ajax/">AJAX Chat</a> &copy; <a href="https://blueimp.net">blueimp.net</a></div>
+</div>

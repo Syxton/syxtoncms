@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="[CONTENT_ENCODING/]"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="[LANG_CODE/]" lang="[LANG_CODE/]" dir="[BASE_DIRECTION/]">
+
+<head>
+	<meta http-equiv="Content-Type" content="[CONTENT_TYPE/]" />
+	<title>[LANG]title[/LANG]</title>
+	[STYLE_SHEETS/]
+	<!--[if lt IE 7]>
+		<link rel="stylesheet" type="text/css" href="css/ie5-6.css"/>
+	<![endif]-->
+	<script type="text/javascript" src="../../../../../min/?b=features/chat/plugin/js&amp;f=chat.js,custom.js,config.js" charset="UTF-8"></script>
+	<script src="js/lang/[LANG_CODE/].js" type="text/javascript" charset="UTF-8"></script>
+	<script type="text/javascript">
+		// <![CDATA[
+			function displayOnlineUsers(checked) {
+				if(checked) {
+					document.getElementById('chatList').style.right = '230px';
+					document.getElementById('showHideHelpField').checked = false;				
+					ajaxChat.showHide('helpContainer', 'none');
+					ajaxChat.showHide('onlineListContainer', 'block');
+					ajaxChat.setSetting('displayOnlineUsers', true);
+				} else {
+					document.getElementById('chatList').style.right = '20px';
+					ajaxChat.showHide('onlineListContainer', 'none');
+					ajaxChat.setSetting('displayOnlineUsers', false);
+				}
+			}
+			
+			function displayHelp(checked) {
+				if(checked) {
+					document.getElementById('chatList').style.right = '390px';
+					document.getElementById('showHideOnlineField').checked = false;
+					ajaxChat.showHide('onlineListContainer', 'none');
+					ajaxChat.showHide('helpContainer', 'block');
+				} else {
+					document.getElementById('chatList').style.right = '20px';
+					ajaxChat.showHide('helpContainer', 'none');
+				}
+			}
+			
+			function initializeOptions() {
+				if(document.getElementById('optionsContainer')) {
+					document.getElementById('autoscrollField').checked = ajaxChat.getSetting('autoScroll');
+					document.getElementById('persistFontColorField').checked = ajaxChat.getSetting('persistFontColor');
+					if(ajaxChat.getSetting('displayOnlineUsers') == true) {
+						document.getElementById('showHideOnlineField').checked = true;
+						displayOnlineUsers(true);
+					} else if(ajaxChat.getSetting('displayOnlineUsers') == false) {
+						document.getElementById('showHideOnlineField').checked = false;
+						displayOnlineUsers(false);
+					}
+				}
+			}
+			
+			function initializeConfig() {
+				ajaxChat.sessionName = '[SESSION_NAME/]';
+				ajaxChat.chatBotName = document.getElementById('chatBotNameField').value;
+				ajaxChat.chatBotID = '[CHAT_BOT_ID/]';
+			}
+			
+			ajaxChat.init(ajaxChatConfig, ajaxChatLang, true, true, false);
+		// ]]>
+	</script>
+</head>
+
+<body onload="initializeConfig(); ajaxChat.initialize(); initializeOptions();" onunload="ajaxChat.finalize();">
+<table style="width:100%;height:400px;vertical-align:top;"><tr><td>
+	<div id="content">
+		<form action="./" method="get" onsubmit="ajaxChat.logout(); return false;">
+			<div id="logoutChannelContainer">
+		  		<input type="hidden" name="chatBotName" id="chatBotNameField" value="[CHAT_BOT_NAME/]"/>
+                <input type="hidden" name="pageid" id="pageid" value="[PAGEID/]" />
+	  			<input type="submit" name="logout" id="logoutButton" value="[LANG]logout[/LANG]"/>
+				<label style="display:none;" for="channelSelection">[LANG]channel[/LANG]:</label>
+				<select style="display:none;" id="channelSelection" name="channelName" onchange="ajaxChat.switchChannel(this.options[this.selectedIndex].value)">[CHANNEL_OPTIONS/]</select>
+				<label style="display:none;" for="styleSelection">[LANG]style[/LANG]:</label>
+				<select style="display:none;" id="styleSelection" name="style" onchange="ajaxChat.setActiveStyleSheet(ajaxChat.getSelectedStyle());">[STYLE_OPTIONS/]</select>
+	  		</div>
+	  	</form>
+		<div id="chatList"></div>
+		<form action="./" method="post" enctype="application/x-www-form-urlencoded" onsubmit="ajaxChat.sendMessage(); return false;">
+			<div id="messageContainer">
+				<div id="messageTextContainer"><input id="messageText" type="text" name="text" maxlength="[MESSAGE_TEXT_MAX_LENGTH/]"/></div>
+				<div id="submitButtonContainer"><input type="submit" name="submit" id="submitButton" value="[LANG]messageSubmit[/LANG]"/></div>
+			</div>
+		</form>
+		<div id="emoticonsContainer" dir="ltr"></div>
+		<div id="bbCodeContainer">
+			<input type="button" value="[LANG]bbCodeLabelBold[/LANG]" title="[LANG]bbCodeTitleBold[/LANG]" onclick="ajaxChat.insertBBCode('b');" style="font-weight:bold;"/>
+			<input type="button" value="[LANG]bbCodeLabelItalic[/LANG]" title="[LANG]bbCodeTitleItalic[/LANG]" onclick="ajaxChat.insertBBCode('i');" style="font-style:italic;"/>
+			<input type="button" value="[LANG]bbCodeLabelUnderline[/LANG]" title="[LANG]bbCodeTitleUnderline[/LANG]" onclick="ajaxChat.insertBBCode('u');" style="text-decoration:underline;"/>
+			<input type="button" value="[LANG]bbCodeLabelQuote[/LANG]" title="[LANG]bbCodeTitleQuote[/LANG]" onclick="ajaxChat.insertBBCode('quote');"/>
+			<input type="button" value="[LANG]bbCodeLabelCode[/LANG]" title="[LANG]bbCodeTitleCode[/LANG]" onclick="ajaxChat.insertBBCode('code');"/>
+			<input type="button" value="[LANG]bbCodeLabelURL[/LANG]" title="[LANG]bbCodeTitleURL[/LANG]" onclick="ajaxChat.insertBBCode('url');"/>
+			<input type="button" value="[LANG]bbCodeLabelColor[/LANG]" title="[LANG]bbCodeTitleColor[/LANG]" onclick="ajaxChat.showHide('colorCodesContainer', null);"/>
+		</div>
+		<div id="colorCodesContainer" style="display:none;" dir="ltr"></div>
+		<div id="optionsContainer">
+			<input type="checkbox" name="autoscroll" id="autoscrollField" checked="checked" onclick="ajaxChat.setSetting('autoScroll', this.checked);"/>
+			<label for="autoscrollField">[LANG]autoScroll[/LANG]</label>
+			<input type="checkbox" name="showHideOnline" id="showHideOnlineField" checked="checked" onclick="displayOnlineUsers(this.checked);"/>
+			<label for="showHideOnlineField">[LANG]showOnlineUsers[/LANG]</label>
+			<input style="display:none;" type="checkbox" name="showHideHelp" id="showHideHelpField" onclick="displayHelp(this.checked);"/>
+			<label style="display:none;" for="showHideHelpField">[LANG]showHelp[/LANG]</label>
+ 			<input style="display:none;" type="checkbox" name="persistFontColor" id="persistFontColorField" onclick="ajaxChat.setPersistFontColor(this.checked);"/>
+			<label style="display:none;" for="persistFontColorField">[LANG]persistFontColor[/LANG]</label>
+  		</div>
+		<div id="onlineListContainer">
+			<h3>[LANG]onlineUsers[/LANG]</h3>
+	  		<div id="onlineList"></div>
+	  	</div>
+	  	<div id="helpContainer" style="display:none;">
+ 			<h3>[LANG]help[/LANG]</h3>
+ 			<div id="helpList">[HELP_LIST/]</div>
+	  	</div>
+	</div>
+</td></tr></table>
+</body>
+
+</html>

@@ -1,0 +1,6 @@
+@media print {
+  .dontprint{ display:none }
+  .print{ display:block }
+  .pagestart{ page-break-after: always; }
+  body {height: auto; overflow: visible;}
+}
