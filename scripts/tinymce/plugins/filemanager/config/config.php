@@ -20,7 +20,6 @@ mb_internal_encoding('UTF-8');
 //    |   |   |   |   |- plugin.min.js
 
 $_SESSION["RF"]["subfolder"] = trim($_COOKIE['userid'],'/\\');
-
 $base_url = "http://".$_SERVER['HTTP_HOST'];  // DON'T TOUCH (base url (only domain) of site (without final /)).
 $upload_dir = '/userfiles/'; // path from base_url to base of upload folder (with start and final /)
 $current_path = '../../../../userfiles/'; // relative path from filemanager folder to upload folder (with final /)
@@ -67,6 +66,7 @@ $show_folder_size 	= TRUE; //Show or not show folder size in list view feature i
 $show_sorting_bar 	= TRUE; //Show or not show sorting feature in filemanager
 $loading_bar 		= TRUE; //Show or not show loading bar
 $transliteration 	= FALSE; //active or deactive the transliteration (mean convert all strange characters in A..Za..z0..9 characters)
+$convert_spaces  = FALSE; //convert all spaces on files name and folders name with _
 
 //*******************************************
 //Images limit and resizing configuration
@@ -150,8 +150,8 @@ $ext = array_merge($ext_img, $ext_file, $ext_misc, $ext_video,$ext_music); //all
  * AVIARY config
 *******************/
 $aviary_active 	= TRUE;
-$aviary_key 	= "dvh8qudbp6yx2bnp";
-$aviary_secret	= "m6xaym5q42rpw433";
+$aviary_key 	= "8dfa89008c36af6c";
+$aviary_secret	= "d042b0a6faca3901";
 $aviary_version	= 3;
 $aviary_language= 'en';
 
