@@ -147,7 +147,7 @@ global $CFG, $USER, $MYVARS, $ROLES;
     $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
     $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
     echo '  <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'scripts/jquery-ui.min.js"></script>
-            <link type="text/css" rel="stylesheet" href="'.$CFG->wwwroot.'/min/?b='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'styles/jqueryui&amp;f=jquery.ui.all.css" />
+            <link type="text/css" rel="stylesheet" href="'.$CFG->wwwroot.'/min/?b='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'styles/jqueryui&amp;f=jquery-ui.css" />
             
             <script type="text/javascript">
             	$(function() {
