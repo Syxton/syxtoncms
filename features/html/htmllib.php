@@ -211,7 +211,7 @@ global $CFG;
                 if(!strstr($url,'#noembed')){
      				if(!strstr($match[0],'javascript:') && strlen($id) > 0){	
                         if(preg_match('/((http:\/\/)?(?:youtu\.be\/|(?:[a-z]{2,3}\.)?youtube\.com\/v\/)([\w-]{11}).*|http:\/\/(?:youtu\.be\/|(?:[a-z]{2,3}\.)?youtube\.com\/watch(?:\?|#\!)v=)([\w-]{11}).*)/i',$match[0]) || preg_match('/(\s*\.[yY][oO][uU][tT][uU][bB][eE]\.[cC][oO][mM][\/]\s*)/',$url)){
-                            $html = str_replace($match[0], '<div style="'.($area == "middle" ? 'max-width:500px;margin:auto;' : 'max-width:300px').'"><div style="width: 100%; padding-top: 60%; margin-bottom: 5px; position: relative;"><iframe style="position: absolute; width: 100%; height: 100%; top: 0; left: 0;" src="//www.youtube.com/embed/'.$id.'"></iframe></div></div>',$html);    
+                            $html = str_replace($match[0], '<div style="'.($area == "middle" ? 'max-width:500px;margin:auto;' : '').'"><div style="width: 100%; padding-top: 60%; margin-bottom: 5px; position: relative;"><iframe style="position: absolute; width: 100%; height: 100%; top: 0; left: 0;" src="//www.youtube.com/embed/'.$id.'"></iframe></div></div>',$html);    
                         }
     				}                   
                 }
