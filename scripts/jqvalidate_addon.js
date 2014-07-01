@@ -20,7 +20,7 @@ jQuery.validator.addMethod("ajax1", function(value, element, param){
 	
 	if(param[3] && param[3] == "true"){ if(resp == "true"){ return true; } }
 	else{ if(resp == "false"){ return true; } }
-},jQuery.format("This value is not allowed."));
+},jQuery.validator.format("This value is not allowed."));
 
 jQuery.validator.addMethod("ajax2", function(value, element, param){
     param = param.split("::");
@@ -44,7 +44,7 @@ jQuery.validator.addMethod("ajax2", function(value, element, param){
 	
 	if(param[3] && param[3] == "true"){ if(resp == "true"){ return true; } }
 	else{ if(resp == "false"){ return true; } }
-},jQuery.format("This value is not allowed."));
+},jQuery.validator.format("This value is not allowed."));
 
 jQuery.validator.addMethod("ajax3", function(value, element, param){
     param = param.split("::");
@@ -68,7 +68,7 @@ jQuery.validator.addMethod("ajax3", function(value, element, param){
 	
 	if(param[3] && param[3] == "true"){ if(resp == "true"){ return true; } }
 	else{ if(resp == "false"){ return true; } }
-},jQuery.format("This value is not allowed."));
+},jQuery.validator.format("This value is not allowed."));
 
 //Captcha
 jQuery.validator.addMethod("captcha", function(value, element, param) {
@@ -82,40 +82,40 @@ jQuery.validator.addMethod("captcha", function(value, element, param) {
 	}).responseText;
 	
 	if(resp == "true"){ return true; }
-},jQuery.format("This does not match the image."));
+},jQuery.validator.format("This does not match the image."));
 
 //Phone
 jQuery.validator.addMethod("phone", function(value,element) {
     return this.optional(element) || /^\(?(\d{3})\)?[- ]?(\d{3})[- ]?(\d{4})$/.test(value);
-},jQuery.format("Enter a valid phone number."));
+},jQuery.validator.format("Enter a valid phone number."));
 
 //Future Date
 jQuery.validator.addMethod("futuredate", function(value, element, param) {
 	var myDate = new Date()
 	if(param && (!/Invalid|NaN/.test(new Date($(param).prop("value"))))){ myDate = new Date($(param).prop("value"))	}
 	return this.optional(element) || myDate < (new Date(value));
-},jQuery.format("Enter a date in the future."));
+},jQuery.validator.format("Enter a date in the future."));
 
 //Past Date
 jQuery.validator.addMethod("pastdate", function(value, element, param) {
 	var myDate = new Date()
 	if(param && (!/Invalid|NaN/.test(new Date($(param).prop("value"))))){ myDate = new Date($(param).prop("value"))	}
 	return this.optional(element) || myDate > (new Date(value));
-},jQuery.format("Enter a date in the past."));
+},jQuery.validator.format("Enter a date in the past."));
 
 //Letters only
 jQuery.validator.addMethod("letters", function(value,element) {
 	return this.optional(element) || /([a-zA-Z])/.test(value);
-},jQuery.format("This can contain only letters."));
+},jQuery.validator.format("This can contain only letters."));
 
 //No Numbers
 jQuery.validator.addMethod("nonumbers", function(value,element) {
 	return this.optional(element) || /^[^0-9]+$/.test(value);
-},jQuery.format("This cannot contain numbers."));
+},jQuery.validator.format("This cannot contain numbers."));
 
 //Custom
 jQuery.validator.addMethod("custom", function(value, element, param) {
     var ptrn = "/" + param + "/";
     var pattern=new RegExp(ptrn)
     return this.optional(element) || pattern.test(value)
-},jQuery.format("This is not a valid entry"));
+},jQuery.validator.format("This is not a valid entry"));
