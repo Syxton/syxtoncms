@@ -319,7 +319,7 @@ global $CFG;
     $modal = $onOpen = $onComplete = $valid = '';
        
     if(!empty($v["validate"]) && empty($v["iframe"])){ //load validation javascript 
-        $onOpen .= 'loadjs(\''.$CFG->wwwroot.'/min/?b=\' + (dirfromroot == \'\' ? \'\' : dirfromroot) + \'/scripts&f=jqvalidate.js,jqvalidate_addon.js\');';
+        $onOpen .= 'loadjs(\''.$CFG->wwwroot.'/min/?b=\' + (dirfromroot == \'\' ? \'\' : dirfromroot + \'/\') + \'scripts&f=jqvalidate.js,jqvalidate_addon.js\');';
     }elseif(!empty($v["validate"]) && !empty($v["iframe"])){
         $valid="&amp;v=!";
     }
