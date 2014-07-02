@@ -329,7 +329,7 @@ if($autofill){
 
 echo '
     <div class="rowContainer">
-        <label for="Camp_Fee">Pay With Application</label>
+        <label class="rowTitle" for="Camp_Fee">Pay With Application</label>
         '.make_fee_options($event['fee_min'],$event['fee_full'],"payment_amount",'onchange="updateTotal();" onclick="updateTotal();"',$event['sale_end'],$event['sale_fee']).'
         <div class="tooltipContainer info">'.get_help("help_paywithapp:events:templates/camp_new").'</div><br />
     </div>';
