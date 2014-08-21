@@ -1,4 +1,4 @@
-var version = "9.6.0";
+var version = "9.6.1";
 var active_contextmenu = true;
 if (loading_bar){   
 	if (!(/MSIE (\d+\.\d+);/.test(navigator.userAgent))){ 
@@ -299,8 +299,13 @@ $(document).ready(function(){
     var sortDescending=$('#descending').val()=== 'true';
     $('.sorter').on('click',function(){
 	_this=$(this);
-	
-	sortDescending=!sortDescending;
+
+	if($('#sort_by').val() === _this.attr('data-sort')){
+		sortDescending = !sortDescending;
+	} else {
+		sortDescending = true;
+	}
+
 	if (js_script) {
 	    $.ajax({
 		url: "ajax_calls.php?action=sort&sort_by="+_this.attr('data-sort')+"&descending="+sortDescending
@@ -313,6 +318,9 @@ $(document).ready(function(){
 		$('.sort-'+_this.attr('data-sort')).addClass("descending");
 	    else
 		$('.sort-'+_this.attr('data-sort')).addClass("ascending");
+
+		$('#sort_by').val(_this.attr('data-sort'));
+		$('#descending').val(sortDescending);
 	}else {
 	    window.location.href=$('#current_url').val()+"&sort_by="+_this.attr('data-sort')+"&descending="+sortDescending;
 	}
@@ -496,13 +504,30 @@ $(document).ready(function(){
 	
 	$(window).resize(function(){fix_colums(28); });
 	fix_colums(14);
-	
-	$('ul.grid').on('click','.link',function(){
-		var _this = $(this);
-		
-		window[_this.attr('data-function')](_this.attr('data-file'),_this.attr('data-field_id'));
+
+	// New link handler
+	function handleFileLink($el) {
+		window[$el.attr('data-function')]($el.attr('data-file'), $el.attr('data-field_id'));
+	}
+
+	$('ul.grid .link').on('click',function(){
+		handleFileLink($(this));
 	});
-	
+
+	$('ul.grid div.box').on('click',function(e){
+
+		var fileLink = $(this).find(".link");
+			if (fileLink.length!==0) {
+				handleFileLink(fileLink);
+		}
+		else {
+			var folderLink = $(this).find(".folder-link");
+			if (folderLink.length!==0)
+				document.location = $(folderLink).prop("href");
+		}
+	});
+	// End of link handler
+
 	if ($('#clipboard').val() == 1){
 		toggle_clipboard(true);
 	}
@@ -992,7 +1017,7 @@ function swipe_reaction(event, direction, distance, duration, fingerCount) {
 
 function encodeURL(url){
 	var tmp=url.split('/');
-	for(var i=2;i<tmp.length;i++){
+	for(var i=3;i<tmp.length;i++){
 		tmp[i]=encodeURIComponent(tmp[i]);
 	}
 	return tmp.join('/');
