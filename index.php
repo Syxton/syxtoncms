@@ -16,13 +16,13 @@ if(isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip,','.
 	include($CFG->dirroot.$CFG->alternatepage);
 }else{
 	include_once ($CFG->dirroot . '/lib/header.php');
-	
+
 	//Check for upgrades or uninstalled components
 	upgrade_check();
-	
+
 	//Cache roles
 	$ROLES = load_roles();
-	
+
 	//Get page info
     $PAGE = new stdClass();
 	$PAGE->id = isset($_GET['pageid']) ? $_GET['pageid'] : $CFG->SITEID;
@@ -37,18 +37,18 @@ if(isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip,','.
     include ('header.html');
 
 	if(is_logged_in()){
-        echo '<script type="text/javascript">if(typeof(window.myInterval) == "undefined"){ var myInterval = setInterval(function(){update_login_contents(false,"check");}, (5 * 30000));}</script>';      
+        echo '<script type="text/javascript">if(typeof(window.myInterval) == "undefined"){ var myInterval = setInterval(function(){update_login_contents(false,"check");}, (5 * 30000));}</script>';
 		$ABILITIES = get_user_abilities($USER->userid,$PAGE->id);
-		if(!$ABILITIES->viewpages->allow){
+		if(empty($ABILITIES->viewpages->allow)){
 			if(get_db_field("opendoorpolicy", "pages", "pageid=" . $PAGE->id) == "0"){ $PAGE->id = $CFG->SITEID; }
 		}
 	}else{
 		$ABILITIES = get_role_abilities($ROLES->visitor,$PAGE->id);
-		if(!(get_db_field("siteviewable", "pages", "pageid=" . $PAGE->id) && $ABILITIES->viewpages->allow)){
+		if(!(get_db_field("siteviewable", "pages", "pageid=" . $PAGE->id) && !empty($ABILITIES->viewpages->allow))){
 			if(get_db_field("opendoorpolicy", "pages", "pageid=" . $PAGE->id) == "0"){ $PAGE->id = $CFG->SITEID; }
 		}
 	}
-	
+
 	//Main Layout
 	echo '	<div class="colmask rightmenu">
 			<input type="hidden" id="currentpage" value="' . $PAGE->id . '" />
@@ -62,10 +62,10 @@ if(isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip,','.
 					</div>
 				</div>
 			</div>';
-	
+
     //End Page
     include ('footer.html');
-	
+
 	//Log
 	log_entry("page", null, "Page View");
 }

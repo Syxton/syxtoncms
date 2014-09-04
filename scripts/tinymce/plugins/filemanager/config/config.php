@@ -19,6 +19,7 @@ mb_internal_encoding('UTF-8');
 //    |   |   |   |- responsivefilemanager
 //    |   |   |   |   |- plugin.min.js
 $_SESSION["RF"]["subfolder"] = trim($_COOKIE['userid'],'/\\');
+
 $base_url =
    // Get HTTP/HTTPS
    ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] && !in_array(strtolower($_SERVER['HTTPS']),array('off','no'))) ? 'https' : 'http').
@@ -68,13 +69,16 @@ $default_language 	= "en_EN"; //default language file name
 $icon_theme 		= "ico"; //ico or ico_dark you can cusatomize just putting a folder inside filemanager/img
 $show_folder_size 	= TRUE; //Show or not show folder size in list view feature in filemanager (is possible, if there is a large folder, to greatly increase the calculations)
 $show_sorting_bar 	= TRUE; //Show or not show sorting feature in filemanager
-$loading_bar 		= TRUE; //Show or not show loading bar
 $transliteration 	= FALSE; //active or deactive the transliteration (mean convert all strange characters in A..Za..z0..9 characters)
 $convert_spaces  = FALSE; //convert all spaces on files name and folders name with _
 
 //*******************************************
 //Images limit and resizing configuration
 //*******************************************
+
+// -1: There is no lazy loading at all, 0: Always lazy-load images, 0+: The minimum number of the files in a directory
+// when lazy loading should be turned on.
+$lazy_loading_file_number_threshold = 0;
 
 // set maximum pixel width and/or maximum pixel height for all images
 // If you set a maximum width or height, oversized images are converted to those limits. Images smaller than the limit(s) are unaffected

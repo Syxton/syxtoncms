@@ -2,7 +2,7 @@ jQuery.validator.addMethod("ajax1", function(value, element, param){
     param = param.split("::");
 	//Matches the previous value.
 	if(param[4] && param[4] == value){ return true; }
-   
+
     var modparam = param[2];
     //finds other field info marked with #name
     if(modparam.indexOf("#") != -1){
@@ -11,13 +11,13 @@ jQuery.validator.addMethod("ajax1", function(value, element, param){
     }
 
     if(param == value){ return true; }
-    var d = new Date();   
+    var d = new Date();
 	var resp = $.ajax({
 		async: false,
 		type: 'post',
-		url: '../'+param[0], data: 'action='+param[1]+modparam+ value + "&currTime=" + d.toUTCString()
+		url: './'+param[0], data: 'action='+param[1]+modparam+ value + "&currTime=" + d.toUTCString()
 	}).responseText;
-	
+
 	if(param[3] && param[3] == "true"){ if(resp == "true"){ return true; } }
 	else{ if(resp == "false"){ return true; } }
 },jQuery.validator.format("This value is not allowed."));
@@ -26,7 +26,7 @@ jQuery.validator.addMethod("ajax2", function(value, element, param){
     param = param.split("::");
 	//Matches the previous value.
 	if(param[4] && param[4] == value){ return true; }
-   
+
     var modparam = param[2];
     //finds other field info marked with #name
     if(modparam.indexOf("#") != -1){
@@ -35,13 +35,13 @@ jQuery.validator.addMethod("ajax2", function(value, element, param){
     }
 
     if(param == value){ return true; }
-    var d = new Date();   
+    var d = new Date();
 	var resp = $.ajax({
 		async: false,
 		type: 'post',
-		url: '../'+param[0], data: 'action='+param[1]+modparam+ value + "&currTime=" + d.toUTCString()
+		url: './'+param[0], data: 'action='+param[1]+modparam+ value + "&currTime=" + d.toUTCString()
 	}).responseText;
-	
+
 	if(param[3] && param[3] == "true"){ if(resp == "true"){ return true; } }
 	else{ if(resp == "false"){ return true; } }
 },jQuery.validator.format("This value is not allowed."));
@@ -50,7 +50,7 @@ jQuery.validator.addMethod("ajax3", function(value, element, param){
     param = param.split("::");
 	//Matches the previous value.
 	if(param[4] && param[4] == value){ return true; }
-    
+
     var modparam = param[2];
     //finds other field info marked with #name
     if(modparam.indexOf("#") != -1){
@@ -59,13 +59,13 @@ jQuery.validator.addMethod("ajax3", function(value, element, param){
     }
 
     if(param == value){ return true; }
-    var d = new Date();   
+    var d = new Date();
 	var resp = $.ajax({
 		async: false,
 		type: 'post',
-		url: '../'+param[0], data: 'action='+param[1]+modparam+ value + "&currTime=" + d.toUTCString()
+		url: './'+param[0], data: 'action='+param[1]+modparam+ value + "&currTime=" + d.toUTCString()
 	}).responseText;
-	
+
 	if(param[3] && param[3] == "true"){ if(resp == "true"){ return true; } }
 	else{ if(resp == "false"){ return true; } }
 },jQuery.validator.format("This value is not allowed."));
@@ -78,9 +78,9 @@ jQuery.validator.addMethod("captcha", function(value, element, param) {
 	var resp = $.ajax({
 		async: false,
 		type: 'post',
-		url: '../'+param[0], data: 'action='+param[1]+'&orig='+number[0]+'&matchwith=' + value + "&currTime=" + d.toUTCString()
+		url: './'+param[0], data: 'action='+param[1]+'&orig='+number[0]+'&matchwith=' + value + "&currTime=" + d.toUTCString()
 	}).responseText;
-	
+
 	if(resp == "true"){ return true; }
 },jQuery.validator.format("This does not match the image."));
 

@@ -6,7 +6,7 @@
 * Date: 2/20/2014
 * Revision: 2.7.9
 ***************************************************************************/
- 
+
 if(!isset($LIBHEADER)){ include('header.php'); }
 $USERLIB = true;
 
@@ -20,10 +20,10 @@ global $CFG;
 }
 
 function load_user_cookie(){
-global $CFG, $USER;	
+global $CFG, $USER;
 	if(session_id()){ @session_start(); } //Used for CKeditor to know if user is logged in.
-    
-	if(!empty($_COOKIE['userid'])){ //cookie exists 
+
+	if(!empty($_COOKIE['userid'])){ //cookie exists
         $time = get_timestamp();
 		$SQL = "SELECT * FROM users WHERE userid='".$_COOKIE['userid']."' AND ($time - last_activity < ".$CFG->cookietimeout.")";
         if($row = get_db_row($SQL)){ //Get user info from db, load into $USER global
@@ -37,22 +37,22 @@ global $CFG, $USER;
     		$_SESSION['userid'] = $temp->userid; //Used for CKeditor to know if user is logged in.
 		}else{
             $temp = new stdClass();
-            $temp->userid = 0; $_SESSION['userid'] = "";  
+            $temp->userid = 0; $_SESSION['userid'] = "";
 		}
 	}else{
         $temp = new stdClass();
-        $temp->userid = 0; $_SESSION['userid'] = ""; 
+        $temp->userid = 0; $_SESSION['userid'] = "";
     }
     $USER = $temp;
 }
 
 function update_user_cookie(){
-global $CFG,$USER;	
+global $CFG,$USER;
 	$time = get_timestamp();
 	if(!is_logged_in()){ //check to see if $USER global is set
         load_user_cookie(); //if $USER global isn't set, see if there is an existing cookie and have it loaded into $USER
 		if(is_logged_in()){ //check if $USER global is set now.
-			setcookie('userid', $USER->userid, $time + $CFG->cookietimeout,'/'); //update the cookie 
+			setcookie('userid', $USER->userid, $time + $CFG->cookietimeout,'/'); //update the cookie
 			execute_db_sql("UPDATE users SET last_activity='$time' WHERE userid='".$USER->userid."'"); //update last active timestamp
 		}else{ //not currently logged in
             $temp = new stdClass();
@@ -73,15 +73,20 @@ global $CFG,$USER;
 	$userid = execute_db_sql("INSERT INTO users (email,fname,lname,temp,password,userkey,joined) VALUES('".$user->email."','".ucfirst($user->fname)."','".ucfirst($user->lname)."','".$user->password."','".md5($temp)."','$key','".get_timestamp()."')");
 	$defaultrole = get_db_field("default_role","pages","pageid='".$CFG->SITEID."'");
 	$role_assignment = execute_db_sql("INSERT INTO roles_assignment (userid,roleid,pageid) VALUES('$userid','$defaultrole','".$CFG->SITEID."')");
-	
+
     if($userid && $role_assignment){
-    	$USER->userid = $userid; $USER->fname = $user->fname; $USER->lname = $user->lname; $USER->email = $user->email;
-    	$FROMUSER->fname = $CFG->sitename; $FROMUSER->lname = '';
+    	$USER->userid = $userid;
+        $USER->fname = $user->fname;
+        $USER->lname = $user->lname;
+        $USER->email = $user->email;
+        $FROMUSER = new stdClass();
+    	$FROMUSER->fname = $CFG->sitename;
+        $FROMUSER->lname = '';
     	$FROMUSER->email = $CFG->siteemail;
     	$message = write_confirmation_email($user, $temp);
     	$subject = $CFG->sitename . ' New User Confirmation';
-	
-		if(send_email($USER,$FROMUSER,NULL,$subject,$message)){	
+
+		if(send_email($USER,$FROMUSER,NULL,$subject,$message)){
 			send_email($FROMUSER,$FROMUSER,NULL,$subject,$message);
 			return "true**" . new_user_confirmation($user);
 		}
@@ -95,7 +100,7 @@ global $CFG,$USER;
 }
 
 function create_random_password(){
-	//Make random password and activation code 
+	//Make random password and activation code
 	$pass1 = array("little","big","loud","quiet","short","tall","tiny","huge","old","young","nice","mean","scary","sneaky","snooty","pretty","happy","sneezy","itchy");
 	$rnd1 = array_rand($pass1);
 	srand ((double) microtime( )*1000000);
@@ -151,8 +156,11 @@ function get_user_name($userid){
 }
 
 function is_logged_in(){
-global $USER;
-	if(!empty($USER->userid)){ return true;}
+global $CFG, $USER;
+	if(!empty($USER->userid)){
+	   recursive_mkdir($CFG->userfilespath . '\\' . $USER->userid);
+       return true;
+    }
 	return false;
 }
 ?>

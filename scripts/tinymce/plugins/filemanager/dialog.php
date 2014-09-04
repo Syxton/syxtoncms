@@ -41,7 +41,7 @@ if($subdir == "")
 }
 
 //remember last position
-setcookie('last_position',$subdir,time() + (86400 * 7)); 
+setcookie('last_position',$subdir,time() + (86400 * 7));
 
 if ($subdir == "/") { $subdir = ""; }
 
@@ -317,8 +317,6 @@ $get_params = http_build_query(array(
 	<script type="text/javascript" src="js/bootstrap-modal.min.js"></script>   
 	<script type="text/javascript" src="js/bootstrap-modalmanager.min.js"></script>
 	<script type="text/javascript" src="jPlayer/jquery.jplayer.min.js"></script>
-	<script type="text/javascript" src="js/imagesloaded.pkgd.min.js"></script>
-	<script type="text/javascript" src="js/jquery.queryloader2.min.js"></script>
 	<?php
 	if ($aviary_active){
 	if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) { ?>
@@ -338,7 +336,6 @@ $get_params = http_build_query(array(
 	<script>
 	    var ext_img=new Array('<?php echo implode("','", $ext_img)?>');
 	    var allowed_ext=new Array('<?php echo implode("','", $ext)?>');
-	    var loading_bar=<?php echo $loading_bar?"true":"false"; ?>;
 	    var image_editor=<?php echo $aviary_active?"true":"false"; ?>;
 	    //dropzone config
 	    Dropzone.options.myAwesomeDropzone = {
@@ -529,6 +526,9 @@ foreach($files as $k=>$file){
 	$sorted[$k]=array('file'=>$file,'file_lcase'=>strtolower($file),'date'=>$date,'size'=>$size,'extension'=>$file_ext,'extension_lcase'=>strtolower($file_ext));
     }
 }
+
+// Should lazy loading be enabled
+$lazy_loading_enabled= ($lazy_loading_file_number_threshold == 0 || $lazy_loading_file_number_threshold != -1 && $n_files > $lazy_loading_file_number_threshold) ? true : false;
 
 function filenameSort($x, $y) {
     return $x['file_lcase'] <  $y['file_lcase'];
@@ -735,13 +735,13 @@ $files=array_merge(array($prev_folder),array($current_folder),$sorted);
 				    <a class="folder-link" href="dialog.php?<?php echo $get_params.rawurlencode($src)."&".uniqid() ?>">
 				    <div class="img-precontainer">
 					<div class="img-container directory"><span></span>
-					<img class="directory-img"  src="img/<?php echo $icon_theme; ?>/folder<?php if($file==".."){ echo "_back"; }?>.jpg" alt="folder" />
+					<img class="directory-img"  src="img/<?php echo $icon_theme; ?>/folder<?php if($file==".."){ echo "_back"; }?>.jpg" />
 					</div>
 				    </div>
 				    <div class="img-precontainer-mini directory">
 					<div class="img-container-mini">
 					    <span></span>
-					    <img class="directory-img"  src="img/<?php echo $icon_theme; ?>/folder<?php if($file==".."){ echo "_back"; }?>.png" alt="folder" />
+					    <img class="directory-img"  src="img/<?php echo $icon_theme; ?>/folder<?php if($file==".."){ echo "_back"; }?>.png" />
 					</div>
 				    </div>
 			<?php if($file==".."){ ?>
@@ -889,7 +889,7 @@ $files=array_merge(array($prev_folder),array($current_folder),$sorted);
 				    <?php if($is_icon_thumb){ ?><div class="filetype"><?php echo $extension_lower ?></div><?php } ?>
 				    <div class="img-container">
 					    <span></span>
-					    <img alt="<?php echo $filename." thumbnails";?>" class="<?php echo $show_original ? "original" : "" ?> <?php echo $is_icon_thumb ? "icon" : "" ?>" src="<?php echo $src_thumb; ?>">
+					    <img class="<?php echo $show_original ? "original" : "" ?><?php echo $is_icon_thumb ? " icon" : "" ?><?php echo $lazy_loading_enabled ? " lazy-loaded" : ""?>" <?php echo $lazy_loading_enabled ? "data-original" : "src"?>="<?php echo $src_thumb; ?>">
 				    </div>
 				</div>
 				<div class="img-precontainer-mini <?php if($is_img) echo 'original-thumb' ?>">
@@ -897,7 +897,7 @@ $files=array_merge(array($prev_folder),array($current_folder),$sorted);
 				    <div class="img-container-mini">
 					<span></span>
 					<?php if($mini_src!=""){ ?>
-					<img alt="<?php echo $filename." thumbnails";?>" class="<?php echo $show_original_mini ? "original" : "" ?> <?php echo $is_icon_thumb_mini ? "icon" : "" ?>" src="<?php echo $mini_src; ?>">
+					<img class="<?php echo $show_original_mini ? "original" : "" ?><?php echo $is_icon_thumb_mini ? " icon" : "" ?><?php echo $lazy_loading_enabled ? " lazy-loaded" : ""?>" <?php echo $lazy_loading_enabled ? "data-original" : "src"?>="<?php echo $mini_src; ?>">
 					<?php } ?>
 				    </div>
 				</div>
@@ -927,10 +927,10 @@ $files=array_merge(array($prev_folder),array($current_folder),$sorted);
 				    <a class="tip-right preview" title="<?php echo lang_Preview?>" data-url="<?php echo $src;?>" data-toggle="lightbox" href="#previewLightbox"><i class=" icon-eye-open"></i></a>
 				    <?php }elseif(($is_video || $is_audio) && in_array($extension_lower,$jplayer_ext)){ ?>
 				    <a class="tip-right modalAV <?php if($is_audio){ echo "audio"; }else{ echo "video"; } ?>"
-					title="<?php echo lang_Preview?>" data-url="ajax_calls.php?action=media_preview&title=<?php echo $filename; ?>&file=<?php echo $current_path.$rfm_subfolder.$subdir.$file;; ?>"
+					title="<?php echo lang_Preview?>" data-url="ajax_calls.php?action=media_preview&title=<?php echo $filename; ?>&file=<?php echo $current_path.$rfm_subfolder.$subdir.$file; ?>"
 					href="javascript:void('');" ><i class=" icon-eye-open"></i></a>
 					<?php }elseif($preview_text_files === TRUE && in_array($extension_lower,$previewable_text_file_exts)){ ?>
-				    <a class="tip-right file-preview-btn" title="<?php echo lang_Preview?>" data-url="ajax_calls.php?action=get_file&sub_action=preview&title=<?php echo $filename; ?>&file=<?php echo $current_path.$rfm_subfolder.$subdir.$file;; ?>"
+				    <a class="tip-right file-preview-btn" title="<?php echo lang_Preview?>" data-url="ajax_calls.php?action=get_file&sub_action=preview&title=<?php echo $filename; ?>&file=<?php echo $current_path.$rfm_subfolder.$subdir.$file; ?>"
 					href="javascript:void('');" ><i class=" icon-eye-open"></i></a>
 				    <?php }else{ ?>
 				    <a class="preview disabled"><i class="icon-eye-open icon-white"></i></a>
@@ -992,6 +992,17 @@ $files=array_merge(array($prev_folder),array($current_folder),$sorted);
     </div>
     <!-- player div end -->
     <img id='aviary_img' src='' class="hide"/>
+
+    <?php if ($lazy_loading_enabled) { ?>
+        <script src="js/jquery.lazyload.min.js" type="text/javascript"></script>
+
+        <script>
+            $(function() {
+                $(".lazy-loaded").lazyload();
+            });
+
+        </script>
+    <?php } ?>
 </body>
 </html>
 <?php } ?>

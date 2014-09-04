@@ -8,16 +8,16 @@
 ***************************************************************************/
 if(!isset($LIBHEADER)){ if(file_exists('./lib/header.php')){ include('./lib/header.php'); }elseif(file_exists('../lib/header.php')) { include('../lib/header.php'); }elseif(file_exists('../../lib/header.php')){ include('../../lib/header.php'); }}
 $HTMLLIB = true;
-	
+
 function display_html($pageid, $area, $featureid){
 global $CFG, $USER, $HTMLSETTINGS;
-	
+
 	$abilities = get_user_abilities($USER->userid,$pageid,"html","html",$featureid);
 	if(!$settings = fetch_settings("html",$featureid,$pageid)){
 		make_or_update_settings_array(default_settings("html",$pageid,$featureid));
 		$settings = fetch_settings("html",$featureid,$pageid);
 	}
-    
+
     if($pageid == $CFG->SITEID || $abilities->viewhtml->allow){
         return get_html($pageid, $featureid, $settings, $abilities, $area);
     }else{
@@ -38,13 +38,13 @@ global $CFG,$USER;
                 $makecomment = $abilities->makecomments->allow ? make_modal_links(array("title"=>"Comment","path"=>$CFG->wwwroot."/features/html/html.php?action=makecomment&amp;pageid=$pageid&amp;htmlid=".$row['htmlid'],"styles"=>"float:right;","refresh"=>"true")) : '';
             }
             //if viewing from rss feed
-			if($htmlonly){ 
-                $returnme .= '<table style="width:100%;border:1px solid silver;padding:10px;"><tr><th>'. $settings->html->$featureid->feature_title->setting.'</th></tr><tr><td><br /><br /><div class="htmlblock">' .filter(stripslashes($row['html']),$featureid,$settings,$area) .'</div><br />'. $comments . '</td></tr></table>'; 
+			if($htmlonly){
+                $returnme .= '<table style="width:100%;border:1px solid silver;padding:10px;"><tr><th>'. $settings->html->$featureid->feature_title->setting.'</th></tr><tr><td><br /><br /><div class="htmlblock">' .filter(stripslashes($row['html']),$featureid,$settings,$area) .'</div><br />'. $comments . '</td></tr></table>';
             }else{ //regular html feature viewing
                 $stopped_editing = '<input type="hidden" id="html_'.$featureid.'_stopped_editing" value="ajaxapi(\'/features/html/html_ajax.php\',\'stopped_editing\',\'&amp;htmlid='.$featureid.'&amp;userid=0\',function(){if (xmlHttp.readyState == 4) { do_nothing(); }},true);" />';
-				
+
                 if(is_logged_in() && $settings->html->$featureid->enablerss->setting) $rss = make_modal_links(array("title"=>"RSS Feed","path"=>$CFG->wwwroot."/pages/rss.php?action=rss_subscribe_feature&amp;pageid=$pageid&amp;featureid=$featureid&amp;feature=html","styles"=>"position: relative;top: 4px;padding-right:2px;","iframe"=>"true","refresh"=>"true","height"=>"300","width"=>"640","image"=>$CFG->wwwroot."/images/small_rss.png"));
-				
+
                 $buttons = get_button_layout("html",$row['htmlid'],$pageid);
 				$returnme .= get_css_box($rss . $settings->html->$featureid->feature_title->setting,$stopped_editing.'<div class="htmlblock">' .filter(stripslashes($row['html']),$featureid,$settings,$area) .'</div><br />'. $makecomment . $comments,$buttons, null, 'html', $featureid, false, false, false, false, false, false);
 			}
@@ -58,44 +58,44 @@ global $CFG;
 	if(isset($settings->html->$featureid->documentviewer->setting) && $settings->html->$featureid->documentviewer->setting == 1){ //Document Viewer Filter
 		if(isset($CFG->doc_view_key)){
 			$regex = '/(<[aA]\s*.[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s""\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(.[^\s]*)(<\/[aA]>)/';
-			if(preg_match_all($regex, $html, $matches, PREG_SET_ORDER)){ 
-				foreach($matches as $match){ 
-					if(!strstr($match[0],'javascript:')){	
+			if(preg_match_all($regex, $html, $matches, PREG_SET_ORDER)){
+				foreach($matches as $match){
+					if(!strstr($match[0],'javascript:')){
 						$filetypes = '/([\.[pP][dD][fF]|\.[dD][oO][cC]|\.[rR][tT][fF]|\.[pP][sS]|\.[pP][pP][tT]|\.[pP][pP][sS]|\.[tT][xX][tT]|\.[sS][xX][cC]|\.[oO][dD][sS]|\.[xX][lL][sS]|\.[oO][dD][tT]|\.[sS][xX][wW]|\.[oO][dD][pP]|\.[sS][xX][iI]])/';
 						if(preg_match($filetypes,$match[2])){
-    						//make internal links full paths	
+    						//make internal links full paths
     						$url = strstr($match[2],$CFG->directory.'/userfiles') && !strstr($match[2],$CFG->wwwroot) && !strstr($match[2],"http://") && !strstr($match[2],"www.") ? str_replace($CFG->directory.'/userfiles', $CFG->wwwroot.'/userfiles',$match[2]) : $match[2];
-                            
+
                             //make full url if not full
                             $url = !strstr($url, "http://") && strstr($url,"www.") ? str_replace("www.","http://www.",$url) : $url;
-    						
+
                             //remove target from urls
     						if(preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/',$url, $target, PREG_OFFSET_CAPTURE)){ $url = str_replace($target[0],"", $url);}
     						$url = preg_replace('/([\'|\"])/','',$url);
-    						
+
                             //make ipaper links
     						$url = str_replace('\\','',$url);
                             $url = str_replace('../','',$url);
                             $url = str_replace('..','',$url);
-                            
-    						$html = str_replace($match[0],'<a href="'.$CFG->wwwroot.'/scripts/download.php?file='.$url.'" onclick="blur();"><img src="'.$CFG->wwwroot.'/images/save.png" alt="Save" /></a>&nbsp;'.make_modal_links(array("title"=>$match[4].$match[5],"path"=>$CFG->wwwroot."/pages/ipaper.php?action=view_ipaper&amp;doc_url=".base64_encode($url),"height"=>"80%","width"=>"80%")),$html);	
+
+    						$html = str_replace($match[0],'<a href="'.$CFG->wwwroot.'/scripts/download.php?file='.$url.'" onclick="blur();"><img src="'.$CFG->wwwroot.'/images/save.png" alt="Save" /></a>&nbsp;'.make_modal_links(array("title"=>$match[4].$match[5],"path"=>$CFG->wwwroot."/pages/ipaper.php?action=view_ipaper&amp;doc_url=".base64_encode($url),"height"=>"80%","width"=>"80%")),$html);
 						}
 					}
 				}
 			}
-		}	
+		}
 	}
 
 	if(isset($settings->html->$featureid->embedaudio->setting) && $settings->html->$featureid->embedaudio->setting == 1){ //Embed audio player
 		$regex = '/(<[aA]\s*.[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s""\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(.[^\s]*)(<\/[aA]>)/';
-		if(preg_match_all($regex, $html, $matches, PREG_SET_ORDER)){ 
-			$i = 0; 
-			foreach($matches as $match){ 
-				if(!strstr($match[0],'javascript:')){	
+		if(preg_match_all($regex, $html, $matches, PREG_SET_ORDER)){
+			$i = 0;
+			foreach($matches as $match){
+				if(!strstr($match[0],'javascript:')){
 					$found = false;
 					$filetypes = '/([\.[aA][aA][cC]|\.[mM][4][aA])/';
 					if(preg_match($filetypes,$match[2])){
-						//make internal links full paths	
+						//make internal links full paths
 						$url = strstr($match[2],$CFG->directory.'/userfiles') && !strstr($match[2],$CFG->wwwroot) ? str_replace($CFG->directory.'/userfiles', $CFG->wwwroot.'/userfiles',$match[2]) : $match[2];
 						//remove target from urls
 						if(preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/',$url, $target, PREG_OFFSET_CAPTURE)){ $url = str_replace($target[0],"", $url);}
@@ -116,21 +116,21 @@ global $CFG;
 							</script>
 						",$html);
 					}
-					
+
 					$found = false;
 					$filetypes = '/([\.[mM][pP][3])/';
 					if(preg_match($filetypes,$match[2])){
-						if(!$found){ 
-							$player = "<script language='javascript' src='".$CFG->wwwroot."/scripts/filters/audio/audio-player.js'></script> 
-						         <script type='text/javascript'>  
-						             AudioPlayer.setup('".$CFG->wwwroot."/scripts/filters/audio/player.swf', {  
-						                 width: 290  
-						             });  
-						         </script>"; 
+						if(!$found){
+							$player = "<script language='javascript' src='".$CFG->wwwroot."/scripts/filters/audio/audio-player.js'></script>
+						         <script type='text/javascript'>
+						             AudioPlayer.setup('".$CFG->wwwroot."/scripts/filters/audio/player.swf', {
+						                 width: 290
+						             });
+						         </script>";
 					 	}else{$player = ""; }
-					 	
+
 						$found = true;
-						//make internal links full paths	
+						//make internal links full paths
 						$url = strstr($match[2],$CFG->directory.'/userfiles') && !strstr($match[2],$CFG->wwwroot) ? str_replace($CFG->directory.'/userfiles', $CFG->wwwroot.'/userfiles',$match[2]) : $match[2];
 						//remove target from urls
 						if(preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/',$url, $target, PREG_OFFSET_CAPTURE)){ $url = str_replace($target[0],"", $url);}
@@ -140,31 +140,31 @@ global $CFG;
 						$info = explode("-",$info[0]);
 						$html = str_replace($match[0], $player ."
 						<span id='audioplayer_$featureid"."_$i"."'></span>
-						<script type='text/javascript'>  
-						 AudioPlayer.embed('audioplayer_$featureid"."_$i"."', {  
-						     soundFile: '".stripslashes($url)."',  
-						     titles: '$info[1]',  
-						     artists: '$info[0]',  
-						     autostart: 'no'  
-						 });  
-						 </script> 
-						",$html);						
+						<script type='text/javascript'>
+						 AudioPlayer.embed('audioplayer_$featureid"."_$i"."', {
+						     soundFile: '".stripslashes($url)."',
+						     titles: '$info[1]',
+						     artists: '$info[0]',
+						     autostart: 'no'
+						 });
+						 </script>
+						",$html);
 					}
 				}
 			$i++;
 			}
 		}
 	}
-	
+
 	if(isset($settings->html->$featureid->embedvideo->setting) && $settings->html->$featureid->embedvideo->setting == 1){ //Embed Video Player
 		$regex = '/(<[aA]\s*.[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s""\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(.[^\s]*)(<\/[aA]>)/';
-		if(preg_match_all($regex, $html, $matches, PREG_SET_ORDER)){ 
+		if(preg_match_all($regex, $html, $matches, PREG_SET_ORDER)){
 			$i = 0;
-			foreach($matches as $match){ 
-				if(!strstr($match[0],'javascript:')){	
+			foreach($matches as $match){
+				if(!strstr($match[0],'javascript:')){
 					$filetypes = '/([\.[fF][lL][vV]|\.[mM][pP][4])/';
 					if(preg_match($filetypes,$match[2])){
-						//make internal links full paths	
+						//make internal links full paths
 						$url = strstr($match[2],$CFG->directory.'/userfiles') && !strstr($match[2],$CFG->wwwroot) ? str_replace($CFG->directory.'/userfiles', $CFG->wwwroot.'/userfiles',$match[2]) : $match[2];
 						//remove target from urls
 						if(preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/',$url, $target, PREG_OFFSET_CAPTURE)){ $url = str_replace($target[0],"", $url);}
@@ -175,7 +175,7 @@ global $CFG;
 						$html = str_replace($match[0], "
                             <script type='text/javascript' src='".$CFG->wwwroot."/scripts/filters/video/flowplayer/flowplayer-3.2.4.min.js'></script>
                             <div id='vid_$rand' class='flowplayer_div' style='width:100%;'><a href='$url' style='display:block;' class='flowplayers' id='player_$rand'></a></div>
-                            <script>flowplayer('a.flowplayers', '".$CFG->wwwroot."/scripts/filters/video/flowplayer/flowplayer-3.2.4.swf',{  
+                            <script>flowplayer('a.flowplayers', '".$CFG->wwwroot."/scripts/filters/video/flowplayer/flowplayer-3.2.4.swf',{
                             clip: {
                                 autoPlay: false,
                                 autoBuffering: true,
@@ -186,11 +186,11 @@ global $CFG;
                                             if(myclip.metaData != undefined){
                                                 var width = $('#'+this.id()).parent('.flowplayer_div').attr('clientWidth') >= myclip.metaData.width ? myclip.metaData.width : $('#'+this.id()).parent('.flowplayer_div').attr('clientWidth');
                                                 var height = (width/myclip.metaData.width) * myclip.metaData.height;
-                                                var wrap = jQuery(this.getParent()); 
-                                                wrap.css({width: width+'px', height: height+'px'}); 
+                                                var wrap = jQuery(this.getParent());
+                                                wrap.css({width: width+'px', height: height+'px'});
                                             }
                                         });
-                                    },1000) 
+                                    },1000)
                                 }
                             });
                             </script>
@@ -201,7 +201,7 @@ global $CFG;
 			}
 		}
 	}
-	
+
 	if(isset($settings->html->$featureid->embedyoutube->setting) && $settings->html->$featureid->embedyoutube->setting == 1){ //Embed Youtube video player
         $regex = '/(<[aA]\s*.[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s""\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(.[^\s]*)(<\/[aA]>)/';
         if(preg_match_all($regex, $html, $matches, PREG_SET_ORDER)){ //link to youtube
@@ -209,11 +209,11 @@ global $CFG;
 				$url = $match[2];
                 $id = youtube_id_from_url($url);
                 if(!strstr($url,'#noembed')){
-     				if(!strstr($match[0],'javascript:') && strlen($id) > 0){	
+     				if(!strstr($match[0],'javascript:') && strlen($id) > 0){
                         if(preg_match('/((http:\/\/)?(?:youtu\.be\/|(?:[a-z]{2,3}\.)?youtube\.com\/v\/)([\w-]{11}).*|http:\/\/(?:youtu\.be\/|(?:[a-z]{2,3}\.)?youtube\.com\/watch(?:\?|#\!)v=)([\w-]{11}).*)/i',$match[0]) || preg_match('/(\s*\.[yY][oO][uU][tT][uU][bB][eE]\.[cC][oO][mM][\/]\s*)/',$url)){
-                            $html = str_replace($match[0], '<div style="'.($area == "middle" ? 'max-width:500px;margin:auto;' : '').'"><div style="width: 100%; padding-top: 60%; margin-bottom: 5px; position: relative;"><iframe style="position: absolute; width: 100%; height: 100%; top: 0; left: 0;" src="//www.youtube.com/embed/'.$id.'"></iframe></div></div>',$html);    
+                            $html = str_replace($match[0], '<div style="'.($area == "middle" ? 'max-width:500px;margin:auto;' : '').'"><div style="width: 100%; padding-top: 60%; margin-bottom: 5px; position: relative;"><iframe style="position: absolute; width: 100%; height: 100%; top: 0; left: 0;" src="//www.youtube.com/embed/'.$id.'"></iframe></div></div>',$html);
                         }
-    				}                   
+    				}
                 }
 			}
 		}
@@ -222,7 +222,7 @@ global $CFG;
 }
 
 function youtube_id_from_url($url) {
-    $pattern = 
+    $pattern =
         '%^# Match any youtube URL
         (?:https?://)?  # Optional scheme. Either http or https
         (?:www\.)?      # Optional www subdomain
@@ -261,7 +261,7 @@ global $CFG,$USER;
 	$comments = $prev = $info = $next = $header = $arrows = $limit = "";
 	$original = $pagenum === false ? true : false;
 	$pagenum = $pagenum === false ? 0 : $pagenum;
-	
+
 	if($perpage){
 		$total = get_db_count("SELECT * FROM html_comments WHERE htmlid=$htmlid");
 		$searchvars = get_search_page_variables($total, $perpage, $pagenum);
@@ -271,12 +271,12 @@ global $CFG,$USER;
     	$arrows = '<table style="width:100%;"><tr><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;font-size:.75em;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><br /><br />';
 		$limit = "LIMIT " .$searchvars["firstonpage"] . "," . $perpage;
 	}else{ $limit = "LIMIT $perpage";}
-	 
+
 	$SQL = "SELECT * FROM html_comments WHERE htmlid=$htmlid ORDER BY commentid DESC $limit";
 
-	if($result = get_db_result($SQL)){	
+	if($result = get_db_result($SQL)){
 		$header = '<div class="button" id="hmtl_'.$htmlid.'_hide_button" style="display:block;margin-right:auto;margin-left:auto;font-size:.8em;width:90px;" onclick="hide_show_buttons(\'hmtl_'.$htmlid.'_comments_button\',true); hide_show_buttons(\'hmtl_'.$htmlid.'_comments\',true)">Hide Comments</div><br />';
-		
+
 		while($row = fetch_row($result)){
 			$makecomment = $makereply = $editcomment = $deletecomment = $username = "";
 			$username = !$row['userid'] ? "Visitor" : get_user_name($row['userid']);
@@ -284,7 +284,7 @@ global $CFG,$USER;
 			if(!$hidebuttons){ $deletecomment = user_has_ability_in_page($USER->userid,"deletecomments",$pageid) || ($USER->userid == $row["userid"] && user_has_ability_in_page($USER->userid,"makecomments",$pageid)) ? make_modal_links(array("title"=>"Delete Comment","path"=>$CFG->wwwroot."/features/html/html.php?action=deletecomment&amp;userid=".$row["userid"].'&amp;pageid='.$pageid.'&amp;commentid='.$row['commentid'],"refresh"=>"true","image"=>$CFG->wwwroot."/images/delete.png")) : "";}
 			if(!$hidebuttons && !strlen($reply) > 0 && user_has_ability_in_page($USER->userid,"makereplies",$pageid)){ $makereply = make_modal_links(array("title"=>"Reply","path"=>$CFG->wwwroot."/features/html/html.php?action=makereply&amp;pageid=$pageid&amp;commentid=".$row['commentid'],"refresh"=>"true","styles"=>"float:right;padding: 2px;"));}
 			if(!$hidebuttons){ $editcomment = user_has_ability_in_page($USER->userid,"editanycomment",$pageid) || ($USER->userid == $row["userid"] && user_has_ability_in_page($USER->userid,"makecomments",$pageid)) ? '<br />'.make_modal_links(array("title"=>"Edit","path"=>$CFG->wwwroot."/features/html/html.php?action=editcomment&amp;pageid=$pageid&amp;commentid=".$row['commentid'].'&amp;userid='.$row["userid"],"refresh"=>"true","styles"=>"float:left;padding: 2px;")) : ''; }
-			$comments .= 
+			$comments .=
 			'
 			<table class="blogbox">
 				<tr class="blogreplyheader">
@@ -307,9 +307,9 @@ global $CFG,$USER;
 			';
 		}
 		//Don't make the overlay div over and over'
-		if($original){ $comments = make_search_box($arrows.$comments,"html_$htmlid"); 
+		if($original){ $comments = make_search_box($arrows.$comments,"html_$htmlid");
         }else{ $comments = $arrows.$comments; }
-		
+
 		if($hide){ $comments = '<div id="hmtl_'.$htmlid.'_comments_button" class="button" style="display:block;margin-right:auto;margin-left:auto;font-size:.8em;width:90px;" onclick="hide_show_buttons(\'hmtl_'.$htmlid.'_comments_button\',true); hide_show_buttons(\'hmtl_'.$htmlid.'_comments\',true)">Show Comments</div><div id="hmtl_'.$htmlid.'_comments" style="display:none;">' . $header . $comments . '</div>'; }
 	}
 	return $comments;
@@ -324,7 +324,7 @@ global $CFG,$USER;
 			$username = get_user_name($row['userid']);
 			if(!$hidebuttons){ $editreply = user_has_ability_in_page($USER->userid,"makereplies",$pageid) ? '<br />'.make_modal_links(array("title"=>"Edit","path"=>$CFG->wwwroot."/features/html/html.php?action=editreply&amp;pageid=$pageid&amp;commentid=$commentid&amp;replyid=".$row["replyid"],"refresh"=>"true","styles"=>"float:left;padding: 2px;")).'<br />' : '';}
 			if(!$hidebuttons){ $deletereply = user_has_ability_in_page($USER->userid,"deletereply",$pageid) ? make_modal_links(array("title"=>"Delete Reply","path"=>$CFG->wwwroot."/features/html/html.php?action=deletereply&amp;pageid=$pageid&amp;replyid=".$row["replyid"],"refresh"=>"true","image"=>$CFG->wwwroot."/images/delete.png")) : "";}
-			$replies = 
+			$replies =
 			'
 				<tr class="blogcommentheader">
 					<td style="text-align:left;vertical-align:middle;">
@@ -356,15 +356,15 @@ function html_buttons($pageid,$featuretype,$featureid){
 global $CFG,$USER;
 	$settings = fetch_settings("html",$featureid,$pageid);
 	$blog = $settings->html->$featureid->blog->setting;
-	
+
 	$html_abilities = get_user_abilities($USER->userid,$pageid,"html","html",$featureid);
 	$feature_abilities = get_user_abilities($USER->userid,$pageid,"features","html",$featureid);
-		
+
 	$returnme = "";
-	if($blog && $feature_abilities->addfeature->allow){ $returnme .= ' <a class="slide_menu_button" title="Add Blog Edition" onclick="if(confirm(\'Do you want to make a new blog edition?  This will move the current blog to the Blog Locker.\')){ ajaxapi(\'/features/html/html_ajax.php\',\'new_edition\',\'&amp;pageid='.$pageid.'&amp;htmlid='.$featureid.'\',function() { refresh_page(); });}"><img src="'.$CFG->wwwroot.'/images/add.png" alt="Delete Feature" /></a> '; } 
-	
-    if($html_abilities->edithtml->allow){ $returnme .= make_modal_links(array("title"=>"Edit HTML","path"=>$CFG->wwwroot."/features/html/html.php?action=edithtml&amp;pageid=$pageid&amp;featureid=$featureid","runafter"=>"html_".$featureid."_stopped_editing","iframe"=>"true","refresh"=>"true","width"=>"950","image"=>$CFG->wwwroot."/images/edit.png","class"=>"slide_menu_button")); }
-    
+	if($blog && !empty($feature_abilities->addfeature->allow)){ $returnme .= ' <a class="slide_menu_button" title="Add Blog Edition" onclick="if(confirm(\'Do you want to make a new blog edition?  This will move the current blog to the Blog Locker.\')){ ajaxapi(\'/features/html/html_ajax.php\',\'new_edition\',\'&amp;pageid='.$pageid.'&amp;htmlid='.$featureid.'\',function() { refresh_page(); });}"><img src="'.$CFG->wwwroot.'/images/add.png" alt="Delete Feature" /></a> '; }
+
+    if(!empty($html_abilities->edithtml->allow)){ $returnme .= make_modal_links(array("title"=>"Edit HTML","path"=>$CFG->wwwroot."/features/html/html.php?action=edithtml&amp;pageid=$pageid&amp;featureid=$featureid","runafter"=>"html_".$featureid."_stopped_editing","iframe"=>"true","refresh"=>"true","width"=>"950","image"=>$CFG->wwwroot."/images/edit.png","class"=>"slide_menu_button")); }
+
     if(!$blog && user_has_ability_in_page($USER->userid,"addtolocker",$pageid)){ $returnme .= '  <a class="slide_menu_button" title="Move to Blog Locker" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'move_feature\',\'&amp;pageid='.$pageid.'&amp;featuretype='.$featuretype.'&amp;sectionid=&amp;featureid='.$featureid.'&amp;direction=locker\',function() { refresh_page(); });"><img src="'.$CFG->wwwroot.'/images/vault.png" alt="Move to Blog Locker" /></a> '; }
 	return $returnme;
 }
@@ -376,7 +376,7 @@ function html_template($html){
 function html_rss($feed, $userid, $userkey){
 global $CFG;
 	$feeds = "";
-	
+
 	$settings = fetch_settings("html",$feed["featureid"],$feed["pageid"]);
 	if($settings->html->$feed["featureid"]->enablerss->setting){
 		if($settings->html->$feed["featureid"]->blog->setting){
@@ -386,7 +386,7 @@ global $CFG;
 			}else{
 				$htmlresults = get_db_result("SELECT * FROM html WHERE htmlid='".$html["htmlid"]."' OR firstedition='".$html["htmlid"]."' ORDER BY htmlid DESC LIMIT 50");
 			}
-			
+
 			while($html = fetch_row($htmlresults)){
 				$settings = fetch_settings("html",$html["htmlid"],$feed["pageid"]);
 				$feeds .= fill_feed($settings->html->$html["htmlid"]->feature_title->setting . " " . date('d/m/Y',$html["dateposted"]),substr($html["html"],0,100),$CFG->wwwroot.'/features/html/html.php?action=viewhtml&key='.$userkey.'&pageid='.$feed["pageid"].'&htmlid='.$html["htmlid"],$html["dateposted"]);
