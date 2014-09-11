@@ -182,6 +182,8 @@ if (isset($_GET["descending"]))
 }
 else $descending = $_SESSION['RF']['descending'];
 
+$return_relative_url = isset($_GET['relative_url']) && $_GET['relative_url'] == "1" ? true : false;
+
 // language
 if (!isset($_SESSION['RF']['language']) 
 	|| file_exists($_SESSION['RF']['language_file']) === FALSE 
@@ -233,6 +235,7 @@ $get_params = http_build_query(array(
     'popup'     => $popup,
     'crossdomain' => $crossdomain,
     'field_id'  => $field_id,
+    'relative_url' => $return_relative_url,
     'akey' 		=> (isset($_GET['akey']) && $_GET['akey'] != '' ? $_GET['akey'] : 'key'),
     'fldr'      => ''
 ));
@@ -395,7 +398,8 @@ $get_params = http_build_query(array(
 	<input type="hidden" id="popup" value="<?php echo $popup; ?>" />
 	<input type="hidden" id="crossdomain" value="<?php echo $crossdomain; ?>" />
 	<input type="hidden" id="view" value="<?php echo $view; ?>" />
-	<input type="hidden" id="cur_dir" value="<?php echo $cur_dir; ?>" />
+    <input type="hidden" id="subdir" value="<?php echo $subdir; ?>" />
+    <input type="hidden" id="cur_dir" value="<?php echo $cur_dir; ?>" />
 	<input type="hidden" id="cur_dir_thumb" value="<?php echo $thumbs_path.$subdir; ?>" />
 	<input type="hidden" id="insert_folder_name" value="<?php echo lang_Insert_Folder_Name; ?>" />
 	<input type="hidden" id="new_folder" value="<?php echo lang_New_Folder; ?>" />
@@ -408,6 +412,8 @@ $get_params = http_build_query(array(
 	<input type="hidden" id="base_url_true" value="<?php echo base_url(); ?>"/>
 	<input type="hidden" id="fldr_value" value="<?php echo $subdir; ?>"/>
 	<input type="hidden" id="sub_folder" value="<?php echo $rfm_subfolder; ?>"/>
+    <input type="hidden" id="return_relative_url" value="<?php echo $return_relative_url == true ? 1 : 0;?>"/>
+    <input type="hidden" id="lazy_loading_file_number_threshold" value="<?php echo $lazy_loading_file_number_threshold?>"/>
 	<input type="hidden" id="file_number_limit_js" value="<?php echo $file_number_limit_js; ?>" />
 	<input type="hidden" id="sort_by" value="<?php echo $sort_by; ?>" />
 	<input type="hidden" id="descending" value="<?php echo $descending?"true":"false"; ?>" />
@@ -463,6 +469,7 @@ $get_params = http_build_query(array(
 					<input type="hidden" name="view" value="<?php echo $view; ?>"/>
 					<input type="hidden" name="type" value="<?php echo $type_param; ?>"/>
 					<input type="hidden" name="field_id" value="<?php echo $field_id; ?>"/>
+                    <input type="hidden" name="relative_url" value="<?php echo $return_relative_url; ?>"/>
 					<input type="hidden" name="popup" value="<?php echo $popup; ?>"/>
 					<input type="hidden" name="lang" value="<?php echo $lang; ?>"/>
 					<input type="hidden" name="filter" value="<?php echo $filter; ?>"/>
@@ -822,12 +829,15 @@ $files=array_merge(array($prev_folder),array($current_folder),$sorted);
 				$mini_src = $src_thumb = $thumbs_path.$subdir. $file;
 				//add in thumbs folder if not exist
 				if(!file_exists($src_thumb)){
-				    try {
-					create_img($file_path, $src_thumb, 122, 91);
-					new_thumbnails_creation($current_path.$rfm_subfolder.$subdir,$file_path,$file,$current_path,$relative_image_creation,$relative_path_from_current_pos,$relative_image_creation_name_to_prepend,$relative_image_creation_name_to_append,$relative_image_creation_width,$relative_image_creation_height,$relative_image_creation_option,$fixed_image_creation,$fixed_path_from_filemanager,$fixed_image_creation_name_to_prepend,$fixed_image_creation_to_append,$fixed_image_creation_width,$fixed_image_creation_height,$fixed_image_creation_option);
-				    } catch (Exception $e) {
-					$src_thumb=$mini_src="";
-				    }
+			    try {
+			    	if(!create_img($file_path, $src_thumb, 122, 91)){
+							$src_thumb=$mini_src="";
+						}else{
+							new_thumbnails_creation($current_path.$rfm_subfolder.$subdir,$file_path,$file,$current_path,$relative_image_creation,$relative_path_from_current_pos,$relative_image_creation_name_to_prepend,$relative_image_creation_name_to_append,$relative_image_creation_width,$relative_image_creation_height,$relative_image_creation_option,$fixed_image_creation,$fixed_path_from_filemanager,$fixed_image_creation_name_to_prepend,$fixed_image_creation_to_append,$fixed_image_creation_width,$fixed_image_creation_height,$fixed_image_creation_option);
+						}
+			    } catch (Exception $e) {
+						$src_thumb=$mini_src="";
+			    }
 				}
 				$is_img=true;
 				//check if is smaller than thumb
@@ -842,7 +852,6 @@ $files=array_merge(array($prev_folder),array($current_folder),$sorted);
 				    $show_original_mini=true;
 				}
 			    }
-			    
 			    $is_icon_thumb=false;
 			    $is_icon_thumb_mini=false;
 			    $no_thumb=false;
@@ -997,12 +1006,10 @@ $files=array_merge(array($prev_folder),array($current_folder),$sorted);
 
     <?php if ($lazy_loading_enabled) { ?>
         <script src="js/jquery.lazyload.min.js" type="text/javascript"></script>
+        <script src="js/jquery.scrollstop.min.js" type="text/javascript"></script>
 
         <script>
-            $(function() {
-                $(".lazy-loaded").lazyload();
-            });
-
+            lazyLoad();
         </script>
     <?php } ?>
 </body>
