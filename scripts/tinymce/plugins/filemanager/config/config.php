@@ -1,6 +1,7 @@
 <?php
 session_start();
 mb_internal_encoding('UTF-8');
+date_default_timezone_set('Europe/Rome');
 //------------------------------------------------------------------------------
 // DON'T COPY THIS VARIABLES IN FOLDERS config.php FILES
 //------------------------------------------------------------------------------
@@ -70,7 +71,8 @@ $icon_theme 		= "ico"; //ico or ico_dark you can cusatomize just putting a folde
 $show_folder_size 	= TRUE; //Show or not show folder size in list view feature in filemanager (is possible, if there is a large folder, to greatly increase the calculations)
 $show_sorting_bar 	= TRUE; //Show or not show sorting feature in filemanager
 $transliteration 	= FALSE; //active or deactive the transliteration (mean convert all strange characters in A..Za..z0..9 characters)
-$convert_spaces  	= FALSE; //convert all spaces on files name and folders name with _
+$convert_spaces  	= FALSE; //convert all spaces on files name and folders name with $replace_with variable
+$replace_with  	    = "_"; //convert all spaces on files name and folders name this value
 
 // -1: There is no lazy loading at all, 0: Always lazy-load images, 0+: The minimum number of the files in a directory
 // when lazy loading should be turned on.
@@ -139,13 +141,22 @@ $edit_text_files 	= TRUE; // eg.: txt, log etc.
 $create_text_files 	= TRUE; // only create files with exts. defined in $editable_text_file_exts
 
 // you can preview these type of files if $preview_text_files is true
-$previewable_text_file_exts = array('txt', 'log', 'xml');
+$previewable_text_file_exts = array('txt', 'log', 'xml','html','css','htm','js');
+$previewable_text_file_exts_no_prettify = array('txt', 'log');
 
 // you can edit these type of files if $edit_text_files is true (only text based files)
 // you can create these type of files if $create_text_files is true (only text based files)
-// if you want you can add html,css etc.
+// if you want you can add html,css etc. 
 // but for security reasons it's NOT RECOMMENDED!
-$editable_text_file_exts = array('txt', 'log', 'xml');
+$editable_text_file_exts = array('txt', 'log', 'xml','html','css','htm','js');
+
+// Preview with Google Documents
+$googledoc_enabled = TRUE;
+$googledoc_file_exts = array('doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx');
+
+// Preview with Viewer.js
+$viewerjs_enabled = TRUE;
+$viewerjs_file_exts = array('pdf', 'odt', 'odp', 'ods');
 
 // defines size limit for paste in MB / operation
 // set 'FALSE' for no limit
@@ -164,7 +175,7 @@ $ext_video 	= array('mov', 'mpeg', 'm4v', 'mp4', 'avi', 'mpg','wma',"flv","webm"
 $ext_music 	= array('mp3', 'm4a', 'ac3', 'aiff', 'mid','ogg','wav'); //Audio
 $ext_misc 	= array('zip', 'rar','gz','tar','iso','dmg'); //Archives
 
-$ext = array_merge($ext_img, $ext_file, $ext_misc, $ext_video,$ext_music); //allowed extensions
+$ext = array_merge($ext_img, $ext_file, $ext_misc, $ext_video, $ext_music); //allowed extensions
 
 /******************
  * AVIARY config
