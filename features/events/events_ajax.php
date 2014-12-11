@@ -1551,9 +1551,9 @@ global $CFG, $MYVARS;
                   'link' => $CFG->wwwroot,
                   'message' => $info[1] . ' has registered to attend '.$event["name"].'!'
              ));
-            echo '<script type="text/javascript">window.location = "http://www.facebook.com"</script>'; 
+            echo '<script type="text/javascript">window.location = "//www.facebook.com"</script>'; 
         } catch(FacebookApiException $e) {
-            echo '<script type="text/javascript">javascript:window.close();</script>';  
+            echo '<script type="text/javascript">jwindow.close();</script>';  
         }  
     }
 }

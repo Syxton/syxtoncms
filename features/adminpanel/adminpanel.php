@@ -27,7 +27,7 @@ if(empty($_POST["aslib"])){
 //			<a href="#">Framework Checks</a>
 //			<div class="acitem panel">
 //			<p>This contains stuff</p>
-//			<p>There can be <a href="http://www.i-marco.nl/">links</a> too</p>
+//			<p>There can be <a href="//www.i-marco.nl/">links</a> too</p>
 //			<ul>
 //				<li>blerk</li>
 //				<li>wonk</li>

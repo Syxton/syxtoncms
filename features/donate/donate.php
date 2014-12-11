@@ -74,7 +74,7 @@ global $CFG;
         $req .= "&tx=$tx_token&at=$auth_token";
          
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, "https://$pp_hostname/cgi-bin/webscr");
+        curl_setopt($ch, CURLOPT_URL, "//$pp_hostname/cgi-bin/webscr");
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $req);
@@ -111,7 +111,7 @@ global $CFG;
                 <div style="width: 640px;text-align:center;margin:auto">
                 <h1>Thank You!</h1>
                     Your transaction has been completed, and a receipt for your donation has been emailed to you.
-                    <br />You may log into your account at <a href="https://www.paypal.com">www.paypal.com</a> to view details of this transaction.
+                    <br />You may log into your account at <a href="//www.paypal.com">www.paypal.com</a> to view details of this transaction.
                 </div>
                 ';  
             }

@@ -139,7 +139,7 @@ global $CFG;
         $answerkey = "&chdl=" . rawurlencode(get_poll_legend($pollid));
         $gridlines = $area == "middle" ? "&chg=10,0,0,0" : "&chg=0,10,0,0"; //every 20 percentage points
         $title = "&chtt=" . rawurlencode(get_db_field("question","polls","pollid=$pollid"));     
-        $chart = make_modal_links(array("title"=> "See Full Size","path"=>"http://chart.apis.google.com/chart?".$charttype.$chartsize.$chartcolors.$chartdata.$answerkey.$gridlines.$title.$showaxis.$barWandS.'&width='.($chartwidth+25).'&height='.($chartheight+25),"height"=>($chartheight+25),"gallery"=>$title,"width"=>($chartwidth+25),"image"=>"http://chart.apis.google.com/chart?".$charttype.$chartsize.$chartcolors.$chartdata.$answerkey.$gridlines.$title.$showaxis.$barWandS,"imagestyles"=>"width:100%"));
+        $chart = make_modal_links(array("title"=> "See Full Size","path"=>"//chart.apis.google.com/chart?".$charttype.$chartsize.$chartcolors.$chartdata.$answerkey.$gridlines.$title.$showaxis.$barWandS.'&width='.($chartwidth+25).'&height='.($chartheight+25),"height"=>($chartheight+25),"gallery"=>$title,"width"=>($chartwidth+25),"image"=>"http://chart.apis.google.com/chart?".$charttype.$chartsize.$chartcolors.$chartdata.$answerkey.$gridlines.$title.$showaxis.$barWandS,"imagestyles"=>"width:100%"));
         $chart .= '<table style="width:100%; text-align:center;"><tr><td>'.$total.' Total Votes</td></tr></table>';
     }else{ $chart = "<br />No responses yet.<br /><br />"; }
      

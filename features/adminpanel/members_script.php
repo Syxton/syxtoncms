@@ -118,7 +118,7 @@ global $CFG, $MYVARS, $USER, $smarty;
 
 	if($easteregg){
 		if($easteregg == "fail"){
-			echo '<iframe src="http://failblog.org/" style="width:100%;border:none;height:800px;" />';
+			echo '<iframe src="//failblog.org/" style="width:100%;border:none;height:800px;" />';
 		}
 	}else{
 		$and1 = $name || (!$name && !$cfield && !$csort) ? " AND " : "";

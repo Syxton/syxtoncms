@@ -33,7 +33,7 @@ $CFG->smtppass	= '';
 
 //Directory variables
 $CFG->directory = 'mywebsites/syxtoncms';
-$CFG->wwwroot   = 'http://'.$_SERVER['SERVER_NAME'];
+$CFG->wwwroot   = '//'.$_SERVER['SERVER_NAME'];
 $CFG->wwwroot   = $CFG->directory ? $CFG->wwwroot.'/'.$CFG->directory : $CFG->wwwroot;
 $CFG->docroot   = dirname(__FILE__);
 $CFG->dirroot   = $CFG->docroot;

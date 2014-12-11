@@ -123,7 +123,7 @@ global $CFG,$MYVARS,$USER;
     $prev = '<a href="javascript: ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'view_logfile\',\'&amp;year='.$prevyear.'&amp;month='.$prevmonth.'&amp;userid='.$userid.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'display\'); }},true);" onmouseup="this.blur()"><< View '.date("F Y",mktime(0,0,0,$prevmonth,1,$prevyear)).'</a>';
     
     echo '<table style="font-size:.75em;width:98%;margin-right:auto;margin-left:auto;"><tr><td style="text-align:left">'.$prev.'</td><td style="text-align:right">'.$next.'</td></tr></table>';
-    echo '<img style="width:98%" src="http://chart.apis.google.com/chart?chxl=0:'.$daylabels.'&chxp=0:'.$labelpos.'&chm=B,8EE5EE,0,0,0&chco=00868B&chxt=x,y&chs=1000x300&cht=lc&chd='.get_user_data($userid,$year,$month).'&chls=0.75,-1,-1&chxs=0,676767,8.5,-1,lt,676767|1,676767,8.5,-0.333,l,676767&chtt='.get_user_name($userid)."'s ".date("F Y",mktime(0,0,0,$month,1,$year)).'+Log" /><br /><br /><br /><div id="actions_div">'.get_user_usage($userid,$pagenum,$year,$month) . "</div>";
+    echo '<img style="width:98%" src="//chart.apis.google.com/chart?chxl=0:'.$daylabels.'&chxp=0:'.$labelpos.'&chm=B,8EE5EE,0,0,0&chco=00868B&chxt=x,y&chs=1000x300&cht=lc&chd='.get_user_data($userid,$year,$month).'&chls=0.75,-1,-1&chxs=0,676767,8.5,-1,lt,676767|1,676767,8.5,-0.333,l,676767&chtt='.get_user_name($userid)."'s ".date("F Y",mktime(0,0,0,$month,1,$year)).'+Log" /><br /><br /><br /><div id="actions_div">'.get_user_usage($userid,$pagenum,$year,$month) . "</div>";
 }
 
 function get_user_data($userid,$year,$month){

@@ -941,7 +941,7 @@ var ajaxChat = {
 	insertBBCode: function(bbCode) {
 		switch(bbCode) {			
 			case 'url':
-				var url = prompt(this.lang['urlDialog'], 'http://');
+				var url = prompt(this.lang['urlDialog'], '//');
 				if(url)
 					this.insert(url,''); //it will automatically convert to link, so no need for bbcode for urls
 				else

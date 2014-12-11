@@ -1,7 +1,7 @@
 function get_coordinates(ip, display){	
 	if((xmlHttp.readyState != 4 && xmlHttp.readyState != 0)){ return;}
 	// Build the URL to connect to
-  	var url = "http://api.hostip.info/get_html.php";
+  	var url = "//api.hostip.info/get_html.php";
   	var d = new Date();
 	var parameters = "ip="+ip+"&position=true" + "&currTime=" + d.toUTCString();
 	ajaxget(url,parameters,false,display);
@@ -24,6 +24,6 @@ function display_map(divname){
     if(city[0].indexOf("Unknown") != -1){
         alert('Location could not be found.');
     }else{
-        document.getElementById(divname).innerHTML = '<iframe style="height:100%;width:100%" src="http://maps.google.com/maps?f=q&source=s_q&z=16&pw=2&hl=en&geocode=&q='+city[0]+'"></iframe>';   
+        document.getElementById(divname).innerHTML = '<iframe style="height:100%;width:100%" src="//maps.google.com/maps?f=q&source=s_q&z=16&pw=2&hl=en&geocode=&q='+city[0]+'"></iframe>';   
     }  
 }

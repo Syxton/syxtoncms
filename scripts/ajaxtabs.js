@@ -39,7 +39,7 @@ ddajaxtabs.connect=function(pageurl, tabinstance){
 	}
 	else
 		return false
-	var ajaxfriendlyurl=pageurl.replace(/^http:\/\/[^\/]+\//i, "http://"+window.location.hostname+"/") 
+	var ajaxfriendlyurl=pageurl.replace(/^http:\/\/[^\/]+\//i, "//"+window.location.hostname+"/") 
 	page_request.onreadystatechange=function(){ddajaxtabs.loadpage(page_request, pageurl, tabinstance)}
 	if (ddajaxtabssettings.bustcachevar) //if bust caching of external page
 		bustcacheparameter=(ajaxfriendlyurl.indexOf("?")!=-1)? "&date="+new Date().getTime() : "?date="+new Date().getTime()
