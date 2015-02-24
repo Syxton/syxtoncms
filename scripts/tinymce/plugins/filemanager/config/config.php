@@ -1,7 +1,7 @@
 <?php
 session_start();
 mb_internal_encoding('UTF-8');
-date_default_timezone_set('Europe/Rome');
+date_default_timezone_set('America/Indianapolis');
 //------------------------------------------------------------------------------
 // DON'T COPY THIS VARIABLES IN FOLDERS config.php FILES
 //------------------------------------------------------------------------------
@@ -20,6 +20,7 @@ date_default_timezone_set('Europe/Rome');
 //    |   |   |   |- responsivefilemanager
 //    |   |   |   |   |- plugin.min.js
 $_SESSION["RF"]["subfolder"] = trim($_COOKIE['userid'],'/\\');
+$directory = "/" . trim($_COOKIE['directory'],'/\\');
 
 $base_url =
 	// Get HTTP/HTTPS
@@ -27,7 +28,7 @@ $base_url =
 	'://'.
 	// Get domain portion
 	$_SERVER['HTTP_HOST']; // DON'T TOUCH (base url (only domain) of site (without final /)).
-$upload_dir = '/userfiles/'; // path from base_url to base of upload folder (with start and final /)
+$upload_dir = $directory.'/userfiles/'; // path from base_url to base of upload folder (with start and final /)
 $current_path = '../../../../userfiles/'; // relative path from filemanager folder to upload folder (with final /)
 //thumbs folder can't put inside upload folder
 $thumbs_base_path = '../../../../userfiles/thumbs/'; // relative path from filemanager folder to thumbs folder (with final /)
@@ -180,16 +181,18 @@ $ext = array_merge($ext_img, $ext_file, $ext_misc, $ext_video,$ext_music); //all
 /******************
  * AVIARY config
 *******************/
-$aviary_active 	= TRUE;
-$aviary_secret	= "d042b0a6faca3901";
+$aviary_active  = TRUE;
+$aviary_apiKey  = "8dfa89008c36af6c";
+$aviary_secret  = "d042b0a6faca3901";
 // Add or modify the Aviary options below as needed - they will be json encoded when added to the configuration so arrays can be utilized as needed
 // For a list of options see: https://developers.aviary.com/docs/web/setup-guide#constructor-config
-$aviary_options = array(
-    'apiKey' => '8dfa89008c36af6c',
+$aviary_defaults_config = array(
+    'apiKey' => $aviary_apiKey,
     'apiVersion' => 3,
-    'language' => 'en'
+    'language' => 'en',
+    'theme' => 'light',
+    'tools' => 'all'
 );
-
 
 //The filter and sorter are managed through both javascript and php scripts because if you have a lot of
 //file in a folder the javascript script can't sort all or filter all, so the filemanager switch to php script.

@@ -107,7 +107,7 @@ global $CFG,$USER;
                 width: "'.$width.'",
                 removed_menuitems: "newdocument",
                 theme : "modern",
-                convert_urls: true,
+                convert_urls: false,
                 plugins: [
                     '.get_editor_plugins($type).'
                 ],
