@@ -9,7 +9,7 @@
 if(empty($_POST["aslib"])){
     if(!isset($CFG)){ include('../header.php'); } 
     if(!isset($EVENTSLIB)){ include_once($CFG->dirroot . '/features/events/eventslib.php'); }
-       
+
     callfunction();
     
     echo '
@@ -680,7 +680,9 @@ global $CFG,$MYVARS,$USER;
     $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
 	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='".$event['template_id']."'");
 	$formlist = ""; $form = "";
-	$returnme = '<div id="registration_div"><table class="registration"><tr><td>'.$template['intro'].'</td></tr></table>';
+	
+    $returnme = '<div id="registration_div">
+                    <table class="registration"><tr><td>'.$template['intro'].' </td></tr></table>';
 
 	if($template['folder'] != "none"){ //registration template refers to a file
 		include($CFG->dirroot . '/features/events/templates/' . $template['folder'] . '/template.php');
@@ -711,8 +713,7 @@ global $CFG,$MYVARS,$USER;
     						</select>
     					</td>
     				</tr>
-    				<tr><td></td><td class="field_input"><span id="payment_method_error" class="error_text"></span></td></tr>
-        				';
+    				<tr><td></td><td class="field_input"><span id="payment_method_error" class="error_text"></span></td></tr>';
 				}
 			}elseif($element['type'] == 'contact'){
 				$form .= '<tr><td class="field_title">' . $opt . $element['display'] . ': </td><td class="field_input" style="width:70%">' . create_form_element($element['type'],$element['elementid'],$element['optional'],$element['length'],false) . '<span class="hint">'.get_help("input_event_email:events").'<span class="hint-pointer">&nbsp;</span></span></td></tr>';
@@ -725,6 +726,9 @@ global $CFG,$MYVARS,$USER;
 		$form .= '<tr><td></td><td><input type="button" value="Submit" onclick="submit_registration(\''.$eventid.'\',\''.$formlist.'\');" /></td></tr></table>';
         $returnme .= create_validation_javascript($formlist,$eventid) . $form . '</div><script>prepareInputsForHints();</script>';
 	}
+    
+    $returnme .= '</div>'; //end registration div
+    
     $returnme .= '<script type="text/javascript">
         $(document).keydown(function(e) {
         var nodeName = e.target.nodeName.toLowerCase();

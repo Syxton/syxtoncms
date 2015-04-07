@@ -61,7 +61,7 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
     }
 	$error = "";
 	
-	if($regid = enter_registration($eventid,$reg, $MYVARS->GET["email"])){ //successful registration
+	if($regid = enter_registration($eventid, $reg, $MYVARS->GET["email"])){ //successful registration
         
         if($error != ""){ echo $error . "<br />"; }
         

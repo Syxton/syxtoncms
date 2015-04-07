@@ -35,13 +35,17 @@ if($show_again){ //This is not the first time through
 }
 
 //output required javascript
-echo '  <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'scripts/popupcalendar.js" ></script>
+echo '  <html>
+        <head>
+        <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'scripts/popupcalendar.js" ></script>
         <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'features/events/templates/camp_new/ajax.js"></script>
         <style>
          //.rowContainer label {
          //   line-height: 12px;
          //}
         </style>
+        </head>
+        <body>
 ';    
 
 
@@ -61,8 +65,8 @@ echo '<form name="form1" id="form1">
 //Get full event info
 $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
 echo '
-    <h2 align="center">Camp Wabashi Online Pre-Registration</h2>
-    <h3 align="center">'.$event["name"].'</h3>
+    <div style="font-size:15px;text-align:center;font-weight:bold">Camp Wabashi Online Pre-Registration</div>
+    <div style="font-size:13px;text-align:center;font-weight:bold">'.$event["name"].'</div>
     <p><a target="policy" href="'.$CFG->wwwroot.'/features/events/templates/camp_new/regpolicy.html">Registration Policy</a></p>';
 
 $min_age = get_db_field("setting","settings","type='events_template' AND extra='$eventid' AND setting_name='template_setting_min_age'");
@@ -249,38 +253,38 @@ if($autofill){
             <div class="rowContainer">
                 <label class="rowTitle" for="Parent_Phone4">Parent/Guardian Phone 4</label><input tabindex="17" type="text" maxlength="22" id="Parent_Phone4" name="Parent_Phone4" data-rule-phone="true" /><div class="tooltipContainer info">'.get_help("help_phone:events:templates/camp_new").'</div><br />
             </div>
-
-            <h3> 
-              <b><strong>CONSENT FOR MEDICAL TREATMENT OF A MINOR CHILD</strong></b><br />
-            </h3>
-            <h4> 
-            <p align="left"> 
-                I herewith authorize Camp Wabashi staff at the Wabash 
-                Valley Christian Youth Camp to request and consent in writing or 
-                otherwise as requested by Union Hospital, Inc. and/or any other 
-                medical facility to any and all examinations, medical treatment 
-                and/or procedures to or for the above named minor, either on or 
-                off the premises of medical facility, as deemed advisable or appropriate 
-                by any physician or surgeon licensed to practice medicine in the 
-                State of Indiana. I understand that verbal concent will be sought using
-                the phone numbers listed in this application.<br />
-                <br />
-                In consideration of the acceptance of the above named camper, I 
-                covenant and agree with Wabash Valley Christian Youth Camp, that 
-                I will at all times hereafter indemnify, and save harmless the said 
-                Wabash Valley Christian Youth Camp from all actions, proceedings, 
-                claims, demands, costs, damages and expenses which may be brought 
-                against, or claimed from Wabash Valley Christian Youth Camp, or 
-                which it may pay, sustain, or incur as a result of illness, accident, 
-                or misadventure to the above named camper during the period said 
-                camper is a participant in the Wabash Valley Christian Youth Camp.<br />
-                <br />
-                This authorization constitutes a Power of Attorney and waiver of 
-                liability appointing the above named adult or staff of Wabash Valley 
-                Christian Youth Camp as Attorney-In-Fact to sign said requests and 
-                as fully thought I, myself, did so. 
+            <span style="font-size:13px;font-weight:bold"> 
+              CONSENT FOR MEDICAL TREATMENT OF A MINOR CHILD
+            </span>
+            <br />
+            <div style="font-size:12px;"> 
+                <p align="left"> 
+                    I herewith authorize Camp Wabashi staff at the Wabash 
+                    Valley Christian Youth Camp to request and consent in writing or 
+                    otherwise as requested by Union Hospital, Inc. and/or any other 
+                    medical facility to any and all examinations, medical treatment 
+                    and/or procedures to or for the above named minor, either on or 
+                    off the premises of medical facility, as deemed advisable or appropriate 
+                    by any physician or surgeon licensed to practice medicine in the 
+                    State of Indiana. I understand that verbal concent will be sought using
+                    the phone numbers listed in this application.<br />
+                    <br />
+                    In consideration of the acceptance of the above named camper, I 
+                    covenant and agree with Wabash Valley Christian Youth Camp, that 
+                    I will at all times hereafter indemnify, and save harmless the said 
+                    Wabash Valley Christian Youth Camp from all actions, proceedings, 
+                    claims, demands, costs, damages and expenses which may be brought 
+                    against, or claimed from Wabash Valley Christian Youth Camp, or 
+                    which it may pay, sustain, or incur as a result of illness, accident, 
+                    or misadventure to the above named camper during the period said 
+                    camper is a participant in the Wabash Valley Christian Youth Camp.<br />
+                    <br />
+                    This authorization constitutes a Power of Attorney and waiver of 
+                    liability appointing the above named adult or staff of Wabash Valley 
+                    Christian Youth Camp as Attorney-In-Fact to sign said requests and 
+                    as fully thought I, myself, did so. 
               </p>
-            </h4>
+            </div>
            	<div class="rowContainer">
 				<label class="rowTitle" for="HealthMemberName">Member\'s Name *</label><input tabindex="18" type="text" id="HealthMemberName" name="HealthMemberName" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">'.get_help("help_membername:events:templates/camp_new").'</div><br />
 			</div>
@@ -411,14 +415,9 @@ if(!$show_again){
 }else{
 	echo '<table><tr><td></td><td><input type="hidden" name="payment_method" id="payment_method" value="'.$payment_method.'" /></td></tr><table>';
 } 
-    echo '<table>
-            <tr> 
-              <td colspan="2" align="center">
-                <input tabindex="32" name="print" value="Print Application" onclick="window.print()" type="button" '.$preview.'/>
-                &nbsp;<input tabindex="33" class="submit" name="submit" type="submit" value="Send Application" '.$preview.'/>
-                &nbsp;<input tabindex="34" name="reset" type="reset" '.$preview.'/> </td>
-            </tr>
-          </table>
+    echo '<input tabindex="32" name="print" value="Print Application" onclick="window.print()" type="button" '.$preview.'/>
+          &nbsp;<input tabindex="33" class="submit" name="submit" type="submit" value="Send Application" '.$preview.'/>
+          &nbsp;<input tabindex="34" name="reset" type="reset" '.$preview.'/>
         </fieldset>
     </div>
 </form>
