@@ -3,8 +3,8 @@
 * dblib.php - Database function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 1/17/2011
-* Revision: 1.7.4
+* Date: 4/7/2015
+* Revision: 1.7.5
 ***************************************************************************/
 
 if(!isset($LIBHEADER)){ include ('header.php'); }
@@ -167,7 +167,7 @@ function senderror($message){
     die($message);    
 }
 
-function log_entry($feature = null, $info = null, $description = null){
+function log_entry($feature = null, $info = null, $description = null, $debug = null){
 global $CFG, $USER, $PAGE;
 	$timeline = get_timestamp();
 	$ip = $_SERVER['REMOTE_ADDR'];
@@ -179,7 +179,7 @@ global $CFG, $USER, $PAGE;
 		$userid = $info;
 		$info = null;
 	}
-	$SQL = "INSERT INTO logfile (userid,ip,pageid,timeline,feature,info,description) VALUES($userid,'$ip',$pageid,$timeline,'".addslashes($feature)."','".addslashes($info)."','".addslashes($description)."')";
+	$SQL = "INSERT INTO logfile (userid,ip,pageid,timeline,feature,info,description,debug) VALUES($userid,'$ip',$pageid,$timeline,'".addslashes($feature)."','".addslashes($info)."','".addslashes($description)."','".addslashes($debug)."')";
 	execute_db_sql($SQL);
 }
 

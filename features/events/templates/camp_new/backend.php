@@ -220,7 +220,6 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
                     
                     echo "<br /><br /><strong>Thank you for registering for this event.</strong>";	                   
                 }
-				
 			}
 		}
         echo "</div>";

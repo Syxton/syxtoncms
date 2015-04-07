@@ -570,7 +570,8 @@ global $CFG, $why, $error;
     $nolimit = true;
     $why = "";
     $time = get_timestamp();
-    $regid = execute_db_sql("INSERT INTO events_registrations (eventid,date,email,code,verified) VALUES(" . $eventid . "," . $time . ",'$contactemail','" . md5($time . $contactemail) . "','0')");
+    $REGIDSQL = "INSERT INTO events_registrations (eventid,date,email,code,verified) VALUES(" . $eventid . "," . $time . ",'$contactemail','" . md5($time . $contactemail) . "','0')";
+    $regid = execute_db_sql($REGIDSQL);
     if($template['folder'] != "none"){ //custom file style
         if($regid){
             $formlist = explode(";", get_db_field("formlist", "events_templates", "folder='" . $template['folder'] . "'"));
@@ -583,17 +584,22 @@ global $CFG, $why, $error;
             if($entries = execute_db_sql($SQL) && $nolimit = hard_limits($regid, $event, $template)) {
                 if(!$nolimit = soft_limits($regid, $event, $template)){
                     $error = "Because this event has $why, you have been placed in the waiting line for this event.";
-                    execute_db_sql("UPDATE events_registrations SET queue=1 WHERE regid=" . $regid);
+                    execute_db_sql("UPDATE events_registrations SET queue='1' WHERE regid='$regid'");
                 }
                 return $regid; //Success
             }else {
                 if(!$nolimit){ $error = "We are sorry, because this event has $why, you are unable to register for this event.";}
-                else{ $error = "We are sorry, there has been an error while trying to register you with this event.  Please try again.";}
+                else{ $error = "We are sorry, there has been an error while trying to register for this event.  Please try again. ERROR CODE: 0001";}
                 execute_db_sql("DELETE FROM events_registrations WHERE regid='$regid'");
                 execute_db_sql("DELETE FROM events_registrations_values WHERE regid='$regid'");
+                log_entry("event", $event["name"], "Failed Registration", $error . ": " . $SQL);
                 return false;
             }
-        }else{  return false;}
+        }else{  
+            $error = "We are sorry, there has been an error while trying to register for this event.  Please try again. ERROR CODE: 0002";
+            log_entry("event", $event["name"], "Failed Registration", $error . ": " . $REGIDSQL);
+            return false;
+        }
     }else{ //db form style
         $sql_values = "";
         if($elements = get_db_result("SELECT * FROM events_templates_forms WHERE template_id='" . $event['template_id'] . "' ORDER BY sort")){
@@ -601,7 +607,7 @@ global $CFG, $why, $error;
 	            if($event["fee_full"] != 0 && $element["type"] == "payment") {
 	                $sql_values .= $sql_values == "" ? "('$eventid','$regid','" . $element['elementid'] . "','" . $event["fee_full"] . "','total_owed'),('$eventid','$regid','" . $element['elementid'] . "','0','paid'),('$eventid','$regid','" . $element['elementid'] . "','" . $reg["payment_method"] . "','payment_method')" : ",('$eventid','$regid','" . $element['elementid'] . "','" . $event["fee_full"] . "','total_owed'),('$eventid','$regid','" . $element['elementid'] . "','0','paid'),('$eventid','$regid','" . $element['elementid'] . "','" . $reg["payment_method"] . "','payment_method')";
 	            }elseif(isset($reg[$element['elementid']])){
-	                    $sql_values .= $sql_values == "" ? "('$eventid','$regid','" . $element['elementid'] . "','" . $reg[$element['elementid']] . "','" . $element['display'] . "')" : ",('$eventid','$regid','" . $element['elementid'] . "','" . dbescape($reg[$element['elementid']]) . "','" . $element['display'] . "')";
+                    $sql_values .= $sql_values == "" ? "('$eventid','$regid','" . $element['elementid'] . "','" . $reg[$element['elementid']] . "','" . $element['display'] . "')" : ",('$eventid','$regid','" . $element['elementid'] . "','" . dbescape($reg[$element['elementid']]) . "','" . $element['display'] . "')";
                 }
 	        }
         }
@@ -614,9 +620,10 @@ global $CFG, $why, $error;
             return $regid; //Success
         }else{
             if(!$nolimit){ $error = "We are sorry, because this event has $why, you are unable to register for this event.";
-            }else{ $error = "We are sorry, there has been an error while trying to register you with this event.  Please try again."; }
+            }else{ $error = "We are sorry, there has been an error while trying to register for this event.  Please try again. ERROR CODE: 0003"; }
             execute_db_sql("DELETE FROM events_registrations WHERE regid='$regid'");
             execute_db_sql("DELETE FROM events_registrations_values WHERE regid='$regid'");
+            log_entry("event", $event["name"], "Failed Registration", $error);
             return false;
         }
     }

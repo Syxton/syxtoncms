@@ -3,8 +3,8 @@
 * db.php - site db upgrades
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 8/19/2010
-* Revision: 0.0.2
+* Date: 4/7/2015
+* Revision: 0.0.3
 ***************************************************************************/
 
 function site_upgrade(){
@@ -75,6 +75,14 @@ global $CFG;
     $thisversion = 20140325; //Switch to tinyMCE and Responsive File Manager
 	if($version < $thisversion){
         $SQL = "DROP TABLE `kfm_directories`, `kfm_files`, `kfm_files_images`, `kfm_files_images_thumbs`, `kfm_parameters`, `kfm_plugin_extensions`, `kfm_session`, `kfm_session_vars`, `kfm_settings`, `kfm_tagged_files`, `kfm_tags`, `kfm_translations`, `kfm_users`, `tagged_files`, `tags`;";
+        if(execute_db_sql($SQL)){
+            execute_db_sql("UPDATE settings SET setting='$thisversion' WHERE type='site' AND setting_name='version'");    
+        }
+	}
+
+    $thisversion = 20150407; //Add debug field to site logs
+	if($version < $thisversion){
+        $SQL = "ALTER TABLE `logfile` ADD `debug` TEXT NULL DEFAULT NULL AFTER `description`;";
         if(execute_db_sql($SQL)){
             execute_db_sql("UPDATE settings SET setting='$thisversion' WHERE type='site' AND setting_name='version'");    
         }
