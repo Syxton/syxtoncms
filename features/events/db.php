@@ -65,6 +65,15 @@ global $CFG;
 			execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
 		}
 	}
+    
+    //Manually entered vs online registration field
+	$thisversion = 20150625;
+	if($version < $thisversion){
+		$SQL = "ALTER TABLE `events_registrations` ADD  `manual` INT( 1 ) NOT NULL DEFAULT  '0', ADD INDEX (  `manual` )";
+		if(execute_db_sql($SQL)){ //if successful upgrade
+			execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
+		}
+	}
 }
 
 function events_install(){

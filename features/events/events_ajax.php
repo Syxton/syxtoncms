@@ -3,8 +3,8 @@
 * events_ajax.php - Events backend ajax script
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 6/2/2014
-* Revision: 2.1.1
+* Date: 6/9/2015
+* Revision: 2.1.2
 ***************************************************************************/
 
 if(!isset($CFG)){ include('../header.php'); } 
@@ -588,7 +588,7 @@ global $CFG, $MYVARS, $USER;
 	$online_only = isset($MYVARS->GET["online_only"]) ? dbescape($MYVARS->GET["online_only"]) : false;
     $printarea = "";
     $returnme = '<link rel="stylesheet" type="text/css" href="'.$CFG->wwwroot.'/styles/print.css">';
-	$returnme .= '<a class="dontprint" href="javascript:document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/events/events_ajax.php\',\'show_registrations\',\'&amp;pageid='.$pageid.'&amp;eventid='.$eventid.'&amp;eventname='.urlencode($eventname).'&amp;template_id='.$template_id.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true);">Back to '.$eventname.' registrants.</a>';
+	$returnme .= '<a class="dontprint" href="javascript:document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/events/events_ajax.php\',\'show_registrations\',\'&amp;pageid='.$pageid.'&amp;eventid='.$eventid.'&amp;eventname='.urlencode($eventname).'&amp;template_id='.$template_id.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; init_event_menu();}},true);">Back to '.$eventname.' registrants.</a>';
 	$returnme .= '<form><span class="dontprint"><br /><br /></span><input class="dontprint" type="button" value="Print" onclick="window.print();return false;" />';
 	if($regid != "false"){ //Print form for 1 registration
 		$printarea .= printable_registration($regid,$eventid,$template_id);
@@ -607,7 +607,7 @@ global $CFG, $MYVARS, $USER;
 }
 
 function get_registration_sort_sql($eventid,$online_only=false){
-    if($online_only){ $online_only = "AND e.code != ''"; }
+    if($online_only){ $online_only = "AND e.manual = 0"; }
     $SQL = "SELECT e.*"; $orderby = "";
     
     $sort_info = get_db_row("SELECT e.eventid,b.orderbyfield,b.folder FROM events as e JOIN events_templates as b ON b.template_id=e.template_id WHERE eventid='$eventid'");
@@ -676,6 +676,15 @@ global $CFG, $MYVARS, $USER;
 	$template_id = dbescape($MYVARS->GET["template_id"]);
 	$regid = isset($MYVARS->GET["regid"]) ? dbescape($MYVARS->GET["regid"]) : false;
 
+    // Changing core registration values
+    $reg_eventid = dbescape($MYVARS->GET["reg_eventid"]);
+    if(!empty($reg_eventid) && get_db_result("SELECT * FROM events WHERE eventid='$reg_eventid'")){
+        $reg_email = dbescape($MYVARS->GET["reg_email"]);
+        $reg_code = dbescape($MYVARS->GET["reg_code"]);
+        execute_db_sql("UPDATE events_registrations SET eventid='$reg_eventid', email='$reg_email', code='$reg_code' WHERE regid='$regid'");
+        execute_db_sql("UPDATE events_registrations_values SET eventid='$reg_eventid' WHERE regid='$regid'");       
+    }
+    
 	$SQL = "SELECT * FROM events_registrations_values WHERE regid='$regid' ORDER BY entryid";
 	if($entries = get_db_result($SQL)){
 		$SQL2 = '';
@@ -710,6 +719,34 @@ global $CFG, $MYVARS, $USER;
     }else{ echo "Failed"; }
 }
 
+function resend_registration_email(){
+global $CFG, $MYVARS, $USER;
+	$regid = isset($MYVARS->GET["regid"]) ? dbescape($MYVARS->GET["regid"]) : false;
+    $eventid = isset($MYVARS->GET["eventid"]) ? dbescape($MYVARS->GET["eventid"]) : false;
+    $pageid = isset($MYVARS->GET["pageid"]) ? dbescape($MYVARS->GET["pageid"]) : false;
+
+    $link = '<a title="Return to Registration list" href="javascript: void(0)" onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/events/events_ajax.php\',\'show_registrations\',\'&amp;pageid='.$pageid.'&amp;eventid='.$eventid.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; init_event_menu();}},true);  return false;">
+                Back to Registration List
+             </a>';
+    if(!empty($regid) && !empty($eventid)){
+        $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
+        $touser = $fromuser = new stdClass();
+        $touser->email = get_db_field("email", "events_registrations", "regid=$regid");
+		$fromuser->fname = $CFG->sitename;
+		$fromuser->lname = "";
+		$fromuser->email = $event['email'];
+
+		$message = registration_email($regid, $touser);
+		if(send_email($touser, $fromuser, null, $event["name"] . " Registration", $message)){
+		  echo $link . '<br /><br /><div style="text-align:center">Registration Email sent</div>';  
+		} else {
+		  echo $link . '<br /><br /><div style="text-align:center">Email could not be sent: Registrant\'s email might not be set</div>';  
+		}   
+    } else {
+        echo $link . '<br /><br /><div style="text-align:center">Email could not be sent: Check for incorrect registration information</div>';
+    }
+}
+
 function get_registration_info(){
 global $CFG, $MYVARS, $USER;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
@@ -717,10 +754,25 @@ global $CFG, $MYVARS, $USER;
 	$template_id = dbescape($MYVARS->GET["template_id"]);
 	$regid = isset($MYVARS->GET["regid"]) ? dbescape($MYVARS->GET["regid"]) : false;
 	$eventname = dbescape($MYVARS->GET["eventname"]);
-	$returnme = '<div style="width:98%;border:1px solid gray;padding:5px;"><a href="javascript:document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/events/events_ajax.php\',\'show_registrations\',\'&amp;pageid='.$pageid.'&amp;eventid='.$eventid.'&amp;eventname='.urlencode($eventname).'&amp;template_id='.$template_id.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true);">Back to '.$eventname.' registrants.</a><br /><br />';
-	$returnme .= '<form name="reg_form" onsubmit="ajaxapi(\'/features/events/events_ajax.php\',\'save_reg_changes\',\'&amp;regid='.$regid.'&amp;pageid='.$pageid.'&amp;eventid='.$eventid.'&amp;template_id='.$template_id.'\' + create_request_string(\'reg_form\'),function() { if (xmlHttp.readyState == 4) { document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/events/events_ajax.php\',\'show_registrations\',\'&amp;pageid='.$pageid.'&amp;eventid='.$eventid.'&amp;eventname='.urlencode($eventname).'&amp;template_id='.$template_id.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); }},true); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true); return false;">
+	$returnme = '<div style="width:98%;border:1px solid gray;padding:5px;"><a href="javascript:document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/events/events_ajax.php\',\'show_registrations\',\'&amp;pageid='.$pageid.'&amp;eventid='.$eventid.'&amp;eventname='.urlencode($eventname).'&amp;template_id='.$template_id.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; init_event_menu(); }},true);">Back to '.$eventname.' registrants.</a><br /><br />';
+	$returnme .= '<form name="reg_form" onsubmit="ajaxapi(\'/features/events/events_ajax.php\',\'save_reg_changes\',\'&amp;regid='.$regid.'&amp;pageid='.$pageid.'&amp;eventid='.$eventid.'&amp;template_id='.$template_id.'\' + create_request_string(\'reg_form\'),function() { if (xmlHttp.readyState == 4) { document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/events/events_ajax.php\',\'show_registrations\',\'&amp;pageid='.$pageid.'&amp;eventid='.$eventid.'&amp;eventname='.urlencode($eventname).'&amp;template_id='.$template_id.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); }},true); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; init_event_menu(); }},true); return false;">
 	<input type="submit" value="Save Changes" />
 	<table>';
+    
+    // Get all events within 3 months that are registerable and has the same template
+    $event_begin_date = get_db_field("event_begin_date", "events", "eventid='$eventid'");
+    $events = get_db_result("SELECT * FROM events WHERE confirmed=1 AND template_id='$template_id' AND start_reg > 0 AND ((event_begin_date - $event_begin_date) < 7776000 && (event_begin_date - $event_begin_date) > -7776000)");
+    $returnme .= '<tr><td>Event </td><td>' .
+                    make_select("reg_eventid", $events, "eventid", "name", $eventid) .
+                 '</td></tr>';
+    $event_reg = get_db_row("SELECT * FROM events_registrations WHERE regid='$regid'");
+    $returnme .= '<tr><td>Email </td><td>' .
+                    '<input id="reg_email" name="reg_email" type="text" size="50" value="'.stripslashes($event_reg["email"]).'" />' .
+                 '</td></tr>';
+    $returnme .= '<tr><td>Pay Code </td><td>' .
+                    '<input id="reg_code" name="reg_code" type="text" size="50" value="'.stripslashes($event_reg["code"]).'" />' .
+                 '</td></tr>';
+                    
 	$SQL = "SELECT * FROM events_templates WHERE template_id='$template_id'";
 	$template = get_db_row($SQL);
     if($template["folder"] == "none"){
@@ -764,7 +816,7 @@ global $CFG, $MYVARS, $USER;
 	$reserved = 0;
 	while($reserved < $reserveamount){
 		$SQL = "";$SQL2 = "";
-		if($regid=execute_db_sql("INSERT INTO events_registrations (eventid,date) VALUES('$eventid','".get_timestamp()."')")){
+		if($regid=execute_db_sql("INSERT INTO events_registrations (eventid,date,code,manual) VALUES('$eventid','".get_timestamp()."','".uniqid("",true)."',1)")){
 			$SQL = "SELECT * FROM events_templates WHERE template_id='$template_id'";
 			$template = get_db_row($SQL);
 		    if($template["folder"] == "none"){
@@ -829,9 +881,45 @@ global $CFG, $MYVARS, $USER;
 			$i++;
 		}
 		
-		$returnme .= '<div style="vertical-align:top;">Edit Registration of '.make_select_from_array("registrants", $values, "regid", "name", false, "" , "",true) . '&nbsp;<a title="Edit Registration" href="javascript: if(document.getElementById(\'registrants\').value != \'\'){ document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/events/events_ajax.php\',\'get_registration_info\',\'&amp;pageid='.$pageid.'&amp;eventname='.urlencode($eventname).'&amp;eventid='.$eventid.'&amp;template_id='.$template_id.'&amp;regid=\'+document.getElementById(\'registrants\').value,function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true);}"><img src="'.$CFG->wwwroot.'/images/edit.png" /></a> <a title="Delete Registration" href="javascript: if(document.getElementById(\'registrants\').value != \'\' && confirm(\'Do you want to delete this registration?\')){ ajaxapi(\'/features/events/events_ajax.php\',\'delete_registration_info\',\'&amp;regid=\'+document.getElementById(\'registrants\').value,function(){ do_nothing(); }); document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/events/events_ajax.php\',\'show_registrations\',\'&amp;pageid='.$pageid.'&amp;eventname='.urlencode($eventname).'&amp;eventid='.$eventid.'&amp;template_id='.$template_id.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true);}"><img src="'.$CFG->wwwroot.'/images/delete.png" /></a></div><br />';
+		$returnme .= '<style>
+                        #event_menu {
+                            display: none;
+                            width: 180px;
+                            border: 1px solid grey;
+                            font-size: .8em;
+                            padding: 0px;
+                            list-style: none;
+                            background-color: whitesmoke;
+                            white-space: nowrap;
+                            position: absolute;
+                            top: 70px;
+                        }
+                        #event_menu li {
+                            padding: 5px;
+                        }
+                        #event_menu li:hover {
+                            background-color: silver;
+                        }
+                    </style>
+                    <div style="vertical-align:top;">
+                        <table>
+                            <tr>
+                                <td>
+                                    <span style="font-size:.8em">Edit Registration of </span>
+                                    '.make_select_from_array("registrants", $values, "regid", "name", false, "" , 'onchange="if($(this).val().length > 0){ $(\'#event_menu_button\').show(); } else { $(\'#event_menu_button\').hide(); }"', true, 1, "width: 200px;") . '</td>' .
+                        '       <td>
+                                    <a id="event_menu_button" title="Menu" style="display:none" href="javascript: void(0);"><img src="'.$CFG->wwwroot.'/images/down.gif" alt="Menu" /></a>
+                                    <ul id="event_menu">' . 
+                                        '<li><a title="Send Registration Email" href="javascript: void(0);" onclick="if(document.getElementById(\'registrants\').value != \'\'){ document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/events/events_ajax.php\',\'resend_registration_email\',\'&amp;pageid='.$pageid.'&amp;eventid='.$eventid.'&amp;regid=\'+document.getElementById(\'registrants\').value,function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true);}"><img src="'.$CFG->wwwroot.'/images/mail.gif" /> Send Registration Email</a></li>' .
+                                        '<li><a title="Edit Registration" href="javascript: void(0);" onclick="if(document.getElementById(\'registrants\').value != \'\'){ document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/events/events_ajax.php\',\'get_registration_info\',\'&amp;pageid='.$pageid.'&amp;eventname='.urlencode($eventname).'&amp;eventid='.$eventid.'&amp;template_id='.$template_id.'&amp;regid=\'+document.getElementById(\'registrants\').value,function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true);}"><img src="'.$CFG->wwwroot.'/images/edit.png" /> Edit Registration</a></li>' .
+                                        '<li><a title="Delete Registration" href="javascript: void(0);" onclick="if(document.getElementById(\'registrants\').value != \'\' && confirm(\'Do you want to delete this registration?\')){ ajaxapi(\'/features/events/events_ajax.php\',\'delete_registration_info\',\'&amp;regid=\'+document.getElementById(\'registrants\').value,function(){ do_nothing(); }); document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/events/events_ajax.php\',\'show_registrations\',\'&amp;pageid='.$pageid.'&amp;eventname='.urlencode($eventname).'&amp;eventid='.$eventid.'&amp;template_id='.$template_id.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; init_event_menu(); }},true);}"><img src="'.$CFG->wwwroot.'/images/delete.png" /> Delete Registration</a></li>' .
+                                    '</ul>' .
+                        '       </td>
+                            </tr>
+                        </table>
+                    </div><br />';
 	}
-	$returnme .= '<div> A reserved registration will show in the above list.<br /><span>Reserve <input type="text" size="2" maxlength="2" id="reserveamount" value="1" onchange="if(IsNumeric(this.value) && this.value > 0){}else{this.value=1;}" /> Spot(s): </span><a href="javascript:ajaxapi(\'/features/events/events_ajax.php\',\'add_blank_registration\',\'&amp;pageid='.$pageid.'&amp;reserveamount=\'+document.getElementById(\'reserveamount\').value+\'&amp;eventname='.urlencode($eventname).'&amp;eventid='.$eventid.'&amp;template_id='.$template_id.'\',function() { do_nothing(); }); document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/events/events_ajax.php\',\'show_registrations\',\'&amp;pageid='.$pageid.'&amp;eventname='.urlencode($eventname).'&amp;eventid='.$eventid.'&amp;template_id='.$template_id.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true);"><img title="Reserve Spot(s)" style="vertical-align:bottom;" onclick="blur()" src="'.$CFG->wwwroot.'/images/reserve.gif" /></a></div></div>';
+	$returnme .= '<div> A reserved registration will show in the above list.<br /><span>Reserve <input type="text" size="2" maxlength="2" id="reserveamount" value="1" onchange="if(IsNumeric(this.value) && this.value > 0){}else{this.value=1;}" /> Spot(s): </span><a href="javascript:ajaxapi(\'/features/events/events_ajax.php\',\'add_blank_registration\',\'&amp;pageid='.$pageid.'&amp;reserveamount=\'+document.getElementById(\'reserveamount\').value+\'&amp;eventname='.urlencode($eventname).'&amp;eventid='.$eventid.'&amp;template_id='.$template_id.'\',function() { do_nothing(); }); document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/events/events_ajax.php\',\'show_registrations\',\'&amp;pageid='.$pageid.'&amp;eventname='.urlencode($eventname).'&amp;eventid='.$eventid.'&amp;template_id='.$template_id.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; init_event_menu(); }},true);"><img title="Reserve Spot(s)" style="vertical-align:bottom;" onclick="blur()" src="'.$CFG->wwwroot.'/images/reserve.gif" /></a></div></div>';
 	echo $returnme;
 }
 
@@ -887,7 +975,7 @@ global $CFG, $MYVARS, $USER;
 				if(user_has_ability_in_page($USER->userid, "exportcsv", $event["pageid"])){ $export = '<a href="javascript: void(0)" onclick="ajaxapi(\'/features/events/events_ajax.php\',\'export_csv\',\'&amp;pageid=' . $event["pageid"] . '&amp;featureid=' . $event['eventid'] . '\',function() { run_this();});"><img src="' . $CFG->wwwroot . '/images/csv.png" title="Export ' . $regcount . '/' . $limit . ' Registrations" alt="Export ' . $regcount . ' Registrations" /></a>';}
            	}
             
-			$body .= '<tr style="height:30px;border:3px solid white;font-size:.9em;"><td style="width:40%;padding:5px;font-size:.85em;white-space:nowrap;"><a href="javascript: void(0)" onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/events/events_ajax.php\',\'show_registrations\',\'&amp;pageid='.$MYVARS->GET["pageid"].'&amp;eventid='.$event["eventid"].'&amp;eventname='.urlencode($event["name"]).'&amp;template_id='.$event["template_id"].'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true);" onmouseup="this.blur()">' . $event["name"] . '</a></td><td style="width:20%;padding:5px;font-size:.75em;">'.date("m/d/Y",$event["event_begin_date"]).' '.$export.'</td><td style="text-align:right;padding:5px;"><a href="mailto:'.$event["email"].'" />'.$event["contact"].'</a></td></tr>';
+			$body .= '<tr style="height:30px;border:3px solid white;font-size:.9em;"><td style="width:40%;padding:5px;font-size:.85em;white-space:nowrap;"><a href="javascript: void(0)" onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/events/events_ajax.php\',\'show_registrations\',\'&amp;pageid='.$MYVARS->GET["pageid"].'&amp;eventid='.$event["eventid"].'&amp;eventname='.urlencode($event["name"]).'&amp;template_id='.$event["template_id"].'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; init_event_menu();}},true);" onmouseup="this.blur()">' . $event["name"] . '</a></td><td style="width:20%;padding:5px;font-size:.75em;">'.date("m/d/Y",$event["event_begin_date"]).' '.$export.'</td><td style="text-align:right;padding:5px;"><a href="mailto:'.$event["email"].'" />'.$event["contact"].'</a></td></tr>';
         }
         $body .= "</table>";
     }else{
@@ -908,7 +996,11 @@ global $CFG, $MYVARS, $USER;
 			$registrant_name = get_registrant_name($registration["regid"]);
 			echo "<b>Event: " . $event["name"] . " - $registrant_name's Registration</b>";
 			$total_owed = get_db_field("value", "events_registrations_values", "regid=" . $registration["regid"] . " AND elementname='total_owed'");
+            if(empty($total_owed)){
+                $total_owed = $registration["date"] < $event["sale_end"] ? $event["sale_fee"] : $event["fee_full"];
+            }
 			$paid = get_db_field("value", "events_registrations_values", "regid=" . $registration["regid"] . " AND elementname='paid'");
+            $paid = empty($paid) ? "0.00" : $paid;
 			$remaining = $total_owed - $paid;
 			$registrant_name = get_registrant_name($registration["regid"]);
 			

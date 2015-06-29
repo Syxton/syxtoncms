@@ -637,7 +637,13 @@ global $CFG;
     $returnme = '	<p><font size="3"><strong>Thank you </strong></font>for registering ' . $touser->fname ." ". $touser->lname . ' for <font size="2"><strong>' . $event["name"] . '.</strong>&nbsp; </font></p>  <strong>Please keep this email for your records.  It contains a registration ID that can allow you to make payments on your registration.</strong>';
     if($event["fee_full"] != 0){
         $total_owed = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='total_owed'");
+        if(empty($total_owed)){
+            $total_owed = $reg["date"] < $event["sale_end"] ? $event["sale_fee"] : $event["fee_full"];
+        }
+        $total_owed = empty($total_owed) ? $event["fee_full"] : $total_owed;
+
         $paid = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='paid'");
+        $paid = empty($paid) ? 0 : $paid;
 		$remaining = $total_owed - $paid;
 
         $returnme .= '	<p><strong>Total Paid:</strong> $'.number_format($paid,2).'<br /><strong>Remaining Balance:</strong> $'.number_format($remaining,2).'<br /><br /><em>Note:This event requires payment in full to complete the registration process.  The above balances may not reflect recent changes.</em></p>';

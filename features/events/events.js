@@ -464,3 +464,13 @@ function add_new_location(eventid){
 function clear_display(divname){
 	if(document.getElementById(divname)){ document.getElementById(divname).innerHTML = ""; }
 }
+function init_event_menu(){
+    $('#event_menu_button').click( function(event){
+        event.stopPropagation();
+        $('#event_menu').toggle();
+    });
+
+    $(document).click( function(){
+        $('#event_menu').hide();
+    });
+}
