@@ -1,8 +1,15 @@
 <?php
-include 'config/config.php';
-if($_SESSION['RF']["verify"] != "RESPONSIVEfilemanager") die('forbiden');
+$config = include 'config/config.php';
+//TODO switch to array
+extract($config, EXTR_OVERWRITE);
+
 include 'include/utils.php';
 
+if ($_SESSION['RF']["verify"] != "RESPONSIVEfilemanager")
+{
+	response('forbiden', 403)->send();
+	exit;
+}
 
 if (isset($_POST['path']))
 {
@@ -18,7 +25,7 @@ else
 $path_pos  = strpos($storeFolder,$current_path);
 $thumb_pos = strpos($storeFolderThumb,$thumbs_base_path);
 
-if ($path_pos!==0 
+if ($path_pos!==0
 	|| $thumb_pos !==0
 	|| strpos($storeFolderThumb,'../',strlen($thumbs_base_path)) !== FALSE
 	|| strpos($storeFolderThumb,'./',strlen($thumbs_base_path)) !== FALSE
@@ -44,17 +51,17 @@ while ($cycle && $i < $max_cycles)
 }
 
 
-if ( ! empty($_FILES)) 
+if ( ! empty($_FILES))
 {
 	$info = pathinfo($_FILES['file']['name']);
 
 	if (in_array(fix_strtolower($info['extension']), $ext))
 	{
-		$tempFile = $_FILES['file']['tmp_name'];   
+		$tempFile = $_FILES['file']['tmp_name'];
 		$targetPath = $storeFolder;
 		$targetPathThumb = $storeFolderThumb;
 		$_FILES['file']['name'] = fix_filename($_FILES['file']['name'],$transliteration,$convert_spaces, $replace_with);
-	 	
+
 	 	// Gen. new file name if exists
 		if (file_exists($targetPath.$_FILES['file']['name']))
 		{
@@ -68,17 +75,17 @@ if ( ! empty($_FILES))
 			$_FILES['file']['name'] = $info['filename']."_".$i.".".$info['extension'];
 		}
 
-		$targetFile =  $targetPath. $_FILES['file']['name']; 
+		$targetFile =  $targetPath. $_FILES['file']['name'];
 		$targetFileThumb =  $targetPathThumb. $_FILES['file']['name'];
-		
+
 		// check if image (and supported)
 		if (in_array(fix_strtolower($info['extension']),$ext_img)) $is_img=TRUE;
 		else $is_img=FALSE;
-	
+
 		// upload
 		move_uploaded_file($tempFile,$targetFile);
 		chmod($targetFile, 0755);
-	
+
 		if ($is_img)
 		{
 			$memory_error = FALSE;
@@ -94,11 +101,11 @@ if ( ! empty($_FILES))
 					$memory_error = FALSE;
 				}
 				else
-				{			
+				{
 					$imginfo = getimagesize($targetFile);
 					$srcWidth = $imginfo[0];
 					$srcHeight = $imginfo[1];
-					
+
 					// resize images if set
 					if ($image_resizing)
 					{
@@ -124,27 +131,27 @@ if ( ! empty($_FILES))
 						$srcHeight = $image_resizing_height;
 						create_img($targetFile, $targetFile, $image_resizing_width, $image_resizing_height, $image_resizing_mode);
 					}
-			
+
 					//max resizing limit control
 					$resize = FALSE;
 					if ($image_max_width != 0 && $srcWidth > $image_max_width && $image_resizing_override === FALSE)
 					{
 						$resize = TRUE;
 						$srcWidth = $image_max_width;
-						
+
 						if ($image_max_height == 0) $srcHeight = $image_max_width*$srcHeight/$srcWidth;
 					}
 
 					if ($image_max_height != 0 && $srcHeight > $image_max_height && $image_resizing_override === FALSE){
 						$resize = TRUE;
 						$srcHeight = $image_max_height;
-						
+
 						if ($image_max_width == 0) $srcWidth = $image_max_height*$srcWidth/$srcHeight;
-					}		
-					
+					}
+
 					if ($resize) create_img($targetFile, $targetFile, $srcWidth, $srcHeight, $image_max_mode);
 				}
-			}	
+			}
 
 			// not enough memory
 			if ($memory_error)
@@ -154,6 +161,7 @@ if ( ! empty($_FILES))
 				exit();
 			}
 		}
+		echo $_FILES['file']['name'];
 	}
 	else // file ext. is not in the allowed list
 	{
@@ -180,5 +188,3 @@ if (isset($_POST['submit']))
 
 	header("location: dialog.php?" . $query);
 }
-
-?>
