@@ -409,25 +409,15 @@ global $CFG;
     $SQL = "SELECT e.* FROM events e WHERE (e.pageid=$pageid $siteviewable) AND e.event_begin_date < $totime AND e.event_begin_date > $time ORDER BY e.event_begin_date, e.event_begin_time";
     if($events = get_db_result($SQL)){
         while($event = fetch_row($events)){
-            if($event['event_begin_date'] == $event['event_end_date']){ //ONE DAY EVENT
-                $length = date("n/j/Y", $event['event_begin_date']);
-                if(!$event['allday']) {
-                    $length .= " from ";
-                    $start = convert_time($event['event_begin_time']);
-                    $finish = convert_time($event['event_end_time']);
-                    $length .= $start . " to " . $finish;
-                }
-            }else{ //Multiple Days
-                if($event['allday']){ // All day events
-                    $length = date("n/j/Y", $event['event_begin_date']) . " - " . date("n/j/Y", $event['event_end_date']);
-                }else{
-                    $length = date("n/j/Y", $event['event_begin_date']) . " - " . date("n/j/Y", $event['event_end_date']) . "<br />&nbsp;&nbsp;&nbsp; from ";
-                    $start = convert_time($event['event_begin_time']);
-                    $finish = convert_time($event['event_end_time']);
-                    $length .= $start . " to " . $finish;
-                }
-            }
-            $returnme .= '<table style="width:100%;background-color:#edfafa;border-bottom:1px gray inset; margin:1px;"><tr><td>' . $event['name'] . " <br />&nbsp;&nbsp;&nbsp;&nbsp;" . $length . "</td></tr></table>";
+            $length = get_event_length($event['event_begin_date'], $event['event_end_date'], $event['allday'], $event['event_begin_time'], $event['event_end_time']);
+            $returnme .= '<table style="width:100%;background-color:#edfafa;border-bottom:1px gray inset; margin:1px;">
+                            <tr>
+                                <td>
+                                    '.make_modal_links(array("title"=> stripslashes($event["name"]),"path"=>$CFG->wwwroot."/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","width"=>"700","height"=>"650")).'
+                                    <span style="display:block;color:gray; font-size:.75em;">' . $length . '</span>
+                                </td>
+                            </tr>
+                          </table>';
         }
     }
     $returnme = $returnme == "" ? false : '<b>Upcoming Events</b><br /><hr /><table style="width:100%;"><tr><td style="background-color:#edfafa; white-space:nowrap">' . $returnme . '</td></tr></table>';
