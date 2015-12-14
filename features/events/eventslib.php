@@ -476,7 +476,7 @@ global $CFG, $USER;
                                     <span style="display:block;color:gray; font-size:.75em;">' . $length . '</span>
                                 </td>
                                 <td style="text-align:right; padding:2px;white-space:nowrap;">';
-            if($event["start_reg"] != "" && user_has_ability_in_page($USER->userid, "exportcsv", $pageid, "events", $featureid)){ 
+            if(!empty($event["start_reg"]) && user_has_ability_in_page($USER->userid, "exportcsv", $pageid, "events", $featureid)){ 
                 $returnme .= '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/events/events_ajax.php\',\'export_csv\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '\',function() { run_this();});"><img src="' . $CFG->wwwroot . '/images/csv.png" title="Export Registrations" alt="Export Registrations" /></a>';
             }
             $returnme .= '</td></tr></table>';
