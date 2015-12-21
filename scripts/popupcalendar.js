@@ -12,9 +12,9 @@ var FontSize = 11; // In pixels
 var FontFamily = 'Tahoma';
 var CellWidth = 18;
 var CellHeight = 16;
-var ImageURL = WWW_ROOT+'/images/calendarIcon.jpg';
-var NextURL = WWW_ROOT+'/images/calendarNext.gif';
-var PrevURL = WWW_ROOT+'/images/calendarPrev.gif';
+var ImageURL = WWW_ROOT+(dirfromroot == '' ? '' : '/' + dirfromroot) +'/images/calendarIcon.jpg';
+var NextURL = WWW_ROOT+(dirfromroot == '' ? '' : '/' + dirfromroot) +'/images/calendarNext.gif';
+var PrevURL = WWW_ROOT+(dirfromroot == '' ? '' : '/' + dirfromroot) +'/images/calendarPrev.gif';
 var CalBGColor = 'white';
 var TopRowBGColor = 'buttonface';
 var DayBGColor = 'lightgrey';
