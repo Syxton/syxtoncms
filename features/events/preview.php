@@ -14,15 +14,7 @@ if(!isset($DBLIB)){ include_once($CFG->dirroot . '/lib/dblib.php'); }
 if(!isset($PAGELIB)){ include_once($CFG->dirroot . '/lib/pagelib.php'); }
 if(!isset($EVENTSLIB)){ include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 
-$postorget = isset($_GET["action"]) ? $_GET : $_POST;
-$postorget = isset($postorget["action"]) ? $postorget : "";
-
-$MYVARS->GET = $postorget;
-
-if($postorget != ""){
-	$action = $postorget["action"];
-	$action(); //Go to the function that was called.
-}
+callfunction();
 
 function preview_template(){
 global $CFG,$MYVARS;

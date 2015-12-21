@@ -53,7 +53,7 @@ function submit_registration(eventid,formlist){
     		i++;
     	}
     	// Build the URL to connect to
-      	var url = WWW_ROOT + dirfromroot + "/features/events/events_ajax.php";
+      	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
     	// Open a connection to the server\
     	ajaxpost(url,parameters);
     	// Setup a function for the server to run when it's done
@@ -71,7 +71,7 @@ function get_end_time(starttime){
     	var limit = document.getElementById("multiday").value == 1 ? "&limit=0" : "&limit=1";
     	var parameters = "action=get_end_time&starttime=" + starttime + endtime + limit + "&currTime=" + d.toUTCString();
     	// Build the URL to connect to
-      	var url = WWW_ROOT + dirfromroot + "/features/events/events_ajax.php";
+      	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
     	// Open a connection to the server\
     	ajaxpost(url,parameters);
     	simple_display("end_time_span");
@@ -81,7 +81,7 @@ function lookup_reg(code){
 	var d = new Date();
 	var parameters = "action=lookup_reg&code=" + code + "&currTime=" + d.toUTCString();
 	// Build the URL to connect to
-  	var url = WWW_ROOT + dirfromroot + "/features/events/events_ajax.php";
+  	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
 	// Open a connection to the server\
 	ajaxpost(url,parameters);
 	simple_display("payarea");
@@ -90,7 +90,7 @@ function get_limit_form(template_id){
 	var d = new Date();
 	var parameters = "action=get_limit_form&template_id=" + template_id + "&currTime=" + d.toUTCString();
 	// Build the URL to connect to
-  	var url = WWW_ROOT + dirfromroot + "/features/events/events_ajax.php";
+  	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
 	// Open a connection to the server\
 	ajaxpost(url,parameters);
 	simple_display("limit_form");
@@ -129,7 +129,7 @@ function add_custom_limit(){
     	var soft_limits = "&soft_limits=" + soft;
     	var parameters = "action=add_custom_limit" + hard_limits + soft_limits + template_id + "&currTime=" + d.toUTCString();
     	// Build the URL to connect to
-      	var url = WWW_ROOT + dirfromroot + "/features/events/events_ajax.php";
+      	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
     	ajaxpost(url,parameters);
     	simple_display("custom_limits");
     	document.getElementById("limit_form").innerHTML = "";
@@ -144,7 +144,7 @@ function delete_limit(limit_type,limit_num){
 	var d = new Date();
 	var parameters = "action=delete_limit" + hard_limits + soft_limits + template_id + limit_type + limit_num + "&currTime=" + d.toUTCString();
 	// Build the URL to connect to
-  	var url = WWW_ROOT + dirfromroot + "/features/events/events_ajax.php";
+  	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
 	// Open a connection to the server\
 	ajaxpost(url,parameters);
 	simple_display("custom_limits");
@@ -154,7 +154,7 @@ function add_location_form(formtype,eventid){
     	var d = new Date();
     	var parameters = "action=add_location_form&formtype=" + formtype + "&eventid=" + eventid + "&currTime=" + d.toUTCString();
     	// Build the URL to connect to
-      	var url = WWW_ROOT + dirfromroot + "/features/events/events_ajax.php";
+      	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
     	// Open a connection to the server\
     	ajaxpost(url,parameters);
     	simple_display("location_menu");
@@ -166,7 +166,7 @@ function copy_location(location,eventid){
     	var d = new Date();
     	var parameters = "action=copy_location&location=" + location + "&eventid=" + eventid + "&currTime=" + d.toUTCString();
     	// Build the URL to connect to
-      	var url = WWW_ROOT + dirfromroot + "/features/events/events_ajax.php";
+      	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
     	// Open a connection to the server\
     	ajaxpost(url,parameters);
     	simple_display("select_location");
@@ -185,7 +185,7 @@ function get_location_details(location){
     	var d = new Date();
     	var parameters = "action=get_location_details&location=" + location + "&currTime=" + d.toUTCString();
     	// Build the URL to connect to
-      	var url = WWW_ROOT + dirfromroot + "/features/events/events_ajax.php";
+      	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
     	// Open a connection to the server\
     	ajaxpost(url,parameters);
     	simple_display("location_details_div");
@@ -200,7 +200,7 @@ function valid_new_location(){
   		valid = false;
   	}else{ 
 		// Build the URL to connect to
-	  	var url = WWW_ROOT + dirfromroot + "/features/events/events_ajax.php?action=unique_relay&table=events_locations&key=location&value="+document.getElementById("location_name").value;
+	  	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php?action=unique_relay&table=events_locations&key=location&value="+document.getElementById("location_name").value;
 		// Open a connection to the server\
 	    var d = new Date();
 	  	xmlHttp.open("GET", url + "&currTime=" + d.toUTCString(), false);
@@ -402,6 +402,7 @@ function new_event_submit(pageid){
     	var category = "&category=" + document.getElementById("category").value; //Event category (birthday, aniversary..)
     	var multiday = "&multiday=" + document.getElementById("multiday").value; //If the event is more than 1 day
     	var allday = "&allday=" + document.getElementById("allday").value; //all day event?
+        var workers = "&workers=" + document.getElementById("workers").value; //all day event?
     	var event_begin_date = "&event_begin_date=" + event_begin_date_Object.picked.date; //when event begins
     	var event_end_date = document.getElementById("multiday").value == "1" ? "&event_end_date=" + event_end_date_Object.picked.date : ""; //when event ends
     	var begin_time = document.getElementById("allday").value == "1" ? "" : "&begin_time=" + document.getElementById("begin_time").value; //If not an all day event, when does it begin
@@ -423,9 +424,9 @@ function new_event_submit(pageid){
         var template_settings = create_request_string('template_settings_form');
         var start_reg = document.getElementById("reg").value == "1" ? "&start_reg=" + start_reg_Object.picked.date : ""; //Registration open date
     	var stop_reg = document.getElementById("reg").value == "1" ? "&stop_reg=" + stop_reg_Object.picked.date : ""; //Registration ending date
-    	var parameters = "action=submit_new_event&pageid="+ pageid + email + contact + phone + fee + min_fee + full_fee + sale_fee + sale_end + hard_limits + soft_limits + checksaddress + payableto + paypal + eventid + event_name + category + extrainfo + siteviewable + location + multiday + template + event_begin_date + event_end_date + allday + begin_time + end_time + reg + allowinpage + max + start_reg + stop_reg + template_settings + "&currTime=" + d.toUTCString();
+    	var parameters = "action=submit_new_event&pageid=" + pageid + workers + email + contact + phone + fee + min_fee + full_fee + sale_fee + sale_end + hard_limits + soft_limits + checksaddress + payableto + paypal + eventid + event_name + category + extrainfo + siteviewable + location + multiday + template + event_begin_date + event_end_date + allday + begin_time + end_time + reg + allowinpage + max + start_reg + stop_reg + template_settings + "&currTime=" + d.toUTCString();
         // Build the URL to connect to
-      	var url = WWW_ROOT + dirfromroot + "/features/events/events_ajax.php";
+      	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
     	// Open a connection to the server\
     	ajaxpost(url,parameters);
     	// Setup a function for the server to run when it's done
@@ -447,7 +448,7 @@ function add_new_location(eventid){
     	var phone = document.getElementById("location_phone_1").value != "" ? "&phone=" + document.getElementById("location_phone_1").value + "-" + document.getElementById("location_phone_2").value + "-" + document.getElementById("location_phone_3").value : "";
     	var parameters = "action=add_new_location" + name + add1 + add2 + zip + share + phone + eventid + "&currTime=" + d.toUTCString();
     	// Build the URL to connect to
-      	var url = WWW_ROOT + dirfromroot + "/features/events/events_ajax.php";
+      	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
     	// Open a connection to the server\
     	ajaxpost(url,parameters);
     	simple_display("select_location");

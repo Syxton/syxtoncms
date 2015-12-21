@@ -29,13 +29,26 @@ global $CFG, $USER, $ROLES, $ABILITIES;
     //Roles & Abilities Manager
 	$content .= !empty($abilities->edit_roles->allow) || !empty($abilities->assign_roles->allow) || !empty($abilities->edit_user_abilities->allow) ? make_modal_links(array("title"=>"Roles & Abilites Manager","text"=>"Roles & Abilites Manager","path"=>$CFG->wwwroot."/pages/roles.php?action=manager&amp;pageid=$pageid","width"=>"700","height"=>"600","iframe"=>"true","image"=>$CFG->wwwroot."/images/key.png","styles"=>"padding:1px;display:block;")) : "";
 
-    //Course Event Manager
-    $content .= user_has_ability_in_page($USER->userid,"addevents",$pageid) ? make_modal_links(array("title"=>"Event Registrations","text"=>"Event Registrations","path"=>$CFG->wwwroot."/features/events/events.php?action=event_manager&amp;pageid=$pageid","iframe"=>"true","width"=>"640","height"=>"600","iframe"=>"true","image"=>$CFG->wwwroot."/images/manage.png","styles"=>"padding:1px;display:block;")) : "";
-
     //Site Admin Area
     if(is_siteadmin($USER->userid)){
         $content .= user_has_ability_in_page($USER->userid,"addevents",$pageid) ? make_modal_links(array("title"=>"Admin Area","text"=>"Admin Area","path"=>$CFG->wwwroot."/features/adminpanel/adminpanel.php?action=site_administration&amp;pageid=$pageid","iframe"=>"true","width"=>"95%","height"=>"95%","iframe"=>"true","image"=>$CFG->wwwroot."/images/admin.gif","styles"=>"padding:1px;display:block;")) : "";
     }
+
+	$directory = $CFG->dirroot . "/features";
+	if($handle = opendir($directory)){
+	    /* This is the correct way to loop over the directory. */
+	    while(false !== ($dir = readdir($handle))){
+	        if(!strstr($dir,".") && is_dir($directory . "/" . $dir)){
+			    include_once($directory . "/" . $dir . '/' . $dir . "lib.php");
+				$action = $dir . "_adminpanel";
+				if(function_exists("$action")){
+                    $content .= $action($pageid);   
+                }		
+	        }
+	    }
+	    //close the directory handler
+		closedir($handle);
+	}
 
     //$panelid = get_db_field("id","pages_features","feature='adminpanel' and pageid='$pageid'");
 	$buttons = get_button_layout("adminpanel",$featureid,$pageid);

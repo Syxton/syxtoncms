@@ -48,6 +48,26 @@ global $CFG,$MYVARS,$USER;
 	<span id="searchcontainer" style="padding:5px; display:block; width:99%;"></span>';
 }
 
+function template_manager(){
+global $CFG,$MYVARS,$USER;
+	
+    echo '<div class="dontprint"><form onsubmit="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';ajaxapi(\'/features/events/events_ajax.php\',\'templatesearch\',\'&amp;pageid='.$MYVARS->GET["pageid"].'&amp;searchwords=\'+escape(document.getElementById(\'searchbox\').value),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true); return false;">
+	Template Search <input type="text" id="searchbox" name="searchbox" />&nbsp;<input type="submit" value="Search" />&nbsp;&nbsp;Search for templates by their name.
+	<br /></form></div>
+	<div id="loading_overlay" class="dontprint" style="text-align:center;position:absolute;width:98%;height:85%;background-color:white;opacity:.6;visibility:hidden;"><br /><br /><br /><img src="' . $CFG->wwwroot . '/images/loading_large.gif" /></div>
+	<span id="searchcontainer" style="padding:5px; display:block; width:99%;"></span>';
+}
+
+function application_manager(){
+global $CFG,$MYVARS,$USER;
+	
+    echo '<div class="dontprint"><form onsubmit="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';ajaxapi(\'/features/events/events_ajax.php\',\'appsearch\',\'&amp;pageid='.$MYVARS->GET["pageid"].'&amp;searchwords=\'+escape(document.getElementById(\'searchbox\').value),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true); return false;">
+	Applicant Search <input type="text" id="searchbox" name="searchbox" />&nbsp;<input type="submit" value="Search" />&nbsp;&nbsp;Search for applicants by their name.
+	<br /></form></div>
+	<div id="loading_overlay" class="dontprint" style="text-align:center;position:absolute;width:98%;height:85%;background-color:white;opacity:.6;visibility:hidden;"><br /><br /><br /><img src="' . $CFG->wwwroot . '/images/loading_large.gif" /></div>
+	<span id="searchcontainer" style="padding:5px; display:block; width:99%;"></span>';
+}
+
 function pay(){
 global $CFG,$MYVARS,$USER;	
     $regcode = isset($MYVARS->GET["regcode"]) ? $MYVARS->GET["regcode"] : "";
@@ -204,6 +224,8 @@ global $CFG,$MYVARS,$USER;
 		$allowinpage_no = $allowinpage_yes == "" ? "selected" : "";
 		$multiday_yes = $row['event_begin_date'] != $row['event_end_date'] ? "selected" : "";
 		$multiday_no = $multiday_yes == "" ? "selected" : "";
+		$workers_yes = !empty($row['workers']) ? "selected" : "";
+		$workers_no = $workers_yes == "" ? "selected" : "";
 		$allday_yes = $row['allday'] == "1" ? "selected" : "";
 		$allday_no = $allday_yes == "" ? "selected" : "";
 		$reg_yes = $row['start_reg'] ? "selected" : "";
@@ -225,448 +247,495 @@ global $CFG,$MYVARS,$USER;
 		$start_reg = $stop_reg = $sale_end = $event_begin_date = $event_end_date = 'true';
 		$end_date_display = $limits_display = $times_display = $reg_display = $fee_display = 'none';
 		$max_users = $cost = '0';
-		$checksaddress = $paypal = $payableto = $name = $contact = $email = $extrainfo = $siteviewable_yes = $multiday_yes = $allday_no = $reg_yes = $fee_yes = $allowinpage_yes = $limits_yes = $event_end_time_form = $fee_min = $fee_full = $sale_fee = $template_settings = "";
+		$checksaddress = $paypal = $payableto = $name = $contact = $email = $extrainfo = $siteviewable_yes = $workers_yes = $multiday_yes = $allday_no = $reg_yes = $fee_yes = $allowinpage_yes = $limits_yes = $event_end_time_form = $fee_min = $fee_full = $sale_fee = $template_settings = "";
 		$event_begin_time_form = get_possible_times('begin_time');
 		$mycategories = get_my_category();	
 		$mylocations = get_my_locations($USER->userid);
-		$siteviewable_no = $multiday_no = $allday_yes = $reg_no = $fee_no = $allowinpage_no = $limits_no = "selected";
+		$siteviewable_no = $workers_no = $multiday_no = $allday_yes = $reg_no = $fee_no = $allowinpage_no = $limits_no = "selected";
         $auto_allowinpage_display = "none";
 	}
 	echo '
 	<script type="text/javascript" src="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'scripts/popupcalendar.js"></script>
     <div id="add_event_div">
-    <form>
-    <table style="width:100%">
-    	<tr>
-    		<td class="field_title" style="width:115px;">
-    			Event Name:
-    		</td>
-    		<td class="field_input">
-    			<input type="text" id="event_name" size="30" value="'. stripslashes($name) .'"/>
-    			<span class="hint">'.get_help("input_event_name:events").'<span class="hint-pointer">&nbsp;</span></span>
-    		</td>
-    	</tr><tr><td></td><td class="field_input"><span id="event_name_error" class="error_text"></span></td></tr>
-    </table>
-    <table style="width:100%">
-    	<tr>
-    		<td class="field_title" style="width:115px;">
-    			Category:
-    		</td>
-    		<td class="field_input">
-    			<span id="select_category">'.$mycategories.'<span class="hint">'.get_help("input_event_category:events").'<span class="hint-pointer">&nbsp;</span></span></span>
-    		</td>
-    	</tr><tr><td></td><td class="field_input"><span id="category_error" class="error_text"></span></td></tr>
-    </table>
-    <table style="width:100%">
-    	<tr>
-    		<td class="field_title" style="width:115px; vertical-align:top">
-    			Description:
-    		</td>
-    		<td class="field_input">
-    			<textarea id="extrainfo" cols="40" rows="5">'. stripslashes($extrainfo) .'</textarea>
-    			<span class="hint">'.get_help("input_extrainfo:events").'<span class="hint-pointer">&nbsp;</span></span>
-    		</td>
-    	</tr><tr><td></td><td class="field_input"><span id="event_name_error" class="error_text"></span></td></tr>
-    </table>
-    '.$admin_contacts.'
-    <table style="width:100%">
-    	<tr>
-    		<td class="field_title" style="width:115px;">
-    			Contact Name:
-    		</td>
-    		<td class="field_input">
-    			<input type="text" id="contact" size="30" value="'. stripslashes($contact) .'"/>
-    			<span class="hint">'.get_help("input_contact:events").'<span class="hint-pointer">&nbsp;</span></span>
-    		</td>
-    	</tr><tr><td></td><td class="field_input"><span id="contact_error" class="error_text"></span></td></tr>
-    </table>
-    <table style="width:100%">
-    	<tr>
-    		<td class="field_title" style="width:115px;">
-    			Contact Email:
-    		</td>
-    		<td class="field_input">
-    			<input type="text" id="email" size="30" value="'. stripslashes($email) .'"/>
-    			<span class="hint">'.get_help("input_event_email:events").'<span class="hint-pointer">&nbsp;</span></span>
-    		</td>
-    	</tr><tr><td></td><td class="field_input"><span id="email_error" class="error_text"></span></td></tr>
-    </table>
-    <table style="width:100%">
-    	<tr>
-    		<td class="field_title" style="width:115px;">
-    			Contact Phone:
-    		</td>
-    		<td class="field_input">
-    			<input id="phone_1" type="text" onkeyup="javascript:movetonextbox(event);" size="1" maxlength="3" value="'.$phone[0].'" />-<input id="phone_2" type="text" onkeyup="javascript:movetonextbox(event);" maxlength="3" size="1" value="'.$phone[1].'" />-<input id="phone_3" type="text" maxlength="4" size="2" value="'.$phone[2].'" />
-    		</td>
-    	</tr><tr><td></td><td class="field_input"><span id="phone_error" class="error_text"></span></td></tr>
-    </table>
-    <table style="width:100%; display:'.$global_display.'">
-    	<tr>
-    		<td class="field_title" style="width:115px;">
-    			Request Site Event:
-    		</td>
-    		<td class="field_input">
-    			<select id="siteviewable" onchange="if(this.value==0){ hide_section(\'auto_allowinpage\'); document.getElementById(\'allowinpage\').value=0; }else{ show_section(\'auto_allowinpage\'); }" ><option value="0" '.$siteviewable_no.'>No</option><option value="1" '.$siteviewable_yes.'>Yes</option></select>
-    			<span class="hint">'.get_help("input_event_siteviewable:events").'<span class="hint-pointer">&nbsp;</span></span>
-    		</td>
-    	</tr><tr><td></td><td class="field_input"><span id="event_name_error" class="error_text"></span></td></tr>
-    </table>
-    <br /><br />
-    <table style="width:100%; border-color:buttonface; border-style:dotted; padding: 10px 0px 10px 0px;">
-    	<tr>
-    		<td class="field_title" style="width:115px;">
-    			Location:
-    		</td>
-    		<td class="field_input">
-    			<span id="select_location">'.$mylocations.'<span class="hint">'.get_help("input_event_location:events").'<span class="hint-pointer">&nbsp;</span></span></span>
-    			<span id="addtolist" style="display:inline"><a href="javascript:hide_show_buttons(\'addtolist\');hide_show_buttons(\'hide_menu\');hide_show_buttons(\'add_location_div\');"> Add to list</a></span>
-    			<span id="hide_menu" style="display:none"><a href="javascript:hide_show_buttons(\'hide_menu\');hide_show_buttons(\'addtolist\');hide_show_buttons(\'add_location_div\');"> Hide Menu</a></span>
-    		</td>
-    	</tr><tr><td></td><td class="field_input"><span id="location_error" class="error_text"></span></td></tr>
-    </table>
-    <table>
-    	<tr><td colspan="2">
-    	<span id="add_location_div" style="display:none">
-    		<table>
-    			<tr>
-    				<td style="width:115px;"></td>
-    				<td class="field_input" style="width:400px; background-color:buttonface; text-align:center">
-    					<span id="new_button" style="display:inline"><a href="javascript:hide_show_buttons(\'browse_button\');hide_show_buttons(\'or\');hide_show_buttons(\'location_menu\');add_location_form(\'new\',\''.$eventid.'\');"><img src="'.$CFG->wwwroot.'/images/add.png" title="Add Location" alt="Add Location"> New Location</a></span>
-    					<span id="or" style="display:inline">&nbsp; or &nbsp;</span> 
-    					<span id="browse_button" style="display:inline"><a href="javascript:hide_show_buttons(\'new_button\');hide_show_buttons(\'or\');hide_show_buttons(\'location_menu\');add_location_form(\'existing\',\''.$eventid.'\');"><img src="'.$CFG->wwwroot.'/images/folder.png" title="Add Location" alt="Add Location"> Browse Locations</a></span>
-    				</td>
-    			</tr>
-    			<tr>
-    				<td></td>
-    				<td>
-    					<span id="location_menu" style="display:none">
-    					</span>
-    				</td>
-    			</tr>
-    		</table>
-    	</span>
-    	</td></tr>
-    	<td></td><td>
-    		<span id="location_status" style="display:inline">
-    		</span>
-    	</td></tr>
-    </table>
-    <br />
-    <table style="width:100%; border-color:buttonface; border-style:dotted; padding: 10px 0px 10px 0px;">
-    <tr><td>
-    	<table style="width:100%">
-    		<tr>
-    			<td class="field_title" style="width:115px;">
-    				Multi-day Event:
-    			</td>
-    			<td class="field_input">
-    				<select id="multiday" onchange="hide_show_buttons(\'event_end_date_div\'); if(document.getElementById(\'begin_time\').value != \'\'){ get_end_time(document.getElementById(\'begin_time\').value) }" ><option value="0" '.$multiday_no.'>No</option><option value="1" '.$multiday_yes.'>Yes</option></select>
-    				<span class="hint">'.get_help("input_event_multiday:events").'<span class="hint-pointer">&nbsp;</span></span>
-    			</td>
-    		</tr><tr><td></td><td class="field_input"><span id="allowinpage_error" class="error_text"></span></td></tr>
-    	</table>
-    	<table style="width:100%">
-    		<tr><td colspan="2">
-    				<table style="margin:0px 0px 0px 50px;">
-    				<tr>
-    					<td class="field_title"  style="width:115px; background-color:buttonface;">
-    						Event Start Date:
-    					</td>
-    					<td class="field_input">
-    						<script>DateInput(\'event_begin_date\', '.$event_begin_date.')</script>
-    					</td>
-    				</tr>
-    				</tr><tr><td></td><td class="field_input"><span id="event_begin_date_error" class="error_text"></span></td></tr>
-    				</table>
-    				<span id="event_end_date_div" style="display:'.$end_date_display.'">
-    					<table style="margin:0px 0px 0px 50px;">
-    					<tr>
-    						<td class="field_title" style="width:115px; background-color:buttonface;">
-    							Event Stop Date:
-    						</td>
-    						<td class="field_input">
-    							<script>DateInput(\'event_end_date\', '.$event_end_date.')</script>
-    						</td>
-    					</tr>
-    					</tr><tr><td></td><td class="field_input"><span id="event_end_date_error" class="error_text"></span></td></tr>
-    					</table>
-    				</span>	
-    		</td></tr>
-    	</table>
-    </td></tr>
-    </table>
-    <br />
-    <table style="width:100%; border-color:buttonface; border-style:dotted; padding: 10px 0px 10px 0px;">
-    <tr><td>
-    	<table style="width:100%">
-    		<tr>
-    			<td class="field_title" style="width:115px;">
-    				All Day Event:
-    			</td>
-    			<td class="field_input">
-    				<select id="allday" onchange="hide_show_buttons(\'event_times_div\');" /><option value="1" '.$allday_yes.'>Yes</option><option value="0" '.$allday_no.'>No</option></select>
-    				<span class="hint">'.get_help("input_event_allday:events").'<span class="hint-pointer">&nbsp;</span></span>
-    			</td>
-    		</tr><tr><td></td><td class="field_input"><span id="allowinpage_error" class="error_text"></span></td></tr>
-    	</table>
-    	<table style="width:100%">
-    	<tr><td colspan="2">
-    			<span id="event_times_div" style="display:'.$times_display.'">
-    				<table style="margin:0px 0px 0px 50px;">
-    				<tr>
-    					<td class="field_title" style="width:115px; background-color:buttonface;">
-    						Times:
-    					</td>
-    					<td class="field_input">
-    						'.$event_begin_time_form.'
-    					</td>
-    					<td class="field_input">
-    						<span id="end_time_span">
-    						'.$event_end_time_form.'
-    						</span>
-    					</td>
-    				</tr>
-    				</tr><tr><td colspan="2"><td class="field_input"><span id="time_error" class="error_text"></span></td></tr>
-    				</table>
-    			</span>
-    	</td></tr>
-    	</table>
-    </td></tr>
-    </table>
-    <br />
-    	<table style="width:100%; border-color:buttonface; border-style:dotted; padding: 10px 0px 10px 0px;">
-    	<tr>
-    		<td class="field_title" style="width:115px;">
-    			Registration:
-    		</td>
-    		<td class="field_input">
-    			<select id="reg" onchange="javascript:hide_show_buttons(\'registration_panel\');" ><option value="0" '.$reg_no.'>No</option><option value="1" '.$reg_yes.'>Yes</option></select>
-    			<span class="hint">'.get_help("input_event_registration:events").'<span class="hint-pointer">&nbsp;</span></span>
-    		</td>
-    	</tr>
-    	<tr><td colspan="2">
-    		<div id="registration_panel" style="display:'.$reg_display.'">
-    			<div id="auto_allowinpage" style="display:'.$auto_allowinpage_display.'">
-                <table style="margin:0px 0px 0px 50px;">
-    			<tr>
-    				<td class="field_title" style="width:115px;">
-    					Auto Access:
-    				</td>
-    				<td class="field_input">
-    					<select id="allowinpage" /><option value="0" '.$allowinpage_no.'>No</option><option value="1" '.$allowinpage_yes.'>Yes</option></select>
-    					<span class="hint">'.get_help("input_event_allowinpage:events").'<span class="hint-pointer">&nbsp;</span></span>
-    				</td>
-    			</tr><tr><td></td><td class="field_input"><span id="allowinpage_error" class="error_text"></span></td></tr>
-    			</table>
-                </div>
-    			<table style="margin:0px 0px 0px 50px;">
-    				<tr>
-    					<td class="field_title" style="width:115px;">
-    						Registration Form Template:
-    					</td>
-    					<td class="field_input">
-    						'.get_templates($template,$eventid).'
-    					</td>
-    				</tr>
-                    <tr><td></td><td class="field_input"><span id="template_error" class="error_text"></span></td></tr>
-    			</table>
-                <div name="template_settings_form">
-                    <div id="template_settings_div">'.$template_settings.'</div>
-                </div>
-    			<table style="margin:0px 0px 0px 50px;">
-    			<tr>
-    				<td class="field_title" style="width:115px; background-color:buttonface;">
-    					Open Registration Date:
-    				</td>
-    				<td class="field_input">
-    					<script>DateInput(\'start_reg\', '.$start_reg.')</script>
-    				</td>
-    			</tr>
-    			</tr><tr><td></td><td class="field_input"><span id="start_reg_error" class="error_text"></span></td></tr>
-    			</table>
-    			<table style="margin:0px 0px 0px 50px;">
-    			<tr>
-    				<td class="field_title" style="width:115px; background-color:buttonface;">
-    					Close Registration Date:
-    				</td>
-    				<td class="field_input">
-    					<script>DateInput(\'stop_reg\', '.$stop_reg.')</script>
-    				</td>
-    			</tr>
-    			</tr><tr><td></td><td class="field_input"><span id="stop_reg_error" class="error_text"></span></td></tr>
-    			</table>
-    			<br />
-    <table style="width:100%; border-color:buttonface; border-style:dotted; padding: 10px 0px 10px 0px;margin:5px;">
-    <tr><td>
-    	<table style="width:100%">
-    		<tr>
-    			<td class="field_title" style="width:115px;">
-    				Limits:
-    			</td>
-    			<td class="field_input">
-    				<select id="limits" onchange="javascript:hide_show_buttons(\'limits_div\');" ><option value="0" '.$limits_no.'>No</option><option value="1" '.$limits_yes.'>Yes</option></select>
-    				<span class="hint">'.get_help("input_event_limits:events").'<span class="hint-pointer">&nbsp;</span></span>
-    			</td>
-    		</tr>
-    	</table>
-    	<span id="limits_div" style="display:'.$limits_display.'">
-    	<table style="width:100%">
-    		<tr><td colspan="2">
-    				<table style="margin:0px 0px 0px 50px;">
-    					<tr>
-    						<td class="field_title" style="width:115px; background-color:buttonface;">
-    							Total Max:
-    						</td>
-    						<td class="field_input">
-    							<input type="text" id="max" size="4" maxlength="4" value="'. $max_users .'"/>
-    							<span class="hint">'.get_help("input_event_max_users:events").'<span class="hint-pointer">&nbsp;</span></span>
-    						</td>
-    					</tr><tr><td></td><td class="field_input"><span id="max_error" class="error_text"></span></td></tr>
-    				</table>
-    		</td></tr>
-    	</table>
-    	<table style="width:100%">
-    		<tr><td colspan="2">
-    				<table style="margin:0px 0px 0px 50px;">
-    					<tr>
-    						<td class="field_title" style="width:115px; background-color:buttonface; vertical-align:top;">
-    							Custom Limits:
-    						</td>
-    						<td class="field_input">
-    							<input type="button" value="Custom Limit Form" onclick="javascript:get_limit_form(document.getElementById(\'template\').value);" /><span></span> <br />
-    							<div id="limit_form">
-    							</div>
-    							<div id="custom_limits" style="font-size:.7em;">
-    							'.$hidden_limits.'
-    							</div>
-    						</td>
-    					</tr><tr><td></td><td class="field_input"><span id="max_error" class="error_text"></span></td></tr>
-    				</table>
-    		</td></tr>
-    	</table>
-    	</span>
-    </td></tr>
-    </table>
-    <br />
-    <table style="width:100%; border-color:buttonface; border-style:dotted; padding: 10px 0px 10px 0px;margin:5px;">
-    <tr><td>
-    	<table style="width:100%">
-    		<tr>
-    			<td class="field_title" style="width:115px;">
-    				Fee:
-    			</td>
-    			<td class="field_input">
-    				<select id="fee" onchange="hide_show_buttons(\'fee_div\');" ><option value="0" '.$fee_no.'>No</option><option value="1" '.$fee_yes.'>Yes</option></select>
-    				<span class="hint">'.get_help("input_event_cost:events").'<span class="hint-pointer">&nbsp;</span></span>
-    			</td>
-    		</tr>
-    	</table>
-    <span id="fee_div" style="display:'.$fee_display.'">
-    	<table style="width:100%">
-    		<tr><td colspan="2">
-    				<table style="margin:0px 0px 0px 50px;">
-    				<tr>
-    					<td class="field_title"  style="width:115px; background-color:buttonface;">
-    						Minimum Payment:
-    					</td>
-    					<td class="field_input">
-    						<input type="text" id="min_fee" size="4" value="'. $fee_min .'"/>
-    						<span class="hint">'.get_help("input_event_min_cost:events").'<span class="hint-pointer">&nbsp;</span></span>
-    					</td>
-    				</tr>
-    				</tr><tr><td></td><td class="field_input"><span id="event_min_fee_error" class="error_text"></span></td></tr>
-    				</table>
-    				<table style="margin:0px 0px 0px 50px;">
-    				<tr>
-    					<td class="field_title"  style="width:115px; background-color:buttonface;">
-    						Full Price:
-    					</td>
-    					<td class="field_input">
-    						<input type="text" id="full_fee" size="4" value="'. $fee_full .'"/>
-    						<span class="hint">'.get_help("input_event_full_cost:events").'<span class="hint-pointer">&nbsp;</span></span>
-    					</td>
-    				</tr>
-    				</tr><tr><td></td><td class="field_input"><span id="event_full_fee_error" class="error_text"></span></td></tr>
-    				</table>
-    				<table style="margin:0px 0px 0px 50px;">
-    				<tr>
-    					<td class="field_title"  style="width:115px; background-color:buttonface;">
-    						Sale Price:
-    					</td>
-    					<td class="field_input">
-    						<input type="text" id="sale_fee" size="4" value="'. $sale_fee .'"/>
-    						<span class="hint">'.get_help("input_event_sale_fee:events").'<span class="hint-pointer">&nbsp;</span></span>
-    					</td>
-    				</tr>
-    				</tr><tr><td></td><td class="field_input"><span id="event_sale_fee_error" class="error_text"></span></td></tr>
-    				</table>
-    				<table style="margin:0px 0px 0px 50px;">
-    				<tr>
-    					<td class="field_title" style="width:115px; background-color:buttonface;">
-    						Sale Price End:
-    					</td>
-    					<td class="field_input">
-    						<script>DateInput(\'sale_end\', '.$sale_end.')</script>
-    						<span class="hint">'.get_help("input_event_sale_end:events").'<span class="hint-pointer">&nbsp;</span></span>
-    					</td>
-    				</tr>
-    				</tr><tr><td></td><td class="field_input"><span id="sale_end_error" class="error_text"></span></td></tr>
-    				</table>
-                    '.$admin_payable.'
-    				<table style="margin:0px 0px 0px 50px;">
-    				<tr>
-    					<td class="field_title"  style="width:115px; background-color:buttonface;">
-    						Payable To:
-    					</td>
-    					<td class="field_input">
-    						<input type="text" id="payableto" size="28" value="'. $payableto .'"/>
-    						<span class="hint">'.get_help("input_event_payableto:events").'<span class="hint-pointer">&nbsp;</span></span>
-    					</td>
-    				</tr>
-    				</tr><tr><td></td><td class="field_input"><span id="event_payableto_error" class="error_text"></span></td></tr>
-    				</table>
-    				<table style="margin:0px 0px 0px 50px;">
-    				<tr>
-    					<td class="field_title" style="width:115px; background-color:buttonface;vertical-align:top;">
-    						Send To:
-    					</td>
-    					<td class="field_input">
-    						<textarea id="checksaddress" cols="21" rows="3">'.$checksaddress.'</textarea>
-    						<span class="hint">'.get_help("input_event_checksaddress:events").'<span class="hint-pointer">&nbsp;</span></span>
-    					</td>
-    				</tr>
-    				</tr><tr><td></td><td class="field_input"><span id="event_checksaddress_error" class="error_text"></span></td></tr>
-    				</table>
-    				<table style="margin:0px 0px 0px 50px;">
-    				<tr>
-    					<td class="field_title"  style="width:115px; background-color:buttonface;">
-    						Paypal Account:
-    					</td>
-    					<td class="field_input">
-    						<input type="text" id="paypal" size="28" value="'. $paypal .'"/>
-    						<span class="hint">'.get_help("input_event_paypal:events").'<span class="hint-pointer">&nbsp;</span></span>
-    					</td>
-    				</tr>
-    				</tr><tr><td></td><td class="field_input"><span id="event_paypal_error" class="error_text"></span></td></tr>
-    				</table>
-    	</td></tr></table>
-    </span>
-    </td></tr></table>
-    		</div>	
-    	</td></tr>
-    	</table>
-    <br />
-    	<table>
-    	<tr>
-    		<td></td>
-    		<td style="text-align:left;">
-    			<input type="button" value="Save" onclick="new_event_submit(\''. $pageid .'\');" />
-    		</td>
-    	</tr>
-    	</table>
-    		<script>prepareInputsForHints();</script>
-    </form>
+        <form>
+            <table style="width:100%">
+            	<tr>
+            		<td class="field_title" style="width:115px;">
+            			Event Name:
+            		</td>
+            		<td class="field_input">
+            			<input type="text" id="event_name" size="30" value="'. stripslashes($name) .'"/>
+            			<span class="hint">'.get_help("input_event_name:events").'<span class="hint-pointer">&nbsp;</span></span>
+            		</td>
+            	</tr><tr><td></td><td class="field_input"><span id="event_name_error" class="error_text"></span></td></tr>
+            </table>
+            <table style="width:100%">
+            	<tr>
+            		<td class="field_title" style="width:115px;">
+            			Category:
+            		</td>
+            		<td class="field_input">
+            			<span id="select_category">'.$mycategories.'<span class="hint">'.get_help("input_event_category:events").'<span class="hint-pointer">&nbsp;</span></span></span>
+            		</td>
+            	</tr><tr><td></td><td class="field_input"><span id="category_error" class="error_text"></span></td></tr>
+            </table>
+            <table style="width:100%">
+            	<tr>
+            		<td class="field_title" style="width:115px; vertical-align:top">
+            			Description:
+            		</td>
+            		<td class="field_input">
+            			<textarea id="extrainfo" cols="40" rows="5">'. stripslashes($extrainfo) .'</textarea>
+            			<span class="hint">'.get_help("input_extrainfo:events").'<span class="hint-pointer">&nbsp;</span></span>
+            		</td>
+            	</tr><tr><td></td><td class="field_input"><span id="event_name_error" class="error_text"></span></td></tr>
+            </table>
+            '.$admin_contacts.'
+            <table style="width:100%">
+            	<tr>
+            		<td class="field_title" style="width:115px;">
+            			Contact Name:
+            		</td>
+            		<td class="field_input">
+            			<input type="text" id="contact" size="30" value="'. stripslashes($contact) .'"/>
+            			<span class="hint">'.get_help("input_contact:events").'<span class="hint-pointer">&nbsp;</span></span>
+            		</td>
+            	</tr><tr><td></td><td class="field_input"><span id="contact_error" class="error_text"></span></td></tr>
+            </table>
+            <table style="width:100%">
+            	<tr>
+            		<td class="field_title" style="width:115px;">
+            			Contact Email:
+            		</td>
+            		<td class="field_input">
+            			<input type="text" id="email" size="30" value="'. stripslashes($email) .'"/>
+            			<span class="hint">'.get_help("input_event_email:events").'<span class="hint-pointer">&nbsp;</span></span>
+            		</td>
+            	</tr><tr><td></td><td class="field_input"><span id="email_error" class="error_text"></span></td></tr>
+            </table>
+            <table style="width:100%">
+            	<tr>
+            		<td class="field_title" style="width:115px;">
+            			Contact Phone:
+            		</td>
+            		<td class="field_input">
+            			<input id="phone_1" type="text" onkeyup="movetonextbox(event);" size="1" maxlength="3" value="'.$phone[0].'" />-
+                        <input id="phone_2" type="text" onkeyup="movetonextbox(event);" maxlength="3" size="1" value="'.$phone[1].'" />-
+                        <input id="phone_3" type="text" maxlength="4" size="2" value="'.$phone[2].'" />
+            		</td>
+            	</tr><tr><td></td><td class="field_input"><span id="phone_error" class="error_text"></span></td></tr>
+            </table>
+            <table style="width:100%; display:'.$global_display.'">
+            	<tr>
+            		<td class="field_title" style="width:115px;">
+            			Request Site Event:
+            		</td>
+            		<td class="field_input">
+            			<select id="siteviewable" onchange="if(this.value==0){ hide_section(\'auto_allowinpage\'); document.getElementById(\'allowinpage\').value=0; }else{ show_section(\'auto_allowinpage\'); }" ><option value="0" '.$siteviewable_no.'>No</option><option value="1" '.$siteviewable_yes.'>Yes</option></select>
+            			<span class="hint">'.get_help("input_event_siteviewable:events").'<span class="hint-pointer">&nbsp;</span></span>
+            		</td>
+            	</tr><tr><td></td><td class="field_input"><span id="event_name_error" class="error_text"></span></td></tr>
+            </table>
+            <br />
+            <div style="border-color:buttonface; border-style:dotted; padding: 10px 0px 10px 0px;">
+                <table style="width:100%;">
+                	<tr>
+                		<td class="field_title" style="width:115px;">
+                			Location:
+                		</td>
+                		<td class="field_input">
+                			<span id="select_location">'.$mylocations.'<span class="hint">'.get_help("input_event_location:events").'<span class="hint-pointer">&nbsp;</span></span></span>
+                			<span id="addtolist" style="display:inline"><a href="javascript:void(0);" onclick="hide_show_buttons(\'addtolist\');hide_show_buttons(\'hide_menu\');hide_show_buttons(\'add_location_div\');"> Add to list</a></span>
+                			<span id="hide_menu" style="display:none"><a href="javascript:void(0);" onclick="hide_show_buttons(\'hide_menu\');hide_show_buttons(\'addtolist\');hide_show_buttons(\'add_location_div\');"> Hide Menu</a></span>
+                		</td>
+                	</tr><tr><td></td><td class="field_input"><span id="location_error" class="error_text"></span></td></tr>
+                </table>
+                <table>
+                	<tr>
+                        <td colspan="2">
+                        	<span id="add_location_div" style="display:none">
+                        		<table>
+                        			<tr>
+                        				<td style="width:115px;"></td>
+                        				<td class="field_input" style="width:400px; background-color:buttonface; text-align:center">
+                        					<span id="new_button" style="display:inline"><a href="javascript:void(0);" onclick="hide_show_buttons(\'browse_button\');hide_show_buttons(\'or\');hide_show_buttons(\'location_menu\');add_location_form(\'new\',\''.$eventid.'\');"><img src="'.$CFG->wwwroot.'/images/add.png" title="Add Location" alt="Add Location"> New Location</a></span>
+                        					<span id="or" style="display:inline">&nbsp; or &nbsp;</span> 
+                        					<span id="browse_button" style="display:inline"><a href="javascript:void(0);" onclick="hide_show_buttons(\'new_button\');hide_show_buttons(\'or\');hide_show_buttons(\'location_menu\');add_location_form(\'existing\',\''.$eventid.'\');"><img src="'.$CFG->wwwroot.'/images/folder.png" title="Add Location" alt="Add Location"> Browse Locations</a></span>
+                        				</td>
+                        			</tr>
+                        			<tr>
+                        				<td></td>
+                        				<td>
+                        					<span id="location_menu" style="display:none"></span>
+                        				</td>
+                        			</tr>
+                        		</table>
+                        	</span>
+                	   </td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td>
+                            <span id="location_status" style="display:inline"></span>
+                	    </td>
+                    </tr>
+                </table>
+            </div>
+            <br />
+            <div style="border-color:buttonface; border-style:dotted; padding: 10px 0px 10px 0px;">
+                <table style="width:100%;">
+                    <tr>
+                        <td>
+                        	<table style="width:100%">
+                        		<tr>
+                        			<td class="field_title" style="width:115px;">
+                        				Worker Application:
+                        			</td>
+                        			<td class="field_input">
+                        				<select id="workers"><option value="0" '.$workers_no.'>No</option><option value="1" '.$workers_yes.'>Yes</option></select>
+                        				<span class="hint">'.get_help("input_event_workers:events").'<span class="hint-pointer">&nbsp;</span></span>
+                        			</td>
+                        		</tr><tr><td></td><td class="field_input"><span id="workers_error" class="error_text"></span></td></tr>
+                        	</table>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <br />
+            <div style="border-color:buttonface; border-style:dotted; padding: 10px 0px 10px 0px;">
+                <table style="width:100%;">
+                    <tr>
+                        <td>
+                        	<table style="width:100%">
+                        		<tr>
+                        			<td class="field_title" style="width:115px;">
+                        				Multi-day Event:
+                        			</td>
+                        			<td class="field_input">
+                        				<select id="multiday" onchange="hide_show_buttons(\'event_end_date_div\'); if(document.getElementById(\'begin_time\').value != \'\'){ get_end_time(document.getElementById(\'begin_time\').value) }" ><option value="0" '.$multiday_no.'>No</option><option value="1" '.$multiday_yes.'>Yes</option></select>
+                        				<span class="hint">'.get_help("input_event_multiday:events").'<span class="hint-pointer">&nbsp;</span></span>
+                        			</td>
+                        		</tr><tr><td></td><td class="field_input"><span id="allowinpage_error" class="error_text"></span></td></tr>
+                        	</table>
+                        	<table style="width:100%">
+                        		<tr>
+                                    <td colspan="2">
+                        				<table style="margin:0px 0px 0px 50px;">
+                            				<tr>
+                            					<td class="field_title"  style="width:115px; background-color:buttonface;">
+                            						Event Start Date:
+                            					</td>
+                            					<td class="field_input">
+                            						<script>DateInput(\'event_begin_date\', '.$event_begin_date.')</script>
+                            					</td>
+                            				</tr><tr><td></td><td class="field_input"><span id="event_begin_date_error" class="error_text"></span></td></tr>
+                        				</table>
+                        				<span id="event_end_date_div" style="display:'.$end_date_display.'">
+                        					<table style="margin:0px 0px 0px 50px;">
+                            					<tr>
+                            						<td class="field_title" style="width:115px; background-color:buttonface;">
+                            							Event Stop Date:
+                            						</td>
+                            						<td class="field_input">
+                            							<script>DateInput(\'event_end_date\', '.$event_end_date.')</script>
+                            						</td>
+                            					</tr><tr><td></td><td class="field_input"><span id="event_end_date_error" class="error_text"></span></td></tr>
+                        					</table>
+                        				</span>	
+                                    </td>
+                                </tr>
+                        	</table>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <br />
+            <div style="border-color:buttonface; border-style:dotted; padding: 10px 0px 10px 0px;">
+                <table style="width:100%;">
+                    <tr>
+                        <td>
+                        	<table style="width:100%">
+                        		<tr>
+                        			<td class="field_title" style="width:115px;">
+                        				All Day Event:
+                        			</td>
+                        			<td class="field_input">
+                        				<select id="allday" onchange="hide_show_buttons(\'event_times_div\');" /><option value="1" '.$allday_yes.'>Yes</option><option value="0" '.$allday_no.'>No</option></select>
+                        				<span class="hint">'.get_help("input_event_allday:events").'<span class="hint-pointer">&nbsp;</span></span>
+                        			</td>
+                        		</tr><tr><td></td><td class="field_input"><span id="allowinpage_error" class="error_text"></span></td></tr>
+                        	</table>
+                        	<table style="width:100%">
+                                <tr>
+                                    <td colspan="2">
+                            			<span id="event_times_div" style="display:'.$times_display.'">
+                            				<table style="margin:0px 0px 0px 50px;">
+                                				<tr>
+                                					<td class="field_title" style="width:115px; background-color:buttonface;">
+                                						Times:
+                                					</td>
+                                					<td class="field_input">
+                                						'.$event_begin_time_form.'
+                                					</td>
+                                					<td class="field_input">
+                                						<span id="end_time_span">
+                                						'.$event_end_time_form.'
+                                						</span>
+                                					</td>
+                                				</tr>
+                            				    <tr><td colspan="2"><td class="field_input"><span id="time_error" class="error_text"></span></td></tr>
+                            				</table>
+                            			</span>
+                                    </td>
+                                </tr>
+                        	</table>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <br />
+            <div style="border-color:buttonface; border-style:dotted; padding: 10px 0px 10px 0px;">
+            	<table style="width:100%;">
+                	<tr>
+                		<td class="field_title" style="width:115px;">
+                			Registration:
+                		</td>
+                		<td class="field_input">
+                			<select id="reg" onchange="hide_show_buttons(\'registration_panel\');" ><option value="0" '.$reg_no.'>No</option><option value="1" '.$reg_yes.'>Yes</option></select>
+                			<span class="hint">'.get_help("input_event_registration:events").'<span class="hint-pointer">&nbsp;</span></span>
+                		</td>
+                	</tr>
+                    <tr>
+                        <td colspan="2">
+                            <div id="registration_panel" style="display:'.$reg_display.'">
+                                <div id="auto_allowinpage" style="display:'.$auto_allowinpage_display.'">
+                                    <table style="margin:0px 0px 0px 50px;">
+                            			<tr>
+                            				<td class="field_title" style="width:115px;">
+                            					Auto Access:
+                            				</td>
+                            				<td class="field_input">
+                            					<select id="allowinpage" /><option value="0" '.$allowinpage_no.'>No</option><option value="1" '.$allowinpage_yes.'>Yes</option></select>
+                            					<span class="hint">'.get_help("input_event_allowinpage:events").'<span class="hint-pointer">&nbsp;</span></span>
+                            				</td>
+                            			</tr><tr><td></td><td class="field_input"><span id="allowinpage_error" class="error_text"></span></td></tr>
+                        			</table>
+                                </div>
+                    			<table style="margin:0px 0px 0px 50px;">
+                    				<tr>
+                    					<td class="field_title" style="width:115px;">
+                    						Registration Form Template:
+                    					</td>
+                    					<td class="field_input">
+                    						'.get_templates($template,$eventid,true).'
+                    					</td>
+                    				</tr><tr><td></td><td class="field_input"><span id="template_error" class="error_text"></span></td></tr>
+                    			</table>
+                                <div name="template_settings_form">
+                                    <div id="template_settings_div">'.$template_settings.'</div>
+                                </div>
+                    			<table style="margin:0px 0px 0px 50px;">
+                                    <tr>
+                        				<td class="field_title" style="width:115px; background-color:buttonface;">
+                        					Open Registration Date:
+                        				</td>
+                        				<td class="field_input">
+                        					<script>DateInput(\'start_reg\', '.$start_reg.')</script>
+                        				</td>
+                                    </tr><tr><td></td><td class="field_input"><span id="start_reg_error" class="error_text"></span></td></tr>
+                    			</table>
+                                <table style="margin:0px 0px 0px 50px;">
+                                	<tr>
+                                		<td class="field_title" style="width:115px; background-color:buttonface;">
+                                			Close Registration Date:
+                                		</td>
+                                		<td class="field_input">
+                                			<script>DateInput(\'stop_reg\', '.$stop_reg.')</script>
+                                		</td>
+                                	</tr><tr><td></td><td class="field_input"><span id="stop_reg_error" class="error_text"></span></td></tr>
+                                </table>
+                                <br />
+                                <table style="width:100%; border-color:buttonface; border-style:dotted; padding: 10px 0px 10px 0px;margin:5px;">
+                                    <tr>
+                                        <td>
+                                        	<table style="width:100%">
+                                        		<tr>
+                                        			<td class="field_title" style="width:115px;">
+                                        				Limits:
+                                        			</td>
+                                        			<td class="field_input">
+                                        				<select id="limits" onchange="hide_show_buttons(\'limits_div\');" ><option value="0" '.$limits_no.'>No</option><option value="1" '.$limits_yes.'>Yes</option></select>
+                                        				<span class="hint">'.get_help("input_event_limits:events").'<span class="hint-pointer">&nbsp;</span></span>
+                                        			</td>
+                                        		</tr>
+                                        	</table>
+                                        	<span id="limits_div" style="display:'.$limits_display.'">
+                                            	<table style="width:100%">
+                                            		<tr>
+                                                        <td colspan="2">
+                                            				<table style="margin:0px 0px 0px 50px;">
+                                            					<tr>
+                                            						<td class="field_title" style="width:115px; background-color:buttonface;">
+                                            							Total Max:
+                                            						</td>
+                                            						<td class="field_input">
+                                            							<input type="text" id="max" size="4" maxlength="4" value="'. $max_users .'"/>
+                                            							<span class="hint">'.get_help("input_event_max_users:events").'<span class="hint-pointer">&nbsp;</span></span>
+                                            						</td>
+                                            					</tr><tr><td></td><td class="field_input"><span id="max_error" class="error_text"></span></td></tr>
+                                            				</table>
+                                                        </td>
+                                                    </tr>
+                                            	</table>
+                                            	<table style="width:100%">
+                                            		<tr>
+                                                        <td colspan="2">
+                                            				<table style="margin:0px 0px 0px 50px;">
+                                            					<tr>
+                                            						<td class="field_title" style="width:115px; background-color:buttonface; vertical-align:top;">
+                                            							Custom Limits:
+                                            						</td>
+                                            						<td class="field_input">
+                                            							<input type="button" value="Custom Limit Form" onclick="get_limit_form(document.getElementById(\'template\').value);" /><span></span> <br />
+                                            							<div id="limit_form">
+                                            							</div>
+                                            							<div id="custom_limits" style="font-size:.7em;">
+                                            							'.$hidden_limits.'
+                                            							</div>
+                                            						</td>
+                                            					</tr><tr><td></td><td class="field_input"><span id="max_error" class="error_text"></span></td></tr>
+                                            				</table>
+                                                        </td>
+                                                    </tr>
+                                            	</table>
+                                        	</span>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <br />
+                                <table style="width:100%; border-color:buttonface; border-style:dotted; padding: 10px 0px 10px 0px;margin:5px;">
+                                    <tr>
+                                        <td>
+                                        	<table style="width:100%">
+                                        		<tr>
+                                        			<td class="field_title" style="width:115px;">
+                                        				Fee:
+                                        			</td>
+                                        			<td class="field_input">
+                                        				<select id="fee" onchange="hide_show_buttons(\'fee_div\');" ><option value="0" '.$fee_no.'>No</option><option value="1" '.$fee_yes.'>Yes</option></select>
+                                        				<span class="hint">'.get_help("input_event_cost:events").'<span class="hint-pointer">&nbsp;</span></span>
+                                        			</td>
+                                        		</tr>
+                                        	</table>
+                                            <span id="fee_div" style="display:'.$fee_display.'">
+                                            	<table style="width:100%">
+                                            		<tr>
+                                                        <td colspan="2">
+                                            				<table style="margin:0px 0px 0px 50px;">
+                                                				<tr>
+                                                					<td class="field_title"  style="width:115px; background-color:buttonface;">
+                                                						Minimum Payment:
+                                                					</td>
+                                                					<td class="field_input">
+                                                						<input type="text" id="min_fee" size="4" value="'. $fee_min .'"/>
+                                                						<span class="hint">'.get_help("input_event_min_cost:events").'<span class="hint-pointer">&nbsp;</span></span>
+                                                					</td>
+                                                				</tr>
+                                            				    <tr>
+                                                                    <td></td>
+                                                                    <td class="field_input"><span id="event_min_fee_error" class="error_text"></span></td>
+                                                                </tr>
+                                            				</table>
+                                            				<table style="margin:0px 0px 0px 50px;">
+                                                				<tr>
+                                                					<td class="field_title"  style="width:115px; background-color:buttonface;">
+                                                						Full Price:
+                                                					</td>
+                                                					<td class="field_input">
+                                                						<input type="text" id="full_fee" size="4" value="'. $fee_full .'"/>
+                                                						<span class="hint">'.get_help("input_event_full_cost:events").'<span class="hint-pointer">&nbsp;</span></span>
+                                                					</td>
+                                                				</tr><tr><td></td><td class="field_input"><span id="event_full_fee_error" class="error_text"></span></td></tr>
+                                            				</table>
+                                            				<table style="margin:0px 0px 0px 50px;">
+                                                				<tr>
+                                                					<td class="field_title"  style="width:115px; background-color:buttonface;">
+                                                						Sale Price:
+                                                					</td>
+                                                					<td class="field_input">
+                                                						<input type="text" id="sale_fee" size="4" value="'. $sale_fee .'"/>
+                                                						<span class="hint">'.get_help("input_event_sale_fee:events").'<span class="hint-pointer">&nbsp;</span></span>
+                                                					</td>
+                                                				</tr><tr><td></td><td class="field_input"><span id="event_sale_fee_error" class="error_text"></span></td></tr>
+                                            				</table>
+                                            				<table style="margin:0px 0px 0px 50px;">
+                                                				<tr>
+                                                					<td class="field_title" style="width:115px; background-color:buttonface;">
+                                                						Sale Price End:
+                                                					</td>
+                                                					<td class="field_input">
+                                                						<script>DateInput(\'sale_end\', '.$sale_end.')</script>
+                                                						<span class="hint">'.get_help("input_event_sale_end:events").'<span class="hint-pointer">&nbsp;</span></span>
+                                                					</td>
+                                                				</tr><tr><td></td><td class="field_input"><span id="sale_end_error" class="error_text"></span></td></tr>
+                                            				</table>
+                                                            '.$admin_payable.'
+                                            				<table style="margin:0px 0px 0px 50px;">
+                                                				<tr>
+                                                					<td class="field_title"  style="width:115px; background-color:buttonface;">
+                                                						Payable To:
+                                                					</td>
+                                                					<td class="field_input">
+                                                						<input type="text" id="payableto" size="28" value="'. $payableto .'"/>
+                                                						<span class="hint">'.get_help("input_event_payableto:events").'<span class="hint-pointer">&nbsp;</span></span>
+                                                					</td>
+                                                				</tr><tr><td></td><td class="field_input"><span id="event_payableto_error" class="error_text"></span></td></tr>
+                                            				</table>
+                                            				<table style="margin:0px 0px 0px 50px;">
+                                                				<tr>
+                                                					<td class="field_title" style="width:115px; background-color:buttonface;vertical-align:top;">
+                                                						Send To:
+                                                					</td>
+                                                					<td class="field_input">
+                                                						<textarea id="checksaddress" cols="21" rows="3">'.$checksaddress.'</textarea>
+                                                						<span class="hint">'.get_help("input_event_checksaddress:events").'<span class="hint-pointer">&nbsp;</span></span>
+                                                					</td>
+                                                				</tr><tr><td></td><td class="field_input"><span id="event_checksaddress_error" class="error_text"></span></td></tr>
+                                            				</table>
+                                            				<table style="margin:0px 0px 0px 50px;">
+                                                				<tr>
+                                                					<td class="field_title"  style="width:115px; background-color:buttonface;">
+                                                						Paypal Account:
+                                                					</td>
+                                                					<td class="field_input">
+                                                						<input type="text" id="paypal" size="28" value="'. $paypal .'"/>
+                                                						<span class="hint">'.get_help("input_event_paypal:events").'<span class="hint-pointer">&nbsp;</span></span>
+                                                					</td>
+                                                				</tr><tr><td></td><td class="field_input"><span id="event_paypal_error" class="error_text"></span></td></tr>
+                                            				</table>
+                                   	                    </td>
+                                                    </tr>
+                                                </table>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+            	</table>
+            </div>
+            <br />
+        	<table>
+            	<tr>
+            		<td></td>
+            		<td style="text-align:left;">
+            			<input type="button" value="Save" onclick="new_event_submit(\''. $pageid .'\');" />
+            		</td>
+            	</tr>
+        	</table>
+       		<script>prepareInputsForHints();</script>
+        </form>
     </div>';
 }
       
@@ -1033,10 +1102,10 @@ function print_cart($items){
 global $MYVARS, $CFG;
 	$i=0; $returnme = '<a href="'.$CFG->wwwroot.'">Go back to '.$CFG->sitename.'</a><br /><br /><table style="border-collapse:collapse;width:60%; margin-right:auto; margin-left:auto;"><tr><td colspan=2><b>What you have paid for:</b></td></tr>';
 	while($i < $items["num_cart_items"]){
-		$returnme .= '<tr style="background-color:#FFF1FF;"><td style="text-align:left; font-size:.8em;">'.$items["item_name".($i+1)] . '</td><td style="text-align:left; padding:10px; font-size:.8em;">' . '$' . $items["mc_gross_".($i+1)] . '</td></tr><tr><td colspan="2"></td></tr>';
+		$returnme .= '<tr style="background-color:#FFF1FF;"><td style="text-align:left; font-size:.8em;">'.$items["item_name".($i+1)] . '</td><td style="text-align:left; padding:10px; font-size:.8em;">' . '$' . $items["mc_gross_".($i+1)] . '</td></tr><td colspan="2"></td></tr>';
 		$i++;
 	}
-	$returnme .= '<tr><td style="text-align:right;"><b>Total</b></td><td style="border-top: 1px solid gray;text-align:left;padding:10px; font-size:.8em;">$' . $items["mc_gross"] . '</td></tr><tr><td style="text-align:right;"><b>Paid</b></td><td style="text-align:left;padding:10px; font-size:.8em;">$' . $items["payment_gross"] . '</td></tr></table>';
+	$returnme .= '<tr><td style="text-align:right;"><b>Total</b></td><td style="border-top: 1px solid gray;text-align:left;padding:10px; font-size:.8em;">$' . $items["mc_gross"] . '</td></tr><td style="text-align:right;"><b>Paid</b></td><td style="text-align:left;padding:10px; font-size:.8em;">$' . $items["payment_gross"] . '</td></tr></table>';
 	return $returnme;
 }
 ?>

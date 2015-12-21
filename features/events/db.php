@@ -75,10 +75,23 @@ global $CFG;
 			execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
 		}
 	}
+           
+    //Activate and Deactivate templates
+	$thisversion = 20151223;
+	if($version < $thisversion){
+		$SQL = "ALTER TABLE `events_templates` ADD  `activated` INT( 1 ) NOT NULL DEFAULT  '1', ADD INDEX (  `activated` )";
+        $SQL2 = "ALTER TABLE `events` ADD  `workers` INT( 1 ) NOT NULL DEFAULT  '0', ADD INDEX (  `workers` )";
+		if(execute_db_sql($SQL2) && execute_db_sql($SQL)){ //if successful upgrade
+            add_role_ability('events','manageevents','Events','1','Manage Events','1','1');
+            add_role_ability('events','manageapplications','Events','2','Manage worker applications','1','1');
+            add_role_ability('events','manageeventtemplates','Events','2','Manage event templates','1','1');
+			execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
+		}
+	}
 }
 
 function events_install(){
-    $thisversion = 20080101; 
+    $thisversion = 20151223; 
 	if(!get_db_row("SELECT * FROM features WHERE feature='events'")){ 
 		$SQL = "CREATE TABLE IF NOT EXISTS `events` (
           `eventid` int(11) NOT NULL AUTO_INCREMENT,
@@ -92,6 +105,7 @@ function events_install(){
           `phone` varchar(15) DEFAULT NULL,
           `location` varchar(50) DEFAULT NULL,
           `allowinpage` int(11) DEFAULT '0',
+          `workers` tinyint(1) DEFAULT '0',
           `start_reg` int(11) DEFAULT '0',
           `stop_reg` int(11) DEFAULT '0',
           `max_users` int(11) DEFAULT '0',
@@ -112,8 +126,9 @@ function events_install(){
           `payableto` varchar(100) DEFAULT NULL,
           `checksaddress` text,
           `confirmed` tinyint(1) DEFAULT '0',
-          PRIMARY KEY (`eventid`)
-        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
+          PRIMARY KEY (`eventid`),
+          KEYKEY `workers` (`workers`)
+          ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
         
         $SQL2 = "CREATE TABLE IF NOT EXISTS `events_locations` (
           `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -160,7 +175,9 @@ function events_install(){
           `intro` longtext,
           `registrant_name` varchar(100) NOT NULL DEFAULT '',
           `orderbyfield` varchar(200) NOT NULL,
-          UNIQUE KEY `template_id` (`template_id`)
+          `activated` tinyint(1) NOT NULL DEFAULT '1',
+          PRIMARY KEY `template_id` (`template_id`),
+          KEY `activated` (`activated`),
         ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
 
         $SQL6 = "CREATE TABLE IF NOT EXISTS `events_templates_forms` (
@@ -189,6 +206,9 @@ function events_install(){
             add_role_ability('events','signupforevents','Events','1','Signup for events','1','1','1','1');
             add_role_ability('events','confirmevents','Events','3','Allow site viewability and add to calendar.','1','0','0','0');
             add_role_ability('events','exportcsv','Events','2','Export registration list to CSV','1','1','0','0');
+            add_role_ability('events','manageevents','Events','1','Manage Events','1','1');
+            add_role_ability('events','manageapplications','Events','2','Manage worker applications','1','1');
+            add_role_ability('events','manageeventtemplates','Events','2','Manage event templates','1','1');
 		}
 	}    
 }

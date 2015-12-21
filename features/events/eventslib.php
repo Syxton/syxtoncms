@@ -897,17 +897,18 @@ function get_event_length($startdate, $enddate, $allday, $starttime, $endtime){
     return $length;
 }
 
-function get_templates($selected = false,$eventid=""){
+function get_templates($selected = false, $eventid="", $activeonly=false){
 global $CFG;
     $returnme = check_for_new_templates();
-    if($templates = get_db_result("SELECT * FROM events_templates ORDER BY name")){
+    $active = !empty($activeonly) ? ' activated=1' : '';
+    if($templates = get_db_result("SELECT * FROM events_templates WHERE $active ORDER BY name")){
         while($template = fetch_row($templates)){
             $returnme .= $returnme == "" ? '<select id="template" onchange=" clear_limits(); ajaxapi(\'/features/events/events_ajax.php\',\'show_template_settings\',\'&amp;eventid='.$eventid.'&amp;templateid=\'+document.getElementById(\'template\').value,function(){ simple_display(\'template_settings_div\');});">' : '';
             $selectme = $selected && ($template['template_id'] == $selected) ? ' selected' : '';
             $returnme .= '<option value="' . $template['template_id'] . '"' . $selectme . '>' . stripslashes($template['name']) . '</option>';
         }
     }
-    $returnme .= $returnme == "" ? "No templates exist" : '</select> <a href="javascript:void window.open(\'' . $CFG->wwwroot . '/features/events/preview.php?action=preview_template&amp;template_id=\'+document.getElementById(\'template\').value,\'Template\',\'menubar=yes,toolbar=yes,scrollbars=1,resizable=1,width=600,height=400\');">Preview</a>';
+    $returnme .= $returnme == "" ? "No templates exist" : '</select> <a href="javascript:void(0);" onclick="window.open(\'' . $CFG->wwwroot . '/features/events/preview.php?action=preview_template&amp;template_id=\'+document.getElementById(\'template\').value,\'Template\',\'menubar=yes,toolbar=yes,scrollbars=1,resizable=1,width=600,height=400\');">Preview</a>';
     return $returnme;
 }
 
@@ -982,7 +983,7 @@ function get_my_hidden_limits($templateid, $hard_limits, $soft_limits){
             $limit = explode(":", $limits_array[$i]);
             if(!empty($limit)){
                 $displayname = get_template_field_displayname($templateid,$limit[0]);
-                $returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . '&nbsp;-&nbsp;<a href="javascript: delete_limit(\'hard_limits\',\'' . $i . '\');">Delete</a><br />';
+                $returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . '&nbsp;-&nbsp;<a href="javascript:void(0);" onclick="delete_limit(\'hard_limits\',\'' . $i . '\');">Delete</a><br />';
                 $hidden_variable1 .= $hidden_variable1 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
             }
             $i++;
@@ -998,7 +999,7 @@ function get_my_hidden_limits($templateid, $hard_limits, $soft_limits){
             $limit = explode(":", $limits_array[$i]);
             if(!empty($limit)){
                 $displayname = get_template_field_displayname($templateid,$limit[0]);
-                $returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . '&nbsp;-&nbsp;<a href="javascript: delete_limit(\'soft_limits\',\'' . $i . '\');">Delete</a><br />';
+                $returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . '&nbsp;-&nbsp;<a href="javascript:void(0);" onclick="delete_limit(\'soft_limits\',\'' . $i . '\');">Delete</a><br />';
                 $hidden_variable2 .= $hidden_variable2 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
             }
             $i++;
@@ -1096,7 +1097,7 @@ global $USER, $CFG;
             $selectme = $selected && ($location['id'] == $selected) ? ' selected' : '';
             $returnme .= '<option value="' . $location['id'] . '"' . $selectme . '>' . $location['location'] . '</option>';
         }
-        $returnme .= '</select><a href="javascript:copy_location(document.getElementById(\'add_location\').value,\''.$eventid.'\');"> <img src="' . $CFG->wwwroot . '/images/add.png" title="Add Location" alt="Add Location" /></a></td><td style="vertical-align:top"><span id="location_details_div" style="vertical-align:top"></span></td></tr></table>';
+        $returnme .= '</select><a href="javascript:void(0);" onclick="copy_location(document.getElementById(\'add_location\').value,\''.$eventid.'\');"> <img src="' . $CFG->wwwroot . '/images/add.png" title="Add Location" alt="Add Location" /></a></td><td style="vertical-align:top"><span id="location_details_div" style="vertical-align:top"></span></td></tr></table>';
     }
     
     if(!$listyes){ return $returnme; 
@@ -1249,5 +1250,44 @@ global $CFG;
         return '<a title="Tell your friends about '.$name.'\'s registration for '.$event["name"].'!" href="' . $login_url . '" target="_blank"><img src="'.$CFG->wwwroot.'/images/facebook_button.png" /></a>';     
     }
     
+}
+
+function events_adminpanel($pageid) {
+global $CFG, $USER;
+    $content = "";
+    //Course Event Manager
+    $content .= user_has_ability_in_page($USER->userid,"manageevents",$pageid) ? make_modal_links(array("title"  => "Event Registrations",
+                                                                                                     "text"   => "Event Registrations",
+                                                                                                     "path"   => $CFG->wwwroot . "/features/events/events.php?action=event_manager&amp;pageid=$pageid",
+                                                                                                     "iframe" => "true",
+                                                                                                     "width"  => "640",
+                                                                                                     "height" => "600",
+                                                                                                     "iframe" => "true",
+                                                                                                     "image"  => $CFG->wwwroot . "/images/manage.png",
+                                                                                                     "styles" => "padding:1px;display:block;"))
+                                                                            : "";
+    //Application Manager
+//    $content .= user_has_ability_in_page($USER->userid,"manageapplications",$pageid) ? make_modal_links(array("title"  => "Worker Applications",
+//                                                                                                     "text"   => "Worker Applications",
+//                                                                                                     "path"   => $CFG->wwwroot . "/features/events/events.php?action=application_manager&amp;pageid=$pageid",
+//                                                                                                     "iframe" => "true",
+//                                                                                                     "width"  => "640",
+//                                                                                                     "height" => "600",
+//                                                                                                     "iframe" => "true",
+//                                                                                                     "image"  => $CFG->wwwroot . "/images/manage.png",
+//                                                                                                     "styles" => "padding:1px;display:block;"))
+//                                                                            : "";
+    //Event Template Manager
+    $content .= user_has_ability_in_page($USER->userid,"manageeventtemplates",$pageid) ? make_modal_links(array("title"  => "Event Templates",
+                                                                                                     "text"   => "Event Templates",
+                                                                                                     "path"   => $CFG->wwwroot . "/features/events/events.php?action=template_manager&amp;pageid=$pageid",
+                                                                                                     "iframe" => "true",
+                                                                                                     "width"  => "640",
+                                                                                                     "height" => "600",
+                                                                                                     "iframe" => "true",
+                                                                                                     "image"  => $CFG->wwwroot . "/images/manage.png",
+                                                                                                     "styles" => "padding:1px;display:block;"))
+                                                                            : "";
+    return $content;
 }
 ?>

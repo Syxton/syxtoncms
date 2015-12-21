@@ -1575,7 +1575,7 @@ global $CFG, $MYVARS;
 			if(!($limit_type == "hard_limits" && $limit_num == $i)){
 				$limit = explode(":", $limits_array[$i]);
                 $displayname = get_template_field_displayname($template["template_id"],$limit[0]);
-				$returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <a href="javascript: delete_limit(\'hard_limits\',\'' . ($i - $alter) . '\');">Delete</a><br />';
+				$returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <a href="javascript:void(0);" onclick="delete_limit(\'hard_limits\',\'' . ($i - $alter) . '\');">Delete</a><br />';
 				$hidden_variable1 .= $hidden_variable1 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
 			}else{  $alter++; }
 			$i++;
@@ -1593,7 +1593,7 @@ global $CFG, $MYVARS;
 			if(!($limit_type == "soft_limits" && $limit_num == $i)){
 				$limit = explode(":", $limits_array[$i]);
                 $displayname = get_template_field_displayname($template["template_id"],$limit[0]);
-				$returnme2 .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <a href="javascript: delete_limit(\'soft_limits\',\'' . ($i - $alter) . '\');">Delete</a><br />';
+				$returnme2 .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <a href="javascript:void(0);" onclick="delete_limit(\'soft_limits\',\'' . ($i - $alter) . '\');">Delete</a><br />';
 				$hidden_variable2 .= $hidden_variable2 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
 			}else{ $alter++; }
 			$i++;
@@ -1630,7 +1630,7 @@ global $CFG, $MYVARS;
 				$displayname = $limit[0];
 			}
 
-			$returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <a href="javascript: delete_limit(\'hard_limits\',\'' . $i . '\');">Delete</a><br />';
+			$returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <a href="javascript:void(0);" onclick="delete_limit(\'hard_limits\',\'' . $i . '\');">Delete</a><br />';
 			$hidden_variable1 .= $hidden_variable1 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
 			$i++;
 		}
@@ -1649,7 +1649,7 @@ global $CFG, $MYVARS;
 				$displayname = $limit[0];
 			}
 
-			$returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <a href="javascript: delete_limit(\'soft_limits\',\'' . $i . '\');">Delete</a><br />';
+			$returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <a href="javascript:void(0);" onclick="delete_limit(\'soft_limits\',\'' . $i . '\');">Delete</a><br />';
 			$hidden_variable2 .= $hidden_variable2 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
 			$i++;
 		}
@@ -1719,7 +1719,7 @@ global $CFG, $MYVARS, $USER;
 	<span id="custom_limit_value_error" class="error_text"></span>
 	<span id="custom_limit_num_error" class="error_text"></span>
 	<span id="custom_limit_sorh_error" class="error_text"></span><br />
-	<input type="button" value="Add" onclick="javascript:add_custom_limit();" /></center>
+	<input type="button" value="Add" onclick="add_custom_limit();" /></center>
 	<script>prepareInputsForHints();</script>
 	';
 }
@@ -1757,7 +1757,8 @@ global $CFG, $MYVARS;
 	$siteviewable = dbescape($MYVARS->GET["siteviewable"]);
 	$extrainfo = dbescape((urldecode($MYVARS->GET["extrainfo"])));
 	$multiday = dbescape($MYVARS->GET["multiday"]);
-    
+    $workers = dbescape($MYVARS->GET["workers"]);
+
     //strtotime php5 fixes
     if(isset($MYVARS->GET["event_begin_date"])){
         $ebd = explode(" ",$MYVARS->GET["event_begin_date"]);
@@ -1816,11 +1817,11 @@ global $CFG, $MYVARS;
                             (pageid,template_id,name,category,location,allowinpage,start_reg,stop_reg,max_users,
     				        event_begin_date,event_begin_time,event_end_date,event_end_time,
     				        confirmed,siteviewable,allday,caleventid,extrainfo,fee_min,fee_full,payableto,checksaddress,
-    				        paypal,sale_fee,sale_end,contact,email,phone,hard_limits,soft_limits) 
+    				        paypal,sale_fee,sale_end,contact,email,phone,hard_limits,soft_limits,workers) 
                     VALUES('$pageid','$template_id','$name','$category','$location','$allowinpage','$start_reg','$stop_reg','$max_users',
                             '$event_begin_date','$event_begin_time','$event_end_date','$event_end_time',
                             '$confirmed','$siteviewable','$allday','$caleventid','$extrainfo','$fee_min','$fee_full','$payableto','$checksaddress',
-                            '$paypal','$sale_fee','$sale_end','$contact','$email','$phone','$hard_limits','$soft_limits')";
+                            '$paypal','$sale_fee','$sale_end','$contact','$email','$phone','$hard_limits','$soft_limits','workers')";
 
 		if($eventid = execute_db_sql($SQL)){
 			$MYVARS->GET['eventid'] = $eventid;
@@ -1853,7 +1854,7 @@ global $CFG, $MYVARS;
                      event_begin_date='$event_begin_date',event_begin_time='$event_begin_time',event_end_date='$event_end_date',event_end_time='$event_end_time',
                      sale_fee='$sale_fee',sale_end='$sale_end',contact='$contact',email='$email',phone='$phone',hard_limits='$hard_limits',soft_limits='$soft_limits',
                      siteviewable='$siteviewable',allday='$allday',extrainfo='$extrainfo',paypal='$paypal',fee_min='$fee_min',fee_full='$fee_full',
-                     payableto='$payableto',checksaddress='$checksaddress',confirmed='$confirmed'
+                     payableto='$payableto',checksaddress='$checksaddress',confirmed='$confirmed',workers='$workers'
 			WHERE eventid='" . dbescape($MYVARS->GET['eventid'])."'";
         
 		if(execute_db_sql($SQL)){
@@ -2119,5 +2120,164 @@ global $CFG, $MYVARS;
             echo '<script type="text/javascript">jwindow.close();</script>';  
         }  
     }
+}
+
+function templatesearch(){
+global $CFG, $MYVARS, $USER;
+    $MYVARS->search_perpage = 8;
+    $userid = $USER->userid; $searchstring = "";
+    $searchwords = trim($MYVARS->GET["searchwords"]);
+    //no search words given
+    if($searchwords == ""){
+        $searchwords = '%';
+    }
+    echo '<input type="hidden" id="searchwords" value="' . $searchwords . '" />';
+    //is a site admin
+    $admin = is_siteadmin($userid) ? true : false;
+    //Create the page limiter
+    $pagenum = isset($MYVARS->GET["pagenum"]) ? dbescape($MYVARS->GET["pagenum"]) : 0;
+    $firstonpage = $MYVARS->search_perpage * $pagenum;
+    $limit = " LIMIT $firstonpage," . $MYVARS->search_perpage;
+    $words = explode(" ", $searchwords);
+    $i = 0;
+    while(isset($words[$i])){
+        $searchpart = "(name LIKE '%" . dbescape($words[$i]) . "%')";
+        $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
+        $i++;
+    }
+    
+	$SQL = "SELECT * FROM events_templates 
+                WHERE (" . $searchstring . ") 
+                ORDER BY name";
+
+    $total = get_db_count($SQL); //get the total for all pages returned.
+    $SQL .= $limit; //Limit to one page of return.
+    $count = $total > (($pagenum+1) * $MYVARS->search_perpage) ? $MYVARS->search_perpage : $total - (($pagenum) * $MYVARS->search_perpage); //get the amount returned...is it a full page of results?
+    $results = get_db_result($SQL);
+    $amountshown = $firstonpage + $MYVARS->search_perpage < $total ? $firstonpage + $MYVARS->search_perpage : $total;
+    $prev = $pagenum > 0 ? '<a href="javascript: void(0);" onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+                                                                    ajaxapi(\'/features/events/events_ajax.php\',
+                                                                            \'templatesearch\',
+                                                                            \'&amp;pagenum=' . ($pagenum - 1) . '&amp;searchwords=\'+escape(\'' . $searchwords . '\'),
+                                                                            function() { 
+                                                                                if (xmlHttp.readyState == 4) { 
+                                                                                    simple_display(\'searchcontainer\'); 
+                                                                                    document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                                                                }
+                                                                            },
+                                                                            true
+                                                                    );" 
+                            onmouseup="this.blur()">
+                                <img src="' . $CFG->wwwroot . '/images/prev.gif" title="Previous Page" alt="Previous Page">
+                            </a>' : "";
+    $info = 'Viewing ' . ($firstonpage + 1) . " through " . $amountshown . " out of $total";
+    $next = $firstonpage + $MYVARS->search_perpage < $total ? '<a onmouseup="this.blur()" href="javascript: void(0);" onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+                                                                                                                                ajaxapi(\'/features/events/events_ajax.php\',
+                                                                                                                                        \'templatesearch\',
+                                                                                                                                        \'&amp;pagenum=' . ($pagenum + 1) . '&amp;searchwords=\'+escape(\'' . $searchwords . '\'),
+                                                                                                                                        function() { 
+                                                                                                                                            if (xmlHttp.readyState == 4) { 
+                                                                                                                                                simple_display(\'searchcontainer\'); 
+                                                                                                                                                document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                                                                                                                            }
+                                                                                                                                        },
+                                                                                                                                        true
+                                                                                                                                );">
+                                                                    <img src="' . $CFG->wwwroot . '/images/next.gif" title="Next Page" alt="Next Page">
+                                                                </a>' : "";
+    $header = $body = "";
+    if($count > 0){
+        $body .= '<tr style="height:30px;border:3px solid white;font-size:.9em;">
+                        <td style="width:40%;padding:5px;font-size:.85em;white-space:nowrap;">
+                            Name
+                        </td>
+                        <td style="width:20%;padding:5px;font-size:.75em;">
+                            Type
+                        </td>
+                        <td style="text-align:right;padding:5px;font-size:.75em;">
+                            Activated
+                        </td>
+                    </tr>';
+        while($template = fetch_row($results)){
+        	$export = "";
+            $header = $header == "" ? '<table style="width:100%;"><tr><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;font-size:.75em;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><p>' : $header;
+            
+            $type = $template["folder"] == "none" ? "DB" : "EXTERNAL";
+            
+			if(!empty($template["activated"])){ // ACTIVE
+                $status = '<a href="javascript: void(0)" onclick="ajaxapi(\'/features/events/events_ajax.php\',
+                                                                          \'change_template_status\',
+                                                                          \'&amp;status=1&amp;template_id='.$template["template_id"].'\',
+                                                                          function() { 
+                                                                            document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+                                                                            ajaxapi(\'/features/events/events_ajax.php\',
+                                                                                    \'templatesearch\',
+                                                                                    \'&amp;pagenum=' . $pagenum . '&amp;searchwords=\'+escape(\'' . $MYVARS->GET["searchwords"] . '\'),
+                                                                                    function() { 
+                                                                                        if (xmlHttp.readyState == 4) { 
+                                                                                            simple_display(\'searchcontainer\'); 
+                                                                                            document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                                                                        }
+                                                                                    },
+                                                                                    true
+                                                                            );
+                                                                          });">
+                                    <img src="' . $CFG->wwwroot . '/images/checked.gif" title="Deactivate Template" alt="Deactivate Template" />
+                                </a>';
+           	} else { // NOT ACTIVE
+                $status = '<a href="javascript: void(0)" onclick="ajaxapi(\'/features/events/events_ajax.php\',
+                                                                          \'change_template_status\',
+                                                                          \'&amp;status=0&amp;template_id='.$template["template_id"].'\',
+                                                                          function() { 
+                                                                            document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+                                                                            ajaxapi(\'/features/events/events_ajax.php\',
+                                                                                    \'templatesearch\',
+                                                                                    \'&amp;pagenum=' . $pagenum . '&amp;searchwords=\'+escape(\'' . $MYVARS->GET["searchwords"] . '\'),
+                                                                                    function() { 
+                                                                                        if (xmlHttp.readyState == 4) { 
+                                                                                            simple_display(\'searchcontainer\'); 
+                                                                                            document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                                                                        }
+                                                                                    },
+                                                                                    true
+                                                                            );
+                                                                          });">
+                    <img src="' . $CFG->wwwroot . '/images/inactive.gif" title="Activate Template" alt="Activate Template" />
+                </a>';
+           	}
+            
+			$body .= '<tr style="height:30px;border:3px solid white;font-size:.9em;">
+                        <td style="width:40%;padding:5px;font-size:.85em;white-space:nowrap;">
+                            ' . $template["name"] . '
+                        </td>
+                        <td style="width:20%;padding:5px;font-size:.75em;">
+                            ' . $type . '
+                        </td>
+                        <td style="text-align:right;padding:5px;">
+                            ' . $status . '
+                        </td>
+                    </tr>';
+        }
+        $body = '<table style="background-color:#F3F6FB;width:100%;border-collapse:collapse;">' . $body . '</table>';
+    }else{
+        echo '<span class="error_text" class="centered_span">No matches found.</span>';
+    }
+    echo $header . $body;
+}
+
+function change_template_status() {
+global $USER, $CFG, $MYVARS;
+    $template_id = $MYVARS->GET["template_id"];
+    $status = $MYVARS->GET["status"];
+    
+    if (is_numeric($template_id)) {
+        if ($status == "1") {
+            execute_db_sql("UPDATE events_templates SET activated='0' WHERE template_id='$template_id'");
+        } else if ($status == "0") {
+            execute_db_sql("UPDATE events_templates SET activated='1' WHERE template_id='$template_id'");
+        } else {
+            // Failed    
+        }
+    } 
 }
 ?>

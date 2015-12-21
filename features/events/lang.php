@@ -72,4 +72,5 @@ $HELP->input_location_add2 = "Addr. line 2: (ex. Marshall, IL)";
 $HELP->input_location_zip = "Zip Code: (ex. 62441)";
 $HELP->input_location_share = "Let other users use this location in their events.";
 $HELP->input_event_template = "Select a registration form template to use.";
+$HELP->input_event_workers = "Require event workers to apply.";
 ?>
