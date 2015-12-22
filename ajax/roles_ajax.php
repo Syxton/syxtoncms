@@ -323,36 +323,36 @@ global $CFG,$MYVARS;
     $i=0;
 	while(isset($abilities[$i])){
 		$ability = $abilities[$i];
-		$allow = $MYVARS->GET[$ability] == 1 ? 1 : 0;
+		$setting = $MYVARS->GET[$ability] == 1 ? 1 : 0;
 		if($pageid == $CFG->SITEID && !$featureid){
 			$default = get_db_field("allow","roles_ability","roleid='$roleid' AND ability='$ability'");
 			if($default !== false){
-				if($default !== $allow){
+				if($default !== $setting){
 					$section = get_db_field("section","abilities","ability='$ability'");
 					$success = execute_db_sql("DELETE FROM roles_ability WHERE roleid='$roleid' AND ability='$ability'") ? true : false;
-					$success = execute_db_sql("INSERT INTO roles_ability (roleid,section,ability,allow) VALUES('$roleid','$section','$ability','$allow')") ? true : false;	
+					$success = execute_db_sql("INSERT INTO roles_ability (roleid,section,ability,allow) VALUES('$roleid','$section','$ability','$setting')") ? true : false;	
 				}
 			}else{ //No entry
 				$section = get_db_field("section","abilities","ability='$ability'");
-				$success = execute_db_sql("INSERT INTO roles_ability (roleid,section,ability,allow) VALUES('$roleid','$section','$ability','$allow')") ? true : false;	
+				$success = execute_db_sql("INSERT INTO roles_ability (roleid,section,ability,allow) VALUES('$roleid','$section','$ability','$setting')") ? true : false;	
 			}			
 		}else{
 			$default = get_db_field("allow","roles_ability","roleid='$roleid' AND ability='$ability'");
             if($feature && $featureid){
-                $alreadyset = get_db_count("SELECT * FROM roles_ability_perfeature WHERE roleid='$roleid' AND pageid='$pageid' AND ability='$ability'");
+                $alreadyset = get_db_count("SELECT * FROM roles_ability_perfeature WHERE feature='$feature' AND featureid='$featureid' AND roleid='$roleid' AND pageid='$pageid' AND ability='$ability'");
     			if($alreadyset){
-    				if($allow == $default){ $success = execute_db_sql("DELETE FROM roles_ability_perfeature WHERE pageid='$pageid' AND roleid='$roleid' AND feature='$feature' AND featureid='$featureid' AND ability='$ability'") ? true : false;	
-    				}else{ $success = execute_db_sql("UPDATE roles_ability_perfeature SET allow='$allow' WHERE roleid='$roleid' AND feature='$feature' AND featureid='$featureid' AND ability='$ability'") ? true : false; }
-    			}elseif($allow != $default && !$alreadyset){
-    				$success = execute_db_sql("INSERT INTO roles_ability_perfeature (roleid,pageid,feature,featureid,ability,allow) VALUES('$roleid','$pageid','$feature','$featureid','$ability','$allow')") ? true : false;
+    				if($setting == $default){ $success = execute_db_sql("DELETE FROM roles_ability_perfeature WHERE pageid='$pageid' AND roleid='$roleid' AND feature='$feature' AND featureid='$featureid' AND ability='$ability'") ? true : false;	
+    				}else{ $success = execute_db_sql("UPDATE roles_ability_perfeature SET allow='$setting' WHERE roleid='$roleid' AND feature='$feature' AND featureid='$featureid' AND ability='$ability'") ? true : false; }
+    			}elseif($setting != $default && !$alreadyset){
+    				$success = execute_db_sql("INSERT INTO roles_ability_perfeature (roleid,pageid,feature,featureid,ability,allow) VALUES('$roleid','$pageid','$feature','$featureid','$ability','$setting')") ? true : false;
     			}            
             }else{
                 $alreadyset = get_db_count("SELECT * FROM roles_ability_perpage WHERE roleid='$roleid' AND pageid='$pageid' AND ability='$ability'");
                 if($alreadyset){
-    				if($allow == $default){ $success = execute_db_sql("DELETE FROM roles_ability_perpage WHERE pageid='$pageid' AND roleid='$roleid' AND ability='$ability'") ? true : false;	
-    				}else{ $success = execute_db_sql("UPDATE roles_ability_perpage SET allow='$allow' WHERE roleid='$roleid' AND ability='$ability' AND pageid='$pageid'") ? true : false; }
-    			}elseif($allow != $default && !$alreadyset){
-    				$success = execute_db_sql("INSERT INTO roles_ability_perpage (roleid,pageid,ability,allow) VALUES('$roleid','$pageid','$ability','$allow')") ? true : false;
+    				if($setting == $default){ $success = execute_db_sql("DELETE FROM roles_ability_perpage WHERE pageid='$pageid' AND roleid='$roleid' AND ability='$ability'") ? true : false;	
+    				}else{ $success = execute_db_sql("UPDATE roles_ability_perpage SET allow='$setting' WHERE roleid='$roleid' AND ability='$ability' AND pageid='$pageid'") ? true : false; }
+    			}elseif($setting != $default && !$alreadyset){
+    				$success = execute_db_sql("INSERT INTO roles_ability_perpage (roleid,pageid,ability,allow) VALUES('$roleid','$pageid','$ability','$setting')") ? true : false;
                 }	                	
     		}
 		}
