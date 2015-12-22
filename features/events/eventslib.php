@@ -1285,7 +1285,7 @@ global $CFG, $USER;
                                                                                                      "width"  => "640",
                                                                                                      "height" => "600",
                                                                                                      "iframe" => "true",
-                                                                                                     "image"  => $CFG->wwwroot . "/images/manage.png",
+                                                                                                     "image"  => $CFG->wwwroot . "/images/template.png",
                                                                                                      "styles" => "padding:1px;display:block;"))
                                                                             : "";
     return $content;
