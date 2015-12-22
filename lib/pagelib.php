@@ -3,8 +3,8 @@
 * pagelib.php - Page function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 3/25/2014
-* Revision: 3.1.2
+* Date: 12/22/2015
+* Revision: 3.1.3
 ***************************************************************************/
 
 if(!isset($LIBHEADER)){ include ('header.php'); }
@@ -470,11 +470,21 @@ function get_user_alerts($userid, $returncount = true, $internal = true){
 
 function print_logout_button($fname, $lname, $pageid = false){
 global $CFG, $USER;
-	if(!$pageid){ $pageid = $CFG->SITEID; }
+	if(empty($pageid)){ $pageid = $CFG->SITEID; }
     $edit = user_has_ability_in_page($USER->userid, "editprofile", $pageid) ? true : false;
-    $logout = '<a title="Log Out" style="line-height: 18px;font-size: 10px;vertical-align: top;" href="javascript: void(0)" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'get_login_box\',\'&amp;logout=1\',function() { clearInterval(myInterval); go_to_page(1);});">(Log Out)</a>';
-    $profile = $edit ? make_modal_links(array("title"=> "Edit Profile","text"=>"$fname $lname $logout","path"=>$CFG->wwwroot."/pages/user.php?action=change_profile","validate"=>"true","width"=>"500","image"=>$CFG->wwwroot."/images/user.png","styles"=>"line-height: 18px;font-size: 10px;vertical-align: top;")) : "<span style='line-height: 18px;font-size: 10px;vertical-align: top;'>$fname $lname $logout</span>";
-	return $profile . '<br />' . get_user_links($USER->userid, $pageid);
+    $param = array("title"       => "Edit Profile",
+                   "text"        => "$fname $lname",
+                   "path"        => $CFG->wwwroot."/pages/user.php?action=change_profile",
+                   "validate"    => "true",
+                   "width"       => "500",
+                   "image"       => $CFG->wwwroot."/images/user.png",
+                   "styles"      => "");
+    $profile = $edit ? make_modal_links($param) : "$fname $lname";
+
+    $logout = '<a title="Log Out" href="javascript: void(0)" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'get_login_box\',\'&amp;logout=1\',function() { clearInterval(myInterval); go_to_page('.$CFG->SITEID.');});">(Log Out)</a>';
+	return  '<span style="display:inline-block;line-height: 18px;font-size: 10px;">'.$profile.' '.$logout.'</span>' .
+            '<br />' .
+            get_user_links($USER->userid, $pageid);
 }
 
 function get_nav_items($pageid = false){
