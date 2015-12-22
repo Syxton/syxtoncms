@@ -3,8 +3,8 @@
 * htmllib.php - HTML feature library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 5/5/2014
-* Revision: 2.4.8
+* Date: 12/22/2015
+* Revision: 2.4.9
 ***************************************************************************/
 if(!isset($LIBHEADER)){ if(file_exists('./lib/header.php')){ include('./lib/header.php'); }elseif(file_exists('../lib/header.php')) { include('../lib/header.php'); }elseif(file_exists('../../lib/header.php')){ include('../../lib/header.php'); }}
 $HTMLLIB = true;
@@ -18,10 +18,8 @@ global $CFG, $USER, $HTMLSETTINGS;
 		$settings = fetch_settings("html",$featureid,$pageid);
 	}
 
-    if($pageid == $CFG->SITEID || $abilities->viewhtml->allow){
+    if($abilities->viewhtml->allow){
         return get_html($pageid, $featureid, $settings, $abilities, $area);
-    }else{
-        return get_css_box($settings->html->$featureid->feature_title->setting,get_error_message("no_html_permissions"),null, null, 'html', $featureid, false, false, false, false, false, false);
     }
 }
 
