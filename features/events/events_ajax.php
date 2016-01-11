@@ -1821,7 +1821,7 @@ global $CFG, $MYVARS;
                     VALUES('$pageid','$template_id','$name','$category','$location','$allowinpage','$start_reg','$stop_reg','$max_users',
                             '$event_begin_date','$event_begin_time','$event_end_date','$event_end_time',
                             '$confirmed','$siteviewable','$allday','$caleventid','$extrainfo','$fee_min','$fee_full','$payableto','$checksaddress',
-                            '$paypal','$sale_fee','$sale_end','$contact','$email','$phone','$hard_limits','$soft_limits','workers')";
+                            '$paypal','$sale_fee','$sale_end','$contact','$email','$phone','$hard_limits','$soft_limits','$workers')";
 
 		if($eventid = execute_db_sql($SQL)){
 			$MYVARS->GET['eventid'] = $eventid;
