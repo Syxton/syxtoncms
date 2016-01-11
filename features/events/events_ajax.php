@@ -3,8 +3,8 @@
 * events_ajax.php - Events backend ajax script
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 7/2/2015
-* Revision: 2.1.3
+* Date: 1/11/2016
+* Revision: 2.1.4
 ***************************************************************************/
 
 if(!isset($CFG)){ include('../header.php'); } 
@@ -1840,13 +1840,19 @@ global $CFG, $MYVARS;
                     }
                 }
             }
+   
+            if ($request) { return $eventid; }
             
-            if($request){ return $eventid; }
-		}else{ if(!$request){ echo "Event could NOT be added";} }
-		
-        //Log event added
-		log_entry("events", $eventid, "Event Added");
-		if(!$request){ echo "Event Added"; }
+            //Log event added
+    		log_entry("events", $eventid, "Event Added");
+    		if(!$request){ echo "Event Added"; }
+		} else {
+            if (!$request) { 
+                //Log event error
+                log_entry("events", 0, "Event could NOT be added");
+                echo "Event could NOT be added <br /> <br /> $SQL";
+            } 
+        }
 	}else{
 		$SQL = "UPDATE events SET
 			         template_id='$template_id',name='$name',category='$category',location='$location',allowinpage='$allowinpage',
@@ -1882,10 +1888,16 @@ global $CFG, $MYVARS;
             
 			//Log event update
 			log_entry("events", dbescape($MYVARS->GET["eventid"]), "Event Edited");
-			if(!$request){ echo "Event Edited"; }
-		}else{ if(!$request){ echo "Event could NOT be Edited"; } }
+			if (!$request) { echo "Event Edited"; }
+		} else { 
+            if (!$request) {
+                //Log event error
+                log_entry("events", dbescape($MYVARS->GET["eventid"]), "Event could NOT be edited");
+                echo "Event could NOT be Edited";
+            }
+        }
 	}
-//echo $SQL;
+
 	if($pageid == $CFG->SITEID && !empty($MYVARS->GET['eventid'])){
 		confirm_event($pageid,$MYVARS->GET['eventid'],true);
 	}
