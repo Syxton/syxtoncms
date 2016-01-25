@@ -357,6 +357,10 @@ function valid_new_event(){
 			}else{ document.getElementById("time_error").innerHTML = ""; }
 		}
 		if(document.getElementById("reg").value == "1"){ //Registration = YES
+            if(document.getElementById("template").value < 1){ 
+                document.getElementById("template_error").innerHTML = "Template must be selected.";
+                valid = false; 
+            }
 			if(document.getElementById("max").value == ""){ document.getElementById("max").value = "0"; }
 			if(document.getElementById("limits").value == "1"){
 				//max reg

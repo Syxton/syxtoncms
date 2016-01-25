@@ -903,7 +903,7 @@ global $CFG;
     $active = !empty($activeonly) ? ' activated=1' : '';
     if($templates = get_db_result("SELECT * FROM events_templates WHERE $active ORDER BY name")){
         while($template = fetch_row($templates)){
-            $returnme .= $returnme == "" ? '<select id="template" onchange=" clear_limits(); ajaxapi(\'/features/events/events_ajax.php\',\'show_template_settings\',\'&amp;eventid='.$eventid.'&amp;templateid=\'+document.getElementById(\'template\').value,function(){ simple_display(\'template_settings_div\');});">' : '';
+            $returnme .= $returnme == "" ? '<select id="template" onchange="clear_limits(); ajaxapi(\'/features/events/events_ajax.php\',\'show_template_settings\',\'&amp;eventid='.$eventid.'&amp;templateid=\'+document.getElementById(\'template\').value,function(){ simple_display(\'template_settings_div\');});"><option value="0">Select a template</option>' : '';
             $selectme = $selected && ($template['template_id'] == $selected) ? ' selected' : '';
             $returnme .= '<option value="' . $template['template_id'] . '"' . $selectme . '>' . stripslashes($template['name']) . '</option>';
         }
