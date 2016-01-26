@@ -3,8 +3,8 @@
 * lang.php - Event Lang library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 8/19/2013
-* Revision: 0.0.3
+* Date: 1/26/2016
+* Revision: 0.0.4
 ***************************************************************************/
  
 unset($HELP);
@@ -73,4 +73,35 @@ $HELP->input_location_zip = "Zip Code: (ex. 62441)";
 $HELP->input_location_share = "Let other users use this location in their events.";
 $HELP->input_event_template = "Select a registration form template to use.";
 $HELP->input_event_workers = "Require event workers to apply.";
+
+//STAFF APP AREA
+//STAFF APP HELP
+$HELP->input_staff_name = "Please enter your full name.";
+$HELP->input_staff_dob = "Please enter a date of birth.  <strong>(xx/xx/xxxx)</strong>";
+$HELP->input_staff_phone = "Please enter a phone number. <strong>(xxxxxxxxxx)</strong>";
+$HELP->input_staff_address = "Please enter an Address, City, State, Zip";
+$HELP->input_staff_agerange = "Please select an age range.";
+$HELP->input_staff_cocmember = "Please select Yes or No";
+$HELP->input_staff_congregation = "Please enter the name of the congregation you attend.";
+$HELP->input_staff_priorwork = "Please select Yes or No";
+$HELP->input_staff_q1_1 = "Please select Yes or No";
+$HELP->input_staff_q1_2 = "Please select Yes or No";
+$HELP->input_staff_q1_3 = "Please select Yes or No";
+$HELP->input_staff_q2_1 = "Please select Yes or No";
+$HELP->input_staff_q2_2 = "Please select Yes or No";
+$HELP->input_staff_q2_3 = "Please explain in detail.";
+$HELP->input_staff_parentalconsent = "Please enter the full name of your parent/guardian.";
+$HELP->input_staff_parentalconsentsig = "Checking this box denotes a parent/guardian signature.";
+$HELP->input_staff_workerconsent = "Please enter your full name.";
+$HELP->input_staff_workerconsentsig = "Checking this box denotes your signature.";
+$HELP->input_staff_workerconsentdate = "Please enter today's date.";
+$HELP->input_staff_refname = "Please enter the references name.";
+$HELP->input_staff_refrelationship = "Please enter the relationship to the applicant.";
+$HELP->input_staff_refphone = "Please enter a valid phone number of this reference.";
+
+//STAFF APP ERRORS
+$ERRORS->valid_staff_name = "A full name is required.";
+$ERRORS->valid_staff_dob = "A valid date must be entered.";
+$ERRORS->valid_staff_phone = "A contact phone number is required.";
+$ERRORS->valid_staff_phone_invalid = "This phone number is invalid.";
 ?>

@@ -3,12 +3,16 @@
 * eventslib.php - Events function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 6/2/2014
-* Revision: 2.8.1
+* Date: 1/26/2016
+* Revision: 2.8.2
 ***************************************************************************/
 
 if(!isset($LIBHEADER)){ if(file_exists('./lib/header.php')){ include('./lib/header.php'); }elseif(file_exists('../lib/header.php')) { include('../lib/header.php'); }elseif(file_exists('../../lib/header.php')){ include('../../lib/header.php'); }}
 $EVENTSLIB = true;
+if(empty($MYVARS)){ $MYVARS = new stdClass(); }
+$MYVARS->bgcyears = 5; // Background checks are invalid after x years
+$MYVARS->staffappmonths = 6; // Staff applications checks are invalid after x months
+$MYVARS->backgroundcheckurl = "http://protectmyministry.com/background-checks/volunteer-screening/";
 
 function display_events($pageid, $area, $featureid){
 global $CFG, $USER, $ROLES;
@@ -31,6 +35,10 @@ global $CFG, $USER, $ROLES;
         return get_calendar_of_events($title, $pageid, $featureid, false, $showpastevents, $content, $allowrequests);
     }else{
         if(is_logged_in()){ //Logged in user will see...
+            if(user_has_ability_in_page($USER->userid, "staffapply", $pageid, "events", $featureid)){ 
+                $content .= get_staff_application_button();    
+            }
+
             if(user_has_ability_in_page($USER->userid, "viewevents", $pageid, "events", $featureid)){                
                 //Get events that must be confirmed
                 if($pageid == $CFG->SITEID){
@@ -87,12 +95,17 @@ global $CFG, $USER, $ROLES;
     }
 }
 
+function get_staff_application_button(){
+global $CFG;
+    return '<div style="margin:5px;text-align:right;">'.make_modal_links(array("title"=>"Staff Application/Renewal Form","path"=>$CFG->wwwroot."/features/events/events.php?action=staff_application","validate"=>"true","width"=>"800","height"=>"650","image"=>$CFG->wwwroot."/images/staff.png","confirmexit"=>"true")).'</div>'; 
+}
+
 function get_event_request_link($area,$featureid){
 global $CFG;
     if($area == "middle"){
-        return '<span style="float:right;margin-top:-5px">'.make_modal_links(array("title"=>"Request an Event","path"=>$CFG->wwwroot."/features/events/events.php?action=event_request_form&amp;featureid=$featureid","validate"=>"true","width"=>"550","height"=>"650","image"=>$CFG->wwwroot."/images/request.gif")).'</span>'; 
+        return '<div style="text-align:right;">'.make_modal_links(array("title"=>"Request an Event","path"=>$CFG->wwwroot."/features/events/events.php?action=event_request_form&amp;featureid=$featureid","validate"=>"true","width"=>"550","height"=>"650","image"=>$CFG->wwwroot."/images/request.gif")).'</div>'; 
     }else{
-        return '<span style="float:right">'.make_modal_links(array("title"=>"Request an Event","path"=>$CFG->wwwroot."/features/events/events.php?action=event_request_form&amp;featureid=$featureid","validate"=>"true","width"=>"550","height"=>"650","image"=>$CFG->wwwroot."/images/request.gif")).'</span><br />';  
+        return '<div style="text-align:right;">'.make_modal_links(array("title"=>"Request an Event","path"=>$CFG->wwwroot."/features/events/events.php?action=event_request_form&amp;featureid=$featureid","validate"=>"true","width"=>"550","height"=>"650","image"=>$CFG->wwwroot."/images/request.gif")).'</div><br />';  
     }
 }
 
@@ -110,6 +123,9 @@ global $CFG, $USER, $ROLES;
     $site = $pageid == $CFG->SITEID ? "((e.pageid != $pageid AND siteviewable=1) OR (e.pageid = $pageid))" : "e.pageid = $pageid";
 
     if(is_logged_in()){
+        if(user_has_ability_in_page($USER->userid, "staffapply", $pageid, "events", $featureid)){ 
+            $content .= get_staff_application_button();    
+        }
         if(user_has_ability_in_page($USER->userid, "viewevents", $pageid, "events", $featureid)){
             $canview = true;
             $canconfirm = user_has_ability_in_page($USER->userid, "confirmevents", $CFG->SITEID, "events", $featureid) ? true : false;
@@ -1267,16 +1283,16 @@ global $CFG, $USER;
                                                                                                      "styles" => "padding:1px;display:block;"))
                                                                             : "";
     //Application Manager
-//    $content .= user_has_ability_in_page($USER->userid,"manageapplications",$pageid) ? make_modal_links(array("title"  => "Worker Applications",
-//                                                                                                     "text"   => "Worker Applications",
-//                                                                                                     "path"   => $CFG->wwwroot . "/features/events/events.php?action=application_manager&amp;pageid=$pageid",
-//                                                                                                     "iframe" => "true",
-//                                                                                                     "width"  => "640",
-//                                                                                                     "height" => "600",
-//                                                                                                     "iframe" => "true",
-//                                                                                                     "image"  => $CFG->wwwroot . "/images/manage.png",
-//                                                                                                     "styles" => "padding:1px;display:block;"))
-//                                                                            : "";
+    $content .= user_has_ability_in_page($USER->userid,"manageapplications",$pageid) ? make_modal_links(array("title"  => "Staff Applications",
+                                                                                                     "text"   => "Staff Applications",
+                                                                                                     "path"   => $CFG->wwwroot . "/features/events/events.php?action=application_manager&amp;pageid=$pageid",
+                                                                                                     "iframe" => "true",
+                                                                                                     "width"  => "640",
+                                                                                                     "height" => "600",
+                                                                                                     "iframe" => "true",
+                                                                                                     "image"  => $CFG->wwwroot . "/images/manage.png",
+                                                                                                     "styles" => "padding:1px;display:block;"))
+                                                                            : "";
     //Event Template Manager
     $content .= user_has_ability_in_page($USER->userid,"manageeventtemplates",$pageid) ? make_modal_links(array("title"  => "Event Templates",
                                                                                                      "text"   => "Event Templates",

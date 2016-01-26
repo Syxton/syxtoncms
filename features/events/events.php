@@ -3,8 +3,8 @@
 * events.php - Events page lib
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 9/16/2013
-* Revision: 1.4.5
+* Date: 1/26/2016
+* Revision: 1.4.6
 ***************************************************************************/
 if(empty($_POST["aslib"])){
     if(!isset($CFG)){ include('../header.php'); } 
@@ -143,6 +143,190 @@ global $CFG,$MYVARS,$USER;
     					<label for="description">Event Description</label><textarea rows="10" id="description" name="description" data-rule-required="true" data-msg-required="'.get_error_message('valid_request_description:events').'" /><div class="tooltipContainer info">'.get_help("input_request_description:events").'</div><br />
     	  			</div>
     		  		<input class="submit" name="submit" type="submit" onmouseover="this.focus();" value="Submit" />	
+    			</fieldset>
+    		</form>
+    	</div>';
+    }else{ echo "Sorry, This form is not available"; }
+}
+
+function staff_application(){
+global $CFG, $USER, $MYVARS;
+    if(isset($USER->userid)){
+        $row = get_db_row("SELECT * FROM events_staff WHERE userid='$USER->userid'"); //Update existing event
+        $v["staffid"] = empty($row) ? false : $row["staffid"];
+        $v["name"] = empty($row) ? $USER->fname . " " . $USER->lname : $row["name"];
+        $v["phone"] = empty($row) ? "" : $row["phone"];
+        $v["dateofbirth"] = empty($row) ? "" : (isset($row['dateofbirth']) ? date('m/d/Y',$row['dateofbirth']) : '');
+        $v["address"] = empty($row) ? "" : $row["address"];
+        $v["ar1selected"] = empty($row) ? "" : ($row["agerange"] == "0" ? "selected" : "");
+        $v["ar2selected"] = empty($row) ? "" : ($row["agerange"] == "1" ? "selected" : "");
+        $v["ar3selected"] = empty($row) ? "" : ($row["agerange"] == "2" ? "selected" : "");
+        $v["cocmembernoselected"] = empty($row) ? "" : ($row["cocmember"] == "0" ? "selected" : "");
+        $v["cocmemberyesselected"] = empty($row) ? "" : ($row["cocmember"] == "1" ? "selected" : "");
+        $v["congregation"] = empty($row) ? "" : $row["congregation"];
+        $v["priorworknoselected"] = empty($row) ? "" : ($row["priorwork"] == "0" ? "selected" : "");
+        $v["priorworkyesselected"] = empty($row) ? "" : ($row["priorwork"] == "1" ? "selected" : "");
+        $v["q1_1noselected"] = empty($row) ? "" : ($row["q1_1"] == "0" ? "selected" : "");
+        $v["q1_1yesselected"] = empty($row) ? "" : ($row["q1_1"] == "1" ? "selected" : "");
+        $v["q1_2noselected"] = empty($row) ? "" : ($row["q1_2"] == "0" ? "selected" : "");
+        $v["q1_2yesselected"] = empty($row) ? "" : ($row["q1_2"] == "1" ? "selected" : "");
+        $v["q1_3noselected"] = empty($row) ? "" : ($row["q1_3"] == "0" ? "selected" : "");
+        $v["q1_3yesselected"] = empty($row) ? "" : ($row["q1_3"] == "1" ? "selected" : "");
+        $v["q2_1noselected"] = empty($row) ? "" : ($row["q2_1"] == "0" ? "selected" : "");
+        $v["q2_1yesselected"] = empty($row) ? "" : ($row["q2_1"] == "1" ? "selected" : "");
+        $v["q2_2noselected"] = empty($row) ? "" : ($row["q2_2"] == "0" ? "selected" : "");
+        $v["q2_2yesselected"] = empty($row) ? "" : ($row["q2_2"] == "1" ? "selected" : "");
+        $v["q2_3"] = empty($row) ? "" : $row["q2_3"];
+        
+        $yestotal = empty($row) ? 0 : $row["q1_1"] + $row["q1_2"] + $row["q1_3"] + $row["q2_1"] + $row["q2_2"];
+        
+        $v["parentalconsent"] = empty($row) ? "" : $row["parentalconsent"];
+        $v["parentalconsentsig"] = empty($row) ? "" : ($row["parentalconsentsig"] == "1" ? "checked" : "");
+        
+        $sub18display = empty($v["ar1selected"]) ? "display:none" : "";
+        $v["workerconsent"] = empty($row) ? "" : $row["workerconsent"];
+        $v["workerconsentsig"] = empty($row) ? "" : ($row["workerconsentsig"] == "1" ? "checked" : "");
+        $v["workerconsentdate"] = empty($row) ? "" : (isset($row['workerconsentdate']) ? date('m/d/Y',$row['workerconsentdate']) : "");
+
+        $v["ref1name"] = empty($row) ? "" : $row["ref1name"];
+        $v["ref1relationship"] = empty($row) ? "" : $row["ref1relationship"];
+        $v["ref1phone"] = empty($row) ? "" : $row["ref1phone"];
+
+        $v["ref2name"] = empty($row) ? "" : $row["ref2name"];
+        $v["ref2relationship"] = empty($row) ? "" : $row["ref2relationship"];
+        $v["ref2phone"] = empty($row) ? "" : $row["ref2phone"];
+
+        $v["ref3name"] = empty($row) ? "" : $row["ref3name"];
+        $v["ref3relationship"] = empty($row) ? "" : $row["ref3relationship"];
+        $v["ref3phone"] = empty($row) ? "" : $row["ref3phone"];
+
+        $v["editing"] = time() - strtotime($v["workerconsentdate"]) <= (30 * $MYVARS->staffappmonths * 24 * 60 * 60) ? true : false;
+        
+        $v["workerconsentdate"] = empty($row) ? date('m/d/Y') : (isset($row['workerconsentdate']) ? date('m/d/Y',$row['workerconsentdate']) : date('m/d/Y'));
+
+        if(!isset($VALIDATELIB)){ include_once($CFG->dirroot . '/lib/validatelib.php'); }
+        	
+    	echo create_validation_script("staffapplication_form" , "ajaxapi('/features/events/events_ajax.php','event_staffapp',create_request_string('staffapplication_form'),function(){ simple_display('staffapplication_form_div'); });") . '
+    	<div class="formDiv" id="staffapplication_form_div">
+        <p align="center"><b><font size="+1">Staff Application</font></b></p><br /><br />
+    		<br /><br />
+            <style>.rowContainer label { width: 215px; } .rowContainer {padding-bottom: 25px;}</style>
+    		<form name="staffapplication_form" id="staffapplication_form">
+                '.(empty($v["staffid"]) ? '' : '<input type="hidden" id="staffid" name="staffid" value="'.$v["staffid"].'" />').'
+    			<fieldset class="formContainer">
+                    <div class="rowContainer">
+    					<label for="name">Name</label><input type="text" id="name" name="name" value="'.$v["name"].'" data-rule-required="true" data-msg-required="'.get_error_message('valid_staff_name:events').'" /><div class="tooltipContainer info">'.get_help("input_staff_name:events").'</div><br />
+    				</div>
+                    <div class="rowContainer">
+        				<label for="dateofbirth">Date of Birth</label><input type="text" id="dateofbirth" name="dateofbirth" value="'.$v["dateofbirth"].'" data-rule-required="true" data-rule-date="true" /><div class="tooltipContainer info">'.get_help("input_staff_dob:events").'</div>
+        			</div>
+                    <div class="rowContainer">
+				        <label for="phone">Phone</label><input type="text" id="phone" name="phone" value="'.$v["phone"].'" data-rule-required="true"  data-rule-phone="true" data-msg-required="'.get_error_message('valid_staff_phone:events').'" data-msg-phone="'.get_error_message('valid_staff_phone_invalid:events').'" /><div class="tooltipContainer info">'.get_help("input_staff_phone:events").'</div><br />
+                    </div>
+                    <div class="rowContainer">
+    					<label for="address">Address</label><textarea rows="3" id="address" name="address" data-rule-required="true">'.$v["address"].'</textarea><div class="tooltipContainer info">'.get_help("input_staff_address:events").'</div><br />
+    	  			</div>
+                    <div class="rowContainer">
+    					<label for="agerange">Age Range</label><select id="agerange" name="agerange" data-rule-required="true" onchange="if($(this).val() != 0){ $(\'#sub18\').hide(); $(\'#parentalconsent\').val(\'\'); $(\'#parentalconsent\').removeData(\'rule-required\').removeAttr(\'data-rule-required\'); $(\'#parentalconsentsig\').prop(\'checked\', false); $(\'#parentalconsentsig\').removeData(\'rule-required\').removeAttr(\'data-rule-required\'); } if($(this).val() == 0){ $(\'#parentalconsent\').val(\'\'); $(\'#parentalconsentsig\').prop(\'checked\', false); $(\'#parentalconsent\').removeData(\'rule-required\').attr(\'data-rule-required\',\'true\'); $(\'#sub18\').show(); }"><option>Please select</option><option value="0" '.$v["ar1selected"].'>18 or younger</option><option value="1" '.$v["ar2selected"].'>19-25</option><option value="2" '.$v["ar3selected"].'>26 or older</option></select><div class="tooltipContainer info">'.get_help("input_staff_agerange:events").'</div><br />
+    	  			</div>
+                    <div class="rowContainer">
+    					<label for="cocmember">Are you a member of the church of Christ?</label><select style="width:80px" id="cocmember" name="cocmember" data-rule-required="true"><option value="0" '.$v["cocmembernoselected"].'>No</option><option value="1" '.$v["cocmemberyesselected"].'>Yes</option></select><div class="tooltipContainer info">'.get_help("input_staff_cocmember:events").'</div><br />
+    	  			</div>
+                    <div class="rowContainer">
+    					<label for="congregation">Congregation Name</label><input id="congregation" name="congregation" value="'.$v["congregation"].'" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("input_staff_congregation:events").'</div><br />
+    	  			</div>
+                    <div class="rowContainer">
+    					<label for="priorwork">Have you worked at Camp Wabashi as a staff member before?</label><select style="width:80px" id="priorwork" name="priorwork" data-rule-required="true"><option value="0" '.$v["priorworknoselected"].'>No</option><option value="1" '.$v["priorworkyesselected"].'>Yes</option></select><div class="tooltipContainer info">'.get_help("input_staff_priorwork:events").'</div><br />
+    	  			</div>
+                    <br /><hr><br />
+                    <h3>Have you at any time ever:</h3>
+                    <div class="rowContainer">
+    					<label for="q1_1">Been arrested for any reason?</label><select onchange="if(($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0){ $(\'#q2_3\').attr(\'data-rule-required\', \'true\'); } else { $(\'#q2_3\').removeData(\'rule-required\').removeAttr(\'data-rule-required\'); }" style="width:80px" id="q1_1" name="q1_1" data-rule-required="true"><option value="0" '.$v["q1_1noselected"].'>No</option><option value="1" '.$v["q1_1yesselected"].'>Yes</option></select><div class="tooltipContainer info">'.get_help("input_staff_q1_1:events").'</div><br />
+    	  			</div>
+                    <div class="rowContainer">
+    					<label for="q1_2">Been convicted of, or pleaded guilty or no contest to, any crime?</label><select onchange="if(($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0){ $(\'#q2_3\').attr(\'data-rule-required\', \'true\'); } else { $(\'#q2_3\').removeData(\'rule-required\').removeAttr(\'data-rule-required\'); }" style="width:80px" id="q1_2" name="q1_2" data-rule-required="true"><option value="0" '.$v["q1_2noselected"].'>No</option><option value="1" '.$v["q1_2yesselected"].'>Yes</option></select><div class="tooltipContainer info">'.get_help("input_staff_q1_2:events").'</div><br />
+    	  			</div>
+                    <div class="rowContainer">
+    					<label for="q1_3">Engaged in, or been accused of, any child molestation, exploitation, or abuse?</label><select onchange="if(($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0){ $(\'#q2_3\').attr(\'data-rule-required\', \'true\'); } else { $(\'#q2_3\').removeData(\'rule-required\').removeAttr(\'data-rule-required\'); }" style="width:80px" id="q1_3" name="q1_3" data-rule-required="true"><option value="0" '.$v["q1_3noselected"].'>No</option><option value="1" '.$v["q1_3yesselected"].'>Yes</option></select><div class="tooltipContainer info">'.get_help("input_staff_q1_3:events").'</div><br />
+    	  			</div>
+                    <br /><hr><br />
+                    <h3>Are you aware of:</h3>
+                    <div class="rowContainer">
+    					<label for="q2_1">Having any traits or tendencies that could pose any threat to children, youth, or others?</label><select onchange="if(($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0){ $(\'#q2_3\').attr(\'data-rule-required\', \'true\'); } else { $(\'#q2_3\').removeData(\'rule-required\').removeAttr(\'data-rule-required\'); }" style="width:80px" id="q2_1" name="q2_1" data-rule-required="true"><option value="0" '.$v["q2_1noselected"].'>No</option><option value="1" '.$v["q2_1yesselected"].'>Yes</option></select><div class="tooltipContainer info">'.get_help("input_staff_q2_1:events").'</div><br />
+    	  			</div>
+                    <div class="rowContainer">
+    					<label for="q2_2">Any reason why you should not work with children, youth, or others?</label><select onchange="if(($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0){ $(\'#q2_3\').attr(\'data-rule-required\', \'true\'); } else { $(\'#q2_3\').removeData(\'rule-required\').removeAttr(\'data-rule-required\'); }" style="width:80px" id="q2_2" name="q2_2" data-rule-required="true"><option value="0" '.$v["q2_2noselected"].'>No</option><option value="1" '.$v["q2_2yesselected"].'>Yes</option></select><div class="tooltipContainer info">'.get_help("input_staff_q2_2:events").'</div><br />
+    	  			</div>
+                    <div class="rowContainer">
+    					<label for="q2_3">If the answer to any of these questions is "Yes", please explain in detail</label><textarea rows="3" id="q2_3" name="q2_3" '.(empty($yestotal) ? '' : 'data-rule-required="true"').'>'.$v["q2_3"].'</textarea><div class="tooltipContainer info">'.get_help("input_staff_q1_3:events").'</div><br />
+    	  			</div>
+                    <br /><hr><br />
+                    <h3>Worker Renewal Work Verification and Release</h3><br />
+                    <em>I recognize that Wabash Valley Christian Youth Camp is relying on the accuracy of the information I provide on the Worker Renewal Application form.   Accordingly, I attest and affirm that the information I have provided is absolutely true and correct.
+                    <br />
+                    I voluntarily release the organization and any such person or entity listed on the Worker Renewal Application form from liability involving the communication of information relating to my background or qualifications.   I further authorize the organization to conduct a criminal background investigation if such a check is deemed necessary.
+                    <br />
+                    I agree to abide by all policies and procedures of the organization and to protect the health and safety of the children or youth assigned to my care or supervision at all times.
+                    </em>
+    		  		<br /><br />
+                    <div class="rowContainer">
+    					<label for="workerconsent">Full Name</label><input type="text" id="workerconsent" name="workerconsent" value="'.$v["workerconsent"].'" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("input_staff_workerconsent:events").'</div><br />
+    				</div>
+                    <div class="rowContainer">
+        				<label for="workerconsentdate">Date</label><input type="text" id="workerconsentdate" name="workerconsentdate" value="'.$v["workerconsentdate"].'" data-rule-required="true" data-rule-date="true" '.($v["editing"] ? "disabled='disabled'" : '').'/><div class="tooltipContainer info">'.get_help("input_staff_workerconsentdate:events").'</div>
+        			</div>
+                    <div class="rowContainer">
+    					<label for="workerconsentsig">Signature</label><input style="width: 50px" type="checkbox" id="workerconsentsig" name="workerconsentsig" '.$v["workerconsentsig"].' data-rule-required="true" /><div class="tooltipContainer info">'.get_help("input_staff_workerconsentsig:events").'</div><br />
+    				</div>
+                    <div id="sub18" style="'.$sub18display.'">
+                        <br /><hr><br />
+                            <div style="background:#FFED00;padding:5px;">
+                            <strong>If you are under 18, please have a parent or guardian affirm to the following:</strong><br />
+                            <em>I swear and affirm that I am not aware of any traits or tendencies of the applicant that could pose a threat to children, youth or others and that I am not aware of any reasons why the applicant should not work with children, youth, or others.</em>
+            		  		<br /><br />
+                            <div class="rowContainer">
+            					<label for="parentalconsent">Parent or Gurdian Full Name</label><input type="text" id="parentalconsent" name="parentalconsent" value="'.$v["parentalconsent"].'" '.(empty($v["ar1selected"]) ? '' : 'data-rule-required="true"').' /><div class="tooltipContainer info">'.get_help("input_staff_parentalconsent:events").'</div><br />
+            				</div>
+                            <div class="rowContainer">
+            					<label for="parentalconsentsig">Parent or Guardian Signature</label><input style="width: 50px" type="checkbox" id="parentalconsentsig" name="parentalconsentsig" '.$v["parentalconsentsig"].' '.(empty($v["ar1selected"]) ? '' : 'data-rule-required="true"').' /><div class="tooltipContainer info">'.get_help("input_staff_parentalconsentsig:events").'</div><br />
+            				</div>
+                        </div>
+                    </div>
+                    <br /><hr><br />
+                    <h3>References #1</h3><br />
+    		  		<br />
+                    <div class="rowContainer">
+    					<label for="ref1name">Name</label><input type="text" id="ref1name" name="ref1name" value="'.$v["ref1name"].'" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("input_staff_refname:events").'</div><br />
+    				</div>
+                    <div class="rowContainer">
+    					<label for="ref1relationship">Relationship</label><input type="text" id="ref1relationship" name="ref1relationship" value="'.$v["ref1relationship"].'" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("input_staff_refrelationship:events").'</div><br />
+    				</div>
+                    <div class="rowContainer">
+				        <label for="ref1phone">Phone</label><input type="text" id="ref1phone" name="ref1phone" value="'.$v["ref1phone"].'" data-rule-required="true"  data-rule-phone="true" data-msg-required="'.get_error_message('valid_staff_phone:events').'" data-msg-phone="'.get_error_message('valid_staff_phone_invalid:events').'" /><div class="tooltipContainer info">'.get_help("input_staff_phone:events").'</div><br />
+                    </div>
+                    <br /><hr><br />
+                    <h3>References #2</h3><br />
+                    <div class="rowContainer">
+    					<label for="ref2name">Name</label><input type="text" id="ref2name" name="ref2name" value="'.$v["ref2name"].'" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("input_staff_refname:events").'</div><br />
+    				</div>
+                    <div class="rowContainer">
+    					<label for="ref2relationship">Relationship</label><input type="text" id="ref2relationship" name="ref2relationship" value="'.$v["ref2relationship"].'" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("input_staff_refrelationship:events").'</div><br />
+    				</div>
+                    <div class="rowContainer">
+				        <label for="ref2phone">Phone</label><input type="text" id="ref2phone" name="ref2phone" value="'.$v["ref2phone"].'" data-rule-required="true"  data-rule-phone="true" data-msg-required="'.get_error_message('valid_staff_phone:events').'" data-msg-phone="'.get_error_message('valid_staff_phone_invalid:events').'" /><div class="tooltipContainer info">'.get_help("input_staff_phone:events").'</div><br />
+                    </div>
+                    <br /><hr><br />
+                    <h3>References #3</h3><br />
+                    <div class="rowContainer">
+    					<label for="ref3name">Name</label><input type="text" id="ref3name" name="ref3name" value="'.$v["ref3name"].'" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("input_staff_refname:events").'</div><br />
+    				</div>
+                    <div class="rowContainer">
+    					<label for="ref3relationship">Relationship</label><input type="text" id="ref3relationship" name="ref3relationship" value="'.$v["ref3relationship"].'" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("input_staff_refrelationship:events").'</div><br />
+    				</div>
+                    <div class="rowContainer">
+				        <label for="ref3phone">Phone</label><input type="text" id="ref3phone" name="ref3phone" value="'.$v["ref3phone"].'" data-rule-required="true"  data-rule-phone="true" data-msg-required="'.get_error_message('valid_staff_phone:events').'" data-msg-phone="'.get_error_message('valid_staff_phone_invalid:events').'" /><div class="tooltipContainer info">'.get_help("input_staff_phone:events").'</div><br />
+                    </div>
+                    <input class="submit" name="submit" type="submit" onmouseover="this.focus();" value="Submit Application" />	
     			</fieldset>
     		</form>
     	</div>';

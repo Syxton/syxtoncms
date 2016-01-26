@@ -3,8 +3,8 @@
 * events_ajax.php - Events backend ajax script
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 1/11/2016
-* Revision: 2.1.4
+* Date: 1/26/2016
+* Revision: 2.1.5
 ***************************************************************************/
 
 if(!isset($CFG)){ include('../header.php'); } 
@@ -13,6 +13,81 @@ if(!isset($EVENTSLIB)){ include_once($CFG->dirroot . '/features/events/eventslib
 update_user_cookie();
 
 callfunction();
+
+function event_staffapp(){
+global $CFG,$MYVARS,$USER;
+    $userid = dbescape($USER->userid);
+    $staffid = empty($MYVARS->GET["staffid"]) ? false : dbescape($MYVARS->GET["staffid"]);
+    
+    $name = dbescape($MYVARS->GET["name"]);
+    $phone = dbescape($MYVARS->GET["phone"]);
+    $dateofbirth = dbescape(strtotime($MYVARS->GET["dateofbirth"]));
+    $address = dbescape($MYVARS->GET["address"]);
+    $agerange = dbescape($MYVARS->GET["agerange"]);
+    $cocmember = dbescape($MYVARS->GET["cocmember"]);
+    $congregation = dbescape($MYVARS->GET["congregation"]);
+    $priorwork = dbescape($MYVARS->GET["priorwork"]);
+    $q1_1 = dbescape($MYVARS->GET["q1_1"]);
+    $q1_2 = dbescape($MYVARS->GET["q1_2"]);
+    $q1_3 = dbescape($MYVARS->GET["q1_3"]);
+    $q2_1 = dbescape($MYVARS->GET["q2_1"]);
+    $q2_2 = dbescape($MYVARS->GET["q2_2"]);
+    $q2_3 = dbescape($MYVARS->GET["q2_3"]);
+    $parentalconsent = dbescape($MYVARS->GET["parentalconsent"]);
+    $parentalconsentsig = dbescape($MYVARS->GET["parentalconsentsig"]);
+    $workerconsent = dbescape($MYVARS->GET["workerconsent"]);
+    $workerconsentsig = dbescape($MYVARS->GET["workerconsentsig"]);
+    $workerconsentdate = dbescape(strtotime($MYVARS->GET["workerconsentdate"]));
+
+    $ref1name = dbescape($MYVARS->GET["ref1name"]);
+    $ref1relationship = dbescape($MYVARS->GET["ref1relationship"]);
+    $ref1phone = dbescape($MYVARS->GET["ref1phone"]);
+
+    $ref2name = dbescape($MYVARS->GET["ref2name"]);
+    $ref2relationship = dbescape($MYVARS->GET["ref2relationship"]);
+    $ref2phone = dbescape($MYVARS->GET["ref2phone"]);
+
+    $ref3name = dbescape($MYVARS->GET["ref3name"]);
+    $ref3relationship = dbescape($MYVARS->GET["ref3relationship"]);
+    $ref3phone = dbescape($MYVARS->GET["ref3phone"]);
+    
+    if(!empty($staffid)) {
+        $SQL = "UPDATE events_staff SET userid='$userid',name='$name',phone='$phone',dateofbirth='$dateofbirth',address='$address',
+                    agerange='$agerange',cocmember='$cocmember',congregation='$congregation',priorwork='$priorwork',
+                    q1_1='$q1_1',q1_2='$q1_2',q1_3='$q1_3',q2_1='$q2_1',q2_2='$q2_2',q2_3='$q2_3',
+                    parentalconsent='$parentalconsent',parentalconsentsig='$parentalconsentsig',
+                    workerconsent='$workerconsent',workerconsentsig='$workerconsentsig',workerconsentdate='$workerconsentdate',
+                    ref1name='$ref1name',ref1relationship='$ref1relationship',ref1phone='$ref1phone',
+                    ref2name='$ref2name',ref2relationship='$ref2relationship',ref2phone='$ref2phone',
+                    ref3name='$ref3name',ref3relationship='$ref3relationship',ref3phone='$ref3phone'
+                    WHERE staffid='$staffid'";
+        $success = execute_db_sql($SQL);
+        $message = "Application Updated";
+    } else {
+        $SQL = "INSERT INTO events_staff 
+                    (userid,name,phone,dateofbirth,address,agerange,cocmember,congregation,priorwork,q1_1,q1_2,q1_3,q2_1,q2_2,q2_3,parentalconsent,parentalconsentsig,workerconsent,workerconsentsig,workerconsentdate,ref1name,ref1relationship,ref1phone,ref2name,ref2relationship,ref2phone,ref3name,ref3relationship,ref3phone) 
+                    VALUES('$userid','$name','$phone','$dateofbirth','$address','$agerange','$cocmember','$congregation','$priorwork','$q1_1','$q1_2','$q1_3','$q2_1','$q2_2','$q2_3','$parentalconsent','$parentalconsentsig','$workerconsent','$workerconsentsig','$workerconsentdate','$ref1name','$ref1relationship','$ref1phone','$ref2name','$ref2relationship','$ref2phone','$ref3name','$ref3relationship','$ref3phone')";    
+        $success = execute_db_sql($SQL);
+        $message = "Application Complete";
+    }
+
+    		  
+    //Save the request
+    if($success){
+            $staffid = !empty($staffid) ? $staffid : $success;
+            $staff = get_db_row("SELECT * FROM events_staff WHERE staffid='$staffid'");
+            $status = empty($staff["bgcheckpass"]) ? false : (time()-$staff["bgcheckpassdate"] > ($MYVARS->bgcyears * 365 * 24 * 60 * 60) ? false : true);
+			$backgroundchecklink = $status ? '' : '
+               <br /><br />
+               If you have not already done so, please complete a background check.<br />
+               <h2><a href="'.$MYVARS->backgroundcheckurl.'">Submit a background check</a></h2>
+               '; 
+        echo "<div style='text-align:center;'><h1>$message</h1>
+        $backgroundchecklink
+        </div>";
+    }else{ echo "<div style='text-align:center;'><h1>Failed to save application.</h1></div>"; }    
+}
+
 
 //See if the date given is open for a requested event
 function request_date_open(){
@@ -2291,5 +2366,142 @@ global $USER, $CFG, $MYVARS;
             // Failed    
         }
     } 
+}
+
+function change_bgcheck_status() {
+global $USER, $CFG, $MYVARS;
+    $staffid = $MYVARS->GET["staffid"];
+    $date = strtotime($MYVARS->GET["bgcdate"]);
+    
+    if (is_numeric($staffid) && is_numeric($date)) {
+        execute_db_sql("UPDATE events_staff SET bgcheckpassdate='$date',bgcheckpass='1' WHERE staffid='$staffid'");
+    } else {
+        echo "Failed";   
+    }
+}
+
+function appsearch(){
+global $CFG, $MYVARS, $USER;
+    $MYVARS->search_perpage = 8;
+    $userid = $USER->userid; $searchstring = "";
+    $searchwords = trim($MYVARS->GET["searchwords"]);
+    //no search words given
+    if($searchwords == ""){
+        $searchwords = '%';
+    }
+    echo '<input type="hidden" id="searchwords" value="' . $searchwords . '" />';
+    //is a site admin
+    $admin = is_siteadmin($userid) ? true : false;
+    //Create the page limiter
+    $pagenum = isset($MYVARS->GET["pagenum"]) ? dbescape($MYVARS->GET["pagenum"]) : 0;
+    $firstonpage = $MYVARS->search_perpage * $pagenum;
+    $limit = " LIMIT $firstonpage," . $MYVARS->search_perpage;
+    $words = explode(" ", $searchwords);
+    $i = 0;
+    while(isset($words[$i])){
+        $searchpart = "(name LIKE '%" . dbescape($words[$i]) . "%')";
+        $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
+        $i++;
+    }
+    
+	$SQL = "SELECT * FROM events_staff 
+                WHERE (" . $searchstring . ") 
+                ORDER BY name";
+
+    $total = get_db_count($SQL); //get the total for all pages returned.
+    $SQL .= $limit; //Limit to one page of return.
+    $count = $total > (($pagenum+1) * $MYVARS->search_perpage) ? $MYVARS->search_perpage : $total - (($pagenum) * $MYVARS->search_perpage); //get the amount returned...is it a full page of results?
+    $results = get_db_result($SQL);
+    $amountshown = $firstonpage + $MYVARS->search_perpage < $total ? $firstonpage + $MYVARS->search_perpage : $total;
+    $prev = $pagenum > 0 ? '<a href="javascript: void(0);" onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+                                                                    ajaxapi(\'/features/events/events_ajax.php\',
+                                                                            \'templatesearch\',
+                                                                            \'&amp;pagenum=' . ($pagenum - 1) . '&amp;searchwords=\'+escape(\'' . $searchwords . '\'),
+                                                                            function() { 
+                                                                                if (xmlHttp.readyState == 4) { 
+                                                                                    simple_display(\'searchcontainer\'); 
+                                                                                    document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                                                                }
+                                                                            },
+                                                                            true
+                                                                    );" 
+                            onmouseup="this.blur()">
+                                <img src="' . $CFG->wwwroot . '/images/prev.gif" title="Previous Page" alt="Previous Page">
+                            </a>' : "";
+    $info = 'Viewing ' . ($firstonpage + 1) . " through " . $amountshown . " out of $total";
+    $next = $firstonpage + $MYVARS->search_perpage < $total ? '<a onmouseup="this.blur()" href="javascript: void(0);" onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+                                                                                                                                ajaxapi(\'/features/events/events_ajax.php\',
+                                                                                                                                        \'templatesearch\',
+                                                                                                                                        \'&amp;pagenum=' . ($pagenum + 1) . '&amp;searchwords=\'+escape(\'' . $searchwords . '\'),
+                                                                                                                                        function() { 
+                                                                                                                                            if (xmlHttp.readyState == 4) { 
+                                                                                                                                                simple_display(\'searchcontainer\'); 
+                                                                                                                                                document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                                                                                                                            }
+                                                                                                                                        },
+                                                                                                                                        true
+                                                                                                                                );">
+                                                                    <img src="' . $CFG->wwwroot . '/images/next.gif" title="Next Page" alt="Next Page">
+                                                                </a>' : "";
+    $header = $body = "";
+    if($count > 0){
+        $body .= '<tr style="height:30px;border:3px solid white;font-size:.9em;">
+                        <td style="width:40%;padding:5px;font-size:.85em;white-space:nowrap;">
+                            Name
+                        </td>
+                        <td style="width:35%;padding:5px;font-size:.75em;">
+                            Status
+                        </td>
+                        <td style="text-align:right;padding:5px;font-size:.75em;">
+                            Date / Edit
+                        </td>
+                    </tr>';
+        while($staff = fetch_row($results)){
+        	$export = "";
+            $header = $header == "" ? '<table style="width:100%;"><tr><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;font-size:.75em;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><p>' : $header;
+            
+            $old = time() - $staff["workerconsentdate"] >=  (30 * $MYVARS->staffappmonths * 24 * 60 * 60)  ? true : false;
+            
+            $status = !empty($old) ? "<div style='color:red;font-weight:bold'>Application Out of Date</div>" : '';
+            $status .= empty($staff["bgcheckpass"]) ? "<div style='color:red;font-weight:bold'>Background Check Incomplete</div> " : (time()-$staff["bgcheckpassdate"] > ($MYVARS->bgcyears * 365 * 24 * 60 * 60) ? " <div style='color:orange;font-weight:bold'>Background Check Out of Date</div> " : "");
+			$status = empty($status) ? "PASSED" : $status;
+            
+            $button = '<a href="javascript: void(0)" onclick="if($(\'#bgcheckdate_'.$staff["staffid"].'\').prop(\'disabled\')){ $(\'#bgcheckdate_'.$staff["staffid"].'\').prop(\'disabled\', false); } else { ajaxapi(\'/features/events/events_ajax.php\',
+                                                                      \'change_bgcheck_status\',
+                                                                      \'&amp;bgcdate=\'+$(\'#bgcheckdate_'.$staff["staffid"].'\').val()+\'&amp;staffid='.$staff["staffid"].'\',
+                                                                      function() { 
+                                                                        document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+                                                                        ajaxapi(\'/features/events/events_ajax.php\',
+                                                                                \'appsearch\',
+                                                                                \'&amp;pagenum=' . $pagenum . '&amp;searchwords=\'+escape(\'' . $MYVARS->GET["searchwords"] . '\'),
+                                                                                function() { 
+                                                                                    if (xmlHttp.readyState == 4) { 
+                                                                                        simple_display(\'searchcontainer\'); 
+                                                                                        document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                                                                    }
+                                                                                },
+                                                                                true
+                                                                        );
+                                                                      }); }">
+                <img src="' . $CFG->wwwroot . '/images/inactive.gif" title="Edit Background Check Date" alt="Edit Background Check Date" />
+            </a>';
+            $bgcheckdate = empty($staff["bgcheckpassdate"]) ? '' : date('m/d/Y', $staff["bgcheckpassdate"]);
+			$body .= '<tr style="height:30px;border:3px solid white;font-size:.9em;">
+                        <td style="width:40%;padding:5px;font-size:.85em;white-space:nowrap;">
+                            ' . $staff["name"] . '
+                        </td>
+                        <td style="width:20%;padding:5px;font-size:.75em;">
+                            ' . $status . '
+                        </td>
+                        <td style="text-align:right;padding:5px;">
+                            <input style="width: 100px;" type="text" disabled="disabled" id="bgcheckdate_'.$staff["staffid"].'" name="bgcheckdate_'.$staff["staffid"].'" value="'.$bgcheckdate.'" />' . $button . '
+                        </td>
+                    </tr>';
+        }
+        $body = '<table style="background-color:#F3F6FB;width:100%;border-collapse:collapse;">' . $body . '</table>';
+    }else{
+        echo '<span class="error_text" class="centered_span">No matches found.</span>';
+    }
+    echo $header . $body;
 }
 ?>

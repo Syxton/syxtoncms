@@ -3,8 +3,8 @@
 * db.php - feature db upgrades
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 4/09/2013
-* Revision: 0.0.5
+* Date: 1/26/2016
+* Revision: 0.0.6
 ***************************************************************************/
 
 function events_upgrade(){
@@ -79,12 +79,61 @@ global $CFG;
     //Activate and Deactivate templates
 	$thisversion = 20151223;
 	if($version < $thisversion){
-		$SQL = "ALTER TABLE `events_templates` ADD  `activated` INT( 1 ) NOT NULL DEFAULT  '1', ADD INDEX (  `activated` )";
-        $SQL2 = "ALTER TABLE `events` ADD  `workers` INT( 1 ) NOT NULL DEFAULT  '0', ADD INDEX (  `workers` )";
-		if(execute_db_sql($SQL2) && execute_db_sql($SQL)){ //if successful upgrade
+		$SQL = "ALTER TABLE `events_templates` ADD IF NOT EXISTS `activated` INT( 1 ) NOT NULL DEFAULT  '1', ADD INDEX (  `activated` )";
+        execute_db_sql($SQL);
+        $SQL2 = "ALTER TABLE `events` ADD IF NOT EXISTS `workers` INT( 1 ) NOT NULL DEFAULT  '0', ADD INDEX (  `workers` )";
+        execute_db_sql($SQL2);
+		if(get_db_row("SELECT * FROM events WHERE workers >= 0") && get_db_row("SELECT * FROM events_templates WHERE activated >= 0")){ //if successful upgrade
             add_role_ability('events','manageevents','Events','1','Manage Events','1','1');
             add_role_ability('events','manageapplications','Events','2','Manage worker applications','1','1');
             add_role_ability('events','manageeventtemplates','Events','2','Manage event templates','1','1');
+			execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
+		}
+	}
+
+    //Activate and Deactivate templates
+	$thisversion = 20160125;
+	if($version < $thisversion){
+        $SQL = "CREATE TABLE IF NOT EXISTS `events_staff` (
+          `staffid` int(11) NOT NULL AUTO_INCREMENT,
+          `userid` int(11) NOT NULL,
+          `name` varchar(200) NOT NULL,
+          `dateofbirth` int(11) NOT NULL,
+          `phone` varchar(20) NOT NULL,
+          `address` varchar(200) NOT NULL,
+          `agerange` varchar(2) NOT NULL,
+          `cocmember` varchar(2) NOT NULL,
+          `congregation` varchar(200) NOT NULL,
+          `priorwork` varchar(2) NOT NULL,
+          `q1_1` varchar(2) NOT NULL,
+          `q1_2` varchar(2) NOT NULL,
+          `q1_3` varchar(2) NOT NULL,
+          `q2_1` varchar(2) NOT NULL,
+          `q2_2` varchar(2) NOT NULL,
+          `q2_3` varchar(200) NOT NULL,
+          `parentalconsent` varchar(200) NOT NULL,
+          `parentalconsentsig` varchar(10) NOT NULL,
+          `workerconsent` varchar(200) NOT NULL,
+          `workerconsentsig` varchar(10) NOT NULL,
+          `workerconsentdate` int(11) NOT NULL,
+          `ref1name` varchar(200) NOT NULL,
+          `ref1relationship` varchar(200) NOT NULL,
+          `ref1phone` varchar(20) NOT NULL,
+          `ref2name` varchar(200) NOT NULL,
+          `ref2relationship` varchar(200) NOT NULL,
+          `ref2phone` varchar(20) NOT NULL,
+          `ref3name` varchar(200) NOT NULL,
+          `ref3relationship` varchar(200) NOT NULL,
+          `ref3phone` varchar(20) NOT NULL,
+          `bgcheckpass` varchar(2) NOT NULL,
+          `bgcheckpassdate` int(11) NOT NULL,
+          PRIMARY KEY `staffid` (`staffid`),
+          KEY `userid` (`userid`),
+          KEY `dateofbirth` (`dateofbirth`),
+          KEY `priorwork` (`priorwork`)
+        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
+		if(execute_db_sql($SQL)){ //if successful upgrade
+            add_role_ability('events','staffapply','Events','1','Apply as staff','1','1','1');
 			execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
 		}
 	}
@@ -195,7 +244,49 @@ function events_install(){
           PRIMARY KEY (`elementid`),
           KEY `template_id` (`template_id`)
         ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
-		if(execute_db_sql($SQL) && execute_db_sql($SQL2) && execute_db_sql($SQL3) && execute_db_sql($SQL4) && execute_db_sql($SQL5) && execute_db_sql($SQL6)){ //if successful upgrade
+        
+        $SQL7 = "CREATE TABLE IF NOT EXISTS `events_staff` (
+          `staffid` int(11) NOT NULL AUTO_INCREMENT,
+          `userid` int(11) NOT NULL,
+          `name` varchar(200) NOT NULL,
+          `dateofbirth` int(11) NOT NULL,
+          `phone` varchar(20) NOT NULL,
+          `address` varchar(200) NOT NULL,
+          `agerange` varchar(2) NOT NULL,
+          `cocmember` varchar(2) NOT NULL,
+          `congregation` varchar(200) NOT NULL,
+          `priorwork` varchar(2) NOT NULL,
+          `q1_1` varchar(2) NOT NULL,
+          `q1_2` varchar(2) NOT NULL,
+          `q1_3` varchar(2) NOT NULL,
+          `q2_1` varchar(2) NOT NULL,
+          `q2_2` varchar(2) NOT NULL,
+          `q2_3` varchar(200) NOT NULL,
+          `parentalconsent` varchar(200) NOT NULL,
+          `parentalconsentsig` varchar(10) NOT NULL,
+          `workerconsent` varchar(200) NOT NULL,
+          `workerconsentsig` varchar(10) NOT NULL,
+          `workerconsentdate` int(11) NOT NULL,
+          `ref1name` varchar(200) NOT NULL,
+          `ref1relationship` varchar(200) NOT NULL,
+          `ref1phone` varchar(20) NOT NULL,
+          `ref2name` varchar(200) NOT NULL,
+          `ref2relationship` varchar(200) NOT NULL,
+          `ref2phone` varchar(20) NOT NULL,
+          `ref3name` varchar(200) NOT NULL,
+          `ref3relationship` varchar(200) NOT NULL,
+          `ref3phone` varchar(20) NOT NULL,
+          `bgcheckpass` varchar(2) NOT NULL,
+          `bgcheckpassdate` int(11) NOT NULL,
+          PRIMARY KEY `staffid` (`staffid`),
+          KEY `userid` (`userid`),
+          KEY `dateofbirth` (`dateofbirth`),
+          KEY `priorwork` (`priorwork`),
+        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
+
+		if(execute_db_sql($SQL) && execute_db_sql($SQL2) && execute_db_sql($SQL3) &&
+           execute_db_sql($SQL4) && execute_db_sql($SQL5) && execute_db_sql($SQL6) && 
+           execute_db_sql($SQL7)){ //if successful upgrade
 			execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
             
             //CREATE ROLE ABILITIES
