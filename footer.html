@@ -23,7 +23,7 @@
                 },
                 update: function(event, ui){
                     $.ajax({
-                      url: "/ajax/site_ajax.php",
+                      url: WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/ajax/site_ajax.php",
                       data: {"action":"drop_move_feature","pageid":<?php echo $PAGE->id; ?>,"col1":$( ".pagesort1" ).sortable( "toArray" ),"col2":$( ".pagesort2" ).sortable( "toArray" ),"moved": $(ui.item).attr('id')},
                       cache: false
                     }).done(function( html ) {
