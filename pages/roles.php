@@ -153,6 +153,8 @@ global $CFG, $USER, $MYVARS, $ROLES;
             	$(function() {
             		$("#tabs").tabs({
             			beforeLoad: function( event, ui ) {
+            			    var d = new Date();
+            			    ui.ajaxSettings.url += "&currTime=" + d.toUTCString();
                             ui.jqXHR.error(function() {
                               ui.panel.html("Couldn\'t load this tab. We\'ll try to fix this as soon as possible." );
                             });

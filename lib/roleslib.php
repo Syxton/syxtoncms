@@ -470,13 +470,20 @@ global $USER;
 
 function group_page($pageid,$feature,$featureid){
 global $CFG,$USER;
-    $returnme = '<table style="font-size:1em;width:100%"><tr><td style="width:40%;text-align:center;vertical-align:top;"><strong>Groups:</strong><div id="group_list_div">
-                    '. groups_list($pageid,$feature,$featureid) .'
-                    </div>';
+    $returnme = '<table style="font-size:1em;width:100%">
+                    <tr><td style="width:40%;text-align:center;vertical-align:top;">
+                        <strong>Groups:</strong>
+                            <div id="group_list_div">
+                                '. groups_list($pageid,$feature,$featureid) .'
+                            </div>';
     $returnme .= user_has_ability_in_page($USER->userid,"manage_groups",$pageid) ? '<a class="imgandlink" href="javascript: ajaxapi(\'/ajax/roles_ajax.php\',\'create_edit_group_form\',\'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;pageid='.$pageid.'\',function(){ simple_display(\'per_group_display_div\'); });"><img src="'.$CFG->wwwroot.'/images/add.png" /> Create New Group</a>' : '';
-    $returnme .= '<br />
-                    </td><td style="width:5px"></td><td><div id="per_group_display_div"></div></td></tr></table><hr />
-                    <div id="per_group_saved_div1" style="width:100%;text-align:center;height: 2px;padding-bottom: 18px;padding-top: 10px;"></div><div id="per_group_abilities_div" style="width:100%;"></div><div id="per_group_saved_div2" style="width:100%;text-align:center;height: 2px;padding-bottom: 10px;padding-top: 10px;"></div>';
+    $returnme .= '          <br />
+                        </td>
+                        <td style="width:5px"></td>
+                        <td><div id="per_group_display_div"></div></td>
+                    </tr>
+                </table><hr />
+                <div id="per_group_saved_div1" style="width:100%;text-align:center;height: 2px;padding-bottom: 18px;padding-top: 10px;"></div><div id="per_group_abilities_div" style="width:100%;"></div><div id="per_group_saved_div2" style="width:100%;text-align:center;height: 2px;padding-bottom: 10px;padding-top: 10px;"></div>';
     return $returnme;
 }
 
