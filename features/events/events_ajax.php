@@ -14,7 +14,7 @@ update_user_cookie();
 
 callfunction();
 
-function event_staffapp(){
+function event_save_staffapp(){
 global $CFG,$MYVARS,$USER;
     $userid = dbescape($USER->userid);
     $staffid = empty($MYVARS->GET["staffid"]) ? false : dbescape($MYVARS->GET["staffid"]);
@@ -2375,8 +2375,10 @@ global $USER, $CFG, $MYVARS;
     
     if (is_numeric($staffid) && is_numeric($date)) {
         execute_db_sql("UPDATE events_staff SET bgcheckpassdate='$date',bgcheckpass='1' WHERE staffid='$staffid'");
+    } else if(is_numeric($staffid) && empty($MYVARS->GET["bgcdate"])){
+        execute_db_sql("UPDATE events_staff SET bgcheckpassdate='',bgcheckpass='' WHERE staffid='$staffid'");
     } else {
-        echo "Failed";   
+        echo "Failed";
     }
 }
 
@@ -2449,10 +2451,10 @@ global $CFG, $MYVARS, $USER;
                         <td style="width:40%;padding:5px;font-size:.85em;white-space:nowrap;">
                             Name
                         </td>
-                        <td style="width:35%;padding:5px;font-size:.75em;">
+                        <td style="width:38%;padding:5px;font-size:.85em;">
                             Status
                         </td>
-                        <td style="text-align:right;padding:5px;font-size:.75em;">
+                        <td style="text-align:right;padding:5px;font-size:.85em;">
                             Date / Edit
                         </td>
                     </tr>';
@@ -2462,9 +2464,11 @@ global $CFG, $MYVARS, $USER;
             
             $old = time() - $staff["workerconsentdate"] >=  (30 * $MYVARS->staffappmonths * 24 * 60 * 60)  ? true : false;
             
-            $status = !empty($old) ? "<div style='color:red;font-weight:bold'>Application Out of Date</div>" : '';
-            $status .= empty($staff["bgcheckpass"]) ? "<div style='color:red;font-weight:bold'>Background Check Incomplete</div> " : (time()-$staff["bgcheckpassdate"] > ($MYVARS->bgcyears * 365 * 24 * 60 * 60) ? " <div style='color:orange;font-weight:bold'>Background Check Out of Date</div> " : "");
-			$status = empty($status) ? "PASSED" : $status;
+            $status = !empty($old) ? '<div style="color:red;font-weight:bold">Application Out of Date</div>' : '';
+            $flag = $staff["q1_1"] + $staff["q1_2"] + $staff["q1_3"] + $staff["q2_1"] + $staff["q2_2"];
+            $status .= !empty($flag) ? '<div style="color:red;font-weight:bolder"><img style="vertical-align: middle;" src="'.$CFG->wwwroot.'/images/error.gif" /> Director Review Required!</div>' : '';
+            $status .= empty($staff["bgcheckpass"]) ? '<div style="color:red;font-weight:bold"><img style="vertical-align: middle;" src="'.$CFG->wwwroot.'/images/error.gif" /> Background Check Incomplete</div>' : (time()-$staff["bgcheckpassdate"] > ($MYVARS->bgcyears * 365 * 24 * 60 * 60) ? '<div style="color:#red;font-weight:bold"><img style="vertical-align: middle;" src="'.$CFG->wwwroot.'/images/error.gif" /> Background Check Out of Date</div>' : "");
+			$status = empty($status) ? '<div style="color:green;font-size:1.3em;font-weight:bold"><img style="vertical-align: bottom;" src="'.$CFG->wwwroot.'/images/checked.gif" /> APPROVED</div>' : $status;
             
             $button = '<a href="javascript: void(0)" onclick="if($(\'#bgcheckdate_'.$staff["staffid"].'\').prop(\'disabled\')){ $(\'#bgcheckdate_'.$staff["staffid"].'\').prop(\'disabled\', false); } else { ajaxapi(\'/features/events/events_ajax.php\',
                                                                       \'change_bgcheck_status\',
@@ -2483,18 +2487,31 @@ global $CFG, $MYVARS, $USER;
                                                                                 true
                                                                         );
                                                                       }); }">
-                <img src="' . $CFG->wwwroot . '/images/inactive.gif" title="Edit Background Check Date" alt="Edit Background Check Date" />
+                <img style="vertical-align: middle;" src="' . $CFG->wwwroot . '/images/manage.png" title="Edit Background Check Date" alt="Edit Background Check Date" />
             </a>';
+            
+            $applookup = 'document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+                                ajaxapi(\'/features/events/events_ajax.php\',
+                                        \'show_staff_app\',
+                                        \'&amp;staffid='.$staff["staffid"].'&amp;pagenum=' . $pagenum . '&amp;searchwords=\'+escape(\'' . $MYVARS->GET["searchwords"] . '\'),
+                                        function() { 
+                                            if (xmlHttp.readyState == 4) { 
+                                                simple_display(\'searchcontainer\'); 
+                                                document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                            }
+                                        },
+                                        true
+                                );';
             $bgcheckdate = empty($staff["bgcheckpassdate"]) ? '' : date('m/d/Y', $staff["bgcheckpassdate"]);
 			$body .= '<tr style="height:30px;border:3px solid white;font-size:.9em;">
-                        <td style="width:40%;padding:5px;font-size:.85em;white-space:nowrap;">
-                            ' . $staff["name"] . '
+                        <td style="padding:5px;font-size:.85em;white-space:nowrap;">
+                            <a href="javascript: void(0);" onclick="'.$applookup.'">'. $staff["name"] .'</a>
                         </td>
-                        <td style="width:20%;padding:5px;font-size:.75em;">
+                        <td style="padding:5px;font-size:.75em;">
                             ' . $status . '
                         </td>
                         <td style="text-align:right;padding:5px;">
-                            <input style="width: 100px;" type="text" disabled="disabled" id="bgcheckdate_'.$staff["staffid"].'" name="bgcheckdate_'.$staff["staffid"].'" value="'.$bgcheckdate.'" />' . $button . '
+                            <input style="width: 85px;" type="text" disabled="disabled" id="bgcheckdate_'.$staff["staffid"].'" name="bgcheckdate_'.$staff["staffid"].'" value="'.$bgcheckdate.'" />' . $button . '
                         </td>
                     </tr>';
         }
@@ -2503,5 +2520,41 @@ global $CFG, $MYVARS, $USER;
         echo '<span class="error_text" class="centered_span">No matches found.</span>';
     }
     echo $header . $body;
+}
+
+function show_staff_app(){
+global $CFG, $MYVARS, $USER;
+    $staffid = trim($MYVARS->GET["staffid"]);
+    $searchwords = trim($MYVARS->GET["searchwords"]);
+    $pagenum = isset($MYVARS->GET["pagenum"]) ? dbescape($MYVARS->GET["pagenum"]) : 0;
+    echo '<link rel="stylesheet" type="text/css" href="'.$CFG->wwwroot.'/styles/print.css">';
+    echo '<a class="dontprint" title="Return to Staff Applications" href="javascript: void(0)" 
+                onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+                         ajaxapi(\'/features/events/events_ajax.php\',
+                                 \'appsearch\',
+                                 \'&amp;pagenum=' . $pagenum . '&amp;searchwords='. $searchwords . '\',
+                                 function() { 
+                                    if (xmlHttp.readyState == 4) { 
+                                        simple_display(\'searchcontainer\'); 
+                                        document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                        init_event_menu();
+                                    }
+                                 },
+                                 true
+                         );
+                         return false;
+                ">Return to Staff Applications
+             </a>';
+ 
+    if($row = get_db_row("SELECT * FROM events_staff WHERE staffid='$staffid'")){
+	   echo '   <input style="float:right;" class="dontprint" type="button" value="Print" onclick="window.print();return false;" />
+                <p style="font-size:.95em;" class="print">
+                    '.staff_application_form($row, true).'
+                </p>
+          ';
+    } else {
+        echo "<h3>No Application on Record</h3>";
+    }
+    
 }
 ?>
