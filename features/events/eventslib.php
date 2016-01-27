@@ -1044,52 +1044,52 @@ function get_my_category($selected = false){
 
 function staff_application_form($row, $viewonly = false){
 global $USER, $CFG, $MYVARS;
-        $v["staffid"] = empty($row) ? false : $row["staffid"];
-        $v["name"] = empty($row) ? $USER->fname . " " . $USER->lname : $row["name"];
-        $v["phone"] = empty($row) ? "" : $row["phone"];
-        $v["dateofbirth"] = empty($row) ? "" : (isset($row['dateofbirth']) ? date('m/d/Y',$row['dateofbirth']) : '');
-        $v["address"] = empty($row) ? "" : $row["address"];
-        $v["ar1selected"] = empty($row) ? "" : ($row["agerange"] == "0" ? "selected" : "");
-        $v["ar2selected"] = empty($row) ? "" : ($row["agerange"] == "1" ? "selected" : "");
-        $v["ar3selected"] = empty($row) ? "" : ($row["agerange"] == "2" ? "selected" : "");
-        $v["cocmembernoselected"] = empty($row) ? "" : ($row["cocmember"] == "0" ? "selected" : "");
-        $v["cocmemberyesselected"] = empty($row) ? "" : ($row["cocmember"] == "1" ? "selected" : "");
-        $v["congregation"] = empty($row) ? "" : $row["congregation"];
-        $v["priorworknoselected"] = empty($row) ? "" : ($row["priorwork"] == "0" ? "selected" : "");
-        $v["priorworkyesselected"] = empty($row) ? "" : ($row["priorwork"] == "1" ? "selected" : "");
-        $v["q1_1noselected"] = empty($row) ? "" : ($row["q1_1"] == "0" ? "selected" : "");
-        $v["q1_1yesselected"] = empty($row) ? "" : ($row["q1_1"] == "1" ? "selected" : "");
-        $v["q1_2noselected"] = empty($row) ? "" : ($row["q1_2"] == "0" ? "selected" : "");
-        $v["q1_2yesselected"] = empty($row) ? "" : ($row["q1_2"] == "1" ? "selected" : "");
-        $v["q1_3noselected"] = empty($row) ? "" : ($row["q1_3"] == "0" ? "selected" : "");
-        $v["q1_3yesselected"] = empty($row) ? "" : ($row["q1_3"] == "1" ? "selected" : "");
-        $v["q2_1noselected"] = empty($row) ? "" : ($row["q2_1"] == "0" ? "selected" : "");
-        $v["q2_1yesselected"] = empty($row) ? "" : ($row["q2_1"] == "1" ? "selected" : "");
-        $v["q2_2noselected"] = empty($row) ? "" : ($row["q2_2"] == "0" ? "selected" : "");
-        $v["q2_2yesselected"] = empty($row) ? "" : ($row["q2_2"] == "1" ? "selected" : "");
-        $v["q2_3"] = empty($row) ? "" : $row["q2_3"];
-        
-        $v["yestotal"] = empty($row) ? 0 : $row["q1_1"] + $row["q1_2"] + $row["q1_3"] + $row["q2_1"] + $row["q2_2"];
-        
-        $v["parentalconsent"] = empty($row) ? "" : $row["parentalconsent"];
-        $v["parentalconsentsig"] = empty($row) ? "" : ($row["parentalconsentsig"] == "on" ? "checked" : "");
-        
-        $v["sub18dispaly"] = empty($v["ar1selected"]) ? "display:none" : "";
-        $v["workerconsent"] = empty($row) ? "" : $row["workerconsent"];
-        $v["workerconsentsig"] = empty($row) ? "" : ($row["workerconsentsig"] == "on" && $viewonly  ? "checked" : "");
-        $v["workerconsentdate"] = empty($row) ? date('m/d/Y') : (!empty($row['workerconsentdate']) && $viewonly ? date('m/d/Y',$row['workerconsentdate']) : date('m/d/Y'));
+    $v["staffid"] = empty($row) ? false : $row["staffid"];
+    $v["name"] = empty($row) ? $USER->fname . " " . $USER->lname : $row["name"];
+    $v["phone"] = empty($row) ? "" : $row["phone"];
+    $v["dateofbirth"] = empty($row) ? "" : (isset($row['dateofbirth']) ? date('m/d/Y',$row['dateofbirth']) : '');
+    $v["address"] = empty($row) ? "" : $row["address"];
+    $v["ar1selected"] = empty($row) ? "" : ($row["agerange"] == "0" ? "selected" : "");
+    $v["ar2selected"] = empty($row) ? "" : ($row["agerange"] == "1" ? "selected" : "");
+    $v["ar3selected"] = empty($row) ? "" : ($row["agerange"] == "2" ? "selected" : "");
+    $v["cocmembernoselected"] = empty($row) ? "" : ($row["cocmember"] == "0" ? "selected" : "");
+    $v["cocmemberyesselected"] = empty($row) ? "" : ($row["cocmember"] == "1" ? "selected" : "");
+    $v["congregation"] = empty($row) ? "" : $row["congregation"];
+    $v["priorworknoselected"] = empty($row) ? "" : ($row["priorwork"] == "0" ? "selected" : "");
+    $v["priorworkyesselected"] = empty($row) ? "" : ($row["priorwork"] == "1" ? "selected" : "");
+    $v["q1_1noselected"] = empty($row) ? "" : ($row["q1_1"] == "0" ? "selected" : "");
+    $v["q1_1yesselected"] = empty($row) ? "" : ($row["q1_1"] == "1" ? "selected" : "");
+    $v["q1_2noselected"] = empty($row) ? "" : ($row["q1_2"] == "0" ? "selected" : "");
+    $v["q1_2yesselected"] = empty($row) ? "" : ($row["q1_2"] == "1" ? "selected" : "");
+    $v["q1_3noselected"] = empty($row) ? "" : ($row["q1_3"] == "0" ? "selected" : "");
+    $v["q1_3yesselected"] = empty($row) ? "" : ($row["q1_3"] == "1" ? "selected" : "");
+    $v["q2_1noselected"] = empty($row) ? "" : ($row["q2_1"] == "0" ? "selected" : "");
+    $v["q2_1yesselected"] = empty($row) ? "" : ($row["q2_1"] == "1" ? "selected" : "");
+    $v["q2_2noselected"] = empty($row) ? "" : ($row["q2_2"] == "0" ? "selected" : "");
+    $v["q2_2yesselected"] = empty($row) ? "" : ($row["q2_2"] == "1" ? "selected" : "");
+    $v["q2_3"] = empty($row) ? "" : $row["q2_3"];
+    
+    $v["yestotal"] = empty($row) ? 0 : $row["q1_1"] + $row["q1_2"] + $row["q1_3"] + $row["q2_1"] + $row["q2_2"];
+    
+    $v["parentalconsent"] = empty($row) ? "" : $row["parentalconsent"];
+    $v["parentalconsentsig"] = empty($row) ? "" : ($row["parentalconsentsig"] == "on" ? "checked" : "");
+    
+    $v["sub18dispaly"] = empty($v["ar1selected"]) ? "display:none" : "";
+    $v["workerconsent"] = empty($row) ? "" : $row["workerconsent"];
+    $v["workerconsentsig"] = empty($row) ? "" : ($row["workerconsentsig"] == "on" && $viewonly  ? "checked" : "");
+    $v["workerconsentdate"] = empty($row) ? date('m/d/Y') : (!empty($row['workerconsentdate']) && $viewonly ? date('m/d/Y',$row['workerconsentdate']) : date('m/d/Y'));
 
-        $v["ref1name"] = empty($row) ? "" : $row["ref1name"];
-        $v["ref1relationship"] = empty($row) ? "" : $row["ref1relationship"];
-        $v["ref1phone"] = empty($row) ? "" : $row["ref1phone"];
+    $v["ref1name"] = empty($row) ? "" : $row["ref1name"];
+    $v["ref1relationship"] = empty($row) ? "" : $row["ref1relationship"];
+    $v["ref1phone"] = empty($row) ? "" : $row["ref1phone"];
 
-        $v["ref2name"] = empty($row) ? "" : $row["ref2name"];
-        $v["ref2relationship"] = empty($row) ? "" : $row["ref2relationship"];
-        $v["ref2phone"] = empty($row) ? "" : $row["ref2phone"];
+    $v["ref2name"] = empty($row) ? "" : $row["ref2name"];
+    $v["ref2relationship"] = empty($row) ? "" : $row["ref2relationship"];
+    $v["ref2phone"] = empty($row) ? "" : $row["ref2phone"];
 
-        $v["ref3name"] = empty($row) ? "" : $row["ref3name"];
-        $v["ref3relationship"] = empty($row) ? "" : $row["ref3relationship"];
-        $v["ref3phone"] = empty($row) ? "" : $row["ref3phone"];
+    $v["ref3name"] = empty($row) ? "" : $row["ref3name"];
+    $v["ref3relationship"] = empty($row) ? "" : $row["ref3relationship"];
+    $v["ref3phone"] = empty($row) ? "" : $row["ref3phone"];
         
     return '<div class="formDiv" id="staffapplication_form_div">
          '.($viewonly ? '' : '<p align="center"><b><font size="+1">Staff Application</font></b></p><br /><br />').'

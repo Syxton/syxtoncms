@@ -687,6 +687,7 @@ global $CFG, $USER, $ROLES, $PAGE;
 	}
 	
     if($pageid && $role_assignment){
+        if(empty($PAGE)){ $PAGE = new stdClass(); }
 		$PAGE->id = $pageid;
 		//Log
 		log_entry("page", $pageid, "Page Created");

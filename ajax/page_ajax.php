@@ -47,6 +47,7 @@ global $CFG, $MYVARS;
 
 function create_page(){
 global $CFG, $MYVARS;
+    $newpage = new stdClass();
     $newpage->name = $MYVARS->GET["name"];
     $newpage->description = $MYVARS->GET["description"];
     $newpage->keywords = $MYVARS->GET["keywords"];
