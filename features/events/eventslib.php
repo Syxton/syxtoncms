@@ -35,9 +35,12 @@ global $CFG, $USER, $ROLES;
         return get_calendar_of_events($title, $pageid, $featureid, false, $showpastevents, $content, $allowrequests);
     }else{
         if(is_logged_in()){ //Logged in user will see...
-            if(user_has_ability_in_page($USER->userid, "staffapply", $pageid, "events", $featureid)){ 
-                $content .= get_staff_application_button();    
+            if(get_db_row("SELECT eventid FROM events WHERE workers=1 AND event_begin_date > " .time())) {
+                if(user_has_ability_in_page($USER->userid, "staffapply", $pageid, "events", $featureid)){ 
+                    $content .= get_staff_application_button();    
+                }    
             }
+            
 
             if(user_has_ability_in_page($USER->userid, "viewevents", $pageid, "events", $featureid)){                
                 //Get events that must be confirmed
@@ -123,8 +126,10 @@ global $CFG, $USER, $ROLES;
     $site = $pageid == $CFG->SITEID ? "((e.pageid != $pageid AND siteviewable=1) OR (e.pageid = $pageid))" : "e.pageid = $pageid";
 
     if(is_logged_in()){
-        if(user_has_ability_in_page($USER->userid, "staffapply", $pageid, "events", $featureid)){ 
-            $content .= get_staff_application_button();    
+        if(get_db_row("SELECT eventid FROM events WHERE workers=1 AND event_begin_date > " .time())) {
+            if(user_has_ability_in_page($USER->userid, "staffapply", $pageid, "events", $featureid)){ 
+                $content .= get_staff_application_button();    
+            }
         }
         if(user_has_ability_in_page($USER->userid, "viewevents", $pageid, "events", $featureid)){
             $canview = true;
