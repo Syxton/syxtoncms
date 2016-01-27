@@ -1067,11 +1067,11 @@ global $USER, $CFG, $MYVARS;
         $v["yestotal"] = empty($row) ? 0 : $row["q1_1"] + $row["q1_2"] + $row["q1_3"] + $row["q2_1"] + $row["q2_2"];
         
         $v["parentalconsent"] = empty($row) ? "" : $row["parentalconsent"];
-        $v["parentalconsentsig"] = empty($row) ? "" : ($row["parentalconsentsig"] == "1" ? "checked" : "");
+        $v["parentalconsentsig"] = empty($row) ? "" : ($row["parentalconsentsig"] == "on" ? "checked" : "");
         
         $v["sub18dispaly"] = empty($v["ar1selected"]) ? "display:none" : "";
         $v["workerconsent"] = empty($row) ? "" : $row["workerconsent"];
-        $v["workerconsentsig"] = empty($row) ? "" : ($row["workerconsentsig"] == "1" ? "checked" : "");
+        $v["workerconsentsig"] = empty($row) ? "" : ($row["workerconsentsig"] == "on" && $viewonly  ? "checked" : "");
         $v["workerconsentdate"] = empty($row) ? date('m/d/Y') : (!empty($row['workerconsentdate']) && $viewonly ? date('m/d/Y',$row['workerconsentdate']) : date('m/d/Y'));
 
         $v["ref1name"] = empty($row) ? "" : $row["ref1name"];
