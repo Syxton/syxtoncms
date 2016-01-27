@@ -65,8 +65,8 @@ global $CFG,$MYVARS,$USER;
         $message = "Application Updated";
     } else {
         $SQL = "INSERT INTO events_staff 
-                    (userid,name,phone,dateofbirth,address,agerange,cocmember,congregation,priorwork,q1_1,q1_2,q1_3,q2_1,q2_2,q2_3,parentalconsent,parentalconsentsig,workerconsent,workerconsentsig,workerconsentdate,ref1name,ref1relationship,ref1phone,ref2name,ref2relationship,ref2phone,ref3name,ref3relationship,ref3phone) 
-                    VALUES('$userid','$name','$phone','$dateofbirth','$address','$agerange','$cocmember','$congregation','$priorwork','$q1_1','$q1_2','$q1_3','$q2_1','$q2_2','$q2_3','$parentalconsent','$parentalconsentsig','$workerconsent','$workerconsentsig','$workerconsentdate','$ref1name','$ref1relationship','$ref1phone','$ref2name','$ref2relationship','$ref2phone','$ref3name','$ref3relationship','$ref3phone')";    
+                    (userid,name,phone,dateofbirth,address,agerange,cocmember,congregation,priorwork,q1_1,q1_2,q1_3,q2_1,q2_2,q2_3,parentalconsent,parentalconsentsig,workerconsent,workerconsentsig,workerconsentdate,ref1name,ref1relationship,ref1phone,ref2name,ref2relationship,ref2phone,ref3name,ref3relationship,ref3phone,bgcheckpass,bgcheckpassdate) 
+                    VALUES('$userid','$name','$phone','$dateofbirth','$address','$agerange','$cocmember','$congregation','$priorwork','$q1_1','$q1_2','$q1_3','$q2_1','$q2_2','$q2_3','$parentalconsent','$parentalconsentsig','$workerconsent','$workerconsentsig','$workerconsentdate','$ref1name','$ref1relationship','$ref1phone','$ref2name','$ref2relationship','$ref2phone','$ref3name','$ref3relationship','$ref3phone','',0)";    
         $success = execute_db_sql($SQL);
         $message = "Application Complete";
     }
@@ -2376,7 +2376,7 @@ global $USER, $CFG, $MYVARS;
     if (is_numeric($staffid) && is_numeric($date)) {
         execute_db_sql("UPDATE events_staff SET bgcheckpassdate='$date',bgcheckpass='1' WHERE staffid='$staffid'");
     } else if(is_numeric($staffid) && empty($MYVARS->GET["bgcdate"])){
-        execute_db_sql("UPDATE events_staff SET bgcheckpassdate='',bgcheckpass='' WHERE staffid='$staffid'");
+        execute_db_sql("UPDATE events_staff SET bgcheckpassdate=0,bgcheckpass='' WHERE staffid='$staffid'");
     } else {
         echo "Failed";
     }
