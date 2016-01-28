@@ -2438,7 +2438,8 @@ global $CFG, $MYVARS, $USER;
             $bgcheckdate = empty($staff["bgcheckpassdate"]) ? '' : date('m/d/Y', $staff["bgcheckpassdate"]);
 			$body .= '<tr style="height:30px;border:3px solid white;font-size:.9em;">
                         <td style="padding:5px;font-size:.85em;white-space:nowrap;">
-                            <a href="javascript: void(0);" onclick="'.$applookup.'">'. $staff["name"] .'</a>
+                            <a href="javascript: void(0);" onclick="'.$applookup.'">'. $staff["name"] .'</a><br />
+                            <span style="font-size:.9em">'.get_db_field("email","users",'userid="'.$staff["userid"].'"').'</span>
                         </td>
                         <td style="padding:5px;font-size:.75em;">
                             ' . $status . '
