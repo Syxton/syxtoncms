@@ -20,19 +20,20 @@ if(isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip,','.
 	//Check for upgrades or uninstalled components
 	upgrade_check();
 
-	//Cache roles
-	$ROLES = load_roles();
-
-	//Get page info
-    $PAGE = new stdClass();
-	$PAGE->id = isset($_GET['pageid']) ? $_GET['pageid'] : $CFG->SITEID;
-	$PAGE->title = $CFG->sitename; //Title of page
-	$PAGE->themeid = getpagetheme($PAGE->id);
-
 	//Get User info
 	load_user_cookie();
 	update_user_cookie();
     setcookie('directory', $CFG->directory, get_timestamp() + $CFG->cookietimeout, '/');
+
+	//Get page info
+    $PAGE = new stdClass();
+	$PAGE->id = isset($_GET['pageid']) ? $_GET['pageid'] : $CFG->SITEID;
+    setcookie('pageid', $PAGE->id, get_timestamp() + $CFG->cookietimeout, '/');
+	$PAGE->title = $CFG->sitename; //Title of page
+	$PAGE->themeid = getpagetheme($PAGE->id);
+
+	//Cache roles
+	$ROLES = load_roles();
     
     //Start Page
     include ('header.html');
