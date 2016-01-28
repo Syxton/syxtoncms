@@ -2395,7 +2395,7 @@ global $CFG, $MYVARS, $USER;
         	$export = "";
             $header = $header == "" ? '<table style="width:100%;"><tr><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;font-size:.75em;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><p>' : $header;
             
-            $old = time() - $staff["workerconsentdate"] >=  (30 * $settings->events->$featureid->staffapp_expires->setting * 24 * 60 * 60)  ? true : false;
+            $old = $staff["workerconsentdate"] < strtotime($settings->events->$featureid->staffapp_expires->setting . '/' . date('Y')) ? true : false;
             
             $status = !empty($old) ? '<div style="color:red;font-weight:bold">Application Out of Date</div>' : '';
             $flag = $staff["q1_1"] + $staff["q1_2"] + $staff["q1_3"] + $staff["q2_1"] + $staff["q2_2"];

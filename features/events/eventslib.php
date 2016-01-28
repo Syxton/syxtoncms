@@ -1508,7 +1508,7 @@ function events_default_settings($feature,$pageid,$featureid){
     $settings_array[] = array(false,"$feature","$pageid","$featureid","request_text","","3","","Request Form Text","textarea");
     $settings_array[] = array(false,"$feature","$pageid","$featureid","bgcheck_url","","3","","Background Check URL","textarea");
     $settings_array[] = array(false,"$feature","$pageid","$featureid","bgcheck_years","5",false,"5","Background Check Expires (years)","text",true,"<=0","Must be greater than 0.");
-    $settings_array[] = array(false,"$feature","$pageid","$featureid","staffapp_expires","7",false,"7","Staff Application Expires (months)","text",true,"<=0","Must be greater than 0.");
+    $settings_array[] = array(false,"$feature","$pageid","$featureid","staffapp_expires","1/1",false,"1/1","Staff Application Expires (day/month)","text");
 
     return $settings_array;
 }
