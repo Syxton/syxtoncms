@@ -3,8 +3,8 @@
 * events.php - Events page lib
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 1/26/2016
-* Revision: 1.4.6
+* Date: 1/28/2016
+* Revision: 1.4.7
 ***************************************************************************/
 if(empty($_POST["aslib"])){
     if(!isset($CFG)){ include('../header.php'); } 

@@ -10,10 +10,10 @@
 if(!isset($LIBHEADER)){ include('header.php'); }
 $SETTINGSLIB = true;
 
-function fetch_settings($type, $featureid=false, $pageid=false){
+function fetch_settings($type, &$featureid, $pageid=false){
 global $CFG;
 
-	if(!$featureid){ //Non Feature settings ex. Site or page
+	if(empty($featureid)){ //Non Feature settings ex. Site or page
 		$SQL = "SELECT * FROM settings WHERE type='$type' AND pageid='$pageid'";
 		if($results = get_db_result($SQL)){
             $settings = new stdClass();
@@ -29,7 +29,13 @@ global $CFG;
 			return $settings;
 		}
 		return false;
-	}else{ //Feature settings
+	} else { //Feature settings
+        if ($featureid == "*") { // Find the featureid: Only valid on features that cannot have duplicates on a page
+            $featureid = get_db_field("featureid", "pages_features", "feature='$type' AND pageid='$pageid'");
+            if(empty($featureid)){
+                return false;
+            }
+        }
 		$defaultsettings = default_settings($type,$pageid,$featureid); //get all default settings for the feature
 		
 		$SQL = "SELECT * FROM settings WHERE type='$type' AND featureid='$featureid'";
@@ -251,6 +257,12 @@ function get_setting($needle, $haystack){
 
 function default_settings($feature,$pageid,$featureid){
 	global $CFG;
+    if ($featureid == "*") { // Find the featureid: Only valid on features that cannot have duplicates on a page
+        $featureid = get_db_field("featureid", "pages_features", "feature='$type' AND pageid='$pageid'");
+        if(!empty($featureid)){
+            return false;
+        }    
+    }
 	return all_features_function(false,$feature,"","_default_settings",false,$feature,$pageid,$featureid);
 }
 ?>

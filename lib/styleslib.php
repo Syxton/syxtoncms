@@ -184,12 +184,15 @@ global $CFG;
 	return $returnme;
 }
 
-function getpagetheme($pageid)
-{
-	$settings = fetch_settings("page",NULL,$pageid);
+function getpagetheme($pageid) {
+    $featureid = false;
+	$settings = fetch_settings("page",$featureid,$pageid);
 
-	if($settings === false) return false; 
-	else return $settings->page->themeid->setting;
+	if($settings === false){ 
+	   return false; 
+    } else { 
+        return $settings->page->themeid->setting; 
+    }
 }
 
 function make_or_update_styles($id=false,$feature=false,$pageid=false,$featureid=false,$attribute=false,$value=false,$themeid=false,$forced=false)

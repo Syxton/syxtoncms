@@ -3,16 +3,15 @@
 * eventslib.php - Events function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 1/26/2016
-* Revision: 2.8.2
+* Date: 1/28/2016
+* Revision: 2.8.3
 ***************************************************************************/
 
 if(!isset($LIBHEADER)){ if(file_exists('./lib/header.php')){ include('./lib/header.php'); }elseif(file_exists('../lib/header.php')) { include('../lib/header.php'); }elseif(file_exists('../../lib/header.php')){ include('../../lib/header.php'); }}
 $EVENTSLIB = true;
 if(empty($MYVARS)){ $MYVARS = new stdClass(); }
 $MYVARS->bgcyears = 5; // Background checks are invalid after x years
-$MYVARS->staffappmonths = 6; // Staff applications checks are invalid after x months
-$MYVARS->backgroundcheckurl = "http://protectmyministry.com/background-checks/volunteer-screening/";
+$MYVARS->staffappmonths = 7; // Staff applications checks are invalid after x months
 
 function display_events($pageid, $area, $featureid){
 global $CFG, $USER, $ROLES;
@@ -40,7 +39,6 @@ global $CFG, $USER, $ROLES;
                     $content .= get_staff_application_button();    
                 }    
             }
-            
 
             if(user_has_ability_in_page($USER->userid, "viewevents", $pageid, "events", $featureid)){                
                 //Get events that must be confirmed
@@ -128,7 +126,7 @@ global $CFG, $USER, $ROLES;
     if(is_logged_in()){
         if(get_db_row("SELECT eventid FROM events WHERE workers=1 AND event_begin_date > " .time())) {
             if(user_has_ability_in_page($USER->userid, "staffapply", $pageid, "events", $featureid)){ 
-                $content .= get_staff_application_button();    
+                $content .= get_staff_application_button($featureid,$pageid);    
             }
         }
         if(user_has_ability_in_page($USER->userid, "viewevents", $pageid, "events", $featureid)){
@@ -1426,6 +1424,9 @@ function events_default_settings($feature,$pageid,$featureid){
     $settings_array[] = array(false,"$feature","$pageid","$featureid","requestapprovalvotes","1",false,"1","Approval Votes Required","text",true,"<=0","Must be greater than 0.  Should be equal or less than the amount of email addresses.");
     $settings_array[] = array(false,"$feature","$pageid","$featureid","requestdenyvotes","1",false,"1","Denial Votes Required","text",true,"<=0","Must be greater than 0.  Should be equal or less than the amount of email addresses.");
     $settings_array[] = array(false,"$feature","$pageid","$featureid","request_text","","3","","Request Form Text","textarea");
+    $settings_array[] = array(false,"$feature","$pageid","$featureid","bgcheck_url","","3","","Background Check URL","textarea");
+    $settings_array[] = array(false,"$feature","$pageid","$featureid","bgcheck_years","5",false,"5","Background Check Expires (years)","text",true,"<=0","Must be greater than 0.");
+    $settings_array[] = array(false,"$feature","$pageid","$featureid","staffapp_expires","7",false,"7","Staff Application Expires (months)","text",true,"<=0","Must be greater than 0.");
 
     return $settings_array;
 }

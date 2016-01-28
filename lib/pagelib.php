@@ -199,7 +199,8 @@ global $CFG;
     }
     
 	//MAKING SURE LATEST SITE UPDATES ARE INSTALLED
-	if($settings = fetch_settings("site")){	
+	$featureid = false;
+    if($settings = fetch_settings("site", $featureid)){	
 		$site_version = $settings->site->version->setting;
 		include_once($CFG->dirroot . "/lib/db.php");
 		site_upgrade();

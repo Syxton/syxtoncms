@@ -79,9 +79,9 @@ global $CFG;
     //Activate and Deactivate templates
 	$thisversion = 20151223;
 	if($version < $thisversion){
-		$SQL = "ALTER TABLE `events_templates` ADD IF NOT EXISTS `activated` INT( 1 ) NOT NULL DEFAULT  '1', ADD INDEX (  `activated` )";
+		$SQL = "ALTER TABLE `events_templates` ADD `activated` INT( 1 ) NOT NULL DEFAULT  '1', ADD INDEX (  `activated` )";
         execute_db_sql($SQL);
-        $SQL2 = "ALTER TABLE `events` ADD IF NOT EXISTS `workers` INT( 1 ) NOT NULL DEFAULT  '0', ADD INDEX (  `workers` )";
+        $SQL2 = "ALTER TABLE `events` ADD `workers` INT( 1 ) NOT NULL DEFAULT  '0', ADD INDEX (  `workers` )";
         execute_db_sql($SQL2);
 		if(get_db_row("SELECT * FROM events WHERE workers >= 0") && get_db_row("SELECT * FROM events_templates WHERE activated >= 0")){ //if successful upgrade
             add_role_ability('events','manageevents','Events','1','Manage Events','1','1');
@@ -134,6 +134,15 @@ global $CFG;
         ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
 		if(execute_db_sql($SQL)){ //if successful upgrade
             add_role_ability('events','staffapply','Events','1','Apply as staff','1','1','1');
+			execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
+		}
+	}
+
+	$thisversion = 20160128;
+	if($version < $thisversion){
+		$SQL = "ALTER TABLE `events_staff` ADD `pageid` INT( 11 ) NOT NULL DEFAULT '0', ADD INDEX ( `pageid` )";
+        execute_db_sql($SQL);
+		if(get_db_row("SELECT * FROM events WHERE pageid >= 0")){ //if successful upgrade
 			execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
 		}
 	}
@@ -247,6 +256,7 @@ function events_install(){
         
         $SQL7 = "CREATE TABLE IF NOT EXISTS `events_staff` (
           `staffid` int(11) NOT NULL AUTO_INCREMENT,
+          `pageid` int(11) NOT NULL DEFAULT '0',
           `userid` int(11) NOT NULL,
           `name` varchar(200) NOT NULL,
           `dateofbirth` int(11) NOT NULL,
