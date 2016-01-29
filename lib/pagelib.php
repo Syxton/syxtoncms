@@ -87,6 +87,35 @@ global $CFG,$USER,$PAGE;
     return $returnme;
 }
 
+function page_masthead($left = true, $header_only = false){
+global $CFG,$USER,$PAGE;
+    if ($left) {
+        $returnme = '<div>
+                        <table style="width:100%">
+                            <tr>
+                                <td style="text-align:center;height:108px;">
+                                    <a href="'.$CFG->wwwroot.'">
+                                        <img src="'.$CFG->wwwroot.'/images/'.$CFG->logofile.'" alt="'.$CFG->sitename.' Logo" />
+                                    </a>
+                                </td>
+                                <td rowspan="2" style="text-align:center;font-size:.75em;vertical-align:middle;">
+                                    '. random_quote() . '
+                                </td>
+                            </tr>
+        				    <tr>
+                                <td>
+                                    '.($header_only ? "" : get_nav_items($PAGE->id)).'
+                                </td>
+                            </tr>
+                        </table>
+                    </div>';        
+    } else {
+        $returnme = (!$header_only ? (is_logged_in() ? print_logout_button($USER->fname, $USER->lname, $PAGE->id) : get_login_form()) : '');
+    }
+    
+    return $returnme;
+}
+
 function get_editor_javascript(){
 global $CFG;
     //return '<script type="text/javascript" src="'.$CFG->wwwroot.'/scripts/ckeditor/ckeditor.js"></script>';
@@ -485,8 +514,11 @@ global $CFG, $USER;
     $profile = $edit ? make_modal_links($param) : "$fname $lname";
 
     $logout = '<a title="Log Out" href="javascript: void(0)" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'get_login_box\',\'&amp;logout=1\',function() { clearInterval(myInterval); go_to_page('.$CFG->SITEID.');});">(Log Out)</a>';
-	return  '<span style="display:inline-block;line-height: 18px;font-size: 10px;">'.$profile.' '.$logout.'</span>' .
-            '<br />' .
+	return  '<div id="login_box" class="login_box" style="text-align:right;">
+                <span style="display:inline-block;line-height: 18px;">
+                    '.$profile.' '.$logout.'
+                </span>' .
+            '</div><br />' .
             get_user_links($USER->userid, $pageid);
 }
 
@@ -786,7 +818,7 @@ global $USER,$CFG;
 	<div id="login_box_error" class="error_text"></div>';
 
 	$returnme = $loginonly ? $content : get_css_box($title, $content);
-	return '<div id="login_box" class="login_box">' . $returnme . '</div>';
+	return $returnme;
 }
 
 function add_page_feature($pageid, $featuretype){

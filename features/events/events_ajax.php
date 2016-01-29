@@ -2384,10 +2384,10 @@ global $CFG, $MYVARS, $USER;
                         <td style="width:40%;padding:5px;font-size:.85em;white-space:nowrap;">
                             Name
                         </td>
-                        <td style="width:38%;padding:5px;font-size:.85em;">
+                        <td style="padding:5px;font-size:.85em;">
                             Status
                         </td>
-                        <td style="text-align:right;padding:5px;font-size:.85em;">
+                        <td style="width:125px;text-align:right;padding:5px;font-size:.85em;">
                             Date / Edit
                         </td>
                     </tr>';
@@ -2445,7 +2445,7 @@ global $CFG, $MYVARS, $USER;
                             ' . $status . '
                         </td>
                         <td style="text-align:right;padding:5px;">
-                            <input style="width: 85px;" type="text" disabled="disabled" id="bgcheckdate_'.$staff["staffid"].'" name="bgcheckdate_'.$staff["staffid"].'" value="'.$bgcheckdate.'" />' . $button . '
+                            <input style="width: 100px;margin: 0;" type="text" disabled="disabled" id="bgcheckdate_'.$staff["staffid"].'" name="bgcheckdate_'.$staff["staffid"].'" value="'.$bgcheckdate.'" />' . $button . '
                         </td>
                     </tr>';
         }

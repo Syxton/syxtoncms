@@ -1090,89 +1090,28 @@ global $USER, $CFG, $MYVARS;
     $v["ref3phone"] = empty($row) ? "" : $row["ref3phone"];
         
     return '<div class="formDiv" id="staffapplication_form_div">
-         '.($viewonly ? '' : '  <style>
-                                    .rowContainer { 
-                                        padding-bottom: 25px;width:initial;
-                                    }
-                                    .fieldtitle {
-                                        width: 100% !important;
-                                    }
-                                    input[type="submit"] {
-                                        padding: 3px 5px;
-                                    }
-                                    .rowContainer input[type="text"],textarea {
-                                        width: 350px !important;
-                                    }
-
-                                    /* ------------------------------
-                                    This CSS should be used site wide
-                                    -------------------------------- */
-                                    .rowContainer input,select,textarea {
-                                        display: block;
-                                        margin-right: 20px;
-                                        padding: 6px 12px;
-                                        font-size: 14px;
-                                        line-height: 1.42857143;
-                                        color: #555;
-                                        background-image: none;
-                                        border: 1px solid #ccc;
-                                        border-radius: 4px;
-                                        -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
-                                        box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
-                                        -webkit-transition: border-color ease-in-out .15s,-webkit-box-shadow ease-in-out .15s;
-                                        -o-transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
-                                        transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
-                                    }
-                                    hr {
-                                        background-color: #ccc;
-                                        border: 0;
-                                        height: 1px;
-                                        margin: 8px;
-                                    }
-                                    input[type="checkbox"] {
-                                        appearance: none;
-                                        background-color: #fafafa;
-                                        border: 1px solid #d3d3d3;
-                                        border-radius: 26px;
-                                        cursor: pointer;
-                                        height: 28px;
-                                        position: relative;
-                                        transition: border .25s .15s, box-shadow .25s .3s, padding .25s;
-                                        width: 44px;
-                                        vertical-align: top;
-                                        -webkit-appearance: none;
-                                    }
-                                    input[type="checkbox"]:after {
-                                        background-color: white;
-                                        border: 1px solid #d3d3d3;
-                                        border-radius: 24px;
-                                        box-shadow: inset 0 -3px 3px rgba(0, 0, 0, 0.025), 0 1px 4px rgba(0, 0, 0, 0.15), 0 4px 4px rgba(0, 0, 0, 0.1);
-                                        content:"";
-                                        display: block;
-                                        height: 24px;
-                                        left: 0;
-                                        position: absolute;
-                                        right: 16px;
-                                        top: 0;
-                                        transition: border .25s .15s, left .25s .1s, right .15s .175s;
-                                    }
-                                    input[type="checkbox"]:checked {
-                                        border-color: #53d76a;
-                                        box-shadow: inset 0 0 0 13px #53d76a;
-                                        padding-left: 18px;
-                                        transition: border .25s, box-shadow .25s, padding .25s .15s;
-                                    }
-                                    input[type="checkbox"]:checked:after {
-                                        border-color: #53d76a;
-                                        left: 16px;
-                                        right: 0;
-                                        transition: border .25s, left .15s .25s, right .25s .175s;
-                                    }
-                                    /* ------------------------------
-                                    ---------------------------------------------------------------------------------------------------------------------------
-                                    -------------------------------- */
-                                    .rowContainer label { '.($viewonly ? 'width: 250px;padding-right: 20px;' : 'width: initial;padding-right: 15px;').' }
-                                </style>').'
+         '.($viewonly ? '<style>
+                            .rowContainer input,select,textarea {
+                                padding: 0px 12px;
+                            }
+                            .rowContainer label {
+                                width: 250px;padding-right: 20px;
+                            }
+                        </style>' : '  <style>
+                        .rowContainer { 
+                            padding-bottom: 25px;width:initial;
+                        }
+                        .fieldtitle {
+                            width: 100% !important;
+                        }
+                        input[type="submit"] {
+                            padding: 3px 5px;
+                        }
+                        .rowContainer input[type="text"],textarea {
+                            width: 350px !important;
+                        }
+                        .rowContainer label { width: initial;padding-right: 15px; }
+                    </style>').'
          '.($viewonly ? '' : '<p align="center"><b><font size="+1">Staff Application</font></b></p><br /><br />').'
     		'.($viewonly ? '<div style="text-align:center"><h2>' . $v["name"] . ' Application</h2></div>' : '<br /><br />').'
     		<form name="staffapplication_form" id="staffapplication_form">
@@ -1552,7 +1491,7 @@ global $CFG, $USER;
                                                                                                      "width"  => "640",
                                                                                                      "height" => "600",
                                                                                                      "iframe" => "true",
-                                                                                                     "image"  => $CFG->wwwroot . "/images/manage.png",
+                                                                                                     "image"  => $CFG->wwwroot . "/images/staffapp.png",
                                                                                                      "styles" => "padding:1px;display:block;"))
                                                                             : "";
     //Event Template Manager
