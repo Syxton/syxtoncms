@@ -269,7 +269,7 @@ global $CFG, $PAGE, $USER, $MYVARS;
 }
 
 function addfeature(){
-global $CFG, $PAGE, $USER, $MYVARS;
+global $MYVARS;
 	update_user_cookie();
 	add_page_feature($MYVARS->GET["pageid"], $MYVARS->GET["feature"]);
 }

@@ -3,8 +3,8 @@
 * help.php - Help library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 8/18/2013
-* Revision: 0.1.1
+* Date: 1/29/2016
+* Revision: 0.1.2
 ***************************************************************************/
  
 unset($HELP);
@@ -37,12 +37,13 @@ $HELP->new_category = "Please type the name of the new forum category.";
 function get_help($help){
 global $CFG, $HELP;
     $lang = explode(":",$help);
+    $string = $lang[0];
     if(isset($lang[2])){
         include($CFG->dirroot . '/features/'.$lang[1]."/".$lang[2]."/lang.php");
-        return $HELP->$lang[0];        
+        return $HELP->$string;        
     }elseif(isset($lang[1])){
         include($CFG->dirroot . '/features/'.$lang[1]."/lang.php");
-        return $HELP->$lang[0];
+        return $HELP->$string;
     }else{ return $HELP->$help; }
 }
 ?>

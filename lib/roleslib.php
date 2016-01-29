@@ -3,8 +3,8 @@
 * roleslib.php - Roles function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 5/2/2014
-* Revision: 1.2.5
+* Date: 1/29/2016
+* Revision: 1.2.6
 ***************************************************************************/
 
 if(!isset($LIBHEADER)) include('header.php');
@@ -15,8 +15,8 @@ $ABILITIES = new stdClass();
 function is_siteadmin($userid){
 global $CFG,$ROLES;
 	if(!isset($userid)){ return false; }
-	if(get_db_count("SELECT * FROM roles_assignment WHERE userid=$userid AND pageid=".$CFG->SITEID." AND confirm=0 AND roleid=".$ROLES->admin)){ return true; }
-	return false;
+	if(!get_db_count("SELECT * FROM roles_assignment WHERE userid='$userid' AND pageid='$CFG->SITEID' AND confirm=0 AND roleid='$ROLES->admin'")){ return false; }
+	return true;
 }
 
 function remove_all_roles($userid){
@@ -332,7 +332,8 @@ global $CFG;
 	$allroles = get_db_result("SELECT * FROM roles");
     $ROLES = new stdClass();
     while($row = fetch_row($allroles)){
-		$ROLES->$row['name'] = $row['roleid'];
+        $rolename = $row['name'];
+		$ROLES->$rolename = $row['roleid'];
 	}
 	return $ROLES;
 }

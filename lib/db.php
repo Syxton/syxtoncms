@@ -87,6 +87,14 @@ global $CFG;
             execute_db_sql("UPDATE settings SET setting='$thisversion' WHERE type='site' AND setting_name='version'");    
         }
 	}
+
+    $thisversion = 20160129; //Add debug field to site logs
+	if($version < $thisversion){
+        $SQL = "ALTER TABLE `pages_features` CHANGE `featureid` `featureid` INT(11) NOT NULL DEFAULT '0';";
+        if(execute_db_sql($SQL)){
+            execute_db_sql("UPDATE settings SET setting='$thisversion' WHERE type='site' AND setting_name='version'");    
+        }
+	}
 }
 
 ?>

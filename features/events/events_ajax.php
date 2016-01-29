@@ -3,8 +3,8 @@
 * events_ajax.php - Events backend ajax script
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 1/28/2016
-* Revision: 2.1.6
+* Date: 1/29/2016
+* Revision: 2.1.7
 ***************************************************************************/
 
 if(!isset($CFG)){ include('../header.php'); } 
@@ -1418,7 +1418,7 @@ global $CFG, $MYVARS, $USER;
 	$time = get_timestamp();
 	$SQL = "SELECT * FROM events_registrations WHERE code = '$code'";
 
-	if($registration = get_db_row($SQL)){
+	if(strlen($code) > 5 && $registration = get_db_row($SQL)){
 		if($event = get_db_row("SELECT * FROM events 
                                     WHERE eventid=" . $registration["eventid"] . " 
                                         AND fee_full != 0")){

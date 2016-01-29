@@ -24,7 +24,17 @@ function display_addfeature($pageid,$area){
 				while($row = fetch_row($result)){
 					$content .= '<option value="' . $row['feature'] . '">' . $row['feature_title'] . '</option>';
 				}
-				$content .= '</select></td><td style="vertical-align:top; text-align:left;"><input type="button" value="Add" onclick="if($(\'#addfeaturelist\').val() != \'\'){ ajaxapi(\'/ajax/site_ajax.php\',\'addfeature\',\'&amp;feature=\' + $(\'#addfeaturelist\').val() + \'&amp;pageid='.$pageid.'\',function(){ go_to_page('.$pageid.'); });}" /></td></tr></table>';
+				$content .= '</select></td><td style="vertical-align:top; text-align:left;"><input type="button" value="Add" onclick="if($(\'#addfeaturelist\').val() != \'\'){ 
+				                                                                                                                        ajaxapi(\'/ajax/site_ajax.php\',
+                                                                                                                                                \'addfeature\',
+                                                                                                                                                \'&amp;feature=\' + $(\'#addfeaturelist\').val() + \'&amp;pageid='.$pageid.'\',
+                                                                                                                                                function() { 
+                                                                                                                                                    if (xmlHttp.readyState == 4) {
+                                                                                                                                                        go_to_page('.$pageid.');
+                                                                                                                                                    }
+                                                                                                                                                },
+                                                                                                                                                true);
+                                                                                                                                        }" /></td></tr></table>';
 			}
 			return get_css_box($title,$content,NULL,NULL,"addfeature");
 		}

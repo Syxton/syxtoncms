@@ -3,8 +3,8 @@
 * errors.php - Error library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 8/16/2013
-* Revision: 0.1.3
+* Date: 1/29/2016
+* Revision: 0.1.4
 ***************************************************************************/
  
 unset($ERRORS);
@@ -67,13 +67,14 @@ $ERRORS = new stdClass();
 function get_error_message($error,$vars=false){
 global $CFG, $ERRORS;
     $lang = explode(":",$error);
+    $string = $lang[0];
     if(isset($lang[2])){
         include($CFG->dirroot . '/features/'.$lang[1]."/".$lang[2]."/lang.php");
-        return $ERRORS->$lang[0];        
+        return $ERRORS->$string;        
     }elseif(isset($lang[1])){
         include($CFG->dirroot . '/features/' . $lang[1] . "/lang.php");
-        if($vars){ return fill_template($ERRORS->$lang[0],$vars); }
-        return $ERRORS->$lang[0];
+        if($vars){ return fill_template($ERRORS->$string,$vars); }
+        return $ERRORS->$string;
     }else{ if($vars){ return fill_template($ERRORS->$error,$vars); } return $ERRORS->$error; }
 }
 

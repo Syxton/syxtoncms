@@ -3,8 +3,8 @@
 * settingslib.php - Settings Library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 2/10/2012
-* Revision: 0.2.3
+* Date: 1/29/2016
+* Revision: 0.2.4
 ***************************************************************************/
 
 if(!isset($LIBHEADER)){ include('header.php'); }
@@ -19,12 +19,13 @@ global $CFG;
             $settings = new stdClass();
             $settings->$type = new stdClass();
 			while($row = fetch_row($results)){
-                if(empty($settings->$type->$row["setting_name"])){ $settings->$type->$row["setting_name"] = new stdClass(); }
-				if(isset($row["settingid"])){ $settings->$type->$row["setting_name"]->settingid = $row["settingid"]; }
-				if(isset($row["setting"])){ $settings->$type->$row["setting_name"]->setting = stripslashes($row["setting"]); }
-				if(isset($row["extra"])){ $settings->$type->$row["setting_name"]->extra = stripslashes($row["extra"]); }
-				if(isset($row["sort"])){ $settings->$type->$row["setting_name"]->sort = $row["sort"]; }
-				if(isset($row["defaultsetting"])){ $settings->$type->$row["setting_name"]->defaultsetting = stripslashes($row["defaultsetting"]); }
+                $setting_name = $row["setting_name"];
+                if(empty($settings->$type->$setting_name)){ $settings->$type->$setting_name = new stdClass(); }
+				if(isset($row["settingid"])){ $settings->$type->$setting_name->settingid = $row["settingid"]; }
+				if(isset($row["setting"])){ $settings->$type->$setting_name->setting = stripslashes($row["setting"]); }
+				if(isset($row["extra"])){ $settings->$type->$setting_name->extra = stripslashes($row["extra"]); }
+				if(isset($row["sort"])){ $settings->$type->$setting_name->sort = $row["sort"]; }
+				if(isset($row["defaultsetting"])){ $settings->$type->$setting_name->defaultsetting = stripslashes($row["defaultsetting"]); }
 			}
 			return $settings;
 		}
@@ -44,18 +45,20 @@ global $CFG;
             $settings->$type = new stdClass();
             $settings->$type->$featureid = new stdClass();
 			while($row = fetch_row($results)){
-                if(empty($settings->$type->$featureid->$row["setting_name"])){ $settings->$type->$featureid->$row["setting_name"] = new stdClass(); }
-				if(isset($row["settingid"])){ $settings->$type->$featureid->$row["setting_name"]->settingid = $row["settingid"];}
-				if(isset($row["setting"])){ $settings->$type->$featureid->$row["setting_name"]->setting = stripslashes($row["setting"]);}
-				if(isset($row["extra"])){ $settings->$type->$featureid->$row["setting_name"]->extra = stripslashes($row["extra"]);}
-				if(isset($row["sort"])){ $settings->$type->$featureid->$row["setting_name"]->sort = $row["sort"];}
-				if(isset($row["defaultsetting"])){ $settings->$type->$featureid->$row["setting_name"]->defaultsetting = stripslashes($row["defaultsetting"]);}
+		        $setting_name = $row["setting_name"];
+                if(empty($settings->$type->$featureid->$setting_name)){ $settings->$type->$featureid->$setting_name = new stdClass(); }
+				if(isset($row["settingid"])){ $settings->$type->$featureid->$setting_name->settingid = $row["settingid"];}
+				if(isset($row["setting"])){ $settings->$type->$featureid->$setting_name->setting = stripslashes($row["setting"]);}
+				if(isset($row["extra"])){ $settings->$type->$featureid->$setting_name->extra = stripslashes($row["extra"]);}
+				if(isset($row["sort"])){ $settings->$type->$featureid->$setting_name->sort = $row["sort"];}
+				if(isset($row["defaultsetting"])){ $settings->$type->$featureid->$setting_name->defaultsetting = stripslashes($row["defaultsetting"]);}
 			}
 		}
 
 		//Make sure all settings are set
 		foreach($defaultsettings as $setting){
-			if(!isset($settings->$type->$featureid->$setting[4]->setting)){
+		    $setting_name = $setting[4];
+			if(!isset($settings->$type->$featureid->$setting_name->setting)){
 				make_or_update_setting(false,$setting[1],$setting[2],$setting[3],$setting[4],$setting[5],$setting[6],$setting[7],$settings);
 			}
 		}

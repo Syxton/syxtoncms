@@ -3,12 +3,14 @@
 * pagelib.php - Page function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 12/22/2015
-* Revision: 3.1.3
+* Date: 1/29/2016
+* Revision: 3.1.4
 ***************************************************************************/
 
 if(!isset($LIBHEADER)){ include ('header.php'); }
 $PAGELIB = true;
+
+if(empty($PAGE)){ $PAGE = new stdClass(); }
 
 function callfunction(){
 global $CFG,$MYVARS;
@@ -793,10 +795,10 @@ global $CFG, $PAGE;
 	$PAGE->id = $pageid;
 	$default_area = get_db_field("default_area", "features", "feature='$featuretype'");
 	$sort = get_db_count("SELECT * FROM pages_features WHERE pageid='$pageid' AND area='$default_area'") + 1;
-    
 	if(get_db_row("SELECT * FROM features WHERE feature='$featuretype' AND multiples_allowed='1'")){
 		$featureid = all_features_function(false,$featuretype,"insert_blank_","",false,$pageid);
 	}else{
+	    echo "INSERT INTO pages_features (pageid, feature, sort, area, featureid) VALUES('$pageid','$featuretype','$sort','$default_area','')";
 		$featureid = execute_db_sql("INSERT INTO pages_features (pageid, feature, sort, area) VALUES('$pageid','$featuretype','$sort','$default_area')");
 		execute_db_sql("UPDATE pages_features SET featureid='$featureid' WHERE id='$featureid'");
 	}

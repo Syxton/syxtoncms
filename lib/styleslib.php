@@ -3,16 +3,15 @@
 * styleslib.php - Styles and Theme function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 3/28/2012
-* Revision: 0.1.7
+* Date: 1/29/2016
+* Revision: 0.1.8
 ***************************************************************************/
 
 if(!isset($LIBHEADER)){ include('header.php'); }
 $STYLESLIB = true;
 $STYLES = "";
 
-function get_styles($pageid, $themeid=false, $feature='', $featureid='')
-{
+function get_styles($pageid, $themeid=false, $feature='', $featureid='') {
 global $CFG,$MYVARS;
 
 // RULES
@@ -89,7 +88,7 @@ global $CFG,$MYVARS;
 		}
 	}
 
-	if($result = get_db_result($SQL)){
+	if($result = get_db_result($SQL)) {
         $styles = false;
 		while($row = fetch_row($result)){
 			$styles[$row["attribute"]] = $row["value"];
@@ -99,8 +98,7 @@ global $CFG,$MYVARS;
     return false;
 }
 
-function theme_selector($pageid, $themeid, $feature="page",$checked1="checked", $checked2="")
-{
+function theme_selector($pageid, $themeid, $feature="page",$checked1="checked", $checked2="") {
 global $CFG, $MYVARS, $USER;
 	$selected = $themeid ? $themeid : false;
 	
@@ -130,8 +128,7 @@ global $CFG, $MYVARS, $USER;
 	return make_panes($left, $right);
 }
 
-function make_panes($left, $right)
-{
+function make_panes($left, $right) {
 	return '
 	<div id="panes">
 		<table style="font-size:1em;width:100%;">
@@ -150,8 +147,7 @@ function make_panes($left, $right)
 	';
 }
 
-function get_feature_styles($pageid,$feature,$featureid=false,$getarray=false)
-{
+function get_feature_styles($pageid,$feature,$featureid=false,$getarray=false) {
 global $CFG;
 	$returnme = $feature == "page" ? '<input type="radio" name="group1" value="Theme Selector" onclick="ajaxapi(\'/ajax/themes_ajax.php\',\'show_themes\',\'&pageid='.$pageid.'&feature='.$feature.'\',function() { simple_display(\'themes_page\');}); blur();" />Theme Selector <input type="radio" name="group1" value="Page Styles" onclick="ajaxapi(\'/ajax/themes_ajax.php\',\'show_styles\',\'&pageid='.$pageid.'&feature='.$feature.'\',function() { simple_display(\'themes_page\');}); blur();" checked/>Page Styles ' : '<input type="radio" name="group1" value="Theme Selector" '.$checked1.' />Theme Selector';
 	$returnme .= '<br /><br /><form id="colors" name="colors">';
@@ -190,13 +186,16 @@ function getpagetheme($pageid) {
 
 	if($settings === false){ 
 	   return false; 
-    } else { 
-        return $settings->page->themeid->setting; 
+    } else {
+        if(!empty($settings->page->themeid->setting)) {
+            return $settings->page->themeid->setting;    
+        } else {
+            return false;
+        }
     }
 }
 
-function make_or_update_styles($id=false,$feature=false,$pageid=false,$featureid=false,$attribute=false,$value=false,$themeid=false,$forced=false)
-{
+function make_or_update_styles($id=false,$feature=false,$pageid=false,$featureid=false,$attribute=false,$value=false,$themeid=false,$forced=false) {
 	//Make select to find out if setting exists
 	$SQL = "";
 	$SQL2 = $id !== false ? "id='$id'" : false;
@@ -220,7 +219,7 @@ function make_or_update_styles($id=false,$feature=false,$pageid=false,$featureid
 
 	$id = $id ? $id : get_db_field("id", "styles", $SQL);
 	
-	if($id){ //Setting Exists
+	if($id) { //Setting Exists
 		//Make update SQL
 		$SQL = "UPDATE styles s SET ";
 		if($SQL3){ $SQL .= "s.".$SQL3; }
@@ -232,7 +231,7 @@ function make_or_update_styles($id=false,$feature=false,$pageid=false,$featureid
 		if($SQL9){ $SQL .= $SQL3 || $SQL4 || $SQL5 || $SQL6 || $SQL7 || $SQL8 ? ", s.$SQL9" : "s.".$SQL9; }
 		
 		$SQL .= " WHERE s.id='$id'";	
-	}else{ //Setting does not exist
+	} else { //Setting does not exist
 		//Make insert SQL
 		$SQL = "INSERT INTO styles (";
 		if($SQL3){ $SQL .= "feature"; }
@@ -260,9 +259,8 @@ function make_or_update_styles($id=false,$feature=false,$pageid=false,$featureid
 	return false;
 }
 
-function make_or_update_styles_array($array)
-{
-	foreach($array as $style){
+function make_or_update_styles_array($array) {
+	foreach($array as $style) {
 		if(!make_or_update_styles($style[0],$style[1],$style[2],$style[3],$style[4],$style[5],$style[6],$style[7])){ return false; }
 	}
 	return true;
