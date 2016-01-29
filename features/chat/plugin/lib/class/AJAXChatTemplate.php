@@ -20,7 +20,7 @@ class AJAXChatTemplate {
 	// Constructor:
 	function AJAXChatTemplate(&$ajaxChat, $templateFile, $contentType=null) {
 		$this->ajaxChat = $ajaxChat;
-		$this->_regExpTemplateTags = '/\[(\w+?)(?:(?:\/)|(?:\](.+?)\[\/\1))\]/se';		
+		$this->_regExpTemplateTags = '/\[(\w+?)(?:(?:\/)|(?:\](.+?)\[\/\1))\]/s';		
 		$this->_templateFile = $templateFile;
 		$this->_contentType = $contentType;
 	}
@@ -52,40 +52,33 @@ class AJAXChatTemplate {
 		}
 
 		// Replace template tags ([TAG/] and [TAG]content[/TAG]) and return parsed template content:
-		$this->_parsedContent = preg_replace($this->_regExpTemplateTags, '$this->replaceTemplateTags(\'$1\', \'$2\')', $this->_parsedContent);
+		$this->_parsedContent = preg_replace_callback($this->_regExpTemplateTags, function($m) { return $this->replaceTemplateTags($m); }, $this->_parsedContent);
 	}
 
-	function replaceTemplateTags($tag, $tagContent) {
-		switch($tag) {
+	function replaceTemplateTags($t) {
+		switch($t[1]) {
 			case 'AJAX_CHAT_URL':
 				return $this->ajaxChat->getChatURL();
 			case 'PAGEID':
 				return PAGEID;
 			case 'LANG':
-				return $this->ajaxChat->htmlEncode($this->ajaxChat->getLang($tagContent));				
+				return $this->ajaxChat->htmlEncode($this->ajaxChat->getLang($t[2]));				
 			case 'LANG_CODE':
 				return $this->ajaxChat->getLangCode();
-
 			case 'BASE_DIRECTION':
 				return $this->getBaseDirectionAttribute();
-
 			case 'CONTENT_ENCODING':
 				return $this->ajaxChat->getConfig('contentEncoding');
-					
 			case 'CONTENT_TYPE':
 				return $this->_contentType;
-		
 			case 'LOGIN_URL':
 				return ($this->ajaxChat->getRequestVar('view') == 'logs') ? './?view=logs' : './';
-				
 			case 'USER_NAME_MAX_LENGTH':
 				return $this->ajaxChat->getConfig('userNameMaxLength');
 			case 'MESSAGE_TEXT_MAX_LENGTH':
 				return $this->ajaxChat->getConfig('messageTextMaxLength');
-				
 			case 'SESSION_NAME':
 				return $this->ajaxChat->getConfig('sessionName');
-				
 			case 'CHAT_BOT_NAME':
 				return $this->ajaxChat->htmlEncode($this->ajaxChat->getConfig('chatBotName'));
 			case 'CHAT_BOT_ID':
@@ -94,25 +87,18 @@ class AJAXChatTemplate {
 				return MYPASSWORD;	
 			case 'USER_NAME':
 				return USERNAME;
-				//return $this->ajaxChat->htmlEncode($this->ajaxChat->getUserName());
 			case 'USER_ID':
 				return USERID;
-				//return $this->ajaxChat->getUserID();
-
 			case 'STYLE_SHEETS':
 				return $this->getStyleSheetLinkTags();
-				
 			case 'CHANNEL_OPTIONS':
 				return $this->getChannelOptionTags();
 			case 'STYLE_OPTIONS':
 				return $this->getStyleOptionTags();
-			
 			case 'HELP_LIST':
 				return $this->getHelpListTable();
-			
 			case 'ERROR_MESSAGES':
 				return $this->getErrorMessageTags();
-
 			case 'LOGS_CHANNEL_OPTIONS':
 				return $this->getLogsChannelOptionTags();
 			case 'LOGS_YEAR_OPTIONS':
@@ -123,9 +109,8 @@ class AJAXChatTemplate {
 				return $this->getLogsDayOptionTags();
 			case 'LOGS_HOUR_OPTIONS':
 				return $this->getLogsHourOptionTags();
-			
 			default:
-				return $this->ajaxChat->replaceCustomTemplateTags($tag, $tagContent);
+				return $this->ajaxChat->replaceCustomTemplateTags($t[1], $t[2]);
 		}
 	}
 

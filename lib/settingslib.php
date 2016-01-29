@@ -38,7 +38,6 @@ global $CFG;
             }
         }
 		$defaultsettings = default_settings($type,$pageid,$featureid); //get all default settings for the feature
-		
 		$SQL = "SELECT * FROM settings WHERE type='$type' AND featureid='$featureid'";
 		if($results = get_db_result($SQL)){
             $settings = new stdClass();
@@ -229,7 +228,7 @@ function make_or_update_setting($settingid=false,$type=false,$pageid=false,$feat
 	}
 
 	if($settingid = execute_db_sql($SQL)){
-		if($settings){ //Update settings variable to show changes
+		if(!empty($settings)){ //Update settings variable to show changes
             $settings->$type = new stdClass();
             $settings->$type->$featureid = new stdClass();
             $settings->$type->$featureid->$setting_name = new stdClass();
