@@ -622,28 +622,31 @@ div.footer-text
 }
 
 .col1, .col2, .col3 {
-	float:left;
+	float:right;
 	padding:0 0 5px;
 	position:relative;
 }
-
-.rightmenu {
-}
-	.rightmenu .colleft {
+.rightmenu .colleft {
 	right:25%;
 }
 
 .rightmenu .col1 {
-	left:25.5%;
+	left:24.5%;
 	width:76%;
 }
 
 .rightmenu .col2 {
-	left:26%;
+	left:25%;
 	width:22.5%;
-    min-width: 220px;
+    min-width: 160px;
 }
 
+.logo_nav {
+    display: inline-block;
+    left: 25%;
+    position: relative;
+    width: 76%;    
+}
 div.quotebox{
 	width:14em;
 }

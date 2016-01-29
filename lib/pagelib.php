@@ -53,45 +53,29 @@ global $MYVARS;
 
 function main_body($header_only = false){
 global $CFG,$USER,$PAGE;
-    $returnme = '';
-    $returnme .= '
-    <div id="wholepage">
-    	<div class="colmask rightmenu">
-    		<div class="colleft">
-    			<div class="col1">
-    				<table style="width:100%"><tr><td style="text-align:center;height:108px;"><a href="'.$CFG->wwwroot.'"><img src="'.$CFG->wwwroot.'/images/'.$CFG->logofile.'" alt="'.$CFG->sitename.' Logo" /></a></td><td rowspan="2" style="text-align:center;font-size:.75em;vertical-align:middle;">'. random_quote() . '</td></tr>
-    				    <tr><td>';
-                            $returnme .= $header_only ? "" : get_nav_items($PAGE->id);
-    $returnme .= '      </td></tr>
-                    </table>
-                    <div style="padding:2px;"></div>
-    			</div>
-    			<div class="col2">';
-    
-    if(!$header_only){
-        if(is_logged_in()){
-            $returnme .= '<div id="login_box" class="login_box" style="text-align:right;">' . print_logout_button($USER->fname, $USER->lname, $PAGE->id) . '</div>';    
-        }else{
-            $returnme .= get_login_form();    
-        }         
-    }
-
-    $returnme .= '
-    			</div>
-    		</div>
-    	</div>
-    </div>
-    <div style="clear:both;"></div>
-    ';
-    
-    return $returnme;
+    return  '<div id="wholepage">
+            	<div class="colmask rightmenu">
+        			<input type="hidden" id="currentpage" value="' . $PAGE->id . '" />
+    				<div class="colleft">
+                        <div class="logo_nav">
+                            '.page_masthead(true, $header_only).'
+                        </div>
+                        <div class="col2 pagesort2 connectedSortable">
+                            '.page_masthead(false, $header_only).'
+    					</div>
+    					<div class="col1 pagesort1 connectedSortable">
+        					<span id="column_width" style="width:100%;"></span>
+    					</div>
+    				</div>
+     			</div>
+            </div>
+            <div style="clear:both;"></div>';
 }
 
 function page_masthead($left = true, $header_only = false){
 global $CFG,$USER,$PAGE;
     if ($left) {
-        $returnme = '<div>
-                        <table style="width:100%">
+        $returnme = '<table style="width:100%">
                             <tr>
                                 <td style="text-align:center;height:108px;">
                                     <a href="'.$CFG->wwwroot.'">
@@ -107,8 +91,7 @@ global $CFG,$USER,$PAGE;
                                     '.($header_only ? "" : get_nav_items($PAGE->id)).'
                                 </td>
                             </tr>
-                        </table>
-                    </div>';        
+                        </table>';        
     } else {
         $returnme = (!$header_only ? (is_logged_in() ? print_logout_button($USER->fname, $USER->lname, $PAGE->id) : get_login_form()) : '');
     }
@@ -798,13 +781,13 @@ global $USER,$CFG;
 				<div class="formContainer rowContainer" style="width:100%;">
 					<label for="username" style="width:70px;">Username</label>
 					<div style="width:100%;margin-right:20px;">
-						<input style="width:70%;" type="email" id="username" name="username" data-rule-required="true" data-msg-required="'.get_error_message('valid_req_username').'" /><div class="tooltipContainer info">'.get_help("input_username").'</div><br />
+						<input style="margin-right:0px" type="email" id="username" name="username" data-rule-required="true" data-msg-required="'.get_error_message('valid_req_username').'" /><div class="tooltipContainer info">'.get_help("input_username").'</div><br />
 					</div>
 				</div>
 				<div class="formContainer rowContainer" style="width:100%;">
 			  		<label for="password" style="width:70px;">Password</label>
 		  			<div style="width:100%;margin-right:20px;">
-						<input style="width:70%;" type="password" id="password" name="password" data-rule-required="true" data-msg-required="'.get_error_message('valid_req_password').'" /><div class="tooltipContainer info">'.get_help("input_password2").'</div><br />
+						<input style="margin-right:0px" type="password" id="password" name="password" data-rule-required="true" data-msg-required="'.get_error_message('valid_req_password').'" /><div class="tooltipContainer info">'.get_help("input_password2").'</div><br />
 	  				</div>
 		  		</div>
 		</fieldset>  

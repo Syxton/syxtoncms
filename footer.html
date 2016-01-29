@@ -33,6 +33,28 @@
                     });
                 }
             }).disableSelection();
+            
+            function adjustStyle(width) {
+                width = parseInt(width);
+                if (width < 701) {
+                    $(".logo_nav").css("width","98%");
+                    $(".rightmenu .col1").css("width","98%");
+                    $(".rightmenu .col2").css("width","98%");
+                } else if ((width >= 701)) {
+                    $(".logo_nav").css("width","76%");
+                    $(".rightmenu .col1").css("width","76%");
+                    $(".rightmenu .col2").css("width","22.5%");
+                }
+            }
+            
+            $(function() {
+                adjustStyle($(this).width());
+                $(window).resize(function() {
+                    setTimeout(function() {
+                        adjustStyle($(this).width());
+                    }, 100);
+                });
+            });
           });
         </script>
 </body>

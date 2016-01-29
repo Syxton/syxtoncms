@@ -55,14 +55,14 @@ if(isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip,','.
 	echo '	<div class="colmask rightmenu">
 			<input type="hidden" id="currentpage" value="' . $PAGE->id . '" />
 				<div class="colleft">
+                    <div class="logo_nav">'.page_masthead(true).'</div>
+                    <div class="col2 pagesort2 connectedSortable">
+                        '.page_masthead(false).'
+    					'.get_page_contents($PAGE->id, 'side').'
+					</div>
 					<div class="col1 pagesort1 connectedSortable">
     					<span id="column_width" style="width:100%;"></span>
-                        '.page_masthead(true).'
     					'.get_page_contents($PAGE->id, 'middle'). '
-					</div>
-					<div class="col2 pagesort2 connectedSortable">
-                    '.page_masthead(false).'
-					'.get_page_contents($PAGE->id, 'side').'
 					</div>
 				</div>
 			</div>';
