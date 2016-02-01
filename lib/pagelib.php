@@ -75,23 +75,22 @@ global $CFG,$USER,$PAGE;
 function page_masthead($left = true, $header_only = false){
 global $CFG,$USER,$PAGE;
     if ($left) {
-        $returnme = '<table style="width:100%">
-                            <tr>
-                                <td style="text-align:center;height:108px;">
+        $returnme = '   <div>
+                            <div id="headerlogo" style="display:inline-block;text-align:center;width:70%;">
+                                <div style="padding: 20px;"
                                     <a href="'.$CFG->wwwroot.'">
-                                        <img src="'.$CFG->wwwroot.'/images/'.$CFG->logofile.'" alt="'.$CFG->sitename.' Logo" />
+                                        <img src="'.$CFG->wwwroot.'/images/'.$CFG->logofile.'" alt="'.$CFG->sitename.' Logo" style="width: 100%;max-width:350px;" />
                                     </a>
-                                </td>
-                                <td rowspan="2" style="text-align:center;font-size:.75em;vertical-align:middle;">
-                                    '. random_quote() . '
-                                </td>
-                            </tr>
-        				    <tr>
-                                <td>
-                                    '.($header_only ? "" : get_nav_items($PAGE->id)).'
-                                </td>
-                            </tr>
-                        </table>';        
+                                </div>
+                            </div>
+                            <div id="headerquotebox" style="display:inline-block;text-align:center;width:29%;">
+                                <div style="padding: 20px;">'. random_quote() . '</div>
+                            </div>
+                            <div>
+                                '.($header_only ? "" : get_nav_items($PAGE->id)).'
+                            </div>
+                        </div>
+                        ';        
     } else {
         $returnme = (!$header_only ? (is_logged_in() ? print_logout_button($USER->fname, $USER->lname, $PAGE->id) : get_login_form()) : '');
     }

@@ -623,7 +623,7 @@ div.footer-text
 
 .col1, .col2, .col3 {
 	float:right;
-	padding:0 0 5px;
+	padding:0 2px 0;
 	position:relative;
 }
 .rightmenu .colleft {
@@ -646,9 +646,6 @@ div.footer-text
     left: 25%;
     position: relative;
     width: 76%;    
-}
-div.quotebox{
-	width:14em;
 }
 
 div.box_title{

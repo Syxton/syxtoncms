@@ -16,7 +16,7 @@ global $CFG;
 	$row = get_db_row("SELECT quote, author FROM quotes ORDER BY RAND() LIMIT 0,1");
 	if($row['quote'] != ""){ $quote = '<div>'.$row['quote'].'</div>';}
 	if($row['author'] != ""){ $author = '<br /><div style="float:right;">-- '.$row['author'].'</div>';}
-	return '<div class="quotebox">'.$quote.$author.'</div>';
+	return $quote.$author;
 }
 
 function load_user_cookie(){
