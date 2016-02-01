@@ -60,10 +60,38 @@ global $CFG,$MYVARS,$USER;
 
 function application_manager(){
 global $CFG,$MYVARS,$USER;
-	
+    $pageid = $_COOKIE["pageid"];
+    $export = "";
+    if($archive = get_db_result("SELECT * FROM events_staff_archive WHERE pageid='$pageid' GROUP BY year ORDER BY year")){
+        $i = 0;
+        $values = new stdClass();
+		while($vals = fetch_row($archive)){
+            $values->$i = new stdClass();
+			$values->$i->year = $vals["year"];
+			$i++;
+		}
+        
+        $export = '<div style="float:right;">
+                    <a href="javascript: void(0);"
+                                       onclick="ajaxapi(\'/features/events/events_ajax.php\',
+                                                        \'export_staffapp\',
+                                                        \'&amp;pageid='.$pageid.'&amp;year=\'+$(\'#appyears\').val(),
+                                                        function() { 
+                                                            if (xmlHttp.readyState == 4) { 
+                                                                run_this();
+                                                            }
+                                                        },
+                                                        true
+                                                );">
+                                       Export
+                                    </a> '.make_select_from_array("appyears",$values,"year","year",date("Y")).'<div></div>
+                    </div>';
+    }
+                
     echo '<div class="dontprint"><form onsubmit="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';ajaxapi(\'/features/events/events_ajax.php\',\'appsearch\',\'&amp;pageid='.$MYVARS->GET["pageid"].'&amp;searchwords=\'+escape(document.getElementById(\'searchbox\').value),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true); return false;">
 	Applicant Search <input type="text" id="searchbox" name="searchbox" />&nbsp;<input type="submit" value="Search" /><div style="float:right;width: 150px;">Search for applicants by their name.</div>
-	<br /></form></div>
+	'.$export.'
+    </form></div>
 	<div id="loading_overlay" class="dontprint" style="text-align:center;position:absolute;width:98%;height:85%;background-color:white;opacity:.6;visibility:hidden;"><br /><br /><br /><img src="' . $CFG->wwwroot . '/images/loading_large.gif" /></div>
 	<span id="searchcontainer" style="padding:5px; display:block; width:99%;"></span>';
 }
