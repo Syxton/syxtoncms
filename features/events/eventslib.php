@@ -222,10 +222,11 @@ global $CFG, $USER;
         $returnme .= '<div class="hprcp_n" style="margin-top:4px;"><div class="hprcp_e"><div class="hprcp_w"></div></div></div>
 			<div class="hprcp_head">
 			<div style="width:100%;vertical-align:middle;color:gray;position:relative;_right:2px;top:-8px;">
-			<span style="font-size:.85em; float:left;line-height:28px;vertical-align:top">
+            ' . $buttons . '
+			<div style="font-size:.85em;line-height:28px;vertical-align:top">
                 ' . $export . '
                 ' . $registration . '
-			</span>' . $buttons . '
+			</div>
 			</div>
 			</div>
 			</td>
@@ -251,10 +252,11 @@ global $CFG, $USER;
         $returnme .= '<div class="hprcp_n" style="margin-top:4px;"><div class="hprcp_e"><div class="hprcp_w"></div></div></div>
 			<div class="hprcp_head">
 			<div style="width:100%;vertical-align:middle;color:gray;position:relative;_right:2px;top:-8px;">
-			<span style="font-size:.85em; float:left;line-height:28px;">
+			' . $buttons . '
+            <div style="font-size:.85em;line-height:28px;">
 			' . $export . '
 			' . $registration . '
-			</span>' . $buttons . '
+			</div>
 			</div>
 			</div>
 			</td>
@@ -282,12 +284,12 @@ global $CFG;
 	if(strlen($buttons) > 0){
 	   	   return '
         <div id="slide_menu" class="slide_menu_invisible slide_menu" style="border-top:1px solid '.$bordercolor.';border-bottom:1px solid '.$bordercolor.';">
-        <div id="event_' . $event["eventid"] . '_buttons" style="padding:0;">
-		  ' . $buttons . '
-		</div>
+            <div id="event_' . $event["eventid"] . '_buttons" style="padding:0;">
+    		  ' . $buttons . '
+    		</div>
         </div>
         <div onclick="$(this).prev(\'#slide_menu\').animate({width: \'toggle\'},function(){$(this).toggleClass(\'slide_menu_visible\');});" class="slide_menu slide_menu_tab" style="background-color:'.$titlefontcolor.';color:'.$titlebgcolor.';border-left:1px solid '.$bordercolor.';border-top:1px solid '.$bordercolor.';border-bottom:1px solid '.$bordercolor.';"><strong>+</strong></div>
-        <div style="clear:both"></div>';
+        ';
 	}
 
     return "";

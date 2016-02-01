@@ -686,12 +686,10 @@ div.box_content{
     -webkit-border-radius: 5px; 
     -khtml-border-radius: 5px; 
     border-radius: 5px; /* CSS3 version */
-	background:transparent url(../images/background_panel.gif) repeat scroll center bottom;
 	border-color:#FCD163 rgb(252, 209, 99) rgb(225, 191, 72);
 	border-style:solid;
 	border-width:1px;
 	z-index:-1;
-	height:20px;
 	margin-top:-6px;
 	padding-left:15px;
 	padding-top:10px;
