@@ -1184,6 +1184,10 @@ input,select,textarea {
     -o-transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
     transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
 }
+select:disabled {
+    background-color: rgb(235, 235, 228);
+    color: rgb(84,84,84);
+}
 hr {
     background-color: #ccc;
     border: 0;

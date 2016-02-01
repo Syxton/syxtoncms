@@ -2295,13 +2295,16 @@ global $USER, $CFG, $MYVARS;
 
 function change_bgcheck_status() {
 global $USER, $CFG, $MYVARS;
+    $pageid = $_COOKIE["pageid"];
     $staffid = $MYVARS->GET["staffid"];
     $date = strtotime($MYVARS->GET["bgcdate"]);
     
-    if (is_numeric($staffid) && is_numeric($date)) {
-        execute_db_sql("UPDATE events_staff SET bgcheckpassdate='$date',bgcheckpass='1' WHERE staffid='$staffid'");
-    } else if(is_numeric($staffid) && empty($MYVARS->GET["bgcdate"])){
-        execute_db_sql("UPDATE events_staff SET bgcheckpassdate=0,bgcheckpass='' WHERE staffid='$staffid'");
+    if (is_numeric($pageid) && is_numeric($staffid) && is_numeric($date)) {
+        execute_db_sql("UPDATE events_staff SET bgcheckpassdate='$date',bgcheckpass='1' WHERE staffid='$staffid' AND pageid='$pageid'");
+        execute_db_sql("UPDATE events_staff_archive SET bgcheckpassdate='$date',bgcheckpass='1' WHERE staffid='$staffid' AND year='".date('Y')."' AND pageid='$pageid'");
+    } else if(is_numeric($pageid) && is_numeric($staffid) && empty($MYVARS->GET["bgcdate"])){
+        execute_db_sql("UPDATE events_staff SET bgcheckpassdate=0,bgcheckpass='' WHERE staffid='$staffid' AND pageid='$pageid'");
+        execute_db_sql("UPDATE events_staff_archive SET bgcheckpassdate=0,bgcheckpass='' WHERE staffid='$staffid' AND year='".date('Y')."' AND pageid='$pageid'");
     } else {
         echo "Failed";
     }
@@ -2460,6 +2463,7 @@ function show_staff_app(){
 global $CFG, $MYVARS, $USER;
     $staffid = trim($MYVARS->GET["staffid"]);
     $searchwords = trim($MYVARS->GET["searchwords"]);
+    $year = isset($MYVARS->GET["year"]) ? trim($MYVARS->GET["year"]) : date("Y");
     $pagenum = isset($MYVARS->GET["pagenum"]) ? dbescape($MYVARS->GET["pagenum"]) : 0;
     echo '<link rel="stylesheet" type="text/css" href="'.$CFG->wwwroot.'/styles/print.css">';
     echo '<a class="dontprint" title="Return to Staff Applications" href="javascript: void(0)" 
@@ -2479,8 +2483,30 @@ global $CFG, $MYVARS, $USER;
                          return false;
                 ">Return to Staff Applications
              </a>';
- 
-    if($row = get_db_row("SELECT * FROM events_staff WHERE staffid='$staffid'")){
+    $applookup = 'document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+                                    ajaxapi(\'/features/events/events_ajax.php\',
+                                            \'show_staff_app\',
+                                            \'&amp;staffid='.$staffid.'&amp;year=\'+$(this).val()+\'&amp;pagenum=' . $pagenum . '&amp;searchwords=\'+escape(\'' . $searchwords . '\'),
+                                            function() { 
+                                                if (xmlHttp.readyState == 4) { 
+                                                    simple_display(\'searchcontainer\'); 
+                                                    document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                                }
+                                            },
+                                            true
+                                    );';
+    if($archive = get_db_result("SELECT * FROM events_staff_archive WHERE staffid='$staffid' ORDER BY year")){
+        $i = 0;
+        $values = new stdClass();
+		while($vals = fetch_row($archive)){
+            $values->$i = new stdClass();
+			$values->$i->year = $vals["year"];
+			$i++;
+		}
+        echo "<br />" . make_select_from_array("year",$values,"year","year",$year,"",'onchange="'.$applookup.'"') ."<br />";
+    }
+
+    if($row = get_db_row("SELECT * FROM events_staff_archive WHERE staffid='$staffid' AND year='$year'")){
 	   echo '   <input style="float:right;" class="dontprint" type="button" value="Print" onclick="window.print();return false;" />
                 <p style="font-size:.95em;" class="print">
                     '.staff_application_form($row, true).'
@@ -2548,13 +2574,31 @@ global $CFG,$MYVARS,$USER;
         $success = execute_db_sql($SQL);
         $message = "Application Complete";
     }
-
     		  
     //Save the request
     if($success){
         $staffid = !empty($staffid) ? $staffid : $success;
         $staff = get_db_row("SELECT * FROM events_staff WHERE staffid='$staffid'");
 		
+        if(get_db_row("SELECT * FROM events_staff_archive WHERE staffid='$staffid' AND pageid='$pageid' AND year='".date("Y")."'")){
+            $SQL = "UPDATE events_staff_archive SET name='$name',phone='$phone',dateofbirth='$dateofbirth',address='$address',
+                agerange='$agerange',cocmember='$cocmember',congregation='$congregation',priorwork='$priorwork',
+                q1_1='$q1_1',q1_2='$q1_2',q1_3='$q1_3',q2_1='$q2_1',q2_2='$q2_2',q2_3='$q2_3',
+                parentalconsent='$parentalconsent',parentalconsentsig='$parentalconsentsig',
+                workerconsent='$workerconsent',workerconsentsig='$workerconsentsig',workerconsentdate='$workerconsentdate',
+                ref1name='$ref1name',ref1relationship='$ref1relationship',ref1phone='$ref1phone',
+                ref2name='$ref2name',ref2relationship='$ref2relationship',ref2phone='$ref2phone',
+                ref3name='$ref3name',ref3relationship='$ref3relationship',ref3phone='$ref3phone',
+                bgcheckpass='".$staff["bgcheckpass"]."',bgcheckpassdate='".$staff["bgcheckpassdate"]."'
+                WHERE staffid='$staffid' AND year='".date("Y")."' AND pageid='$pageid'";
+            execute_db_sql($SQL);    
+        } else {
+            $SQL = "INSERT INTO events_staff_archive 
+                        (staffid,userid,pageid,year,name,phone,dateofbirth,address,agerange,cocmember,congregation,priorwork,q1_1,q1_2,q1_3,q2_1,q2_2,q2_3,parentalconsent,parentalconsentsig,workerconsent,workerconsentsig,workerconsentdate,ref1name,ref1relationship,ref1phone,ref2name,ref2relationship,ref2phone,ref3name,ref3relationship,ref3phone,bgcheckpass,bgcheckpassdate) 
+                        VALUES('$staffid','$userid','$pageid','".date("Y")."','$name','$phone','$dateofbirth','$address','$agerange','$cocmember','$congregation','$priorwork','$q1_1','$q1_2','$q1_3','$q2_1','$q2_2','$q2_3','$parentalconsent','$parentalconsentsig','$workerconsent','$workerconsentsig','$workerconsentdate','$ref1name','$ref1relationship','$ref1phone','$ref2name','$ref2relationship','$ref2phone','$ref3name','$ref3relationship','$ref3phone','".$staff["bgcheckpass"]."',".$staff["bgcheckpassdate"].")";    
+            execute_db_sql($SQL);            
+        }
+        
         $backgroundchecklink = '';
         $featureid = "*";
         if(!$settings = fetch_settings("events", $featureid, $pageid)){

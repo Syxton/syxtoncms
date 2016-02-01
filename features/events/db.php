@@ -146,6 +146,69 @@ global $CFG;
 			execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
 		}
 	}
+
+    //Activate and Deactivate templates
+	$thisversion = 20160201;
+	if($version < $thisversion){
+        $SQL = "CREATE TABLE IF NOT EXISTS `events_staff_archive` (
+          `archiveid` int(11) NOT NULL AUTO_INCREMENT,
+          `staffid` int(11) NOT NULL,
+          `userid` int(11) NOT NULL,
+          `pageid` int(11) NOT NULL,
+          `year` int(11) NOT NULL,
+          `name` varchar(200) NOT NULL,
+          `dateofbirth` int(11) NOT NULL,
+          `phone` varchar(20) NOT NULL,
+          `address` varchar(200) NOT NULL,
+          `agerange` varchar(2) NOT NULL,
+          `cocmember` varchar(2) NOT NULL,
+          `congregation` varchar(200) NOT NULL,
+          `priorwork` varchar(2) NOT NULL,
+          `q1_1` varchar(2) NOT NULL,
+          `q1_2` varchar(2) NOT NULL,
+          `q1_3` varchar(2) NOT NULL,
+          `q2_1` varchar(2) NOT NULL,
+          `q2_2` varchar(2) NOT NULL,
+          `q2_3` varchar(200) NOT NULL,
+          `parentalconsent` varchar(200) NOT NULL,
+          `parentalconsentsig` varchar(10) NOT NULL,
+          `workerconsent` varchar(200) NOT NULL,
+          `workerconsentsig` varchar(10) NOT NULL,
+          `workerconsentdate` int(11) NOT NULL,
+          `ref1name` varchar(200) NOT NULL,
+          `ref1relationship` varchar(200) NOT NULL,
+          `ref1phone` varchar(20) NOT NULL,
+          `ref2name` varchar(200) NOT NULL,
+          `ref2relationship` varchar(200) NOT NULL,
+          `ref2phone` varchar(20) NOT NULL,
+          `ref3name` varchar(200) NOT NULL,
+          `ref3relationship` varchar(200) NOT NULL,
+          `ref3phone` varchar(20) NOT NULL,
+          `bgcheckpass` varchar(2) NOT NULL,
+          `bgcheckpassdate` int(11) NOT NULL,
+          PRIMARY KEY `archiveid` (`archiveid`),
+          KEY `staffid` (`staffid`),
+          KEY `pageid` (`pageid`),
+          KEY `userid` (`userid`),
+          KEY `dateofbirth` (`dateofbirth`),
+          KEY `priorwork` (`priorwork`)
+        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
+		if(execute_db_sql($SQL)){ //if successful upgrade
+            if($result = get_db_result("SELECT * FROM events_staff")){
+                while($row = fetch_row($result)){                    
+                    $SQL = "INSERT INTO events_staff_archive 
+                    (staffid,userid,pageid,year,name,phone,dateofbirth,address,agerange,cocmember,congregation,priorwork,q1_1,q1_2,q1_3,q2_1,q2_2,q2_3,parentalconsent,parentalconsentsig,workerconsent,workerconsentsig,workerconsentdate,ref1name,ref1relationship,ref1phone,ref2name,ref2relationship,ref2phone,ref3name,ref3relationship,ref3phone,bgcheckpass,bgcheckpassdate) 
+                    VALUES('".$row["staffid"]."','".$row["userid"]."','".$row["pageid"]."','".date("Y",$row["workerconsentdate"])."','".$row["name"]."','".$row["phone"]."',
+                           '".$row["dateofbirth"]."','".$row["address"]."','".$row["agerange"]."','".$row["cocmember"]."','".$row["congregation"]."',
+                           '".$row["priorwork"]."','".$row["q1_1"]."','".$row["q1_2"]."','".$row["q1_3"]."','".$row["q2_1"]."','".$row["q2_2"]."','".$row["q2_3"]."',
+                           '".$row["parentalconsent"]."','".$row["parentalconsentsig"]."','".$row["workerconsent"]."','".$row["workerconsentsig"]."','".$row["workerconsentdate"]."',
+                           '".$row["ref1name"]."','".$row["ref1relationship"]."','".$row["ref1phone"]."','".$row["ref2name"]."','".$row["ref2relationship"]."','".$row["ref2phone"]."','".$row["ref3name"]."','".$row["ref3relationship"]."','".$row["ref3phone"]."','".$row["bgcheckpass"]."','".$row["bgcheckpassdate"]."')";
+                    execute_db_sql($SQL);    
+                }
+            }
+			execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
+		}
+	}
 }
 
 function events_install(){
@@ -293,10 +356,54 @@ function events_install(){
           KEY `dateofbirth` (`dateofbirth`),
           KEY `priorwork` (`priorwork`),
         ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
+        
+        $SQL8 = "CREATE TABLE IF NOT EXISTS `events_staff_archive` (
+          `archiveid` int(11) NOT NULL AUTO_INCREMENT,
+          `staffid` int(11) NOT NULL,
+          `userid` int(11) NOT NULL,
+          `pageid` int(11) NOT NULL,
+          `year` int(11) NOT NULL,
+          `name` varchar(200) NOT NULL,
+          `dateofbirth` int(11) NOT NULL,
+          `phone` varchar(20) NOT NULL,
+          `address` varchar(200) NOT NULL,
+          `agerange` varchar(2) NOT NULL,
+          `cocmember` varchar(2) NOT NULL,
+          `congregation` varchar(200) NOT NULL,
+          `priorwork` varchar(2) NOT NULL,
+          `q1_1` varchar(2) NOT NULL,
+          `q1_2` varchar(2) NOT NULL,
+          `q1_3` varchar(2) NOT NULL,
+          `q2_1` varchar(2) NOT NULL,
+          `q2_2` varchar(2) NOT NULL,
+          `q2_3` varchar(200) NOT NULL,
+          `parentalconsent` varchar(200) NOT NULL,
+          `parentalconsentsig` varchar(10) NOT NULL,
+          `workerconsent` varchar(200) NOT NULL,
+          `workerconsentsig` varchar(10) NOT NULL,
+          `workerconsentdate` int(11) NOT NULL,
+          `ref1name` varchar(200) NOT NULL,
+          `ref1relationship` varchar(200) NOT NULL,
+          `ref1phone` varchar(20) NOT NULL,
+          `ref2name` varchar(200) NOT NULL,
+          `ref2relationship` varchar(200) NOT NULL,
+          `ref2phone` varchar(20) NOT NULL,
+          `ref3name` varchar(200) NOT NULL,
+          `ref3relationship` varchar(200) NOT NULL,
+          `ref3phone` varchar(20) NOT NULL,
+          `bgcheckpass` varchar(2) NOT NULL,
+          `bgcheckpassdate` int(11) NOT NULL,
+          PRIMARY KEY `archiveid` (`archiveid`),
+          KEY `staffid` (`staffid`),
+          KEY `pageid` (`pageid`),
+          KEY `userid` (`userid`),
+          KEY `dateofbirth` (`dateofbirth`),
+          KEY `priorwork` (`priorwork`)
+        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
 
 		if(execute_db_sql($SQL) && execute_db_sql($SQL2) && execute_db_sql($SQL3) &&
            execute_db_sql($SQL4) && execute_db_sql($SQL5) && execute_db_sql($SQL6) && 
-           execute_db_sql($SQL7)){ //if successful upgrade
+           execute_db_sql($SQL7) && execute_db_sql($SQL8)){ //if successful upgrade
 			execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
             
             //CREATE ROLE ABILITIES
