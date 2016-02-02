@@ -98,13 +98,11 @@ global $CFG, $USER;
 }
 
 function make_setting_input($name, $title, $type, $extra="", $settingid="", $setting = "", $numeric = false, $extravalidation = "", $extra_alert = "", $savebutton = true){
-global $CFG; 
-	$returnme = '<table style="width:100%;margin: 2px 0px;">
-					<tr>
-						<td class="field_title" style="vertical-align:top;width:230px;">
-						'.$title.':
-						</td>
-						<td class="field_input" style="width:230px">';
+global $CFG;
+    $valign = $type == "textarea" ? "top" : "middle";
+	$returnme = '<div style="margin:10px 0;">
+                    <div style="display:inline-block;width:20%;padding:0 10px;font-size:.9em;vertical-align:'.$valign.';">'.$title.'</div>
+                    <div style="display:inline-block;width:70%">';
 	
 	switch ($type){
 	case "text":
@@ -112,61 +110,61 @@ global $CFG;
 		$numeric_close = $numeric ? '}' : '';
 		$extravalidation_open = $extravalidation != '' ? 'if($(\'#'.$name.'\').val() '.$extravalidation.'){alert(\''.$extra_alert.'\');}else{ ' : '';
 		$extravalidation_close = $extravalidation != '' ? '}' : '';
-		$returnme .= '<input type="text" id="'.$name.'" name="'.$name.'" style="width:100%" value="'.$setting.'"/></td><td>';
-		$returnme .= !$savebutton ? '' : '<input type="button" value="Save" onclick="'.$numeric_open.''.$extravalidation_open.' ajaxapi(\'/ajax/site_ajax.php\',\'save_settings\',\'&amp;settingid='.$settingid.'&amp;setting=\'+escape($(\'#'.$name.'\').val()),function() { simple_display(\''.$name.'_results\'); setTimeout(function() {clear_display(\''.$name.'_results\');}, 3000);});'.$extravalidation_close.''.$numeric_close.'" /> ';
+		$returnme .= '<input type="text" id="'.$name.'" name="'.$name.'" value="'.$setting.'"/>';
+		$returnme .= !$savebutton ? '' : '<input style="float:right" type="button" value="Save" onclick="'.$numeric_open.''.$extravalidation_open.' ajaxapi(\'/ajax/site_ajax.php\',\'save_settings\',\'&amp;settingid='.$settingid.'&amp;setting=\'+escape($(\'#'.$name.'\').val()),function() { simple_display(\''.$name.'_results\'); setTimeout(function() {clear_display(\''.$name.'_results\');}, 3000);});'.$extravalidation_close.''.$numeric_close.'" /> ';
 
 	    break;
 	case "yes/no":
 	    $yes = $setting == 1 ? "selected" : "";
 		$no = $yes == "" ? "selected" : "";
-        $returnme .= '<select name="'.$name.'" id="'.$name.'" style="width:100%;">
+        $returnme .= '<select name="'.$name.'" id="'.$name.'">
 						<option value="1" '.$yes.'>Yes</option>
 						<option value="0" '.$no.'>No</option>
-					</select></td><td>';
-		$returnme .= !$savebutton ? '' : '<input type="button" value="Save" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'save_settings\',\'&amp;settingid='.$settingid.'&amp;setting=\'+escape($(\'#'.$name.'\').val()),function() { simple_display(\''.$name.'_results\'); setTimeout(function() {clear_display(\''.$name.'_results\');}, 3000);});" />';
+					</select>';
+		$returnme .= !$savebutton ? '' : '<input style="float:right" type="button" value="Save" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'save_settings\',\'&amp;settingid='.$settingid.'&amp;setting=\'+escape($(\'#'.$name.'\').val()),function() { simple_display(\''.$name.'_results\'); setTimeout(function() {clear_display(\''.$name.'_results\');}, 3000);});" />';
 	    break;
 	case "no/yes":
 		$no = $setting == 1 ? "" : "selected";
 		$yes = $no == "" ? "selected" : "";
-        $returnme .= '<select name="'.$name.'" id="'.$name.'" style="width:100%;">
+        $returnme .= '<select name="'.$name.'" id="'.$name.'">
 						<option value="1" '.$no.'>No</option>
 						<option value="0" '.$yes.'>Yes</option>
-					</select></td><td>';
-		$returnme .= !$savebutton ? '' : '<input type="button" value="Save" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'save_settings\',\'&amp;settingid='.$settingid.'&amp;setting=\'+escape($(\'#'.$name.'\').val()),function() { simple_display(\''.$name.'_results\'); setTimeout(function() {clear_display(\''.$name.'_results\');}, 3000);});" />';
+					</select>';
+		$returnme .= !$savebutton ? '' : '<input style="float:right" type="button" value="Save" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'save_settings\',\'&amp;settingid='.$settingid.'&amp;setting=\'+escape($(\'#'.$name.'\').val()),function() { simple_display(\''.$name.'_results\'); setTimeout(function() {clear_display(\''.$name.'_results\');}, 3000);});" />';
 	    break;
     case "select": //extra will look like 'SELECT id as selectvalue,text as selectname from table'  the value and name must be labeled as selectvalue and selectname
         $no = $setting != 0 ? "" : "selected";
-        $returnme .= '<select name="'.$name.'" id="'.$name.'" style="width:100%;"><option value="0" '.$no.'>No</option>';
+        $returnme .= '<select name="'.$name.'" id="'.$name.'"><option value="0" '.$no.'>No</option>';
         if($data = get_db_result($extra)){
             while($row = fetch_row($data)){
                 $yes = $setting == $row["selectvalue"] ? "selected" : "";
                 $returnme .= '<option value="'.$row["selectvalue"].'" '.$yes.'>'.stripslashes($row["selectname"]).'</option>';
             }
         }
-        $returnme .= '</select></td><td>';
-        $returnme .= !$savebutton ? '' : '<input type="button" value="Save" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'save_settings\',\'&amp;settingid='.$settingid.'&amp;setting=\'+escape($(\'#'.$name.'\').val()),function() { simple_display(\''.$name.'_results\'); setTimeout(function() {clear_display(\''.$name.'_results\');}, 3000);});" />';       
+        $returnme .= '</select>';
+        $returnme .= !$savebutton ? '' : '<input style="float:right" type="button" value="Save" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'save_settings\',\'&amp;settingid='.$settingid.'&amp;setting=\'+escape($(\'#'.$name.'\').val()),function() { simple_display(\''.$name.'_results\'); setTimeout(function() {clear_display(\''.$name.'_results\');}, 3000);});" />';       
 	    break;
         
     case "select_array": //extra will be an array of arrays. The value and name must be labeled as selectvalue and selectname
-        $returnme .= '<select name="'.$name.'" id="'.$name.'" style="width:100%;">';
+        $returnme .= '<select name="'.$name.'" id="'.$name.'">';
         foreach($extra as $e){
             $yes = $setting == $e["selectvalue"] ? "selected" : "";
             $returnme .= '<option value="'.$e["selectvalue"].'" '.$yes.'>'.stripslashes($e["selectname"]).'</option>';    
         }
-        $returnme .= '</select></td><td>';
-        $returnme .= !$savebutton ? '' : '<input type="button" value="Save" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'save_settings\',\'&amp;settingid='.$settingid.'&amp;setting=\'+escape($(\'#'.$name.'\').val()),function() { simple_display(\''.$name.'_results\'); setTimeout(function() {clear_display(\''.$name.'_results\');}, 3000);});" />';       
+        $returnme .= '</select>';
+        $returnme .= !$savebutton ? '' : '<input style="float:right" type="button" value="Save" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'save_settings\',\'&amp;settingid='.$settingid.'&amp;setting=\'+escape($(\'#'.$name.'\').val()),function() { simple_display(\''.$name.'_results\'); setTimeout(function() {clear_display(\''.$name.'_results\');}, 3000);});" />';       
 	    break;        
      case "textarea": 
 		$numeric_open = $numeric ? 'if(!IsNumeric($(\'#'.$name.'\').val())){alert(\'Must be numeric!\');}else{ ' : '';
 		$numeric_close = $numeric ? '}' : '';
 		$extravalidation_open = $extravalidation != '' ? 'if($(\'#'.$name.'\').val() '.$extravalidation.'){alert(\''.$extra_alert.'\');}else{ ' : '';
 		$extravalidation_close = $extravalidation != '' ? '}' : '';
-		$returnme .= '<textarea id="'.$name.'" wrap="off" cols="23" rows="'.$extra.'" >'.stripslashes($setting).'</textarea></td><td>';
-		$returnme .= !$savebutton ? '' : '<input type="button" value="Save" onclick="'.$numeric_open.''.$extravalidation_open.' ajaxapi(\'/ajax/site_ajax.php\',\'save_settings\',\'&amp;settingid='.$settingid.'&amp;setting=\'+escape($(\'#'.$name.'\').val()),function() { simple_display(\''.$name.'_results\'); setTimeout(function() {clear_display(\''.$name.'_results\');}, 3000);});'.$extravalidation_close.''.$numeric_close.'" /> ';
+		$returnme .= '<textarea id="'.$name.'" wrap="off" cols="23" rows="'.$extra.'" >'.stripslashes($setting).'</textarea>';
+		$returnme .= !$savebutton ? '' : '<input style="float:right" type="button" value="Save" onclick="'.$numeric_open.''.$extravalidation_open.' ajaxapi(\'/ajax/site_ajax.php\',\'save_settings\',\'&amp;settingid='.$settingid.'&amp;setting=\'+escape($(\'#'.$name.'\').val()),function() { simple_display(\''.$name.'_results\'); setTimeout(function() {clear_display(\''.$name.'_results\');}, 3000);});'.$extravalidation_close.''.$numeric_close.'" /> ';
         break;
 	}
 
-	$returnme .= '<span id="'.$name.'_results" class="notification"></span></td></tr></table>';
+	$returnme .= '</div><span style="max-width:50px" id="'.$name.'_results" class="notification"></span></div>';
 	return $returnme;
 }
 
