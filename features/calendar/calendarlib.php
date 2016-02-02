@@ -56,7 +56,7 @@ function get_small_calendar($pageid, $userid = 0, $month = false, $year = false,
         $prevmonth = $month - 1;
         $prevyear = $year;
     }
-    $returnme = '<table cellspacing="1" cellpadding="0" border="0" class="mainTable2"><tr><td align="center" colspan="7" class="monthRow">
+    $returnme = '<table class="mainTable2"><tr><td style="text-align:center" colspan="7" class="monthRow">
               		<a href="javascript: ajaxapi(\'/features/calendar/calendar_ajax.php\',\'print_calendar\',\'&amp;displaymode=0&amp;userid=' .
         $userid . '&amp;pageid=' . $pageid . '&amp;month=' . $prevmonth . '&amp;year=' .
         $prevyear . '\',function() { simple_display(\'calendar_div\');});">&laquo;</a>&nbsp;';
@@ -112,15 +112,15 @@ function get_small_calendar($pageid, $userid = 0, $month = false, $year = false,
                     }else{ $category_colors = 'background-color: #CCFF00; color: #333333;'; }
                 }
         
-                $returnme .= '<td align="center" style="' . $category_colors .' cursor: pointer;" onclick="ajaxapi(\'/features/calendar/calendar_ajax.php\',\'get_date_info\',\'&amp;show_site_events='.$show_site_events.'&amp;pageid='.$pageid.'&amp;tm='.$tm.'&amp;tn='.$tn.'&amp;tp='.$tp.'&amp;list_day='.$list_day.'\',function() { simple_display(\'day_info\'); show_section(\'day_info\'); var temptimer=10; countdown(\'cal_countdown\',temptimer,function(){ hide_section(\'day_info\'); });})">';
+                $returnme .= '<td style="text-align:center;' . $category_colors .' cursor: pointer;" onclick="ajaxapi(\'/features/calendar/calendar_ajax.php\',\'get_date_info\',\'&amp;show_site_events='.$show_site_events.'&amp;pageid='.$pageid.'&amp;tm='.$tm.'&amp;tn='.$tn.'&amp;tp='.$tp.'&amp;list_day='.$list_day.'\',function() { simple_display(\'day_info\'); show_section(\'day_info\'); var temptimer=10; countdown(\'cal_countdown\',temptimer,function(){ hide_section(\'day_info\'); });})">';
                 db_free_result($result);
             }
         }elseif($tn > $tm && $tn < $tp && date('j') == $list_day && date('m') == $month && date('Y') == $year){
-            $returnme .= '<td align="center" style="background-color: #FFC18A; color: #CF0000;">';
+            $returnme .= '<td style="text-align:center;background-color: #FFC18A; color: #CF0000;">';
         }elseif($theday == 6 or $theday == 0){
-            $returnme .= '<td align="center" style="background-color: #EEEEEE; color: #666666;">';
+            $returnme .= '<td style="text-align:center;background-color: #EEEEEE; color: #666666;">';
         }else{
-            $returnme .= '<td align="center" style="background-color: #CCCCCC; color: #333333;">';
+            $returnme .= '<td style="text-align:center;background-color: #CCCCCC; color: #333333;">';
         }
         $returnme .= $list_day;
         $returnme .= '</td>';
@@ -136,7 +136,10 @@ function get_small_calendar($pageid, $userid = 0, $month = false, $year = false,
         $returnme .= '<tr class="rows">';
         $returnme .= '<td>&nbsp;</td>';
     }
-    if($theday != 0){ $returnme .= '</tr>'; }
+    if($theday != 0) {
+        $returnme .= str_repeat("<td></td>", 7-$theday);
+        $returnme .= '</tr>'; 
+    }
     $returnme .= '</table>';
     return $returnme;
 }
@@ -160,7 +163,7 @@ global $CFG;
         $prevmonth = $month - 1;
         $prevyear = $year;
     }
-    $returnme = '<table cellspacing="1" cellpadding="0" border="0" class="mainTableLarge"><tr><td align="center" colspan="7" class="monthRowLarge">
+    $returnme = '<table class="mainTableLarge"><tr><td style="text-align:center;" colspan="7" class="monthRowLarge">
               		<a href="javascript: ajaxapi(\'/features/calendar/calendar_ajax.php\',\'print_calendar\',\'&amp;displaymode=1&amp;userid=' .
         $userid . '&amp;pageid=' . $pageid . '&amp;month=' . $prevmonth . '&amp;year=' .
         $prevyear . '\',function() { simple_display(\'calendar_div\');});">&laquo;</a>&nbsp;';
@@ -215,15 +218,15 @@ global $CFG;
                     }else{ $category_colors = 'background-color: #CCFF00; color: #333333;'; }
                 }
         
-                $returnme .= '<td align="center" style="' . $category_colors .' cursor: pointer;" onclick="ajaxapi(\'/features/calendar/calendar_ajax.php\',\'get_date_info\',\'&amp;show_site_events='.$show_site_events.'&amp;pageid='.$pageid.'&amp;tm='.$tm.'&amp;tn='.$tn.'&amp;tp='.$tp.'&amp;list_day='.$list_day.'\',function() { simple_display(\'day_info\'); show_section(\'day_info\'); clearTimeout(temptimer); temptimer = setTimeout(function(){hide_section(\'day_info\')},10000); var temptimer2=10; countdown(\'cal_countdown\',temptimer2);})">';
+                $returnme .= '<td style="text-align:center;' . $category_colors .' cursor: pointer;" onclick="ajaxapi(\'/features/calendar/calendar_ajax.php\',\'get_date_info\',\'&amp;show_site_events='.$show_site_events.'&amp;pageid='.$pageid.'&amp;tm='.$tm.'&amp;tn='.$tn.'&amp;tp='.$tp.'&amp;list_day='.$list_day.'\',function() { simple_display(\'day_info\'); show_section(\'day_info\'); clearTimeout(temptimer); temptimer = setTimeout(function(){hide_section(\'day_info\')},10000); var temptimer2=10; countdown(\'cal_countdown\',temptimer2);})">';
                 db_free_result($result);
             }
         }elseif($tn > $tm && $tn < $tp && date('j') == $list_day && date('m') == $month && date('Y') == $year){
-            $returnme .= '<td align="center" style="background-color: #FFC18A; color: #CF0000;">';
+            $returnme .= '<td style="text-align:center;background-color: #FFC18A; color: #CF0000;">';
         }elseif($theday == 6 or $theday == 0){
-            $returnme .= '<td align="center" style="background-color: #EEEEEE; color: #666666;">';
+            $returnme .= '<td style="text-align:center;background-color: #EEEEEE; color: #666666;">';
         }else{
-            $returnme .= '<td align="center" style="background-color: #CCCCCC; color: #333333;">';
+            $returnme .= '<td style="text-align:center;background-color: #CCCCCC; color: #333333;">';
         }
         $returnme .= $list_day;
         if($count){
@@ -241,11 +244,6 @@ global $CFG;
             $HowManyRows = $HowManyRows + 1;
         }
         $theday++;
-    }
-    if(($HowManyRows <= 4) and ($extra_row_large == 1)){
-        $returnme .= "</tr>";
-        $returnme .= '<tr class="rowsLarge">';
-        $returnme .= '<td>&nbsp;</td>';
     }
     if($theday != 0){ $returnme .= '</tr>'; }
     $returnme .= '</table>';
