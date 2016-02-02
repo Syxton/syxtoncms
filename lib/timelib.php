@@ -99,7 +99,7 @@ global $CFG;
 		$graphic = $inactive ? "datestamp_small_inactive.png" : "datestamp_small.png";
 		if($newday){
 			return '
-			<td style="vertical-align:top;width:60px;height:60px;" rowspan="2">
+			<td style="vertical-align:top;width:60px;height:60px;">
 			<table style="vertical-align:top;width:60px;height:60px;max-height:89px;"><tr>
 				<td style="background-image: url('.$CFG->wwwroot.'/images/'.$graphic.'); '.$alterfont.'">
 				<div style="text-align:center; font-size:.75em;line-height:10px;"><b>'.date('F',$timestamp).'</b></div>
@@ -109,13 +109,13 @@ global $CFG;
 			</tr>
 			</table>
 			</td>
-			<td rowspan="2" style="vertical-align:top;"><br />
+			<td style="vertical-align:top;"><br />
 			';
 		}else{
 			return '
 			<td style="vertical-align:middle;width:60px;height:60px;">
 			</td>
-			<td rowspan="2" style="vertical-align:top;">
+			<td style="vertical-align:top;">
 			';
 		}
 	}else{
@@ -123,7 +123,7 @@ global $CFG;
 		$graphic = $inactive ? "datestamp_inactive.png" : "datestamp.png";
 		if($newday){
 			return '
-			<td style="vertical-align:top;width:78px;height:78px;" rowspan="2">
+			<td style="vertical-align:top;width:78px;height:78px;">
 			<table style="vertical-align:top;width:78px;height:78px;max-height:89px;"><tr>
 				<td style="background-image: url('.$CFG->wwwroot.'/images/'.$graphic.'); '.$alterfont.'">
 				<div style="text-align:center; font-size:.85em;line-height:20px;"><b>'.date('F',$timestamp).'</b></div>
@@ -133,7 +133,7 @@ global $CFG;
 			</tr>
 			</table>
 			</td>
-			<td rowspan="2" style="vertical-align:top;"><br />
+			<td style="vertical-align:top;"><br />
 			';
 		}else{
 			return '

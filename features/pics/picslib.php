@@ -102,7 +102,7 @@ global $CFG;
 		while($row = fetch_row($result)){
 				$display = $gallery == "" || $gallery != $row['galleryid'] ? true : false;
 				$display = $display ? '' : 'display:none;';
-                $returnme .= empty($display) ? make_modal_links(array("id"=>"pic_".$row["picsid"],"title"=> stripslashes($row['caption']),"text"=>$row['name'],"gallery"=>"pics_gallery_".$row['galleryid'],"path"=>$path.$row['pageid']."/".$row['featureid']."/".$row['imagename'],"styles"=>$display)) : '<a href="'.$path.$row['pageid']."/".$row['featureid']."/".$row['imagename'].'" title="'.stripslashes($row['caption']).'" rel="pics_gallery_'.$row['galleryid'].'" style="'.$display.'"></a>';
+                $returnme .= empty($display) ? make_modal_links(array("id"=>"pic_".$row["picsid"],"title"=> stripslashes($row['caption']),"text"=>$row['name'],"gallery"=>"pics_gallery_".$row['galleryid'],"path"=>$path.$row['pageid']."/".$row['featureid']."/".$row['imagename'],"styles"=>$display)) : '<a href="'.$path.$row['pageid']."/".$row['featureid']."/".$row['imagename'].'" title="'.stripslashes($row['caption']).'" data-rel="pics_gallery_'.$row['galleryid'].'" style="'.$display.'"></a>';
 				$returnme .= $display == "" ? '<br />' : '';
 				$gallery = $row["galleryid"];
 		}

@@ -55,7 +55,7 @@ global $CFG;
             $total = empty($total) ? "0" : $total;
         }
         $returnme .= '
-        <link type="text/css" rel="stylesheet" href="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'features/donate/donate.css" />
+        <link type="text/css" rel="stylesheet" href="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'features/donate/donate.css" property="" />
         <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'features/donate/donate.js"></script>
         ';  
         $button = '     

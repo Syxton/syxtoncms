@@ -77,7 +77,7 @@ global $CFG,$USER,$PAGE;
     if ($left) {
         $returnme = '   <div>
                             <div id="headerlogo" style="display:inline-block;text-align:center;width:70%;">
-                                <div style="padding: 20px;"
+                                <div style="padding: 20px;">
                                     <a href="'.$CFG->wwwroot.'">
                                         <img src="'.$CFG->wwwroot.'/images/'.$CFG->logofile.'" alt="'.$CFG->sitename.' Logo" style="width: 100%;max-width:350px;" />
                                     </a>
@@ -308,10 +308,10 @@ function make_modal_links($v){
 global $CFG;    
     $v["title"] = empty($v["title"]) ? "" : $v["title"];
     $v["confirmexit"] = empty($v["confirmexit"]) ? "" : $v["confirmexit"];
-    $v["id"] = empty($v["id"]) ? "" : $v["id"];
-    $v["type"] = empty($v["type"]) ? "" : $v["type"];
+    $v["id"] = empty($v["id"]) ? "" : 'id="'.$v["id"].'"';
+    $v["type"] = empty($v["type"]) ? "" : 'type="'.$v["type"].'"';
     $gallery_name = empty($v["gallery"]) ? "" : $v["gallery"];
-    $gallery = empty($v["gallery"]) ? "" : "('a[rel=\'$gallery_name\']')";
+    $gallery = empty($v["gallery"]) ? "" : "('*[data-rel=\'$gallery_name\']')";
     $v["gallery"] = empty($v["gallery"]) ? "" : ",rel:'$gallery_name',photo:'true',preloading:'true'";
     $v["imagestyles"] = empty($v["imagestyles"]) ? "" : $v["imagestyles"];
     $v["image"] = empty($v["image"]) ? "" : '<img alt="'.$v["title"].'" title="'.$v["title"].'" src="'.$v["image"].'" style="'.$v["imagestyles"].'" />';
@@ -389,7 +389,7 @@ global $CFG;
         $modal = "setTimeout(function(){ $modal },500);";    
     }
 
-    return '<a id="'.trim($v["id"]).'" class="'.$v["class"].'" type="'.trim($v["type"]).'" rel="'.$gallery_name.'" title="'.trim(strip_tags($v["title"])).'" style="'.$v["styles"].'" onclick="'.$onOpen.' '.$modal.'" href="'.$path.'">'.$v["text"].'</a>';    
+    return '<a '.trim($v["id"]).' class="'.$v["class"].'" '.trim($v["type"]).' data-rel="'.$gallery_name.'" title="'.trim(strip_tags($v["title"])).'" style="'.$v["styles"].'" onclick="'.$onOpen.' '.$modal.'" href="'.$path.'">'.$v["text"].'</a>';    
 }
 
 function get_user_links($userid, $pageid){
@@ -775,19 +775,15 @@ global $USER,$CFG;
 	$content = '
 	 <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?b='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'scripts&amp;f=jqvalidate.js,jqvalidate_addon.js"></script>
      '.create_validation_script("login_form" , "login(document.getElementById('username').value,document.getElementById('password').value);").'
-	 <form id="login_form" action="">
+	 <form id="login_form">
 		 <fieldset>
 				<div class="formContainer rowContainer" style="width:100%;">
 					<label for="username" style="width:70px;">Username</label>
-					<div style="width:100%;margin-right:20px;">
-						<input style="margin-right:0px" type="email" id="username" name="username" data-rule-required="true" data-msg-required="'.get_error_message('valid_req_username').'" /><div class="tooltipContainer info">'.get_help("input_username").'</div><br />
-					</div>
+					<input tabindex=1 style="margin-right:0px;width:80%" type="email" id="username" name="username" data-rule-required="true" data-msg-required="'.get_error_message('valid_req_username').'" /><div class="tooltipContainer info">'.get_help("input_username").'</div><br />
 				</div>
 				<div class="formContainer rowContainer" style="width:100%;">
 			  		<label for="password" style="width:70px;">Password</label>
-		  			<div style="width:100%;margin-right:20px;">
-						<input style="margin-right:0px" type="password" id="password" name="password" data-rule-required="true" data-msg-required="'.get_error_message('valid_req_password').'" /><div class="tooltipContainer info">'.get_help("input_password2").'</div><br />
-	  				</div>
+				    <input tabindex=2 style="margin-right:0px;width:80%" type="password" id="password" name="password" data-rule-required="true" data-msg-required="'.get_error_message('valid_req_password').'" /><div class="tooltipContainer info">'.get_help("input_password2").'</div><br />
 		  		</div>
 		</fieldset>  
         <input name="submit" type="submit" value="Sign In" style="padding:2px;float:left;" />

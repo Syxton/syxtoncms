@@ -207,64 +207,74 @@ global $CFG, $USER;
     
     if($needsconfirmed){
         $returnme = '<div id="confirm_' . $event['eventid'] . '">
-			<table class="eventstable">
-			<tr>
-			' . $daygraphic . '
-			<table style="width:100%;border-spacing: 0px;">
-			<tr>
-			<td>
-			<div style="font-size:.95em; color:gray;float:left;padding-right:10px;">Unconfirmed: 
-                '.make_modal_links(array("title"=> stripslashes($event["name"]),"path"=>$CFG->wwwroot."/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","width"=>"700","height"=>"650")).'
-            </div>
-            <span style="font-size:.85em">&nbsp;
-                ' . stripslashes(strip_tags($event["extrainfo"])) . '
-			</span> ';
-        $returnme .= '<div class="hprcp_n" style="margin-top:4px;"><div class="hprcp_e"><div class="hprcp_w"></div></div></div>
-			<div class="hprcp_head">
-			<div style="width:100%;vertical-align:middle;color:gray;position:relative;_right:2px;top:-8px;">
-            ' . $buttons . '
-			<div style="font-size:.85em;line-height:28px;vertical-align:top">
-                ' . $export . '
-                ' . $registration . '
-			</div>
-			</div>
-			</div>
-			</td>
-			</tr>
-			</table>
-			</td>
-			</tr>
-			</table></div>';
+            			<table class="eventstable">
+                			<tr>
+                    			' . $daygraphic . '
+                        			<table style="width:100%;border-spacing: 0px;">
+                                        <tr>
+                                            <td>
+                                    			<div style="font-size:.95em; color:gray;float:left;padding-right:10px;">Unconfirmed: 
+                                                    '.make_modal_links(array("title"=> stripslashes($event["name"]),"path"=>$CFG->wwwroot."/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","width"=>"700","height"=>"650")).'
+                                                </div>
+                                                <span style="font-size:.85em">&nbsp;
+                                                    ' . stripslashes(strip_tags($event["extrainfo"])) . '
+                                    			</span>
+                                                <div class="hprcp_n" style="margin-top:4px;">
+                                                    <div class="hprcp_e">
+                                                        <div class="hprcp_w"></div>
+                                                    </div>
+                                                </div>
+                                    			<div class="hprcp_head">
+                                        			<div style="width:100%;vertical-align:middle;color:gray;position:relative;_right:2px;top:-8px;">
+                                                        ' . $buttons . '
+                                            			<div style="font-size:.85em;line-height:28px;vertical-align:top">
+                                                            ' . $export . '
+                                                            ' . $registration . '
+                                            			</div>
+                                        			</div>
+                                    			</div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                			</tr>
+            			</table>
+                    </div>';
     }else{
         $returnme = '<div id="confirm_' . $event['eventid'] . '">
-			<table class="eventstable">
-			<tr>
-			' . $daygraphic . '
-			<table style="width:100%;border-spacing: 0px;">
-			<tr>
-			<td>
-			<div style="font-size:.95em; color:blue;float:left;padding-right:10px;">
-            '.make_modal_links(array("title"=> stripslashes($event["name"]),"path"=>$CFG->wwwroot."/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","width"=>"700","height"=>"650")).'
-            </div>
-			<span style="font-size:.85em">&nbsp;
-			' . stripslashes(strip_tags($event["extrainfo"])) . '
-			</span> ';
-        $returnme .= '<div class="hprcp_n" style="margin-top:4px;"><div class="hprcp_e"><div class="hprcp_w"></div></div></div>
-			<div class="hprcp_head">
-			<div style="width:100%;vertical-align:middle;color:gray;position:relative;_right:2px;top:-8px;">
-			' . $buttons . '
-            <div style="font-size:.85em;line-height:28px;">
-			' . $export . '
-			' . $registration . '
-			</div>
-			</div>
-			</div>
-			</td>
-			</tr>
-			</table>
-			</td>
-			</tr>
-			</table></div>';
+            			<table class="eventstable">
+                            <tr>
+                    			' . $daygraphic . '
+                        			<table style="width:100%;border-spacing: 0px;">
+                                        <tr>
+                                            <td>
+                                    			<div style="font-size:.95em; color:blue;float:left;padding-right:10px;">
+                                                    '.make_modal_links(array("title"=> stripslashes($event["name"]),"path"=>$CFG->wwwroot."/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","width"=>"700","height"=>"650")).'
+                                                </div>
+                                    			<span style="font-size:.85em">
+                                                    &nbsp;' . stripslashes(strip_tags($event["extrainfo"])) . '
+                                    			</span>
+                                                <div class="hprcp_n" style="margin-top:4px;">
+                                                    <div class="hprcp_e">
+                                                        <div class="hprcp_w"></div>
+                                                    </div>
+                                                </div>
+                                    			<div class="hprcp_head">
+                                                    <div style="width:100%;vertical-align:middle;color:gray;position:relative;_right:2px;top:-8px;">
+                                            			' . $buttons . '
+                                                        <div style="font-size:.85em;line-height:28px;">
+                                            			' . $export . '
+                                            			' . $registration . '
+                                            			</div>
+                                    			    </div>
+                                                </div>
+                        			         </td>
+                                        </tr>
+                                    </table>
+                    			</td>
+            			     </tr>
+                        </table>
+                    </div>';
     }
     return $returnme;
 }
