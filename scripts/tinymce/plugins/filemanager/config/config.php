@@ -44,8 +44,9 @@ define('USE_ACCESS_KEYS', false); // TRUE or FALSE
 |    |   |   |   |- responsivefilemanager
 |    |   |   |   |   |- plugin.min.js
 */
+if(empty($_COOKIE['userid']) || empty($_COOKIE['directory'])){ exit("Cannot open file area."); }
 $_SESSION["RF"]["subfolder"] = trim($_COOKIE['userid'],'/\\');
-$directory = "/" . trim($_COOKIE['directory'],'/\\');
+$directory = $_COOKIE['directory'] == "root" ? "" : "/" . trim($_COOKIE['directory'],'/\\');
 $config = array(
 
 	/*

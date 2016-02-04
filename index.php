@@ -23,7 +23,9 @@ if(isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip,','.
 	//Get User info
 	load_user_cookie();
 	update_user_cookie();
-    setcookie('directory', $CFG->directory, get_timestamp() + $CFG->cookietimeout, '/');
+
+    $directory = $CFG->directory == '' ? 'root' : $CFG->directory;
+    setcookie('directory', $directory, get_timestamp() + $CFG->cookietimeout, '/');
 
 	//Get page info
     $PAGE = new stdClass();
