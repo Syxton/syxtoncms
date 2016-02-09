@@ -9,9 +9,6 @@
 
 if(!isset($LIBHEADER)){ if(file_exists('./lib/header.php')){ include('./lib/header.php'); }elseif(file_exists('../lib/header.php')) { include('../lib/header.php'); }elseif(file_exists('../../lib/header.php')){ include('../../lib/header.php'); }}
 $EVENTSLIB = true;
-if(empty($MYVARS)){ $MYVARS = new stdClass(); }
-$MYVARS->bgcyears = 5; // Background checks are invalid after x years
-$MYVARS->staffappmonths = 7; // Staff applications checks are invalid after x months
 
 function display_events($pageid, $area, $featureid){
 global $CFG, $USER, $ROLES;
@@ -1175,38 +1172,6 @@ global $USER, $CFG, $MYVARS;
                     <div class="rowContainer">
     					<label class="fieldtitle" for="q2_3">If the answer to any of these questions is "Yes", please explain in detail</label>'.($viewonly ? '' : '<br />').'<textarea '.($viewonly ? 'disabled="disabled"' : '').' rows="3" id="q2_3" name="q2_3" '.(empty($v["yestotal"]) ? '' : 'data-rule-required="true"').'>'.$v["q2_3"].'</textarea><div class="tooltipContainer info">'.get_help("input_staff_q1_3:events").'</div><br />
     	  			</div>
-                    <br /><hr><br />
-                    <h3>Worker Renewal Work Verification and Release</h3><br />
-                    <em>I recognize that Wabash Valley Christian Youth Camp is relying on the accuracy of the information I provide on the Worker Renewal Application form.   Accordingly, I attest and affirm that the information I have provided is absolutely true and correct.
-                    <br />
-                    I voluntarily release the organization and any such person or entity listed on the Worker Renewal Application form from liability involving the communication of information relating to my background or qualifications.   I further authorize the organization to conduct a criminal background investigation if such a check is deemed necessary.
-                    <br />
-                    I agree to abide by all policies and procedures of the organization and to protect the health and safety of the children or youth assigned to my care or supervision at all times.
-                    </em>
-    		  		<br /><br />
-                    <div class="rowContainer">
-    					<label class="fieldtitle" for="workerconsent">Full Name</label>'.($viewonly ? '' : '<br />').'<input '.($viewonly ? 'disabled="disabled"' : '').' type="text" id="workerconsent" name="workerconsent" value="'.$v["workerconsent"].'" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("input_staff_workerconsent:events").'</div><br />
-    				</div>
-                    <div class="rowContainer">
-        				<label class="fieldtitle" for="workerconsentdate">Date</label>'.($viewonly ? '' : '<br />').'<input '.($viewonly ? 'disabled="disabled"' : '').' type="text" id="workerconsentdate" name="workerconsentdate" value="'.$v["workerconsentdate"].'" data-rule-required="true" data-rule-date="true" disabled="disabled" /><div class="tooltipContainer info">'.get_help("input_staff_workerconsentdate:events").'</div>
-        			</div>
-                    <div class="rowContainer">
-    					<label class="fieldtitle" for="workerconsentsig">Signature</label>'.($viewonly ? '' : '<br />').'<input '.($viewonly ? 'disabled="disabled"' : '').' type="checkbox" id="workerconsentsig" name="workerconsentsig" '.$v["workerconsentsig"].' data-rule-required="true" /><div class="tooltipContainer info">'.get_help("input_staff_workerconsentsig:events").'</div><br />
-    				</div>
-                    <div id="sub18" style="'.$v["sub18dispaly"].'">
-                        <br /><hr><br />
-                            <div style="background:#FFED00;padding:5px;">
-                            <strong>If you are under 18, please have a parent or guardian affirm to the following:</strong><br />
-                            <em>I swear and affirm that I am not aware of any traits or tendencies of the applicant that could pose a threat to children, youth or others and that I am not aware of any reasons why the applicant should not work with children, youth, or others.</em>
-            		  		<br /><br />
-                            <div class="rowContainer">
-            					<label class="fieldtitle" for="parentalconsent">Parent or Gurdian Full Name</label>'.($viewonly ? '' : '<br />').'<input '.($viewonly ? 'disabled="disabled"' : '').' type="text" id="parentalconsent" name="parentalconsent" value="'.$v["parentalconsent"].'" '.(empty($v["ar1selected"]) ? '' : 'data-rule-required="true"').' /><div class="tooltipContainer info">'.get_help("input_staff_parentalconsent:events").'</div><br />
-            				</div>
-                            <div class="rowContainer">
-            					<label class="fieldtitle" for="parentalconsentsig">Parent or Guardian Signature</label>'.($viewonly ? '' : '<br />').'<input '.($viewonly ? 'disabled="disabled"' : '').' type="checkbox" id="parentalconsentsig" name="parentalconsentsig" '.$v["parentalconsentsig"].' '.(empty($v["ar1selected"]) ? '' : 'data-rule-required="true"').' /><div class="tooltipContainer info">'.get_help("input_staff_parentalconsentsig:events").'</div><br />
-            				</div>
-                        </div>
-                    </div>
                     '.($viewonly ? '<div style="text-align:center"><h2>' . $v["name"] . ' References</h2></div>' : '<br /><hr><br />').'
                     <h3>References #1</h3><br />
     		  		<br />
@@ -1240,6 +1205,46 @@ global $USER, $CFG, $MYVARS;
     				</div>
                     <div class="rowContainer">
 				        <label class="fieldtitle" for="ref3phone">Phone</label>'.($viewonly ? '' : '<br />').'<input '.($viewonly ? 'disabled="disabled"' : '').' type="text" id="ref3phone" name="ref3phone" value="'.$v["ref3phone"].'" data-rule-required="true"  data-rule-phone="true" data-msg-required="'.get_error_message('valid_staff_phone:events').'" data-msg-phone="'.get_error_message('valid_staff_phone_invalid:events').'" /><div class="tooltipContainer info">'.get_help("input_staff_phone:events").'</div><br />
+                    </div>
+                    <br /><hr><br />
+                    <h3>Worker Renewal Work Verification and Release</h3><br />
+                    <em>I recognize that Wabash Valley Christian Youth Camp is relying on the accuracy of the information I provide on the Worker Renewal Application form.   Accordingly, I attest and affirm that the information I have provided is absolutely true and correct.
+                    <br />
+                    I voluntarily release the organization and any such person or entity listed on the Worker Renewal Application form from liability involving the communication of information relating to my background or qualifications.   I further authorize the organization to conduct a criminal background investigation if such a check is deemed necessary.
+                    <br />
+                    I agree to abide by all policies and procedures of the organization and to protect the health and safety of the children or youth assigned to my care or supervision at all times.
+                    </em>
+    		  		<br /><br />
+                    <div class="rowContainer">
+    					<label class="fieldtitle" for="workerconsent">Full Name</label>'.($viewonly ? '' : '<br />').'<input '.($viewonly ? 'disabled="disabled"' : '').' type="text" id="workerconsent" name="workerconsent" value="'.$v["workerconsent"].'" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("input_staff_workerconsent:events").'</div><br />
+    				</div>
+                    <div class="rowContainer">
+        				<label class="fieldtitle" for="workerconsentdate">Date</label>'.($viewonly ? '' : '<br />').'<input '.($viewonly ? 'disabled="disabled"' : '').' type="text" id="workerconsentdate" name="workerconsentdate" value="'.$v["workerconsentdate"].'" data-rule-required="true" data-rule-date="true" disabled="disabled" /><div class="tooltipContainer info">'.get_help("input_staff_workerconsentdate:events").'</div>
+        			</div>
+                    <div>
+                        <strong>You should understand that the name field and signature field have the same legal effect and can be enforced in the same way as a written signature.</strong>
+                    </div>
+                    <br />
+                    <div class="rowContainer">
+    					<label class="fieldtitle" for="workerconsentsig">Signature</label>'.($viewonly ? '' : '<br />').'<input '.($viewonly ? 'disabled="disabled"' : '').' type="checkbox" id="workerconsentsig" name="workerconsentsig" '.$v["workerconsentsig"].' data-rule-required="true" /><div class="tooltipContainer info">'.get_help("input_staff_workerconsentsig:events").'</div><br />
+    				</div>
+                    <div id="sub18" style="'.$v["sub18dispaly"].'">
+                        <br /><hr><br />
+                            <div style="background:#FFED00;padding:5px;">
+                            <strong>If you are under 18, please have a parent or guardian affirm to the following:</strong><br />
+                            <em>I swear and affirm that I am not aware of any traits or tendencies of the applicant that could pose a threat to children, youth or others and that I am not aware of any reasons why the applicant should not work with children, youth, or others.</em>
+            		  		<br /><br />
+                            <div class="rowContainer">
+            					<label class="fieldtitle" for="parentalconsent">Parent or Gurdian Full Name</label>'.($viewonly ? '' : '<br />').'<input '.($viewonly ? 'disabled="disabled"' : '').' type="text" id="parentalconsent" name="parentalconsent" value="'.$v["parentalconsent"].'" '.(empty($v["ar1selected"]) ? '' : 'data-rule-required="true"').' /><div class="tooltipContainer info">'.get_help("input_staff_parentalconsent:events").'</div><br />
+            				</div>
+                            <div>
+                                <strong>You should understand that the name field and signature field have the same legal effect and can be enforced in the same way as a written signature.</strong>
+                            </div>
+                            <br />
+                            <div class="rowContainer">
+            					<label class="fieldtitle" for="parentalconsentsig">Parent or Guardian Signature</label>'.($viewonly ? '' : '<br />').'<input '.($viewonly ? 'disabled="disabled"' : '').' type="checkbox" id="parentalconsentsig" name="parentalconsentsig" '.$v["parentalconsentsig"].' '.(empty($v["ar1selected"]) ? '' : 'data-rule-required="true"').' /><div class="tooltipContainer info">'.get_help("input_staff_parentalconsentsig:events").'</div><br />
+            				</div>
+                        </div>
                     </div>
                     '.($viewonly ? '' : '<input class="submit" name="submit" type="submit" onmouseover="this.focus();" value="Submit Application" />').'	
     			</fieldset>
