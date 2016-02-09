@@ -529,7 +529,7 @@ global $CFG, $USER;
 	return $returnme;
 }
 
-function get_css_box($title, $content, $buttons = '', $padding = null, $feature = '', $featureid = '', $themeid = false, $preview = false, $pageid=false, $bottom_left = false, $bottom_center = false, $bottom_right = false){
+function get_css_box($title, $content, $buttons = '', $padding = null, $feature = '', $featureid = '', $themeid = false, $preview = false, $pageid=false, $bottom_left = false, $bottom_center = false, $bottom_right = false, $class = ""){
 global $CFG, $PAGE, $STYLES;
     $returnme = '';
 	if($pageid === false){
@@ -572,7 +572,7 @@ global $CFG, $PAGE, $STYLES;
 		$padding = isset($padding) ? ' padding:' . $padding . ';' : "";
 		$bottom = $bottom_left || $bottom_center || $bottom_right ? '<div style="display:table;width:100%;' . 'background-color:'.$contentbgcolor.'"><div style="float:left;padding-left:2px;">' . $bottom_left . '</div><div style="text-align:center;position:relative;float:left;left:18%;width:60%">' . $bottom_center . '</div><div style="float:right;padding-right:2px;">' . $bottom_right . '</div></div>' : "";
 		
-        $returnme .= empty($feature) || $feature == 'pagelist' || $feature == 'addfeature' ? '' : '<div class="box" id="'.$feature.'_'.$featureid.'">';
+        $returnme .= empty($feature) || $feature == 'pagelist' || $feature == 'addfeature' ? '<div>' : '<div class="box" id="'.$feature.'_'.$featureid.'">';
         $returnme .= '
     		<div class="box_header"  style="border: 2px solid ' . $bordercolor . ';background-color:' . $titlebgcolor . ';">
                 <div class="box_title"  style="line-height:23px;color:'.$titlefontcolor.';">
@@ -580,12 +580,12 @@ global $CFG, $PAGE, $STYLES;
                 </div>
                     ' . $buttons . '
     		</div>
-            <div class="box_content" style="border: 2px solid ' . $bordercolor . ';border-top: none;' . $padding . 'background-color:'.$contentbgcolor.';">
+            <div class="box_content '.$class.'" style="border: 2px solid ' . $bordercolor . ';border-top: none;' . $padding . 'background-color:'.$contentbgcolor.';">
     		  ' . $content . '
               ' . $bottom . '
     		</div>
             <div style="padding:3px;"></div>';
-        $returnme .= empty($feature) || $feature == 'pagelist' || $feature == 'addfeature' ? '' : '</div>';
+        $returnme .= empty($feature) || $feature == 'pagelist' || $feature == 'addfeature' ? '</div>' : '</div>';
 	}
 	return $returnme;
 }

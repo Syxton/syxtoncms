@@ -2,8 +2,8 @@
  * @package AJAX_Chat
  * @author Sebastian Tschan
  * @author Smiley Barry
- * @copyright (c) 2007 Sebastian Tschan
- * @license http://creativecommons.org/licenses/by-sa/
+ * @copyright (c) Sebastian Tschan
+ * @license Modified MIT License
  * @link https://blueimp.net/ajax/
  */
 
@@ -30,21 +30,48 @@ var ajaxChatLang = {
 	ignoreList: 'משתמשים אשר אתה מתעלם מהם:',
 	ignoreListEmpty: 'אין משתמשים ברשימה.',
 	who: 'משתמשים מחוברים:',
+	whoChannel: 'Online Users in channel %s:',
 	whoEmpty: 'אין משתמשים מחוברים בערוץ.',
 	list: 'ערוצים פתוחים:',
 	bans: 'משתמשים חסומים:',
 	bansEmpty: 'אין משתמשים חסומים.',
 	unban: 'בוטלה החסימה נגד המשתמש %s.',
 	whois: 'כתובת המחשב של המשתמש %s:',
+	whereis: 'User %s is in channel %s.',
 	roll: '%s מגלגל %s ומקבל %s.',
-	sendPrivateMessage: 'שלח הודעה פרטית ל%s',
+	nick: '%s is now known as %s.',
+	toggleUserMenu: 'Toggle user menu for %s',
+	userMenuLogout: 'Logout',
+	userMenuWho: 'List online users',
+	userMenuList: 'List available channels',
+	userMenuAction: 'Describe action',
+	userMenuRoll: 'Roll dice',
+	userMenuNick: 'Change username',
+	userMenuEnterPrivateRoom: 'Enter private room',
+	userMenuSendPrivateMessage: 'Send private message',
+	userMenuDescribe: 'Send private action',
+	userMenuOpenPrivateChannel: 'Open private channel',
+	userMenuClosePrivateChannel: 'Close private channel',
+	userMenuInvite: 'Invite',
+	userMenuUninvite: 'Uninvite',
+	userMenuIgnore: 'Ignore/Accept',
+	userMenuIgnoreList: 'List ignored users',
+	userMenuWhereis: 'Display channel',
+	userMenuKick: 'Kick/Ban',
+	userMenuBans: 'List banned users',
+	userMenuWhois: 'Display IP',
+	unbanUser: 'Revoke ban of user %s',
 	joinChannel: 'הצטרף לערוץ %s',
 	cite: '%s אמר:',
 	urlDialog: 'אנא הכנס את כתובת האינטרנט (URL) של הדף:',
+	deleteMessage: 'Delete this chat message',
+	deleteMessageConfirm: 'Really delete the selected chat message?',
 	errorCookiesRequired: 'הצאט מבקש עוגיות כדי לפעול. אנא רד לחנות לקנות.',
 	errorUserNameNotFound: 'שגיאה: המשתמש %s לא נמצא.',
 	errorMissingText: 'שגיאה: חסר טקסט בהודעה.',
 	errorMissingUserName: 'שגיאה: חסר שם משתמש.',
+	errorInvalidUserName: 'Error: Invalid username.',
+	errorUserNameInUse: 'Error: Username already in use.',
 	errorMissingChannelName: 'שגיאה: חסר שם ערוץ.',
 	errorInvalidChannelName: 'שגיאה: שם ערוץ לא חוקי: %s',
 	errorPrivateMessageNotAllowed: 'שגיאה: הודעות פרטיות אסורות לשימוש.',
@@ -54,7 +81,12 @@ var ajaxChatLang = {
 	errorKickNotAllowed: 'שגיאה: אסור לך להעיף את %s.',
 	errorCommandNotAllowed: 'שגיאה: פקודה אסורה: %s',
 	errorUnknownCommand: 'שגיאה: פקודה לא ידועה: %s',
+	errorMaxMessageRate: 'Error: You exceeded the maximum number of messages per minute.',
 	errorConnectionTimeout: 'שגיאה: זמן חיבור פג. אנא נסה שנית.',
-	errorConnectionStatus: 'שגיאת חיבור: %s'
+	errorConnectionStatus: 'שגיאת חיבור: %s',
+	errorSoundIO: 'Error: Failed to load sound file (Flash IO Error).',
+	errorSocketIO: 'Error: Connection to socket server failed (Flash IO Error).',
+	errorSocketSecurity: 'Error: Connection to socket server failed (Flash Security Error).',
+	errorDOMSyntax: 'Error: Invalid DOM Syntax (DOM ID: %s).'
 	
 }

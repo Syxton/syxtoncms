@@ -1,8 +1,8 @@
 /*
  * @package AJAX_Chat
  * @author Sebastian Tschan
- * @copyright (c) 2007 Sebastian Tschan
- * @license http://creativecommons.org/licenses/by-sa/
+ * @copyright (c) Sebastian Tschan
+ * @license Modified MIT License
  * @link https://blueimp.net/ajax/
  */
 
@@ -29,21 +29,48 @@ var ajaxChatLang = {
 	ignoreList: 'Ignored Users:',
 	ignoreListEmpty: 'No ignored Users listed.',
 	who: 'Online Users:',
+	whoChannel: 'Online Users in channel %s:',
 	whoEmpty: 'No online users in the given channel.',
 	list: 'Available channels:',
 	bans: 'Banned Users:',
 	bansEmpty: 'No banned Users listed.',
 	unban: 'Ban of user %s revoked.',
 	whois: 'User %s - IP address:',
+	whereis: 'User %s is in channel %s.',
 	roll: '%s rolls %s and gets %s.',
-	sendPrivateMessage: 'Send private message to %s',
+	nick: '%s is now known as %s.',
+	toggleUserMenu: 'Toggle user menu for %s',
+	userMenuLogout: 'Logout',
+	userMenuWho: 'List online users',
+	userMenuList: 'List available channels',
+	userMenuAction: 'Describe action',
+	userMenuRoll: 'Roll dice',
+	userMenuNick: 'Change username',
+	userMenuEnterPrivateRoom: 'Enter private room',
+	userMenuSendPrivateMessage: 'Send private message',
+	userMenuDescribe: 'Send private action',
+	userMenuOpenPrivateChannel: 'Open private channel',
+	userMenuClosePrivateChannel: 'Close private channel',
+	userMenuInvite: 'Invite',
+	userMenuUninvite: 'Uninvite',
+	userMenuIgnore: 'Ignore/Accept',
+	userMenuIgnoreList: 'List ignored users',
+	userMenuWhereis: 'Display channel',
+	userMenuKick: 'Kick/Ban',
+	userMenuBans: 'List banned users',
+	userMenuWhois: 'Display IP',
+	unbanUser: 'Revoke ban of user %s',
 	joinChannel: 'Join channel %s',
 	cite: '%s said:',
 	urlDialog: 'Please enter the address (URL) of the webpage:',
+	deleteMessage: 'Delete this chat message',
+	deleteMessageConfirm: 'Really delete the selected chat message?',
 	errorCookiesRequired: 'Cookies are required for this chat.',
 	errorUserNameNotFound: 'Error: User %s not found.',
 	errorMissingText: 'Error: Missing message text.',
-	errorMissingUserName: 'Error: Missing Username.',
+	errorMissingUserName: 'Error: Missing username.',
+	errorInvalidUserName: 'Error: Invalid username.',
+	errorUserNameInUse: 'Error: Username already in use.',
 	errorMissingChannelName: 'Error: Missing channel name.',
 	errorInvalidChannelName: 'Error: Invalid channel name: %s',
 	errorPrivateMessageNotAllowed: 'Error: Private messages are not allowed.',
@@ -53,7 +80,12 @@ var ajaxChatLang = {
 	errorKickNotAllowed: 'Error: You are not allowed to kick %s.',
 	errorCommandNotAllowed: 'Error: Command not allowed: %s',
 	errorUnknownCommand: 'Error: Unknown command: %s',
+	errorMaxMessageRate: 'Error: You exceeded the maximum number of messages per minute.',
 	errorConnectionTimeout: 'Error: Connection timeout. Please try again.',
-	errorConnectionStatus: 'Error: Connection status: %s'
+	errorConnectionStatus: 'Error: Connection status: %s',
+	errorSoundIO: 'Error: Failed to load sound file (Flash IO Error).',
+	errorSocketIO: 'Error: Connection to socket server failed (Flash IO Error).',
+	errorSocketSecurity: 'Error: Connection to socket server failed (Flash Security Error).',
+	errorDOMSyntax: 'Error: Invalid DOM Syntax (DOM ID: %s).'
 	
 }

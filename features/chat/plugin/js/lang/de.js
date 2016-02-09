@@ -1,8 +1,8 @@
 /*
  * @package AJAX_Chat
  * @author Sebastian Tschan
- * @copyright (c) 2007 Sebastian Tschan
- * @license http://creativecommons.org/licenses/by-sa/
+ * @copyright (c) Sebastian Tschan
+ * @license Modified MIT License
  * @link https://blueimp.net/ajax/
  */
 
@@ -29,21 +29,48 @@ var ajaxChatLang = {
 	ignoreList: 'Ignorierte Benutzer:',
 	ignoreListEmpty: 'Keine Benutzer werden ignoriert.',
 	who: 'Benutzer online:',
+	whoChannel: 'Benutzer online im Raum %s:',
 	whoEmpty: 'Keine Benutzer online im angegebenen Kanal.',
 	list: 'Verfügbare Räume:',
 	bans: 'Ausgeschlossene Nutzer:',
 	bansEmpty: 'Keine ausgeschlossenen Nutzer vorhanden.',
 	unban: 'Ausschluss des Benutzers %s aufgehoben.',
 	whois: 'Benutzer %s - IP-Adresse:',
+	whereis: 'Benutzer %s ist im Raum %s.',
 	roll: '%s würfelt %s und erhält %s.',
-	sendPrivateMessage: 'Private Nachricht an %s schicken',
+	nick: '%s heißt jetzt %s.',
+	toggleUserMenu: 'Benutzer-Menü für %s anzeigen/ausblenden',
+	userMenuLogout: 'Logout',
+	userMenuWho: 'Online Benutzer auflisten',
+	userMenuList: 'Verfügbare Räume auflisten',
+	userMenuAction: 'Aktion beschreiben',
+	userMenuRoll: 'Würfeln',
+	userMenuNick: 'Benutzernamen ändern',
+	userMenuEnterPrivateRoom: 'Privaten Raum betreten',
+	userMenuSendPrivateMessage: 'Private Nachricht schicken',
+	userMenuDescribe: 'Private Aktion schicken',
+	userMenuOpenPrivateChannel: 'Privaten Kanal öffnen',
+	userMenuClosePrivateChannel: 'Privaten Kanal schließen',
+	userMenuInvite: 'Einladen',
+	userMenuUninvite: 'Ausladen',
+	userMenuIgnore: 'Ignorieren / Akzeptieren',
+	userMenuIgnoreList: 'Ignorierte Benutzer auflisten',
+	userMenuWhereis: 'Raum anzeigen',
+	userMenuKick: 'Ausschließen / Verbannen',
+	userMenuBans: 'Ausgeschlossene Benutzer auflisten',
+	userMenuWhois: 'IP anzeigen',
+	unbanUser: 'Ausschluss von %s aufheben',
 	joinChannel: 'Raum %s betreten',
 	cite: '%s sagte:',
 	urlDialog: 'Bitte die Adresse (URL) der Webseite eingeben:',
+	deleteMessage: 'Diese Chat-Nachricht löschen',
+	deleteMessageConfirm: 'Die ausgewählte Chat-Nachricht wirklich löschen?',
 	errorCookiesRequired: 'Cookies werden für diesen Chat benötigt.',
 	errorUserNameNotFound: 'Fehler: Benutzer %s wurde nicht gefunden.',
 	errorMissingText: 'Fehler: Nachrichtentext fehlt.',
 	errorMissingUserName: 'Fehler: Benutzername fehlt.',
+	errorInvalidUserName: 'Fehler: Ungültiger Benutzername.',
+	errorUserNameInUse: 'Fehler: Benutzername schon vergeben.',
 	errorMissingChannelName: 'Fehler: Raumname fehlt.',
 	errorInvalidChannelName: 'Fehler: Ungültiger Raumname: %s',
 	errorPrivateMessageNotAllowed: 'Fehler: Private Nachrichten sind nicht erlaubt.',
@@ -53,7 +80,12 @@ var ajaxChatLang = {
 	errorKickNotAllowed: 'Fehler: Du kannst %s nicht ausschließen.',
 	errorCommandNotAllowed: 'Fehler: Befehl nicht erlaubt: %s',
 	errorUnknownCommand: 'Fehler: Unbekannter Befehl: %s',
+	errorMaxMessageRate: 'Fehler: Du hast die maximale Anzahl an Nachrichten pro Minute überschritten.',
 	errorConnectionTimeout: 'Fehler: Verbindungsabbruch. Bitte erneut versuchen.',
-	errorConnectionStatus: 'Fehler: Verbindungsstatus: %s'
+	errorConnectionStatus: 'Fehler: Verbindungsstatus: %s',
+	errorSoundIO: 'Fehler: Laden einer Sound-Datei fehlgeschlagen (Flash IO Error).',
+	errorSocketIO: 'Fehler: Verbindung zum Socket Server fehlgeschlagen (Flash IO Error).',
+	errorSocketSecurity: 'Fehler: Verbindung zum Socket Server fehlgeschlagen (Flash Security Error).',
+	errorDOMSyntax: 'Error: Invalid DOM Syntax (DOM ID: %s).'
 	
 }

@@ -227,9 +227,9 @@ function make_or_update_setting($settingid=false,$type=false,$pageid=false,$feat
 
 	if($settingid = execute_db_sql($SQL)){
 		if(!empty($settings)){ //Update settings variable to show changes
-            $settings->$type = new stdClass();
-            $settings->$type->$featureid = new stdClass();
-            $settings->$type->$featureid->$setting_name = new stdClass();
+            if(empty($settings->$type)){ $settings->$type = new stdClass(); }
+            if(empty($settings->$type->$featureid)){ $settings->$type->$featureid = new stdClass(); }
+            if(empty($settings->$type->$featureid->$setting_name)){ $settings->$type->$featureid->$setting_name = new stdClass(); }
 			$settings->$type->$featureid->$setting_name->settingid = $settingid;
 			$settings->$type->$featureid->$setting_name->setting = stripslashes($setting);
 			if($extra){ $settings->$type->$featureid->$setting_name->extra = is_string($extra) ? stripslashes($extra) : $extra; }

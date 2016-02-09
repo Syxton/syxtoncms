@@ -2,8 +2,8 @@
 /*
  * @package AJAX_Chat
  * @author Sebastian Tschan
- * @copyright (c) 2007 Sebastian Tschan
- * @license http://creativecommons.org/licenses/by-sa/
+ * @copyright (c) Sebastian Tschan
+ * @license Modified MIT License
  * @link https://blueimp.net/ajax/
  */
 
@@ -13,9 +13,11 @@ class AJAXChatDataBaseMySQL {
 	var $_connectionID;
 	var $_errno = 0;
 	var $_error = '';
+	var $_dbName;
 
-	function AJAXChatDataBaseMySQL(&$dbConnectionConfig) {
+	function __construct(&$dbConnectionConfig) {
 		$this->_connectionID = $dbConnectionConfig['link'];
+		$this->_dbName = $dbConnectionConfig['name'];
 	}
 	
 	// Method to connect to the DataBase server:
@@ -23,7 +25,8 @@ class AJAXChatDataBaseMySQL {
 		$this->_connectionID = @mysql_connect(
 			$dbConnectionConfig['host'],
 			$dbConnectionConfig['user'],
-			$dbConnectionConfig['pass']
+			$dbConnectionConfig['pass'],
+			true
 		);
 		if(!$this->_connectionID) {
 			$this->_errno = null;
@@ -34,12 +37,13 @@ class AJAXChatDataBaseMySQL {
 	}
 	
 	// Method to select the DataBase:
-	function select(&$dbConnectionConfig) {
-		if(!@mysql_select_db($dbConnectionConfig['name'], $this->_connectionID)) {
+	function select($dbName) {
+		if(!@mysql_select_db($dbName, $this->_connectionID)) {
 			$this->_errno = mysql_errno($this->_connectionID);
 			$this->_error = mysql_error($this->_connectionID);
 			return false;
 		}
+		$this->_dbName = $dbName;
 		return true;	
 	}
 	
@@ -72,6 +76,16 @@ class AJAXChatDataBaseMySQL {
 	// Method to perform SQL queries:
 	function sqlQuery($sql) {
 		return new AJAXChatMySQLQuery($sql, $this->_connectionID);
+	}
+
+	// Method to retrieve the current DataBase name:
+	function getName() {
+		return $this->_dbName;
+	}
+
+	// Method to retrieve the last inserted ID:
+	function getLastInsertedID() {
+		return mysql_insert_id($this->_connectionID);
 	}
 
 }

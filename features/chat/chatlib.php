@@ -30,7 +30,7 @@ global $CFG, $USER, $ROLES, $PAGE;
 	if((is_logged_in() && user_has_ability_in_page($USER->userid,"chat",$pageid)) || (!is_logged_in() && role_has_ability_in_page($ROLES->visitor,"chat",$pageid))){
         $styles=get_styles($pageid,$PAGE->themeid);
 		if($area == "middle"){ 
-		  $content .= '<div style="width:100%;"><iframe id="myframe" onload="resizeCaller();" src="'.$CFG->wwwroot.'/features/chat/plugin/index.php?pageid='.$pageid.'" frameborder="0" style="background-color:'.$styles['contentbgcolor'].';overflow:hidden; width:100%;"></iframe></div>';
+		  $content .= '<div style="width:100%;"><iframe id="myframe" onload="resizeCaller();" src="'.$CFG->wwwroot.'/features/chat/plugin/index.php?pageid='.$pageid.'" frameborder="0" style="background-color:'.$styles['contentbgcolor'].';overflow:hidden;height:500px;width:100%;"></iframe></div>';
 		}else{ 
 		  $content .= '<span class="centered_span">Cannot be used as a side panel.</span>'; 
         }
@@ -38,7 +38,7 @@ global $CFG, $USER, $ROLES, $PAGE;
 		$content .= '<span class="centered_span">You do not have permission to join this chat.</span>';
 	}
 	$buttons = is_logged_in() ? get_button_layout("chat",$featureid,$pageid) : ""; 
-	return get_css_box($title,$content,$buttons,NULL,"chat",$featureid);
+	return "<style>.chatbox{ padding:0 !important;}</style>" . get_css_box($title,$content,$buttons,NULL,"chat",$featureid,false,false,false,false,false,false,"chatbox");
 }
 
 function chat_delete($pageid,$featureid,$sectionid){
@@ -63,33 +63,29 @@ global $CFG;
 	$channels_array = array();
 	if($channels = get_db_result("SELECT * FROM chat WHERE pageid='$pageid'")){
     	while($channel = fetch_row($channels)){
+//            $channels_array[] = array($channel['name'] => $channel['channel_id']);
     		$channels_array[$channel['channel_id']] = $channel['name'];
+//            $channels_array[$channel['name']] = $channel['channel_id'];
     	}	   
 	}
-
 	return $channels_array;
 }
 
 function get_chat_users($pageid){
 global $CFG;
-    $i=1; $channel_list=""; 
-	$users[0]['userRole'] = 1;
-	$users[0]['userName'] = "Guest";
-	$users[0]['password'] = "password";
-	$users[0]['channels'] = explode(",",$channel_list);
+    $i=0; $channel_list=""; 
     
     if($channels = get_db_result("SELECT * FROM chat WHERE pageid='$pageid'")){
     	while($channel = fetch_row($channels)){
     		$channel_list .= $channel_list == "" ? $channel["channel_id"] : "," . $channel["channel_id"];	
     	}        
     }
-    
+   
 	if($users_list = users_that_have_ability_in_page("chat", $pageid)){
     	while($user = fetch_row($users_list)){
-    		// Default guest user (don't delete this one):
-    		$users[$i]['userRole'] = user_has_ability_in_page($user["userid"], "moderate", $pageid) ? 2:1;
+    		$users[$i]['userRole'] = user_has_ability_in_page($user["userid"], "moderate", $pageid) ? 2:0;
     		$users[$i]['userName'] = substr($user["fname"],0,1) . "." . $user["lname"];
-    		$users[$i]['password'] = $user["email"];
+    		$users[$i]['password'] = "";
     		$users[$i]['channels'] = explode(",",$channel_list);
     		$i++;
     	}	   

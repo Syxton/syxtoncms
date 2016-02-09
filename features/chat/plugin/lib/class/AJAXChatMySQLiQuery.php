@@ -2,8 +2,8 @@
 /*
  * @package AJAX_Chat
  * @author Sebastian Tschan
- * @copyright (c) 2007 Sebastian Tschan
- * @license http://creativecommons.org/licenses/by-sa/
+ * @copyright (c) Sebastian Tschan
+ * @license Modified MIT License
  * @link https://blueimp.net/ajax/
  */
 
@@ -17,7 +17,7 @@ class AJAXChatMySQLiQuery {
 	var $_error = '';
 
 	// Constructor:
-	function AJAXChatMySQLiQuery($sql, $connectionID) {
+	function __construct($sql, $connectionID) {
 		$this->_sql = trim($sql);
 		$this->_connectionID = $connectionID;
 		$this->_result = $this->_connectionID->query($this->_sql);
@@ -54,12 +54,21 @@ class AJAXChatMySQLiQuery {
 		}
 	}
 
-	// Returns the number of rows:
+	// Returns the number of rows (SELECT or SHOW):
 	function numRows() {
 		if($this->error()) {
 			return null;
 		} else {
 			return $this->_result->num_rows;
+		}
+	}
+
+	// Returns the number of affected rows (INSERT, UPDATE, REPLACE or DELETE):
+	function affectedRows() {
+		if($this->error()) {
+			return null;
+		} else {
+			return $this->_connectionID->affected_rows;
 		}
 	}
 

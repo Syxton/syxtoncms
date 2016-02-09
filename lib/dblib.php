@@ -17,11 +17,11 @@ global $CFG;
         //mysqli is installed
         $CFG->dbtype = "mysqli";        
         $conn = mysqli_connect($CFG->dbhost, $CFG->dbuser, $CFG->dbpass) or senderror("Could not connect to database");
-        mysqli_select_db($conn, $CFG->dbname) or senderror("<b>A fatal MySQL error occured</b>.\n<br />Query: " . $SQL . "<br />\nError: (" . mysqli_errno($conn) . ") " . mysqli_error($conn));
+        mysqli_select_db($conn, $CFG->dbname) or senderror("<b>A fatal MySQL error occured</b>.\n<br />\nError: (" . mysqli_errno($conn) . ") " . mysqli_error($conn));
     }else{
         $CFG->dbtype = "mysql";        
         $conn = mysql_connect($CFG->dbhost, $CFG->dbuser, $CFG->dbpass) or senderror("Could not connect to database");
-        mysql_select_db($CFG->dbname) or senderror("<b>A fatal MySQL error occured</b>.\n<br />Query: " . $SQL . "<br />\nError: (" . mysql_errno() . ") " . mysql_error());   
+        mysql_select_db($CFG->dbname) or senderror("<b>A fatal MySQL error occured</b>.\n<br />\nError: (" . mysql_errno() . ") " . mysql_error());   
     } 
 return $conn;
 }

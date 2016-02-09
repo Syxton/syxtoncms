@@ -2,8 +2,9 @@
  * @package AJAX_Chat
  * @author Sebastian Tschan
  * @author SkyKnight
- * @copyright (c) 2007 Sebastian Tschan
- * @license http://creativecommons.org/licenses/by-sa/
+ * @author Dmitry Plyonkin
+ * @copyright (c) Sebastian Tschan
+ * @license Modified MIT License
  * @link https://blueimp.net/ajax/
  */
 
@@ -30,21 +31,48 @@ var ajaxChatLang = {
 	ignoreList: 'Игнорируемые пользователи:',
 	ignoreListEmpty: 'Игнорируемых пользователей не найдено.',
 	who: 'Пользователи:',
-	whoEmpty: 'На данном канале нет пользователей.',
+	whoChannel: 'Пользователи в канале %s:',
+	whoEmpty: 'В данном канале нет пользователей.',
 	list: 'Доступные каналы:',
 	bans: 'Забаненные пользователи:',
 	bansEmpty: 'Нет забаненных пользователей.',
 	unban: 'Пользователь %s разбанен.',
 	whois: 'Пользователь %s - IP адрес:',
+	whereis: 'Пользователь %s находится в канале %s.',
 	roll: '%s кинул кубики %s. Результат %s.',
-	sendPrivateMessage: 'Послать приватное сообщение %s',
+	nick: '%s сменил имя на %s.',
+	toggleUserMenu: 'Меню пользователя %s',
+	userMenuLogout: 'Выйти',
+	userMenuWho: 'Список пользователей',
+	userMenuList: 'Список каналов',
+	userMenuAction: 'Действие',
+	userMenuRoll: 'Бросить кубик',
+	userMenuNick: 'Сменить имя',
+	userMenuEnterPrivateRoom: 'Войти в комнату',
+	userMenuSendPrivateMessage: 'Отправить приватное сообщение',
+	userMenuDescribe: 'Приватное действие',
+	userMenuOpenPrivateChannel: 'Открыть приватный канал',
+	userMenuClosePrivateChannel: 'Закрыть приватный канал',
+	userMenuInvite: 'Пригласить',
+	userMenuUninvite: 'Отменить приглашение',
+	userMenuIgnore: 'Игнорировать/Принять',
+	userMenuIgnoreList: 'Список игнорируемых',
+	userMenuWhereis: 'В каком канале?',
+	userMenuKick: 'Выкинуть/Забанить',
+	userMenuBans: 'Список забаненных',
+	userMenuWhois: 'Показать IP',
+	unbanUser: 'Отменить бан пользователя %s',
 	joinChannel: ' %s присоединился к каналу',
 	cite: '%s сказал:',
-	urlDialog: 'Пожалуйста введети адрес (URL) Web-страницы:',
-	errorCookiesRequired: 'Cookies должны быть разрешены.',
+	urlDialog: 'Пожалуйста введите адрес (URL) Web-страницы:',
+	deleteMessage: 'Удалить сообщение',
+	deleteMessageConfirm: 'Вы действительно хотите удалить это сообщение?',
+	errorCookiesRequired: 'Необходимо включить Cookies.',
 	errorUserNameNotFound: 'Ошибка: Пользователь %s не найдет.',
 	errorMissingText: 'Ошибка: Отсутствует текст сообщения.',
 	errorMissingUserName: 'Ошибка: Отсутствует имя.',
+	errorInvalidUserName: 'Error: Invalid username.',
+	errorUserNameInUse: 'Error: Username already in use.',
 	errorMissingChannelName: 'Ошибка: Отсутствует имя канала.',
 	errorInvalidChannelName: 'Ошибка: Не верное имя канала: %s',
 	errorPrivateMessageNotAllowed: 'Ошибка: Приватные сообщения не разрешены.',
@@ -54,7 +82,12 @@ var ajaxChatLang = {
 	errorKickNotAllowed: 'Ошибка: У Вас нет прав забанить %s.',
 	errorCommandNotAllowed: 'Ошибка: Команда недоступна: %s',
 	errorUnknownCommand: 'Ошибка: Неизвестная команда: %s',
+	errorMaxMessageRate: 'Ошибка: Вы превысили ограничение на количество сообщений, отправленных за минуту.',
 	errorConnectionTimeout: 'Ошибка: Соединение не установлено. Пожалуйста, попробуйте еще раз.',
-	errorConnectionStatus: 'Ошибка: Статус соединения: %s'
+	errorConnectionStatus: 'Ошибка: Статус соединения: %s',
+	errorSoundIO: 'Ошибка: Не получается загрузить звуковой файл (Flash IO Error).',
+	errorSocketIO: 'Ошибка: Не удалось открыть сокет (Flash IO Error).',
+	errorSocketSecurity: 'Ошибка: Не удалость открыть сокет (Flash Security Error).',
+	errorDOMSyntax: 'Ошибка: Некорректный синтаксис DOM (DOM ID: %s).'
 	
 }

@@ -1,8 +1,8 @@
 /*
  * @package AJAX_Chat
  * @author Sebastian Tschan
- * @copyright (c) 2007 Sebastian Tschan
- * @license http://creativecommons.org/licenses/by-sa/
+ * @copyright (c) Sebastian Tschan
+ * @license Modified MIT License
  * @link https://blueimp.net/ajax/
  */
 
@@ -27,11 +27,26 @@
 #ajaxChatContent #ajaxChatChatList cite {
 	margin-right:5px;
 }
-#ajaxChatContent #ajaxChatMessageText {
+#ajaxChatContent #ajaxChatChatList .bbCodeImage {
+	vertical-align:top;
+	overflow:auto;
+	margin:5px;
+}
+#ajaxChatContent #ajaxChatChatList .delete {
+	float:right;
+	width:10px;
+	height:10px;
+	margin-top:5px;
+	margin-left:5px;
+}
+#ajaxChatContent #ajaxChatInputFieldContainer #ajaxChatInputField {
 	width:90%;
 }
 #ajaxChatContent #ajaxChatCopyright {
 	margin-top:5px;
+}
+#ajaxChatContent #ajaxChatInputFieldContainer.write_forbidden {
+	display:none;
 }
 
 
@@ -41,6 +56,10 @@
 
 #ajaxChatContent img {
 	border:none;
+}
+#ajaxChatContent #ajaxChatChatList .deleteSelected {
+	border-width:1px;
+	border-style:dotted;
 }
 
 
@@ -68,6 +87,10 @@
 	font-weight:bold;
 }
 #ajaxChatContent #ajaxChatChatList span.user {
+	font-size:0.9em;
+	font-weight:bold;
+}
+#ajaxChatContent #ajaxChatChatList span.customUser {
 	font-size:0.9em;
 	font-weight:bold;
 }
@@ -140,4 +163,10 @@
 }
 #ajaxChatContent #ajaxChatChatList a {
 	color:#1E90FF;
+}
+#ajaxChatContent #ajaxChatChatList .delete {
+	background:url('../img/delete.png') no-repeat right;
+}
+#ajaxChatContent #ajaxChatChatList .deleteSelected {
+	border-color:red;
 }

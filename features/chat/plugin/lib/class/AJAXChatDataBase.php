@@ -2,8 +2,8 @@
 /*
  * @package AJAX_Chat
  * @author Sebastian Tschan
- * @copyright (c) 2007 Sebastian Tschan
- * @license http://creativecommons.org/licenses/by-sa/
+ * @copyright (c) Sebastian Tschan
+ * @license Modified MIT License
  * @link https://blueimp.net/ajax/
  */
 
@@ -12,7 +12,7 @@ class AJAXChatDataBase {
 
 	var $_db;
 
-	function AJAXChatDataBase(&$dbConnectionConfig) {
+	function __construct(&$dbConnectionConfig) {
 		switch($dbConnectionConfig['type']) {
 			case 'mysqli':
 				$this->_db = new AJAXChatDatabaseMySQLi($dbConnectionConfig);
@@ -21,8 +21,8 @@ class AJAXChatDataBase {
 				$this->_db = new AJAXChatDatabaseMySQL($dbConnectionConfig);
 				break;
 			default:
-				// Use MySQLi if available, else MySQL:
-				if(function_exists('mysqli_connect')) {
+				// Use MySQLi if available, else MySQL (and check the type of a given database connection object):
+				if(function_exists('mysqli_connect') && (!$dbConnectionConfig['link'] || is_object($dbConnectionConfig['link']))) {
 					$this->_db = new AJAXChatDatabaseMySQLi($dbConnectionConfig);
 				} else {
 					$this->_db = new AJAXChatDatabaseMySQL($dbConnectionConfig);	
@@ -36,8 +36,8 @@ class AJAXChatDataBase {
 	}
 	
 	// Method to select the DataBase:
-	function select(&$dbConnectionConfig) {
-		return $this->_db->select($dbConnectionConfig);
+	function select($dbName) {
+		return $this->_db->select($dbName);
 	}
 	
 	// Method to determine if an error has occured:
@@ -63,6 +63,18 @@ class AJAXChatDataBase {
 	// Method to perform SQL queries:
 	function sqlQuery($sql) {
 		return $this->_db->sqlQuery($sql);
+	}
+	
+	// Method to retrieve the current DataBase name:
+	function getName() {
+		return $this->_db->getName(); 
+		//If your database has hyphens ( - ) in it, try using this instead:
+		//return '`'.$this->_db->getName().'`'; 
+	}
+
+	// Method to retrieve the last inserted ID:
+	function getLastInsertedID() {
+		return $this->_db->getLastInsertedID();
 	}
 
 }

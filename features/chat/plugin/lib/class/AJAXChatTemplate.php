@@ -2,8 +2,8 @@
 /*
  * @package AJAX_Chat
  * @author Sebastian Tschan
- * @copyright (c) 2007 Sebastian Tschan
- * @license http://creativecommons.org/licenses/by-sa/
+ * @copyright (c) Sebastian Tschan
+ * @license Modified MIT License
  * @link https://blueimp.net/ajax/
  */
 
@@ -18,7 +18,7 @@ class AJAXChatTemplate {
 	var $_parsedContent;
 
 	// Constructor:
-	function AJAXChatTemplate(&$ajaxChat, $templateFile, $contentType=null) {
+	function __construct(&$ajaxChat, $templateFile, $contentType=null) {
 		$this->ajaxChat = $ajaxChat;
 		$this->_regExpTemplateTags = '/\[(\w+?)(?:(?:\/)|(?:\](.+?)\[\/\1))\]/s';		
 		$this->_templateFile = $templateFile;
@@ -52,53 +52,109 @@ class AJAXChatTemplate {
 		}
 
 		// Replace template tags ([TAG/] and [TAG]content[/TAG]) and return parsed template content:
-		$this->_parsedContent = preg_replace_callback($this->_regExpTemplateTags, function($m) { return $this->replaceTemplateTags($m); }, $this->_parsedContent);
+		$this->_parsedContent = preg_replace_callback($this->_regExpTemplateTags, array($this, 'replaceTemplateTags'), $this->_parsedContent);
 	}
 
-	function replaceTemplateTags($t) {
-		switch($t[1]) {
+	function replaceTemplateTags($tagData) {
+		switch($tagData[1]) {
 			case 'AJAX_CHAT_URL':
-				return $this->ajaxChat->getChatURL();
-			case 'PAGEID':
-				return PAGEID;
+				return $this->ajaxChat->htmlEncode($this->ajaxChat->getChatURL());
+
 			case 'LANG':
-				return $this->ajaxChat->htmlEncode($this->ajaxChat->getLang($t[2]));				
+				return $this->ajaxChat->htmlEncode($this->ajaxChat->getLang((isset($tagData[2]) ? $tagData[2] : null)));				
 			case 'LANG_CODE':
 				return $this->ajaxChat->getLangCode();
+
 			case 'BASE_DIRECTION':
 				return $this->getBaseDirectionAttribute();
+
 			case 'CONTENT_ENCODING':
 				return $this->ajaxChat->getConfig('contentEncoding');
+					
 			case 'CONTENT_TYPE':
 				return $this->_contentType;
+		
 			case 'LOGIN_URL':
 				return ($this->ajaxChat->getRequestVar('view') == 'logs') ? './?view=logs' : './';
+				
 			case 'USER_NAME_MAX_LENGTH':
 				return $this->ajaxChat->getConfig('userNameMaxLength');
 			case 'MESSAGE_TEXT_MAX_LENGTH':
 				return $this->ajaxChat->getConfig('messageTextMaxLength');
+
+			case 'LOGIN_CHANNEL_ID':
+				return $this->ajaxChat->getValidRequestChannelID();
+				
 			case 'SESSION_NAME':
 				return $this->ajaxChat->getConfig('sessionName');
+				
+			case 'COOKIE_EXPIRATION':
+				return $this->ajaxChat->getConfig('sessionCookieLifeTime');
+			case 'COOKIE_PATH':
+				return $this->ajaxChat->getConfig('sessionCookiePath');
+			case 'COOKIE_DOMAIN':
+				return $this->ajaxChat->getConfig('sessionCookieDomain');
+			case 'COOKIE_SECURE':
+				return $this->ajaxChat->getConfig('sessionCookieSecure');
+				
 			case 'CHAT_BOT_NAME':
-				return $this->ajaxChat->htmlEncode($this->ajaxChat->getConfig('chatBotName'));
+				return rawurlencode($this->ajaxChat->getConfig('chatBotName'));
 			case 'CHAT_BOT_ID':
 				return $this->ajaxChat->getConfig('chatBotID');
-			case 'PASSWORD':
-				return MYPASSWORD;	
-			case 'USER_NAME':
-				return USERNAME;
-			case 'USER_ID':
-				return USERID;
+
+			case 'ALLOW_USER_MESSAGE_DELETE':
+				if($this->ajaxChat->getConfig('allowUserMessageDelete'))
+					return 1;
+				else
+					return 0;
+
+			case 'INACTIVE_TIMEOUT':
+				return $this->ajaxChat->getConfig('inactiveTimeout');
+
+			case 'PRIVATE_CHANNEL_DIFF':
+				return $this->ajaxChat->getConfig('privateChannelDiff');
+			case 'PRIVATE_MESSAGE_DIFF':
+				return $this->ajaxChat->getConfig('privateMessageDiff');
+
+			case 'SHOW_CHANNEL_MESSAGES':
+				if($this->ajaxChat->getConfig('showChannelMessages'))
+					return 1;
+				else
+					return 0;
+
+			case 'SOCKET_SERVER_ENABLED':
+				if($this->ajaxChat->getConfig('socketServerEnabled'))
+					return 1;
+				else
+					return 0;
+
+			case 'SOCKET_SERVER_HOST':
+				if($this->ajaxChat->getConfig('socketServerHost')) {
+					$socketServerHost = $this->ajaxChat->getConfig('socketServerHost');
+				} else {
+					$socketServerHost = (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : $_SERVER['SERVER_NAME']);
+				}
+				return rawurlencode($socketServerHost);
+
+			case 'SOCKET_SERVER_PORT':
+				return $this->ajaxChat->getConfig('socketServerPort');
+
+			case 'SOCKET_SERVER_CHAT_ID':
+				return $this->ajaxChat->getConfig('socketServerChatID');
+
 			case 'STYLE_SHEETS':
 				return $this->getStyleSheetLinkTags();
+				
 			case 'CHANNEL_OPTIONS':
 				return $this->getChannelOptionTags();
 			case 'STYLE_OPTIONS':
 				return $this->getStyleOptionTags();
-			case 'HELP_LIST':
-				return $this->getHelpListTable();
+			case 'LANGUAGE_OPTIONS':
+				return $this->getLanguageOptionTags();
+			
 			case 'ERROR_MESSAGES':
 				return $this->getErrorMessageTags();
+
 			case 'LOGS_CHANNEL_OPTIONS':
 				return $this->getLogsChannelOptionTags();
 			case 'LOGS_YEAR_OPTIONS':
@@ -109,8 +165,16 @@ class AJAXChatTemplate {
 				return $this->getLogsDayOptionTags();
 			case 'LOGS_HOUR_OPTIONS':
 				return $this->getLogsHourOptionTags();
+			case 'CLASS_WRITEABLE':
+				$userdata = $this->ajaxChat->getValidLoginUserData();
+				$guestwrite = $this->ajaxChat->getConfig('allowGuestWrite');
+				if ($userdata['userRole'] === AJAX_CHAT_GUEST && $guestwrite === false)
+					return 'write_forbidden';
+				else
+					return 'write_allowed';
+			
 			default:
-				return $this->ajaxChat->replaceCustomTemplateTags($t[1], $t[2]);
+				return $this->ajaxChat->replaceCustomTemplateTags($tagData[1], (isset($tagData[2]) ? $tagData[2] : null));
 		}
 	}
 
@@ -129,6 +193,7 @@ class AJAXChatTemplate {
 		$langCodeParts = explode('-', $this->ajaxChat->getLangCode());
 		switch($langCodeParts[0]) {
 			case 'ar':
+			case 'fa':
 			case 'he':
 				return 'rtl';
 			default:
@@ -148,26 +213,39 @@ class AJAXChatTemplate {
 	function getChannelOptionTags() {
 		$channelOptions = '';
 		$channelSelected = false;
-		foreach($this->ajaxChat->getChannels() as $key=>$value) {
-			if($this->ajaxChat->isLoggedIn()) {
-				$selected = ($value == $this->ajaxChat->getChannel()) ? ' selected="selected"' : '';
+		foreach($this->ajaxChat->getChannels() as $name=>$id) {
+			if($this->ajaxChat->isLoggedIn() && $this->ajaxChat->getChannel()) {
+				$selected = ($id == $this->ajaxChat->getChannel()) ? ' selected="selected"' : '';
 			} else {
-				$selected = ($value == $this->ajaxChat->getConfig('defaultChannelID')) ? ' selected="selected"' : '';
+				$selected = ($id == $this->ajaxChat->getConfig('defaultChannelID')) ? ' selected="selected"' : '';
 			}
-			if($selected)
+			if($selected) {
 				$channelSelected = true;
-			$channelOptions .= '<option value="'.$this->ajaxChat->htmlEncode($key).'"'.$selected.'>'.$this->ajaxChat->htmlEncode($key).'</option>';
-		}
-		// If current channel is not in the list, try to retrieve the channelName:
-		if(!$channelSelected) {
-			$channelName = $this->ajaxChat->getChannelName();
-			if($channelName !== null) {
-				$channelOptions .= '<option value="'.$this->ajaxChat->htmlEncode($channelName).'" selected="selected">'.$this->ajaxChat->htmlEncode($channelName).'</option>';
-			} else {
-				// Show an empty selection:
-				$channelOptions .= '';
 			}
+			$channelOptions .= '<option value="'.$this->ajaxChat->htmlEncode($name).'"'.$selected.'>'.$this->ajaxChat->htmlEncode($name).'</option>';
 		}
+        return $channelOptions;
+//		if($this->ajaxChat->isLoggedIn() && $this->ajaxChat->isAllowedToCreatePrivateChannel()) {
+//			// Add the private channel of the user to the options list:
+//			if(!$channelSelected && $this->ajaxChat->getPrivateChannelID() == $this->ajaxChat->getChannel()) {
+//				$selected = ' selected="selected"';
+//				$channelSelected = true;
+//			} else {
+//				$selected = '';
+//			}
+//			$privateChannelName = $this->ajaxChat->getPrivateChannelName();
+//			$channelOptions .= '<option value="'.$this->ajaxChat->htmlEncode($privateChannelName).'"'.$selected.'>'.$this->ajaxChat->htmlEncode($privateChannelName).'</option>';
+//		}
+//		// If current channel is not in the list, try to retrieve the channelName:
+//		if(!$channelSelected) {
+//			$channelName = $this->ajaxChat->getChannelName();
+//			if($channelName !== null) {
+//				$channelOptions .= '<option value="'.$this->ajaxChat->htmlEncode($channelName).'" selected="selected">'.$this->ajaxChat->htmlEncode($channelName).'</option>';
+//			} else {
+//				// Show an empty selection:
+//				$channelOptions .= '<option value="" selected="selected">---</option>';
+//			}
+//		}
 		return $channelOptions;
 	}
 
@@ -180,17 +258,14 @@ class AJAXChatTemplate {
 		return $styleOptions;
 	}
 
-	function getHelpListTable() {
-		$helpList = '<table>';
-		foreach($this->ajaxChat->getLang() as $key=>$value) {
-			if(strpos($key, 'helpItemDesc') === 0) {
-				$helpList .= '<tr class="'.$this->alternateRow().'"><td class="desc">'.$this->ajaxChat->htmlEncode($value).'</td>';
-			} else if(strpos($key, 'helpItemCode') === 0) {
-				$helpList .= '<td class="code">'.$this->ajaxChat->htmlEncode($value).'</td></tr>';
-			}
+	function getLanguageOptionTags() {
+		$languageOptions = '';
+		$languageNames = $this->ajaxChat->getConfig('langNames');
+		foreach($this->ajaxChat->getConfig('langAvailable') as $langCode) {
+			$selected = ($langCode == $this->ajaxChat->getLangCode()) ? ' selected="selected"' : '';
+			$languageOptions .= '<option value="'.$this->ajaxChat->htmlEncode($langCode).'"'.$selected.'>'.$languageNames[$langCode].'</option>';
 		}
-		$helpList .= '</table>';
-		return $helpList;
+		return $languageOptions;
 	}
 
 	function getErrorMessageTags() {
@@ -205,6 +280,9 @@ class AJAXChatTemplate {
 		$channelOptions = '';
 		$channelOptions .= '<option value="-3">------</option>';
 		foreach($this->ajaxChat->getChannels() as $key=>$value) {
+			if($this->ajaxChat->getUserRole() != AJAX_CHAT_ADMIN && $this->ajaxChat->getConfig('logsUserAccessChannelList') && !in_array($value, $this->ajaxChat->getConfig('logsUserAccessChannelList'))) {
+				continue;
+			}
 			$channelOptions .= '<option value="'.$value.'">'.$this->ajaxChat->htmlEncode($key).'</option>';
 		}
 		$channelOptions .= '<option value="-1">'.$this->ajaxChat->htmlEncode($this->ajaxChat->getLang('logsPrivateChannels')).'</option>';

@@ -2,8 +2,8 @@
 /*
  * @package AJAX_Chat
  * @author Sebastian Tschan
- * @copyright (c) 2007 Sebastian Tschan
- * @license http://creativecommons.org/licenses/by-sa/
+ * @copyright (c) Sebastian Tschan
+ * @license Modified MIT License
  * @link https://blueimp.net/ajax/
  */
 
@@ -14,7 +14,7 @@ class AJAXChatHTTPHeader {
 	var $_constant;
 	var $_noCache;
 
-	function AJAXChatHTTPHeader($encoding='UTF-8', $contentType=null, $noCache=true) {
+	function __construct($encoding='UTF-8', $contentType=null, $noCache=true) {
 		if($contentType) {
 			$this->_contentType = $contentType.'; charset='.$encoding;
 			$this->_constant = true;
