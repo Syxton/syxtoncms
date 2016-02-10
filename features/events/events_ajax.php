@@ -2608,8 +2608,9 @@ global $CFG,$MYVARS,$USER;
         $linkurl = $settings->events->$featureid->bgcheck_url->setting;
         
         $status = empty($staff["bgcheckpass"]) ? false : (time()-$staff["bgcheckpassdate"] > ($settings->events->$featureid->bgcheck_years->setting * 365 * 24 * 60 * 60) ? false : true);
-
-        $backgroundchecklink = $status || empty($linkurl) ? '' : '
+        
+        $eighteen = 18 * 365 * 24 * 60 * 60; // 18 years in seconds
+        $backgroundchecklink = ((time() - $dateofbirth) > $eighteen) && ($status || empty($linkurl)) ? '' : '
            <br /><br />
            If you have not already done so, please complete a background check.<br />
            <h2><a href="'.$linkurl.'">Submit a background check</a></h2>'; 
