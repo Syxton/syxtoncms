@@ -3,8 +3,8 @@
 * events_ajax.php - Events backend ajax script
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 1/29/2016
-* Revision: 2.1.7
+* Date: 2/25/2016
+* Revision: 2.1.8
 ***************************************************************************/
 
 if(!isset($CFG)){ include('../header.php'); } 
@@ -2353,7 +2353,7 @@ global $CFG, $MYVARS, $USER;
     $amountshown = $firstonpage + $MYVARS->search_perpage < $total ? $firstonpage + $MYVARS->search_perpage : $total;
     $prev = $pagenum > 0 ? '<a href="javascript: void(0);" onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
                                                                     ajaxapi(\'/features/events/events_ajax.php\',
-                                                                            \'templatesearch\',
+                                                                            \'appsearch\',
                                                                             \'&amp;pagenum=' . ($pagenum - 1) . '&amp;searchwords=\'+escape(\'' . $searchwords . '\'),
                                                                             function() { 
                                                                                 if (xmlHttp.readyState == 4) { 
@@ -2369,7 +2369,7 @@ global $CFG, $MYVARS, $USER;
     $info = 'Viewing ' . ($firstonpage + 1) . " through " . $amountshown . " out of $total";
     $next = $firstonpage + $MYVARS->search_perpage < $total ? '<a onmouseup="this.blur()" href="javascript: void(0);" onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
                                                                                                                                 ajaxapi(\'/features/events/events_ajax.php\',
-                                                                                                                                        \'templatesearch\',
+                                                                                                                                        \'appsearch\',
                                                                                                                                         \'&amp;pagenum=' . ($pagenum + 1) . '&amp;searchwords=\'+escape(\'' . $searchwords . '\'),
                                                                                                                                         function() { 
                                                                                                                                             if (xmlHttp.readyState == 4) { 
