@@ -1103,7 +1103,7 @@ global $CFG, $MYVARS, $USER;
 	$eventid = dbescape($MYVARS->GET["eventid"]);
 	$template_id = dbescape($MYVARS->GET["template_id"]);
 	$eventname = dbescape(urldecode($MYVARS->GET["eventname"]));
-    $selected = dbescape($MYVARS->GET["sel"]);
+    $selected = empty($MYVARS->GET["sel"]) ? false : dbescape($MYVARS->GET["sel"]);
     $initial_display = $selected ? "" : "display:none;";
 	$returnme = '<span style="width:50%;float:left;">'.$eventname.'</span>';
 	
@@ -1782,13 +1782,24 @@ global $CFG, $MYVARS;
 	
     //strtotime php5 fixes
     if(isset($MYVARS->GET["start_reg"])){
-        $startr = explode("/",$MYVARS->GET["start_reg"]);
-        $start_reg = $reg == "1" && isset($MYVARS->GET["start_reg"]) ? strtotime("$startr[1]/$startr[2]/$startr[0]") : '0';
+        if(strstr($MYVARS->GET["start_reg"],"/")) {
+            $startr = explode("/",$MYVARS->GET["start_reg"]);
+            $start_reg = $reg == "1" && isset($MYVARS->GET["start_reg"]) ? strtotime("$startr[1]/$startr[2]/$startr[0]") : '0';    
+        } else {
+            $startr = explode(" ",$MYVARS->GET["start_reg"]);
+            $start_reg = $reg == "1" && isset($MYVARS->GET["start_reg"]) ? strtotime("$startr[0] $startr[1] $startr[2] $startr[3] $startr[4] $startr[5]") : '0';
+        }
+
     }else{ $start_reg = '0';}
     
     if(isset($MYVARS->GET["stop_reg"])){
-        $stopr = explode("/",$MYVARS->GET["stop_reg"]);
-        $stop_reg = $reg == "1" ? strtotime("$stopr[1]/$stopr[2]/$stopr[0]") : '0';
+        if(strstr($MYVARS->GET["stop_reg"],"/")) {
+            $stopr = explode("/",$MYVARS->GET["stop_reg"]);
+            $stop_reg = $reg == "1" ? strtotime("$stopr[1]/$stopr[2]/$stopr[0]") : '0';
+        } else {
+            $stopr = explode(" ",$MYVARS->GET["stop_reg"]);
+            $stop_reg = $reg == "1" ? strtotime("$stopr[0] $stopr[1] $stopr[2] $stopr[3] $stopr[4] $stopr[5]") : '0';
+        }
     }else{ $stop_reg = '0'; }
     
 	$template_id = $reg == "1" ? dbescape($MYVARS->GET["template"]) : '0';
@@ -1800,8 +1811,13 @@ global $CFG, $MYVARS;
 	$sale_fee = $sale_fee == "" ? '0' : $sale_fee;
     
     if(isset($MYVARS->GET["sale_end"])){
-        $se = explode("/",$MYVARS->GET["sale_end"]);
-        $sale_end = $sale_fee != '0' ? strtotime("$se[1]/$se[2]/$se[0]") : '0';
+        if(strstr($MYVARS->GET["sale_end"],"/")) {
+            $se = explode("/",$MYVARS->GET["sale_end"]);
+            $sale_end = $sale_fee != '0' ? strtotime("$se[1]/$se[2]/$se[0]") : '0';
+        } else {
+            $se = explode(" ",$MYVARS->GET["sale_end"]);
+            $sale_end = $sale_fee != '0' ? strtotime("$se[0] $se[1] $se[2] $se[3] $se[4] $se[5]") : '0';
+        }
     }else{ $sale_end = '0'; }
     
 	$payableto = $fee != "1" ? '' : dbescape(urldecode($MYVARS->GET["payableto"]));

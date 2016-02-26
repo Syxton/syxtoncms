@@ -945,13 +945,16 @@ global $CFG;
     $returnme = "";
     if(!empty($templateid) && $template_settings = get_db_field("settings","events_templates","template_id='$templateid'")){ //template settings
         if(!empty($template_settings)){ //there are settings in this template
-            $returnme = '<table style="margin:0px 0px 0px 50px;"><tr><td class="field_title" style="width:115px;">Template Settings</td><td class="field_input"></td></tr>';
+            $returnme = '<table style="margin:0px 0px 0px 50px;">
+                            <tr><td class="field_title" style="width:115px;">Template Settings</td></tr>
+                            <tr><td>';
             $settings = unserialize($template_settings);
             foreach($settings as $setting){ //save each setting with the default if no other is given
                 $set = get_db_field("setting","settings","type='events_template' AND extra='$eventid' AND setting_name='".$setting['name']."'");
                 $current_setting = !empty($set) ? $set : $setting['default'];
                 $returnme .= make_setting_input($setting["name"],$setting["title"],$setting["type"],NULL,NULL,$current_setting,$setting["numeric"],$setting["extravalidation"], $setting["extra_alert"],false);
             }
+            $returnme .= '</td></tr></table>';
         }
     }
     return $returnme;
