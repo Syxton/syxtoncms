@@ -1022,7 +1022,7 @@ global $CFG, $MYVARS, $USER;
 			}
         }
     }else{
-        $template_forms = explode(";",$template["formlist"]);
+        $template_forms = explode(";", trim($template["formlist"], ';'));
         $i=0;
         while(isset($template_forms[$i])){
         	$form = explode(":",$template_forms[$i]);
