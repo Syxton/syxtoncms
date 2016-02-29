@@ -20,6 +20,7 @@ $HELP->help_phone = "Please enter a phone number beginning with the area code.";
 $HELP->help_state = "Please select the home state of the camper.";
 $HELP->help_zip = "Please enter the zipcode of the camper.";
 $HELP->help_paywithapp = "Please enter the amount you wish to pay up front.";
+$HELP->help_overnight = "Do you plan to stay overnight on-site?";
 
 //ERRORS
 $ERRORS = new stdClass();

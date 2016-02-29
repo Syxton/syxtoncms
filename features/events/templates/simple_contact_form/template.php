@@ -1,6 +1,6 @@
 <?php
 /***************************************************************************
- * template.php - father_coaching_weekend Template page
+ * template.php - simple_contact_form Template page
  * -------------------------------------------------------------------------
  * $Author: Matthew Davidson
 * Date: 4/09/2013
@@ -37,7 +37,7 @@ if($show_again){ //This is not the first time through
 //output required javascript
 echo '  <html>
         <head>
-        <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'features/events/templates/father_coaching_weekend/ajax.js"></script>
+        <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'features/events/templates/simple_contact_form/ajax.js"></script>
         </head>
         <body>
 ';    
@@ -84,7 +84,7 @@ if($autofill){
         <style> .calendarDateInput{margin-right:5px !important;}.info{ width: 92%; } div.rowContainer { height: 75px; } .rowContainer label :not(.valid){ width:initial;} .rowContainer textarea { width:80%;max-width: 480px; margin-right: 20px; } .rowTitle { width:100% !important; } .rowContainer select { margin-right: 20px; }</style>
             <input type="hidden" name="Name" />
 			<div class="rowContainer">
-				<label class="rowTitle" for="email">Email Address *</label><br /><input tabindex="1" type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-msg-required="'.get_error_message('valid_req_email').'" data-msg-email="'.get_error_message('valid_email_invalid').'" /><div class="tooltipContainer info">'.get_help("help_email:events:templates/father_coaching_weekend").'</div><br />
+				<label class="rowTitle" for="email">Email Address *</label><br /><input tabindex="1" type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-msg-required="'.get_error_message('valid_req_email').'" data-msg-email="'.get_error_message('valid_email_invalid').'" /><div class="tooltipContainer info">'.get_help("help_email:events:templates/simple_contact_form").'</div><br />
 			</div>
 			<div class="rowContainer">
 				<label class="rowTitle" for="Name_First">First Name *</label><br /><input tabindex="2" type="text" id="Name_First" name="Name_First" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="'.get_error_message('valid_req_fname').'" /><div class="tooltipContainer info">'.get_help("input_fname").'</div><br />
@@ -93,13 +93,13 @@ if($autofill){
 				<label class="rowTitle" for="Name_Last">Last Name *</label><br /><input tabindex="3" type="text" id="Name_Last" name="Name_Last" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="'.get_error_message('valid_req_lname').'" /><div class="tooltipContainer info">'.get_help("input_lname").'</div><br />
   			</div>
 			<div class="rowContainer">
-				<label class="rowTitle" for="Address_Line1">Mailing Address Line One *</label><br /><input tabindex="9" type="text" id="Address_Line1" name="Address_Line1" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("help_address:events:templates/father_coaching_weekend").'</div><br />
+				<label class="rowTitle" for="Address_Line1">Mailing Address Line One *</label><br /><input tabindex="9" type="text" id="Address_Line1" name="Address_Line1" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("help_address:events:templates/simple_contact_form").'</div><br />
 			</div>            
 			<div class="rowContainer">
-				<label class="rowTitle" for="Address_Line2">Mailing Address Line Two</label><br /><input tabindex="10" type="text" id="Address_Line2" name="Address_Line2" /><div class="tooltipContainer info">'.get_help("help_address:events:templates/father_coaching_weekend").'</div><br />
+				<label class="rowTitle" for="Address_Line2">Mailing Address Line Two</label><br /><input tabindex="10" type="text" id="Address_Line2" name="Address_Line2" /><div class="tooltipContainer info">'.get_help("help_address:events:templates/simple_contact_form").'</div><br />
 			</div>         
 			<div class="rowContainer">
-				<label class="rowTitle" for="Address_City">City *</label><br /><input tabindex="11" type="text" id="Address_City" name="Address_City" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">'.get_help("help_city:events:templates/father_coaching_weekend").'</div><br />
+				<label class="rowTitle" for="Address_City">City *</label><br /><input tabindex="11" type="text" id="Address_City" name="Address_City" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">'.get_help("help_city:events:templates/simple_contact_form").'</div><br />
 			</div>             
 			<div class="rowContainer">
 				<label class="rowTitle" for="Address_State">State *</label><br />
@@ -156,21 +156,30 @@ if($autofill){
                     <option value="WI">Wisconsin
                     <option value="WY">Wyoming
                 </select>
-                <div class="tooltipContainer info">'.get_help("help_state:events:templates/father_coaching_weekend").'</div><br />
+                <div class="tooltipContainer info">'.get_help("help_state:events:templates/simple_contact_form").'</div><br />
 			</div>             
             <div class="rowContainer">
-                <label class="rowTitle" for="Address_Zipcode">Zipcode *</label><br /><input tabindex="13" type="text" size="5" maxlength="5" id="Address_Zipcode" name="Address_Zipcode" data-rule-required="true" data-rule-number="true" data-rule-minlength="5" /><div class="tooltipContainer info">'.get_help("help_zip:events:templates/father_coaching_weekend").'</div><br />
+                <label class="rowTitle" for="Address_Zipcode">Zipcode *</label><br /><input tabindex="13" type="text" size="5" maxlength="5" id="Address_Zipcode" name="Address_Zipcode" data-rule-required="true" data-rule-number="true" data-rule-minlength="5" /><div class="tooltipContainer info">'.get_help("help_zip:events:templates/simple_contact_form").'</div><br />
             </div>            
             <div class="rowContainer">
-                <label class="rowTitle" for="Phone">Phone</label><br /><input tabindex="14" type="text" maxlength="22" id="Phone" name="Phone" data-rule-phone="true" /><div class="tooltipContainer info">'.get_help("help_phone:events:templates/father_coaching_weekend").'</div><br />
-            </div>'; 
+                <label class="rowTitle" for="Phone">Phone</label><br /><input tabindex="14" type="text" maxlength="22" id="Phone" name="Phone" data-rule-phone="true" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("help_phone:events:templates/simple_contact_form").'</div><br />
+            </div>
+            <div class="rowContainer">
+                <label class="rowTitle" for="Overnight">Overnight Stay</label><br />
+                <select tabindex="6" id="Overnight" name="Overnight" data-rule-required="true">
+                    <option value="">Select One...</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+                <div class="tooltipContainer info">'.get_help("help_overnight:events:templates/simple_contact_form").'</div><br />
+            </div> '; 
 }
 
 echo '
     <div class="rowContainer">
         <label class="rowTitle" for="Camp_Fee">Pay With Application</label><br />
         '.make_fee_options($event['fee_min'],$event['fee_full'],"payment_amount",'onchange="updateTotal();" onclick="updateTotal();"',$event['sale_end'],$event['sale_fee']).'
-        <div class="tooltipContainer info">'.get_help("help_paywithapp:events:templates/father_coaching_weekend").'</div><br />
+        <div class="tooltipContainer info">'.get_help("help_paywithapp:events:templates/simple_contact_form").'</div><br />
     </div>';
 
 echo '
@@ -179,28 +188,7 @@ echo '
         <span style="display:inline-block;width:12px;">$</span><input style="float:none;width:100px;border:none;" name="owed" id="owed" size="5" value="'.$event['fee_min'].'" type="text" readonly />
     </div>';
 
-if(!$show_again){
-    echo '
-        <div class="rowContainer">
-            <label class="rowTitle" for="payment_method">Method of Payment *:</label><br />
-            <select tabindex="31" id="payment_method" name="payment_method" size="1" onchange="updateMessage();" onclick="updateMessage();" data-rule-required="true">
-                <option value="">Choose One</option>
-                <option value="PayPal">PayPal</option>
-                <option value="Check/Cash/Money Order">Check/Cash or Money Order</option>
-            </select>
-            <br />
-        </div>
-        <div class="rowContainer" style="height: auto;">
-            <label for="payment_note">Notes:</label><br />
-            <textarea name="payment_note" id="payment_note" rows="8" cols="60">After you select a payment method, you can put a message here.'."\n\n".'Do you have a cabin preference or cabin-mates?'."\n".'Do you have a question for the director?
-            </textarea>
-            <br />
-        </div>';
-}else{
-	echo '<table><tr><td></td><td><input type="hidden" name="payment_method" id="payment_method" value="'.$payment_method.'" /></td></tr><table>';
-} 
-    echo '<input tabindex="32" name="print" value="Print Application" onclick="window.print()" type="button" '.$preview.'/><br /><br />
-          <input tabindex="33" class="submit" name="submit" type="submit" value="Send Application" '.$preview.'/><br /><br />
+    echo '<input tabindex="33" class="submit" name="submit" type="submit" value="Submit Application" '.$preview.'/><br /><br />
           <input tabindex="34" name="reset" type="reset" '.$preview.'/>
         </fieldset>
     </div>
@@ -208,7 +196,7 @@ if(!$show_again){
 ';
 
 //Finalize and activate validation code
-echo create_validation_script("form1" , "submit_father_coaching_weekend_registration()");
+echo create_validation_script("form1" , "submit_simple_contact_form_registration()");
 echo '  
 <script type="text/javascript" language="javascript">
     $(document).ready(function(){
