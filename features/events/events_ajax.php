@@ -1071,15 +1071,14 @@ global $CFG, $MYVARS, $USER;
                             (regid,elementid,value,eventid,elementname) 
                             VALUES" . $SQL2;
 		    }else{
-		        $template_forms = explode(";",$template["formlist"]);
-		        $i=0;
-		        while(isset($template_forms[$i])){
-		        	$form = explode(":",$template_forms[$i]);
-		        	$value = strstr($template["registrant_name"],$form[0]) ? "Reserved" : "";
+		        $template_forms = explode(";", trim($template["formlist"], ';'));
+                foreach($template_forms as $formset) {
+                    $form = explode(":", $formset);
+		        	$value = strstr($template["registrant_name"], $form[0]) ? "Reserved" : "";
 					$SQL2 .= $SQL2 == "" ? "" : ",";
-					$SQL2 .= "('$regid','$value','$eventid','".$form[0]."')";
-					$i++;
-				}
+					$SQL2 .= "('$regid','$value','$eventid','".$form[0]."')";    
+                }
+
 				$SQL2 = "INSERT INTO events_registrations_values 
                             (regid,value,eventid,elementname) 
                             VALUES" . $SQL2;
