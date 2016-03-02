@@ -1104,7 +1104,7 @@ global $CFG, $MYVARS, $USER;
 	$eventname = dbescape(urldecode($MYVARS->GET["eventname"]));
     $selected = empty($MYVARS->GET["sel"]) ? false : dbescape($MYVARS->GET["sel"]);
     $initial_display = $selected ? "" : "display:none;";
-	$returnme = '<span style="width:50%;float:left;">'.$eventname.'</span>';
+	$returnme = '<span style="width:50%;float:left;">'.stripslashes($eventname).'</span>';
 	
     //Print all registration button
     $returnme .= '<span style="width:50%;text-align:right;float:right;">
