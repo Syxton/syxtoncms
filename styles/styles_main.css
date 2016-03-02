@@ -1189,6 +1189,16 @@ input[type="submit"]:hover {
     cursor: pointer;
 }
 
+input[type="button"]:hover {
+    cursor: pointer;
+}
+
+input[type="button"].smallbutton {
+    font-size: 1em;
+    padding: 3px 6px;
+    font-weight: bold;
+}
+
 select:disabled {
     background-color: rgb(235, 235, 228);
     color: rgb(84,84,84);

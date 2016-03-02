@@ -173,23 +173,24 @@ global $CFG, $USER;
     $time = get_timestamp();
     $export = ""; $registration = "";
     $featureid = get_db_field("featureid","pages_features","pageid='$pageid' AND feature='events'");    
-    if($event["start_reg"] > 0){ //Event is a registerable page...at one time
+    if($event["start_reg"] > 0) { //Event is a registerable page...at one time
 		$regcount = get_db_count("SELECT * FROM events_registrations WHERE eventid='" . $event['eventid'] . "'");
 		$limit = $event['max_users'] == "0" ? "&#8734;" : $event['max_users'];
 		
 		//Currently can register for event (time check)
-	    if($event["start_reg"] < $time && $event["stop_reg"] > $time){
+	    if($event["start_reg"] < $time && $event["stop_reg"] > $time) {
 	        $registerable = $event["max_users"] == 0 || ($event["max_users"] != 0 and $event["max_users"] > $regcount) ? true : false;
 	        //Availability check
 	        if($registerable){
-	            $registration = "Registration ends in " . ago($event["event_begin_date"]) . "&nbsp;&nbsp;";
+	            $registration = "Registration ends in " . ago($event["event_begin_date"]) . "&nbsp;&nbsp;<div style='display:inline-block'>";
 	            $left = $event['max_users'] == "0" ? "&#8734;" : '(' . ($limit - $regcount) . ' out of ' . $limit . ' openings left)';
 	            if(user_has_ability_in_page($USER->userid, "signupforevents", $pageid, "events", $featureid)){ 
-                    $registration .= make_modal_links(array("title"=>"Register $left","path"=>$CFG->wwwroot."/features/events/events.php?action=show_registration&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","validate"=>"true","width"=>"630","height"=>"800","image"=>$CFG->wwwroot."/images/register.png","confirmexit"=>"true"));
+                    $registration .= make_modal_links(array("button"=>"button","title"=>"Register $left","text"=>"Register","path"=>$CFG->wwwroot."/features/events/events.php?action=show_registration&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","validate"=>"true","width"=>"630","height"=>"95%","confirmexit"=>"true"));
                 }
 	            if($event["paypal"] != ""){ 
-	               $registration .= make_modal_links(array("title"=>"Event Payment","path"=>$CFG->wwwroot."/features/events/events.php?action=pay&amp;modal=1&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"image"=>$CFG->wwwroot."/images/pay.png","width"=>"95%","height"=>"95%"));
+	               $registration .= make_modal_links(array("button"=>"button","title"=>"Event Payment","text"=>"Pay","path"=>$CFG->wwwroot."/features/events/events.php?action=pay&amp;modal=1&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"width"=>"95%","height"=>"95%"));
 	            }
+                $registration .= '</div>';
 	        }
 	    }
 	    
@@ -197,12 +198,12 @@ global $CFG, $USER;
 		if(user_has_ability_in_page($USER->userid, "exportcsv", $event["pageid"],"events",$featureid)){ $export = '<a href="javascript: void(0)" onclick="ajaxapi(\'/features/events/events_ajax.php\',\'export_csv\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '\',function() { run_this();});"><img src="' . $CFG->wwwroot . '/images/csv.png" title="Export ' . $regcount . '/' . $limit . ' Registrations" alt="Export ' . $regcount . ' Registrations" /></a>';}
     }
 
-    if($registration == ""){
+    if($registration == "") {
         $location = get_db_row("SELECT * FROM events_locations WHERE id='".$event['location']."'");
         $registration = "Where: " . stripslashes($location["location"]);
     }
     
-    if($needsconfirmed){
+    if($needsconfirmed) {
         $returnme = '<div id="confirm_' . $event['eventid'] . '">
             			<table class="eventstable">
                 			<tr>
@@ -237,7 +238,7 @@ global $CFG, $USER;
                 			</tr>
             			</table>
                     </div>';
-    }else{
+    } else {
         $returnme = '<div id="confirm_' . $event['eventid'] . '">
             			<table class="eventstable">
                             <tr>

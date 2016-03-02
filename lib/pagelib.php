@@ -124,9 +124,10 @@ global $CFG,$USER;
                 plugins: [
                     '.get_editor_plugins($type).'
                 ],
-                external_filemanager_path:"'.(empty($CFG->directory) ? '' : '/'.$CFG->directory).'/scripts/tinymce/plugins/filemanager/", 
-                filemanager_title:"File Manager" , 
-                external_plugins: { "filemanager" : "'.(empty($CFG->directory) ? '' : '/'.$CFG->directory).'/scripts/tinymce/plugins/filemanager/plugin.min.js"}
+                external_filemanager_path: "'.(empty($CFG->directory) ? '' : '/'.$CFG->directory).'/scripts/tinymce/plugins/filemanager/", 
+                filemanager_title: "File Manager" , 
+                external_plugins: { "filemanager" : "'.(empty($CFG->directory) ? '' : '/'.$CFG->directory).'/scripts/tinymce/plugins/filemanager/plugin.min.js"},
+                init_instance_callback: function (editor) { resize_editor(); }
             });
         });
     </script>'; 
@@ -305,7 +306,8 @@ function resort_page_features($pageid){
 }
 
 function make_modal_links($v){
-global $CFG;    
+global $CFG;
+    $v["button"] = empty($v["button"]) ? "link" : "button";
     $v["title"] = empty($v["title"]) ? "" : $v["title"];
     $v["confirmexit"] = empty($v["confirmexit"]) ? "" : $v["confirmexit"];
     $v["id"] = empty($v["id"]) ? "" : 'id="'.$v["id"].'"';
@@ -389,7 +391,11 @@ global $CFG;
         $modal = "setTimeout(function(){ $modal },500);";    
     }
 
-    return '<a '.trim($v["id"]).' class="'.$v["class"].'" '.trim($v["type"]).' data-rel="'.$gallery_name.'" title="'.trim(strip_tags($v["title"])).'" style="'.$v["styles"].'" onclick="'.$onOpen.' '.$modal.'" href="'.$path.'">'.$v["text"].'</a>';    
+    if($v["button"] == "button") {
+        return '<input type="button" '.trim($v["id"]).' class="smallbutton '.$v["class"].'" '.trim($v["type"]).' title="'.trim(strip_tags($v["title"])).'" style="'.$v["styles"].'" onclick="'.$onOpen.' '.$modal.'" value="'.$v["text"].'" />';    
+    } else {
+        return '<a '.trim($v["id"]).' class="'.$v["class"].'" '.trim($v["type"]).' data-rel="'.$gallery_name.'" title="'.trim(strip_tags($v["title"])).'" style="'.$v["styles"].'" onclick="'.$onOpen.' '.$modal.'" href="'.$path.'">'.$v["text"].'</a>';    
+    }
 }
 
 function get_user_links($userid, $pageid){
