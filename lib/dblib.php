@@ -81,7 +81,7 @@ global $CFG, $USER;
     		$USER->userid = $user['userid'];
     		$USER->fname = $user['fname'];
     		$USER->lname = $user['lname'];
-    		$USER->email = $email;
+    		$USER->email = $user['email'];
     		$FROMUSER->fname = $CFG->sitename;
     		$FROMUSER->lname = '';
     		$FROMUSER->email = $CFG->siteemail;
