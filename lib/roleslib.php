@@ -3,8 +3,8 @@
 * roleslib.php - Roles function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 1/29/2016
-* Revision: 1.2.6
+* Date: 3/08/2016
+* Revision: 1.2.7
 ***************************************************************************/
 
 if(!isset($LIBHEADER)) include('header.php');
@@ -106,7 +106,11 @@ global $CFG,$ROLES,$ABILITIES;
 	LIMIT 1
 	";
 
-	if(get_db_row($SQL)){ return true; }
+	if(get_db_row($SQL)) {
+	   return true; 
+    } else {
+        error_log("FAILED SQL: $SQL");
+	}
 	return false;
 	}
 }
@@ -190,7 +194,7 @@ global $CFG,$ROLES,$ABILITIES;
     	) as allowed FROM abilities a $section ORDER BY section
     	";
 
-    	if($results = get_db_result($SQL)){
+    	if($results = get_db_result($SQL)) {
     		while($row = fetch_row($results)){
     			$ability = $row["ability"];
     			$allow = $row["allowed"] == 1 ? 1 : 0;
@@ -204,6 +208,8 @@ global $CFG,$ROLES,$ABILITIES;
                 
     			$abilities->$ability->allow = $allow;		
     		}
+    	} else {
+            error_log("FAILED SQL: $SQL");
     	}
     	if(!$section){ $ABILITIES = $abilities; }
     	return $abilities;
@@ -234,7 +240,13 @@ global $CFG,$ROLES;
 					";
 	}
 	$SQL .= ") a GROUP BY a.pageid";
-	return get_db_result($SQL);
+    
+    if($results = get_db_result($SQL)){
+        return $results;
+    } else {
+        error_log("FAILED SQL: $SQL");
+        return false;
+	}
 }
 
 //	This is a fully implemented roles structure for the system.  The following is the importance structure
@@ -289,6 +301,8 @@ global $CFG,$ROLES,$ABILITIES;
             $abilities->$ability = new stdClass();
 			$abilities->$ability->allow = $allow;		
 		}
+	} else {
+        error_log("FAILED SQL: $SQL");
 	}
 	if(empty($section) && !empty($abilities)){ $ABILITIES = $abilities; }
 	return $abilities;
@@ -324,7 +338,10 @@ global $CFG,$ROLES;
 	";
 
 	if(get_db_row($SQL)){ return true;
-	}else{ return false;}
+	} else {
+        error_log("FAILED SQL: $SQL");
+        return false;
+	}
 }
 
 function load_roles(){
@@ -405,7 +422,13 @@ global $CFG,$ROLES;
     	OR userid IN (SELECT userid FROM roles_assignment WHERE roleid=1 AND pageid=".$CFG->SITEID.")
     	";
 	}
-	return get_db_result($SQL);
+
+    if($results = get_db_result($SQL)){
+        return $results;
+    } else {
+        error_log("FAILED SQL: $SQL");
+        return false;
+	}
 }
 
 //GROUPS AREA
