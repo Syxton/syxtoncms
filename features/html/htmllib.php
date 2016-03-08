@@ -18,7 +18,7 @@ global $CFG, $USER, $HTMLSETTINGS;
 		$settings = fetch_settings("html",$featureid,$pageid);
 	}
 
-    if($abilities->viewhtml->allow){
+    if(!empty($abilities->viewhtml->allow)){
         return get_html($pageid, $featureid, $settings, $abilities, $area);
     }
 }

@@ -17,7 +17,7 @@ global $CFG, $USER, $donateSETTINGS;
 		$settings = fetch_settings("donate",$featureid,$pageid);
 	}
     
-    if($abilities->makedonation->allow){
+    if(!empty($abilities->makedonation->allow)){
         return get_donate($pageid, $featureid, $settings, $abilities, $area);
     }
 }
@@ -279,29 +279,7 @@ global $CFG;
     $orientation[] = array("selectvalue" => "vertical", "selectname" => "Vertical");
     $settings_array[] = array(false,"$feature","$pageid","$featureid","metertype","horizontal",$orientation,"horizontal","Thermometer Orientation","select_array",null,null,"Select the orientation of the donation thermometer.");
     $settings_array[] = array(false,"$feature","$pageid","$featureid","enablerss","0",false,"0","Enable RSS","yes/no");
-    //$settings_array[] = array(false,"$feature","$pageid","$featureid","paypal_account",$CFG->paypal_merchant_account,false,$CFG->paypal_merchant_account,"Paypal Account","text");
-    //$settings_array[] = array(false,"$feature","$pageid","$featureid","donation_goal_amount","0",false,"0","Goal Amount","text",true,"<=0","0 means No Goal Amount.");
-    //$settings_array[] = array(false,"$feature","$pageid","$featureid","donation_goal_desc","",false,"","Goal Description","text");
-    //$settings_array[] = array(false,"$feature","$pageid","$featureid","shared_donation","0",false,"0","Allow other pages to donate.","yes/no");
-    
-//	$settings_array[] = array(false,"$feature","$pageid","$featureid","enablerss","0",false,"0","Enable RSS","yes/no");
-//	$settings_array[] = array(false,"$feature","$pageid","$featureid","allowcomments","0",false,"0","Allow Comments","yes/no");
-//	$settings_array[] = array(false,"$feature","$pageid","$featureid","middlecommentlimit","10",false,"10","Limit Replies Shown in Middle","text",true,"<=0","Must be greater than 0.");
-//	$settings_array[] = array(false,"$feature","$pageid","$featureid","sidecommentlimit","3",false,"3","Limit Replies Shown on Side","text",true,"<=0","Must be greater than 0.");
-//	$settings_array[] = array(false,"$feature","$pageid","$featureid","documentviewer","0",false,"0","Document Viewer Filter","yes/no");
-//	$settings_array[] = array(false,"$feature","$pageid","$featureid","embedaudio","0",false,"0","Embed Audio Links","yes/no");
-//	$settings_array[] = array(false,"$feature","$pageid","$featureid","embedvideo","0",false,"0","Embed Video Links","yes/no");
-//	$settings_array[] = array(false,"$feature","$pageid","$featureid","embedyoutube","0",false,"0","Embed Youtube.com Links","yes/no");
-//	$settings_array[] = array(false,"$feature","$pageid","$featureid","feature_title","Events",false,"Events","Feature Title","text");
-//	$settings_array[] = array(false,"$feature","$pageid","$featureid","upcomingdays","30",false,"30","Show Upcoming Events (days)","text",true,"<=0","Must be greater than 0.");
-//	$settings_array[] = array(false,"$feature","$pageid","$featureid","recentdays","5",false,"5","Recent Events (days)","text",true,"<=0","Must be greater than 0.");
-//	$settings_array[] = array(false,"$feature","$pageid","$featureid","archivedays","30",false,"30","Admin Recent Events (days)","text",true,"<=0","Must be greater than 0.");
-//	$settings_array[] = array(false,"$feature","$pageid","$featureid","showpastevents","1",false,"1","Show Past Events","yes/no");
-//	$settings_array[] = array(false,"$feature","$pageid","$featureid","allowrequests","0","SELECT id as selectvalue,location as selectname FROM events_locations WHERE shared=1","0","Allow Location Reservations","select",null,null,"Select a location to allow event requests on.");
-//    $settings_array[] = array(false,"$feature","$pageid","$featureid","emaillistconfirm","","3","","Request Email List","textarea");
-//    $settings_array[] = array(false,"$feature","$pageid","$featureid","requestapprovalvotes","1",false,"1","Approval Votes Required","text",true,"<=0","Must be greater than 0.  Should be equal or less than the amount of email addresses.");
-//    $settings_array[] = array(false,"$feature","$pageid","$featureid","requestdenyvotes","1",false,"1","Denial Votes Required","text",true,"<=0","Must be greater than 0.  Should be equal or less than the amount of email addresses.");
-//    $settings_array[] = array(false,"$feature","$pageid","$featureid","request_text","","3","","Request Form Text","textarea");
+
 	return $settings_array;
 }
 ?>
