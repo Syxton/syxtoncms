@@ -65,53 +65,51 @@ global $CFG,$ROLES,$ABILITIES;
 	if(is_siteadmin($userid)){ return true; }
 	$roleid = get_user_role($userid,$pageid);
     
-	if($roleid == $ROLES->visitor){
+	if($roleid == $ROLES->visitor) {
 		if(role_has_ability_in_page($ROLES->visitor, $ability, $pageid, $feature, $featureid)){ return true; }
 		return false;
-	}else{
+	} else {
 
-	//$groupallowed = -1; //This will be a group check.  1 if allowed 0 if not allowed -1 if not specified
-	$groupallowed = groups_SQL($userid,$pageid,$ability);
-	$featuregroupallowed = groups_SQL($userid,$pageid,$ability,$feature,$featureid); //This will be a group check.  1 if allowed 0 if not allowed -1 if not specified
-
-	$SQL = "
-	SELECT 1 as allowed FROM roles_ability ra WHERE
-		(
-			1 IN (SELECT allow FROM roles_ability_perfeature_peruser WHERE pageid=$pageid AND userid=$userid AND feature='$feature' AND featureid='$featureid' AND ability='$ability' AND allow=1)
-			OR
-			(
-				1 IN (SELECT allow FROM roles_ability_peruser WHERE userid=$userid AND pageid=$pageid AND ability='$ability' AND allow=1)
-				OR
-				$featuregroupallowed[0]
-				$groupallowed[0]
-				(
-					1 IN (SELECT allow FROM roles_ability_perfeature WHERE pageid=$pageid AND roleid=$roleid AND feature='$feature' AND featureid='$featureid' AND ability='$ability' AND allow=1) 
-					OR
-					(
-						1 IN (SELECT allow FROM roles_ability_perpage WHERE roleid=$roleid AND pageid=$pageid AND ability='$ability' AND allow=1)
-						OR
-						(
-							1 IN (SELECT allow FROM roles_ability WHERE roleid=$roleid AND ability='$ability' AND allow=1)
-						)
-						AND 0 NOT IN (SELECT allow FROM roles_ability_perpage WHERE roleid=$roleid AND pageid=$pageid AND ability='$ability' AND allow=0)
-					)
-					AND 0 NOT IN (SELECT allow FROM roles_ability_perfeature WHERE pageid=$pageid AND roleid=$roleid AND feature='$feature' AND featureid='$featureid' AND ability='$ability' AND allow=0)
-				$groupallowed[1]
-				$featuregroupallowed[1]	
-				)
-				AND 0 NOT IN (SELECT allow FROM roles_ability_peruser WHERE userid=$userid AND pageid=$pageid AND ability='$ability' AND allow=0)
-			)
-			AND 0 NOT IN (SELECT allow FROM roles_ability_perfeature_peruser WHERE pageid=$pageid AND userid=$userid AND feature='$feature' AND featureid='$featureid' AND ability='$ability' AND allow=0)
-		)
-	LIMIT 1
-	";
-
-	if(get_db_row($SQL)) {
-	   return true; 
-    } else {
-        error_log("FAILED SQL: $SQL");
-	}
-	return false;
+    	//$groupallowed = -1; //This will be a group check.  1 if allowed 0 if not allowed -1 if not specified
+    	$groupallowed = groups_SQL($userid,$pageid,$ability);
+    	$featuregroupallowed = groups_SQL($userid,$pageid,$ability,$feature,$featureid); //This will be a group check.  1 if allowed 0 if not allowed -1 if not specified
+    
+    	$SQL = "
+    	SELECT 1 as allowed FROM roles_ability ra WHERE
+    		(
+    			1 IN (SELECT allow FROM roles_ability_perfeature_peruser WHERE pageid=$pageid AND userid=$userid AND feature='$feature' AND featureid='$featureid' AND ability='$ability' AND allow=1)
+    			OR
+    			(
+    				1 IN (SELECT allow FROM roles_ability_peruser WHERE userid=$userid AND pageid=$pageid AND ability='$ability' AND allow=1)
+    				OR
+    				$featuregroupallowed[0]
+    				$groupallowed[0]
+    				(
+    					1 IN (SELECT allow FROM roles_ability_perfeature WHERE pageid=$pageid AND roleid=$roleid AND feature='$feature' AND featureid='$featureid' AND ability='$ability' AND allow=1) 
+    					OR
+    					(
+    						1 IN (SELECT allow FROM roles_ability_perpage WHERE roleid=$roleid AND pageid=$pageid AND ability='$ability' AND allow=1)
+    						OR
+    						(
+    							1 IN (SELECT allow FROM roles_ability WHERE roleid=$roleid AND ability='$ability' AND allow=1)
+    						)
+    						AND 0 NOT IN (SELECT allow FROM roles_ability_perpage WHERE roleid=$roleid AND pageid=$pageid AND ability='$ability' AND allow=0)
+    					)
+    					AND 0 NOT IN (SELECT allow FROM roles_ability_perfeature WHERE pageid=$pageid AND roleid=$roleid AND feature='$feature' AND featureid='$featureid' AND ability='$ability' AND allow=0)
+    				$groupallowed[1]
+    				$featuregroupallowed[1]	
+    				)
+    				AND 0 NOT IN (SELECT allow FROM roles_ability_peruser WHERE userid=$userid AND pageid=$pageid AND ability='$ability' AND allow=0)
+    			)
+    			AND 0 NOT IN (SELECT allow FROM roles_ability_perfeature_peruser WHERE pageid=$pageid AND userid=$userid AND feature='$feature' AND featureid='$featureid' AND ability='$ability' AND allow=0)
+    		)
+    	LIMIT 1
+    	";
+    
+    	if(get_db_row($SQL)) {
+    	   return true; 
+        }
+        return false;
 	}
 }
 
@@ -244,7 +242,6 @@ global $CFG,$ROLES;
     if($results = get_db_result($SQL)){
         return $results;
     } else {
-        error_log("FAILED SQL: $SQL");
         return false;
 	}
 }
@@ -337,9 +334,9 @@ global $CFG,$ROLES;
 	LIMIT 1
 	";
 
-	if(get_db_row($SQL)){ return true;
+	if(get_db_row($SQL)){ 
+        return true;
 	} else {
-        error_log("FAILED SQL: $SQL");
         return false;
 	}
 }
@@ -426,7 +423,6 @@ global $CFG,$ROLES;
     if($results = get_db_result($SQL)){
         return $results;
     } else {
-        error_log("FAILED SQL: $SQL");
         return false;
 	}
 }
