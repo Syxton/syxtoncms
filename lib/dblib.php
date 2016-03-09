@@ -176,7 +176,9 @@ global $CFG, $USER, $PAGE;
 	$userid = is_logged_in() ? $USER->userid : 0;
 	$pageid = isset($PAGE->id) ? $PAGE->id : $CFG->SITEID;
 	$pageid = $pageid == $CFG->SITEID && isset($_GET['pageid']) ? $_GET['pageid'] : $pageid;
-	
+    if(!is_numeric($pageid)) { // Somebody could be playing with this variable.
+        return;
+    }
 	if(!$userid && $description == "Login"){
 		$userid = $info;
 		$info = null;

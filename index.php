@@ -30,6 +30,9 @@ if(isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip,','.
 	//Get page info
     $PAGE = new stdClass();
 	$PAGE->id = isset($_GET['pageid']) ? $_GET['pageid'] : $CFG->SITEID;
+    if(!is_numeric($PAGE->id)) { // Somebody could be playing with this variable.
+        $PAGE->id = $CFG->SITEID;
+    }
     setcookie('pageid', $PAGE->id, get_timestamp() + $CFG->cookietimeout, '/');
 	$PAGE->title = $CFG->sitename; //Title of page
 	$PAGE->themeid = getpagetheme($PAGE->id);
