@@ -783,22 +783,23 @@ global $USER,$CFG;
      '.create_validation_script("login_form" , "login(document.getElementById('username').value,document.getElementById('password').value);").'
 	 <form id="login_form">
 		 <fieldset>
-				<div class="formContainer rowContainer" style="width:100%;">
-					<label for="username" style="width:70px;">Username</label>
-					<input tabindex=1 style="margin-right:0px;width:80%" type="email" id="username" name="username" data-rule-required="true" data-msg-required="'.get_error_message('valid_req_username').'" /><div class="tooltipContainer info">'.get_help("input_username").'</div><br />
+				<div class="rowContainer">
+					<label class="rowTitle" for="username">Username</label>
+					<input tabindex=1 style="margin-right:0px;width:80%" type="email" id="username" name="username" data-rule-required="true" data-msg-required="'.get_error_message('valid_req_username').'" /><div class="tooltipContainer info">'.get_help("input_username").'</div>
+                    <div class="spacer" style="clear: both;"></div>
 				</div>
-				<div class="formContainer rowContainer" style="width:100%;">
-			  		<label for="password" style="width:70px;">Password</label>
-				    <input tabindex=2 style="margin-right:0px;width:80%" type="password" id="password" name="password" data-rule-required="true" data-msg-required="'.get_error_message('valid_req_password').'" /><div class="tooltipContainer info">'.get_help("input_password2").'</div><br />
-		  		</div>
-		</fieldset>  
-        <input name="submit" type="submit" value="Sign In" style="padding:2px;float:left;" />
+				<div class="rowContainer">
+			  		<label class="rowTitle" for="password">Password</label>
+				    <input tabindex=2 style="margin-right:0px;width:80%" type="password" id="password" name="password" data-rule-required="true" data-msg-required="'.get_error_message('valid_req_password').'" /><div class="tooltipContainer info">'.get_help("input_password2").'</div>
+		            <div class="spacer" style="clear: both;"></div>
+                </div>
+		</fieldset>
+        <input name="submit" type="submit" value="Sign In" style="margin-left:5px;" />
 	<span style="float:right;font-size:.9em">';
-    $content .= $newuser ? make_modal_links(array("title"=> "New User","path"=>$CFG->wwwroot."/pages/user.php?action=new_user","width"=>"500")).'<br />' : '';  
-    $content .= make_modal_links(array("title"=> "Forgot password?","path"=>$CFG->wwwroot."/pages/user.php?action=forgot_password","width"=>"500")).' 
+        $content .= $newuser ? make_modal_links(array("title"=> "New User","path"=>$CFG->wwwroot."/pages/user.php?action=new_user","width"=>"500")).'<br />' : '';  
+        $content .= make_modal_links(array("title"=> "Forgot password?","path"=>$CFG->wwwroot."/pages/user.php?action=forgot_password","width"=>"500")).' 
 	</span>			     
 	</form>
-
 	<div id="login_box_error" class="error_text"></div>';
 
 	$returnme = $loginonly ? $content : get_css_box($title, $content);

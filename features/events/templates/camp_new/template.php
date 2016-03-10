@@ -39,11 +39,6 @@ echo '  <html>
         <head>
         <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'scripts/popupcalendar.js" ></script>
         <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'features/events/templates/camp_new/ajax.js"></script>
-        <style>
-         //.rowContainer label {
-         //   line-height: 12px;
-         //}
-        </style>
         </head>
         <body>
 ';    
@@ -65,9 +60,9 @@ echo '<form name="form1" id="form1">
 //Get full event info
 $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
 echo '
-    <div style="width:85%;font-size:15px;text-align:center;font-weight:bold">Camp Wabashi Online Pre-Registration</div>
-    <div style="width:85%;font-size:13px;text-align:center;font-weight:bold">'.$event["name"].'</div>
-    <p style="width:85%;"><a target="policy" href="'.$CFG->wwwroot.'/features/events/templates/camp_new/regpolicy.html">Registration Policy</a></p>';
+    <div style="font-size:15px;text-align:center;font-weight:bold">Camp Wabashi Online Pre-Registration</div>
+    <div style="font-size:13px;text-align:center;font-weight:bold">'.$event["name"].'</div>
+    <p><a target="policy" href="'.$CFG->wwwroot.'/features/events/templates/camp_new/regpolicy.html">Registration Policy</a></p>';
 
 $min_age = get_db_field("setting","settings","type='events_template' AND extra='$eventid' AND setting_name='template_setting_min_age'");
 $max_age = get_db_field("setting","settings","type='events_template' AND extra='$eventid' AND setting_name='template_setting_max_age'");
@@ -134,55 +129,68 @@ if($autofill){
         <input style="border:none;" type="hidden" name="HealthConsentFrom" id="HealthConsentFrom" value="'.date("m/d/Y",$event["event_begin_date"]).'" readonly />
         <input style="border:none;" type="hidden" name="HealthConsentTo" id="HealthConsentTo" value="'.date("m/d/Y",$event["event_end_date"]).'" readonly />
 
-        <style> .calendarDateInput{margin-right:5px !important;}.info{ width: 92%; } div.rowContainer { height: 75px; } .rowContainer label { width:initial;} .rowContainer textarea { width:80%;max-width: 480px; margin-right: 20px; } .rowTitle { width:100% !important; } .rowContainer select { margin-right: 20px; }</style>
+        <style> .calendarDateInput{margin-right:5px !important;}.info{ width: 92%; } .rowContainer textarea { width:80%;max-width: 480px; margin-right: 20px; } .rowContainer select { margin-right: 20px; }</style>
             <input type="hidden" name="Camper_Name" />
 			<div class="rowContainer">
-				<label class="rowTitle" for="email">Email Address *</label><br /><input tabindex="1" type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-msg-required="'.get_error_message('valid_req_email').'" data-msg-email="'.get_error_message('valid_email_invalid').'" /><div class="tooltipContainer info">'.get_help("help_email:events:templates/camp_new").'</div><br />
-			</div>
+				<label class="rowTitle" for="email">Email Address *</label><input tabindex="1" type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-msg-required="'.get_error_message('valid_req_email').'" data-msg-email="'.get_error_message('valid_email_invalid').'" /><div class="tooltipContainer info">'.get_help("help_email:events:templates/camp_new").'</div>
+			    <div class="spacer" style="clear: both;"></div>
+            </div>
 			<div class="rowContainer">
-				<label class="rowTitle" for="Camper_Name_First">Camper First Name *</label><br /><input tabindex="2" type="text" id="Camper_Name_First" name="Camper_Name_First" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="'.get_error_message('valid_req_fname').'" /><div class="tooltipContainer info">'.get_help("input_fname").'</div><br />
-			</div>
+				<label class="rowTitle" for="Camper_Name_First">Camper First Name *</label><input tabindex="2" type="text" id="Camper_Name_First" name="Camper_Name_First" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="'.get_error_message('valid_req_fname').'" /><div class="tooltipContainer info">'.get_help("input_fname").'</div>
+			    <div class="spacer" style="clear: both;"></div>
+            </div>
 			<div class="rowContainer">
-				<label class="rowTitle" for="Camper_Name_Last">Camper Last Name *</label><br /><input tabindex="3" type="text" id="Camper_Name_Last" name="Camper_Name_Last" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="'.get_error_message('valid_req_lname').'" /><div class="tooltipContainer info">'.get_help("input_lname").'</div><br />
-  			</div>
-            <div class="rowContainer">
-				<label class="rowTitle" for="Camper_Name_Middle">Camper Middle Initial</label><br /><input tabindex="4" style="width:50px;" maxlength="1" type="text" id="Camper_Name_Middle" name="Camper_Name_Middle" data-rule-maxlength="1" data-rule-letters="true" /><div class="tooltipContainer info">'.get_help("help_middlei:events:templates/camp_new").'</div><br />
-  			</div>
-            <div class="rowContainer">
-				<label class="rowTitle" for="Camper_Birth_Date">Camper Birthdate *</label><br /><script>DateInput(\'Camper_Birth_Date\',true)</script><div class="tooltipContainer info">'.get_help("help_bday:events:templates/camp_new").'</div>
+				<label class="rowTitle" for="Camper_Name_Last">Camper Last Name *</label><input tabindex="3" type="text" id="Camper_Name_Last" name="Camper_Name_Last" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="'.get_error_message('valid_req_lname').'" /><div class="tooltipContainer info">'.get_help("input_lname").'</div>
+  			    <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
-                <label class="rowTitle" for="Camper_Age">Age during week</label><br /><input style="background-color: lightgray;border: 1px solid grey; width:50px;" type="text" id="Camper_Age" name="Camper_Age" data-rule-required="true" data-rule-number="true" '.$min_age.$max_age.$min_age_error.$max_age_error.' readonly /><div class="tooltipContainer info">'.get_help("help_age:events:templates/camp_new").'</div><br />
+				<label class="rowTitle" for="Camper_Name_Middle">Camper Middle Initial</label><input tabindex="4" style="width:50px;" maxlength="1" type="text" id="Camper_Name_Middle" name="Camper_Name_Middle" data-rule-maxlength="1" data-rule-letters="true" /><div class="tooltipContainer info">'.get_help("help_middlei:events:templates/camp_new").'</div>
+  			    <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
-                <label class="rowTitle" for="Camper_Grade">Last Completed Grade *</label><br /><input tabindex="5" style="width:50px;" type="text" size="2" maxlength="2" id="Camper_Grade" name="Camper_Grade" data-rule-required="true" data-rule-number="true" data-rule-max="12" data-rule-min="0" /><div class="tooltipContainer info">'.get_help("help_grade:events:templates/camp_new").'</div><br />
+				<label class="rowTitle" for="Camper_Birth_Date">Camper Birthdate *</label><script>DateInput(\'Camper_Birth_Date\',true)</script><div class="tooltipContainer info">'.get_help("help_bday:events:templates/camp_new").'</div>
+                <div class="spacer" style="clear: both;"></div>
+            </div>
+            <div class="rowContainer">
+                <label class="rowTitle" for="Camper_Age">Age during week</label><input style="background-color: lightgray;border: 1px solid grey; width:50px;" type="text" id="Camper_Age" name="Camper_Age" data-rule-required="true" data-rule-number="true" '.$min_age.$max_age.$min_age_error.$max_age_error.' readonly /><div class="tooltipContainer info">'.get_help("help_age:events:templates/camp_new").'</div>
+                <div class="spacer" style="clear: both;"></div>
+            </div>
+            <div class="rowContainer">
+                <label class="rowTitle" for="Camper_Grade">Last Completed Grade *</label><input tabindex="5" style="width:50px;" type="text" size="2" maxlength="2" id="Camper_Grade" name="Camper_Grade" data-rule-required="true" data-rule-number="true" data-rule-max="12" data-rule-min="0" /><div class="tooltipContainer info">'.get_help("help_grade:events:templates/camp_new").'</div>
+                <div class="spacer" style="clear: both;"></div>
             </div>            
             <div class="rowContainer">
-                <label class="rowTitle" for="Camper_Gender">Gender *</label><br />
+                <label class="rowTitle" for="Camper_Gender">Gender *</label>
                 <select tabindex="6" id="Camper_Gender" name="Camper_Gender" data-rule-required="true">
                     <option value="">Select One...</option>
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
                 </select>
-                <div class="tooltipContainer info">'.get_help("help_gender:events:templates/camp_new").'</div><br />
+                <div class="tooltipContainer info">'.get_help("help_gender:events:templates/camp_new").'</div>
+                <div class="spacer" style="clear: both;"></div>
             </div> 
   			<div class="rowContainer">
-				<label class="rowTitle" for="Camper_Home_Congregation">Home Congregation</label><br /><input tabindex="7" type="text" id="Camper_Home_Congregation" name="Camper_Home_Congregation" data-rule-nonumbers="true" /><div class="tooltipContainer info">'.get_help("help_congregation:events:templates/camp_new").'</div><br />
-			</div>             
+				<label class="rowTitle" for="Camper_Home_Congregation">Home Congregation</label><input tabindex="7" type="text" id="Camper_Home_Congregation" name="Camper_Home_Congregation" data-rule-nonumbers="true" /><div class="tooltipContainer info">'.get_help("help_congregation:events:templates/camp_new").'</div>
+                <div class="spacer" style="clear: both;"></div>
+            </div>             
 			<div class="rowContainer">
-				<label class="rowTitle" for="Parent_Name">Parent/Guardian *</label><br /><input tabindex="8" type="text" id="Parent_Name" name="Parent_Name" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">'.get_help("help_parent:events:templates/camp_new").'</div><br />
-			</div>
+				<label class="rowTitle" for="Parent_Name">Parent/Guardian *</label><input tabindex="8" type="text" id="Parent_Name" name="Parent_Name" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">'.get_help("help_parent:events:templates/camp_new").'</div>
+                <div class="spacer" style="clear: both;"></div>
+            </div>
 			<div class="rowContainer">
-				<label class="rowTitle" for="Parent_Address_Line1">Mailing Address Line One *</label><br /><input tabindex="9" type="text" id="Parent_Address_Line1" name="Parent_Address_Line1" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("help_address:events:templates/camp_new").'</div><br />
-			</div>            
+				<label class="rowTitle" for="Parent_Address_Line1">Mailing Address Line One *</label><input tabindex="9" type="text" id="Parent_Address_Line1" name="Parent_Address_Line1" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("help_address:events:templates/camp_new").'</div>
+			    <div class="spacer" style="clear: both;"></div>
+            </div>            
 			<div class="rowContainer">
-				<label class="rowTitle" for="Parent_Address_Line2">Mailing Address Line Two</label><br /><input tabindex="10" type="text" id="Parent_Address_Line2" name="Parent_Address_Line2" /><div class="tooltipContainer info">'.get_help("help_address:events:templates/camp_new").'</div><br />
-			</div>         
+				<label class="rowTitle" for="Parent_Address_Line2">Mailing Address Line Two</label><input tabindex="10" type="text" id="Parent_Address_Line2" name="Parent_Address_Line2" /><div class="tooltipContainer info">'.get_help("help_address:events:templates/camp_new").'</div>
+                <div class="spacer" style="clear: both;"></div>
+            </div>         
 			<div class="rowContainer">
-				<label class="rowTitle" for="Parent_Address_City">City *</label><br /><input tabindex="11" type="text" id="Parent_Address_City" name="Parent_Address_City" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">'.get_help("help_city:events:templates/camp_new").'</div><br />
-			</div>             
+				<label class="rowTitle" for="Parent_Address_City">City *</label><input tabindex="11" type="text" id="Parent_Address_City" name="Parent_Address_City" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">'.get_help("help_city:events:templates/camp_new").'</div>
+                <div class="spacer" style="clear: both;"></div>
+            </div>             
 			<div class="rowContainer">
-				<label class="rowTitle" for="Parent_Address_State">State *</label><br />
+				<label class="rowTitle" for="Parent_Address_State">State *</label>
                 <select tabindex="12" id="Parent_Address_State" name="Parent_Address_State" data-rule-required="true">
                     <option value="AL">Alabama
                     <option value="AK">Alaska
@@ -236,22 +244,28 @@ if($autofill){
                     <option value="WI">Wisconsin
                     <option value="WY">Wyoming
                 </select>
-                <div class="tooltipContainer info">'.get_help("help_state:events:templates/camp_new").'</div><br />
-			</div>             
+                <div class="tooltipContainer info">'.get_help("help_state:events:templates/camp_new").'</div>
+                <div class="spacer" style="clear: both;"></div>
+            </div>             
             <div class="rowContainer">
-                <label class="rowTitle" for="Parent_Address_Zipcode">Zipcode *</label><br /><input tabindex="13" type="text" size="5" maxlength="5" id="Parent_Address_Zipcode" name="Parent_Address_Zipcode" data-rule-required="true" data-rule-number="true" data-rule-minlength="5" /><div class="tooltipContainer info">'.get_help("help_zip:events:templates/camp_new").'</div><br />
+                <label class="rowTitle" for="Parent_Address_Zipcode">Zipcode *</label><input tabindex="13" type="text" size="5" maxlength="5" id="Parent_Address_Zipcode" name="Parent_Address_Zipcode" data-rule-required="true" data-rule-number="true" data-rule-minlength="5" /><div class="tooltipContainer info">'.get_help("help_zip:events:templates/camp_new").'</div>
+                <div class="spacer" style="clear: both;"></div>
             </div>            
             <div class="rowContainer">
-                <label class="rowTitle" for="Parent_Phone1">Parent/Guardian Phone 1 *</label><br /><input tabindex="14" type="text" maxlength="22" id="Parent_Phone1" name="Parent_Phone1" data-rule-required="true" data-rule-phone="true" /><div class="tooltipContainer info">'.get_help("help_phone:events:templates/camp_new").'</div><br />
+                <label class="rowTitle" for="Parent_Phone1">Parent/Guardian Phone 1 *</label><input tabindex="14" type="text" maxlength="22" id="Parent_Phone1" name="Parent_Phone1" data-rule-required="true" data-rule-phone="true" /><div class="tooltipContainer info">'.get_help("help_phone:events:templates/camp_new").'</div>
+                <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
-                <label class="rowTitle" for="Parent_Phone2">Parent/Guardian Phone 2 *</label><br /><input tabindex="15" type="text" maxlength="22" id="Parent_Phone2" name="Parent_Phone2" data-rule-required="true" data-rule-phone="true" /><div class="tooltipContainer info">'.get_help("help_phone:events:templates/camp_new").'</div><br />
+                <label class="rowTitle" for="Parent_Phone2">Parent/Guardian Phone 2 *</label><input tabindex="15" type="text" maxlength="22" id="Parent_Phone2" name="Parent_Phone2" data-rule-required="true" data-rule-phone="true" /><div class="tooltipContainer info">'.get_help("help_phone:events:templates/camp_new").'</div>
+                <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
-                <label class="rowTitle" for="Parent_Phone3">Parent/Guardian Phone 3</label><br /><input tabindex="16" type="text" maxlength="22" id="Parent_Phone3" name="Parent_Phone3" data-rule-phone="true" /><div class="tooltipContainer info">'.get_help("help_phone:events:templates/camp_new").'</div><br />
+                <label class="rowTitle" for="Parent_Phone3">Parent/Guardian Phone 3</label><input tabindex="16" type="text" maxlength="22" id="Parent_Phone3" name="Parent_Phone3" data-rule-phone="true" /><div class="tooltipContainer info">'.get_help("help_phone:events:templates/camp_new").'</div>
+                <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
-                <label class="rowTitle" for="Parent_Phone4">Parent/Guardian Phone 4</label><br /><input tabindex="17" type="text" maxlength="22" id="Parent_Phone4" name="Parent_Phone4" data-rule-phone="true" /><div class="tooltipContainer info">'.get_help("help_phone:events:templates/camp_new").'</div><br />
+                <label class="rowTitle" for="Parent_Phone4">Parent/Guardian Phone 4</label><input tabindex="17" type="text" maxlength="22" id="Parent_Phone4" name="Parent_Phone4" data-rule-phone="true" /><div class="tooltipContainer info">'.get_help("help_phone:events:templates/camp_new").'</div>
+                <div class="spacer" style="clear: both;"></div>
             </div>
             <div style="text-align:left;width:85%;font-size:13px;font-weight:bold"> 
               CONSENT FOR MEDICAL TREATMENT OF A MINOR CHILD
@@ -285,68 +299,82 @@ if($autofill){
               </p>
             </div>
            	<div class="rowContainer">
-				<label class="rowTitle" for="HealthMemberName">Member\'s Name *</label><br /><input tabindex="18" type="text" id="HealthMemberName" name="HealthMemberName" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">'.get_help("help_membername:events:templates/camp_new").'</div><br />
+				<label class="rowTitle" for="HealthMemberName">Member\'s Name *</label><input tabindex="18" type="text" id="HealthMemberName" name="HealthMemberName" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">'.get_help("help_membername:events:templates/camp_new").'</div>
+                <div class="spacer" style="clear: both;"></div>
 			</div>
            	<div class="rowContainer">
-				<label class="rowTitle" for="HealthRelationship">Relationship *</label><br /><input tabindex="19" type="text" id="HealthRelationship" name="HealthRelationship" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">'.get_help("help_relationship:events:templates/camp_new").'</div><br />
+				<label class="rowTitle" for="HealthRelationship">Relationship *</label><input tabindex="19" type="text" id="HealthRelationship" name="HealthRelationship" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">'.get_help("help_relationship:events:templates/camp_new").'</div>
+                <div class="spacer" style="clear: both;"></div>
 			</div>
            	<div class="rowContainer">
-				<label class="rowTitle" for="HealthInsurance">Medical Insurance Carrier *</label><br /><input tabindex="20" type="text" id="HealthInsurance" name="HealthInsurance" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("help_carrier:events:templates/camp_new").'</div><br />
-			</div>  
+				<label class="rowTitle" for="HealthInsurance">Medical Insurance Carrier *</label><input tabindex="20" type="text" id="HealthInsurance" name="HealthInsurance" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("help_carrier:events:templates/camp_new").'</div>
+                <div class="spacer" style="clear: both;"></div>
+			</div>
            	<div class="rowContainer">
-				<label class="rowTitle" for="HealthIdentification">Medical Identification Number</label><br /><input tabindex="21" type="text" id="HealthIdentification" name="HealthIdentification" /><div class="tooltipContainer info">'.get_help("help_memberid:events:templates/camp_new").'</div><br />
-			</div> 
+				<label class="rowTitle" for="HealthIdentification">Medical Identification Number</label><input tabindex="21" type="text" id="HealthIdentification" name="HealthIdentification" /><div class="tooltipContainer info">'.get_help("help_memberid:events:templates/camp_new").'</div>
+                <div class="spacer" style="clear: both;"></div>
+			</div>
            	<div class="rowContainer">
-				<label class="rowTitle" for="HealthBenefitCode">Benefit Code</label><br /><input tabindex="22" type="text" id="HealthBenefitCode" name="HealthBenefitCode" /><div class="tooltipContainer info">'.get_help("help_membercode:events:templates/camp_new").'</div><br />
-			</div> 
+				<label class="rowTitle" for="HealthBenefitCode">Benefit Code</label><input tabindex="22" type="text" id="HealthBenefitCode" name="HealthBenefitCode" /><div class="tooltipContainer info">'.get_help("help_membercode:events:templates/camp_new").'</div>
+                <div class="spacer" style="clear: both;"></div>
+			</div>
            	<div class="rowContainer">
-				<label class="rowTitle" for="HealthAccount">Account Number</label><br /><input tabindex="23" type="text" id="HealthAccount" name="HealthAccount" /><div class="tooltipContainer info">'.get_help("help_memberaccount:events:templates/camp_new").'</div><br />
-			</div>  
+				<label class="rowTitle" for="HealthAccount">Account Number</label><input tabindex="23" type="text" id="HealthAccount" name="HealthAccount" /><div class="tooltipContainer info">'.get_help("help_memberaccount:events:templates/camp_new").'</div>
+                <div class="spacer" style="clear: both;"></div>
+			</div>
             <div class="rowContainer">
-				<label class="rowTitle" for="HealthExpirationDate">Expiration Date</label><br /><script>DateInput(\'HealthExpirationDate\',true)</script><div class="tooltipContainer info">'.get_help("help_healthto:events:templates/camp_new").'</div>
-  			</div>            
+				<label class="rowTitle" for="HealthExpirationDate">Expiration Date</label><script>DateInput(\'HealthExpirationDate\',true)</script><div class="tooltipContainer info">'.get_help("help_healthto:events:templates/camp_new").'</div>
+                <div class="spacer" style="clear: both;"></div>
+  			</div>
            	<div class="rowContainer" style="height: auto;">
-				<label class="rowTitle" for="HealthHistory">Medical History *</label><br />
+				<label class="rowTitle" for="HealthHistory">Medical History *</label>
                 <textarea tabindex="24" id="HealthHistory" name="HealthHistory" rows="8" cols="60" data-rule-required="true">-none-</textarea>
-                <div class="tooltipContainer info">'.get_help("help_history:events:templates/camp_new").'</div><br />
-			</div><br />
+                <div class="tooltipContainer info">'.get_help("help_history:events:templates/camp_new").'</div>
+                <div class="spacer" style="clear: both;"></div>
+			</div>
            	<div class="rowContainer" style="height: auto;">
-				<label class="rowTitle" for="HealthAllergies">Allergies *</label><br />
+				<label class="rowTitle" for="HealthAllergies">Allergies *</label>
                 <textarea tabindex="25" id="HealthAllergies" name="HealthAllergies" rows="8" cols="60" data-rule-required="true">-none-</textarea>
-                <div class="tooltipContainer info">'.get_help("help_alergies:events:templates/camp_new").'</div><br />
-			</div><br />           
+                <div class="tooltipContainer info">'.get_help("help_alergies:events:templates/camp_new").'</div>
+                <div class="spacer" style="clear: both;"></div>
+			</div>
            	<div class="rowContainer" style="height: auto;">
-				<label class="rowTitle" for="HealthExisting">Chronic/existing diseases/medical issues *</label><br />
+				<label class="rowTitle" for="HealthExisting">Chronic/existing diseases/medical issues *</label>
                 <textarea tabindex="26" id="HealthExisting" name="HealthExisting" rows="8" cols="60" data-rule-required="true">-none-</textarea>
-                <div class="tooltipContainer info">'.get_help("help_existing:events:templates/camp_new").'</div><br />
-			</div><br /> 
+                <div class="tooltipContainer info">'.get_help("help_existing:events:templates/camp_new").'</div>
+                <div class="spacer" style="clear: both;"></div>
+			</div>
            	<div class="rowContainer" style="height: auto;">
-				<label class="rowTitle" for="HealthMedicines">Medicines *</label><br />
+				<label class="rowTitle" for="HealthMedicines">Medicines *</label>
                 <textarea tabindex="27" id="HealthMedicines" name="HealthMedicines" rows="8" cols="60" data-rule-required="true">-none-</textarea>
-                <div class="tooltipContainer info">'.get_help("help_meds:events:templates/camp_new").'</div><br />
-			</div><br />             
+                <div class="tooltipContainer info">'.get_help("help_meds:events:templates/camp_new").'</div>
+                <div class="spacer" style="clear: both;"></div>
+			</div>           
             <div class="rowContainer">
-				<label class="rowTitle" for="HealthTetanusDate">Date of last Tetanus injection/booster *</label><br /><script>DateInput(\'HealthTetanusDate\',true)</script><div class="tooltipContainer info">'.get_help("help_tetanus:events:templates/camp_new").'</div>
-  			</div>'; 
+				<label class="rowTitle" for="HealthTetanusDate">Date of last Tetanus injection/booster *</label><script>DateInput(\'HealthTetanusDate\',true)</script><div class="tooltipContainer info">'.get_help("help_tetanus:events:templates/camp_new").'</div>
+  			    <div class="spacer" style="clear: both;"></div>
+            </div>'; 
 }
 
 echo '
     <div class="rowContainer">
-        <label class="rowTitle" for="Camp_Fee">Pay With Application</label><br />
+        <label class="rowTitle" for="Camp_Fee">Pay With Application</label>
         '.make_fee_options($event['fee_min'],$event['fee_full'],"payment_amount",'onchange="updateTotal();" onclick="updateTotal();"',$event['sale_end'],$event['sale_fee']).'
-        <div class="tooltipContainer info">'.get_help("help_paywithapp:events:templates/camp_new").'</div><br />
+        <div class="tooltipContainer info">'.get_help("help_paywithapp:events:templates/camp_new").'</div>
+        <div class="spacer" style="clear: both;"></div>
     </div>';
     
 if($pictures){
     if($pictures_price > 0){
         echo '
             <div class="rowContainer">
-                <label class="rowTitle" for="Camper_Picture">Camp Picture</label><br />
+                <label class="rowTitle" for="Camper_Picture">Camp Picture</label>
                 <select tabindex="28" style="width:auto;" name="Camper_Picture" id="Camper_Picture" onchange="updateTotal();" onclick="updateTotal();">
                     <option value="0" selected>No</option>
                     <option value="'.$pictures_price.'">Yes</option>
                 </select>
-                <div class="tooltipContainer info">'.get_help("help_pictures:events:templates/camp_new").' ($'.$pictures_price.'.00 for 8x10 color picture of all campers and staff)</div><br />
+                <div class="tooltipContainer info">'.get_help("help_pictures:events:templates/camp_new").' ($'.$pictures_price.'.00 for 8x10 color picture of all campers and staff)</div>
+                <div class="spacer" style="clear: both;"></div>
             </div>';        
     }else{
         echo '<input type="hidden" size="5" maxlength="5" id="Camper_Picture" name="Camper_Picture" value="1" readonly />';        
@@ -358,7 +386,7 @@ if($shirt){
     if($shirt_price > 0){
         echo '
         <div class="rowContainer">
-            <label class="rowTitle" for="Camper_Shirt">Shirt</label><br />
+            <label class="rowTitle" for="Camper_Shirt">Shirt</label>
             <input type="hidden" id="Camper_Shirt" name="Camper_Shirt" value="1" readonly />
             <input type="hidden" id="Camper_Shirt_Price" name="Camper_Shirt_Price" value="'.$shirt_price.'" readonly />
             <select tabindex="29" style="width:auto;" name="Camper_Shirt_Size" id="Camper_Shirt_Size" onchange="updateTotal();" onclick="updateTotal();">
@@ -368,13 +396,14 @@ if($shirt){
                 }
         echo '        
             </select>
-            <div class="tooltipContainer info">'.get_help("help_shirt:events:templates/camp_new").' ($'.$shirt_price.'.00 for camp shirt)</div><br />
+            <div class="tooltipContainer info">'.get_help("help_shirt:events:templates/camp_new").' ($'.$shirt_price.'.00 for camp shirt)</div>
+            <div class="spacer" style="clear: both;"></div>
         </div>
         ';        
     }else{
         echo '
         <div class="rowContainer">
-            <label class="rowTitle" for="Camper_Shirt">Shirt</label><br />
+            <label class="rowTitle" for="Camper_Shirt">Shirt</label>
             <input type="hidden" id="Camper_Shirt" name="Camper_Shirt" value="1" readonly />
             <input type="hidden" id="Camper_Shirt_Price" name="Camper_Shirt_Price" value="'.$shirt_price.'" readonly />
             <select tabindex="30" style="width:auto;" name="Camper_Shirt_Size" id="Camper_Shirt_Size" onchange="updateTotal();" onclick="updateTotal();">';
@@ -383,33 +412,35 @@ if($shirt){
             }
             echo '
             </select>
-            <div class="tooltipContainer info">'.get_help("help_shirt_size:events:templates/camp_new").' (no extra charge)</div><br />
+            <div class="tooltipContainer info">'.get_help("help_shirt_size:events:templates/camp_new").' (no extra charge)</div>
+            <div class="spacer" style="clear: both;"></div>
         </div>';        
     }
 }else{ echo '<input type="hidden" id="Camper_Shirt" name="Camper_Shirt_Size" value="0" readonly /><input type="hidden" id="Camper_Shirt_Price" name="Camper_Shirt_Price" value="0" readonly />'; }
 
 echo '
     <div class="rowContainer">
-        <label class="rowTitle" for="owed">Total:</label><br />
+        <label class="rowTitle" for="owed">Total:</label>
         <span style="display:inline-block;width:12px;">$</span><input style="float:none;width:100px;border:none;" name="owed" id="owed" size="5" value="'.$event['fee_min'].'" type="text" readonly />
+        <div class="spacer" style="clear: both;"></div>
     </div>';
 
 if(!$show_again){
     echo '
         <div class="rowContainer">
-            <label class="rowTitle" for="payment_method">Method of Payment *:</label><br />
+            <label class="rowTitle" for="payment_method">Method of Payment *:</label>
             <select tabindex="31" id="payment_method" name="payment_method" size="1" onchange="updateMessage();" onclick="updateMessage();" data-rule-required="true">
                 <option value="">Choose One</option>
                 <option value="PayPal">PayPal</option>
                 <option value="Check/Money Order">Check or Money Order</option>
             </select>
-            <br />
+            <div class="spacer" style="clear: both;"></div>
         </div>
         <div class="rowContainer" style="height: auto;">
-            <label for="payment_note">Notes:</label><br />
+            <label for="payment_note">Notes:</label>
             <textarea name="payment_note" id="payment_note" rows="8" cols="60">After you select a payment method, you can put a message here.'."\n\n".'Do you have a cabin preference or cabin-mates?'."\n".'Do you have a question for the director?
             </textarea>
-            <br />
+            <div class="spacer" style="clear: both;"></div>
         </div>';
 }else{
 	echo '<table><tr><td></td><td><input type="hidden" name="payment_method" id="payment_method" value="'.$payment_method.'" /></td></tr><table>';

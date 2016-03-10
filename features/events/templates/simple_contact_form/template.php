@@ -59,8 +59,8 @@ echo '<form name="form1" id="form1">
 //Get full event info
 $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
 echo '
-    <div style="width:85%;font-size:15px;text-align:center;font-weight:bold">Online Registration</div>
-    <div style="width:85%;font-size:13px;text-align:center;font-weight:bold">'.$event["name"].'</div>';
+    <div style="font-size:15px;text-align:center;font-weight:bold">Online Registration</div>
+    <div style="font-size:13px;text-align:center;font-weight:bold">'.$event["name"].'</div><br />';
   
 if($autofill){
  echo '     <strong>Registrant: '.$Name.'</strong>
@@ -81,28 +81,34 @@ if($autofill){
         <input style="border:none;" type="hidden" name="HealthConsentFrom" id="HealthConsentFrom" value="'.date("m/d/Y",$event["event_begin_date"]).'" readonly />
         <input style="border:none;" type="hidden" name="HealthConsentTo" id="HealthConsentTo" value="'.date("m/d/Y",$event["event_end_date"]).'" readonly />
 
-        <style> .calendarDateInput{margin-right:5px !important;}.info{ width: 92%; } div.rowContainer { height: 75px; } .rowContainer label :not(.valid){ width:initial;} .rowContainer textarea { width:80%;max-width: 480px; margin-right: 20px; } .rowTitle { width:100% !important; } .rowContainer select { margin-right: 20px; }</style>
+        <style> .calendarDateInput{margin-right:5px !important;}.info{ width: 92%; } .rowContainer textarea { width:80%;max-width: 480px; margin-right: 20px; } .rowContainer select { margin-right: 20px; }</style>
             <input type="hidden" name="Name" />
 			<div class="rowContainer">
-				<label class="rowTitle" for="email">Email Address *</label><br /><input tabindex="1" type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-msg-required="'.get_error_message('valid_req_email').'" data-msg-email="'.get_error_message('valid_email_invalid').'" /><div class="tooltipContainer info">'.get_help("help_email:events:templates/simple_contact_form").'</div><br />
-			</div>
+				<label class="rowTitle" for="email">Email Address *</label><input tabindex="1" type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-msg-required="'.get_error_message('valid_req_email').'" data-msg-email="'.get_error_message('valid_email_invalid').'" /><div class="tooltipContainer info">'.get_help("help_email:events:templates/simple_contact_form").'</div>
+			    <div class="spacer" style="clear: both;"></div>
+            </div>
 			<div class="rowContainer">
-				<label class="rowTitle" for="Name_First">First Name *</label><br /><input tabindex="2" type="text" id="Name_First" name="Name_First" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="'.get_error_message('valid_req_fname').'" /><div class="tooltipContainer info">'.get_help("input_fname").'</div><br />
-			</div>
+				<label class="rowTitle" for="Name_First">First Name *</label><input tabindex="2" type="text" id="Name_First" name="Name_First" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="'.get_error_message('valid_req_fname').'" /><div class="tooltipContainer info">'.get_help("input_fname").'</div>
+			    <div class="spacer" style="clear: both;"></div>
+            </div>
 			<div class="rowContainer">
-				<label class="rowTitle" for="Name_Last">Last Name *</label><br /><input tabindex="3" type="text" id="Name_Last" name="Name_Last" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="'.get_error_message('valid_req_lname').'" /><div class="tooltipContainer info">'.get_help("input_lname").'</div><br />
-  			</div>
+				<label class="rowTitle" for="Name_Last">Last Name *</label><input tabindex="3" type="text" id="Name_Last" name="Name_Last" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="'.get_error_message('valid_req_lname').'" /><div class="tooltipContainer info">'.get_help("input_lname").'</div>
+  			    <div class="spacer" style="clear: both;"></div>
+            </div>
 			<div class="rowContainer">
-				<label class="rowTitle" for="Address_Line1">Mailing Address Line One *</label><br /><input tabindex="9" type="text" id="Address_Line1" name="Address_Line1" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("help_address:events:templates/simple_contact_form").'</div><br />
+				<label class="rowTitle" for="Address_Line1">Mailing Address Line One *</label><input tabindex="9" type="text" id="Address_Line1" name="Address_Line1" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("help_address:events:templates/simple_contact_form").'</div>
+                <div class="spacer" style="clear: both;"></div>
 			</div>            
 			<div class="rowContainer">
-				<label class="rowTitle" for="Address_Line2">Mailing Address Line Two</label><br /><input tabindex="10" type="text" id="Address_Line2" name="Address_Line2" /><div class="tooltipContainer info">'.get_help("help_address:events:templates/simple_contact_form").'</div><br />
+				<label class="rowTitle" for="Address_Line2">Mailing Address Line Two</label><input tabindex="10" type="text" id="Address_Line2" name="Address_Line2" /><div class="tooltipContainer info">'.get_help("help_address:events:templates/simple_contact_form").'</div>
+                <div class="spacer" style="clear: both;"></div>
 			</div>         
 			<div class="rowContainer">
-				<label class="rowTitle" for="Address_City">City *</label><br /><input tabindex="11" type="text" id="Address_City" name="Address_City" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">'.get_help("help_city:events:templates/simple_contact_form").'</div><br />
+				<label class="rowTitle" for="Address_City">City *</label><input tabindex="11" type="text" id="Address_City" name="Address_City" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">'.get_help("help_city:events:templates/simple_contact_form").'</div>
+                <div class="spacer" style="clear: both;"></div>
 			</div>             
 			<div class="rowContainer">
-				<label class="rowTitle" for="Address_State">State *</label><br />
+				<label class="rowTitle" for="Address_State">State *</label>
                 <select tabindex="12" id="Address_State" name="Address_State" data-rule-required="true">
                     <option value="AL">Alabama
                     <option value="AK">Alaska
@@ -156,35 +162,40 @@ if($autofill){
                     <option value="WI">Wisconsin
                     <option value="WY">Wyoming
                 </select>
-                <div class="tooltipContainer info">'.get_help("help_state:events:templates/simple_contact_form").'</div><br />
+                <div class="tooltipContainer info">'.get_help("help_state:events:templates/simple_contact_form").'</div>
+                <div class="spacer" style="clear: both;"></div>
 			</div>             
             <div class="rowContainer">
-                <label class="rowTitle" for="Address_Zipcode">Zipcode *</label><br /><input tabindex="13" type="text" size="5" maxlength="5" id="Address_Zipcode" name="Address_Zipcode" data-rule-required="true" data-rule-number="true" data-rule-minlength="5" /><div class="tooltipContainer info">'.get_help("help_zip:events:templates/simple_contact_form").'</div><br />
+                <label class="rowTitle" for="Address_Zipcode">Zipcode *</label><input tabindex="13" type="text" size="5" maxlength="5" id="Address_Zipcode" name="Address_Zipcode" data-rule-required="true" data-rule-number="true" data-rule-minlength="5" /><div class="tooltipContainer info">'.get_help("help_zip:events:templates/simple_contact_form").'</div>
+                <div class="spacer" style="clear: both;"></div>
             </div>            
             <div class="rowContainer">
-                <label class="rowTitle" for="Phone">Phone</label><br /><input tabindex="14" type="text" maxlength="22" id="Phone" name="Phone" data-rule-phone="true" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("help_phone:events:templates/simple_contact_form").'</div><br />
+                <label class="rowTitle" for="Phone">Phone *</label><input tabindex="14" type="text" maxlength="22" id="Phone" name="Phone" data-rule-phone="true" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("help_phone:events:templates/simple_contact_form").'</div>
+                <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
-                <label class="rowTitle" for="Overnight">Overnight Stay</label><br />
+                <label class="rowTitle" for="Overnight">Overnight Stay *</label>
                 <select tabindex="6" id="Overnight" name="Overnight" data-rule-required="true">
                     <option value="">Select One...</option>
                     <option value="Yes">Yes</option>
                     <option value="No">No</option>
                 </select>
-                <div class="tooltipContainer info">'.get_help("help_overnight:events:templates/simple_contact_form").'</div><br />
+                <div class="tooltipContainer info">'.get_help("help_overnight:events:templates/simple_contact_form").'</div>
+                <div class="spacer" style="clear: both;"></div>
             </div> '; 
 }
 
 echo '
     <div class="rowContainer">
-        <label class="rowTitle" for="Camp_Fee">Pay With Application</label><br />
+        <label class="rowTitle" for="Camp_Fee">Pay With Application</label>
         '.make_fee_options($event['fee_min'],$event['fee_full'],"payment_amount",'onchange="updateTotal();" onclick="updateTotal();"',$event['sale_end'],$event['sale_fee']).'
-        <div class="tooltipContainer info">'.get_help("help_paywithapp:events:templates/simple_contact_form").'</div><br />
+        <div class="tooltipContainer info">'.get_help("help_paywithapp:events:templates/simple_contact_form").'</div>
+        <div class="spacer" style="clear: both;"></div>
     </div>';
 
 echo '
     <div class="rowContainer">
-        <label class="rowTitle" for="owed">Total:</label><br />
+        <label class="rowTitle" for="owed">Total:</label>
         <span style="display:inline-block;width:12px;">$</span><input style="float:none;width:100px;border:none;" name="owed" id="owed" size="5" value="'.$event['fee_min'].'" type="text" readonly />
     </div>';
 
