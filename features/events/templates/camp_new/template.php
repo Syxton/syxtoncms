@@ -437,7 +437,7 @@ if(!$show_again){
             <div class="spacer" style="clear: both;"></div>
         </div>
         <div class="rowContainer" style="height: auto;">
-            <label for="payment_note">Notes:</label>
+            <label class="rowTitle" for="payment_note">Notes:</label>
             <textarea name="payment_note" id="payment_note" rows="8" cols="60">After you select a payment method, you can put a message here.'."\n\n".'Do you have a cabin preference or cabin-mates?'."\n".'Do you have a question for the director?
             </textarea>
             <div class="spacer" style="clear: both;"></div>
