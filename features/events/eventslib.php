@@ -3,8 +3,8 @@
 * eventslib.php - Events function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 1/28/2016
-* Revision: 2.8.3
+* Date: 3/10/2016
+* Revision: 2.8.4
 ***************************************************************************/
 
 if(!isset($LIBHEADER)){ if(file_exists('./lib/header.php')){ include('./lib/header.php'); }elseif(file_exists('../lib/header.php')) { include('../lib/header.php'); }elseif(file_exists('../../lib/header.php')){ include('../../lib/header.php'); }}
@@ -404,21 +404,22 @@ global $CFG, $USER;
             $limit = $event['max_users'] == "0" ? "&#8734;" : $event['max_users'];
             $left = $event['max_users'] == "0" ? "&#8734;" : '(' . ($limit - $regcount) . ' out of ' . $limit . ' openings left)';
             $featureid = get_db_field("featureid","pages_features","pageid='$pageid' AND feature='events'");
-            
-            //Export registrations
+
+            // Export registrations
             if(user_has_ability_in_page($USER->userid, "exportcsv", $pageid,"events",$featureid)){
                 $returnme .= '<a href="javascript:ajaxapi(\'/features/events/events_ajax.php\',\'export_csv\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '\',function() { run_this();});"><img src="' . $CFG->wwwroot . '/images/csv.png" title="Export ' . $regcount . '/' . $limit . ' Registrations" alt="Export ' . $regcount . ' Registrations" /></a>';
-            } 
-            
-            //Payment Area
-            if($event["paypal"] != ""){
-                $returnme .= ' <a title="Event Payment" href="./features/events/events.php?action=pay&amp;pageid=' . $pageid . '&amp;eventid=' . $event['eventid'] . '"> <img src="' . $CFG->wwwroot . '/images/pay.png" title="Make Payment" alt="Make Payment" /></a>';
-            } 
-            
-            //Registration button
+            }
+
+            // Registration button
             if(user_has_ability_in_page($USER->userid, "signupforevents", $pageid, "events", $featureid)){
-                $returnme .= make_modal_links(array("title"=> "Register $left","path"=>$CFG->wwwroot."/features/events/events.php?action=show_registration&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","width"=>"800","height"=>"600","image"=>$CFG->wwwroot . "/images/register.png"));
-            } 
+                $returnme .= make_modal_links(array("title"=> "Register $left","path"=>$CFG->wwwroot."/features/events/events.php?action=show_registration&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","validate"=>"true","width"=>"630","height"=>"95%","confirmexit"=>"true","image"=>$CFG->wwwroot . "/images/register.png"));
+            }
+
+            // Payment Area
+            if($event["paypal"] != ""){
+                $returnme .= make_modal_links(array("title"=> "Event Payment","path"=>$CFG->wwwroot.'/features/events/events.php?action=pay&amp;modal=1&amp;pageid='.$pageid.'&amp;eventid=' . $event['eventid'],"width"=>"95%","height"=>"95%","image"=>$CFG->wwwroot . "/images/pay.png"));
+            }
+
             $returnme .= '</td></tr></table>';
         }
     }
