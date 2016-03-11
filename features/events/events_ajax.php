@@ -2536,104 +2536,111 @@ function event_save_staffapp(){
 global $CFG,$MYVARS,$USER;
     $userid = dbescape($USER->userid);
     $staffid = empty($MYVARS->GET["staffid"]) ? false : dbescape($MYVARS->GET["staffid"]);
-    $pageid = $_COOKIE["pageid"];
     
-    $name = dbescape($MYVARS->GET["name"]);
-    $phone = dbescape($MYVARS->GET["phone"]);
-    $dateofbirth = dbescape(strtotime($MYVARS->GET["dateofbirth"]));
-    $address = dbescape($MYVARS->GET["address"]);
-    $agerange = dbescape($MYVARS->GET["agerange"]);
-    $cocmember = dbescape($MYVARS->GET["cocmember"]);
-    $congregation = dbescape($MYVARS->GET["congregation"]);
-    $priorwork = dbescape($MYVARS->GET["priorwork"]);
-    $q1_1 = dbescape($MYVARS->GET["q1_1"]);
-    $q1_2 = dbescape($MYVARS->GET["q1_2"]);
-    $q1_3 = dbescape($MYVARS->GET["q1_3"]);
-    $q2_1 = dbescape($MYVARS->GET["q2_1"]);
-    $q2_2 = dbescape($MYVARS->GET["q2_2"]);
-    $q2_3 = dbescape($MYVARS->GET["q2_3"]);
-    $parentalconsent = dbescape($MYVARS->GET["parentalconsent"]);
-    $parentalconsentsig = dbescape($MYVARS->GET["parentalconsentsig"]);
-    $workerconsent = dbescape($MYVARS->GET["workerconsent"]);
-    $workerconsentsig = dbescape($MYVARS->GET["workerconsentsig"]);
-    $workerconsentdate = dbescape(strtotime($MYVARS->GET["workerconsentdate"]));
+    // Check for valid pageid
+    $pageid = !empty($_COOKIE["pageid"]) ? $_COOKIE["pageid"] : (!empty($_GET["pageid"]) && is_numeric($_GET["pageid"]) ? $_GET["pageid"] : false);
 
-    $ref1name = dbescape($MYVARS->GET["ref1name"]);
-    $ref1relationship = dbescape($MYVARS->GET["ref1relationship"]);
-    $ref1phone = dbescape($MYVARS->GET["ref1phone"]);
-
-    $ref2name = dbescape($MYVARS->GET["ref2name"]);
-    $ref2relationship = dbescape($MYVARS->GET["ref2relationship"]);
-    $ref2phone = dbescape($MYVARS->GET["ref2phone"]);
-
-    $ref3name = dbescape($MYVARS->GET["ref3name"]);
-    $ref3relationship = dbescape($MYVARS->GET["ref3relationship"]);
-    $ref3phone = dbescape($MYVARS->GET["ref3phone"]);
+    if(!empty($pageid)) {
+        $name = dbescape($MYVARS->GET["name"]);
+        $phone = dbescape($MYVARS->GET["phone"]);
+        $dateofbirth = dbescape(strtotime($MYVARS->GET["dateofbirth"]));
+        $address = dbescape($MYVARS->GET["address"]);
+        $agerange = dbescape($MYVARS->GET["agerange"]);
+        $cocmember = dbescape($MYVARS->GET["cocmember"]);
+        $congregation = dbescape($MYVARS->GET["congregation"]);
+        $priorwork = dbescape($MYVARS->GET["priorwork"]);
+        $q1_1 = dbescape($MYVARS->GET["q1_1"]);
+        $q1_2 = dbescape($MYVARS->GET["q1_2"]);
+        $q1_3 = dbescape($MYVARS->GET["q1_3"]);
+        $q2_1 = dbescape($MYVARS->GET["q2_1"]);
+        $q2_2 = dbescape($MYVARS->GET["q2_2"]);
+        $q2_3 = dbescape($MYVARS->GET["q2_3"]);
+        $parentalconsent = dbescape($MYVARS->GET["parentalconsent"]);
+        $parentalconsentsig = dbescape($MYVARS->GET["parentalconsentsig"]);
+        $workerconsent = dbescape($MYVARS->GET["workerconsent"]);
+        $workerconsentsig = dbescape($MYVARS->GET["workerconsentsig"]);
+        $workerconsentdate = dbescape(strtotime($MYVARS->GET["workerconsentdate"]));
     
-    if(!empty($staffid)) {
-        $SQL = "UPDATE events_staff SET userid='$userid',pageid='$pageid',name='$name',phone='$phone',dateofbirth='$dateofbirth',address='$address',
+        $ref1name = dbescape($MYVARS->GET["ref1name"]);
+        $ref1relationship = dbescape($MYVARS->GET["ref1relationship"]);
+        $ref1phone = dbescape($MYVARS->GET["ref1phone"]);
+    
+        $ref2name = dbescape($MYVARS->GET["ref2name"]);
+        $ref2relationship = dbescape($MYVARS->GET["ref2relationship"]);
+        $ref2phone = dbescape($MYVARS->GET["ref2phone"]);
+    
+        $ref3name = dbescape($MYVARS->GET["ref3name"]);
+        $ref3relationship = dbescape($MYVARS->GET["ref3relationship"]);
+        $ref3phone = dbescape($MYVARS->GET["ref3phone"]);
+        
+        if(!empty($staffid)) {
+            $SQL = "UPDATE events_staff SET userid='$userid',pageid='$pageid',name='$name',phone='$phone',dateofbirth='$dateofbirth',address='$address',
+                        agerange='$agerange',cocmember='$cocmember',congregation='$congregation',priorwork='$priorwork',
+                        q1_1='$q1_1',q1_2='$q1_2',q1_3='$q1_3',q2_1='$q2_1',q2_2='$q2_2',q2_3='$q2_3',
+                        parentalconsent='$parentalconsent',parentalconsentsig='$parentalconsentsig',
+                        workerconsent='$workerconsent',workerconsentsig='$workerconsentsig',workerconsentdate='$workerconsentdate',
+                        ref1name='$ref1name',ref1relationship='$ref1relationship',ref1phone='$ref1phone',
+                        ref2name='$ref2name',ref2relationship='$ref2relationship',ref2phone='$ref2phone',
+                        ref3name='$ref3name',ref3relationship='$ref3relationship',ref3phone='$ref3phone'
+                        WHERE staffid='$staffid'";
+            $success = execute_db_sql($SQL);
+            $message = "Application Updated";
+        } else {
+            $SQL = "INSERT INTO events_staff 
+                        (userid,pageid,name,phone,dateofbirth,address,agerange,cocmember,congregation,priorwork,q1_1,q1_2,q1_3,q2_1,q2_2,q2_3,parentalconsent,parentalconsentsig,workerconsent,workerconsentsig,workerconsentdate,ref1name,ref1relationship,ref1phone,ref2name,ref2relationship,ref2phone,ref3name,ref3relationship,ref3phone,bgcheckpass,bgcheckpassdate) 
+                        VALUES('$userid','$pageid','$name','$phone','$dateofbirth','$address','$agerange','$cocmember','$congregation','$priorwork','$q1_1','$q1_2','$q1_3','$q2_1','$q2_2','$q2_3','$parentalconsent','$parentalconsentsig','$workerconsent','$workerconsentsig','$workerconsentdate','$ref1name','$ref1relationship','$ref1phone','$ref2name','$ref2relationship','$ref2phone','$ref3name','$ref3relationship','$ref3phone','',0)";    
+            $success = execute_db_sql($SQL);
+            $message = "Application Complete";
+        }
+        		  
+        //Save the request
+        if($success){
+            $staffid = !empty($staffid) ? $staffid : $success;
+            $staff = get_db_row("SELECT * FROM events_staff WHERE staffid='$staffid'");
+    		
+            if(get_db_row("SELECT * FROM events_staff_archive WHERE staffid='$staffid' AND pageid='$pageid' AND year='".date("Y")."'")){
+                $SQL = "UPDATE events_staff_archive SET name='$name',phone='$phone',dateofbirth='$dateofbirth',address='$address',
                     agerange='$agerange',cocmember='$cocmember',congregation='$congregation',priorwork='$priorwork',
                     q1_1='$q1_1',q1_2='$q1_2',q1_3='$q1_3',q2_1='$q2_1',q2_2='$q2_2',q2_3='$q2_3',
                     parentalconsent='$parentalconsent',parentalconsentsig='$parentalconsentsig',
                     workerconsent='$workerconsent',workerconsentsig='$workerconsentsig',workerconsentdate='$workerconsentdate',
                     ref1name='$ref1name',ref1relationship='$ref1relationship',ref1phone='$ref1phone',
                     ref2name='$ref2name',ref2relationship='$ref2relationship',ref2phone='$ref2phone',
-                    ref3name='$ref3name',ref3relationship='$ref3relationship',ref3phone='$ref3phone'
-                    WHERE staffid='$staffid'";
-        $success = execute_db_sql($SQL);
-        $message = "Application Updated";
-    } else {
-        $SQL = "INSERT INTO events_staff 
-                    (userid,pageid,name,phone,dateofbirth,address,agerange,cocmember,congregation,priorwork,q1_1,q1_2,q1_3,q2_1,q2_2,q2_3,parentalconsent,parentalconsentsig,workerconsent,workerconsentsig,workerconsentdate,ref1name,ref1relationship,ref1phone,ref2name,ref2relationship,ref2phone,ref3name,ref3relationship,ref3phone,bgcheckpass,bgcheckpassdate) 
-                    VALUES('$userid','$pageid','$name','$phone','$dateofbirth','$address','$agerange','$cocmember','$congregation','$priorwork','$q1_1','$q1_2','$q1_3','$q2_1','$q2_2','$q2_3','$parentalconsent','$parentalconsentsig','$workerconsent','$workerconsentsig','$workerconsentdate','$ref1name','$ref1relationship','$ref1phone','$ref2name','$ref2relationship','$ref2phone','$ref3name','$ref3relationship','$ref3phone','',0)";    
-        $success = execute_db_sql($SQL);
-        $message = "Application Complete";
-    }
-    		  
-    //Save the request
-    if($success){
-        $staffid = !empty($staffid) ? $staffid : $success;
-        $staff = get_db_row("SELECT * FROM events_staff WHERE staffid='$staffid'");
-		
-        if(get_db_row("SELECT * FROM events_staff_archive WHERE staffid='$staffid' AND pageid='$pageid' AND year='".date("Y")."'")){
-            $SQL = "UPDATE events_staff_archive SET name='$name',phone='$phone',dateofbirth='$dateofbirth',address='$address',
-                agerange='$agerange',cocmember='$cocmember',congregation='$congregation',priorwork='$priorwork',
-                q1_1='$q1_1',q1_2='$q1_2',q1_3='$q1_3',q2_1='$q2_1',q2_2='$q2_2',q2_3='$q2_3',
-                parentalconsent='$parentalconsent',parentalconsentsig='$parentalconsentsig',
-                workerconsent='$workerconsent',workerconsentsig='$workerconsentsig',workerconsentdate='$workerconsentdate',
-                ref1name='$ref1name',ref1relationship='$ref1relationship',ref1phone='$ref1phone',
-                ref2name='$ref2name',ref2relationship='$ref2relationship',ref2phone='$ref2phone',
-                ref3name='$ref3name',ref3relationship='$ref3relationship',ref3phone='$ref3phone',
-                bgcheckpass='".$staff["bgcheckpass"]."',bgcheckpassdate='".$staff["bgcheckpassdate"]."'
-                WHERE staffid='$staffid' AND year='".date("Y")."' AND pageid='$pageid'";
-            execute_db_sql($SQL);    
+                    ref3name='$ref3name',ref3relationship='$ref3relationship',ref3phone='$ref3phone',
+                    bgcheckpass='".$staff["bgcheckpass"]."',bgcheckpassdate='".$staff["bgcheckpassdate"]."'
+                    WHERE staffid='$staffid' AND year='".date("Y")."' AND pageid='$pageid'";
+                execute_db_sql($SQL);    
+            } else {
+                $SQL = "INSERT INTO events_staff_archive 
+                            (staffid,userid,pageid,year,name,phone,dateofbirth,address,agerange,cocmember,congregation,priorwork,q1_1,q1_2,q1_3,q2_1,q2_2,q2_3,parentalconsent,parentalconsentsig,workerconsent,workerconsentsig,workerconsentdate,ref1name,ref1relationship,ref1phone,ref2name,ref2relationship,ref2phone,ref3name,ref3relationship,ref3phone,bgcheckpass,bgcheckpassdate) 
+                            VALUES('$staffid','$userid','$pageid','".date("Y")."','$name','$phone','$dateofbirth','$address','$agerange','$cocmember','$congregation','$priorwork','$q1_1','$q1_2','$q1_3','$q2_1','$q2_2','$q2_3','$parentalconsent','$parentalconsentsig','$workerconsent','$workerconsentsig','$workerconsentdate','$ref1name','$ref1relationship','$ref1phone','$ref2name','$ref2relationship','$ref2phone','$ref3name','$ref3relationship','$ref3phone','".$staff["bgcheckpass"]."',".$staff["bgcheckpassdate"].")";    
+                execute_db_sql($SQL);            
+            }
+            
+            $backgroundchecklink = '';
+            $featureid = "*";
+            if(!$settings = fetch_settings("events", $featureid, $pageid)){
+        		make_or_update_settings_array(default_settings("events",$pageid,$featureid));
+        		$settings = fetch_settings("events", $featureid, $pageid);
+        	}
+            $linkurl = $settings->events->$featureid->bgcheck_url->setting;
+            
+            $status = empty($staff["bgcheckpass"]) ? false : (time()-$staff["bgcheckpassdate"] > ($settings->events->$featureid->bgcheck_years->setting * 365 * 24 * 60 * 60) ? false : true);
+            
+            $eighteen = 18 * 365 * 24 * 60 * 60; // 18 years in seconds
+            $backgroundchecklink = ((time() - $dateofbirth) > $eighteen) && ($status || empty($linkurl)) ? '' : '
+               <br /><br />
+               If you have not already done so, please complete a background check.<br />
+               <h2><a href="'.$linkurl.'">Submit a background check</a></h2>'; 
+            
+            echo "<div style='text-align:center;'><h1>$message</h1>$backgroundchecklink</div>";
         } else {
-            $SQL = "INSERT INTO events_staff_archive 
-                        (staffid,userid,pageid,year,name,phone,dateofbirth,address,agerange,cocmember,congregation,priorwork,q1_1,q1_2,q1_3,q2_1,q2_2,q2_3,parentalconsent,parentalconsentsig,workerconsent,workerconsentsig,workerconsentdate,ref1name,ref1relationship,ref1phone,ref2name,ref2relationship,ref2phone,ref3name,ref3relationship,ref3phone,bgcheckpass,bgcheckpassdate) 
-                        VALUES('$staffid','$userid','$pageid','".date("Y")."','$name','$phone','$dateofbirth','$address','$agerange','$cocmember','$congregation','$priorwork','$q1_1','$q1_2','$q1_3','$q2_1','$q2_2','$q2_3','$parentalconsent','$parentalconsentsig','$workerconsent','$workerconsentsig','$workerconsentdate','$ref1name','$ref1relationship','$ref1phone','$ref2name','$ref2relationship','$ref2phone','$ref3name','$ref3relationship','$ref3phone','".$staff["bgcheckpass"]."',".$staff["bgcheckpassdate"].")";    
-            execute_db_sql($SQL);            
-        }
-        
-        $backgroundchecklink = '';
-        $featureid = "*";
-        if(!$settings = fetch_settings("events", $featureid, $pageid)){
-    		make_or_update_settings_array(default_settings("events",$pageid,$featureid));
-    		$settings = fetch_settings("events", $featureid, $pageid);
-    	}
-        $linkurl = $settings->events->$featureid->bgcheck_url->setting;
-        
-        $status = empty($staff["bgcheckpass"]) ? false : (time()-$staff["bgcheckpassdate"] > ($settings->events->$featureid->bgcheck_years->setting * 365 * 24 * 60 * 60) ? false : true);
-        
-        $eighteen = 18 * 365 * 24 * 60 * 60; // 18 years in seconds
-        $backgroundchecklink = ((time() - $dateofbirth) > $eighteen) && ($status || empty($linkurl)) ? '' : '
-           <br /><br />
-           If you have not already done so, please complete a background check.<br />
-           <h2><a href="'.$linkurl.'">Submit a background check</a></h2>'; 
-        
-        echo "<div style='text-align:center;'><h1>$message</h1>$backgroundchecklink</div>";
+            echo "<div style='text-align:center;'><h1>Failed to save application.</h1></div>"; 
+        }        
     } else {
-        echo "<div style='text-align:center;'><h1>Failed to save application.</h1></div>"; 
-    }    
+        echo "<div style='text-align:center;'><h1>The page has timed out and the form could not be save for security reasons.  Please try again.</h1></div>"; 
+    }
+        
 }
 
 function export_staffapp(){

@@ -203,6 +203,7 @@ echo '
           <input tabindex="34" name="reset" type="reset" '.$preview.'/>
         </fieldset>
     </div>
+    '.keepalive().'
 </form>
 ';
 

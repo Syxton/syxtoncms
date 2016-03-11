@@ -962,4 +962,9 @@ global $CFG;
                 <h3>'.$title.'</h3>'.$content.'
             </div>';
 }
+
+function keepalive() {
+global $CFG;
+    return '<iframe style="display:none;" src="'.$CFG->wwwroot.'/index.php?keepalive=true"></iframe>';
+}
 ?>

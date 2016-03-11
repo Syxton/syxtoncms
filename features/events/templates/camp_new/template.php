@@ -450,6 +450,7 @@ if(!$show_again){
           <input tabindex="34" name="reset" type="reset" '.$preview.'/>
         </fieldset>
     </div>
+    '.keepalive().'
 </form>
 ';
 

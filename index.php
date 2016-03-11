@@ -17,9 +17,6 @@ if(isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip,','.
 }else{
 	include_once ($CFG->dirroot . '/lib/header.php');
 
-	//Check for upgrades or uninstalled components
-	upgrade_check();
-
 	//Get User info
 	load_user_cookie();
 	update_user_cookie();
@@ -36,6 +33,12 @@ if(isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip,','.
     setcookie('pageid', $PAGE->id, get_timestamp() + $CFG->cookietimeout, '/');
 	$PAGE->title = $CFG->sitename; //Title of page
 	$PAGE->themeid = getpagetheme($PAGE->id);
+
+    //Use this page only to keep session and cookies refreshed (during forms)
+    if(!empty($_GET['keepalive'])) { header("Refresh:30"); echo rand(); die(); }
+
+	//Check for upgrades or uninstalled components
+	upgrade_check();
 
 	//Cache roles
 	$ROLES = load_roles();

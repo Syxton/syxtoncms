@@ -1258,6 +1258,7 @@ global $USER, $CFG, $MYVARS;
                     '.($viewonly ? '' : '<input class="submit" name="submit" type="submit" onmouseover="this.focus();" value="Submit Application" />').'	
     			</fieldset>
     		</form>
+            '.keepalive().'
     	</div>';
 }
 
