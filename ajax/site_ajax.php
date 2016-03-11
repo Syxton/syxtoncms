@@ -182,21 +182,6 @@ global $CFG, $MYVARS, $USER;
 	}
 }
 
-//function run_feature_function(){
-//global $CFG, $PAGE, $USER, $MYVARS;
-//    $featuretype = !empty($MYVARS->GET["featuretype"]) ? $MYVARS->GET["featuretype"] : null;
-//    $featureid = !empty($MYVARS->GET["featureid"]) ? $MYVARS->GET["featureid"] : null;
-//    $functionname = !empty($MYVARS->GET["functionname"]) ? $MYVARS->GET["functionname"] : null;
-//    $extra = !empty($MYVARS->GET["extra"]) ? $MYVARS->GET["extra"] : null;
-//    $parameters = !empty($MYVARS->GET["parameters"]) ? $MYVARS->GET["parameters"] : null;
-//    
-//	if($featuretype){
-//		$featuretype = str_replace("_features", "", $featuretype);
-//		all_features_function(false,$featuretype,"",$functionname,false,$MYVARS->GET["pageid"],$featureid,$extra,null,false);
-//	}
-//	update_user_cookie();
-//}
-
 function refresh_user_alerts(){
 global $CFG, $MYVARS;
     $userid = empty($MYVARS->GET["userid"]) ? false : $MYVARS->GET["userid"];  
@@ -232,6 +217,7 @@ function get_login_box(){
 global $CFG, $USER, $MYVARS;
 	if(isset($MYVARS->GET["logout"])){
 		setcookie("userid", "0", get_timestamp() - 60000, '/'); //set an expired cookie
+        unset($USER);
 		//Log
 		log_entry("user", null, "Logout");
 	}
@@ -240,31 +226,23 @@ global $CFG, $USER, $MYVARS;
 
 function update_login_contents(){
 global $CFG, $PAGE, $USER, $MYVARS;
-	if(is_logged_in()){
-		if(isset($MYVARS->GET['check'])){ echo "true**check";
-		}else{
+	if(is_logged_in()) {
+		if(isset($MYVARS->GET['check'])) {
+            if(isset($_COOKIE["userid"])) {
+                $USER->userid = $_COOKIE["userid"];
+                echo "true**check";    
+            } else {
+                load_user_cookie();
+                echo "false";
+            }
+            
+		} else {
 			update_user_cookie();
 			echo "true**" . print_logout_button($USER->fname, $USER->lname, $MYVARS->GET['pageid']);
 		}
-	}else{ //Cookie has timed out or they haven't logged in yet.
+	} else { //Cookie has timed out or they haven't logged in yet.
         load_user_cookie();
 		echo "false";
-	}
-}
-
-function update_page_contents(){
-global $CFG, $PAGE, $USER, $MYVARS;
-	$pageid = $MYVARS->GET["pageid"];
-	if(isset($pageid) && $pageid != "undefined"){ $PAGE->id = $pageid; 
-    }else{ $pageid = $CFG->SITEID; }
-	if(!isset($PAGE->id) || $PAGE->id == ""){ $PAGE->id = $CFG->SITEID;}
-	if($MYVARS->GET["why"] == 'logout'){
-		unset($USER);
-		$PAGE->id = $CFG->SITEID;
-		$CFG->extra = "logout";
-		echo get_page_contents($PAGE->id, $MYVARS->GET["area"]);
-	}else{
-		echo get_page_contents($PAGE->id, $MYVARS->GET["area"]);
 	}
 }
 

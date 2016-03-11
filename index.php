@@ -47,7 +47,8 @@ if(isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip,','.
     include ('header.html');
 
 	if(is_logged_in()){
-        echo '<script type="text/javascript">if(typeof(window.myInterval) == "undefined"){ var myInterval = setInterval(function(){update_login_contents(false,"check");}, (5 * 30000));}</script>';
+	    // Approximate every 15 seconds
+        echo '<script type="text/javascript">if(typeof(window.myInterval) == "undefined"){ var myInterval = setInterval(function(){update_login_contents(false,"check");}, 14599);}</script>';
 		$ABILITIES = get_user_abilities($USER->userid,$PAGE->id);
 		if(empty($ABILITIES->viewpages->allow)){
 			if(get_db_field("opendoorpolicy", "pages", "pageid=" . $PAGE->id) == "0"){ $PAGE->id = $CFG->SITEID; }
@@ -61,7 +62,6 @@ if(isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip,','.
 
 	//Main Layout
 	echo '	<div class="colmask rightmenu">
-			<input type="hidden" id="currentpage" value="' . $PAGE->id . '" />
 				<div class="colleft">
                     <div class="logo_nav">'.page_masthead(true).'</div>
                     <div class="col2 pagesort2 connectedSortable">

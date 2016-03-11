@@ -55,7 +55,6 @@ function main_body($header_only = false){
 global $CFG,$USER,$PAGE;
     return  '<div id="wholepage">
             	<div class="colmask rightmenu">
-        			<input type="hidden" id="currentpage" value="' . $PAGE->id . '" />
     				<div class="colleft">
                         <div class="logo_nav">
                             '.page_masthead(true, $header_only).'

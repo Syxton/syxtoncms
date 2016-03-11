@@ -23,7 +23,7 @@ function load_user_cookie(){
 global $CFG, $USER;
 	if(session_id()){ @session_start(); } //Used for CKeditor to know if user is logged in.
 
-	if(!empty($_COOKIE['userid'])){ //cookie exists
+	if(!empty($_COOKIE['userid'])) { //cookie exists
         $time = get_timestamp();
 		$SQL = "SELECT * FROM users WHERE userid='".$_COOKIE['userid']."' AND ($time - last_activity < ".$CFG->cookietimeout.")";
         if($row = get_db_row($SQL)){ //Get user info from db, load into $USER global
@@ -39,22 +39,22 @@ global $CFG, $USER;
             $temp = new stdClass();
             $temp->userid = 0; $_SESSION['userid'] = "";
 		}
-	}else{
+	} else {
         $temp = new stdClass();
         $temp->userid = 0; $_SESSION['userid'] = "";
     }
     $USER = $temp;
 }
 
-function update_user_cookie(){
+function update_user_cookie() {
 global $CFG,$USER;
 	$time = get_timestamp();
 	if(!is_logged_in()){ //check to see if $USER global is set
         load_user_cookie(); //if $USER global isn't set, see if there is an existing cookie and have it loaded into $USER
-		if(is_logged_in()){ //check if $USER global is set now.
+		if(is_logged_in()) { //check if $USER global is set now.
 			setcookie('userid', $USER->userid, $time + $CFG->cookietimeout,'/'); //update the cookie
 			execute_db_sql("UPDATE users SET last_activity='$time' WHERE userid='".$USER->userid."'"); //update last active timestamp
-		}else{ //not currently logged in
+		} else { //not currently logged in
             $temp = new stdClass();
             $temp->userid = 0;
             $USER = $temp;
