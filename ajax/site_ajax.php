@@ -48,8 +48,8 @@ function change_profile(){
 global $CFG, $MYVARS;
     $userid = dbescape($MYVARS->GET["userid"]);
 	$email = dbescape($MYVARS->GET["email"]);
-	$fname = dbescape($MYVARS->GET["fname"]);
-	$lname = dbescape($MYVARS->GET["lname"]);
+	$fname = dbescape(nameize($MYVARS->GET["fname"]));
+	$lname = dbescape(nameize($MYVARS->GET["lname"]));
     $passchanged = empty($MYVARS->GET["password"]) ? false : true;
     $password = md5($MYVARS->GET["password"]);
     $passwordsql = $passchanged ? ",alternate='',password='$password'" : "";
@@ -153,10 +153,10 @@ global $CFG, $MYVARS;
 function add_new_user(){
 global $CFG, $MYVARS;
     $newuser = new stdClass();
-	$newuser->email = trim(urldecode($MYVARS->GET["email"]));
-	$newuser->fname = trim(urldecode($MYVARS->GET["fname"]));
-	$newuser->lname = trim(urldecode($MYVARS->GET["lname"]));
-	$newuser->password = md5(trim(urldecode($MYVARS->GET["password"])));
+	$newuser->email = trim($MYVARS->GET["email"]);
+	$newuser->fname = nameize($MYVARS->GET["fname"]);
+	$newuser->lname = nameize($MYVARS->GET["lname"]);
+	$newuser->password = md5(trim($MYVARS->GET["password"]));
 	echo create_new_user($newuser);
 }
 

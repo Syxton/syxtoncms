@@ -40,8 +40,8 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
     $MYVARS->GET["total_owed"] = empty($MYVARS->GET["total_owed"]) ? $MYVARS->GET["owed"] : $MYVARS->GET["total_owed"] + $MYVARS->GET["owed"]; // Marked for payment now	
 
     //Prepare names
-    $MYVARS->GET["Name_First"] = ucfirst($MYVARS->GET["Name_First"]);
-    $MYVARS->GET["Name_Last"] = ucfirst($MYVARS->GET["Name_Last"]);
+    $MYVARS->GET["Name_First"] = nameize($MYVARS->GET["Name_First"]);
+    $MYVARS->GET["Name_Last"] = nameize($MYVARS->GET["Name_Last"]);
 	$MYVARS->GET["Name"] = $MYVARS->GET["Name_Last"] . ", " . $MYVARS->GET["Name_First"]; 
     
     //Format phone numbers 

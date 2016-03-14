@@ -41,10 +41,10 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
 	$MYVARS->GET["total_owed"] = get_timestamp() < $event["sale_end"] ? $event["sale_fee"] + $picture_cost + $shirt_cost : $event["fee_full"] +  + $picture_cost + $shirt_cost;
 	
     //Prepare names
-    $middle_i = empty($MYVARS->GET["Camper_Name_Middle"]) ? '' : " ".strtoupper($MYVARS->GET["Camper_Name_Middle"]).".";
+    $middle_i = empty($MYVARS->GET["Camper_Name_Middle"]) ? '' : " ".nameize($MYVARS->GET["Camper_Name_Middle"]).".";
     $MYVARS->GET["Camper_Name_Middle"] = $middle_i;
-    $MYVARS->GET["Camper_Name_First"] = ucfirst($MYVARS->GET["Camper_Name_First"]);
-    $MYVARS->GET["Camper_Name_Last"] = ucfirst($MYVARS->GET["Camper_Name_Last"]);
+    $MYVARS->GET["Camper_Name_First"] = nameize($MYVARS->GET["Camper_Name_First"]);
+    $MYVARS->GET["Camper_Name_Last"] = nameize($MYVARS->GET["Camper_Name_Last"]);
 	$MYVARS->GET["Camper_Name"] = $MYVARS->GET["Camper_Name_Last"] . ", " . $MYVARS->GET["Camper_Name_First"] . $middle_i; 
     
     //Format phone numbers 

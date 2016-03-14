@@ -70,7 +70,7 @@ global $CFG,$USER;
 	if(!isset($COMLIB)){ include_once($CFG->dirroot.'/lib/comlib.php'); }
 	$temp = create_random_password();
 	$key = md5($user->email) . md5(time());
-	$userid = execute_db_sql("INSERT INTO users (email,fname,lname,temp,password,userkey,joined) VALUES('".$user->email."','".ucfirst($user->fname)."','".ucfirst($user->lname)."','".$user->password."','".md5($temp)."','$key','".get_timestamp()."')");
+	$userid = execute_db_sql("INSERT INTO users (email,fname,lname,temp,password,userkey,joined) VALUES('".dbescape($user->email)."','".dbescape($user->fname)."','".dbescape($user->lname)."','".dbescape($user->password)."','".md5($temp)."','$key','".get_timestamp()."')");
 	$defaultrole = get_db_field("default_role","pages","pageid='".$CFG->SITEID."'");
 	$role_assignment = execute_db_sql("INSERT INTO roles_assignment (userid,roleid,pageid) VALUES('$userid','$defaultrole','".$CFG->SITEID."')");
 
@@ -162,5 +162,49 @@ global $CFG, $USER;
        return true;
     }
 	return false;
+}
+
+function nameize($str,$a_char = array("'","-"," ",'"','.')){ 
+    $str = stripslashes($str);
+    //the tricky part is finding names like DeMarco: 2 capitals
+	for($i=0;$i<strlen($str);$i++){
+		if($i > 0 && ctype_lower($str{($i-1)}) && ctype_upper($str{$i}) && isset($str{($i+1)}) && ctype_lower($str{($i+1)})){
+			$temp = $str;
+			$str = substr($temp,0,($i)) . "+ " . substr($temp,($i),(strlen($str)-($i)));
+			$i++; $i++;
+		}
+	}
+
+	//$str contains the complete raw name string
+    //$a_char is an array containing the characters we use as separators for capitalization. If you don't pass anything, there are three in there as default.
+	$string = strtolower($str);
+    foreach($a_char as $temp){
+        $pos = strpos($string,$temp);
+        if($pos !== -1){
+            //we are in the loop because we found one of the special characters in the array, so lets split it up into chunks and capitalize each one.
+            $mend = '';
+            $a_split = explode($temp,$string);
+            foreach ($a_split as $temp2){
+                //capitalize each portion of the string which was separated at a special character
+                $mend .= ucfirst($temp2).$temp;
+            }
+            $string = substr($mend,0,-1);
+        }   
+    }
+    
+    $str = "";
+   	for($i=0;$i<strlen($string);$i++){
+		if(array_search($string{$i},$a_char)){
+            if($string{$i} !== $string{(strlen($string)-$i-1)}){
+                $str .= $string{$i};
+            }
+		}else{
+            $str .= $string{$i};
+		}
+	}
+    $str = str_replace("+ ","",$str);
+    $str = str_replace("+","",$str);
+    $str = str_replace('""','"',$str);
+    return trim(ucfirst($str));
 }
 ?>

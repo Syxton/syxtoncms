@@ -2541,8 +2541,9 @@ global $CFG,$MYVARS,$USER;
     $pageid = !empty($_COOKIE["pageid"]) ? $_COOKIE["pageid"] : (!empty($_GET["pageid"]) && is_numeric($_GET["pageid"]) ? $_GET["pageid"] : false);
 
     if(!empty($pageid)) {
-        $name = dbescape($MYVARS->GET["name"]);
-        $phone = dbescape($MYVARS->GET["phone"]);
+        $name = dbescape(nameize($MYVARS->GET["name"]));
+        $phone = preg_replace('/\d{3}/', '$0-', trim(preg_replace("/\D/", "", $MYVARS->GET["phone"])), 2);
+        $phone = dbescape($phone);
         $dateofbirth = dbescape(strtotime($MYVARS->GET["dateofbirth"]));
         $address = dbescape($MYVARS->GET["address"]);
         $agerange = dbescape($MYVARS->GET["agerange"]);
@@ -2555,23 +2556,26 @@ global $CFG,$MYVARS,$USER;
         $q2_1 = dbescape($MYVARS->GET["q2_1"]);
         $q2_2 = dbescape($MYVARS->GET["q2_2"]);
         $q2_3 = dbescape($MYVARS->GET["q2_3"]);
-        $parentalconsent = dbescape($MYVARS->GET["parentalconsent"]);
+        $parentalconsent = dbescape(nameize($MYVARS->GET["parentalconsent"]));
         $parentalconsentsig = dbescape($MYVARS->GET["parentalconsentsig"]);
-        $workerconsent = dbescape($MYVARS->GET["workerconsent"]);
+        $workerconsent = dbescape(nameize($MYVARS->GET["workerconsent"]));
         $workerconsentsig = dbescape($MYVARS->GET["workerconsentsig"]);
         $workerconsentdate = dbescape(strtotime($MYVARS->GET["workerconsentdate"]));
     
-        $ref1name = dbescape($MYVARS->GET["ref1name"]);
+        $ref1name = dbescape(nameize($MYVARS->GET["ref1name"]));
         $ref1relationship = dbescape($MYVARS->GET["ref1relationship"]);
-        $ref1phone = dbescape($MYVARS->GET["ref1phone"]);
+        $ref1phone = preg_replace('/\d{3}/', '$0-', trim(preg_replace("/\D/", "", $MYVARS->GET["ref1phone"])), 2);
+        $ref1phone = dbescape($ref1phone);
     
-        $ref2name = dbescape($MYVARS->GET["ref2name"]);
+        $ref2name = dbescape(nameize($MYVARS->GET["ref2name"]));
         $ref2relationship = dbescape($MYVARS->GET["ref2relationship"]);
-        $ref2phone = dbescape($MYVARS->GET["ref2phone"]);
+        $ref2phone = preg_replace('/\d{3}/', '$0-', trim(preg_replace("/\D/", "", $MYVARS->GET["ref2phone"])), 2);
+        $ref2phone = dbescape($ref2phone);
     
-        $ref3name = dbescape($MYVARS->GET["ref3name"]);
+        $ref3name = dbescape(nameize($MYVARS->GET["ref3name"]));
         $ref3relationship = dbescape($MYVARS->GET["ref3relationship"]);
-        $ref3phone = dbescape($MYVARS->GET["ref3phone"]);
+        $ref3phone = preg_replace('/\d{3}/', '$0-', trim(preg_replace("/\D/", "", $MYVARS->GET["ref3phone"])), 2);
+        $ref3phone = dbescape($ref3phone);
         
         if(!empty($staffid)) {
             $SQL = "UPDATE events_staff SET userid='$userid',pageid='$pageid',name='$name',phone='$phone',dateofbirth='$dateofbirth',address='$address',
