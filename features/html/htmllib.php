@@ -18,6 +18,7 @@ global $CFG, $USER, $HTMLSETTINGS;
 		$settings = fetch_settings("html",$featureid,$pageid);
 	}
 
+    //if(user_has_ability_in_page($USER->userid, "viewhtml", $pageid, "html", $featureid)){
     if(!empty($abilities->viewhtml->allow)){
         return get_html($pageid, $featureid, $settings, $abilities, $area);
     }
@@ -25,7 +26,7 @@ global $CFG, $USER, $HTMLSETTINGS;
 
 function get_html($pageid,$featureid,$settings,$abilities,$area=false,$htmlonly=false){
 global $CFG,$USER;
-	$SQL = "SELECT * FROM html WHERE htmlid=$featureid";
+	$SQL = "SELECT * FROM html WHERE htmlid='$featureid'";
 	$returnme = ""; $makecomment = ""; $comments = $rss = "";
 	if($result = get_db_result($SQL)){
 		while($row = fetch_row($result)){
