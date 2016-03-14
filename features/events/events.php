@@ -191,32 +191,36 @@ global $CFG, $USER, $MYVARS;
 
 function info(){
 global $CFG, $MYVARS, $USER;
-    $eventid = dbescape($MYVARS->GET["eventid"]);
-    $locationid = dbescape($MYVARS->GET["location"]);
-    $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
-    $location = get_db_row("SELECT * FROM events_locations WHERE id='$locationid'");
-    date_default_timezone_set("UTC");
+    $eventid = !empty($MYVARS->GET["eventid"]) && is_numeric($MYVARS->GET["eventid"]) ? dbescape($MYVARS->GET["eventid"]) : false;
+    if(!empty($eventid) && $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'")){
+        $location = get_db_row("SELECT * FROM events_locations WHERE id='".$event["location"]."'");
+        date_default_timezone_set("UTC");
+        
+        echo '<center><h1>'.stripslashes($event["name"]).'</h1>'.stripslashes($event["extrainfo"]).'<br /><br />';
+        
+        if($event['event_begin_date'] != $event['event_end_date']){ //Multi day event
+        	echo 'When: '.date('F \t\h\e jS, Y',$event["event_begin_date"]).' to '.date('F \t\h\e jS, Y',$event["event_end_date"]).'<br />';
+        }else{
+        	echo 'When: '.date('F \t\h\e jS, Y',$event["event_begin_date"]).'<br />';
+        }
+        
+    	echo '<br /><table style="font-size:1em"><tr><td>Where: </td><td>'.stripslashes($location["location"]).'</td></tr>
+        <tr><td></td><td>'.stripslashes($location["address_1"]).'<br />'.$location["address_2"].'&nbsp;'.$location["zip"].'</td></tr></table>
+    	<span class="centered_span"><a title="Get Directions" href="'.$CFG->wwwroot.'/features/events/googlemaps.php?address_1='.stripslashes($location["address_1"]).'&address_2='.stripslashes($location["address_2"]).'">Get Directions</a></span><br />';
     
-    echo '<center><h1>'.stripslashes($event["name"]).'</h1>'.stripslashes($event["extrainfo"]).'<br /><br />';
-    
-    if($event['event_begin_date'] != $event['event_end_date']){ //Multi day event
-    	echo 'When: '.date('F \t\h\e jS, Y',$event["event_begin_date"]).' to '.date('F \t\h\e jS, Y',$event["event_end_date"]).'<br />';
-    }else{
-    	echo 'When: '.date('F \t\h\e jS, Y',$event["event_begin_date"]).'<br />';
+    	if($event['allday'] != 1){ //All day event
+    		echo 'Times: '.convert_time($event['event_begin_time']).' to '.convert_time($event['event_end_time']).'. <br />';
+    	}	
+        
+        echo '<br />For more information about this event<br /> contact '.stripslashes($event["contact"]).' at '.$event["email"].'<br />or call '.$event["phone"].'.</center><br />';
+    	
+        //Log
+    	log_entry("events", $eventid, "View Event Info");    
+    } else {
+        //Log
+    	log_entry("events", "-", "Variable manipulation");
     }
-    
-	echo '<br /><table style="font-size:1em"><tr><td>Where: </td><td>'.stripslashes($location["location"]).'</td></tr>
-    <tr><td></td><td>'.stripslashes($location["address_1"]).'<br />'.$location["address_2"].'&nbsp;'.$location["zip"].'</td></tr></table>
-	<span class="centered_span"><a title="Get Directions" href="'.$CFG->wwwroot.'/features/events/googlemaps.php?address_1='.stripslashes($location["address_1"]).'&address_2='.stripslashes($location["address_2"]).'">Get Directions</a></span><br />';
-
-	if($event['allday'] != 1){ //All day event
-		echo 'Times: '.convert_time($event['event_begin_time']).' to '.convert_time($event['event_end_time']).'. <br />';
-	}	
-    
-    echo '<br />For more information about this event<br /> contact '.stripslashes($event["contact"]).' at '.$event["email"].'<br />or call '.$event["phone"].'.</center><br />';
-	
-    //Log
-	log_entry("events", $eventid, "View Event Info");	
+    	
 }
 
 function add_event_form(){
