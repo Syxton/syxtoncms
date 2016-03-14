@@ -27,7 +27,7 @@ if($show_again) //This is not the first time through
 	{
 		$last_reg = get_db_result("SELECT * FROM events_registrations_values WHERE regid=$regid");
 		while ($reginfo = fetch_row($last_reg)) {
-			$$reginfo["elementname"] = $reginfo["value"];
+			${$reginfo["elementname"]} = $reginfo["value"];
 		}
 		$email = get_db_field("email","events_registrations","regid=$regid");
 	}

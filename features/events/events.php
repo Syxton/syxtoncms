@@ -190,9 +190,11 @@ global $CFG, $USER, $MYVARS;
 }
 
 function info(){
-global $CFG,$MYVARS,$USER;
-    $event = get_db_row("SELECT * FROM events WHERE eventid=".$MYVARS->GET["eventid"]);
-    $location = get_db_row("SELECT * FROM events_locations WHERE id=".$event["location"]);
+global $CFG, $MYVARS, $USER;
+    $eventid = dbescape($MYVARS->GET["eventid"]);
+    $locationid = dbescape($MYVARS->GET["location"]);
+    $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
+    $location = get_db_row("SELECT * FROM events_locations WHERE id='$locationid'");
     date_default_timezone_set("UTC");
     
     echo '<center><h1>'.stripslashes($event["name"]).'</h1>'.stripslashes($event["extrainfo"]).'<br /><br />';
@@ -214,7 +216,7 @@ global $CFG,$MYVARS,$USER;
     echo '<br />For more information about this event<br /> contact '.stripslashes($event["contact"]).' at '.$event["email"].'<br />or call '.$event["phone"].'.</center><br />';
 	
     //Log
-	log_entry("events", $MYVARS->GET["eventid"], "View Event Info");	
+	log_entry("events", $eventid, "View Event Info");	
 }
 
 function add_event_form(){
