@@ -191,16 +191,14 @@ global $CFG,$ROLES,$ABILITIES;
     	LIMIT 1
     	) as allowed FROM abilities a $section ORDER BY section
     	";
-
+//if($userid == 14) { echo "<pre>" . $SQL . "</pre><br /><br />"; }
     	if($results = get_db_result($SQL)) {
+    	    $abilities = new stdClass();
     		while($row = fetch_row($results)){
     			$ability = $row["ability"];
     			$allow = $row["allowed"] == 1 ? 1 : 0;
                 
                 if(empty($abilities->$ability)){
-                    $abilities = new stdClass();     
-                    $abilities->$ability = new stdClass();
-                }elseif(empty($abilities->$ability)){
                     $abilities->$ability = new stdClass();    
                 }
                 
