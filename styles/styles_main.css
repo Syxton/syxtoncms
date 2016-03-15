@@ -1232,3 +1232,7 @@ left:16px;
 right:0;
 transition:border .25s,left .15s .25s,right .25s .175s;
 }
+
+input[type="image"]{
+box-shadow: none;
+}
