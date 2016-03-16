@@ -3,8 +3,8 @@
 * pagelistlib.php - Page list function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 4/09/2013
-* Revision: 2.3.3
+* Date: 3/16/2016
+* Revision: 2.3.4
 ***************************************************************************/
 
 if (!isset($LIBHEADER)){ include ('header.php'); }
@@ -66,12 +66,12 @@ function format_pagelist($pageresults){
 global $CFG, $USER, $PAGE;
     $returnme = "";
     if($pageresults){
-        $returnme = '<table style="width:100%"><tr><td style="vertical-align:top; text-align:right; width:90%;"><select id="select_page" style="width:100%">';
+        $returnme = '<select id="select_page" style="width:100%" onchange="go_to_page($(this).val());">';
         while($row = fetch_row($pageresults)){
             $selected = $PAGE->id == $row['pageid'] ? "selected" : ""; //Preselect page if you are there
             $returnme .= '<option value="' . $row['pageid'] . '" ' . $selected . '>' . $row['name'] . '</option>';
         }
-        $returnme .= '</select></td><td style="vertical-align:top; text-align:left;"><input type="button" value="Go" onclick="javascript:go_to_page(document.getElementById(\'select_page\').value);" /></td></tr></table>';
+        $returnme .= '</select>';
     }
     return $returnme;
 }
