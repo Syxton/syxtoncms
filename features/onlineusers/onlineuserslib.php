@@ -3,8 +3,8 @@
 * onlineuserslib.php - Online Users function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 1/14/2011
-* Revision: 0.4.0
+* Date: 3/16/2016
+* Revision: 0.4.1
 ***************************************************************************/
  
 if(!isset($LIBHEADER)){ if(file_exists('./lib/header.php')){ include('./lib/header.php'); }elseif(file_exists('../lib/header.php')) { include('../lib/header.php'); }elseif(file_exists('../../lib/header.php')){ include('../../lib/header.php'); }}
@@ -68,14 +68,13 @@ global $CFG, $USER;
 		if($show_total){ 
 			$onlineusers = get_db_count($SQL);
 			if(!$onlineusers){ $onlineusers = 1;}
-			$returnme .= '<div style="width:100%;text-align:center;font-size:.8em;">Online Users: '.$onlineusers.'</div>'; 
+			$returnme .= '<div style="width:100%;text-align:center;font-size:.9em;">Online Users: '.$onlineusers.'</div>'; 
 		}
 		
 		if($users = get_db_result($SQL.$limit)){
 			while($user = fetch_row($users)){
-				$returnme .= '<div style="width:100%;text-align:left;color:blue;font-size:.75em;overflow:auto;">
-									<div style="float:left;">'. $user["fname"] . " " . $user["lname"] . '</div>
-									<div style="float:right;color:green;">'.ago($user["last_activity"]).'</div>
+				$returnme .= '<div style="width:100%;text-align:left;color:blue;font-size:.9em;overflow:auto;margin:2px;">
+									<div title="'.ago($user["last_activity"]).'">'. $user["fname"] . " " . $user["lname"] . '</div>
 							  </div>';
 			}
 		}
