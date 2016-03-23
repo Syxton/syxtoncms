@@ -3,8 +3,8 @@
 * events_ajax.php - Events backend ajax script
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 2/25/2016
-* Revision: 2.1.8
+* Date: 3/23/2016
+* Revision: 2.1.9
 ***************************************************************************/
 
 if(!isset($CFG)){ include('../header.php'); } 
@@ -527,12 +527,14 @@ global $CFG, $MYVARS;
             }
             
             //See if the voting on this request is finished
-            if($request = get_db_row("SELECT * FROM events_requests WHERE reqid='$reqid'")){
+            if($request = get_db_row("SELECT * FROM events_requests WHERE reqid='$reqid'")) {
+                $from = new stdClass();
                 $from->email = $CFG->siteemail;
                 $from->fname = $CFG->sitename;
                 $from->lname = "";
                 
                 //Requesting email setup
+                $contact = new stdClass();
                 $contact->email = $request["contact_email"];
                 if(strstr(stripslashes($request["contact_name"]), " ")){
                     $name = explode(" ",stripslashes($request["contact_name"]));
@@ -2588,13 +2590,13 @@ global $CFG,$MYVARS,$USER;
                         ref3name='$ref3name',ref3relationship='$ref3relationship',ref3phone='$ref3phone'
                         WHERE staffid='$staffid'";
             $success = execute_db_sql($SQL);
-            $message = "Application Updated";
+            $subject = "Application Updated";
         } else {
             $SQL = "INSERT INTO events_staff 
                         (userid,pageid,name,phone,dateofbirth,address,agerange,cocmember,congregation,priorwork,q1_1,q1_2,q1_3,q2_1,q2_2,q2_3,parentalconsent,parentalconsentsig,workerconsent,workerconsentsig,workerconsentdate,ref1name,ref1relationship,ref1phone,ref2name,ref2relationship,ref2phone,ref3name,ref3relationship,ref3phone,bgcheckpass,bgcheckpassdate) 
                         VALUES('$userid','$pageid','$name','$phone','$dateofbirth','$address','$agerange','$cocmember','$congregation','$priorwork','$q1_1','$q1_2','$q1_3','$q2_1','$q2_2','$q2_3','$parentalconsent','$parentalconsentsig','$workerconsent','$workerconsentsig','$workerconsentdate','$ref1name','$ref1relationship','$ref1phone','$ref2name','$ref2relationship','$ref2phone','$ref3name','$ref3relationship','$ref3phone','',0)";    
             $success = execute_db_sql($SQL);
-            $message = "Application Complete";
+            $subject = "Application Complete";
         }
         		  
         //Save the request
@@ -2621,6 +2623,20 @@ global $CFG,$MYVARS,$USER;
                 execute_db_sql($SQL);            
             }
             
+           	//Log
+	        log_entry("event", $pageid, $subject);
+            
+            $emailnotice = new stdClass();
+            $emailnotice->email = $CFG->siteemail;
+            $emailnotice->fname = $CFG->sitename;
+            $emailnotice->lname = "";
+
+            //Requesting email setup
+            $message = "<strong>$name has applied to work</strong>";    
+            
+            //Send email to the requester letting them know we received the request
+            send_email($emailnotice,$emailnotice,false,$subject,$message);
+        
             $backgroundchecklink = '';
             $featureid = "*";
             if(!$settings = fetch_settings("events", $featureid, $pageid)){
@@ -2637,7 +2653,7 @@ global $CFG,$MYVARS,$USER;
                If you have not already done so, please complete a background check.<br />
                <h2><a href="'.$linkurl.'">Submit a background check</a></h2>'; 
             
-            echo "<div style='text-align:center;'><h1>$message</h1>$backgroundchecklink</div>";
+            echo "<div style='text-align:center;'><h1>$subject</h1>$backgroundchecklink</div>";
         } else {
             echo "<div style='text-align:center;'><h1>Failed to save application.</h1></div>"; 
         }        
