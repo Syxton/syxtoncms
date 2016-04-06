@@ -1171,10 +1171,15 @@ input[type="button"]:hover {
 cursor:pointer;
 }
 
-input[type="button"].smallbutton {
+button:hover {
+cursor:pointer;
+}
+
+button.smallbutton {
 font-size:1em;
 padding:3px 6px;
 font-weight:bold;
+margin: 2px;
 }
 
 select:disabled {

@@ -391,7 +391,7 @@ global $CFG;
     }
 
     if($v["button"] == "button") {
-        return '<input type="button" '.trim($v["id"]).' class="smallbutton '.$v["class"].'" '.trim($v["type"]).' title="'.trim(strip_tags($v["title"])).'" style="'.$v["styles"].'" onclick="'.$onOpen.' '.$modal.'" value="'.$v["text"].'" />';    
+        return '<button '.trim($v["id"]).' class="smallbutton '.$v["class"].'" '.trim($v["type"]).' title="'.trim(strip_tags($v["title"])).'" style="'.$v["styles"].'" onclick="'.$onOpen.' '.$modal.'" />'.$v["text"].'</button>';    
     } else {
         return '<a '.trim($v["id"]).' class="'.$v["class"].'" '.trim($v["type"]).' data-rel="'.$gallery_name.'" title="'.trim(strip_tags($v["title"])).'" style="'.$v["styles"].'" onclick="'.$onOpen.' '.$modal.'" href="'.$path.'">'.$v["text"].'</a>';    
     }

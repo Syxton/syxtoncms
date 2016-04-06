@@ -61,7 +61,7 @@ global $CFG,$MYVARS,$USER;
     //Create Discussion Link
 	if(user_has_ability_in_page($USER->userid,"createforumdiscussion",$pageid)){ 
         $returnme .= '  <div style="font-size:.8em; text-align:right; width:100%;">
-                            '.make_modal_links(array("title"=>"New Topic","path"=>$CFG->wwwroot."/features/forum/forum.php?action=create_discussion_form&amp;pageid=$pageid&amp;forumid=$forumid&amp;catid=$catid","width"=>"750","height"=>"600","iframe"=>"true","runafter"=>"forum_refresh_$forumid","image"=>$CFG->wwwroot.'/images/new_topic.gif')).'
+                            '.make_modal_links(array("button"=>"button","title"=>"New Discussion","text"=>'<img src="'.$CFG->wwwroot.'/images/discussion.gif" alt=""> New Discussion',"path"=>$CFG->wwwroot."/features/forum/forum.php?action=create_discussion_form&amp;pageid=$pageid&amp;forumid=$forumid&amp;catid=$catid","width"=>"750","height"=>"600","iframe"=>"true","runafter"=>"forum_refresh_$forumid")).'
                         </div>';
     }
 	$returnme .= get_discussion_pages($forumid, $category, $dpagenum);
@@ -172,7 +172,7 @@ global $CFG,$MYVARS,$USER;
 	
     if(user_has_ability_in_page($USER->userid,"createforumdiscussion",$pageid)){ 
         $returnme .= '  <div style="font-size:.8em; text-align:right; width:100%;">
-                            '.make_modal_links(array("title"=>"New Topic","path"=>$CFG->wwwroot."/features/forum/forum.php?action=create_discussion_form&amp;pageid=$pageid&amp;forumid=$forumid&amp;catid=$catid","width"=>"750","height"=>"600","iframe"=>"true","runafter"=>"forum_refresh_$forumid","image"=>$CFG->wwwroot.'/images/new_topic.gif')).'
+                            '.make_modal_links(array("button"=>"button","title"=>"New Discussion","text"=>'<img src="'.$CFG->wwwroot.'/images/discussion.gif" alt=""> New Discussion',"path"=>$CFG->wwwroot."/features/forum/forum.php?action=create_discussion_form&amp;pageid=$pageid&amp;forumid=$forumid&amp;catid=$catid","width"=>"750","height"=>"600","iframe"=>"true","runafter"=>"forum_refresh_$forumid")).'
                         </div>';
     }
 	
