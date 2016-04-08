@@ -215,7 +215,7 @@ global $CFG, $USER;
                                                     '.make_modal_links(array("title"=> stripslashes($event["name"]),"path"=>$CFG->wwwroot."/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","width"=>"700","height"=>"650")).'
                                                 </div>
                                                 <span style="font-size:.85em">&nbsp;
-                                                    ' . stripslashes(strip_tags($event["byline"])) . '
+                                                    ' . stripslashes(strip_tags($event["byline"],'<a>')) . '
                                     			</span>
                                                 <div class="hprcp_n" style="margin-top:4px;">
                                                     <div class="hprcp_e">
