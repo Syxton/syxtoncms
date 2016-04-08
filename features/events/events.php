@@ -17,6 +17,8 @@ if(empty($_POST["aslib"])){
         <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?b='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'features/events&amp;f=events.js"></script>
     ';
     
+    echo get_editor_javascript();
+
     echo '</body></html>';
 }
 
@@ -196,7 +198,8 @@ global $CFG, $MYVARS, $USER;
         $location = get_db_row("SELECT * FROM events_locations WHERE id='".$event["location"]."'");
         date_default_timezone_set("UTC");
         
-        echo '<center><h1>'.stripslashes($event["name"]).'</h1>'.stripslashes($event["extrainfo"]).'<br /><br />';
+        echo '<div style="text-align:center"><h1>'.stripslashes($event["name"]).'</h1>'.stripslashes($event["byline"]).'</div>';
+        echo '<div>'.stripslashes($event["description"]).'</div><br /><center>';
         
         if($event['event_begin_date'] != $event['event_end_date']){ //Multi day event
         	echo 'When: '.date('F \t\h\e jS, Y',$event["event_begin_date"]).' to '.date('F \t\h\e jS, Y',$event["event_end_date"]).'<br />';
@@ -263,7 +266,8 @@ global $CFG,$MYVARS,$USER;
 		$reg_display = $row['start_reg'] ? 'inline' : 'none';
 		$limits_display = $row['max_users'] == 0 && $row['hard_limits'] == "" && $row['soft_limits'] == "" ? 'none' : 'inline';
 		$max_users = $row['max_users'] != "0" ? $row['max_users'] : '0';
-		$extrainfo = $row['extrainfo'];
+		$byline = $row['byline'];
+        $description = $row['description'];
 		$fee_yes = $row['fee_full'] != "0" ? "selected" : "";
 		$fee_no = $fee_yes == "" ? "selected" : "";
 		$allowinpage_yes = $row['allowinpage'] == "1" ? "selected" : "";
@@ -293,7 +297,7 @@ global $CFG,$MYVARS,$USER;
 		$start_reg = $stop_reg = $sale_end = $event_begin_date = $event_end_date = 'true';
 		$end_date_display = $limits_display = $times_display = $reg_display = $fee_display = 'none';
 		$max_users = $cost = '0';
-		$checksaddress = $paypal = $payableto = $name = $contact = $email = $extrainfo = $siteviewable_yes = $workers_yes = $multiday_yes = $allday_no = $reg_yes = $fee_yes = $allowinpage_yes = $limits_yes = $event_end_time_form = $fee_min = $fee_full = $sale_fee = $template_settings = "";
+		$checksaddress = $paypal = $payableto = $name = $contact = $email = $byline = $description = $siteviewable_yes = $workers_yes = $multiday_yes = $allday_no = $reg_yes = $fee_yes = $allowinpage_yes = $limits_yes = $event_end_time_form = $fee_min = $fee_full = $sale_fee = $template_settings = "";
 		$event_begin_time_form = get_possible_times('begin_time');
 		$mycategories = get_my_category();	
 		$mylocations = get_my_locations($USER->userid);
@@ -328,11 +332,22 @@ global $CFG,$MYVARS,$USER;
             <table style="width:100%">
             	<tr>
             		<td class="field_title" style="width:115px; vertical-align:top">
+            			Byline:
+            		</td>
+            		<td class="field_input">
+            			<textarea id="byline" cols="40" rows="5">'. stripslashes($byline) .'</textarea>
+            			<span class="hint">'.get_help("input_byline:events").'<span class="hint-pointer">&nbsp;</span></span>
+            		</td>
+            	</tr><tr><td></td><td class="field_input"><span id="event_name_error" class="error_text"></span></td></tr>
+            </table>
+            <table style="width:100%">
+            	<tr>
+            		<td class="field_title" style="width:115px; vertical-align:top">
             			Description:
             		</td>
             		<td class="field_input">
-            			<textarea id="extrainfo" cols="40" rows="5">'. stripslashes($extrainfo) .'</textarea>
-            			<span class="hint">'.get_help("input_extrainfo:events").'<span class="hint-pointer">&nbsp;</span></span>
+                        '.get_editor_box(stripslashes($description),"editor1","300").'
+            			<span class="hint">'.get_help("input_description:events").'<span class="hint-pointer">&nbsp;</span></span>
             		</td>
             	</tr><tr><td></td><td class="field_input"><span id="event_name_error" class="error_text"></span></td></tr>
             </table>

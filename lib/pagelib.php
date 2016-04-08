@@ -125,8 +125,7 @@ global $CFG,$USER;
                 ],
                 external_filemanager_path: "'.(empty($CFG->directory) ? '' : '/'.$CFG->directory).'/scripts/tinymce/plugins/filemanager/", 
                 filemanager_title: "File Manager" , 
-                external_plugins: { "filemanager" : "'.(empty($CFG->directory) ? '' : '/'.$CFG->directory).'/scripts/tinymce/plugins/filemanager/plugin.min.js"},
-                init_instance_callback: function (editor) { resize_editor(); }
+                external_plugins: { "filemanager" : "'.(empty($CFG->directory) ? '' : '/'.$CFG->directory).'/scripts/tinymce/plugins/filemanager/plugin.min.js"}
             });
         });
     </script>'; 

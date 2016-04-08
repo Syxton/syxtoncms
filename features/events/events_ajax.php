@@ -641,7 +641,7 @@ global $CFG,$MYVARS;
 	$MYVARS->GET["category"] = "1"; //Placed in general category...can be changed later
 	$MYVARS->GET["siteviewable"] = $pageid == $CFG->SITEID ? "1" : "0"; //if feature is on site, then yes...otherwise no.
 	
-    $MYVARS->GET["extrainfo"] = $request["description"]; //event description
+    $MYVARS->GET["description"] = $request["description"]; //event description
 
 	$MYVARS->GET["multiday"] = $request["startdate"] == $request["enddate"] ? "0" : "1";
     
@@ -1678,7 +1678,7 @@ global $CFG, $MYVARS, $USER;
 		$i = 0;
 		while(isset($formlist[$i])){
 			$element = explode(":", $formlist[$i]);
-			if($element[1] != "Pay"){ $fields .= '<option value="' . $element[0] . '">' . $element[2] . '</option>'; }
+			if(isset($element[1]) && $element[1] != "Pay"){ $fields .= '<option value="' . $element[0] . '">' . $element[2] . '</option>'; }
 			$i++;
 		}
 	}
@@ -1756,7 +1756,8 @@ global $CFG, $MYVARS;
 	$location = dbescape($MYVARS->GET["location"]);
 	$category = dbescape($MYVARS->GET["category"]);
 	$siteviewable = dbescape($MYVARS->GET["siteviewable"]);
-	$extrainfo = dbescape((urldecode($MYVARS->GET["extrainfo"])));
+	$byline = dbescape((urldecode($MYVARS->GET["byline"])));
+    $description = dbescape((urldecode($MYVARS->GET["description"])));
 	$multiday = dbescape($MYVARS->GET["multiday"]);
     $workers = dbescape($MYVARS->GET["workers"]);
 
@@ -1833,11 +1834,11 @@ global $CFG, $MYVARS;
 		$SQL = "INSERT INTO events 
                             (pageid,template_id,name,category,location,allowinpage,start_reg,stop_reg,max_users,
     				        event_begin_date,event_begin_time,event_end_date,event_end_time,
-    				        confirmed,siteviewable,allday,caleventid,extrainfo,fee_min,fee_full,payableto,checksaddress,
+    				        confirmed,siteviewable,allday,caleventid,byline,description,fee_min,fee_full,payableto,checksaddress,
     				        paypal,sale_fee,sale_end,contact,email,phone,hard_limits,soft_limits,workers) 
                     VALUES('$pageid','$template_id','$name','$category','$location','$allowinpage','$start_reg','$stop_reg','$max_users',
                             '$event_begin_date','$event_begin_time','$event_end_date','$event_end_time',
-                            '$confirmed','$siteviewable','$allday','$caleventid','$extrainfo','$fee_min','$fee_full','$payableto','$checksaddress',
+                            '$confirmed','$siteviewable','$allday','$caleventid','$byline','$description','$fee_min','$fee_full','$payableto','$checksaddress',
                             '$paypal','$sale_fee','$sale_end','$contact','$email','$phone','$hard_limits','$soft_limits','$workers')";
 
 		if($eventid = execute_db_sql($SQL)){
@@ -1876,7 +1877,7 @@ global $CFG, $MYVARS;
                      start_reg='$start_reg',stop_reg='$stop_reg',max_users='$max_users',
                      event_begin_date='$event_begin_date',event_begin_time='$event_begin_time',event_end_date='$event_end_date',event_end_time='$event_end_time',
                      sale_fee='$sale_fee',sale_end='$sale_end',contact='$contact',email='$email',phone='$phone',hard_limits='$hard_limits',soft_limits='$soft_limits',
-                     siteviewable='$siteviewable',allday='$allday',extrainfo='$extrainfo',paypal='$paypal',fee_min='$fee_min',fee_full='$fee_full',
+                     siteviewable='$siteviewable',allday='$allday',byline='$byline',description='$description',paypal='$paypal',fee_min='$fee_min',fee_full='$fee_full',
                      payableto='$payableto',checksaddress='$checksaddress',confirmed='$confirmed',workers='$workers'
 			WHERE eventid='" . dbescape($MYVARS->GET['eventid'])."'";
         

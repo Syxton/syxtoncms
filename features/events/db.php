@@ -3,8 +3,8 @@
 * db.php - feature db upgrades
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 1/26/2016
-* Revision: 0.0.6
+* Date: 4/08/2016
+* Revision: 0.0.7
 ***************************************************************************/
 
 function events_upgrade(){
@@ -206,6 +206,17 @@ global $CFG;
                     execute_db_sql($SQL);    
                 }
             }
+			execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
+		}
+	}
+
+	$thisversion = 20160408;
+	if($version < $thisversion){
+		$SQL = "ALTER TABLE `events` ADD `description` LONGTEXT NOT NULL DEFAULT ''";
+        execute_db_sql($SQL);
+        $SQL = "ALTER TABLE `events` CHANGE `extrainfo` `byline` LONGTEXT NOT NULL DEFAULT '';";
+        execute_db_sql($SQL);
+		if(get_db_row("SELECT * FROM events WHERE description != 'xxxxxxxx'")){ //if successful upgrade
 			execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
 		}
 	}

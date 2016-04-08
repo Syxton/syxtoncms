@@ -199,8 +199,7 @@ echo '
         <span style="display:inline-block;width:12px;">$</span><input style="float:none;width:100px;border:none;" name="owed" id="owed" size="5" value="'.$event['fee_min'].'" type="text" readonly />
     </div>';
 
-    echo '<input tabindex="33" class="submit" name="submit" type="submit" value="Submit Application" '.$preview.'/><br /><br />
-          <input tabindex="34" name="reset" type="reset" '.$preview.'/>
+    echo '<input tabindex="33" class="submit" name="submit" type="submit" value="Submit Application" '.$preview.'/>
         </fieldset>
     </div>
     '.keepalive().'

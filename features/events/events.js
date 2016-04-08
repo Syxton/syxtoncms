@@ -17,8 +17,8 @@ if(!xmlHttp && typeof XMLHttpRequest != 'undefined'){ xmlHttp = new XMLHttpReque
 function movetonextbox(e){
     var unicode=e.keyCode? e.keyCode : e.charCode;
     if(unicode == 8 || unicode == 46){ return false; }
-    if(document.getElementById("lasthint").value.match("_1") && document.getElementById(document.getElementById("lasthint").value).value.length == 3){ document.getElementById(document.getElementById("lasthint").value.replace("_1","_2")).focus(); }
-    if(document.getElementById("lasthint").value.match("_2") && document.getElementById(document.getElementById("lasthint").value).value.length == 3){ document.getElementById(document.getElementById("lasthint").value.replace("_2","_3")).focus();}
+    if($("#lasthint").val().match("_1") && $("#"+$("#lasthint").val()).val().length == 3){ document.getElementById($("#lasthint").val().replace("_1","_2")).focus(); }
+    if($("#lasthint").val().match("_2") && $("#"+$("#lasthint").val()).val().length == 3){ document.getElementById($("#lasthint").val().replace("_2","_3")).focus();}
 }
 function submit_registration(eventid,formlist){
 	if(validate_fields()){
@@ -30,24 +30,24 @@ function submit_registration(eventid,formlist){
     		elparam = elements[i].split(":");
     		if(elparam[0] == "text"){ 
     			parameters += "&" + elparam[1] + "=";
-    			parameters += document.getElementById(elparam[1]).value;
+    			parameters += $("#"+elparam[1]).val();
     		}else if(elparam[0] == "email"){
     			parameters += "&" + elparam[1] + "=";
-    			parameters += document.getElementById(elparam[1]).value;
-    			parameters += "&email=" + document.getElementById(elparam[1]).value;
+    			parameters += $("#"+elparam[1]).val();
+    			parameters += "&email=" + $("#"+elparam[1]).val();
     		}else if(elparam[0] == "contact"){
     			parameters += "&" + elparam[1] + "=";
-    			parameters += document.getElementById(elparam[1]).value;
-    			parameters += "&email=" + document.getElementById(elparam[1]).value;
+    			parameters += $("#"+elparam[1]).val();
+    			parameters += "&email=" + $("#"+elparam[1]).val();
     		}else if(elparam[0] == "phone"){
     				parameters += "&" + elparam[1] + "=";
-    				parameters += document.getElementById(elparam[1]+"_1").value + "-" + document.getElementById(elparam[1]+"_2").value + "-" + document.getElementById(elparam[1]+"_3").value;
+    				parameters += $("#"+elparam[1]+"_1").val() + "-" + $("#"+elparam[1]+"_2").val() + "-" + $("#"+elparam[1]+"_3").val();
     		}else if(elparam[0] == "payment"){
-    			if(document.getElementById("payment_amount")){
-    				parameters += "&payment_amount=" + document.getElementById("payment_amount").value;
-    				parameters += "&payment_method=" + document.getElementById("payment_method").value;
-    				parameters += document.getElementById("total_owed") ? "&total_owed=" + document.getElementById("total_owed").value : "&total_owed=0";
-    				if(document.getElementById("items")) parameters += "&items=" + document.getElementById("items").value;
+    			if($("#payment_amount").length){
+    				parameters += "&payment_amount=" + $("#payment_amount").val();
+    				parameters += "&payment_method=" + $("#payment_method").val();
+    				parameters += $("#total_owed") ? "&total_owed=" + $("#total_owed").val() : "&total_owed=0";
+                    parameters += $("#items") ? "&items=" + $("#items").val() : "";
     			}
     		}
     		i++;
@@ -61,14 +61,14 @@ function submit_registration(eventid,formlist){
   	}
 }
 function clear_limits(){
-	document.getElementById("limit_form").innerHTML = "";
-	document.getElementById("custom_limits").innerHTML = '<input type="hidden" id="hard_limits" value="" /><input type="hidden" id="soft_limits" value="" />';
+	$("#limit_form").html("");
+	$("#custom_limits").html('<input type="hidden" id="hard_limits" value="" /><input type="hidden" id="soft_limits" value="" />');
 }
 function get_end_time(starttime){
-	if(document.getElementById("begin_time").value != ""){
+	if($("#begin_time").val() != ""){
     	var d = new Date();
-    	var endtime = document.getElementById("end_time") && document.getElementById("end_time").value != "" ? "&endtime=" + document.getElementById("end_time").value : "";
-    	var limit = document.getElementById("multiday").value == 1 ? "&limit=0" : "&limit=1";
+    	var endtime = $("#end_time").length && $("#end_time").val() != "" ? "&endtime=" + $("#end_time").val() : "";
+    	var limit = $("#multiday").val() == 1 ? "&limit=0" : "&limit=1";
     	var parameters = "action=get_end_time&starttime=" + starttime + endtime + limit + "&currTime=" + d.toUTCString();
     	// Build the URL to connect to
       	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
@@ -97,34 +97,34 @@ function get_limit_form(template_id){
 }
 function validate_limit(){
     var valid = true;
-	if(!document.getElementById("custom_limit_value").value.length > 0){
-  		document.getElementById("custom_limit_value_error").innerHTML = "You must add a field value.";
+	if(!$("#custom_limit_value").val().length > 0){
+  		$("#custom_limit_value_error").html("You must add a field value.");
   		valid = false;
-  	}else if(!IsNumeric(document.getElementById("custom_limit_value").value) && (document.getElementById("operators").value == "gt" || document.getElementById("operators").value == "gteq" ||	document.getElementById("operators").value == "lt" || document.getElementById("operators").value == "lteq")){
-  		document.getElementById("custom_limit_value_error").innerHTML = "Value must be a number.";
+  	}else if(!IsNumeric($("#custom_limit_value").val()) && ($("#operators").val() == "gt" || $("#operators").val() == "gteq" ||	$("#operators").val() == "lt" || $("#operators").val() == "lteq")){
+  		$("#custom_limit_value_error").html("Value must be a number.");
   		valid = false;
-  	}else{ document.getElementById("custom_limit_value_error").innerHTML = ""; }
+  	}else{ $("#custom_limit_value_error").html(""); }
 	
-    if(!document.getElementById("custom_limit_num").value.length > 0){
-  		document.getElementById("custom_limit_num_error").innerHTML = "You must add a limit amount.";
+    if(!$("#custom_limit_num").val().length > 0){
+  		$("#custom_limit_num_error").html("You must add a limit amount.");
   		valid = false;
-  	}else if(! IsNumeric(document.getElementById("custom_limit_num").value)){
-  		document.getElementById("custom_limit_num_error").innerHTML = "Value must be a number.";
+  	}else if(! IsNumeric($("#custom_limit_num").val())){
+  		$("#custom_limit_num_error").html("Value must be a number.");
   		valid = false;
-  	}else{ document.getElementById("custom_limit_num_error").innerHTML = ""; }
+  	}else{ $("#custom_limit_num_error").html(""); }
   	return valid;
 }
 function add_custom_limit(){
 	if(validate_limit()){
     	var d = new Date();
-    	if(document.getElementById("custom_limit_sorh").value == 0){
-        	var hard = document.getElementById("hard_limits") && document.getElementById("hard_limits").value == "" ? document.getElementById("custom_limit_fields").value + ":" + document.getElementById("operators").value + ":" + document.getElementById("custom_limit_value").value + ":" + document.getElementById("custom_limit_num").value : document.getElementById("hard_limits").value + "*" + document.getElementById("custom_limit_fields").value + ":" + document.getElementById("operators").value + ":" + document.getElementById("custom_limit_value").value + ":" + document.getElementById("custom_limit_num").value;
-        	var soft = document.getElementById("soft_limits") ? document.getElementById("soft_limits").value : "";
+    	if($("#custom_limit_sorh").val() == 0){
+        	var hard = $("#hard_limits").length && $("#hard_limits").val() == "" ? $("#custom_limit_fields").val() + ":" + $("#operators").val() + ":" + $("#custom_limit_value").val() + ":" + $("#custom_limit_num").val() : $("#hard_limits").val() + "*" + $("#custom_limit_fields").val() + ":" + $("#operators").val() + ":" + $("#custom_limit_value").val() + ":" + $("#custom_limit_num").val();
+        	var soft = $("#soft_limits").length ? $("#soft_limits").val() : "";
     	}else{
-        	var soft = document.getElementById("soft_limits") && document.getElementById("soft_limits").value == "" ? document.getElementById("custom_limit_fields").value + ":" + document.getElementById("operators").value + ":" + document.getElementById("custom_limit_value").value + ":" + document.getElementById("custom_limit_num").value : document.getElementById("soft_limits").value + "*" + document.getElementById("custom_limit_fields").value + ":" + document.getElementById("operators").value + ":" + document.getElementById("custom_limit_value").value + ":" + document.getElementById("custom_limit_num").value;
-        	var hard = document.getElementById("hard_limits") ? document.getElementById("hard_limits").value : "";
+        	var soft = $("#soft_limits").length && $("#soft_limits").val() == "" ? $("#custom_limit_fields").val() + ":" + $("#operators").val() + ":" + $("#custom_limit_value").val() + ":" + $("#custom_limit_num").val() : $("#soft_limits").val() + "*" + $("#custom_limit_fields").val() + ":" + $("#operators").val() + ":" + $("#custom_limit_value").val() + ":" + $("#custom_limit_num").val();
+        	var hard = $("#hard_limits").length ? $("#hard_limits").val() : "";
     	}
-    	var template_id = "&template_id=" + document.getElementById("template").value;
+    	var template_id = "&template_id=" + $("#template").val();
     	var hard_limits = "&hard_limits=" + hard;
     	var soft_limits = "&soft_limits=" + soft;
     	var parameters = "action=add_custom_limit" + hard_limits + soft_limits + template_id + "&currTime=" + d.toUTCString();
@@ -136,9 +136,9 @@ function add_custom_limit(){
 	}
 }
 function delete_limit(limit_type,limit_num){
-	var hard_limits = "&hard_limits=" + document.getElementById("hard_limits").value;
-	var soft_limits = "&soft_limits=" + document.getElementById("soft_limits").value;
-	var template_id = "&template_id=" + document.getElementById("template").value;
+	var hard_limits = "&hard_limits=" + $("#hard_limits").val();
+	var soft_limits = "&soft_limits=" + $("#soft_limits").val();
+	var template_id = "&template_id=" + $("#template").val();
 	var limit_type = "&limit_type=" + limit_type;
 	var limit_num = "&limit_num=" + limit_num;
 	var d = new Date();
@@ -170,7 +170,7 @@ function copy_location(location,eventid){
     	// Open a connection to the server\
     	ajaxpost(url,parameters);
     	simple_display("select_location");
-    	document.getElementById("location_status").innerHTML = "Location Added"
+    	$("#location_status").html("Location Added");
     	hide_show_buttons("addtolist");
     	hide_show_buttons("hide_menu");
     	hide_show_buttons("new_button");
@@ -195,49 +195,49 @@ function get_location_details(location){
 }
 function valid_new_location(){
 	var valid = true;
-	if(!document.getElementById("location_name").value.length > 0){
-  		document.getElementById("location_name_error").innerHTML = "This is a required field.";
+	if(!$('#location_name').val().length > 0){
+  		$("#location_name_error").html("This is a required field.");
   		valid = false;
   	}else{ 
 		// Build the URL to connect to
-	  	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php?action=unique_relay&table=events_locations&key=location&value="+document.getElementById("location_name").value;
+	  	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php?action=unique_relay&table=events_locations&key=location&value="+$('#location_name').val();
 		// Open a connection to the server\
 	    var d = new Date();
 	  	xmlHttp.open("GET", url + "&currTime=" + d.toUTCString(), false);
 	  	// Send the request
 		xmlHttp.send(null);
 		if(!istrue()){
-			document.getElementById("location_name_error").innerHTML = "This value already exists in our database.";
+			$("#location_name_error").html("This value already exists in our database.");
 			valid = false;
-		}else{ document.getElementById("location_name_error").innerHTML = ""; }
+		}else{ $("#location_name_error").html(""); }
 	}
-	if(!document.getElementById("location_address_1").value.length > 0){
-  		document.getElementById("location_address_1_error").innerHTML = "This is a required field.";
+	if(!$('#location_address_1').val().length > 0){
+  		$("#location_address_1_error").html("This is a required field.");
   		valid = false;
-  	}else{ document.getElementById("location_address_1_error").innerHTML = ""; }
-	if(!document.getElementById("location_address_2").value.length > 0){
-  		document.getElementById("location_address_2_error").innerHTML = "This is a required field.";
+  	}else{ $("#location_address_1_error").html(""); }
+	if(!$('#location_address_2').val().length > 0){
+  		$("#location_address_2_error").html("This is a required field.");
   		valid = false;
-  	}else{ document.getElementById("location_address_2_error").innerHTML = ""; }
-	if(!document.getElementById("zip").value.length > 0){
-  		document.getElementById("zip_error").innerHTML = "This is a required field.";
+  	}else{ $("#location_address_2_error").html(""); }
+	if(!$("#zip").val().length > 0){
+  		$("#zip_error").html("This is a required field.");
   		valid = false;
-  	}else if(document.getElementById("zip").value.length < 5){
-  		document.getElementById("zip_error").innerHTML = "This is an invalid zipcode.";
+  	}else if($("#zip").val().length < 5){
+  		$("#zip_error").html("This is an invalid zipcode.");
   		valid = false;
-  	}else if(! IsNumeric(document.getElementById("zip").value)){
-  		document.getElementById("zip_error").innerHTML = "This is an invalid zipcode.";
+  	}else if(! IsNumeric($("#zip").val())){
+  		$("#zip_error").html("This is an invalid zipcode.");
   		valid = false;
-  	}else{ document.getElementById("zip_error").innerHTML = ""; }
-	if(document.getElementById("opt_location_phone").value == 0 || (document.getElementById("opt_location_phone").value != 0 && (document.getElementById("location_phone_1").value.length > 0 || document.getElementById("location_phone_2").value.length > 0 || document.getElementById("location_phone_3").value.length > 0))){
+  	}else{ $("#zip_error").html(""); }
+	if($("#opt_location_phone").val() == 0 || ($("#opt_location_phone").val() != 0 && ($('#location_phone_1').val().length > 0 || $('#location_phone_2').val().length > 0 || $('#location_phone_3').val().length > 0))){
 		//Phone # validity test
-		if(document.getElementById("location_phone_1").value.length == 3 && document.getElementById("location_phone_2").value.length == 3 && document.getElementById("location_phone_3").value.length == 4){
-			if(!(IsNumeric(document.getElementById("location_phone_1").value) && IsNumeric(document.getElementById("location_phone_2").value) && IsNumeric(document.getElementById("location_phone_3").value))){
-				document.getElementById("location_phone_error").innerHTML = "Not a valid phone #";
+		if($('#location_phone_1').val().length == 3 && $('#location_phone_2').val().length == 3 && $('#location_phone_3').val().length == 4){
+			if(!(IsNumeric($('#location_phone_1').val()) && IsNumeric($('#location_phone_2').val()) && IsNumeric($('#location_phone_3').val()))){
+				$("#location_phone_error").html("Not a valid phone #");
 	  			valid = false;
-			}else{ document.getElementById("location_phone_error").innerHTML = ""; }
+			}else{ $("#location_phone_error").html(""); }
 		}else{
-	  		document.getElementById("location_phone_error").innerHTML = "Phone # is not complete.";
+	  		$("#location_phone_error").html("Phone # is not complete.");
 	  		valid = false;
 	  	}
 	}
@@ -248,187 +248,188 @@ function valid_new_event(){
 		var Today = new Date();
 		Today.setDate(Today.getDate()-1)
 		//event name
-		if(!document.getElementById("event_name").value.length > 0){
-	  		document.getElementById("event_name_error").innerHTML = "This is a required field.";
+		if(!$('#event_name').val().length > 0){
+	  		$("#event_name_error").html("This is a required field.");
 	  		valid = false;
-	  	}else{ document.getElementById("event_name_error").innerHTML = ""; }
+	  	}else{ $("#event_name_error").html(""); }
 		//contact name
-		if(!document.getElementById("contact").value.length > 0){
-	  		document.getElementById("contact_error").innerHTML = "This is a required field.";
+		if(!$("#contact").val().length > 0){
+	  		$("#contact_error").html("This is a required field.");
 	  		valid = false;
-	  	}else{ document.getElementById("contact_error").innerHTML = ""; }
+	  	}else{ $("#contact_error").html(""); }
 		//contact email
-		if(document.getElementById("email").value.length > 0){
-			if(echeck(document.getElementById("email").value)){
-				document.getElementById("email_error").innerHTML = "";
+		if($("#email").val().length > 0){
+			if(echeck($("#email").val())){
+				$("#email_error").html("");
 		  	}else{
-				document.getElementById("email_error").innerHTML = "Email address is not valid.";
+				$("#email_error").html("Email address is not valid.");
 				valid = false;
 			}
 		}else{
-	  		document.getElementById("email_error").innerHTML = "Email address is required.";
+	  		$("#email_error").html("Email address is required.");
 	  		valid = false;
 	  	}
 	  	//contact phone #
-		if(document.getElementById("phone_1").value.length == 3 && document.getElementById("phone_2").value.length == 3 && document.getElementById("phone_3").value.length == 4){
-			if(!(IsNumeric(document.getElementById("phone_1").value) && IsNumeric(document.getElementById("phone_2").value) && IsNumeric(document.getElementById("phone_3").value))){
-				document.getElementById("phone_error").innerHTML = "Not a valid phone #";
+		if($("#phone_1").val().length == 3 && $("#phone_2").val().length == 3 && $("#phone_3").val().length == 4){
+			if(!(IsNumeric($("#phone_1").val()) && IsNumeric($("#phone_2").val()) && IsNumeric($("#phone_3").val()))){
+				$("#phone_error").html("Not a valid phone #");
 	  			valid = false;
-			}else{ document.getElementById("phone_error").innerHTML = ""; }
+			}else{ $("#phone_error").html(""); }
 		}else{
-	  		document.getElementById("phone_error").innerHTML = "Phone # is not complete.";
+	  		$("#phone_error").html("Phone # is not complete.");
 	  		valid = false;
 	  	}
-		if(document.getElementById("fee").value == "1"){ //Fee = YES
+		if($("#fee").val() == "1"){ //Fee = YES
 			//min fee
-			if(! IsNumeric(document.getElementById("min_fee").value)){
-				document.getElementById("event_min_fee_error").innerHTML = "Must be a numeric value.";
+			if(!(IsNumeric($("#min_fee").val()))){
+				$("#event_min_fee_error").html("Must be a numeric value.");
 			  	valid = false;
-			}else if(parseInt(document.getElementById("min_fee").value) > parseInt(document.getElementById("full_fee").value)){
-				document.getElementById("event_min_fee_error").innerHTML = "Cannot be greater than full fee.";
+			}else if(parseInt($("#min_fee").val()) > parseInt($("#full_fee").val())){
+				$("#event_min_fee_error").html("Cannot be greater than full fee.");
 			  	valid = false;
-			}else{	document.getElementById("event_min_fee_error").innerHTML = ""; }
+			}else{ $("#event_min_fee_error").html(""); }
 			//full fee
-			if(! IsNumeric(document.getElementById("full_fee").value)){
-				document.getElementById("event_full_fee_error").innerHTML = "Must be a numeric value.";
+			if(!(IsNumeric($("#full_fee").val()))){
+				$("#event_full_fee_error").html("Must be a numeric value.");
 			  	valid = false;
-			}else if(document.getElementById("full_fee").value == "0"){
-				document.getElementById("event_full_fee_error").innerHTML = "Must be greater than 0.";
+			}else if($("#full_fee").val() == "0"){
+				$("#event_full_fee_error").html("Must be greater than 0.");
 			  	valid = false;
-			}else{ document.getElementById("event_full_fee_error").innerHTML = ""; }
+			}else{ $("#event_full_fee_error").html(""); }
 			//sale fee
-			if(parseInt(document.getElementById("sale_fee").value) != 0){
-				if(! IsNumeric(document.getElementById("sale_fee").value)){
-					document.getElementById("event_sale_fee_error").innerHTML = "Must be a numeric value.";
+			if(parseInt($("#sale_fee").val()) != 0){
+				if(!(IsNumeric($("#sale_fee").val()))){
+					$("#event_sale_fee_error").html("Must be a numeric value.");
 				  	valid = false;
-				}else{ document.getElementById("event_sale_fee_error").innerHTML = ""; }
+				}else{ $("#event_sale_fee_error").html(""); }
 				if(sale_end_Object.picked.date < Today){
-					document.getElementById("sale_end_error").innerHTML = 'Cannot select a date in the past.';
+					$("#sale_end_error").html('Cannot select a date in the past.');
 					valid = false;
-				}else{ document.getElementById("sale_end_error").innerHTML = ''; }
+				}else{ $("#sale_end_error").html(""); }
 			}
 			//payable to
-			if(document.getElementById("payableto").value == ""){
-				document.getElementById("event_payableto_error").innerHTML = "This is a required field.";
+			if($("#payableto").val() == ""){
+				$("#event_payableto_error").html("This is a required field.");
 			  	valid = false;
-			}else{	document.getElementById("event_payableto_error").innerHTML = ""; }
+			}else{ $("#event_payableto_error").html(""); }
 			//checksaddress to
-			if(document.getElementById("checksaddress").value == ""){
-				document.getElementById("event_checksaddress_error").innerHTML = "This is a required field.";
+			if($("#checksaddress").val() == ""){
+				$("#event_checksaddress_error").html("This is a required field.");
 			  	valid = false;
-			}else{ document.getElementById("event_checksaddress_error").innerHTML = ""; }
+			}else{ $("#event_checksaddress_error").html(""); }
 			//paypal
-			if(document.getElementById("paypal").value != "" && !echeck(document.getElementById("paypal").value)){
-				document.getElementById("event_paypal_error").innerHTML = "This is not a valid email address.";
+			if($("#paypal").val() != "" && !echeck($("#paypal").val())){
+				$("#event_paypal_error").html("This is not a valid email address.");
 			  	valid = false;
-			}else{	document.getElementById("event_paypal_error").innerHTML = ""; }
+			}else{ $("#event_paypal_error").html(""); }
 		}		
 		//event location
-		if(document.getElementById("location")){
-			document.getElementById("location_error").innerHTML = "";
+		if($("#location").length){
+			$("#location_error").html("");
 		}else{
-			document.getElementById("location_error").innerHTML = "Add a location for your event.";
+			$("#location_error").html("Add a location for your event.");
 		  	valid = false;
 		}
 		//multiday event
 		//event_begin_date	
 		if (event_begin_date_Object.picked.date < Today){
-			document.getElementById("event_begin_date_error").innerHTML = 'Cannot select a date in the past.';
+			$("#event_begin_date_error").html('Cannot select a date in the past.');
 			valid = false;
-        }else{ document.getElementById("event_begin_date_error").innerHTML = ''; }
-		if(document.getElementById("multiday").value == "1"){ //Multi day = YES
+        }else{ $("#event_begin_date_error").html(""); }
+		if($("#multiday").val() == "1"){ //Multi day = YES
    			//event_end_date	
 			if (event_end_date_Object.picked.date <= event_begin_date_Object.picked.date){
-				document.getElementById("event_end_date_error").innerHTML = 'Must select a date after the event start date';
+				$("#event_end_date_error").html('Must select a date after the event start date');
 				valid = false;
 			}else if (event_end_date_Object.picked.date < Today){
-				document.getElementById("event_end_date_error").innerHTML = 'Cannot select a date in the past.';
+				$("#event_end_date_error").html('Cannot select a date in the past.');
 				valid = false;
-			}else{ document.getElementById("event_end_date_error").innerHTML = ''; }
+			}else{ $("#event_end_date_error").html(""); }
 		}
-		if(document.getElementById("allday").value == "0"){ //All day = NO
+		if($("#allday").val() == "0"){ //All day = NO
 			//begin time
-			if(document.getElementById("begin_time").value == ""){
-				document.getElementById("time_error").innerHTML = "You must select a start time.";
+			if($("#begin_time").val() == ""){
+				$("#time_error").html("You must select a start time.");
 			  	valid = false;
-			}else if(document.getElementById("end_time").value == ""){
-				document.getElementById("time_error").innerHTML = "You must select an end time.";
+			}else if($("#end_time").val() == ""){
+				$("#time_error").html("You must select an end time.");
 			  	valid = false;
-			}else{ document.getElementById("time_error").innerHTML = ""; }
+			}else{ $("#time_error").html(""); }
 		}
-		if(document.getElementById("reg").value == "1"){ //Registration = YES
-            if(document.getElementById("template").value < 1){ 
-                document.getElementById("template_error").innerHTML = "Template must be selected.";
+		if($("#reg").val() == "1"){ //Registration = YES
+            if($("#template").val() < 1){ 
+                $("#template_error").html("Template must be selected.");
                 valid = false; 
             }
-			if(document.getElementById("max").value == ""){ document.getElementById("max").value = "0"; }
-			if(document.getElementById("limits").value == "1"){
+			if($("#max").val() == ""){ $("#max").val("0"); }
+			if($("#limits").val() == "1"){
 				//max reg
-				if(!IsNumeric(document.getElementById("max").value)){
-					document.getElementById("max_error").innerHTML = "Must be a numeric value.";
+				if(!IsNumeric($("#max").val())){
+					$("#max_error").html("Must be a numeric value.");
 				  	valid = false;
-				}else{ document.getElementById("max_error").innerHTML = ""; }
+				}else{ $("#max_error").html(""); }
 			}
 			//registration dates
    			//start_reg	
-			if(start_reg_Object.picked.date < Today && !document.getElementById("eventid")){
-				document.getElementById("start_reg_error").innerHTML = 'Cannot select a date in the past.';
+			if(start_reg_Object.picked.date < Today && !$("#eventid").length){
+				$("#start_reg_error").html('Cannot select a date in the past.');
 				valid = false;
 			}else if (start_reg_Object.picked.date >= event_begin_date_Object.picked.date){ 
-				document.getElementById("start_reg_error").innerHTML = 'Registration must start and end before event starts.';
+				$("#start_reg_error").html('Registration must start and end before event starts.');
 				valid = false
-   			}else{ document.getElementById("start_reg_error").innerHTML = ''; }
+   			}else{ $("#start_reg_error").html(""); }
 			//stop_reg	
-			if(stop_reg_Object.picked.date < Today && !document.getElementById("eventid")){
-				document.getElementById("stop_reg_error").innerHTML = 'Cannot select a date in the past.';
+			if(stop_reg_Object.picked.date < Today && !$("#eventid").length){
+				$("#stop_reg_error").html('Cannot select a date in the past.');
 				valid = false;
 			}else if (stop_reg_Object.picked.date <= start_reg_Object.picked.date){ 
-				document.getElementById("stop_reg_error").innerHTML = 'Must be a date after registration start.';
+				$("#stop_reg_error").html('Must be a date after registration start.');
 				valid = false
    			}else if (stop_reg_Object.picked.date > event_begin_date_Object.picked.date){ 
-				document.getElementById("stop_reg_error").innerHTML = 'Registration must start and end before event starts.';
+				$("#stop_reg_error").html('Registration must start and end before event starts.');
 				valid = false
-   			}else{ document.getElementById("stop_reg_error").innerHTML = ''; }
+   			}else{ $("#stop_reg_error").html(""); }
 		}
 	return valid;
 }
 function new_event_submit(pageid){
 	if(valid_new_event()){
     	var d = new Date();
-    	var eventid = document.getElementById("eventid") ? '&eventid=' + document.getElementById("eventid").value: ''; //Event id if update event
-    	var event_name = "&event_name=" + escape(document.getElementById("event_name").value); //Event name
-    	var contact = "&contact=" + escape(document.getElementById("contact").value); //Contacts name
-    	var email = "&email=" + escape(document.getElementById("email").value); //Contacts email
-    	var phone = "&phone=" + document.getElementById("phone_1").value + "-" + document.getElementById("phone_2").value + "-" + document.getElementById("phone_3").value; //Event name
-    	var extrainfo = "&extrainfo=" + escape(document.getElementById("extrainfo").value); //Event description
-    	var siteviewable = "&siteviewable=" + document.getElementById("siteviewable").value; //If event is viewable on front page
-    	var location = "&location=" + document.getElementById("location").value; //Where event is located
-    	var category = "&category=" + document.getElementById("category").value; //Event category (birthday, aniversary..)
-    	var multiday = "&multiday=" + document.getElementById("multiday").value; //If the event is more than 1 day
-    	var allday = "&allday=" + document.getElementById("allday").value; //all day event?
-        var workers = "&workers=" + document.getElementById("workers").value; //all day event?
+    	var eventid = $('#eventid').val() ? '&eventid=' + $('#eventid').val() : ''; //Event id if update event
+    	var event_name = "&event_name=" + escape($('#event_name').val()); //Event name
+    	var contact = "&contact=" + escape($('#contact').val()); //Contacts name
+    	var email = "&email=" + escape($('#email').val()); //Contacts email
+    	var phone = "&phone=" + $('#phone_1').val() + "-" + $('#phone_2').val() + "-" + $('#phone_3').val(); //Event name
+    	var byline = "&byline=" + escape($('#byline').val()); //Event byline
+        var description = "&description=" + escape($('#editor1').val()); //Event byline
+    	var siteviewable = "&siteviewable=" + $('#siteviewable').val(); //If event is viewable on front page
+    	var location = "&location=" + $('#location').val(); //Where event is located
+    	var category = "&category=" + $('#category').val(); //Event category (birthday, aniversary..)
+    	var multiday = "&multiday=" + $("#multiday").val(); //If the event is more than 1 day
+    	var allday = "&allday=" + $("#allday").val(); //all day event?
+        var workers = "&workers=" + $("#workers").val(); //all day event?
     	var event_begin_date = "&event_begin_date=" + event_begin_date_Object.picked.date; //when event begins
-    	var event_end_date = document.getElementById("multiday").value == "1" ? "&event_end_date=" + event_end_date_Object.picked.date : ""; //when event ends
-    	var begin_time = document.getElementById("allday").value == "1" ? "" : "&begin_time=" + document.getElementById("begin_time").value; //If not an all day event, when does it begin
-    	var end_time = document.getElementById("allday").value == "1" ? "" : "&end_time=" + document.getElementById("end_time").value; //If not an all day event, when does it end
-        var max = document.getElementById("reg").value == "1" ? "&max=" + document.getElementById("max").value : ""; //Maximum registrations HARD
-    	var hard_limits = document.getElementById("hard_limits") && document.getElementById("hard_limits").value != "" ? "&hard_limits=" + document.getElementById("hard_limits").value : ""; //custom limits that keep people from registering
-    	var soft_limits = document.getElementById("soft_limits") && document.getElementById("soft_limits").value != ""  ? "&soft_limits=" + document.getElementById("soft_limits").value : ""; //custom limits that place people in queue
-        var fee = "&fee=" + document.getElementById("fee").value; //Are there fees associated with this reg page?
-    	var min_fee = "&min_fee=" + document.getElementById("min_fee").value; //minimum amount needed to pay to register
-    	var full_fee = "&full_fee=" + document.getElementById("full_fee").value; //full payment for registration
-    	var sale_fee = "&sale_fee=" + document.getElementById("sale_fee").value; //temporary sale payment
-    	var sale_end = document.getElementById("sale_fee").value != "" ? "&sale_end=" + sale_end_Object.picked.date : ""; //when temporary sale price ends
-    	var checksaddress = "&checksaddress=" + escape(document.getElementById("checksaddress").value); //Address to send checks to
-    	var payableto = "&payableto=" + escape(document.getElementById("payableto").value); //Make checks payable to
-    	var paypal = "&paypal=" + document.getElementById("paypal").value; //Paypal account
-    	var reg = "&reg=" + document.getElementById("reg").value; //Event has a registration page
-    	var allowinpage = document.getElementById("reg").value == "1" ? "&allowinpage=" + document.getElementById("allowinpage").value : ""; //If a logged in user registers...allow them into the page that this event was created in.
-    	var template = document.getElementById("reg").value == "1" ? "&template=" + document.getElementById("template").value : ""; //registration template
+    	var event_end_date = $("#multiday").val() == "1" ? "&event_end_date=" + event_end_date_Object.picked.date : ""; //when event ends
+    	var begin_time = $("#allday").val() == "1" ? "" : "&begin_time=" + $("#begin_time").val(); //If not an all day event, when does it begin
+    	var end_time = $("#allday").val() == "1" ? "" : "&end_time=" + $("#end_time").val(); //If not an all day event, when does it end
+        var max = $("#reg").val() == "1" ? "&max=" + $("#max").val() : ""; //Maximum registrations HARD
+    	var hard_limits = $("#hard_limits").length && $("#hard_limits").val() != "" ? "&hard_limits=" + $("#hard_limits").val() : ""; //custom limits that keep people from registering
+    	var soft_limits = $("#soft_limits").length && $("#soft_limits").val() != "" ? "&soft_limits=" + $("#soft_limits").val() : ""; //custom limits that place people in queue
+        var fee = "&fee=" + $("#fee").val(); //Are there fees associated with this reg page?
+    	var min_fee = "&min_fee=" + $("#min_fee").val(); //minimum amount needed to pay to register
+    	var full_fee = "&full_fee=" + $("#full_fee").val(); //full payment for registration
+    	var sale_fee = "&sale_fee=" + $("#sale_fee").val(); //temporary sale payment
+    	var sale_end = $("#sale_fee").val() != "" ? "&sale_end=" + sale_end_Object.picked.date : ""; //when temporary sale price ends
+    	var checksaddress = "&checksaddress=" + escape($("#checksaddress").val()); //Address to send checks to
+    	var payableto = "&payableto=" + escape($("#payableto").val()); //Make checks payable to
+    	var paypal = "&paypal=" + $("#paypal").val(); //Paypal account
+    	var reg = "&reg=" + $("#reg").val(); //Event has a registration page
+    	var allowinpage = $("#reg").val() == "1" ? "&allowinpage=" + $("#allowinpage").val() : ""; //If a logged in user registers...allow them into the page that this event was created in.
+    	var template = $("#reg").val() == "1" ? "&template=" + $("#template").val() : ""; //registration template
         var template_settings = create_request_string('template_settings_form');
-        var start_reg = document.getElementById("reg").value == "1" ? "&start_reg=" + start_reg_Object.picked.date : ""; //Registration open date
-    	var stop_reg = document.getElementById("reg").value == "1" ? "&stop_reg=" + stop_reg_Object.picked.date : ""; //Registration ending date
-    	var parameters = "action=submit_new_event&pageid=" + pageid + workers + email + contact + phone + fee + min_fee + full_fee + sale_fee + sale_end + hard_limits + soft_limits + checksaddress + payableto + paypal + eventid + event_name + category + extrainfo + siteviewable + location + multiday + template + event_begin_date + event_end_date + allday + begin_time + end_time + reg + allowinpage + max + start_reg + stop_reg + template_settings + "&currTime=" + d.toUTCString();
+        var start_reg = $("#reg").val() == "1" ? "&start_reg=" + start_reg_Object.picked.date : ""; //Registration open date
+    	var stop_reg = $("#reg").val() == "1" ? "&stop_reg=" + stop_reg_Object.picked.date : ""; //Registration ending date
+    	var parameters = "action=submit_new_event&pageid=" + pageid + workers + email + contact + phone + fee + min_fee + full_fee + sale_fee + sale_end + hard_limits + soft_limits + checksaddress + payableto + paypal + eventid + event_name + category + byline + description + siteviewable + location + multiday + template + event_begin_date + event_end_date + allday + begin_time + end_time + reg + allowinpage + max + start_reg + stop_reg + template_settings + "&currTime=" + d.toUTCString();
         // Build the URL to connect to
       	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
     	// Open a connection to the server\
@@ -443,20 +444,20 @@ function new_event_submit(pageid){
 function add_new_location(eventid){
 	if(valid_new_location()){
     	var d = new Date();
-    	var name = "&name=" + escape(document.getElementById("location_name").value);
-    	var add1 = "&add1=" + escape(document.getElementById("location_address_1").value);
-    	var add2 = "&add2=" + escape(document.getElementById("location_address_2").value);
+    	var name = "&name=" + escape($('#location_name').val());
+    	var add1 = "&add1=" + escape($('#location_address_1').val());
+    	var add2 = "&add2=" + escape($('#location_address_2').val());
     	var zip = "&zip=" + document.getElementById("zip").value;
     	var eventid = "&eventid=" + eventid;
     	var share = document.getElementById("share").checked == true ? "&share=1" : "";
-    	var phone = document.getElementById("location_phone_1").value != "" ? "&phone=" + document.getElementById("location_phone_1").value + "-" + document.getElementById("location_phone_2").value + "-" + document.getElementById("location_phone_3").value : "";
+    	var phone = $('#location_phone_1').val() != "" ? "&phone=" + $('#location_phone_1').val() + "-" + $('#location_phone_2').val() + "-" + $('#location_phone_3').val() : "";
     	var parameters = "action=add_new_location" + name + add1 + add2 + zip + share + phone + eventid + "&currTime=" + d.toUTCString();
     	// Build the URL to connect to
       	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
     	// Open a connection to the server\
     	ajaxpost(url,parameters);
     	simple_display("select_location");
-    	document.getElementById("location_status").innerHTML = "Location Added"
+        $('#location_status').html("Location Added");
     	hide_show_buttons("addtolist");
     	hide_show_buttons("hide_menu");
     	hide_show_buttons("new_button");
@@ -467,7 +468,7 @@ function add_new_location(eventid){
 	}	
 }
 function clear_display(divname){
-	if(document.getElementById(divname)){ document.getElementById(divname).innerHTML = ""; }
+	if($("#"+divname).length){ $('#'+divname).html(""); }
 }
 function init_event_menu(){
     $('#event_menu_button').click( function(event){

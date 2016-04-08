@@ -215,7 +215,7 @@ global $CFG, $USER;
                                                     '.make_modal_links(array("title"=> stripslashes($event["name"]),"path"=>$CFG->wwwroot."/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","width"=>"700","height"=>"650")).'
                                                 </div>
                                                 <span style="font-size:.85em">&nbsp;
-                                                    ' . stripslashes(strip_tags($event["extrainfo"])) . '
+                                                    ' . stripslashes(strip_tags($event["byline"])) . '
                                     			</span>
                                                 <div class="hprcp_n" style="margin-top:4px;">
                                                     <div class="hprcp_e">
@@ -250,7 +250,7 @@ global $CFG, $USER;
                                                     '.make_modal_links(array("title"=> stripslashes($event["name"]),"path"=>$CFG->wwwroot."/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","width"=>"700","height"=>"650")).'
                                                 </div>
                                     			<span style="font-size:.85em">
-                                                    &nbsp;' . stripslashes(strip_tags($event["extrainfo"])) . '
+                                                    &nbsp;' . stripslashes(strip_tags($event["byline"])) . '
                                     			</span>
                                                 <div class="hprcp_n" style="margin-top:4px;">
                                                     <div class="hprcp_e">
@@ -865,7 +865,7 @@ function refresh_calendar_events($eventid){
         $year = date('Y',$startdate);
         $event_begin_time = $event["event_begin_time"] == "NULL" ? "" : $event["event_begin_time"];
         $event_end_time = $event["event_end_time"] == "NULL" ? "" : $event["event_end_time"];
-        $SQL = "INSERT INTO calendar_events (eventid,date,title,event,location,cat,starttime,endtime,day,month,year,site_viewable,groupid,pageid) VALUES('$eventid',".$startdate.",'" .dbescape($event["name"]). "','".dbescape($event["extrainfo"]). "','" .$event["location"]. "','" .$event["category"]. "','" .$event_begin_time . "','" . $event_end_time . "',$day,$month,$year,$siteviewable,0," .$event["pageid"]. ")";
+        $SQL = "INSERT INTO calendar_events (eventid,date,title,event,location,cat,starttime,endtime,day,month,year,site_viewable,groupid,pageid) VALUES('$eventid',".$startdate.",'" .dbescape($event["name"]). "','".dbescape($event["byline"]). "','" .$event["location"]. "','" .$event["category"]. "','" .$event_begin_time . "','" . $event_end_time . "',$day,$month,$year,$siteviewable,0," .$event["pageid"]. ")";
         $caleventid .= execute_db_sql($SQL);
         $startdate += 86400; //Advance 1 day
     }
