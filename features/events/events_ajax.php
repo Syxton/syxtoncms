@@ -902,11 +902,14 @@ global $CFG, $MYVARS, $USER;
              </a>';
     if(!empty($regid) && !empty($eventid)){
         $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
-        $touser = $fromuser = new stdClass();
-        $touser->email = get_db_field("email", "events_registrations", "regid=$regid");
-		$fromuser->fname = $CFG->sitename;
-		$fromuser->lname = "";
-		$fromuser->email = $event['email'];
+        
+        $touser = (object)array('email' => get_db_field("email", "events_registrations", "regid='$regid'"),
+                                'fname' => $registrant_name = get_registrant_name($regid),
+                                'lname' => "");
+
+        $fromuser = (object)array('email' => $event['email'],
+                                  'fname' => $CFG->sitename,
+                                  'lname' => "");
 
 		$message = registration_email($regid, $touser);
 		if(send_email($touser, $fromuser, null, $event["name"] . " Registration", $message)){
@@ -1518,37 +1521,20 @@ global $CFG, $MYVARS, $USER, $error;
 			}
 		}
 
-		$i = 0;
-		$name = "";
+        $touser = (object)array('email' => get_db_field("email", "events_registrations", "regid='$regid'"),
+                                'fname' => $registrant_name = get_registrant_name($regid),
+                                'lname' => "");
 
-		$result = get_db_result("SELECT * FROM events_templates_forms 
-                                    WHERE nameforemail='1' 
-                                        AND template_id='" . $event["template_id"]."'");
-		while($forms = fetch_row($result)){
-			$name .= $name == "" ? get_db_field("value", "events_registrations_values", "regid='$regid' AND elementid='" . $forms["elementid"]) . "'" : " " . get_db_field("value", "events_registrations_values", "regid=$regid AND elementid=" . $forms["elementid"]);
-		}
-        //Fixes email issues with some names "Firstname Lastname" and others "Lastname, Firstname"
-        if(strstr($name,",")){
-            $splitname = explode(",",$name,2);
-      		$touser->fname = str_replace(",","",$splitname[1]);
-    		$touser->lname = $splitname[0];
-        }else{
-    		$touser->fname = $name;
-    		$touser->lname = "";            
-        }
-
-		$touser->email = get_db_field("email", "events_registrations", "regid=$regid");
-		$fromuser->fname = $CFG->sitename;
-		$fromuser->lname = "";
-		$fromuser->email = $event['email'];
+        $fromuser = (object)array('email' => $event['email'],
+                                  'fname' => $CFG->sitename,
+                                  'lname' => "");
 
 		$message = registration_email($regid, $touser);
 		send_email($touser, $fromuser, null, $event["name"] . " Registration", $message);
-		//Log
-		log_entry("events", dbescape($MYVARS->GET["eventid"]), "Registered for Event");
+
+		log_entry("events", dbescape($MYVARS->GET["eventid"]), "Registered for Event"); //Log
 	}else{ //failed registration
-		//Log
-		log_entry("events", dbescape($MYVARS->GET["eventid"]), "Failed Event Registration");
+		log_entry("events", dbescape($MYVARS->GET["eventid"]), "Failed Event Registration"); //Log
 		echo '<center><div style="width:60%"><span class="error_text">Your registration for ' . $event['name'] . ' has failed. </span><br /> ' . $error . '</div>';
 	}
 }
