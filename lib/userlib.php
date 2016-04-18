@@ -164,47 +164,58 @@ global $CFG, $USER;
 	return false;
 }
 
-function nameize($str,$a_char = array("'","-"," ",'"','.')){ 
-    $str = stripslashes($str);
-    //the tricky part is finding names like DeMarco: 2 capitals
-	for($i=0;$i<strlen($str);$i++){
-		if($i > 0 && ctype_lower($str{($i-1)}) && ctype_upper($str{$i}) && isset($str{($i+1)}) && ctype_lower($str{($i+1)})){
-			$temp = $str;
-			$str = substr($temp,0,($i)) . "+ " . substr($temp,($i),(strlen($str)-($i)));
-			$i++; $i++;
-		}
-	}
+function nameize($str,$a_char = array("'","-"," ",'"','.')){
+    $str = stripslashes(trim($str));
+    $str = preg_replace('!\s+!', ' ', $str);
+    $name_parts = explode(" ", $str);
 
-	//$str contains the complete raw name string
-    //$a_char is an array containing the characters we use as separators for capitalization. If you don't pass anything, there are three in there as default.
-	$string = strtolower($str);
-    foreach($a_char as $temp){
-        $pos = strpos($string,$temp);
-        if($pos !== -1){
-            //we are in the loop because we found one of the special characters in the array, so lets split it up into chunks and capitalize each one.
-            $mend = '';
-            $a_split = explode($temp,$string);
-            foreach ($a_split as $temp2){
-                //capitalize each portion of the string which was separated at a special character
-                $mend .= ucfirst($temp2).$temp;
-            }
-            $string = substr($mend,0,-1);
-        }   
-    }
+    if(count($name_parts) > 1) {
+        $output = "";
+        foreach($name_parts as $np) {
+            $output .= nameize($np) . " ";        
+        }
+        return trim($output);
+    } else {
+        //the tricky part is finding names like DeMarco: 2 capitals
+    	for($i=0;$i<strlen($str);$i++){
+    		if($i > 0 && ctype_lower($str{($i-1)}) && ctype_upper($str{$i}) && isset($str{($i+1)}) && ctype_lower($str{($i+1)})){
+    			$temp = $str;
+    			$str = substr($temp,0,($i)) . "+ " . substr($temp,($i),(strlen($str)-($i)));
+    			$i++; $i++;
+    		}
+    	}
     
-    $str = "";
-   	for($i=0;$i<strlen($string);$i++){
-		if(array_search($string{$i},$a_char)){
-            if($string{$i} !== $string{(strlen($string)-$i-1)}){
+    	//$str contains the complete raw name string
+        //$a_char is an array containing the characters we use as separators for capitalization. If you don't pass anything, there are three in there as default.
+    	$string = strtolower($str);
+        foreach($a_char as $temp){
+            $pos = strpos($string,$temp);
+            if($pos !== -1){
+                //we are in the loop because we found one of the special characters in the array, so lets split it up into chunks and capitalize each one.
+                $mend = '';
+                $a_split = explode($temp,$string);
+                foreach ($a_split as $temp2){
+                    //capitalize each portion of the string which was separated at a special character
+                    $mend .= ucfirst($temp2).$temp;
+                }
+                $string = substr($mend,0,-1);
+            }   
+        }
+        
+        $str = "";
+       	for($i=0;$i<strlen($string);$i++){
+    		if(array_search($string{$i},$a_char)){
+                if($string{$i} !== $string{(strlen($string)-$i-1)}){
+                    $str .= $string{$i};
+                }
+    		}else{
                 $str .= $string{$i};
-            }
-		}else{
-            $str .= $string{$i};
-		}
-	}
-    $str = str_replace("+ ","",$str);
-    $str = str_replace("+","",$str);
-    $str = str_replace('""','"',$str);
-    return trim(ucfirst($str));
+    		}
+    	}
+        $str = str_replace("+ ","",$str);
+        $str = str_replace("+","",$str);
+        $str = str_replace('""','"',$str);
+        return trim(ucfirst($str));        
+    }
 }
 ?>
