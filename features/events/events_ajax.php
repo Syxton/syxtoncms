@@ -2407,7 +2407,9 @@ global $CFG, $MYVARS, $USER;
             $status = !empty($old) ? '<div style="color:red;font-weight:bold">Application Out of Date</div>' : '';
             $flag = $staff["q1_1"] + $staff["q1_2"] + $staff["q1_3"] + $staff["q2_1"] + $staff["q2_2"];
             $status .= !empty($flag) ? '<div style="color:red;font-weight:bolder"><img style="vertical-align: middle;" src="'.$CFG->wwwroot.'/images/error.gif" /> Director Review Required!</div>' : '';
-            $status .= empty($staff["bgcheckpass"]) ? '<div style="color:red;font-weight:bold"><img style="vertical-align: middle;" src="'.$CFG->wwwroot.'/images/error.gif" /> Background Check Incomplete</div>' : (time()-$staff["bgcheckpassdate"] > ($settings->events->$featureid->bgcheck_years->setting * 365 * 24 * 60 * 60) ? '<div style="color:#red;font-weight:bold"><img style="vertical-align: middle;" src="'.$CFG->wwwroot.'/images/error.gif" /> Background Check Out of Date</div>' : "");
+            
+            $eighteen = 18 * 365 * 24 * 60 * 60; // 18 years in seconds
+            $status .= empty($staff["bgcheckpass"]) ? ((time() - $staff["dateofbirth"]) < $eighteen) ? '' : '<div style="color:red;font-weight:bold"><img style="vertical-align: middle;" src="'.$CFG->wwwroot.'/images/error.gif" /> Background Check Incomplete</div>' : (time()-$staff["bgcheckpassdate"] > ($settings->events->$featureid->bgcheck_years->setting * 365 * 24 * 60 * 60) ? '<div style="color:#red;font-weight:bold"><img style="vertical-align: middle;" src="'.$CFG->wwwroot.'/images/error.gif" /> Background Check Out of Date</div>' : "");
 			$status = empty($status) ? '<div style="color:green;font-size:1.3em;font-weight:bold"><img style="vertical-align: bottom;" src="'.$CFG->wwwroot.'/images/checked.gif" /> APPROVED</div>' : $status;
             
             $button = '<a href="javascript: void(0)" onclick="if($(\'#bgcheckdate_'.$staff["staffid"].'\').prop(\'disabled\')){ $(\'#bgcheckdate_'.$staff["staffid"].'\').prop(\'disabled\', false); } else { ajaxapi(\'/features/events/events_ajax.php\',
@@ -2635,7 +2637,7 @@ global $CFG,$MYVARS,$USER;
             $status = empty($staff["bgcheckpass"]) ? false : (time()-$staff["bgcheckpassdate"] > ($settings->events->$featureid->bgcheck_years->setting * 365 * 24 * 60 * 60) ? false : true);
             
             $eighteen = 18 * 365 * 24 * 60 * 60; // 18 years in seconds
-            $backgroundchecklink = ((time() - $dateofbirth) > $eighteen) && ($status || empty($linkurl)) ? '' : '
+            $backgroundchecklink = ((time() - $dateofbirth) < $eighteen) || ($status || empty($linkurl)) ? '' : '
                <br /><br />
                If you have not already done so, please complete a background check.<br />
                <h2><a href="'.$linkurl.'">Submit a background check</a></h2>'; 
