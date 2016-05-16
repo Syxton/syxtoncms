@@ -1082,7 +1082,6 @@ function staff_status($staff) {
             $status[] =  "Background Check Out of Date";
         }
     }
-
     return $status;    
 }
 
@@ -1131,7 +1130,7 @@ global $USER, $CFG, $MYVARS;
     $v["parentalconsent"] = empty($row) ? "" : $row["parentalconsent"];
     $v["parentalconsentsig"] = empty($row) ? "" : ($row["parentalconsentsig"] == "on" ? "checked" : "");
     
-    $v["sub18dispaly"] = empty($v["ar1selected"]) ? "display:none" : "";
+    $v["sub18display"] = empty($v["ar1selected"]) ? "display:none" : "";
     $v["workerconsent"] = empty($row) ? "" : $row["workerconsent"];
     $v["workerconsentsig"] = empty($row) ? "" : ($row["workerconsentsig"] == "on" && $viewonly  ? "checked" : "");
     $v["workerconsentdate"] = empty($row) ? date('m/d/Y') : (!empty($row['workerconsentdate']) && $viewonly ? date('m/d/Y',$row['workerconsentdate']) : date('m/d/Y'));
@@ -1170,7 +1169,7 @@ global $USER, $CFG, $MYVARS;
     				    <div class="spacer" style="clear: both;"></div>
     	  			</div>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="agerange">Age Range</label><select '.($viewonly ? 'disabled="disabled"' : '').' id="agerange" name="agerange" data-rule-required="true" onchange="if($(this).val() != 0){ $(\'#sub18\').hide(); $(\'#parentalconsent\').val(\'\'); $(\'#parentalconsent\').removeData(\'rule-required\').removeAttr(\'data-rule-required\'); $(\'#parentalconsentsig\').prop(\'checked\', false); $(\'#parentalconsentsig\').removeData(\'rule-required\').removeAttr(\'data-rule-required\'); } if($(this).val() == 0){ $(\'#parentalconsent\').val(\'\'); $(\'#parentalconsentsig\').prop(\'checked\', false); $(\'#parentalconsent\').removeData(\'rule-required\').attr(\'data-rule-required\',\'true\'); $(\'#sub18\').show(); }"><option>Please select</option><option value="0" '.$v["ar1selected"].'>18 or younger</option><option value="1" '.$v["ar2selected"].'>19-25</option><option value="2" '.$v["ar3selected"].'>26 or older</option></select><div class="tooltipContainer info">'.get_help("input_staff_agerange:events").'</div><br />
+    					<label class="rowTitle" for="agerange">Age Range</label><select '.($viewonly ? 'disabled="disabled"' : '').' id="agerange" name="agerange" data-rule-required="true" onchange="if($(this).val() != 0){ $(\'#sub18\').hide(); $(\'#parentalconsent\').val(\'\'); $(\'#parentalconsent\').removeData(\'rule-required\').removeAttr(\'data-rule-required\'); $(\'#parentalconsentsig\').prop(\'checked\', false); $(\'#parentalconsentsig\').removeData(\'rule-required\').removeAttr(\'data-rule-required\'); } if($(this).val() == 0){ $(\'#parentalconsent\').val(\'\'); $(\'#parentalconsentsig\').prop(\'checked\', false); $(\'#parentalconsent\').removeData(\'rule-required\').attr(\'data-rule-required\',\'true\'); $(\'#sub18\').show(); }"><option>Please select</option><option value="0" '.$v["ar1selected"].'>younger than 18</option><option value="1" '.$v["ar2selected"].'>18-25</option><option value="2" '.$v["ar3selected"].'>26 or older</option></select><div class="tooltipContainer info">'.get_help("input_staff_agerange:events").'</div><br />
     				    <div class="spacer" style="clear: both;"></div>
     	  			</div>
                     <div class="rowContainer">
@@ -1281,7 +1280,7 @@ global $USER, $CFG, $MYVARS;
     					<label class="rowTitle" for="workerconsentsig">Signature</label><input '.($viewonly ? 'disabled="disabled"' : '').' type="checkbox" id="workerconsentsig" name="workerconsentsig" '.$v["workerconsentsig"].' data-rule-required="true" /><div class="tooltipContainer info">'.get_help("input_staff_workerconsentsig:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
     				</div>
-                    <div id="sub18" style="'.$v["sub18dispaly"].'">
+                    <div id="sub18" style="'.$v["sub18display"].'">
                         <br /><hr><br />
                             <div style="background:#FFED00;padding:5px;">
                             <strong>If you are under 18, please have a parent or guardian affirm to the following:</strong><br />

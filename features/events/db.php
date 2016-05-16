@@ -220,6 +220,15 @@ global $CFG;
 			execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
 		}
 	}
+    
+	$thisversion = 20160516;
+	if($version < $thisversion){
+	    $SQL1 = "UPDATE `events_staff` SET agerange=1, parentalconsent='', parentalconsentsig='' WHERE agerange=0 AND (UNIX_TIMESTAMP() - dateofbirth) > 567648000";
+        $SQL2 = "UPDATE `events_staff_archive` SET agerange=1, parentalconsent='', parentalconsentsig='' WHERE year=2016 AND agerange=0 AND (UNIX_TIMESTAMP() - dateofbirth) > 567648000";
+        if(execute_db_sql($SQL1) && execute_db_sql($SQL2)) {
+           execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'"); 
+        }
+	}
 }
 
 function events_install(){
