@@ -1105,9 +1105,29 @@ global $USER, $CFG, $MYVARS;
     $v["phone"] = empty($row) ? "" : $row["phone"];
     $v["dateofbirth"] = empty($row) ? "" : (isset($row['dateofbirth']) ? date('m/d/Y',$row['dateofbirth']) : '');
     $v["address"] = empty($row) ? "" : $row["address"];
-    $v["ar1selected"] = empty($row) ? "" : ($row["agerange"] == "0" ? "selected" : "");
-    $v["ar2selected"] = empty($row) ? "" : ($row["agerange"] == "1" ? "selected" : "");
-    $v["ar3selected"] = empty($row) ? "" : ($row["agerange"] == "2" ? "selected" : "");
+    $v["ar1selected"] = "";
+    $v["ar2selected"] = "";
+    $v["ar3selected"] = "";
+    if(!empty($row)) {
+        if($viewonly || empty($v["dateofbirth"])) {
+            if ($row["agerange"] == "0") {
+                $v["ar1selected"] = "selected";
+            } elseif ($row["agerange"] == "1") {
+                $v["ar2selected"] = "selected";
+            } elseif ($row["agerange"] == "2") {
+                $v["ar3selected"] = "selected";
+            }  
+        } else {
+            $time = get_timestamp();
+            if (($time - $row['dateofbirth']) < (18 * 365 * 24 * 60 * 60)) { // Under 18
+                $v["ar1selected"] = "selected";
+            } elseif ((($time - $row['dateofbirth']) < (25 * 365 * 24 * 60 * 60))) { // Over 18 under 25
+                $v["ar2selected"] = "selected";
+            } else {
+                $v["ar3selected"] = "selected";
+            }
+        } 
+    }
     $v["cocmembernoselected"] = empty($row) ? "" : ($row["cocmember"] == "0" ? "selected" : "");
     $v["cocmemberyesselected"] = empty($row) ? "" : ($row["cocmember"] == "1" ? "selected" : "");
     $v["congregation"] = empty($row) ? "" : $row["congregation"];
@@ -1157,7 +1177,26 @@ global $USER, $CFG, $MYVARS;
     				    <div class="spacer" style="clear: both;"></div>
                     </div>
                     <div class="rowContainer">
-        				<label class="rowTitle" for="dateofbirth">Date of Birth</label><input '.($viewonly ? 'disabled="disabled"' : '').' type="text" id="dateofbirth" name="dateofbirth" value="'.$v["dateofbirth"].'" data-rule-required="true" data-rule-date="true" /><div class="tooltipContainer info">'.get_help("input_staff_dob:events").'</div>
+        				<label class="rowTitle" for="dateofbirth">Date of Birth</label>
+                        <input '.($viewonly ? 'disabled="disabled"' : '').' type="text" 
+                                                                            id="dateofbirth" 
+                                                                            name="dateofbirth" 
+                                                                            value="'.$v["dateofbirth"].'" 
+                                                                            data-rule-required="true" 
+                                                                            data-rule-date="true" 
+                                                                            onblur="
+                                                                            var d = new Date($(this).val()).getTime() / 1000;
+                                                                            console.log(d);
+                                                                            if('.time().' - d < 567648000) {
+                                                                                $(\'#agerange\').val(0);
+                                                                            } else if ('.time().' - d < 788400000) {
+                                                                                $(\'#agerange\').val(1);
+                                                                            } else {
+                                                                                $(\'#agerange\').val(2);
+                                                                            }
+                                                                            $(\'#agerange\').change();
+                                                                            "
+                                                                            /><div class="tooltipContainer info">'.get_help("input_staff_dob:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
         			</div>
                     <div class="rowContainer">
@@ -1169,7 +1208,28 @@ global $USER, $CFG, $MYVARS;
     				    <div class="spacer" style="clear: both;"></div>
     	  			</div>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="agerange">Age Range</label><select '.($viewonly ? 'disabled="disabled"' : '').' id="agerange" name="agerange" data-rule-required="true" onchange="if($(this).val() != 0){ $(\'#sub18\').hide(); $(\'#parentalconsent\').val(\'\'); $(\'#parentalconsent\').removeData(\'rule-required\').removeAttr(\'data-rule-required\'); $(\'#parentalconsentsig\').prop(\'checked\', false); $(\'#parentalconsentsig\').removeData(\'rule-required\').removeAttr(\'data-rule-required\'); } if($(this).val() == 0){ $(\'#parentalconsent\').val(\'\'); $(\'#parentalconsentsig\').prop(\'checked\', false); $(\'#parentalconsent\').removeData(\'rule-required\').attr(\'data-rule-required\',\'true\'); $(\'#sub18\').show(); }"><option>Please select</option><option value="0" '.$v["ar1selected"].'>younger than 18</option><option value="1" '.$v["ar2selected"].'>18-25</option><option value="2" '.$v["ar3selected"].'>26 or older</option></select><div class="tooltipContainer info">'.get_help("input_staff_agerange:events").'</div><br />
+    					<label class="rowTitle" for="agerange">Age Range</label>
+                        <select '.($viewonly ? 'disabled="disabled"' : '').' id="agerange" 
+                                                                             name="agerange" 
+                                                                             data-rule-required="true" 
+                                                                             onchange="if($(this).val() != 0) { 
+                                                                                            $(\'#sub18\').hide(); 
+                                                                                            $(\'#parentalconsent\').val(\'\'); 
+                                                                                            $(\'#parentalconsent\').removeData(\'rule-required\').removeAttr(\'data-rule-required\');
+                                                                                            $(\'#parentalconsentsig\').prop(\'checked\', false);
+                                                                                            $(\'#parentalconsentsig\').removeData(\'rule-required\').removeAttr(\'data-rule-required\'); 
+                                                                                        } 
+                                                                                        if($(this).val() == 0) { 
+                                                                                            $(\'#parentalconsent\').val(\'\');
+                                                                                            $(\'#parentalconsentsig\').prop(\'checked\', false);
+                                                                                            $(\'#parentalconsent\').removeData(\'rule-required\').attr(\'data-rule-required\',\'true\');
+                                                                                            $(\'#sub18\').show();
+                                                                                        }">
+                            <option>Please select</option>
+                            <option value="0" '.$v["ar1selected"].'>younger than 18</option>
+                            <option value="1" '.$v["ar2selected"].'>18-25</option>
+                            <option value="2" '.$v["ar3selected"].'>26 or older</option>
+                        </select><div class="tooltipContainer info">'.get_help("input_staff_agerange:events").'</div><br />
     				    <div class="spacer" style="clear: both;"></div>
     	  			</div>
                     <div class="rowContainer">
