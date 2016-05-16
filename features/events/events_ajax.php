@@ -3,8 +3,8 @@
 * events_ajax.php - Events backend ajax script
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 3/23/2016
-* Revision: 2.1.9
+* Date: 5/16/2016
+* Revision: 2.2.0
 ***************************************************************************/
 
 if(!isset($CFG)){ include('../header.php'); } 
@@ -2316,13 +2316,6 @@ global $USER, $CFG, $MYVARS;
 
 function appsearch(){
 global $CFG, $MYVARS, $USER;
-    $pageid = $_COOKIE["pageid"];
-    $featureid = "*";
-    if(!$settings = fetch_settings("events", $featureid, $pageid)){
-		make_or_update_settings_array(default_settings("events",$pageid,$featureid));
-		$settings = fetch_settings("events", $featureid, $pageid);
-	}
-
     $MYVARS->search_perpage = 8;
     $userid = $USER->userid; $searchstring = "";
     $searchwords = trim($MYVARS->GET["searchwords"]);
@@ -2401,17 +2394,6 @@ global $CFG, $MYVARS, $USER;
         while($staff = fetch_row($results)){
         	$export = "";
             $header = $header == "" ? '<table style="width:100%;"><tr><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;font-size:.75em;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><p>' : $header;
-            
-            $old = $staff["workerconsentdate"] < strtotime($settings->events->$featureid->staffapp_expires->setting . '/' . date('Y')) ? true : false;
-            
-            $status = !empty($old) ? '<div style="color:red;font-weight:bold">Application Out of Date</div>' : '';
-            $flag = $staff["q1_1"] + $staff["q1_2"] + $staff["q1_3"] + $staff["q2_1"] + $staff["q2_2"];
-            $status .= !empty($flag) ? '<div style="color:red;font-weight:bolder"><img style="vertical-align: middle;" src="'.$CFG->wwwroot.'/images/error.gif" /> Director Review Required!</div>' : '';
-            
-            $eighteen = 18 * 365 * 24 * 60 * 60; // 18 years in seconds
-            $status .= empty($staff["bgcheckpass"]) ? ((time() - $staff["dateofbirth"]) < $eighteen) ? '' : '<div style="color:red;font-weight:bold"><img style="vertical-align: middle;" src="'.$CFG->wwwroot.'/images/error.gif" /> Background Check Incomplete</div>' : (time()-$staff["bgcheckpassdate"] > ($settings->events->$featureid->bgcheck_years->setting * 365 * 24 * 60 * 60) ? '<div style="color:#red;font-weight:bold"><img style="vertical-align: middle;" src="'.$CFG->wwwroot.'/images/error.gif" /> Background Check Out of Date</div>' : "");
-			$status = empty($status) ? '<div style="color:green;font-size:1.3em;font-weight:bold"><img style="vertical-align: bottom;" src="'.$CFG->wwwroot.'/images/checked.gif" /> APPROVED</div>' : $status;
-            
             $button = '<a href="javascript: void(0)" onclick="if($(\'#bgcheckdate_'.$staff["staffid"].'\').prop(\'disabled\')){ $(\'#bgcheckdate_'.$staff["staffid"].'\').prop(\'disabled\', false); } else { ajaxapi(\'/features/events/events_ajax.php\',
                                                                       \'change_bgcheck_status\',
                                                                       \'&amp;bgcdate=\'+$(\'#bgcheckdate_'.$staff["staffid"].'\').val()+\'&amp;staffid='.$staff["staffid"].'\',
@@ -2445,13 +2427,14 @@ global $CFG, $MYVARS, $USER;
                                         true
                                 );';
             $bgcheckdate = empty($staff["bgcheckpassdate"]) ? '' : date('m/d/Y', $staff["bgcheckpassdate"]);
+            $status = staff_status($staff);
 			$body .= '<tr style="height:30px;border:3px solid white;font-size:.9em;">
                         <td style="padding:5px;font-size:.85em;white-space:nowrap;">
                             <a href="javascript: void(0);" onclick="'.$applookup.'">'. $staff["name"] .'</a><br />
                             <span style="font-size:.9em">'.get_db_field("email","users",'userid="'.$staff["userid"].'"').'</span>
                         </td>
                         <td style="padding:5px;font-size:.75em;">
-                            ' . $status . '
+                            ' . print_status($status) . '
                         </td>
                         <td style="text-align:right;padding:5px;">
                             <input style="width: 100px;margin: 0;" type="text" disabled="disabled" id="bgcheckdate_'.$staff["staffid"].'" name="bgcheckdate_'.$staff["staffid"].'" value="'.$bgcheckdate.'" />' . $button . '

@@ -3,8 +3,8 @@
 * eventslib.php - Events function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 3/10/2016
-* Revision: 2.8.4
+* Date: 5/16/2016
+* Revision: 2.8.5
 ***************************************************************************/
 
 if(!isset($LIBHEADER)){ if(file_exists('./lib/header.php')){ include('./lib/header.php'); }elseif(file_exists('../lib/header.php')) { include('../lib/header.php'); }elseif(file_exists('../../lib/header.php')){ include('../../lib/header.php'); }}
@@ -1052,6 +1052,51 @@ function get_my_category($selected = false){
     }
     $returnme .= $returnme == "" ? "No categories exist." : "</select>";
     return $returnme;
+}
+
+function staff_status($staff) {
+    $pageid = $_COOKIE["pageid"];
+    $featureid = "*";
+    if(!$settings = fetch_settings("events", $featureid, $pageid)){
+		make_or_update_settings_array(default_settings("events", $pageid, $featureid));
+		$settings = fetch_settings("events", $featureid, $pageid);
+	}
+    $status = array();
+
+    if ($staff["workerconsentdate"] < strtotime($settings->events->$featureid->staffapp_expires->setting . '/' . date('Y'))) {
+        $status[] = "Application Out of Date";
+    }
+
+    $flag = $staff["q1_1"] + $staff["q1_2"] + $staff["q1_3"] + $staff["q2_1"] + $staff["q2_2"];
+    if (!empty($flag)) {
+        $status[] = "Director Review Required!";
+    }
+
+    $eighteen = 18 * 365 * 24 * 60 * 60; // 18 years in seconds
+    $expireyear = $settings->events->$featureid->bgcheck_years->setting * 365 * 24 * 60 * 60;
+    $time = get_timestamp();
+    if( ($time - $staff["dateofbirth"]) > $eighteen ) {
+        if(empty($staff["bgcheckpass"]) ) {
+            $status[] =  "Background Check Incomplete";
+        } else if ( ($time - $staff["bgcheckpassdate"]) > $expireyear ) {
+            $status[] =  "Background Check Out of Date";
+        }
+    }
+
+    return $status;    
+}
+
+function print_status($status) {
+global $CFG;
+    $print = '';
+    if(!empty($status)){
+        foreach($status as $s) {
+            $print .= '<div style="color:red;font-weight:bold"><img style="vertical-align: middle;" src="'.$CFG->wwwroot.'/images/error.gif" /> ' . $s . '</div>';
+        }
+    } else {
+        $print = '<div style="color:green;font-size:1.3em;font-weight:bold"><img style="vertical-align: bottom;" src="'.$CFG->wwwroot.'/images/checked.gif" /> APPROVED</div>';
+    }
+    return $print;
 }
 
 function staff_application_form($row, $viewonly = false){
