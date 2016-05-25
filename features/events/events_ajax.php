@@ -2642,6 +2642,7 @@ global $MYVARS, $CFG, $USER;
 	if(!isset($FILELIB)){ include_once ($CFG->dirroot . '/lib/filelib.php'); }
     $fields = array("STATUS",
                     "Name",
+                    "Email",
                     "Date of Birth",
                     "Phone",
                     "Address",
@@ -2673,7 +2674,7 @@ global $MYVARS, $CFG, $USER;
                     "Background Check Date");
 	$CSV = '"' . implode('","', $fields). "\"\n";
     
-    $SQL = "SELECT name,phone,dateofbirth,address,agerange,cocmember,congregation,
+    $SQL = "SELECT name,userid,phone,dateofbirth,address,agerange,cocmember,congregation,
                    priorwork,q1_1,q1_2,q1_3,q2_1,q2_2,q2_3,parentalconsent,
                    parentalconsentsig,workerconsent,workerconsentsig,workerconsentdate,
                    ref1name,ref1relationship,ref1phone,ref2name,ref2relationship,ref2phone,
@@ -2683,6 +2684,7 @@ global $MYVARS, $CFG, $USER;
 		while ($app = fetch_row($applications)) {
             $status = staff_status($app);
             $status = empty($status) ? array("APPROVED") : $status;
+            $email = get_db_field("email", "users", "userid='".$app["userid"]."'");
             $app["agerange"] = $app["agerange"] == 0 ? "under 18" : ($app["agerange"] == 1 ? "18 - 25" : "26 or older");
             $app["cocmember"] = $app["cocmember"] == 0 ? "No" : "Yes";
             $app["priorwork"] = $app["priorwork"] == 0 ? "No" : "Yes";
@@ -2694,7 +2696,39 @@ global $MYVARS, $CFG, $USER;
             $app["parentalconsentsig"] = $app["parentalconsentsig"] == "on" ? "Signed" : "";
             $app["workerconsentsig"] = $app["workerconsentsig"] == "on" ? "Signed" : "";
             $app["bgcheckpass"] = $app["bgcheckpass"] == 0 ? "No" : "Yes";
-            $CSV .= '"'.implode($status," | ").'","'.$app["name"].'","'.date('m/d/Y',$app["dateofbirth"]).'","'.$app["phone"].'","'.$app["address"].'","'.$app["agerange"].'","'.$app["cocmember"].'","'.$app["congregation"].'","'.$app["priorwork"].'","'.$app["q1_1"].'","'.$app["q1_2"].'","'.$app["q1_3"].'","'.$app["q2_1"].'","'.$app["q2_2"].'","'.$app["q2_3"].'","'.$app["parentalconsent"].'","'.$app["parentalconsentsig"].'","'.$app["workerconsent"].'","'.$app["workerconsentsig"].'","'.date('m/d/Y',$app["workerconsentdate"]).'","'.$app["ref1name"].'","'.$app["ref1phone"].'","'.$app["ref1relationship"].'","'.$app["ref2name"].'","'.$app["ref2phone"].'","'.$app["ref2relationship"].'","'.$app["ref3name"].'","'.$app["ref1phone"].'","'.$app["ref3relationship"].'","'.$app["bgcheckpass"].'","'.(!empty($app["bgcheckpassdate"]) ? date('m/d/Y',$app["bgcheckpassdate"]) : '').'"' . "\n";
+            $CSV .= '"'.implode($status," | ").
+                    '","'.$app["name"].
+                    '","'.$email.
+                    '","'.date('m/d/Y',$app["dateofbirth"]).
+                    '","'.$app["phone"].
+                    '","'.$app["address"].
+                    '","'.$app["agerange"].
+                    '","'.$app["cocmember"].
+                    '","'.$app["congregation"].
+                    '","'.$app["priorwork"].
+                    '","'.$app["q1_1"].
+                    '","'.$app["q1_2"].
+                    '","'.$app["q1_3"].
+                    '","'.$app["q2_1"].
+                    '","'.$app["q2_2"].
+                    '","'.$app["q2_3"].
+                    '","'.$app["parentalconsent"].
+                    '","'.$app["parentalconsentsig"].
+                    '","'.$app["workerconsent"].
+                    '","'.$app["workerconsentsig"].
+                    '","'.date('m/d/Y',$app["workerconsentdate"]).
+                    '","'.$app["ref1name"].
+                    '","'.$app["ref1phone"].
+                    '","'.$app["ref1relationship"].
+                    '","'.$app["ref2name"].
+                    '","'.$app["ref2phone"].
+                    '","'.$app["ref2relationship"].
+                    '","'.$app["ref3name"].
+                    '","'.$app["ref1phone"].
+                    '","'.$app["ref3relationship"].
+                    '","'.$app["bgcheckpass"].
+                    '","'.(!empty($app["bgcheckpassdate"]) ? date('m/d/Y',$app["bgcheckpassdate"]) : '').
+                    '"' . "\n";
 		}
 	}
 	echo get_download_link("staffapps($year).csv",$CSV);
