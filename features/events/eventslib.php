@@ -1168,12 +1168,15 @@ global $USER, $CFG, $MYVARS;
     $v["ref3phone"] = empty($row) ? "" : $row["ref3phone"];
         
     return '<div class="formDiv" id="staffapplication_form_div">
-            <div style="text-align:center"><h2>'.(!$viewonly ? 'Staff Application' : $v["name"] . ' Application').'</h2></div><br />
+            <div style="text-align:center">
+            <h2>'.(!$viewonly ? 'Staff Application' : $v["name"] . ' Application').'</h2>
+            <span style="font-weight:bold;font-size:.9em">If you are not ' . $v["name"] . ', please sign into your own account.</span>
+            </div><br />
     		<form name="staffapplication_form" id="staffapplication_form">
                 '.(empty($v["staffid"]) ? '' : '<input type="hidden" id="staffid" name="staffid" value="'.$v["staffid"].'" />').'
     			<fieldset class="formContainer" '.($viewonly ? '' : 'style="width: 420px;margin-left: auto;margin-right: auto;"').'>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="name">Name</label><input '.($viewonly ? 'disabled="disabled"' : '').' type="text" id="name" name="name" value="'.$v["name"].'" data-rule-required="true" data-msg-required="'.get_error_message('valid_staff_name:events').'" /><div class="tooltipContainer info">'.get_help("input_staff_name:events").'</div>
+    					<label class="rowTitle" for="name">Name</label><input disabled="disabled" type="text" id="name" name="name" value="'.$v["name"].'" data-rule-required="true" data-msg-required="'.get_error_message('valid_staff_name:events').'" /><div class="tooltipContainer info">'.get_help("input_staff_name:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
                     </div>
                     <div class="rowContainer">
