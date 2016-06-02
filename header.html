@@ -7,9 +7,9 @@
     <link rel="shortcut icon" href="favicon.ico" />
     <link type="text/css" rel="stylesheet" href="<?php echo $CFG->wwwroot ?>/min/?b=<?php echo empty($CFG->directory) ? '' : $CFG->directory . '/'; ?>styles&amp;f=styles_main.css,colorbox.css" />
     <!--[if lt IE 7]>
-     <style type="text/css">
-     .dock img { behavior: url(iepngfix.htc) }
-     </style>
+    <style type="text/css">
+        .dock img { behavior: url(iepngfix.htc) }
+    </style>
     <![endif]-->
  
 	<?php if(isset($USER->key)){ ?>
@@ -36,3 +36,14 @@
     <!-- End Google Analytics -->
 </head>
 <body>
+<noscript>
+	<div style="text-align: center;">
+    <h2>JavaScript is disabled!</h2>
+	This website requires Javascript to run properly.
+    Please enable JavaScript in your web browser!
+    </div>
+	<style type="text/css">
+		#main-content { display:none; }
+	</style>
+</noscript>
+<div id="main-content">
