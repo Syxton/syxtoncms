@@ -95,12 +95,20 @@ global $CFG, $USER, $ROLES;
 
 function get_staff_application_button(){
 global $CFG;
-    return '
-    <script>
-        $(".staff_apply_button").show();
-    </script>
-    <div style="margin:5px;text-align:right;">'.make_modal_links(array("title"=>"Staff Application/Renewal Form","path"=>$CFG->wwwroot."/features/events/events.php?action=staff_application","validate"=>"true","width"=>"600","height"=>"650","image"=>$CFG->wwwroot."/images/staff.png","confirmexit"=>"true")).'</div>
-    '; 
+$returnme = '';
+    if(is_logged_in()){ //Members list visible only if logged in   
+        $menuitem = '<li>'.make_modal_links(array("title"=> "Staff Apply","path"=>$CFG->wwwroot."/features/events/events.php?action=staff_application","validate"=>"true","width"=>"600","height"=>"650","styles"=>"display:inline-block;")).'</li>';
+        $returnme .= '
+        <script>
+            $(document).ready(function() {
+                var item = "'.addslashes($menuitem).'";
+                $("#pagenav").append(item);
+            });
+        </script>';
+    }
+    $returnme .= '<div style="margin:5px;text-align:right;">'.make_modal_links(array("title"=>"Staff Application/Renewal Form","path"=>$CFG->wwwroot."/features/events/events.php?action=staff_application","validate"=>"true","width"=>"600","height"=>"650","image"=>$CFG->wwwroot."/images/staff.png","confirmexit"=>"true")).'</div>'; 
+
+    return $returnme;
 }
 
 function get_event_request_link($area,$featureid){
