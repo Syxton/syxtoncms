@@ -3,8 +3,8 @@
 * events.php - Events page lib
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 1/28/2016
-* Revision: 1.4.7
+* Date: 6/07/2016
+* Revision: 1.4.8
 ***************************************************************************/
 if(empty($_POST["aslib"])){
     if(!isset($CFG)){ include('../header.php'); } 
@@ -62,7 +62,7 @@ global $CFG,$MYVARS,$USER;
 
 function application_manager(){
 global $CFG,$MYVARS,$USER;
-    $pageid = $_COOKIE["pageid"];
+    $pageid = $_SESSION["pageid"];
     $export = "";
     if($archive = get_db_result("SELECT * FROM events_staff_archive WHERE pageid='$pageid' GROUP BY year ORDER BY year")){
         $i = 0;

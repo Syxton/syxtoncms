@@ -60,7 +60,7 @@ function browse_search(){
 global $CFG, $MYVARS, $USER, $ROLES;
     echo '<form onsubmit="document.getElementById(\'loading_overlay_pagesearch\').style.visibility=\'visible\';ajaxapi(\'/ajax/page_ajax.php\',\'pagesearch\',\'&searchwords=\'+escape(document.getElementById(\'searchbox\').value),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer_pagesearch\'); document.getElementById(\'loading_overlay_pagesearch\').style.visibility=\'hidden\'; }},true); return false;"><p>
 		Search for pages by either their name, thier keywords, or their description.  If you have the ability to add it to your personal pagelist, you will see an <img src="' . $CFG->wwwroot . '/images/add.png" title="Add" alt="Add"> link to the right.  If you already have rights in that page you will see the <img src="' . $CFG->wwwroot . '/images/delete.png" title="Remove" alt="Remove"> link.  If you want to request access into a page, click the <img src="' . $CFG->wwwroot . '/images/mail.gif" title=Request" alt="Request"> link.
-		</p>
+        </p>
 		Search <input type="text" id="searchbox" name="searchbox" />&nbsp;<input type="submit" value="Search" />
 		<br /><br /></form>'.make_search_box(false,"pagesearch");
 }

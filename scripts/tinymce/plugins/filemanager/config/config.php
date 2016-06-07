@@ -47,9 +47,9 @@ define('DEBUG_ERROR_MESSAGE', false); // TRUE or FALSE
 |    |   |   |   |- responsivefilemanager
 |    |   |   |   |   |- plugin.min.js
 */
-if(empty($_COOKIE['userid']) || empty($_COOKIE['directory'])){ exit("Cannot open file area."); }
-$_SESSION["RF"]["subfolder"] = trim($_COOKIE['userid'],'/\\');
-$directory = $_COOKIE['directory'] == "root" ? "" : "/" . trim($_COOKIE['directory'],'/\\');
+if(empty($_SESSION['userid']) || empty($_SESSION['directory'])){ exit("Cannot open file area."); }
+$_SESSION["RF"]["subfolder"] = trim($_SESSION['userid'],'/\\');
+$directory = $_SESSION['directory'] == "root" ? "" : "/" . trim($_SESSION['directory'],'/\\');
 $config = array(
 
 	/*

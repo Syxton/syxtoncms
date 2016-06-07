@@ -3,13 +3,18 @@
 * adminpanel_ajax.php - Adminpanel backend ajax script
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 2/25/2014
-* Revision: 0.0.7
+* Date: 6/07/2016
+* Revision: 0.0.8
 ***************************************************************************/
 if(!isset($CFG)){ include('../header.php'); } 
 update_user_cookie();
 
-if(!is_siteadmin($USER->userid)){ echo get_page_error_message("generic_permissions"); return;}
+if (!empty($_SESSION["lia_original"])) {
+    if(!is_siteadmin($_SESSION["lia_original"])){ echo get_page_error_message("generic_permissions"); return;}    
+} else {
+    if(!is_siteadmin($USER->userid)){ echo get_page_error_message("generic_permissions"); return;}    
+}
+
 
 callfunction();
 
@@ -231,5 +236,25 @@ function extendedEncode($arrVals, $maxVal){
         $i++;
     }
     return $chartData;
+}
+
+function loginas() {
+global $MYVARS;
+    $userid = $MYVARS->GET["userid"];
+    if (!empty($userid)) {
+        if (empty($_SESSION["lia_original"])) {
+            $_SESSION["lia_original"] = $_SESSION["userid"];    
+        }
+        $_SESSION["userid"] = $userid;      
+    }
+
+    echo $_SESSION["pageid"];
+}
+
+function logoutas() {
+global $MYVARS;
+    $_SESSION["userid"] = $_SESSION["lia_original"];
+    unset($_SESSION["lia_original"]);
+    echo $_SESSION["pageid"];
 }
 ?>

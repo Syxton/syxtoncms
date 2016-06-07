@@ -3,8 +3,8 @@
 * adminpanel.php - Site Admin Panel Area
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 4/09/2013
-* Revision: 0.0.5
+* Date: 6/07/2016
+* Revision: 0.0.6
 ***************************************************************************/
 
 if(empty($_POST["aslib"])){
@@ -14,6 +14,7 @@ if(empty($_POST["aslib"])){
     
     echo '
         <link type="text/css" rel="stylesheet" href="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'styles/vertmenu.css" />
+        <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?b='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'features/events&amp;f=events.js"></script>
         <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'features/adminpanel/adminpanel.js"></script>
         <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?b='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'scripts&amp;f=vertmenu.js"></script>
     ';

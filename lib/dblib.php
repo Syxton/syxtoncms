@@ -3,8 +3,8 @@
 * dblib.php - Database function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 4/7/2015
-* Revision: 1.7.5
+* Date: 6/07/2016
+* Revision: 1.7.6
 ***************************************************************************/
 
 if(!isset($LIBHEADER)){ include ('header.php'); }
@@ -65,7 +65,7 @@ global $CFG, $USER;
 		//Password recovery
 		if($user = get_db_row("SELECT * FROM users WHERE email='$username' AND alternate='$password'")){
 			$ip = $_SERVER['REMOTE_ADDR'];
-			setcookie('userid', $user['userid'], $time + $CFG->cookietimeout, '/');
+            $_SESSION['userid'] = $user['userid'];
 			execute_db_sql("UPDATE users SET ip='$ip', last_activity='$time' WHERE userid='" . $user['userid'] . "'");
 			return $user;
 		}else{
@@ -108,7 +108,7 @@ global $CFG, $USER;
         }
         
 		$ip = $_SERVER['REMOTE_ADDR'];
-		setcookie('userid', $user['userid'], $time + $CFG->cookietimeout, '/');
+        $_SESSION['userid'] = $user['userid'];
 		execute_db_sql("UPDATE users SET ip='$ip', last_activity='$time', alternate='' WHERE userid='" . $user['userid'] . "'");
 
 		//Log
@@ -122,7 +122,7 @@ global $CFG, $USER;
 	if($userfound = get_db_row("SELECT * FROM users WHERE userkey='$key'")){
 		$time = get_timestamp();
 		$USER->userid = $userfound['userid'];
-		setcookie('userid', $userfound['userid'], $time + $CFG->cookietimeout, '/');
+        $_SESSION['userid'] = $userfound['userid'];
 		log_entry("user", $userfound['userid'], "Login");
 	}	
 }

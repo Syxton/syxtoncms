@@ -3,11 +3,11 @@
 * header.php - Page header
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 9/20/07
-* Revision: 0.1.0
+* Date: 6/07/2016
+* Revision: 0.1.1
 ***************************************************************************/
 $LIBHEADER = true;
-
+if (session_status() === PHP_SESSION_NONE){session_start();}
 if(!isset($CFG)) 	include_once('../config.php');
 if(!isset($DBLIB)){ include_once($CFG->dirroot.'/lib/dblib.php'); }
 if(!isset($SETTINGSLIB)){ include_once($CFG->dirroot.'/lib/settingslib.php'); }

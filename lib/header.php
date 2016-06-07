@@ -3,12 +3,12 @@
 * header.php - Lib header
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 7/21/2010
-* Revision: 0.1.5
+* Date: 6/07/2016
+* Revision: 0.1.6
 ***************************************************************************/
  
 $LIBHEADER = true;
-
+if (session_status() === PHP_SESSION_NONE){session_start();}
 if(!isset($DBLIB)){ include_once($CFG->dirroot.'/lib/dblib.php'); }
 if(!isset($SETTINGSLIB)){ include_once($CFG->dirroot.'/lib/settingslib.php'); }
 if(!isset($COMLIB)){ include_once($CFG->dirroot.'/lib/comlib.php'); }

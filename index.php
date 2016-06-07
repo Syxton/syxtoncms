@@ -3,8 +3,8 @@
 * index.php
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 3/8/2012
-* Revision: 1.0.1
+* Date: 6/07/2016
+* Revision: 1.0.2
 ***************************************************************************/
 header('Cache-Control: no-cache, no-store, must-revalidate'); // HTTP 1.1.
 header('Pragma: no-cache'); // HTTP 1.0.
@@ -23,6 +23,7 @@ if(isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip,','.
 
     $directory = $CFG->directory == '' ? 'root' : $CFG->directory;
     setcookie('directory', $directory, get_timestamp() + $CFG->cookietimeout, '/');
+    $_SESSION['directory'] = $directory;
 
 	//Get page info
     $PAGE = new stdClass();
@@ -31,7 +32,8 @@ if(isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip,','.
         $PAGE->id = $CFG->SITEID;
     }
     setcookie('pageid', $PAGE->id, get_timestamp() + $CFG->cookietimeout, '/');
-	$PAGE->title = $CFG->sitename; //Title of page
+	$_SESSION['pageid'] = $PAGE->id;
+    $PAGE->title = $CFG->sitename; //Title of page
 	$PAGE->themeid = getpagetheme($PAGE->id);
 
     //Use this page only to keep session and cookies refreshed (during forms)

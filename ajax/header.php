@@ -3,11 +3,11 @@
 * header.php - Ajax header
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 1/29/2016
-* Revision: 0.1.1
+* Date: 6/07/2016
+* Revision: 0.1.2
 ***************************************************************************/
 $LIBHEADER = true;
-
+if (session_status() === PHP_SESSION_NONE){session_start();}
 if(!isset($CFG)) { 	        include_once('../config.php'); }
 if(!isset($DBLIB)) {        include_once($CFG->dirroot.'/lib/dblib.php'); }
 if(!isset($SETTINGSLIB)) {  include_once($CFG->dirroot.'/lib/settingslib.php'); }

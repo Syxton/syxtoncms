@@ -3,8 +3,8 @@
 * pagelib.php - Page function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 1/29/2016
-* Revision: 3.1.4
+* Date: 6/07/2016
+* Revision: 3.1.5
 ***************************************************************************/
 
 if(!isset($LIBHEADER)){ include ('header.php'); }
@@ -499,8 +499,16 @@ global $CFG, $USER;
                    "styles"      => "");
     $profile = $edit ? make_modal_links($param) : "$fname $lname";
 
+    // Logged in as someone else.
+    $logoutas = "";
+    if (!empty($_SESSION["lia_original"])) {
+        $lia_name = get_user_name($_SESSION["lia_original"]);
+        $logoutas = '<a title="Switch back to: '.$lia_name.'" href="javascript: void(0)" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'logoutas\',\'\',function() { go_to_page('.$CFG->SITEID.');});">Switch back to: '.$lia_name.'</a><br />';
+    }
+
     $logout = '<a title="Log Out" href="javascript: void(0)" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'get_login_box\',\'&amp;logout=1\',function() { clearInterval(myInterval); go_to_page('.$CFG->SITEID.');});">(Log Out)</a>';
-	return  '<div id="login_box" class="login_box" style="text-align:right;">
+    return  '<div id="login_box" class="login_box" style="text-align:right;">
+                '.$logoutas.'
                 <span style="display:inline-block;line-height: 18px;">
                     '.$profile.' '.$logout.'
                 </span>' .

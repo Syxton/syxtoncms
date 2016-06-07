@@ -3,7 +3,7 @@
 * eventslib.php - Events function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 5/16/2016
+* Date: 6/07/2016
 * Revision: 2.8.5
 ***************************************************************************/
 
@@ -1055,7 +1055,7 @@ function get_my_category($selected = false){
 }
 
 function staff_status($staff) {
-    $pageid = $_COOKIE["pageid"];
+    $pageid = $_SESSION["pageid"];
     $featureid = "*";
     if(!$settings = fetch_settings("events", $featureid, $pageid)){
 		make_or_update_settings_array(default_settings("events", $pageid, $featureid));

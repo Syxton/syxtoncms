@@ -3,8 +3,8 @@
 * userlib.php - User function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 2/20/2014
-* Revision: 2.7.9
+* Date: 6/07/2016
+* Revision: 2.8.0
 ***************************************************************************/
 
 if(!isset($LIBHEADER)){ include('header.php'); }
@@ -21,11 +21,10 @@ global $CFG;
 
 function load_user_cookie(){
 global $CFG, $USER;
-	if(session_id()){ @session_start(); } //Used for CKeditor to know if user is logged in.
-
-	if(!empty($_COOKIE['userid'])) { //cookie exists
+	if(!empty($_SESSION['userid'])) { //cookie exists
         $time = get_timestamp();
-		$SQL = "SELECT * FROM users WHERE userid='".$_COOKIE['userid']."' AND ($time - last_activity < ".$CFG->cookietimeout.")";
+        $advanced_login = !empty($_SESSION["lia_original"]) ? "" : " AND ($time - last_activity < ".$CFG->cookietimeout.")";
+		$SQL = "SELECT * FROM users WHERE userid='".$_SESSION['userid']."' $advanced_login";
         if($row = get_db_row($SQL)){ //Get user info from db, load into $USER global
             $temp = new stdClass();
     		$temp->userid = $row['userid'];
@@ -52,7 +51,7 @@ global $CFG,$USER;
 	if(!is_logged_in()){ //check to see if $USER global is set
         load_user_cookie(); //if $USER global isn't set, see if there is an existing cookie and have it loaded into $USER
 		if(is_logged_in()) { //check if $USER global is set now.
-			setcookie('userid', $USER->userid, $time + $CFG->cookietimeout,'/'); //update the cookie
+            $_SESSION['userid'] = $USER->userid;
 			execute_db_sql("UPDATE users SET last_activity='$time' WHERE userid='".$USER->userid."'"); //update last active timestamp
 		} else { //not currently logged in
             $temp = new stdClass();
@@ -60,7 +59,7 @@ global $CFG,$USER;
             $USER = $temp;
 		}
 	}else{ //User is logged in
-		setcookie('userid', $USER->userid, $time + $CFG->cookietimeout,'/'); //update the cookie
+        $_SESSION['userid'] = $USER->userid;
 		execute_db_sql("UPDATE users SET last_activity='$time' WHERE userid='".$USER->userid."'"); //update last active timestamp
 	}
 }

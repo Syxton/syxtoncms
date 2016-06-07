@@ -3,8 +3,8 @@
 * site_ajax.php - Main backend ajax script.  Usually sends off to feature libraries.
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 3/13/2012
-* Revision: 2.9.6
+* Date: 6/07/2016
+* Revision: 2.9.7
 ***************************************************************************/
 
 include('header.php');
@@ -216,7 +216,9 @@ global $CFG, $USER, $MYVARS;
 function get_login_box(){
 global $CFG, $USER, $MYVARS;
 	if(isset($MYVARS->GET["logout"])){
-		setcookie("userid", "0", get_timestamp() - 60000, '/'); //set an expired cookie
+        $_SESSION['userid'] = "0";
+        session_destroy();
+        session_write_close();
         unset($USER);
 		//Log
 		log_entry("user", null, "Logout");
@@ -226,10 +228,11 @@ global $CFG, $USER, $MYVARS;
 
 function update_login_contents(){
 global $CFG, $PAGE, $USER, $MYVARS;
+    $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : $_SESSION["pageid"];
 	if(is_logged_in()) {
 		if(isset($MYVARS->GET['check'])) {
-            if(isset($_COOKIE["userid"])) {
-                $USER->userid = $_COOKIE["userid"];
+            if(isset($_SESSION['userid'])) {
+                $USER->userid = $_SESSION['userid'];
                 echo "true**check";    
             } else {
                 load_user_cookie();
@@ -238,12 +241,21 @@ global $CFG, $PAGE, $USER, $MYVARS;
             
 		} else {
 			update_user_cookie();
-			echo "true**" . print_logout_button($USER->fname, $USER->lname, $MYVARS->GET['pageid']);
+			echo "true**" . print_logout_button($USER->fname, $USER->lname, $pageid);
 		}
 	} else { //Cookie has timed out or they haven't logged in yet.
         load_user_cookie();
 		echo "false";
 	}
+}
+
+function get_cookie() {
+global $MYVARS;
+    $cname = $MYVARS->GET['cname'];
+    if (isset($_SESSION["$cname"])) {
+        echo $_SESSION["$cname"];
+    }
+    echo "";
 }
 
 function addfeature(){
@@ -273,7 +285,7 @@ global $MYVARS;
 
 function drop_move_feature(){
 global $MYVARS;
-	$pageid = empty($MYVARS->GET["pageid"]) ? false : $MYVARS->GET["pageid"];
+	$pageid = empty($MYVARS->GET["pageid"]) ? $_SESSION["pageid"] : $MYVARS->GET["pageid"];
     $col1 = empty($MYVARS->GET["col1"]) ? false : $MYVARS->GET["col1"];
     $col2 = empty($MYVARS->GET["col2"]) ? false : $MYVARS->GET["col2"];
     $moved = empty($MYVARS->GET["moved"]) ? false : $MYVARS->GET["moved"];
@@ -318,7 +330,6 @@ global $MYVARS;
 	//Log
 	log_entry($featuretype, $featureid, "Move Feature");
 }
-
 
 function donothing(){
 	echo "";

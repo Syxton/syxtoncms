@@ -19,7 +19,6 @@ global $CFG, $USER, $ROLES;
 	}
 	
 	$title = $settings->polls->$featureid->feature_title->setting;
-
 	$poll = get_db_row("SELECT * FROM polls WHERE pollid='$featureid'");
 	$time = get_timestamp();
 	

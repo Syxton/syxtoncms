@@ -398,7 +398,8 @@ function login(username, password){
 	ajaxapi('/ajax/site_ajax.php','login',"&username=" + username + "&password=" + password,function(){
 		if(login_display(reroute)){
 			if(!reroute.value) {
-				if(pageid = getCookie("pageid")) { 
+                pageid = getCookie("pageid");			 
+                if(pageid && pageid.isNumeric) {				    
                     go_to_page(pageid); 
 				} else {  go_to_page(1); }
 			} else {
@@ -417,7 +418,6 @@ function update_login_display(pageid){
 
 //checks to see if user should still be logged in
 function update_login_contents(pageid, check) {
-	if(!pageid) { pageid = getCookie("pageid"); }
 	if(check == "check"){
 		ajaxapi('/ajax/site_ajax.php','update_login_contents','&pageid='+pageid+'&check=1',function(){if (xmlHttp.readyState == 4) { update_login_display(pageid); }},true);
 	} else {
@@ -529,6 +529,10 @@ function removeEditor(name){
 function preloadImg(image) {
 	var img = new Image();
 	img.src = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/" + image;
+}
+
+function getSession(cname) {
+    ajaxapi('/ajax/site_ajax.php','get_cookie','&cname='+cname,function(){if (xmlHttp.readyState == 4) { return xmlHttp.responseText; } }, true);
 }
 
 function getCookie(cname) {
