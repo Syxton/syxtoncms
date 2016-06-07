@@ -238,6 +238,12 @@ function extendedEncode($arrVals, $maxVal){
     return $chartData;
 }
 
+function ipmap() {
+global $CFG,$MYVARS;
+    $json = json_decode($MYVARS->GET["json"]);
+    echo '<iframe style="height:100%;width:100%" src="https://www.google.com/maps/embed/v1/place?q='.$json->latitude.','.$json->longitude.'&key='.$CFG->googlemapsembedkey.'"></iframe>';    
+}
+
 function loginas() {
 global $MYVARS;
     $userid = $MYVARS->GET["userid"];

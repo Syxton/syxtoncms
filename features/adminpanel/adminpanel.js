@@ -7,10 +7,10 @@ function get_coordinates(ip, divname) {
       url: url,
       cache: false,
       success: function( json ) {
-        if (!json.latitute) {
+        if (!json.latitude) {
             alert('Location could not be found.');
         } else {
-            document.getElementById(divname).innerHTML = '<iframe style="height:100%;width:100%" src="//maps.google.com/maps?q='+json.latitute+','+json.longitude+'"></iframe>';   
+            ajaxapi('/features/adminpanel/adminpanel_ajax.php','ipmap','&json='+JSON.stringify(json),function(){if (xmlHttp.readyState == 4) { document.getElementById(divname).innerHTML = xmlHttp.responseText; } }, true);
         }
       }
     });
