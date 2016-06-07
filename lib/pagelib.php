@@ -534,7 +534,11 @@ global $CFG, $USER;
 	}
     
     if(is_logged_in()){ //Members list visible only if logged in
-        $returnme .= '<li>'.make_modal_links(array("title"=> "Members List","path"=>$CFG->wwwroot."/pages/page.php?action=browse&amp;section=users&amp;userid=$USER->userid","iframe"=>"true","width"=>"640","height"=>"623","styles"=>"display:inline-block;")).'</li>';   
+        $returnme .= '<li>'.make_modal_links(array("title"=> "Members List","path"=>$CFG->wwwroot."/pages/page.php?action=browse&amp;section=users&amp;userid=$USER->userid","iframe"=>"true","width"=>"640","height"=>"623","styles"=>"display:inline-block;","confirmexit"=>"true")).'</li>';   
+    }
+    
+    if(is_logged_in()){ //Members list visible only if logged in
+        $returnme .= '<li class="staff_apply_button" style="display:none;">'.make_modal_links(array("title"=> "Staff Apply","path"=>$CFG->wwwroot."/features/events/events.php?action=staff_application","validate"=>"true","width"=>"600","height"=>"650","styles"=>"display:inline-block;")).'</li>';   
     }
     
 	$returnme .= '</ul>';

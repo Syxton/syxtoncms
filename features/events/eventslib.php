@@ -95,7 +95,12 @@ global $CFG, $USER, $ROLES;
 
 function get_staff_application_button(){
 global $CFG;
-    return '<div style="margin:5px;text-align:right;">'.make_modal_links(array("title"=>"Staff Application/Renewal Form","path"=>$CFG->wwwroot."/features/events/events.php?action=staff_application","validate"=>"true","width"=>"600","height"=>"650","image"=>$CFG->wwwroot."/images/staff.png","confirmexit"=>"true")).'</div>'; 
+    return '
+    <script>
+        $(".staff_apply_button").show();
+    </script>
+    <div style="margin:5px;text-align:right;">'.make_modal_links(array("title"=>"Staff Application/Renewal Form","path"=>$CFG->wwwroot."/features/events/events.php?action=staff_application","validate"=>"true","width"=>"600","height"=>"650","image"=>$CFG->wwwroot."/images/staff.png","confirmexit"=>"true")).'</div>
+    '; 
 }
 
 function get_event_request_link($area,$featureid){
