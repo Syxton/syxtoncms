@@ -77,31 +77,31 @@ global $CFG,$ROLES,$ABILITIES;
     	$SQL = "
     	SELECT 1 as allowed FROM roles_ability ra WHERE
     		(
-    			1 IN (SELECT allow FROM roles_ability_perfeature_peruser WHERE pageid=$pageid AND userid=$userid AND feature='$feature' AND featureid='$featureid' AND ability='$ability' AND allow=1)
+    			1 IN (SELECT allow FROM roles_ability_perfeature_peruser WHERE pageid='$pageid' AND userid='$userid' AND feature='$feature' AND featureid='$featureid' AND ability='$ability' AND allow='1')
     			OR
     			(
-    				1 IN (SELECT allow FROM roles_ability_peruser WHERE userid=$userid AND pageid=$pageid AND ability='$ability' AND allow=1)
+    				1 IN (SELECT allow FROM roles_ability_peruser WHERE userid='$userid' AND pageid='$pageid' AND ability='$ability' AND allow='1')
     				OR
     				$featuregroupallowed[0]
     				$groupallowed[0]
     				(
-    					1 IN (SELECT allow FROM roles_ability_perfeature WHERE pageid=$pageid AND roleid=$roleid AND feature='$feature' AND featureid='$featureid' AND ability='$ability' AND allow=1) 
+    					1 IN (SELECT allow FROM roles_ability_perfeature WHERE pageid='$pageid' AND roleid='$roleid' AND feature='$feature' AND featureid='$featureid' AND ability='$ability' AND allow='1') 
     					OR
     					(
-    						1 IN (SELECT allow FROM roles_ability_perpage WHERE roleid=$roleid AND pageid=$pageid AND ability='$ability' AND allow=1)
+    						1 IN (SELECT allow FROM roles_ability_perpage WHERE roleid='$roleid' AND pageid='$pageid' AND ability='$ability' AND allow='1')
     						OR
     						(
-    							1 IN (SELECT allow FROM roles_ability WHERE roleid=$roleid AND ability='$ability' AND allow=1)
+    							1 IN (SELECT allow FROM roles_ability WHERE roleid='$roleid' AND ability='$ability' AND allow='1')
     						)
-    						AND 0 NOT IN (SELECT allow FROM roles_ability_perpage WHERE roleid=$roleid AND pageid=$pageid AND ability='$ability' AND allow=0)
+    						AND 0 NOT IN (SELECT allow FROM roles_ability_perpage WHERE roleid='$roleid' AND pageid='$pageid' AND ability='$ability' AND allow='0')
     					)
-    					AND 0 NOT IN (SELECT allow FROM roles_ability_perfeature WHERE pageid=$pageid AND roleid=$roleid AND feature='$feature' AND featureid='$featureid' AND ability='$ability' AND allow=0)
+    					AND 0 NOT IN (SELECT allow FROM roles_ability_perfeature WHERE pageid='$pageid' AND roleid='$roleid' AND feature='$feature' AND featureid='$featureid' AND ability='$ability' AND allow='0')
     				$groupallowed[1]
     				$featuregroupallowed[1]	
     				)
-    				AND 0 NOT IN (SELECT allow FROM roles_ability_peruser WHERE userid=$userid AND pageid=$pageid AND ability='$ability' AND allow=0)
+    				AND 0 NOT IN (SELECT allow FROM roles_ability_peruser WHERE userid='$userid' AND pageid='$pageid' AND ability='$ability' AND allow='0')
     			)
-    			AND 0 NOT IN (SELECT allow FROM roles_ability_perfeature_peruser WHERE pageid=$pageid AND userid=$userid AND feature='$feature' AND featureid='$featureid' AND ability='$ability' AND allow=0)
+    			AND 0 NOT IN (SELECT allow FROM roles_ability_perfeature_peruser WHERE pageid='$pageid' AND userid='$userid' AND feature='$feature' AND featureid='$featureid' AND ability='$ability' AND allow='0')
     		)
     	LIMIT 1
     	";
@@ -162,36 +162,36 @@ global $CFG,$ROLES,$ABILITIES;
     		(
     			SELECT 1 as allowed FROM roles_ability ra WHERE
     			(
-    				1 IN (SELECT allow FROM roles_ability_perfeature_peruser WHERE pageid=$pageid AND userid=$userid AND feature='$feature' AND featureid='$featureid' AND ability=a.ability AND allow=1)
+    				1 IN (SELECT allow FROM roles_ability_perfeature_peruser WHERE pageid='$pageid' AND userid='$userid' AND feature='$feature' AND featureid='$featureid' AND ability=a.ability AND allow='1')
     				OR
     				(
-    					1 IN (SELECT allow FROM roles_ability_peruser WHERE userid=$userid AND pageid=$pageid AND ability=a.ability AND allow=1)
+    					1 IN (SELECT allow FROM roles_ability_peruser WHERE userid='$userid' AND pageid='$pageid' AND ability=a.ability AND allow='1')
     					OR
     					$featuregroupallowed[0]
     					$groupallowed[0]
     					(
-    						1 IN (SELECT allow FROM roles_ability_perfeature WHERE pageid=$pageid AND roleid=$roleid AND feature='$feature' AND featureid='$featureid' AND ability=a.ability AND allow=1) 
+    						1 IN (SELECT allow FROM roles_ability_perfeature WHERE pageid='$pageid' AND roleid='$roleid' AND feature='$feature' AND featureid='$featureid' AND ability=a.ability AND allow='1') 
     						OR			
     						(
-    							1 IN (SELECT allow FROM roles_ability_perpage WHERE roleid=$roleid AND pageid=$pageid AND ability=a.ability AND allow=1)
+    							1 IN (SELECT allow FROM roles_ability_perpage WHERE roleid='$roleid' AND pageid='$pageid' AND ability=a.ability AND allow='1')
     							OR
     							(
-    								1 IN (SELECT allow FROM roles_ability WHERE roleid=$roleid AND ability=a.ability AND allow=1)
+    								1 IN (SELECT allow FROM roles_ability WHERE roleid='$roleid' AND ability=a.ability AND allow='1')
     							)
-    							AND 0 NOT IN (SELECT allow FROM roles_ability_perpage WHERE roleid=$roleid AND pageid=$pageid AND ability=a.ability AND allow=0)
+    							AND 0 NOT IN (SELECT allow FROM roles_ability_perpage WHERE roleid='$roleid' AND pageid='$pageid' AND ability=a.ability AND allow='0')
     					)
-    					AND 0 NOT IN (SELECT allow FROM roles_ability_perfeature WHERE pageid=$pageid AND roleid=$roleid AND feature='$feature' AND featureid='$featureid' AND ability=a.ability AND allow=0)
+    					AND 0 NOT IN (SELECT allow FROM roles_ability_perfeature WHERE pageid='$pageid' AND roleid='$roleid' AND feature='$feature' AND featureid='$featureid' AND ability=a.ability AND allow='0')
     				$groupallowed[1]
     				$featuregroupallowed[1]
     				)	
-    				AND 0 NOT IN (SELECT allow FROM roles_ability_peruser WHERE userid=$userid AND pageid=$pageid AND ability=a.ability AND allow=0)
+    				AND 0 NOT IN (SELECT allow FROM roles_ability_peruser WHERE userid='$userid' AND pageid='$pageid' AND ability=a.ability AND allow='0')
     			)
-    			AND 0 NOT IN (SELECT allow FROM roles_ability_perfeature_peruser WHERE pageid=$pageid AND userid=$userid AND feature='$feature' AND featureid='$featureid' AND ability=a.ability AND allow=0)
+    			AND 0 NOT IN (SELECT allow FROM roles_ability_perfeature_peruser WHERE pageid='$pageid' AND userid='$userid' AND feature='$feature' AND featureid='$featureid' AND ability=a.ability AND allow='0')
     		)
     	LIMIT 1
     	) as allowed FROM abilities a $section ORDER BY section
     	";
-//if($userid == 14) { echo "<pre>" . $SQL . "</pre><br /><br />"; }
+//if($userid == 60) { echo "<pre>" . $SQL . "</pre><br /><br />"; }
     	if($results = get_db_result($SQL)) {
     	    $abilities = new stdClass();
     		while($row = fetch_row($results)){
@@ -350,15 +350,23 @@ global $CFG;
 	return $ROLES;
 }
 
-function get_user_role($userid=0, $pageid){
-global $CFG,$ROLES,$USER;
-	if(is_siteadmin($userid)){ return $ROLES->admin; }
+function get_user_role($userid=0, $pageid, $ignore_site_admin=false){
+global $CFG, $ROLES, $USER;
+    $admin = is_siteadmin($userid) ? true : false;
+
+    if (!$ignore_site_admin) {
+	   if($admin){ return $ROLES->admin; }
+	}
+
 	$SQL = "SELECT * FROM roles_assignment WHERE userid='$userid' AND pageid='$pageid' AND confirm=0 LIMIT 1";
 	if($result = get_db_result($SQL)){	
 		while($row = fetch_row($result)){
 			return $row['roleid'];
 		}
 	}
+    
+    if($admin){ return $ROLES->admin; } // Site admin, but doesn't have a role in the page.
+
 	if(is_logged_in()){
 		if(get_db_field("opendoorpolicy","pages","pageid='$pageid'") == 1){ return get_db_field("default_role","pages","pageid='$pageid'"); }
 	}
@@ -428,52 +436,53 @@ global $CFG,$ROLES;
 //GROUPS AREA
 
 //This function will get an array of the groups hierarchy
-function get_groups_hierarchy($userid, $pageid){
-	$i = 0;
-	if($group = get_db_row("SELECT * FROM groups_users WHERE pageid=$pageid AND userid=$userid")){	
-		$groups_array[$i] = $group["groupid"];
-		$group = get_db_row("SELECT * FROM groups WHERE groupid=" . $group["groupid"]);
-        while(isset($group["parent"])){
-			$group = get_db_row("SELECT * FROM groups WHERE groupid=" . $group["parent"]);
-			$i++;
-			$groups_array[$i] = $group["groupid"];
-		}
-		return $groups_array;
-	}else{ return false; }
+function get_groups_hierarchy($userid, $pageid, $parent=0){
+    $SQL = "SELECT * FROM groups g WHERE
+                g.parent = '$parent' AND
+                g.groupid IN (SELECT u.groupid FROM groups_users u WHERE
+                                u.pageid='$pageid' AND 
+                                u.userid='$userid')";
+	if ($groups = get_db_result($SQL)) {	// If you are in a group on this page.
+        $groups_array = array();
+        while ($group = fetch_row($groups)) { 
+    		$groups_array[] = $group["groupid"];
+            // Check for child groups
+            if ($child_group = get_groups_hierarchy($userid, $pageid, $group["groupid"])) { // Check if user is in a group that is a child of this group
+                $groups_array = array_merge($groups_array,$child_group);
+            }
+        }
+        return $groups_array;
+	}
+    return false;
 }
 
 //This function gets the permission of an ability according to groups
-function groups_SQL($userid,$pageid,$ability='a.ability',$feature=false,$featureid=false){
+function groups_SQL($userid, $pageid, $ability='a.ability', $feature=false, $featureid=false){
 	//Return array of groups hierarchy for given user in this page
 	$hierarchy = get_groups_hierarchy($userid, $pageid);
-	
-	//Groups don't exist or featureid was not given
-	if(!$hierarchy || $featureid===0){	$groupsSQL[0] = "";	$groupsSQL[1] = "";	return $groupsSQL; }
-	
+
+	//Groups don't exist
+	if (empty($hierarchy)) { $groupsSQL[0] = ""; $groupsSQL[1] = "";	return $groupsSQL; }
+
 	//Add quotes around a specific ability or link to SQL variable if not given
 	$ability = $ability == 'a.ability' ? 'a.ability' : "'".$ability."'";
 	
 	//Decide which table the SQL requires
 	$table = $feature && $featureid ? 'roles_ability_perfeature_pergroup' : 'roles_ability_pergroup';
-	
+
 	//Add feature checks if a perfeature SQL is asked for
 	$extraSQL = $feature && $featureid ? "AND feature='$feature' AND featureid='$featureid'" : "";
 	
 	//Create dynamic groups sql
-	$SQL1 = "";	$SQL2 = "";	$i=0;
-	while(isset($hierarchy[$i])){
-		$SQL1 .= "( 1 IN (SELECT allow FROM $table WHERE groupid=$hierarchy[$i] AND ability=$ability AND allow=1 $extraSQL) OR ";
-		$i++;
-	}$i--; //take it back down 1
-	
-	while(isset($hierarchy[$i])){
-		$SQL2 .= " )  AND 0 NOT IN (SELECT allow FROM $table WHERE groupid=".$hierarchy[($i)]." AND ability=$ability AND allow=0 $extraSQL) ";
-		$i--;
-	}
+	$SQL1 = "";	$SQL2 = "";
+    foreach ($hierarchy as $group) {
+        $SQL1 .= "( 1 IN (SELECT allow FROM $table WHERE groupid='$group' AND ability=$ability AND allow='1' $extraSQL) OR ";
+        $SQL2 .= " ) AND 0 NOT IN (SELECT allow FROM $table WHERE groupid='$group' AND ability=$ability AND allow='0' $extraSQL) ";
+    }
 	
 	$groupsSQL[0] = $SQL1;
 	$groupsSQL[1] = $SQL2;
-	
+
 	return $groupsSQL;
 }
 
@@ -543,12 +552,14 @@ global $CFG;
 	$SQL = "SELECT *, CONCAT(section,ability) as i FROM abilities $sql_add GROUP BY i ORDER BY section";
 
     if($pages = get_db_result($SQL)){
-        if($roleid){
+        if ($roleid) {
             $returnme = '<div style="width:100%; text-align:center"><input type="button" value="Save" onclick="ajaxapi(\'/ajax/roles_ajax.php\',\'save_ability_changes\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'\'+create_request_string(\''.$type.'roles_form\'),function(){ simple_display(\''.$type.'saved_div1\'); simple_display(\''.$type.'saved_div2\'); setTimeout(function(){ clear_display(\''.$type.'saved_div1\'); clear_display(\''.$type.'saved_div2\'); },5000);} );ajaxapi(\'/ajax/roles_ajax.php\',\'refresh_edit_roles\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;roleid=\'+document.getElementById(\''.$type.'role_select\').value,function(){ simple_display(\''.$type.'abilities_div\'); });" /></div>';
-        }elseif($groupid){
-            $returnme = '<div style="width:100%; text-align:center"><input type="button" value="Save" onclick="ajaxapi(\'/ajax/roles_ajax.php\',\'save_group_ability_changes\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;groupid='.$groupid.'\'+create_request_string(\''.$type.'roles_form\'),function(){ simple_display(\''.$type.'saved_div1\'); simple_display(\''.$type.'saved_div2\'); setTimeout(function(){ clear_display(\''.$type.'saved_div1\'); clear_display(\''.$type.'saved_div2\'); },5000);} ); ajaxapi(\'/ajax/roles_ajax.php\',\'refresh_group_abilities\',\'&amp;groupid='.$groupid.'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;userid=\'+document.getElementById(\''.$type.'user_select\').value,function(){ simple_display(\''.$type.'abilities_div\'); });" /></div>';  
-        }elseif($userid){
+        } elseif($groupid) {
+            $returnme = '<div style="width:100%; text-align:center"><input type="button" value="Save" onclick="ajaxapi(\'/ajax/roles_ajax.php\',\'save_group_ability_changes\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;groupid='.$groupid.'\'+create_request_string(\''.$type.'roles_form\'),function(){ simple_display(\''.$type.'saved_div1\'); simple_display(\''.$type.'saved_div2\'); setTimeout(function(){ clear_display(\''.$type.'saved_div1\'); clear_display(\''.$type.'saved_div2\'); },5000);} ); ajaxapi(\'/ajax/roles_ajax.php\',\'refresh_group_abilities\',\'&amp;groupid='.$groupid.'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;groupid=\'+document.getElementById(\''.$type.'group_select\').value,function(){ simple_display(\''.$type.'abilities_div\'); });" /></div>';  
+        } elseif($userid) {
             $returnme = '<div style="width:100%; text-align:center"><input type="button" value="Save" onclick="ajaxapi(\'/ajax/roles_ajax.php\',\'save_user_ability_changes\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;userid='.$userid.'\'+create_request_string(\''.$type.'roles_form\'),function(){ simple_display(\''.$type.'saved_div1\'); simple_display(\''.$type.'saved_div2\'); setTimeout(function(){ clear_display(\''.$type.'saved_div1\'); clear_display(\''.$type.'saved_div2\'); },5000);} ); ajaxapi(\'/ajax/roles_ajax.php\',\'refresh_user_abilities\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;userid=\'+document.getElementById(\''.$type.'user_select\').value,function(){ simple_display(\''.$type.'abilities_div\'); });" /></div>';  
+        } else {
+            $returnme = "";
         }
         if($groupid){ $notsettitle = "Unset"; }
         $returnme .= '<table '.$table_style.'><tr><td>Abilities</td><td style="width: 32px;">Allow</td><td style="width: 32px;">'.$notsettitle.'</td><td style="width: 32px;">Deny</td></tr>';
@@ -597,7 +608,7 @@ global $CFG;
         if($roleid){
             $returnme .= '<input type="button" value="Save" onclick="ajaxapi(\'/ajax/roles_ajax.php\',\'save_ability_changes\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'\'+create_request_string(\''.$type.'roles_form\'),function(){ simple_display(\''.$type.'saved_div1\'); simple_display(\''.$type.'saved_div2\'); setTimeout(function(){ clear_display(\''.$type.'saved_div1\'); clear_display(\''.$type.'saved_div2\'); },5000);} );ajaxapi(\'/ajax/roles_ajax.php\',\'refresh_edit_roles\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;roleid=\'+document.getElementById(\''.$type.'role_select\').value,function(){ simple_display(\''.$type.'abilities_div\'); });" />';
         }elseif($groupid){
-            $returnme .= '<input type="button" value="Save" onclick="ajaxapi(\'/ajax/roles_ajax.php\',\'save_group_ability_changes\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;groupid='.$groupid.'\'+create_request_string(\''.$type.'roles_form\'),function(){ simple_display(\''.$type.'saved_div1\'); simple_display(\''.$type.'saved_div2\'); setTimeout(function(){ clear_display(\''.$type.'saved_div1\'); clear_display(\''.$type.'saved_div2\'); },5000);} ); ajaxapi(\'/ajax/roles_ajax.php\',\'refresh_user_abilities\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;userid=\'+document.getElementById(\''.$type.'user_select\').value,function(){ simple_display(\''.$type.'abilities_div\'); });" />';  
+            $returnme .= '<input type="button" value="Save" onclick="ajaxapi(\'/ajax/roles_ajax.php\',\'save_group_ability_changes\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;groupid='.$groupid.'\'+create_request_string(\''.$type.'roles_form\'),function(){ simple_display(\''.$type.'saved_div1\'); simple_display(\''.$type.'saved_div2\'); setTimeout(function(){ clear_display(\''.$type.'saved_div1\'); clear_display(\''.$type.'saved_div2\'); },5000);} ); ajaxapi(\'/ajax/roles_ajax.php\',\'refresh_group_abilities\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;groupid=\'+document.getElementById(\''.$type.'group_select\').value,function(){ simple_display(\''.$type.'abilities_div\'); });" />';  
         }elseif($userid){
             $returnme .= '<input type="button" value="Save" onclick="ajaxapi(\'/ajax/roles_ajax.php\',\'save_user_ability_changes\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;userid='.$userid.'\'+create_request_string(\''.$type.'roles_form\'),function(){ simple_display(\''.$type.'saved_div1\'); simple_display(\''.$type.'saved_div2\'); setTimeout(function(){ clear_display(\''.$type.'saved_div1\'); clear_display(\''.$type.'saved_div2\'); },5000);} ); ajaxapi(\'/ajax/roles_ajax.php\',\'refresh_user_abilities\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;userid=\'+document.getElementById(\''.$type.'user_select\').value,function(){ simple_display(\''.$type.'abilities_div\'); });" />';  
         }

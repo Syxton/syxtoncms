@@ -45,14 +45,27 @@ callfunction();
 echo '</body></html>';
 
 function assign_roles(){
-global $CFG,$MYVARS,$USER,$ROLES;
+global $CFG, $MYVARS, $USER, $ROLES;
     $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : $CFG->SITEID; //Should always be passed  
    
-	if(!user_has_ability_in_page($USER->userid,"assign_roles",$pageid)){ echo get_page_error_message("no_permission",array("assign_roles")); return; }
-	$myroleid = get_user_role($USER->userid,$pageid);
+	if(!user_has_ability_in_page($USER->userid, "assign_roles", $pageid)) { 
+        echo get_page_error_message("no_permission", array("assign_roles")); 
+        return; 
+    }
+	$myroleid = get_user_role($USER->userid, $pageid);
 	$rightslist = "";
 	$returnme = '<form onsubmit="clear_display(\'per_page_roles_div\'); ajaxapi(\'/ajax/roles_ajax.php\',\'name_search\',\'&amp;pageid='.$pageid.'&amp;type=per_page_&amp;refreshroles=refreshroles&amp;searchstring=\'+trim(document.getElementById(\'per_page_search\').value), function(){ simple_display(\'per_page_users_display_div\'); }); return false;" >User Search: <input type="text" id="per_page_search" size="18" />&nbsp;<input type="submit" value="Search" /></form>';
-	$SQL = "SELECT u.* FROM users u WHERE u.userid IN (SELECT ra.userid FROM roles_assignment ra WHERE ra.confirm=0 AND ra.pageid='$pageid') AND u.userid NOT IN (SELECT ra.userid FROM roles_assignment ra WHERE ra.roleid=6 OR (ra.userid = '".$USER->userid."' ) OR (ra.pageid='".$CFG->SITEID."' AND ra.roleid='".$ROLES->admin."') OR (ra.pageid='$pageid' AND ra.roleid <= '$myroleid')) ORDER BY u.lname";
+	$SQL = "SELECT u.* FROM users u WHERE
+                u.userid IN (SELECT ra.userid FROM roles_assignment ra WHERE
+                                ra.confirm = 0 AND
+                                ra.pageid='$pageid'
+                            ) AND
+                u.userid NOT IN (SELECT ra.userid FROM roles_assignment ra WHERE
+                                    ra.roleid = ".$ROLES->none." OR
+                                    (ra.pageid='$pageid' AND ra.roleid <= '$myroleid')
+                                )
+                ORDER BY u.lname";
+
 	$returnme .= 'Users:<br />
 				<div style="width:100%; text-align:center; vertical-align:top;" id="per_page_users_display_div">
 				<select size="10" style="width: 100%; font-size:.85em;" name="userid" id="per_page_user_select" onclick="if(document.getElementById(\'per_page_user_select\').value > 0){ ajaxapi(\'/ajax/roles_ajax.php\',\'refresh_user_roles\',\'&amp;pageid='.$pageid.'&amp;userid=\'+document.getElementById(\'per_page_user_select\').value,function(){ simple_display(\'per_page_roles_div\'); });}">';

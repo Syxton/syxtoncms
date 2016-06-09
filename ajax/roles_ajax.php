@@ -26,13 +26,22 @@ global $CFG,$ROLES,$USER,$MYVARS;
 		$i++;
 	}
 	
-	if(is_siteadmin($USER->userid) && $pageid == $CFG->SITEID){ $SQL = "SELECT u.* FROM users u WHERE $searchstring AND u.userid != '".$USER->userid."' ORDER BY u.lname";
-	}else{
+	if ($pageid == $CFG->SITEID && is_siteadmin($USER->userid)) {
+        $SQL = "SELECT u.* FROM users u WHERE $searchstring ORDER BY u.lname";
+	} else {
         $myroleid = get_user_role($USER->userid,$pageid);
-        if($type != "per_page_"){ //Page or feature specific search
-            $SQL = "SELECT u.* FROM users u WHERE $searchstring AND u.userid IN (SELECT ra.userid FROM roles_assignment ra WHERE ra.pageid='$pageid') AND u.userid NOT IN (SELECT ra.userid FROM roles_assignment ra WHERE (ra.pageid='".$CFG->SITEID."' AND ra.roleid='".$ROLES->admin."') OR (ra.pageid='$pageid' AND ra.roleid <= '$myroleid') OR (u.userid = '".$USER->userid."')) ORDER BY u.lname";
-        }else{  //Page search
-            $SQL = "SELECT u.* FROM users u WHERE $searchstring AND u.userid NOT IN (SELECT ra.userid FROM roles_assignment ra WHERE (ra.pageid='".$CFG->SITEID."' AND ra.roleid='".$ROLES->admin."') OR (ra.pageid='$pageid' AND ra.roleid <= '$myroleid') OR (u.userid = '".$USER->userid."')) ORDER BY u.lname";
+        if($type != "per_page_"){ // Feature specific role assignment search. (only searches people that already have page privs)
+            $SQL = "SELECT u.* FROM users u WHERE
+                        $searchstring AND
+                        u.userid IN (SELECT ra.userid FROM roles_assignment ra WHERE ra.pageid='$pageid') AND 
+                        u.userid NOT IN (SELECT ra.userid FROM roles_assignment ra WHERE ra.pageid='$pageid' AND ra.roleid <= '$myroleid') 
+                        ORDER BY u.lname";
+        }else{  // Page role assignment search.
+            $SQL = "SELECT u.* FROM users u WHERE
+                        $searchstring AND 
+                        u.userid NOT IN (SELECT ra.userid FROM roles_assignment ra WHERE
+                                            ra.pageid='$pageid' AND ra.roleid <= '$myroleid') 
+                    ORDER BY u.lname";
         }
   	}
 
@@ -90,9 +99,20 @@ global $CFG,$MYVARS,$USER;
     $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
     $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
     
-   	if(is_siteadmin($USER->userid) && $pageid == $CFG->SITEID){ $SQL = "SELECT u.* FROM users u WHERE u.userid != '".$USER->userid."' AND u.userid IN (SELECT userid FROM groups_users WHERE pageid='$pageid' AND groupid='$groupid') ORDER BY u.lname";
-	}else{
-        $SQL = "SELECT u.* FROM users u WHERE u.userid IN (SELECT ra.userid FROM roles_assignment ra WHERE ra.pageid='$pageid') AND u.userid IN (SELECT userid FROM groups_users WHERE pageid='$pageid' AND groupid='$groupid') ORDER BY u.lname";
+   	if ($pageid == $CFG->SITEID && is_siteadmin($USER->userid)) {
+   	    $SQL = "SELECT u.* FROM users u WHERE
+                    u.userid IN (SELECT userid FROM groups_users WHERE
+                                    pageid='$pageid' AND
+                                    groupid='$groupid')
+                    ORDER BY u.lname";
+	} else {
+        $SQL = "SELECT u.* FROM users u WHERE
+                    u.userid IN (SELECT ra.userid FROM roles_assignment ra WHERE
+                                    ra.pageid='$pageid') AND
+                    u.userid IN (SELECT userid FROM groups_users WHERE
+                                    pageid='$pageid' AND
+                                    groupid='$groupid')
+                    ORDER BY u.lname";
   	}
     $groupname = get_db_field("name","groups","groupid='$groupid'");
     $returnme = $groupname.'
@@ -156,7 +176,11 @@ global $CFG,$MYVARS,$ROLES,$USER;
 					<div style="width:100%; text-align:center; vertical-align:top;" id="per_group_users_display_div">
 						<select size="5" width="100%" style="width: 100%; font-size:.85em;" name="userid" id="add_user_select">';
 
-    $SQL = "SELECT u.* FROM users u WHERE u.userid IN (SELECT ra.userid FROM roles_assignment ra WHERE ra.pageid='$pageid') AND u.userid NOT IN (SELECT ra.userid FROM roles_assignment ra WHERE ra.pageid='".$CFG->SITEID."' AND ra.roleid='".$ROLES->admin."') AND u.userid NOT IN (SELECT ra.userid FROM roles_assignment ra WHERE ra.pageid='$pageid' AND ra.roleid <= '$myroleid') AND u.userid != '".$USER->userid."' AND u.userid NOT IN (SELECT userid FROM groups_users WHERE groupid='$groupid') ORDER BY u.lname";
+    $SQL = "SELECT u.* FROM users u WHERE
+                u.userid IN (SELECT ra.userid FROM roles_assignment ra WHERE ra.pageid='$pageid') AND
+                u.userid NOT IN (SELECT ra.userid FROM roles_assignment ra WHERE ra.pageid='$pageid' AND ra.roleid <= '$myroleid') AND
+                u.userid NOT IN (SELECT userid FROM groups_users WHERE groupid='$groupid')
+            ORDER BY u.lname";
 	if($pageid == $CFG->SITEID){
         $returnme .= '<option value="0">Search results will be shown here.</option>';    
     }elseif($roles = get_db_result($SQL)){
@@ -175,7 +199,11 @@ global $CFG,$MYVARS,$ROLES,$USER;
     $returnme .= 'Remove Users:<br />
 					<div style="width:100%; text-align:center; vertical-align:top;" id="per_group_users_display_div2">
 						<select size="5" width="100%" style="width: 100%; font-size:.85em;" id="remove_user_select">';
-    $SQL = "SELECT u.* FROM users u WHERE u.userid IN (SELECT ra.userid FROM roles_assignment ra WHERE ra.pageid='$pageid') AND u.userid NOT IN (SELECT ra.userid FROM roles_assignment ra WHERE ra.pageid='".$CFG->SITEID."' AND ra.roleid='".$ROLES->admin."') AND u.userid NOT IN (SELECT ra.userid FROM roles_assignment ra WHERE ra.pageid='$pageid' AND ra.roleid <= '$myroleid') AND u.userid != '".$USER->userid."' AND u.userid IN (SELECT userid FROM groups_users WHERE groupid='$groupid') ORDER BY u.lname";
+    $SQL = "SELECT u.* FROM users u WHERE
+                u.userid IN (SELECT ra.userid FROM roles_assignment ra WHERE ra.pageid='$pageid') AND
+                u.userid IN (SELECT userid FROM groups_users WHERE groupid='$groupid') AND
+                u.userid NOT IN (SELECT ra.userid FROM roles_assignment ra WHERE ra.pageid='$pageid' AND ra.roleid <= '$myroleid')
+            ORDER BY u.lname";
 	if($roles = get_db_result($SQL)){
 		while($row = fetch_row($roles)){
             $mygroups = "";
@@ -287,7 +315,7 @@ global $CFG,$MYVARS;
 
 //TOP LEVEL PER USER OVERRIDES
 function refresh_user_abilities(){
-global $CFG,$MYVARS;
+global $CFG, $MYVARS;
 	$pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed  
     $userid = !empty($MYVARS->GET['userid']) ? $MYVARS->GET['userid'] : false; //Should always be passed
     $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
@@ -467,19 +495,23 @@ global $CFG,$MYVARS;
 }
 
 function refresh_user_roles(){
-global $CFG,$USER,$MYVARS;
+global $CFG, $USER, $MYVARS, $ROLES;
     $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed  
     $userid = !empty($MYVARS->GET['userid']) ? $MYVARS->GET['userid'] : false; //Should always be passed  
     $myroleid = get_user_role($USER->userid,$pageid);
-    $roleid = get_user_role($userid,$pageid);
-    if(isset($roleid)){
-    	$rolename = get_db_field("display_name","roles","roleid='$roleid'");
-    }else{
+    $roleid = get_user_role($userid,$pageid,true);
+    if (isset($roleid)) {
+        if(is_siteadmin($userid)){
+            $rolename = "<strong>Site Admin</strong>";
+        } else {
+            $rolename = get_db_field("display_name","roles","roleid='$roleid'");    
+        }
+    } else {
     	$roleid = 0;
     	$rolename = "Unassigned";
     }
     $returnme = "<br /><br />Current Role: " . $rolename . '<br /><br />Assign Role:';
-    $sql_admin = $pageid != $CFG->SITEID ? " WHERE roleid != 1 " : "";
+    $sql_admin = $pageid != $CFG->SITEID ? " WHERE roleid != '$ROLES->admin'" : "";
 	$SQL = "SELECT * FROM roles $sql_admin ORDER BY roleid";
 	if($roles = get_db_result($SQL)){
 		$returnme .= '<form id="roles_form"><div style="width:100%; text-align:center"><select name="roleid" id="role_select" >';
@@ -492,13 +524,13 @@ global $CFG,$USER,$MYVARS;
 }
 
 function assign_role(){
-global $CFG,$MYVARS;
+global $CFG, $MYVARS, $ROLES;
 	$roleid = $MYVARS->GET['roleid'];
 	$userid = $MYVARS->GET['userid'];
 	$pageid = $MYVARS->GET['pageid'];
 
 	if(execute_db_sql("DELETE FROM roles_assignment WHERE userid='$userid' AND pageid='$pageid'")){
-		if($roleid != 6){ //No role besides "No Role" was given
+		if($roleid !== $ROLES->none){ //No role besides "No Role" was given
             if(execute_db_sql("INSERT INTO roles_assignment (userid,pageid,roleid) VALUES('$userid','$pageid','$roleid')")){
                 echo "Changes Saved";    
             }else{
