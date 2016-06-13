@@ -103,6 +103,7 @@ $HELP->input_staff_refphone = "Please enter a valid phone number of this referen
 //STAFF APP ERRORS
 $ERRORS->valid_staff_name = "A full name is required.";
 $ERRORS->valid_staff_dob = "A valid date must be entered.";
+$ERRORS->valid_staff_dateformat = "The date must be in the format xx/xx/xxxx.";
 $ERRORS->valid_staff_phone = "A contact phone number is required.";
 $ERRORS->valid_staff_phone_invalid = "This phone number is invalid.";
 ?>

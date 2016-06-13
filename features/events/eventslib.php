@@ -1189,58 +1189,80 @@ global $USER, $CFG, $MYVARS;
                 '.(empty($v["staffid"]) ? '' : '<input type="hidden" id="staffid" name="staffid" value="'.$v["staffid"].'" />').'
     			<fieldset class="formContainer" '.($viewonly ? '' : 'style="width: 420px;margin-left: auto;margin-right: auto;"').'>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="name">Name</label><input disabled="disabled" type="text" id="name" name="name" value="'.$v["name"].'" data-rule-required="true" data-msg-required="'.get_error_message('valid_staff_name:events').'" /><div class="tooltipContainer info">'.get_help("input_staff_name:events").'</div>
+    					<label class="rowTitle" for="name">Name</label>
+                        <input disabled="disabled" type="text" id="name" name="name" value="'.$v["name"].'"
+                            data-rule-required="true"
+                            data-msg-required="'.get_error_message('valid_staff_name:events').'"
+                        /><div class="tooltipContainer info">'.get_help("input_staff_name:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
                     </div>
                     <div class="rowContainer">
         				<label class="rowTitle" for="dateofbirth">Date of Birth</label>
-                        <input '.($viewonly ? 'disabled="disabled"' : '').' type="text" 
-                                                                            id="dateofbirth" 
-                                                                            name="dateofbirth" 
-                                                                            value="'.$v["dateofbirth"].'" 
-                                                                            data-rule-required="true" 
-                                                                            data-rule-date="true" 
-                                                                            onblur="
-                                                                            var d = new Date($(this).val()).getTime() / 1000;
-                                                                            console.log(d);
-                                                                            if('.time().' - d < 567648000) {
-                                                                                $(\'#agerange\').val(0);
-                                                                            } else if ('.time().' - d < 788400000) {
-                                                                                $(\'#agerange\').val(1);
-                                                                            } else {
-                                                                                $(\'#agerange\').val(2);
-                                                                            }
-                                                                            $(\'#agerange\').change();
-                                                                            "
-                                                                            /><div class="tooltipContainer info">'.get_help("input_staff_dob:events").'</div>
+                        <input '.($viewonly ? 'disabled="disabled"' : '').'
+                            type="text" 
+                            id="dateofbirth" 
+                            name="dateofbirth" 
+                            value="'.$v["dateofbirth"].'" 
+                            data-rule-required="true"
+                            data-rule-custom="^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$" 
+                            data-msg-custom="'.get_error_message('valid_staff_dateformat:events').'"
+                            data-rule-date="true" 
+                            onblur="
+                                var d = new Date($(this).val()).getTime() / 1000;
+                                if('.time().' - d < 567648000) {
+                                    $(\'#agerange\').val(0);
+                                } else if ('.time().' - d < 788400000) {
+                                    $(\'#agerange\').val(1);
+                                } else {
+                                    $(\'#agerange\').val(2);
+                                }
+                                $(\'#agerange\').change();
+                            "
+                        /><div class="tooltipContainer info">'.get_help("input_staff_dob:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
         			</div>
                     <div class="rowContainer">
-				        <label class="rowTitle" for="phone">Phone</label><input '.($viewonly ? 'disabled="disabled"' : '').' type="text" id="phone" name="phone" value="'.$v["phone"].'" data-rule-required="true"  data-rule-phone="true" data-msg-required="'.get_error_message('valid_staff_phone:events').'" data-msg-phone="'.get_error_message('valid_staff_phone_invalid:events').'" /><div class="tooltipContainer info">'.get_help("input_staff_phone:events").'</div>
+				        <label class="rowTitle" for="phone">Phone</label>
+                        <input '.($viewonly ? 'disabled="disabled"' : '').'
+                            type="text" id="phone" name="phone" value="'.$v["phone"].'"
+                            data-rule-required="true"
+                            data-rule-phone="true"
+                            data-msg-required="'.get_error_message('valid_staff_phone:events').'"
+                            data-msg-phone="'.get_error_message('valid_staff_phone_invalid:events').'" 
+                        />
+                        <div class="tooltipContainer info">'.get_help("input_staff_phone:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
                     </div>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="address">Address</label><textarea '.($viewonly ? 'disabled="disabled"' : '').' rows="3" id="address" name="address" data-rule-required="true">'.$v["address"].'</textarea><div class="tooltipContainer info">'.get_help("input_staff_address:events").'</div>
+    					<label class="rowTitle" for="address">Address</label>
+                        <textarea '.($viewonly ? 'disabled="disabled"' : '').'
+                            rows="3" id="address" name="address"
+                            data-rule-required="true"
+                        >'.$v["address"].'</textarea>
+                        <div class="tooltipContainer info">'.get_help("input_staff_address:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
     	  			</div>
                     <div class="rowContainer">
     					<label class="rowTitle" for="agerange">Age Range</label>
-                        <select '.($viewonly ? 'disabled="disabled"' : '').' id="agerange" 
-                                                                             name="agerange" 
-                                                                             data-rule-required="true" 
-                                                                             onchange="if($(this).val() != 0) { 
-                                                                                            $(\'#sub18\').hide(); 
-                                                                                            $(\'#parentalconsent\').val(\'\'); 
-                                                                                            $(\'#parentalconsent\').removeData(\'rule-required\').removeAttr(\'data-rule-required\');
-                                                                                            $(\'#parentalconsentsig\').prop(\'checked\', false);
-                                                                                            $(\'#parentalconsentsig\').removeData(\'rule-required\').removeAttr(\'data-rule-required\'); 
-                                                                                        } 
-                                                                                        if($(this).val() == 0) { 
-                                                                                            $(\'#parentalconsent\').val(\'\');
-                                                                                            $(\'#parentalconsentsig\').prop(\'checked\', false);
-                                                                                            $(\'#parentalconsent\').removeData(\'rule-required\').attr(\'data-rule-required\',\'true\');
-                                                                                            $(\'#sub18\').show();
-                                                                                        }">
+                        <select '.($viewonly ? 'disabled="disabled"' : '').'
+                            id="agerange" 
+                            name="agerange" 
+                            data-rule-required="true" 
+                            onchange="
+                                if ($(this).val() != 0) { 
+                                    $(\'#sub18\').hide(); 
+                                    $(\'#parentalconsent\').val(\'\'); 
+                                    $(\'#parentalconsent\').removeData(\'rule-required\').removeAttr(\'data-rule-required\');
+                                    $(\'#parentalconsentsig\').prop(\'checked\', false);
+                                    $(\'#parentalconsentsig\').removeData(\'rule-required\').removeAttr(\'data-rule-required\'); 
+                                } 
+                                if ($(this).val() == 0) { 
+                                    $(\'#parentalconsent\').val(\'\');
+                                    $(\'#parentalconsentsig\').prop(\'checked\', false);
+                                    $(\'#parentalconsent\').removeData(\'rule-required\').attr(\'data-rule-required\',\'true\');
+                                    $(\'#sub18\').show();
+                                }"
+                        >
                             <option>Please select</option>
                             <option value="0" '.$v["ar1selected"].'>younger than 18</option>
                             <option value="1" '.$v["ar2selected"].'>18-25</option>
@@ -1249,86 +1271,237 @@ global $USER, $CFG, $MYVARS;
     				    <div class="spacer" style="clear: both;"></div>
     	  			</div>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="cocmember">Are you a member of the church of Christ?</label><select '.($viewonly ? 'disabled="disabled"' : '').' style="width:80px" id="cocmember" name="cocmember" data-rule-required="true"><option value="0" '.$v["cocmembernoselected"].'>No</option><option value="1" '.$v["cocmemberyesselected"].'>Yes</option></select><div class="tooltipContainer info">'.get_help("input_staff_cocmember:events").'</div>
+    					<label class="rowTitle" for="cocmember">Are you a member of the church of Christ?</label>
+                        <select '.($viewonly ? 'disabled="disabled"' : '').' style="width:80px" id="cocmember" name="cocmember"
+                            data-rule-required="true"
+                        >
+                            <option value="0" '.$v["cocmembernoselected"].'>No</option>
+                            <option value="1" '.$v["cocmemberyesselected"].'>Yes</option>
+                        </select>
+                        <div class="tooltipContainer info">'.get_help("input_staff_cocmember:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
     	  			</div>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="congregation">Congregation Name</label><input '.($viewonly ? 'disabled="disabled"' : '').' type="text"  id="congregation" name="congregation" value="'.$v["congregation"].'" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("input_staff_congregation:events").'</div>
+    					<label class="rowTitle" for="congregation">Congregation Name</label>
+                        <input '.($viewonly ? 'disabled="disabled"' : '').' type="text" id="congregation" name="congregation" value="'.$v["congregation"].'"
+                            data-rule-required="true"
+                        />
+                        <div class="tooltipContainer info">'.get_help("input_staff_congregation:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
     	  			</div>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="priorwork">Have you worked at Camp Wabashi as a staff member before?</label><select '.($viewonly ? 'disabled="disabled"' : '').' style="width:80px" id="priorwork" name="priorwork" data-rule-required="true"><option value="0" '.$v["priorworknoselected"].'>No</option><option value="1" '.$v["priorworkyesselected"].'>Yes</option></select><div class="tooltipContainer info">'.get_help("input_staff_priorwork:events").'</div>
+    					<label class="rowTitle" for="priorwork">Have you worked at Camp Wabashi as a staff member before?</label>
+                        <select '.($viewonly ? 'disabled="disabled"' : '').' style="width:80px" id="priorwork" name="priorwork"
+                            data-rule-required="true"
+                        >
+                            <option value="0" '.$v["priorworknoselected"].'>No</option>
+                            <option value="1" '.$v["priorworkyesselected"].'>Yes</option>
+                        </select>
+                        <div class="tooltipContainer info">'.get_help("input_staff_priorwork:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
     	  			</div>
                     <br /><hr><br />
                     <h3>Have you at any time ever:</h3>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="q1_1">Been arrested for any reason?</label><select '.($viewonly ? 'disabled="disabled"' : '').' onchange="if(($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0){ $(\'#q2_3\').attr(\'data-rule-required\', \'true\'); } else { $(\'#q2_3\').removeData(\'rule-required\').removeAttr(\'data-rule-required\'); }" style="width:80px" id="q1_1" name="q1_1" data-rule-required="true"><option value="0" '.$v["q1_1noselected"].'>No</option><option value="1" '.$v["q1_1yesselected"].'>Yes</option></select><div class="tooltipContainer info">'.get_help("input_staff_q1_1:events").'</div>
+    					<label class="rowTitle" for="q1_1">Been arrested for any reason?</label>
+                        <select '.($viewonly ? 'disabled="disabled"' : '').'
+                            onchange="
+                                if (($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0) { 
+                                    $(\'#q2_3\').attr(\'data-rule-required\', \'true\');
+                                } else { 
+                                    $(\'#q2_3\').removeData(\'rule-required\').removeAttr(\'data-rule-required\'); 
+                                }
+                            "
+                            style="width:80px" id="q1_1" name="q1_1"
+                            data-rule-required="true"
+                        >
+                            <option value="0" '.$v["q1_1noselected"].'>No</option>
+                            <option value="1" '.$v["q1_1yesselected"].'>Yes</option>
+                        </select>
+                        <div class="tooltipContainer info">'.get_help("input_staff_q1_1:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
     	  			</div>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="q1_2">Been convicted of, or pleaded guilty or no contest to, any crime?</label><select '.($viewonly ? 'disabled="disabled"' : '').' onchange="if(($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0){ $(\'#q2_3\').attr(\'data-rule-required\', \'true\'); } else { $(\'#q2_3\').removeData(\'rule-required\').removeAttr(\'data-rule-required\'); }" style="width:80px" id="q1_2" name="q1_2" data-rule-required="true"><option value="0" '.$v["q1_2noselected"].'>No</option><option value="1" '.$v["q1_2yesselected"].'>Yes</option></select><div class="tooltipContainer info">'.get_help("input_staff_q1_2:events").'</div>
+    					<label class="rowTitle" for="q1_2">Been convicted of, or pleaded guilty or no contest to, any crime?</label>
+                        <select '.($viewonly ? 'disabled="disabled"' : '').'
+                            onchange="
+                                if (($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0) {
+                                    $(\'#q2_3\').attr(\'data-rule-required\', \'true\');
+                                } else {
+                                    $(\'#q2_3\').removeData(\'rule-required\').removeAttr(\'data-rule-required\');
+                                }
+                            "
+                            style="width:80px" id="q1_2" name="q1_2"
+                            data-rule-required="true"
+                        >
+                            <option value="0" '.$v["q1_2noselected"].'>No</option>
+                            <option value="1" '.$v["q1_2yesselected"].'>Yes</option>
+                        </select>
+                        <div class="tooltipContainer info">'.get_help("input_staff_q1_2:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
     	  			</div>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="q1_3">Engaged in, or been accused of, any child molestation, exploitation, or abuse?</label><select '.($viewonly ? 'disabled="disabled"' : '').' onchange="if(($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0){ $(\'#q2_3\').attr(\'data-rule-required\', \'true\'); } else { $(\'#q2_3\').removeData(\'rule-required\').removeAttr(\'data-rule-required\'); }" style="width:80px" id="q1_3" name="q1_3" data-rule-required="true"><option value="0" '.$v["q1_3noselected"].'>No</option><option value="1" '.$v["q1_3yesselected"].'>Yes</option></select><div class="tooltipContainer info">'.get_help("input_staff_q1_3:events").'</div>
+    					<label class="rowTitle" for="q1_3">Engaged in, or been accused of, any child molestation, exploitation, or abuse?</label>
+                        <select '.($viewonly ? 'disabled="disabled"' : '').'
+                            onchange="
+                                if (($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0) {
+                                    $(\'#q2_3\').attr(\'data-rule-required\', \'true\');
+                                } else {
+                                    $(\'#q2_3\').removeData(\'rule-required\').removeAttr(\'data-rule-required\');
+                                }"
+                            style="width:80px" id="q1_3" name="q1_3"
+                            data-rule-required="true"
+                        >
+                            <option value="0" '.$v["q1_3noselected"].'>No</option>
+                            <option value="1" '.$v["q1_3yesselected"].'>Yes</option>
+                        </select>
+                        <div class="tooltipContainer info">'.get_help("input_staff_q1_3:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
     	  			</div>
                     <br /><hr><br />
                     <h3>Are you aware of:</h3>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="q2_1">Having any traits or tendencies that could pose any threat to children, youth, or others?</label><select '.($viewonly ? 'disabled="disabled"' : '').' onchange="if(($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0){ $(\'#q2_3\').attr(\'data-rule-required\', \'true\'); } else { $(\'#q2_3\').removeData(\'rule-required\').removeAttr(\'data-rule-required\'); }" style="width:80px" id="q2_1" name="q2_1" data-rule-required="true"><option value="0" '.$v["q2_1noselected"].'>No</option><option value="1" '.$v["q2_1yesselected"].'>Yes</option></select><div class="tooltipContainer info">'.get_help("input_staff_q2_1:events").'</div>
+    					<label class="rowTitle" for="q2_1">Having any traits or tendencies that could pose any threat to children, youth, or others?</label>
+                        <select '.($viewonly ? 'disabled="disabled"' : '').'
+                            onchange="
+                                if (($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0) {
+                                    $(\'#q2_3\').attr(\'data-rule-required\', \'true\');
+                                } else {
+                                    $(\'#q2_3\').removeData(\'rule-required\').removeAttr(\'data-rule-required\');
+                                }
+                            "
+                            style="width:80px" id="q2_1" name="q2_1"
+                            data-rule-required="true"
+                        >
+                            <option value="0" '.$v["q2_1noselected"].'>No</option>
+                            <option value="1" '.$v["q2_1yesselected"].'>Yes</option>
+                        </select>
+                        <div class="tooltipContainer info">'.get_help("input_staff_q2_1:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
     	  			</div>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="q2_2">Any reason why you should not work with children, youth, or others?</label><select '.($viewonly ? 'disabled="disabled"' : '').' onchange="if(($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0){ $(\'#q2_3\').attr(\'data-rule-required\', \'true\'); } else { $(\'#q2_3\').removeData(\'rule-required\').removeAttr(\'data-rule-required\'); }" style="width:80px" id="q2_2" name="q2_2" data-rule-required="true"><option value="0" '.$v["q2_2noselected"].'>No</option><option value="1" '.$v["q2_2yesselected"].'>Yes</option></select><div class="tooltipContainer info">'.get_help("input_staff_q2_2:events").'</div>
+    					<label class="rowTitle" for="q2_2">Any reason why you should not work with children, youth, or others?</label>
+                        <select '.($viewonly ? 'disabled="disabled"' : '').'
+                            onchange="
+                                if (($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0) {
+                                    $(\'#q2_3\').attr(\'data-rule-required\', \'true\');
+                                } else {
+                                    $(\'#q2_3\').removeData(\'rule-required\').removeAttr(\'data-rule-required\');
+                                }
+                            "
+                            style="width:80px" id="q2_2" name="q2_2"
+                            data-rule-required="true"
+                        >
+                            <option value="0" '.$v["q2_2noselected"].'>No</option>
+                            <option value="1" '.$v["q2_2yesselected"].'>Yes</option>
+                        </select>
+                        <div class="tooltipContainer info">'.get_help("input_staff_q2_2:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
     	  			</div>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="q2_3">If the answer to any of these questions is "Yes", please explain in detail</label><textarea '.($viewonly ? 'disabled="disabled"' : '').' rows="3" id="q2_3" name="q2_3" '.(empty($v["yestotal"]) ? '' : 'data-rule-required="true"').'>'.$v["q2_3"].'</textarea><div class="tooltipContainer info">'.get_help("input_staff_q1_3:events").'</div>
+    					<label class="rowTitle" for="q2_3">If the answer to any of these questions is "Yes", please explain in detail</label>
+                            <textarea '.($viewonly ? 'disabled="disabled"' : '').'
+                                rows="3" id="q2_3" name="q2_3"
+                                '.(empty($v["yestotal"]) ? '' : 'data-rule-required="true"').'
+                            >'.$v["q2_3"].'</textarea>
+                            <div class="tooltipContainer info">'.get_help("input_staff_q1_3:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
     	  			</div>
                     '.($viewonly ? '<div style="text-align:center"><h2>' . $v["name"] . ' References</h2></div>' : '<br /><hr><br />').'
                     <h3>References #1</h3><br />
     		  		<br />
                     <div class="rowContainer">
-    					<label class="rowTitle" for="ref1name">Name</label><input '.($viewonly ? 'disabled="disabled"' : '').' type="text" id="ref1name" name="ref1name" value="'.$v["ref1name"].'" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("input_staff_refname:events").'</div>
+    					<label class="rowTitle" for="ref1name">Name</label>
+                        <input '.($viewonly ? 'disabled="disabled"' : '').'
+                            type="text" id="ref1name" name="ref1name" value="'.$v["ref1name"].'"
+                            data-rule-required="true"
+                        />
+                        <div class="tooltipContainer info">'.get_help("input_staff_refname:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
     				</div>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="ref1relationship">Relationship</label><input '.($viewonly ? 'disabled="disabled"' : '').' type="text" id="ref1relationship" name="ref1relationship" value="'.$v["ref1relationship"].'" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("input_staff_refrelationship:events").'</div>
+    					<label class="rowTitle" for="ref1relationship">Relationship</label>
+                        <input '.($viewonly ? 'disabled="disabled"' : '').'
+                            type="text" id="ref1relationship" name="ref1relationship" value="'.$v["ref1relationship"].'"
+                            data-rule-required="true"
+                        />
+                        <div class="tooltipContainer info">'.get_help("input_staff_refrelationship:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
     				</div>
                     <div class="rowContainer">
-				        <label class="rowTitle" for="ref1phone">Phone</label><input '.($viewonly ? 'disabled="disabled"' : '').' type="text" id="ref1phone" name="ref1phone" value="'.$v["ref1phone"].'" data-rule-required="true"  data-rule-phone="true" data-msg-required="'.get_error_message('valid_staff_phone:events').'" data-msg-phone="'.get_error_message('valid_staff_phone_invalid:events').'" /><div class="tooltipContainer info">'.get_help("input_staff_phone:events").'</div>
+				        <label class="rowTitle" for="ref1phone">Phone</label>
+                        <input '.($viewonly ? 'disabled="disabled"' : '').'
+                            type="text" id="ref1phone" name="ref1phone" value="'.$v["ref1phone"].'"
+                            data-rule-required="true"
+                            data-rule-phone="true"
+                            data-msg-required="'.get_error_message('valid_staff_phone:events').'"
+                            data-msg-phone="'.get_error_message('valid_staff_phone_invalid:events').'"
+                        />
+                        <div class="tooltipContainer info">'.get_help("input_staff_phone:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
                     </div>
                     <br /><hr><br />
                     <h3>References #2</h3><br />
                     <div class="rowContainer">
-    					<label class="rowTitle" for="ref2name">Name</label><input '.($viewonly ? 'disabled="disabled"' : '').' type="text" id="ref2name" name="ref2name" value="'.$v["ref2name"].'" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("input_staff_refname:events").'</div>
+    					<label class="rowTitle" for="ref2name">Name</label>
+                        <input '.($viewonly ? 'disabled="disabled"' : '').'
+                            type="text" id="ref2name" name="ref2name" value="'.$v["ref2name"].'"
+                            data-rule-required="true"
+                        />
+                        <div class="tooltipContainer info">'.get_help("input_staff_refname:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
     				</div>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="ref2relationship">Relationship</label><input '.($viewonly ? 'disabled="disabled"' : '').' type="text" id="ref2relationship" name="ref2relationship" value="'.$v["ref2relationship"].'" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("input_staff_refrelationship:events").'</div>
+    					<label class="rowTitle" for="ref2relationship">Relationship</label>
+                        <input '.($viewonly ? 'disabled="disabled"' : '').'
+                            type="text" id="ref2relationship" name="ref2relationship" value="'.$v["ref2relationship"].'"
+                            data-rule-required="true"
+                        />
+                        <div class="tooltipContainer info">'.get_help("input_staff_refrelationship:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
     				</div>
                     <div class="rowContainer">
-				        <label class="rowTitle" for="ref2phone">Phone</label><input '.($viewonly ? 'disabled="disabled"' : '').' type="text" id="ref2phone" name="ref2phone" value="'.$v["ref2phone"].'" data-rule-required="true"  data-rule-phone="true" data-msg-required="'.get_error_message('valid_staff_phone:events').'" data-msg-phone="'.get_error_message('valid_staff_phone_invalid:events').'" /><div class="tooltipContainer info">'.get_help("input_staff_phone:events").'</div>
+				        <label class="rowTitle" for="ref2phone">Phone</label>
+                        <input '.($viewonly ? 'disabled="disabled"' : '').'
+                            type="text" id="ref2phone" name="ref2phone" value="'.$v["ref2phone"].'"
+                            data-rule-required="true"
+                            data-rule-phone="true"
+                            data-msg-required="'.get_error_message('valid_staff_phone:events').'"
+                            data-msg-phone="'.get_error_message('valid_staff_phone_invalid:events').'"
+                        />
+                        <div class="tooltipContainer info">'.get_help("input_staff_phone:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
                     </div>
                     <br /><hr><br />
                     <h3>References #3</h3><br />
                     <div class="rowContainer">
-    					<label class="rowTitle" for="ref3name">Name</label><input '.($viewonly ? 'disabled="disabled"' : '').' type="text" id="ref3name" name="ref3name" value="'.$v["ref3name"].'" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("input_staff_refname:events").'</div>
+    					<label class="rowTitle" for="ref3name">Name</label>
+                        <input '.($viewonly ? 'disabled="disabled"' : '').'
+                            type="text" id="ref3name" name="ref3name" value="'.$v["ref3name"].'"
+                            data-rule-required="true"
+                        />
+                        <div class="tooltipContainer info">'.get_help("input_staff_refname:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
     				</div>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="ref3relationship">Relationship</label><input '.($viewonly ? 'disabled="disabled"' : '').' type="text" id="ref3relationship" name="ref3relationship" value="'.$v["ref3relationship"].'" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("input_staff_refrelationship:events").'</div>
+    					<label class="rowTitle" for="ref3relationship">Relationship</label>
+                        <input '.($viewonly ? 'disabled="disabled"' : '').'
+                            type="text" id="ref3relationship" name="ref3relationship" value="'.$v["ref3relationship"].'"
+                            data-rule-required="true"
+                        />
+                        <div class="tooltipContainer info">'.get_help("input_staff_refrelationship:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
     				</div>
                     <div class="rowContainer">
-				        <label class="rowTitle" for="ref3phone">Phone</label><input '.($viewonly ? 'disabled="disabled"' : '').' type="text" id="ref3phone" name="ref3phone" value="'.$v["ref3phone"].'" data-rule-required="true"  data-rule-phone="true" data-msg-required="'.get_error_message('valid_staff_phone:events').'" data-msg-phone="'.get_error_message('valid_staff_phone_invalid:events').'" /><div class="tooltipContainer info">'.get_help("input_staff_phone:events").'</div>
+				        <label class="rowTitle" for="ref3phone">Phone</label>
+                        <input '.($viewonly ? 'disabled="disabled"' : '').'
+                            type="text" id="ref3phone" name="ref3phone" value="'.$v["ref3phone"].'"
+                            data-rule-required="true"
+                            data-rule-phone="true"
+                            data-msg-required="'.get_error_message('valid_staff_phone:events').'"
+                            data-msg-phone="'.get_error_message('valid_staff_phone_invalid:events').'"
+                        />
+                        <div class="tooltipContainer info">'.get_help("input_staff_phone:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
                     </div>
                     <br /><hr><br />
@@ -1341,11 +1514,25 @@ global $USER, $CFG, $MYVARS;
                     </em>
     		  		<br /><br />
                     <div class="rowContainer">
-    					<label class="rowTitle" for="workerconsent">Full Name</label><input '.($viewonly ? 'disabled="disabled"' : '').' type="text" id="workerconsent" name="workerconsent" value="'.$v["workerconsent"].'" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("input_staff_workerconsent:events").'</div>
+    					<label class="rowTitle" for="workerconsent">Full Name</label>
+                        <input '.($viewonly ? 'disabled="disabled"' : '').'
+                            type="text" id="workerconsent" name="workerconsent" value="'.$v["workerconsent"].'"
+                            data-rule-required="true"
+                        />
+                        <div class="tooltipContainer info">'.get_help("input_staff_workerconsent:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
     				</div>
                     <div class="rowContainer">
-        				<label class="rowTitle" for="workerconsentdate">Date</label><input '.($viewonly ? 'disabled="disabled"' : '').' type="text" id="workerconsentdate" name="workerconsentdate" value="'.$v["workerconsentdate"].'" data-rule-required="true" data-rule-date="true" disabled="disabled" /><div class="tooltipContainer info">'.get_help("input_staff_workerconsentdate:events").'</div>
+        				<label class="rowTitle" for="workerconsentdate">Date</label>
+                        <input '.($viewonly ? 'disabled="disabled"' : '').'
+                            type="text" id="workerconsentdate" name="workerconsentdate" value="'.$v["workerconsentdate"].'" 
+                            data-rule-required="true"
+                            data-rule-custom="^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$"
+                            data-msg-custom="'.get_error_message('valid_staff_dateformat:events').'"
+                            data-rule-date="true"
+                            disabled="disabled"
+                        />
+                        <div class="tooltipContainer info">'.get_help("input_staff_workerconsentdate:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
         			</div>
                     <div>
@@ -1353,7 +1540,12 @@ global $USER, $CFG, $MYVARS;
                     </div>
                     <br />
                     <div class="rowContainer">
-    					<label class="rowTitle" for="workerconsentsig">Signature</label><input '.($viewonly ? 'disabled="disabled"' : '').' type="checkbox" id="workerconsentsig" name="workerconsentsig" '.$v["workerconsentsig"].' data-rule-required="true" /><div class="tooltipContainer info">'.get_help("input_staff_workerconsentsig:events").'</div>
+    					<label class="rowTitle" for="workerconsentsig">Signature</label>
+                        <input '.($viewonly ? 'disabled="disabled"' : '').'
+                            type="checkbox" id="workerconsentsig" name="workerconsentsig" '.$v["workerconsentsig"].'
+                            data-rule-required="true"
+                        />
+                        <div class="tooltipContainer info">'.get_help("input_staff_workerconsentsig:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
     				</div>
                     <div id="sub18" style="'.$v["sub18display"].'">
@@ -1363,14 +1555,25 @@ global $USER, $CFG, $MYVARS;
                             <em>I swear and affirm that I am not aware of any traits or tendencies of the applicant that could pose a threat to children, youth or others and that I am not aware of any reasons why the applicant should not work with children, youth, or others.</em>
             		  		<br /><br />
                             <div class="rowContainer">
-            					<label class="rowTitle" for="parentalconsent">Parent or Gurdian Full Name</label><input '.($viewonly ? 'disabled="disabled"' : '').' type="text" id="parentalconsent" name="parentalconsent" value="'.$v["parentalconsent"].'" '.(empty($v["ar1selected"]) ? '' : 'data-rule-required="true"').' /><div class="tooltipContainer info">'.get_help("input_staff_parentalconsent:events").'</div>
+            					<label class="rowTitle" for="parentalconsent">Parent or Gurdian Full Name</label>
+                                <input '.($viewonly ? 'disabled="disabled"' : '').'
+                                    type="text" id="parentalconsent" name="parentalconsent" value="'.$v["parentalconsent"].'"
+                                    '.(empty($v["ar1selected"]) ? '' : 'data-rule-required="true"').'
+                                />
+                                <div class="tooltipContainer info">'.get_help("input_staff_parentalconsent:events").'</div>
             				</div>
                             <div>
                                 <strong>You should understand that the name field and signature field have the same legal effect and can be enforced in the same way as a written signature.</strong>
                             </div>
                             <br />
                             <div class="rowContainer">
-            					<label class="rowTitle" for="parentalconsentsig">Parent or Guardian Signature</label><input '.($viewonly ? 'disabled="disabled"' : '').' type="checkbox" id="parentalconsentsig" name="parentalconsentsig" '.$v["parentalconsentsig"].' '.(empty($v["ar1selected"]) ? '' : 'data-rule-required="true"').' /><div class="tooltipContainer info">'.get_help("input_staff_parentalconsentsig:events").'</div>
+            					<label class="rowTitle" for="parentalconsentsig">Parent or Guardian Signature</label>
+                                <input '.($viewonly ? 'disabled="disabled"' : '').'
+                                    type="checkbox" id="parentalconsentsig" name="parentalconsentsig"
+                                    '.$v["parentalconsentsig"].'
+                                    '.(empty($v["ar1selected"]) ? '' : 'data-rule-required="true"').'
+                                />
+                                <div class="tooltipContainer info">'.get_help("input_staff_parentalconsentsig:events").'</div>
     				            <div class="spacer" style="clear: both;"></div>
             				</div>
                         </div>

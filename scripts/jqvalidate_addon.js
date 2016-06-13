@@ -115,7 +115,6 @@ jQuery.validator.addMethod("nonumbers", function(value,element) {
 
 //Custom
 jQuery.validator.addMethod("custom", function(value, element, param) {
-    var ptrn = "/" + param + "/";
-    var pattern=new RegExp(ptrn)
+    var pattern=new RegExp(param)
     return this.optional(element) || pattern.test(value)
 },jQuery.validator.format("This is not a valid entry"));
