@@ -621,8 +621,11 @@ global $CFG, $why, $error;
                 }
                 return $regid; //Success
             }else {
-                if(!$nolimit){ $error = "We are sorry, because this event has $why, you are unable to register for this event.";}
-                else{ $error = "We are sorry, there has been an error while trying to register for this event.  Please try again. ERROR CODE: 0001";}
+                if (!$nolimit) {
+                    $error = "We are sorry, because this event has $why, you are unable to register for this event.";
+                } else {
+                    $error = "We are sorry, there has been an error while trying to register for this event.  Please try again. ERROR CODE: 0001";
+                }
                 execute_db_sql("DELETE FROM events_registrations WHERE regid='$regid'");
                 execute_db_sql("DELETE FROM events_registrations_values WHERE regid='$regid'");
                 log_entry("event", $event["name"], "Failed Registration", $error . ": " . $SQL);
@@ -635,25 +638,28 @@ global $CFG, $why, $error;
         }
     }else{ //db form style
         $sql_values = "";
-        if($elements = get_db_result("SELECT * FROM events_templates_forms WHERE template_id='" . $event['template_id'] . "' ORDER BY sort")){
-	        while($element = fetch_row($elements)){
-	            if($event["fee_full"] != 0 && $element["type"] == "payment") {
+        if ($elements = get_db_result("SELECT * FROM events_templates_forms WHERE template_id='" . $event['template_id'] . "' ORDER BY sort")) {
+	        while ($element = fetch_row($elements)) {
+	            if ($event["fee_full"] != 0 && $element["type"] == "payment") {
 	                $sql_values .= $sql_values == "" ? "('$eventid','$regid','" . $element['elementid'] . "','" . $event["fee_full"] . "','total_owed'),('$eventid','$regid','" . $element['elementid'] . "','0','paid'),('$eventid','$regid','" . $element['elementid'] . "','" . $reg["payment_method"] . "','payment_method')" : ",('$eventid','$regid','" . $element['elementid'] . "','" . $event["fee_full"] . "','total_owed'),('$eventid','$regid','" . $element['elementid'] . "','0','paid'),('$eventid','$regid','" . $element['elementid'] . "','" . $reg["payment_method"] . "','payment_method')";
-	            }elseif(isset($reg[$element['elementid']])){
+	            } elseif (isset($reg[$element['elementid']])) {
                     $sql_values .= $sql_values == "" ? "('$eventid','$regid','" . $element['elementid'] . "','" . $reg[$element['elementid']] . "','" . $element['display'] . "')" : ",('$eventid','$regid','" . $element['elementid'] . "','" . dbescape($reg[$element['elementid']]) . "','" . $element['display'] . "')";
                 }
 	        }
         }
         $SQL = "INSERT INTO events_registrations_values (eventid,regid,elementid,value,elementname) VALUES" . $sql_values;
-        if($entries = execute_db_sql($SQL) && $nolimit = hard_limits($regid, $event, $template)){
-            if(!$nolimit = soft_limits($regid, $event, $template)){
+        if ($entries = execute_db_sql($SQL) && $nolimit = hard_limits($regid, $event, $template)) {
+            if (!$nolimit = soft_limits($regid, $event, $template)) {
                 $error = "Because this event has $why, you have been placed in the waiting line for this event.";
                 execute_db_sql("UPDATE events_registrations SET queue=1 WHERE regid=" . $regid);
             }
             return $regid; //Success
-        }else{
-            if(!$nolimit){ $error = "We are sorry, because this event has $why, you are unable to register for this event.";
-            }else{ $error = "We are sorry, there has been an error while trying to register for this event.  Please try again. ERROR CODE: 0003"; }
+        } else {
+            if (!$nolimit) {
+                $error = "We are sorry, because this event has $why, you are unable to register for this event.";
+            } else {
+                $error = "We are sorry, there has been an error while trying to register for this event.  Please try again. ERROR CODE: 0003";
+            }
             execute_db_sql("DELETE FROM events_registrations WHERE regid='$regid'");
             execute_db_sql("DELETE FROM events_registrations_values WHERE regid='$regid'");
             log_entry("event", $event["name"], "Failed Registration", $error);
@@ -662,75 +668,96 @@ global $CFG, $why, $error;
     }
 }
 
-function registration_email($regid, $touser){
+function registration_email($regid, $touser, $pending=false){
 global $CFG;
     $reg = get_db_row("SELECT * FROM events_registrations WHERE regid='$regid'");
     $event = get_db_row("SELECT * FROM events WHERE eventid='" . $reg["eventid"]."'");
     $template = get_db_row("SELECT * FROM events_templates WHERE template_id='" . $event["template_id"]."'");
-    $returnme = '	<p><font size="3"><strong>Thank you </strong></font>for registering ' . $touser->fname ." ". $touser->lname . ' for <font size="2"><strong>' . $event["name"] . '.</strong>&nbsp; </font></p>  <strong>Please keep this email for your records.  It contains a registration ID that can allow you to make payments on your registration.</strong>';
-    if($event["fee_full"] != 0){
-        $total_owed = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='total_owed'");
-        if(empty($total_owed)){
-            $total_owed = $reg["date"] < $event["sale_end"] ? $event["sale_fee"] : $event["fee_full"];
-        }
-        $total_owed = empty($total_owed) ? $event["fee_full"] : $total_owed;
 
-        $paid = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='paid'");
-        $paid = empty($paid) ? 0 : $paid;
-		$remaining = $total_owed - $paid;
-
-        $returnme .= '	<p><strong>Total Paid:</strong> $'.number_format($paid,2).'<br /><strong>Remaining Balance:</strong> $'.number_format($remaining,2).'<br /><br /><em>Note:This event requires payment in full to complete the registration process.  The above balances may not reflect recent changes.</em></p>';
-        
-        $returnme .= '	<p><strong>Registration ID:</strong><font color="#993300"><strong> ' . $reg["code"] . '</strong></font></p>';
-
-        //If event can be paid via paypal
-        if($event["paypal"] != ""){
-            $returnme .= '	<p><strong>Make payment online:</strong> <a href="'.$CFG->wwwroot.'/features/events/events.php?action=pay&amp;i=!&amp;regcode='.$reg["code"].'">Make Payment</a></p>';
-        }
-            
-        $returnme .= '<p><strong>Make payment by check or money order: </strong><br />Payable to: ' . stripslashes($event['payableto']) . '<br />' . stripslashes($event['checksaddress']) . '<br />On the memo line be sure to write "' . $touser->fname ." ". $touser->lname . ' - ' . $event["name"] . '".</p>';
+    if (!empty($CFG->logofile)) {
+        $email = '<img src="'.$CFG->wwwroot.'/images/'.$CFG->logofile.'" style="5em" /><br />';
+    } else {
+        $email = '<h1>'.$CFG->sitename.'</h1>';
     }
-    $returnme .= '<p><font size="2">If you have any questions about this event, contact ' . $event["contact"] . ' at <a href="mailto:' . $event["email"] . '">' . $event["email"] . '</a> </font>. 
-                <br />We hope that you have enjoyed your time on the <strong>' . $CFG->sitename . ' </strong>website.</p>';
-    return $returnme;
-}
 
-function registration_pending_email($regid, $touser){
-global $CFG;
-    $reg = get_db_row("SELECT * FROM events_registrations WHERE regid='$regid'");
-    $event = get_db_row("SELECT * FROM events WHERE eventid='" . $reg["eventid"]."'");
-    $template = get_db_row("SELECT * FROM events_templates WHERE template_id='" . $event["template_id"]."'");
-    $returnme = '	<p><font size="3"><strong>Thank you </strong></font>for beginning the registration process of ' . $touser->fname ." ". $touser->lname . ' for <font size="2"><strong>' . $event["name"] . '.</strong>&nbsp; </font></p>  <strong>Please keep this email for your records.  It contains a registration ID that can allow you to make payments on your registration.</strong>';
-    if($event["fee_full"] != 0){
-        $total_owed = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='total_owed'");
-        $paid = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='paid'");
-		$remaining = $total_owed - $paid;
+    if ($pending) {
+        if (!empty($event["fee_full"])) { // This event requires payment to attend
+            $total_owed = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='total_owed'");
 
-        $returnme .= '	<p><strong>To complete the registration process, an advance payment must be made.<br /><br /><strong>Remaining Balance:</strong> $'.number_format($remaining,2).'<br /><br /></p>';
-        
-        $returnme .= '	<p><strong>Registration ID:</strong><font color="#993300"><strong> ' . $reg["code"] . '</strong></font></p>';
+            if (empty($total_owed)) {
+                $total_owed = $reg["date"] < $event["sale_end"] ? $event["sale_fee"] : $event["fee_full"];
+            }
 
-        //If event can be paid via paypal
-        if($event["paypal"] != ""){
-            $returnme .= '	<p><strong>Make payment online:</strong> <a href="'.$CFG->wwwroot.'/features/events/events.php?action=pay&amp;i=!&amp;regcode='.$reg["code"].'">Make Payment</a></p>';
+            $total_owed = empty($total_owed) ? $event["fee_full"] : $total_owed;
+            $paid = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='paid'");
+            $paid = empty($paid) ? 0 : $paid;
+    		$remaining = $total_owed - $paid;
+
+            $email .= '
+                <h2>We show a PENDING registration for ' . $touser->fname ." ". $touser->lname . ' to attend ' . $event["name"] . '.</h2>
+                <h2 style="color:red">This registration is NOT COMPLETED until a payment is received.</h2>
+                <strong>Please keep this email for your records.  It contains a registration ID that can allow you to make payments on your registration.</strong>
+                <br /><br /><h3>Total Paid: $'.number_format($paid,2).'</h3><h3>Remaining Balance: $'.number_format($remaining,2).'</h3><br /><em>Note:This event requires payment in full to complete the registration process.  The above balances may not reflect recent changes.</em>
+                <br /><br /><strong>Registration ID:</strong><span style="color:#993300;"><strong> ' . $reg["code"] . '</strong></span>
+                '.(!empty($event["paypal"]) ? '<br /><br /><strong>Make payment online:</strong> <a href="'.$CFG->wwwroot.'/features/events/events.php?action=pay&amp;i=!&amp;regcode='.$reg["code"].'">Make Payment</a>' : '').'
+                <br /><br /><strong>Make payment by check or money order: </strong><br />Payable to: ' . stripslashes($event['payableto']) . '<br />' . stripslashes($event['checksaddress']) . '<br />On the memo line be sure to write "' . $touser->fname ." ". $touser->lname . ' - ' . $event["name"] . '".                        
+                <br /><br />
+                If you have any questions about this event, contact ' . $event["contact"] . ' at <a href="mailto:' . $event["email"] . '">' . $event["email"] . '</a>. 
+                <br />
+                We hope that you have enjoyed your time on the <strong>' . $CFG->sitename . ' </strong>website.                
+            ';
         }
-            
-        $returnme .= '<p><strong>Make payment by check or money order: </strong><br />Payable to: ' . stripslashes($event['payableto']) . '<br />' . stripslashes($event['checksaddress']) . '<br />On the memo line be sure to write "' . $touser->fname ." ". $touser->lname . ' - ' . $event["name"] . '".</p>';
+    } else {
+        if (!empty($event["fee_full"])) { // This event requires payment to attend
+            $total_owed = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='total_owed'");
+
+            if (empty($total_owed)) {
+                $total_owed = $reg["date"] < $event["sale_end"] ? $event["sale_fee"] : $event["fee_full"];
+            }
+
+            $total_owed = empty($total_owed) ? $event["fee_full"] : $total_owed;
+            $paid = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='paid'");
+            $paid = empty($paid) ? 0 : $paid;
+    		$remaining = $total_owed - $paid;
+
+            $email .= '
+                <h2>Thank you for registering ' . $touser->fname ." ". $touser->lname . ' to attend ' . $event["name"] . '.</h2>
+                <strong>Please keep this email for your records.  It contains a registration ID that can allow you to make payments on your registration.</strong>
+                <br /><br /><h3>Total Paid: $'.number_format($paid,2).'</h3><h3>Remaining Balance: $'.number_format($remaining,2).'</h3><br /><em>Note:This event requires payment in full to complete the registration process.  The above balances may not reflect recent changes.</em>
+                <br /><br /><strong>Registration ID:</strong><span style="color:#993300;"><strong> ' . $reg["code"] . '</strong></span>
+                '.(!empty($event["paypal"]) ? '<br /><br /><strong>Make payment online:</strong> <a href="'.$CFG->wwwroot.'/features/events/events.php?action=pay&amp;i=!&amp;regcode='.$reg["code"].'">Make Payment</a>' : '').'
+                <br /><br /><strong>Make payment by check or money order: </strong><br />Payable to: ' . stripslashes($event['payableto']) . '<br />' . stripslashes($event['checksaddress']) . '<br />On the memo line be sure to write "' . $touser->fname ." ". $touser->lname . ' - ' . $event["name"] . '".                        
+                <br /><br />
+                If you have any questions about this event, contact ' . $event["contact"] . ' at <a href="mailto:' . $event["email"] . '">' . $event["email"] . '</a>. 
+                <br />
+                We hope that you have enjoyed your time on the <strong>' . $CFG->sitename . ' </strong>website.                
+            ';
+        } else { // This event does NOT require payment
+            $email .= '
+                <h2>Thank you for registering ' . $touser->fname ." ". $touser->lname . ' to attend ' . $event["name"] . '.</h2>
+                <strong>Please keep this email for your records.  It contains a registration ID as proof of your registration.</strong>
+                <br /><br />
+                <strong>Registration ID:</strong><span style="color:#993300;"><strong> ' . $reg["code"] . '</strong></span>
+                <br /><br />
+                If you have any questions about this event, contact ' . $event["contact"] . ' at <a href="mailto:' . $event["email"] . '">' . $event["email"] . '</a>. 
+                <br />
+                We hope that you have enjoyed your time on the <strong>' . $CFG->sitename . ' </strong>website.                
+            ';
+        }
     }
-    $returnme .= '<p><font size="2">If you have any questions about this event, contact ' . $event["contact"] . ' at <a href="mailto:' . $event["email"] . '">' . $event["email"] . '</a> </font>. 
-                <br />We hope that you have enjoyed your time on the <strong>' . $CFG->sitename . ' </strong>website.</p>';
-    return $returnme;
+
+    return $email;
 }
 
 function get_template_field_displayname($templateid,$fieldname){
     $template = get_db_row("SELECT * FROM events_templates WHERE template_id='$templateid'");
-    if($template["folder"] == "none"){
+    if ($template["folder"] == "none") {
         return get_db_field("display", "events_templates_forms", "elementid='$fieldname'");       
-    }else{
+    } else {
         $fields = explode(";",$template["formlist"]);
-        foreach($fields as $f){
+        foreach ($fields as $f) {
             $field = explode(":",$f);
-            if($field[0] == $fieldname){
+            if ($field[0] == $fieldname) {
                 return $field[2]; 
             }
         }
@@ -741,14 +768,14 @@ function get_template_field_displayname($templateid,$fieldname){
 function hard_limits($regid, $event, $template){
 global $CFG, $why;
     //If there are no custom limits in place, just return a passing grade
-    if ($event["hard_limits"] == ""){ return true; }
+    if ($event["hard_limits"] == "") { return true; }
     $limits_array = explode("*", $event["hard_limits"]);
     $i = 0;
-    while(isset($limits_array[$i])){
+    while (isset($limits_array[$i])) {
         $limit = explode(":", $limits_array[$i]);
         $elementtype = $template["folder"] == "none" ? "elementid" : "elementname";
         $SQL = "SELECT * FROM events_registrations_values WHERE eventid='" . $event["eventid"] . "' AND $elementtype='" . $limit[0] . "' AND value" . make_limit_statement($limit[1], $limit[2], true);
-        if(get_db_row($SQL . "AND regid='$regid'")){ 
+        if (get_db_row($SQL . "AND regid='$regid'")) { 
             $field_count = get_db_count($SQL);
             if($field_count > $limit[3]){ //if registration limit is reached
                 $displayname = get_template_field_displayname($template["template_id"],$limit[0]);
@@ -764,10 +791,10 @@ global $CFG, $why;
 function soft_limits($regid, $event, $template){
 global $CFG, $why;
     //If there are no custom limits in place, just return a passing grade
-    if($event["soft_limits"] == ""){ return true; }
+    if ($event["soft_limits"] == "") { return true; }
     $limits_array = explode("*", $event["soft_limits"]);
     $i = 0;
-    while(isset($limits_array[$i])){
+    while (isset($limits_array[$i])) {
         $limit = explode(":", $limits_array[$i]);
         $elementtype = $template["folder"] == "none" ? "elementid" : "elementname";
         $SQL = "SELECT * FROM events_registrations_values WHERE eventid='" . $event["eventid"] . "' AND $elementtype='" . $limit[0] . "' AND value" . make_limit_statement($limit[1], $limit[2], true);
@@ -786,7 +813,7 @@ global $CFG, $why;
 
 function make_limit_statement($operator, $value, $SQLmode = false){
     $quotes = is_numeric($value) ? "" : "'";
-    if($SQLmode){
+    if ($SQLmode) {
         switch ($operator) {
             case "eq":
                 return " = $quotes$value$quotes ";
@@ -813,7 +840,7 @@ function make_limit_statement($operator, $value, $SQLmode = false){
                 return " <= $value ";
                 break;
         }
-    }else{
+    } else {
         switch ($operator) {
             case "eq":
                 return " is $value";
@@ -850,7 +877,7 @@ global $MYVARS, $CFG, $USER;
     $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
     delete_calendar_events($event);
     
-    if($eventid){
+    if ($eventid) {
         execute_db_sql("DELETE FROM events WHERE eventid='$eventid'");
         execute_db_sql("DELETE FROM calendar_events WHERE eventid='$eventid'");
         execute_db_sql("DELETE FROM events_registrations WHERE eventid='$eventid'");
@@ -870,7 +897,7 @@ function refresh_calendar_events($eventid){
     
     delete_calendar_events($event); //Delete old calendar events
     $caleventid = "";
-    while($startdate <= $event_end_date){
+    while ($startdate <= $event_end_date) {
         $caleventid .= $caleventid == "" ? "" : ":";
         date_default_timezone_set("UTC");
         $day = date('d',$startdate);
@@ -895,11 +922,11 @@ global $MYVARS, $CFG, $USER;
     $confirm = !empty($confirm) ? '1' : (empty($MYVARS->GET['confirm']) ? "0" : "1");
 
     //Make Calendar event
-    if(!empty($confirm)){
+    if (!empty($confirm)) {
         //Set events to confirm then refresh
         execute_db_sql("UPDATE events SET confirmed='$confirm' WHERE eventid='$eventid'");
         refresh_calendar_events($eventid);
-    }else{ //NO to site viewability 
+    } else { //NO to site viewability 
         //Set events to confirm
         if($event["pageid"] == $CFG->SITEID){
             delete_calendar_events($event);
@@ -913,11 +940,11 @@ global $MYVARS, $CFG, $USER;
 
 //Make sure that the calendar is edited when the event is edited.
 function delete_calendar_events($event){
-    //if calendar events exist
-    if(!empty($event['caleventid'])){
+    // If calendar events exist
+    if (!empty($event['caleventid'])) {
         $calevents = explode(":", $event['caleventid']);
         $i = 0;
-        while(isset($calevents[$i])){
+        while (isset($calevents[$i])) {
             execute_db_sql("DELETE FROM calendar_events WHERE id='$calevents[$i]'");
             $i++;
         }
@@ -926,12 +953,13 @@ function delete_calendar_events($event){
 
 function get_event_length($startdate, $enddate, $allday, $starttime, $endtime){
     date_default_timezone_set(date_default_timezone_get());
-    if ($startdate == $enddate){ //ONE DAY EVENT
+    if ($startdate == $enddate) { //ONE DAY EVENT
         $length = date("n/j/Y", $startdate);
-    }else{ //Multiple Days
+    } else { //Multiple Days
         $length = date("n/j/Y", $startdate) . " - " . date("n/j/Y", $enddate);
     }
-    if(!$allday){
+
+    if (!$allday) {
         $length .= "<br />from ";
         $start = convert_time($starttime);
         $finish = convert_time($endtime);
@@ -944,8 +972,8 @@ function get_templates($selected = false, $eventid="", $activeonly=false){
 global $CFG;
     $returnme = check_for_new_templates();
     $active = !empty($activeonly) ? ' activated=1' : '';
-    if($templates = get_db_result("SELECT * FROM events_templates WHERE $active ORDER BY name")){
-        while($template = fetch_row($templates)){
+    if ($templates = get_db_result("SELECT * FROM events_templates WHERE $active ORDER BY name")) {
+        while ($template = fetch_row($templates)) {
             $returnme .= $returnme == "" ? '<select id="template" onchange="clear_limits(); ajaxapi(\'/features/events/events_ajax.php\',\'show_template_settings\',\'&amp;eventid='.$eventid.'&amp;templateid=\'+document.getElementById(\'template\').value,function(){ simple_display(\'template_settings_div\');});"><option value="0">Select a template</option>' : '';
             $selectme = $selected && ($template['template_id'] == $selected) ? ' selected' : '';
             $returnme .= '<option value="' . $template['template_id'] . '"' . $selectme . '>' . stripslashes($template['name']) . '</option>';
@@ -958,8 +986,8 @@ global $CFG;
 function get_template_settings($templateid,$eventid){
 global $CFG;
     $returnme = "";
-    if(!empty($templateid) && $template_settings = get_db_field("settings","events_templates","template_id='$templateid'")){ //template settings
-        if(!empty($template_settings)){ //there are settings in this template
+    if (!empty($templateid) && $template_settings = get_db_field("settings","events_templates","template_id='$templateid'")) { //template settings
+        if (!empty($template_settings)) { //there are settings in this template
             $returnme = '<table style="margin:0px 0px 0px 50px;">
                             <tr><td class="field_title" style="width:115px;">Template Settings</td></tr>
                             <tr><td>';
@@ -982,15 +1010,21 @@ function get_possible_times($formid, $selected_time = "false", $start_time = "fa
     $returnme = $to . '<select id="' . $formid . '" ' . $onchange . '><option></option>';
     $i = 0;
     $from = false;
-    while(isset($times[$i])){
+    while (isset($times[$i])) {
         $time = explode("*", $times[$i]);
-        if($start_time != "false" && $from){
-            if(strstr($time[0], $selected_time)){ $returnme .= '<option value="' . $time[0] . '" selected>' . $time[1] . '</option>';}
-            else{ $returnme .= '<option value="' . $time[0] . '">' . $time[1] . '</option>';}
+        if ($start_time != "false" && $from) {
+            if (strstr($time[0], $selected_time)) {
+                $returnme .= '<option value="' . $time[0] . '" selected>' . $time[1] . '</option>';
+            } else {
+                $returnme .= '<option value="' . $time[0] . '">' . $time[1] . '</option>';
+            }
         }
-        if($start_time == "false"){
-            if(strstr($time[0], $selected_time)){ $returnme .= '<option value="' . $time[0] . '" selected>' . $time[1] . '</option>'; }
-            else{ $returnme .= '<option value="' . $time[0] . '">' . $time[1] . '</option>'; }
+        if ($start_time == "false") {
+            if (strstr($time[0], $selected_time)) {
+                $returnme .= '<option value="' . $time[0] . '" selected>' . $time[1] . '</option>';
+            } else {
+                $returnme .= '<option value="' . $time[0] . '">' . $time[1] . '</option>';
+            }
         }
         $from = strstr($time[0], $start_time) ? true : $from;
         $i++;
@@ -1004,8 +1038,8 @@ function get_my_locations($userid, $selected = false, $eventid=false){
     $union_statement = $eventid ? " UNION SELECT * FROM events_locations WHERE id IN (SELECT location FROM events WHERE eventid=$eventid)" : "";
     $SQL = "SELECT * FROM events_locations WHERE userid LIKE '%,$userid,%' $union_statement GROUP BY id ORDER BY location";
 
-	if($locations = get_db_result($SQL)){
-        while($location = fetch_row($locations)){
+	if ($locations = get_db_result($SQL)) {
+        while ($location = fetch_row($locations)) {
             $returnme .= $returnme == "" ? '<select id="location">' : '';
             $selectme = $selected && ($location['id'] == $selected) ? ' selected' : '';
             $returnme .= '<option value="' . $location['id'] . '"' . $selectme . '>' . stripslashes($location['location']) . '</option>';
@@ -1017,17 +1051,17 @@ function get_my_locations($userid, $selected = false, $eventid=false){
 
 function get_my_hidden_limits($templateid, $hard_limits, $soft_limits){
     $returnme = "";
-    if(empty($templateid)){ return $returnme; }
+    if (empty($templateid)) { return $returnme; }
     $hidden_variable1 = $hidden_variable2 = "";
     
-    if(!empty($hard_limits)){ // There are some hard limits
+    if (!empty($hard_limits)) { // There are some hard limits
         $limits_array = explode("*", $hard_limits);
         $i = 0;
         $returnme .= "<br /><strong>Hard Limits</strong> <br />";
         $hidden_variable1 = "";
-        while(!empty($limits_array[$i])){
+        while (!empty($limits_array[$i])) {
             $limit = explode(":", $limits_array[$i]);
-            if(!empty($limit)){
+            if (!empty($limit)) {
                 $displayname = get_template_field_displayname($templateid,$limit[0]);
                 $returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . '&nbsp;-&nbsp;<a href="javascript:void(0);" onclick="delete_limit(\'hard_limits\',\'' . $i . '\');">Delete</a><br />';
                 $hidden_variable1 .= $hidden_variable1 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
@@ -1036,14 +1070,14 @@ function get_my_hidden_limits($templateid, $hard_limits, $soft_limits){
         }
     }
     
-    if(!empty($soft_limits)){ // There are some soft limits
+    if (!empty($soft_limits)) { // There are some soft limits
         $limits_array = explode("*", $soft_limits);
         $i = 0;
         $returnme .= "<br /><strong>Soft Limits</strong> <br />";
         $hidden_variable2 = "";
-        while (isset($limits_array[$i])){
+        while (isset($limits_array[$i])) {
             $limit = explode(":", $limits_array[$i]);
-            if(!empty($limit)){
+            if (!empty($limit)) {
                 $displayname = get_template_field_displayname($templateid,$limit[0]);
                 $returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . '&nbsp;-&nbsp;<a href="javascript:void(0);" onclick="delete_limit(\'soft_limits\',\'' . $i . '\');">Delete</a><br />';
                 $hidden_variable2 .= $hidden_variable2 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
@@ -1056,8 +1090,8 @@ function get_my_hidden_limits($templateid, $hard_limits, $soft_limits){
 
 function get_my_category($selected = false){
     $returnme = "";
-    if($categories = get_db_result("SELECT * FROM calendar_cat ORDER BY cat_id")){
-        while($category = fetch_row($categories)){
+    if ($categories = get_db_result("SELECT * FROM calendar_cat ORDER BY cat_id")) {
+        while ($category = fetch_row($categories)) {
             $returnme .= $returnme == "" ? '<select id="category">' : '';
             $selectme = $selected && ($category['cat_id'] == $selected) ? ' selected' : '';
             $returnme .= '<option value="' . $category['cat_id'] . '"' . $selectme . '>' . stripslashes($category['cat_name']) . '</option>';
@@ -1070,7 +1104,7 @@ function get_my_category($selected = false){
 function staff_status($staff) {
     $pageid = $_SESSION["pageid"];
     $featureid = "*";
-    if(!$settings = fetch_settings("events", $featureid, $pageid)){
+    if (!$settings = fetch_settings("events", $featureid, $pageid)) {
 		make_or_update_settings_array(default_settings("events", $pageid, $featureid));
 		$settings = fetch_settings("events", $featureid, $pageid);
 	}
@@ -1088,10 +1122,10 @@ function staff_status($staff) {
     $eighteen = 18 * 365 * 24 * 60 * 60; // 18 years in seconds
     $expireyear = $settings->events->$featureid->bgcheck_years->setting * 365 * 24 * 60 * 60;
     $time = get_timestamp();
-    if( ($time - $staff["dateofbirth"]) > $eighteen ) {
-        if(empty($staff["bgcheckpass"]) ) {
+    if (($time - $staff["dateofbirth"]) > $eighteen ) {
+        if (empty($staff["bgcheckpass"])) {
             $status[] =  "Background Check Incomplete";
-        } else if ( ($time - $staff["bgcheckpassdate"]) > $expireyear ) {
+        } else if (($time - $staff["bgcheckpassdate"]) > $expireyear) {
             $status[] =  "Background Check Out of Date";
         }
     }
@@ -1101,8 +1135,8 @@ function staff_status($staff) {
 function print_status($status) {
 global $CFG;
     $print = '';
-    if(!empty($status)){
-        foreach($status as $s) {
+    if (!empty($status)) {
+        foreach ($status as $s) {
             $print .= '<div style="color:red;font-weight:bold"><img style="vertical-align: middle;" src="'.$CFG->wwwroot.'/images/error.gif" /> ' . $s . '</div>';
         }
     } else {
@@ -1121,8 +1155,8 @@ global $USER, $CFG, $MYVARS;
     $v["ar1selected"] = "";
     $v["ar2selected"] = "";
     $v["ar3selected"] = "";
-    if(!empty($row)) {
-        if($viewonly || empty($v["dateofbirth"])) {
+    if (!empty($row)) {
+        if ($viewonly || empty($v["dateofbirth"])) {
             if ($row["agerange"] == "0") {
                 $v["ar1selected"] = "selected";
             } elseif ($row["agerange"] == "1") {
@@ -1654,8 +1688,8 @@ global $USER, $CFG;
     $locations = get_db_result("SELECT * FROM events_locations WHERE shared=1 and userid NOT LIKE '%," . $USER->userid . ",%' ORDER BY location");
     $listyes = true;
     $returnme = '';
-    if($locations){
-        while($location = fetch_row($locations)){
+    if ($locations) {
+        while ($location = fetch_row($locations)) {
             $listyes = false;
             $returnme .= $returnme == "" ? '<table><tr><td style="vertical-align:top; width: 250px;"><select width="200" style="width: 200px" id="add_location" onchange="get_location_details(this.value);"><option value="false"></option>' : "";
             $selectme = $selected && ($location['id'] == $selected) ? ' selected' : '';
@@ -1663,9 +1697,12 @@ global $USER, $CFG;
         }
         $returnme .= '</select><a href="javascript:void(0);" onclick="copy_location(document.getElementById(\'add_location\').value,\''.$eventid.'\');"> <img src="' . $CFG->wwwroot . '/images/add.png" title="Add Location" alt="Add Location" /></a></td><td style="vertical-align:top"><span id="location_details_div" style="vertical-align:top"></span></td></tr></table>';
     }
-    
-    if(!$listyes){ return $returnme; 
-    }else{ return "No other addable locations."; }
+
+    if (!$listyes) {
+        return $returnme; 
+    }
+
+    return "No other addable locations.";
 }
 
 function events_delete($pageid, $featureid, $sectionid){
@@ -1703,11 +1740,11 @@ global $CFG, $USER;
     $startdir = $CFG->dirroot . "/features/events/templates/";
     $ignoredDirectory[] = '.';
     $ignoredDirectory[] = '..';
-    if(is_dir($startdir)){
-        if($dh = opendir($startdir)){
-            while(($folder = readdir($dh)) !== false){
-                if(!(array_search($folder, $ignoredDirectory) > -1)){
-                    if(filetype($startdir . $folder) == "dir"){
+    if (is_dir($startdir)) {
+        if ($dh = opendir($startdir)) {
+            while (($folder = readdir($dh)) !== false) {
+                if (!(array_search($folder, $ignoredDirectory) > -1)) {
+                    if (filetype($startdir . $folder) == "dir") {
                         $directorylist[$startdir . $folder]['name'] = $folder;
                         $directorylist[$startdir . $folder]['path'] = $startdir;
                     }
@@ -1716,7 +1753,7 @@ global $CFG, $USER;
             closedir($dh);
         }
     }
-    if(isset($directorylist)){
+    if (isset($directorylist)) {
     	foreach ($directorylist as $folder) {
 	        $name = $folder['name'];
 	        include ($CFG->dirroot."/features/events/templates/$name/install.php");
@@ -1804,7 +1841,7 @@ function events_default_settings($feature,$pageid,$featureid){
 
 function facebook_share_button($eventid,$name,$keys=false){
 global $CFG;
-    if(!empty($keys)){
+    if (!empty($keys)) {
         require_once ($CFG->dirroot . '/features/events/facebook/facebook.php'); //'<path to facebook library, you uploaded>/facebook.php';
         $config = array(
             'appId' => $keys->app_key,

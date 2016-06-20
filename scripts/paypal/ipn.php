@@ -1,5 +1,5 @@
 <?php
-if(!isset($CFG)){ include('../../config.php'); }
+if (!isset($CFG)) { include('../../config.php'); }
 include_once($CFG->dirroot . '/lib/header.php');
 
 // STEP 1: read POST data
@@ -9,15 +9,17 @@ $raw_post_data = file_get_contents('php://input');
 $raw_post_array = explode('&', $raw_post_data);
 $myPost = array();
 foreach ($raw_post_array as $keyval) {
-  $keyval = explode ('=', $keyval);
-  if (count($keyval) == 2)
-     $myPost[$keyval[0]] = urldecode($keyval[1]);
+    $keyval = explode ('=', $keyval);
+    if (count($keyval) == 2) {
+        $myPost[$keyval[0]] = urldecode($keyval[1]);
+    }
 }
 // read the IPN message sent from PayPal and prepend 'cmd=_notify-validate'
 $req = 'cmd=_notify-validate';
-if(function_exists('get_magic_quotes_gpc')) {
+if (function_exists('get_magic_quotes_gpc')) {
    $get_magic_quotes_exists = true;
-} 
+}
+
 foreach ($myPost as $key => $value) {        
    if($get_magic_quotes_exists == true && get_magic_quotes_gpc() == 1) { 
         $value = urlencode(stripslashes($value)); 
@@ -26,13 +28,13 @@ foreach ($myPost as $key => $value) {
    }
    $req .= "&$key=$value";
 }
- 
+
 // STEP 2: POST IPN data back to PayPal to validate
-if($CFG->paypal){ 
-        $ch = curl_init('https://www.paypal.com/cgi-bin/webscr');
-}else{ 
-        $ch = curl_init('https://www.sandbox.paypal.com/cgi-bin/websc
-    '); }
+if ($CFG->paypal) { 
+    $ch = curl_init('https://www.paypal.com/cgi-bin/webscr');
+} else { 
+    $ch = curl_init('https://www.sandbox.paypal.com/cgi-bin/websc'); 
+}
 
 curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
 curl_setopt($ch, CURLOPT_POST, 1);
@@ -42,11 +44,12 @@ curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 1);
 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
 curl_setopt($ch, CURLOPT_FORBID_REUSE, 1);
 curl_setopt($ch, CURLOPT_HTTPHEADER, array('Connection: Close'));
+
 // In wamp-like environments that do not come bundled with root authority certificates,
 // please download 'cacert.pem' from "http://curl.haxx.se/docs/caextract.html" and set 
 // the directory path of the certificate as shown below:
 // curl_setopt($ch, CURLOPT_CAINFO, dirname(__FILE__) . '/cacert.pem');
-if( !($res = curl_exec($ch)) ) {
+if (!($res = curl_exec($ch))) {
     // error_log("Got " . curl_error($ch) . " when processing IPN data");
     curl_close($ch);
     exit;
@@ -63,13 +66,13 @@ if (strcmp ($res, "VERIFIED") == 0) {
     // process the notification
     // assign posted variables to local variables
         
-	if(!get_db_row("SELECT * FROM logfile WHERE feature='events' AND description='Paypal' AND info='".$_POST['txn_id']."'")){
+	if (!get_db_row("SELECT * FROM logfile WHERE feature='events' AND description='Paypal' AND info='".$_POST['txn_id']."'")) {
 		$regids = $_POST['custom'];
 		$regids = explode(":",$regids);
 		$i=0;
-		while(isset($regids[$i])){
-			$paid = get_db_field("value", "events_registrations_values", "elementname='paid' AND regid=".$regids[$i]);
-			$SQL = "UPDATE events_registrations_values SET value=".($paid + $_POST["mc_gross_".($i+1)])." WHERE elementname='paid' AND regid=".$regids[$i];
+		while (isset($regids[$i]) && isset($_POST["mc_gross_".($i+1)])) {
+			$paid = get_db_field("value", "events_registrations_values", "elementname='paid' AND regid='".$regids[$i]."'");
+			$SQL = "UPDATE events_registrations_values SET value='".($paid + $_POST["mc_gross_".($i+1)])."' WHERE elementname='paid' AND regid='".$regids[$i]."'";
 			execute_db_sql($SQL);
 			$i++;
 		}
@@ -77,10 +80,10 @@ if (strcmp ($res, "VERIFIED") == 0) {
 		//Log
 		log_entry('events', $_POST['txn_id'], "Paypal");
 	}
-} else if (strcmp ($res, "INVALID") == 0) {
+} elseif (strcmp ($res, "INVALID") == 0) {
     // IPN invalid, log for manual investigation
     //Log
-    log_entry('events', $res, "Paypal (failed)");
+    log_entry('events', $res . $_POST['custom'], "Paypal (failed)");
 }
 ?>
 

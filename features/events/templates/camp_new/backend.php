@@ -117,7 +117,7 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
         		$fromuser->email = $CFG->siteemail;
         		$fromuser->fname = $CFG->sitename;
         		$fromuser->lname = "";    
-                $message = registration_pending_email($regid, $touser);
+                $message = registration_email($regid, $touser, true);
         		if(send_email($touser,$fromuser,null,"Camp Wabashi Registration Pending", $message)){
         			send_email($fromuser,$fromuser,null,"Camp Wabashi Registration Pending", $message);
         		}
