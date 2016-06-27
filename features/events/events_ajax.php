@@ -760,12 +760,12 @@ function printable_registration($regid, $eventid, $template_id){
 	
 	$SQL = "SELECT * FROM events_templates WHERE template_id='$template_id'";
 	$template = get_db_row($SQL);
-    if($template["folder"] == "none"){
+    if ($template["folder"] == "none") {
         if($template_forms = get_db_result("SELECT * FROM events_templates_forms 
                                                 WHERE template_id='$template_id' 
                                                 ORDER BY sort")){
         	while($form_element = fetch_row($template_forms)){
-        		if($form_element["type"] == "payment"){
+        		if ($form_element["type"] == "payment") {
         			if($values = get_db_result("SELECT * FROM events_registrations_values 
                                                     WHERE regid='$regid' AND elementid='".$form_element["elementid"]."' 
                                                     ORDER BY entryid")){
@@ -781,7 +781,7 @@ function printable_registration($regid, $eventid, $template_id){
         					$i++;
 						}
 					}
-				}else{
+				} else {
 	        		$value = get_db_row("SELECT * FROM events_registrations_values 
                                             WHERE regid='$regid' 
                                                 AND elementid='".$form_element["elementid"]."'");
@@ -795,10 +795,10 @@ function printable_registration($regid, $eventid, $template_id){
 				}
 			}
         }
-    }else{
+    } else {
         $template_forms = explode(";",$template["formlist"]);
         $i=0;
-        while(isset($template_forms[$i])){
+        while (!empty($template_forms[$i])) {
         	$form = explode(":",$template_forms[$i]);
         	$value = get_db_row("SELECT * FROM events_registrations_values 
                                     WHERE regid='$regid' 
@@ -813,7 +813,23 @@ function printable_registration($regid, $eventid, $template_id){
         	$i++;
 		}
     }
+    
+    // Payment info
+    if($values = get_db_result("SELECT * FROM events_registrations_values WHERE regid='$regid' AND elementname='tx' ORDER BY entryid")){
+		while($value = fetch_row($values)){
+			$returnme .= '<br />
+                            <div style="float:left;width:33%">
+                                <strong>Payment</strong>
+                            </div>
+                            <div style="float:left;width:66%;">
+                                &nbsp;'.stripslashes($value["value"]).'
+                            </div>';
+			$i++;
+		}
+	}
+
     $returnme .= "</div>";
+
 	return $returnme;
 }
 
