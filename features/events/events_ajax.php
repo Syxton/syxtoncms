@@ -772,10 +772,10 @@ function printable_registration($regid, $eventid, $template_id){
         				$i = 0; $values_display = explode(",", $form_element["display"]);
         				while($value = fetch_row($values)){
 	        				$returnme .= '<br />
-                                            <div style="float:left;width:33%">
-                                                '.$values_display[$i].'
+                                            <div style="display:inline-block;width:150px;">
+                                                <strong>'.$values_display[$i].'</strong>
                                             </div>
-                                            <div style="float:left;width:66%;">
+                                            <div style="display:inline-block;">
                                                 &nbsp;'.stripslashes($value["value"]).'
                                             </div>';
         					$i++;
@@ -786,10 +786,10 @@ function printable_registration($regid, $eventid, $template_id){
                                             WHERE regid='$regid' 
                                                 AND elementid='".$form_element["elementid"]."'");
 	        		$returnme .= '<br />
-                                    <div style="float:left;width:33%">
-                                        '.$form_element["display"].'
+                                    <div style="display:inline-block;width:150px;">
+                                        <strong>'.$form_element["display"].'</strong>
                                     </div>
-                                    <div style="float:left;width:66%;">
+                                    <div style="display:inline-block;">
                                         &nbsp;'.stripslashes($value["value"]).'
                                     </div>';
 				}
@@ -804,24 +804,24 @@ function printable_registration($regid, $eventid, $template_id){
                                     WHERE regid='$regid' 
                                         AND elementname='".$form[0]."'");
         	$returnme .=   '<br />
-                            <div style="float:left;width:33%">
-                                '.$form[2].'
+                            <div style="display:inline-block;width:150px;">
+                                <strong>'.$form[2].'</strong>
                             </div>
-                            <div style="float:left;width:66%;">
+                            <div style="display:inline-block;">
                                 &nbsp;'.stripslashes($value["value"]).'
                             </div>';
         	$i++;
 		}
     }
-    
+
     // Payment info
     if($values = get_db_result("SELECT * FROM events_registrations_values WHERE regid='$regid' AND elementname='tx' ORDER BY entryid")){
 		while($value = fetch_row($values)){
 			$returnme .= '<br />
-                            <div style="float:left;width:33%">
+                            <div style="display:inline-block;width:150px;">
                                 <strong>Payment</strong>
                             </div>
-                            <div style="float:left;width:66%;">
+                            <div style="display:inline-block;">
                                 &nbsp;'.stripslashes($value["value"]).'
                             </div>';
 			$i++;
