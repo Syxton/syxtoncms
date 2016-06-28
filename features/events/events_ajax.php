@@ -772,11 +772,11 @@ function printable_registration($regid, $eventid, $template_id){
         				$i = 0; $values_display = explode(",", $form_element["display"]);
         				while($value = fetch_row($values)){
 	        				$returnme .= '<br />
-                                            <div style="display:inline-block;width:150px;">
+                                            <div style="display:inline-block;width:150px;vertical-align: top;">
                                                 <strong>'.$values_display[$i].'</strong>
                                             </div>
-                                            <div style="display:inline-block;">
-                                                &nbsp;'.stripslashes($value["value"]).'
+                                            <div style="display:inline-block;max-width: 400px;padding-left:5px;">
+                                                '.stripslashes($value["value"]).'
                                             </div>';
         					$i++;
 						}
@@ -786,11 +786,11 @@ function printable_registration($regid, $eventid, $template_id){
                                             WHERE regid='$regid' 
                                                 AND elementid='".$form_element["elementid"]."'");
 	        		$returnme .= '<br />
-                                    <div style="display:inline-block;width:150px;">
+                                    <div style="display:inline-block;width:150px;vertical-align: top;">
                                         <strong>'.$form_element["display"].'</strong>
                                     </div>
-                                    <div style="display:inline-block;">
-                                        &nbsp;'.stripslashes($value["value"]).'
+                                    <div style="display:inline-block;max-width: 400px;padding-left:5px;">
+                                        '.stripslashes($value["value"]).'
                                     </div>';
 				}
 			}
@@ -804,11 +804,11 @@ function printable_registration($regid, $eventid, $template_id){
                                     WHERE regid='$regid' 
                                         AND elementname='".$form[0]."'");
         	$returnme .=   '<br />
-                            <div style="display:inline-block;width:150px;">
+                            <div style="display:inline-block;width:150px;vertical-align: top;">
                                 <strong>'.$form[2].'</strong>
                             </div>
-                            <div style="display:inline-block;">
-                                &nbsp;'.stripslashes($value["value"]).'
+                            <div style="display:inline-block;max-width: 400px;padding-left:5px;">
+                                '.stripslashes($value["value"]).'
                             </div>';
         	$i++;
 		}
@@ -818,10 +818,10 @@ function printable_registration($regid, $eventid, $template_id){
     if($values = get_db_result("SELECT * FROM events_registrations_values WHERE regid='$regid' AND elementname='tx' ORDER BY entryid")){
 		while($value = fetch_row($values)){
 			$returnme .= '<br />
-                            <div style="display:inline-block;width:150px;">
+                            <div style="display:inline-block;width:150px;vertical-align: top;">
                                 <strong>Payment</strong>
                             </div>
-                            <div style="display:inline-block;">
+                            <div style="display:inline-block;max-width: 400px;padding-left:5px;">
                                 &nbsp;'.stripslashes($value["value"]).'
                             </div>';
 			$i++;
