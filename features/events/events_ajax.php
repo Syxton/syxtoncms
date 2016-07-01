@@ -815,14 +815,15 @@ function printable_registration($regid, $eventid, $template_id){
     }
 
     // Payment info
-    if($values = get_db_result("SELECT * FROM events_registrations_values WHERE regid='$regid' AND elementname='tx' ORDER BY entryid")){
-		while($value = fetch_row($values)){
+    if ($values = get_db_result("SELECT * FROM events_registrations_values WHERE regid='$regid' AND elementname='tx' ORDER BY entryid")) {
+		while ($value = fetch_row($values)) {
+            $params = unserialize($value["value"]);
 			$returnme .= '<br />
                             <div style="display:inline-block;width:150px;vertical-align: top;">
-                                <strong>Payment</strong>
+                                <strong>Paypal TX</strong>
                             </div>
                             <div style="display:inline-block;max-width: 400px;padding-left:5px;">
-                                &nbsp;'.stripslashes($value["value"]).'
+                                &nbsp;$'.stripslashes($params["amount"] . " on " . date("m/d/Y", $params["date"]) . " - " . $params["txid"]).'
                             </div>';
 			$i++;
 		}

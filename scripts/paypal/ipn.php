@@ -78,7 +78,10 @@ if (strcmp ($res, "VERIFIED") == 0) {
             
             // Make an entry for this transaction that links it to this registration.
             $eventid = get_db_field("eventid","events_registrations_values","regid='".$regids[$i]."'"); // Get eventid
-            $SQL = "INSERT INTO events_registrations_values (eventid, elementname, regid, value) VALUES('$eventid', 'tx', '".$regids[$i]."', '$" . $_POST["mc_gross_".($i+1)] . " on " . date("d/M/Y", get_timestamp()) . " : " . $_POST['txn_id'] ."')";
+            $params = array("date" => get_timestamp(),
+                            "amount" => $_POST["mc_gross_".($i+1)],
+                            "txid" => $_POST['txn_id']);
+            $SQL = "INSERT INTO events_registrations_values (eventid, elementname, regid, value) VALUES('$eventid', 'tx', '".$regids[$i]."', '$" . serialize($params) ."')";
             execute_db_sql($SQL);
             $i++;
 		}
