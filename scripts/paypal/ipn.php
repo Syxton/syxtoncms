@@ -81,7 +81,7 @@ if (strcmp ($res, "VERIFIED") == 0) {
             $params = array("date" => get_timestamp(),
                             "amount" => $_POST["mc_gross_".($i+1)],
                             "txid" => $_POST['txn_id']);
-            $SQL = "INSERT INTO events_registrations_values (eventid, elementname, regid, value) VALUES('$eventid', 'tx', '".$regids[$i]."', '$" . serialize($params) ."')";
+            $SQL = "INSERT INTO events_registrations_values (eventid, elementname, regid, value) VALUES('$eventid', 'tx', '".$regids[$i]."', '" . serialize($params) ."')";
             execute_db_sql($SQL);
             $i++;
 		}
