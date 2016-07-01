@@ -71,15 +71,15 @@ if (strcmp ($res, "VERIFIED") == 0) {
 		$regids = explode(":",$regids);
 		$i=0;
 		while (isset($regids[$i]) && isset($_POST["mc_gross_".($i+1)])) {
-			// Update paid amount field.
+            // Update paid amount field.
             $paid = get_db_field("value", "events_registrations_values", "elementname='paid' AND regid='".$regids[$i]."'");
 			$SQL = "UPDATE events_registrations_values SET value='".($paid + $_POST["mc_gross_".($i+1)])."' WHERE elementname='paid' AND regid='".$regids[$i]."'";
 			execute_db_sql($SQL);
             
             // Make an entry for this transaction that links it to this registration.
             $eventid = get_db_field("eventid","events_registrations_values","regid='".$regids[$i]."'"); // Get eventid
-            $SQL = "INSERT INTO events_registrations_values SET (eventid, elementname, regid, value) AS ('$eventid', 'tx', '".$regids[$i]."', '" . $_POST["mc_gross_".($i+1)] . " on " . date("d/M/Y", get_timestamp()) . " : " . $_POST['txn_id'] ."')";
-			execute_db_sql($SQL);
+            $SQL = "INSERT INTO events_registrations_values (eventid, elementname, regid, value) VALUES('$eventid', 'tx', '".$regids[$i]."', '$" . $_POST["mc_gross_".($i+1)] . " on " . date("d/M/Y", get_timestamp()) . " : " . $_POST['txn_id'] ."')";
+            execute_db_sql($SQL);
             $i++;
 		}
 
