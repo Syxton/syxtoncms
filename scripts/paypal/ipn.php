@@ -65,29 +65,35 @@ if (strcmp ($res, "VERIFIED") == 0) {
     // check that payment_amount/payment_currency are correct
     // process the notification
     // assign posted variables to local variables
-        
-	if (!get_db_row("SELECT * FROM logfile WHERE feature='events' AND description='Paypal' AND info='".$_POST['txn_id']."'")) {
+    
+    $txid = $_POST['txn_id'];
+	if (!get_db_row("SELECT * FROM logfile WHERE feature='events' AND description='Paypal' AND info='$txid'")) {
 		$regids = $_POST['custom'];
 		$regids = explode(":",$regids);
 		$i=0;
-		while (isset($regids[$i]) && isset($_POST["mc_gross_".($i+1)])) {
+		while (!empty($regids[$i]) && isset($_POST["mc_gross_".($i+1)])) {
+            $regid = dbescape($regids[$i]);
+            $add = $_POST["mc_gross_".($i+1)];
+            
             // Update paid amount field.
-            $paid = get_db_field("value", "events_registrations_values", "elementname='paid' AND regid='".$regids[$i]."'");
-			$SQL = "UPDATE events_registrations_values SET value='".($paid + $_POST["mc_gross_".($i+1)])."' WHERE elementname='paid' AND regid='".$regids[$i]."'";
+            $paid = get_db_field("value", "events_registrations_values", "elementname='paid' AND regid='$regid'");
+			$SQL = "UPDATE events_registrations_values SET value='".($paid + $add)."' WHERE elementname='paid' AND regid='$regid'";
 			execute_db_sql($SQL);
             
             // Make an entry for this transaction that links it to this registration.
-            $eventid = get_db_field("eventid","events_registrations_values","regid='".$regids[$i]."'"); // Get eventid
+            $eventid = get_db_field("eventid","events_registrations_values","regid='$regid'"); // Get eventid
             $params = array("date" => get_timestamp(),
-                            "amount" => $_POST["mc_gross_".($i+1)],
-                            "txid" => $_POST['txn_id']);
-            $SQL = "INSERT INTO events_registrations_values (eventid, elementname, regid, value) VALUES('$eventid', 'tx', '".$regids[$i]."', '" . serialize($params) ."')";
-            execute_db_sql($SQL);
+                            "amount" => $add,
+                            "txid" => $txid);
+            $SQL = "INSERT INTO events_registrations_values (eventid, elementname, regid, value) VALUES('$eventid','tx','$regid','".dbescape(serialize($params))."')";
+            if(!execute_db_sql($SQL)) {
+                error_log("PAYPAL DEBUG: " . $SQL);
+            }
             $i++;
 		}
 
 		//Log
-		log_entry('events', $_POST['txn_id'], "Paypal");
+		log_entry('events', $txid, "Paypal");
 	}
 } elseif (strcmp ($res, "INVALID") == 0) {
     // IPN invalid, log for manual investigation
