@@ -142,11 +142,11 @@ function create_edit_page(){
 global $CFG, $MYVARS, $ROLES, $USER;
     	
 	if(!isset($VALIDATELIB)){ include_once($CFG->dirroot . '/lib/validatelib.php'); }
-
+    $content = '';
     $admin = is_siteadmin($USER->userid) ? true : false;
     if(isset($MYVARS->GET["pageid"])){
         if(!user_has_ability_in_page($USER->userid, "editpage", $MYVARS->GET["pageid"])){
-            echo get_error_message("generic_permissions");
+            $content .= get_error_message("generic_permissions");
             return;
         }
         $page = get_db_row("SELECT * FROM pages WHERE pageid=" . $MYVARS->GET["pageid"]);
@@ -169,7 +169,7 @@ global $CFG, $MYVARS, $ROLES, $USER;
         }
     }else{
         if(!user_has_ability_in_page($USER->userid, "createpage", $CFG->SITEID)){
-            echo get_error_message("generic_permissions");
+            $content .= get_error_message("generic_permissions");
             return;
         }
         
@@ -180,92 +180,101 @@ global $CFG, $MYVARS, $ROLES, $USER;
     }
     
     if (isset($MYVARS->GET["pageid"])){
-    	echo create_validation_script("create_page_form" , 'ajaxapi(\'/ajax/page_ajax.php\',\'edit_page\',\'&name=\' + escape(document.getElementById(\'name\').value) + \'&description=\' + escape(document.getElementById(\'summary\').value) + \'&keywords=\' + escape(document.getElementById(\'keywords\').value) + \'&defaultrole=\' + document.getElementById(\'role_select\').value + \'&opendoor=\' + document.getElementById(\'opendoor\').value + \'&siteviewable=\' + document.getElementById(\'siteviewable\').value + \'&menu_page=\' + document.getElementById(\'menu_page\').value + \'&hidefromvisitors=\' + document.getElementById(\'hidefromvisitors\').value + \'&pageid=' . $MYVARS->GET["pageid"] . '\',function() { close_modal(); });');
+    	$content .= create_validation_script("create_page_form" , 'ajaxapi(\'/ajax/page_ajax.php\',\'edit_page\',\'&name=\' + escape(document.getElementById(\'name\').value) + \'&description=\' + escape(document.getElementById(\'summary\').value) + \'&keywords=\' + escape(document.getElementById(\'keywords\').value) + \'&defaultrole=\' + document.getElementById(\'role_select\').value + \'&opendoor=\' + document.getElementById(\'opendoor\').value + \'&siteviewable=\' + document.getElementById(\'siteviewable\').value + \'&menu_page=\' + document.getElementById(\'menu_page\').value + \'&hidefromvisitors=\' + document.getElementById(\'hidefromvisitors\').value + \'&pageid=' . $MYVARS->GET["pageid"] . '\',function() { close_modal(); });');
     }else{
-    	echo create_validation_script("create_page_form" , 'ajaxapi(\'/ajax/page_ajax.php\',\'create_page\',\'&name=\' + escape(document.getElementById(\'name\').value) + \'&description=\' + escape(document.getElementById(\'summary\').value) + \'&keywords=\' + document.getElementById(\'keywords\').value + \'&defaultrole=\' + document.getElementById(\'role_select\').value + \'&opendoor=\' + document.getElementById(\'opendoor\').value + \'&siteviewable=\' + document.getElementById(\'siteviewable\').value + \'&menu_page=\' + document.getElementById(\'menu_page\').value + \'&hidefromvisitors=\' + document.getElementById(\'hidefromvisitors\').value,function() { create_page_display();});');	
+    	$content .= create_validation_script("create_page_form" , 'ajaxapi(\'/ajax/page_ajax.php\',\'create_page\',\'&name=\' + escape(document.getElementById(\'name\').value) + \'&description=\' + escape(document.getElementById(\'summary\').value) + \'&keywords=\' + document.getElementById(\'keywords\').value + \'&defaultrole=\' + document.getElementById(\'role_select\').value + \'&opendoor=\' + document.getElementById(\'opendoor\').value + \'&siteviewable=\' + document.getElementById(\'siteviewable\').value + \'&menu_page=\' + document.getElementById(\'menu_page\').value + \'&hidefromvisitors=\' + document.getElementById(\'hidefromvisitors\').value,function() { create_page_display();});');	
     }
-  
-    echo '
+
+    $SQL = 'SELECT * FROM roles WHERE roleid > "' . $ROLES->creator . '" AND roleid < "'.$ROLES->none.'" ORDER BY roleid DESC';
+    $roles = get_db_result($SQL);
+
+    $content .= '                    
     <div class="formDiv" id="create_page_div">
     	<form id="create_page_form">
     		<fieldset class="formContainer">
     			<div class="rowContainer">
-    				<label for="name">Page Name</label><input type="text" id="name" name="name" data-rule-required="true" value="'.$name.'" /><div class="tooltipContainer info">'.get_help("input_page_name").'</div><br />
-    			</div>
+    				<label class="rowTitle" for="name">Page Name</label><input type="text" id="name" name="name" data-rule-required="true" value="'.$name.'" /><div class="tooltipContainer info">'.get_help("input_page_name").'</div>
+                    <div class="spacer" style="clear: both;"></div>
+                </div>
     			<div class="rowContainer">
-    				<label for="keywords">Page Keywords</label><textarea id="keywords" name="keywords" cols="28" rows="2" data-rule-required="true" >' . $keywords . '</textarea><div class="tooltipContainer info">'.get_help("input_page_tags").'</div><br />
-    			</div>			
+    				<label class="rowTitle" for="keywords">Page Keywords</label><textarea id="keywords" name="keywords" cols="28" rows="2" data-rule-required="true" >' . $keywords . '</textarea><div class="tooltipContainer info">'.get_help("input_page_tags").'</div>
+                    <div class="spacer" style="clear: both;"></div>
+                </div>			
     			<div class="rowContainer">
-    				<label for="description">Page Description</label><div style="display:inline-block">
+    				<label class="rowTitle" for="description">Page Description</label>
                     <textarea id="summary" name="summary" cols="28" rows="4" data-rule-required="true">' . stripslashes($description) . '</textarea>
-                    </div><div class="tooltipContainer info">'.get_help("input_page_summary").'</div><br />
+                    <div class="tooltipContainer info">'.get_help("input_page_summary").'</div><div class="spacer" style="clear: both;"></div>
     			</div>
     			<div class="rowContainer">
-    				<label for="role_select">Default Role</label>';
-    				$SQL = 'SELECT * FROM roles WHERE roleid > "' . $ROLES->creator . '" AND roleid < "'.$ROLES->none.'" ORDER BY roleid DESC';
-    			    $roles = get_db_result($SQL);
-    			    echo make_select("role_select", $roles, "roleid", "display_name", $role_selected);
-	echo '	<div class="tooltipContainer info">'.get_help("input_page_default_role").'</div><br />
-			</div>
-			<div class="rowContainer">
-				<label for="opendoor">Open Door Policy</label>
-				<select name="opendoor" id="opendoor">
-					<option value="0" ' . $open_no . '>No</option>
-					<option value="1" ' . $open_yes . '>Yes</option>
-				</select>
-				<div class="tooltipContainer info">'.get_help("input_page_opendoor").'</div><br />
-			</div>	
-			<div class="rowContainer">
-				<label for="siteviewable">Site viewable</label>
-				<select name="siteviewable" id="siteviewable">
-					<option value="0" ' . $global_no . '>No</option>
-					<option value="1" ' . $global_yes . '>Yes</option>
-				</select>
-				<div class="tooltipContainer info">'.get_help("input_page_siteviewable").'</div><br />
-			</div>';
+    				<label class="rowTitle" for="role_select">Default Role</label>
+    				' . make_select("role_select", $roles, "roleid", "display_name", $role_selected) . '
+	                <div class="tooltipContainer info">'.get_help("input_page_default_role").'</div><div class="spacer" style="clear: both;"></div>
+                </div>
+                <div class="rowContainer">
+                	<label class="rowTitle" for="opendoor">Open Door Policy</label>
+                	<select name="opendoor" id="opendoor">
+                		<option value="0" ' . $open_no . '>No</option>
+                		<option value="1" ' . $open_yes . '>Yes</option>
+                	</select>
+                	<div class="tooltipContainer info">'.get_help("input_page_opendoor").'</div>
+                    <div class="spacer" style="clear: both;"></div>
+                </div>	
+                <div class="rowContainer">
+                	<label class="rowTitle" for="siteviewable">Site viewable</label>
+                	<select name="siteviewable" id="siteviewable">
+                		<option value="0" ' . $global_no . '>No</option>
+                		<option value="1" ' . $global_yes . '>Yes</option>
+                	</select>
+                	<div class="tooltipContainer info">'.get_help("input_page_siteviewable").'</div>
+                    <div class="spacer" style="clear: both;"></div>
+                </div>';
     if($admin){
-    	echo '
+    	$content .= '
     			<div class="rowContainer">
-    				<label for="menu_page">Show in Main Menu</label>
+    				<label class="rowTitle" for="menu_page">Show in Main Menu</label>
     				<select name="menu_page" id="menu_page">
     				<option value="0" ' . $menu_no . '>No</option>
     				<option value="1" ' . $menu_yes . '>Yes</option>
     				</select>
-    				<div class="tooltipContainer info">'.get_help("input_page_menulink").'</div><br />
+    				<div class="tooltipContainer info">'.get_help("input_page_menulink").'</div>
+                    <div class="spacer" style="clear: both;"></div>
     			</div>
     			<div class="rowContainer">
-    				<label for="hidefromvisitors">Hide Menu from Visitors</label>
+    				<label class="rowTitle" for="hidefromvisitors">Hide Menu from Visitors</label>
     				<select name="hidefromvisitors" id="hidefromvisitors">
     				<option value="0" ' . $hide_no . '>No</option>
     				<option value="1" ' . $hide_yes . '>Yes</option>
     				</select>
-    				<div class="tooltipContainer info">'.get_help("input_page_menulink").'</div><br />
+    				<div class="tooltipContainer info">'.get_help("input_page_menulink").'</div>
+                    <div class="spacer" style="clear: both;"></div>
     			</div>';
     }else{
-        echo '<input type="hidden" id="menu_page" name="menu_page" value="' . $menu_page . '" /><input type="hidden" id="hidefromvisitors" name="hidefromvisitors" value="' . $hidefromvisitors . '" />';
+        $content .= '<input type="hidden" id="menu_page" name="menu_page" value="' . $menu_page . '" /><input type="hidden" id="hidefromvisitors" name="hidefromvisitors" value="' . $hidefromvisitors . '" />';
     }
  			
     if(isset($MYVARS->GET["pageid"])){
-    	echo '<input class="submit" name="submit" type="submit" value="Submit Changes" />';
-    }else{
-    	echo '<input class="submit" name="submit" type="submit"value="Create Page" />';
+    	$content .= '<input class="submit" name="submit" type="submit" value="Submit Changes" />';
+    } else {
+    	$content .= '<input class="submit" name="submit" type="submit"value="Create Page" />';
     }		
  
-    echo '		</fieldset>
+    $content .= '</fieldset>
     	</form>
     </div>';
+    echo format_popup($content,'Create/Edit Page');
 }
 
 function create_edit_links(){
 global $CFG, $MYVARS, $ROLES, $USER;
+    $content = '';
     $pageid = $MYVARS->GET["pageid"];
     //Stop right there you!
     if(!user_has_ability_in_page($USER->userid, "editpage", $pageid)){
-        echo get_error_message("generic_permissions");
+        $content .= get_error_message("generic_permissions");
         return;
     }
     
-    echo '
+    $content .= '
 		<div id="links_editor" style="width:99%;height:93%;border-color:buttonface; border-style:dotted; padding: 10px 0px 10px 0px;">
 		<table>
 		<tr><td><b>Links Editor Mode</b>&nbsp;&nbsp;<input type="button" value="Add/Remove Links" onclick="ajaxapi(\'/ajax/page_ajax.php\',\'get_new_link_form\',\'&pageid=' . $pageid . '\',function() { simple_display(\'links_mode_span\');});">
@@ -274,5 +283,6 @@ global $CFG, $MYVARS, $ROLES, $USER;
 		</td></tr></table><br />
 		<span id="links_mode_span"></span>
 		</div>';
+    echo format_popup($content,'Edit Links');
 }
 ?>

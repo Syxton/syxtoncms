@@ -26,7 +26,6 @@ global $MYVARS, $CFG;
 	if(!isset($VALIDATELIB)){ include_once($CFG->dirroot . '/lib/validatelib.php'); }
 	$content = '
         <div class="formDiv" id="new_user_div">
-        <br /><br />
     		<input id="hiddenusername" type="hidden" /><input id="hiddenpassword" type="hidden" />
     		<form id="signup_form">
     			<fieldset class="formContainer">
