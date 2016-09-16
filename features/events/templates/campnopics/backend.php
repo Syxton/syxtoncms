@@ -183,7 +183,7 @@ function common_weeks($event, $included = true, $id, $regid = "")
 	$time = get_timestamp();
 	$siteviewable = $event["pageid"] == $CFG->SITEID ? " OR siteviewable = '1' AND confirmed = '1'" : "";
 	
-	$SQL = "SELECT e.* FROM events e WHERE (e.template_id=".$event["template_id"]." AND (e.pageid='".$event["pageid"]."' $siteviewable)) AND e.start_reg < '$time' AND e.stop_reg > '$time' AND (e.max_users=0 OR (e.max_users != 0 AND e.max_users > (SELECT COUNT(*) FROM events_registrations er WHERE er.eventid=e.eventid)))";
+	$SQL = "SELECT e.* FROM events e WHERE (e.template_id=".$event["template_id"]." AND (e.pageid='".$event["pageid"]."' $siteviewable)) AND e.start_reg < '$time' AND e.stop_reg > ($time - 86400) AND (e.max_users=0 OR (e.max_users != 0 AND e.max_users > (SELECT COUNT(*) FROM events_registrations er WHERE er.eventid=e.eventid)))";
 
 	$events = get_db_result($SQL);
 

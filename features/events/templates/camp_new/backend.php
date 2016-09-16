@@ -234,7 +234,7 @@ global $CFG,$USER,$PAGE;
     $camper_name = $autofill == 0 ? false : get_db_field("value","events_registrations_values","regid='$regid' AND elementname='Camper_Name'");
 	$siteviewable = $event["pageid"] == $CFG->SITEID || ($event["siteviewable"] == 1 && $event["confirmed"] == 1) ? " OR (siteviewable = '1' AND confirmed = '1')" : "";
 	$includelastevent = $included ? "" : "e.eventid != ".$event["eventid"]. " AND ";
-	$SQL = "SELECT e.* FROM events e WHERE $includelastevent (e.template_id=".$event["template_id"]." AND (e.pageid='".$event["pageid"]."' $siteviewable)) AND (e.start_reg < $time AND e.stop_reg > $time) AND (e.max_users=0 OR (e.max_users != 0 AND e.max_users > (SELECT COUNT(*) FROM events_registrations er WHERE er.eventid=e.eventid AND verified='1')))";
+	$SQL = "SELECT e.* FROM events e WHERE $includelastevent (e.template_id=".$event["template_id"]." AND (e.pageid='".$event["pageid"]."' $siteviewable)) AND (e.start_reg < $time AND e.stop_reg > ($time - 86400)) AND (e.max_users=0 OR (e.max_users != 0 AND e.max_users > (SELECT COUNT(*) FROM events_registrations er WHERE er.eventid=e.eventid AND verified='1')))";
 	if($events = get_db_result($SQL)){
         $common = array();
 		while($evnt = fetch_row($events)){

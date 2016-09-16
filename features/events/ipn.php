@@ -69,10 +69,11 @@ if (strcmp ($res, "VERIFIED") == 0) {
     // check that receiver_email is your Primary PayPal email
     // check that payment_amount/payment_currency are correct
     // process payment
-
+    
+	$keyarray = $_POST;
     $txid = $_POST['txn_id'];
 	if(!get_db_row("SELECT * FROM logfile WHERE feature='events' AND description='Paypal' AND info='$txid'")){
-		$regids = $_POST['custom'];
+		$regids = $keyarray['custom'];
 		$regids = explode(":",$regids);
 		$i=0;
 		while(isset($regids[$i])){
@@ -112,7 +113,7 @@ if (strcmp ($res, "VERIFIED") == 0) {
 		}
 
 		//Log
-		log_entry('events', $txid, "Paypal");
+		log_entry('events', $keyarray['txn_id'], "Paypal");
 	}
     
 } else if (strcmp ($res, "INVALID") == 0) {
