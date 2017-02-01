@@ -124,7 +124,7 @@ global $USER,$CFG;
 	<tr>
         <td>
             <span class="shoutbox_tabtext">
-                '.make_modal_links(array("title"=>"Shout","path"=>$CFG->wwwroot."/features/forum/forum.php?action=shoutbox_editor$userid&amp;forumid=$forumid","iframe"=>"true","refresh"=>"true","runafter"=>"forum_refresh_$forumid")).'
+                '.make_modal_links(array("title"=>"Shout","path"=>$CFG->wwwroot."/features/forum/forum.php?action=shoutbox_editor$userid&amp;forumid=$forumid","width"=>"600","iframe"=>"true","refresh"=>"true","runafter"=>"forum_refresh_$forumid")).'
             </span>
         </td>
     </tr>';
