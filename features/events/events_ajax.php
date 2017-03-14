@@ -2489,7 +2489,7 @@ global $CFG, $MYVARS, $USER;
                          return false;
                 ">Return to Staff Applications
              </a>';
-    $applookup = 'document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+    $applookup = 'if($(this).val() > 0){ document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
                                     ajaxapi(\'/features/events/events_ajax.php\',
                                             \'show_staff_app\',
                                             \'&amp;staffid='.$staffid.'&amp;year=\'+$(this).val()+\'&amp;pagenum=' . $pagenum . '&amp;searchwords=\'+escape(\'' . $searchwords . '\'),
@@ -2500,7 +2500,7 @@ global $CFG, $MYVARS, $USER;
                                                 }
                                             },
                                             true
-                                    );';
+                                    ); }';
     if($archive = get_db_result("SELECT * FROM events_staff_archive WHERE staffid='$staffid' ORDER BY year")){
         $i = 0;
         $values = new stdClass();
@@ -2509,7 +2509,7 @@ global $CFG, $MYVARS, $USER;
 			$values->$i->year = $vals["year"];
 			$i++;
 		}
-        echo "<br />" . make_select_from_array("year",$values,"year","year",$year,"",'onchange="'.$applookup.'"') ."<br />";
+        echo "<br />" . make_select_from_array("year",$values,"year","year",$year,"",'onchange="'.$applookup.'"',true) ."<br />";
     }
 
     if($row = get_db_row("SELECT * FROM events_staff_archive WHERE staffid='$staffid' AND year='$year'")){
