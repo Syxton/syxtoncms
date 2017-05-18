@@ -54,22 +54,30 @@ global $CFG,$USER;
 
 function filter($html,$featureid,$settings,$area="middle"){
 global $CFG;
-	if(isset($settings->html->$featureid->documentviewer->setting) && $settings->html->$featureid->documentviewer->setting == 1){ //Document Viewer Filter
-		if(isset($CFG->doc_view_key)){
+	if (isset($settings->html->$featureid->documentviewer->setting) && $settings->html->$featureid->documentviewer->setting == 1) { //Document Viewer Filter
+		if (isset($CFG->doc_view_key)) {
 			$regex = '/(<[aA]\s*.[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s""\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(.[^\s]*)(<\/[aA]>)/';
-			if(preg_match_all($regex, $html, $matches, PREG_SET_ORDER)){
+			if (preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) {
 				foreach($matches as $match){
-					if(!strstr($match[0],'javascript:')){
+					if (!strstr($match[0],'javascript:')) {
 						$filetypes = '/([\.[pP][dD][fF]|\.[dD][oO][cC]|\.[rR][tT][fF]|\.[pP][sS]|\.[pP][pP][tT]|\.[pP][pP][sS]|\.[tT][xX][tT]|\.[sS][xX][cC]|\.[oO][dD][sS]|\.[xX][lL][sS]|\.[oO][dD][tT]|\.[sS][xX][wW]|\.[oO][dD][pP]|\.[sS][xX][iI]])/';
-						if(preg_match($filetypes,$match[2])){
+						if (preg_match($filetypes,$match[2])) {
     						//make internal links full paths
     						$url = strstr($match[2],$CFG->directory.'/userfiles') && !strstr($match[2],$CFG->wwwroot) && !strstr($match[2],"http://") && !strstr($match[2],"www.") ? str_replace($CFG->directory.'/userfiles', $CFG->wwwroot.'/userfiles',$match[2]) : $match[2];
 
                             //make full url if not full
-                            $url = !strstr($url, "http://") && strstr($url,"www.") ? str_replace("www.","http://www.",$url) : $url;
+                            $protocol = isset($_SERVER["HTTPS"]) ? 'https://' : 'http://';
+                            $url_parts = parse_url($url);
+                            $url = str_replace(":", "", $url);
+                            $url = str_replace("//", "", $url);
+                            if (!empty($url_parts["scheme"])) { // protocol exists.
+                                $url = str_replace($url_parts["scheme"], $protocol, $url);
+                            } else {
+                                $url = $protocol . $url;
+                            }
 
                             //remove target from urls
-    						if(preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/',$url, $target, PREG_OFFSET_CAPTURE)){ $url = str_replace($target[0],"", $url);}
+    						if (preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/',$url, $target, PREG_OFFSET_CAPTURE)) { $url = str_replace($target[0],"", $url); }
     						$url = preg_replace('/([\'|\"])/','',$url);
 
                             //make ipaper links
