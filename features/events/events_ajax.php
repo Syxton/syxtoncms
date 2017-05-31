@@ -834,7 +834,7 @@ function printable_registration($regid, $eventid, $template_id){
 	return $returnme;
 }
 
-function save_reg_changes(){
+function save_reg_changes() {
 global $CFG, $MYVARS, $USER;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
 	$eventid = dbescape($MYVARS->GET["eventid"]);
@@ -843,7 +843,7 @@ global $CFG, $MYVARS, $USER;
 
     // Changing core registration values
     $reg_eventid = dbescape($MYVARS->GET["reg_eventid"]);
-    if(!empty($reg_eventid) && get_db_result("SELECT * FROM events WHERE eventid='$reg_eventid'")){
+    if (!empty($reg_eventid) && get_db_result("SELECT * FROM events WHERE eventid='$reg_eventid'")) {
         $reg_email = dbescape($MYVARS->GET["reg_email"]);
         $reg_code = dbescape($MYVARS->GET["reg_code"]);
         execute_db_sql("UPDATE events_registrations 
@@ -857,7 +857,7 @@ global $CFG, $MYVARS, $USER;
 	$SQL = "SELECT * FROM events_registrations_values 
                 WHERE regid='$regid' 
                 ORDER BY entryid";
-	if($entries = get_db_result($SQL)){
+	if ($entries = get_db_result($SQL)) {
 		$SQL2 = '';
 		while($entry = fetch_row($entries)){
 			$SQL2 .= $SQL2 == "" ? "('".$entry["entryid"]."','".addslashes(urldecode($MYVARS->GET[$entry["entryid"]]))."')" : ",('".$entry["entryid"]."','".addslashes(urldecode($MYVARS->GET[$entry["entryid"]]))."')";
@@ -873,14 +873,43 @@ global $CFG, $MYVARS, $USER;
 		$SQL3 = "UPDATE events_registrations_values e, temp_updates t
 		SET e.value = t.newvalue WHERE e.entryid = t.entryid AND e.regid='$regid'";
 	}
+
+    if (execute_db_sql($SQL1)) {
+        if (execute_db_sql($SQL2)) {
+            if (execute_db_sql($SQL3)) {
+                // check paid status
+                $paid = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='paid'");
+                $minimum = get_db_field("fee_min", "events", "eventid='$eventid'");
+                $verified = get_db_field("verified", "events_registrations", "regid='$regid'");
+                if ($paid >= $minimum) {
+                    if (empty($verified)) { // Not already verified.
+                        // If payment is made, it is no longer in queue.
+                        $SQL = "UPDATE events_registrations SET verified='1' WHERE regid='$regid'";
+            			execute_db_sql($SQL);
     
-    if(execute_db_sql($SQL1)){
-        if(execute_db_sql($SQL2)){
-            if(execute_db_sql($SQL3)){
+                        $touser = new stdClass();
+                        $touser->fname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_First'");
+                		$touser->lname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_Last'");
+                		$touser->email = get_db_field("email","events_registrations","regid='$regid'");
+                		
+                        $fromuser = new stdClass();
+                        $fromuser->email = $CFG->siteemail;
+                		$fromuser->fname = $CFG->sitename;
+                		$fromuser->lname = "";
+                		$message = registration_email($regid, $touser);
+                		if (send_email($touser, $fromuser, null, $CFG->sitename . " Registration", $message)) {
+                			send_email($fromuser, $fromuser, null, $CFG->sitename . " Registration", $message);
+                		}   
+                    }
+                } else {
+                    // Should be uncommented out if payments by check are not verified without payment.
+                    // $SQL = "UPDATE events_registrations SET verified='0' WHERE regid='$regid'";
+        			// execute_db_sql($SQL);
+                }
                 echo "Saved";
-            }else{ echo $SQL3; }
-        }else{ echo $SQL2; }   
-    }else{ echo $SQL1; }
+            } else { echo $SQL3; }
+        } else { echo $SQL2; }
+    } else { echo $SQL1; }
 }
 
 function delete_registration_info(){
@@ -1007,14 +1036,14 @@ global $CFG, $MYVARS, $USER;
                                     AND start_reg > 0 
                                     AND ((event_begin_date - $event_begin_date) < 7776000 && (event_begin_date - $event_begin_date) > -7776000)");
     $returnme .= '<tr><td>Event </td><td>' .
-                    make_select("reg_eventid", $events, "eventid", "name", $eventid) .
+                    make_select("reg_eventid", $events, "eventid", "name", $eventid, "", "false", "1", "width: 420px") .
                  '</td></tr>';
     $event_reg = get_db_row("SELECT * FROM events_registrations WHERE regid='$regid'");
     $returnme .= '<tr><td>Email </td><td>' .
-                    '<input id="reg_email" name="reg_email" type="text" size="50" value="'.stripslashes($event_reg["email"]).'" />' .
+                    '<input id="reg_email" name="reg_email" type="text" size="45" value="'.stripslashes($event_reg["email"]).'" />' .
                  '</td></tr>';
     $returnme .= '<tr><td>Pay Code </td><td>' .
-                    '<input id="reg_code" name="reg_code" type="text" size="50" value="'.stripslashes($event_reg["code"]).'" />' .
+                    '<input id="reg_code" name="reg_code" type="text" size="45" value="'.stripslashes($event_reg["code"]).'" />' .
                  '</td></tr>';
                     
 	$SQL = "SELECT * FROM events_templates WHERE template_id='$template_id'";
@@ -1031,7 +1060,7 @@ global $CFG, $MYVARS, $USER;
                                                     ORDER BY entryid")){
         				$i = 0; $values_display = explode(",", $form_element["display"]);
         				while($value = fetch_row($values)){
-	        				$returnme .= '<tr><td>'.$values_display[$i].' </td><td><input id="'.$value["entryid"].'" name="'.$value["entryid"].'" type="text" size="50" value="'.stripslashes($value["value"]).'" /></td></tr>';
+	        				$returnme .= '<tr><td>'.$values_display[$i].' </td><td><input id="'.$value["entryid"].'" name="'.$value["entryid"].'" type="text" size="45" value="'.stripslashes($value["value"]).'" /></td></tr>';
         					$i++;
 						}
 					}
@@ -1039,7 +1068,7 @@ global $CFG, $MYVARS, $USER;
 	        		$value = get_db_row("SELECT * FROM events_registrations_values 
                                             WHERE regid='$regid' 
                                                 AND elementid='".$form_element["elementid"]."'");
-	        		$returnme .= '<tr><td>'.$form_element["display"].' </td><td><input id="'.$value["entryid"].'" name="'.$value["entryid"].'" type="text" size="50" value="'.stripslashes($value["value"]).'" /></td></tr>';
+	        		$returnme .= '<tr><td>'.$form_element["display"].' </td><td><input id="'.$value["entryid"].'" name="'.$value["entryid"].'" type="text" size="45" value="'.stripslashes($value["value"]).'" /></td></tr>';
 				}
 			}
         }
@@ -1051,7 +1080,7 @@ global $CFG, $MYVARS, $USER;
         	$value = get_db_row("SELECT * FROM events_registrations_values 
                                     WHERE regid='$regid' 
                                         AND elementname='".$form[0]."'");
-        	$returnme .= '<tr><td>'.$form[2].' </td><td><input id="'.$value["entryid"].'" name="'.$value["entryid"].'" type="text" size="50" value="'.stripslashes($value["value"]).'" /></td></tr>';
+        	$returnme .= '<tr><td>'.$form[2].' </td><td><input id="'.$value["entryid"].'" name="'.$value["entryid"].'" type="text" size="45" value="'.stripslashes($value["value"]).'" /></td></tr>';
         	$i++;
 		}
     }

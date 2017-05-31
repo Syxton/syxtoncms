@@ -84,12 +84,12 @@ if (strcmp ($res, "VERIFIED") == 0) {
 			$SQL = "UPDATE events_registrations_values SET value='".((float) $paid + (float) $add)."' WHERE elementname='paid' AND regid='$regid'";
 			execute_db_sql($SQL);
             
-            //If payment is made, it is no longer in queue
+            // If payment is made, it is no longer in queue.
             $SQL = "UPDATE events_registrations SET verified='1' WHERE regid='$regid'";
 			execute_db_sql($SQL);
             
             // Make an entry for this transaction that links it to this registration.
-            $eventid = get_db_field("eventid","events_registrations_values","regid='$regid'"); // Get eventid
+            $eventid = get_db_field("eventid","events_registrations_values","regid='$regid'"); // Get eventid.
             $params = array("date" => get_timestamp(),
                             "amount" => $add,
                             "txid" => $txid);
@@ -101,13 +101,13 @@ if (strcmp ($res, "VERIFIED") == 0) {
     		$touser->lname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_Last'");
     		$touser->email = get_db_field("email","events_registrations","regid='$regid'");
     		
-		$fromuser = new stdClass();
-		$fromuser->email = $CFG->siteemail;
+            $fromuser = new stdClass();
+            $fromuser->email = $CFG->siteemail;
     		$fromuser->fname = $CFG->sitename;
     		$fromuser->lname = "";
     		$message = registration_email($regids[$i], $touser);
-    		if(send_email($touser,$fromuser,null,"Camp Wabashi Registration", $message)){
-    			send_email($fromuser,$fromuser,null,"Camp Wabashi Registration", $message);
+    		if (send_email($touser, $fromuser, null, $CFG->sitename . " Registration", $message)) {
+    			send_email($fromuser, $fromuser, null, $CFG->sitename . " Registration", $message);
     		}
 			$i++;
 		}
