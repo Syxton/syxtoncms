@@ -815,7 +815,9 @@ global $CFG,$MYVARS,$USER;
                     <table class="registration"><tr><td>'.$template['intro'].' </td></tr></table>';
 
 	if($template['folder'] != "none"){ //registration template refers to a file
-		include($CFG->dirroot . '/features/events/templates/' . $template['folder'] . '/template.php');
+        ob_start();
+        include($CFG->dirroot . '/features/events/templates/' . $template['folder'] . '/template.php');
+        $returnme .= ob_get_clean();
 	}else{ //registration template refers to a database style template
 		$form = '<table style="width:100%">';
 		$templateform = get_db_result("SELECT * FROM events_templates_forms WHERE template_id='".$template['template_id']."' ORDER BY sort");

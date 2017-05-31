@@ -22,7 +22,7 @@ $regid = isset($MYVARS->GET['regid']) && $MYVARS->GET['regid'] != "false" ? $MYV
 $autofill = isset($MYVARS->GET['autofill']) && $MYVARS->GET['autofill'] == "1" ? true : false;
 $email = "";
 
-if($show_again){ //This is not the first time through
+if($show_again) { //This is not the first time through
 	if($autofill){ //Same person..so auto fill all items
 		$last_reg = get_db_result("SELECT * FROM events_registrations_values WHERE regid='$regid'");
 		while($reginfo = fetch_row($last_reg)){
@@ -43,14 +43,12 @@ echo '  <html>
         <body>
 ';    
 
-
 //output any passed on hidden info from previous registrations
 $total_owed = isset($MYVARS->GET['total_owed']) ? $MYVARS->GET['total_owed'] : 0;
 $items = isset($MYVARS->GET["items"]) ? $MYVARS->GET["items"] : "";
 
 //Somebody please tell me why I MUST HAVE THE &nbsp; before the form to make it show up?
 echo '<form name="form1" id="form1">
-    <div id="camp">
         <fieldset class="formContainer">
             <input type="hidden" name="eventid" value="'.$eventid.'" />
             <input type="hidden" name="paid" value="0" />
@@ -449,9 +447,8 @@ if(!$show_again){
           <input tabindex="33" class="submit" name="submit" type="submit" value="Send Application" '.$preview.'/><br /><br />
           <input tabindex="34" name="reset" type="reset" '.$preview.'/>
         </fieldset>
-    </div>
+    </form>
     '.keepalive().'
-</form>
 ';
 
 //Finalize and activate validation code

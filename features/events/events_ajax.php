@@ -902,9 +902,8 @@ global $CFG, $MYVARS, $USER;
                 		}   
                     }
                 } else {
-                    // Should be uncommented out if payments by check are not verified without payment.
-                    // $SQL = "UPDATE events_registrations SET verified='0' WHERE regid='$regid'";
-        			// execute_db_sql($SQL);
+                    $SQL = "UPDATE events_registrations SET verified='0' WHERE regid='$regid'";
+        			execute_db_sql($SQL);
                 }
                 echo "Saved";
             } else { echo $SQL3; }
@@ -1414,8 +1413,7 @@ global $CFG, $MYVARS, $USER;
             
 			if($event["start_reg"] > 0){
 				$regcount = get_db_count("SELECT * FROM events_registrations 
-                                            WHERE eventid='" . $event['eventid']."' 
-                                                AND verified='1'");
+                                            WHERE eventid='" . $event['eventid']."'");
 				$limit = $event['max_users'] == "0" ? "&#8734;" : $event['max_users'];
 				//GET EXPORT CSV BUTTON
 				if(user_has_ability_in_page($USER->userid, "exportcsv", $event["pageid"])){ 
@@ -1552,7 +1550,6 @@ global $CFG, $MYVARS, $USER, $error;
 					<br /><br />
 					Your registration will be complete upon payment. ';
 				}else{
-				    execute_db_sql("UPDATE events_registrations SET verified='1' WHERE regid='$regid'");
 					echo '<br />
 					If you are done with the registration process, please make out your <br />
 					check or money order in the amount of <span style="color:blue;font-size:1.25em;">$' . $MYVARS->GET["cart_total"] . '</span> payable to <b>' . $event["payableto"] . '</b> and send it to <br /><br />
@@ -2117,8 +2114,7 @@ global $MYVARS, $CFG, $USER;
     
 	if($registrations = get_db_result("SELECT * FROM events_registrations 
                                             WHERE eventid='$eventid' 
-                                                AND queue='1' 
-                                                AND verified='1'")){
+                                                AND queue='1'")){
 		$CSV .= "\nQUEUE\n";
 		while($regid = fetch_row($registrations)){
 			$row = date("F j g:i a", $regid["date"]) . "," . $regid["email"];
