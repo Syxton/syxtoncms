@@ -677,7 +677,9 @@ global $CFG;
     $template = get_db_row("SELECT * FROM events_templates WHERE template_id='" . $event["template_id"]."'");
 
     if (!empty($CFG->logofile)) {
-        $email = '<img src="'.$CFG->wwwroot.'/images/'.$CFG->logofile.'" style="5em" /><br />';
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https:" : "http:";
+        $protocol = strstr($CFG->wwwroot, "http") ? '' : $protocol;
+        $email = '<img src="'.$protocol.$CFG->wwwroot.'/images/'.$CFG->logofile.'" style="5em" /><br />';
     } else {
         $email = '<h1>'.$CFG->sitename.'</h1>';
     }
