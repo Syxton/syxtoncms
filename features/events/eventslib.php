@@ -550,11 +550,13 @@ function make_paypal_button($items, $sellersemail){
 global $CFG;
     $regids = "";
     $returnme = $CFG->paypal ? '<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">' : '<form action="https://www.sandbox.paypal.com/cgi-bin/webscr" method="post" target="_blank">';
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https:" : "http:";
+    $protocol = strstr($CFG->wwwroot, "http") ? '' : $protocol;
     $returnme .= '
         <input type="hidden" name="upload" value="1">
         <input type="hidden" name="cmd" value="_cart">
-        <input type="hidden" name="return" value="'.$CFG->wwwroot.'/features/events/events.php?action=showcart">
-        <input type="hidden" name="notify_url" value="'.$CFG->wwwroot.'/features/events/ipn.php">
+        <input type="hidden" name="return" value="'.$protocol.$CFG->wwwroot.'/features/events/events.php?action=showcart">
+        <input type="hidden" name="notify_url" value="'.$protocol.$CFG->wwwroot.'/features/events/ipn.php">
         <input type="hidden" name="business" value="' . $sellersemail . '">';
     $i = 1;
     foreach($items as $item){

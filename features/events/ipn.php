@@ -31,7 +31,7 @@ foreach ($myPost as $key => $value) {
 }
  
 // STEP 2: Post IPN data back to paypal to validate
-$pp_hostname = $CFG->paypal ? 'www.paypal.com' : 'www.sandbox.paypal.com';
+$pp_hostname = $CFG->paypal ? 'ipnpb.paypal.com' : 'ipnpb.sandbox.paypal.com';
 $paypal_link = "https://$pp_hostname/cgi-bin/webscr"; 
  
 $ch = curl_init($paypal_link);
@@ -62,6 +62,7 @@ curl_close($ch);
 
 // STEP 3: Inspect IPN validation result and act accordingly
 $req = str_replace("&", "||", $req);  // Make it a nice list in case we want to email it to ourselves for reporting
+
 if (strcmp ($res, "VERIFIED") == 0) {
     
     // check whether the payment_status is Completed

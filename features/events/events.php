@@ -1031,7 +1031,7 @@ global $CFG;
     
     $auth_token = $CFG->paypal_auth; 
     
-    $pp_hostname = $CFG->paypal ? 'www.paypal.com' : 'www.sandbox.paypal.com';
+    $pp_hostname = $CFG->paypal ? 'ipnpb.paypal.com' : 'ipnpb.sandbox.paypal.com';
      
     // read the post from PayPal system and add 'cmd'
     $req = 'cmd=_notify-synch';
@@ -1058,14 +1058,12 @@ global $CFG;
         echo $redirect;
     }else{
          // parse the data
-        $lines = explode("\n", $res);
+        $lines = explode("\n", trim($res));
         $keyarray = array();
         if (strcmp ($lines[0], "SUCCESS") == 0) {
-            for ($i=1; $i<count($lines);$i++){
-                if(!empty($lines[$i])){
-                    list($key,$val) = explode("=", $lines[$i]);
-                    $keyarray[urldecode($key)] = urldecode($val);    
-                }
+            for ($i = 1; $i < count($lines); $i++) {
+                $temp = explode("=", $lines[$i],2);
+                $keyarray[urldecode($temp[0])] = urldecode($temp[1]);
             }
             // check the payment_status is Completed
             // check that txn_id has not been previously processed

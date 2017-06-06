@@ -74,9 +74,39 @@ if(!$fp){
     			$regids = explode(":",$regids);
     			$i=0;
     			while(isset($regids[$i])){
-    				$paid = get_db_field("value", "events_registrations_values", "elementname='paid' AND regid=".$regids[$i]);
-    				$SQL = "UPDATE events_registrations_values SET value=".($paid + $keyarray["mc_gross_".($i+1)])." WHERE elementname='paid' AND regid=".$regids[$i];
+    			    $rid = $regids[$i];
+    				$paid = get_db_field("value", "events_registrations_values", "elementname='paid' AND regid='$rid'");
+    				$SQL = "UPDATE events_registrations_values SET value=".($paid + $keyarray["mc_gross_".($i+1)])." WHERE elementname='paid' AND regid='$rid'";
     				execute_db_sql($SQL);
+                    
+                    $eventid = get_db_field("eventid","events_registrations_values","regid='$rid'"); // Get eventid.
+                    $minimum = get_db_field("fee_min", "events", "eventid='$eventid'");
+                    $verified = get_db_field("verified", "events_registrations", "regid='$rid'");
+                    
+                    if ($paid >= $minimum) {
+                        if (empty($verified)) { // Not already verified.
+                            // If payment is made, it is no longer in queue.
+                            $SQL = "UPDATE events_registrations SET verified='1' WHERE regid='$rid'";
+                			execute_db_sql($SQL);
+        
+                            $touser = new stdClass();
+                            $touser->fname = get_db_field("value", "events_registrations_values", "regid='$rid' AND elementname='Camper_Name_First'");
+                    		$touser->lname = get_db_field("value", "events_registrations_values", "regid='$rid' AND elementname='Camper_Name_Last'");
+                    		$touser->email = get_db_field("email","events_registrations","regid='$rid'");
+                    		
+                            $fromuser = new stdClass();
+                            $fromuser->email = $CFG->siteemail;
+                    		$fromuser->fname = $CFG->sitename;
+                    		$fromuser->lname = "";
+                    		$message = registration_email($rid, $touser);
+                    		if (send_email($touser, $fromuser, null, $CFG->sitename . " Registration", $message)) {
+                    			send_email($fromuser, $fromuser, null, $CFG->sitename . " Registration", $message);
+                    		}   
+                        }
+                    } else {
+                        $SQL = "UPDATE events_registrations SET verified='0' WHERE regid='$rid'";
+            			execute_db_sql($SQL);
+                    }
     				$i++;
     			}
     			
