@@ -278,8 +278,40 @@ width:22em;
 }
 /** EVENTS CSS **/
 .eventstable {
-width:100%;
-padding-bottom:0px;
+    width:100%;
+    padding-bottom:0px;
+}
+.events_reginfoblock {
+    display: inline-block;
+    margin: 5px;
+}
+.events_alert {
+    font-weight: bolder;
+    font-size: 1.2em;
+    color: green;
+}
+.events_limit_alert {
+    font-weight: bolder;
+    font-size: 1.2em;
+    color: red;
+}
+.event_title {
+    font-size: .95em;
+    float: left;
+    padding-right: 10px;
+}
+.event_info_box {
+    width: 100%;
+    vertical-align: middle;
+    color: gray;
+    position: relative;
+    _right: 2px;
+    top:-8px;
+}
+.event_info {
+    font-size: .85em;
+    line-height: 28px;
+    vertical-align: top;
 }
 /** BLOG CSS **/
 div.html_template {

@@ -127,41 +127,43 @@ global $CFG, $USER, $ROLES;
 
     $begincurrentyear = mktime(0, 0, 0, 1, 1, $year); //Beginning of current year
     $endcurrentyear = mktime(0, 0, 0, 12, 32, $year); //End of current year
-    //GET ABILITIES FOR EVENTS//////////////////////////////
+
+    // GET ABILITIES FOR EVENTS
     $canconfirm = false;
     $canedit = false;
     $canview = false;
     $site = $pageid == $CFG->SITEID ? "((e.pageid != $pageid AND siteviewable=1) OR (e.pageid = $pageid))" : "e.pageid = $pageid";
 
-    if(is_logged_in()){
-        if(get_db_row("SELECT eventid FROM events WHERE workers=1 AND event_begin_date > " .time())) {
+    if (is_logged_in()) {
+        if (get_db_row("SELECT eventid FROM events WHERE workers=1 AND event_begin_date > " .time())) {
             if(user_has_ability_in_page($USER->userid, "staffapply", $pageid, "events", $featureid)){ 
                 $content .= get_staff_application_button($featureid,$pageid);    
             }
         }
-        if(user_has_ability_in_page($USER->userid, "viewevents", $pageid, "events", $featureid)){
+        if (user_has_ability_in_page($USER->userid, "viewevents", $pageid, "events", $featureid)) {
             $canview = true;
             $canconfirm = user_has_ability_in_page($USER->userid, "confirmevents", $CFG->SITEID, "events", $featureid) ? true : false;
             $buttons = get_button_layout("events", $featureid, $pageid);
-            if($canconfirm){ 
+            if ($canconfirm) { 
                 $SQL = "SELECT * FROM events e WHERE $site AND $begincurrentyear < e.event_begin_date AND $endcurrentyear > e.event_begin_date ORDER BY e.event_begin_date, e.event_begin_time";
-            }else{  
+            } else {  
                 $SQL = "SELECT * FROM events e WHERE $site AND $begincurrentyear < e.event_begin_date AND $endcurrentyear > e.event_begin_date AND e.confirmed=1 ORDER BY e.event_begin_date, e.event_begin_time";
             }
         }
-    }else{
+    } else {
         $canview = role_has_ability_in_page($ROLES->visitor, "viewevents", $pageid) ? true : false;
-        if($canview && $pageid == $CFG->SITEID){ 
+        if ($canview && $pageid == $CFG->SITEID) { 
             $SQL = "SELECT * FROM events e WHERE $site AND $begincurrentyear < e.event_begin_date AND $endcurrentyear > e.event_begin_date AND e.confirmed=1 ORDER BY e.event_begin_date, e.event_begin_time";
-        }elseif($canview){ 
+        } elseif($canview) { 
             $SQL = "SELECT * FROM events e WHERE $site AND $begincurrentyear < e.event_begin_date AND $endcurrentyear > e.event_begin_date AND e.confirmed=1 ORDER BY e.event_begin_date, e.event_begin_time";
-        }$buttons = null;
-    }
-    //END ABILITIES CHECK///////////////////////////////////
-    if($canview && $result = get_db_result($SQL)){
+        }
+        $buttons = null;
+    } // END ABILITIES CHECK
+
+    if ($canview && $result = get_db_result($SQL)) {
         $lastday = false;
-        while($event = fetch_row($result)){
-            if($showpastevents || ($event["event_end_date"] >= ($time - 86400))){
+        while ($event = fetch_row($result)) {
+            if ($showpastevents || ($event["event_end_date"] >= ($time - 86400))) {
 				$newday = true;
 	            $newday = $lastday == date("n/d/Y", $event["event_begin_date"]) ? false : true;
 	            $lastday = date("n/d/Y", $event["event_begin_date"]);
@@ -173,10 +175,15 @@ global $CFG, $USER, $ROLES;
             }
         }
     }
-    if($content == ""){ $content .= "There are no events for this calendar year.";}
-    
-    //Get link for request form
-    if($allowrequests){ $content = get_event_request_link("middle",$featureid) . $content; }
+
+    if ($content == "") {
+        $content .= "There are no events for this calendar year.";
+    }
+
+    // Get link for request form.
+    if ($allowrequests) {
+        $content = get_event_request_link("middle",$featureid) . $content;
+    }
 
     return get_css_box($title, $content, $buttons, NULL, "events", $featureid);
 }
@@ -184,39 +191,80 @@ global $CFG, $USER, $ROLES;
 function make_calendar_table($pageid, $daygraphic, $event, $buttons = false, $needsconfirmed = false){
 global $CFG, $USER;
     $time = get_timestamp();
-    $export = ""; $registration = "";
+    $registration_info = "";
+    $alert = $export = $info = $eventbuttons = "";
+
     $featureid = get_db_field("featureid","pages_features","pageid='$pageid' AND feature='events'");    
-    if($event["start_reg"] > 0) { //Event is a registerable page...at one time
+    if ($event["start_reg"] > 0) { // Event is a registerable page...at one time.
 		$regcount = get_db_count("SELECT * FROM events_registrations WHERE eventid='" . $event['eventid'] . "'");
 		$limit = $event['max_users'] == "0" ? "&#8734;" : $event['max_users'];
 		
-		//Currently can register for event (time check)
-	    if($event["start_reg"] < $time && $event["stop_reg"] > ($time - 86400)) {
-	        $registerable = $event["max_users"] == 0 || ($event["max_users"] != 0 and $event["max_users"] > $regcount) ? true : false;
-	        //Availability check
-	        if($registerable){
-	            $registration = "Registration ends in " . ago($event["event_begin_date"]) . "&nbsp;&nbsp;<div style='display:inline-block'>";
+		// Currently can register for event (time check)
+	    if ($event["start_reg"] < $time && $event["stop_reg"] > ($time - 86400)) {
+	        $info  = "Registration ends in " . ago($event["event_begin_date"]);
+	        $maxreached = $event["max_users"] == 0 || ($event["max_users"] != 0 and $event["max_users"] > $regcount) ? false : true;
+
+            // Availability check
+	        if (!$maxreached) {
 	            $left = $event['max_users'] == "0" ? "&#8734;" : '(' . ($limit - $regcount) . ' out of ' . $limit . ' openings left)';
-	            if(user_has_ability_in_page($USER->userid, "signupforevents", $pageid, "events", $featureid)){ 
-                    $registration .= make_modal_links(array("button"=>"button","title"=>"Register $left","text"=>"Register","path"=>$CFG->wwwroot."/features/events/events.php?action=show_registration&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","validate"=>"true","width"=>"630","height"=>"95%","confirmexit"=>"true"));
+
+                // Alert
+                if ($event['max_users'] > 0 && (($limit - $regcount) < 10)) {
+                    $alert = '<span class="events_limit_alert">Only ' . ($limit - $regcount) . ' spots remaining.</span>';
+                } else {
+                    $alert = "";
                 }
-	            if($event["paypal"] != ""){ 
-	               $registration .= make_modal_links(array("button"=>"button","title"=>"Event Payment","text"=>"Pay","path"=>$CFG->wwwroot."/features/events/events.php?action=pay&amp;modal=1&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"width"=>"95%","height"=>"95%"));
+
+                // Can you sign up for this event.
+                if (user_has_ability_in_page($USER->userid, "signupforevents", $pageid, "events", $featureid)) {
+                    $params = array("button" => "button",
+                                    "title" => "Register $left",
+                                    "text" => "Register",
+                                    "path" => $CFG->wwwroot . "/features/events/events.php?action=show_registration&amp;pageid=$pageid&amp;eventid=".$event['eventid'],
+                                    "iframe" => "true",
+                                    "validate" => "true",
+                                    "width" => "630",
+                                    "height" => "95%",
+                                    "confirmexit" => "true");
+                    $eventbuttons .= make_modal_links($params);
+                }
+
+                // Can you pay for this event.
+	            if ($event["paypal"] != "") {
+                    $params = array("button" => "button",
+                                    "title" => "Event Payment",
+                                    "text" => "Pay",
+                                    "path" => $CFG->wwwroot . "/features/events/events.php?action=pay&amp;modal=1&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                                    "width" => "95%",
+                                    "height" => "95%");
+                    $eventbuttons .= make_modal_links($params);
 	            }
-                $registration .= '</div>';
+	        } else {
+	           $alert = '<span class="events_limit_alert">No spots available.</span>';
 	        }
 	    }
-	    
-		//GET EXPORT CSV BUTTON
-		if(user_has_ability_in_page($USER->userid, "exportcsv", $event["pageid"],"events",$featureid)){ $export = '<a href="javascript: void(0)" onclick="ajaxapi(\'/features/events/events_ajax.php\',\'export_csv\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '\',function() { run_this();});"><img src="' . $CFG->wwwroot . '/images/csv.png" title="Export ' . $regcount . '/' . $limit . ' Registrations" alt="Export ' . $regcount . ' Registrations" /></a>';}
+
+        if ($time > $event["event_begin_date"] && $time < $event["event_end_date"]) {
+            $info = '<span class="events_alert">This event is currently underway!</span>';
+        }
+
+		// GET EXPORT CSV BUTTON
+		if (user_has_ability_in_page($USER->userid, "exportcsv", $event["pageid"], "events", $featureid)) {
+            $export = '<a href="javascript: void(0)" onclick="ajaxapi(\'/features/events/events_ajax.php\',\'export_csv\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '\',function() { run_this();});"><img src="' . $CFG->wwwroot . '/images/csv.png" title="Export ' . $regcount . '/' . $limit . ' Registrations" alt="Export ' . $regcount . ' Registrations" /></a>';
+        }
     }
 
-    if($registration == "") {
+    if($info == "") { // If the info is empty, let's put something there.
         $location = get_db_row("SELECT * FROM events_locations WHERE id='".$event['location']."'");
-        $registration = "Where: " . stripslashes($location["location"]);
+        $info = "Event Location: " . stripslashes($location["location"]);
     }
+
+    $registration_info = '<div role="export_button" class="events_reginfoblock">' . $export . '</div>' . 
+                         '<div role="event_info" class="events_reginfoblock">' . $info . '</div>' .
+                         '<div role="event_buttons" class="events_reginfoblock">' . $eventbuttons . '</div>' .
+                         '<div role="alert" class="events_reginfoblock">' . $alert . '</div>';
     
-    if($needsconfirmed) {
+    if ($needsconfirmed) {
         $returnme = '<div id="confirm_' . $event['eventid'] . '">
             			<table class="eventstable">
                 			<tr>
@@ -224,8 +272,12 @@ global $CFG, $USER;
                         			<table style="width:100%;border-spacing: 0px;">
                                         <tr>
                                             <td>
-                                    			<div style="font-size:.95em; color:gray;float:left;padding-right:10px;">Unconfirmed: 
-                                                    '.make_modal_links(array("title"=> stripslashes($event["name"]),"path"=>$CFG->wwwroot."/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","width"=>"700","height"=>"650")).'
+                                    			<div class="event_title" style="color:gray;">Unconfirmed: 
+                                                    '.make_modal_links(array("title" => stripslashes($event["name"]),
+                                                                             "path" => $CFG->wwwroot."/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=".$event['eventid'],
+                                                                             "iframe" => "true",
+                                                                             "width" => "700",
+                                                                             "height" => "650")).'
                                                 </div>
                                                 <span style="font-size:.85em">&nbsp;
                                                     ' . stripslashes(strip_tags($event["byline"],'<a>')) . '
@@ -236,11 +288,10 @@ global $CFG, $USER;
                                                     </div>
                                                 </div>
                                     			<div class="hprcp_head">
-                                        			<div style="width:100%;vertical-align:middle;color:gray;position:relative;_right:2px;top:-8px;">
+                                        			<div class="event_info_box">
                                                         ' . $buttons . '
-                                            			<div style="font-size:.85em;line-height:28px;vertical-align:top">
-                                                            ' . $export . '
-                                                            ' . $registration . '
+                                            			<div class="event_info">
+                                                            ' . $registration_info . '
                                             			</div>
                                         			</div>
                                     			</div>
@@ -259,8 +310,12 @@ global $CFG, $USER;
                         			<table style="width:100%;border-spacing: 0px;">
                                         <tr>
                                             <td>
-                                    			<div style="font-size:.95em; color:blue;float:left;padding-right:10px;">
-                                                    '.make_modal_links(array("title"=> stripslashes($event["name"]),"path"=>$CFG->wwwroot."/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","width"=>"700","height"=>"650")).'
+                                    			<div class="event_title" style="color:blue;">
+                                                    '.make_modal_links(array("title" => stripslashes($event["name"]),
+                                                                             "path" => $CFG->wwwroot."/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=".$event['eventid'],
+                                                                             "iframe" => "true",
+                                                                             "width" => "700",
+                                                                             "height" => "650")).'
                                                 </div>
                                     			<span style="font-size:.85em">
                                                     &nbsp;' . stripslashes(strip_tags($event["byline"],'<a>')) . '
@@ -271,11 +326,10 @@ global $CFG, $USER;
                                                     </div>
                                                 </div>
                                     			<div class="hprcp_head">
-                                                    <div style="width:100%;vertical-align:middle;color:gray;position:relative;_right:2px;top:-8px;">
+                                                    <div class="event_info_box">
                                             			' . $buttons . '
-                                                        <div style="font-size:.85em;line-height:28px;">
-                                            			' . $export . '
-                                            			' . $registration . '
+                                                        <div class="event_info">
+                                            			' . $registration_info . '
                                             			</div>
                                     			    </div>
                                                 </div>
@@ -290,7 +344,7 @@ global $CFG, $USER;
     return $returnme;
 }
 
-function get_event_button_layout($pageid, $event, $edit, $confirm){
+function get_event_button_layout($pageid, $event, $edit, $confirm) {
 global $CFG;
     $buttons = get_event_edit_buttons($pageid, $event, $edit, $confirm);
     
