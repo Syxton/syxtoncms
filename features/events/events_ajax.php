@@ -672,7 +672,7 @@ global $CFG, $MYVARS, $USER;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
 	$eventid = dbescape($MYVARS->GET["eventid"]);
 	$template_id = dbescape($MYVARS->GET["template_id"]);
-	$eventname = dbescape($MYVARS->GET["eventname"]);
+	$eventname = urldecode($MYVARS->GET["eventname"]);
 	$regid = dbescape($MYVARS->GET["regid"]);
 	$online_only = isset($MYVARS->GET["online_only"]) ? dbescape($MYVARS->GET["online_only"]) : false;
     $printarea = "";
@@ -982,7 +982,7 @@ global $CFG, $MYVARS, $USER;
 	$eventid = dbescape($MYVARS->GET["eventid"]);
 	$template_id = dbescape($MYVARS->GET["template_id"]);
 	$regid = isset($MYVARS->GET["regid"]) ? dbescape($MYVARS->GET["regid"]) : false;
-	$eventname = dbescape($MYVARS->GET["eventname"]);
+	$eventname = urldecode($MYVARS->GET["eventname"]);
 	$returnme = '<a href="javascript: void(0);" 
                     onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
                             ajaxapi(\'/features/events/events_ajax.php\',
@@ -1151,7 +1151,7 @@ global $CFG, $MYVARS, $USER;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
 	$eventid = dbescape($MYVARS->GET["eventid"]);
 	$template_id = dbescape($MYVARS->GET["template_id"]);
-	$eventname = dbescape(urldecode($MYVARS->GET["eventname"]));
+	$eventname = urldecode($MYVARS->GET["eventname"]);
     $selected = empty($MYVARS->GET["sel"]) ? false : dbescape($MYVARS->GET["sel"]);
     $initial_display = $selected ? "" : "display:none;";
 	$returnme = '<span style="width:50%;float:left;">'.stripslashes($eventname).'</span>';
