@@ -22,7 +22,7 @@ echo '
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
     <title>Directions</title>
-    <script src=" http://maps.google.com/?file=api&amp;v=2.x&amp;key='.$CFG->googleapikey.'"
+    <script src="//maps.google.com/?file=api&amp;v=2.x&amp;key='.$CFG->googleapikey.'"
       type="text/javascript"></script>
     <style type="text/css">
       body {
