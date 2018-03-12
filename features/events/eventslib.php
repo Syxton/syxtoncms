@@ -1046,8 +1046,8 @@ global $CFG;
     $returnme = "";
     if (!empty($templateid) && $template_settings = get_db_field("settings","events_templates","template_id='$templateid'")) { //template settings
         if (!empty($template_settings)) { //there are settings in this template
-            $returnme = '<table style="margin:0px 0px 0px 50px;">
-                            <tr><td class="field_title" style="width:115px;">Template Settings</td></tr>
+            $returnme = '<table style="margin:0px 0px 0px 50px;min-width: 485px;">
+                            <tr><td class="field_title" style="width:115px;text-align: center;">Template Settings</td></tr>
                             <tr><td>';
             $settings = unserialize($template_settings);
             foreach($settings as $setting){ //save each setting with the default if no other is given

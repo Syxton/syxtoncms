@@ -6,11 +6,11 @@
 * Date: 4/09/2013
  * $Revision: 2.1.2
  ***************************************************************************/
-if(!isset($CFG)){ require('../../../../config.php'); }
-if(!isset($EVENTSLIB)){ include_once($CFG->dirroot . '/features/events/eventslib.php'); }
-if(!isset($VALIDATELIB)){ include_once($CFG->dirroot . '/lib/validatelib.php'); }
+if (!isset($CFG)) { require('../../../../config.php'); }
+if (!isset($EVENTSLIB)) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
+if (!isset($VALIDATELIB)) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
 
- //Retrieve from Javascript
+// Retrieve from Javascript.
 $postorget = isset($_GET["eventid"]) ? $_GET : $_POST;
 $postorget = isset($postorget["eventid"]) ? $postorget : "";
 
@@ -22,32 +22,31 @@ $regid = isset($MYVARS->GET['regid']) && $MYVARS->GET['regid'] != "false" ? $MYV
 $autofill = isset($MYVARS->GET['autofill']) && $MYVARS->GET['autofill'] == "1" ? true : false;
 $email = "";
 
-if($show_again){ //This is not the first time through
-	if($autofill){ //Same person..so auto fill all items
+if ($show_again) { // This is not the first time through.
+	if ($autofill) { //Same person..so auto fill all items
 		$last_reg = get_db_result("SELECT * FROM events_registrations_values WHERE regid='$regid'");
-		while($reginfo = fetch_row($last_reg)){
+		while ($reginfo = fetch_row($last_reg)) {
 			${$reginfo["elementname"]} = $reginfo["value"];
 		}
 		$email = get_db_field("email","events_registrations","regid='$regid'");
-	}else{ //Different person...but auto fill the payment method and hide it.
+	} else { // Different person...but auto fill the payment method and hide it.
 		$payment_method = get_db_field("value", "events_registrations_values", "elementname='payment_method' AND regid='$regid'");
 	}
 }
 
 //output required javascript
-echo '  <html>
+echo '<html>
         <head>
         <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'features/events/templates/simple_contact_form/ajax.js"></script>
         </head>
         <body>
-';    
+';
 
-
-//output any passed on hidden info from previous registrations
+// Output any passed on hidden info from previous registrations.
 $total_owed = isset($MYVARS->GET['total_owed']) ? $MYVARS->GET['total_owed'] : 0;
 $items = isset($MYVARS->GET["items"]) ? $MYVARS->GET["items"] : "";
 
-//Somebody please tell me why I MUST HAVE THE &nbsp; before the form to make it show up?
+// Somebody please tell me why I MUST HAVE THE &nbsp; before the form to make it show up?
 echo '<form name="form1" id="form1">
     <div id="camp">
         <fieldset class="formContainer">
@@ -56,13 +55,12 @@ echo '<form name="form1" id="form1">
             <input type="hidden" name="total_owed" id="total_owed" value="'.$total_owed.'" />
             <input type="hidden" name="items" id="items" value="'.$items.'" />';
                  
-//Get full event info
+// Get full event info.
 $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
-echo '
-    <div style="font-size:15px;text-align:center;font-weight:bold">Online Registration</div>
-    <div style="font-size:13px;text-align:center;font-weight:bold">'.$event["name"].'</div><br />';
-  
-if($autofill){
+echo '<div style="font-size:15px;text-align:center;font-weight:bold">Online Registration</div>
+      <div style="font-size:13px;text-align:center;font-weight:bold">'.$event["name"].'</div><br />';
+
+if ($autofill) {
  echo '     <strong>Registrant: '.$Name.'</strong>
 			<input type="hidden" name="Name" value="'.$Name.'" />
             <input type="hidden" name="Name_First" value="'.$Name_First.'" />
@@ -74,7 +72,7 @@ if($autofill){
 			<input type="hidden" name="Address_State" value="'.$Address_State.'" />
 			<input type="hidden" name="Address_Zipcode" value="'.$Address_Zipcode.'" />
 			<input type="hidden" name="Phone1" value="'.$Phone1.'" />';
-}else{
+} else {
  echo ' <input type="hidden" id="event_day" value="'.date("j",$event["event_begin_date"]).'" />
         <input type="hidden" id="event_month" value="'.date("n",$event["event_begin_date"]).'" />
         <input type="hidden" id="event_year" value="'.date("Y",$event["event_begin_date"]).'" />
@@ -172,32 +170,46 @@ if($autofill){
             <div class="rowContainer">
                 <label class="rowTitle" for="Phone">Phone *</label><input tabindex="14" type="text" maxlength="22" id="Phone" name="Phone" data-rule-phone="true" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("help_phone:events:templates/simple_contact_form").'</div>
                 <div class="spacer" style="clear: both;"></div>
-            </div>
-            <div class="rowContainer">
-                <label class="rowTitle" for="Overnight">Overnight Stay *</label>
-                <select tabindex="6" id="Overnight" name="Overnight" data-rule-required="true">
-                    <option value="">Select One...</option>
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                </select>
-                <div class="tooltipContainer info">'.get_help("help_overnight:events:templates/simple_contact_form").'</div>
-                <div class="spacer" style="clear: both;"></div>
-            </div> '; 
+            </div>';
+
+            $overnight = get_db_field("setting","settings","type='events_template' AND extra='$eventid' AND setting_name='template_setting_overnight'");
+            $overnight = empty($overnight) ? false : true;
+            if (!$overnight) {
+                echo '<input type="hidden" id="Overnight" name="Overnight" value="No" />';
+            } else {
+                echo '
+                <div class="rowContainer">
+                    <label class="rowTitle" for="Overnight">Overnight Stay *</label>
+                    <select tabindex="6" id="Overnight" name="Overnight" data-rule-required="true">
+                        <option value="">Select One...</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                    <div class="tooltipContainer info">'.get_help("help_overnight:events:templates/simple_contact_form").'</div>
+                    <div class="spacer" style="clear: both;"></div>
+                </div>';
+            }
 }
 
-echo '
-    <div class="rowContainer">
-        <label class="rowTitle" for="Camp_Fee">Pay With Application</label>
-        '.make_fee_options($event['fee_min'],$event['fee_full'],"payment_amount",'onchange="updateTotal();" onclick="updateTotal();"',$event['sale_end'],$event['sale_fee']).'
-        <div class="tooltipContainer info">'.get_help("help_paywithapp:events:templates/simple_contact_form").'</div>
-        <div class="spacer" style="clear: both;"></div>
-    </div>';
+if ($event['fee_full']) {
+    echo '
+        <div class="rowContainer">
+            <label class="rowTitle" for="Camp_Fee">Pay With Application</label>
+            '.make_fee_options($event['fee_min'],$event['fee_full'],"payment_amount",'onchange="updateTotal();" onclick="updateTotal();"',$event['sale_end'],$event['sale_fee']).'
+            <div class="tooltipContainer info">'.get_help("help_paywithapp:events:templates/simple_contact_form").'</div>
+            <div class="spacer" style="clear: both;"></div>
+        </div>
 
-echo '
-    <div class="rowContainer">
-        <label class="rowTitle" for="owed">Total:</label>
-        <span style="display:inline-block;width:12px;">$</span><input style="float:none;width:100px;border:none;" name="owed" id="owed" size="5" value="'.$event['fee_min'].'" type="text" readonly />
-    </div>';
+        <div class="rowContainer">
+            <label class="rowTitle" for="owed">Total:</label>
+            <span style="display:inline-block;width:12px;">$</span><input style="float:none;width:100px;border:none;" name="owed" id="owed" size="5" value="'.$event['fee_min'].'" type="text" readonly />
+        </div>';
+} else {
+    echo '
+        <input type="hidden" id="payment_amount" name="payment_amount" value="0" />
+        <input type="hidden" name="owed" id="owed" value="0" />
+    ';
+}
 
     echo '<input tabindex="33" class="submit" name="submit" type="submit" value="Submit Application" '.$preview.'/>
         </fieldset>
@@ -206,14 +218,12 @@ echo '
 </form>
 ';
 
-//Finalize and activate validation code
+// Finalize and activate validation code.
 echo create_validation_script("form1" , "submit_simple_contact_form_registration()");
-echo '  
-<script type="text/javascript" language="javascript">
-    $(document).ready(function(){
-        $("input,select,textarea").bind("focus",function(){ $(this).closest(".rowContainer").css("background-color","whitesmoke"); });
-        $("input,select,textarea").bind("blur",function(){ $(this).closest(".rowContainer").css("background-color","white"); });
-    });
-</script>
-';
+echo '<script type="text/javascript" language="javascript">
+        $(document).ready(function(){
+            $("input,select,textarea").bind("focus",function(){ $(this).closest(".rowContainer").css("background-color","whitesmoke"); });
+            $("input,select,textarea").bind("blur",function(){ $(this).closest(".rowContainer").css("background-color","white"); });
+        });
+      </script>';
 ?>

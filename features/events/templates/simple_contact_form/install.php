@@ -26,11 +26,11 @@ Overnight:Info:Overnight;
 total_owed:Pay:Amount Owed;
 paid:Pay:Amount Paid';
 
-//Event template specific settings
-$settings = ''; // No specific settings
+// Event template specific settings.
+$settings = ''; // No specific settings.
 
-//If it is already installed, don't install it again.
-if(!get_db_row("SELECT * FROM events_templates WHERE name = '$templatename'")) {
+// If it is already installed, don't install it again.
+if (!get_db_row("SELECT * FROM events_templates WHERE name = '$templatename'")) {
     // Uninstall the father's day template
     $SQL = "DELETE FROM events_templates WHERE folder = 'father_coaching_weekend'";
 	execute_db_sql($SQL);
@@ -41,5 +41,19 @@ if(!get_db_row("SELECT * FROM events_templates WHERE name = '$templatename'")) {
 	('$templatename','$templatefolder','".str_replace(array("\r", "\n", "\t"), '', $formlist)."', '$registrant_name', '$orderbyfield', '$settings')";
 
 	execute_db_sql($SQL);
+} else { // Update event template.
+    $version = get_db_field("setting","settings","setting_name='version' AND type='eventtemplate' AND extra='$templatefolder'");	
+
+	$thisversion = 2018031200;
+	if ($version < $thisversion) {
+        $settings[] = array('name' => 'template_setting_overnight','title'=> 'Overnight Option','type' => 'yes/no','numeric' => false,'default' => "false", 'extravalidation' => '', 'extra_alert' => '');
+        $settings = dbescape(serialize($settings));
+
+        $SQL = "UPDATE events_templates SET settings = '$settings' WHERE folder='$templatefolder'";
+ 
+		if(execute_db_sql($SQL)){ // If successful upgrade.
+			
+		}
+	}
 }
 ?>
