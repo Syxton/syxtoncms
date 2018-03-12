@@ -26,11 +26,11 @@ Overnight:Info:Overnight;
 total_owed:Pay:Amount Owed;
 paid:Pay:Amount Paid';
 
-// Event template specific settings.
-$settings = ''; // No specific settings.
-
 // If it is already installed, don't install it again.
 if (!get_db_row("SELECT * FROM events_templates WHERE name = '$templatename'")) {
+    // Event template specific settings.
+    $settings = ''; // No specific settings.
+
     // Uninstall the father's day template
     $SQL = "DELETE FROM events_templates WHERE folder = 'father_coaching_weekend'";
 	execute_db_sql($SQL);
