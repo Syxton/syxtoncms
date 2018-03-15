@@ -42,23 +42,27 @@ global $CFG,$USER;
 
 function donation_form($featureid,$settings){
 global $CFG;
-    $returnme = "";  
-    if($campaign = get_db_row("SELECT * FROM donate_campaign WHERE campaign_id IN (SELECT campaign_id FROM donate_instance WHERE donate_id='$featureid')")){
-        if($CFG->paypal){ 
+    $returnme = "";
+
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https:" : "http:";
+    $protocol = strstr($CFG->wwwroot, "http") ? '' : $protocol;
+
+    if ($campaign = get_db_row("SELECT * FROM donate_campaign WHERE campaign_id IN (SELECT campaign_id FROM donate_instance WHERE donate_id='$featureid')")) {
+        if ($CFG->paypal) { 
             $paypal = 'www.paypal.com';
-        }else{ 
+        } else { 
             $paypal = 'www.sandbox.paypal.com';
         }
         
-        if($donations = get_db_row("SELECT SUM(amount) as total FROM donate_donations WHERE campaign_id = '".$campaign["campaign_id"]."'")){
+        if ($donations = get_db_row("SELECT SUM(amount) as total FROM donate_donations WHERE campaign_id = '".$campaign["campaign_id"]."'")) {
             $total = $donations["total"];
             $total = empty($total) ? "0" : $total;
         }
         $returnme .= '
         <link type="text/css" rel="stylesheet" href="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'features/donate/donate.css" property="" />
         <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'features/donate/donate.js"></script>
-        ';  
-        $button = '     
+        ';
+        $button = '
         <form action="https://'.$paypal.'/cgi-bin/webscr" method="post">
     	       <div style="width: 100%; text-align: center;">
     		      <input name="cmd" type="hidden" value="_donations" />
@@ -68,7 +72,7 @@ global $CFG;
                   <input name="custom" type="hidden" value="'.$campaign["campaign_id"].'" />
                   <input name="no_shipping" type="hidden" value="1" />
                   <input name="return" type="hidden" value="'.$CFG->wwwroot.'/features/donate/donate.php?action=thankyou" />
-                  <input type="hidden" name="notify_url" value="'.$CFG->wwwroot.'/features/donate/ipn.php'.'">
+                  <input type="hidden" name="notify_url" value="'.$protocol.$CFG->wwwroot.'/features/donate/ipn.php'.'">
                   <input name="currency_code" type="hidden" value="USD" />
                   <input name="tax" type="hidden" value="0" />
                   <input name="rm" type="hidden" value="2" />
@@ -80,8 +84,8 @@ global $CFG;
         </form>'; 
     
         $returnme .= donate_meter($campaign, $total, $button, $settings->donate->$featureid->metertype->setting);        
-    }else{ //Not setup yet
-     $returnme .= 'You must first setup a donation campaign.<br />';    
+    } else { // Not setup yet
+        $returnme .= 'You must first setup a donation campaign.<br />';    
     }
 
     
