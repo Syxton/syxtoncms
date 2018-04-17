@@ -2386,7 +2386,7 @@ global $CFG, $MYVARS, $USER;
     foreach ($stafflist as $email) {
         if(filter_var($email, FILTER_VALIDATE_EMAIL)) { // It is an email address, so let's get an email ready.
             if ($user = get_db_row("SELECT * FROM users WHERE LOWER(email) LIKE LOWER('%$email%')")) { // is a user.
-                if ($archive = get_db_row("SELECT * FROM events_staff_archive WHERE userid='" . $user["userid"] . "' ORDER BY userid DESC LIMIT 1")) {
+                if ($archive = get_db_row("SELECT * FROM events_staff_archive WHERE userid='" . $user["userid"] . "' ORDER BY archiveid DESC LIMIT 1")) {
                     $status = staff_status($archive);
 
                     if (!empty($status)) {
