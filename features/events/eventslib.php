@@ -1947,7 +1947,7 @@ global $CFG, $USER;
                                                                                                      "width"  => "640",
                                                                                                      "height" => "600",
                                                                                                      "iframe" => "true",
-                                                                                                     "image"  => $CFG->wwwroot . "/images/staffapp.png",
+                                                                                                     "image"  => $CFG->wwwroot . "/images/apps.png",
                                                                                                      "styles" => "padding:1px;display:block;"))
                                                                             : "";
     //Staff Notifications
