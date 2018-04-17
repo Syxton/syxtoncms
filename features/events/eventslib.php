@@ -1917,6 +1917,17 @@ global $CFG;
 function events_adminpanel($pageid) {
 global $CFG, $USER;
     $content = "";
+    //Event Template Manager
+    $content .= user_has_ability_in_page($USER->userid,"manageeventtemplates",$pageid) ? make_modal_links(array("title"  => "Event Templates",
+                                                                                                     "text"   => "Event Templates",
+                                                                                                     "path"   => $CFG->wwwroot . "/features/events/events.php?action=template_manager&amp;pageid=$pageid",
+                                                                                                     "iframe" => "true",
+                                                                                                     "width"  => "640",
+                                                                                                     "height" => "600",
+                                                                                                     "iframe" => "true",
+                                                                                                     "image"  => $CFG->wwwroot . "/images/template.png",
+                                                                                                     "styles" => "padding:1px;display:block;"))
+                                                                            : "";
     //Course Event Manager
     $content .= user_has_ability_in_page($USER->userid,"manageevents",$pageid) ? make_modal_links(array("title"  => "Event Registrations",
                                                                                                      "text"   => "Event Registrations",
@@ -1939,15 +1950,15 @@ global $CFG, $USER;
                                                                                                      "image"  => $CFG->wwwroot . "/images/staffapp.png",
                                                                                                      "styles" => "padding:1px;display:block;"))
                                                                             : "";
-    //Event Template Manager
-    $content .= user_has_ability_in_page($USER->userid,"manageeventtemplates",$pageid) ? make_modal_links(array("title"  => "Event Templates",
-                                                                                                     "text"   => "Event Templates",
-                                                                                                     "path"   => $CFG->wwwroot . "/features/events/events.php?action=template_manager&amp;pageid=$pageid",
+    //Staff Notifications
+    $content .= user_has_ability_in_page($USER->userid,"manageapplications",$pageid) ? make_modal_links(array("title"  => "Staff Process Email",
+                                                                                                     "text"   => "Staff Process Email",
+                                                                                                     "path"   => $CFG->wwwroot . "/features/events/events.php?action=staff_emailer&amp;pageid=$pageid",
                                                                                                      "iframe" => "true",
                                                                                                      "width"  => "640",
                                                                                                      "height" => "600",
                                                                                                      "iframe" => "true",
-                                                                                                     "image"  => $CFG->wwwroot . "/images/template.png",
+                                                                                                     "image"  => $CFG->wwwroot . "/images/staffapp.png",
                                                                                                      "styles" => "padding:1px;display:block;"))
                                                                             : "";
     return $content;
