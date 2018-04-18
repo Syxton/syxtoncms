@@ -1192,13 +1192,15 @@ function staff_status($staff) {
 
 function print_status($status) {
 global $CFG;
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https:" : "http:";
+    $protocol = strstr($CFG->wwwroot, "http") ? '' : $protocol;
     $print = '';
     if (!empty($status)) {
         foreach ($status as $s) {
-            $print .= '<div style="color:red;font-weight:bold"><img style="vertical-align: middle;" src="'.$CFG->wwwroot.'/images/error.gif" /> ' . $s . '</div>';
+            $print .= '<div style="color:red;font-weight:bold"><img style="vertical-align: middle;" src="'.$protocol.$CFG->wwwroot.'/images/error.gif" /> ' . $s . '</div>';
         }
     } else {
-        $print = '<div style="color:green;font-size:1.3em;font-weight:bold"><img style="vertical-align: bottom;" src="'.$CFG->wwwroot.'/images/checked.gif" /> APPROVED</div>';
+        $print = '<div style="color:green;font-size:1.3em;font-weight:bold"><img style="vertical-align: bottom;" src="'.$protocol.$CFG->wwwroot.'/images/checked.gif" /> APPROVED</div>';
     }
     return $print;
 }
