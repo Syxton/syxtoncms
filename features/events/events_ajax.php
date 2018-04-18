@@ -2374,7 +2374,7 @@ global $CFG, $MYVARS, $USER;
     $full_message = "
     <p><strong>If you are receiving this, it is because we have been notified that you have been selected to be on staff this year.</strong>&nbsp; <strong>Please do the following ASAP.&nbsp;&nbsp; You must complete this staff application to be a staff member. </strong></p>
     <ol>
-    <li>Go to <a href='$CFG->sitename'>" . $protocol.$CFG->wwwroot . "</a> and signup for an account and login.&nbsp; It's easy and free.&nbsp;&nbsp;<strong> <br />Do not log in as someone else and fill out the application. </strong></li>
+    <li>Go to <a href='" . $protocol.$CFG->wwwroot . "'>$CFG->sitename</a> and signup for an account and login.&nbsp; It's easy and free.&nbsp;&nbsp;<strong> <br />Do not log in as someone else and fill out the application. </strong></li>
     <li>Once you are logged into the site, you will see a tab or a button labeled 'Staff Apply'.&nbsp; Complete a staff application.</li>
     <li>If you are 18 years of age or older, once you complete your staff application you will be given an opportunity to follow a link to complete the Background Authorization Form. This background check will be valid for the next 5 years and will not need to be done every year.</li>
     </ol>
@@ -2398,7 +2398,7 @@ global $CFG, $MYVARS, $USER;
                         Dear ".$user["fname"]." ".$user["lname"]."
                         <p><strong>If you are receiving this, it is because we have been notified that you have been selected to be on staff this year.</strong>&nbsp; <strong>Please do the following ASAP.&nbsp;&nbsp; You must complete this staff application to be a staff member. </strong></p>
                         <ol>
-                        <li>Go to <a href='$CFG->sitename'>" . $protocol.$CFG->wwwroot . "</a> and login using your account.&nbsp; <strong> <br />Do not log in as someone else and fill out the application. </strong></li>
+                        <li>Go to <a href='" . $protocol.$CFG->wwwroot . "'>$CFG->sitename</a> and login using your account.&nbsp; <strong> <br />Do not log in as someone else and fill out the application. </strong></li>
                         <li>Once you are logged into the site, you will see a tab or a button labeled 'Staff Apply'.&nbsp; Complete a staff application.</li>
                         <li>The information from your previous application should already be filled in. Please update any information as needed.</li>
                         <li>If you are 18 years of age or older, once you complete your staff application you will be given an opportunity to follow a link to complete the Background Authorization Form. This background check will be valid for the next 5 years and will not need to be done every year.</li>
@@ -2423,7 +2423,7 @@ global $CFG, $MYVARS, $USER;
                     Dear ".$user["fname"]." ".$user["lname"]."
                     <p><strong>If you are receiving this, it is because we have been notified that you have been selected to be on staff this year.</strong>&nbsp; <strong>Please do the following ASAP.&nbsp;&nbsp; You must complete this staff application to be a staff member. </strong></p>
                     <ol>
-                    <li>Go to <a href='$CFG->sitename'>" . $protocol.$CFG->wwwroot . "</a> and login using your account.&nbsp; <strong> <br />Do not log in as someone else and fill out the application. </strong></li>
+                    <li>Go to <a href='" . $protocol.$CFG->wwwroot . "'>$CFG->sitename</a> and login using your account.&nbsp; <strong> <br />Do not log in as someone else and fill out the application. </strong></li>
                     <li>Once you are logged into the site, you will see a tab or a button labeled 'Staff Apply'.&nbsp; Complete a staff application.</li>
                     <li>If you are 18 years of age or older, once you complete your staff application you will be given an opportunity to follow a link to complete the Background Authorization Form. This background check will be valid for the next 5 years and will not need to be done every year.</li>
                     </ol>
