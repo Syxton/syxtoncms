@@ -101,11 +101,15 @@ global $CFG,$MYVARS,$USER;
 
 function staff_emailer(){
 global $CFG,$MYVARS,$USER;               
-    echo '<div class="dontprint"><form onsubmit="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';ajaxapi(\'/features/events/events_ajax.php\',\'sendstaffemails\',\'&amp;stafflist=\'+escape(document.getElementById(\'stafflist\').value),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true); return false;">
-	<div style="text-align:center;margin:5px;font-weight: bolder;">Staff Email List</div>
-    <div style="text-align:center;">List of email addresses of staff, one email address per line.</div>
-    <textarea rows="20" id="stafflist" name="stafflist" style="width:98%"></textarea>
-    <div style="text-align:center;margin:5px;"><input type="submit" value="Notify Staff" /></div>
+    echo '<div class="dontprint"><form onsubmit="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';ajaxapi(\'/features/events/events_ajax.php\',\'sendstaffemails\',\'&amp;sendemails=\'+$(\'#sendemails\').prop(\'checked\')+\'&amp;stafflist=\'+escape($(\'#stafflist\').val()),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true); return false;">
+	<div style="text-align:center;margin:5px;font-weight: bolder;">Staff Status Checker</div>
+    <div style="float:right;line-height:35px;">
+		<label class="rowTitle" for="workerconsentsig">Send Emails</label>
+        <input id="sendemails" name="sendemails" type="checkbox" />
+	</div>
+    <div style="text-align:center;width: 50%;">List of email addresses of staff, one email address per line.</div>
+    <textarea rows="15" id="stafflist" name="stafflist" style="width:98%"></textarea>
+    <div style="text-align:center;margin:5px;"><input type="submit" value="Process" /></div>
     </form></div>
 	<div id="loading_overlay" class="dontprint" style="text-align:center;position:absolute;width:98%;background-color:white;opacity:.6;visibility:hidden;"><br /><br /><br /><img src="' . $CFG->wwwroot . '/images/loading_large.gif" /></div>
 	<span id="searchcontainer" style="padding:5px; display:block; width:99%;"></span>';
