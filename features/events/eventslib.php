@@ -730,9 +730,10 @@ global $CFG;
     $event = get_db_row("SELECT * FROM events WHERE eventid='" . $reg["eventid"]."'");
     $template = get_db_row("SELECT * FROM events_templates WHERE template_id='" . $event["template_id"]."'");
 
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https:" : "http:";
+    $protocol = strstr($CFG->wwwroot, "http") ? '' : $protocol;
+
     if (!empty($CFG->logofile)) {
-        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https:" : "http:";
-        $protocol = strstr($CFG->wwwroot, "http") ? '' : $protocol;
         $email = '<img src="'.$protocol.$CFG->wwwroot.'/images/'.$CFG->logofile.'" style="5em" /><br />';
     } else {
         $email = '<h1>'.$CFG->sitename.'</h1>';
@@ -757,7 +758,7 @@ global $CFG;
                 <strong>Please keep this email for your records.  It contains a registration ID that can allow you to make payments on your registration.</strong>
                 <br /><br /><h3>Total Paid: $'.number_format($paid,2).'</h3><h3>Remaining Balance: $'.number_format($remaining,2).'</h3><br /><em>Note:This event requires payment in full to complete the registration process.  The above balances may not reflect recent changes.</em>
                 <br /><br /><strong>Registration ID:</strong><span style="color:#993300;"><strong> ' . $reg["code"] . '</strong></span>
-                '.(!empty($event["paypal"]) ? '<br /><br /><strong>Make payment online:</strong> <a href="'.$CFG->wwwroot.'/features/events/events.php?action=pay&amp;i=!&amp;regcode='.$reg["code"].'">Make Payment</a>' : '').'
+                '.(!empty($event["paypal"]) ? '<br /><br /><strong>Make payment online:</strong> <a href="'.$protocol.$CFG->wwwroot.'/features/events/events.php?action=pay&amp;i=!&amp;regcode='.$reg["code"].'">Make Payment</a>' : '').'
                 <br /><br /><strong>Make payment by check or money order: </strong><br />Payable to: ' . stripslashes($event['payableto']) . '<br />' . stripslashes($event['checksaddress']) . '<br />On the memo line be sure to write "' . $touser->fname ." ". $touser->lname . ' - ' . $event["name"] . '".                        
                 <br /><br />
                 If you have any questions about this event, contact ' . $event["contact"] . ' at <a href="mailto:' . $event["email"] . '">' . $event["email"] . '</a>. 
@@ -783,7 +784,7 @@ global $CFG;
                 <strong>Please keep this email for your records.  It contains a registration ID that can allow you to make payments on your registration.</strong>
                 <br /><br /><h3>Total Paid: $'.number_format($paid,2).'</h3><h3>Remaining Balance: $'.number_format($remaining,2).'</h3><br /><em>Note:This event requires payment in full to complete the registration process.  The above balances may not reflect recent changes.</em>
                 <br /><br /><strong>Registration ID:</strong><span style="color:#993300;"><strong> ' . $reg["code"] . '</strong></span>
-                '.(!empty($event["paypal"]) ? '<br /><br /><strong>Make payment online:</strong> <a href="'.$CFG->wwwroot.'/features/events/events.php?action=pay&amp;i=!&amp;regcode='.$reg["code"].'">Make Payment</a>' : '').'
+                '.(!empty($event["paypal"]) ? '<br /><br /><strong>Make payment online:</strong> <a href="'.$protocol.$CFG->wwwroot.'/features/events/events.php?action=pay&amp;i=!&amp;regcode='.$reg["code"].'">Make Payment</a>' : '').'
                 <br /><br /><strong>Make payment by check or money order: </strong><br />Payable to: ' . stripslashes($event['payableto']) . '<br />' . stripslashes($event['checksaddress']) . '<br />On the memo line be sure to write "' . $touser->fname ." ". $touser->lname . ' - ' . $event["name"] . '".                        
                 <br /><br />
                 If you have any questions about this event, contact ' . $event["contact"] . ' at <a href="mailto:' . $event["email"] . '">' . $event["email"] . '</a>. 

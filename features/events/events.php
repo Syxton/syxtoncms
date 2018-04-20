@@ -133,9 +133,11 @@ global $CFG,$MYVARS,$USER;
         <div id="payarea" style="padding:15px;">
         </div>
         <script type="text/javascript">
-        if($("#code").val() != ""){
-            lookup_reg($("#code").val());
-        }
+            window.onload = function () { 
+                if ($("#code").val() != ""){
+                    lookup_reg($("#code").val());
+                }
+            }
         </script>
     ';
 }
