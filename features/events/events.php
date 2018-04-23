@@ -108,7 +108,7 @@ global $CFG,$MYVARS,$USER;
         <input id="sendemails" name="sendemails" type="checkbox" />
 	</div>
     <div style="text-align:center;width: 50%;">List of email addresses of staff, one email address per line.</div>
-    <textarea rows="15" id="stafflist" name="stafflist" style="width:98%"></textarea>
+    <textarea rows="15" id="stafflist" name="stafflist" style="width:100%;max-width:500px"></textarea>
     <div style="text-align:center;margin:5px;"><input type="submit" value="Process" /></div>
     </form></div>
 	<div id="loading_overlay" class="dontprint" style="text-align:center;position:absolute;width:98%;background-color:white;opacity:.6;visibility:hidden;"><br /><br /><br /><img src="' . $CFG->wwwroot . '/images/loading_large.gif" /></div>
