@@ -2373,6 +2373,7 @@ global $CFG, $MYVARS, $USER;
     $protocol = strstr($CFG->wwwroot, "http") ? '' : $protocol;
 
     $staffcomstatus = array();
+    $staffapproved = array();
     if (!empty($stafflist)) {
         foreach ($stafflist as $email) {
         $message = "
@@ -2420,7 +2421,7 @@ global $CFG, $MYVARS, $USER;
                                 $staffcomstatus[] = $user["fname"] . " " . $user["lname"] . " ($email) <strong>Requires $thingstodo action(s)</strong>";
                             }
                         } else {
-                            $staffcomstatus[] = $user["fname"] . " " . $user["lname"] . " ($email) is <strong>APPROVED</strong>";
+                            $staffapproved[] = $user["fname"] . " " . $user["lname"] . " ($email) is <strong>APPROVED</strong>";
                         }
     
                     } else {
@@ -2472,7 +2473,7 @@ global $CFG, $MYVARS, $USER;
         }        
     }
 
-    echo rtrim(implode('<br />', $staffcomstatus), '<br />');
+    echo implode('<br />', $staffcomstatus) . "<br /><br />" . implode('<br />', $staffapproved);
 }
 
 function appsearch() {
