@@ -87,7 +87,7 @@ global $CFG, $MYVARS;
 	if(!isset($COMLIB)){ include_once ($CFG->dirroot . '/lib/comlib.php'); }
     $admin = isset($MYVARS->GET["admin"]) ? true : false;
     if($admin){
-        $email = get_db_field("email","users","userid='".isset($MYVARS->GET["admin"])."'");
+        $email = get_db_field("email","users","userid='".isset($MYVARS->GET["userid"])."'");
     }else{
         $email = dbescape($MYVARS->GET["email"]);
     }
