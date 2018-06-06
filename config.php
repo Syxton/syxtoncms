@@ -1,5 +1,5 @@
-<?php  /// Moodle Configuration File 
-
+<?php 
+// SyxtonCMS Configuration File
 unset($CFG);
 unset($USER);
 
@@ -18,7 +18,7 @@ $CFG->sitefooter = '';
 $CFG->logofile 	= 'logo.png';
 
 //Database connection variables
-$CFG->dbtype    = ''; //mysql or mysqli
+$CFG->dbtype    = 'mysqli'; //mysql or mysqli
 $CFG->dbhost    = 'localhost';
 $CFG->dbname    = '';
 $CFG->dbuser    = '';
@@ -33,13 +33,13 @@ $CFG->smtppass	= '';
 
 //Directory variables
 $CFG->directory = '';
-$CFG->wwwroot   = 'http://'.$_SERVER['SERVER_NAME'];
+$CFG->wwwroot   = '//'.$_SERVER['SERVER_NAME'];
 $CFG->wwwroot   = $CFG->directory ? $CFG->wwwroot.'/'.$CFG->directory : $CFG->wwwroot;
 $CFG->docroot   = dirname(__FILE__);
 $CFG->dirroot   = $CFG->docroot;
 
 //Userfile path
-$CFG->userfilespath = substr($CFG->docroot,0,strrpos($CFG->docroot,'/'));
+$CFG->userfilespath = $CFG->docroot . '\userfiles';
 
 //Home site id
 $CFG->SITEID = 1;
@@ -51,13 +51,14 @@ $CFG->paypal_auth = '';
 
 //Cookie variables in seconds
 $CFG->cookietimeout = 600;
-$CFG->timezone = "";
+$CFG->timezone = "America/Indianapolis";
 $CFG->defaultaddress = "";
 
 //Google Maps API site key
 $CFG->googleapikey = "";
+$CFG->googlemapsembedkey = "";
 
-//Scribd API key
+//GoogleDoc api key
 $CFG->doc_view_key = '';
 
 //Google Analytics id
