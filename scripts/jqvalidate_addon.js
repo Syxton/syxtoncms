@@ -15,7 +15,7 @@ jQuery.validator.addMethod("ajax1", function(value, element, param){
 	var resp = $.ajax({
 		async: false,
 		type: 'post',
-		url: './'+param[0], data: 'action='+param[1]+modparam+ value + "&currTime=" + d.toUTCString()
+		url: './'+param[0], data: 'action='+param[1]+modparam+encodeURIComponent(value) + "&currTime=" + d.toUTCString()
 	}).responseText;
 
 	if(param[3] && param[3] == "true"){ if(resp == "true"){ return true; } }
@@ -39,7 +39,7 @@ jQuery.validator.addMethod("ajax2", function(value, element, param){
 	var resp = $.ajax({
 		async: false,
 		type: 'post',
-		url: './'+param[0], data: 'action='+param[1]+modparam+ value + "&currTime=" + d.toUTCString()
+		url: './'+param[0], data: 'action='+param[1]+modparam+encodeURIComponent(value) + "&currTime=" + d.toUTCString()
 	}).responseText;
 
 	if(param[3] && param[3] == "true"){ if(resp == "true"){ return true; } }
@@ -63,7 +63,7 @@ jQuery.validator.addMethod("ajax3", function(value, element, param){
 	var resp = $.ajax({
 		async: false,
 		type: 'post',
-		url: './'+param[0], data: 'action='+param[1]+modparam+ value + "&currTime=" + d.toUTCString()
+		url: './'+param[0], data: 'action='+param[1]+modparam+encodeURIComponent(value) + "&currTime=" + d.toUTCString()
 	}).responseText;
 
 	if(param[3] && param[3] == "true"){ if(resp == "true"){ return true; } }
@@ -78,7 +78,7 @@ jQuery.validator.addMethod("captcha", function(value, element, param) {
 	var resp = $.ajax({
 		async: false,
 		type: 'post',
-		url: './'+param[0], data: 'action='+param[1]+'&orig='+number[0]+'&matchwith=' + value + "&currTime=" + d.toUTCString()
+		url: './'+param[0], data: 'action='+param[1]+'&orig='+number[0]+'&matchwith=' + encodeURIComponent(value) + "&currTime=" + d.toUTCString()
 	}).responseText;
 
 	if(resp == "true"){ return true; }

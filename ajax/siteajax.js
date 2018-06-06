@@ -395,7 +395,7 @@ function login_display(reroute){
 function login(username, password){
 	var reroute = new Object();
 	reroute.value = document.getElementById("reroute") ? true : false;
-	ajaxapi('/ajax/site_ajax.php','login',"&username=" + username + "&password=" + password,function(){
+	ajaxapi('/ajax/site_ajax.php','login',"&username=" + encodeURIComponent(username) + "&password=" + password,function(){
 		if(login_display(reroute)){
 			if(!reroute.value) {
                 pageid = getCookie("pageid");			 
