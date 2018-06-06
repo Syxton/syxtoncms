@@ -84,69 +84,73 @@ global $CFG, $MYVARS;
 
 function forgot_password(){
 global $CFG, $MYVARS;
-	if(!isset($COMLIB)){ include_once ($CFG->dirroot . '/lib/comlib.php'); }
+	if (!isset($COMLIB)) { include_once ($CFG->dirroot . '/lib/comlib.php'); }
     $admin = isset($MYVARS->GET["admin"]) ? true : false;
-    if($admin){
-        $email = get_db_field("email","users","userid='".isset($MYVARS->GET["userid"])."'");
-    }else{
-        $email = dbescape($MYVARS->GET["email"]);
+    if ($admin && isset($MYVARS->GET["userid"])) {
+        $MYVARS->GET["email"] = get_db_field("email", "users", "userid='" . $MYVARS->GET["userid"] . "'");
     }
+
+    if (isset($MYVARS->GET["email"])) {
+        $email = dbescape($MYVARS->GET["email"]);
+
+    	// Check to see if email matches an existing user.
+    	if ($user = get_db_row("SELECT * FROM users WHERE email='$email'")) {
+    		$alternate = create_random_password();
     
-	//Check to see if email matches an existing user.
-	if($user = get_db_row("SELECT * FROM users WHERE email='$email'")){
-		$alternate = create_random_password();
-        
-        //check to see if account is activated
-		if(strlen($user["temp"]) > 0){ 
-            $userid = execute_db_sql("UPDATE users SET password='" . md5($alternate) . "' WHERE email='$email'");
-		}else{
-			$userid = execute_db_sql("UPDATE users SET alternate='" . md5($alternate) . "' WHERE email='$email'");
+            // Check to see if account is activated
+    		if (strlen($user["temp"]) > 0) { 
+                $userid = execute_db_sql("UPDATE users SET password='" . md5($alternate) . "' WHERE email='$email'");
+    		} else {
+    			$userid = execute_db_sql("UPDATE users SET alternate='" . md5($alternate) . "' WHERE email='$email'");
+            }
+    
+    		// Email new password to the email address.
+            $TOUSER = new stdClass();
+    		$TOUSER->userid = $user['userid'];
+    		$TOUSER->fname = $user['fname'];
+    		$TOUSER->lname = $user['lname'];
+    		$TOUSER->email = $email;
+            $FROMUSER = new stdClass();
+    		$FROMUSER->fname = $CFG->sitename;
+    		$FROMUSER->lname = '';
+    		$FROMUSER->email = $CFG->siteemail;
+    		$message = '
+    			<p><font face="Tahoma"><font size="3" color="#993366">Dear <strong>' . $user['fname'] . ' ' . $user['lname'] . '</strong>,</font><br />
+    			</font></p>
+    			<blockquote>
+    			<p><font size="3" face="Tahoma"><strong>' . $CFG->sitename . '</strong> has recieved notification that you have forgotten your password.&nbsp; A new temporary password is being sent to you in this email.</font></p>
+    			</blockquote>
+    			<p>&nbsp;</p>
+    			<hr width="100%" size="2" />
+    			<p>&nbsp;</p>
+    			<blockquote>
+    			<p align="left"><font face="Tahoma"><strong>Username:</strong> <font color="#3366ff">' . $email . '</font></font></p>
+    			<p align="left"><font face="Tahoma"><strong>Password:</strong> <font color="#3366ff">' . $alternate . '</font></font></p>
+    			</blockquote>
+    			<p>&nbsp;</p>
+    			<hr width="100%" size="2" />
+    			<blockquote>
+    			<p><font size="3" face="Tahoma">After you have successfully logged into the site using the password provided a password reset form will open up.  Please create a new password at that time.  If you somehow exit this form without entering a new password, your forgotten password will still be valid and the password in this email will still be valid.  If you have any questions during your use of the site, feel free to contact us at <font color="#ff0000">' . $CFG->siteemail . '</font>.<br />
+    			</font></p>
+    			</blockquote>
+    			<p>&nbsp;</p>
+    			<p><font face="Tahoma"><strong><font size="3" color="#666699">Enjoy the site,</font></strong></font></p>
+    			<p><font size="3" face="Tahoma"><em>' . $CFG->siteowner . ' </em></font><font size="3" face="Tahoma" color="#ff0000">&lt;' . $CFG->siteemail . '</font><font face="Tahoma"><font size="3" color="#ff0000">&gt;</font></font></p>
+    			<p>&nbsp;</p>';
+    		$subject = $CFG->sitename . ' Password Reset';
+    		if (!$userid || send_email($TOUSER, $FROMUSER, null, $subject, $message)) {
+    			send_email($FROMUSER, $FROMUSER, null, $subject, $message); // Send a copy to the site admin
+    
+    			// Log
+    			log_entry("user", $TOUSER->email, "Password Reset");
+    			if (!$admin) { echo '<div class="centered_div">An email has been sent to your address that contains a new temporary password. <br />Your forgotten password will still work until you log into the site with the new password.<br />If you remember your password and log into the site, the password contained in the email will no longer work.</div>'; 
+                } else { echo '<img src="'.$CFG->wwwroot.'/images/reset_disabled.png" />'; }
+    		} else {
+                echo '<br /><br /><span class="centered_span">A password reset could not be done at this time.  Please try again later.</span>';
+    		}
+    	} else {  
+    	   if (!$admin) { echo '<br /><br /><span class="centered_span">There is no user with this email address.</span>'; } 
         }
-		//Email new password to the email address.
-        $USER = new stdClass();
-		$USER->userid = $user['userid'];
-		$USER->fname = $user['fname'];
-		$USER->lname = $user['lname'];
-		$USER->email = $email;
-        $FROMUSER = new stdClass();
-		$FROMUSER->fname = $CFG->sitename;
-		$FROMUSER->lname = '';
-		$FROMUSER->email = $CFG->siteemail;
-		$message = '
-			<p><font face="Tahoma"><font size="3" color="#993366">Dear <strong>' . $user['fname'] . ' ' . $user['lname'] . '</strong>,</font><br />
-			</font></p>
-			<blockquote>
-			<p><font size="3" face="Tahoma"><strong>' . $CFG->sitename . '</strong> has recieved notification that you have forgotten your password.&nbsp; A new temporary password is being sent to you in this email.</font></p>
-			</blockquote>
-			<p>&nbsp;</p>
-			<hr width="100%" size="2" />
-			<p>&nbsp;</p>
-			<blockquote>
-			<p align="left"><font face="Tahoma"><strong>Username:</strong> <font color="#3366ff">' . $email . '</font></font></p>
-			<p align="left"><font face="Tahoma"><strong>Password:</strong> <font color="#3366ff">' . $alternate . '</font></font></p>
-			</blockquote>
-			<p>&nbsp;</p>
-			<hr width="100%" size="2" />
-			<blockquote>
-			<p><font size="3" face="Tahoma">After you have successfully logged into the site using the password provided a password reset form will open up.  Please create a new password at that time.  If you somehow exit this form without entering a new password, your forgotten password will still be valid and the password in this email will still be valid.  If you have any questions during your use of the site, feel free to contact us at <font color="#ff0000">' . $CFG->siteemail . '</font>.<br />
-			</font></p>
-			</blockquote>
-			<p>&nbsp;</p>
-			<p><font face="Tahoma"><strong><font size="3" color="#666699">Enjoy the site,</font></strong></font></p>
-			<p><font size="3" face="Tahoma"><em>' . $CFG->siteowner . ' </em></font><font size="3" face="Tahoma" color="#ff0000">&lt;' . $CFG->siteemail . '</font><font face="Tahoma"><font size="3" color="#ff0000">&gt;</font></font></p>
-			<p>&nbsp;</p>';
-		$subject = $CFG->sitename . ' Password Reset';
-		if(!$userid || send_email($USER, $FROMUSER, null, $subject, $message)){
-			send_email($FROMUSER, $FROMUSER, null, $subject, $message); //Send a copy to the site admin
-			//Log
-			log_entry("user", $USER->email, "Password Reset");
-			if(!$admin){ echo '<div class="centered_div">An email has been sent to your address that contains a new temporary password. <br />Your forgotten password will still work until you log into the site with the new password.<br />If you remember your password and log into the site, the password contained in the email will no longer work.</div>'; 
-            }else{ echo '<img src="'.$CFG->wwwroot.'/images/reset_disabled.png" />'; }
-		}else{
-            echo '<br /><br /><span class="centered_span">A password reset could not be done at this time.  Please try again later.</span>';
-		}
-	}else{  
-	   if(!$admin){ echo '<br /><br /><span class="centered_span">There is no user with this email address.</span>'; } 
     }
 }
 

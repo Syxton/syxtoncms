@@ -91,7 +91,7 @@ global $CFG,$MYVARS,$USER;
                     </div>';
     }
                 
-    echo '<div class="dontprint"><form onsubmit="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';ajaxapi(\'/features/events/events_ajax.php\',\'appsearch\',\'&amp;pageid='.$MYVARS->GET["pageid"].'&amp;searchwords=\'+escape(document.getElementById(\'searchbox\').value),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true); return false;">
+    echo '<div class="dontprint"><form onsubmit="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';ajaxapi(\'/features/events/events_ajax.php\',\'appsearch\',\'&amp;pageid='.$MYVARS->GET["pageid"].'&amp;searchwords=\'+escape($(\'#searchbox\').val()),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true); return false;">
 	Applicant Search <input type="text" id="searchbox" name="searchbox" />&nbsp;<input type="submit" value="Search" /><div style="float:right;width: 150px;">Search for applicants by their name.</div>
 	'.$export.'
     </form></div>
@@ -101,7 +101,7 @@ global $CFG,$MYVARS,$USER;
 
 function staff_emailer(){
 global $CFG,$MYVARS,$USER;               
-    echo '<div class="dontprint"><form onsubmit="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';ajaxapi(\'/features/events/events_ajax.php\',\'sendstaffemails\',\'&amp;sendemails=\'+$(\'#sendemails\').prop(\'checked\')+\'&amp;stafflist=\'+escape($(\'#stafflist\').val()),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true); return false;">
+    echo '<div class="dontprint"><form onsubmit="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';ajaxapi(\'/features/events/events_ajax.php\',\'sendstaffemails\',\'&amp;sendemails=\'+$(\'#sendemails\').prop(\'checked\')+\'&amp;stafflist=\'+encodeURIComponent($(\'#stafflist\').val()),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true); return false;">
 	<div style="text-align:center;margin:5px;font-weight: bolder;">Staff Status Checker</div>
     <div style="float:right;line-height:35px;">
 		<label class="rowTitle" for="workerconsentsig">Send Emails</label>

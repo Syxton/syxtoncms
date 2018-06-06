@@ -55,7 +55,7 @@ global $MYVARS, $CFG;
     	</div>
     ';
        
-	echo create_validation_script("signup_form" , "ajaxapi('/ajax/site_ajax.php','add_new_user','&email=' + escape(document.getElementById('email').value) + '&fname=' + escape(document.getElementById('fname').value) + '&lname=' + escape(document.getElementById('lname').value) + '&password=' + escape(document.getElementById('mypassword').value),function(){ var returned = trim(xmlHttp.responseText).split('**'); if(returned[0] == 'true'){ document.getElementById('new_user_div').innerHTML = returned[1];}else{ document.getElementById('new_user_div').innerHTML = returned[1];}});");
+	echo create_validation_script("signup_form" , "ajaxapi('/ajax/site_ajax.php','add_new_user','&email=' + encodeURIComponent($('#email').val()) + '&fname=' + escape($('#fname').val()) + '&lname=' + escape($('#lname').val()) + '&password=' + escape($('#mypassword').val()),function(){ var returned = trim(xmlHttp.responseText).split('**'); if(returned[0] == 'true'){ document.getElementById('new_user_div').innerHTML = returned[1];}else{ document.getElementById('new_user_div').innerHTML = returned[1];}});");
     echo format_popup($content,$CFG->sitename.' Signup',"500px");
 }
 
@@ -93,7 +93,7 @@ global $MYVARS, $CFG;
             			</script>
             		</div>';
         
-        echo create_validation_script("password_request_form" , "ajaxapi('/ajax/site_ajax.php','reset_password','&userid=$userid&password='+document.getElementById('mypassword').value,function() { go_to_page(1); });");
+        echo create_validation_script("password_request_form" , "ajaxapi('/ajax/site_ajax.php','reset_password','&userid=$userid&password='+escape($('#mypassword').val()),function() { go_to_page(1); });");
         echo format_popup($content,'Change Password',"500px");   
     }else{
 		echo '<script type="text/javascript">go_to_page(1);</script>';
@@ -136,7 +136,7 @@ global $MYVARS, $CFG, $USER, $PAGE;
 				</fieldset>
 			</form>
 		</div>';		
-		echo create_validation_script("profile_change_form" , "ajaxapi('/ajax/site_ajax.php','change_profile','&userid=$userid&password='+$('#mypassword').val()+'&email='+$('#email').val()+'&fname='+$('#myfname').val()+'&lname='+$('#mylname').val(),function() { simple_display('change_profile'); });");
+		echo create_validation_script("profile_change_form" , "ajaxapi('/ajax/site_ajax.php','change_profile','&userid=$userid&password='+escape($('#mypassword').val())+'&email='+encodeURIComponent($('#email').val())+'&fname='+escape($('#myfname').val())+'&lname='+escape($('#mylname').val()),function() { simple_display('change_profile'); });");
         echo format_popup($content,'Edit Profile',"500px");
 	}else{
 		echo '<script type="text/javascript">go_to_page(1);</script>';
@@ -160,7 +160,7 @@ global $MYVARS, $CFG;
 			</fieldset>
 		</form>
 	</div>';	
-	echo create_validation_script("password_request_form" , "ajaxapi('/ajax/site_ajax.php','forgot_password','&email='+document.getElementById('email').value,function() { simple_display('forgot_password'); });");
+	echo create_validation_script("password_request_form" , "ajaxapi('/ajax/site_ajax.php','forgot_password','&email='+encodeURIComponent($('#email').val()),function() { simple_display('forgot_password'); });");
     echo format_popup($content,'Forgot Password',"500px");
 }
 
