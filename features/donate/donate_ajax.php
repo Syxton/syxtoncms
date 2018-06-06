@@ -46,12 +46,17 @@ global $CFG, $MYVARS, $USER;
         <style>
             .rowContainer label{
                 margin: 5px;
+                display: inline-block;
+                min-width: 150px;
+                vertical-align: top;
             }
-            .rowContainer input{
+            .rowContainer input, .rowContainer textarea, .rowContainer select{
+                float: initial;
                 margin-right: 0px;
             }
             .info {
                 margin: -5px 2px 10px 4px;
+                float: initial;
             }
             .tooltipContainer {
                 padding: 10px 20px 7px 20px;
@@ -88,7 +93,7 @@ global $CFG, $MYVARS, $USER;
                         <div class="tooltipContainer info">'.get_help("donate_shared:donate").'</div><br />
                     </div>
                     <br />
-                    <input class="submit" name="submit" type="submit" value="'.$startoredit.' Campaign" style="margin: auto;display:block;" />
+                    <input class="submit" name="submit" type="submit" value="'.$startoredit.' Campaign" style="margin: auto;display:block;clear:both;" />
                     <div id="error_div"></div>	
     			</fieldset>
     		</form>
@@ -128,13 +133,14 @@ global $CFG, $MYVARS, $USER;
 
 function join_campaign_form(){
 global $CFG, $MYVARS, $USER;
-    $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']); 
+    $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
+    echo '<center><h1>Join a Campaign</h1></center>';
     echo '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'select_campaign_form\',\'&featureid='.$featureid.'&pageid='.$pageid.'\',function(){ simple_display(\'donation_display\'); });">Back</a><br /><br />';   
-    $SQL = "SELECT * FROM donate_campaign WHERE shared=1 AND campaign_id NOT IN (SELECT campaign_id FROM donate_instance WHERE donate_id IN (SELECT featureid FROM pages_features WHERE pageid='$pageid' AND feature='donate'))";
+    $SQL = "SELECT * FROM donate_campaign WHERE origin_page='$pageid' AND campaign_id NOT IN (SELECT campaign_id FROM donate_instance WHERE donate_id IN (SELECT featureid FROM pages_features WHERE pageid='$pageid' AND feature='donate')) OR shared='1'";
     if($result = get_db_result($SQL)){
-        echo "<select>";
+        echo '<select id="campaign_id">';
         while($row = fetch_row($result)){
-            echo '<option id="campaign_id" value="'.$row["campaign_id"].'">'.$row["title"]."</option>";    
+            echo '<option value="'.$row["campaign_id"].'">'.$row["title"]."</option>";    
         }
         echo '</select> <button onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'join_campaign\',\'&campaign_id=\'+$(\'#campaign_id\').val()+\'&featureid='.$featureid.'&pageid='.$pageid.'\',function(){ simple_display(\'donation_display\'); });">Join Campaign</button>';
     }else{
@@ -150,9 +156,11 @@ global $CFG, $MYVARS, $USER;
     if($campaign_id){ //Campaign ID chosen
         //Save campaign ID in instance
         execute_db_sql("UPDATE donate_instance SET campaign_id=$campaign_id WHERE donate_id=$featureid");
-        echo "true**<h1>Campaign Joined</h1>";
+        echo "<h1>Campaign Joined</h1>
+                You can now accept donations for your chosen campaign.
+             ";
     }else{
-        echo "false**$goal $description $title $shared $pageid $featureid";    
+        echo "Could not join campaign.";    
     }    
 }
 
