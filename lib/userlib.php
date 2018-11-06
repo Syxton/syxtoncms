@@ -13,10 +13,28 @@ $USERLIB = true;
 function random_quote(){
 global $CFG;
 	$quote = $author = "";
-	$row = get_db_row("SELECT quote, author FROM quotes ORDER BY RAND() LIMIT 0,1");
-	if($row['quote'] != ""){ $quote = '<div>'.$row['quote'].'</div>';}
-	if($row['author'] != ""){ $author = '<br /><div style="float:right;">-- '.$row['author'].'</div>';}
-	return $quote.$author;
+    $returnme = '<div id="carousel"  data-flickity=\'{ "autoPlay": 10000, "pageDots": false, "imagesLoaded": true, "percentPosition": false, "wrapAround": true }\'>';
+	if ($result = get_db_result("SELECT quote, author FROM quotes ORDER BY RAND() LIMIT 0,4")) {
+        while($row = fetch_row($result)) {
+            if($row['quote'] != ""){ $quote = '<div>'.$row['quote'].'</div>';}
+        	if($row['author'] != ""){ $author = '<br /><div style="float:right;">-- '.$row['author'].'</div>';}
+            if (!$img = randomimages("images/carousel/")) {
+                return '';
+            }
+            $returnme .= "<div class='carousel-cell'>" .
+                            "<div><img class='carouselslides' src='$img' /></div>" .
+                            "<div class='carouselquotes'>" . $quote . $author . "</div>" .
+                         "</div>";
+        }
+    }
+    return $returnme . '</div>';
+}
+
+function randomimages($dir) {
+    $images = glob($dir . '*.{jpg,jpeg,png,gif}', GLOB_BRACE);
+    if (empty(count($images))) { return false; }
+    $randomImage = $images[array_rand($images)];
+    return $randomImage;
 }
 
 function load_user_cookie(){
@@ -171,7 +189,7 @@ function nameize($str,$a_char = array("'","-"," ",'"','.')){
     if(count($name_parts) > 1) {
         $output = "";
         foreach($name_parts as $np) {
-            $output .= nameize($np) . " ";        
+            $output .= nameize($np) . " ";
         }
         return trim($output);
     } else {
@@ -183,7 +201,7 @@ function nameize($str,$a_char = array("'","-"," ",'"','.')){
     			$i++; $i++;
     		}
     	}
-    
+
     	//$str contains the complete raw name string
         //$a_char is an array containing the characters we use as separators for capitalization. If you don't pass anything, there are three in there as default.
     	$string = strtolower($str);
@@ -198,9 +216,9 @@ function nameize($str,$a_char = array("'","-"," ",'"','.')){
                     $mend .= ucfirst($temp2).$temp;
                 }
                 $string = substr($mend,0,-1);
-            }   
+            }
         }
-        
+
         $str = "";
        	for($i=0;$i<strlen($string);$i++){
     		if(array_search($string{$i},$a_char)){
@@ -214,7 +232,7 @@ function nameize($str,$a_char = array("'","-"," ",'"','.')){
         $str = str_replace("+ ","",$str);
         $str = str_replace("+","",$str);
         $str = str_replace('""','"',$str);
-        return trim(ucfirst($str));        
+        return trim(ucfirst($str));
     }
 }
 ?>

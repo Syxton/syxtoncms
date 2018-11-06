@@ -44,7 +44,7 @@ if(isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip,','.
 
 	//Cache roles
 	$ROLES = load_roles();
-    
+
     //Start Page
     include ('header.html');
 
@@ -63,9 +63,9 @@ if(isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip,','.
 	}
 
 	//Main Layout
-	echo '	<div class="colmask rightmenu">
+	echo '	<div class="logo_nav">'.page_masthead(true).'</div>
+            <div class="colmask rightmenu">
 				<div class="colleft">
-                    <div class="logo_nav">'.page_masthead(true).'</div>
                     <div class="col2 pagesort2 connectedSortable">
                         '.page_masthead(false).'
     					'.get_page_contents($PAGE->id, 'side').'

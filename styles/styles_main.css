@@ -23,6 +23,7 @@ body {
 font-family:Arial,Helvetica,sans-serif;
 font-size:.83em;
 overflow:auto;
+margin-top: 0px;
 }
 
 .content_links {
@@ -200,7 +201,7 @@ padding-left:20px;
 width:140px;
 }
 
-.rowContainer label :not(.valid) { 
+.rowContainer label :not(.valid) {
 width: 16px;
 }
 
@@ -450,7 +451,7 @@ font-family:Tahoma,Verdana,Arial,sans-serif;
 font-size:.8em;
 color:#433D27;
 /* If you want square 'days of the week' blocks, you will need to adjust this HEIGHT, based on the '.mainTableLarge width:' */
-/* Suggestions: 
+/* Suggestions:
   /*     .mainTableLarge.width=360 try height: 36pt         */
 /*     .mainTableLarge.width=525 try height: 52pt         */
 /*     .mainTableLarge.width=800 try height: 80pt         */
@@ -607,6 +608,7 @@ float:left;
 overflow:hidden;
 position:relative;
 width:100%;
+margin-top: 5px;
 }
 
 .colright,.colmid,.colleft {
@@ -622,7 +624,7 @@ position:relative;
 }
 
 .rightmenu .colleft {
-right:25%;
+right:25.5%;
 }
 
 .rightmenu .col1 {
@@ -631,16 +633,13 @@ width:76%;
 }
 
 .rightmenu .col2 {
-left:25%;
+left:25.5%;
 width:22.5%;
 min-width:160px;
 }
 
 .logo_nav {
-display:inline-block;
-left:25%;
 position:relative;
-width:76%;
 }
 
 div.box_title {
@@ -896,59 +895,141 @@ padding-bottom:0px;
 .shadetabs li a.selected:hover { /*selected main tab style */
 text-decoration:none;
 }
-/* ######### CSS for Main Nav Tabs. Remove if not using ######### */
-.navtabs {
-padding:3px 0;
-margin-left:0;
-margin-top:1px;
-margin-bottom:0;
-font:bold 12px Verdana;
-list-style-type:none;
-text-align:center; /*set to left, center, or right to align the menu as desired*/
+@media only screen and (max-width : 640px) {
+	.logo_nav #menu-icon {
+    	display:inline-block !important;
+        position: absolute;
+        right: 0;
+        top: 25px;
+	}
+
+    .logo_nav #logo {
+        float: left !important;
+    }
+
+	nav ul, nav:active ul {
+		display: none;
+		position: fixed !important;
+        margin: 0 !important;
+		padding: 0 !important;
+		background: #fff !important;
+        border-top: 5px solid #444 !important;
+        border-bottom: 5px solid #444 !important;
+		right: 0 !important;
+        top: 100px !important;
+		width: 100% !important;
+        z-index: 99999;
+	}
+
+    .logo_nav nav {
+        float: none !important;
+    }
+
+	nav li {
+		text-align: center;
+		width: 100%;
+        font-weight: bolder;
+        font-size: 1.5em;
+	}
+
+	nav:hover ul {
+		display: block;
+	}
 }
 
-.navtabs li {
-display:inline-table;
-*display:inline; /* IE hack for menu*/
-margin-bottom:8px;
+.carousel-cell {
+  width: 100%; /* full width */
+  height: 400px;
+  background: #222;
+  /* center images in cells with flexbox */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.navtabs li a {
--moz-border-radius:5px; /* rounded corners except for IE */
--webkit-border-radius:5px;
--khtml-border-radius:5px;
-border-radius:5px; /* CSS3 version */
-text-decoration:none;
-position:relative;
-z-index:1;
-padding:3px 7px;
-margin-right:3px;
-border:1px solid #778;
-color:#2d2b2b;
-background:white url(../images/shade.gif) top left repeat-x;
+.carouselslides {
+     max-width: 100%;
+     width: 100vw;
+     min-height: 400px;
+     height: auto;
 }
 
-.navtabs li a:visited {
-color:#2d2b2b;
+.carouselquotes {
+    width: 90%;
+    bottom: 20px;
+    right: 10px;
+    position: absolute;
+    text-align: right;
+    color: whitesmoke;
+    font-size: 1.5em;
+    text-shadow: 2px 3px 5px black;
 }
 
-.navtabs li a:hover {
-text-decoration:underline;
-color:#2d2b2b;
+.logo_nav .navtabs li:hover {
+    background-color: darkslategray;
 }
 
-.navtabs li a.selected { /*selected main tab style */
-position:relative;
-top:1px;
+.logo_nav #carousel {
+    clear: both;
 }
 
-.navtabs li a.selected { /*selected main tab style */
-background-image:url(../images/shadeactive.gif);
+.logo_nav header {
+	background: #fff;
+	top: 0;
+	left: 0;
+	z-index: 100;
 }
 
-.navtabs li a.selected:hover { /*selected main tab style */
-text-decoration:none;
+.logo_nav #logo {
+	float: none;
+	max-height: 100px;
+	display: block;
 }
+
+.logo_nav nav {
+    width: 100%;
+    float: left;
+}
+
+.logo_nav .navtabs li {
+    display: initial;
+    margin-bottom: initial;
+}
+
+.logo_nav  #menu-icon {
+	display: none;
+	width: 40px;
+	height: 40px;
+}
+
+.logo_nav a:hover#menu-icon {
+	background-color: #444;
+	border-radius: 4px 4px 0 0;
+}
+
+.logo_nav ul {
+	list-style: none;
+    margin: 0;
+}
+
+.logo_nav li {
+	display: inline-block;
+	float: left;
+    background-color: grey;
+    margin: 0px 1px;
+}
+
+.navtabs a {
+    display: block;
+    padding: 10px;
+	color: white;
+    border-top: 5px solid grey;
+}
+
+.navtabs a.selected {
+	border-top: 5px solid gainsboro;
+}
+
 /* ######### CSS for Forums and Shoutboxes. Remove if not using ######### */
 .forum_breadcrumb {
 font-weight:bold;

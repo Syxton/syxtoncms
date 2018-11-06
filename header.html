@@ -5,23 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title><?php echo $PAGE->title ?></title>
     <link rel="shortcut icon" href="favicon.ico" />
-    <link type="text/css" rel="stylesheet" href="<?php echo $CFG->wwwroot ?>/min/?b=<?php echo empty($CFG->directory) ? '' : $CFG->directory . '/'; ?>styles&amp;f=styles_main.css,colorbox.css" />
+    <link type="text/css" rel="stylesheet" href="<?php echo $CFG->wwwroot ?>/min/?b=<?php echo empty($CFG->directory) ? '' : $CFG->directory . '/'; ?>styles&amp;f=styles_main.css,colorbox.css,flickity.css" />
     <!--[if lt IE 7]>
     <style type="text/css">
         .dock img { behavior: url(iepngfix.htc) }
     </style>
     <![endif]-->
- 
+
 	<?php if(isset($USER->key)){ ?>
         <link href="<?php echo $CFG->wwwroot ?>/scripts/rss/rss.php?pageid=<?php echo $PAGE->id ?>&amp;key=<?php echo $USER->key ?>" title="<?php echo $CFG->sitename ?> [RSS]" type="application/rss+xml" rel="alternate"/>
     <?php } ?>
-    
+
     <script>
     var dirfromroot = "<?php echo $CFG->directory ?>";
     </script>
-    
+
     <script type="text/javascript" src="<?php echo $CFG->wwwroot ?>/min/?f=<?php echo empty($CFG->directory) ? '' : $CFG->directory . '/'; ?>ajax/siteajax.js"></script>
-	<script type="text/javascript" src="<?php echo $CFG->wwwroot ?>/min/?b=<?php echo empty($CFG->directory) ? '' : $CFG->directory . '/'; ?>scripts&amp;f=jquery.min.js,jquery.colorbox.js,jquery.colorbox.extend.js,jquery.extend.js,jquery-ui.min.js"></script>
+	<script type="text/javascript" src="<?php echo $CFG->wwwroot ?>/min/?b=<?php echo empty($CFG->directory) ? '' : $CFG->directory . '/'; ?>scripts&amp;f=jquery.min.js,jquery.colorbox.js,jquery.colorbox.extend.js,jquery.extend.js,jquery-ui.min.js,flickity.js"></script>
 
     <!-- Google Analytics -->
     <script>
@@ -29,7 +29,7 @@
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
     })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-    
+
     ga('create', '<?php echo $CFG->analytics; ?>', 'auto');
     ga('send', 'pageview');
     </script>
