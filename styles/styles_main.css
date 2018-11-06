@@ -908,12 +908,9 @@ text-decoration:none;
 
 	nav ul, nav:active ul {
 		display: none;
-		position: fixed !important;
         margin: 0 !important;
 		padding: 0 !important;
 		background: #fff !important;
-        border-top: 5px solid #444 !important;
-        border-bottom: 5px solid #444 !important;
 		right: 0 !important;
         top: 100px !important;
 		width: 100% !important;
@@ -1097,6 +1094,7 @@ text-decoration:none;
     padding: 10px;
 	color: white;
     border-top: 5px solid grey;
+    border-bottom: 1px solid silver;
 }
 
 .navtabs a.selected {
