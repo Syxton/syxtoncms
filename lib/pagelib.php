@@ -519,7 +519,7 @@ global $CFG, $USER, $PAGE;
 	} else { $SQL = "SELECT * FROM menus WHERE hidefromvisitors=0 AND parent IS NULL order by sort"; }
 
 	$selected = $pageid == $CFG->SITEID ? ' class="selected"' : '';
-	$returnme = '<ul id="pagenav" class="navtabs"><li><a href="' . $CFG->wwwroot . "/index.php?pageid=" . $CFG->SITEID . '" onmouseup="this.blur()" onfocus="this.blur()" ' . $selected . '><span>Home</span></a></li>';
+	$returnme = '<ul id="pagenav" class="navtabs">';
 	//Query the database
 	if($result = get_db_result($SQL)){
 		while($row = fetch_row($result)){
