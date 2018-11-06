@@ -1014,8 +1014,6 @@ text-decoration:none;
 
 .logo_nav  #menu-icon {
 	display: none;
-	width: 40px;
-	height: 40px;
 }
 
 .logo_nav a:hover#menu-icon {
