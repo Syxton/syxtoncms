@@ -511,28 +511,48 @@ global $CFG, $USER;
 }
 
 function get_nav_items($pageid = false){
-global $CFG, $USER;
-	if(!$pageid){ $pageid = $CFG->SITEID; }
+global $CFG, $USER, $PAGE;
+    $pageid = !$pageid ? (empty($PAGE->id) ? $CFG->SITEID : $PAGE->id) : $pageid;
+
 	//SQL Creation
-	if(is_logged_in()){ $SQL = "SELECT * FROM menus order by sort";
-	}else{ $SQL = "SELECT * FROM menus WHERE hidefromvisitors=0 order by sort"; }
+	if (is_logged_in()) { $SQL = "SELECT * FROM menus WHERE parent IS NULL order by sort";
+	} else { $SQL = "SELECT * FROM menus WHERE hidefromvisitors=0 AND parent IS NULL order by sort"; }
 
 	$selected = $pageid == $CFG->SITEID ? ' class="selected"' : '';
-	$returnme = '<ul id="pagenav" class="navtabs"><li><a style="display:inline-block" href="' . $CFG->wwwroot . "/index.php?pageid=" . $CFG->SITEID . '" onmouseup="this.blur()" onfocus="this.blur()" ' . $selected . '><span>Home</span></a></li>';
+	$returnme = '<ul id="pagenav" class="navtabs"><li><a href="' . $CFG->wwwroot . "/index.php?pageid=" . $CFG->SITEID . '" onmouseup="this.blur()" onfocus="this.blur()" ' . $selected . '><span>Home</span></a></li>';
 	//Query the database
 	if($result = get_db_result($SQL)){
 		while($row = fetch_row($result)){
 			$selected = $pageid == $row['pageid'] ? 'class="selected"' : '';
-			$returnme .= '<li><a style="display:inline-block" href="' . $CFG->wwwroot . "/index.php?pageid=" . $row['link'] . '" onmouseup="this.blur()" onfocus="this.blur()" ' . $selected . '><span>' . stripslashes($row['text']) . '</span></a></li>';
-		}
+			$returnme .= '<li><a href="' . $CFG->wwwroot . "/index.php?pageid=" . $row['link'] . '" onmouseup="this.blur()" onfocus="this.blur()" ' . $selected . '><span>' . stripslashes($row['text']) . '</span></a>';
+            $returnme .= get_menu_children($row["id"], $pageid);
+            $returnme .= '</li>';
+        }
 	}
 
     if(is_logged_in()){ //Members list visible only if logged in
-        $returnme .= '<li>'.make_modal_links(array("title"=> "Members List","path"=>$CFG->wwwroot."/pages/page.php?action=browse&amp;section=users&amp;userid=$USER->userid","iframe"=>"true","width"=>"640","height"=>"623","styles"=>"display:inline-block;","confirmexit"=>"true")).'</li>';
+        $returnme .= '<li>'.make_modal_links(array("title"=> "Members List","path"=>$CFG->wwwroot."/pages/page.php?action=browse&amp;section=users&amp;userid=$USER->userid","iframe"=>"true","width"=>"640","height"=>"623","confirmexit"=>"true")).'</li>';
     }
 
 	$returnme .= '</ul>';
 	return $returnme;
+}
+
+function get_menu_children($menuid, $pageid) {
+global $CFG;
+    $returnme = '';
+    $SQL = "SELECT * FROM menus WHERE parent='$menuid' order by sort";
+    if($result = get_db_result($SQL)){
+        $returnme .= '<ul class="dropdown">';
+		while($row = fetch_row($result)){
+			$selected = $pageid == $row['pageid'] ? 'class="selected"' : '';
+			$returnme .= '<li><a href="' . $CFG->wwwroot . "/index.php?pageid=" . $row['link'] . '" onmouseup="this.blur()" onfocus="this.blur()" ' . $selected . '><span>' . stripslashes($row['text']) . '</span></a>';
+            $returnme .= get_menu_children($row["id"], $pageid);
+            $returnme .= '</li>';
+        }
+        $returnme .= '</ul>';
+	}
+    return $returnme;
 }
 
 function get_css_box($title, $content, $buttons = '', $padding = null, $feature = '', $featureid = '', $themeid = false, $preview = false, $pageid=false, $bottom_left = false, $bottom_center = false, $bottom_right = false, $class = ""){

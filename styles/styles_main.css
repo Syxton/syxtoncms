@@ -916,7 +916,7 @@ text-decoration:none;
         border-top: 5px solid #444 !important;
         border-bottom: 5px solid #444 !important;
 		right: 0 !important;
-        top: 100px !important;
+        top: 75px !important;
 		width: 100% !important;
         z-index: 99999;
 	}
@@ -935,6 +935,18 @@ text-decoration:none;
 	nav:hover ul {
 		display: block;
 	}
+
+    nav:hover ul li ul {
+        left: initial;
+        visibility: visible;
+        display: block;
+        opacity: initial;
+        position: relative !important;
+        top: 0 !important;
+        font-size: .6rem;
+        border: none !important;
+        font-weight: initial;
+    }
 }
 
 .carousel-cell {
@@ -984,6 +996,7 @@ text-decoration:none;
 	float: none;
 	max-height: 100px;
 	display: block;
+    margin: auto;
 }
 
 .logo_nav nav {
@@ -1013,10 +1026,68 @@ text-decoration:none;
 }
 
 .logo_nav li {
-	display: inline-block;
 	float: left;
     background-color: grey;
     margin: 0px 1px;
+}
+
+.logo_nav ul {
+    list-style: none;
+    margin: 0;
+    padding-left: 0;
+}
+
+.logo_nav li {
+    color: #fff;
+    display: block;
+    min-width: 10rem;
+    float: left;
+    position: relative;
+    text-decoration: none;
+    transition-duration: 0.5s;
+}
+
+.logo_nav .dropdown {
+    z-index: 99999;
+}
+
+.logo_nav li a {
+  color: #fff;
+}
+
+.logo_nav li:hover,
+.logo_nav li:focus-within {
+    background: red;
+    cursor: pointer;
+}
+
+.logo_nav li:focus-within a {
+  outline: none;
+}
+
+.logo_nav ul li ul {
+    background: orange;
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    transition: all 0.5s ease;
+    left: 10%;
+    display: none;
+    white-space: nowrap;
+}
+
+.logo_nav ul li:hover > ul,
+.logo_nav ul li:focus-within > ul,
+.logo_nav ul li ul:hover,
+.logo_nav ul li ul:focus {
+  visibility: visible;
+  opacity: 1;
+  display: block
+}
+
+.logo_nav ul li ul li {
+    clear: both;
+    width: 100%;
 }
 
 .navtabs a {
@@ -1028,6 +1099,7 @@ text-decoration:none;
 
 .navtabs a.selected {
 	border-top: 5px solid gainsboro;
+    background-color: darkgrey;
 }
 
 /* ######### CSS for Forums and Shoutboxes. Remove if not using ######### */
