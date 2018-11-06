@@ -6,6 +6,7 @@
 		        alt="Valid XHTML 1.0 Strict" height="31" width="88" /></a>
 		</p>
 		</div>
+
         <script type="text/javascript">
         $(function() {
             $( ".pagesort1, .pagesort2" ).sortable({
@@ -18,7 +19,7 @@
                 cursor: "move",
                 cursorAt: { top: 0, left: 0 },
                 zIndex: 9999,
-                sort: function(event, ui) {  
+                sort: function(event, ui) {
                     ui.helper.css({'top' : ui.position.top + $(window).scrollTop() + 'px','left' : ui.position.left + $(window).scrollLeft() + 'px'});
                 },
                 update: function(event, ui){
@@ -33,18 +34,16 @@
                     });
                 }
             });
-            
+
             function adjustStyle(width) {
                 width = parseInt(width);
                 if (width < 701) {
-                    $(".logo_nav").css("width","98%");
                     $(".rightmenu .col1").css("width","98%");
                     $(".rightmenu .col2").css("width","98%");
                     $(".rightmenu .col2").css("width","98%");
                     $("#headerlogo").css("width","100%");
                     $("#headerquotebox").css("width","100%");
                 } else if ((width >= 701)) {
-                    $(".logo_nav").css("width","76%");
                     $(".rightmenu .col1").css("width","76%");
                     $(".rightmenu .col2").css("width","22.5%");
                     $("#headerlogo").css("width","70%");
@@ -59,6 +58,7 @@
                     }, 100);
                 });
             });
+
             adjustStyle($(this).width());
           });
         </script>
