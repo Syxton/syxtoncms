@@ -524,8 +524,12 @@ global $CFG, $USER, $PAGE;
 	if($result = get_db_result($SQL)){
 		while($row = fetch_row($result)){
 			$selected = $pageid == $row['pageid'] ? 'class="selected"' : '';
-			$returnme .= '<li><a href="' . $CFG->wwwroot . "/index.php?pageid=" . $row['link'] . '" onmouseup="this.blur()" onfocus="this.blur()" ' . $selected . '><span>' . stripslashes($row['text']) . '</span></a>';
-            $returnme .= get_menu_children($row["id"], $pageid);
+            if (empty($row["link"])) {
+                $returnme .= '<li><a href="#"><span>' . stripslashes($row['text']) . '</span></a>';
+            } else {
+                $returnme .= '<li><a href="' . $CFG->wwwroot . "/index.php?pageid=" . $row['link'] . '" onmouseup="this.blur()" onfocus="this.blur()" ' . $selected . '><span>' . stripslashes($row['text']) . '</span></a>';
+            }
+			$returnme .= get_menu_children($row["id"], $pageid);
             $returnme .= '</li>';
         }
 	}
@@ -546,7 +550,11 @@ global $CFG;
         $returnme .= '<ul class="dropdown">';
 		while($row = fetch_row($result)){
 			$selected = $pageid == $row['pageid'] ? 'class="selected"' : '';
-			$returnme .= '<li><a href="' . $CFG->wwwroot . "/index.php?pageid=" . $row['link'] . '" onmouseup="this.blur()" onfocus="this.blur()" ' . $selected . '><span>' . stripslashes($row['text']) . '</span></a>';
+            if (empty($row["link"])) {
+                $returnme .= '<li><a href="#"><span>' . stripslashes($row['text']) . '</span></a>';
+            } else {
+                $returnme .= '<li><a href="' . $CFG->wwwroot . "/index.php?pageid=" . $row['link'] . '" onmouseup="this.blur()" onfocus="this.blur()" ' . $selected . '><span>' . stripslashes($row['text']) . '</span></a>';
+            }
             $returnme .= get_menu_children($row["id"], $pageid);
             $returnme .= '</li>';
         }

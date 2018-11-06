@@ -25,45 +25,45 @@ global $CFG, $USER, $ROLES;
 	$archivedays = $settings->events->$featureid->archivedays->setting;
 	$showpastevents = $settings->events->$featureid->showpastevents->setting;
     $allowrequests = $settings->events->$featureid->allowrequests->setting;
-	
-	if($area == "middle"){               
+
+	if($area == "middle"){
         //Get calendar of events
         return get_calendar_of_events($title, $pageid, $featureid, false, $showpastevents, $content, $allowrequests);
     }else{
         if(is_logged_in()){ //Logged in user will see...
             if(get_db_row("SELECT eventid FROM events WHERE workers=1 AND event_begin_date > " .time())) {
-                if(user_has_ability_in_page($USER->userid, "staffapply", $pageid, "events", $featureid)){ 
-                    $content .= get_staff_application_button();    
-                }    
+                if(user_has_ability_in_page($USER->userid, "staffapply", $pageid, "events", $featureid)){
+                    $content .= get_staff_application_button();
+                }
             }
 
-            if(user_has_ability_in_page($USER->userid, "viewevents", $pageid, "events", $featureid)){                
+            if(user_has_ability_in_page($USER->userid, "viewevents", $pageid, "events", $featureid)){
                 //Get events that must be confirmed
                 if($pageid == $CFG->SITEID){
                     if(user_has_ability_in_page($USER->userid, "confirmevents", $pageid, "events", $featureid) && $section = get_confirm_events()){ $content .= $section . "<br />";}
                 }
-                
+
                 //Get events that can be edited
                 if(user_has_ability_in_page($USER->userid, "editevents", $pageid, "events", $featureid) && $section = get_editable_events($pageid)){ $content .= $section . "<br />";}
-                
+
                 //Get current events
                 if($section = get_current_events($pageid)){ $content .= $section . "<br />"; }
-                
+
                 //Get upcoming events
                 if($section = get_upcoming_events($pageid, $upcomingdays)){ $content .= $section . "<br />"; }
-                
+
                 //Get events that are registerable
                 if($section = get_open_enrollment_events($pageid)){ $content .= $section . ""; }
-                
+
                 //No events
                 if($content == ""){ $content .= "There are no current or upcoming events."; }
-                
+
                 //Get link for request form
                 if($allowrequests){ $content = get_event_request_link($area,$featureid) . $content; }
-                
+
                 //Get recent events
                 if($section = get_recent_events($pageid, $recentdays, $archivedays)){ $content .= $section; }
-                            
+
                 //Get feature layout
                 $buttons = get_button_layout("events", $featureid, $pageid);
                 return get_css_box($title, $content, $buttons, NULL, "events", $featureid);
@@ -71,22 +71,22 @@ global $CFG, $USER, $ROLES;
         }elseif(role_has_ability_in_page($ROLES->visitor, "viewevents", $pageid)){ //If unlogged in users can see...
             //Get current events
             if($section = get_current_events($pageid)){ $content .= $section . "<br />";}
-            
+
             //Get upcoming events
             if($section = get_upcoming_events($pageid, $upcomingdays)){ $content .= $section . "<br />";}
-            
+
             //Get registerable events
             if($section = get_open_enrollment_events($pageid)){ $content .= $section . "";}
-            
+
             //No events
             if($content == ""){ $content .= "There are no current or upcoming events.";}
-            
+
             //Get link for request form
             if($allowrequests){ $content = get_event_request_link($area,$featureid) . $content; }
-            
+
             //Show past events
             if($section = get_recent_events($pageid, $recentdays, $archivedays)){ $content .= $section;}
-            
+
             //Get feature layout
             return get_css_box($title, $content, NULL, NULL, "events", $featureid);
         }
@@ -96,8 +96,8 @@ global $CFG, $USER, $ROLES;
 function get_staff_application_button(){
 global $CFG;
 $returnme = '';
-    if(is_logged_in()){ //Members list visible only if logged in   
-        $menuitem = '<li>'.make_modal_links(array("title"=> "Staff Apply","path"=>$CFG->wwwroot."/features/events/events.php?action=staff_application","validate"=>"true","width"=>"600","height"=>"650","styles"=>"display:inline-block;")).'</li>';
+    if(is_logged_in()){ //Members list visible only if logged in
+        $menuitem = '<li>'.make_modal_links(array("title"=> "Staff Apply","path"=>$CFG->wwwroot."/features/events/events.php?action=staff_application","validate"=>"true","width"=>"600","height"=>"650")).'</li>';
         $returnme .= '
         <script>
             $(document).ready(function() {
@@ -106,7 +106,7 @@ $returnme = '';
             });
         </script>';
     }
-    $returnme .= '<div style="margin:5px;text-align:right;">'.make_modal_links(array("title"=>"Staff Application/Renewal Form","path"=>$CFG->wwwroot."/features/events/events.php?action=staff_application","validate"=>"true","width"=>"600","height"=>"650","image"=>$CFG->wwwroot."/images/staff.png","confirmexit"=>"true")).'</div>'; 
+    $returnme .= '<div style="margin:5px;text-align:right;">'.make_modal_links(array("title"=>"Staff Application/Renewal Form","path"=>$CFG->wwwroot."/features/events/events.php?action=staff_application","validate"=>"true","width"=>"600","height"=>"650","image"=>$CFG->wwwroot."/images/staff.png","confirmexit"=>"true")).'</div>';
 
     return $returnme;
 }
@@ -114,9 +114,9 @@ $returnme = '';
 function get_event_request_link($area,$featureid){
 global $CFG;
     if($area == "middle"){
-        return '<div style="text-align:right;">'.make_modal_links(array("title"=>"Request an Event","path"=>$CFG->wwwroot."/features/events/events.php?action=event_request_form&amp;featureid=$featureid","validate"=>"true","width"=>"550","height"=>"650","image"=>$CFG->wwwroot."/images/request.gif")).'</div>'; 
+        return '<div style="text-align:right;">'.make_modal_links(array("title"=>"Request an Event","path"=>$CFG->wwwroot."/features/events/events.php?action=event_request_form&amp;featureid=$featureid","validate"=>"true","width"=>"550","height"=>"650","image"=>$CFG->wwwroot."/images/request.gif")).'</div>';
     }else{
-        return '<div style="text-align:right;">'.make_modal_links(array("title"=>"Request an Event","path"=>$CFG->wwwroot."/features/events/events.php?action=event_request_form&amp;featureid=$featureid","validate"=>"true","width"=>"550","height"=>"650","image"=>$CFG->wwwroot."/images/request.gif")).'</div><br />';  
+        return '<div style="text-align:right;">'.make_modal_links(array("title"=>"Request an Event","path"=>$CFG->wwwroot."/features/events/events.php?action=event_request_form&amp;featureid=$featureid","validate"=>"true","width"=>"550","height"=>"650","image"=>$CFG->wwwroot."/images/request.gif")).'</div><br />';
     }
 }
 
@@ -136,25 +136,25 @@ global $CFG, $USER, $ROLES;
 
     if (is_logged_in()) {
         if (get_db_row("SELECT eventid FROM events WHERE workers=1 AND event_begin_date > " .time())) {
-            if(user_has_ability_in_page($USER->userid, "staffapply", $pageid, "events", $featureid)){ 
-                $content .= get_staff_application_button($featureid,$pageid);    
+            if(user_has_ability_in_page($USER->userid, "staffapply", $pageid, "events", $featureid)){
+                $content .= get_staff_application_button($featureid,$pageid);
             }
         }
         if (user_has_ability_in_page($USER->userid, "viewevents", $pageid, "events", $featureid)) {
             $canview = true;
             $canconfirm = user_has_ability_in_page($USER->userid, "confirmevents", $CFG->SITEID, "events", $featureid) ? true : false;
             $buttons = get_button_layout("events", $featureid, $pageid);
-            if ($canconfirm) { 
+            if ($canconfirm) {
                 $SQL = "SELECT * FROM events e WHERE $site AND $begincurrentyear < e.event_begin_date AND $endcurrentyear > e.event_begin_date ORDER BY e.event_begin_date, e.event_begin_time";
-            } else {  
+            } else {
                 $SQL = "SELECT * FROM events e WHERE $site AND $begincurrentyear < e.event_begin_date AND $endcurrentyear > e.event_begin_date AND e.confirmed=1 ORDER BY e.event_begin_date, e.event_begin_time";
             }
         }
     } else {
         $canview = role_has_ability_in_page($ROLES->visitor, "viewevents", $pageid) ? true : false;
-        if ($canview && $pageid == $CFG->SITEID) { 
+        if ($canview && $pageid == $CFG->SITEID) {
             $SQL = "SELECT * FROM events e WHERE $site AND $begincurrentyear < e.event_begin_date AND $endcurrentyear > e.event_begin_date AND e.confirmed=1 ORDER BY e.event_begin_date, e.event_begin_time";
-        } elseif($canview) { 
+        } elseif($canview) {
             $SQL = "SELECT * FROM events e WHERE $site AND $begincurrentyear < e.event_begin_date AND $endcurrentyear > e.event_begin_date AND e.confirmed=1 ORDER BY e.event_begin_date, e.event_begin_time";
         }
         $buttons = null;
@@ -194,11 +194,11 @@ global $CFG, $USER;
     $registration_info = "";
     $alert = $export = $info = $eventbuttons = "";
 
-    $featureid = get_db_field("featureid","pages_features","pageid='$pageid' AND feature='events'");    
+    $featureid = get_db_field("featureid","pages_features","pageid='$pageid' AND feature='events'");
     if ($event["start_reg"] > 0) { // Event is a registerable page...at one time.
 		$regcount = get_db_count("SELECT * FROM events_registrations WHERE eventid='" . $event['eventid'] . "'");
 		$limit = $event['max_users'] == "0" ? "&#8734;" : $event['max_users'];
-		
+
 		// Currently can register for event (time check)
 	    if ($event["start_reg"] < $time && $event["stop_reg"] > ($time - 86400)) {
 	        $info  = "Registration ends in " . ago($event["event_begin_date"]);
@@ -259,11 +259,11 @@ global $CFG, $USER;
         $info = "Event Location: " . stripslashes($location["location"]);
     }
 
-    $registration_info = '<div role="export_button" class="events_reginfoblock">' . $export . '</div>' . 
+    $registration_info = '<div role="export_button" class="events_reginfoblock">' . $export . '</div>' .
                          '<div role="event_info" class="events_reginfoblock">' . $info . '</div>' .
                          '<div role="event_buttons" class="events_reginfoblock">' . $eventbuttons . '</div>' .
                          '<div role="alert" class="events_reginfoblock">' . $alert . '</div>';
-    
+
     if ($needsconfirmed) {
         $returnme = '<div id="confirm_' . $event['eventid'] . '">
             			<table class="eventstable">
@@ -272,7 +272,7 @@ global $CFG, $USER;
                         			<table style="width:100%;border-spacing: 0px;">
                                         <tr>
                                             <td>
-                                    			<div class="event_title" style="color:gray;">Unconfirmed: 
+                                    			<div class="event_title" style="color:gray;">Unconfirmed:
                                                     '.make_modal_links(array("title" => stripslashes($event["name"]),
                                                                              "path" => $CFG->wwwroot."/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=".$event['eventid'],
                                                                              "iframe" => "true",
@@ -347,7 +347,7 @@ global $CFG, $USER;
 function get_event_button_layout($pageid, $event, $edit, $confirm) {
 global $CFG;
     $buttons = get_event_edit_buttons($pageid, $event, $edit, $confirm);
-    
+
 	$themeid = getpagetheme($pageid);
     $styles = get_styles($pageid,$themeid,"news");
 
@@ -355,7 +355,7 @@ global $CFG;
 	$bordercolor = isset($styles['bordercolor']) ? $styles['bordercolor'] : "";
 	$titlebgcolor = isset($styles['titlebgcolor']) ? $styles['titlebgcolor'] : "";
 	$titlefontcolor = isset($styles['titlefontcolor']) ? $styles['titlefontcolor'] : "";
-        
+
 	if(strlen($buttons) > 0){
 	   	   return '
         <div id="slide_menu" class="slide_menu_invisible slide_menu" style="border-top:1px solid '.$bordercolor.';border-bottom:1px solid '.$bordercolor.';">
@@ -385,7 +385,7 @@ global $CFG, $USER;
         //Edit && Delete button
         if($canedit && $editable){
             $returnme .= make_modal_links(array("title"=> "Edit Event","path"=>$CFG->wwwroot."/features/events/events.php?action=add_event_form&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"refresh"=>"true","iframe"=>"true","width"=>"800","height"=>"95%","image"=>$CFG->wwwroot . "/images/edit.png","class"=>"slide_menu_button"));
-            
+
             //Delete button
             $returnme .= ' <a class="slide_menu_button" title="Delete Event" href="javascript: if(confirm(\'Are you sure you want to delete this event?\')){ ajaxapi(\'/features/events/events_ajax.php\',\'delete_event_relay\',\'&amp;featureid=' . $event['eventid'] . '\',function() { update_login_contents(\'' . $pageid . '\'); });}"> <img src="' . $CFG->wwwroot . '/images/delete.png" title="Delete Event" alt="Delete Event" /></a>';
         }
@@ -409,14 +409,14 @@ global $CFG, $USER;
                         <td>
                             <span id="confirm_' . $event['eventid'] . '">
                                 '.make_modal_links(array("title"=> stripslashes($event['name']),"path"=>$CFG->wwwroot."/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","width"=>"700","height"=>"650"));
-                            
+
             $featureid = get_db_field("featureid","pages_features","pageid='$pageid' AND feature='events'");
-            if(user_has_ability_in_page($USER->userid, "editevents", $pageid, "events", $featureid)){ 
+            if(user_has_ability_in_page($USER->userid, "editevents", $pageid, "events", $featureid)){
                 $returnme .= make_modal_links(array("title"=> "Edit Event","path"=>$CFG->wwwroot."/features/events/events.php?action=add_event_form&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"refresh"=>"true","iframe"=>"true","width"=>"800","height"=>"95%","image"=>$CFG->wwwroot."/images/edit.png"));
             }
-            
+
             $returnme .= '      <a href="javascript: if(confirm(\'Are you sure you want to confirm this event?\')){ ajaxapi(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '&amp;confirm=1\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); update_login_contents(\'' . $pageid . '\');});}"> <img src="' . $CFG->wwwroot . '/images/add.png" title="Confirm Event" alt="Confirm Event" /></a>';
-            $returnme .= '      <a href="javascript: if(confirm(\'Are you sure you want to deny this event?\')){ ajaxapi(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '&amp;confirm=0\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); update_login_contents(\'' . $pageid . '\');});}"> <img src="' . $CFG->wwwroot . '/images/deny.png" title="Deny Event" alt="Deny Event" /></a>';           
+            $returnme .= '      <a href="javascript: if(confirm(\'Are you sure you want to deny this event?\')){ ajaxapi(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '&amp;confirm=0\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); update_login_contents(\'' . $pageid . '\');});}"> <img src="' . $CFG->wwwroot . '/images/deny.png" title="Deny Event" alt="Deny Event" /></a>';
             $returnme .= '  </span>
                         </td>
                     </tr>
@@ -573,7 +573,7 @@ global $CFG, $USER;
                                     <span style="display:block;color:gray; font-size:.75em;">' . $length . '</span>
                                 </td>
                                 <td style="text-align:right; padding:2px;white-space:nowrap;">';
-            if(!empty($event["start_reg"]) && user_has_ability_in_page($USER->userid, "exportcsv", $pageid, "events", $featureid)){ 
+            if(!empty($event["start_reg"]) && user_has_ability_in_page($USER->userid, "exportcsv", $pageid, "events", $featureid)){
                 $returnme .= '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/events/events_ajax.php\',\'export_csv\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '\',function() { run_this();});"><img src="' . $CFG->wwwroot . '/images/csv.png" title="Export Registrations" alt="Export Registrations" /></a>';
             }
             $returnme .= '</td></tr></table>';
@@ -585,12 +585,12 @@ global $CFG, $USER;
 
 function make_fee_options($min, $full, $name, $options = "", $sale_end = "", $sale = false){
     if($sale_end != "" && $sale && get_timestamp() < $sale_end){ $full = $sale;}
-    
+
     $returnme = '<select id="' . $name . '" name="' . $name . '" ' . $options . ' >';
     $select = "selected";
-    
+
     if($min == $full){ return '<span style="float:left;margin:4px;">$</span><input id="' . $name . '" name="' . $name . '" type="text" READONLY value="' . $full . '.00"/>';}
-    
+
     while($min < $full){
         $returnme .= '<option value="' . $min . '" ' . $select . '>$' . $min . '</option>';
         $min = ($full - $min) > 10 ? $min + 10 : $full;
@@ -648,7 +648,7 @@ global $CFG;
             $i++;
         }
     }
-    
+
     return ucwords($name);
 }
 
@@ -665,7 +665,7 @@ global $CFG, $why, $error;
         if($regid){
             $formlist = explode(";", get_db_field("formlist", "events_templates", "folder='" . $template['folder'] . "'"));
             $sql_values = "";
-            foreach($formlist as $list){    
+            foreach($formlist as $list){
                 $element = explode(":", $list);
                 $sql_values .= $sql_values == "" ? "($regid,'" . dbescape($reg[$element[0]]) . "'," . $eventid . ",'" . $element[0] . "')" : ",($regid,'" . dbescape($reg[$element[0]]) . "'," . $eventid . ",'" . $element[0] . "')";
             }
@@ -687,7 +687,7 @@ global $CFG, $why, $error;
                 log_entry("event", $event["name"], "Failed Registration", $error . ": " . $SQL);
                 return false;
             }
-        }else{  
+        }else{
             $error = "We are sorry, there has been an error while trying to register for this event.  Please try again. ERROR CODE: 0002";
             log_entry("event", $event["name"], "Failed Registration", $error . ": " . $REGIDSQL);
             return false;
@@ -759,11 +759,11 @@ global $CFG;
                 <br /><br /><h3>Total Paid: $'.number_format($paid,2).'</h3><h3>Remaining Balance: $'.number_format($remaining,2).'</h3><br /><em>Note:This event requires payment in full to complete the registration process.  The above balances may not reflect recent changes.</em>
                 <br /><br /><strong>Registration ID:</strong><span style="color:#993300;"><strong> ' . $reg["code"] . '</strong></span>
                 '.(!empty($event["paypal"]) ? '<br /><br /><strong>Make payment online:</strong> <a href="'.$protocol.$CFG->wwwroot.'/features/events/events.php?action=pay&amp;i=!&amp;regcode='.$reg["code"].'">Make Payment</a>' : '').'
-                <br /><br /><strong>Make payment by check or money order: </strong><br />Payable to: ' . stripslashes($event['payableto']) . '<br />' . stripslashes($event['checksaddress']) . '<br />On the memo line be sure to write "' . $touser->fname ." ". $touser->lname . ' - ' . $event["name"] . '".                        
+                <br /><br /><strong>Make payment by check or money order: </strong><br />Payable to: ' . stripslashes($event['payableto']) . '<br />' . stripslashes($event['checksaddress']) . '<br />On the memo line be sure to write "' . $touser->fname ." ". $touser->lname . ' - ' . $event["name"] . '".
                 <br /><br />
-                If you have any questions about this event, contact ' . $event["contact"] . ' at <a href="mailto:' . $event["email"] . '">' . $event["email"] . '</a>. 
+                If you have any questions about this event, contact ' . $event["contact"] . ' at <a href="mailto:' . $event["email"] . '">' . $event["email"] . '</a>.
                 <br />
-                We hope that you have enjoyed your time on the <strong>' . $CFG->sitename . ' </strong>website.                
+                We hope that you have enjoyed your time on the <strong>' . $CFG->sitename . ' </strong>website.
             ';
         }
     } else {
@@ -785,11 +785,11 @@ global $CFG;
                 <br /><br /><h3>Total Paid: $'.number_format($paid,2).'</h3><h3>Remaining Balance: $'.number_format($remaining,2).'</h3><br /><em>Note:This event requires payment in full to complete the registration process.  The above balances may not reflect recent changes.</em>
                 <br /><br /><strong>Registration ID:</strong><span style="color:#993300;"><strong> ' . $reg["code"] . '</strong></span>
                 '.(!empty($event["paypal"]) ? '<br /><br /><strong>Make payment online:</strong> <a href="'.$protocol.$CFG->wwwroot.'/features/events/events.php?action=pay&amp;i=!&amp;regcode='.$reg["code"].'">Make Payment</a>' : '').'
-                <br /><br /><strong>Make payment by check or money order: </strong><br />Payable to: ' . stripslashes($event['payableto']) . '<br />' . stripslashes($event['checksaddress']) . '<br />On the memo line be sure to write "' . $touser->fname ." ". $touser->lname . ' - ' . $event["name"] . '".                        
+                <br /><br /><strong>Make payment by check or money order: </strong><br />Payable to: ' . stripslashes($event['payableto']) . '<br />' . stripslashes($event['checksaddress']) . '<br />On the memo line be sure to write "' . $touser->fname ." ". $touser->lname . ' - ' . $event["name"] . '".
                 <br /><br />
-                If you have any questions about this event, contact ' . $event["contact"] . ' at <a href="mailto:' . $event["email"] . '">' . $event["email"] . '</a>. 
+                If you have any questions about this event, contact ' . $event["contact"] . ' at <a href="mailto:' . $event["email"] . '">' . $event["email"] . '</a>.
                 <br />
-                We hope that you have enjoyed your time on the <strong>' . $CFG->sitename . ' </strong>website.                
+                We hope that you have enjoyed your time on the <strong>' . $CFG->sitename . ' </strong>website.
             ';
         } else { // This event does NOT require payment
             $email .= '
@@ -798,9 +798,9 @@ global $CFG;
                 <br /><br />
                 <strong>Registration ID:</strong><span style="color:#993300;"><strong> ' . $reg["code"] . '</strong></span>
                 <br /><br />
-                If you have any questions about this event, contact ' . $event["contact"] . ' at <a href="mailto:' . $event["email"] . '">' . $event["email"] . '</a>. 
+                If you have any questions about this event, contact ' . $event["contact"] . ' at <a href="mailto:' . $event["email"] . '">' . $event["email"] . '</a>.
                 <br />
-                We hope that you have enjoyed your time on the <strong>' . $CFG->sitename . ' </strong>website.                
+                We hope that you have enjoyed your time on the <strong>' . $CFG->sitename . ' </strong>website.
             ';
         }
     }
@@ -811,13 +811,13 @@ global $CFG;
 function get_template_field_displayname($templateid,$fieldname){
     $template = get_db_row("SELECT * FROM events_templates WHERE template_id='$templateid'");
     if ($template["folder"] == "none") {
-        return get_db_field("display", "events_templates_forms", "elementid='$fieldname'");       
+        return get_db_field("display", "events_templates_forms", "elementid='$fieldname'");
     } else {
         $fields = explode(";",$template["formlist"]);
         foreach ($fields as $f) {
             $field = explode(":",$f);
             if ($field[0] == $fieldname) {
-                return $field[2]; 
+                return $field[2];
             }
         }
     }
@@ -834,13 +834,13 @@ global $CFG, $why;
         $limit = explode(":", $limits_array[$i]);
         $elementtype = $template["folder"] == "none" ? "elementid" : "elementname";
         $SQL = "SELECT * FROM events_registrations_values WHERE eventid='" . $event["eventid"] . "' AND $elementtype='" . $limit[0] . "' AND value" . make_limit_statement($limit[1], $limit[2], true);
-        if (get_db_row($SQL . "AND regid='$regid'")) { 
+        if (get_db_row($SQL . "AND regid='$regid'")) {
             $field_count = get_db_count($SQL);
             if($field_count > $limit[3]){ //if registration limit is reached
                 $displayname = get_template_field_displayname($template["template_id"],$limit[0]);
                 $why = "reached the limit of " . $limit[3] . " registrations where " . $displayname . make_limit_statement($limit[1], $limit[2], false);
                 return false;
-            }                
+            }
         }
         $i++;
     }
@@ -857,13 +857,13 @@ global $CFG, $why;
         $limit = explode(":", $limits_array[$i]);
         $elementtype = $template["folder"] == "none" ? "elementid" : "elementname";
         $SQL = "SELECT * FROM events_registrations_values WHERE eventid='" . $event["eventid"] . "' AND $elementtype='" . $limit[0] . "' AND value" . make_limit_statement($limit[1], $limit[2], true);
-        if(get_db_row($SQL . "AND regid='$regid'")){ 
+        if(get_db_row($SQL . "AND regid='$regid'")){
             $field_count = get_db_count($SQL);
             if($field_count > $limit[3]){ //if registration limit is reached
                 $displayname = get_template_field_displayname($template["template_id"],$limit[0]);
                 $why = "reached the limit of " . $limit[3] . " registrations where " . $displayname . make_limit_statement($limit[1], $limit[2], false);
                 return false;
-            }                
+            }
         }
         $i++;
     }
@@ -935,14 +935,14 @@ global $MYVARS, $CFG, $USER;
     $eventid = dbescape($MYVARS->GET['featureid']);
     $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
     delete_calendar_events($event);
-    
+
     if ($eventid) {
         execute_db_sql("DELETE FROM events WHERE eventid='$eventid'");
         execute_db_sql("DELETE FROM calendar_events WHERE eventid='$eventid'");
         execute_db_sql("DELETE FROM events_registrations WHERE eventid='$eventid'");
         execute_db_sql("DELETE FROM events_registrations_values WHERE eventid='$eventid'");
     }
-    
+
     //Log
     log_entry("event", $event["name"], "Deleted Event");
     echo "";
@@ -953,7 +953,7 @@ function refresh_calendar_events($eventid){
     $siteviewable = $event["confirmed"];
     $startdate = $event["event_begin_date"];
     $event_end_date = $event["event_end_date"];
-    
+
     delete_calendar_events($event); //Delete old calendar events
     $caleventid = "";
     while ($startdate <= $event_end_date) {
@@ -969,7 +969,7 @@ function refresh_calendar_events($eventid){
         $startdate += 86400; //Advance 1 day
     }
 
-    execute_db_sql("UPDATE events SET caleventid='$caleventid' WHERE eventid='$eventid'");               
+    execute_db_sql("UPDATE events SET caleventid='$caleventid' WHERE eventid='$eventid'");
 }
 
 //Confirms a site event
@@ -985,7 +985,7 @@ global $MYVARS, $CFG, $USER;
         //Set events to confirm then refresh
         execute_db_sql("UPDATE events SET confirmed='$confirm' WHERE eventid='$eventid'");
         refresh_calendar_events($eventid);
-    } else { //NO to site viewability 
+    } else { //NO to site viewability
         //Set events to confirm
         if($event["pageid"] == $CFG->SITEID){
             delete_calendar_events($event);
@@ -1112,7 +1112,7 @@ function get_my_hidden_limits($templateid, $hard_limits, $soft_limits){
     $returnme = "";
     if (empty($templateid)) { return $returnme; }
     $hidden_variable1 = $hidden_variable2 = "";
-    
+
     if (!empty($hard_limits)) { // There are some hard limits
         $limits_array = explode("*", $hard_limits);
         $i = 0;
@@ -1128,7 +1128,7 @@ function get_my_hidden_limits($templateid, $hard_limits, $soft_limits){
             $i++;
         }
     }
-    
+
     if (!empty($soft_limits)) { // There are some soft limits
         $limits_array = explode("*", $soft_limits);
         $i = 0;
@@ -1188,7 +1188,7 @@ function staff_status($staff) {
             $status[] =  "Background Check Out of Date";
         }
     }
-    return $status;    
+    return $status;
 }
 
 function print_status($status) {
@@ -1224,7 +1224,7 @@ global $USER, $CFG, $MYVARS;
                 $v["ar2selected"] = "selected";
             } elseif ($row["agerange"] == "2") {
                 $v["ar3selected"] = "selected";
-            }  
+            }
         } else {
             $time = get_timestamp();
             if (($time - $row['dateofbirth']) < (18 * 365 * 24 * 60 * 60)) { // Under 18
@@ -1234,7 +1234,7 @@ global $USER, $CFG, $MYVARS;
             } else {
                 $v["ar3selected"] = "selected";
             }
-        } 
+        }
     }
     $v["cocmembernoselected"] = empty($row) ? "" : ($row["cocmember"] == "0" ? "selected" : "");
     $v["cocmemberyesselected"] = empty($row) ? "" : ($row["cocmember"] == "1" ? "selected" : "");
@@ -1252,12 +1252,12 @@ global $USER, $CFG, $MYVARS;
     $v["q2_2noselected"] = empty($row) ? "" : ($row["q2_2"] == "0" ? "selected" : "");
     $v["q2_2yesselected"] = empty($row) ? "" : ($row["q2_2"] == "1" ? "selected" : "");
     $v["q2_3"] = empty($row) ? "" : $row["q2_3"];
-    
+
     $v["yestotal"] = empty($row) ? 0 : $row["q1_1"] + $row["q1_2"] + $row["q1_3"] + $row["q2_1"] + $row["q2_2"];
-    
+
     $v["parentalconsent"] = empty($row) ? "" : $row["parentalconsent"];
     $v["parentalconsentsig"] = empty($row) ? "" : ($row["parentalconsentsig"] == "on" ? "checked" : "");
-    
+
     $v["sub18display"] = empty($v["ar1selected"]) ? "display:none" : "";
     $v["workerconsent"] = empty($row) ? "" : $row["workerconsent"];
     $v["workerconsentsig"] = empty($row) ? "" : ($row["workerconsentsig"] == "on" && $viewonly  ? "checked" : "");
@@ -1274,7 +1274,7 @@ global $USER, $CFG, $MYVARS;
     $v["ref3name"] = empty($row) ? "" : $row["ref3name"];
     $v["ref3relationship"] = empty($row) ? "" : $row["ref3relationship"];
     $v["ref3phone"] = empty($row) ? "" : $row["ref3phone"];
-        
+
     return '<div class="formDiv" id="staffapplication_form_div">
             <div style="text-align:center">
             <h2>'.(!$viewonly ? 'Staff Application' : $v["name"] . ' Application').'</h2>
@@ -1294,14 +1294,14 @@ global $USER, $CFG, $MYVARS;
                     <div class="rowContainer">
         				<label class="rowTitle" for="dateofbirth">Date of Birth</label>
                         <input '.($viewonly ? 'disabled="disabled"' : '').'
-                            type="text" 
-                            id="dateofbirth" 
-                            name="dateofbirth" 
-                            value="'.$v["dateofbirth"].'" 
+                            type="text"
+                            id="dateofbirth"
+                            name="dateofbirth"
+                            value="'.$v["dateofbirth"].'"
                             data-rule-required="true"
-                            data-rule-custom="^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$" 
+                            data-rule-custom="^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$"
                             data-msg-custom="'.get_error_message('valid_staff_dateformat:events').'"
-                            data-rule-date="true" 
+                            data-rule-date="true"
                             onblur="
                                 var d = new Date($(this).val()).getTime() / 1000;
                                 if('.time().' - d < 567648000) {
@@ -1323,7 +1323,7 @@ global $USER, $CFG, $MYVARS;
                             data-rule-required="true"
                             data-rule-phone="true"
                             data-msg-required="'.get_error_message('valid_staff_phone:events').'"
-                            data-msg-phone="'.get_error_message('valid_staff_phone_invalid:events').'" 
+                            data-msg-phone="'.get_error_message('valid_staff_phone_invalid:events').'"
                         />
                         <div class="tooltipContainer info">'.get_help("input_staff_phone:events").'</div>
     				    <div class="spacer" style="clear: both;"></div>
@@ -1340,18 +1340,18 @@ global $USER, $CFG, $MYVARS;
                     <div class="rowContainer">
     					<label class="rowTitle" for="agerange">Age Range</label>
                         <select '.($viewonly ? 'disabled="disabled"' : '').'
-                            id="agerange" 
-                            name="agerange" 
-                            data-rule-required="true" 
+                            id="agerange"
+                            name="agerange"
+                            data-rule-required="true"
                             onchange="
-                                if ($(this).val() != 0) { 
-                                    $(\'#sub18\').hide(); 
-                                    $(\'#parentalconsent\').val(\'\'); 
+                                if ($(this).val() != 0) {
+                                    $(\'#sub18\').hide();
+                                    $(\'#parentalconsent\').val(\'\');
                                     $(\'#parentalconsent\').removeData(\'rule-required\').removeAttr(\'data-rule-required\');
                                     $(\'#parentalconsentsig\').prop(\'checked\', false);
-                                    $(\'#parentalconsentsig\').removeData(\'rule-required\').removeAttr(\'data-rule-required\'); 
-                                } 
-                                if ($(this).val() == 0) { 
+                                    $(\'#parentalconsentsig\').removeData(\'rule-required\').removeAttr(\'data-rule-required\');
+                                }
+                                if ($(this).val() == 0) {
                                     $(\'#parentalconsent\').val(\'\');
                                     $(\'#parentalconsentsig\').prop(\'checked\', false);
                                     $(\'#parentalconsent\').removeData(\'rule-required\').attr(\'data-rule-required\',\'true\');
@@ -1401,10 +1401,10 @@ global $USER, $CFG, $MYVARS;
     					<label class="rowTitle" for="q1_1">Been arrested for any reason?</label>
                         <select '.($viewonly ? 'disabled="disabled"' : '').'
                             onchange="
-                                if (($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0) { 
+                                if (($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0) {
                                     $(\'#q2_3\').attr(\'data-rule-required\', \'true\');
-                                } else { 
-                                    $(\'#q2_3\').removeData(\'rule-required\').removeAttr(\'data-rule-required\'); 
+                                } else {
+                                    $(\'#q2_3\').removeData(\'rule-required\').removeAttr(\'data-rule-required\');
                                 }
                             "
                             style="width:80px" id="q1_1" name="q1_1"
@@ -1620,7 +1620,7 @@ global $USER, $CFG, $MYVARS;
                     <div class="rowContainer">
         				<label class="rowTitle" for="workerconsentdate">Date</label>
                         <input '.($viewonly ? 'disabled="disabled"' : '').'
-                            type="text" id="workerconsentdate" name="workerconsentdate" value="'.$v["workerconsentdate"].'" 
+                            type="text" id="workerconsentdate" name="workerconsentdate" value="'.$v["workerconsentdate"].'"
                             data-rule-required="true"
                             data-rule-custom="^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$"
                             data-msg-custom="'.get_error_message('valid_staff_dateformat:events').'"
@@ -1673,7 +1673,7 @@ global $USER, $CFG, $MYVARS;
             				</div>
                         </div>
                     </div>
-                    '.($viewonly ? '' : '<input class="submit" name="submit" type="submit" onmouseover="this.focus();" value="Submit Application" />').'	
+                    '.($viewonly ? '' : '<input class="submit" name="submit" type="submit" onmouseover="this.focus();" value="Submit Application" />').'
     			</fieldset>
     		</form>
             '.keepalive().'
@@ -1760,7 +1760,7 @@ global $USER, $CFG;
     }
 
     if (!$listyes) {
-        return $returnme; 
+        return $returnme;
     }
 
     return "No other addable locations.";
@@ -1824,7 +1824,7 @@ global $CFG, $USER;
 
 function get_events_admin_contacts(){
     $contacts = get_db_result("SELECT DISTINCT CONCAT(contact,': ',email,': ',phone) as admin_contact FROM events WHERE confirmed=1 ORDER BY contact,eventid DESC");
-    
+
     $script = '
     <script type="text/javascript">
         function fill_admin_contacts(values){
@@ -1834,10 +1834,10 @@ function get_events_admin_contacts(){
             var phone = values[2].split("-");
             document.getElementById("phone_1").value = phone[0];
             document.getElementById("phone_2").value = phone[1];
-            document.getElementById("phone_3").value = phone[2]; 
+            document.getElementById("phone_3").value = phone[2];
         }
     </script>';
-    
+
     return $script.'<br /><table style="width:100%">
     	<tr>
     		<td class="field_title" style="width:115px;">
@@ -1847,12 +1847,12 @@ function get_events_admin_contacts(){
     			'.make_select("admin_contacts",$contacts,"admin_contact","admin_contact",false,"onchange='fill_admin_contacts(this.value)'",true).'
     		</td>
     	</tr><tr><td></td><td class="field_input"><span id="contact_error" class="error_text"></span></td></tr>
-    </table>';    
+    </table>';
 }
 
 function get_events_admin_payable(){
     $contacts = get_db_result("SELECT DISTINCT CONCAT(payableto,': ',checksaddress,': ',paypal) as admin_contact FROM events WHERE payableto!='' AND confirmed=1");
-    
+
     $script = '
     <script type="text/javascript">
         function fill_admin_payable(values){
@@ -1862,7 +1862,7 @@ function get_events_admin_payable(){
             document.getElementById("paypal").value = values[2];
         }
     </script>';
-    
+
     return $script.'<br /><table style="width:100%">
     	<tr>
     		<td class="field_title" style="width:115px;">
@@ -1872,8 +1872,8 @@ function get_events_admin_payable(){
     			'.make_select("admin_contacts",$contacts,"admin_contact","admin_contact",false,"onchange='fill_admin_payable(this.value)'",true).'
     		</td>
     	</tr><tr><td></td><td class="field_input"><span id="contact_error" class="error_text"></span></td></tr>
-    </table>';    
-} 
+    </table>';
+}
 
 function events_buttons($pageid, $featuretype, $featureid){
 global $CFG, $USER;
@@ -1912,9 +1912,9 @@ global $CFG;
         $facebook = new Facebook($config);
         $login_url = $facebook->getLoginUrl( array( 'scope' => 'publish_stream',
                            'redirect_uri' => $CFG->wwwroot . '/features/events/events_ajax.php?action=send_facebook_message&info='.base64_encode(serialize(array($eventid,$name,$keys))) ) );
-        return '<a title="Tell your friends about '.$name.'\'s registration for '.$event["name"].'!" href="' . $login_url . '" target="_blank"><img src="'.$CFG->wwwroot.'/images/facebook_button.png" /></a>';     
+        return '<a title="Tell your friends about '.$name.'\'s registration for '.$event["name"].'!" href="' . $login_url . '" target="_blank"><img src="'.$CFG->wwwroot.'/images/facebook_button.png" /></a>';
     }
-    
+
 }
 
 function events_adminpanel($pageid) {
