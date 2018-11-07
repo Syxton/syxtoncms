@@ -12,19 +12,27 @@ $USERLIB = true;
 
 function random_quote(){
 global $CFG;
-	$quote = $author = "";
     $returnme = '<div id="carousel"  data-flickity=\'{ "autoPlay": 10000, "pageDots": false, "imagesLoaded": true, "percentPosition": false, "wrapAround": true }\'>';
-	if ($result = get_db_result("SELECT quote, author FROM quotes ORDER BY RAND() LIMIT 0,4")) {
+
+    if (!$img = randomimages("images/carousel/")) { return ''; } // No carousel if no images are found.
+
+    $count = count($img) >= 5 ? 5 : count($img); // Images found, find out how many.
+
+    // Get enough quotes to add to the images.
+    if ($result = get_db_result("SELECT quote, author FROM quotes ORDER BY RAND() LIMIT 0, $count")) {
         while($row = fetch_row($result)) {
-            if($row['quote'] != ""){ $quote = '<div>'.$row['quote'].'</div>';}
-        	if($row['author'] != ""){ $author = '<br /><div style="float:right;">-- '.$row['author'].'</div>';}
-            if (!$img = randomimages("images/carousel/")) {
-                return '';
-            }
+            // Set quotes and authors.
+            $quote = empty($row['quote']) ? '' : '<div>'.$row['quote'].'</div>';
+            $author = empty($row['author']) ? '' : '<br /><div style="float:right;">-- '.$row['author'].'</div>';
+
+            // Get random image index from $img array.
+            $randindex = array_rand($img);
             $returnme .= "<div class='carousel-cell'>" .
-                            "<div><img class='carouselslides' src='$img' /></div>" .
+                            "<div><img class='carouselslides' src='".$img[$randindex]."' /></div>" .
                             "<div class='carouselquotes'>" . $quote . $author . "</div>" .
                          "</div>";
+            // Unset the random image so it can't be used twice.
+            unset($img[$randindex]);
         }
     }
     return $returnme . '</div>';
@@ -33,8 +41,7 @@ global $CFG;
 function randomimages($dir) {
     $images = glob($dir . '*.{jpg,jpeg,png,gif}', GLOB_BRACE);
     if (empty(count($images))) { return false; }
-    $randomImage = $images[array_rand($images)];
-    return $randomImage;
+    return $images;
 }
 
 function load_user_cookie(){
