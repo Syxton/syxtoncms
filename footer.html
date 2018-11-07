@@ -9,6 +9,13 @@
 
         <script type="text/javascript">
         $(function() {
+            $(function() {
+                $('#pagenav li').hover(
+                       function(){ $(this).addClass('sfhover') },
+                       function(){ $(this).removeClass('sfhover') }
+                )
+            });
+
             $( ".pagesort1, .pagesort2" ).sortable({
                 connectWith: ".connectedSortable",
                 items: ".box",
@@ -60,7 +67,7 @@
             });
 
             adjustStyle($(this).width());
-          });
+        });
         </script>
 </div>
 </body>

@@ -909,7 +909,11 @@ text-decoration:none;
         float: left !important;
     }
 
-	nav ul, nav:active ul {
+    .logo_nav #logo_div {
+        padding-bottom: 0px !important;
+    }
+
+	.nav ul, .nav:active ul {
 		display: none;
         margin: 0 !important;
 		padding: 0 !important;
@@ -920,22 +924,22 @@ text-decoration:none;
         z-index: 99999;
 	}
 
-    .logo_nav nav {
+    .logo_nav .nav {
         float: none !important;
     }
 
-	nav li {
+	.nav li {
 		text-align: center;
 		width: 100%;
         font-weight: bolder;
         font-size: 1.5em;
 	}
 
-	nav:hover ul {
+	.nav:hover ul {
 		display: block;
 	}
 
-    nav:hover ul li ul {
+    .nav:hover ul li ul {
         left: initial;
         visibility: visible;
         display: block;
@@ -984,27 +988,36 @@ text-decoration:none;
     clear: both;
 }
 
-.logo_nav header {
+.logo_nav .nav_header {
 	background: #fff;
 	top: 0;
 	left: 0;
 	z-index: 100;
+    text-align: center;
+}
+
+.logo_nav #logo_div {
+    text-align: center;
+    padding-bottom: 20px;
+}
+
+.logo_nav #logo_div a {
+    display: inline-block;
+    vertical-align: middle;
 }
 
 .logo_nav #logo {
 	float: none;
 	max-height: 100px;
 	display: block;
-    margin: auto;
 }
 
-.logo_nav nav {
-    width: 100%;
-    float: left;
+.logo_nav .nav {
     font-weight: bold;
-    margin: 5px;
+    margin: 5px 0px;
     text-align: center;
     text-transform: uppercase;
+    display: inline-block;
 }
 
 .logo_nav .navtabs li {
@@ -1058,7 +1071,6 @@ text-decoration:none;
 
 .logo_nav li:hover,
 .logo_nav li:focus-within {
-    background: red;
     cursor: pointer;
 }
 
@@ -1076,13 +1088,10 @@ text-decoration:none;
     white-space: nowrap;
 }
 
-.logo_nav ul li:hover > ul,
-.logo_nav ul li:focus-within > ul,
-.logo_nav ul li ul:hover,
-.logo_nav ul li ul:focus {
-  visibility: visible;
-  opacity: 1;
-  display: block
+.logo_nav ul li.sfhover > ul {
+    visibility: visible;
+    opacity: 1;
+    display: block;
 }
 
 .logo_nav ul li ul li {
