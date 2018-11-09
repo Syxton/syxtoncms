@@ -129,17 +129,17 @@ function get_editor_plugins($type){
     switch ($type){
     case "Default":
         $set = '"autolink image lists link responsivefilemanager charmap preview hr anchor pagebreak",
-                "searchreplace wordcount visualblocks visualchars code fullscreen",
+                "searchreplace wordcount visualblocks visualchars code fullscreen textcolor",
                 "insertdatetime media nonbreaking paste table contextmenu directionality"';
         break;
     case "News":
         $set = '"autolink image lists link responsivefilemanager charmap preview hr anchor pagebreak",
-                "searchreplace wordcount visualblocks visualchars code fullscreen",
+                "searchreplace wordcount visualblocks visualchars code fullscreen textcolor",
                 "insertdatetime media nonbreaking paste table contextmenu directionality"';
         break;
     case "HTML":
         $set = '"autolink image lists link responsivefilemanager charmap preview hr anchor pagebreak",
-                "searchreplace wordcount visualblocks visualchars code fullscreen",
+                "searchreplace wordcount visualblocks visualchars code fullscreen textcolor",
                 "insertdatetime media nonbreaking paste table contextmenu directionality"';
         break;
     case "Basic":
@@ -162,13 +162,13 @@ return $set;
 function get_editor_toolbar($type){
     switch ($type){
     case "Default":
-        $set = "insertfile undo redo | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image";
+        $set = "insertfile undo redo | formatselect | bold italic strikethrough forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image";
         break;
     case "News":
-        $set = "insertfile undo redo | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image";
+        $set = "insertfile undo redo | formatselect | bold italic strikethrough forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image";
         break;
     case "HTML":
-        $set = "insertfile undo redo | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image";
+        $set = "insertfile undo redo | formatselect | bold italic strikethrough forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image";
         break;
     case "Basic":
         $set = "undo redo bold italic | alignleft aligncenter alignright alignjustify link image";
