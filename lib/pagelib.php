@@ -537,7 +537,7 @@ global $CFG, $USER, $PAGE;
         }
 	}
 
-    if(is_logged_in()){ //Members list visible only if logged in
+    if(is_logged_in() && is_siteadmin($USER->userid)){ // Members list visible only if logged in admin
         $returnme .= '<li>'.make_modal_links(array("title"=> "Members List","path"=>$CFG->wwwroot."/pages/page.php?action=browse&amp;section=users&amp;userid=$USER->userid","iframe"=>"true","width"=>"640","height"=>"623","confirmexit"=>"true")).'</li>';
     }
 

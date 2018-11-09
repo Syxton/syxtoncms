@@ -96,7 +96,7 @@ global $CFG, $USER, $ROLES;
 function get_staff_application_button(){
 global $CFG;
 $returnme = '';
-    if(is_logged_in()){ //Members list visible only if logged in
+    if(is_logged_in()){ // Staff Apply visible only if logged in
         $menuitem = '<li>'.make_modal_links(array("title"=> "Staff Apply","path"=>$CFG->wwwroot."/features/events/events.php?action=staff_application","validate"=>"true","width"=>"600","height"=>"650")).'</li>';
         $returnme .= '
         <script>
@@ -135,10 +135,8 @@ global $CFG, $USER, $ROLES;
     $site = $pageid == $CFG->SITEID ? "((e.pageid != $pageid AND siteviewable=1) OR (e.pageid = $pageid))" : "e.pageid = $pageid";
 
     if (is_logged_in()) {
-        if (get_db_row("SELECT eventid FROM events WHERE workers=1 AND event_begin_date > " .time())) {
-            if(user_has_ability_in_page($USER->userid, "staffapply", $pageid, "events", $featureid)){
-                $content .= get_staff_application_button($featureid,$pageid);
-            }
+        if(user_has_ability_in_page($USER->userid, "staffapply", $pageid, "events", $featureid)){
+            $content .= get_staff_application_button($featureid,$pageid);
         }
         if (user_has_ability_in_page($USER->userid, "viewevents", $pageid, "events", $featureid)) {
             $canview = true;
