@@ -456,7 +456,7 @@ global $CFG, $USER;
     $time = get_timestamp();
     date_default_timezone_set("UTC");
     $siteviewable = $pageid == $CFG->SITEID ? " OR siteviewable = '1' AND confirmed = '1'" : "";
-    $SQL = "SELECT e.* FROM events e WHERE (e.pageid='$pageid' $siteviewable) AND e.start_reg < '$time' AND e.stop_reg > '($time - 86400)' AND (e.max_users=0 OR (e.max_users != 0 AND e.max_users > (SELECT COUNT(*) FROM events_registrations er WHERE er.eventid=e.eventid AND verified='1'))) ORDER BY e.event_begin_date, e.event_begin_time";
+    $SQL = "SELECT e.* FROM events e WHERE (e.pageid='$pageid' $siteviewable) AND e.start_reg < $time AND e.stop_reg > ($time - 86400) AND (e.max_users=0 OR (e.max_users != 0 AND e.max_users > (SELECT COUNT(*) FROM events_registrations er WHERE er.eventid=e.eventid AND verified='1'))) ORDER BY e.event_begin_date, e.event_begin_time";
     if($events = get_db_result($SQL)) {
         while($event = fetch_row($events)){
             $returnme .= '<table style="width:100%;background-color:#edfafa;border-bottom:1px gray inset; margin:1px;">
