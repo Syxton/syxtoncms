@@ -67,7 +67,7 @@ global $CFG, $MYVARS, $USER, $ROLES;
 
 function browse_users(){
 global $CFG, $MYVARS, $USER, $ROLES;
-    echo '<form onsubmit="document.getElementById(\'loading_overlay_usersearch\').style.visibility=\'visible\';ajaxapi(\'/ajax/page_ajax.php\',\'usersearch\',\'&searchwords=\'+escape(document.getElementById(\'searchbox\').value),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer_usersearch\'); document.getElementById(\'loading_overlay_usersearch\').style.visibility=\'hidden\'; }},true); return false;"><p> 
+    echo '<form onsubmit="document.getElementById(\'loading_overlay_usersearch\').style.visibility=\'visible\';ajaxapi(\'/ajax/page_ajax.php\',\'usersearch\',\'&searchwords=\'+escape(document.getElementById(\'searchbox\').value),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer_usersearch\'); document.getElementById(\'loading_overlay_usersearch\').style.visibility=\'hidden\'; }},true); return false;"><p>
 		Search for users by either their name or thier email address.  If you want to invite a user into your page, click the <img src="' . $CFG->wwwroot . '/images/mail.gif" title=Request" alt="Request"> icon beside their name, then select the page you would like to invite them to.
 		</p>
 		Search <input type="text" id="searchbox" name="searchbox" />&nbsp;<input type="submit" value="Search" />
@@ -77,15 +77,15 @@ global $CFG, $MYVARS, $USER, $ROLES;
 function browse_categories(){
 global $CFG, $MYVARS, $USER, $ROLES;
     $SQL = '
-	SELECT * FROM pages p 
-		WHERE 
+	SELECT * FROM pages p
+		WHERE
 		(
 			(
 			p.opendoorpolicy = 1
 			OR
 			p.siteviewable = 1
 			)
-		AND 
+		AND
 		menu_page != 1
 		)
 		AND
@@ -140,7 +140,7 @@ function browse_keywords(){
 
 function create_edit_page(){
 global $CFG, $MYVARS, $ROLES, $USER;
-    	
+
 	if(!isset($VALIDATELIB)){ include_once($CFG->dirroot . '/lib/validatelib.php'); }
     $content = '';
     $admin = is_siteadmin($USER->userid) ? true : false;
@@ -172,37 +172,37 @@ global $CFG, $MYVARS, $ROLES, $USER;
             $content .= get_error_message("generic_permissions");
             return;
         }
-        
+
         $menu_no = $menu_yes = $hide_no = $hide_yes = $global_yes = $global_no = $open_yes = $open_no = $name = $description = $keywords = "";
         $role_selected = 4;
         $menu_page = 0;
         $hidefromvisitors = 0;
     }
-    
+
     if (isset($MYVARS->GET["pageid"])){
     	$content .= create_validation_script("create_page_form" , 'ajaxapi(\'/ajax/page_ajax.php\',\'edit_page\',\'&name=\' + escape(document.getElementById(\'name\').value) + \'&description=\' + escape(document.getElementById(\'summary\').value) + \'&keywords=\' + escape(document.getElementById(\'keywords\').value) + \'&defaultrole=\' + document.getElementById(\'role_select\').value + \'&opendoor=\' + document.getElementById(\'opendoor\').value + \'&siteviewable=\' + document.getElementById(\'siteviewable\').value + \'&menu_page=\' + document.getElementById(\'menu_page\').value + \'&hidefromvisitors=\' + document.getElementById(\'hidefromvisitors\').value + \'&pageid=' . $MYVARS->GET["pageid"] . '\',function() { close_modal(); });');
     }else{
-    	$content .= create_validation_script("create_page_form" , 'ajaxapi(\'/ajax/page_ajax.php\',\'create_page\',\'&name=\' + escape(document.getElementById(\'name\').value) + \'&description=\' + escape(document.getElementById(\'summary\').value) + \'&keywords=\' + document.getElementById(\'keywords\').value + \'&defaultrole=\' + document.getElementById(\'role_select\').value + \'&opendoor=\' + document.getElementById(\'opendoor\').value + \'&siteviewable=\' + document.getElementById(\'siteviewable\').value + \'&menu_page=\' + document.getElementById(\'menu_page\').value + \'&hidefromvisitors=\' + document.getElementById(\'hidefromvisitors\').value,function() { create_page_display();});');	
+    	$content .= create_validation_script("create_page_form" , 'ajaxapi(\'/ajax/page_ajax.php\',\'create_page\',\'&name=\' + escape(document.getElementById(\'name\').value) + \'&description=\' + escape(document.getElementById(\'summary\').value) + \'&keywords=\' + document.getElementById(\'keywords\').value + \'&defaultrole=\' + document.getElementById(\'role_select\').value + \'&opendoor=\' + document.getElementById(\'opendoor\').value + \'&siteviewable=\' + document.getElementById(\'siteviewable\').value + \'&menu_page=\' + document.getElementById(\'menu_page\').value + \'&hidefromvisitors=\' + document.getElementById(\'hidefromvisitors\').value,function() { create_page_display();});');
     }
 
     $SQL = 'SELECT * FROM roles WHERE roleid > "' . $ROLES->creator . '" AND roleid < "'.$ROLES->none.'" ORDER BY roleid DESC';
     $roles = get_db_result($SQL);
 
-    $content .= '                    
+    $content .= '
     <div class="formDiv" id="create_page_div">
     	<form id="create_page_form">
     		<fieldset class="formContainer">
     			<div class="rowContainer">
-    				<label class="rowTitle" for="name">Page Name</label><input type="text" id="name" name="name" data-rule-required="true" value="'.$name.'" /><div class="tooltipContainer info">'.get_help("input_page_name").'</div>
+    				<label class="rowTitle" for="name">Page Name</label><input type="text" id="name" name="name" data-rule-required="true" data-rule-maxlength="50" value="'.$name.'" /><div class="tooltipContainer info">'.get_help("input_page_name").'</div>
                     <div class="spacer" style="clear: both;"></div>
                 </div>
     			<div class="rowContainer">
-    				<label class="rowTitle" for="keywords">Page Keywords</label><textarea id="keywords" name="keywords" cols="28" rows="2" data-rule-required="true" >' . $keywords . '</textarea><div class="tooltipContainer info">'.get_help("input_page_tags").'</div>
+    				<label class="rowTitle" for="keywords">Page Keywords</label><textarea id="keywords" name="keywords" cols="28" rows="2" data-rule-required="true" data-rule-maxlength="255">' . $keywords . '</textarea><div class="tooltipContainer info">'.get_help("input_page_tags").'</div>
                     <div class="spacer" style="clear: both;"></div>
-                </div>			
+                </div>
     			<div class="rowContainer">
     				<label class="rowTitle" for="description">Page Description</label>
-                    <textarea id="summary" name="summary" cols="28" rows="4" data-rule-required="true">' . stripslashes($description) . '</textarea>
+                    <textarea id="summary" name="summary" cols="28" rows="4" data-rule-required="true" data-rule-maxlength="255">' . stripslashes($description) . '</textarea>
                     <div class="tooltipContainer info">'.get_help("input_page_summary").'</div><div class="spacer" style="clear: both;"></div>
     			</div>
     			<div class="rowContainer">
@@ -218,7 +218,7 @@ global $CFG, $MYVARS, $ROLES, $USER;
                 	</select>
                 	<div class="tooltipContainer info">'.get_help("input_page_opendoor").'</div>
                     <div class="spacer" style="clear: both;"></div>
-                </div>	
+                </div>
                 <div class="rowContainer">
                 	<label class="rowTitle" for="siteviewable">Site viewable</label>
                 	<select name="siteviewable" id="siteviewable">
@@ -251,13 +251,13 @@ global $CFG, $MYVARS, $ROLES, $USER;
     }else{
         $content .= '<input type="hidden" id="menu_page" name="menu_page" value="' . $menu_page . '" /><input type="hidden" id="hidefromvisitors" name="hidefromvisitors" value="' . $hidefromvisitors . '" />';
     }
- 			
+
     if(isset($MYVARS->GET["pageid"])){
     	$content .= '<input class="submit" name="submit" type="submit" value="Submit Changes" />';
     } else {
     	$content .= '<input class="submit" name="submit" type="submit"value="Create Page" />';
-    }		
- 
+    }
+
     $content .= '</fieldset>
     	</form>
     </div>';
@@ -273,7 +273,7 @@ global $CFG, $MYVARS, $ROLES, $USER;
         $content .= get_error_message("generic_permissions");
         return;
     }
-    
+
     $content .= '
 		<div id="links_editor" style="width:99%;height:93%;border-color:buttonface; border-style:dotted; padding: 10px 0px 10px 0px;">
 		<table>

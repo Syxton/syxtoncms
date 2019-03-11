@@ -10,7 +10,7 @@
 include ('header.php');
 update_user_cookie();
 
-$CFG->sitesearch = new stdClass(); 
+$CFG->sitesearch = new stdClass();
 $CFG->sitesearch->perpage = 8;
 
 callfunction();
@@ -25,7 +25,7 @@ global $CFG, $MYVARS;
     $siteviewable = $MYVARS->GET["siteviewable"];
     $menu_page = $MYVARS->GET["menu_page"];
     $hidefromvisitors = $MYVARS->GET["hidefromvisitors"];
-    $shortname = strtolower(str_replace(" ", "", $name));
+    $shortname = substr(strtolower(preg_replace("/[^A-Za-z0-9 ]/", '', $name)), 20);
     $pageid = $MYVARS->GET["pageid"];
 
     $SQL = "UPDATE pages SET description='$description', name='$name', short_name='$shortname', keywords='$keywords', siteviewable='$siteviewable', menu_page='$menu_page', default_role='$defaultrole', opendoorpolicy='$opendoor' WHERE pageid=$pageid";
@@ -148,7 +148,7 @@ global $CFG, $MYVARS, $USER;
                     $linkclose = "</a>";
                 }
             }
-            $body .= '<tr style="height:30px;border:3px solid white;font-size:.9em;"><td style="width:30%;padding:5px;font-size:.85em;white-space:nowrap;">' . $linkopen . substr($page["name"], 0, 30) . $linkclose . '</td><td style="width:60%;padding:5px;font-size:.75em;">' . substr($page["description"], 0, 50) . '</td><td style="text-align:right;padding:5px;">' . $add_remove . '</td></tr>';                      
+            $body .= '<tr style="height:30px;border:3px solid white;font-size:.9em;"><td style="width:30%;padding:5px;font-size:.85em;white-space:nowrap;">' . $linkopen . substr($page["name"], 0, 30) . $linkclose . '</td><td style="width:60%;padding:5px;font-size:.75em;">' . substr($page["description"], 0, 50) . '</td><td style="text-align:right;padding:5px;">' . $add_remove . '</td></tr>';
         }
         $body .= "</table>";
     }else{
@@ -240,7 +240,7 @@ global $MYVARS, $CFG, $USER;
     $i = 0;
     if($links = get_db_result("SELECT * FROM pages_links WHERE hostpageid=$pageid ORDER BY sort")){
         $returnme = "<br />
-		Reorder the links how you would like them to be displayed in this page.  Change the link names and save them by selecting the \"Save\" button 
+		Reorder the links how you would like them to be displayed in this page.  Change the link names and save them by selecting the \"Save\" button
     	that appears beside it.  Changing a links position also saves a name change to that link.
     	<br /><br />
     	<div style='overflow:hidden;font:13.3px sans-serif;width:31em;border-left:1px solid #808080;border-top:1px solid #808080;border-bottom:1px solid #fff; border-right:1px solid #fff;margin:auto;'>
@@ -396,7 +396,7 @@ global $CFG, $MYVARS;
     $invitee = $MYVARS->GET["invitee"];
     $pages = user_has_ability_in_pages($inviter, "invite", false, false); //list pages you have invite permissions in
     $notthese = user_has_ability_in_pages($invitee, "viewpages", false, false); //remove pages that the user already has access to
-    
+
     echo make_select("page_invite_list", $pages, "pageid", "name", null, 'onchange="if($(\'#page_invite_list\').val() != \'\' && confirm(\'Do you wish to send an invitation to this user?\')){  ajaxapi(\'/ajax/page_ajax.php\',\'invite_user\',\'&pageid=\'+$(\'#page_invite_list\').val()+\'&userid=' . $invitee . '\',function() { simple_display(\'pagelist_' . $invitee . '\'); });  }else{  ajaxapi(\'/ajax/site_ajax.php\',\'donothing\',\'\',function() { simple_display(\'pagelist_' . $invitee . '\'); }) }"', true, 1 , "width:150px;","",$notthese);
 }
 
