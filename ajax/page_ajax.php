@@ -25,7 +25,7 @@ global $CFG, $MYVARS;
     $siteviewable = $MYVARS->GET["siteviewable"];
     $menu_page = $MYVARS->GET["menu_page"];
     $hidefromvisitors = $MYVARS->GET["hidefromvisitors"];
-    $shortname = substr(strtolower(preg_replace("/[^A-Za-z0-9 ]/", '', $name)), 0, 20);
+    $shortname = substr(strtolower(preg_replace("/\W|_/", '', $name)), 0, 20);
     $pageid = $MYVARS->GET["pageid"];
 
     $SQL = "UPDATE pages SET description='$description', name='$name', short_name='$shortname', keywords='$keywords', siteviewable='$siteviewable', menu_page='$menu_page', default_role='$defaultrole', opendoorpolicy='$opendoor' WHERE pageid=$pageid";
