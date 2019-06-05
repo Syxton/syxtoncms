@@ -1,5 +1,5 @@
 function get_coordinates(ip, divname) {
-    var url = "//freegeoip.net/json/" + ip;
+    var url = "//extreme-ip-lookup.com/json/" + ip;
     $.ajax({
       jsonpCallback: 'jsonCallback',
       contentType: "application/json",
