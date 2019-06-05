@@ -164,7 +164,7 @@ global $CFG,$MYVARS,$USER;
         }
         $max = 100;
     }
-error_log(print_r($data, true));
+
     return extendedEncode($data, $max) . "&chxr=0,1,".(date('t',$date)+1).",1|1,0,$max";
 }
 
