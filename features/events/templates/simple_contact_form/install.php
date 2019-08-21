@@ -12,7 +12,7 @@ $templatefolder = 'simple_contact_form';
 $registrant_name = 'Name';
 $orderbyfield = 'Name';
 
-$formlist = '
+$formlist = "
 Name:Info:Name;
 Name_First:Info:First Name;
 Name_Last:Info:Last Name;
@@ -23,8 +23,12 @@ Address_State:Info:State;
 Address_Zipcode:Info:Zipcode;
 Phone:Info:Phone;
 Overnight:Info:Overnight;
+Gender:Info:Gender;
 total_owed:Pay:Amount Owed;
-paid:Pay:Amount Paid';
+paid:Pay:Amount Paid";
+
+// Format it for db;
+$formlist = str_replace(array("\r", "\n", "\t"), '', $formlist);
 
 // If it is already installed, don't install it again.
 if (!get_db_row("SELECT * FROM events_templates WHERE name = '$templatename'")) {
@@ -34,15 +38,15 @@ if (!get_db_row("SELECT * FROM events_templates WHERE name = '$templatename'")) 
     // Uninstall the father's day template
     $SQL = "DELETE FROM events_templates WHERE folder = 'father_coaching_weekend'";
 	execute_db_sql($SQL);
-    
+
 	$SQL = "INSERT INTO events_templates
 	(name, folder, formlist, registrant_name, orderbyfield, settings)
-	VALUES 
-	('$templatename','$templatefolder','".str_replace(array("\r", "\n", "\t"), '', $formlist)."', '$registrant_name', '$orderbyfield', '$settings')";
+	VALUES
+	('$templatename','$templatefolder','$formlist', '$registrant_name', '$orderbyfield', '$settings')";
 
 	execute_db_sql($SQL);
 } else { // Update event template.
-    $version = get_db_field("setting","settings","setting_name='version' AND type='events_template' AND extra='$templatefolder'");	
+    $version = get_db_field("setting","settings","setting_name='version' AND type='events_template' AND extra='$templatefolder'");
 
 	$thisversion = 2018031200;
 	if ($version < $thisversion) {
@@ -55,6 +59,13 @@ if (!get_db_row("SELECT * FROM events_templates WHERE name = '$templatename'")) 
 	   if(execute_db_sql($SQL)){ // If successful upgrade.
 	       execute_db_sql("INSERT INTO settings (type,pageid,featureid,setting_name,setting,extra) VALUES('events_template', 0, 0, 'version', '$thisversion', '$templatefolder')");
 	   }
+	}
+
+    $thisversion = 2018082101;
+	if ($version < $thisversion) {
+       $SQL = "UPDATE events_templates SET formlist = '$formlist' WHERE folder='$templatefolder'";
+
+	   execute_db_sql($SQL);
 	}
 }
 ?>

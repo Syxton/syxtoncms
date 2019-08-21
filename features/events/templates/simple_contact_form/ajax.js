@@ -4,7 +4,7 @@ function submit_simple_contact_form_registration(){
     //Hide form during validation
     document.form1.style.display = 'none';
     var reqstring = create_request_string('form1');
-    ajaxapi("/features/events/templates/" + folder + "/backend.php",'register',reqstring,function(){ $("#camp").html(""); simple_display('registration_div'); document.form1.style.display = 'block'; });
+    ajaxapi("/features/events/templates/" + folder + "/backend.php",'register',reqstring,function(){ $("#camp").html(""); simple_display('registration_div');});
 }
 
 function show_form_again(eventid, regid, autofill){

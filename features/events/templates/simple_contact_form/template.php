@@ -54,7 +54,7 @@ echo '<form name="form1" id="form1">
             <input type="hidden" name="paid" value="0" />
             <input type="hidden" name="total_owed" id="total_owed" value="'.$total_owed.'" />
             <input type="hidden" name="items" id="items" value="'.$items.'" />';
-                 
+
 // Get full event info.
 $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
 echo '<div style="font-size:15px;text-align:center;font-weight:bold">Online Registration</div>
@@ -96,15 +96,15 @@ if ($autofill) {
 			<div class="rowContainer">
 				<label class="rowTitle" for="Address_Line1">Mailing Address Line One *</label><input tabindex="9" type="text" id="Address_Line1" name="Address_Line1" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("help_address:events:templates/simple_contact_form").'</div>
                 <div class="spacer" style="clear: both;"></div>
-			</div>            
+			</div>
 			<div class="rowContainer">
 				<label class="rowTitle" for="Address_Line2">Mailing Address Line Two</label><input tabindex="10" type="text" id="Address_Line2" name="Address_Line2" /><div class="tooltipContainer info">'.get_help("help_address:events:templates/simple_contact_form").'</div>
                 <div class="spacer" style="clear: both;"></div>
-			</div>         
+			</div>
 			<div class="rowContainer">
 				<label class="rowTitle" for="Address_City">City *</label><input tabindex="11" type="text" id="Address_City" name="Address_City" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">'.get_help("help_city:events:templates/simple_contact_form").'</div>
                 <div class="spacer" style="clear: both;"></div>
-			</div>             
+			</div>
 			<div class="rowContainer">
 				<label class="rowTitle" for="Address_State">State *</label>
                 <select tabindex="12" id="Address_State" name="Address_State" data-rule-required="true">
@@ -162,11 +162,11 @@ if ($autofill) {
                 </select>
                 <div class="tooltipContainer info">'.get_help("help_state:events:templates/simple_contact_form").'</div>
                 <div class="spacer" style="clear: both;"></div>
-			</div>             
+			</div>
             <div class="rowContainer">
                 <label class="rowTitle" for="Address_Zipcode">Zipcode *</label><input tabindex="13" type="text" size="5" maxlength="5" id="Address_Zipcode" name="Address_Zipcode" data-rule-required="true" data-rule-number="true" data-rule-minlength="5" /><div class="tooltipContainer info">'.get_help("help_zip:events:templates/simple_contact_form").'</div>
                 <div class="spacer" style="clear: both;"></div>
-            </div>            
+            </div>
             <div class="rowContainer">
                 <label class="rowTitle" for="Phone">Phone *</label><input tabindex="14" type="text" maxlength="22" id="Phone" name="Phone" data-rule-phone="true" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("help_phone:events:templates/simple_contact_form").'</div>
                 <div class="spacer" style="clear: both;"></div>
@@ -176,6 +176,7 @@ if ($autofill) {
             $overnight = empty($overnight) ? false : true;
             if (!$overnight) {
                 echo '<input type="hidden" id="Overnight" name="Overnight" value="No" />';
+                echo '<input type="hidden" id="Gender" name="Gender" value="No" />';
             } else {
                 echo '
                 <div class="rowContainer">
@@ -186,6 +187,16 @@ if ($autofill) {
                         <option value="No">No</option>
                     </select>
                     <div class="tooltipContainer info">'.get_help("help_overnight:events:templates/simple_contact_form").'</div>
+                    <div class="spacer" style="clear: both;"></div>
+                </div>
+                <div class="rowContainer">
+                    <label class="rowTitle" for="Gender">Gender *</label>
+                    <select tabindex="6" id="Gender" name="Gender" data-rule-required="true">
+                        <option value="">Select One...</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                    <div class="tooltipContainer info">'.get_help("help_gender:events:templates/simple_contact_form").'</div>
                     <div class="spacer" style="clear: both;"></div>
                 </div>';
             }
