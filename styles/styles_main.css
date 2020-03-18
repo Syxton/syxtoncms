@@ -894,64 +894,6 @@ padding-bottom:0px;
 .shadetabs li a.selected:hover { /*selected main tab style */
 text-decoration:none;
 }
-@media only screen and (max-width : 640px) {
-	.logo_nav #menu-icon {
-    	display:inline-block !important;
-        position: absolute;
-        right: 0;
-        top: 0;
-        max-width: 40px;
-        max-height: 40px;
-        width: 8%;
-	}
-
-    .logo_nav #logo {
-        float: left !important;
-    }
-
-    .logo_nav #logo_div {
-        padding-bottom: 0px !important;
-    }
-
-	.nav ul, .nav:active ul {
-		display: none;
-        margin: 0 !important;
-		padding: 0 !important;
-		background: #fff !important;
-		right: 0 !important;
-        top: 100px !important;
-		width: 100% !important;
-        z-index: 99999;
-	}
-
-    .logo_nav .nav {
-        float: none !important;
-    }
-
-	.nav li {
-		text-align: center;
-		width: 100%;
-        font-weight: bolder;
-        font-size: 1.5em;
-	}
-
-	.nav:hover ul {
-		display: block;
-	}
-
-    .nav:hover ul li ul {
-        left: initial;
-        visibility: visible;
-        display: block;
-        opacity: initial;
-        position: relative !important;
-        top: 0 !important;
-        font-size: .6rem;
-        border: none !important;
-        font-weight: initial;
-    }
-}
-
 .carousel-cell {
   width: 100%; /* full width */
   height: 400px;
@@ -986,6 +928,7 @@ text-decoration:none;
 
 .logo_nav #carousel {
     clear: both;
+    border: 2px solid black;
 }
 
 .logo_nav .nav_header {
@@ -1010,6 +953,15 @@ text-decoration:none;
 	float: none;
 	max-height: 100px;
 	display: block;
+    max-width: 85vw;
+    font-size: 7vw;
+    font-weight: bold;
+}
+
+.logo_nav #logosmall {
+	float: none;
+    display: none;
+	max-height: 200px;
 }
 
 .logo_nav .nav {
@@ -1026,6 +978,9 @@ text-decoration:none;
 }
 
 .logo_nav  #menu-icon {
+    width: 40px;
+    height: 40px;
+    background: center / contain url('../images/menu-icon.png') no-repeat;
 	display: none;
 }
 
@@ -1434,4 +1389,70 @@ transition:border .25s,left .15s .25s,right .25s .175s;
 
 input[type="image"]{
 box-shadow: none;
+}
+
+@media only screen and (max-width : 640px) {
+	.logo_nav #menu-icon {
+    	display:inline-block !important;
+        position: absolute;
+        right: 0;
+        top: 0;
+        max-width: 40px;
+        max-height: 40px;
+        width: 8%;
+	}
+
+    #logosmall + #logo {
+        display: none;
+    }
+
+    #logosmall {
+        display: block !important;
+    }
+
+    .logo_nav #logo {
+        float: left !important;
+    }
+
+    .logo_nav #logo_div {
+        padding-bottom: 0px !important;
+    }
+
+	.nav ul, .nav:active ul {
+		display: none;
+        margin: 0 !important;
+		padding: 0 !important;
+		background: #fff !important;
+		right: 0 !important;
+        top: 100px !important;
+		width: 100% !important;
+        z-index: 99999;
+	}
+
+    .logo_nav .nav {
+        float: none !important;
+    }
+
+	.nav li {
+		text-align: center;
+		width: 100%;
+        font-weight: bolder;
+        font-size: 1.5em;
+	}
+
+	.nav:hover ul {
+		display: block;
+	}
+
+    .nav:hover ul li ul {
+        left: initial;
+        visibility: visible;
+        display: block;
+        opacity: initial;
+        position: relative !important;
+        top: 0 !important;
+        font-size: .6rem;
+        border: none !important;
+        font-weight: initial;
+    }
 }

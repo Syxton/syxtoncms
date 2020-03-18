@@ -85,14 +85,18 @@ function main_body($header_only = false) {
 function page_masthead($left = true, $header_only = false) {
     global $CFG, $USER, $PAGE;
     if ($left) {
+        $logo = isset($CFG->logofile) ? '<img id="logo" src="' . $CFG->wwwroot . '/images/' . $CFG->logofile . '" alt="' . $CFG->sitename . ' Logo" />' : '<div id="logo">' . $CFG->sitename . '</>';
+        $mobilelogo = isset($CFG->mobilelogofile) ? '<img id="logosmall" src="' . $CFG->wwwroot . '/images/' . $CFG->mobilelogofile . '" alt="' . $CFG->sitename . ' Logo" />' : '';
+
         $returnme = '   <div class="nav_header">
                             <div id="logo_div">
                                 <a href="' . $CFG->wwwroot . '">
-                                    <img id="logo" src="' . $CFG->wwwroot . '/images/' . $CFG->logofile . '" alt="' . $CFG->sitename . ' Logo" style="max-width: 85vw;" />
+                                    ' . $mobilelogo . '
+                                    ' . $logo . '
                                 </a>
                             </div>
                             <div class="nav">
-                            <img id="menu-icon" src="' . $CFG->wwwroot . '/styles/menu-icon.png" />
+                            <div id="menu-icon"></div>
                                 ' . ($header_only ? "" : get_nav_items($PAGE->id)) . '
                             </div>
                         </div>
