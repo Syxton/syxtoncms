@@ -202,7 +202,7 @@ function nameize($str,$a_char = array("'","-"," ",'"','.')){
     } else {
         //the tricky part is finding names like DeMarco: 2 capitals
     	for($i=0;$i<strlen($str);$i++){
-    		if($i > 0 && ctype_lower($str{($i-1)}) && ctype_upper($str{$i}) && isset($str{($i+1)}) && ctype_lower($str{($i+1)})){
+    		if($i > 0 && ctype_lower($str[($i-1)]) && ctype_upper($str[$i]) && isset($str[($i+1)]) && ctype_lower($str[($i+1)])){
     			$temp = $str;
     			$str = substr($temp,0,($i)) . "+ " . substr($temp,($i),(strlen($str)-($i)));
     			$i++; $i++;
@@ -228,12 +228,12 @@ function nameize($str,$a_char = array("'","-"," ",'"','.')){
 
         $str = "";
        	for($i=0;$i<strlen($string);$i++){
-    		if(array_search($string{$i},$a_char)){
-                if($string{$i} !== $string{(strlen($string)-$i-1)}){
-                    $str .= $string{$i};
+    		if(array_search($string[$i],$a_char)){
+                if($string[$i] !== $string[(strlen($string)-$i-1)]){
+                    $str .= $string[$i];
                 }
     		}else{
-                $str .= $string{$i};
+                $str .= $string[$i];
     		}
     	}
         $str = str_replace("+ ","",$str);
