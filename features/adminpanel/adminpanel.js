@@ -6,7 +6,7 @@ function get_coordinates(ip, divname) {
       dataType: 'jsonp',
       url: url,
       cache: false,
-      success: function( json ) {
+      done: function( json ) {
         if (!json.latitude) {
             alert('Location could not be found.');
         } else {

@@ -15,18 +15,18 @@ global $CFG;
 	$setup = '';
 	$script = '
 	$.validator.setDefaults({
-	success: \'valid\'
+	done: \'valid\'
 	});
-	
+
 	$(document).ready(function(){
 		$(\'#'.$formname.'\').validate({
 			meta: \'validate\',
 			submitHandler: function() { '.$function.' },
             ignore: \'.calendarDateInput\'
 		});
-	});			
+	});
 ';
-     
+
     //Text fields and new HTML5 types
     $setup .= '$(document).ready(function(){
     			$(\'.formContainer input[type=text],[type=email],[type=search],[type=url]\').focus(function(){
@@ -36,7 +36,7 @@ global $CFG;
     		        $(this).parent().find(\'.info\').css(\'display\', \'none\');
     		    });
     		});';
-            
+
     //Password fields
     $setup .= '$(document).ready(function(){
     			$(\'.formContainer input[type=password]\').focus(function(){
@@ -45,8 +45,8 @@ global $CFG;
     		    }).blur(function(){
     		        $(this).parent().find(\'.info\').css(\'display\', \'none\');
     		    });
-    		});';							
-    
+    		});';
+
     //Textarea fields
     $setup .= '$(document).ready(function(){
     			$(\'.formContainer textarea\').focus(function(){
@@ -56,7 +56,7 @@ global $CFG;
     		        $(this).parent().find(\'.info\').css(\'display\', \'none\');
     		    });
     		});';
-    
+
     //CHECK fields
     $setup .= '$(document).ready(function(){
     			$(\'.formContainer input[type=checkbox]\').focus(function(){
@@ -66,7 +66,7 @@ global $CFG;
     		        $(this).parent().find(\'.info\').css(\'display\', \'none\');
     		    });
     		});';
-    		
+
     //SELECT fields
     $setup .= '$(document).ready(function(){
     			$(\'.formContainer select\').focus(function(){
@@ -76,12 +76,12 @@ global $CFG;
     		        $(this).parent().find(\'.info\').css(\'display\', \'none\');
     		    });
     		});';
-	
+
     if($ajax){
-	   return $script . $setup;   
+	   return $script . $setup;
 	}else{
-	   return '<script type=\'text/javascript\'>' . $script . $setup .'</script>';   
-	}	
-	
+	   return '<script type=\'text/javascript\'>' . $script . $setup .'</script>';
+	}
+
 }
 ?>

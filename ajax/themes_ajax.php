@@ -16,8 +16,8 @@ function theme_change(){
 global $CFG, $MYVARS, $USER, $PAGE;
 	$themeid = dbescape($MYVARS->GET["themeid"]);
 	$pageid = dbescape($MYVARS->GET["pageid"]);
-	
-	
+
+
 	if($themeid == ""){ $themeid = '0'; }
 
 	echo get_css_box(get_db_field("name", "pages", "pageid=$pageid"), get_db_field("display_name", "roles", "roleid=" . get_user_role($USER->userid,$pageid)), false,NULL,'pagename',NULL,$themeid,false,$pageid) . '<div style="padding:3px;"></div>'.get_css_box("Title", "Content", null, null, null, null, $themeid,false,$pageid);
@@ -25,7 +25,7 @@ global $CFG, $MYVARS, $USER, $PAGE;
 
 function show_themes(){
 global $CFG, $MYVARS, $USER, $PAGE;
-	$pageid = dbescape($MYVARS->GET["pageid"]);	
+	$pageid = dbescape($MYVARS->GET["pageid"]);
 	$themeid = getpagetheme($pageid);
 	$themeid = $themeid !== false ? $themeid : $PAGE->thememid;
 
@@ -43,16 +43,16 @@ global $CFG, $MYVARS, $USER;
 	$featureid = dbescape($MYVARS->GET["featureid"]);
 	$feature = dbescape($MYVARS->GET["feature"]);
 	$pageid = dbescape($MYVARS->GET["pageid"]);
-	
+
 	$pageid = $pageid == $CFG->SITEID ? 0 : $pageid;
-	
+
 	if($feature == "page"){
 		$default_list = get_feature_styles($pageid,$feature,NULL,true);
 		$i=0;
 		foreach($default_list as $style){
 			$styles[$i] = array(false,false,"$pageid",false,$style[1],dbescape($MYVARS->GET[$style[1]]),'0','0');
 			$i++;
-		}	
+		}
 	}else{
 		$default_list = get_feature_styles($pageid,$feature,$featureid,true);
 		foreach($default_list as $style){
@@ -69,7 +69,7 @@ global $CFG, $MYVARS, $USER, $STYLES;
 	$featureid = dbescape($MYVARS->GET["featureid"]);
 	$feature = dbescape($MYVARS->GET["feature"]);
 	$pageid = dbescape($MYVARS->GET["pageid"]);
-	
+
 	if($feature == "page"){
 		$default_list = get_feature_styles($pageid,$feature,NULL,true);
 		foreach($default_list as $style){
@@ -78,25 +78,25 @@ global $CFG, $MYVARS, $USER, $STYLES;
 		$STYLES->pagename = $temparray;
 		$STYLES->page = $temparray;
 
-		$returnme = 
+		$returnme =
 		get_css_box(get_db_field("name", "pages", "pageid=$pageid"), get_db_field("display_name", "roles", "roleid=" . get_user_role($USER->userid,$pageid)), false,NULL,'pagename',NULL,NULL,true) . '<div style="padding:3px;"></div>'
 		.
-		get_css_box("Title", "Content",NULL,NULL,"page",NULL,NULL,true);	
+		get_css_box("Title", "Content",NULL,NULL,"page",NULL,NULL,true);
 	}else{
 		$STYLES->preview = true;
-		
+
 		$default_list = get_feature_styles($pageid,$feature,$featureid,true);
 		foreach($default_list as $style){
 			$temparray[$style[1]] = dbescape($MYVARS->GET[$style[1]]);
 		}
 		$STYLES->$feature = $temparray;
-		
+
 		include_once($CFG->dirroot . '/features/'.$feature.'/'.$feature.'lib.php');
 		$function = "display_$feature";
 		$returnme = $function($pageid,"side",$featureid);
 		unset($STYLES->preview);
 	}
-	
+
 	echo $returnme;
 }
 
@@ -113,8 +113,8 @@ global $CFG, $MYVARS, $USER;
 		<div id="color_preview">
 		'.get_css_box(get_db_field("name", "pages", "pageid=$pageid"), get_db_field("display_name", "roles", "roleid=" . get_user_role($USER->userid,$pageid)),false,NULL,'pagename',NULL,'0',NULL,$pageid) . '<div style="padding:3px;"></div>'
 		.get_css_box("Title", "Content",NULL,NULL,NULL,NULL,'0',NULL,$pageid).
-        '</div>';	
-	
+        '</div>';
+
 		echo make_panes($left, $right);
 	}else{
     	include_once($CFG->dirroot . '/features/'.$feature.'/'.$feature.'lib.php');
@@ -131,7 +131,7 @@ global $CFG, $MYVARS, $USER;
 
 	//Save selected Theme
 	make_or_update_setting(false,'page',$pageid,0,"themeid",$themeid,false,false);
-	
+
 	//Page has theme selected show themes
 	echo theme_selector($pageid,$themeid);
 }

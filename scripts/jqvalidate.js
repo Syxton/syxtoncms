@@ -1463,7 +1463,7 @@ $.extend( $.validator, {
 				dataType: "json",
 				data: data,
 				context: validator.currentForm,
-				success: function( response ) {
+				done: function( response ) {
 					var valid = response === true || response === "true",
 						errors, message, submitted;
 

@@ -57,21 +57,21 @@ global $CFG,$MYVARS,$USER;
     if(!user_has_ability_in_page($USER->userid,"managepics",$pageid)){ return get_page_error_message("no_permission",array("managepics")); }
 
 	if($pageid == $CFG->SITEID){
-		$SQL = "SELECT * FROM pics p LEFT JOIN pics_galleries pg ON pg.galleryid = p.galleryid  WHERE (p.pageid='$pageid' AND p.featureid=$featureid) OR (p.siteviewable=1) GROUP BY p.galleryid ORDER BY p.galleryid";
+		$SQL = "SELECT DISTINCT galleryid, galleryid, gallery_title FROM pics p WHERE (p.pageid='$pageid' AND p.featureid=$featureid) OR (p.siteviewable=1) ORDER BY p.galleryid";
 	}else{
-		$SQL = "SELECT * FROM pics p LEFT JOIN pics_galleries pg ON pg.galleryid = p.galleryid  WHERE p.pageid='$pageid' AND p.featureid=$featureid GROUP BY p.galleryid ORDER BY p.galleryid";
+		$SQL = "SELECT DISTINCT galleryid, galleryid, gallery_title FROM pics p WHERE p.pageid='$pageid' AND p.featureid=$featureid ORDER BY p.galleryid";
 	}
 
 	if($allgalleries = get_db_result($SQL)){
-		$g = 0;
-        $gallerylist = new stdClass();
-        $gallerylist->$g = new stdClass();
-		$gallerylist->$g->name = "All";
-		$gallerylist->$g->value = "all";
-		$g++;
+			$g = 0;
+	  	$gallerylist = new stdClass();
+	    $gallerylist->$g = new stdClass();
+			$gallerylist->$g->name = "All";
+			$gallerylist->$g->value = "all";
+			$g++;
 			while($galleries = fetch_row($allgalleries)){
-                $gallerylist->$g = new stdClass();
-				$gallerylist->$g->name = $galleries["name"];
+        $gallerylist->$g = new stdClass();
+				$gallerylist->$g->name = $galleries["gallery_title"];
 				$gallerylist->$g->value = $galleries["galleryid"];
 				$g++;
 			}

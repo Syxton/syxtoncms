@@ -1,0 +1,6 @@
+Alias /syxtoncms "C:\Users\davidso1\Documents\GitHub\syxtoncms"
+
+<Directory "C:\Users\davidso1\Documents\GitHub\syxtoncms\">
+   Options Indexes FollowSymLinks MultiViews
+   Allow from all
+</Directory>

@@ -122,7 +122,7 @@ function get_editor_box($initialValue = "", $name = "editor1", $height = "550", 
     global $CFG;
     return '<textarea id="editor1" name="editor1" class="wysiwyg_editor">' . $initialValue . '</textarea>
     <script type="text/javascript">
-        $(window).load(function() {
+        $(window).on("load", function() {
             $(".wysiwyg_editor").tinymce({
                 script_url : "' . $CFG->wwwroot . '/scripts/tinymce/tinymce.min.js",
                 toolbar: "' . get_editor_toolbar($type) . '",

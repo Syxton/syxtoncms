@@ -43,7 +43,7 @@ global $CFG, $MYVARS, $USER, $PAGE;
 		$function = "display_$feature";
 		$featureid = dbescape($MYVARS->GET['featureid']);
 		echo make_panes(get_feature_styles($pageid,$feature,$featureid), $function($pageid,"side",$featureid));
-		
+
 	}
 	echo '</div>';
 }
