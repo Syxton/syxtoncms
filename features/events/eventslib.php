@@ -3,8 +3,8 @@
 * eventslib.php - Events function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 6/07/2016
-* Revision: 2.8.5
+* Date: 3/25/2021
+* Revision: 2.8.6
 ***************************************************************************/
 
 if(!isset($LIBHEADER)){ if(file_exists('./lib/header.php')){ include('./lib/header.php'); }elseif(file_exists('../lib/header.php')) { include('../lib/header.php'); }elseif(file_exists('../../lib/header.php')){ include('../../lib/header.php'); }}
@@ -385,7 +385,7 @@ global $CFG, $USER;
             $returnme .= make_modal_links(array("title"=> "Edit Event","path"=>$CFG->wwwroot."/features/events/events.php?action=add_event_form&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"refresh"=>"true","iframe"=>"true","width"=>"800","height"=>"95%","image"=>$CFG->wwwroot . "/images/edit.png","class"=>"slide_menu_button"));
 
             //Delete button
-            $returnme .= ' <a class="slide_menu_button" title="Delete Event" href="javascript: if(confirm(\'Are you sure you want to delete this event?\')){ ajaxapi(\'/features/events/events_ajax.php\',\'delete_event_relay\',\'&amp;featureid=' . $event['eventid'] . '\',function() { update_login_contents(\'' . $pageid . '\'); });}"> <img src="' . $CFG->wwwroot . '/images/delete.png" title="Delete Event" alt="Delete Event" /></a>';
+            $returnme .= ' <a class="slide_menu_button" title="Delete Event" href="javascript: if(confirm(\'Are you sure you want to delete this event?\')){ ajaxapi(\'/features/events/events_ajax.php\',\'delete_events_relay\',\'&amp;featureid=' . $event['eventid'] . '\',function() { update_login_contents(\'' . $pageid . '\'); });}"> <img src="' . $CFG->wwwroot . '/images/delete.png" title="Delete Event" alt="Delete Event" /></a>';
         }
     }else{  return "";}
     return $returnme;
@@ -441,7 +441,7 @@ global $CFG, $USER;
                                     <td>
                                         '.make_modal_links(array("title"=> stripslashes($event['name']),"path"=>$CFG->wwwroot."/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","width"=>"700","height"=>"650"));
             $returnme .= " ".make_modal_links(array("title"=> "Edit Event","path"=>$CFG->wwwroot."/features/events/events.php?action=add_event_form&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"refresh"=>"true","iframe"=>"true","width"=>"750","height"=>"650","image"=>$CFG->wwwroot."/images/edit.png"));
-            $returnme .= ' <a href="javascript: if(confirm(\'Are you sure you want to delete this event?\')){ ajaxapi(\'/features/events/events_ajax.php\',\'delete_event_relay\',\'&amp;featureid=' . $event['eventid'] . '\',function() { update_login_contents(\'' . $pageid . '\');});}"> <img src="' . $CFG->wwwroot . '/images/delete.png" title="Delete Event" alt="Delete Event" /></a>';
+            $returnme .= ' <a href="javascript: if(confirm(\'Are you sure you want to delete this event?\')){ ajaxapi(\'/features/events/events_ajax.php\',\'delete_events_relay\',\'&amp;featureid=' . $event['eventid'] . '\',function() { update_login_contents(\'' . $pageid . '\');});}"> <img src="' . $CFG->wwwroot . '/images/delete.png" title="Delete Event" alt="Delete Event" /></a>';
             $returnme .= '</td></tr></table></span>';
         }
     }
