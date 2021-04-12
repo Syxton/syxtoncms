@@ -3,8 +3,8 @@
 * eventslib.php - Events function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 3/25/2021
-* Revision: 2.8.6
+* Date: 4/12/2021
+* Revision: 2.8.7
 ***************************************************************************/
 
 if(!isset($LIBHEADER)){ if(file_exists('./lib/header.php')){ include('./lib/header.php'); }elseif(file_exists('../lib/header.php')) { include('../lib/header.php'); }elseif(file_exists('../../lib/header.php')){ include('../../lib/header.php'); }}
@@ -1168,12 +1168,12 @@ function staff_status($staff) {
     $status = array();
 
     if ($staff["workerconsentdate"] < strtotime($settings->events->$featureid->staffapp_expires->setting . '/' . date('Y'))) {
-        $status[] = "Application Out of Date";
+        $status[] = array("tag" => "Application", "full" => "Application Out of Date");
     }
 
     $flag = $staff["q1_1"] + $staff["q1_2"] + $staff["q1_3"] + $staff["q2_1"] + $staff["q2_2"];
     if (!empty($flag)) {
-        $status[] = "Director Review Required!";
+        $status[] = array("tag" => "Flagged", "full" => "Flagged for review!");
     }
 
     $eighteen = 18 * 365 * 24 * 60 * 60; // 18 years in seconds
@@ -1181,9 +1181,9 @@ function staff_status($staff) {
     $time = get_timestamp();
     if (($time - $staff["dateofbirth"]) > $eighteen ) {
         if (empty($staff["bgcheckpass"])) {
-            $status[] =  "Background Check Incomplete";
+            $status[] =  array("tag" => "Background Check", "full" => "Background Check Incomplete");
         } else if (($time - $staff["bgcheckpassdate"]) > $expireyear) {
-            $status[] =  "Background Check Out of Date";
+            $status[] =  array("tag" => "Background Check", "full" => "Background Check Out of Date");
         }
     }
     return $status;
@@ -1196,7 +1196,7 @@ global $CFG;
     $print = '';
     if (!empty($status)) {
         foreach ($status as $s) {
-            $print .= '<div style="color:red;font-weight:bold"><img style="vertical-align: middle;" src="'.$protocol.$CFG->wwwroot.'/images/error.gif" /> ' . $s . '</div>';
+            $print .= '<div style="color:red;font-weight:bold"><img style="vertical-align: middle;" src="'.$protocol.$CFG->wwwroot.'/images/error.gif" /> ' . $s["full"] . '</div>';
         }
     } else {
         $print = '<div style="color:green;font-size:1.3em;font-weight:bold"><img style="vertical-align: bottom;" src="'.$protocol.$CFG->wwwroot.'/images/checked.gif" /> APPROVED</div>';

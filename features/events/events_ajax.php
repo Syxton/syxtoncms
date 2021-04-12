@@ -3,11 +3,11 @@
 * events_ajax.php - Events backend ajax script
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 5/17/2016
-* Revision: 2.2.1
+* Date: 4/12/2021
+* Revision: 2.2.2
 ***************************************************************************/
 
-if(!isset($CFG)){ include('../header.php'); } 
+if(!isset($CFG)){ include('../header.php'); }
 if(!isset($EVENTSLIB)){ include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 
 update_user_cookie();
@@ -21,48 +21,48 @@ global $CFG,$MYVARS,$USER;
     $startdate = $MYVARS->GET["startdate"];
     if(isset($featureid)){
         $pageid = get_db_field("pageid","pages_features","feature='events' AND featureid=$featureid");
-        
+
         //Only site events need to be set to confirm=1
         $confirm = $pageid == $CFG->SITEID ? "confirmed=1 AND" : "pageid=$pageid AND";
-        
+
         if(!$settings = fetch_settings("events",$featureid,$pageid)){
     		make_or_update_settings_array(default_settings("events",$pageid,$featureid));
     		$settings = fetch_settings("events",$featureid,$pageid);
     	}
 
         $locationid = $settings->events->$featureid->allowrequests->setting;
-        
+
         if(isset($MYVARS->GET["enddate"])){ //check all dates between startdate and enddate
             $startdate = strtotime($startdate) + get_offset(); $enddate = strtotime($MYVARS->GET["enddate"]) + get_offset();
             //get all events at location between dates
-            $SQL = "SELECT * FROM events 
-                        WHERE $confirm location='$locationid' 
+            $SQL = "SELECT * FROM events
+                        WHERE $confirm location='$locationid'
                             AND (
-                                    ($startdate >= event_begin_date AND $startdate <= event_end_date) 
-                                    OR 
-                                    ($enddate >= event_begin_date AND $enddate <= event_end_date) 
+                                    ($startdate >= event_begin_date AND $startdate <= event_end_date)
+                                    OR
+                                    ($enddate >= event_begin_date AND $enddate <= event_end_date)
                                     OR ($startdate <= event_begin_date AND $enddate >= event_end_date)
                             )";
             //echo $SQL;
             if($getdates = get_db_count($SQL)){
-                echo "false"; 
+                echo "false";
             }else{ echo "true";}
         }else{ //only check a single day for an opening
-            $startdate = strtotime($startdate) + get_offset(); 
+            $startdate = strtotime($startdate) + get_offset();
             //get all events at location on date
-            $SQL = "SELECT * FROM events 
-                        WHERE $confirm location='$locationid' 
+            $SQL = "SELECT * FROM events
+                        WHERE $confirm location='$locationid'
                             AND ($startdate >= event_begin_date AND $startdate <= event_end_date)";
             //echo $SQL;
             if($getdates = get_db_count($SQL)){
-                echo "false"; 
-            }else{ echo "true"; }   
+                echo "false";
+            }else{ echo "true"; }
         }
-    }      
+    }
 }
 
 function event_request(){
-global $CFG,$MYVARS,$USER;  
+global $CFG,$MYVARS,$USER;
     $featureid = dbescape($MYVARS->GET["featureid"]);
     $contact_name = dbescape($MYVARS->GET["name"]);
     $contact_email = dbescape($MYVARS->GET["email"]);
@@ -72,16 +72,16 @@ global $CFG,$MYVARS,$USER;
     $enddate = $MYVARS->GET["enddate"] == "" ? $startdate : strtotime(dbescape($MYVARS->GET["enddate"]));
     $participants = dbescape($MYVARS->GET["participants"]);
     $description = dbescape($MYVARS->GET["description"]);
-    
-    $INSERTSQL = "INSERT INTO events_requests 
-                    (featureid,contact_name,contact_email,contact_phone,event_name,startdate,enddate,participants,description,votes_for,votes_against) 
+
+    $INSERTSQL = "INSERT INTO events_requests
+                    (featureid,contact_name,contact_email,contact_phone,event_name,startdate,enddate,participants,description,votes_for,votes_against)
                     VALUES('$featureid','$contact_name','$contact_email','$contact_phone','$event_name','$startdate','$enddate','$participants','$description','0','0')";
     //Save the request
     if($reqid = execute_db_sql($INSERTSQL)){
         $from->email = $CFG->siteemail;
         $from->fname = $CFG->sitename;
         $from->lname = "";
-        
+
         //Requesting email setup
         $contact->email = $contact_email;
         if(strstr($contact_name, " ")){
@@ -98,11 +98,11 @@ global $CFG,$MYVARS,$USER;
                     <br />
                     We will look over the details that you provided and respond shortly. <br />
                     Through the approval process you may receive additional questions about your event.<br />
-                    $request_info";    
-        
+                    $request_info";
+
         //Send email to the requester letting them know we received the request
         send_email($contact,$from,false,$subject, $message);
-        
+
         if(isset($featureid)){
             //Get feature request settings
             $pageid = get_db_field("pageid","pages_features","feature='events' AND featureid=$featureid");
@@ -110,9 +110,9 @@ global $CFG,$MYVARS,$USER;
         		make_or_update_settings_array(default_settings("events",$pageid,$featureid));
         		$settings = fetch_settings("events",$featureid,$pageid);
         	}
-            
+
             $subject = $CFG->sitename . " Event Request";
-            
+
             //Get and send to email list
             $emaillist = $settings->events->$featureid->emaillistconfirm->setting;
             $emaillist = str_replace(array(","," ","\t","\r"),"\n",$emaillist);
@@ -124,16 +124,16 @@ global $CFG,$MYVARS,$USER;
                 $message = '<p>A new event request has been submitted. Your input is required to approve the event. This email contains specific links designed for you to be able to submit and view questions as well as vote for this event\'s approval.</p>
                             <p>Do <strong>not </strong>delete this email.<strong>&nbsp; Please review the following event request.</strong></p>
                             <br />
-                            <a href="'.$CFG->wwwroot.'/features/events/events_ajax.php?action=request_vote&amp;reqid='.$reqid.'&amp;approve=1&amp;voteid='.$voteid.'">Approve</a> 
+                            <a href="'.$CFG->wwwroot.'/features/events/events_ajax.php?action=request_vote&amp;reqid='.$reqid.'&amp;approve=1&amp;voteid='.$voteid.'">Approve</a>
                             &nbsp;
-                            <a href="'.$CFG->wwwroot.'/features/events/events_ajax.php?action=request_vote&amp;reqid='.$reqid.'&amp;approve=0&amp;voteid='.$voteid.'">Deny</a> 
+                            <a href="'.$CFG->wwwroot.'/features/events/events_ajax.php?action=request_vote&amp;reqid='.$reqid.'&amp;approve=0&amp;voteid='.$voteid.'">Deny</a>
                             &nbsp;
                             <a href="'.$CFG->wwwroot.'/features/events/events_ajax.php?action=request_question&amp;reqid='.$reqid.'&amp;voteid='.$voteid.'">View/Ask Questions</a><br />'.
-                            $request_info; 
-                   
+                            $request_info;
+
                 $thisuser->email = $emailuser;
                 $thisuser->fname = "";
-                $thisuser->lname = "";               
+                $thisuser->lname = "";
                 send_email($thisuser,$from,false,$subject, $message);
             }
         }
@@ -146,7 +146,7 @@ global $CFG,$MYVARS,$USER;
                 <br />
                 Thank you.
               </div>';
-    
+
     }else{ echo "Failed to make request"; }
 }
 
@@ -158,17 +158,17 @@ function valid_voter($pageid,$featureid,$voteid){
     	$settings = fetch_settings("events",$featureid,$pageid);
     }
     $locationid = $settings->events->$featureid->allowrequests->setting;
-    
+
     //Get email list to check and see if the voteid matches one
-    $emaillist = $settings->events->$featureid->emaillistconfirm->setting;  
+    $emaillist = $settings->events->$featureid->emaillistconfirm->setting;
     $emaillist = str_replace(array(","," ","\t","\r"),"\n",$emaillist);
     $emaillist = str_replace("\n\n","\n",$emaillist);
     $emaillist = explode("\n",$emaillist);
-    
+
     foreach($emaillist as $emailuser){
         if(md5($emailuser) == $voteid){ $validvote = true;}
     }
-    return $validvote; 
+    return $validvote;
 }
 
 //Save question
@@ -190,8 +190,8 @@ global $CFG, $MYVARS;
         //Allowed to ask questions
         if(valid_voter($pageid,$featureid,$voteid)){
             $qtime = get_timestamp();
-            $SQL = "INSERT INTO events_requests_questions 
-                        (reqid,question,answer,question_time,answer_time) 
+            $SQL = "INSERT INTO events_requests_questions
+                        (reqid,question,answer,question_time,answer_time)
                         VALUES('$reqid','$question','','$qtime','0')";
             if($qid = execute_db_sql($SQL)){ //Question is saved.  Now send it to everyone.
                 $subject = $CFG->sitename . " Event Request Question";
@@ -202,29 +202,29 @@ global $CFG, $MYVARS;
                 <a href="'.$CFG->wwwroot.'/features/events/events_ajax.php?action=request_question&amp;reqid='.$reqid.'&amp;voteid='.$voteid.'">
                     View/Ask Questions
                 </a>';
-                
+
                 $from->email = $CFG->siteemail;
                 $from->fname = $CFG->sitename;
                 $from->lname = "";
-                
-                $emaillist = $settings->events->$featureid->emaillistconfirm->setting;  
+
+                $emaillist = $settings->events->$featureid->emaillistconfirm->setting;
                 $emaillist = str_replace(array(","," ","\t","\r"),"\n",$emaillist);
                 $emaillist = str_replace("\n\n","\n",$emaillist);
                 $emaillist = explode("\n",$emaillist);
-    
+
                 foreach($emaillist as $emailuser){
-                    //Let everyone know the event has been questioned                       
+                    //Let everyone know the event has been questioned
                     $thisuser->email = $emailuser;
                     $thisuser->fname = "";
-                    $thisuser->lname = "";               
+                    $thisuser->lname = "";
                     send_email($thisuser,$from,false,$subject, $message);
                 }
-                
+
                 $message .= '<br /><br />
                             <a href="'.$CFG->wwwroot.'/features/events/events_ajax.php?action=request_answer&amp;qid='.$qid.'&amp;reqid='.$reqid.'">
                                 Answer Question
                             </a>';
-                
+
                 $contact->email = $request["contact_email"];
                 if(strstr(stripslashes($request["contact_name"]), " ")){
                     $name = explode(" ",stripslashes($request["contact_name"]));
@@ -234,13 +234,13 @@ global $CFG, $MYVARS;
                     $contact->fname = stripslashes($request["contact_name"]);
                     $contact->lname = "";
                 }
-                                
+
                 //Send email to the requester letting them know a question has been raised
                 send_email($contact,$from,false,$subject, $message);
-                
-                echo request_question(true);   
+
+                echo request_question(true);
             }else{ get_error_message("generic_db_error"); }
-                 
+
         }else{ echo get_error_message("generic_permissions"); }
     }else{ echo get_error_message("invalid_old_request:events"); }
 }
@@ -260,7 +260,7 @@ global $CFG, $MYVARS;
         	$settings = fetch_settings("events",$featureid,$pageid);
         }
         $request = get_db_row("SELECT * FROM events_requests WHERE reqid='$reqid'");
-        
+
         $atime = get_timestamp();
         $SQL = "UPDATE events_requests_questions set answer='$answer',answer_time='$atime' WHERE id=$qid";
         if(execute_db_sql($SQL)){ //Question is saved.  Now send it to everyone.
@@ -270,37 +270,37 @@ global $CFG, $MYVARS;
             <strong>Question:</strong> '.stripslashes(get_db_field("question","events_requests_questions","id=$qid")).'<br />
             <br />
             <strong>Answer:</strong>'.stripslashes(get_db_field("answer","events_requests_questions","id=$qid"));
-            
+
             $from->email = $CFG->siteemail;
             $from->fname = $CFG->sitename;
             $from->lname = "";
-            
-            $emaillist = $settings->events->$featureid->emaillistconfirm->setting;  
+
+            $emaillist = $settings->events->$featureid->emaillistconfirm->setting;
             $emaillist = str_replace(array(","," ","\t","\r"),"\n",$emaillist);
             $emaillist = str_replace("\n\n","\n",$emaillist);
             $emaillist = explode("\n",$emaillist);
 
             foreach($emaillist as $emailuser){
-                //Let everyone know the event has been questioned                       
+                //Let everyone know the event has been questioned
                 $thisuser->email = $emailuser;
                 $thisuser->fname = "";
-                $thisuser->lname = "";               
+                $thisuser->lname = "";
                 send_email($thisuser,$from,false,$subject, $message);
             }
-            
-            echo request_answer(true);   
+
+            echo request_answer(true);
         }else{ get_error_message("generic_db_error"); }
     }else{ echo get_error_message("invalid_old_request:events"); }
 }
 
 function confirm_events_relay(){
 global $CFG, $MYVARS;
-    confirm_event();   
+    confirm_event();
 }
 
 function delete_events_relay(){
 global $CFG, $MYVARS;
-    delete_event();    
+    delete_event();
 }
 
 //Request question form
@@ -308,7 +308,7 @@ function request_question($refresh=false){
 global $CFG, $MYVARS;
     $reqid = $MYVARS->GET["reqid"];
     $voteid = $MYVARS->GET["voteid"];
-    
+
     //Make sure request exists and get the featureid
     if($featureid = get_db_field("featureid","events_requests","reqid=$reqid")){
         //Get feature request settings
@@ -318,7 +318,7 @@ global $CFG, $MYVARS;
         	$settings = fetch_settings("events",$featureid,$pageid);
         }
         $locationid = $settings->events->$featureid->allowrequests->setting;
-        
+
         //Allowed to ask questions
         if(valid_voter($pageid,$featureid,$voteid)){
             //Print out question form
@@ -328,43 +328,43 @@ global $CFG, $MYVARS;
             	<script type="text/javascript" src="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'ajax/siteajax.js"></script>
                 '.get_editor_javascript().'
                 <link type="text/css" rel="stylesheet" href="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'styles/styles_main.css" />
-                </head><body><div id="question_form">'; 
+                </head><body><div id="question_form">';
             }
             echo '<h2>Questions Regarding Event Request</h2>'.get_request_info($reqid);
-            if(!$refresh){ 
-                echo' 
+            if(!$refresh){
+                echo'
     			<table style="width:100%">
     				<tr>
     					<td><br />';
                         echo get_editor_box();
     				    echo ' <div style="width:100%;text-align:center">
-                                    <input type="button" value="Send Question" 
+                                    <input type="button" value="Send Question"
                                         onclick="ajaxapi(\'/features/events/events_ajax.php\',
                                                          \'request_question_send\',
                                                          \'&amp;voteid='.$voteid.'&amp;reqid='.$reqid.'&amp;question=\'+ escape('.get_editor_value_javascript().'),
                                                          function(){ simple_display(\'question_form\');}
-                                        );" 
+                                        );"
                                     />
     					       </div>
                         </td>
     				</tr>
     			</table>';
             }
-            
+
             echo '<h3>Previous Questions</h3>';
-            
+
             //Print out previous questions and answers
-            if($results = get_db_result("SELECT * FROM events_requests_questions 
-                                            WHERE reqid=$reqid 
+            if($results = get_db_result("SELECT * FROM events_requests_questions
+                                            WHERE reqid=$reqid
                                             ORDER BY question_time")){
                 while($row = fetch_row($results)){
                     echo '<div style="background-color:Aquamarine;padding:4px;"><strong>'.$row['question'].'</strong></div>';
                     if($row["answer"] == ""){ //Not answered
-                        echo '<div style="background-color:PaleTurquoise;padding:4px;">Question has not been responed to at this time.</div><br /><br />'; 
+                        echo '<div style="background-color:PaleTurquoise;padding:4px;">Question has not been responed to at this time.</div><br /><br />';
                     }else{ //Print answer
-                        echo '<div style="background-color:Gold;padding:4px;">'.$row['answer'].'</div><br /><br />';  
+                        echo '<div style="background-color:Gold;padding:4px;">'.$row['answer'].'</div><br /><br />';
                     }
-                }  
+                }
             }else{ echo "No questions have been asked yet."; }
             if(!$refresh){ echo '</div></body></html>'; }
         }else{ echo get_error_message("generic_permissions"); }
@@ -376,7 +376,7 @@ function request_answer($refresh=false){
 global $CFG, $MYVARS;
     $reqid = $MYVARS->GET["reqid"];
     $qid = $MYVARS->GET["qid"];
-    
+
     //Make sure request exists and get the featureid
     if($featureid = get_db_field("featureid","events_requests","reqid=$reqid")){
         //Get feature request settings
@@ -386,7 +386,7 @@ global $CFG, $MYVARS;
         	$settings = fetch_settings("events",$featureid,$pageid);
         }
         $locationid = $settings->events->$featureid->allowrequests->setting;
-        
+
         //Allowed to ask questions
         //Print out question form
         if(!$refresh){
@@ -395,13 +395,13 @@ global $CFG, $MYVARS;
         	<script type="text/javascript" src="'.$CFG->wwwroot.'/min/?b='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'ajax/siteajax.js"></script>
             <script type="text/javascript" src="'.$CFG->wwwroot.'/scripts/ckeditor/ckeditor.js"></script>
             <link type="text/css" rel="stylesheet" href="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'styles/styles_main.css" />
-            </head><body><div id="answer_form">'; 
+            </head><body><div id="answer_form">';
         }
         echo '<h2>Questions Regarding Event Request</h2>'.get_request_info($reqid);
-        
+
         $answer = get_db_field("answer","events_requests_questions","id=$qid");
-        if(!$refresh){ 
-            echo' 
+        if(!$refresh){
+            echo'
 			<table style="width:100%">
 				<tr>
 					<td><br />
@@ -411,25 +411,25 @@ global $CFG, $MYVARS;
                     <br />';
                     echo get_editor_box($answer);
 				    echo ' <div style="width:100%;text-align:center">
-                                <input type="button" value="Send Answer" 
+                                <input type="button" value="Send Answer"
                                     onclick="ajaxapi(\'/features/events/events_ajax.php\',
                                                      \'request_answer_send\',
                                                      \'&amp;qid='.$qid.'&amp;reqid='.$reqid.'&amp;answer=\'+ escape('.get_editor_value_javascript().'),
                                                      function(){ simple_display(\'answer_form\');}
-                                    );" 
+                                    );"
                                 />
 					       </div>
                     </td>
 				</tr>
 			</table>';
         }
-        
+
         echo '<h3>Previous Questions</h3>';
-        
+
         //Print out previous questions and answers
         $mod = !$refresh ? "AND id!=$qid" : "";
-        if($results = get_db_result("SELECT * FROM events_requests_questions 
-                                        WHERE reqid=$reqid $mod 
+        if($results = get_db_result("SELECT * FROM events_requests_questions
+                                        WHERE reqid=$reqid $mod
                                         ORDER BY question_time")){
             while($row = fetch_row($results)){
                 echo    '<div style="background-color:Aquamarine;padding:4px;">
@@ -442,7 +442,7 @@ global $CFG, $MYVARS;
                                         Answer Question
                                     </a>
                                 </strong>
-                            </div><br /><br />'; 
+                            </div><br /><br />';
                 }else{ //Print answer
                     echo    '<div style="background-color:Gold;padding:4px;overflow:hidden;">
                                 '.$row['answer'].'<br />
@@ -451,9 +451,9 @@ global $CFG, $MYVARS;
                                         Update Answer
                                     </a>
                                 </strong>
-                            </div><br /><br />';  
+                            </div><br /><br />';
                 }
-            }  
+            }
         }else{ echo "No other questions have been asked yet."; }
         if(!$refresh){ echo '</div></body></html>'; }
     }else{ echo get_error_message("invalid_old_request:events"); }
@@ -465,7 +465,7 @@ global $CFG, $MYVARS;
     $reqid = $MYVARS->GET["reqid"];
     $approve = $MYVARS->GET["approve"];
     $voteid = $MYVARS->GET["voteid"];
-    
+
     $stance = $approve == "1" ? "approve" : "deny";
     echo "<html><title>Event Request has been voted on.</title><body>";
     //Make sure request exists and get the featureid
@@ -478,11 +478,11 @@ global $CFG, $MYVARS;
         	$settings = fetch_settings("events",$featureid,$pageid);
         }
         $locationid = $settings->events->$featureid->allowrequests->setting;
-         
+
         if(valid_voter($pageid,$featureid,$voteid)){
             //See if the person has already voted
-            if($row = get_db_row("SELECT * FROM events_requests 
-                                    WHERE reqid='$reqid' 
+            if($row = get_db_row("SELECT * FROM events_requests
+                                    WHERE reqid='$reqid'
                                         AND voted LIKE '%:$voteid;%'")){ //Person has already voted
                 $voted = explode("::",$row["voted"]);
                 foreach($voted as $vote){
@@ -493,46 +493,46 @@ global $CFG, $MYVARS;
                             echo "You have already voted to $stance this event.";
                         }else{ //They have changed their vote.
                             //Remove old vote
-                            execute_db_sql("UPDATE events_requests 
-                                                SET voted = replace(voted, ':$voteid;$entry[1]:', ':$voteid;$approve:') 
+                            execute_db_sql("UPDATE events_requests
+                                                SET voted = replace(voted, ':$voteid;$entry[1]:', ':$voteid;$approve:')
                                                 WHERE reqid=$reqid;");
-                            
+
                             if($approve == "1"){ //Remove 1 from against and add 1 to for
-                                execute_db_sql("UPDATE events_requests 
-                                                    SET votes_against = (votes_against - 1), votes_for = (votes_for + 1) 
-                                                    WHERE reqid=$reqid;");    
+                                execute_db_sql("UPDATE events_requests
+                                                    SET votes_against = (votes_against - 1), votes_for = (votes_for + 1)
+                                                    WHERE reqid=$reqid;");
                             }else{ //Remove 1 from for and add 1 to against
-                                execute_db_sql("UPDATE events_requests 
-                                                    SET votes_for = (votes_for - 1),votes_against = (votes_against + 1) 
+                                execute_db_sql("UPDATE events_requests
+                                                    SET votes_for = (votes_for - 1),votes_against = (votes_against + 1)
                                                     WHERE reqid=$reqid;");
                             }
                             echo "You have changed your vote to $stance.";
-                        }    
+                        }
                     }
                 }
             }else{ //New vote
-                execute_db_sql("UPDATE events_requests 
-                                    SET voted = CONCAT(voted,':$voteid;$approve:') 
+                execute_db_sql("UPDATE events_requests
+                                    SET voted = CONCAT(voted,':$voteid;$approve:')
                                     WHERE reqid=$reqid;");
                 if($approve == "1"){ //Remove 1 from against and add 1 to for
-                    execute_db_sql("UPDATE events_requests 
-                                        SET votes_for = (votes_for + 1) 
-                                        WHERE reqid=$reqid;");    
+                    execute_db_sql("UPDATE events_requests
+                                        SET votes_for = (votes_for + 1)
+                                        WHERE reqid=$reqid;");
                 }else{ //Remove 1 from for and add 1 to against
-                    execute_db_sql("UPDATE events_requests 
-                                        SET votes_against = (votes_against + 1) 
+                    execute_db_sql("UPDATE events_requests
+                                        SET votes_against = (votes_against + 1)
                                         WHERE reqid=$reqid;");
                 }
                 echo "You have voted to $stance this event.";
             }
-            
+
             //See if the voting on this request is finished
             if($request = get_db_row("SELECT * FROM events_requests WHERE reqid='$reqid'")) {
                 $from = new stdClass();
                 $from->email = $CFG->siteemail;
                 $from->fname = $CFG->sitename;
                 $from->lname = "";
-                
+
                 //Requesting email setup
                 $contact = new stdClass();
                 $contact->email = $request["contact_email"];
@@ -549,83 +549,83 @@ global $CFG, $MYVARS;
                 $message = "<strong>Thank you for submitting a request for us to host your event: ".$request["event_name"].".</strong><br />
                             <br />
                             We will look over the details that you provided and respond shortly.<br />
-                            Through the approval process you may receive additional questions about your event. $request_info";    
-         
-                if($request["votes_for"] == $settings->events->$featureid->requestapprovalvotes->setting && 
+                            Through the approval process you may receive additional questions about your event. $request_info";
+
+                if($request["votes_for"] == $settings->events->$featureid->requestapprovalvotes->setting &&
                     $request["votes_against"] < $settings->events->$featureid->requestdenyvotes->setting){
                     //Event Approved
                     $subject = $CFG->sitename . " Event Request Approved";
                     $message = '<strong>The event ('.stripslashes($request["event_name"]).') has been approved by a vote of '.$request["votes_for"].' to '.$request["votes_against"].'.</strong>
                     <br /><br />'.
                     $request_info;
-                    
+
                     //Send email to the requester letting them know we denied the request
                     send_email($contact,$from,false,$subject, $message);
-                    
-                    $emaillist = $settings->events->$featureid->emaillistconfirm->setting;  
+
+                    $emaillist = $settings->events->$featureid->emaillistconfirm->setting;
                     $emaillist = str_replace(array(","," ","\t","\r"),"\n",$emaillist);
                     $emaillist = str_replace("\n\n","\n",$emaillist);
                     $emaillist = explode("\n",$emaillist);
                     foreach($emaillist as $emailuser){
-                        //Let everyone know the event has been denied                       
+                        //Let everyone know the event has been denied
                         $thisuser->email = $emailuser;
                         $thisuser->fname = "";
-                        $thisuser->lname = "";               
+                        $thisuser->lname = "";
                         send_email($thisuser,$from,false,$subject, $message);
                     }
-                    
+
                     //Make event
                     $MYVARS->GET["pageid"] = $pageid;
                     $MYVARS->GET["featureid"] = $featureid;
                     $eventid = convert_to_event($request,$locationid);
-                
+
                     //Confirm event
                     $siteviewable = $pageid == $CFG->SITEID ? "1" : "0"; //if feature is on site, then yes...otherwise no.
                     confirm_event($pageid,$eventid,$siteviewable);
 
                     //Delete event request
-                    execute_db_sql("DELETE FROM events_requests 
+                    execute_db_sql("DELETE FROM events_requests
                                         WHERE reqid=$reqid");
-                    execute_db_sql("DELETE FROM events_requests_questions 
-                                        WHERE reqid=$reqid"); 
-                                            
-                }elseif($request["votes_for"] < $settings->events->$featureid->requestapprovalvotes->setting && 
+                    execute_db_sql("DELETE FROM events_requests_questions
+                                        WHERE reqid=$reqid");
+
+                }elseif($request["votes_for"] < $settings->events->$featureid->requestapprovalvotes->setting &&
                         $request["votes_against"] == $settings->events->$featureid->requestdenyvotes->setting){
                     //Event Denied
                     $subject = $CFG->sitename . " Event Request Denied";
                     $message = '<strong>The event ('.stripslashes($request["event_name"]).') has been denied by a vote of '.$request["votes_for"].' to '.$request["votes_against"].'.</strong>
                     <br /><br />'.
                     $request_info;
-                    
+
                     //Send email to the requester letting them know we denied the request
                     send_email($contact,$from,false,$subject, $message);
-                    
-                    $emaillist = $settings->events->$featureid->emaillistconfirm->setting;  
+
+                    $emaillist = $settings->events->$featureid->emaillistconfirm->setting;
                     $emaillist = str_replace(array(","," ","\t","\r"),"\n",$emaillist);
                     $emaillist = str_replace("\n\n","\n",$emaillist);
-                    $emaillist = explode("\n",$emaillist);                    
+                    $emaillist = explode("\n",$emaillist);
                     foreach($emaillist as $emailuser){
-                        //Let everyone know the event has been denied                       
+                        //Let everyone know the event has been denied
                         $thisuser->email = $emailuser;
                         $thisuser->fname = "";
-                        $thisuser->lname = "";               
+                        $thisuser->lname = "";
                         send_email($thisuser,$from,false,$subject, $message);
                     }
-                    
+
                     //Delete event request
-                    execute_db_sql("DELETE FROM events_requests 
+                    execute_db_sql("DELETE FROM events_requests
                                         WHERE reqid=$reqid;");
-                    execute_db_sql("DELETE FROM events_requests_questions 
+                    execute_db_sql("DELETE FROM events_requests_questions
                                         WHERE reqid=$reqid");
                 }elseif($request["votes_for"] > $settings->events->$featureid->requestapprovalvotes->setting){
                     echo "Event has already been approved.  Thank you for voting.";
-                }       
+                }
             }
-            
+
         }else{ echo get_error_message("generic_permissions"); }
     }else{
         echo get_error_message("invalid_old_request:events");
-    }   
+    }
     echo "</body></html>";
 }
 
@@ -637,18 +637,18 @@ global $CFG,$MYVARS;
 	$MYVARS->GET["email"] = $request["contact_email"];
 	$MYVARS->GET["phone"] = $request["contact_phone"];
     $MYVARS->GET["location"] = $location;
-    
+
 	$MYVARS->GET["category"] = "1"; //Placed in general category...can be changed later
 	$MYVARS->GET["siteviewable"] = $pageid == $CFG->SITEID ? "1" : "0"; //if feature is on site, then yes...otherwise no.
-	
+
     $MYVARS->GET["description"] = $request["description"]; //event description
 
 	$MYVARS->GET["multiday"] = $request["startdate"] == $request["enddate"] ? "0" : "1";
-    
+
     $MYVARS->GET["event_begin_date"] = date(DATE_RFC822,$request["startdate"]);
     $MYVARS->GET["event_end_date"] = $MYVARS->GET["multiday"] == "1" ? date(DATE_RFC822,$request["enddate"]) : $MYVARS->GET["event_begin_date"];
     $MYVARS->GET["allday"] = "1"; $MYVARS->GET["reg"] = "0"; $MYVARS->GET["fee"] = "0";
-    
+
     return submit_new_event(true);
 }
 
@@ -663,7 +663,7 @@ global $CFG;
         <strong>Estimated Participants:</strong> '.$request["participants"].'<br />
         <strong>Start Date:</strong> '.date('l jS \of F Y',$request["startdate"]).'<br />
         <strong>End Date:</strong> '.date('l jS \of F Y',$request["enddate"]).'<br />
-        <strong>Description:</strong> '.stripslashes($request["description"]).'<br />';    
+        <strong>Description:</strong> '.stripslashes($request["description"]).'<br />';
     }
 }
 
@@ -677,15 +677,15 @@ global $CFG, $MYVARS, $USER;
 	$online_only = isset($MYVARS->GET["online_only"]) ? dbescape($MYVARS->GET["online_only"]) : false;
     $printarea = "";
     $returnme = '<link rel="stylesheet" type="text/css" href="'.$CFG->wwwroot.'/styles/print.css">';
-	$returnme .= '<a class="dontprint" href="javascript: void(0);" 
-                    onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+	$returnme .= '<a class="dontprint" href="javascript: void(0);"
+                    onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                                 ajaxapi(\'/features/events/events_ajax.php\',
                                         \'show_registrations\',
                                         \'&amp;pageid='.$pageid.'&amp;eventid='.$eventid.'&amp;eventname='.urlencode($eventname).'&amp;template_id='.$template_id.'\',
-                                        function() { 
-                                            if (xmlHttp.readyState == 4) { 
-                                                simple_display(\'searchcontainer\'); 
-                                                document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                        function() {
+                                            if (xmlHttp.readyState == 4) {
+                                                simple_display(\'searchcontainer\');
+                                                document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
                                                 init_event_menu();
                                             }
                                         },
@@ -719,36 +719,36 @@ global $CFG, $MYVARS, $USER;
 function get_registration_sort_sql($eventid,$online_only=false){
     if($online_only){ $online_only = "AND e.manual = 0"; }
     $SQL = "SELECT e.*"; $orderby = "";
-    
-    $sort_info = get_db_row("SELECT e.eventid,b.orderbyfield,b.folder FROM events as e 
-                                JOIN events_templates as b ON b.template_id=e.template_id 
+
+    $sort_info = get_db_row("SELECT e.eventid,b.orderbyfield,b.folder FROM events as e
+                                JOIN events_templates as b ON b.template_id=e.template_id
                                 WHERE eventid='$eventid'");
 
    	if($sort_info["folder"] == "none"){ //form template
         $sort_elements=explode(",",$sort_info["orderbyfield"]);$i=0;
         while(isset($sort_elements[$i])){
-            $SQL .= ",(SELECT value FROM events_registrations_values 
+            $SQL .= ",(SELECT value FROM events_registrations_values
                             WHERE elementid='$sort_elements[$i]' AND regid=v.regid) as val$i";
             $orderby .= $orderby == "" ? "val$i" : ",val$i";
             $i++;
         }
-        $SQL .= " FROM events_registrations as e 
-                    JOIN events_registrations_values as v ON (e.regid=v.regid) 
-                    WHERE e.eventid='$eventid' $online_only 
-                    GROUP BY regid 
+        $SQL .= " FROM events_registrations as e
+                    JOIN events_registrations_values as v ON (e.regid=v.regid)
+                    WHERE e.eventid='$eventid' $online_only
+                    GROUP BY regid
                     ORDER BY val0 LIKE '%Reserved%' DESC,$orderby";
    	}else{ //custom template
         $sort_elements=explode(",",$sort_info["orderbyfield"]);$i=0;
         while(isset($sort_elements[$i])){
-            $SQL .= ",(SELECT value FROM events_registrations_values 
+            $SQL .= ",(SELECT value FROM events_registrations_values
                             WHERE elementname='$sort_elements[$i]' AND regid=v.regid) as val$i";
             $orderby .= $orderby == "" ? "val$i" : ",val$i";
             $i++;
         }
-        $SQL .= " FROM events_registrations as e 
-                    JOIN events_registrations_values as v ON (e.regid=v.regid) 
-                    WHERE e.eventid='$eventid' $online_only 
-                    GROUP BY regid 
+        $SQL .= " FROM events_registrations as e
+                    JOIN events_registrations_values as v ON (e.regid=v.regid)
+                    WHERE e.eventid='$eventid' $online_only
+                    GROUP BY regid
                     ORDER BY val0 LIKE '%Reserved%' DESC,$orderby";
    	}
 
@@ -757,17 +757,17 @@ return $SQL;
 
 function printable_registration($regid, $eventid, $template_id){
 	$returnme = '<div>';
-	
+
 	$SQL = "SELECT * FROM events_templates WHERE template_id='$template_id'";
 	$template = get_db_row($SQL);
     if ($template["folder"] == "none") {
-        if($template_forms = get_db_result("SELECT * FROM events_templates_forms 
-                                                WHERE template_id='$template_id' 
+        if($template_forms = get_db_result("SELECT * FROM events_templates_forms
+                                                WHERE template_id='$template_id'
                                                 ORDER BY sort")){
         	while($form_element = fetch_row($template_forms)){
         		if ($form_element["type"] == "payment") {
-        			if($values = get_db_result("SELECT * FROM events_registrations_values 
-                                                    WHERE regid='$regid' AND elementid='".$form_element["elementid"]."' 
+        			if($values = get_db_result("SELECT * FROM events_registrations_values
+                                                    WHERE regid='$regid' AND elementid='".$form_element["elementid"]."'
                                                     ORDER BY entryid")){
         				$i = 0; $values_display = explode(",", $form_element["display"]);
         				while($value = fetch_row($values)){
@@ -782,8 +782,8 @@ function printable_registration($regid, $eventid, $template_id){
 						}
 					}
 				} else {
-	        		$value = get_db_row("SELECT * FROM events_registrations_values 
-                                            WHERE regid='$regid' 
+	        		$value = get_db_row("SELECT * FROM events_registrations_values
+                                            WHERE regid='$regid'
                                                 AND elementid='".$form_element["elementid"]."'");
 	        		$returnme .= '<br />
                                     <div style="display:inline-block;width:150px;vertical-align: top;">
@@ -800,8 +800,8 @@ function printable_registration($regid, $eventid, $template_id){
         $i=0;
         while (!empty($template_forms[$i])) {
         	$form = explode(":",$template_forms[$i]);
-        	$value = get_db_row("SELECT * FROM events_registrations_values 
-                                    WHERE regid='$regid' 
+        	$value = get_db_row("SELECT * FROM events_registrations_values
+                                    WHERE regid='$regid'
                                         AND elementname='".$form[0]."'");
         	$returnme .=   '<br />
                             <div style="display:inline-block;width:150px;vertical-align: top;">
@@ -846,28 +846,28 @@ global $CFG, $MYVARS, $USER;
     if (!empty($reg_eventid) && get_db_result("SELECT * FROM events WHERE eventid='$reg_eventid'")) {
         $reg_email = dbescape($MYVARS->GET["reg_email"]);
         $reg_code = dbescape($MYVARS->GET["reg_code"]);
-        execute_db_sql("UPDATE events_registrations 
-                            SET eventid='$reg_eventid', email='$reg_email', code='$reg_code' 
+        execute_db_sql("UPDATE events_registrations
+                            SET eventid='$reg_eventid', email='$reg_email', code='$reg_code'
                             WHERE regid='$regid'");
-        execute_db_sql("UPDATE events_registrations_values 
-                            SET eventid='$reg_eventid' 
-                            WHERE regid='$regid'");       
+        execute_db_sql("UPDATE events_registrations_values
+                            SET eventid='$reg_eventid'
+                            WHERE regid='$regid'");
     }
-    
-	$SQL = "SELECT * FROM events_registrations_values 
-                WHERE regid='$regid' 
+
+	$SQL = "SELECT * FROM events_registrations_values
+                WHERE regid='$regid'
                 ORDER BY entryid";
 	if ($entries = get_db_result($SQL)) {
 		$SQL2 = '';
 		while($entry = fetch_row($entries)){
 			$SQL2 .= $SQL2 == "" ? "('".$entry["entryid"]."','".addslashes(urldecode($MYVARS->GET[$entry["entryid"]]))."')" : ",('".$entry["entryid"]."','".addslashes(urldecode($MYVARS->GET[$entry["entryid"]]))."')";
 		}
-		
+
 		$SQL1 = "CREATE TEMPORARY TABLE temp_updates (
 	  	id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
 	  	entryid INT(11) UNSIGNED NOT NULL,
 	  	newvalue LONGTEXT COLLATE 'utf8_general_ci')";
-		
+
 		$SQL2 = "INSERT INTO temp_updates (entryid,newvalue) VALUES" . $SQL2;
 
 		$SQL3 = "UPDATE events_registrations_values e, temp_updates t
@@ -886,12 +886,12 @@ global $CFG, $MYVARS, $USER;
                         // If payment is made, it is no longer in queue.
                         $SQL = "UPDATE events_registrations SET verified='1' WHERE regid='$regid'";
             			execute_db_sql($SQL);
-    
+
                         $touser = new stdClass();
                         $touser->fname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_First'");
                 		$touser->lname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_Last'");
                 		$touser->email = get_db_field("email","events_registrations","regid='$regid'");
-                		
+
                         $fromuser = new stdClass();
                         $fromuser->email = $CFG->siteemail;
                 		$fromuser->fname = $CFG->sitename;
@@ -899,7 +899,7 @@ global $CFG, $MYVARS, $USER;
                 		$message = registration_email($regid, $touser);
                 		if (send_email($touser, $fromuser, null, $CFG->sitename . " Registration", $message)) {
                 			send_email($fromuser, $fromuser, null, $CFG->sitename . " Registration", $message);
-                		}   
+                		}
                     }
                 } else {
                     $SQL = "UPDATE events_registrations SET verified='0' WHERE regid='$regid'";
@@ -914,10 +914,10 @@ global $CFG, $MYVARS, $USER;
 function delete_registration_info(){
 global $CFG, $MYVARS, $USER;
 	$regid = isset($MYVARS->GET["regid"]) ? dbescape($MYVARS->GET["regid"]) : false;
-	if(execute_db_sql("DELETE FROM events_registrations 
+	if(execute_db_sql("DELETE FROM events_registrations
                             WHERE regid='$regid'") &&
-        execute_db_sql("DELETE FROM events_registrations_values 
-                            WHERE regid='$regid'")){ 
+        execute_db_sql("DELETE FROM events_registrations_values
+                            WHERE regid='$regid'")){
         echo "Deleted Registration";
     }else{ echo "Failed"; }
 }
@@ -928,15 +928,15 @@ global $CFG, $MYVARS, $USER;
     $eventid = isset($MYVARS->GET["eventid"]) ? dbescape($MYVARS->GET["eventid"]) : false;
     $pageid = isset($MYVARS->GET["pageid"]) ? dbescape($MYVARS->GET["pageid"]) : false;
 
-    $link = '<a title="Return to Registration list" href="javascript: void(0)" 
-                onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+    $link = '<a title="Return to Registration list" href="javascript: void(0)"
+                onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                          ajaxapi(\'/features/events/events_ajax.php\',
                                  \'show_registrations\',
                                  \'&amp;pageid='.$pageid.'&amp;eventid='.$eventid.'\',
-                                 function() { 
-                                    if (xmlHttp.readyState == 4) { 
-                                        simple_display(\'searchcontainer\'); 
-                                        document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                 function() {
+                                    if (xmlHttp.readyState == 4) {
+                                        simple_display(\'searchcontainer\');
+                                        document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
                                         init_event_menu();
                                     }
                                  },
@@ -947,7 +947,7 @@ global $CFG, $MYVARS, $USER;
              </a>';
     if(!empty($regid) && !empty($eventid)){
         $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
-        
+
         $touser = (object)array('email' => get_db_field("email", "events_registrations", "regid='$regid'"),
                                 'fname' => $registrant_name = get_registrant_name($regid),
                                 'lname' => "");
@@ -961,13 +961,13 @@ global $CFG, $MYVARS, $USER;
 		  echo $link . '<br /><br />
                         <div style="text-align:center">
                             Registration Email sent
-                        </div>';  
+                        </div>';
 		} else {
 		  echo $link . '<br /><br />
                         <div style="text-align:center">
                             Email could not be sent: Registrant\'s email might not be set
-                        </div>';  
-		}   
+                        </div>';
+		}
     } else {
         echo $link . '<br /><br />
                       <div style="text-align:center">
@@ -983,16 +983,16 @@ global $CFG, $MYVARS, $USER;
 	$template_id = dbescape($MYVARS->GET["template_id"]);
 	$regid = isset($MYVARS->GET["regid"]) ? dbescape($MYVARS->GET["regid"]) : false;
 	$eventname = urldecode($MYVARS->GET["eventname"]);
-	$returnme = '<a href="javascript: void(0);" 
-                    onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+	$returnme = '<a href="javascript: void(0);"
+                    onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                             ajaxapi(\'/features/events/events_ajax.php\',
                                     \'show_registrations\',
                                     \'&amp;pageid='.$pageid.'&amp;eventid='.$eventid.'&amp;eventname='.urlencode($eventname).'&amp;template_id='.$template_id.'\',
-                                    function() { 
-                                        if (xmlHttp.readyState == 4) { 
-                                            simple_display(\'searchcontainer\'); 
-                                            document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
-                                            init_event_menu(); 
+                                    function() {
+                                        if (xmlHttp.readyState == 4) {
+                                            simple_display(\'searchcontainer\');
+                                            document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
+                                            init_event_menu();
                                         }
                                     },
                                     true
@@ -1005,16 +1005,16 @@ global $CFG, $MYVARS, $USER;
                                                   ajaxapi(\'/features/events/events_ajax.php\',
                                                           \'save_reg_changes\',
                                                           \'&amp;regid='.$regid.'&amp;pageid='.$pageid.'&amp;eventid='.$eventid.'&amp;template_id='.$template_id.'\' + create_request_string(\'reg_form\'),
-                                                          function() { 
-                                                            if (xmlHttp.readyState == 4) { 
+                                                          function() {
+                                                            if (xmlHttp.readyState == 4) {
                                                                 ajaxapi(\'/features/events/events_ajax.php\',
                                                                         \'show_registrations\',
                                                                         \'&amp;pageid='.$pageid.'&amp;eventid='.$eventid.'&amp;eventname='.urlencode($eventname).'&amp;template_id='.$template_id.'&amp;sel='.$regid.'\',
-                                                                        function() { 
-                                                                            if (xmlHttp.readyState == 4) { 
-                                                                                simple_display(\'searchcontainer\'); 
-                                                                                document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
-                                                                                init_event_menu(); 
+                                                                        function() {
+                                                                            if (xmlHttp.readyState == 4) {
+                                                                                simple_display(\'searchcontainer\');
+                                                                                document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
+                                                                                init_event_menu();
                                                                             }
                                                                         }
                                                                 );
@@ -1024,15 +1024,15 @@ global $CFG, $MYVARS, $USER;
                                                   );
                                                   return false;
                 "><input type="submit" value="Save Changes" />';
-	
+
     $returnme .= '<table>';
-    
+
     // Get all events within 3 months that are registerable and has the same template
     $event_begin_date = get_db_field("event_begin_date", "events", "eventid='$eventid'");
-    $events = get_db_result("SELECT * FROM events 
-                                WHERE confirmed=1 
-                                    AND template_id='$template_id' 
-                                    AND start_reg > 0 
+    $events = get_db_result("SELECT * FROM events
+                                WHERE confirmed=1
+                                    AND template_id='$template_id'
+                                    AND start_reg > 0
                                     AND ((event_begin_date - $event_begin_date) < 7776000 && (event_begin_date - $event_begin_date) > -7776000)");
     $returnme .= '<tr><td>Event </td><td>' .
                     make_select("reg_eventid", $events, "eventid", "name", $eventid, "", "false", "1", "width: 420px") .
@@ -1044,18 +1044,18 @@ global $CFG, $MYVARS, $USER;
     $returnme .= '<tr><td>Pay Code </td><td>' .
                     '<input id="reg_code" name="reg_code" type="text" size="45" value="'.stripslashes($event_reg["code"]).'" />' .
                  '</td></tr>';
-                    
+
 	$SQL = "SELECT * FROM events_templates WHERE template_id='$template_id'";
 	$template = get_db_row($SQL);
     if($template["folder"] == "none"){
-        if($template_forms = get_db_result("SELECT * FROM events_templates_forms 
-                                                WHERE template_id='$template_id' 
+        if($template_forms = get_db_result("SELECT * FROM events_templates_forms
+                                                WHERE template_id='$template_id'
                                                 ORDER BY sort")){
         	while($form_element = fetch_row($template_forms)){
         		if($form_element["type"] == "payment"){
-        			if($values = get_db_result("SELECT * FROM events_registrations_values 
-                                                    WHERE regid='$regid' 
-                                                        AND elementid='".$form_element["elementid"]."' 
+        			if($values = get_db_result("SELECT * FROM events_registrations_values
+                                                    WHERE regid='$regid'
+                                                        AND elementid='".$form_element["elementid"]."'
                                                     ORDER BY entryid")){
         				$i = 0; $values_display = explode(",", $form_element["display"]);
         				while($value = fetch_row($values)){
@@ -1064,8 +1064,8 @@ global $CFG, $MYVARS, $USER;
 						}
 					}
 				}else{
-	        		$value = get_db_row("SELECT * FROM events_registrations_values 
-                                            WHERE regid='$regid' 
+	        		$value = get_db_row("SELECT * FROM events_registrations_values
+                                            WHERE regid='$regid'
                                                 AND elementid='".$form_element["elementid"]."'");
 	        		$returnme .= '<tr><td>'.$form_element["display"].' </td><td><input id="'.$value["entryid"].'" name="'.$value["entryid"].'" type="text" size="45" value="'.stripslashes($value["value"]).'" /></td></tr>';
 				}
@@ -1076,8 +1076,8 @@ global $CFG, $MYVARS, $USER;
         $i=0;
         while(isset($template_forms[$i])){
         	$form = explode(":",$template_forms[$i]);
-        	$value = get_db_row("SELECT * FROM events_registrations_values 
-                                    WHERE regid='$regid' 
+        	$value = get_db_row("SELECT * FROM events_registrations_values
+                                    WHERE regid='$regid'
                                         AND elementname='".$form[0]."'");
         	$returnme .= '<tr><td>'.$form[2].' </td><td><input id="'.$value["entryid"].'" name="'.$value["entryid"].'" type="text" size="45" value="'.stripslashes($value["value"]).'" /></td></tr>';
         	$i++;
@@ -1097,14 +1097,14 @@ global $CFG, $MYVARS, $USER;
 	$reserved = 0;
 	while($reserved < $reserveamount){
 		$SQL = "";$SQL2 = "";
-		if($regid=execute_db_sql("INSERT INTO events_registrations 
-                                    (eventid,date,code,manual) 
+		if($regid=execute_db_sql("INSERT INTO events_registrations
+                                    (eventid,date,code,manual)
                                     VALUES('$eventid','".get_timestamp()."','".uniqid("",true)."',1)")){
 			$SQL = "SELECT * FROM events_templates WHERE template_id='$template_id'";
 			$template = get_db_row($SQL);
 		    if($template["folder"] == "none"){
-		        if($template_forms = get_db_result("SELECT * FROM events_templates_forms 
-                                                        WHERE template_id='$template_id' 
+		        if($template_forms = get_db_result("SELECT * FROM events_templates_forms
+                                                        WHERE template_id='$template_id'
                                                         ORDER BY sort")){
 		        	while($form_element = fetch_row($template_forms)){
 		        		if($form_element["type"] == "payment"){
@@ -1117,8 +1117,8 @@ global $CFG, $MYVARS, $USER;
 			        	}
 					}
 		        }
-		        $SQL2 = "INSERT INTO events_registrations_values 
-                            (regid,elementid,value,eventid,elementname) 
+		        $SQL2 = "INSERT INTO events_registrations_values
+                            (regid,elementid,value,eventid,elementname)
                             VALUES" . $SQL2;
 		    }else{
 		        $template_forms = explode(";", trim($template["formlist"], ';'));
@@ -1126,22 +1126,22 @@ global $CFG, $MYVARS, $USER;
                     $form = explode(":", $formset);
 		        	$value = strstr($template["registrant_name"], $form[0]) ? "Reserved" : "";
 					$SQL2 .= $SQL2 == "" ? "" : ",";
-					$SQL2 .= "('$regid','$value','$eventid','".$form[0]."')";    
+					$SQL2 .= "('$regid','$value','$eventid','".$form[0]."')";
                 }
 
-				$SQL2 = "INSERT INTO events_registrations_values 
-                            (regid,value,eventid,elementname) 
+				$SQL2 = "INSERT INTO events_registrations_values
+                            (regid,value,eventid,elementname)
                             VALUES" . $SQL2;
 		    }
-	
+
 		    if(execute_db_sql($SQL2)){ echo "Added";
 		    }else{
-				execute_db_sql("DELETE FROM events_registrations 
+				execute_db_sql("DELETE FROM events_registrations
                                     WHERE regid='$regid'");
 				echo "Failed";
 			}
 	    }else{ echo "Failed"; }
-	    
+
 	    $reserved++;
     }
 }
@@ -1155,7 +1155,7 @@ global $CFG, $MYVARS, $USER;
     $selected = empty($MYVARS->GET["sel"]) ? false : dbescape($MYVARS->GET["sel"]);
     $initial_display = $selected ? "" : "display:none;";
 	$returnme = '<span style="width:50%;float:left;">'.stripslashes($eventname).'</span>';
-	
+
     //Print all registration button
     $returnme .= '<span style="width:50%;text-align:right;float:right;">
                     <a href="javascript: void(0);"
@@ -1163,10 +1163,10 @@ global $CFG, $MYVARS, $USER;
                                 ajaxapi(\'/features/events/events_ajax.php\',
                                         \'print_registration\',
                                         \'&amp;regid=false&amp;pageid='.$pageid.'&amp;eventname='.urlencode($eventname).'&amp;eventid='.$eventid.'&amp;template_id='.$template_id.'\',
-                                        function() { 
-                                            if (xmlHttp.readyState == 4) { 
-                                                simple_display(\'searchcontainer\'); 
-                                                document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                        function() {
+                                            if (xmlHttp.readyState == 4) {
+                                                simple_display(\'searchcontainer\');
+                                                document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
                                             }
                                         },
                                         true
@@ -1174,18 +1174,18 @@ global $CFG, $MYVARS, $USER;
                        Print All Registrations
                     </a>
                 </span><br />';
-    
+
     //Print online registrations only button
     $returnme .= '<span style="width:50%;text-align:right;float:right;">
-                    <a href="javascript: void(0);" 
-                       onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+                    <a href="javascript: void(0);"
+                       onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                                 ajaxapi(\'/features/events/events_ajax.php\',
                                         \'print_registration\',
                                         \'&amp;regid=false&amp;pageid='.$pageid.'&amp;eventname='.urlencode($eventname).'&amp;online_only=1&amp;eventid='.$eventid.'&amp;template_id='.$template_id.'\',
-                                        function() { 
-                                            if (xmlHttp.readyState == 4) { 
-                                                simple_display(\'searchcontainer\'); 
-                                                document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                        function() {
+                                            if (xmlHttp.readyState == 4) {
+                                                simple_display(\'searchcontainer\');
+                                                document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
                                             }
                                         },
                                         true
@@ -1204,7 +1204,7 @@ global $CFG, $MYVARS, $USER;
 			$values->$i->regid = $registrant["regid"];
 			$i++;
 		}
-		
+
 		$returnme .= '<style>
                         #event_menu {
                             display: none;
@@ -1233,18 +1233,18 @@ global $CFG, $MYVARS, $USER;
                                     '.make_select_from_array("registrants", $values, "regid", "name", $selected, "" , 'onchange="if($(this).val().length > 0){ $(\'#event_menu_button\').show(); } else { $(\'#event_menu_button\').hide(); }"', true, 1, "width: 200px;") . '</td>' .
                         '       <td>
                                     <a id="event_menu_button" title="Menu" style="'.$initial_display.'" href="javascript: void(0);"><img src="'.$CFG->wwwroot.'/images/down.gif" alt="Menu" /></a>
-                                    <ul id="event_menu">' . 
+                                    <ul id="event_menu">' .
                                         '<li>
-                                            <a title="Edit Registration" href="javascript: void(0);" 
-                                                onclick="if(document.getElementById(\'registrants\').value != \'\'){ 
-                                                            document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+                                            <a title="Edit Registration" href="javascript: void(0);"
+                                                onclick="if(document.getElementById(\'registrants\').value != \'\'){
+                                                            document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                                                             ajaxapi(\'/features/events/events_ajax.php\',
                                                                     \'get_registration_info\',
                                                                     \'&amp;pageid='.$pageid.'&amp;eventname='.urlencode($eventname).'&amp;eventid='.$eventid.'&amp;template_id='.$template_id.'&amp;regid=\'+document.getElementById(\'registrants\').value,
-                                                                    function() { 
-                                                                        if (xmlHttp.readyState == 4) { 
-                                                                            simple_display(\'searchcontainer\'); 
-                                                                            document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                                                    function() {
+                                                                        if (xmlHttp.readyState == 4) {
+                                                                            simple_display(\'searchcontainer\');
+                                                                            document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
                                                                         }
                                                                     },
                                                                     true
@@ -1254,22 +1254,22 @@ global $CFG, $MYVARS, $USER;
                                             </a>
                                         </li>' .
                                         '<li>
-                                            <a title="Delete Registration" href="javascript: void(0);" 
-                                                onclick="if(document.getElementById(\'registrants\').value != \'\' && confirm(\'Do you want to delete this registration?\')){ 
+                                            <a title="Delete Registration" href="javascript: void(0);"
+                                                onclick="if(document.getElementById(\'registrants\').value != \'\' && confirm(\'Do you want to delete this registration?\')){
                                                             document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                                                             ajaxapi(\'/features/events/events_ajax.php\',
                                                                     \'delete_registration_info\',
                                                                     \'&amp;regid=\'+document.getElementById(\'registrants\').value,
                                                                     function(){ do_nothing(); }
-                                                            ); 
+                                                            );
                                                             ajaxapi(\'/features/events/events_ajax.php\',
                                                                     \'show_registrations\',
                                                                     \'&amp;pageid='.$pageid.'&amp;eventname='.urlencode($eventname).'&amp;eventid='.$eventid.'&amp;template_id='.$template_id.'\',
-                                                                    function() { 
-                                                                        if (xmlHttp.readyState == 4) { 
-                                                                            simple_display(\'searchcontainer\'); 
-                                                                            document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
-                                                                            init_event_menu(); 
+                                                                    function() {
+                                                                        if (xmlHttp.readyState == 4) {
+                                                                            simple_display(\'searchcontainer\');
+                                                                            document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
+                                                                            init_event_menu();
                                                                         }
                                                                     },
                                                                     true
@@ -1279,16 +1279,16 @@ global $CFG, $MYVARS, $USER;
                                             </a>
                                         </li>' .
                                         '<li>
-                                            <a title="Send Registration Email" href="javascript: void(0);" 
-                                                onclick="if(document.getElementById(\'registrants\').value != \'\'){ 
-                                                            document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+                                            <a title="Send Registration Email" href="javascript: void(0);"
+                                                onclick="if(document.getElementById(\'registrants\').value != \'\'){
+                                                            document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                                                             ajaxapi(\'/features/events/events_ajax.php\',
                                                                     \'resend_registration_email\',
                                                                     \'&amp;pageid='.$pageid.'&amp;eventid='.$eventid.'&amp;regid=\'+document.getElementById(\'registrants\').value,
-                                                                    function() { 
-                                                                        if (xmlHttp.readyState == 4) { 
-                                                                            simple_display(\'searchcontainer\'); 
-                                                                            document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                                                    function() {
+                                                                        if (xmlHttp.readyState == 4) {
+                                                                            simple_display(\'searchcontainer\');
+                                                                            document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
                                                                         }
                                                                     },
                                                                     true
@@ -1315,11 +1315,11 @@ global $CFG, $MYVARS, $USER;
                                                             ajaxapi(\'/features/events/events_ajax.php\',
                                                                     \'show_registrations\',
                                                                     \'&amp;pageid='.$pageid.'&amp;eventname='.urlencode($eventname).'&amp;eventid='.$eventid.'&amp;template_id='.$template_id.'\',
-                                                                    function() { 
-                                                                        if (xmlHttp.readyState == 4) { 
-                                                                            simple_display(\'searchcontainer\'); 
-                                                                            document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
-                                                                            init_event_menu(); 
+                                                                    function() {
+                                                                        if (xmlHttp.readyState == 4) {
+                                                                            simple_display(\'searchcontainer\');
+                                                                            document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
+                                                                            init_event_menu();
                                                                         }
                                                                     },
                                                                     true
@@ -1353,19 +1353,19 @@ global $CFG, $MYVARS, $USER;
         $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
         $i++;
     }
-    
+
 	if($MYVARS->GET["pageid"] == $CFG->SITEID){
-		$SQL = "SELECT * FROM events 
-                    WHERE (pageid=".dbescape($MYVARS->GET["pageid"])." 
-                            OR (siteviewable=1 AND confirmed=1)) 
-                        AND start_reg !='' 
-                        AND (" . $searchstring . ") 
+		$SQL = "SELECT * FROM events
+                    WHERE (pageid=".dbescape($MYVARS->GET["pageid"])."
+                            OR (siteviewable=1 AND confirmed=1))
+                        AND start_reg !=''
+                        AND (" . $searchstring . ")
                     ORDER BY event_begin_date DESC";
 	}else{
-		$SQL = "SELECT * FROM events 
-                    WHERE pageid=".dbescape($MYVARS->GET["pageid"])." 
-                        AND start_reg !='' 
-                        AND (" . $searchstring . ") 
+		$SQL = "SELECT * FROM events
+                    WHERE pageid=".dbescape($MYVARS->GET["pageid"])."
+                        AND start_reg !=''
+                        AND (" . $searchstring . ")
                     ORDER BY event_begin_date DESC";
 	}
 
@@ -1374,34 +1374,34 @@ global $CFG, $MYVARS, $USER;
     $count = $total > (($pagenum+1) * $MYVARS->search_perpage) ? $MYVARS->search_perpage : $total - (($pagenum) * $MYVARS->search_perpage); //get the amount returned...is it a full page of results?
     $events = get_db_result($SQL);
     $amountshown = $firstonpage + $MYVARS->search_perpage < $total ? $firstonpage + $MYVARS->search_perpage : $total;
-    $prev = $pagenum > 0 ? '<a href="javascript: void(0);" onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+    $prev = $pagenum > 0 ? '<a href="javascript: void(0);" onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                                                                     ajaxapi(\'/features/events/events_ajax.php\',
                                                                             \'eventsearch\',
                                                                             \'&amp;pageid='.$MYVARS->GET["pageid"].'&pagenum=' . ($pagenum - 1) . '&amp;searchwords=\'+escape(\'' . $searchwords . '\'),
-                                                                            function() { 
-                                                                                if (xmlHttp.readyState == 4) { 
-                                                                                    simple_display(\'searchcontainer\'); 
-                                                                                    document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                                                            function() {
+                                                                                if (xmlHttp.readyState == 4) {
+                                                                                    simple_display(\'searchcontainer\');
+                                                                                    document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
                                                                                 }
                                                                             },
                                                                             true
-                                                                    );" 
+                                                                    );"
                             onmouseup="this.blur()">
                                 <img src="' . $CFG->wwwroot . '/images/prev.gif" title="Previous Page" alt="Previous Page">
                             </a>' : "";
     $info = 'Viewing ' . ($firstonpage + 1) . " through " . $amountshown . " out of $total";
-    $next = $firstonpage + $MYVARS->search_perpage < $total ? '<a href="javascript: void(0);" onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+    $next = $firstonpage + $MYVARS->search_perpage < $total ? '<a href="javascript: void(0);" onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                                                                                                         ajaxapi(\'/features/events/events_ajax.php\',
                                                                                                                 \'eventsearch\',
                                                                                                                 \'&amp;pageid='.$MYVARS->GET["pageid"].'&amp;pagenum=' . ($pagenum + 1) . '&amp;searchwords=\'+escape(\'' . $searchwords . '\'),
-                                                                                                                function() { 
-                                                                                                                    if (xmlHttp.readyState == 4) { 
-                                                                                                                        simple_display(\'searchcontainer\'); 
-                                                                                                                        document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                                                                                                function() {
+                                                                                                                    if (xmlHttp.readyState == 4) {
+                                                                                                                        simple_display(\'searchcontainer\');
+                                                                                                                        document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
                                                                                                                     }
                                                                                                                 },
                                                                                                                 true
-                                                                                                        );" 
+                                                                                                        );"
                                                                 onmouseup="this.blur()">
                                                                     <img src="' . $CFG->wwwroot . '/images/next.gif" title="Next Page" alt="Next Page">
                                                                 </a>' : "";
@@ -1410,13 +1410,13 @@ global $CFG, $MYVARS, $USER;
         while($event = fetch_row($events)){
         	$export = "";
             $header = $header == "" ? '<table style="width:100%;"><tr><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;font-size:.75em;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><p>' : $header;
-            
+
 			if($event["start_reg"] > 0){
-				$regcount = get_db_count("SELECT * FROM events_registrations 
+				$regcount = get_db_count("SELECT * FROM events_registrations
                                             WHERE eventid='" . $event['eventid']."'");
 				$limit = $event['max_users'] == "0" ? "&#8734;" : $event['max_users'];
 				//GET EXPORT CSV BUTTON
-				if(user_has_ability_in_page($USER->userid, "exportcsv", $event["pageid"])){ 
+				if(user_has_ability_in_page($USER->userid, "exportcsv", $event["pageid"])){
 				    $export = '<a href="javascript: void(0)" onclick="ajaxapi(\'/features/events/events_ajax.php\',
                                                                               \'export_csv\',
                                                                               \'&amp;pageid=' . $event["pageid"] . '&amp;featureid=' . $event['eventid'] . '\',
@@ -1425,22 +1425,22 @@ global $CFG, $MYVARS, $USER;
                                     <img src="' . $CFG->wwwroot . '/images/csv.png" title="Export ' . $regcount . '/' . $limit . ' Registrations" alt="Export ' . $regcount . ' Registrations" />
                                 </a>';}
            	}
-            
+
 			$body .= '<tr style="height:30px;border:3px solid white;font-size:.9em;">
                         <td style="width:40%;padding:5px;font-size:.85em;white-space:nowrap;">
-                            <a href="javascript: void(0)" onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+                            <a href="javascript: void(0)" onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                                                                     ajaxapi(\'/features/events/events_ajax.php\',
                                                                             \'show_registrations\',
                                                                             \'&amp;pageid='.$MYVARS->GET["pageid"].'&amp;eventid='.$event["eventid"].'&amp;eventname='.urlencode($event["name"]).'&amp;template_id='.$event["template_id"].'\',
-                                                                            function() { 
-                                                                                if (xmlHttp.readyState == 4) { 
-                                                                                    simple_display(\'searchcontainer\'); 
-                                                                                    document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                                                            function() {
+                                                                                if (xmlHttp.readyState == 4) {
+                                                                                    simple_display(\'searchcontainer\');
+                                                                                    document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
                                                                                     init_event_menu();
                                                                                 }
                                                                             },
                                                                             true
-                                                                    );" 
+                                                                    );"
                             onmouseup="this.blur()">
                                 ' . $event["name"] . '
                             </a>
@@ -1467,8 +1467,8 @@ global $CFG, $MYVARS, $USER;
 	$SQL = "SELECT * FROM events_registrations WHERE code = '$code'";
 
 	if(strlen($code) > 5 && $registration = get_db_row($SQL)){
-		if($event = get_db_row("SELECT * FROM events 
-                                    WHERE eventid=" . $registration["eventid"] . " 
+		if($event = get_db_row("SELECT * FROM events
+                                    WHERE eventid=" . $registration["eventid"] . "
                                         AND fee_full != 0")){
 			echo "<h3>Registration Found</h3> ";
 			$registrant_name = get_registrant_name($registration["regid"]);
@@ -1481,7 +1481,7 @@ global $CFG, $MYVARS, $USER;
             $paid = empty($paid) ? "0.00" : $paid;
 			$remaining = $total_owed - $paid;
 			$registrant_name = get_registrant_name($registration["regid"]);
-			
+
 			echo "<br /><br />Total Owed:  $" . number_format($total_owed,2) . "<br />";
 			echo "Amount Paid:  $" . number_format($paid,2) . "<br />";
 			echo "<b>Remaining Balance:  $" . number_format($remaining,2) . "</b><br />";
@@ -1511,7 +1511,7 @@ global $CFG, $MYVARS, $USER, $error;
         $MYVARS->GET["cart_total"] = isset($MYVARS->GET["total_owed"]) && $MYVARS->GET["total_owed"] != 0 ? $MYVARS->GET["total_owed"] + $MYVARS->GET["payment_amount"] : $MYVARS->GET["payment_amount"];
         $MYVARS->GET["total_owed"] = get_timestamp() < $event["sale_end"] ? $event["sale_fee"] : $event["fee_full"];
     }
-	
+
 
 	$error = "";
 	if($regid = enter_registration($event['eventid'], $MYVARS->GET, $MYVARS->GET["email"])){ //successful registration
@@ -1554,10 +1554,10 @@ global $CFG, $MYVARS, $USER, $error;
 					If you are done with the registration process, please make out your <br />
 					check or money order in the amount of <span style="color:blue;font-size:1.25em;">$' . $MYVARS->GET["cart_total"] . '</span> payable to <b>' . $event["payableto"] . '</b> and send it to <br /><br />
 					<center>
-					' . $event['checksaddress'] . '.  
+					' . $event['checksaddress'] . '.
 					</center>
 					<br /><br />
-					Thank you for registering for this event. 
+					Thank you for registering for this event.
 					';
 				}
 				echo '</div></center>';
@@ -1590,7 +1590,7 @@ global $CFG, $MYVARS;
 	$hard_limits = dbescape($MYVARS->GET["hard_limits"]);
 	$soft_limits = dbescape($MYVARS->GET["soft_limits"]);
     $hidden_variable1 = $hidden_variable2 = "";
-    
+
 	$returnme = "";
 	if(!$templateid){ echo $returnme;}
 
@@ -1641,7 +1641,7 @@ global $CFG, $MYVARS;
 	$hard_limits = dbescape($MYVARS->GET["hard_limits"]);
 	$soft_limits = dbescape($MYVARS->GET["soft_limits"]);
     $hidden_variable1 = $hidden_variable2 = "";
-    
+
 	$returnme = "";
 	if(!$template_id){ echo $returnme; }
 
@@ -1694,8 +1694,8 @@ global $CFG, $MYVARS, $USER;
 	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='$template_id'");
 	$fields = '<select id="custom_limit_fields">';
 	if($template["folder"] == "none"){
-		$SQL = "SELECT * FROM events_templates_forms 
-                    WHERE template_id='$template_id' 
+		$SQL = "SELECT * FROM events_templates_forms
+                    WHERE template_id='$template_id'
                         AND type != 'payment'";
 		$forms = get_db_result($SQL);
 		while($form = fetch_row($forms)){
@@ -1761,12 +1761,12 @@ global $CFG, $MYVARS, $USER;
 	$add2 = dbescape(urldecode($MYVARS->GET["add2"]));
 	$zip = dbescape(urldecode($MYVARS->GET["zip"]));
 	$eventid = dbescape(urldecode($MYVARS->GET["eventid"]));
-	
+
 	$phone = isset($MYVARS->GET["phone"]) ? dbescape($MYVARS->GET["phone"]) : "";
 	$shared = isset($MYVARS->GET["share"]) ? 1 : 0;
 
-	$id = execute_db_sql("INSERT INTO events_locations 
-                            (location,address_1,address_2,zip,phone,userid,shared) 
+	$id = execute_db_sql("INSERT INTO events_locations
+                            (location,address_1,address_2,zip,phone,userid,shared)
                             VALUES('" . addslashes($name) . "','" . addslashes($add1) . "','" . addslashes($add2) . "',$zip,'$phone','," . $USER->userid . ",',$shared)");
 
 	//Log
@@ -1795,12 +1795,12 @@ global $CFG, $MYVARS;
         $ebd = explode(" ",$MYVARS->GET["event_begin_date"]);
         $event_begin_date = strtotime("$ebd[0] $ebd[1] $ebd[2] $ebd[3] $ebd[4] $ebd[5]");
     }else{ die("No Event Begin Date"); }
-    
+
     if(isset($MYVARS->GET["event_end_date"])){
         $eed = explode(" ",$MYVARS->GET["event_end_date"]);
         $event_end_date = $multiday == "1" ? strtotime("$eed[0] $eed[1] $eed[2] $eed[3] $eed[4] $eed[5]") : $event_begin_date;
     }else{ $event_end_date = $event_begin_date; }
-    
+
     $allday = dbescape($MYVARS->GET["allday"]);
 	$event_begin_time = $allday != "1" ? dbescape($MYVARS->GET["begin_time"]) : '';
 	$event_end_time = $allday != "1" ? dbescape($MYVARS->GET["end_time"]) : '';
@@ -1810,19 +1810,19 @@ global $CFG, $MYVARS;
 	$max_users = $reg == "1" && isset($MYVARS->GET["max"]) ? dbescape($MYVARS->GET["max"]) : '0';
 	$hard_limits = $reg == "1" && isset($MYVARS->GET["hard_limits"]) && $MYVARS->GET["hard_limits"] != "" ? dbescape($MYVARS->GET["hard_limits"]) : '0';
 	$soft_limits = $reg == "1" && isset($MYVARS->GET["soft_limits"]) && $MYVARS->GET["soft_limits"] != "" ? dbescape($MYVARS->GET["soft_limits"]) : '0';
-	
+
     //strtotime php5 fixes
     if(isset($MYVARS->GET["start_reg"])){
         if(strstr($MYVARS->GET["start_reg"],"/")) {
             $startr = explode("/",$MYVARS->GET["start_reg"]);
-            $start_reg = $reg == "1" && isset($MYVARS->GET["start_reg"]) ? strtotime("$startr[1]/$startr[2]/$startr[0]") : '0';    
+            $start_reg = $reg == "1" && isset($MYVARS->GET["start_reg"]) ? strtotime("$startr[1]/$startr[2]/$startr[0]") : '0';
         } else {
             $startr = explode(" ",$MYVARS->GET["start_reg"]);
             $start_reg = $reg == "1" && isset($MYVARS->GET["start_reg"]) ? strtotime("$startr[0] $startr[1] $startr[2] $startr[3] $startr[4] $startr[5]") : '0';
         }
 
     }else{ $start_reg = '0';}
-    
+
     if(isset($MYVARS->GET["stop_reg"])){
         if(strstr($MYVARS->GET["stop_reg"],"/")) {
             $stopr = explode("/",$MYVARS->GET["stop_reg"]);
@@ -1832,7 +1832,7 @@ global $CFG, $MYVARS;
             $stop_reg = $reg == "1" ? strtotime("$stopr[0] $stopr[1] $stopr[2] $stopr[3] $stopr[4] $stopr[5]") : '0';
         }
     }else{ $stop_reg = '0'; }
-    
+
 	$template_id = $reg == "1" ? dbescape($MYVARS->GET["template"]) : '0';
 
 	$fee = dbescape($MYVARS->GET["fee"]);
@@ -1840,7 +1840,7 @@ global $CFG, $MYVARS;
 	$fee_min = $fee != "1" ? '0' : dbescape($MYVARS->GET["min_fee"]);
 	$sale_fee = $fee != "1" ? '0' : dbescape($MYVARS->GET["sale_fee"]);
 	$sale_fee = $sale_fee == "" ? '0' : $sale_fee;
-    
+
     if(isset($MYVARS->GET["sale_end"])){
         if(strstr($MYVARS->GET["sale_end"],"/")) {
             $se = explode("/",$MYVARS->GET["sale_end"]);
@@ -1850,7 +1850,7 @@ global $CFG, $MYVARS;
             $sale_end = $sale_fee != '0' ? strtotime("$se[0] $se[1] $se[2] $se[3] $se[4] $se[5]") : '0';
         }
     }else{ $sale_end = '0'; }
-    
+
 	$payableto = $fee != "1" ? '' : dbescape(urldecode($MYVARS->GET["payableto"]));
 	$checksaddress = $fee != "1" ? '' : dbescape(urldecode($MYVARS->GET["checksaddress"]));
 	$paypal = $fee != "1" ? '' : dbescape($MYVARS->GET["paypal"]);
@@ -1860,11 +1860,11 @@ global $CFG, $MYVARS;
 
 	if(empty($MYVARS->GET["eventid"])){ //New Event
 
-		$SQL = "INSERT INTO events 
+		$SQL = "INSERT INTO events
                             (pageid,template_id,name,category,location,allowinpage,start_reg,stop_reg,max_users,
     				        event_begin_date,event_begin_time,event_end_date,event_end_time,
     				        confirmed,siteviewable,allday,caleventid,byline,description,fee_min,fee_full,payableto,checksaddress,
-    				        paypal,sale_fee,sale_end,contact,email,phone,hard_limits,soft_limits,workers) 
+    				        paypal,sale_fee,sale_end,contact,email,phone,hard_limits,soft_limits,workers)
                     VALUES('$pageid','$template_id','$name','$category','$location','$allowinpage','$start_reg','$stop_reg','$max_users',
                             '$event_begin_date','$event_begin_time','$event_end_date','$event_end_time',
                             '$confirmed','$siteviewable','$allday','$caleventid','$byline','$description','$fee_min','$fee_full','$payableto','$checksaddress',
@@ -1872,9 +1872,9 @@ global $CFG, $MYVARS;
 
 		if($eventid = execute_db_sql($SQL)){
 			$MYVARS->GET['eventid'] = $eventid;
-			
+
             refresh_calendar_events($eventid);
-            
+
             //Save any event template settings if necessary
             if($template_id > 0){ //if a template is chosen
                 //See if it should contain settings
@@ -1887,18 +1887,18 @@ global $CFG, $MYVARS;
                     }
                 }
             }
-   
+
             if ($request) { return $eventid; }
-            
+
             //Log event added
     		log_entry("events", $eventid, "Event Added");
     		if(!$request){ echo "Event Added"; }
 		} else {
-            if (!$request) { 
+            if (!$request) {
                 //Log event error
                 log_entry("events", 0, "Event could NOT be added");
                 echo "Event could NOT be added <br /> <br /> $SQL";
-            } 
+            }
         }
 	}else{
 		$SQL = "UPDATE events SET
@@ -1909,14 +1909,14 @@ global $CFG, $MYVARS;
                      siteviewable='$siteviewable',allday='$allday',byline='$byline',description='$description',paypal='$paypal',fee_min='$fee_min',fee_full='$fee_full',
                      payableto='$payableto',checksaddress='$checksaddress',confirmed='$confirmed',workers='$workers'
 			WHERE eventid='" . dbescape($MYVARS->GET['eventid'])."'";
-        
+
 		if(execute_db_sql($SQL)){
-		  
+
             refresh_calendar_events($MYVARS->GET['eventid']);
 
             //Delete old template settings info just in case things have changed
-            execute_db_sql("DELETE FROM settings 
-                                WHERE type='events_template' 
+            execute_db_sql("DELETE FROM settings
+                                WHERE type='events_template'
                                     AND extra='".$MYVARS->GET["eventid"]."'");
             //Save any event template settings if necessary
             if($template_id > 0){ //if a template is chosen continue
@@ -1926,17 +1926,17 @@ global $CFG, $MYVARS;
                     $settings = unserialize($settings);
                     foreach($settings as $setting){ //save each setting with the default if no other is given
                         $current_setting = isset($MYVARS->GET[$setting['name']]) ? $MYVARS->GET[$setting['name']] : $setting['default'];
-                        execute_db_sql("INSERT INTO settings 
-                                            (type,pageid,featureid,setting_name,setting,extra,defaultsetting) 
+                        execute_db_sql("INSERT INTO settings
+                                            (type,pageid,featureid,setting_name,setting,extra,defaultsetting)
                                             VALUES('events_template',false,false,'".$setting['name']."','".$current_setting."','".$MYVARS->GET['eventid']."','".$setting['default']."')");
                     }
                 }
             }
-            
+
 			//Log event update
 			log_entry("events", dbescape($MYVARS->GET["eventid"]), "Event Edited");
 			if (!$request) { echo "Event Edited"; }
-		} else { 
+		} else {
             if (!$request) {
                 //Log event error
                 log_entry("events", dbescape($MYVARS->GET["eventid"]), "Event could NOT be edited");
@@ -2035,8 +2035,8 @@ global $MYVARS, $CFG, $USER;
 		}
 		$CSV .= "\n";
 	}else{
-		$formlist = get_db_result("SELECT * FROM events_templates_forms 
-                                        WHERE template_id='" . $event['template_id'] . "' 
+		$formlist = get_db_result("SELECT * FROM events_templates_forms
+                                        WHERE template_id='" . $event['template_id'] . "'
                                         ORDER BY sort");
         $sortby = "elementid";
 		while($form = fetch_row($formlist)){
@@ -2045,14 +2045,14 @@ global $MYVARS, $CFG, $USER;
 		$CSV .= "\n";
 	}
 
-	if($registrations = get_db_result("SELECT * FROM events_registrations 
-                                            WHERE eventid='$eventid' 
-                                                AND queue='0' 
+	if($registrations = get_db_result("SELECT * FROM events_registrations
+                                            WHERE eventid='$eventid'
+                                                AND queue='0'
                                                 AND verified='1'")){
 		while($regid = fetch_row($registrations)){
 			$row = date("F j g:i a", $regid["date"]) . "," . $regid["email"];
-			$values = get_db_result("SELECT * FROM events_registrations_values 
-                                        WHERE regid='" . $regid["regid"] . "' 
+			$values = get_db_result("SELECT * FROM events_registrations_values
+                                        WHERE regid='" . $regid["regid"] . "'
                                         ORDER BY entryid");
             $reorder = array();
 			while($value = fetch_row($values)){
@@ -2066,27 +2066,27 @@ global $MYVARS, $CFG, $USER;
         			$i++;
         		}
             }else{
-          		$formlist = get_db_result("SELECT * FROM events_templates_forms 
-                                                WHERE template_id='" . $event['template_id'] . "' 
+          		$formlist = get_db_result("SELECT * FROM events_templates_forms
+                                                WHERE template_id='" . $event['template_id'] . "'
                                                 ORDER BY sort");
                 $sortby = "elementid";
         		while($form = fetch_row($formlist)){
                     $row .= ',"' . $reorder[$form[$sortby]]["value"] . '"';
-        		}    
+        		}
             }
 			$CSV .= $row . "\n";
 		}
 	}
-	
-    if($registrations = get_db_result("SELECT * FROM events_registrations 
-                                            WHERE eventid='$eventid' 
-                                                AND queue='0' 
+
+    if($registrations = get_db_result("SELECT * FROM events_registrations
+                                            WHERE eventid='$eventid'
+                                                AND queue='0'
                                                 AND verified='0'")){
 		$CSV .= "\nPENDING\n";
 		while($regid = fetch_row($registrations)){
 			$row = date("F j g:i a", $regid["date"]) . "," . $regid["email"];
-			$values = get_db_result("SELECT * FROM events_registrations_values 
-                                        WHERE regid='" . $regid["regid"] . "' 
+			$values = get_db_result("SELECT * FROM events_registrations_values
+                                        WHERE regid='" . $regid["regid"] . "'
                                         ORDER BY entryid");
             $reorder = array();
 			while($value = fetch_row($values)){
@@ -2100,26 +2100,26 @@ global $MYVARS, $CFG, $USER;
         			$i++;
         		}
             }else{
-          		$formlist = get_db_result("SELECT * FROM events_templates_forms 
-                                                WHERE template_id='" . $event['template_id'] . "' 
+          		$formlist = get_db_result("SELECT * FROM events_templates_forms
+                                                WHERE template_id='" . $event['template_id'] . "'
                                                 ORDER BY sort");
                 $sortby = "elementid";
         		while($form = fetch_row($formlist)){
                     $row .= ',"' . $reorder[$form[$sortby]]["value"] . '"';
-        		}    
+        		}
             }
 			$CSV .= $row . "\n";
 		}
 	}
-    
-	if($registrations = get_db_result("SELECT * FROM events_registrations 
-                                            WHERE eventid='$eventid' 
+
+	if($registrations = get_db_result("SELECT * FROM events_registrations
+                                            WHERE eventid='$eventid'
                                                 AND queue='1'")){
 		$CSV .= "\nQUEUE\n";
 		while($regid = fetch_row($registrations)){
 			$row = date("F j g:i a", $regid["date"]) . "," . $regid["email"];
-			$values = get_db_result("SELECT * FROM events_registrations_values 
-                                        WHERE regid='" . $regid["regid"] . "' 
+			$values = get_db_result("SELECT * FROM events_registrations_values
+                                        WHERE regid='" . $regid["regid"] . "'
                                         ORDER BY entryid");
             $reorder = array();
 			while($value = fetch_row($values)){
@@ -2133,13 +2133,13 @@ global $MYVARS, $CFG, $USER;
         			$i++;
         		}
             }else{
-          		$formlist = get_db_result("SELECT * FROM events_templates_forms 
-                                                WHERE template_id='" . $event['template_id'] . "' 
+          		$formlist = get_db_result("SELECT * FROM events_templates_forms
+                                                WHERE template_id='" . $event['template_id'] . "'
                                                 ORDER BY sort");
                 $sortby = "elementid";
         		while($form = fetch_row($formlist)){
                     $row .= ',"' . $reorder[$form[$sortby]]["value"] . '"';
-        		}    
+        		}
             }
 			$CSV .= $row . "\n";
 		}
@@ -2156,27 +2156,27 @@ function send_facebook_message(){
 global $CFG, $MYVARS;
     require_once ($CFG->dirroot . '/features/events/facebook/facebook.php'); //'<path to facebook library, you uploaded>/facebook.php';
     $info = unserialize(base64_decode($MYVARS->GET["info"]));
-    
+
     $config = array(
         'appId' => $info[2]->app_key,
         'secret' => $info[2]->app_secret,
     );
-    
+
     $event = get_db_row("SELECT * FROM events WHERE eventid = '".$info[0]."'");
     $facebook = new Facebook($config);
-    
+
     if($user_id = $facebook->getUser()){
-      // We have a user ID, so probably a logged in user.   
-        try {        
+      // We have a user ID, so probably a logged in user.
+        try {
             $ret_obj = $facebook->api('/me/feed', 'POST',
                 array(
                   'link' => $CFG->wwwroot,
                   'message' => $info[1] . ' has registered to attend '.$event["name"].'!'
              ));
-            echo '<script type="text/javascript">window.location = "//www.facebook.com"</script>'; 
+            echo '<script type="text/javascript">window.location = "//www.facebook.com"</script>';
         } catch(FacebookApiException $e) {
-            echo '<script type="text/javascript">jwindow.close();</script>';  
-        }  
+            echo '<script type="text/javascript">jwindow.close();</script>';
+        }
     }
 }
 
@@ -2203,9 +2203,9 @@ global $CFG, $MYVARS, $USER;
         $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
         $i++;
     }
-    
-	$SQL = "SELECT * FROM events_templates 
-                WHERE (" . $searchstring . ") 
+
+	$SQL = "SELECT * FROM events_templates
+                WHERE (" . $searchstring . ")
                 ORDER BY name";
 
     $total = get_db_count($SQL); //get the total for all pages returned.
@@ -2213,30 +2213,30 @@ global $CFG, $MYVARS, $USER;
     $count = $total > (($pagenum+1) * $MYVARS->search_perpage) ? $MYVARS->search_perpage : $total - (($pagenum) * $MYVARS->search_perpage); //get the amount returned...is it a full page of results?
     $results = get_db_result($SQL);
     $amountshown = $firstonpage + $MYVARS->search_perpage < $total ? $firstonpage + $MYVARS->search_perpage : $total;
-    $prev = $pagenum > 0 ? '<a href="javascript: void(0);" onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+    $prev = $pagenum > 0 ? '<a href="javascript: void(0);" onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                                                                     ajaxapi(\'/features/events/events_ajax.php\',
                                                                             \'templatesearch\',
                                                                             \'&amp;pagenum=' . ($pagenum - 1) . '&amp;searchwords=\'+escape(\'' . $searchwords . '\'),
-                                                                            function() { 
-                                                                                if (xmlHttp.readyState == 4) { 
-                                                                                    simple_display(\'searchcontainer\'); 
-                                                                                    document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                                                            function() {
+                                                                                if (xmlHttp.readyState == 4) {
+                                                                                    simple_display(\'searchcontainer\');
+                                                                                    document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
                                                                                 }
                                                                             },
                                                                             true
-                                                                    );" 
+                                                                    );"
                             onmouseup="this.blur()">
                                 <img src="' . $CFG->wwwroot . '/images/prev.gif" title="Previous Page" alt="Previous Page">
                             </a>' : "";
     $info = 'Viewing ' . ($firstonpage + 1) . " through " . $amountshown . " out of $total";
-    $next = $firstonpage + $MYVARS->search_perpage < $total ? '<a onmouseup="this.blur()" href="javascript: void(0);" onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+    $next = $firstonpage + $MYVARS->search_perpage < $total ? '<a onmouseup="this.blur()" href="javascript: void(0);" onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                                                                                                                                 ajaxapi(\'/features/events/events_ajax.php\',
                                                                                                                                         \'templatesearch\',
                                                                                                                                         \'&amp;pagenum=' . ($pagenum + 1) . '&amp;searchwords=\'+escape(\'' . $searchwords . '\'),
-                                                                                                                                        function() { 
-                                                                                                                                            if (xmlHttp.readyState == 4) { 
-                                                                                                                                                simple_display(\'searchcontainer\'); 
-                                                                                                                                                document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                                                                                                                        function() {
+                                                                                                                                            if (xmlHttp.readyState == 4) {
+                                                                                                                                                simple_display(\'searchcontainer\');
+                                                                                                                                                document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
                                                                                                                                             }
                                                                                                                                         },
                                                                                                                                         true
@@ -2259,22 +2259,22 @@ global $CFG, $MYVARS, $USER;
         while($template = fetch_row($results)){
         	$export = "";
             $header = $header == "" ? '<table style="width:100%;"><tr><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;font-size:.75em;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><p>' : $header;
-            
+
             $type = $template["folder"] == "none" ? "DB" : "EXTERNAL";
-            
+
 			if(!empty($template["activated"])){ // ACTIVE
                 $status = '<a href="javascript: void(0)" onclick="ajaxapi(\'/features/events/events_ajax.php\',
                                                                           \'change_template_status\',
                                                                           \'&amp;status=1&amp;template_id='.$template["template_id"].'\',
-                                                                          function() { 
-                                                                            document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+                                                                          function() {
+                                                                            document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                                                                             ajaxapi(\'/features/events/events_ajax.php\',
                                                                                     \'templatesearch\',
                                                                                     \'&amp;pagenum=' . $pagenum . '&amp;searchwords=\'+escape(\'' . $MYVARS->GET["searchwords"] . '\'),
-                                                                                    function() { 
-                                                                                        if (xmlHttp.readyState == 4) { 
-                                                                                            simple_display(\'searchcontainer\'); 
-                                                                                            document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                                                                    function() {
+                                                                                        if (xmlHttp.readyState == 4) {
+                                                                                            simple_display(\'searchcontainer\');
+                                                                                            document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
                                                                                         }
                                                                                     },
                                                                                     true
@@ -2286,15 +2286,15 @@ global $CFG, $MYVARS, $USER;
                 $status = '<a href="javascript: void(0)" onclick="ajaxapi(\'/features/events/events_ajax.php\',
                                                                           \'change_template_status\',
                                                                           \'&amp;status=0&amp;template_id='.$template["template_id"].'\',
-                                                                          function() { 
-                                                                            document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+                                                                          function() {
+                                                                            document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                                                                             ajaxapi(\'/features/events/events_ajax.php\',
                                                                                     \'templatesearch\',
                                                                                     \'&amp;pagenum=' . $pagenum . '&amp;searchwords=\'+escape(\'' . $MYVARS->GET["searchwords"] . '\'),
-                                                                                    function() { 
-                                                                                        if (xmlHttp.readyState == 4) { 
-                                                                                            simple_display(\'searchcontainer\'); 
-                                                                                            document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                                                                    function() {
+                                                                                        if (xmlHttp.readyState == 4) {
+                                                                                            simple_display(\'searchcontainer\');
+                                                                                            document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
                                                                                         }
                                                                                     },
                                                                                     true
@@ -2303,7 +2303,7 @@ global $CFG, $MYVARS, $USER;
                     <img src="' . $CFG->wwwroot . '/images/inactive.gif" title="Activate Template" alt="Activate Template" />
                 </a>';
            	}
-            
+
 			$body .= '<tr style="height:30px;border:3px solid white;font-size:.9em;">
                         <td style="width:40%;padding:5px;font-size:.85em;white-space:nowrap;">
                             ' . $template["name"] . '
@@ -2327,16 +2327,16 @@ function change_template_status() {
 global $USER, $CFG, $MYVARS;
     $template_id = $MYVARS->GET["template_id"];
     $status = $MYVARS->GET["status"];
-    
+
     if (is_numeric($template_id)) {
         if ($status == "1") {
             execute_db_sql("UPDATE events_templates SET activated='0' WHERE template_id='$template_id'");
         } else if ($status == "0") {
             execute_db_sql("UPDATE events_templates SET activated='1' WHERE template_id='$template_id'");
         } else {
-            // Failed    
+            // Failed
         }
-    } 
+    }
 }
 
 function change_bgcheck_status() {
@@ -2344,7 +2344,7 @@ global $USER, $CFG, $MYVARS;
     $pageid = $_COOKIE["pageid"];
     $staffid = $MYVARS->GET["staffid"];
     $date = strtotime($MYVARS->GET["bgcdate"]);
-    
+
     if (is_numeric($pageid) && is_numeric($staffid) && is_numeric($date)) {
         execute_db_sql("UPDATE events_staff SET bgcheckpassdate='$date',bgcheckpass='1' WHERE staffid='$staffid' AND pageid='$pageid'");
         execute_db_sql("UPDATE events_staff_archive SET bgcheckpassdate='$date',bgcheckpass='1' WHERE staffid='$staffid' AND year='".date('Y')."' AND pageid='$pageid'");
@@ -2412,19 +2412,20 @@ global $CFG, $MYVARS, $USER;
                             $contact->fname = $user["fname"];
                             $contact->lname = $user["lname"];
                             $contact->email = $email;
-    
+
                             // Send email to the requester letting them know we received the request.
                             if (!empty($sendemails)) {
                                 send_email($contact, $emailnotice, false, $subject, $message);
                                 $staffcomstatus[] = $user["fname"] . " " . $user["lname"] . " ($email) contacted.";
                             } else {
-                                $staffcomstatus[] = $user["fname"] . " " . $user["lname"] . " ($email) <strong>Requires $thingstodo action(s)</strong>";
+                                $staffcomstatus[] = $user["fname"] . " " . $user["lname"] . " ($email) <strong> Requires: " . implode(", ", array_column($status, 'tag')) . "</strong>";
                             }
                         } else {
-                            $staffapproved[] = $user["fname"] . " " . $user["lname"] . " ($email) is <strong>APPROVED</strong>";
+                            $staffapproved[] = $user["fname"] . " " . $user["lname"] . " ($email) is <strong> APPROVED</strong>";
                         }
-    
+
                     } else {
+                        $status = staff_status($archive);
                         $message = "
                         Dear ".$user["fname"]." ".$user["lname"]."
                         <p><strong>If you are receiving this, it is because we have been notified that you have been selected to be on staff this year.</strong>&nbsp; <strong>Please do the following ASAP.&nbsp;&nbsp; You must complete this staff application to be a staff member. </strong></p>
@@ -2436,20 +2437,20 @@ global $CFG, $MYVARS, $USER;
                         <br /><br />
                         Current Status:<br />
                         <div style='color:red;font-weight:bold'><img style='vertical-align: middle;' src='" . $protocol.$CFG->wwwroot . "/images/error.gif' /> Application Incomplete</div>
-                        <div style='color:red;font-weight:bold'><img style='vertical-align: middle;' src='" . $protocol.$CFG->wwwroot . "/images/error.gif' /> Background Check Incomplete</div>
+                        <div style='color:red;font-weight:bold'><img style='vertical-align: middle;' src='" . $protocol.$CFG->wwwroot . "/images/error.gif' /> Background Check Incomplete or Out of Date</div>
                         ";
-    
+
                         $contact = new stdClass();
                         $contact->fname = $user["fname"];
                         $contact->lname = $user["lname"];
                         $contact->email = $email;
-    
+
                         // Send email to the requester letting them know we received the request.
                         if (!empty($sendemails)) {
                             send_email($contact, $emailnotice, false, $subject, $message);
                             $staffcomstatus[] = $user["fname"] . " " . $user["lname"] . " ($email) contacted.";
                         } else {
-                            $staffcomstatus[] = $user["fname"] . " " . $user["lname"] . " ($email) <strong>Requires 2 action(s)</strong>";
+                            $staffcomstatus[] = $user["fname"] . " " . $user["lname"] . " ($email) <strong> Requires: " . implode(", ", array_column($status, 'tag')) . "</strong>";
                         }
                     }
                 } else { // Not an email we know, so send the full email.
@@ -2462,7 +2463,7 @@ global $CFG, $MYVARS, $USER;
                         send_email($contact, $emailnotice, false, $subject, $message);
                         $staffcomstatus[] = "$email contacted.";
                     } else {
-                        $staffcomstatus[] = "$email <strong>Requires 3 action(s)</strong>";
+                        $staffcomstatus[] = "$email <strong> Requires: Account, Application, Background</strong>";
                     }
                 }
             } else {
@@ -2470,7 +2471,7 @@ global $CFG, $MYVARS, $USER;
                     $staffcomstatus[] = "$email is not a valid email address.";
                 }
             }
-        }        
+        }
     }
 
     echo implode('<br />', $staffcomstatus) . "<br /><br />" . implode('<br />', $staffapproved);
@@ -2499,10 +2500,10 @@ global $CFG, $MYVARS, $USER;
         $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
         $i++;
     }
-    
+
     $pageid = $_COOKIE["pageid"];
-	$SQL = "SELECT * FROM events_staff 
-                WHERE (" . $searchstring . ") AND pageid='$pageid' 
+	$SQL = "SELECT * FROM events_staff
+                WHERE (" . $searchstring . ") AND pageid='$pageid'
                 ORDER BY name";
 
     $total = get_db_count($SQL); //get the total for all pages returned.
@@ -2510,30 +2511,30 @@ global $CFG, $MYVARS, $USER;
     $count = $total > (($pagenum+1) * $MYVARS->search_perpage) ? $MYVARS->search_perpage : $total - (($pagenum) * $MYVARS->search_perpage); //get the amount returned...is it a full page of results?
     $results = get_db_result($SQL);
     $amountshown = $firstonpage + $MYVARS->search_perpage < $total ? $firstonpage + $MYVARS->search_perpage : $total;
-    $prev = $pagenum > 0 ? '<a href="javascript: void(0);" onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+    $prev = $pagenum > 0 ? '<a href="javascript: void(0);" onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                                                                     ajaxapi(\'/features/events/events_ajax.php\',
                                                                             \'appsearch\',
                                                                             \'&amp;pagenum=' . ($pagenum - 1) . '&amp;searchwords=\'+escape(\'' . $searchwords . '\'),
-                                                                            function() { 
-                                                                                if (xmlHttp.readyState == 4) { 
-                                                                                    simple_display(\'searchcontainer\'); 
-                                                                                    document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                                                            function() {
+                                                                                if (xmlHttp.readyState == 4) {
+                                                                                    simple_display(\'searchcontainer\');
+                                                                                    document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
                                                                                 }
                                                                             },
                                                                             true
-                                                                    );" 
+                                                                    );"
                             onmouseup="this.blur()">
                                 <img src="' . $CFG->wwwroot . '/images/prev.gif" title="Previous Page" alt="Previous Page">
                             </a>' : "";
     $info = 'Viewing ' . ($firstonpage + 1) . " through " . $amountshown . " out of $total";
-    $next = $firstonpage + $MYVARS->search_perpage < $total ? '<a onmouseup="this.blur()" href="javascript: void(0);" onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+    $next = $firstonpage + $MYVARS->search_perpage < $total ? '<a onmouseup="this.blur()" href="javascript: void(0);" onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                                                                                                                                 ajaxapi(\'/features/events/events_ajax.php\',
                                                                                                                                         \'appsearch\',
                                                                                                                                         \'&amp;pagenum=' . ($pagenum + 1) . '&amp;searchwords=\'+escape(\'' . $searchwords . '\'),
-                                                                                                                                        function() { 
-                                                                                                                                            if (xmlHttp.readyState == 4) { 
-                                                                                                                                                simple_display(\'searchcontainer\'); 
-                                                                                                                                                document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                                                                                                                        function() {
+                                                                                                                                            if (xmlHttp.readyState == 4) {
+                                                                                                                                                simple_display(\'searchcontainer\');
+                                                                                                                                                document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
                                                                                                                                             }
                                                                                                                                         },
                                                                                                                                         true
@@ -2559,15 +2560,15 @@ global $CFG, $MYVARS, $USER;
             $button = '<a href="javascript: void(0)" onclick="if($(\'#bgcheckdate_'.$staff["staffid"].'\').prop(\'disabled\')){ $(\'#bgcheckdate_'.$staff["staffid"].'\').prop(\'disabled\', false); } else { ajaxapi(\'/features/events/events_ajax.php\',
                                                                       \'change_bgcheck_status\',
                                                                       \'&amp;bgcdate=\'+$(\'#bgcheckdate_'.$staff["staffid"].'\').val()+\'&amp;staffid='.$staff["staffid"].'\',
-                                                                      function() { 
-                                                                        document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+                                                                      function() {
+                                                                        document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                                                                         ajaxapi(\'/features/events/events_ajax.php\',
                                                                                 \'appsearch\',
                                                                                 \'&amp;pagenum=' . $pagenum . '&amp;searchwords=\'+escape(\'' . $MYVARS->GET["searchwords"] . '\'),
-                                                                                function() { 
-                                                                                    if (xmlHttp.readyState == 4) { 
-                                                                                        simple_display(\'searchcontainer\'); 
-                                                                                        document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                                                                function() {
+                                                                                    if (xmlHttp.readyState == 4) {
+                                                                                        simple_display(\'searchcontainer\');
+                                                                                        document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
                                                                                     }
                                                                                 },
                                                                                 true
@@ -2575,15 +2576,15 @@ global $CFG, $MYVARS, $USER;
                                                                       }); }">
                 <img style="vertical-align: middle;" src="' . $CFG->wwwroot . '/images/manage.png" title="Edit Background Check Date" alt="Edit Background Check Date" />
             </a>';
-            
-            $applookup = 'document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+
+            $applookup = 'document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                                 ajaxapi(\'/features/events/events_ajax.php\',
                                         \'show_staff_app\',
                                         \'&amp;staffid='.$staff["staffid"].'&amp;pagenum=' . $pagenum . '&amp;searchwords=\'+escape(\'' . $MYVARS->GET["searchwords"] . '\'),
-                                        function() { 
-                                            if (xmlHttp.readyState == 4) { 
-                                                simple_display(\'searchcontainer\'); 
-                                                document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                        function() {
+                                            if (xmlHttp.readyState == 4) {
+                                                simple_display(\'searchcontainer\');
+                                                document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
                                             }
                                         },
                                         true
@@ -2617,15 +2618,15 @@ global $CFG, $MYVARS, $USER;
     $year = isset($MYVARS->GET["year"]) ? trim($MYVARS->GET["year"]) : date("Y");
     $pagenum = isset($MYVARS->GET["pagenum"]) ? dbescape($MYVARS->GET["pagenum"]) : 0;
     echo '<link rel="stylesheet" type="text/css" href="'.$CFG->wwwroot.'/styles/print.css">';
-    echo '<a class="dontprint" title="Return to Staff Applications" href="javascript: void(0)" 
-                onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+    echo '<a class="dontprint" title="Return to Staff Applications" href="javascript: void(0)"
+                onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                          ajaxapi(\'/features/events/events_ajax.php\',
                                  \'appsearch\',
                                  \'&amp;pagenum=' . $pagenum . '&amp;searchwords='. $searchwords . '\',
-                                 function() { 
-                                    if (xmlHttp.readyState == 4) { 
-                                        simple_display(\'searchcontainer\'); 
-                                        document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                 function() {
+                                    if (xmlHttp.readyState == 4) {
+                                        simple_display(\'searchcontainer\');
+                                        document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
                                         init_event_menu();
                                     }
                                  },
@@ -2634,14 +2635,14 @@ global $CFG, $MYVARS, $USER;
                          return false;
                 ">Return to Staff Applications
              </a>';
-    $applookup = 'if($(this).val() > 0){ document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; 
+    $applookup = 'if($(this).val() > 0){ document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                                     ajaxapi(\'/features/events/events_ajax.php\',
                                             \'show_staff_app\',
                                             \'&amp;staffid='.$staffid.'&amp;year=\'+$(this).val()+\'&amp;pagenum=' . $pagenum . '&amp;searchwords=\'+escape(\'' . $searchwords . '\'),
-                                            function() { 
-                                                if (xmlHttp.readyState == 4) { 
-                                                    simple_display(\'searchcontainer\'); 
-                                                    document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; 
+                                            function() {
+                                                if (xmlHttp.readyState == 4) {
+                                                    simple_display(\'searchcontainer\');
+                                                    document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
                                                 }
                                             },
                                             true
@@ -2672,7 +2673,7 @@ function event_save_staffapp(){
 global $CFG,$MYVARS,$USER;
     $userid = dbescape($USER->userid);
     $staffid = empty($MYVARS->GET["staffid"]) ? false : dbescape($MYVARS->GET["staffid"]);
-    
+
     // Check for valid pageid
     $pageid = !empty($_COOKIE["pageid"]) ? $_COOKIE["pageid"] : (!empty($_GET["pageid"]) && is_numeric($_GET["pageid"]) ? $_GET["pageid"] : false);
 
@@ -2697,22 +2698,22 @@ global $CFG,$MYVARS,$USER;
         $workerconsent = dbescape(nameize($MYVARS->GET["workerconsent"]));
         $workerconsentsig = dbescape($MYVARS->GET["workerconsentsig"]);
         $workerconsentdate = dbescape(strtotime($MYVARS->GET["workerconsentdate"]));
-    
+
         $ref1name = dbescape(nameize($MYVARS->GET["ref1name"]));
         $ref1relationship = dbescape($MYVARS->GET["ref1relationship"]);
         $ref1phone = preg_replace('/\d{3}/', '$0-', trim(preg_replace("/\D/", "", $MYVARS->GET["ref1phone"])), 2);
         $ref1phone = dbescape($ref1phone);
-    
+
         $ref2name = dbescape(nameize($MYVARS->GET["ref2name"]));
         $ref2relationship = dbescape($MYVARS->GET["ref2relationship"]);
         $ref2phone = preg_replace('/\d{3}/', '$0-', trim(preg_replace("/\D/", "", $MYVARS->GET["ref2phone"])), 2);
         $ref2phone = dbescape($ref2phone);
-    
+
         $ref3name = dbescape(nameize($MYVARS->GET["ref3name"]));
         $ref3relationship = dbescape($MYVARS->GET["ref3relationship"]);
         $ref3phone = preg_replace('/\d{3}/', '$0-', trim(preg_replace("/\D/", "", $MYVARS->GET["ref3phone"])), 2);
         $ref3phone = dbescape($ref3phone);
-        
+
         if(!empty($staffid)) {
             $SQL = "UPDATE events_staff SET userid='$userid',pageid='$pageid',name='$name',phone='$phone',dateofbirth='$dateofbirth',address='$address',
                         agerange='$agerange',cocmember='$cocmember',congregation='$congregation',priorwork='$priorwork',
@@ -2726,18 +2727,18 @@ global $CFG,$MYVARS,$USER;
             $success = execute_db_sql($SQL);
             $subject = "Application Updated";
         } else {
-            $SQL = "INSERT INTO events_staff 
-                        (userid,pageid,name,phone,dateofbirth,address,agerange,cocmember,congregation,priorwork,q1_1,q1_2,q1_3,q2_1,q2_2,q2_3,parentalconsent,parentalconsentsig,workerconsent,workerconsentsig,workerconsentdate,ref1name,ref1relationship,ref1phone,ref2name,ref2relationship,ref2phone,ref3name,ref3relationship,ref3phone,bgcheckpass,bgcheckpassdate) 
-                        VALUES('$userid','$pageid','$name','$phone','$dateofbirth','$address','$agerange','$cocmember','$congregation','$priorwork','$q1_1','$q1_2','$q1_3','$q2_1','$q2_2','$q2_3','$parentalconsent','$parentalconsentsig','$workerconsent','$workerconsentsig','$workerconsentdate','$ref1name','$ref1relationship','$ref1phone','$ref2name','$ref2relationship','$ref2phone','$ref3name','$ref3relationship','$ref3phone','',0)";    
+            $SQL = "INSERT INTO events_staff
+                        (userid,pageid,name,phone,dateofbirth,address,agerange,cocmember,congregation,priorwork,q1_1,q1_2,q1_3,q2_1,q2_2,q2_3,parentalconsent,parentalconsentsig,workerconsent,workerconsentsig,workerconsentdate,ref1name,ref1relationship,ref1phone,ref2name,ref2relationship,ref2phone,ref3name,ref3relationship,ref3phone,bgcheckpass,bgcheckpassdate)
+                        VALUES('$userid','$pageid','$name','$phone','$dateofbirth','$address','$agerange','$cocmember','$congregation','$priorwork','$q1_1','$q1_2','$q1_3','$q2_1','$q2_2','$q2_3','$parentalconsent','$parentalconsentsig','$workerconsent','$workerconsentsig','$workerconsentdate','$ref1name','$ref1relationship','$ref1phone','$ref2name','$ref2relationship','$ref2phone','$ref3name','$ref3relationship','$ref3phone','',0)";
             $success = execute_db_sql($SQL);
             $subject = "Application Complete";
         }
-        		  
+
         //Save the request
         if($success){
             $staffid = !empty($staffid) ? $staffid : $success;
             $staff = get_db_row("SELECT * FROM events_staff WHERE staffid='$staffid'");
-    		
+
             if(get_db_row("SELECT * FROM events_staff_archive WHERE staffid='$staffid' AND pageid='$pageid' AND year='".date("Y")."'")){
                 $SQL = "UPDATE events_staff_archive SET name='$name',phone='$phone',dateofbirth='$dateofbirth',address='$address',
                     agerange='$agerange',cocmember='$cocmember',congregation='$congregation',priorwork='$priorwork',
@@ -2749,28 +2750,28 @@ global $CFG,$MYVARS,$USER;
                     ref3name='$ref3name',ref3relationship='$ref3relationship',ref3phone='$ref3phone',
                     bgcheckpass='".$staff["bgcheckpass"]."',bgcheckpassdate='".$staff["bgcheckpassdate"]."'
                     WHERE staffid='$staffid' AND year='".date("Y")."' AND pageid='$pageid'";
-                execute_db_sql($SQL);    
+                execute_db_sql($SQL);
             } else {
-                $SQL = "INSERT INTO events_staff_archive 
-                            (staffid,userid,pageid,year,name,phone,dateofbirth,address,agerange,cocmember,congregation,priorwork,q1_1,q1_2,q1_3,q2_1,q2_2,q2_3,parentalconsent,parentalconsentsig,workerconsent,workerconsentsig,workerconsentdate,ref1name,ref1relationship,ref1phone,ref2name,ref2relationship,ref2phone,ref3name,ref3relationship,ref3phone,bgcheckpass,bgcheckpassdate) 
-                            VALUES('$staffid','$userid','$pageid','".date("Y")."','$name','$phone','$dateofbirth','$address','$agerange','$cocmember','$congregation','$priorwork','$q1_1','$q1_2','$q1_3','$q2_1','$q2_2','$q2_3','$parentalconsent','$parentalconsentsig','$workerconsent','$workerconsentsig','$workerconsentdate','$ref1name','$ref1relationship','$ref1phone','$ref2name','$ref2relationship','$ref2phone','$ref3name','$ref3relationship','$ref3phone','".$staff["bgcheckpass"]."',".$staff["bgcheckpassdate"].")";    
-                execute_db_sql($SQL);            
+                $SQL = "INSERT INTO events_staff_archive
+                            (staffid,userid,pageid,year,name,phone,dateofbirth,address,agerange,cocmember,congregation,priorwork,q1_1,q1_2,q1_3,q2_1,q2_2,q2_3,parentalconsent,parentalconsentsig,workerconsent,workerconsentsig,workerconsentdate,ref1name,ref1relationship,ref1phone,ref2name,ref2relationship,ref2phone,ref3name,ref3relationship,ref3phone,bgcheckpass,bgcheckpassdate)
+                            VALUES('$staffid','$userid','$pageid','".date("Y")."','$name','$phone','$dateofbirth','$address','$agerange','$cocmember','$congregation','$priorwork','$q1_1','$q1_2','$q1_3','$q2_1','$q2_2','$q2_3','$parentalconsent','$parentalconsentsig','$workerconsent','$workerconsentsig','$workerconsentdate','$ref1name','$ref1relationship','$ref1phone','$ref2name','$ref2relationship','$ref2phone','$ref3name','$ref3relationship','$ref3phone','".$staff["bgcheckpass"]."',".$staff["bgcheckpassdate"].")";
+                execute_db_sql($SQL);
             }
-            
+
            	//Log
 	        log_entry("event", $pageid, $subject);
-            
+
             $emailnotice = new stdClass();
             $emailnotice->email = $CFG->siteemail;
             $emailnotice->fname = $CFG->sitename;
             $emailnotice->lname = "";
 
             //Requesting email setup
-            $message = "<strong>$name has applied to work</strong>";    
-            
+            $message = "<strong>$name has applied to work</strong>";
+
             //Send email to the requester letting them know we received the request
             send_email($emailnotice,$emailnotice,false,$subject,$message);
-        
+
             $backgroundchecklink = '';
             $featureid = "*";
             if(!$settings = fetch_settings("events", $featureid, $pageid)){
@@ -2778,23 +2779,23 @@ global $CFG,$MYVARS,$USER;
         		$settings = fetch_settings("events", $featureid, $pageid);
         	}
             $linkurl = $settings->events->$featureid->bgcheck_url->setting;
-            
+
             $status = empty($staff["bgcheckpass"]) ? false : (time()-$staff["bgcheckpassdate"] > ($settings->events->$featureid->bgcheck_years->setting * 365 * 24 * 60 * 60) ? false : true);
-            
+
             $eighteen = 18 * 365 * 24 * 60 * 60; // 18 years in seconds
             $backgroundchecklink = ((time() - $dateofbirth) < $eighteen) || ($status || empty($linkurl)) ? '' : '
                <br /><br />
                If you have not already done so, please complete a background check.<br />
-               <h2><a href="'.$linkurl.'">Submit a background check</a></h2>'; 
-            
+               <h2><a href="'.$linkurl.'">Submit a background check</a></h2>';
+
             echo "<div style='text-align:center;'><h1>$subject</h1>$backgroundchecklink</div>";
         } else {
-            echo "<div style='text-align:center;'><h1>Failed to save application.</h1></div>"; 
-        }        
+            echo "<div style='text-align:center;'><h1>Failed to save application.</h1></div>";
+        }
     } else {
-        echo "<div style='text-align:center;'><h1>The page has timed out and the form could not be save for security reasons.  Please try again.</h1></div>"; 
+        echo "<div style='text-align:center;'><h1>The page has timed out and the form could not be save for security reasons.  Please try again.</h1></div>";
     }
-        
+
 }
 
 function export_staffapp(){
@@ -2835,7 +2836,7 @@ global $MYVARS, $CFG, $USER;
                     "Background Check",
                     "Background Check Date");
 	$CSV = '"' . implode('","', $fields). "\"\n";
-    
+
     $SQL = "SELECT name,userid,phone,dateofbirth,address,agerange,cocmember,congregation,
                    priorwork,q1_1,q1_2,q1_3,q2_1,q2_2,q2_3,parentalconsent,
                    parentalconsentsig,workerconsent,workerconsentsig,workerconsentdate,
@@ -2858,7 +2859,7 @@ global $MYVARS, $CFG, $USER;
             $app["parentalconsentsig"] = $app["parentalconsentsig"] == "on" ? "Signed" : "";
             $app["workerconsentsig"] = $app["workerconsentsig"] == "on" ? "Signed" : "";
             $app["bgcheckpass"] = $app["bgcheckpass"] == 0 ? "No" : "Yes";
-            $CSV .= '"'.implode($status," | ").
+            $CSV .= '"'.implode(" | " , array_column($status, 'full')).
                     '","'.$app["name"].
                     '","'.$email.
                     '","'.date('m/d/Y',$app["dateofbirth"]).
