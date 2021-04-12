@@ -3,20 +3,20 @@
 * events.php - Events page lib
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 6/07/2016
-* Revision: 1.4.8
+* Date: 4/12/2021
+* Revision: 1.4.9
 ***************************************************************************/
 if(empty($_POST["aslib"])){
-    if(!isset($CFG)){ include('../header.php'); } 
+    if(!isset($CFG)){ include('../header.php'); }
     if(!isset($EVENTSLIB)){ include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 
     callfunction();
-    
+
     echo '
         <input id="lasthint" type="hidden" />
         <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?b='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'features/events&amp;f=events.js"></script>
     ';
-    
+
     echo get_editor_javascript();
 
     echo '</body></html>';
@@ -28,10 +28,10 @@ global $CFG,$MYVARS,$USER;
 	$featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
 	$feature = "events";
 
-	//Default Settings	
+	//Default Settings
 	$default_settings = default_settings($feature,$pageid,$featureid);
 	$setting_names = get_setting_names($default_settings);
-    
+
 	//Check if any settings exist for this feature
 	if($settings = fetch_settings($feature,$featureid,$pageid)){
         echo make_settings_page($setting_names,$settings,$default_settings,$feature,$featureid,$pageid);
@@ -42,22 +42,22 @@ global $CFG,$MYVARS,$USER;
 
 function event_manager(){
 global $CFG,$MYVARS,$USER;
-	
+
     echo '<div class="dontprint"><form onsubmit="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';ajaxapi(\'/features/events/events_ajax.php\',\'eventsearch\',\'&amp;pageid='.$MYVARS->GET["pageid"].'&amp;searchwords=\'+escape(document.getElementById(\'searchbox\').value),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true); return false;">
 	Event Search <input type="text" id="searchbox" name="searchbox" />&nbsp;<input type="submit" value="Search" /><div style="float:right;width: 150px;">Search for events by their name.</div>
 	<br /></form></div>
 	<div id="loading_overlay" class="dontprint" style="text-align:center;position:absolute;width:98%;height:85%;background-color:white;opacity:.6;visibility:hidden;"><br /><br /><br /><img src="' . $CFG->wwwroot . '/images/loading_large.gif" /></div>
-	<span id="searchcontainer" style="padding:5px; display:block; width:99%;"></span>';
+	<span id="searchcontainer"></span>';
 }
 
 function template_manager(){
 global $CFG,$MYVARS,$USER;
-	
+
     echo '<div class="dontprint"><form onsubmit="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';ajaxapi(\'/features/events/events_ajax.php\',\'templatesearch\',\'&amp;pageid='.$MYVARS->GET["pageid"].'&amp;searchwords=\'+escape(document.getElementById(\'searchbox\').value),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true); return false;">
 	Template Search <input type="text" id="searchbox" name="searchbox" />&nbsp;<input type="submit" value="Search" /><div style="float:right;width: 150px;">Search for templates by their name.</div>
 	<br /></form></div>
 	<div id="loading_overlay" class="dontprint" style="text-align:center;position:absolute;width:98%;height:85%;background-color:white;opacity:.6;visibility:hidden;"><br /><br /><br /><img src="' . $CFG->wwwroot . '/images/loading_large.gif" /></div>
-	<span id="searchcontainer" style="padding:5px; display:block; width:99%;"></span>';
+	<span id="searchcontainer"></span>';
 }
 
 function application_manager(){
@@ -72,15 +72,15 @@ global $CFG,$MYVARS,$USER;
 			$values->$i->year = $vals["year"];
 			$i++;
 		}
-        
+
         $export = '<div style="float:right;">
                     ' . make_select_from_array("appyears",$values,"year","year",date("Y")) . '
                     <a href="javascript: void(0);"
                                        onclick="ajaxapi(\'/features/events/events_ajax.php\',
                                                         \'export_staffapp\',
                                                         \'&amp;pageid='.$pageid.'&amp;year=\'+$(\'#appyears\').val(),
-                                                        function() { 
-                                                            if (xmlHttp.readyState == 4) { 
+                                                        function() {
+                                                            if (xmlHttp.readyState == 4) {
                                                                 run_this();
                                                             }
                                                         },
@@ -90,17 +90,17 @@ global $CFG,$MYVARS,$USER;
                     </a><div></div>
                     </div>';
     }
-                
+
     echo '<div class="dontprint"><form onsubmit="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';ajaxapi(\'/features/events/events_ajax.php\',\'appsearch\',\'&amp;pageid='.$MYVARS->GET["pageid"].'&amp;searchwords=\'+escape($(\'#searchbox\').val()),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true); return false;">
 	Applicant Search <input type="text" id="searchbox" name="searchbox" />&nbsp;<input type="submit" value="Search" /><div style="float:right;width: 150px;">Search for applicants by their name.</div>
 	'.$export.'
     </form></div>
 	<div id="loading_overlay" class="dontprint" style="text-align:center;position:absolute;width:98%;height:85%;background-color:white;opacity:.6;visibility:hidden;"><br /><br /><br /><img src="' . $CFG->wwwroot . '/images/loading_large.gif" /></div>
-	<span id="searchcontainer" style="padding:5px; display:block; width:99%;"></span>';
+	<span id="searchcontainer"></span>';
 }
 
 function staff_emailer(){
-global $CFG,$MYVARS,$USER;               
+global $CFG,$MYVARS,$USER;
     echo '<div class="dontprint"><form onsubmit="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';ajaxapi(\'/features/events/events_ajax.php\',\'sendstaffemails\',\'&amp;sendemails=\'+$(\'#sendemails\').prop(\'checked\')+\'&amp;stafflist=\'+encodeURIComponent($(\'#stafflist\').val()),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true); return false;">
 	<div style="text-align:center;margin:5px;font-weight: bolder;">Staff Status Checker</div>
     <div style="float:right;line-height:35px;">
@@ -112,17 +112,17 @@ global $CFG,$MYVARS,$USER;
     <div style="text-align:center;margin:5px;"><input type="submit" value="Process" /></div>
     </form></div>
 	<div id="loading_overlay" class="dontprint" style="text-align:center;position:absolute;width:98%;background-color:white;opacity:.6;visibility:hidden;"><br /><br /><br /><img src="' . $CFG->wwwroot . '/images/loading_large.gif" /></div>
-	<span id="searchcontainer" style="padding:5px; display:block; width:99%;"></span>';
+	<span id="searchcontainer"></span>';
 }
 
 function pay(){
-global $CFG,$MYVARS,$USER;	
+global $CFG,$MYVARS,$USER;
     $regcode = isset($MYVARS->GET["regcode"]) ? $MYVARS->GET["regcode"] : "";
-    
+
     if(empty($MYVARS->GET["modal"])){
         echo '<script type="text/javascript" src="'.$CFG->wwwroot.'/min/?b='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'scripts&amp;f=jquery.min.js"></script>'.main_body(true).'<br /><br />';
     }
-    
+
     echo '
         <div style="text-align:center;padding:15px;">
             <h3>'.$CFG->sitename.' Registration Lookup</h3><br />
@@ -133,7 +133,7 @@ global $CFG,$MYVARS,$USER;
         <div id="payarea" style="padding:15px;">
         </div>
         <script type="text/javascript">
-            window.onload = function () { 
+            window.onload = function () {
                 if ($("#code").val() != ""){
                     lookup_reg($("#code").val());
                 }
@@ -154,9 +154,9 @@ global $CFG,$MYVARS,$USER;
         $event_begin_date = $event_end_date = 'true';
         $locationid = $settings->events->$featureid->allowrequests->setting;
         $request_text = $settings->events->$featureid->request_text->setting;
-        
+
         if(!isset($VALIDATELIB)){ include_once($CFG->dirroot . '/lib/validatelib.php'); }
-        	
+
     	echo create_validation_script("request_form" , "ajaxapi('/features/events/events_ajax.php','event_request',create_request_string('request_form'),function(){ simple_display('request_form_div'); });") . '
     	<div class="formDiv" id="request_form_div">
         <p align="center"><b><font size="+1">Event Request Form</font></b></p><br />'.$request_text.'<br />If you would like to have your event hosted at ' . get_db_field("location","events_locations","id=$locationid") . ' please fill out the below form and we will get back to you.<br />
@@ -191,7 +191,7 @@ global $CFG,$MYVARS,$USER;
     				<div class="rowContainer">
     					<label for="description">Event Description</label><textarea rows="10" id="description" name="description" data-rule-required="true" data-msg-required="'.get_error_message('valid_request_description:events').'" /><div class="tooltipContainer info">'.get_help("input_request_description:events").'</div><br />
     	  			</div>
-    		  		<input class="submit" name="submit" type="submit" onmouseover="this.focus();" value="Submit" />	
+    		  		<input class="submit" name="submit" type="submit" onmouseover="this.focus();" value="Submit" />
     			</fieldset>
     		</form>
     	</div>';
@@ -204,7 +204,7 @@ global $CFG, $USER, $MYVARS;
         $row = get_db_row("SELECT * FROM events_staff WHERE userid='$USER->userid'"); //Update existing event
 
         if(!isset($VALIDATELIB)){ include_once($CFG->dirroot . '/lib/validatelib.php'); }
-        	
+
     	echo create_validation_script("staffapplication_form" , "ajaxapi('/features/events/events_ajax.php','event_save_staffapp',create_request_string('staffapplication_form'),function(){ simple_display('staffapplication_form_div'); });");
         echo staff_application_form($row);
     }else{ echo "Sorry, This form is not available"; }
@@ -216,33 +216,33 @@ global $CFG, $MYVARS, $USER;
     if(!empty($eventid) && $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'")){
         $location = get_db_row("SELECT * FROM events_locations WHERE id='".$event["location"]."'");
         date_default_timezone_set("UTC");
-        
+
         echo '<div style="text-align:center"><h1>'.stripslashes($event["name"]).'</h1>'.stripslashes($event["byline"]).'</div>';
         echo '<div>'.stripslashes($event["description"]).'</div><br /><center>';
-        
+
         if($event['event_begin_date'] != $event['event_end_date']){ //Multi day event
         	echo 'When: '.date('F \t\h\e jS, Y',$event["event_begin_date"]).' to '.date('F \t\h\e jS, Y',$event["event_end_date"]).'<br />';
         }else{
         	echo 'When: '.date('F \t\h\e jS, Y',$event["event_begin_date"]).'<br />';
         }
-        
+
     	echo '<br /><table style="font-size:1em"><tr><td>Where: </td><td>'.stripslashes($location["location"]).'</td></tr>
         <tr><td></td><td>'.stripslashes($location["address_1"]).'<br />'.$location["address_2"].'&nbsp;'.$location["zip"].'</td></tr></table>
     	<span class="centered_span"><a title="Get Directions" href="'.$CFG->wwwroot.'/features/events/googlemaps.php?address_1='.stripslashes($location["address_1"]).'&address_2='.stripslashes($location["address_2"]).'">Get Directions</a></span><br />';
-    
+
     	if($event['allday'] != 1){ //All day event
     		echo 'Times: '.convert_time($event['event_begin_time']).' to '.convert_time($event['event_end_time']).'. <br />';
-    	}	
-        
+    	}
+
         echo '<br />For more information about this event<br /> contact '.stripslashes($event["contact"]).' at '.$event["email"].'<br />or call '.$event["phone"].'.</center><br />';
-    	
+
         //Log
-    	log_entry("events", $eventid, "View Event Info");    
+    	log_entry("events", $eventid, "View Event Info");
     } else {
         //Log
     	log_entry("events", "-", "Variable manipulation");
     }
-    	
+
 }
 
 function add_event_form(){
@@ -250,12 +250,12 @@ global $CFG,$MYVARS,$USER;
 	$pageid = $MYVARS->GET['pageid'];
 	date_default_timezone_set("UTC");
     $admin_contacts = $admin_payable = "";
-    
+
     if(is_siteadmin($USER->userid)){ //Get special admin drop down lists for contacts and accounts payable
         $admin_contacts = get_events_admin_contacts();
-        $admin_payable = get_events_admin_payable();   
+        $admin_payable = get_events_admin_payable();
     }
-    
+
 	if(isset($MYVARS->GET["eventid"])){ //Update existing event
 		$eventid = $MYVARS->GET["eventid"];
         if(!user_has_ability_in_page($USER->userid,"editevents",$pageid)){ echo get_page_error_message("no_permission",array("editevents")); return; }
@@ -304,7 +304,7 @@ global $CFG,$MYVARS,$USER;
 		$siteviewable_yes = $row['siteviewable'] == "1" ? "selected" : "";
 		$siteviewable_no = $siteviewable_yes == "" ? "selected" : "";
         $auto_allowinpage_display = $row['siteviewable'] == "1" ? "inline" : "none";
-		$mycategories = get_my_category($row['category']);		
+		$mycategories = get_my_category($row['category']);
 		$mylocations = get_my_locations($USER->userid, $row['location'],$MYVARS->GET["eventid"]);
 		$hidden_limits = get_my_hidden_limits($template, $row['hard_limits'],$row['soft_limits']);
 	}else{ //New event form
@@ -318,7 +318,7 @@ global $CFG,$MYVARS,$USER;
 		$max_users = $cost = '0';
 		$checksaddress = $paypal = $payableto = $name = $contact = $email = $byline = $description = $siteviewable_yes = $workers_yes = $multiday_yes = $allday_no = $reg_yes = $fee_yes = $allowinpage_yes = $limits_yes = $event_end_time_form = $fee_min = $fee_full = $sale_fee = $template_settings = "";
 		$event_begin_time_form = get_possible_times('begin_time');
-		$mycategories = get_my_category();	
+		$mycategories = get_my_category();
 		$mylocations = get_my_locations($USER->userid);
 		$siteviewable_no = $workers_no = $multiday_no = $allday_yes = $reg_no = $fee_no = $allowinpage_no = $limits_no = "selected";
         $auto_allowinpage_display = "none";
@@ -439,7 +439,7 @@ global $CFG,$MYVARS,$USER;
                         				<td style="width:115px;"></td>
                         				<td class="field_input" style="width:400px; background-color:buttonface; text-align:center">
                         					<span id="new_button" style="display:inline"><a href="javascript:void(0);" onclick="hide_show_buttons(\'browse_button\');hide_show_buttons(\'or\');hide_show_buttons(\'location_menu\');add_location_form(\'new\',\''.$eventid.'\');"><img src="'.$CFG->wwwroot.'/images/add.png" title="Add Location" alt="Add Location"> New Location</a></span>
-                        					<span id="or" style="display:inline">&nbsp; or &nbsp;</span> 
+                        					<span id="or" style="display:inline">&nbsp; or &nbsp;</span>
                         					<span id="browse_button" style="display:inline"><a href="javascript:void(0);" onclick="hide_show_buttons(\'new_button\');hide_show_buttons(\'or\');hide_show_buttons(\'location_menu\');add_location_form(\'existing\',\''.$eventid.'\');"><img src="'.$CFG->wwwroot.'/images/folder.png" title="Add Location" alt="Add Location"> Browse Locations</a></span>
                         				</td>
                         			</tr>
@@ -521,7 +521,7 @@ global $CFG,$MYVARS,$USER;
                             						</td>
                             					</tr><tr><td></td><td class="field_input"><span id="event_end_date_error" class="error_text"></span></td></tr>
                         					</table>
-                        				</span>	
+                        				</span>
                                     </td>
                                 </tr>
                         	</table>
@@ -818,18 +818,18 @@ global $CFG,$MYVARS,$USER;
         </form>
     </div>';
 }
-      
+
 //Show registration form
 function show_registration(){
 global $CFG,$MYVARS,$USER;
 	$eventid = $MYVARS->GET['eventid'];
 	$pageid = empty($MYVARS->GET['pageid']) ? $CFG->SITEID : $MYVARS->GET['pageid'];
 	if(!user_has_ability_in_page($USER->userid,"signupforevents",$pageid)){ echo get_page_error_message("no_permission",array("signupforevents")); return; }
-	
+
     $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
 	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='".$event['template_id']."'");
 	$formlist = ""; $form = "";
-	
+
     $returnme = '<div id="registration_div">
                     <table class="registration"><tr><td>'.$template['intro'].' </td></tr></table>';
 
@@ -877,13 +877,13 @@ global $CFG,$MYVARS,$USER;
 		$form .= '<tr><td></td><td><input type="button" value="Submit" onclick="submit_registration(\''.$eventid.'\',\''.$formlist.'\');" /></td></tr></table>';
         $returnme .= create_validation_javascript($formlist,$eventid) . $form . '</div><script>prepareInputsForHints();</script>';
 	}
-    
+
     $returnme .= '</div>'; //end registration div
-    
+
     $returnme .= '<script type="text/javascript">
         $(document).keydown(function(e) {
         var nodeName = e.target.nodeName.toLowerCase();
-        
+
         if (e.which === 8) {
             if ((nodeName === "input" && e.target.type === "text") || nodeName === "textarea") {
                 // do nothing
@@ -899,7 +899,7 @@ echo $returnme;
 function create_validation_javascript($formlist,$eventid){
 global $CFG;
     $validation_script = '<script> function validate_fields(){	var valid = true;';
-    date_default_timezone_set(date_default_timezone_get());	
+    date_default_timezone_set(date_default_timezone_get());
     $element = explode("*",$formlist);
     $i = 0;
     while(isset($element[$i])){
@@ -1003,7 +1003,7 @@ global $CFG;
     	//Password validity test
     	$validation_script .= '
       	if(!document.getElementById("'.$attribute[1].'").value.length > 4){
-    	  	if(document.getElementById("'.$attribute[1].'").value.length > 0){ 
+    	  	if(document.getElementById("'.$attribute[1].'").value.length > 0){
     			document.getElementById("'.$attribute[1].'_error").innerHTML = "Password must be between 5-20 characters long.";
     	  		valid = false;
     	  	}else if(!document.getElementById("'.$attribute[1].'").value.length > 0){
@@ -1015,7 +1015,7 @@ global $CFG;
       			document.getElementById("'.$attribute[1].'_error").innerHTML = "Password and Verify fields must match."
       			valid = false;
       		}else{ document.getElementById("'.$attribute[1].'_error").innerHTML = ""; }
-    		
+
             if('.$attribute[3].' == 0){
         		// Build the URL to connect to
         	  	var url = "'.$CFG->wwwroot.'/features/events/events_ajax.php?action=unique&elementid='.$attribute[1].'&value="+document.getElementById("'.$attribute[1].'").value + "&eventid=" + '.$eventid.';
@@ -1045,19 +1045,19 @@ global $CFG;
     $redirect = '<script type="text/javascript">
                     window.location = "'.$CFG->wwwroot.'";
                 </script>';
-                   
+
     echo main_body(true);
-    
-    $auth_token = $CFG->paypal_auth; 
-    
+
+    $auth_token = $CFG->paypal_auth;
+
     $pp_hostname = $CFG->paypal ? 'ipnpb.paypal.com' : 'ipnpb.sandbox.paypal.com';
-     
+
     // read the post from PayPal system and add 'cmd'
     $req = 'cmd=_notify-synch';
-     
+
     $tx_token = $_GET['tx'];
     $req .= "&tx=$tx_token&at=$auth_token";
-     
+
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, "https://$pp_hostname/cgi-bin/webscr");
     curl_setopt($ch, CURLOPT_POST, 1);
@@ -1071,7 +1071,7 @@ global $CFG;
     curl_setopt($ch, CURLOPT_HTTPHEADER, array("Host: $pp_hostname"));
     $res = curl_exec($ch);
     curl_close($ch);
-            
+
     if(!$res){
         //HTTP ERROR
         echo $redirect;
@@ -1105,10 +1105,10 @@ global $CFG;
             echo $redirect;
         }
     }
-    
-    
- //   
-//    
+
+
+ //
+//
 //    // read the post from PayPal system and add 'cmd'
 //    $req = 'cmd=_notify-synch';
 //    $tx_token = $_GET['tx'];
@@ -1120,7 +1120,7 @@ global $CFG;
 //    $header .= "Content-Length: " . strlen($req) . "\r\n\r\n";
 //    if($CFG->paypal){ $fp = fsockopen ('www.paypal.com', 80, $errno, $errstr, 30);
 //    }else{ $fp = fsockopen ('www.sandbox.paypal.com', 80, $errno, $errstr, 30);}
-//    
+//
 //    // If possible, securely post back to paypal using HTTPS
 //    // Your PHP server will need to be SSL enabled
 //    // $fp = fsockopen ('ssl://www.sandbox.paypal.com', 443, $errno, $errstr, 30);
@@ -1165,7 +1165,7 @@ global $CFG;
 ////    				execute_db_sql($SQL);
 ////    				$i++;
 ////    			}
-//			
+//
 //			//Log
 //			//log_entry('events', $keyarray['txn_id'], "Paypal");
 //    	   echo "Your transaction has been completed, and a receipt for your purchase has been emailed to you.<br>You may log into your account at <a href='https://www.paypal.com'>www.paypal.com</a> to view details of this transaction.<br>";
