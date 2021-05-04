@@ -145,13 +145,14 @@ function template_use($file, $params, $subsection) {
 
         // Check to make sure that a matched variable exists.
         if (template_variable_exists($match, $params)) {
-          $contents = str_replace("||$match||", '<? ' . $replacement . ' ?>', $contents);
+					ob_start();
+			    eval($replacement);
+					$replacement = ob_get_clean();
+          $contents = str_replace("||$match||", $replacement, $contents);
         }
     }
 
-		ob_start();
-    eval('?> ' . $contents . ' <?');
-		return ob_get_clean();
+		return $contents;
 }
 
 // Grab only a subsection of the template
@@ -197,7 +198,7 @@ function template_evaluate_qualifiers($match, $params, $contents) {
 // Looks for functions or loops and arrange parts.
 function template_get_functionality($match) {
   $type = strpos($match, "::") === false ? "simple" : "code";
-  $varslist = ""; $code = ""; $func = "";  $variables = $match;
+  $varslist = ""; $code = ""; $func = "";  $variables = $match; $replacement = "";
   if ($type === "code") { // Either direct functon or code provided
     $template = explode("::", $match); // Split function::variablename
     $func = $template[0];
@@ -284,6 +285,7 @@ function template_create_v($match, $var, $complex_parts) {
 
 // Strips off array brackets or object pointers to be reattached later.
 function template_get_complex_variables($var) {
+	$part = "";
   if (strpos($var,"[") !== false) {
     $bracket = strpos($var,"[");
     $part = substr($var, $bracket, strlen($var) - $bracket);
