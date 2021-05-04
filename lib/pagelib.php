@@ -3,8 +3,8 @@
  * pagelib.php - Page function library
  * -------------------------------------------------------------------------
  * Author: Matthew Davidson
- * Date: 6/07/2016
- * Revision: 3.1.5
+ * Date: 4/27/2021
+ * Revision: 3.1.6
  ***************************************************************************/
 
 if (!isset($LIBHEADER)) {
@@ -26,20 +26,17 @@ function callfunction() {
     if (empty($_POST["aslib"])) {
         //Retrieve from Javascript
         $postorget = isset($_POST["action"]) ? $_POST : false;
-        if (empty($MYVARS)) {
-            $MYVARS = new stdClass();
-        }
+
+        $params = array("wwwroot" => $CFG->wwwroot,
+                        "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'));
+
+        $MYVARS = empty($MYVARS) ? new stdClass() : $MYVARS;
         $MYVARS->GET = !$postorget && isset($_GET["action"]) ? $_GET : $postorget;
         if (!empty($MYVARS->GET["i"])) { //universal javascript and css
-            echo '
-            <script type="text/javascript" src="' . $CFG->wwwroot . '/min/?f=' . (empty($CFG->directory) ? '' : $CFG->directory . '/') . 'ajax/siteajax.js"></script>
-            <script type="text/javascript"> var dirfromroot = "' . $CFG->directory . '"; </script>
-            <link type="text/css" rel="stylesheet" href="' . $CFG->wwwroot . '/min/?f=' . (empty($CFG->directory) ? '' : $CFG->directory . '/') . 'styles/styles_main.css" />
-            <script type="text/javascript" src="' . $CFG->wwwroot . '/min/?b=' . (empty($CFG->directory) ? '' : $CFG->directory . '/') . 'scripts&amp;f=jquery.min.js,jquery.extend.js,jquery.colorbox.js,jquery.colorbox.extend.js"></script>';
+            echo template_use("templates/pagelib.template", $params, "main_js_css");
         }
         if (!empty($MYVARS->GET["v"])) { //validation javascript and css
-            echo '
-                <script type="text/javascript" src="' . $CFG->wwwroot . '/min/?b=' . (empty($CFG->directory) ? '' : $CFG->directory . '/') . 'scripts&f=jqvalidate.js,jqvalidate_addon.js" ></script>';
+            echo template_use("templates/pagelib.template", $params, "validation_js");
             unset($MYVARS->GET["v"]);
         }
         if (function_exists($MYVARS->GET["action"])) {
@@ -66,20 +63,9 @@ function postorget() {
 }
 
 function main_body($header_only = false) {
-    return '<div id="wholepage">
-                <div class="logo_nav">' . page_masthead(true) . '</div>
-                <div class="colmask rightmenu">
-                    <div class="colleft">
-                        <div class="col2 pagesort2 connectedSortable">
-                            ' . page_masthead(false, $header_only) . '
-                        </div>
-                        <div class="col1 pagesort1 connectedSortable">
-                            <span id="column_width" style="width:100%;"></span>
-                        </div>
-                    </div>
-                 </div>
-            </div>
-            <div style="clear:both;"></div>';
+    $params = array("page_masthead_1" => page_masthead(true),
+                    "page_masthead_2" => page_masthead(false, $header_only));
+    return template_use("templates/pagelib.template", $params, "main_body_template");
 }
 
 function page_masthead($left = true, $header_only = false) {
@@ -88,19 +74,12 @@ function page_masthead($left = true, $header_only = false) {
         $logo = isset($CFG->logofile) ? '<img id="logo" src="' . $CFG->wwwroot . '/images/' . $CFG->logofile . '" alt="' . $CFG->sitename . ' Logo" />' : '<div id="logo">' . $CFG->sitename . '</>';
         $mobilelogo = isset($CFG->mobilelogofile) ? '<img id="logosmall" src="' . $CFG->wwwroot . '/images/' . $CFG->mobilelogofile . '" alt="' . $CFG->sitename . ' Logo" />' : '';
 
-        $returnme = '   <div class="nav_header">
-                            <div id="logo_div">
-                                <a href="' . $CFG->wwwroot . '">
-                                    ' . $mobilelogo . '
-                                    ' . $logo . '
-                                </a>
-                            </div>
-                            <div class="nav">
-                            <div id="menu-icon"></div>
-                                ' . ($header_only ? "" : get_nav_items($PAGE->id)) . '
-                            </div>
-                        </div>
-                        ' . random_quote();
+        $params = array("wwwroot" => $CFG->wwwroot,
+                        "mobilelogo" => $mobilelogo,
+                        "logo" => $logo,
+                        "header_only" => ($header_only ? "" : get_nav_items($PAGE->id)),
+                        "quote" => random_quote());
+        $returnme = template_use("templates/pagelib.template", $params, "page_masthead_template");
     } else {
         $returnme = (!$header_only ? (is_logged_in() ? print_logout_button($USER->fname, $USER->lname, $PAGE->id) : get_login_form()) : '');
     }
@@ -120,26 +99,14 @@ function get_editor_value_javascript($editorname = "editor1") {
 
 function get_editor_box($initialValue = "", $name = "editor1", $height = "550", $width = "100%", $type = "HTML") {
     global $CFG;
-    return '<textarea id="editor1" name="editor1" class="wysiwyg_editor">' . $initialValue . '</textarea>
-    <script type="text/javascript">
-        $(window).on("load", function() {
-            $(".wysiwyg_editor").tinymce({
-                script_url : "' . $CFG->wwwroot . '/scripts/tinymce/tinymce.min.js",
-                toolbar: "' . get_editor_toolbar($type) . '",
-                height: "' . $height . '",
-                width: "' . $width . '",
-                removed_menuitems: "newdocument",
-                theme : "modern",
-                convert_urls: false,
-                plugins: [
-                    ' . get_editor_plugins($type) . '
-                ],
-                external_filemanager_path: "' . (empty($CFG->directory) ? '' : '/' . $CFG->directory) . '/scripts/tinymce/plugins/filemanager/",
-                filemanager_title: "File Manager" ,
-                external_plugins: { "filemanager" : "' . (empty($CFG->directory) ? '' : '/' . $CFG->directory) . '/scripts/tinymce/plugins/filemanager/plugin.min.js"}
-            });
-        });
-    </script>';
+    $params = array("wwwroot" => $CFG->wwwroot,
+                    "initialvalue" => $initialValue,
+                    "toolbar" => get_editor_toolbar($type),
+                    "height" => $height,
+                    "width" => $width,
+                    "plugins" => get_editor_plugins($type),
+                    "directory" => (empty($CFG->directory) ? '' : '/' . $CFG->directory));
+    return template_use("templates/pagelib.template", $params, "editor_box_template");
 }
 
 function get_editor_plugins($type) {
@@ -591,7 +558,7 @@ function all_features_function($SQL = false, $feature = false, $pre = "", $post 
 function get_user_alerts($userid, $returncount = true, $internal = true) {
     $returnme = all_features_function("SELECT * FROM features", false, "get_", "_alerts", $returncount, $userid, $returncount);
     if (!$returncount) {
-        $returnme = $returnme == "" ? '<span class="centered_span">There are no more alerts for you at this time.</span>' : $returnme;
+        $returnme = $returnme == "" ? template_use("templates/pagelib.template", array(), "get_user_alerts_template") : $returnme;
     }
 
     if ($internal) {
@@ -622,15 +589,17 @@ function print_logout_button($fname, $lname, $pageid = false) {
     $logoutas = "";
     if (!empty($_SESSION["lia_original"])) {
         $lia_name = get_user_name($_SESSION["lia_original"]);
-        $logoutas = '<a title="Switch back to: ' . $lia_name . '" href="javascript: void(0)" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'logoutas\',\'\',function() { go_to_page(' . $CFG->SITEID . ');});">Switch back to: ' . $lia_name . '</a><br />';
+        $params = array("siteid" => $CFG->SITEID,
+                        "lia_name" => $lia_name);
+        $logoutas = template_use("templates/pagelib.template", $params, "print_logout_button_switchback_template");
     }
 
-    $logout = '<a title="Log Out" href="javascript: void(0)" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'get_login_box\',\'&amp;logout=1\',function() { clearInterval(myInterval); go_to_page(' . $CFG->SITEID . ');});">(Log Out)</a>';
-    return '<div id="login_box" class="login_box logout" style="text-align:right;">
-                ' . $logoutas . '
-                <span style="display:inline-block;line-height: 18px;">
-                    ' . $profile . ' ' . $logout . '
-                </span>' . '</div><br />' . get_user_links($USER->userid, $pageid);
+    $params = array("siteid" => $CFG->SITEID,
+                    "logoutas" => $logoutas,
+                    "profile" => $profile,
+                    "userlinks" => get_user_links($USER->userid, $pageid));
+
+    return template_use("templates/pagelib.template", $params, "print_logout_button_template");
 }
 
 function get_nav_items($pageid = false) {
@@ -735,15 +704,10 @@ function get_css_box($title, $content, $buttons = '', $padding = null, $feature 
         $pagenamebgcolor     = isset($styles['pagenamebgcolor']) ? $styles['pagenamebgcolor'] : "";
         $pagenamefontcolor   = isset($styles['pagenamefontcolor']) ? $styles['pagenamefontcolor'] : "";
 
-        $returnme = '
-        <div class="pagename_box" style="border: 2px solid ' . $pagenamebordercolor . ';background-color:' . $pagenamebgcolor . ';">
-            <div class="box_title" style="color:' . $pagenamefontcolor . ';">
-                <strong>' . stripslashes($title) . '</strong>
-                <br />
-                <span style="color:' . $pagenamefontcolor . ';font-size:.75em;">' . $content . '</span>
-            </div>
-                ' . $buttons . '
-        </div>';
+        $params = array("pagenamebordercolor" => $pagenamebordercolor, "pagenamebgcolor" => $pagenamebgcolor,
+                        "pagenamefontcolor" => $pagenamefontcolor, "title" => stripslashes($title),
+                        "content" => $content, "buttons" => $buttons);
+        $returnme = template_use("templates/pagelib.template", $params, "get_css_box_template1");
     } else {
         if ($preview) {
             $styles = $STYLES->$feature;
@@ -756,23 +720,18 @@ function get_css_box($title, $content, $buttons = '', $padding = null, $feature 
         $titlebgcolor   = isset($styles['titlebgcolor']) ? $styles['titlebgcolor'] : "";
         $titlefontcolor = isset($styles['titlefontcolor']) ? $styles['titlefontcolor'] : "";
 
-        $padding = isset($padding) ? ' padding:' . $padding . ';' : "";
-        $bottom  = $bottom_left || $bottom_center || $bottom_right ? '<div style="display:table;width:100%;' . 'background-color:' . $contentbgcolor . '"><div style="float:left;padding-left:2px;">' . $bottom_left . '</div><div style="text-align:center;position:relative;float:left;left:18%;width:60%">' . $bottom_center . '</div><div style="float:right;padding-right:2px;">' . $bottom_right . '</div></div>' : "";
+        $bottom = "";
+        if ($bottom_left || $bottom_center || $bottom_right) {
+          $params = array("bottom_left" => $bottom_left, "bottom_right" => $bottom_right, "contentbgcolor" => $contentbgcolor);
+          $returnme .= template_use("templates/pagelib.template", $params, "get_css_box_bottom_template");
+        }
 
-        $returnme .= empty($feature) || $feature == 'pagelist' || $feature == 'addfeature' ? '<div>' : '<div class="box" id="' . $feature . '_' . $featureid . '">';
-        $returnme .= '
-            <div class="box_header"  style="border: 2px solid ' . $bordercolor . ';background-color:' . $titlebgcolor . ';">
-                <div class="box_title"  style="line-height:23px;color:' . $titlefontcolor . ';">
-                    ' . stripslashes($title) . '
-                </div>
-                    ' . $buttons . '
-            </div>
-            <div class="box_content ' . $class . '" style="border: 2px solid ' . $bordercolor . ';border-top: none;' . $padding . 'background-color:' . $contentbgcolor . ';">
-              ' . $content . '
-              ' . $bottom . '
-            </div>
-            <div style="padding:3px;"></div>';
-        $returnme .= empty($feature) || $feature == 'pagelist' || $feature == 'addfeature' ? '</div>' : '</div>';
+        $opendiv = empty($feature) || $feature == 'pagelist' || $feature == 'addfeature' ? '' : 'class="box" id="' . $feature . '_' . $featureid . '">';
+        $padding = isset($padding) ? ' padding:' . $padding . ";" : "";
+        $params = array("opendiv" => $opendiv, "bordercolor" => $bordercolor, "titlebgcolor" => $titlebgcolor, "buttons" => $buttons,
+                        "titlefontcolor" => $titlefontcolor, "title" => stripslashes($title), "class" => $class,
+                        "padding" => $padding, "contentbgcolor" => $contentbgcolor, "content" => $content, "bottom" => $bottom);
+        $returnme .= template_use("templates/pagelib.template", $params, "get_css_box_template2");
     }
     return $returnme;
 }
@@ -971,40 +930,30 @@ function get_login_form($loginonly = false, $newuser = true) {
     if (!isset($VALIDATELIB)) {
         include_once($CFG->dirroot . '/lib/validatelib.php');
     }
-    $title   = "Login";
-    $content = '
-     <script type="text/javascript" src="' . $CFG->wwwroot . '/min/?b=' . (empty($CFG->directory) ? '' : $CFG->directory . '/') . 'scripts&amp;f=jqvalidate.js,jqvalidate_addon.js"></script>
-     ' . create_validation_script("login_form", "login(document.getElementById('username').value,document.getElementById('password').value);") . '
-     <form id="login_form">
-         <fieldset>
-                <div class="rowContainer">
-                    <label class="rowTitle" for="username">Username</label>
-                    <input tabindex=1 style="margin-right:0px;width:80%" type="email" id="username" name="username" data-rule-required="true" data-msg-required="' . get_error_message('valid_req_username') . '" /><div class="tooltipContainer info">' . get_help("input_username") . '</div>
-                    <div class="spacer" style="clear: both;"></div>
-                </div>
-                <div class="rowContainer">
-                      <label class="rowTitle" for="password">Password</label>
-                    <input tabindex=2 style="margin-right:0px;width:80%" type="password" id="password" name="password" data-rule-required="true" data-msg-required="' . get_error_message('valid_req_password') . '" /><div class="tooltipContainer info">' . get_help("input_password2") . '</div>
-                    <div class="spacer" style="clear: both;"></div>
-                </div>
-        </fieldset>
-        <input name="submit" type="submit" value="Sign In" style="margin-left:5px;" />
-    <span style="float:right;font-size:.9em">';
-    $content .= $newuser ? make_modal_links(array(
+
+    $newuserlink = $newuser ? make_modal_links(array(
         "title" => "New User",
         "path" => $CFG->wwwroot . "/pages/user.php?action=new_user",
-        "width" => "500"
-    )) . '<br />' : '';
-    $content .= make_modal_links(array(
+        "width" => "500")) : '';
+
+    $forgotpasswordlink = make_modal_links(array(
         "title" => "Forgot password?",
         "path" => $CFG->wwwroot . "/pages/user.php?action=forgot_password",
         "width" => "500"
-    )) . '
-    </span>
-    </form>
-    <div id="login_box_error" class="error_text"></div>';
+    ));
 
-    $returnme = $loginonly ? $content : get_css_box($title, $content);
+    $params = array("wwwroot" => $CFG->wwwroot,
+                    "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'),
+                    "validation_script" => create_validation_script("login_form", "login(document.getElementById('username').value,document.getElementById('password').value);"),
+                    "valid_req_username" => get_error_message('valid_req_username'),
+                    "input_username" => get_help("input_username"),
+                    "valid_req_password" => get_error_message('valid_req_password'),
+                    "input_password2" => get_help("input_password2"),
+                    "newuserlink" => $newuserlink,
+                    "forgotpasswordlink" => $forgotpasswordlink);
+    $content = template_use("templates/pagelib.template", $params, "get_login_form_template");
+
+    $returnme = $loginonly ? $content : get_css_box("Login", $content);
     return $returnme;
 }
 
@@ -1045,7 +994,6 @@ function get_edit_buttons($pageid, $featuretype, $featureid = false) {
 
         //If this is a section
         if ($is_feature_menu) {
-
             //Move block buttons
             if (user_has_ability_in_page($USER->userid, "movefeatures", $pageid, $featuretype, $featureid)) {
                 $returnme .= ' <a class="slide_menu_button pagesorthandle" href="javascript: void(0);" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'move_feature\',\'&amp;pageid=' . $pageid . '&amp;featuretype=' . $featuretype . '&amp;featureid=' . $featureid . '&amp;direction=drag\',function() { update_login_contents(' . $pageid . ');});"><img title="Move feature" src="' . $CFG->wwwroot . '/images/move.png" alt="Move feature" /></a> ';
@@ -1094,6 +1042,7 @@ function get_edit_buttons($pageid, $featuretype, $featureid = false) {
 
 function get_button_layout($featuretype, $featureid = "", $pageid) {
     global $CFG, $PAGE;
+    $returnme = "";
     if ($featuretype == 'pagename' || $featuretype == 'pagelist') {
         include_once($CFG->dirroot . '/lib/pagelistlib.php');
         $action          = $featuretype . "_buttons";
@@ -1109,30 +1058,20 @@ function get_button_layout($featuretype, $featureid = "", $pageid) {
     if (!$themeid && $pageid) {
         $themeid = getpagetheme($pageid);
     }
-    $styles = get_styles($pageid, $themeid, $featuretype, $featureid);
 
+    $styles = get_styles($pageid, $themeid, $featuretype, $featureid);
     $contentbgcolor = isset($styles['contentbgcolor']) ? $styles['contentbgcolor'] : "";
     $bordercolor    = isset($styles['bordercolor']) ? $styles['bordercolor'] : "";
     $titlebgcolor   = isset($styles['titlebgcolor']) ? $styles['titlebgcolor'] : "";
     $titlefontcolor = isset($styles['titlefontcolor']) ? $styles['titlefontcolor'] : "";
 
     if (strlen($buttons) > 0) {
-        return '
-        <div id="slide_menu" class="slide_menu_invisible slide_menu" style="border-top:1px solid ' . $bordercolor . ';border-bottom:1px solid ' . $bordercolor . ';">
-        <div id="' . $featuretype . '_' . $featureid . '_buttons" style="padding:0;">
-          ' . $buttons . '
-        </div>
-        </div>
-        <div onclick="$(this).prev(\'#slide_menu\').animate({width: \'toggle\'},function(){$(this).toggleClass(\'slide_menu_visible\');});" class="slide_menu slide_menu_tab" style="background-color:' . $titlefontcolor . ';color:' . $titlebgcolor . ';border-left:1px solid ' . $bordercolor . ';border-top:1px solid ' . $bordercolor . ';border-bottom:1px solid ' . $bordercolor . ';"><strong>+</strong></div>
-        <div style="clear:both"></div>';
+        $params = array("bordercolor" => $bordercolor, "titlefontcolor" => $titlefontcolor, "titlebgcolor" => $titlebgcolor,
+                        "featuretype" => $featuretype, "featureid" => $featureid, "buttons" => $buttons);
+        $returnme = template_use("templates/pagelib.template", $params, "get_button_layout_template");
     }
 
-    return "";
-}
-
-//DOES NOTHING!!!
-function page_buttons($pageid, $featuretype, $featureid) {
-    return "";
+    return $returnme;
 }
 
 function get_search_page_variables($total, $perpage, $pagenum) {
@@ -1147,21 +1086,18 @@ function get_search_page_variables($total, $perpage, $pagenum) {
 
 function make_search_box($contents = "", $name_addition = "") {
     global $CFG;
-    $returnme = '
-        <div style="position:relative;width:95%;margin-right:auto;margin-left:auto;">
-        <div id="loading_overlay_' . $name_addition . '" style="text-align:center;position:absolute;width:100%;height:99%;vertical-align:middle;background-color:white;opacity:.6;visibility:hidden;"><img src="' . $CFG->wwwroot . '/images/loading_large.gif" alt="loading image" /></div>
-        <div id="searchcontainer_' . $name_addition . '" style="padding:5px; display:block; width:99%;">' . $contents . '</div></div>';
-    return $returnme;
+    $params = array("name_addition" => $name_addition, "wwwroot" => $CFG->wwwroot, "contents" => $contents);
+    return template_use("templates/pagelib.template", $params, "make_search_box_template");
 }
 
 function format_popup($content = "", $title = "", $height = "", $padding = "25px") {
-    return '<div style="padding:' . $padding . ';border:1px solid silver;border-radius: 5px;height:' . $height . ';">
-                <h3>' . $title . '</h3>' . $content . '
-            </div>';
+    $params = array("padding" => $padding, "height" => $height, "title" => $title, "content" => $content);
+    return template_use("templates/pagelib.template", $params, "format_popup_template");
 }
 
 function keepalive() {
     global $CFG;
-    return '<iframe style="display:none;" src="' . $CFG->wwwroot . '/index.php?keepalive=true"></iframe>';
+    $params = array("wwwroot" => $CFG->wwwroot);
+    return template_use("templates/pagelib.template", $params, "keepalive_template");
 }
 ?>

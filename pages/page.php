@@ -3,139 +3,50 @@
 * page.php - Page relevent page file
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 3/25/2014
-* Revision: 1.5.7
+* Date: 4/28/2021
+* Revision: 1.5.8
 ***************************************************************************/
 
 include ('header.php');
-echo '
-	 <script type="text/javascript"> var dirfromroot = "' . $CFG->directory . '"; </script>
-	 <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'ajax/siteajax.js"></script>
-     <link type="text/css" rel="stylesheet" href="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'styles/styles_main.css" />
-	 <input id="lasthint" type="hidden" />';
+
+$params = array("dirroot" => $CFG->directory, "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'), "wwwroot" => $CFG->wwwroot);
+echo template_use("templates/page.template", $params, "page_js_css");
 
 callfunction();
 
-echo '</body></html>';
+echo template_use("templates/page.template", array(), "end_of_page_template");
 
 function browse(){
-global $CFG, $MYVARS, $USER, $ROLES;
+global $CFG;
     $section = isset($MYVARS->GET["section"]) ? $MYVARS->GET["section"] : "search";
-    echo '
-	<script type="text/javascript" src="' . $CFG->wwwroot . '/scripts/ajaxtabs.js"></script>
-	<body style="background-color:white;">
-	<ul id="findpagetabs" class="shadetabs">';
-    if(is_logged_in()){
-        switch($section){
-            case "search":
-                echo '<li><a class="tablinks" href="page.php?action=browse_search" style="text-decoration: none;position: relative;z-index: 1;padding-top: 3px; padding-right: 7px; padding-left: 7px;margin-right: 3px;border-top: 1px solid #778;border-right: 1px solid #778;border-left: 1px solid #778;color: #2d2b2b;" rel="contentscontainer" class="selected" onmouseup="this.blur()">Search Pages</a></li>';
-                //	echo '<li><a href="page.php?action=browse_categories" rel="contentscontainer" onmouseup="this.blur()">Categories</a></li>';
-                //	echo '<li><a href="page.php?action=browse_keywords" rel="contentscontainer" onmouseup="this.blur()">Keywords</a></li>';
-                echo '<li><a href="page.php?action=browse_users" style="text-decoration: none;position: relative;z-index: 1;padding-top: 3px; padding-right: 7px; padding-left: 7px;margin-right: 3px;border-top: 1px solid #778;border-right: 1px solid #778;border-left: 1px solid #778;color: #2d2b2b;" rel="contentscontainer" class="notselected" onmouseup="this.blur()">Search Members</a></li>';
-                break;
-            case "users":
-                echo '<li><a href="page.php?action=browse_search" style="text-decoration: none;position: relative;z-index: 1;padding-top: 3px; padding-right: 7px; padding-left: 7px;margin-right: 3px;border-top: 1px solid #778;border-right: 1px solid #778;border-left: 1px solid #778;color: #2d2b2b;" rel="contentscontainer" class="notselected" onmouseup="this.blur()">Search Pages</a></li>';
-                //	echo '<li><a href="page.php?action=browse_categories" rel="contentscontainer" onmouseup="this.blur()">Categories</a></li>';
-                //	echo '<li><a href="page.php?action=browse_keywords" rel="contentscontainer" onmouseup="this.blur()">Keywords</a></li>';
-                echo '<li><a href="page.php?action=browse_users" style="text-decoration: none;position: relative;z-index: 1;padding-top: 3px; padding-right: 7px; padding-left: 7px;margin-right: 3px;border-top: 1px solid #778;border-right: 1px solid #778;border-left: 1px solid #778;color: #2d2b2b;" rel="contentscontainer" class="selected" onmouseup="this.blur()">Search Members</a></li>';
-                break;
-        }
-        echo '<div id="contentscontainer" style="border:1px solid gray;position:relative;height:470px;padding: 10px 10px 0px 10px;"></div></ul>';
-    }else{
-        echo '<li><a class="tablinks" href="page.php?action=browse_search" style="text-decoration: none;position: relative;z-index: 1;padding-top: 3px; padding-right: 7px; padding-left: 7px;margin-right: 3px;border-top: 1px solid #778;border-right: 1px solid #778;border-left: 1px solid #778;color: #2d2b2b;" rel="contentscontainer" class="selected" onmouseup="this.blur()">Search Pages</a></li>';
-        //	echo '<li><a href="page.php?action=browse_categories" rel="contentscontainer" onmouseup="this.blur()">Categories</a></li>';
-        //	echo '<li><a href="page.php?action=browse_keywords" rel="contentscontainer" onmouseup="this.blur()">Keywords</a></li>';
-        //echo '<li><a href="page.php?action=browse_users" rel="contentscontainer" class="selected" onmouseup="this.blur()">Users</a></li>';
-        echo '<div id="contentscontainer" style="border:1px solid gray;position:relative;height:470px;padding: 10px 10px 0px 10px"></div></ul>';
-    }
-    echo '<script type="text/javascript">
-	var findmethods=new ddajaxtabs("findpagetabs", "contentscontainer")
-	findmethods.setpersist(false)
-	findmethods.setselectedClassTarget("link") //"link" or "linkparent"
-	findmethods.init()
-	</script>';
+
+		switch($section){
+				case "users":
+						$pagesearch = "notselected";
+						$usersearch = "selected";
+						break;
+				default:
+						$pagesearch = "selected";
+						$usersearch = "notselected";
+						break;
+		}
+
+		$params = array("wwwroot" => $CFG->wwwroot,
+										"pagesearchselected" => $pagesearch,
+										"usersearchtab" => (!is_logged_in() ? "" : template_use("templates/page.template", array("usersearchselected" => $usersearch), "browse_usersearch_template")));
+		echo template_use("templates/page.template", $params, "browse_template");
 }
 
 function browse_search(){
-global $CFG, $MYVARS, $USER, $ROLES;
-    echo '<form onsubmit="document.getElementById(\'loading_overlay_pagesearch\').style.visibility=\'visible\';ajaxapi(\'/ajax/page_ajax.php\',\'pagesearch\',\'&searchwords=\'+escape(document.getElementById(\'searchbox\').value),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer_pagesearch\'); document.getElementById(\'loading_overlay_pagesearch\').style.visibility=\'hidden\'; }},true); return false;"><p>
-		Search for pages by either their name, thier keywords, or their description.  If you have the ability to add it to your personal pagelist, you will see an <img src="' . $CFG->wwwroot . '/images/add.png" title="Add" alt="Add"> link to the right.  If you already have rights in that page you will see the <img src="' . $CFG->wwwroot . '/images/delete.png" title="Remove" alt="Remove"> link.  If you want to request access into a page, click the <img src="' . $CFG->wwwroot . '/images/mail.gif" title=Request" alt="Request"> link.
-        </p>
-		Search <input type="text" id="searchbox" name="searchbox" />&nbsp;<input type="submit" value="Search" />
-		<br /><br /></form>'.make_search_box(false,"pagesearch");
+global $CFG;
+	$params = array("wwwroot" => $CFG->wwwroot, "search_results_box" => make_search_box(false,"pagesearch"));
+	echo template_use("templates/page.template", $params, "browse_search_template");
 }
 
 function browse_users(){
-global $CFG, $MYVARS, $USER, $ROLES;
-    echo '<form onsubmit="document.getElementById(\'loading_overlay_usersearch\').style.visibility=\'visible\';ajaxapi(\'/ajax/page_ajax.php\',\'usersearch\',\'&searchwords=\'+escape(document.getElementById(\'searchbox\').value),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer_usersearch\'); document.getElementById(\'loading_overlay_usersearch\').style.visibility=\'hidden\'; }},true); return false;"><p>
-		Search for users by either their name or thier email address.  If you want to invite a user into your page, click the <img src="' . $CFG->wwwroot . '/images/mail.gif" title=Request" alt="Request"> icon beside their name, then select the page you would like to invite them to.
-		</p>
-		Search <input type="text" id="searchbox" name="searchbox" />&nbsp;<input type="submit" value="Search" />
-		<br /><br /></form>'.make_search_box(false,"usersearch");
-}
-
-function browse_categories(){
-global $CFG, $MYVARS, $USER, $ROLES;
-    $SQL = '
-	SELECT * FROM pages p
-		WHERE
-		(
-			(
-			p.opendoorpolicy = 1
-			OR
-			p.siteviewable = 1
-			)
-		AND
-		menu_page != 1
-		)
-		AND
-		p.pageid NOT IN (SELECT ra.pageid FROM roles_assignment ra WHERE userid=' . $USER->userid . ')
-	';
-    $pages = get_db_result($SQL);
-    $returnme = '<div id="create_page_div">Select a page that you would like to add to your personal page list.<table style="width:100%"><tr><td style="vertical-align:top; text-align:right; width:50%;"><select name="select_page" id="select_page" style="width:100%; font-size:.75em;">';
-    while ($row = fetch_row($pages)) {
-        $SQL2 = "SELECT u.fname, u.lname FROM users u WHERE u.userid IN (SELECT ra.userid FROM roles_assignment ra WHERE ra.pageid='" . $row['pageid'] . "' AND ra.roleid='" . $ROLES->creator . "')";
-        $runby = "";
-        $owner = get_db_row($SQL2);
-        $runby = strlen($owner['fname']) > 0 ? " - Owner: " . $owner['fname'] . " " . $owner['lname'] : "";
-        $returnme .= '<option value="' . $row['pageid'] . '" >' . $row['name'] . $runby . '</option>';
-    }
-    $returnme .= '</select></td><td style="vertical-align:top; text-align:left;"><input type="button" value="Add" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'subscribe\',\'&amp;pageid=\'+document.getElementById(\'select_page\').value,function(){ option_display(document.getElementById(\'select_page\').value,\'results\'); });"></td></tr></table><div id="results"></div></div>';
-    echo $returnme;
-}
-
-function browse_keywords(){
-    //	$SQL = '
-    //	SELECT * FROM pages p
-    //		WHERE
-    //		(
-    //			(
-    //			p.opendoorpolicy = 1
-    //			OR
-    //			p.siteviewable = 1
-    //			)
-    //		AND
-    //		menu_page != 1
-    //		)
-    //		AND
-    //		p.pageid NOT IN (SELECT ra.pageid FROM roles_assignment ra WHERE userid='.$USER->userid.')
-    //
-    //	';
-    //
-    //	$pages = get_db_result($SQL);
-    //
-    //	$returnme = '<div id="create_page_div">Select a page that you would like to add to your personal page list.<table style="width:100%"><tr><td style="vertical-align:top; text-align:right; width:50%;"><select name="select_page" id="select_page" style="width:100%; font-size:.75em;">';
-    //
-    //	while($row = fetch_row($pages))
-    //	{
-    //		$SQL2 = "SELECT u.fname, u.lname FROM users u WHERE u.userid IN (SELECT ra.userid FROM roles_assignment ra WHERE ra.pageid='".$row['pageid']."' AND ra.roleid='".$ROLES->creator."')";
-    //		$runby = "";
-    //		$owner = get_db_row($SQL2);
-    //		$runby = strlen($owner['fname']) > 0 ? " - Owner: " . $owner['fname'] . " " . $owner['lname'] : "";
-    //		$returnme .= '<option value="' . $row['pageid'] . '" >' . $row['name'] . $runby . '</option>';
-    //	}
-    //	$returnme .= '</select></td><td style="vertical-align:top; text-align:left;"><input type="button" value="Add" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'subscribe\',\'&amp;pageid=\'+document.getElementById(\'select_page\').value,function(){ option_display(document.getElementById(\'select_page\').value,\'results\'); });"></td></tr></table><div id="results"></div></div>';
-    //	echo $returnme;
+global $CFG;
+	$params = array("wwwroot" => $CFG->wwwroot, "search_results_box" => make_search_box(false,"usersearch"));
+	echo template_use("templates/page.template", $params, "browse_user_template");
 }
 
 function create_edit_page(){
@@ -174,98 +85,35 @@ global $CFG, $MYVARS, $ROLES, $USER;
         }
 
         $menu_no = $menu_yes = $hide_no = $hide_yes = $global_yes = $global_no = $open_yes = $open_no = $name = $description = $keywords = "";
-        $role_selected = 4;
-        $menu_page = 0;
-        $hidefromvisitors = 0;
+        $role_selected = 4; $menu_page = 0; $hidefromvisitors = 0;
     }
 
-    if (isset($MYVARS->GET["pageid"])){
-    	$content .= create_validation_script("create_page_form" , 'ajaxapi(\'/ajax/page_ajax.php\',\'edit_page\',\'&name=\' + escape(document.getElementById(\'name\').value) + \'&description=\' + escape(document.getElementById(\'summary\').value) + \'&keywords=\' + escape(document.getElementById(\'keywords\').value) + \'&defaultrole=\' + document.getElementById(\'role_select\').value + \'&opendoor=\' + document.getElementById(\'opendoor\').value + \'&siteviewable=\' + document.getElementById(\'siteviewable\').value + \'&menu_page=\' + document.getElementById(\'menu_page\').value + \'&hidefromvisitors=\' + document.getElementById(\'hidefromvisitors\').value + \'&pageid=' . $MYVARS->GET["pageid"] . '\',function() { close_modal(); });');
-    }else{
-    	$content .= create_validation_script("create_page_form" , 'ajaxapi(\'/ajax/page_ajax.php\',\'create_page\',\'&name=\' + escape(document.getElementById(\'name\').value) + \'&description=\' + escape(document.getElementById(\'summary\').value) + \'&keywords=\' + document.getElementById(\'keywords\').value + \'&defaultrole=\' + document.getElementById(\'role_select\').value + \'&opendoor=\' + document.getElementById(\'opendoor\').value + \'&siteviewable=\' + document.getElementById(\'siteviewable\').value + \'&menu_page=\' + document.getElementById(\'menu_page\').value + \'&hidefromvisitors=\' + document.getElementById(\'hidefromvisitors\').value,function() { create_page_display();});');
+    if (isset($MYVARS->GET["pageid"])) {
+    	$content .= create_validation_script("create_page_form" , template_use("templates/page.template", array("pageid" => $MYVARS->GET["pageid"]), "edit_page_validation"));
+    } else {
+    	$content .= create_validation_script("create_page_form" , template_use("templates/page.template", array(), "create_page_validation"));
     }
 
     $SQL = 'SELECT * FROM roles WHERE roleid > "' . $ROLES->creator . '" AND roleid < "'.$ROLES->none.'" ORDER BY roleid DESC';
     $roles = get_db_result($SQL);
 
-    $content .= '
-    <div class="formDiv" id="create_page_div">
-    	<form id="create_page_form">
-    		<fieldset class="formContainer">
-    			<div class="rowContainer">
-    				<label class="rowTitle" for="name">Page Name</label><input type="text" id="name" name="name" data-rule-required="true" data-rule-maxlength="50" value="'.$name.'" /><div class="tooltipContainer info">'.get_help("input_page_name").'</div>
-                    <div class="spacer" style="clear: both;"></div>
-                </div>
-    			<div class="rowContainer">
-    				<label class="rowTitle" for="keywords">Page Keywords</label><textarea id="keywords" name="keywords" cols="28" rows="2" data-rule-required="true" data-rule-maxlength="255">' . $keywords . '</textarea><div class="tooltipContainer info">'.get_help("input_page_tags").'</div>
-                    <div class="spacer" style="clear: both;"></div>
-                </div>
-    			<div class="rowContainer">
-    				<label class="rowTitle" for="description">Page Description</label>
-                    <textarea id="summary" name="summary" cols="28" rows="4" data-rule-required="true" data-rule-maxlength="255">' . stripslashes($description) . '</textarea>
-                    <div class="tooltipContainer info">'.get_help("input_page_summary").'</div><div class="spacer" style="clear: both;"></div>
-    			</div>
-    			<div class="rowContainer">
-    				<label class="rowTitle" for="role_select">Default Role</label>
-    				' . make_select("role_select", $roles, "roleid", "display_name", $role_selected) . '
-	                <div class="tooltipContainer info">'.get_help("input_page_default_role").'</div><div class="spacer" style="clear: both;"></div>
-                </div>
-                <div class="rowContainer">
-                	<label class="rowTitle" for="opendoor">Open Door Policy</label>
-                	<select name="opendoor" id="opendoor">
-                		<option value="0" ' . $open_no . '>No</option>
-                		<option value="1" ' . $open_yes . '>Yes</option>
-                	</select>
-                	<div class="tooltipContainer info">'.get_help("input_page_opendoor").'</div>
-                    <div class="spacer" style="clear: both;"></div>
-                </div>
-                <div class="rowContainer">
-                	<label class="rowTitle" for="siteviewable">Site viewable</label>
-                	<select name="siteviewable" id="siteviewable">
-                		<option value="0" ' . $global_no . '>No</option>
-                		<option value="1" ' . $global_yes . '>Yes</option>
-                	</select>
-                	<div class="tooltipContainer info">'.get_help("input_page_siteviewable").'</div>
-                    <div class="spacer" style="clear: both;"></div>
-                </div>';
-    if($admin){
-    	$content .= '
-    			<div class="rowContainer">
-    				<label class="rowTitle" for="menu_page">Show in Main Menu</label>
-    				<select name="menu_page" id="menu_page">
-    				<option value="0" ' . $menu_no . '>No</option>
-    				<option value="1" ' . $menu_yes . '>Yes</option>
-    				</select>
-    				<div class="tooltipContainer info">'.get_help("input_page_menulink").'</div>
-                    <div class="spacer" style="clear: both;"></div>
-    			</div>
-    			<div class="rowContainer">
-    				<label class="rowTitle" for="hidefromvisitors">Hide Menu from Visitors</label>
-    				<select name="hidefromvisitors" id="hidefromvisitors">
-    				<option value="0" ' . $hide_no . '>No</option>
-    				<option value="1" ' . $hide_yes . '>Yes</option>
-    				</select>
-    				<div class="tooltipContainer info">'.get_help("input_page_menulink").'</div>
-                    <div class="spacer" style="clear: both;"></div>
-    			</div>';
-    }else{
-        $content .= '<input type="hidden" id="menu_page" name="menu_page" value="' . $menu_page . '" /><input type="hidden" id="hidefromvisitors" name="hidefromvisitors" value="' . $hidefromvisitors . '" />';
-    }
+		$params = array("name" => $name, "input_name_help" => get_help("input_page_name"),
+										"keywords" => $keywords, "input_page_tags" => get_help("input_page_tags"),
+										"description" => stripslashes($description), "input_page_summary" => get_help("input_page_summary"),
+										"roleselector" => make_select("role_select", $roles, "roleid", "display_name", $role_selected), "input_page_default_role" => get_help("input_page_default_role"),
+										"openno" => $open_no, "openyes" => $open_yes, "input_page_opendoor" => get_help("input_page_opendoor"),
+										"globalno" => $global_no, "globalyes" => $global_yes, "input_page_siteviewable" => get_help("input_page_siteviewable"),
+										"admin" => $admin, "menuno" => $menu_no, "menuyes" => $menu_yes, "input_page_menulink" => get_help("input_page_menulink"),
+										"hideno" => $hide_no, "hideyes" => $hide_yes, "input_page_menulink" => get_help("input_page_menulink"),
+										"menupage" => $menu_page, "hidefromvisitors" => $hidefromvisitors,
+										"buttonname" => (isset($MYVARS->GET["pageid"]) ? "Submit Changes" : "Create Page"));
+		$content .= template_use("templates/page.template", $params, "create_edit_page_template");
 
-    if(isset($MYVARS->GET["pageid"])){
-    	$content .= '<input class="submit" name="submit" type="submit" value="Submit Changes" />';
-    } else {
-    	$content .= '<input class="submit" name="submit" type="submit"value="Create Page" />';
-    }
-
-    $content .= '</fieldset>
-    	</form>
-    </div>';
     echo format_popup($content,'Create/Edit Page');
 }
 
 function create_edit_links(){
-global $CFG, $MYVARS, $ROLES, $USER;
+global $CFG, $MYVARS, $USER;
     $content = '';
     $pageid = $MYVARS->GET["pageid"];
     //Stop right there you!
@@ -274,15 +122,8 @@ global $CFG, $MYVARS, $ROLES, $USER;
         return;
     }
 
-    $content .= '
-		<div id="links_editor" style="width:99%;height:93%;border-color:buttonface; border-style:dotted; padding: 10px 0px 10px 0px;">
-		<table>
-		<tr><td><b>Links Editor Mode</b>&nbsp;&nbsp;<input type="button" value="Add/Remove Links" onclick="ajaxapi(\'/ajax/page_ajax.php\',\'get_new_link_form\',\'&pageid=' . $pageid . '\',function() { simple_display(\'links_mode_span\');});">
-						&nbsp;
-						<input type="button" value="Sort Links" onclick="ajaxapi(\'/ajax/page_ajax.php\',\'get_link_manager\',\'&pageid=' . $pageid . '&linkid=' . $pageid . '\',function() { simple_display(\'links_mode_span\');  });">
-		</td></tr></table><br />
-		<span id="links_mode_span"></span>
-		</div>';
+		$params = array("pageid" => $pageid);
+		$content .= template_use("templates/page.template", $params, "create_edit_links_template");
     echo format_popup($content,'Edit Links');
 }
 ?>

@@ -94,6 +94,7 @@ global $CFG,$MYVARS,$USER;
         }
         $request_info = get_request_info($reqid);
         $subject = $CFG->sitename . " Event Request Received";
+        $event_name = stripslashes($event_name);
         $message = "<strong>Thank you for submitting a request for us to host your event: $event_name.</strong><br />
                     <br />
                     We will look over the details that you provided and respond shortly. <br />
@@ -101,24 +102,24 @@ global $CFG,$MYVARS,$USER;
                     $request_info";
 
         //Send email to the requester letting them know we received the request
-        send_email($contact,$from,false,$subject, $message);
+        send_email($contact, $from, false, $subject, $message);
 
-        if(isset($featureid)){
+        if (isset($featureid)) {
             //Get feature request settings
             $pageid = get_db_field("pageid","pages_features","feature='events' AND featureid=$featureid");
-            if(!$settings = fetch_settings("events",$featureid,$pageid)){
-        		make_or_update_settings_array(default_settings("events",$pageid,$featureid));
-        		$settings = fetch_settings("events",$featureid,$pageid);
-        	}
+            if (!$settings = fetch_settings("events", $featureid, $pageid)) {
+        		    make_or_update_settings_array(default_settings("events", $pageid, $featureid));
+        		    $settings = fetch_settings("events", $featureid, $pageid);
+            }
 
             $subject = $CFG->sitename . " Event Request";
 
             //Get and send to email list
             $emaillist = $settings->events->$featureid->emaillistconfirm->setting;
-            $emaillist = str_replace(array(","," ","\t","\r"),"\n",$emaillist);
-            $emaillist = str_replace("\n\n","\n",$emaillist);
-            $emaillist = explode("\n",$emaillist);
-            foreach($emaillist as $emailuser){
+            $emaillist = str_replace(array(","," ","\t","\r"), "\n", $emaillist);
+            $emaillist = str_replace("\n\n", "\n", $emaillist);
+            $emaillist = explode("\n", $emaillist);
+            foreach ($emaillist as $emailuser) {
                 //Each message must has an md5'd email address so I know if a person has voted or not
                 $voteid = md5($emailuser);
                 $message = '<p>A new event request has been submitted. Your input is required to approve the event. This email contains specific links designed for you to be able to submit and view questions as well as vote for this event\'s approval.</p>
@@ -134,7 +135,7 @@ global $CFG,$MYVARS,$USER;
                 $thisuser->email = $emailuser;
                 $thisuser->fname = "";
                 $thisuser->lname = "";
-                send_email($thisuser,$from,false,$subject, $message);
+                send_email($thisuser, $from, false, $subject, $message);
             }
         }
         echo '<div style="width:100%;text-align:center;">
@@ -147,53 +148,55 @@ global $CFG,$MYVARS,$USER;
                 Thank you.
               </div>';
 
-    }else{ echo "Failed to make request"; }
+    } else {
+      echo "Failed to make request";
+    }
 }
 
-function valid_voter($pageid,$featureid,$voteid){
+function valid_voter($pageid, $featureid, $voteid) {
     $validvote = false;
 
-    if(!$settings = fetch_settings("events",$featureid,$pageid)){
-    	make_or_update_settings_array(default_settings("events",$pageid,$featureid));
-    	$settings = fetch_settings("events",$featureid,$pageid);
+    if (!$settings = fetch_settings("events",$featureid,$pageid)) {
+    	make_or_update_settings_array(default_settings("events", $pageid, $featureid));
+    	$settings = fetch_settings("events", $featureid, $pageid);
     }
     $locationid = $settings->events->$featureid->allowrequests->setting;
 
     //Get email list to check and see if the voteid matches one
     $emaillist = $settings->events->$featureid->emaillistconfirm->setting;
-    $emaillist = str_replace(array(","," ","\t","\r"),"\n",$emaillist);
-    $emaillist = str_replace("\n\n","\n",$emaillist);
-    $emaillist = explode("\n",$emaillist);
+    $emaillist = str_replace(array(","," ","\t","\r"), "\n", $emaillist);
+    $emaillist = str_replace("\n\n", "\n", $emaillist);
+    $emaillist = explode("\n", $emaillist);
 
-    foreach($emaillist as $emailuser){
-        if(md5($emailuser) == $voteid){ $validvote = true;}
+    foreach ($emaillist as $emailuser) {
+        if (md5($emailuser) == $voteid) { $validvote = true;}
     }
     return $validvote;
 }
 
 //Save question
-function request_question_send(){
+function request_question_send() {
 global $CFG, $MYVARS;
     $reqid = $MYVARS->GET["reqid"];
     $voteid = $MYVARS->GET["voteid"];
     $question = dbescape(strip_tags(trim($MYVARS->GET["question"]," \n\r\t"),'<a><em><u><img><br>'));
     //Make sure request exists and get the featureid
-    if($featureid = get_db_field("featureid","events_requests","reqid=$reqid")){
+    if ($featureid = get_db_field("featureid","events_requests","reqid=$reqid")) {
         //Get feature request settings
         $pageid = get_db_field("pageid","pages_features","feature='events' AND featureid=$featureid");
-        if(!$settings = fetch_settings("events",$featureid,$pageid)){
-        	make_or_update_settings_array(default_settings("events",$pageid,$featureid));
-        	$settings = fetch_settings("events",$featureid,$pageid);
+        if (!$settings = fetch_settings("events",$featureid,$pageid)) {
+        	make_or_update_settings_array(default_settings("events", $pageid, $featureid));
+        	$settings = fetch_settings("events", $featureid, $pageid);
         }
         $locationid = $settings->events->$featureid->allowrequests->setting;
         $request = get_db_row("SELECT * FROM events_requests WHERE reqid='$reqid'");
         //Allowed to ask questions
-        if(valid_voter($pageid,$featureid,$voteid)){
+        if (valid_voter($pageid, $featureid, $voteid)){
             $qtime = get_timestamp();
             $SQL = "INSERT INTO events_requests_questions
                         (reqid,question,answer,question_time,answer_time)
                         VALUES('$reqid','$question','','$qtime','0')";
-            if($qid = execute_db_sql($SQL)){ //Question is saved.  Now send it to everyone.
+            if ($qid = execute_db_sql($SQL)) { //Question is saved.  Now send it to everyone.
                 $subject = $CFG->sitename . " Event Request Question";
                 $message = '<strong>A question has been asked about the event ('.stripslashes($request["event_name"]).').</strong><br />
                 <br />
@@ -239,31 +242,36 @@ global $CFG, $MYVARS;
                 send_email($contact,$from,false,$subject, $message);
 
                 echo request_question(true);
-            }else{ get_error_message("generic_db_error"); }
-
-        }else{ echo get_error_message("generic_permissions"); }
-    }else{ echo get_error_message("invalid_old_request:events"); }
+            } else {
+              get_error_message("generic_db_error");
+            }
+        } else {
+          echo get_error_message("generic_permissions");
+        }
+    } else {
+      echo get_error_message("invalid_old_request:events");
+    }
 }
 
 //Save question
-function request_answer_send(){
+function request_answer_send() {
 global $CFG, $MYVARS;
     $reqid = $MYVARS->GET["reqid"];
     $qid = $MYVARS->GET["qid"];
     $answer = dbescape(strip_tags(trim($MYVARS->GET["answer"]," \n\r\t"),'<a><em><u><img><br>'));
     //Make sure request exists and get the featureid
-    if($featureid = get_db_field("featureid","events_requests","reqid=$reqid")){
+    if ($featureid = get_db_field("featureid", "events_requests", "reqid=$reqid")) {
         //Get feature request settings
-        $pageid = get_db_field("pageid","pages_features","feature='events' AND featureid=$featureid");
-        if(!$settings = fetch_settings("events",$featureid,$pageid)){
-        	make_or_update_settings_array(default_settings("events",$pageid,$featureid));
-        	$settings = fetch_settings("events",$featureid,$pageid);
+        $pageid = get_db_field("pageid", "pages_features", "feature='events' AND featureid=$featureid");
+        if (!$settings = fetch_settings("events", $featureid, $pageid)) {
+        	make_or_update_settings_array(default_settings("events", $pageid, $featureid));
+        	$settings = fetch_settings("events", $featureid, $pageid);
         }
         $request = get_db_row("SELECT * FROM events_requests WHERE reqid='$reqid'");
 
         $atime = get_timestamp();
         $SQL = "UPDATE events_requests_questions set answer='$answer',answer_time='$atime' WHERE id=$qid";
-        if(execute_db_sql($SQL)){ //Question is saved.  Now send it to everyone.
+        if (execute_db_sql($SQL)) { //Question is saved.  Now send it to everyone.
             $subject = $CFG->sitename . " Event Request Answer";
             $message = '<strong>An answer to a question has been recieved about the event ('.stripslashes($request["event_name"]).').</strong><br />
             <br />
@@ -280,49 +288,52 @@ global $CFG, $MYVARS;
             $emaillist = str_replace("\n\n","\n",$emaillist);
             $emaillist = explode("\n",$emaillist);
 
-            foreach($emaillist as $emailuser){
+            foreach ($emaillist as $emailuser) {
                 //Let everyone know the event has been questioned
                 $thisuser->email = $emailuser;
                 $thisuser->fname = "";
                 $thisuser->lname = "";
-                send_email($thisuser,$from,false,$subject, $message);
+                send_email($thisuser, $from, false, $subject, $message);
             }
-
             echo request_answer(true);
-        }else{ get_error_message("generic_db_error"); }
-    }else{ echo get_error_message("invalid_old_request:events"); }
+        } else {
+          get_error_message("generic_db_error");
+        }
+    } else {
+      echo get_error_message("invalid_old_request:events");
+    }
 }
 
-function confirm_events_relay(){
+function confirm_events_relay() {
 global $CFG, $MYVARS;
     confirm_event();
 }
 
-function delete_events_relay(){
+function delete_events_relay() {
 global $CFG, $MYVARS;
     delete_event();
 }
 
 //Request question form
-function request_question($refresh=false){
+function request_question($refresh=false) {
 global $CFG, $MYVARS;
     $reqid = $MYVARS->GET["reqid"];
     $voteid = $MYVARS->GET["voteid"];
 
     //Make sure request exists and get the featureid
-    if($featureid = get_db_field("featureid","events_requests","reqid=$reqid")){
+    if ($featureid = get_db_field("featureid", "events_requests", "reqid=$reqid")) {
         //Get feature request settings
-        $pageid = get_db_field("pageid","pages_features","feature='events' AND featureid=$featureid");
-        if(!$settings = fetch_settings("events",$featureid,$pageid)){
-        	make_or_update_settings_array(default_settings("events",$pageid,$featureid));
-        	$settings = fetch_settings("events",$featureid,$pageid);
+        $pageid = get_db_field("pageid", "pages_features", "feature='events' AND featureid=$featureid");
+        if (!$settings = fetch_settings("events", $featureid, $pageid)) {
+        	make_or_update_settings_array(default_settings("events", $pageid, $featureid));
+        	$settings = fetch_settings("events", $featureid, $pageid);
         }
         $locationid = $settings->events->$featureid->allowrequests->setting;
 
         //Allowed to ask questions
-        if(valid_voter($pageid,$featureid,$voteid)){
+        if (valid_voter($pageid, $featureid, $voteid)) {
             //Print out question form
-            if(!$refresh){
+            if (!$refresh) {
                echo '<html><head><title>Event Request Question Page</title>
                 <script type="text/javascript">var dirfromroot = "'.$CFG->directory.'";</script>
             	<script type="text/javascript" src="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'ajax/siteajax.js"></script>
@@ -331,44 +342,51 @@ global $CFG, $MYVARS;
                 </head><body><div id="question_form">';
             }
             echo '<h2>Questions Regarding Event Request</h2>'.get_request_info($reqid);
-            if(!$refresh){
+            if (!$refresh) {
                 echo'
-    			<table style="width:100%">
-    				<tr>
-    					<td><br />';
-                        echo get_editor_box();
-    				    echo ' <div style="width:100%;text-align:center">
-                                    <input type="button" value="Send Question"
-                                        onclick="ajaxapi(\'/features/events/events_ajax.php\',
-                                                         \'request_question_send\',
-                                                         \'&amp;voteid='.$voteid.'&amp;reqid='.$reqid.'&amp;question=\'+ escape('.get_editor_value_javascript().'),
-                                                         function(){ simple_display(\'question_form\');}
-                                        );"
-                                    />
-    					       </div>
-                        </td>
-    				</tr>
-    			</table>';
+          			<table style="width:100%">
+          				<tr>
+          					<td><br />';
+                              echo get_editor_box();
+          				    echo ' <div style="width:100%;text-align:center">
+                                          <input type="button" value="Send Question"
+                                              onclick="ajaxapi(\'/features/events/events_ajax.php\',
+                                                               \'request_question_send\',
+                                                               \'&amp;voteid='.$voteid.'&amp;reqid='.$reqid.'&amp;question=\'+ escape('.get_editor_value_javascript().'),
+                                                               function(){ simple_display(\'question_form\');}
+                                              );"
+                                          />
+          					       </div>
+                              </td>
+          				</tr>
+          			</table>';
             }
 
             echo '<h3>Previous Questions</h3>';
 
             //Print out previous questions and answers
-            if($results = get_db_result("SELECT * FROM events_requests_questions
-                                            WHERE reqid=$reqid
-                                            ORDER BY question_time")){
-                while($row = fetch_row($results)){
+            if ($results = get_db_result("SELECT *
+                                            FROM events_requests_questions
+                                           WHERE reqid=$reqid
+                                        ORDER BY question_time")) {
+                while ($row = fetch_row($results)) {
                     echo '<div style="background-color:Aquamarine;padding:4px;"><strong>'.$row['question'].'</strong></div>';
-                    if($row["answer"] == ""){ //Not answered
+                    if ($row["answer"] == "") { //Not answered
                         echo '<div style="background-color:PaleTurquoise;padding:4px;">Question has not been responed to at this time.</div><br /><br />';
-                    }else{ //Print answer
+                    } else { //Print answer
                         echo '<div style="background-color:Gold;padding:4px;">'.$row['answer'].'</div><br /><br />';
                     }
                 }
-            }else{ echo "No questions have been asked yet."; }
-            if(!$refresh){ echo '</div></body></html>'; }
-        }else{ echo get_error_message("generic_permissions"); }
-    }else{ echo get_error_message("invalid_old_request:events"); }
+            } else {
+              echo "No questions have been asked yet.";
+            }
+            if (!$refresh) { echo '</div></body></html>'; }
+        } else {
+          echo get_error_message("generic_permissions");
+        }
+    } else {
+      echo get_error_message("invalid_old_request:events");
+    }
 }
 
 //Request answer form
@@ -378,39 +396,39 @@ global $CFG, $MYVARS;
     $qid = $MYVARS->GET["qid"];
 
     //Make sure request exists and get the featureid
-    if($featureid = get_db_field("featureid","events_requests","reqid=$reqid")){
+    if ($featureid = get_db_field("featureid", "events_requests", "reqid=$reqid")) {
         //Get feature request settings
-        $pageid = get_db_field("pageid","pages_features","feature='events' AND featureid=$featureid");
-        if(!$settings = fetch_settings("events",$featureid,$pageid)){
-        	make_or_update_settings_array(default_settings("events",$pageid,$featureid));
-        	$settings = fetch_settings("events",$featureid,$pageid);
+        $pageid = get_db_field("pageid", "pages_features", "feature='events' AND featureid=$featureid");
+        if (!$settings = fetch_settings("events", $featureid, $pageid)) {
+        	make_or_update_settings_array(default_settings("events", $pageid, $featureid));
+        	$settings = fetch_settings("events", $featureid, $pageid);
         }
         $locationid = $settings->events->$featureid->allowrequests->setting;
 
         //Allowed to ask questions
         //Print out question form
-        if(!$refresh){
+        if (!$refresh) {
            echo '<html><head><title>Event Request Question Page</title>
-            <script type="text/javascript">var dirfromroot = "'.$CFG->directory.'";</script>
-        	<script type="text/javascript" src="'.$CFG->wwwroot.'/min/?b='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'ajax/siteajax.js"></script>
-            <script type="text/javascript" src="'.$CFG->wwwroot.'/scripts/ckeditor/ckeditor.js"></script>
-            <link type="text/css" rel="stylesheet" href="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'styles/styles_main.css" />
-            </head><body><div id="answer_form">';
+                  <script type="text/javascript">var dirfromroot = "'.$CFG->directory.'";</script>
+              	  <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?b='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'ajax/siteajax.js"></script>
+                  <script type="text/javascript" src="'.$CFG->wwwroot.'/scripts/ckeditor/ckeditor.js"></script>
+                  <link type="text/css" rel="stylesheet" href="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'styles/styles_main.css" />
+                  </head><body><div id="answer_form">';
         }
         echo '<h2>Questions Regarding Event Request</h2>'.get_request_info($reqid);
 
         $answer = get_db_field("answer","events_requests_questions","id=$qid");
         if(!$refresh){
             echo'
-			<table style="width:100%">
-				<tr>
-					<td><br />
-                    <div style="background-color:Aquamarine;padding:4px;">
-                        <strong>Question: '.get_db_field("question","events_requests_questions","id=$qid").'</strong>
-                    </div>
-                    <br />';
-                    echo get_editor_box($answer);
-				    echo ' <div style="width:100%;text-align:center">
+          			<table style="width:100%">
+          				<tr>
+          					<td><br />
+                              <div style="background-color:Aquamarine;padding:4px;">
+                                  <strong>Question: '.get_db_field("question","events_requests_questions","id=$qid").'</strong>
+                              </div>
+                              <br />';
+                              echo get_editor_box($answer);
+				               echo ' <div style="width:100%;text-align:center">
                                 <input type="button" value="Send Answer"
                                     onclick="ajaxapi(\'/features/events/events_ajax.php\',
                                                      \'request_answer_send\',
@@ -418,10 +436,10 @@ global $CFG, $MYVARS;
                                                      function(){ simple_display(\'answer_form\');}
                                     );"
                                 />
-					       </div>
-                    </td>
-				</tr>
-			</table>';
+        					       </div>
+                            </td>
+        				</tr>
+        			</table>';
         }
 
         echo '<h3>Previous Questions</h3>';
@@ -2734,12 +2752,12 @@ global $CFG,$MYVARS,$USER;
             $subject = "Application Complete";
         }
 
-        //Save the request
-        if($success){
+        // Save the request
+        if ($success) {
             $staffid = !empty($staffid) ? $staffid : $success;
             $staff = get_db_row("SELECT * FROM events_staff WHERE staffid='$staffid'");
 
-            if(get_db_row("SELECT * FROM events_staff_archive WHERE staffid='$staffid' AND pageid='$pageid' AND year='".date("Y")."'")){
+            if (get_db_row("SELECT * FROM events_staff_archive WHERE staffid='$staffid' AND pageid='$pageid' AND year='".date("Y")."'")) {
                 $SQL = "UPDATE events_staff_archive SET name='$name',phone='$phone',dateofbirth='$dateofbirth',address='$address',
                     agerange='$agerange',cocmember='$cocmember',congregation='$congregation',priorwork='$priorwork',
                     q1_1='$q1_1',q1_2='$q1_2',q1_3='$q1_3',q2_1='$q2_1',q2_2='$q2_2',q2_3='$q2_3',
@@ -2759,7 +2777,7 @@ global $CFG,$MYVARS,$USER;
             }
 
            	//Log
-	        log_entry("event", $pageid, $subject);
+	          log_entry("event", $pageid, $subject);
 
             $emailnotice = new stdClass();
             $emailnotice->email = $CFG->siteemail;
@@ -2767,17 +2785,19 @@ global $CFG,$MYVARS,$USER;
             $emailnotice->lname = "";
 
             //Requesting email setup
+            $name = stripslashes($name);
             $message = "<strong>$name has applied to work</strong>";
 
             //Send email to the requester letting them know we received the request
-            send_email($emailnotice,$emailnotice,false,$subject,$message);
+            send_email($emailnotice, $emailnotice, false, $subject, $message);
 
             $backgroundchecklink = '';
             $featureid = "*";
-            if(!$settings = fetch_settings("events", $featureid, $pageid)){
-        		make_or_update_settings_array(default_settings("events",$pageid,$featureid));
-        		$settings = fetch_settings("events", $featureid, $pageid);
-        	}
+            if (!$settings = fetch_settings("events", $featureid, $pageid)) {
+        		    make_or_update_settings_array(default_settings("events", $pageid, $featureid));
+        		    $settings = fetch_settings("events", $featureid, $pageid);
+        	  }
+
             $linkurl = $settings->events->$featureid->bgcheck_url->setting;
 
             $status = empty($staff["bgcheckpass"]) ? false : (time()-$staff["bgcheckpassdate"] > ($settings->events->$featureid->bgcheck_years->setting * 365 * 24 * 60 * 60) ? false : true);
@@ -2798,11 +2818,11 @@ global $CFG,$MYVARS,$USER;
 
 }
 
-function export_staffapp(){
+function export_staffapp() {
 global $MYVARS, $CFG, $USER;
     $year = dbescape($MYVARS->GET["year"]);
     $pageid = dbescape($MYVARS->GET["pageid"]);
-	if(!isset($FILELIB)){ include_once ($CFG->dirroot . '/lib/filelib.php'); }
+	  if (!isset($FILELIB)) { include_once ($CFG->dirroot . '/lib/filelib.php'); }
     $fields = array("STATUS",
                     "Name",
                     "Email",
@@ -2835,7 +2855,7 @@ global $MYVARS, $CFG, $USER;
                     "Ref3 Relationship",
                     "Background Check",
                     "Background Check Date");
-	$CSV = '"' . implode('","', $fields). "\"\n";
+    $CSV = '"' . implode('","', $fields). "\"\n";
 
     $SQL = "SELECT name,userid,phone,dateofbirth,address,agerange,cocmember,congregation,
                    priorwork,q1_1,q1_2,q1_3,q2_1,q2_2,q2_3,parentalconsent,
@@ -2843,8 +2863,8 @@ global $MYVARS, $CFG, $USER;
                    ref1name,ref1relationship,ref1phone,ref2name,ref2relationship,ref2phone,
                    ref3name,ref3relationship,ref3phone,bgcheckpass,bgcheckpassdate
                    FROM events_staff_archive WHERE pageid='$pageid' AND year='$year' ORDER BY name";
-	if ($applications = get_db_result($SQL)) {
-		while ($app = fetch_row($applications)) {
+    if ($applications = get_db_result($SQL)) {
+		    while ($app = fetch_row($applications)) {
             $status = staff_status($app);
             $status = empty($status) ? array("APPROVED") : $status;
             $email = get_db_field("email", "users", "userid='".$app["userid"]."'");
@@ -2892,8 +2912,8 @@ global $MYVARS, $CFG, $USER;
                     '","'.$app["bgcheckpass"].
                     '","'.(!empty($app["bgcheckpassdate"]) ? date('m/d/Y',$app["bgcheckpassdate"]) : '').
                     '"' . "\n";
-		}
-	}
+          }
+    }
 	echo get_download_link("staffapps($year).csv",$CSV);
 }
 ?>

@@ -30,7 +30,7 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
     setcookie('pageid', $PAGE->id, get_timestamp() + $CFG->cookietimeout, '/');
     $_SESSION['pageid'] = $PAGE->id;
 
-    $PAGE->title   = $CFG->sitename; //Title of page
+    $PAGE->title   = $CFG->sitename; // Title of page
     $PAGE->themeid = getpagetheme($PAGE->id);
 
     //Use this page only to keep session and cookies refreshed (during forms)
@@ -50,8 +50,9 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
     include('header.html');
 
     if (is_logged_in()) {
-        // Approximate every 15 seconds
-        echo '<script type="text/javascript">if(typeof(window.myInterval) == "undefined"){ var myInterval = setInterval(function(){update_login_contents(false,"check");}, 14599);}</script>';
+        $params = array("timeout" => 14599); // Javascript that checks for valid login every x seconds.
+        echo template_use("templates/index.template", $params, "valid_login_check");
+
         $ABILITIES = get_user_abilities($USER->userid, $PAGE->id);
         if (empty($ABILITIES->viewpages->allow)) {
             if (get_db_field("opendoorpolicy", "pages", "pageid=" . $PAGE->id) == "0") {
@@ -67,25 +68,18 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
         }
     }
 
-    //Main Layout
-    echo '    <div class="logo_nav">' . page_masthead(true) . '</div>
-            <div class="colmask rightmenu">
-                <div class="colleft">
-                    <div class="col2 pagesort2 connectedSortable">
-                        ' . page_masthead(false) . '
-                        ' . get_page_contents($PAGE->id, 'side') . '
-                    </div>
-                    <div class="col1 pagesort1 connectedSortable">
-                        <span id="column_width" style="width:100%;"></span>
-                        ' . get_page_contents($PAGE->id, 'middle') . '
-                    </div>
-                </div>
-            </div>';
+    // Main Layout
+    $params = array("mainmast" => page_masthead(true),
+                    "sidemast" => page_masthead(false),
+                    "sidecontents" => get_page_contents($PAGE->id, 'side'),
+                    "middlecontents" => get_page_contents($PAGE->id, 'middle'));
 
-    //End Page
+    echo template_use("templates/index.template", $params, "mainlayout_template");
+
+    // End Page
     include('footer.html');
 
-    //Log
+    // Log
     log_entry("page", null, "Page View");
 }
 ?>
