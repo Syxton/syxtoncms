@@ -7,13 +7,13 @@
 * Revision: 0.4.0
 ***************************************************************************/
 if(empty($_POST["aslib"])){
-    if(!isset($CFG)){ include('../header.php'); } 
+    if(!isset($CFG)){ include('../header.php'); }
     if(!isset($NEWSLIB)){ include_once($CFG->dirroot . '/features/news/newslib.php');}
-      
+
     callfunction();
-    
+
     echo get_editor_javascript();
-    
+
     echo '</body></html>';
 }
 
@@ -22,10 +22,10 @@ global $CFG,$MYVARS,$USER;
 	$featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
 	$feature = "news";
 
-	//Default Settings	
+	//Default Settings
 	$default_settings = default_settings($feature,$pageid,$featureid);
 	$setting_names = get_setting_names($default_settings);
-    
+
 	//Check if any settings exist for this feature
 	if($settings = fetch_settings($feature,$featureid,$pageid)){
         echo make_settings_page($setting_names,$settings,$default_settings,$feature,$featureid,$pageid);
@@ -39,10 +39,10 @@ global $CFG, $MYVARS, $USER;
 	$pageid = $MYVARS->GET["pageid"];
     $featureid= empty($MYVARS->GET["featureid"]) ? false : $MYVARS->GET["featureid"];
 	$newsid= empty($MYVARS->GET["newsid"]) ? false : $MYVARS->GET["newsid"];
-    
+
     $title = $caption = $content = "";
     if($newsid){
-        if(!user_has_ability_in_page($USER->userid,"editnews",$pageid,"news",$featureid)){ echo get_page_error_message("no_permission",array("editnews")); return; }    
+        if(!user_has_ability_in_page($USER->userid,"editnews",$pageid,"news",$featureid)){ echo get_page_error_message("no_permission",array("editnews")); return; }
         $row = get_db_row("SELECT * FROM news WHERE newsid='$newsid'");
         $title = stripslashes(htmlentities($row["title"]));
         $caption = stripslashes(htmlentities($row["caption"]));
@@ -52,7 +52,7 @@ global $CFG, $MYVARS, $USER;
         if(!user_has_ability_in_page($USER->userid,"addnews",$pageid,"news",$featureid)){ echo get_page_error_message("no_permission",array("addnews")); return; }
         $button = '<input type="button" value="Save" onclick="ajaxapi(\'/features/news/news_ajax.php\',\'add_news\',\'&amp;title=\'+escape($(\'#news_title\').val())+\'&amp;summary=\' + escape($(\'#news_summary\').val()) + \'&amp;pageid='.$pageid.'&amp;html=\'+escape('.get_editor_value_javascript().')+\'&amp;featureid='.$featureid.'\',function(){ close_modal(); });" />';
     }
-		
+
 	echo '
 		<div id="edit_news_div">
 				<table style="width:100%">
@@ -88,7 +88,7 @@ global $CFG, $MYVARS, $USER;
 }
 
 function viewnews(){
-global $CFG, $MYVARS, $USER, $ROLES;	
+global $CFG, $MYVARS, $USER, $ROLES;
     $newsid = $MYVARS->GET['newsid'];
     $pageid = $MYVARS->GET['pageid'];
     $newsonly = isset($MYVARS->GET['newsonly']) ? true : false;

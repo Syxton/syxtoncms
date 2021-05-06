@@ -1,0 +1,6 @@
+view_ipaper_template||
+  <iframe src="//docs.google.com/viewer?url=||doc_url||&embedded=true" scrolling="no" style="margin-right:auto;margin-left:auto;border:none;width:99%;height:99%;overflow:hidden;">
+    Your browser does not support inline frames or is currently configured
+    not to display inline frames.
+  </iframe>
+||view_ipaper_template

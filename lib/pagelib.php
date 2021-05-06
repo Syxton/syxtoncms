@@ -679,9 +679,10 @@ function get_css_box($title, $content, $buttons = '', $padding = null, $feature 
     global $CFG, $PAGE, $STYLES;
     $returnme = '';
     if ($pageid === false) {
-        if ($themeid === false) {
-            $themeid = isset($PAGE->themeid) ? $PAGE->themeid : false;
+        if (empty($themeid)) {
+            $themeid = !empty($PAGE->themeid) ? $PAGE->themeid : 0;
         }
+
         if (isset($PAGE->id) && isset($CFG->SITEID) && $PAGE->id == $CFG->SITEID) {
             $pageid = 0;
         } else {

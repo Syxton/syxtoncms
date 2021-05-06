@@ -18,14 +18,15 @@ global $CFG,$MYVARS;
 // Default styles are given pageid=0
 // Global styles are given forced=1
 // Feature type specific styles are given featureid=0
-	if($themeid === '0'){ //CUSTOM THEME
+	if(empty($themeid)){ //CUSTOM THEME
+		$themeid = "0";
 		$pageid = $pageid == $CFG->SITEID ? 0 : $pageid;
 
 		//Hasn't saved custom colors yet return defaults;
-		if(!get_db_field("id","styles","pageid=$pageid")) {
+		if(!get_db_field("id","styles","pageid='$pageid'")) {
 			$feature = "page";
 			if($default_list = get_feature_styles($pageid,$feature,NULL,true)){
-                foreach($default_list as $style){
+          foreach($default_list as $style){
     				$temparray[$style[1]] = isset($MYVARS->GET[$style[1]]) ? dbescape($MYVARS->GET[$style[1]]) : false;
     			}
 			}
@@ -45,7 +46,7 @@ global $CFG,$MYVARS;
 			pageid=0 AND forced=1 AND feature='$feature' AND featureid='0'
 		ORDER BY ranky
 		";
-	}elseif($themeid > 0){ //PAGE THEME IS SET TO A SAVED THEME
+	} elseif ($themeid > 0) { //PAGE THEME IS SET TO A SAVED THEME
 		$SQL = "
 		SELECT *, 1 as ranky FROM styles WHERE themeid='$themeid'
 		  UNION
@@ -59,7 +60,7 @@ global $CFG,$MYVARS;
 			pageid=0 AND forced=1 AND feature='$feature' AND featureid='0'
 		ORDER BY ranky
 		";
-	}else{ //NO THEME...LOOK FOR PARENT THEMES
+	} else { //NO THEME...LOOK FOR PARENT THEMES
 		$themeid = getpagetheme($CFG->SITEID);
 		if($themeid !== false){
             return get_styles($CFG->SITEID,$themeid);
@@ -88,9 +89,9 @@ global $CFG,$MYVARS;
 		}
 	}
 
-	if($result = get_db_result($SQL)) {
-        $styles = false;
-		while($row = fetch_row($result)){
+	if ($result = get_db_result($SQL)) {
+    $styles = false;
+		while ($row = fetch_row($result)) {
 			$styles[$row["attribute"]] = $row["value"];
 		}
 		return $styles;
@@ -98,7 +99,7 @@ global $CFG,$MYVARS;
     return false;
 }
 
-function theme_selector($pageid, $themeid, $feature="page",$checked1="checked", $checked2="") {
+function theme_selector($pageid, $themeid, $feature="page", $checked1="checked", $checked2="") {
 global $CFG, $MYVARS, $USER;
 	$selected = $themeid ? $themeid : false;
 
@@ -118,7 +119,7 @@ global $CFG, $MYVARS, $USER;
     	Preview:<br />
     	<div id="color_preview">
     	'.
-    	get_css_box(get_db_field("name", "pages", "pageid=$pageid"), get_db_field("display_name", "roles", "roleid=" . get_user_role($USER->userid, $pageid)),false,NULL,'pagename',NULL,$themeid,null,$pageid) . '<div style="padding:3px;"></div>'
+    	get_css_box(get_db_field("name", "pages", "pageid='$pageid'"), get_db_field("display_name", "roles", "roleid=" . get_user_role($USER->userid, $pageid)),false,NULL,'pagename',NULL,$themeid,null,$pageid) . '<div style="padding:3px;"></div>'
     	.
     	get_css_box("Title", "Content", null, null, null, null, $themeid, null, $pageid)
     	.'
@@ -162,7 +163,7 @@ global $CFG;
 
 		foreach($styles as $style){
 			if(!$value = get_db_field("value","styles","themeid=0 AND attribute='".$style[1]."' AND pageid='$revised_pageid' AND feature IS NULL AND featureid IS NULL ORDER BY pageid DESC")){ $value = $style[2]; }
-			$returnme .= '<div><table style="font-size:1em;"><tr><td style="width:170px;vertical-align:middle;">' . $style[0] . '</td><td><input type="text" name="'.$style[1].'" value="'.$value.'" style="background-color:'.$value.';width:70px;" ><a onclick="blur();" href="javascript:TCP.popup(document.forms[\'colors\'].elements[\''.$style[1].'\'])"><img alt="Click Here to Pick up the color" src="' . $CFG->wwwroot . '/images/themes.gif" /></a></td></tr></table></div>';
+			$returnme .= '<div><table style="font-size:1em;"><tr><td style="width:170px;vertical-align:middle;">' . $style[0] . '</td><td><input class="themeinput" type="text" name="'.$style[1].'" value="'.$value.'" style="background-color:'.$value.';width:70px;" ><a onclick="blur();" href="javascript:TCP.popup(document.forms[\'colors\'].elements[\''.$style[1].'\'])"><img alt="Click Here to Pick up the color" src="' . $CFG->wwwroot . '/images/themes.gif" /></a></td></tr></table></div>';
 		}
 	}else{
 		include_once($CFG->dirroot . '/features/'.$feature."/".$feature.'lib.php');
@@ -172,17 +173,19 @@ global $CFG;
 
 		foreach($styles as $style){
 			if(!$value = get_db_field("value","styles","themeid=0 AND attribute='".$style[1]."' AND pageid='$revised_pageid' AND feature='$feature' AND featureid='$featureid' ORDER BY pageid DESC")){ $value = $style[2]; }
-			$returnme .= '<div><table style="font-size:1em;><tr><td style="width:170px;vertical-align:middle;">' . $style[0] . '</td><td><input type="text" name="'.$style[1].'" value="'.$value.'" style="background-color:'.$value.';width:70px;" ><a onclick="blur();" href="javascript:TCP.popup(document.forms[\'colors\'].elements[\''.$style[1].'\'])"><img alt="Click Here to Pick up the color" src="' . $CFG->wwwroot . '/images/themes.gif" /></a></td></tr></table></div>';
+			$returnme .= '<div><table style="font-size:1em;><tr><td style="width:170px;vertical-align:middle;">' . $style[0] . '</td><td><input class="themeinput" type="text" name="'.$style[1].'" value="'.$value.'" style="background-color:'.$value.';width:70px;"><a onclick="blur();" href="javascript:TCP.popup(document.forms[\'colors\'].elements[\''.$style[1].'\'])"><img alt="Click Here to Pick up the color" src="' . $CFG->wwwroot . '/images/themes.gif" /></a></td></tr></table></div>';
 		}
 	}
 
-	$returnme .= '<br /><input type="button" value="Save" onclick="ajaxapi(\'/ajax/themes_ajax.php\',\'save_custom_theme\',create_request_string(\'colors\')+\'&pageid='.$pageid.'&feature='.$feature.'&featureid='.$featureid.'\',function(){ location.reload(true);});" />&nbsp;<input type="button" value="Preview" onclick="ajaxapi(\'/ajax/themes_ajax.php\',\'preview\',\'&\'+create_request_string(\'colors\')+\'&pageid='.$pageid.'&feature='.$feature.'&featureid='.$featureid.'\',function(){ simple_display(\'color_preview\'); });" /></form>';
+	$returnme .= '	<br />
+									<input type="button" value="Save" onclick="ajaxapi(\'/ajax/themes_ajax.php\',\'save_custom_theme\',create_request_string(\'colors\')+\'&pageid='.$pageid.'&feature='.$feature.'&featureid='.$featureid.'\',function(){ location.reload(true);});" />
+								</form>';
 	return $returnme;
 }
 
 function getpagetheme($pageid) {
-    $featureid = false;
-	$settings = fetch_settings("page",$featureid,$pageid);
+  $featureid = false;
+	$settings = fetch_settings("page", $featureid, $pageid);
 
 	if($settings === false){
 	   return false;

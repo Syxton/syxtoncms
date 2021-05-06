@@ -46,21 +46,22 @@ global $CFG, $MYVARS, $USER;
 
 	$pageid = $pageid == $CFG->SITEID ? 0 : $pageid;
 
-	if($feature == "page"){
-		$default_list = get_feature_styles($pageid,$feature,NULL,true);
+	if ($feature == "page") {
+		$default_list = get_feature_styles($pageid, $feature, NULL, true);
 		$i=0;
-		foreach($default_list as $style){
-			$styles[$i] = array(false,false,"$pageid",false,$style[1],dbescape($MYVARS->GET[$style[1]]),'0','0');
+		foreach ($default_list as $style) {
+			$styles[$i] = array(false, false, "$pageid", false, $style[1], dbescape($MYVARS->GET[$style[1]]), '0', '0');
 			$i++;
 		}
-	}else{
-		$default_list = get_feature_styles($pageid,$feature,$featureid,true);
-		foreach($default_list as $style){
-			$styles[$i] = array(false,"$feature","$pageid",$featureid,$style[1],dbescape($MYVARS->GET[$style[1]]),'0','0');
+	} else {
+		$default_list = get_feature_styles($pageid, $feature, $featureid, true);
+		foreach ($default_list as $style) {
+			$styles[$i] = array(false, "$feature", "$pageid", $featureid, $style[1], dbescape($MYVARS->GET[$style[1]]), '0', '0');
 			$i++;
 		}
 	}
-	if(make_or_update_styles_array($styles)){ echo "Saved";
+
+	if (make_or_update_styles_array($styles)) { echo "Saved";
 	}else{ echo "Failed"; }
 }
 

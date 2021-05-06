@@ -3,8 +3,8 @@
 * filelib.php - File Library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 2/3/2012
-* Revision: 0.0.5
+* Date: 05/06/2021
+* Revision: 0.0.6
 ***************************************************************************/
 
 if(!isset($LIBHEADER)){ include('header.php'); }
@@ -113,7 +113,7 @@ function return_bytes ($size_str){
 }
 
 // Main template function
-function template_use($file, $params, $subsection) {
+function template_use($file, $params = array(), $subsection = "") {
 	global $CFG;
     $v = $params;
 
@@ -144,11 +144,10 @@ function template_use($file, $params, $subsection) {
         //$replacement = '$func = function(){ $v = unserialize(\''.htmlentities(serialize($params)).'\'); ' . $replacement .' }; $func(); unset($func);';
 
         // Check to make sure that a matched variable exists.
-        if (template_variable_exists($match, $params)) {
-					ob_start();
+				if (template_variable_exists($match, $params)) {
+					ob_start(); // Capture eval() output
 			    eval($replacement);
-					$replacement = ob_get_clean();
-          $contents = str_replace("||$match||", $replacement, $contents);
+          $contents = str_replace("||$match||", ob_get_clean(), $contents);
         }
     }
 
@@ -276,7 +275,11 @@ function template_create_v($match, $var, $complex_parts) {
   if (strpos($match,"[") !== false) { // Complex variable in associative array form
     $v = '$v["' . $var . '"]' . $complex_parts;
   } elseif (strpos($match,"-") !== false) { // Complex variable in object form
-    $v = '$v' . $complex_parts;
+    if (empty($var)) {
+      $v = '$v' . $complex_parts;
+    } else {
+      $v = '$v["' . $var . '"]' . $complex_parts;
+    }
   } else { // Simple variable.
     $v = '$v["' . $var . '"]';
   }
