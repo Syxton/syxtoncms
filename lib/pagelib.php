@@ -1091,7 +1091,7 @@ function make_search_box($contents = "", $name_addition = "") {
     return template_use("templates/pagelib.template", $params, "make_search_box_template");
 }
 
-function format_popup($content = "", $title = "", $height = "", $padding = "25px") {
+function format_popup($content = "", $title = "", $height = "calc(100% - 60px)", $padding = "15px") {
     $params = array("padding" => $padding, "height" => $height, "title" => $title, "content" => $content);
     return template_use("templates/pagelib.template", $params, "format_popup_template");
 }

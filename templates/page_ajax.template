@@ -5,7 +5,7 @@ search_template||
       <tr>
         <td style="width:25%;text-align:left;">
           ||isprev{{
-            <a href="javascript: document.getElementById('loading_overlay_pagesearch').style.visibility='visible';
+            <a href="javascript: document.getElementById('loading_overlay_||searchtype||').style.visibility='visible';
                                  ajaxapi('/ajax/page_ajax.php',
                                          '||searchtype||',
                                          '&pagenum=||prev_pagenum||' +
@@ -25,7 +25,7 @@ search_template||
         </td>
         <td style="width:25%;text-align:right;">
           ||isnext{{
-            <a onclick="document.getElementById('loading_overlay_pagesearch').style.visibility='visible';
+            <a onclick="document.getElementById('loading_overlay_||searchtype||').style.visibility='visible';
                         ajaxapi('/ajax/page_ajax.php',
                                 '||searchtype||',
                                 '&pagenum=||next_pagenum||' +
@@ -151,9 +151,87 @@ search_pages_link_template||
 
 search_users_buttons_template||
   ||isuser{{
-      <span id="pagelist_||user[userid]||"></span>&nbsp;
+    <span id="pagelist_||user[userid]||">
       <a href="javascript: ajaxapi('/ajax/page_ajax.php',
                                    'get_inviteable_pages',
-                                   '&inviter=' . $userid . '&invitee=||user[userid]||\',function() {simple_display('pagelist_||user[userid]||');});" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/mail.gif" title="Invite" alt="Invite"></a></span>
+                                   '&inviter=||userid||' +
+                                   '&invitee=||user[userid]||',
+                                   function() {
+                                     simple_display('pagelist_||user[userid]||');
+                                   });" onmouseup="this.blur()">
+        <img src="||wwwroot||/images/mail.gif" title="Invite" alt="Invite">
+      </a>
+    </span>
   }}isuser||
 ||search_users_buttons_template
+
+new_link_form_template||
+  <br />
+  <table style="width:100%">
+  <tr>
+    <td class="field_title" style="white-space:nowrap;">
+      Link Page Search:
+    </td>
+    <td class="field_input">
+      <form onsubmit="ajaxapi('/ajax/page_ajax.php',
+                              'linkpagesearch',
+                              '&pageid=||pageid||' +
+                              '&searchwords=' + escape(document.getElementById('searchbox').value),
+                              function() {
+                                simple_display('page_search_span');
+                              }); return false;">
+        <input type="text" size="37" name="searchbox" id="searchbox" />&nbsp;<input type="submit" value="Search" />
+      </form>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2">
+    <span id="page_search_span"></span>
+    </td>
+  </tr>
+  </table>
+||new_link_form_template
+
+search_linkpagesearch_buttons_template||
+  <span id="addremove_||pageid||">
+  ||alreadylinked{{
+    <a href="javascript: ||confirmopen{{ if (confirm('This linked page is not viewable to everyone and will only show up for people who have viewing rights.')) { }}confirmopen||
+                                            ajaxapi('/ajax/page_ajax.php',
+                                                    'make_page_link',
+                                                    '&pageid=||pageid||' +
+                                                    '&linkpageid=||linkpageid||',
+                                                    function() {
+                                                      simple_display('addremove_||pageid||');
+                                                    });
+                                            ajaxapi('/ajax/page_ajax.php',
+                                                    'linkpagesearch',
+                                                    '&pageid=||pageid||' +
+                                                    '&pagenum=||pagenum||' +
+                                                    '&searchwords=' + escape('||searchwords||'),
+                                                    function() {
+                                                      simple_display('page_search_span');
+                                                    });
+                         ||confirmopen{{ } }}confirmopen||" onmouseup="this.blur()">
+      <img src="||wwwroot||/images/add.png" title="Add Page Link" alt="Add Page Link">
+    </a>
+    //OR//
+    <a href="javascript: ajaxapi('/ajax/page_ajax.php',
+                                 'unlink_page',
+                                 '&pageid=||pageid||' +
+                                 '&linkid=||linkpageid||',
+                                 function() {
+                                   simple_display('addremove_||pageid||');
+                                 });
+                         ajaxapi('/ajax/page_ajax.php',
+                                'linkpagesearch',
+                                '&pageid=||pageid||' +
+                                '&pagenum=||pagenum||' +
+                                '&searchwords=' + escape('||searchwords||'),
+                                function() {
+                                  simple_display('page_search_span');
+                                });" onmouseup="this.blur();">
+      <img src="||wwwroot||/images/delete.png" title="Remove Page Link" alt="Remove Page Link" />
+    </a>
+  }}alreadylinked||
+  </span>
+||search_linkpagesearch_buttons_template

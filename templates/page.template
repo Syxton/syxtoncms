@@ -185,7 +185,7 @@ create_edit_page_template||
 ||create_edit_page_template
 
 create_edit_links_template||
-<div id="links_editor" style="width:99%;height:93%;border-color:buttonface; border-style:dotted; padding: 10px 0px 10px 0px;">
+<div id="links_editor" style="padding: 10px 0px 10px 0px;">
 <table>
   <tr>
     <td>

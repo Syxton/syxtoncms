@@ -244,23 +244,7 @@ global $CFG, $MYVARS, $USER;
 
 function get_new_link_form(){
 global $MYVARS, $CFG, $USER;
-    $pageid = $MYVARS->GET['pageid'];
-    echo '<br />
-	<table style="width:100%">
-		<tr>
-			<td class="field_title" style="white-space:nowrap;">
-				Link Page Search:
-			</td>
-			<td class="field_input">
-				<form onsubmit="ajaxapi(\'/ajax/page_ajax.php\',\'linkpagesearch\',\'&pageid=' . $pageid . '&searchwords=\'+escape(document.getElementById(\'searchbox\').value),function() { simple_display(\'page_search_span\');}); return false;"><input type="text" size="37" name="searchbox" id="searchbox" />&nbsp;<input type="submit" value="Search" />
-			</td>
-		</tr>
-		<tr>
-			<td colspan="2">
-			<span id="page_search_span"></span>
-			</td>
-		</tr>
-	</table>';
+  echo template_use("templates/page_ajax.template", array("pageid" => $MYVARS->GET['pageid']), "new_link_form_template");
 }
 
 function get_link_manager(){
@@ -295,6 +279,79 @@ global $MYVARS, $CFG, $USER;
 }
 
 function linkpagesearch(){
+global $CFG, $MYVARS, $USER;
+  $searchwords = trim($MYVARS->GET["searchwords"]);
+  $pageid = $MYVARS->GET["pageid"];
+
+  // no search words given
+  if ($searchwords == "") {
+    $searchwords = '%';
+  }
+
+  // logged in
+  $loggedin = is_logged_in() ? true : false;
+  $userid = $loggedin ? $USER->userid : "";
+
+  // is a site admin
+  $admin = $loggedin && is_siteadmin($userid) ? true : false;
+
+  //restrict possible page listings
+  $siteviewableonly = $loggedin ? "" : " AND p.siteviewable=1";
+  $opendoorpolicy = $admin ? "" : " AND (p.opendoorpolicy=1 OR p.siteviewable=1)";
+
+  //Create the page limiter
+  $pagenum = isset($MYVARS->GET["pagenum"]) ? $MYVARS->GET["pagenum"] : 0;
+  $firstonpage = $CFG->sitesearch->perpage * $pagenum;
+  $limit = " LIMIT $firstonpage," . $CFG->sitesearch->perpage;
+  $words = explode(" ", $searchwords);
+
+  $i = 0; $searchstring = "";
+  while (isset($words[$i])) {
+      $searchpart = "(p.name LIKE '%" . $words[$i] . "%' OR p.keywords LIKE '%" . $words[$i] . "%' OR p.description LIKE '%" . $words[$i] . "%')";
+      $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
+      $i++;
+  }
+
+  if ($loggedin) {
+      $roleid = get_user_role($userid, $CFG->SITEID);
+      $SQL = "SELECT p.*, (SELECT pl.linkid
+                             FROM pages_links pl
+                            WHERE pl.linkpageid = p.pageid
+                              AND pl.hostpageid = '$pageid') as alreadylinked
+                FROM pages p
+               WHERE p.pageid != '$CFG->SITEID'
+                 AND ($searchstring)
+                 AND p.pageid != '$pageid'
+            ORDER BY p.name";
+  }
+
+  $total = get_db_count($SQL); //get the total for all pages returned.
+  $SQL .= $limit; //Limit to one page of return.
+  $pages = get_db_result($SQL);
+
+  $count = $total > (($pagenum+1) * $CFG->sitesearch->perpage) ? $CFG->sitesearch->perpage : $total - (($pagenum) * $CFG->sitesearch->perpage); //get the amount returned...is it a full page of results?
+  $amountshown = $firstonpage + $CFG->sitesearch->perpage < $total ? $firstonpage + $CFG->sitesearch->perpage : $total;
+
+  $params = array("resultsfound" => ($count > 0), "searchresults" => "", "searchwords" => $searchwords, "searchtype" => "linkpagesearch", "isprev" => ($pagenum > 0), "isnext" => ($firstonpage + $CFG->sitesearch->perpage < $total), "wwwroot" => $CFG->wwwroot, "prev_pagenum" => ($pagenum - 1), "next_pagenum" => ($pagenum + 1),
+                  "pagenum" => $pagenum, "viewing" => ($firstonpage + 1), "amountshown" => $amountshown, "total" => $total, "loggedin" => $loggedin, "pageid" => $pageid);
+
+  if ($count > 0) {
+    while ($page = fetch_row($pages)) {
+      $params["alreadylinked"] = ($loggedin && empty($page["alreadylinked"]));
+      $params["confirmopen"] = ($page["siteviewable"] == 0);
+      $params["linkpageid"] = $page["pageid"];
+
+      $params["col1"] = substr(stripslashes($page["name"]), 0, 30);
+      $params["col2"] = substr(stripslashes(strip_tags($page["description"])), 0, 100);
+      $params["col3"] = ($loggedin) ? template_use("templates/page_ajax.template", $params, "search_linkpagesearch_buttons_template") : "";
+      $params["searchresults"] = $params["searchresults"] . template_use("templates/page_ajax.template", $params, "search_row_template");
+    }
+  }
+
+  echo template_use("templates/page_ajax.template", $params, "search_template");
+}
+
+function linkpagesearc2h(){
 global $CFG, $MYVARS, $USER;
     $searchwords = trim($MYVARS->GET["searchwords"]);
     $pageid = $MYVARS->GET["pageid"];
@@ -347,14 +404,7 @@ global $CFG, $MYVARS, $USER;
             $confirmopen = "";
             $confirmclose = "";
             $header = $header == "" ? '<table style="width:100%;"><tr><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;font-size:.75em;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><p>' : $header;
-            if($page["siteviewable"] == 0){
-                $confirmopen = "if(confirm('This linked page is not viewable to everyone and will only show up for people who have viewing rights.')){";
-                $confirmclose = "}";
-            }
-            if($loggedin){
-                $add_remove = $page["alreadylinked"] == 0 ? '<span id="addremove_' . $page["pageid"] . '"><a href="javascript: ' . $confirmopen . 'ajaxapi(\'/ajax/page_ajax.php\',\'make_page_link\',\'&pageid=' . $pageid . '&linkpageid=' . $page["pageid"] . '\',function() {simple_display(\'addremove_' . $page["pageid"] . '\');});  ajaxapi(\'/ajax/page_ajax.php\',\'linkpagesearch\',\'&pageid=' . $pageid . '&pagenum=' . $pagenum . '&searchwords=\'+escape(\'' . $searchwords . '\'),function() {simple_display(\'page_search_span\');});' . $confirmclose . '" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/add.png" title="Add Page Link" alt="Add Page Link"></a></span>' : '<span id="addremove_' . $page["pageid"] . '"><a href="javascript: ajaxapi(\'/ajax/page_ajax.php\',\'unlink_page\',\'&pageid=' . $pageid . '&linkid=' . $page["alreadylinked"] . '\',function() {simple_display(\'addremove_' . $page["pageid"] . '\');});  ajaxapi(\'/ajax/page_ajax.php\',\'linkpagesearch\',\'&pageid=' . $pageid . '&pagenum=' . $pagenum . '&searchwords=\'+escape(\'' . $searchwords . '\'),function() {simple_display(\'page_search_span\');});" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/delete.png" title="Remove Page Link" alt="Remove Page Link"></a></span>';
-            }
-            $body .= '<tr style="height:30px;border:3px solid white;font-size:.9em;"><td style="width:30%;padding:5px;font-size:.85em;white-space:nowrap;">' . substr(stripslashes($page["name"]), 0, 30) . '</td><td style="width:60%;padding:5px;font-size:.75em;">' . substr(stripslashes(strip_tags($page["description"])), 0, 100) . '</td><td style="text-align:right;padding:5px;">' . $add_remove . '</td></tr>';
+
         }
         $body .= "</table>";
     }else{
@@ -378,7 +428,7 @@ function unlink_page(){
 global $MYVARS, $CFG, $USER;
     $linkid = $MYVARS->GET['linkid'];
     $pageid = $MYVARS->GET['pageid'];
-    $SQL = "DELETE FROM pages_links WHERE linkid=$linkid";
+    $SQL = "DELETE FROM pages_links WHERE hostpageid='$pageid' AND linkpageid='$linkid'";
     execute_db_sql($SQL);
     resort_links($pageid);
     echo "";
