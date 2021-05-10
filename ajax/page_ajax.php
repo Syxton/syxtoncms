@@ -15,201 +15,231 @@ $CFG->sitesearch->perpage = 8;
 
 callfunction();
 
-function edit_page(){
+function edit_page() {
 global $CFG, $MYVARS;
-    $name = addslashes(urldecode($MYVARS->GET["name"]));
-    $description = addslashes(urldecode($MYVARS->GET["description"]));
-    $keywords = addslashes(urldecode($MYVARS->GET["keywords"]));
-    $defaultrole = $MYVARS->GET["defaultrole"];
-    $opendoor = $MYVARS->GET["opendoor"];
-    $siteviewable = $MYVARS->GET["siteviewable"];
-    $menu_page = $MYVARS->GET["menu_page"];
-    $hidefromvisitors = $MYVARS->GET["hidefromvisitors"];
-    $shortname = substr(strtolower(preg_replace("/\W|_/", '', $name)), 0, 20);
-    $pageid = $MYVARS->GET["pageid"];
+  $name = dbescape($MYVARS->GET["name"]);
+  $description = dbescape($MYVARS->GET["description"]);
+  $keywords = dbescape($MYVARS->GET["keywords"]);
+  $defaultrole = dbescape($MYVARS->GET["defaultrole"]);
+  $opendoor = dbescape($MYVARS->GET["opendoor"]);
+  $siteviewable = dbescape($MYVARS->GET["siteviewable"]);
+  $menu_page = dbescape($MYVARS->GET["menu_page"]);
+  $hidefromvisitors = dbescape($MYVARS->GET["hidefromvisitors"]);
+  $pageid = dbescape($MYVARS->GET["pageid"]);
 
-    $SQL = "UPDATE pages SET description='$description', name='$name', short_name='$shortname', keywords='$keywords', siteviewable='$siteviewable', menu_page='$menu_page', default_role='$defaultrole', opendoorpolicy='$opendoor' WHERE pageid=$pageid";
-    if($menu_page == "1"){ //Menu Page
-        if(get_db_row("SELECT * FROM menus WHERE pageid='$pageid'")){ //Page was already a menu...just run an update
-            execute_db_sql("UPDATE menus SET hidefromvisitors='$hidefromvisitors', link='$pageid', text='$name' WHERE pageid='$pageid'");
-        }else{ //New Menu Item
-            $sort = get_db_field("sort", "menus", "id > 0 ORDER BY sort DESC");
-            $sort++;
-            execute_db_sql("INSERT INTO menus (pageid,text,link,sort,hidefromvisitors) VALUES('$pageid','" . $name . "','$pageid','$sort','" . $hidefromvisitors . "')");
-        }
-    }else{
-        if(get_db_row("SELECT * FROM menus WHERE pageid=$pageid")){ //Page is already a mneu...just delete that row.
-            execute_db_sql("DELETE FROM menus WHERE pageid=$pageid");
-        }
+  if ($menu_page == "1") { // Menu Page
+    $SQL = "SELECT *
+              FROM menus
+             WHERE pageid = '$pageid'";
+    if (get_db_row($SQL)) { //Page was already a menu...just run an update
+      $SQL = "UPDATE menus
+                 SET hidefromvisitors = '$hidefromvisitors',
+                     link = '$pageid',
+                     text = '$name'
+               WHERE pageid = '$pageid'";
+      execute_db_sql($SQL);
+    } else { // New Menu Item
+      $sort = get_db_field("sort", "menus", "id > 0 ORDER BY sort DESC");
+      $sort++;
+      $SQL = "INSERT INTO menus (pageid, text, link, sort, hidefromvisitors)
+                   VALUES ('$pageid','$name','$pageid','$sort','$hidefromvisitors')";
+      execute_db_sql($SQL);
     }
-    if(execute_db_sql($SQL)){ echo "Page edited successfully"; }
+  } else {
+    $SQL = "FROM menus WHERE pageid = '$pageid'";
+    if (get_db_row("SELECT * $SQL")) { // Page is already a menu...just delete that row.
+      execute_db_sql("DELETE $SQL");
+    }
+  }
+
+  $shortname = substr(strtolower(preg_replace("/\W|_/", '', $name)), 0, 20);
+  $SQL = "UPDATE pages
+             SET description = '$description',
+                 name = '$name',
+                 short_name = '$shortname',
+                 keywords = '$keywords',
+                 siteviewable = '$siteviewable',
+                 menu_page = '$menu_page',
+                 default_role = '$defaultrole',
+                 opendoorpolicy = '$opendoor'
+           WHERE pageid = $pageid";
+  if (execute_db_sql($SQL)) { echo "Page edited successfully"; }
 }
 
-function create_page(){
+function create_page() {
 global $CFG, $MYVARS;
-    $newpage = new stdClass();
-    $newpage->name = $MYVARS->GET["name"];
-    $newpage->description = $MYVARS->GET["description"];
-    $newpage->keywords = $MYVARS->GET["keywords"];
-    $newpage->defaultrole = $MYVARS->GET["defaultrole"];
-    $newpage->opendoor = $MYVARS->GET["opendoor"];
-    $newpage->siteviewable = $MYVARS->GET["siteviewable"];
-    $newpage->menu_page = $MYVARS->GET["menu_page"];
-    $newpage->hidefromvisitors = $MYVARS->GET["hidefromvisitors"];
-    update_user_cookie();
-    echo create_new_page($newpage);
+  update_user_cookie();
+  echo create_new_page((object) $MYVARS->GET); // Converts associative array to object.
 }
 
-function pagesearch(){
+function pagesearch() {
 global $CFG, $MYVARS, $USER;
-    $searchwords = trim($MYVARS->GET["searchwords"]);
-    //no search words given
-    if($searchwords == ""){
-        $searchwords = '%';
-    }
-    echo '<input type="hidden" id="searchwords" value="' . $searchwords . '" />';
-    //logged in
-    $loggedin = is_logged_in() ? true : false;
-    $userid = $loggedin ? $USER->userid : "";
-    //is a site admin
-    $admin = $loggedin && is_siteadmin($userid) ? true : false;
-    //restrict possible page listings
-    $siteviewableonly = $loggedin ? "" : " AND p.siteviewable=1";
-    $opendoorpolicy = $admin ? "" : " AND (p.opendoorpolicy=1 OR p.siteviewable=1)";
-    $no_menu_items = " AND p.menu_page=0";
-    //Create the page limiter
-    $pagenum = isset($MYVARS->GET["pagenum"]) ? $MYVARS->GET["pagenum"] : 0;
-    $firstonpage = $CFG->sitesearch->perpage * $pagenum;
-    $limit = " LIMIT $firstonpage," . $CFG->sitesearch->perpage;
-    $words = explode(" ", $searchwords);
-    $i = 0; $searchstring = "";
-    while(isset($words[$i])){
-        $searchpart = "(p.name LIKE '%" . $words[$i] . "%' OR p.keywords LIKE '%" . $words[$i] . "%' OR p.description LIKE '%" . $words[$i] . "%')";
-        $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
-        $i++;
-    }
-    if($loggedin){
-        $roleid = get_user_role($userid, $CFG->SITEID);
-        $check_rights = !$admin ? ", IF(p.pageid IN (SELECT p.pageid FROM pages p INNER JOIN roles_ability ry ON ry.roleid='$roleid' AND ry.ability='viewpages' AND allow='1' WHERE
-			(
-				p.pageid IN (SELECT ra.pageid FROM roles_assignment ra WHERE ra.userid='$userid' AND ra.pageid=p.pageid AND ra.confirm=0) OR p.pageid IN (SELECT rau.pageid FROM roles_ability_peruser rau WHERE rau.userid='$userid' AND rau.ability ='viewpages' AND allow='1')
-			)
-			AND p.pageid NOT IN (SELECT rau.pageid FROM roles_ability_peruser rau WHERE rau.userid='$userid' AND rau.ability ='viewpages' AND allow='0')
-			AND p.pageid != " . $CFG->SITEID . " AND p.menu_page != '1'),1,0) as added" : "";
-        $SQL = '
-		SELECT p.*' . $check_rights . '
-		FROM pages p WHERE p.pageid != ' . $CFG->SITEID . '
-		AND (' . $searchstring . ')
-		' . $no_menu_items . '
-		ORDER BY p.name
-		';
-    }else{
-        $SQL = '
-		SELECT p.*
-		FROM pages p WHERE p.pageid != ' . $CFG->SITEID . '
-		AND (' . $searchstring . ')
-		' . $siteviewableonly . '
-		' . $no_menu_items . '
-		ORDER BY p.name
-		';
-    }
-    $total = get_db_count($SQL); //get the total for all pages returned.
-    $SQL .= $limit; //Limit to one page of return.
-    $pages = get_db_result($SQL);
-    $count = $total > (($pagenum+1) * $CFG->sitesearch->perpage) ? $CFG->sitesearch->perpage : $total - (($pagenum) * $CFG->sitesearch->perpage); //get the amount returned...is it a full page of results?
-    $amountshown = $firstonpage + $CFG->sitesearch->perpage < $total ? $firstonpage + $CFG->sitesearch->perpage : $total;
-    $prev = $pagenum > 0 ? '<a href="javascript: document.getElementById(\'loading_overlay_pagesearch\').style.visibility=\'visible\'; ajaxapi(\'/ajax/page_ajax.php\',\'pagesearch\',\'&pagenum=' . ($pagenum - 1) . '&searchwords=\'+escape(\'' . $searchwords . '\'),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer_pagesearch\'); document.getElementById(\'loading_overlay_pagesearch\').style.visibility=\'hidden\'; }},true); " onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/prev.gif" title="Previous Page" alt="Previous Page" /></a>' : "";
-    $info = 'Viewing ' . ($firstonpage + 1) . " through " . $amountshown . " out of $total";
-    $next = $firstonpage + $CFG->sitesearch->perpage < $total ? '<a href="javascript: document.getElementById(\'loading_overlay_pagesearch\').style.visibility=\'visible\'; ajaxapi(\'/ajax/page_ajax.php\',\'pagesearch\',\'&pagenum=' . ($pagenum + 1) . '&searchwords=\'+escape(\'' . $searchwords . '\'),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer_pagesearch\'); document.getElementById(\'loading_overlay_pagesearch\').style.visibility=\'hidden\'; }},true);" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/next.gif" title="Next Page" alt="Next Page" /></a>' : "";
-    $header = "";
-    $body = '<table style="background-color:#F3F6FB;width:100%;border-collapse:collapse;">';
-    if($count > 0){
-        while($page = fetch_row($pages)){
-            $add_remove = "";
-            $linkopen = "";
-            $linkclose = "";
-            $header = $header == "" ? '<table style="width:100%;"><tr><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;font-size:.75em;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><p>' : $header;
-            if($loggedin && !$admin){
-                if($page["siteviewable"] == 1 || $page["opendoorpolicy"] == 1 || $page["added"] == 1 || user_has_ability_in_page($userid, "assign_roles", $page["pageid"])){
-                    $linkopen = '<a href="javascript:self.parent.go_to_page(\'' . $page["pageid"] . '\');">';
-                    $linkclose = "</a>";
-                    $add_remove = $page["added"] == 0 ? '<span id="addremove_' . $page["pageid"] . '"><a href="javascript: ajaxapi(\'/ajax/page_ajax.php\',\'change_subscription\',\'&pageid=' . $page["pageid"] . '\',function() {simple_display(\'addremove_' . $page["pageid"] . '\');});  ajaxapi(\'/ajax/page_ajax.php\',\'pagesearch\',\'&pagenum=' . $pagenum . '&searchwords=\'+escape(\'' . $searchwords . '\'),function() {simple_display(\'searchcontainer_pagesearch\');});" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/add.png" title="Add Page" alt="Add Page" /></a></span>' : '<span id="addremove_' . $page["pageid"] . '"><a href="javascript: if(confirm(\'Are you sure you want to remove yourself from this page? \n You might not be able to get into this page again.\')){ajaxapi(\'/ajax/page_ajax.php\',\'change_subscription\',\'&pageid=' . $page["pageid"] . '\',function() {simple_display(\'addremove_' . $page["pageid"] . '\');});  ajaxapi(\'/ajax/page_ajax.php\',\'pagesearch\',\'&pagenum=' . $pagenum . '&searchwords=\'+escape(\'' . $searchwords . '\'),function() {simple_display(\'searchcontainer_pagesearch\');});}" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/delete.png" title="Remove Page" alt="Remove Page" /></a></span>';
-                    $add_remove = user_has_ability_in_page($userid, "add_page", $CFG->SITEID) ? $add_remove : "";
-                }else{
-                    if(get_db_row("SELECT * FROM roles_assignment WHERE userid='$userid' AND pageid='" . $page["pageid"] . "' AND confirm=1")){ $add_remove = '<span id="addremove_' . $page["pageid"] . '"><a href="javascript: ajaxapi(\'/ajax/page_ajax.php\',\'remove_request\',\'&pageid=' . $page["pageid"] . '\',function() {simple_display(\'addremove_' . $page["pageid"] . '\');});" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/undo.png" title="Remove Request" alt="Remove Request" /></a></span>';
-                    }else{  $add_remove = '<span id="addremove_' . $page["pageid"] . '"><a href="javascript: ajaxapi(\'/ajax/page_ajax.php\',\'add_request\',\'&pageid=' . $page["pageid"] . '\',function() {simple_display(\'addremove_' . $page["pageid"] . '\');});" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/mail.gif" title="Send Request" alt="Send Request"></a></span>'; }
-                }
-            }else{
-                if($admin){
-                    $linkopen = '<a href="javascript:self.parent.go_to_page(\'' . $page["pageid"] . '\');">';
-                    $linkclose = "</a>";
-                }elseif($page["siteviewable"] == 1){
-                    $linkopen = '<a href="javascript:self.parent.go_to_page(\'' . $page["pageid"] . '\');">';
-                    $linkclose = "</a>";
-                }
-            }
-            $body .= '<tr style="height:30px;border:3px solid white;font-size:.9em;"><td style="width:30%;padding:5px;font-size:.85em;white-space:nowrap;">' . $linkopen . substr($page["name"], 0, 30) . $linkclose . '</td><td style="width:60%;padding:5px;font-size:.75em;">' . substr($page["description"], 0, 50) . '</td><td style="text-align:right;padding:5px;">' . $add_remove . '</td></tr>';
+  $searchwords = trim($MYVARS->GET["searchwords"]);
+  // no search words given
+  if ($searchwords == "") {
+    $searchwords = '%';
+  }
+
+  // logged in
+  $loggedin = is_logged_in() ? true : false;
+  $userid = $loggedin ? $USER->userid : "";
+
+  // is a site admin
+  $admin = $loggedin && is_siteadmin($userid) ? true : false;
+
+  //restrict possible page listings
+  $siteviewableonly = $loggedin ? "" : " AND p.siteviewable=1";
+  $opendoorpolicy = $admin ? "" : " AND (p.opendoorpolicy=1 OR p.siteviewable=1)";
+
+  //Create the page limiter
+  $pagenum = isset($MYVARS->GET["pagenum"]) ? $MYVARS->GET["pagenum"] : 0;
+  $firstonpage = $CFG->sitesearch->perpage * $pagenum;
+  $limit = " LIMIT $firstonpage," . $CFG->sitesearch->perpage;
+  $words = explode(" ", $searchwords);
+
+  $i = 0; $searchstring = "";
+  while (isset($words[$i])) {
+      $searchpart = "(p.name LIKE '%" . $words[$i] . "%' OR p.keywords LIKE '%" . $words[$i] . "%' OR p.description LIKE '%" . $words[$i] . "%')";
+      $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
+      $i++;
+  }
+
+  if ($loggedin) {
+      $roleid = get_user_role($userid, $CFG->SITEID);
+      $check_rights = "";
+      if (empty($admin)) { // Is my site role allowed to view pages.  REPLACE WITH user_has_ability_in_page?????
+          $check_rights = ", IF(p.pageid IN (SELECT p.pageid
+                                               FROM pages p
+                                         INNER JOIN roles_ability ry
+                                                 ON ry.roleid = '$roleid'
+                                                AND ry.ability = 'viewpages'
+                                                AND allow = '1'
+                                              WHERE (p.pageid IN (SELECT ra.pageid
+                                                                    FROM roles_assignment ra
+                                                                   WHERE ra.userid = '$userid'
+                                                                     AND ra.pageid = p.pageid
+                                                                     AND ra.confirm = 0)
+                                                 OR p.pageid IN (SELECT rau.pageid
+                                                                   FROM roles_ability_peruser rau
+                                                                  WHERE rau.userid = '$userid'
+                                                                    AND rau.ability = 'viewpages'
+                                                                    AND allow = '1'))
+                                                AND p.pageid NOT IN (SELECT rau.pageid
+                                                                       FROM roles_ability_peruser rau
+                                                                      WHERE rau.userid = '$userid'
+                                                                        AND rau.ability = 'viewpages'
+                                                                        AND allow = '0')
+                                                AND p.pageid != '$CFG->SITEID'
+                                                AND p.menu_page != '1'), 1, 0) as added";
+      }
+
+      $SQL = "SELECT p.*
+              $check_rights
+                FROM pages p
+               WHERE p.pageid != '$CFG->SITEID'
+	               AND ($searchstring)
+	               AND p.menu_page = 0
+	          ORDER BY p.name";
+  } else {
+      $SQL = "SELECT p.*
+                FROM pages p
+               WHERE p.pageid != '$CFG->SITEID'
+    	           AND ($searchstring)
+    $siteviewableonly
+       $no_menu_items
+    	       ORDER BY p.name";
+  }
+
+  $total = get_db_count($SQL); //get the total for all pages returned.
+  $SQL .= $limit; //Limit to one page of return.
+  $pages = get_db_result($SQL);
+
+  $count = $total > (($pagenum+1) * $CFG->sitesearch->perpage) ? $CFG->sitesearch->perpage : $total - (($pagenum) * $CFG->sitesearch->perpage); //get the amount returned...is it a full page of results?
+  $amountshown = $firstonpage + $CFG->sitesearch->perpage < $total ? $firstonpage + $CFG->sitesearch->perpage : $total;
+
+  $params = array("resultsfound" => ($count > 0), "searchresults" => "", "searchwords" => $searchwords, "searchtype" => "pagesearch", "isprev" => ($pagenum > 0), "isnext" => ($firstonpage + $CFG->sitesearch->perpage < $total), "wwwroot" => $CFG->wwwroot, "prev_pagenum" => ($pagenum - 1), "next_pagenum" => ($pagenum + 1),
+                  "pagenum" => $pagenum, "viewing" => ($firstonpage + 1), "amountshown" => $amountshown, "total" => $total);
+
+  if ($count > 0) {
+    while ($page = fetch_row($pages)) {
+      $linked = true;
+      if ($loggedin && !$admin) {
+        if ($page["siteviewable"] == 1 || $page["opendoorpolicy"] == 1 || $page["added"] == 1 || user_has_ability_in_page($userid, "assign_roles", $page["pageid"])) {
+          $params["col3"] = template_use("templates/page_ajax.template", array("must_request" => false, "can_add_remove" => user_has_ability_in_page($userid, "add_page", $CFG->SITEID),
+                                                                               "isadd" => ($page["added"] == 0), "wwwroot" => $CFG->wwwroot, "pagenum" => $pagenum,
+                                                                               "searchwords" => $searchwords, "pageid" => $page["pageid"]), "search_pages_buttons_template");
+        } else {
+          $linked = false;
+          $alreadyrequested = get_db_row("SELECT * FROM roles_assignment WHERE userid='$userid' AND pageid='" . $page["pageid"] . "' AND confirm=1") ? true : false;
+          $params["col3"] = template_use("templates/page_ajax.template", array("must_request" => true, "alreadyrequested" => $alreadyrequested, "wwwroot" => $CFG->wwwroot, "pagenum" => $pagenum,
+                                                                               "searchwords" => $searchwords, "pageid" => $page["pageid"]), "search_pages_buttons_template");
         }
-        $body .= "</table>";
-    }else{
-        echo '<span class="error_text" class="centered_span">No matches found.</span>';
+      }
+
+      $params["linked"] = $linked;
+      $params["col1"] = template_use("templates/page_ajax.template", array("linked" => $linked, "pageid" =>  $page["pageid"],"name" => substr($page["name"], 0, 30)), "search_pages_link_template");
+      $params["col2"] = substr($page["description"], 0, 50);
+      $params["searchresults"] = $params["searchresults"] . template_use("templates/page_ajax.template", $params, "search_row_template");
     }
-    echo $header . $body;
+  }
+
+  echo template_use("templates/page_ajax.template", $params, "search_template");
 }
 
 function usersearch(){
 global $CFG, $MYVARS, $USER;
-    $userid = $USER->userid;
-    $searchwords = trim($MYVARS->GET["searchwords"]);
-    //no search words given
-    if($searchwords == ""){
-        $searchwords = '%';
+  $userid = $USER->userid;
+  $searchwords = trim($MYVARS->GET["searchwords"]);
+  //no search words given
+  if ($searchwords == "") {
+      $searchwords = '%';
+  }
+
+  echo '<input type="hidden" id="searchwords" value="' . $searchwords . '" />';
+
+  //is a site admin
+  $admin = is_siteadmin($userid) ? true : false;
+
+  //Create the page limiter
+  $pagenum = isset($MYVARS->GET["pagenum"]) ? $MYVARS->GET["pagenum"] : 0;
+  $firstonpage = $CFG->sitesearch->perpage * $pagenum;
+  $limit = " LIMIT $firstonpage," . $CFG->sitesearch->perpage;
+  $words = explode(" ", $searchwords);
+
+  $i = 0; $searchstring = "";
+  while(isset($words[$i])){
+      $searchpart = "(u.fname LIKE '%" . $words[$i] . "%' OR u.lname LIKE '%" . $words[$i] . "%' OR u.email LIKE '%" . $words[$i] . "%')";
+      $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
+      $i++;
+  }
+
+  $SQL = "SELECT u.*
+            FROM users u
+           WHERE ($searchstring)
+           ORDER BY u.lname";
+
+  $total = get_db_count($SQL); //get the total for all pages returned.
+  $SQL .= $limit; //Limit to one page of return.
+  $users = get_db_result($SQL);
+  $count = $total > (($pagenum+1) * $CFG->sitesearch->perpage) ? $CFG->sitesearch->perpage : $total - (($pagenum) * $CFG->sitesearch->perpage); //get the amount returned...is it a full page of results?
+  $amountshown = $firstonpage + $CFG->sitesearch->perpage < $total ? $firstonpage + $CFG->sitesearch->perpage : $total;
+
+  $params = array("resultsfound" => ($count > 0), "searchresults" => "", "searchwords" => $searchwords, "searchtype" => "usersearch", "isprev" => ($pagenum > 0), "isnext" => ($firstonpage + $CFG->sitesearch->perpage < $total), "wwwroot" => $CFG->wwwroot, "prev_pagenum" => ($pagenum - 1), "next_pagenum" => ($pagenum + 1),
+                  "pagenum" => $pagenum, "viewing" => ($firstonpage + 1), "amountshown" => $amountshown, "total" => $total);
+
+  if ($count > 0) {
+    while ($user = fetch_row($users)) {
+      $params["isuser"] = ($userid != $user["userid"] && !is_siteadmin($user["userid"]));
+      $params["userid"] = $userid;
+      $params["user"] = $user;
+      $params["col1"] = $user["fname"] . " " . $user["lname"];
+      $params["col2"] = $user["email"];
+      $params["col3"] = template_use("templates/page_ajax.template", $params, "search_users_buttons_template");
+      $params["searchresults"] = $params["searchresults"] . template_use("templates/page_ajax.template", $params, "search_row_template");
     }
-    echo '<input type="hidden" id="searchwords" value="' . $searchwords . '" />';
-    //is a site admin
-    $admin = is_siteadmin($userid) ? true : false;
-    //Create the page limiter
-    $pagenum = isset($MYVARS->GET["pagenum"]) ? $MYVARS->GET["pagenum"] : 0;
-    $firstonpage = $CFG->sitesearch->perpage * $pagenum;
-    $limit = " LIMIT $firstonpage," . $CFG->sitesearch->perpage;
-    $words = explode(" ", $searchwords);
-    $i = 0; $searchstring = "";
-    while(isset($words[$i])){
-        $searchpart = "(u.fname LIKE '%" . $words[$i] . "%' OR u.lname LIKE '%" . $words[$i] . "%' OR u.email LIKE '%" . $words[$i] . "%')";
-        $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
-        $i++;
-    }
-    $SQL = '
-	SELECT u.*
-	FROM users u WHERE (' . $searchstring . ')
-	ORDER BY u.lname
-	';
-    $total = get_db_count($SQL); //get the total for all pages returned.
-    $SQL .= $limit; //Limit to one page of return.
-    $users = get_db_result($SQL);
-    $count = $total > (($pagenum+1) * $CFG->sitesearch->perpage) ? $CFG->sitesearch->perpage : $total - (($pagenum) * $CFG->sitesearch->perpage); //get the amount returned...is it a full page of results?
-    $amountshown = $firstonpage + $CFG->sitesearch->perpage < $total ? $firstonpage + $CFG->sitesearch->perpage : $total;
-    $prev = $pagenum > 0 ? '<a href="javascript: document.getElementById(\'loading_overlay_usersearch\').style.visibility=\'visible\'; ajaxapi(\'/ajax/page_ajax.php\',\'usersearch\',\'&pagenum=' . ($pagenum - 1) . '&searchwords=\'+escape(\'' . $searchwords . '\'),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer_usersearch\'); document.getElementById(\'loading_overlay_usersearch\').style.visibility=\'hidden\'; }},true);" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/prev.gif" title="Previous Page" alt="Previous Page"></a>' : "";
-    $info = 'Viewing ' . ($firstonpage + 1) . " through " . $amountshown . " out of $total";
-    $next = $firstonpage + $CFG->sitesearch->perpage < $total ? '<a href="javascript: document.getElementById(\'loading_overlay_usersearch\').style.visibility=\'visible\'; ajaxapi(\'/ajax/page_ajax.php\',\'usersearch\',\'&pagenum=' . ($pagenum + 1) . '&searchwords=\'+escape(\'' . $searchwords . '\'),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer_usersearch\'); document.getElementById(\'loading_overlay_usersearch\').style.visibility=\'hidden\'; }},true);" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/next.gif" title="Next Page" alt="Next Page"></a>' : "";
-    $header = "";
-    $body = '<table style="background-color:#F3F6FB;width:100%;border-collapse:collapse;">';
-    if($count > 0){
-        while($user = fetch_row($users)){
-            $add_remove = "";
-            $linkopen = "";
-            $linkclose = "";
-            $add_remove = $userid != $user["userid"] && !is_siteadmin($user["userid"]) ? '<span id="pagelist_' . $user["userid"] . '"></span> <a href="javascript: ajaxapi(\'/ajax/page_ajax.php\',\'get_inviteable_pages\',\'&inviter=' . $userid . '&invitee=' . $user["userid"] . '\',function() {simple_display(\'pagelist_' . $user["userid"] . '\');});" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/mail.gif" title="Invite" alt="Invite"></a></span>' : '';
-            $header = $header == "" ? '<table style="width:100%;"><tr><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;font-size:.75em;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><p>' : $header;
-            $linkopen = '';
-            $linkclose = '';
-            $body .= '<tr style="height:30px;border:3px solid white;font-size:.9em;"><td style="width:30%;padding:5px;font-size:.85em;white-space:nowrap;">' . $linkopen . $user["fname"] . " " . $user["lname"] . $linkclose . '</td><td style="width:30%;padding:5px;font-size:.75em;">' . $user["email"] . '</td><td style="text-align:right;padding:5px;">' . $add_remove . '</td></tr>';
-        }
-        $body .= "</table>";
-    }else{
-        echo '<span class="error_text" class="centered_span">No matches found.</span>';
-    }
-    echo $header . $body;
+  }
+
+  echo template_use("templates/page_ajax.template", $params, "search_template");
 }
 
 function get_new_link_form(){

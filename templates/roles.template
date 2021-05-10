@@ -57,7 +57,7 @@ assign_roles_template||
                                                                                                                             });}">
               ||issiteid{{
                 <option value="0">Search results will be shown here.</option>
-              }}||
+              }}issiteid||
               ||options||
         </select>
   </div>
@@ -123,7 +123,7 @@ user_specific_template||
                                                                                                                                       function() {
                                                                                                                                         simple_display('per_user_abilities_div');
                                                                                                                                       });}">
-        ||issiteid{{<option value="0">Search results will be shown here.</option>}}||
+        ||issiteid{{<option value="0">Search results will be shown here.</option>}}issiteid||
         ||options||
       </select>
     </div>
@@ -167,16 +167,16 @@ roles_manager_template||
         <em>
           ||pagename||
         </em>
-        ||featurecontext{{&nbsp;&nbsp;<strong>Specific for the ||feature|| feature:</strong> <em>||setting||</em>}}||
+        ||featurecontext{{&nbsp;&nbsp;<strong>Specific for the ||feature|| feature:</strong> <em>||setting||</em>}}featurecontext||
       </span>
-      ||warning{{ <span style="background-color:red;padding:3px;float:right;border:5px solid black;">WARNING: Changes affect all pages.</span>}}||
+      ||warning{{ <span style="background-color:red;padding:3px;float:right;border:5px solid black;">WARNING: Changes affect all pages.</span>}}warning||
   </div>
   <div id="tabs" style="font-size:.9em">
     <ul style="height:30px">
-      ||tab_assign_roles{{<li><a href="roles.php?action=assign_roles&pageid=||pageid||">Assign Roles</a></li>}}||
-      ||tab_modify_roles{{<li><a href="roles.php?action=role_specific&feature=||feature||&featureid=||featureid||&pageid=||pageid||">Modify Roles</a></li>}}||
-      ||tab_groups{{<li><a href="roles.php?action=group_specific&feature=||feature||&featureid=||featureid||&pageid=||pageid||">Group Abilities</a></li>}}||
-      ||tab_user{{<li><a href="roles.php?action=user_specific&feature=||feature||&featureid=||featureid||&pageid=||pageid||">User Abilities</a></li>}}||
+      ||tab_assign_roles{{<li><a href="roles.php?action=assign_roles&pageid=||pageid||">Assign Roles</a></li>}}tab_assign_roles||
+      ||tab_modify_roles{{<li><a href="roles.php?action=role_specific&feature=||feature||&featureid=||featureid||&pageid=||pageid||">Modify Roles</a></li>}}tab_modify_roles||
+      ||tab_groups{{<li><a href="roles.php?action=group_specific&feature=||feature||&featureid=||featureid||&pageid=||pageid||">Group Abilities</a></li>}}tab_groups||
+      ||tab_user{{<li><a href="roles.php?action=user_specific&feature=||feature||&featureid=||featureid||&pageid=||pageid||">User Abilities</a></li>}}tab_user||
     </ul>
   </div>
 ||roles_manager_template

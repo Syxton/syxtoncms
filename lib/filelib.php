@@ -128,12 +128,7 @@ function template_use($file, $params = array(), $subsection = "") {
       }
     }
 
-		$pattern = '/\|\|.*\{\{((?s).*?)\}\}\|\|/i'; //Look for stuff between ||
-    preg_match_all($pattern, $contents, $matches);
-
-		foreach ($matches[0] as $match) { // Loop through each instance where the template variable bars are found. ie || xxx ||
-				$contents = template_evaluate_qualifiers($match, $params, $contents);
-		}
+		$contents = templates_process_qualifiers($contents, $params); // Look for qualifiers ||x{{ ~~ }}x||
 
   	$pattern = '/\|\|((?s).*?)\|\|/i'; //Look for stuff between ||
 		preg_match_all($pattern, $contents, $matches);
@@ -168,28 +163,32 @@ function template_subsection($contents, $subsection) {
   return $contents;
 }
 
-// Looks for qualifier template ||is_true{{ output this stuff }}||
-function template_evaluate_qualifiers($match, $params, $contents) {
-  $pattern = '/\{\{((?s).*?)\}\}/i'; //Look for stuff between {{ }}
-  preg_match_all($pattern, $match, $qualifiers);
+function templates_process_qualifiers($contents, $params) {
+  $pattern = '/\|\|(?<x>.*)\{\{((?s).*?)\}\}\k<x>\|\|/i'; //Look for stuff between ||x{{ ---- }}x||
+  preg_match_all($pattern, $contents, $qualifiers); // Match all on the same level (does not see nested)
+  if (!empty($qualifiers[0])) { // Qualifiers found
+    $i = 0;
+    while (!empty($qualifiers[0][$i])) { // Full code match found
+      // Make replacements in the found qualifier.
+      $contents = templates_replace_qualifiers($qualifiers['x'][$i], $qualifiers[0][$i], $qualifiers[2][$i], $params, $contents);
+      $i++;
+    }
+  }
+  return $contents;
+}
 
-  foreach ($qualifiers[0] as $qcontent) {
-      $eval = substr(str_replace($qcontent, "", $match), 2, -2);  // Just the qualifier.
+function templates_replace_qualifiers($eval, $fullcode, $innercode, $params, $contents) {
+  $innercontent = templates_process_qualifiers($innercode, $params); // Look for nested qualifiers.
+  $replacewith = explode("//OR//", $innercontent);
 
-      $replacewith = explode("//OR//", $qcontent);
-      if (count($replacewith) > 1) {
-        $replacewith[0] = substr($replacewith[0], 2);
-        $replacewith[1] = substr($replacewith[1], 0, -2);
-      } else {
-        $replacewith[0] = substr($replacewith[0], 2, -2);
-        $replacewith[1] = "";
-      }
+  if (count($replacewith) < 2) { // If no //OR// is found, fill the missing array with an empty string.
+    $replacewith[1] = "";
+  }
 
-      if($params["$eval"] === false) {
-        $contents = str_replace($match, $replacewith[1], $contents);
-      } else {
-        $contents = str_replace($match, $replacewith[0], $contents);
-      }
+  if ($params[$eval] === false) { // If eval variable is false, replace with the 2nd part of the OR
+    $contents = str_replace($fullcode, $replacewith[1], $contents);
+  } else { // If eval variable is true, replace with the 1st part of the OR
+    $contents = str_replace($fullcode, $replacewith[0], $contents);
   }
   return $contents;
 }

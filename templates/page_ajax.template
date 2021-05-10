@@ -1,0 +1,159 @@
+search_template||
+  <input type="hidden" id="searchwords" value="||searchwords||" />
+  ||resultsfound{{
+    <table style="width:100%;">
+      <tr>
+        <td style="width:25%;text-align:left;">
+          ||isprev{{
+            <a href="javascript: document.getElementById('loading_overlay_pagesearch').style.visibility='visible';
+                                 ajaxapi('/ajax/page_ajax.php',
+                                         '||searchtype||',
+                                         '&pagenum=||prev_pagenum||' +
+                                         '&searchwords=' + escape('||searchwords||'),
+                                         function() {
+                                           if (xmlHttp.readyState == 4) {
+                                             simple_display('searchcontainer_||searchtype||');
+                                             document.getElementById('loading_overlay_||searchtype||').style.visibility='hidden';
+                                           }
+                                         },true);" onmouseup="this.blur();">
+              <img src="||wwwroot||/images/prev.gif" title="Previous Page" alt="Previous Page" />
+            </a>
+          }}isprev||
+        </td>
+        <td style="width:50%;text-align:center;font-size:.75em;color:green;">
+          Viewing ||viewing|| through ||amountshown|| out of ||total||
+        </td>
+        <td style="width:25%;text-align:right;">
+          ||isnext{{
+            <a onclick="document.getElementById('loading_overlay_pagesearch').style.visibility='visible';
+                        ajaxapi('/ajax/page_ajax.php',
+                                '||searchtype||',
+                                '&pagenum=||next_pagenum||' +
+                                '&searchwords=' + escape('||searchwords||'),
+                                function() {
+                                  if (xmlHttp.readyState == 4) {
+                                    simple_display('searchcontainer_||searchtype||');
+                                    document.getElementById('loading_overlay_||searchtype||').style.visibility='hidden';
+                                  }
+                                },true);" onmouseup="this.blur();" href="javascript: void();">
+              <img src="||wwwroot||/images/next.gif" title="Next Page" alt="Next Page" />
+            </a>
+          }}isnext||
+        </td>
+      </tr>
+    </table>
+    <br />
+    <br />
+    <table style="background-color:#F3F6FB;width:100%;border-collapse:collapse;">
+      ||searchresults||
+    </table>
+    //OR//
+    <span class="error_text" class="centered_span">No matches found.</span>
+  }}resultsfound||
+||search_template
+
+search_row_template||
+  <tr style="height:30px;border:3px solid white;font-size:.9em;">
+    <td style="width:30%;padding:5px;font-size:.85em;white-space:nowrap;">
+      ||col1||
+    </td>
+    <td style="width:60%;padding:5px;font-size:.75em;">
+      ||col2||
+    </td>
+    <td style="text-align:right;padding:5px;">
+      ||col3||
+    </td>
+  </tr>
+||search_row_template
+
+search_pages_link_template||
+  ||linked{{
+    <a href="javascript:self.parent.go_to_page('||pageid||');">
+      ||name||
+    </a>
+  //OR//
+    ||name||
+  }}linked||
+||search_pages_link_template
+
+search_pages_buttons_template||
+  <span id="addremove_||pageid||">
+  ||must_request{{
+    ||alreadyrequested{{
+      <a href="javascript: ajaxapi('/ajax/page_ajax.php',
+                                   'remove_request',
+                                   '&pageid=||pageid||',
+                                   function() {
+                                     simple_display('addremove_||pageid||');
+                                   });" onmouseup="this.blur();">
+        <img src="||wwwroot||/images/undo.png" title="Remove Request" alt="Remove Request" />
+      </a>
+    //OR//
+      <a href="javascript: ajaxapi('/ajax/page_ajax.php',
+                                   'add_request',
+                                   '&pageid=||pageid||',
+                                   function() {
+                                     simple_display('addremove_||pageid||');
+                                   });" onmouseup="this.blur();">" onmouseup="this.blur();">
+        <img src="||wwwroot||/images/mail.gif" title="Send Request" alt="Send Request">
+      </a>
+    }}alreadyrequested||
+  //OR//
+    ||can_add_remove{{
+      ||isadd{{
+        <a href="javascript: ajaxapi('/ajax/page_ajax.php',
+                                     'change_subscription',
+                                     '&pageid=||pageid||',
+                                     function() {
+                                       simple_display('addremove_||pageid||');
+                                     });
+                             ajaxapi('/ajax/page_ajax.php',
+                                     'pagesearch',
+                                     '&pagenum=||pagenum||' +
+                                     '&searchwords=' + escape('||searchwords||'),
+                                     function() {
+                                       simple_display('searchcontainer_pagesearch');
+                                     });" onmouseup="this.blur();">
+          <img src="||wwwroot||/images/add.png" title="Add Page" alt="Add Page" />
+        </a>
+      //OR//
+        <a href="javascript: if (confirm('Are you sure you want to remove yourself from this page? \n You might not be able to get into this page again.')) {
+                               ajaxapi('/ajax/page_ajax.php',
+                                       'change_subscription',
+                                       '&pageid=||pageid||',
+                                       function() {
+                                         simple_display('addremove_||pageid||');
+                                       });
+                               ajaxapi('/ajax/page_ajax.php',
+                                       'pagesearch',
+                                       '&pagenum=||pagenum||' +
+                                       '&searchwords=' + escape('||searchwords||'),
+                                       function() {
+                                         simple_display('searchcontainer_pagesearch');
+                                       });" onmouseup="this.blur();">
+          <img src="' . $CFG->wwwroot . '/images/delete.png" title="Remove Page" alt="Remove Page" />
+        </a>
+      }}isadd||
+    }}can_add_remove||
+  }}must_request||
+  </span>
+||search_pages_buttons_template
+
+search_pages_link_template||
+  ||linked{{
+    <a href="javascript:self.parent.go_to_page('||pageid||');">
+      ||name||
+    </a>
+  //OR//
+    ||name||
+  }}linked||
+||search_pages_link_template
+
+search_users_buttons_template||
+  ||isuser{{
+      <span id="pagelist_||user[userid]||"></span>&nbsp;
+      <a href="javascript: ajaxapi('/ajax/page_ajax.php',
+                                   'get_inviteable_pages',
+                                   '&inviter=' . $userid . '&invitee=||user[userid]||\',function() {simple_display('pagelist_||user[userid]||');});" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/mail.gif" title="Invite" alt="Invite"></a></span>
+  }}isuser||
+||search_users_buttons_template

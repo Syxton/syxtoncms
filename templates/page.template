@@ -15,7 +15,7 @@ browse_template||
       </a>
     </li>
     ||usersearchtab||
-    <div id="contentscontainer" style="border:1px solid gray;position:relative;height:470px;padding: 10px 10px 0px 10px;"></div>
+    <div id="contentscontainer" style="border-top:1px solid gray;position:relative;height:calc(100% - 35px);padding: 10px 10px 0px 10px;"></div>
   </ul>
 <script type="text/javascript">
   var findmethods=new ddajaxtabs("findpagetabs", "contentscontainer");
@@ -177,7 +177,7 @@ create_edit_page_template||
       //OR//
       <input type="hidden" id="menu_page" name="menu_page" value="||menupage||" />
       <input type="hidden" id="hidefromvisitors" name="hidefromvisitors" value="||hidefromvisitors||" />
-    }}||
+    }}admin||
       <input class="submit" name="submit" type="submit" value="||buttonname||" />
     </fieldset>
   </form>
