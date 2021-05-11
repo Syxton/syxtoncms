@@ -1,0 +1,30 @@
+name_search_template||
+  ||refreshroles{{
+        <div style="width:100%; text-align:center;">
+          <select size="10" width="100%" style="width: 100%; font-size:.85em;" name="userid" id="||type||user_select" onclick="if($('#||type||user_select').val() > 0) {
+                                                                                                                                  ajaxapi('/ajax/roles_ajax.php',
+                                                                                                                                          'refresh_user_roles',
+                                                                                                                                          '&pageid=||pageid||' +
+                                                                                                                                          '&userid=' + $('#||type||user_select').val(),
+                                                                                                                                          function() {
+                                                                                                                                            simple_display('||type||roles_div');
+                                                                                                                                          });
+                                                                                                                               }">
+      //OR//
+        <div style="width:100%; text-align:center;">
+          <select size="10" width="100%" style="width: 100%; font-size:.85em;" name="userid" id="||type||user_select" onclick="if($('#||type||user_select').val() > 0) {
+                                                                                                                                  ajaxapi('/ajax/roles_ajax.php',
+                                                                                                                                          'refresh_user_abilities',
+                                                                                                                                          '&pageid=||pageid||' +
+                                                                                                                                          '&feature=||feature||' +
+                                                                                                                                          '&featureid=||featureid||' +
+                                                                                                                                          '&userid=' + $('#||type||user_select').val(),
+                                                                                                                                          function() {
+                                                                                                                                            simple_display('||type||abilities_div');
+                                                                                                                                          });
+                                                                                                                               }">
+  }}refreshroles||
+            ||options||
+          </select>
+        </div>
+||name_search_template

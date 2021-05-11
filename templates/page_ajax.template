@@ -5,17 +5,18 @@ search_template||
       <tr>
         <td style="width:25%;text-align:left;">
           ||isprev{{
-            <a href="javascript: document.getElementById('loading_overlay_||searchtype||').style.visibility='visible';
-                                 ajaxapi('/ajax/page_ajax.php',
-                                         '||searchtype||',
-                                         '&pagenum=||prev_pagenum||' +
-                                         '&searchwords=' + escape('||searchwords||'),
-                                         function() {
-                                           if (xmlHttp.readyState == 4) {
-                                             simple_display('searchcontainer_||searchtype||');
-                                             document.getElementById('loading_overlay_||searchtype||').style.visibility='hidden';
-                                           }
-                                         },true);" onmouseup="this.blur();">
+            <a href="javascript: void(0);" onclick="$('#loading_overlay_||searchtype||').css('visibility', 'visible');
+                                                    ajaxapi('/ajax/page_ajax.php',
+                                                            '||searchtype||',
+                                                            '&pagenum=||prev_pagenum||' +
+                                                            '&searchwords=' + escape('||searchwords||'),
+                                                            function() {
+                                                              if (xmlHttp.readyState == 4) {
+                                                                simple_display('searchcontainer_||searchtype||');
+                                                                $('#loading_overlay_||searchtype||').css('visibility', 'hidden');
+                                                              }
+                                                            },
+                                                            true);" onmouseup="this.blur();">
               <img src="||wwwroot||/images/prev.gif" title="Previous Page" alt="Previous Page" />
             </a>
           }}isprev||
@@ -25,17 +26,18 @@ search_template||
         </td>
         <td style="width:25%;text-align:right;">
           ||isnext{{
-            <a onclick="document.getElementById('loading_overlay_||searchtype||').style.visibility='visible';
-                        ajaxapi('/ajax/page_ajax.php',
-                                '||searchtype||',
-                                '&pagenum=||next_pagenum||' +
-                                '&searchwords=' + escape('||searchwords||'),
-                                function() {
-                                  if (xmlHttp.readyState == 4) {
-                                    simple_display('searchcontainer_||searchtype||');
-                                    document.getElementById('loading_overlay_||searchtype||').style.visibility='hidden';
-                                  }
-                                },true);" onmouseup="this.blur();" href="javascript: void();">
+            <a href="javascript: void(0);" onclick="$('#loading_overlay_||searchtype||').css('visibility', 'visible');
+                                                    ajaxapi('/ajax/page_ajax.php',
+                                                            '||searchtype||',
+                                                            '&pagenum=||next_pagenum||' +
+                                                            '&searchwords=' + escape('||searchwords||'),
+                                                            function() {
+                                                              if (xmlHttp.readyState == 4) {
+                                                                simple_display('searchcontainer_||searchtype||');
+                                                                $('#loading_overlay_||searchtype||').css('visibility', 'hidden');
+                                                              }
+                                                            },
+                                                            true);" onmouseup="this.blur();">
               <img src="||wwwroot||/images/next.gif" title="Next Page" alt="Next Page" />
             </a>
           }}isnext||
@@ -68,7 +70,7 @@ search_row_template||
 
 search_pages_link_template||
   ||linked{{
-    <a href="javascript:self.parent.go_to_page('||pageid||');">
+    <a href="javascript: void(0);" onclick="self.parent.go_to_page('||pageid||');">
       ||name||
     </a>
   //OR//
@@ -80,57 +82,60 @@ search_pages_buttons_template||
   <span id="addremove_||pageid||">
   ||must_request{{
     ||alreadyrequested{{
-      <a href="javascript: ajaxapi('/ajax/page_ajax.php',
-                                   'remove_request',
-                                   '&pageid=||pageid||',
-                                   function() {
-                                     simple_display('addremove_||pageid||');
-                                   });" onmouseup="this.blur();">
+      <a href="javascript: void(0);" onclick="ajaxapi('/ajax/page_ajax.php',
+                                                      'remove_request',
+                                                      '&pageid=||pageid||',
+                                                      function() {
+                                                        simple_display('addremove_||pageid||');
+                                                      });" onmouseup="this.blur();">
         <img src="||wwwroot||/images/undo.png" title="Remove Request" alt="Remove Request" />
       </a>
     //OR//
-      <a href="javascript: ajaxapi('/ajax/page_ajax.php',
-                                   'add_request',
-                                   '&pageid=||pageid||',
-                                   function() {
-                                     simple_display('addremove_||pageid||');
-                                   });" onmouseup="this.blur();">" onmouseup="this.blur();">
+      <a href="javascript: void(0);" onclick="ajaxapi('/ajax/page_ajax.php',
+                                                      'add_request',
+                                                      '&pageid=||pageid||',
+                                                      function() {
+                                                        simple_display('addremove_||pageid||');
+                                                      });" onmouseup="this.blur();">" onmouseup="this.blur();">
         <img src="||wwwroot||/images/mail.gif" title="Send Request" alt="Send Request">
       </a>
     }}alreadyrequested||
   //OR//
     ||can_add_remove{{
       ||isadd{{
-        <a href="javascript: ajaxapi('/ajax/page_ajax.php',
-                                     'change_subscription',
-                                     '&pageid=||pageid||',
-                                     function() {
-                                       simple_display('addremove_||pageid||');
-                                     });
-                             ajaxapi('/ajax/page_ajax.php',
-                                     'pagesearch',
-                                     '&pagenum=||pagenum||' +
-                                     '&searchwords=' + escape('||searchwords||'),
-                                     function() {
-                                       simple_display('searchcontainer_pagesearch');
-                                     });" onmouseup="this.blur();">
+        <a href="javascript: void(0);" onclick="ajaxapi('/ajax/page_ajax.php',
+                                                        'change_subscription',
+                                                        '&pagenum=||pagenum||' +
+                                                        '&pageid=||pageid||',
+                                                        function() {
+                                                          simple_display('addremove_||pageid||');
+                                                        });
+                                                ajaxapi('/ajax/page_ajax.php',
+                                                        'pagesearch',
+                                                        '&pagenum=||pagenum||' +
+                                                        '&searchwords=' + escape('||searchwords||'),
+                                                        function() {
+                                                          simple_display('searchcontainer_pagesearch');
+                                                        });" onmouseup="this.blur();">
           <img src="||wwwroot||/images/add.png" title="Add Page" alt="Add Page" />
         </a>
       //OR//
-        <a href="javascript: if (confirm('Are you sure you want to remove yourself from this page? \n You might not be able to get into this page again.')) {
-                               ajaxapi('/ajax/page_ajax.php',
-                                       'change_subscription',
-                                       '&pageid=||pageid||',
-                                       function() {
-                                         simple_display('addremove_||pageid||');
-                                       });
-                               ajaxapi('/ajax/page_ajax.php',
-                                       'pagesearch',
-                                       '&pagenum=||pagenum||' +
-                                       '&searchwords=' + escape('||searchwords||'),
-                                       function() {
-                                         simple_display('searchcontainer_pagesearch');
-                                       });" onmouseup="this.blur();">
+        <a href="javascript: void(0);" onclick="if (confirm('Are you sure you want to remove yourself from this page? \n You might not be able to get into this page again.')) {
+                                                   ajaxapi('/ajax/page_ajax.php',
+                                                           'change_subscription',
+                                                           '&pagenum=||pagenum||' +
+                                                           '&pageid=||pageid||',
+                                                           function() {
+                                                             simple_display('addremove_||pageid||');
+                                                           });
+                                                   ajaxapi('/ajax/page_ajax.php',
+                                                           'pagesearch',
+                                                           '&pagenum=||pagenum||' +
+                                                           '&searchwords=' + escape('||searchwords||'),
+                                                           function() {
+                                                             simple_display('searchcontainer_pagesearch');
+                                                           });
+                                                }" onmouseup="this.blur();">
           <img src="' . $CFG->wwwroot . '/images/delete.png" title="Remove Page" alt="Remove Page" />
         </a>
       }}isadd||
@@ -141,7 +146,7 @@ search_pages_buttons_template||
 
 search_pages_link_template||
   ||linked{{
-    <a href="javascript:self.parent.go_to_page('||pageid||');">
+    <a href="javascript: void(0);" onclick="self.parent.go_to_page('||pageid||');">
       ||name||
     </a>
   //OR//
@@ -152,13 +157,13 @@ search_pages_link_template||
 search_users_buttons_template||
   ||isuser{{
     <span id="pagelist_||user[userid]||">
-      <a href="javascript: ajaxapi('/ajax/page_ajax.php',
-                                   'get_inviteable_pages',
-                                   '&inviter=||userid||' +
-                                   '&invitee=||user[userid]||',
-                                   function() {
-                                     simple_display('pagelist_||user[userid]||');
-                                   });" onmouseup="this.blur()">
+      <a href="javascript: void(0);" onclick="ajaxapi('/ajax/page_ajax.php',
+                                                      'get_inviteable_pages',
+                                                      '&inviter=||userid||' +
+                                                      '&invitee=||user[userid]||',
+                                                      function() {
+                                                        simple_display('pagelist_||user[userid]||');
+                                                      });" onmouseup="this.blur()">
         <img src="||wwwroot||/images/mail.gif" title="Invite" alt="Invite">
       </a>
     </span>
@@ -176,7 +181,7 @@ new_link_form_template||
       <form onsubmit="ajaxapi('/ajax/page_ajax.php',
                               'linkpagesearch',
                               '&pageid=||pageid||' +
-                              '&searchwords=' + escape(document.getElementById('searchbox').value),
+                              '&searchwords=' + escape($('#searchbox').val()),
                               function() {
                                 simple_display('page_search_span');
                               }); return false;">
@@ -195,43 +200,217 @@ new_link_form_template||
 search_linkpagesearch_buttons_template||
   <span id="addremove_||pageid||">
   ||alreadylinked{{
-    <a href="javascript: ||confirmopen{{ if (confirm('This linked page is not viewable to everyone and will only show up for people who have viewing rights.')) { }}confirmopen||
-                                            ajaxapi('/ajax/page_ajax.php',
-                                                    'make_page_link',
+    <a href="javascript: void(0);" onclick="||confirmopen{{ if (confirm('This linked page is not viewable to everyone and will only show up for people who have viewing rights.')) { }}confirmopen||
+                                                              ajaxapi('/ajax/page_ajax.php',
+                                                                      'make_page_link',
+                                                                      '&pageid=||pageid||' +
+                                                                      '&linkpageid=||linkpageid||',
+                                                                      function() {
+                                                                        simple_display('addremove_||pageid||');
+                                                                      });
+                                                              ajaxapi('/ajax/page_ajax.php',
+                                                                      'linkpagesearch',
+                                                                      '&pageid=||pageid||' +
+                                                                      '&pagenum=||pagenum||' +
+                                                                      '&searchwords=' + escape('||searchwords||'),
+                                                                      function() {
+                                                                        simple_display('page_search_span');
+                                                                      });
+                                           ||confirmopen{{ } }}confirmopen||" onmouseup="this.blur()">
+      <img src="||wwwroot||/images/add.png" title="Add Page Link" alt="Add Page Link">
+    </a>
+    //OR//
+    <a href="javascript: void(0);" onclick="ajaxapi('/ajax/page_ajax.php',
+                                                    'unlink_page',
                                                     '&pageid=||pageid||' +
-                                                    '&linkpageid=||linkpageid||',
+                                                    '&linkid=||linkpageid||',
                                                     function() {
                                                       simple_display('addremove_||pageid||');
                                                     });
                                             ajaxapi('/ajax/page_ajax.php',
-                                                    'linkpagesearch',
-                                                    '&pageid=||pageid||' +
-                                                    '&pagenum=||pagenum||' +
-                                                    '&searchwords=' + escape('||searchwords||'),
-                                                    function() {
-                                                      simple_display('page_search_span');
-                                                    });
-                         ||confirmopen{{ } }}confirmopen||" onmouseup="this.blur()">
-      <img src="||wwwroot||/images/add.png" title="Add Page Link" alt="Add Page Link">
-    </a>
-    //OR//
-    <a href="javascript: ajaxapi('/ajax/page_ajax.php',
-                                 'unlink_page',
-                                 '&pageid=||pageid||' +
-                                 '&linkid=||linkpageid||',
-                                 function() {
-                                   simple_display('addremove_||pageid||');
-                                 });
-                         ajaxapi('/ajax/page_ajax.php',
-                                'linkpagesearch',
-                                '&pageid=||pageid||' +
-                                '&pagenum=||pagenum||' +
-                                '&searchwords=' + escape('||searchwords||'),
-                                function() {
-                                  simple_display('page_search_span');
-                                });" onmouseup="this.blur();">
+                                                   'linkpagesearch',
+                                                   '&pageid=||pageid||' +
+                                                   '&pagenum=||pagenum||' +
+                                                   '&searchwords=' + escape('||searchwords||'),
+                                                   function() {
+                                                     simple_display('page_search_span');
+                                                   });" onmouseup="this.blur();">
       <img src="||wwwroot||/images/delete.png" title="Remove Page Link" alt="Remove Page Link" />
     </a>
   }}alreadylinked||
   </span>
 ||search_linkpagesearch_buttons_template
+
+get_inviteable_button_template||
+  onchange="if ($('#page_invite_list').val() != '' && confirm('Do you wish to send an invitation to this user?')) {
+              ajaxapi('/ajax/page_ajax.php',
+                      'invite_user',
+                      '&pageid=' + $('#page_invite_list').val() +
+                      '&userid=||invitee||',
+                      function() {
+                        simple_display('pagelist_||invitee||');
+                      });
+            } else {
+              ajaxapi('/ajax/site_ajax.php',
+                      'donothing',
+                      '',
+                      function() {
+                        simple_display('pagelist_||invitee||');
+                      });
+            }"
+||get_inviteable_button_template
+
+change_subscription_template||
+  ||subscription_added{{
+    <a href="javascript: void(0);" onclick="if(confirm('Are you sure you want to remove yourself from this page? \n You might not be able to get into this page again.')) {
+                                              ajaxapi('/ajax/page_ajax.php',
+                                                      'change_subscription',
+                                                      '&pagenum=||pagenum||' +
+                                                      '&pageid=||pageid||',
+                                                      function() {
+                                                        simple_display('addremove_||pageid||');
+                                                      });
+                                              ajaxapi('/ajax/page_ajax.php',
+                                                      'pagesearch',
+                                                      '&pagenum=||pagenum||' +
+                                                      '&searchwords=' + escape($('#searchwords').val()),
+                                                      function() {
+                                                        simple_display('searchcontainer_pagesearch');
+                                                      });
+                                              }" onmouseup="this.blur()">
+        <img src="||wwwroot||/images/delete.png" title="Remove Page" alt="Remove Page">
+      </a>
+    //OR//
+    ||can_add{{
+      <a href="javascript: void(0);" onclick="ajaxapi('/ajax/page_ajax.php',
+                                                      'change_subscription',
+                                                      '&pagenum=||pagenum||' +
+                                                      '&pageid=||pageid||',
+                                                      function() {
+                                                        simple_display('addremove_||pageid||');
+                                                      });
+                                             ajaxapi('/ajax/page_ajax.php',
+                                                     'pagesearch',
+                                                     '&pagenum=||pagenum||' +
+                                                     '&searchwords=' + escape($('#searchwords').val()),
+                                                     function() {
+                                                       simple_display('searchcontainer_pagesearch');
+                                                     });" onmouseup="this.blur()">
+          <img src="||wwwroot||/images/add.png" title="Add Page" alt="Add Page">
+        </a>
+      //OR//
+        <a href="javascript: void(0);" onclick="ajaxapi('/ajax/page_ajax.php',
+                                                        'add_request',
+                                                        '&pageid=||pageid||',
+                                                        function() {
+                                                          simple_display('addremove_||pageid||');
+                                                        });" onmouseup="this.blur()">
+          <img src="||wwwroot||/images/mail.gif" title="Send Request" alt="Send Request">
+        </a>
+    }}can_add||
+  }}subscription_added||
+||change_subscription_template
+
+add_remove_request_template||
+  ||request_added{{
+      <a href="javascript: void(0);" onclick="ajaxapi('/ajax/page_ajax.php',
+                                                      'remove_request',\
+                                                      &pageid=||pageid||',
+                                                      function() {
+                                                        simple_display('addremove_||pageid||');
+                                                      });" onmouseup="this.blur()">
+        <img src="||wwwroot||/images/undo.png" title="Remove Request" alt="Remove Request">
+      </a>
+    //OR//
+      <a href="javascript: void(0);" onclick="ajaxapi('/ajax/page_ajax.php',
+                                                      'add_request',
+                                                      '&pageid=||pageid||',
+                                                      function() {
+                                                        simple_display('addremove_||pageid||');
+                                                      });" onmouseup="this.blur()">
+        <img src="||wwwroot||/images/mail.gif" title="Send Request" alt="Send Request">
+      </a>
+  }}request_added||
+||add_remove_request_template
+
+links_manager_template||
+  ||haslinks{{
+      <br />
+      Reorder the links how you would like them to be displayed in this page.  Change the link names and save them by selecting the "Save" button that appears beside it.
+      Changing a links position also saves a name change to that link.
+      <br />
+      <br />
+      <div style='overflow:hidden;font:13.3px sans-serif;margin:auto;'>
+        <div style='background:lightgray;overflow:auto;'>
+        <hr />
+        ||links||
+        </div>
+      </div>
+    //OR//
+      There are no links to manage on this page.
+  }}haslinks||
+||links_manager_template
+
+sortable_links_template||
+  <label for="standard||order||" style="padding-right:3px;white-space:nowrap;display:block;background:darkgray; color:#fff;">
+    <span style="width:10px;background-color:gray;padding:5px">
+      ||nextorder||
+    </span>
+    <input type="text" id="linkdisplay||order||" size="42" value="||linkdisplay||" onkeyup="if($('#linkdisplay||order||_hidden').val() != $('#linkdisplay||order||').val()) {
+                                                                                              $('#linkdisplay||order||_save').show();
+                                                                                            } else {
+                                                                                              $('#linkdisplay||order||_save').hide();
+                                                                                            }" />
+    <input type="hidden" id="linkdisplay||order||_hidden" value="||linkdisplay||" />&nbsp;
+    ||notfirstrow{{
+      <a href="javascript: void(0);" onclick="ajaxapi('/ajax/page_ajax.php',
+                                                      'move_link',
+                                                      '&pageid=||pageid||' +
+                                                      '&direction=up' +
+                                                      '&linkid=||linkid||' +
+                                                      '&linkdisplay=' + escape($('#linkdisplay||order||').val()),
+                                                      function() {
+                                                        ajaxapi('/ajax/page_ajax.php',
+                                                                'get_link_manager',
+                                                                '&pageid=||pageid||' +
+                                                                '&linkid=||linkid||',
+                                                                function() {
+                                                                  simple_display('links_mode_span');
+                                                                });
+                                                      });">
+        <img src="||wwwroot||/images/up.png" title="Move Up" alt="Move Up"  />
+      </a>
+    }}notfirstrow||
+    ||notlastrow{{
+      <a href="javascript: void(0);" onclick="ajaxapi('/ajax/page_ajax.php',
+                                                      'move_link',
+                                                      '&pageid=||pageid||' +
+                                                      '&direction=down' +
+                                                      '&linkid=||linkid||' +
+                                                      '&linkdisplay=' + escape($('#linkdisplay||order||').val()),
+                                                      function() {
+                                                        ajaxapi('/ajax/page_ajax.php',
+                                                                'get_link_manager',
+                                                                '&pageid=||pageid||' +
+                                                                '&linkid=||linkid||',
+                                                                function() {
+                                                                  simple_display('links_mode_span');
+                                                                });
+                                                        });">
+        <img src="||wwwroot||/images/down.png" title="Move Down" alt="Move Down" />
+      </a>
+    }}notlastrow||
+      &nbsp;
+      <span id="linkdisplay||order||_save" style="display:none;">
+        <input type="button" value="Save Name" style="font-size:.75em;display:inline;" onclick="ajaxapi('/ajax/page_ajax.php',
+                                                                                                        'rename_link',
+                                                                                                        '&linkid=||linkid||' +
+                                                                                                        '&linkdisplay=' + escape($('#linkdisplay||order||').val()),
+                                                                                                        function() {
+                                                                                                          $('#linkdisplay||order||_hidden').val($('#linkdisplay||order||').val());
+                                                                                                        });
+                                                                                                $('#linkdisplay||order||_save').hide();"/>
+      </span>
+    </label>
+    <br />
+||sortable_links_template

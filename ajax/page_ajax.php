@@ -3,8 +3,8 @@
 * page_ajax.php - Page backend ajax script
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 8/19/2013
-* Revision: 1.4.2
+* Date: 05/11/2021
+* Revision: 1.4.3
 ***************************************************************************/
 
 include ('header.php');
@@ -252,30 +252,30 @@ global $MYVARS, $CFG, $USER;
     $pageid = $MYVARS->GET['pageid'];
     $returnme = "";
     $i = 0;
-    if($links = get_db_result("SELECT * FROM pages_links WHERE hostpageid=$pageid ORDER BY sort")){
-        $returnme = "<br />
-		Reorder the links how you would like them to be displayed in this page.  Change the link names and save them by selecting the \"Save\" button
-    	that appears beside it.  Changing a links position also saves a name change to that link.
-    	<br /><br />
-    	<div style='overflow:hidden;font:13.3px sans-serif;width:31em;border-left:1px solid #808080;border-top:1px solid #808080;border-bottom:1px solid #fff; border-right:1px solid #fff;margin:auto;'>
-    	<div style='background:#0A246A;overflow:auto;border-left:3px solid #0A246A;border-top:1px solid #404040;border-bottom:1px solid #d4d0c8;border-right:3px solid #0A246A;'><hr />";
-        $count = get_db_count("SELECT * FROM pages_links WHERE hostpageid=$pageid");
-        while($link = fetch_row($links)){
-            $returnme .= '<label for="standard' . $i . '" style="padding-right:3px;white-space:nowrap;display:block;background:#0a246a; color:#fff;">
-		 			<span style="width:10px;background-color:gray;">&nbsp;' . ($i + 1) . '.&nbsp;</span>
-					 	<input type="text" id="linkdisplay' . $i . '" size="38" value="' . stripslashes($link['linkdisplay']) . '" onkeyup="if(document.getElementById(\'linkdisplay' . $i . '_hidden\').value != document.getElementById(\'linkdisplay' . $i . '\').value){document.getElementById(\'linkdisplay' . $i . '_save\').style.display = \'inline\';}else{document.getElementById(\'linkdisplay' . $i . '_save\').style.display = \'none\';}" />
-						<input type="hidden" id="linkdisplay' . $i . '_hidden" value="' . stripslashes($link['linkdisplay']) . '" />&nbsp;
-					<span id="linkdisplay' . $i . '_save" style="display:none;">
-						<input type="button" value="Save Name" style="font-size:.75em;display:inline;" onclick="ajaxapi(\'/ajax/page_ajax.php\',\'rename_link\',\'&linkid=' . $link['linkid'] . '&linkdisplay=\'+escape(document.getElementById(\'linkdisplay' . $i . '\').value),function() { document.getElementById(\'linkdisplay' . $i . '\').value = document.getElementById(\'linkdisplay' . $i . '_hidden\').value; }); document.getElementById(\'linkdisplay' . $i . '_save\').style.display = \'none\';"/></span>&nbsp;';
-            $returnme .= $i > 0 ? '<img src="' . $CFG->wwwroot . '/images/up.png" title="Move Up" alt="Move Up" onclick="ajaxapi(\'/ajax/page_ajax.php\',\'move_link\',\'&pageid=' . $pageid . '&direction=up&linkid=' . $link['linkid'] . '&linkdisplay=\'+escape(document.getElementById(\'linkdisplay' . $i . '\').value),function() { ajaxapi(\'/ajax/page_ajax.php\',\'get_link_manager\',\'&pageid=' . $pageid . '&linkid=' . $link["linkid"] . '\',function() { simple_display(\'links_mode_span\');});});"/>&nbsp;' : "";
-            $returnme .= $i < ($count - 1) ? '<img src="' . $CFG->wwwroot . '/images/down.png" title="Move Down" alt="Move Down" onclick="ajaxapi(\'/ajax/page_ajax.php\',\'move_link\',\'&pageid=' . $pageid . '&direction=down&linkid=' . $link['linkid'] . '&linkdisplay=\'+escape(document.getElementById(\'linkdisplay' . $i . '\').value),function() { ajaxapi(\'/ajax/page_ajax.php\',\'get_link_manager\',\'&pageid=' . $pageid . '&linkid=' . $link["linkid"] . '\',function() { simple_display(\'links_mode_span\');});});"/></label>' : "";
-            $returnme .= '<hr />';
-            $i++;
-        }
-        $returnme .= '</div></div>';
+    $params = array("pageid" => $pageid, "wwwroot" => $CFG->wwwroot, "haslinks" => false);
+
+    $SQL = "SELECT *
+              FROM pages_links
+             WHERE hostpageid = '$pageid'
+          ORDER BY sort";
+    if ($links = get_db_result($SQL)) {
+      $params["haslinks"] = true;
+      $SQL = "SELECT *
+                FROM pages_links
+               WHERE hostpageid = '$pageid'";
+      $count = get_db_count($SQL);
+
+      while ($link = fetch_row($links)) {
+        $rowparams = array("wwwroot" => $CFG->wwwroot, "order" => $i, "nextorder" => ($i + 1), "pageid" => $pageid,
+                           "linkdisplay" => stripslashes($link['linkdisplay']), "linkid" => $link["linkid"], "notfirstrow" =>  ($i > 0), "notlastrow" => ($i < ($count - 1)));
+        $linkrows .= template_use("templates/page_ajax.template", $rowparams, "sortable_links_template");
+        $i++;
+      }
+
+      $params["links"] = $linkrows;
     }
-    $returnme = $returnme == "" ? "There are no links to manage on this page." : $returnme;
-    echo $returnme;
+
+    echo template_use("templates/page_ajax.template", $params, "links_manager_template");
 }
 
 function linkpagesearch(){
@@ -351,186 +351,191 @@ global $CFG, $MYVARS, $USER;
   echo template_use("templates/page_ajax.template", $params, "search_template");
 }
 
-function linkpagesearc2h(){
-global $CFG, $MYVARS, $USER;
-    $searchwords = trim($MYVARS->GET["searchwords"]);
-    $pageid = $MYVARS->GET["pageid"];
-    //no search words given
-    if($searchwords == ""){
-        $searchwords = '%';
-    }
-    //logged in
-    $loggedin = is_logged_in() ? true : false;
-    $userid = $loggedin ? $USER->userid : "";
-    //is a site admin
-    $admin = $loggedin && is_siteadmin($userid) ? true : false;
-    //restrict possible page listings
-    $siteviewableonly = $loggedin ? "" : " AND p.siteviewable=1";
-    $opendoorpolicy = $admin ? "" : " AND (p.opendoorpolicy=1 OR p.siteviewable=1)";
-    //Create the page limiter
-    $pagenum = isset($MYVARS->GET["pagenum"]) ? $MYVARS->GET["pagenum"] : 0;
-    $firstonpage = $CFG->sitesearch->perpage * $pagenum;
-    $limit = " LIMIT $firstonpage," . $CFG->sitesearch->perpage;
-    $words = explode(" ", $searchwords);
-    $i = 0; $searchstring = "";
-    while(isset($words[$i])){
-        $searchpart = "(p.name LIKE '%" . $words[$i] . "%' OR p.keywords LIKE '%" . $words[$i] . "%' OR p.description LIKE '%" . $words[$i] . "%')";
-        $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
-        $i++;
-    }
-    if($loggedin){
-        $roleid = get_user_role($userid, $CFG->SITEID);
-        $SQL = '
-		SELECT p.*, (SELECT pl.linkid FROM pages_links pl WHERE pl.linkpageid=p.pageid AND pl.hostpageid=' . $pageid . ') as alreadylinked
-		FROM pages p WHERE p.pageid != ' . $CFG->SITEID . '
-		AND (' . $searchstring . ')
-		AND p.pageid != ' . $pageid . '
-		ORDER BY p.name
-		';
-    }
-    $total = get_db_count($SQL); //get the total for all pages returned.
-    $SQL .= $limit; //Limit to one page of return.
-    $pages = get_db_result($SQL);
-    $count = $pages ? get_db_count($SQL) : 0; //get the amount returned...is it a full page of results?
-    $amountshown = $firstonpage + $CFG->sitesearch->perpage < $total ? $firstonpage + $CFG->sitesearch->perpage : $total;
-    $prev = $pagenum > 0 ? '<a href="javascript: ajaxapi(\'/ajax/page_ajax.php\',\'linkpagesearch\',\'&pageid=' . $pageid . '&pagenum=' . ($pagenum - 1) . '&searchwords=\'+escape(\'' . $searchwords . '\'),function() {simple_display(\'page_search_span\');});" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/prev.gif" title="Previous Page" alt="Previous Page"></a>' : "";
-    $info = 'Viewing ' . ($firstonpage + 1) . " through " . $amountshown . " out of $total";
-    $next = $firstonpage + $CFG->sitesearch->perpage < $total ? '<a href="javascript: ajaxapi(\'/ajax/page_ajax.php\',\'linkpagesearch\',\'&pageid=' . $pageid . '&pagenum=' . ($pagenum + 1) . '&searchwords=\'+escape(\'' . $searchwords . '\'),function() {simple_display(\'page_search_span\');});" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/next.gif" title="Next Page" alt="Next Page"></a>' : "";
-    $header = '';
-    if($count > 0){
-        $body = '<table style="background-color:#F3F6FB;width:100%;border-collapse:collapse;">';
-        while($page = fetch_row($pages)){
-            $add_remove = "";
-            $confirmopen = "";
-            $confirmclose = "";
-            $header = $header == "" ? '<table style="width:100%;"><tr><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;font-size:.75em;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><p>' : $header;
-
-        }
-        $body .= "</table>";
-    }else{
-        $header .= '<span class="error_text" class="centered_span">No matches found.</span>';
-    }
-    echo '<input type="hidden" id="searchwords" value="' . $searchwords . '" />' . $header . $body;
-}
-
 function make_page_link(){
 global $MYVARS, $CFG, $USER;
     $pageid = $MYVARS->GET['pageid'];
     $linkid = $MYVARS->GET['linkpageid'];
-    $sort = get_db_count("SELECT * FROM pages_links WHERE hostpageid=$pageid") + 1;
-    $display = get_db_field("name", "pages", "pageid=$linkid");
-    execute_db_sql("INSERT INTO pages_links (hostpageid,linkpageid,sort,linkdisplay) VALUES($pageid,$linkid,$sort,'$display')");
-    echo "";
-}
+    $SQL = "SELECT *
+              FROM pages_links
+             WHERE hostpageid = '$pageid'";
+    $sort = get_db_count($SQL);
+    $sort++;
+    $page_name = get_db_field("name", "pages", "pageid='$linkid'");
 
-
-function unlink_page(){
-global $MYVARS, $CFG, $USER;
-    $linkid = $MYVARS->GET['linkid'];
-    $pageid = $MYVARS->GET['pageid'];
-    $SQL = "DELETE FROM pages_links WHERE hostpageid='$pageid' AND linkpageid='$linkid'";
+    $SQL = "INSERT INTO pages_links (hostpageid, linkpageid, sort, linkdisplay)
+                 VALUES($pageid, $linkid, $sort, '$page_name')";
     execute_db_sql($SQL);
-    resort_links($pageid);
     echo "";
 }
 
-function move_link(){
-global $MYVARS, $CFG, $USER;
-    $linkid = $MYVARS->GET['linkid'];
-    $linkdisplay = addslashes($MYVARS->GET['linkdisplay']);
-    $pageid = $MYVARS->GET['pageid'];
-    $direction = $MYVARS->GET['direction'];
-    $change = $direction == "up" ? -1 : 1;
-    $SQL = "SELECT * FROM pages_links WHERE linkid=$linkid";
-    $link1 = get_db_row($SQL);
-    $SQL = "SELECT * FROM pages_links WHERE hostpageid=$pageid AND sort=" . ($link1["sort"] + $change);
-    $link2 = get_db_row($SQL);
-    execute_db_sql("UPDATE pages_links SET sort=" . $link2["sort"] . ",linkdisplay='" . $linkdisplay . "' WHERE linkid=$linkid");
-    execute_db_sql("UPDATE pages_links SET sort=" . $link1["sort"] . " WHERE linkid=" . $link2["linkid"]);
-    resort_links($pageid);
-    echo "";
+
+function unlink_page() {
+global $MYVARS;
+  $linkid = $MYVARS->GET['linkid'];
+  $pageid = $MYVARS->GET['pageid'];
+  $SQL = "DELETE FROM pages_links
+                WHERE hostpageid = '$pageid'
+                  AND linkpageid = '$linkid'";
+  execute_db_sql($SQL);
+  resort_links($pageid);
+  echo "";
 }
 
-function rename_link(){
-global $MYVARS, $CFG, $USER;
-    $linkid = $MYVARS->GET['linkid'];
-    $linkdisplay = addslashes($MYVARS->GET['linkdisplay']);
-    execute_db_sql("UPDATE pages_links SET linkdisplay='$linkdisplay' WHERE linkid=$linkid");
-    echo "";
+function move_link() {
+global $MYVARS;
+  $linkid = dbescape($MYVARS->GET['linkid']);
+  $linkdisplay = dbescape($MYVARS->GET['linkdisplay']);
+  $pageid = $MYVARS->GET['pageid'];
+  $direction = $MYVARS->GET['direction'];
+  $change = $direction == "up" ? -1 : 1;
+
+  $SQL = "SELECT *
+            FROM pages_links
+           WHERE linkid = '$linkid'";
+  $link1 = get_db_row($SQL);
+
+  $position1 = $link1["sort"];
+  $position2 = $position1 + $change;
+
+  $SQL = "SELECT *
+            FROM pages_links
+           WHERE hostpageid = '$pageid'
+             AND sort = $position2";
+  $link2 = get_db_row($SQL);
+
+  $SQL = "UPDATE pages_links
+             SET sort = $position2, linkdisplay = '$linkdisplay'
+           WHERE linkid = '$linkid'";
+  execute_db_sql($SQL);
+
+  $SQL = "UPDATE pages_links
+             SET sort = $position1
+           WHERE linkid = " . $link2["linkid"];
+  execute_db_sql($SQL);
+
+  resort_links($pageid);
+  echo "";
 }
 
-function resort_links($pageid){
-global $MYVARS, $CFG, $USER;
-    $i = 1;
-    if($links = get_db_result("SELECT * FROM pages_links WHERE hostpageid=$pageid ORDER BY sort")){
-        while($link = fetch_row($links)){
-            execute_db_sql("UPDATE pages_links SET sort=$i WHERE linkid=" . $link["linkid"]);
-            $i++;
-        }
+function rename_link() {
+global $MYVARS;
+  $linkid = $MYVARS->GET['linkid'];
+  $linkdisplay = dbescape($MYVARS->GET['linkdisplay']);
+
+  $SQL = "UPDATE pages_links
+             SET linkdisplay = '$linkdisplay'
+           WHERE linkid = '$linkid'";
+  echo $SQL;
+  execute_db_sql($SQL);
+  echo "";
+}
+
+function resort_links($pageid) {
+global $MYVARS;
+  $i = 1;
+  $SQL = "SELECT *
+            FROM pages_links
+           WHERE hostpageid = '$pageid'
+        ORDER BY sort";
+  if ($links = get_db_result($SQL)) {
+    while ($link = fetch_row($links)) {
+      $SQL = "UPDATE pages_links
+                 SET sort = $i
+               WHERE linkid = " . $link["linkid"];
+      execute_db_sql($SQL);
+      $i++;
     }
+  }
 }
 
-function get_inviteable_pages(){
+function get_inviteable_pages() {
 global $CFG, $MYVARS;
-    $inviter = $MYVARS->GET["inviter"];
-    $invitee = $MYVARS->GET["invitee"];
-    $pages = user_has_ability_in_pages($inviter, "invite", false, false); //list pages you have invite permissions in
-    $notthese = user_has_ability_in_pages($invitee, "viewpages", false, false); //remove pages that the user already has access to
+  $inviter = $MYVARS->GET["inviter"];
+  $invitee = $MYVARS->GET["invitee"];
+  $pages = user_has_ability_in_pages($inviter, "invite", false, false); //list pages you have invite permissions in
+  $notthese = user_has_ability_in_pages($invitee, "viewpages", false, false); //remove pages that the user already has access to
 
-    echo make_select("page_invite_list", $pages, "pageid", "name", null, 'onchange="if($(\'#page_invite_list\').val() != \'\' && confirm(\'Do you wish to send an invitation to this user?\')){  ajaxapi(\'/ajax/page_ajax.php\',\'invite_user\',\'&pageid=\'+$(\'#page_invite_list\').val()+\'&userid=' . $invitee . '\',function() { simple_display(\'pagelist_' . $invitee . '\'); });  }else{  ajaxapi(\'/ajax/site_ajax.php\',\'donothing\',\'\',function() { simple_display(\'pagelist_' . $invitee . '\'); }) }"', true, 1 , "width:150px;","",$notthese);
+  $invite_button = template_use("templates/page_ajax.template", array("invitee" => $invitee), "get_inviteable_button_template");
+  echo make_select("page_invite_list", $pages, "pageid", "name", null, $invite_button, true, 1 , "width:150px;", "", $notthese);
 }
 
-function invite_user(){
+function invite_user() {
 global $CFG, $MYVARS;
-    $userid = $MYVARS->GET["userid"];
-    $pageid = $MYVARS->GET["pageid"];
-    $defaultrole = get_db_field("default_role", "pages", "pageid=$pageid");
-    if(get_db_row("SELECT * FROM roles_assignment WHERE userid='$userid' AND roleid='$defaultrole' && pageid='$pageid' AND confirm='2'") || execute_db_sql("INSERT INTO roles_assignment (userid,roleid,pageid,confirm) VALUES($userid,$defaultrole,$pageid,2)")){ echo "Invite Sent";
-    }else{  echo "Invite Error"; }
+  $userid = $MYVARS->GET["userid"];
+  $pageid = $MYVARS->GET["pageid"];
+  $defaultrole = get_db_field("default_role", "pages", "pageid='$pageid'");
+
+  $SQL = "SELECT confirm
+            FROM roles_assignment
+           WHERE userid = '$userid'
+             AND roleid = '$defaultrole'
+             AND pageid = '$pageid'
+             AND confirm = '2'";
+  $invite_received = get_db_row($SQL);
+
+  $SQL = "INSERT INTO roles_assignment (userid, roleid, pageid, confirm)
+               VALUES($userid, $defaultrole, $pageid, 2)";
+  if ($invite_received || execute_db_sql($SQL)) {
+    echo "Invite Sent";
+  } else {
+    echo "Invite Error";
+  }
 }
 
-function refresh_page_links(){
+function refresh_page_links() {
 global $CFG, $USER, $MYVARS;
-    if(!isset($PAGELISTLIB)){ include_once ($CFG->dirroot . '/lib/pagelistlib.php'); }
-    $userid = $USER->userid;
-    $pageid = $MYVARS->GET["pageid"];
-    echo get_page_links($pageid, $userid);
+  if (!isset($PAGELISTLIB)) { include_once ($CFG->dirroot . '/lib/pagelistlib.php'); }
+  $userid = $USER->userid;
+  $pageid = $MYVARS->GET["pageid"];
+  echo get_page_links($pageid, $userid);
 }
 
-function change_subscription(){
+function change_subscription() {
 global $CFG, $MYVARS, $USER;
-    $userid = $USER->userid;
-    $pageid = $MYVARS->GET["pageid"];
-    if(subscribe_to_page($pageid, $userid, true)){ // subscription added
-        echo '<a href="javascript: if(confirm(\'Are you sure you want to remove yourself from this page? \n You might not be able to get into this page again.\')){ajaxapi(\'/ajax/page_ajax.php\',\'change_subscription\',\'&pageid=' . $pageid . '\',function() {simple_display(\'addremove_' . $pageid . '\');}); ajaxapi(\'/ajax/page_ajax.php\',\'pagesearch\',\'&pagenum=' . $pagenum . '&searchwords=\'+escape(document.getElementById(\'searchwords\').value),function() {simple_display(\'searchcontainer_pagesearch\');});}" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/delete.png" title="Remove Page" alt="Remove Page"></a>';
-    }else{ //subscription removed
-        $page = get_db_row("SELECT * FROM pages WHERE pageid=$pageid");
-        if($page["siteviewable"] == 1 || $page["opendoorpolicy"] == 1 || $page["added"] == 1 || user_has_ability_in_page($userid, "assign_roles", $pageid)){
-            echo '<a href="javascript: ajaxapi(\'/ajax/page_ajax.php\',\'change_subscription\',\'&pageid=' . $pageid . '\',function() {simple_display(\'addremove_' . $pageid . '\');}); ajaxapi(\'/ajax/page_ajax.php\',\'pagesearch\',\'&pagenum=' . $pagenum . '&searchwords=\'+escape(document.getElementById(\'searchwords\').value),function() {simple_display(\'searchcontainer_pagesearch\');});" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/add.png" title="Add Page" alt="Add Page"></a>';
-        }else{  echo '<a href="javascript: ajaxapi(\'/ajax/page_ajax.php\',\'add_request\',\'&pageid=' . $pageid . '\',function() {simple_display(\'addremove_' . $pageid . '\');});" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/mail.gif" title="Send Request" alt="Send Request"></a>'; }
+  $userid = $USER->userid;
+  $pageid = $MYVARS->GET["pageid"];
+  $pagenum = $MYVARS->GET["pagenum"];
+
+  $params = array("wwwroot" => $CFG->wwwroot, "can_add" => false, "pageid" => $pageid, "pagenum" => $pagenum, "userid" => $userid);
+  $subscription_added = subscribe_to_page($pageid, $userid, true);
+  if (!$subscription_added) {
+    $SQL = "SELECT added, opendoorpolicy, siteviewable
+              FROM pages
+             WHERE pageid = '$pageid'";
+    $page = get_db_row($SQL);
+    if ($page["siteviewable"] == 1 || $page["opendoorpolicy"] == 1 || $page["added"] == 1 || user_has_ability_in_page($userid, "assign_roles", $pageid)) {
+      $params["can_add"] = true;
     }
+  }
+
+  echo template_use("templates/page_ajax.template", $params, "change_subscription_template");
 }
 
-function add_request(){
-global $CFG, $MYVARS, $USER;
-    $userid = $USER->userid;
-    $pageid = $MYVARS->GET["pageid"];
-    $roleid = get_db_field("default_role", "pages", "pageid=$pageid");
-    if(execute_db_sql("INSERT INTO roles_assignment (userid,roleid,pageid,confirm) VALUES($userid,$roleid,$pageid,1)")) {
-        echo '<a href="javascript: ajaxapi(\'/ajax/page_ajax.php\',\'remove_request\',\'&pageid=' . $pageid . '\',function() {simple_display(\'addremove_' . $pageid . '\');});" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/undo.png" title="Remove Request" alt="Remove Request"></a>';
-    }else{
-        echo '<a href="javascript: ajaxapi(\'/ajax/page_ajax.php\',\'add_request\',\'&pageid=' . $pageid . '\',function() {simple_display(\'addremove_' . $pageid . '\');});" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/mail.gif" title="Send Request" alt="Send Request"></a>';
-    }
+function add_request() {
+global $CFG, $MYVARS;
+  $userid = $USER->userid;
+  $pageid = $MYVARS->GET["pageid"];
+  $roleid = get_db_field("default_role", "pages", "pageid='$pageid'");
+  $SQL = "INSERT INTO roles_assignment (userid, roleid, pageid, confirm)
+               VALUES($userid, $roleid, $pageid, 1)";
+
+  $request_added = execute_db_sql($SQL);
+  $params = array("request_added" => $request_added, "wwwroot" => $CFG->wwwroot, "pageid" => $pageid);
+  echo template_use("templates/page_ajax.template", $params, "add_remove_request_template");
 }
 
-function remove_request(){
-global $CFG, $MYVARS, $USER;
-    $userid = $USER->userid;
-    $pageid = $MYVARS->GET["pageid"];
-    if(execute_db_sql("DELETE FROM roles_assignment WHERE userid=$userid AND pageid=$pageid AND confirm=1")){
-        echo '<a href="javascript: ajaxapi(\'/ajax/page_ajax.php\',\'add_request\',\'&pageid=' . $pageid . '\',function() {simple_display(\'addremove_' . $pageid . '\');});" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/mail.gif" title="Send Request" alt="Send Request"></a>';
-    }else{
-        echo '<a href="javascript: ajaxapi(\'/ajax/page_ajax.php\',\'remove_request\',\'&pageid=' . $pageid . '\',function() {simple_display(\'addremove_' . $pageid . '\');});" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/undo.png" title="Remove Request" alt="Remove Request"></a>';
-    }
+function remove_request() {
+global $CFG, $MYVARS;
+  $userid = $USER->userid;
+  $pageid = $MYVARS->GET["pageid"];
+
+  $SQL = "DELETE FROM roles_assignment
+                WHERE userid = '$userid'
+                  AND pageid = '$pageid'
+                  AND confirm = 1";
+  $request_removed = execute_db_sql($SQL);
+
+  $params = array("request_removed" => (!$request_removed), "wwwroot" => $CFG->wwwroot, "pageid" => $pageid);
+  echo template_use("templates/page_ajax.template", $params, "add_remove_request_template");
 }
 ?>

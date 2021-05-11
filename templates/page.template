@@ -206,3 +206,9 @@ end_of_page_template||
   </body>
 </html>
 ||end_of_page_template
+
+select_options_template||
+  <option value="||value||">
+    ||display||
+  </option>
+||select_options_template
