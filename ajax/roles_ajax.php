@@ -12,7 +12,7 @@ update_user_cookie();
 
 callfunction();
 
-function name_search(){
+function name_search() {
 global $CFG,$ROLES,$USER,$MYVARS;
   $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
   $type = !empty($MYVARS->GET['type']) ? $MYVARS->GET['type'] : "per_page_"; //Should always be passed
@@ -69,7 +69,7 @@ global $CFG,$ROLES,$USER,$MYVARS;
   echo template_use("templates/roles_ajax.template", $params, "name_search_template");
 }
 
-function add_to_group_search(){
+function add_to_group_search() {
 global $CFG,$ROLES,$USER,$MYVARS;
     $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
     $groupid = !empty($MYVARS->GET['groupid']) ? $MYVARS->GET['groupid'] : false; //Should always be passed

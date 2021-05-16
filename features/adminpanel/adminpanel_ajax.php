@@ -56,7 +56,8 @@ global $CFG,$MYVARS;
 
     $subject = "SERVER: EMAIL TEST";
     $message = "This is a test message sent: " . date('l jS \of F Y h:i:s A');
-    if(send_email($touser,$fromuser,$cc = false,$subject, $message)){
+
+    if(send_email($touser, $fromuser, $cc = false, $subject, $message)) {
         echo "<br />Email Success";
     }else{
         echo "<br />Email Failed";

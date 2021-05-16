@@ -63,14 +63,14 @@ editor_box_template||
 ||editor_box_template
 
 print_logout_button_switchback_template||
-<a title="Switch back to: ||lia_name||" href="javascript: void(0)" onclick="ajaxapi('/features/adminpanel/adminpanel_ajax.php','logoutas','',function() { go_to_page(||SITEID||);});">Switch back to: ||lia_name||</a><br />
+<a title="Switch back to: ||lia_name||" href="javascript: void(0)" onclick="ajaxapi('/features/adminpanel/adminpanel_ajax.php','logoutas','',function() { go_to_page(||siteid||);});">Switch back to: ||lia_name||</a><br />
 ||print_logout_button_switchback_template
 
 print_logout_button_template||
 <div id="login_box" class="login_box logout" style="text-align:right;">
     ||logoutas||
     <span style="display:inline-block;line-height: 18px;">
-        ||profile|| <a title="Log Out" href="javascript: void(0)" onclick="ajaxapi('/ajax/site_ajax.php','get_login_box','&amp;logout=1',function() { clearInterval(myInterval); go_to_page(||SITEID||);});">(Log Out)</a>
+        ||profile|| <a title="Log Out" href="javascript: void(0)" onclick="ajaxapi('/ajax/site_ajax.php','get_login_box','&amp;logout=1',function() { clearInterval(myInterval); go_to_page(||siteid||);});">(Log Out)</a>
     </span>
 </div>
 <br />
@@ -91,7 +91,7 @@ get_css_box_template1||
 ||get_css_box_template1
 
 get_css_box_template2||
-<div ||openingdiv||>
+<div ||opendiv||>
     <div class="box_header"  style="border: 2px solid ||bordercolor||;background-color:||titlebgcolor||;">
         <div class="box_title"  style="line-height:23px;color:||titlefontcolor||;">
             ||title||

@@ -198,7 +198,7 @@ change_profile_template||
     </div>
     //OR//
     <script type="text/javascript">
-      go_to_page(||SITEID||);
+      go_to_page(||siteid||);
     </script>
   }}userid||
 ||change_profile_template

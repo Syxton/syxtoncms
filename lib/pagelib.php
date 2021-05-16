@@ -575,6 +575,7 @@ function print_logout_button($fname, $lname, $pageid = false) {
     }
     $edit    = user_has_ability_in_page($USER->userid, "editprofile", $pageid) ? true : false;
     $param   = array(
+        "siteid" => $CFG->SITEID,
         "title" => "Edit Profile",
         "text" => "$fname $lname",
         "path" => $CFG->wwwroot . "/pages/user.php?action=change_profile",
@@ -589,8 +590,7 @@ function print_logout_button($fname, $lname, $pageid = false) {
     $logoutas = "";
     if (!empty($_SESSION["lia_original"])) {
         $lia_name = get_user_name($_SESSION["lia_original"]);
-        $params = array("siteid" => $CFG->SITEID,
-                        "lia_name" => $lia_name);
+        $params = array("lia_name" => $lia_name);
         $logoutas = template_use("templates/pagelib.template", $params, "print_logout_button_switchback_template");
     }
 
@@ -727,7 +727,7 @@ function get_css_box($title, $content, $buttons = '', $padding = null, $feature 
           $returnme .= template_use("templates/pagelib.template", $params, "get_css_box_bottom_template");
         }
 
-        $opendiv = empty($feature) || $feature == 'pagelist' || $feature == 'addfeature' ? '' : 'class="box" id="' . $feature . '_' . $featureid . '">';
+        $opendiv = empty($feature) || $feature == 'pagelist' || $feature == 'addfeature' ? '' : 'class="box" id="' . $feature . '_' . $featureid . '"';
         $padding = isset($padding) ? ' padding:' . $padding . ";" : "";
         $params = array("opendiv" => $opendiv, "bordercolor" => $bordercolor, "titlebgcolor" => $titlebgcolor, "buttons" => $buttons,
                         "titlefontcolor" => $titlefontcolor, "title" => stripslashes($title), "class" => $class,
