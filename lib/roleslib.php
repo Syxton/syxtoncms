@@ -437,7 +437,7 @@ global $CFG,$ROLES;
 
 //This function will get an array of the groups hierarchy
 function get_groups_hierarchy($userid, $pageid, $parent=0){
-    $SQL = "SELECT * FROM groups g WHERE
+    $SQL = "SELECT * FROM `groups` g WHERE
                 g.parent = '$parent' AND
                 g.groupid IN (SELECT u.groupid FROM groups_users u WHERE
                                 u.pageid='$pageid' AND
@@ -526,14 +526,14 @@ function groups_list($pageid,$feature = false,$featureid = false,$action=true,$s
 function sub_groups_list($pageid,$groupid=false,$level="",$selectid=0,$excludeid=0,$excludechildrenofid=0){
     $returnme = "";
     $subsql = $groupid ? "parent='$groupid'" : "parent='0'";
-    $SQL = "SELECT * FROM groups WHERE pageid='$pageid' AND $subsql ORDER BY name";
+    $SQL = "SELECT * FROM `groups` WHERE pageid='$pageid' AND $subsql ORDER BY name";
 
     if($groups = get_db_result($SQL)){
         while($group = fetch_row($groups)){
             $group_count = get_db_count("SELECT * FROM groups_users WHERE groupid='".$group['groupid']."'");
             $selected = $selectid == $group["groupid"] ? "selected" : "";
             $returnme .= $excludeid != $group["groupid"] ? '<option value="'.$group['groupid'].'" '.$selected.'>'.$level.$group['name'].' ('.$group_count.')</option>' : '';
-            if($subgroups = get_db_row("SELECT * FROM groups WHERE pageid='$pageid' AND parent = '".$group['groupid']."'")){
+            if($subgroups = get_db_row("SELECT * FROM `groups` WHERE pageid='$pageid' AND parent = '".$group['groupid']."'")){
                 $returnme .= $excludechildrenofid != $group["groupid"] ? sub_groups_list($pageid,$group['groupid'],$level."-- ",$selectid,$excludeid) : '';
             }
 		}
