@@ -3,10 +3,10 @@ if (!isset($CFG)){ include('../../config.php'); }
 include_once($CFG->dirroot . '/lib/header.php');
 
 // STEP 1: Read POST data
- 
-// reading posted data from directly from $_POST causes serialization 
+
+// reading posted data from directly from $_POST causes serialization
 // issues with array data in POST
-// reading raw POST data from input stream instead. 
+// reading raw POST data from input stream instead.
 $raw_post_data = file_get_contents('php://input');
 $raw_post_array = explode('&', $raw_post_data);
 $myPost = array();
@@ -19,13 +19,9 @@ foreach ($raw_post_array as $keyval) {
 $req = 'cmd=_notify-validate';
 if (function_exists('get_magic_quotes_gpc')) {
    $get_magic_quotes_exists = true;
-} 
-foreach ($myPost as $key => $value) {        
-   if ($get_magic_quotes_exists == true && get_magic_quotes_gpc() == 1) { 
-        $value = urlencode(stripslashes($value)); 
-   } else {
-        $value = urlencode($value);
-   }
+}
+foreach ($myPost as $key => $value) {
+   $value = urlencode(stripslashes($value));
    $req .= "&$key=$value";
 }
 
@@ -44,7 +40,7 @@ curl_setopt($ch, CURLOPT_FORBID_REUSE, 1);
 curl_setopt($ch, CURLOPT_HTTPHEADER, array('Connection: Close'));
 
 // In wamp like environments that do not come bundled with root authority certificates,
-// please download 'cacert.pem' from "http://curl.haxx.se/docs/caextract.html" and set the directory path 
+// please download 'cacert.pem' from "http://curl.haxx.se/docs/caextract.html" and set the directory path
 // of the certificate as shown below.
 
 curl_setopt($ch, CURLOPT_CAINFO, dirname(__FILE__) . '/cacert.pem');
@@ -77,7 +73,7 @@ if (strcmp ($res, "VERIFIED") == 0) {
     $payer_email = $_POST['payer_email'];
     $name = !empty($_POST["firstname"]) && !empty($_POST["lastname"]) ? $_POST["firstname"].' '.$_POST["lastname"] : $payer_email;
     if ($_SERVER['REQUEST_METHOD'] != "POST") {
-        die("No Post Variables");    
+        die("No Post Variables");
     }
 
     if (!empty($custom)) {
@@ -92,20 +88,20 @@ if (strcmp ($res, "VERIFIED") == 0) {
                     if ($sum >= $c["goal_amount"]) {
                         execute_db_sql("UPDATE donate_campaign SET metgoal=1 WHERE campaign_id='$custom'");
                         //Log
-                        log_entry('donate', $custom, "Campaign Goal Met");    
-                    }                    
+                        log_entry('donate', $custom, "Campaign Goal Met");
+                    }
                 }
 
                 // Log.
                 log_entry('donate', $txn_id, "Paypal");
 
                 // Mail yourself the details.
-                mail($c["paypal_email"], "Donation Made", "A donation of $".$payment." has been made to the ".$c["title"]." donation campaign.", "From: ".$c["paypal_email"]);   
+                mail($c["paypal_email"], "Donation Made", "A donation of $".$payment." has been made to the ".$c["title"]." donation campaign.", "From: ".$c["paypal_email"]);
             } else {
                 echo "This donation has already been processed.";
             }
-        }        
-    } 
+        }
+    }
 } else if (strcmp ($res, "INVALID") == 0) {
     //Log
    	log_entry('donate', $res, "Paypal (failed)");
