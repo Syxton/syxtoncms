@@ -17,7 +17,6 @@ global $CFG, $MYVARS, $USER, $PAGE;
 	$themeid = dbescape($MYVARS->GET["themeid"]);
 	$pageid = dbescape($MYVARS->GET["pageid"]);
 
-
 	if($themeid == ""){ $themeid = '0'; }
 
 	echo get_css_box(get_db_field("name", "pages", "pageid=$pageid"), get_db_field("display_name", "roles", "roleid=" . get_user_role($USER->userid,$pageid)), false,NULL,'pagename',NULL,$themeid,false,$pageid) . '<div style="padding:3px;"></div>'.get_css_box("Title", "Content", null, null, null, null, $themeid,false,$pageid);
@@ -34,7 +33,7 @@ global $CFG, $MYVARS, $USER, $PAGE;
 	if(isset($PAGE->themeid) && $PAGE->themeid > 0){ //Theme selected
 		echo theme_selector($pageid,$themeid);
 	}else{ //Custom Theme
-		echo theme_selector($pageid,$themeid);
+		echo theme_selector($pageid, $themeid);
 	}
 }
 
@@ -62,7 +61,7 @@ global $CFG, $MYVARS, $USER;
 	}
 
 	if (make_or_update_styles_array($styles)) { echo "Saved";
-	}else{ echo "Failed"; }
+	} else { echo "Failed"; }
 }
 
 function preview(){

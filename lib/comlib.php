@@ -44,9 +44,9 @@ function send_multi_email($tolist,$fromuser,$cc = false,$subject, $message, $bcc
     }
 }
 
-function smtp($touser, $fromuser, $cc = false, $subject, $message, $bcc = false){
+function smtp($touser, $fromuser, $cc = false, $subject, $message, $bcc = false) {
 	global $CFG;
-	require_once($CFG->smtppath."Mail.php");
+	require_once($CFG->dirroot . "/scripts/PEAR/Mail.php");
 	$to = ucwords(strtolower($touser->fname) . ' ' . strtolower($touser->lname)) . ' <' . $touser->email . '>';
 	$from = ucwords(strtolower($fromuser->fname).' '. strtolower($fromuser->lname)). ' <' . $fromuser->email . '>';
 	$subject = $subject;
@@ -65,22 +65,20 @@ function smtp($touser, $fromuser, $cc = false, $subject, $message, $bcc = false)
 	  	'Bcc' => $bcc,
 	  	'Subject' => $subject);
 
-	if(!$CFG->smtpauth){
-		$smtp = Mail::factory('smtp',
-		array ('host' => $CFG->smtp,
-		'auth' => $CFG->smtpauth));
-  	}else{
-		$smtp = Mail::factory('smtp',
-		array ('host' => $CFG->smtp,
-		'auth' => $CFG->smtpauth,
-		'username' => $CFG->smtpuser,
-		'password' => $CFG->smtppass));
-    }
-	$mail = $smtp->send($to, $headers, $body);
-	if(PEAR::isError($mail)){
-        return false;
-    }else{
-        return true;
-    }
+  $smtpinfo["host"] = $CFG->smtp;
+  $smtpinfo["port"] = $CFG->smtpport;
+  $smtpinfo["auth"] = $CFG->smtpauth;
+  $smtpinfo["username"] = $CFG->smtpuser;
+  $smtpinfo["password"] = $CFG->smtppass;
+
+  $mail_object =& Mail::factory("smtp", $smtpinfo);
+
+  $mail_object->send($to, $headers, $body);
+
+  if (PEAR::isError($mail_object)) {
+    return false;
+  } else {
+    return true;
+  }
 }
 ?>

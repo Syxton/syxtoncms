@@ -18,10 +18,7 @@ global $CFG,$MYVARS;
 // Default styles are given pageid=0
 // Global styles are given forced=1
 // Feature type specific styles are given featureid=0
-	if(empty($themeid)){ //CUSTOM THEME
-		$themeid = "0";
-		$pageid = $pageid == $CFG->SITEID ? 0 : $pageid;
-
+	if ($themeid === "0") { //CUSTOM THEME
 		//Hasn't saved custom colors yet return defaults;
 		if(!get_db_field("id","styles","pageid='$pageid'")) {
 			$feature = "page";
@@ -62,30 +59,31 @@ global $CFG,$MYVARS;
 		";
 	} else { //NO THEME...LOOK FOR PARENT THEMES
 		$themeid = getpagetheme($CFG->SITEID);
-		if($themeid !== false){
-            return get_styles($CFG->SITEID,$themeid);
-        }else{
-    		//$pageid = $CFG->SITEID;
-    		$root = $themeid ? " UNION SELECT *, 2 as ranky FROM styles WHERE themeid=$themeid" : "";
 
-    		$SQL = "
-    		SELECT *, 1 as ranky FROM styles WHERE
-    			pageid = 0 AND feature IS NULL
-     		$root
-    		  UNION
-    		SELECT *, 3 as ranky FROM styles WHERE
-    			pageid = '$pageid' AND feature IS NULL
-    		  UNION
-    		SELECT *, 4 as ranky FROM styles WHERE
-    			pageid = '$pageid' AND feature='$feature' AND featureid='0'
-    		  UNION
-    		SELECT *, 5 as ranky FROM styles WHERE
-    			pageid = '$pageid' AND feature='$feature' AND featureid='$featureid'
-    		  UNION
-    		SELECT *, 6 as ranky FROM styles WHERE
-    			pageid=0 AND forced=1 AND feature='$feature' AND featureid='0'
-    		ORDER BY ranky
-    		";
+		if (!empty($themeid)) {
+      return get_styles($CFG->SITEID, $themeid);
+    } else {
+  		//$pageid = $CFG->SITEID;
+  		$root = $themeid ? " UNION SELECT *, 2 as ranky FROM styles WHERE themeid=$themeid" : "";
+
+  		$SQL = "
+  		SELECT *, 1 as ranky FROM styles WHERE
+  			pageid = 0 AND feature IS NULL
+   		$root
+  		  UNION
+  		SELECT *, 3 as ranky FROM styles WHERE
+  			pageid = '$pageid' AND feature IS NULL
+  		  UNION
+  		SELECT *, 4 as ranky FROM styles WHERE
+  			pageid = '$pageid' AND feature='$feature' AND featureid='0'
+  		  UNION
+  		SELECT *, 5 as ranky FROM styles WHERE
+  			pageid = '$pageid' AND feature='$feature' AND featureid='$featureid'
+  		  UNION
+  		SELECT *, 6 as ranky FROM styles WHERE
+  			pageid=0 AND forced=1 AND feature='$feature' AND featureid='0'
+  		ORDER BY ranky
+  		";
 		}
 	}
 
@@ -187,13 +185,13 @@ function getpagetheme($pageid) {
   $featureid = false;
 	$settings = fetch_settings("page", $featureid, $pageid);
 
-	if($settings === false){
-	   return false;
+	if ($settings === false) {
+	   return "";
     } else {
-        if(!empty($settings->page->themeid->setting)) {
+        if(isset($settings->page->themeid->setting)) {
             return $settings->page->themeid->setting;
         } else {
-            return false;
+            return "";
         }
     }
 }

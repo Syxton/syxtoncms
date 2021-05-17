@@ -678,61 +678,55 @@ function get_menu_children($menuid, $pageid) {
 function get_css_box($title, $content, $buttons = '', $padding = null, $feature = '', $featureid = '', $themeid = false, $preview = false, $pageid = false, $bottom_left = false, $bottom_center = false, $bottom_right = false, $class = "") {
     global $CFG, $PAGE, $STYLES;
     $returnme = '';
-    if ($pageid === false) {
-        if (empty($themeid)) {
-            $themeid = !empty($PAGE->themeid) ? $PAGE->themeid : 0;
-        }
 
-        if (isset($PAGE->id) && isset($CFG->SITEID) && $PAGE->id == $CFG->SITEID) {
-            $pageid = 0;
-        } else {
-            $pageid = isset($PAGE->id) ? $PAGE->id : 0;
-        }
+    if ($pageid === false) {
+      $pageid = $PAGE->id;
+      $themeid = $PAGE->themeid;
     } else {
-        if ($themeid === false) {
-            $themeid = getpagetheme($pageid);
-        }
+      if ($themeid === false) {
+          $themeid = getpagetheme($pageid);
+      }
     }
 
     if ($feature == 'pagename') {
-        if ($preview) {
-            $styles = $STYLES->pagename;
-        } else {
-            $styles = get_styles($pageid, "$themeid", "pagename", NULL);
-        }
+      if ($preview) {
+          $styles = $STYLES->pagename;
+      } else {
+          $styles = get_styles($pageid, "$themeid", "pagename", NULL);
+      }
 
-        $pagenamebordercolor = isset($styles['pagenamebordercolor']) ? $styles['pagenamebordercolor'] : "";
-        $pagenamebgcolor     = isset($styles['pagenamebgcolor']) ? $styles['pagenamebgcolor'] : "";
-        $pagenamefontcolor   = isset($styles['pagenamefontcolor']) ? $styles['pagenamefontcolor'] : "";
+      $pagenamebordercolor = isset($styles['pagenamebordercolor']) ? $styles['pagenamebordercolor'] : "";
+      $pagenamebgcolor     = isset($styles['pagenamebgcolor']) ? $styles['pagenamebgcolor'] : "";
+      $pagenamefontcolor   = isset($styles['pagenamefontcolor']) ? $styles['pagenamefontcolor'] : "";
 
-        $params = array("pagenamebordercolor" => $pagenamebordercolor, "pagenamebgcolor" => $pagenamebgcolor,
-                        "pagenamefontcolor" => $pagenamefontcolor, "title" => stripslashes($title),
-                        "content" => $content, "buttons" => $buttons);
-        $returnme = template_use("templates/pagelib.template", $params, "get_css_box_template1");
+      $params = array("pagenamebordercolor" => $pagenamebordercolor, "pagenamebgcolor" => $pagenamebgcolor,
+                      "pagenamefontcolor" => $pagenamefontcolor, "title" => stripslashes($title),
+                      "content" => $content, "buttons" => $buttons);
+      $returnme = template_use("templates/pagelib.template", $params, "get_css_box_template1");
     } else {
-        if ($preview) {
-            $styles = $STYLES->$feature;
-        } else {
-            $styles = get_styles($pageid, "$themeid", $feature, $featureid);
-        }
+      if ($preview) {
+          $styles = $STYLES->$feature;
+      } else {
+          $styles = get_styles($pageid, "$themeid", $feature, $featureid);
+      }
 
-        $contentbgcolor = isset($styles['contentbgcolor']) ? $styles['contentbgcolor'] : "";
-        $bordercolor    = isset($styles['bordercolor']) ? $styles['bordercolor'] : "";
-        $titlebgcolor   = isset($styles['titlebgcolor']) ? $styles['titlebgcolor'] : "";
-        $titlefontcolor = isset($styles['titlefontcolor']) ? $styles['titlefontcolor'] : "";
+      $contentbgcolor = isset($styles['contentbgcolor']) ? $styles['contentbgcolor'] : "";
+      $bordercolor    = isset($styles['bordercolor']) ? $styles['bordercolor'] : "";
+      $titlebgcolor   = isset($styles['titlebgcolor']) ? $styles['titlebgcolor'] : "";
+      $titlefontcolor = isset($styles['titlefontcolor']) ? $styles['titlefontcolor'] : "";
 
-        $bottom = "";
-        if ($bottom_left || $bottom_center || $bottom_right) {
-          $params = array("bottom_left" => $bottom_left, "bottom_right" => $bottom_right, "contentbgcolor" => $contentbgcolor);
-          $returnme .= template_use("templates/pagelib.template", $params, "get_css_box_bottom_template");
-        }
+      $bottom = "";
+      if ($bottom_left || $bottom_center || $bottom_right) {
+        $params = array("bottom_left" => $bottom_left, "bottom_right" => $bottom_right, "contentbgcolor" => $contentbgcolor);
+        $returnme .= template_use("templates/pagelib.template", $params, "get_css_box_bottom_template");
+      }
 
-        $opendiv = empty($feature) || $feature == 'pagelist' || $feature == 'addfeature' ? '' : 'class="box" id="' . $feature . '_' . $featureid . '"';
-        $padding = isset($padding) ? ' padding:' . $padding . ";" : "";
-        $params = array("opendiv" => $opendiv, "bordercolor" => $bordercolor, "titlebgcolor" => $titlebgcolor, "buttons" => $buttons,
-                        "titlefontcolor" => $titlefontcolor, "title" => stripslashes($title), "class" => $class,
-                        "padding" => $padding, "contentbgcolor" => $contentbgcolor, "content" => $content, "bottom" => $bottom);
-        $returnme .= template_use("templates/pagelib.template", $params, "get_css_box_template2");
+      $opendiv = empty($feature) || $feature == 'pagelist' || $feature == 'addfeature' ? '' : 'class="box" id="' . $feature . '_' . $featureid . '"';
+      $padding = isset($padding) ? ' padding:' . $padding . ";" : "";
+      $params = array("opendiv" => $opendiv, "bordercolor" => $bordercolor, "titlebgcolor" => $titlebgcolor, "buttons" => $buttons,
+                      "titlefontcolor" => $titlefontcolor, "title" => stripslashes($title), "class" => $class,
+                      "padding" => $padding, "contentbgcolor" => $contentbgcolor, "content" => $content, "bottom" => $bottom);
+      $returnme .= template_use("templates/pagelib.template", $params, "get_css_box_template2");
     }
     return $returnme;
 }

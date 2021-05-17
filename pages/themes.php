@@ -20,8 +20,8 @@ echo template_use("templates/page.template", array(), "end_of_page_template");
 function change_theme(){
 global $CFG, $MYVARS, $USER, $PAGE;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
-	$feature = dbescape($MYVARS->GET['feature']);
-	$featureid = dbescape($MYVARS->GET['featureid']);
+	$feature = isset($MYVARS->GET['feature']) ? dbescape($MYVARS->GET['feature']) : false;
+	$featureid = isset($MYVARS->GET['featureid']) ? dbescape($MYVARS->GET['featureid']) : false;
 	$PAGE = new stdClass();
 	$PAGE->id = $pageid;
 	$PAGE->themeid = getpagetheme($PAGE->id);

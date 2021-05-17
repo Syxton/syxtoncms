@@ -25,6 +25,10 @@ font-size:.83em;
 overflow:auto;
 }
 
+p {
+  margin: 0px 0px 1em 0px;
+}
+
 .content_links {
 color:brown;
 text-decoration:none;
@@ -627,8 +631,8 @@ right:25.5%;
 }
 
 .rightmenu .col1 {
-left:24.5%;
-width:76%;
+left:25.5%;
+width:77%;
 }
 
 .rightmenu .col2 {
@@ -981,12 +985,7 @@ text-decoration:none;
     width: 40px;
     height: 40px;
     background: center / contain url('../images/menu-icon.png') no-repeat;
-	display: none;
-}
-
-.logo_nav a:hover#menu-icon {
-	background-color: #444;
-	border-radius: 4px 4px 0 0;
+	  display: none;
 }
 
 .logo_nav ul {
@@ -1440,19 +1439,12 @@ box-shadow: none;
         font-size: 1.5em;
 	}
 
-	.nav:hover ul {
-		display: block;
-	}
-
-    .nav:hover ul li ul {
-        left: initial;
-        visibility: visible;
-        display: block;
-        opacity: initial;
-        position: relative !important;
-        top: 0 !important;
-        font-size: .6rem;
-        border: none !important;
-        font-weight: initial;
-    }
+  .nav:hover ul li ul {
+      left: initial;
+      position: relative !important;
+      top: 0 !important;
+      font-size: .6rem;
+      border: none !important;
+      font-weight: initial;
+  }
 }
