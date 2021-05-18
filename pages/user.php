@@ -31,7 +31,7 @@ global $MYVARS, $CFG;
 }
 
 function reset_password(){
-global $MYVARS, $CFG;
+global $MYVARS, $PAGE, $CFG;
 	$userid = $MYVARS->GET["userid"];
 	$alternate = get_db_row("SELECT * FROM users WHERE userid='$userid' AND alternate='".$MYVARS->GET["alternate"]."'") ? true : false;
 	$params = array("siteid" => $CFG->SITEID, "userid" => $userid, "wwwroot" => $CFG->wwwroot, "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'), "alternate" => $alternate);
@@ -46,8 +46,12 @@ global $MYVARS, $CFG;
 		$params["vpassword_match"] = get_error_message('valid_vpassword_match');
 		$params["vpassword_help"] = get_help("input_vpassword");
 
-    echo create_validation_script("password_request_form" , template_use("templates/user.template", $params, "reset_password_validation_template"));
-    echo format_popup(template_use("templates/user.template", $params, "reset_password_template"), 'Change Password',"500px");
+		// Main Layout
+		$params2 = array("mainmast" => page_masthead(true),
+									 	 "middlecontents" => template_use("templates/user.template", $params, "reset_password_template") .
+													 							 create_validation_script("password_request_form" , template_use("templates/user.template", $params, "reset_password_validation_template")));
+
+		echo template_use("templates/index.template", $params2, "mainlayout_template");
   } else {
 		echo template_use("templates/user.template", array("alternate" => false), "reset_password_template");
 	}

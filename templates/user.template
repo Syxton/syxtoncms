@@ -76,6 +76,10 @@ new_user_validation||
 reset_password_template||
   ||alternate{{
     <script src="||wwwroot||/min/?b=||directory||scripts&f=jquery.min.js,jqvalidate.js,jqvalidate_addon.js,jqmetadata.js" type="text/javascript"></script>
+    <h1>
+      Change Password
+    </h1>
+    <br />
     <div id="forgot_password">
       Please type a new password then verify it.  After submitting your new password, you will be logged into the site and your new password will be set.
       <br />
@@ -84,7 +88,7 @@ reset_password_template||
         <fieldset class="formContainer">
           <div class="rowContainer">
             <label class="rowTitle" for="mypassword">
-              Password
+              New Password
             </label>
             <input value="" type="password" id="mypassword" name="mypassword" data-rule-required="true" data-rule-minlength="6" data-msg-required="||password_req||" data-msg-minlength="||password_length||" />
             <div class="tooltipContainer info">

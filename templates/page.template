@@ -212,3 +212,11 @@ select_options_template||
     ||display||
   </option>
 ||select_options_template
+
+setting_change_template||
+  ||success{{
+      <img src="||wwwroot||/images/checked.gif" />
+    //OR//
+      <img src="||wwwroot||/images/error.gif" />
+  }}success||
+||setting_change_template

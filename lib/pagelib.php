@@ -1095,4 +1095,8 @@ function keepalive() {
     $params = array("wwwroot" => $CFG->wwwroot);
     return template_use("templates/pagelib.template", $params, "keepalive_template");
 }
+
+function donothing() {
+  echo "";
+}
 ?>

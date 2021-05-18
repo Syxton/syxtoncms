@@ -365,7 +365,7 @@ global $MYVARS, $CFG, $USER;
     $SQL = "INSERT INTO pages_links (hostpageid, linkpageid, sort, linkdisplay)
                  VALUES($pageid, $linkid, $sort, '$page_name')";
     execute_db_sql($SQL);
-    echo "";
+    donothing();
 }
 
 
@@ -378,7 +378,7 @@ global $MYVARS;
                   AND linkpageid = '$linkid'";
   execute_db_sql($SQL);
   resort_links($pageid);
-  echo "";
+  donothing();
 }
 
 function move_link() {
@@ -414,7 +414,7 @@ global $MYVARS;
   execute_db_sql($SQL);
 
   resort_links($pageid);
-  echo "";
+  donothing();
 }
 
 function rename_link() {
@@ -427,7 +427,7 @@ global $MYVARS;
            WHERE linkid = '$linkid'";
   echo $SQL;
   execute_db_sql($SQL);
-  echo "";
+  donothing();
 }
 
 function resort_links($pageid) {

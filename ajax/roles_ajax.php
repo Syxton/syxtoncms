@@ -445,7 +445,7 @@ global $CFG,$MYVARS;
     }else{ echo get_error_message("generic_error"); return; }
 }
 
-function save_ability_changes(){
+function save_ability_changes() {
 global $CFG,$MYVARS;
   $abilities = explode("**",$MYVARS->GET['per_role_rightslist']);
   $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
@@ -454,6 +454,7 @@ global $CFG,$MYVARS;
   $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
   $success = false;
   $i=0;
+
 	while (isset($abilities[$i])) {
 		$ability = $abilities[$i];
 		$setting = $MYVARS->GET[$ability] == 1 ? 1 : 0;

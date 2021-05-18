@@ -942,7 +942,7 @@ global $MYVARS, $CFG, $USER;
 
     //Log
     log_entry("event", $event["name"], "Deleted Event");
-    echo "";
+    donothing();
 }
 
 function refresh_calendar_events($eventid){
@@ -991,7 +991,7 @@ global $MYVARS, $CFG, $USER;
     }
     //Log
     log_entry("events", $event["name"], "Confirmed Event's Visibility");
-    echo "";
+    donothing();
 }
 
 //Make sure that the calendar is edited when the event is edited.
