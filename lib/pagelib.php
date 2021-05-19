@@ -681,11 +681,10 @@ function get_css_box($title, $content, $buttons = '', $padding = null, $feature 
 
     if ($pageid === false) {
       $pageid = $PAGE->id;
-      $themeid = $PAGE->themeid;
-    } else {
-      if ($themeid === false) {
-          $themeid = getpagetheme($pageid);
-      }
+    }
+
+    if ($themeid === false && !$preview) {
+      $themeid = getpagetheme($pageid);
     }
 
     if ($feature == 'pagename') {

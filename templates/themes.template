@@ -34,3 +34,80 @@ change_theme_template||
   });
   </script>
 ||change_theme_template
+
+theme_selector_menu_action_template||
+  ajaxapi('/ajax/themes_ajax.php',
+          'theme_change',
+          '&pageid=||pageid||' +
+          '&themeid=' + escape($('#themes').val()),
+          function() {
+            simple_display('color_preview');
+          });
+||theme_selector_menu_action_template
+
+theme_selector_left_template||
+  ||iscustom{{
+      <input type="radio" name="group1" value="Theme Selector" onclick="ajaxapi('/ajax/themes_ajax.php',
+                                                                                'show_themes',
+                                                                                '&pageid=||pageid||' +
+                                                                                '&feature=||feature||',
+                                                                                function() {
+                                                                                  simple_display('themes_page');
+                                                                                }); blur();" ||checked1|| />
+        Theme Selector
+        &nbsp;
+        <input type="radio" name="group1" value="Page Styles" onclick="ajaxapi('/ajax/themes_ajax.php',
+                                                                               'show_styles',
+                                                                               '&pageid=||pageid||' +
+                                                                               '&feature=||feature||',
+                                                                               function() {
+                                                                                 simple_display('themes_page');
+                                                                               }); blur();" ||checked2|| />
+        Page Styles
+    //OR//
+      <input type="radio" name="group1" value="Theme Selector" ||checked1|| />Theme Selector
+  }}iscustom||
+  <br />
+  <br />
+  <div id="left_pane">
+    Select Theme:
+    <div id="theme_select">
+      ||menu||
+      &nbsp;
+      <input type="button" value="Save" onclick="ajaxapi('/ajax/themes_ajax.php',
+                                                         'change_theme_save',
+                                                         '&pageid=||pageid||' +
+                                                         '&themeid=' + escape($('#themes').val()),
+                                                         function() {
+                                                           simple_display('themes_page');
+                                                         });" />
+    </div>
+  </div>
+||theme_selector_left_template
+
+theme_selector_right_template||
+  <div id="color_preview">
+    Preview:
+    <br />
+    ||pagelist||
+    <div style="padding:3px;"></div>
+    ||block||
+  </div>
+||theme_selector_right_template
+
+make_template_selector_panes_template||
+  <div id="panes">
+    <table style="font-size:1em;width:100%;">
+      <tr>
+        <td style="width:48%;vertical-align:top;">
+          ||left||
+        </td>
+        <td style="width:2%;"></td>
+        <td style="width:50%;vertical-align:top;*padding-right:10px !important;">
+          <div style="border:1px;position:absolute;width:50%;z-index:1000;"></div>
+          ||right||
+        </td>
+      </tr>
+    </table>
+  </div>
+||make_template_selector_panes_template

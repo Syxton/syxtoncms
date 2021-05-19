@@ -3,8 +3,8 @@
 * styleslib.php - Styles and Theme function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 1/29/2016
-* Revision: 0.1.8
+* Date: 5/19/2021
+* Revision: 0.1.9
 ***************************************************************************/
 
 if(!isset($LIBHEADER)){ include('header.php'); }
@@ -13,78 +13,30 @@ $STYLES = new \stdClass;
 
 function get_styles($pageid, $themeid=false, $feature='', $featureid='') {
 global $CFG,$MYVARS;
+	// THEME RULES
+	// Default styles are given pageid = 0
+	// Global styles are given forced = 1
+	// Feature type specific styles are given featureid = 0
+	$revised_pageid = $pageid == $CFG->SITEID ? 0 : $pageid;
+	$params = array("pageid" => $revised_pageid, "themeid" => $themeid, "feature" => $feature, "featureid" => $featureid);
 
-// RULES
-// Default styles are given pageid=0
-// Global styles are given forced=1
-// Feature type specific styles are given featureid=0
-	if ($themeid === "0") { //CUSTOM THEME
-		//Hasn't saved custom colors yet return defaults;
-		if(!get_db_field("id","styles","pageid='$pageid'")) {
+	if ($themeid === "0") { // CUSTOM THEME
+		// Hasn't saved custom colors yet return defaults;
+		if (!get_db_field("id", "styles", "pageid = '$revised_pageid'")) {
 			$feature = "page";
-			if($default_list = get_feature_styles($pageid,$feature,NULL,true)){
-          foreach($default_list as $style){
-    				$temparray[$style[1]] = isset($MYVARS->GET[$style[1]]) ? dbescape($MYVARS->GET[$style[1]]) : false;
-    			}
+			if ($default_list = get_feature_styles($revised_pageid, $feature, NULL, true)) {
+        foreach ($default_list as $style) {
+  				$temparray[$style[1]] = isset($MYVARS->GET[$style[1]]) ? dbescape($MYVARS->GET[$style[1]]) : false;
+  			}
 			}
 			return $temparray;
 		}
-
-		$SQL = "
-		SELECT *, 1 as ranky FROM styles WHERE pageid=$pageid AND themeid='$themeid'
-		  UNION
-		SELECT *, 2 as ranky FROM styles WHERE
-			pageid=$pageid AND themeid='$themeid' AND feature='$feature' AND featureid='0'
-		  UNION
-		SELECT *, 3 as ranky FROM styles WHERE
-			pageid=$pageid AND themeid='$themeid' AND feature='$feature' AND featureid='$featureid'
-		  UNION
-		SELECT *, 4 as ranky FROM styles WHERE
-			pageid=0 AND forced=1 AND feature='$feature' AND featureid='0'
-		ORDER BY ranky
-		";
-	} elseif ($themeid > 0) { //PAGE THEME IS SET TO A SAVED THEME
-		$SQL = "
-		SELECT *, 1 as ranky FROM styles WHERE themeid='$themeid'
-		  UNION
-		SELECT *, 2 as ranky FROM styles WHERE
-			themeid='$themeid' AND feature='$feature' AND featureid='0'
-		  UNION
-		SELECT *, 3 as ranky FROM styles WHERE
-			themeid='$themeid' AND feature='$feature' AND featureid='$featureid'
-		  UNION
-		SELECT *, 4 as ranky FROM styles WHERE
-			pageid=0 AND forced=1 AND feature='$feature' AND featureid='0'
-		ORDER BY ranky
-		";
-	} else { //NO THEME...LOOK FOR PARENT THEMES
-		$themeid = getpagetheme($CFG->SITEID);
-
-		if (!empty($themeid)) {
-      return get_styles($CFG->SITEID, $themeid);
-    } else {
-  		//$pageid = $CFG->SITEID;
-  		$root = $themeid ? " UNION SELECT *, 2 as ranky FROM styles WHERE themeid=$themeid" : "";
-
-  		$SQL = "
-  		SELECT *, 1 as ranky FROM styles WHERE
-  			pageid = 0 AND feature IS NULL
-   		$root
-  		  UNION
-  		SELECT *, 3 as ranky FROM styles WHERE
-  			pageid = '$pageid' AND feature IS NULL
-  		  UNION
-  		SELECT *, 4 as ranky FROM styles WHERE
-  			pageid = '$pageid' AND feature='$feature' AND featureid='0'
-  		  UNION
-  		SELECT *, 5 as ranky FROM styles WHERE
-  			pageid = '$pageid' AND feature='$feature' AND featureid='$featureid'
-  		  UNION
-  		SELECT *, 6 as ranky FROM styles WHERE
-  			pageid=0 AND forced=1 AND feature='$feature' AND featureid='0'
-  		ORDER BY ranky
-  		";
-		}
+		$SQL = template_use("dbsql/styles.sql", $params, "custom_theme_styles");
+	} elseif ($themeid > 0) { // PAGE THEME IS SET TO A SAVED THEME
+		$SQL = template_use("dbsql/styles.sql", $params, "set_theme_styles");
+	} else { // NO THEME...LOOK FOR PARENT THEMES
+		$params["themeid"] = getpagetheme($CFG->SITEID);
+		$SQL = template_use("dbsql/styles.sql", $params, "parent_theme_styles");
 	}
 
 	if ($result = get_db_result($SQL)) {
@@ -99,70 +51,49 @@ global $CFG,$MYVARS;
 
 function theme_selector($pageid, $themeid, $feature="page", $checked1="checked", $checked2="") {
 global $CFG, $MYVARS, $USER;
-	$selected = $themeid ? $themeid : false;
+	$selected = $themeid;
 
-	$left = $themeid === '0' ? '<input type="radio" name="group1" value="Theme Selector" onclick="ajaxapi(\'/ajax/themes_ajax.php\',\'show_themes\',\'&pageid='.$pageid.'&feature='.$feature.'\',function() { simple_display(\'themes_page\');}); blur();" '.$checked1.'/>Theme Selector <input type="radio" name="group1" value="Page Styles" onclick="ajaxapi(\'/ajax/themes_ajax.php\',\'show_styles\',\'&pageid='.$pageid.'&feature='.$feature.'\',function() { simple_display(\'themes_page\');}); blur();" '.$checked2.'/>Page Styles ' : '<input type="radio" name="group1" value="Theme Selector" '.$checked1.' />Theme Selector';
+	$SQL = template_use("dbsql/styles.sql", array("notsite" => ($pageid != $CFG->SITEID)), "theme_selector_sql");
+	$params = array("pageid" => $pageid, "feature" => $feature, "checked1" => $checked1, "checked2" => $checked2, "iscustom" => ($themeid === '0' ));
+	$params["menu"] = make_select("themes", get_db_result($SQL), "themeid", "name", $selected, 'onchange="' . template_use("templates/themes.template", $params, "theme_selector_menu_action_template") . '"', false, null, "width:225px;");
+	$left = template_use("templates/themes.template", $params, "theme_selector_left_template");
 
-	$left .='
-    	<br /><br /><div id="left_pane">
-    	Select Theme:
-    	<div id="theme_select">
-    	'.
-    	make_select("themes",get_db_result("SELECT * FROM themes"),"themeid","name",$selected,'onchange="ajaxapi(\'/ajax/themes_ajax.php\',\'theme_change\',\'&pageid='.$pageid.'&themeid=\'+escape(document.getElementById(\'themes\').value),function() { simple_display(\'color_preview\');});"',true,null,"width:225px;","Custom")
-    	.'&nbsp;<input type="button" value="Save" onclick="ajaxapi(\'/ajax/themes_ajax.php\',\'change_theme_save\',\'&pageid='.$pageid.'&themeid=\'+escape(document.getElementById(\'themes\').value),function() { simple_display(\'themes_page\');});" />
-    	</div></div>
-    	';
+	$pagename = get_db_field("name", "pages", "pageid = '$pageid'");
+	$rolename = get_db_field("display_name", "roles", "roleid = " . get_user_role($USER->userid, $pageid));
 
-	$right = '
-    	Preview:<br />
-    	<div id="color_preview">
-    	'.
-    	get_css_box(get_db_field("name", "pages", "pageid='$pageid'"), get_db_field("display_name", "roles", "roleid=" . get_user_role($USER->userid, $pageid)),false,NULL,'pagename',NULL,$themeid,null,$pageid) . '<div style="padding:3px;"></div>'
-    	.
-    	get_css_box("Title", "Content", null, null, null, null, $themeid, null, $pageid)
-    	.'
-    	</div>
-    	';
+	$params["pagelist"] = get_css_box($pagename, $rolename, false, NULL, 'pagename', NULL, $themeid, null, $pageid);
+	$params["block"] = get_css_box("Title", "Content", null, null, null, null, $themeid, null, $pageid);
+	$right = template_use("templates/themes.template", $params, "theme_selector_right_template");
 
-	return make_panes($left, $right);
+	return template_use("templates/themes.template", array("left" => $left, "right" => $right), "make_template_selector_panes_template");
 }
 
-function make_panes($left, $right) {
-	return '
-	<div id="panes">
-		<table style="font-size:1em;width:100%;">
-			<tr>
-				<td style="width:48%;vertical-align:top;">
-				'.$left.'
-				</td>
-				<td style="width:2%;"></td>
-				<td style="width:50%;vertical-align:top;*padding-right:10px !important;">
-				<div style="border:1px;position:absolute;width:50%;z-index:1000;"></div>
-				'.$right.'
-				</td>
-			</tr>
-		</table>
-	</div>
-	';
-}
-
-function get_feature_styles($pageid,$feature,$featureid=false,$getarray=false) {
+function get_feature_styles($pageid, $feature, $featureid=false, $getarray=false) {
 global $CFG;
 	$returnme = $feature == "page" ? '<input type="radio" name="group1" value="Theme Selector" onclick="ajaxapi(\'/ajax/themes_ajax.php\',\'show_themes\',\'&pageid='.$pageid.'&feature='.$feature.'\',function() { simple_display(\'themes_page\');}); blur();" />Theme Selector <input type="radio" name="group1" value="Page Styles" onclick="ajaxapi(\'/ajax/themes_ajax.php\',\'show_styles\',\'&pageid='.$pageid.'&feature='.$feature.'\',function() { simple_display(\'themes_page\');}); blur();" checked/>Page Styles ' : '<input type="radio" name="group1" value="Theme Selector" '.$checked1.' />Theme Selector';
 	$returnme .= '<br /><br /><form id="colors" name="colors">';
 
 	//Styles function
 	$styles = $feature.'_default_styles';
-    $revised_pageid = $pageid == $CFG->SITEID ? 0 : $pageid;
+  $revised_pageid = $pageid == $CFG->SITEID ? 0 : $pageid;
 	if($feature == "page"){
-		$styles = $styles();
+		$styles = $styles(); // hard coded default styles.
 
-		if($getarray){ return $styles; }
-
-		foreach($styles as $style){
-			if(!$value = get_db_field("value","styles","themeid=0 AND attribute='".$style[1]."' AND pageid='$revised_pageid' AND feature IS NULL AND featureid IS NULL ORDER BY pageid DESC")){ $value = $style[2]; }
-			$returnme .= '<div><table style="font-size:1em;"><tr><td style="width:170px;vertical-align:middle;">' . $style[0] . '</td><td><input class="themeinput" type="text" name="'.$style[1].'" value="'.$value.'" style="background-color:'.$value.';width:70px;" ><a onclick="blur();" href="javascript:TCP.popup(document.forms[\'colors\'].elements[\''.$style[1].'\'])"><img alt="Click Here to Pick up the color" src="' . $CFG->wwwroot . '/images/themes.gif" /></a></td></tr></table></div>';
+		$i = 0;
+		foreach ($styles as $style) { // go through each style type and see if there is a db setting that can replace it.
+			$value = get_db_field("value","styles","themeid=0 AND attribute='".$style[1]."' AND pageid='$revised_pageid' AND feature <= '' AND featureid <= 0 ORDER BY pageid DESC");
+			if (!$value) { // No db value found, use the hard coded default value.
+				$value = $style[2];
+			} else { // db value found, replace it in the array so that the array return gets the correct value.
+				$styles[$i][2] = $value;
+			}
+			if (!$getarray) {
+				$returnme .= '<div><table style="font-size:1em;"><tr><td style="width:170px;vertical-align:middle;">' . $style[0] . '</td><td><input class="themeinput" type="text" name="'.$style[1].'" value="'.$value.'" style="background-color:'.$value.';width:70px;" ><a onclick="blur();" href="javascript:TCP.popup(document.forms[\'colors\'].elements[\''.$style[1].'\'])"><img alt="Click Here to Pick up the color" src="' . $CFG->wwwroot . '/images/themes.gif" /></a></td></tr></table></div>';
+			}
+			$i++;
 		}
+
+		if ($getarray) { return $styles; }
 	}else{
 		include_once($CFG->dirroot . '/features/'.$feature."/".$feature.'lib.php');
  		$styles = $styles();
@@ -183,17 +114,18 @@ global $CFG;
 
 function getpagetheme($pageid) {
   $featureid = false;
+
 	$settings = fetch_settings("page", $featureid, $pageid);
 
 	if ($settings === false) {
 	   return "";
+  } else {
+    if(isset($settings->page->themeid->setting)) {
+        return $settings->page->themeid->setting;
     } else {
-        if(isset($settings->page->themeid->setting)) {
-            return $settings->page->themeid->setting;
-        } else {
-            return "";
-        }
+        return "";
     }
+  }
 }
 
 function make_or_update_styles($id=false,$feature=false,$pageid=false,$featureid=false,$attribute=false,$value=false,$themeid=false,$forced=false) {

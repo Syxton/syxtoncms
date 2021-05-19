@@ -3,8 +3,8 @@
 * rss_ajax.php - RSS ajax backend script
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 8/16/2011
-* Revision: 1.2.2
+* Date: 05/18/2021
+* Revision: 1.2.3
 ***************************************************************************/
 
 include ('header.php');
@@ -14,13 +14,15 @@ if(!isset($RSSLIB)){ include_once($CFG->dirroot . '/lib/rsslib.php'); }
 
 callfunction();
 
-function edit_name(){
+function edit_name() {
 global $MYVARS;
-	
 	$rssname = dbescape($MYVARS->GET["rssname"]);
 	$rssid = $MYVARS->GET["rssid"];
-    $SQL = "UPDATE rss SET rssname='$rssname' WHERE rssid=$rssid";
-	if(execute_db_sql($SQL)){
+  $SQL = "UPDATE rss
+						 SET rssname = '$rssname'
+					 WHERE rssid = '$rssid'";
+
+	if (execute_db_sql($SQL)) {
 		echo "Saved";
 	}
 }
@@ -32,10 +34,14 @@ global $CFG, $MYVARS, $USER;
 	$featureid = $MYVARS->GET["featureid"];
 	$userkey = $MYVARS->GET["key"];
 	$rssname = dbescape($MYVARS->GET["rssname"]);
-	
-	if($rssid = execute_db_sql("INSERT INTO rss (userid,rssname) VALUES(".$USER->userid.",'".$rssname."')")){
-		if(execute_db_sql("INSERT INTO rss_feeds (rssid,type,featureid,pageid) VALUES($rssid,'$type',$featureid,$pageid)")){
-			echo '<div style="width:100%;text-align:center;">You have created an RSS feed.  Please click the \'Subscribe\' link to add the feed to your RSS reader. <br /><br /><a href="'.$CFG->wwwroot.'/scripts/rss/rss.php?rssid='.$rssid.'&key='.$userkey.'"><img src="'.$CFG->wwwroot.'/images/small_rss.png" alt="RSS Feed" /> Subscribe</a></div>';
+
+	$SQL = "INSERT INTO rss (userid,rssname)
+							 VALUES ('$USER->userid', '$rssname')";
+	if ($rssid = execute_db_sql($SQL)) {
+		$SQL = "INSERT INTO rss_feeds (rssid, type, featureid, pageid)
+								 VALUES ('$rssid', '$type', '$featureid', '$pageid')";
+		if (execute_db_sql($SQL)) {
+			echo template_use("templates/rss_ajax.template", array("wwwroot" => $CFG->wwwroot, "rssid" => $rssid, "userkey" => $userkey), "add_feed_template");
 		}
 	}
 }
