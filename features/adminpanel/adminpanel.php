@@ -7,8 +7,8 @@
 * Revision: 0.0.6
 ***************************************************************************/
 
-if(empty($_POST["aslib"])){
-    if(!isset($CFG)){ include('../header.php'); } 
+if (empty($_POST["aslib"])) {
+    if (!isset($CFG)) { include('../header.php'); } 
     
     callfunction();
     
@@ -37,7 +37,7 @@ if(empty($_POST["aslib"])){
 //			</div>
 //		</li>
 
-function site_administration(){
+function site_administration() {
     echo '<table style="height:98%;width:100%"><tr><td style="width:1%;font-size:.75em;border:2px solid silver;background-color:DarkSlateGray;">
     <div style="height:100%;">
     <ul class="vertmenu">

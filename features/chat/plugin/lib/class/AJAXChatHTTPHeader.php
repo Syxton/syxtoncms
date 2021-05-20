@@ -15,11 +15,11 @@ class AJAXChatHTTPHeader {
 	var $_noCache;
 
 	function __construct($encoding='UTF-8', $contentType=null, $noCache=true) {
-		if($contentType) {
+		if ($contentType) {
 			$this->_contentType = $contentType.'; charset='.$encoding;
 			$this->_constant = true;
 		} else {
-			if(isset($_SERVER['HTTP_ACCEPT']) && (strpos($_SERVER['HTTP_ACCEPT'],'application/xhtml+xml') !== false)) {
+			if (isset($_SERVER['HTTP_ACCEPT']) && (strpos($_SERVER['HTTP_ACCEPT'],'application/xhtml+xml') !== false)) {
 				$this->_contentType = 'application/xhtml+xml; charset='.$encoding;
 			} else {
 	 			$this->_contentType = 'text/html; charset='.$encoding;
@@ -32,7 +32,7 @@ class AJAXChatHTTPHeader {
 	// Method to send the HTTP header:
 	function send() {
 		// Prevent caching:
-		if($this->_noCache) {
+		if ($this->_noCache) {
 			header('Cache-Control: no-cache, must-revalidate');
 			header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
 		}
@@ -41,7 +41,7 @@ class AJAXChatHTTPHeader {
 		header('Content-Type: '.$this->_contentType);
 		
 		// Send vary header if content-type varies (important for proxy-caches):
-		if(!$this->_constant) {
+		if (!$this->_constant) {
 			header('Vary: Accept');
 		}
 	}

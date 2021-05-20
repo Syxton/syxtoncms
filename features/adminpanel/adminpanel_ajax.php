@@ -6,19 +6,19 @@
 * Date: 6/07/2016
 * Revision: 0.0.8
 ***************************************************************************/
-if(!isset($CFG)){ include('../header.php'); }
+if (!isset($CFG)) { include('../header.php'); }
 update_user_cookie();
 
 if (!empty($_SESSION["lia_original"])) {
-    if(!is_siteadmin($_SESSION["lia_original"])){ echo get_page_error_message("generic_permissions"); return;}
+    if (!is_siteadmin($_SESSION["lia_original"])) { echo get_page_error_message("generic_permissions"); return;}
 } else {
-    if(!is_siteadmin($USER->userid)){ echo get_page_error_message("generic_permissions"); return;}
+    if (!is_siteadmin($USER->userid)) { echo get_page_error_message("generic_permissions"); return;}
 }
 
 
 callfunction();
 
-function admin_email_tester(){
+function admin_email_tester() {
 global $CFG;
     echo '
     <strong>Send Test Email</strong><br /><br />
@@ -27,17 +27,17 @@ global $CFG;
     ';
 }
 
-function get_phpinfo(){
+function get_phpinfo() {
 global $CFG;
     echo "<iframe style='width:100%;height:100%;border:none;' src='$CFG->wwwroot/features/adminpanel/adminpanel_ajax.php?action=phpinfo'></iframe>";
 }
 
-function camper_list(){
+function camper_list() {
 global $CFG;
     echo "<iframe style='width:100%;height:100%;border:none;' src='$CFG->wwwroot/features/adminpanel/camper_list.php'></iframe>";
 }
 
-function admin_email_test(){
+function admin_email_test() {
 global $CFG,$MYVARS;
 
     admin_email_tester(); //Send for again
@@ -57,19 +57,19 @@ global $CFG,$MYVARS;
     $subject = "SERVER: EMAIL TEST";
     $message = "This is a test message sent: " . date('l jS \of F Y h:i:s A');
 
-    if(send_email($touser, $fromuser, $cc = false, $subject, $message)) {
+    if (send_email($touser, $fromuser, $cc = false, $subject, $message)) {
         echo "<br />Email Success";
     }else{
         echo "<br />Email Failed";
     }
 }
 
-function user_admin(){
+function user_admin() {
 global $CFG,$MYVARS,$USER;
     include("members.php");
 }
 
-function site_versions(){
+function site_versions() {
 global $CFG,$MYVARS,$USER;
 
     echo '<table style="width:100%;font-size:.8em;">';
@@ -79,15 +79,15 @@ global $CFG,$MYVARS,$USER;
 
     //Feature versions
     echo '<tr><td colspan="2" style="text-align:center"></td></tr><tr><td colspan="2" style="text-align:center"><ins>Feature db version</ins></td><td></tr>';
-    if($result = get_db_result("SELECT * FROM features ORDER BY feature")){
-        while($row = fetch_row($result)){
+    if ($result = get_db_result("SELECT * FROM features ORDER BY feature")) {
+        while ($row = fetch_row($result)) {
             echo '<tr><td style="width:50%;text-align:right;border:1px solid silver;padding:3px;">'.$row["feature_title"].'</td><td style="padding:3px;border:1px solid silver;text-align:left">'.$row["version"].'</td></tr>';
         }
     }
     echo '</table>';
 }
 
-function view_logfile(){
+function view_logfile() {
 global $CFG,$MYVARS,$USER;
 
     $viewtype = isset($MYVARS->GET["viewtype"]) ? $MYVARS->GET["viewtype"] : "all";
@@ -99,7 +99,7 @@ global $CFG,$MYVARS,$USER;
 
 
     $daysinmonth = date('t',mktime(0,0,0,$month,1,$year));
-    for($n=1;$n <= $daysinmonth;$n++){
+    for ($n=1;$n <= $daysinmonth;$n++) {
         $daytext = date("D",mktime(0,0,0,$month,$n,$year));
         $daylabels .= "|".date("m/d",mktime(0,0,0,$month,$n,$year));
         $labelpos .= $labelpos=="" ? $n : ",".$n;
@@ -107,12 +107,12 @@ global $CFG,$MYVARS,$USER;
     $daylabels .= "|";
     $labelpos .= $labelpos=="" ? $n : ",".$n;
 
-    if($month == 1){
+    if ($month == 1) {
         $nextyear=$year;
         $nextmonth=($month+1);
         $prevyear=($year-1);
         $prevmonth=12;
-    }elseif($month == 12){
+    }elseif ($month == 12) {
         $nextyear=($year+1);
         $nextmonth=1;
         $prevyear=$year;
@@ -132,7 +132,7 @@ global $CFG,$MYVARS,$USER;
     echo '<img style="width:98%" src="//chart.apis.google.com/chart?chxl=0:'.$daylabels.'&chxp=0:'.$labelpos.'&chm=B,8EE5EE,0,0,0&chco=00868B&chxt=x,y&chs=1000x300&cht=lc&chd='.get_user_data($userid,$year,$month).'&chls=0.75,-1,-1&chxs=0,676767,8.5,-1,lt,676767|1,676767,8.5,-0.333,l,676767&chtt='.get_user_name($userid)."'s ".date("F Y",mktime(0,0,0,$month,1,$year)).'+Log" /><br /><br /><br /><div id="actions_div">'.get_user_usage($userid,$pagenum,$year,$month) . "</div>";
 }
 
-function get_user_data($userid,$year,$month){
+function get_user_data($userid,$year,$month) {
 global $CFG,$MYVARS,$USER;
     $data = array(); $i = $max = 0;
     $SQL = "SELECT *,COUNT(*) as hits,YEAR(FROM_UNIXTIME(timeline)) as myyear,MONTH(FROM_UNIXTIME(timeline)) as mymonth,DAYOFMONTH(FROM_UNIXTIME(timeline)) as myday FROM `logfile`
@@ -140,9 +140,9 @@ global $CFG,$MYVARS,$USER;
 
     $date = mktime(0,0,0,$month,1,$year); //The get's the first of the given month
     $first=1; //last day of given month
-    if($result = get_db_result($SQL)){
-        while($row = fetch_row($result)){
-            while($first < $row["myday"]){
+    if ($result = get_db_result($SQL)) {
+        while ($row = fetch_row($result)) {
+            while ($first < $row["myday"]) {
                 $data[$i] = 0;
                 $first++;$i++;
             }
@@ -151,7 +151,7 @@ global $CFG,$MYVARS,$USER;
             $i++; $first++;
         }
         $first--;
-        while($first <= date('t',$date)){
+        while ($first <= date('t',$date)) {
             $data[$i] = 0;
             $i++;$first++;
         }
@@ -159,7 +159,7 @@ global $CFG,$MYVARS,$USER;
         $max = ceil($max/100) * 100;
         $lines = $max/10;
     }else{
-        while($first <= date('t',$date)){
+        while ($first <= date('t',$date)) {
             $data[$i] = 0;
             $i++;$first++;
         }
@@ -169,12 +169,12 @@ global $CFG,$MYVARS,$USER;
     return extendedEncode($data, $max) . "&chxr=0,1,".(date('t',$date)+1).",1|1,0,$max";
 }
 
-function get_user_usage_page(){
+function get_user_usage_page() {
 global $CFG,$MYVARS,$USER;
     echo get_user_usage($MYVARS->GET["userid"],$MYVARS->GET["pagenum"],$MYVARS->GET["year"],$MYVARS->GET["month"]);
 }
 
-function get_user_usage($userid,$pagenum,$year,$month){
+function get_user_usage($userid,$pagenum,$year,$month) {
 global $CFG,$MYVARS,$USER;
     $returnme = ""; $perpage=20;
     $firstonpage = $perpage * $pagenum;
@@ -192,14 +192,14 @@ global $CFG,$MYVARS,$USER;
 
 
     $returnme .= '<table style="font-size:.75em;width:98%;margin-right:auto;margin-left:auto;"><tr><td style="text-align:left">'.$prev.'</td><td style="text-align:right">'.$next.'</td></tr></table><div style="width:98%;margin-right:auto;margin-left:auto;"><table style="border-collapse:collapse;width:100%;border:1px solid black;background-color:silver;padding:3px;font-size:.9em;"><tr><td style="width:25%;text-align:center;"><strong>Date</strong></td><td style="width:35%;"><strong>Page</strong></td><td style="width:20%;"><strong>Feature</strong></td><td style="width:15%;"><strong>Action</strong></td></tr></table></div>';
-    if($result = get_db_result($SQL)){
-        while($row = fetch_row($result)){
+    if ($result = get_db_result($SQL)) {
+        while ($row = fetch_row($result)) {
             $data[$i] = $row;
             $i++;
         }
 
         $data= array_reverse($data); $i=0;
-        while(isset($data[$i])){
+        while (isset($data[$i])) {
             $bg = !($i%2) ? "DDDDDD" : "CCCCCC";
             $info = get_db_field("setting","settings","type='".$data[$i]["feature"]."' AND setting_name='feature_title' AND pageid='".$data[$i]["pageid"]."' AND featureid='".$data[$i]["info"]."'");
             $info = $info != "" ? $info : $data[$i]["feature"];
@@ -212,21 +212,21 @@ global $CFG,$MYVARS,$USER;
     return $returnme;
 }
 
-function extendedEncode($arrVals, $maxVal){
+function extendedEncode($arrVals, $maxVal) {
     // Same as simple encoding, but for extended encoding.
     $EXTENDED_MAP='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-.';
     $EXTENDED_MAP_LENGTH = strlen($EXTENDED_MAP);
 
     $chartData = 'e:'; $i=0;
-    while($i < count($arrVals)){
+    while ($i < count($arrVals)) {
         // In case the array vals were translated to strings.
         $numericVal = $arrVals[$i];
         // Scale the value to maxVal.
         $scaledVal = floor($EXTENDED_MAP_LENGTH * $EXTENDED_MAP_LENGTH * $numericVal / $maxVal);
 
-        if($scaledVal > ($EXTENDED_MAP_LENGTH * $EXTENDED_MAP_LENGTH) - 1) {
+        if ($scaledVal > ($EXTENDED_MAP_LENGTH * $EXTENDED_MAP_LENGTH) - 1) {
             $chartData .= "..";
-        }elseif($scaledVal < 0){
+        }elseif ($scaledVal < 0) {
             $chartData .= '__';
         }else{
             // Calculate first and second digits and add them to the output.

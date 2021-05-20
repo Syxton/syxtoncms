@@ -6,16 +6,16 @@
  * $Date: 08/16/2013
  * $Revision: 0.1.4
  ***************************************************************************/
-if(!isset($CFG)){ include('../../../../config.php'); } 
+if (!isset($CFG)) { include('../../../../config.php'); } 
 include($CFG->dirroot . '/pages/header.php');
 
-if(!isset($EVENTSLIB)) include_once($CFG->dirroot . '/features/events/eventslib.php');
+if (!isset($EVENTSLIB)) include_once($CFG->dirroot . '/features/events/eventslib.php');
 
 callfunction();
 
 update_user_cookie();
 
-function register(){
+function register() {
 global $CFG,$MYVARS,$USER,$error;
 error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
 
@@ -23,7 +23,7 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
     $keys->app_key = '350430668323766';
     $keys->app_secret = '7c43774dbcf542b0700e338bc5625296';
   
-    if(!isset($COMLIB)){ include_once($CFG->dirroot.'/lib/comlib.php'); }
+    if (!isset($COMLIB)) { include_once($CFG->dirroot.'/lib/comlib.php'); }
     $eventid = $MYVARS->GET["eventid"];
 	$event = get_db_row("SELECT * FROM events WHERE eventid = '$eventid'");
 	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='".$event['template_id']."'");
@@ -49,24 +49,24 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
 
     //Go through entire template form list
 	$formlist = explode(";",$template['formlist']);
-    foreach($formlist as $formelements){
+    foreach ($formlist as $formelements) {
         $element = explode(":",$formelements);
         $reg[$element[0]] = isset($MYVARS->GET[$element[0]]) ? $MYVARS->GET[$element[0]] : ""; 
     }
 	$error = "";
 	
-	if($regid = enter_registration($eventid, $reg, $MYVARS->GET["email"])) { // Successful registration.
+	if ($regid = enter_registration($eventid, $reg, $MYVARS->GET["email"])) { // Successful registration.
 
-        if($error != "") { echo $error . "<br />"; }
+        if ($error != "") { echo $error . "<br />"; }
 
-		if($event['allowinpage'] !=0) {
-			if(is_logged_in() && $event['pageid'] != $CFG->SITEID) { 
+		if ($event['allowinpage'] !=0) {
+			if (is_logged_in() && $event['pageid'] != $CFG->SITEID) { 
 				subscribe_to_page($event['pageid'], $USER->userid);
 				echo 'You have been automatically allowed into this events\' web page.  This page contain specific information about this event.';
 			}
 		}
 
-		if($event['fee_full'] != 0) { // Not free event.
+		if ($event['fee_full'] != 0) { // Not free event.
 			$items = !empty($MYVARS->GET["items"]) ? $MYVARS->GET["items"] . "**" . $regid . "::" . $MYVARS->GET["Name"] . " - " . $event["name"] . "::" . $MYVARS->GET["payment_amount"] : $regid . "::" . $MYVARS->GET["Name"] . " - " . $event["name"] . "::" . $MYVARS->GET["payment_amount"];
 			echo '<div id="backup">
                     <input type="hidden" name="cart_total" id="cart_total" value="'.$MYVARS->GET["cart_total"].'" />
@@ -75,7 +75,7 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
 
 			$items = explode("**",$items);
             $i=0;
-            foreach($items as $item) {
+            foreach ($items as $item) {
                 $itm = explode("::",$item);
 				$cart_items[$i]->regid = $itm[0];
 				$cart_items[$i]->description = $itm[1];
@@ -95,14 +95,14 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
     		$fromuser->fname = $CFG->sitename;
     		$fromuser->lname = "";
     		$message = registration_email($regid, $touser);
-    		if(send_email($touser,$fromuser,null,$event['name']." Registration", $message)) {
+    		if (send_email($touser,$fromuser,null,$event['name']." Registration", $message)) {
     			send_email($fromuser,$fromuser,null,$event['name']." Registration", $message);
     		}
             
-			if($MYVARS->GET["cart_total"] > 0){ // Event paid by paypal.
+			if ($MYVARS->GET["cart_total"] > 0) { // Event paid by paypal.
                 
                 echo '<br />The full payment amount of <span style="color:blue;font-size:1.25em;">$'.number_format($event['fee_full'],2).'</span> will be expected when you show up to the event.'; 
-                if($MYVARS->GET["cart_total"] < $MYVARS->GET["total_owed"]) {
+                if ($MYVARS->GET["cart_total"] < $MYVARS->GET["total_owed"]) {
                     echo '<br />You have indicated that you would like to pay:  <span style="color:blue;font-size:1.25em;">$'.number_format($MYVARS->GET["cart_total"],2).'</span> right now.';    
                 } else {
                     echo '<br />You have indicated that you would like to pay the full event cost of:  <span style="color:blue;font-size:1.25em;">$'.number_format($MYVARS->GET["cart_total"],2).'</span> right now.';
@@ -128,7 +128,7 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
     		$fromuser->fname = $CFG->sitename;
     		$fromuser->lname = "";
     		$message = registration_email($regid, $touser);
-    		if(send_email($touser,$fromuser,null,$event['name']." Registration", $message)) {
+    		if (send_email($touser,$fromuser,null,$event['name']." Registration", $message)) {
     			send_email($fromuser,$fromuser,null,$event['name']." Registration", $message);
     		}
         }

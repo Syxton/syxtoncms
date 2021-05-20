@@ -7,15 +7,15 @@
 * Revision: 0.3.6
 ***************************************************************************/
 
-if(empty($_POST["aslib"])){
-    if(!isset($CFG)){ include('../header.php'); } 
+if (empty($_POST["aslib"])) {
+    if (!isset($CFG)) { include('../header.php'); } 
     
     callfunction(); 
     
     echo '</body></html>';
 }
 
-function calendar_settings(){
+function calendar_settings() {
 global $MYVARS,$CFG,$USER;
 	$featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
 	$feature = "calendar";
@@ -25,10 +25,10 @@ global $MYVARS,$CFG,$USER;
 	$setting_names = get_setting_names($default_settings);
     
 	//Check if any settings exist for this feature
-	if($settings = fetch_settings($feature,$featureid,$pageid)){
+	if ($settings = fetch_settings($feature,$featureid,$pageid)) {
         echo make_settings_page($setting_names,$settings,$default_settings,$feature,$featureid,$pageid);
 	}else{ //No Settings found...setup default settings
-		if(make_or_update_settings_array($default_settings)){ calendar_settings(); }
+		if (make_or_update_settings_array($default_settings)) { calendar_settings(); }
 	}
 }
 ?>

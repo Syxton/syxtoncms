@@ -7,8 +7,8 @@
 * Revision: 0.9.6
 ***************************************************************************/
 
-if(empty($_POST["aslib"])){
-    if(!isset($CFG)){ include('../header.php'); } 
+if (empty($_POST["aslib"])) {
+    if (!isset($CFG)) { include('../header.php'); } 
     
     callfunction();
     
@@ -19,7 +19,7 @@ if(empty($_POST["aslib"])){
     echo '</body></html>';
 }
 
-function polls_settings(){
+function polls_settings() {
 global $CFG,$MYVARS,$USER;
 	$featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
 	$feature = "polls";
@@ -29,19 +29,19 @@ global $CFG,$MYVARS,$USER;
 	$setting_names = get_setting_names($default_settings);
     
 	//Check if any settings exist for this feature
-	if($settings = fetch_settings($feature,$featureid,$pageid)){
+	if ($settings = fetch_settings($feature,$featureid,$pageid)) {
         echo make_settings_page($setting_names,$settings,$default_settings,$feature,$featureid,$pageid);
 	}else{ //No Settings found...setup default settings
-		if(make_or_update_settings_array($default_settings)){ polls_settings(); }
+		if (make_or_update_settings_array($default_settings)) { polls_settings(); }
 	}
 
 }
 
-function editpoll(){
+function editpoll() {
 global $CFG, $MYVARS, $USER;
 	date_default_timezone_set("UTC");
 	$pageid = $MYVARS->GET["pageid"];
-    if(!user_has_ability_in_page($USER->userid,"editpolls",$pageid)){ echo get_page_error_message("no_permission",array("editpolls")); return; }
+    if (!user_has_ability_in_page($USER->userid,"editpolls",$pageid)) { echo get_page_error_message("no_permission",array("editpolls")); return; }
 	$pollid= $MYVARS->GET["featureid"];
 	$row = get_db_row("SELECT * FROM polls WHERE pollid='$pollid'");
 	$savedstart = $row['startdate'] ? date('m/d/Y',$row['startdate']) : '0';
@@ -50,8 +50,8 @@ global $CFG, $MYVARS, $USER;
 	$stopdate = $row['stopdate'] ? '<div id="savedstopdatediv" style="color:gray;display:inline;">Currently set for: ' . date('l dS \of F Y',$row['stopdate']) . ' <input type="button" value="Clear" onclick="javascript: zeroout(\'savedstopdate\');" /></div>' : false;
 	
 	$answers = "";
-    if($result = get_db_result("SELECT * FROM polls_answers WHERE pollid='$pollid' ORDER BY sort")){
-        while($answer = fetch_row($result)){
+    if ($result = get_db_result("SELECT * FROM polls_answers WHERE pollid='$pollid' ORDER BY sort")) {
+        while ($answer = fetch_row($result)) {
             $answers .= $answers == "" ? $answer["answer"] : ",".$answer["answer"];    
         }
     }
@@ -124,7 +124,7 @@ global $CFG, $MYVARS, $USER;
     	<tr>
     		<td></td>
     		<td style="text-align:left;">
-    			<input type="button" value="Save" onclick="if(valid_poll_fields()){ var startdateenabled = !document.getElementById(\'startdateenabled\').checked ? \'&amp;startdateenabled=0&amp;startdate=\' + document.getElementById(\'savedstartdate\').value : \'&amp;startdateenabled=1&amp;startdate=\' + document.getElementById(\'startdate\').value; var stopdateenabled = !document.getElementById(\'stopdateenabled\').checked ? \'&amp;stopdateenabled=0&amp;stopdate=\' + document.getElementById(\'savedstopdate\').value : \'&amp;stopdateenabled=1&amp;stopdate=\' + document.getElementById(\'stopdate\').value; ajaxapi(\'/features/polls/polls_ajax.php\',\'poll_submit\',\'&amp;question=\' + document.getElementById(\'polls_question\').value + \'&amp;answers=\' + document.getElementById(\'polls_answers\').value + startdateenabled + stopdateenabled + \'&amp;pollid='.$pollid.'\',function(){ close_modal();});}" />
+    			<input type="button" value="Save" onclick="if (valid_poll_fields()) { var startdateenabled = !document.getElementById(\'startdateenabled\').checked ? \'&amp;startdateenabled=0&amp;startdate=\' + document.getElementById(\'savedstartdate\').value : \'&amp;startdateenabled=1&amp;startdate=\' + document.getElementById(\'startdate\').value; var stopdateenabled = !document.getElementById(\'stopdateenabled\').checked ? \'&amp;stopdateenabled=0&amp;stopdate=\' + document.getElementById(\'savedstopdate\').value : \'&amp;stopdateenabled=1&amp;stopdate=\' + document.getElementById(\'stopdate\').value; ajaxapi(\'/features/polls/polls_ajax.php\',\'poll_submit\',\'&amp;question=\' + document.getElementById(\'polls_question\').value + \'&amp;answers=\' + document.getElementById(\'polls_answers\').value + startdateenabled + stopdateenabled + \'&amp;pollid='.$pollid.'\',function() { close_modal();});}" />
     		</td>
     	</tr>
     	</table>

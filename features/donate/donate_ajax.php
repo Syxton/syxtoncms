@@ -7,30 +7,30 @@
 * Revision: 1.0.7
 ***************************************************************************/
 
-if(!isset($CFG)){ include('../header.php'); } 
-if(!isset($donateLIB)){ include_once($CFG->dirroot . '/features/donate/donatelib.php'); }
+if (!isset($CFG)) { include('../header.php'); } 
+if (!isset($donateLIB)) { include_once($CFG->dirroot . '/features/donate/donatelib.php'); }
 
 update_user_cookie();
 
 callfunction();
 
-function select_campaign_form(){
+function select_campaign_form() {
 global $CFG, $MYVARS, $USER;
     $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']); 
     echo select_campaign_forms($featureid,$pageid);  
 }
 
-function add_or_manage_form(){
+function add_or_manage_form() {
 global $CFG, $MYVARS, $USER;
     $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']); 
     echo add_or_manage_forms($featureid,$pageid);  
 }
 
-function new_campaign_form(){
+function new_campaign_form() {
 global $CFG, $MYVARS, $USER;
     $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']); 
     $campaign_id = empty($MYVARS->GET['campaign_id']) ? false : dbescape($MYVARS->GET['campaign_id']);
-    if(!isset($VALIDATELIB)){ include_once($CFG->dirroot . '/lib/validatelib.php'); }   
+    if (!isset($VALIDATELIB)) { include_once($CFG->dirroot . '/lib/validatelib.php'); }   
     
     $c = $campaign_id ? get_db_row("SELECT * FROM donate_campaign WHERE campaign_id='$campaign_id'") : false;
     $title = $campaign_id ? $c["title"] : "";
@@ -63,7 +63,7 @@ global $CFG, $MYVARS, $USER;
             }
         </style>';
         
-    echo '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'select_campaign_form\',\'&featureid='.$featureid.'&pageid='.$pageid.'\',function(){ simple_display(\'donation_display\'); });">Back</a><br /><br />';   
+    echo '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'select_campaign_form\',\'&featureid='.$featureid.'&pageid='.$pageid.'\',function() { simple_display(\'donation_display\'); });">Back</a><br /><br />';   
     $content = '
             <div class="formDiv" id="new_campaign_div">
     		<form id="campaign_form">
@@ -98,11 +98,11 @@ global $CFG, $MYVARS, $USER;
     			</fieldset>
     		</form>
     	</div>';
-    echo '<div id="donation_script" style="display:none">' . create_validation_script("campaign_form" , "ajaxapi('/features/donate/donate_ajax.php','add_new_campaign','&campaign_id=$campaign_id&featureid=$featureid&pageid=$pageid&email=' + escape($('#email').val()) + '&token=' + escape($('#token').val()) + '&title=' + escape($('#title').val()) + '&goal=' + escape($('#goal').val()) + '&description=' + escape($('#description').val()) + '&shared=' + escape($('#shared').val()),function(){ var returned = trim(xmlHttp.responseText).split('**'); if(returned[0] == 'true'){ $('#new_campaign_div').html(returned[1]);}else{ $('#error_div').html(returned[1])}});",true) . "</div>";
+    echo '<div id="donation_script" style="display:none">' . create_validation_script("campaign_form" , "ajaxapi('/features/donate/donate_ajax.php','add_new_campaign','&campaign_id=$campaign_id&featureid=$featureid&pageid=$pageid&email=' + escape($('#email').val()) + '&token=' + escape($('#token').val()) + '&title=' + escape($('#title').val()) + '&goal=' + escape($('#goal').val()) + '&description=' + escape($('#description').val()) + '&shared=' + escape($('#shared').val()),function() { var returned = trim(xmlHttp.responseText).split('**'); if (returned[0] == 'true') { $('#new_campaign_div').html(returned[1]);}else{ $('#error_div').html(returned[1])}});",true) . "</div>";
     echo format_popup($content,'Start a Donation Campaign',"380px");
 }
 
-function add_new_campaign(){
+function add_new_campaign() {
 global $CFG, $MYVARS, $USER;
     $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']); 
     $campaign_id = empty($MYVARS->GET['campaign_id']) ? false : dbescape($MYVARS->GET['campaign_id']);
@@ -110,16 +110,16 @@ global $CFG, $MYVARS, $USER;
     $email = dbescape($MYVARS->GET['email']); $token = dbescape($MYVARS->GET['token']);
     $title = dbescape($MYVARS->GET['title']); $shared = dbescape($MYVARS->GET['shared']);
     
-    if($campaign_id){ //UPDATE
+    if ($campaign_id) { //UPDATE
         $SQL = "UPDATE donate_campaign SET title='$title',goal_amount='$goal',goal_description='$description',paypal_email='$email',token='$token',shared='$shared' WHERE campaign_id='$campaign_id'";
-        if(execute_db_sql($SQL)){ //edit made
+        if (execute_db_sql($SQL)) { //edit made
             echo "true**<h1>Campaign Edited</h1>";
         }else{
             echo "false**An error has occurred, please try again later.";    
         }         
     }else{ //INSERT NEW
         $SQL = "INSERT INTO donate_campaign (origin_page,title,goal_amount,goal_description,paypal_email,token,shared,datestarted,metgoal) VALUES('$pageid','$title','$goal','$description','$email','$token','$shared','".get_timestamp()."','0')";
-        if($campaign_id = execute_db_sql($SQL)){ //New campaign made
+        if ($campaign_id = execute_db_sql($SQL)) { //New campaign made
             //Save campaign ID in instance
             execute_db_sql("UPDATE donate_instance SET campaign_id=$campaign_id WHERE donate_id=$featureid");
             echo "true**<h1>Campaign Started</h1>";
@@ -131,29 +131,29 @@ global $CFG, $MYVARS, $USER;
 }
 
 
-function join_campaign_form(){
+function join_campaign_form() {
 global $CFG, $MYVARS, $USER;
     $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
     echo '<center><h1>Join a Campaign</h1></center>';
-    echo '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'select_campaign_form\',\'&featureid='.$featureid.'&pageid='.$pageid.'\',function(){ simple_display(\'donation_display\'); });">Back</a><br /><br />';   
+    echo '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'select_campaign_form\',\'&featureid='.$featureid.'&pageid='.$pageid.'\',function() { simple_display(\'donation_display\'); });">Back</a><br /><br />';   
     $SQL = "SELECT * FROM donate_campaign WHERE origin_page='$pageid' AND campaign_id NOT IN (SELECT campaign_id FROM donate_instance WHERE donate_id IN (SELECT featureid FROM pages_features WHERE pageid='$pageid' AND feature='donate')) OR shared='1'";
-    if($result = get_db_result($SQL)){
+    if ($result = get_db_result($SQL)) {
         echo '<select id="campaign_id">';
-        while($row = fetch_row($result)){
+        while ($row = fetch_row($result)) {
             echo '<option value="'.$row["campaign_id"].'">'.$row["title"]."</option>";    
         }
-        echo '</select> <button onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'join_campaign\',\'&campaign_id=\'+$(\'#campaign_id\').val()+\'&featureid='.$featureid.'&pageid='.$pageid.'\',function(){ simple_display(\'donation_display\'); });">Join Campaign</button>';
+        echo '</select> <button onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'join_campaign\',\'&campaign_id=\'+$(\'#campaign_id\').val()+\'&featureid='.$featureid.'&pageid='.$pageid.'\',function() { simple_display(\'donation_display\'); });">Join Campaign</button>';
     }else{
         echo "There are no active campaigns available.";
     }
 }
 
-function join_campaign(){
+function join_campaign() {
 global $CFG, $MYVARS, $USER;    
     $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
     $campaign_id = dbescape($MYVARS->GET['campaign_id']); 
     
-    if($campaign_id){ //Campaign ID chosen
+    if ($campaign_id) { //Campaign ID chosen
         //Save campaign ID in instance
         execute_db_sql("UPDATE donate_instance SET campaign_id=$campaign_id WHERE donate_id=$featureid");
         echo "<h1>Campaign Joined</h1>
@@ -164,10 +164,10 @@ global $CFG, $MYVARS, $USER;
     }    
 }
 
-function add_offline_donations_form(){
+function add_offline_donations_form() {
 global $CFG, $MYVARS, $USER;
     $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']); 
-    if(!isset($VALIDATELIB)){ include_once($CFG->dirroot . '/lib/validatelib.php'); }   
+    if (!isset($VALIDATELIB)) { include_once($CFG->dirroot . '/lib/validatelib.php'); }   
     echo '
         <style>
             .rowContainer label{
@@ -184,7 +184,7 @@ global $CFG, $MYVARS, $USER;
             }
         </style>';
         
-    echo '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'add_or_manage_form\',\'&featureid='.$featureid.'&pageid='.$pageid.'\',function(){ simple_display(\'donation_display\'); });">Back</a><br /><br />';   
+    echo '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'add_or_manage_form\',\'&featureid='.$featureid.'&pageid='.$pageid.'\',function() { simple_display(\'donation_display\'); });">Back</a><br /><br />';   
     $content = '
             <div class="formDiv" id="new_donation_div">
     		<form id="donation_form">
@@ -201,11 +201,11 @@ global $CFG, $MYVARS, $USER;
     			</fieldset>
     		</form>
     	</div>';
-    echo '<div id="donation_script" style="display:none">' . create_validation_script("donation_form" , "ajaxapi('/features/donate/donate_ajax.php','add_offline_donation','&featureid=$featureid&pageid=$pageid&amount=' + escape($('#amount').val()) + '&name=' + escape($('#name').val()),function(){ var returned = trim(xmlHttp.responseText).split('**'); if(returned[0] == 'true'){ $('#donation_display').html(returned[1]);}else{ $('#error_div').html(returned[1])}});",true) . "</div>";
+    echo '<div id="donation_script" style="display:none">' . create_validation_script("donation_form" , "ajaxapi('/features/donate/donate_ajax.php','add_offline_donation','&featureid=$featureid&pageid=$pageid&amount=' + escape($('#amount').val()) + '&name=' + escape($('#name').val()),function() { var returned = trim(xmlHttp.responseText).split('**'); if (returned[0] == 'true') { $('#donation_display').html(returned[1]);}else{ $('#error_div').html(returned[1])}});",true) . "</div>";
     echo format_popup($content,'Start a Donation Campaign',"380px");    
 }
 
-function add_offline_donation(){
+function add_offline_donation() {
 global $CFG, $MYVARS, $USER;
     $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']); 
     $amount = dbescape(number_format($MYVARS->GET['amount'],2,".","")); $name = $MYVARS->GET['name'];
@@ -219,26 +219,26 @@ global $CFG, $MYVARS, $USER;
     echo "true**".add_or_manage_forms($featureid,$pageid);
 }
 
-function manage_donations_form(){
+function manage_donations_form() {
 global $CFG, $MYVARS, $USER;
     $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']); 
     $content = '';
-    echo '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'add_or_manage_form\',\'&featureid='.$featureid.'&pageid='.$pageid.'\',function(){ simple_display(\'donation_display\'); });">Back</a><br /><br />';   
+    echo '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'add_or_manage_form\',\'&featureid='.$featureid.'&pageid='.$pageid.'\',function() { simple_display(\'donation_display\'); });">Back</a><br /><br />';   
     $content .= '<div style="max-height:340px;overflow-x:hidden;overflow-y:auto;">';
     $campaign = get_db_row("SELECT * FROM donate_campaign WHERE campaign_id IN (SELECT campaign_id FROM donate_instance WHERE donate_id='$featureid')");	    
-    if($result = get_db_result("SELECT * FROM donate_donations WHERE campaign_id='".$campaign["campaign_id"]."' ORDER BY timestamp DESC")){
+    if ($result = get_db_result("SELECT * FROM donate_donations WHERE campaign_id='".$campaign["campaign_id"]."' ORDER BY timestamp DESC")) {
         $content .= '<table style="font-size: 10px;width:100%;border-collapse: collapse;">
                     <tr><td style="width:55px"><strong>Type</strong></td><td><strong>Name</strong></td><td><strong>Amount</strong></td><td style="width:80px"><strong>Date</strong></td><td><strong>Paypal TX</strong></td><td style="width:20px"></td><td style="width:20px"></td></tr>';
         $i = 1;
-        while($row = fetch_row($result)){
+        while ($row = fetch_row($result)) {
             $bg = $i % 2 == 0 ? "silver" : "white";
             $type = $row["paypal_TX"] == "Offline" ? "Offline" : "Paypal";
             $tx = $row["paypal_TX"] == "Offline" ? "--" : $row["paypal_TX"];
             $name = $row["name"] == "" ? "Anonymous" : $row["name"];
             
             //Edit and Delete buttons
-            $edit = 'ajaxapi(\'/features/donate/donate_ajax.php\',\'edit_donation_form\',\'&featureid='.$featureid.'&pageid='.$pageid.'&donationid='.$row["donationid"].'\',function(){ simple_display(\'donation_display\'); loaddynamicjs(\'donation_script\'); });';
-            $delete = 'if(confirm(\'Are you sure you want to delete this donation record?\')){ ajaxapi(\'/features/donate/donate_ajax.php\',\'delete_donation\',\'&featureid='.$featureid.'&pageid='.$pageid.'&donationid='.$row["donationid"].'\',function(){ simple_display(\'donation_display\'); }); }';
+            $edit = 'ajaxapi(\'/features/donate/donate_ajax.php\',\'edit_donation_form\',\'&featureid='.$featureid.'&pageid='.$pageid.'&donationid='.$row["donationid"].'\',function() { simple_display(\'donation_display\'); loaddynamicjs(\'donation_script\'); });';
+            $delete = 'if (confirm(\'Are you sure you want to delete this donation record?\')) { ajaxapi(\'/features/donate/donate_ajax.php\',\'delete_donation\',\'&featureid='.$featureid.'&pageid='.$pageid.'&donationid='.$row["donationid"].'\',function() { simple_display(\'donation_display\'); }); }';
             
             $content .= '
                 <tr style="border:1px solid gainsboro;background-color: '.$bg.'">
@@ -261,11 +261,11 @@ global $CFG, $MYVARS, $USER;
     echo format_popup($content,'Manage Donations',"380px");    
 }
 
-function edit_donation_form(){
+function edit_donation_form() {
 global $CFG, $MYVARS, $USER;
     $donationid = dbescape($MYVARS->GET['donationid']);  
     $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']); 
-    if(!isset($VALIDATELIB)){ include_once($CFG->dirroot . '/lib/validatelib.php'); }
+    if (!isset($VALIDATELIB)) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
       
     $row = get_db_row("SELECT * FROM donate_donations WHERE donationid='$donationid'");
        
@@ -285,7 +285,7 @@ global $CFG, $MYVARS, $USER;
             }
         </style>';
         
-    echo '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'manage_donations_form\',\'&featureid='.$featureid.'&pageid='.$pageid.'\',function(){ simple_display(\'donation_display\'); });">Back</a><br /><br />';   
+    echo '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'manage_donations_form\',\'&featureid='.$featureid.'&pageid='.$pageid.'\',function() { simple_display(\'donation_display\'); });">Back</a><br /><br />';   
     $content = '
             <div class="formDiv" id="new_donation_div">
     		<form id="donation_form">
@@ -293,9 +293,9 @@ global $CFG, $MYVARS, $USER;
                     <div class="rowContainer">
                         <label for="campaign_id">Donated to:</label>
                         <select id="campaign_id" name="campaign_id" data-rule-required="true">';
-                        if($result = get_db_result("SELECT * FROM donate_campaign WHERE shared=1 OR campaign_id='".$row["campaign_id"]."'")){
+                        if ($result = get_db_result("SELECT * FROM donate_campaign WHERE shared=1 OR campaign_id='".$row["campaign_id"]."'")) {
                             $selected = $row["campaign_id"];
-                            while($c = fetch_row($result)){
+                            while ($c = fetch_row($result)) {
                                 $select = $selected == $c["campaign_id"] ? "selected" : "";
                                 $content .= '<option value="'.$c["campaign_id"].'" '.$select.'>'.$c["title"].'</option>';    
                             }
@@ -319,11 +319,11 @@ global $CFG, $MYVARS, $USER;
     			</fieldset>
     		</form>
     	</div>';
-    echo '<div id="donation_script" style="display:none">' . create_validation_script("donation_form" , "ajaxapi('/features/donate/donate_ajax.php','edit_donation_save','&donationid=$donationid&featureid=$featureid&pageid=$pageid&amount=' + escape($('#amount').val()) + '&name=' + escape($('#name').val()) + '&campaign_id=' + escape($('#campaign_id').val()) + '&paypal_TX=' + escape($('#paypal_TX').val()),function(){ var returned = trim(xmlHttp.responseText).split('**'); if(returned[0] == 'true'){ $('#donation_display').html(returned[1]);}else{ $('#error_div').html(returned[1])}});",true) . "</div>";
+    echo '<div id="donation_script" style="display:none">' . create_validation_script("donation_form" , "ajaxapi('/features/donate/donate_ajax.php','edit_donation_save','&donationid=$donationid&featureid=$featureid&pageid=$pageid&amount=' + escape($('#amount').val()) + '&name=' + escape($('#name').val()) + '&campaign_id=' + escape($('#campaign_id').val()) + '&paypal_TX=' + escape($('#paypal_TX').val()),function() { var returned = trim(xmlHttp.responseText).split('**'); if (returned[0] == 'true') { $('#donation_display').html(returned[1]);}else{ $('#error_div').html(returned[1])}});",true) . "</div>";
     echo format_popup($content,'Edit Donation',"380px");    
 }
 
-function edit_donation_save(){
+function edit_donation_save() {
 global $CFG, $MYVARS, $USER;
     $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
     $donationid = dbescape($MYVARS->GET['donationid']);$name = $MYVARS->GET['name']; $campaign_id = dbescape($MYVARS->GET['campaign_id']); 
@@ -337,7 +337,7 @@ global $CFG, $MYVARS, $USER;
     manage_donations_form();    
 }
 
-function delete_donation(){
+function delete_donation() {
 global $CFG, $MYVARS, $USER;
     $donationid = dbescape($MYVARS->GET['donationid']);
     execute_db_sql("DELETE FROM donate_donations WHERE donationid='$donationid'");

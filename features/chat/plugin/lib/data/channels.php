@@ -14,7 +14,7 @@
 //$channels[0] = 'Public';
 //$channels[1] = 'Private';
 
-if(!isset($CFG)){ include('../../../config.php'); }
+if (!isset($CFG)) { include('../../../config.php'); }
 include_once($CFG->dirroot . '/lib/header.php');
 include_once($CFG->dirroot . '/features/chat/chatlib.php');
 $channels = get_course_channels($_COOKIE["pageid"]);

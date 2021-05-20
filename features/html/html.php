@@ -7,9 +7,9 @@
 * Revision: 1.7.5
 ***************************************************************************/
 
-if(empty($_POST["aslib"])){
-    if(!isset($CFG)){ include('../header.php'); }
-    if(!isset($HTMLLIB)){ include_once($CFG->dirroot . '/features/html/htmllib.php'); }
+if (empty($_POST["aslib"])) {
+    if (!isset($CFG)) { include('../header.php'); }
+    if (!isset($HTMLLIB)) { include_once($CFG->dirroot . '/features/html/htmllib.php'); }
 
     callfunction();
 
@@ -18,7 +18,7 @@ if(empty($_POST["aslib"])){
     echo '</body></html>';
 }
 
-function html_settings(){
+function html_settings() {
 global $CFG, $MYVARS, $USER;
 	$featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
 	$feature = "html";
@@ -28,22 +28,22 @@ global $CFG, $MYVARS, $USER;
 	$setting_names = get_setting_names($default_settings);
 
 	//Check if any settings exist for this feature
-	if($settings = fetch_settings($feature,$featureid,$pageid)){
+	if ($settings = fetch_settings($feature,$featureid,$pageid)) {
         echo make_settings_page($setting_names,$settings,$default_settings,$feature,$featureid,$pageid);
 	}else{ //No Settings found...setup default settings
-		if(make_or_update_settings_array($settings_array)){ html_settings(); }
+		if (make_or_update_settings_array($settings_array)) { html_settings(); }
 	}
 }
 
-function edithtml(){
+function edithtml() {
 global $CFG, $MYVARS, $USER;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
 	$featureid = dbescape($MYVARS->GET['featureid']);
 	$now = get_timestamp();
-	if(!user_has_ability_in_page($USER->userid,"edithtml",$pageid)){ echo get_page_error_message("no_permission",array("edithtml")); return; }
+	if (!user_has_ability_in_page($USER->userid,"edithtml",$pageid)) { echo get_page_error_message("no_permission",array("edithtml")); return; }
 	$SQL = "SELECT * FROM html WHERE htmlid='$featureid'";
-    if($row = get_db_row($SQL)){
-        if(($now - $row["edit_time"]) > 30){
+    if ($row = get_db_row($SQL)) {
+        if (($now - $row["edit_time"]) > 30) {
     		$content = stripslashes($row['html']);
     		$userid = is_logged_in() ? $USER->userid : "0";
     		echo '
@@ -52,12 +52,12 @@ global $CFG, $MYVARS, $USER;
     				<tr>
     					<td colspan="2" style="text-align:center">';
                         echo get_editor_box($content);
-    				    echo '<input type="button" value="Save" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'edit_html\',\'&amp;htmlid='.$featureid.'&amp;html=\'+ escape('.get_editor_value_javascript().'),function(){ do_nothing();}); close_modal();" />
+    				    echo '<input type="button" value="Save" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'edit_html\',\'&amp;htmlid='.$featureid.'&amp;html=\'+ escape('.get_editor_value_javascript().'),function() { do_nothing();}); close_modal();" />
     					</td>
     				</tr>
     			</table>
     		</div>
-    		<script type="text/javascript">var stillediting = setInterval(function(){ ajaxapi(\'/features/html/html_ajax.php\',\'still_editing\',\'&htmlid='.$featureid.'&userid='.$userid.'\',function() { if (xmlHttp.readyState == 4) { do_nothing(); }},true);},5000);</script>';
+    		<script type="text/javascript">var stillediting = setInterval(function() { ajaxapi(\'/features/html/html_ajax.php\',\'still_editing\',\'&htmlid='.$featureid.'&userid='.$userid.'\',function() { if (xmlHttp.readyState == 4) { do_nothing(); }},true);},5000);</script>';
     		execute_db_sql("UPDATE html SET edit_user='$userid',edit_time='$now' WHERE htmlid=$featureid");
     	}else{
     		echo '
@@ -73,11 +73,11 @@ global $CFG, $MYVARS, $USER;
     donothing();
 }
 
-function deletecomment(){
+function deletecomment() {
 global $CFG, $MYVARS, $USER;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
 	$userid = dbescape($MYVARS->GET["userid"]);
-	if(!(user_has_ability_in_page($USER->userid,"deletecomments",$pageid) || ($USER->userid == $userid && user_has_ability_in_page($USER->userid,"makecomments",$pageid)))) { echo get_page_error_message("generic_permissions"); return;}
+	if (!(user_has_ability_in_page($USER->userid,"deletecomments",$pageid) || ($USER->userid == $userid && user_has_ability_in_page($USER->userid,"makecomments",$pageid)))) { echo get_page_error_message("generic_permissions"); return;}
 	$commentid = dbescape($MYVARS->GET["commentid"]);
 	echo '
 	<table style="width:80%;margin-left: auto; margin-right: auto;">
@@ -95,10 +95,10 @@ global $CFG, $MYVARS, $USER;
 	';
 }
 
-function makecomment(){
+function makecomment() {
 global $CFG, $MYVARS, $USER;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
-    if(!user_has_ability_in_page($USER->userid,"makecomments",$pageid)){ echo get_page_error_message("no_permission",array("makecomments")); return; }
+    if (!user_has_ability_in_page($USER->userid,"makecomments",$pageid)) { echo get_page_error_message("no_permission",array("makecomments")); return; }
 
 	$htmlid = dbescape($MYVARS->GET["htmlid"]);
 	echo '
@@ -122,10 +122,10 @@ global $CFG, $MYVARS, $USER;
 	';
 }
 
-function makereply(){
+function makereply() {
 global $CFG, $MYVARS, $USER;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
-    if(!user_has_ability_in_page($USER->userid,"makereplies",$pageid)){ echo get_page_error_message("no_permission",array("makereplies")); return; }
+    if (!user_has_ability_in_page($USER->userid,"makereplies",$pageid)) { echo get_page_error_message("no_permission",array("makereplies")); return; }
 
 	$commentid = dbescape($MYVARS->GET["commentid"]);
 	$comment = htmlentities(get_db_field("comment","html_comments","commentid='$commentid'"));
@@ -160,10 +160,10 @@ global $CFG, $MYVARS, $USER;
 	';
 }
 
-function editreply(){
+function editreply() {
 global $CFG, $MYVARS, $USER;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
-    if(!user_has_ability_in_page($USER->userid,"makereplies",$pageid)){ echo get_page_error_message("no_permission",array("makereplies")); return; }
+    if (!user_has_ability_in_page($USER->userid,"makereplies",$pageid)) { echo get_page_error_message("no_permission",array("makereplies")); return; }
 
 	$commentid = dbescape($MYVARS->GET["commentid"]);
 	$replyid = dbescape($MYVARS->GET["replyid"]);
@@ -199,13 +199,13 @@ global $CFG, $MYVARS, $USER;
 	</table>';
 }
 
-function editcomment(){
+function editcomment() {
 global $CFG, $MYVARS, $USER;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
 	$userid = dbescape($MYVARS->GET["userid"]);
 	$commentid = dbescape($MYVARS->GET["commentid"]);
 	$commentuser = htmlentities(get_db_field("userid","html_comments","commentid='$commentid'"));
-	if(!(user_has_ability_in_page($USER->userid,"editanycomment",$pageid) || ($USER->userid == $userid && user_has_ability_in_page($USER->userid,"makecomments",$pageid)))){ echo get_page_error_message("generic_permissions"); return;}
+	if (!(user_has_ability_in_page($USER->userid,"editanycomment",$pageid) || ($USER->userid == $userid && user_has_ability_in_page($USER->userid,"makecomments",$pageid)))) { echo get_page_error_message("generic_permissions"); return;}
 
 	$comment = htmlentities(get_db_field("comment","html_comments","commentid='$commentid'"));
 	echo '
@@ -238,10 +238,10 @@ global $CFG, $MYVARS, $USER;
 	</table>';
 }
 
-function deletereply(){
+function deletereply() {
 global $CFG, $MYVARS, $USER;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
-    if(!user_has_ability_in_page($USER->userid,"deletereply",$pageid)){ echo get_page_error_message("no_permission",array("deletereply")); return; }
+    if (!user_has_ability_in_page($USER->userid,"deletereply",$pageid)) { echo get_page_error_message("no_permission",array("deletereply")); return; }
 
 	$replyid = dbescape($MYVARS->GET["replyid"]);
 	echo '
@@ -260,18 +260,18 @@ global $CFG, $MYVARS, $USER;
 	';
 }
 
-function viewhtml(){
+function viewhtml() {
 global $CFG, $MYVARS, $USER, $ROLES;
     $key = $MYVARS->GET['key'];
     $htmlid = $MYVARS->GET['htmlid'];
     $pageid = $MYVARS->GET['pageid'];
 
-    if(!is_logged_in() && isset($key)){ key_login($key); }
+    if (!is_logged_in() && isset($key)) { key_login($key); }
 
     $settings = fetch_settings("html",$htmlid,$pageid);
 
-	if(is_logged_in()){
-		if(user_has_ability_in_page($USER->userid,"viewhtml",$pageid)){
+	if (is_logged_in()) {
+		if (user_has_ability_in_page($USER->userid,"viewhtml",$pageid)) {
 			$abilities = get_user_abilities($USER->userid,$pageid,"html");
 			echo '<a href="'.$CFG->wwwroot.'/index.php?pageid='.$pageid.'">Home</a>
 			<table style="margin-left:auto;margin-right:auto;width:100%">
@@ -285,7 +285,7 @@ global $CFG, $MYVARS, $USER, $ROLES;
 			</table>';
 		}else{ echo '<center>You do not have proper permissions to view this item.</center>';}
 	}else{
-		if(get_db_field("siteviewable","pages","pageid=$pageid") && role_has_ability_in_page($ROLES->visitor, 'viewhtml', $pageid)){
+		if (get_db_field("siteviewable","pages","pageid=$pageid") && role_has_ability_in_page($ROLES->visitor, 'viewhtml', $pageid)) {
 			$abilities = get_user_abilities($USER->userid,$pageid,"html");
 			echo '<a href="'.$CFG->wwwroot.'/index.php?pageid='.$pageid.'">Home</a>
 			<table style="margin-left:auto;margin-right:auto;width:100%">

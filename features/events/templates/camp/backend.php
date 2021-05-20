@@ -6,26 +6,26 @@
  * $Date: 1/30/2012
  * $Revision: .7
  ***************************************************************************/
-if(!isset($CFG)){ include('../../../../config.php'); } 
+if (!isset($CFG)) { include('../../../../config.php'); } 
 include($CFG->dirroot . '/pages/header.php');
 
-if(!isset($EVENTSLIB)) include_once($CFG->dirroot . '/features/events/eventslib.php');
+if (!isset($EVENTSLIB)) include_once($CFG->dirroot . '/features/events/eventslib.php');
 
 //Retrieve from Javascript
 $postorget = isset($_GET["action"]) ? $_GET : $_POST;
 $postorget = isset($postorget["action"]) ? $postorget : "";
 
 $MYVARS->GET = $postorget;
-if($postorget != ""){
+if ($postorget != "") {
 	$action = $postorget["action"];
 	$action(); //Go to the function that was called.
 }
 
 update_user_cookie();
 
-function register(){
+function register() {
 global $CFG,$MYVARS,$USER,$error;
-    if(!isset($COMLIB)){ include_once($CFG->dirroot.'/lib/comlib.php'); }
+    if (!isset($COMLIB)) { include_once($CFG->dirroot.'/lib/comlib.php'); }
 
 	$event = get_db_row("SELECT * FROM events WHERE eventid = ".$MYVARS->GET["eventid"]);
 	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='".$event['template_id']."'");
@@ -36,32 +36,32 @@ global $CFG,$MYVARS,$USER,$error;
 	
 	$formlist = explode(";",$template['formlist']);
 
-    foreach($formlist as $formelements){
+    foreach ($formlist as $formelements) {
         $element = explode(":",$formelements);
 		$reg[$element[0]] = $MYVARS->GET[$element[0]];    
     }
 	$error = "";
 	
-	if($regid = enter_registration($MYVARS->GET["eventid"],$reg, $MYVARS->GET["email"])){ //successful registration
+	if ($regid = enter_registration($MYVARS->GET["eventid"],$reg, $MYVARS->GET["email"])) { //successful registration
 		echo '<center><div style="width:90%">You have successfully registered for '.$event['name'] . '.<br />';
 		
-		if($error != ""){ echo $error . "<br />"; }
+		if ($error != "") { echo $error . "<br />"; }
 		
-		if($event['allowinpage'] !=0){
-			if(is_logged_in() && $event['pageid'] != $CFG->SITEID){ 
+		if ($event['allowinpage'] !=0) {
+			if (is_logged_in() && $event['pageid'] != $CFG->SITEID) { 
 				subscribe_to_page($event['pageid'], $USER->userid);
 				echo 'You have been automatically allowed into this events\' web page.  This page contain specific information about this event.';
 			}
 		}
 		
-		if($event['fee_full'] != 0){
+		if ($event['fee_full'] != 0) {
 			$items = isset($MYVARS->GET["items"]) ? $MYVARS->GET["items"] . "**" . $regid . "::" . $MYVARS->GET["Camper_Name"] . " - " . $event["name"] . "::" . $MYVARS->GET["paypal_amount"] : $regid . "::" . $MYVARS->GET["Camper_Name"] . " - " . $event["name"] . "::" . $MYVARS->GET["paypal_amount"];
 			echo '<div id="backup"><input type="hidden" name="total_owed" id="total_owed" value="'.$MYVARS->GET["cart_total"].'" />
 				 <input type="hidden" name="items" id="items" value="'.$items.'" /></div>';
 			
 			$items = explode("**",$items);
             $i=0;
-            foreach($items as $item){
+            foreach ($items as $item) {
                 $itm = explode("::",$item);
 				$cart_items[$i]->regid = $itm[0];
 				$cart_items[$i]->description = $itm[1];
@@ -69,7 +69,7 @@ global $CFG,$MYVARS,$USER,$error;
                 $i++;           
             }
 			
-			if($MYVARS->GET['payment_method'] == "PayPal"){
+			if ($MYVARS->GET['payment_method'] == "PayPal") {
     			echo '<br />
 				To register a <b>different</b> child:  Select the week '.common_weeks($event, true, "week1", $regid).'.<br />
 				To register the <b>same child</b> for a <b>different week</b>:  Select the week '.common_weeks($event, false, "week2", $regid, 1).'.<br />
@@ -103,22 +103,22 @@ global $CFG,$MYVARS,$USER,$error;
 		$fromuser->fname = $CFG->sitename;
 		$fromuser->lname = "";
 		$message = registration_email($regid, $touser);
-		if(send_email($touser,$fromuser,null,"Camp Wabashi Registration", $message)){
+		if (send_email($touser,$fromuser,null,"Camp Wabashi Registration", $message)) {
 			send_email($fromuser,$fromuser,null,"Camp Wabashi Registration", $message);
 		}else{ echo "<br /><br />Registration Email NOT Sent."; }
 		
 	}else{ //failed registration
 		$MYVARS->GET["cart_total"] = $MYVARS->GET["cart_total"] - $MYVARS->GET["paypal_amount"];
 		echo '<center><div style="width:60%"><span class="error_text">Your registration for '.$event['name'].' has failed. </span><br /> '.$error . '</div>';	
-		if(isset($MYVARS->GET["items"])){ //other registrations have already occured
-			if($event['fee_full'] != 0){
+		if (isset($MYVARS->GET["items"])) { //other registrations have already occured
+			if ($event['fee_full'] != 0) {
 				$items = $MYVARS->GET["items"];
 				echo '<div id="backup"><input type="hidden" name="total_owed" id="total_owed" value="'.$MYVARS->GET["cart_total"].'" />
 					 <input type="hidden" name="items" id="items" value="'.$items.'" /></div>';
 				
 				$items = explode("**",$items);
                 $i=0;
-                foreach($items as $item){
+                foreach ($items as $item) {
 					$itm = explode("::",$item);
 					$cart_items[$i]->regid = $itm[0];
 					$cart_items[$i]->description = $itm[1];
@@ -126,7 +126,7 @@ global $CFG,$MYVARS,$USER,$error;
                     $i++;
                 }
 				
-				if($MYVARS->GET['payment_method'] == "PayPal"){
+				if ($MYVARS->GET['payment_method'] == "PayPal") {
 					echo '<br />
 					To register a child: Select the week '.common_weeks($event, true, "week1", "").'.<br />
 					<br />
@@ -154,7 +154,7 @@ global $CFG,$MYVARS,$USER,$error;
 	}
 }
 
-function common_weeks($event, $included = true, $id, $regid = "", $autofill = 0){
+function common_weeks($event, $included = true, $id, $regid = "", $autofill = 0) {
 global $CFG,$USER,$PAGE;
 	$returnme = "";
 	$time = get_timestamp();
@@ -162,9 +162,9 @@ global $CFG,$USER,$PAGE;
 	$includelastevent = $included ? "" : "e.eventid != ".$event["eventid"]. " AND ";
 	$SQL = "SELECT e.* FROM events e WHERE $includelastevent (e.template_id=".$event["template_id"]." AND (e.pageid='".$event["pageid"]."' $siteviewable)) AND (e.start_reg < $time AND e.stop_reg > ($time - 86400)) AND (e.max_users=0 OR (e.max_users != 0 AND e.max_users > (SELECT COUNT(*) FROM events_registrations er WHERE er.eventid=e.eventid)))";
 
-	if($events = get_db_result($SQL)){
+	if ($events = get_db_result($SQL)) {
 		$returnme .= '<select id="'.$id.'">';
-		while($evnt = fetch_row($events)){
+		while ($evnt = fetch_row($events)) {
 			$selected = $event["eventid"] == $evnt["eventid"] ? " SELECTED " : "";
 			$returnme .= '<option value="'.$evnt['eventid'].'" '.$selected.'>'.$evnt['name'].'</option>';
 		}
@@ -173,7 +173,7 @@ global $CFG,$USER,$PAGE;
 	return $returnme;
 }
 
-function show_form_again(){
+function show_form_again() {
 	include("template.php");
 }
 ?>

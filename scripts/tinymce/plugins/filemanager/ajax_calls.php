@@ -30,7 +30,7 @@ if (isset($_GET['file']) && !checkRelativePath($_GET['file'])) {
 }
 
 //check $_POST['file']
-if(isset($_POST['path']) && !checkRelativePath($_POST['path'])) {
+if (isset($_POST['path']) && !checkRelativePath($_POST['path'])) {
     response(trans('wrong path').AddErrorLocation())->send();
     exit;
 }
@@ -230,13 +230,13 @@ if (isset($_GET['action'])) {
 
 			break;
 		case 'media_preview':
-			if(isset($_GET['file'])){
+			if (isset($_GET['file'])) {
 				$_GET['file'] = sanitize($_GET['file']);
 			}
-			if(isset($_GET['title'])){
+			if (isset($_GET['title'])) {
 				$_GET['title'] = sanitize($_GET['title']);
 			}
-			if($ftp){
+			if ($ftp) {
 				$preview_file = $config['ftp_base_url'].$config['upload_dir'] . $_GET['file'];
 			}else{
 				$preview_file = $config['current_path'] . $_GET["file"];
@@ -291,7 +291,7 @@ if (isset($_GET['action'])) {
 				</div>
 				</div>
 			</div>
-			<?php if(in_array(strtolower($info['extension']), $config['ext_music'])): ?>
+			<?php if (in_array(strtolower($info['extension']), $config['ext_music'])): ?>
 
             <script type="text/javascript">
                 $(document).ready(function () {
@@ -631,8 +631,8 @@ if (isset($_GET['action'])) {
 				}
 			}else{
 				$data = stripslashes(htmlspecialchars(file_get_contents($selected_file)));
-				if(in_array($info['extension'],array('html','html'))){
-					$ret = '<script src="https://cdn.ckeditor.com/ckeditor5/12.1.0/classic/ckeditor.js"></script><textarea id="textfile_edit_area" style="width:100%;height:300px;">'.$data.'</textarea><script>setTimeout(function(){ ClassicEditor.create( document.querySelector( "#textfile_edit_area" )).catch( function(error){ console.error( error ); } );  }, 500);</script>';
+				if (in_array($info['extension'],array('html','html'))) {
+					$ret = '<script src="https://cdn.ckeditor.com/ckeditor5/12.1.0/classic/ckeditor.js"></script><textarea id="textfile_edit_area" style="width:100%;height:300px;">'.$data.'</textarea><script>setTimeout(function() { ClassicEditor.create( document.querySelector( "#textfile_edit_area" )).catch( function(error) { console.error( error ); } );  }, 500);</script>';
 				}else{
 					$ret = '<textarea id="textfile_edit_area" style="width:100%;height:300px;">'.$data.'</textarea>';
 				}

@@ -6,7 +6,7 @@
  * $Date: 01/30/2012
  * $Revision: .9
  ***************************************************************************/
-if(!isset($CFG)){ require('../../../../config.php'); }
+if (!isset($CFG)) { require('../../../../config.php'); }
 
  //Retrieve from Javascript
 $postorget = isset($_GET["eventid"]) ? $_GET : $_POST;
@@ -23,10 +23,10 @@ $autofill = isset($MYVARS->GET['autofill']) && $MYVARS->GET['autofill'] == "1" ?
 $picturecost = 5; //if no picture is needed, set to false
 $email = "";
 
-if($show_again){ //This is not the first time through
-	if($autofill){ //Same person..so auto fill all items
+if ($show_again) { //This is not the first time through
+	if ($autofill) { //Same person..so auto fill all items
 		$last_reg = get_db_result("SELECT * FROM events_registrations_values WHERE regid='$regid'");
-		while($reginfo = fetch_row($last_reg)){
+		while ($reginfo = fetch_row($last_reg)) {
 			${$reginfo["elementname"]} = $reginfo["value"];
 		}
 		$email = get_db_field("email","events_registrations","regid=$regid");
@@ -38,7 +38,7 @@ if($show_again){ //This is not the first time through
 $total_owed = isset($MYVARS->GET['total_owed']) ? $MYVARS->GET['total_owed'] : 0;
 $row = get_db_row("SELECT * FROM events WHERE eventid=".$eventid);
 
-if(!$show_again){
+if (!$show_again) {
     echo '
     <script type="text/javascript" src="'.$CFG->wwwroot.'/features/events/templates/camp/ajax.js"></script>
     <form name="form1">
@@ -59,7 +59,7 @@ echo '
     <a target="policy" href="'.$CFG->wwwroot.'/userfiles/1/file/regpolicy.html">Registration Policy</a>
   </p></td></tr>';
   
-if($autofill){
+if ($autofill) {
  echo '  <tr> 
             <td>
             	Camper: '.$Camper_Name.'
@@ -272,7 +272,7 @@ echo '<tr><td colspan="2"><hr></td></tr>
       <td>'.make_fee_options($row['fee_min'],$row['fee_full'],"payment_amount",'onchange="updateTotal();" onclick="updateTotal();"',$row['sale_end'],$row['sale_fee']).'</td>
     </tr>';
     
-if($picturecost){
+if ($picturecost) {
     echo '<tr>
           <td align="right"><strong><font size="2">Camp&nbsp;Picture:&nbsp;</font></strong></td>
            <td><input name="Camper_Picture" value="'.$picturecost.'" onchange="updateTotal();" onclick="updateTotal();" type="radio">Yes
@@ -287,7 +287,7 @@ echo
         <td>$<input name="paypal_amount" size="5" value="'.$row['fee_min'].'" type="text" READONLY></td>
     </tr>';
 
-if(!$show_again){
+if (!$show_again) {
     echo '<tr>
       <td align="right"><strong><font size="2">Method&nbsp;of&nbsp;Payment:&nbsp;</font></strong></td>
         <td><select name="payment_method" size="1" onchange="updateMessage();" onclick="updateMessage();">
@@ -315,7 +315,7 @@ echo '<tr>
         </tr>
       </table>';
 
-if(!$show_again){
+if (!$show_again) {
 	echo '</div></form>';
 }
 

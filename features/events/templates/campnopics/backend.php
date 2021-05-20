@@ -8,14 +8,14 @@
  ***************************************************************************/
 include('../../../../config.php');
 include($CFG->dirroot . '/pages/header.php');
-if(!isset($EVENTSLIB)) include_once($CFG->dirroot . '/features/events/eventslib.php');
+if (!isset($EVENTSLIB)) include_once($CFG->dirroot . '/features/events/eventslib.php');
 
 //Retrieve from Javascript
 $postorget = isset($_GET["action"]) ? $_GET : $_POST;
 $postorget = isset($postorget["action"]) ? $postorget : "";
 
 $MYVARS->GET = $postorget;
-if($postorget != "")
+if ($postorget != "")
 {
 	$action = $postorget["action"];
 	$action(); //Go to the function that was called.
@@ -27,7 +27,7 @@ function register()
 {
 global $CFG,$MYVARS,$USER,$error;
 
-if(!isset($COMLIB)) include_once($CFG->dirroot.'/lib/comlib.php');
+if (!isset($COMLIB)) include_once($CFG->dirroot.'/lib/comlib.php');
 
 	$event = get_db_row("SELECT * FROM events WHERE eventid = ".$MYVARS->GET["eventid"]);
 	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='".$event['template_id']."'");
@@ -45,22 +45,22 @@ if(!isset($COMLIB)) include_once($CFG->dirroot.'/lib/comlib.php');
 	}
 	$error = "";
 	
-	if($regid = enter_registration($MYVARS->GET["eventid"],$reg, $MYVARS->GET["email"])) //successful registration
+	if ($regid = enter_registration($MYVARS->GET["eventid"],$reg, $MYVARS->GET["email"])) //successful registration
 	{
 		echo '<center><div style="width:90%">You have successfully registered for '.$event['name'] . '.<br />';
 		
-		if($error != "") echo $error . "<br />";
+		if ($error != "") echo $error . "<br />";
 		
-		if($event['allowinpage'] !=0) 
+		if ($event['allowinpage'] !=0) 
 		{
-			if(is_logged_in() && $event['pageid'] != $CFG->SITEID)
+			if (is_logged_in() && $event['pageid'] != $CFG->SITEID)
 			{ 
 				subscribe_to_page($event['pageid'], $USER->userid);
 				echo 'You have been automatically allowed into this events web page.  This page contain specific information about this event.';
 			}
 		}
 		
-		if($event['fee_full'] != 0)
+		if ($event['fee_full'] != 0)
 		{
 			$items = isset($MYVARS->GET["items"]) ? $MYVARS->GET["items"] . "**" . $regid . "::" . $MYVARS->GET["Camper_Name"] . " - " . $event["name"] . "::" . $MYVARS->GET["paypal_amount"] : $regid . "::" . $MYVARS->GET["Camper_Name"] . " - " . $event["name"] . "::" . $MYVARS->GET["paypal_amount"];
 			echo '<div id="backup"><input type="hidden" name="total_owed" id="total_owed" value="'.$MYVARS->GET["cart_total"].'" />
@@ -77,7 +77,7 @@ if(!isset($COMLIB)) include_once($CFG->dirroot.'/lib/comlib.php');
 				$i++;
 			}
 			
-			if($MYVARS->GET['payment_method'] == "PayPal")
+			if ($MYVARS->GET['payment_method'] == "PayPal")
 			{
 				echo '<br />
 				To register a <b>different</b> child:  Select the week '.common_weeks($event, true, "week1", $regid).'.<br />
@@ -115,7 +115,7 @@ if(!isset($COMLIB)) include_once($CFG->dirroot.'/lib/comlib.php');
 		$fromuser->lname = "";
 		$message = registration_email($regid, $touser);
 		
-		if(send_email($touser,$fromuser,null,"Camp Wabashi Registration", $message))
+		if (send_email($touser,$fromuser,null,"Camp Wabashi Registration", $message))
 		{
 			send_email($fromuser,$fromuser,null,"Camp Wabashi Registration", $message);
 		}
@@ -126,9 +126,9 @@ if(!isset($COMLIB)) include_once($CFG->dirroot.'/lib/comlib.php');
 	{
 		$MYVARS->GET["cart_total"] = $MYVARS->GET["cart_total"] - $MYVARS->GET["paypal_amount"];
 		echo '<center><div style="width:60%"><span class="error_text">Your registration for '.$event['name'].' has failed. </span><br /> '.$error . '</div>';	
-		if(isset($MYVARS->GET["items"])) //other registrations have already occured
+		if (isset($MYVARS->GET["items"])) //other registrations have already occured
 		{
-			if($event['fee_full'] != 0)
+			if ($event['fee_full'] != 0)
 			{
 				$items = $MYVARS->GET["items"];
 				echo '<div id="backup"><input type="hidden" name="total_owed" id="total_owed" value="'.$MYVARS->GET["cart_total"].'" />
@@ -145,7 +145,7 @@ if(!isset($COMLIB)) include_once($CFG->dirroot.'/lib/comlib.php');
 					$i++;
 				}
 				
-				if($MYVARS->GET['payment_method'] == "PayPal")
+				if ($MYVARS->GET['payment_method'] == "PayPal")
 				{
 					echo '<br />
 					To register a child: Select the week '.common_weeks($event, true, "week1", "").'.<br />
@@ -187,7 +187,7 @@ function common_weeks($event, $included = true, $id, $regid = "")
 
 	$events = get_db_result($SQL);
 
-	while($evnt = fetch_row($events))
+	while ($evnt = fetch_row($events))
 	{
 		$returnme .= !$included && $evnt['eventid'] == $event['eventid'] ? "" : '<option value="'.$evnt['eventid'].'">'.$evnt['name'].'</option>';
 	}

@@ -56,7 +56,7 @@ if (!get_db_row("SELECT * FROM events_templates WHERE name = '$templatename'")) 
 
        $SQL = "UPDATE events_templates SET settings = '$settings' WHERE folder='$templatefolder'";
 
-	   if(execute_db_sql($SQL)){ // If successful upgrade.
+	   if (execute_db_sql($SQL)) { // If successful upgrade.
 	       execute_db_sql("INSERT INTO settings (type,pageid,featureid,setting_name,setting,extra) VALUES('events_template', 0, 0, 'version', '$thisversion', '$templatefolder')");
 	   }
 	}

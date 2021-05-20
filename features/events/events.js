@@ -26,7 +26,7 @@ function submit_registration(eventid,formlist){
     	var parameters = "action=pick_registration&eventid=" + eventid + "&currTime=" + d.toUTCString();
     	var elements = formlist.split("*");
     	var i = 0;
-    	while(elements[i]){
+    	while (elements[i]){
     		elparam = elements[i].split(":");
     		if(elparam[0] == "text"){ 
     			parameters += "&" + elparam[1] + "=";

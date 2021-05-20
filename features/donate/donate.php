@@ -6,9 +6,9 @@
 * Date: 8/16/2011
 * Revision: 1.7.3
 ***************************************************************************/
-if(empty($_POST["aslib"])){
-    if(!isset($CFG)){ include('../header.php'); }
-    if(!isset($donateLIB)){ include_once($CFG->dirroot . '/features/donate/donatelib.php'); }
+if (empty($_POST["aslib"])) {
+    if (!isset($CFG)) { include('../header.php'); }
+    if (!isset($donateLIB)) { include_once($CFG->dirroot . '/features/donate/donatelib.php'); }
     
     header_remove('X-Frame-Options');    
         
@@ -17,7 +17,7 @@ if(empty($_POST["aslib"])){
     echo '</body></html>';    
 }
 
-function donate_settings(){
+function donate_settings() {
 global $CFG, $MYVARS, $USER;
 	$featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
 	$feature = "donate";
@@ -27,14 +27,14 @@ global $CFG, $MYVARS, $USER;
 	$setting_names = get_setting_names($default_settings);
     
 	//Check if any settings exist for this feature
-	if($settings = fetch_settings($feature,$featureid,$pageid)){
+	if ($settings = fetch_settings($feature,$featureid,$pageid)) {
         echo make_settings_page($setting_names,$settings,$default_settings,$feature,$featureid,$pageid);
 	}else{ //No Settings found...setup default settings			
-		if(make_or_update_settings_array($settings_array)){ donate_settings(); }
+		if (make_or_update_settings_array($settings_array)) { donate_settings(); }
 	}	
 }
 
-function editcampaign(){
+function editcampaign() {
 global $CFG, $MYVARS, $USER;
 $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
     $returnme = '<div id="donation_display">';
@@ -43,7 +43,7 @@ $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GE
     echo $returnme;
 }
 
-function managedonations(){
+function managedonations() {
 global $CFG, $MYVARS, $USER;
     $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
     $returnme = '<div id="donation_display">';
@@ -53,7 +53,7 @@ global $CFG, $MYVARS, $USER;
     echo $returnme; 
 }
 
-function thankyou(){
+function thankyou() {
 global $CFG;
     $redirect = '<script type="text/javascript">
                     window.location = "'.$CFG->wwwroot.'";
@@ -61,7 +61,7 @@ global $CFG;
 
     echo main_body(true);
     
-    if(!empty($_GET['cm'])){
+    if (!empty($_GET['cm'])) {
         $c = get_db_row("SELECT * FROM donate_campaign WHERE campaign_id='".$_GET['cm']."'");
         $auth_token = $c["token"]; 
         
@@ -87,7 +87,7 @@ global $CFG;
         $res = curl_exec($ch);
         curl_close($ch);
                 
-        if(!$res){
+        if (!$res) {
             //HTTP ERROR
             echo $redirect;
         }else{
@@ -95,7 +95,7 @@ global $CFG;
             $lines = explode("\n", $res);
             $keyarray = array();
             if (strcmp ($lines[0], "SUCCESS") == 0) {
-                for ($i=1; $i<count($lines);$i++){
+                for ($i=1; $i<count($lines);$i++) {
                     list($key,$val) = explode("=", $lines[$i]);
                     $keyarray[urldecode($key)] = urldecode($val);
                 }
@@ -106,7 +106,7 @@ global $CFG;
                 // process payment
                 echo '
                 <script type="text/javascript">
-                    setTimeout(function(){ window.location = "'.$CFG->wwwroot.'" },10000);
+                    setTimeout(function() { window.location = "'.$CFG->wwwroot.'" },10000);
                 </script>
                 <div style="width: 640px;text-align:center;margin:auto">
                 <h1>Thank You!</h1>

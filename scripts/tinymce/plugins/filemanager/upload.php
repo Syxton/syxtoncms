@@ -118,7 +118,7 @@ try {
     }
     $_FILES['files']['name'][0] = fix_filename($filename, $config);
 
-    if(!$_FILES['files']['type'][0]){
+    if (!$_FILES['files']['type'][0]) {
         $_FILES['files']['type'][0] = $mime_type;
 
     }

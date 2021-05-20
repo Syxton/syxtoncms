@@ -1188,7 +1188,7 @@ var ajaxChat = {
 		if(this.dom['onlineList']) {
 			var node = this.dom['onlineList'].firstChild;
 			var rowEven = false;
-			while(node) {
+			while (node) {
 				node.className = (rowEven ? 'rowEven' : 'rowOdd');
 				node = node.nextSibling;
 				rowEven = !rowEven;
@@ -1197,7 +1197,7 @@ var ajaxChat = {
 	},
 
 	clearChatList: function() {
-		while(this.dom['chatList'].hasChildNodes()) {
+		while (this.dom['chatList'].hasChildNodes()) {
 			this.dom['chatList'].removeChild(this.dom['chatList'].firstChild);
 		}
 	},
@@ -1206,7 +1206,7 @@ var ajaxChat = {
 		this.usersList = [];
 		this.userNamesList = [];
 		if(this.dom['onlineList']) {
-			while(this.dom['onlineList'].hasChildNodes()) {
+			while (this.dom['onlineList'].hasChildNodes()) {
 				this.dom['onlineList'].removeChild(this.dom['onlineList'].firstChild);
 			}
 		}
@@ -1407,7 +1407,7 @@ var ajaxChat = {
 
 	updateChatlistView: function() {
 		if(this.dom['chatList'].childNodes && this.settings['maxMessages']) {
-			while(this.dom['chatList'].childNodes.length > this.settings['maxMessages']) {
+			while (this.dom['chatList'].childNodes.length > this.settings['maxMessages']) {
 				this.dom['chatList'].removeChild(this.dom['chatList'].firstChild);
 			}
 		}
@@ -1452,7 +1452,7 @@ var ajaxChat = {
 		var plainText = '';
 		var c,c2,c3;
 		var i=0;
-		while(i<utf8Text.length) {
+		while (i<utf8Text.length) {
 			c = utf8Text.charCodeAt(i);
 			if(c<128) {
 				plainText += String.fromCharCode(c);
@@ -1524,7 +1524,7 @@ var ajaxChat = {
 
 	inArray: function(haystack, needle) {
 		var i = haystack.length;
-		while(i--) {
+		while (i--) {
 			if(haystack[i] === needle) {
 				return true;
 			}
@@ -1535,7 +1535,7 @@ var ajaxChat = {
 	arraySearch: function(needle, haystack) {
 		if (!Array.prototype.indexOf) { // IE<9
 			var i = haystack.length;
-			while(i--) {
+			while (i--) {
 				if(haystack[i] === needle) {
 					return i;
 				}
@@ -1778,7 +1778,7 @@ var ajaxChat = {
 			}
 			if(ignoredUserNames.length > 0) {
 				i = ignoredUserNames.length;
-				while(i--) {
+				while (i--) {
 					if(ignoredUserNames[i] === userName) {
 						ignoredUserNames.splice(i,1);
 						this.addChatBotMessageToChatList('/ignoreRemoved '+userName);
@@ -1870,7 +1870,7 @@ var ajaxChat = {
 		if(node) {
 			previousNode = node.previousSibling;
 			rowEven = (previousNode && previousNode.className === 'rowOdd') ? true : false;
-			while(node) {
+			while (node) {
 				node.className = (rowEven ? 'rowEven' : 'rowOdd');
 				node = node.nextSibling;
 				rowEven = !rowEven;
@@ -2896,7 +2896,7 @@ var ajaxChat = {
 		var ca = document.cookie.split(';');
 		for(var i=0; i<ca.length; i++) {
 			var c = ca[i];
-			while(c.charAt(0) === ' ') {
+			while (c.charAt(0) === ' ') {
 				c = c.substring(1, c.length);
 			}
 			if(c.indexOf(nameEQ) === 0) {

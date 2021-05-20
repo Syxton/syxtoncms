@@ -25,7 +25,7 @@ global $CFG, $MYVARS, $USER, $PAGE;
 	echo template_use("templates/themes.template", $params, "theme_selector_right_template");
 }
 
-function show_themes(){
+function show_themes() {
 global $CFG, $MYVARS, $USER, $PAGE;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
 	$themeid = get_page_themeid($pageid);
@@ -34,7 +34,7 @@ global $CFG, $MYVARS, $USER, $PAGE;
 	echo theme_selector($pageid, $themeid);
 }
 
-function save_custom_theme(){
+function save_custom_theme() {
 global $CFG, $MYVARS, $USER;
 	$featureid = dbescape($MYVARS->GET["featureid"]);
 	$feature = dbescape($MYVARS->GET["feature"]);
@@ -88,7 +88,7 @@ global $CFG, $MYVARS, $USER, $STYLES;
 	}else{
 		$STYLES->preview = true;
 		$default_list = get_custom_styles($pageid, $feature, $featureid);
-		foreach($default_list as $style){
+		foreach ($default_list as $style) {
 			$temparray[$style[1]] = dbescape($MYVARS->GET[$style[1]]);
 		}
 		$STYLES->$feature = $temparray;
@@ -102,7 +102,7 @@ global $CFG, $MYVARS, $USER, $STYLES;
 	echo $returnme;
 }
 
-function show_styles(){
+function show_styles() {
 global $CFG, $MYVARS, $USER;
 	$feature = dbescape($MYVARS->GET["feature"]);
 	$pageid = dbescape($MYVARS->GET["pageid"]);
@@ -128,7 +128,7 @@ global $CFG, $MYVARS, $USER;
 	}
 }
 
-function change_theme_save(){
+function change_theme_save() {
 global $CFG, $MYVARS, $USER;
 	$themeid = dbescape($MYVARS->GET["themeid"]);
 	$pageid = dbescape($MYVARS->GET["pageid"]);

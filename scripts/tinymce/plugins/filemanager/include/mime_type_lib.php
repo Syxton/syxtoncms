@@ -173,12 +173,12 @@ $mime_types = array(
 
 if ( ! function_exists('get_extension_from_mime'))
 {
-	function get_extension_from_mime($mime){
+	function get_extension_from_mime($mime) {
 		global $mime_types;
-		if(strpos($mime, ';')!==FALSE){
+		if (strpos($mime, ';')!==FALSE) {
 			$mime = substr($mime, 0,strpos($mime, ';'));
 		}
-		if(isset($mime_types[$mime])){
+		if (isset($mime_types[$mime])) {
 			return $mime_types[$mime];
 		}
 		return '';

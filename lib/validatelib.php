@@ -7,10 +7,10 @@
 * Revision: 0.0.4
 ***************************************************************************/
 
-if(!isset($LIBHEADER)) include('header.php');
+if (!isset($LIBHEADER)) include('header.php');
 $VALIDATELIB = true;
 
-function create_validation_script($formname,$function,$ajax=false){
+function create_validation_script($formname,$function,$ajax=false) {
 global $CFG;
 	$setup = '';
 	$script = '
@@ -18,7 +18,7 @@ global $CFG;
 	done: \'valid\'
 	});
 
-	$(document).ready(function(){
+	$(document).ready(function() {
 		$(\'#'.$formname.'\').validate({
 			meta: \'validate\',
 			submitHandler: function() { '.$function.' },
@@ -28,56 +28,56 @@ global $CFG;
 ';
 
     //Text fields and new HTML5 types
-    $setup .= '$(document).ready(function(){
-    			$(\'.formContainer input[type=text],[type=email],[type=search],[type=url]\').focus(function(){
+    $setup .= '$(document).ready(function() {
+    			$(\'.formContainer input[type=text],[type=email],[type=search],[type=url]\').focus(function() {
     		        $(this).parent().find(\'label.error\').css(\'display\', \'none\');
     		        $(this).parent().find(\'.info\').css(\'display\', \'block\');
-    		    }).blur(function(){
+    		    }).blur(function() {
     		        $(this).parent().find(\'.info\').css(\'display\', \'none\');
     		    });
     		});';
 
     //Password fields
-    $setup .= '$(document).ready(function(){
-    			$(\'.formContainer input[type=password]\').focus(function(){
+    $setup .= '$(document).ready(function() {
+    			$(\'.formContainer input[type=password]\').focus(function() {
     		        $(this).parent().find(\'label.error\').css(\'display\', \'none\');
     		        $(this).parent().find(\'.info\').css(\'display\', \'block\');
-    		    }).blur(function(){
+    		    }).blur(function() {
     		        $(this).parent().find(\'.info\').css(\'display\', \'none\');
     		    });
     		});';
 
     //Textarea fields
-    $setup .= '$(document).ready(function(){
-    			$(\'.formContainer textarea\').focus(function(){
+    $setup .= '$(document).ready(function() {
+    			$(\'.formContainer textarea\').focus(function() {
     		        $(this).parent().find(\'label.error\').css(\'display\', \'none\');
     		        $(this).parent().find(\'.info\').css(\'display\', \'block\');
-    		    }).blur(function(){
+    		    }).blur(function() {
     		        $(this).parent().find(\'.info\').css(\'display\', \'none\');
     		    });
     		});';
 
     //CHECK fields
-    $setup .= '$(document).ready(function(){
-    			$(\'.formContainer input[type=checkbox]\').focus(function(){
+    $setup .= '$(document).ready(function() {
+    			$(\'.formContainer input[type=checkbox]\').focus(function() {
     		        $(this).parent().find(\'label.error\').css(\'display\', \'none\');
     		        $(this).parent().find(\'.info\').css(\'display\', \'block\');
-    		    }).blur(function(){
+    		    }).blur(function() {
     		        $(this).parent().find(\'.info\').css(\'display\', \'none\');
     		    });
     		});';
 
     //SELECT fields
-    $setup .= '$(document).ready(function(){
-    			$(\'.formContainer select\').focus(function(){
+    $setup .= '$(document).ready(function() {
+    			$(\'.formContainer select\').focus(function() {
     		        $(this).parent().find(\'label.error\').css(\'display\', \'none\');
     		        $(this).parent().find(\'.info\').css(\'display\', \'block\');
-    		    }).blur(function(){
+    		    }).blur(function() {
     		        $(this).parent().find(\'.info\').css(\'display\', \'none\');
     		    });
     		});';
 
-    if($ajax){
+    if ($ajax) {
 	   return $script . $setup;
 	}else{
 	   return '<script type=\'text/javascript\'>' . $script . $setup .'</script>';

@@ -38,7 +38,7 @@
 //$users[3]['password'] = 'user';
 //$users[3]['channels'] = array(0,1);
 
-if(!isset($CFG)){ include('../../../config.php'); }
+if (!isset($CFG)) { include('../../../config.php'); }
 include_once($CFG->dirroot . '/lib/header.php');
 include_once($CFG->dirroot . '/features/chat/chatlib.php');
 $users = get_chat_users($_COOKIE["pageid"]);

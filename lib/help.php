@@ -8,7 +8,7 @@
 ***************************************************************************/
  
 unset($HELP);
-if(!isset($LIBHEADER)){ include('header.php'); }
+if (!isset($LIBHEADER)) { include('header.php'); }
 
 $HELP = new \stdClass;
 
@@ -34,14 +34,14 @@ $HELP->input_lname = "Please use your full last name, not just an initial.";
 //FORUM HINTS
 $HELP->new_category = "Please type the name of the new forum category.";
 
-function get_help($help){
+function get_help($help) {
 global $CFG, $HELP;
     $lang = explode(":",$help);
     $string = $lang[0];
-    if(isset($lang[2])){
+    if (isset($lang[2])) {
         include($CFG->dirroot . '/features/'.$lang[1]."/".$lang[2]."/lang.php");
         return $HELP->$string;        
-    }elseif(isset($lang[1])){
+    }elseif (isset($lang[1])) {
         include($CFG->dirroot . '/features/'.$lang[1]."/lang.php");
         return $HELP->$string;
     }else{ return $HELP->$help; }

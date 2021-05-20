@@ -348,7 +348,7 @@ function make_modal_links($v) {
 
     if (!empty($v["refresh"])) {
         $modal .= '
-        $.colorbox.close = function(){
+        $.colorbox.close = function() {
             window.location.reload( true );
         };';
     }
@@ -356,18 +356,18 @@ function make_modal_links($v) {
     if (!empty($v["runafter"])) {
         $modal .= '
         var originalClose = $.colorbox.close;
-        $.colorbox.close = function(){';
+        $.colorbox.close = function() {';
 
-        $modal .= empty($v["confirmexit"]) ? "" : 'if(confirm(\'Are you sure you wish to close this window?\')){';
+        $modal .= empty($v["confirmexit"]) ? "" : 'if (confirm(\'Are you sure you wish to close this window?\')) {';
         $modal .= 'eval(stripslashes(unescape(self.parent.$(\'#' . $v["runafter"] . '\').val())));
-                   setTimeout(function(){ originalClose(); $.colorbox.close = originalClose; },100);';
+                   setTimeout(function() { originalClose(); $.colorbox.close = originalClose; },100);';
         $modal .= empty($v["confirmexit"]) ? "" : '}';
         $modal .= '};';
     } elseif (!empty($v["confirmexit"])) {
         $modal .= '
         var originalClose = $.colorbox.close;
-        $.colorbox.close = function(){
-            if(confirm(\'Are you sure you wish to close this window?\')){
+        $.colorbox.close = function() {
+            if (confirm(\'Are you sure you wish to close this window?\')) {
                 originalClose(); $.colorbox.close = originalClose;
             }
         };';
@@ -375,10 +375,10 @@ function make_modal_links($v) {
 
     if ((empty($v["height"]) || empty($v["width"]))) {
         if (empty($v["iframe"])) {
-            $onComplete = 'setTimeout(function(){ $.colorbox.resize(); },1500);';
+            $onComplete = 'setTimeout(function() { $.colorbox.resize(); },1500);';
         } else {
             $onComplete .= '
-            setTimeout(function(){
+            setTimeout(function() {
                 parent.$.colorbox.resize({
                     width:$(\'iframe[class=cboxIframe]\').contents().width()+50,
                     height:$(\'iframe[class=cboxIframe]\').contents().height()+75
@@ -390,11 +390,11 @@ function make_modal_links($v) {
     if ($v["gallery"]) {
         $modal .= '$' . $gallery . '.colorbox({maxWidth: \'95%\',maxHeight: \'95%\',fixed: true' . $v["width"] . $v["height"] . $v["gallery"] . ',speed:0});';
     } else {
-        $modal .= '$.colorbox({maxWidth: \'98%\',maxHeight: \'98%\',fixed: true,onComplete:function(){ ' . $onComplete . ' $(\'#cboxTitle\').attr({\'style\': \'display: none\'}); },href:\'' . $v["path"] . $i . $valid . $rand . '\'' . $v["width"] . $v["height"] . $v["gallery"] . ',speed:0' . $iframe . '});';
+        $modal .= '$.colorbox({maxWidth: \'98%\',maxHeight: \'98%\',fixed: true,onComplete:function() { ' . $onComplete . ' $(\'#cboxTitle\').attr({\'style\': \'display: none\'}); },href:\'' . $v["path"] . $i . $valid . $rand . '\'' . $v["width"] . $v["height"] . $v["gallery"] . ',speed:0' . $iframe . '});';
     }
 
     if (!empty($onOpen)) {
-        $modal = "setTimeout(function(){ $modal },500);";
+        $modal = "setTimeout(function() { $modal },500);";
     }
 
     if ($v["button"] == "button") {
@@ -1027,7 +1027,7 @@ function get_edit_buttons($pageid, $featuretype, $featureid = false) {
 
             //Remove feature button
             if (user_has_ability_in_page($USER->userid, "removefeatures", $pageid, $featuretype, $featureid)) {
-                $returnme .= ' <a title="Delete" class="slide_menu_button" href="javascript: if(confirm(\'Are you sure you want to delete this?\')){ ajaxapi(\'/ajax/site_ajax.php\',\'delete_feature\',\'&amp;pageid=' . $pageid . '&amp;featuretype=' . $featuretype . '&amp;sectionid=&amp;featureid=' . $featureid . '\',function() { update_login_contents(' . $pageid . ');});}"><img src="' . $CFG->wwwroot . '/images/delete.png" alt="Delete Feature" /></a> ';
+                $returnme .= ' <a title="Delete" class="slide_menu_button" href="javascript: if (confirm(\'Are you sure you want to delete this?\')) { ajaxapi(\'/ajax/site_ajax.php\',\'delete_feature\',\'&amp;pageid=' . $pageid . '&amp;featuretype=' . $featuretype . '&amp;sectionid=&amp;featureid=' . $featureid . '\',function() { update_login_contents(' . $pageid . ');});}"><img src="' . $CFG->wwwroot . '/images/delete.png" alt="Delete Feature" /></a> ';
             }
         }
     }

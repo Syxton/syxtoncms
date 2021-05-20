@@ -7,26 +7,26 @@
 * Revision: 0.0.1
 ***************************************************************************/
 
-function donate_upgrade(){
+function donate_upgrade() {
 global $CFG;
     $version = get_db_field("version","features","feature='donate'");		
     $thisversion = 20130320;
-	if($version < $thisversion){ execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='donate'"); }
+	if ($version < $thisversion) { execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='donate'"); }
 
 	$thisversion = 20130504;
-	if($version < $thisversion){ //# = new version number.  If this is the first...start at 1
+	if ($version < $thisversion) { //# = new version number.  If this is the first...start at 1
 		$SQL = "ALTER TABLE  `donate_donations` CHANGE  `amount`  `amount` DECIMAL(10,2) NOT NULL";
         $SQL2 = "ALTER TABLE  `donate_campaign` CHANGE  `goal_amount`  `goal_amount` DECIMAL(10,2) NOT NULL";
-		if(execute_db_sql($SQL) && execute_db_sql($SQL2)){ //if successful upgrade
+		if (execute_db_sql($SQL) && execute_db_sql($SQL2)) { //if successful upgrade
 			execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='donate'");
 		}
 	}
 
 }
 
-function donate_install(){
+function donate_install() {
     //Make sure this hasn't already been done
-    if(!get_db_row("SELECT * FROM features WHERE feature='donate'")){
+    if (!get_db_row("SELECT * FROM features WHERE feature='donate'")) {
         $thisversion = 20130320;
     	//ADD AS FEATURE
     	execute_db_sql("INSERT INTO features (feature,feature_title,multiples_allowed,site_multiples_allowed,default_area,rss,allowed) VALUES('donate','Donations','1','1','side','0','1')");

@@ -8,7 +8,7 @@
 ***************************************************************************/
  
 unset($ERRORS);
-if(!isset($LIBHEADER)){ include('header.php'); }
+if (!isset($LIBHEADER)) { include('header.php'); }
 
 $ERRORS = new \stdClass;
 
@@ -64,27 +64,27 @@ $ERRORS = new \stdClass;
 	$ERRORS->valid_req_vpassword = "Please verify your password.";
 	$ERRORS->valid_vpassword_match = "Must match the password field.";
 
-function get_error_message($error,$vars=false){
+function get_error_message($error,$vars=false) {
 global $CFG, $ERRORS;
     $lang = explode(":",$error);
     $string = $lang[0];
-    if(isset($lang[2])){
+    if (isset($lang[2])) {
         include($CFG->dirroot . '/features/'.$lang[1]."/".$lang[2]."/lang.php");
         return $ERRORS->$string;        
-    }elseif(isset($lang[1])){
+    }elseif (isset($lang[1])) {
         include($CFG->dirroot . '/features/' . $lang[1] . "/lang.php");
-        if($vars){ return fill_template($ERRORS->$string,$vars); }
+        if ($vars) { return fill_template($ERRORS->$string,$vars); }
         return $ERRORS->$string;
-    }else{ if($vars){ return fill_template($ERRORS->$error,$vars); } return $ERRORS->$error; }
+    }else{ if ($vars) { return fill_template($ERRORS->$error,$vars); } return $ERRORS->$error; }
 }
 
-function get_page_error_message($error,$vars=false){
+function get_page_error_message($error,$vars=false) {
     return '<div style="background:red;padding:20px;text-align:center;">' . get_error_message($error,$vars) . '</div>';    
 }
 
-function fill_template($string,$vars){
+function fill_template($string,$vars) {
     $i=0;
-    foreach($vars as $var){
+    foreach ($vars as $var) {
         $string = str_replace("[$i]",$var,$string);
         $i++;
     }

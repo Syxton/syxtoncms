@@ -26,7 +26,7 @@ global $MYVARS;
 	}
 }
 
-function unique_email(){
+function unique_email() {
 global $MYVARS;
 	$email = dbescape($MYVARS->GET["email"]);
 	$SQL = "SELECT *
@@ -287,7 +287,7 @@ global $MYVARS;
 	add_page_feature($MYVARS->GET["pageid"], $MYVARS->GET["feature"]);
 }
 
-function delete_feature(){
+function delete_feature() {
 global $CFG, $PAGE, $USER, $MYVARS;
 	update_user_cookie();
 	$PAGE->id = $MYVARS->GET["pageid"];
@@ -341,7 +341,7 @@ global $MYVARS;
   }
 
   $area = "side"; $i = 1;
-  foreach($col2 as $a){
+  foreach ($col2 as $a) {
     $a = explode("_", $a);
     $featuretype = empty($a[0]) ? false : $a[0];
     $featureid = empty($a[1]) ? false : $a[1];

@@ -7,12 +7,12 @@
  * $Revision: .12
  ***************************************************************************/
  
-if(!isset($CFG)) include_once('../../config.php');
+if (!isset($CFG)) include_once('../../config.php');
 
 $postorget = isset($_GET["address_1"]) ? $_GET : $_POST;
 $postorget = isset($postorget["address_1"]) ? $postorget : "";
 
-if(empty($MYVARS)){ $MYVARS = new \stdClass; }
+if (empty($MYVARS)) { $MYVARS = new \stdClass; }
 $MYVARS->GET = $postorget;
 
 echo '
@@ -62,7 +62,7 @@ echo '
                 { "locale": locale });
     }
 
-    function handleErrors(){
+    function handleErrors() {
 	   if (gdir.getStatus().code == G_GEO_UNKNOWN_ADDRESS)
 	     alert("No corresponding geographic location could be found for one of the specified addresses. This may be due to the fact that the address is relatively new, or it may be incorrect.\nError code: " + gdir.getStatus().code);
 	   else if (gdir.getStatus().code == G_GEO_SERVER_ERROR)
@@ -84,7 +84,7 @@ echo '
 	   
 	}
 
-	function onGDirectionsLoad(){ 
+	function onGDirectionsLoad() { 
       // Use this function to access information about the latest load()
       // results.
 

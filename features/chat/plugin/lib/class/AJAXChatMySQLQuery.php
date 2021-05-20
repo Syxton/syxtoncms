@@ -20,15 +20,15 @@ class AJAXChatMySQLQuery {
 	function __construct($sql, $connectionID = null) {
 		$this->_sql = trim($sql);
 		$this->_connectionID = $connectionID;
-		if($this->_connectionID) {
+		if ($this->_connectionID) {
 			$this->_result = mysql_query($this->_sql, $this->_connectionID);
-			if(!$this->_result) {
+			if (!$this->_result) {
 				$this->_errno = mysql_errno($this->_connectionID);
 				$this->_error = mysql_error($this->_connectionID);
 			}
 		} else {
 			$this->_result = mysql_query($this->_sql);
-			if(!$this->_result) {
+			if (!$this->_result) {
 				$this->_errno = mysql_errno();
 				$this->_error = mysql_error();
 			}	
@@ -43,7 +43,7 @@ class AJAXChatMySQLQuery {
 
 	// Returns an Error-String:
 	function getError() {
-		if($this->error()) {
+		if ($this->error()) {
 			$str  = 'Query: '	 .$this->_sql  ."\n";
 			$str .= 'Error-Report: '	.$this->_error."\n";
 			$str .= 'Error-Code: '.$this->_errno;
@@ -55,7 +55,7 @@ class AJAXChatMySQLQuery {
 
 	// Returns the content:
 	function fetch() {
-		if($this->error()) {
+		if ($this->error()) {
 			return null;
 		} else {
 			return mysql_fetch_assoc($this->_result);
@@ -64,7 +64,7 @@ class AJAXChatMySQLQuery {
 
 	// Returns the number of rows (SELECT or SHOW):
 	function numRows() {
-		if($this->error()) {
+		if ($this->error()) {
 			return null;
 		} else {
 			return mysql_num_rows($this->_result);
@@ -73,7 +73,7 @@ class AJAXChatMySQLQuery {
 
 	// Returns the number of affected rows (INSERT, UPDATE, REPLACE or DELETE):
 	function affectedRows() {
-		if($this->error()) {
+		if ($this->error()) {
 			return null;
 		} else {
 			return mysql_affected_rows($this->_connectionID);

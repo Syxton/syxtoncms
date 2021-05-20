@@ -7,7 +7,7 @@
  * @license Modified MIT License
  * @link https://blueimp.net/ajax/
  */
-if(!isset($CFG)) include('../../../config.php');
+if (!isset($CFG)) include('../../../config.php');
 include_once($CFG->dirroot . '/lib/header.php');
 define('PAGEID', $_COOKIE["pageid"]);
 

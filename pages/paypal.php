@@ -23,7 +23,7 @@ $req .= "&tx=$tx_token&at=$auth_token";
 $header = "POST /cgi-bin/webscr HTTP/1.0\r\n";
 $header .= "Content-Type: application/x-www-form-urlencoded\r\n";
 $header .= "Content-Length: " . strlen($req) . "\r\n\r\n";
-if($CFG->paypal){ $fp = fsockopen ('www.paypal.com', 80, $errno, $errstr, 30);
+if ($CFG->paypal) { $fp = fsockopen ('www.paypal.com', 80, $errno, $errstr, 30);
 }else{ $fp = fsockopen ('www.sandbox.paypal.com', 80, $errno, $errstr, 30);}
 
 // If possible, securely post back to paypal using HTTPS
@@ -50,7 +50,7 @@ if (!$fp) {
 	$lines = explode("\n", $res);
 	$keyarray = array();
 	if (strcmp ($lines[0], "SUCCESS") == 0) {
-  	for ($i=1; $i<count($lines);$i++){
+  	for ($i=1; $i<count($lines);$i++) {
       	list($key,$val) = explode("=", $lines[$i]);
       	$keyarray[urldecode($key)] = urldecode($val);
   	}
@@ -77,7 +77,7 @@ if (!$fp) {
                WHERE feature = 'events'
                  AND description = 'Paypal'
                  AND info = '".$keyarray['txn_id']."'";
-  		if (!get_db_row($SQL)){
+  		if (!get_db_row($SQL)) {
   			$regids = $keyarray['custom'];
   			$regids = explode(":",$regids);
   			$i=0;

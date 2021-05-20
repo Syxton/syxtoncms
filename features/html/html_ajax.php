@@ -7,14 +7,14 @@
 * Revision: 1.9.6
 ***************************************************************************/
 
-if(!isset($CFG)){ include('../header.php'); } 
-if(!isset($HTMLLIB)){ include_once($CFG->dirroot . '/features/html/htmllib.php'); }
+if (!isset($CFG)) { include('../header.php'); } 
+if (!isset($HTMLLIB)) { include_once($CFG->dirroot . '/features/html/htmllib.php'); }
 
 update_user_cookie();
 
 callfunction();
 
-function new_edition(){
+function new_edition() {
 global $CFG, $MYVARS;
 	$htmlid = $MYVARS->GET["htmlid"];
 	$pageid = $MYVARS->GET["pageid"];
@@ -31,7 +31,7 @@ global $CFG, $MYVARS;
 	$SQL = "UPDATE pages_features SET area='locker' WHERE feature='html' AND featureid=$htmlid";
 	execute_db_sql($SQL);
 	
-	if(!$html["firstedition"]){ //This is the first edition
+	if (!$html["firstedition"]) { //This is the first edition
 		//Set first edition field
 		$SQL = "UPDATE html SET firstedition='$htmlid' WHERE htmlid=$newhtmlid";
 		execute_db_sql($SQL);
@@ -43,14 +43,14 @@ global $CFG, $MYVARS;
 	
 	//Copy settings
 	$SQL = "SELECT * FROM settings WHERE type='html' AND featureid=$htmlid";
-	if($result = get_db_result($SQL)){
-		while($row = fetch_row($result)){
+	if ($result = get_db_result($SQL)) {
+		while ($row = fetch_row($result)) {
 			copy_db_row($row,"settings","settingid=null,featureid=$newhtmlid");
 		}
 	}
 }
 
-function still_editing(){
+function still_editing() {
 global $CFG,$MYVARS;
 	$htmlid = $MYVARS->GET["htmlid"];
 	$userid = $MYVARS->GET["userid"];
@@ -59,7 +59,7 @@ global $CFG,$MYVARS;
 	execute_db_sql($SQL);
 }
 
-function stopped_editing(){
+function stopped_editing() {
 global $CFG,$MYVARS;
 	$htmlid = $MYVARS->GET["htmlid"];
 	$userid = $MYVARS->GET["userid"];
@@ -67,7 +67,7 @@ global $CFG,$MYVARS;
 	execute_db_sql($SQL);  
 }
 
-function edit_html(){
+function edit_html() {
 global $CFG, $MYVARS;
 	$htmlid = $MYVARS->GET["htmlid"];
 	$html = stripslashes($MYVARS->GET["html"]);
@@ -80,19 +80,19 @@ global $CFG, $MYVARS;
 	
 	$html = dbescape(urldecode($html));
     $SQL = "UPDATE html SET html='$html', dateposted='" . get_timestamp() . "',edit_user=0,edit_time=0 WHERE htmlid='$htmlid'";
-	if(execute_db_sql($SQL)){
+	if (execute_db_sql($SQL)) {
 		//Log
 		log_entry("html", $htmlid, "Edited");
 		echo "HTML edited successfully";
 	}
 }
 
-function commentspage(){
+function commentspage() {
 global $CFG, $MYVARS;
 	echo get_html_comments($MYVARS->GET["htmlid"],$MYVARS->GET["pageid"],false,$MYVARS->GET["perpage"],$MYVARS->GET["pagenum"],false);
 }
 
-function deletecomment(){
+function deletecomment() {
 global $CFG, $MYVARS;
 	$commentid = $MYVARS->GET["commentid"];
 
@@ -102,55 +102,55 @@ global $CFG, $MYVARS;
 	log_entry("html", $commentid, "Delete Comment");
 }
 
-function makecomment(){
+function makecomment() {
 global $CFG, $MYVARS, $USER;
 	$htmlid = $MYVARS->GET["htmlid"];
 	$comment = dbescape(urldecode($MYVARS->GET["comment"]));
     $SQL = "INSERT INTO html_comments (comment,htmlid,userid) VALUES ('$comment',$htmlid,'" . $USER->userid . "')";
-	if($commentid = execute_db_sql($SQL)){
+	if ($commentid = execute_db_sql($SQL)) {
 		//Log
 		log_entry("html", $commentid, "Blog Comment");
 		echo "Blog comment made successfully";
 	}
 }
 
-function editcomment(){
+function editcomment() {
 global $CFG, $MYVARS;
 	$commentid = $MYVARS->GET["commentid"];
 	$comment = dbescape(urldecode($MYVARS->GET["comment"]));
     $SQL = "UPDATE html_comments SET comment='$comment' WHERE commentid=$commentid";
-	if(execute_db_sql($SQL)){
+	if (execute_db_sql($SQL)) {
 		//Log
 		log_entry("html", $replyid, "Blog Comment Edited");
 		echo "Blog comment edited successfully";
 	}
 }
 
-function makereply(){
+function makereply() {
 global $CFG, $MYVARS, $USER;
 	$commentid = $MYVARS->GET["commentid"];
 	$reply = dbescape(urldecode($MYVARS->GET["reply"]));
     $SQL = "INSERT INTO html_replies (commentid,reply,userid) VALUES ($commentid,'$reply','" . $USER->userid . "')";
-	if($replyid = execute_db_sql($SQL)){
+	if ($replyid = execute_db_sql($SQL)) {
 		//Log
 		log_entry("html", $replyid, "Blog Reply");
 		echo "Blog reply made successfully";
 	}
 }
 
-function editreply(){
+function editreply() {
 global $CFG, $MYVARS;
 	$replyid = $MYVARS->GET["replyid"];
 	$reply = dbescape(urldecode($MYVARS->GET["reply"]));
 	$SQL = "UPDATE html_replies SET reply='$reply' WHERE replyid=$replyid";
-    if(execute_db_sql($SQL)){
+    if (execute_db_sql($SQL)) {
 		//Log
 		log_entry("html", $replyid, "Blog Reply Edited");
 		echo "Blog reply edited successfully";
 	}
 }
 
-function deletereply(){
+function deletereply() {
 global $CFG, $MYVARS;
 	$replyid = $MYVARS->GET["replyid"];
     $SQL = "DELETE FROM html_replies WHERE replyid=$replyid";

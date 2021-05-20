@@ -15,7 +15,7 @@ callfunction();
 
 echo template_use("templates/page.template", array(), "end_of_page_template");
 
-function assign_roles(){
+function assign_roles() {
 global $CFG, $MYVARS, $USER, $ROLES;
     $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : $CFG->SITEID; // Should always be passed
 
@@ -39,7 +39,7 @@ global $CFG, $MYVARS, $USER, $ROLES;
 	$options = "";
 	if ($pageid != $CFG->SITEID) {
 		if ($roles = get_db_result($SQL)) {
-			while($row = fetch_row($roles)) {
+			while ($row = fetch_row($roles)) {
 				$options .= template_use("templates/roles.template", array("user" => $row), "assign_roles_options_template");
 			}
 		}
@@ -49,7 +49,7 @@ global $CFG, $MYVARS, $USER, $ROLES;
 	echo template_use("templates/roles.template", $params, "assign_roles_template");
 }
 
-function role_specific(){
+function role_specific() {
 global $CFG,$USER,$MYVARS,$ROLES;
     $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : $CFG->SITEID; //Should always be passed
     $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
@@ -80,7 +80,7 @@ global $CFG,$USER,$MYVARS,$ROLES;
 	echo template_use("templates/roles.template", $params, "role_specific_template");
 }
 
-function user_specific(){
+function user_specific() {
 global $CFG, $USER, $MYVARS, $ROLES;
 	$pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : $CFG->SITEID; //Should always be passed
   $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
@@ -112,7 +112,7 @@ global $CFG, $USER, $MYVARS, $ROLES;
 
 	$options = "";
 	if ($roles = get_db_result($SQL)) {
-		while($row = fetch_row($roles)) {
+		while ($row = fetch_row($roles)) {
 			$options .= template_use("templates/roles.template", array("user" => $row), "role_specific_options_template");
 		}
 	}
@@ -125,7 +125,7 @@ global $CFG, $USER, $MYVARS, $ROLES;
 	echo $returnme;
 }
 
-function group_specific(){
+function group_specific() {
 global $CFG, $USER, $MYVARS, $ROLES;
 	$pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : $CFG->SITEID; //Should always be passed
   $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
@@ -147,7 +147,7 @@ global $CFG, $USER, $MYVARS, $ROLES;
 	echo template_use("templates/roles.template", $params, "group_specific_template");
 }
 
-function manager(){
+function manager() {
 global $CFG, $USER, $MYVARS, $ROLES;
 	$pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : $CFG->SITEID; //Should always be passed
     $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing

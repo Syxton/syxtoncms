@@ -489,7 +489,7 @@ class UploadHandler
 
     protected function get_unique_filename($file_path, $name, $size, $type, $error,
             $index, $content_range) {
-        while(is_dir($this->get_upload_path($name))) {
+        while (is_dir($this->get_upload_path($name))) {
             $name = $this->upcount_name($name);
         }
         // Keep an existing filename if this is part of a chunked upload:
@@ -1425,7 +1425,7 @@ class UploadHandler
         $response = array($this->options['param_name'] => $files);
         $name = $file_name ? $file_name : $upload['name'][0];
         $res = $this->generate_response($response, $print_response);
-        if(is_file($this->get_upload_path($name))){
+        if (is_file($this->get_upload_path($name))) {
             $uploaded_bytes = $this->fix_integer_overflow((int)$content_range[1]);
             $totalSize = $this->get_file_size($this->get_upload_path($name));
             if ($totalSize - $uploaded_bytes - $this->options['readfile_chunk_size'] < 0) {
@@ -1441,19 +1441,19 @@ class UploadHandler
         return $res;
     }
 
-    public function onUploadEnd ($res){
+    public function onUploadEnd ($res) {
         $targetPath = $this->options['storeFolder'];
         $targetPathThumb = $this->options['storeFolderThumb'];
 
-        if(!$this->options['ftp']){
+        if (!$this->options['ftp']) {
             $targetFile =  $targetPath. $res['files'][0]->name;
             $targetFileThumb =  $targetPathThumb. $res['files'][0]->name;
             if (!is_dir($targetPathThumb)) {
                 mkdir($targetPathThumb, $this->options['mkdir_mode'], true);
             }
-            if(is_file($targetFile)) {
+            if (is_file($targetFile)) {
                 chmod($targetFile, $this->options['config']['filePermission']);
-            }elseif(is_dir($targetFile)){
+            }elseif (is_dir($targetFile)) {
                 chmod($targetFile, $this->options['config']['folderPermission']);
             }
         }else{
@@ -1463,13 +1463,13 @@ class UploadHandler
 
         //check if image (and supported)
         $is_img = FALSE;
-        if ($this->is_valid_image_file($targetFile)){
+        if ($this->is_valid_image_file($targetFile)) {
             $is_img = TRUE;
         }
 
         if ($is_img)
         {
-            if(isset($this->options['config']['image_watermark']) && $this->options['config']['image_watermark']){
+            if (isset($this->options['config']['image_watermark']) && $this->options['config']['image_watermark']) {
                 require_once('include/php_image_magician.php');
 
                 $magicianObj = new imageLib($targetFile);
@@ -1484,7 +1484,7 @@ class UploadHandler
 
             if ( $thumbResult!==true)
             {
-                if($thumbResult === false){
+                if ($thumbResult === false) {
                     $res['files'][0]->error = trans("Not enough Memory");
                 }else{
                     $res['files'][0]->error = $thumbResult;
@@ -1492,7 +1492,7 @@ class UploadHandler
             }
             else
             {
-                if( !$this->options['ftp'] && ! new_thumbnails_creation($targetPath,$targetFile,$_FILES['files']['name'][0],$this->options['config']['current_path'],$this->options['config']))
+                if ( !$this->options['ftp'] && ! new_thumbnails_creation($targetPath,$targetFile,$_FILES['files']['name'][0],$this->options['config']['current_path'],$this->options['config']))
                 {
                     $res['files'][0]->error = trans("Not enough Memory");
                 }
@@ -1538,19 +1538,19 @@ class UploadHandler
                         if ($this->options['config']['image_max_height'] == 0) $srcHeight = $this->options['config']['image_max_width']*$srcHeight/$srcWidth;
                     }
 
-                    if ($this->options['config']['image_max_height'] != 0 && $srcHeight > $this->options['config']['image_max_height'] && $this->options['config']['image_resizing_override'] === FALSE){
+                    if ($this->options['config']['image_max_height'] != 0 && $srcHeight > $this->options['config']['image_max_height'] && $this->options['config']['image_resizing_override'] === FALSE) {
                         $resize = TRUE;
                         $srcHeight = $this->options['config']['image_max_height'];
 
                         if ($this->options['config']['image_max_width'] == 0) $srcWidth = $this->options['config']['image_max_height']*$srcWidth/$srcHeight;
                     }
 
-                    if ($resize){ create_img($targetFile, $targetFile, $srcWidth, $srcHeight, $this->options['config']['image_max_mode']); }
+                    if ($resize) { create_img($targetFile, $targetFile, $srcWidth, $srcHeight, $this->options['config']['image_max_mode']); }
                 }
             }
         }
 
-        if($this->options['ftp']){
+        if ($this->options['ftp']) {
 
             $this->options['ftp']->put($targetPath. $res['files'][0]->name, $targetFile, FTP_BINARY);
             unlink($targetFile);

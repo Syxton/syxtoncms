@@ -1,5 +1,5 @@
 <?php
-if(!isset($CFG)){ include_once('../config.php'); }
+if (!isset($CFG)) { include_once('../config.php'); }
 include($CFG->dirroot.'/lib/header.php');
 $allowed_ext = array(
 
@@ -41,30 +41,30 @@ $allowed_ext = array(
   'avi' => 'video/x-msvideo'
 );
 
-if(!empty($_GET['file'])){
+if (!empty($_GET['file'])) {
     $file = $_GET['file'];
     $file = str_replace("\\","/",$file);
     
     $path_parts = pathinfo($file);
-    if(empty($path_parts['filename']) && empty($path_parts['extension'])){ exit; }
+    if (empty($path_parts['filename']) && empty($path_parts['extension'])) { exit; }
     $filename = $path_parts['filename'] . "." . $path_parts['extension'];
 
-    if(!array_key_exists($path_parts['extension'], $allowed_ext)){
+    if (!array_key_exists($path_parts['extension'], $allowed_ext)) {
         die("Not allowed file type."); 
     }
   
     // get mime type
-    if($allowed_ext[$path_parts['extension']] == ''){
+    if ($allowed_ext[$path_parts['extension']] == '') {
         $mtype = '';
         // mime type is not set, get from server settings
-        if (function_exists('mime_content_type')){
+        if (function_exists('mime_content_type')) {
             $mtype = mime_content_type($file);
-        }elseif(function_exists('finfo_file')){
+        }elseif (function_exists('finfo_file')) {
             $finfo = finfo_open(FILEINFO_MIME); // return mime type
             $mtype = finfo_file($finfo, $file);
             finfo_close($finfo);  
         }
-        if($mtype == ''){
+        if ($mtype == '') {
             $mtype = "application/octet-stream";
         }
     }else{

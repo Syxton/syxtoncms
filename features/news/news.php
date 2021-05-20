@@ -6,9 +6,9 @@
 * Date: 3/25/2014
 * Revision: 0.4.0
 ***************************************************************************/
-if(empty($_POST["aslib"])){
-    if(!isset($CFG)){ include('../header.php'); }
-    if(!isset($NEWSLIB)){ include_once($CFG->dirroot . '/features/news/newslib.php');}
+if (empty($_POST["aslib"])) {
+    if (!isset($CFG)) { include('../header.php'); }
+    if (!isset($NEWSLIB)) { include_once($CFG->dirroot . '/features/news/newslib.php');}
 
     callfunction();
 
@@ -17,7 +17,7 @@ if(empty($_POST["aslib"])){
     echo '</body></html>';
 }
 
-function news_settings(){
+function news_settings() {
 global $CFG,$MYVARS,$USER;
 	$featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
 	$feature = "news";
@@ -27,30 +27,30 @@ global $CFG,$MYVARS,$USER;
 	$setting_names = get_setting_names($default_settings);
 
 	//Check if any settings exist for this feature
-	if($settings = fetch_settings($feature,$featureid,$pageid)){
+	if ($settings = fetch_settings($feature,$featureid,$pageid)) {
         echo make_settings_page($setting_names,$settings,$default_settings,$feature,$featureid,$pageid);
 	}else{ //No Settings found...setup default settings
-		if(make_or_update_settings_array($default_settings)){ news_settings(); }
+		if (make_or_update_settings_array($default_settings)) { news_settings(); }
 	}
 }
 
-function addeditnews(){
+function addeditnews() {
 global $CFG, $MYVARS, $USER;
 	$pageid = $MYVARS->GET["pageid"];
     $featureid= empty($MYVARS->GET["featureid"]) ? false : $MYVARS->GET["featureid"];
 	$newsid= empty($MYVARS->GET["newsid"]) ? false : $MYVARS->GET["newsid"];
 
     $title = $caption = $content = "";
-    if($newsid){
-        if(!user_has_ability_in_page($USER->userid,"editnews",$pageid,"news",$featureid)){ echo get_page_error_message("no_permission",array("editnews")); return; }
+    if ($newsid) {
+        if (!user_has_ability_in_page($USER->userid,"editnews",$pageid,"news",$featureid)) { echo get_page_error_message("no_permission",array("editnews")); return; }
         $row = get_db_row("SELECT * FROM news WHERE newsid='$newsid'");
         $title = stripslashes(htmlentities($row["title"]));
         $caption = stripslashes(htmlentities($row["caption"]));
         $content = stripslashes($row["content"]);
-        $button = '<input type="button" value="Save" onclick="ajaxapi(\'/features/news/news_ajax.php\',\'edit_news\',\'&amp;title=\'+escape($(\'#news_title\').val())+\'&amp;summary=\' + escape($(\'#news_summary\').val()) + \'&amp;pageid='.$pageid.'&amp;html=\'+escape('.get_editor_value_javascript().')+\'&amp;newsid='.$newsid.'\',function(){ close_modal(); });" />';
+        $button = '<input type="button" value="Save" onclick="ajaxapi(\'/features/news/news_ajax.php\',\'edit_news\',\'&amp;title=\'+escape($(\'#news_title\').val())+\'&amp;summary=\' + escape($(\'#news_summary\').val()) + \'&amp;pageid='.$pageid.'&amp;html=\'+escape('.get_editor_value_javascript().')+\'&amp;newsid='.$newsid.'\',function() { close_modal(); });" />';
     }else{
-        if(!user_has_ability_in_page($USER->userid,"addnews",$pageid,"news",$featureid)){ echo get_page_error_message("no_permission",array("addnews")); return; }
-        $button = '<input type="button" value="Save" onclick="ajaxapi(\'/features/news/news_ajax.php\',\'add_news\',\'&amp;title=\'+escape($(\'#news_title\').val())+\'&amp;summary=\' + escape($(\'#news_summary\').val()) + \'&amp;pageid='.$pageid.'&amp;html=\'+escape('.get_editor_value_javascript().')+\'&amp;featureid='.$featureid.'\',function(){ close_modal(); });" />';
+        if (!user_has_ability_in_page($USER->userid,"addnews",$pageid,"news",$featureid)) { echo get_page_error_message("no_permission",array("addnews")); return; }
+        $button = '<input type="button" value="Save" onclick="ajaxapi(\'/features/news/news_ajax.php\',\'add_news\',\'&amp;title=\'+escape($(\'#news_title\').val())+\'&amp;summary=\' + escape($(\'#news_summary\').val()) + \'&amp;pageid='.$pageid.'&amp;html=\'+escape('.get_editor_value_javascript().')+\'&amp;featureid='.$featureid.'\',function() { close_modal(); });" />';
     }
 
 	echo '
@@ -87,15 +87,15 @@ global $CFG, $MYVARS, $USER;
 		</div>';
 }
 
-function viewnews(){
+function viewnews() {
 global $CFG, $MYVARS, $USER, $ROLES;
     $newsid = $MYVARS->GET['newsid'];
     $pageid = $MYVARS->GET['pageid'];
     $newsonly = isset($MYVARS->GET['newsonly']) ? true : false;
-	if(is_logged_in()){
-	    if(!user_has_ability_in_page($USER->userid,"viewnews",$pageid)){ echo get_page_error_message("no_permission",array("viewnews")); return; }else{ echo news_wrapper($newsid,$pageid,$newsonly); }
+	if (is_logged_in()) {
+	    if (!user_has_ability_in_page($USER->userid,"viewnews",$pageid)) { echo get_page_error_message("no_permission",array("viewnews")); return; }else{ echo news_wrapper($newsid,$pageid,$newsonly); }
 	}else{
-		if(get_db_field("siteviewable","pages","pageid=$pageid") && role_has_ability_in_page($ROLES->visitor, 'viewnews', $pageid)){
+		if (get_db_field("siteviewable","pages","pageid=$pageid") && role_has_ability_in_page($ROLES->visitor, 'viewnews', $pageid)) {
             echo news_wrapper($newsid,$pageid,$newsonly);
 		}else{
     		echo '<div id="standalone_div"><input type="hidden" id="reroute" value="/features/news/news.php:viewnews:&amp;pageid='.$pageid.'&amp;newsid='.$newsid . ':standalone_div" />
@@ -104,7 +104,7 @@ global $CFG, $MYVARS, $USER, $ROLES;
 	}
 }
 
-function news_wrapper($newsid,$pageid,$newsonly){
+function news_wrapper($newsid,$pageid,$newsonly) {
 global $CFG;
 	$news = get_db_row("SELECT * FROM news WHERE newsid=$newsid");
 	$daygraphic = get_date_graphic($news['submitted'],true, true);
@@ -115,7 +115,7 @@ global $CFG;
 	$pagenews->submitted = $news['submitted'];
 	$pagenews->userid = $news['userid'];
 	$display_news = $news['content'] == "" ? stripslashes($news['caption']) : stripslashes($news['content']);
-	if($newsonly){
+	if ($newsonly) {
 		return '
 		 <input id="lasthint" type="hidden" />
 			<table style="width:100%">

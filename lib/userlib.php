@@ -7,10 +7,10 @@
 * Revision: 2.8.0
 ***************************************************************************/
 
-if(!isset($LIBHEADER)){ include('header.php'); }
+if (!isset($LIBHEADER)) { include('header.php'); }
 $USERLIB = true;
 
-function random_quote(){
+function random_quote() {
 global $CFG;
     $returnme = '<div id="carousel"  data-flickity=\'{ "autoPlay": 10000, "pageDots": false, "imagesLoaded": true, "percentPosition": false, "wrapAround": true }\'>';
 
@@ -20,7 +20,7 @@ global $CFG;
 
     // Get enough quotes to add to the images.
     if ($result = get_db_result("SELECT quote, author FROM quotes ORDER BY RAND() LIMIT 0, $count")) {
-        while($row = fetch_row($result)) {
+        while ($row = fetch_row($result)) {
             // Set quotes and authors.
             $quote = empty($row['quote']) ? '' : '<div>'.$row['quote'].'</div>';
             $author = empty($row['author']) ? '' : '<br /><div style="float:right;">-- '.$row['author'].'</div>';
@@ -44,13 +44,13 @@ function randomimages($dir) {
     return $images;
 }
 
-function load_user_cookie(){
+function load_user_cookie() {
 global $CFG, $USER;
-	if(!empty($_SESSION['userid'])) { //cookie exists
+	if (!empty($_SESSION['userid'])) { //cookie exists
         $time = get_timestamp();
         $advanced_login = !empty($_SESSION["lia_original"]) ? "" : " AND ($time - last_activity < ".$CFG->cookietimeout.")";
 		$SQL = "SELECT * FROM users WHERE userid='".$_SESSION['userid']."' $advanced_login";
-        if($row = get_db_row($SQL)){ //Get user info from db, load into $USER global
+        if ($row = get_db_row($SQL)) { //Get user info from db, load into $USER global
             $temp = new \stdClass;
     		$temp->userid = $row['userid'];
     		$temp->fname = $row['fname'];
@@ -73,9 +73,9 @@ global $CFG, $USER;
 function update_user_cookie() {
 global $CFG,$USER;
 	$time = get_timestamp();
-	if(!is_logged_in()){ //check to see if $USER global is set
+	if (!is_logged_in()) { //check to see if $USER global is set
         load_user_cookie(); //if $USER global isn't set, see if there is an existing cookie and have it loaded into $USER
-		if(is_logged_in()) { //check if $USER global is set now.
+		if (is_logged_in()) { //check if $USER global is set now.
             $_SESSION['userid'] = $USER->userid;
 			execute_db_sql("UPDATE users SET last_activity='$time' WHERE userid='".$USER->userid."'"); //update last active timestamp
 		} else { //not currently logged in
@@ -89,16 +89,16 @@ global $CFG,$USER;
 	}
 }
 
-function create_new_user($user){
+function create_new_user($user) {
 global $CFG,$USER;
-	if(!isset($COMLIB)){ include_once($CFG->dirroot.'/lib/comlib.php'); }
+	if (!isset($COMLIB)) { include_once($CFG->dirroot.'/lib/comlib.php'); }
 	$temp = create_random_password();
 	$key = md5($user->email) . md5(time());
 	$userid = execute_db_sql("INSERT INTO users (email,fname,lname,temp,password,userkey,joined) VALUES('".dbescape($user->email)."','".dbescape($user->fname)."','".dbescape($user->lname)."','".dbescape($user->password)."','".md5($temp)."','$key','".get_timestamp()."')");
 	$defaultrole = get_db_field("default_role","pages","pageid='".$CFG->SITEID."'");
 	$role_assignment = execute_db_sql("INSERT INTO roles_assignment (userid,roleid,pageid) VALUES('$userid','$defaultrole','".$CFG->SITEID."')");
 
-    if($userid && $role_assignment){
+    if ($userid && $role_assignment) {
     	$USER->userid = $userid;
         $USER->fname = $user->fname;
         $USER->lname = $user->lname;
@@ -110,12 +110,12 @@ global $CFG,$USER;
     	$message = write_confirmation_email($user, $temp);
     	$subject = $CFG->sitename . ' New User Confirmation';
 
-		if(send_email($USER,$FROMUSER,NULL,$subject,$message)){
+		if (send_email($USER,$FROMUSER,NULL,$subject,$message)) {
 			send_email($FROMUSER,$FROMUSER,NULL,$subject,$message);
 			return "true**" . new_user_confirmation($user);
 		}
 	}else{
-		if($userid){
+		if ($userid) {
 			execute_db_sql("DELETE FROM users WHERE userid='$userid'");
 			execute_db_sql("DELETE FROM roles_assignment WHERE userid='$userid'");
 		}
@@ -123,7 +123,7 @@ global $CFG,$USER;
 	}
 }
 
-function create_random_password(){
+function create_random_password() {
 	//Make random password and activation code
 	$pass1 = array("little","big","loud","quiet","short","tall","tiny","huge","old","young","nice","mean","scary","sneaky","snooty","pretty","happy","sneezy","itchy");
 	$rnd1 = array_rand($pass1);
@@ -134,7 +134,7 @@ function create_random_password(){
 	return $pass1[$rnd1] . $pass2 . $pass3[$rnd3];
 }
 
-function new_user_confirmation($user){
+function new_user_confirmation($user) {
 global $CFG;
 	return '
     	<p><font size="3" face="Tahoma"><strong>'.ucfirst($user->fname).' '.ucfirst($user->lname).'\'s</strong> account was created </font><font size="3" face="Tahoma" color="#999999">successfully!</font></p>
@@ -147,7 +147,7 @@ global $CFG;
     	';
 }
 
-function write_confirmation_email($user, $temp){
+function write_confirmation_email($user, $temp) {
 global $CFG;
 	return '
         <p><font face="Tahoma"><font size="3" color="#993366">Dear <strong>'.$user->fname.' '.$user->lname.'</strong>,</font><br />
@@ -174,35 +174,35 @@ global $CFG;
     	<p>&nbsp;</p>';
 }
 
-function get_user_name($userid){
-	if($user = get_db_row("SELECT * FROM users WHERE userid='$userid' LIMIT 1")){ return $user['fname'] . " " . $user['lname']; }
+function get_user_name($userid) {
+	if ($user = get_db_row("SELECT * FROM users WHERE userid='$userid' LIMIT 1")) { return $user['fname'] . " " . $user['lname']; }
 	return "Anonymous";
 }
 
-function is_logged_in(){
+function is_logged_in() {
 global $CFG, $USER;
-	if(!empty($USER->userid)){
+	if (!empty($USER->userid)) {
 	   recursive_mkdir($CFG->userfilespath . '\\' . $USER->userid);
        return true;
     }
 	return false;
 }
 
-function nameize($str,$a_char = array("'","-"," ",'"','.')){
+function nameize($str,$a_char = array("'","-"," ",'"','.')) {
     $str = stripslashes(trim($str));
     $str = preg_replace('!\s+!', ' ', $str);
     $name_parts = explode(" ", $str);
 
-    if(count($name_parts) > 1) {
+    if (count($name_parts) > 1) {
         $output = "";
-        foreach($name_parts as $np) {
+        foreach ($name_parts as $np) {
             $output .= nameize($np) . " ";
         }
         return trim($output);
     } else {
         //the tricky part is finding names like DeMarco: 2 capitals
-    	for($i=0;$i<strlen($str);$i++){
-    		if($i > 0 && ctype_lower($str[($i-1)]) && ctype_upper($str[$i]) && isset($str[($i+1)]) && ctype_lower($str[($i+1)])){
+    	for ($i=0;$i<strlen($str);$i++) {
+    		if ($i > 0 && ctype_lower($str[($i-1)]) && ctype_upper($str[$i]) && isset($str[($i+1)]) && ctype_lower($str[($i+1)])) {
     			$temp = $str;
     			$str = substr($temp,0,($i)) . "+ " . substr($temp,($i),(strlen($str)-($i)));
     			$i++; $i++;
@@ -212,13 +212,13 @@ function nameize($str,$a_char = array("'","-"," ",'"','.')){
     	//$str contains the complete raw name string
         //$a_char is an array containing the characters we use as separators for capitalization. If you don't pass anything, there are three in there as default.
     	$string = strtolower($str);
-        foreach($a_char as $temp){
+        foreach ($a_char as $temp) {
             $pos = strpos($string,$temp);
-            if($pos !== -1){
+            if ($pos !== -1) {
                 //we are in the loop because we found one of the special characters in the array, so lets split it up into chunks and capitalize each one.
                 $mend = '';
                 $a_split = explode($temp,$string);
-                foreach ($a_split as $temp2){
+                foreach ($a_split as $temp2) {
                     //capitalize each portion of the string which was separated at a special character
                     $mend .= ucfirst($temp2).$temp;
                 }
@@ -227,9 +227,9 @@ function nameize($str,$a_char = array("'","-"," ",'"','.')){
         }
 
         $str = "";
-       	for($i=0;$i<strlen($string);$i++){
-    		if(array_search($string[$i],$a_char)){
-                if($string[$i] !== $string[(strlen($string)-$i-1)]){
+       	for ($i=0;$i<strlen($string);$i++) {
+    		if (array_search($string[$i],$a_char)) {
+                if ($string[$i] !== $string[(strlen($string)-$i-1)]) {
                     $str .= $string[$i];
                 }
     		}else{

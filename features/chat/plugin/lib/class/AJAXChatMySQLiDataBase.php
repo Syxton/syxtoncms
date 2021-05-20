@@ -27,7 +27,7 @@ class AJAXChatDataBaseMySQLi {
 			$dbConnectionConfig['user'],
 			$dbConnectionConfig['pass']
 		);
-		if($this->_connectionID->connect_errno) {
+		if ($this->_connectionID->connect_errno) {
 			$this->_errno = mysqli_connect_errno();
 			$this->_error = mysqli_connect_error();
 			return false;
@@ -37,7 +37,7 @@ class AJAXChatDataBaseMySQLi {
 	
 	// Method to select the DataBase:
 	function select($dbName) {
-		if(!$this->_connectionID->select_db($dbName)) {
+		if (!$this->_connectionID->select_db($dbName)) {
 			$this->_errno = $this->_connectionID->errno;
 			$this->_error = $this->_connectionID->error;
 			return false;
@@ -53,7 +53,7 @@ class AJAXChatDataBaseMySQLi {
 	
 	// Method to return the error report:
 	function getError() {
-		if($this->error()) {
+		if ($this->error()) {
 			$str = 'Error-Report: '	.$this->_error."\n";
 			$str .= 'Error-Code: '.$this->_errno."\n";
 		} else {

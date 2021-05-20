@@ -10,7 +10,7 @@
 include ('header.php');
 update_user_cookie();
 
-if(!isset($RSSLIB)){ include_once($CFG->dirroot . '/lib/rsslib.php'); }
+if (!isset($RSSLIB)) { include_once($CFG->dirroot . '/lib/rsslib.php'); }
 
 callfunction();
 
@@ -27,7 +27,7 @@ global $MYVARS;
 	}
 }
 
-function add_feed(){
+function add_feed() {
 global $CFG, $MYVARS, $USER;
 	$pageid = $MYVARS->GET["pageid"];
 	$type = $MYVARS->GET["type"];

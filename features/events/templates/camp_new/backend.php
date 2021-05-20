@@ -6,16 +6,16 @@
  * $Date: 08/16/2013
  * $Revision: 0.1.4
  ***************************************************************************/
-if(!isset($CFG)){ include('../../../../config.php'); } 
+if (!isset($CFG)) { include('../../../../config.php'); } 
 include($CFG->dirroot . '/pages/header.php');
 
-if(!isset($EVENTSLIB)) include_once($CFG->dirroot . '/features/events/eventslib.php');
+if (!isset($EVENTSLIB)) include_once($CFG->dirroot . '/features/events/eventslib.php');
 
 callfunction();
 
 update_user_cookie();
 
-function register(){
+function register() {
 global $CFG,$MYVARS,$USER,$error;
 error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
 
@@ -23,7 +23,7 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
     $keys->app_key = '350430668323766';
     $keys->app_secret = '7c43774dbcf542b0700e338bc5625296';
   
-    if(!isset($COMLIB)){ include_once($CFG->dirroot.'/lib/comlib.php'); }
+    if (!isset($COMLIB)) { include_once($CFG->dirroot.'/lib/comlib.php'); }
     $eventid = $MYVARS->GET["eventid"];
 	$event = get_db_row("SELECT * FROM events WHERE eventid = '$eventid'");
 	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='".$event['template_id']."'");
@@ -199,7 +199,7 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
 	}
 }
 
-function common_weeks($event, $included = true, $id, $regid = "", $autofill = 0){
+function common_weeks($event, $included = true, $id, $regid = "", $autofill = 0) {
 global $CFG,$USER,$PAGE;
 	$returnme = "";
 	$time = get_timestamp();
@@ -208,23 +208,23 @@ global $CFG,$USER,$PAGE;
 	$siteviewable = $event["pageid"] == $CFG->SITEID || ($event["siteviewable"] == 1 && $event["confirmed"] == 1) ? " OR (siteviewable = '1' AND confirmed = '1')" : "";
 	$includelastevent = $included ? "" : "e.eventid != ".$event["eventid"]. " AND ";
 	$SQL = "SELECT e.* FROM events e WHERE $includelastevent (e.template_id=".$event["template_id"]." AND (e.pageid='".$event["pageid"]."' $siteviewable)) AND (e.start_reg < $time AND e.stop_reg > ($time - 86400)) AND (e.max_users=0 OR (e.max_users != 0 AND e.max_users > (SELECT COUNT(*) FROM events_registrations er WHERE er.eventid=e.eventid AND verified='1')))";
-	if($events = get_db_result($SQL)){
+	if ($events = get_db_result($SQL)) {
         $common = array();
-		while($evnt = fetch_row($events)){
+		while ($evnt = fetch_row($events)) {
 			$selected = $event["eventid"] == $evnt["eventid"] ? " SELECTED " : "";
             $min_age = get_db_field("setting","settings","type='events_template' AND extra='".$evnt["eventid"]."' AND setting_name='template_setting_min_age'");
             $max_age = get_db_field("setting","settings","type='events_template' AND extra='".$evnt["eventid"]."' AND setting_name='template_setting_max_age'");
             $already_registered = get_db_count("SELECT * FROM events_registrations WHERE regid IN (SELECT regid FROM events_registrations_values WHERE elementname='Camper_Name' AND value='$camper_name') AND regid IN (SELECT regid FROM events_registrations_values WHERE elementname='Camper_Age' AND value='$camper_age') AND eventid='".$evnt["eventid"]."'");
             //meets minimum age and maximum age requirements if set
-            if(!$camper_age || ((!$min_age && !$max_age) || ($min_age && $camper_age >= $min_age && $max_age && $camper_age <= $max_age) || 
+            if (!$camper_age || ((!$min_age && !$max_age) || ($min_age && $camper_age >= $min_age && $max_age && $camper_age <= $max_age) || 
                (!$max_age && ($min_age && $camper_age >= $min_age)) || 
                (!$min_age && ($max_age && $camper_age >= $max_age)))
-            ){ 
-                if(!$already_registered){ $common[] = array('eventid'=>$evnt['eventid'],'selected'=>$selected,'name'=>$evnt['name']); }       
+            ) { 
+                if (!$already_registered) { $common[] = array('eventid'=>$evnt['eventid'],'selected'=>$selected,'name'=>$evnt['name']); }       
             }
 		}
         $returnme = count($common) ? '<select id="'.$id.'">' : '&nbsp;<span style="color:red;">There are no other weeks available. </span>';
-        foreach($common as $c){
+        foreach ($common as $c) {
             $returnme .= '<option value="'.$c['eventid'].'" '.$c['selected'].'>'.$c['name'].'</option>';
         }
         $returnme .= count($common) ? '</select> <input type="button" onclick="show_form_again($(\'#'.$id.'\').val(),\''.$regid.'\', '.$autofill.');" value="Register" />' : '';

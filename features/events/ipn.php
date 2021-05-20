@@ -1,7 +1,7 @@
 <?php
-if(!isset($CFG)){ include('../../config.php'); }
+if (!isset($CFG)) { include('../../config.php'); }
 include_once($CFG->dirroot . '/lib/header.php');
-if(!isset($EVENTSLIB)){ include_once($CFG->dirroot . '/features/events/eventslib.php'); }
+if (!isset($EVENTSLIB)) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 
 // STEP 1: Read POST data
 
@@ -18,7 +18,7 @@ foreach ($raw_post_array as $keyval) {
 }
 // read the post from PayPal system and add 'cmd'
 $req = 'cmd=_notify-validate';
-if(function_exists('get_magic_quotes_gpc')) {
+if (function_exists('get_magic_quotes_gpc')) {
    $get_magic_quotes_exists = true;
 }
 foreach ($myPost as $key => $value) {
@@ -46,7 +46,7 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, array('Connection: Close'));
 // of the certificate as shown below.
 
 curl_setopt($ch, CURLOPT_CAINFO, dirname(__FILE__) . '/cacert.pem');
-if( !($res = curl_exec($ch)) ) {
+if ( !($res = curl_exec($ch)) ) {
     // error_log("Got " . curl_error($ch) . " when processing IPN data");
     //Log
     log_entry('events', "Got " . curl_error($ch) . " when processing IPN data", "Paypal (failed)");
@@ -69,11 +69,11 @@ if (strcmp ($res, "VERIFIED") == 0) {
 
 	$keyarray = $_POST;
     $txid = $_POST['txn_id'];
-	if(!get_db_row("SELECT * FROM logfile WHERE feature='events' AND description='Paypal' AND info='$txid'")){
+	if (!get_db_row("SELECT * FROM logfile WHERE feature='events' AND description='Paypal' AND info='$txid'")) {
 		$regids = $keyarray['custom'];
 		$regids = explode(":",$regids);
 		$i=0;
-		while(isset($regids[$i])){
+		while (isset($regids[$i])) {
             $regid = dbescape($regids[$i]);
             $add = $_POST["mc_gross_".($i+1)];
 

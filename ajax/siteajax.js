@@ -210,7 +210,7 @@ function create_request_string(container){
 
 function get_values_from_multiselect(label){
 	var returnme = "";	var i = 0;
-	while(document.getElementById(label+i)){
+	while (document.getElementById(label+i)){
 		if(document.getElementById(label+i).checked) {
 			returnme += returnme === "" ? document.getElementById(label+i).value : "," + document.getElementById(label+i).value;
 		} 
@@ -430,7 +430,7 @@ function clear_window(pageid){ go_to_page(pageid); } //Might be useless now\
 
 function page_display(){
 	var sections = trim(xmlHttp.responseText).split("%%");	var content; var i=0;
- 	while(sections[i]){
+ 	while (sections[i]){
 	 	content = sections[i].split("**");
 		var filldiv = content[0];
 		var divname = content[1];

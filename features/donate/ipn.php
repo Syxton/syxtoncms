@@ -1,5 +1,5 @@
 <?php
-if (!isset($CFG)){ include('../../config.php'); }
+if (!isset($CFG)) { include('../../config.php'); }
 include_once($CFG->dirroot . '/lib/header.php');
 
 // STEP 1: Read POST data

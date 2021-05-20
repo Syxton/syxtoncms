@@ -7,7 +7,7 @@
 * Revision: 0.1.9
 ***************************************************************************/
 
-if(!isset($LIBHEADER)){ include('header.php'); }
+if (!isset($LIBHEADER)) { include('header.php'); }
 $STYLESLIB = true;
 $STYLES = new \stdClass;
 

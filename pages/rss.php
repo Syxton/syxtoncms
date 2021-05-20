@@ -15,7 +15,7 @@ callfunction();
 
 echo template_use("templates/page.template", array(), "end_of_page_template");
 
-function rss_subscribe_feature(){
+function rss_subscribe_feature() {
 global $CFG, $MYVARS, $USER;
 	$pageid = $MYVARS->GET["pageid"];
 	$feature = $MYVARS->GET["feature"];

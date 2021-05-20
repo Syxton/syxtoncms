@@ -68,13 +68,13 @@ if ( ! function_exists('trans'))
 	}
 	else
 	{
-		if(file_exists('lang/languages.php')){
+		if (file_exists('lang/languages.php')) {
 			$languages = include 'lang/languages.php';
 		}else{
 			$languages = include '../lang/languages.php';
 		}
 
-		if(array_key_exists($_SESSION['RF']['language'],$languages)){
+		if (array_key_exists($_SESSION['RF']['language'],$languages)) {
 			$lang = $_SESSION['RF']['language'];
 		}else{
 			response('Lang_Not_Found'.AddErrorLocation())->send();
@@ -82,7 +82,7 @@ if ( ! function_exists('trans'))
 		}
 
 	}
-	if(file_exists('lang/' . $lang . '.php')){
+	if (file_exists('lang/' . $lang . '.php')) {
 		$lang_vars = include 'lang/' . $lang . '.php';
 	}else{
 		$lang_vars = include '../lang/' . $lang . '.php';
@@ -95,7 +95,7 @@ if ( ! function_exists('trans'))
 }
 
 
-function checkRelativePathPartial($path){
+function checkRelativePathPartial($path) {
 	if (strpos($path, '../') !== false
         || strpos($path, './') !== false
         || strpos($path, '/..') !== false
@@ -103,7 +103,7 @@ function checkRelativePathPartial($path){
         || strpos($path, '\\..') !== false
         || strpos($path, '.\\') !== false
         || $path === ".."
-    ){
+    ) {
 		return false;
     }
     return true;
@@ -116,9 +116,9 @@ function checkRelativePathPartial($path){
 *
 * @return boolean is it correct?
 */
-function checkRelativePath($path){
+function checkRelativePath($path) {
 	$path_correct = checkRelativePathPartial($path);
-	if($path_correct){
+	if ($path_correct) {
 		$path_decoded = rawurldecode($path);
 		$path_correct = checkRelativePathPartial($path_decoded);
 	}
@@ -133,7 +133,7 @@ function checkRelativePath($path){
 *
 * @return boolean is it an upload dir?
 */
-function isUploadDir($path, $config){
+function isUploadDir($path, $config) {
 	$upload_dir = $config['current_path'];
 	$thumbs_dir = $config['thumbs_base_path'];
 	if (realpath($path) === realpath($upload_dir) || realpath($path) === realpath($thumbs_dir))
@@ -152,28 +152,28 @@ function isUploadDir($path, $config){
 *
 * @return null
 */
-function deleteFile($path,$path_thumb,$config){
-	if ($config['delete_files']){
+function deleteFile($path,$path_thumb,$config) {
+	if ($config['delete_files']) {
 		$ftp = ftp_con($config);
-		if($ftp){
+		if ($ftp) {
 			try{
 				$ftp->delete("/".$path);
 				@$ftp->delete("/".$path_thumb);
-			}catch(FtpClient\FtpException $e){
+			}catch(FtpClient\FtpException $e) {
 				return;
 			}
 		}else{
-			if (file_exists($path)){
+			if (file_exists($path)) {
 				unlink($path);
 			}
-			if (file_exists($path_thumb)){
+			if (file_exists($path_thumb)) {
 				unlink($path_thumb);
 			}
 		}
 
 		$info=pathinfo($path);
-		if (!$ftp && $config['relative_image_creation']){
-			foreach($config['relative_path_from_current_pos'] as $k=>$path)
+		if (!$ftp && $config['relative_image_creation']) {
+			foreach ($config['relative_path_from_current_pos'] as $k=>$path)
 			{
 				if ($path!="" && $path[strlen($path)-1]!="/") $path.="/";
 
@@ -186,7 +186,7 @@ function deleteFile($path,$path_thumb,$config){
 
 		if (!$ftp && $config['fixed_image_creation'])
 		{
-			foreach($config['fixed_path_from_filemanager'] as $k=>$path)
+			foreach ($config['fixed_path_from_filemanager'] as $k=>$path)
 			{
 				if ($path!="" && $path[strlen($path)-1] != "/") $path.="/";
 
@@ -209,13 +209,13 @@ function deleteFile($path,$path_thumb,$config){
 */
 function deleteDir($dir,$ftp = null, $config = null)
 {
-	if($ftp){
+	if ($ftp) {
 
 		try{
 			$ftp->rmdir($dir);
 			return true;
 
-		}catch(FtpClient\FtpException $e){
+		}catch(FtpClient\FtpException $e) {
 			return null;
 		}
 
@@ -256,7 +256,7 @@ function duplicate_file( $old_path, $name, $ftp = null, $config = null )
 {
 	$info = pathinfo($old_path);
 	$new_path = $info['dirname'] . "/" . $name . "." . $info['extension'];
-	if($ftp){
+	if ($ftp) {
 		try{
 			$tmp = time().$name . "." . $info['extension'];
 			$ftp->get($tmp, "/".$old_path, FTP_BINARY);
@@ -264,7 +264,7 @@ function duplicate_file( $old_path, $name, $ftp = null, $config = null )
 			unlink($tmp);
 			return true;
 
-		}catch(FtpClient\FtpException $e){
+		}catch(FtpClient\FtpException $e) {
 			return null;
 		}
 	}else{
@@ -295,10 +295,10 @@ function rename_file($old_path, $name, $ftp = null, $config = null)
 	$name = fix_filename($name, $config);
 	$info = pathinfo($old_path);
 	$new_path = $info['dirname'] . "/" . $name . "." . $info['extension'];
-	if($ftp){
+	if ($ftp) {
 		try{
 			return $ftp->rename("/".$old_path, "/".$new_path);
-		}catch(FtpClient\FtpException $e){
+		}catch(FtpClient\FtpException $e) {
 			return false;
 		}
 	}else{
@@ -316,7 +316,7 @@ function rename_file($old_path, $name, $ftp = null, $config = null)
 }
 
 
-function url_exists($url){
+function url_exists($url) {
     if (!$fp = curl_init($url)) return false;
     return true;
 }
@@ -343,9 +343,9 @@ function rename_folder($old_path, $name, $ftp = null, $config = null)
 {
 	$name = fix_filename($name, $config, true);
 	$new_path = fix_dirname($old_path) . "/" . $name;
-	if($ftp){
-		if($ftp->chdir("/".$old_path)){
-			if(@$ftp->chdir($new_path)){
+	if ($ftp) {
+		if ($ftp->chdir("/".$old_path)) {
+			if (@$ftp->chdir($new_path)) {
 				return false;
 			}
 			return $ftp->rename("/".$old_path, "/".$new_path);
@@ -362,8 +362,8 @@ function rename_folder($old_path, $name, $ftp = null, $config = null)
 	}
 }
 
-function ftp_con($config){
-	if(isset($config['ftp_host']) && $config['ftp_host']){
+function ftp_con($config) {
+	if (isset($config['ftp_host']) && $config['ftp_host']) {
 		// *** Include the class
 		include('include/FtpClient.php');
 		include('include/FtpException.php');
@@ -375,7 +375,7 @@ function ftp_con($config){
 			$ftp->login($config['ftp_user'], $config['ftp_pass']);
 			$ftp->pasv(true);
 			return $ftp;
-		}catch(FtpClient\FtpException $e){
+		}catch(FtpClient\FtpException $e) {
 			echo "Error: ";
 			echo $e->getMessage();
 			echo " to server ";
@@ -404,8 +404,8 @@ function ftp_con($config){
 function create_img($imgfile, $imgthumb, $newwidth, $newheight = null, $option = "crop",$config = array())
 {
 	$result = false;
-	if(isset($config['ftp_host']) && $config['ftp_host']){
-		if(url_exists($imgfile)){
+	if (isset($config['ftp_host']) && $config['ftp_host']) {
+		if (url_exists($imgfile)) {
 			$temp = tempnam('/tmp','RF');
 			unlink($temp);
 			$temp .=".".substr(strrchr($imgfile,'.'),1);
@@ -417,7 +417,7 @@ function create_img($imgfile, $imgthumb, $newwidth, $newheight = null, $option =
 			$imgthumb = $temp;
 		}
 	}
-	if(file_exists($imgfile) || strpos($imgfile,'http')===0){
+	if (file_exists($imgfile) || strpos($imgfile,'http')===0) {
 		if (strpos($imgfile,'http')===0 || image_check_memory_usage($imgfile, $newwidth, $newheight))
 		{
 			require_once('php_image_magician.php');
@@ -425,13 +425,13 @@ function create_img($imgfile, $imgthumb, $newwidth, $newheight = null, $option =
 				$magicianObj = new imageLib($imgfile);
 				$magicianObj->resizeImage($newwidth, $newheight, $option);
 				$magicianObj->saveImage($imgthumb, 80);
-			}catch (Exception $e){
+			}catch (Exception $e) {
 				return $e->getMessage();
 			}
 			$result = true;
 		}
 	}
-	if($result && isset($config['ftp_host']) && $config['ftp_host'] ){
+	if ($result && isset($config['ftp_host']) && $config['ftp_host'] ) {
 		$ftp->put($save_ftp, $imgthumb, FTP_BINARY);
 		unlink($imgthumb);
 	}
@@ -564,16 +564,16 @@ function checkresultingsize($sizeAdded)
 */
 function create_folder($path = null, $path_thumbs = null,$ftp = null,$config = null)
 {
-	if($ftp){
+	if ($ftp) {
 		$ftp->mkdir($path);
 		$ftp->mkdir($path_thumbs);
 	}else{
-		if(file_exists($path) || file_exists($path_thumbs)){
+		if (file_exists($path) || file_exists($path_thumbs)) {
 			return false;
 		}
 		$oldumask = umask(0);
 		$permission = 0755;
-		if(isset($config['folderPermission'])){
+		if (isset($config['folderPermission'])) {
 			$permission = $config['folderPermission'];
 		}
 		if ($path && !file_exists($path))
@@ -623,19 +623,19 @@ function check_files_extensions_on_path($path, $ext)
 * @param  array   $config
 */
 
-function check_file_extension($extension,$config){
+function check_file_extension($extension,$config) {
 	$check = false;
 	if (!$config['ext_blacklist']) {
-		if(in_array(mb_strtolower($extension), $conf['ext'])){
+		if (in_array(mb_strtolower($extension), $conf['ext'])) {
 			$check = true;
 		}
     } else {
-    	if(!in_array(mb_strtolower($extension), $conf['ext_blacklist'])){
+    	if (!in_array(mb_strtolower($extension), $conf['ext_blacklist'])) {
 			$check = true;
 		}
     }
 
-	if($config['files_without_extension'] && $extension == ''){
+	if ($config['files_without_extension'] && $extension == '') {
 		$check = true;
 	}
 
@@ -694,9 +694,9 @@ function fix_get_params($str)
 *
 * @return bool
 */
-function check_extension($extension,$config){
+function check_extension($extension,$config) {
 	$extension = fix_strtolower($extension);
-	if((!$config['ext_blacklist'] && !in_array($extension, $config['ext'])) || ($config['ext_blacklist'] && in_array($extension, $config['ext_blacklist']))){
+	if ((!$config['ext_blacklist'] && !in_array($extension, $config['ext'])) || ($config['ext_blacklist'] && in_array($extension, $config['ext_blacklist']))) {
 		return false;
 	}
 	return true;
@@ -871,7 +871,7 @@ function image_check_memory_usage($img, $max_breedte, $max_hoogte)
 	{
 		$K64 = 65536; // number of bytes in 64K
 		$memory_usage = memory_get_usage();
-		if(ini_get('memory_limit') > 0 ){
+		if (ini_get('memory_limit') > 0 ) {
 			
 			$mem = ini_get('memory_limit');
 			$memory_limit = 0;
@@ -907,7 +907,7 @@ function image_check_memory_usage($img, $max_breedte, $max_hoogte)
 *
 * @return  bool
 */
-if(!function_exists('ends_with')){
+if (!function_exists('ends_with')) {
 	function ends_with($haystack, $needle)
 	{
 		return $needle === "" || substr($haystack, -strlen($needle)) === $needle;

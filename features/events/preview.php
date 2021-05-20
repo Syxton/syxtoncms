@@ -7,16 +7,16 @@
  * $Revision: 1.0.0
  ***************************************************************************/
  
-if(!isset($CFG)){ include_once('../../config.php'); }
-if(!isset($ERRORS)){ include_once($CFG->dirroot . '/lib/errors.php'); }
-if(!isset($USERLIB)){ include_once($CFG->dirroot . '/lib/userlib.php'); }
-if(!isset($DBLIB)){ include_once($CFG->dirroot . '/lib/dblib.php'); }
-if(!isset($PAGELIB)){ include_once($CFG->dirroot . '/lib/pagelib.php'); }
-if(!isset($EVENTSLIB)){ include_once($CFG->dirroot . '/features/events/eventslib.php'); }
+if (!isset($CFG)) { include_once('../../config.php'); }
+if (!isset($ERRORS)) { include_once($CFG->dirroot . '/lib/errors.php'); }
+if (!isset($USERLIB)) { include_once($CFG->dirroot . '/lib/userlib.php'); }
+if (!isset($DBLIB)) { include_once($CFG->dirroot . '/lib/dblib.php'); }
+if (!isset($PAGELIB)) { include_once($CFG->dirroot . '/lib/pagelib.php'); }
+if (!isset($EVENTSLIB)) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 
 callfunction();
 
-function preview_template(){
+function preview_template() {
 global $CFG,$MYVARS;
     $form = "";
 	echo '
@@ -37,23 +37,23 @@ global $CFG,$MYVARS;
 	$formlist = "";
 	$returnme = '<div id="registration_div"><table class="registration"><tr><td>'.$template['intro'].'</td></tr></table>';
 	
-	if($template['folder'] != "none"){ //registration template refers to a file
+	if ($template['folder'] != "none") { //registration template refers to a file
 		$preview = true;
 		include($CFG->dirroot . '/features/events/templates/' . $template['folder'] . '/template.php');
 	}else{ //registration template refers to a database style template
 		$form = '<table style="width:100%">';
 		$templateform = get_db_result("SELECT * FROM events_templates_forms WHERE template_id='".$template['template_id']."' ORDER BY sort");
 	
-		while($element = fetch_row($templateform)){
+		while ($element = fetch_row($templateform)) {
 			$opt = $element['optional'] ? '<font size="1.2em" color="blue">(optional)</font> ' : '';
 			$formlist .= $formlist == "" ? $element['type'] . ":" . $element['elementid'] . ":" . $element['optional'] . ":" . $element['allowduplicates'] . ":" . $element['list'] : "*" . $element['type'] . ":" . $element['elementid'] . ":" . $element['optional'] . ":" . $element['allowduplicates'] . ":" . $element['list'];
 			
-			if($element['type'] == 'select'){
+			if ($element['type'] == 'select') {
 				
-			}elseif($element['type'] == 'phone'){
+			}elseif ($element['type'] == 'phone') {
 				$form .= '<tr><td class="field_title">' . $opt . $element['display'] . ': </td><td class="field_input" style="width:70%">' . create_form_element($element['type'],$element['elementid'],$element['optional'],$element['length'],false) . '</td></tr>';
 				$form .= '<tr><td></td><td class="field_input"><span id="'.$element['elementid'].'_error" class="error_text"></span></td></tr>';
-			}elseif($element['type'] == 'payment'){
+			}elseif ($element['type'] == 'payment') {
 				$form .= '
 				<tr>
 					<td class="field_title">Payment Amount:</td>

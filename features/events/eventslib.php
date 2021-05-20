@@ -7,14 +7,14 @@
 * Revision: 2.8.7
 ***************************************************************************/
 
-if(!isset($LIBHEADER)){ if(file_exists('./lib/header.php')){ include('./lib/header.php'); }elseif(file_exists('../lib/header.php')) { include('../lib/header.php'); }elseif(file_exists('../../lib/header.php')){ include('../../lib/header.php'); }}
+if (!isset($LIBHEADER)) { if (file_exists('./lib/header.php')) { include('./lib/header.php'); }elseif (file_exists('../lib/header.php')) { include('../lib/header.php'); }elseif (file_exists('../../lib/header.php')) { include('../../lib/header.php'); }}
 $EVENTSLIB = true;
 
-function display_events($pageid, $area, $featureid){
+function display_events($pageid, $area, $featureid) {
 global $CFG, $USER, $ROLES;
     $content = "";
 
-	if(!$settings = fetch_settings("events",$featureid,$pageid)){
+	if (!$settings = fetch_settings("events",$featureid,$pageid)) {
 		make_or_update_settings_array(default_settings("events",$pageid,$featureid));
 		$settings = fetch_settings("events",$featureid,$pageid);
 	}
@@ -26,66 +26,66 @@ global $CFG, $USER, $ROLES;
 	$showpastevents = $settings->events->$featureid->showpastevents->setting;
     $allowrequests = $settings->events->$featureid->allowrequests->setting;
 
-	if($area == "middle"){
+	if ($area == "middle") {
         //Get calendar of events
         return get_calendar_of_events($title, $pageid, $featureid, false, $showpastevents, $content, $allowrequests);
     }else{
-        if(is_logged_in()){ //Logged in user will see...
-            if(get_db_row("SELECT eventid FROM events WHERE workers=1 AND event_begin_date > " .time())) {
-                if(user_has_ability_in_page($USER->userid, "staffapply", $pageid, "events", $featureid)){
+        if (is_logged_in()) { //Logged in user will see...
+            if (get_db_row("SELECT eventid FROM events WHERE workers=1 AND event_begin_date > " .time())) {
+                if (user_has_ability_in_page($USER->userid, "staffapply", $pageid, "events", $featureid)) {
                     $content .= get_staff_application_button();
                 }
             }
 
-            if(user_has_ability_in_page($USER->userid, "viewevents", $pageid, "events", $featureid)){
+            if (user_has_ability_in_page($USER->userid, "viewevents", $pageid, "events", $featureid)) {
                 //Get events that must be confirmed
-                if($pageid == $CFG->SITEID){
-                    if(user_has_ability_in_page($USER->userid, "confirmevents", $pageid, "events", $featureid) && $section = get_confirm_events()){ $content .= $section . "<br />";}
+                if ($pageid == $CFG->SITEID) {
+                    if (user_has_ability_in_page($USER->userid, "confirmevents", $pageid, "events", $featureid) && $section = get_confirm_events()) { $content .= $section . "<br />";}
                 }
 
                 //Get events that can be edited
-                if(user_has_ability_in_page($USER->userid, "editevents", $pageid, "events", $featureid) && $section = get_editable_events($pageid)){ $content .= $section . "<br />";}
+                if (user_has_ability_in_page($USER->userid, "editevents", $pageid, "events", $featureid) && $section = get_editable_events($pageid)) { $content .= $section . "<br />";}
 
                 //Get current events
-                if($section = get_current_events($pageid)){ $content .= $section . "<br />"; }
+                if ($section = get_current_events($pageid)) { $content .= $section . "<br />"; }
 
                 //Get upcoming events
-                if($section = get_upcoming_events($pageid, $upcomingdays)){ $content .= $section . "<br />"; }
+                if ($section = get_upcoming_events($pageid, $upcomingdays)) { $content .= $section . "<br />"; }
 
                 //Get events that are registerable
-                if($section = get_open_enrollment_events($pageid)){ $content .= $section . ""; }
+                if ($section = get_open_enrollment_events($pageid)) { $content .= $section . ""; }
 
                 //No events
-                if($content == ""){ $content .= "There are no current or upcoming events."; }
+                if ($content == "") { $content .= "There are no current or upcoming events."; }
 
                 //Get link for request form
-                if($allowrequests){ $content = get_event_request_link($area,$featureid) . $content; }
+                if ($allowrequests) { $content = get_event_request_link($area,$featureid) . $content; }
 
                 //Get recent events
-                if($section = get_recent_events($pageid, $recentdays, $archivedays)){ $content .= $section; }
+                if ($section = get_recent_events($pageid, $recentdays, $archivedays)) { $content .= $section; }
 
                 //Get feature layout
                 $buttons = get_button_layout("events", $featureid, $pageid);
                 return get_css_box($title, $content, $buttons, NULL, "events", $featureid);
             }
-        }elseif(role_has_ability_in_page($ROLES->visitor, "viewevents", $pageid)){ //If unlogged in users can see...
+        }elseif (role_has_ability_in_page($ROLES->visitor, "viewevents", $pageid)) { //If unlogged in users can see...
             //Get current events
-            if($section = get_current_events($pageid)){ $content .= $section . "<br />";}
+            if ($section = get_current_events($pageid)) { $content .= $section . "<br />";}
 
             //Get upcoming events
-            if($section = get_upcoming_events($pageid, $upcomingdays)){ $content .= $section . "<br />";}
+            if ($section = get_upcoming_events($pageid, $upcomingdays)) { $content .= $section . "<br />";}
 
             //Get registerable events
-            if($section = get_open_enrollment_events($pageid)){ $content .= $section . "";}
+            if ($section = get_open_enrollment_events($pageid)) { $content .= $section . "";}
 
             //No events
-            if($content == ""){ $content .= "There are no current or upcoming events.";}
+            if ($content == "") { $content .= "There are no current or upcoming events.";}
 
             //Get link for request form
-            if($allowrequests){ $content = get_event_request_link($area,$featureid) . $content; }
+            if ($allowrequests) { $content = get_event_request_link($area,$featureid) . $content; }
 
             //Show past events
-            if($section = get_recent_events($pageid, $recentdays, $archivedays)){ $content .= $section;}
+            if ($section = get_recent_events($pageid, $recentdays, $archivedays)) { $content .= $section;}
 
             //Get feature layout
             return get_css_box($title, $content, NULL, NULL, "events", $featureid);
@@ -93,10 +93,10 @@ global $CFG, $USER, $ROLES;
     }
 }
 
-function get_staff_application_button(){
+function get_staff_application_button() {
 global $CFG;
 $returnme = '';
-    if(is_logged_in()){ // Staff Apply visible only if logged in
+    if (is_logged_in()) { // Staff Apply visible only if logged in
         $menuitem = '<li>'.make_modal_links(array("title"=> "Staff Apply","path"=>$CFG->wwwroot."/features/events/events.php?action=staff_application","validate"=>"true","width"=>"600","height"=>"650")).'</li>';
         $returnme .= '
         <script>
@@ -111,16 +111,16 @@ $returnme = '';
     return $returnme;
 }
 
-function get_event_request_link($area,$featureid){
+function get_event_request_link($area,$featureid) {
 global $CFG;
-    if($area == "middle"){
+    if ($area == "middle") {
         return '<div style="text-align:right;">'.make_modal_links(array("title"=>"Request an Event","path"=>$CFG->wwwroot."/features/events/events.php?action=event_request_form&amp;featureid=$featureid","validate"=>"true","width"=>"550","height"=>"650","image"=>$CFG->wwwroot."/images/request.gif")).'</div>';
     }else{
         return '<div style="text-align:right;">'.make_modal_links(array("title"=>"Request an Event","path"=>$CFG->wwwroot."/features/events/events.php?action=event_request_form&amp;featureid=$featureid","validate"=>"true","width"=>"550","height"=>"650","image"=>$CFG->wwwroot."/images/request.gif")).'</div><br />';
     }
 }
 
-function get_calendar_of_events($title, $pageid, $featureid, $year = false, $showpastevents = true, $content = "",$allowrequests=false){
+function get_calendar_of_events($title, $pageid, $featureid, $year = false, $showpastevents = true, $content = "",$allowrequests=false) {
 global $CFG, $USER, $ROLES;
     $time = get_timestamp();
     $year = $year ? $year : date("Y", $time);
@@ -135,7 +135,7 @@ global $CFG, $USER, $ROLES;
     $site = $pageid == $CFG->SITEID ? "((e.pageid != $pageid AND siteviewable=1) OR (e.pageid = $pageid))" : "e.pageid = $pageid";
 
     if (is_logged_in()) {
-        if(user_has_ability_in_page($USER->userid, "staffapply", $pageid, "events", $featureid)){
+        if (user_has_ability_in_page($USER->userid, "staffapply", $pageid, "events", $featureid)) {
             $content .= get_staff_application_button($featureid,$pageid);
         }
         if (user_has_ability_in_page($USER->userid, "viewevents", $pageid, "events", $featureid)) {
@@ -152,7 +152,7 @@ global $CFG, $USER, $ROLES;
         $canview = role_has_ability_in_page($ROLES->visitor, "viewevents", $pageid) ? true : false;
         if ($canview && $pageid == $CFG->SITEID) {
             $SQL = "SELECT * FROM events e WHERE $site AND $begincurrentyear < e.event_begin_date AND $endcurrentyear > e.event_begin_date AND e.confirmed=1 ORDER BY e.event_begin_date, e.event_begin_time";
-        } elseif($canview) {
+        } elseif ($canview) {
             $SQL = "SELECT * FROM events e WHERE $site AND $begincurrentyear < e.event_begin_date AND $endcurrentyear > e.event_begin_date AND e.confirmed=1 ORDER BY e.event_begin_date, e.event_begin_time";
         }
         $buttons = null;
@@ -186,7 +186,7 @@ global $CFG, $USER, $ROLES;
     return get_css_box($title, $content, $buttons, NULL, "events", $featureid);
 }
 
-function make_calendar_table($pageid, $daygraphic, $event, $buttons = false, $needsconfirmed = false){
+function make_calendar_table($pageid, $daygraphic, $event, $buttons = false, $needsconfirmed = false) {
 global $CFG, $USER;
     $time = get_timestamp();
     $registration_info = "";
@@ -252,7 +252,7 @@ global $CFG, $USER;
         }
     }
 
-    if($info == "") { // If the info is empty, let's put something there.
+    if ($info == "") { // If the info is empty, let's put something there.
         $location = get_db_row("SELECT * FROM events_locations WHERE id='".$event['location']."'");
         $info = "Event Location: " . stripslashes($location["location"]);
     }
@@ -353,53 +353,53 @@ global $CFG;
 	$titlebgcolor = isset($styles['titlebgcolor']) ? $styles['titlebgcolor'] : "";
 	$titlefontcolor = isset($styles['titlefontcolor']) ? $styles['titlefontcolor'] : "";
 
-	if(strlen($buttons) > 0){
+	if (strlen($buttons) > 0) {
 	   	   return '
         <div id="slide_menu" class="slide_menu_invisible slide_menu" style="border-top:1px solid '.$bordercolor.';border-bottom:1px solid '.$bordercolor.';">
             <div id="event_' . $event["eventid"] . '_buttons" style="padding:0;">
     		  ' . $buttons . '
     		</div>
         </div>
-        <div onclick="$(this).prev(\'#slide_menu\').animate({width: \'toggle\'},function(){$(this).toggleClass(\'slide_menu_visible\');});" class="slide_menu slide_menu_tab" style="background-color:'.$titlefontcolor.';color:'.$titlebgcolor.';border-left:1px solid '.$bordercolor.';border-top:1px solid '.$bordercolor.';border-bottom:1px solid '.$bordercolor.';"><strong>+</strong></div>
+        <div onclick="$(this).prev(\'#slide_menu\').animate({width: \'toggle\'},function() {$(this).toggleClass(\'slide_menu_visible\');});" class="slide_menu slide_menu_tab" style="background-color:'.$titlefontcolor.';color:'.$titlebgcolor.';border-left:1px solid '.$bordercolor.';border-top:1px solid '.$bordercolor.';border-bottom:1px solid '.$bordercolor.';"><strong>+</strong></div>
         ';
 	}
 
     return "";
 }
 
-function get_event_edit_buttons($pageid, $event, $canedit, $canconfirm){
+function get_event_edit_buttons($pageid, $event, $canedit, $canconfirm) {
 global $CFG, $USER;
     $returnme = "";
     $is_section = true;
-    if(is_logged_in()){
+    if (is_logged_in()) {
         $time = get_timestamp();
         $editable = ($time - 86400) < $event["event_end_date"] ? true : false;
         //Confirm Event Buttons
-        if($canconfirm && $event["confirmed"] != 1 && $event["siteviewable"] == 1){
-            $returnme .= ' <a class="slide_menu_button" href="javascript: void(0);" onclick="if(confirm(\'Are you sure you want to confirm this event?\')){ ajaxapi(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '&amp;confirm=1\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); update_login_contents(\'' . $pageid . '\');});}"> <img src="' . $CFG->wwwroot . '/images/add.png" title="Confirm Event\'s Global Visibility" alt="Confirm Event" /></a>';
-            $returnme .= ' <a class="slide_menu_button" href="javascript: void(0);" onclick="if(confirm(\'Are you sure you want to deny this event?\')){ ajaxapi(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '&amp;confirm=0\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); update_login_contents(\'' . $pageid . '\');});}"> <img src="' . $CFG->wwwroot . '/images/deny.png" title="Deny Event\'s Global Visibility" alt="Deny Event" /></a>';
+        if ($canconfirm && $event["confirmed"] != 1 && $event["siteviewable"] == 1) {
+            $returnme .= ' <a class="slide_menu_button" href="javascript: void(0);" onclick="if (confirm(\'Are you sure you want to confirm this event?\')) { ajaxapi(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '&amp;confirm=1\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); update_login_contents(\'' . $pageid . '\');});}"> <img src="' . $CFG->wwwroot . '/images/add.png" title="Confirm Event\'s Global Visibility" alt="Confirm Event" /></a>';
+            $returnme .= ' <a class="slide_menu_button" href="javascript: void(0);" onclick="if (confirm(\'Are you sure you want to deny this event?\')) { ajaxapi(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '&amp;confirm=0\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); update_login_contents(\'' . $pageid . '\');});}"> <img src="' . $CFG->wwwroot . '/images/deny.png" title="Deny Event\'s Global Visibility" alt="Deny Event" /></a>';
         }
         //Edit && Delete button
-        if($canedit && $editable){
+        if ($canedit && $editable) {
             $returnme .= make_modal_links(array("title"=> "Edit Event","path"=>$CFG->wwwroot."/features/events/events.php?action=add_event_form&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"refresh"=>"true","iframe"=>"true","width"=>"800","height"=>"95%","image"=>$CFG->wwwroot . "/images/edit.png","class"=>"slide_menu_button"));
 
             //Delete button
-            $returnme .= ' <a class="slide_menu_button" title="Delete Event" href="javascript: if(confirm(\'Are you sure you want to delete this event?\')){ ajaxapi(\'/features/events/events_ajax.php\',\'delete_events_relay\',\'&amp;featureid=' . $event['eventid'] . '\',function() { update_login_contents(\'' . $pageid . '\'); });}"> <img src="' . $CFG->wwwroot . '/images/delete.png" title="Delete Event" alt="Delete Event" /></a>';
+            $returnme .= ' <a class="slide_menu_button" title="Delete Event" href="javascript: if (confirm(\'Are you sure you want to delete this event?\')) { ajaxapi(\'/features/events/events_ajax.php\',\'delete_events_relay\',\'&amp;featureid=' . $event['eventid'] . '\',function() { update_login_contents(\'' . $pageid . '\'); });}"> <img src="' . $CFG->wwwroot . '/images/delete.png" title="Delete Event" alt="Delete Event" /></a>';
         }
     }else{  return "";}
     return $returnme;
 }
 
 //Gathers the events that can be edited
-function get_confirm_events(){
+function get_confirm_events() {
 global $CFG, $USER;
     $returnme = "";
     $pageid = $CFG->SITEID;
     $time = get_timestamp();
     date_default_timezone_set("UTC");
     $SQL = "SELECT * FROM events e WHERE ((e.pageid != '$pageid' AND siteviewable='1') OR (e.pageid = '$pageid')) AND $time < e.event_end_date AND confirmed='3' ORDER BY e.event_begin_date, e.event_begin_time";
-    if($events = get_db_result($SQL)){
-        while($event = fetch_row($events)){
+    if ($events = get_db_result($SQL)) {
+        while ($event = fetch_row($events)) {
             $returnme .= '
                 <table style="width:100%;background-color:#edfafa;border-bottom:1px gray inset; margin:1px;">
                     <tr>
@@ -408,12 +408,12 @@ global $CFG, $USER;
                                 '.make_modal_links(array("title"=> stripslashes($event['name']),"path"=>$CFG->wwwroot."/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","width"=>"700","height"=>"650"));
 
             $featureid = get_db_field("featureid","pages_features","pageid='$pageid' AND feature='events'");
-            if(user_has_ability_in_page($USER->userid, "editevents", $pageid, "events", $featureid)){
+            if (user_has_ability_in_page($USER->userid, "editevents", $pageid, "events", $featureid)) {
                 $returnme .= make_modal_links(array("title"=> "Edit Event","path"=>$CFG->wwwroot."/features/events/events.php?action=add_event_form&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"refresh"=>"true","iframe"=>"true","width"=>"800","height"=>"95%","image"=>$CFG->wwwroot."/images/edit.png"));
             }
 
-            $returnme .= '      <a href="javascript: if(confirm(\'Are you sure you want to confirm this event?\')){ ajaxapi(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '&amp;confirm=1\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); update_login_contents(\'' . $pageid . '\');});}"> <img src="' . $CFG->wwwroot . '/images/add.png" title="Confirm Event" alt="Confirm Event" /></a>';
-            $returnme .= '      <a href="javascript: if(confirm(\'Are you sure you want to deny this event?\')){ ajaxapi(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '&amp;confirm=0\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); update_login_contents(\'' . $pageid . '\');});}"> <img src="' . $CFG->wwwroot . '/images/deny.png" title="Deny Event" alt="Deny Event" /></a>';
+            $returnme .= '      <a href="javascript: if (confirm(\'Are you sure you want to confirm this event?\')) { ajaxapi(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '&amp;confirm=1\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); update_login_contents(\'' . $pageid . '\');});}"> <img src="' . $CFG->wwwroot . '/images/add.png" title="Confirm Event" alt="Confirm Event" /></a>';
+            $returnme .= '      <a href="javascript: if (confirm(\'Are you sure you want to deny this event?\')) { ajaxapi(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '&amp;confirm=0\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); update_login_contents(\'' . $pageid . '\');});}"> <img src="' . $CFG->wwwroot . '/images/deny.png" title="Deny Event" alt="Deny Event" /></a>';
             $returnme .= '  </span>
                         </td>
                     </tr>
@@ -425,22 +425,22 @@ global $CFG, $USER;
 }
 
 //Gathers the events that can be edited
-function get_editable_events($pageid){
+function get_editable_events($pageid) {
 global $CFG, $USER;
     $returnme = "";
     $time = get_timestamp();
     date_default_timezone_set("UTC");
     $siteviewable = $pageid == $CFG->SITEID ? " OR (siteviewable = '1' AND confirmed = '1')" : "";
     $SQL = "SELECT e.* FROM events e WHERE (e.pageid='$pageid' $siteviewable) AND ($time -86400) < e.event_end_date ORDER BY e.event_begin_date, e.event_begin_time";
-    if($events = get_db_result($SQL)){
-        while($event = fetch_row($events)){
+    if ($events = get_db_result($SQL)) {
+        while ($event = fetch_row($events)) {
             $returnme .= '<span id="edit_' . $event['eventid'] . '">
                             <table style="width:100%;background-color:#edfafa;border-bottom:1px gray inset; margin:1px;">
                                 <tr>
                                     <td>
                                         '.make_modal_links(array("title"=> stripslashes($event['name']),"path"=>$CFG->wwwroot."/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","width"=>"700","height"=>"650"));
             $returnme .= " ".make_modal_links(array("title"=> "Edit Event","path"=>$CFG->wwwroot."/features/events/events.php?action=add_event_form&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"refresh"=>"true","iframe"=>"true","width"=>"750","height"=>"650","image"=>$CFG->wwwroot."/images/edit.png"));
-            $returnme .= ' <a href="javascript: if(confirm(\'Are you sure you want to delete this event?\')){ ajaxapi(\'/features/events/events_ajax.php\',\'delete_events_relay\',\'&amp;featureid=' . $event['eventid'] . '\',function() { update_login_contents(\'' . $pageid . '\');});}"> <img src="' . $CFG->wwwroot . '/images/delete.png" title="Delete Event" alt="Delete Event" /></a>';
+            $returnme .= ' <a href="javascript: if (confirm(\'Are you sure you want to delete this event?\')) { ajaxapi(\'/features/events/events_ajax.php\',\'delete_events_relay\',\'&amp;featureid=' . $event['eventid'] . '\',function() { update_login_contents(\'' . $pageid . '\');});}"> <img src="' . $CFG->wwwroot . '/images/delete.png" title="Delete Event" alt="Delete Event" /></a>';
             $returnme .= '</td></tr></table></span>';
         }
     }
@@ -449,15 +449,15 @@ global $CFG, $USER;
 }
 
 //Gathers the events that are currently available for enrollment
-function get_open_enrollment_events($pageid){
+function get_open_enrollment_events($pageid) {
 global $CFG, $USER;
     $returnme = "";
     $time = get_timestamp();
     date_default_timezone_set("UTC");
     $siteviewable = $pageid == $CFG->SITEID ? " OR siteviewable = '1' AND confirmed = '1'" : "";
     $SQL = "SELECT e.* FROM events e WHERE (e.pageid='$pageid' $siteviewable) AND e.start_reg < $time AND e.stop_reg > ($time - 86400) AND (e.max_users=0 OR (e.max_users != 0 AND e.max_users > (SELECT COUNT(*) FROM events_registrations er WHERE er.eventid=e.eventid AND verified='1'))) ORDER BY e.event_begin_date, e.event_begin_time";
-    if($events = get_db_result($SQL)) {
-        while($event = fetch_row($events)){
+    if ($events = get_db_result($SQL)) {
+        while ($event = fetch_row($events)) {
             $returnme .= '<table style="width:100%;background-color:#edfafa;border-bottom:1px gray inset; margin:1px;">
                             <tr>
                                 <td style="white-space:normal">
@@ -470,17 +470,17 @@ global $CFG, $USER;
             $featureid = get_db_field("featureid","pages_features","pageid='$pageid' AND feature='events'");
 
             // Export registrations
-            if(user_has_ability_in_page($USER->userid, "exportcsv", $pageid,"events",$featureid)){
+            if (user_has_ability_in_page($USER->userid, "exportcsv", $pageid,"events",$featureid)) {
                 $returnme .= '<a href="javascript:ajaxapi(\'/features/events/events_ajax.php\',\'export_csv\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '\',function() { run_this();});"><img src="' . $CFG->wwwroot . '/images/csv.png" title="Export ' . $regcount . '/' . $limit . ' Registrations" alt="Export ' . $regcount . ' Registrations" /></a>';
             }
 
             // Registration button
-            if(user_has_ability_in_page($USER->userid, "signupforevents", $pageid, "events", $featureid)){
+            if (user_has_ability_in_page($USER->userid, "signupforevents", $pageid, "events", $featureid)) {
                 $returnme .= make_modal_links(array("title"=> "Register $left","path"=>$CFG->wwwroot."/features/events/events.php?action=show_registration&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","validate"=>"true","width"=>"630","height"=>"95%","confirmexit"=>"true","image"=>$CFG->wwwroot . "/images/register.png"));
             }
 
             // Payment Area
-            if($event["paypal"] != ""){
+            if ($event["paypal"] != "") {
                 $returnme .= make_modal_links(array("title"=> "Event Payment","path"=>$CFG->wwwroot.'/features/events/events.php?action=pay&amp;modal=1&amp;pageid='.$pageid.'&amp;eventid=' . $event['eventid'],"width"=>"95%","height"=>"95%","image"=>$CFG->wwwroot . "/images/pay.png"));
             }
 
@@ -492,7 +492,7 @@ global $CFG, $USER;
 }
 
 //Gathers the events that are happening in the next (SETTINGS: upcomingdays) days
-function get_upcoming_events($pageid, $upcomingdays){
+function get_upcoming_events($pageid, $upcomingdays) {
 global $CFG;
     $returnme = "";
     $time = get_timestamp();
@@ -501,8 +501,8 @@ global $CFG;
     $totime = $time + ($upcomingdays * $oneday);
     $siteviewable = $pageid == $CFG->SITEID ? " OR (siteviewable = '1' AND confirmed = '1')" : "";
     $SQL = "SELECT e.* FROM events e WHERE (e.pageid=$pageid $siteviewable) AND e.event_begin_date < $totime AND e.event_begin_date > $time ORDER BY e.event_begin_date, e.event_begin_time";
-    if($events = get_db_result($SQL)){
-        while($event = fetch_row($events)){
+    if ($events = get_db_result($SQL)) {
+        while ($event = fetch_row($events)) {
             $length = get_event_length($event['event_begin_date'], $event['event_end_date'], $event['allday'], $event['event_begin_time'], $event['event_end_time']);
             $returnme .= '<table style="width:100%;background-color:#edfafa;border-bottom:1px gray inset; margin:1px;">
                             <tr>
@@ -519,7 +519,7 @@ global $CFG;
 }
 
 //Gathers the events that are happening right now
-function get_current_events($pageid){
+function get_current_events($pageid) {
 global $CFG, $USER;
     $returnme = "";
     $time = get_timestamp();
@@ -527,8 +527,8 @@ global $CFG, $USER;
     $oneday = 86400;
     $siteviewable = $pageid == $CFG->SITEID ? " OR (siteviewable = '1' AND confirmed = '1')" : "";
     $SQL = "SELECT * FROM events e WHERE (e.pageid='$pageid' $siteviewable) AND ((((e.event_begin_date + $oneday) - $time) < $oneday AND ((e.event_begin_date + $oneday) - $time) > 0) OR ($time > (e.event_begin_date) AND $time < (e.event_end_date))) ORDER BY e.event_begin_date, e.event_begin_time";
-    if($events = get_db_result($SQL)){
-        while($event = fetch_row($events)){
+    if ($events = get_db_result($SQL)) {
+        while ($event = fetch_row($events)) {
             $length = get_event_length($event['event_begin_date'], $event['event_end_date'], $event['allday'], $event['event_begin_time'], $event['event_end_time']);
             $returnme .= '<table style="width:100%;background-color:#edfafa;border-bottom:1px gray inset; margin:1px;">
                             <tr>
@@ -540,7 +540,7 @@ global $CFG, $USER;
             $regcount = get_db_count("SELECT * FROM events_registrations WHERE eventid='".$event['eventid']."' AND verified='1'");
             $limit = $event['max_users'] == "0" ? "&#8734;" : $event['max_users'];
             $featureid = get_db_field("featureid","pages_features","pageid='$pageid' AND feature='events'");
-            if(user_has_ability_in_page($USER->userid, "exportcsv", $pageid, "events", $featureid)){ $returnme .= '<a href="javascript:ajaxapi(\'/features/events/events_ajax.php\',\'export_csv\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '\',function() { run_this();});"><img src="' . $CFG->wwwroot . '/images/csv.png" title="Export ' . $regcount . '/' . $limit . ' Registrations" alt="Export ' . $regcount . ' Registrations" /></a>';}
+            if (user_has_ability_in_page($USER->userid, "exportcsv", $pageid, "events", $featureid)) { $returnme .= '<a href="javascript:ajaxapi(\'/features/events/events_ajax.php\',\'export_csv\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '\',function() { run_this();});"><img src="' . $CFG->wwwroot . '/images/csv.png" title="Export ' . $regcount . '/' . $limit . ' Registrations" alt="Export ' . $regcount . ' Registrations" /></a>';}
             $returnme .= "</td></tr></table>";
         }
     }
@@ -549,7 +549,7 @@ global $CFG, $USER;
 }
 
 //Gathers the events that are currently available for enrollment
-function get_recent_events($pageid, $recentdays, $archivedays){
+function get_recent_events($pageid, $recentdays, $archivedays) {
 global $CFG, $USER;
     $returnme = "";
     $time = get_timestamp();
@@ -560,8 +560,8 @@ global $CFG, $USER;
     $to_day = ($dayspan * $oneday);
     $siteviewable = $pageid == $CFG->SITEID ? " OR siteviewable = '1' AND confirmed = '1'" : "";
     $SQL = "SELECT e.* FROM events e WHERE (e.pageid='$pageid' $siteviewable) AND (e.event_end_date + $to_day) > $time AND e.event_end_date < $time ORDER BY e.event_begin_date DESC, e.event_begin_time DESC";
-    if($events = get_db_result($SQL)){
-        while($event = fetch_row($events)){
+    if ($events = get_db_result($SQL)) {
+        while ($event = fetch_row($events)) {
             $length = get_event_length($event['event_begin_date'], $event['event_end_date'], $event['allday'], $event['event_begin_time'], $event['event_end_time']);
             $returnme .= '<table style="width:100%;background-color:#edfafa;border-bottom:1px gray inset; margin:1px;">
                             <tr>
@@ -570,7 +570,7 @@ global $CFG, $USER;
                                     <span style="display:block;color:gray; font-size:.75em;">' . $length . '</span>
                                 </td>
                                 <td style="text-align:right; padding:2px;white-space:nowrap;">';
-            if(!empty($event["start_reg"]) && user_has_ability_in_page($USER->userid, "exportcsv", $pageid, "events", $featureid)){
+            if (!empty($event["start_reg"]) && user_has_ability_in_page($USER->userid, "exportcsv", $pageid, "events", $featureid)) {
                 $returnme .= '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/events/events_ajax.php\',\'export_csv\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '\',function() { run_this();});"><img src="' . $CFG->wwwroot . '/images/csv.png" title="Export Registrations" alt="Export Registrations" /></a>';
             }
             $returnme .= '</td></tr></table>';
@@ -580,15 +580,15 @@ global $CFG, $USER;
     return $returnme;
 }
 
-function make_fee_options($min, $full, $name, $options = "", $sale_end = "", $sale = false){
-    if($sale_end != "" && $sale && get_timestamp() < $sale_end){ $full = $sale;}
+function make_fee_options($min, $full, $name, $options = "", $sale_end = "", $sale = false) {
+    if ($sale_end != "" && $sale && get_timestamp() < $sale_end) { $full = $sale;}
 
     $returnme = '<select id="' . $name . '" name="' . $name . '" ' . $options . ' >';
     $select = "selected";
 
-    if($min == $full){ return '<span style="float:left;margin:4px;">$</span><input id="' . $name . '" name="' . $name . '" type="text" READONLY value="' . $full . '.00"/>';}
+    if ($min == $full) { return '<span style="float:left;margin:4px;">$</span><input id="' . $name . '" name="' . $name . '" type="text" READONLY value="' . $full . '.00"/>';}
 
-    while($min < $full){
+    while ($min < $full) {
         $returnme .= '<option value="' . $min . '" ' . $select . '>$' . $min . '</option>';
         $min = ($full - $min) > 10 ? $min + 10 : $full;
         $select = "";
@@ -597,7 +597,7 @@ function make_fee_options($min, $full, $name, $options = "", $sale_end = "", $sa
     return $returnme;
 }
 
-function make_paypal_button($items, $sellersemail){
+function make_paypal_button($items, $sellersemail) {
 global $CFG;
     $regids = "";
     $returnme = $CFG->paypal ? '<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">' : '<form action="https://www.sandbox.paypal.com/cgi-bin/webscr" method="post" target="_blank">';
@@ -610,7 +610,7 @@ global $CFG;
         <input type="hidden" name="notify_url" value="'.$protocol.$CFG->wwwroot.'/features/events/ipn.php">
         <input type="hidden" name="business" value="' . $sellersemail . '">';
     $i = 1;
-    foreach($items as $item){
+    foreach ($items as $item) {
         $returnme .= '
             <input type="hidden" name="item_name_' . $i . '" value="' . $item->description . '">
             <input type="hidden" name="amount_' . $i . '" value="' . number_format($item->cost, 2, '.', '') . '">';
@@ -624,14 +624,14 @@ global $CFG;
     return $returnme;
 }
 
-function get_registrant_name($regid){
+function get_registrant_name($regid) {
 global $CFG;
     $SQL = "SELECT * FROM events_templates WHERE template_id IN (SELECT template_id FROM events WHERE eventid IN (SELECT eventid FROM events_registrations WHERE regid='$regid'))";
     $template = get_db_row($SQL);
     $name = "";
-    if($template["folder"] == "none"){
-        if($name_fields = get_db_result("SELECT * FROM events_templates_forms WHERE template_id=" . $template["template_id"] . " AND nameforemail=1")){
-            while($name_field = fetch_row($name_fields)){
+    if ($template["folder"] == "none") {
+        if ($name_fields = get_db_result("SELECT * FROM events_templates_forms WHERE template_id=" . $template["template_id"] . " AND nameforemail=1")) {
+            while ($name_field = fetch_row($name_fields)) {
                 $value = stripslashes(get_db_field("value", "events_registrations_values", "regid='$regid' AND elementid='". $name_field["elementid"] ."'"));
                 $name .= $name == "" ? $value : " " . $value;
             }
@@ -639,7 +639,7 @@ global $CFG;
     }else{
         $name_fields = explode(",", $template["registrant_name"]);
         $i = 0;
-        while(isset($name_fields[$i])){
+        while (isset($name_fields[$i])) {
             $value = stripslashes(get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='" . $name_fields[$i] . "'"));
             $name .= $name == "" ? $value : " " . $value;
             $i++;
@@ -649,7 +649,7 @@ global $CFG;
     return ucwords($name);
 }
 
-function enter_registration($eventid, $reg, $contactemail){
+function enter_registration($eventid, $reg, $contactemail) {
 global $CFG, $why, $error;
     $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
     $template = get_db_row("SELECT * FROM events_templates WHERE template_id='" . $event['template_id'] . "'");
@@ -658,17 +658,17 @@ global $CFG, $why, $error;
     $time = get_timestamp();
     $REGIDSQL = "INSERT INTO events_registrations (eventid,date,email,code,verified) VALUES(" . $eventid . "," . $time . ",'$contactemail','" . md5($time . $contactemail) . "','0')";
     $regid = execute_db_sql($REGIDSQL);
-    if($template['folder'] != "none"){ //custom file style
-        if($regid){
+    if ($template['folder'] != "none") { //custom file style
+        if ($regid) {
             $formlist = explode(";", get_db_field("formlist", "events_templates", "folder='" . $template['folder'] . "'"));
             $sql_values = "";
-            foreach($formlist as $list){
+            foreach ($formlist as $list) {
                 $element = explode(":", $list);
                 $sql_values .= $sql_values == "" ? "($regid,'" . dbescape($reg[$element[0]]) . "'," . $eventid . ",'" . $element[0] . "')" : ",($regid,'" . dbescape($reg[$element[0]]) . "'," . $eventid . ",'" . $element[0] . "')";
             }
             $SQL = "INSERT INTO events_registrations_values (regid,value,eventid,elementname) VALUES" . $sql_values;
-            if($entries = execute_db_sql($SQL) && $nolimit = hard_limits($regid, $event, $template)) {
-                if(!$nolimit = soft_limits($regid, $event, $template)){
+            if ($entries = execute_db_sql($SQL) && $nolimit = hard_limits($regid, $event, $template)) {
+                if (!$nolimit = soft_limits($regid, $event, $template)) {
                     $error = "Because this event has $why, you have been placed in the waiting line for this event.";
                     execute_db_sql("UPDATE events_registrations SET queue='1' WHERE regid='$regid'");
                 }
@@ -721,7 +721,7 @@ global $CFG, $why, $error;
     }
 }
 
-function registration_email($regid, $touser, $pending=false){
+function registration_email($regid, $touser, $pending=false) {
 global $CFG;
     $reg = get_db_row("SELECT * FROM events_registrations WHERE regid='$regid'");
     $event = get_db_row("SELECT * FROM events WHERE eventid='" . $reg["eventid"]."'");
@@ -805,7 +805,7 @@ global $CFG;
     return $email;
 }
 
-function get_template_field_displayname($templateid,$fieldname){
+function get_template_field_displayname($templateid,$fieldname) {
     $template = get_db_row("SELECT * FROM events_templates WHERE template_id='$templateid'");
     if ($template["folder"] == "none") {
         return get_db_field("display", "events_templates_forms", "elementid='$fieldname'");
@@ -821,7 +821,7 @@ function get_template_field_displayname($templateid,$fieldname){
     return $fieldname;
 }
 
-function hard_limits($regid, $event, $template){
+function hard_limits($regid, $event, $template) {
 global $CFG, $why;
     //If there are no custom limits in place, just return a passing grade
     if ($event["hard_limits"] == "") { return true; }
@@ -833,7 +833,7 @@ global $CFG, $why;
         $SQL = "SELECT * FROM events_registrations_values WHERE eventid='" . $event["eventid"] . "' AND $elementtype='" . $limit[0] . "' AND value" . make_limit_statement($limit[1], $limit[2], true);
         if (get_db_row($SQL . "AND regid='$regid'")) {
             $field_count = get_db_count($SQL);
-            if($field_count > $limit[3]){ //if registration limit is reached
+            if ($field_count > $limit[3]) { //if registration limit is reached
                 $displayname = get_template_field_displayname($template["template_id"],$limit[0]);
                 $why = "reached the limit of " . $limit[3] . " registrations where " . $displayname . make_limit_statement($limit[1], $limit[2], false);
                 return false;
@@ -844,7 +844,7 @@ global $CFG, $why;
     return true;
 }
 
-function soft_limits($regid, $event, $template){
+function soft_limits($regid, $event, $template) {
 global $CFG, $why;
     //If there are no custom limits in place, just return a passing grade
     if ($event["soft_limits"] == "") { return true; }
@@ -854,9 +854,9 @@ global $CFG, $why;
         $limit = explode(":", $limits_array[$i]);
         $elementtype = $template["folder"] == "none" ? "elementid" : "elementname";
         $SQL = "SELECT * FROM events_registrations_values WHERE eventid='" . $event["eventid"] . "' AND $elementtype='" . $limit[0] . "' AND value" . make_limit_statement($limit[1], $limit[2], true);
-        if(get_db_row($SQL . "AND regid='$regid'")){
+        if (get_db_row($SQL . "AND regid='$regid'")) {
             $field_count = get_db_count($SQL);
-            if($field_count > $limit[3]){ //if registration limit is reached
+            if ($field_count > $limit[3]) { //if registration limit is reached
                 $displayname = get_template_field_displayname($template["template_id"],$limit[0]);
                 $why = "reached the limit of " . $limit[3] . " registrations where " . $displayname . make_limit_statement($limit[1], $limit[2], false);
                 return false;
@@ -867,7 +867,7 @@ global $CFG, $why;
     return true;
 }
 
-function make_limit_statement($operator, $value, $SQLmode = false){
+function make_limit_statement($operator, $value, $SQLmode = false) {
     $quotes = is_numeric($value) ? "" : "'";
     if ($SQLmode) {
         switch ($operator) {
@@ -927,7 +927,7 @@ function make_limit_statement($operator, $value, $SQLmode = false){
 }
 
 //Delete an event
-function delete_event(){
+function delete_event() {
 global $MYVARS, $CFG, $USER;
     $eventid = dbescape($MYVARS->GET['featureid']);
     $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
@@ -945,7 +945,7 @@ global $MYVARS, $CFG, $USER;
     donothing();
 }
 
-function refresh_calendar_events($eventid){
+function refresh_calendar_events($eventid) {
     $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
     $siteviewable = $event["confirmed"];
     $startdate = $event["event_begin_date"];
@@ -970,7 +970,7 @@ function refresh_calendar_events($eventid){
 }
 
 //Confirms a site event
-function confirm_event($pageid = false, $eventid = false, $confirm = false){
+function confirm_event($pageid = false, $eventid = false, $confirm = false) {
 global $MYVARS, $CFG, $USER;
     date_default_timezone_set("UTC");
     $eventid = $eventid ? $eventid : dbescape($MYVARS->GET['featureid']);
@@ -984,7 +984,7 @@ global $MYVARS, $CFG, $USER;
         refresh_calendar_events($eventid);
     } else { //NO to site viewability
         //Set events to confirm
-        if($event["pageid"] == $CFG->SITEID){
+        if ($event["pageid"] == $CFG->SITEID) {
             delete_calendar_events($event);
         }
         execute_db_sql("UPDATE events SET confirmed='$confirm' WHERE eventid='$eventid'");
@@ -995,7 +995,7 @@ global $MYVARS, $CFG, $USER;
 }
 
 //Make sure that the calendar is edited when the event is edited.
-function delete_calendar_events($event){
+function delete_calendar_events($event) {
     // If calendar events exist
     if (!empty($event['caleventid'])) {
         $calevents = explode(":", $event['caleventid']);
@@ -1007,7 +1007,7 @@ function delete_calendar_events($event){
     }
 }
 
-function get_event_length($startdate, $enddate, $allday, $starttime, $endtime){
+function get_event_length($startdate, $enddate, $allday, $starttime, $endtime) {
     date_default_timezone_set(date_default_timezone_get());
     if ($startdate == $enddate) { //ONE DAY EVENT
         $length = date("n/j/Y", $startdate);
@@ -1024,13 +1024,13 @@ function get_event_length($startdate, $enddate, $allday, $starttime, $endtime){
     return $length;
 }
 
-function get_templates($selected = false, $eventid="", $activeonly=false){
+function get_templates($selected = false, $eventid="", $activeonly=false) {
 global $CFG;
     $returnme = check_for_new_templates();
     $active = !empty($activeonly) ? ' activated=1' : '';
     if ($templates = get_db_result("SELECT * FROM events_templates WHERE $active ORDER BY name")) {
         while ($template = fetch_row($templates)) {
-            $returnme .= $returnme == "" ? '<select id="template" onchange="clear_limits(); ajaxapi(\'/features/events/events_ajax.php\',\'show_template_settings\',\'&amp;eventid='.$eventid.'&amp;templateid=\'+document.getElementById(\'template\').value,function(){ simple_display(\'template_settings_div\');});"><option value="0">Select a template</option>' : '';
+            $returnme .= $returnme == "" ? '<select id="template" onchange="clear_limits(); ajaxapi(\'/features/events/events_ajax.php\',\'show_template_settings\',\'&amp;eventid='.$eventid.'&amp;templateid=\'+document.getElementById(\'template\').value,function() { simple_display(\'template_settings_div\');});"><option value="0">Select a template</option>' : '';
             $selectme = $selected && ($template['template_id'] == $selected) ? ' selected' : '';
             $returnme .= '<option value="' . $template['template_id'] . '"' . $selectme . '>' . stripslashes($template['name']) . '</option>';
         }
@@ -1039,7 +1039,7 @@ global $CFG;
     return $returnme;
 }
 
-function get_template_settings($templateid,$eventid){
+function get_template_settings($templateid,$eventid) {
 global $CFG;
     $returnme = "";
     if (!empty($templateid) && $template_settings = get_db_field("settings","events_templates","template_id='$templateid'")) { //template settings
@@ -1048,7 +1048,7 @@ global $CFG;
                             <tr><td class="field_title" style="width:115px;text-align: center;">Template Settings</td></tr>
                             <tr><td>';
             $settings = unserialize($template_settings);
-            foreach($settings as $setting){ //save each setting with the default if no other is given
+            foreach ($settings as $setting) { //save each setting with the default if no other is given
                 $set = get_db_field("setting","settings","type='events_template' AND extra='$eventid' AND setting_name='".$setting['name']."'");
                 $current_setting = !empty($set) ? $set : $setting['default'];
                 $returnme .= make_setting_input($setting["name"],$setting["title"],$setting["type"],NULL,NULL,$current_setting,$setting["numeric"],$setting["extravalidation"], $setting["extra_alert"],false);
@@ -1059,7 +1059,7 @@ global $CFG;
     return $returnme;
 }
 
-function get_possible_times($formid, $selected_time = "false", $start_time = "false"){
+function get_possible_times($formid, $selected_time = "false", $start_time = "false") {
     $times = array("00:00*12:00 am", "00:30*12:30 am", "01:00*01:00 am", "01:30*01:30 am", "02:00*02:00 am", "02:30*02:30 am", "03:00*03:00 am", "03:30*03:30 am", "04:00*04:00 am", "04:30*04:30 am", "05:00*05:00 am", "05:30*05:30 am", "06:00*06:00 am", "06:30*06:30 am", "07:00*07:00 am", "07:30*07:30 am", "08:00*08:00 am", "08:30*08:30 am", "09:00*09:00 am", "09:30*09:30 am", "10:00*10:00 am", "10:30*10:30 am", "11:00*11:00 am", "11:30*11:30 am", "12:00*12:00 pm", "12:30*12:30 pm", "13:00*01:00 pm", "13:30*01:30 pm", "14:00*02:00 pm", "14:30*02:30 pm", "15:00*03:00 pm", "15:30*03:30 pm", "16:00*04:00 pm", "16:30*04:30 pm", "17:00*05:00 pm", "17:30*05:30 pm", "18:00*06:00 pm", "18:30*06:30 pm", "19:00*07:00 pm", "19:30*07:30 pm", "20:00*08:00 pm", "20:30*08:30 pm", "21:00*09:00 pm", "21:30*09:30 pm", "22:00*10:00 pm", "22:30*10:30 pm", "23:00*11:00 pm", "23:30*11:30 pm");
     $onchange = $formid == 'begin_time' ? 'onchange="get_end_time(this.value);"' : '';
     $to = $formid == 'begin_time' ? '<div style="font-size:.75em; color:green;">From </div>' : '<div style="font-size:.75em; color:green;">&nbsp; To </div>';
@@ -1089,7 +1089,7 @@ function get_possible_times($formid, $selected_time = "false", $start_time = "fa
     return $returnme;
 }
 
-function get_my_locations($userid, $selected = false, $eventid=false){
+function get_my_locations($userid, $selected = false, $eventid=false) {
     $returnme = "";
     $union_statement = $eventid ? " UNION SELECT * FROM events_locations WHERE id IN (SELECT location FROM events WHERE eventid=$eventid)" : "";
     $SQL = "SELECT * FROM events_locations WHERE userid LIKE '%,$userid,%' $union_statement GROUP BY id ORDER BY location";
@@ -1105,7 +1105,7 @@ function get_my_locations($userid, $selected = false, $eventid=false){
     return $returnme;
 }
 
-function get_my_hidden_limits($templateid, $hard_limits, $soft_limits){
+function get_my_hidden_limits($templateid, $hard_limits, $soft_limits) {
     $returnme = "";
     if (empty($templateid)) { return $returnme; }
     $hidden_variable1 = $hidden_variable2 = "";
@@ -1144,7 +1144,7 @@ function get_my_hidden_limits($templateid, $hard_limits, $soft_limits){
     return $returnme . '<input type="hidden" id="hard_limits" value="' . $hidden_variable1 . '" />' . '<input type="hidden" id="soft_limits" value="' . $hidden_variable2 . '" />';
 }
 
-function get_my_category($selected = false){
+function get_my_category($selected = false) {
     $returnme = "";
     if ($categories = get_db_result("SELECT * FROM calendar_cat ORDER BY cat_id")) {
         while ($category = fetch_row($categories)) {
@@ -1203,7 +1203,7 @@ global $CFG;
     return $print;
 }
 
-function staff_application_form($row, $viewonly = false){
+function staff_application_form($row, $viewonly = false) {
 global $USER, $CFG, $MYVARS;
     $v["staffid"] = empty($row) ? false : $row["staffid"];
     $v["name"] = empty($row) ? $USER->fname . " " . $USER->lname : $row["name"];
@@ -1301,7 +1301,7 @@ global $USER, $CFG, $MYVARS;
                             data-rule-date="true"
                             onblur="
                                 var d = new Date($(this).val()).getTime() / 1000;
-                                if('.time().' - d < 567648000) {
+                                if ('.time().' - d < 567648000) {
                                     $(\'#agerange\').val(0);
                                 } else if ('.time().' - d < 788400000) {
                                     $(\'#agerange\').val(1);
@@ -1677,7 +1677,7 @@ global $USER, $CFG, $MYVARS;
     	</div>';
 }
 
-function new_location_form($eventid){
+function new_location_form($eventid) {
     echo '
 	<table>
 		<tr>
@@ -1741,7 +1741,7 @@ function new_location_form($eventid){
 ';
 }
 
-function location_list_form($eventid){
+function location_list_form($eventid) {
 global $USER, $CFG;
     $locations = get_db_result("SELECT * FROM events_locations WHERE shared=1 and userid NOT LIKE '%," . $USER->userid . ",%' ORDER BY location");
     $listyes = true;
@@ -1763,13 +1763,13 @@ global $USER, $CFG;
     return "No other addable locations.";
 }
 
-function events_delete($pageid, $featureid, $sectionid){
+function events_delete($pageid, $featureid, $sectionid) {
     execute_db_sql("DELETE FROM pages_features WHERE feature='events' AND pageid='$pageid' AND featureid='$featureid'");
     execute_db_sql("DELETE FROM settings WHERE type='events' AND pageid='$pageid' AND featureid='$featureid'");
     resort_page_features($pageid);
 }
 
-function create_form_element($type, $id, $optional, $length, $list = false){
+function create_form_element($type, $id, $optional, $length, $list = false) {
     switch ($type) {
         case "text":
             $maxlength = $length > 0 ? ' maxlength="' . $length . '"': "";
@@ -1793,7 +1793,7 @@ function create_form_element($type, $id, $optional, $length, $list = false){
     return $returnme;
 }
 
-function check_for_new_templates(){
+function check_for_new_templates() {
 global $CFG, $USER;
     $startdir = $CFG->dirroot . "/features/events/templates/";
     $ignoredDirectory[] = '.';
@@ -1819,12 +1819,12 @@ global $CFG, $USER;
     }
 }
 
-function get_events_admin_contacts(){
+function get_events_admin_contacts() {
     $contacts = get_db_result("SELECT DISTINCT CONCAT(contact,': ',email,': ',phone) as admin_contact FROM events WHERE confirmed=1 ORDER BY contact,eventid DESC");
 
     $script = '
     <script type="text/javascript">
-        function fill_admin_contacts(values){
+        function fill_admin_contacts(values) {
             values = values.split(": ");
             document.getElementById("contact").value = values[0];
             document.getElementById("email").value = values[1];
@@ -1847,12 +1847,12 @@ function get_events_admin_contacts(){
     </table>';
 }
 
-function get_events_admin_payable(){
+function get_events_admin_payable() {
     $contacts = get_db_result("SELECT DISTINCT CONCAT(payableto,': ',checksaddress,': ',paypal) as admin_contact FROM events WHERE payableto!='' AND confirmed=1");
 
     $script = '
     <script type="text/javascript">
-        function fill_admin_payable(values){
+        function fill_admin_payable(values) {
             values = values.split(": ");
             document.getElementById("payableto").value = values[0];
             document.getElementById("checksaddress").value = values[1];
@@ -1872,14 +1872,14 @@ function get_events_admin_payable(){
     </table>';
 }
 
-function events_buttons($pageid, $featuretype, $featureid){
+function events_buttons($pageid, $featuretype, $featureid) {
 global $CFG, $USER;
     $returnme = "";
-    if(user_has_ability_in_page($USER->userid, "addevents", $pageid, $featuretype, $featureid)){ $returnme .= make_modal_links(array("title"=> "Add Event","path"=>$CFG->wwwroot."/features/events/events.php?action=add_event_form&amp;pageid=$pageid","refresh"=>"true","iframe"=>"true","width"=>"800","height"=>"95%","image"=>$CFG->wwwroot."/images/add.png","class"=>"slide_menu_button")); }
+    if (user_has_ability_in_page($USER->userid, "addevents", $pageid, $featuretype, $featureid)) { $returnme .= make_modal_links(array("title"=> "Add Event","path"=>$CFG->wwwroot."/features/events/events.php?action=add_event_form&amp;pageid=$pageid","refresh"=>"true","iframe"=>"true","width"=>"800","height"=>"95%","image"=>$CFG->wwwroot."/images/add.png","class"=>"slide_menu_button")); }
     return $returnme;
 }
 
-function events_default_settings($feature,$pageid,$featureid){
+function events_default_settings($feature,$pageid,$featureid) {
 	$settings_array[] = array(false,"$feature","$pageid","$featureid","feature_title","Events",false,"Events","Feature Title","text");
 	$settings_array[] = array(false,"$feature","$pageid","$featureid","upcomingdays","30",false,"30","Show Upcoming Events (days)","text",true,"<=0","Must be greater than 0.");
 	$settings_array[] = array(false,"$feature","$pageid","$featureid","recentdays","5",false,"5","Recent Events (days)","text",true,"<=0","Must be greater than 0.");
@@ -1897,7 +1897,7 @@ function events_default_settings($feature,$pageid,$featureid){
     return $settings_array;
 }
 
-function facebook_share_button($eventid,$name,$keys=false){
+function facebook_share_button($eventid,$name,$keys=false) {
 global $CFG;
     if (!empty($keys)) {
         require_once ($CFG->dirroot . '/features/events/facebook/facebook.php'); //'<path to facebook library, you uploaded>/facebook.php';

@@ -232,9 +232,9 @@ if ($event['fee_full']) {
 // Finalize and activate validation code.
 echo create_validation_script("form1" , "submit_simple_contact_form_registration()");
 echo '<script type="text/javascript" language="javascript">
-        $(document).ready(function(){
-            $("input,select,textarea").bind("focus",function(){ $(this).closest(".rowContainer").css("background-color","whitesmoke"); });
-            $("input,select,textarea").bind("blur",function(){ $(this).closest(".rowContainer").css("background-color","white"); });
+        $(document).ready(function() {
+            $("input,select,textarea").bind("focus",function() { $(this).closest(".rowContainer").css("background-color","whitesmoke"); });
+            $("input,select,textarea").bind("blur",function() { $(this).closest(".rowContainer").css("background-color","white"); });
         });
       </script>';
 ?>

@@ -20,7 +20,7 @@ function browse() {
 global $CFG;
   $section = isset($MYVARS->GET["section"]) ? $MYVARS->GET["section"] : "search";
 
-	switch($section){
+	switch($section) {
 			case "users":
 					$pagesearch = "notselected";
 					$usersearch = "selected";
@@ -52,7 +52,7 @@ global $CFG;
 function create_edit_page() {
 global $CFG, $MYVARS, $ROLES, $USER;
 
-	if(!isset($VALIDATELIB)){ include_once($CFG->dirroot . '/lib/validatelib.php'); }
+	if (!isset($VALIDATELIB)) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
   $content = '';
   $admin = is_siteadmin($USER->userid) ? true : false;
   if (isset($MYVARS->GET["pageid"])) {
@@ -117,7 +117,7 @@ global $CFG, $MYVARS, $USER;
   $content = '';
   $pageid = $MYVARS->GET["pageid"];
   //Stop right there you!
-  if(!user_has_ability_in_page($USER->userid, "editpage", $pageid)){
+  if (!user_has_ability_in_page($USER->userid, "editpage", $pageid)) {
       $content .= get_error_message("generic_permissions");
       return;
   }

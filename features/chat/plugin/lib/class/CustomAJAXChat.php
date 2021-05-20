@@ -18,7 +18,7 @@ class CustomAJAXChat extends AJAXChat {
 	// Store the channels the current user has access to
 	// Make sure channel names don't contain any whitespace
 	function &getChannels() {
-		if($this->_channels === null) {
+		if ($this->_channels === null) {
 			$this->_channels = array();
 			
 			$customUsers = $this->getCustomUsers();
@@ -27,16 +27,16 @@ class CustomAJAXChat extends AJAXChat {
 			$validChannels = $customUsers[0]['channels'];
 			
 			// Add the valid channels to the channel list (the defaultChannelID is always valid):
-			foreach($this->getAllChannels() as $key=>$value) {
+			foreach ($this->getAllChannels() as $key=>$value) {
 				if ($value == $this->getConfig('defaultChannelID')) {
 					$this->_channels[$key] = $value;
 					continue;
 				}
 				// Check if we have to limit the available channels:
-				if($this->getConfig('limitChannelList') && !in_array($value, $this->getConfig('limitChannelList'))) {
+				if ($this->getConfig('limitChannelList') && !in_array($value, $this->getConfig('limitChannelList'))) {
 					continue;
 				}
-				if(in_array($value, $validChannels)) {
+				if (in_array($value, $validChannels)) {
 					$this->_channels[$key] = $value;
 				}
 			}
@@ -49,20 +49,20 @@ class CustomAJAXChat extends AJAXChat {
 	function &getAllChannels() {
         $this->_allChannels = $this->getCustomChannels();
         return $this->_allChannels;
-		if($this->_allChannels === null) {
+		if ($this->_allChannels === null) {
 			// Get all existing channels:
 			$customChannels = $this->getCustomChannels();
 			
 			$defaultChannelFound = false;
 			
-			foreach($customChannels as $name=>$id) {
+			foreach ($customChannels as $name=>$id) {
 				$this->_allChannels[$this->trimChannelName($name)] = $id;
-				if($id == $this->getConfig('defaultChannelID')) {
+				if ($id == $this->getConfig('defaultChannelID')) {
 					$defaultChannelFound = true;
 				}
 			}
 			
-			if(!$defaultChannelFound) {
+			if (!$defaultChannelFound) {
 				// Add the default channel as first array element to the channel list
 				// First remove it in case it appeard under a different ID
 				unset($this->_allChannels[$this->getConfig('defaultChannelName')]);

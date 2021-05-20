@@ -7,32 +7,32 @@
 * Revision: 2.2.2
 ***************************************************************************/
 
-if(!isset($CFG)){ include('../header.php'); }
-if(!isset($EVENTSLIB)){ include_once($CFG->dirroot . '/features/events/eventslib.php'); }
+if (!isset($CFG)) { include('../header.php'); }
+if (!isset($EVENTSLIB)) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 
 update_user_cookie();
 
 callfunction();
 
 //See if the date given is open for a requested event
-function request_date_open(){
+function request_date_open() {
 global $CFG,$MYVARS,$USER;
     $featureid = $MYVARS->GET["featureid"];
     $startdate = $MYVARS->GET["startdate"];
-    if(isset($featureid)){
+    if (isset($featureid)) {
         $pageid = get_db_field("pageid","pages_features","feature='events' AND featureid=$featureid");
 
         //Only site events need to be set to confirm=1
         $confirm = $pageid == $CFG->SITEID ? "confirmed=1 AND" : "pageid=$pageid AND";
 
-        if(!$settings = fetch_settings("events",$featureid,$pageid)){
+        if (!$settings = fetch_settings("events",$featureid,$pageid)) {
     		make_or_update_settings_array(default_settings("events",$pageid,$featureid));
     		$settings = fetch_settings("events",$featureid,$pageid);
     	}
 
         $locationid = $settings->events->$featureid->allowrequests->setting;
 
-        if(isset($MYVARS->GET["enddate"])){ //check all dates between startdate and enddate
+        if (isset($MYVARS->GET["enddate"])) { //check all dates between startdate and enddate
             $startdate = strtotime($startdate) + get_offset(); $enddate = strtotime($MYVARS->GET["enddate"]) + get_offset();
             //get all events at location between dates
             $SQL = "SELECT * FROM events
@@ -44,7 +44,7 @@ global $CFG,$MYVARS,$USER;
                                     OR ($startdate <= event_begin_date AND $enddate >= event_end_date)
                             )";
             //echo $SQL;
-            if($getdates = get_db_count($SQL)){
+            if ($getdates = get_db_count($SQL)) {
                 echo "false";
             }else{ echo "true";}
         }else{ //only check a single day for an opening
@@ -54,14 +54,14 @@ global $CFG,$MYVARS,$USER;
                         WHERE $confirm location='$locationid'
                             AND ($startdate >= event_begin_date AND $startdate <= event_end_date)";
             //echo $SQL;
-            if($getdates = get_db_count($SQL)){
+            if ($getdates = get_db_count($SQL)) {
                 echo "false";
             }else{ echo "true"; }
         }
     }
 }
 
-function event_request(){
+function event_request() {
 global $CFG,$MYVARS,$USER;
     $featureid = dbescape($MYVARS->GET["featureid"]);
     $contact_name = dbescape($MYVARS->GET["name"]);
@@ -77,14 +77,14 @@ global $CFG,$MYVARS,$USER;
                     (featureid,contact_name,contact_email,contact_phone,event_name,startdate,enddate,participants,description,votes_for,votes_against)
                     VALUES('$featureid','$contact_name','$contact_email','$contact_phone','$event_name','$startdate','$enddate','$participants','$description','0','0')";
     //Save the request
-    if($reqid = execute_db_sql($INSERTSQL)){
+    if ($reqid = execute_db_sql($INSERTSQL)) {
         $from->email = $CFG->siteemail;
         $from->fname = $CFG->sitename;
         $from->lname = "";
 
         //Requesting email setup
         $contact->email = $contact_email;
-        if(strstr($contact_name, " ")){
+        if (strstr($contact_name, " ")) {
             $name = explode(" ",$contact_name);
             $contact->fname = $name[0];
             $contact->lname = $name[1];
@@ -191,7 +191,7 @@ global $CFG, $MYVARS;
         $locationid = $settings->events->$featureid->allowrequests->setting;
         $request = get_db_row("SELECT * FROM events_requests WHERE reqid='$reqid'");
         //Allowed to ask questions
-        if (valid_voter($pageid, $featureid, $voteid)){
+        if (valid_voter($pageid, $featureid, $voteid)) {
             $qtime = get_timestamp();
             $SQL = "INSERT INTO events_requests_questions
                         (reqid,question,answer,question_time,answer_time)
@@ -215,7 +215,7 @@ global $CFG, $MYVARS;
                 $emaillist = str_replace("\n\n","\n",$emaillist);
                 $emaillist = explode("\n",$emaillist);
 
-                foreach($emaillist as $emailuser){
+                foreach ($emaillist as $emailuser) {
                     //Let everyone know the event has been questioned
                     $thisuser->email = $emailuser;
                     $thisuser->fname = "";
@@ -229,7 +229,7 @@ global $CFG, $MYVARS;
                             </a>';
 
                 $contact->email = $request["contact_email"];
-                if(strstr(stripslashes($request["contact_name"]), " ")){
+                if (strstr(stripslashes($request["contact_name"]), " ")) {
                     $name = explode(" ",stripslashes($request["contact_name"]));
                     $contact->fname = $name[0];
                     $contact->lname = $name[1];
@@ -353,7 +353,7 @@ global $CFG, $MYVARS;
                                               onclick="ajaxapi(\'/features/events/events_ajax.php\',
                                                                \'request_question_send\',
                                                                \'&amp;voteid='.$voteid.'&amp;reqid='.$reqid.'&amp;question=\'+ escape('.get_editor_value_javascript().'),
-                                                               function(){ simple_display(\'question_form\');}
+                                                               function() { simple_display(\'question_form\');}
                                               );"
                                           />
           					       </div>
@@ -390,7 +390,7 @@ global $CFG, $MYVARS;
 }
 
 //Request answer form
-function request_answer($refresh=false){
+function request_answer($refresh=false) {
 global $CFG, $MYVARS;
     $reqid = $MYVARS->GET["reqid"];
     $qid = $MYVARS->GET["qid"];
@@ -418,7 +418,7 @@ global $CFG, $MYVARS;
         echo '<h2>Questions Regarding Event Request</h2>'.get_request_info($reqid);
 
         $answer = get_db_field("answer","events_requests_questions","id=$qid");
-        if(!$refresh){
+        if (!$refresh) {
             echo'
           			<table style="width:100%">
           				<tr>
@@ -433,7 +433,7 @@ global $CFG, $MYVARS;
                                     onclick="ajaxapi(\'/features/events/events_ajax.php\',
                                                      \'request_answer_send\',
                                                      \'&amp;qid='.$qid.'&amp;reqid='.$reqid.'&amp;answer=\'+ escape('.get_editor_value_javascript().'),
-                                                     function(){ simple_display(\'answer_form\');}
+                                                     function() { simple_display(\'answer_form\');}
                                     );"
                                 />
         					       </div>
@@ -446,14 +446,14 @@ global $CFG, $MYVARS;
 
         //Print out previous questions and answers
         $mod = !$refresh ? "AND id!=$qid" : "";
-        if($results = get_db_result("SELECT * FROM events_requests_questions
+        if ($results = get_db_result("SELECT * FROM events_requests_questions
                                         WHERE reqid=$reqid $mod
-                                        ORDER BY question_time")){
-            while($row = fetch_row($results)){
+                                        ORDER BY question_time")) {
+            while ($row = fetch_row($results)) {
                 echo    '<div style="background-color:Aquamarine;padding:4px;">
                             <strong>'.$row['question'].'</strong>
                         </div>';
-                if($row["answer"] == ""){ //Not answered
+                if ($row["answer"] == "") { //Not answered
                     echo    '<div style="background-color:PaleTurquoise;padding:4px;overflow:hidden;">
                                 <strong>
                                     <a href="'.$CFG->wwwroot.'/features/events/events_ajax.php?action=request_answer&amp;qid='.$row['id'].'&amp;reqid='.$reqid.'">
@@ -473,12 +473,12 @@ global $CFG, $MYVARS;
                 }
             }
         }else{ echo "No other questions have been asked yet."; }
-        if(!$refresh){ echo '</div></body></html>'; }
+        if (!$refresh) { echo '</div></body></html>'; }
     }else{ echo get_error_message("invalid_old_request:events"); }
 }
 
 //Function is called on email votes
-function request_vote(){
+function request_vote() {
 global $CFG, $MYVARS;
     $reqid = $MYVARS->GET["reqid"];
     $approve = $MYVARS->GET["approve"];
@@ -487,27 +487,27 @@ global $CFG, $MYVARS;
     $stance = $approve == "1" ? "approve" : "deny";
     echo "<html><title>Event Request has been voted on.</title><body>";
     //Make sure request exists and get the featureid
-    if($featureid = get_db_field("featureid","events_requests","reqid=$reqid")){
+    if ($featureid = get_db_field("featureid","events_requests","reqid=$reqid")) {
         //Get feature request settings
         $pageid = get_db_field("pageid","pages_features","feature='events' AND featureid=$featureid");
 
-        if(!$settings = fetch_settings("events",$featureid,$pageid)){
+        if (!$settings = fetch_settings("events",$featureid,$pageid)) {
         	make_or_update_settings_array(default_settings("events",$pageid,$featureid));
         	$settings = fetch_settings("events",$featureid,$pageid);
         }
         $locationid = $settings->events->$featureid->allowrequests->setting;
 
-        if(valid_voter($pageid,$featureid,$voteid)){
+        if (valid_voter($pageid,$featureid,$voteid)) {
             //See if the person has already voted
-            if($row = get_db_row("SELECT * FROM events_requests
+            if ($row = get_db_row("SELECT * FROM events_requests
                                     WHERE reqid='$reqid'
-                                        AND voted LIKE '%:$voteid;%'")){ //Person has already voted
+                                        AND voted LIKE '%:$voteid;%'")) { //Person has already voted
                 $voted = explode("::",$row["voted"]);
-                foreach($voted as $vote){
+                foreach ($voted as $vote) {
                     $vote = trim($vote,":");
                     $entry = explode(";",$vote);
-                    if($entry[0] == $voteid){ //This is the vote that needs removed
-                        if($entry[1] == $approve){ //Same vote, nothing else needs done
+                    if ($entry[0] == $voteid) { //This is the vote that needs removed
+                        if ($entry[1] == $approve) { //Same vote, nothing else needs done
                             echo "You have already voted to $stance this event.";
                         }else{ //They have changed their vote.
                             //Remove old vote
@@ -515,7 +515,7 @@ global $CFG, $MYVARS;
                                                 SET voted = replace(voted, ':$voteid;$entry[1]:', ':$voteid;$approve:')
                                                 WHERE reqid=$reqid;");
 
-                            if($approve == "1"){ //Remove 1 from against and add 1 to for
+                            if ($approve == "1") { //Remove 1 from against and add 1 to for
                                 execute_db_sql("UPDATE events_requests
                                                     SET votes_against = (votes_against - 1), votes_for = (votes_for + 1)
                                                     WHERE reqid=$reqid;");
@@ -532,7 +532,7 @@ global $CFG, $MYVARS;
                 execute_db_sql("UPDATE events_requests
                                     SET voted = CONCAT(voted,':$voteid;$approve:')
                                     WHERE reqid=$reqid;");
-                if($approve == "1"){ //Remove 1 from against and add 1 to for
+                if ($approve == "1") { //Remove 1 from against and add 1 to for
                     execute_db_sql("UPDATE events_requests
                                         SET votes_for = (votes_for + 1)
                                         WHERE reqid=$reqid;");
@@ -545,7 +545,7 @@ global $CFG, $MYVARS;
             }
 
             //See if the voting on this request is finished
-            if($request = get_db_row("SELECT * FROM events_requests WHERE reqid='$reqid'")) {
+            if ($request = get_db_row("SELECT * FROM events_requests WHERE reqid='$reqid'")) {
                 $from = new \stdClass;
                 $from->email = $CFG->siteemail;
                 $from->fname = $CFG->sitename;
@@ -554,7 +554,7 @@ global $CFG, $MYVARS;
                 //Requesting email setup
                 $contact = new \stdClass;
                 $contact->email = $request["contact_email"];
-                if(strstr(stripslashes($request["contact_name"]), " ")){
+                if (strstr(stripslashes($request["contact_name"]), " ")) {
                     $name = explode(" ",stripslashes($request["contact_name"]));
                     $contact->fname = $name[0];
                     $contact->lname = $name[1];
@@ -569,8 +569,8 @@ global $CFG, $MYVARS;
                             We will look over the details that you provided and respond shortly.<br />
                             Through the approval process you may receive additional questions about your event. $request_info";
 
-                if($request["votes_for"] == $settings->events->$featureid->requestapprovalvotes->setting &&
-                    $request["votes_against"] < $settings->events->$featureid->requestdenyvotes->setting){
+                if ($request["votes_for"] == $settings->events->$featureid->requestapprovalvotes->setting &&
+                    $request["votes_against"] < $settings->events->$featureid->requestdenyvotes->setting) {
                     //Event Approved
                     $subject = $CFG->sitename . " Event Request Approved";
                     $message = '<strong>The event ('.stripslashes($request["event_name"]).') has been approved by a vote of '.$request["votes_for"].' to '.$request["votes_against"].'.</strong>
@@ -584,7 +584,7 @@ global $CFG, $MYVARS;
                     $emaillist = str_replace(array(","," ","\t","\r"),"\n",$emaillist);
                     $emaillist = str_replace("\n\n","\n",$emaillist);
                     $emaillist = explode("\n",$emaillist);
-                    foreach($emaillist as $emailuser){
+                    foreach ($emaillist as $emailuser) {
                         //Let everyone know the event has been denied
                         $thisuser->email = $emailuser;
                         $thisuser->fname = "";
@@ -607,8 +607,8 @@ global $CFG, $MYVARS;
                     execute_db_sql("DELETE FROM events_requests_questions
                                         WHERE reqid=$reqid");
 
-                }elseif($request["votes_for"] < $settings->events->$featureid->requestapprovalvotes->setting &&
-                        $request["votes_against"] == $settings->events->$featureid->requestdenyvotes->setting){
+                }elseif ($request["votes_for"] < $settings->events->$featureid->requestapprovalvotes->setting &&
+                        $request["votes_against"] == $settings->events->$featureid->requestdenyvotes->setting) {
                     //Event Denied
                     $subject = $CFG->sitename . " Event Request Denied";
                     $message = '<strong>The event ('.stripslashes($request["event_name"]).') has been denied by a vote of '.$request["votes_for"].' to '.$request["votes_against"].'.</strong>
@@ -622,7 +622,7 @@ global $CFG, $MYVARS;
                     $emaillist = str_replace(array(","," ","\t","\r"),"\n",$emaillist);
                     $emaillist = str_replace("\n\n","\n",$emaillist);
                     $emaillist = explode("\n",$emaillist);
-                    foreach($emaillist as $emailuser){
+                    foreach ($emaillist as $emailuser) {
                         //Let everyone know the event has been denied
                         $thisuser->email = $emailuser;
                         $thisuser->fname = "";
@@ -635,7 +635,7 @@ global $CFG, $MYVARS;
                                         WHERE reqid=$reqid;");
                     execute_db_sql("DELETE FROM events_requests_questions
                                         WHERE reqid=$reqid");
-                }elseif($request["votes_for"] > $settings->events->$featureid->requestapprovalvotes->setting){
+                }elseif ($request["votes_for"] > $settings->events->$featureid->requestapprovalvotes->setting) {
                     echo "Event has already been approved.  Thank you for voting.";
                 }
             }
@@ -647,7 +647,7 @@ global $CFG, $MYVARS;
     echo "</body></html>";
 }
 
-function convert_to_event($request,$location){
+function convert_to_event($request,$location) {
 global $CFG,$MYVARS;
     $pageid = $MYVARS->GET["pageid"];
 	$MYVARS->GET["event_name"] = $request["event_name"];
@@ -670,9 +670,9 @@ global $CFG,$MYVARS;
     return submit_new_event(true);
 }
 
-function get_request_info($reqid){
+function get_request_info($reqid) {
 global $CFG;
-    if($request = get_db_row("SELECT * FROM events_requests WHERE reqid='$reqid'")){
+    if ($request = get_db_row("SELECT * FROM events_requests WHERE reqid='$reqid'")) {
         return '<br />
         <strong>Event Name:</strong> '.stripslashes($request["event_name"]).'<br />
         <strong>Contact Name:</strong> '.stripslashes($request["contact_name"]).'<br />
@@ -685,7 +685,7 @@ global $CFG;
     }
 }
 
-function print_registration(){
+function print_registration() {
 global $CFG, $MYVARS, $USER;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
 	$eventid = dbescape($MYVARS->GET["eventid"]);
@@ -712,11 +712,11 @@ global $CFG, $MYVARS, $USER;
                     Back to '.$eventname.' registrants.
                 </a>';
 
-	if($regid != "false"){ //Print form for 1 registration
+	if ($regid != "false") { //Print form for 1 registration
 		$printarea .= printable_registration($regid,$eventid,$template_id);
 	}else{ //Batch print all registrations
-        if($registrations = get_db_result(get_registration_sort_sql($eventid,$online_only))){
-			while($registration = fetch_row($registrations)){
+        if ($registrations = get_db_result(get_registration_sort_sql($eventid,$online_only))) {
+			while ($registration = fetch_row($registrations)) {
 				$printarea .= $printarea == '' ? '<p style="font-size:.95em;" class="print">' : '<p style="font-size:.95em;" class="pagestart print">';
 				$printarea .= printable_registration($registration["regid"],$eventid,$template_id);
 				$printarea .= "</p>";
@@ -734,17 +734,17 @@ global $CFG, $MYVARS, $USER;
 	echo $returnme;
 }
 
-function get_registration_sort_sql($eventid,$online_only=false){
-    if($online_only){ $online_only = "AND e.manual = 0"; }
+function get_registration_sort_sql($eventid,$online_only=false) {
+    if ($online_only) { $online_only = "AND e.manual = 0"; }
     $SQL = "SELECT e.*"; $orderby = "";
 
     $sort_info = get_db_row("SELECT e.eventid,b.orderbyfield,b.folder FROM events as e
                                 JOIN events_templates as b ON b.template_id=e.template_id
                                 WHERE eventid='$eventid'");
 
-   	if($sort_info["folder"] == "none"){ //form template
+   	if ($sort_info["folder"] == "none") { //form template
         $sort_elements=explode(",",$sort_info["orderbyfield"]);$i=0;
-        while(isset($sort_elements[$i])){
+        while (isset($sort_elements[$i])) {
             $SQL .= ",(SELECT value FROM events_registrations_values
                             WHERE elementid='$sort_elements[$i]' AND regid=v.regid) as val$i";
             $orderby .= $orderby == "" ? "val$i" : ",val$i";
@@ -757,7 +757,7 @@ function get_registration_sort_sql($eventid,$online_only=false){
                     ORDER BY val0 LIKE '%Reserved%' DESC,$orderby";
    	}else{ //custom template
         $sort_elements=explode(",",$sort_info["orderbyfield"]);$i=0;
-        while(isset($sort_elements[$i])){
+        while (isset($sort_elements[$i])) {
             $SQL .= ",(SELECT value FROM events_registrations_values
                             WHERE elementname='$sort_elements[$i]' AND regid=v.regid) as val$i";
             $orderby .= $orderby == "" ? "val$i" : ",val$i";
@@ -773,22 +773,22 @@ function get_registration_sort_sql($eventid,$online_only=false){
 return $SQL;
 }
 
-function printable_registration($regid, $eventid, $template_id){
+function printable_registration($regid, $eventid, $template_id) {
 	$returnme = '<div>';
 
 	$SQL = "SELECT * FROM events_templates WHERE template_id='$template_id'";
 	$template = get_db_row($SQL);
     if ($template["folder"] == "none") {
-        if($template_forms = get_db_result("SELECT * FROM events_templates_forms
+        if ($template_forms = get_db_result("SELECT * FROM events_templates_forms
                                                 WHERE template_id='$template_id'
-                                                ORDER BY sort")){
-        	while($form_element = fetch_row($template_forms)){
+                                                ORDER BY sort")) {
+        	while ($form_element = fetch_row($template_forms)) {
         		if ($form_element["type"] == "payment") {
-        			if($values = get_db_result("SELECT * FROM events_registrations_values
+        			if ($values = get_db_result("SELECT * FROM events_registrations_values
                                                     WHERE regid='$regid' AND elementid='".$form_element["elementid"]."'
-                                                    ORDER BY entryid")){
+                                                    ORDER BY entryid")) {
         				$i = 0; $values_display = explode(",", $form_element["display"]);
-        				while($value = fetch_row($values)){
+        				while ($value = fetch_row($values)) {
 	        				$returnme .= '<br />
                                             <div style="display:inline-block;width:150px;vertical-align: top;">
                                                 <strong>'.$values_display[$i].'</strong>
@@ -877,7 +877,7 @@ global $CFG, $MYVARS, $USER;
                 ORDER BY entryid";
 	if ($entries = get_db_result($SQL)) {
 		$SQL2 = '';
-		while($entry = fetch_row($entries)){
+		while ($entry = fetch_row($entries)) {
 			$SQL2 .= $SQL2 == "" ? "('".$entry["entryid"]."','".addslashes(urldecode($MYVARS->GET[$entry["entryid"]]))."')" : ",('".$entry["entryid"]."','".addslashes(urldecode($MYVARS->GET[$entry["entryid"]]))."')";
 		}
 
@@ -929,18 +929,18 @@ global $CFG, $MYVARS, $USER;
     } else { echo $SQL1; }
 }
 
-function delete_registration_info(){
+function delete_registration_info() {
 global $CFG, $MYVARS, $USER;
 	$regid = isset($MYVARS->GET["regid"]) ? dbescape($MYVARS->GET["regid"]) : false;
-	if(execute_db_sql("DELETE FROM events_registrations
+	if (execute_db_sql("DELETE FROM events_registrations
                             WHERE regid='$regid'") &&
         execute_db_sql("DELETE FROM events_registrations_values
-                            WHERE regid='$regid'")){
+                            WHERE regid='$regid'")) {
         echo "Deleted Registration";
     }else{ echo "Failed"; }
 }
 
-function resend_registration_email(){
+function resend_registration_email() {
 global $CFG, $MYVARS, $USER;
 	$regid = isset($MYVARS->GET["regid"]) ? dbescape($MYVARS->GET["regid"]) : false;
     $eventid = isset($MYVARS->GET["eventid"]) ? dbescape($MYVARS->GET["eventid"]) : false;
@@ -963,7 +963,7 @@ global $CFG, $MYVARS, $USER;
                          return false;
                 ">Back to Registration List
              </a>';
-    if(!empty($regid) && !empty($eventid)){
+    if (!empty($regid) && !empty($eventid)) {
         $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
 
         $touser = (object)array('email' => get_db_field("email", "events_registrations", "regid='$regid'"),
@@ -975,7 +975,7 @@ global $CFG, $MYVARS, $USER;
                                   'lname' => "");
 
 		$message = registration_email($regid, $touser);
-		if(send_email($touser, $fromuser, null, $event["name"] . " Registration", $message)){
+		if (send_email($touser, $fromuser, null, $event["name"] . " Registration", $message)) {
 		  echo $link . '<br /><br />
                         <div style="text-align:center">
                             Registration Email sent
@@ -994,7 +994,7 @@ global $CFG, $MYVARS, $USER;
     }
 }
 
-function get_registration_info(){
+function get_registration_info() {
 global $CFG, $MYVARS, $USER;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
 	$eventid = dbescape($MYVARS->GET["eventid"]);
@@ -1065,18 +1065,18 @@ global $CFG, $MYVARS, $USER;
 
 	$SQL = "SELECT * FROM events_templates WHERE template_id='$template_id'";
 	$template = get_db_row($SQL);
-    if($template["folder"] == "none"){
-        if($template_forms = get_db_result("SELECT * FROM events_templates_forms
+    if ($template["folder"] == "none") {
+        if ($template_forms = get_db_result("SELECT * FROM events_templates_forms
                                                 WHERE template_id='$template_id'
-                                                ORDER BY sort")){
-        	while($form_element = fetch_row($template_forms)){
-        		if($form_element["type"] == "payment"){
-        			if($values = get_db_result("SELECT * FROM events_registrations_values
+                                                ORDER BY sort")) {
+        	while ($form_element = fetch_row($template_forms)) {
+        		if ($form_element["type"] == "payment") {
+        			if ($values = get_db_result("SELECT * FROM events_registrations_values
                                                     WHERE regid='$regid'
                                                         AND elementid='".$form_element["elementid"]."'
-                                                    ORDER BY entryid")){
+                                                    ORDER BY entryid")) {
         				$i = 0; $values_display = explode(",", $form_element["display"]);
-        				while($value = fetch_row($values)){
+        				while ($value = fetch_row($values)) {
 	        				$returnme .= '<tr><td>'.$values_display[$i].' </td><td><input id="'.$value["entryid"].'" name="'.$value["entryid"].'" type="text" size="45" value="'.stripslashes($value["value"]).'" /></td></tr>';
         					$i++;
 						}
@@ -1092,7 +1092,7 @@ global $CFG, $MYVARS, $USER;
     }else{
         $template_forms = explode(";", trim($template["formlist"], ';'));
         $i=0;
-        while(isset($template_forms[$i])){
+        while (isset($template_forms[$i])) {
         	$form = explode(":",$template_forms[$i]);
         	$value = get_db_row("SELECT * FROM events_registrations_values
                                     WHERE regid='$regid'
@@ -1105,7 +1105,7 @@ global $CFG, $MYVARS, $USER;
     echo '<div style="width:98%;border:1px solid gray;padding:5px;">' . $returnme . '</div>';
 }
 
-function add_blank_registration(){
+function add_blank_registration() {
 global $CFG, $MYVARS, $USER;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
 	$eventid = dbescape($MYVARS->GET["eventid"]);
@@ -1113,19 +1113,19 @@ global $CFG, $MYVARS, $USER;
 	$reserveamount = isset($MYVARS->GET["reserveamount"]) ? dbescape($MYVARS->GET["reserveamount"]) : 1;
 	$eventname = dbescape(urldecode($MYVARS->GET["eventname"]));
 	$reserved = 0;
-	while($reserved < $reserveamount){
+	while ($reserved < $reserveamount) {
 		$SQL = "";$SQL2 = "";
-		if($regid=execute_db_sql("INSERT INTO events_registrations
+		if ($regid=execute_db_sql("INSERT INTO events_registrations
                                     (eventid,date,code,manual)
-                                    VALUES('$eventid','".get_timestamp()."','".uniqid("",true)."',1)")){
+                                    VALUES('$eventid','".get_timestamp()."','".uniqid("",true)."',1)")) {
 			$SQL = "SELECT * FROM events_templates WHERE template_id='$template_id'";
 			$template = get_db_row($SQL);
-		    if($template["folder"] == "none"){
-		        if($template_forms = get_db_result("SELECT * FROM events_templates_forms
+		    if ($template["folder"] == "none") {
+		        if ($template_forms = get_db_result("SELECT * FROM events_templates_forms
                                                         WHERE template_id='$template_id'
-                                                        ORDER BY sort")){
-		        	while($form_element = fetch_row($template_forms)){
-		        		if($form_element["type"] == "payment"){
+                                                        ORDER BY sort")) {
+		        	while ($form_element = fetch_row($template_forms)) {
+		        		if ($form_element["type"] == "payment") {
 		    				$SQL2 .= $SQL2 == "" ? "" : ",";
 		        			$SQL2 .= "('$regid','".$form_element["elementid"]."','','$eventid','total_owed'),('$regid',".$form_element["elementid"].",'','$eventid','paid'),('$regid','".$form_element["elementid"]."','','$eventid','payment_method')";
 						}else{
@@ -1140,7 +1140,7 @@ global $CFG, $MYVARS, $USER;
                             VALUES" . $SQL2;
 		    }else{
 		        $template_forms = explode(";", trim($template["formlist"], ';'));
-                foreach($template_forms as $formset) {
+                foreach ($template_forms as $formset) {
                     $form = explode(":", $formset);
 		        	$value = strstr($template["registrant_name"], $form[0]) ? "Reserved" : "";
 					$SQL2 .= $SQL2 == "" ? "" : ",";
@@ -1152,7 +1152,7 @@ global $CFG, $MYVARS, $USER;
                             VALUES" . $SQL2;
 		    }
 
-		    if(execute_db_sql($SQL2)){ echo "Added";
+		    if (execute_db_sql($SQL2)) { echo "Added";
 		    }else{
 				execute_db_sql("DELETE FROM events_registrations
                                     WHERE regid='$regid'");
@@ -1164,7 +1164,7 @@ global $CFG, $MYVARS, $USER;
     }
 }
 
-function show_registrations(){
+function show_registrations() {
 global $CFG, $MYVARS, $USER;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
 	$eventid = dbescape($MYVARS->GET["eventid"]);
@@ -1212,10 +1212,10 @@ global $CFG, $MYVARS, $USER;
                     </a>
                 </span><br />';
 
-    if($registrants = get_db_result(get_registration_sort_sql($eventid))){
+    if ($registrants = get_db_result(get_registration_sort_sql($eventid))) {
 		$i = 0;
         $values = new \stdClass;
-		while($registrant = fetch_row($registrants)){
+		while ($registrant = fetch_row($registrants)) {
             $values->$i = new \stdClass;
 			$values->$i->name = ($i+1) . " - " . get_registrant_name($registrant["regid"]);
             $values->$i->name .= !empty($registrant["verified"]) ? '' : ' [PENDING]';
@@ -1248,13 +1248,13 @@ global $CFG, $MYVARS, $USER;
                             <tr>
                                 <td>
                                     <span style="font-size:.8em">Edit Registration of </span>
-                                    '.make_select_from_array("registrants", $values, "regid", "name", $selected, "" , 'onchange="if($(this).val().length > 0){ $(\'#event_menu_button\').show(); } else { $(\'#event_menu_button\').hide(); }"', true, 1, "width: 200px;") . '</td>' .
+                                    '.make_select_from_array("registrants", $values, "regid", "name", $selected, "" , 'onchange="if ($(this).val().length > 0) { $(\'#event_menu_button\').show(); } else { $(\'#event_menu_button\').hide(); }"', true, 1, "width: 200px;") . '</td>' .
                         '       <td>
                                     <a id="event_menu_button" title="Menu" style="'.$initial_display.'" href="javascript: void(0);"><img src="'.$CFG->wwwroot.'/images/down.gif" alt="Menu" /></a>
                                     <ul id="event_menu">' .
                                         '<li>
                                             <a title="Edit Registration" href="javascript: void(0);"
-                                                onclick="if(document.getElementById(\'registrants\').value != \'\'){
+                                                onclick="if (document.getElementById(\'registrants\').value != \'\') {
                                                             document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                                                             ajaxapi(\'/features/events/events_ajax.php\',
                                                                     \'get_registration_info\',
@@ -1273,12 +1273,12 @@ global $CFG, $MYVARS, $USER;
                                         </li>' .
                                         '<li>
                                             <a title="Delete Registration" href="javascript: void(0);"
-                                                onclick="if(document.getElementById(\'registrants\').value != \'\' && confirm(\'Do you want to delete this registration?\')){
+                                                onclick="if (document.getElementById(\'registrants\').value != \'\' && confirm(\'Do you want to delete this registration?\')) {
                                                             document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                                                             ajaxapi(\'/features/events/events_ajax.php\',
                                                                     \'delete_registration_info\',
                                                                     \'&amp;regid=\'+document.getElementById(\'registrants\').value,
-                                                                    function(){ do_nothing(); }
+                                                                    function() { do_nothing(); }
                                                             );
                                                             ajaxapi(\'/features/events/events_ajax.php\',
                                                                     \'show_registrations\',
@@ -1298,7 +1298,7 @@ global $CFG, $MYVARS, $USER;
                                         </li>' .
                                         '<li>
                                             <a title="Send Registration Email" href="javascript: void(0);"
-                                                onclick="if(document.getElementById(\'registrants\').value != \'\'){
+                                                onclick="if (document.getElementById(\'registrants\').value != \'\') {
                                                             document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                                                             ajaxapi(\'/features/events/events_ajax.php\',
                                                                     \'resend_registration_email\',
@@ -1323,7 +1323,7 @@ global $CFG, $MYVARS, $USER;
 	}
 	$returnme .= '<div>
                     A reserved registration will show in the above list.<br />
-                    <span>Reserve <input type="text" size="2" maxlength="2" id="reserveamount" value="1" onchange="if(IsNumeric(this.value) && this.value > 0){}else{this.value=1;}" /> Spot(s): </span>
+                    <span>Reserve <input type="text" size="2" maxlength="2" id="reserveamount" value="1" onchange="if (IsNumeric(this.value) && this.value > 0) {}else{this.value=1;}" /> Spot(s): </span>
                     <a href="javascript: void(0);" onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                                                             ajaxapi(\'/features/events/events_ajax.php\',
                                                                     \'add_blank_registration\',
@@ -1348,13 +1348,13 @@ global $CFG, $MYVARS, $USER;
 	echo '<div style="font-size:.9em;width:98%;border:1px solid gray;padding:5px;">' . $returnme . '</div>';
 }
 
-function eventsearch(){
+function eventsearch() {
 global $CFG, $MYVARS, $USER;
     $MYVARS->search_perpage = 8;
     $userid = $USER->userid; $searchstring = "";
     $searchwords = trim($MYVARS->GET["searchwords"]);
     //no search words given
-    if($searchwords == ""){
+    if ($searchwords == "") {
         $searchwords = '%';
     }
     echo '<input type="hidden" id="searchwords" value="' . $searchwords . '" />';
@@ -1366,13 +1366,13 @@ global $CFG, $MYVARS, $USER;
     $limit = " LIMIT $firstonpage," . $MYVARS->search_perpage;
     $words = explode(" ", $searchwords);
     $i = 0;
-    while(isset($words[$i])){
+    while (isset($words[$i])) {
         $searchpart = "(name LIKE '%" . dbescape($words[$i]) . "%')";
         $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
         $i++;
     }
 
-	if($MYVARS->GET["pageid"] == $CFG->SITEID){
+	if ($MYVARS->GET["pageid"] == $CFG->SITEID) {
 		$SQL = "SELECT * FROM events
                     WHERE (pageid=".dbescape($MYVARS->GET["pageid"])."
                             OR (siteviewable=1 AND confirmed=1))
@@ -1424,17 +1424,17 @@ global $CFG, $MYVARS, $USER;
                                                                     <img src="' . $CFG->wwwroot . '/images/next.gif" title="Next Page" alt="Next Page">
                                                                 </a>' : "";
     $header = $body = "";
-    if($count > 0){
-        while($event = fetch_row($events)){
+    if ($count > 0) {
+        while ($event = fetch_row($events)) {
         	$export = "";
             $header = $header == "" ? '<table style="width:100%;"><tr><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;font-size:.75em;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><p>' : $header;
 
-			if($event["start_reg"] > 0){
+			if ($event["start_reg"] > 0) {
 				$regcount = get_db_count("SELECT * FROM events_registrations
                                             WHERE eventid='" . $event['eventid']."'");
 				$limit = $event['max_users'] == "0" ? "&#8734;" : $event['max_users'];
 				//GET EXPORT CSV BUTTON
-				if(user_has_ability_in_page($USER->userid, "exportcsv", $event["pageid"])){
+				if (user_has_ability_in_page($USER->userid, "exportcsv", $event["pageid"])) {
 				    $export = '<a href="javascript: void(0)" onclick="ajaxapi(\'/features/events/events_ajax.php\',
                                                                               \'export_csv\',
                                                                               \'&amp;pageid=' . $event["pageid"] . '&amp;featureid=' . $event['eventid'] . '\',
@@ -1478,21 +1478,21 @@ global $CFG, $MYVARS, $USER;
     echo $header . $body;
 }
 
-function lookup_reg(){
+function lookup_reg() {
 global $CFG, $MYVARS, $USER;
 	$code = dbescape($MYVARS->GET["code"]);
 	$time = get_timestamp();
 	$SQL = "SELECT * FROM events_registrations WHERE code = '$code'";
 
-	if(strlen($code) > 5 && $registration = get_db_row($SQL)){
-		if($event = get_db_row("SELECT * FROM events
+	if (strlen($code) > 5 && $registration = get_db_row($SQL)) {
+		if ($event = get_db_row("SELECT * FROM events
                                     WHERE eventid=" . $registration["eventid"] . "
-                                        AND fee_full != 0")){
+                                        AND fee_full != 0")) {
 			echo "<h3>Registration Found</h3> ";
 			$registrant_name = get_registrant_name($registration["regid"]);
 			echo "<b>Event: " . $event["name"] . " - $registrant_name's Registration</b>";
 			$total_owed = get_db_field("value", "events_registrations_values", "regid=" . $registration["regid"] . " AND elementname='total_owed'");
-            if(empty($total_owed)){
+            if (empty($total_owed)) {
                 $total_owed = $registration["date"] < $event["sale_end"] ? $event["sale_fee"] : $event["fee_full"];
             }
 			$paid = get_db_field("value", "events_registrations_values", "regid=" . $registration["regid"] . " AND elementname='paid'");
@@ -1504,7 +1504,7 @@ global $CFG, $MYVARS, $USER;
 			echo "Amount Paid:  $" . number_format($paid,2) . "<br />";
 			echo "<b>Remaining Balance:  $" . number_format($remaining,2) . "</b><br />";
 
-			if($remaining > 0){
+			if ($remaining > 0) {
 				$item[0] = new \stdClass;
 				$item[0]->description = "Event: " . $event["name"] . " - $registrant_name's Registration - Remaining Balance Payment";
 				$item[0]->cost = $remaining;
@@ -1519,31 +1519,31 @@ global $CFG, $MYVARS, $USER;
 	}
 }
 
-function pick_registration(){
+function pick_registration() {
 global $CFG, $MYVARS, $USER, $error;
-	if(!isset($COMLIB)){ include_once($CFG->dirroot . '/lib/comlib.php');}
+	if (!isset($COMLIB)) { include_once($CFG->dirroot . '/lib/comlib.php');}
 
 	$event = get_db_row("SELECT * FROM events WHERE eventid='".dbescape($MYVARS->GET["eventid"])."'");
 
-    if($event['fee_full'] != 0 && isset($MYVARS->GET["payment_amount"])){
+    if ($event['fee_full'] != 0 && isset($MYVARS->GET["payment_amount"])) {
         $MYVARS->GET["cart_total"] = isset($MYVARS->GET["total_owed"]) && $MYVARS->GET["total_owed"] != 0 ? $MYVARS->GET["total_owed"] + $MYVARS->GET["payment_amount"] : $MYVARS->GET["payment_amount"];
         $MYVARS->GET["total_owed"] = get_timestamp() < $event["sale_end"] ? $event["sale_fee"] : $event["fee_full"];
     }
 
 
 	$error = "";
-	if($regid = enter_registration($event['eventid'], $MYVARS->GET, $MYVARS->GET["email"])){ //successful registration
+	if ($regid = enter_registration($event['eventid'], $MYVARS->GET, $MYVARS->GET["email"])) { //successful registration
 		echo '<center><div style="width:70%">You have successfully registered for ' . $event['name'] . '.<br />';
 
-		if($error != ""){ echo $error . "<br />";}
+		if ($error != "") { echo $error . "<br />";}
 
-		if($event['allowinpage'] != 0){
-			if(is_logged_in() && $event['pageid'] != $CFG->SITEID){
+		if ($event['allowinpage'] != 0) {
+			if (is_logged_in() && $event['pageid'] != $CFG->SITEID) {
 				subscribe_to_page($event['pageid'], $USER->userid);
 				echo 'You have been automatically allowed into this events web page.  This page contain specific information about this event.';
 			}
 
-			if($event['fee_full'] != 0){
+			if ($event['fee_full'] != 0) {
 				$registrant_name = get_registrant_name($regid);
 				$items = isset($MYVARS->GET["items"]) ? $MYVARS->GET["items"] . "**" . $regid . "::Event: " . $event["name"] . " - $registrant_name's Registration::" . $MYVARS->GET["payment_amount"] : $regid . "::Event: " . $event["name"] . " - $registrant_name's Registration::" . $MYVARS->GET["payment_amount"];
 				echo '<div id="backup"><input type="hidden" name="total_owed" id="total_owed" value="' . $MYVARS->GET["cart_total"] . '" />
@@ -1551,7 +1551,7 @@ global $CFG, $MYVARS, $USER, $error;
 
 				$items = explode("**", $items);
 				$i = 0;
-				while(isset($items[$i])){
+				while (isset($items[$i])) {
 					$itm = explode("::", $items[$i]);
 					$cart_items[$i]->regid = $itm[0];
 					$cart_items[$i]->description = $itm[1];
@@ -1559,7 +1559,7 @@ global $CFG, $MYVARS, $USER, $error;
 					$i++;
 				}
 
-				if($MYVARS->GET['payment_method'] == "PayPal"){
+				if ($MYVARS->GET['payment_method'] == "PayPal") {
 					echo '<br />
 					If you would like to pay the <span style="color:blue;font-size:1.25em;">$' . $MYVARS->GET["cart_total"] . '</span> fee now, click the Paypal button below.
 					<center>
@@ -1600,7 +1600,7 @@ global $CFG, $MYVARS, $USER, $error;
 	}
 }
 
-function delete_limit(){
+function delete_limit() {
 global $CFG, $MYVARS;
 	$template_id = dbescape($MYVARS->GET["template_id"]);
 	$limit_type = dbescape($MYVARS->GET["limit_type"]);
@@ -1610,17 +1610,17 @@ global $CFG, $MYVARS;
     $hidden_variable1 = $hidden_variable2 = "";
 
 	$returnme = "";
-	if(!$templateid){ echo $returnme;}
+	if (!$templateid) { echo $returnme;}
 
 	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='$template_id'");
 
-	if($hard_limits != ""){ // There are some hard limits
+	if ($hard_limits != "") { // There are some hard limits
 		$limits_array = explode("*", $hard_limits);
 		$i = 0;
 		$returnme .= "<br /><b>Hard Limits</b> <br />";
 		$alter = 0;
-		while(isset($limits_array[$i])){
-			if(!($limit_type == "hard_limits" && $limit_num == $i)){
+		while (isset($limits_array[$i])) {
+			if (!($limit_type == "hard_limits" && $limit_num == $i)) {
 				$limit = explode(":", $limits_array[$i]);
                 $displayname = get_template_field_displayname($template["template_id"],$limit[0]);
 				$returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <a href="javascript:void(0);" onclick="delete_limit(\'hard_limits\',\'' . ($i - $alter) . '\');">Delete</a><br />';
@@ -1630,15 +1630,15 @@ global $CFG, $MYVARS;
 		}
 	}
 
-	if($hidden_variable1 == ""){ $returnme = ""; }
+	if ($hidden_variable1 == "") { $returnme = ""; }
 	$returnme2 = "";
-	if($soft_limits != ""){ // There are some soft limits
+	if ($soft_limits != "") { // There are some soft limits
 		$limits_array = explode("*", $soft_limits);
 		$i = 0;
 		$returnme2 .= "<br /><b>Soft Limits</b> <br />";
 		$alter = 0;
-		while(isset($limits_array[$i])){
-			if(!($limit_type == "soft_limits" && $limit_num == $i)){
+		while (isset($limits_array[$i])) {
+			if (!($limit_type == "soft_limits" && $limit_num == $i)) {
 				$limit = explode(":", $limits_array[$i]);
                 $displayname = get_template_field_displayname($template["template_id"],$limit[0]);
 				$returnme2 .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <a href="javascript:void(0);" onclick="delete_limit(\'soft_limits\',\'' . ($i - $alter) . '\');">Delete</a><br />';
@@ -1648,12 +1648,12 @@ global $CFG, $MYVARS;
 		}
 	}
 
-	if($hidden_variable2 == ""){ $returnme2 = ""; }
+	if ($hidden_variable2 == "") { $returnme2 = ""; }
 
 	echo $returnme . $returnme2 . '<input type="hidden" id="hard_limits" value="' . $hidden_variable1 . '" />' . '<input type="hidden" id="soft_limits" value="' . $hidden_variable2 . '" />';
 }
 
-function add_custom_limit(){
+function add_custom_limit() {
 global $CFG, $MYVARS;
 	$template_id = dbescape($MYVARS->GET["template_id"]);
 	$hard_limits = dbescape($MYVARS->GET["hard_limits"]);
@@ -1661,18 +1661,18 @@ global $CFG, $MYVARS;
     $hidden_variable1 = $hidden_variable2 = "";
 
 	$returnme = "";
-	if(!$template_id){ echo $returnme; }
+	if (!$template_id) { echo $returnme; }
 
 	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='$template_id'");
 
-	if($hard_limits != ""){ // There are some hard limits
+	if ($hard_limits != "") { // There are some hard limits
 		$limits_array = explode("*", $hard_limits);
 		$i = 0;
 		$returnme .= "<br /><b>Hard Limits</b> <br />";
-		while(isset($limits_array[$i])){
+		while (isset($limits_array[$i])) {
 			$limit = explode(":", $limits_array[$i]);
 
-			if($template["folder"] == "none"){
+			if ($template["folder"] == "none") {
 				$displayname = get_db_field("display", "events_templates_forms", "elementid=" . $limit[0]);
 			}else{
 				$displayname = $limit[0];
@@ -1684,14 +1684,14 @@ global $CFG, $MYVARS;
 		}
 	}
 
-	if($soft_limits != ""){ // There are some soft limits
+	if ($soft_limits != "") { // There are some soft limits
 		$limits_array = explode("*", $soft_limits);
 		$i = 0;
 		$returnme .= "<br /><b>Soft Limits</b> <br />";
-		while(isset($limits_array[$i])){
+		while (isset($limits_array[$i])) {
 			$limit = explode(":", $limits_array[$i]);
 
-			if($template["folder"] == "none"){
+			if ($template["folder"] == "none") {
 				$displayname = get_db_field("display", "events_templates_forms", "elementid=" . $limit[0]);
 			}else{
 				$displayname = $limit[0];
@@ -1706,26 +1706,26 @@ global $CFG, $MYVARS;
 	echo $returnme . '<input type="hidden" id="hard_limits" value="' . $hidden_variable1 . '" />' . '<input type="hidden" id="soft_limits" value="' . $hidden_variable2 . '" />';
 }
 
-function get_limit_form(){
+function get_limit_form() {
 global $CFG, $MYVARS, $USER;
 	$template_id = dbescape($MYVARS->GET["template_id"]);
 	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='$template_id'");
 	$fields = '<select id="custom_limit_fields">';
-	if($template["folder"] == "none"){
+	if ($template["folder"] == "none") {
 		$SQL = "SELECT * FROM events_templates_forms
                     WHERE template_id='$template_id'
                         AND type != 'payment'";
 		$forms = get_db_result($SQL);
-		while($form = fetch_row($forms)){
+		while ($form = fetch_row($forms)) {
 			$fields .= '<option value="' . $form["elementid"] . '">' . $form["display"] . '</option>';
 		}
 	}else{
 		$formlist = explode(";", $template['formlist']);
 
 		$i = 0;
-		while(isset($formlist[$i])){
+		while (isset($formlist[$i])) {
 			$element = explode(":", $formlist[$i]);
-			if(isset($element[1]) && $element[1] != "Pay"){ $fields .= '<option value="' . $element[0] . '">' . $element[2] . '</option>'; }
+			if (isset($element[1]) && $element[1] != "Pay") { $fields .= '<option value="' . $element[0] . '">' . $element[2] . '</option>'; }
 			$i++;
 		}
 	}
@@ -1772,7 +1772,7 @@ global $CFG, $MYVARS, $USER;
 	';
 }
 
-function add_new_location(){
+function add_new_location() {
 global $CFG, $MYVARS, $USER;
 	$name = dbescape(urldecode($MYVARS->GET["name"]));
 	$add1 = dbescape(urldecode($MYVARS->GET["add1"]));
@@ -1792,7 +1792,7 @@ global $CFG, $MYVARS, $USER;
 	echo get_my_locations($USER->userid,$id,$eventid);
 }
 
-function submit_new_event($request=false){
+function submit_new_event($request=false) {
 global $CFG, $MYVARS;
 	date_default_timezone_set(date_default_timezone_get());
 	$pageid = !isset($MYVARS->GET["eventid"]) ? dbescape($MYVARS->GET["pageid"]) : get_db_field("pageid", "events", "eventid=" . dbescape($MYVARS->GET["eventid"]));
@@ -1809,12 +1809,12 @@ global $CFG, $MYVARS;
     $workers = dbescape($MYVARS->GET["workers"]);
 
     //strtotime php5 fixes
-    if(isset($MYVARS->GET["event_begin_date"])){
+    if (isset($MYVARS->GET["event_begin_date"])) {
         $ebd = explode(" ",$MYVARS->GET["event_begin_date"]);
         $event_begin_date = strtotime("$ebd[0] $ebd[1] $ebd[2] $ebd[3] $ebd[4] $ebd[5]");
     }else{ die("No Event Begin Date"); }
 
-    if(isset($MYVARS->GET["event_end_date"])){
+    if (isset($MYVARS->GET["event_end_date"])) {
         $eed = explode(" ",$MYVARS->GET["event_end_date"]);
         $event_end_date = $multiday == "1" ? strtotime("$eed[0] $eed[1] $eed[2] $eed[3] $eed[4] $eed[5]") : $event_begin_date;
     }else{ $event_end_date = $event_begin_date; }
@@ -1830,8 +1830,8 @@ global $CFG, $MYVARS;
 	$soft_limits = $reg == "1" && isset($MYVARS->GET["soft_limits"]) && $MYVARS->GET["soft_limits"] != "" ? dbescape($MYVARS->GET["soft_limits"]) : '0';
 
     //strtotime php5 fixes
-    if(isset($MYVARS->GET["start_reg"])){
-        if(strstr($MYVARS->GET["start_reg"],"/")) {
+    if (isset($MYVARS->GET["start_reg"])) {
+        if (strstr($MYVARS->GET["start_reg"],"/")) {
             $startr = explode("/",$MYVARS->GET["start_reg"]);
             $start_reg = $reg == "1" && isset($MYVARS->GET["start_reg"]) ? strtotime("$startr[1]/$startr[2]/$startr[0]") : '0';
         } else {
@@ -1841,8 +1841,8 @@ global $CFG, $MYVARS;
 
     }else{ $start_reg = '0';}
 
-    if(isset($MYVARS->GET["stop_reg"])){
-        if(strstr($MYVARS->GET["stop_reg"],"/")) {
+    if (isset($MYVARS->GET["stop_reg"])) {
+        if (strstr($MYVARS->GET["stop_reg"],"/")) {
             $stopr = explode("/",$MYVARS->GET["stop_reg"]);
             $stop_reg = $reg == "1" ? strtotime("$stopr[1]/$stopr[2]/$stopr[0]") : '0';
         } else {
@@ -1859,8 +1859,8 @@ global $CFG, $MYVARS;
 	$sale_fee = $fee != "1" ? '0' : dbescape($MYVARS->GET["sale_fee"]);
 	$sale_fee = $sale_fee == "" ? '0' : $sale_fee;
 
-    if(isset($MYVARS->GET["sale_end"])){
-        if(strstr($MYVARS->GET["sale_end"],"/")) {
+    if (isset($MYVARS->GET["sale_end"])) {
+        if (strstr($MYVARS->GET["sale_end"],"/")) {
             $se = explode("/",$MYVARS->GET["sale_end"]);
             $sale_end = $sale_fee != '0' ? strtotime("$se[1]/$se[2]/$se[0]") : '0';
         } else {
@@ -1876,7 +1876,7 @@ global $CFG, $MYVARS;
 	$confirmed = 3;
 	$caleventid = 0;
 
-	if(empty($MYVARS->GET["eventid"])){ //New Event
+	if (empty($MYVARS->GET["eventid"])) { //New Event
 
 		$SQL = "INSERT INTO events
                             (pageid,template_id,name,category,location,allowinpage,start_reg,stop_reg,max_users,
@@ -1888,18 +1888,18 @@ global $CFG, $MYVARS;
                             '$confirmed','$siteviewable','$allday','$caleventid','$byline','$description','$fee_min','$fee_full','$payableto','$checksaddress',
                             '$paypal','$sale_fee','$sale_end','$contact','$email','$phone','$hard_limits','$soft_limits','$workers')";
 
-		if($eventid = execute_db_sql($SQL)){
+		if ($eventid = execute_db_sql($SQL)) {
 			$MYVARS->GET['eventid'] = $eventid;
 
             refresh_calendar_events($eventid);
 
             //Save any event template settings if necessary
-            if($template_id > 0){ //if a template is chosen
+            if ($template_id > 0) { //if a template is chosen
                 //See if it should contain settings
                 $settings = get_db_field("settings","events_templates","template_id='$template_id'");
-                if(!empty($settings)){ //there are settings in this template
+                if (!empty($settings)) { //there are settings in this template
                     $settings = unserialize($settings);
-                    foreach($settings as $setting){ //save each setting with the default if no other is given
+                    foreach ($settings as $setting) { //save each setting with the default if no other is given
                         $current_setting = isset($MYVARS->GET[$setting['name']]) ? $MYVARS->GET[$setting['name']] : $setting['default'];
                         execute_db_sql("INSERT INTO settings (type,pageid,featureid,setting_name,setting,extra,defaultsetting) VALUES('events_template',false,false,'".$setting['name']."','".$current_setting."','".$eventid."','".$setting['default']."')");
                     }
@@ -1910,7 +1910,7 @@ global $CFG, $MYVARS;
 
             //Log event added
     		log_entry("events", $eventid, "Event Added");
-    		if(!$request){ echo "Event Added"; }
+    		if (!$request) { echo "Event Added"; }
 		} else {
             if (!$request) {
                 //Log event error
@@ -1928,7 +1928,7 @@ global $CFG, $MYVARS;
                      payableto='$payableto',checksaddress='$checksaddress',confirmed='$confirmed',workers='$workers'
 			WHERE eventid='" . dbescape($MYVARS->GET['eventid'])."'";
 
-		if(execute_db_sql($SQL)){
+		if (execute_db_sql($SQL)) {
 
             refresh_calendar_events($MYVARS->GET['eventid']);
 
@@ -1937,12 +1937,12 @@ global $CFG, $MYVARS;
                                 WHERE type='events_template'
                                     AND extra='".$MYVARS->GET["eventid"]."'");
             //Save any event template settings if necessary
-            if($template_id > 0){ //if a template is chosen continue
+            if ($template_id > 0) { //if a template is chosen continue
                 //See if it should contain settings
                 $settings = get_db_field("settings","events_templates","template_id='$template_id'");
-                if(!empty($settings)){ //there are settings in this template
+                if (!empty($settings)) { //there are settings in this template
                     $settings = unserialize($settings);
-                    foreach($settings as $setting){ //save each setting with the default if no other is given
+                    foreach ($settings as $setting) { //save each setting with the default if no other is given
                         $current_setting = isset($MYVARS->GET[$setting['name']]) ? $MYVARS->GET[$setting['name']] : $setting['default'];
                         execute_db_sql("INSERT INTO settings
                                             (type,pageid,featureid,setting_name,setting,extra,defaultsetting)
@@ -1963,47 +1963,47 @@ global $CFG, $MYVARS;
         }
 	}
 
-	if($pageid == $CFG->SITEID && !empty($MYVARS->GET['eventid'])){
+	if ($pageid == $CFG->SITEID && !empty($MYVARS->GET['eventid'])) {
 		confirm_event($pageid,$MYVARS->GET['eventid'],true);
 	}
 }
 
-function get_end_time(){
+function get_end_time() {
 global $CFG, $MYVARS;
 	$starttime = dbescape($MYVARS->GET["starttime"]);
 	$limit = dbescape($MYVARS->GET["limit"]);
 	//event is not a multi day event and endtime is already set
-	if($limit == 1 && isset($MYVARS->GET["endtime"])){ echo get_possible_times("end_time", dbescape($MYVARS->GET["endtime"]), $starttime);
-	}elseif($limit == 1){ echo get_possible_times("end_time", null, $starttime);
-	}elseif($limit == 0 && isset($MYVARS->GET["endtime"])){ echo get_possible_times("end_time", dbescape($MYVARS->GET["endtime"]));
-	}elseif($limit == 0){ echo get_possible_times("end_time");}
+	if ($limit == 1 && isset($MYVARS->GET["endtime"])) { echo get_possible_times("end_time", dbescape($MYVARS->GET["endtime"]), $starttime);
+	}elseif ($limit == 1) { echo get_possible_times("end_time", null, $starttime);
+	}elseif ($limit == 0 && isset($MYVARS->GET["endtime"])) { echo get_possible_times("end_time", dbescape($MYVARS->GET["endtime"]));
+	}elseif ($limit == 0) { echo get_possible_times("end_time");}
 }
 
-function unique(){
+function unique() {
 global $CFG, $MYVARS;
 	$eventid = dbescape($MYVARS->GET["eventid"]);
 	$elementid = dbescape($MYVARS->GET["elementid"]);
 	$value = dbescape($MYVARS->GET["value"]);
 
-	if(is_unique("events_registrations_values", "elementid='$elementid' AND eventid='$eventid' AND value='$value'")){ echo "false";
+	if (is_unique("events_registrations_values", "elementid='$elementid' AND eventid='$eventid' AND value='$value'")) { echo "false";
 	}else{ echo "true";}
 }
 
-function unique_relay(){
+function unique_relay() {
 global $CFG, $MYVARS;
 	$table = dbescape($MYVARS->GET["table"]);
 	$key = dbescape($MYVARS->GET["key"]);
 	$value = dbescape($MYVARS->GET["value"]);
 
-	if(is_unique($table, "$key='$value'")){ echo "false";
+	if (is_unique($table, "$key='$value'")) { echo "false";
 	}else{ echo "true";}
 
 }
 
-function add_location_form(){
+function add_location_form() {
 global $USER, $CFG, $MYVARS;
 	$formtype = $MYVARS->GET["formtype"];
-	switch($formtype){
+	switch($formtype) {
 		case "new":
 			echo new_location_form($MYVARS->GET["eventid"]);
 			break;
@@ -2013,14 +2013,14 @@ global $USER, $CFG, $MYVARS;
 	}
 }
 
-function copy_location(){
+function copy_location() {
 global $USER, $CFG, $MYVARS;
 	$location = dbescape($MYVARS->GET["location"]);
 	execute_db_sql("UPDATE events_locations SET userid = CONCAT(userid,'" . $USER->userid . ",') WHERE id='$location'");
 	echo get_my_locations($USER->userid,$location,$MYVARS->GET["eventid"]);
 }
 
-function get_location_details(){
+function get_location_details() {
 global $USER, $CFG, $MYVARS;
 	$location = dbescape($MYVARS->GET["location"]);
 	$row = get_db_row("SELECT * FROM events_locations WHERE id='$location'");
@@ -2033,20 +2033,20 @@ global $USER, $CFG, $MYVARS;
 	echo $returnme;
 }
 
-function export_csv(){
+function export_csv() {
 global $MYVARS, $CFG, $USER;
-	if(!isset($FILELIB)){ include_once ($CFG->dirroot . '/lib/filelib.php'); }
+	if (!isset($FILELIB)) { include_once ($CFG->dirroot . '/lib/filelib.php'); }
 	date_default_timezone_set(date_default_timezone_get());
 	$CSV = "Registration Date,Contact Email";
 	$eventid = dbescape($MYVARS->GET["featureid"]);
 	$event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
 	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='" . $event['template_id'] . "'");
 
-	if($template['folder'] != "none"){
+	if ($template['folder'] != "none") {
 		$formlist = explode(";", $template['formlist']);
         $sortby = "elementname";
 		$i = 0;
-		while(isset($formlist[$i])){
+		while (isset($formlist[$i])) {
 			$element = explode(":", $formlist[$i]);
 			$CSV .= "," . $element[2];
 			$i++;
@@ -2057,28 +2057,28 @@ global $MYVARS, $CFG, $USER;
                                         WHERE template_id='" . $event['template_id'] . "'
                                         ORDER BY sort");
         $sortby = "elementid";
-		while($form = fetch_row($formlist)){
+		while ($form = fetch_row($formlist)) {
 			$CSV .= "," . $form["display"];
 		}
 		$CSV .= "\n";
 	}
 
-	if($registrations = get_db_result("SELECT * FROM events_registrations
+	if ($registrations = get_db_result("SELECT * FROM events_registrations
                                             WHERE eventid='$eventid'
                                                 AND queue='0'
-                                                AND verified='1'")){
-		while($regid = fetch_row($registrations)){
+                                                AND verified='1'")) {
+		while ($regid = fetch_row($registrations)) {
 			$row = date("F j g:i a", $regid["date"]) . "," . $regid["email"];
 			$values = get_db_result("SELECT * FROM events_registrations_values
                                         WHERE regid='" . $regid["regid"] . "'
                                         ORDER BY entryid");
             $reorder = array();
-			while($value = fetch_row($values)){
+			while ($value = fetch_row($values)) {
 				$reorder[$value[$sortby]] = $value;
 			}
-            if($template['folder'] != "none"){
+            if ($template['folder'] != "none") {
                 $i=0;$formlist = explode(";", $template['formlist']);
-          		while(isset($formlist[$i])){
+          		while (isset($formlist[$i])) {
         			$element = explode(":", $formlist[$i]);
                     $row .= ',"' . $reorder[$element[0]]["value"] . '"';
         			$i++;
@@ -2088,7 +2088,7 @@ global $MYVARS, $CFG, $USER;
                                                 WHERE template_id='" . $event['template_id'] . "'
                                                 ORDER BY sort");
                 $sortby = "elementid";
-        		while($form = fetch_row($formlist)){
+        		while ($form = fetch_row($formlist)) {
                     $row .= ',"' . $reorder[$form[$sortby]]["value"] . '"';
         		}
             }
@@ -2096,23 +2096,23 @@ global $MYVARS, $CFG, $USER;
 		}
 	}
 
-    if($registrations = get_db_result("SELECT * FROM events_registrations
+    if ($registrations = get_db_result("SELECT * FROM events_registrations
                                             WHERE eventid='$eventid'
                                                 AND queue='0'
-                                                AND verified='0'")){
+                                                AND verified='0'")) {
 		$CSV .= "\nPENDING\n";
-		while($regid = fetch_row($registrations)){
+		while ($regid = fetch_row($registrations)) {
 			$row = date("F j g:i a", $regid["date"]) . "," . $regid["email"];
 			$values = get_db_result("SELECT * FROM events_registrations_values
                                         WHERE regid='" . $regid["regid"] . "'
                                         ORDER BY entryid");
             $reorder = array();
-			while($value = fetch_row($values)){
+			while ($value = fetch_row($values)) {
 				$reorder[$value[$sortby]] = $value;
 			}
-            if($template['folder'] != "none"){
+            if ($template['folder'] != "none") {
                 $i=0;$formlist = explode(";", $template['formlist']);
-          		while(isset($formlist[$i])){
+          		while (isset($formlist[$i])) {
         			$element = explode(":", $formlist[$i]);
                     $row .= ',"' . $reorder[$element[0]]["value"] . '"';
         			$i++;
@@ -2122,7 +2122,7 @@ global $MYVARS, $CFG, $USER;
                                                 WHERE template_id='" . $event['template_id'] . "'
                                                 ORDER BY sort");
                 $sortby = "elementid";
-        		while($form = fetch_row($formlist)){
+        		while ($form = fetch_row($formlist)) {
                     $row .= ',"' . $reorder[$form[$sortby]]["value"] . '"';
         		}
             }
@@ -2130,22 +2130,22 @@ global $MYVARS, $CFG, $USER;
 		}
 	}
 
-	if($registrations = get_db_result("SELECT * FROM events_registrations
+	if ($registrations = get_db_result("SELECT * FROM events_registrations
                                             WHERE eventid='$eventid'
-                                                AND queue='1'")){
+                                                AND queue='1'")) {
 		$CSV .= "\nQUEUE\n";
-		while($regid = fetch_row($registrations)){
+		while ($regid = fetch_row($registrations)) {
 			$row = date("F j g:i a", $regid["date"]) . "," . $regid["email"];
 			$values = get_db_result("SELECT * FROM events_registrations_values
                                         WHERE regid='" . $regid["regid"] . "'
                                         ORDER BY entryid");
             $reorder = array();
-			while($value = fetch_row($values)){
+			while ($value = fetch_row($values)) {
 				$reorder[$value[$sortby]] = $value;
 			}
-            if($template['folder'] != "none"){
+            if ($template['folder'] != "none") {
                 $i=0;$formlist = explode(";", $template['formlist']);
-          		while(isset($formlist[$i])){
+          		while (isset($formlist[$i])) {
         			$element = explode(":", $formlist[$i]);
                     $row .= ',"' . $reorder[$element[0]]["value"] . '"';
         			$i++;
@@ -2155,7 +2155,7 @@ global $MYVARS, $CFG, $USER;
                                                 WHERE template_id='" . $event['template_id'] . "'
                                                 ORDER BY sort");
                 $sortby = "elementid";
-        		while($form = fetch_row($formlist)){
+        		while ($form = fetch_row($formlist)) {
                     $row .= ',"' . $reorder[$form[$sortby]]["value"] . '"';
         		}
             }
@@ -2165,12 +2165,12 @@ global $MYVARS, $CFG, $USER;
 	echo get_download_link("export.csv",$CSV);
 }
 
-function show_template_settings(){
+function show_template_settings() {
 global $USER, $CFG, $MYVARS;
     echo get_template_settings($MYVARS->GET["templateid"],$MYVARS->GET["eventid"]);
 }
 
-function send_facebook_message(){
+function send_facebook_message() {
 global $CFG, $MYVARS;
     require_once ($CFG->dirroot . '/features/events/facebook/facebook.php'); //'<path to facebook library, you uploaded>/facebook.php';
     $info = unserialize(base64_decode($MYVARS->GET["info"]));
@@ -2183,7 +2183,7 @@ global $CFG, $MYVARS;
     $event = get_db_row("SELECT * FROM events WHERE eventid = '".$info[0]."'");
     $facebook = new Facebook($config);
 
-    if($user_id = $facebook->getUser()){
+    if ($user_id = $facebook->getUser()) {
       // We have a user ID, so probably a logged in user.
         try {
             $ret_obj = $facebook->api('/me/feed', 'POST',
@@ -2198,13 +2198,13 @@ global $CFG, $MYVARS;
     }
 }
 
-function templatesearch(){
+function templatesearch() {
 global $CFG, $MYVARS, $USER;
     $MYVARS->search_perpage = 8;
     $userid = $USER->userid; $searchstring = "";
     $searchwords = trim($MYVARS->GET["searchwords"]);
     //no search words given
-    if($searchwords == ""){
+    if ($searchwords == "") {
         $searchwords = '%';
     }
     echo '<input type="hidden" id="searchwords" value="' . $searchwords . '" />';
@@ -2216,7 +2216,7 @@ global $CFG, $MYVARS, $USER;
     $limit = " LIMIT $firstonpage," . $MYVARS->search_perpage;
     $words = explode(" ", $searchwords);
     $i = 0;
-    while(isset($words[$i])){
+    while (isset($words[$i])) {
         $searchpart = "(name LIKE '%" . dbescape($words[$i]) . "%')";
         $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
         $i++;
@@ -2262,7 +2262,7 @@ global $CFG, $MYVARS, $USER;
                                                                     <img src="' . $CFG->wwwroot . '/images/next.gif" title="Next Page" alt="Next Page">
                                                                 </a>' : "";
     $header = $body = "";
-    if($count > 0){
+    if ($count > 0) {
         $body .= '<tr style="height:30px;border:3px solid white;font-size:.9em;">
                         <td style="width:40%;padding:5px;font-size:.85em;white-space:nowrap;">
                             Name
@@ -2274,13 +2274,13 @@ global $CFG, $MYVARS, $USER;
                             Activated
                         </td>
                     </tr>';
-        while($template = fetch_row($results)){
+        while ($template = fetch_row($results)) {
         	$export = "";
             $header = $header == "" ? '<table style="width:100%;"><tr><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;font-size:.75em;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><p>' : $header;
 
             $type = $template["folder"] == "none" ? "DB" : "EXTERNAL";
 
-			if(!empty($template["activated"])){ // ACTIVE
+			if (!empty($template["activated"])) { // ACTIVE
                 $status = '<a href="javascript: void(0)" onclick="ajaxapi(\'/features/events/events_ajax.php\',
                                                                           \'change_template_status\',
                                                                           \'&amp;status=1&amp;template_id='.$template["template_id"].'\',
@@ -2366,7 +2366,7 @@ global $USER, $CFG, $MYVARS;
     if (is_numeric($pageid) && is_numeric($staffid) && is_numeric($date)) {
         execute_db_sql("UPDATE events_staff SET bgcheckpassdate='$date',bgcheckpass='1' WHERE staffid='$staffid' AND pageid='$pageid'");
         execute_db_sql("UPDATE events_staff_archive SET bgcheckpassdate='$date',bgcheckpass='1' WHERE staffid='$staffid' AND year='".date('Y')."' AND pageid='$pageid'");
-    } else if(is_numeric($pageid) && is_numeric($staffid) && empty($MYVARS->GET["bgcdate"])){
+    } else if (is_numeric($pageid) && is_numeric($staffid) && empty($MYVARS->GET["bgcdate"])) {
         execute_db_sql("UPDATE events_staff SET bgcheckpassdate=0,bgcheckpass='' WHERE staffid='$staffid' AND pageid='$pageid'");
         execute_db_sql("UPDATE events_staff_archive SET bgcheckpassdate=0,bgcheckpass='' WHERE staffid='$staffid' AND year='".date('Y')."' AND pageid='$pageid'");
     } else {
@@ -2409,7 +2409,7 @@ global $CFG, $MYVARS, $USER;
         ";
 
             $email = trim($email);
-            if(filter_var($email, FILTER_VALIDATE_EMAIL)) { // It is an email address, so let's get an email ready.
+            if (filter_var($email, FILTER_VALIDATE_EMAIL)) { // It is an email address, so let's get an email ready.
                 if ($user = get_db_row("SELECT * FROM users WHERE LOWER(email) LIKE LOWER('%$email%')")) { // is a user.
                     if ($archive = get_db_row("SELECT * FROM events_staff WHERE userid='" . $user["userid"] . "' LIMIT 1")) {
                         $status = staff_status($archive);
@@ -2501,7 +2501,7 @@ global $CFG, $MYVARS, $USER;
     $userid = $USER->userid; $searchstring = "";
     $searchwords = trim($MYVARS->GET["searchwords"]);
     //no search words given
-    if($searchwords == ""){
+    if ($searchwords == "") {
         $searchwords = '%';
     }
     echo '<input type="hidden" id="searchwords" value="' . $searchwords . '" />';
@@ -2513,7 +2513,7 @@ global $CFG, $MYVARS, $USER;
     $limit = " LIMIT $firstonpage," . $MYVARS->search_perpage;
     $words = explode(" ", $searchwords);
     $i = 0;
-    while(isset($words[$i])){
+    while (isset($words[$i])) {
         $searchpart = "(name LIKE '%" . dbescape($words[$i]) . "%')";
         $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
         $i++;
@@ -2560,7 +2560,7 @@ global $CFG, $MYVARS, $USER;
                                                                     <img src="' . $CFG->wwwroot . '/images/next.gif" title="Next Page" alt="Next Page">
                                                                 </a>' : "";
     $header = $body = "";
-    if($count > 0){
+    if ($count > 0) {
         $body .= '<tr style="height:30px;border:3px solid white;font-size:.9em;">
                         <td style="width:40%;padding:5px;font-size:.85em;white-space:nowrap;">
                             Name
@@ -2572,10 +2572,10 @@ global $CFG, $MYVARS, $USER;
                             Date / Edit
                         </td>
                     </tr>';
-        while($staff = fetch_row($results)){
+        while ($staff = fetch_row($results)) {
         	$export = "";
             $header = $header == "" ? '<table style="width:100%;"><tr><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;font-size:.75em;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><p>' : $header;
-            $button = '<a href="javascript: void(0)" onclick="if($(\'#bgcheckdate_'.$staff["staffid"].'\').prop(\'disabled\')){ $(\'#bgcheckdate_'.$staff["staffid"].'\').prop(\'disabled\', false); } else { ajaxapi(\'/features/events/events_ajax.php\',
+            $button = '<a href="javascript: void(0)" onclick="if ($(\'#bgcheckdate_'.$staff["staffid"].'\').prop(\'disabled\')) { $(\'#bgcheckdate_'.$staff["staffid"].'\').prop(\'disabled\', false); } else { ajaxapi(\'/features/events/events_ajax.php\',
                                                                       \'change_bgcheck_status\',
                                                                       \'&amp;bgcdate=\'+$(\'#bgcheckdate_'.$staff["staffid"].'\').val()+\'&amp;staffid='.$staff["staffid"].'\',
                                                                       function() {
@@ -2629,7 +2629,7 @@ global $CFG, $MYVARS, $USER;
     echo $header . $body;
 }
 
-function show_staff_app(){
+function show_staff_app() {
 global $CFG, $MYVARS, $USER;
     $staffid = trim($MYVARS->GET["staffid"]);
     $searchwords = trim($MYVARS->GET["searchwords"]);
@@ -2653,7 +2653,7 @@ global $CFG, $MYVARS, $USER;
                          return false;
                 ">Return to Staff Applications
              </a>';
-    $applookup = 'if($(this).val() > 0){ document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
+    $applookup = 'if ($(this).val() > 0) { document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                                     ajaxapi(\'/features/events/events_ajax.php\',
                                             \'show_staff_app\',
                                             \'&amp;staffid='.$staffid.'&amp;year=\'+$(this).val()+\'&amp;pagenum=' . $pagenum . '&amp;searchwords=\'+escape(\'' . $searchwords . '\'),
@@ -2665,10 +2665,10 @@ global $CFG, $MYVARS, $USER;
                                             },
                                             true
                                     ); }';
-    if($archive = get_db_result("SELECT * FROM events_staff_archive WHERE staffid='$staffid' ORDER BY year")){
+    if ($archive = get_db_result("SELECT * FROM events_staff_archive WHERE staffid='$staffid' ORDER BY year")) {
         $i = 0;
         $values = new \stdClass;
-		while($vals = fetch_row($archive)){
+		while ($vals = fetch_row($archive)) {
             $values->$i = new \stdClass;
 			$values->$i->year = $vals["year"];
 			$i++;
@@ -2676,7 +2676,7 @@ global $CFG, $MYVARS, $USER;
         echo "<br />" . make_select_from_array("year",$values,"year","year",$year,"",'onchange="'.$applookup.'"',true) ."<br />";
     }
 
-    if($row = get_db_row("SELECT * FROM events_staff_archive WHERE staffid='$staffid' AND year='$year'")){
+    if ($row = get_db_row("SELECT * FROM events_staff_archive WHERE staffid='$staffid' AND year='$year'")) {
 	   echo '   <input style="float:right;" class="dontprint" type="button" value="Print" onclick="window.print();return false;" />
                 <p style="font-size:.95em;" class="print">
                     '.staff_application_form($row, true).'
@@ -2687,7 +2687,7 @@ global $CFG, $MYVARS, $USER;
     }
 }
 
-function event_save_staffapp(){
+function event_save_staffapp() {
 global $CFG,$MYVARS,$USER;
     $userid = dbescape($USER->userid);
     $staffid = empty($MYVARS->GET["staffid"]) ? false : dbescape($MYVARS->GET["staffid"]);
@@ -2695,7 +2695,7 @@ global $CFG,$MYVARS,$USER;
     // Check for valid pageid
     $pageid = !empty($_COOKIE["pageid"]) ? $_COOKIE["pageid"] : (!empty($_GET["pageid"]) && is_numeric($_GET["pageid"]) ? $_GET["pageid"] : false);
 
-    if(!empty($pageid)) {
+    if (!empty($pageid)) {
         $name = dbescape(nameize($MYVARS->GET["name"]));
         $phone = preg_replace('/\d{3}/', '$0-', trim(preg_replace("/\D/", "", $MYVARS->GET["phone"])), 2);
         $phone = dbescape($phone);
@@ -2732,7 +2732,7 @@ global $CFG,$MYVARS,$USER;
         $ref3phone = preg_replace('/\d{3}/', '$0-', trim(preg_replace("/\D/", "", $MYVARS->GET["ref3phone"])), 2);
         $ref3phone = dbescape($ref3phone);
 
-        if(!empty($staffid)) {
+        if (!empty($staffid)) {
             $SQL = "UPDATE events_staff SET userid='$userid',pageid='$pageid',name='$name',phone='$phone',dateofbirth='$dateofbirth',address='$address',
                         agerange='$agerange',cocmember='$cocmember',congregation='$congregation',priorwork='$priorwork',
                         q1_1='$q1_1',q1_2='$q1_2',q1_3='$q1_3',q2_1='$q2_1',q2_2='$q2_2',q2_3='$q2_3',

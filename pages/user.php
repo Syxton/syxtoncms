@@ -16,7 +16,7 @@ callfunction();
 
 echo template_use("templates/page.template", array(), "end_of_page_template");
 
-function new_user(){
+function new_user() {
 global $MYVARS, $CFG;
 	if (!isset($VALIDATELIB)) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
 
@@ -30,7 +30,7 @@ global $MYVARS, $CFG;
   echo format_popup(template_use("templates/user.template", $params, "new_user_template"), $CFG->sitename.' Signup',"500px");
 }
 
-function reset_password(){
+function reset_password() {
 global $MYVARS, $PAGE, $CFG;
 	$userid = $MYVARS->GET["userid"];
 	$alternate = get_db_row("SELECT * FROM users WHERE userid='$userid' AND alternate='".$MYVARS->GET["alternate"]."'") ? true : false;
@@ -57,7 +57,7 @@ global $MYVARS, $PAGE, $CFG;
 	}
 }
 
-function change_profile(){
+function change_profile() {
 global $MYVARS, $CFG, $USER, $PAGE;
 	$params = array("siteid" => $CFG->SITEID, "userid" => !empty($USER->userid), "user" => $USER);
 	if (!empty($USER->userid)) {
@@ -80,7 +80,7 @@ global $MYVARS, $CFG, $USER, $PAGE;
 	}
 }
 
-function forgot_password(){
+function forgot_password() {
 global $MYVARS, $CFG;
 	if (!isset($VALIDATELIB)) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
 

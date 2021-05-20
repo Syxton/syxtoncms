@@ -6,9 +6,9 @@
 * Date: 4/09/2013
  * $Revision: 2.1.2
  ***************************************************************************/
-if(!isset($CFG)){ require('../../../../config.php'); }
-if(!isset($EVENTSLIB)){ include_once($CFG->dirroot . '/features/events/eventslib.php'); }
-if(!isset($VALIDATELIB)){ include_once($CFG->dirroot . '/lib/validatelib.php'); }
+if (!isset($CFG)) { require('../../../../config.php'); }
+if (!isset($EVENTSLIB)) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
+if (!isset($VALIDATELIB)) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
 
  //Retrieve from Javascript
 $postorget = isset($_GET["eventid"]) ? $_GET : $_POST;
@@ -22,10 +22,10 @@ $regid = isset($MYVARS->GET['regid']) && $MYVARS->GET['regid'] != "false" ? $MYV
 $autofill = isset($MYVARS->GET['autofill']) && $MYVARS->GET['autofill'] == "1" ? true : false;
 $email = "";
 
-if($show_again) { //This is not the first time through
-	if($autofill){ //Same person..so auto fill all items
+if ($show_again) { //This is not the first time through
+	if ($autofill) { //Same person..so auto fill all items
 		$last_reg = get_db_result("SELECT * FROM events_registrations_values WHERE regid='$regid'");
-		while($reginfo = fetch_row($last_reg)){
+		while ($reginfo = fetch_row($last_reg)) {
 			${$reginfo["elementname"]} = $reginfo["value"];
 		}
 		$email = get_db_field("email","events_registrations","regid='$regid'");
@@ -72,19 +72,19 @@ $max_age = empty($max_age) ? "" : " data-rule-max=\"$max_age\"";
  
 $pictures = get_db_field("setting","settings","type='events_template' AND extra='$eventid' AND setting_name='template_setting_pictures'");
 $pictures = empty($pictures) ? false : true;
-if($pictures){
+if ($pictures) {
     $pictures_price = get_db_field("setting","settings","type='events_template' AND extra='$eventid' AND setting_name='template_setting_pictures_price'");   
     $pictures_price = empty($pictures_price) ? "0" : $pictures_price; 
 }
 
 $shirt = get_db_field("setting","settings","type='events_template' AND extra='$eventid' AND setting_name='template_setting_shirt'");
 $shirt = empty($shirt) ? false : true;
-if($shirt){
+if ($shirt) {
     $shirt_price = get_db_field("setting","settings","type='events_template' AND extra='$eventid' AND setting_name='template_setting_shirt_price'");   
     $shirt_price = empty($shirt_price) ? "0" : $shirt_price; 
 }
   
-if($autofill){
+if ($autofill) {
  echo '     <strong>Camper: '.$Camper_Name.'</strong>
 			<input type="hidden" name="Camper_Name" value="'.$Camper_Name.'" />
             <input type="hidden" name="Camper_Name_First" value="'.$Camper_Name_First.'" />
@@ -362,8 +362,8 @@ echo '
         <div class="spacer" style="clear: both;"></div>
     </div>';
     
-if($pictures){
-    if($pictures_price > 0){
+if ($pictures) {
+    if ($pictures_price > 0) {
         echo '
             <div class="rowContainer">
                 <label class="rowTitle" for="Camper_Picture">Camp Picture</label>
@@ -379,9 +379,9 @@ if($pictures){
     }
 }else{ echo '<input type="hidden" size="5" maxlength="5" id="Camper_Picture" name="Camper_Picture" value="0" readonly />'; }
 
-if($shirt){
+if ($shirt) {
     $shirt_sizes = array("Youth XS","Youth S","Youth M","Youth L","Youth XL","Adult S","Adult M","Adult L","Adult XL","Adult XXL");
-    if($shirt_price > 0){
+    if ($shirt_price > 0) {
         echo '
         <div class="rowContainer">
             <label class="rowTitle" for="Camper_Shirt">Shirt</label>
@@ -389,7 +389,7 @@ if($shirt){
             <input type="hidden" id="Camper_Shirt_Price" name="Camper_Shirt_Price" value="'.$shirt_price.'" readonly />
             <select tabindex="29" style="width:auto;" name="Camper_Shirt_Size" id="Camper_Shirt_Size" onchange="updateTotal();" onclick="updateTotal();">
                 <option value="0" selected>No</option>';
-                foreach($shirt_sizes as $ss){
+                foreach ($shirt_sizes as $ss) {
                     echo '<option value="'.$ss.'">'.$ss.'</option>';
                 }
         echo '        
@@ -405,7 +405,7 @@ if($shirt){
             <input type="hidden" id="Camper_Shirt" name="Camper_Shirt" value="1" readonly />
             <input type="hidden" id="Camper_Shirt_Price" name="Camper_Shirt_Price" value="'.$shirt_price.'" readonly />
             <select tabindex="30" style="width:auto;" name="Camper_Shirt_Size" id="Camper_Shirt_Size" onchange="updateTotal();" onclick="updateTotal();">';
-            foreach($shirt_sizes as $ss){
+            foreach ($shirt_sizes as $ss) {
                 echo '<option value="'.$ss.'">'.$ss.'</option>';
             }
             echo '
@@ -423,7 +423,7 @@ echo '
         <div class="spacer" style="clear: both;"></div>
     </div>';
 
-if(!$show_again){
+if (!$show_again) {
     echo '
         <div class="rowContainer">
             <label class="rowTitle" for="payment_method">Method of Payment *:</label>
@@ -455,14 +455,14 @@ if(!$show_again){
 echo create_validation_script("form1" , "submit_camp_new_registration()");
 echo '  
 <script type="text/javascript" language="javascript">
-    $(document).ready(function(){
-        $("select[id^=\'Camper_Birth_Date\']").change(function(){ updateAge(); });
+    $(document).ready(function() {
+        $("select[id^=\'Camper_Birth_Date\']").change(function() { updateAge(); });
         $("select[id^=\'Camper_Birth_Date\']").attr("onKeyUp","updateAge()");
-        $("input[id^=\'Camper_Birth_Date\']").change(function(){ updateAge(); });
-        $("#Camper_Birth_Date").change(function(){ updateAge(); });
+        $("input[id^=\'Camper_Birth_Date\']").change(function() { updateAge(); });
+        $("#Camper_Birth_Date").change(function() { updateAge(); });
         $("#Camper_Birth_Date").attr("onChange","updateAge()");
-        $("input,select,textarea").bind("focus",function(){ $(this).closest(".rowContainer").css("background-color","whitesmoke"); });
-        $("input,select,textarea").bind("blur",function(){ $(this).closest(".rowContainer").css("background-color","white"); });
+        $("input,select,textarea").bind("focus",function() { $(this).closest(".rowContainer").css("background-color","whitesmoke"); });
+        $("input,select,textarea").bind("blur",function() { $(this).closest(".rowContainer").css("background-color","white"); });
     });
 </script>
 ';

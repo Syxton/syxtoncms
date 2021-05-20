@@ -186,7 +186,7 @@ global $CFG, $MYVARS, $USER;
   echo template_use("templates/page_ajax.template", $params, "search_template");
 }
 
-function usersearch(){
+function usersearch() {
 global $CFG, $MYVARS, $USER;
   $userid = $USER->userid;
   $searchwords = trim($MYVARS->GET["searchwords"]);
@@ -207,7 +207,7 @@ global $CFG, $MYVARS, $USER;
   $words = explode(" ", $searchwords);
 
   $i = 0; $searchstring = "";
-  while(isset($words[$i])){
+  while (isset($words[$i])) {
       $searchpart = "(u.fname LIKE '%" . $words[$i] . "%' OR u.lname LIKE '%" . $words[$i] . "%' OR u.email LIKE '%" . $words[$i] . "%')";
       $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
       $i++;
@@ -242,12 +242,12 @@ global $CFG, $MYVARS, $USER;
   echo template_use("templates/page_ajax.template", $params, "search_template");
 }
 
-function get_new_link_form(){
+function get_new_link_form() {
 global $MYVARS, $CFG, $USER;
   echo template_use("templates/page_ajax.template", array("pageid" => $MYVARS->GET['pageid']), "new_link_form_template");
 }
 
-function get_link_manager(){
+function get_link_manager() {
 global $MYVARS, $CFG, $USER;
     $pageid = $MYVARS->GET['pageid'];
     $returnme = "";
@@ -278,7 +278,7 @@ global $MYVARS, $CFG, $USER;
     echo template_use("templates/page_ajax.template", $params, "links_manager_template");
 }
 
-function linkpagesearch(){
+function linkpagesearch() {
 global $CFG, $MYVARS, $USER;
   $searchwords = trim($MYVARS->GET["searchwords"]);
   $pageid = $MYVARS->GET["pageid"];
@@ -351,7 +351,7 @@ global $CFG, $MYVARS, $USER;
   echo template_use("templates/page_ajax.template", $params, "search_template");
 }
 
-function make_page_link(){
+function make_page_link() {
 global $MYVARS, $CFG, $USER;
     $pageid = $MYVARS->GET['pageid'];
     $linkid = $MYVARS->GET['linkpageid'];

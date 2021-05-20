@@ -17,7 +17,7 @@ callfunction();
 
 echo template_use("templates/page.template", array(), "end_of_page_template");
 
-function change_theme(){
+function change_theme() {
 global $CFG, $MYVARS, $USER, $PAGE;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
 	$feature = isset($MYVARS->GET['feature']) ? dbescape($MYVARS->GET['feature']) : false;

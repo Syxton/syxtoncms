@@ -28,7 +28,7 @@ class AJAXChatDataBaseMySQL {
 			$dbConnectionConfig['pass'],
 			true
 		);
-		if(!$this->_connectionID) {
+		if (!$this->_connectionID) {
 			$this->_errno = null;
 			$this->_error = 'Database connection failed.';
 			return false;
@@ -38,7 +38,7 @@ class AJAXChatDataBaseMySQL {
 	
 	// Method to select the DataBase:
 	function select($dbName) {
-		if(!@mysql_select_db($dbName, $this->_connectionID)) {
+		if (!@mysql_select_db($dbName, $this->_connectionID)) {
 			$this->_errno = mysql_errno($this->_connectionID);
 			$this->_error = mysql_error($this->_connectionID);
 			return false;
@@ -54,7 +54,7 @@ class AJAXChatDataBaseMySQL {
 	
 	// Method to return the error report:
 	function getError() {
-		if($this->error()) {
+		if ($this->error()) {
 			$str = 'Error-Report: '	.$this->_error."\n";
 			$str .= 'Error-Code: '.$this->_errno."\n";
 		} else {

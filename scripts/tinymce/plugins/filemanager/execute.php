@@ -67,7 +67,7 @@ function returnPaths($_path, $_name, $config)
     return array($path, $path_thumb, $name);
 }
 
-if(isset($_POST['paths'])){
+if (isset($_POST['paths'])) {
 	$paths = $paths_thumb = $names = array();
 	foreach ($_POST['paths'] as $key => $path) {
 		if (!checkRelativePath($path))
@@ -76,7 +76,7 @@ if(isset($_POST['paths'])){
 			exit;
 		}
 		$name = null;
-		if(isset($_POST['names'][$key])){
+		if (isset($_POST['names'][$key])) {
 			$name = $_POST['names'][$key];
 		}
 		list($path,$path_thumb,$name) = returnPaths($path,$name,$config);
@@ -86,7 +86,7 @@ if(isset($_POST['paths'])){
 	}
 } else {
 	$name = null;
-	if(isset($_POST['name'])){
+	if (isset($_POST['name'])) {
 		$name = $_POST['name'];
 	}
 	list($path,$path_thumb,$name) = returnPaths($_POST['path'],$name,$config);
@@ -116,9 +116,9 @@ if (isset($_GET['action'])) {
 
 			break;
 		case 'delete_folder':
-			if ($config['delete_folders']){
+			if ($config['delete_folders']) {
 
-				if($ftp){
+				if ($ftp) {
 					deleteDir($path,$ftp,$config);
 					deleteDir($path_thumb,$ftp,$config);
 				}else{
@@ -132,7 +132,7 @@ if (isset($_GET['action'])) {
 						deleteDir($path,NULL,$config);
 						if ($config['fixed_image_creation'])
 						{
-							foreach($config['fixed_path_from_filemanager'] as $k=>$paths){
+							foreach ($config['fixed_path_from_filemanager'] as $k=>$paths) {
 								if ($paths!="" && $paths[strlen($paths)-1] != "/") $paths.="/";
 
 								$base_dir=$paths.substr_replace($path, '', 0, strlen($config['current_path']));
@@ -151,14 +151,14 @@ if (isset($_GET['action'])) {
 				$path .= $name;
 				$path_thumb .= $name;
 				$res = create_folder(fix_path($path,$config),fix_path($path_thumb,$config),$ftp,$config);
-				if(!$res){
+				if (!$res) {
 					response(trans('Rename_existing_folder').AddErrorLocation())->send();
 				}
 			}
 			break;
 		case 'rename_folder':
-			if ($config['rename_folders']){
-                if(!is_dir($path)) {
+			if ($config['rename_folders']) {
+                if (!is_dir($path)) {
                     response(trans('wrong path').AddErrorLocation())->send();
                     exit;
                 }
@@ -409,7 +409,7 @@ if (isset($_GET['action'])) {
                     rrename($data['path_thumb'], $path_thumb);
 
 					// cleanup
-					if (is_dir($data['path']) === TRUE){
+					if (is_dir($data['path']) === TRUE) {
 						rrename_after_cleaner($data['path']);
 						rrename_after_cleaner($data['path_thumb']);
 					}

@@ -7,7 +7,7 @@
 * Revision: 2.8.3
 ***************************************************************************/
 
-if(!isset($LIBHEADER)) if(file_exists('./lib/header.php')){ include('./lib/header.php'); }elseif(file_exists('../lib/header.php')) { include('../lib/header.php'); }elseif(file_exists('../../lib/header.php')){ include('../../lib/header.php'); }
+if (!isset($LIBHEADER)) if (file_exists('./lib/header.php')) { include('./lib/header.php'); }elseif (file_exists('../lib/header.php')) { include('../lib/header.php'); }elseif (file_exists('../../lib/header.php')) { include('../../lib/header.php'); }
 $NEWSLIB = true;
 
 //NEWSLIB Config
@@ -16,13 +16,13 @@ $CFG->news->maxlength = 500;
 $CFG->news->modalheight = 600;
 $CFG->news->modalwidth = 640;
 
-function display_news($pageid,$area,$featureid=false){
+function display_news($pageid,$area,$featureid=false) {
 global $CFG,$USER,$ROLES;
-if(!$pageid){ $pageid = $CFG->SITEID; }
+if (!$pageid) { $pageid = $CFG->SITEID; }
 $returnme = ''; $section_content = ""; $toggle = "";
 
 	$main_section = get_db_row("SELECT * FROM news_features WHERE featureid=".$featureid);
-	if(!$settings = fetch_settings("news",$featureid,$pageid)){
+	if (!$settings = fetch_settings("news",$featureid,$pageid)) {
 		make_or_update_settings_array(default_settings("news",$pageid,$featureid));
 		$settings = fetch_settings("news",$featureid,$pageid);
 	}
@@ -30,13 +30,13 @@ $returnme = ''; $section_content = ""; $toggle = "";
 	$limit = $settings->news->$featureid->limit_viewable->setting;
 	$title = $settings->news->$featureid->feature_title->setting;
 
-	if(!is_logged_in()){ //If the user is not signed in
-		if(role_has_ability_in_page($ROLES->visitor, 'viewnews', $pageid)){ //Has ability to see the news items
-				if($area == "middle"){
-					if($pagenews = get_section_news($featureid, "LIMIT ".$limit)){ //Gets the news from the given section
+	if (!is_logged_in()) { //If the user is not signed in
+		if (role_has_ability_in_page($ROLES->visitor, 'viewnews', $pageid)) { //Has ability to see the news items
+				if ($area == "middle") {
+					if ($pagenews = get_section_news($featureid, "LIMIT ".$limit)) { //Gets the news from the given section
 						$i=0; $newdate=false;
-                        foreach($pagenews as $news){
-                            if(isset($news->content)){
+                        foreach ($pagenews as $news) {
+                            if (isset($news->content)) {
                                 $daygraphic = !$newdate || date('j',$newdate) != date('j',$news->submitted) ? get_date_graphic($news->submitted,true) : get_date_graphic($news->submitted,false);
                                 $newdate = $pagenews->$i->submitted;
                                 $section_content .= make_news_table($pageid,$news,$area,$daygraphic);
@@ -48,26 +48,26 @@ $returnme = ''; $section_content = ""; $toggle = "";
 
 				//Get the Archived News Area
 				$section_content .= get_section_archives($pageid, $featureid, NULL, $area);
-				if(empty($section_content)){ $section_content = "No news added yet"; }
+				if (empty($section_content)) { $section_content = "No news added yet"; }
 				$buttons = get_button_layout("news_features",$featureid,$pageid);
 				$returnme .= get_css_box($title,$section_content,$buttons,NULL,"news",$featureid);
 			}
 
 	}else{ //User is signed in
 
-		if(user_has_ability_in_page($USER->userid, 'viewnews', $pageid)){
+		if (user_has_ability_in_page($USER->userid, 'viewnews', $pageid)) {
 			if (is_logged_in()) {
       	$rss = make_modal_links(array("title"=>"News RSS Feed","path"=>$CFG->wwwroot."/pages/rss.php?action=rss_subscribe_feature&amp;feature=news&amp;pageid=$pageid&amp;featureid=$featureid","width"=>"640","styles"=>"position: relative;top: 4px;padding-right:2px;","height"=>"400","image"=>$CFG->wwwroot."/images/small_rss.png"));
       }
 
-			if($area == "middle"){
-				if($pageid == $CFG->SITEID){ //This is the site page
+			if ($area == "middle") {
+				if ($pageid == $CFG->SITEID) { //This is the site page
 					$returnme .= '';
-					if($pages = get_users_news_pages($USER->userid,"LIMIT $limit")){
-						if($pagenews = get_pages_news($pages,"LIMIT $limit")){
+					if ($pages = get_users_news_pages($USER->userid,"LIMIT $limit")) {
+						if ($pagenews = get_pages_news($pages,"LIMIT $limit")) {
 							$newdate=false;
-                            foreach($pagenews as $news){
-                                if(isset($news->content)){
+                            foreach ($pagenews as $news) {
+                                if (isset($news->content)) {
                                     $daygraphic = !$newdate || date('j',$newdate) != date('j',$news->submitted) ? get_date_graphic($news->submitted,true) : get_date_graphic($news->submitted,false);
     								$newdate = $news->submitted;
     								$section_content .= make_news_table($pageid,$news,$area,$daygraphic);
@@ -77,9 +77,9 @@ $returnme = ''; $section_content = ""; $toggle = "";
 						}
 					}
 				}else{ //This is for any page other than site
-					if($pagenews = get_section_news($featureid, "LIMIT ".$limit)){
+					if ($pagenews = get_section_news($featureid, "LIMIT ".$limit)) {
 						$newdate=false;
-                        foreach($pagenews as $news){
+                        foreach ($pagenews as $news) {
                             $daygraphic = !$newdate || date('j',$newdate) != date('j',$news->submitted) ? get_date_graphic($news->submitted,true) : get_date_graphic($news->submitted,false);
 							$newdate = $news->submitted;
 							$section_content .= make_news_table($pageid,$news,$area,$daygraphic);
@@ -91,18 +91,18 @@ $returnme = ''; $section_content = ""; $toggle = "";
 			$buttons = get_button_layout("news_features",$featureid,$pageid);
 			//Get the Archived News Area
 			$section_content .= get_section_archives($pageid, $featureid, $USER->userid, $area);
-			if(empty($section_content)){ $section_content = "No news added yet"; }
+			if (empty($section_content)) { $section_content = "No news added yet"; }
 			$returnme .= get_css_box($rss . $title,$section_content,$buttons, NULL, "news", $featureid);
 		}
 	}
     return $toggle . $returnme;
 }
 
-function make_news_table($pageid,$pagenews,$area,$daygraphic,$standalone = false){
+function make_news_table($pageid,$pagenews,$area,$daygraphic,$standalone = false) {
 global $CFG;
 	$buttons = $standalone ? '' : get_button_layout("news",$pagenews->newsid, $pagenews->pageid);
 	$user = get_db_row("SELECT * FROM users where userid = " . $pagenews->userid);
-	if($area == "middle"){
+	if ($area == "middle") {
     	$dots = strlen($pagenews->caption) > 350 ? "..." : "";
     	$returnme = '
     	<table class="newstable">
@@ -169,10 +169,10 @@ global $CFG;
 	return $returnme;
 }
 
-function get_users_news_pages($userid, $limit="", $site=true){
+function get_users_news_pages($userid, $limit="", $site=true) {
 global $CFG;
 	$includesite = $site ? "" : " WHERE ns.pageid !=" . $CFG->SITEID;
-	if(is_siteadmin($userid)){
+	if (is_siteadmin($userid)) {
 		$SQL = "
 		SELECT DISTINCT ns.pageid,ns.lastupdate FROM news_features ns
 		INNER JOIN pages_features pf on pf.pageid=ns.pageid AND pf.feature='news' AND pf.featureid=ns.featureid
@@ -190,12 +190,12 @@ global $CFG;
     return get_db_result($SQL);
 }
 
-function get_section_archives($pageid, $featureid, $userid = false, $area = "middle"){
+function get_section_archives($pageid, $featureid, $userid = false, $area = "middle") {
 global $CFG;
 	$lastyear = date('Y',get_timestamp());
-	if($area == "middle"){
+	if ($area == "middle") {
 		$zero = 0;
-		if($pagenews = get_all_news($userid, $pageid, $featureid)){
+		if ($pagenews = get_all_news($userid, $pageid, $featureid)) {
     		$returnme = '<br/><table style="background-color:#FCD163;border:1px solid gray;width:100%;text-align:right;font-size:.85em;">
     				<tr><td style="width:100px;text-align:center;"><strong><span>Archive</span></strong></td><td class="field_title" style="width: 60px;">Year: </td><td class="field_input" style="width: 60px;"><span id="year_span_'.$featureid.'_archive">';
     		$years = years_with_news($userid, $pagenews);
@@ -212,7 +212,7 @@ global $CFG;
 		}else{ return ""; }
 	}else{
 		$zero = 0;
-		if($pagenews = get_all_news($userid, $pageid, $featureid)){
+		if ($pagenews = get_all_news($userid, $pageid, $featureid)) {
     		$returnme = '<table style="background-color:#FCD163;border:1px solid gray;width:100%;text-align:left;font-size:.85em;">
     				<tr><td colspan="3" style="text-align:center;"><strong>Archive</strong></td></tr><tr><td class="field_title" style="width:5%;padding:0px 2px;">Year: </td><td><span id="year_span_'.$featureid.'_archive">';
     		$years = years_with_news($userid, $pagenews);
@@ -230,48 +230,48 @@ global $CFG;
 	}
 }
 
-function get_array_count($array, $i = 0){
-	foreach($array as $item){
+function get_array_count($array, $i = 0) {
+	foreach ($array as $item) {
 		$i++;
 	}
 	return $i;
 }
 
-function get_all_news($userid, $pageid, $featureid){
+function get_all_news($userid, $pageid, $featureid) {
 global $CFG, $USER;
 	$zero = 0;
-	if($userid){
-		if($CFG->SITEID == $pageid){
+	if ($userid) {
+		if ($CFG->SITEID == $pageid) {
 			$pages = get_users_news_pages($userid, NULL, true);
 			$returnme = get_pages_news($pages);
-			if(isset($returnme->$zero)){ return $returnme;
+			if (isset($returnme->$zero)) { return $returnme;
 			}else{ return false; }
 		}else{
 			$returnme = get_section_news($featureid);
-			if(isset($returnme->$zero)){ return $returnme;
+			if (isset($returnme->$zero)) { return $returnme;
 			}else{ return false; }
 		}
 	}else{
 		$returnme = get_section_news($featureid);
-		if(isset($returnme->$zero)){ return $returnme;
+		if (isset($returnme->$zero)) { return $returnme;
 		}else{ return false; }
 	}
 }
 
-function get_month_news($userid, $year, $month, $pagenews=false, $pageid=false, $featureid=false){
-	if(!$pagenews){ $pagenews = get_all_news($userid,$pageid,$featureid); }
+function get_month_news($userid, $year, $month, $pagenews=false, $pageid=false, $featureid=false) {
+	if (!$pagenews) { $pagenews = get_all_news($userid,$pageid,$featureid); }
 	$y=$currentmonth=$last=$i=0; $first = false;
-	if(isset($pagenews->$i)){
-		while(isset($pagenews->$i)){ //Find first and last month of given year that a news item was exists in pagenews set
-			if(date("Y",$pagenews->$i->submitted) == $year && date("n",$pagenews->$i->submitted) == $month){
-				if($first === false){ $first = $i; }
+	if (isset($pagenews->$i)) {
+		while (isset($pagenews->$i)) { //Find first and last month of given year that a news item was exists in pagenews set
+			if (date("Y",$pagenews->$i->submitted) == $year && date("n",$pagenews->$i->submitted) == $month) {
+				if ($first === false) { $first = $i; }
 				$last = $i;
 			}$i++;
 		}
-		if($first !== false){
+		if ($first !== false) {
 			$firststamp = $pagenews->$first->submitted; $laststamp = $pagenews->$last->submitted;
-			while($first <= $last){
-                if(empty($returnme)){ $returnme = new \stdClass; }
+			while ($first <= $last) {
+                if (empty($returnme)) { $returnme = new \stdClass; }
                 $returnme->$y = new \stdClass;
 				$returnme->$y->title = $pagenews->$first->title;
 				$returnme->$y->newsid = $pagenews->$first->newsid;
@@ -282,17 +282,17 @@ function get_month_news($userid, $year, $month, $pagenews=false, $pageid=false, 
 	}else{ return false; }
 }
 
-function months_with_news($userid, $year, $pagenews=false, $pageid=false, $featureid=false){
-	if(!$pagenews){ $pagenews = get_all_news($userid,$pageid,$featureid);	}
+function months_with_news($userid, $year, $pagenews=false, $pageid=false, $featureid=false) {
+	if (!$pagenews) { $pagenews = get_all_news($userid,$pageid,$featureid);	}
 	$last=$i=0; $first = false;
-	if(isset($pagenews->$i)){
-		while(isset($pagenews->$i)){ //Find first and last month of given year that a news item was exists in pagenews set
-			if(date("Y",$pagenews->$i->submitted) == $year){
-				if($first === false){ $first = $i; }
+	if (isset($pagenews->$i)) {
+		while (isset($pagenews->$i)) { //Find first and last month of given year that a news item was exists in pagenews set
+			if (date("Y",$pagenews->$i->submitted) == $year) {
+				if ($first === false) { $first = $i; }
 				$last = $i;
 			}$i++;
 		}
-		if($first !== false){
+		if ($first !== false) {
 			//SWAP THEM SO THAT MONTHS WILL BE DISPLAYED FROM JANUARY TO DECEMBER INSTEAD OF BACKWARDS
 			$firststamp = $pagenews->$first->submitted;
 			$laststamp = $pagenews->$last->submitted;
@@ -300,16 +300,16 @@ function months_with_news($userid, $year, $pagenews=false, $pageid=false, $featu
 			$firstmonth = date("n",$firststamp);
 			$lastmonth = date("n",$laststamp);
 			$y = 0; $currentmonth = 0;
-			while($firstmonth >= $lastmonth){
+			while ($firstmonth >= $lastmonth) {
 				$beginmonth = mktime(0,0,0,$lastmonth,1,$year);
 				$daysinmonth = cal_days_in_month(CAL_GREGORIAN,$firstmonth,$year) + 1;
 				$endmonth = mktime(0,0,0,$firstmonth,$daysinmonth,$year);
 				$i=$first;
-				while(isset($pagenews->$i)){
-					if($pagenews->$i->submitted >= $beginmonth && $pagenews->$i->submitted <= $endmonth){
-						if(date("n",$pagenews->$i->submitted) > $currentmonth){
+				while (isset($pagenews->$i)) {
+					if ($pagenews->$i->submitted >= $beginmonth && $pagenews->$i->submitted <= $endmonth) {
+						if (date("n",$pagenews->$i->submitted) > $currentmonth) {
 							$currentmonth = date("n",$pagenews->$i->submitted);
-							if(empty($returnme)){ $returnme = new \stdClass; }
+							if (empty($returnme)) { $returnme = new \stdClass; }
                             $returnme->$y = new \stdClass;
                             $returnme->$y->month = $currentmonth;
 							$returnme->$y->monthname = date("F", $pagenews->$i->submitted);
@@ -326,23 +326,23 @@ function months_with_news($userid, $year, $pagenews=false, $pageid=false, $featu
 	return false;
 }
 
-function years_with_news($userid, $pagenews=false, $pageid=false, $featureid=false){
-	if(!$pagenews){ $pagenews = get_all_news($userid,$pageid,$featureid);	}
+function years_with_news($userid, $pagenews=false, $pageid=false, $featureid=false) {
+	if (!$pagenews) { $pagenews = get_all_news($userid,$pageid,$featureid);	}
 	$zero=$last=0;
-    if(isset($pagenews->$zero)){
-		foreach($pagenews as $news){ $last++; } $last--; //counts news items -- count() doesn't work on objects)
+    if (isset($pagenews->$zero)) {
+		foreach ($pagenews as $news) { $last++; } $last--; //counts news items -- count() doesn't work on objects)
 		$first = $pagenews->$zero->submitted;
 		$last = $pagenews->$last->submitted;
 		$firstyear = date("Y",$last);
 		$currentyear = date("Y",$first);
         $y = 0;
-		while($currentyear >= $firstyear){
+		while ($currentyear >= $firstyear) {
 			$beginyear = mktime(0,0,0,1,1,$currentyear);
 			$endyear = mktime(0,0,0,12,32,$currentyear);
 
-            foreach($pagenews as $news){
-                if($news->submitted >= $beginyear && $news->submitted <= $endyear){
-                    if(empty($returnme)){ $returnme = new \stdClass; }
+            foreach ($pagenews as $news) {
+                if ($news->submitted >= $beginyear && $news->submitted <= $endyear) {
+                    if (empty($returnme)) { $returnme = new \stdClass; }
                     $returnme->$y = new \stdClass;
                     $returnme->$y->year = $currentyear;
                     $y++;
@@ -356,13 +356,13 @@ function years_with_news($userid, $pagenews=false, $pageid=false, $featureid=fal
 	}else{ return false; }
 }
 
-function get_section_news($featureid, $limit = ""){
+function get_section_news($featureid, $limit = "") {
 global $CFG;
 	$SQL = "SELECT * FROM news WHERE featureid='$featureid'	ORDER BY submitted DESC $limit";
     $i=0;
-	if($news_results = get_db_result($SQL)){
+	if ($news_results = get_db_result($SQL)) {
         $news = new \stdClass;
-		while($row = fetch_row($news_results)){
+		while ($row = fetch_row($news_results)) {
 			$news->$i = new \stdClass;
             $news->$i->newsid = $row['newsid'];
 			$news->$i->pageid = $row['pageid'];
@@ -377,32 +377,32 @@ global $CFG;
 		}
 	}
 
-	if($i == 0) return false;
+	if ($i == 0) return false;
 	return $news;
 }
 
-function get_page_news($pageid, $limit = ""){
+function get_page_news($pageid, $limit = "") {
 global $CFG;
 	$sections = "";
 	$SQL = "
 	SELECT * FROM news_features
 	WHERE pageid=$pageid
 	ORDER BY lastupdate";
-	if($section_results = get_db_result($SQL)){
-		while($section = fetch_row($section_results)){
+	if ($section_results = get_db_result($SQL)) {
+		while ($section = fetch_row($section_results)) {
 			$sections .= $sections == "" ? "featureid=".$section['featureid'] : " OR featureid=".$section['featureid'];
 		}
 	}
-	if($sections != ""){
-		if(!$limit){ $limit = "LIMIT " . $section['limit_viewable']; }
+	if ($sections != "") {
+		if (!$limit) { $limit = "LIMIT " . $section['limit_viewable']; }
 		$SQL = "
 		SELECT * FROM news
 		WHERE ($sections)
 		ORDER BY submitted DESC $limit
 		";
 		$i=0;
-		if($news_results = get_db_result($SQL)){
-			while($row = fetch_row($news_results)){
+		if ($news_results = get_db_result($SQL)) {
+			while ($row = fetch_row($news_results)) {
 				$news->$i->newsid = $row['newsid'];
 				$news->$i->pageid = $row['pageid'];
 				$news->$i->featureid = $row['featureid'];
@@ -415,13 +415,13 @@ global $CFG;
 				$i++;
 			}
 		}
-		if($i == 0){ return false; }
+		if ($i == 0) { return false; }
 		return $news;
 	}
     return false;
 }
 
-function get_pages_news($pages, $limit = ""){
+function get_pages_news($pages, $limit = "") {
 global $CFG;
 	$mypages = "";
 	if ($pages) {
@@ -458,9 +458,9 @@ global $CFG;
     return false;
 }
 
-//function format_news_clip($newscontent){
+//function format_news_clip($newscontent) {
 //global $CFG;
-//	if(strlen($newscontent->content) > $CFG->news->maxlength){
+//	if (strlen($newscontent->content) > $CFG->news->maxlength) {
 //		$newscontent->content = substr($newscontent->content,0,$CFG->news->maxlength);
 //		$newscontent->content = closetags($newscontent->content);
 //		$newscontent->content .= '
@@ -474,7 +474,7 @@ global $CFG;
 //    return $newscontent->content;
 //}
 
-function closetags($html){
+function closetags($html) {
 	$selfclosing = ',img,input,br,hr,';
 	//put all opened tags into an array
 	preg_match_all("#<([a-z]+)(?: .*)?(?<![/|/ ])>#iU", $html, $result);
@@ -485,17 +485,17 @@ function closetags($html){
 	$len_opened = count($openedtags);
 
     //all tags are closed
-	if(count($closedtags) == $len_opened){ return $html; }
+	if (count($closedtags) == $len_opened) { return $html; }
 
     $openedtags = array_reverse($openedtags);
 	//close tags
-	for($i=0;$i < $len_opened;$i++) {
+	for ($i=0;$i < $len_opened;$i++) {
 		$temp = $openedtags[$i];
-		switch ($openedtags[$i]){
+		switch ($openedtags[$i]) {
 			case strstr($selfclosing,",$temp,"):
 				break;
 			default:
-				if (!in_array($openedtags[$i],$closedtags)){
+				if (!in_array($openedtags[$i],$closedtags)) {
 					$html .= '</'.$openedtags[$i].'>';
 				}else{
 					unset($closedtags[array_search($openedtags[$i],$closedtags)]);
@@ -505,9 +505,9 @@ function closetags($html){
 	return $html;
 }
 
-function news_delete($pageid,$featureid,$newsid){
-	if(empty($newsid)){ //News feature delete
-		if(execute_db_sql("DELETE FROM pages_features WHERE feature='news' AND pageid='$pageid' AND featureid='$featureid'") && execute_db_sql("DELETE FROM news_features WHERE pageid='$pageid' and featureid='$featureid'") && execute_db_sql("DELETE FROM news WHERE pageid='$pageid' and featureid='$featureid'") && execute_db_sql("DELETE FROM settings WHERE type='news' AND pageid='$pageid' AND featureid='$featureid'")){
+function news_delete($pageid,$featureid,$newsid) {
+	if (empty($newsid)) { //News feature delete
+		if (execute_db_sql("DELETE FROM pages_features WHERE feature='news' AND pageid='$pageid' AND featureid='$featureid'") && execute_db_sql("DELETE FROM news_features WHERE pageid='$pageid' and featureid='$featureid'") && execute_db_sql("DELETE FROM news WHERE pageid='$pageid' and featureid='$featureid'") && execute_db_sql("DELETE FROM settings WHERE type='news' AND pageid='$pageid' AND featureid='$featureid'")) {
 			resort_page_features($pageid);
 		}
 	}else{ //News item delete
@@ -515,23 +515,23 @@ function news_delete($pageid,$featureid,$newsid){
 	}
 }
 
-function news_rss($feed, $userid, $userkey){
+function news_rss($feed, $userid, $userkey) {
 global $CFG;
 	$feeds = "";
-	if($feed["pageid"] == $CFG->SITEID && $userid){ //This is the site page for people who are members
-		if($pages = get_users_news_pages($userid,"LIMIT 50")){
-			if($pagenews = get_pages_news($pages,"LIMIT 50")){
-                foreach($pagenews as $news){
-                    if(isset($news->content)){
+	if ($feed["pageid"] == $CFG->SITEID && $userid) { //This is the site page for people who are members
+		if ($pages = get_users_news_pages($userid,"LIMIT 50")) {
+			if ($pagenews = get_pages_news($pages,"LIMIT 50")) {
+                foreach ($pagenews as $news) {
+                    if (isset($news->content)) {
                        $feeds .= fill_feed($news->title,strip_tags($news->caption),$CFG->wwwroot.'/features/news/news.php?action=viewnews&key='.$userkey.'&pageid='.$feed["pageid"].'&newsid='.$news->newsid,$news->submitted);
                      }
                 }
 			}
 		}
 	}else{ //This is for any page other than site
-		if($pagenews = get_section_news($feed["featureid"], "LIMIT 50")){
-			foreach($pagenews as $news){
-                if(isset($news->content)){
+		if ($pagenews = get_section_news($feed["featureid"], "LIMIT 50")) {
+			foreach ($pagenews as $news) {
+                if (isset($news->content)) {
                     $feeds .= fill_feed($news->title,strip_tags($news->caption),$CFG->wwwroot.'/features/news/news.php?action=viewnews&key='.$userkey.'&pageid='.$feed["pageid"].'&newsid='.$news->newsid,$news->submitted);
                 }
 			}
@@ -540,9 +540,9 @@ global $CFG;
 	return $feeds;
 }
 
-function insert_blank_news($pageid){
+function insert_blank_news($pageid) {
 global $CFG;
-	if($featureid = execute_db_sql("INSERT INTO news_features (pageid,lastupdate) VALUES('$pageid','".get_timestamp()."')")){
+	if ($featureid = execute_db_sql("INSERT INTO news_features (pageid,lastupdate) VALUES('$pageid','".get_timestamp()."')")) {
 		$feature = "news";
 		$area = get_db_field("default_area", "features", "feature='news'");
 		$sort = get_db_count("SELECT * FROM pages_features WHERE pageid='$pageid' AND area='$area'") + 1;
@@ -552,19 +552,19 @@ global $CFG;
 	return false;
 }
 
-function news_buttons($pageid,$featuretype,$featureid){
+function news_buttons($pageid,$featuretype,$featureid) {
 global $CFG,$USER;
 	$returnme = "";
-	if(strstr($featuretype,"_features")){
+	if (strstr($featuretype,"_features")) {
         $returnme .= user_has_ability_in_page($USER->userid,"addnews",$pageid) ? make_modal_links(array("title"=> "Add News Item","path"=>$CFG->wwwroot."/features/news/news.php?action=addeditnews&amp;pageid=$pageid&amp;featureid=$featureid","iframe"=>"true","refresh"=>"true","width"=>"850","height"=>"600","image"=>$CFG->wwwroot."/images/add.png","class"=>"slide_menu_button")) : '';
 	}else{
         $returnme .= user_has_ability_in_page($USER->userid,"editnews",$pageid) ? make_modal_links(array("title"=> "Edit News Item","path"=>$CFG->wwwroot."/features/news/news.php?action=addeditnews&amp;pageid=$pageid&amp;newsid=$featureid","iframe"=>"true","refresh"=>"true","width"=>"850","height"=>"600","image"=>$CFG->wwwroot."/images/edit.png","class"=>"slide_menu_button")) : '';
-        $returnme .= user_has_ability_in_page($USER->userid,"deletenews",$pageid) ? ' <a class="slide_menu_button" title="Delete News Item" onclick="if(confirm(\'Are you sure you want to delete this?\')){ ajaxapi(\'/ajax/site_ajax.php\',\'delete_feature\',\'&amp;pageid='.$pageid.'&amp;featuretype='.$featuretype.'&amp;sectionid='.$featureid.'&amp;featureid='.$featureid.'\',function() { update_login_contents('.$pageid.');});}"><img src="'.$CFG->wwwroot.'/images/delete.png" alt="Delete News Item" /></a> ' : '';
+        $returnme .= user_has_ability_in_page($USER->userid,"deletenews",$pageid) ? ' <a class="slide_menu_button" title="Delete News Item" onclick="if (confirm(\'Are you sure you want to delete this?\')) { ajaxapi(\'/ajax/site_ajax.php\',\'delete_feature\',\'&amp;pageid='.$pageid.'&amp;featuretype='.$featuretype.'&amp;sectionid='.$featureid.'&amp;featureid='.$featureid.'\',function() { update_login_contents('.$pageid.');});}"><img src="'.$CFG->wwwroot.'/images/delete.png" alt="Delete News Item" /></a> ' : '';
     }
 	return $returnme;
 }
 
-function news_default_settings($feature,$pageid,$featureid){
+function news_default_settings($feature,$pageid,$featureid) {
 	$settings_array[] = array(false,"$feature","$pageid","$featureid","feature_title","News Section",false,"News Section","Feature Title","text");
 	$settings_array[] = array(false,"$feature","$pageid","$featureid","limit_viewable","5",false,"5","Viewable Limit","text",true,"<=0","Must be greater than 0.");
 	return $settings_array;

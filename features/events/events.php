@@ -6,9 +6,9 @@
 * Date: 4/12/2021
 * Revision: 1.4.9
 ***************************************************************************/
-if(empty($_POST["aslib"])){
-    if(!isset($CFG)){ include('../header.php'); }
-    if(!isset($EVENTSLIB)){ include_once($CFG->dirroot . '/features/events/eventslib.php'); }
+if (empty($_POST["aslib"])) {
+    if (!isset($CFG)) { include('../header.php'); }
+    if (!isset($EVENTSLIB)) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 
     callfunction();
 
@@ -23,7 +23,7 @@ if(empty($_POST["aslib"])){
 }
 
 
-function events_settings(){
+function events_settings() {
 global $CFG,$MYVARS,$USER;
 	$featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
 	$feature = "events";
@@ -33,14 +33,14 @@ global $CFG,$MYVARS,$USER;
 	$setting_names = get_setting_names($default_settings);
 
 	//Check if any settings exist for this feature
-	if($settings = fetch_settings($feature,$featureid,$pageid)){
+	if ($settings = fetch_settings($feature,$featureid,$pageid)) {
         echo make_settings_page($setting_names,$settings,$default_settings,$feature,$featureid,$pageid);
 	}else{ //No Settings found...setup default settings
-		if(make_or_update_settings_array($default_settings)){ events_settings(); }
+		if (make_or_update_settings_array($default_settings)) { events_settings(); }
 	}
 }
 
-function event_manager(){
+function event_manager() {
 global $CFG,$MYVARS,$USER;
 
     echo '<div class="dontprint"><form onsubmit="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';ajaxapi(\'/features/events/events_ajax.php\',\'eventsearch\',\'&amp;pageid='.$MYVARS->GET["pageid"].'&amp;searchwords=\'+escape(document.getElementById(\'searchbox\').value),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true); return false;">
@@ -50,7 +50,7 @@ global $CFG,$MYVARS,$USER;
 	<span id="searchcontainer"></span>';
 }
 
-function template_manager(){
+function template_manager() {
 global $CFG,$MYVARS,$USER;
 
     echo '<div class="dontprint"><form onsubmit="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';ajaxapi(\'/features/events/events_ajax.php\',\'templatesearch\',\'&amp;pageid='.$MYVARS->GET["pageid"].'&amp;searchwords=\'+escape(document.getElementById(\'searchbox\').value),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true); return false;">
@@ -60,14 +60,14 @@ global $CFG,$MYVARS,$USER;
 	<span id="searchcontainer"></span>';
 }
 
-function application_manager(){
+function application_manager() {
 global $CFG,$MYVARS,$USER;
     $pageid = $_SESSION["pageid"];
     $export = "";
-    if($archive = get_db_result("SELECT * FROM events_staff_archive WHERE pageid='$pageid' GROUP BY year ORDER BY year")){
+    if ($archive = get_db_result("SELECT * FROM events_staff_archive WHERE pageid='$pageid' GROUP BY year ORDER BY year")) {
         $i = 0;
         $values = new \stdClass;
-		while($vals = fetch_row($archive)){
+		while ($vals = fetch_row($archive)) {
             $values->$i = new \stdClass;
 			$values->$i->year = $vals["year"];
 			$i++;
@@ -99,7 +99,7 @@ global $CFG,$MYVARS,$USER;
 	<span id="searchcontainer"></span>';
 }
 
-function staff_emailer(){
+function staff_emailer() {
 global $CFG,$MYVARS,$USER;
     echo '<div class="dontprint"><form onsubmit="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';ajaxapi(\'/features/events/events_ajax.php\',\'sendstaffemails\',\'&amp;sendemails=\'+$(\'#sendemails\').prop(\'checked\')+\'&amp;stafflist=\'+encodeURIComponent($(\'#stafflist\').val()),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true); return false;">
 	<div style="text-align:center;margin:5px;font-weight: bolder;">Staff Status Checker</div>
@@ -115,11 +115,11 @@ global $CFG,$MYVARS,$USER;
 	<span id="searchcontainer"></span>';
 }
 
-function pay(){
+function pay() {
 global $CFG,$MYVARS,$USER;
     $regcode = isset($MYVARS->GET["regcode"]) ? $MYVARS->GET["regcode"] : "";
 
-    if(empty($MYVARS->GET["modal"])){
+    if (empty($MYVARS->GET["modal"])) {
         echo '<script type="text/javascript" src="'.$CFG->wwwroot.'/min/?b='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'scripts&amp;f=jquery.min.js"></script>'.main_body(true).'<br /><br />';
     }
 
@@ -134,7 +134,7 @@ global $CFG,$MYVARS,$USER;
         </div>
         <script type="text/javascript">
             window.onload = function () {
-                if ($("#code").val() != ""){
+                if ($("#code").val() != "") {
                     lookup_reg($("#code").val());
                 }
             }
@@ -142,12 +142,12 @@ global $CFG,$MYVARS,$USER;
     ';
 }
 
-function event_request_form(){
+function event_request_form() {
 global $CFG,$MYVARS,$USER;
     $featureid = $MYVARS->GET["featureid"];
-    if(isset($featureid)){
+    if (isset($featureid)) {
         $pageid = get_db_field("pageid","pages_features","featureid=$featureid");
-        if(!$settings = fetch_settings("events",$featureid,$pageid)){
+        if (!$settings = fetch_settings("events",$featureid,$pageid)) {
     		make_or_update_settings_array(default_settings("events",$pageid,$featureid));
     		$settings = fetch_settings("events",$featureid,$pageid);
     	}
@@ -155,9 +155,9 @@ global $CFG,$MYVARS,$USER;
         $locationid = $settings->events->$featureid->allowrequests->setting;
         $request_text = $settings->events->$featureid->request_text->setting;
 
-        if(!isset($VALIDATELIB)){ include_once($CFG->dirroot . '/lib/validatelib.php'); }
+        if (!isset($VALIDATELIB)) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
 
-    	echo create_validation_script("request_form" , "ajaxapi('/features/events/events_ajax.php','event_request',create_request_string('request_form'),function(){ simple_display('request_form_div'); });") . '
+    	echo create_validation_script("request_form" , "ajaxapi('/features/events/events_ajax.php','event_request',create_request_string('request_form'),function() { simple_display('request_form_div'); });") . '
     	<div class="formDiv" id="request_form_div">
         <p align="center"><b><font size="+1">Event Request Form</font></b></p><br />'.$request_text.'<br />If you would like to have your event hosted at ' . get_db_field("location","events_locations","id=$locationid") . ' please fill out the below form and we will get back to you.<br />
     		<br /><br />
@@ -198,29 +198,29 @@ global $CFG,$MYVARS,$USER;
     }else{ echo "Sorry, This form is not available"; }
 }
 
-function staff_application(){
+function staff_application() {
 global $CFG, $USER, $MYVARS;
-    if(isset($USER->userid)){
+    if (isset($USER->userid)) {
         $row = get_db_row("SELECT * FROM events_staff WHERE userid='$USER->userid'"); //Update existing event
 
-        if(!isset($VALIDATELIB)){ include_once($CFG->dirroot . '/lib/validatelib.php'); }
+        if (!isset($VALIDATELIB)) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
 
-    	echo create_validation_script("staffapplication_form" , "ajaxapi('/features/events/events_ajax.php','event_save_staffapp',create_request_string('staffapplication_form'),function(){ simple_display('staffapplication_form_div'); });");
+    	echo create_validation_script("staffapplication_form" , "ajaxapi('/features/events/events_ajax.php','event_save_staffapp',create_request_string('staffapplication_form'),function() { simple_display('staffapplication_form_div'); });");
         echo staff_application_form($row);
     }else{ echo "Sorry, This form is not available"; }
 }
 
-function info(){
+function info() {
 global $CFG, $MYVARS, $USER;
     $eventid = !empty($MYVARS->GET["eventid"]) && is_numeric($MYVARS->GET["eventid"]) ? dbescape($MYVARS->GET["eventid"]) : false;
-    if(!empty($eventid) && $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'")){
+    if (!empty($eventid) && $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'")) {
         $location = get_db_row("SELECT * FROM events_locations WHERE id='".$event["location"]."'");
         date_default_timezone_set("UTC");
 
         echo '<div style="text-align:center"><h1>'.stripslashes($event["name"]).'</h1>'.stripslashes($event["byline"]).'</div>';
         echo '<div>'.stripslashes($event["description"]).'</div><br /><center>';
 
-        if($event['event_begin_date'] != $event['event_end_date']){ //Multi day event
+        if ($event['event_begin_date'] != $event['event_end_date']) { //Multi day event
         	echo 'When: '.date('F \t\h\e jS, Y',$event["event_begin_date"]).' to '.date('F \t\h\e jS, Y',$event["event_end_date"]).'<br />';
         }else{
         	echo 'When: '.date('F \t\h\e jS, Y',$event["event_begin_date"]).'<br />';
@@ -230,7 +230,7 @@ global $CFG, $MYVARS, $USER;
         <tr><td></td><td>'.stripslashes($location["address_1"]).'<br />'.$location["address_2"].'&nbsp;'.$location["zip"].'</td></tr></table>
     	<span class="centered_span"><a title="Get Directions" href="'.$CFG->wwwroot.'/features/events/googlemaps.php?address_1='.stripslashes($location["address_1"]).'&address_2='.stripslashes($location["address_2"]).'">Get Directions</a></span><br />';
 
-    	if($event['allday'] != 1){ //All day event
+    	if ($event['allday'] != 1) { //All day event
     		echo 'Times: '.convert_time($event['event_begin_time']).' to '.convert_time($event['event_end_time']).'. <br />';
     	}
 
@@ -245,20 +245,20 @@ global $CFG, $MYVARS, $USER;
 
 }
 
-function add_event_form(){
+function add_event_form() {
 global $CFG,$MYVARS,$USER;
 	$pageid = $MYVARS->GET['pageid'];
 	date_default_timezone_set("UTC");
     $admin_contacts = $admin_payable = "";
 
-    if(is_siteadmin($USER->userid)){ //Get special admin drop down lists for contacts and accounts payable
+    if (is_siteadmin($USER->userid)) { //Get special admin drop down lists for contacts and accounts payable
         $admin_contacts = get_events_admin_contacts();
         $admin_payable = get_events_admin_payable();
     }
 
-	if(isset($MYVARS->GET["eventid"])){ //Update existing event
+	if (isset($MYVARS->GET["eventid"])) { //Update existing event
 		$eventid = $MYVARS->GET["eventid"];
-        if(!user_has_ability_in_page($USER->userid,"editevents",$pageid)){ echo get_page_error_message("no_permission",array("editevents")); return; }
+        if (!user_has_ability_in_page($USER->userid,"editevents",$pageid)) { echo get_page_error_message("no_permission",array("editevents")); return; }
 		$row = get_db_row("SELECT * FROM events WHERE eventid='".$MYVARS->GET["eventid"]."'");
 		$name = $row["name"]; $contact = $row['contact'];
 		$email = $row['email']; $fee_min = $row['fee_min'];
@@ -279,7 +279,7 @@ global $CFG,$MYVARS,$USER;
 		$times_display = $row['allday'] == "1" ? 'none' : 'inline';
 		$fee_display = $row['fee_full'] == "0" ? 'none' : 'inline';
 		$event_begin_time_form = isset($row['event_begin_time']) && $row['event_begin_time'] != "" ? get_possible_times('begin_time',$row['event_begin_time']) : get_possible_times('begin_time');
-		if(!empty($row['event_end_time'])){
+		if (!empty($row['event_end_time'])) {
 			$event_end_time_form = $row['event_begin_date'] != $row['event_end_date'] ? get_possible_times('end_time',$row['event_end_time']) : get_possible_times('end_time',$row['event_end_time'],$row['event_begin_time']);
 		}else{ $event_end_time_form = ""; }
 		$reg_display = $row['start_reg'] ? 'inline' : 'none';
@@ -308,7 +308,7 @@ global $CFG,$MYVARS,$USER;
 		$mylocations = get_my_locations($USER->userid, $row['location'],$MYVARS->GET["eventid"]);
 		$hidden_limits = get_my_hidden_limits($template, $row['hard_limits'],$row['soft_limits']);
 	}else{ //New event form
-        if(!user_has_ability_in_page($USER->userid,"addevents",$pageid)){ echo get_page_error_message("no_permission",array("addevents")); return; }
+        if (!user_has_ability_in_page($USER->userid,"addevents",$pageid)) { echo get_page_error_message("no_permission",array("addevents")); return; }
 		$eventid = $template = false;
 		$global_display = $pageid == $CFG->SITEID ? 'none' : 'inline';
 		$hidden_limits = '<input type="hidden" id="hard_limits" value="" /><input type="hidden" id="soft_limits" value="" />';
@@ -411,7 +411,7 @@ global $CFG,$MYVARS,$USER;
             			Request Site Event:
             		</td>
             		<td class="field_input">
-            			<select id="siteviewable" onchange="if(this.value==0){ hide_section(\'auto_allowinpage\'); document.getElementById(\'allowinpage\').value=0; }else{ show_section(\'auto_allowinpage\'); }" ><option value="0" '.$siteviewable_no.'>No</option><option value="1" '.$siteviewable_yes.'>Yes</option></select>
+            			<select id="siteviewable" onchange="if (this.value==0) { hide_section(\'auto_allowinpage\'); document.getElementById(\'allowinpage\').value=0; }else{ show_section(\'auto_allowinpage\'); }" ><option value="0" '.$siteviewable_no.'>No</option><option value="1" '.$siteviewable_yes.'>Yes</option></select>
             			<span class="hint">'.get_help("input_event_siteviewable:events").'<span class="hint-pointer">&nbsp;</span></span>
             		</td>
             	</tr><tr><td></td><td class="field_input"><span id="event_name_error" class="error_text"></span></td></tr>
@@ -492,7 +492,7 @@ global $CFG,$MYVARS,$USER;
                         				Multi-day Event:
                         			</td>
                         			<td class="field_input">
-                        				<select id="multiday" onchange="hide_show_buttons(\'event_end_date_div\'); if(document.getElementById(\'begin_time\').value != \'\'){ get_end_time(document.getElementById(\'begin_time\').value) }" ><option value="0" '.$multiday_no.'>No</option><option value="1" '.$multiday_yes.'>Yes</option></select>
+                        				<select id="multiday" onchange="hide_show_buttons(\'event_end_date_div\'); if (document.getElementById(\'begin_time\').value != \'\') { get_end_time(document.getElementById(\'begin_time\').value) }" ><option value="0" '.$multiday_no.'>No</option><option value="1" '.$multiday_yes.'>Yes</option></select>
                         				<span class="hint">'.get_help("input_event_multiday:events").'<span class="hint-pointer">&nbsp;</span></span>
                         			</td>
                         		</tr><tr><td></td><td class="field_input"><span id="allowinpage_error" class="error_text"></span></td></tr>
@@ -820,11 +820,11 @@ global $CFG,$MYVARS,$USER;
 }
 
 //Show registration form
-function show_registration(){
+function show_registration() {
 global $CFG,$MYVARS,$USER;
 	$eventid = $MYVARS->GET['eventid'];
 	$pageid = empty($MYVARS->GET['pageid']) ? $CFG->SITEID : $MYVARS->GET['pageid'];
-	if(!user_has_ability_in_page($USER->userid,"signupforevents",$pageid)){ echo get_page_error_message("no_permission",array("signupforevents")); return; }
+	if (!user_has_ability_in_page($USER->userid,"signupforevents",$pageid)) { echo get_page_error_message("no_permission",array("signupforevents")); return; }
 
     $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
 	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='".$event['template_id']."'");
@@ -833,22 +833,22 @@ global $CFG,$MYVARS,$USER;
     $returnme = '<div id="registration_div">
                     <table class="registration"><tr><td>'.$template['intro'].' </td></tr></table>';
 
-	if($template['folder'] != "none"){ //registration template refers to a file
+	if ($template['folder'] != "none") { //registration template refers to a file
         ob_start();
         include($CFG->dirroot . '/features/events/templates/' . $template['folder'] . '/template.php');
         $returnme .= ob_get_clean();
 	}else{ //registration template refers to a database style template
 		$form = '<table style="width:100%">';
 		$templateform = get_db_result("SELECT * FROM events_templates_forms WHERE template_id='".$template['template_id']."' ORDER BY sort");
-		while($element = fetch_row($templateform)){
+		while ($element = fetch_row($templateform)) {
 			$opt = $element['optional'] ? '<font size="1.2em" color="blue">(optional)</font> ' : '';
 			$formlist .= $formlist == "" ? $element['type'] . ":" . $element['elementid'] . ":" . $element['optional'] . ":" . $element['allowduplicates'] . ":" . $element['list'] : "*" . $element['type'] . ":" . $element['elementid'] . ":" . $element['optional'] . ":" . $element['allowduplicates'] . ":" . $element['list'];
-			if($element['type'] == 'select'){
-			}elseif($element['type'] == 'phone'){
+			if ($element['type'] == 'select') {
+			}elseif ($element['type'] == 'phone') {
 				$form .= '<tr><td class="field_title">' . $opt . $element['display'] . ': </td><td class="field_input" style="width:70%">' . create_form_element($element['type'],$element['elementid'],$element['optional'],$element['length'],false) . '</td></tr>';
 				$form .= '<tr><td></td><td class="field_input"><span id="'.$element['elementid'].'_error" class="error_text"></span></td></tr>';
-			}elseif($element['type'] == 'payment'){
-				if($event["fee_full"] != "0"){
+			}elseif ($element['type'] == 'payment') {
+				if ($event["fee_full"] != "0") {
 				$form .= '
     				<tr>
     					<td class="field_title">Payment Amount:</td>
@@ -866,7 +866,7 @@ global $CFG,$MYVARS,$USER;
     				</tr>
     				<tr><td></td><td class="field_input"><span id="payment_method_error" class="error_text"></span></td></tr>';
 				}
-			}elseif($element['type'] == 'contact'){
+			}elseif ($element['type'] == 'contact') {
 				$form .= '<tr><td class="field_title">' . $opt . $element['display'] . ': </td><td class="field_input" style="width:70%">' . create_form_element($element['type'],$element['elementid'],$element['optional'],$element['length'],false) . '<span class="hint">'.get_help("input_event_email:events").'<span class="hint-pointer">&nbsp;</span></span></td></tr>';
 				$form .= '<tr><td></td><td class="field_input"><span id="'.$element['elementid'].'_error" class="error_text"></span></td></tr>';
 			}else{
@@ -896,23 +896,23 @@ global $CFG,$MYVARS,$USER;
 echo $returnme;
 }
 
-function create_validation_javascript($formlist,$eventid){
+function create_validation_javascript($formlist,$eventid) {
 global $CFG;
-    $validation_script = '<script> function validate_fields(){	var valid = true;';
+    $validation_script = '<script> function validate_fields() {	var valid = true;';
     date_default_timezone_set(date_default_timezone_get());
     $element = explode("*",$formlist);
     $i = 0;
-    while(isset($element[$i])){
+    while (isset($element[$i])) {
     	$attribute = explode(":",$element[$i]);
-    	switch ($attribute[0]){
+    	switch ($attribute[0]) {
     	case "text":
     		$validation_script .= '
-    		if(document.getElementById(\'opt_'.$attribute[1].'\').value == 0 || (document.getElementById("opt_'.$attribute[1].'").value != 0 && document.getElementById("'.$attribute[1].'").value.length > 0)){
-    			if(!document.getElementById("'.$attribute[1].'").value.length > 0){
+    		if (document.getElementById(\'opt_'.$attribute[1].'\').value == 0 || (document.getElementById("opt_'.$attribute[1].'").value != 0 && document.getElementById("'.$attribute[1].'").value.length > 0)) {
+    			if (!document.getElementById("'.$attribute[1].'").value.length > 0) {
     		  		document.getElementById("'.$attribute[1].'_error").innerHTML = "This is a required field.";
     		  		valid = false;
     		  	}else{ document.getElementById("'.$attribute[1].'_error").innerHTML = ""; }
-      			if('.$attribute[3].' == 0){
+      			if ('.$attribute[3].' == 0) {
         			// Build the URL to connect to
         		  	var url = "'.$CFG->wwwroot.'/features/events/events_ajax.php?action=unique&elementid='.$attribute[1].'&value="+document.getElementById("'.$attribute[1].'").value + "&eventid=" + '.$eventid.';
         			// Open a connection to the server\
@@ -920,7 +920,7 @@ global $CFG;
         		  	xmlHttp.open("GET", url + "&currTime=" + d.toUTCString(), false);
         		  	// Send the request
         			xmlHttp.send(null);
-    				if(!istrue()){
+    				if (!istrue()) {
     					document.getElementById("'.$attribute[1].'_error").innerHTML = "This value already exists in our database.";
     					valid = false;
     				}else{ document.getElementById("'.$attribute[1].'_error").innerHTML = ""; }
@@ -929,11 +929,11 @@ global $CFG;
     	    break;
     	case "email":
     		$validation_script .= '
-    		if(document.getElementById("opt_'.$attribute[1].'").value == 0 || (document.getElementById("opt_'.$attribute[1].'").value != 0 && document.getElementById("'.$attribute[1].'").value.length > 0)){
+    		if (document.getElementById("opt_'.$attribute[1].'").value == 0 || (document.getElementById("opt_'.$attribute[1].'").value != 0 && document.getElementById("'.$attribute[1].'").value.length > 0)) {
     			//Email address validity test
-    			if(document.getElementById("'.$attribute[1].'").value.length > 0){
-    				if(echeck(document.getElementById("'.$attribute[1].'").value)){
-    					if('.$attribute[3].' == 0){
+    			if (document.getElementById("'.$attribute[1].'").value.length > 0) {
+    				if (echeck(document.getElementById("'.$attribute[1].'").value)) {
+    					if ('.$attribute[3].' == 0) {
         					// Build the URL to connect to
         				  	var url = "'.$CFG->wwwroot.'/features/events/events_ajax.php?action=unique&elementid='.$attribute[1].'&value="+document.getElementById("'.$attribute[1].'").value + "&eventid=" + '.$eventid.';
         					// Open a connection to the server\
@@ -941,7 +941,7 @@ global $CFG;
         				  	xmlHttp.open("GET", url + "&currTime=" + d.toUTCString(), false);
         				  	// Send the request
         					xmlHttp.send(null);
-    						if(!istrue()){
+    						if (!istrue()) {
     							document.getElementById("'.$attribute[1].'_error").innerHTML = "This email address has already been registered with.";
     							valid = false;
     						}else{	document.getElementById("'.$attribute[1].'_error").innerHTML = ""; }
@@ -958,8 +958,8 @@ global $CFG;
     		break;
     	case "contact":
     		$validation_script .= '
-    			if(document.getElementById("'.$attribute[1].'").value.length > 0){
-    				if(echeck(document.getElementById("'.$attribute[1].'").value)){
+    			if (document.getElementById("'.$attribute[1].'").value.length > 0) {
+    				if (echeck(document.getElementById("'.$attribute[1].'").value)) {
     					document.getElementById("'.$attribute[1].'_error").innerHTML = "";
     			  	}else{
     					document.getElementById("'.$attribute[1].'_error").innerHTML = "Email address is not valid.";
@@ -973,10 +973,10 @@ global $CFG;
     		break;
     	case "phone":
     		$validation_script .= '
-    		if(document.getElementById("opt_'.$attribute[1].'").value == 0 || (document.getElementById("opt_'.$attribute[1].'").value != 0 && (document.getElementById("'.$attribute[1].'_1").value.length > 0 || document.getElementById("'.$attribute[1].'_2").value.length > 0 || document.getElementById("'.$attribute[1].'_3").value.length > 0))){
+    		if (document.getElementById("opt_'.$attribute[1].'").value == 0 || (document.getElementById("opt_'.$attribute[1].'").value != 0 && (document.getElementById("'.$attribute[1].'_1").value.length > 0 || document.getElementById("'.$attribute[1].'_2").value.length > 0 || document.getElementById("'.$attribute[1].'_3").value.length > 0))) {
     			//Phone # validity test
-    			if(document.getElementById("'.$attribute[1].'_1").value.length == 3 && document.getElementById("'.$attribute[1].'_2").value.length == 3 && document.getElementById("'.$attribute[1].'_3").value.length == 4){
-    				if(!(IsNumeric(document.getElementById("'.$attribute[1].'_1").value) && IsNumeric(document.getElementById("'.$attribute[1].'_2").value) && IsNumeric(document.getElementById("'.$attribute[1].'_3").value))){
+    			if (document.getElementById("'.$attribute[1].'_1").value.length == 3 && document.getElementById("'.$attribute[1].'_2").value.length == 3 && document.getElementById("'.$attribute[1].'_3").value.length == 4) {
+    				if (!(IsNumeric(document.getElementById("'.$attribute[1].'_1").value) && IsNumeric(document.getElementById("'.$attribute[1].'_2").value) && IsNumeric(document.getElementById("'.$attribute[1].'_3").value))) {
     					document.getElementById("'.$attribute[1].'_error").innerHTML = "Not a valid phone #";
     		  			valid = false;
     				}else{ document.getElementById("'.$attribute[1].'_error").innerHTML = ""; }
@@ -991,8 +991,8 @@ global $CFG;
     	    break;
     	case "payment":
     		$validation_script .= '
-    		if(document.getElementById(\'payment_method\')){
-    			if(document.getElementById(\'payment_method\').value == ""){
+    		if (document.getElementById(\'payment_method\')) {
+    			if (document.getElementById(\'payment_method\').value == "") {
     		  		document.getElementById("payment_method_error").innerHTML = "This is a required field.";
     			  	valid = false;
     			}else{ document.getElementById("payment_method_error").innerHTML = ""; }
@@ -1002,21 +1002,21 @@ global $CFG;
     	case "password":
     	//Password validity test
     	$validation_script .= '
-      	if(!document.getElementById("'.$attribute[1].'").value.length > 4){
-    	  	if(document.getElementById("'.$attribute[1].'").value.length > 0){
+      	if (!document.getElementById("'.$attribute[1].'").value.length > 4) {
+    	  	if (document.getElementById("'.$attribute[1].'").value.length > 0) {
     			document.getElementById("'.$attribute[1].'_error").innerHTML = "Password must be between 5-20 characters long.";
     	  		valid = false;
-    	  	}else if(!document.getElementById("'.$attribute[1].'").value.length > 0){
+    	  	}else if (!document.getElementById("'.$attribute[1].'").value.length > 0) {
     	  		document.getElementById("'.$attribute[1].'_error").innerHTML = "Password is required.";
     	  		valid = false;
     	  	}
     	}else{
-      		if(!checkPassword(document.getElementById("'.$attribute[1].'"),document.getElementById("verify_'.$attribute[1].'"),document.getElementById("'.$attribute[1].'"),true)){
+      		if (!checkPassword(document.getElementById("'.$attribute[1].'"),document.getElementById("verify_'.$attribute[1].'"),document.getElementById("'.$attribute[1].'"),true)) {
       			document.getElementById("'.$attribute[1].'_error").innerHTML = "Password and Verify fields must match."
       			valid = false;
       		}else{ document.getElementById("'.$attribute[1].'_error").innerHTML = ""; }
 
-            if('.$attribute[3].' == 0){
+            if ('.$attribute[3].' == 0) {
         		// Build the URL to connect to
         	  	var url = "'.$CFG->wwwroot.'/features/events/events_ajax.php?action=unique&elementid='.$attribute[1].'&value="+document.getElementById("'.$attribute[1].'").value + "&eventid=" + '.$eventid.';
         		// Open a connection to the server\
@@ -1024,7 +1024,7 @@ global $CFG;
         	  	xmlHttp.open("GET", url + "&currTime=" + d.toUTCString(), false);
         	  	// Send the request
         		xmlHttp.send(null);
-    			if(!istrue()){
+    			if (!istrue()) {
     				document.getElementById("'.$attribute[1].'_error").innerHTML = "This value already exists in our database.";
     				valid = false;
     			}else{ document.getElementById("'.$attribute[1].'_error").innerHTML = ""; }
@@ -1038,9 +1038,9 @@ global $CFG;
     return $validation_script;
 }
 
-function showcart(){
+function showcart() {
 global $CFG;
-    if(!isset($EVENTSLIB)){ include_once($CFG->dirroot . '/features/events/eventslib.php'); }
+    if (!isset($EVENTSLIB)) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 
     $redirect = '<script type="text/javascript">
                     window.location = "'.$CFG->wwwroot.'";
@@ -1072,7 +1072,7 @@ global $CFG;
     $res = curl_exec($ch);
     curl_close($ch);
 
-    if(!$res){
+    if (!$res) {
         //HTTP ERROR
         echo $redirect;
     }else{
@@ -1118,25 +1118,25 @@ global $CFG;
 //    $header = "POST /cgi-bin/webscr HTTP/1.0\r\n";
 //    $header .= "Content-Type: application/x-www-form-urlencoded\r\n";
 //    $header .= "Content-Length: " . strlen($req) . "\r\n\r\n";
-//    if($CFG->paypal){ $fp = fsockopen ('www.paypal.com', 80, $errno, $errstr, 30);
+//    if ($CFG->paypal) { $fp = fsockopen ('www.paypal.com', 80, $errno, $errstr, 30);
 //    }else{ $fp = fsockopen ('www.sandbox.paypal.com', 80, $errno, $errstr, 30);}
 //
 //    // If possible, securely post back to paypal using HTTPS
 //    // Your PHP server will need to be SSL enabled
 //    // $fp = fsockopen ('ssl://www.sandbox.paypal.com', 443, $errno, $errstr, 30);
-//    if(!$fp){
+//    if (!$fp) {
 //    // HTTP ERROR
 //    }else{
 //    	fputs ($fp, $header . $req);
 //    	// read the body data
 //    	$res = '';
 //    	$headerdone = false;
-//    	while(!feof($fp)) {
+//    	while (!feof($fp)) {
 //        	$line = fgets ($fp, 1024);
-//        	if(strcmp($line, "\r\n") == 0){
+//        	if (strcmp($line, "\r\n") == 0) {
 //            	// read the header
 //            	$headerdone = true;
-//        	}elseif($headerdone){
+//        	}elseif ($headerdone) {
 //            	// header has been read. now read the contents
 //            	$res .= $line;
 //        	}
@@ -1145,8 +1145,8 @@ global $CFG;
 //    	// parse the data
 //    	$lines = explode("\n", $res);
 //    	$keyarray = array();
-//    	if(strcmp ($lines[0], "SUCCESS") == 0) {
-//        	for ($i=1; $i<count($lines);$i++){
+//    	if (strcmp ($lines[0], "SUCCESS") == 0) {
+//        	for ($i=1; $i<count($lines);$i++) {
 //            	list($key,$val) = explode("=", $lines[$i]);
 //            	$keyarray[urldecode($key)] = urldecode($val);
 //        	}
@@ -1155,11 +1155,11 @@ global $CFG;
 //        	// check that receiver_email is your Primary PayPal email
 //        	// check that payment_amount/payment_currency are correct
 //        	// process payment
-////    		if(!get_db_row("SELECT * FROM logfile WHERE feature='events' AND description='Paypal' AND info='".$keyarray['txn_id']."'")){
+////    		if (!get_db_row("SELECT * FROM logfile WHERE feature='events' AND description='Paypal' AND info='".$keyarray['txn_id']."'")) {
 ////    			$regids = $keyarray['custom'];
 ////    			$regids = explode(":",$regids);
 ////    			$i=0;
-////    			while(isset($regids[$i])){
+////    			while (isset($regids[$i])) {
 ////    				$paid = get_db_field("value", "events_registrations_values", "elementname='paid' AND regid=".$regids[$i]);
 ////    				$SQL = "UPDATE events_registrations_values SET value=".($paid + $keyarray["mc_gross_".($i+1)])." WHERE elementname='paid' AND regid=".$regids[$i];
 ////    				execute_db_sql($SQL);
@@ -1170,7 +1170,7 @@ global $CFG;
 //			//log_entry('events', $keyarray['txn_id'], "Paypal");
 //    	   echo "Your transaction has been completed, and a receipt for your purchase has been emailed to you.<br>You may log into your account at <a href='https://www.paypal.com'>www.paypal.com</a> to view details of this transaction.<br>";
 //    	   echo print_cart($keyarray);
-//    	}elseif (strcmp ($lines[0], "FAIL") == 0){
+//    	}elseif (strcmp ($lines[0], "FAIL") == 0) {
 //        	//Log
 //        	log_entry('events', $lines[0], "Paypal (failed)");
 //    	}
@@ -1178,10 +1178,10 @@ global $CFG;
 //    fclose ($fp);
 }
 
-function print_cart($items){
+function print_cart($items) {
 global $MYVARS, $CFG;
 	$i=0; $returnme = '<a href="'.$CFG->wwwroot.'">Go back to '.$CFG->sitename.'</a><br /><br /><table style="border-collapse:collapse;width:60%; margin-right:auto; margin-left:auto;"><tr><td colspan=2><b>What you have paid for:</b></td></tr>';
-	while($i < $items["num_cart_items"]){
+	while ($i < $items["num_cart_items"]) {
 		$returnme .= '<tr style="background-color:#FFF1FF;"><td style="text-align:left; font-size:.8em;">'.$items["item_name".($i+1)] . '</td><td style="text-align:left; padding:10px; font-size:.8em;">' . '$' . $items["mc_gross_".($i+1)] . '</td></tr><td colspan="2"></td></tr>';
 		$i++;
 	}

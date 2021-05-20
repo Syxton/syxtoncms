@@ -249,7 +249,7 @@ global $CFG, $MYVARS, $ROLES, $USER;
                                   WHERE userid = '".$row['userid']."'
                                     AND pageid = '$pageid')";
       if ($groups = get_db_result($SQL)) {
-        while ($group_info = fetch_row($groups)){
+        while ($group_info = fetch_row($groups)) {
             $mygroups .= " " . $group_info["name"];
         }
       }
@@ -431,14 +431,14 @@ global $MYVARS;
   }
 }
 
-function refresh_group_abilities(){
+function refresh_group_abilities() {
 global $CFG,$MYVARS;
 	$pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
     $groupid = !empty($MYVARS->GET['groupid']) ? $MYVARS->GET['groupid'] : false; //Should always be passed
     $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
     $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
 
-    if($pageid && $groupid){
+    if ($pageid && $groupid) {
         echo '<form id="per_group_roles_form">';
         echo print_abilities($pageid,"per_group_",false,false,$feature,$featureid,$groupid);
         echo '</form>';
@@ -760,7 +760,7 @@ global $CFG, $USER, $MYVARS, $ROLES;
         ORDER BY roleid";
   $options = '';
 	if ($roles = get_db_result($SQL)) {
-		while($row = fetch_row($roles)){
+		while ($row = fetch_row($roles)) {
 			if ($row['roleid'] != $roleid && $row['roleid'] >= $myroleid) {
         $options .= template_use("templates/page.template", array("value" => $row['roleid'], "display" => stripslashes($row['display_name'])), "select_options_template");
       }

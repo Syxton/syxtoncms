@@ -7,37 +7,37 @@
 * Revision: 0.0.6
 ***************************************************************************/
 
-if(!isset($LIBHEADER)){ include('header.php'); }
+if (!isset($LIBHEADER)) { include('header.php'); }
 $FILELIB = true;
 
-function delete_old_files($path, $days = 1){
+function delete_old_files($path, $days = 1) {
 global $CFG;
 	$seconds = $days * (24*60*60);
 	$dir    = $CFG->dirroot . $path;
 	$files = scandir($dir);
-	foreach ($files as $num => $fname){
+	foreach ($files as $num => $fname) {
 		if (file_exists("{$dir}{$fname}") && ((time() - filemtime("{$dir}{$fname}")) > $seconds)) {
 			$mod_time = filemtime("{$dir}{$fname}");
-			if($fname != ".."){
-				if (unlink("{$dir}{$fname}")){$del = $del + 1;}
+			if ($fname != "..") {
+				if (unlink("{$dir}{$fname}")) {$del = $del + 1;}
 			}
 		}
 	}
 }
 
-function delete_file($filepath){
-    if (file_exists($filepath)){
+function delete_file($filepath) {
+    if (file_exists($filepath)) {
 		unlink($filepath);
 	}
 }
 
-function recursive_mkdir( $folder ){
+function recursive_mkdir( $folder ) {
     $folder = preg_split( "/[\\\\\/]/" , $folder );
     $mkfolder = '';
-    for(  $i=0 ; isset( $folder[$i] ) ; $i++ ){
-        if(!strlen(trim($folder[$i])))continue;
+    for (  $i=0 ; isset( $folder[$i] ) ; $i++ ) {
+        if (!strlen(trim($folder[$i])))continue;
         $mkfolder .= $folder[$i];
-        if( !is_dir( $mkfolder ) ){
+        if ( !is_dir( $mkfolder ) ) {
           mkdir( "$mkfolder" ,  0777);
           chmod("$mkfolder", 0777);
         }
@@ -45,14 +45,14 @@ function recursive_mkdir( $folder ){
     }
 }
 
-function recursive_delete ( $folderPath ){
-    if ( is_dir ( $folderPath ) ){
-        foreach ( scandir ( $folderPath )  as $value ){
-            if ( $value != "." && $value != ".." ){
+function recursive_delete ( $folderPath ) {
+    if ( is_dir ( $folderPath ) ) {
+        foreach ( scandir ( $folderPath )  as $value ) {
+            if ( $value != "." && $value != ".." ) {
                 $value = $folderPath . "/" . $value;
-                if ( is_dir ( $value ) ){
+                if ( is_dir ( $value ) ) {
                     FolderDelete ( $value );
-                }elseif ( is_file ( $value ) ){
+                }elseif ( is_file ( $value ) ) {
                     @unlink ( $value );
                 }
             }
@@ -63,18 +63,18 @@ function recursive_delete ( $folderPath ){
     }
 }
 
-function copy_file($old,$new){
-    if (file_exists($old)){
+function copy_file($old,$new) {
+    if (file_exists($old)) {
 		copy($old, $new) or die("Unable to copy $old to $new.");
 	}
 }
 
-function make_csv($filename,$contents){
+function make_csv($filename,$contents) {
     $tempdir = sys_get_temp_dir() == "" ? "/tmp/" : sys_get_temp_dir();
     $tmpfname = tempnam($tempdir, $filename);
-    if(file_exists($tmpfname)){	unlink($tmpfname); }
+    if (file_exists($tmpfname)) {	unlink($tmpfname); }
     $handle = fopen($tmpfname, "w");
-    foreach($contents as $fields){
+    foreach ($contents as $fields) {
         fputcsv($handle, $fields);
     }
     fclose($handle);
@@ -82,13 +82,13 @@ function make_csv($filename,$contents){
     return addslashes($tempdir."/".$filename);
 }
 
-function create_file($filename,$contents,$makecsv=false){
-    if($makecsv){
+function create_file($filename,$contents,$makecsv=false) {
+    if ($makecsv) {
         return make_csv($filename,$contents);
     }else{
         $tempdir = sys_get_temp_dir() == "" ? "/tmp/" : sys_get_temp_dir();
         $tmpfname = tempnam($tempdir, $filename);
-        if(file_exists($tmpfname)){	unlink($tmpfname); }
+        if (file_exists($tmpfname)) {	unlink($tmpfname); }
         $handle = fopen($tmpfname, "w");
 
         fwrite($handle, stripslashes($contents));
@@ -98,13 +98,13 @@ function create_file($filename,$contents,$makecsv=false){
     }
 }
 
-function get_download_link($filename,$contents,$makecsv=false){
+function get_download_link($filename,$contents,$makecsv=false) {
     global $CFG;
     return 'window.open("'.$CFG->wwwroot . '/scripts/download.php?file='.create_file($filename,$contents,$makecsv).'", "download","menubar=yes,toolbar=yes,scrollbars=1,resizable=1,width=600,height=400");';
 }
 
-function return_bytes ($size_str){
-    switch (substr ($size_str, -1)){
+function return_bytes ($size_str) {
+    switch (substr ($size_str, -1)) {
         case 'M': case 'm': case 'mb': return (int)$size_str * 1048576;
         case 'K': case 'k': case 'kb': return (int)$size_str * 1024;
         case 'G': case 'g': case 'gb': return (int)$size_str * 1073741824;
@@ -122,7 +122,7 @@ function template_use($file, $params = array(), $subsection = "") {
     $contents = file_get_contents($CFG->dirroot . '/' . $file);
 
     if (!empty($subsection)) { // Templates with multiple sections.
-      if(!$contents = template_subsection($contents, $subsection)) {
+      if (!$contents = template_subsection($contents, $subsection)) {
 				echo "Subsection $subsection not found.";
         return;
       }
@@ -136,7 +136,7 @@ function template_use($file, $params = array(), $subsection = "") {
     foreach ($matches[1] as $match) { // Loop through each instance where the template variable bars are found. ie || xxx ||
         $replacement = template_get_functionality($match);
         // send paramaters into a smaller scope so that they don't conflict with other template variables of the same name. Commented out because complex HTML can break it.
-        //$replacement = '$func = function(){ $v = unserialize(\''.htmlentities(serialize($params)).'\'); ' . $replacement .' }; $func(); unset($func);';
+        //$replacement = '$func = function() { $v = unserialize(\''.htmlentities(serialize($params)).'\'); ' . $replacement .' }; $func(); unset($func);';
 
         // Check to make sure that a matched variable exists.
 				if (template_variable_exists($match, $params)) {

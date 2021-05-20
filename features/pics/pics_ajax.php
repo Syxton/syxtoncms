@@ -6,14 +6,14 @@
 * Date: 8/16/2011
 * Revision: 1.7.4
 ***************************************************************************/
-if(!isset($CFG)){ include('../header.php'); } 
+if (!isset($CFG)) { include('../header.php'); } 
 if (!isset($PICSLIB)) include_once ($CFG->dirroot . '/features/pics/picslib.php');
 
 update_user_cookie();
 
 callfunction();
 
-function pics_pageturn(){
+function pics_pageturn() {
 global $CFG,$MYVARS;
 	$galleryid = !isset($MYVARS->GET["galleryid"]) ? NULL : $MYVARS->GET["galleryid"];
 	$pagenum = !isset($MYVARS->GET["pagenum"]) ? NULL : $MYVARS->GET["pagenum"];
@@ -24,11 +24,11 @@ global $CFG,$MYVARS;
 	echo get_pics($MYVARS->GET["pageid"],$MYVARS->GET["featureid"],$galleryid,$pagenum,$editable,$perpage,$order);
 }
 
-function new_gallery(){
+function new_gallery() {
 global $CFG, $MYVARS;
 	$param = $MYVARS->GET['param'];
 	$pageid = $MYVARS->GET['pageid'];
-	if($param == "1"){
+	if ($param == "1") {
 		echo '<input name="gallery_name" id="gallery_name" type="text" size="32" onkeypress="return handleEnter(this, event)" />';
 	}else{
 		$SQL = "SELECT * FROM pics_galleries WHERE galleryid IN (SELECT galleryid FROM pics WHERE pageid=$pageid)";
@@ -36,28 +36,28 @@ global $CFG, $MYVARS;
 	}
 }
 
-function move_pic(){
+function move_pic() {
 global $CFG,$MYVARS;
 	$picsid = $MYVARS->GET['picsid']; $galleryid = $MYVARS->GET['galleryid'];
 	execute_db_sql("UPDATE pics SET galleryid='$galleryid' WHERE picsid='$picsid'");
 	echo 'Done';
 }
 
-function save_caption(){
+function save_caption() {
 global $CFG,$MYVARS;
 	$picsid = $MYVARS->GET['picsid']; $caption = addslashes(urldecode($MYVARS->GET['caption']));
 	execute_db_sql("UPDATE pics SET caption='$caption' WHERE picsid='$picsid'");
 	echo 'Saved';
 }
 
-function save_viewability(){
+function save_viewability() {
 global $CFG,$MYVARS;
 	$picsid = $MYVARS->GET['picsid']; $siteviewable = $MYVARS->GET['siteviewable'] == "true" ? 1 : 0;
 	execute_db_sql("UPDATE pics SET siteviewable='$siteviewable' WHERE picsid='$picsid'");
 	echo 'Saved';
 }
 
-function delete_pic(){
+function delete_pic() {
 global $CFG,$MYVARS;
     $picsid = $MYVARS->GET['picsid'];
     $row = get_db_row("SELECT * FROM pics WHERE picsid='$picsid'");
@@ -66,23 +66,23 @@ global $CFG,$MYVARS;
     echo '<font style="font-color:gray">Picture Deleted</font>';
 }
 
-function delete_gallery(){
+function delete_gallery() {
 global $CFG,$MYVARS;
     $galleryid = $MYVARS->GET['galleryid'];
     $pageid = $MYVARS->GET['pageid'];
     $featureid = $MYVARS->GET['featureid'];
     $delete = $copy = false;
-    if(!empty($galleryid) && !empty($pageid) && !empty($featureid)){
-        if($result = get_db_result("SELECT * FROM pics WHERE galleryid='$galleryid'")){
-            while($row = fetch_row($result)){
-                if($pageid != $CFG->SITEID && !empty($row["siteviewable"])){ //siteviewable images from a page other than SITE.  Move them to site
+    if (!empty($galleryid) && !empty($pageid) && !empty($featureid)) {
+        if ($result = get_db_result("SELECT * FROM pics WHERE galleryid='$galleryid'")) {
+            while ($row = fetch_row($result)) {
+                if ($pageid != $CFG->SITEID && !empty($row["siteviewable"])) { //siteviewable images from a page other than SITE.  Move them to site
                     $copy = true;
                     $site_featureid = get_db_field("featureid","pages_features","feature='pics' AND pageid='".$CFG->SITEID."'");
                     $old = $CFG->dirroot.'/features/pics/files/'.$row["pageid"]."/".$row["featureid"]."/".$row["imagename"];
                     $new = $CFG->dirroot.'/features/pics/files/'.$CFG->SITEID."/".$site_featureid."/".$row["imagename"];
                     copy_file($old,$new);
                     delete_file($old);
-                }elseif($pageid == $CFG->SITEID && $pageid != $row["pageid"]){  //SITE is dealing with images from another page
+                }elseif ($pageid == $CFG->SITEID && $pageid != $row["pageid"]) {  //SITE is dealing with images from another page
                     execute_db_sql("UPDATE pics SET siteviewable=0 WHERE galleryid='$galleryid'");
                 }else{ //nobody is using it, so delete it
                     $delete = true;
@@ -92,14 +92,14 @@ global $CFG,$MYVARS;
             }
         }
         
-        if($copy){
+        if ($copy) {
             $SQL = "UPDATE pics SET pageid='$CFG->SITEID',featureid='$site_featureid' WHERE galleryid='$galleryid'";
             execute_db_sql($SQL);
             $SQL = "UPDATE pics_galleries SET pageid='$CFG->SITEID',featureid='$site_featureid' WHERE galleryid='$galleryid'";
             execute_db_sql($SQL);
         }
         
-        if($delete){
+        if ($delete) {
             execute_db_sql("DELETE FROM pics_galleries WHERE galleryid='$galleryid'");
         }         
     }
@@ -107,13 +107,13 @@ global $CFG,$MYVARS;
     echo get_pics_manager($pageid,$featureid);
 }
 
-function pics_upload(){
+function pics_upload() {
 global $CFG,$MYVARS;
     $newgallery = empty($MYVARS->GET['new_gallery']) ? false : $MYVARS->GET['new_gallery'];
     $pageid = $MYVARS->GET['pageid']; $featureid = $MYVARS->GET['featureid'];
     
     //must have a featureid and pageid
-    if(!empty($featureid) && !empty($pageid)){
+    if (!empty($featureid) && !empty($pageid)) {
         //upload directory.
         $upload_dir = 'files/' . "$pageid/$featureid/";
         
@@ -129,11 +129,11 @@ global $CFG,$MYVARS;
         $limitedext = array(".gif",".jpg",".jpeg",".png",".bmp");
         
         //check if the directory exists or not.
-        if(!is_dir("$upload_dir")){
+        if (!is_dir("$upload_dir")) {
             die ("Error: The directory <strong>($upload_dir)</strong> doesn't exist");
         }
         //check if the directory is writable.
-        if(!is_writeable("$upload_dir")){
+        if (!is_writeable("$upload_dir")) {
             die("Error: The directory <strong>($upload_dir)</strong> is NOT writable, Please CHMOD (777)");
         }
         
@@ -145,7 +145,7 @@ global $CFG,$MYVARS;
         $i=$success=0; $galleryid=false;
         $files = $_FILES["files"];
         
-        while(isset($filenames[$i]) && isset($files["name"][$i])){
+        while (isset($filenames[$i]) && isset($files["name"][$i])) {
            $file_name = $files["name"][$i];
            //to remove spaces from file name we have to replace it with "_".
            $file_name = str_replace(' ', '_', $file_name);
@@ -154,7 +154,7 @@ global $CFG,$MYVARS;
            #-----------------------------------------------------------#
            # this code will check if the files were selected or not.    #
            #-----------------------------------------------------------#
-           if(!is_uploaded_file($file_tmp)){
+           if (!is_uploaded_file($file_tmp)) {
               //print error message and file number.
               echo "Skipping file ($file_name) Not selected. <br />";
            }else{
@@ -162,30 +162,30 @@ global $CFG,$MYVARS;
                  # this code will check file extension                       #
                  #-----------------------------------------------------------#
                  $ext = strrchr($file_name,'.');
-                 if(!in_array(strtolower($ext),$limitedext)){
+                 if (!in_array(strtolower($ext),$limitedext)) {
                     echo "Skipping file ($file_name) Incompatible file extension. <br />";
                  }else{
                        #-----------------------------------------------------------#
                        # this code will check file size is correct                 #
                        #-----------------------------------------------------------#
-                       if($file_size > $size_bytes){
+                       if ($file_size > $size_bytes) {
                            echo "Skipping file ($file_name) File must be less than <strong>". $size_bytes / 1024 ."</strong> KB. <br />";
                        }else{
                              #-----------------------------------------------------------#
                              # this code check if file is Already EXISTS.                #
                              #-----------------------------------------------------------#
-                             if(file_exists($upload_dir.$file_name)){
+                             if (file_exists($upload_dir.$file_name)) {
                                  echo "Skipping file ($file_name) File already exists. <br />";
                              }else{
                                    #-----------------------------------------------------------#
                                    # this function will upload the files.  :) ;) cool          #
                                    #-----------------------------------------------------------#
-                                   if (move_uploaded_file($file_tmp,$upload_dir.$file_name)){
+                                   if (move_uploaded_file($file_tmp,$upload_dir.$file_name)) {
                                         $dateadded = get_timestamp();
-        								if($newgallery == 1 && !$galleryid){
+        								if ($newgallery == 1 && !$galleryid) {
         							    	$gallery_name = addslashes($MYVARS->GET['gallery_name']);
         							    	$galleryid = execute_db_sql("INSERT INTO pics_galleries (pageid,featureid,name) VALUES('$pageid','$featureid','$gallery_name')");
-        								}elseif($newgallery != 1){
+        								}elseif ($newgallery != 1) {
         							    	$galleryid = $MYVARS->GET['gallery_name'];
         							    	$gallery_name = get_db_field("name", "pics_galleries", "galleryid='$galleryid'");
         							    }
@@ -200,7 +200,7 @@ global $CFG,$MYVARS;
            }#end of (!is_uploaded_file).
            $i++;
         }#end of (while loop).
-        if(empty($success)){
+        if (empty($success)) {
             die("Failed to upload files");
         }else{
             die("<strong>$success file[s] uploaded.</strong>");
@@ -211,7 +211,7 @@ global $CFG,$MYVARS;
     
 }
 
-function toggle_activate(){
+function toggle_activate() {
 global $CFG,$MYVARS;
 	$pageid = $MYVARS->GET["pageid"];
 	$picsid = $MYVARS->GET["picsid"];
@@ -224,7 +224,7 @@ global $CFG,$MYVARS;
 	$pagehidden = $pagehidden == 0 ? 1 : 0;
 	
 	
-	if($pageid==$CFG->SITEID){ //SITE IMAGE
+	if ($pageid==$CFG->SITEID) { //SITE IMAGE
 		$activated = $sitehidden == 0 ? 'background-color:#FFFF66;' : '';
 		execute_db_sql("UPDATE pics SET sitehidden=$sitehidden WHERE picsid=$picsid");
 	}else{

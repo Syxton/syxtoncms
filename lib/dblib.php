@@ -7,11 +7,11 @@
 * Revision: 1.7.6
 ***************************************************************************/
 
-if(!isset($LIBHEADER)){ include ('header.php'); }
+if (!isset($LIBHEADER)) { include ('header.php'); }
 $DBLIB = true;
 
 
-function reconnect(){
+function reconnect() {
 global $CFG;
     if ($CFG->dbtype == "mysqli" && function_exists('mysqli_connect')) {
         //mysqli is installed
@@ -28,42 +28,42 @@ return $conn;
 
 $conn = reconnect();
 
-if($CFG->dbtype == "mysqli"){
+if ($CFG->dbtype == "mysqli") {
     require('dblib_mysqli.php');
 }else{
     require('dblib_mysql.php');
 }
 
-function get_db_row($SQL, $type = false){
+function get_db_row($SQL, $type = false) {
 global $CFG;
     $type = get_mysql_array_type($type);
-	if($result = get_db_result($SQL)){
+	if ($result = get_db_result($SQL)) {
 		return fetch_row($result, $type);
 	}
     return false;
 }
 
-function get_db_field($field, $from, $where){
+function get_db_field($field, $from, $where) {
 global $CFG;
 	$SQL = "SELECT $field FROM $from WHERE $where LIMIT 1";
     
-	if($result = get_db_result($SQL)){
+	if ($result = get_db_result($SQL)) {
 		$row = fetch_row($result);
 		return $row[$field];
 	}
 	return false;
 }
 
-function authenticate($username, $password){
+function authenticate($username, $password) {
 global $CFG, $USER;
 	$time = get_timestamp();
 	
 	//SQL Creation
 	$SQL = "SELECT * FROM users WHERE email='$username' AND password='$password'";
 
-	if(!$user = get_db_row($SQL)){
+	if (!$user = get_db_row($SQL)) {
 		//Password recovery
-		if($user = get_db_row("SELECT * FROM users WHERE email='$username' AND alternate='$password'")){
+		if ($user = get_db_row("SELECT * FROM users WHERE email='$username' AND alternate='$password'")) {
 			$ip = $_SERVER['REMOTE_ADDR'];
             $_SESSION['userid'] = $user['userid'];
 			execute_db_sql("UPDATE users SET ip='$ip', last_activity='$time' WHERE userid='" . $user['userid'] . "'");
@@ -75,7 +75,7 @@ global $CFG, $USER;
 		}
 	}else{
 		//First login switch temp password for actual password
-		if(strlen($user['temp']) > 0){
+		if (strlen($user['temp']) > 0) {
 			execute_db_sql("UPDATE users SET password='" . $user['temp'] . "', temp='' WHERE userid='" . $user['userid'] . "'");
             //Email new password to the email address.
             $USER = new \stdClass;
@@ -103,7 +103,7 @@ global $CFG, $USER;
 		}
         
         //Set first activity time
-        if(!$user["first_activity"]){
+        if (!$user["first_activity"]) {
             execute_db_sql("UPDATE users SET first_activity=".$time." WHERE userid='" . $user['userid'] . "'");
         }
         
@@ -117,9 +117,9 @@ global $CFG, $USER;
 	}
 }
 
-function key_login($key){
+function key_login($key) {
 global $CFG, $USER;
-	if($userfound = get_db_row("SELECT * FROM users WHERE userkey='$key'")){
+	if ($userfound = get_db_row("SELECT * FROM users WHERE userkey='$key'")) {
 		$time = get_timestamp();
 		$USER->userid = $userfound['userid'];
         $_SESSION['userid'] = $userfound['userid'];
@@ -127,13 +127,13 @@ global $CFG, $USER;
 	}	
 }
 
-function copy_db_row($row, $table, $variablechanges){
+function copy_db_row($row, $table, $variablechanges) {
 global $USER, $CFG, $MYVARS;
 	$paired = explode(",", $variablechanges);
 	$newkey = $newvalue = array();
 	$keylist = $valuelist = "";
     $i=0;
-	while(isset($paired[$i])){
+	while (isset($paired[$i])) {
 		$split = explode("=", $paired[$i]);
 		$newkey[$i] = $split[0];
 		$newvalue[$i] = $split[1];
@@ -141,10 +141,10 @@ global $USER, $CFG, $MYVARS;
 	}
 
 	$keys = array_keys($row);
-    foreach($keys as $key){
+    foreach ($keys as $key) {
 		$found = array_search($key, $newkey);
 		$keylist .= $keylist == "" ? $key : "," . $key;
-		if($found === false){
+		if ($found === false) {
 			$valuelist .= $valuelist == "" ? "'" . $row[$key] . "'" : ",'" . $row[$key] . "'";
 		}else{
 			$valuelist .= $valuelist == "" ? "'" . $newvalue[$found] . "'" : ",'" . $newvalue[$found] . "'";
@@ -154,32 +154,32 @@ global $USER, $CFG, $MYVARS;
 	return execute_db_sql($SQL);
 }
 
-function is_unique($table, $where){
-	if(get_db_count("SELECT * FROM $table WHERE $where")){ return true; }
+function is_unique($table, $where) {
+	if (get_db_count("SELECT * FROM $table WHERE $where")) { return true; }
 	return false;
 }
 
-function even($var){
+function even($var) {
 	return (!($var & 1));
 }
 
-function senderror($message){
+function senderror($message) {
     $message=preg_replace(array("\r,\t,\n"),"",$message);
     error_log($message);
     die($message);    
 }
 
-function log_entry($feature = null, $info = null, $description = null, $debug = null){
+function log_entry($feature = null, $info = null, $description = null, $debug = null) {
 global $CFG, $USER, $PAGE;
 	$timeline = get_timestamp();
 	$ip = $_SERVER['REMOTE_ADDR'];
 	$userid = is_logged_in() ? $USER->userid : 0;
 	$pageid = isset($PAGE->id) ? $PAGE->id : $CFG->SITEID;
 	$pageid = $pageid == $CFG->SITEID && isset($_GET['pageid']) ? $_GET['pageid'] : $pageid;
-    if(!is_numeric($pageid)) { // Somebody could be playing with this variable.
+    if (!is_numeric($pageid)) { // Somebody could be playing with this variable.
         return;
     }
-	if(!$userid && $description == "Login"){
+	if (!$userid && $description == "Login") {
 		$userid = $info;
 		$info = null;
 	}

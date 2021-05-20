@@ -377,7 +377,7 @@ class imageLib {
 		if ($autoRotate)
 		{
 
-			$exifData = $this->getExif(false);
+			$exifData = $this->getExif (false);
 			if (count($exifData) > 0)
 			{
 
@@ -1865,7 +1865,7 @@ class imageLib {
   Get EXIF Data
 *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**-*-*-*-*-*-*-*-*-*-*-*-*-*/
 
-	public function getExif($debug = false)
+	public function getExif ($debug = false)
 		# Author:     Jarrod Oberto
 		# Date:       07-05-2011
 		# Purpose:    Get image EXIF data
@@ -2730,7 +2730,7 @@ class imageLib {
 				$img = @imagecreatefromjpeg($file);
 				break;
 			case 'gif':
-				$img = @imagecreatefromgif($file);
+				$img = @imagecreatefromgif ($file);
 				break;
 			case 'png':
 				$img = @imagecreatefrompng($file);
@@ -2838,7 +2838,7 @@ class imageLib {
 				$this->checkInterlaceImage($this->isInterlace);
 				if (imagetypes() & IMG_GIF)
 				{
-					imagegif($this->imageResized, $savePath);
+					imagegif ($this->imageResized, $savePath);
 				}
 				else
 				{
@@ -2920,7 +2920,7 @@ class imageLib {
 				break;
 			case 'gif':
 				header('Content-type: image/gif');
-				imagegif($this->imageResized);
+				imagegif ($this->imageResized);
 				break;
 			case 'png':
 				header('Content-type: image/png');

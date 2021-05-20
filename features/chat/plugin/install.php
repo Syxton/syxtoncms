@@ -30,22 +30,22 @@ class CustomAJAXChatInstaller extends CustomAJAXChatInterface {
 		// Retrieve the queries from the SQL file:
 		$lines = file(AJAX_CHAT_PATH.'chat.sql');
 		// Stop if an error occurs:
-		if(!$lines) {
+		if (!$lines) {
 			echo 'Failed to load queries from file (chat.sql).';
 			die();
 		}
-		foreach($lines as $line) {
-			if(empty($line)) {
+		foreach ($lines as $line) {
+			if (empty($line)) {
 				continue;
 			}
 			$line = trim($line);
-			if(count($queries) <= $index) {
+			if (count($queries) <= $index) {
 				array_push($queries, $line."\n");
 			} else {
 				$queries[$index] .= $line."\n";	
 			}
 			// Create a new array item for each query:
-			if(substr($line, -1) == ';') {
+			if (substr($line, -1) == ';') {
 				$index++;
 			}
 		}
@@ -54,17 +54,17 @@ class CustomAJAXChatInstaller extends CustomAJAXChatInterface {
 
 	function createDataBaseTables($printSuccessConfirmation=true) {
 		$queries = $this->getDataBaseTableCreationQueries();
-		foreach($queries as $sql) {
+		foreach ($queries as $sql) {
 			// Create a new SQL query:
 			$result = $this->db->sqlQuery($sql);
 			
 			// Stop if an error occurs:
-			if($result->error()) {
+			if ($result->error()) {
 				echo $result->getError();
 				die();
 			}
 		}
-		if($printSuccessConfirmation) {
+		if ($printSuccessConfirmation) {
 			// Print a success confirmation:
 			echo 'Database tables created successfully - please delete this file (install.php).';
 		}

@@ -7,10 +7,10 @@
 * Revision: 0.0.8
 ***************************************************************************/
 
-if(!isset($LIBHEADER)) include('header.php');
+if (!isset($LIBHEADER)) include('header.php');
 $COMLIB = true;
 
-function send_email($touser,$fromuser,$cc = false,$subject, $message, $bcc = false){
+function send_email($touser,$fromuser,$cc = false,$subject, $message, $bcc = false) {
  global $MYVARS,$CFG;
     $success = false;
 	if (!$CFG->smtp) {
@@ -38,8 +38,8 @@ function send_email($touser,$fromuser,$cc = false,$subject, $message, $bcc = fal
 	return $success;
 }
 
-function send_multi_email($tolist,$fromuser,$cc = false,$subject, $message, $bcc = false){
-    foreach($tolist as $touser){
+function send_multi_email($tolist,$fromuser,$cc = false,$subject, $message, $bcc = false) {
+    foreach ($tolist as $touser) {
         send_email($touser, $fromuser, $cc, $subject, $message, $bcc);
     }
 }
