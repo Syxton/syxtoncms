@@ -24,7 +24,7 @@ global $CFG,$MYVARS;
 		// Hasn't saved custom colors yet return defaults;
 		if (!get_db_field("id", "styles", "pageid = '$revised_pageid'")) {
 			$feature = "page";
-			if ($default_list = get_feature_styles($revised_pageid, $feature, NULL, true)) {
+			if ($default_list = get_custom_styles($revised_pageid, $feature)) {
         foreach ($default_list as $style) {
   				$temparray[$style[1]] = isset($MYVARS->GET[$style[1]]) ? dbescape($MYVARS->GET[$style[1]]) : false;
   			}
@@ -130,7 +130,8 @@ global $CFG;
 }
 
 function get_page_themeid($pageid) {
-	$settings = fetch_settings("page", $featureid=false, $pageid);
+	$featureid = false;
+	$settings = fetch_settings("page", $featureid, $pageid);
 
 	if ($settings === false) {
 	   return "";

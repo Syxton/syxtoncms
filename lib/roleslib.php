@@ -7,13 +7,12 @@
 * Revision: 1.2.7
 ***************************************************************************/
 
-if (!isset($LIBHEADER)) include('header.php');
+if (!isset($LIBHEADER)) { include('header.php'); }
 $ROLESLIB = true;
-
 $ABILITIES = new \stdClass;
 
 function is_siteadmin($userid) {
-global $CFG,$ROLES;
+global $CFG, $ROLES;
 	if (!isset($userid)) { return false; }
 	if (!get_db_count("SELECT * FROM roles_assignment WHERE userid='$userid' AND pageid='$CFG->SITEID' AND confirm=0 AND roleid='$ROLES->admin'")) { return false; }
 	return true;
