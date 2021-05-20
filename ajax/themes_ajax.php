@@ -95,11 +95,9 @@ global $CFG, $MYVARS, $USER, $STYLES;
 
 		include_once($CFG->dirroot . '/features/'.$feature.'/'.$feature.'lib.php');
 		$function = "display_$feature";
-		$returnme = $function($pageid,"side",$featureid);
+		echo $function($pageid, "side", $featureid);
 		unset($STYLES->preview);
 	}
-
-	echo $returnme;
 }
 
 function show_styles() {

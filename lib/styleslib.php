@@ -83,6 +83,7 @@ function custom_styles_selector($pageid, $feature, $featureid=false) {
 			include_once($CFG->dirroot . '/features/'.$feature."/".$feature.'lib.php');
 		}
 
+		$style_inputs = "";
 		foreach ($styles as $style) { // go through each style type and see if there is a db setting that can replace it.
 			if ($feature == "page") {
 				$SQL = "themeid=0 AND attribute='".$style[1]."' AND pageid='$revised_pageid' AND feature <= '' AND featureid <= 0 ORDER BY pageid DESC";
