@@ -684,7 +684,7 @@ function get_css_box($title, $content, $buttons = '', $padding = null, $feature 
     }
 
     if ($themeid === false && !$preview) {
-      $themeid = getpagetheme($pageid);
+      $themeid = get_page_themeid($pageid);
     }
 
     if ($feature == 'pagename') {
@@ -1048,9 +1048,9 @@ function get_button_layout($featuretype, $featureid = "", $pageid) {
         $buttons         = $feature_buttons . get_edit_buttons($pageid, $featuretype, $featureid);
     }
 
-    $themeid = getpagetheme($PAGE->id);
+    $themeid = get_page_themeid($PAGE->id);
     if (!$themeid && $pageid) {
-        $themeid = getpagetheme($pageid);
+        $themeid = get_page_themeid($pageid);
     }
 
     $styles = get_styles($pageid, $themeid, $featuretype, $featureid);

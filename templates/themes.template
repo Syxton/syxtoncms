@@ -45,7 +45,7 @@ theme_selector_menu_action_template||
           });
 ||theme_selector_menu_action_template
 
-theme_selector_left_template||
+theme_selector_tabs_template||
   ||iscustom{{
       <input type="radio" name="group1" value="Theme Selector" onclick="ajaxapi('/ajax/themes_ajax.php',
                                                                                 'show_themes',
@@ -69,31 +69,82 @@ theme_selector_left_template||
   }}iscustom||
   <br />
   <br />
+||theme_selector_tabs_template
+
+theme_selector_left_template||
   <div id="left_pane">
-    Select Theme:
+    <center>
+      <strong>Select Theme</strong>
+    </center>
     <div id="theme_select">
-      ||menu||
-      &nbsp;
-      <input type="button" value="Save" onclick="ajaxapi('/ajax/themes_ajax.php',
-                                                         'change_theme_save',
-                                                         '&pageid=||pageid||' +
-                                                         '&themeid=' + escape($('#themes').val()),
-                                                         function() {
-                                                           simple_display('themes_page');
-                                                         });" />
+      <center>
+        ||menu||
+        <br />
+        <br />
+        <input type="button" value="Save" onclick="ajaxapi('/ajax/themes_ajax.php',
+                                                           'change_theme_save',
+                                                           '&pageid=||pageid||' +
+                                                           '&themeid=' + escape($('#themes').val()),
+                                                           function() {
+                                                             simple_display('themes_page');
+                                                           });" />
+      </center>
     </div>
   </div>
 ||theme_selector_left_template
 
 theme_selector_right_template||
   <div id="color_preview">
-    Preview:
+    <strong>
+      Preview:
+    </strong>
+    <br />
     <br />
     ||pagelist||
     <div style="padding:3px;"></div>
     ||block||
   </div>
 ||theme_selector_right_template
+
+custom_styles_selector_template||
+  <center>
+    <strong>
+      Custom Colors
+    </strong>
+  </center>
+  <br />
+  <form id="colors" name="colors">
+    ||style_inputs||
+    <br />
+    <input type="button" value="Save" onclick="ajaxapi('/ajax/themes_ajax.php',
+                                                       'save_custom_theme',
+                                                       create_request_string('colors') +
+                                                       '&pageid=||pageid||' +
+                                                       '&feature=||feature||' +
+                                                       '&featureid=||featureid||',
+                                                       function() {
+                                                         location.reload(true);
+                                                       });" />
+  </form>
+||custom_styles_selector_template
+
+style_inputs_template||
+  <div>
+    <table style="font-size:1em;">
+      <tr>
+        <td style="width:170px;vertical-align:middle;">
+          ||style[0]||
+        </td>
+        <td>
+          <input class="themeinput" type="text" name="||style[1]||" value="||value||" style="background-color:||value||;width:70px;" >
+          <a href="javascript: void(0);" onclick="TCP.popup(document.forms['colors'].elements['||style[1]||']); blur();">
+            <img alt="Click Here to Pick up the color" src="||wwwroot||/images/themes.gif" />
+          </a>
+        </td>
+      </tr>
+    </table>
+  </div>
+||style_inputs_template
 
 make_template_selector_panes_template||
   <div id="panes">

@@ -35,7 +35,7 @@ global $CFG,$MYVARS;
 	} elseif ($themeid > 0) { // PAGE THEME IS SET TO A SAVED THEME
 		$SQL = template_use("dbsql/styles.sql", $params, "set_theme_styles");
 	} else { // NO THEME...LOOK FOR PARENT THEMES
-		$params["themeid"] = getpagetheme($CFG->SITEID);
+		$params["themeid"] = get_page_themeid($CFG->SITEID);
 		$SQL = template_use("dbsql/styles.sql", $params, "parent_theme_styles");
 	}
 
@@ -56,7 +56,8 @@ global $CFG, $MYVARS, $USER;
 	$SQL = template_use("dbsql/styles.sql", array("notsite" => ($pageid != $CFG->SITEID)), "theme_selector_sql");
 	$params = array("pageid" => $pageid, "feature" => $feature, "checked1" => $checked1, "checked2" => $checked2, "iscustom" => ($themeid === '0' ));
 	$params["menu"] = make_select("themes", get_db_result($SQL), "themeid", "name", $selected, 'onchange="' . template_use("templates/themes.template", $params, "theme_selector_menu_action_template") . '"', false, null, "width:225px;");
-	$left = template_use("templates/themes.template", $params, "theme_selector_left_template");
+	$tabs = template_use("templates/themes.template", $params, "theme_selector_tabs_template");
+	$left = $tabs . template_use("templates/themes.template", $params, "theme_selector_left_template");
 
 	$pagename = get_db_field("name", "pages", "pageid = '$pageid'");
 	$rolename = get_db_field("display_name", "roles", "roleid = " . get_user_role($USER->userid, $pageid));
@@ -68,67 +69,81 @@ global $CFG, $MYVARS, $USER;
 	return template_use("templates/themes.template", array("left" => $left, "right" => $right), "make_template_selector_panes_template");
 }
 
-function get_feature_styles($pageid, $feature, $featureid=false, $getarray=false) {
-global $CFG;
-	$returnme = $feature == "page" ? '<input type="radio" name="group1" value="Theme Selector" onclick="ajaxapi(\'/ajax/themes_ajax.php\',\'show_themes\',\'&pageid='.$pageid.'&feature='.$feature.'\',function() { simple_display(\'themes_page\');}); blur();" />Theme Selector <input type="radio" name="group1" value="Page Styles" onclick="ajaxapi(\'/ajax/themes_ajax.php\',\'show_styles\',\'&pageid='.$pageid.'&feature='.$feature.'\',function() { simple_display(\'themes_page\');}); blur();" checked/>Page Styles ' : '<input type="radio" name="group1" value="Theme Selector" '.$checked1.' />Theme Selector';
-	$returnme .= '<br /><br /><form id="colors" name="colors">';
+function custom_styles_selector($pageid, $feature, $featureid=false) {
+	global $CFG;
+		$params = array("pageid" => $pageid, "feature" => $feature, "featureid" => $featureid, "checked1" => "", "checked2" => "checked", "iscustom" => ($feature == "page"));
+		$tabs = template_use("templates/themes.template", $params, "theme_selector_tabs_template");
 
-	//Styles function
-	$styles = $feature.'_default_styles';
-  $revised_pageid = $pageid == $CFG->SITEID ? 0 : $pageid;
-	if($feature == "page"){
-		$styles = $styles(); // hard coded default styles.
+		// Styles function
+		$styles = $feature.'_default_styles';
+		$styles = $styles();
+	  $revised_pageid = $pageid == $CFG->SITEID ? 0 : $pageid;
 
-		$i = 0;
+		if ($feature != "page") {
+			include_once($CFG->dirroot . '/features/'.$feature."/".$feature.'lib.php');
+		}
+
 		foreach ($styles as $style) { // go through each style type and see if there is a db setting that can replace it.
-			$value = get_db_field("value","styles","themeid=0 AND attribute='".$style[1]."' AND pageid='$revised_pageid' AND feature <= '' AND featureid <= 0 ORDER BY pageid DESC");
+			if ($feature == "page") {
+				$SQL = "themeid=0 AND attribute='".$style[1]."' AND pageid='$revised_pageid' AND feature <= '' AND featureid <= 0 ORDER BY pageid DESC";
+			} else {
+				$SQL = "themeid=0 AND attribute='".$style[1]."' AND pageid='$revised_pageid' AND feature='$feature' AND featureid='$featureid' ORDER BY pageid DESC";
+			}
+			$value = get_db_field("value","styles", $SQL);
 			if (!$value) { // No db value found, use the hard coded default value.
 				$value = $style[2];
-			} else { // db value found, replace it in the array so that the array return gets the correct value.
-				$styles[$i][2] = $value;
 			}
-			if (!$getarray) {
-				$returnme .= '<div><table style="font-size:1em;"><tr><td style="width:170px;vertical-align:middle;">' . $style[0] . '</td><td><input class="themeinput" type="text" name="'.$style[1].'" value="'.$value.'" style="background-color:'.$value.';width:70px;" ><a onclick="blur();" href="javascript:TCP.popup(document.forms[\'colors\'].elements[\''.$style[1].'\'])"><img alt="Click Here to Pick up the color" src="' . $CFG->wwwroot . '/images/themes.gif" /></a></td></tr></table></div>';
-			}
-			$i++;
+			$style_inputs .= template_use("templates/themes.template", array("style" => $style, "value" => $value, "wwwroot" => $CFG->wwwroot), "style_inputs_template");
 		}
 
-		if ($getarray) { return $styles; }
-	}else{
-		include_once($CFG->dirroot . '/features/'.$feature."/".$feature.'lib.php');
- 		$styles = $styles();
-
-		if($getarray){ return $styles; }
-
-		foreach($styles as $style){
-			if(!$value = get_db_field("value","styles","themeid=0 AND attribute='".$style[1]."' AND pageid='$revised_pageid' AND feature='$feature' AND featureid='$featureid' ORDER BY pageid DESC")){ $value = $style[2]; }
-			$returnme .= '<div><table style="font-size:1em;><tr><td style="width:170px;vertical-align:middle;">' . $style[0] . '</td><td><input class="themeinput" type="text" name="'.$style[1].'" value="'.$value.'" style="background-color:'.$value.';width:70px;"><a onclick="blur();" href="javascript:TCP.popup(document.forms[\'colors\'].elements[\''.$style[1].'\'])"><img alt="Click Here to Pick up the color" src="' . $CFG->wwwroot . '/images/themes.gif" /></a></td></tr></table></div>';
-		}
-	}
-
-	$returnme .= '	<br />
-									<input type="button" value="Save" onclick="ajaxapi(\'/ajax/themes_ajax.php\',\'save_custom_theme\',create_request_string(\'colors\')+\'&pageid='.$pageid.'&feature='.$feature.'&featureid='.$featureid.'\',function(){ location.reload(true);});" />
-								</form>';
-	return $returnme;
+		$params["style_inputs"] = $style_inputs;
+		return $tabs . template_use("templates/themes.template", $params, "custom_styles_selector_template");
 }
 
-function getpagetheme($pageid) {
-  $featureid = false;
+function get_custom_styles($pageid, $feature, $featureid=false) {
+global $CFG;
+	//Styles function
+	$styles = $feature.'_default_styles';
+	$styles = $styles();
 
-	$settings = fetch_settings("page", $featureid, $pageid);
+  $revised_pageid = $pageid == $CFG->SITEID ? 0 : $pageid;
+
+	if ($feature != "page") {
+		include_once($CFG->dirroot . '/features/'.$feature."/".$feature.'lib.php');
+	}
+
+	$i = 0;
+	foreach ($styles as $style) { // go through each style type and see if there is a db setting that can replace it.
+		if ($feature == "page") {
+			$SQL = "themeid=0 AND attribute='".$style[1]."' AND pageid='$revised_pageid' AND feature <= '' AND featureid <= 0 ORDER BY pageid DESC";
+		} else {
+			$SQL = "themeid=0 AND attribute='".$style[1]."' AND pageid='$revised_pageid' AND feature='$feature' AND featureid='$featureid' ORDER BY pageid DESC";
+		}
+		$value = get_db_field("value","styles", $SQL);
+		if ($value) { // No db value found, use the hard coded default value.
+			$styles[$i][2] = $value;
+		}
+		$i++;
+	}
+
+	return $styles;
+}
+
+function get_page_themeid($pageid) {
+	$settings = fetch_settings("page", false, $pageid);
 
 	if ($settings === false) {
 	   return "";
   } else {
-    if(isset($settings->page->themeid->setting)) {
-        return $settings->page->themeid->setting;
+    if (isset($settings->page->themeid->setting)) {
+      return $settings->page->themeid->setting;
     } else {
-        return "";
+      return "";
     }
   }
 }
 
-function make_or_update_styles($id=false,$feature=false,$pageid=false,$featureid=false,$attribute=false,$value=false,$themeid=false,$forced=false) {
+function make_or_update_styles($id=false, $feature=false, $pageid=false, $featureid=false, $attribute=false, $value=false, $themeid=false, $forced=false) {
 	//Make select to find out if setting exists
 	$SQL = "";
 	$SQL2 = $id !== false ? "id='$id'" : false;
@@ -140,61 +155,62 @@ function make_or_update_styles($id=false,$feature=false,$pageid=false,$featureid
 	$SQL8 = $themeid !== false ? "themeid='$themeid'" : false;
 	$SQL9 = $forced !== false ? "forced='$forced'" : false;
 
-	if(!$id){
-    	$SQL .= $SQL2 ? $SQL2 : "";
-    	if($SQL3){ $SQL .= $SQL2 ? " AND $SQL3" : $SQL3; }
-    	if($SQL4){ $SQL .= $SQL2 || $SQL3 ? " AND $SQL4" : $SQL4; }
-    	if($SQL5){ $SQL .= $SQL2 || $SQL3 || $SQL4 ? " AND $SQL5" : $SQL5; }
-    	if($SQL6){ $SQL .= $SQL2 || $SQL3 || $SQL4 || $SQL5 ? " AND $SQL6" : $SQL6; }
-    	if($SQL8){ $SQL .= $SQL2 || $SQL3 || $SQL4 || $SQL5 || $SQL6 ? " AND $SQL8" : $SQL8; }
+	if (!$id) {
+  	$SQL .= $SQL2 ? $SQL2 : "";
+  	if ($SQL3) { $SQL .= $SQL2 ? " AND $SQL3" : $SQL3; }
+  	if ($SQL4) { $SQL .= $SQL2 || $SQL3 ? " AND $SQL4" : $SQL4; }
+  	if ($SQL5) { $SQL .= $SQL2 || $SQL3 || $SQL4 ? " AND $SQL5" : $SQL5; }
+  	if ($SQL6) { $SQL .= $SQL2 || $SQL3 || $SQL4 || $SQL5 ? " AND $SQL6" : $SQL6; }
+  	if ($SQL8) { $SQL .= $SQL2 || $SQL3 || $SQL4 || $SQL5 || $SQL6 ? " AND $SQL8" : $SQL8; }
 	}
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	$id = $id ? $id : get_db_field("id", "styles", $SQL);
 
-	if($id) { //Setting Exists
+	if ($id) { //Setting Exists
 		//Make update SQL
 		$SQL = "UPDATE styles s SET ";
-		if($SQL3){ $SQL .= "s.".$SQL3; }
-		if($SQL4){ $SQL .= $SQL3 ? ", s.$SQL4" : "s.".$SQL4; }
-		if($SQL5){ $SQL .= $SQL3 || $SQL4 ? ", s.$SQL5" : "s.".$SQL5; }
-		if($SQL6){ $SQL .= $SQL3 || $SQL4 || $SQL5 ? ", s.$SQL6" : "s.".$SQL6; }
-		if($SQL7){ $SQL .= $SQL3 || $SQL4 || $SQL5 || $SQL6 ? ", s.$SQL7" : "s.".$SQL7; }
-		if($SQL8){ $SQL .= $SQL3 || $SQL4 || $SQL5 || $SQL6 || $SQL7 ? ", s.$SQL8" : "s.".$SQL8; }
-		if($SQL9){ $SQL .= $SQL3 || $SQL4 || $SQL5 || $SQL6 || $SQL7 || $SQL8 ? ", s.$SQL9" : "s.".$SQL9; }
-
+		if ($SQL3) { $SQL .= "s.".$SQL3; }
+		if ($SQL4) { $SQL .= $SQL3 ? ", s.$SQL4" : "s.".$SQL4; }
+		if ($SQL5) { $SQL .= $SQL3 || $SQL4 ? ", s.$SQL5" : "s.".$SQL5; }
+		if ($SQL6) { $SQL .= $SQL3 || $SQL4 || $SQL5 ? ", s.$SQL6" : "s.".$SQL6; }
+		if ($SQL7) { $SQL .= $SQL3 || $SQL4 || $SQL5 || $SQL6 ? ", s.$SQL7" : "s.".$SQL7; }
+		if ($SQL8) { $SQL .= $SQL3 || $SQL4 || $SQL5 || $SQL6 || $SQL7 ? ", s.$SQL8" : "s.".$SQL8; }
+		if ($SQL9) { $SQL .= $SQL3 || $SQL4 || $SQL5 || $SQL6 || $SQL7 || $SQL8 ? ", s.$SQL9" : "s.".$SQL9; }
 		$SQL .= " WHERE s.id='$id'";
 	} else { //Setting does not exist
 		//Make insert SQL
 		$SQL = "INSERT INTO styles (";
-		if($SQL3){ $SQL .= "feature"; }
-		if($SQL4){ $SQL .= $SQL3 ? ",pageid" : "pageid"; }
-		if($SQL5){ $SQL .= $SQL3 || $SQL4 ? ", featureid" : "featureid"; }
-		if($SQL6){ $SQL .= $SQL3 || $SQL4 || $SQL5 ? ", attribute" : "attribute"; }
-		if($SQL7){ $SQL .= $SQL3 || $SQL4 || $SQL5 || $SQL6 ? ", value" : "value"; }
-		if($SQL8){ $SQL .= $SQL3 || $SQL4 || $SQL5 || $SQL6 || $SQL7 ? ", themeid" : "themeid"; }
-		if($SQL9){ $SQL .= $SQL3 || $SQL4 || $SQL5 || $SQL6 || $SQL7 || $SQL8 ? ", forced" : "forced"; }
+		if ($SQL3) { $SQL .= "feature"; }
+		if ($SQL4) { $SQL .= $SQL3 ? ",pageid" : "pageid"; }
+		if ($SQL5) { $SQL .= $SQL3 || $SQL4 ? ", featureid" : "featureid"; }
+		if ($SQL6) { $SQL .= $SQL3 || $SQL4 || $SQL5 ? ", attribute" : "attribute"; }
+		if ($SQL7) { $SQL .= $SQL3 || $SQL4 || $SQL5 || $SQL6 ? ", value" : "value"; }
+		if ($SQL8) { $SQL .= $SQL3 || $SQL4 || $SQL5 || $SQL6 || $SQL7 ? ", themeid" : "themeid"; }
+		if ($SQL9) { $SQL .= $SQL3 || $SQL4 || $SQL5 || $SQL6 || $SQL7 || $SQL8 ? ", forced" : "forced"; }
 		$SQL .= ")";
 
 		$SQL2 = " VALUES (";
-		if($SQL3){ $SQL2 .= "'$feature'"; }
-		if($SQL4){ $SQL2 .= $SQL3 ? ",'$pageid'" : "'$pageid'"; }
-		if($SQL5){ $SQL2 .= $SQL3 || $SQL4 ? ", '$featureid'" : "'$featureid'"; }
-		if($SQL6){ $SQL2 .= $SQL3 || $SQL4 || $SQL5 ? ", '$attribute'" : "'$attribute'"; }
-		if($SQL7){ $SQL2 .= $SQL3 || $SQL4 || $SQL5 || $SQL6 ? ", '$value'" : "'$value'"; }
-		if($SQL8){ $SQL2 .= $SQL3 || $SQL4 || $SQL5 || $SQL6 || $SQL7 ? ", '$themeid'" : "'$themeid'"; }
-		if($SQL9){ $SQL2 .= $SQL3 || $SQL4 || $SQL5 || $SQL6 || $SQL7 || $SQL8 ? ", '$forced'" : "'$forced'"; }
+		if ($SQL3) { $SQL2 .= "'$feature'"; }
+		if ($SQL4) { $SQL2 .= $SQL3 ? ",'$pageid'" : "'$pageid'"; }
+		if ($SQL5) { $SQL2 .= $SQL3 || $SQL4 ? ", '$featureid'" : "'$featureid'"; }
+		if ($SQL6) { $SQL2 .= $SQL3 || $SQL4 || $SQL5 ? ", '$attribute'" : "'$attribute'"; }
+		if ($SQL7) { $SQL2 .= $SQL3 || $SQL4 || $SQL5 || $SQL6 ? ", '$value'" : "'$value'"; }
+		if ($SQL8) { $SQL2 .= $SQL3 || $SQL4 || $SQL5 || $SQL6 || $SQL7 ? ", '$themeid'" : "'$themeid'"; }
+		if ($SQL9) { $SQL2 .= $SQL3 || $SQL4 || $SQL5 || $SQL6 || $SQL7 || $SQL8 ? ", '$forced'" : "'$forced'"; }
 		$SQL2 .= ")";
 		$SQL .= $SQL2;
 	}
 
-	if(execute_db_sql($SQL)){ return true; }
+	if (execute_db_sql($SQL)) { return true; }
 	return false;
 }
 
 function make_or_update_styles_array($array) {
-	foreach($array as $style) {
-		if(!make_or_update_styles($style[0],$style[1],$style[2],$style[3],$style[4],$style[5],$style[6],$style[7])){ return false; }
+	foreach ($array as $style) {
+		if (!make_or_update_styles($style[0],$style[1],$style[2],$style[3],$style[4],$style[5],$style[6],$style[7])) {
+			return false;
+		}
 	}
 	return true;
 }

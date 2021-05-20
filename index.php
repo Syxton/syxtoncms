@@ -31,7 +31,7 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
     $_SESSION['pageid'] = $PAGE->id;
 
     $PAGE->title   = $CFG->sitename; // Title of page
-    $PAGE->themeid = getpagetheme($PAGE->id);
+    $PAGE->themeid = get_page_themeid($PAGE->id);
 
     //Use this page only to keep session and cookies refreshed (during forms)
     if (!empty($_GET['keepalive'])) {

@@ -345,7 +345,7 @@ global $CFG, $USER;
 function get_event_button_layout($pageid, $event, $edit, $confirm) {
 global $CFG;
   $buttons = get_event_edit_buttons($pageid, $event, $edit, $confirm);
-	$themeid = getpagetheme($pageid);
+	$themeid = get_page_themeid($pageid);
   $styles = get_styles($pageid, $themeid, "news");
 
   $contentbgcolor = isset($styles['contentbgcolor']) ? $styles['contentbgcolor'] : "";

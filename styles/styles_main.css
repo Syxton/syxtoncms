@@ -29,6 +29,10 @@ p {
   margin: 0px 0px 1em 0px;
 }
 
+.themeinput {
+  margin: 0;
+}
+
 .content_links {
 color:brown;
 text-decoration:none;

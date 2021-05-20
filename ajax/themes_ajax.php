@@ -23,7 +23,7 @@ global $CFG, $MYVARS, $USER, $PAGE;
 function show_themes(){
 global $CFG, $MYVARS, $USER, $PAGE;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
-	$themeid = getpagetheme($pageid);
+	$themeid = get_page_themeid($pageid);
 	$themeid = $themeid !== false ? $themeid : $PAGE->thememid;
 
 	echo theme_selector($pageid, $themeid);
@@ -38,14 +38,14 @@ global $CFG, $MYVARS, $USER;
 	$pageid = $pageid == $CFG->SITEID ? 0 : $pageid;
 
 	if ($feature == "page") {
-		$default_list = get_feature_styles($pageid, $feature, NULL, true);
+		$default_list = get_custom_styles($pageid, $feature);
 		$i=0;
 		foreach ($default_list as $style) {
 			$styles[$i] = array(false, false, "$pageid", false, $style[1], dbescape($MYVARS->GET[$style[1]]), '0', '0');
 			$i++;
 		}
 	} else {
-		$default_list = get_feature_styles($pageid, $feature, $featureid, true);
+		$default_list = get_custom_styles($pageid, $feature, $featureid);
 		foreach ($default_list as $style) {
 			$styles[$i] = array(false, "$feature", "$pageid", $featureid, $style[1], dbescape($MYVARS->GET[$style[1]]), '0', '0');
 			$i++;
@@ -63,7 +63,7 @@ global $CFG, $MYVARS, $USER, $STYLES;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
 
 	if ($feature == "page") {
-		$default_list = get_feature_styles($pageid, $feature, false, true);
+		$default_list = get_custom_styles($pageid, $feature);
 		foreach ($default_list as $style) {
 			if (isset($MYVARS->GET[$style[1]])) {
 				$temparray[$style[1]] = dbescape($MYVARS->GET[$style[1]]);
@@ -82,8 +82,7 @@ global $CFG, $MYVARS, $USER, $STYLES;
 		echo template_use("templates/themes.template", $params, "theme_selector_right_template");
 	}else{
 		$STYLES->preview = true;
-
-		$default_list = get_feature_styles($pageid,$feature,$featureid,true);
+		$default_list = get_custom_styles($pageid, $feature, $featureid);
 		foreach($default_list as $style){
 			$temparray[$style[1]] = dbescape($MYVARS->GET[$style[1]]);
 		}
@@ -104,7 +103,7 @@ global $CFG, $MYVARS, $USER;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
 
 	if ($feature == "page") {
-		$left = get_feature_styles($pageid, $feature);
+		$left = custom_styles_selector($pageid, $feature);
 
 		$pagename = get_db_field("name", "pages", "pageid = '$pageid'");
 		$rolename = get_db_field("display_name", "roles", "roleid = " . get_user_role($USER->userid, $pageid));
@@ -118,7 +117,7 @@ global $CFG, $MYVARS, $USER;
 	}else{
     	include_once($CFG->dirroot . '/features/'.$feature.'/'.$feature.'lib.php');
     	$function = "display_$feature";
-			$left = get_feature_styles($pageid, $feature, $featureid);
+			$left = custom_styles_selector($pageid, $feature, $featureid);
 			$right = $function($pageid, "side", $featureid);
 			echo template_use("templates/themes.template", array("left" => $left, "right" => $right), "make_template_selector_panes_template");
 	}

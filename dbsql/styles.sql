@@ -54,7 +54,7 @@ ORDER BY ranky
 ||set_theme_styles
 
 parent_theme_styles||
-  SELECT *, 1 as ranky n
+  SELECT *, 1 as ranky
     FROM styles
    WHERE pageid = '0'
      AND themeid = '||themeid||'
