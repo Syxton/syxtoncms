@@ -15,6 +15,6 @@ echo template_use("templates/page.template", array(), "end_of_page_template");
 
 function view_ipaper() {
 	global $MYVARS;
-    echo template_use("templates/ipaper.template", array("doc_url" => trim(urlencode(base64_decode($MYVARS->GET["doc_url"])))), "view_ipaper_template");
+    echo template_use("templates/ipaper.template", array("doc_url" => trim(base64_decode($MYVARS->GET["doc_url"]))), "view_ipaper_template");
 }
 ?>

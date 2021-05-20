@@ -63,27 +63,29 @@ global $CFG;
 						$filetypes = '/([\.[pP][dD][fF]|\.[dD][oO][cC]|\.[rR][tT][fF]|\.[pP][sS]|\.[pP][pP][tT]|\.[pP][pP][sS]|\.[tT][xX][tT]|\.[sS][xX][cC]|\.[oO][dD][sS]|\.[xX][lL][sS]|\.[oO][dD][tT]|\.[sS][xX][wW]|\.[oO][dD][pP]|\.[sS][xX][iI]])/';
 						if (preg_match($filetypes,$match[2])) {
     						//make internal links full paths
-    						$url = strstr($match[2],$CFG->directory.'/userfiles') && !strstr($match[2],$CFG->wwwroot) && !strstr($match[2],"http://") && !strstr($match[2],"www.") ? str_replace($CFG->directory.'/userfiles', $CFG->wwwroot.'/userfiles',$match[2]) : $match[2];
+    						$url = strstr($match[2], $CFG->directory.'/userfiles') && !strstr($match[2],$CFG->wwwroot) && !strstr($match[2],"http://") && !strstr($match[2],"www.") ? str_replace($CFG->directory.'/userfiles', $CFG->wwwroot.'/userfiles',$match[2]) : $match[2];
 
-                            //make full url if not full
-                            $protocol = isset($_SERVER["HTTPS"]) ? 'https://' : 'http://';
-                            $url_parts = parse_url($url);
-                            $url = str_replace(":", "", $url);
-                            $url = str_replace("//", "", $url);
-                            if (!empty($url_parts["scheme"])) { // protocol exists.
-                                $url = str_replace($url_parts["scheme"], $protocol, $url);
-                            } else {
-                                $url = $protocol . $url;
-                            }
+                //make full url if not full
+                $protocol = isset($_SERVER["HTTPS"]) ? 'https://' : 'http://';
+                $url_parts = parse_url($url);
+								$url = str_replace("://", "", $url);
+                $url = str_replace(":", "", $url);
+								$url = str_replace("//", "/", $url);
 
-                            //remove target from urls
+                if (!empty($url_parts["scheme"])) { // protocol exists.
+                    $url = str_replace($url_parts["scheme"], $protocol, $url);
+                } else {
+                    $url = $protocol . $url;
+                }
+
+                //remove target from urls
     						if (preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/',$url, $target, PREG_OFFSET_CAPTURE)) { $url = str_replace($target[0],"", $url); }
     						$url = preg_replace('/([\'|\"])/','',$url);
 
-                            //make ipaper links
-    						$url = str_replace('\\','',$url);
-                            $url = str_replace('../','',$url);
-                            $url = str_replace('..','',$url);
+                //make ipaper links
+								$url = str_replace('\\','',$url);
+                $url = str_replace('../','',$url);
+                $url = str_replace('..','',$url);
 
     						$html = str_replace($match[0],'<a href="'.$CFG->wwwroot.'/scripts/download.php?file='.$url.'" onclick="blur();"><img src="'.$CFG->wwwroot.'/images/save.png" alt="Save" /></a>&nbsp;'.make_modal_links(array("title"=>$match[4].$match[5],"path"=>$CFG->wwwroot."/pages/ipaper.php?action=view_ipaper&amp;doc_url=".base64_encode($url),"height"=>"80%","width"=>"80%")),$html);
 						}

@@ -1158,34 +1158,39 @@ function get_my_category($selected = false) {
 }
 
 function staff_status($staff) {
-    $pageid = $_SESSION["pageid"];
-    $featureid = "*";
-    if (!$settings = fetch_settings("events", $featureid, $pageid)) {
-		make_or_update_settings_array(default_settings("events", $pageid, $featureid));
-		$settings = fetch_settings("events", $featureid, $pageid);
-	}
-    $status = array();
+  $pageid = $_SESSION["pageid"];
+  $featureid = "*";
+  if (!$settings = fetch_settings("events", $featureid, $pageid)) {
+	   make_or_update_settings_array(default_settings("events", $pageid, $featureid));
+	    $settings = fetch_settings("events", $featureid, $pageid);
+  }
+  $status = array();
 
-    if ($staff["workerconsentdate"] < strtotime($settings->events->$featureid->staffapp_expires->setting . '/' . date('Y'))) {
-        $status[] = array("tag" => "Application", "full" => "Application Out of Date");
-    }
+  if (!$staff) { // User exists but no staff history.
+    return array(array("tag" => "Application", "full" => "Application Out of Date"),
+                 array("tag" => "Background Check", "full" => "Background Check Incomplete"));
+  }
 
-    $flag = $staff["q1_1"] + $staff["q1_2"] + $staff["q1_3"] + $staff["q2_1"] + $staff["q2_2"];
-    if (!empty($flag)) {
-        $status[] = array("tag" => "Flagged", "full" => "Flagged for review!");
-    }
+  if ($staff["workerconsentdate"] < strtotime($settings->events->$featureid->staffapp_expires->setting . '/' . date('Y'))) {
+      $status[] = array("tag" => "Application", "full" => "Application Out of Date");
+  }
 
-    $eighteen = 18 * 365 * 24 * 60 * 60; // 18 years in seconds
-    $expireyear = $settings->events->$featureid->bgcheck_years->setting * 365 * 24 * 60 * 60;
-    $time = get_timestamp();
-    if (($time - $staff["dateofbirth"]) > $eighteen ) {
-        if (empty($staff["bgcheckpass"])) {
-            $status[] =  array("tag" => "Background Check", "full" => "Background Check Incomplete");
-        } else if (($time - $staff["bgcheckpassdate"]) > $expireyear) {
-            $status[] =  array("tag" => "Background Check", "full" => "Background Check Out of Date");
-        }
-    }
-    return $status;
+  $flag = $staff["q1_1"] + $staff["q1_2"] + $staff["q1_3"] + $staff["q2_1"] + $staff["q2_2"];
+  if (!empty($flag)) {
+      $status[] = array("tag" => "Flagged", "full" => "Flagged for review!");
+  }
+
+  $eighteen = 18 * 365 * 24 * 60 * 60; // 18 years in seconds
+  $expireyear = $settings->events->$featureid->bgcheck_years->setting * 365 * 24 * 60 * 60;
+  $time = get_timestamp();
+  if (($time - $staff["dateofbirth"]) > $eighteen ) {
+      if (empty($staff["bgcheckpass"])) {
+          $status[] =  array("tag" => "Background Check", "full" => "Background Check Incomplete");
+      } else if (($time - $staff["bgcheckpassdate"]) > $expireyear) {
+          $status[] =  array("tag" => "Background Check", "full" => "Background Check Out of Date");
+      }
+  }
+  return $status;
 }
 
 function print_status($status) {
