@@ -17,7 +17,12 @@ global $CFG, $MYVARS, $USER, $PAGE;
 	$themeid = dbescape($MYVARS->GET["themeid"]);
 	$pageid = dbescape($MYVARS->GET["pageid"]);
 
-	echo get_css_box(get_db_field("name", "pages", "pageid='$pageid'"), get_db_field("display_name", "roles", "roleid=" . get_user_role($USER->userid, $pageid)), false, NULL, 'pagename', NULL, $themeid, false, $pageid) . '<div style="padding:3px;"></div>' . get_css_box("Title", "Content", null, null, null, null, $themeid, false, $pageid);
+	$pagename = get_db_field("name", "pages", "pageid = '$pageid'");
+	$rolename = get_db_field("display_name", "roles", "roleid = " . get_user_role($USER->userid, $pageid));
+
+	$params["pagelist"] = get_css_box($pagename, $rolename, false, NULL, 'pagename', NULL, $themeid, false, $pageid);
+	$params["block"] = get_css_box("Title", "Content", null, null, null, null, $themeid, false, $pageid);
+	echo template_use("templates/themes.template", $params, "theme_selector_right_template");
 }
 
 function show_themes(){

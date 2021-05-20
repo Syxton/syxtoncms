@@ -130,7 +130,7 @@ global $CFG;
 }
 
 function get_page_themeid($pageid) {
-	$settings = fetch_settings("page", false, $pageid);
+	$settings = fetch_settings("page", $featureid=false, $pageid);
 
 	if ($settings === false) {
 	   return "";
