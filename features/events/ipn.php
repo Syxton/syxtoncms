@@ -93,12 +93,12 @@ if (strcmp ($res, "VERIFIED") == 0) {
             $SQL = "INSERT INTO events_registrations_values (eventid, elementname, regid, value) VALUES('$eventid','tx','$regid','".dbescape(serialize($params))."')";
             execute_db_sql($SQL);
 
-            $touser = new stdClass();
+            $touser = new \stdClass;
             $touser->fname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_First'");
     		$touser->lname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_Last'");
     		$touser->email = get_db_field("email","events_registrations","regid='$regid'");
 
-            $fromuser = new stdClass();
+            $fromuser = new \stdClass;
             $fromuser->email = $CFG->siteemail;
     		$fromuser->fname = $CFG->sitename;
     		$fromuser->lname = "";

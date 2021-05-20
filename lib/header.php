@@ -21,6 +21,6 @@ if(!isset($TIMELIB)){ include_once($CFG->dirroot.'/lib/timelib.php'); }
 if(!isset($FILELIB)){ include_once($CFG->dirroot.'/lib/filelib.php'); }
 if(!isset($STYLESLIB)){ include_once($CFG->dirroot.'/lib/styleslib.php'); }
 if(!isset($HELP)){ include_once($CFG->dirroot.'/lib/help.php'); }
-if(!isset($ROLES)){ $ROLES = new stdClass(); $ROLES = load_roles(); }
+if(!isset($ROLES)){ $ROLES = new \stdClass; $ROLES = load_roles(); }
 if(!is_logged_in()){ load_user_cookie(); }
 ?>

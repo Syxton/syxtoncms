@@ -10,8 +10,8 @@
 unset($HELP);
 unset($ERRORS);
 
-$HELP = new stdClass();
-$ERRORS = new stdClass();
+$HELP = new \stdClass;
+$ERRORS = new \stdClass;
 
 //ERRORS
 $ERRORS->donate_req_title = "A campaign title is required.";

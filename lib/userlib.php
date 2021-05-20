@@ -51,7 +51,7 @@ global $CFG, $USER;
         $advanced_login = !empty($_SESSION["lia_original"]) ? "" : " AND ($time - last_activity < ".$CFG->cookietimeout.")";
 		$SQL = "SELECT * FROM users WHERE userid='".$_SESSION['userid']."' $advanced_login";
         if($row = get_db_row($SQL)){ //Get user info from db, load into $USER global
-            $temp = new stdClass();
+            $temp = new \stdClass;
     		$temp->userid = $row['userid'];
     		$temp->fname = $row['fname'];
     		$temp->lname = $row['lname'];
@@ -60,11 +60,11 @@ global $CFG, $USER;
     		$temp->ip = $row['ip'];
     		$_SESSION['userid'] = $temp->userid; //Used for CKeditor to know if user is logged in.
 		}else{
-            $temp = new stdClass();
+            $temp = new \stdClass;
             $temp->userid = 0; $_SESSION['userid'] = "";
 		}
 	} else {
-        $temp = new stdClass();
+        $temp = new \stdClass;
         $temp->userid = 0; $_SESSION['userid'] = "";
     }
     $USER = $temp;
@@ -79,7 +79,7 @@ global $CFG,$USER;
             $_SESSION['userid'] = $USER->userid;
 			execute_db_sql("UPDATE users SET last_activity='$time' WHERE userid='".$USER->userid."'"); //update last active timestamp
 		} else { //not currently logged in
-            $temp = new stdClass();
+            $temp = new \stdClass;
             $temp->userid = 0;
             $USER = $temp;
 		}
@@ -103,7 +103,7 @@ global $CFG,$USER;
         $USER->fname = $user->fname;
         $USER->lname = $user->lname;
         $USER->email = $user->email;
-        $FROMUSER = new stdClass();
+        $FROMUSER = new \stdClass;
     	$FROMUSER->fname = $CFG->sitename;
         $FROMUSER->lname = '';
     	$FROMUSER->email = $CFG->siteemail;

@@ -42,8 +42,8 @@ global $CFG,$MYVARS;
 
     admin_email_tester(); //Send for again
 
-    $touser = new stdClass();
-    $fromuser = new stdClass();
+    $touser = new \stdClass;
+    $fromuser = new \stdClass;
 
     //Now output the last test.
     $touser->email = $MYVARS->GET["email"];

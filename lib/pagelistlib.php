@@ -12,7 +12,7 @@ $PAGELISTLIB = true;
 
 //CONFIG VARIABLES
 
-$MYVARS = new stdClass(); 
+$MYVARS = new \stdClass; 
 $MYVARS->search_perpage = 8;
 
 function display_pagelist($pageid){

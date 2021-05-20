@@ -12,7 +12,7 @@ unset($ERRORS);
 
 //REGISTRATION 
 //HELP LANG
-$HELP = new stdClass();
+$HELP = new \stdClass;
 $HELP->help_email = "Please enter a valid email address to send your registration information.";
 $HELP->help_middlei = "Please enter a middle initial.";
 $HELP->help_age = "The age will be calculated based on the birthdate entered.";
@@ -46,7 +46,7 @@ $HELP->help_shirt_size = "What size camp shirt do you want?";
 $HELP->help_phone = "Please enter a phone number beginning with the area code.";
 
 //ERRORS
-$ERRORS = new stdClass();
+$ERRORS = new \stdClass;
 $ERRORS->error_age_min = "The birthdate you have selected does not meet the minimum age of {0}";
 $ERRORS->error_age_max = "The birthdate you have selected exeeds the maximum age of {0}";
 ?>

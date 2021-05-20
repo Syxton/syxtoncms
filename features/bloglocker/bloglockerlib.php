@@ -11,7 +11,7 @@ if(!isset($LIBHEADER)){ if(file_exists('./lib/header.php')){ include('./lib/head
 $BLOGLOCKERLIB = true;
 
 //BLOGLOCKERLIB Config
-$CFG->bloglocker = new stdClass(); 
+$CFG->bloglocker = new \stdClass; 
 $CFG->bloglocker->viewable_limit = 20;
 
 function display_bloglocker($pageid,$area,$featureid){
@@ -89,7 +89,7 @@ global $CFG;
 
 	$i=0;
 	if($result = get_db_result($SQL)){
-        $lockeritems = new stdClass(); 
+        $lockeritems = new \stdClass; 
 		while($row = fetch_row($result)){
 			$featureid = $row["htmlid"];
 			
@@ -98,7 +98,7 @@ global $CFG;
 				$settings = fetch_settings("html",$featureid,$pageid);
 			}
             
-            $lockeritems->$i = new stdClass();
+            $lockeritems->$i = new \stdClass;
 			$lockeritems->$i->htmlid = $featureid;
 			$lockeritems->$i->blog = $settings->html->$featureid->blog->setting;
 			$lockeritems->$i->title = $settings->html->$featureid->feature_title->setting;

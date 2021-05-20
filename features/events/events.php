@@ -66,9 +66,9 @@ global $CFG,$MYVARS,$USER;
     $export = "";
     if($archive = get_db_result("SELECT * FROM events_staff_archive WHERE pageid='$pageid' GROUP BY year ORDER BY year")){
         $i = 0;
-        $values = new stdClass();
+        $values = new \stdClass;
 		while($vals = fetch_row($archive)){
-            $values->$i = new stdClass();
+            $values->$i = new \stdClass;
 			$values->$i->year = $vals["year"];
 			$i++;
 		}

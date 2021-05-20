@@ -22,7 +22,7 @@ global $CFG, $MYVARS, $USER, $PAGE;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
 	$feature = isset($MYVARS->GET['feature']) ? dbescape($MYVARS->GET['feature']) : false;
 	$featureid = isset($MYVARS->GET['featureid']) ? dbescape($MYVARS->GET['featureid']) : false;
-	$PAGE = new stdClass();
+	$PAGE = new \stdClass;
 	$PAGE->id = $pageid;
 	$PAGE->themeid = get_page_themeid($PAGE->id);
 	$params = array("pageid" => $pageid, "feature" => $feature, "featureid" => $featureid);

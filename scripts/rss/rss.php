@@ -4,7 +4,7 @@ include_once($CFG->dirroot . '/lib/header.php');
 include_once($CFG->dirroot . '/lib/rsslib.php');
 
 //Retrieve from Javascript
-if(empty($MYVARS)){ $MYVARS = new stdClass(); }
+if(empty($MYVARS)){ $MYVARS = new \stdClass; }
 $MYVARS->GET = $_GET;
 
 echo header("Content-Type: application/xml; charset=ISO-8859-1");

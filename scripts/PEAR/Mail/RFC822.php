@@ -667,7 +667,7 @@ class Mail_RFC822 {
         }
 
         // Construct the object that will be returned.
-        $mbox = new stdClass();
+        $mbox = new \stdClass;
 
         // Add the phrase (even if empty) and comments
         $mbox->personal = $phrase;

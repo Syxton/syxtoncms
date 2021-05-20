@@ -108,7 +108,7 @@ function news_wrapper($newsid,$pageid,$newsonly){
 global $CFG;
 	$news = get_db_row("SELECT * FROM news WHERE newsid=$newsid");
 	$daygraphic = get_date_graphic($news['submitted'],true, true);
-    $pagenews = new stdClass();
+    $pagenews = new \stdClass;
 	$pagenews->newsid = $news['newsid'];
 	$pagenews->title = stripslashes($news['title']);
 	$pagenews->caption = stripslashes($news['caption']);

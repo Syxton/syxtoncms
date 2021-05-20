@@ -64,13 +64,13 @@ global $CFG,$MYVARS,$USER;
 
 	if($allgalleries = get_db_result($SQL)){
 			$g = 0;
-	  	$gallerylist = new stdClass();
-	    $gallerylist->$g = new stdClass();
+	  	$gallerylist = new \stdClass;
+	    $gallerylist->$g = new \stdClass;
 			$gallerylist->$g->name = "All";
 			$gallerylist->$g->value = "all";
 			$g++;
 			while($galleries = fetch_row($allgalleries)){
-        $gallerylist->$g = new stdClass();
+        $gallerylist->$g = new \stdClass;
 				$gallerylist->$g->name = $galleries["gallery_title"];
 				$gallerylist->$g->value = $galleries["galleryid"];
 				$g++;

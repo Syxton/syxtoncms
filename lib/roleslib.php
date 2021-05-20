@@ -10,7 +10,7 @@
 if(!isset($LIBHEADER)) include('header.php');
 $ROLESLIB = true;
 
-$ABILITIES = new stdClass();
+$ABILITIES = new \stdClass;
 
 function is_siteadmin($userid){
 global $CFG,$ROLES;
@@ -193,13 +193,13 @@ global $CFG,$ROLES,$ABILITIES;
     	";
 //if($userid == 60) { echo "<pre>" . $SQL . "</pre><br /><br />"; }
     	if($results = get_db_result($SQL)) {
-    	    $abilities = new stdClass();
+    	    $abilities = new \stdClass;
     		while($row = fetch_row($results)){
     			$ability = $row["ability"];
     			$allow = $row["allowed"] == 1 ? 1 : 0;
 
                 if(empty($abilities->$ability)){
-                    $abilities->$ability = new stdClass();
+                    $abilities->$ability = new \stdClass;
                 }
 
     			$abilities->$ability->allow = $allow;
@@ -289,11 +289,11 @@ global $CFG,$ROLES,$ABILITIES;
 	";
 
 	if($results = get_db_result($SQL)){
-        $abilities = new stdClass();
+        $abilities = new \stdClass;
 		while($row = fetch_row($results)){
 			$ability = $row["ability"];
 			$allow = $row["allowed"] == 1 ? 1 : 0;
-            $abilities->$ability = new stdClass();
+            $abilities->$ability = new \stdClass;
 			$abilities->$ability->allow = $allow;
 		}
 	} else {
@@ -342,7 +342,7 @@ global $CFG,$ROLES;
 function load_roles(){
 global $CFG;
 	$allroles = get_db_result("SELECT * FROM roles");
-    $ROLES = new stdClass();
+    $ROLES = new \stdClass;
     while($row = fetch_row($allroles)){
         $rolename = $row['name'];
 		$ROLES->$rolename = $row['roleid'];

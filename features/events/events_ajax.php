@@ -546,13 +546,13 @@ global $CFG, $MYVARS;
 
             //See if the voting on this request is finished
             if($request = get_db_row("SELECT * FROM events_requests WHERE reqid='$reqid'")) {
-                $from = new stdClass();
+                $from = new \stdClass;
                 $from->email = $CFG->siteemail;
                 $from->fname = $CFG->sitename;
                 $from->lname = "";
 
                 //Requesting email setup
-                $contact = new stdClass();
+                $contact = new \stdClass;
                 $contact->email = $request["contact_email"];
                 if(strstr(stripslashes($request["contact_name"]), " ")){
                     $name = explode(" ",stripslashes($request["contact_name"]));
@@ -905,12 +905,12 @@ global $CFG, $MYVARS, $USER;
                         $SQL = "UPDATE events_registrations SET verified='1' WHERE regid='$regid'";
             			execute_db_sql($SQL);
 
-                        $touser = new stdClass();
+                        $touser = new \stdClass;
                         $touser->fname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_First'");
                 		$touser->lname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_Last'");
                 		$touser->email = get_db_field("email","events_registrations","regid='$regid'");
 
-                        $fromuser = new stdClass();
+                        $fromuser = new \stdClass;
                         $fromuser->email = $CFG->siteemail;
                 		$fromuser->fname = $CFG->sitename;
                 		$fromuser->lname = "";
@@ -1214,9 +1214,9 @@ global $CFG, $MYVARS, $USER;
 
     if($registrants = get_db_result(get_registration_sort_sql($eventid))){
 		$i = 0;
-        $values = new stdClass();
+        $values = new \stdClass;
 		while($registrant = fetch_row($registrants)){
-            $values->$i = new stdClass();
+            $values->$i = new \stdClass;
 			$values->$i->name = ($i+1) . " - " . get_registrant_name($registrant["regid"]);
             $values->$i->name .= !empty($registrant["verified"]) ? '' : ' [PENDING]';
 			$values->$i->regid = $registrant["regid"];
@@ -1505,7 +1505,7 @@ global $CFG, $MYVARS, $USER;
 			echo "<b>Remaining Balance:  $" . number_format($remaining,2) . "</b><br />";
 
 			if($remaining > 0){
-				$item[0] = new stdClass();
+				$item[0] = new \stdClass;
 				$item[0]->description = "Event: " . $event["name"] . " - $registrant_name's Registration - Remaining Balance Payment";
 				$item[0]->cost = $remaining;
 				$item[0]->regid = $registration["regid"];
@@ -2380,7 +2380,7 @@ global $CFG, $MYVARS, $USER;
     $stafflist = preg_split("/\r\n|\n|\r/", $stafflist);
     $sendemails = filter_var($MYVARS->GET["sendemails"], FILTER_VALIDATE_BOOLEAN);;
 
-    $emailnotice = new stdClass();
+    $emailnotice = new \stdClass;
     $emailnotice->email = $CFG->siteemail;
     $emailnotice->fname = $CFG->sitename;
     $emailnotice->lname = "";
@@ -2426,7 +2426,7 @@ global $CFG, $MYVARS, $USER;
                             </ol>
                             <br /><br />
                             Current Status:<br />" . print_status($status);
-                            $contact = new stdClass();
+                            $contact = new \stdClass;
                             $contact->fname = $user["fname"];
                             $contact->lname = $user["lname"];
                             $contact->email = $email;
@@ -2458,7 +2458,7 @@ global $CFG, $MYVARS, $USER;
                         <div style='color:red;font-weight:bold'><img style='vertical-align: middle;' src='" . $protocol.$CFG->wwwroot . "/images/error.gif' /> Background Check Incomplete or Out of Date</div>
                         ";
 
-                        $contact = new stdClass();
+                        $contact = new \stdClass;
                         $contact->fname = $user["fname"];
                         $contact->lname = $user["lname"];
                         $contact->email = $email;
@@ -2472,7 +2472,7 @@ global $CFG, $MYVARS, $USER;
                         }
                     }
                 } else { // Not an email we know, so send the full email.
-                    $contact = new stdClass();
+                    $contact = new \stdClass;
                     $contact->email = $email;
                     $contact->fname = "";
                     $contact->lname = "";
@@ -2667,9 +2667,9 @@ global $CFG, $MYVARS, $USER;
                                     ); }';
     if($archive = get_db_result("SELECT * FROM events_staff_archive WHERE staffid='$staffid' ORDER BY year")){
         $i = 0;
-        $values = new stdClass();
+        $values = new \stdClass;
 		while($vals = fetch_row($archive)){
-            $values->$i = new stdClass();
+            $values->$i = new \stdClass;
 			$values->$i->year = $vals["year"];
 			$i++;
 		}
@@ -2779,7 +2779,7 @@ global $CFG,$MYVARS,$USER;
            	//Log
 	          log_entry("event", $pageid, $subject);
 
-            $emailnotice = new stdClass();
+            $emailnotice = new \stdClass;
             $emailnotice->email = $CFG->siteemail;
             $emailnotice->fname = $CFG->sitename;
             $emailnotice->lname = "";

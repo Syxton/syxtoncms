@@ -12,7 +12,7 @@ unset($ERRORS);
 
 //REGISTRATION
 //HELP LANG
-$HELP = new stdClass();
+$HELP = new \stdClass;
 $HELP->help_email = "Please enter a valid email address to send your registration information.";
 $HELP->help_address = "Please enter the mailing address of the camper.";
 $HELP->help_city = "Please enter the home city of the camper.";
@@ -24,5 +24,5 @@ $HELP->help_overnight = "Do you plan to stay overnight on-site?";
 $HELP->help_gender = "Are you a man or a woman?";
 
 //ERRORS
-$ERRORS = new stdClass();
+$ERRORS = new \stdClass;
 ?>

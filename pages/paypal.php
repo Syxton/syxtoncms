@@ -102,12 +102,12 @@ if (!$fp) {
                        WHERE regid = '$rid'";
       			  execute_db_sql($SQL);
 
-              $touser = new stdClass();
+              $touser = new \stdClass;
               $touser->fname = get_db_field("value", "events_registrations_values", "regid='$rid' AND elementname='Camper_Name_First'");
           		$touser->lname = get_db_field("value", "events_registrations_values", "regid='$rid' AND elementname='Camper_Name_Last'");
           		$touser->email = get_db_field("email","events_registrations","regid='$rid'");
 
-              $fromuser = new stdClass();
+              $fromuser = new \stdClass;
               $fromuser->email = $CFG->siteemail;
           		$fromuser->fname = $CFG->sitename;
           		$fromuser->lname = "";

@@ -78,12 +78,12 @@ global $CFG, $USER;
 		if(strlen($user['temp']) > 0){
 			execute_db_sql("UPDATE users SET password='" . $user['temp'] . "', temp='' WHERE userid='" . $user['userid'] . "'");
             //Email new password to the email address.
-            $USER = new stdClass();
+            $USER = new \stdClass;
     		$USER->userid = $user['userid'];
     		$USER->fname = $user['fname'];
     		$USER->lname = $user['lname'];
     		$USER->email = $user['email'];
-            $FROMUSER = new stdClass();
+            $FROMUSER = new \stdClass;
     		$FROMUSER->fname = $CFG->sitename;
     		$FROMUSER->lname = '';
     		$FROMUSER->email = $CFG->siteemail;

@@ -12,7 +12,7 @@ if(!isset($CFG)) include_once('../../config.php');
 $postorget = isset($_GET["address_1"]) ? $_GET : $_POST;
 $postorget = isset($postorget["address_1"]) ? $postorget : "";
 
-if(empty($MYVARS)){ $MYVARS = new stdClass(); }
+if(empty($MYVARS)){ $MYVARS = new \stdClass; }
 $MYVARS->GET = $postorget;
 
 echo '

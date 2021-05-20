@@ -10,7 +10,7 @@
 include ('header.php');
 update_user_cookie();
 
-$CFG->sitesearch = new stdClass();
+$CFG->sitesearch = new \stdClass;
 $CFG->sitesearch->perpage = 8;
 
 callfunction();

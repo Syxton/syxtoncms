@@ -10,7 +10,7 @@
 unset($ERRORS);
 if(!isset($LIBHEADER)){ include('header.php'); }
 
-$ERRORS = new stdClass();
+$ERRORS = new \stdClass;
 
 //Login Errors *********************************************************
 	$ERRORS->no_login = "Username or password was incorrect.<br />Please try again.";

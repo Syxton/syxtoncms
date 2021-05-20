@@ -10,8 +10,8 @@
 unset($HELP);
 unset($ERRORS);
 
-$HELP = new stdClass();
-$ERRORS = new stdClass();
+$HELP = new \stdClass;
+$ERRORS = new \stdClass;
 
 //EVENT REQUEST AREA
 //REQUEST HELP

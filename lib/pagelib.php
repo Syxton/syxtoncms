@@ -14,7 +14,7 @@ $PAGELIB = true;
 
 //Get page info
 if (empty($PAGE)) {
-    $PAGE = new stdClass();
+    $PAGE = new \stdClass;
 }
 $PAGE->id = isset($_GET['pageid']) ? $_GET['pageid'] : $CFG->SITEID;
 if (!is_numeric($PAGE->id)) { // Somebody could be playing with this variable.
@@ -849,7 +849,7 @@ function create_new_page($newpage) {
 
     if ($pageid && $role_assignment) {
         if (empty($PAGE)) {
-            $PAGE = new stdClass();
+            $PAGE = new \stdClass;
         }
         $PAGE->id = $pageid;
         //Log
@@ -954,7 +954,7 @@ function get_login_form($loginonly = false, $newuser = true) {
 function add_page_feature($pageid, $featuretype) {
     global $PAGE;
     if (empty($PAGE)) {
-        $PAGE = new stdClass();
+        $PAGE = new \stdClass;
     }
     $PAGE->id     = $pageid;
     $default_area = get_db_field("default_area", "features", "feature='$featuretype'");

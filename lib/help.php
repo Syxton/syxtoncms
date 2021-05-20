@@ -10,7 +10,7 @@
 unset($HELP);
 if(!isset($LIBHEADER)){ include('header.php'); }
 
-$HELP = new stdClass();
+$HELP = new \stdClass;
 
 //PAGE EDITING HINTS
 $HELP->input_page_name = "This is the name of the page.  It will be displayed in links and in the page HTML header.  It is search indexed.";

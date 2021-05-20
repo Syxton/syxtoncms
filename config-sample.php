@@ -3,7 +3,7 @@
 unset($CFG);
 unset($USER);
 
-$CFG = new stdClass();
+$CFG = new \stdClass;
 
 //Downtime
 $CFG->downtime = false;
