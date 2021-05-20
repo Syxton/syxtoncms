@@ -902,7 +902,7 @@ $files = $sorted;
 		<?php if ( ($ftp && !$ftp->isDir($config['ftp_base_folder'].$config['upload_dir'].$rfm_subfolder.$subdir))  || (!$ftp && @opendir($config['current_path'].$rfm_subfolder.$subdir)===FALSE)) { ?>
 		<br/>
 		<div class="alert alert-error">There is an error! The upload folder there isn't. Check your config.php file. </div>
-		<?php }else{ ?>
+		<?php } else { ?>
 		<h4 id="help"><?php echo trans('Swipe_help');?></h4>
 		<?php if (isset($config['folder_message'])) { ?>
 		<div class="alert alert-block"><?php echo $config['folder_message'];?></div>
@@ -985,7 +985,7 @@ $files = $sorted;
                     </div>
                     </a>
 
-            <?php }else{ ?>
+            <?php } else { ?>
                     </a>
                     <div class="box">
                     <h4 class="<?php if ($config['ellipsis_title_after_first_row']) { echo "ellipsis"; } ?>"><a class="folder-link" data-file="<?php echo $file ?>" href="dialog.php?<?php echo $get_params.rawurlencode($src)."&".uniqid() ?>"><?php echo $file;?></a></h4>
@@ -1056,7 +1056,7 @@ $files = $sorted;
                         $file_array['extension']=fix_filename($file_array['extension'],$config);
                         $file_path=$file_path1;
                     }
-                }else{
+                } else {
                     $file_path = $config['ftp_base_url'].$config['upload_dir'].$rfm_subfolder.$subdir.$file;
                 }
 
@@ -1075,7 +1075,7 @@ $files = $sorted;
                     if ($ftp) {
                         $mini_src = $src_thumb = $config['ftp_base_url'].$config['ftp_thumbs_dir'].$subdir. $file;
                         $creation_thumb_path = "/".$config['ftp_base_folder'].$config['ftp_thumbs_dir'].$subdir. $file;
-                    }else{
+                    } else {
 
                         $creation_thumb_path = $mini_src = $src_thumb = $thumbs_path. $file;
 
@@ -1104,7 +1104,7 @@ $files = $sorted;
                     $no_thumb=true;
                     if (file_exists('img/'.$config['icon_theme'].'/'.$file_array['extension'].".jpg")) {
                         $src_thumb ='img/'.$config['icon_theme'].'/'.$file_array['extension'].".jpg";
-                    }else{
+                    } else {
                         $src_thumb = "img/".$config['icon_theme']."/default.jpg";
                     }
                     $is_icon_thumb=true;
@@ -1124,7 +1124,7 @@ $files = $sorted;
                     $is_audio=true;
                 }elseif (in_array($file_array['extension'], $config['ext_misc'])) {
                     $class_ext = 3;
-                }else{
+                } else {
                     $class_ext = 1;
                 }
                 if ((!($_GET['type']==1 && !$is_img) && !(($_GET['type']==3 && !$is_video) && ($_GET['type']==3 && !$is_audio))) && $class_ext>0) {
@@ -1140,7 +1140,7 @@ $files = $sorted;
             $file_prevent_delete = isset($filePermissions[$file]['prevent_delete']) && $filePermissions[$file]['prevent_delete'];
             }
             ?>
-            <figure data-name="<?php echo $file ?>" data-path="<?php echo $rfm_subfolder.$subdir.$file;?>" data-type="<?php if ($is_img) { echo "img"; }else{ echo "file"; } ?>">
+            <figure data-name="<?php echo $file ?>" data-path="<?php echo $rfm_subfolder.$subdir.$file;?>" data-type="<?php if ($is_img) { echo "img"; } else { echo "file"; } ?>">
             <?php if ($config['multiple_selection']) { ?><div class="selector">
                         <label class="cont">
                             <input type="checkbox" class="selection" name="selection[]" value="<?php echo $file;?>">
@@ -1191,7 +1191,7 @@ $files = $sorted;
                     <?php if ($is_img && $src_thumb!="") { ?>
                     <a class="tip-right preview" title="<?php echo trans('Preview')?>" data-featherlight="<?php echo $src;?>"  href="#"><i class=" icon-eye-open"></i></a>
                     <?php }elseif (($is_video || $is_audio) && in_array($file_array['extension'],$config['jplayer_exts'])) { ?>
-                    <a class="tip-right modalAV <?php if ($is_audio) { echo "audio"; }else{ echo "video"; } ?>"
+                    <a class="tip-right modalAV <?php if ($is_audio) { echo "audio"; } else { echo "video"; } ?>"
                     title="<?php echo trans('Preview')?>" data-url="ajax_calls.php?action=media_preview&title=<?php echo $filename;?>&file=<?php echo $rfm_subfolder.$subdir.$file;?>"
                     href="javascript:void('');" ><i class=" icon-eye-open"></i></a>
                     <?php }elseif (in_array($file_array['extension'],$config['cad_exts'])) { ?>
@@ -1203,7 +1203,7 @@ $files = $sorted;
                     <?php }elseif ($config['googledoc_enabled'] && in_array($file_array['extension'],$config['googledoc_file_exts'])) { ?>
                     <a class="tip-right file-preview-btn" title="<?php echo trans('Preview')?>" data-url="ajax_calls.php?action=get_file&sub_action=preview&preview_mode=google&title=<?php echo $filename;?>&file=<?php echo $rfm_subfolder.$subdir.$file;?>"
                     href="docs.google.com;" ><i class=" icon-eye-open"></i></a>
-                    <?php }else{ ?>
+                    <?php } else { ?>
                     <a class="preview disabled"><i class="icon-eye-open icon-white"></i></a>
                     <?php } ?>
                     <a href="javascript:void('')" class="tip-left edit-button rename-file-paths <?php if ($config['rename_files'] && !$file_prevent_rename) echo "rename-file";?>" title="<?php echo trans('Rename')?>" data-folder="0" data-permissions="<?php echo $file_array['permissions']; ?>">

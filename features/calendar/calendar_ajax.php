@@ -23,7 +23,7 @@ global $CFG, $MYVARS;
 	
 	if ($MYVARS->GET["displaymode"] == 1) {
 		echo get_large_calendar($pageid, $userid, $month, $year, $extra_row);
-	}else{
+	} else {
 		echo get_small_calendar($pageid, $userid, $month, $year, $extra_row);
 	}
 }
@@ -43,7 +43,7 @@ global $CFG,$MYVARS;
         while ($event = fetch_row($result)) {
         	if ($eventlist != "") { 
                 $eventlist .= '<br />'; $firstevent = ''; 
-            }else{ 
+            } else { 
                 $firstevent = '<span style="width:35px;text-align:center;float:right;font-size:.7em;color:gray;">hide<br /><span id="cal_countdown"></span></span>';
             }
             $eventlist .= '<div class="popupEventTitle">'.make_modal_links(array("title"=>"Event Info","text"=> stripslashes($event["title"]), "path"=>$CFG->wwwroot."/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=".$event["eventid"],"iframe"=>"true","width"=>"700","height"=>"650","styles"=>"float:left;padding:2px;","image"=>$CFG->wwwroot.'/images/info.gif','styles'=>'vertical-align:top;')).$firstevent.'</div>';

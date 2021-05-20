@@ -30,7 +30,7 @@ global $CFG, $MYVARS;
 	$pageid = $MYVARS->GET['pageid'];
 	if ($param == "1") {
 		echo '<input name="gallery_name" id="gallery_name" type="text" size="32" onkeypress="return handleEnter(this, event)" />';
-	}else{
+	} else {
 		$SQL = "SELECT * FROM pics_galleries WHERE galleryid IN (SELECT galleryid FROM pics WHERE pageid=$pageid)";
 		echo make_select("gallery_name", get_db_result($SQL), "galleryid", "name", false, '', true, '1', '', 'None selected');
 	}
@@ -84,7 +84,7 @@ global $CFG,$MYVARS;
                     delete_file($old);
                 }elseif ($pageid == $CFG->SITEID && $pageid != $row["pageid"]) {  //SITE is dealing with images from another page
                     execute_db_sql("UPDATE pics SET siteviewable=0 WHERE galleryid='$galleryid'");
-                }else{ //nobody is using it, so delete it
+                } else { //nobody is using it, so delete it
                     $delete = true;
                     delete_file($CFG->dirroot.'/features/pics/files/'.$row["pageid"]."/".$row["featureid"]."/".$row["imagename"]);
                     execute_db_sql("DELETE FROM pics WHERE picsid='".$row["picsid"]."'");    
@@ -157,26 +157,26 @@ global $CFG,$MYVARS;
            if (!is_uploaded_file($file_tmp)) {
               //print error message and file number.
               echo "Skipping file ($file_name) Not selected. <br />";
-           }else{
+           } else {
                  #-----------------------------------------------------------#
                  # this code will check file extension                       #
                  #-----------------------------------------------------------#
                  $ext = strrchr($file_name,'.');
                  if (!in_array(strtolower($ext),$limitedext)) {
                     echo "Skipping file ($file_name) Incompatible file extension. <br />";
-                 }else{
+                 } else {
                        #-----------------------------------------------------------#
                        # this code will check file size is correct                 #
                        #-----------------------------------------------------------#
                        if ($file_size > $size_bytes) {
                            echo "Skipping file ($file_name) File must be less than <strong>". $size_bytes / 1024 ."</strong> KB. <br />";
-                       }else{
+                       } else {
                              #-----------------------------------------------------------#
                              # this code check if file is Already EXISTS.                #
                              #-----------------------------------------------------------#
                              if (file_exists($upload_dir.$file_name)) {
                                  echo "Skipping file ($file_name) File already exists. <br />";
-                             }else{
+                             } else {
                                    #-----------------------------------------------------------#
                                    # this function will upload the files.  :) ;) cool          #
                                    #-----------------------------------------------------------#
@@ -202,10 +202,10 @@ global $CFG,$MYVARS;
         }#end of (while loop).
         if (empty($success)) {
             die("Failed to upload files");
-        }else{
+        } else {
             die("<strong>$success file[s] uploaded.</strong>");
         }       
-    }else{
+    } else {
         die("Error: A pageid and featureid were not given.");
     }
     
@@ -227,7 +227,7 @@ global $CFG,$MYVARS;
 	if ($pageid==$CFG->SITEID) { //SITE IMAGE
 		$activated = $sitehidden == 0 ? 'background-color:#FFFF66;' : '';
 		execute_db_sql("UPDATE pics SET sitehidden=$sitehidden WHERE picsid=$picsid");
-	}else{
+	} else {
 		$activated = $pagehidden == 0 ? 'background-color:#FFFF66;' : '';
 		execute_db_sql("UPDATE pics SET pagehidden=$pagehidden WHERE picsid=$picsid");
 	}

@@ -79,7 +79,7 @@ global $CFG;
 
     if ($ajax) {
 	   return $script . $setup;
-	}else{
+	} else {
 	   return '<script type=\'text/javascript\'>' . $script . $setup .'</script>';
 	}
 

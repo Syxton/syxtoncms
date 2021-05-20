@@ -75,7 +75,7 @@ global $CFG, $ERRORS;
         include($CFG->dirroot . '/features/' . $lang[1] . "/lang.php");
         if ($vars) { return fill_template($ERRORS->$string,$vars); }
         return $ERRORS->$string;
-    }else{ if ($vars) { return fill_template($ERRORS->$error,$vars); } return $ERRORS->$error; }
+    } else { if ($vars) { return fill_template($ERRORS->$error,$vars); } return $ERRORS->$error; }
 }
 
 function get_page_error_message($error,$vars=false) {

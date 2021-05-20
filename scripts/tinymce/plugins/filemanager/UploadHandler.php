@@ -1430,11 +1430,11 @@ class UploadHandler
             $totalSize = $this->get_file_size($this->get_upload_path($name));
             if ($totalSize - $uploaded_bytes - $this->options['readfile_chunk_size'] < 0) {
                 $this->onUploadEnd($res);
-            }else{
+            } else {
                 $this->head();
                 $this->body(json_encode($res));
             }
-        }else{
+        } else {
             $this->head();
             $this->body(json_encode($res));
         }
@@ -1456,7 +1456,7 @@ class UploadHandler
             }elseif (is_dir($targetFile)) {
                 chmod($targetFile, $this->options['config']['folderPermission']);
             }
-        }else{
+        } else {
             $targetFile = $this->options['config']['ftp_temp_folder'].$res['files'][0]->name;
             $targetFileThumb =  $this->options['config']['ftp_temp_folder']."thumbs/". $res['files'][0]->name;
         }
@@ -1486,7 +1486,7 @@ class UploadHandler
             {
                 if ($thumbResult === false) {
                     $res['files'][0]->error = trans("Not enough Memory");
-                }else{
+                } else {
                     $res['files'][0]->error = $thumbResult;
                 }
             }

@@ -40,7 +40,7 @@ global $CFG,$MYVARS;
 	if ($template['folder'] != "none") { //registration template refers to a file
 		$preview = true;
 		include($CFG->dirroot . '/features/events/templates/' . $template['folder'] . '/template.php');
-	}else{ //registration template refers to a database style template
+	} else { //registration template refers to a database style template
 		$form = '<table style="width:100%">';
 		$templateform = get_db_result("SELECT * FROM events_templates_forms WHERE template_id='".$template['template_id']."' ORDER BY sort");
 	
@@ -71,7 +71,7 @@ global $CFG,$MYVARS;
 				</tr>
 				<tr><td></td><td class="field_input"><span id="payment_method_error" class="error_text"></span></td></tr>
     				';
-			}else{
+			} else {
 				$form .= '<tr><td class="field_title">' . $opt . $element['display'] . ': </td><td class="field_input" style="width:70%">' . create_form_element($element['type'],$element['elementid'],$element['optional'],$element['length'],false) . '<span class="hint">'. $element['hint'] . '<span class="hint-pointer">&nbsp;</span></span></td></tr>';
 				$form .= '<tr><td></td><td class="field_input"><span id="'.$element['elementid'].'_error" class="error_text"></span></td></tr>';
 			}

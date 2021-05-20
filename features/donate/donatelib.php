@@ -31,7 +31,7 @@ global $CFG,$USER;
             //if viewing from rss feed
 			if ($resultsonly) { 
                 $returnme .= '<table style="width:100%;border:1px solid silver;padding:10px;"><tr><th>'. $settings->donate->$featureid->feature_title->setting.'</th></tr><tr><td><br /><br /><div class="htmlblock">' .get_donation_results($row["id"]) .'</div></td></tr></table>'; 
-            }else{ //regular donate feature viewing
+            } else { //regular donate feature viewing
                 $buttons = get_button_layout("donate",$featureid,$pageid);
 				$returnme .= get_css_box($settings->donate->$featureid->feature_title->setting,'<div class="htmlblock">'.donation_form($featureid,$settings).'</div>',$buttons, null, 'donate', $featureid, false, false, false, false, false, false);
 			}
@@ -96,7 +96,7 @@ function donate_meter($campaign, $total, $button, $type = "horizontal") {
 $returnme = "";
     if ($campaign["metgoal"] == 1 || (round($total / $campaign["goal_amount"],2) * 100) > 100) {
         $perc = "100";
-    }else{
+    } else {
         $perc = round($total / $campaign["goal_amount"],2) * 100;    
     }
     
@@ -218,10 +218,10 @@ global $CFG, $MYVARS, $USER;
                 You are involved in a campaign you started called: <strong>'.get_db_field("title","donate_campaign","campaign_id='".$edit["campaign_id"]."'").'</strong><br />    
                 <br />Would you like to edit the current campaign? <a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'new_campaign_form\',\'&campaign_id='.$edit["campaign_id"].'&featureid='.$featureid.'&pageid='.$pageid.'\',function() { simple_display(\'donation_display\'); loaddynamicjs(\'donation_script\');});">Edit Campaign</a>
         <br /><br /><br />';        
-    }else{
+    } else {
         if ($joined = get_db_row("SELECT * FROM donate_instance WHERE donate_id='$featureid' AND campaign_id != '0'")) {
             $current = 'You are currently joined to a campaign called: <strong>'.get_db_field("title","donate_campaign","campaign_id='".$joined["campaign_id"]."'").'</strong><br />';    
-        }else{
+        } else {
             $current = 'You are not currently associated with an active campaign.<br />';    
         }       
     }
@@ -260,7 +260,7 @@ global $CFG, $MYVARS, $USER;
 //			$donate = get_db_row("SELECT * FROM donate WHERE donateid='".$feed["featureid"]."'");
 //			if ($donate['firstedition']) { //this is not a first edition
 //				$donateresults = get_db_result("SELECT * FROM donate WHERE donateid='".$donate["firstedition"]."' OR firstedition='".$donate["firstedition"]."' ORDER BY donateid DESC LIMIT 50");
-//			}else{
+//			} else {
 //				$donateresults = get_db_result("SELECT * FROM donate WHERE donateid='".$donate["donateid"]."' OR firstedition='".$donate["donateid"]."' ORDER BY donateid DESC LIMIT 50");
 //			}
 //			
@@ -268,7 +268,7 @@ global $CFG, $MYVARS, $USER;
 //				$settings = fetch_settings("donate",$donate["donateid"],$feed["pageid"]);
 //				$feeds .= fill_feed($settings->donate->$donate["donateid"]->feature_title->setting . " " . date('d/m/Y',$donate["dateposted"]),substr($donate["donate"],0,100),$CFG->wwwroot.'/features/donate/donate.php?action=viewdonate&key='.$userkey.'&pageid='.$feed["pageid"].'&donateid='.$donate["donateid"],$donate["dateposted"]);
 //			}
-//		}else{
+//		} else {
 //			$donate = get_db_row("SELECT * FROM donate WHERE donateid='".$feed["featureid"]."'");
 //			$feeds .= fill_feed($settings->donate->$feed["featureid"]->feature_title->setting,substr($donate["donate"],0,100),$CFG->wwwroot.'/features/donate/donate.php?action=viewdonate&key='.$userkey.'&pageid='.$feed["pageid"].'&donateid='.$feed["featureid"],$donate["dateposted"]);
 //		}

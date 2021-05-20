@@ -30,7 +30,7 @@ global $CFG,$MYVARS,$USER;
 	//Check if any settings exist for this feature
 	if ($settings = fetch_settings($feature,$featureid,$pageid)) {
         echo make_settings_page($setting_names,$settings,$default_settings,$feature,$featureid,$pageid);
-	}else{ //No Settings found...setup default settings
+	} else { //No Settings found...setup default settings
 		if (make_or_update_settings_array($default_settings)) { forum_settings(); }
 	}
 }
@@ -46,13 +46,13 @@ global $MYVARS, $CFG, $USER;
         if (!user_has_ability_in_page($USER->userid,"editforumcategory",$pageid)) { echo get_page_error_message("no_permission",array("editforumcategory")); return; }
 		$category = get_db_row("SELECT * FROM forum_categories WHERE catid=".dbescape($MYVARS->GET["catid"]));
 		$title = $category["title"];
-	}else{
+	} else {
         if (!user_has_ability_in_page($USER->userid,"createforumcategory",$pageid)) { echo get_page_error_message("no_permission",array("createforumcategory")); return; }   
 		if (!user_has_ability_in_page($USER->userid,"createforumcategory",$pageid)) { echo get_error_message("generic_permissions"); return;}
 	}
 
 	if (isset($MYVARS->GET["catid"])) { echo create_validation_script("new_category_form" , 'ajaxapi(\'/features/forum/forum_ajax.php\',\'edit_category\',\'&catid='.dbescape($MYVARS->GET["catid"]).'&catname=\'+escape(document.getElementById(\'catname\').value),function() { simple_display(\'category_div\');}); close_modal();');	
-	}else{ echo create_validation_script("new_category_form" , 'ajaxapi(\'/features/forum/forum_ajax.php\',\'create_category\',\'&forumid='.$forumid.'&pageid='.$pageid.'&catname=\'+escape(document.getElementById(\'catname\').value),function() { simple_display(\'category_div\');}); close_modal();');}
+	} else { echo create_validation_script("new_category_form" , 'ajaxapi(\'/features/forum/forum_ajax.php\',\'create_category\',\'&forumid='.$forumid.'&pageid='.$pageid.'&catname=\'+escape(document.getElementById(\'catname\').value),function() { simple_display(\'category_div\');}); close_modal();');}
 
 	echo '
 	<div class="formDiv" id="category_div">
@@ -76,7 +76,7 @@ global $CFG,$MYVARS;
 	$pagenum = $MYVARS->GET["pagenum"];
 	if ($edit == 1) {
 		$value = get_db_field("message", "forum_posts", "postid='$postid'");
-	}else{
+	} else {
 		$value = "";
 	}
 	echo '<img id="edit_area_'.$forumid.'" name="edit_area_'.$forumid.'" src="'.$CFG->wwwroot.'/images/edit_area.gif" />';
@@ -116,7 +116,7 @@ global $CFG,$MYVARS;
 	echo '<br /><span style="padding:2px;"><strong>Discussion Title</strong>: <input type="text" size="80" id="discussion_title" value="'.$title.'" /></span><br /><br />';
 	echo get_editor_box(stripslashes($message),null,"300",null,"Forum");
 	if (isset($MYVARS->GET["discussionid"])) { echo '<span style="position:relative; float:right;"><input type="button" name="forum_submit" id="forum_submit" value="Submit" onclick="if ('.get_editor_value_javascript().' != \'\' && document.getElementById(\'discussion_title\').value != \'\') { ajaxapi(\'/features/forum/forum_ajax.php\',\'create_discussion\',\'&message=\'+escape('.get_editor_value_javascript().')+\'&title=\'+escape(document.getElementById(\'discussion_title\').value)+\'&pageid='.$pageid.'&forumid='.$forumid.'&catid='.$catid.'&postid='.$postid.'&discussionid='.$discussionid.'\',function() { close_modal(); }); }" /></span>';
-	}else{ echo '<span style="position:relative; float:right;"><input type="button" name="forum_submit" id="forum_submit" value="Submit" onclick="javascript: if ('.get_editor_value_javascript().' != \'\' && document.getElementById(\'discussion_title\').value != \'\') { ajaxapi(\'/features/forum/forum_ajax.php\',\'create_discussion\',\'&message=\'+escape('.get_editor_value_javascript().')+\'&title=\'+escape(document.getElementById(\'discussion_title\').value)+\'&pageid='.$pageid.'&forumid='.$forumid.'&catid='.$catid.'\',function() { close_modal(); });  }" /></span>';}
+	} else { echo '<span style="position:relative; float:right;"><input type="button" name="forum_submit" id="forum_submit" value="Submit" onclick="javascript: if ('.get_editor_value_javascript().' != \'\' && document.getElementById(\'discussion_title\').value != \'\') { ajaxapi(\'/features/forum/forum_ajax.php\',\'create_discussion\',\'&message=\'+escape('.get_editor_value_javascript().')+\'&title=\'+escape(document.getElementById(\'discussion_title\').value)+\'&pageid='.$pageid.'&forumid='.$forumid.'&catid='.$catid.'\',function() { close_modal(); });  }" /></span>';}
 }
 
 ?>

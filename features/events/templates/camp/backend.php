@@ -80,7 +80,7 @@ global $CFG,$MYVARS,$USER,$error;
 				</center>
 				<br /><br />
 				Thank you for registering for this event. ';	
-			}else{
+			} else {
 				echo '<br />
 				To register a <b>different</b> child:  Select the week '.common_weeks($event, true, "week1", $regid).'.<br />
 				To register the <b>same child</b> for a <b>different week</b>:  Select the week '.common_weeks($event, false, "week2", $regid, 1).'.<br />
@@ -105,9 +105,9 @@ global $CFG,$MYVARS,$USER,$error;
 		$message = registration_email($regid, $touser);
 		if (send_email($touser,$fromuser,null,"Camp Wabashi Registration", $message)) {
 			send_email($fromuser,$fromuser,null,"Camp Wabashi Registration", $message);
-		}else{ echo "<br /><br />Registration Email NOT Sent."; }
+		} else { echo "<br /><br />Registration Email NOT Sent."; }
 		
-	}else{ //failed registration
+	} else { //failed registration
 		$MYVARS->GET["cart_total"] = $MYVARS->GET["cart_total"] - $MYVARS->GET["paypal_amount"];
 		echo '<center><div style="width:60%"><span class="error_text">Your registration for '.$event['name'].' has failed. </span><br /> '.$error . '</div>';	
 		if (isset($MYVARS->GET["items"])) { //other registrations have already occured
@@ -136,7 +136,7 @@ global $CFG,$MYVARS,$USER,$error;
 					</center>
 					<br /><br />
 					Thank you for registering for this event. ';	
-				}else{ //Pay by check
+				} else { //Pay by check
 					echo '<br />
 					To register a child:  Select the week '.common_weeks($event, true, "week1", $regid).'.<br />
 					<br />
@@ -169,7 +169,7 @@ global $CFG,$USER,$PAGE;
 			$returnme .= '<option value="'.$evnt['eventid'].'" '.$selected.'>'.$evnt['name'].'</option>';
 		}
 		$returnme .= '</select>' . ' and click <a href="javascript:show_form_again(document.getElementById(\''.$id.'\').value,\''.$regid.'\', '.$autofill.');"><b>Continue</b></a>';
-	}else{ $returnme = '&nbsp;<span style="color:red;">There are no other weeks available. </span>'; }
+	} else { $returnme = '&nbsp;<span style="color:red;">There are no other weeks available. </span>'; }
 	return $returnme;
 }
 

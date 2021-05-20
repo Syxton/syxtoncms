@@ -29,7 +29,7 @@ global $CFG,$MYVARS,$USER;
 	//Check if any settings exist for this feature
 	if ($settings = fetch_settings($feature,$featureid,$pageid)) {
         echo make_settings_page($setting_names,$settings,$default_settings,$feature,$featureid,$pageid);
-	}else{ //No Settings found...setup default settings
+	} else { //No Settings found...setup default settings
 		if (make_or_update_settings_array($default_settings)) { news_settings(); }
 	}
 }
@@ -48,7 +48,7 @@ global $CFG, $MYVARS, $USER;
         $caption = stripslashes(htmlentities($row["caption"]));
         $content = stripslashes($row["content"]);
         $button = '<input type="button" value="Save" onclick="ajaxapi(\'/features/news/news_ajax.php\',\'edit_news\',\'&amp;title=\'+escape($(\'#news_title\').val())+\'&amp;summary=\' + escape($(\'#news_summary\').val()) + \'&amp;pageid='.$pageid.'&amp;html=\'+escape('.get_editor_value_javascript().')+\'&amp;newsid='.$newsid.'\',function() { close_modal(); });" />';
-    }else{
+    } else {
         if (!user_has_ability_in_page($USER->userid,"addnews",$pageid,"news",$featureid)) { echo get_page_error_message("no_permission",array("addnews")); return; }
         $button = '<input type="button" value="Save" onclick="ajaxapi(\'/features/news/news_ajax.php\',\'add_news\',\'&amp;title=\'+escape($(\'#news_title\').val())+\'&amp;summary=\' + escape($(\'#news_summary\').val()) + \'&amp;pageid='.$pageid.'&amp;html=\'+escape('.get_editor_value_javascript().')+\'&amp;featureid='.$featureid.'\',function() { close_modal(); });" />';
     }
@@ -93,11 +93,11 @@ global $CFG, $MYVARS, $USER, $ROLES;
     $pageid = $MYVARS->GET['pageid'];
     $newsonly = isset($MYVARS->GET['newsonly']) ? true : false;
 	if (is_logged_in()) {
-	    if (!user_has_ability_in_page($USER->userid,"viewnews",$pageid)) { echo get_page_error_message("no_permission",array("viewnews")); return; }else{ echo news_wrapper($newsid,$pageid,$newsonly); }
-	}else{
+	    if (!user_has_ability_in_page($USER->userid,"viewnews",$pageid)) { echo get_page_error_message("no_permission",array("viewnews")); return; } else { echo news_wrapper($newsid,$pageid,$newsonly); }
+	} else {
 		if (get_db_field("siteviewable","pages","pageid=$pageid") && role_has_ability_in_page($ROLES->visitor, 'viewnews', $pageid)) {
             echo news_wrapper($newsid,$pageid,$newsonly);
-		}else{
+		} else {
     		echo '<div id="standalone_div"><input type="hidden" id="reroute" value="/features/news/news.php:viewnews:&amp;pageid='.$pageid.'&amp;newsid='.$newsid . ':standalone_div" />
     		      <div style="width:100%; text-align:center;">You must login to see this content.<br /><center>'.get_login_form(true,false) . '</center></div></div>';
 		}
@@ -125,7 +125,7 @@ global $CFG;
 					</td>
 				</tr>
 			</table>';
-	}else{
+	} else {
 		return main_body(true).'
 		<a href="'.$CFG->wwwroot.'/index.php?pageid='.$pageid.'">Home</a>
 		<table style="margin-left:auto;margin-right:auto;width:800px">

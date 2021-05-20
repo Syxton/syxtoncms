@@ -40,7 +40,7 @@ global $CFG;
 			return mysql_num_rows($result);
 		} 
         return 0;
-	}else{ //Simple SQL can be counted quicker this way
+	} else { //Simple SQL can be counted quicker this way
 		$SQL = "SELECT COUNT(*) as count " . substr($SQL, strpos($SQL, "FROM"));
 		if ($row = get_db_row($SQL)) {
 			return $row["count"];

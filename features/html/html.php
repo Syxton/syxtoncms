@@ -30,7 +30,7 @@ global $CFG, $MYVARS, $USER;
 	//Check if any settings exist for this feature
 	if ($settings = fetch_settings($feature,$featureid,$pageid)) {
         echo make_settings_page($setting_names,$settings,$default_settings,$feature,$featureid,$pageid);
-	}else{ //No Settings found...setup default settings
+	} else { //No Settings found...setup default settings
 		if (make_or_update_settings_array($settings_array)) { html_settings(); }
 	}
 }
@@ -59,7 +59,7 @@ global $CFG, $MYVARS, $USER;
     		</div>
     		<script type="text/javascript">var stillediting = setInterval(function() { ajaxapi(\'/features/html/html_ajax.php\',\'still_editing\',\'&htmlid='.$featureid.'&userid='.$userid.'\',function() { if (xmlHttp.readyState == 4) { do_nothing(); }},true);},5000);</script>';
     		execute_db_sql("UPDATE html SET edit_user='$userid',edit_time='$now' WHERE htmlid=$featureid");
-    	}else{
+    	} else {
     		echo '
     		<div style="width:100%;text-align:center;">
     			<img src="'.$CFG->wwwroot.'/images/underconstruction.gif" />
@@ -283,8 +283,8 @@ global $CFG, $MYVARS, $USER, $ROLES;
 					</td>
 				</tr>
 			</table>';
-		}else{ echo '<center>You do not have proper permissions to view this item.</center>';}
-	}else{
+		} else { echo '<center>You do not have proper permissions to view this item.</center>';}
+	} else {
 		if (get_db_field("siteviewable","pages","pageid=$pageid") && role_has_ability_in_page($ROLES->visitor, 'viewhtml', $pageid)) {
 			$abilities = get_user_abilities($USER->userid,$pageid,"html");
 			echo '<a href="'.$CFG->wwwroot.'/index.php?pageid='.$pageid.'">Home</a>
@@ -297,7 +297,7 @@ global $CFG, $MYVARS, $USER, $ROLES;
 					</td>
 				</tr>
 			</table>';
-		}else{
+		} else {
             echo '<div id="standalone_div"><input type="hidden" id="reroute" value="/features/html/html.php:viewhtml:&amp;pageid='.$pageid.'&amp;htmlid='.$htmlid . ':standalone_div" />';
             echo '<div style="width:100%; text-align:center;">You must login to see this content.<br /><center>'.get_login_form(true,false) . '</center></div></div>';
 		}

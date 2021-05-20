@@ -79,7 +79,7 @@ global $CFG;
 	}
 	if ($difference == 60) {
 		$minutes = "1 min";
-	}else{ $seconds = floor($difference) > 1 ? $difference . " secs" : $difference . " sec"; }
+	} else { $seconds = floor($difference) > 1 ? $difference . " secs" : $difference . " sec"; }
 	
 	if ($difference == 0) { $seconds = ""; }
 	
@@ -87,7 +87,7 @@ global $CFG;
 	}elseif (isset($weeks)) { return "$weeks $days $ago";
 	}elseif (isset($days)) { return "$days $hours $ago";
 	}elseif (isset($hours)) { return "$hours $minutes $ago";
-	}else{ return "$minutes $seconds $ago"; }
+	} else { return "$minutes $seconds $ago"; }
 }
 
 function get_date_graphic($timestamp = false, $newday, $alter = false, $small = false, $inactive = false) {
@@ -111,14 +111,14 @@ global $CFG;
 			</td>
 			<td style="vertical-align:top;"><br />
 			';
-		}else{
+		} else {
 			return '
 			<td style="vertical-align:middle;width:60px;height:60px;">
 			</td>
 			<td style="vertical-align:top;">
 			';
 		}
-	}else{
+	} else {
 		$alterfont = $alter ? "font-size:.8em;" : "";
 		$graphic = $inactive ? "datestamp_inactive.png" : "datestamp.png";
 		if ($newday) {
@@ -135,7 +135,7 @@ global $CFG;
 			</td>
 			<td style="vertical-align:top;"><br />
 			';
-		}else{
+		} else {
 			return '
 			<td style="vertical-align:top;width:78px;height:78px;">
 			</td>
@@ -151,7 +151,7 @@ function convert_time($time) {
     $time[1] = empty($time[1]) ? "00" : $time[1];
 	if ($time[0] > 12) {
 		return ($time[0]-12) . ":" . $time[1] . "pm";
-	}else{
+	} else {
 		if ($time[0] == "00") { return "12:" . $time[1] . "am"; }
 		return $time[0] . ":" . $time[1] . "am";
 	}

@@ -31,13 +31,13 @@ global $CFG;
                     if ($row["first_activity"] == "") { //Now we have to make something up
                         if ($row["last_activity"] == "") {
                             execute_db_sql("UPDATE users SET joined='".$madeuptime."' WHERE userid='".$row["userid"]."'");
-                        }else{
+                        } else {
                             execute_db_sql("UPDATE users SET joined='".$madeuptime."',first_activity='".$row["last_activity"]."' WHERE userid='".$row["userid"]."'");
                         }
-                    }else{ //Make the joined time a few minutes before first_activity time
+                    } else { //Make the joined time a few minutes before first_activity time
                         if ($row["last_activity"] == "") {
                             execute_db_sql("UPDATE users SET joined='".($row["first_activity"]-1200).",last_activity='".$row["first_activity"]."' WHERE userid='".$row["userid"]."'");
-                        }else{
+                        } else {
                             execute_db_sql("UPDATE users SET joined='".($row["first_activity"]-1200)."' WHERE userid='".$row["userid"]."'");
                         }
                     }

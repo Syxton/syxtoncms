@@ -44,6 +44,6 @@ global $CFG, $HELP;
     }elseif (isset($lang[1])) {
         include($CFG->dirroot . '/features/'.$lang[1]."/lang.php");
         return $HELP->$string;
-    }else{ return $HELP->$help; }
+    } else { return $HELP->$help; }
 }
 ?>

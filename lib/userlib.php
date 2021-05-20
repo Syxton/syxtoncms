@@ -59,7 +59,7 @@ global $CFG, $USER;
     		$temp->key = $row['userkey'];
     		$temp->ip = $row['ip'];
     		$_SESSION['userid'] = $temp->userid; //Used for CKeditor to know if user is logged in.
-		}else{
+		} else {
             $temp = new \stdClass;
             $temp->userid = 0; $_SESSION['userid'] = "";
 		}
@@ -83,7 +83,7 @@ global $CFG,$USER;
             $temp->userid = 0;
             $USER = $temp;
 		}
-	}else{ //User is logged in
+	} else { //User is logged in
         $_SESSION['userid'] = $USER->userid;
 		execute_db_sql("UPDATE users SET last_activity='$time' WHERE userid='".$USER->userid."'"); //update last active timestamp
 	}
@@ -114,7 +114,7 @@ global $CFG,$USER;
 			send_email($FROMUSER,$FROMUSER,NULL,$subject,$message);
 			return "true**" . new_user_confirmation($user);
 		}
-	}else{
+	} else {
 		if ($userid) {
 			execute_db_sql("DELETE FROM users WHERE userid='$userid'");
 			execute_db_sql("DELETE FROM roles_assignment WHERE userid='$userid'");
@@ -232,7 +232,7 @@ function nameize($str,$a_char = array("'","-"," ",'"','.')) {
                 if ($string[$i] !== $string[(strlen($string)-$i-1)]) {
                     $str .= $string[$i];
                 }
-    		}else{
+    		} else {
                 $str .= $string[$i];
     		}
     	}

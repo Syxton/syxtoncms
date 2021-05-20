@@ -183,7 +183,7 @@ for ($i=-1, $ci=count($t); ++$i<$ci;) {
   elseif (isset($cB[$p])) {$ok = $eB; unset($cI['del'], $cI['ins']);}
   if (isset($cO[$p])) {$ok = $ok + $cO[$p];}
   if (isset($cN[$p])) {$ok = array_diff_assoc($ok, $cN[$p]);}
- }else{$ok = $inOk; unset($cI['del'], $cI['ins']);}
+ } else {$ok = $inOk; unset($cI['del'], $cI['ins']);}
  // bad tags, & ele content
  if (isset($e) && ($do == 1 or (isset($ok['#pcdata']) && ($do == 3 or $do == 5)))) {
   echo '&lt;', $s, $e, $a, '&gt;';
@@ -266,7 +266,7 @@ if ($ql = count($q)) {
  elseif (isset($cB[$p])) {$ok = $eB; unset($cI['del'], $cI['ins']);}
  if (isset($cO[$p])) {$ok = $ok + $cO[$p];}
  if (isset($cN[$p])) {$ok = array_diff_assoc($ok, $cN[$p]);}
-}else{$ok = $inOk; unset($cI['del'], $cI['ins']);}
+} else {$ok = $inOk; unset($cI['del'], $cI['ins']);}
 if (isset($e) && ($do == 1 or (isset($ok['#pcdata']) && ($do == 3 or $do == 5)))) {
  echo '&lt;', $s, $e, $a, '&gt;';
 }
@@ -298,7 +298,7 @@ if ($t[3] == '-') {
  if (substr(($t = preg_replace('`--+`', '-', substr($t, 4, -3))), -1) != ' ') {$t .= ' ';}
  $t = $C['comment'] == 2 ? str_replace(array('&', '<', '>'), array('&amp;', '&lt;', '&gt;'), $t) : $t;
  $t = "\x01\x02\x04!--$t--\x05\x02\x01";
-}else{ // CDATA
+} else { // CDATA
  if (!$C['cdata']) {return $t;}
  if ($C['cdata'] == 1) {return '';}
  $t = substr($t, 1, -1);
@@ -472,7 +472,7 @@ while (strlen($a)) {
   break; case 1:
    if ($a[0] == '=') { // =
     $w = 1; $mode = 2; $a = ltrim($a, '= ');
-   }else{ // No val
+   } else { // No val
     $w = 1; $mode = 0; $a = ltrim($a);
     $aA[$nm] = '';
    }
@@ -519,7 +519,7 @@ foreach ($aA as $k=>$v) {
        if (!preg_match('`\bnofollow\b`i', $a['rel'])) {$a['rel'] .= ' nofollow';}
       }elseif (isset($aA['rel'])) {
        if (!preg_match('`\bnofollow\b`i', $aA['rel'])) {$nfr = 1;}
-      }else{$a['rel'] = 'nofollow';}
+      } else {$a['rel'] = 'nofollow';}
      }
     }
    }
@@ -593,7 +593,7 @@ if ($depTr) {
 // unique IDs
 if ($C['unique_ids'] && isset($a['id'])) {
  if (!preg_match('`^[A-Za-z][A-Za-z0-9_\-.:]*$`', ($id = $a['id'])) or (isset($GLOBALS['hl_Ids'][$id]) && $C['unique_ids'] == 1)) {unset($a['id']);
- }else{
+ } else {
   while (isset($GLOBALS['hl_Ids'][$id])) {$id = $C['unique_ids']. $id;}
   $GLOBALS['hl_Ids'][($a['id'] = $id)] = 1;
  }
@@ -677,7 +677,7 @@ for ($i=-1, $j=count($t); ++$i<$j;) {
  }elseif (isset($b[$y])) {echo $f, $e, $r;
  }elseif (isset($a[$y])) {echo $e, $f, ltrim($r);
  }elseif (!$y) {echo $f, $e, $f, ltrim($r);
- }else{echo $e, $r;}
+ } else {echo $e, $r;}
 }
 $t = preg_replace('`[\n]\s*?[\n]+`', "\n", ob_get_contents());
 ob_end_clean();

@@ -121,7 +121,7 @@ if (isset($_GET['action'])) {
 				if ($ftp) {
 					deleteDir($path,$ftp,$config);
 					deleteDir($path_thumb,$ftp,$config);
-				}else{
+				} else {
 					if (is_dir($path_thumb))
 					{
 						deleteDir($path_thumb,NULL,$config);

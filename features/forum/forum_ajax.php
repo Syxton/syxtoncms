@@ -236,7 +236,7 @@ global $CFG,$MYVARS,$USER;
 		}
 		execute_db_sql("UPDATE forum_discussions SET lastpost=$time WHERE discussionid=".$post["discussionid"]);
 		execute_db_sql("INSERT INTO forum_posts (discussionid,catid,forumid,pageid,ownerid,message,posted) VALUES(".$post["discussionid"].",".$post["catid"].",".$post["forumid"].",".$post["pageid"].",".$USER->userid.",'".$message."',$time)");
-	}else{ execute_db_sql("UPDATE forum_posts SET message='".$message."',edited=$time,editedby=".$USER->userid." WHERE postid=$postid"); }
+	} else { execute_db_sql("UPDATE forum_posts SET message='".$message."',edited=$time,editedby=".$USER->userid." WHERE postid=$postid"); }
 	echo "Post Successful.";		
 }
 
@@ -266,7 +266,7 @@ global $CFG,$MYVARS,$USER;
 		execute_db_sql("UPDATE forum_discussions SET title='".addslashes($title)."' WHERE discussionid=".$MYVARS->GET["discussionid"]);
 		execute_db_sql("UPDATE forum_posts SET message='".addslashes($message)."' WHERE postid=".$MYVARS->GET["postid"]);
 		echo "Discussion Edited Successful";
-	}else{
+	} else {
 		if ($discussionid = execute_db_sql("INSERT INTO forum_discussions (catid,forumid,pageid,ownerid,title,lastpost) VALUES(".$catid.",".$forumid.",".$pageid.",".$USER->userid.",'".addslashes($title)."',$time)")) {
 			execute_db_sql("INSERT INTO forum_posts (discussionid,catid,forumid,pageid,ownerid,message,posted) VALUES(".$discussionid.",".$catid.",".$forumid.",".$pageid.",".$USER->userid.",'".addslashes($message)."',$time)");
 		}

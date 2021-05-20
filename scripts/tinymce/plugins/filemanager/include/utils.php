@@ -70,13 +70,13 @@ if ( ! function_exists('trans'))
 	{
 		if (file_exists('lang/languages.php')) {
 			$languages = include 'lang/languages.php';
-		}else{
+		} else {
 			$languages = include '../lang/languages.php';
 		}
 
 		if (array_key_exists($_SESSION['RF']['language'],$languages)) {
 			$lang = $_SESSION['RF']['language'];
-		}else{
+		} else {
 			response('Lang_Not_Found'.AddErrorLocation())->send();
 			exit;
 		}
@@ -84,7 +84,7 @@ if ( ! function_exists('trans'))
 	}
 	if (file_exists('lang/' . $lang . '.php')) {
 		$lang_vars = include 'lang/' . $lang . '.php';
-	}else{
+	} else {
 		$lang_vars = include '../lang/' . $lang . '.php';
 	}
 
@@ -162,7 +162,7 @@ function deleteFile($path,$path_thumb,$config) {
 			}catch(FtpClient\FtpException $e) {
 				return;
 			}
-		}else{
+		} else {
 			if (file_exists($path)) {
 				unlink($path);
 			}
@@ -219,7 +219,7 @@ function deleteDir($dir,$ftp = null, $config = null)
 			return null;
 		}
 
-	}else{
+	} else {
 		if ( ! file_exists($dir) || isUploadDir($dir, $config))
 		{
 			return false;
@@ -267,7 +267,7 @@ function duplicate_file( $old_path, $name, $ftp = null, $config = null )
 		}catch(FtpClient\FtpException $e) {
 			return null;
 		}
-	}else{
+	} else {
 		if (file_exists($old_path) && is_file($old_path))
 		{
 			if (file_exists($new_path) && $old_path == $new_path)
@@ -301,7 +301,7 @@ function rename_file($old_path, $name, $ftp = null, $config = null)
 		}catch(FtpClient\FtpException $e) {
 			return false;
 		}
-	}else{
+	} else {
 		if (file_exists($old_path) && is_file($old_path))
 		{
 			$new_path = $info['dirname'] . "/" . $name . "." . $info['extension'];
@@ -350,7 +350,7 @@ function rename_folder($old_path, $name, $ftp = null, $config = null)
 			}
 			return $ftp->rename("/".$old_path, "/".$new_path);
 		}
-	}else{
+	} else {
 		if (file_exists($old_path) && is_dir($old_path) && !isUploadDir($old_path, $config))
 		{
 			if (file_exists($new_path) && $old_path == $new_path)
@@ -384,7 +384,7 @@ function ftp_con($config) {
 			echo "<br/>Please check configurations";
 			die();
 		}
-	}else{
+	} else {
 		return false;
 	}
 }
@@ -567,7 +567,7 @@ function create_folder($path = null, $path_thumbs = null,$ftp = null,$config = n
 	if ($ftp) {
 		$ftp->mkdir($path);
 		$ftp->mkdir($path_thumbs);
-	}else{
+	} else {
 		if (file_exists($path) || file_exists($path_thumbs)) {
 			return false;
 		}

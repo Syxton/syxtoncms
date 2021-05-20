@@ -18,7 +18,7 @@ global $CFG;
         $CFG->dbtype = "mysqli";        
         $conn = mysqli_connect($CFG->dbhost, $CFG->dbuser, $CFG->dbpass) or senderror("Could not connect to database");
         mysqli_select_db($conn, $CFG->dbname) or senderror("<b>A fatal MySQL error occured</b>.\n<br />\nError: (" . mysqli_errno($conn) . ") " . mysqli_error($conn));
-    }else{
+    } else {
         $CFG->dbtype = "mysql";        
         $conn = mysql_connect($CFG->dbhost, $CFG->dbuser, $CFG->dbpass) or senderror("Could not connect to database");
         mysql_select_db($CFG->dbname) or senderror("<b>A fatal MySQL error occured</b>.\n<br />\nError: (" . mysql_errno() . ") " . mysql_error());   
@@ -30,7 +30,7 @@ $conn = reconnect();
 
 if ($CFG->dbtype == "mysqli") {
     require('dblib_mysqli.php');
-}else{
+} else {
     require('dblib_mysql.php');
 }
 
@@ -68,12 +68,12 @@ global $CFG, $USER;
             $_SESSION['userid'] = $user['userid'];
 			execute_db_sql("UPDATE users SET ip='$ip', last_activity='$time' WHERE userid='" . $user['userid'] . "'");
 			return $user;
-		}else{
+		} else {
 			//Log
 			log_entry("user", $username, "Failed Login");
 			return false;
 		}
-	}else{
+	} else {
 		//First login switch temp password for actual password
 		if (strlen($user['temp']) > 0) {
 			execute_db_sql("UPDATE users SET password='" . $user['temp'] . "', temp='' WHERE userid='" . $user['userid'] . "'");
@@ -146,7 +146,7 @@ global $USER, $CFG, $MYVARS;
 		$keylist .= $keylist == "" ? $key : "," . $key;
 		if ($found === false) {
 			$valuelist .= $valuelist == "" ? "'" . $row[$key] . "'" : ",'" . $row[$key] . "'";
-		}else{
+		} else {
 			$valuelist .= $valuelist == "" ? "'" . $newvalue[$found] . "'" : ",'" . $newvalue[$found] . "'";
 		}        
     }

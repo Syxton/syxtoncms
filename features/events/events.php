@@ -35,7 +35,7 @@ global $CFG,$MYVARS,$USER;
 	//Check if any settings exist for this feature
 	if ($settings = fetch_settings($feature,$featureid,$pageid)) {
         echo make_settings_page($setting_names,$settings,$default_settings,$feature,$featureid,$pageid);
-	}else{ //No Settings found...setup default settings
+	} else { //No Settings found...setup default settings
 		if (make_or_update_settings_array($default_settings)) { events_settings(); }
 	}
 }
@@ -195,7 +195,7 @@ global $CFG,$MYVARS,$USER;
     			</fieldset>
     		</form>
     	</div>';
-    }else{ echo "Sorry, This form is not available"; }
+    } else { echo "Sorry, This form is not available"; }
 }
 
 function staff_application() {
@@ -207,7 +207,7 @@ global $CFG, $USER, $MYVARS;
 
     	echo create_validation_script("staffapplication_form" , "ajaxapi('/features/events/events_ajax.php','event_save_staffapp',create_request_string('staffapplication_form'),function() { simple_display('staffapplication_form_div'); });");
         echo staff_application_form($row);
-    }else{ echo "Sorry, This form is not available"; }
+    } else { echo "Sorry, This form is not available"; }
 }
 
 function info() {
@@ -222,7 +222,7 @@ global $CFG, $MYVARS, $USER;
 
         if ($event['event_begin_date'] != $event['event_end_date']) { //Multi day event
         	echo 'When: '.date('F \t\h\e jS, Y',$event["event_begin_date"]).' to '.date('F \t\h\e jS, Y',$event["event_end_date"]).'<br />';
-        }else{
+        } else {
         	echo 'When: '.date('F \t\h\e jS, Y',$event["event_begin_date"]).'<br />';
         }
 
@@ -281,7 +281,7 @@ global $CFG,$MYVARS,$USER;
 		$event_begin_time_form = isset($row['event_begin_time']) && $row['event_begin_time'] != "" ? get_possible_times('begin_time',$row['event_begin_time']) : get_possible_times('begin_time');
 		if (!empty($row['event_end_time'])) {
 			$event_end_time_form = $row['event_begin_date'] != $row['event_end_date'] ? get_possible_times('end_time',$row['event_end_time']) : get_possible_times('end_time',$row['event_end_time'],$row['event_begin_time']);
-		}else{ $event_end_time_form = ""; }
+		} else { $event_end_time_form = ""; }
 		$reg_display = $row['start_reg'] ? 'inline' : 'none';
 		$limits_display = $row['max_users'] == 0 && $row['hard_limits'] == "" && $row['soft_limits'] == "" ? 'none' : 'inline';
 		$max_users = $row['max_users'] != "0" ? $row['max_users'] : '0';
@@ -307,7 +307,7 @@ global $CFG,$MYVARS,$USER;
 		$mycategories = get_my_category($row['category']);
 		$mylocations = get_my_locations($USER->userid, $row['location'],$MYVARS->GET["eventid"]);
 		$hidden_limits = get_my_hidden_limits($template, $row['hard_limits'],$row['soft_limits']);
-	}else{ //New event form
+	} else { //New event form
         if (!user_has_ability_in_page($USER->userid,"addevents",$pageid)) { echo get_page_error_message("no_permission",array("addevents")); return; }
 		$eventid = $template = false;
 		$global_display = $pageid == $CFG->SITEID ? 'none' : 'inline';
@@ -411,7 +411,7 @@ global $CFG,$MYVARS,$USER;
             			Request Site Event:
             		</td>
             		<td class="field_input">
-            			<select id="siteviewable" onchange="if (this.value==0) { hide_section(\'auto_allowinpage\'); document.getElementById(\'allowinpage\').value=0; }else{ show_section(\'auto_allowinpage\'); }" ><option value="0" '.$siteviewable_no.'>No</option><option value="1" '.$siteviewable_yes.'>Yes</option></select>
+            			<select id="siteviewable" onchange="if (this.value==0) { hide_section(\'auto_allowinpage\'); document.getElementById(\'allowinpage\').value=0; } else { show_section(\'auto_allowinpage\'); }" ><option value="0" '.$siteviewable_no.'>No</option><option value="1" '.$siteviewable_yes.'>Yes</option></select>
             			<span class="hint">'.get_help("input_event_siteviewable:events").'<span class="hint-pointer">&nbsp;</span></span>
             		</td>
             	</tr><tr><td></td><td class="field_input"><span id="event_name_error" class="error_text"></span></td></tr>
@@ -837,7 +837,7 @@ global $CFG,$MYVARS,$USER;
         ob_start();
         include($CFG->dirroot . '/features/events/templates/' . $template['folder'] . '/template.php');
         $returnme .= ob_get_clean();
-	}else{ //registration template refers to a database style template
+	} else { //registration template refers to a database style template
 		$form = '<table style="width:100%">';
 		$templateform = get_db_result("SELECT * FROM events_templates_forms WHERE template_id='".$template['template_id']."' ORDER BY sort");
 		while ($element = fetch_row($templateform)) {
@@ -869,7 +869,7 @@ global $CFG,$MYVARS,$USER;
 			}elseif ($element['type'] == 'contact') {
 				$form .= '<tr><td class="field_title">' . $opt . $element['display'] . ': </td><td class="field_input" style="width:70%">' . create_form_element($element['type'],$element['elementid'],$element['optional'],$element['length'],false) . '<span class="hint">'.get_help("input_event_email:events").'<span class="hint-pointer">&nbsp;</span></span></td></tr>';
 				$form .= '<tr><td></td><td class="field_input"><span id="'.$element['elementid'].'_error" class="error_text"></span></td></tr>';
-			}else{
+			} else {
 				$form .= '<tr><td class="field_title">' . $opt . $element['display'] . ': </td><td class="field_input" style="width:70%">' . create_form_element($element['type'],$element['elementid'],$element['optional'],$element['length'],false) . '<span class="hint">'. $element['hint'] . '<span class="hint-pointer">&nbsp;</span></span></td></tr>';
 				$form .= '<tr><td></td><td class="field_input"><span id="'.$element['elementid'].'_error" class="error_text"></span></td></tr>';
 			}
@@ -911,7 +911,7 @@ global $CFG;
     			if (!document.getElementById("'.$attribute[1].'").value.length > 0) {
     		  		document.getElementById("'.$attribute[1].'_error").innerHTML = "This is a required field.";
     		  		valid = false;
-    		  	}else{ document.getElementById("'.$attribute[1].'_error").innerHTML = ""; }
+    		  	} else { document.getElementById("'.$attribute[1].'_error").innerHTML = ""; }
       			if ('.$attribute[3].' == 0) {
         			// Build the URL to connect to
         		  	var url = "'.$CFG->wwwroot.'/features/events/events_ajax.php?action=unique&elementid='.$attribute[1].'&value="+document.getElementById("'.$attribute[1].'").value + "&eventid=" + '.$eventid.';
@@ -923,7 +923,7 @@ global $CFG;
     				if (!istrue()) {
     					document.getElementById("'.$attribute[1].'_error").innerHTML = "This value already exists in our database.";
     					valid = false;
-    				}else{ document.getElementById("'.$attribute[1].'_error").innerHTML = ""; }
+    				} else { document.getElementById("'.$attribute[1].'_error").innerHTML = ""; }
     			}
     		}';
     	    break;
@@ -944,13 +944,13 @@ global $CFG;
     						if (!istrue()) {
     							document.getElementById("'.$attribute[1].'_error").innerHTML = "This email address has already been registered with.";
     							valid = false;
-    						}else{	document.getElementById("'.$attribute[1].'_error").innerHTML = ""; }
+    						} else {	document.getElementById("'.$attribute[1].'_error").innerHTML = ""; }
     					}
-    			  	}else{
+    			  	} else {
     					document.getElementById("'.$attribute[1].'_error").innerHTML = "Email address is not valid.";
     					valid = false;
     				}
-    			}else{
+    			} else {
     		  		document.getElementById("'.$attribute[1].'_error").innerHTML = "Email address is required.";
     		  		valid = false;
     		  	}
@@ -961,11 +961,11 @@ global $CFG;
     			if (document.getElementById("'.$attribute[1].'").value.length > 0) {
     				if (echeck(document.getElementById("'.$attribute[1].'").value)) {
     					document.getElementById("'.$attribute[1].'_error").innerHTML = "";
-    			  	}else{
+    			  	} else {
     					document.getElementById("'.$attribute[1].'_error").innerHTML = "Email address is not valid.";
     					valid = false;
     				}
-    			}else{
+    			} else {
     		  		document.getElementById("'.$attribute[1].'_error").innerHTML = "Email address is required.";
     		  		valid = false;
     		  	}
@@ -979,8 +979,8 @@ global $CFG;
     				if (!(IsNumeric(document.getElementById("'.$attribute[1].'_1").value) && IsNumeric(document.getElementById("'.$attribute[1].'_2").value) && IsNumeric(document.getElementById("'.$attribute[1].'_3").value))) {
     					document.getElementById("'.$attribute[1].'_error").innerHTML = "Not a valid phone #";
     		  			valid = false;
-    				}else{ document.getElementById("'.$attribute[1].'_error").innerHTML = ""; }
-    			}else{
+    				} else { document.getElementById("'.$attribute[1].'_error").innerHTML = ""; }
+    			} else {
     		  		document.getElementById("'.$attribute[1].'_error").innerHTML = "Phone # is not complete.";
     		  		valid = false;
     		  	}
@@ -995,7 +995,7 @@ global $CFG;
     			if (document.getElementById(\'payment_method\').value == "") {
     		  		document.getElementById("payment_method_error").innerHTML = "This is a required field.";
     			  	valid = false;
-    			}else{ document.getElementById("payment_method_error").innerHTML = ""; }
+    			} else { document.getElementById("payment_method_error").innerHTML = ""; }
     		}
     		';
     	break;
@@ -1010,11 +1010,11 @@ global $CFG;
     	  		document.getElementById("'.$attribute[1].'_error").innerHTML = "Password is required.";
     	  		valid = false;
     	  	}
-    	}else{
+    	} else {
       		if (!checkPassword(document.getElementById("'.$attribute[1].'"),document.getElementById("verify_'.$attribute[1].'"),document.getElementById("'.$attribute[1].'"),true)) {
       			document.getElementById("'.$attribute[1].'_error").innerHTML = "Password and Verify fields must match."
       			valid = false;
-      		}else{ document.getElementById("'.$attribute[1].'_error").innerHTML = ""; }
+      		} else { document.getElementById("'.$attribute[1].'_error").innerHTML = ""; }
 
             if ('.$attribute[3].' == 0) {
         		// Build the URL to connect to
@@ -1027,7 +1027,7 @@ global $CFG;
     			if (!istrue()) {
     				document.getElementById("'.$attribute[1].'_error").innerHTML = "This value already exists in our database.";
     				valid = false;
-    			}else{ document.getElementById("'.$attribute[1].'_error").innerHTML = ""; }
+    			} else { document.getElementById("'.$attribute[1].'_error").innerHTML = ""; }
     		}
       	}';
     	    break;
@@ -1075,7 +1075,7 @@ global $CFG;
     if (!$res) {
         //HTTP ERROR
         echo $redirect;
-    }else{
+    } else {
          // parse the data
         $lines = explode("\n", trim($res));
         $keyarray = array();
@@ -1101,7 +1101,7 @@ global $CFG;
         else if (strcmp ($lines[0], "FAIL") == 0) {
             // log for manual investigation
             echo $redirect;
-        }else{
+        } else {
             echo $redirect;
         }
     }
@@ -1119,14 +1119,14 @@ global $CFG;
 //    $header .= "Content-Type: application/x-www-form-urlencoded\r\n";
 //    $header .= "Content-Length: " . strlen($req) . "\r\n\r\n";
 //    if ($CFG->paypal) { $fp = fsockopen ('www.paypal.com', 80, $errno, $errstr, 30);
-//    }else{ $fp = fsockopen ('www.sandbox.paypal.com', 80, $errno, $errstr, 30);}
+//    } else { $fp = fsockopen ('www.sandbox.paypal.com', 80, $errno, $errstr, 30);}
 //
 //    // If possible, securely post back to paypal using HTTPS
 //    // Your PHP server will need to be SSL enabled
 //    // $fp = fsockopen ('ssl://www.sandbox.paypal.com', 443, $errno, $errstr, 30);
 //    if (!$fp) {
 //    // HTTP ERROR
-//    }else{
+//    } else {
 //    	fputs ($fp, $header . $req);
 //    	// read the body data
 //    	$res = '';

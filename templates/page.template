@@ -208,7 +208,7 @@ end_of_page_template||
 ||end_of_page_template
 
 select_options_template||
-  <option value="||value||">
+  <option value="||value||" ||selected||>
     ||display||
   </option>
 ||select_options_template

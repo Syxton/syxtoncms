@@ -29,7 +29,7 @@ global $CFG, $MYVARS, $USER;
 	//Check if any settings exist for this feature
 	if ($settings = fetch_settings($feature,$featureid,$pageid)) {
         echo make_settings_page($setting_names,$settings,$default_settings,$feature,$featureid,$pageid);
-	}else{ //No Settings found...setup default settings			
+	} else { //No Settings found...setup default settings			
 		if (make_or_update_settings_array($settings_array)) { donate_settings(); }
 	}	
 }
@@ -90,7 +90,7 @@ global $CFG;
         if (!$res) {
             //HTTP ERROR
             echo $redirect;
-        }else{
+        } else {
              // parse the data
             $lines = explode("\n", $res);
             $keyarray = array();
@@ -118,11 +118,11 @@ global $CFG;
             else if (strcmp ($lines[0], "FAIL") == 0) {
                 // log for manual investigation
                 echo $redirect;
-            }else{
+            } else {
                 echo $redirect;
             }
         }
-    }else{
+    } else {
          echo $redirect;
     }
 }

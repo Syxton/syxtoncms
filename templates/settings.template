@@ -1,0 +1,85 @@
+make_settings_page_template||
+  <div id="settings_div">
+    <table style="width:100%; border-color:buttonface; border-style:dotted; padding: 10px 0px 10px 0px;">
+      <tr>
+        <td>
+          <strong>
+            Feature Attributes
+          </strong>
+          <br />
+          <br />
+          ||settingslist||
+        </td>
+      </tr>
+    </table>
+  </div>
+||make_settings_page_template
+
+make_setting_input_template||
+  <div style="margin:10px 0;">
+    <div style="display:inline-block;width:20%;padding:0 10px;font-size:.9em;vertical-align:||valign||;">
+      ||title||
+    </div>
+    <div style="display:inline-block;width:70%">
+      ||istext{{
+          <input style="width: calc(100% - 150px);" type="text" id="||name||" name="||name||" value="||setting||" />
+      }}istext||
+
+      ||isyesno{{
+        <select style="width: calc(100% - 150px);" name="||name||" id="||name||">
+					<option value="1" ||yes||>Yes</option>
+					<option value="0" ||no||>No</option>
+				</select>
+      }}isyesno||
+
+      ||isnoyes{{
+        <select style="width: calc(100% - 150px);" name="||name||" id="||name||">
+          <option value="1" ||no||>No</option>
+          <option value="0" ||yes||>Yes</option>
+        </select>
+      }}isnoyes||
+
+      ||isselect{{
+        <select style="width: calc(100% - 150px);" name="||name||" id="||name||">
+          ||options||
+        </select>
+      }}isselect||
+
+      ||istextarea{{
+        <textarea style="width: calc(100% - 150px);" id="||name||" wrap="off" rows="||extra||" >
+          ||setting||
+        </textarea>
+      }}istextarea||
+
+      ||savebutton{{
+        <input style="float:right" type="button" value="Save" onclick="||ifnumeric{{
+                                                                         if (!IsNumeric($('#||name||').val())) {
+                                                                           alert('Must be numeric!');
+                                                                         } else {
+                                                                       }}ifnumeric||
+                                                                            ||ifextravalidation{{
+                                                                              if ($('#||name||').val() ||extravalidation||) {
+                                                                                alert('||extra_alert||');
+                                                                              } else {
+                                                                            }}ifextravalidation||
+                                                                              ajaxapi('/ajax/site_ajax.php',
+                                                                                      'save_settings',
+                                                                                      '&settingid=||settingid||' +
+                                                                                      '&setting=' + escape($('#||name||').val()),
+                                                                                      function() {
+                                                                                        simple_display('||name||_results');
+                                                                                        setTimeout(function() {
+                                                                                          clear_display('||name||_results');
+                                                                                        }, 3000);
+                                                                                      });
+                                                                            ||ifextravalidation{{
+                                                                              }
+                                                                            }}ifextravalidation||
+                                                                       ||ifnumeric{{
+                                                                         }
+                                                                       }}ifnumeric||" />
+      }}savebutton||
+    </div>
+    <span style="max-width:50px" id="||name||_results" class="notification"></span>
+  </div>
+||make_setting_input_template

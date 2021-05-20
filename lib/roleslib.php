@@ -138,7 +138,7 @@ global $CFG,$ROLES,$ABILITIES;
 	$roleid = get_user_role($userid,$pageid);
 	if ($roleid == $ROLES->visitor) {
 		return get_role_abilities($ROLES->visitor,$pageid,$section, $feature, $featureid);
-	}else{
+	} else {
         if ($section) {
             if (is_array($section)) {
                 $section_sql = "";
@@ -146,10 +146,10 @@ global $CFG,$ROLES,$ABILITIES;
                     $section_sql .= $section_sql == "" ? "section = '$s'" : " || section = '$s'";
                 }
                 $section = " WHERE ($section_sql)";
-            }else{
+            } else {
                 $section = " WHERE section = '$section'";
             }
-        }else{
+        } else {
             $section = "";
         }
 
@@ -260,10 +260,10 @@ global $CFG,$ROLES,$ABILITIES;
                 $section_sql .= $section_sql == "" ? "section = '$s'" : " || section = '$s'";
             }
             $section = " WHERE ($section_sql)";
-        }else{
+        } else {
             $section = " WHERE section = '$section'";
         }
-    }else{
+    } else {
         $section = "";
     }
 
@@ -372,7 +372,7 @@ global $CFG, $ROLES, $USER;
 	}
 
 	if (is_visitor_allowed_page($pageid)) { return $ROLES->visitor; //if it is a site viewable page and the user has no specified role, default to visitor
-	}else{ return $ROLES->none; }
+	} else { return $ROLES->none; }
 }
 
 function users_that_have_ability_in_page($ability, $pageid) {
@@ -401,7 +401,7 @@ global $CFG,$ROLES;
     	OR userid IN (SELECT pu.userid FROM roles_ability_peruser pu WHERE pu.pageid='$pageid' AND pu.ability='$ability' AND pu.allow='1'))
     	OR userid IN (SELECT userid FROM roles_assignment WHERE roleid=1 AND pageid=".$CFG->SITEID.")
     	";
-	}else{
+	} else {
     	$SQL = "
     	SELECT * FROM users u
     	WHERE
@@ -515,7 +515,7 @@ global $CFG,$USER;
 }
 
 function groups_list($pageid,$feature = false,$featureid = false,$action=true,$selectid=0,$excludeid=0,$excludechildrenofid=0,$width="100%",$id="group_select",$name="groupid") {
-    $action = $action ? 'onchange="if ($(\'#group_select\').val() > 0) { ajaxapi(\'/ajax/roles_ajax.php\',\'refresh_group_users\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;groupid=\'+document.getElementById(\'group_select\').value,function() { simple_display(\'per_group_display_div\'); }); ajaxapi(\'/ajax/roles_ajax.php\',\'refresh_group_abilities\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;groupid=\'+document.getElementById(\'group_select\').value,function() { simple_display(\'per_group_abilities_div\'); });}else{ clear_display(\'per_group_display_div\'); clear_display(\'per_group_abilities_div\'); }"' : '';
+    $action = $action ? 'onchange="if ($(\'#group_select\').val() > 0) { ajaxapi(\'/ajax/roles_ajax.php\',\'refresh_group_users\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;groupid=\'+document.getElementById(\'group_select\').value,function() { simple_display(\'per_group_display_div\'); }); ajaxapi(\'/ajax/roles_ajax.php\',\'refresh_group_abilities\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;groupid=\'+document.getElementById(\'group_select\').value,function() { simple_display(\'per_group_abilities_div\'); });} else { clear_display(\'per_group_display_div\'); clear_display(\'per_group_abilities_div\'); }"' : '';
     $returnme = '<select style="width: '.$width.'; font-size:.85em;" name="'.$name.'" id="'.$id.'" '.$action.' >';
     $returnme .= '<option value="0">No group selected</option>';
     $returnme .= sub_groups_list($pageid,false,"",$selectid,$excludeid,$excludechildrenofid);
@@ -581,7 +581,7 @@ global $CFG;
                 if ($feature && $featureid) { //Feature user override
                     $rights = user_has_ability_in_page($userid,$row['ability'],$pageid,$feature,$featureid) ? "1" : "0";
                     $notify = get_db_count("SELECT * FROM roles_ability_perfeature_peruser WHERE pageid='$pageid' AND feature='$feature' AND featureid='$featureid' AND userid='$userid' AND ability='".$row['ability']."'") ? 'background-color:yellow;' : '';
-    			}else{ //Page user override
+    			} else { //Page user override
                     $rights = user_has_ability_in_page($userid,$row['ability'],$pageid) ? "1" : "0";
                     $notify = get_db_count("SELECT * FROM roles_ability_peruser WHERE pageid='$pageid' AND userid='$userid' AND ability='".$row['ability']."'") ? 'background-color:yellow;' : '';
     			}
@@ -592,7 +592,7 @@ global $CFG;
                 $radiobuttons = '<td><div style="width:22px;'.$notify.'" id="'.$type.'abilty_'.$row["abilityid"].'_yes"><input onclick="'.$swap_function.'(\''.$type.'abilty_'.$row["abilityid"].'_yes\',\''.$type.'abilty_'.$row["abilityid"].'_no\');" type="radio" name="'.$row['ability'].'" value="1" checked></div></td><td>'.$notsettoggle.'</td><td><div style="width:22px;" id="'.$type.'abilty_'.$row["abilityid"].'_no"><input onclick="'.$swap_function.'(\''.$type.'abilty_'.$row["abilityid"].'_no\',\''.$type.'abilty_'.$row["abilityid"].'_yes\');" type="radio" name="'.$row['ability'].'" value="0"></div></td>';
 			}elseif ($rights === "0") { //set to disallow
                 $radiobuttons = '<td><div style="width:22px;" id="'.$type.'abilty_'.$row["abilityid"].'_yes"><input onclick="'.$swap_function.'(\''.$type.'abilty_'.$row["abilityid"].'_yes\',\''.$type.'abilty_'.$row["abilityid"].'_no\');" type="radio" name="'.$row['ability'].'" value="1"></div></td><td>'.$notsettoggle.'</td><td><div style="width:22px;'.$notify.'" id="'.$type.'abilty_'.$row["abilityid"].'_no"><input onclick="'.$swap_function.'(\''.$type.'abilty_'.$row["abilityid"].'_no\',\''.$type.'abilty_'.$row["abilityid"].'_yes\');" type="radio" name="'.$row['ability'].'" value="0" checked></div></td>';
-			}else{ //not set
+			} else { //not set
                 $radiobuttons = '<td><div style="width:22px;" id="'.$type.'abilty_'.$row["abilityid"].'_yes"><input onclick="'.$swap_function.'(\''.$type.'abilty_'.$row["abilityid"].'_yes\',\''.$type.'abilty_'.$row["abilityid"].'_no\');" type="radio" name="'.$row['ability'].'" value="1"></div></td><td>'.$notsettoggle.'</td><td><div style="width:22px;'.$notify.'" id="'.$type.'abilty_'.$row["abilityid"].'_no"><input onclick="'.$swap_function.'(\''.$type.'abilty_'.$row["abilityid"].'_no\',\''.$type.'abilty_'.$row["abilityid"].'_yes\');" type="radio" name="'.$row['ability'].'" value="0"></div></td>';
 			}
 

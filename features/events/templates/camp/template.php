@@ -30,7 +30,7 @@ if ($show_again) { //This is not the first time through
 			${$reginfo["elementname"]} = $reginfo["value"];
 		}
 		$email = get_db_field("email","events_registrations","regid=$regid");
-	}else{ //Different person...but auto fill the payment method and hide it.
+	} else { //Different person...but auto fill the payment method and hide it.
 		$payment_method = get_db_field("value", "events_registrations_values", "elementname='payment_method' AND regid=$regid");
 	}
 }
@@ -95,7 +95,7 @@ if ($autofill) {
 			<input type="hidden" name="HealthTetanusDate" value="'.$HealthTetanusDate.'" />
 		</td>
      </tr>';
-}else{
+} else {
  echo '  
 		<tr>
 		  <td class="field_title" align="right" style="width:115px;">
@@ -303,7 +303,7 @@ if (!$show_again) {
     Do you have a question for the director?
       </textarea></td>
     </tr>';
-}else{
+} else {
 	echo '<tr><td></td><td><input type="hidden" name="payment_method" value="'.$payment_method.'" /></td></tr>';
 } 
    

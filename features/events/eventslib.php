@@ -29,7 +29,7 @@ global $CFG, $USER, $ROLES;
 	if ($area == "middle") {
         //Get calendar of events
         return get_calendar_of_events($title, $pageid, $featureid, false, $showpastevents, $content, $allowrequests);
-    }else{
+    } else {
         if (is_logged_in()) { //Logged in user will see...
             if (get_db_row("SELECT eventid FROM events WHERE workers=1 AND event_begin_date > " .time())) {
                 if (user_has_ability_in_page($USER->userid, "staffapply", $pageid, "events", $featureid)) {
@@ -115,7 +115,7 @@ function get_event_request_link($area,$featureid) {
 global $CFG;
     if ($area == "middle") {
         return '<div style="text-align:right;">'.make_modal_links(array("title"=>"Request an Event","path"=>$CFG->wwwroot."/features/events/events.php?action=event_request_form&amp;featureid=$featureid","validate"=>"true","width"=>"550","height"=>"650","image"=>$CFG->wwwroot."/images/request.gif")).'</div>';
-    }else{
+    } else {
         return '<div style="text-align:right;">'.make_modal_links(array("title"=>"Request an Event","path"=>$CFG->wwwroot."/features/events/events.php?action=event_request_form&amp;featureid=$featureid","validate"=>"true","width"=>"550","height"=>"650","image"=>$CFG->wwwroot."/images/request.gif")).'</div><br />';
     }
 }
@@ -386,7 +386,7 @@ global $CFG, $USER;
             //Delete button
             $returnme .= ' <a class="slide_menu_button" title="Delete Event" href="javascript: if (confirm(\'Are you sure you want to delete this event?\')) { ajaxapi(\'/features/events/events_ajax.php\',\'delete_events_relay\',\'&amp;featureid=' . $event['eventid'] . '\',function() { update_login_contents(\'' . $pageid . '\'); });}"> <img src="' . $CFG->wwwroot . '/images/delete.png" title="Delete Event" alt="Delete Event" /></a>';
         }
-    }else{  return "";}
+    } else {  return "";}
     return $returnme;
 }
 
@@ -636,7 +636,7 @@ global $CFG;
                 $name .= $name == "" ? $value : " " . $value;
             }
         }
-    }else{
+    } else {
         $name_fields = explode(",", $template["registrant_name"]);
         $i = 0;
         while (isset($name_fields[$i])) {
@@ -684,12 +684,12 @@ global $CFG, $why, $error;
                 log_entry("event", $event["name"], "Failed Registration", $error . ": " . $SQL);
                 return false;
             }
-        }else{
+        } else {
             $error = "We are sorry, there has been an error while trying to register for this event.  Please try again. ERROR CODE: 0002";
             log_entry("event", $event["name"], "Failed Registration", $error . ": " . $REGIDSQL);
             return false;
         }
-    }else{ //db form style
+    } else { //db form style
         $sql_values = "";
         if ($elements = get_db_result("SELECT * FROM events_templates_forms WHERE template_id='" . $event['template_id'] . "' ORDER BY sort")) {
 	        while ($element = fetch_row($elements)) {

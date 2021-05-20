@@ -98,7 +98,7 @@ global $CFG, $MYVARS, $USER;
     			</fieldset>
     		</form>
     	</div>';
-    echo '<div id="donation_script" style="display:none">' . create_validation_script("campaign_form" , "ajaxapi('/features/donate/donate_ajax.php','add_new_campaign','&campaign_id=$campaign_id&featureid=$featureid&pageid=$pageid&email=' + escape($('#email').val()) + '&token=' + escape($('#token').val()) + '&title=' + escape($('#title').val()) + '&goal=' + escape($('#goal').val()) + '&description=' + escape($('#description').val()) + '&shared=' + escape($('#shared').val()),function() { var returned = trim(xmlHttp.responseText).split('**'); if (returned[0] == 'true') { $('#new_campaign_div').html(returned[1]);}else{ $('#error_div').html(returned[1])}});",true) . "</div>";
+    echo '<div id="donation_script" style="display:none">' . create_validation_script("campaign_form" , "ajaxapi('/features/donate/donate_ajax.php','add_new_campaign','&campaign_id=$campaign_id&featureid=$featureid&pageid=$pageid&email=' + escape($('#email').val()) + '&token=' + escape($('#token').val()) + '&title=' + escape($('#title').val()) + '&goal=' + escape($('#goal').val()) + '&description=' + escape($('#description').val()) + '&shared=' + escape($('#shared').val()),function() { var returned = trim(xmlHttp.responseText).split('**'); if (returned[0] == 'true') { $('#new_campaign_div').html(returned[1]);} else { $('#error_div').html(returned[1])}});",true) . "</div>";
     echo format_popup($content,'Start a Donation Campaign',"380px");
 }
 
@@ -114,16 +114,16 @@ global $CFG, $MYVARS, $USER;
         $SQL = "UPDATE donate_campaign SET title='$title',goal_amount='$goal',goal_description='$description',paypal_email='$email',token='$token',shared='$shared' WHERE campaign_id='$campaign_id'";
         if (execute_db_sql($SQL)) { //edit made
             echo "true**<h1>Campaign Edited</h1>";
-        }else{
+        } else {
             echo "false**An error has occurred, please try again later.";    
         }         
-    }else{ //INSERT NEW
+    } else { //INSERT NEW
         $SQL = "INSERT INTO donate_campaign (origin_page,title,goal_amount,goal_description,paypal_email,token,shared,datestarted,metgoal) VALUES('$pageid','$title','$goal','$description','$email','$token','$shared','".get_timestamp()."','0')";
         if ($campaign_id = execute_db_sql($SQL)) { //New campaign made
             //Save campaign ID in instance
             execute_db_sql("UPDATE donate_instance SET campaign_id=$campaign_id WHERE donate_id=$featureid");
             echo "true**<h1>Campaign Started</h1>";
-        }else{
+        } else {
             echo "false**An error has occurred, please try again later.";    
         }    
     }
@@ -143,7 +143,7 @@ global $CFG, $MYVARS, $USER;
             echo '<option value="'.$row["campaign_id"].'">'.$row["title"]."</option>";    
         }
         echo '</select> <button onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'join_campaign\',\'&campaign_id=\'+$(\'#campaign_id\').val()+\'&featureid='.$featureid.'&pageid='.$pageid.'\',function() { simple_display(\'donation_display\'); });">Join Campaign</button>';
-    }else{
+    } else {
         echo "There are no active campaigns available.";
     }
 }
@@ -159,7 +159,7 @@ global $CFG, $MYVARS, $USER;
         echo "<h1>Campaign Joined</h1>
                 You can now accept donations for your chosen campaign.
              ";
-    }else{
+    } else {
         echo "Could not join campaign.";    
     }    
 }
@@ -201,7 +201,7 @@ global $CFG, $MYVARS, $USER;
     			</fieldset>
     		</form>
     	</div>';
-    echo '<div id="donation_script" style="display:none">' . create_validation_script("donation_form" , "ajaxapi('/features/donate/donate_ajax.php','add_offline_donation','&featureid=$featureid&pageid=$pageid&amount=' + escape($('#amount').val()) + '&name=' + escape($('#name').val()),function() { var returned = trim(xmlHttp.responseText).split('**'); if (returned[0] == 'true') { $('#donation_display').html(returned[1]);}else{ $('#error_div').html(returned[1])}});",true) . "</div>";
+    echo '<div id="donation_script" style="display:none">' . create_validation_script("donation_form" , "ajaxapi('/features/donate/donate_ajax.php','add_offline_donation','&featureid=$featureid&pageid=$pageid&amount=' + escape($('#amount').val()) + '&name=' + escape($('#name').val()),function() { var returned = trim(xmlHttp.responseText).split('**'); if (returned[0] == 'true') { $('#donation_display').html(returned[1]);} else { $('#error_div').html(returned[1])}});",true) . "</div>";
     echo format_popup($content,'Start a Donation Campaign',"380px");    
 }
 
@@ -253,7 +253,7 @@ global $CFG, $MYVARS, $USER;
             $i++; 
         }    
         $content .= '</table>';
-    }else{
+    } else {
         $content .= 'No donations have been made yet.';
     }
     
@@ -319,7 +319,7 @@ global $CFG, $MYVARS, $USER;
     			</fieldset>
     		</form>
     	</div>';
-    echo '<div id="donation_script" style="display:none">' . create_validation_script("donation_form" , "ajaxapi('/features/donate/donate_ajax.php','edit_donation_save','&donationid=$donationid&featureid=$featureid&pageid=$pageid&amount=' + escape($('#amount').val()) + '&name=' + escape($('#name').val()) + '&campaign_id=' + escape($('#campaign_id').val()) + '&paypal_TX=' + escape($('#paypal_TX').val()),function() { var returned = trim(xmlHttp.responseText).split('**'); if (returned[0] == 'true') { $('#donation_display').html(returned[1]);}else{ $('#error_div').html(returned[1])}});",true) . "</div>";
+    echo '<div id="donation_script" style="display:none">' . create_validation_script("donation_form" , "ajaxapi('/features/donate/donate_ajax.php','edit_donation_save','&donationid=$donationid&featureid=$featureid&pageid=$pageid&amount=' + escape($('#amount').val()) + '&name=' + escape($('#name').val()) + '&campaign_id=' + escape($('#campaign_id').val()) + '&paypal_TX=' + escape($('#paypal_TX').val()),function() { var returned = trim(xmlHttp.responseText).split('**'); if (returned[0] == 'true') { $('#donation_display').html(returned[1]);} else { $('#error_div').html(returned[1])}});",true) . "</div>";
     echo format_popup($content,'Edit Donation',"380px");    
 }
 

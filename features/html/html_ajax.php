@@ -35,7 +35,7 @@ global $CFG, $MYVARS;
 		//Set first edition field
 		$SQL = "UPDATE html SET firstedition='$htmlid' WHERE htmlid=$newhtmlid";
 		execute_db_sql($SQL);
-	}else{ //This is not a first edition
+	} else { //This is not a first edition
 		//Set first edition field
 		$SQL = "UPDATE html SET firstedition='".$html["firstedition"]."' WHERE htmlid=$newhtmlid";
 		execute_db_sql($SQL);

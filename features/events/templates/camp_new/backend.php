@@ -228,7 +228,7 @@ global $CFG,$USER,$PAGE;
             $returnme .= '<option value="'.$c['eventid'].'" '.$c['selected'].'>'.$c['name'].'</option>';
         }
         $returnme .= count($common) ? '</select> <input type="button" onclick="show_form_again($(\'#'.$id.'\').val(),\''.$regid.'\', '.$autofill.');" value="Register" />' : '';
-	}else{ return false; }
+	} else { return false; }
 	return $returnme;
 }
 ?>

@@ -65,7 +65,7 @@ global $CFG, $MYVARS, $USER, $smarty;
             if (is_numeric(trim($name))) {          
                 $x = trim($name);
                 $NAMESEARCHSQL .= $NAMESEARCHSQL == "" ? "(u.userid = $x)" : " AND (u.userid = $x)";	
-            }else{
+            } else {
                 preg_match_all('/"(?:\\\\.|[^\\\\"])*"|\S+/', trim(stripslashes($name)), $temp);
                 foreach ($temp[0] as $x) {
                     if (strstr($x," ")) {
@@ -74,7 +74,7 @@ global $CFG, $MYVARS, $USER, $smarty;
                     }elseif (strstr($x,"\"") || strstr($x,"\'")) {
                         $x = trim($x,'\"\'');
                         $NAMESEARCHSQL .= $NAMESEARCHSQL == "" ? "((u.fname = '$x') OR (u.lname = '$x'))" : " AND ((u.fname = '$x') OR (u.lname = '$x'))";   
-                    }else{
+                    } else {
                         $NAMESEARCHSQL .= $NAMESEARCHSQL == "" ? "((u.fname LIKE '%$x%') OR (u.lname LIKE '%$x%'))" : " AND ((u.fname LIKE '%$x%') OR (u.lname LIKE '%$x%'))";
                     }	
     			}
@@ -91,11 +91,11 @@ global $CFG, $MYVARS, $USER, $smarty;
 			$customfield = strtolower(array_shift($temp));
 			$test = strtolower(trim($temp[0]));
 			if ($test != '=' && $test != '!=' && $test != '>' && $test != '<' && $test != '>=' && $test != '<=' && $test != 'like' && $test != '!like') { $customtype = '=';
-			}else{ $customtype = strtolower(trim(array_shift($temp))); }
+			} else { $customtype = strtolower(trim(array_shift($temp))); }
 			foreach ($temp as $x) {
 				if ($customtype == 'like') { $FIELDSEARCHSQL .= $FIELDSEARCHSQL == "" ? "($customfield LIKE '%$x%')" : " AND ($customfield LIKE '%$x%')";
 				}elseif ($customtype == '!like') { $FIELDSEARCHSQL .= $FIELDSEARCHSQL == "" ? "($customfield NOT LIKE '%$x%')" : " AND ($customfield NOT LIKE '%$x%')";	
-				}else{ $FIELDSEARCHSQL .= $FIELDSEARCHSQL == "" ? "($customfield $customtype '$x')" : " AND ($customfield $customtype '$x')";}
+				} else { $FIELDSEARCHSQL .= $FIELDSEARCHSQL == "" ? "($customfield $customtype '$x')" : " AND ($customfield $customtype '$x')";}
 			}
 		}
 		$FIELDSEARCHSQL = empty($FIELDSEARCHSQL) ? "" : "($FIELDSEARCHSQL)";
@@ -120,7 +120,7 @@ global $CFG, $MYVARS, $USER, $smarty;
 		if ($easteregg == "fail") {
 			echo '<iframe src="//failblog.org/" style="width:100%;border:none;height:800px;" />';
 		}
-	}else{
+	} else {
 		$and1 = !empty($name) ? " AND " : "";
 		$and2 = !empty($cfield) ? " AND " : "";		
 			
@@ -156,7 +156,7 @@ global $CFG, $MYVARS, $USER, $smarty;
 					$fileoutput .= $row["fname"] . " " . $row["lname"] . " <" . $row["email"] . ">\r\n";
 				}elseif (isset($MYVARS->GET["csv"])) { //Export to CSV
 					$fileoutput .= $row["fname"] . "," . $row["lname"] . "," . $row["email"] . "\n";
-				}else{
+				} else {
 					$lastip = get_db_field("ip","logfile","userid='".$row["userid"]."' ORDER BY timeline DESC");
                     $locate = $lastip ? '<a title="IP Location" href="javascript: void(0);" onclick="get_coordinates(\''.$lastip.'\',\'display\');"><img src="'.$CFG->wwwroot.'/images/locate.png" alt="IP Location" /></a>' : "";
 					$delete = !is_siteadmin($row["userid"]) ? '<a title="Delete User" href="javascript: void(0);" onclick="if (confirm(\'Do you want to delete '.addslashes($row['fname']).' '.addslashes($row['lname']).'\\\'s account?\')) { ajaxapi(\'/ajax/site_ajax.php\',\'delete_user\',\'&userid='.$row['userid'].'\',function() { ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;pagenum='.$pagenum.'&amp;search='.$searchwords.'\',function() { simple_display(\'mem_resultsdiv\'); });}); }" ><img src="'.$CFG->wwwroot.'/images/delete.png" alt="Delete User" /></a>' : "";
@@ -203,11 +203,11 @@ global $CFG, $MYVARS, $USER, $smarty;
    	        $export = '<div style="font-size:.65em;padding:2px;"><a href="javascript: ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;csv=1&amp;search='.$searchwords.'\',function() { if (xmlHttp.readyState == 4) { run_this(); }},true);" >Export to CSV</a>&nbsp;&nbsp;<a href="javascript: ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;mailman=1&amp;search='.$searchwords.'\',function() { if (xmlHttp.readyState == 4) { run_this(); }},true);" >Export to Mailman</a></div>';
 			
 	        if (!isset($MYVARS->GET["mailman"]) && !isset($MYVARS->GET["csv"])) { echo $header . $export . $body; 
-            }else{
+            } else {
 		    	$filename = isset($MYVARS->GET["mailman"]) ? "users_export.txt" : "users_export.csv";
                 echo get_download_link($filename,$fileoutput);
 			}
-		}else{
+		} else {
 	        echo $body . '<tr><td colspan="9" style="font-size:.8em;text-align:center;"><b>No matches found.</b></td></tr></table>';
 	    }
 	}

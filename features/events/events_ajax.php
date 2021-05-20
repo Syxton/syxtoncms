@@ -46,8 +46,8 @@ global $CFG,$MYVARS,$USER;
             //echo $SQL;
             if ($getdates = get_db_count($SQL)) {
                 echo "false";
-            }else{ echo "true";}
-        }else{ //only check a single day for an opening
+            } else { echo "true";}
+        } else { //only check a single day for an opening
             $startdate = strtotime($startdate) + get_offset();
             //get all events at location on date
             $SQL = "SELECT * FROM events
@@ -56,7 +56,7 @@ global $CFG,$MYVARS,$USER;
             //echo $SQL;
             if ($getdates = get_db_count($SQL)) {
                 echo "false";
-            }else{ echo "true"; }
+            } else { echo "true"; }
         }
     }
 }
@@ -88,7 +88,7 @@ global $CFG,$MYVARS,$USER;
             $name = explode(" ",$contact_name);
             $contact->fname = $name[0];
             $contact->lname = $name[1];
-        }else{
+        } else {
             $contact->fname = $contact_name;
             $contact->lname = "";
         }
@@ -233,7 +233,7 @@ global $CFG, $MYVARS;
                     $name = explode(" ",stripslashes($request["contact_name"]));
                     $contact->fname = $name[0];
                     $contact->lname = $name[1];
-                }else{
+                } else {
                     $contact->fname = stripslashes($request["contact_name"]);
                     $contact->lname = "";
                 }
@@ -461,7 +461,7 @@ global $CFG, $MYVARS;
                                     </a>
                                 </strong>
                             </div><br /><br />';
-                }else{ //Print answer
+                } else { //Print answer
                     echo    '<div style="background-color:Gold;padding:4px;overflow:hidden;">
                                 '.$row['answer'].'<br />
                                 <strong>
@@ -472,9 +472,9 @@ global $CFG, $MYVARS;
                             </div><br /><br />';
                 }
             }
-        }else{ echo "No other questions have been asked yet."; }
+        } else { echo "No other questions have been asked yet."; }
         if (!$refresh) { echo '</div></body></html>'; }
-    }else{ echo get_error_message("invalid_old_request:events"); }
+    } else { echo get_error_message("invalid_old_request:events"); }
 }
 
 //Function is called on email votes
@@ -509,7 +509,7 @@ global $CFG, $MYVARS;
                     if ($entry[0] == $voteid) { //This is the vote that needs removed
                         if ($entry[1] == $approve) { //Same vote, nothing else needs done
                             echo "You have already voted to $stance this event.";
-                        }else{ //They have changed their vote.
+                        } else { //They have changed their vote.
                             //Remove old vote
                             execute_db_sql("UPDATE events_requests
                                                 SET voted = replace(voted, ':$voteid;$entry[1]:', ':$voteid;$approve:')
@@ -519,7 +519,7 @@ global $CFG, $MYVARS;
                                 execute_db_sql("UPDATE events_requests
                                                     SET votes_against = (votes_against - 1), votes_for = (votes_for + 1)
                                                     WHERE reqid=$reqid;");
-                            }else{ //Remove 1 from for and add 1 to against
+                            } else { //Remove 1 from for and add 1 to against
                                 execute_db_sql("UPDATE events_requests
                                                     SET votes_for = (votes_for - 1),votes_against = (votes_against + 1)
                                                     WHERE reqid=$reqid;");
@@ -528,7 +528,7 @@ global $CFG, $MYVARS;
                         }
                     }
                 }
-            }else{ //New vote
+            } else { //New vote
                 execute_db_sql("UPDATE events_requests
                                     SET voted = CONCAT(voted,':$voteid;$approve:')
                                     WHERE reqid=$reqid;");
@@ -536,7 +536,7 @@ global $CFG, $MYVARS;
                     execute_db_sql("UPDATE events_requests
                                         SET votes_for = (votes_for + 1)
                                         WHERE reqid=$reqid;");
-                }else{ //Remove 1 from for and add 1 to against
+                } else { //Remove 1 from for and add 1 to against
                     execute_db_sql("UPDATE events_requests
                                         SET votes_against = (votes_against + 1)
                                         WHERE reqid=$reqid;");
@@ -558,7 +558,7 @@ global $CFG, $MYVARS;
                     $name = explode(" ",stripslashes($request["contact_name"]));
                     $contact->fname = $name[0];
                     $contact->lname = $name[1];
-                }else{
+                } else {
                     $contact->fname = stripslashes($request["contact_name"]);
                     $contact->lname = "";
                 }
@@ -640,8 +640,8 @@ global $CFG, $MYVARS;
                 }
             }
 
-        }else{ echo get_error_message("generic_permissions"); }
-    }else{
+        } else { echo get_error_message("generic_permissions"); }
+    } else {
         echo get_error_message("invalid_old_request:events");
     }
     echo "</body></html>";
@@ -714,7 +714,7 @@ global $CFG, $MYVARS, $USER;
 
 	if ($regid != "false") { //Print form for 1 registration
 		$printarea .= printable_registration($regid,$eventid,$template_id);
-	}else{ //Batch print all registrations
+	} else { //Batch print all registrations
         if ($registrations = get_db_result(get_registration_sort_sql($eventid,$online_only))) {
 			while ($registration = fetch_row($registrations)) {
 				$printarea .= $printarea == '' ? '<p style="font-size:.95em;" class="print">' : '<p style="font-size:.95em;" class="pagestart print">';
@@ -755,7 +755,7 @@ function get_registration_sort_sql($eventid,$online_only=false) {
                     WHERE e.eventid='$eventid' $online_only
                     GROUP BY regid
                     ORDER BY val0 LIKE '%Reserved%' DESC,$orderby";
-   	}else{ //custom template
+   	} else { //custom template
         $sort_elements=explode(",",$sort_info["orderbyfield"]);$i=0;
         while (isset($sort_elements[$i])) {
             $SQL .= ",(SELECT value FROM events_registrations_values
@@ -937,7 +937,7 @@ global $CFG, $MYVARS, $USER;
         execute_db_sql("DELETE FROM events_registrations_values
                             WHERE regid='$regid'")) {
         echo "Deleted Registration";
-    }else{ echo "Failed"; }
+    } else { echo "Failed"; }
 }
 
 function resend_registration_email() {
@@ -1081,7 +1081,7 @@ global $CFG, $MYVARS, $USER;
         					$i++;
 						}
 					}
-				}else{
+				} else {
 	        		$value = get_db_row("SELECT * FROM events_registrations_values
                                             WHERE regid='$regid'
                                                 AND elementid='".$form_element["elementid"]."'");
@@ -1089,7 +1089,7 @@ global $CFG, $MYVARS, $USER;
 				}
 			}
         }
-    }else{
+    } else {
         $template_forms = explode(";", trim($template["formlist"], ';'));
         $i=0;
         while (isset($template_forms[$i])) {
@@ -1128,7 +1128,7 @@ global $CFG, $MYVARS, $USER;
 		        		if ($form_element["type"] == "payment") {
 		    				$SQL2 .= $SQL2 == "" ? "" : ",";
 		        			$SQL2 .= "('$regid','".$form_element["elementid"]."','','$eventid','total_owed'),('$regid',".$form_element["elementid"].",'','$eventid','paid'),('$regid','".$form_element["elementid"]."','','$eventid','payment_method')";
-						}else{
+						} else {
 		        			$SQL2 .= $SQL2 == "" ? "" : ",";
 		        			$value = $form_element["nameforemail"] == 1 ? "Reserved" : "";
 		        			$SQL2 .= "('$regid',".$form_element["elementid"].",'$value','$eventid','".$form_element["elementname"]."')";
@@ -1138,7 +1138,7 @@ global $CFG, $MYVARS, $USER;
 		        $SQL2 = "INSERT INTO events_registrations_values
                             (regid,elementid,value,eventid,elementname)
                             VALUES" . $SQL2;
-		    }else{
+		    } else {
 		        $template_forms = explode(";", trim($template["formlist"], ';'));
                 foreach ($template_forms as $formset) {
                     $form = explode(":", $formset);
@@ -1153,12 +1153,12 @@ global $CFG, $MYVARS, $USER;
 		    }
 
 		    if (execute_db_sql($SQL2)) { echo "Added";
-		    }else{
+		    } else {
 				execute_db_sql("DELETE FROM events_registrations
                                     WHERE regid='$regid'");
 				echo "Failed";
 			}
-	    }else{ echo "Failed"; }
+	    } else { echo "Failed"; }
 
 	    $reserved++;
     }
@@ -1323,7 +1323,7 @@ global $CFG, $MYVARS, $USER;
 	}
 	$returnme .= '<div>
                     A reserved registration will show in the above list.<br />
-                    <span>Reserve <input type="text" size="2" maxlength="2" id="reserveamount" value="1" onchange="if (IsNumeric(this.value) && this.value > 0) {}else{this.value=1;}" /> Spot(s): </span>
+                    <span>Reserve <input type="text" size="2" maxlength="2" id="reserveamount" value="1" onchange="if (IsNumeric(this.value) && this.value > 0) {} else {this.value=1;}" /> Spot(s): </span>
                     <a href="javascript: void(0);" onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                                                             ajaxapi(\'/features/events/events_ajax.php\',
                                                                     \'add_blank_registration\',
@@ -1379,7 +1379,7 @@ global $CFG, $MYVARS, $USER;
                         AND start_reg !=''
                         AND (" . $searchstring . ")
                     ORDER BY event_begin_date DESC";
-	}else{
+	} else {
 		$SQL = "SELECT * FROM events
                     WHERE pageid=".dbescape($MYVARS->GET["pageid"])."
                         AND start_reg !=''
@@ -1472,7 +1472,7 @@ global $CFG, $MYVARS, $USER;
                     </tr>';
         }
         $body = '<table style="background-color:#F3F6FB;width:100%;border-collapse:collapse;">' . $body . '</table>';
-    }else{
+    } else {
         echo '<span class="error_text" class="centered_span">No matches found.</span>';
     }
     echo $header . $body;
@@ -1511,10 +1511,10 @@ global $CFG, $MYVARS, $USER;
 				$item[0]->regid = $registration["regid"];
 				echo '<br />' . make_paypal_button($item, $event["paypal"]);
 			}
-		}else{
+		} else {
 			echo "<center><h3>We are unable to provide payment options for this registration id.</h3></center>";
 		}
-	}else{
+	} else {
 		echo '<div style="text-align:center;"><br /><br /><strong>No registration found.</strong></div>';
 	}
 }
@@ -1567,7 +1567,7 @@ global $CFG, $MYVARS, $USER, $error;
 					</center>
 					<br /><br />
 					Your registration will be complete upon payment. ';
-				}else{
+				} else {
 					echo '<br />
 					If you are done with the registration process, please make out your <br />
 					check or money order in the amount of <span style="color:blue;font-size:1.25em;">$' . $MYVARS->GET["cart_total"] . '</span> payable to <b>' . $event["payableto"] . '</b> and send it to <br /><br />
@@ -1594,7 +1594,7 @@ global $CFG, $MYVARS, $USER, $error;
 		send_email($touser, $fromuser, null, $event["name"] . " Registration", $message);
 
 		log_entry("events", dbescape($MYVARS->GET["eventid"]), "Registered for Event"); //Log
-	}else{ //failed registration
+	} else { //failed registration
 		log_entry("events", dbescape($MYVARS->GET["eventid"]), "Failed Event Registration"); //Log
 		echo '<center><div style="width:60%"><span class="error_text">Your registration for ' . $event['name'] . ' has failed. </span><br /> ' . $error . '</div>';
 	}
@@ -1625,7 +1625,7 @@ global $CFG, $MYVARS;
                 $displayname = get_template_field_displayname($template["template_id"],$limit[0]);
 				$returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <a href="javascript:void(0);" onclick="delete_limit(\'hard_limits\',\'' . ($i - $alter) . '\');">Delete</a><br />';
 				$hidden_variable1 .= $hidden_variable1 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
-			}else{  $alter++; }
+			} else {  $alter++; }
 			$i++;
 		}
 	}
@@ -1643,7 +1643,7 @@ global $CFG, $MYVARS;
                 $displayname = get_template_field_displayname($template["template_id"],$limit[0]);
 				$returnme2 .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <a href="javascript:void(0);" onclick="delete_limit(\'soft_limits\',\'' . ($i - $alter) . '\');">Delete</a><br />';
 				$hidden_variable2 .= $hidden_variable2 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
-			}else{ $alter++; }
+			} else { $alter++; }
 			$i++;
 		}
 	}
@@ -1674,7 +1674,7 @@ global $CFG, $MYVARS;
 
 			if ($template["folder"] == "none") {
 				$displayname = get_db_field("display", "events_templates_forms", "elementid=" . $limit[0]);
-			}else{
+			} else {
 				$displayname = $limit[0];
 			}
 
@@ -1693,7 +1693,7 @@ global $CFG, $MYVARS;
 
 			if ($template["folder"] == "none") {
 				$displayname = get_db_field("display", "events_templates_forms", "elementid=" . $limit[0]);
-			}else{
+			} else {
 				$displayname = $limit[0];
 			}
 
@@ -1719,7 +1719,7 @@ global $CFG, $MYVARS, $USER;
 		while ($form = fetch_row($forms)) {
 			$fields .= '<option value="' . $form["elementid"] . '">' . $form["display"] . '</option>';
 		}
-	}else{
+	} else {
 		$formlist = explode(";", $template['formlist']);
 
 		$i = 0;
@@ -1812,12 +1812,12 @@ global $CFG, $MYVARS;
     if (isset($MYVARS->GET["event_begin_date"])) {
         $ebd = explode(" ",$MYVARS->GET["event_begin_date"]);
         $event_begin_date = strtotime("$ebd[0] $ebd[1] $ebd[2] $ebd[3] $ebd[4] $ebd[5]");
-    }else{ die("No Event Begin Date"); }
+    } else { die("No Event Begin Date"); }
 
     if (isset($MYVARS->GET["event_end_date"])) {
         $eed = explode(" ",$MYVARS->GET["event_end_date"]);
         $event_end_date = $multiday == "1" ? strtotime("$eed[0] $eed[1] $eed[2] $eed[3] $eed[4] $eed[5]") : $event_begin_date;
-    }else{ $event_end_date = $event_begin_date; }
+    } else { $event_end_date = $event_begin_date; }
 
     $allday = dbescape($MYVARS->GET["allday"]);
 	$event_begin_time = $allday != "1" ? dbescape($MYVARS->GET["begin_time"]) : '';
@@ -1839,7 +1839,7 @@ global $CFG, $MYVARS;
             $start_reg = $reg == "1" && isset($MYVARS->GET["start_reg"]) ? strtotime("$startr[0] $startr[1] $startr[2] $startr[3] $startr[4] $startr[5]") : '0';
         }
 
-    }else{ $start_reg = '0';}
+    } else { $start_reg = '0';}
 
     if (isset($MYVARS->GET["stop_reg"])) {
         if (strstr($MYVARS->GET["stop_reg"],"/")) {
@@ -1849,7 +1849,7 @@ global $CFG, $MYVARS;
             $stopr = explode(" ",$MYVARS->GET["stop_reg"]);
             $stop_reg = $reg == "1" ? strtotime("$stopr[0] $stopr[1] $stopr[2] $stopr[3] $stopr[4] $stopr[5]") : '0';
         }
-    }else{ $stop_reg = '0'; }
+    } else { $stop_reg = '0'; }
 
 	$template_id = $reg == "1" ? dbescape($MYVARS->GET["template"]) : '0';
 
@@ -1867,7 +1867,7 @@ global $CFG, $MYVARS;
             $se = explode(" ",$MYVARS->GET["sale_end"]);
             $sale_end = $sale_fee != '0' ? strtotime("$se[0] $se[1] $se[2] $se[3] $se[4] $se[5]") : '0';
         }
-    }else{ $sale_end = '0'; }
+    } else { $sale_end = '0'; }
 
 	$payableto = $fee != "1" ? '' : dbescape(urldecode($MYVARS->GET["payableto"]));
 	$checksaddress = $fee != "1" ? '' : dbescape(urldecode($MYVARS->GET["checksaddress"]));
@@ -1918,7 +1918,7 @@ global $CFG, $MYVARS;
                 echo "Event could NOT be added <br /> <br /> $SQL";
             }
         }
-	}else{
+	} else {
 		$SQL = "UPDATE events SET
 			         template_id='$template_id',name='$name',category='$category',location='$location',allowinpage='$allowinpage',
                      start_reg='$start_reg',stop_reg='$stop_reg',max_users='$max_users',
@@ -1986,7 +1986,7 @@ global $CFG, $MYVARS;
 	$value = dbescape($MYVARS->GET["value"]);
 
 	if (is_unique("events_registrations_values", "elementid='$elementid' AND eventid='$eventid' AND value='$value'")) { echo "false";
-	}else{ echo "true";}
+	} else { echo "true";}
 }
 
 function unique_relay() {
@@ -1996,7 +1996,7 @@ global $CFG, $MYVARS;
 	$value = dbescape($MYVARS->GET["value"]);
 
 	if (is_unique($table, "$key='$value'")) { echo "false";
-	}else{ echo "true";}
+	} else { echo "true";}
 
 }
 
@@ -2052,7 +2052,7 @@ global $MYVARS, $CFG, $USER;
 			$i++;
 		}
 		$CSV .= "\n";
-	}else{
+	} else {
 		$formlist = get_db_result("SELECT * FROM events_templates_forms
                                         WHERE template_id='" . $event['template_id'] . "'
                                         ORDER BY sort");
@@ -2083,7 +2083,7 @@ global $MYVARS, $CFG, $USER;
                     $row .= ',"' . $reorder[$element[0]]["value"] . '"';
         			$i++;
         		}
-            }else{
+            } else {
           		$formlist = get_db_result("SELECT * FROM events_templates_forms
                                                 WHERE template_id='" . $event['template_id'] . "'
                                                 ORDER BY sort");
@@ -2117,7 +2117,7 @@ global $MYVARS, $CFG, $USER;
                     $row .= ',"' . $reorder[$element[0]]["value"] . '"';
         			$i++;
         		}
-            }else{
+            } else {
           		$formlist = get_db_result("SELECT * FROM events_templates_forms
                                                 WHERE template_id='" . $event['template_id'] . "'
                                                 ORDER BY sort");
@@ -2150,7 +2150,7 @@ global $MYVARS, $CFG, $USER;
                     $row .= ',"' . $reorder[$element[0]]["value"] . '"';
         			$i++;
         		}
-            }else{
+            } else {
           		$formlist = get_db_result("SELECT * FROM events_templates_forms
                                                 WHERE template_id='" . $event['template_id'] . "'
                                                 ORDER BY sort");
@@ -2335,7 +2335,7 @@ global $CFG, $MYVARS, $USER;
                     </tr>';
         }
         $body = '<table style="background-color:#F3F6FB;width:100%;border-collapse:collapse;">' . $body . '</table>';
-    }else{
+    } else {
         echo '<span class="error_text" class="centered_span">No matches found.</span>';
     }
     echo $header . $body;
@@ -2623,7 +2623,7 @@ global $CFG, $MYVARS, $USER;
                     </tr>';
         }
         $body = '<table style="background-color:#F3F6FB;width:100%;border-collapse:collapse;">' . $body . '</table>';
-    }else{
+    } else {
         echo '<span class="error_text" class="centered_span">No matches found.</span>';
     }
     echo $header . $body;

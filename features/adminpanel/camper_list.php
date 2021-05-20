@@ -26,17 +26,17 @@ if ($registrations = get_db_result($SQL)) {
                     $bday = date("m/d/Y",strtotime($temp["Camper_Birth_Date"][0].$temp["Camper_Birth_Date"][1].'/'.$temp["Camper_Birth_Date"][2].$temp["Camper_Birth_Date"][3].'/'.$century.$temp["Camper_Birth_Date"][4].$temp["Camper_Birth_Date"][5]));
                 }elseif (strlen($temp["Camper_Birth_Date"])==8) {
                     $bday = date("m/d/Y",strtotime($temp["Camper_Birth_Date"][0].$temp["Camper_Birth_Date"][1].'/'.$temp["Camper_Birth_Date"][2].$temp["Camper_Birth_Date"][3].'/'.$temp["Camper_Birth_Date"][4].$temp["Camper_Birth_Date"][5].$temp["Camper_Birth_Date"][6].$temp["Camper_Birth_Date"][7]));
-                }else{ //Most likely empty so try the age field
+                } else { //Most likely empty so try the age field
                     if (!empty($temp["Camper_Age"])) {
                         $regdate = $reg["date"];//datetime when they registered
                         $regage = $temp["Camper_Age"];//age when they registered
                         $age = round((time() - $regdate) / (60*60*24*365)) + $regage;                      
-                    }else{
+                    } else {
                         $age = "Unknown";
                     }
                     $bday = "Unknown";
                 }
-            }else{ $bday = date("m/d/Y",strtotime($temp["Camper_Birth_Date"])); };
+            } else { $bday = date("m/d/Y",strtotime($temp["Camper_Birth_Date"])); };
             
             $temp["Camper_Gender"] = $temp["Camper_Gender"] == "F" ? "Female" : $temp["Camper_Gender"];
             $temp["Camper_Gender"] = $temp["Camper_Gender"] == "M" ? "Male" : $temp["Camper_Gender"];
@@ -160,7 +160,7 @@ function array_distinct ($array, $group_keys, $sum_keys = NULL, $count_key = NUL
     if (!in_array ($puffer, $existing_sub_keys)) {
       $existing_sub_keys[$key] = $puffer;
       $output[$key] = $sub_array;
-    }else{
+    } else {
       $puffer = array_search ($puffer, $existing_sub_keys);
       #sum keys
       foreach ($sum_keys as $sum_key) {

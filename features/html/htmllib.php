@@ -39,7 +39,7 @@ global $CFG,$USER;
             //if viewing from rss feed
 			if ($htmlonly) {
                 $returnme .= '<table style="width:100%;border:1px solid silver;padding:10px;"><tr><th>'. $settings->html->$featureid->feature_title->setting.'</th></tr><tr><td><br /><br /><div class="htmlblock">' .filter(stripslashes($row['html']),$featureid,$settings,$area) .'</div><br />'. $comments . '</td></tr></table>';
-            }else{ //regular html feature viewing
+            } else { //regular html feature viewing
                 $stopped_editing = '<input type="hidden" id="html_'.$featureid.'_stopped_editing" value="ajaxapi(\'/features/html/html_ajax.php\',\'stopped_editing\',\'&amp;htmlid='.$featureid.'&amp;userid=0\',function() {if (xmlHttp.readyState == 4) { do_nothing(); }},true);" />';
 
                 if (is_logged_in() && $settings->html->$featureid->enablerss->setting) $rss = make_modal_links(array("title"=>"RSS Feed","path"=>$CFG->wwwroot."/pages/rss.php?action=rss_subscribe_feature&amp;pageid=$pageid&amp;featureid=$featureid&amp;feature=html","styles"=>"position: relative;top: 4px;padding-right:2px;","iframe"=>"true","refresh"=>"true","height"=>"300","width"=>"640","image"=>$CFG->wwwroot."/images/small_rss.png"));
@@ -134,7 +134,7 @@ global $CFG;
 						                 width: 290
 						             });
 						         </script>";
-					 	}else{$player = ""; }
+					 	} else {$player = ""; }
 
 						$found = true;
 						//make internal links full paths
@@ -277,7 +277,7 @@ global $CFG,$USER;
     	$next = $searchvars["next"] ? '<a href="javascript: document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/html/html_ajax.php\',\'commentspage\',\'&pagenum=' . ($pagenum + 1) . '&perpage='.$perpage.'&pageid='.$pageid.'&htmlid='.$htmlid.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer'."html_$htmlid".'\'); document.getElementById(\'loading_overlay'."html_$featureid".'\').style.visibility=\'hidden\'; }},true);" onmouseup="this.blur()">Next</a>' : "";
     	$arrows = '<table style="width:100%;"><tr><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;font-size:.75em;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><br /><br />';
 		$limit = "LIMIT " .$searchvars["firstonpage"] . "," . $perpage;
-	}else{ $limit = "LIMIT $perpage";}
+	} else { $limit = "LIMIT $perpage";}
 
 	$SQL = "SELECT * FROM html_comments WHERE htmlid=$htmlid ORDER BY commentid DESC $limit";
 
@@ -315,7 +315,7 @@ global $CFG,$USER;
 		}
 		//Don't make the overlay div over and over'
 		if ($original) { $comments = make_search_box($arrows.$comments,"html_$htmlid");
-        }else{ $comments = $arrows.$comments; }
+        } else { $comments = $arrows.$comments; }
 
 		if ($hide) { $comments = '<div id="hmtl_'.$htmlid.'_comments_button" class="button" style="display:block;margin-right:auto;margin-left:auto;font-size:.8em;width:90px;" onclick="hide_show_buttons(\'hmtl_'.$htmlid.'_comments_button\',true); hide_show_buttons(\'hmtl_'.$htmlid.'_comments\',true)">Show Comments</div><div id="hmtl_'.$htmlid.'_comments" style="display:none;">' . $header . $comments . '</div>'; }
 	}
@@ -390,7 +390,7 @@ global $CFG;
 			$html = get_db_row("SELECT * FROM html WHERE htmlid='".$feed["featureid"]."'");
 			if ($html['firstedition']) { //this is not a first edition
 				$htmlresults = get_db_result("SELECT * FROM html WHERE htmlid='".$html["firstedition"]."' OR firstedition='".$html["firstedition"]."' ORDER BY htmlid DESC LIMIT 50");
-			}else{
+			} else {
 				$htmlresults = get_db_result("SELECT * FROM html WHERE htmlid='".$html["htmlid"]."' OR firstedition='".$html["htmlid"]."' ORDER BY htmlid DESC LIMIT 50");
 			}
 
@@ -398,7 +398,7 @@ global $CFG;
 				$settings = fetch_settings("html",$html["htmlid"],$feed["pageid"]);
 				$feeds .= fill_feed($settings->html->$html["htmlid"]->feature_title->setting . " " . date('d/m/Y',$html["dateposted"]),substr($html["html"],0,100),$CFG->wwwroot.'/features/html/html.php?action=viewhtml&key='.$userkey.'&pageid='.$feed["pageid"].'&htmlid='.$html["htmlid"],$html["dateposted"]);
 			}
-		}else{
+		} else {
 			$html = get_db_row("SELECT * FROM html WHERE htmlid='".$feed["featureid"]."'");
 			$feeds .= fill_feed($settings->html->$feed["featureid"]->feature_title->setting,substr($html["html"],0,100),$CFG->wwwroot.'/features/html/html.php?action=viewhtml&key='.$userkey.'&pageid='.$feed["pageid"].'&htmlid='.$feed["featureid"],$html["dateposted"]);
 		}

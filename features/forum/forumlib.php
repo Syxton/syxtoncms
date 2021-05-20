@@ -26,17 +26,17 @@ global $CFG, $USER, $ROLES;
 	if ($area == "middle") { //This is a FORUM
 		if (user_has_ability_in_page($USER->userid,"viewforums",$pageid)) {
 			$content .= get_forum_categories($forumid);
-		}else{
+		} else {
 			$content .= '<span class="centered_span">'.get_error_message("generic_permissions").'</span>';
 		}
 		$content .= '</div><input type="hidden" name="forum_refresh_'.$forumid.'" id="forum_refresh_'.$forumid.'" value="ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_categories_ajax\',\'&amp;forumid='.$forumid.'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true);" />';
         
         //Refresh Script
         $content.='<script type="text/javascript">var forum'.$forumid.'_interval=0; forum'.$forumid.'_interval = setInterval(function() { eval(stripslashes(unescape(window.parent.document.getElementById("forum_refresh_'.$forumid.'").value))); },'.$refresh_time.');</script>';
-    }else{ //This is a SHOUTBOX
+    } else { //This is a SHOUTBOX
 		if (user_has_ability_in_page($USER->userid,"viewshoutbox",$pageid)) {
 			$content .= get_shoutbox($forumid);
-		}else{
+		} else {
 			$content .= '<span class="centered_span">'.get_error_message("generic_permissions").'</span>';
 		}
 		$content .= '</div><input type="hidden" name="forum_refresh_'.$forumid.'" id="forum_refresh_'.$forumid.'" value="ajaxapi(\'/features/forum/forum_ajax.php\',\'get_shoutbox_ajax\',\'&amp;forumid='.$forumid.'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true);" />';
@@ -101,7 +101,7 @@ global $CFG;
 	$time = get_timestamp();
 	if (!get_db_row("SELECT * FROM forum_views WHERE userid='$userid' AND discussionid='$discussionid'")) {
 	   execute_db_sql("INSERT INTO forum_views (userid,catid,discussionid,lastviewed) VALUES('$userid','$catid','$discussionid','$time')");
-	}else{
+	} else {
 	   execute_db_sql("UPDATE forum_views SET lastviewed='$time' WHERE userid='$userid' AND discussionid='$discussionid'");
 	}
 }
@@ -165,14 +165,14 @@ global $CFG;
 			if ($page_counter > $beforeskipping) {
 				$returnme .= !($pagenum === false) && $pagenum == $lastpage ? ' Last ' : ' <a href="javascript: ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_posts\',\'&amp;discussionid='.$discussion['discussionid'].'&amp;pagenum='.$lastpage.'&amp;catid='.$discussion['catid'].'&amp;forumid='.$discussion['forumid'].'&amp;pageid='.$discussion["pageid"].'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); $(\'#forum_refresh_'.$forumid.'\').val(\''.addslashes('ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_posts\',\'&amp;discussionid='.$discussion['discussionid'].'&amp;pagenum='.$lastpage.'&amp;catid='.$discussion['catid'].'&amp;forumid='.$discussion['forumid'].'&amp;pageid='.$discussion["pageid"].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true);').'\');}},true); "> Last </a>';
 				$countdown = 0;
-			}else{
+			} else {
 				$returnme .= !($pagenum === false) && $pagenum == ($page_counter-1) ? ' ' . $page_counter . ' ' : ' <a href="javascript: ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_posts\',\'&amp;discussionid='.$discussion['discussionid'].'&amp;pagenum='.($page_counter-1).'&amp;catid='.$discussion['catid'].'&amp;forumid='.$discussion['forumid'].'&amp;pageid='.$discussion["pageid"].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); $(\'#forum_refresh_'.$forumid.'\').val(\''.addslashes('ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_posts\',\'&amp;discussionid='.$discussion['discussionid'].'&amp;pagenum='.($page_counter-1).'&amp;catid='.$discussion['catid'].'&amp;forumid='.$discussion['forumid'].'&amp;pageid='.$discussion["pageid"].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true);').'\');}},true); ">' . $page_counter . ' </a>';
 				$countdown -= $perpage;
 			}
 			$page_counter++;
 		}
 		if ($page_counter == 2) { return "";}
-	}else{ return ""; }
+	} else { return ""; }
 	
     return ''.$returnme.$next.'</span>';
 }
@@ -196,14 +196,14 @@ global $CFG;
 			if ($page_counter > $beforeskipping) {
 				$returnme .= !($pagenum === false) && $pagenum == $lastpage ? ' Last ' : ' <a href="javascript: ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_discussions\',\'&amp;dpagenum='.$lastpage.'&amp;pageid='.$category['pageid'].'&amp;forumid='.$category['forumid'].'&amp;catid='.$category['catid'].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); $(\'#forum_refresh_'.$forumid.'\').val(\''.addslashes('ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_discussions\',\'&amp;dpagenum='.$lastpage.'&amp;pageid='.$category['pageid'].'&amp;forumid='.$category['forumid'].'&amp;catid='.$category['catid'].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true);').'\'); }},true);"> Last </a>';
 				$countdown = 0;
-			}else{
+			} else {
 				$returnme .= !($pagenum === false) && $pagenum == ($page_counter-1) ? ' ' . $page_counter . ' ' : ' <a href="javascript: ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_discussions\',\'&amp;dpagenum='.($page_counter-1).'&amp;pageid='.$category['pageid'].'&amp;forumid='.$category['forumid'].'&amp;catid='.$category['catid'].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); $(\'#forum_refresh_'.$forumid.'\').val(\''.addslashes('ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_discussions\',\'&amp;dpagenum='.($page_counter-1).'&amp;pageid='.$category['pageid'].'&amp;forumid='.$category['forumid'].'&amp;catid='.$category['catid'].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true);').'\'); }},true);">' . $page_counter . ' </a>';
 				$countdown -= $perpage;
 			}
 			$page_counter++;
 		}
 		if ($page_counter == 2) { return "";}
-	}else{ return ""; }
+	} else { return ""; }
     
 	return ''.$returnme.$next.'</span>';
 }

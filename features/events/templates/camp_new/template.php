@@ -29,7 +29,7 @@ if ($show_again) { //This is not the first time through
 			${$reginfo["elementname"]} = $reginfo["value"];
 		}
 		$email = get_db_field("email","events_registrations","regid='$regid'");
-	}else{ //Different person...but auto fill the payment method and hide it.
+	} else { //Different person...but auto fill the payment method and hide it.
 		$payment_method = get_db_field("value", "events_registrations_values", "elementname='payment_method' AND regid='$regid'");
 	}
 }
@@ -120,7 +120,7 @@ if ($autofill) {
 			<input type="hidden" name="HealthExisting" value="'.$HealthExisting.'" />
 			<input type="hidden" name="HealthMedicines" value="'.$HealthMedicines.'" />
 			<input type="hidden" name="HealthTetanusDate" value="'.$HealthTetanusDate.'" />';
-}else{
+} else {
  echo ' <input type="hidden" id="event_day" value="'.date("j",$event["event_begin_date"]).'" />
         <input type="hidden" id="event_month" value="'.date("n",$event["event_begin_date"]).'" />
         <input type="hidden" id="event_year" value="'.date("Y",$event["event_begin_date"]).'" />
@@ -374,10 +374,10 @@ if ($pictures) {
                 <div class="tooltipContainer info">'.get_help("help_pictures:events:templates/camp_new").' ($'.$pictures_price.'.00 for 8x10 color picture of all campers and staff)</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>';        
-    }else{
+    } else {
         echo '<input type="hidden" size="5" maxlength="5" id="Camper_Picture" name="Camper_Picture" value="1" readonly />';        
     }
-}else{ echo '<input type="hidden" size="5" maxlength="5" id="Camper_Picture" name="Camper_Picture" value="0" readonly />'; }
+} else { echo '<input type="hidden" size="5" maxlength="5" id="Camper_Picture" name="Camper_Picture" value="0" readonly />'; }
 
 if ($shirt) {
     $shirt_sizes = array("Youth XS","Youth S","Youth M","Youth L","Youth XL","Adult S","Adult M","Adult L","Adult XL","Adult XXL");
@@ -398,7 +398,7 @@ if ($shirt) {
             <div class="spacer" style="clear: both;"></div>
         </div>
         ';        
-    }else{
+    } else {
         echo '
         <div class="rowContainer">
             <label class="rowTitle" for="Camper_Shirt">Shirt</label>
@@ -414,7 +414,7 @@ if ($shirt) {
             <div class="spacer" style="clear: both;"></div>
         </div>';        
     }
-}else{ echo '<input type="hidden" id="Camper_Shirt" name="Camper_Shirt_Size" value="0" readonly /><input type="hidden" id="Camper_Shirt_Price" name="Camper_Shirt_Price" value="0" readonly />'; }
+} else { echo '<input type="hidden" id="Camper_Shirt" name="Camper_Shirt_Size" value="0" readonly /><input type="hidden" id="Camper_Shirt_Price" name="Camper_Shirt_Price" value="0" readonly />'; }
 
 echo '
     <div class="rowContainer">
@@ -440,7 +440,7 @@ if (!$show_again) {
             </textarea>
             <div class="spacer" style="clear: both;"></div>
         </div>';
-}else{
+} else {
 	echo '<table><tr><td></td><td><input type="hidden" name="payment_method" id="payment_method" value="'.$payment_method.'" /></td></tr><table>';
 } 
     echo '<input tabindex="32" name="print" value="Print Application" onclick="window.print()" type="button" '.$preview.'/><br /><br />

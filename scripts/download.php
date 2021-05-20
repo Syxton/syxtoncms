@@ -67,7 +67,7 @@ if (!empty($_GET['file'])) {
         if ($mtype == '') {
             $mtype = "application/octet-stream";
         }
-    }else{
+    } else {
       // get mime type defined by admin
       $mtype = $allowed_ext[$path_parts['extension']];
     }

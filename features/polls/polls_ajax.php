@@ -44,7 +44,7 @@ global $CFG,$MYVARS;
 	while (isset($answers[$i-1])) {
         if ($answer = get_db_row("SELECT * FROM polls_answers WHERE pollid='$pollid' AND answer='".$answers[$i-1]."'")) { //already exists so just update the sort
             execute_db_sql("UPDATE polls_answere SET sort='$i' WHERE answerid='".$answer["answerid"]."'");
-        }else{ //answer doesn't exist so make it
+        } else { //answer doesn't exist so make it
             $SQL = "INSERT INTO polls_answers (pollid,answer,sort) VALUES('$pollid','".$answers[$i-1]."','$i')";
             execute_db_sql($SQL);
         }
@@ -125,7 +125,7 @@ global $CFG, $MYVARS, $USER;
             $returnme .= '<a title="Close Poll" onclick="if (confirm(\'Are you sure you would like to close this poll?  Once a poll is closed, it cannot be reopened.\')) { ajaxapi(\'/features/polls/polls_ajax.php\',\'closepoll\',\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'&amp;extra=\',function() { simple_display(\'polldiv'.$featureid.'\'); ajaxapi(\'/features/polls/polls_ajax.php\',\'pollstatuspic\',\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'&amp;extra=close\',function() { simple_display(\'pollstatus'.$featureid.'\'); });}); }"><img src="'.$CFG->wwwroot.'/images/stop.png" alt="Close Poll" /></a> ';
         }
 		echo $returnme;
-	}else{
+	} else {
 		donothing();
 	}
 }

@@ -116,7 +116,7 @@ if (strcmp ($res, "VERIFIED") == 0) {
 } else if (strcmp ($res, "INVALID") == 0) {
     //Log
     log_entry('events', $res, "Paypal (failed)");
-}else{
+} else {
     //Log
     log_entry('events', $res, "Paypal (none)");
 }

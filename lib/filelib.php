@@ -58,7 +58,7 @@ function recursive_delete ( $folderPath ) {
             }
         }
         return rmdir ( $folderPath );
-    }else{
+    } else {
         return false;
     }
 }
@@ -85,7 +85,7 @@ function make_csv($filename,$contents) {
 function create_file($filename,$contents,$makecsv=false) {
     if ($makecsv) {
         return make_csv($filename,$contents);
-    }else{
+    } else {
         $tempdir = sys_get_temp_dir() == "" ? "/tmp/" : sys_get_temp_dir();
         $tmpfname = tempnam($tempdir, $filename);
         if (file_exists($tmpfname)) {	unlink($tmpfname); }

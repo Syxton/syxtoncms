@@ -19,7 +19,7 @@
      							<h2>
 								 	Search the Member Directory
 								</h2>
-								<a style="font-size:.75em;" onclick="if (document.getElementById('instructions').style.display == 'none') { document.getElementById('instructions').style.display = 'block'; }else{ document.getElementById('instructions').style.display = 'none';} return false;" >Show/Hide Instructions</a>
+								<a style="font-size:.75em;" onclick="if (document.getElementById('instructions').style.display == 'none') { document.getElementById('instructions').style.display = 'block'; } else { document.getElementById('instructions').style.display = 'none';} return false;" >Show/Hide Instructions</a>
 								<div id="instructions" style="display:none;font-size:.8em;">
 								<span style="font-size:.85em;"><b>Name:</b></span><code style="color:blue;"> /n Joe </code> <span style="font-size:.85em;">Default search /n is not needed unless following another tag.</span><br />
 								<span style="font-size:.85em;"><b>Field Search:</b></span><code style="color:blue;"> /f department like parent </code> <span style="font-size:.85em;">'fieldname followed by '=, !=, &gt;, &lt;, &gt;=, &lt;=, or like' then search criteria'</span><br />
@@ -27,7 +27,7 @@
 								<span style="font-size:.85em;"><b>Example:</b></span><code style="color:blue;"> Joe /f email like hotmail.com</code> <span style="font-size:.85em;">6th grade math teacher named Joe Smith</span>
 								<br /><br />
 								</div>
-								<a style="font-size:.75em;" onclick="if (document.getElementById('allfields').style.display == 'none') { document.getElementById('allfields').style.display = 'inline'; }else{ document.getElementById('allfields').style.display = 'none';} return false;" >Show/Hide Available fields</a>
+								<a style="font-size:.75em;" onclick="if (document.getElementById('allfields').style.display == 'none') { document.getElementById('allfields').style.display = 'inline'; } else { document.getElementById('allfields').style.display = 'none';} return false;" >Show/Hide Available fields</a>
 								<span id="allfields" style="display:none;font-size:.8em;">
 									<?php
                                     //Get list of all fields that can be searched on

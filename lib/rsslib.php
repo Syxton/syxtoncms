@@ -24,7 +24,7 @@ global $CFG, $MYVARS;
 				$rssname = $rss["rssname"];
 				$feeds = create_feed($rssid,$userid,$userkey);
 			}
-		}else{
+		} else {
 			$pageid = dbescape($MYVARS->GET["pageid"]);
 				
 			if (user_has_ability_in_page($userid,"viewpage",$pageid)) {	
@@ -32,7 +32,7 @@ global $CFG, $MYVARS;
 				if ($feed = get_db_row("SELECT * FROM rss_feeds WHERE pageid=$pageid AND type='page' AND rssid IN (SELECT rssid FROM rss WHERE userid=$userid)")) {
 					$rssname = get_db_field("rssname","rss","rssid=".$feed["rssid"]);
 					$feeds = create_feed($feed["rssid"],$userid,$userkey);
-				}else{ //Need to create new rssid and feed
+				} else { //Need to create new rssid and feed
 					$page = get_db_row("SELECT * FROM pages WHERE pageid=$pageid");
 					$rssname = $page["name"];
 					if ($rssid = execute_db_sql("INSERT INTO rss (userid,rssname) VALUES($userid,'".dbescape($page["name"])."')")) {
@@ -92,7 +92,7 @@ function compare_fields($a, $b) {
 function feature_feeds($feed,$userid,$userkey) {
 global $CFG;
 	if ($feed["type"] == "page") { $feeds = create_page_feed($feed["pageid"],$userid,$userkey); $feeds = sort_feeds($feeds); 
-    }else{ $feeds = all_features_function(false,$feed["type"],"","_rss",false,$feed,$userid,$userkey);}
+    } else { $feeds = all_features_function(false,$feed["type"],"","_rss",false,$feed,$userid,$userkey);}
 		
 	return $feeds;
 }

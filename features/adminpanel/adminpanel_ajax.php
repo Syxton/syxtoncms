@@ -59,7 +59,7 @@ global $CFG,$MYVARS;
 
     if (send_email($touser, $fromuser, $cc = false, $subject, $message)) {
         echo "<br />Email Success";
-    }else{
+    } else {
         echo "<br />Email Failed";
     }
 }
@@ -117,7 +117,7 @@ global $CFG,$MYVARS,$USER;
         $nextmonth=1;
         $prevyear=$year;
         $prevmonth=($month-1);
-    }else{
+    } else {
         $nextyear=$year;
         $nextmonth=($month+1);
         $prevyear=$year;
@@ -158,7 +158,7 @@ global $CFG,$MYVARS,$USER;
         //$data= array_reverse($data); //Display data from first day to last even though we are usually looking for the latest data
         $max = ceil($max/100) * 100;
         $lines = $max/10;
-    }else{
+    } else {
         while ($first <= date('t',$date)) {
             $data[$i] = 0;
             $i++;$first++;
@@ -206,7 +206,7 @@ global $CFG,$MYVARS,$USER;
             $returnme .= '<div style="background-color:#'.$bg.';width:98%;margin-right:auto;margin-left:auto;"><table style="border-collapse:collapse;width:100%;font-size:.9em;padding-left:3px"><tr><td style="width:25%;text-align:center;">'.date("m/d/Y g:i a",$data[$i]["timeline"]).'</td><td style="width:35%;">'.stripslashes(get_db_field("name","pages","pageid='".$data[$i]["pageid"]."'")).'</td><td style="width:20%;">'.$info.'</td><td style="width:15%;">'.stripslashes($data[$i]["description"]).'</td></tr></table></div>';
             $i++;
         }
-    }else{
+    } else {
         $returnme .= '<div style="width:98%;margin-right:auto;margin-left:auto;"><table style="border-collapse:collapse;width:100%;font-size:.9em;"><tr><td colspan="4" style="text-align:center;">No Usage</td></tr></table></div>';
     }
     return $returnme;
@@ -228,7 +228,7 @@ function extendedEncode($arrVals, $maxVal) {
             $chartData .= "..";
         }elseif ($scaledVal < 0) {
             $chartData .= '__';
-        }else{
+        } else {
             // Calculate first and second digits and add them to the output.
             $quotient = floor($scaledVal / $EXTENDED_MAP_LENGTH);
             $remainder = $scaledVal - $EXTENDED_MAP_LENGTH * $quotient;

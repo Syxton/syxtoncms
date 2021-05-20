@@ -53,7 +53,7 @@ $returnme = ''; $section_content = ""; $toggle = "";
 				$returnme .= get_css_box($title,$section_content,$buttons,NULL,"news",$featureid);
 			}
 
-	}else{ //User is signed in
+	} else { //User is signed in
 
 		if (user_has_ability_in_page($USER->userid, 'viewnews', $pageid)) {
 			if (is_logged_in()) {
@@ -76,7 +76,7 @@ $returnme = ''; $section_content = ""; $toggle = "";
                             }
 						}
 					}
-				}else{ //This is for any page other than site
+				} else { //This is for any page other than site
 					if ($pagenews = get_section_news($featureid, "LIMIT ".$limit)) {
 						$newdate=false;
                         foreach ($pagenews as $news) {
@@ -129,7 +129,7 @@ global $CFG;
     		  </td>
             </tr>
     	</table>';
-    }else{
+    } else {
         $dots = strlen($pagenews->caption) > 50 ? "..." : "";
     	$returnme = '
     	<table class="newstable">
@@ -178,7 +178,7 @@ global $CFG;
 		INNER JOIN pages_features pf on pf.pageid=ns.pageid AND pf.feature='news' AND pf.featureid=ns.featureid
 		$includesite
 		 ORDER BY ns.pageid,ns.lastupdate DESC $limit";
-	}else{
+	} else {
     	$SQL = "
     	SELECT DISTINCT ns.pageidns.lastupdate FROM news_features ns
     	INNER JOIN roles_assignment ra ON ra.userid=$userid AND ra.pageid = ns.pageid AND confirm=0
@@ -209,8 +209,8 @@ global $CFG;
     		$returnme .= make_select_from_array("news_".$featureid."_archive_news", $newsarticles, "newsid", "title", NULL ,'','',false,NULL,'font-size:.8em;');
     		$returnme .= '</span></td><td>'.make_modal_links(array("title"=> "Get News","id"=>"fetch_".$featureid."_button","path"=>$CFG->wwwroot."/features/news/news.php?action=viewnews&amp;newsonly=1&amp;pageid=$pageid&amp;newsid='+$('#news_15_archive_news').val()+'&amp;featureid=$featureid","width"=>"800","image"=>$CFG->wwwroot."/images/magnifying_glass.png")).'</td></tr></table>';
             return $returnme;
-		}else{ return ""; }
-	}else{
+		} else { return ""; }
+	} else {
 		$zero = 0;
 		if ($pagenews = get_all_news($userid, $pageid, $featureid)) {
     		$returnme = '<table style="background-color:#FCD163;border:1px solid gray;width:100%;text-align:left;font-size:.85em;">
@@ -226,7 +226,7 @@ global $CFG;
     		$returnme .= make_select_from_array("news_".$featureid."_archive_news", $newsarticles, "newsid", "title", NULL ,'', 'onchange=""',false,NULL,'font-size:.8em;');
     		$returnme .= '</span></td><td>'.make_modal_links(array("title"=> "Get News","id"=>"fetch_".$featureid."_button","path"=>$CFG->wwwroot."/features/news/news.php?action=viewnews&amp;newsonly=1&amp;pageid=$pageid&amp;newsid='+$('#news_15_archive_news').val()+'&amp;featureid=$featureid","width"=>"800","image"=>$CFG->wwwroot."/images/magnifying_glass.png")).'</td></tr></table>';
     		return $returnme;
-		}else{ return ""; }
+		} else { return ""; }
 	}
 }
 
@@ -245,16 +245,16 @@ global $CFG, $USER;
 			$pages = get_users_news_pages($userid, NULL, true);
 			$returnme = get_pages_news($pages);
 			if (isset($returnme->$zero)) { return $returnme;
-			}else{ return false; }
-		}else{
+			} else { return false; }
+		} else {
 			$returnme = get_section_news($featureid);
 			if (isset($returnme->$zero)) { return $returnme;
-			}else{ return false; }
+			} else { return false; }
 		}
-	}else{
+	} else {
 		$returnme = get_section_news($featureid);
 		if (isset($returnme->$zero)) { return $returnme;
-		}else{ return false; }
+		} else { return false; }
 	}
 }
 
@@ -278,8 +278,8 @@ function get_month_news($userid, $year, $month, $pagenews=false, $pageid=false, 
 				$first++; $y++;
 			}
 			return $returnme;
-		}else{ return false; }
-	}else{ return false; }
+		} else { return false; }
+	} else { return false; }
 }
 
 function months_with_news($userid, $year, $pagenews=false, $pageid=false, $featureid=false) {
@@ -321,7 +321,7 @@ function months_with_news($userid, $year, $pagenews=false, $pageid=false, $featu
 				$lastmonth++; $y++;
 			}
 			return $returnme;
-		}else{ return false; }
+		} else { return false; }
 	}
 	return false;
 }
@@ -353,7 +353,7 @@ function years_with_news($userid, $pagenews=false, $pageid=false, $featureid=fal
             $currentyear--;
 		}
 		return $returnme;
-	}else{ return false; }
+	} else { return false; }
 }
 
 function get_section_news($featureid, $limit = "") {
@@ -497,7 +497,7 @@ function closetags($html) {
 			default:
 				if (!in_array($openedtags[$i],$closedtags)) {
 					$html .= '</'.$openedtags[$i].'>';
-				}else{
+				} else {
 					unset($closedtags[array_search($openedtags[$i],$closedtags)]);
 				}
 		}
@@ -510,7 +510,7 @@ function news_delete($pageid,$featureid,$newsid) {
 		if (execute_db_sql("DELETE FROM pages_features WHERE feature='news' AND pageid='$pageid' AND featureid='$featureid'") && execute_db_sql("DELETE FROM news_features WHERE pageid='$pageid' and featureid='$featureid'") && execute_db_sql("DELETE FROM news WHERE pageid='$pageid' and featureid='$featureid'") && execute_db_sql("DELETE FROM settings WHERE type='news' AND pageid='$pageid' AND featureid='$featureid'")) {
 			resort_page_features($pageid);
 		}
-	}else{ //News item delete
+	} else { //News item delete
 		execute_db_sql("DELETE FROM news WHERE newsid='$newsid'");
 	}
 }
@@ -528,7 +528,7 @@ global $CFG;
                 }
 			}
 		}
-	}else{ //This is for any page other than site
+	} else { //This is for any page other than site
 		if ($pagenews = get_section_news($feed["featureid"], "LIMIT 50")) {
 			foreach ($pagenews as $news) {
                 if (isset($news->content)) {
@@ -557,7 +557,7 @@ global $CFG,$USER;
 	$returnme = "";
 	if (strstr($featuretype,"_features")) {
         $returnme .= user_has_ability_in_page($USER->userid,"addnews",$pageid) ? make_modal_links(array("title"=> "Add News Item","path"=>$CFG->wwwroot."/features/news/news.php?action=addeditnews&amp;pageid=$pageid&amp;featureid=$featureid","iframe"=>"true","refresh"=>"true","width"=>"850","height"=>"600","image"=>$CFG->wwwroot."/images/add.png","class"=>"slide_menu_button")) : '';
-	}else{
+	} else {
         $returnme .= user_has_ability_in_page($USER->userid,"editnews",$pageid) ? make_modal_links(array("title"=> "Edit News Item","path"=>$CFG->wwwroot."/features/news/news.php?action=addeditnews&amp;pageid=$pageid&amp;newsid=$featureid","iframe"=>"true","refresh"=>"true","width"=>"850","height"=>"600","image"=>$CFG->wwwroot."/images/edit.png","class"=>"slide_menu_button")) : '';
         $returnme .= user_has_ability_in_page($USER->userid,"deletenews",$pageid) ? ' <a class="slide_menu_button" title="Delete News Item" onclick="if (confirm(\'Are you sure you want to delete this?\')) { ajaxapi(\'/ajax/site_ajax.php\',\'delete_feature\',\'&amp;pageid='.$pageid.'&amp;featuretype='.$featuretype.'&amp;sectionid='.$featureid.'&amp;featureid='.$featureid.'\',function() { update_login_contents('.$pageid.');});}"><img src="'.$CFG->wwwroot.'/images/delete.png" alt="Delete News Item" /></a> ' : '';
     }

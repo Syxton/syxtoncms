@@ -24,7 +24,7 @@ $header = "POST /cgi-bin/webscr HTTP/1.0\r\n";
 $header .= "Content-Type: application/x-www-form-urlencoded\r\n";
 $header .= "Content-Length: " . strlen($req) . "\r\n\r\n";
 if ($CFG->paypal) { $fp = fsockopen ('www.paypal.com', 80, $errno, $errstr, 30);
-}else{ $fp = fsockopen ('www.sandbox.paypal.com', 80, $errno, $errstr, 30);}
+} else { $fp = fsockopen ('www.sandbox.paypal.com', 80, $errno, $errstr, 30);}
 
 // If possible, securely post back to paypal using HTTPS
 // Your PHP server will need to be SSL enabled

@@ -109,7 +109,7 @@ global $CFG;
 	}
 	if ($count_return) {
 	   return $alerts;
-	}else{
+	} else {
 	   return $display_alerts;
 	}
 }

@@ -40,7 +40,7 @@ global $CFG, $USER, $ROLES;
 						if (!$lockeritem->blog && user_has_ability_in_page($USER->userid,"addtolocker",$pageid)) { $content .= '<a title="Send to middle" href="javascript: ajaxapi(\'/ajax/site_ajax.php\',\'move_feature\',\'&amp;pageid='.$pageid.'&amp;featuretype=html&amp;featureid='.$lockeritem->htmlid.'&amp;direction=middle\',function() { update_login_contents('.$pageid.');});"><img src="'.$CFG->wwwroot.'/images/undo.png" alt="Move feature to the middle area" /></a>';	}
 						$content .= '<br />';
                     }
-				}else{
+				} else {
 					$lockeritems = get_bloglocker($pageid);
 					$i=0;
                     foreach ($lockeritems as $lockeritem) {
@@ -54,7 +54,7 @@ global $CFG, $USER, $ROLES;
 				$buttons = get_button_layout("bloglocker",$featureid,$pageid); 
 				return get_css_box($title,$content,$buttons,NULL,"bloglocker",$featureid);
 			}
-		}else{
+		} else {
 			if (role_has_ability_in_page($ROLES->visitor,"viewbloglocker",$pageid)) {
 				if ($area == "middle") {
 					$lockeritems = get_bloglocker($pageid);
@@ -64,7 +64,7 @@ global $CFG, $USER, $ROLES;
                         $content .= '<span style="color:gray;font-size:.75em;">'.date('m/d/Y',$lockeritem->dateposted).' </span>';
 						$content .= make_modal_links(array("title"=>$lockeritem->title,"path"=>$CFG->wwwroot."/features/bloglocker/bloglocker.php?action=view_locker&amp;pageid=$pageid&amp;htmlid=$lockeritem->htmlid")).'<br />';
                     }
-				}else{
+				} else {
 					$lockeritems = get_bloglocker($pageid);
 					$i=0;
                     foreach ($lockeritems as $lockeritem) {
@@ -77,7 +77,7 @@ global $CFG, $USER, $ROLES;
 				return get_css_box($title,$content,$buttons,NULL,"bloglocker",$featureid);
 			}
 		}
-	}else{
+	} else {
 		$buttons = get_button_layout("bloglocker",$featureid,$pageid); 
 		return get_css_box($title,"The blog locker is empty at this time.",$buttons,NULL,"bloglocker",$featureid);
 	}

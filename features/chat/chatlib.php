@@ -31,10 +31,10 @@ global $CFG, $USER, $ROLES, $PAGE;
         $styles=get_styles($pageid,$PAGE->themeid);
 		if ($area == "middle") { 
 		  $content .= '<div style="width:100%;"><iframe id="myframe" onload="resizeCaller();" src="'.$CFG->wwwroot.'/features/chat/plugin/index.php?pageid='.$pageid.'" frameborder="0" style="background-color:'.$styles['contentbgcolor'].';overflow:hidden;height:500px;width:100%;"></iframe></div>';
-		}else{ 
+		} else { 
 		  $content .= '<span class="centered_span">Cannot be used as a side panel.</span>'; 
         }
-	}else{
+	} else {
 		$content .= '<span class="centered_span">You do not have permission to join this chat.</span>';
 	}
 	$buttons = is_logged_in() ? get_button_layout("chat",$featureid,$pageid) : ""; 

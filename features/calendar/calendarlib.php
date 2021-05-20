@@ -24,7 +24,7 @@ global $CFG, $USER, $ROLES;
     if (user_has_ability_in_page($USER->userid, "viewcalendar", $pageid, "calendar", $featureid)) {
         if ($area == "middle") {
             $content .= '<span id="calendarmarker"></span><div id="calendar_div" style="width:100%;z-index:2;">' . get_large_calendar($pageid,$USER->userid) . '</div><div id="day_info" style="display:none"></div>';
-        }else{
+        } else {
             $content .= '<span id="calendarmarker"></span><div id="calendar_div" style="width:100%;z-index:2;">' . get_small_calendar($pageid, $USER->userid) . '</div><div id="day_info" style="display:none"></div>';
         }
                 
@@ -52,7 +52,7 @@ function get_small_calendar($pageid, $userid = 0, $month = false, $year = false,
     if ($month == '01') {
         $prevmonth = '12';
         $prevyear = $year - 1;
-    }else{
+    } else {
         $prevmonth = $month - 1;
         $prevyear = $year;
     }
@@ -66,7 +66,7 @@ function get_small_calendar($pageid, $userid = 0, $month = false, $year = false,
     if ($month == '12') {
         $nextmonth = '01';
         $nextyear = $year + 1;
-    }else{
+    } else {
         $nextmonth = $month + 1;
         $nextyear = $year;
     }
@@ -109,7 +109,7 @@ function get_small_calendar($pageid, $userid = 0, $month = false, $year = false,
                         $background_color = $category["cat_color"] != "" ? 'color:' . $category["cat_color"].';' : 'color: #333333;';
                         $font_color = $category["cat_bgcolor"] != '' ? 'background-color:' . $category["cat_bgcolor"].';' : 'background-color: #CCFF00;';
                         $category_colors = $background_color . $font_color;
-                    }else{ $category_colors = 'background-color: #CCFF00; color: #333333;'; }
+                    } else { $category_colors = 'background-color: #CCFF00; color: #333333;'; }
                 }
         
                 $returnme .= '<td style="text-align:center;' . $category_colors .' cursor: pointer;" onclick="ajaxapi(\'/features/calendar/calendar_ajax.php\',\'get_date_info\',\'&amp;show_site_events='.$show_site_events.'&amp;pageid='.$pageid.'&amp;tm='.$tm.'&amp;tn='.$tn.'&amp;tp='.$tp.'&amp;list_day='.$list_day.'\',function() { simple_display(\'day_info\'); show_section(\'day_info\'); var temptimer=10; countdown(\'cal_countdown\',temptimer,function() { hide_section(\'day_info\'); });})">';
@@ -119,7 +119,7 @@ function get_small_calendar($pageid, $userid = 0, $month = false, $year = false,
             $returnme .= '<td style="text-align:center;background-color: #FFC18A; color: #CF0000;">';
         }elseif ($theday == 6 or $theday == 0) {
             $returnme .= '<td style="text-align:center;background-color: #EEEEEE; color: #666666;">';
-        }else{
+        } else {
             $returnme .= '<td style="text-align:center;background-color: #CCCCCC; color: #333333;">';
         }
         $returnme .= $list_day;
@@ -159,7 +159,7 @@ global $CFG;
     if ($month == '01') {
         $prevmonth = '12';
         $prevyear = $year - 1;
-    }else{
+    } else {
         $prevmonth = $month - 1;
         $prevyear = $year;
     }
@@ -173,7 +173,7 @@ global $CFG;
     if ($month == '12') {
         $nextmonth = '01';
         $nextyear = $year + 1;
-    }else{
+    } else {
         $nextmonth = $month + 1;
         $nextyear = $year;
     }
@@ -215,7 +215,7 @@ global $CFG;
                         $background_color = $category["cat_color"] != "" ? 'color:' . $category["cat_color"].';' : 'color: #333333;';
                         $font_color = $category["cat_bgcolor"] != '' ? 'background-color:' . $category["cat_bgcolor"].';' : 'background-color: #CCFF00;';
                         $category_colors = $background_color . $font_color;
-                    }else{ $category_colors = 'background-color: #CCFF00; color: #333333;'; }
+                    } else { $category_colors = 'background-color: #CCFF00; color: #333333;'; }
                 }
         
                 $returnme .= '<td style="text-align:center;' . $category_colors .' cursor: pointer;" onclick="ajaxapi(\'/features/calendar/calendar_ajax.php\',\'get_date_info\',\'&amp;show_site_events='.$show_site_events.'&amp;pageid='.$pageid.'&amp;tm='.$tm.'&amp;tn='.$tn.'&amp;tp='.$tp.'&amp;list_day='.$list_day.'\',function() { simple_display(\'day_info\'); show_section(\'day_info\'); clearTimeout(temptimer); temptimer = setTimeout(function() {hide_section(\'day_info\')},10000); var temptimer2=10; countdown(\'cal_countdown\',temptimer2);})">';
@@ -225,7 +225,7 @@ global $CFG;
             $returnme .= '<td style="text-align:center;background-color: #FFC18A; color: #CF0000;">';
         }elseif ($theday == 6 or $theday == 0) {
             $returnme .= '<td style="text-align:center;background-color: #EEEEEE; color: #666666;">';
-        }else{
+        } else {
             $returnme .= '<td style="text-align:center;background-color: #CCCCCC; color: #333333;">';
         }
         $returnme .= $list_day;

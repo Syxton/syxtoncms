@@ -442,7 +442,7 @@ global $CFG,$MYVARS;
         echo '<form id="per_group_roles_form">';
         echo print_abilities($pageid,"per_group_",false,false,$feature,$featureid,$groupid);
         echo '</form>';
-    }else{ echo get_error_message("generic_error"); return; }
+    } else { echo get_error_message("generic_error"); return; }
 }
 
 function save_ability_changes() {

@@ -30,7 +30,7 @@ global $CFG, $USER, $ROLES, $PAGE, $STYLES;
 		</span>';
         $pagelist .= get_page_links($pageid, $USER->userid);
         return $pagename . get_css_box('My Page List', $pagelist, $buttons, null, "pagelist", null, false, $preview);
-    }else{
+    } else {
         $pagename = get_css_box(get_db_field("name", "pages", "pageid=$pageid"), get_db_field("display_name", "roles", "roleid=" . get_user_role($USER->userid, $pageid)),NULL,NULL,'pagename') . '<div style="padding:3px;"></div>';
         $pagelist = '
         <span class="centered_span">
@@ -59,7 +59,7 @@ global $CFG, $ROLES, $USER;
 		AND p.menu_page != '1'
 	ORDER BY p.name";
     if ($result = get_db_result($SQL)) { return format_pagelist($result);
-    }else{  return ""; }
+    } else {  return ""; }
 }
 
 function format_pagelist($pageresults) {
@@ -89,7 +89,7 @@ global $CFG, $ROLES, $USER;
     			AND pl.linkpageid != " . $CFG->SITEID . "
     			AND pl.linkpageid != " . $pageid . "
     		ORDER BY pl.sort";
-        }else{
+        } else {
             $SQL = "
     		SELECT pl.* 
     		FROM pages_links pl
@@ -121,7 +121,7 @@ global $CFG, $ROLES, $USER;
     			)
     		ORDER BY pl.sort";
         }
-    }else{
+    } else {
         $SQL = "
     	SELECT pl.* 
     	FROM pages_links pl

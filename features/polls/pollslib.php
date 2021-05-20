@@ -46,23 +46,23 @@ global $CFG, $USER, $ROLES;
 						return get_css_box($title,get_poll_results($featureid,$area),$buttons,'0px',"polls",$featureid);
 					}elseif ($settings->polls->$featureid->individualvotelimit->setting != "0" && $settings->polls->$featureid->individualvotelimit->setting <= get_db_count("SELECT * FROM polls_response WHERE pollid='$featureid' AND (userid='".$USER->userid."' OR ip='".$USER->ip."')")) {
 						return get_css_box($title,get_poll_results($featureid,$area),$buttons,'0px',"polls",$featureid);
-					}else{ //No limits are met
+					} else { //No limits are met
 						return get_css_box($title,take_poll_form($pageid,$featureid,$area),$buttons,'0px',"polls",$featureid);	
 					}
-				}else{ //A limit is not set
+				} else { //A limit is not set
 					return get_css_box($title,take_poll_form($pageid,$featureid,$area),$buttons,'0px',"polls",$featureid);
 				}
 			}elseif (!already_taken_poll($featureid)) { //Multiple votes are not allowed and user has not voted
 				return get_css_box($title,take_poll_form($pageid,$featureid,$area),$buttons,'0px',"polls",$featureid);
-			}else{ //Multiple votes are not allowed and user has already voted
+			} else { //Multiple votes are not allowed and user has already voted
 				return get_css_box($title,get_poll_results($featureid,$area),$buttons,'0px',"polls",$featureid);
 			}
 		}elseif ($poll['status'] == '1') { //Poll is created but not yet open
 			return get_css_box($title,locked_take_poll_form($pageid,$featureid,$area),$buttons,'0px',"polls",$featureid);	
-		}else{ //Poll is closed so show results
+		} else { //Poll is closed so show results
 			return get_css_box($title,get_poll_results($featureid,$area),$buttons,'0px',"polls",$featureid);	
 		}
-	}else{ return get_error_message("no_poll_permissions"); }
+	} else { return get_error_message("no_poll_permissions"); }
 }
 
 function already_taken_poll($pollid) {
@@ -95,7 +95,7 @@ function get_poll_data($pollid) {
             
             if ($area == "middle") {
                 $label .= $label == "" ? "N*p1*,000000,$i,,11,,h:20" : "|N*p1*,000000,$i,,11,,h:20";    
-            }else{
+            } else {
                 $label .= $label == "" ? "N*p1*,000000,$i,,11" : "|N*p1*,000000,$i,,11";    
             }
             
@@ -140,7 +140,7 @@ global $CFG;
         $title = "&chtt=" . rawurlencode(get_db_field("question","polls","pollid=$pollid"));     
         $chart = make_modal_links(array("title"=> "See Full Size","path"=>"//chart.apis.google.com/chart?".$charttype.$chartsize.$chartcolors.$chartdata.$answerkey.$gridlines.$title.$showaxis.$barWandS.'&width='.($chartwidth+25).'&height='.($chartheight+25),"height"=>($chartheight+25),"gallery"=>$title,"width"=>($chartwidth+25),"image"=>"http://chart.apis.google.com/chart?".$charttype.$chartsize.$chartcolors.$chartdata.$answerkey.$gridlines.$title.$showaxis.$barWandS,"imagestyles"=>"width:100%"));
         $chart .= '<table style="width:100%; text-align:center;"><tr><td>'.$total.' Total Votes</td></tr></table>';
-    }else{ $chart = "<br />No responses yet.<br /><br />"; }
+    } else { $chart = "<br />No responses yet.<br /><br />"; }
      
 	return '<div id="resultsdiv_'.$pollid.'" style="display:block;margin-left:auto;margin-right:auto;width:100%;text-align:center;">'.$chart.'</div>';
 }

@@ -26,7 +26,7 @@ global $CFG, $USER, $ROLES;
     		$content .= '<div id="onlineusersfeature">'.get_onlineusers($pageid,$featureid,$settings). '</div>';
 			$buttons = get_button_layout($feature,$featureid,$pageid); 
 		}
-	}else{
+	} else {
 		if (role_has_ability_in_page($ROLES->visitor,"seeusers",$pageid)) {
 			$content .= '<div id="onlineusersfeature">'.get_onlineusers($pageid,$featureid,$settings). '</div>';
 			$buttons = get_button_layout($feature,$featureid,$pageid); 
@@ -61,7 +61,7 @@ global $CFG, $USER;
 	if (is_logged_in()) {
 		if ($pageid == $CFG->SITEID) {
 			$SQL = "SELECT * FROM users u INNER JOIN logfile lf ON lf.userid = u.userid AND lf.timeline = (SELECT timeline FROM logfile WHERE userid=u.userid ORDER BY timeline DESC LIMIT 1) WHERE u.userid IN (SELECT l.userid FROM logfile l WHERE l.timeline > $timelimit ORDER BY l.timeline DESC) AND lf.description != 'Logout' GROUP BY u.userid ORDER BY u.last_activity DESC";
-		}else{
+		} else {
 			$SQL = "SELECT * FROM users u INNER JOIN logfile lf ON lf.userid = u.userid AND lf.timeline = (SELECT timeline FROM logfile WHERE userid=u.userid ORDER BY timeline DESC LIMIT 1) WHERE u.userid IN (SELECT l.userid FROM logfile l WHERE l.timeline > $timelimit AND l.pageid=$pageid ORDER BY l.timeline DESC) AND lf.description != 'Logout' GROUP BY u.userid ORDER BY u.last_activity DESC";
 		}
 
@@ -78,10 +78,10 @@ global $CFG, $USER;
 							  </div>';
 			}
 		}
-	}else{
+	} else {
 		if ($pageid == $CFG->SITEID) {
 			$SQL = "SELECT l.* FROM logfile l WHERE l.timeline > $timelimit GROUP BY l.ip ORDER BY l.timeline DESC";
-		}else{
+		} else {
 			$SQL = "SELECT l.* FROM logfile l WHERE l.timeline > $timelimit AND l.pagid=$pageid GROUP BY l.ip ORDER BY l.timeline DESC";			
 		}
 		

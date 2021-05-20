@@ -26,7 +26,7 @@ global $MYVARS,$CFG,$USER;
 	//Check if any settings exist for this feature
 	if ($settings = fetch_settings($feature,$featureid,$pageid)) {
         echo make_settings_page($setting_names,$settings,$default_settings,$feature,$featureid,$pageid);
-	}else{ //No Settings found...setup default settings
+	} else { //No Settings found...setup default settings
 		if (make_or_update_settings_array($default_settings)) { bloglocker_settings(); }
 	}
 }

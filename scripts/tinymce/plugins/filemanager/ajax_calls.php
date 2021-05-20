@@ -238,7 +238,7 @@ if (isset($_GET['action'])) {
 			}
 			if ($ftp) {
 				$preview_file = $config['ftp_base_url'].$config['upload_dir'] . $_GET['file'];
-			}else{
+			} else {
 				$preview_file = $config['current_path'] . $_GET["file"];
 			}
 			$info = pathinfo($preview_file);
@@ -629,11 +629,11 @@ if (isset($_GET['action'])) {
 					$googledoc_url = urlencode($url_file);
 					$ret = "<iframe src=\"https://docs.google.com/viewer?url=" . $url_file . "&embedded=true\" class=\"google-iframe\"></iframe>";
 				}
-			}else{
+			} else {
 				$data = stripslashes(htmlspecialchars(file_get_contents($selected_file)));
 				if (in_array($info['extension'],array('html','html'))) {
 					$ret = '<script src="https://cdn.ckeditor.com/ckeditor5/12.1.0/classic/ckeditor.js"></script><textarea id="textfile_edit_area" style="width:100%;height:300px;">'.$data.'</textarea><script>setTimeout(function() { ClassicEditor.create( document.querySelector( "#textfile_edit_area" )).catch( function(error) { console.error( error ); } );  }, 500);</script>';
-				}else{
+				} else {
 					$ret = '<textarea id="textfile_edit_area" style="width:100%;height:300px;">'.$data.'</textarea>';
 				}
 
