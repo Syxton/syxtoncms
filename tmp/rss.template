@@ -1,0 +1,92 @@
+rss_subscribe_feature_template||
+||feed{{
+  <div id="add_feed_div">
+    <table style="width:100%; border-color:buttonface; border-style:dotted; padding: 10px 0px 10px 0px;">
+      <tr>
+        <td>
+          <span style="float:left;">
+            <strong>
+              Edit RSS feed
+            </strong>
+          </span>&nbsp;
+          <a type="application/rss+xml" style="float:right;" href="||wwwroot||/scripts/rss/rss.php?rssid=||feed["rssid"]||&key=||userkey||">
+            <img src="||wwwroot||/images/small_rss.png" alt="RSS Feed" />&nbsp;
+            Subscribe
+          </a>
+          <br />
+          <br />
+          <br />
+          <table style="width:100%">
+            <tr>
+              <td style="text-align:right;width:100px;">
+                Feed Title:
+              </td>
+              <td style="text-align:left; width:280px;">
+                <input type="text" id="rssname" size="40" maxlength="50" value="||rss["rssname"]||"/>
+                <input type="hidden" id="rssid" value="||rss["rssid"]||" />
+              </td>
+              <td style="text-align:left; width:50px;">
+                <input type="button" value="Save Changes" onclick="ajaxapi('/ajax/rss_ajax.php',
+                                                                           'edit_name',
+                                                                           '&rssname=' + escape(document.getElementById('rssname').value) +
+                                                                           '&rssid=' + escape(document.getElementById('rssid').value),
+                                                                           function() {
+                                                                             simple_display('saved');
+                                                                             setTimeout(function() {
+                                                                               clear_display('saved');
+                                                                             },5000);
+                                                                           });" />
+              </td>
+              <td>
+                <div id="saved"></div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>
+  //OR//
+  <div id="add_feed_div">
+    <table style="width:100%; border-color:buttonface; border-style:dotted; padding: 10px 0px 10px 0px;">
+      <tr>
+        <td>
+          <span style="float:left;">
+            <strong>
+              Add RSS feed
+            </strong>
+          </span>
+          <br />
+          <br />
+          <br />
+          <table style="width:100%">
+            <tr>
+              <td style="text-align:right;width:100px;">
+                Feed Title:
+              </td>
+              <td style="text-align:left; width:280px;">
+                <input type="text" id="rssname" size="40" maxlength="50" value="||title||"/>
+              </td>
+              <td style="text-align:left; width:50px;">
+                <input type="button" value="Add Feed" onclick="ajaxapi('/ajax/rss_ajax.php',
+                                                                       'add_feed',
+                                                                       '&key=||userkey||' +
+                                                                       '&pageid=||pageid||' +
+                                                                       '&type=||feature||' +
+                                                                       '&featureid=||featureid||' +
+                                                                       '&rssname=' + escape(document.getElementById('rssname').value),
+                                                                       function() {
+                                                                         simple_display('add_feed_div');
+                                                                       });" />
+              </td>
+              <td>
+                <div id="saved"></div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>
+}}feed||
+||rss_subscribe_feature_template

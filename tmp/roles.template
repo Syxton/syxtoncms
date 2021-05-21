@@ -1,0 +1,182 @@
+roles_header_script||
+  <script type="text/javascript">
+    function swap_highlights(option1,option2){
+        option1 = "#"+option1;
+        option2 = "#"+option2;
+    if($(option1).emptybg() && $(option2).emptybg()){
+            $(option1).css("background-color","yellow");
+        }else if($(option1).emptybg()){
+      $(option1).css("background-color","inherit");
+            $(option2).css("background-color","inherit");
+    }
+    blur();
+    }
+    function swap_highlights2(option1,option2){
+        option1 = "#"+option1;
+        option2 = "#"+option2;
+    if($(option1).emptybg() && $(option2).emptybg()){
+      $(option1).css("background-color","yellow");
+        }else{
+      $(option1).css("background-color","yellow");
+            $(option2).css("background-color","inherit");
+    }
+    blur();
+    }
+    function clear_highlights(option1,option2){
+        $(option1).css("background-color","inherit");
+        $(option2).css("background-color","inherit");
+    blur();
+    }
+  </script>
+||roles_header_script
+
+assign_roles_template||
+  <form onsubmit="clear_display('per_page_roles_div');
+                  ajaxapi('/ajax/roles_ajax.php',
+                          'name_search',
+                          '&pageid=||pageid||' +
+                          '&type=per_page_' +
+                          '&refreshroles=refreshroles' +
+                          '&searchstring=' + trim(document.getElementById('per_page_search').value),
+                          function() {
+                            simple_display('per_page_users_display_div');
+                          }
+                  ); return false;">
+                  User Search: <input type="text" id="per_page_search" size="18" />&nbsp;<input type="submit" value="Search" />
+  </form>
+  Users:
+  <br />
+  <div style="width:100%; text-align:center; vertical-align:top;" id="per_page_users_display_div">
+        <select size="10" style="width: 100%; font-size:.85em;" name="userid" id="per_page_user_select" onclick="if (document.getElementById('per_page_user_select').value > 0) {
+                                                                                                                    ajaxapi('/ajax/roles_ajax.php',
+                                                                                                                            'refresh_user_roles',
+                                                                                                                            '&pageid=||pageid||' +
+                                                                                                                            '&userid=' + document.getElementById('per_page_user_select').value,
+                                                                                                                            function() {
+                                                                                                                              simple_display('per_page_roles_div');
+                                                                                                                            });}">
+              ||issiteid{{
+                <option value="0">Search results will be shown here.</option>
+              }}issiteid||
+              ||options||
+        </select>
+  </div>
+  <div id="per_page_roles_div" style="width:100%;"></div>
+||assign_roles_template
+
+assign_roles_options_template||
+  <option value="||user[userid]||">||user[fname]|| ||user[lname]|| (||user[email]||)</option>
+||assign_roles_options_template
+
+role_specific_template||
+  <form id="per_role_roles_form">
+    <div style="width:100%; text-align:center">
+      <select name="per_role_roleid" id="per_role_role_select" onchange="ajaxapi('/ajax/roles_ajax.php',
+                                                                                 'refresh_edit_roles',
+                                                                                 '&pageid=||pageid||' +
+                                                                                 '&feature=||feature||' +
+                                                                                 '&featureid=||featureid||' +
+                                                                                 '&roleid=' + this.value,
+                                                                                 function() {
+                                                                                   simple_display('per_role_abilities_div');
+                                                                                 });">
+          ||options||
+      </select>
+      <div id="per_role_saved_div1" style="width:100%;text-align:center;height: 2px;padding-bottom: 20px;padding-top: 20px;"></div>
+      <div id="per_role_abilities_div" style="width:100%;">||abilities||</div>
+      <div id="per_role_saved_div2" style="width:100%;text-align:center;height: 2px;padding-bottom: 10px;padding-top: 10px;"></div>
+    </div>
+  </form>
+||role_specific_template
+
+role_specific_options_template||
+  <option value="||roles[roleid]||">||roles[display_name]||</option>
+||role_specific_options_template
+
+user_specific_template||
+  <form onsubmit="clear_display('per_user_abilities_div');
+                  ajaxapi('/ajax/roles_ajax.php',
+                          'name_search',
+                          '&pageid=||pageid||' +
+                          '&type=per_user_' +
+                          '&feature=||feature||' +
+                          '&featureid=||featureid||' +
+                          '&refreshroles=' +
+                          '&searchstring='+trim(document.getElementById('per_user_search').value),
+                          function() {
+                            simple_display('per_user_users_display_div');
+                          });
+                  return false;">
+    User Search: <input type="text" id="per_user_search" size="18" />&nbsp;<input type="submit" value="Search" />
+  </form>
+  <form id="per_user_roles_form">
+    Users:
+    <br />
+    <div style="width:100%; text-align:center; vertical-align:top;" id="per_user_users_display_div">
+      <select size="10" width="100%" style="width: 100%; font-size:.85em;" name="userid" id="per_user_user_select" onclick="if (document.getElementById('per_user_user_select').value > 0) {
+                                                                                                                              ajaxapi('/ajax/roles_ajax.php',
+                                                                                                                                      'refresh_user_abilities',
+                                                                                                                                      '&pageid=||pageid|| +
+                                                                                                                                      '&feature=||feature|| +
+                                                                                                                                      '&featureid=||featureid|| +
+                                                                                                                                      '&userid=' + document.getElementById('per_user_user_select').value,
+                                                                                                                                      function() {
+                                                                                                                                        simple_display('per_user_abilities_div');
+                                                                                                                                      });}">
+        ||issiteid{{<option value="0">Search results will be shown here.</option>}}issiteid||
+        ||options||
+      </select>
+    </div>
+    <div id="per_user_saved_div1" style="width:100%;text-align:center;height: 2px;padding-bottom: 18px;padding-top: 10px;"></div>
+    <div id="per_user_abilities_div" style="width:100%;"></div>
+    <div id="per_user_saved_div2" style="width:100%;text-align:center;height: 2px;padding-bottom: 10px;padding-top: 10px;"></div>
+  </form>
+||user_specific_template
+
+user_specific_options_template||
+  <option value="||user[userid]||">||user[fname]|| ||user["lname"]|| (||user["email"]||)</option>
+||user_specific_options_template
+
+group_specific_template||
+  <div id="per_group_whole_page" style="width:100%;">
+    ||grouppage||
+  </div>
+||group_specific_template
+
+roles_manager_template||
+  <script type="text/javascript" src="||wwwroot||/min/?f=||directory||scripts/jquery-ui.min.js"></script>
+  <link type="text/css" rel="stylesheet" href="||wwwroot||/min/?b=||directory||styles/jqueryui&amp;f=jquery-ui.css" />
+  <script type="text/javascript">
+    $(function() {
+      $("#tabs").tabs({beforeLoad: function( event, ui ) {
+                                      var d = new Date();
+                                      ui.ajaxSettings.url += "&currTime=" + d.toUTCString();
+                                      ui.jqXHR.fail(function() {
+                                                      ui.panel.html("Couldn't load this tab. We'll try to fix this as soon as possible.");
+                                                    });
+                                   }
+                      });
+    });
+  </script>
+
+  <div id="context" style="font-size:.85em;background-color:lightGrey;margin:3px;padding:3px;height:30px;">
+      <span style="display:inline-block;float:left;">
+        <strong>
+          Page:
+        </strong>&nbsp;
+        <em>
+          ||pagename||
+        </em>
+        ||featurecontext{{&nbsp;&nbsp;<strong>Specific for the ||feature|| feature:</strong> <em>||setting||</em>}}featurecontext||
+      </span>
+      ||warning{{ <span style="background-color:red;padding:3px;float:right;border:5px solid black;">WARNING: Changes affect all pages.</span>}}warning||
+  </div>
+  <div id="tabs" style="font-size:.9em">
+    <ul style="height:30px">
+      ||tab_assign_roles{{<li><a href="roles.php?action=assign_roles&pageid=||pageid||">Assign Roles</a></li>}}tab_assign_roles||
+      ||tab_modify_roles{{<li><a href="roles.php?action=role_specific&feature=||feature||&featureid=||featureid||&pageid=||pageid||">Modify Roles</a></li>}}tab_modify_roles||
+      ||tab_groups{{<li><a href="roles.php?action=group_specific&feature=||feature||&featureid=||featureid||&pageid=||pageid||">Group Abilities</a></li>}}tab_groups||
+      ||tab_user{{<li><a href="roles.php?action=user_specific&feature=||feature||&featureid=||featureid||&pageid=||pageid||">User Abilities</a></li>}}tab_user||
+    </ul>
+  </div>
+||roles_manager_template

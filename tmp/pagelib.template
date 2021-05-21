@@ -1,0 +1,185 @@
+main_js_css||
+  <script type="text/javascript" src="||wwwroot||/min/?f=||directory||ajax/siteajax.js"></script>
+  <script type="text/javascript"> var dirfromroot = "||directory||"; </script>
+  <link type="text/css" rel="stylesheet" href="||wwwroot||/min/?f=||directory||styles/styles_main.css" />
+  <script type="text/javascript" src="||wwwroot||/min/?b=||directory||scripts&amp;f=jquery.min.js,jquery.extend.js,jquery.colorbox.js,jquery.colorbox.extend.js"></script>
+||main_js_css
+
+validation_js||
+  <script type="text/javascript" src="||wwwroot||/min/?b=||directory||scripts&f=jqvalidate.js,jqvalidate_addon.js" ></script>
+||validation_js
+
+main_body_template||
+<div id="wholepage">
+    <div class="logo_nav">||page_masthead_1||</div>
+    <div class="colmask rightmenu">
+        <div class="colleft">
+            <div class="col2 pagesort2 connectedSortable">
+                ||page_masthead_2||
+            </div>
+            <div class="col1 pagesort1 connectedSortable">
+                <span id="column_width" style="width:100%;"></span>
+            </div>
+        </div>
+     </div>
+</div>
+<div style="clear:both;"></div>
+||main_body_template
+
+page_masthead_template||
+<div class="nav_header">
+    <div id="logo_div">
+        <a href="||wwwroot||">
+            ||mobilelogo||
+            ||logo||
+        </a>
+    </div>
+    <div class="nav">
+        <div id="menu-icon"></div>
+        ||header_only||
+    </div>
+</div>||quote||
+||page_masthead_template
+
+editor_box_template||
+<textarea id="editor1" name="editor1" class="wysiwyg_editor">||initialvalue||</textarea>
+<script type="text/javascript">
+    $(window).on("load", function() {
+        $(".wysiwyg_editor").tinymce({
+            script_url : "||wwwroot||/scripts/tinymce/tinymce.min.js",
+            toolbar: "||toolbar||",
+            height: "||height||",
+            width: "||width||",
+            removed_menuitems: "newdocument",
+            theme : "modern",
+            convert_urls: false,
+            plugins: [||plugins||],
+            external_filemanager_path: "||directory||/scripts/tinymce/plugins/filemanager/",
+            filemanager_title: "File Manager" ,
+            external_plugins: { "filemanager" : "||directory||/scripts/tinymce/plugins/filemanager/plugin.min.js"}
+        });
+    });
+</script>
+||editor_box_template
+
+print_logout_button_switchback_template||
+<a title="Switch back to: ||lia_name||" href="javascript: void(0)" onclick="ajaxapi('/features/adminpanel/adminpanel_ajax.php','logoutas','',function() { go_to_page(||siteid||);});">Switch back to: ||lia_name||</a><br />
+||print_logout_button_switchback_template
+
+print_logout_button_template||
+<div id="login_box" class="login_box logout" style="text-align:right;">
+    ||logoutas||
+    <span style="display:inline-block;line-height: 18px;">
+        ||profile|| <a title="Log Out" href="javascript: void(0)" onclick="ajaxapi('/ajax/site_ajax.php','get_login_box','&amp;logout=1',function() { clearInterval(myInterval); go_to_page(||siteid||);});">(Log Out)</a>
+    </span>
+</div>
+<br />
+||userlinks||
+||print_logout_button_template
+
+get_css_box_template1||
+<div class="pagename_box" style="border: 2px solid ||pagenamebordercolor||;background-color:||pagenamebgcolor||;">
+    <div class="box_title" style="color:||pagenamefontcolor||;">
+        <strong>||title||</strong>
+        <br />
+        <span style="color:||pagenamefontcolor||;font-size:.75em;">
+          ||content||
+        </span>
+    </div>
+    ||buttons||
+</div>
+||get_css_box_template1
+
+get_css_box_template2||
+<div ||opendiv||>
+    <div class="box_header"  style="border: 2px solid ||bordercolor||;background-color:||titlebgcolor||;">
+        <div class="box_title"  style="line-height:23px;color:||titlefontcolor||;">
+            ||title||
+        </div>
+        ||buttons||
+    </div>
+    <div class="box_content ||class||" style="border: 2px solid ||bordercolor||;border-top: none;background-color:||contentbgcolor||;||padding||">
+      ||content||
+      ||bottom||
+    </div>
+    <div style="padding:3px;"></div>
+</div>
+||get_css_box_template2
+
+get_css_box_bottom_template||
+<div style="display:table;width:100%;background-color:||contentbgcolor||">
+  <div style="float:left;padding-left:2px;">
+    ||bottom_left||
+  </div>
+  <div style="text-align:center;position:relative;float:left;left:18%;width:60%">
+    ||bottom_center||
+  </div>
+  <div style="float:right;padding-right:2px;">
+    ||bottom_right||
+  </div>
+</div>
+||get_css_box_bottom_template
+
+get_login_form_template||
+<script type="text/javascript" src="||wwwroot||/min/?b=||directory||scripts&amp;f=jqvalidate.js,jqvalidate_addon.js"></script>
+||validation_script||
+<form id="login_form">
+    <fieldset>
+           <div class="rowContainer">
+               <label class="rowTitle" for="username">Username</label>
+               <input tabindex=1 style="margin-right:0px;width:80%" type="email" id="username" name="username" data-rule-required="true" data-msg-required="||valid_req_username||" />
+               <div class="tooltipContainer info">||input_username||</div>
+               <div class="spacer" style="clear: both;"></div>
+           </div>
+           <div class="rowContainer">
+                 <label class="rowTitle" for="password">Password</label>
+               <input tabindex=2 style="margin-right:0px;width:80%" type="password" id="password" name="password" data-rule-required="true" data-msg-required="||valid_req_password||" />
+               <div class="tooltipContainer info">||input_password2||</div>
+               <div class="spacer" style="clear: both;"></div>
+           </div>
+   </fieldset>
+   <input name="submit" type="submit" value="Sign In" style="margin-left:5px;" />
+   <span style="float:right;font-size:.9em">
+     ||newuserlink||
+     <br />
+     ||forgotpasswordlink||
+   </span>
+</form>
+<div id="login_box_error" class="error_text"></div>
+||get_login_form_template
+
+get_button_layout_template||
+<div id="slide_menu" class="slide_menu_invisible slide_menu" style="border-top:1px solid ||bordercolor||;border-bottom:1px solid ||bordercolor||;">
+  <div id="||featuretype||_||featureid||_buttons" style="padding:0;">
+    ||buttons||
+  </div>
+</div>
+<div class="slide_menu slide_menu_tab" style="background-color:||titlefontcolor||;color:||titlebgcolor||;border-left:1px solid ||bordercolor||;border-top:1px solid ||bordercolor||;border-bottom:1px solid ||bordercolor||;" onclick="$(this).prev('#slide_menu').animate({width: 'toggle'}, function() { $(this).toggleClass('slide_menu_visible'); });">
+  <strong>+</strong>
+</div>
+<div style="clear:both"></div>
+||get_button_layout_template
+
+make_search_box_template||
+<div style="position:relative;width:95%;margin-right:auto;margin-left:auto;">
+  <div id="loading_overlay_||name_addition||" style="text-align:center;position:absolute;width:100%;height:99%;vertical-align:middle;background-color:white;opacity:.6;visibility:hidden;">
+    <img src="||wwwroot||/images/loading_large.gif" alt="loading image" />
+  </div>
+  <div id="searchcontainer_||name_addition||" style="padding:5px; display:block; width:99%;">
+    ||contents||
+  </div>
+</div>
+||make_search_box_template
+
+format_popup_template||
+<div style="padding:||padding||;border:1px solid silver;border-radius: 5px;height:||height||;">
+    <h3>||title||</h3>
+    ||content||
+</div>
+||format_popup_template
+
+keepalive_template||
+<iframe style="display:none;" src="||wwwroot||/index.php?keepalive=true"></iframe>
+||keepalive_template
+
+get_user_alerts_template||<span class="centered_span">There are no more alerts for you at this time.</span>||get_user_alerts_template
