@@ -165,25 +165,25 @@ global $CFG, $MYVARS, $USER;
       $linked = true;
       if ($loggedin && !$admin) {
         if ($page["siteviewable"] == 1 || $page["opendoorpolicy"] == 1 || $page["added"] == 1 || user_has_ability_in_page($userid, "assign_roles", $page["pageid"])) {
-          $params["col3"] = template_use("templates/page_ajax.template", array("must_request" => false, "can_add_remove" => user_has_ability_in_page($userid, "add_page", $CFG->SITEID),
+          $params["col3"] = template_use("tmp/page_ajax.template", array("must_request" => false, "can_add_remove" => user_has_ability_in_page($userid, "add_page", $CFG->SITEID),
                                                                                "isadd" => ($page["added"] == 0), "wwwroot" => $CFG->wwwroot, "pagenum" => $pagenum,
                                                                                "searchwords" => $searchwords, "pageid" => $page["pageid"]), "search_pages_buttons_template");
         } else {
           $linked = false;
           $alreadyrequested = get_db_row("SELECT * FROM roles_assignment WHERE userid='$userid' AND pageid='" . $page["pageid"] . "' AND confirm=1") ? true : false;
-          $params["col3"] = template_use("templates/page_ajax.template", array("must_request" => true, "alreadyrequested" => $alreadyrequested, "wwwroot" => $CFG->wwwroot, "pagenum" => $pagenum,
+          $params["col3"] = template_use("tmp/page_ajax.template", array("must_request" => true, "alreadyrequested" => $alreadyrequested, "wwwroot" => $CFG->wwwroot, "pagenum" => $pagenum,
                                                                                "searchwords" => $searchwords, "pageid" => $page["pageid"]), "search_pages_buttons_template");
         }
       }
 
       $params["linked"] = $linked;
-      $params["col1"] = template_use("templates/page_ajax.template", array("linked" => $linked, "pageid" =>  $page["pageid"],"name" => substr($page["name"], 0, 30)), "search_pages_link_template");
+      $params["col1"] = template_use("tmp/page_ajax.template", array("linked" => $linked, "pageid" =>  $page["pageid"],"name" => substr($page["name"], 0, 30)), "search_pages_link_template");
       $params["col2"] = substr($page["description"], 0, 50);
-      $params["searchresults"] = $params["searchresults"] . template_use("templates/page_ajax.template", $params, "search_row_template");
+      $params["searchresults"] = $params["searchresults"] . template_use("tmp/page_ajax.template", $params, "search_row_template");
     }
   }
 
-  echo template_use("templates/page_ajax.template", $params, "search_template");
+  echo template_use("tmp/page_ajax.template", $params, "search_template");
 }
 
 function usersearch() {
@@ -234,17 +234,17 @@ global $CFG, $MYVARS, $USER;
       $params["user"] = $user;
       $params["col1"] = $user["fname"] . " " . $user["lname"];
       $params["col2"] = $user["email"];
-      $params["col3"] = template_use("templates/page_ajax.template", $params, "search_users_buttons_template");
-      $params["searchresults"] = $params["searchresults"] . template_use("templates/page_ajax.template", $params, "search_row_template");
+      $params["col3"] = template_use("tmp/page_ajax.template", $params, "search_users_buttons_template");
+      $params["searchresults"] = $params["searchresults"] . template_use("tmp/page_ajax.template", $params, "search_row_template");
     }
   }
 
-  echo template_use("templates/page_ajax.template", $params, "search_template");
+  echo template_use("tmp/page_ajax.template", $params, "search_template");
 }
 
 function get_new_link_form() {
 global $MYVARS, $CFG, $USER;
-  echo template_use("templates/page_ajax.template", array("pageid" => $MYVARS->GET['pageid']), "new_link_form_template");
+  echo template_use("tmp/page_ajax.template", array("pageid" => $MYVARS->GET['pageid']), "new_link_form_template");
 }
 
 function get_link_manager() {
@@ -268,14 +268,14 @@ global $MYVARS, $CFG, $USER;
       while ($link = fetch_row($links)) {
         $rowparams = array("wwwroot" => $CFG->wwwroot, "order" => $i, "nextorder" => ($i + 1), "pageid" => $pageid,
                            "linkdisplay" => stripslashes($link['linkdisplay']), "linkid" => $link["linkid"], "notfirstrow" =>  ($i > 0), "notlastrow" => ($i < ($count - 1)));
-        $linkrows .= template_use("templates/page_ajax.template", $rowparams, "sortable_links_template");
+        $linkrows .= template_use("tmp/page_ajax.template", $rowparams, "sortable_links_template");
         $i++;
       }
 
       $params["links"] = $linkrows;
     }
 
-    echo template_use("templates/page_ajax.template", $params, "links_manager_template");
+    echo template_use("tmp/page_ajax.template", $params, "links_manager_template");
 }
 
 function linkpagesearch() {
@@ -343,12 +343,12 @@ global $CFG, $MYVARS, $USER;
 
       $params["col1"] = substr(stripslashes($page["name"]), 0, 30);
       $params["col2"] = substr(stripslashes(strip_tags($page["description"])), 0, 100);
-      $params["col3"] = ($loggedin) ? template_use("templates/page_ajax.template", $params, "search_linkpagesearch_buttons_template") : "";
-      $params["searchresults"] = $params["searchresults"] . template_use("templates/page_ajax.template", $params, "search_row_template");
+      $params["col3"] = ($loggedin) ? template_use("tmp/page_ajax.template", $params, "search_linkpagesearch_buttons_template") : "";
+      $params["searchresults"] = $params["searchresults"] . template_use("tmp/page_ajax.template", $params, "search_row_template");
     }
   }
 
-  echo template_use("templates/page_ajax.template", $params, "search_template");
+  echo template_use("tmp/page_ajax.template", $params, "search_template");
 }
 
 function make_page_link() {
@@ -455,7 +455,7 @@ global $CFG, $MYVARS;
   $pages = user_has_ability_in_pages($inviter, "invite", false, false); //list pages you have invite permissions in
   $notthese = user_has_ability_in_pages($invitee, "viewpages", false, false); //remove pages that the user already has access to
 
-  $invite_button = template_use("templates/page_ajax.template", array("invitee" => $invitee), "get_inviteable_button_template");
+  $invite_button = template_use("tmp/page_ajax.template", array("invitee" => $invitee), "get_inviteable_button_template");
   echo make_select("page_invite_list", $pages, "pageid", "name", null, $invite_button, true, 1 , "width:150px;", "", $notthese);
 }
 
@@ -508,7 +508,7 @@ global $CFG, $MYVARS, $USER;
     }
   }
 
-  echo template_use("templates/page_ajax.template", $params, "change_subscription_template");
+  echo template_use("tmp/page_ajax.template", $params, "change_subscription_template");
 }
 
 function add_request() {
@@ -521,7 +521,7 @@ global $CFG, $MYVARS;
 
   $request_added = execute_db_sql($SQL);
   $params = array("request_added" => $request_added, "wwwroot" => $CFG->wwwroot, "pageid" => $pageid);
-  echo template_use("templates/page_ajax.template", $params, "add_remove_request_template");
+  echo template_use("tmp/page_ajax.template", $params, "add_remove_request_template");
 }
 
 function remove_request() {
@@ -536,6 +536,6 @@ global $CFG, $MYVARS;
   $request_removed = execute_db_sql($SQL);
 
   $params = array("request_removed" => (!$request_removed), "wwwroot" => $CFG->wwwroot, "pageid" => $pageid);
-  echo template_use("templates/page_ajax.template", $params, "add_remove_request_template");
+  echo template_use("tmp/page_ajax.template", $params, "add_remove_request_template");
 }
 ?>

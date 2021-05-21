@@ -55,24 +55,24 @@ global $CFG, $MYVARS, $USER;
 
 	$SQL = template_use("dbsql/styles.sql", array("notsite" => ($pageid != $CFG->SITEID)), "theme_selector_sql");
 	$params = array("pageid" => $pageid, "feature" => $feature, "checked1" => $checked1, "checked2" => $checked2, "iscustom" => ($themeid === '0' ));
-	$params["menu"] = make_select("themes", get_db_result($SQL), "themeid", "name", $selected, 'onchange="' . template_use("templates/themes.template", $params, "theme_selector_menu_action_template") . '"', false, null, "width:225px;");
-	$tabs = template_use("templates/themes.template", $params, "theme_selector_tabs_template");
-	$left = $tabs . template_use("templates/themes.template", $params, "theme_selector_left_template");
+	$params["menu"] = make_select("themes", get_db_result($SQL), "themeid", "name", $selected, 'onchange="' . template_use("tmp/themes.template", $params, "theme_selector_menu_action_template") . '"', false, null, "width:225px;");
+	$tabs = template_use("tmp/themes.template", $params, "theme_selector_tabs_template");
+	$left = $tabs . template_use("tmp/themes.template", $params, "theme_selector_left_template");
 
 	$pagename = get_db_field("name", "pages", "pageid = '$pageid'");
 	$rolename = get_db_field("display_name", "roles", "roleid = " . get_user_role($USER->userid, $pageid));
 
 	$params["pagelist"] = get_css_box($pagename, $rolename, false, NULL, 'pagename', NULL, $themeid, null, $pageid);
 	$params["block"] = get_css_box("Title", "Content", null, null, null, null, $themeid, null, $pageid);
-	$right = template_use("templates/themes.template", $params, "theme_selector_right_template");
+	$right = template_use("tmp/themes.template", $params, "theme_selector_right_template");
 
-	return template_use("templates/themes.template", array("left" => $left, "right" => $right), "make_template_selector_panes_template");
+	return template_use("tmp/themes.template", array("left" => $left, "right" => $right), "make_template_selector_panes_template");
 }
 
 function custom_styles_selector($pageid, $feature, $featureid=false) {
 	global $CFG;
 		$params = array("pageid" => $pageid, "feature" => $feature, "featureid" => $featureid, "checked1" => "", "checked2" => "checked", "iscustom" => ($feature == "page"));
-		$tabs = template_use("templates/themes.template", $params, "theme_selector_tabs_template");
+		$tabs = template_use("tmp/themes.template", $params, "theme_selector_tabs_template");
 
 		// Styles function
 		$styles = $feature.'_default_styles';
@@ -94,11 +94,11 @@ function custom_styles_selector($pageid, $feature, $featureid=false) {
 			if (!$value) { // No db value found, use the hard coded default value.
 				$value = $style[2];
 			}
-			$style_inputs .= template_use("templates/themes.template", array("style" => $style, "value" => $value, "wwwroot" => $CFG->wwwroot), "style_inputs_template");
+			$style_inputs .= template_use("tmp/themes.template", array("style" => $style, "value" => $value, "wwwroot" => $CFG->wwwroot), "style_inputs_template");
 		}
 
 		$params["style_inputs"] = $style_inputs;
-		return $tabs . template_use("templates/themes.template", $params, "custom_styles_selector_template");
+		return $tabs . template_use("tmp/themes.template", $params, "custom_styles_selector_template");
 }
 
 function get_custom_styles($pageid, $feature, $featureid=false) {

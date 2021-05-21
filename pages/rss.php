@@ -9,11 +9,11 @@
 include('header.php');
 
 $params = array("dirroot" => $CFG->directory, "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'), "wwwroot" => $CFG->wwwroot);
-echo template_use("templates/page.template", $params, "page_js_css");
+echo template_use("tmp/page.template", $params, "page_js_css");
 
 callfunction();
 
-echo template_use("templates/page.template", array(), "end_of_page_template");
+echo template_use("tmp/page.template", array(), "end_of_page_template");
 
 function rss_subscribe_feature() {
 global $CFG, $MYVARS, $USER;
@@ -39,13 +39,13 @@ global $CFG, $MYVARS, $USER;
 						 WHERE rssid='".$feed["rssid"]."'";
 
 		$params = array('wwwroot' => $CFG->wwwroot, 'feed' => true, 'rss' => get_db_row($SQL), 'userkey' => $userkey);
-		echo template_use("templates/rss.template", $params, "rss_subscribe_feature_template");
+		echo template_use("tmp/rss.template", $params, "rss_subscribe_feature_template");
 	} else { //Need to create new rssid and feed
 		$settings = fetch_settings($feature,$featureid,$pageid);
 		$title = $settings->$feature->$featureid->feature_title->setting;
 
 		$params = array('wwwroot' => $CFG->wwwroot, 'feed' => false, 'title' => $title, 'userkey' => $userkey, 'pageid' => $pageid, 'feature' => $feature, 'featureid' => $featureid);
-		echo template_use("templates/rss.template", $params, "rss_subscribe_feature_template");
+		echo template_use("tmp/rss.template", $params, "rss_subscribe_feature_template");
 	}
 }
 ?>

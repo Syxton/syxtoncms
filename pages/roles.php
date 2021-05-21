@@ -9,11 +9,11 @@
 
 include('header.php');
 
-echo template_use("templates/roles.template", array(), "roles_header_script");
+echo template_use("tmp/roles.template", array(), "roles_header_script");
 
 callfunction();
 
-echo template_use("templates/page.template", array(), "end_of_page_template");
+echo template_use("tmp/page.template", array(), "end_of_page_template");
 
 function assign_roles() {
 global $CFG, $MYVARS, $USER, $ROLES;
@@ -40,13 +40,13 @@ global $CFG, $MYVARS, $USER, $ROLES;
 	if ($pageid != $CFG->SITEID) {
 		if ($roles = get_db_result($SQL)) {
 			while ($row = fetch_row($roles)) {
-				$options .= template_use("templates/roles.template", array("user" => $row), "assign_roles_options_template");
+				$options .= template_use("tmp/roles.template", array("user" => $row), "assign_roles_options_template");
 			}
 		}
 	}
 
 	$params = array("pageid" => $pageid, "issiteid" => ($pageid == $CFG->SITEID), "options" => $options);
-	echo template_use("templates/roles.template", $params, "assign_roles_template");
+	echo template_use("tmp/roles.template", $params, "assign_roles_template");
 }
 
 function role_specific() {
@@ -70,14 +70,14 @@ global $CFG,$USER,$MYVARS,$ROLES;
 	if ($roles = get_db_result($SQL)) {
 		while ($row = fetch_row($roles)) {
     	$roleid = !$roleid ? $row["roleid"] : $roleid;
-			$options .= template_use("templates/roles.template", array("roles" => $row), "role_specific_options_template");
+			$options .= template_use("tmp/roles.template", array("roles" => $row), "role_specific_options_template");
 		}
 	}
 
 	$params = array("pageid" => $pageid, "feature" => $feature,
 									"featureid" => $featureid, "options" => $options,
 									"abilities" => print_abilities($pageid, "per_role_", $roleid, false, $feature, $featureid));
-	echo template_use("templates/roles.template", $params, "role_specific_template");
+	echo template_use("tmp/roles.template", $params, "role_specific_template");
 }
 
 function user_specific() {
@@ -113,14 +113,14 @@ global $CFG, $USER, $MYVARS, $ROLES;
 	$options = "";
 	if ($roles = get_db_result($SQL)) {
 		while ($row = fetch_row($roles)) {
-			$options .= template_use("templates/roles.template", array("user" => $row), "role_specific_options_template");
+			$options .= template_use("tmp/roles.template", array("user" => $row), "role_specific_options_template");
 		}
 	}
 
 	$params = array("pageid" => $pageid, "feature" => $feature,
 									"featureid" => $featureid, "options" => $options,
 									"issiteid" => ($pageid == $CFG->SITEID));
-	echo template_use("templates/roles.template", $params, "user_specific_template");
+	echo template_use("tmp/roles.template", $params, "user_specific_template");
 
 	echo $returnme;
 }
@@ -144,7 +144,7 @@ global $CFG, $USER, $MYVARS, $ROLES;
 	}
 
 	$params = array("grouppage" => group_page($pageid, $feature, $featureid));
-	echo template_use("templates/roles.template", $params, "group_specific_template");
+	echo template_use("tmp/roles.template", $params, "group_specific_template");
 }
 
 function manager() {
@@ -174,6 +174,6 @@ global $CFG, $USER, $MYVARS, $ROLES;
 				$params["setting"] = $settings->$feature->$featureid->feature_title->setting;
     }
 
-		echo template_use("templates/roles.template", $params, "roles_manager_template");
+		echo template_use("tmp/roles.template", $params, "roles_manager_template");
 }
 ?>

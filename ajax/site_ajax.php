@@ -18,7 +18,7 @@ global $MYVARS;
 	if ($row = authenticate($username, $password)) {
 		$reroute = '';
 		if ($row["alternate"] == $password) {
-			$reroute = template_use("templates/site_ajax.template", array("userid" => $row["userid"], "password" => $password), "password_change_reroute_template");
+			$reroute = template_use("tmp/site_ajax.template", array("userid" => $row["userid"], "password" => $password), "password_change_reroute_template");
 		}
     echo 'true**' . $reroute;
 	} else {
@@ -57,7 +57,7 @@ global $MYVARS;
 		log_entry("user", null, "Password change failed"); // Log
 	}
 
-	echo template_use("templates/site_ajax.template", array("success" => $success), "reset_password_passfail_template");
+	echo template_use("tmp/site_ajax.template", array("success" => $success), "reset_password_passfail_template");
 }
 
 function change_profile() {
@@ -89,7 +89,7 @@ global $CFG, $MYVARS;
       log_entry("user", null, "Profile change failed"); // Log
     }
   }
-	echo template_use("templates/site_ajax.template", array("success" => $success, "notused" => $notused), "change_profile_template");
+	echo template_use("tmp/site_ajax.template", array("success" => $success, "notused" => $notused), "change_profile_template");
 }
 
 function save_settings() {
@@ -101,7 +101,7 @@ global $CFG, $MYVARS;
 	if ($success = make_or_update_setting($settingid, false, false, false, false, $setting, $extra, false)) {
 		log_entry("setting", $settingid . ":" . $setting, "Setting Changed"); // Log
 	}
-	echo template_use("templates/page.template", array("wwwroot" => $CFG->wwwroot, "success" => $success), "setting_change_template");
+	echo template_use("tmp/page.template", array("wwwroot" => $CFG->wwwroot, "success" => $success), "setting_change_template");
 }
 
 function forgot_password() {
@@ -149,7 +149,7 @@ global $CFG, $MYVARS;
   		$FROMUSER->email = $CFG->siteemail;
 
 			$params = array("user" => $user, "email" => $email, "alternate" => $alternate, "sitename" => $CFG->sitename, "siteowner" => $CFG->siteowner, "siteemail" => $CFG->siteemail);
-			$message = template_use("templates/site_ajax.template", $params, "forgot_password_email_template");
+			$message = template_use("tmp/site_ajax.template", $params, "forgot_password_email_template");
 
   		$subject = $CFG->sitename . ' Password Reset';
 			$success = false;
@@ -159,7 +159,7 @@ global $CFG, $MYVARS;
   			log_entry("user", $TOUSER->email, "Password Reset"); // Log
   		}
   	}
-		echo template_use("templates/site_ajax.template", array("wwwroot" => $CFG->wwwroot, "success" => $success, "user" => $user, "admin" => $admin), "forgot_password_template");
+		echo template_use("tmp/site_ajax.template", array("wwwroot" => $CFG->wwwroot, "success" => $success, "user" => $user, "admin" => $admin), "forgot_password_template");
   }
 }
 
@@ -201,7 +201,7 @@ global $MYVARS, $USER;
   	}
 	}
 	$params = array("yourself" => $yourself, "admin" => $admin, "user" => $user);
-	echo template_use("templates/site_ajax.template", $params, "delete_user_template");
+	echo template_use("tmp/site_ajax.template", $params, "delete_user_template");
 }
 
 function refresh_user_alerts() {

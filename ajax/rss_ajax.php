@@ -41,7 +41,7 @@ global $CFG, $MYVARS, $USER;
 		$SQL = "INSERT INTO rss_feeds (rssid, type, featureid, pageid)
 								 VALUES ('$rssid', '$type', '$featureid', '$pageid')";
 		if (execute_db_sql($SQL)) {
-			echo template_use("templates/rss_ajax.template", array("wwwroot" => $CFG->wwwroot, "rssid" => $rssid, "userkey" => $userkey), "add_feed_template");
+			echo template_use("tmp/rss_ajax.template", array("wwwroot" => $CFG->wwwroot, "rssid" => $rssid, "userkey" => $userkey), "add_feed_template");
 		}
 	}
 }

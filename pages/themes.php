@@ -10,12 +10,12 @@
 include('header.php');
 
 $params = array("dirroot" => $CFG->directory, "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'), "wwwroot" => $CFG->wwwroot);
-echo template_use("templates/page.template", $params, "page_js_css");
-echo template_use("templates/themes.template", $params, "theme_manager_header_template");
+echo template_use("tmp/page.template", $params, "page_js_css");
+echo template_use("tmp/themes.template", $params, "theme_manager_header_template");
 
 callfunction();
 
-echo template_use("templates/page.template", array(), "end_of_page_template");
+echo template_use("tmp/page.template", array(), "end_of_page_template");
 
 function change_theme() {
 global $CFG, $MYVARS, $USER, $PAGE;
@@ -33,9 +33,9 @@ global $CFG, $MYVARS, $USER, $PAGE;
 	} else {
 		include_once($CFG->dirroot . '/features/'.$feature.'/'.$feature.'lib.php');
 		$function = "display_$feature";
-		$params["pane"] = template_use("templates/themes.template", array("left" => custom_styles_selector($pageid, $feature, $featureid), "right" => $function($pageid,"side",$featureid)), "make_template_selector_panes_template");
+		$params["pane"] = template_use("tmp/themes.template", array("left" => custom_styles_selector($pageid, $feature, $featureid), "right" => $function($pageid,"side",$featureid)), "make_template_selector_panes_template");
 	}
 
-	echo template_use("templates/themes.template", $params, "change_theme_template");
+	echo template_use("tmp/themes.template", $params, "change_theme_template");
 }
 ?>

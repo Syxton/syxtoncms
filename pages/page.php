@@ -10,11 +10,11 @@
 include ('header.php');
 
 $params = array("dirroot" => $CFG->directory, "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'), "wwwroot" => $CFG->wwwroot);
-echo template_use("templates/page.template", $params, "page_js_css");
+echo template_use("tmp/page.template", $params, "page_js_css");
 
 callfunction();
 
-echo template_use("templates/page.template", array(), "end_of_page_template");
+echo template_use("tmp/page.template", array(), "end_of_page_template");
 
 function browse() {
 global $CFG;
@@ -33,20 +33,20 @@ global $CFG;
 
 	$params = array("wwwroot" => $CFG->wwwroot,
 									"pagesearchselected" => $pagesearch,
-									"usersearchtab" => (!is_logged_in() ? "" : template_use("templates/page.template", array("usersearchselected" => $usersearch), "browse_usersearch_template")));
-	echo template_use("templates/page.template", $params, "browse_template");
+									"usersearchtab" => (!is_logged_in() ? "" : template_use("tmp/page.template", array("usersearchselected" => $usersearch), "browse_usersearch_template")));
+	echo template_use("tmp/page.template", $params, "browse_template");
 }
 
 function browse_search() {
 global $CFG;
 	$params = array("wwwroot" => $CFG->wwwroot, "search_results_box" => make_search_box(false,"pagesearch"));
-	echo template_use("templates/page.template", $params, "browse_search_template");
+	echo template_use("tmp/page.template", $params, "browse_search_template");
 }
 
 function browse_users() {
 global $CFG;
 	$params = array("wwwroot" => $CFG->wwwroot, "search_results_box" => make_search_box(false,"usersearch"));
-	echo template_use("templates/page.template", $params, "browse_user_template");
+	echo template_use("tmp/page.template", $params, "browse_user_template");
 }
 
 function create_edit_page() {
@@ -89,9 +89,9 @@ global $CFG, $MYVARS, $ROLES, $USER;
   }
 
   if (isset($MYVARS->GET["pageid"])) {
-  	$content .= create_validation_script("create_page_form" , template_use("templates/page.template", array("pageid" => $MYVARS->GET["pageid"]), "edit_page_validation"));
+  	$content .= create_validation_script("create_page_form" , template_use("tmp/page.template", array("pageid" => $MYVARS->GET["pageid"]), "edit_page_validation"));
   } else {
-  	$content .= create_validation_script("create_page_form" , template_use("templates/page.template", array(), "create_page_validation"));
+  	$content .= create_validation_script("create_page_form" , template_use("tmp/page.template", array(), "create_page_validation"));
   }
 
   $SQL = 'SELECT * FROM roles WHERE roleid > "' . $ROLES->creator . '" AND roleid < "'.$ROLES->none.'" ORDER BY roleid DESC';
@@ -107,7 +107,7 @@ global $CFG, $MYVARS, $ROLES, $USER;
 									"hideno" => $hide_no, "hideyes" => $hide_yes, "input_page_menulink" => get_help("input_page_menulink"),
 									"menupage" => $menu_page, "hidefromvisitors" => $hidefromvisitors,
 									"buttonname" => (isset($MYVARS->GET["pageid"]) ? "Submit Changes" : "Create Page"));
-	$content .= template_use("templates/page.template", $params, "create_edit_page_template");
+	$content .= template_use("tmp/page.template", $params, "create_edit_page_template");
 
   echo format_popup($content,'Create/Edit Page');
 }
@@ -123,7 +123,7 @@ global $CFG, $MYVARS, $USER;
   }
 
 	$params = array("pageid" => $pageid);
-	$content .= template_use("templates/page.template", $params, "create_edit_links_template");
+	$content .= template_use("tmp/page.template", $params, "create_edit_links_template");
   echo format_popup($content,'Edit Links');
 }
 ?>

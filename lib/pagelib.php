@@ -33,10 +33,10 @@ function callfunction() {
         $MYVARS = empty($MYVARS) ? new stdClass() : $MYVARS;
         $MYVARS->GET = !$postorget && isset($_GET["action"]) ? $_GET : $postorget;
         if (!empty($MYVARS->GET["i"])) { //universal javascript and css
-            echo template_use("templates/pagelib.template", $params, "main_js_css");
+            echo template_use("tmp/pagelib.template", $params, "main_js_css");
         }
         if (!empty($MYVARS->GET["v"])) { //validation javascript and css
-            echo template_use("templates/pagelib.template", $params, "validation_js");
+            echo template_use("tmp/pagelib.template", $params, "validation_js");
             unset($MYVARS->GET["v"]);
         }
         if (function_exists($MYVARS->GET["action"])) {
@@ -65,7 +65,7 @@ function postorget() {
 function main_body($header_only = false) {
     $params = array("page_masthead_1" => page_masthead(true),
                     "page_masthead_2" => page_masthead(false, $header_only));
-    return template_use("templates/pagelib.template", $params, "main_body_template");
+    return template_use("tmp/pagelib.template", $params, "main_body_template");
 }
 
 function page_masthead($left = true, $header_only = false) {
@@ -79,7 +79,7 @@ function page_masthead($left = true, $header_only = false) {
                         "logo" => $logo,
                         "header_only" => ($header_only ? "" : get_nav_items($PAGE->id)),
                         "quote" => random_quote());
-        $returnme = template_use("templates/pagelib.template", $params, "page_masthead_template");
+        $returnme = template_use("tmp/pagelib.template", $params, "page_masthead_template");
     } else {
         $returnme = (!$header_only ? (is_logged_in() ? print_logout_button($USER->fname, $USER->lname, $PAGE->id) : get_login_form()) : '');
     }
@@ -106,7 +106,7 @@ function get_editor_box($initialValue = "", $name = "editor1", $height = "550", 
                     "width" => $width,
                     "plugins" => get_editor_plugins($type),
                     "directory" => (empty($CFG->directory) ? '' : '/' . $CFG->directory));
-    return template_use("templates/pagelib.template", $params, "editor_box_template");
+    return template_use("tmp/pagelib.template", $params, "editor_box_template");
 }
 
 function get_editor_plugins($type) {
@@ -558,7 +558,7 @@ function all_features_function($SQL = false, $feature = false, $pre = "", $post 
 function get_user_alerts($userid, $returncount = true, $internal = true) {
     $returnme = all_features_function("SELECT * FROM features", false, "get_", "_alerts", $returncount, $userid, $returncount);
     if (!$returncount) {
-        $returnme = $returnme == "" ? template_use("templates/pagelib.template", array(), "get_user_alerts_template") : $returnme;
+        $returnme = $returnme == "" ? template_use("tmp/pagelib.template", array(), "get_user_alerts_template") : $returnme;
     }
 
     if ($internal) {
@@ -591,7 +591,7 @@ function print_logout_button($fname, $lname, $pageid = false) {
     if (!empty($_SESSION["lia_original"])) {
         $lia_name = get_user_name($_SESSION["lia_original"]);
         $params = array("lia_name" => $lia_name);
-        $logoutas = template_use("templates/pagelib.template", $params, "print_logout_button_switchback_template");
+        $logoutas = template_use("tmp/pagelib.template", $params, "print_logout_button_switchback_template");
     }
 
     $params = array("siteid" => $CFG->SITEID,
@@ -599,7 +599,7 @@ function print_logout_button($fname, $lname, $pageid = false) {
                     "profile" => $profile,
                     "userlinks" => get_user_links($USER->userid, $pageid));
 
-    return template_use("templates/pagelib.template", $params, "print_logout_button_template");
+    return template_use("tmp/pagelib.template", $params, "print_logout_button_template");
 }
 
 function get_nav_items($pageid = false) {
@@ -701,7 +701,7 @@ function get_css_box($title, $content, $buttons = '', $padding = null, $feature 
       $params = array("pagenamebordercolor" => $pagenamebordercolor, "pagenamebgcolor" => $pagenamebgcolor,
                       "pagenamefontcolor" => $pagenamefontcolor, "title" => stripslashes($title),
                       "content" => $content, "buttons" => $buttons);
-      $returnme = template_use("templates/pagelib.template", $params, "get_css_box_template1");
+      $returnme = template_use("tmp/pagelib.template", $params, "get_css_box_template1");
     } else {
       if ($preview) {
           $styles = $STYLES->$feature;
@@ -717,7 +717,7 @@ function get_css_box($title, $content, $buttons = '', $padding = null, $feature 
       $bottom = "";
       if ($bottom_left || $bottom_center || $bottom_right) {
         $params = array("bottom_left" => $bottom_left, "bottom_right" => $bottom_right, "contentbgcolor" => $contentbgcolor);
-        $returnme .= template_use("templates/pagelib.template", $params, "get_css_box_bottom_template");
+        $returnme .= template_use("tmp/pagelib.template", $params, "get_css_box_bottom_template");
       }
 
       $opendiv = empty($feature) || $feature == 'pagelist' || $feature == 'addfeature' ? '' : 'class="box" id="' . $feature . '_' . $featureid . '"';
@@ -725,7 +725,7 @@ function get_css_box($title, $content, $buttons = '', $padding = null, $feature 
       $params = array("opendiv" => $opendiv, "bordercolor" => $bordercolor, "titlebgcolor" => $titlebgcolor, "buttons" => $buttons,
                       "titlefontcolor" => $titlefontcolor, "title" => stripslashes($title), "class" => $class,
                       "padding" => $padding, "contentbgcolor" => $contentbgcolor, "content" => $content, "bottom" => $bottom);
-      $returnme .= template_use("templates/pagelib.template", $params, "get_css_box_template2");
+      $returnme .= template_use("tmp/pagelib.template", $params, "get_css_box_template2");
     }
     return $returnme;
 }
@@ -945,7 +945,7 @@ function get_login_form($loginonly = false, $newuser = true) {
                     "input_password2" => get_help("input_password2"),
                     "newuserlink" => $newuserlink,
                     "forgotpasswordlink" => $forgotpasswordlink);
-    $content = template_use("templates/pagelib.template", $params, "get_login_form_template");
+    $content = template_use("tmp/pagelib.template", $params, "get_login_form_template");
 
     $returnme = $loginonly ? $content : get_css_box("Login", $content);
     return $returnme;
@@ -1062,7 +1062,7 @@ function get_button_layout($featuretype, $featureid = "", $pageid) {
     if (strlen($buttons) > 0) {
         $params = array("bordercolor" => $bordercolor, "titlefontcolor" => $titlefontcolor, "titlebgcolor" => $titlebgcolor,
                         "featuretype" => $featuretype, "featureid" => $featureid, "buttons" => $buttons);
-        $returnme = template_use("templates/pagelib.template", $params, "get_button_layout_template");
+        $returnme = template_use("tmp/pagelib.template", $params, "get_button_layout_template");
     }
 
     return $returnme;
@@ -1081,18 +1081,18 @@ function get_search_page_variables($total, $perpage, $pagenum) {
 function make_search_box($contents = "", $name_addition = "") {
     global $CFG;
     $params = array("name_addition" => $name_addition, "wwwroot" => $CFG->wwwroot, "contents" => $contents);
-    return template_use("templates/pagelib.template", $params, "make_search_box_template");
+    return template_use("tmp/pagelib.template", $params, "make_search_box_template");
 }
 
 function format_popup($content = "", $title = "", $height = "calc(100% - 60px)", $padding = "15px") {
     $params = array("padding" => $padding, "height" => $height, "title" => $title, "content" => $content);
-    return template_use("templates/pagelib.template", $params, "format_popup_template");
+    return template_use("tmp/pagelib.template", $params, "format_popup_template");
 }
 
 function keepalive() {
     global $CFG;
     $params = array("wwwroot" => $CFG->wwwroot);
-    return template_use("templates/pagelib.template", $params, "keepalive_template");
+    return template_use("tmp/pagelib.template", $params, "keepalive_template");
 }
 
 function donothing() {

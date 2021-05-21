@@ -113,11 +113,16 @@ function return_bytes ($size_str) {
 }
 
 // Main template function
-function template_use($file, $params = array(), $subsection = "") {
+function template_use($file, $params = array(), $subsection = "", $feature = false) {
 	global $CFG;
     $v = $params;
 
-    if (!file_exists($CFG->dirroot . '/' . $file)) { echo $CFG->dirroot . '/' . $file . " not found."; return; } // template file not found.
+		if ($feature) {
+			if (!file_exists($CFG->dirroot . "/$feature/" . $file)) { echo $CFG->dirroot . "/$feature/" . $file . " not found."; return; } // template file not found.
+		} else {
+			if (!file_exists($CFG->dirroot . '/' . $file)) { echo $CFG->dirroot . '/' . $file . " not found."; return; } // template file not found.
+		}
+
 
     $contents = file_get_contents($CFG->dirroot . '/' . $file);
 

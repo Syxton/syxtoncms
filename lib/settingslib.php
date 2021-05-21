@@ -95,7 +95,7 @@ global $CFG, $USER;
     }
   }
 
-  return template_use("templates/settings.template", array("settingslist" => $settingslist), "make_settings_page_template");
+  return template_use("tmp/settings.template", array("settingslist" => $settingslist), "make_settings_page_template");
 }
 
 function make_setting_input($name, $title, $type, $extra="", $settingid="", $setting = "", $numeric = false, $extravalidation = "", $extra_alert = "", $savebutton = true) {
@@ -123,12 +123,12 @@ global $CFG;
 	  case "select": //extra will look like 'SELECT id as selectvalue,text as selectname from table'  the value and name must be labeled as selectvalue and selectname
 			$params["isselect"] = true;
 			$selected = $setting != 0 ? "" : "selected";
-			$params["options"] = template_use("templates/page.template", array("selected" => $selected, "value" => "0", "display" => "No"), "select_options_template");
+			$params["options"] = template_use("tmp/page.template", array("selected" => $selected, "value" => "0", "display" => "No"), "select_options_template");
 
 	    if ($data = get_db_result($extra)) {
 	      while ($row = fetch_row($data)) {
 	        $selected = $setting == $row["selectvalue"] ? "selected" : "";
-					$params["options"] .= template_use("templates/page.template", array("selected" => $selected, "value" => $row["selectvalue"], "display" => stripslashes($row["selectname"])), "select_options_template");
+					$params["options"] .= template_use("tmp/page.template", array("selected" => $selected, "value" => $row["selectvalue"], "display" => stripslashes($row["selectname"])), "select_options_template");
 	      }
 	    }
 			break;
@@ -137,7 +137,7 @@ global $CFG;
 			$params["options"] = "";
 	    foreach ($extra as $e) {
 	      $selected = $setting == $e["selectvalue"] ? "selected" : "";
-				$params["options"] .= template_use("templates/page.template", array("selected" => $selected, "value" => $e["selectvalue"], "display" => stripslashes($e["selectname"])), "select_options_template");
+				$params["options"] .= template_use("tmp/page.template", array("selected" => $selected, "value" => $e["selectvalue"], "display" => stripslashes($e["selectname"])), "select_options_template");
 	    }
 	    break;
 		case "textarea":
@@ -146,7 +146,7 @@ global $CFG;
 			$params["ifextravalidation"] = !empty($extravalidation);
 	      break;
 	}
-	return template_use("templates/settings.template", $params, "make_setting_input_template");
+	return template_use("tmp/settings.template", $params, "make_setting_input_template");
 }
 
 function make_or_update_setting($settingid=false, $type=false, $pageid=false, $featureid=false, $setting_name=false, $setting=false, $extra=false, $defaultsetting=false, &$settings = false) {

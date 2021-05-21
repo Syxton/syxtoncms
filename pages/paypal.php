@@ -10,7 +10,7 @@
 include('header.php');
 
 $params = array("dirroot" => $CFG->directory, "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'), "wwwroot" => $CFG->wwwroot);
-echo template_use("templates/page.template", $params, "page_js_css");
+echo template_use("tmp/page.template", $params, "page_js_css");
 
 if (!isset($EVENTSLIB)) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 
@@ -69,7 +69,7 @@ if (!$fp) {
                        VALUES('".$keyarray["custom"]."','".$keyarray['txn_id']."','".$keyarray["payment_gross"]."',".get_timestamp().")";
           execute_db_sql($SQL);
       }
-      echo template_use("templates/paypal.template", array("type" => "donation"), "transaction_complete");
+      echo template_use("tmp/paypal.template", array("type" => "donation"), "transaction_complete");
       echo print_cart($keyarray, true);
   	} else {
       $SQL = "SELECT *
@@ -128,7 +128,7 @@ if (!$fp) {
   			//Log
   			log_entry('events', $keyarray['txn_id'], "Paypal");
   		}
-    echo template_use("templates/paypal.template", array("type" => "transaction"), "transaction_complete");
+    echo template_use("tmp/paypal.template", array("type" => "transaction"), "transaction_complete");
   	echo print_cart($keyarray);
   	}
 	} elseif (strcmp ($lines[0], "FAIL") == 0) {
@@ -143,10 +143,10 @@ global $CFG;
 	$i = 0; $cartitems = "";
   while ($i < $items["num_cart_items"]) {
     $params = array("itemname" => $items["item_name".($i+1)] , "itemprice" => $items["mc_gross_".($i+1)]);
-		$cartitems .= template_use("templates/paypal.template", $params, "print_cart_row_template");
+		$cartitems .= template_use("tmp/paypal.template", $params, "print_cart_row_template");
 		$i++;
 	}
   $params = array("wwwroot" => $CFG->wwwroot, "sitename" => $CFG->sitename, "cartitems" => $cartitems, "items" => $items, "type" => (!$donation ? "paid for" : "donated"));
-  return template_use("templates/paypal.template", array("type" => "transaction"), "print_cart_template");
+  return template_use("tmp/paypal.template", array("type" => "transaction"), "print_cart_template");
 }
 ?>

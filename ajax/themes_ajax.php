@@ -22,7 +22,7 @@ global $CFG, $MYVARS, $USER, $PAGE;
 
 	$params["pagelist"] = get_css_box($pagename, $rolename, false, NULL, 'pagename', NULL, $themeid, false, $pageid);
 	$params["block"] = get_css_box("Title", "Content", null, null, null, null, $themeid, false, $pageid);
-	echo template_use("templates/themes.template", $params, "theme_selector_right_template");
+	echo template_use("tmp/themes.template", $params, "theme_selector_right_template");
 }
 
 function show_themes() {
@@ -84,7 +84,7 @@ global $CFG, $MYVARS, $USER, $STYLES;
 		$rolename = get_db_field("display_name", "roles", "roleid = " . get_user_role($USER->userid, $pageid));
 		$params["pagelist"] = get_css_box($pagename, $rolename, false, NULL, 'pagename', NULL, NULL, true);
 		$params["block"] = get_css_box("Title", "Content", NULL, NULL, "page", NULL, NULL, true);
-		echo template_use("templates/themes.template", $params, "theme_selector_right_template");
+		echo template_use("tmp/themes.template", $params, "theme_selector_right_template");
 	} else {
 		$STYLES->preview = true;
 		$default_list = get_custom_styles($pageid, $feature, $featureid);
@@ -114,15 +114,15 @@ global $CFG, $MYVARS, $USER;
 		$params = array();
 		$params["pagelist"] = get_css_box($pagename, $rolename, false, NULL, 'pagename', NULL, '0', NULL, $pageid);
 		$params["block"] = get_css_box("Title", "Content", NULL, NULL, NULL, NULL, '0', NULL, $pageid);
-		$right = template_use("templates/themes.template", $params, "theme_selector_right_template");
+		$right = template_use("tmp/themes.template", $params, "theme_selector_right_template");
 
-		echo template_use("templates/themes.template", array("left" => $left, "right" => $right), "make_template_selector_panes_template");
+		echo template_use("tmp/themes.template", array("left" => $left, "right" => $right), "make_template_selector_panes_template");
 	} else {
     	include_once($CFG->dirroot . '/features/'.$feature.'/'.$feature.'lib.php');
     	$function = "display_$feature";
 			$left = custom_styles_selector($pageid, $feature, $featureid);
 			$right = $function($pageid, "side", $featureid);
-			echo template_use("templates/themes.template", array("left" => $left, "right" => $right), "make_template_selector_panes_template");
+			echo template_use("tmp/themes.template", array("left" => $left, "right" => $right), "make_template_selector_panes_template");
 	}
 }
 

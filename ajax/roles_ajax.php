@@ -62,11 +62,11 @@ global $CFG,$ROLES,$USER,$MYVARS;
   $options = "";
 	if ($users = get_db_result($SQL)) {
 		while ($row = fetch_row($users)) {
-      $options .= template_use("templates/page.template", array("value" => $row['userid'], "display" => $row['fname'] . ' ' . $row['lname'] . ' (' . $row['email'] . ')'), "select_options_template");
+      $options .= template_use("tmp/page.template", array("value" => $row['userid'], "display" => $row['fname'] . ' ' . $row['lname'] . ' (' . $row['email'] . ')'), "select_options_template");
 		}
 	}
   $params["options"] = $options;
-  echo template_use("templates/roles_ajax.template", $params, "name_search_template");
+  echo template_use("tmp/roles_ajax.template", $params, "name_search_template");
 }
 
 function add_to_group_search() {
@@ -122,12 +122,12 @@ global $CFG, $ROLES, $USER, $MYVARS;
             $mygroups .= " " . $group_info["name"];
         }
       }
-      $options .= template_use("templates/page.template", array("value" => $row['userid'], "display" => $row['fname'] . ' ' . $row['lname'] . ' (' . $row['email'] . ')' . $mygroups), "select_options_template");
+      $options .= template_use("tmp/page.template", array("value" => $row['userid'], "display" => $row['fname'] . ' ' . $row['lname'] . ' (' . $row['email'] . ')' . $mygroups), "select_options_template");
 		}
 	}
 
   $params["options"] = $options;
-  echo template_use("templates/roles_ajax.template", $params, "add_to_group_search_template");
+  echo template_use("tmp/roles_ajax.template", $params, "add_to_group_search_template");
 }
 
 function refresh_group_users() {
@@ -166,14 +166,14 @@ global $CFG, $MYVARS, $USER;
   $options = '';
   if ($users = get_db_result($SQL)) {
 		while ($row = fetch_row($users)) {
-      $options .= template_use("templates/page.template", array("value" => $row['userid'], "display" => $row['fname'] . ' ' . $row['lname'] . ' (' . $row['email'] . ')'), "select_options_template");
+      $options .= template_use("tmp/page.template", array("value" => $row['userid'], "display" => $row['fname'] . ' ' . $row['lname'] . ' (' . $row['email'] . ')'), "select_options_template");
 		}
 	} else {
-    $options .= template_use("templates/page.template", array("value" => "0", "display" => "No users in this group."), "select_options_template");
+    $options .= template_use("tmp/page.template", array("value" => "0", "display" => "No users in this group."), "select_options_template");
 	}
 
   $params["options"] = $options;
-  echo template_use("templates/roles_ajax.template", $params, "refresh_group_users_template");
+  echo template_use("tmp/roles_ajax.template", $params, "refresh_group_users_template");
 }
 
 function manage_group_users_form() {
@@ -238,7 +238,7 @@ global $CFG, $MYVARS, $ROLES, $USER;
 
   $options1 = "";
 	if ($pageid == $CFG->SITEID) {
-    $options1 = template_use("templates/page.template", array("value" => "0", "display" => "Search results will be shown here."), "select_options_template");
+    $options1 = template_use("tmp/page.template", array("value" => "0", "display" => "Search results will be shown here."), "select_options_template");
   } elseif ($roles = get_db_result($SQL)) {
 		while ($row = fetch_row($roles)) {
       $mygroups = "";
@@ -253,7 +253,7 @@ global $CFG, $MYVARS, $ROLES, $USER;
             $mygroups .= " " . $group_info["name"];
         }
       }
-      $options1 .= template_use("templates/page.template", array("value" => $row['userid'], "display" => $row['fname']. ' ' . $row['lname'] . ' (' . $row['email'] .')'.$mygroups), "select_options_template");
+      $options1 .= template_use("tmp/page.template", array("value" => $row['userid'], "display" => $row['fname']. ' ' . $row['lname'] . ' (' . $row['email'] .')'.$mygroups), "select_options_template");
 		}
 	}
 
@@ -287,13 +287,13 @@ global $CFG, $MYVARS, $ROLES, $USER;
               $mygroups .= " " . $group_info["name"];
           }
       }
-      $options2 = template_use("templates/page.template", array("value" => $row['userid'], "display" => $row['fname']. ' ' . $row['lname'] . ' (' . $row['email'] .')' . $mygroups), "select_options_template");
+      $options2 = template_use("tmp/page.template", array("value" => $row['userid'], "display" => $row['fname']. ' ' . $row['lname'] . ' (' . $row['email'] .')' . $mygroups), "select_options_template");
 		}
 	}
 
   $params = array("wwwroot" => $CFG->wwwroot, "groupname" => $groupname, "pageid" => $pageid, "groupid" => $groupid, "feature" => $feature, "featureid" => $featureid,
                   "issite" => ($pageid == $CFG->SITEID), "options1" => $options1, "options2" => $options2);
-  return template_use("templates/roles_ajax.template", $params, "refresh_manage_groups_template");
+  return template_use("tmp/roles_ajax.template", $params, "refresh_manage_groups_template");
 }
 
 function delete_group() {
@@ -371,7 +371,7 @@ global $CFG, $MYVARS;
   }
 
   $params = array("wwwroot" => $CFG->wwwroot, "name" => $name, "parents" => $parents, "pageid" => $pageid, "groupid" => $groupid, "feature" => $feature, "featureid" => $featureid);
-  echo template_use("templates/roles_ajax.template", $params, "create_edit_group_form_template");
+  echo template_use("tmp/roles_ajax.template", $params, "create_edit_group_form_template");
 }
 
 function save_group() {
@@ -762,13 +762,13 @@ global $CFG, $USER, $MYVARS, $ROLES;
 	if ($roles = get_db_result($SQL)) {
 		while ($row = fetch_row($roles)) {
 			if ($row['roleid'] != $roleid && $row['roleid'] >= $myroleid) {
-        $options .= template_use("templates/page.template", array("value" => $row['roleid'], "display" => stripslashes($row['display_name'])), "select_options_template");
+        $options .= template_use("tmp/page.template", array("value" => $row['roleid'], "display" => stripslashes($row['display_name'])), "select_options_template");
       }
 		}
 	}
 
   $params = array("rolename" => $rolename, "pageid" => $pageid, "userid" => $userid, "options" => $options);
-  echo template_use("templates/roles_ajax.template", $params, "refresh_user_roles_template");
+  echo template_use("tmp/roles_ajax.template", $params, "refresh_user_roles_template");
 }
 
 function assign_role() {
