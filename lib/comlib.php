@@ -10,9 +10,11 @@
 if (!isset($LIBHEADER)) include('header.php');
 $COMLIB = true;
 
-function send_email($touser,$fromuser,$cc = false,$subject, $message, $bcc = false) {
- global $MYVARS,$CFG;
-    $success = false;
+function send_email($touser, $fromuser, $cc = false, $subject, $message, $bcc = false) {
+ global $MYVARS, $CFG;
+  $touser = is_array($touser) ? (object)$touser : $touser;
+  $fromuser = is_array($fromuser) ? (object)$fromuser : $fromuser;
+  $success = false;
 	if (!$CFG->smtp) {
 		// To send HTML mail, the Content-type header must be set
 		$headers  = 'MIME-Version: 1.0' . "\r\n";

@@ -137,12 +137,6 @@ global $CFG, $MYVARS;
       }
 
   		// Email new password to the email address.
-			$TOUSER = new \stdClass;
-  		$TOUSER->userid = $user['userid'];
-  		$TOUSER->fname = $user['fname'];
-  		$TOUSER->lname = $user['lname'];
-  		$TOUSER->email = $email;
-
       $FROMUSER = new \stdClass;
   		$FROMUSER->fname = $CFG->sitename;
   		$FROMUSER->lname = '';
@@ -153,7 +147,7 @@ global $CFG, $MYVARS;
 
   		$subject = $CFG->sitename . ' Password Reset';
 			$success = false;
-  		if (!$userid || send_email($TOUSER, $FROMUSER, null, $subject, $message)) {
+  		if (!$userid || send_email($user, $FROMUSER, null, $subject, $message)) {
 				$success = true;
   			send_email($FROMUSER, $FROMUSER, null, $subject, $message); // Send a copy to the site admin
   			log_entry("user", $TOUSER->email, "Password Reset"); // Log

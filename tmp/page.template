@@ -202,6 +202,127 @@ create_edit_links_template||
 </div>
 ||create_edit_links_template
 
+display_addfeature_template||
+  <table style="width:100%">
+    <tr>
+      <td style="vertical-align:top; text-align:right; width:90%;">
+        <select id="addfeaturelist" style="width:100%">
+          <option value="">Add Feature...</option>
+          ||options||
+        </select>
+      </td>
+      <td style="vertical-align:top; text-align:left;">
+        <input type="button" value="Add" onclick="if ($('#addfeaturelist').val() != '') {
+                                                    ajaxapi('/ajax/site_ajax.php',
+                                                            'addfeature',
+                                                            '&feature=' + $('#addfeaturelist').val() +
+                                                            '&pageid=||pageid||',
+                                                            function() {
+                                                              if (xmlHttp.readyState == 4) {
+                                                                go_to_page(||pageid||);
+                                                              }
+                                                            },
+                                                            true);}" />
+      </td>
+    </tr>
+  </table>
+||display_addfeature_template
+
+account_activation_email||
+  <p>
+    <font face="Tahoma" size="3" color="#993366">
+      Dear <strong>||user[fname]|| ||user[lname]||</strong>,
+      <br />
+    </font>
+  </p>
+  <blockquote>
+    <p>
+      <font size="3" face="Tahoma">
+        <strong>||sitename||</strong> has recieved notification that you have activated your account.&nbsp; The temporary password you used to log in has now been replaced with the original password you used when you signed up.
+      </font>
+    </p>
+  </blockquote>
+  <p>&nbsp;</p>
+  <p>
+    <font face="Tahoma" size="3" color="#666699">
+      <strong>Enjoy the site,</strong>
+    </font>
+  </p>
+  <p>
+    <font size="3" face="Tahoma">
+      <em>||siteowner|| </em>
+    </font>
+    <font size="3" face="Tahoma" color="#ff0000">
+      &lt;||siteemail||
+    </font>
+    <font face="Tahoma" size="3" color="#ff0000">
+      &gt;
+    </font>
+  </p>
+  <p>&nbsp;</p>
+||account_activation_email
+
+pagelist_template||
+  ||pagelist||
+  <span class="centered_span">
+    ||browse||
+  </span>
+  ||pagelinks||
+||pagelist_template
+
+role_on_pagelist_template||
+  ||roleonpage||
+  <div style="padding:3px;"></div>
+  ||pagelistblock||
+||role_on_pagelist_template
+
+format_pagelist_select||
+  <select id="select_page" style="width:100%" onchange="go_to_page($(this).val());">
+    ||options||
+  </select>
+||format_pagelist_select
+
+pagelinks_template||
+  <div id="page_links_div">
+    <br />
+    <div style="border: 1px solid gray; background-color:#EFEFEF;">
+      <span style="line-height:2em; width:100%; display:block; background-color:#D1D7DC;">
+        <b>&nbsp;Page Links</b>
+      </span>
+      ||links||
+    </div>
+  </div>
+||pagelinks_template
+
+pagelinks_links_template||
+  <div style="line-height:1.5em; padding:5px;" id="link_span_||page[linkid]||">
+    <span style="width:100%;">
+      <a style="vertical-align:middle;" href="||wwwroot||/index.php?pageid=||page[linkpageid]||">
+        ||page[linkdisplay]||
+      </a>
+      ||canedit{{
+        &nbsp;
+        <a style="vertical-align:middle;" href="javascript: void(0);" onclick="if (confirm('Are you sure you want to unlink this page?')) {
+                                                                                  ajaxapi('/ajax/page_ajax.php',
+                                                                                          'unlink_page',
+                                                                                          '&pageid=||pageid||' +
+                                                                                          '&linkpageid=||page[linkpageid]||',
+                                                                                          function() {
+                                                                                            ajaxapi('/ajax/page_ajax.php',
+                                                                                                    'refresh_page_links',
+                                                                                                    '&pageid=||pageid||',
+                                                                                                    function() {
+                                                                                                      simple_display('page_links_div');
+                                                                                                    });
+                                                                                          });
+                                                                                  }">
+          <img src="||wwwroot||/images/unlink.png" title="Unlink Page" alt="Unlink Page" />
+        </a>
+      }}canedit||
+    </span>
+  </div>
+||pagelinks_links_template
+
 end_of_page_template||
   </body>
 </html>

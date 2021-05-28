@@ -223,7 +223,7 @@ search_linkpagesearch_buttons_template||
     <a href="javascript: void(0);" onclick="ajaxapi('/ajax/page_ajax.php',
                                                     'unlink_page',
                                                     '&pageid=||pageid||' +
-                                                    '&linkid=||linkpageid||',
+                                                    '&linkpageid=||linkpageid||',
                                                     function() {
                                                       simple_display('addremove_||pageid||');
                                                     });

@@ -1,4 +1,4 @@
-<?php  /// Moodle Configuration File 
+<?php  /// Moodle Configuration File
 
 unset($CFG);
 unset($USER);
@@ -16,6 +16,7 @@ $CFG->siteowner	= 'Your Name';
 $CFG->siteemail	= 'test@email.com';
 $CFG->sitefooter = '1234 My Address';
 $CFG->logofile 	= 'logo.png';
+$CFG->mobilelogofile 	= 'mobilelogo.png';
 
 //Database connection variables
 $CFG->dbtype    = 'mysqli'; //mysql or mysqli

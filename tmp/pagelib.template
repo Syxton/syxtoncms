@@ -30,8 +30,16 @@ page_masthead_template||
 <div class="nav_header">
     <div id="logo_div">
         <a href="||wwwroot||">
-            ||mobilelogo||
-            ||logo||
+            ||hasmobilelogo{{
+              <img id="logosmall" src="||wwwroot||/images/||mobilelogofile||" alt="||sitename|| Logo" />
+            }}hasmobilelogo||
+            ||haslogo{{
+              <img id="logo" src="||wwwroot||/images/||logofile||" alt="||sitename|| Logo" />
+              //OR//
+              <div id="logo">
+                ||sitename||
+              </div>
+            }}haslogo||
         </a>
     </div>
     <div class="nav">

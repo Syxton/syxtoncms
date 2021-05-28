@@ -371,11 +371,11 @@ global $MYVARS, $CFG, $USER;
 
 function unlink_page() {
 global $MYVARS;
-  $linkid = $MYVARS->GET['linkid'];
+  $linkpageid = $MYVARS->GET['linkpageid'];
   $pageid = $MYVARS->GET['pageid'];
   $SQL = "DELETE FROM pages_links
                 WHERE hostpageid = '$pageid'
-                  AND linkpageid = '$linkid'";
+                  AND linkpageid = '$linkpageid'";
   execute_db_sql($SQL);
   resort_links($pageid);
   donothing();
@@ -484,9 +484,11 @@ global $CFG, $MYVARS;
 
 function refresh_page_links() {
 global $CFG, $USER, $MYVARS;
-  if (!isset($PAGELISTLIB)) { include_once ($CFG->dirroot . '/lib/pagelistlib.php'); }
   $userid = $USER->userid;
   $pageid = $MYVARS->GET["pageid"];
+
+  if (!isset($PAGELISTLIB)) { include_once ($CFG->dirroot . '/lib/pagelistlib.php'); }
+
   echo get_page_links($pageid, $userid);
 }
 
