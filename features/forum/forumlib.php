@@ -14,13 +14,13 @@ function display_forum($pageid,$area,$forumid) {
 global $CFG, $USER, $ROLES;
 	date_default_timezone_set(date_default_timezone_get());
 	$content='<div id="forum_div_'.$forumid.'">';
-	
+
     //get settings or create default settings if they don't exist
 	if (!$settings = fetch_settings("forum",$forumid,$pageid)) {
 		make_or_update_settings_array(default_settings("forum",$pageid,$forumid));
 		$settings = fetch_settings("forum",$forumid,$pageid);
 	}
-    
+
 	$title = $settings->forum->$forumid->feature_title->setting;
 	$refresh_time = 1 * 60000; //the 1 could be a setting for minutes
 	if ($area == "middle") { //This is a FORUM
@@ -30,7 +30,7 @@ global $CFG, $USER, $ROLES;
 			$content .= '<span class="centered_span">'.get_error_message("generic_permissions").'</span>';
 		}
 		$content .= '</div><input type="hidden" name="forum_refresh_'.$forumid.'" id="forum_refresh_'.$forumid.'" value="ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_categories_ajax\',\'&amp;forumid='.$forumid.'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true);" />';
-        
+
         //Refresh Script
         $content.='<script type="text/javascript">var forum'.$forumid.'_interval=0; forum'.$forumid.'_interval = setInterval(function() { eval(stripslashes(unescape(window.parent.document.getElementById("forum_refresh_'.$forumid.'").value))); },'.$refresh_time.');</script>';
     } else { //This is a SHOUTBOX
@@ -41,14 +41,14 @@ global $CFG, $USER, $ROLES;
 		}
 		$content .= '</div><input type="hidden" name="forum_refresh_'.$forumid.'" id="forum_refresh_'.$forumid.'" value="ajaxapi(\'/features/forum/forum_ajax.php\',\'get_shoutbox_ajax\',\'&amp;forumid='.$forumid.'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true);" />';
 	}
-	  
+
 	$buttons = is_logged_in() ? get_button_layout("forum",$forumid,$pageid) : "";
-	return get_css_box($title,$content,$buttons, NULL, "forum", $forumid);
+	return get_css_box($title,$content,$buttons, "0px", "forum", $forumid);
 }
 
 function get_forum_categories($forumid) {
 global $USER,$CFG;
-	$returnme = '<br /><table class="forum_category"><tr><td class="forum_headers">Category Name</td><td class="forum_headers" style="width:70px;">Discussions</td><td  class="forum_headers" style="width:70px;">Posts</td></tr>';
+	$returnme = '<table class="forum_category"><tr><td class="forum_headers">Category Name</td><td class="forum_headers" style="width:70px;">Discussions</td><td  class="forum_headers" style="width:70px;">Posts</td></tr>';
 	$content = "";
 	if ($categories = get_db_result("SELECT * FROM forum_categories WHERE forumid=$forumid AND shoutbox=0 ORDER BY sort")) {
 		while ($category = fetch_row($categories)) {
@@ -57,9 +57,9 @@ global $USER,$CFG;
 			if (is_logged_in()) {
 				$SQL = 'SELECT * FROM forum_posts f WHERE f.catid='.$category["catid"].' AND
 				(discussionid IN (
-								SELECT a.discussionid 
-									FROM forum_discussions a 
-									INNER JOIN forum_views b ON a.discussionid = b.discussionid 
+								SELECT a.discussionid
+									FROM forum_discussions a
+									INNER JOIN forum_views b ON a.discussionid = b.discussionid
 									WHERE b.userid='.$USER->userid.'
 									AND a.lastpost > b.lastviewed
 							 )
@@ -73,18 +73,18 @@ global $USER,$CFG;
 			$content .= '	<tr><td class="'.$viewclass.'"><span style="position:relative;float:left;"><a href="javascript: ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_discussions\',\'&amp;dpagenum=0&amp;pageid='.$category['pageid'].'&amp;forumid='.$forumid.'&amp;catid='.$category['catid'].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); $(\'#forum_refresh_'.$forumid.'\').val(\''.addslashes('ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_discussions\',\'&amp;dpagenum=0&amp;pageid='.$category['pageid'].'&amp;forumid='.$forumid.'&amp;catid='.$category['catid'].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true);').'\');}},true);" >'.$category["title"].'</a></span>';
 			$edit = user_has_ability_in_page($USER->userid,"editforumcategory",$category['pageid']);
 			$content .= '<span style="position:relative;float:right;">';
-			
+
             if ($edit) {
 				if ($category["sort"] > 1) $content .= '<a title="Move Up" onclick="this.blur();" href="javascript: ajaxapi(\'/features/forum/forum_ajax.php\',\'move_category\',\'&amp;catid='.$category['catid'].'&amp;forumid='.$forumid.'&amp;pageid='.$category['pageid'].'&amp;direction=up\',function() {if (xmlHttp.readyState == 4) {  simple_display(\'forum_div_'.$forumid.'\');}},true);"><img alt="Move Up" src="'.$CFG->wwwroot.'/images/up.gif" /></a>';
 				if ($category["sort"] != get_db_field("sort","forum_categories","forumid=$forumid AND shoutbox=0 ORDER BY sort DESC")) $content .= '<a title="Move Down" onclick="this.blur();" href="javascript: ajaxapi(\'/features/forum/forum_ajax.php\',\'move_category\',\'&amp;catid='.$category['catid'].'&amp;forumid='.$forumid.'&amp;pageid='.$category['pageid'].'&amp;direction=down\',function() { simple_display(\'forum_div_'.$forumid.'\');});"><img alt="Move Down" src="'.$CFG->wwwroot.'/images/down.gif" /></a>';
 			}
-			
-            if (user_has_ability_in_page($USER->userid,"deleteforumcategory",$category['pageid'])) { $content .= '<a title="Delete Category" onclick="this.blur();" href="javascript: if (confirm(\'Are you sure you wish to delete this category? \nThis will delete all discussions and posts inside this category.\')) { ajaxapi(\'/features/forum/forum_ajax.php\',\'delete_category\',\'&amp;forumid='.$forumid.'&amp;catid='.$category['catid'].'\',function() {if (xmlHttp.readyState == 4) {  simple_display(\'forum_div_'.$forumid.'\');}},true);}"><img alt="Delete Category" src="'.$CFG->wwwroot.'/images/delete.png" /></a>';}		
-			
+
+            if (user_has_ability_in_page($USER->userid,"deleteforumcategory",$category['pageid'])) { $content .= '<a title="Delete Category" onclick="this.blur();" href="javascript: if (confirm(\'Are you sure you wish to delete this category? \nThis will delete all discussions and posts inside this category.\')) { ajaxapi(\'/features/forum/forum_ajax.php\',\'delete_category\',\'&amp;forumid='.$forumid.'&amp;catid='.$category['catid'].'\',function() {if (xmlHttp.readyState == 4) {  simple_display(\'forum_div_'.$forumid.'\');}},true);}"><img alt="Delete Category" src="'.$CFG->wwwroot.'/images/delete.png" /></a>';}
+
             if ($edit) {
                 $content .= make_modal_links(array("title"=>"Edit Category","path"=>$CFG->wwwroot."/features/forum/forum.php?action=createforumcategory&amp;catid=".$category['catid'].'&amp;pageid='.$category['pageid'].'&amp;forumid='.$forumid,"runafter"=>'forum_refresh_'.$forumid,"height"=>"200","width"=>"640","validate"=>"true","image"=>$CFG->wwwroot."/images/edit.png"));
             }
-            
+
 			$content .= '	</span></td>
 						<td class="forum_col2">'.$discussion_count.'</td>
 						<td class="forum_col3">'.($posts_count-$discussion_count).'</td>
@@ -124,11 +124,11 @@ global $USER,$CFG;
 	<tr>
         <td>
             <span class="shoutbox_tabtext">
-                '.make_modal_links(array("title"=>"Shout","path"=>$CFG->wwwroot."/features/forum/forum.php?action=shoutbox_editor$userid&amp;forumid=$forumid","width"=>"600","iframe"=>"true","refresh"=>"true","runafter"=>"forum_refresh_$forumid")).'
+                '.make_modal_links(array("title"=>"Shout","path"=>$CFG->wwwroot."/features/forum/forum.php?action=shoutbox_editor$userid&amp;forumid=$forumid","width"=>"600","height"=>"600","iframe"=>"true","refresh"=>"true","runafter"=>"forum_refresh_$forumid")).'
             </span>
         </td>
     </tr>';
-    
+
 	$shoutboxid = get_db_field("discussionid","forum_discussions","forumid=$forumid AND shoutbox=1");
 	if ($posts = get_db_result("SELECT * FROM forum_posts WHERE discussionid=$shoutboxid ORDER BY posted DESC $shoutboxlimit")) {
 		while ($post = fetch_row($posts)) {
@@ -157,7 +157,7 @@ global $CFG;
 	if ($post_count = get_db_count("SELECT * FROM forum_posts WHERE discussionid=".$discussion["discussionid"])) {
 		$page_counter = 1;
 		$lastpage = (ceil($post_count / $perpage)-1);
-		$countdown = $post_count;	
+		$countdown = $post_count;
 		if ($buttons && !($pagenum === false) && $pagenum > 0) $previous = '<a href="javascript: ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_posts\',\'&amp;discussionid='.$discussion['discussionid'].'&amp;pagenum='.($pagenum-1).'&amp;catid='.$discussion['catid'].'&amp;forumid='.$discussion['forumid'].'&amp;pageid='.$discussion["pageid"].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); $(\'#forum_refresh_'.$forumid.'\').val(\''.addslashes('ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_posts\',\'&amp;discussionid='.$discussion['discussionid'].'&amp;pagenum='.($pagenum-1).'&amp;catid='.$discussion['catid'].'&amp;forumid='.$discussion['forumid'].'&amp;pageid='.$discussion["pageid"].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true);').'\');}},true); " > Back </a>';
 		if ($buttons && !($pagenum === false) && $pagenum < $lastpage) $next = '<a href="javascript: ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_posts\',\'&amp;discussionid='.$discussion['discussionid'].'&amp;pagenum='.($pagenum+1).'&amp;catid='.$discussion['catid'].'&amp;forumid='.$discussion['forumid'].'&amp;pageid='.$discussion["pageid"].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); $(\'#forum_refresh_'.$forumid.'\').val(\''.addslashes('ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_posts\',\'&amp;discussionid='.$discussion['discussionid'].'&amp;pagenum='.($pagenum+1).'&amp;catid='.$discussion['catid'].'&amp;forumid='.$discussion['forumid'].'&amp;pageid='.$discussion["pageid"].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true);').'\');}},true);" > Next </a>';
 		$returnme = '<span style="font-size:.8em;">Page: '.$previous;
@@ -173,7 +173,7 @@ global $CFG;
 		}
 		if ($page_counter == 2) { return "";}
 	} else { return ""; }
-	
+
     return ''.$returnme.$next.'</span>';
 }
 
@@ -182,13 +182,13 @@ global $CFG;
 
 	$settings = fetch_settings("forum",$forumid,$category['pageid']);
 	$perpage = $settings->forum->$forumid->discussionsperpage->setting;
-	
+
 	$pagenum = $pagenum === false ? false : $pagenum;
 	$previous = ""; $next = "";
 	if ($discussion_count = get_db_count("SELECT * FROM forum_discussions WHERE bulletin=0 AND catid=".$category["catid"]." AND shoutbox=0")) {
 		$page_counter = 1;
 		$lastpage = (ceil($discussion_count / $perpage)-1);
-		$countdown = $discussion_count;	
+		$countdown = $discussion_count;
 		if ($buttons && !($pagenum === false) && $pagenum > 0) { $previous = '<a href="javascript: ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_discussions\',\'&amp;dpagenum='.($pagenum-1).'&amp;pageid='.$category['pageid'].'&amp;forumid='.$category['forumid'].'&amp;catid='.$category['catid'].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); $(\'#forum_refresh_'.$forumid.'\').val(\''.addslashes('ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_discussions\',\'&amp;dpagenum='.($pagenum-1).'&amp;pageid='.$category['pageid'].'&amp;forumid='.$category['forumid'].'&amp;catid='.$category['catid'].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true);').'\'); }},true);" > Back </a>';}
 		if ($buttons && !($pagenum === false) && $pagenum < $lastpage) { $next = '<a href="javascript: ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_discussions\',\'&amp;dpagenum='.($pagenum+1).'&amp;pageid='.$category['pageid'].'&amp;forumid='.$category['forumid'].'&amp;catid='.$category['catid'].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); $(\'#forum_refresh_'.$forumid.'\').val(\''.addslashes('ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_discussions\',\'&amp;dpagenum='.($pagenum+1).'&amp;pageid='.$category['pageid'].'&amp;forumid='.$category['forumid'].'&amp;catid='.$category['catid'].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true);').'\'); }},true);" > Next </a>';}
 		$returnme = '<span style="font-size:.8em;">Page: '.$previous;
@@ -204,7 +204,7 @@ global $CFG;
 		}
 		if ($page_counter == 2) { return "";}
 	} else { return ""; }
-    
+
 	return ''.$returnme.$next.'</span>';
 }
 
@@ -230,9 +230,9 @@ function insert_blank_forum($pageid) {
 		$sort = get_db_count("SELECT * FROM pages_features WHERE pageid='$pageid' AND area='$area'") + 1;
 		execute_db_sql("INSERT INTO pages_features (pageid,feature,sort,area,featureid) VALUES('$pageid','forum','$sort','$area','$featureid')");
 		$catid = execute_db_sql("INSERT INTO forum_categories (forumid,pageid,title,shoutbox) VALUES('$featureid','$pageid','Shoutbox',1)");
-		$discussionid = execute_db_sql("INSERT INTO forum_discussions (catid,forumid,pageid,title,shoutbox) VALUES('$catid','$featureid','$pageid','Shoutbox',1)");		
+		$discussionid = execute_db_sql("INSERT INTO forum_discussions (catid,forumid,pageid,title,shoutbox) VALUES('$catid','$featureid','$pageid','Shoutbox',1)");
 		execute_db_sql("INSERT INTO settings (type,pageid,featureid,setting_name,setting,extra,defaultsetting) VALUES('$type',".$pageid.",".$featureid.",'feature_title','$title',NULL,'$title'),('$type',".$pageid.",".$featureid.",'shoutboxlimit','10',NULL,'10'),('$type',".$pageid.",".$featureid.",'postsperpage','10',NULL,'10'),('$type',".$pageid.",".$featureid.",'discussionsperpage','10',NULL,'10')");
-	
+
 		return $featureid;
 	}
 	return false;
@@ -245,15 +245,15 @@ function forum_delete($pageid,$featureid,$sectionid) {
 	execute_db_sql("DELETE FROM forum_discussions WHERE forumid='$featureid'");
 	execute_db_sql("DELETE FROM forum_posts WHERE forumid='$featureid'");
 	execute_db_sql("DELETE FROM settings WHERE pageid='$pageid' AND type='forum' AND featureid='$featureid'");
-	
+
 	resort_page_features($pageid);
 }
 
 function forum_buttons($pageid,$featuretype,$featureid) {
 global $CFG,$USER;
 	$returnme = "";
-	if (user_has_ability_in_page($USER->userid,"createforumcategory",$pageid)) { 
-        $returnme .= make_modal_links(array("title"=>"Create Forum Category","path"=>$CFG->wwwroot."/features/forum/forum.php?action=createforumcategory&amp;pageid=$pageid&amp;forumid=$featureid","width"=>"350","height"=>"200","validate"=>"true","runafter"=>"forum_refresh_$featureid","image"=>$CFG->wwwroot.'/images/add.png',"class"=>"slide_menu_button")); 
+	if (user_has_ability_in_page($USER->userid,"createforumcategory",$pageid)) {
+        $returnme .= make_modal_links(array("title"=>"Create Forum Category","path"=>$CFG->wwwroot."/features/forum/forum.php?action=createforumcategory&amp;pageid=$pageid&amp;forumid=$featureid","width"=>"350","height"=>"200","validate"=>"true","runafter"=>"forum_refresh_$featureid","image"=>$CFG->wwwroot.'/images/add.png',"class"=>"slide_menu_button"));
     }
 	return $returnme;
 }
