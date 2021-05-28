@@ -59,7 +59,7 @@ editor_box_template||
             height: "||height||",
             width: "||width||",
             removed_menuitems: "newdocument",
-            theme : "modern",
+            theme : "silver",
             convert_urls: false,
             plugins: [||plugins||],
             external_filemanager_path: "||directory||/scripts/tinymce/plugins/filemanager/",
