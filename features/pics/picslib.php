@@ -92,7 +92,7 @@ global $CFG;
 	$section = $allsections ? "" : "AND p.featureid=$featureid";
 	if ($pageid == $CFG->SITEID) {
 		$SQL = "SELECT * FROM pics p LEFT JOIN pics_galleries pg ON pg.galleryid = p.galleryid WHERE (p.pageid='$pageid' $section AND p.sitehidden=0) OR (p.siteviewable=1 and p.sitehidden=0) ORDER BY p.galleryid DESC,p.dateadded ASC";
-    } else {
+  } else {
 		$SQL = "SELECT * FROM pics p LEFT JOIN pics_galleries pg ON pg.galleryid = p.galleryid WHERE p.pageid='$pageid' $section AND p.pagehidden=0 ORDER BY p.galleryid DESC,p.dateadded ASC";
 	}
 
@@ -100,11 +100,11 @@ global $CFG;
 	if ($result = get_db_result($SQL)) {
 		$gallery = "";
 		while ($row = fetch_row($result)) {
-				$display = $gallery == "" || $gallery != $row['galleryid'] ? true : false;
-				$display = $display ? '' : 'display:none;';
-                $returnme .= empty($display) ? make_modal_links(array("id"=>"pic_".$row["picsid"],"title"=> stripslashes($row['caption']),"text"=>$row['name'],"gallery"=>"pics_gallery_".$row['galleryid'],"path"=>$path.$row['pageid']."/".$row['featureid']."/".$row['imagename'],"styles"=>$display)) : '<a href="'.$path.$row['pageid']."/".$row['featureid']."/".$row['imagename'].'" title="'.stripslashes($row['caption']).'" data-rel="pics_gallery_'.$row['galleryid'].'" style="'.$display.'"></a>';
-				$returnme .= $display == "" ? '<br />' : '';
-				$gallery = $row["galleryid"];
+			$display = $gallery == "" || $gallery != $row['galleryid'] ? true : false;
+			$display = $display ? '' : 'display:none;';
+      $returnme .= empty($display) ? make_modal_links(array("id"=>"pic_".$row["picsid"],"title"=> stripslashes($row['caption']),"text"=>$row['name'],"gallery"=>"pics_gallery_".$row['galleryid'],"path"=>$path.$row['pageid']."/".$row['featureid']."/".$row['imagename'],"styles"=>$display)) : '<a href="'.$path.$row['pageid']."/".$row['featureid']."/".$row['imagename'].'" title="'.stripslashes($row['caption']).'" data-rel="pics_gallery_'.$row['galleryid'].'" style="'.$display.'"></a>';
+			$returnme .= $display == "" ? '<br />' : '';
+			$gallery = $row["galleryid"];
 		}
 	} else { $returnme = '<div style="text-align:center;padding:7px">No images have been added.</div>';}
 	return $returnme;

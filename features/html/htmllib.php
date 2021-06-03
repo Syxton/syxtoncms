@@ -52,178 +52,253 @@ global $CFG,$USER;
 	return $returnme;
 }
 
-function filter($html,$featureid,$settings,$area="middle") {
+function filter($html, $featureid, $settings, $area = "middle") {
 global $CFG;
-	if (isset($settings->html->$featureid->documentviewer->setting) && $settings->html->$featureid->documentviewer->setting == 1) { //Document Viewer Filter
-		if (isset($CFG->doc_view_key)) {
-			$regex = '/(<[aA]\s*.[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s""\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(.[^\s]*)(<\/[aA]>)/';
-			if (preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) {
-				foreach ($matches as $match) {
-					if (!strstr($match[0],'javascript:')) {
-						$filetypes = '/([\.[pP][dD][fF]|\.[dD][oO][cC]|\.[rR][tT][fF]|\.[pP][sS]|\.[pP][pP][tT]|\.[pP][pP][sS]|\.[tT][xX][tT]|\.[sS][xX][cC]|\.[oO][dD][sS]|\.[xX][lL][sS]|\.[oO][dD][tT]|\.[sS][xX][wW]|\.[oO][dD][pP]|\.[sS][xX][iI]])/';
-						if (preg_match($filetypes,$match[2])) {
-    						//make internal links full paths
-    						$url = strstr($match[2], $CFG->directory.'/userfiles') && !strstr($match[2],$CFG->wwwroot) && !strstr($match[2],"http://") && !strstr($match[2],"www.") ? str_replace($CFG->directory.'/userfiles', $CFG->wwwroot.'/userfiles',$match[2]) : $match[2];
+	if (isset($settings->html->$featureid->documentviewer->setting) && $settings->html->$featureid->documentviewer->setting == 1) { // Document Viewer Filter
+		$html = filter_docviewer($html);
+	}
 
-                //make full url if not full
-                $protocol = isset($_SERVER["HTTPS"]) ? 'https://' : 'http://';
-                $url_parts = parse_url($url);
-								$url = str_replace("://", "", $url);
-                $url = str_replace(":", "", $url);
-								$url = str_replace("//", "/", $url);
+	if (isset($settings->html->$featureid->embedaudio->setting) && $settings->html->$featureid->embedaudio->setting == 1) { // Embed audio player
+		$html = filter_embedaudio($html);
+	}
 
-                if (!empty($url_parts["scheme"])) { // protocol exists.
-                    $url = str_replace($url_parts["scheme"], $protocol, $url);
-                } else {
-                    $url = $protocol . $url;
-                }
+	if (isset($settings->html->$featureid->embedvideo->setting) && $settings->html->$featureid->embedvideo->setting == 1) { // Embed Video Player
+		$html = filter_embedvideo($html);
+	}
 
-                //remove target from urls
-    						if (preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/',$url, $target, PREG_OFFSET_CAPTURE)) { $url = str_replace($target[0],"", $url); }
-    						$url = preg_replace('/([\'|\"])/','',$url);
+	if (isset($settings->html->$featureid->embedyoutube->setting) && $settings->html->$featureid->embedyoutube->setting == 1) { // Embed Youtube video player
+		$html = filter_youtube($html);
+	}
 
-                //make ipaper links
-								$url = str_replace('\\','',$url);
-                $url = str_replace('../','',$url);
-                $url = str_replace('..','',$url);
+	if (isset($settings->html->$featureid->photogallery->setting) && $settings->html->$featureid->photogallery->setting == 1) { // Photo Gallery Filter
+		$html = filter_photogallery($html);
+	}
+	return $html;
+}
 
-    						$html = str_replace($match[0],'<a href="'.$CFG->wwwroot.'/scripts/download.php?file='.$url.'" onclick="blur();"><img src="'.$CFG->wwwroot.'/images/save.png" alt="Save" /></a>&nbsp;'.make_modal_links(array("title"=>$match[4].$match[5],"path"=>$CFG->wwwroot."/pages/ipaper.php?action=view_ipaper&amp;doc_url=".base64_encode($url),"height"=>"80%","width"=>"80%")),$html);
+function filter_docviewer($html) {
+global $CFG;
+	if (isset($CFG->doc_view_key)) {
+		$regex = '/(<[aA]\s*.[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s""\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(.[^\s]*)(<\/[aA]>)/';
+		if (preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) {
+			foreach ($matches as $match) {
+				if (!strstr($match[0],'javascript:')) {
+					$filetypes = '/([\.[pP][dD][fF]|\.[dD][oO][cC]|\.[rR][tT][fF]|\.[pP][sS]|\.[pP][pP][tT]|\.[pP][pP][sS]|\.[tT][xX][tT]|\.[sS][xX][cC]|\.[oO][dD][sS]|\.[xX][lL][sS]|\.[oO][dD][tT]|\.[sS][xX][wW]|\.[oO][dD][pP]|\.[sS][xX][iI]])/';
+					if (preg_match($filetypes,$match[2])) {
+						//make internal links full paths
+						$url = strstr($match[2], $CFG->directory.'/userfiles') && !strstr($match[2],$CFG->wwwroot) && !strstr($match[2],"http://") && !strstr($match[2],"www.") ? str_replace($CFG->directory.'/userfiles', $CFG->wwwroot.'/userfiles',$match[2]) : $match[2];
+
+						//make full url if not full
+						$protocol = isset($_SERVER["HTTPS"]) ? 'https://' : 'http://';
+						$url_parts = parse_url($url);
+						$url = str_replace("://", "", $url);
+						$url = str_replace(":", "", $url);
+						$url = str_replace("//", "/", $url);
+
+						if (!empty($url_parts["scheme"])) { // protocol exists.
+								$url = str_replace($url_parts["scheme"], $protocol, $url);
+						} else {
+								$url = $protocol . $url;
 						}
+
+						//remove target from urls
+						if (preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/',$url, $target, PREG_OFFSET_CAPTURE)) { $url = str_replace($target[0],"", $url); }
+						$url = preg_replace('/([\'|\"])/','',$url);
+
+						//make ipaper links
+						$url = str_replace('\\','',$url);
+						$url = str_replace('../','',$url);
+						$url = str_replace('..','',$url);
+
+						$html = str_replace($match[0],'<a href="'.$CFG->wwwroot.'/scripts/download.php?file='.$url.'" onclick="blur();"><img src="'.$CFG->wwwroot.'/images/save.png" alt="Save" /></a>&nbsp;'.make_modal_links(array("title"=>$match[4].$match[5],"path"=>$CFG->wwwroot."/pages/ipaper.php?action=view_ipaper&amp;doc_url=".base64_encode($url),"height"=>"80%","width"=>"80%")),$html);
 					}
 				}
 			}
 		}
 	}
+	return $html;
+}
 
-	if (isset($settings->html->$featureid->embedaudio->setting) && $settings->html->$featureid->embedaudio->setting == 1) { //Embed audio player
-		$regex = '/(<[aA]\s*.[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s""\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(.[^\s]*)(<\/[aA]>)/';
-		if (preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) {
-			$i = 0;
-			foreach ($matches as $match) {
-				if (!strstr($match[0],'javascript:')) {
-					$found = false;
-					$filetypes = '/([\.[aA][aA][cC]|\.[mM][4][aA])/';
-					if (preg_match($filetypes,$match[2])) {
-						//make internal links full paths
-						$url = strstr($match[2],$CFG->directory.'/userfiles') && !strstr($match[2],$CFG->wwwroot) ? str_replace($CFG->directory.'/userfiles', $CFG->wwwroot.'/userfiles',$match[2]) : $match[2];
-						//remove target from urls
-						if (preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/',$url, $target, PREG_OFFSET_CAPTURE)) { $url = str_replace($target[0],"", $url);}
-						$url = preg_replace('/([\'|\"])/','',$url);
+function filter_embedaudio($html) {
+global $CFG;
+	$regex = '/(<[aA]\s*.[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s""\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(.[^\s]*)(<\/[aA]>)/';
+	if (preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) {
+		$i = 0;
+		foreach ($matches as $match) {
+			if (!strstr($match[0],'javascript:')) {
+				$found = false;
+				$filetypes = '/([\.[aA][aA][cC]|\.[mM][4][aA])/';
+				if (preg_match($filetypes,$match[2])) {
+					//make internal links full paths
+					$url = strstr($match[2],$CFG->directory.'/userfiles') && !strstr($match[2],$CFG->wwwroot) ? str_replace($CFG->directory.'/userfiles', $CFG->wwwroot.'/userfiles',$match[2]) : $match[2];
+					//remove target from urls
+					if (preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/',$url, $target, PREG_OFFSET_CAPTURE)) { $url = str_replace($target[0],"", $url);}
+					$url = preg_replace('/([\'|\"])/','',$url);
 
-						$url = str_replace('\\','',$url);
-						$info = explode(".",$match[4].$match[5]);
-						$html = str_replace($match[0], "
-							<script type='text/javascript' src='".$CFG->wwwroot."/scripts/filters/video/swfobject.js'></script>
-							<span id='mediaspace_s$i'></span>
-							<script type='text/javascript'>
-							  var s$i = new SWFObject('".$CFG->wwwroot."/scripts/filters/video/player.swf','ply','290','30','9','#ffffff');
-							  s$i.addParam('allowfullscreen','true');
-							  s$i.addParam('allowscriptaccess','always');
-							  s$i.addParam('wmode','opaque');
-							  s$i.addParam('flashvars','file=".stripslashes(urlencode($url))."&amp;skin=".$CFG->wwwroot."/scripts/filters/video/skins/stylish_slim.swf');
-							  s$i.write('mediaspace_s$i');
-							</script>
-						",$html);
-					}
-
-					$found = false;
-					$filetypes = '/([\.[mM][pP][3])/';
-					if (preg_match($filetypes,$match[2])) {
-						if (!$found) {
-							$player = "<script language='javascript' src='".$CFG->wwwroot."/scripts/filters/audio/audio-player.js'></script>
-						         <script type='text/javascript'>
-						             AudioPlayer.setup('".$CFG->wwwroot."/scripts/filters/audio/player.swf', {
-						                 width: 290
-						             });
-						         </script>";
-					 	} else {$player = ""; }
-
-						$found = true;
-						//make internal links full paths
-						$url = strstr($match[2],$CFG->directory.'/userfiles') && !strstr($match[2],$CFG->wwwroot) ? str_replace($CFG->directory.'/userfiles', $CFG->wwwroot.'/userfiles',$match[2]) : $match[2];
-						//remove target from urls
-						if (preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/',$url, $target, PREG_OFFSET_CAPTURE)) { $url = str_replace($target[0],"", $url);}
-						$url = preg_replace('/([\'|\"])/','',$url);
-						$url = str_replace('\\','',$url);
-						$info = explode(".",$match[4].$match[5]);
-						$info = explode("-",$info[0]);
-						$html = str_replace($match[0], $player ."
-						<span id='audioplayer_$featureid"."_$i"."'></span>
+					$url = str_replace('\\','',$url);
+					$info = explode(".",$match[4].$match[5]);
+					$html = str_replace($match[0], "
+						<script type='text/javascript' src='".$CFG->wwwroot."/scripts/filters/video/swfobject.js'></script>
+						<span id='mediaspace_s$i'></span>
 						<script type='text/javascript'>
-						 AudioPlayer.embed('audioplayer_$featureid"."_$i"."', {
-						     soundFile: '".stripslashes($url)."',
-						     titles: '$info[1]',
-						     artists: '$info[0]',
-						     autostart: 'no'
-						 });
-						 </script>
-						",$html);
+							var s$i = new SWFObject('".$CFG->wwwroot."/scripts/filters/video/player.swf','ply','290','30','9','#ffffff');
+							s$i.addParam('allowfullscreen','true');
+							s$i.addParam('allowscriptaccess','always');
+							s$i.addParam('wmode','opaque');
+							s$i.addParam('flashvars','file=".stripslashes(urlencode($url))."&amp;skin=".$CFG->wwwroot."/scripts/filters/video/skins/stylish_slim.swf');
+							s$i.write('mediaspace_s$i');
+						</script>
+					",$html);
+				}
+
+				$found = false;
+				$filetypes = '/([\.[mM][pP][3])/';
+				if (preg_match($filetypes,$match[2])) {
+					if (!$found) {
+						$player = "<script language='javascript' src='".$CFG->wwwroot."/scripts/filters/audio/audio-player.js'></script>
+									 <script type='text/javascript'>
+											 AudioPlayer.setup('".$CFG->wwwroot."/scripts/filters/audio/player.swf', {
+													 width: 290
+											 });
+									 </script>";
+					} else {$player = ""; }
+
+					$found = true;
+					//make internal links full paths
+					$url = strstr($match[2],$CFG->directory.'/userfiles') && !strstr($match[2],$CFG->wwwroot) ? str_replace($CFG->directory.'/userfiles', $CFG->wwwroot.'/userfiles',$match[2]) : $match[2];
+					//remove target from urls
+					if (preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/',$url, $target, PREG_OFFSET_CAPTURE)) { $url = str_replace($target[0],"", $url);}
+					$url = preg_replace('/([\'|\"])/','',$url);
+					$url = str_replace('\\','',$url);
+					$info = explode(".",$match[4].$match[5]);
+					$info = explode("-",$info[0]);
+					$html = str_replace($match[0], $player ."
+					<span id='audioplayer_$featureid"."_$i"."'></span>
+					<script type='text/javascript'>
+					 AudioPlayer.embed('audioplayer_$featureid"."_$i"."', {
+							 soundFile: '".stripslashes($url)."',
+							 titles: '$info[1]',
+							 artists: '$info[0]',
+							 autostart: 'no'
+					 });
+					 </script>
+					",$html);
+				}
+			}
+		$i++;
+		}
+	}
+	return $html;
+}
+function filter_embedvideo($html) {
+global $CFG;
+	$regex = '/(<[aA]\s*.[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s""\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(.[^\s]*)(<\/[aA]>)/';
+	if (preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) {
+		$i = 0;
+		foreach ($matches as $match) {
+			if (!strstr($match[0],'javascript:')) {
+				$filetypes = '/([\.[fF][lL][vV]|\.[mM][pP][4])/';
+				if (preg_match($filetypes,$match[2])) {
+					//make internal links full paths
+					$url = strstr($match[2],$CFG->directory.'/userfiles') && !strstr($match[2],$CFG->wwwroot) ? str_replace($CFG->directory.'/userfiles', $CFG->wwwroot.'/userfiles',$match[2]) : $match[2];
+					//remove target from urls
+					if (preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/',$url, $target, PREG_OFFSET_CAPTURE)) { $url = str_replace($target[0],"", $url);}
+					$url = preg_replace('/([\'|\"])/','',$url);
+
+					$url = str_replace('\\','',$url);
+					$rand = rand(0,time());
+					$html = str_replace($match[0], "
+													<script type='text/javascript' src='".$CFG->wwwroot."/scripts/filters/video/flowplayer/flowplayer-3.2.4.min.js'></script>
+													<div id='vid_$rand' class='flowplayer_div' style='width:100%;'><a href='$url' style='display:block;' class='flowplayers' id='player_$rand'></a></div>
+													<script>flowplayer('a.flowplayers', '".$CFG->wwwroot."/scripts/filters/video/flowplayer/flowplayer-3.2.4.swf',{
+													clip: {
+															autoPlay: false,
+															autoBuffering: true,
+															onBegin: function() { this.getControls().css({height:'5%'});},
+															onMetaData: setInterval(function() {
+																			$('a.flowplayers').flowplayer().each(function() {
+																					var myclip = this.getClip(0);
+																					if (myclip.metaData != undefined) {
+																							var width = $('#'+this.id()).parent('.flowplayer_div').attr('clientWidth') >= myclip.metaData.width ? myclip.metaData.width : $('#'+this.id()).parent('.flowplayer_div').attr('clientWidth');
+																							var height = (width/myclip.metaData.width) * myclip.metaData.height;
+																							var wrap = jQuery(this.getParent());
+																							wrap.css({width: width+'px', height: height+'px'});
+																					}
+																			});
+																	},1000)
+															}
+													});
+													</script>
+					",$html);
+				}
+			}
+		$i++;
+		}
+	}
+	return $html;
+}
+
+function filter_youtube($html) {
+global $CFG;
+	$regex = '/(<[aA]\s*.[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s""\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(.[^\s]*)(<\/[aA]>)/';
+	if (preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) { //link to youtube
+		foreach ($matches as $match) {
+			$url = $match[2];
+			$id = youtube_id_from_url($url);
+			if (!strstr($url,'#noembed')) {
+				if (!strstr($match[0],'javascript:') && strlen($id) > 0) {
+					if (preg_match('/((http:\/\/)?(?:youtu\.be\/|(?:[a-z]{2,3}\.)?youtube\.com\/v\/)([\w-]{11}).*|http:\/\/(?:youtu\.be\/|(?:[a-z]{2,3}\.)?youtube\.com\/watch(?:\?|#\!)v=)([\w-]{11}).*)/i',$match[0]) || preg_match('/(\s*\.[yY][oO][uU][tT][uU][bB][eE]\.[cC][oO][mM][\/]\s*)/',$url)) {
+							$html = str_replace($match[0], '<div style="'.($area == "middle" ? 'max-width:500px;margin:auto;' : '').'"><div style="width: 100%; padding-top: 60%; margin-bottom: 5px; position: relative;"><iframe style="position: absolute; width: 100%; height: 100%; top: 0; left: 0;" src="//www.youtube.com/embed/'.$id.'"></iframe></div></div>',$html);
 					}
 				}
-			$i++;
 			}
 		}
 	}
+	return $html;
+}
 
-	if (isset($settings->html->$featureid->embedvideo->setting) && $settings->html->$featureid->embedvideo->setting == 1) { //Embed Video Player
-		$regex = '/(<[aA]\s*.[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s""\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(.[^\s]*)(<\/[aA]>)/';
+function filter_photogallery($html) {
+global $CFG;
+	if (isset($CFG->doc_view_key)) {
+		$regex = '/(<[aA]\s*.[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s""\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(<\/[aA]>)/';
 		if (preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) {
-			$i = 0;
-			foreach ($matches as $match) {
-				if (!strstr($match[0],'javascript:')) {
-					$filetypes = '/([\.[fF][lL][vV]|\.[mM][pP][4])/';
-					if (preg_match($filetypes,$match[2])) {
-						//make internal links full paths
-						$url = strstr($match[2],$CFG->directory.'/userfiles') && !strstr($match[2],$CFG->wwwroot) ? str_replace($CFG->directory.'/userfiles', $CFG->wwwroot.'/userfiles',$match[2]) : $match[2];
-						//remove target from urls
-						if (preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/',$url, $target, PREG_OFFSET_CAPTURE)) { $url = str_replace($target[0],"", $url);}
-						$url = preg_replace('/([\'|\"])/','',$url);
-
-						$url = str_replace('\\','',$url);
-						$rand = rand(0,time());
-						$html = str_replace($match[0], "
-                            <script type='text/javascript' src='".$CFG->wwwroot."/scripts/filters/video/flowplayer/flowplayer-3.2.4.min.js'></script>
-                            <div id='vid_$rand' class='flowplayer_div' style='width:100%;'><a href='$url' style='display:block;' class='flowplayers' id='player_$rand'></a></div>
-                            <script>flowplayer('a.flowplayers', '".$CFG->wwwroot."/scripts/filters/video/flowplayer/flowplayer-3.2.4.swf',{
-                            clip: {
-                                autoPlay: false,
-                                autoBuffering: true,
-                                onBegin: function() { this.getControls().css({height:'5%'});},
-                                onMetaData: setInterval(function() {
-                                        $('a.flowplayers').flowplayer().each(function() {
-                                            var myclip = this.getClip(0);
-                                            if (myclip.metaData != undefined) {
-                                                var width = $('#'+this.id()).parent('.flowplayer_div').attr('clientWidth') >= myclip.metaData.width ? myclip.metaData.width : $('#'+this.id()).parent('.flowplayer_div').attr('clientWidth');
-                                                var height = (width/myclip.metaData.width) * myclip.metaData.height;
-                                                var wrap = jQuery(this.getParent());
-                                                wrap.css({width: width+'px', height: height+'px'});
-                                            }
-                                        });
-                                    },1000)
-                                }
-                            });
-                            </script>
-						",$html);
-					}
-				}
-			$i++;
-			}
-		}
-	}
-
-	if (isset($settings->html->$featureid->embedyoutube->setting) && $settings->html->$featureid->embedyoutube->setting == 1) { //Embed Youtube video player
-        $regex = '/(<[aA]\s*.[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s""\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(.[^\s]*)(<\/[aA]>)/';
-        if (preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) { //link to youtube
 			foreach ($matches as $match) {
 				$url = $match[2];
-                $id = youtube_id_from_url($url);
-                if (!strstr($url,'#noembed')) {
-     				if (!strstr($match[0],'javascript:') && strlen($id) > 0) {
-                        if (preg_match('/((http:\/\/)?(?:youtu\.be\/|(?:[a-z]{2,3}\.)?youtube\.com\/v\/)([\w-]{11}).*|http:\/\/(?:youtu\.be\/|(?:[a-z]{2,3}\.)?youtube\.com\/watch(?:\?|#\!)v=)([\w-]{11}).*)/i',$match[0]) || preg_match('/(\s*\.[yY][oO][uU][tT][uU][bB][eE]\.[cC][oO][mM][\/]\s*)/',$url)) {
-                            $html = str_replace($match[0], '<div style="'.($area == "middle" ? 'max-width:500px;margin:auto;' : '').'"><div style="width: 100%; padding-top: 60%; margin-bottom: 5px; position: relative;"><iframe style="position: absolute; width: 100%; height: 100%; top: 0; left: 0;" src="//www.youtube.com/embed/'.$id.'"></iframe></div></div>',$html);
-                        }
-    				}
-                }
+				$exts = array('jpeg', 'jpg', 'gif', 'png');
+				if (strpos($match[0], 'title="gallery"') !== false && strpos($url, 'userfiles') !== false) {
+					//make internal links full paths
+					$localdirectory = strstr($url, $CFG->wwwroot.'/userfiles') && !strstr($url, $CFG->dirroot) ? str_replace($CFG->wwwroot.'/userfiles', $CFG->dirroot.'/userfiles', $url) : $url;
+					$localdirectory = str_replace("https:", "", $localdirectory);  // Sometimes we have a hanger on.
+					$localdirectory = str_replace("http:", "", $localdirectory); // Sometimes we have a hanger on.
+
+					if (substr($directory, -1) == '/') {
+						$directory = substr($directory, 0, -1);
+					}
+					$gallery = ""; $galleryid = uniqid("autogallery");
+
+					if (is_readable($localdirectory) && (file_exists($localdirectory) || is_dir($localdirectory))) {
+						$directoryList = opendir($localdirectory);
+						$i = 0;
+						while($file = readdir($directoryList)) {
+							if ($file != '.' && $file != '..') {
+								$path = $localdirectory . '/' . $file;
+								if (is_readable($path)) {
+									if (is_file($path) && in_array(end(explode('.', end(explode('/', $path)))),   $exts)) {
+										$fileurl = $url . '/' . $file; // Use web url instead of local link.
+										$caption = "";
+										$name = $match[4]; // Use text inside original hyperlink.
+										$display = $gallery == "" ? "" : 'display:none;';
+							      $gallery .= empty($display) ? make_modal_links(array("id"=>"autogallery_$i","title"=> $caption, "text"=> $name,"gallery"=> $galleryid, "path" => $fileurl, "styles" => $display)) : '<a href="'.$fileurl.'" title="'.$caption.'" data-rel="'.$galleryid.'" style="'.$display.'"></a>';
+										$gallery .= $display == "" ? '<br />' : '';
+									}
+								}
+							}
+							$i++;
+						}
+						closedir($directoryList);
+					}
+					$html = str_replace($match[0], $gallery, $html);
+				}
 			}
 		}
 	}
@@ -421,6 +496,7 @@ function html_default_settings($feature,$pageid,$featureid) {
 	$settings_array[] = array(false,"$feature","$pageid","$featureid","embedaudio","0",false,"0","Embed Audio Links","yes/no");
 	$settings_array[] = array(false,"$feature","$pageid","$featureid","embedvideo","0",false,"0","Embed Video Links","yes/no");
 	$settings_array[] = array(false,"$feature","$pageid","$featureid","embedyoutube","0",false,"0","Embed Youtube.com Links","yes/no");
+	$settings_array[] = array(false,"$feature","$pageid","$featureid","photogallery","0",false,"0","Auto Photogallery","yes/no");
 	return $settings_array;
 }
 ?>
