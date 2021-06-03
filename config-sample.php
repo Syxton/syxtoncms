@@ -1,4 +1,4 @@
-<?php  /// Moodle Configuration File
+<?php  // SyxtonCMS Configuration File
 
 unset($CFG);
 unset($USER);

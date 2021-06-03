@@ -267,37 +267,38 @@ global $CFG;
 				$exts = array('jpeg', 'jpg', 'gif', 'png');
 				if (strpos($match[0], 'title="gallery"') !== false && strpos($url, 'userfiles') !== false) {
 					//make internal links full paths
-					$localdirectory = strstr($url, $CFG->wwwroot.'/userfiles') && !strstr($url, $CFG->dirroot) ? str_replace($CFG->wwwroot.'/userfiles', $CFG->dirroot.'/userfiles', $url) : $url;
-					$localdirectory = str_replace("https:", "", $localdirectory);  // Sometimes we have a hanger on.
-					$localdirectory = str_replace("http:", "", $localdirectory); // Sometimes we have a hanger on.
+					$localdirectory = $CFG->dirroot . "/" . substr($url, strpos($url, "userfiles"));
 
-					if (substr($directory, -1) == '/') {
-						$directory = substr($directory, 0, -1);
+					if (substr($localdirectory, -1) == '/') {
+						$localdirectory = substr($localdirectory, 0, -1);
 					}
 					$gallery = ""; $galleryid = uniqid("autogallery");
-
 					if (is_readable($localdirectory) && (file_exists($localdirectory) || is_dir($localdirectory))) {
 						$directoryList = opendir($localdirectory);
 						$i = 0;
+						$captions = get_file_captions($localdirectory);
+
 						while($file = readdir($directoryList)) {
 							if ($file != '.' && $file != '..') {
 								$path = $localdirectory . '/' . $file;
 								if (is_readable($path)) {
 									if (is_file($path) && in_array(end(explode('.', end(explode('/', $path)))),   $exts)) {
 										$fileurl = $url . '/' . $file; // Use web url instead of local link.
-										$caption = "";
+										$caption = isset($captions[$file]) ? $captions[$file] : $file; // Either a caption or the filename
 										$name = $match[4]; // Use text inside original hyperlink.
-										$display = $gallery == "" ? "" : 'display:none;';
-							      $gallery .= empty($display) ? make_modal_links(array("id"=>"autogallery_$i","title"=> $caption, "text"=> $name,"gallery"=> $galleryid, "path" => $fileurl, "styles" => $display)) : '<a href="'.$fileurl.'" title="'.$caption.'" data-rel="'.$galleryid.'" style="'.$display.'"></a>';
-										$gallery .= $display == "" ? '<br />' : '';
+										$display = empty($gallery) ? "" : "display:none;";
+										$modalsettings = array("id" => "autogallery_$i", "title" => $caption, "text" => $name, "gallery" => $galleryid, "path" => $fileurl, "styles" => $display);
+							      $gallery .= empty($display) ? make_modal_links($modalsettings) : '<a href="'.$fileurl.'" title="'.$caption.'" data-rel="'.$galleryid.'" style="'.$display.'"></a>';
 									}
 								}
 							}
 							$i++;
 						}
 						closedir($directoryList);
+						if (!empty($gallery)) {
+							$html = str_replace($match[0], $gallery, $html);
+						}
 					}
-					$html = str_replace($match[0], $gallery, $html);
 				}
 			}
 		}

@@ -3,12 +3,25 @@
 * filelib.php - File Library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 05/06/2021
-* Revision: 0.0.6
+* Date: 06/03/2021
+* Revision: 0.0.7
 ***************************************************************************/
 
 if (!isset($LIBHEADER)) { include('header.php'); }
 $FILELIB = true;
+
+function get_file_captions($path) {
+	$caption_return = array();
+	if (file_exists($path . '/captions.txt')) {
+		$fhandle = fopen($path . '/captions.txt', 'r');
+		while(!feof($fhandle)) { // until end of file
+			$caption = explode("||", fgets($fhandle));
+			$caption_return[trim($caption[0])] = trim($caption[1]);
+		}
+		fclose($fhandle);
+	}
+	return $caption_return;
+}
 
 function delete_old_files($path, $days = 1) {
 global $CFG;
