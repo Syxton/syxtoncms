@@ -1487,6 +1487,9 @@ box-shadow: none;
 	background-color: #ccc;
 	margin: 0px;
 }
+#accordion .ui-accordion-header:hover {
+	background-color: #9e9e9e;
+}
 #accordion .ui-accordion-header a {
 	color: #fff;
 	line-height: 42px;
@@ -1503,18 +1506,12 @@ box-shadow: none;
 #accordion .ui-accordion-content {
 	width: 100%;
 	background-color: #f3f3f3;
-	color: #777;
-	font-size: 10pt;
-	line-height: 16pt;
 	box-shadow: inset 0px 1px 1px 0px rgba(0, 0, 0, .2),
 				inset 0px -1px 0px 0px rgba(0, 0, 0, .4);
 }
 #accordion .ui-accordion-content > * {
 	margin: 0;
 	padding: 20px;
-}
-#accordion .ui-accordion-content a {
-	color: #777;
 }
 #accordion .ui-accordion-header:hover {
 	cursor: pointer;

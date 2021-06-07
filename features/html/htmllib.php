@@ -36,7 +36,11 @@ global $CFG,$USER;
 				$comments = $abilities->viewcomments->allow && $settings->html->$featureid->allowcomments->setting ? get_html_comments($row['htmlid'],$pageid,$hidebuttons,$limit) : '';
         $makecomment = $abilities->makecomments->allow ? make_modal_links(array("title"=>"Comment","path"=>$CFG->wwwroot."/features/html/html.php?action=makecomment&amp;pageid=$pageid&amp;htmlid=".$row['htmlid'],"styles"=>"float:right;","refresh"=>"true")) : '';
       }
-			$html = '<div class="htmlblock">' . fullscreen_toggle(filter(stripslashes($row['html']), $featureid, $settings, $area), $featureid, $settings) . '</div><br />';
+			$nomargin = "";
+			if (isset($settings->html->$featureid->allowfullscreen->setting) && $settings->html->$featureid->allowfullscreen->setting == 1) { // if fullscreen option is on, remove margin.
+				$nomargin = 'style="margin:-8px"';
+			}
+			$html = '<div class="htmlblock" '.$nomargin.'>' . fullscreen_toggle(filter(stripslashes($row['html']), $featureid, $settings, $area), $featureid, $settings) . '</div><br />';
     	//if viewing from rss feed
 			if ($htmlonly) {
         $returnme .= '<table style="width:100%;border:1px solid silver;padding:10px;"><tr><th>'. $settings->html->$featureid->feature_title->setting.'</th></tr><tr><td><br /><br />' . $html . $comments . '</td></tr></table>';
