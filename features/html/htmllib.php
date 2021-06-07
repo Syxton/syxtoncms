@@ -34,18 +34,22 @@ global $CFG,$USER;
 			if ($settings->html->$featureid->allowcomments->setting) {
 				$hidebuttons = $htmlonly ? true : false;
 				$comments = $abilities->viewcomments->allow && $settings->html->$featureid->allowcomments->setting ? get_html_comments($row['htmlid'],$pageid,$hidebuttons,$limit) : '';
-                $makecomment = $abilities->makecomments->allow ? make_modal_links(array("title"=>"Comment","path"=>$CFG->wwwroot."/features/html/html.php?action=makecomment&amp;pageid=$pageid&amp;htmlid=".$row['htmlid'],"styles"=>"float:right;","refresh"=>"true")) : '';
-            }
-            //if viewing from rss feed
+        $makecomment = $abilities->makecomments->allow ? make_modal_links(array("title"=>"Comment","path"=>$CFG->wwwroot."/features/html/html.php?action=makecomment&amp;pageid=$pageid&amp;htmlid=".$row['htmlid'],"styles"=>"float:right;","refresh"=>"true")) : '';
+      }
+			$html = '<div class="htmlblock">' . fullscreen_toggle(filter(stripslashes($row['html']), $featureid, $settings, $area), $featureid, $settings) . '</div><br />';
+    	//if viewing from rss feed
 			if ($htmlonly) {
-                $returnme .= '<table style="width:100%;border:1px solid silver;padding:10px;"><tr><th>'. $settings->html->$featureid->feature_title->setting.'</th></tr><tr><td><br /><br /><div class="htmlblock">' .filter(stripslashes($row['html']),$featureid,$settings,$area) .'</div><br />'. $comments . '</td></tr></table>';
-            } else { //regular html feature viewing
-                $stopped_editing = '<input type="hidden" id="html_'.$featureid.'_stopped_editing" value="ajaxapi(\'/features/html/html_ajax.php\',\'stopped_editing\',\'&amp;htmlid='.$featureid.'&amp;userid=0\',function() {if (xmlHttp.readyState == 4) { do_nothing(); }},true);" />';
-
-                if (is_logged_in() && $settings->html->$featureid->enablerss->setting) $rss = make_modal_links(array("title"=>"RSS Feed","path"=>$CFG->wwwroot."/pages/rss.php?action=rss_subscribe_feature&amp;pageid=$pageid&amp;featureid=$featureid&amp;feature=html","styles"=>"position: relative;top: 4px;padding-right:2px;","iframe"=>"true","refresh"=>"true","height"=>"300","width"=>"640","image"=>$CFG->wwwroot."/images/small_rss.png"));
-
-                $buttons = get_button_layout("html",$row['htmlid'],$pageid);
-				$returnme .= get_css_box($rss . $settings->html->$featureid->feature_title->setting,$stopped_editing.'<div class="htmlblock">' .filter(stripslashes($row['html']),$featureid,$settings,$area) .'</div><br />'. $makecomment . $comments,$buttons, null, 'html', $featureid, false, false, false, false, false, false);
+        $returnme .= '<table style="width:100%;border:1px solid silver;padding:10px;"><tr><th>'. $settings->html->$featureid->feature_title->setting.'</th></tr><tr><td><br /><br />' . $html . $comments . '</td></tr></table>';
+      } else { //regular html feature viewing
+        $stopped_editing = '<input type="hidden" id="html_'.$featureid.'_stopped_editing" value="ajaxapi(\'/features/html/html_ajax.php\',\'stopped_editing\',\'&amp;htmlid='.$featureid.'&amp;userid=0\',function() {if (xmlHttp.readyState == 4) { do_nothing(); }},true);" />';
+        if (is_logged_in() && $settings->html->$featureid->enablerss->setting) {
+					$modalsettings = array("title" => "RSS Feed", "path" => $CFG->wwwroot . "/pages/rss.php?action=rss_subscribe_feature&amp;pageid=$pageid&amp;featureid=$featureid&amp;feature=html",
+																 "styles" => "position: relative;top: 4px;padding-right:2px;", "iframe" => "true",
+																 "refresh" => "true", "height" => "300", "width" => "640", "image" => $CFG->wwwroot . "/images/small_rss.png");
+					$rss = make_modal_links($modalsettings);
+				}
+				$buttons = get_button_layout("html", $row['htmlid'], $pageid);
+				$returnme .= get_css_box($rss . $settings->html->$featureid->feature_title->setting,$stopped_editing . $html . $makecomment . $comments, $buttons, null, 'html', $featureid, false, false, false, false, false, false);
 			}
 		}
 	}
@@ -72,6 +76,19 @@ global $CFG;
 
 	if (isset($settings->html->$featureid->photogallery->setting) && $settings->html->$featureid->photogallery->setting == 1) { // Photo Gallery Filter
 		$html = filter_photogallery($html);
+	}
+
+	return $html;
+}
+
+function fullscreen_toggle($html, $featureid, $settings) {
+global $CFG;
+	if (isset($settings->html->$featureid->allowfullscreen->setting) && $settings->html->$featureid->allowfullscreen->setting == 1) { // Allow fullscreen toggle.
+		$html = '<div class="html_notfullscreen">
+							<a title="View Full Screen" href="javascript: void(0);" onclick="$(\'.html_notfullscreen div\').toggleClass(\'fs_icon_on\'); $(this).closest(\'.htmlblock\').toggleClass(\'html_fullscreen\');">
+								<div class="fs_icon"></div>
+						 	</a>
+						 </div>' . $html;
 	}
 	return $html;
 }
@@ -498,6 +515,7 @@ function html_default_settings($feature,$pageid,$featureid) {
 	$settings_array[] = array(false,"$feature","$pageid","$featureid","embedvideo","0",false,"0","Embed Video Links","yes/no");
 	$settings_array[] = array(false,"$feature","$pageid","$featureid","embedyoutube","0",false,"0","Embed Youtube.com Links","yes/no");
 	$settings_array[] = array(false,"$feature","$pageid","$featureid","photogallery","0",false,"0","Auto Photogallery","yes/no");
+	$settings_array[] = array(false,"$feature","$pageid","$featureid","allowfullscreen","0",false,"0","Enable Fullscreen","yes/no");
 	return $settings_array;
 }
 ?>

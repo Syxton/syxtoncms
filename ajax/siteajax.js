@@ -27,12 +27,12 @@ function createXMLHttpRequest(){
 
 function ajaxapi(script, action, param, display, async){
 	if(!refreshajax(script, action, param, display, async)){ return };
-    
+
     //Build the URL to connect to
   	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + script;
   	var d = new Date();
 	var parameters = "action=" + action + param.entityify() + "&currTime=" + d.toUTCString();
-	
+
 	if(async != true){
 		ajaxpost(url,parameters,false,false);
     	display();
@@ -46,7 +46,7 @@ function ajaxpost(url, parameters, async, display){
     	xmlHttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     	xmlHttp.send(parameters);
 	}
-	else{	
+	else{
 		xmlHttp.open('POST', url, false);
 		xmlHttp.onreadystatechange = function () {};
 		xmlHttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -76,7 +76,7 @@ function istrue(){ if(trim(xmlHttp.responseText) == "false"){ return false; }els
 function do_nothing(){}
 function option_display(pageid,resultsdiv){
 	var returned = trim(xmlHttp.responseText).split("**");
-	if(returned[0] == "true"){	go_to_page(pageid);	
+	if(returned[0] == "true"){	go_to_page(pageid);
     }else{ document.getElementById(resultsdiv).innerHTML = returned[1]; }
 }
 
@@ -98,19 +98,19 @@ function ltrim(stringToTrim){ return stringToTrim.replace(/^\s+/,""); }
 function rtrim(stringToTrim){ return stringToTrim.replace(/\s+$/,""); }
 
 //Modal Functions
-function close_modal(){	
-    if(typeof self.parent.$ != "undefined"){ 
-        self.parent.$.colorbox.close(); 
-    }else if(typeof $ != "undefined"){ 
-        $.colorbox.close(); 
-    } 
+function close_modal(){
+    if(typeof self.parent.$ != "undefined"){
+        self.parent.$.colorbox.close();
+    }else if(typeof $ != "undefined"){
+        $.colorbox.close();
+    }
 }
 
 function resize_modal(container){
-    if(typeof self.parent.$.colorbox != "undefined"){ 
-        self.parent.$("#colorbox").resize(); 
-    }else if(typeof $.colorbox != "undefined"){ 
-        $("#colorbox").resize(); 
+    if(typeof self.parent.$.colorbox != "undefined"){
+        self.parent.$("#colorbox").resize();
+    }else if(typeof $.colorbox != "undefined"){
+        $("#colorbox").resize();
     }
 }
 
@@ -145,7 +145,7 @@ function loadjs(scriptName,callback){
     if(typeof callback == "undefined") {
         callback = function(){};
     }
-    $.getScript(scriptName,callback).fail(function(jqxhr, settings, exception){ alert( "Some javascript files failed to load ("+scriptName+"), the page may not work as intended." );}); 
+    $.getScript(scriptName,callback).fail(function(jqxhr, settings, exception){ alert( "Some javascript files failed to load ("+scriptName+"), the page may not work as intended." );});
     return;
 }
 
@@ -164,11 +164,11 @@ function loaddynamicjs(scriptname){
 //2.0 jquery version
 function create_request_string(container){
     var reqStr = "";
-    
+
     if ($('[name="'+container+'"]').length>0){ //container has a name
         var $container_id = $('[name="'+container+'"]');
     }else if($('[id="'+container+'"]').length>0){
-        var $container_id = $('[id="'+container+'"]'); 
+        var $container_id = $('[id="'+container+'"]');
     }else{
         return "";
     }
@@ -213,7 +213,7 @@ function get_values_from_multiselect(label){
 	while (document.getElementById(label+i)){
 		if(document.getElementById(label+i).checked) {
 			returnme += returnme === "" ? document.getElementById(label+i).value : "," + document.getElementById(label+i).value;
-		} 
+		}
 		i++;
 	}
 	return returnme;
@@ -226,8 +226,8 @@ function getRadioValue(idOrName){
     if(radioGroupName == null){ return null;}
     var radios = document.getElementsByTagName('input');
     for(var i=0; i<radios.length; i++){
-        var input = radios[i];      
-        if(input.type == 'radio' && input.name == radioGroupName && input.checked){       
+        var input = radios[i];
+        if(input.type == 'radio' && input.name == radioGroupName && input.checked){
             value = input.value;
             break;
         }
@@ -253,13 +253,13 @@ function echeck(str){
 	if (str.substring(lat-1,lat)==dot || str.substring(lat+1,lat+2)==dot) return false;
 	if (str.indexOf(dot,(lat+2))==-1) return false;
 	if (str.indexOf(" ")!=-1) return false;
-	return true					
+	return true
 }
 
 function IsNumeric(sText){
 	var ValidChars = "0123456789."; var IsNumber=true; var Char;
-	for (i = 0; i < sText.length && IsNumber == true; i++) { 
-		Char = sText.charAt(i); 
+	for (i = 0; i < sText.length && IsNumber == true; i++) {
+		Char = sText.charAt(i);
 		if (ValidChars.indexOf(Char) == -1) IsNumber = false;
 	}
 	return IsNumber;
@@ -356,7 +356,7 @@ function scrollto(target_id,speed){
 		thisNode = thisNode.offsetParent;
 		desty += thisNode.offsetTop;
 	}
-	
+
 	desty -= 12; // bring you to just above
 	if(desty < currentypos){
 		for (I=currentypos;I > desty; I-=speed){
@@ -377,14 +377,14 @@ function getQueryVariable(variable) {
     if (pair[0] == variable) {
       return pair[1];
     }
-  } 
+  }
  return false;
 }
 
 function login_display(reroute){
 	var returned = trim(xmlHttp.responseText).split("**");
 	if(returned[0] == "false"){ //login failed
-        document.getElementById("login_box_error").innerHTML = returned[1]; return false; 
+        document.getElementById("login_box_error").innerHTML = returned[1]; return false;
     }else if(returned[1] != ''){ //login with a reroute
 	   document.getElementById("login_box_error").innerHTML = returned[1];
 	   reroute.value = true;
@@ -398,9 +398,9 @@ function login(username, password){
 	ajaxapi('/ajax/site_ajax.php','login',"&username=" + encodeURIComponent(username) + "&password=" + password,function(){
 		if(login_display(reroute)){
 			if(!reroute.value) {
-                pageid = getCookie("pageid");			 
-                if(pageid && pageid.isNumeric) {				    
-                    go_to_page(pageid); 
+                pageid = getCookie("pageid");
+                if(pageid && pageid.isNumeric) {
+                    go_to_page(pageid);
 				} else {  go_to_page(1); }
 			} else {
 				window.location=WWW_ROOT + document.getElementById("reroute").value;
@@ -412,7 +412,7 @@ function login(username, password){
 //print function
 function update_login_display(pageid){
 	var returned = trim(xmlHttp.responseText).split("**");
-	if(returned[0] == "true"){ if(returned[1] != "check"){	go_to_page(pageid); } 
+	if(returned[0] == "true"){ if(returned[1] != "check"){	go_to_page(pageid); }
     }else{ if(document.getElementById("loggedin")){ go_to_page(1); } }
 }
 
@@ -434,7 +434,7 @@ function page_display(){
 	 	content = sections[i].split("**");
 		var filldiv = content[0];
 		var divname = content[1];
-		document.getElementById(divname).innerHTML = filldiv;	
+		document.getElementById(divname).innerHTML = filldiv;
 	 	i++;
  	}
 }
