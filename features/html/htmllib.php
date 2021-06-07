@@ -302,8 +302,8 @@ global $CFG;
 									if (is_file($path) && in_array(end(explode('.', end(explode('/', $path)))),   $exts)) {
 										$fileurl = $url . '/' . $file; // Use web url instead of local link.
 										$caption = isset($captions[$file]) ? $captions[$file] : $file; // Either a caption or the filename
-										$name = $match[4]; // Use text inside original hyperlink.
 										$display = empty($gallery) ? "" : "display:none;";
+										$name = empty($display) ? '<img style="width:15px;height:15px" src="'.$CFG->wwwroot.'/images/gallery.png" /> ' . $match[4] : $match[4]; // Use text inside original hyperlink.
 										$modalsettings = array("id" => "autogallery_$i", "title" => $caption, "text" => $name, "gallery" => $galleryid, "path" => $fileurl, "styles" => $display);
 							      $gallery .= empty($display) ? make_modal_links($modalsettings) : '<a href="'.$fileurl.'" title="'.$caption.'" data-rel="'.$galleryid.'" style="'.$display.'"></a>';
 									}
