@@ -550,69 +550,107 @@ global $CFG;
   $sql_add = $feature && $featureid ? " WHERE section='$feature' OR (ability='editfeaturesettings' OR ability='removefeatures' OR ability='movefeatures' OR ability='edit_feature_abilities' OR ability='edit_feature_group_abilities' OR ability='edit_feature_user_abilities') " : "";
 	$SQL = "SELECT * FROM abilities $sql_add  ORDER BY section, ability";
 
-    if ($pages = get_db_result($SQL)) {
-        if ($roleid) {
-            $returnme = '<div style="width:100%; text-align:center"><input type="button" value="Save" onclick="ajaxapi(\'/ajax/roles_ajax.php\',\'save_ability_changes\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'\'+create_request_string(\''.$type.'roles_form\'),function() { simple_display(\''.$type.'saved_div1\'); simple_display(\''.$type.'saved_div2\'); setTimeout(function() { clear_display(\''.$type.'saved_div1\'); clear_display(\''.$type.'saved_div2\'); },5000);} );ajaxapi(\'/ajax/roles_ajax.php\',\'refresh_edit_roles\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;roleid=\'+document.getElementById(\''.$type.'role_select\').value,function() { simple_display(\''.$type.'abilities_div\'); });" /></div>';
-        } elseif ($groupid) {
-            $returnme = '<div style="width:100%; text-align:center"><input type="button" value="Save" onclick="ajaxapi(\'/ajax/roles_ajax.php\',\'save_group_ability_changes\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;groupid='.$groupid.'\'+create_request_string(\''.$type.'roles_form\'),function() { simple_display(\''.$type.'saved_div1\'); simple_display(\''.$type.'saved_div2\'); setTimeout(function() { clear_display(\''.$type.'saved_div1\'); clear_display(\''.$type.'saved_div2\'); },5000);} ); ajaxapi(\'/ajax/roles_ajax.php\',\'refresh_group_abilities\',\'&amp;groupid='.$groupid.'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;groupid=\'+document.getElementById(\''.$type.'group_select\').value,function() { simple_display(\''.$type.'abilities_div\'); });" /></div>';
-        } elseif ($userid) {
-            $returnme = '<div style="width:100%; text-align:center"><input type="button" value="Save" onclick="ajaxapi(\'/ajax/roles_ajax.php\',\'save_user_ability_changes\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;userid='.$userid.'\'+create_request_string(\''.$type.'roles_form\'),function() { simple_display(\''.$type.'saved_div1\'); simple_display(\''.$type.'saved_div2\'); setTimeout(function() { clear_display(\''.$type.'saved_div1\'); clear_display(\''.$type.'saved_div2\'); },5000);} ); ajaxapi(\'/ajax/roles_ajax.php\',\'refresh_user_abilities\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;userid=\'+document.getElementById(\''.$type.'user_select\').value,function() { simple_display(\''.$type.'abilities_div\'); });" /></div>';
-        } else {
-            $returnme = "";
-        }
-        if ($groupid) { $notsettitle = "Unset"; }
-        $returnme .= '<table '.$table_style.'><tr><td>Abilities</td><td style="width: 32px;">Allow</td><td style="width: 32px;">'.$notsettitle.'</td><td style="width: 32px;">Deny</td></tr>';
-    	$i=0;
+  if ($pages = get_db_result($SQL)) {
+    if ($roleid) {
+      $returnme = '<div style="width:100%; text-align:center"><input type="button" value="Save" onclick="ajaxapi(\'/ajax/roles_ajax.php\',\'save_ability_changes\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'\'+create_request_string(\''.$type.'roles_form\'),function() { simple_display(\''.$type.'saved_div1\'); simple_display(\''.$type.'saved_div2\'); setTimeout(function() { clear_display(\''.$type.'saved_div1\'); clear_display(\''.$type.'saved_div2\'); },5000);} );ajaxapi(\'/ajax/roles_ajax.php\',\'refresh_edit_roles\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;roleid=\'+document.getElementById(\''.$type.'role_select\').value,function() { simple_display(\''.$type.'abilities_div\'); });" /></div>';
+    } elseif ($groupid) {
+      $returnme = '<div style="width:100%; text-align:center"><input type="button" value="Save" onclick="ajaxapi(\'/ajax/roles_ajax.php\',\'save_group_ability_changes\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;groupid='.$groupid.'\'+create_request_string(\''.$type.'roles_form\'),function() { simple_display(\''.$type.'saved_div1\'); simple_display(\''.$type.'saved_div2\'); setTimeout(function() { clear_display(\''.$type.'saved_div1\'); clear_display(\''.$type.'saved_div2\'); },5000);} ); ajaxapi(\'/ajax/roles_ajax.php\',\'refresh_group_abilities\',\'&amp;groupid='.$groupid.'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;groupid=\'+document.getElementById(\''.$type.'group_select\').value,function() { simple_display(\''.$type.'abilities_div\'); });" /></div>';
+    } elseif ($userid) {
+      $returnme = '<div style="width:100%; text-align:center"><input type="button" value="Save" onclick="ajaxapi(\'/ajax/roles_ajax.php\',\'save_user_ability_changes\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;userid='.$userid.'\'+create_request_string(\''.$type.'roles_form\'),function() { simple_display(\''.$type.'saved_div1\'); simple_display(\''.$type.'saved_div2\'); setTimeout(function() { clear_display(\''.$type.'saved_div1\'); clear_display(\''.$type.'saved_div2\'); },5000);} ); ajaxapi(\'/ajax/roles_ajax.php\',\'refresh_user_abilities\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;userid=\'+document.getElementById(\''.$type.'user_select\').value,function() { simple_display(\''.$type.'abilities_div\'); });" /></div>';
+    } else {
+      $returnme = "";
+    }
+    if ($groupid) {
+			$notsettitle = "Unset";
+		}
+    $returnme .= '<table '.$table_style.'><tr><td>Abilities</td><td style="width: 75px;text-align:center;">Allow</td><td style="width: 32px;">'.$notsettitle.'</td><td style="width: 75px;text-align:center;">Deny</td></tr>';
+  	$i=0;
 		while ($row = fetch_row($pages)) {
 			$currentstyle = $currentstyle == $style_row1 ? $style_row2 : $style_row1;
 			$breakline = $i > 0 ? "<br />" : "";
 			$printsection = $section == $row['section'] ? "" : "<tr><td colspan=\"4\">$breakline</td></tr><tr ".$style_header.'><td colspan="4"><strong>' . $row['section_display'] . '</strong></td></tr>';
 			$currentstyle = $printsection != "" ? $style_row1 : $currentstyle;
-            if ($roleid && empty($userid)) { //Role based only
-                $rights = role_has_ability_in_page($roleid,$row['ability'],$pageid,$feature,$featureid) ? "1" : "0";
-                $notify = get_db_count("SELECT * FROM roles_ability_perpage WHERE pageid='$pageid' AND roleid='$roleid' AND ability='".$row['ability']."'") ? 'background-color:yellow;' : '';
-            }elseif ($groupid) { //Group based
-                $rights = ($feature && $featureid) ? get_db_row("SELECT * FROM roles_ability_perfeature_pergroup WHERE pageid='$pageid' AND feature='$feature' AND featureid='$featureid' AND groupid='$groupid' AND ability='".$row['ability']."'") : get_db_row("SELECT * FROM roles_ability_pergroup WHERE pageid='$pageid' AND groupid='$groupid' AND ability='".$row['ability']."'");
-                $rights = $rights["allow"] === "0" ? "0" : ($rights["allow"] === "1" ? "1" : false);
-                $notify = $rights !== false ? 'background-color:yellow;"' : '';
-                $notsettoggle = $rights === false ? '<input onclick="clear_highlights(\''.$type.'abilty_'.$row["abilityid"].'_no\',\''.$type.'abilty_'.$row["abilityid"].'_yes\');" type="radio" name="'.$row['ability'].'" value="" checked>' : '<input onclick="clear_highlights(\''.$type.'abilty_'.$row["abilityid"].'_no\',\''.$type.'abilty_'.$row["abilityid"].'_yes\');" type="radio" name="'.$row['ability'].'" value="">';
-            }elseif ($userid) { //User based
-                if ($feature && $featureid) { //Feature user override
-                    $rights = user_has_ability_in_page($userid,$row['ability'],$pageid,$feature,$featureid) ? "1" : "0";
-                    $notify = get_db_count("SELECT * FROM roles_ability_perfeature_peruser WHERE pageid='$pageid' AND feature='$feature' AND featureid='$featureid' AND userid='$userid' AND ability='".$row['ability']."'") ? 'background-color:yellow;' : '';
-    			} else { //Page user override
-                    $rights = user_has_ability_in_page($userid,$row['ability'],$pageid) ? "1" : "0";
-                    $notify = get_db_count("SELECT * FROM roles_ability_peruser WHERE pageid='$pageid' AND userid='$userid' AND ability='".$row['ability']."'") ? 'background-color:yellow;' : '';
-    			}
-            }
-            $swap_function = $groupid ? "swap_highlights2" : "swap_highlights";
+      if ($roleid && empty($userid)) { //Role based only
+        $rights = role_has_ability_in_page($roleid,$row['ability'],$pageid,$feature,$featureid) ? "1" : "0";
+        $notify = get_db_count("SELECT * FROM roles_ability_perpage WHERE pageid='$pageid' AND roleid='$roleid' AND ability='".$row['ability']."'") ? 'background-color:yellow;' : '';
+      } elseif ($groupid) { //Group based
+        $rights = ($feature && $featureid) ? get_db_row("SELECT * FROM roles_ability_perfeature_pergroup WHERE pageid='$pageid' AND feature='$feature' AND featureid='$featureid' AND groupid='$groupid' AND ability='".$row['ability']."'") : get_db_row("SELECT * FROM roles_ability_pergroup WHERE pageid='$pageid' AND groupid='$groupid' AND ability='".$row['ability']."'");
+        $rights = $rights["allow"] === "0" ? "0" : ($rights["allow"] === "1" ? "1" : false);
+        $notify = $rights !== false ? 'background-color:yellow;"' : '';
+        $notsettoggle = $rights === false ? '<input onclick="clear_highlights(\''.$type.'abilty_'.$row["abilityid"].'_no\',\''.$type.'abilty_'.$row["abilityid"].'_yes\');" type="radio" name="'.$row['ability'].'" value="" checked>' : '<input onclick="clear_highlights(\''.$type.'abilty_'.$row["abilityid"].'_no\',\''.$type.'abilty_'.$row["abilityid"].'_yes\');" type="radio" name="'.$row['ability'].'" value="">';
+      } elseif ($userid) { //User based
+        if ($feature && $featureid) { //Feature user override
+          $rights = user_has_ability_in_page($userid,$row['ability'],$pageid,$feature,$featureid) ? "1" : "0";
+          $notify = get_db_count("SELECT * FROM roles_ability_perfeature_peruser WHERE pageid='$pageid' AND feature='$feature' AND featureid='$featureid' AND userid='$userid' AND ability='".$row['ability']."'") ? 'background-color:yellow;' : '';
+  			} else { //Page user override
+          $rights = user_has_ability_in_page($userid,$row['ability'],$pageid) ? "1" : "0";
+          $notify = get_db_count("SELECT * FROM roles_ability_peruser WHERE pageid='$pageid' AND userid='$userid' AND ability='".$row['ability']."'") ? 'background-color:yellow;' : '';
+  			}
+      }
+      $swap_function = $groupid ? "swap_highlights2" : "swap_highlights";
 
-            if ($rights === "1") { //set to allow
-                $radiobuttons = '<td><div style="width:22px;'.$notify.'" id="'.$type.'abilty_'.$row["abilityid"].'_yes"><input onclick="'.$swap_function.'(\''.$type.'abilty_'.$row["abilityid"].'_yes\',\''.$type.'abilty_'.$row["abilityid"].'_no\');" type="radio" name="'.$row['ability'].'" value="1" checked></div></td><td>'.$notsettoggle.'</td><td><div style="width:22px;" id="'.$type.'abilty_'.$row["abilityid"].'_no"><input onclick="'.$swap_function.'(\''.$type.'abilty_'.$row["abilityid"].'_no\',\''.$type.'abilty_'.$row["abilityid"].'_yes\');" type="radio" name="'.$row['ability'].'" value="0"></div></td>';
-			}elseif ($rights === "0") { //set to disallow
-                $radiobuttons = '<td><div style="width:22px;" id="'.$type.'abilty_'.$row["abilityid"].'_yes"><input onclick="'.$swap_function.'(\''.$type.'abilty_'.$row["abilityid"].'_yes\',\''.$type.'abilty_'.$row["abilityid"].'_no\');" type="radio" name="'.$row['ability'].'" value="1"></div></td><td>'.$notsettoggle.'</td><td><div style="width:22px;'.$notify.'" id="'.$type.'abilty_'.$row["abilityid"].'_no"><input onclick="'.$swap_function.'(\''.$type.'abilty_'.$row["abilityid"].'_no\',\''.$type.'abilty_'.$row["abilityid"].'_yes\');" type="radio" name="'.$row['ability'].'" value="0" checked></div></td>';
+      if ($rights === "1") { //set to allow
+        $radiobuttons = '<td>
+												 		<div style="width:75px;text-align:center;'.$notify.'" id="'.$type.'abilty_'.$row["abilityid"].'_yes">
+															<input style="margin-right:0" onclick="'.$swap_function.'(\''.$type.'abilty_'.$row["abilityid"].'_yes\',\''.$type.'abilty_'.$row["abilityid"].'_no\');" type="radio" name="'.$row['ability'].'" value="1" checked>
+														</div>
+												 </td>
+												 <td>
+														'.$notsettoggle.'
+												 </td>
+												 <td>
+														<div style="width:75px;text-align:center;" id="'.$type.'abilty_'.$row["abilityid"].'_no">
+															<input style="margin-right:0" onclick="'.$swap_function.'(\''.$type.'abilty_'.$row["abilityid"].'_no\',\''.$type.'abilty_'.$row["abilityid"].'_yes\');" type="radio" name="'.$row['ability'].'" value="0">
+														</div>
+												 </td>';
+			} elseif ($rights === "0") { //set to disallow
+        $radiobuttons = '<td>
+														<div style="width:75px;text-align:center;" id="'.$type.'abilty_'.$row["abilityid"].'_yes">
+															<input style="margin-right:0" onclick="'.$swap_function.'(\''.$type.'abilty_'.$row["abilityid"].'_yes\',\''.$type.'abilty_'.$row["abilityid"].'_no\');" type="radio" name="'.$row['ability'].'" value="1">
+														</div>
+												 </td>
+												 <td>
+												 		'.$notsettoggle.'
+												 </td>
+												 <td>
+												 		<div style="width:75px;text-align:center;'.$notify.'" id="'.$type.'abilty_'.$row["abilityid"].'_no">
+															<input style="margin-right:0"  onclick="'.$swap_function.'(\''.$type.'abilty_'.$row["abilityid"].'_no\',\''.$type.'abilty_'.$row["abilityid"].'_yes\');" type="radio" name="'.$row['ability'].'" value="0" checked>
+														</div>
+												 </td>';
 			} else { //not set
-                $radiobuttons = '<td><div style="width:22px;" id="'.$type.'abilty_'.$row["abilityid"].'_yes"><input onclick="'.$swap_function.'(\''.$type.'abilty_'.$row["abilityid"].'_yes\',\''.$type.'abilty_'.$row["abilityid"].'_no\');" type="radio" name="'.$row['ability'].'" value="1"></div></td><td>'.$notsettoggle.'</td><td><div style="width:22px;'.$notify.'" id="'.$type.'abilty_'.$row["abilityid"].'_no"><input onclick="'.$swap_function.'(\''.$type.'abilty_'.$row["abilityid"].'_no\',\''.$type.'abilty_'.$row["abilityid"].'_yes\');" type="radio" name="'.$row['ability'].'" value="0"></div></td>';
+        $radiobuttons = '<td>
+														<div style="width:75px;text-align:center;" id="'.$type.'abilty_'.$row["abilityid"].'_yes">
+															<input style="margin-right:0" onclick="'.$swap_function.'(\''.$type.'abilty_'.$row["abilityid"].'_yes\',\''.$type.'abilty_'.$row["abilityid"].'_no\');" type="radio" name="'.$row['ability'].'" value="1">
+														</div>
+												 </td>
+												 <td>
+												 		'.$notsettoggle.'
+												 </td>
+												 <td>
+												 		<div style="width:75px;text-align:center;'.$notify.'" id="'.$type.'abilty_'.$row["abilityid"].'_no">
+															<input style="margin-right:0"  onclick="'.$swap_function.'(\''.$type.'abilty_'.$row["abilityid"].'_no\',\''.$type.'abilty_'.$row["abilityid"].'_yes\');" type="radio" name="'.$row['ability'].'" value="0">
+														</div>
+												 </td>';
 			}
 
-            $rightslist .= $rightslist == "" ? $row['ability'] : "**".$row['ability'];
+      $rightslist .= $rightslist == "" ? $row['ability'] : "**".$row['ability'];
 			$section = $row['section'];
 			$returnme .= $printsection;
 			$returnme .= '<tr '.$currentstyle.'><td>' . $row['ability_display'] . "</td>$radiobuttons</tr>";
-		$i++;
+			$i++;
 		}
-        $returnme .= '</table><input type="hidden" name="'.$type.'rightslist" value="'.$rightslist.'" />';
-        $returnme .= '<div style="width:100%; text-align:center"><br />';
+    $returnme .= '</table><input type="hidden" name="'.$type.'rightslist" value="'.$rightslist.'" />';
+    $returnme .= '<div style="width:100%; text-align:center"><br />';
 
-        if ($roleid) {
-            $returnme .= '<input type="button" value="Save" onclick="ajaxapi(\'/ajax/roles_ajax.php\',\'save_ability_changes\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'\'+create_request_string(\''.$type.'roles_form\'),function() { simple_display(\''.$type.'saved_div1\'); simple_display(\''.$type.'saved_div2\'); setTimeout(function() { clear_display(\''.$type.'saved_div1\'); clear_display(\''.$type.'saved_div2\'); },5000);} );ajaxapi(\'/ajax/roles_ajax.php\',\'refresh_edit_roles\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;roleid=\'+document.getElementById(\''.$type.'role_select\').value,function() { simple_display(\''.$type.'abilities_div\'); });" />';
-        }elseif ($groupid) {
-            $returnme .= '<input type="button" value="Save" onclick="ajaxapi(\'/ajax/roles_ajax.php\',\'save_group_ability_changes\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;groupid='.$groupid.'\'+create_request_string(\''.$type.'roles_form\'),function() { simple_display(\''.$type.'saved_div1\'); simple_display(\''.$type.'saved_div2\'); setTimeout(function() { clear_display(\''.$type.'saved_div1\'); clear_display(\''.$type.'saved_div2\'); },5000);} ); ajaxapi(\'/ajax/roles_ajax.php\',\'refresh_group_abilities\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;groupid=\'+document.getElementById(\''.$type.'group_select\').value,function() { simple_display(\''.$type.'abilities_div\'); });" />';
-        }elseif ($userid) {
-            $returnme .= '<input type="button" value="Save" onclick="ajaxapi(\'/ajax/roles_ajax.php\',\'save_user_ability_changes\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;userid='.$userid.'\'+create_request_string(\''.$type.'roles_form\'),function() { simple_display(\''.$type.'saved_div1\'); simple_display(\''.$type.'saved_div2\'); setTimeout(function() { clear_display(\''.$type.'saved_div1\'); clear_display(\''.$type.'saved_div2\'); },5000);} ); ajaxapi(\'/ajax/roles_ajax.php\',\'refresh_user_abilities\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;userid=\'+document.getElementById(\''.$type.'user_select\').value,function() { simple_display(\''.$type.'abilities_div\'); });" />';
-        }
-        $returnme .= '</div>';
+    if ($roleid) {
+      $returnme .= '<input type="button" value="Save" onclick="ajaxapi(\'/ajax/roles_ajax.php\',\'save_ability_changes\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'\'+create_request_string(\''.$type.'roles_form\'),function() { simple_display(\''.$type.'saved_div1\'); simple_display(\''.$type.'saved_div2\'); setTimeout(function() { clear_display(\''.$type.'saved_div1\'); clear_display(\''.$type.'saved_div2\'); },5000);} );ajaxapi(\'/ajax/roles_ajax.php\',\'refresh_edit_roles\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;roleid=\'+document.getElementById(\''.$type.'role_select\').value,function() { simple_display(\''.$type.'abilities_div\'); });" />';
+    } elseif ($groupid) {
+      $returnme .= '<input type="button" value="Save" onclick="ajaxapi(\'/ajax/roles_ajax.php\',\'save_group_ability_changes\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;groupid='.$groupid.'\'+create_request_string(\''.$type.'roles_form\'),function() { simple_display(\''.$type.'saved_div1\'); simple_display(\''.$type.'saved_div2\'); setTimeout(function() { clear_display(\''.$type.'saved_div1\'); clear_display(\''.$type.'saved_div2\'); },5000);} ); ajaxapi(\'/ajax/roles_ajax.php\',\'refresh_group_abilities\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;groupid=\'+document.getElementById(\''.$type.'group_select\').value,function() { simple_display(\''.$type.'abilities_div\'); });" />';
+    } elseif ($userid) {
+      $returnme .= '<input type="button" value="Save" onclick="ajaxapi(\'/ajax/roles_ajax.php\',\'save_user_ability_changes\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;userid='.$userid.'\'+create_request_string(\''.$type.'roles_form\'),function() { simple_display(\''.$type.'saved_div1\'); simple_display(\''.$type.'saved_div2\'); setTimeout(function() { clear_display(\''.$type.'saved_div1\'); clear_display(\''.$type.'saved_div2\'); },5000);} ); ajaxapi(\'/ajax/roles_ajax.php\',\'refresh_user_abilities\',\'&amp;pageid='.$pageid.'&amp;feature='.$feature.'&amp;featureid='.$featureid.'&amp;userid=\'+document.getElementById(\''.$type.'user_select\').value,function() { simple_display(\''.$type.'abilities_div\'); });" />';
     }
+    $returnme .= '</div>';
+  }
 	return $returnme;
 }
 ?>
