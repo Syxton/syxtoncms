@@ -1,31 +1,97 @@
+group_page_template||
+  <table style="font-size:1em;width:100%">
+    <tr>
+      <td style="width:40%;text-align:center;vertical-align:top;">
+        <strong>Groups:</strong>
+        <div id="group_list_div">
+          ||groups_list||
+        </div>
+        ||canmanagegroups{{
+          <a class="imgandlink" href="javascript: void(0);" onclick="ajaxapi('/ajax/roles_ajax.php',
+                                                                             'create_edit_group_form',
+                                                                             '&feature=||feature||' +
+                                                                             '&featureid=||featureid||' +
+                                                                             '&pageid=||pageid||',
+                                                                             function() {
+                                                                               simple_display('per_group_display_div');
+                                                                             });">
+            <img src="||wwwroot||/images/add.png" /> Create New Group
+          </a>
+        }}canmanagegroups||
+        <br />
+      </td>
+      <td style="width:5px"></td>
+      <td><div id="per_group_display_div"></div></td>
+    </tr>
+  </table>
+  <hr />
+  <div id="per_group_saved_div1" style="width:100%;text-align:center;height: 2px;padding-bottom: 18px;padding-top: 10px;"></div>
+  <div id="per_group_abilities_div" style="width:100%;"></div>
+  <div id="per_group_saved_div2" style="width:100%;text-align:center;height: 2px;padding-bottom: 10px;padding-top: 10px;"></div>
+||group_page_template
+
+groups_list_template||
+  <select style="font-size:.85em;width:||width||;" name="||name||" id="||id||" ||enableaction{{ onchange="if ($('#group_select').val() > 0) {
+                                                                                                            ajaxapi('/ajax/roles_ajax.php',
+                                                                                                                    'refresh_group_users',
+                                                                                                                    '&pageid=||pageid||' +
+                                                                                                                    '&feature=||feature||' +
+                                                                                                                    '&featureid=||featureid||' +
+                                                                                                                    '&groupid=' + $('#group_select').val(),
+                                                                                                                    function() {
+                                                                                                                      simple_display('per_group_display_div');
+                                                                                                                    });
+                                                                                                            ajaxapi('/ajax/roles_ajax.php',
+                                                                                                                    'refresh_group_abilities',
+                                                                                                                    '&pageid=||pageid||' +
+                                                                                                                    '&feature=||feature||' +
+                                                                                                                    '&featureid=||featureid||' +
+                                                                                                                    '&groupid=' + $('#group_select').val(),
+                                                                                                                    function() {
+                                                                                                                      simple_display('per_group_abilities_div');
+                                                                                                                    });
+                                                                                                          } else {
+                                                                                                            clear_display('per_group_display_div');
+                                                                                                            clear_display('per_group_abilities_div');
+                                                                                                          }"
+                                                                               }}enableaction|| >
+    <option value="0">No group selected</option>
+    ||groups||
+  </select>
+||groups_list_template
+
 roles_header_script||
   <script type="text/javascript">
-    function swap_highlights(option1,option2){
-        option1 = "#"+option1;
-        option2 = "#"+option2;
-    if($(option1).emptybg() && $(option2).emptybg()){
-            $(option1).css("background-color","yellow");
-        }else if($(option1).emptybg()){
-      $(option1).css("background-color","inherit");
-            $(option2).css("background-color","inherit");
-    }
-    blur();
-    }
-    function swap_highlights2(option1,option2){
-        option1 = "#"+option1;
-        option2 = "#"+option2;
-    if($(option1).emptybg() && $(option2).emptybg()){
-      $(option1).css("background-color","yellow");
-        }else{
-      $(option1).css("background-color","yellow");
-            $(option2).css("background-color","inherit");
-    }
-    blur();
-    }
-    function clear_highlights(option1,option2){
+    function swap_highlights(option1,option2) {
+      option1 = "#"+option1;
+      option2 = "#"+option2;
+      if ($(option1).emptybg() && $(option2).emptybg()) {
+        $(option1).css("background-color","yellow");
+      } else if ($(option1).emptybg()) {
         $(option1).css("background-color","inherit");
         $(option2).css("background-color","inherit");
-    blur();
+      }
+      blur();
+    }
+
+    function swap_highlights2(option1,option2) {
+      option1 = "#"+option1;
+      option2 = "#"+option2;
+      if ($(option1).emptybg() && $(option2).emptybg()) {
+        $(option1).css("background-color","yellow");
+      } else {
+        $(option1).css("background-color","yellow");
+        $(option2).css("background-color","inherit");
+      }
+      blur();
+    }
+
+    function clear_highlights(option1, option2) {
+      option1 = "#"+option1;
+      option2 = "#"+option2;
+      $(option1).css("background-color", "inherit");
+      $(option2).css("background-color", "inherit");
+      blur();
     }
   </script>
 ||roles_header_script
@@ -180,3 +246,100 @@ roles_manager_template||
     </ul>
   </div>
 ||roles_manager_template
+
+print_abilities_save_button||
+  <div style="width:100%; text-align:center">
+    <input type="button" value="Save" onclick="ajaxapi('/ajax/roles_ajax.php',
+                                                       '||save_function||',
+                                                       '&pageid=||pageid||' +
+                                                       '&feature=||feature||' +
+                                                       '&featureid=||featureid||' +
+                                                       ||groupid{{ '&groupid=||groupid||' + }}groupid||
+                                                       ||userid{{ '&groupid=||userid||' + }}userid||
+                                                       create_request_string('||type||roles_form'),
+                                                       function() {
+                                                         simple_display('||type||saved_div1');
+                                                         simple_display('||type||saved_div2');
+                                                         setTimeout(function() {
+                                                                     clear_display('||type||saved_div1');
+                                                                     clear_display('||type||saved_div2');
+                                                                    },5000);
+                                                       });
+                                               ajaxapi('/ajax/roles_ajax.php',
+                                                       '||refresh_function||',
+                                                       '&pageid=||pageid||' +
+                                                       '&feature=||feature||' +
+                                                       '&featureid=||featureid||' +
+                                                       ||roleid{{ '&roleid=' + $('#||type||role_select').val() }}roleid||
+                                                       ||groupid{{ '&groupid=' + $('#||type||group_select').val() }}groupid||
+                                                       ||userid{{ '&userid=' + $('#||type||user_select').val() }}userid||,
+                                                       function() {
+                                                         simple_display('||type||abilities_div');
+                                                       });" />
+  </div>
+||print_abilities_save_button
+
+print_abilities||
+  <div style="width:100%; text-align:center">
+    ||save||
+  </div>
+  <table class="roles_table">
+    <tr>
+      <td rowspan="2">
+        <strong>Abilities</strong>
+      </td>
+      <td style="width: 75px;text-align:center;" rowspan="2">
+        <strong>Allow</strong>
+      </td>
+      <td style="width: 75px;text-align:center;" rowspan="2">
+        <strong>||default||</strong>
+      </td>
+      <td style="width: 75px;text-align:center;" rowspan="2">
+        <strong>Deny</strong>
+      </td>
+    </tr>
+    ||abilities||
+  </table>
+  <input type="hidden" name="||type||rightslist" value="||rightslist||" />
+  <div style="width:100%; text-align:center">
+    <br />
+    ||save||
+  </div>
+||print_abilities
+
+print_abilities_ability||
+  ||thissection{{
+    <tr>
+      <td colspan="4"><br /></td>
+    </tr>
+    <tr class="roles_header">
+      <td colspan="4">
+        <strong>
+          ||ability[section_display]||
+        </strong>
+      </td>
+    </tr>
+  }}thissection||
+    <tr ||currentstyle||>
+      <td>
+        ||ability[ability_display]||
+      </td>
+      <td>
+        <div style="width:75px;text-align:center;||notify1{{ ||notify{{ background-color:yellow; }}notify|| }}notify1||" id="||type||abilty_||ability[abilityid]||_yes">
+          <input style="margin-right:0" onclick="||swap_function||('||type||abilty_||ability[abilityid]||_yes','||type||abilty_||ability[abilityid]||_no');" type="radio" name="||ability[ability]||" value="1" ||notify1{{ checked }}notify1|| />
+        </div>
+      </td>
+      <td>
+        <div style="width:75px;text-align:center;">
+          ||default_toggle{{
+            <input onclick="clear_highlights('||type||abilty_||ability[abilityid]||_no','||type||abilty_||ability[abilityid]||_yes');" type="radio" name="||ability[ability]||" style="margin-right: 0;" value="" ||default_checked{{ checked }}default_checked|| />
+          }}default_toggle||
+        </div>
+      </td>
+      <td>
+        <div style="width:75px;text-align:center;||notify2{{ ||notify{{ background-color:yellow; }}notify|| }}notify2||" id="||type||abilty_||ability[abilityid]||_no">
+          <input style="margin-right:0"  onclick="||swap_function||('||type||abilty_||ability[abilityid]||_no','||type||abilty_||ability[abilityid]||_yes');" type="radio" name="||ability[ability]||" value="0" ||notify2{{ checked }}notify2|| />
+        </div>
+      </td>
+    </tr>
+||print_abilities_ability

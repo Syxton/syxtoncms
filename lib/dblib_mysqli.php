@@ -64,9 +64,9 @@ global $CFG, $conn;
 }
 
 function execute_db_sql($SQL) {
-global $CFG, $conn;
-	$update = preg_match('/^UPDATE/i',$SQL) ? true : false;
-	$delete = preg_match('/^DELETE/i',$SQL) ? true : false;
+global $conn;
+	$update = preg_match('/^UPDATE/i', $SQL) ? true : false;
+	$delete = preg_match('/^DELETE/i', $SQL) ? true : false;
 
   if ($result = get_db_result($SQL)) {
   	if ($result && $update) {

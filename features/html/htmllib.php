@@ -11,17 +11,16 @@ $HTMLLIB = true;
 
 function display_html($pageid, $area, $featureid) {
 global $CFG, $USER, $HTMLSETTINGS;
-
-	$abilities = get_user_abilities($USER->userid,$pageid,"html","html",$featureid);
-	if (!$settings = fetch_settings("html",$featureid,$pageid)) {
-		make_or_update_settings_array(default_settings("html",$pageid,$featureid));
-		$settings = fetch_settings("html",$featureid,$pageid);
+	$abilities = get_user_abilities($USER->userid, $pageid, "html", "html", $featureid);
+	if (!$settings = fetch_settings("html", $featureid, $pageid)) {
+		make_or_update_settings_array(default_settings("html", $pageid, $featureid));
+		$settings = fetch_settings("html", $featureid, $pageid);
 	}
 
-    //if (user_has_ability_in_page($USER->userid, "viewhtml", $pageid, "html", $featureid)) {
-    if (!empty($abilities->viewhtml->allow)) {
-        return get_html($pageid, $featureid, $settings, $abilities, $area);
-    }
+  //if (user_has_ability_in_page($USER->userid, "viewhtml", $pageid, "html", $featureid)) {
+  if (!empty($abilities->viewhtml->allow)) {
+    return get_html($pageid, $featureid, $settings, $abilities, $area);
+  }
 }
 
 function get_html($pageid,$featureid,$settings,$abilities,$area=false,$htmlonly=false) {

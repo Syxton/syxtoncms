@@ -3,8 +3,8 @@
 * roles_ajax.php - Roles Ajax backend script
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 05/17/2021
-* Revision: 2.0.3
+* Date: 06/11/2021
+* Revision: 2.0.4
 ***************************************************************************/
 
 include ('header.php');
@@ -359,15 +359,13 @@ global $CFG, $MYVARS;
   $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
 
   $name = "";
-  if ($groupid) { //EDITING: get form values to fill in
-    $SQL = "SELECT *
-              FROM `groups`
-             WHERE groupid = '$groupid'";
+  if ($groupid) { // EDITING: get form values to fill in
+    $SQL = template_use("dbsql/roles.sql", array("groupid" => $groupid), "get_group");
     $group = get_db_row($SQL);
     $name = $group["name"];
     $parents = groups_list($pageid, false, false, false, $group["parent"], $groupid, $groupid, "80%", "per_group_edit_group_select", "per_group_edit_group_select");
-  } else { //CREATING
-    $parents = groups_list($pageid, null, null, null, null, null, null, "80%", "per_group_edit_group_select", "per_group_edit_group_select");
+  } else { // CREATING
+    $parents = groups_list($pageid, false, false, false, null, null, null, "80%", "per_group_edit_group_select", "per_group_edit_group_select");
   }
 
   $params = array("wwwroot" => $CFG->wwwroot, "name" => $name, "parents" => $parents, "pageid" => $pageid, "groupid" => $groupid, "feature" => $feature, "featureid" => $featureid);
@@ -383,21 +381,13 @@ global $MYVARS;
   $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
   $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
 
-  if ($groupid) { //EDITING
-    $parent = $parent ? "parent = '$parent'" : "parent = '0'";
-    $SQL = "UPDATE `groups`
-               SET name = '$name', $parent
-             WHERE groupid = '$groupid'
-               AND pageid = '$pageid'";
-    execute_db_sql($SQL);
-  } else { //CREATING
-    $parent = $parent ? $parent : "0";
-    $SQL = "INSERT INTO `groups` (name, parent, pageid)
-                 VALUES('$name', '$parent', '$pageid')";
-    execute_db_sql($SQL);
-    }
+  $parent = $parent ? $parent : "0";
+  $params = array("is_editing" => ($groupid), "pageid" => $pageid, "groupid" => $groupid, "name" => $name, "parent" => $parent);
 
-  echo group_page($pageid,$feature,$featureid);
+  $SQL = template_use("dbsql/roles.sql", $params, "save_group");
+  execute_db_sql($SQL);
+
+  echo group_page($pageid, $feature, $featureid);
 }
 
 function refresh_edit_roles() {
@@ -432,21 +422,24 @@ global $MYVARS;
 }
 
 function refresh_group_abilities() {
-global $CFG,$MYVARS;
+global $MYVARS;
 	$pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
-    $groupid = !empty($MYVARS->GET['groupid']) ? $MYVARS->GET['groupid'] : false; //Should always be passed
-    $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
-    $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
+  $groupid = !empty($MYVARS->GET['groupid']) ? $MYVARS->GET['groupid'] : false; //Should always be passed
+  $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
+  $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
 
-    if ($pageid && $groupid) {
-        echo '<form id="per_group_roles_form">';
-        echo print_abilities($pageid,"per_group_",false,false,$feature,$featureid,$groupid);
-        echo '</form>';
-    } else { echo get_error_message("generic_error"); return; }
+  if ($pageid && $groupid) {
+    echo '<form id="per_group_roles_form">';
+    echo print_abilities($pageid, "per_group_", false, false, $feature, $featureid, $groupid);
+    echo '</form>';
+  } else {
+    echo get_error_message("generic_error");
+    return;
+  }
 }
 
 function save_ability_changes() {
-global $CFG,$MYVARS;
+global $CFG, $MYVARS;
   $abilities = explode("**",$MYVARS->GET['per_role_rightslist']);
   $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
   $roleid = !empty($MYVARS->GET['per_role_roleid']) ? $MYVARS->GET['per_role_roleid'] : false; //Should always be passed

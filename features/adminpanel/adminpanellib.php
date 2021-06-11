@@ -42,8 +42,8 @@ global $CFG, $USER, $ROLES, $ABILITIES;
 			    include_once($directory . "/" . $dir . '/' . $dir . "lib.php");
 				$action = $dir . "_adminpanel";
 				if (function_exists("$action")) {
-                    $content .= $action($pageid);   
-                }		
+                    $content .= $action($pageid);
+                }
 	        }
 	    }
 	    //close the directory handler
@@ -73,7 +73,7 @@ global $CFG;
 	$display_alerts = "";
 
 	//This section creates alerts for users who have requested entry into a page that the user has rights to add them to.
-	if ($pages = user_has_ability_in_pages($userid,"assign_roles")) {
+	if ($pages = user_has_ability_in_pages($userid, "assign_roles")) {
 		while ($page = fetch_row($pages)) {
             $SQL = "SELECT * FROM roles_assignment WHERE pageid=".$page["pageid"]." AND confirm=1";
 			if ($result = get_db_result($SQL)) {

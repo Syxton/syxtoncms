@@ -54,6 +54,16 @@ global $CFG;
 	return false;
 }
 
+function execute_db_sqls($SQLS) {
+global $conn;
+  $sql_array = explode(";\r", $SQLS);
+  $returns = array();
+  foreach ($sql_array as $SQL) {
+    $returns[] = execute_db_sql($SQL);
+  }
+  return $returns;
+}
+
 function authenticate($username, $password) {
 global $CFG, $USER;
 	$time = get_timestamp();

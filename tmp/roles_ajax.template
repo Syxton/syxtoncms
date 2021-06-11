@@ -169,7 +169,7 @@ create_edit_group_form_template||
   <table style="width:100%;font-size:.85em;">
     <tr>
       <td colspan="2">
-        <strong>Edit Group</strong>
+        <strong>||groupid{{ Edit Group //OR// Create Group }}groupid||</strong>
       </td>
     </tr>
     <tr>
@@ -194,7 +194,8 @@ create_edit_group_form_template||
                                                                     ajaxapi('/ajax/roles_ajax.php',
                                                                             'save_group',
                                                                             '&name=' + $('#per_group_name').val() +
-                                                                            '&parent=' + $('#per_group_edit_group_select').val(),
+                                                                            '&parent=' + $('#per_group_edit_group_select').val() +
+                                                                            '&pageid=||pageid||',
                                                                             function() {
                                                                               simple_display('per_group_whole_page');
                                                                             });

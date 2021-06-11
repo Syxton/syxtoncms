@@ -1,3 +1,9 @@
+get_page||
+  SELECT *
+    FROM pages
+   WHERE pageid = '||pageid||'
+||get_page
+
 my_pagelist||
     SELECT p.*
       FROM pages p

@@ -414,6 +414,10 @@ background-color:#5F9EA0;
 color:white;
 }
 
+.roles_table td {
+    padding: 2px;
+}
+
 tr.roles_row1 {
 background-color:#F0FFFF;
 }
