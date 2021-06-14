@@ -167,11 +167,8 @@ global $CFG, $ROLES, $ABILITIES;
 }
 
 function role_has_ability_in_page($roleid, $ability, $pageid, $feature="", $featureid=0) {
-global $CFG,$ROLES;
-
 	$params = array("pageid" => $pageid, "feature" => $feature, "featureid" => $featureid, "roleid" => $roleid, "ability" => $ability);
 	$SQL = template_use("dbsql/roles.sql", $params, "role_has_ability_in_page");
-
 	if (get_db_row($SQL)) {
     return true;
 	}
@@ -180,7 +177,7 @@ global $CFG,$ROLES;
 
 function load_roles() {
 global $CFG;
-	$allroles = get_db_result("SELECT * FROM roles");
+	$allroles = get_db_result(template_use("dbsql/roles.sql", array(), "get_roles"));
   $ROLES = new \stdClass;
   while ($row = fetch_row($allroles)) {
     $rolename = $row['name'];

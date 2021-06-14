@@ -279,34 +279,33 @@ global $CFG;
 
 function filter_photogallery($html) {
 global $CFG;
-	if (isset($CFG->doc_view_key)) {
-		$regex = '/(<[aA]\s*.[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s""\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(<\/[aA]>)/';
-		if (preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) {
-			foreach ($matches as $match) {
-				$url = $match[2];
-				$exts = array('jpeg', 'jpg', 'gif', 'png');
-				if (strpos($match[0], 'title="gallery"') !== false && strpos($url, 'userfiles') !== false) {
-					//make internal links full paths
-					$localdirectory = $CFG->dirroot . "/" . substr($url, strpos($url, "userfiles"));
+	$exts = array('jpeg', 'jpg', 'gif', 'png');
+	$regex = '/(<[aA]\s*.[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s""\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(<\/[aA]>)/';
+	if (preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) {
+		foreach ($matches as $match) {
+			$url = $match[2];
+			//make internal links full paths
+			$localdirectory = $CFG->dirroot . "/" . substr($url, strpos($url, "userfiles"));
+			if (substr($localdirectory, -1) == '/') {
+				$localdirectory = substr($localdirectory, 0, -1);
+			}
 
-					if (substr($localdirectory, -1) == '/') {
-						$localdirectory = substr($localdirectory, 0, -1);
-					}
-					$gallery = ""; $galleryid = uniqid("autogallery");
-					if (is_readable($localdirectory) && (file_exists($localdirectory) || is_dir($localdirectory))) {
+			if (is_readable($localdirectory) && strpos($url, 'userfiles') !== false) {
+				$gallery = ""; $galleryid = uniqid("autogallery");
+				if (is_dir($localdirectory)) { // directory
+					$captions = get_file_captions($localdirectory); // get the captions if they exist.
+					if (strpos($match[0], 'title="gallery"') !== false) {
 						$directoryList = opendir($localdirectory);
 						$i = 0;
-						$captions = get_file_captions($localdirectory);
-
-						while($file = readdir($directoryList)) {
+						while ($file = readdir($directoryList)) {
 							if ($file != '.' && $file != '..') {
 								$path = $localdirectory . '/' . $file;
 								if (is_readable($path)) {
-									if (is_file($path) && in_array(end(explode('.', end(explode('/', $path)))),   $exts)) {
+									if (is_file($path) && in_array(end(explode('.', end(explode('/', $file)))), $exts)) {
 										$fileurl = $url . '/' . $file; // Use web url instead of local link.
 										$caption = isset($captions[$file]) ? $captions[$file] : $file; // Either a caption or the filename
 										$display = empty($gallery) ? "" : "display:none;";
-										$name = empty($display) ? '<img style="width:15px;height:15px" src="'.$CFG->wwwroot.'/images/gallery.png" /> ' . $match[4] : $match[4]; // Use text inside original hyperlink.
+										$name = empty($display) ? '<img style="width:17px;height:17px;vertical-align: middle;" src="'.$CFG->wwwroot.'/images/gallery.png" /> ' . $match[4] : $match[4]; // Use text inside original hyperlink.
 										$modalsettings = array("id" => "autogallery_$i", "title" => $caption, "text" => $name, "gallery" => $galleryid, "path" => $fileurl, "styles" => $display);
 							      $gallery .= empty($display) ? make_modal_links($modalsettings) : '<a href="'.$fileurl.'" title="'.$caption.'" data-rel="'.$galleryid.'" style="'.$display.'"></a>';
 									}
@@ -315,10 +314,19 @@ global $CFG;
 							$i++;
 						}
 						closedir($directoryList);
-						if (!empty($gallery)) {
-							$html = str_replace($match[0], $gallery, $html);
-						}
 					}
+				} else if (is_file($localdirectory)) { // file
+					$file = basename($localdirectory); // get just the filename and extention.
+					$captions = get_file_captions(str_replace($file, "", $localdirectory)); // get the caption from the image directory if possible
+					$fileurl = $url; // Use web url instead of local link.
+					$caption = isset($captions[$file]) ? $captions[$file] : $file; // Either a caption or the filename
+					$name = empty($display) ? '<img style="width:15px;height:15px;vertical-align: middle;" src="' . $CFG->wwwroot . '/images/image.png" /> ' . $match[4] : $match[4]; // Use text inside original hyperlink.
+					$modalsettings = array("id" => "autogallery_$i", "title" => $caption, "text" => $name, "gallery" => $galleryid, "path" => $fileurl);
+					$gallery = make_modal_links($modalsettings);
+				}
+
+				if (!empty($gallery)) {
+					$html = str_replace($match[0], $gallery, $html);
 				}
 			}
 		}

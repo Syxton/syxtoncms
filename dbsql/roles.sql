@@ -7,6 +7,12 @@ is_siteadmin||
      AND confirm = 0
 ||is_siteadmin
 
+get_roles||
+    SELECT *
+      FROM roles
+  ORDER BY roleid 
+||get_roles
+
 remove_all_roles||
   DELETE FROM roles_assignment
         WHERE userid = '||userid||';
