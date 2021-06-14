@@ -282,6 +282,7 @@ global $CFG;
 	$exts = array('jpeg', 'jpg', 'gif', 'png');
 	$regex = '/(<[aA]\s*.[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s""\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(<\/[aA]>)/';
 	if (preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) {
+		$i = 0;
 		foreach ($matches as $match) {
 			$url = $match[2];
 			//make internal links full paths
@@ -296,7 +297,6 @@ global $CFG;
 					$captions = get_file_captions($localdirectory); // get the captions if they exist.
 					if (strpos($match[0], 'title="gallery"') !== false) {
 						$directoryList = opendir($localdirectory);
-						$i = 0;
 						while ($file = readdir($directoryList)) {
 							if ($file != '.' && $file != '..') {
 								$path = $localdirectory . '/' . $file;
@@ -311,7 +311,7 @@ global $CFG;
 									}
 								}
 							}
-							$i++;
+							//$i++;
 						}
 						closedir($directoryList);
 					}
@@ -320,7 +320,7 @@ global $CFG;
 					$captions = get_file_captions(str_replace($file, "", $localdirectory)); // get the caption from the image directory if possible
 					$fileurl = $url; // Use web url instead of local link.
 					$caption = isset($captions[$file]) ? $captions[$file] : $file; // Either a caption or the filename
-					$name = empty($display) ? '<img style="width:15px;height:15px;vertical-align: middle;" src="' . $CFG->wwwroot . '/images/image.png" /> ' . $match[4] : $match[4]; // Use text inside original hyperlink.
+					$name = '<img style="width:15px;height:15px;vertical-align: middle;" src="' . $CFG->wwwroot . '/images/image.png" /> ' . $match[4]; // Use text inside original hyperlink.
 					$modalsettings = array("id" => "autogallery_$i", "title" => $caption, "text" => $name, "gallery" => $galleryid, "path" => $fileurl);
 					$gallery = make_modal_links($modalsettings);
 				}
@@ -329,6 +329,7 @@ global $CFG;
 					$html = str_replace($match[0], $gallery, $html);
 				}
 			}
+			$i++;
 		}
 	}
 	return $html;
