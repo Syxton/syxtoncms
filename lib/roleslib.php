@@ -21,7 +21,7 @@ global $CFG, $ROLES;
 }
 
 function remove_all_roles($userid) {
-	$SQL = template_use("dbsql/roles.sql", array("userid" => $userid), "remove_all_roles");
+	$SQL = template_use("dbsql/roles.sql", array("userid" => $userid), "remove_all_user_roles");
 	return execute_db_sqls($SQL);
 }
 

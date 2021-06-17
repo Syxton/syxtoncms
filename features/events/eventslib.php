@@ -927,9 +927,9 @@ function make_limit_statement($operator, $value, $SQLmode = false) {
 }
 
 //Delete an event
-function delete_event() {
+function delete_event($eventid = false) {
 global $MYVARS, $CFG, $USER;
-    $eventid = dbescape($MYVARS->GET['featureid']);
+    $eventid = empty($eventid) ? dbescape($MYVARS->GET['featureid']) : $eventid;
     $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
     delete_calendar_events($event);
 

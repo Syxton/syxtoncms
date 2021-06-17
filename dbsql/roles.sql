@@ -10,10 +10,10 @@ is_siteadmin||
 get_roles||
     SELECT *
       FROM roles
-  ORDER BY roleid 
+  ORDER BY roleid
 ||get_roles
 
-remove_all_roles||
+remove_all_user_roles||
   DELETE FROM roles_assignment
         WHERE userid = '||userid||';
 
@@ -22,7 +22,31 @@ remove_all_roles||
 
   DELETE FROM roles_ability_perfeature_peruser
         WHERE userid = '||userid||';
-||remove_all_roles
+||remove_all_user_roles
+
+remove_role_assignment||
+  DELETE
+    FROM roles_assignment
+   WHERE pageid = "||pageid||"
+     AND userid = "||userid||"
+||remove_role_assignment
+
+insert_role_assignment||
+  INSERT INTO roles_assignment (userid,
+                                roleid,
+                                pageid)
+                      VALUES("||userid||",
+                             "||roleid||",
+                             "||pageid||")
+||insert_role_assignment
+
+check_for_role_assignment||
+  SELECT *
+    FROM roles_assignment
+   WHERE pageid = "||pageid||"
+     AND userid = "||userid||"
+     AND confirm = 0
+||check_for_role_assignment
 
 add_role_ability||
   INSERT INTO abilities (section, section_display, ability, ability_display, power)

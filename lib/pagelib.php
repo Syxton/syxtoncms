@@ -604,71 +604,60 @@ global $CFG, $USER, $PAGE;
 
   //SQL Creation
   if (is_logged_in()) {
-    $SQL = "SELECT * FROM menus WHERE parent IS NULL order by sort";
+    $SQL = template_use("dbsql/pages.sql", array(), "get_menu_for_users");
   } else {
-    $SQL = "SELECT * FROM menus WHERE hidefromvisitors=0 AND parent IS NULL order by sort";
+    $SQL = template_use("dbsql/pages.sql", array(), "get_menu_for_visitors");
   }
 
-  $selected = $pageid == $CFG->SITEID ? ' class="selected"' : '';
-  $returnme = '<ul id="pagenav" class="navtabs">';
+  $selected = $pageid == $CFG->SITEID ? true : false;
+  $items = '';
   //Query the database
   if ($result = get_db_result($SQL)) {
     while ($row = fetch_row($result)) {
-      $selected = $pageid == $row['pageid'] ? 'class="selected"' : '';
-      $parent   = "";
-      $children = get_menu_children($row["id"], $pageid);
-      if (!empty($children)) {
-        $parent = "&#9660;";
-      }
-      if (empty($row["link"])) {
-        $returnme .= '<li><a href="#"><span>' . stripslashes($row['text']) . ' ' . $parent . '</span></a>';
-      } else {
-        $returnme .= '<li><a href="' . $CFG->wwwroot . "/index.php?pageid=" . $row['link'] . '" onmouseup="this.blur()" onfocus="this.blur()" ' . $selected . '><span>' . stripslashes($row['text']) . ' ' . $parent . '</span></a>';
-      }
-      $returnme .= $children;
-      $returnme .= '</li>';
+      $menu_children = get_menu_children($row["id"], $pageid);
+      $parent = empty($menu_children) ? false : true;
+      $selected = $pageid == $row['pageid'] ? true : false;
+      $link = empty($row["link"]) ? "#" : $CFG->wwwroot . "/index.php?pageid=" . $row['link'];
+      $text = stripslashes($row['text']) . ' ' . $parent;
+      $params = array("is_selected" => $selected, "menu_children" => $menu_children, "text" => stripslashes($row['text']), "is_parent" => $parent, "link" => $link);
+      $items .= template_use("tmp/page.template", $params, "get_nav_item");
     }
   }
 
   if (is_logged_in() && is_siteadmin($USER->userid)) { // Members list visible only if logged in admin
-    $returnme .= '<li>' . make_modal_links(array(
+    $members_modal = make_modal_links(array(
         "title" => "Members List",
         "path" => $CFG->wwwroot . "/pages/page.php?action=browse&amp;section=users&amp;userid=$USER->userid",
         "iframe" => "true",
         "width" => "640",
         "height" => "623",
         "confirmexit" => "true"
-    )) . '</li>';
+    ));
+    $items .= template_use("tmp/page.template", array("members_modal" => $members_modal), "get_members_item");
   }
 
-  $returnme .= '</ul>';
-  return $returnme;
+  if (!empty($items)) {
+    return template_use("tmp/page.template", array("id" => "pagenav", "class" => "navtabs", "items" => $items), "make_ul");
+  }
+  return "";
 }
 
 function get_menu_children($menuid, $pageid) {
 global $CFG;
-  $returnme = '';
-  $SQL      = "SELECT * FROM menus WHERE parent='$menuid' order by sort";
+  $SQL = template_use("dbsql/pages.sql", array("menuid" => $menuid), "get_menu_children");
   if ($result = get_db_result($SQL)) {
-    $returnme .= '<ul class="dropdown">';
     while ($row = fetch_row($result)) {
-      $selected = $pageid == $row['pageid'] ? 'class="selected"' : '';
-      $parent   = "";
-      $children = get_menu_children($row["id"], $pageid);
-      if (!empty($children)) {
-        $parent = "&#9660;";
-      }
-      if (empty($row["link"])) {
-        $returnme .= '<li><a href="#"><span>' . stripslashes($row['text']) . ' ' . $parent . '</span></a>';
-      } else {
-        $returnme .= '<li><a href="' . $CFG->wwwroot . "/index.php?pageid=" . $row['link'] . '" onmouseup="this.blur()" onfocus="this.blur()" ' . $selected . '><span>' . stripslashes($row['text']) . ' ' . $parent . '</span></a>';
-      }
-      $returnme .= $children;
-      $returnme .= '</li>';
+      $menu_children = get_menu_children($row["id"], $pageid);
+      $parent = empty($menu_children) ? false : true;
+      $selected = $pageid == $row['pageid'] ? true : false;
+      $link = empty($row["link"]) ? "#" : $CFG->wwwroot . "/index.php?pageid=" . $row['link'];
+      $text = stripslashes($row['text']) . ' ' . $parent;
+      $params = array("is_selected" => $selected, "menu_children" => $menu_children, "text" => stripslashes($row['text']), "is_parent" => $parent, "link" => $link);
+      $items .= template_use("tmp/page.template", $params, "get_nav_item");
     }
-    $returnme .= '</ul>';
+    return template_use("tmp/page.template", array("id" => "pagenavchild", "class" => "dropdown", "items" => $items), "make_ul");
   }
-    return $returnme;
+  return "";
 }
 
 function get_css_box($title, $content, $buttons = '', $padding = null, $feature = '', $featureid = '', $themeid = false, $preview = false, $pageid = false, $bottom_left = false, $bottom_center = false, $bottom_right = false, $class = "") {
@@ -829,49 +818,64 @@ function sort_object($object, $value, $sorttype = SORT_REGULAR) {
   return $newobject;
 }
 
-function create_new_page($newpage) {
+function create_new_page($page) {
 global $USER, $ROLES, $PAGE;
-  $shortname = strtolower(str_replace(" ", "", $newpage->name));
+  $SQL = template_use("dbsql/pages.sql", array("page" => $page, "short_name" => strtolower(str_replace(" ", "", $page->name))), "create_page");
+  $pageid = execute_db_sql($SQL);
 
-  $pageid          = execute_db_sql("INSERT INTO pages (name,short_name,description,keywords,default_role,opendoorpolicy,siteviewable,menu_page) VALUES('" . $newpage->name . "','$shortname','" . $newpage->description . "','" . $newpage->keywords . "','" . $newpage->defaultrole . "','" . $newpage->opendoor . "','" . $newpage->siteviewable . "','" . $newpage->menu_page . "')");
-  $role_assignment = execute_db_sql("INSERT INTO roles_assignment (userid,roleid,pageid) VALUES('" . $USER->userid . "','" . $ROLES->creator . "','$pageid')");
+  if ($pageid) {
+    $SQL = template_use("dbsql/roles.sql", array("userid" => $USER->userid, "roleid" => $ROLES->creator, "pageid" => $pageid), "insert_role_assignment");
+    $role_assignment = execute_db_sql($SQL);
 
-  if ($newpage->menu_page == 1) {
-    $sort = get_db_field("sort", "menus", "id > 0 ORDER BY sort DESC");
-    $sort++;
-    execute_db_sql("INSERT INTO menus (pageid,text,link,sort,hidefromvisitors) VALUES('$pageid','" . $newpage->name . "','$pageid','$sort','" . $newpage->hidefromvisitors . "')");
-  }
-
-  if ($pageid && $role_assignment) {
-    if (empty($PAGE)) {
-      $PAGE = new \stdClass;
+    if ($newpage->menu_page == 1) {
+      $sort = get_db_field("sort", "menus", "id > 0 ORDER BY sort DESC");
+      $sort++;
+      $SQL = template_use("dbsql/pages.sql", array("pageid" => $pageid, "text" => $page->name, "link" => $pageid, "sort" => $sort, "hidefromvisitors" => $page->hidefromvisitors), "add_page_menu");
+      execute_db_sql($SQL);
     }
-    $PAGE->id = $pageid;
-    //Log
-    log_entry("page", $pageid, "Page Created");
-    //create_rss($pageid);
-    return "true**$pageid";
-  } else {
-    if ($userid) {
-      execute_db_sql("DELETE FROM pages WHERE pageid='$pageid'");
-      execute_db_sql("DELETE FROM roles_assignment WHERE pageid='$pageid'");
+
+    if ($pageid && $role_assignment) {
+      if (empty($PAGE)) {
+        $PAGE = new \stdClass;
+      }
+      $PAGE->id = $pageid;
+      //Log
+      log_entry("page", $pageid, "Page Created");
+      return "true**$pageid";
+    } else {
+      if ($pageid) {
+        delete_page($pageid);
+      }
     }
-    return "false**" . get_error_message("page_not_created");
   }
+  return "false**" . get_error_message("page_not_created");
+}
+
+function delete_page($pageid) {
+  // implement delete_all feature function
+  // $SQL = "SELECT * FROM features WHERE pageid='$pageid'";
+  // all_features_function($SQL, false, "", "_delete_all", false, $pageid);
+
+  $SQL = template_use("dbsql/pages.sql", array("pageid" => $pageid), "delete_page");
+  execute_db_sqls($SQL);
 }
 
 function subscribe_to_page($pageid, $userid = false, $addorremove = false) {
 global $USER;
-  $user        = $userid ? $userid : $USER->userid;
+  $userid        = $userid ? $userid : $USER->userid;
   $defaultrole = get_db_field("default_role", "pages", "pageid='$pageid'");
   if (!$addorremove) {
-    $role_assignment = execute_db_sql("INSERT INTO roles_assignment (userid,roleid,pageid) VALUES('" . $user . "','" . $defaultrole . "','$pageid')");
-} else {
-    if (get_db_count("SELECT * FROM roles_assignment WHERE pageid=$pageid AND userid=$user AND confirm=0")) { //role already exists
-      $role_assignment = execute_db_sql("DELETE FROM roles_assignment WHERE pageid=$pageid AND userid=$user");
+    $SQL = template_use("dbsql/roles.sql", array("userid" => $userid, "roleid" => $defaultrole, "pageid" => $pageid), "insert_role_assignment");
+    $role_assignment = execute_db_sql($SQL);
+  } else {
+    $SQL = template_use("dbsql/roles.sql", array("userid" => $userid, "pageid" => $pageid), "check_for_role_assignment");
+    if (get_db_count($SQL)) { //role already exists
+      $SQL = template_use("dbsql/roles.sql", array("userid" => $userid, "pageid" => $pageid), "remove_role_assignment");
+      $role_assignment = execute_db_sql($SQL);
       return false;
     } else {
-      $role_assignment = execute_db_sql("INSERT INTO roles_assignment (userid,roleid,pageid) VALUES('" . $user . "','" . $defaultrole . "','$pageid')");
+      $SQL = template_use("dbsql/roles.sql", array("userid" => $user, "roleid" => $defaultrole, "pageid" => $pageid), "insert_role_assignment");
+      $role_assignment = execute_db_sql($SQL);
       return true;
     }
   }

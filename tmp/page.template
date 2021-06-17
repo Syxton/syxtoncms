@@ -1,3 +1,26 @@
+make_ul||
+  <ul id="||id||" class="||class||">
+    ||items||
+  </ul>
+||make_ul
+
+get_nav_item||
+  <li>
+    <a onmouseup="this.blur()" onfocus="this.blur()" href="||link||" ||is_selected{{ class="selected" }}is_selected||>
+      <span>
+        ||text|| ||is_parent{{&#9660;}}is_parent||
+      </span>
+    </a>
+    ||menu_children||
+  </li>
+||get_nav_item
+
+get_members_item||
+  <li>
+    ||members_modal||
+  </li>
+||get_members_item
+
 page_js_css||
 <script type="text/javascript"> var dirfromroot = "||dirroot||"; </script>
 <script type="text/javascript" src="||wwwroot||/min/?f=||directory||ajax/siteajax.js"></script>

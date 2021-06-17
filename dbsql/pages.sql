@@ -4,6 +4,92 @@ get_page||
    WHERE pageid = '||pageid||'
 ||get_page
 
+create_page||
+  INSERT INTO pages (name,
+                     short_name,
+                     description,
+                     keywords,
+                     default_role,
+                     opendoorpolicy,
+                     siteviewable,
+                     menu_page)
+           VALUES("||page->name||",
+                  "||short_name||",
+                  "||page->description||",
+                  "||page->keywords||",
+                  "||page->defaultrole||",
+                  "||page->opendoor||",
+                  "||page->siteviewable||",
+                  "||page->menu_page||")
+||create_page
+
+delete_page||
+  DELETE
+    FROM `pages`
+   WHERE pageid = "||pageid||";
+
+  DELETE
+    FROM `roles_assignment`
+   WHERE pageid = "||pageid||";
+
+  DELETE
+    FROM `pages_features`
+   WHERE pageid = "||pageid||";
+
+  DELETE
+    FROM `menus`
+   WHERE pageid = "||pageid||";
+
+  DELETE
+    FROM `roles_ability_perfeature`
+   WHERE pageid = "||pageid||";
+
+  DELETE
+    FROM `roles_ability_perfeature_pergroup`
+   WHERE pageid = "||pageid||";
+
+  DELETE
+    FROM `roles_ability_perfeature_peruser`
+   WHERE pageid = "||pageid||";
+
+  DELETE
+    FROM `roles_ability_pergroup`
+   WHERE pageid = "||pageid||";
+
+  DELETE
+    FROM `roles_ability_perpage`
+   WHERE pageid = "||pageid||";
+
+  DELETE
+    FROM `roles_ability_peruser`
+   WHERE pageid = "||pageid||";
+
+  DELETE
+    FROM `roles_assignment`
+   WHERE pageid = "||pageid||";
+
+  DELETE
+    FROM `settings`
+   WHERE pageid = "||pageid||";
+
+  DELETE
+    FROM `styles`
+   WHERE pageid = "||pageid||";
+||delete_page
+
+add_page_menu||
+  INSERT INTO menus (pageid,
+                       text,
+                       link,
+                       sort,
+                       hidefromvisitors)
+              VALUES("||pageid||",
+                     "||text||",
+                     "||link||",
+                     "||sort||",
+                     "||hidefromvisitors||")
+||add_page_menu
+
 my_pagelist||
     SELECT p.*
       FROM pages p
@@ -115,3 +201,25 @@ default_pagelinks||
        AND pl.linkpageid != ||pageid||
     ORDER BY pl.sort
 ||default_pagelinks
+
+get_menu_for_users||
+  SELECT *
+    FROM menus
+   WHERE parent IS NULL
+  ORDER BY sort
+||get_menu_for_users
+
+get_menu_for_visitors||
+    SELECT *
+      FROM menus
+     WHERE hidefromvisitors = 0
+       AND parent IS NULL
+  ORDER BY sort
+||get_menu_for_visitors
+
+get_menu_children||
+    SELECT *
+      FROM menus
+     WHERE parent = '||menuid||'
+  ORDER BY sort
+||get_menu_children
