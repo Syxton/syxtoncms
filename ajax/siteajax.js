@@ -434,16 +434,18 @@ function page_display(){
 	 	content = sections[i].split("**");
 		var filldiv = content[0];
 		var divname = content[1];
-		document.getElementById(divname).innerHTML = filldiv;
+		$("#" + divname).html(filldiv);
 	 	i++;
  	}
 }
 
 //print function
 function create_page_display(){
-	var returned = trim(xmlHttp.responseText).split("**");
-	if(returned[0] == "true"){	self.parent.go_to_page(returned[1]);
-	}else{ document.getElementById("create_page_div").innerHTML = returned[1]; }
+	var text = JSON.parse(xmlHttp.responseText);
+  $("#create_page_div").html(text[2]);
+	if (text[0] == "true") {
+    self.parent.go_to_page(text[1]);
+	}
 }
 
 function prepareInputsForHints() {
@@ -455,12 +457,9 @@ function prepareInputsForHints() {
 			if(document.getElementById("lasthint"))document.getElementById("lasthint").value = this.id;
 			if(this.parentNode.getElementsByTagName("span")[0])this.parentNode.getElementsByTagName("span")[0].style.display = "inline";
 			var newinputs = document.getElementsByTagName("input");
-			for (var j=0; j<newinputs.length; j++)
-			{
-				if (newinputs[j].parentNode.getElementsByTagName("span")[0] && newinputs[j].type != "hidden")
-				{
-					if(document.getElementById("lasthint").value != newinputs[j].id)
-					{
+			for (var j=0; j<newinputs.length; j++) {
+				if (newinputs[j].parentNode.getElementsByTagName("span")[0] && newinputs[j].type != "hidden") {
+					if(document.getElementById("lasthint").value != newinputs[j].id) {
 						newinputs[j].parentNode.getElementsByTagName("span")[0].style.display = "none";
 					}
 				}
@@ -469,19 +468,16 @@ function prepareInputsForHints() {
 	}
 	// repeat the same tests as above for selects
 	var selects = document.getElementsByTagName("select");
-	for (var k=0; k<selects.length; k++){
+	for (var k=0; k<selects.length; k++) {
 		selects[k].onfocus = function () {
 			if(document.getElementById("lasthint")) var lasthint = document.getElementById("lasthint").value;
 			if(lasthint && document.getElementById(lasthint) && document.getElementById(lasthint).parentNode.getElementsByTagName("span")[0]) document.getElementById(lasthint).parentNode.getElementsByTagName("span")[0].style.display = "none";
 			if(document.getElementById("lasthint"))document.getElementById("lasthint").value = this.id;
 			if(this.parentNode.getElementsByTagName("span")[0]) this.parentNode.getElementsByTagName("span")[0].style.display = "inline";
 			var newselects = document.getElementsByTagName("select");
-			for (var l=0; l<newselects.length; l++)
-			{
-				if (newselects[l].parentNode.getElementsByTagName("span")[0])
-				{
-					if(document.getElementById("lasthint").value != newselects[l].id)
-					{
+			for (var l=0; l<newselects.length; l++) {
+				if (newselects[l].parentNode.getElementsByTagName("span")[0]) {
+					if(document.getElementById("lasthint").value != newselects[l].id) {
 						newselects[l].parentNode.getElementsByTagName("span")[0].style.display = "none";
 					}
 				}
@@ -497,12 +493,9 @@ function prepareInputsForHints() {
 			if(document.getElementById("lasthint"))document.getElementById("lasthint").value = this.id;
 			if(this.parentNode.getElementsByTagName("span")[0]) this.parentNode.getElementsByTagName("span")[0].style.display = "inline";
 			var newtextarea = document.getElementsByTagName("textarea");
-			for (var l=0; l<newtextarea.length; l++)
-			{
-				if (newtextarea[l].parentNode.getElementsByTagName("span")[0])
-				{
-					if(document.getElementById("lasthint").value != newtextarea[l].id)
-					{
+			for (var l=0; l<newtextarea.length; l++) {
+				if (newtextarea[l].parentNode.getElementsByTagName("span")[0]) {
+					if(document.getElementById("lasthint").value != newtextarea[l].id) {
 						newtextarea[l].parentNode.getElementsByTagName("span")[0].style.display = "none";
 					}
 				}

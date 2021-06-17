@@ -226,12 +226,6 @@ global $MYVARS;
   }
 }
 
-function subscribe() {
-global $MYVARS;
-	update_user_cookie();
-	echo subscribe_to_page($MYVARS->GET["pageid"]);
-}
-
 function get_login_box() {
 global $USER, $MYVARS;
 	if (isset($MYVARS->GET["logout"])) {

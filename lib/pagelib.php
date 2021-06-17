@@ -819,7 +819,7 @@ function sort_object($object, $value, $sorttype = SORT_REGULAR) {
 }
 
 function create_new_page($page) {
-global $USER, $ROLES, $PAGE;
+global $CFG, $USER, $ROLES, $PAGE;
   $SQL = template_use("dbsql/pages.sql", array("page" => $page, "short_name" => strtolower(str_replace(" ", "", $page->name))), "create_page");
   $pageid = execute_db_sql($SQL);
 
@@ -841,14 +841,14 @@ global $USER, $ROLES, $PAGE;
       $PAGE->id = $pageid;
       //Log
       log_entry("page", $pageid, "Page Created");
-      return "true**$pageid";
+      return json_encode(array("true", $pageid, "Course Created"));
     } else {
       if ($pageid) {
         delete_page($pageid);
       }
     }
   }
-  return "false**" . get_error_message("page_not_created");
+  return json_encode(array("false", $CFG->SITEID, get_error_message("page_not_created")));
 }
 
 function delete_page($pageid) {
@@ -872,19 +872,16 @@ global $USER;
     if (get_db_count($SQL)) { //role already exists
       $SQL = template_use("dbsql/roles.sql", array("userid" => $userid, "pageid" => $pageid), "remove_role_assignment");
       $role_assignment = execute_db_sql($SQL);
-      return false;
     } else {
       $SQL = template_use("dbsql/roles.sql", array("userid" => $user, "roleid" => $defaultrole, "pageid" => $pageid), "insert_role_assignment");
       $role_assignment = execute_db_sql($SQL);
-      return true;
     }
   }
 
   if ($pageid && $role_assignment) {
-    return "true**$pageid";
-  } else {
-    return "false**" . get_error_message("could_not_subscribe");
+    return true;
   }
+  return false;
 }
 
 function get_page_contents($pageid = false, $area) {
