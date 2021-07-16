@@ -29,8 +29,9 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
 
     setcookie('pageid', $PAGE->id, get_timestamp() + $CFG->cookietimeout, '/');
     $_SESSION['pageid'] = $PAGE->id;
+    $currentpage = get_db_row("SELECT * FROM pages WHERE pageid='$PAGE->id'");
 
-    $PAGE->title   = $CFG->sitename; // Title of page
+    $PAGE->title   = $CFG->sitename . " - " . $currentpage["name"]; // Title of page
     $PAGE->themeid = get_page_themeid($PAGE->id);
 
     //Use this page only to keep session and cookies refreshed (during forms)
@@ -55,14 +56,14 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
 
         $ABILITIES = get_user_abilities($USER->userid, $PAGE->id);
         if (empty($ABILITIES->viewpages->allow)) {
-            if (get_db_field("opendoorpolicy", "pages", "pageid=" . $PAGE->id) == "0") {
+            if ($currentpage["opendoorpolicy"] == "0") {
                 $PAGE->id = $CFG->SITEID;
             }
         }
     } else {
         $ABILITIES = get_role_abilities($ROLES->visitor, $PAGE->id);
-        if (!(get_db_field("siteviewable", "pages", "pageid=" . $PAGE->id) && !empty($ABILITIES->viewpages->allow))) {
-            if (get_db_field("opendoorpolicy", "pages", "pageid=" . $PAGE->id) == "0") {
+        if (!($currentpage["siteviewable"] && !empty($ABILITIES->viewpages->allow))) {
+            if ($currentpage["opendoorpolicy"] == "0") {
                 $PAGE->id = $CFG->SITEID;
             }
         }
