@@ -32,6 +32,7 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
     $currentpage = get_db_row("SELECT * FROM pages WHERE pageid='$PAGE->id'");
 
     $PAGE->title   = $CFG->sitename . " - " . $currentpage["name"]; // Title of page
+    $PAGE->description = $currentpage["description"]; // Descriptoin of page
     $PAGE->themeid = get_page_themeid($PAGE->id);
 
     //Use this page only to keep session and cookies refreshed (during forms)
