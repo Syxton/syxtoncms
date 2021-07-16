@@ -69,6 +69,10 @@ function main_body($header_only = false) {
 function page_masthead($left = true, $header_only = false) {
 global $CFG, $USER, $PAGE;
   if ($left) {
+    $styles = get_styles($PAGE->id, $PAGE->themeid);
+  	$header_color = isset($styles['pagenamebgcolor']) ? $styles['pagenamebgcolor'] : "";
+  	$header_text = isset($styles['pagenamefontcolor']) ? $styles['pagenamefontcolor'] : "";
+
     $params = array("wwwroot" => $CFG->wwwroot,
                     "haslogo" => isset($CFG->logofile),
                     "logofile" => $CFG->logofile,
@@ -76,7 +80,10 @@ global $CFG, $USER, $PAGE;
                     "mobilelogofile" => $CFG->mobilelogofile,
                     "sitename" => $CFG->sitename,
                     "header_only" => ($header_only ? "" : get_nav_items($PAGE->id)),
-                    "quote" => random_quote());
+                    "quote" => random_quote(),
+                    "pagename" => $PAGE->name,
+                    "header_text" => $header_text,
+                    "header_color" => $header_color);
     return template_use("tmp/pagelib.template", $params, "page_masthead_template");
   }
 

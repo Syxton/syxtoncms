@@ -47,6 +47,11 @@ page_masthead_template||
         ||header_only||
     </div>
 </div>||quote||
+<div style="background: linear-gradient(to right, rgba(0, 0, 0, 0), ||header_color||, rgba(0, 0, 0, 0));">
+    <h1 style="text-align: center;color: ||header_text||;">
+        ||pagename||
+    </h1>
+</div>
 ||page_masthead_template
 
 editor_box_template||
