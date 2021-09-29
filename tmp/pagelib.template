@@ -140,13 +140,13 @@ get_login_form_template||
     <fieldset>
            <div class="rowContainer">
                <label class="rowTitle" for="username">Username</label>
-               <input tabindex=1 style="margin-right:0px;width:80%" type="email" id="username" name="username" data-rule-required="true" data-msg-required="||valid_req_username||" />
+               <input tabindex=1 style="margin-right:0px;width:80%" type="email" id="username" name="username" automcomplete="username" data-rule-required="true" data-msg-required="||valid_req_username||" />
                <div class="tooltipContainer info">||input_username||</div>
                <div class="spacer" style="clear: both;"></div>
            </div>
            <div class="rowContainer">
                  <label class="rowTitle" for="password">Password</label>
-               <input tabindex=2 style="margin-right:0px;width:80%" type="password" id="password" name="password" data-rule-required="true" data-msg-required="||valid_req_password||" />
+               <input tabindex=2 style="margin-right:0px;width:80%" type="password" id="password" name="password" autocomplete="current-password" data-rule-required="true" data-msg-required="||valid_req_password||" />
                <div class="tooltipContainer info">||input_password2||</div>
                <div class="spacer" style="clear: both;"></div>
            </div>
