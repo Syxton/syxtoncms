@@ -87,7 +87,6 @@ refresh_group_users_template||
 ||refresh_group_users_template
 
 refresh_manage_groups_template||
-  ||issite{{
     <form onsubmit="ajaxapi('/ajax/roles_ajax.php',
                             'add_to_group_search',
                             '&pageid=||pageid||' +
@@ -98,7 +97,7 @@ refresh_manage_groups_template||
                             function(){
                               simple_display('per_group_users_display_div');
                             }); return false;">
-      User Search: <input type="text" id="per_group_search_text" size="19" />
+      User Search: <input type="text" id="per_group_search_text" size="18" />
       <input type="submit" value="Search" style="margin:0;" />
     </form>
     Add Users:
@@ -162,7 +161,6 @@ refresh_manage_groups_template||
                                                                                     }">
       <img src="||wwwroot||/images/subtract.png" /> Remove User
     </a>
-  }}issite||
 ||refresh_manage_groups_template
 
 create_edit_group_form_template||

@@ -257,14 +257,10 @@ global $CFG, $MYVARS, $ROLES, $USER;
 		}
 	}
 
-  $returnme .= '';
+  $options2 = "";
   $SQL = "SELECT u.*
             FROM users u
-           WHERE ('$pageid' = '$CFG->SITEID'
-                 OR u.userid IN (SELECT ra.userid
-                                   FROM roles_assignment ra
-                                  WHERE ra.pageid = '$pageid'))
-             AND u.userid NOT IN (SELECT ra.userid
+           WHERE u.userid NOT IN (SELECT ra.userid
                                     FROM roles_assignment ra
                                    WHERE ra.pageid = '$pageid'
                                      AND ra.roleid <= '$myroleid')
@@ -287,12 +283,12 @@ global $CFG, $MYVARS, $ROLES, $USER;
               $mygroups .= " " . $group_info["name"];
           }
       }
-      $options2 = template_use("tmp/page.template", array("value" => $row['userid'], "display" => $row['fname']. ' ' . $row['lname'] . ' (' . $row['email'] .')' . $mygroups), "select_options_template");
+      $options2 .= template_use("tmp/page.template", array("value" => $row['userid'], "display" => $row['fname']. ' ' . $row['lname'] . ' (' . $row['email'] .')' . $mygroups), "select_options_template");
 		}
 	}
 
   $params = array("wwwroot" => $CFG->wwwroot, "groupname" => $groupname, "pageid" => $pageid, "groupid" => $groupid, "feature" => $feature, "featureid" => $featureid,
-                  "issite" => ($pageid == $CFG->SITEID), "options1" => $options1, "options2" => $options2);
+                  "options1" => $options1, "options2" => $options2);
   return template_use("tmp/roles_ajax.template", $params, "refresh_manage_groups_template");
 }
 

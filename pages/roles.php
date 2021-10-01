@@ -150,30 +150,30 @@ global $CFG, $USER, $MYVARS, $ROLES;
 function manager() {
 global $CFG, $USER, $MYVARS, $ROLES;
 	$pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : $CFG->SITEID; //Should always be passed
-    $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
-    $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
+  $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
+  $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
 
-    $abilities = merge_abilities(array(get_user_abilities($USER->userid, $pageid, "roles", $feature, $featureid),
-																			 get_user_abilities($USER->userid, $pageid, array("feature", "html"), $feature, $featureid)));
+  $abilities = merge_abilities(array(get_user_abilities($USER->userid, $pageid, "roles", $feature, $featureid),
+																		 get_user_abilities($USER->userid, $pageid, array("feature", "html"), $feature, $featureid)));
+  $params = array("wwwroot" => $CFG->wwwroot, "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'), "feature" => $feature, "featureid" => $featureid);
+	$params["warning"] = ($pageid == $CFG->SITEID && !$featureid);
+	$params["tab_assign_roles"] = !$featureid && $abilities->assign_roles->allow;
+	$params["tab_modify_roles"] = (!$featureid && $abilities->edit_roles->allow) || (($featureid && $abilities->edit_feature_abilities->allow));
+	$params["tab_groups"] = (!$featureid && $abilities->edit_group_abilities->allow) || (($featureid && $abilities->edit_feature_group_abilities->allow));
+	$params["tab_user"] = (!$featureid && $abilities->edit_user_abilities->allow) || (($featureid && $abilities->edit_feature_user_abilities->allow));
+	$params["pagename"] = stripslashes(get_db_field("name","pages","pageid='$pageid'"));
+  $params["pageid"] = $pageid;
+	$params["featurecontext"] = false;
 
-		$params = array("wwwroot" => $CFG->wwwroot, "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'), "feature" => $feature, "featureid" => $featureid);
-		$params["warning"] = ($pageid == $CFG->SITEID && !$featureid);
-		$params["tab_assign_roles"] = !$featureid && $abilities->assign_roles->allow;
-		$params["tab_modify_roles"] = (!$featureid && $abilities->edit_roles->allow) || (($featureid && $abilities->edit_feature_abilities->allow));
-		$params["tab_groups"] = (!$featureid && $abilities->edit_group_abilities->allow) || (($featureid && $abilities->edit_feature_group_abilities->allow));
-		$params["tab_user"] = (!$featureid && $abilities->edit_user_abilities->allow) || (($featureid && $abilities->edit_feature_user_abilities->allow));
-		$params["pagename"] = stripslashes(get_db_field("name","pages","pageid='$pageid'"));
-		$params["featurecontext"] = false;
-
-		if ($featureid && $feature) {
-        if (!$settings = fetch_settings($feature, $featureid, $pageid)) {
-            make_or_update_settings_array(default_settings($feature, $pageid, $featureid));
-           	$settings = fetch_settings($feature, $featureid, $pageid);
-        }
-				$params["featurecontext"] = true;
-				$params["setting"] = $settings->$feature->$featureid->feature_title->setting;
+	if ($featureid && $feature) {
+    if (!$settings = fetch_settings($feature, $featureid, $pageid)) {
+      make_or_update_settings_array(default_settings($feature, $pageid, $featureid));
+     	$settings = fetch_settings($feature, $featureid, $pageid);
     }
+		$params["featurecontext"] = true;
+		$params["setting"] = $settings->$feature->$featureid->feature_title->setting;
+  }
 
-		echo template_use("tmp/roles.template", $params, "roles_manager_template");
+	echo template_use("tmp/roles.template", $params, "roles_manager_template");
 }
 ?>
