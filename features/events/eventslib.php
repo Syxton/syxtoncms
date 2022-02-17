@@ -649,14 +649,15 @@ global $CFG;
     return ucwords($name);
 }
 
-function enter_registration($eventid, $reg, $contactemail) {
+function enter_registration($eventid, $reg, $contactemail, $pending = true) {
 global $CFG, $why, $error;
     $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
     $template = get_db_row("SELECT * FROM events_templates WHERE template_id='" . $event['template_id'] . "'");
     $nolimit = true;
     $why = "";
     $time = get_timestamp();
-    $REGIDSQL = "INSERT INTO events_registrations (eventid,date,email,code,verified) VALUES(" . $eventid . "," . $time . ",'$contactemail','" . md5($time . $contactemail) . "','0')";
+    $pending = $pending ? "0" : "1";
+    $REGIDSQL = "INSERT INTO events_registrations (eventid,date,email,code,verified) VALUES(" . $eventid . "," . $time . ",'$contactemail','" . md5($time . $contactemail) . "','$pending')";
     $regid = execute_db_sql($REGIDSQL);
     if ($template['folder'] != "none") { //custom file style
         if ($regid) {
@@ -721,7 +722,7 @@ global $CFG, $why, $error;
     }
 }
 
-function registration_email($regid, $touser, $pending=false) {
+function registration_email($regid, $touser, $pending=false, $waivefee=false) {
 global $CFG;
     $reg = get_db_row("SELECT * FROM events_registrations WHERE regid='$regid'");
     $event = get_db_row("SELECT * FROM events WHERE eventid='" . $reg["eventid"]."'");
@@ -764,7 +765,7 @@ global $CFG;
             ';
         }
     } else {
-        if (!empty($event["fee_full"])) { // This event requires payment to attend
+        if (!empty($event["fee_full"]) && !$waivefee) { // This event requires payment to attend
             $total_owed = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='total_owed'");
 
             if (empty($total_owed)) {

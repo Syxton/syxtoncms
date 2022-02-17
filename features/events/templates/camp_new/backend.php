@@ -9,14 +9,14 @@
 if (!isset($CFG)) { include('../../../../config.php'); } 
 include($CFG->dirroot . '/pages/header.php');
 
-if (!isset($EVENTSLIB)) include_once($CFG->dirroot . '/features/events/eventslib.php');
+if (!isset($EVENTSLIB)) { include_once($CFG->dirroot . '/features/events/eventslib.php');}
 
 callfunction();
 
 update_user_cookie();
 
 function register() {
-global $CFG,$MYVARS,$USER,$error;
+global $CFG, $MYVARS, $USER, $error;
 error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
 
     //Facebook keys
@@ -39,7 +39,10 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
     //Total up the registration bill
 	$MYVARS->GET["cart_total"] = $MYVARS->GET["total_owed"] != 0 ? $MYVARS->GET["total_owed"] + $MYVARS->GET["owed"] : $MYVARS->GET["owed"];
 	$MYVARS->GET["total_owed"] = get_timestamp() < $event["sale_end"] ? $event["sale_fee"] + $picture_cost + $shirt_cost : $event["fee_full"] +  + $picture_cost + $shirt_cost;
+    $MYVARS->GET["campership"] = $MYVARS->GET["payment_method"] == "Campership" && empty($MYVARS->GET["campership"]) ? "David Grubb Campership Fund" : $MYVARS->GET["campership"];
 	
+    $pending = $MYVARS->GET["payment_method"] == "Campership" ? false : true;
+
     //Prepare names
     $middle_i = empty($MYVARS->GET["Camper_Name_Middle"]) ? '' : " ".nameize($MYVARS->GET["Camper_Name_Middle"]).".";
     $MYVARS->GET["Camper_Name_Middle"] = $middle_i;
@@ -61,24 +64,23 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
     }
 	$error = "";
 	
-	if ($regid = enter_registration($eventid, $reg, $MYVARS->GET["email"])) { //successful registration
+	if ($regid = enter_registration($eventid, $reg, $MYVARS->GET["email"], $pending)) { // Successful registration
         
         if ($error != "") { echo $error . "<br />"; }
         
-		if ($event['allowinpage'] !=0) {
-			if (is_logged_in() && $event['pageid'] != $CFG->SITEID) { 
-				subscribe_to_page($event['pageid'], $USER->userid);
-				echo 'You have been automatically allowed into this events\' web page.  This page contain specific information about this event.';
-			}
-		}
+        // Open registration div.
+        echo '<div style="margin:auto;width:90%;text-align:center;">
+                <h1>Congratulations!</h1><br />';
 		
 		if ($event['fee_full'] != 0) {
 			$items = !empty($MYVARS->GET["items"]) ? $MYVARS->GET["items"] . "**" . $regid . "::" . $MYVARS->GET["Camper_Name"] . " - " . $event["name"] . "::" . $MYVARS->GET["owed"] : $regid . "::" . $MYVARS->GET["Camper_Name"] . " - " . $event["name"] . "::" . $MYVARS->GET["owed"];
-			echo '<div id="backup"><input type="hidden" name="total_owed" id="total_owed" value="'.$MYVARS->GET["cart_total"].'" />
-				 <input type="hidden" name="items" id="items" value="'.$items.'" /></div>';
+			echo '<div id="backup">
+                    <input type="hidden" name="total_owed" id="total_owed" value="'.$MYVARS->GET["cart_total"].'" />
+				    <input type="hidden" name="items" id="items" value="' . $items . '" />
+                  </div>';
 
-			$items = explode("**",$items);
-            $i=0;
+			$items = explode("**", $items);
+            $i = 0;
             foreach ($items as $item) {
                 $itm = explode("::",$item);
 				$cart_items[$i]->regid = $itm[0];
@@ -87,52 +89,75 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
                 $i++;           
             }
 
-            echo '<div style="margin:auto;width:90%;text-align:center;">'; // Open registration div.
-            echo '  <h3>You have successfully added: '.$MYVARS->GET["Camper_Name_First"].' for '.$event['name'] . ' to your cart.</h3>
-                    <br />Your current cart total is:  <span style="color:blue;font-size:1.25em;">$'.number_format($MYVARS->GET["cart_total"],2).'</span>';
+            if ($MYVARS->GET['payment_method'] !== "Campership") {
+                echo '  <h3>You have successfully added: '.$MYVARS->GET["Camper_Name_First"].' for '.$event['name'] . ' to your cart.</h3>';
+                echo '  <br />Your current cart total is:  <span style="color:blue;font-size:1.25em;">$'.number_format($MYVARS->GET["cart_total"],2).'</span>';
+            } else { // Campership
+                echo '  <h3>You have successfully registered: '.$MYVARS->GET["Camper_Name_First"].' for '.$event['name'] . '.</h3>';
+            }
 
             $more1 = common_weeks($event, false, "week2", $regid, 1);
             $more2 = common_weeks($event, true, "week1", $regid);
 
             if ($more1 || $more2) {
-                echo '<br /><h3 style="color:green">More...?</h3>';
-                echo empty($more1) ? "" : 'Register <strong>'.$MYVARS->GET["Camper_Name_First"].'</strong> for another week.<br /><strong>Select from the weeks available</strong><br />'.$more1.'.<br />';
+                echo '<br /><br /><h3 style="color:green">Do you need to do more?</h3><br />';
+                echo empty($more1) ? "" : '<strong>Register '.$MYVARS->GET["Camper_Name_First"].' for another week.<br />Select from the weeks available</strong><br />'.$more1.'.<br />';
 			    echo !empty($more1) && !empty($more2) ? '<br />' : ""; 
-                echo empty($more2) ? "" : 'Register <strong>another</strong> child.<br /><strong>Select from the weeks available</strong><br />'.$more2.'<br />';
+                echo empty($more2) ? "" : '<strong>Register another child.<br />Select from the weeks available</strong><br />'.$more2.'<br />';
             }
 
-            echo '<br /><h3 style="background-color: black; color: yellow">You\'re not finished yet...</h3>';
-            if ($MYVARS->GET['payment_method'] == "PayPal") {
-                echo 'Payment must be made to finalize your registrations.
-                        <br />
-                        Click the Paypal button below to finish registering.
-                        <br /><br />
-                        <div style="text-align:center;">
-                            '.make_paypal_button($cart_items,$event['paypal']).'
-                        </div>';
-            } else {
-                echo '<br />To finish the registration process, please make out a <br />
-        				check or money order in the amount of <span style="color:blue;font-size:1.25em;">$'.number_format($MYVARS->GET["cart_total"],2).'</span> payable to <strong>'.$event["payableto"].'</strong> and send it to <br />
-                        <div style="text-align:center;">
-        				<strong>'.$event['checksaddress'].'</strong> 
-        				</div>';
+            $campershipreq = "";
+            $waivefee = false;
+            if ($MYVARS->GET['payment_method'] == "PayPal") { // Paypal payment selected.
+                $regmessage = 'Your registration is pending. To finalize your registrations:
+                                <br />Click the Paypal button below to pay for your camper fees.
+                                <br /><br />
+                                <div style="text-align:center;">
+                                    '.make_paypal_button($cart_items,$event['paypal']).'
+                                </div>';
+            } else if ($MYVARS->GET['payment_method'] == "Campership") { // Campership selected.
+                $waivefee = true; // Campership is a free registration.
+                $campershipreq = "CAMPERSHIP REQUEST (". $MYVARS->GET['campership'] ."): ";
+                $regmessage = '<br />You have requested to pay by Campership.
+                                <br />We will review your application.  If we find that you are not elegible for a campership, we will notifiy you before
+                                your event date.  Thank you! You are now registered for camp.';
+            } else { // Check or Money Order required.
+                $regmessage = 'Your registration is pending. To finalize your registrations:
+                                <br /> Please send a check or money order in the amount of 
+                                <span style="color:blue;font-size:1.25em;">
+                                    $' . number_format($MYVARS->GET["cart_total"], 2) . '
+                                </span> payable to <strong>' . $event["payableto"] . '</strong> and send it to
+                                <br />
+                                <div style="text-align:center;">
+                                    <strong>'.$event['checksaddress'].'</strong> 
+                                </div>';
             }
 
-            echo '</div>'; // Close registration div.
+            $emailsubject = "Camp Wabashi Registration";
+            if ($pending) { // Payment is required to finalize registration.
+                echo '<br /><h3 style="background-color: black; color: yellow">You\'re not finished yet...</h3>';
+                $emailsubject = "Pending Camp Wabashi Registration";
+            }
 
-            // Send pending registration email.
+            echo $regmessage; // Close registration div.
+
+            // Send registration email.
             $touser->fname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_First'");
     		$touser->lname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_Last'");
     		$touser->email = get_db_field("email","events_registrations","regid='$regid'");
     		$fromuser->email = $CFG->siteemail;
     		$fromuser->fname = $CFG->sitename;
     		$fromuser->lname = "";    
-            $message = registration_email($regid, $touser, true);
-    		if (send_email($touser,$fromuser,null,"Camp Wabashi Registration Pending", $message)) {
-    			send_email($fromuser,$fromuser,null,"Camp Wabashi Registration Pending", $message);
+            $message = registration_email($regid, $touser, $pending, $waivefee);
+    		if (send_email($touser, $fromuser, null, $emailsubject, $message)) {
+    			send_email($fromuser, $fromuser, null, $campershipreq.$emailsubject, $message);
     		}
+
 		} else { // Support for a free event.
-            echo '<div style="margin:auto;width:90%;text-align:center;"><h3>You have successfully registered '.$MYVARS->GET["Camper_Name_First"].' for '.$event['name'] . '.</h3></div>';
+            echo '<h1>Congratulations!</h1>
+                    <br />
+                    <h3>You have successfully registered '.$MYVARS->GET["Camper_Name_First"].' for '.$event['name'] . '.</h3>';
+
             execute_db_sql("UPDATE events_registrations SET verified='1' WHERE regid='$regid'");
 
             //Send registration email
@@ -148,20 +173,36 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
     		}
         }
 
+        if ($event['allowinpage'] !== 0) {
+			if (is_logged_in() && $event['pageid'] != $CFG->SITEID) { 
+				subscribe_to_page($event['pageid'], $USER->userid);
+				echo '<br />You have been automatically allowed into this events\' web page.  This page contain specific information about this event.<br />';
+			}
+		}
+
         //Facebook share button
-        echo '<br /><div style="margin:auto;width:90%;text-align:center;">' . facebook_share_button($eventid,$MYVARS->GET["Camper_Name_First"],$keys) . '</div>';
+        echo '</div>
+              <br />
+              <div style="margin:auto;width:90%;text-align:center;">' . facebook_share_button($eventid,$MYVARS->GET["Camper_Name_First"],$keys) . '</div>';
 	} else { // Failed registration.
 		$MYVARS->GET["cart_total"] = $MYVARS->GET["cart_total"] - $MYVARS->GET["owed"];
-		echo '<div style="text-align:center;"><div style="width:60%;margin:auto;"><span class="error_text">Your registration for '.$event['name'].' has failed. </span><br /> '.$error . '</div>';	
-		if (isset($MYVARS->GET["items"])) { //other registrations have already occured
+		echo '<div style="text-align:center;">
+                <div style="width:60%;margin:auto;">
+                    <span class="error_text">Your registration for '.$event['name'].' has failed. </span>
+                    <br />
+                    '.$error . '
+                </div>';	
+		if (isset($MYVARS->GET["items"])) { // Other registrations have already occured
 			if ($event['fee_full'] != 0) {
                 if (!empty($MYVARS->GET["items"])) {
                     $items = $MYVARS->GET["items"];
-    				echo '<div id="backup"><input type="hidden" name="total_owed" id="total_owed" value="'.$MYVARS->GET["cart_total"].'" />
-    					 <input type="hidden" name="items" id="items" value="'.$items.'" /></div>';
+    				echo '<div id="backup">
+                            <input type="hidden" name="total_owed" id="total_owed" value="'.$MYVARS->GET["cart_total"].'" />
+    					    <input type="hidden" name="items" id="items" value="'.$items.'" />
+                          </div>';
 
-    				$items = explode("**",$items);
-                    $i=0;
+    				$items = explode("**", $items);
+                    $i = 0;
                     foreach ($items as $item) {
     					$itm = explode("::",$item);
     					$cart_items[$i]->regid = $itm[0];
@@ -179,7 +220,10 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
                         <div style="text-align:center;">
     					'.make_paypal_button($cart_items,$event['paypal']).'
     					</div>';	
-    				} else { // Pay by check
+    				} else if ($MYVARS->GET['payment_method'] == "Campership") { // Campership
+                        echo '<br />
+    					To register a child:  Select the week '.common_weeks($event, true, "week1", $regid).'<br />';
+                    } else { // Pay by check
     					echo '<br />
     					To register a child:  Select the week '.common_weeks($event, true, "week1", $regid).'<br />
     					<br />

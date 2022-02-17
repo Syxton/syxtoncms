@@ -12,7 +12,9 @@ function show_form_again(eventid, regid, autofill){
 
 function updateMessage(){
     var message = "After you select a payment method, you can put a message here.\n\nDo you have a cabin preference or cabin-mates?\nDo you have a question for the director?";
-    if(document.form1.payment_method.selectedIndex == 1){
+    $("#campershiprow").hide();
+    if(document.form1.payment_method.selectedIndex == 1) {
+        $(".costinfo").show();
         message = "We use PayPal to process payments for our online registration. ";
         message += "Your credit card or bank account information is not transmitted to us. ";
         message += "You do not need a PayPal account to make payment using most major credit cards, ";
@@ -22,11 +24,20 @@ function updateMessage(){
         message += "and adding https://www.paypal.com/ to your list of trusted sites.";
     }
 
-    if(document.form1.payment_method.selectedIndex == 2){
+    if(document.form1.payment_method.selectedIndex == 2) {
+        $(".costinfo").not(".paywithapp").show();
+        $(".paywithapp").hide();
         message = "Make the check or money order out to: Camp Wabashi\n\n";
         message = message + "Please write the name of the camper in the memo field and send it to:\n\n";
         message = message + "3525 East Harlan Drive\n";
         message = message + "Terre Haute, IN 47802";
+    }
+
+    if(document.form1.payment_method.selectedIndex == 3) {
+        $("#campershiprow").show();
+        $(".costinfo").hide();
+        message = "Please be sure to name the congregation/organization that is funding your campership in the box above.\n\n";
+        message = message + "To request a campership, type \"David Grubb Campership Fund\"\n\n";
     }
     document.form1.payment_note.value = message;
     return true;

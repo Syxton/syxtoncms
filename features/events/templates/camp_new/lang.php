@@ -22,6 +22,7 @@ $HELP->help_gender = "Please select whether the camper is Male or Female.";
 $HELP->help_congregation = "What, if any, church congregation does the camper attend?";
 $HELP->help_parent = "Please enter the name of a parent or guardian of the camper.";
 $HELP->help_address = "Please enter the mailing address of the camper.";
+$HELP->help_campership = "Please enter the church/organization sponsering your campership.";
 $HELP->help_city = "Please enter the home city of the camper.";
 $HELP->help_state = "Please select the home state of the camper.";
 $HELP->help_zip = "Please enter the zipcode of the camper.";
