@@ -20,17 +20,18 @@ $eventid = empty($MYVARS->GET['eventid']) ? false : $MYVARS->GET['eventid'];
 $show_again = isset($MYVARS->GET['show_again']) ? true : false;
 $regid = isset($MYVARS->GET['regid']) && $MYVARS->GET['regid'] != "false" ? $MYVARS->GET['regid'] : false;
 $autofill = isset($MYVARS->GET['autofill']) && $MYVARS->GET['autofill'] == "1" ? true : false;
-$email = "";
+$email = $payment_method = "";
 
-if ($show_again) { //This is not the first time through
-	if ($autofill) { //Same person..so auto fill all items
+if ($show_again) { // This is not the first time through
+	if ($autofill) { // Same person..so auto fill all items
 		$last_reg = get_db_result("SELECT * FROM events_registrations_values WHERE regid='$regid'");
 		while ($reginfo = fetch_row($last_reg)) {
 			${$reginfo["elementname"]} = $reginfo["value"];
 		}
 		$email = get_db_field("email","events_registrations","regid='$regid'");
-	} else { //Different person...but auto fill the payment method and hide it.
+	} else { // Different person...but auto fill the payment method and hide it.
 		$payment_method = get_db_field("value", "events_registrations_values", "elementname='payment_method' AND regid='$regid'");
+        $campership = get_db_field("value", "events_registrations_values", "elementname='campership' AND regid='$regid'");
 	}
 }
 
@@ -119,7 +120,9 @@ if ($autofill) {
 			<input type="hidden" name="HealthAllergies" value="'.$HealthAllergies.'" />
 			<input type="hidden" name="HealthExisting" value="'.$HealthExisting.'" />
 			<input type="hidden" name="HealthMedicines" value="'.$HealthMedicines.'" />
-			<input type="hidden" name="HealthTetanusDate" value="'.$HealthTetanusDate.'" />';
+			<input type="hidden" name="HealthTetanusDate" value="'.$HealthTetanusDate.'" />
+            <input type="hidden" name="campership" value="'.$campership.'" />';
+            
 } else {
  echo ' <input type="hidden" id="event_day" value="'.date("j",$event["event_begin_date"]).'" />
         <input type="hidden" id="event_month" value="'.date("n",$event["event_begin_date"]).'" />
@@ -353,15 +356,7 @@ if ($autofill) {
   			    <div class="spacer" style="clear: both;"></div>
             </div>'; 
 }
-
-echo '
-    <div class="rowContainer">
-        <label class="rowTitle" for="Camp_Fee">Pay With Application</label>
-        '.make_fee_options($event['fee_min'],$event['fee_full'],"payment_amount",'onchange="updateTotal();" onclick="updateTotal();"',$event['sale_end'],$event['sale_fee']).'
-        <div class="tooltipContainer info">'.get_help("help_paywithapp:events:templates/camp_new").'</div>
-        <div class="spacer" style="clear: both;"></div>
-    </div>';
-    
+  
 if ($pictures) {
     if ($pictures_price > 0) {
         echo '
@@ -416,36 +411,54 @@ if ($shirt) {
     }
 } else { echo '<input type="hidden" id="Camper_Shirt" name="Camper_Shirt_Size" value="0" readonly /><input type="hidden" id="Camper_Shirt_Price" name="Camper_Shirt_Price" value="0" readonly />'; }
 
-echo '
-    <div class="rowContainer">
+if (empty($payment_method) || $payment_method == "Paypal") { // Don't show for camperships or check/money order payments.
+    echo '
+    <div class="rowContainer costinfo paywithapp">
+        <label class="rowTitle" for="Camp_Fee">Pay With Application</label>
+        '.make_fee_options($event['fee_min'],$event['fee_full'],"payment_amount",'onchange="updateTotal();" onclick="updateTotal();"',$event['sale_end'],$event['sale_fee']).'
+        <div class="tooltipContainer info">'.get_help("help_paywithapp:events:templates/camp_new").'</div>
+        <div class="spacer" style="clear: both;"></div>
+    </div>';
+}
+
+if ($payment_method !== "Campership") { // Don't show for camperships.
+    echo '
+    <div class="rowContainer costinfo">
         <label class="rowTitle" for="owed">Total:</label>
         <span style="display:inline-block;width:12px;">$</span><input style="float:none;width:100px;border:none;" name="owed" id="owed" size="5" value="'.$event['fee_min'].'" type="text" readonly />
         <div class="spacer" style="clear: both;"></div>
     </div>';
+}
 
 if (!$show_again) {
     echo '
-        <div class="rowContainer">
-            <label class="rowTitle" for="payment_method">Method of Payment *:</label>
-            <select tabindex="31" id="payment_method" name="payment_method" size="1" onchange="updateMessage();" onclick="updateMessage();" data-rule-required="true">
-                <option value="">Choose One</option>
-                <option value="PayPal">PayPal</option>
-                <option value="Check/Money Order">Check or Money Order</option>
-            </select>
-            <div class="spacer" style="clear: both;"></div>
-        </div>
-        <div class="rowContainer" style="height: auto;">
-            <label class="rowTitle" for="payment_note">Notes:</label>
-            <textarea name="payment_note" id="payment_note" rows="8" cols="60">After you select a payment method, you can put a message here.'."\n\n".'Do you have a cabin preference or cabin-mates?'."\n".'Do you have a question for the director?
-            </textarea>
-            <div class="spacer" style="clear: both;"></div>
-        </div>';
+    <div class="rowContainer">
+        <label class="rowTitle" for="payment_method">Method of Payment *:</label>
+        <select tabindex="31" id="payment_method" name="payment_method" size="1" onchange="updateMessage();" onclick="updateMessage();" data-rule-required="true">
+            <option value="">Choose One</option>
+            <option value="PayPal">PayPal</option>
+            <option value="Check/Money Order">Check or Money Order</option>
+            <option value="Campership">Campership</option>
+        </select>
+        <div class="spacer" style="clear: both;"></div>
+    </div>
+    <div class="rowContainer" id="campershiprow" style="display: none">
+        <label class="rowTitle" for="campership">Campership Info *</label><input tabindex="32" type="text" id="campership" name="campership" /><div class="tooltipContainer info">'.get_help("help_campership:events:templates/camp_new").'</div>
+        <div class="spacer" style="clear: both;"></div>
+    </div>
+    <div class="rowContainer" style="height: auto;">
+        <label class="rowTitle" for="payment_note">Notes:</label>
+        <textarea name="payment_note" id="payment_note" rows="8" cols="60">After you select a payment method, you can put a message here.'."\n\n".'Do you have a cabin preference or cabin-mates?'."\n".'Do you have a question for the director?
+        </textarea>
+        <div class="spacer" style="clear: both;"></div>
+    </div>';
 } else {
-	echo '<table><tr><td></td><td><input type="hidden" name="payment_method" id="payment_method" value="'.$payment_method.'" /></td></tr><table>';
+	echo '<input type="hidden" name="payment_method" id="payment_method" value="'.$payment_method.'" />
+          <input type="hidden" id="campership" name="campership" value="'.$campership.'"/>';
 } 
-    echo '<input tabindex="32" name="print" value="Print Application" onclick="window.print()" type="button" '.$preview.'/><br /><br />
-          <input tabindex="33" class="submit" name="submit" type="submit" value="Send Application" '.$preview.'/><br /><br />
-          <input tabindex="34" name="reset" type="reset" '.$preview.'/>
+    echo '<input tabindex="33" name="print" value="Print" onclick="window.print()" style="position: fixed;top: 10px;right: 10px;font-size: .7em;" type="button" '.$preview.'/><br /><br />
+          <input tabindex="34" class="submit" name="submit" type="submit" value="Send Application" style="background: green;color: white;" ' . $preview . ' />
+          <input tabindex="35" name="reset" type="reset" onclick="return confirm(\'Are you sure you want to reset the application?\');" style="cursor:pointer;background: red;color: white;float:right;" '.$preview.'/>
         </fieldset>
     </form>
     '.keepalive().'

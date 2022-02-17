@@ -653,6 +653,7 @@ function get_menu_children($menuid, $pageid) {
 global $CFG;
   $SQL = template_use("dbsql/pages.sql", array("menuid" => $menuid), "get_menu_children");
   if ($result = get_db_result($SQL)) {
+    $items = "";
     while ($row = fetch_row($result)) {
       $menu_children = get_menu_children($row["id"], $pageid);
       $parent = empty($menu_children) ? false : true;

@@ -27,6 +27,7 @@ Camper_Picture:Pay:Camper Picture;
 total_owed:Pay:Amount Owed;
 paid:Pay:Amount Paid;
 payment_method:Pay:Payment Method;
+campership:Pay:Campership;
 Camper_Home_Congregation:Camper:Congregation;
 Parent_Name1:Parent:Parent/Guardian 1;
 Parent_Address_Line1:Parent:Address 1;
@@ -69,6 +70,13 @@ if (!get_db_row("SELECT * FROM events_templates WHERE name = '$templatename'")) 
 	VALUES 
 	('$templatename','$templatefolder','".str_replace(array("\r", "\n", "\t"), '', $formlist)."', '$registrant_name', '$orderbyfield', '$settings')";
 
+	execute_db_sql($SQL);
+} else { // Update formslist, settings, and orderbyfield in case they have changed.
+	$SQL = "UPDATE events_templates
+			   SET formlist = '" . str_replace(array("\r", "\n", "\t"), '', $formlist) . "',
+			   	   settings = '$settings', orderbyfield = '$orderbyfield'
+			 WHERE name = '$templatename'
+			   AND folder = '$templatefolder'";
 	execute_db_sql($SQL);
 }
 ?>
