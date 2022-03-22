@@ -102,39 +102,58 @@ global $CFG;
 		$regex = '/(<[aA]\s*.[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s""\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(.[^\s]*)(<\/[aA]>)/';
 		if (preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) {
 			foreach ($matches as $match) {
-				if (!strstr($match[0],'javascript:')) {
+				if (!strstr($match[0], 'javascript:')) { // not a javascript link.
+					$icon = "save.png";
 					$filetypes = '/([\.[pP][dD][fF]|\.[dD][oO][cC]|\.[rR][tT][fF]|\.[pP][sS]|\.[pP][pP][tT]|\.[pP][pP][sS]|\.[tT][xX][tT]|\.[sS][xX][cC]|\.[oO][dD][sS]|\.[xX][lL][sS]|\.[oO][dD][tT]|\.[sS][xX][wW]|\.[oO][dD][pP]|\.[sS][xX][iI]])/';
-					if (preg_match($filetypes,$match[2])) {
-						//make internal links full paths
-						$url = strstr($match[2], $CFG->directory.'/userfiles') && !strstr($match[2], $CFG->wwwroot) ? $CFG->wwwroot . strstr($match[2], '/userfiles/') : $match[2];
+					if (preg_match($filetypes, $match[2])) {
+						if (strstr($match[2], $CFG->directory.'/userfiles') && strstr($match[2], $CFG->wwwroot)) { // internal link.
+							$url = $CFG->wwwroot . strstr($match[2], '/userfiles/');
+						} else { // external link.
+							$url = $match[2];
+						}
+						
+						if (!empty($url)) {
+							// make full url if not full
+							$protocol = isset($_SERVER["HTTPS"]) ? 'https://' : 'http://';
+							$url_parts = parse_url($url);
+							$url = str_replace("://", "", $url);
+							$url = str_replace(":", "", $url);
+							$url = str_replace("//", "/", $url);
+							$url = trim($url, "/");
 
-						//make full url if not full
-						$protocol = isset($_SERVER["HTTPS"]) ? 'https://' : 'http://';
-						$url_parts = parse_url($url);
-						$url = str_replace("://", "", $url);
-						$url = str_replace(":", "", $url);
-						$url = str_replace("//", "/", $url);
-						$url = trim($url, "/");
+							if (!empty($url_parts["scheme"])) { // protocol exists.
+								$url = str_replace($url_parts["scheme"], $protocol, $url);
+							} else {
+								$url = $protocol . $url;
+							}
 
-						if (!empty($url_parts["scheme"])) { // protocol exists.
-							$url = str_replace($url_parts["scheme"], $protocol, $url);
-						} else {
-							$url = $protocol . $url;
+							// Make sure www is in the url.
+							$url = strstr($url, "://www.") !== false ? $url : str_replace("://", "://www.", $url);
+
+							//remove target from urls
+							if (preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/', $url, $target, PREG_OFFSET_CAPTURE)) { $url = str_replace($target[0],"", $url); }
+							$url = preg_replace('/([\'|\"])/', '', $url);
+
+							//make ipaper links
+							$url = str_replace('\\', '', $url);
+							$url = str_replace('../', '', $url);
+							$url = str_replace('..', '', $url);
 						}
 
-						// Make sure www is in the url.
-						$url = strstr($url, "://www.") !== false ? $url : str_replace("://", "://www.", $url);
-
-						//remove target from urls
-						if (preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/',$url, $target, PREG_OFFSET_CAPTURE)) { $url = str_replace($target[0],"", $url); }
-						$url = preg_replace('/([\'|\"])/','',$url);
-
-						//make ipaper links
-						$url = str_replace('\\','',$url);
-						$url = str_replace('../','',$url);
-						$url = str_replace('..','',$url);
-
-						$html = str_replace($match[0],'<a href="'.$CFG->wwwroot.'/scripts/download.php?file='.$url.'" onclick="blur();"><img src="'.$CFG->wwwroot.'/images/save.png" alt="Save" /></a>&nbsp;'.make_modal_links(array("title"=>$match[4].$match[5],"path"=>$CFG->wwwroot."/pages/ipaper.php?action=view_ipaper&amp;doc_url=".base64_encode($url),"height"=>"80%","width"=>"80%")),$html);
+						$link = "";
+						$text = $match[4].$match[5];
+						if (strstr($url, $CFG->directory.'/userfiles') && 
+							strstr($url, $CFG->wwwroot) && 
+							!file_exists($CFG->docroot . strstr($url, '/userfiles/'))) { // internal link check.
+							$icon = "deny.png";
+							$link = 'javascript: void(0);';
+							$title = "File Not Found: $url";
+							$url = "";
+						} else {
+							$title = $url;
+							$link = $CFG->wwwroot.'/scripts/download.php?file='.$url;
+						}
+						$html = str_replace($match[0],'<a title="'.$title.'" href="'.$link.'" onclick="blur();"><img src="'.$CFG->wwwroot.'/images/'.$icon.'" alt="Save" /></a>&nbsp;'.make_modal_links(array("text" => $text, "title" => $title, "path" => $CFG->wwwroot."/pages/ipaper.php?action=view_ipaper&amp;doc_url=".base64_encode($url),"height"=>"80%","width"=>"80%")), $html);
 					}
 				}
 			}

@@ -44,18 +44,8 @@ function delete_file($filepath) {
 	}
 }
 
-function recursive_mkdir( $folder ) {
-    $folder = preg_split( "/[\\\\\/]/" , $folder );
-    $mkfolder = '';
-    for (  $i=0 ; isset( $folder[$i] ) ; $i++ ) {
-        if (!strlen(trim($folder[$i])))continue;
-        $mkfolder .= $folder[$i];
-        if ( !is_dir( $mkfolder ) ) {
-          mkdir( "$mkfolder" ,  0777);
-          chmod("$mkfolder", 0777);
-        }
-        $mkfolder .= DIRECTORY_SEPARATOR;
-    }
+function recursive_mkdir($path) {
+  return file_exists($path) || mkdir($path, 0777, true);
 }
 
 function recursive_delete ( $folderPath ) {

@@ -182,7 +182,7 @@ function get_user_name($userid) {
 function is_logged_in() {
 global $CFG, $USER;
 	if (!empty($USER->userid)) {
-	   recursive_mkdir($CFG->userfilespath . '\\' . $USER->userid);
+	   recursive_mkdir($CFG->userfilespath . '/' . $USER->userid);
        return true;
     }
 	return false;

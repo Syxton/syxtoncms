@@ -83,6 +83,6 @@ if (!empty($_GET['file'])) {
     ob_clean();
     flush();
     readfile(str_replace(" ","%20",$file));
-    exit;
 }
+exit;
 ?>
