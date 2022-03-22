@@ -106,7 +106,7 @@ global $CFG;
 					$filetypes = '/([\.[pP][dD][fF]|\.[dD][oO][cC]|\.[rR][tT][fF]|\.[pP][sS]|\.[pP][pP][tT]|\.[pP][pP][sS]|\.[tT][xX][tT]|\.[sS][xX][cC]|\.[oO][dD][sS]|\.[xX][lL][sS]|\.[oO][dD][tT]|\.[sS][xX][wW]|\.[oO][dD][pP]|\.[sS][xX][iI]])/';
 					if (preg_match($filetypes,$match[2])) {
 						//make internal links full paths
-						$url = strstr($match[2], $CFG->directory.'/userfiles') && !strstr($match[2],$CFG->wwwroot) && !strstr($match[2],"http://") && !strstr($match[2],"www.") ? str_replace($CFG->directory.'/userfiles', $CFG->wwwroot.'/userfiles',$match[2]) : $match[2];
+						$url = strstr($match[2], $CFG->directory.'/userfiles') && !strstr($match[2], $CFG->wwwroot) ? $CFG->wwwroot . strstr($match[2], '/userfiles/') : $match[2];
 
 						//make full url if not full
 						$protocol = isset($_SERVER["HTTPS"]) ? 'https://' : 'http://';
@@ -114,12 +114,16 @@ global $CFG;
 						$url = str_replace("://", "", $url);
 						$url = str_replace(":", "", $url);
 						$url = str_replace("//", "/", $url);
+						$url = trim($url, "/");
 
 						if (!empty($url_parts["scheme"])) { // protocol exists.
-								$url = str_replace($url_parts["scheme"], $protocol, $url);
+							$url = str_replace($url_parts["scheme"], $protocol, $url);
 						} else {
-								$url = $protocol . $url;
+							$url = $protocol . $url;
 						}
+
+						// Make sure www is in the url.
+						$url = strstr($url, "://www.") !== false ? $url : str_replace("://", "://www.", $url);
 
 						//remove target from urls
 						if (preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/',$url, $target, PREG_OFFSET_CAPTURE)) { $url = str_replace($target[0],"", $url); }
