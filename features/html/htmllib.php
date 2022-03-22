@@ -106,12 +106,12 @@ global $CFG;
 					$icon = "save.png";
 					$filetypes = '/([\.[pP][dD][fF]|\.[dD][oO][cC]|\.[rR][tT][fF]|\.[pP][sS]|\.[pP][pP][tT]|\.[pP][pP][sS]|\.[tT][xX][tT]|\.[sS][xX][cC]|\.[oO][dD][sS]|\.[xX][lL][sS]|\.[oO][dD][tT]|\.[sS][xX][wW]|\.[oO][dD][pP]|\.[sS][xX][iI]])/';
 					if (preg_match($filetypes, $match[2])) {
-						if (strstr($match[2], $CFG->directory.'/userfiles') && strstr($match[2], $CFG->wwwroot)) { // internal link.
+						if (strstr($match[2], $CFG->directory.'/userfiles') || strstr($match[2], $CFG->wwwroot)) { // internal link.
 							$url = $CFG->wwwroot . strstr($match[2], '/userfiles/');
 						} else { // external link.
 							$url = $match[2];
 						}
-						
+
 						if (!empty($url)) {
 							// make full url if not full
 							$protocol = isset($_SERVER["HTTPS"]) ? 'https://' : 'http://';
