@@ -6,11 +6,12 @@
  */
 if (!isset($CFG)) { include('../header.php'); } 
 
-echo "<h3>Current Camper listing</h3>This download contains a list of names,ages,and addresses of all campers from previous seasons and for campers 13+ years old as of June 1st of the current year (or today if past June 1st).<br />";
+echo "<h3>Camper Lists</h3>This download contains a list of names,ages,and addresses of all campers from previous seasons and for campers 13+ years old as of June 1st of the current year (or today if past June 1st).<br />";
 $SQL = "SELECT * FROM events_registrations WHERE eventid IN (SELECT eventid FROM events WHERE template_id = 10 ) ORDER BY regid DESC"; //ONLY CAMP WEEK TEMPLATED EVENTS
 if ($registrations = get_db_result($SQL)) {
-    $allcamperlist[] = array("REGID","Name","Gender","Birthday","Current Age","Address1","Address2","City","State","Zip");
-    $retreatcamperlist[] = array("REGID","Name","Gender","Birthday","Current Age","Address1","Address2","City","State","Zip");
+    $allcamperlist[] = array("REGID","Name","Gender","Birthday","Current Age","Address1","Address2","City","State","Zip","Email");
+    $retreatcamperlist[] = array("REGID","Name","Gender","Birthday","Current Age","Address1","Address2","City","State","Zip","Email");
+    $excamperlist[] = array("REGID","Name","Gender","Birthday","Current Age","Address1","Address2","City","State","Zip","Email");
     while ($reg = fetch_row($registrations)) {
         $SQL = "SELECT * FROM events_registrations_values WHERE regid='".$reg['regid']."' ORDER BY entryid";
         if ($entries = get_db_result($SQL)) {
@@ -47,11 +48,14 @@ if ($registrations = get_db_result($SQL)) {
             $cutoff = $june > $today ? $june : $today;
 
             $age = round(($cutoff - strtotime($bday)) / (60*60*24*365));
-            if ($age != "Unknown" && $age > 7 && $age < 19.5) {
-                $allcamperlist[] = array($reg['regid'],ucwords(strtolower(stripslashes($temp["Camper_Name"]))),ucwords(strtolower($temp["Camper_Gender"])),$bday,$age,ucwords(strtolower(stripslashes($temp["Parent_Address_Line1"]))),ucwords(strtolower(stripslashes($temp["Parent_Address_Line2"]))),ucwords(strtolower(stripslashes($temp["Parent_Address_City"]))),strtoupper($temp["Parent_Address_State"]),$temp["Parent_Address_Zipcode"]);
+            $age = $bday != "Unknown" ? $age : "0";
+            if ($bday != "Unknown" && $age > 7 && $age < 19.5) {
+                $allcamperlist[] = array($reg['regid'],ucwords(strtolower(stripslashes($temp["Camper_Name"]))),ucwords(strtolower($temp["Camper_Gender"])),$bday,$age,ucwords(strtolower(stripslashes($temp["Parent_Address_Line1"]))),ucwords(strtolower(stripslashes($temp["Parent_Address_Line2"]))),ucwords(strtolower(stripslashes($temp["Parent_Address_City"]))),strtoupper($temp["Parent_Address_State"]),$temp["Parent_Address_Zipcode"],strtolower(stripslashes($reg["email"])));
                 if ($age >= 12.5) {
-                    $retreatcamperlist[] = array($reg['regid'],ucwords(strtolower(stripslashes($temp["Camper_Name"]))),ucwords(strtolower($temp["Camper_Gender"])),$bday,$age,ucwords(strtolower(stripslashes($temp["Parent_Address_Line1"]))),ucwords(strtolower(stripslashes($temp["Parent_Address_Line2"]))),ucwords(strtolower(stripslashes($temp["Parent_Address_City"]))),strtoupper($temp["Parent_Address_State"]),$temp["Parent_Address_Zipcode"]);
+                    $retreatcamperlist[] = array($reg['regid'],ucwords(strtolower(stripslashes($temp["Camper_Name"]))),ucwords(strtolower($temp["Camper_Gender"])),$bday,$age,ucwords(strtolower(stripslashes($temp["Parent_Address_Line1"]))),ucwords(strtolower(stripslashes($temp["Parent_Address_Line2"]))),ucwords(strtolower(stripslashes($temp["Parent_Address_City"]))),strtoupper($temp["Parent_Address_State"]),$temp["Parent_Address_Zipcode"],strtolower(stripslashes($reg["email"])));
                 }   
+            } else { // Unknown or older than 19.5
+                $excamperlist[] = array($reg['regid'],ucwords(strtolower(stripslashes($temp["Camper_Name"]))),ucwords(strtolower($temp["Camper_Gender"])),$bday,$age,ucwords(strtolower(stripslashes($temp["Parent_Address_Line1"]))),ucwords(strtolower(stripslashes($temp["Parent_Address_Line2"]))),ucwords(strtolower(stripslashes($temp["Parent_Address_City"]))),strtoupper($temp["Parent_Address_State"]),$temp["Parent_Address_Zipcode"],strtolower(stripslashes($reg["email"])));
             }
         }    
     }
@@ -61,12 +65,15 @@ if ($registrations = get_db_result($SQL)) {
     
     $retreatcamperlist = array_distinct_new($retreatcamperlist,array(1,3),"80"); // Removes duplicate Camper_Name's'
     echo "<br /><a href='javascript:".get_download_link("youthretreatlist.csv",$retreatcamperlist,true)."'>Download Retreat 13+ List</a>";
+
+    $excamperlist = array_distinct_new($excamperlist,array(1,3),"80"); // Removes duplicate Camper_Name's'
+    echo "<br /><a href='javascript:".get_download_link("excamperlist.csv",$excamperlist,true)."'>Download Ex-Camper 19+ List</a>";
 }
 
 $year = date("Y",strtotime("-1 year"));
 $SQL = "SELECT * FROM events_registrations WHERE eventid IN (SELECT eventid FROM events WHERE template_id = 10 ) AND date > '".mktime(0,0,0,0,0,$year)."' AND date < '".mktime(23,59,59,12,31,$year)."' ORDER BY regid DESC"; //ONLY LAST YEAR CAMP WEEK TEMPLATED EVENTS
 if ($registrations = get_db_result($SQL)) {
-    $lastyearlist[] = array("REGID","Name","Gender","Birthday","Current Age","Address1","Address2","City","State","Zip");
+    $lastyearlist[] = array("REGID","Name","Gender","Birthday","Current Age","Address1","Address2","City","State","Zip","Email");
     while ($reg = fetch_row($registrations)) {
         $SQL = "SELECT * FROM events_registrations_values WHERE regid='".$reg['regid']."' ORDER BY entryid";
         if ($entries = get_db_result($SQL)) {

@@ -46,7 +46,7 @@ function site_administration() {
 			<ul class="acitem">
 				<li><a href="javascript: ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'user_admin\',\'\',function() { simple_display(\'display\');});">User Admin</a></li>
 				<li><a href="#">Page Admin (Not Yet Available)</a></li>
-                <li><a href="javascript: ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'camper_list\',\'\',function() { simple_display(\'display\');});"">Current Camper List</a></li>
+                <li><a href="javascript: ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'camper_list\',\'\',function() { simple_display(\'display\');});"">Camper Lists</a></li>
 				<li><a href="javascript: ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'site_versions\',\'\',function() { simple_display(\'display\');});">Version Checker</a></li>
 			</ul>
 		</li>
