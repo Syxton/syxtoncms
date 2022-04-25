@@ -699,7 +699,7 @@ global $CFG, $MYVARS, $USER;
                     onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                                 ajaxapi(\'/features/events/events_ajax.php\',
                                         \'show_registrations\',
-                                        \'&amp;pageid='.$pageid.'&amp;eventid='.$eventid.'&amp;eventname='.urlencode($eventname).'&amp;template_id='.$template_id.'\',
+                                        \'&amp;eventid='.$eventid.'\',
                                         function() {
                                             if (xmlHttp.readyState == 4) {
                                                 simple_display(\'searchcontainer\');
@@ -854,9 +854,7 @@ function printable_registration($regid, $eventid, $template_id) {
 
 function save_reg_changes() {
 global $CFG, $MYVARS, $USER;
-	$pageid = dbescape($MYVARS->GET["pageid"]);
-	$eventid = dbescape($MYVARS->GET["eventid"]);
-	$template_id = dbescape($MYVARS->GET["template_id"]);
+    $eventid = dbescape($MYVARS->GET["eventid"]);
 	$regid = isset($MYVARS->GET["regid"]) ? dbescape($MYVARS->GET["regid"]) : false;
 
     // Changing core registration values
@@ -897,6 +895,7 @@ global $CFG, $MYVARS, $USER;
             if (execute_db_sql($SQL3)) {
                 // check paid status
                 $paid = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='paid'");
+                $payment_method = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='payment_method'");
                 $minimum = get_db_field("fee_min", "events", "eventid='$eventid'");
                 $verified = get_db_field("verified", "events_registrations", "regid='$regid'");
                 if ($paid >= $minimum) {
@@ -920,7 +919,11 @@ global $CFG, $MYVARS, $USER;
                 		}
                     }
                 } else {
-                    $SQL = "UPDATE events_registrations SET verified='0' WHERE regid='$regid'";
+                    if ($payment_method = "Campership") {
+                        $SQL = "UPDATE events_registrations SET verified='1' WHERE regid='$regid'";
+                    } else {
+                        $SQL = "UPDATE events_registrations SET verified='0' WHERE regid='$regid'";
+                    }
         			execute_db_sql($SQL);
                 }
                 echo "Saved";
@@ -950,7 +953,7 @@ global $CFG, $MYVARS, $USER;
                 onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                          ajaxapi(\'/features/events/events_ajax.php\',
                                  \'show_registrations\',
-                                 \'&amp;pageid='.$pageid.'&amp;eventid='.$eventid.'\',
+                                 \'&amp;eventid='.$eventid.'\',
                                  function() {
                                     if (xmlHttp.readyState == 4) {
                                         simple_display(\'searchcontainer\');
@@ -996,16 +999,18 @@ global $CFG, $MYVARS, $USER;
 
 function get_registration_info() {
 global $CFG, $MYVARS, $USER;
-	$pageid = dbescape($MYVARS->GET["pageid"]);
-	$eventid = dbescape($MYVARS->GET["eventid"]);
-	$template_id = dbescape($MYVARS->GET["template_id"]);
+    $eventid = dbescape($MYVARS->GET["eventid"]);
+    $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
+	$template_id = $event["template_id"];
+	$eventname = $event["name"];
+    $pageid = $event["pageid"];
 	$regid = isset($MYVARS->GET["regid"]) ? dbescape($MYVARS->GET["regid"]) : false;
-	$eventname = urldecode($MYVARS->GET["eventname"]);
+
 	$returnme = '<a href="javascript: void(0);"
                     onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                             ajaxapi(\'/features/events/events_ajax.php\',
                                     \'show_registrations\',
-                                    \'&amp;pageid='.$pageid.'&amp;eventid='.$eventid.'&amp;eventname='.urlencode($eventname).'&amp;template_id='.$template_id.'\',
+                                    \'&amp;eventid='.$eventid.'\',
                                     function() {
                                         if (xmlHttp.readyState == 4) {
                                             simple_display(\'searchcontainer\');
@@ -1017,44 +1022,92 @@ global $CFG, $MYVARS, $USER;
                             );
                     ">
                     Back to '.$eventname.' registrants.
-                </a><br />
-                <br />';
-	$returnme .= '<form name="reg_form" onsubmit="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
-                                                  ajaxapi(\'/features/events/events_ajax.php\',
-                                                          \'save_reg_changes\',
-                                                          \'&amp;regid='.$regid.'&amp;pageid='.$pageid.'&amp;eventid='.$eventid.'&amp;template_id='.$template_id.'\' + create_request_string(\'reg_form\'),
-                                                          function() {
-                                                            if (xmlHttp.readyState == 4) {
-                                                                ajaxapi(\'/features/events/events_ajax.php\',
-                                                                        \'show_registrations\',
-                                                                        \'&amp;pageid='.$pageid.'&amp;eventid='.$eventid.'&amp;eventname='.urlencode($eventname).'&amp;template_id='.$template_id.'&amp;sel='.$regid.'\',
-                                                                        function() {
-                                                                            if (xmlHttp.readyState == 4) {
-                                                                                simple_display(\'searchcontainer\');
-                                                                                document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
-                                                                                init_event_menu();
-                                                                            }
-                                                                        }
-                                                                );
-                                                            }
-                                                          },
-                                                          true
-                                                  );
-                                                  return false;
-                "><input type="submit" value="Save Changes" />';
+                </a><br /><br />';
 
-    $returnme .= '<table>';
+    // Get all events beginning 3 months in the past, to a year in the future.
+    $today = get_timestamp();
+    $events = get_db_result("SELECT eventid, (CONCAT(FROM_UNIXTIME(e.event_begin_date , '%Y'), ' ', e.name)) AS name
+                               FROM events e
+                              WHERE e.confirmed = 1
+                                AND e.template_id = '$template_id'
+                                AND e.start_reg > 0
+                                AND ((e.event_begin_date - $today) < 31560000 && (e.event_begin_date - $today) > -7776000)");
 
-    // Get all events within 3 months that are registerable and has the same template
-    $event_begin_date = get_db_field("event_begin_date", "events", "eventid='$eventid'");
-    $events = get_db_result("SELECT * FROM events
-                                WHERE confirmed=1
-                                    AND template_id='$template_id'
-                                    AND start_reg > 0
-                                    AND ((event_begin_date - $event_begin_date) < 7776000 && (event_begin_date - $event_begin_date) > -7776000)");
+    // Open copy form.
+    $copy_form_code = '
+    if ($(\'#copy_reg_to\').val() > 0) { 
+        document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
+        ajaxapi(\'/features/events/events_ajax.php\',
+                \'copy_registration\',
+                \'&amp;regid='.$regid.'\' + create_request_string(\'copy_form\'),
+                function() {
+                    if (xmlHttp.readyState == 4) {
+                        ajaxapi(\'/features/events/events_ajax.php\',
+                                \'show_registrations\',
+                                \'&amp;eventid=\'+$(\'#copy_reg_to\').val(),
+                                function() {
+                                    if (xmlHttp.readyState == 4) {
+                                        simple_display(\'searchcontainer\');
+                                        document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
+                                        init_event_menu();
+                                    }
+                                }
+                        );
+                    }
+                },
+                true
+        ); 
+    }
+    return false;';
+    $returnme .= '<h3>Copy Registration</h3>
+                  <form name="copy_form" onsubmit="'.$copy_form_code.'">';
+    $returnme .= '<table style="border-top: 1px solid grey;">';
+    $returnme .= '<tr><td style="width: 125px;">Copy To </td><td>' .
+                    make_select("copy_reg_to", $events, "eventid", "name", false, "", true, 1, "width: 420px", "", $eventid) .
+                 '</td></tr>
+                  <tr><td colspan="2" style="text-align: right"><input type="submit" value="Copy Registration" /><br /><br /></td></tr>';
+    
+    $returnme .= '</table></form>';
+
+    $edit_form_code = 'document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
+                       ajaxapi(\'/features/events/events_ajax.php\',
+                               \'save_reg_changes\',
+                               \'&amp;regid='.$regid.'&amp;eventid='.$eventid.'\' + create_request_string(\'reg_form\'),
+                               function() {
+                                   if (xmlHttp.readyState == 4) {
+                                       ajaxapi(\'/features/events/events_ajax.php\',
+                                               \'show_registrations\',
+                                               \'&amp;eventid='.$eventid.'&amp;sel='.$regid.'\',
+                                               function() {
+                                                   if (xmlHttp.readyState == 4) {
+                                                       simple_display(\'searchcontainer\');
+                                                       document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
+                                                       init_event_menu();
+                                                    }
+                                                }
+                                        );
+                                    }
+                                },
+                                true
+                        );
+                        return false;';
+    // Open save form.
+    $returnme .= '<h3>Edit Registration Values</h3>
+                  <form name="reg_form" onsubmit="'.$edit_form_code.'">';
+    
+    $returnme .= '<table style="border-top: 1px solid grey;">';
+    // Top Save button.
+    $returnme .= '<tr><td colspan="2" style="text-align: center"><input type="submit" value="Save Changes" /></td></tr>';
+
+    $reg_status = get_db_field("verified", "events_registrations", "regid='$regid'");
+    $reg_status = !$reg_status ? "Pending" : "Completed";
+    $returnme .= '<tr><td>Status </td><td>' . $reg_status . '</td></tr>';
+
+    db_goto_row($events); // reset pointer to use it again.
     $returnme .= '<tr><td>Event </td><td>' .
-                    make_select("reg_eventid", $events, "eventid", "name", $eventid, "", "false", "1", "width: 420px") .
+                    make_select("reg_eventid", $events, "eventid", "name", $eventid, "", false, 1, "width: 420px") .
                  '</td></tr>';
+    
     $event_reg = get_db_row("SELECT * FROM events_registrations WHERE regid='$regid'");
     $returnme .= '<tr><td>Email </td><td>' .
                     '<input id="reg_email" name="reg_email" type="text" size="45" value="'.stripslashes($event_reg["email"]).'" />' .
@@ -1101,21 +1154,27 @@ global $CFG, $MYVARS, $USER;
         	$i++;
 		}
     }
-    $returnme .= '</table><input type="submit" value="Save Changes" /></form>';
-    echo '<div style="width:98%;border:1px solid gray;padding:5px;">' . $returnme . '</div>';
+    // Bottom Save button.
+    $returnme .= '<tr><td colspan="2" style="text-align: center"><input type="submit" value="Save Changes" /></td></tr>';
+    $returnme .= '</table></form>';
+    echo '<div style="padding:15px 5px">' . $returnme . '</div>';
 }
 
-function add_blank_registration() {
+function add_blank_registration($eventid = false, $reserveamount = 1) {
 global $CFG, $MYVARS, $USER;
-	$pageid = dbescape($MYVARS->GET["pageid"]);
-	$eventid = dbescape($MYVARS->GET["eventid"]);
-	$template_id = dbescape($MYVARS->GET["template_id"]);
-	$reserveamount = isset($MYVARS->GET["reserveamount"]) ? dbescape($MYVARS->GET["reserveamount"]) : 1;
-	$eventname = dbescape(urldecode($MYVARS->GET["eventname"]));
+    $eventid = isset($MYVARS->GET["eventid"]) ? dbescape($MYVARS->GET["eventid"]) : $eventid;
+    $reserveamount = isset($MYVARS->GET["reserveamount"]) ? dbescape($MYVARS->GET["reserveamount"]) : $reserveamount;
+
+    $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
+	$template_id = $event["template_id"];
+	$eventname = $event["name"];
+    $pageid = $event["pageid"];
+
 	$reserved = 0;
+    $return = [];
 	while ($reserved < $reserveamount) {
 		$SQL = "";$SQL2 = "";
-		if ($regid=execute_db_sql("INSERT INTO events_registrations
+		if ($regid = execute_db_sql("INSERT INTO events_registrations
                                     (eventid,date,code,manual)
                                     VALUES('$eventid','".get_timestamp()."','".uniqid("",true)."',1)")) {
 			$SQL = "SELECT * FROM events_templates WHERE template_id='$template_id'";
@@ -1152,27 +1211,84 @@ global $CFG, $MYVARS, $USER;
                             VALUES" . $SQL2;
 		    }
 
-		    if (execute_db_sql($SQL2)) { echo "Added";
+		    if (execute_db_sql($SQL2)) { 
+                $return[$reserved] = $regid;
 		    } else {
 				execute_db_sql("DELETE FROM events_registrations
                                     WHERE regid='$regid'");
-				echo "Failed";
+				$return[$reserved] = false;
 			}
-	    } else { echo "Failed"; }
-
+	    } else { $return[$reserved] = false; }
 	    $reserved++;
+    }
+    if (isset($MYVARS->GET["eventid"])) {
+        foreach($return as $key => $val) {
+            echo "Reserved spot #". ($key+1);
+            echo $val ? ": Success <br />" : " Failed <br />";
+        }
+    } else {
+        return $return;
+    }
+}
+
+function copy_registration($regid = false, $eventid = false) {
+    global $CFG, $MYVARS, $USER;
+	$regid = !$regid ? dbescape($MYVARS->GET["regid"]) : $regid;
+    $eventid = !$eventid ? dbescape($MYVARS->GET["copy_reg_to"]) : $eventid;
+
+    $oldreg = get_db_row("SELECT * FROM events_registrations WHERE regid='$regid'");
+    $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
+    $blankreg = add_blank_registration($eventid);
+
+    if (isset($blankreg[0])) {
+        $newregid = $blankreg[0];
+        $SQL = "SELECT * FROM events_registrations_values WHERE regid='$regid'";
+
+        if($registration_values = get_db_result($SQL)) {
+            while ($registration_value = fetch_row($registration_values)) {
+                $SQL = 'UPDATE events_registrations_values 
+                           SET value = "' . $registration_value["value"] . '"
+                         WHERE regid = "' . $newregid . '"
+                           AND elementname = "' . $registration_value["elementname"] .'"';
+                execute_db_sql($SQL);
+            }
+
+            // Reset payment info.
+            $SQL = 'UPDATE events_registrations_values
+                       SET value = "0"
+                     WHERE regid = "' . $newregid . '"
+                       AND elementname = "paid"';
+            execute_db_sql($SQL);
+
+            $reg = get_db_row("SELECT * FROM events_registrations WHERE regid='$newregid'");
+            $total_owed = $reg["date"] < $event["sale_end"] ? $event["sale_fee"] : $event["fee_full"];
+            $total_owed = empty($total_owed) ? $event["fee_full"] : $total_owed;
+
+            $SQL = 'UPDATE events_registrations_values
+                       SET value = "' . $total_owed . '"
+                     WHERE regid = "' . $newregid . '"
+                       AND elementname = "total_owed"';
+            execute_db_sql($SQL);
+
+            $SQL = 'UPDATE events_registrations
+                       SET email = "' . $oldreg["email"] . '"
+                     WHERE regid = "' . $newregid . '"';
+            execute_db_sql($SQL);
+        }
     }
 }
 
 function show_registrations() {
 global $CFG, $MYVARS, $USER;
-	$pageid = dbescape($MYVARS->GET["pageid"]);
 	$eventid = dbescape($MYVARS->GET["eventid"]);
-	$template_id = dbescape($MYVARS->GET["template_id"]);
-	$eventname = urldecode($MYVARS->GET["eventname"]);
+
+    $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
+	$template_id = $event["template_id"];
+	$eventname = $event["name"];
+    $pageid = $event["pageid"];
     $selected = empty($MYVARS->GET["sel"]) ? false : dbescape($MYVARS->GET["sel"]);
     $initial_display = $selected ? "" : "display:none;";
-	$returnme = '<span style="width:50%;float:left;">'.stripslashes($eventname).'</span>';
+	$returnme = '<h2>'.stripslashes($eventname).'</h2>';
 
     //Print all registration button
     $returnme .= '<span style="width:50%;text-align:right;float:right;">
@@ -1258,7 +1374,7 @@ global $CFG, $MYVARS, $USER;
                                                             document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                                                             ajaxapi(\'/features/events/events_ajax.php\',
                                                                     \'get_registration_info\',
-                                                                    \'&amp;pageid='.$pageid.'&amp;eventname='.urlencode($eventname).'&amp;eventid='.$eventid.'&amp;template_id='.$template_id.'&amp;regid=\'+document.getElementById(\'registrants\').value,
+                                                                    \'&amp;eventid='.$eventid.'&amp;regid=\'+document.getElementById(\'registrants\').value,
                                                                     function() {
                                                                         if (xmlHttp.readyState == 4) {
                                                                             simple_display(\'searchcontainer\');
@@ -1282,7 +1398,7 @@ global $CFG, $MYVARS, $USER;
                                                             );
                                                             ajaxapi(\'/features/events/events_ajax.php\',
                                                                     \'show_registrations\',
-                                                                    \'&amp;pageid='.$pageid.'&amp;eventname='.urlencode($eventname).'&amp;eventid='.$eventid.'&amp;template_id='.$template_id.'\',
+                                                                    \'&amp;eventid='.$eventid.'\',
                                                                     function() {
                                                                         if (xmlHttp.readyState == 4) {
                                                                             simple_display(\'searchcontainer\');
@@ -1332,7 +1448,7 @@ global $CFG, $MYVARS, $USER;
                                                             );
                                                             ajaxapi(\'/features/events/events_ajax.php\',
                                                                     \'show_registrations\',
-                                                                    \'&amp;pageid='.$pageid.'&amp;eventname='.urlencode($eventname).'&amp;eventid='.$eventid.'&amp;template_id='.$template_id.'\',
+                                                                    \'&amp;eventid='.$eventid.'\',
                                                                     function() {
                                                                         if (xmlHttp.readyState == 4) {
                                                                             simple_display(\'searchcontainer\');
@@ -1345,7 +1461,7 @@ global $CFG, $MYVARS, $USER;
                         <img title="Reserve Spot(s)" style="vertical-align:bottom;" onclick="blur()" src="'.$CFG->wwwroot.'/images/reserve.gif" />
                     </a>
                 </div>';
-	echo '<div style="font-size:.9em;width:98%;border:1px solid gray;padding:5px;">' . $returnme . '</div>';
+	echo '<div style="font-size:.9em;padding:15px 5px;">' . $returnme . '</div>';
 }
 
 function eventsearch() {
@@ -1449,7 +1565,7 @@ global $CFG, $MYVARS, $USER;
                             <a href="javascript: void(0)" onclick="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                                                                     ajaxapi(\'/features/events/events_ajax.php\',
                                                                             \'show_registrations\',
-                                                                            \'&amp;pageid='.$MYVARS->GET["pageid"].'&amp;eventid='.$event["eventid"].'&amp;eventname='.urlencode($event["name"]).'&amp;template_id='.$event["template_id"].'\',
+                                                                            \'&amp;eventid='.$event["eventid"].'\',
                                                                             function() {
                                                                                 if (xmlHttp.readyState == 4) {
                                                                                     simple_display(\'searchcontainer\');
