@@ -71,49 +71,68 @@ if ($registrations = get_db_result($SQL)) {
 }
 
 $year = date("Y",strtotime("-1 year"));
-$SQL = "SELECT * FROM events_registrations WHERE eventid IN (SELECT eventid FROM events WHERE template_id = 10 ) AND date > '".mktime(0,0,0,0,0,$year)."' AND date < '".mktime(23,59,59,12,31,$year)."' ORDER BY regid DESC"; //ONLY LAST YEAR CAMP WEEK TEMPLATED EVENTS
-if ($registrations = get_db_result($SQL)) {
-    $lastyearlist[] = array("REGID","Name","Gender","Birthday","Current Age","Address1","Address2","City","State","Zip","Email");
-    while ($reg = fetch_row($registrations)) {
-        $SQL = "SELECT * FROM events_registrations_values WHERE regid='".$reg['regid']."' ORDER BY entryid";
-        if ($entries = get_db_result($SQL)) {
-            unset($temp); unset($bday); unset($age);
-            while ($entry = fetch_row($entries)) {
-                $temp[$entry["elementname"]] = $entry["value"];
-            }
-            if (strstr($temp["Camper_Birth_Date"],'-')) {
-                $bday = date("m/d/Y",strtotime(str_replace("-","/",$temp["Camper_Birth_Date"])));
-            } elseif (!strstr($temp["Camper_Birth_Date"],'/') && !strstr($temp["Camper_Birth_Date"],'-')) {
-                if (strlen($temp["Camper_Birth_Date"])==6) {
-                    $century = $temp["Camper_Birth_Date"][4] > 1 ? "19" : "20";
-                    $bday = date("m/d/Y",strtotime($temp["Camper_Birth_Date"][0].$temp["Camper_Birth_Date"][1].'/'.$temp["Camper_Birth_Date"][2].$temp["Camper_Birth_Date"][3].'/'.$century.$temp["Camper_Birth_Date"][4].$temp["Camper_Birth_Date"][5]));
-                } elseif (strlen($temp["Camper_Birth_Date"])==8) {
-                    $bday = date("m/d/Y",strtotime($temp["Camper_Birth_Date"][0].$temp["Camper_Birth_Date"][1].'/'.$temp["Camper_Birth_Date"][2].$temp["Camper_Birth_Date"][3].'/'.$temp["Camper_Birth_Date"][4].$temp["Camper_Birth_Date"][5].$temp["Camper_Birth_Date"][6].$temp["Camper_Birth_Date"][7]));
-                } else { //Most likely empty so try the age field
-                    if (!empty($temp["Camper_Age"])) {
-                        $regdate = $reg["date"];//datetime when they registered
-                        $regage = $temp["Camper_Age"];//age when they registered
-                        $age = round((time() - $regdate) / (60*60*24*365)) + $regage;                      
-                    } else {
-                        $age = "Unknown";
-                    }
-                    $bday = "Unknown";
+echo list_from_year($year);
+
+$year = date("Y");
+echo list_from_year($year);
+
+function list_from_year($year) {
+    $SQL = "SELECT * FROM events_registrations WHERE eventid IN (SELECT eventid FROM events WHERE template_id = 10 ) AND date > '".mktime(0,0,0,0,0,$year)."' AND date < '".mktime(23,59,59,12,31,$year)."' ORDER BY regid DESC"; // ONLY THIS YEAR CAMP WEEK TEMPLATED EVENTS
+    if ($registrations = get_db_result($SQL)) {
+        $yearlist[] = array("REGID","Name","Gender","Birthday","Current Age","Address1","Address2","City","State","Zip","Email","Payment Method","Sponsor");
+        while ($reg = fetch_row($registrations)) {
+            $SQL = "SELECT * FROM events_registrations_values WHERE regid='".$reg['regid']."' ORDER BY entryid";
+            if ($entries = get_db_result($SQL)) {
+                unset($temp); unset($bday); unset($age);
+                while ($entry = fetch_row($entries)) {
+                    $temp[$entry["elementname"]] = $entry["value"];
                 }
-            } else { $bday = date("m/d/Y",strtotime($temp["Camper_Birth_Date"])); };
-            
-            $temp["Camper_Gender"] = $temp["Camper_Gender"] == "F" ? "Female" : $temp["Camper_Gender"];
-            $temp["Camper_Gender"] = $temp["Camper_Gender"] == "M" ? "Male" : $temp["Camper_Gender"];
-
-            $today = time();
-            if ($age != "Unknown") {
-                $age = round(($today - strtotime($bday)) / (60*60*24*365));
-            }
-            $lastyearlist[] = array($reg['regid'],ucwords(strtolower(stripslashes($temp["Camper_Name"]))),ucwords(strtolower($temp["Camper_Gender"])),$bday,$age,ucwords(strtolower(stripslashes($temp["Parent_Address_Line1"]))),ucwords(strtolower(stripslashes($temp["Parent_Address_Line2"]))),ucwords(strtolower(stripslashes($temp["Parent_Address_City"]))),strtoupper($temp["Parent_Address_State"]),$temp["Parent_Address_Zipcode"]);
-        }    
+                if (strstr($temp["Camper_Birth_Date"],'-')) {
+                    $bday = date("m/d/Y",strtotime(str_replace("-","/",$temp["Camper_Birth_Date"])));
+                } elseif (!strstr($temp["Camper_Birth_Date"],'/') && !strstr($temp["Camper_Birth_Date"],'-')) {
+                    if (strlen($temp["Camper_Birth_Date"])==6) {
+                        $century = $temp["Camper_Birth_Date"][4] > 1 ? "19" : "20";
+                        $bday = date("m/d/Y",strtotime($temp["Camper_Birth_Date"][0].$temp["Camper_Birth_Date"][1].'/'.$temp["Camper_Birth_Date"][2].$temp["Camper_Birth_Date"][3].'/'.$century.$temp["Camper_Birth_Date"][4].$temp["Camper_Birth_Date"][5]));
+                    } elseif (strlen($temp["Camper_Birth_Date"])==8) {
+                        $bday = date("m/d/Y",strtotime($temp["Camper_Birth_Date"][0].$temp["Camper_Birth_Date"][1].'/'.$temp["Camper_Birth_Date"][2].$temp["Camper_Birth_Date"][3].'/'.$temp["Camper_Birth_Date"][4].$temp["Camper_Birth_Date"][5].$temp["Camper_Birth_Date"][6].$temp["Camper_Birth_Date"][7]));
+                    } else { //Most likely empty so try the age field
+                        if (!empty($temp["Camper_Age"])) {
+                            $regdate = $reg["date"];//datetime when they registered
+                            $regage = $temp["Camper_Age"];//age when they registered
+                            $age = round((time() - $regdate) / (60*60*24*365)) + $regage;                      
+                        } else {
+                            $age = "Unknown";
+                        }
+                        $bday = "Unknown";
+                    }
+                } else { $bday = date("m/d/Y",strtotime($temp["Camper_Birth_Date"])); };
+                
+                $temp["Camper_Gender"] = $temp["Camper_Gender"] == "F" ? "Female" : $temp["Camper_Gender"];
+                $temp["Camper_Gender"] = $temp["Camper_Gender"] == "M" ? "Male" : $temp["Camper_Gender"];
+    
+                $today = time();
+                if ($age != "Unknown") {
+                    $age = round(($today - strtotime($bday)) / (60*60*24*365));
+                }
+                $yearlist[] = array($reg['regid'],
+                                        ucwords(strtolower(stripslashes($temp["Camper_Name"]))),
+                                        ucwords(strtolower($temp["Camper_Gender"])),
+                                        $bday,
+                                        $age,
+                                        ucwords(strtolower(stripslashes($temp["Parent_Address_Line1"]))),
+                                        ucwords(strtolower(stripslashes($temp["Parent_Address_Line2"]))),
+                                        ucwords(strtolower(stripslashes($temp["Parent_Address_City"]))),
+                                        strtoupper($temp["Parent_Address_State"]),
+                                        $temp["Parent_Address_Zipcode"],
+                                        $reg["email"],
+                                        $temp["payment_method"],
+                                        $temp["campership"]);
+            }    
+        }
+    
+        $yearlist = array_distinct_new($yearlist,array(1,3),"80"); // Removes duplicate Camper_Name's'
+        return "<br /><a href='javascript:".get_download_link("year_$year.csv",$yearlist,true)."'>Download " .$year. " List</a>";
     }
-
-    $lastyearlist = array_distinct_new($lastyearlist,array(1,3),"80"); // Removes duplicate Camper_Name's'
-    echo "<br /><a href='javascript:".get_download_link("lastyearlist.csv",$lastyearlist,true)."'>Download " .$year. " List</a>";
 }
 
 function array_distinct_new($array,$fieldnum,$matchpercent) {
