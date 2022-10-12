@@ -24,6 +24,9 @@ get_members_item||
 page_js_css||
 <script type="text/javascript"> var dirfromroot = "||dirroot||"; </script>
 <script type="text/javascript" src="||wwwroot||/min/?f=||directory||ajax/siteajax.js"></script>
+||jquery{{
+  <script type="text/javascript" src="||wwwroot||/min/?b=||directory||scripts&amp;f=jquery.min.js"></script>
+}}jquery||
 <link type="text/css" rel="stylesheet" href="||wwwroot||/min/?f=||directory||styles/styles_main.css" />
 <input id="lasthint" type="hidden" />
 ||page_js_css
