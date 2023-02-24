@@ -10,7 +10,7 @@
 if (!isset($LIBHEADER)) include('header.php');
 $VALIDATELIB = true;
 
-function create_validation_script($formname,$function,$ajax=false) {
+function create_validation_script($formname, $function, $ajax=false) {
 global $CFG;
 	$setup = '';
 	$script = '

@@ -9,7 +9,7 @@
 
 include('header.php');
 
-$params = array("dirroot" => $CFG->directory, "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'), "wwwroot" => $CFG->wwwroot);
+$params = array("jquery" => false, "dirroot" => $CFG->directory, "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'), "wwwroot" => $CFG->wwwroot);
 echo template_use("tmp/page.template", $params, "page_js_css");
 
 callfunction();
@@ -74,7 +74,7 @@ global $MYVARS, $CFG, $USER, $PAGE;
 		$params["vpassword_match"] = get_error_message('valid_vpassword_match');
 		$params["vpassword_help"] = get_help("input_vpassword");
 		echo create_validation_script("profile_change_form", template_use("tmp/user.template", $params, "change_profile_validation_template"));
-    echo format_popup(template_use("tmp/user.template", $params, "change_profile_template"),'Edit Profile',"500px");
+    	echo format_popup(template_use("tmp/user.template", $params, "change_profile_template"),'Edit Profile',"500px");
 	} else {
 		echo template_use("tmp/user.template", $params, "change_profile_template");
 	}
@@ -90,7 +90,7 @@ global $MYVARS, $CFG;
 	$params["email_help"] = get_help("input_email");
 
 	echo create_validation_script("password_request_form", template_use("tmp/user.template", array(), "forgot_password_validation_template"));
-  echo format_popup(template_use("tmp/user.template", $params, "forgot_password_template"),'Forgot Password',"500px");
+  	echo format_popup(template_use("tmp/user.template", $params, "forgot_password_template"),'Forgot Password',"500px");
 }
 
 function user_alerts() {
