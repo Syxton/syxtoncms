@@ -9,7 +9,7 @@
 
 include('header.php');
 
-$params = array("jquery" => false, "dirroot" => $CFG->directory, "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'), "wwwroot" => $CFG->wwwroot);
+$params = array("jsset" => "basics", "dirroot" => $CFG->directory, "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'), "wwwroot" => $CFG->wwwroot);
 echo template_use("tmp/page.template", $params, "page_js_css");
 
 callfunction();

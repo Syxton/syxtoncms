@@ -1,13 +1,8 @@
 main_js_css||
-  <script type="text/javascript" src="||wwwroot||/min/?f=||directory||ajax/siteajax.js"></script>
   <script type="text/javascript"> var dirfromroot = "||directory||"; </script>
+  ||echo get_js_set(jsset);::jsset||
   <link type="text/css" rel="stylesheet" href="||wwwroot||/min/?f=||directory||styles/styles_main.css" />
-  <script type="text/javascript" src="||wwwroot||/min/?b=||directory||scripts&amp;f=jquery.min.js,jquery.extend.js,jquery.colorbox.js,jquery.colorbox.extend.js"></script>
 ||main_js_css
-
-validation_js||
-  <script type="text/javascript" src="||wwwroot||/min/?b=||directory||scripts&f=jqvalidate.js,jqvalidate_addon.js" ></script>
-||validation_js
 
 main_body_template||
 <div id="wholepage">

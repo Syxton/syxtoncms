@@ -27,7 +27,8 @@ global $CFG, $MYVARS;
     //Retrieve from Javascript
     $postorget = isset($_POST["action"]) ? $_POST : false;
 
-    $params = array("wwwroot" => $CFG->wwwroot,
+    $params = array("jsset" => "main",
+                    "wwwroot" => $CFG->wwwroot,
                     "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'));
 
     $MYVARS = empty($MYVARS) ? new stdClass() : $MYVARS;
@@ -36,7 +37,7 @@ global $CFG, $MYVARS;
       echo template_use("tmp/pagelib.template", $params, "main_js_css");
     }
     if (!empty($MYVARS->GET["v"])) { //validation javascript and css
-      echo template_use("tmp/pagelib.template", $params, "validation_js");
+      echo get_js_tags(array("validate"));
       unset($MYVARS->GET["v"]);
     }
     if (function_exists($MYVARS->GET["action"])) {
@@ -344,7 +345,7 @@ global $CFG;
   $modal = $onOpen = $onComplete = $valid = '';
 
   if (!empty($v["validate"]) && empty($v["iframe"])) { //load validation javascript
-    $onOpen .= 'loadjs(\'' . $CFG->wwwroot . '/min/?b=\' + (dirfromroot == \'\' ? \'\' : dirfromroot + \'/\') + \'scripts&f=jqvalidate.js,jqvalidate_addon.js\');';
+    $onOpen .= "loadjs('" . get_js_tags(array("validate"), true) . "');";
   } elseif (!empty($v["validate"]) && !empty($v["iframe"])) {
     $valid = "&amp;v=!";
   }

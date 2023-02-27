@@ -9,7 +9,7 @@
 
 include('header.php');
 
-$params = array("dirroot" => $CFG->directory, "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'), "wwwroot" => $CFG->wwwroot);
+$params = array("jsset" => "basics", "dirroot" => $CFG->directory, "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'), "wwwroot" => $CFG->wwwroot);
 echo template_use("tmp/page.template", $params, "page_js_css");
 echo template_use("tmp/themes.template", $params, "theme_manager_header_template");
 

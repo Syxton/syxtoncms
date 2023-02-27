@@ -10,6 +10,11 @@
 if (!isset($LIBHEADER)) { include('header.php'); }
 $FILELIB = true;
 
+// Make Javascript loaded array.
+if (!isset($LOADED)) {
+  $LOADED = array();
+}
+
 function get_file_captions($path) {
 	$caption_return = array();
 	if (file_exists($path . '/captions.txt')) {
@@ -315,4 +320,103 @@ function template_clean_complex_variables($var) {
 	if (strpos($var,"{{") !== false) { $var = substr($var, 0, strpos($var,"{{")); } // Remove everything after qualifier code.
   return $var;
 }
+
+// Smarter Javascript gathering.
+function get_js_tags($params, $linkonly = false) {
+  global $CFG, $LOADED;
+  $javascript = build_from_js_library($params);
+
+  $filelist = array();
+  $dir = empty($CFG->directory) ? '' : $CFG->directory . '/';
+  foreach ($javascript as $path => $files) {
+    foreach($files as $file){
+      array_push($filelist, $dir . $path . "/" . $file);
+    }
+  }
+
+  if(count($filelist)) {
+    $link = $CFG->wwwroot . '/min/?f=' . implode(",", $filelist);
+    if($linkonly){
+      return $link; // for loadjs() so we don't know if it is actually every loaded.
+    } else {
+      $LOADED = array_merge_recursive($LOADED, $javascript); // set global to loaded javascript.
+      return js_script_wrap($link);
+    }
+  }
+  return;
+}
+
+function js_script_wrap($link) {
+  return '<script type="text/javascript" src="' . $link . '"></script>';
+}
+
+function add_js_to_array($path, $script, &$javascript = array()) {
+  if (!js_already_loaded($path, $script)) {
+    if (array_key_exists($path, $javascript) === false) { // path doesn't exist yet.
+      $javascript[$path] = array();
+    }
+    array_push($javascript[$path], $script);
+    $javascript[$path] = array_unique($javascript[$path]);
+  }
+  return $javascript;
+}
+
+function js_already_loaded($path, $script) {
+  global $LOADED;
+  $key = array_key_exists($path, $LOADED);
+  if ($key !== false) { // path exists.
+    $key = array_search($script, $LOADED[$path]);
+    if ($key !== false) { // script loaded.
+      return true;
+    }
+  }
+  return false;
+}
+
+function build_from_js_library($params) {
+  $javascript = array();
+  if (array_search("siteajax", $params) !== false) { // Site javascript.
+    add_js_to_array("ajax", "siteajax.js", $javascript);
+  }
+  if (array_search("jquery", $params) !== false) { // jQuery.
+    add_js_to_array("scripts", "jquery.min.js", $javascript);
+    add_js_to_array("scripts", "jquery.extend.js", $javascript);
+  }
+  if (array_search("ui", $params) !== false) { // jQuery UI.
+    add_js_to_array("scripts", "jquery.min.js", $javascript);
+    add_js_to_array("scripts", "jquery.extend.js", $javascript);
+    add_js_to_array("scripts", "jquery-ui.min.js", $javascript);
+  }
+  if (array_search("colorbox", $params) !== false) { // Modal popups.
+    add_js_to_array("scripts", "jquery.min.js", $javascript);
+    add_js_to_array("scripts", "jquery.extend.js", $javascript);
+    add_js_to_array("scripts", "jquery.colorbox.js", $javascript);
+    add_js_to_array("scripts", "jquery.colorbox.extend.js", $javascript);
+  }
+  if (array_search("flickity", $params) !== false) { // Image carolsel.
+    add_js_to_array("scripts", "flickity.js", $javascript);
+  }
+  if (array_search("validate", $params) !== false) { // jQuery validate.
+    add_js_to_array("scripts", "jquery.min.js", $javascript);
+    add_js_to_array("scripts", "jquery.extend.js", $javascript);
+    add_js_to_array("scripts", "jqvalidate.js", $javascript);
+    add_js_to_array("scripts", "jqvalidate_addon.js", $javascript);
+  }
+
+  return $javascript;
+}
+
+function get_js_set($setname) {
+  $params = array();
+  switch ($setname) {
+    case "main":
+        $params = array("siteajax", "jquery", "colorbox", "ui", "flickity");
+        break;
+    case "basics":
+        $params = array("siteajax", "jquery");
+        break;
+  }
+  return get_js_tags($params);
+}
 ?>
+

@@ -9,7 +9,7 @@
 
 include('header.php');
 
-$params = array("dirroot" => $CFG->directory, "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'), "wwwroot" => $CFG->wwwroot);
+$params = array("jsset" => "basics", "dirroot" => $CFG->directory, "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'), "wwwroot" => $CFG->wwwroot);
 echo template_use("tmp/page.template", $params, "page_js_css");
 
 if (!isset($EVENTSLIB)) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
@@ -62,7 +62,7 @@ if (!$fp) {
   	if (!empty($keyarray['item_number']) && $keyarray['item_number'] == "DONATE") {
   		$SQL = "SELECT *
                 FROM donate_donations
-               WHERE paypal_TX ='".$keyarra["txn_id"]."'"
+               WHERE paypal_TX ='".$keyarra["txn_id"]."'";
       if (!get_db_row($SQL)) {
           $SQL = "INSERT INTO donate_donations
                              (campaign_id, paypal_TX, amount, timestamp)
