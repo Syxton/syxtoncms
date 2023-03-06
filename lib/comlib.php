@@ -16,26 +16,28 @@ function send_email($touser, $fromuser, $cc = false, $subject, $message, $bcc = 
   $fromuser = is_array($fromuser) ? (object)$fromuser : $fromuser;
   $success = false;
 	if (!$CFG->smtp) {
+		$headers = array();
 		// To send HTML mail, the Content-type header must be set
-		$headers  = 'MIME-Version: 1.0' . "\r\n";
-		$headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+		$headers['MIME-Version'] = '1.0';
+		$headers['Content-type'] = 'text/html; charset=iso-8859-1';
 
 		// Additional headers
-		$headers .= 'To: ' . ucwords(strtolower($touser->fname) . ' ' . strtolower($touser->lname)) . ' <' . $touser->email . '>' . "\r\n";
-		$headers .= 'From: '.ucwords(strtolower($fromuser->fname).' '. strtolower($fromuser->lname)).' <' . $fromuser->email . '>' . "\r\n";
-		if ($cc) { $headers .= 'Cc: ' . $cc . "\r\n"; }
-		if ($bcc) {$headers .= 'Bcc: ' . $bcc . "\r\n"; }
-		$headers .= 'Reply-To: ' . $fromuser->email . "\r\n";
-		$headers .= 'Return-Path:'.$fromuser->email."\n";
+		$headers['To'] = ucwords(strtolower($touser->fname) . ' ' . strtolower($touser->lname)) . ' <' . $touser->email . '>';
+		$headers['From'] = ucwords(strtolower($fromuser->fname).' '. strtolower($fromuser->lname)).' <' . $fromuser->email . '>';
+		$headers['Reply-To'] = $fromuser->email;
+		$headers['Return-Path'] = $fromuser->email;
+		$headers['X-Mailer'] = 'PHP/' . phpversion();
+		if ($cc) { $headers['Cc'] = $cc; }
+		if ($bcc) { $headers['Bcc'] = $bcc; }
 
 		if (@mail($touser->email, $subject, $message, $headers, "-f" . $fromuser->email)) {
-      $success = true;
-    }
+      		$success = true;
+    	}
 	} else {
-    if (@smtp($touser, $fromuser, $cc, $subject, $message, $bcc)) {
-      $success = true;
-    }
-  }
+		if (@smtp($touser, $fromuser, $cc, $subject, $message, $bcc)) {
+			$success = true;
+		}
+	}
 
 	return $success;
 }
