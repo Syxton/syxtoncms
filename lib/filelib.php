@@ -460,7 +460,7 @@ function get_css_tags($params) {
 }
 
 function css_script_wrap($link) {
-  return '<link type="text/css" rel="stylesheet" href="' . $link . '" />';
+  return '<link rel="stylesheet" href="' . $link . '" media="print" onload="this.onload=null;this.removeAttribute(\'media\');"/>';
 }
 
 function add_css_to_array($path, $script, &$css = array()) {

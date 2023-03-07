@@ -28,7 +28,7 @@ global $CFG;
             // Get random image index from $img array.
             $randindex = array_rand($img);
             $returnme .= "<div class='carousel-cell'>" .
-                            "<div><img class='carouselslides' src='".$img[$randindex]."' loading='lazy' /></div>" .
+                            "<div><img class='carouselslides' src='".$img[$randindex]."' /></div>" .
                             "<div class='carouselquotes'>" . $quote . $author . "</div>" .
                          "</div>";
             // Unset the random image so it can't be used twice.
