@@ -1045,7 +1045,7 @@ text-decoration:none;
 .logo_nav li {
     color: #fff;
     display: block;
-    min-width: 10rem;
+    min-width: 8rem;
     float: left;
     position: relative;
     text-decoration: none;
