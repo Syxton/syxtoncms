@@ -19,17 +19,9 @@ callfunction();
 function preview_template() {
 global $CFG,$MYVARS;
     $form = "";
-	echo '
-	 <script type="text/javascript">
-	 var dirfromroot = "'.$CFG->directory.'";
-	 </script>
-	 <script type="text/javascript" src="'.$CFG->wwwroot.'/ajax/siteajax.js"></script>
-	 <script type="text/javascript" src="'.$CFG->wwwroot.'/features/events/events.js"></script>
-	 <link rel="stylesheet" type="text/css" charset="utf-8" href="'. $CFG->wwwroot .'/styles/styles_main.css" />
-	 <!--[if IE]>
-  	 <link rel="stylesheet" type="text/css" href="'. $CFG->wwwroot .'/styles/styles_main_ie.css" />
-	 <![endif]-->
-	 <input id="lasthint" type="hidden" />';
+	echo '<script type="text/javascript">var dirfromroot = "' . $CFG->directory . '";</script><input id="lasthint" type="hidden" />';
+	echo get_js_tags(array("siteajax", "features/events/events.js"));
+	echo get_css_tags(array("main"));
      
 	$template_id = $MYVARS->GET['template_id'];
 	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='".$template_id."'");

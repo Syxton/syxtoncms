@@ -132,7 +132,7 @@ get_css_box_bottom_template||
 ||get_css_box_bottom_template
 
 get_login_form_template||
-<script type="text/javascript" src="||wwwroot||/min/?b=||directory||scripts&amp;f=jqvalidate.js,jqvalidate_addon.js"></script>
+||echo get_js_tags(array("validate"));::none||
 ||validation_script||
 <form id="login_form">
     <fieldset>

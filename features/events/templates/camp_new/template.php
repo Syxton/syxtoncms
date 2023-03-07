@@ -38,7 +38,7 @@ if ($show_again) { // This is not the first time through
 //output required javascript
 echo '  <html>
         <head>
-        ' . get_js_tags(array("popupcal")) . '
+        ' . get_js_tags(array("jquery", "validate", "popupcal")) . '
         ' . get_js_tags(array("features/events/templates/camp_new/ajax.js")) . '
         </head>
         <body>

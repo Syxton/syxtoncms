@@ -75,7 +75,7 @@ new_user_validation||
 
 reset_password_template||
   ||alternate{{
-    <script src="||wwwroot||/min/?b=||directory||scripts&f=jquery.min.js,jqvalidate.js,jqvalidate_addon.js,jqmetadata.js" type="text/javascript"></script>
+    ||get_js_tags)("validate");::none||
     <h1>
       Change Password
     </h1>

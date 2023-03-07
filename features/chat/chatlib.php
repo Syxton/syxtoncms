@@ -25,7 +25,7 @@ global $CFG, $USER, $ROLES, $PAGE;
 		execute_db_sql("INSERT INTO chat (pageid, name) VALUES($pageid, 'Chat Room')");
 	}
 	
-	$content='<script type="text/javascript" src="'.$CFG->wwwroot.'/scripts/frame_resize.js"></script>';
+	$content = get_js_tags(array("scripts/frame_resize.js"));
 
 	if ((is_logged_in() && user_has_ability_in_page($USER->userid,"chat",$pageid)) || (!is_logged_in() && role_has_ability_in_page($ROLES->visitor,"chat",$pageid))) {
         $styles=get_styles($pageid,$PAGE->themeid);
