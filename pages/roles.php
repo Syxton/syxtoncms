@@ -155,7 +155,7 @@ global $CFG, $USER, $MYVARS, $ROLES;
 
   $abilities = merge_abilities(array(get_user_abilities($USER->userid, $pageid, "roles", $feature, $featureid),
 																		 get_user_abilities($USER->userid, $pageid, array("feature", "html"), $feature, $featureid)));
-  $params = array("wwwroot" => $CFG->wwwroot, "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'), "feature" => $feature, "featureid" => $featureid);
+  $params = array("wwwroot" => $CFG->wwwroot, "directory" => get_directory(), "feature" => $feature, "featureid" => $featureid);
 	$params["warning"] = ($pageid == $CFG->SITEID && !$featureid);
 	$params["tab_assign_roles"] = !$featureid && $abilities->assign_roles->allow;
 	$params["tab_modify_roles"] = (!$featureid && $abilities->edit_roles->allow) || (($featureid && $abilities->edit_feature_abilities->allow));

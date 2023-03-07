@@ -27,13 +27,10 @@ global $CFG, $MYVARS;
     //Retrieve from Javascript
     $postorget = isset($_POST["action"]) ? $_POST : false;
 
-    $params = array("jsset" => "main",
-                    "wwwroot" => $CFG->wwwroot,
-                    "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'));
-
     $MYVARS = empty($MYVARS) ? new stdClass() : $MYVARS;
     $MYVARS->GET = !$postorget && isset($_GET["action"]) ? $_GET : $postorget;
     if (!empty($MYVARS->GET["i"])) { //universal javascript and css
+      $params = array("directory" => get_directory());
       echo template_use("tmp/pagelib.template", $params, "main_js_css");
     }
     if (!empty($MYVARS->GET["v"])) { //validation javascript and css
@@ -59,6 +56,11 @@ global $MYVARS;
     return $postorget["action"];
   }
   return false;
+}
+
+function get_directory() {
+global $CFG;
+  return (empty($CFG->directory) ? '' : $CFG->directory . '/');
 }
 
 function main_body($header_only = false) {
@@ -109,7 +111,7 @@ global $CFG;
                   "height" => $height,
                   "width" => $width,
                   "plugins" => get_editor_plugins($type),
-                  "directory" => (empty($CFG->directory) ? '' : '/' . $CFG->directory));
+                  "directory" => get_directory());
   return template_use("tmp/pagelib.template", $params, "editor_box_template");
 }
 
@@ -940,7 +942,7 @@ global $CFG;
                                                "width" => "500"));
 
   $params = array("wwwroot" => $CFG->wwwroot,
-                  "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'),
+                  "directory" => get_directory(),
                   "validation_script" => create_validation_script("login_form", "login(document.getElementById('username').value,document.getElementById('password').value);"),
                   "valid_req_username" => get_error_message('valid_req_username'),
                   "input_username" => get_help("input_username"),

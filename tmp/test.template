@@ -1,0 +1,28 @@
+simple||
+<br />
+  This is a ||variable||
+||simple
+
+code1||
+<br />
+  CODE1:
+  ||echo print_r(array(1,2,3,4,5), true);::none||
+||code1
+
+code2||
+<br />
+  CODE2:
+  ||echo print_r(variable, true);::variable||
+||code2
+
+code3||
+  <br />
+  CODE3:
+  ||echo max(variables[0],variables[1],variables[2],variables[3],variables[4]);::variables||
+||code3
+
+code4||
+  <br />
+  CODE4:
+  ||echo min(variables->one, variables->two, variables->three);::variables||
+||code4

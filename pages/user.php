@@ -6,10 +6,9 @@
 * Date: 05/06/2021
 * Revision: 0.4.6
 ***************************************************************************/
-
 include('header.php');
 
-$params = array("jsset" => "basics", "dirroot" => $CFG->directory, "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'), "wwwroot" => $CFG->wwwroot);
+$params = array("dirroot" => $CFG->directory);
 echo template_use("tmp/page.template", $params, "page_js_css");
 
 callfunction();
@@ -34,7 +33,7 @@ function reset_password() {
 global $MYVARS, $PAGE, $CFG;
 	$userid = $MYVARS->GET["userid"];
 	$alternate = get_db_row("SELECT * FROM users WHERE userid='$userid' AND alternate='".$MYVARS->GET["alternate"]."'") ? true : false;
-	$params = array("siteid" => $CFG->SITEID, "userid" => $userid, "wwwroot" => $CFG->wwwroot, "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'), "alternate" => $alternate);
+	$params = array("siteid" => $CFG->SITEID, "userid" => $userid, "wwwroot" => $CFG->wwwroot, "directory" => get_directory(), "alternate" => $alternate);
 
 	if ($alternate) {
 		if (!isset($VALIDATELIB)) { include_once($CFG->dirroot . '/lib/validatelib.php'); }

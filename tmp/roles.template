@@ -210,8 +210,8 @@ group_specific_template||
 ||group_specific_template
 
 roles_manager_template||
-  <script type="text/javascript" src="||wwwroot||/min/?f=||directory||scripts/jquery-ui.min.js"></script>
-  <link type="text/css" rel="stylesheet" href="||wwwroot||/min/?b=||directory||styles/jqueryui&amp;f=jquery-ui.css" />
+  ||echo get_js_tags(array("ui"));::none||
+  ||echo get_css_tags(array("ui"));::none||
   <script type="text/javascript">
     $(function() {
       $("#tabs").tabs({beforeLoad: function( event, ui ) {

@@ -6,10 +6,9 @@
 * Date: 8/16/2011
 * Revision: 0.1.5
 ***************************************************************************/
-
 include('header.php');
 
-$params = array("jsset" => "basics", "dirroot" => $CFG->directory, "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'), "wwwroot" => $CFG->wwwroot);
+$params = array("dirroot" => $CFG->directory);
 echo template_use("tmp/page.template", $params, "page_js_css");
 echo template_use("tmp/themes.template", $params, "theme_manager_header_template");
 

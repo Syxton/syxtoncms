@@ -23,13 +23,13 @@ get_members_item||
 
 page_js_css||
 <script type="text/javascript"> var dirfromroot = "||dirroot||"; </script>
-||echo get_js_set(jsset);::jsset||
-<link type="text/css" rel="stylesheet" href="||wwwroot||/min/?f=||directory||styles/styles_main.css" />
+||echo get_js_set("basics");::none||
+||echo get_css_set("main");::none||
 <input id="lasthint" type="hidden" />
 ||page_js_css
 
 browse_template||
-<script type="text/javascript" src="||wwwroot||/scripts/ajaxtabs.js"></script>
+||echo get_js_tags(array("tabs"));::none||
 <body style="background-color:white;">
   <ul id="findpagetabs" class="shadetabs">
     <li>

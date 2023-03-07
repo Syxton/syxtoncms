@@ -1,6 +1,5 @@
 theme_manager_header_template||
-  <script type="text/javascript" src="||wwwroot||/min/?b=||directory||scripts&amp;f=jquery.min.js"></script>
-  <script type="text/javascript" src="||wwwroot||/min/?f=||directory||scripts/picker/picker.js"></script>
+  ||echo get_js_tags(array("jquery", "picker"));::none||
 ||theme_manager_header_template
 
 change_theme_template||

@@ -19,37 +19,28 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
 } else {
     include_once($CFG->dirroot . '/lib/header.php');
 
-    //Get User info
-    load_user_cookie();
-    update_user_cookie();
-
-    $directory = $CFG->directory == '' ? 'root' : $CFG->directory;
-    setcookie('directory', $directory, get_timestamp() + $CFG->cookietimeout, '/');
-    $_SESSION['directory'] = $directory;
-
-    setcookie('pageid', $PAGE->id, get_timestamp() + $CFG->cookietimeout, '/');
-    $_SESSION['pageid'] = $PAGE->id;
-    $currentpage = get_db_row("SELECT * FROM pages WHERE pageid='$PAGE->id'");
-
-    $PAGE->title   = $CFG->sitename . " - " . $currentpage["name"]; // Title of page
-    $PAGE->name   = $currentpage["name"]; // Title of page
-    $PAGE->description = $currentpage["description"]; // Descriptoin of page
-    $PAGE->themeid = get_page_themeid($PAGE->id);
-
-    //Use this page only to keep session and cookies refreshed (during forms)
-    if (!empty($_GET['keepalive'])) {
-        header("Refresh:30");
-        echo rand();
-        die();
-    }
-
-    //Check for upgrades or uninstalled components
-    upgrade_check();
-
-    //Cache roles
-    $ROLES = load_roles();
-echo "MAKE TAG";
+    echo get_css_set("main");
     echo get_js_set("main");
     echo get_js_set("main");
+
+    $params = array("variable" => "TEST");
+    echo template_use("tmp/test.template", $params, "simple");
+
+    echo template_use("tmp/test.template", $params, "code1");
+
+    $params = array("variable" => array(5,4,3,2,1));
+    echo template_use("tmp/test.template", $params, "code2");
+
+    $params = array("variables" => array(1,2,3,4,5));
+    echo template_use("tmp/test.template", $params, "code3");
+
+    $variables = new \stdClass();
+    $variables->one = 1;
+    $variables->two = 2;
+    $variables->three = 3;
+    $params = array("variables" => $variables);
+    echo template_use("tmp/test.template", $params, "code4");
+
 }
+
 ?>

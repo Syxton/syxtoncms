@@ -225,7 +225,7 @@ function template_get_functionality($match) {
       if ($type === "code") { // Is code provided from the template?
         $code = empty($code) ? $func : $code; // Get code on the first variable.  Keep the old version for the next variables.
         $code = str_replace($var, $v, $code, $count); // Replace the placeholder in code with the PHP variable.
-        if (!$count) { // If there isn't a perfect match in the template code, it is either a mistake or an unneccesary variable given.
+        if ($var != "none" && !$count) { // If there isn't a perfect match in the template code, it is either a mistake or an unneccesary variable given.
           echo "<br />Variable '$v' could not be matched in the supplied code.<br /><br />";
         }
       } else { // Simple echo of single variables;
@@ -251,7 +251,7 @@ function template_variable_exists($match, $params) {
       $v = 'return isset($params["' . $var . '"]);';
     }
 
-    if (eval($v) !== NULL) {
+    if ($var == "none" || eval($v) !== NULL) {
       return true;
     } else {
       echo "<br /><br />Template variable '$var' not found.<br /><br />";
@@ -272,7 +272,7 @@ function template_variable_exists($match, $params) {
           $v = 'return $params["' . $vr . '"];';
         }
 
-        if (!empty(eval($v))) {
+        if ($vr == "none" || !empty(eval($v))) {
           return true;
         } else {
           echo "<br /><br />Template variable '$vr' not found.<br /><br />";
@@ -396,13 +396,28 @@ function build_from_js_library($params) {
   if (array_search("flickity", $params) !== false) { // Image carolsel.
     add_js_to_array("scripts", "flickity.js", $javascript);
   }
+  if (array_search("tabs", $params) !== false) { // Tabs.
+    add_js_to_array("scripts", "ajaxtabs.js", $javascript);
+  }
+  if (array_search("picker", $params) !== false) { // Tabs.
+    add_js_to_array("scripts/picker", "picker.js", $javascript);
+  }
   if (array_search("validate", $params) !== false) { // jQuery validate.
     add_js_to_array("scripts", "jquery.min.js", $javascript);
     add_js_to_array("scripts", "jquery.extend.js", $javascript);
     add_js_to_array("scripts", "jqvalidate.js", $javascript);
     add_js_to_array("scripts", "jqvalidate_addon.js", $javascript);
   }
-
+  // Check for module level js.
+  foreach ($params as $p) {
+    $module = array_filter(explode("/", $p));
+    if (count($module) > 1) {
+      $file = end($module);
+      array_pop($module);
+      $folder = implode("/", $module);
+      add_js_to_array($folder, $file, $javascript);
+    }
+  }
   return $javascript;
 }
 
@@ -417,6 +432,85 @@ function get_js_set($setname) {
         break;
   }
   return get_js_tags($params);
+}
+
+// Smarter CSS gathering.
+function get_css_tags($params) {
+  global $CFG;
+  $css = build_from_css_library($params);
+
+  $filelist = array();
+  $dir = empty($CFG->directory) ? '' : $CFG->directory . '/';
+  foreach ($css as $path => $files) {
+    foreach($files as $file){
+      array_push($filelist, $dir . $path . "/" . $file);
+    }
+  }
+
+  if(count($filelist)) {
+    $link = $CFG->wwwroot . '/min/?f=' . implode(",", $filelist);
+    return css_script_wrap($link);
+  }
+  return;
+}
+
+function css_script_wrap($link) {
+  return '<link type="text/css" rel="stylesheet" href="' . $link . '" />';
+}
+
+function add_css_to_array($path, $script, &$css = array()) {
+  if (array_key_exists($path, $css) === false) { // path doesn't exist yet.
+    $css[$path] = array();
+  }
+  array_push($css[$path], $script);
+  $css[$path] = array_unique($css[$path]);
+  return $css;
+}
+
+function build_from_css_library($params) {
+  $css = array();
+  if (array_search("main", $params) !== false) { // Site javascript.
+    add_css_to_array("styles", "styles_main.css", $css);
+  }
+  if (array_search("colorbox", $params) !== false) { // Modal popups.
+    add_css_to_array("styles", "colorbox.css", $css);
+  }
+  if (array_search("flickity", $params) !== false) { // Image carolsel.
+    add_css_to_array("styles", "flickity.css", $css);
+  }
+  if (array_search("ui", $params) !== false) {
+    add_css_to_array("styles/jqueryui", "jquery-ui.css", $css); // jQueryUI
+  }
+  if (array_search("jtip", $params) !== false) {
+    add_css_to_array("styles", "jtip.css", $css); // jTip
+  }
+  if (array_search("print", $params) !== false) {
+    add_css_to_array("styles", "print.css", $css); // jTip
+  }
+  if (array_search("menu", $params) !== false) {
+    add_css_to_array("styles", "styles_menu.css", $css); // jTip
+  }
+  // Check for module level css.
+  foreach ($params as $p) {
+    $module = array_filter(explode("/", $p));
+    if (count($module) > 1) {
+      $file = end($module);
+      array_pop($module);
+      $folder = implode("/", $module);
+      add_css_to_array($folder, $file, $css);
+    }
+  }
+  return $css;
+}
+
+function get_css_set($setname) {
+  $params = array();
+  switch ($setname) {
+    case "main":
+        $params = array("main", "colorbox", "flickity");
+        break;
+  }
+  return get_css_tags($params);
 }
 ?>
 

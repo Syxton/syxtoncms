@@ -1,7 +1,10 @@
 main_js_css||
-  <script type="text/javascript"> var dirfromroot = "||directory||"; </script>
-  ||echo get_js_set(jsset);::jsset||
-  <link type="text/css" rel="stylesheet" href="||wwwroot||/min/?f=||directory||styles/styles_main.css" />
+  <script type="text/javascript">
+    var dirfromroot = "||directory||";
+  </script>
+
+  ||echo get_js_set("main");::none||
+  ||echo get_css_tags(array("main"));::none||
 ||main_js_css
 
 main_body_template||

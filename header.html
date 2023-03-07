@@ -5,26 +5,25 @@
 	<meta name="description" content="<?php echo $PAGE->description ?>"/>
 	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
 	<link rel="shortcut icon" href="favicon.ico" />
-    <link type="text/css" rel="stylesheet" href="<?php echo $CFG->wwwroot ?>/min/?b=<?php echo empty($CFG->directory) ? '' : $CFG->directory . '/'; ?>styles&amp;f=styles_main.css,colorbox.css,flickity.css" />
+
     <!--[if lt IE 7]>
     <style type="text/css">
         .dock img { behavior: url(iepngfix.htc) }
     </style>
     <![endif]-->
-
-<?php if(isset($USER->key)){ ?>
-    <link href="<?php echo $CFG->wwwroot ?>/scripts/rss/rss.php?pageid=<?php echo $PAGE->id ?>&amp;key=<?php echo $USER->key ?>" title="<?php echo $CFG->sitename ?> [RSS]" type="application/rss+xml" rel="alternate"/>
-<?php } ?>
-
 	<script>
 		var dirfromroot = "<?php echo $CFG->directory ?>";
 	</script>
 
 <?php
+	echo get_css_set("main"); // Load CSS.
 	echo get_js_set("main"); // Load javascript.
 ?>
+
+<?php if(isset($USER->key)){ ?>
+    <link href="<?php echo $CFG->wwwroot ?>/scripts/rss/rss.php?pageid=<?php echo $PAGE->id ?>&amp;key=<?php echo $USER->key ?>" title="<?php echo $CFG->sitename ?> [RSS]" type="application/rss+xml" rel="alternate"/>
+<?php } ?>
 
 	<!-- Global site tag (gtag.js) - Google Analytics -->
 	<script async src="https://www.googletagmanager.com/gtag/js?id=<?php echo $CFG->analytics; ?>"></script>
