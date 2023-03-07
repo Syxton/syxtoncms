@@ -37,7 +37,7 @@ if ($show_again) { // This is not the first time through.
 //output required javascript
 echo '<html>
         <head>
-        <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'features/events/templates/simple_contact_form/ajax.js"></script>
+        ' . get_js_tags(array("features/events/templates/simple_contact_form/ajax.js")) . '
         </head>
         <body>
 ';

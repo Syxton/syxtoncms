@@ -11,13 +11,8 @@ if (empty($_POST["aslib"])) {
     if (!isset($CFG)) { include('../header.php'); } 
     
     callfunction();
-    
-    echo '
-        <link type="text/css" rel="stylesheet" href="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'styles/vertmenu.css" />
-        <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?b='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'features/events&amp;f=events.js"></script>
-        <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'features/adminpanel/adminpanel.js"></script>
-        <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?b='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'scripts&amp;f=vertmenu.js"></script>
-    ';
+
+    echo template_use("tmp/main.template", array(), "header", "adminpanel");
     
     echo '</body></html>';
 }

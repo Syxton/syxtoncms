@@ -1,0 +1,6 @@
+header||
+    ||echo get_css_tags(array("styles/vertmenu.css"));::none||
+    ||echo get_js_tags(array("features/events/events.js"));::none||
+    ||echo get_js_tags(array("features/adminpanel/adminpanel.js"));::none||
+    ||echo get_js_tags(array("scripts/vertmenu.js"));::none||
+||header

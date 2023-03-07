@@ -12,9 +12,7 @@ if (empty($_POST["aslib"])) {
     
     callfunction();
     
-    echo '
-        <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?b='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'features/pics&amp;f=pics.js,uploads.js"></script>
-    ';
+	echo get_js_tags(array("features/pics/pics.js", "features/pics/uploads.js"));
     
     echo '</body></html>';
 }

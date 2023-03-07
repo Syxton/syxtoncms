@@ -58,10 +58,10 @@ global $CFG;
             $total = $donations["total"];
             $total = empty($total) ? "0" : $total;
         }
-        $returnme .= '
-        <link type="text/css" rel="stylesheet" href="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'features/donate/donate.css" property="" />
-        <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'features/donate/donate.js"></script>
-        ';
+
+        $returnme .= get_css_tags(array("features/donate/donate.css"));
+        $returnme .= get_js_tags(array("features/donate/donate.js"));
+
         $button = '
         <form action="https://'.$paypal.'/cgi-bin/webscr" method="post">
     	       <div style="width: 100%; text-align: center;">

@@ -125,12 +125,14 @@ function template_use($file, $params = array(), $subsection = "", $feature = fal
 	global $CFG;
     $v = $params;
 
-		if ($feature) {
-			if (!file_exists($CFG->dirroot . "/$feature/" . $file)) { echo $CFG->dirroot . "/$feature/" . $file . " not found."; return; } // template file not found.
-		} else {
-			if (!file_exists($CFG->dirroot . '/' . $file)) { echo $CFG->dirroot . '/' . $file . " not found."; return; } // template file not found.
-		}
-
+    if ($feature) {
+      $file = "features/$feature/$file";
+    }
+		
+    if (!file_exists($CFG->dirroot . '/' . $file)) { // template file not found.
+      echo $CFG->dirroot . '/' . $file . " not found."; 
+      return; 
+    }
 
     $contents = file_get_contents($CFG->dirroot . '/' . $file);
 
@@ -399,14 +401,17 @@ function build_from_js_library($params) {
   if (array_search("tabs", $params) !== false) { // Tabs.
     add_js_to_array("scripts", "ajaxtabs.js", $javascript);
   }
-  if (array_search("picker", $params) !== false) { // Tabs.
-    add_js_to_array("scripts/picker", "picker.js", $javascript);
+  if (array_search("popupcal", $params) !== false) { // Tabs.
+    add_js_to_array("scripts", "popupcalendar.js", $javascript);
   }
   if (array_search("validate", $params) !== false) { // jQuery validate.
     add_js_to_array("scripts", "jquery.min.js", $javascript);
     add_js_to_array("scripts", "jquery.extend.js", $javascript);
     add_js_to_array("scripts", "jqvalidate.js", $javascript);
     add_js_to_array("scripts", "jqvalidate_addon.js", $javascript);
+  }
+  if (array_search("picker", $params) !== false) { // Tabs.
+    add_js_to_array("scripts/picker", "picker.js", $javascript);
   }
   // Check for module level js.
   foreach ($params as $p) {

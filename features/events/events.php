@@ -12,11 +12,8 @@ if (empty($_POST["aslib"])) {
 
     callfunction();
 
-    echo '
-        <input id="lasthint" type="hidden" />
-        <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?b='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'features/events&amp;f=events.js"></script>
-    ';
-
+    echo '<input id="lasthint" type="hidden" />';
+	echo get_js_tags(array("features/events/events.js"));
     echo get_editor_javascript();
 
     echo '</body></html>';
@@ -120,7 +117,8 @@ global $CFG,$MYVARS,$USER;
     $regcode = isset($MYVARS->GET["regcode"]) ? $MYVARS->GET["regcode"] : "";
 
     if (empty($MYVARS->GET["modal"])) {
-        echo '<script type="text/javascript" src="'.$CFG->wwwroot.'/min/?b='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'scripts&amp;f=jquery.min.js"></script>'.main_body(true).'<br /><br />';
+		echo get_js_tags(array("jquery"));
+        echo main_body(true) . '<br /><br />';
     }
 
     echo '
@@ -323,8 +321,9 @@ global $CFG,$MYVARS,$USER;
 		$siteviewable_no = $workers_no = $multiday_no = $allday_yes = $reg_no = $fee_no = $allowinpage_no = $limits_no = "selected";
         $auto_allowinpage_display = "none";
 	}
+
+	echo get_js_tags(array("popupcal"));
 	echo '
-	<script type="text/javascript" src="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'scripts/popupcalendar.js"></script>
     <div id="add_event_div">
         <form>
             <table style="width:100%">

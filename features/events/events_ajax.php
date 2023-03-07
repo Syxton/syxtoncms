@@ -334,12 +334,11 @@ global $CFG, $MYVARS;
         if (valid_voter($pageid, $featureid, $voteid)) {
             //Print out question form
             if (!$refresh) {
-               echo '<html><head><title>Event Request Question Page</title>
-                <script type="text/javascript">var dirfromroot = "'.$CFG->directory.'";</script>
-            	<script type="text/javascript" src="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'ajax/siteajax.js"></script>
-                '.get_editor_javascript().'
-                <link type="text/css" rel="stylesheet" href="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'styles/styles_main.css" />
-                </head><body><div id="question_form">';
+               echo '<html><head><title>Event Request Question Page</title><script type="text/javascript">var dirfromroot = "'.$CFG->directory.'";</script>';
+               echo get_js_tags(array("siteajax"));
+               echo get_editor_javascript();
+               echo get_css_tags(array("main"));
+               echo '</head><body><div id="question_form">';
             }
             echo '<h2>Questions Regarding Event Request</h2>'.get_request_info($reqid);
             if (!$refresh) {
@@ -408,13 +407,13 @@ global $CFG, $MYVARS;
         //Allowed to ask questions
         //Print out question form
         if (!$refresh) {
-           echo '<html><head><title>Event Request Question Page</title>
-                  <script type="text/javascript">var dirfromroot = "'.$CFG->directory.'";</script>
-              	  <script type="text/javascript" src="'.$CFG->wwwroot.'/min/?b='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'ajax/siteajax.js"></script>
-                  <script type="text/javascript" src="'.$CFG->wwwroot.'/scripts/ckeditor/ckeditor.js"></script>
-                  <link type="text/css" rel="stylesheet" href="'.$CFG->wwwroot.'/min/?f='.(empty($CFG->directory) ? '' : $CFG->directory . '/').'styles/styles_main.css" />
-                  </head><body><div id="answer_form">';
-        }
+            echo '<html><head><title>Event Request Question Page</title><script type="text/javascript">var dirfromroot = "'.$CFG->directory.'";</script>';
+            echo get_js_tags(array("siteajax"));
+            echo get_editor_javascript();
+            echo get_css_tags(array("main"));
+            echo '</head><body><div id="answer_form">';
+         }
+
         echo '<h2>Questions Regarding Event Request</h2>'.get_request_info($reqid);
 
         $answer = get_db_field("answer","events_requests_questions","id=$qid");
