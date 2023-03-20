@@ -69,6 +69,32 @@ function main_body($header_only = false) {
   return template_use("tmp/pagelib.template", $params, "main_body_template");
 }
 
+function get_pageid() {
+global $PAGE, $CFG, $MYVARS;
+
+  if (!empty($MYVARS->GET["pageid"]) && is_numeric($MYVARS->GET["pageid"])) {
+    return $MYVARS->GET["pageid"];
+  }
+
+  if (!empty($_GET["pageid"]) && is_numeric($_GET["pageid"])) {
+    return $_GET["pageid"];
+  }
+
+  if (!empty($_COOKIE["pageid"]) && is_numeric($_COOKIE["pageid"])) {
+    return $_COOKIE["pageid"];
+  }
+
+  if (!empty($_SESSION["pageid"]) && is_numeric($_SESSION["pageid"])) {
+    return $_SESSION["pageid"];
+  }
+
+  if (!empty($PAGE->id) && is_numeric($PAGE->id)) {
+    return $PAGE->id;
+  }
+
+  return $CFG->SITEID;
+}
+
 function page_masthead($left = true, $header_only = false) {
 global $CFG, $USER, $PAGE;
   if ($left) {

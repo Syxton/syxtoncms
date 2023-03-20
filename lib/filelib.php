@@ -395,9 +395,6 @@ function build_from_js_library($params) {
     add_js_to_array("scripts", "jquery.colorbox.js", $javascript);
     add_js_to_array("scripts", "jquery.colorbox.extend.js", $javascript);
   }
-  if (array_search("flickity", $params) !== false) { // Image carolsel.
-    add_js_to_array("scripts", "flickity.js", $javascript);
-  }
   if (array_search("tabs", $params) !== false) { // Tabs.
     add_js_to_array("scripts", "ajaxtabs.js", $javascript);
   }
@@ -412,6 +409,9 @@ function build_from_js_library($params) {
   }
   if (array_search("picker", $params) !== false) { // Tabs.
     add_js_to_array("scripts/picker", "picker.js", $javascript);
+  }
+  if (array_search("flickity", $params) !== false) { // Image carolsel.
+    add_js_to_array("scripts", "flickity.js", $javascript);
   }
   // Check for module level js.
   foreach ($params as $p) {
@@ -518,4 +518,3 @@ function get_css_set($setname) {
   return get_css_tags($params);
 }
 ?>
-

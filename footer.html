@@ -65,13 +65,20 @@
                 });
             });
 
-						$("#menu-icon").on("click", function() {
-							$("#pagenav").toggle();
-						});
+            $("#menu-icon").on("click", function() {
+                $("#pagenav").toggle();
+            });
 
-						$( "#accordion" ).accordion();
+            $( "#accordion" ).accordion();
 
             adjustStyle($(this).width());
+
+            $(function() {
+                setTimeout(function() {
+                    $("#carousel").flickity();
+                }, 500);
+            });
+            
         });
         </script>
 </div>

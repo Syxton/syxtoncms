@@ -2773,12 +2773,12 @@ global $CFG, $MYVARS, $USER;
 }
 
 function event_save_staffapp() {
-global $CFG,$MYVARS,$USER;
+global $CFG, $MYVARS, $USER;
     $userid = dbescape($USER->userid);
     $staffid = empty($MYVARS->GET["staffid"]) ? false : dbescape($MYVARS->GET["staffid"]);
 
-    // Check for valid pageid
-    $pageid = !empty($_COOKIE["pageid"]) ? $_COOKIE["pageid"] : (!empty($_GET["pageid"]) && is_numeric($_GET["pageid"]) ? $_GET["pageid"] : false);
+    // Get pageid.
+    $pageid = get_pageid();
 
     if (!empty($pageid)) {
         $name = dbescape(nameize($MYVARS->GET["name"]));

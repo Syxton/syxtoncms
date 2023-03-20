@@ -970,6 +970,8 @@ text-decoration:none;
 .logo_nav #carousel {
     clear: both;
     border: 2px solid black;
+    max-height: 400px;
+    overflow: hidden;
 }
 
 .logo_nav .nav_header {

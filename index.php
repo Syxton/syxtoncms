@@ -6,15 +6,14 @@
  * Date: 6/07/2016
  * Revision: 1.0.2
  ***************************************************************************/
-header('Cache-Control: no-cache, no-store, must-revalidate'); // HTTP 1.1.
-header('Pragma: no-cache'); // HTTP 1.0.
-header('Expires: 0'); // Proxies.
-
 if (!isset($CFG)) {
     include_once('config.php');
 }
 
 if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',' . $_SERVER['REMOTE_ADDR'] . ',')) {
+    header('Cache-Control: no-cache, no-store, must-revalidate'); // HTTP 1.1.
+    header('Pragma: no-cache'); // HTTP 1.0.
+    header('Expires: 0'); // Proxies.
     include($CFG->dirroot . $CFG->alternatepage);
 } else {
     include_once($CFG->dirroot . '/lib/header.php');
@@ -27,14 +26,19 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
     setcookie('directory', $directory, get_timestamp() + $CFG->cookietimeout, '/');
     $_SESSION['directory'] = $directory;
 
-    setcookie('pageid', $PAGE->id, get_timestamp() + $CFG->cookietimeout, '/');
-    $_SESSION['pageid'] = $PAGE->id;
-    $currentpage = get_db_row("SELECT * FROM pages WHERE pageid='$PAGE->id'");
+    $pageid = get_pageid();
+    setcookie('pageid', $pageid, get_timestamp() + $CFG->cookietimeout, '/');
+    $_SESSION['pageid'] = $pageid;
+    $currentpage = get_db_row("SELECT * FROM pages WHERE pageid='$pageid'");
 
     $PAGE->title   = $CFG->sitename . " - " . $currentpage["name"]; // Title of page
     $PAGE->name   = $currentpage["name"]; // Title of page
     $PAGE->description = $currentpage["description"]; // Descriptoin of page
-    $PAGE->themeid = get_page_themeid($PAGE->id);
+    $PAGE->themeid = get_page_themeid($pageid);
+
+    header('Cache-Control: no-cache, no-store, must-revalidate'); // HTTP 1.1.
+    header('Pragma: no-cache'); // HTTP 1.0.
+    header('Expires: 0'); // Proxies.
 
     //Use this page only to keep session and cookies refreshed (during forms)
     if (!empty($_GET['keepalive'])) {
