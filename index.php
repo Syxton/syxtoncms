@@ -11,8 +11,7 @@ if (!isset($CFG)) {
 }
 
 if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',' . $_SERVER['REMOTE_ADDR'] . ',')) {
-    header('Cache-Control: no-cache, no-store, must-revalidate'); // HTTP 1.1.
-    header('Pragma: no-cache'); // HTTP 1.0.
+    header('Cache-Control: max-age=86400'); // HTTP 1.1.
     header('Expires: 0'); // Proxies.
     include($CFG->dirroot . $CFG->alternatepage);
 } else {
@@ -35,26 +34,24 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
     $PAGE->name   = $currentpage["name"]; // Title of page
     $PAGE->description = $currentpage["description"]; // Descriptoin of page
     $PAGE->themeid = get_page_themeid($pageid);
-
-    header('Cache-Control: no-cache, no-store, must-revalidate'); // HTTP 1.1.
-    header('Pragma: no-cache'); // HTTP 1.0.
+    
+    header('Cache-Control: max-age=86400'); // HTTP 1.1.
     header('Expires: 0'); // Proxies.
 
     //Use this page only to keep session and cookies refreshed (during forms)
     if (!empty($_GET['keepalive'])) {
         header("Refresh:30");
-        echo rand();
         die();
     }
 
-    //Check for upgrades or uninstalled components
-    upgrade_check();
+    //Start Page
+    include('header.html');
 
     //Cache roles
     $ROLES = load_roles();
 
-    //Start Page
-    include('header.html');
+    //Check for upgrades or uninstalled components
+    upgrade_check();
 
     if (is_logged_in()) {
         $params = array("timeout" => 14599); // Javascript that checks for valid login every x seconds.

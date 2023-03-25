@@ -17,7 +17,7 @@ global $CFG;
     if (!$img = randomimages("images/carousel/")) { return ''; } // No carousel if no images are found.
 
     $count = count($img) >= 5 ? 5 : count($img); // Images found, find out how many.
-
+	$loading = "";
     // Get enough quotes to add to the images.
     if ($result = get_db_result("SELECT quote, author FROM quotes ORDER BY RAND() LIMIT 0, $count")) {
         while ($row = fetch_row($result)) {
@@ -28,18 +28,19 @@ global $CFG;
             // Get random image index from $img array.
             $randindex = array_rand($img);
             $returnme .= "<div class='carousel-cell'>" .
-                            "<div><img class='carouselslides' src='".$img[$randindex]."' /></div>" .
+                            "<div><img $loading class='carouselslides' src='".$img[$randindex]."' alt='carousel image with a quote' /></div>" .
                             "<div class='carouselquotes'>" . $quote . $author . "</div>" .
                          "</div>";
             // Unset the random image so it can't be used twice.
             unset($img[$randindex]);
+			$loading = "loading='lazy'";
         }
     }
     return $returnme . '</div>';
 }
 
 function randomimages($dir) {
-    $images = glob($dir . '*.{jpg,jpeg,png,gif}', GLOB_BRACE);
+    $images = glob($dir . '*.{jpg,jpeg,png,gif,webp,avif}', GLOB_BRACE);
     if (empty(count($images))) { return false; }
     return $images;
 }

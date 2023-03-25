@@ -99,10 +99,12 @@ $returnme = '';
     if (is_logged_in()) { // Staff Apply visible only if logged in
         $menuitem = '<li>'.make_modal_links(array("title"=> "Staff Apply","path"=>$CFG->wwwroot."/features/events/events.php?action=staff_application","validate"=>"true","width"=>"600","height"=>"650")).'</li>';
         $returnme .= '
-        <script>
-            $(document).ready(function() {
-                var item = "'.addslashes($menuitem).'";
-                $("#pagenav").append(item);
+        <script type="text/javascript" defer>
+            defer(function () {
+                $(document).ready(function() {
+                    var item = "'.addslashes($menuitem).'";
+                    $("#pagenav").append(item);
+                });
             });
         </script>';
     }

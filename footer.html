@@ -1,86 +1,86 @@
-		<div class="footer-text">
-            <br />
-            <?php echo $CFG->sitefooter; ?>
-		</div>
+                <div class="footer-text">
+                    <br />
+                    <?php echo $CFG->sitefooter; ?>
+                </div>
 
-        <script type="text/javascript">
-        $(function() {
-            $(function() {
-                $('#pagenav li').hover(
-                       function(){ $(this).addClass('sfhover') },
-                       function(){ $(this).removeClass('sfhover') }
-                )
-            });
+                <script type="text/javascript" defer>
+                    defer(function () {
+                        $(function() {
+                            $('#pagenav li').hover(
+                                function(){ $(this).addClass('sfhover') },
+                                function(){ $(this).removeClass('sfhover') }
+                            )
+                        });
 
-            $( ".pagesort1, .pagesort2" ).sortable({
-                connectWith: ".connectedSortable",
-                items: ".box",
-                handle: ".pagesorthandle",
-                tolerance: "pointer",
-                helper: function(){ return $('<div class="portable_box"></div>') },
-                placeholder: "inner_drop_zone",
-                cursor: "move",
-                cursorAt: { top: 0, left: 0 },
-                zIndex: 9999,
-                sort: function(event, ui) {
-                    ui.helper.css({'top' : ui.position.top + $(window).scrollTop() + 'px','left' : ui.position.left + $(window).scrollLeft() + 'px'});
-                },
-                update: function(event, ui){
-                    $.ajax({
-                      url: WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/ajax/site_ajax.php",
-                      data: {"action":"drop_move_feature","pageid":<?php echo $PAGE->id; ?>,"col1":$( ".pagesort1" ).sortable( "toArray" ),"col2":$( ".pagesort2" ).sortable( "toArray" ),"moved": $(ui.item).attr('id')},
-                      cache: false
-                    }).done(function( html ) {
-                        if(html == "refresh"){
-                            location.reload();
+                        $( ".pagesort1, .pagesort2" ).sortable({
+                            connectWith: ".connectedSortable",
+                            items: ".box",
+                            handle: ".pagesorthandle",
+                            tolerance: "pointer",
+                            helper: function(){ return $('<div class="portable_box"></div>') },
+                            placeholder: "inner_drop_zone",
+                            cursor: "move",
+                            cursorAt: { top: 0, left: 0 },
+                            zIndex: 9999,
+                            sort: function(event, ui) {
+                                ui.helper.css({'top' : ui.position.top + $(window).scrollTop() + 'px','left' : ui.position.left + $(window).scrollLeft() + 'px'});
+                            },
+                            update: function(event, ui){
+                                $.ajax({
+                                url: WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/ajax/site_ajax.php",
+                                data: {"action":"drop_move_feature","pageid":<?php echo $PAGE->id; ?>,"col1":$( ".pagesort1" ).sortable( "toArray" ),"col2":$( ".pagesort2" ).sortable( "toArray" ),"moved": $(ui.item).attr('id')},
+                                cache: false
+                                }).done(function( html ) {
+                                    if(html == "refresh"){
+                                        location.reload();
+                                    }
+                                });
+                            }
+                        });
+
+                        function adjustStyle(width) {
+                            width = parseInt(width);
+                            if (width < 701) {
+                                $(".rightmenu .col1").css("width","100%");
+                                $(".rightmenu .col2").css("width","100%");
+                                                    $(".rightmenu .colleft").css("right", "24.5%");
+                                                    $(".rightmenu .col1").css("left","25%");
+                                $(".rightmenu .col2").css("left","25%");
+                                $("#headerlogo").css("width","100%");
+                                $("#headerquotebox").css("width","100%");
+                            } else if ((width >= 701)) {
+                                $(".rightmenu .col1").css("width","76.3%");
+                                $(".rightmenu .col2").css("width","22.5%");
+                                                    $(".rightmenu .colleft").css("right", "25.5%");
+                                $("#headerlogo").css("width","70%");
+                                $("#headerquotebox").css("width","29%");
+                            }
                         }
-                    });
-                }
-            });
 
-            function adjustStyle(width) {
-                width = parseInt(width);
-                if (width < 701) {
-                    $(".rightmenu .col1").css("width","100%");
-                    $(".rightmenu .col2").css("width","100%");
-										$(".rightmenu .colleft").css("right", "24.5%");
-										$(".rightmenu .col1").css("left","25%");
-                    $(".rightmenu .col2").css("left","25%");
-                    $("#headerlogo").css("width","100%");
-                    $("#headerquotebox").css("width","100%");
-                } else if ((width >= 701)) {
-                    $(".rightmenu .col1").css("width","76.3%");
-                    $(".rightmenu .col2").css("width","22.5%");
-										$(".rightmenu .colleft").css("right", "25.5%");
-                    $("#headerlogo").css("width","70%");
-                    $("#headerquotebox").css("width","29%");
-                }
-            }
+                        $(function() {
+                            $(window).resize(function() {
+                                setTimeout(function() {
+                                    adjustStyle($(this).width());
+                                }, 100);
+                            });
+                        });
 
-            $(function() {
-                $(window).resize(function() {
-                    setTimeout(function() {
+                        $("#menu-icon").on("click", function() {
+                            $("#pagenav").toggle();
+                        });
+
+                        $( "#accordion" ).accordion();
+
                         adjustStyle($(this).width());
-                    }, 100);
-                });
-            });
 
-            $("#menu-icon").on("click", function() {
-                $("#pagenav").toggle();
-            });
-
-            $( "#accordion" ).accordion();
-
-            adjustStyle($(this).width());
-
-            $(function() {
-                setTimeout(function() {
-                    $("#carousel").flickity();
-                }, 500);
-            });
-            
-        });
-        </script>
-</div>
-</body>
+                        $(function() {
+                            setTimeout(function() {
+                                $("#carousel").flickity();
+                            }, 500);
+                        });
+                        
+                    });
+            </script>
+        </div>
+    </body>
 </html>

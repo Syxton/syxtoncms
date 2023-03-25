@@ -324,7 +324,7 @@ function template_clean_complex_variables($var) {
 }
 
 // Smarter Javascript gathering.
-function get_js_tags($params, $linkonly = false) {
+function get_js_tags($params, $linkonly = false, $loadtype = false) {
   global $CFG, $LOADED;
   $javascript = build_from_js_library($params);
 
@@ -342,14 +342,15 @@ function get_js_tags($params, $linkonly = false) {
       return $link; // for loadjs() so we don't know if it is actually every loaded.
     } else {
       $LOADED = array_merge_recursive($LOADED, $javascript); // set global to loaded javascript.
-      return js_script_wrap($link);
+      return js_script_wrap($link, $loadtype);
     }
   }
   return;
 }
 
-function js_script_wrap($link) {
-  return '<script type="text/javascript" src="' . $link . '"></script>';
+function js_script_wrap($link, $loadtype = false) {
+  $loadtype = !$loadtype ? "" : $loadtype;
+  return '<script type="text/javascript" src="' . $link . '" ' . $loadtype . '></script>';
 }
 
 function add_js_to_array($path, $script, &$javascript = array()) {
@@ -426,7 +427,7 @@ function build_from_js_library($params) {
   return $javascript;
 }
 
-function get_js_set($setname) {
+function get_js_set($setname, $loadtype = false) {
   $params = array();
   switch ($setname) {
     case "main":
@@ -436,7 +437,7 @@ function get_js_set($setname) {
         $params = array("siteajax", "jquery");
         break;
   }
-  return get_js_tags($params);
+  return get_js_tags($params, false, $loadtype);
 }
 
 // Smarter CSS gathering.
