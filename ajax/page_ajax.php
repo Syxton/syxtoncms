@@ -146,7 +146,6 @@ global $CFG, $MYVARS, $USER;
                WHERE p.pageid != '$CFG->SITEID'
     	           AND ($searchstring)
     $siteviewableonly
-       $no_menu_items
     	       ORDER BY p.name";
   }
 
@@ -163,6 +162,7 @@ global $CFG, $MYVARS, $USER;
   if ($count > 0) {
     while ($page = fetch_row($pages)) {
       $linked = true;
+      $params["col3"] = "";
       if ($loggedin && !$admin) {
         if ($page["siteviewable"] == 1 || $page["opendoorpolicy"] == 1 || $page["added"] == 1 || user_has_ability_in_page($userid, "assign_roles", $page["pageid"])) {
           $params["col3"] = template_use("tmp/page_ajax.template", array("must_request" => false, "can_add_remove" => user_has_ability_in_page($userid, "add_page", $CFG->SITEID),
@@ -281,7 +281,7 @@ global $MYVARS, $CFG, $USER;
 function linkpagesearch() {
 global $CFG, $MYVARS, $USER;
   $searchwords = trim($MYVARS->GET["searchwords"]);
-  $pageid = $MYVARS->GET["pageid"];
+  $pageid = get_pageid();
 
   // no search words given
   if ($searchwords == "") {

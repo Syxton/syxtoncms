@@ -183,7 +183,7 @@ new_link_form_template||
                               '&pageid=||pageid||' +
                               '&searchwords=' + escape($('#searchbox').val()),
                               function() {
-                                simple_display('page_search_span');
+                                simple_display('searchcontainer_linkpagesearch');
                               }); return false;">
         <input type="text" size="37" name="searchbox" id="searchbox" />&nbsp;<input type="submit" value="Search" />
       </form>
@@ -191,7 +191,7 @@ new_link_form_template||
   </tr>
   <tr>
     <td colspan="2">
-    <span id="page_search_span"></span>
+    <span id="searchcontainer_linkpagesearch"></span>
     </td>
   </tr>
   </table>

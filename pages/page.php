@@ -9,9 +9,6 @@
 
 include ('header.php');
 
-$params = array("dirroot" => $CFG->directory);
-echo template_use("tmp/page.template", $params, "page_js_css");
-
 callfunction();
 
 echo template_use("tmp/page.template", array(), "end_of_page_template");

@@ -80,7 +80,7 @@ global $CFG;
     if ($ajax) {
 	   return $script . $setup;
 	} else {
-	   return '<script type=\'text/javascript\'>' . $script . $setup .'</script>';
+	   return js_code_wrap($script . $setup, "defer");
 	}
 
 }

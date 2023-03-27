@@ -330,6 +330,8 @@ function print_abilities($pageid, $type = "per_role_", $roleid = false, $userid 
 global $CFG;
 	$rightslist = $currentstyle = $section = $notsettitle = $notsettoggle = $save_button = "";
 	$default_toggle = false;
+	$default_checked = false;
+	$default = "";
 
 	// Save button
 	if ($roleid || $groupid || $userid) {
@@ -353,7 +355,7 @@ global $CFG;
 	}
 
 	$SQL = template_use("dbsql/roles.sql", array("feature" => $feature, "is_feature" => ($feature && $featureid)), "print_abilities");
-  if ($pages = get_db_result($SQL)) {
+  	if ($pages = get_db_result($SQL)) {
 		$i = 0; $abilities = "";
 		$style_row1 = 'class="roles_row1"';
 		$style_row2 = 'class="roles_row2"';
@@ -361,29 +363,29 @@ global $CFG;
 			$currentstyle = $currentstyle == $style_row1 ? $style_row2 : $style_row1;
 			$currentstyle = $section == $row['section'] ? $currentstyle : $style_row1;
 
-      if ($roleid && empty($userid)) { // Role based only
-        $rights = role_has_ability_in_page($roleid, $row['ability'], $pageid, $feature, $featureid) ? "1" : "0";
+			if ($roleid && empty($userid)) { // Role based only
+				$rights = role_has_ability_in_page($roleid, $row['ability'], $pageid, $feature, $featureid) ? "1" : "0";
 				$SQL = template_use("dbsql/roles.sql", array("ability" => $row['ability'], "pageid" => $pageid, "roleid" => $roleid), "get_page_role_override");
-        $notify = get_db_count($SQL) ? true : false;
-      } elseif ($groupid) { // Group based
+				$notify = get_db_count($SQL) ? true : false;
+			} elseif ($groupid) { // Group based
 				$default_toggle = true;
 				$params = array("ability" => $row['ability'], "pageid" => $pageid, "feature" => $feature, "featureid" => $featureid, "groupid" => $groupid);
-        $rights = ($feature && $featureid) ? get_db_row(template_use("dbsql/roles.sql", $params, "get_page_group_feature_override")) : get_db_row(template_use("dbsql/roles.sql", $params, "get_page_group_override"));
-        $rights = $rights["allow"] === "0" ? "0" : ($rights["allow"] === "1" ? "1" : false);
-        $notify = $rights !== false ? true : false;
+				$rights = ($feature && $featureid) ? get_db_row(template_use("dbsql/roles.sql", $params, "get_page_group_feature_override")) : get_db_row(template_use("dbsql/roles.sql", $params, "get_page_group_override"));
+				$rights = $rights["allow"] === "0" ? "0" : ($rights["allow"] === "1" ? "1" : false);
+				$notify = $rights !== false ? true : false;
 				$default_checked = $rights === false ? true : false;
 			} elseif ($userid) { // User based
 				$params = array("ability" => $row['ability'], "pageid" => $pageid, "feature" => $feature, "featureid" => $featureid, "userid" => $userid);
-        if ($feature && $featureid) { // Feature user override
+				if ($feature && $featureid) { // Feature user override
 					$SQL = template_use("dbsql/roles.sql", $params, "get_page_feature_user_override");
-          $rights = user_has_ability_in_page($userid, $row['ability'], $pageid, $feature, $featureid) ? "1" : "0";
-          $notify = get_db_count($SQL) ? true : false;
-  			} else { // Page user override
+					$rights = user_has_ability_in_page($userid, $row['ability'], $pageid, $feature, $featureid) ? "1" : "0";
+					$notify = get_db_count($SQL) ? true : false;
+				} else { // Page user override
 					$SQL = template_use("dbsql/roles.sql", $params, "get_page_user_override");
-          $rights = user_has_ability_in_page($userid, $row['ability'], $pageid) ? "1" : "0";
-          $notify = get_db_count($SQL) ? true : false;
-  			}
-      }
+					$rights = user_has_ability_in_page($userid, $row['ability'], $pageid) ? "1" : "0";
+					$notify = get_db_count($SQL) ? true : false;
+				}
+			}
 
 			$notify1 = $notify2 = false; // not set
 			if ($rights === "1") { // set to allow
@@ -402,7 +404,7 @@ global $CFG;
 			$section = $row['section']; // Remmember last section so we know when a new section starts.
 			$i++;
 		}
-  }
+  	}
 
 	$params = array("default" => $default, "abilities" => $abilities, "type" => $type, "save" => $save_button, "rightslist" => $rightslist);
 	return template_use("tmp/roles.template", $params, "print_abilities");

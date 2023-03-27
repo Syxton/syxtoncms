@@ -353,6 +353,11 @@ function js_script_wrap($link, $loadtype = false) {
   return '<script type="text/javascript" src="' . $link . '" ' . $loadtype . '></script>';
 }
 
+function js_code_wrap($code, $loadtype = false) {
+  $loadtype = !$loadtype ? "" : $loadtype;
+  return '<script type="text/javascript"' . $loadtype . '>' . $code . '</script>';
+}
+
 function add_js_to_array($path, $script, &$javascript = array()) {
   if (!js_already_loaded($path, $script)) {
     if (array_key_exists($path, $javascript) === false) { // path doesn't exist yet.

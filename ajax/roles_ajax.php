@@ -62,7 +62,7 @@ global $CFG,$ROLES,$USER,$MYVARS;
   $options = "";
 	if ($users = get_db_result($SQL)) {
 		while ($row = fetch_row($users)) {
-      $options .= template_use("tmp/page.template", array("value" => $row['userid'], "display" => $row['fname'] . ' ' . $row['lname'] . ' (' . $row['email'] . ')'), "select_options_template");
+      $options .= template_use("tmp/page.template", array("selected" => "", "value" => $row['userid'], "display" => $row['fname'] . ' ' . $row['lname'] . ' (' . $row['email'] . ')'), "select_options_template");
 		}
 	}
   $params["options"] = $options;
@@ -122,7 +122,7 @@ global $CFG, $ROLES, $USER, $MYVARS;
             $mygroups .= " " . $group_info["name"];
         }
       }
-      $options .= template_use("tmp/page.template", array("value" => $row['userid'], "display" => $row['fname'] . ' ' . $row['lname'] . ' (' . $row['email'] . ')' . $mygroups), "select_options_template");
+      $options .= template_use("tmp/page.template", array("selected" => "", "value" => $row['userid'], "display" => $row['fname'] . ' ' . $row['lname'] . ' (' . $row['email'] . ')' . $mygroups), "select_options_template");
 		}
 	}
 
@@ -169,7 +169,7 @@ global $CFG, $MYVARS, $USER;
       $options .= template_use("tmp/page.template", array("value" => $row['userid'], "display" => $row['fname'] . ' ' . $row['lname'] . ' (' . $row['email'] . ')'), "select_options_template");
 		}
 	} else {
-    $options .= template_use("tmp/page.template", array("value" => "0", "display" => "No users in this group."), "select_options_template");
+    $options .= template_use("tmp/page.template", array("selected" => "", "value" => "0", "display" => "No users in this group."), "select_options_template");
 	}
 
   $params["options"] = $options;
@@ -238,7 +238,7 @@ global $CFG, $MYVARS, $ROLES, $USER;
 
   $options1 = "";
 	if ($pageid == $CFG->SITEID) {
-    $options1 = template_use("tmp/page.template", array("value" => "0", "display" => "Search results will be shown here."), "select_options_template");
+    $options1 = template_use("tmp/page.template", array("selected" => "", "value" => "0", "display" => "Search results will be shown here."), "select_options_template");
   } elseif ($roles = get_db_result($SQL)) {
 		while ($row = fetch_row($roles)) {
       $mygroups = "";
@@ -253,7 +253,7 @@ global $CFG, $MYVARS, $ROLES, $USER;
             $mygroups .= " " . $group_info["name"];
         }
       }
-      $options1 .= template_use("tmp/page.template", array("value" => $row['userid'], "display" => $row['fname']. ' ' . $row['lname'] . ' (' . $row['email'] .')'.$mygroups), "select_options_template");
+      $options1 .= template_use("tmp/page.template", array("selected" => "", "value" => $row['userid'], "display" => $row['fname']. ' ' . $row['lname'] . ' (' . $row['email'] .')'.$mygroups), "select_options_template");
 		}
 	}
 
@@ -283,7 +283,7 @@ global $CFG, $MYVARS, $ROLES, $USER;
               $mygroups .= " " . $group_info["name"];
           }
       }
-      $options2 .= template_use("tmp/page.template", array("value" => $row['userid'], "display" => $row['fname']. ' ' . $row['lname'] . ' (' . $row['email'] .')' . $mygroups), "select_options_template");
+      $options2 .= template_use("tmp/page.template", array("selected" => "", "value" => $row['userid'], "display" => $row['fname']. ' ' . $row['lname'] . ' (' . $row['email'] .')' . $mygroups), "select_options_template");
 		}
 	}
 
@@ -751,7 +751,7 @@ global $CFG, $USER, $MYVARS, $ROLES;
 	if ($roles = get_db_result($SQL)) {
 		while ($row = fetch_row($roles)) {
 			if ($row['roleid'] != $roleid && $row['roleid'] >= $myroleid) {
-        $options .= template_use("tmp/page.template", array("value" => $row['roleid'], "display" => stripslashes($row['display_name'])), "select_options_template");
+        $options .= template_use("tmp/page.template", array("selected" => "", "value" => $row['roleid'], "display" => stripslashes($row['display_name'])), "select_options_template");
       }
 		}
 	}

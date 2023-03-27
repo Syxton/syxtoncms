@@ -8,9 +8,6 @@
 ***************************************************************************/
 include('header.php');
 
-$params = array("dirroot" => $CFG->directory);
-echo template_use("tmp/page.template", $params, "page_js_css");
-
 callfunction();
 
 echo template_use("tmp/page.template", array(), "end_of_page_template");
@@ -26,7 +23,7 @@ global $MYVARS, $CFG;
 									"vpassword_req" => get_error_message('valid_req_vpassword'), "vpassword_match" => get_error_message('valid_vpassword_match'), "vpassword_help" => get_help("input_vpassword"));
 
 	echo create_validation_script("signup_form" , template_use("tmp/user.template", array(), "new_user_validation"));
-  echo format_popup(template_use("tmp/user.template", $params, "new_user_template"), $CFG->sitename.' Signup',"500px");
+  	echo format_popup(template_use("tmp/user.template", $params, "new_user_template"), $CFG->sitename.' Signup',"500px");
 }
 
 function reset_password() {
