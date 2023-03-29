@@ -110,20 +110,19 @@ reset_password_template||
           <input class="submit" name="submit" type="submit" value="Save" style="margin: auto;width: 80px;display: block;" />
         </fieldset>
       </form>
-      <script type="text/javascript">
-        setTimeout(function() {
+        ||echo js_code_wrap('
+          setTimeout(function() {
                       document.getElementById("mypassword").value = "";
                       document.getElementById("vpassword").value = "";
                       document.getElementById("mypassword").focus();
-                   },500);
-      </script>
+                    },500);
+        ');::none||
     </div>
 
     //OR//
 
-    <script type="text/javascript">
-      go_to_page(||siteid||);
-    </script>
+    ||echo js_code_wrap('go_to_page(' . siteid . ');');::siteid||
+  
   }}alternate||
 ||reset_password_template
 
@@ -200,10 +199,11 @@ change_profile_template||
         </fieldset>
       </form>
     </div>
+
     //OR//
-    <script type="text/javascript">
-      go_to_page(||siteid||);
-    </script>
+
+    ||echo js_code_wrap('go_to_page(' . siteid . ');');::siteid||
+
   }}userid||
 ||change_profile_template
 

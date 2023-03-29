@@ -149,7 +149,7 @@ if ($autofill) {
   			    <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
-				<label class="rowTitle" for="Camper_Birth_Date">Camper Birthdate *</label><script>DateInput(\'Camper_Birth_Date\',true)</script><div class="tooltipContainer info">'.get_help("help_bday:events:templates/camp_new").'</div>
+				<label class="rowTitle" for="Camper_Birth_Date">Camper Birthdate *</label>' . js_code_wrap('DateInput(\'Camper_Birth_Date\', true)') . '<div class="tooltipContainer info">'.get_help("help_bday:events:templates/camp_new").'</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
@@ -324,7 +324,7 @@ if ($autofill) {
                 <div class="spacer" style="clear: both;"></div>
 			</div>
             <div class="rowContainer">
-				<label class="rowTitle" for="HealthExpirationDate">Expiration Date</label><script>DateInput(\'HealthExpirationDate\',true)</script><div class="tooltipContainer info">'.get_help("help_healthto:events:templates/camp_new").'</div>
+				<label class="rowTitle" for="HealthExpirationDate">Expiration Date</label>' . js_code_wrap('DateInput(\'HealthExpirationDate\', true)') . '<div class="tooltipContainer info">'.get_help("help_healthto:events:templates/camp_new").'</div>
                 <div class="spacer" style="clear: both;"></div>
   			</div>
            	<div class="rowContainer" style="height: auto;">
@@ -352,7 +352,7 @@ if ($autofill) {
                 <div class="spacer" style="clear: both;"></div>
 			</div>           
             <div class="rowContainer">
-				<label class="rowTitle" for="HealthTetanusDate">Date of last Tetanus injection/booster *</label><script>DateInput(\'HealthTetanusDate\',true)</script><div class="tooltipContainer info">'.get_help("help_tetanus:events:templates/camp_new").'</div>
+				<label class="rowTitle" for="HealthTetanusDate">Date of last Tetanus injection/booster *</label>' . js_code_wrap('DateInput(\'HealthTetanusDate\', true)') . '<div class="tooltipContainer info">'.get_help("help_tetanus:events:templates/camp_new").'</div>
   			    <div class="spacer" style="clear: both;"></div>
             </div>'; 
 }
@@ -466,17 +466,12 @@ if (!$show_again) {
 
 //Finalize and activate validation code
 echo create_validation_script("form1" , "submit_camp_new_registration()");
-echo '  
-<script type="text/javascript" language="javascript">
-    $(document).ready(function() {
-        $("select[id^=\'Camper_Birth_Date\']").change(function() { updateAge(); });
-        $("select[id^=\'Camper_Birth_Date\']").attr("onKeyUp","updateAge()");
-        $("input[id^=\'Camper_Birth_Date\']").change(function() { updateAge(); });
-        $("#Camper_Birth_Date").change(function() { updateAge(); });
-        $("#Camper_Birth_Date").attr("onChange","updateAge()");
-        $("input,select,textarea").bind("focus",function() { $(this).closest(".rowContainer").css("background-color","whitesmoke"); });
-        $("input,select,textarea").bind("blur",function() { $(this).closest(".rowContainer").css("background-color","white"); });
-    });
-</script>
-';
+$script = '$("select[id^=\'Camper_Birth_Date\']").change(function() { updateAge(); });
+           $("select[id^=\'Camper_Birth_Date\']").attr("onKeyUp","updateAge()");
+           $("input[id^=\'Camper_Birth_Date\']").change(function() { updateAge(); });
+           $("#Camper_Birth_Date").change(function() { updateAge(); });
+           $("#Camper_Birth_Date").attr("onChange","updateAge()");
+           $("input,select,textarea").bind("focus",function() { $(this).closest(".rowContainer").css("background-color","whitesmoke"); });
+           $("input,select,textarea").bind("blur",function() { $(this).closest(".rowContainer").css("background-color","white"); });';
+echo js_code_wrap($script, "defer", true);
 ?>

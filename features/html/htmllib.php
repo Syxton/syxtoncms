@@ -180,31 +180,22 @@ global $CFG;
 
 					$url = str_replace('\\','',$url);
 					$info = explode(".",$match[4].$match[5]);
-					$html = str_replace($match[0], "
-						<script type='text/javascript' src='".$CFG->wwwroot."/scripts/filters/video/swfobject.js'></script>
-						<span id='mediaspace_s$i'></span>
-						<script type='text/javascript'>
-							var s$i = new SWFObject('".$CFG->wwwroot."/scripts/filters/video/player.swf','ply','290','30','9','#ffffff');
-							s$i.addParam('allowfullscreen','true');
-							s$i.addParam('allowscriptaccess','always');
-							s$i.addParam('wmode','opaque');
-							s$i.addParam('flashvars','file=".stripslashes(urlencode($url))."&amp;skin=".$CFG->wwwroot."/scripts/filters/video/skins/stylish_slim.swf');
-							s$i.write('mediaspace_s$i');
-						</script>
-					",$html);
+					$script = "var s$i = new SWFObject('".$CFG->wwwroot."/scripts/filters/video/player.swf','ply','290','30','9','#ffffff');
+							   s$i.addParam('allowfullscreen','true');
+							   s$i.addParam('allowscriptaccess','always');
+							   s$i.addParam('wmode','opaque');
+							   s$i.addParam('flashvars','file=".stripslashes(urlencode($url))."&amp;skin=".$CFG->wwwroot."/scripts/filters/video/skins/stylish_slim.swf');
+							   s$i.write('mediaspace_s$i');";
+					$html = str_replace($match[0], js_script_wrap($CFG->wwwroot . "/scripts/filters/video/swfobject.js") . "<span id='mediaspace_s$i'></span>" . js_code_wrap($script), $html);
 				}
 
 				$found = false;
 				$filetypes = '/([\.[mM][pP][3])/';
 				if (preg_match($filetypes,$match[2])) {
+					$player = "";
 					if (!$found) {
-						$player = "<script language='javascript' src='".$CFG->wwwroot."/scripts/filters/audio/audio-player.js'></script>
-									 <script type='text/javascript'>
-											 AudioPlayer.setup('".$CFG->wwwroot."/scripts/filters/audio/player.swf', {
-													 width: 290
-											 });
-									 </script>";
-					} else {$player = ""; }
+						$player = js_script_wrap($CFG->wwwroot . "/scripts/filters/audio/audio-player.js") . js_code_wrap("AudioPlayer.setup('" . $CFG->wwwroot . "/scripts/filters/audio/player.swf', { width: 290 });");
+					}
 
 					$found = true;
 					//make internal links full paths
@@ -215,17 +206,13 @@ global $CFG;
 					$url = str_replace('\\','',$url);
 					$info = explode(".",$match[4].$match[5]);
 					$info = explode("-",$info[0]);
-					$html = str_replace($match[0], $player ."
-					<span id='audioplayer_$featureid"."_$i"."'></span>
-					<script type='text/javascript'>
-					 AudioPlayer.embed('audioplayer_$featureid"."_$i"."', {
-							 soundFile: '".stripslashes($url)."',
-							 titles: '$info[1]',
-							 artists: '$info[0]',
-							 autostart: 'no'
-					 });
-					 </script>
-					",$html);
+					$script = "AudioPlayer.embed('audioplayer_$featureid"."_$i"."', {
+									soundFile: '".stripslashes($url)."',
+									titles: '$info[1]',
+									artists: '$info[0]',
+									autostart: 'no'
+								});";
+					$html = str_replace($match[0], $player ."<span id='audioplayer_$featureid"."_$i"."'></span>" . js_code_wrap($script), $html);
 				}
 			}
 		$i++;
@@ -250,29 +237,28 @@ global $CFG;
 
 					$url = str_replace('\\','',$url);
 					$rand = rand(0,time());
-					$html = str_replace($match[0], "
-													<script type='text/javascript' src='".$CFG->wwwroot."/scripts/filters/video/flowplayer/flowplayer-3.2.4.min.js'></script>
-													<div id='vid_$rand' class='flowplayer_div' style='width:100%;'><a href='$url' style='display:block;' class='flowplayers' id='player_$rand'></a></div>
-													<script>flowplayer('a.flowplayers', '".$CFG->wwwroot."/scripts/filters/video/flowplayer/flowplayer-3.2.4.swf',{
-													clip: {
-															autoPlay: false,
-															autoBuffering: true,
-															onBegin: function() { this.getControls().css({height:'5%'});},
-															onMetaData: setInterval(function() {
-																			$('a.flowplayers').flowplayer().each(function() {
-																					var myclip = this.getClip(0);
-																					if (myclip.metaData != undefined) {
-																							var width = $('#'+this.id()).parent('.flowplayer_div').attr('clientWidth') >= myclip.metaData.width ? myclip.metaData.width : $('#'+this.id()).parent('.flowplayer_div').attr('clientWidth');
-																							var height = (width/myclip.metaData.width) * myclip.metaData.height;
-																							var wrap = jQuery(this.getParent());
-																							wrap.css({width: width+'px', height: height+'px'});
-																					}
-																			});
-																	},1000)
-															}
-													});
-													</script>
-					",$html);
+					$script = " flowplayer('a.flowplayers', '" . $CFG->wwwroot . "/scripts/filters/video/flowplayer/flowplayer-3.2.4.swf',{
+								clip: {
+										autoPlay: false,
+										autoBuffering: true,
+										onBegin: function() { this.getControls().css({height:'5%'});},
+										onMetaData: setInterval(function() {
+														$('a.flowplayers').flowplayer().each(function() {
+																var myclip = this.getClip(0);
+																if (myclip.metaData != undefined) {
+																		var width = $('#'+this.id()).parent('.flowplayer_div').attr('clientWidth') >= myclip.metaData.width ? myclip.metaData.width : $('#'+this.id()).parent('.flowplayer_div').attr('clientWidth');
+																		var height = (width/myclip.metaData.width) * myclip.metaData.height;
+																		var wrap = jQuery(this.getParent());
+																		wrap.css({width: width+'px', height: height+'px'});
+																}
+														});
+												},1000)
+										}
+								});";
+					$html = str_replace($match[0], js_script_wrap($CFG->wwwroot . '/scripts/filters/video/flowplayer/flowplayer-3.2.4.min.js') . 
+						   "<div id='vid_$rand' class='flowplayer_div' style='width:100%;'>
+								<a href='$url' style='display:block;' class='flowplayers' id='player_$rand'></a>
+							</div>" . js_code_wrap($script), $html);
 				}
 			}
 		$i++;

@@ -1,8 +1,6 @@
 main_js_css||
-  <script type="text/javascript">
-    var dirfromroot = "||directory||";
-  </script>
-
+  ||echo js_code_wrap('var dirfromroot = "' . directory . '";');::directory||
+  ||echo js_code_wrap(template_use("tmp/pagelib.template", array(), "defer_script"));::none||
   ||echo get_js_set("main");::none||
   ||echo get_css_tags(array("main"));::none||
 ||main_js_css
@@ -54,24 +52,34 @@ page_masthead_template||
 
 editor_box_template||
 <textarea id="editor1" name="editor1" class="wysiwyg_editor">||initialvalue||</textarea>
-<script type="text/javascript">
-    $(window).on("load", function() {
-        $(".wysiwyg_editor").tinymce({
-            script_url : "||wwwroot||/scripts/tinymce/tinymce.min.js",
-            toolbar: "||toolbar||",
-            height: "||height||",
-            width: "||width||",
-            removed_menuitems: "newdocument",
-            theme : "silver",
-            convert_urls: false,
-            plugins: [||plugins||],
-            external_filemanager_path: "||directory||/scripts/tinymce/plugins/filemanager/",
-            filemanager_title: "File Manager" ,
-            external_plugins: { "filemanager" : "||directory||/scripts/tinymce/plugins/filemanager/plugin.min.js"}
-        });
-    });
-</script>
+||echo js_code_wrap('
+  $(window).on("load", function() {
+      $(".wysiwyg_editor").tinymce({
+          script_url : "' . variables->wwwroot . '/scripts/tinymce/tinymce.min.js",
+          toolbar: "' . variables->toolbar . '",
+          height: "' . variables->height . '",
+          width: "' . variables->width . '",
+          removed_menuitems: "newdocument",
+          theme : "silver",
+          convert_urls: false,
+          plugins: [' . variables->plugins . '],
+          external_filemanager_path: "' . variables->directory . '/scripts/tinymce/plugins/filemanager/",
+          filemanager_title: "File Manager" ,
+          external_plugins: { "filemanager" : "' . variables->directory . '/scripts/tinymce/plugins/filemanager/plugin.min.js"}
+      });
+  });
+', "defer", true);::variables||
 ||editor_box_template
+
+defer_script||
+  function defer(method) {
+    if (window.jQuery) {
+      method();
+    } else {
+      setTimeout(function() { defer(method) }, 50);
+    }
+  }
+||defer_script
 
 print_logout_button_switchback_template||
 <a title="Switch back to: ||lia_name||" href="javascript: void(0)" onclick="ajaxapi('/features/adminpanel/adminpanel_ajax.php','logoutas','',function() { go_to_page(||siteid||);});">Switch back to: ||lia_name||</a><br />

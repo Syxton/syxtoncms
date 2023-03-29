@@ -61,7 +61,7 @@ groups_list_template||
 ||groups_list_template
 
 roles_header_script||
-  <script type="text/javascript">
+  ||echo js_code_wrap('
     function swap_highlights(option1,option2) {
       option1 = "#"+option1;
       option2 = "#"+option2;
@@ -93,7 +93,7 @@ roles_header_script||
       $(option2).css("background-color", "inherit");
       blur();
     }
-  </script>
+  ');::none||
 ||roles_header_script
 
 assign_roles_template||
@@ -212,18 +212,16 @@ group_specific_template||
 roles_manager_template||
   ||echo get_js_tags(array("ui"));::none||
   ||echo get_css_tags(array("ui"));::none||
-  <script type="text/javascript">
-    $(function() {
-      $("#tabs").tabs({beforeLoad: function( event, ui ) {
-                                      var d = new Date();
-                                      ui.ajaxSettings.url += "&currTime=" + d.toUTCString();
-                                      ui.jqXHR.fail(function() {
-                                                      ui.panel.html("Couldn't load this tab. We'll try to fix this as soon as possible.");
-                                                    });
-                                   }
-                      });
-    });
-  </script>
+  ||echo js_code_wrap('
+    $("#tabs").tabs({
+      beforeLoad: function( event, ui ) {
+                  var d = new Date();
+                  ui.ajaxSettings.url += "&currTime=" + d.toUTCString();
+                  ui.jqXHR.fail(function() {
+                    ui.panel.html("Couldn\'t load this tab. We\'ll try to fix this as soon as possible.");
+                  });
+                }
+    }); ', 'defer', true);::none||
 
   <div id="context" style="font-size:.85em;background-color:lightGrey;margin:3px;padding:3px;height:30px;">
       <span style="display:inline-block;float:left;">

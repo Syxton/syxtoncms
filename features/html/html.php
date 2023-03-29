@@ -56,9 +56,9 @@ global $CFG, $MYVARS, $USER;
     					</td>
     				</tr>
     			</table>
-    		</div>
-    		<script type="text/javascript">var stillediting = setInterval(function() { ajaxapi(\'/features/html/html_ajax.php\',\'still_editing\',\'&htmlid='.$featureid.'&userid='.$userid.'\',function() { if (xmlHttp.readyState == 4) { do_nothing(); }},true);},5000);</script>';
-    		execute_db_sql("UPDATE html SET edit_user='$userid',edit_time='$now' WHERE htmlid=$featureid");
+    		</div>';
+    		echo js_code_wrap('var stillediting = setInterval(function() { ajaxapi(\'/features/html/html_ajax.php\',\'still_editing\',\'&htmlid='.$featureid.'&userid='.$userid.'\',function() { if (xmlHttp.readyState == 4) { do_nothing(); }},true);},5000);');
+			execute_db_sql("UPDATE html SET edit_user='$userid',edit_time='$now' WHERE htmlid=$featureid");
     	} else {
     		echo '
     		<div style="width:100%;text-align:center;">

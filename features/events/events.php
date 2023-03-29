@@ -121,6 +121,7 @@ global $CFG,$MYVARS,$USER;
         echo main_body(true) . '<br /><br />';
     }
 
+	echo js_code_wrap('window.onload = function () { if ($("#code").val() != "") { lookup_reg($("#code").val()); } }', "", true);
     echo '
         <div style="text-align:center;padding:15px;">
             <h3>'.$CFG->sitename.' Registration Lookup</h3><br />
@@ -128,15 +129,7 @@ global $CFG,$MYVARS,$USER;
             Enter your Registration ID: <input type="text" id="code" size="35" value="'.$regcode.'" /> <input type="submit" value="Submit" />
             </form>
         </div>
-        <div id="payarea" style="padding:15px;">
-        </div>
-        <script type="text/javascript">
-            window.onload = function () {
-                if ($("#code").val() != "") {
-                    lookup_reg($("#code").val());
-                }
-            }
-        </script>
+        <div id="payarea" style="padding:15px;"></div>
     ';
 }
 
@@ -505,7 +498,7 @@ global $CFG,$MYVARS,$USER;
                             						Event Start Date:
                             					</td>
                             					<td class="field_input">
-                            						<script>DateInput(\'event_begin_date\', '.$event_begin_date.')</script>
+													' . js_code_wrap('DateInput(\'event_begin_date\', ' . $event_begin_date . ');') . '
                             					</td>
                             				</tr><tr><td></td><td class="field_input"><span id="event_begin_date_error" class="error_text"></span></td></tr>
                         				</table>
@@ -516,7 +509,7 @@ global $CFG,$MYVARS,$USER;
                             							Event Stop Date:
                             						</td>
                             						<td class="field_input">
-                            							<script>DateInput(\'event_end_date\', '.$event_end_date.')</script>
+														' . js_code_wrap('DateInput(\'event_end_date\', ' . $event_end_date . ');') . '
                             						</td>
                             					</tr><tr><td></td><td class="field_input"><span id="event_end_date_error" class="error_text"></span></td></tr>
                         					</table>
@@ -619,7 +612,7 @@ global $CFG,$MYVARS,$USER;
                         					Open Registration Date:
                         				</td>
                         				<td class="field_input">
-                        					<script>DateInput(\'start_reg\', '.$start_reg.')</script>
+											' . js_code_wrap('DateInput(\'start_reg\', ' . $start_reg . ');') . '
                         				</td>
                                     </tr><tr><td></td><td class="field_input"><span id="start_reg_error" class="error_text"></span></td></tr>
                     			</table>
@@ -629,7 +622,7 @@ global $CFG,$MYVARS,$USER;
                                 			Close Registration Date:
                                 		</td>
                                 		<td class="field_input">
-                                			<script>DateInput(\'stop_reg\', '.$stop_reg.')</script>
+											' . js_code_wrap('DateInput(\'stop_reg\', ' . $stop_reg . ');') . '
                                 		</td>
                                 	</tr><tr><td></td><td class="field_input"><span id="stop_reg_error" class="error_text"></span></td></tr>
                                 </table>
@@ -753,7 +746,7 @@ global $CFG,$MYVARS,$USER;
                                                 						Sale Price End:
                                                 					</td>
                                                 					<td class="field_input">
-                                                						<script>DateInput(\'sale_end\', '.$sale_end.')</script>
+																		' . js_code_wrap('DateInput(\'sale_end\', ' . $sale_end . ');') . '
                                                 						<span class="hint">'.get_help("input_event_sale_end:events").'<span class="hint-pointer">&nbsp;</span></span>
                                                 					</td>
                                                 				</tr><tr><td></td><td class="field_input"><span id="sale_end_error" class="error_text"></span></td></tr>
@@ -813,7 +806,7 @@ global $CFG,$MYVARS,$USER;
             		</td>
             	</tr>
         	</table>
-       		<script>prepareInputsForHints();</script>
+			' . js_code_wrap('prepareInputsForHints();') . '
         </form>
     </div>';
 }
@@ -874,30 +867,29 @@ global $CFG,$MYVARS,$USER;
 			}
 		}
 		$form .= '<tr><td></td><td><input type="button" value="Submit" onclick="submit_registration(\''.$eventid.'\',\''.$formlist.'\');" /></td></tr></table>';
-        $returnme .= create_validation_javascript($formlist,$eventid) . $form . '</div><script>prepareInputsForHints();</script>';
+        $returnme .= create_validation_javascript($formlist,$eventid) . $form . '</div>' . js_code_wrap('prepareInputsForHints();');
 	}
 
     $returnme .= '</div>'; //end registration div
 
-    $returnme .= '<script type="text/javascript">
-        $(document).keydown(function(e) {
-        var nodeName = e.target.nodeName.toLowerCase();
+    $code = '$(document).keydown(function(e) {
+				var nodeName = e.target.nodeName.toLowerCase();
 
-        if (e.which === 8) {
-            if ((nodeName === "input" && e.target.type === "text") || nodeName === "textarea") {
-                // do nothing
-            } else {
-                e.preventDefault();
-            }
-        }
-        });</script>
-    ';
-echo $returnme;
+				if (e.which === 8) {
+					if ((nodeName === "input" && e.target.type === "text") || nodeName === "textarea") {
+						// do nothing
+					} else {
+						e.preventDefault();
+					}
+				}
+				});';
+	$returnme .= js_code_wrap($code, "defer", true);
+	echo $returnme;
 }
 
 function create_validation_javascript($formlist,$eventid) {
 global $CFG;
-    $validation_script = '<script> function validate_fields() {	var valid = true;';
+    $validation_script = 'function validate_fields() {	var valid = true;';
     date_default_timezone_set(date_default_timezone_get());
     $element = explode("*",$formlist);
     $i = 0;
@@ -1033,18 +1025,15 @@ global $CFG;
     	}
     	$i++;
     }
-    $validation_script .= 'return valid; } </script>';
-    return $validation_script;
+    $validation_script .= 'return valid; }';
+	return js_code_wrap($validation_script, "defer", true);
 }
 
 function showcart() {
 global $CFG;
     if (!isset($EVENTSLIB)) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 
-    $redirect = '<script type="text/javascript">
-                    window.location = "'.$CFG->wwwroot.'";
-                </script>';
-
+	$redirect = js_code_wrap('window.location = "' . $CFG->wwwroot . '";');
     echo main_body(true);
 
     $auth_token = $CFG->paypal_auth;

@@ -22,10 +22,10 @@ get_members_item||
 ||get_members_item
 
 page_js_css||
-<script type="text/javascript"> var dirfromroot = "||dirroot||"; </script>
-||echo get_js_set("basics");::none||
-||echo get_css_set("main");::none||
-<input id="lasthint" type="hidden" />
+  <input id="lasthint" type="hidden" />
+  ||echo js_code_wrap('var dirfromroot = "' . dirroot . '";');::dirroot||
+  ||echo get_js_set("basics");::none||
+  ||echo get_css_set("main");::none||
 ||page_js_css
 
 browse_template||
@@ -40,12 +40,7 @@ browse_template||
     ||usersearchtab||
     <div id="contentscontainer" style="border-top:1px solid gray;position:relative;height:calc(100% - 35px);padding: 10px 10px 0px 10px;"></div>
   </ul>
-<script type="text/javascript">
-  var findmethods=new ddajaxtabs("findpagetabs", "contentscontainer");
-  findmethods.setpersist(false);
-  findmethods.setselectedClassTarget("link"); //"link" or "linkparent"
-  findmethods.init();
-</script>
+  ||echo js_code_wrap('var findmethods=new ddajaxtabs("findpagetabs", "contentscontainer");findmethods.setpersist(false);findmethods.setselectedClassTarget("link");findmethods.init();');::none||
 ||browse_template
 
 browse_usersearch_template||

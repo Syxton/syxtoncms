@@ -159,14 +159,8 @@ $returnme = "";
             break;
     } 
 
-    $returnme .= '
-    <script type="text/javascript">
-        $(document).ready(function() {
-            //call without the parameters to have it read from the DOM
-            thermometer("thermometer");        
-        });
-    </script>
-    ';
+    $returnme .= js_code_wrap('thermometer("thermometer");', "", true);
+
     return $returnme;    
 }
 

@@ -24,7 +24,12 @@ global $CFG, $MYVARS, $USER, $PAGE;
 	$PAGE = new \stdClass;
 	$PAGE->id = $pageid;
 	$PAGE->themeid = get_page_themeid($PAGE->id);
-	$params = array("pageid" => $pageid, "feature" => $feature, "featureid" => $featureid);
+
+	$variables = new \stdClass();
+	$variables->pageid = $pageid;
+	$variables->feature = $feature;
+	$variables->featureid = $featureid;
+	$params = array("variables" => $variables);
 
 	// Allow the Theme Selector
 	if ($feature == "page") {
@@ -35,6 +40,7 @@ global $CFG, $MYVARS, $USER, $PAGE;
 		$params["pane"] = template_use("tmp/themes.template", array("left" => custom_styles_selector($pageid, $feature, $featureid), "right" => $function($pageid,"side",$featureid)), "make_template_selector_panes_template");
 	}
 
+	
 	echo template_use("tmp/themes.template", $params, "change_theme_template");
 }
 ?>

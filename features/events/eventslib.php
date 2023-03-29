@@ -98,15 +98,7 @@ global $CFG;
 $returnme = '';
     if (is_logged_in()) { // Staff Apply visible only if logged in
         $menuitem = '<li>'.make_modal_links(array("title"=> "Staff Apply","path"=>$CFG->wwwroot."/features/events/events.php?action=staff_application","validate"=>"true","width"=>"600","height"=>"650")).'</li>';
-        $returnme .= '
-        <script type="text/javascript" defer>
-            defer(function () {
-                $(document).ready(function() {
-                    var item = "'.addslashes($menuitem).'";
-                    $("#pagenav").append(item);
-                });
-            });
-        </script>';
+        $returnme .= js_code_wrap('var item = "' . addslashes($menuitem) . '"; $("#pagenav").append(item);', 'defer', true);
     }
     $returnme .= '<div style="margin:5px;text-align:right;">'.make_modal_links(array("title"=>"Staff Application/Renewal Form","path"=>$CFG->wwwroot."/features/events/events.php?action=staff_application","validate"=>"true","width"=>"600","height"=>"650","image"=>$CFG->wwwroot."/images/staff.png","confirmexit"=>"true")).'</div>';
 
@@ -1830,20 +1822,17 @@ global $CFG, $USER;
 function get_events_admin_contacts() {
     $contacts = get_db_result("SELECT DISTINCT CONCAT(contact,': ',email,': ',phone) as admin_contact FROM events WHERE confirmed=1 ORDER BY contact,eventid DESC");
 
-    $script = '
-    <script type="text/javascript">
-        function fill_admin_contacts(values) {
-            values = values.split(": ");
-            document.getElementById("contact").value = values[0];
-            document.getElementById("email").value = values[1];
-            var phone = values[2].split("-");
-            document.getElementById("phone_1").value = phone[0];
-            document.getElementById("phone_2").value = phone[1];
-            document.getElementById("phone_3").value = phone[2];
-        }
-    </script>';
+    $script = 'function fill_admin_contacts(values) {
+                    values = values.split(": ");
+                    document.getElementById("contact").value = values[0];
+                    document.getElementById("email").value = values[1];
+                    var phone = values[2].split("-");
+                    document.getElementById("phone_1").value = phone[0];
+                    document.getElementById("phone_2").value = phone[1];
+                    document.getElementById("phone_3").value = phone[2];
+                }';
 
-    return $script.'<br /><table style="width:100%">
+    return js_code_wrap($script) . '<br /><table style="width:100%">
     	<tr>
     		<td class="field_title" style="width:115px;">
     			Contacts List:
@@ -1858,17 +1847,14 @@ function get_events_admin_contacts() {
 function get_events_admin_payable() {
     $contacts = get_db_result("SELECT DISTINCT CONCAT(payableto,': ',checksaddress,': ',paypal) as admin_contact FROM events WHERE payableto!='' AND confirmed=1");
 
-    $script = '
-    <script type="text/javascript">
-        function fill_admin_payable(values) {
-            values = values.split(": ");
-            document.getElementById("payableto").value = values[0];
-            document.getElementById("checksaddress").value = values[1];
-            document.getElementById("paypal").value = values[2];
-        }
-    </script>';
+    $script = 'function fill_admin_payable(values) {
+                    values = values.split(": ");
+                    document.getElementById("payableto").value = values[0];
+                    document.getElementById("checksaddress").value = values[1];
+                    document.getElementById("paypal").value = values[2];
+                }';
 
-    return $script.'<br /><table style="width:100%">
+    return js_code_wrap($script) . '<br /><table style="width:100%">
     	<tr>
     		<td class="field_title" style="width:115px;">
     			Payable List:

@@ -334,7 +334,8 @@ global $CFG, $MYVARS;
         if (valid_voter($pageid, $featureid, $voteid)) {
             //Print out question form
             if (!$refresh) {
-               echo '<html><head><title>Event Request Question Page</title><script type="text/javascript">var dirfromroot = "'.$CFG->directory.'";</script>';
+               echo '<html><head><title>Event Request Question Page</title>';
+               echo js_code_wrap('var dirfromroot = "' . $CFG->directory . '";');
                echo get_js_tags(array("siteajax"));
                echo get_editor_javascript();
                echo get_css_tags(array("main"));
@@ -407,7 +408,8 @@ global $CFG, $MYVARS;
         //Allowed to ask questions
         //Print out question form
         if (!$refresh) {
-            echo '<html><head><title>Event Request Question Page</title><script type="text/javascript">var dirfromroot = "'.$CFG->directory.'";</script>';
+            echo '<html><head><title>Event Request Question Page</title>';
+            echo js_code_wrap('var dirfromroot = "' . $CFG->directory . '";');
             echo get_js_tags(array("siteajax"));
             echo get_editor_javascript();
             echo get_css_tags(array("main"));
@@ -1883,8 +1885,7 @@ global $CFG, $MYVARS, $USER;
 	<span id="custom_limit_num_error" class="error_text"></span>
 	<span id="custom_limit_sorh_error" class="error_text"></span><br />
 	<input type="button" value="Add" onclick="add_custom_limit();" /></center>
-	<script>prepareInputsForHints();</script>
-	';
+    ' . js_code_wrap('prepareInputsForHints();');
 }
 
 function add_new_location() {
@@ -2306,9 +2307,9 @@ global $CFG, $MYVARS;
                   'link' => $CFG->wwwroot,
                   'message' => $info[1] . ' has registered to attend '.$event["name"].'!'
              ));
-            echo '<script type="text/javascript">window.location = "//www.facebook.com"</script>';
+            echo js_code_wrap('window.location = "//www.facebook.com";');
         } catch(FacebookApiException $e) {
-            echo '<script type="text/javascript">jwindow.close();</script>';
+            echo js_code_wrap('jwindow.close();');
         }
     }
 }

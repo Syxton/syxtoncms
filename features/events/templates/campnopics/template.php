@@ -40,12 +40,11 @@ if ($show_again) //This is not the first time through
 $total_owed = isset($MYVARS->GET['total_owed']) ? $MYVARS->GET['total_owed'] : 0;
 $row = get_db_row("SELECT * FROM events WHERE eventid=".$eventid);
 
-if (!$show_again)
-{
-echo '
-<script type="text/javascript" src="'.$CFG->wwwroot.'/features/events/templates/camp/ajax.js"></script>
-<form name="form1">
-<div id="camp"><input type="hidden" name="total_owed" id="total_owed" value="'.$total_owed.'" />';
+if (!$show_again) {
+  echo js_script_wrap($CFG->wwwroot.'/features/events/templates/camp/ajax.js');
+  echo '<form name="form1">
+          <div id="camp">
+            <input type="hidden" name="total_owed" id="total_owed" value="'.$total_owed.'" />';
 }
 
 echo '
@@ -330,6 +329,6 @@ if (!$show_again)
 	echo '</div></form>';
 }
 
-echo '<script>prepareInputsForHints();</script>';
+echo js_code_wrap('prepareInputsForHints();');
 
 ?>

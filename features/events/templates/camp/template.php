@@ -318,5 +318,5 @@ if (!$show_again) {
 	echo '</div></form>';
 }
 
-echo '<script>prepareInputsForHints();</script>';
+echo js_code_wrap('prepareInputsForHints();');
 ?>

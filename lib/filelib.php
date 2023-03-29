@@ -274,7 +274,7 @@ function template_variable_exists($match, $params) {
           $v = 'return $params["' . $vr . '"];';
         }
 
-        if ($vr == "none" || !empty(eval($v))) {
+        if ($vr == "none" || null !== eval($v)) {
           return true;
         } else {
           echo "<br /><br />Template variable '$vr' not found.<br /><br />";
@@ -353,9 +353,17 @@ function js_script_wrap($link, $loadtype = false) {
   return '<script type="text/javascript" src="' . $link . '" ' . $loadtype . '></script>';
 }
 
-function js_code_wrap($code, $loadtype = false) {
+function js_code_wrap($code, $loadtype = false, $jquery = false) {
   $loadtype = !$loadtype ? "" : $loadtype;
-  return '<script type="text/javascript"' . $loadtype . '>' . $code . '</script>';
+  $jq_open = $jquery ? 'defer(function () { $(function() {' : '';
+  $jq_close = $jquery ? '}); });' : '';
+  return <<<EOT
+  <script type="text/javascript" $loadtype >
+    $jq_open
+      $code
+    $jq_close
+  </script>
+  EOT;
 }
 
 function add_js_to_array($path, $script, &$javascript = array()) {

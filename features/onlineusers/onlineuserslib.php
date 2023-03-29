@@ -32,17 +32,25 @@ global $CFG, $USER, $ROLES;
 			$buttons = get_button_layout($feature,$featureid,$pageid); 
 		}
 	}
-	
-	$content .= '<script type="text/javascript">
-					<!-- 
-					var onlineuserstimeout = setInterval(function() { ajaxapi("/features/onlineusers/onlineusers_ajax.php","run_lib_function","&amp;runthis=get_onlineusers&amp;var1='.$pageid.'&amp;var2='.$featureid.'",function() { if (xmlHttp.readyState == 4) { simple_display("onlineusersfeature"); }},true);},30000);
-				 	// --> 
-				 </script>';
+	$script = '
+	<!-- 
+	var onlineuserstimeout = setInterval(function() { 
+											ajaxapi("/features/onlineusers/onlineusers_ajax.php",
+													"run_lib_function",
+													"&amp;runthis=get_onlineusers&amp;var1='.$pageid.'&amp;var2='.$featureid.'",
+													function() { 
+														if (xmlHttp.readyState == 4) { 
+															simple_display("onlineusersfeature"); 
+														}
+													}, true);
+										}, 30000);
+	// -->';
+	$content .= js_code_wrap($script);
 				
-	return get_css_box($title,$content,$buttons, NULL, "onlineusers", $featureid);
+	return get_css_box($title, $content, $buttons, NULL, "onlineusers", $featureid);
 }
 
-function get_onlineusers($pageid,$featureid,$settings=false) {
+function get_onlineusers($pageid, $featureid, $settings = false) {
 global $CFG, $USER;
 	$returnme = "";
 

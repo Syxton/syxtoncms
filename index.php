@@ -25,6 +25,8 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
     setcookie('directory', $directory, get_timestamp() + $CFG->cookietimeout, '/');
     $_SESSION['directory'] = $directory;
 
+    unset($_COOKIE["pageid"]);
+    unset($_SESSION['pageid']);
     $pageid = get_pageid();
     setcookie('pageid', $pageid, get_timestamp() + $CFG->cookietimeout, '/');
     $_SESSION['pageid'] = $pageid;

@@ -15,18 +15,10 @@
         .dock img { behavior: url(iepngfix.htc) }
     </style>
     <![endif]-->
-	<script type="text/javascript">
-		var dirfromroot = "<?php echo $CFG->directory ?>";
-		function defer(method) {
-			if (window.jQuery) {
-				method();
-			} else {
-				setTimeout(function() { defer(method) }, 50);
-			}
-      	}
-	</script>
-            
+
 	<?php
+		echo js_code_wrap('var dirfromroot = "' . $CFG->directory . '";');
+		echo js_code_wrap(template_use("tmp/pagelib.template", array(), "defer_script"));
 		echo get_js_set("main"); // Load javascript.
 	?>
 

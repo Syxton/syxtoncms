@@ -32,8 +32,9 @@ global $CFG, $USER, $ROLES;
 		$content .= '</div><input type="hidden" name="forum_refresh_'.$forumid.'" id="forum_refresh_'.$forumid.'" value="ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_categories_ajax\',\'&amp;forumid='.$forumid.'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true);" />';
 
         //Refresh Script
-        $content.='<script type="text/javascript">var forum'.$forumid.'_interval=0; forum'.$forumid.'_interval = setInterval(function() { eval(stripslashes(unescape(window.parent.document.getElementById("forum_refresh_'.$forumid.'").value))); },'.$refresh_time.');</script>';
-    } else { //This is a SHOUTBOX
+        $script ='var forum'.$forumid.'_interval = setInterval(function() { eval(stripslashes(unescape(window.parent.document.getElementById("forum_refresh_'.$forumid.'").value))); },'.$refresh_time.');';
+		$content .= js_code_wrap($script);
+	} else { //This is a SHOUTBOX
 		if (user_has_ability_in_page($USER->userid,"viewshoutbox",$pageid)) {
 			$content .= get_shoutbox($forumid);
 		} else {

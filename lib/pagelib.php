@@ -121,8 +121,7 @@ global $CFG, $USER, $PAGE;
 
 function get_editor_javascript() {
 global $CFG;
-  //return '<script type="text/javascript" src="'.$CFG->wwwroot.'/scripts/ckeditor/ckeditor.js"></script>';
-  return '<script type="text/javascript" src="' . $CFG->wwwroot . '/scripts/tinymce/jquery.tinymce.min.js"></script>';
+  return js_script_wrap($CFG->wwwroot . '/scripts/tinymce/jquery.tinymce.min.js');
 }
 
 function get_editor_value_javascript($editorname = "editor1") {
@@ -131,13 +130,14 @@ function get_editor_value_javascript($editorname = "editor1") {
 
 function get_editor_box($initialValue = "", $name = "editor1", $height = "550", $width = "100%", $type = "HTML") {
 global $CFG;
-  $params = array("wwwroot" => $CFG->wwwroot,
-                  "initialvalue" => $initialValue,
-                  "toolbar" => get_editor_toolbar($type),
-                  "height" => $height,
-                  "width" => $width,
-                  "plugins" => get_editor_plugins($type),
-                  "directory" => get_directory());
+  $variables = new \stdClass();
+  $variables->wwwroot = $CFG->wwwroot;
+  $variables->toolbar = get_editor_toolbar($type);
+  $variables->height = $height;
+  $variables->width = $width;
+  $variables->plugins = get_editor_plugins($type);
+  $variables->directory = get_directory();
+  $params = array("variables" => $variables, "initialvalue" => $initialValue);
   return template_use("tmp/pagelib.template", $params, "editor_box_template");
 }
 

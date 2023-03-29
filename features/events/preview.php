@@ -19,7 +19,7 @@ callfunction();
 function preview_template() {
 global $CFG,$MYVARS;
     $form = "";
-	echo '<script type="text/javascript">var dirfromroot = "' . $CFG->directory . '";</script><input id="lasthint" type="hidden" />';
+	echo js_code_wrap('var dirfromroot = "' . $CFG->directory . '";');
 	echo get_js_tags(array("siteajax", "features/events/events.js"));
 	echo get_css_tags(array("main"));
      
@@ -27,7 +27,7 @@ global $CFG,$MYVARS;
 	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='".$template_id."'");
 	
 	$formlist = "";
-	$returnme = '<div id="registration_div"><table class="registration"><tr><td>'.$template['intro'].'</td></tr></table>';
+	$returnme = '<input id="lasthint" type="hidden" /><div id="registration_div"><table class="registration"><tr><td>'.$template['intro'].'</td></tr></table>';
 	
 	if ($template['folder'] != "none") { //registration template refers to a file
 		$preview = true;

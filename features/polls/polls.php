@@ -9,13 +9,11 @@
 
 if (empty($_POST["aslib"])) {
     if (!isset($CFG)) { include('../header.php'); } 
-    
+
     callfunction();
-    
-    echo '
-        <script type="text/javascript" src="'. $CFG->wwwroot .'/features/polls/polls.js"></script>
-    ';
-    
+
+    echo js_script_wrap($CFG->wwwroot .'/features/polls/polls.js');
+
     echo '</body></html>';
 }
 
@@ -56,8 +54,8 @@ global $CFG, $MYVARS, $USER;
         }
     }
     
+	echo js_script_wrap($CFG->wwwroot .'/scripts/popupcalendar.js');
     echo '
-    <script type="text/javascript" src="'. $CFG->wwwroot .'/scripts/popupcalendar.js"></script>
     <input id="savedstartdate" type="hidden" value='.$savedstart.' />
     <input id="savedstopdate" type="hidden" value='.$savedstop.' />
     <input id="lasthint" type="hidden" />
@@ -83,8 +81,7 @@ global $CFG, $MYVARS, $USER;
     		</td>
     	</tr><tr><td></td><td class="field_input"><span id="answers_error" class="error_text"></span></td></tr>
     	</table>
-    	
-    	<script>prepareInputsForHints();</script>
+		' . js_code_wrap('prepareInputsForHints();') . '
     	<table>
     	<tr>
     		<td class="field_title" style="width:150px;">
@@ -100,7 +97,7 @@ global $CFG, $MYVARS, $USER;
     		</td>
     		<td class="field_input">
     		<div id="startdatespan" style="display:none;">
-    			<script>DateInput(\'startdate\', true)</script>
+			' . js_code_wrap('DateInput(\'startdate\', true);') . '
     		</div>
     		</td>
     	</tr><tr><td></td><td class="field_input"><div id="startdate_error" class="error_text"></div></td></tr>
@@ -117,7 +114,7 @@ global $CFG, $MYVARS, $USER;
     		</td>
     		<td class="field_input">
     			<div id="stopdatespan" style="display:none;">
-    			<script>DateInput(\'stopdate\', true)</script>
+				' . js_code_wrap('DateInput(\'stopdate\', true);') . '
     			</div>
     		</td>
     	</tr><tr><td></td><td class="field_input"><div id="stopdate_error" class="error_text"></div></td></tr>

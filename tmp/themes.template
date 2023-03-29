@@ -6,32 +6,30 @@ change_theme_template||
   <div id="themes_page">
     ||pane||
   </div>
-  <script type="text/javascript">
-  $(document).ready(function() {
+  ||echo js_code_wrap('
     var themelist = "";
     setInterval(function() {
                   var newlist = "";
-                  $('.themeinput').each(function(themelist) {
+                  $(".themeinput").each(function(themelist) {
                     newlist += $(this)[0].name + $(this).val();
                   });
 
                   if (themelist != newlist) {
                     themelist = newlist;
                     newlist = "";
-                    ajaxapi('/ajax/themes_ajax.php',
-                            'preview',
-                            '&' + create_request_string('colors') +
-                            '&pageid=||pageid||' +
-                            '&feature=||feature||' +
-                            '&featureid=||featureid||',
+                    ajaxapi("/ajax/themes_ajax.php",
+                            "preview",
+                            "&" + create_request_string("colors") +
+                            "&pageid=' . variables->pageid . '" +
+                            "&feature=' . variables->feature . '" +
+                            "&featureid=' . variables->featureid . '",
                             function() {
-                              simple_display('color_preview');
+                              simple_display("color_preview");
                             }
                     );
                   }
                 }, 500);
-  });
-  </script>
+  ', "defer", true);::variables||
 ||change_theme_template
 
 theme_selector_menu_action_template||

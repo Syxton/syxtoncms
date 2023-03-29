@@ -55,9 +55,7 @@ global $CFG, $MYVARS, $USER;
 
 function thankyou() {
 global $CFG;
-    $redirect = '<script type="text/javascript">
-                    window.location = "'.$CFG->wwwroot.'";
-                </script>';
+    $redirect = js_code_wrap('window.location = "' . $CFG->wwwroot . '";');
 
     echo main_body(true);
     
@@ -104,12 +102,10 @@ global $CFG;
                 // check that receiver_email is your Primary PayPal email
                 // check that payment_amount/payment_currency are correct
                 // process payment
+                echo js_code_wrap('setTimeout(function() { window.location = "' . $CFG->wwwroot . '"; },10000);');
                 echo '
-                <script type="text/javascript">
-                    setTimeout(function() { window.location = "'.$CFG->wwwroot.'" },10000);
-                </script>
                 <div style="width: 640px;text-align:center;margin:auto">
-                <h1>Thank You!</h1>
+                    <h1>Thank You!</h1>
                     Your transaction has been completed, and a receipt for your donation has been emailed to you.
                     <br />You may log into your account at <a href="//www.paypal.com">www.paypal.com</a> to view details of this transaction.
                 </div>
