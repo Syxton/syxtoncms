@@ -10,26 +10,26 @@
 if (!isset($LIBHEADER)) { if (file_exists('./lib/header.php')) { include('./lib/header.php'); }elseif (file_exists('../lib/header.php')) { include('../lib/header.php'); }elseif (file_exists('../../lib/header.php')) { include('../../lib/header.php'); }}
 $ONLINEUSERSLIB = true;
 
-function display_onlineusers($pageid,$area,$featureid) {
+function display_onlineusers($pageid, $area, $featureid) {
 global $CFG, $USER, $ROLES;
 	$content=""; $feature = "onlineusers";
 	
-	if (!$settings = fetch_settings($feature,$featureid,$pageid)) {
-		make_or_update_settings_array(default_settings($feature,$pageid,$featureid));
-		$settings = fetch_settings($feature,$featureid,$pageid);
+	if (!$settings = fetch_settings($feature, $featureid, $pageid)) {
+		make_or_update_settings_array(default_settings($feature, $pageid, $featureid));
+		$settings = fetch_settings($feature, $featureid, $pageid);
 	}
 	
 	$title = $settings->$feature->$featureid->feature_title->setting;
 	
 	if (is_logged_in()) {
-		if (user_has_ability_in_page($USER->userid,"seeusers",$pageid)) {
-    		$content .= '<div id="onlineusersfeature">'.get_onlineusers($pageid,$featureid,$settings). '</div>';
+		if (user_has_ability_in_page($USER->userid, "seeusers", $pageid)) {
+    		$content .= '<div id="onlineusersfeature">'.get_onlineusers($pageid, $featureid, $settings). '</div>';
 			$buttons = get_button_layout($feature,$featureid,$pageid); 
 		}
 	} else {
-		if (role_has_ability_in_page($ROLES->visitor,"seeusers",$pageid)) {
-			$content .= '<div id="onlineusersfeature">'.get_onlineusers($pageid,$featureid,$settings). '</div>';
-			$buttons = get_button_layout($feature,$featureid,$pageid); 
+		if (role_has_ability_in_page($ROLES->visitor, "seeusers", $pageid)) {
+			$content .= '<div id="onlineusersfeature">'.get_onlineusers($pageid, $featureid, $settings). '</div>';
+			$buttons = get_button_layout($feature, $featureid, $pageid); 
 		}
 	}
 	$script = '
@@ -55,9 +55,9 @@ global $CFG, $USER;
 	$returnme = "";
 
     //Settings will usually come from display setting, but they could come from ajax call without settings
-	if (!$settings && !$settings = fetch_settings("onlineusers",$featureid,$pageid)) {
-		make_or_update_settings_array(default_settings("onlineusers",$pageid,$featureid));
-		$settings = fetch_settings("onlineusers",$featureid,$pageid);
+	if (!$settings && !$settings = fetch_settings("onlineusers", $featureid, $pageid)) {
+		make_or_update_settings_array(default_settings("onlineusers", $pageid, $featureid));
+		$settings = fetch_settings("onlineusers", $featureid, $pageid);
 	}
     
 	$viewable_limit = $settings->onlineusers->$featureid->viewable_limit->setting;
