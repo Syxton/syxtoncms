@@ -96,7 +96,7 @@ search_pages_buttons_template||
                                                       '&pageid=||pageid||',
                                                       function() {
                                                         simple_display('addremove_||pageid||');
-                                                      });" onmouseup="this.blur();">" onmouseup="this.blur();">
+                                                      });" onmouseup="this.blur();">
         <img src="||wwwroot||/images/mail.gif" title="Send Request" alt="Send Request">
       </a>
     }}alreadyrequested||
@@ -136,7 +136,7 @@ search_pages_buttons_template||
                                                              simple_display('searchcontainer_pagesearch');
                                                            });
                                                 }" onmouseup="this.blur();">
-          <img src="' . $CFG->wwwroot . '/images/delete.png" title="Remove Page" alt="Remove Page" />
+          <img src="||wwwroot||/images/delete.png" title="Remove Page" alt="Remove Page" />
         </a>
       }}isadd||
     }}can_add_remove||

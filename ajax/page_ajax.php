@@ -178,7 +178,7 @@ global $CFG, $MYVARS, $USER;
 
       $params["linked"] = $linked;
       $params["col1"] = template_use("tmp/page_ajax.template", array("linked" => $linked, "pageid" =>  $page["pageid"],"name" => substr($page["name"], 0, 30)), "search_pages_link_template");
-      $params["col2"] = substr($page["description"], 0, 50);
+      $params["col2"] = htmlentities(strip_tags(substr($page["description"], 0, 50)));
       $params["searchresults"] = $params["searchresults"] . template_use("tmp/page_ajax.template", $params, "search_row_template");
     }
   }
