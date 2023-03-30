@@ -105,7 +105,7 @@ global $CFG, $USER, $PAGE;
     $params = array("wwwroot" => $CFG->wwwroot,
                     "haslogo" => isset($CFG->logofile),
                     "logofile" => $CFG->logofile,
-                    "hasmobilelogo" => isset($CFG->mobilelogofile),
+                    "hasmobilelogo" => !empty($CFG->mobilelogofile),
                     "mobilelogofile" => $CFG->mobilelogofile,
                     "sitename" => $CFG->sitename,
                     "header_only" => ($header_only ? "" : get_nav_items($PAGE->id)),
