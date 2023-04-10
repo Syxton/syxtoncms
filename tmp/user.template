@@ -75,54 +75,52 @@ new_user_validation||
 
 reset_password_template||
   ||alternate{{
-    ||get_js_tags)("validate");::none||
-    <h1>
-      Change Password
-    </h1>
-    <br />
-    <div id="forgot_password">
-      Please type a new password then verify it.  After submitting your new password, you will be logged into the site and your new password will be set.
+      <h1>
+        Change Password
+      </h1>
       <br />
-      <br />
-      <form id="password_request_form">
-        <fieldset class="formContainer">
-          <div class="rowContainer">
-            <label class="rowTitle" for="mypassword">
-              New Password
-            </label>
-            <input value="" type="password" id="mypassword" name="mypassword" data-rule-required="true" data-rule-minlength="6" data-msg-required="||password_req||" data-msg-minlength="||password_length||" />
-            <div class="tooltipContainer info">
-              ||password_help||
+      <div id="forgot_password">
+        Please type a new password then verify it.  After submitting your new password, you will be logged into the site and your new password will be set.
+        <br />
+        <br />
+        <form id="password_reset_form">
+          <fieldset class="formContainer">
+            <div class="rowContainer">
+              <label class="rowTitle" for="mypassword">
+                New Password
+              </label>
+              <input value="" type="password" id="mypassword" name="mypassword" data-rule-required="true" data-rule-minlength="6" data-msg-required="||password_req||" data-msg-minlength="||password_length||" />
+              <div class="tooltipContainer info">
+                ||password_help||
+              </div>
+              <div class="spacer" style="clear: both;"></div>
             </div>
-            <div class="spacer" style="clear: both;"></div>
-          </div>
-          <div class="rowContainer">
-            <label class="rowTitle" for="vpassword">
-              Verify Password
-            </label>
-            <input value="" type="password" id="vpassword" name="vpassword" data-rule-required="true" data-rule-equalTo="#mypassword" data-msg-required="||vpassword_req||" data-msg-equalTo="||vpassword_match||" />
-            <div class="tooltipContainer info">
-              ||vpassword_help||
+            <div class="rowContainer">
+              <label class="rowTitle" for="vpassword">
+                Verify Password
+              </label>
+              <input value="" type="password" id="vpassword" name="vpassword" data-rule-required="true" data-rule-equalTo="#mypassword" data-msg-required="||vpassword_req||" data-msg-equalTo="||vpassword_match||" />
+              <div class="tooltipContainer info">
+                ||vpassword_help||
+              </div>
+              <br />
+              <div class="spacer" style="clear: both;"></div>
             </div>
-            <br />
-            <div class="spacer" style="clear: both;"></div>
-          </div>
-          <input class="submit" name="submit" type="submit" value="Save" style="margin: auto;width: 80px;display: block;" />
-        </fieldset>
-      </form>
-        ||echo js_code_wrap('
-          setTimeout(function() {
-                      document.getElementById("mypassword").value = "";
-                      document.getElementById("vpassword").value = "";
-                      document.getElementById("mypassword").focus();
-                    },500);
-        ');::none||
-    </div>
+            <input class="submit" name="submit" type="submit" value="Save" style="margin: auto;width: 80px;display: block;" />
+          </fieldset>
+        </form>
+          ||echo js_code_wrap('
+            setTimeout(function() {
+                        document.getElementById("mypassword").value = "";
+                        document.getElementById("vpassword").value = "";
+                        document.getElementById("mypassword").focus();
+                      },500);
+          ');::none||
+      </div>
 
-    //OR//
+      //OR//
 
-    ||echo js_code_wrap('go_to_page(' . siteid . ');');::siteid||
-  
+      ||echo js_code_wrap('go_to_page(' . siteid . ');');::siteid||
   }}alternate||
 ||reset_password_template
 

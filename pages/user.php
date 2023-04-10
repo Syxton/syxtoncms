@@ -3,7 +3,7 @@
 * user.php - User thickbox page lib
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 05/06/2021
+* Date: 04/10/2023
 * Revision: 0.4.6
 ***************************************************************************/
 include('header.php');
@@ -28,9 +28,14 @@ global $MYVARS, $CFG;
 
 function reset_password() {
 global $MYVARS, $PAGE, $CFG;
+	//Not an ajax call so full start of new page is needed.  This is pretty rare.
+	$PAGE->title = "Reset Password";
+    include($CFG->dirroot . '/header.html');
+	echo get_js_tags(array("validate"));
+
 	$userid = $MYVARS->GET["userid"];
 	$alternate = get_db_row("SELECT * FROM users WHERE userid='$userid' AND alternate='".$MYVARS->GET["alternate"]."'") ? true : false;
-	$params = array("siteid" => $CFG->SITEID, "userid" => $userid, "wwwroot" => $CFG->wwwroot, "directory" => get_directory(), "alternate" => $alternate);
+	$params = array("siteid" => $CFG->SITEID, "userid" => $userid, "wwwroot" => $CFG->wwwroot, "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'), "alternate" => $alternate);
 
 	if ($alternate) {
 		if (!isset($VALIDATELIB)) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
@@ -42,13 +47,14 @@ global $MYVARS, $PAGE, $CFG;
 		$params["vpassword_match"] = get_error_message('valid_vpassword_match');
 		$params["vpassword_help"] = get_help("input_vpassword");
 
-		// Main Layout
-		$params2 = array("mainmast" => page_masthead(true),
-									 	 "middlecontents" => template_use("tmp/user.template", $params, "reset_password_template") .
-													 							 create_validation_script("password_request_form" , template_use("tmp/user.template", $params, "reset_password_validation_template")));
+		$password_validate_form = template_use("tmp/user.template", $params, "reset_password_validation_template");
+		$validation_script = create_validation_script("password_reset_form" , $password_validate_form);
+		$middle_contents = template_use("tmp/user.template", $params, "reset_password_template") . $validation_script;
 
+		// Main Layout
+		$params2 = array("mainmast" => page_masthead(true), "middlecontents" => $middle_contents);
 		echo template_use("tmp/index.template", $params2, "mainlayout_template");
-  } else {
+	} else {
 		echo template_use("tmp/user.template", array("alternate" => false), "reset_password_template");
 	}
 }
