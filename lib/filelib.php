@@ -120,6 +120,12 @@ function return_bytes ($size_str) {
     }
 }
 
+function get_protocol() {
+  $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https:" : "http:";
+  $protocol = strstr($CFG->wwwroot, "http") ? '' : $protocol;
+  return $protocol;
+}
+
 // Main template function
 function template_use($file, $params = array(), $subsection = "", $feature = false) {
 	global $CFG;

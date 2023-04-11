@@ -595,8 +595,8 @@ function make_paypal_button($items, $sellersemail) {
 global $CFG;
     $regids = "";
     $returnme = $CFG->paypal ? '<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">' : '<form action="https://www.sandbox.paypal.com/cgi-bin/webscr" method="post" target="_blank">';
-    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https:" : "http:";
-    $protocol = strstr($CFG->wwwroot, "http") ? '' : $protocol;
+    $protocol = get_protocol();
+    
     $returnme .= '
         <input type="hidden" name="upload" value="1">
         <input type="hidden" name="cmd" value="_cart">
@@ -722,8 +722,7 @@ global $CFG;
     $event = get_db_row("SELECT * FROM events WHERE eventid='" . $reg["eventid"]."'");
     $template = get_db_row("SELECT * FROM events_templates WHERE template_id='" . $event["template_id"]."'");
 
-    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https:" : "http:";
-    $protocol = strstr($CFG->wwwroot, "http") ? '' : $protocol;
+    $protocol = get_protocol();
 
     if (!empty($CFG->logofile)) {
         $email = '<img src="'.$protocol.$CFG->wwwroot.'/images/'.$CFG->logofile.'" style="5em" /><br />';
@@ -1152,46 +1151,53 @@ function get_my_category($selected = false) {
     return $returnme;
 }
 
-function staff_status($staff) {
-  $pageid = $_SESSION["pageid"];
-  $featureid = "*";
-  if (!$settings = fetch_settings("events", $featureid, $pageid)) {
-	   make_or_update_settings_array(default_settings("events", $pageid, $featureid));
-	    $settings = fetch_settings("events", $featureid, $pageid);
-  }
-  $status = array();
+function staff_status($staff, $userid = true) {
+    $status = array();
 
-  if (!$staff) { // User exists but no staff history.
-    return array(array("tag" => "Application", "full" => "Application Out of Date"),
-                 array("tag" => "Background Check", "full" => "Background Check Incomplete"));
-  }
+    if ($userid) {
+        $pageid = $_SESSION["pageid"];
+        $featureid = "*";
+        if (!$settings = fetch_settings("events", $featureid, $pageid)) {
+            make_or_update_settings_array(default_settings("events", $pageid, $featureid));
+            $settings = fetch_settings("events", $featureid, $pageid);
+        }
 
-  if ($staff["workerconsentdate"] < strtotime($settings->events->$featureid->staffapp_expires->setting . '/' . date('Y'))) {
-      $status[] = array("tag" => "Application", "full" => "Application Out of Date");
-  }
+        if (!$staff) { // User exists but no staff history.
+        return array(array("tag" => "Application", "full" => "Application Incomplete"),
+                     array("tag" => "Background Check", "full" => "Background Check Incomplete"));
+        }
+    
+        if ($staff["workerconsentdate"] < strtotime($settings->events->$featureid->staffapp_expires->setting . '/' . date('Y'))) {
+            $status[] = array("tag" => "Application", "full" => "Application Out of Date");
+        }
+    
+        $flag = $staff["q1_1"] + $staff["q1_2"] + $staff["q1_3"] + $staff["q2_1"] + $staff["q2_2"];
+        if (!empty($flag)) {
+            $status[] = array("tag" => "Flagged", "full" => "Flagged for review!");
+        }
+    
+        $eighteen = 18 * 365 * 24 * 60 * 60; // 18 years in seconds
+        $expireyear = $settings->events->$featureid->bgcheck_years->setting * 365 * 24 * 60 * 60;
+        $time = get_timestamp();
+        if (($time - $staff["dateofbirth"]) > $eighteen ) {
+            if (empty($staff["bgcheckpass"])) {
+                $status[] =  array("tag" => "Background Check", "full" => "Background Check Incomplete");
+            } else if (($time - $staff["bgcheckpassdate"]) > $expireyear) {
+                $status[] =  array("tag" => "Background Check", "full" => "Background Check Out of Date");
+            }
+        }
+    } else {
+        $status[] = array("tag" => "Account", "full" => "No account");
+        $status[] = array("tag" => "Application", "full" => "Application Incomplete");
+        $status[] = array("tag" => "Background Check", "full" => "Background Check Incomplete");
+    }
 
-  $flag = $staff["q1_1"] + $staff["q1_2"] + $staff["q1_3"] + $staff["q2_1"] + $staff["q2_2"];
-  if (!empty($flag)) {
-      $status[] = array("tag" => "Flagged", "full" => "Flagged for review!");
-  }
-
-  $eighteen = 18 * 365 * 24 * 60 * 60; // 18 years in seconds
-  $expireyear = $settings->events->$featureid->bgcheck_years->setting * 365 * 24 * 60 * 60;
-  $time = get_timestamp();
-  if (($time - $staff["dateofbirth"]) > $eighteen ) {
-      if (empty($staff["bgcheckpass"])) {
-          $status[] =  array("tag" => "Background Check", "full" => "Background Check Incomplete");
-      } else if (($time - $staff["bgcheckpassdate"]) > $expireyear) {
-          $status[] =  array("tag" => "Background Check", "full" => "Background Check Out of Date");
-      }
-  }
-  return $status;
+    return $status;
 }
 
 function print_status($status) {
 global $CFG;
-    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https:" : "http:";
-    $protocol = strstr($CFG->wwwroot, "http") ? '' : $protocol;
+    $protocol = get_protocol();
     $print = '';
     if (!empty($status)) {
         foreach ($status as $s) {

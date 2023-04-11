@@ -44,8 +44,7 @@ function donation_form($featureid,$settings) {
 global $CFG;
     $returnme = "";
 
-    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https:" : "http:";
-    $protocol = strstr($CFG->wwwroot, "http") ? '' : $protocol;
+    $protocol = get_protocol();
 
     if ($campaign = get_db_row("SELECT * FROM donate_campaign WHERE campaign_id IN (SELECT campaign_id FROM donate_instance WHERE donate_id='$featureid')")) {
         if ($CFG->paypal) { 

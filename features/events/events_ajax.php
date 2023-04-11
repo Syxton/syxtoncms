@@ -1598,7 +1598,7 @@ global $CFG, $MYVARS, $USER;
 function lookup_reg() {
 global $CFG, $MYVARS, $USER;
 	$code = dbescape($MYVARS->GET["code"]);
-	$time = get_timestamp();
+
 	$SQL = "SELECT * FROM events_registrations WHERE code = '$code'";
 
 	if (strlen($code) > 5 && $registration = get_db_row($SQL)) {
@@ -2496,79 +2496,61 @@ global $CFG, $MYVARS, $USER;
     $stafflist = preg_split("/\r\n|\n|\r/", $stafflist);
     $sendemails = filter_var($MYVARS->GET["sendemails"], FILTER_VALIDATE_BOOLEAN);;
 
-    $emailnotice = new \stdClass;
-    $emailnotice->email = $CFG->siteemail;
-    $emailnotice->fname = $CFG->sitename;
-    $emailnotice->lname = "";
-    $time = get_timestamp();
-    $subject = "$CFG->sitename Staff Process";
-
-    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https:" : "http:";
-    $protocol = strstr($CFG->wwwroot, "http") ? '' : $protocol;
-
-    $staffcomstatus = array();
-    $staffapproved = array();
     if (!empty($stafflist)) {
-        foreach ($stafflist as $email) {
-        $message = "
-        <p><strong>If you are receiving this, it is because we have been notified that you have been selected to be on staff this year.</strong>&nbsp; <strong>Please do the following ASAP.&nbsp;&nbsp; You must complete this staff application to be a staff member. </strong></p>
-        <ol>
-        <li>Go to <a href='" . $protocol.$CFG->wwwroot . "'>$CFG->sitename</a> and signup for an account and login.&nbsp; It's easy and free.&nbsp;&nbsp;<strong> <br />Do not log in as someone else and fill out the application. </strong></li>
-        <li>Once you are logged into the site, you will see a tab or a button labeled 'Staff Apply'.&nbsp; Complete a staff application.</li>
-        <li>If you are 18 years of age or older, once you complete your staff application you will be given an opportunity to follow a link to complete the Background Authorization Form. This background check will be valid for the next 5 years and will not need to be done every year.</li>
-        </ol>
-        <br /><br />
-        Current Status:<br />
-        <div style='color:red;font-weight:bold'><img style='vertical-align: middle;' src='" . $protocol.$CFG->wwwroot . "/images/error.gif' /> No account</div>
-        <div style='color:red;font-weight:bold'><img style='vertical-align: middle;' src='" . $protocol.$CFG->wwwroot . "/images/error.gif' /> Application Incomplete</div>
-        <div style='color:red;font-weight:bold'><img style='vertical-align: middle;' src='" . $protocol.$CFG->wwwroot . "/images/error.gif' /> Background Check Incomplete</div>
-        ";
+        $subject = "$CFG->sitename Staff Process";
+        $protocol = get_protocol();
+        $staffcomstatus = array();
+        $staffapproved = array();
 
+        $emailnotice = new \stdClass;
+        $emailnotice->email = $CFG->siteemail;
+        $emailnotice->fname = $CFG->sitename;
+        $emailnotice->lname = "";
+
+        $m2 = "<br />I hope this email finds you well.<br />
+        <p><strong>If you are receiving this, it is because we have been notified that you have been selected to be on staff this year.</strong>&nbsp; <strong>Please do the following ASAP.&nbsp;&nbsp; You must complete this staff application to be a " . date("Y") . " staff member. </strong></p>
+        <ul>
+        <li>Go to <a href='" . $protocol.$CFG->wwwroot . "'>$CFG->sitename</a> and sign in or signup for an account and login.&nbsp; It's easy and free.&nbsp;&nbsp;<strong> <br />Do not log in as someone else and fill out the application. </strong></li>
+        <li>Once you are logged into the site, you will find a button labeled <strong>Staff Apply</strong>.&nbsp; Fill out the staff application and submit.</li>
+        <li>If you have previously applied, the information from your previous application should already be filled in. Please update any information as needed.</li>
+        <li>If you are 18 years of age or older, once you complete your staff application you will be given an opportunity to follow a link to complete the Background Authorization Form. This background check will be valid for the next 5 years and will not need to be done every year.</li>
+        <li>If you have completed a background check previously you can also send an email to ". $CFG->siteemail . " giving permission to renew your background check.</li>
+        </ul><br /><br />";
+
+        foreach ($stafflist as $email) {
+            $name = "";
             $email = trim($email);
             if (filter_var($email, FILTER_VALIDATE_EMAIL)) { // It is an email address, so let's get an email ready.
-                if ($user = get_db_row("SELECT * FROM users WHERE LOWER(email) LIKE LOWER('%$email%')")) { // is a user.
-                  $archive = get_db_row("SELECT * FROM events_staff WHERE userid='" . $user["userid"] . "' LIMIT 1");
-                  $status = staff_status($archive);
-                  $thingstodo = count($status);
-                  if (!empty($status)) {
-                      $message = "
-                      Dear ".$user["fname"]." ".$user["lname"]."
-                      <p><strong>If you are receiving this, it is because we have been notified that you have been selected to be on staff this year.</strong>&nbsp; <strong>Please do the following ASAP.&nbsp;&nbsp; You must complete this staff application to be a staff member. </strong></p>
-                      <ol>
-                      <li>Go to <a href='" . $protocol.$CFG->wwwroot . "'>$CFG->sitename</a> and login using your account.&nbsp; <strong> <br />Do not log in as someone else and fill out the application. </strong></li>
-                      <li>Once you are logged into the site, you will see a tab or a button labeled 'Staff Apply'.&nbsp; Complete a staff application.</li>
-                      <li>The information from your previous application should already be filled in. Please update any information as needed.</li>
-                      <li>If you are 18 years of age or older, once you complete your staff application you will be given an opportunity to follow a link to complete the Background Authorization Form. This background check will be valid for the next 5 years and will not need to be done every year.</li>
-                      </ol>
-                      <br /><br />
-                      Current Status:<br />" . print_status($status);
-                      $contact = new \stdClass;
-                      $contact->fname = $user["fname"];
-                      $contact->lname = $user["lname"];
-                      $contact->email = $email;
+                $user = get_db_row("SELECT * FROM users WHERE LOWER(email) LIKE LOWER('%$email%')");
+                $contact = new \stdClass;
+                $contact->email = $email;
+                $contact->fname = "";
+                $contact->lname = "";
 
-                      // Send email to the requester letting them know we received the request.
-                      if (!empty($sendemails)) {
-                          send_email($contact, $emailnotice, false, $subject, $message);
-                          $staffcomstatus[] = $user["fname"] . " " . $user["lname"] . " ($email) contacted.";
-                      } else {
-                          $staffcomstatus[] = $user["fname"] . " " . $user["lname"] . " ($email) <strong> Requires: " . implode(", ", array_column($status, 'tag')) . "</strong>";
-                      }
-                  } else {
-                      $staffapproved[] = $user["fname"] . " " . $user["lname"] . " ($email) is <strong> APPROVED</strong>";
-                  }
-                } else { // Not an email we know, so send the full email.
-                    $contact = new \stdClass;
-                    $contact->email = $email;
-                    $contact->fname = "";
-                    $contact->lname = "";
+                if ($user) {
+                    $name = $user["fname"] . " " . $user["lname"] . " ";
+                    $m1 = "Hello $name!,";
+                    $contact->fname = $user["fname"];
+                    $contact->lname = $user["lname"];
+                    $archive = get_db_row("SELECT * FROM events_staff WHERE userid='" . $user["userid"] . "' LIMIT 1");
+                    $status = staff_status($archive);
+                } else {
+                    $m1 = "Hello future team member!,";
+                    $status = staff_status(false, false);
+                }
+
+                if (!empty($status)) {
+                    $m3 = "<strong>Current Status:</strong><br />" . print_status($status);
+
                     // Send email to the requester letting them know we received the request.
                     if (!empty($sendemails)) {
-                        send_email($contact, $emailnotice, false, $subject, $message);
-                        $staffcomstatus[] = "$email contacted.";
+                        send_email($contact, $emailnotice, false, $subject, $m1.$m2.$m3);
+                        $staffcomstatus[] = "$name($email) contacted.";
                     } else {
-                        $staffcomstatus[] = "$email <strong> Requires: Account, Application, Background</strong>";
+                        $staffcomstatus[] = "$name($email) <strong> Requires: " . implode(", ", array_column($status, 'tag')) . "</strong>";
                     }
+                } else {
+                    $staffapproved[] = "$name($email) is <strong> APPROVED</strong>";
                 }
             } else {
                 if (strlen($email) > 4) {

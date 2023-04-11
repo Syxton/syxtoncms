@@ -114,7 +114,7 @@ global $CFG;
 
 						if (!empty($url)) {
 							// make full url if not full
-							$protocol = isset($_SERVER["HTTPS"]) ? 'https://' : 'http://';
+							$protocol = get_protocol();
 							$url_parts = parse_url($url);
 							$url = str_replace("://", "", $url);
 							$url = str_replace(":", "", $url);
