@@ -35,7 +35,6 @@
                             });
                         }
                     });
-
                     function adjustStyle(width) {
                         width = parseInt(width);
                         if (width < 701) {
@@ -54,29 +53,24 @@
                             $("#headerquotebox").css("width","29%");
                         }
                     }
-
                     $("#menu-icon").on("click", function() {
                         $("#pagenav").toggle();
                     });
-
                     $( "#accordion" ).accordion();
-
                     adjustStyle($(this).width());
-
                     $('#pagenav li').hover(
                         function(){ $(this).addClass('sfhover') },
                         function(){ $(this).removeClass('sfhover') }
                     );
-
                     $(window).resize(function() {
                         setTimeout(function() {
                             adjustStyle($(this).width());
                         }, 100);
                     });
-
                     setTimeout(function() {
                         $("#carousel").flickity();
                     }, 500);
+                    $("#main-content").show();
                 EOT;
                 echo js_code_wrap($code, "defer", true);
             ?>
