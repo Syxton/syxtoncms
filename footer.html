@@ -5,6 +5,11 @@
 
             <?php
                 $code = <<<EOT
+                    $("#accordion").accordion();
+                    adjustStyle($(window).width());
+                    setTimeout(function() {
+                        $("#carousel").flickity();
+                    }, 500);
                     $(".pagesort1, .pagesort2" ).sortable({
                         connectWith: ".connectedSortable",
                         items: ".box",
@@ -35,42 +40,27 @@
                             });
                         }
                     });
-                    function adjustStyle(width) {
-                        width = parseInt(width);
-                        if (width < 701) {
-                            $(".rightmenu .col1").css("width","100%");
-                            $(".rightmenu .col2").css("width","100%");
-                            $(".rightmenu .colleft").css("right", "24.5%");
-                            $(".rightmenu .col1").css("left","25%");
-                            $(".rightmenu .col2").css("left","25%");
-                            $("#headerlogo").css("width","100%");
-                            $("#headerquotebox").css("width","100%");
-                        } else if ((width >= 701)) {
-                            $(".rightmenu .col1").css("width","76.3%");
-                            $(".rightmenu .col2").css("width","22.5%");
-                            $(".rightmenu .colleft").css("right", "25.5%");
-                            $("#headerlogo").css("width","70%");
-                            $("#headerquotebox").css("width","29%");
-                        }
-                    }
                     $("#menu-icon").on("click", function() {
                         $("#pagenav").toggle();
                     });
-                    $( "#accordion" ).accordion();
-                    adjustStyle($(this).width());
                     $('#pagenav li').hover(
                         function(){ $(this).addClass('sfhover') },
                         function(){ $(this).removeClass('sfhover') }
                     );
                     $(window).resize(function() {
                         setTimeout(function() {
-                            adjustStyle($(this).width());
+                            adjustStyle($(window).width());
                         }, 100);
+                    });
+                    $(window).on('focus', function() {
+                        $("#carousel").flickity();
+                        window.dispatchEvent(new Event('resize'));
                     });
                     setTimeout(function() {
                         $("#carousel").flickity();
+                        window.dispatchEvent(new Event('resize'));
+                        $("#main-content").show();
                     }, 500);
-                    $("#main-content").show();
                 EOT;
                 echo js_code_wrap($code, "defer", true);
             ?>

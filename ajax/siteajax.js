@@ -302,6 +302,25 @@ function update_alerts(change){
 	$("#alerts").val(alerts);
 }
 
+function adjustStyle(width) {
+	width = parseInt(width);
+	if (width < 701) {
+		$(".rightmenu .col1").css("width","100%");
+		$(".rightmenu .col2").css("width","100%");
+		$(".rightmenu .colleft").css("right", "24.5%");
+		$(".rightmenu .col1").css("left","25%");
+		$(".rightmenu .col2").css("left","25%");
+		$("#headerlogo").css("width","100%");
+		$("#headerquotebox").css("width","100%");
+	} else if ((width >= 701)) {
+		$(".rightmenu .col1").css("width","76.3%");
+		$(".rightmenu .col2").css("width","22.5%");
+		$(".rightmenu .colleft").css("right", "25.5%");
+		$("#headerlogo").css("width","70%");
+		$("#headerquotebox").css("width","29%");
+	}
+}
+
 function findPosX(obj) {
     var curleft = 0;
     if (obj.offsetParent) {
