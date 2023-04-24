@@ -114,7 +114,7 @@ global $CFG;
 
 						if (!empty($url)) {
 							// make full url if not full
-							$protocol = get_protocol();
+							$protocol = get_protocol() . "//";
 							$url_parts = parse_url($url);
 							$url = str_replace("://", "", $url);
 							$url = str_replace(":", "", $url);
