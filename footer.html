@@ -5,7 +5,12 @@
 
             <?php
                 $code = <<<EOT
-                    $("#accordion").accordion();
+                    $("#accordion").accordion({
+                        header: "h3",
+                        collapsible: true,
+                        heightStyle: "content",
+                        navigation: true 
+                    });
                     adjustStyle($(window).width());
                     setTimeout(function() {
                         $("#carousel").flickity();
