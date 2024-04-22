@@ -590,7 +590,7 @@ global $CFG;
 function get_user_alerts($userid, $returncount = true, $internal = true) {
   $returnme = all_features_function("SELECT * FROM features", false, "get_", "_alerts", $returncount, $userid, $returncount);
   if (!$returncount) {
-    $returnme = $returnme == "" ? template_use("tmp/pagelib.template", array(), "get_user_alerts_template") : $returnme;
+    $returnme = $returnme == "" ? template_use("tmp/pagelib.template", [], "get_user_alerts_template") : $returnme;
   }
 
   if ($internal) {
@@ -640,9 +640,9 @@ global $CFG, $USER, $PAGE;
 
   //SQL Creation
   if (is_logged_in()) {
-    $SQL = template_use("dbsql/pages.sql", array(), "get_menu_for_users");
+    $SQL = template_use("dbsql/pages.sql", [], "get_menu_for_users");
   } else {
-    $SQL = template_use("dbsql/pages.sql", array(), "get_menu_for_visitors");
+    $SQL = template_use("dbsql/pages.sql", [], "get_menu_for_visitors");
   }
 
   $selected = $pageid == $CFG->SITEID ? true : false;

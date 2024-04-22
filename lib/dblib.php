@@ -57,7 +57,7 @@ global $CFG;
 function execute_db_sqls($SQLS) {
 global $conn;
   $sql_array = explode(";\r", $SQLS);
-  $returns = array();
+  $returns = [];
   foreach ($sql_array as $SQL) {
     $returns[] = execute_db_sql($SQL);
   }
@@ -122,7 +122,7 @@ global $CFG, $USER;
 function copy_db_row($row, $table, $variablechanges) {
 global $USER, $CFG, $MYVARS;
 	$paired = explode(",", $variablechanges);
-	$newkey = $newvalue = array();
+	$newkey = $newvalue = [];
 	$keylist = $valuelist = "";
   $i=0;
 	while (isset($paired[$i])) {

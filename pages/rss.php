@@ -13,7 +13,7 @@ echo template_use("tmp/page.template", $params, "page_js_css");
 
 callfunction();
 
-echo template_use("tmp/page.template", array(), "end_of_page_template");
+echo template_use("tmp/page.template", [], "end_of_page_template");
 
 function rss_subscribe_feature() {
 global $CFG, $MYVARS, $USER;

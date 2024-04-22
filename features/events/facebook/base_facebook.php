@@ -509,7 +509,7 @@ abstract class BaseFacebook
    * @param array $params Provide custom parameters
    * @return string The URL for the login flow
    */
-  public function getLoginUrl($params=array()) {
+  public function getLoginUrl($params=[]) {
     $this->establishCSRFTokenState();
     $currentUrl = $this->getCurrentUrl();
 
@@ -538,7 +538,7 @@ abstract class BaseFacebook
    * @param array $params Provide custom parameters
    * @return string The URL for the logout flow
    */
-  public function getLogoutUrl($params=array()) {
+  public function getLogoutUrl($params=[]) {
     return $this->getUrl(
       'www',
       'logout.php',
@@ -560,7 +560,7 @@ abstract class BaseFacebook
    * @param array $params Provide custom parameters
    * @return string The URL for the logout flow
    */
-  public function getLoginStatusUrl($params=array()) {
+  public function getLoginStatusUrl($params=[]) {
     return $this->getUrl(
       'www',
       'extern/login_status.php',
@@ -722,7 +722,7 @@ abstract class BaseFacebook
       return false;
     }
 
-    $response_params = array();
+    $response_params = [];
     parse_str($access_token_response, $response_params);
     if (!isset($response_params['access_token'])) {
       return false;
@@ -787,7 +787,7 @@ abstract class BaseFacebook
    * @return mixed The decoded response object
    * @throws FacebookApiException
    */
-  protected function _graph($path, $method = 'GET', $params = array()) {
+  protected function _graph($path, $method = 'GET', $params = []) {
     if (is_array($method) && empty($params)) {
       $params = $method;
       $method = 'GET';
@@ -1012,7 +1012,7 @@ abstract class BaseFacebook
    *
    * @return string The URL for the given parameters
    */
-  protected function getUrl($name, $path='', $params=array()) {
+  protected function getUrl($name, $path='', $params=[]) {
     $url = self::$DOMAIN_MAP[$name];
     if ($path) {
       if ($path[0] === '/') {
@@ -1050,7 +1050,7 @@ abstract class BaseFacebook
     if (!empty($parts['query'])) {
       // drop known fb params
       $params = explode('&', $parts['query']);
-      $retained_params = array();
+      $retained_params = [];
       foreach ($params as $param) {
         if ($this->shouldRetainParam($param)) {
           $retained_params[] = $param;
@@ -1198,18 +1198,18 @@ abstract class BaseFacebook
   protected function getMetadataCookie() {
     $cookie_name = $this->getMetadataCookieName();
     if (!array_key_exists($cookie_name, $_COOKIE)) {
-      return array();
+      return [];
     }
 
     // The cookie value can be wrapped in "-characters so remove them
     $cookie_value = trim($_COOKIE[$cookie_name], '"');
 
     if (empty($cookie_value)) {
-      return array();
+      return [];
     }
 
     $parts = explode('&', $cookie_value);
-    $metadata = array();
+    $metadata = [];
     foreach ($parts as $part) {
       $pair = explode('=', $part, 2);
       if (!empty($pair[0])) {

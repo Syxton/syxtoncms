@@ -12,11 +12,11 @@ $FILELIB = true;
 
 // Make Javascript loaded array.
 if (!isset($LOADED)) {
-  $LOADED = array();
+  $LOADED = [];
 }
 
 function get_file_captions($path) {
-	$caption_return = array();
+	$caption_return = [];
 	if (file_exists($path . '/captions.txt')) {
 		$fhandle = fopen($path . '/captions.txt', 'r');
 		while(!feof($fhandle)) { // until end of file
@@ -127,7 +127,7 @@ function get_protocol() {
 }
 
 // Main template function
-function template_use($file, $params = array(), $subsection = "", $feature = false) {
+function template_use($file, $params = [], $subsection = "", $feature = false) {
 	global $CFG;
     $v = $params;
 
@@ -334,7 +334,7 @@ function get_js_tags($params, $linkonly = false, $loadtype = false) {
   global $CFG, $LOADED;
   $javascript = build_from_js_library($params);
 
-  $filelist = array();
+  $filelist = [];
   $dir = empty($CFG->directory) ? '' : $CFG->directory . '/';
   foreach ($javascript as $path => $files) {
     foreach($files as $file){
@@ -372,10 +372,10 @@ function js_code_wrap($code, $loadtype = false, $jquery = false) {
   EOT;
 }
 
-function add_js_to_array($path, $script, &$javascript = array()) {
+function add_js_to_array($path, $script, &$javascript = []) {
   if (!js_already_loaded($path, $script)) {
     if (array_key_exists($path, $javascript) === false) { // path doesn't exist yet.
-      $javascript[$path] = array();
+      $javascript[$path] = [];
     }
     array_push($javascript[$path], $script);
     $javascript[$path] = array_unique($javascript[$path]);
@@ -396,7 +396,7 @@ function js_already_loaded($path, $script) {
 }
 
 function build_from_js_library($params) {
-  $javascript = array();
+  $javascript = [];
   if (array_search("siteajax", $params) !== false) { // Site javascript.
     add_js_to_array("ajax", "siteajax.js", $javascript);
   }
@@ -447,7 +447,7 @@ function build_from_js_library($params) {
 }
 
 function get_js_set($setname, $loadtype = false) {
-  $params = array();
+  $params = [];
   switch ($setname) {
     case "main":
         $params = array("siteajax", "jquery", "colorbox", "ui", "flickity");
@@ -464,7 +464,7 @@ function get_css_tags($params) {
   global $CFG;
   $css = build_from_css_library($params);
 
-  $filelist = array();
+  $filelist = [];
   $dir = empty($CFG->directory) ? '' : $CFG->directory . '/';
   foreach ($css as $path => $files) {
     foreach($files as $file){
@@ -483,9 +483,9 @@ function css_script_wrap($link) {
   return '<link rel="stylesheet" href="' . $link . '" media="print" onload="this.onload=null;this.removeAttribute(\'media\');"/>';
 }
 
-function add_css_to_array($path, $script, &$css = array()) {
+function add_css_to_array($path, $script, &$css = []) {
   if (array_key_exists($path, $css) === false) { // path doesn't exist yet.
-    $css[$path] = array();
+    $css[$path] = [];
   }
   array_push($css[$path], $script);
   $css[$path] = array_unique($css[$path]);
@@ -493,7 +493,7 @@ function add_css_to_array($path, $script, &$css = array()) {
 }
 
 function build_from_css_library($params) {
-  $css = array();
+  $css = [];
   if (array_search("main", $params) !== false) { // Site javascript.
     add_css_to_array("styles", "styles_main.css", $css);
   }
@@ -529,7 +529,7 @@ function build_from_css_library($params) {
 }
 
 function get_css_set($setname) {
-  $params = array();
+  $params = [];
   switch ($setname) {
     case "main":
         $params = array("main", "colorbox", "flickity");

@@ -18,10 +18,10 @@ define('AJAX_CHAT_USER',		1);
 define('AJAX_CHAT_GUEST',		0);
 
 // AJAX Chat config parameters:
-$config = array();
+$config = [];
 
 // Database connection values:
-$config['dbConnection'] = array();
+$config['dbConnection'] = [];
 // Database hostname:
 $config['dbConnection']['host'] = $CFG->dbhost;
 // Database username:
@@ -36,7 +36,7 @@ $config['dbConnection']['type'] = $CFG->dbtype;
 $config['dbConnection']['link'] = null;
 
 // Database table names:
-$config['dbTableNames'] = array();
+$config['dbTableNames'] = [];
 $config['dbTableNames']['online']		= 'ajax_chat_online';
 $config['dbTableNames']['messages']		= 'ajax_chat_messages';
 $config['dbTableNames']['bans']			= 'ajax_chat_bans';

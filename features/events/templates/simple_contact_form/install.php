@@ -50,7 +50,7 @@ if (!get_db_row("SELECT * FROM events_templates WHERE name = '$templatename'")) 
 
 	$thisversion = 2018031200;
 	if ($version < $thisversion) {
-	   $settings = array();
+	   $settings = [];
        $settings[] = array('name' => 'template_setting_overnight','title'=> 'Overnight Option','type' => 'yes/no','numeric' => false,'default' => "false", 'extravalidation' => '', 'extra_alert' => '');
        $settings = dbescape(serialize($settings));
 

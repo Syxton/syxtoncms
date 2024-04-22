@@ -11,7 +11,7 @@ include('header.php');
 
 callfunction();
 
-echo template_use("tmp/page.template", array(), "end_of_page_template");
+echo template_use("tmp/page.template", [], "end_of_page_template");
 
 function view_ipaper() {
 	global $MYVARS;

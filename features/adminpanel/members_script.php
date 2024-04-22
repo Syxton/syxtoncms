@@ -23,8 +23,8 @@ global $CFG, $MYVARS, $USER, $smarty;
     $firstonpage = $perpage * $pagenum;
     $LIMIT = " LIMIT $firstonpage," . $perpage;
 
-	$name = false; $NAMESEARCHSQL = ""; $namesearch = array();
-	$cfield = false; $FIELDSEARCHSQL = ""; $fieldsearch = array();
+	$name = false; $NAMESEARCHSQL = ""; $namesearch = [];
+	$cfield = false; $FIELDSEARCHSQL = ""; $fieldsearch = [];
 	$csort = false; $SORT = "u.lname,u.fname";
 	$easteregg = false;
 		

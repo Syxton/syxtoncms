@@ -25,7 +25,7 @@ require(AJAX_CHAT_PATH.'lib/classes.php');
 class CustomAJAXChatInstaller extends CustomAJAXChatInterface {
 
 	function &getDataBaseTableCreationQueries() {
-		$queries = array();
+		$queries = [];
 		$index = 0;
 		// Retrieve the queries from the SQL file:
 		$lines = file(AJAX_CHAT_PATH.'chat.sql');

@@ -111,7 +111,7 @@ global $CFG, $MYVARS, $USER;
 		$pagename = get_db_field("name", "pages", "pageid = '$pageid'");
 		$rolename = get_db_field("display_name", "roles", "roleid = " . get_user_role($USER->userid, $pageid));
 
-		$params = array();
+		$params = [];
 		$params["pagelist"] = get_css_box($pagename, $rolename, false, NULL, 'pagename', NULL, '0', NULL, $pageid);
 		$params["block"] = get_css_box("Title", "Content", NULL, NULL, NULL, NULL, '0', NULL, $pageid);
 		$right = template_use("tmp/themes.template", $params, "theme_selector_right_template");

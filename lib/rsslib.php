@@ -60,7 +60,7 @@ global $CFG;
 	$items = explode('<item>',$feed);
 	unset($items[0]);
 	
-	$sorteditems = array();
+	$sorteditems = [];
 	//break down feed
 	foreach ($items as $item) {
 		$item = str_replace('</',',</',$item);

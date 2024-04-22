@@ -70,5 +70,5 @@ campers 13+ years old as of June 1st of the current year (or today if past June 
 <div id="downloadfile" style="display: none"></div>
 
 <?php
-    echo template_use("tmp/page.template", array(), "end_of_page_template");
+    echo template_use("tmp/page.template", [], "end_of_page_template");
 ?>

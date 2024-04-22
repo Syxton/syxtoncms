@@ -1152,7 +1152,7 @@ function get_my_category($selected = false) {
 }
 
 function staff_status($staff, $userid = true) {
-    $status = array();
+    $status = [];
 
     if ($userid) {
         $pageid = $_SESSION["pageid"];

@@ -12,7 +12,7 @@ if (empty($_POST["aslib"])) {
     
     callfunction();
 
-    echo template_use("tmp/main.template", array(), "header", "adminpanel");
+    echo template_use("tmp/main.template", [], "header", "adminpanel");
     
     echo '</body></html>';
 }

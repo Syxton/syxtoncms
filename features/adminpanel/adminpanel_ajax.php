@@ -134,7 +134,7 @@ global $CFG,$MYVARS,$USER;
 
 function get_user_data($userid,$year,$month) {
 global $CFG,$MYVARS,$USER;
-    $data = array(); $i = $max = 0;
+    $data = []; $i = $max = 0;
     $SQL = "SELECT *,COUNT(*) as hits,YEAR(FROM_UNIXTIME(timeline)) as myyear,MONTH(FROM_UNIXTIME(timeline)) as mymonth,DAYOFMONTH(FROM_UNIXTIME(timeline)) as myday FROM `logfile`
     WHERE userid=$userid AND YEAR(FROM_UNIXTIME(timeline))=$year AND MONTH(FROM_UNIXTIME(timeline))=$month GROUP BY myyear,mymonth,myday ORDER BY myday";
 
@@ -179,7 +179,7 @@ global $CFG,$MYVARS,$USER;
     $returnme = ""; $perpage=20;
     $firstonpage = $perpage * $pagenum;
     $LIMIT = " LIMIT $firstonpage," . $perpage;
-    $data = array(); $i=0;
+    $data = []; $i=0;
 
     $SQL = "SELECT * FROM `logfile` WHERE userid=$userid AND YEAR(FROM_UNIXTIME(timeline))=$year AND MONTH(FROM_UNIXTIME(timeline))=$month";
     $total = get_db_count($SQL);

@@ -19,7 +19,7 @@ class CustomAJAXChat extends AJAXChat {
 	// Make sure channel names don't contain any whitespace
 	function &getChannels() {
 		if ($this->_channels === null) {
-			$this->_channels = array();
+			$this->_channels = [];
 			
 			$customUsers = $this->getCustomUsers();
 

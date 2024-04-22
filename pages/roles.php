@@ -9,11 +9,11 @@
 
 include('header.php');
 
-echo template_use("tmp/roles.template", array(), "roles_header_script");
+echo template_use("tmp/roles.template", [], "roles_header_script");
 
 callfunction();
 
-echo template_use("tmp/page.template", array(), "end_of_page_template");
+echo template_use("tmp/page.template", [], "end_of_page_template");
 
 function assign_roles() {
 global $CFG, $MYVARS, $USER, $ROLES;

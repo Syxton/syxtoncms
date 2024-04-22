@@ -10,19 +10,21 @@ include('header.php');
 
 callfunction();
 
-echo template_use("tmp/page.template", array(), "end_of_page_template");
+echo template_use("tmp/page.template", [], "end_of_page_template");
 
 function new_user() {
 global $MYVARS, $CFG;
 	if (!isset($VALIDATELIB)) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
 
-	$params = array("email_req" => get_error_message('valid_req_email'), "email_valid" => get_error_message('valid_email_invalid'), "email_unique" => get_error_message('valid_email_unique'), "email_help" => get_help("input_email"),
-									"fname_req" => get_error_message('valid_req_fname'), "fname_help" => get_help("input_fname"),
-									"lname_req" => get_error_message('valid_req_lname'), "lname_help" => get_help("input_lname"),
-									"password_req" => get_error_message('valid_req_password'), "password_length" => get_error_message('valid_password_length'), "password_help" => get_help("input_password"),
-									"vpassword_req" => get_error_message('valid_req_vpassword'), "vpassword_match" => get_error_message('valid_vpassword_match'), "vpassword_help" => get_help("input_vpassword"));
+	$params = ["email_req" => get_error_message('valid_req_email'), "email_valid" => get_error_message('valid_email_invalid'),
+	           "email_unique" => get_error_message('valid_email_unique'), "email_help" => get_help("input_email"),
+			   "fname_req" => get_error_message('valid_req_fname'), "fname_help" => get_help("input_fname"),
+			   "lname_req" => get_error_message('valid_req_lname'), "lname_help" => get_help("input_lname"),
+			   "password_req" => get_error_message('valid_req_password'), "password_length" => get_error_message('valid_password_length'),
+			   "password_help" => get_help("input_password"), "vpassword_req" => get_error_message('valid_req_vpassword'),
+			   "vpassword_match" => get_error_message('valid_vpassword_match'), "vpassword_help" => get_help("input_vpassword")];
 
-	echo create_validation_script("signup_form" , template_use("tmp/user.template", array(), "new_user_validation"));
+	echo create_validation_script("signup_form" , template_use("tmp/user.template", [], "new_user_validation"));
   	echo format_popup(template_use("tmp/user.template", $params, "new_user_template"), $CFG->sitename.' Signup',"500px");
 }
 
@@ -31,11 +33,11 @@ global $MYVARS, $PAGE, $CFG;
 	//Not an ajax call so full start of new page is needed.  This is pretty rare.
 	$PAGE->title = "Reset Password";
     include($CFG->dirroot . '/header.html');
-	echo get_js_tags(array("validate"));
+	echo get_js_tags(["validate"]);
 
 	$userid = $MYVARS->GET["userid"];
 	$alternate = get_db_row("SELECT * FROM users WHERE userid='$userid' AND alternate='".$MYVARS->GET["alternate"]."'") ? true : false;
-	$params = array("siteid" => $CFG->SITEID, "userid" => $userid, "wwwroot" => $CFG->wwwroot, "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'), "alternate" => $alternate);
+	$params = ["siteid" => $CFG->SITEID, "userid" => $userid, "wwwroot" => $CFG->wwwroot, "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'), "alternate" => $alternate];
 
 	if ($alternate) {
 		if (!isset($VALIDATELIB)) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
@@ -52,16 +54,19 @@ global $MYVARS, $PAGE, $CFG;
 		$middle_contents = template_use("tmp/user.template", $params, "reset_password_template") . $validation_script;
 
 		// Main Layout
-		$params2 = array("mainmast" => page_masthead(true), "middlecontents" => $middle_contents);
+		$params2 = ["mainmast" => page_masthead(true), "middlecontents" => $middle_contents];
 		echo template_use("tmp/index.template", $params2, "mainlayout_template");
+
+		// End Page
+		include('footer.html');
 	} else {
-		echo template_use("tmp/user.template", array("alternate" => false), "reset_password_template");
+		echo template_use("tmp/user.template", ["alternate" => false], "reset_password_template");
 	}
 }
 
 function change_profile() {
 global $MYVARS, $CFG, $USER, $PAGE;
-	$params = array("siteid" => $CFG->SITEID, "userid" => !empty($USER->userid), "user" => $USER);
+	$params = ["siteid" => $CFG->SITEID, "userid" => !empty($USER->userid), "user" => $USER];
 	if (!empty($USER->userid)) {
 		if (!isset($VALIDATELIB)) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
 
@@ -91,12 +96,12 @@ global $MYVARS, $CFG;
 	$params["email_used"] = get_error_message('valid_email_used');
 	$params["email_help"] = get_help("input_email");
 
-	echo create_validation_script("password_request_form", template_use("tmp/user.template", array(), "forgot_password_validation_template"));
+	echo create_validation_script("password_request_form", template_use("tmp/user.template", [], "forgot_password_validation_template"));
   	echo format_popup(template_use("tmp/user.template", $params, "forgot_password_template"),'Forgot Password',"500px");
 }
 
 function user_alerts() {
 global $MYVARS, $CFG, $USER;
-	echo template_use("tmp/user.template", array("alerts" => get_user_alerts($MYVARS->GET["userid"],false, true)), "user_alerts_template");
+	echo template_use("tmp/user.template", ["alerts" => get_user_alerts($MYVARS->GET["userid"], false, true)], "user_alerts_template");
 }
 ?>

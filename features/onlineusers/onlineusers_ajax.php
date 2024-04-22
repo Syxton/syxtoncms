@@ -17,7 +17,7 @@ function run_lib_function() {
 global $CFG, $MYVARS;
 	
 	$i=1;
-	$args = array();
+	$args = [];
 	while (isset($MYVARS->GET["var$i"])) {
 		$args[$i] = $MYVARS->GET["var$i"];
 		$i++;

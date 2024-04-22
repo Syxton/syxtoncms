@@ -67,7 +67,7 @@ global $CFG;
 }
 
 function get_setting_names($settings_list) {
-  $setting_names = array();
+  $setting_names = [];
   foreach ($settings_list as $setting) {
     $setting_names[] .= $setting[4];
   }

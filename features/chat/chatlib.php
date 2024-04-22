@@ -60,7 +60,7 @@ function chat_default_settings($feature,$pageid,$featureid) {
 
 function get_course_channels($pageid) {
 global $CFG;
-	$channels_array = array();
+	$channels_array = [];
 	if ($channels = get_db_result("SELECT * FROM chat WHERE pageid='$pageid'")) {
     	while ($channel = fetch_row($channels)) {
 //            $channels_array[] = array($channel['name'] => $channel['channel_id']);

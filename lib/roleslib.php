@@ -177,7 +177,7 @@ function role_has_ability_in_page($roleid, $ability, $pageid, $feature="", $feat
 
 function load_roles() {
 global $CFG;
-	$allroles = get_db_result(template_use("dbsql/roles.sql", array(), "get_roles"));
+	$allroles = get_db_result(template_use("dbsql/roles.sql", [], "get_roles"));
   $ROLES = new \stdClass;
   while ($row = fetch_row($allroles)) {
     $rolename = $row['name'];
@@ -240,7 +240,7 @@ function get_groups_hierarchy($userid, $pageid, $parent = 0) {
 	$SQL = template_use("dbsql/roles.sql", $params, "get_groups_hierarchy");
 
 	if ($groups = get_db_result($SQL)) {	// If you are in a group on this page.
-    $groups_array = array();
+    $groups_array = [];
     while ($group = fetch_row($groups)) {
 			$groups_array[] = $group["groupid"];
       // Check for child groups
@@ -284,7 +284,7 @@ function groups_SQL($userid, $pageid, $ability='a.ability', $feature=false, $fea
 }
 
 function merge_abilities($abilities) {
-  $merged = array();
+  $merged = [];
   foreach ($abilities as $ability) {
   	$merged = (object) array_merge((array) $merged, (array) $ability);
   }

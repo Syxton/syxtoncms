@@ -14,7 +14,7 @@ echo template_use("tmp/themes.template", $params, "theme_manager_header_template
 
 callfunction();
 
-echo template_use("tmp/page.template", array(), "end_of_page_template");
+echo template_use("tmp/page.template", [], "end_of_page_template");
 
 function change_theme() {
 global $CFG, $MYVARS, $USER, $PAGE;

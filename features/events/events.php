@@ -1066,7 +1066,7 @@ global $CFG;
     } else {
          // parse the data
         $lines = explode("\n", trim($res));
-        $keyarray = array();
+        $keyarray = [];
         if (strcmp ($lines[0], "SUCCESS") == 0) {
             for ($i = 1; $i < count($lines); $i++) {
                 $temp = explode("=", $lines[$i],2);
@@ -1132,7 +1132,7 @@ global $CFG;
 //
 //    	// parse the data
 //    	$lines = explode("\n", $res);
-//    	$keyarray = array();
+//    	$keyarray = [];
 //    	if (strcmp ($lines[0], "SUCCESS") == 0) {
 //        	for ($i=1; $i<count($lines);$i++) {
 //            	list($key,$val) = explode("=", $lines[$i]);

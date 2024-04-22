@@ -46,9 +46,8 @@ global $MYVARS;
 	$password = md5($MYVARS->GET["password"]);
 
 	$SQL = "UPDATE users
-						 SET alternate = '',
-						 		 password = '$password'
-					 WHERE userid = '$userid'";
+			   SET alternate = '', password = '$password'
+			 WHERE userid = '$userid'";
 
 	$success = false;
 	if ($success = execute_db_sql($SQL)) {

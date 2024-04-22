@@ -58,7 +58,7 @@ class AJAXChat {
 	}
 
 	function initRequestVars() {
-		$this->_requestVars = array();
+		$this->_requestVars = [];
 		$this->_requestVars['ajax']			= isset($_REQUEST['ajax'])			? true							: false;
 		$this->_requestVars['userID']		= isset($_REQUEST['userID'])		? (int)$_REQUEST['userID']		: null;
 		$this->_requestVars['userName']		= isset($_REQUEST['userName'])		? $_REQUEST['userName']			: null;
@@ -167,7 +167,7 @@ class AJAXChat {
 
 	function updateLogsViewSocketAuthentication() {
 		if ($this->getUserRole() != AJAX_CHAT_ADMIN) {
-			$channels = array();
+			$channels = [];
 			foreach ($this->getChannels() as $channel) {
 				if ($this->getConfig('logsUserAccessChannelList') && !in_array($channel, $this->getConfig('logsUserAccessChannelList'))) {
 					continue;
@@ -1644,7 +1644,7 @@ class AJAXChat {
 
 	function getBannedUsersData($key=null, $value=null) {
 		if ($this->_bannedUsersData === null) {
-			$this->_bannedUsersData = array();
+			$this->_bannedUsersData = [];
 
 			$sql = 'SELECT
 						userID,
@@ -1673,7 +1673,7 @@ class AJAXChat {
 		}
 
 		if ($key) {
-			$bannedUsersData = array();
+			$bannedUsersData = [];
 			foreach ($this->_bannedUsersData as $bannedUserData) {
 				if (!isset($bannedUserData[$key])) {
 					return $bannedUsersData;
@@ -2318,11 +2318,11 @@ class AJAXChat {
 
 	function getInfoMessages($type=null) {
 		if (!isset($this->_infoMessages)) {
-			$this->_infoMessages = array();
+			$this->_infoMessages = [];
 		}
 		if ($type) {
 			if (!isset($this->_infoMessages[$type])) {
-				$this->_infoMessages[$type] = array();
+				$this->_infoMessages[$type] = [];
 			}
 			return $this->_infoMessages[$type];
 		} else {
@@ -2332,10 +2332,10 @@ class AJAXChat {
 
 	function addInfoMessage($info, $type='error') {
 		if (!isset($this->_infoMessages)) {
-			$this->_infoMessages = array();
+			$this->_infoMessages = [];
 		}
 		if (!isset($this->_infoMessages[$type])) {
-			$this->_infoMessages[$type] = array();
+			$this->_infoMessages[$type] = [];
 		}
 		if (!in_array($info, $this->_infoMessages[$type])) {
 			array_push($this->_infoMessages[$type], $info);
@@ -2355,14 +2355,14 @@ class AJAXChat {
 
 	function setRequestVar($key, $value) {
 		if (!$this->_requestVars) {
-			$this->_requestVars = array();
+			$this->_requestVars = [];
 		}
 		$this->_requestVars[$key] = $value;
 	}
 
 	function getOnlineUsersData($channelIDs=null, $key=null, $value=null) {
 		if ($this->_onlineUsersData === null) {
-			$this->_onlineUsersData = array();
+			$this->_onlineUsersData = [];
 
 			$sql = 'SELECT
 						userID,
@@ -2394,7 +2394,7 @@ class AJAXChat {
 		}
 
 		if ($channelIDs || $key) {
-			$onlineUsersData = array();
+			$onlineUsersData = [];
 			foreach ($this->_onlineUsersData as $userData) {
 				if ($channelIDs && !in_array($userData['channel'], $channelIDs)) {
 					continue;
@@ -2471,7 +2471,7 @@ class AJAXChat {
 	function destroySession() {
 		if ($this->_sessionNew) {
 			// Delete all session variables:
-			$_SESSION = array();
+			$_SESSION = [];
 
 			// Delete the session cookie:
 			if (isset($_COOKIE[session_name()])) {
@@ -2541,7 +2541,7 @@ class AJAXChat {
 
 	function getInvitations() {
 		if ($this->_invitations === null) {
-			$this->_invitations = array();
+			$this->_invitations = [];
 
 			$sql = 'SELECT
 						channel
@@ -2895,7 +2895,7 @@ class AJAXChat {
 	function setConfig($key, $subkey, $value) {
 		if ($subkey) {
 			if (!isset($this->_config[$key])) {
-				$this->_config[$key] = array();
+				$this->_config[$key] = [];
 			}
 			$this->_config[$key][$subkey] = $value;
 		} else {
@@ -3201,7 +3201,7 @@ class AJAXChat {
 			$userName = $this->createGuestUserName();
 		}
 
-		$userData = array();
+		$userData = [];
 		$userData['userID'] = $this->createGuestUserID();
 		$userData['userName'] = $userName;
 		$userData['userRole'] = user_has_ability_in_page($USER->userid, "moderate", $_COOKIE["pageid"]) ? AJAX_CHAT_MODERATOR : AJAX_CHAT_GUEST;
@@ -3210,7 +3210,7 @@ class AJAXChat {
 
 	function getCustomVar($key) {
 		if (!isset($this->_customVars))
-			$this->_customVars = array();
+			$this->_customVars = [];
 		if (!isset($this->_customVars[$key]))
 			return null;
 		return $this->_customVars[$key];
@@ -3218,7 +3218,7 @@ class AJAXChat {
 
 	function setCustomVar($key, $value) {
 		if (!isset($this->_customVars))
-			$this->_customVars = array();
+			$this->_customVars = [];
 		$this->_customVars[$key] = $value;
 	}
 
@@ -3308,7 +3308,7 @@ class AJAXChat {
 	// Make sure channel names don't contain any whitespace
 	function &getAllChannels() {
 		if ($this->_allChannels === null) {
-			$this->_allChannels = array();
+			$this->_allChannels = [];
 
 			// Default channel, public to everyone:
 			$this->_allChannels[$this->trimChannelName($this->getConfig('defaultChannelName'))] = $this->getConfig('defaultChannelID');

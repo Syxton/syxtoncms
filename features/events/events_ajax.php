@@ -2188,7 +2188,7 @@ global $MYVARS, $CFG, $USER;
 			$values = get_db_result("SELECT * FROM events_registrations_values
                                         WHERE regid='" . $regid["regid"] . "'
                                         ORDER BY entryid");
-            $reorder = array();
+            $reorder = [];
 			while ($value = fetch_row($values)) {
 				$reorder[$value[$sortby]] = $value;
 			}
@@ -2222,7 +2222,7 @@ global $MYVARS, $CFG, $USER;
 			$values = get_db_result("SELECT * FROM events_registrations_values
                                         WHERE regid='" . $regid["regid"] . "'
                                         ORDER BY entryid");
-            $reorder = array();
+            $reorder = [];
 			while ($value = fetch_row($values)) {
 				$reorder[$value[$sortby]] = $value;
 			}
@@ -2255,7 +2255,7 @@ global $MYVARS, $CFG, $USER;
 			$values = get_db_result("SELECT * FROM events_registrations_values
                                         WHERE regid='" . $regid["regid"] . "'
                                         ORDER BY entryid");
-            $reorder = array();
+            $reorder = [];
 			while ($value = fetch_row($values)) {
 				$reorder[$value[$sortby]] = $value;
 			}
@@ -2499,8 +2499,8 @@ global $CFG, $MYVARS, $USER;
     if (!empty($stafflist)) {
         $subject = "$CFG->sitename Staff Process";
         $protocol = get_protocol();
-        $staffcomstatus = array();
-        $staffapproved = array();
+        $staffcomstatus = [];
+        $staffapproved = [];
 
         $emailnotice = new \stdClass;
         $emailnotice->email = $CFG->siteemail;

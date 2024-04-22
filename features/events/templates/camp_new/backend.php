@@ -253,7 +253,7 @@ global $CFG,$USER,$PAGE;
 	$includelastevent = $included ? "" : "e.eventid != ".$event["eventid"]. " AND ";
 	$SQL = "SELECT e.* FROM events e WHERE $includelastevent (e.template_id=".$event["template_id"]." AND (e.pageid='".$event["pageid"]."' $siteviewable)) AND (e.start_reg < $time AND e.stop_reg > ($time - 86400)) AND (e.max_users=0 OR (e.max_users != 0 AND e.max_users > (SELECT COUNT(*) FROM events_registrations er WHERE er.eventid=e.eventid AND verified='1')))";
 	if ($events = get_db_result($SQL)) {
-        $common = array();
+        $common = [];
 		while ($evnt = fetch_row($events)) {
 			$selected = $event["eventid"] == $evnt["eventid"] ? " SELECTED " : "";
             $min_age = get_db_field("setting","settings","type='events_template' AND extra='".$evnt["eventid"]."' AND setting_name='template_setting_min_age'");

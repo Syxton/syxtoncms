@@ -11,7 +11,7 @@ include ('header.php');
 
 callfunction();
 
-echo template_use("tmp/page.template", array(), "end_of_page_template");
+echo template_use("tmp/page.template", [], "end_of_page_template");
 
 function browse() {
 global $CFG;
@@ -87,7 +87,7 @@ global $CFG, $MYVARS, $ROLES, $USER;
   if (isset($MYVARS->GET["pageid"])) {
   	$content .= create_validation_script("create_page_form" , template_use("tmp/page.template", array("pageid" => $MYVARS->GET["pageid"]), "edit_page_validation"));
   } else {
-  	$content .= create_validation_script("create_page_form" , template_use("tmp/page.template", array(), "create_page_validation"));
+  	$content .= create_validation_script("create_page_form" , template_use("tmp/page.template", [], "create_page_validation"));
   }
 
   $SQL = 'SELECT * FROM roles WHERE roleid > "' . $ROLES->creator . '" AND roleid < "'.$ROLES->none.'" ORDER BY roleid DESC';

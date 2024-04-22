@@ -31,7 +31,7 @@ global $CFG, $USER, $ROLES, $PAGE, $STYLES;
 		$browse_vars = "&amp;section=search&amp;userid=$USER->userid";
 		$buttons = get_button_layout("pagelist", 1, $pageid);
   }
-	$params = array();
+	$params = [];
 	$params["pagelist"] = !is_siteadmin($USER->userid) ? get_pagelist($USER->userid) : "";
 	$params["browse"] = make_modal_links(array("title" => "Browse for Pages",
 																							"path" => "$CFG->wwwroot/pages/page.php?action=browse$browse_vars",
