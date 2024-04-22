@@ -58,7 +58,7 @@ global $MYVARS, $PAGE, $CFG;
 		echo template_use("tmp/index.template", $params2, "mainlayout_template");
 
 		// End Page
-		include('footer.html');
+		include('../footer.html');
 	} else {
 		echo template_use("tmp/user.template", ["alternate" => false], "reset_password_template");
 	}
