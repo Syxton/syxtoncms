@@ -59,8 +59,14 @@ global $MYVARS, $PAGE, $CFG;
 
 		// End Page
 		include('../footer.html');
+
+		// Log
+		log_entry("user", $userid, "Password Reset Form Viewed");
 	} else {
 		echo template_use("tmp/user.template", ["alternate" => false], "reset_password_template");
+
+		// Log
+		log_entry("user", $userid, "Defunct Password Reset Link Clicked");
 	}
 }
 
