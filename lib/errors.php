@@ -30,6 +30,7 @@ $ERRORS = new \stdClass;
 	$ERRORS->could_not_subscribe = "You did NOT add this page successfully.";
 	$ERRORS->page_not_created = "Your page was NOT created successfully.";
     $ERRORS->no_function = "The function: <strong>[0]</strong> could not be found.";
+	$ERRORS->no_data = "The expected data of [0] could not be found.";
 
 //Polls *********************************************************
 	$ERRORS->no_poll_permissions = "You do not have the correct permissions to view this poll.";
@@ -82,10 +83,19 @@ function get_page_error_message($error,$vars=false) {
     return '<div style="background:red;padding:20px;text-align:center;">' . get_error_message($error,$vars) . '</div>';    
 }
 
-function fill_template($string,$vars) {
-    $i=0;
+function fill_template($string, $vars) {
+    $i = 0;
     foreach ($vars as $var) {
-        $string = str_replace("[$i]",$var,$string);
+		// Check if $var is array.
+		if (is_array($var)) {
+			$allvars = "";
+			foreach ($var as $v) {
+				$allvars .= $v . " ";
+			}
+			$string = str_replace("[$i]", $allvars, $string);
+		} else {
+			$string = str_replace("[$i]", $var, $string);
+		}
         $i++;
     }
     return $string;

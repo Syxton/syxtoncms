@@ -24,38 +24,34 @@ if (!is_numeric($PAGE->id)) { // Somebody could be playing with this variable.
 function callfunction() {
 global $CFG, $MYVARS;
   if (empty($_POST["aslib"])) {
+
+    collect_vars(); // Place all passed variables in MYVARS global.
+  
+    if (!empty($MYVARS->GET["i"])) { // Universal javascript and CSS.
+      $params = ["directory" => get_directory()];
+      echo template_use("tmp/pagelib.template", $params, "main_js_css");
+    }
+    if (!empty($MYVARS->GET["v"])) { // Validation javascript and CSS.
+      echo get_js_tags(["validate"]);
+      unset($MYVARS->GET["v"]);
+    }
+    if (function_exists($MYVARS->GET["action"])) {
+      $action = $MYVARS->GET["action"];
+      $action(); // Go to the function that was called.
+    } else {
+      echo get_page_error_message("no_function", [$MYVARS->GET["action"]]);
+    }
+  }
+}
+
+function collect_vars() {
+global $CFG, $MYVARS;
     //Retrieve from Javascript
     $postorget = isset($_POST["action"]) ? $_POST : false;
 
     $MYVARS = empty($MYVARS) ? new stdClass() : $MYVARS;
     $MYVARS->GET = !$postorget && isset($_GET["action"]) ? $_GET : $postorget;
-    if (!empty($MYVARS->GET["i"])) { //universal javascript and css
-      $params = array("directory" => get_directory());
-      echo template_use("tmp/pagelib.template", $params, "main_js_css");
-    }
-    if (!empty($MYVARS->GET["v"])) { //validation javascript and css
-      echo get_js_tags(array("validate"));
-      unset($MYVARS->GET["v"]);
-    }
-    if (function_exists($MYVARS->GET["action"])) {
-      $action = $MYVARS->GET["action"];
-      $action(); //Go to the function that was called.
-    } else {
-      echo get_page_error_message("no_function", array($MYVARS->GET["action"]));
-    }
-  }
-}
-
-function postorget() {
-global $MYVARS;
-  //Retrieve from Javascript
-  $postorget   = isset($_GET["action"]) ? $_GET : $_POST;
-  $postorget   = isset($postorget["action"]) ? $postorget : "";
-  $MYVARS->GET = $postorget;
-  if ($postorget != "") {
-    return $postorget["action"];
-  }
-  return false;
+    $MYVARS->GET = empty($MYVARS->GET) ? $_GET : $MYVARS->GET;
 }
 
 function get_directory() {
