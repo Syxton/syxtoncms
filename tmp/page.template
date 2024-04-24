@@ -134,7 +134,7 @@ create_edit_page_template||
       <div class="rowContainer">
         <label class="rowTitle" for="name">Page Name</label>
         <input type="text" id="name" name="name" data-rule-required="true" data-rule-maxlength="50" value="||name||" />
-        <div class="tooltipContainer info">||input_page_name||</div>
+        <div class="tooltipContainer info">||input_name_help||</div>
         <div class="spacer" style="clear: both;"></div>
       </div>
       <div class="rowContainer">
@@ -225,7 +225,7 @@ display_addfeature_template||
     <tr>
       <td style="vertical-align:top; text-align:right; width:90%;">
         <select id="addfeaturelist" style="width:100%">
-          <option value="">Add Feature...</option>
+          <option value="" selected>Add Feature...</option>
           ||options||
         </select>
       </td>
@@ -347,7 +347,7 @@ end_of_page_template||
 ||end_of_page_template
 
 select_options_template||
-  <option value="||value||" ||selected||>
+  <option value="||value||" ||*selected||>
     ||display||
   </option>
 ||select_options_template

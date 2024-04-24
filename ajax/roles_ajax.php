@@ -12,61 +12,84 @@ update_user_cookie();
 
 callfunction();
 
+/**
+ * Performs a name search for users to add to a group
+ *
+ * @global \stdClass $CFG The global config object
+ * @global \stdClass $USER The current user object
+ * @global \stdClass $MYVARS The global $_GET and $_POST array
+ * @return void
+ */
 function name_search() {
-global $CFG,$ROLES,$USER,$MYVARS;
-  $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
-  $type = !empty($MYVARS->GET['type']) ? $MYVARS->GET['type'] : "per_page_"; //Should always be passed
-  $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
-  $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
+global $CFG, $USER, $MYVARS;
 
-	$searchstring = "";	$searcharray = explode(" ",$MYVARS->GET["searchstring"]);
-	$i=0;
-	foreach ($searcharray as $search) {
-		$searchstring .= $i == 0 ? "" : " OR ";
-    $searchstring .= "(fname LIKE '%$search%' OR lname LIKE '%$search%' OR email LIKE '%$search%')";
-    $i++;
-	}
+    // Search for users based on name, email, or username
+    $pageid = isset($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; // The page to search on
+    $type = isset($MYVARS->GET['type']) ? $MYVARS->GET['type'] : "per_page_"; // The type of search being performed (per_page_ or feature specific)
+    $featureid = isset($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; // The feature ID, if feature specific
+    $feature = isset($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; // The feature name, if feature specific
 
-	if ($pageid == $CFG->SITEID && is_siteadmin($USER->userid)) {
-    $SQL = "SELECT u.*
-              FROM users u
-             WHERE $searchstring
-          ORDER BY u.lname";
-	} else {
-    $myroleid = get_user_role($USER->userid,$pageid);
-    if ($type != "per_page_") { // Feature specific role assignment search. (only searches people that already have page privs)
-        $SQL = "SELECT u.*
-                  FROM users u
-                 WHERE $searchstring
-                   AND u.userid IN (SELECT ra.userid
-                                      FROM roles_assignment ra
-                                     WHERE ra.pageid = '$pageid')
-                   AND u.userid NOT IN (SELECT ra.userid
-                                          FROM roles_assignment ra
-                                         WHERE ra.pageid = '$pageid'
-                                           AND ra.roleid <= '$myroleid')
-              ORDER BY u.lname";
-    } else {  // Page role assignment search.
-        $SQL = "SELECT u.*
-                  FROM users u
-                 WHERE $searchstring
-                   AND u.userid NOT IN (SELECT ra.userid
-                                          FROM roles_assignment ra
-                                         WHERE ra.pageid = '$pageid'
-                                           AND ra.roleid <= '$myroleid')
-              ORDER BY u.lname";
+    $searchstring = "";
+    $searcharray = explode(" ", $MYVARS->GET["searchstring"]);
+    $i = 0;
+    foreach ($searcharray as $search) {
+        $searchstring .= $i == 0 ? "" : " OR ";
+        $searchstring .= "(fname LIKE '%$search%' OR lname LIKE '%$search%' OR email LIKE '%$search%')";
+        $i++;
     }
-  }
 
-  $params = array("refreshroles" => ($MYVARS->GET["refreshroles"] == "refreshroles"), "type" => $type, "pageid" => $pageid, "featureid" => $featureid, "feature" => $feature);
-  $options = "";
-	if ($users = get_db_result($SQL)) {
-		while ($row = fetch_row($users)) {
-      $options .= template_use("tmp/page.template", array("selected" => "", "value" => $row['userid'], "display" => $row['fname'] . ' ' . $row['lname'] . ' (' . $row['email'] . ')'), "select_options_template");
-		}
-	}
-  $params["options"] = $options;
-  echo template_use("tmp/roles_ajax.template", $params, "name_search_template");
+    $fields = "u.userid, u.fname, u.lname, u.email";
+    if ($pageid == $CFG->SITEID && is_siteadmin($USER->userid)) {
+        // If admin on site, search all users
+        $SQL = "SELECT $fields
+                  FROM users u
+                 WHERE $searchstring
+              ORDER BY u.lname";
+    } else {
+        // Get the user's role on the page
+        $myroleid = get_user_role($USER->userid, $pageid);
+        if ($type != "per_page_") { // Feature specific role assignment search. (only searches people that already have page privs)
+            // Search for users with a higher role on the page
+            $SQL = "SELECT $fields
+                      FROM users u
+                     WHERE $searchstring
+                       AND u.userid IN (SELECT ra.userid
+                                          FROM roles_assignment ra
+                                         WHERE ra.pageid = '$pageid'
+                                           AND ra.roleid > '$myroleid')  
+                  ORDER BY u.lname";
+        } else {  // Page role assignment search.
+            // Search for users with a role lower than the user's on the page
+            $SQL = "SELECT $fields
+                      FROM users u
+                     WHERE $searchstring
+                       AND u.userid NOT IN (SELECT ra.userid
+                                              FROM roles_assignment ra
+                                             WHERE ra.pageid = '$pageid'
+                                               AND ra.roleid <= '$myroleid')
+                  ORDER BY u.lname";
+        }
+    }
+
+    // Add the search results to the page template
+    $params = [ "refreshroles" => (isset($MYVARS->GET["refreshroles"]) && $MYVARS->GET["refreshroles"] == "refreshroles"),
+                "type" => $type,
+                "pageid" => $pageid,
+                "featureid" => $featureid,
+                "feature" => $feature,
+    ];
+    $options = "";
+    if ($users = get_db_result($SQL)) {
+        while ($row = fetch_row($users)) {
+            $vars = [ "selected" => "",
+                      "value" => $row['userid'],
+                      "display" => fill_string("{fname} {lname} ({email})", $row),
+            ];
+            $options .= template_use("tmp/page.template", $vars, "select_options_template");
+        }
+    }
+    $params["options"] = $options;
+    echo template_use("tmp/roles_ajax.template", $params, "name_search_template");
 }
 
 function add_to_group_search() {
@@ -77,7 +100,7 @@ global $CFG, $ROLES, $USER, $MYVARS;
   $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
   $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
 
-  $searchstring = "";	$searcharray = explode(" ",$MYVARS->GET["searchstring"]);
+  $searchstring = "";	$searcharray = explode(" ", $MYVARS->GET["searchstring"]);
   $i=0;
   foreach ($searcharray as $search) {
     $searchstring .= $i == 0 ? "" : " OR ";
@@ -122,12 +145,17 @@ global $CFG, $ROLES, $USER, $MYVARS;
             $mygroups .= " " . $group_info["name"];
         }
       }
-      $options .= template_use("tmp/page.template", array("selected" => "", "value" => $row['userid'], "display" => $row['fname'] . ' ' . $row['lname'] . ' (' . $row['email'] . ')' . $mygroups), "select_options_template");
+
+      $params = [
+          "selected" => "",
+          "value" => $row['userid'],
+          "display" => fill_string("{fname} {lname} ({email})", $row) . $mygroups,
+      ];
+      $options .= template_use("tmp/page.template", $params, "select_options_template");
 		}
 	}
 
-  $params["options"] = $options;
-  echo template_use("tmp/roles_ajax.template", $params, "add_to_group_search_template");
+  echo template_use("tmp/roles_ajax.template", ["options" => $options], "add_to_group_search_template");
 }
 
 function refresh_group_users() {
@@ -160,16 +188,29 @@ global $CFG, $MYVARS, $USER;
 	}
 
   $groupname = get_db_field("name", "groups", "groupid = '$groupid'");
-  $params = array("wwwroot" => $CFG->wwwroot, "groupname" => $groupname, "pageid" => $pageid, "groupid" => $groupid, "feature" => $feature, "featureid" => $featureid,
-                  "canmanage" => user_has_ability_in_page($USER->userid, "manage_groups", $pageid));
+  $params = [ "wwwroot" => $CFG->wwwroot,
+              "groupname" => $groupname,
+              "pageid" => $pageid,
+              "groupid" => $groupid,
+              "feature" => $feature,
+              "featureid" => $featureid,
+              "canmanage" => user_has_ability_in_page($USER->userid, "manage_groups", $pageid),
+  ];
 
   $options = '';
   if ($users = get_db_result($SQL)) {
 		while ($row = fetch_row($users)) {
-      $options .= template_use("tmp/page.template", array("value" => $row['userid'], "display" => $row['fname'] . ' ' . $row['lname'] . ' (' . $row['email'] . ')'), "select_options_template");
+      $p = ["value" => $row['userid'],
+            "display" => fill_string("{fname} {lname} ({email})", $row),
+      ];
+      $options .= template_use("tmp/page.template", $p, "select_options_template");
 		}
 	} else {
-    $options .= template_use("tmp/page.template", array("selected" => "", "value" => "0", "display" => "No users in this group."), "select_options_template");
+    $p = ["selected" => "",
+          "value" => "0",
+          "display" => "No users in this group.",
+    ];
+    $options .= template_use("tmp/page.template", $p, "select_options_template");
 	}
 
   $params["options"] = $options;
@@ -238,22 +279,30 @@ global $CFG, $MYVARS, $ROLES, $USER;
 
   $options1 = "";
 	if ($pageid == $CFG->SITEID) {
-    $options1 = template_use("tmp/page.template", array("selected" => "", "value" => "0", "display" => "Search results will be shown here."), "select_options_template");
+    $p = ["selected" => "selected",
+          "value" => "0",
+          "display" => "Search results will be shown here.",
+    ];
+    $options1 = template_use("tmp/page.template", $p, "select_options_template");
   } elseif ($roles = get_db_result($SQL)) {
 		while ($row = fetch_row($roles)) {
       $mygroups = "";
       $SQL = "SELECT *
-                FROM `groups`
+                FROM groups
                WHERE groupid IN (SELECT groupid
                                    FROM groups_users
                                   WHERE userid = '".$row['userid']."'
                                     AND pageid = '$pageid')";
       if ($groups = get_db_result($SQL)) {
         while ($group_info = fetch_row($groups)) {
-            $mygroups .= " " . $group_info["name"];
+            $mygroups .= fill_string(" {name}", $group_info);
         }
       }
-      $options1 .= template_use("tmp/page.template", array("selected" => "", "value" => $row['userid'], "display" => $row['fname']. ' ' . $row['lname'] . ' (' . $row['email'] .')'.$mygroups), "select_options_template");
+      $p = ["selected" => "",
+            "value" => $row['userid'],
+            "display" => fill_string("{fname} {lname} ({email})", $row) . $mygroups,
+      ];
+      $options1 .= template_use("tmp/page.template", $p, "select_options_template");
 		}
 	}
 
@@ -280,20 +329,31 @@ global $CFG, $MYVARS, $ROLES, $USER;
                                     AND pageid='$pageid')";
       if ($groups = get_db_result($SQL)) {
           while ($group_info = fetch_row($groups)) {
-              $mygroups .= " " . $group_info["name"];
+              $mygroups .= fill_string(" {name}", $group_info);
           }
       }
-      $options2 .= template_use("tmp/page.template", array("selected" => "", "value" => $row['userid'], "display" => $row['fname']. ' ' . $row['lname'] . ' (' . $row['email'] .')' . $mygroups), "select_options_template");
+      $p = ["selected" => "",
+            "value" => $row['userid'],
+            "display" => fill_string("{fname} {lname} ({email})", $row) . $mygroups,
+      ];
+      $options2 .= template_use("tmp/page.template", $p, "select_options_template");
 		}
 	}
 
-  $params = array("wwwroot" => $CFG->wwwroot, "groupname" => $groupname, "pageid" => $pageid, "groupid" => $groupid, "feature" => $feature, "featureid" => $featureid,
-                  "options1" => $options1, "options2" => $options2);
+  $params = [ "wwwroot" => $CFG->wwwroot,
+              "groupname" => $groupname,
+              "pageid" => $pageid,
+              "groupid" => $groupid,
+              "feature" => $feature,
+              "featureid" => $featureid,
+              "options1" => $options1,
+              "options2" => $options2,
+  ];
   return template_use("tmp/roles_ajax.template", $params, "refresh_manage_groups_template");
 }
 
 function delete_group() {
-global $CFG,$MYVARS,$USER;
+global $CFG, $MYVARS, $USER;
   $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
   $groupid = !empty($MYVARS->GET['groupid']) ? $MYVARS->GET['groupid'] : false; //Should always be passed
   $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
@@ -356,7 +416,7 @@ global $CFG, $MYVARS;
 
   $name = "";
   if ($groupid) { // EDITING: get form values to fill in
-    $SQL = template_use("dbsql/roles.sql", array("groupid" => $groupid), "get_group");
+    $SQL = template_use("dbsql/roles.sql", ["groupid" => $groupid], "get_group");
     $group = get_db_row($SQL);
     $name = $group["name"];
     $parents = groups_list($pageid, false, false, false, $group["parent"], $groupid, $groupid, "80%", "per_group_edit_group_select", "per_group_edit_group_select");
@@ -364,7 +424,14 @@ global $CFG, $MYVARS;
     $parents = groups_list($pageid, false, false, false, null, null, null, "80%", "per_group_edit_group_select", "per_group_edit_group_select");
   }
 
-  $params = array("wwwroot" => $CFG->wwwroot, "name" => $name, "parents" => $parents, "pageid" => $pageid, "groupid" => $groupid, "feature" => $feature, "featureid" => $featureid);
+  $params = [ "wwwroot" => $CFG->wwwroot,
+              "name" => $name,
+              "parents" => $parents,
+              "pageid" => $pageid,
+              "groupid" => $groupid,
+              "feature" => $feature,
+              "featureid" => $featureid,
+  ];
   echo template_use("tmp/roles_ajax.template", $params, "create_edit_group_form_template");
 }
 
@@ -378,8 +445,12 @@ global $MYVARS;
   $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
 
   $parent = $parent ? $parent : "0";
-  $params = array("is_editing" => ($groupid), "pageid" => $pageid, "groupid" => $groupid, "name" => $name, "parent" => $parent);
-
+  $params = [ "is_editing" => boolval($groupid),
+              "pageid" => $pageid,
+              "groupid" => $groupid,
+              "name" => $name,
+              "parent" => $parent,
+  ];
   $SQL = template_use("dbsql/roles.sql", $params, "save_group");
   execute_db_sql($SQL);
 
@@ -425,143 +496,142 @@ global $MYVARS;
   $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
 
   if ($pageid && $groupid) {
-    echo '<form id="per_group_roles_form">';
-    echo print_abilities($pageid, "per_group_", false, false, $feature, $featureid, $groupid);
-    echo '</form>';
+    echo '<form id="per_group_roles_form">' .
+            print_abilities($pageid, "per_group_", false, false, $feature, $featureid, $groupid) .
+          '</form>';
   } else {
     echo get_error_message("generic_error");
     return;
   }
 }
 
+/**
+ * Save the changes to the role abilities
+ *
+ * This function is called via AJAX from the ability manager page
+ * It takes the post variables and uses them to update the roles_ability
+ * table with the new abilities
+ *
+ * @global object $CFG The global config object
+ * @global object $MYVARS The global variables object
+ */
 function save_ability_changes() {
-global $CFG, $MYVARS;
-  $abilities = explode("**",$MYVARS->GET['per_role_rightslist']);
+  global $CFG, $MYVARS;
+
+  // Get the ability list from the post
+  $abilities = explode("**", $MYVARS->GET['per_role_rightslist']);
+
+  // Extract the page and role ids from the post
   $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
   $roleid = !empty($MYVARS->GET['per_role_roleid']) ? $MYVARS->GET['per_role_roleid'] : false; //Should always be passed
-  $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
-  $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
+
+  // Extract the feature and feature id from the post (if present)
+  $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false;
+  $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false;
+
+  // Initialize the success flag
   $success = false;
-  $i=0;
 
-	while (isset($abilities[$i])) {
-		$ability = $abilities[$i];
-		$setting = $MYVARS->GET[$ability] == 1 ? 1 : 0;
-		if ($pageid == $CFG->SITEID && !$featureid) {
-			$default = get_db_field("allow", "roles_ability", "roleid = '$roleid' AND ability = '$ability'");
-			if ($default !== false) {
-				if ($default !== $setting) {
-					$section = get_db_field("section", "abilities", "ability = '$ability'");
-          $SQL = "DELETE
-                    FROM roles_ability
-                   WHERE roleid = '$roleid'
-                     AND ability = '$ability'";
-					$success = execute_db_sql($SQL) ? true : false;
-          $SQL = "INSERT INTO roles_ability (roleid, section, ability, allow)
-                       VALUES('$roleid', '$section', '$ability', '$setting')";
-					$success = execute_db_sql($SQL) ? true : false;
-				}
-			} else { //No entry
-				$section = get_db_field("section", "abilities", "ability = '$ability'");
-        $SQL = "INSERT INTO roles_ability (roleid,section,ability,allow)
-                     VALUES('$roleid', '$section', '$ability', '$setting')";
-				$success = execute_db_sql($SQL) ? true : false;
-			}
-		} else {
-			$default = get_db_field("allow", "roles_ability", "roleid = '$roleid' AND ability = '$ability'");
-      if ($feature && $featureid) {
-        $SQL = "SELECT *
-                  FROM roles_ability_perfeature
-                 WHERE feature = '$feature'
-                   AND featureid = '$featureid'
-                   AND roleid = '$roleid'
-                   AND pageid = '$pageid'
-                   AND ability = '$ability'";
+  // Loop through the abilities and update the database
+  $i = 0;
+  while (isset($abilities[$i])) {
+    $ability = $abilities[$i];
+    $setting = $MYVARS->GET[$ability] == 1 ? 1 : 0;
+
+    // Create the paramaters for the SQL queries
+    $params = [ "ability" => $ability,
+                "pageid" => $pageid,
+                "roleid" => $roleid,
+                "setting" => $setting,
+                "feature" => $feature,
+                "featureid" => $featureid,
+    ];
+
+    // If this is a site-wide ability
+    if ($pageid == $CFG->SITEID && !$featureid) {
+      // Check if there is already a default value for this ability
+      $default = get_db_field("allow", "roles_ability", "roleid = '$roleid' AND ability = '$ability'");
+      $params["section"] = get_db_field("section", "abilities", "ability = '$ability'");
+
+      // If there is a default, check if the default should be changed
+      if ($default !== false && $default !== $setting) {
+        // If the default is being changed, remove the old default
+        $SQL = template_use("dbsql/roles.sql", $params, "remove_role_override");
+        $success = execute_db_sql($SQL) ? true : false;
+      }
+
+      // Insert the new default
+      $SQL = template_use("dbsql/roles.sql", $params, "insert_role_override");
+      $success = execute_db_sql($SQL) ? true : false;
+    } else { // If this is a feature-specific ability
+      // Check if there is already an override for this ability
+      $default = get_db_field("allow", "roles_ability", "roleid = '$roleid' AND ability = '$ability'");
+
+      if ($feature && $featureid) { // If this is a feature-specific ability
+        $SQL = template_use("dbsql/roles.sql", $params, "get_page_role_feature_override");
         $alreadyset = get_db_count($SQL);
 
-    		if ($alreadyset) {
-    			if ($setting == $default) {
-            $SQL = "DELETE
-                      FROM roles_ability_perfeature
-                     WHERE pageid = '$pageid'
-                       AND roleid = '$roleid'
-                       AND feature = '$feature'
-                       AND featureid = '$featureid'
-                       AND ability = '$ability'";
+        if ($alreadyset) { // If there is an override, check if it should be changed
+          if ($setting == $default) { // If the override should be removed         
+            $SQL = template_use("dbsql/roles.sql", $params, "remove_page_role_feature_override");
             $success = execute_db_sql($SQL) ? true : false;
-    			} else {
-            $SQL = "UPDATE roles_ability_perfeature
-                       SET allow = '$setting'
-                     WHERE roleid = '$roleid'
-                       AND feature = '$feature'
-                       AND featureid = '$featureid'
-                       AND ability = '$ability'";
+          } else { // If the override should be changed
+            $SQL = template_use("dbsql/roles.sql", $params, "update_page_role_feature_override");
             $success = execute_db_sql($SQL) ? true : false;
           }
-    		} elseif ($setting != $default && !$alreadyset) {
-          $SQL = "INSERT INTO roles_ability_perfeature (roleid, pageid, feature, featureid, ability, allow)
-                       VALUES('$roleid', '$pageid', '$feature', '$featureid', '$ability', '$setting')";
-    			$success = execute_db_sql($SQL) ? true : false;
-    		}
-      } else {
-        $SQL = "SELECT *
-                  FROM roles_ability_perpage
-                 WHERE roleid = '$roleid'
-                   AND pageid = '$pageid'
-                   AND ability = '$ability'";
-        $alreadyset = get_db_count($SQL);
-        if ($alreadyset) {
-    		  if ($setting == $default) {
-            $SQL = "DELETE
-                      FROM roles_ability_perpage
-                     WHERE pageid = '$pageid'
-                       AND roleid = '$roleid'
-                       AND ability = '$ability'";
-            $success = execute_db_sql($SQL) ? true : false;
-    			} else {
-            $SQL = "UPDATE roles_ability_perpage
-                       SET allow = '$setting'
-                     WHERE roleid = '$roleid'
-                       AND ability = '$ability'
-                       AND pageid = '$pageid'";
-            $success = execute_db_sql($SQL) ? true : false;
-          }
-    		} elseif ($setting != $default && !$alreadyset) {
-          $SQL = "INSERT INTO roles_ability_perpage (roleid, pageid, ability, allow)
-                       VALUES('$roleid', '$pageid', '$ability', '$setting')";
-    			$success = execute_db_sql($SQL) ? true : false;
+        } elseif ($setting != $default && !$alreadyset) { // If the override should be added
+          $SQL = template_use("dbsql/roles.sql", $params, "insert_page_role_feature_override");
+          $success = execute_db_sql($SQL) ? true : false;
         }
-    	}
-		}
-		$i++;
-	}
+      } else { // If this is a page-specific ability
+        $SQL = template_use("dbsql/roles.sql", $params, "get_page_role_override");
+        $alreadyset = get_db_count($SQL);
+
+        if ($alreadyset) { // If there is an override, check if it should be changed
+          if ($setting == $default) { // If the override should be removed
+            $SQL = template_use("dbsql/roles.sql", $params, "remove_page_role_override");
+            $success = execute_db_sql($SQL) ? true : false;
+          } else { // If the override should be changed
+            $SQL = template_use("dbsql/roles.sql", $params, "update_page_role_override");
+            $success = execute_db_sql($SQL) ? true : false;
+          }
+        } elseif ($setting != $default && !$alreadyset) { // If the override should be added
+          $SQL = template_use("dbsql/roles.sql", $params, "insert_page_role_override");
+          $success = execute_db_sql($SQL) ? true : false;
+        }
+      }
+    }
+    $i++;
+  }
+
+  // If the updates were successful, return a success message
   if ($success) {
     echo "Changes Saved";
-  } else {
+  } else { // Otherwise, return a failure message
     echo "Save Failed";
   }
 }
 
 function save_user_ability_changes() {
-global $CFG,$MYVARS;
-  $abilities = explode("**",$MYVARS->GET['per_user_rightslist']);
+global $CFG, $MYVARS;
+  $abilities = explode("**", $MYVARS->GET['per_user_rightslist']);
 	$pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
   $userid = !empty($MYVARS->GET['userid']) ? $MYVARS->GET['userid'] : false; //Should always be passed
   $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
   $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
 
-  $i=0;
+  $i = 0;
 	while (isset($abilities[$i])) {
 		$ability = $abilities[$i];
-		$allow = $MYVARS->GET[$ability] == 1 ? 1 : 0;
-		$roleid = get_user_role($userid,$pageid);
+		$setting = $MYVARS->GET[$ability] == 1 ? 1 : 0;
+		$roleid = get_user_role($userid, $pageid);
 
-    //$default = $featureid ? (user_has_ability_in_page($userid,$ability,$pageid,$feature,$featureid) ? "1" : "0") : (user_has_ability_in_page($roleid,$ability,$pageid,$feature) ? "1" : "0");
+    //$default = $featureid ? (user_has_ability_in_page($userid, $ability, $pageid, $feature, $featureid) ? "1" : "0") : (user_has_ability_in_page($roleid, $ability, $pageid, $feature) ? "1" : "0");
     //figure out the default
     if ($featureid) { //feature specific ability change
-      $default = user_has_ability_in_page($userid,$ability,$pageid,$feature,$featureid) ? "1" : "0";
+      $default = user_has_ability_in_page($userid, $ability, $pageid, $feature, $featureid) ? "1" : "0";
     } else { //page specific ability change
-      $default = user_has_ability_in_page($userid,$ability,$pageid) ? "1" : "0";
+      $default = user_has_ability_in_page($userid, $ability, $pageid) ? "1" : "0";
     }
 
 		if ($feature && $featureid) {
@@ -583,7 +653,7 @@ global $CFG,$MYVARS;
 		}
 
 		if ($alreadyset) {
-			if ($alreadyset && $allow == $default) {
+			if ($alreadyset && $setting == $default) {
         if ($feature && $featureid) {
           $SQL = "DELETE
                     FROM roles_ability_perfeature_peruser
@@ -604,7 +674,7 @@ global $CFG,$MYVARS;
       } else {
         if ($feature && $featureid) {
           $SQL = "UPDATE roles_ability_perfeature_peruser
-                     SET allow = '$allow'
+                     SET allow = '$setting'
                    WHERE userid = '$userid'
                      AND pageid = '$pageid'
                      AND feature = '$feature'
@@ -613,21 +683,21 @@ global $CFG,$MYVARS;
           execute_db_sql($SQL);
         } else {
           $SQL = "UPDATE roles_ability_peruser
-                     SET allow = '$allow'
+                     SET allow = '$setting'
                    WHERE userid = '$userid'
                      AND pageid = '$pageid'
                      AND ability = '$ability'";
           execute_db_sql($SQL);
         }
       }
-		} elseif ($allow != $default && !$alreadyset) {
+		} elseif ($setting != $default && !$alreadyset) {
       if ($feature && $featureid) {
         $SQL = "INSERT INTO roles_ability_perfeature_peruser (userid, pageid, feature, featureid, ability, allow)
-                     VALUES('$userid', '$pageid', '$feature', '$featureid', '$ability', '$allow')";
+                     VALUES('$userid', '$pageid', '$feature', '$featureid', '$ability', '$setting')";
         execute_db_sql($SQL);
       } else {
         $SQL = "INSERT INTO roles_ability_peruser (userid, pageid, ability, allow)
-                     VALUES('$userid', '$pageid', '$ability', '$allow')";
+                     VALUES ('$userid', '$pageid', '$ability', '$setting')";
         execute_db_sql($SQL);
     	}
 		}
@@ -637,14 +707,14 @@ global $CFG,$MYVARS;
 }
 
 function save_group_ability_changes() {
-global $CFG,$MYVARS;
-  $abilities = explode("**",$MYVARS->GET['per_group_rightslist']);
+global $CFG, $MYVARS;
+  $abilities = explode("**", $MYVARS->GET['per_group_rightslist']);
 	$pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
   $groupid = !empty($MYVARS->GET['groupid']) ? $MYVARS->GET['groupid'] : false; //Should always be passed
   $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
   $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
 
-  $i=0;
+  $i = 0;
 	while (isset($abilities[$i])) {
 		$ability = $abilities[$i];
 		$allow = $MYVARS->GET[$ability] === 1 ? 1 : $MYVARS->GET[$ability]; //If ability is SET to 1
@@ -751,12 +821,20 @@ global $CFG, $USER, $MYVARS, $ROLES;
 	if ($roles = get_db_result($SQL)) {
 		while ($row = fetch_row($roles)) {
 			if ($row['roleid'] != $roleid && $row['roleid'] >= $myroleid) {
-        $options .= template_use("tmp/page.template", array("selected" => "", "value" => $row['roleid'], "display" => stripslashes($row['display_name'])), "select_options_template");
+        $p = ["selected" => "",
+              "value" => $row['roleid'],
+              "display" => stripslashes($row['display_name']),
+        ];
+        $options .= template_use("tmp/page.template", $p, "select_options_template");
       }
 		}
 	}
 
-  $params = array("rolename" => $rolename, "pageid" => $pageid, "userid" => $userid, "options" => $options);
+  $params = [ "rolename" => $rolename,
+              "pageid" => $pageid,
+              "userid" => $userid,
+              "options" => $options,
+  ];
   echo template_use("tmp/roles_ajax.template", $params, "refresh_user_roles_template");
 }
 
@@ -773,7 +851,7 @@ global $MYVARS, $ROLES;
 	if (execute_db_sql($SQL)) {
 		if ($roleid !== $ROLES->none) { //No role besides "No Role" was given
       $SQL = "INSERT INTO roles_assignment (userid, pageid, roleid)
-                   VALUES('$userid', '$pageid', '$roleid')";
+                   VALUES ('$userid', '$pageid', '$roleid')";
       if (execute_db_sql($SQL)) {
         echo "Changes Saved";
       } else {

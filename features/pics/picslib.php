@@ -10,25 +10,25 @@
 if (!isset($LIBHEADER)) { if (file_exists('./lib/header.php')) { include('./lib/header.php'); }elseif (file_exists('../lib/header.php')) { include('../lib/header.php'); }elseif (file_exists('../../lib/header.php')) { include('../../lib/header.php'); }}
 $PICSLIB = true;
 
-function display_pics($pageid,$area,$featureid) {
+function display_pics($pageid, $area, $featureid) {
 global $CFG, $USER, $ROLES;
 
-	if (!$settings = fetch_settings("pics",$featureid,$pageid)) {
-		make_or_update_settings_array(default_settings("pics",$pageid,$featureid));
-		$settings = fetch_settings("pics",$featureid,$pageid);
+	if (!$settings = fetch_settings("pics", $featureid, $pageid)) {
+		make_or_update_settings_array(default_settings("pics", $pageid, $featureid));
+		$settings = fetch_settings("pics", $featureid, $pageid);
 	}
 
 	$title = $settings->pics->$featureid->feature_title->setting;
 
 	if (is_logged_in()) {
-		if (user_has_ability_in_page($USER->userid,"viewpics",$pageid,"pics",$featureid)) {
+		if (user_has_ability_in_page($USER->userid,"viewpics", $pageid,"pics", $featureid)) {
 			if ($pageid==$CFG->SITEID) {
 				$SQL = "SELECT * FROM pics_features WHERE pageid='$pageid' LIMIT 1";
 				if ($sections = get_db_result($SQL)) {
 					while ($row = fetch_row($sections)) {
 						$content = get_gallery_links($pageid, $featureid, true);
-						$buttons = get_button_layout("pics_features",$row['featureid'],$pageid);
-						return get_css_box($title,$content,$buttons,NULL,"pics",$featureid);
+						$buttons = get_button_layout("pics_features", $row['featureid'], $pageid);
+						return get_css_box($title, $content, $buttons,NULL,"pics", $featureid);
 					}
 				}
 			} else {
@@ -36,25 +36,25 @@ global $CFG, $USER, $ROLES;
 				if ($sections = get_db_result($SQL)) {
 					while ($row = fetch_row($sections)) {
 						$content = get_gallery_links($pageid, $featureid);
-						$buttons = get_button_layout("pics_features",$featureid,$pageid);
-						return get_css_box($title,$content,$buttons,NULL,"pics",$featureid);
+						$buttons = get_button_layout("pics_features", $featureid, $pageid);
+						return get_css_box($title, $content, $buttons,NULL,"pics", $featureid);
 					}
 				}
 			}
 		}
 	} else {
-		if (role_has_ability_in_page($ROLES->visitor,"viewpics",$pageid)) {
+		if (role_has_ability_in_page($ROLES->visitor,"viewpics", $pageid)) {
 			$title = get_db_field("setting", "settings", "type='pics' AND pageid=$pageid AND featureid=$featureid");
 			$content = get_gallery_links($pageid, $featureid, true);
-			return get_css_box($title,$content,NULL,NULL,"pics",$featureid);
+			return get_css_box($title, $content,NULL,NULL,"pics", $featureid);
 		}
 	}
 }
 
-function get_pics_manager($pageid,$featureid) {
-global $CFG,$MYVARS,$USER;
+function get_pics_manager($pageid, $featureid) {
+global $CFG, $MYVARS, $USER;
     $returnme = '';
-    if (!user_has_ability_in_page($USER->userid,"managepics",$pageid)) { return get_page_error_message("no_permission",array("managepics")); }
+    if (!user_has_ability_in_page($USER->userid,"managepics", $pageid)) { return get_page_error_message("no_permission",array("managepics")); }
 
 	if ($pageid == $CFG->SITEID) {
 		$SQL = "SELECT DISTINCT galleryid, galleryid, gallery_title FROM pics p WHERE (p.pageid='$pageid' AND p.featureid=$featureid) OR (p.siteviewable=1) ORDER BY p.galleryid";
@@ -77,16 +77,16 @@ global $CFG,$MYVARS,$USER;
 			}
 
 		$returnme .= '<div id="loading_overlay" style="text-align: center; position: absolute; width: 98%; z-index:4;height: 98%; background-color: white; opacity: 0.6; visibility: hidden;"><br /><br /><br /><img src="' . $CFG->wwwroot . '/images/loading_large.gif" /></div>';
-		$gallery_select = 'Select which gallery you wish to view. '.make_select_from_array("gallery", $gallerylist, "value", "name", false, "" , 'onchange="$(\'#loading_overlay\').show(); ajaxapi(\'/features/pics/pics_ajax.php\',\'pics_pageturn\',\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'&amp;galleryid=\'+$(\'#gallery\').val()+\'&amp;editable=true\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); $(\'#loading_overlay\').hide(); }},true);"',false);
+		$gallery_select = 'Select which gallery you wish to view. '.make_select_from_array("gallery", $gallerylist, "value", "name", false, "" , 'onchange="$(\'#loading_overlay\').show(); ajaxapi(\'/features/pics/pics_ajax.php\',\'pics_pageturn\',\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'&amp;galleryid=\'+$(\'#gallery\').val()+\'&amp;editable=true\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); $(\'#loading_overlay\').hide(); }}, true);"', false);
         $returnme .= $gallery_select . ' Click on a picture to activate or deactivate it.';
-        $returnme .= '<a title="Delete Gallery" style="float:right;padding:2px;" href="javascript: void(0);" onclick="if ($(\'#gallery\').val() != \'all\') { ajaxapi(\'/features/pics/pics_ajax.php\',\'delete_gallery\',\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'&amp;galleryid=\'+$(\'#gallery\').val(),function() { if (xmlHttp.readyState == 4) { simple_display(\'pics_manager\'); }},true); } else { alert(\'Cannot delete all galleries at once.\') }"><img src="'.$CFG->wwwroot.'/images/trash.gif" /></a>';
-		$returnme .= '<span id="searchcontainer">'.get_pics($pageid,$featureid,"all",0,"true").'</span>';
+        $returnme .= '<a title="Delete Gallery" style="float:right;padding:2px;" href="javascript: void(0);" onclick="if ($(\'#gallery\').val() != \'all\') { ajaxapi(\'/features/pics/pics_ajax.php\',\'delete_gallery\',\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'&amp;galleryid=\'+$(\'#gallery\').val(),function() { if (xmlHttp.readyState == 4) { simple_display(\'pics_manager\'); }}, true); } else { alert(\'Cannot delete all galleries at once.\') }"><img src="'.$CFG->wwwroot.'/images/trash.gif" /></a>';
+		$returnme .= '<span id="searchcontainer">'.get_pics($pageid, $featureid,"all",0,"true").'</span>';
 	} else { $returnme .= '<br /><br /><div style="text-align:center">No images have been added.</div>'; }
 
     return $returnme;
 }
 
-function get_gallery_links($pageid,$featureid,$allsections = false) {
+function get_gallery_links($pageid, $featureid, $allsections = false) {
 global $CFG;
 	$path = $CFG->wwwroot.'/features/pics/files/';
 	$section = $allsections ? "" : "AND p.featureid=$featureid";
@@ -110,8 +110,8 @@ global $CFG;
 	return $returnme;
 }
 
-function get_pics($pageid,$featureid,$galleryid='all',$pagenum=0,$editable='false', $perpage = 8, $order='dateadded DESC') {
-global $CFG,$USER;
+function get_pics($pageid, $featureid, $galleryid='all', $pagenum=0, $editable='false', $perpage = 8, $order='dateadded DESC') {
+global $CFG, $USER;
 
 	$pagenum = !$pagenum ? 0 : $pagenum;
 	$order = !$order ? 'dateadded DESC' : $order;
@@ -144,9 +144,9 @@ global $CFG,$USER;
 	if ($pages = get_db_result($SQL)) {
 		$count = $total > (($pagenum+1) * $perpage) ? $perpage : $total - (($pagenum) * $perpage); //get the amount returned...is it a full page of results?
 	    $amountshown = $firstonpage + $perpage < $total ? $firstonpage + $perpage : $total;
-	    $prev = $pagenum > 0 ? '<a href="javascript: document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/pics/pics_ajax.php\',\'pics_pageturn\',\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'&amp;galleryid='.$galleryid.'&amp;editable='.$editable.'&amp;perpage='.$perpage.'&amp;order='.urlencode($order).'&amp;pagenum=' . ($pagenum - 1) . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true);" onmouseup="this.blur();"><img src="' . $CFG->wwwroot . '/images/prev.gif" title="Previous Page" alt="Previous Page" /></a>' : "";
+	    $prev = $pagenum > 0 ? '<a href="javascript: document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/pics/pics_ajax.php\',\'pics_pageturn\',\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'&amp;galleryid='.$galleryid.'&amp;editable='.$editable.'&amp;perpage='.$perpage.'&amp;order='.urlencode($order).'&amp;pagenum=' . ($pagenum - 1) . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }}, true);" onmouseup="this.blur();"><img src="' . $CFG->wwwroot . '/images/prev.gif" title="Previous Page" alt="Previous Page" /></a>' : "";
 	    $info = 'Viewing ' . ($firstonpage + 1) . " through " . $amountshown . " out of $total";
-	    $next = $firstonpage + $perpage < $total ? '<a href="javascript: document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/pics/pics_ajax.php\',\'pics_pageturn\',\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'&amp;galleryid='.$galleryid.'&amp;editable='.$editable.'&amp;perpage='.$perpage.'&amp;order='.urlencode($order).'&amp;pagenum=' . ($pagenum + 1) . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true);" onmouseup="this.blur();"><img src="' . $CFG->wwwroot . '/images/next.gif" title="Next Page" alt="Next Page" /></a>' : "";
+	    $next = $firstonpage + $perpage < $total ? '<a href="javascript: document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/pics/pics_ajax.php\',\'pics_pageturn\',\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'&amp;galleryid='.$galleryid.'&amp;editable='.$editable.'&amp;perpage='.$perpage.'&amp;order='.urlencode($order).'&amp;pagenum=' . ($pagenum + 1) . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }}, true);" onmouseup="this.blur();"><img src="' . $CFG->wwwroot . '/images/next.gif" title="Next Page" alt="Next Page" /></a>' : "";
  		$header = '<table style="width:100%;"><tr style="height:45px;"><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;font-size:.75em;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><p>';
 
 		$returnme = '<div style="width:760px;overflow:auto;margin-right:auto;margin-left:auto;">';
@@ -162,7 +162,7 @@ global $CFG,$USER;
 			}
 
 			if ($editable != 'false') {
-				$deletepic = user_has_ability_in_page($USER->userid,"deletepics",$pageid,"pics",$featureid) ? ' <a href="javascript: if (confirm(\'Do you want to delete this image?\')) { ajaxapi(\'/features/pics/pics_ajax.php\',\'delete_pic\',\'&amp;picsid='.$row['picsid'].'\',function() {do_nothing();}); document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/pics/pics_ajax.php\',\'pics_pageturn\',\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'&amp;galleryid='.$galleryid.'&amp;editable='.$editable.'&amp;perpage='.$perpage.'&amp;order='.urlencode($order).'&amp;pagenum=' . ($pagenum) . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true);}"><img style="position:absolute; z-index:2; border:none;" src="'.$CFG->wwwroot.'/images/trash.gif" title="Delete" alt="Delete Feature" /></a>' : '';
+				$deletepic = user_has_ability_in_page($USER->userid,"deletepics", $pageid,"pics", $featureid) ? ' <a href="javascript: if (confirm(\'Do you want to delete this image?\')) { ajaxapi(\'/features/pics/pics_ajax.php\',\'delete_pic\',\'&amp;picsid='.$row['picsid'].'\',function() {do_nothing();}); document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/pics/pics_ajax.php\',\'pics_pageturn\',\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'&amp;galleryid='.$galleryid.'&amp;editable='.$editable.'&amp;perpage='.$perpage.'&amp;order='.urlencode($order).'&amp;pagenum=' . ($pagenum) . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }}, true);}"><img style="position:absolute; z-index:2; border:none;" src="'.$CFG->wwwroot.'/images/trash.gif" title="Delete" alt="Delete Feature" /></a>' : '';
 				if (($pageid == $CFG->SITEID && $row["sitehidden"] == 1) || ($pageid != $CFG->SITEID && $row["pagehidden"] == 1)) {
 					$activated = '';
 				} else { //image is activated
@@ -174,13 +174,13 @@ global $CFG,$USER;
 			$captionsize = $editable != 'false' ? "height:40px;width:155px;" : "height:80px;width:170px;";
 			$checked = $row["siteviewable"] == 1 ? " checked=checked" : "";
 			$alreadysite1 = $pageid == $CFG->SITEID && $row["pageid"] != $pageid ? 'do_nothing();' : 'simple_display(\'picsid_'.$row["picsid"].'\'); setTimeout(function() { document.getElementById(\'picsid_'.$row["picsid"].'\').style.visibility=\'hidden\'; },3000); ';
-			$alreadysite2 = $pageid == $CFG->SITEID && $row["pageid"] != $pageid ? 'ajaxapi(\'/features/pics/pics_ajax.php\',\'pics_pageturn\',\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'&amp;galleryid='.$galleryid.'&amp;editable='.$editable.'&amp;perpage='.$perpage.'&amp;order='.urlencode($order).'&amp;pagenum=' . ($pagenum) . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true);' : '';
+			$alreadysite2 = $pageid == $CFG->SITEID && $row["pageid"] != $pageid ? 'ajaxapi(\'/features/pics/pics_ajax.php\',\'pics_pageturn\',\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'&amp;galleryid='.$galleryid.'&amp;editable='.$editable.'&amp;perpage='.$perpage.'&amp;order='.urlencode($order).'&amp;pagenum=' . ($pagenum) . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }}, true);' : '';
 			$caption = $editable != 'false' ? '<textarea id="caption_'.$row["picsid"].'" style="margin-left:2px;font-size:1em;'.$captionsize.'" type="text">'.stripslashes($row["caption"]).'</textarea><a onclick="document.getElementById(\'picsid_'.$row["picsid"].'\').style.visibility=\'visible\'; ajaxapi(\'/features/pics/pics_ajax.php\',\'save_caption\',\'&amp;picsid='.$row["picsid"].'&amp;caption=\'+escape(document.getElementById(\'caption_'.$row["picsid"].'\').value),function() { simple_display(\'picsid_'.$row["picsid"].'\')}); setTimeout(function() { document.getElementById(\'picsid_'.$row["picsid"].'\').style.visibility=\'hidden\'; },3000);"><img style="position:absolute;top:2px;" src="'.$CFG->wwwroot.'/images/save.png" /></a><span style="font-size:.85em;"><input type="checkbox" id="siteviewable_'.$row["picsid"].'" '.$disabled.' onchange="if (confirm(\'Do you want to change the site viewability of this image?\')) { document.getElementById(\'picsid_'.$row["picsid"].'\').style.visibility=\'visible\'; ajaxapi(\'/features/pics/pics_ajax.php\',\'save_viewability\',\'&amp;picsid='.$row["picsid"].'&amp;siteviewable=\'+document.getElementById(\'siteviewable_'.$row["picsid"].'\').checked,function() { '.$alreadysite1.' }); '.$alreadysite2.' } else { if (document.getElementById(\'siteviewable_'.$row["picsid"].'\').checked == true) { document.getElementById(\'siteviewable_'.$row["picsid"].'\').checked = false; } else { document.getElementById(\'siteviewable_'.$row["picsid"].'\').checked = true; } } blur();"'.$checked.' /><span style="position:relative;top:-3px;">Site Viewable</span></span>' : '<div style="font-size:.85em;'.$captionsize.'">'.stripslashes($row["caption"]).'</div>';
 
 			if ($row["pageid"] != $pageid) { //this image is from another page and must be copied rather than moved.
-				$movepics = $editable != 'false' ? '<div style="display:block;position:relative;text-align:center;width:171px;">'.make_select('movepics',get_db_result("SELECT * FROM pics_galleries WHERE pageid=".$pageid),"galleryid","name",false,'onchange=""',true,NULL,"font-size:.85em;width:170px;","Copy to Gallery...not working",$row["galleryid"]).'</div>' : '';
+				$movepics = $editable != 'false' ? '<div style="display:block;position:relative;text-align:center;width:171px;">'.make_select('movepics',get_db_result("SELECT * FROM pics_galleries WHERE pageid=".$pageid),"galleryid","name", false,'onchange=""', true,NULL,"font-size:.85em;width:170px;","Copy to Gallery...not working", $row["galleryid"]).'</div>' : '';
 			} else {
-				$movepics = $editable != 'false' ? '<div style="display:block;position:relative;text-align:center;width:171px;">'.make_select('movepics_'.$row["picsid"],get_db_result("SELECT * FROM pics_galleries WHERE pageid=".$pageid),"galleryid","name",false,'onchange="if (document.getElementById(\'movepics_'.$row["picsid"].'\').value != \'\' && confirm(\'Do you want to move this image to another gallery?\')) {ajaxapi(\'/features/pics/pics_ajax.php\',\'move_pic\',\'&amp;picsid='.$row["picsid"].'&amp;galleryid=\'+document.getElementById(\'movepics_'.$row["picsid"].'\').value,function() {do_nothing();}); document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/pics/pics_ajax.php\',\'pics_pageturn\',\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'&amp;galleryid='.$galleryid.'&amp;editable='.$editable.'&amp;perpage='.$perpage.'&amp;order='.urlencode($order).'&amp;pagenum=' . ($pagenum) . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }},true);} else { change_selection(\'movepics_'.$row["picsid"].'\',\'\'); blur();}"',true,NULL,"font-size:.85em;width:170px;","Move to Gallery...",$row["galleryid"]).'</div>' : '';
+				$movepics = $editable != 'false' ? '<div style="display:block;position:relative;text-align:center;width:171px;">'.make_select('movepics_'.$row["picsid"],get_db_result("SELECT * FROM pics_galleries WHERE pageid=".$pageid),"galleryid","name", false,'onchange="if (document.getElementById(\'movepics_'.$row["picsid"].'\').value != \'\' && confirm(\'Do you want to move this image to another gallery?\')) {ajaxapi(\'/features/pics/pics_ajax.php\',\'move_pic\',\'&amp;picsid='.$row["picsid"].'&amp;galleryid=\'+document.getElementById(\'movepics_'.$row["picsid"].'\').value,function() {do_nothing();}); document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/pics/pics_ajax.php\',\'pics_pageturn\',\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'&amp;galleryid='.$galleryid.'&amp;editable='.$editable.'&amp;perpage='.$perpage.'&amp;order='.urlencode($order).'&amp;pagenum=' . ($pagenum) . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }}, true);} else { change_selection(\'movepics_'.$row["picsid"].'\',\'\'); blur();}"', true,NULL,"font-size:.85em;width:170px;","Move to Gallery...", $row["galleryid"]).'</div>' : '';
 			}
 
 			$returnme .= '<div style="padding: 3px; border:1px solid #96E4D7; margin:3px; float: left; width:171px;">
@@ -195,7 +195,7 @@ global $CFG,$USER;
 											<tr>
 												<td>
 													<div style="width:165px; height:130px; overflow:hidden; text-align:center;">
-														'.$deletepic.'<a onclick="blur();" href="javascript: ajaxapi(\'/features/pics/pics_ajax.php\',\'toggle_activate\',\'&amp;pageid='.$pageid.'&amp;picsid='.$row["picsid"].'\',function() {simple_display(\'activated_picsid_'.$row["picsid"].'\');});"><img src="'.$webpath.'"'.imgResize($mypicture[0],$mypicture[1], 165) . ' /></a>
+														'.$deletepic.'<a onclick="blur();" href="javascript: ajaxapi(\'/features/pics/pics_ajax.php\',\'toggle_activate\',\'&amp;pageid='.$pageid.'&amp;picsid='.$row["picsid"].'\',function() {simple_display(\'activated_picsid_'.$row["picsid"].'\');});"><img src="'.$webpath.'"'.imgResize($mypicture[0], $mypicture[1], 165) . ' /></a>
 													</div>
 												</td>
 											</tr>
@@ -213,15 +213,27 @@ global $CFG,$USER;
 	}
 }
 
-function pics_delete($pageid,$featureid) {
+function pics_delete($pageid, $featureid) {
 global $CFG;
 	if (isset($featureid)) { //Pics section delete
-		recursive_delete($CFG->dirroot.'/features/pics/files/'.$pageid."/".$featureid);
-		execute_db_sql("DELETE FROM pages_features WHERE feature='pics' AND pageid='$pageid' AND featureid='$featureid'");
-		execute_db_sql("DELETE FROM pics_features WHERE pageid='$pageid' and featureid='$featureid'");
-		execute_db_sql("DELETE FROM pics_galleries WHERE pageid='$pageid' and featureid='$featureid'");
-		execute_db_sql("DELETE FROM pics WHERE pageid='$pageid' and featureid='$featureid'");
-		execute_db_sql("DELETE FROM settings WHERE pageid='$pageid' AND type='pics' AND featureid='$featureid'");
+		recursive_delete($CFG->dirroot . '/features/pics/files/' . $pageid . "/" . $featureid);
+
+		$params = [
+			"pageid" => $pageid,
+			"featureid" => $featureid,
+			"feature" => "pics",
+		];
+	
+		$SQL = template_use("dbsql/features.sql", $params, "delete_feature");
+		execute_db_sql($SQL);
+		$SQL = template_use("dbsql/features.sql", $params, "delete_feature_settings");
+		execute_db_sql($SQL);
+		$SQL = template_use("dbsql/pics.sql", $params, "delete_galleries", "pics");
+		execute_db_sql($SQL);
+		$SQL = template_use("dbsql/pics.sql", $params, "delete_pics_features", "pics");
+		execute_db_sql($SQL);
+		$SQL = template_use("dbsql/pics.sql", $params, "delete_pics", "pics");
+		execute_db_sql($SQL);
 
 		resort_page_features($pageid);
 	}
@@ -243,8 +255,8 @@ function imgResize($width, $height, $target) {
 }
 
 //Changes the actual pixels of an image
-function resizeImage($name,$filename,$new_w,$new_h) {
-	$system=explode(".",$name);
+function resizeImage($name, $filename, $new_w, $new_h) {
+	$system=explode(".", $name);
 	if (preg_match("/jpg|jpeg/",strtolower($system[1]))) {$src_img=imagecreatefromjpeg($name);}
 	if (preg_match("/gif/",strtolower($system[1]))) {$src_img=imagecreatefromgif ($name);}
 	if (preg_match("/png/",strtolower($system[1]))) {$src_img=imagecreatefrompng($name);}
@@ -264,12 +276,12 @@ function resizeImage($name,$filename,$new_w,$new_h) {
     		$thumb_w=$new_w;
     		$thumb_h=$new_h;
     	}
-    	$dst_img=ImageCreateTrueColor($thumb_w,$thumb_h);
-    	imagecopyresampled($dst_img,$src_img,0,0,0,0,$thumb_w,$thumb_h,$old_x,$old_y);
-    	if (preg_match("/png/",$system[1])) {
-    		imagepng($dst_img,$filename);
+    	$dst_img=ImageCreateTrueColor($thumb_w, $thumb_h);
+    	imagecopyresampled($dst_img, $src_img,0,0,0,0, $thumb_w, $thumb_h, $old_x, $old_y);
+    	if (preg_match("/png/", $system[1])) {
+    		imagepng($dst_img, $filename);
     	} else {
-    		imagejpeg($dst_img,$filename);
+    		imagejpeg($dst_img, $filename);
     	}
     	imagedestroy($dst_img);
     	imagedestroy($src_img);
@@ -288,12 +300,12 @@ global $CFG;
 	return false;
 }
 
-function pics_buttons($pageid,$featuretype,$featureid) {
-global $CFG,$USER;
+function pics_buttons($pageid, $featuretype, $featureid) {
+global $CFG, $USER;
 	$returnme = "";
 	if (strstr($featuretype,"_features")) {
-		$pics_abilities = get_user_abilities($USER->userid,$pageid,"pics","pics",$featureid);
-		$feature_abilities = get_user_abilities($USER->userid,$pageid,"features","pics",$featureid);
+		$pics_abilities = get_user_abilities($USER->userid, $pageid,"pics","pics", $featureid);
+		$feature_abilities = get_user_abilities($USER->userid, $pageid,"features","pics", $featureid);
 
         if (!empty($pics_abilities->managepics->allow) && get_db_row("SELECT * FROM pics WHERE pageid='$pageid' and featureid='$featureid'")) {
             $returnme .= make_modal_links(array("title"=> "Manage Galleries","path"=>$CFG->wwwroot."/features/pics/pics.php?action=manage_pics&amp;pageid=$pageid&amp;featureid=$featureid","refresh"=>"true","image"=>$CFG->wwwroot."/images/swap.png","class"=>"slide_menu_button"));
@@ -306,9 +318,35 @@ global $CFG,$USER;
 	return $returnme;
 }
 
-function pics_default_settings($feature,$pageid,$featureid) {
-	$settings_array[] = array(false,"$feature","$pageid","$featureid","feature_title","Image Gallery",false,"Image Gallery","Feature Title","text");
-	$settings_array[] = array(false,"$feature","$pageid","$featureid","picsperpage","12",false,"12","Pictures Per Page","text",true,"<=0","Must be greater than 0.");
-	return $settings_array;
+function pics_default_settings($type, $pageid, $featureid) {
+	$settings = [
+		[
+			"type" => "$type",
+			"pageid" => "$pageid",
+			"featureid" => "$featureid",
+			"setting_name" => "feature_title",
+			"setting" => "Image Gallery",
+			"extra" => false,
+			"defaultsetting" => "Image Gallery",
+			"display" => "Feature Title",
+			"inputtype" => "text",
+		],
+		[
+			"type" => "$type",
+			"pageid" => "$pageid",
+			"featureid" => "$featureid",
+			"setting_name" => "picsperpage",
+			"setting" => "12",
+			"extra" => false,
+			"defaultsetting" => "12",
+			"display" => "Pictures Per Page",
+			"inputtype" => "text",
+			"numeric" => true,
+			"validation" => "<=0",
+			"warning" => "Must be greater than 0.",
+		],
+	];
+
+	return $settings;
 }
 ?>

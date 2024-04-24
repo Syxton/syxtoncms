@@ -14,14 +14,14 @@ update_user_cookie();
 callfunction();
 
 function pics_pageturn() {
-global $CFG,$MYVARS;
+global $CFG, $MYVARS;
 	$galleryid = !isset($MYVARS->GET["galleryid"]) ? NULL : $MYVARS->GET["galleryid"];
 	$pagenum = !isset($MYVARS->GET["pagenum"]) ? NULL : $MYVARS->GET["pagenum"];
 	$editable = !isset($MYVARS->GET["editable"]) ? 'false' : $MYVARS->GET["editable"];
 	$perpage = !isset($MYVARS->GET["perpage"]) ? NULL : $MYVARS->GET["perpage"];
 	$order = !isset($MYVARS->GET["order"]) ? NULL : urldecode($MYVARS->GET["order"]);
 	
-	echo get_pics($MYVARS->GET["pageid"],$MYVARS->GET["featureid"],$galleryid,$pagenum,$editable,$perpage,$order);
+	echo get_pics($MYVARS->GET["pageid"], $MYVARS->GET["featureid"], $galleryid, $pagenum, $editable, $perpage, $order);
 }
 
 function new_gallery() {
@@ -37,28 +37,28 @@ global $CFG, $MYVARS;
 }
 
 function move_pic() {
-global $CFG,$MYVARS;
+global $CFG, $MYVARS;
 	$picsid = $MYVARS->GET['picsid']; $galleryid = $MYVARS->GET['galleryid'];
 	execute_db_sql("UPDATE pics SET galleryid='$galleryid' WHERE picsid='$picsid'");
 	echo 'Done';
 }
 
 function save_caption() {
-global $CFG,$MYVARS;
+global $CFG, $MYVARS;
 	$picsid = $MYVARS->GET['picsid']; $caption = addslashes(urldecode($MYVARS->GET['caption']));
 	execute_db_sql("UPDATE pics SET caption='$caption' WHERE picsid='$picsid'");
 	echo 'Saved';
 }
 
 function save_viewability() {
-global $CFG,$MYVARS;
+global $CFG, $MYVARS;
 	$picsid = $MYVARS->GET['picsid']; $siteviewable = $MYVARS->GET['siteviewable'] == "true" ? 1 : 0;
 	execute_db_sql("UPDATE pics SET siteviewable='$siteviewable' WHERE picsid='$picsid'");
 	echo 'Saved';
 }
 
 function delete_pic() {
-global $CFG,$MYVARS;
+global $CFG, $MYVARS;
     $picsid = $MYVARS->GET['picsid'];
     $row = get_db_row("SELECT * FROM pics WHERE picsid='$picsid'");
     delete_file($CFG->dirroot.'/features/pics/files/'.$row["pageid"]."/".$row["featureid"]."/".$row["imagename"]);
@@ -67,7 +67,7 @@ global $CFG,$MYVARS;
 }
 
 function delete_gallery() {
-global $CFG,$MYVARS;
+global $CFG, $MYVARS;
     $galleryid = $MYVARS->GET['galleryid'];
     $pageid = $MYVARS->GET['pageid'];
     $featureid = $MYVARS->GET['featureid'];
@@ -80,7 +80,7 @@ global $CFG,$MYVARS;
                     $site_featureid = get_db_field("featureid","pages_features","feature='pics' AND pageid='".$CFG->SITEID."'");
                     $old = $CFG->dirroot.'/features/pics/files/'.$row["pageid"]."/".$row["featureid"]."/".$row["imagename"];
                     $new = $CFG->dirroot.'/features/pics/files/'.$CFG->SITEID."/".$site_featureid."/".$row["imagename"];
-                    copy_file($old,$new);
+                    copy_file($old, $new);
                     delete_file($old);
                 }elseif ($pageid == $CFG->SITEID && $pageid != $row["pageid"]) {  //SITE is dealing with images from another page
                     execute_db_sql("UPDATE pics SET siteviewable=0 WHERE galleryid='$galleryid'");
@@ -104,11 +104,11 @@ global $CFG,$MYVARS;
         }         
     }
     
-    echo get_pics_manager($pageid,$featureid);
+    echo get_pics_manager($pageid, $featureid);
 }
 
 function pics_upload() {
-global $CFG,$MYVARS;
+global $CFG, $MYVARS;
     $newgallery = empty($MYVARS->GET['new_gallery']) ? false : $MYVARS->GET['new_gallery'];
     $pageid = $MYVARS->GET['pageid']; $featureid = $MYVARS->GET['featureid'];
     
@@ -138,7 +138,7 @@ global $CFG,$MYVARS;
         }
         
         //if the form has been submitted, then do the upload process
-        $filenames = explode("**",$MYVARS->GET['filenames']);
+        $filenames = explode("**", $MYVARS->GET['filenames']);
         $file_count = count($filenames);
         
         //do a loop for uploading files based on ($file_count) number of files.
@@ -162,7 +162,7 @@ global $CFG,$MYVARS;
                  # this code will check file extension                       #
                  #-----------------------------------------------------------#
                  $ext = strrchr($file_name,'.');
-                 if (!in_array(strtolower($ext),$limitedext)) {
+                 if (!in_array(strtolower($ext), $limitedext)) {
                     echo "Skipping file ($file_name) Incompatible file extension. <br />";
                  } else {
                        #-----------------------------------------------------------#
@@ -180,7 +180,7 @@ global $CFG,$MYVARS;
                                    #-----------------------------------------------------------#
                                    # this function will upload the files.  :) ;) cool          #
                                    #-----------------------------------------------------------#
-                                   if (move_uploaded_file($file_tmp,$upload_dir.$file_name)) {
+                                   if (move_uploaded_file($file_tmp, $upload_dir.$file_name)) {
                                         $dateadded = get_timestamp();
         								if ($newgallery == 1 && !$galleryid) {
         							    	$gallery_name = addslashes($MYVARS->GET['gallery_name']);
@@ -190,8 +190,8 @@ global $CFG,$MYVARS;
         							    	$gallery_name = get_db_field("name", "pics_galleries", "galleryid='$galleryid'");
         							    }
         								
-        								execute_db_sql("INSERT INTO pics (pageid,featureid,galleryid,gallery_title,imagename,siteviewable,caption,alttext,dateadded) VALUES('$pageid','$featureid','$galleryid','$gallery_name','$file_name','0','','','$dateadded')");
-        							    resizeImage($upload_dir.$file_name,$upload_dir.$file_name,"600","600");
+        								execute_db_sql("INSERT INTO pics (pageid,featureid,galleryid,gallery_title,imagename,siteviewable,caption,alttext,dateadded) VALUES('$pageid','$featureid','$galleryid','$gallery_name','$file_name','0', '', '','$dateadded')");
+        							    resizeImage($upload_dir.$file_name, $upload_dir.$file_name,"600","600");
                                         $success++;
         						   }#end of (move_uploaded_file).
                              }#end of (file_exists).
@@ -212,7 +212,7 @@ global $CFG,$MYVARS;
 }
 
 function toggle_activate() {
-global $CFG,$MYVARS;
+global $CFG, $MYVARS;
 	$pageid = $MYVARS->GET["pageid"];
 	$picsid = $MYVARS->GET["picsid"];
 	$row = get_db_row("SELECT * FROM pics WHERE picsid=$picsid");

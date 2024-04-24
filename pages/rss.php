@@ -41,7 +41,7 @@ global $CFG, $MYVARS, $USER;
 		$params = array('wwwroot' => $CFG->wwwroot, 'feed' => true, 'rss' => get_db_row($SQL), 'userkey' => $userkey);
 		echo template_use("tmp/rss.template", $params, "rss_subscribe_feature_template");
 	} else { //Need to create new rssid and feed
-		$settings = fetch_settings($feature,$featureid,$pageid);
+		$settings = fetch_settings($feature, $featureid, $pageid);
 		$title = $settings->$feature->$featureid->feature_title->setting;
 
 		$params = array('wwwroot' => $CFG->wwwroot, 'feed' => false, 'title' => $title, 'userkey' => $userkey, 'pageid' => $pageid, 'feature' => $feature, 'featureid' => $featureid);

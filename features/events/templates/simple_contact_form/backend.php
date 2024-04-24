@@ -16,7 +16,7 @@ callfunction();
 update_user_cookie();
 
 function register() {
-global $CFG,$MYVARS,$USER,$error;
+global $CFG, $MYVARS, $USER, $error;
 error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
 
     //Facebook keys
@@ -48,9 +48,9 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
     $MYVARS->GET["Phone"] = preg_replace('/\d{3}/', '$0-', trim(preg_replace("/\D/", "", $MYVARS->GET["Phone"])), 2);
 
     //Go through entire template form list
-	$formlist = explode(";",$template['formlist']);
+	$formlist = explode(";", $template['formlist']);
     foreach ($formlist as $formelements) {
-        $element = explode(":",$formelements);
+        $element = explode(":", $formelements);
         $reg[$element[0]] = isset($MYVARS->GET[$element[0]]) ? $MYVARS->GET[$element[0]] : ""; 
     }
 	$error = "";
@@ -73,10 +73,10 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
                     <input type="hidden" name="total_owed" id="total_owed" value="'.$MYVARS->GET["total_owed"].'" />
 				    <input type="hidden" name="items" id="items" value="'.$items.'" /></div>';
 
-			$items = explode("**",$items);
+			$items = explode("**", $items);
             $i=0;
             foreach ($items as $item) {
-                $itm = explode("::",$item);
+                $itm = explode("::", $item);
 				$cart_items[$i]->regid = $itm[0];
 				$cart_items[$i]->description = $itm[1];
 				$cart_items[$i]->cost = $itm[2];     
@@ -95,10 +95,10 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
     		$fromuser->fname = $CFG->sitename;
     		$fromuser->lname = "";
     		$message = registration_email($regid, $touser);
-    		if (send_email($touser,$fromuser,null,$event['name']." Registration", $message)) {
-    			send_email($fromuser,$fromuser,null,$event['name']." Registration", $message);
+    		if (send_email($touser, $fromuser, $event['name']." Registration", $message)) {
+    			send_email($fromuser, $fromuser, $event['name']." Registration", $message);
     		}
-            
+
 			if ($MYVARS->GET["cart_total"] > 0) { // Event paid by paypal.
                 
                 echo '<br />The full payment amount of <span style="color:blue;font-size:1.25em;">$'.number_format($event['fee_full'],2).'</span> will be expected when you show up to the event.'; 
@@ -111,7 +111,7 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
                 echo '<br /><br />Click the Paypal button below to make that payment.
   				    <br />
                     <div style="text-align:center;">
-    				'.make_paypal_button($cart_items,$event['paypal']).'
+    				'.make_paypal_button($cart_items, $event['paypal']).'
     				</div>';
             } else {
                 echo '<br />Please bring cash, check or money order in the amount of <span style="color:blue;font-size:1.25em;">$'.number_format($event['fee_full'],2).'</span><br />payable to <strong>'.$event["payableto"].'</strong> on the day of the event.';
@@ -128,15 +128,15 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
     		$fromuser->fname = $CFG->sitename;
     		$fromuser->lname = "";
     		$message = registration_email($regid, $touser);
-    		if (send_email($touser,$fromuser,null,$event['name']." Registration", $message)) {
-    			send_email($fromuser,$fromuser,null,$event['name']." Registration", $message);
+    		if (send_email($touser, $fromuser, $event['name']." Registration", $message)) {
+    			send_email($fromuser, $fromuser, $event['name']." Registration", $message);
     		}
         }
 		
         echo "<h2>Thank you for registering!</h2>";
 
         //Facebook share button
-        echo '<br /><br />' . facebook_share_button($eventid,$MYVARS->GET["Name_First"],$keys);
+        echo '<br /><br />' . facebook_share_button($eventid, $MYVARS->GET["Name_First"], $keys);
 
 	} else { // Failed registration      
         echo "<br /><br /><strong>We were unable to register you for this event.  Please try again at a later date.</strong>";

@@ -58,7 +58,7 @@ function site_administration() {
                     </div>
                 </td>
                 <td style="vertical-align: top;">
-                    <div id="display">
+                    <div id="display" style="height:100%;">
                         <div style="font-size:.8em;width:98%;padding:10px;text-align:center;">
                             <h2>Site Administration Area</h2>
                             All administration features are displayed in this area.  Click the links to the left to display the various administration features.

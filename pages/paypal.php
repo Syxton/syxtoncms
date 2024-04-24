@@ -51,7 +51,7 @@ if (!$fp) {
 	$keyarray = [];
 	if (strcmp ($lines[0], "SUCCESS") == 0) {
   	for ($i=1; $i<count($lines);$i++) {
-      	list($key,$val) = explode("=", $lines[$i]);
+      	list($key, $val) = explode("=", $lines[$i]);
       	$keyarray[urldecode($key)] = urldecode($val);
   	}
   	// check the payment_status is Completed
@@ -79,7 +79,7 @@ if (!$fp) {
                  AND info = '".$keyarray['txn_id']."'";
   		if (!get_db_row($SQL)) {
   			$regids = $keyarray['custom'];
-  			$regids = explode(":",$regids);
+  			$regids = explode(":", $regids);
   			$i=0;
   			while (isset($regids[$i])) {
           $rid = $regids[$i];
@@ -112,8 +112,8 @@ if (!$fp) {
           		$fromuser->fname = $CFG->sitename;
           		$fromuser->lname = "";
           		$message = registration_email($rid, $touser);
-          		if (send_email($touser, $fromuser, null, $CFG->sitename . " Registration", $message)) {
-          			send_email($fromuser, $fromuser, null, $CFG->sitename . " Registration", $message);
+          		if (send_email($touser, $fromuser, $CFG->sitename . " Registration", $message)) {
+          			send_email($fromuser, $fromuser, $CFG->sitename . " Registration", $message);
           		}
             }
           } else {

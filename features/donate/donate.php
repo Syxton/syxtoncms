@@ -23,14 +23,14 @@ global $CFG, $MYVARS, $USER;
 	$feature = "donate";
 
 	//Default Settings	
-	$default_settings = default_settings($feature,$pageid,$featureid);
+	$default_settings = default_settings($feature, $pageid, $featureid);
 	$setting_names = get_setting_names($default_settings);
     
 	//Check if any settings exist for this feature
-	if ($settings = fetch_settings($feature,$featureid,$pageid)) {
-        echo make_settings_page($setting_names,$settings,$default_settings,$feature,$featureid,$pageid);
+	if ($settings = fetch_settings($feature, $featureid, $pageid)) {
+        echo make_settings_page($setting_names, $settings, $default_settings);
 	} else { //No Settings found...setup default settings			
-		if (make_or_update_settings_array($settings_array)) { donate_settings(); }
+		if (make_or_update_settings_array($default_settings)) { donate_settings(); }
 	}	
 }
 
@@ -81,7 +81,7 @@ global $CFG;
         //set cacert.pem verisign certificate path in curl using 'CURLOPT_CAINFO' field here,
         //if your server does not bundled with default verisign certificates.
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array("Host: $pp_hostname"));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ["Host: $pp_hostname"]);
         $res = curl_exec($ch);
         curl_close($ch);
                 
@@ -94,7 +94,7 @@ global $CFG;
             $keyarray = [];
             if (strcmp ($lines[0], "SUCCESS") == 0) {
                 for ($i=1; $i<count($lines);$i++) {
-                    list($key,$val) = explode("=", $lines[$i]);
+                    list($key, $val) = explode("=", $lines[$i]);
                     $keyarray[urldecode($key)] = urldecode($val);
                 }
                 // check the payment_status is Completed

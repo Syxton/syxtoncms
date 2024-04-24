@@ -65,8 +65,8 @@ global $CFG, $conn;
 
 function execute_db_sql($SQL) {
 global $CFG, $conn;
-	$update = preg_match('/^UPDATE/i',$SQL) ? true : false;
-	$delete = preg_match('/^DELETE/i',$SQL) ? true : false;
+	$update = preg_match('/^UPDATE/i', $SQL) ? true : false;
+	$delete = preg_match('/^DELETE/i', $SQL) ? true : false;
 
   if ($result = get_db_result($SQL)) {
   	if ($result && $update) {
@@ -84,9 +84,12 @@ global $CFG, $conn;
   return false;
 }
 
-function dbescape($str) {
-global $conn;
-  return mysql_real_escape_string($str,$conn);
+function dbescape($val) {
+	global $conn;
+	if (!is_string($val)) {
+		return $val;
+	}
+	return mysql_real_escape_string($val, $conn);
 }
 
 function db_free_result($result) {

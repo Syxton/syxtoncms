@@ -218,8 +218,8 @@ else
           <tr>
             <td align="right"><strong><font size="2">This consent effective&nbsp;*&nbsp;</font></strong></td>
             <td align="left"><font size="2">
-            From: <input name="HealthConsentFrom" size="13" maxlength="13" value="'.date("m/d/Y",$row["event_begin_date"]).'" type="text">
-            To: <input name="HealthConsentTo" size="13" maxlength="13" value="'.date("m/d/Y",$row["event_end_date"]).'" type="text"></font></td>
+            From: <input name="HealthConsentFrom" size="13" maxlength="13" value="'.date("m/d/Y", $row["event_begin_date"]).'" type="text">
+            To: <input name="HealthConsentTo" size="13" maxlength="13" value="'.date("m/d/Y", $row["event_end_date"]).'" type="text"></font></td>
           </tr>
           <tr>
             <td align="right"><strong><font size="2">Member\'s Name&nbsp;*&nbsp;</font></strong></td>
@@ -274,7 +274,7 @@ else
 echo '<tr><td colspan="2"><hr></td></tr>
     <tr>
       <td align="right"><strong><font size="2">Pay With Application</font></strong></td>
-      <td>'.make_fee_options($row['fee_min'],$row['fee_full'],"payment_amount",'onchange="updateTotal();" onclick="updateTotal();"',$row['sale_end'],$row['sale_fee']).'</td>
+      <td>'.make_fee_options($row['fee_min'], $row['fee_full'],"payment_amount",'onchange="updateTotal();" onclick="updateTotal();"', $row['sale_end'], $row['sale_fee']).'</td>
     </tr>';
     
 if ($picturecost)

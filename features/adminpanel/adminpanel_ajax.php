@@ -55,7 +55,7 @@ global $CFG, $MYVARS;
     $subject = "SERVER: EMAIL TEST";
     $message = "This is a test message sent: " . date('l jS \of F Y h:i:s A');
 
-    if (send_email($touser, $fromuser, $cc = false, $subject, $message)) {
+    if (send_email($touser, $fromuser, $subject, $message)) {
         echo "<br />Email Success";
     } else {
         echo "<br />Email Failed";
@@ -117,8 +117,8 @@ global $USER, $MYVARS;
     }
     
     // Next and Previous Month links
-    $next = date('Y') < $nextyear || (date('Y') == $nextyear && date('m') < $nextmonth) ? '' : '<div class="button" style="display: inline-block" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'view_logfile\',\'&amp;year='.$nextyear.'&amp;month='.$nextmonth.'&amp;userid='.$userid.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'display\'); }}, true);" onmouseup="this.blur()">View '.date("F Y",mktime(0,0,0,$nextmonth,1,$nextyear)) . '</div>';
-    $prev = '<div class="button" style="display: inline-block" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'view_logfile\',\'&amp;year='.$prevyear.'&amp;month='.$prevmonth.'&amp;userid='.$userid.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'display\'); }}, true);" onmouseup="this.blur()">View ' . date("F Y",mktime(0,0,0,$prevmonth,1,$prevyear)).'</div>';
+    $next = date('Y') < $nextyear || (date('Y') == $nextyear && date('m') < $nextmonth) ? '' : '<div class="button" style="display: inline-block" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'view_logfile\',\'&amp;year='.$nextyear.'&amp;month='.$nextmonth.'&amp;userid='.$userid.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'display\'); }}, true);" onmouseup="this.blur()">View '.date("F Y",mktime(0,0,0, $nextmonth,1, $nextyear)) . '</div>';
+    $prev = '<div class="button" style="display: inline-block" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'view_logfile\',\'&amp;year='.$prevyear.'&amp;month='.$prevmonth.'&amp;userid='.$userid.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'display\'); }}, true);" onmouseup="this.blur()">View ' . date("F Y",mktime(0,0,0, $prevmonth,1, $prevyear)).'</div>';
     
     echo '<div style="caret-color: transparent;">
             <div>
@@ -171,8 +171,8 @@ global $MYVARS, $USER;
           ORDER BY timeline
               DESC $LIMIT";
 
-    $next = $pagenum > 0 ? '<div class="button" style="display: inline-block" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'get_user_usage_page\',\'&amp;pagenum=' . ($pagenum - 1) . '&amp;year='.$year.'&amp;month='.$month.'&amp;userid='.$userid.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'actions_div\'); }},true);" onmouseup="this.blur()">Later Actions</div>' : "";
-    $prev = $firstonpage + $perpage < $total ? '<div class="button" style="display: inline-block" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'get_user_usage_page\',\'&amp;pagenum=' . ($pagenum + 1) . '&amp;year='.$year.'&amp;month='.$month.'&amp;userid='.$userid.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'actions_div\'); }},true);" onmouseup="this.blur()">Previous Actions</div>' : "";
+    $next = $pagenum > 0 ? '<div class="button" style="display: inline-block" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'get_user_usage_page\',\'&amp;pagenum=' . ($pagenum - 1) . '&amp;year='.$year.'&amp;month='.$month.'&amp;userid='.$userid.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'actions_div\'); }}, true);" onmouseup="this.blur()">Later Actions</div>' : "";
+    $prev = $firstonpage + $perpage < $total ? '<div class="button" style="display: inline-block" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'get_user_usage_page\',\'&amp;pagenum=' . ($pagenum + 1) . '&amp;year='.$year.'&amp;month='.$month.'&amp;userid='.$userid.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'actions_div\'); }}, true);" onmouseup="this.blur()">Previous Actions</div>' : "";
 
     $returnme .= '<table style="font-size:.75em;width: 100%;">
                     <tr>

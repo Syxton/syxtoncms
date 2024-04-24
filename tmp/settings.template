@@ -34,8 +34,8 @@ make_setting_input_template||
 
       ||isnoyes{{
         <select style="width: calc(100% - 150px);" name="||name||" id="||name||">
-          <option value="1" ||no||>No</option>
-          <option value="0" ||yes||>Yes</option>
+          <option value="0" ||no||>No</option>
+          <option value="1" ||yes||>Yes</option>
         </select>
       }}isnoyes||
 

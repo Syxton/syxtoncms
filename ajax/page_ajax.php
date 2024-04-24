@@ -156,8 +156,19 @@ global $CFG, $MYVARS, $USER;
   $count = $total > (($pagenum+1) * $CFG->sitesearch->perpage) ? $CFG->sitesearch->perpage : $total - (($pagenum) * $CFG->sitesearch->perpage); //get the amount returned...is it a full page of results?
   $amountshown = $firstonpage + $CFG->sitesearch->perpage < $total ? $firstonpage + $CFG->sitesearch->perpage : $total;
 
-  $params = array("resultsfound" => ($count > 0), "searchresults" => "", "searchwords" => $searchwords, "searchtype" => "pagesearch", "isprev" => ($pagenum > 0), "isnext" => ($firstonpage + $CFG->sitesearch->perpage < $total), "wwwroot" => $CFG->wwwroot, "prev_pagenum" => ($pagenum - 1), "next_pagenum" => ($pagenum + 1),
-                  "pagenum" => $pagenum, "viewing" => ($firstonpage + 1), "amountshown" => $amountshown, "total" => $total);
+  $params = [ "resultsfound" => ($count > 0),
+              "searchresults" => "",
+              "searchwords" => $searchwords,
+              "searchtype" => "pagesearch",
+              "isprev" => ($pagenum > 0),
+              "isnext" => ($firstonpage + $CFG->sitesearch->perpage < $total),
+              "wwwroot" => $CFG->wwwroot,
+              "prev_pagenum" => ($pagenum - 1),
+              "next_pagenum" => ($pagenum + 1),
+              "pagenum" => $pagenum,
+              "viewing" => ($firstonpage + 1),
+              "amountshown" => $amountshown,
+              "total" => $total];
 
   if ($count > 0) {
     while ($page = fetch_row($pages)) {
@@ -165,19 +176,36 @@ global $CFG, $MYVARS, $USER;
       $params["col3"] = "";
       if ($loggedin && !$admin) {
         if ($page["siteviewable"] == 1 || $page["opendoorpolicy"] == 1 || $page["added"] == 1 || user_has_ability_in_page($userid, "assign_roles", $page["pageid"])) {
-          $params["col3"] = template_use("tmp/page_ajax.template", array("must_request" => false, "can_add_remove" => user_has_ability_in_page($userid, "add_page", $CFG->SITEID),
-                                                                               "isadd" => ($page["added"] == 0), "wwwroot" => $CFG->wwwroot, "pagenum" => $pagenum,
-                                                                               "searchwords" => $searchwords, "pageid" => $page["pageid"]), "search_pages_buttons_template");
+          $vars = [ "must_request" => false,
+                    "can_add_remove" => user_has_ability_in_page($userid, "add_page", $CFG->SITEID),
+                    "isadd" => ($page["added"] == 0),
+                    "wwwroot" => $CFG->wwwroot,
+                    "pagenum" => $pagenum,
+                    "searchwords" => $searchwords,
+                    "pageid" => $page["pageid"],
+          ];
+          $params["col3"] = template_use("tmp/page_ajax.template", $vars, "search_pages_buttons_template");
         } else {
           $linked = false;
           $alreadyrequested = get_db_row("SELECT * FROM roles_assignment WHERE userid='$userid' AND pageid='" . $page["pageid"] . "' AND confirm=1") ? true : false;
-          $params["col3"] = template_use("tmp/page_ajax.template", array("must_request" => true, "alreadyrequested" => $alreadyrequested, "wwwroot" => $CFG->wwwroot, "pagenum" => $pagenum,
-                                                                               "searchwords" => $searchwords, "pageid" => $page["pageid"]), "search_pages_buttons_template");
+          $vars = [ "must_request" => true,
+                    "alreadyrequested" => $alreadyrequested,
+                    "wwwroot" => $CFG->wwwroot,
+                    "pagenum" => $pagenum,
+                    "searchwords" => $searchwords,
+                    "pageid" => $page["pageid"],
+          ];
+          $params["col3"] = template_use("tmp/page_ajax.template", $vars, "search_pages_buttons_template");
         }
       }
 
       $params["linked"] = $linked;
-      $params["col1"] = template_use("tmp/page_ajax.template", array("linked" => $linked, "pageid" =>  $page["pageid"],"name" => substr($page["name"], 0, 30)), "search_pages_link_template");
+      $vars = [ "linked" => $linked,
+                "pageid" => $page["pageid"],
+                "name" => substr($page["name"], 0, 30),
+
+      ];
+      $params["col1"] = template_use("tmp/page_ajax.template", $vars, "search_pages_link_template");
       $params["col2"] = htmlentities(strip_tags(substr($page["description"], 0, 50)));
       $params["searchresults"] = $params["searchresults"] . template_use("tmp/page_ajax.template", $params, "search_row_template");
     }
@@ -224,8 +252,20 @@ global $CFG, $MYVARS, $USER;
   $count = $total > (($pagenum+1) * $CFG->sitesearch->perpage) ? $CFG->sitesearch->perpage : $total - (($pagenum) * $CFG->sitesearch->perpage); //get the amount returned...is it a full page of results?
   $amountshown = $firstonpage + $CFG->sitesearch->perpage < $total ? $firstonpage + $CFG->sitesearch->perpage : $total;
 
-  $params = array("resultsfound" => ($count > 0), "searchresults" => "", "searchwords" => $searchwords, "searchtype" => "usersearch", "isprev" => ($pagenum > 0), "isnext" => ($firstonpage + $CFG->sitesearch->perpage < $total), "wwwroot" => $CFG->wwwroot, "prev_pagenum" => ($pagenum - 1), "next_pagenum" => ($pagenum + 1),
-                  "pagenum" => $pagenum, "viewing" => ($firstonpage + 1), "amountshown" => $amountshown, "total" => $total);
+  $params = [ "resultsfound" => ($count > 0),
+              "searchresults" => "",
+              "searchwords" => $searchwords,
+              "searchtype" => "usersearch",
+              "isprev" => ($pagenum > 0),
+              "isnext" => ($firstonpage + $CFG->sitesearch->perpage < $total),
+              "wwwroot" => $CFG->wwwroot,
+              "prev_pagenum" => ($pagenum - 1),
+              "next_pagenum" => ($pagenum + 1),
+              "pagenum" => $pagenum,
+              "viewing" => ($firstonpage + 1),
+              "amountshown" => $amountshown,
+              "total" => $total,
+  ];
 
   if ($count > 0) {
     while ($user = fetch_row($users)) {
@@ -244,7 +284,7 @@ global $CFG, $MYVARS, $USER;
 
 function get_new_link_form() {
 global $MYVARS, $CFG, $USER;
-  echo template_use("tmp/page_ajax.template", array("pageid" => $MYVARS->GET['pageid']), "new_link_form_template");
+  echo template_use("tmp/page_ajax.template", ["pageid" => $MYVARS->GET['pageid']], "new_link_form_template");
 }
 
 function get_link_manager() {
@@ -252,7 +292,7 @@ global $MYVARS, $CFG, $USER;
     $pageid = $MYVARS->GET['pageid'];
     $returnme = "";
     $i = 0;
-    $params = array("pageid" => $pageid, "wwwroot" => $CFG->wwwroot, "haslinks" => false);
+    $params = ["pageid" => $pageid, "wwwroot" => $CFG->wwwroot, "haslinks" => false];
 
     $SQL = "SELECT *
               FROM pages_links
@@ -266,8 +306,15 @@ global $MYVARS, $CFG, $USER;
       $count = get_db_count($SQL);
 
       while ($link = fetch_row($links)) {
-        $rowparams = array("wwwroot" => $CFG->wwwroot, "order" => $i, "nextorder" => ($i + 1), "pageid" => $pageid,
-                           "linkdisplay" => stripslashes($link['linkdisplay']), "linkid" => $link["linkid"], "notfirstrow" =>  ($i > 0), "notlastrow" => ($i < ($count - 1)));
+        $rowparams = ["wwwroot" => $CFG->wwwroot,
+                      "order" => $i,
+                      "nextorder" => ($i + 1),
+                      "pageid" => $pageid,
+                      "linkdisplay" => stripslashes($link['linkdisplay']),
+                      "linkid" => $link["linkid"],
+                      "notfirstrow" =>  ($i > 0),
+                      "notlastrow" => ($i < ($count - 1)),
+        ];
         $linkrows .= template_use("tmp/page_ajax.template", $rowparams, "sortable_links_template");
         $i++;
       }
@@ -332,8 +379,22 @@ global $CFG, $MYVARS, $USER;
   $count = $total > (($pagenum+1) * $CFG->sitesearch->perpage) ? $CFG->sitesearch->perpage : $total - (($pagenum) * $CFG->sitesearch->perpage); //get the amount returned...is it a full page of results?
   $amountshown = $firstonpage + $CFG->sitesearch->perpage < $total ? $firstonpage + $CFG->sitesearch->perpage : $total;
 
-  $params = array("resultsfound" => ($count > 0), "searchresults" => "", "searchwords" => $searchwords, "searchtype" => "linkpagesearch", "isprev" => ($pagenum > 0), "isnext" => ($firstonpage + $CFG->sitesearch->perpage < $total), "wwwroot" => $CFG->wwwroot, "prev_pagenum" => ($pagenum - 1), "next_pagenum" => ($pagenum + 1),
-                  "pagenum" => $pagenum, "viewing" => ($firstonpage + 1), "amountshown" => $amountshown, "total" => $total, "loggedin" => $loggedin, "pageid" => $pageid);
+  $params = [ "resultsfound" => ($count > 0),
+              "searchresults" => "",
+              "searchwords" => $searchwords,
+              "searchtype" => "linkpagesearch",
+              "isprev" => ($pagenum > 0),
+              "isnext" => ($firstonpage + $CFG->sitesearch->perpage < $total),
+              "wwwroot" => $CFG->wwwroot,
+              "prev_pagenum" => ($pagenum - 1),
+              "next_pagenum" => ($pagenum + 1),
+              "pagenum" => $pagenum,
+              "viewing" => ($firstonpage + 1),
+              "amountshown" => $amountshown,
+              "total" => $total,
+              "loggedin" => $loggedin,
+              "pageid" => $pageid,
+  ];
 
   if ($count > 0) {
     while ($page = fetch_row($pages)) {
@@ -455,7 +516,7 @@ global $CFG, $MYVARS;
   $pages = user_has_ability_in_pages($inviter, "invite", false, false); //list pages you have invite permissions in
   $notthese = user_has_ability_in_pages($invitee, "viewpages", false, false); //remove pages that the user already has access to
 
-  $invite_button = template_use("tmp/page_ajax.template", array("invitee" => $invitee), "get_inviteable_button_template");
+  $invite_button = template_use("tmp/page_ajax.template", ["invitee" => $invitee], "get_inviteable_button_template");
   echo make_select("page_invite_list", $pages, "pageid", "name", null, $invite_button, true, 1 , "width:150px;", "", $notthese);
 }
 
@@ -498,7 +559,7 @@ global $CFG, $MYVARS, $USER;
   $pageid = $MYVARS->GET["pageid"];
   $pagenum = $MYVARS->GET["pagenum"];
 
-  $params = array("wwwroot" => $CFG->wwwroot, "can_add" => false, "pageid" => $pageid, "pagenum" => $pagenum, "userid" => $userid);
+  $params = ["wwwroot" => $CFG->wwwroot, "can_add" => false, "pageid" => $pageid, "pagenum" => $pagenum, "userid" => $userid];
   $subscription_added = subscribe_to_page($pageid, $userid, true);
   if (!$subscription_added) {
     $SQL = "SELECT added, opendoorpolicy, siteviewable
@@ -522,7 +583,7 @@ global $CFG, $MYVARS;
                VALUES($userid, $roleid, $pageid, 1)";
 
   $request_added = execute_db_sql($SQL);
-  $params = array("request_added" => $request_added, "wwwroot" => $CFG->wwwroot, "pageid" => $pageid);
+  $params = ["request_added" => $request_added, "wwwroot" => $CFG->wwwroot, "pageid" => $pageid];
   echo template_use("tmp/page_ajax.template", $params, "add_remove_request_template");
 }
 
@@ -537,7 +598,7 @@ global $CFG, $MYVARS;
                   AND confirm = 1";
   $request_removed = execute_db_sql($SQL);
 
-  $params = array("request_removed" => (!$request_removed), "wwwroot" => $CFG->wwwroot, "pageid" => $pageid);
+  $params = ["request_removed" => (!$request_removed), "wwwroot" => $CFG->wwwroot, "pageid" => $pageid];
   echo template_use("tmp/page_ajax.template", $params, "add_remove_request_template");
 }
 ?>

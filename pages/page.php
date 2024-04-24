@@ -28,20 +28,31 @@ global $CFG;
 					break;
 	}
 
-	$params = array("pagesearchselected" => $pagesearch,
-									"usersearchtab" => (!is_logged_in() ? "" : template_use("tmp/page.template", array("usersearchselected" => $usersearch), "browse_usersearch_template")));
+  $searchtab = "";
+  if (is_logged_in()) {
+    $searchtab = template_use("tmp/page.template", ["usersearchselected" => $usersearch], "browse_usersearch_template");
+  }
+  
+  $params = [ "pagesearchselected" => $pagesearch,
+							"usersearchtab" => $searchtab,
+  ];
+
 	echo template_use("tmp/page.template", $params, "browse_template");
 }
 
 function browse_search() {
 global $CFG;
-	$params = array("wwwroot" => $CFG->wwwroot, "search_results_box" => make_search_box(false,"pagesearch"));
+	$params = [ "wwwroot" => $CFG->wwwroot,
+              "search_results_box" => make_search_box(false, "pagesearch"),
+  ];
 	echo template_use("tmp/page.template", $params, "browse_search_template");
 }
 
 function browse_users() {
 global $CFG;
-	$params = array("wwwroot" => $CFG->wwwroot, "search_results_box" => make_search_box(false,"usersearch"));
+  $params = [ "wwwroot" => $CFG->wwwroot,
+              "search_results_box" => make_search_box(false, "usersearch"),
+  ];
 	echo template_use("tmp/page.template", $params, "browse_user_template");
 }
 
@@ -85,7 +96,7 @@ global $CFG, $MYVARS, $ROLES, $USER;
   }
 
   if (isset($MYVARS->GET["pageid"])) {
-  	$content .= create_validation_script("create_page_form" , template_use("tmp/page.template", array("pageid" => $MYVARS->GET["pageid"]), "edit_page_validation"));
+  	$content .= create_validation_script("create_page_form" , template_use("tmp/page.template", ["pageid" => $MYVARS->GET["pageid"]], "edit_page_validation"));
   } else {
   	$content .= create_validation_script("create_page_form" , template_use("tmp/page.template", [], "create_page_validation"));
   }
@@ -93,19 +104,34 @@ global $CFG, $MYVARS, $ROLES, $USER;
   $SQL = 'SELECT * FROM roles WHERE roleid > "' . $ROLES->creator . '" AND roleid < "'.$ROLES->none.'" ORDER BY roleid DESC';
   $roles = get_db_result($SQL);
 
-	$params = array("name" => $name, "input_name_help" => get_help("input_page_name"),
-									"keywords" => $keywords, "input_page_tags" => get_help("input_page_tags"),
-									"description" => stripslashes($description), "input_page_summary" => get_help("input_page_summary"),
-									"roleselector" => make_select("role_select", $roles, "roleid", "display_name", $role_selected), "input_page_default_role" => get_help("input_page_default_role"),
-									"openno" => $open_no, "openyes" => $open_yes, "input_page_opendoor" => get_help("input_page_opendoor"),
-									"globalno" => $global_no, "globalyes" => $global_yes, "input_page_siteviewable" => get_help("input_page_siteviewable"),
-									"admin" => $admin, "menuno" => $menu_no, "menuyes" => $menu_yes, "input_page_menulink" => get_help("input_page_menulink"),
-									"hideno" => $hide_no, "hideyes" => $hide_yes, "input_page_menulink" => get_help("input_page_menulink"),
-									"menupage" => $menu_page, "hidefromvisitors" => $hidefromvisitors,
-									"buttonname" => (isset($MYVARS->GET["pageid"]) ? "Submit Changes" : "Create Page"));
+	$params = [ "name" => $name,
+              "input_name_help" => get_help("input_page_name"),
+						  "keywords" => $keywords,
+              "input_page_tags" => get_help("input_page_tags"),
+							"description" => stripslashes($description),
+              "input_page_summary" => get_help("input_page_summary"),
+							"roleselector" => make_select("role_select", $roles, "roleid", "display_name", $role_selected),
+              "input_page_default_role" => get_help("input_page_default_role"),
+							"openno" => $open_no,
+              "openyes" => $open_yes,
+              "input_page_opendoor" => get_help("input_page_opendoor"),
+							"globalno" => $global_no,
+              "globalyes" => $global_yes,
+              "input_page_siteviewable" => get_help("input_page_siteviewable"),
+							"admin" => $admin,
+              "menuno" => $menu_no,
+              "menuyes" => $menu_yes,
+              "input_page_menulink" => get_help("input_page_menulink"),
+							"hideno" => $hide_no,
+              "hideyes" => $hide_yes,
+              "input_page_menulink" => get_help("input_page_menulink"),
+							"menupage" => $menu_page,
+              "hidefromvisitors" => $hidefromvisitors ?? false,
+							"buttonname" => (isset($MYVARS->GET["pageid"]) ? "Submit Changes" : "Create Page"),
+  ];
 	$content .= template_use("tmp/page.template", $params, "create_edit_page_template");
 
-  echo format_popup($content,'Create/Edit Page');
+  echo format_popup($content, 'Create/Edit Page');
 }
 
 function create_edit_links() {
@@ -118,7 +144,7 @@ global $CFG, $MYVARS, $USER;
       return;
   }
 
-	$params = array("pageid" => $pageid);
+	$params = ["pageid" => $pageid];
 	$content .= template_use("tmp/page.template", $params, "create_edit_links_template");
   echo format_popup($content,'Edit Links');
 }

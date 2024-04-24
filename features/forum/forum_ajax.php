@@ -15,26 +15,26 @@ update_user_cookie();
 callfunction();
 
 function get_forum_categories_ajax() {
-global $CFG,$MYVARS;
+global $CFG, $MYVARS;
 	$forumid = $MYVARS->GET["forumid"];
 	echo get_forum_categories($forumid);	
 }
 
 function get_shoutbox_ajax() {
-global $CFG,$MYVARS;
+global $CFG, $MYVARS;
 	$forumid = $MYVARS->GET["forumid"];
 	echo get_shoutbox($forumid);	
 }
 
 function get_forum_discussions() {
-global $CFG,$MYVARS,$USER;
+global $CFG, $MYVARS, $USER;
 	$catid = $MYVARS->GET["catid"]; $forumid = $MYVARS->GET["forumid"];
 	$pageid = $MYVARS->GET["pageid"]; 
 	$dpagenum = isset($MYVARS->GET["dpagenum"]) ? $MYVARS->GET["dpagenum"] : false;
     $dpagenum = $dpagenum < 0 ? false : $dpagenum;
 	$dpagenum2 = isset($dpagenum) ? $dpagenum : false;
 	
-	$settings = fetch_settings("forum",$forumid,$pageid);
+	$settings = fetch_settings("forum", $forumid, $pageid);
 	
 	$content = "";
 	date_default_timezone_set(date_default_timezone_get());
@@ -52,14 +52,14 @@ global $CFG,$MYVARS,$USER;
 	} 
 	
     //Abilities
-	$lockability = user_has_ability_in_page($USER->userid,"lockdiscussion",$category['pageid']);
-	$deleteability = user_has_ability_in_page($USER->userid,"deleteforumdiscussion",$category['pageid']);
-	$bulletinability = user_has_ability_in_page($USER->userid,"designateforumbulletin",$category['pageid']);
-	$editability = user_has_ability_in_page($USER->userid,"editforumcategory",$category['pageid']);
-	$returnme = '<span class="forum_breadcrumb"><a href="javascript: ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_categories_ajax\',\'&forumid='.$forumid.'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); $(\'#forum_refresh_'.$forumid.'\').val(\''.addslashes('ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_categories_ajax\',\'&forumid='.$forumid.'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true);').'\'); }},true); ">Categories</a></span> <img src="'.$CFG->wwwroot.'/images/calendarNext.gif" alt="breadcrumbarrow" /> <span style="font-size:.9em;">' . get_db_field("title","forum_categories","catid=$catid") . '</span>';
+	$lockability = user_has_ability_in_page($USER->userid,"lockdiscussion", $category['pageid']);
+	$deleteability = user_has_ability_in_page($USER->userid,"deleteforumdiscussion", $category['pageid']);
+	$bulletinability = user_has_ability_in_page($USER->userid,"designateforumbulletin", $category['pageid']);
+	$editability = user_has_ability_in_page($USER->userid,"editforumcategory", $category['pageid']);
+	$returnme = '<span class="forum_breadcrumb"><a href="javascript: ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_categories_ajax\',\'&forumid='.$forumid.'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); $(\'#forum_refresh_'.$forumid.'\').val(\''.addslashes('ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_categories_ajax\',\'&forumid='.$forumid.'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }}, true);').'\'); }}, true); ">Categories</a></span> <img src="'.$CFG->wwwroot.'/images/calendarNext.gif" alt="breadcrumbarrow" /> <span style="font-size:.9em;">' . get_db_field("title","forum_categories","catid=$catid") . '</span>';
 	
     //Create Discussion Link
-	if (user_has_ability_in_page($USER->userid,"createforumdiscussion",$pageid)) { 
+	if (user_has_ability_in_page($USER->userid,"createforumdiscussion", $pageid)) { 
         $returnme .= '  <div style="font-size:.8em; text-align:right; width:100%;">
                             '.make_modal_links(array("button"=>"button","title"=>"New Discussion","text"=>'<img src="'.$CFG->wwwroot.'/images/discussion.gif" alt=""> New Discussion',"path"=>$CFG->wwwroot."/features/forum/forum.php?action=create_discussion_form&amp;pageid=$pageid&amp;forumid=$forumid&amp;catid=$catid","width"=>"750","height"=>"600","iframe"=>"true","runafter"=>"forum_refresh_$forumid")).'
                         </div>';
@@ -81,18 +81,18 @@ global $CFG,$MYVARS,$USER;
 			}
 			$viewclass = $notviewed ? 'forum_bulletin' : 'forum_bulletin_viewed';
 			$lock = $bulletin["locked"] == 1 ? '<img src="'.$CFG->wwwroot.'/images/lock.png" style="margin:-5px;" />&nbsp;&nbsp;' : '';
-			$content .= '<tr><td class="'.$viewclass.'"><span style="position:relative;float:left;max-width:95%;">'.$lock.'Bulletin: <a href="javascript: ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_posts\',\'&discussionid='.$bulletin['discussionid'].'&pagenum=0&catid='.$catid.'&forumid='.$forumid.'&pageid='.$bulletin["pageid"].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); $(\'#forum_refresh_'.$forumid.'\').val(\''.addslashes('ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_posts\',\'&discussionid='.$bulletin['discussionid'].'&pagenum=0&catid='.$catid.'&forumid='.$forumid.'&pageid='.$bulletin["pageid"].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true); ').'\'); }},true);" >'.stripslashes($bulletin["title"]).'</a><br />'.get_post_pages($forumid, $bulletin, false, 3, false) . '</span>';
+			$content .= '<tr><td class="'.$viewclass.'"><span style="position:relative;float:left;max-width:95%;">'.$lock.'Bulletin: <a href="javascript: ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_posts\',\'&discussionid='.$bulletin['discussionid'].'&pagenum=0&catid='.$catid.'&forumid='.$forumid.'&pageid='.$bulletin["pageid"].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); $(\'#forum_refresh_'.$forumid.'\').val(\''.addslashes('ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_posts\',\'&discussionid='.$bulletin['discussionid'].'&pagenum=0&catid='.$catid.'&forumid='.$forumid.'&pageid='.$bulletin["pageid"].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }}, true); ').'\'); }}, true);" >'.stripslashes($bulletin["title"]).'</a><br />'.get_post_pages($forumid, $bulletin, false, 3, false) . '</span>';
 			$content .= '<span style="position:relative;float:right;">';
 			
             //UNPIN BULLETIN
-			if ($bulletinability) { $content .= '<a alt="Undesignate as Bulletin" title="Undesignate as Bulletin" href="javascript: if (confirm(\'Are you sure you wish to unpin this bulletin?\')) { ajaxapi(\'/features/forum/forum_ajax.php\',\'unpin_bulletin\',\'&dpagenum='.$dpagenum.'&pageid='.$pageid.'&forumid='.$forumid.'&catid='.$catid.'&discussionid='.$bulletin['discussionid'].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true);}"><img src="'.$CFG->wwwroot.'/images/unpin.png" /></a>';}
+			if ($bulletinability) { $content .= '<a alt="Undesignate as Bulletin" title="Undesignate as Bulletin" href="javascript: if (confirm(\'Are you sure you wish to unpin this bulletin?\')) { ajaxapi(\'/features/forum/forum_ajax.php\',\'unpin_bulletin\',\'&dpagenum='.$dpagenum.'&pageid='.$pageid.'&forumid='.$forumid.'&catid='.$catid.'&discussionid='.$bulletin['discussionid'].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }}, true);}"><img src="'.$CFG->wwwroot.'/images/unpin.png" /></a>';}
 			
             //LOCK/UNLOCK BULLETIN
-			if ($lockability && $bulletin["locked"] == 1) { $content .= '<a alt="Unlock Bulletin" title="Unlock Bulletin" href="javascript: if (confirm(\'Are you sure you wish to unlock this bulletin?\')) { ajaxapi(\'/features/forum/forum_ajax.php\',\'unlock_discussion\',\'&dpagenum='.$dpagenum.'&pageid='.$pageid.'&forumid='.$forumid.'&catid='.$catid.'&discussionid='.$bulletin['discussionid'].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true);}"><img src="'.$CFG->wwwroot.'/images/unlock.png" /></a>';}
-			if ($lockability && $bulletin["locked"] == 0) { $content .= '<a alt="Lock Bulletin" title="Lock Bulletin" href="javascript: if (confirm(\'Are you sure you wish to lock this bulletin?\')) { ajaxapi(\'/features/forum/forum_ajax.php\',\'lock_discussion\',\'&dpagenum='.$dpagenum.'&pageid='.$pageid.'&forumid='.$forumid.'&catid='.$catid.'&discussionid='.$bulletin['discussionid'].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true);}"><img src="'.$CFG->wwwroot.'/images/lock.png" /></a>';}
+			if ($lockability && $bulletin["locked"] == 1) { $content .= '<a alt="Unlock Bulletin" title="Unlock Bulletin" href="javascript: if (confirm(\'Are you sure you wish to unlock this bulletin?\')) { ajaxapi(\'/features/forum/forum_ajax.php\',\'unlock_discussion\',\'&dpagenum='.$dpagenum.'&pageid='.$pageid.'&forumid='.$forumid.'&catid='.$catid.'&discussionid='.$bulletin['discussionid'].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }}, true);}"><img src="'.$CFG->wwwroot.'/images/unlock.png" /></a>';}
+			if ($lockability && $bulletin["locked"] == 0) { $content .= '<a alt="Lock Bulletin" title="Lock Bulletin" href="javascript: if (confirm(\'Are you sure you wish to lock this bulletin?\')) { ajaxapi(\'/features/forum/forum_ajax.php\',\'lock_discussion\',\'&dpagenum='.$dpagenum.'&pageid='.$pageid.'&forumid='.$forumid.'&catid='.$catid.'&discussionid='.$bulletin['discussionid'].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }}, true);}"><img src="'.$CFG->wwwroot.'/images/lock.png" /></a>';}
 			
             //DELETE BULLETIN		
-			if ($deleteability) { $content .= '<a alt="Delete Bulletin" title="Delete Bulletin" onclick="this.blur();" href="javascript: if (confirm(\'Are you sure you wish to delete this discussion? \nThis will also delete all posts inside this discussion.\')) { ajaxapi(\'/features/forum/forum_ajax.php\',\'delete_discussion\',\'&dpagenum='.$dpagenum.'&pageid='.$pageid.'&forumid='.$forumid.'&catid='.$catid.'&discussionid='.$bulletin['discussionid'].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true);}"><img src="'.$CFG->wwwroot.'/images/delete.png" /></a>';}		
+			if ($deleteability) { $content .= '<a alt="Delete Bulletin" title="Delete Bulletin" onclick="this.blur();" href="javascript: if (confirm(\'Are you sure you wish to delete this discussion? \nThis will also delete all posts inside this discussion.\')) { ajaxapi(\'/features/forum/forum_ajax.php\',\'delete_discussion\',\'&dpagenum='.$dpagenum.'&pageid='.$pageid.'&forumid='.$forumid.'&catid='.$catid.'&discussionid='.$bulletin['discussionid'].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }}, true);}"><img src="'.$CFG->wwwroot.'/images/delete.png" /></a>';}		
 			if ($editability) { $content .= make_modal_links(array("title"=>"Edit Bulletin","path"=>$CFG->wwwroot."/features/forum/forum.php?action=create_discussion_form&amp;pageid=$pageid&amp;forumid=$forumid&amp;catid=$catid&amp;discussionid=".$bulletin['discussionid'],"width"=>"750","height"=>"600","iframe"=>"true","runafter"=>"forum_refresh_$forumid","image"=>$CFG->wwwroot.'/images/edit.png')); }
 			$content .= '</span></td>
 						<td class="forum_col2">'.$posts_count.'</td>
@@ -120,19 +120,19 @@ global $CFG,$MYVARS,$USER;
 			$viewclass = $notviewed ? 'forum_col1' : 'forum_col1_viewed';
 			$lock = $discussion["locked"] == 1 ? '<img src="'.$CFG->wwwroot.'/images/lock.png" style="margin:-5px;" />&nbsp;&nbsp;' : '';
 			$content .= '	<tr>
-						<td class="'.$viewclass.'"><span style="position:relative;float:left;max-width:95%;"><a href="javascript: ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_posts\',\'&discussionid='.$discussion['discussionid'].'&pagenum=0&catid='.$catid.'&forumid='.$forumid.'&pageid='.$discussion["pageid"].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); $(\'#forum_refresh_'.$forumid.'\').val(\''.addslashes('ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_posts\',\'&discussionid='.$discussion['discussionid'].'&pagenum=0&catid='.$catid.'&forumid='.$forumid.'&pageid='.$discussion["pageid"].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true);').'\'); }},true); " >'.$lock.stripslashes($discussion["title"]).'</a><br />'.get_post_pages($forumid, $discussion, false, 3, false).'</span>';
+						<td class="'.$viewclass.'"><span style="position:relative;float:left;max-width:95%;"><a href="javascript: ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_posts\',\'&discussionid='.$discussion['discussionid'].'&pagenum=0&catid='.$catid.'&forumid='.$forumid.'&pageid='.$discussion["pageid"].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); $(\'#forum_refresh_'.$forumid.'\').val(\''.addslashes('ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_posts\',\'&discussionid='.$discussion['discussionid'].'&pagenum=0&catid='.$catid.'&forumid='.$forumid.'&pageid='.$discussion["pageid"].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }}, true);').'\'); }}, true); " >'.$lock.stripslashes($discussion["title"]).'</a><br />'.get_post_pages($forumid, $discussion, false, 3, false).'</span>';
 			$editability = $editability || $USER->userid == $discussion["ownerid"] ? true : false;
 			$content .= '<span style="position:relative;float:right;">';
 			
             //PIN DISCUSSION
-			if ($bulletinability) { $content .= '<a alt="Designate as Bulletin" title="Designate as Bulletin" href="javascript: if (confirm(\'Are you sure you wish to pin this as a bulletin?\')) { ajaxapi(\'/features/forum/forum_ajax.php\',\'pin_bulletin\',\'&dpagenum='.$dpagenum.'&pageid='.$pageid.'&forumid='.$forumid.'&catid='.$catid.'&discussionid='.$discussion['discussionid'].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true);}"><img src="'.$CFG->wwwroot.'/images/pin.png" /></a>';}
+			if ($bulletinability) { $content .= '<a alt="Designate as Bulletin" title="Designate as Bulletin" href="javascript: if (confirm(\'Are you sure you wish to pin this as a bulletin?\')) { ajaxapi(\'/features/forum/forum_ajax.php\',\'pin_bulletin\',\'&dpagenum='.$dpagenum.'&pageid='.$pageid.'&forumid='.$forumid.'&catid='.$catid.'&discussionid='.$discussion['discussionid'].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }}, true);}"><img src="'.$CFG->wwwroot.'/images/pin.png" /></a>';}
 			
             //LOCK/UNLOCK BULLETIN
-			if ($lockability && $discussion["locked"] == 1) { $content .= '<a alt="Unlock Discussion" title="Unlock Discussion" href="javascript: if (confirm(\'Are you sure you wish to unlock this discussion?\')) { ajaxapi(\'/features/forum/forum_ajax.php\',\'unlock_discussion\',\'&dpagenum='.$dpagenum.'&pageid='.$pageid.'&forumid='.$forumid.'&catid='.$catid.'&discussionid='.$discussion['discussionid'].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true);}"><img src="'.$CFG->wwwroot.'/images/unlock.png" /></a>';}
-			if ($lockability && $discussion["locked"] == 0) { $content .= '<a alt="Lock Discussion" title="Lock Discussion" href="javascript: if (confirm(\'Are you sure you wish to lock this discussion?\')) { ajaxapi(\'/features/forum/forum_ajax.php\',\'lock_discussion\',\'&dpagenum='.$dpagenum.'&pageid='.$pageid.'&forumid='.$forumid.'&catid='.$catid.'&discussionid='.$discussion['discussionid'].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true);}"><img src="'.$CFG->wwwroot.'/images/lock.png" /></a>';}
+			if ($lockability && $discussion["locked"] == 1) { $content .= '<a alt="Unlock Discussion" title="Unlock Discussion" href="javascript: if (confirm(\'Are you sure you wish to unlock this discussion?\')) { ajaxapi(\'/features/forum/forum_ajax.php\',\'unlock_discussion\',\'&dpagenum='.$dpagenum.'&pageid='.$pageid.'&forumid='.$forumid.'&catid='.$catid.'&discussionid='.$discussion['discussionid'].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }}, true);}"><img src="'.$CFG->wwwroot.'/images/unlock.png" /></a>';}
+			if ($lockability && $discussion["locked"] == 0) { $content .= '<a alt="Lock Discussion" title="Lock Discussion" href="javascript: if (confirm(\'Are you sure you wish to lock this discussion?\')) { ajaxapi(\'/features/forum/forum_ajax.php\',\'lock_discussion\',\'&dpagenum='.$dpagenum.'&pageid='.$pageid.'&forumid='.$forumid.'&catid='.$catid.'&discussionid='.$discussion['discussionid'].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }}, true);}"><img src="'.$CFG->wwwroot.'/images/lock.png" /></a>';}
 			
             //DELETE DISCUSSION		
-			if ($deleteability) { $content .= '<a alt="Delete Discussion" title="Delete Discussion" onclick="this.blur();" href="javascript: if (confirm(\'Are you sure you wish to delete this discussion? \nThis will also delete all posts inside this discussion.\')) { ajaxapi(\'/features/forum/forum_ajax.php\',\'delete_discussion\',\'&dpagenum='.$dpagenum.'&pageid='.$pageid.'&forumid='.$forumid.'&catid='.$catid.'&discussionid='.$discussion['discussionid'].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true);}"><img src="'.$CFG->wwwroot.'/images/delete.png" /></a>';}		
+			if ($deleteability) { $content .= '<a alt="Delete Discussion" title="Delete Discussion" onclick="this.blur();" href="javascript: if (confirm(\'Are you sure you wish to delete this discussion? \nThis will also delete all posts inside this discussion.\')) { ajaxapi(\'/features/forum/forum_ajax.php\',\'delete_discussion\',\'&dpagenum='.$dpagenum.'&pageid='.$pageid.'&forumid='.$forumid.'&catid='.$catid.'&discussionid='.$discussion['discussionid'].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }}, true);}"><img src="'.$CFG->wwwroot.'/images/delete.png" /></a>';}		
 			
             //EDIT DISCUSSION
 			if ($editability) { $content .= make_modal_links(array("title"=>"Edit Discussion","path"=>$CFG->wwwroot."/features/forum/forum.php?action=create_discussion_form&amp;pageid=$pageid&amp;forumid=$forumid&amp;catid=$catid&amp;discussionid=".$discussion['discussionid'],"width"=>"750","height"=>"600","iframe"=>"true","runafter"=>"forum_refresh_$forumid","image"=>$CFG->wwwroot.'/images/edit.png')); }
@@ -150,11 +150,11 @@ global $CFG,$MYVARS,$USER;
 }
 
 function get_forum_posts() {
-global $CFG,$MYVARS,$USER;
+global $CFG, $MYVARS, $USER;
 	$pageid = $MYVARS->GET["pageid"]; $forumid = $MYVARS->GET["forumid"];
 	$catid = $MYVARS->GET["catid"]; $discussionid = $MYVARS->GET["discussionid"];
-	if (is_logged_in()) { update_user_views($catid,$discussionid,$USER->userid); }
-	$settings = fetch_settings("forum",$forumid,$pageid);
+	if (is_logged_in()) { update_user_views($catid, $discussionid, $USER->userid); }
+	$settings = fetch_settings("forum", $forumid, $pageid);
 	$postcount = get_db_count("SELECT * FROM forum_posts WHERE discussionid=$discussionid");
 	$pagenum = $MYVARS->GET["pagenum"] == "last" ? (ceil($postcount/$settings->forum->$forumid->postsperpage)-1): $MYVARS->GET["pagenum"];
 	
@@ -168,9 +168,9 @@ global $CFG,$MYVARS,$USER;
 		$limit = $CFG->forum->postsperpage * $pagenum;
 		$SQL = "SELECT * FROM forum_posts WHERE discussionid=$discussionid ORDER BY posted LIMIT $limit,".$settings->forum->$forumid->postsperpage->setting;	
 	}
-	$returnme = '<span class="forum_breadcrumb"><a href="javascript: ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_categories_ajax\',\'&forumid='.$forumid.'&pageid='.$pageid.'&catid='.$catid.'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); $(\'#forum_refresh_'.$forumid.'\').val(\''.addslashes('ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_categories_ajax\',\'&forumid='.$forumid.'&pageid='.$pageid.'&catid='.$catid.'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true);').'\'); }},true);" >Categories</a> <img src="'.$CFG->wwwroot.'/images/calendarNext.gif" alt="breadcrumbarrow" /> <a href="javascript: ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_discussions\',\'&forumid='.$forumid.'&catid='.$catid.'&pageid='.$pageid.'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); $(\'#forum_refresh_'.$forumid.'\').val(\''.addslashes('ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_discussions\',\'&forumid='.$forumid.'&catid='.$catid.'&pageid='.$pageid.'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }},true);').'\'); }},true);" >' . get_db_field("title","forum_categories","catid=$catid").'</a></span>  <img src="'.$CFG->wwwroot.'/images/calendarNext.gif" alt="breadcrumbarrow" /> <span style="font-size:.9em;">' . get_db_field("title","forum_discussions","discussionid=$discussionid") . '</span>';
+	$returnme = '<span class="forum_breadcrumb"><a href="javascript: ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_categories_ajax\',\'&forumid='.$forumid.'&pageid='.$pageid.'&catid='.$catid.'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); $(\'#forum_refresh_'.$forumid.'\').val(\''.addslashes('ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_categories_ajax\',\'&forumid='.$forumid.'&pageid='.$pageid.'&catid='.$catid.'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }}, true);').'\'); }}, true);" >Categories</a> <img src="'.$CFG->wwwroot.'/images/calendarNext.gif" alt="breadcrumbarrow" /> <a href="javascript: ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_discussions\',\'&forumid='.$forumid.'&catid='.$catid.'&pageid='.$pageid.'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); $(\'#forum_refresh_'.$forumid.'\').val(\''.addslashes('ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_discussions\',\'&forumid='.$forumid.'&catid='.$catid.'&pageid='.$pageid.'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\'); }}, true);').'\'); }}, true);" >' . get_db_field("title","forum_categories","catid=$catid").'</a></span>  <img src="'.$CFG->wwwroot.'/images/calendarNext.gif" alt="breadcrumbarrow" /> <span style="font-size:.9em;">' . get_db_field("title","forum_discussions","discussionid=$discussionid") . '</span>';
 	
-    if (user_has_ability_in_page($USER->userid,"createforumdiscussion",$pageid)) { 
+    if (user_has_ability_in_page($USER->userid,"createforumdiscussion", $pageid)) { 
         $returnme .= '  <div style="font-size:.8em; text-align:right; width:100%;">
                             '.make_modal_links(array("button"=>"button","title"=>"New Discussion","text"=>'<img src="'.$CFG->wwwroot.'/images/discussion.gif" alt=""> New Discussion',"path"=>$CFG->wwwroot."/features/forum/forum.php?action=create_discussion_form&amp;pageid=$pageid&amp;forumid=$forumid&amp;catid=$catid","width"=>"750","height"=>"600","iframe"=>"true","runafter"=>"forum_refresh_$forumid")).'
                         </div>';
@@ -187,7 +187,7 @@ global $CFG,$MYVARS,$USER;
 					</td><td class="forum_message">';
 					
                     //QUOTE
-					if (!$discussion["locked"] && user_has_ability_in_page($USER->userid,"forumreply",$pageid)) {
+					if (!$discussion["locked"] && user_has_ability_in_page($USER->userid,"forumreply", $pageid)) {
 					   $content .= '<span style="font-size:.8em; right:6px; top:-5px; position: relative; float:left;">
                                         '.make_modal_links(array("title"=>"Quote","path"=>$CFG->wwwroot."/features/forum/forum.php?action=show_forum_editor&amp;quote=1&amp;edit=0&amp;pagenum=$pagenum&amp;catid=$catid&amp;postid=".$post["postid"],"width"=>"750","height"=>"600","iframe"=>"true","runafter"=>"forum_refresh_$forumid")).'
                                     </span>';   
@@ -198,19 +198,19 @@ global $CFG,$MYVARS,$USER;
 					$content .= $post["edited"] ? '<span class="centered_span" style="font-size:.8em; color:gray;">[edited by '.get_user_name($post["editedby"]).' '.ago($post["edited"]).']</span>' : '';
 					
                     //EDIT POST
-					if (!$discussion["locked"] && (user_has_ability_in_page($USER->userid,"editforumposts",$pageid) || $USER->userid == $post["ownerid"])) {
+					if (!$discussion["locked"] && (user_has_ability_in_page($USER->userid,"editforumposts", $pageid) || $USER->userid == $post["ownerid"])) {
                         $content .= '<span style="font-size:.8em; padding-right:10px; right:6px; top:3px; position: relative; float:left;">
                                         '.make_modal_links(array("title"=>"Edit","path"=>$CFG->wwwroot."/features/forum/forum.php?action=show_forum_editor&amp;quote=0&amp;edit=1&amp;pagenum=$pagenum&amp;postid=".$post["postid"],"width"=>"750","height"=>"600","iframe"=>"true","runafter"=>"forum_refresh_$forumid")).'
                                     </span>';
 					}
                      	
                     //DELETE POST
-					if ($post["postid"] != $firstpost && user_has_ability_in_page($USER->userid,"deleteforumpost",$pageid)) {
-					   $content .= '<span style="font-size:.8em; right:6px; top:3px; position: relative; float:left;"><a href="javascript: if (confirm(\'Are you sure you want to delete this post?\')) {ajaxapi(\'/features/forum/forum_ajax.php\',\'delete_post\',\'&pagenum='.$pagenum.'&pageid='.$pageid.'&forumid='.$forumid.'&catid='.$catid.'&discussionid='.$discussionid.'&postid='.$post["postid"].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\');}},true);}" >Delete</a></span>';  
+					if ($post["postid"] != $firstpost && user_has_ability_in_page($USER->userid,"deleteforumpost", $pageid)) {
+					   $content .= '<span style="font-size:.8em; right:6px; top:3px; position: relative; float:left;"><a href="javascript: if (confirm(\'Are you sure you want to delete this post?\')) {ajaxapi(\'/features/forum/forum_ajax.php\',\'delete_post\',\'&pagenum='.$pagenum.'&pageid='.$pageid.'&forumid='.$forumid.'&catid='.$catid.'&discussionid='.$discussionid.'&postid='.$post["postid"].'\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_'.$forumid.'\');}}, true);}" >Delete</a></span>';  
 					} 
                     					
                     //REPLY
-					if (!$discussion["locked"] && user_has_ability_in_page($USER->userid,"forumreply",$pageid)) {
+					if (!$discussion["locked"] && user_has_ability_in_page($USER->userid,"forumreply", $pageid)) {
 					   $content .= '<span style="font-size:.8em; left:3px; top:3px; position: relative; float:right;">
                                         '.make_modal_links(array("title"=>"Reply","path"=>$CFG->wwwroot."/features/forum/forum.php?action=show_forum_editor&amp;quote=0&amp;edit=0&amp;pagenum=$pagenum&amp;postid=".$post["postid"],"width"=>"750","height"=>"600","iframe"=>"true","runafter"=>"forum_refresh_$forumid")).'
                                     </span>';   
@@ -225,7 +225,7 @@ global $CFG,$MYVARS,$USER;
 }
 
 function post() {
-global $CFG,$MYVARS,$USER;
+global $CFG, $MYVARS, $USER;
 	$message = addslashes(urldecode($MYVARS->GET["message"])); $quote = $MYVARS->GET["quote"];
 	$postid = $MYVARS->GET["postid"]; $edit = $MYVARS->GET["edit"];
 	$time = get_timestamp();
@@ -235,30 +235,30 @@ global $CFG,$MYVARS,$USER;
 			$message = '<blockquote class="forum_quote">[quoted from '.get_user_name($post["ownerid"]).']<br />'.$post["message"].'</blockquote>' . $message;
 		}
 		execute_db_sql("UPDATE forum_discussions SET lastpost=$time WHERE discussionid=".$post["discussionid"]);
-		execute_db_sql("INSERT INTO forum_posts (discussionid,catid,forumid,pageid,ownerid,message,posted) VALUES(".$post["discussionid"].",".$post["catid"].",".$post["forumid"].",".$post["pageid"].",".$USER->userid.",'".$message."',$time)");
+		execute_db_sql("INSERT INTO forum_posts (discussionid,catid,forumid,pageid,ownerid,message,posted) VALUES(".$post["discussionid"].",".$post["catid"].",".$post["forumid"].",".$post["pageid"].",".$USER->userid.",'".$message."', $time)");
 	} else { execute_db_sql("UPDATE forum_posts SET message='".$message."',edited=$time,editedby=".$USER->userid." WHERE postid=$postid"); }
 	echo "Post Successful.";		
 }
 
 function edit_category() {
-global $CFG,$MYVARS,$USER;
+global $CFG, $MYVARS, $USER;
 	$title = addslashes(urldecode($MYVARS->GET["catname"])); $catid = $MYVARS->GET["catid"];
 	execute_db_sql("UPDATE forum_categories SET title='$title' WHERE catid=$catid");
 	echo "Edit Successful.";
 }
 
 function create_category() {
-global $CFG,$MYVARS,$USER;
+global $CFG, $MYVARS, $USER;
 	$title = addslashes(urldecode($MYVARS->GET["catname"]));
 	$pageid = $MYVARS->GET["pageid"]; $forumid = $MYVARS->GET["forumid"]; 
 	$sort = get_db_count("SELECT * FROM forum_categories WHERE forumid=$forumid AND shoutbox=0");
 	$sort++;
-	execute_db_sql("INSERT INTO forum_categories (forumid,pageid,title,sort) VALUES($forumid,$pageid,'$title',$sort)");
+	execute_db_sql("INSERT INTO forum_categories (forumid,pageid,title,sort) VALUES($forumid, $pageid,'$title', $sort)");
 	echo "Category Creation Successful.";
 }
 
 function create_discussion() {
-global $CFG,$MYVARS,$USER;
+global $CFG, $MYVARS, $USER;
 	$message = urldecode($MYVARS->GET["message"]); $title = urldecode($MYVARS->GET["title"]);
 	$pageid = $MYVARS->GET["pageid"]; $forumid = $MYVARS->GET["forumid"]; $catid = $MYVARS->GET["catid"];
 	$time = get_timestamp();
@@ -267,15 +267,15 @@ global $CFG,$MYVARS,$USER;
 		execute_db_sql("UPDATE forum_posts SET message='".addslashes($message)."' WHERE postid=".$MYVARS->GET["postid"]);
 		echo "Discussion Edited Successful";
 	} else {
-		if ($discussionid = execute_db_sql("INSERT INTO forum_discussions (catid,forumid,pageid,ownerid,title,lastpost) VALUES(".$catid.",".$forumid.",".$pageid.",".$USER->userid.",'".addslashes($title)."',$time)")) {
-			execute_db_sql("INSERT INTO forum_posts (discussionid,catid,forumid,pageid,ownerid,message,posted) VALUES(".$discussionid.",".$catid.",".$forumid.",".$pageid.",".$USER->userid.",'".addslashes($message)."',$time)");
+		if ($discussionid = execute_db_sql("INSERT INTO forum_discussions (catid,forumid,pageid,ownerid,title,lastpost) VALUES(".$catid.",".$forumid.",".$pageid.",".$USER->userid.",'".addslashes($title)."', $time)")) {
+			execute_db_sql("INSERT INTO forum_posts (discussionid,catid,forumid,pageid,ownerid,message,posted) VALUES(".$discussionid.",".$catid.",".$forumid.",".$pageid.",".$USER->userid.",'".addslashes($message)."', $time)");
 		}
 		echo "Discussion Creation Successful";
 	}
 }
 
 function move_category() {
-global $CFG,$MYVARS;
+global $CFG, $MYVARS;
 	$direction = $MYVARS->GET["direction"]; $forumid = $MYVARS->GET["forumid"];
 	$catid = $MYVARS->GET["catid"];
 	$current_position = get_db_field("sort","forum_categories","catid=$catid"); 
@@ -292,7 +292,7 @@ global $CFG,$MYVARS;
 }
 
 function delete_category() {
-global $CFG,$MYVARS;
+global $CFG, $MYVARS;
 	$forumid = $MYVARS->GET["forumid"];
 	$catid = $MYVARS->GET["catid"];
 	execute_db_sql("DELETE FROM forum_categories WHERE catid='$catid'");
@@ -304,7 +304,7 @@ global $CFG,$MYVARS;
 }
 
 function delete_discussion() {
-global $CFG,$MYVARS;
+global $CFG, $MYVARS;
 	$discussionid = $MYVARS->GET["discussionid"];
 	execute_db_sql("DELETE FROM forum_discussions WHERE discussionid='$discussionid'");
 	execute_db_sql("DELETE FROM forum_posts WHERE discussionid='$discussionid'");
@@ -312,42 +312,42 @@ global $CFG,$MYVARS;
 }
 
 function delete_post() {
-global $CFG,$MYVARS;
+global $CFG, $MYVARS;
 	$postid = $MYVARS->GET["postid"];
 	execute_db_sql("DELETE FROM forum_posts WHERE postid='$postid'");
 	get_forum_posts();		
 }
 
 function pin_bulletin() {
-global $CFG,$MYVARS;
+global $CFG, $MYVARS;
 	$discussionid = $MYVARS->GET["discussionid"];
 	execute_db_sql("UPDATE forum_discussions SET bulletin=1 WHERE discussionid=".$discussionid);
 	get_forum_discussions();	
 }
 
 function unpin_bulletin() {
-global $CFG,$MYVARS;
+global $CFG, $MYVARS;
 	$discussionid = $MYVARS->GET["discussionid"];
 	execute_db_sql("UPDATE forum_discussions SET bulletin=0 WHERE discussionid=".$discussionid);
 	get_forum_discussions();	
 }
 
 function lock_discussion() {
-global $CFG,$MYVARS;
+global $CFG, $MYVARS;
 	$discussionid = $MYVARS->GET["discussionid"];
 	execute_db_sql("UPDATE forum_discussions SET locked=1 WHERE discussionid=".$discussionid);
 	get_forum_discussions();	
 }
 
 function unlock_discussion() {
-global $CFG,$MYVARS;
+global $CFG, $MYVARS;
 	$discussionid = $MYVARS->GET["discussionid"];
 	execute_db_sql("UPDATE forum_discussions SET locked=0 WHERE discussionid=".$discussionid);
 	get_forum_discussions();	
 }
 
 function shoutbox_post() {
-global $CFG,$MYVARS;
+global $CFG, $MYVARS;
 	$message = $MYVARS->GET["message"];
 	$alias = $MYVARS->GET["alias"];
 	$forumid = $MYVARS->GET["forumid"];

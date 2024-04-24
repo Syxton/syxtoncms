@@ -40,5 +40,5 @@ activate_account||
 
 logsql||
   INSERT INTO logfile (userid, ip, pageid, timeline, feature, info, description, debug)
-       VALUES(||userid||, '||ip||', ||pageid||, ||time||,'||feature||','||info||','||desc||','||debug||')
+       VALUES(||userid||, '||ip||', ||pageid||, ||time||,'||feature||','||*info||','||desc||','||*debug||')
 ||logsql

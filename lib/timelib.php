@@ -23,7 +23,7 @@ global $CFG;
 	// Create two timezone objects, one for UTC and one for local timezone
 	$LOCAL = new DateTimeZone($CFG->timezone);
 	$timeLOCAL = new DateTime("now", $LOCAL);
-	$timeOffset = timezone_offset_get($LOCAL,$timeLOCAL);
+	$timeOffset = timezone_offset_get($LOCAL, $timeLOCAL);
 	return $timeOffset;
 }
 
@@ -90,7 +90,7 @@ global $CFG;
 	} else { return "$minutes $seconds $ago"; }
 }
 
-function get_date_graphic($timestamp = false, $newday, $alter = false, $small = false, $inactive = false) {
+function get_date_graphic($timestamp = false, $newday = false, $alter = false, $small = false, $inactive = false) {
 global $CFG;
 	date_default_timezone_set("UTC");
 	if (!$timestamp) { $timestamp = get_timestamp(); }
@@ -102,9 +102,9 @@ global $CFG;
 			<td style="vertical-align:top;width:60px;height:60px;">
 			<table style="vertical-align:top;width:60px;height:60px;max-height:89px;"><tr>
 				<td style="background-image: url('.$CFG->wwwroot.'/images/'.$graphic.'); '.$alterfont.'">
-				<div style="text-align:center; font-size:.75em;line-height:10px;"><b>'.date('F',$timestamp).'</b></div>
-				<div style="text-align:center; font-size:1.65em;line-height:27px;"><b>'.date('jS',$timestamp).'</b></div>
-				<div style="text-align:right; font-size:.75em;">'.date('Y',$timestamp).' &nbsp;</div>
+				<div style="text-align:center; font-size:.75em;line-height:10px;"><b>'.date('F', $timestamp).'</b></div>
+				<div style="text-align:center; font-size:1.65em;line-height:27px;"><b>'.date('jS', $timestamp).'</b></div>
+				<div style="text-align:right; font-size:.75em;">'.date('Y', $timestamp).' &nbsp;</div>
 				</td>
 			</tr>
 			</table>
@@ -126,9 +126,9 @@ global $CFG;
 			<td style="vertical-align:top;width:78px;height:78px;">
 			<table style="vertical-align:top;width:78px;height:78px;max-height:89px;"><tr>
 				<td style="background-image: url('.$CFG->wwwroot.'/images/'.$graphic.'); '.$alterfont.'">
-				<div style="text-align:center; font-size:.85em;line-height:20px;"><b>'.date('F',$timestamp).'</b></div>
-				<div style="text-align:center; font-size:2.2em;line-height:30px;"><b>'.date('jS',$timestamp).'</b></div>
-				<div style="text-align:right; font-size:.85em;">'.date('Y',$timestamp).' &nbsp;</div>
+				<div style="text-align:center; font-size:.85em;line-height:20px;"><b>'.date('F', $timestamp).'</b></div>
+				<div style="text-align:center; font-size:2.2em;line-height:30px;"><b>'.date('jS', $timestamp).'</b></div>
+				<div style="text-align:right; font-size:.85em;">'.date('Y', $timestamp).' &nbsp;</div>
 				</td>
 			</tr>
 			</table>
@@ -147,7 +147,7 @@ global $CFG;
 
 function convert_time($time) {
 	date_default_timezone_set(date_default_timezone_get());
-	$time = explode(":",$time);
+	$time = explode(":", $time);
     $time[1] = empty($time[1]) ? "00" : $time[1];
 	if ($time[0] > 12) {
 		return ($time[0]-12) . ":" . $time[1] . "pm";

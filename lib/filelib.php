@@ -71,13 +71,13 @@ function recursive_delete ( $folderPath ) {
     }
 }
 
-function copy_file($old,$new) {
+function copy_file($old, $new) {
     if (file_exists($old)) {
 		copy($old, $new) or die("Unable to copy $old to $new.");
 	}
 }
 
-function make_csv($filename,$contents) {
+function make_csv($filename, $contents) {
     $tempdir = sys_get_temp_dir() == "" ? "/tmp/" : sys_get_temp_dir();
     $tmpfname = tempnam($tempdir, $filename);
     if (file_exists($tmpfname)) {	unlink($tmpfname); }
@@ -86,13 +86,13 @@ function make_csv($filename,$contents) {
         fputcsv($handle, $fields);
     }
     fclose($handle);
-    rename($tmpfname,$tempdir."/".$filename);
+    rename($tmpfname, $tempdir."/".$filename);
     return addslashes($tempdir."/".$filename);
 }
 
-function create_file($filename,$contents,$makecsv=false) {
+function create_file($filename, $contents, $makecsv=false) {
     if ($makecsv) {
-        return make_csv($filename,$contents);
+        return make_csv($filename, $contents);
     } else {
         $tempdir = sys_get_temp_dir() == "" ? "/tmp/" : sys_get_temp_dir();
         $tmpfname = tempnam($tempdir, $filename);
@@ -101,14 +101,14 @@ function create_file($filename,$contents,$makecsv=false) {
 
         fwrite($handle, stripslashes($contents));
         fclose($handle);
-        rename($tmpfname,$tempdir."/".$filename);
+        rename($tmpfname, $tempdir."/".$filename);
         return addslashes($tempdir."/".$filename);
     }
 }
 
-function get_download_link($filename,$contents,$makecsv=false) {
+function get_download_link($filename, $contents, $makecsv=false) {
     global $CFG;
-    return 'window.open("'.$CFG->wwwroot . '/scripts/download.php?file='.create_file($filename,$contents,$makecsv).'", "download","menubar=yes,toolbar=yes,scrollbars=1,resizable=1,width=600,height=400");';
+    return 'window.open("'.$CFG->wwwroot . '/scripts/download.php?file='.create_file($filename, $contents, $makecsv).'", "download","menubar=yes,toolbar=yes,scrollbars=1,resizable=1,width=600,height=400");';
 }
 
 function return_bytes ($size_str) {
@@ -121,6 +121,7 @@ function return_bytes ($size_str) {
 }
 
 function get_protocol() {
+  global $CFG;
   $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https:" : "http:";
   $protocol = strstr($CFG->wwwroot, "http") ? '' : $protocol;
   return $protocol;
@@ -155,15 +156,27 @@ function template_use($file, $params = [], $subsection = "", $feature = false) {
 		preg_match_all($pattern, $contents, $matches);
 
     foreach ($matches[1] as $match) { // Loop through each instance where the template variable bars are found. ie || xxx ||
+        $optional = "";  
+        // Check for leading asterisks denoting optional variables.
+        if (strpos($match, "*") === 0) {
+          // Remove leading asterisks.
+          $match = substr($match, 1);
+          $optional = "*";
+        }
+
         $replacement = template_get_functionality($match);
-        // send paramaters into a smaller scope so that they don't conflict with other template variables of the same name. Commented out because complex HTML can break it.
-        //$replacement = '$func = function() { $v = unserialize(\''.htmlentities(serialize($params)).'\'); ' . $replacement .' }; $func(); unset($func);';
 
         // Check to make sure that a matched variable exists.
-				if (template_variable_exists($match, $params)) {
-					ob_start(); // Capture eval() output
-			    eval($replacement);
-          $contents = str_replace("||$match||", ob_get_clean(), $contents);
+				if ($varisset = template_variable_exists($match, $params)) {
+            ob_start(); // Capture eval() output
+            eval($replacement);
+            $contents = str_replace("||$optional$match||", ob_get_clean(), $contents);
+        } else {
+          $contents = str_replace("||$optional$match||", "", $contents);
+          
+          if (!$optional) {
+            error_log("[WARNING] - Expected $subsection template variable $match not found in parameters array.");
+          }
         }
     }
 
@@ -246,55 +259,119 @@ function template_get_functionality($match) {
   return $replacement;
 }
 
-// Check to make sure that variables in the template are provided.
+/**
+ * Check to make sure that variables in the template are provided.
+ *
+ * @param string $match
+ *   The variable name or function and variable name
+ * @param array $params
+ *   The parameters to check
+ *
+ * @return bool
+ *   True if the variable exists, false otherwise
+ */
 function template_variable_exists($match, $params) {
-  if (strpos($match, "::") === false) {
-    $complex_parts = template_get_complex_variables($match);
-    $var = template_clean_complex_variables($match);
-    if (strpos($match,"[") !== false) { // Complex variable in associative array form
-      $v = 'return isset($params["' . $var . '"]' . $complex_parts . ');';
-    } elseif (strpos($match,"-") !== false) { // Complex variable in object form
-      $v = 'return isset($params' . $complex_parts . ');';
-    } else { // Simple variable.
-      $v = 'return isset($params["' . $var . '"]);';
-    }
+    // Check for simple variable
+    if (strpos($match, "::") === false) {
+      if ($return = template_variable_tests($match, $params)) {
+        return $return;
+      }
+    } else { // Advanced functionality
+      // Split function::variablename
+      $x = explode("::", $match);
+      $vars = explode("|", template_clean_complex_variables($x[1]));
 
-    if ($var == "none" || eval($v) !== NULL) {
-      return true;
-    } else {
-      echo "<br /><br />Template variable '$var' not found.<br /><br />";
-    }
-  } else { //Advanced functionality.
-    $x = explode("::", $match); // Split function::variablename
-    $vclean =  template_clean_complex_variables($x[1]);
-    $vars = explode("|", $vclean);
-
-    foreach ($vars as $param) {
-        $cp = template_get_complex_variables($param);
-        $vr = template_clean_complex_variables($param);
-        if (strpos($param,"[") !== false) { // Complex variable in associative array form
-          $v = 'return $params["' . $vr . '"]' . $cp . ';';
-        } elseif (strpos($param,"-") !== false) { // Complex variable in object form
-          $v = 'return $params' . $cp . ';';
-        } else { // Simple variable.
-          $v = 'return $params["' . $vr . '"];';
+      // Loop through all variables
+      foreach ($vars as $m) {
+        if ($return = template_variable_tests($m, $params)) {
+          return $return;
         }
-
-        if ($vr == "none" || null !== eval($v)) {
-          return true;
-        } else {
-          echo "<br /><br />Template variable '$vr' not found.<br /><br />";
-        }
+      }
     }
-  }
- return false;
+    return false;
 }
 
-// Creates the template variable string ie $v["name"] or $v->name
+/**
+ * Create tests to see if a variable is set in the params array.  Handles both
+ * simple and complex variables.
+ *
+ * @param string $match
+ *   The variable name to check
+ * @param array $params
+ *   The parameters to check
+ *
+ * @return bool
+ *   True if the variable exists, false otherwise
+ */
+function template_variable_tests($match, $params) {
+    // Cut off and store any complex variable parts. ie [] arrays or -> objects
+    $cp = template_get_complex_variables($match);
+    // Get root variable.
+    $vr = template_clean_complex_variables($match);
+
+    if (strpos($match, "[") !== false || strpos($match, "-") !== false) { // Complex variable.
+      // PHP code to check for the variable
+      $v = 'return isset($params["' . $vr . '"]' . $cp . ');';
+    } else { // Simple variable.
+      // PHP code to check for the variable
+      $v = 'return array_key_exists("' . $vr . '", $params);';
+    }
+
+    if ($return = template_variable_isset($params, $vr, $v)) {
+      return $return;
+    }
+    return false;
+}
+
+/**
+ * Check to see if a variable is set in the params array and return true/false.
+ *
+ * @param array $params
+ *   The parameters to check
+ * @param string $var
+ *   The variable name to check
+ * @param string $test
+ *   The PHP code to check for the variable
+ *
+ * @return bool
+ *   True if the variable exists, false otherwise
+ */
+function template_variable_isset($params, $var, $test) {
+    // If the variable is none, return true.
+    if ($var == "none") {
+        return true;
+    }
+
+    // Run the variable test and store the results.
+    $eval = eval($test);
+
+    // If the variable is set, return true, otherwise false.
+    if ($eval !== NULL) {
+        return $eval;
+    }
+
+    // If the variable was not found, notify the user.
+    echo "<br /><br />Template variable '$var' not found.<br /><br />";
+    return false;
+  }
+
+/**
+ * Creates the template variable string ie $v["name"] or $v->name
+ *
+ * @param string $match
+ *   The string from the template that the variable is in.
+ * @param string $var
+ *   The variable name to check
+ * @param string $complex_parts
+ *   The PHP code to check for the variable
+ *
+ * @return string
+ *   The PHP variable string to use in the template
+ */
 function template_create_v($match, $var, $complex_parts) {
-  if (strpos($match,"[") !== false) { // Complex variable in associative array form
+  if (strpos($match, "[") !== false) { // Complex variable in associative array form
     $v = '$v["' . $var . '"]' . $complex_parts;
-  } elseif (strpos($match,"-") !== false) { // Complex variable in object form
+  } elseif (strpos($match, "-") !== false) { // Complex variable in object form
     if (empty($var)) {
       $v = '$v' . $complex_parts;
     } else {
@@ -310,22 +387,22 @@ function template_create_v($match, $var, $complex_parts) {
 function template_get_complex_variables($var) {
 	$part = "";
   if (strpos($var,"[") !== false) {
-    $bracket = strpos($var,"[");
+    $bracket = strpos($var, "[");
     $part = substr($var, $bracket, strlen($var) - $bracket);
 		$part = str_replace('"', '', $part);
-    $part = str_replace('[','["',$part);
-    $part = str_replace(']','"]',$part);
-  } elseif (strpos($var,"-") !== false) {
-    $part = substr($var, strpos($var,"-"), strlen($var) - strpos($var,"-"));
+    $part = str_replace('[', '["', $part);
+    $part = str_replace(']', '"]', $part);
+  } elseif (strpos($var, "-") !== false) {
+    $part = substr($var, strpos($var, "-"), strlen($var) - strpos($var, "-"));
   }
   return $part;
 }
 
 // Gets the root variable.  For arrays this will be the key, for objects it will be blank.
 function template_clean_complex_variables($var) {
-  if (strpos($var,"[") !== false) { $var = substr($var, 0, strpos($var,"[")); } // Remove assoiative array brackets
-  if (strpos($var,"-") !== false) { $var = substr($var, 0, strpos($var,"-")); } // Remove everything after object arrows
-	if (strpos($var,"{{") !== false) { $var = substr($var, 0, strpos($var,"{{")); } // Remove everything after qualifier code.
+  if (strpos($var, "[") !== false) { $var = substr($var, 0, strpos($var, "[")); } // Remove assoiative array brackets
+  if (strpos($var, "-") !== false) { $var = substr($var, 0, strpos($var, "-")); } // Remove everything after object arrows
+	if (strpos($var, "{{") !== false) { $var = substr($var, 0, strpos($var, "{{")); } // Remove everything after qualifier code.
   return $var;
 }
 

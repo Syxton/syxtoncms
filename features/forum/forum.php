@@ -19,17 +19,17 @@ if (empty($_POST["aslib"])) {
 }
 
 function forum_settings() {
-global $CFG,$MYVARS,$USER;
+global $CFG, $MYVARS, $USER;
 	$featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
 	$feature = "forum";
 
 	//Default Settings
-	$default_settings = default_settings($feature,$pageid,$featureid);
+	$default_settings = default_settings($feature, $pageid, $featureid);
 	$setting_names = get_setting_names($default_settings);
 
 	//Check if any settings exist for this feature
-	if ($settings = fetch_settings($feature,$featureid,$pageid)) {
-        echo make_settings_page($setting_names,$settings,$default_settings,$feature,$featureid,$pageid);
+	if ($settings = fetch_settings($feature, $featureid, $pageid)) {
+        echo make_settings_page($setting_names, $settings, $default_settings);
 	} else { //No Settings found...setup default settings
 		if (make_or_update_settings_array($default_settings)) { forum_settings(); }
 	}
@@ -43,12 +43,12 @@ global $MYVARS, $CFG, $USER;
 	$title = "";
 
 	if (isset($MYVARS->GET["catid"])) {
-        if (!user_has_ability_in_page($USER->userid,"editforumcategory",$pageid)) { echo get_page_error_message("no_permission",array("editforumcategory")); return; }
+        if (!user_has_ability_in_page($USER->userid,"editforumcategory", $pageid)) { echo get_page_error_message("no_permission",array("editforumcategory")); return; }
 		$category = get_db_row("SELECT * FROM forum_categories WHERE catid=".dbescape($MYVARS->GET["catid"]));
 		$title = $category["title"];
 	} else {
-        if (!user_has_ability_in_page($USER->userid,"createforumcategory",$pageid)) { echo get_page_error_message("no_permission",array("createforumcategory")); return; }
-		if (!user_has_ability_in_page($USER->userid,"createforumcategory",$pageid)) { echo get_error_message("generic_permissions"); return;}
+        if (!user_has_ability_in_page($USER->userid,"createforumcategory", $pageid)) { echo get_page_error_message("no_permission",array("createforumcategory")); return; }
+		if (!user_has_ability_in_page($USER->userid,"createforumcategory", $pageid)) { echo get_error_message("generic_permissions"); return;}
 	}
 
 	if (isset($MYVARS->GET["catid"])) { echo create_validation_script("new_category_form" , 'ajaxapi(\'/features/forum/forum_ajax.php\',\'edit_category\',\'&catid='.dbescape($MYVARS->GET["catid"]).'&catname=\'+escape(document.getElementById(\'catname\').value),function() { simple_display(\'category_div\');}); close_modal();');
@@ -69,7 +69,7 @@ global $MYVARS, $CFG, $USER;
 }
 
 function show_forum_editor() {
-global $CFG,$MYVARS;
+global $CFG, $MYVARS;
 	$postid = $MYVARS->GET["postid"]; $quote = $MYVARS->GET["quote"]; $edit = $MYVARS->GET["edit"];
 	$discussion = get_db_row("SELECT * FROM forum_discussions WHERE discussionid IN (SELECT discussionid FROM forum_posts WHERE postid=$postid)");
 	$forumid = $discussion['forumid'];
@@ -88,7 +88,7 @@ global $CFG,$MYVARS;
 }
 
 function shoutbox_editor() {
-global $CFG,$MYVARS,$USER;
+global $CFG, $MYVARS, $USER;
     $forumid = $MYVARS->GET["forumid"];
 	$username = isset($USER->userid) && $USER->userid > 0 ? '<input type="hidden" id="ownerid" name="ownerid" value="'.$USER->userid.'" /><input type="hidden" id="alias" name="alias" />' : '<span class="shoutbox_editortext" style="float:left;margin-top:3px;"><img src="'.$CFG->wwwroot.'/images/shoutbox_alias.gif" style="margin-bottom:-12px;" /></span><input type="text" id="alias" size="21" name="alias" style="float:left;margin-top:5px; margin-left:-195px;" /><input type="hidden" id="ownerid" name="ownerid" />';
     echo '<input name="contentWordCount" type="hidden" value="5" />';
@@ -98,7 +98,7 @@ global $CFG,$MYVARS,$USER;
 }
 
 function create_discussion_form() {
-global $CFG,$MYVARS;
+global $CFG, $MYVARS;
 	$title = $message = "";
 	$pageid = $MYVARS->GET["pageid"]; $forumid = $MYVARS->GET["forumid"]; $catid = $MYVARS->GET["catid"];
 

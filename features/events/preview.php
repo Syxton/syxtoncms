@@ -17,7 +17,7 @@ if (!isset($EVENTSLIB)) { include_once($CFG->dirroot . '/features/events/eventsl
 callfunction();
 
 function preview_template() {
-global $CFG,$MYVARS;
+global $CFG, $MYVARS;
     $form = "";
 	echo js_code_wrap('var dirfromroot = "' . $CFG->directory . '";');
 	echo get_js_tags(array("siteajax", "features/events/events.js"));
@@ -43,13 +43,13 @@ global $CFG,$MYVARS;
 			if ($element['type'] == 'select') {
 				
 			}elseif ($element['type'] == 'phone') {
-				$form .= '<tr><td class="field_title">' . $opt . $element['display'] . ': </td><td class="field_input" style="width:70%">' . create_form_element($element['type'],$element['elementid'],$element['optional'],$element['length'],false) . '</td></tr>';
+				$form .= '<tr><td class="field_title">' . $opt . $element['display'] . ': </td><td class="field_input" style="width:70%">' . create_form_element($element['type'], $element['elementid'], $element['optional'], $element['length'], false) . '</td></tr>';
 				$form .= '<tr><td></td><td class="field_input"><span id="'.$element['elementid'].'_error" class="error_text"></span></td></tr>';
 			}elseif ($element['type'] == 'payment') {
 				$form .= '
 				<tr>
 					<td class="field_title">Payment Amount:</td>
-					<td class="field_input">'.make_fee_options($event['fee_min'],$event['fee_full'],'payment_amount','').'</td>
+					<td class="field_input">'.make_fee_options($event['fee_min'], $event['fee_full'],'payment_amount', '').'</td>
 				</tr>
 				<tr>
 					<td class="field_title">Method of Payment:</td>
@@ -64,7 +64,7 @@ global $CFG,$MYVARS;
 				<tr><td></td><td class="field_input"><span id="payment_method_error" class="error_text"></span></td></tr>
     				';
 			} else {
-				$form .= '<tr><td class="field_title">' . $opt . $element['display'] . ': </td><td class="field_input" style="width:70%">' . create_form_element($element['type'],$element['elementid'],$element['optional'],$element['length'],false) . '<span class="hint">'. $element['hint'] . '<span class="hint-pointer">&nbsp;</span></span></td></tr>';
+				$form .= '<tr><td class="field_title">' . $opt . $element['display'] . ': </td><td class="field_input" style="width:70%">' . create_form_element($element['type'], $element['elementid'], $element['optional'], $element['length'], false) . '<span class="hint">'. $element['hint'] . '<span class="hint-pointer">&nbsp;</span></span></td></tr>';
 				$form .= '<tr><td></td><td class="field_input"><span id="'.$element['elementid'].'_error" class="error_text"></span></td></tr>';
 			}
 		}

@@ -7,7 +7,9 @@
 * Revision: 0.0.2
 ***************************************************************************/
 
+global $CFG;
 ?>
+
 <div class="members">
 	<table style="text-align:center;border:none;width:100%;">
 		<tr>
@@ -43,10 +45,10 @@
 								<div style="text-align:left;" id="mem_searchbardiv">
 									<span style="font-size:.75em;">
 										Common Searches: 
-										<a href="javascript: document.getElementById('waiting_span').style.display='inline'; ajaxapi('/features/adminpanel/members_script.php','members_search','&search=/s -joined',function() { if (xmlHttp.readyState == 4) { simple_display('mem_resultsdiv'); document.getElementById('waiting_span').style.display='none'; }},true);" >New Members</a>
-		 								<a href="javascript: document.getElementById('waiting_span').style.display='inline'; ajaxapi('/features/adminpanel/members_script.php','members_search','&search=/s -last_activity',function() { if (xmlHttp.readyState == 4) { simple_display('mem_resultsdiv');document.getElementById('waiting_span').style.display='none'; }},true);" >Last Accessed</a>
+										<a href="javascript: document.getElementById('waiting_span').style.display='inline'; ajaxapi('/features/adminpanel/members_script.php','members_search','&search=/s -joined',function() { if (xmlHttp.readyState == 4) { simple_display('mem_resultsdiv'); document.getElementById('waiting_span').style.display='none'; }}, true);" >New Members</a>
+		 								<a href="javascript: document.getElementById('waiting_span').style.display='inline'; ajaxapi('/features/adminpanel/members_script.php','members_search','&search=/s -last_activity',function() { if (xmlHttp.readyState == 4) { simple_display('mem_resultsdiv');document.getElementById('waiting_span').style.display='none'; }}, true);" >Last Accessed</a>
 									</span><br />
-									<input type="text" id="searchbox" size="50" onkeypress="if (event.keyCode == 13 || event.which == 13) { document.getElementById('waiting_span').style.display='inline'; ajaxapi('/features/adminpanel/members_script.php','members_search','&search='+escape(document.getElementById('searchbox').value),function() { if (xmlHttp.readyState == 4) { simple_display('mem_resultsdiv'); document.getElementById('waiting_span').style.display='none';}},true); }" /> <input type="button" value="Search" onclick="document.getElementById('waiting_span').style.display='inline'; ajaxapi('/features/adminpanel/members_script.php','members_search','&search='+escape(document.getElementById('searchbox').value),function() { if (xmlHttp.readyState == 4) { simple_display('mem_resultsdiv'); document.getElementById('waiting_span').style.display='none';}},true);" />
+									<input type="text" id="searchbox" size="50" onkeypress="if (event.keyCode == 13 || event.which == 13) { document.getElementById('waiting_span').style.display='inline'; ajaxapi('/features/adminpanel/members_script.php','members_search','&search='+escape(document.getElementById('searchbox').value),function() { if (xmlHttp.readyState == 4) { simple_display('mem_resultsdiv'); document.getElementById('waiting_span').style.display='none';}}, true); }" /> <input type="button" value="Search" onclick="document.getElementById('waiting_span').style.display='inline'; ajaxapi('/features/adminpanel/members_script.php','members_search','&search='+escape(document.getElementById('searchbox').value),function() { if (xmlHttp.readyState == 4) { simple_display('mem_resultsdiv'); document.getElementById('waiting_span').style.display='none';}}, true);" />
 									<span style="display:none;" id="waiting_span"><img src="<?php echo $CFG->wwwroot; ?>/images/indicator.gif" /></span>
 								</div>
 								</div>

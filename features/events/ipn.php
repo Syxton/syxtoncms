@@ -67,7 +67,7 @@ if (strcmp ($res, "VERIFIED") == 0) {
   $txid = $_POST['txn_id'];
 	if (!empty($txid) && !get_db_row("SELECT * FROM logfile WHERE feature='events' AND description='Paypal' AND info='$txid'")) {
 		$regids = $keyarray['custom'];
-		$regids = explode(":",$regids);
+		$regids = explode(":", $regids);
 		$i=0;
 		while (isset($regids[$i])) {
       $regid = dbescape($regids[$i]);
@@ -100,8 +100,8 @@ if (strcmp ($res, "VERIFIED") == 0) {
 
       if (!empty($touser->email)) {
         $message = registration_email($regids[$i], $touser);
-        send_email($fromuser, $fromuser, null, $CFG->sitename . " Registration", $message);
-    		send_email($touser, $fromuser, null, $CFG->sitename . " Registration", $message);
+        send_email($fromuser, $fromuser, $CFG->sitename . " Registration", $message);
+    		send_email($touser, $fromuser, $CFG->sitename . " Registration", $message);
       }
 			$i++;
 		}

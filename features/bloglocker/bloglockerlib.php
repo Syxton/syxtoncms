@@ -14,72 +14,46 @@ $BLOGLOCKERLIB = true;
 $CFG->bloglocker = new \stdClass; 
 $CFG->bloglocker->viewable_limit = 20;
 
-function display_bloglocker($pageid,$area,$featureid) {
+function display_bloglocker($pageid, $area, $featureid) {
 global $CFG, $USER, $ROLES;
 
 	$content="";
 
-	if (!$settings = fetch_settings("bloglocker",$featureid,$pageid)) {
-		make_or_update_settings_array(default_settings("bloglocker",$pageid,$featureid));
-		$settings = fetch_settings("bloglocker",$featureid,$pageid);
+	if (!$settings = fetch_settings("bloglocker", $featureid, $pageid)) {
+		make_or_update_settings_array(default_settings("bloglocker", $pageid, $featureid));
+		$settings = fetch_settings("bloglocker", $featureid, $pageid);
 	}
 
 	$title = $settings->bloglocker->$featureid->feature_title->setting;
 	$viewable_limit = $settings->bloglocker->$featureid->viewable_limit->setting;
 	
 	if (get_db_count("SELECT * FROM pages_features pf WHERE pf.pageid='$pageid' AND pf.feature='html' AND pf.area='locker'")) {
-		if (is_logged_in()) {
-			if (user_has_ability_in_page($USER->userid,"viewbloglocker",$pageid)) {
-				if ($area == "middle") {
-					$lockeritems = get_bloglocker($pageid);
-					$i=0;
-                    foreach ($lockeritems as $lockeritem) {
-                        if (++$i > $viewable_limit) { break; }
-                        $content .= '<span style="color:gray;font-size:.75em;">'.date('m/d/Y',$lockeritem->dateposted).' </span>';
-                        $content .= make_modal_links(array("title"=>$lockeritem->title,"path"=>$CFG->wwwroot."/features/bloglocker/bloglocker.php?action=view_locker&amp;pageid=$pageid&amp;htmlid=$lockeritem->htmlid"));
-						if (!$lockeritem->blog && user_has_ability_in_page($USER->userid,"addtolocker",$pageid)) { $content .= '<a title="Send to middle" href="javascript: ajaxapi(\'/ajax/site_ajax.php\',\'move_feature\',\'&amp;pageid='.$pageid.'&amp;featuretype=html&amp;featureid='.$lockeritem->htmlid.'&amp;direction=middle\',function() { update_login_contents('.$pageid.');});"><img src="'.$CFG->wwwroot.'/images/undo.png" alt="Move feature to the middle area" /></a>';	}
-						$content .= '<br />';
-                    }
-				} else {
-					$lockeritems = get_bloglocker($pageid);
-					$i=0;
-                    foreach ($lockeritems as $lockeritem) {
-                        if (++$i > $viewable_limit) { break; }
-                        $content .= '<span style="color:gray;font-size:.75em;">'.date('m/d/Y',$lockeritem->dateposted).' </span>';
-						$content .= make_modal_links(array("title"=>$lockeritem->title,"path"=>$CFG->wwwroot."/features/bloglocker/bloglocker.php?action=view_locker&amp;pageid=$pageid&amp;htmlid=$lockeritem->htmlid"));
-                        if (!$lockeritem->blog && user_has_ability_in_page($USER->userid,"addtolocker",$pageid)) { $content .= '<a title="Move feature to middle area" href="javascript: ajaxapi(\'/ajax/site_ajax.php\',\'move_feature\',\'&amp;pageid='.$pageid.'&amp;featuretype=html&amp;featureid='.$lockeritem->htmlid.'&amp;direction=middle\',function() { update_login_contents('.$pageid.');});"><img src="'.$CFG->wwwroot.'/images/undo.png" alt="Move feature to the middle area" /></a>';}	
-						$content .= '<br />';
-                    }
-				}
-				$buttons = get_button_layout("bloglocker",$featureid,$pageid); 
-				return get_css_box($title,$content,$buttons,NULL,"bloglocker",$featureid);
+		if (user_has_ability_in_page($USER->userid, "viewbloglocker", $pageid)) {
+			$lockeritems = get_bloglocker($pageid);
+			$i = 0;
+			foreach ($lockeritems as $lockeritem) {
+				if (++$i > $viewable_limit) { break; }
+				$content .= '<span style="color:gray;font-size:.75em;">' .
+								date('m/d/Y', $lockeritem->dateposted) .
+							' </span>';
+				$p = [
+					"title" => $lockeritem->title,
+					"path" => $CFG->wwwroot . "/features/bloglocker/bloglocker.php?action=view_locker&amp;pageid=$pageid&amp;htmlid=" . $lockeritem->htmlid,
+				];
+				$content .= make_modal_links($p);
+				if (!$lockeritem->blog && is_logged_in() && user_has_ability_in_page($USER->userid, "addtolocker", $pageid)) {
+					$content .= '<a title="Move back to its original state" href="#" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'move_feature\',\'&amp;pageid='.$pageid.'&amp;featuretype=html&amp;featureid=' . $lockeritem->htmlid . '&amp;direction=middle\',function() { update_login_contents(' . $pageid . ');});">
+									<img src="' . $CFG->wwwroot . '/images/undo.png" alt="Move feature to the middle area" />
+								 </a>';
+				}	
+				$content .= '<br />';
 			}
-		} else {
-			if (role_has_ability_in_page($ROLES->visitor,"viewbloglocker",$pageid)) {
-				if ($area == "middle") {
-					$lockeritems = get_bloglocker($pageid);
-                    $i=0;
-                    foreach ($lockeritems as $lockeritem) {
-                        if (++$i > $viewable_limit) { break; }
-                        $content .= '<span style="color:gray;font-size:.75em;">'.date('m/d/Y',$lockeritem->dateposted).' </span>';
-						$content .= make_modal_links(array("title"=>$lockeritem->title,"path"=>$CFG->wwwroot."/features/bloglocker/bloglocker.php?action=view_locker&amp;pageid=$pageid&amp;htmlid=$lockeritem->htmlid")).'<br />';
-                    }
-				} else {
-					$lockeritems = get_bloglocker($pageid);
-					$i=0;
-                    foreach ($lockeritems as $lockeritem) {
-                        if (++$i > $viewable_limit) { break; }
-						$content .= '<span style="color:gray;font-size:.75em;">'.date('m/d/Y',$lockeritem->dateposted).' </span>';
-						$content .= make_modal_links(array("title"=>$lockeritem->title,"path"=>$CFG->wwwroot."/features/bloglocker/bloglocker.php?action=view_locker&amp;pageid=$pageid&amp;htmlid=$lockeritem->htmlid")).'<br />';                   
-                    }
-				}
-				$buttons = get_button_layout("bloglocker",$featureid,$pageid); 
-				return get_css_box($title,$content,$buttons,NULL,"bloglocker",$featureid);
-			}
+			$buttons = get_button_layout("bloglocker", $featureid, $pageid); 
+			return get_css_box($title, $content, $buttons, NULL, "bloglocker", $featureid);
 		}
 	} else {
-		$buttons = get_button_layout("bloglocker",$featureid,$pageid); 
-		return get_css_box($title,"The blog locker is empty at this time.",$buttons,NULL,"bloglocker",$featureid);
+		$buttons = get_button_layout("bloglocker", $featureid, $pageid); 
+		return get_css_box($title,"The blog locker is empty at this time.", $buttons,NULL,"bloglocker", $featureid);
 	}
 }
 
@@ -93,9 +67,9 @@ global $CFG;
 		while ($row = fetch_row($result)) {
 			$featureid = $row["htmlid"];
 			
-			if (!$settings = fetch_settings("html",$featureid,$pageid)) {
-				make_or_update_settings_array(default_settings("html",$pageid,$featureid));
-				$settings = fetch_settings("html",$featureid,$pageid);
+			if (!$settings = fetch_settings("html", $featureid, $pageid)) {
+				make_or_update_settings_array(default_settings("html", $pageid, $featureid));
+				$settings = fetch_settings("html", $featureid, $pageid);
 			}
             
             $lockeritems->$i = new \stdClass;
@@ -110,20 +84,56 @@ global $CFG;
 	return false;
 }
 
-function bloglocker_delete($pageid,$featureid,$sectionid) {
-	execute_db_sql("DELETE FROM pages_features WHERE feature='bloglocker' AND pageid='$pageid' AND featureid='$featureid'");
+function bloglocker_delete($pageid, $featureid) {
+	$params = [
+		"pageid" => $pageid,
+		"featureid" => $featureid,
+		"feature" => "bloglocker",
+	];
+
+	$SQL = template_use("dbsql/features.sql", $params, "delete_feature");
+    execute_db_sql($SQL);
+    $SQL = template_use("dbsql/features.sql", $params, "delete_feature_settings");
+    execute_db_sql($SQL);
+
 	resort_page_features($pageid);
 }
 
-function bloglocker_buttons($pageid,$featuretype,$featureid) {
-	global $CFG,$USER;
+function bloglocker_buttons($pageid, $featuretype, $featureid) {
+	global $CFG, $USER;
 	$returnme = "";
 	return $returnme;
 }
 
-function bloglocker_default_settings($feature,$pageid,$featureid) {
-	$settings_array[] = array(false,"$feature","$pageid","$featureid","feature_title","Blog Locker",false,"Blog Locker","Feature Title","text");
-	$settings_array[] = array(false,"$feature","$pageid","$featureid","viewable_limit","20",false,"20","Viewable Blog Limit","text",true,"<= 0","Must be greater than 0.");
-	return $settings_array;
+function bloglocker_default_settings($type, $pageid, $featureid) {
+	$settings = [
+		[
+			"type" => "$type",
+			"pageid" => "$pageid",
+			"featureid" => "$featureid",
+			"setting_name" => "feature_title",
+			"setting" => "Blog Locker",
+			"extra" => false,
+			"defaultsetting" => "Blog Locker",
+			"display" => "Feature Title",
+			"inputtype" => "text",
+		],
+        [
+            "type" => "$type",
+            "pageid" => "$pageid",
+            "featureid" => "$featureid",
+            "setting_name" => "viewable_limit",
+            "setting" => "20",
+            "extra" => false,
+            "defaultsetting" => "20",
+            "display" => "Viewable Blog Limit",
+            "inputtype" => "text",
+			"numeric" => true,
+			"validation" => "<=0",
+			"warning" => "Must be greater than 0.",
+        ]
+	];
+
+	return $settings;
 }
 ?>

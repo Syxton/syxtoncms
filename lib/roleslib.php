@@ -55,8 +55,16 @@ global $CFG, $ROLES, $ABILITIES;
   	$groupallowed = groups_SQL($userid, $pageid, $ability);
   	$featuregroupallowed = groups_SQL($userid, $pageid, $ability, $feature, $featureid); //This will be a group check.  1 if allowed 0 if not allowed -1 if not specified
 
-		$params = array("pageid" => $pageid, "roleid" => $roleid, "userid" => $userid, "ability" => $ability,
-										"feature" => $feature, "featureid" => $featureid, "groupsql" => $groupallowed, "featuregroupsql" => $featuregroupallowed);
+	$params = [
+		"pageid" => $pageid,
+		"roleid" => $roleid,
+		"userid" => $userid,
+		"ability" => $ability,
+		"feature" => $feature,
+		"featureid" => $featureid,
+		"groupsql" => $groupallowed,
+		"featuregroupsql" => $featuregroupallowed,
+	];
   	$SQL = template_use("dbsql/roles.sql", $params, "user_has_ability_in_page");
 
   	if (get_db_row($SQL)) {
@@ -76,7 +84,7 @@ global $CFG, $ROLES, $ABILITIES;
 	$roleid = get_user_role($userid, $pageid);
 
 	if ($roleid == $ROLES->visitor) {
-		return get_role_abilities($ROLES->visitor,$pageid,$section, $feature, $featureid);
+		return get_role_abilities($ROLES->visitor, $pageid, $section, $feature, $featureid);
 	} else {
 		$section_sql = "";
     if ($section) {
@@ -166,58 +174,91 @@ global $CFG, $ROLES, $ABILITIES;
 	return $abilities;
 }
 
-function role_has_ability_in_page($roleid, $ability, $pageid, $feature="", $featureid=0) {
-	$params = array("pageid" => $pageid, "feature" => $feature, "featureid" => $featureid, "roleid" => $roleid, "ability" => $ability);
+
+/**
+ * Check if a role has a specific ability on a given page
+ * @param int $roleid The role ID
+ * @param string $ability The ability string
+ * @param int $pageid The page ID
+ * @param string $feature The feature name (optional)
+ * @param int $featureid The feature ID (optional)
+ * @return bool True if the role has the ability, false otherwise
+ */
+function role_has_ability_in_page($roleid, $ability, $pageid, $feature = "", $featureid = 0) {
+	$params = [
+		"pageid" => $pageid,
+		"feature" => $feature,
+		"featureid" => $featureid,
+		"roleid" => $roleid,
+		"ability" => $ability,
+	];
 	$SQL = template_use("dbsql/roles.sql", $params, "role_has_ability_in_page");
 	if (get_db_row($SQL)) {
-    return true;
+		return true;
 	}
 	return false;
 }
 
+/**
+ * Load the roles into a global object
+ * @global \stdClass $ROLES The roles object
+ * @return \stdClass The roles object
+ */
 function load_roles() {
-global $CFG;
-	$allroles = get_db_result(template_use("dbsql/roles.sql", [], "get_roles"));
+  global $CFG;
+
+  // Get all roles from the database
+  $allroles = get_db_result(template_use("dbsql/roles.sql", [], "get_roles"));
+
+  // Store all roles in a global object, keyed by role name
   $ROLES = new \stdClass;
   while ($row = fetch_row($allroles)) {
     $rolename = $row['name'];
-		$ROLES->$rolename = $row['roleid'];
-	}
-	return $ROLES;
+    $ROLES->$rolename = $row['roleid'];
+  }
+
+  return $ROLES;
 }
 
-function get_user_role($userid=0, $pageid, $ignore_site_admin = false) {
-global $CFG, $ROLES, $USER;
-  $admin = is_siteadmin($userid) ? true : false;
 
-  if (!$ignore_site_admin) {
-   if ($admin) { return $ROLES->admin; }
-	}
+function get_user_role($userid, $pageid, $ignore_site_admin = false) {
+	global $CFG, $ROLES, $USER;
 
-	$params = array("userid" => $userid, "pageid" => $pageid);
-	$SQL = template_use("dbsql/roles.sql", $params, "get_user_role");
-	if ($result = get_db_result($SQL)) {
-		while ($row = fetch_row($result)) {
-			return $row['roleid'];
+	if (is_logged_in($userid)) {
+		// Check if user is site admin.
+		$admin = is_siteadmin($userid) ? true : false;
+		if (!$ignore_site_admin && $admin) {
+			return $ROLES->admin;
 		}
-	}
 
-  if ($admin) { return $ROLES->admin; } // Site admin, but doesn't have a role in the page.
+		// Check if user has a role in the page.
+		$params = ["userid" => $userid, "pageid" => $pageid];
+		$SQL = template_use("dbsql/roles.sql", $params, "get_user_role");
+		if ($result = get_db_result($SQL)) {
+			while ($row = fetch_row($result)) {
+				return $row['roleid'];
+			}
+		}
 
-	if (is_logged_in()) {
+		if ($admin) { return $ROLES->admin; } // Site admin, but doesn't have a role in the page.
+
+		// If page has open door policy, return default role for page.
 		if (get_db_field("opendoorpolicy", "pages", "pageid = '$pageid'") == 1) {
-			return get_db_field("default_role","pages","pageid='$pageid'");
+			return get_db_field("default_role", "pages", "pageid='$pageid'");
 		}
 	}
 
+	// if it is a site viewable page and the user has no specified role, default to visitor
 	if (is_visitor_allowed_page($pageid)) {
-		return $ROLES->visitor; // if it is a site viewable page and the user has no specified role, default to visitor
+		return $ROLES->visitor;
 	}
-	return $ROLES->none; // no role found.
+
+	// No role found.
+	return $ROLES->none;
 }
 
 function users_that_have_ability_in_page($ability, $pageid) {
-global $CFG,$ROLES;
+global $CFG, $ROLES;
 	$page = get_db_row(template_use("dbsql/pages.sql", array("pageid" => $pageid), "get_page"));
 
 	$params = array("pageid" => $pageid, "ability" => $ability, "siteid" => $CFG->SITEID, "siteoropen" => ($page["siteviewable"] || $page["opendoorpolicy"]));
@@ -292,7 +333,7 @@ function merge_abilities($abilities) {
 }
 
 function group_page($pageid, $feature, $featureid) {
-global $CFG,$USER;
+global $CFG, $USER;
 	$params = array("pageid" => $pageid, "feature" => $feature, "featureid" => $featureid, "wwwroot" => $CFG->wwwroot,
 									"groups_list" => groups_list($pageid, $feature, $featureid),
 									"canmanagegroups" => user_has_ability_in_page($USER->userid, "manage_groups", $pageid));
@@ -349,33 +390,41 @@ global $CFG;
 			$refresh_function = 'refresh_user_abilities';
 			$swap_function = "swap_highlights";
 		}
-		$params = array("pageid" => $pageid, "type" => $type, "roleid" => $roleid, "userid" => $userid, "feature" => $feature, "featureid" => $featureid, "groupid" => $groupid,
-										"save_function" => $save_function, "refresh_function" => $refresh_function);
+		$params = [	"pageid" => $pageid,
+					"type" => $type,
+					"roleid" => $roleid,
+					"userid" => $userid,
+					"feature" => $feature,
+					"featureid" => $featureid,
+					"groupid" => $groupid,
+					"save_function" => $save_function,
+					"refresh_function" => $refresh_function,
+		];
 		$save_button = template_use("tmp/roles.template", $params, "print_abilities_save_button");
 	}
 
-	$SQL = template_use("dbsql/roles.sql", array("feature" => $feature, "is_feature" => ($feature && $featureid)), "print_abilities");
-  	if ($pages = get_db_result($SQL)) {
+	$SQL = template_use("dbsql/roles.sql", ["feature" => $feature, "is_feature" => ($feature && $featureid)], "print_abilities");
+  	if ($allabilities = get_db_result($SQL)) {
 		$i = 0; $abilities = "";
 		$style_row1 = 'class="roles_row1"';
 		$style_row2 = 'class="roles_row2"';
-		while ($row = fetch_row($pages)) {
+		while ($row = fetch_row($allabilities)) {
 			$currentstyle = $currentstyle == $style_row1 ? $style_row2 : $style_row1;
 			$currentstyle = $section == $row['section'] ? $currentstyle : $style_row1;
 
 			if ($roleid && empty($userid)) { // Role based only
 				$rights = role_has_ability_in_page($roleid, $row['ability'], $pageid, $feature, $featureid) ? "1" : "0";
-				$SQL = template_use("dbsql/roles.sql", array("ability" => $row['ability'], "pageid" => $pageid, "roleid" => $roleid), "get_page_role_override");
+				$SQL = template_use("dbsql/roles.sql", ["ability" => $row['ability'], "pageid" => $pageid, "roleid" => $roleid], "get_page_role_override");
 				$notify = get_db_count($SQL) ? true : false;
 			} elseif ($groupid) { // Group based
 				$default_toggle = true;
-				$params = array("ability" => $row['ability'], "pageid" => $pageid, "feature" => $feature, "featureid" => $featureid, "groupid" => $groupid);
+				$params = ["ability" => $row['ability'], "pageid" => $pageid, "feature" => $feature, "featureid" => $featureid, "groupid" => $groupid];
 				$rights = ($feature && $featureid) ? get_db_row(template_use("dbsql/roles.sql", $params, "get_page_group_feature_override")) : get_db_row(template_use("dbsql/roles.sql", $params, "get_page_group_override"));
-				$rights = $rights["allow"] === "0" ? "0" : ($rights["allow"] === "1" ? "1" : false);
+				$rights = $rights && $rights["allow"] === "0" ? "0" : ($rights && $rights["allow"] === "1" ? "1" : false);
 				$notify = $rights !== false ? true : false;
 				$default_checked = $rights === false ? true : false;
 			} elseif ($userid) { // User based
-				$params = array("ability" => $row['ability'], "pageid" => $pageid, "feature" => $feature, "featureid" => $featureid, "userid" => $userid);
+				$params = ["ability" => $row['ability'], "pageid" => $pageid, "feature" => $feature, "featureid" => $featureid, "userid" => $userid];
 				if ($feature && $featureid) { // Feature user override
 					$SQL = template_use("dbsql/roles.sql", $params, "get_page_feature_user_override");
 					$rights = user_has_ability_in_page($userid, $row['ability'], $pageid, $feature, $featureid) ? "1" : "0";
@@ -396,8 +445,18 @@ global $CFG;
 				$notify2 = true;
 			}
 
-			$params = array("type" => $type, "currentstyle" => $currentstyle, "ability" => $row, "swap_function" => $swap_function, "thissection" => ($section != $row['section']),
-											"notify1" => $notify1, "notify2" => $notify2, "notify" => $notify, "default_toggle" => $default_toggle, "default_checked" => $default_checked);
+			$params = [
+				"type" => $type,
+				"currentstyle" => $currentstyle,
+				"ability" => $row,
+				"swap_function" => $swap_function,
+				"thissection" => ($section != $row['section']),
+				"notify1" => $notify1,
+				"notify2" => $notify2,
+				"notify" => $notify,
+				"default_toggle" => $default_toggle,
+				"default_checked" => $default_checked,
+			];
 			$abilities .= template_use("tmp/roles.template", $params, "print_abilities_ability");
 
 			$rightslist .= $rightslist == "" ? $row['ability'] : "**".$row['ability'];
@@ -406,7 +465,13 @@ global $CFG;
 		}
   	}
 
-	$params = array("default" => $default, "abilities" => $abilities, "type" => $type, "save" => $save_button, "rightslist" => $rightslist);
+	$params = [
+		"default" => $default,
+		"abilities" => $abilities,
+		"type" => $type,
+		"save" => $save_button,
+		"rightslist" => $rightslist,
+	];
 	return template_use("tmp/roles.template", $params, "print_abilities");
 }
 ?>

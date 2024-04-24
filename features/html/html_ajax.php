@@ -20,8 +20,8 @@ global $CFG, $MYVARS;
 	$pageid = $MYVARS->GET["pageid"];
 	
 	$html = get_db_row("SELECT * FROM html h JOIN pages_features pf ON pf.featureid=h.htmlid WHERE h.htmlid=$htmlid AND pf.feature='html'");
-	$settings = fetch_settings("html",$htmlid,$pageid);
-	$newhtmlid = insert_blank_html($pageid,$settings->html->$htmlid);	
+	$settings = fetch_settings("html", $htmlid, $pageid);
+	$newhtmlid = insert_blank_html($pageid, $settings->html->$htmlid);	
 	
 	//Move new html to the previous location
 	$SQL = "UPDATE pages_features SET area='".$html["area"]."',sort='".$html["sort"]."' WHERE feature='html' AND featureid=$newhtmlid";
@@ -51,7 +51,7 @@ global $CFG, $MYVARS;
 }
 
 function still_editing() {
-global $CFG,$MYVARS;
+global $CFG, $MYVARS;
 	$htmlid = $MYVARS->GET["htmlid"];
 	$userid = $MYVARS->GET["userid"];
 	$now = get_timestamp();
@@ -60,7 +60,7 @@ global $CFG,$MYVARS;
 }
 
 function stopped_editing() {
-global $CFG,$MYVARS;
+global $CFG, $MYVARS;
 	$htmlid = $MYVARS->GET["htmlid"];
 	$userid = $MYVARS->GET["userid"];
 	$SQL = "UPDATE html SET edit_user=$userid,edit_time=0 WHERE htmlid=$htmlid";
@@ -89,7 +89,7 @@ global $CFG, $MYVARS;
 
 function commentspage() {
 global $CFG, $MYVARS;
-	echo get_html_comments($MYVARS->GET["htmlid"],$MYVARS->GET["pageid"],false,$MYVARS->GET["perpage"],$MYVARS->GET["pagenum"],false);
+	echo get_html_comments($MYVARS->GET["htmlid"], $MYVARS->GET["pageid"], false, $MYVARS->GET["perpage"], $MYVARS->GET["pagenum"], false);
 }
 
 function deletecomment() {
@@ -106,7 +106,7 @@ function makecomment() {
 global $CFG, $MYVARS, $USER;
 	$htmlid = $MYVARS->GET["htmlid"];
 	$comment = dbescape(urldecode($MYVARS->GET["comment"]));
-    $SQL = "INSERT INTO html_comments (comment,htmlid,userid) VALUES ('$comment',$htmlid,'" . $USER->userid . "')";
+    $SQL = "INSERT INTO html_comments (comment,htmlid,userid) VALUES ('$comment', $htmlid,'" . $USER->userid . "')";
 	if ($commentid = execute_db_sql($SQL)) {
 		//Log
 		log_entry("html", $commentid, "Blog Comment");

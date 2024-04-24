@@ -18,9 +18,9 @@ global $MYVARS;
 	if ($row = authenticate($username, $password)) {
 		$reroute = '';
 		if ($row["alternate"] == $password) {
-			$reroute = template_use("tmp/site_ajax.template", array("userid" => $row["userid"], "password" => $password), "password_change_reroute_template");
+			$reroute = template_use("tmp/site_ajax.template", ["userid" => $row["userid"], "password" => $password], "password_change_reroute_template");
 		}
-    echo 'true**' . $reroute;
+    	echo 'true**' . $reroute;
 	} else {
 		echo "false**" . get_error_message("no_login");
 	}
@@ -30,8 +30,8 @@ function unique_email() {
 global $MYVARS;
 	$email = dbescape($MYVARS->GET["email"]);
 	$SQL = "SELECT *
-						FROM users
-					 WHERE email = '$email'";
+			FROM users
+			WHERE email = '$email'";
 
 	if (get_db_count($SQL)) {
 		echo "false";
@@ -56,39 +56,42 @@ global $MYVARS;
 		log_entry("user", null, "Password change failed"); // Log
 	}
 
-	echo template_use("tmp/site_ajax.template", array("success" => $success), "reset_password_passfail_template");
+	echo template_use("tmp/site_ajax.template",["success" => $success], "reset_password_passfail_template");
 }
 
 function change_profile() {
 global $CFG, $MYVARS;
-  $userid = dbescape($MYVARS->GET["userid"]);
+	$userid = dbescape($MYVARS->GET["userid"]);
 	$email = dbescape($MYVARS->GET["email"]);
 	$fname = dbescape(nameize($MYVARS->GET["fname"]));
 	$lname = dbescape(nameize($MYVARS->GET["lname"]));
-  $passchanged = empty($MYVARS->GET["password"]) ? false : true;
-  $password = md5($MYVARS->GET["password"]);
-  $passwordsql = $passchanged ? ", alternate = '', password = '$password'" : "";
-	$success = false; $notused = false;
+
+	$success = false;
+	$notused = false;
 
 	$SQL = "SELECT *
-						FROM users
-					 WHERE email = '$email'
-					 	 AND userid != '$userid'";
-  if (!get_db_row($SQL)) { // email address isn't being used by another user
+			FROM users
+			WHERE email = '$email'
+			AND userid != '$userid'";
+	if (!get_db_row($SQL)) { // email address isn't being used by another user
+		$passchanged = empty($MYVARS->GET["password"]) ? false : true;
+		$password = md5($MYVARS->GET["password"]);
+		$passwordsql = $passchanged ? ", alternate = '', password = '$password'" : "";
+
 		$SQL = "UPDATE users
-							 SET fname = '$fname',
-							 		 lname = '$lname',
-									 email = '$email'
-									 $passwordsql
-						 WHERE userid = '$userid'";
+				SET fname = '$fname',
+					lname = '$lname',
+					email = '$email'
+					$passwordsql
+				WHERE userid = '$userid'";
 		$notused = true;
-    if ($success = execute_db_sql($SQL)) {
-      log_entry("user", null, "Profile changed"); // Log
-    } else {
-      log_entry("user", null, "Profile change failed"); // Log
-    }
-  }
-	echo template_use("tmp/site_ajax.template", array("success" => $success, "notused" => $notused), "change_profile_template");
+		if ($success = execute_db_sql($SQL)) {
+			log_entry("user", null, "Profile changed"); // Log
+		} else {
+			log_entry("user", null, "Profile change failed"); // Log
+		}
+	}
+	echo template_use("tmp/site_ajax.template", ["success" => $success, "notused" => $notused], "change_profile_success_template");
 }
 
 function save_settings() {
@@ -97,68 +100,102 @@ global $CFG, $MYVARS;
 	$setting = dbescape((urldecode($MYVARS->GET["setting"])));
 	$extra = isset($MYVARS->GET["extra"]) ? dbescape((urldecode($MYVARS->GET["extra"]))) : false;
 
-	if ($success = make_or_update_setting($settingid, false, false, false, false, $setting, $extra, false)) {
+	if ($success = make_or_update_setting($settingid, [], $setting, $extra)) {
 		log_entry("setting", $settingid . ":" . $setting, "Setting Changed"); // Log
 	}
-	echo template_use("tmp/page.template", array("wwwroot" => $CFG->wwwroot, "success" => $success), "setting_change_template");
+	echo template_use("tmp/page.template", ["wwwroot" => $CFG->wwwroot, "success" => $success], "setting_change_template");
 }
 
+/**
+ * Reset user's password if email is valid and account is activated.
+ *
+ * If email matches an existing user, a new random password is generated
+ * and sent to the user via email. The new password is also saved in the
+ * database. If the user's account is not activated, a new password will be
+ * generated and saved, but not sent to the user via email.
+ *
+ * @global \stdClass $CFG The global config object. Contains site settings.
+ * @global \stdClass $MYVARS The global MYVARS object. Contains all the user-inputted variables
+ * from the URL.
+ */
 function forgot_password() {
 global $CFG, $MYVARS;
+
+	// Load COMLIB if it isn't already loaded.
 	if (!isset($COMLIB)) { include_once ($CFG->dirroot . '/lib/comlib.php'); }
-  $admin = isset($MYVARS->GET["admin"]) ? true : false;
-  if ($admin && isset($MYVARS->GET["userid"])) {
-      $MYVARS->GET["email"] = get_db_field("email", "users", "userid='" . $MYVARS->GET["userid"] . "'");
-  }
 
-  if (isset($MYVARS->GET["email"])) {
-    $email = dbescape($MYVARS->GET["email"]);
+	// Check if the request is coming from an admin trying to reset someone else's password.
+	$admin = isset($MYVARS->GET["admin"]) ? true : false;
 
-	 	// Check to see if email matches an existing user.
+	// If the admin request is valid, use the userid parameter to retrieve the email address from the database.
+	if ($admin && isset($MYVARS->GET["userid"])) {
+		$MYVARS->GET["email"] = get_db_field("email", "users", "userid='" . $MYVARS->GET["userid"] . "'");
+	}
+
+	// Make sure we have an email address to work with.
+	if (isset($MYVARS->GET["email"])) {
+		$email = dbescape($MYVARS->GET["email"]);
+		$success = false;
+
+		// Check to see if email matches an existing user.
 		$SQL = "SELECT *
-							FROM users
-						 WHERE email = '$email'";
+				FROM users
+				WHERE email = '$email'";
 
 		if ($user = get_db_row($SQL)) {
-  		$alternate = create_random_password();
+			// Generate a new random password
+			$alternate = create_random_password();
 
-      // Check to see if account is activated
-  		if (strlen($user["temp"]) > 0) {
-				$SQL = "UPDATE users
-									 SET password = '" . md5($alternate) . "'
-								 WHERE email = '$email'";
-        $userid = execute_db_sql($SQL);
-  		} else {
-				$SQL = "UPDATE users
-									 SET alternate = '" . md5($alternate) . "'
-								 WHERE email = '$email'";
-  			$userid = execute_db_sql($SQL);
-      }
+			// Check to see if account is activated. If so, save the new password in the database.
+			if (strlen($user["temp"]) > 0) {
+				$SQL = 'UPDATE users
+						SET password = "' . md5($alternate) . '"
+						WHERE email = "' . $email . '"';
+				$userid = execute_db_sql($SQL);
+			} else {
+				$SQL = 'UPDATE users
+						SET alternate = "' . md5($alternate) . '"
+						WHERE email = "' . $email . '"';
+				$userid = execute_db_sql($SQL);
+			}
 
-  		// Email new password to the email address.
-      $FROMUSER = new \stdClass;
-  		$FROMUSER->fname = $CFG->sitename;
-  		$FROMUSER->lname = '';
-  		$FROMUSER->email = $CFG->siteemail;
+			// Email new password to the email address.
+			$SITEUSER = new \stdClass;
+			$SITEUSER->fname = $CFG->sitename;
+			$SITEUSER->lname = '';
+			$SITEUSER->email = $CFG->siteemail;
 
-			$params = array("user" => $user, "email" => $email, "alternate" => $alternate, "sitename" => $CFG->sitename, "siteowner" => $CFG->siteowner, "siteemail" => $CFG->siteemail);
+			$params = [
+				"user" => $user,
+				"email" => $email,
+				"alternate" => $alternate,
+				"sitename" => $CFG->sitename,
+				"siteowner" => $CFG->siteowner,
+				"siteemail" => $CFG->siteemail,
+			];
 			$message = template_use("tmp/site_ajax.template", $params, "forgot_password_email_template");
 
-  		$subject = $CFG->sitename . ' Password Reset';
-			$success = false;
-  		if (!$userid || send_email($user, $FROMUSER, null, $subject, $message)) {
+			$subject = $CFG->sitename . ' Password Reset';
+			if (!$userid || send_email($user, $SITEUSER, $subject, $message)) {
 				$success = true;
-  			send_email($FROMUSER, $FROMUSER, null, $subject, $message); // Send a copy to the site admin
-  			log_entry("user", $TOUSER->email, "Password Reset"); // Log
-  		}
-  	}
-		echo template_use("tmp/site_ajax.template", array("wwwroot" => $CFG->wwwroot, "success" => $success, "user" => $user, "admin" => $admin), "forgot_password_template");
-  }
+				send_email($SITEUSER, $SITEUSER, $subject, $message); // Send a copy to the site admin
+				log_entry("user", $user->email, "Password Reset"); // Log
+			}
+		}
+
+		$params = [
+			"wwwroot" => $CFG->wwwroot,
+			"success" => $success,
+			"user" => $user,
+			"admin" => $admin,
+		];
+		echo template_use("tmp/site_ajax.template", $params, "forgot_password_submitted_template");
+	}
 }
 
 function add_new_user() {
 global $MYVARS;
-  $newuser = new \stdClass;
+	$newuser = new \stdClass;
 	$newuser->email = trim($MYVARS->GET["email"]);
 	$newuser->fname = nameize($MYVARS->GET["fname"]);
 	$newuser->lname = nameize($MYVARS->GET["lname"]);
@@ -166,8 +203,19 @@ global $MYVARS;
 	echo create_new_user($newuser);
 }
 
+/**
+ * Delete a user.
+ *
+ * This function deletes a user from the database. The user can be
+ * deleted if they are not themselves or an admin account.
+ *
+ * @global \stdClass $MYVARS The global MYVARS object. Contains all the user-inputted variables
+ * from the URL.
+ * @global \stdClass $USER The global USER object. Contains user information.
+ */
 function delete_user() {
-global $MYVARS, $USER;
+	global $MYVARS, $USER;
+
 	$userid = $MYVARS->GET["userid"];
 	$user = false;
 
@@ -175,63 +223,66 @@ global $MYVARS, $USER;
 	$admin = is_siteadmin($userid);
 
 	if (!$yourself && !$admin) { // Can't delete yourself or an admin account.
+		// Get the user's information from the database.
 		$SQL = "SELECT *
-							FROM users
-						 WHERE userid = '$userid'";
+				FROM users
+				WHERE userid = '$userid'";
 		if ($user = get_db_row($SQL)) {
-      $SQL = "DELETE
-								FROM users
-							 WHERE userid = '$userid'";
-      if (execute_db_sql($SQL)) {
-        //Remove all role assignments on site
-      	remove_all_roles($userid);
-        //Delete all logs of the user
-        $SQL = "DELETE
-									FROM logfile
-								 WHERE userid = '$userid'";
-        execute_db_sql($SQL);
-      }
-  	}
+			// Delete the user from the database.
+			$SQL = "DELETE
+					FROM users
+					WHERE userid = '$userid'";
+			if (execute_db_sql($SQL)) {
+				// Remove all role assignments on site.
+				remove_all_roles($userid);
+				// Delete all logs of the user.
+				$SQL = "DELETE
+						FROM logfile
+						WHERE userid = '$userid'";
+				execute_db_sql($SQL);
+			}
+		}
 	}
-	$params = array("yourself" => $yourself, "admin" => $admin, "user" => $user);
+
+	$params = ["yourself" => $yourself, "admin" => $admin, "user" => $user];
 	echo template_use("tmp/site_ajax.template", $params, "delete_user_template");
 }
 
 function refresh_user_alerts() {
 global $MYVARS;
-  $userid = empty($MYVARS->GET["userid"]) ? false : $MYVARS->GET["userid"];
-  get_user_alerts($userid, false, false);
+	$userid = empty($MYVARS->GET["userid"]) ? false : $MYVARS->GET["userid"];
+	get_user_alerts($userid, false, false);
 }
 
 function allow_page_request() {
 global $MYVARS;
-  $approve = empty($MYVARS->GET["approve"]) ? false : true;
-  $requestid = empty($MYVARS->GET["requestid"]) ? false : $MYVARS->GET["requestid"];
+	$approve = empty($MYVARS->GET["approve"]) ? false : true;
+	$requestid = empty($MYVARS->GET["requestid"]) ? false : $MYVARS->GET["requestid"];
 
-  if ($approve) { // confirmed request
-      $SQL = "UPDATE roles_assignment
-								 SET confirm = 0
-							 WHERE assignmentid = '$requestid'";
-  } else { // denied request
-      $SQL = "DELETE
-								FROM roles_assignment
-							 WHERE assignmentid = '$requestid'";
-  }
+	if ($approve) { // confirmed request
+		$SQL = "UPDATE roles_assignment
+				SET confirm = 0
+				WHERE assignmentid = '$requestid'";
+	} else { // denied request
+		$SQL = "DELETE
+				FROM roles_assignment
+				WHERE assignmentid = '$requestid'";
+	}
 
-  if (execute_db_sql($SQL)) {
-      donothing();
-  } else {
-      echo "false";
-  }
+	if (execute_db_sql($SQL)) {
+		donothing();
+	} else {
+		echo "false";
+	}
 }
 
 function get_login_box() {
 global $USER, $MYVARS;
 	if (isset($MYVARS->GET["logout"])) {
-    $_SESSION['userid'] = "0";
-    session_destroy();
-    session_write_close();
-    unset($USER);
+		$_SESSION['userid'] = "0";
+		session_destroy();
+		session_write_close();
+		unset($USER);
 		log_entry("user", null, "Logout"); // Log
 	}
 	echo get_login_form();
@@ -261,11 +312,11 @@ global $USER, $MYVARS;
 
 function get_cookie() {
 global $MYVARS;
-  $cname = $MYVARS->GET['cname'];
-  if (isset($_SESSION["$cname"])) {
-      echo $_SESSION["$cname"];
-  }
-  donothing();
+	$cname = $MYVARS->GET['cname'];
+	if (isset($_SESSION["$cname"])) {
+		echo $_SESSION["$cname"];
+	}
+	donothing();
 }
 
 function addfeature() {
@@ -281,7 +332,11 @@ global $CFG, $PAGE, $USER, $MYVARS;
 	$featuretype = str_replace("_features", "", $MYVARS->GET["featuretype"]);
 	$action = $featuretype . "_delete";
 
-	all_features_function(false, $featuretype, "", "_delete", false, $MYVARS->GET["pageid"], $MYVARS->GET["featureid"], $MYVARS->GET["sectionid"]);
+	$var1 = $MYVARS->GET["pageid"] ?? "#false#";
+	$var2 = $MYVARS->GET["featureid"] ?? "#false#";
+	$var3 = $MYVARS->GET["subid"] ?? "#false#";
+
+	all_features_function(false, $featuretype, "", "_delete", false, $var1, $var2, $var3);
 	log_entry($featuretype, null, "Deleted Feature"); // Log
 }
 
@@ -294,67 +349,67 @@ global $MYVARS;
 function drop_move_feature() {
 global $MYVARS;
 	$pageid = empty($MYVARS->GET["pageid"]) ? $_SESSION["pageid"] : $MYVARS->GET["pageid"];
-  $col1 = empty($MYVARS->GET["col1"]) ? false : $MYVARS->GET["col1"];
-  $col2 = empty($MYVARS->GET["col2"]) ? false : $MYVARS->GET["col2"];
-  $moved = empty($MYVARS->GET["moved"]) ? false : $MYVARS->GET["moved"];
-  $refresh = false;
+	$col1 = empty($MYVARS->GET["col1"]) ? false : $MYVARS->GET["col1"];
+	$col2 = empty($MYVARS->GET["col2"]) ? false : $MYVARS->GET["col2"];
+	$moved = empty($MYVARS->GET["moved"]) ? false : $MYVARS->GET["moved"];
+	$refresh = false;
 
-  $moved = explode("_", $moved);
-  $movedtype = empty($moved[0]) ? false : $moved[0];
-  $movedid = empty($moved[1]) ? false : $moved[1];
+	$moved = explode("_", $moved);
+	$movedtype = empty($moved[0]) ? false : $moved[0];
+	$movedid = empty($moved[1]) ? false : $moved[1];
 
-  $area = "middle"; $i = 1;
-  foreach ($col1 as $a) {
-    $a = explode("_", $a);
-    $featuretype = empty($a[0]) ? false : $a[0];
-    $featureid = empty($a[1]) ? false : $a[1];
+	$area = "middle"; $i = 1;
+	foreach ($col1 as $a) {
+		$a = explode("_", $a);
+		$featuretype = empty($a[0]) ? false : $a[0];
+		$featureid = empty($a[1]) ? false : $a[1];
 
 		$SQL = "SELECT *
-							FROM pages_features
-						 WHERE pageid = '$pageid'
-						 	 AND feature = '$featuretype'
-							 AND featureid = '$featureid'";
-    $current = get_db_row($SQL);
-    if ($movedtype == $featuretype && $movedid == $featureid && $current["area"] != $area) {
-      $refresh = true;
-    }
+				FROM pages_features
+				WHERE pageid = '$pageid'
+				AND feature = '$featuretype'
+				AND featureid = '$featureid'";
+		$current = get_db_row($SQL);
+		if ($movedtype == $featuretype && $movedid == $featureid && $current["area"] != $area) {
+			$refresh = true;
+		}
 
 		$SQL = "UPDATE pages_features
-							 SET sort = '$i',
-							 		 area = '$area'
-						 WHERE id = '" . $current["id"] . "'";
-    execute_db_sql($SQL);
-    $i++;
-  }
+				SET sort = '$i',
+					area = '$area'
+				WHERE id = '" . $current["id"] . "'";
+		execute_db_sql($SQL);
+		$i++;
+	}
 
-  $area = "side"; $i = 1;
-  foreach ($col2 as $a) {
-    $a = explode("_", $a);
-    $featuretype = empty($a[0]) ? false : $a[0];
-    $featureid = empty($a[1]) ? false : $a[1];
+	$area = "side"; $i = 1;
+	foreach ($col2 as $a) {
+		$a = explode("_", $a);
+		$featuretype = empty($a[0]) ? false : $a[0];
+		$featureid = empty($a[1]) ? false : $a[1];
 		$SQL = "SELECT *
-							FROM pages_features
-						 WHERE pageid = '$pageid'
-						 	 AND feature = '$featuretype'
-							 AND featureid = '$featureid'";
-    $current = get_db_row($SQL);
-    if ($movedtype == $featuretype && $movedid == $featureid && $current["area"] != $area) {
-      $refresh = true;
-    }
+				FROM pages_features
+				WHERE pageid = '$pageid'
+				AND feature = '$featuretype'
+				AND featureid = '$featureid'";
+		$current = get_db_row($SQL);
+		if ($movedtype == $featuretype && $movedid == $featureid && $current["area"] != $area) {
+			$refresh = true;
+		}
 
 		$SQL = "UPDATE pages_features
-							 SET sort = '$i',
-							 		 area = '$area'
-						 WHERE id = '" . $current["id"] . "'";
-    execute_db_sql($SQL);
-    $i++;
-  }
+				SET sort = '$i',
+					area = '$area'
+				WHERE id = '" . $current["id"] . "'";
+		execute_db_sql($SQL);
+		$i++;
+	}
 
-  if ($refresh) {
-  	echo "refresh";
-  } else {
-    echo "done";
-  }
+	if ($refresh) {
+		echo "refresh";
+	} else {
+		echo "done";
+	}
 
 	log_entry($featuretype, $featureid, "Move Feature"); // Log
 }

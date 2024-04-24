@@ -25,7 +25,7 @@ function get_mysql_array_type($type = "assoc") {
 }
 
 function db_goto_row($result, $rownum = 0) {
-  mysqli_data_seek($result, $rownum);
+	mysqli_data_seek($result, $rownum);
 }
 
 function fetch_row($result, $type = false) {
@@ -84,12 +84,15 @@ global $conn;
   return false;
 }
 
-function dbescape($str) {
-global $conn;
-  return mysqli_real_escape_string($conn,$str);
+function dbescape($val) {
+	global $conn;
+	if (!is_string($val)) {
+		return $val;
+	}
+	return mysqli_real_escape_string($conn, $val);
 }
 
 function db_free_result($result) {
-  mysqli_free_result($result);
+	mysqli_free_result($result);
 }
 ?>

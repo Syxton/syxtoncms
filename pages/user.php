@@ -71,7 +71,7 @@ global $MYVARS, $PAGE, $CFG;
 }
 
 function change_profile() {
-global $MYVARS, $CFG, $USER, $PAGE;
+global $CFG, $USER;
 	$params = ["siteid" => $CFG->SITEID, "userid" => !empty($USER->userid), "user" => $USER];
 	if (!empty($USER->userid)) {
 		if (!isset($VALIDATELIB)) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
@@ -94,20 +94,22 @@ global $MYVARS, $CFG, $USER, $PAGE;
 }
 
 function forgot_password() {
-global $MYVARS, $CFG;
+global $CFG;
 	if (!isset($VALIDATELIB)) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
 
-	$params["email_req"] = get_error_message('valid_req_email');
-	$params["email_valid"] = get_error_message('valid_email_invalid');
-	$params["email_used"] = get_error_message('valid_email_used');
-	$params["email_help"] = get_help("input_email");
+	$params = [
+		"email_req" => get_error_message('valid_req_email'),
+		"email_valid" => get_error_message('valid_email_invalid'),
+		"email_used" => get_error_message('valid_email_used'),
+		"email_help" => get_help("input_email"),
+	];
 
 	echo create_validation_script("password_request_form", template_use("tmp/user.template", [], "forgot_password_validation_template"));
-  	echo format_popup(template_use("tmp/user.template", $params, "forgot_password_template"),'Forgot Password',"500px");
+  	echo format_popup(template_use("tmp/user.template", $params, "forgot_password_form_template"), 'Forgot Password', "500px");
 }
 
 function user_alerts() {
-global $MYVARS, $CFG, $USER;
+global $MYVARS;
 	echo template_use("tmp/user.template", ["alerts" => get_user_alerts($MYVARS->GET["userid"], false, true)], "user_alerts_template");
 }
 ?>

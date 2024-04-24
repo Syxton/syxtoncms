@@ -72,7 +72,7 @@ global $CFG, $USER;
 }
 
 function update_user_cookie() {
-global $CFG,$USER;
+global $CFG, $USER;
 	$time = get_timestamp();
 	if (!is_logged_in()) { //check to see if $USER global is set
         load_user_cookie(); //if $USER global isn't set, see if there is an existing cookie and have it loaded into $USER
@@ -91,7 +91,7 @@ global $CFG,$USER;
 }
 
 function create_new_user($user) {
-global $CFG,$USER;
+global $CFG, $USER;
 	if (!isset($COMLIB)) { include_once($CFG->dirroot.'/lib/comlib.php'); }
 	$temp = create_random_password();
 	$key = md5($user->email) . md5(time());
@@ -111,8 +111,8 @@ global $CFG,$USER;
     	$message = write_confirmation_email($user, $temp);
     	$subject = $CFG->sitename . ' New User Confirmation';
 
-		if (send_email($USER,$FROMUSER,NULL,$subject,$message)) {
-			send_email($FROMUSER,$FROMUSER,NULL,$subject,$message);
+		if (send_email($USER, $FROMUSER, $subject, $message)) {
+			send_email($FROMUSER, $FROMUSER, $subject, $message);
 			return "true**" . new_user_confirmation($user);
 		}
 	} else {
@@ -180,16 +180,24 @@ function get_user_name($userid) {
 	return "Anonymous";
 }
 
-function is_logged_in() {
+function is_logged_in($userid = false) {
 global $CFG, $USER;
-	if (!empty($USER->userid)) {
-	   recursive_mkdir($CFG->userfilespath . '/' . $USER->userid);
+	if (!$userid) {
+		if (empty($USER->userid)) { 
+			return false; 
+		}
+		$userid = $USER->userid;
+	}
+
+	$userid = $userid ? $userid : $USER->userid;
+	if (!empty($userid)) {
+	   recursive_mkdir($CFG->userfilespath . '/' . $userid);
        return true;
     }
 	return false;
 }
 
-function nameize($str,$a_char = array("'","-"," ",'"','.')) {
+function nameize($str, $a_char = array("'","-"," ",'"','.')) {
     $str = stripslashes(trim($str));
     $str = preg_replace('!\s+!', ' ', $str);
     $name_parts = explode(" ", $str);
@@ -214,11 +222,11 @@ function nameize($str,$a_char = array("'","-"," ",'"','.')) {
         //$a_char is an array containing the characters we use as separators for capitalization. If you don't pass anything, there are three in there as default.
     	$string = strtolower($str);
         foreach ($a_char as $temp) {
-            $pos = strpos($string,$temp);
+            $pos = strpos($string, $temp);
             if ($pos !== -1) {
                 //we are in the loop because we found one of the special characters in the array, so lets split it up into chunks and capitalize each one.
                 $mend = '';
-                $a_split = explode($temp,$string);
+                $a_split = explode($temp, $string);
                 foreach ($a_split as $temp2) {
                     //capitalize each portion of the string which was separated at a special character
                     $mend .= ucfirst($temp2).$temp;
@@ -229,7 +237,7 @@ function nameize($str,$a_char = array("'","-"," ",'"','.')) {
 
         $str = "";
        	for ($i=0;$i<strlen($string);$i++) {
-    		if (array_search($string[$i],$a_char)) {
+    		if (array_search($string[$i], $a_char)) {
                 if ($string[$i] !== $string[(strlen($string)-$i-1)]) {
                     $str .= $string[$i];
                 }
@@ -237,9 +245,9 @@ function nameize($str,$a_char = array("'","-"," ",'"','.')) {
                 $str .= $string[$i];
     		}
     	}
-        $str = str_replace("+ ","",$str);
-        $str = str_replace("+","",$str);
-        $str = str_replace('""','"',$str);
+        $str = str_replace("+ ", "", $str);
+        $str = str_replace("+", "", $str);
+        $str = str_replace('""','"', $str);
         return trim(ucfirst($str));
     }
 }

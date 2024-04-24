@@ -15,15 +15,15 @@ update_user_cookie();
 callfunction();
 
 function add_news() {
-global $CFG,$USER,$MYVARS;
+global $CFG, $USER, $MYVARS;
     $pageid = $MYVARS->GET["pageid"];
     $featureid = $MYVARS->GET["featureid"];
     $html = dbescape(urldecode($MYVARS->GET["html"]));
     $title = dbescape(urldecode($MYVARS->GET["title"]));
     $summary = dbescape(urldecode($MYVARS->GET["summary"]));
-    $section = get_db_field("section_title","news_features","featureid='$featureid' AND pageid='$pageid'");
+
     $submitted = get_timestamp();
-    $SQL = "INSERT INTO news (pageid,featureid,section,title,caption,content,submitted,userid) VALUES('$pageid','$featureid','$section','$title','$summary','$html','$submitted','".$USER->userid."')";
+    $SQL = "INSERT INTO news (pageid,featureid,title,caption,content,submitted,userid) VALUES('$pageid', '$featureid', '$title', '$summary', '$html', '$submitted', '" . $USER->userid . "')";
 	if (execute_db_sql($SQL)) { 
 		create_rss($pageid);
 		create_rss($pageid, $featureid);
@@ -54,28 +54,18 @@ global $CFG, $USER, $MYVARS;
 }
 
 function edit_news() {
-global $CFG,$MYVARS;
-    $newsid = $MYVARS->GET["newsid"];
+global $CFG, $MYVARS;
+    $newsid = dbescape($MYVARS->GET["newsid"]);
     $html = dbescape(urldecode($MYVARS->GET["html"]));
     $title = dbescape(urldecode($MYVARS->GET["title"]));
     $summary = dbescape(urldecode($MYVARS->GET["summary"]));
-    $pageid = $MYVARS->GET["pageid"];
+    $pageid = dbescape($MYVARS->GET["pageid"]);
     $edited = get_timestamp();
     $SQL = "UPDATE news SET content='$html', title='$title', caption='$summary', edited='$edited' WHERE newsid='$newsid'";
+
     if (execute_db_sql($SQL)) { 
-    	create_rss($pageid);
-    	create_rss($pageid, get_db_field("featureid","news","newsid='$newsid'"));
     	echo "$pageid News edited successfully";
     } 
 }
 
-function edit_news_section() {
-global $CFG,$MYVARS;
-    $featureid = $MYVARS->GET["featureid"];
-    $limit = dbescape(urldecode($MYVARS->GET["limit"]));
-    $title = dbescape(urldecode($MYVARS->GET["title"]));
-    $SQL1 = "UPDATE news_features SET limit_viewable='$limit', section_title='$title' WHERE featureid='$featureid'";
-    $SQL2 = "UPDATE news SET section='$title' WHERE featureid='$featureid'";
-    if (execute_db_sql($SQL1) && execute_db_sql($SQL2)) { echo "News Section edited successfully"; }
-}
 ?>

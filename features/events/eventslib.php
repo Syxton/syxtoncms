@@ -14,9 +14,9 @@ function display_events($pageid, $area, $featureid) {
 global $CFG, $USER, $ROLES;
     $content = "";
 
-	if (!$settings = fetch_settings("events",$featureid,$pageid)) {
-		make_or_update_settings_array(default_settings("events",$pageid,$featureid));
-		$settings = fetch_settings("events",$featureid,$pageid);
+	if (!$settings = fetch_settings("events", $featureid, $pageid)) {
+		make_or_update_settings_array(default_settings("events", $pageid, $featureid));
+		$settings = fetch_settings("events", $featureid, $pageid);
 	}
 
 	$title = $settings->events->$featureid->feature_title->setting;
@@ -59,7 +59,7 @@ global $CFG, $USER, $ROLES;
                 if ($content == "") { $content .= "There are no current or upcoming events."; }
 
                 //Get link for request form
-                if ($allowrequests) { $content = get_event_request_link($area,$featureid) . $content; }
+                if ($allowrequests) { $content = get_event_request_link($area, $featureid) . $content; }
 
                 //Get recent events
                 if ($section = get_recent_events($pageid, $recentdays, $archivedays)) { $content .= $section; }
@@ -82,7 +82,7 @@ global $CFG, $USER, $ROLES;
             if ($content == "") { $content .= "There are no current or upcoming events.";}
 
             //Get link for request form
-            if ($allowrequests) { $content = get_event_request_link($area,$featureid) . $content; }
+            if ($allowrequests) { $content = get_event_request_link($area, $featureid) . $content; }
 
             //Show past events
             if ($section = get_recent_events($pageid, $recentdays, $archivedays)) { $content .= $section;}
@@ -105,7 +105,7 @@ $returnme = '';
     return $returnme;
 }
 
-function get_event_request_link($area,$featureid) {
+function get_event_request_link($area, $featureid) {
 global $CFG;
     if ($area == "middle") {
         return '<div style="text-align:right;">'.make_modal_links(array("title"=>"Request an Event","path"=>$CFG->wwwroot."/features/events/events.php?action=event_request_form&amp;featureid=$featureid","validate"=>"true","width"=>"550","height"=>"650","image"=>$CFG->wwwroot."/images/request.gif")).'</div>';
@@ -114,7 +114,7 @@ global $CFG;
     }
 }
 
-function get_calendar_of_events($title, $pageid, $featureid, $year = false, $showpastevents = true, $content = "",$allowrequests=false) {
+function get_calendar_of_events($title, $pageid, $featureid, $year = false, $showpastevents = true, $content = "", $allowrequests=false) {
 global $CFG, $USER, $ROLES;
     $time = get_timestamp();
     $year = $year ? $year : date("Y", $time);
@@ -130,7 +130,7 @@ global $CFG, $USER, $ROLES;
 
     if (is_logged_in()) {
         if (user_has_ability_in_page($USER->userid, "staffapply", $pageid, "events", $featureid)) {
-            $content .= get_staff_application_button($featureid,$pageid);
+            $content .= get_staff_application_button($featureid, $pageid);
         }
         if (user_has_ability_in_page($USER->userid, "viewevents", $pageid, "events", $featureid)) {
             $canview = true;
@@ -174,7 +174,7 @@ global $CFG, $USER, $ROLES;
 
     // Get link for request form.
     if ($allowrequests) {
-        $content = get_event_request_link("middle",$featureid) . $content;
+        $content = get_event_request_link("middle", $featureid) . $content;
     }
 
     return get_css_box($title, $content, $buttons, NULL, "events", $featureid);
@@ -464,7 +464,7 @@ global $CFG, $USER;
             $featureid = get_db_field("featureid","pages_features","pageid='$pageid' AND feature='events'");
 
             // Export registrations
-            if (user_has_ability_in_page($USER->userid, "exportcsv", $pageid,"events",$featureid)) {
+            if (user_has_ability_in_page($USER->userid, "exportcsv", $pageid,"events", $featureid)) {
                 $returnme .= '<a href="javascript:ajaxapi(\'/features/events/events_ajax.php\',\'export_csv\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '\',function() { run_this();});"><img src="' . $CFG->wwwroot . '/images/csv.png" title="Export ' . $regcount . '/' . $limit . ' Registrations" alt="Export ' . $regcount . ' Registrations" /></a>';
             }
 
@@ -799,14 +799,14 @@ global $CFG;
     return $email;
 }
 
-function get_template_field_displayname($templateid,$fieldname) {
+function get_template_field_displayname($templateid, $fieldname) {
     $template = get_db_row("SELECT * FROM events_templates WHERE template_id='$templateid'");
     if ($template["folder"] == "none") {
         return get_db_field("display", "events_templates_forms", "elementid='$fieldname'");
     } else {
-        $fields = explode(";",$template["formlist"]);
+        $fields = explode(";", $template["formlist"]);
         foreach ($fields as $f) {
-            $field = explode(":",$f);
+            $field = explode(":", $f);
             if ($field[0] == $fieldname) {
                 return $field[2];
             }
@@ -828,7 +828,7 @@ global $CFG, $why;
         if (get_db_row($SQL . "AND regid='$regid'")) {
             $field_count = get_db_count($SQL);
             if ($field_count > $limit[3]) { //if registration limit is reached
-                $displayname = get_template_field_displayname($template["template_id"],$limit[0]);
+                $displayname = get_template_field_displayname($template["template_id"], $limit[0]);
                 $why = "reached the limit of " . $limit[3] . " registrations where " . $displayname . make_limit_statement($limit[1], $limit[2], false);
                 return false;
             }
@@ -851,7 +851,7 @@ global $CFG, $why;
         if (get_db_row($SQL . "AND regid='$regid'")) {
             $field_count = get_db_count($SQL);
             if ($field_count > $limit[3]) { //if registration limit is reached
-                $displayname = get_template_field_displayname($template["template_id"],$limit[0]);
+                $displayname = get_template_field_displayname($template["template_id"], $limit[0]);
                 $why = "reached the limit of " . $limit[3] . " registrations where " . $displayname . make_limit_statement($limit[1], $limit[2], false);
                 return false;
             }
@@ -950,12 +950,12 @@ function refresh_calendar_events($eventid) {
     while ($startdate <= $event_end_date) {
         $caleventid .= $caleventid == "" ? "" : ":";
         date_default_timezone_set("UTC");
-        $day = date('d',$startdate);
-        $month = date('m',$startdate);
-        $year = date('Y',$startdate);
+        $day = date('d', $startdate);
+        $month = date('m', $startdate);
+        $year = date('Y', $startdate);
         $event_begin_time = $event["event_begin_time"] == "NULL" ? "" : $event["event_begin_time"];
         $event_end_time = $event["event_end_time"] == "NULL" ? "" : $event["event_end_time"];
-        $SQL = "INSERT INTO calendar_events (eventid,date,title,event,location,cat,starttime,endtime,day,month,year,site_viewable,groupid,pageid) VALUES('$eventid',".$startdate.",'" .dbescape($event["name"]). "','".dbescape($event["byline"]). "','" .$event["location"]. "','" .$event["category"]. "','" .$event_begin_time . "','" . $event_end_time . "',$day,$month,$year,$siteviewable,0," .$event["pageid"]. ")";
+        $SQL = "INSERT INTO calendar_events (eventid,date,title,event,location,cat,starttime,endtime,day,month,year,site_viewable,groupid,pageid) VALUES('$eventid',".$startdate.",'" .dbescape($event["name"]). "','".dbescape($event["byline"]). "','" .$event["location"]. "','" .$event["category"]. "','" .$event_begin_time . "','" . $event_end_time . "', $day, $month, $year, $siteviewable,0," .$event["pageid"]. ")";
         $caleventid .= execute_db_sql($SQL);
         $startdate += 86400; //Advance 1 day
     }
@@ -1033,10 +1033,10 @@ global $CFG;
     return $returnme;
 }
 
-function get_template_settings($templateid,$eventid) {
+function get_template_settings($templateid, $eventid) {
 global $CFG;
     $returnme = "";
-    if (!empty($templateid) && $template_settings = get_db_field("settings","events_templates","template_id='$templateid'")) { //template settings
+    if (!empty($templateid) && $template_settings = get_db_field("settings", "events_templates", "template_id='$templateid'")) { // template settings
         if (!empty($template_settings)) { //there are settings in this template
             $returnme = '<table style="margin:0px 0px 0px 50px;min-width: 485px;">
                             <tr><td class="field_title" style="width:115px;text-align: center;">Template Settings</td></tr>
@@ -1045,7 +1045,7 @@ global $CFG;
             foreach ($settings as $setting) { //save each setting with the default if no other is given
                 $set = get_db_field("setting","settings","type='events_template' AND extra='$eventid' AND setting_name='".$setting['name']."'");
                 $current_setting = !empty($set) ? $set : $setting['default'];
-                $returnme .= make_setting_input($setting["name"],$setting["title"],$setting["type"],NULL,NULL,$current_setting,$setting["numeric"],$setting["extravalidation"], $setting["extra_alert"],false);
+                $returnme .= make_setting_input($setting["name"], $setting, NULL, NULL, $current_setting, false);
             }
             $returnme .= '</td></tr></table>';
         }
@@ -1086,7 +1086,7 @@ function get_possible_times($formid, $selected_time = "false", $start_time = "fa
 function get_my_locations($userid, $selected = false, $eventid=false) {
     $returnme = "";
     $union_statement = $eventid ? " UNION SELECT * FROM events_locations WHERE id IN (SELECT location FROM events WHERE eventid=$eventid)" : "";
-    $SQL = "SELECT * FROM events_locations WHERE userid LIKE '%,$userid,%' $union_statement GROUP BY id ORDER BY location";
+    $SQL = "SELECT * FROM events_locations WHERE userid LIKE '%, $userid,%' $union_statement GROUP BY id ORDER BY location";
 
 	if ($locations = get_db_result($SQL)) {
         while ($location = fetch_row($locations)) {
@@ -1112,7 +1112,7 @@ function get_my_hidden_limits($templateid, $hard_limits, $soft_limits) {
         while (!empty($limits_array[$i])) {
             $limit = explode(":", $limits_array[$i]);
             if (!empty($limit)) {
-                $displayname = get_template_field_displayname($templateid,$limit[0]);
+                $displayname = get_template_field_displayname($templateid, $limit[0]);
                 $returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . '&nbsp;-&nbsp;<a href="javascript:void(0);" onclick="delete_limit(\'hard_limits\',\'' . $i . '\');">Delete</a><br />';
                 $hidden_variable1 .= $hidden_variable1 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
             }
@@ -1128,7 +1128,7 @@ function get_my_hidden_limits($templateid, $hard_limits, $soft_limits) {
         while (isset($limits_array[$i])) {
             $limit = explode(":", $limits_array[$i]);
             if (!empty($limit)) {
-                $displayname = get_template_field_displayname($templateid,$limit[0]);
+                $displayname = get_template_field_displayname($templateid, $limit[0]);
                 $returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . '&nbsp;-&nbsp;<a href="javascript:void(0);" onclick="delete_limit(\'soft_limits\',\'' . $i . '\');">Delete</a><br />';
                 $hidden_variable2 .= $hidden_variable2 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
             }
@@ -1144,7 +1144,9 @@ function get_my_category($selected = false) {
         while ($category = fetch_row($categories)) {
             $returnme .= $returnme == "" ? '<select id="category">' : '';
             $selectme = $selected && ($category['cat_id'] == $selected) ? ' selected' : '';
-            $returnme .= '<option value="' . $category['cat_id'] . '"' . $selectme . '>' . stripslashes($category['cat_name']) . '</option>';
+            $returnme .= '<option value="' . $category['cat_id'] . '"' . $selectme . '>' .
+                            stripslashes($category['cat_name']) .
+                         '</option>';
         }
     }
     $returnme .= $returnme == "" ? "No categories exist." : "</select>";
@@ -1163,17 +1165,31 @@ function staff_status($staff, $userid = true) {
         }
 
         if (!$staff) { // User exists but no staff history.
-        return array(array("tag" => "Application", "full" => "Application Incomplete"),
-                     array("tag" => "Background Check", "full" => "Background Check Incomplete"));
+            return [
+                [
+                    "tag" => "Application",
+                    "full" => "Application Incomplete",
+                ],
+                [
+                    "tag" => "Background Check",
+                    "full" => "Background Check Incomplete",
+                ],
+            ];
         }
     
         if ($staff["workerconsentdate"] < strtotime($settings->events->$featureid->staffapp_expires->setting . '/' . date('Y'))) {
-            $status[] = array("tag" => "Application", "full" => "Application Out of Date");
+            $status[] = [
+                "tag" => "Application",
+                "full" => "Application Out of Date",
+            ];
         }
     
         $flag = $staff["q1_1"] + $staff["q1_2"] + $staff["q1_3"] + $staff["q2_1"] + $staff["q2_2"];
         if (!empty($flag)) {
-            $status[] = array("tag" => "Flagged", "full" => "Flagged for review!");
+            $status[] = [
+                "tag" => "Flagged",
+                "full" => "Flagged for review!",
+            ];
         }
     
         $eighteen = 18 * 365 * 24 * 60 * 60; // 18 years in seconds
@@ -1181,15 +1197,21 @@ function staff_status($staff, $userid = true) {
         $time = get_timestamp();
         if (($time - $staff["dateofbirth"]) > $eighteen ) {
             if (empty($staff["bgcheckpass"])) {
-                $status[] =  array("tag" => "Background Check", "full" => "Background Check Incomplete");
+                $status[] =  [
+                    "tag" => "Background Check",
+                    "full" => "Background Check Incomplete",
+                ];
             } else if (($time - $staff["bgcheckpassdate"]) > $expireyear) {
-                $status[] =  array("tag" => "Background Check", "full" => "Background Check Out of Date");
+                $status[] =  [
+                    "tag" => "Background Check",
+                    "full" => "Background Check Out of Date",
+                ];
             }
         }
     } else {
-        $status[] = array("tag" => "Account", "full" => "No account");
-        $status[] = array("tag" => "Application", "full" => "Application Incomplete");
-        $status[] = array("tag" => "Background Check", "full" => "Background Check Incomplete");
+        $status[] = ["tag" => "Account", "full" => "No account"];
+        $status[] = ["tag" => "Application", "full" => "Application Incomplete"];
+        $status[] = ["tag" => "Background Check", "full" => "Background Check Incomplete"];
     }
 
     return $status;
@@ -1214,7 +1236,7 @@ global $USER, $CFG, $MYVARS;
     $v["staffid"] = empty($row) ? false : $row["staffid"];
     $v["name"] = empty($row) ? $USER->fname . " " . $USER->lname : $row["name"];
     $v["phone"] = empty($row) ? "" : $row["phone"];
-    $v["dateofbirth"] = empty($row) ? "" : (isset($row['dateofbirth']) ? date('m/d/Y',$row['dateofbirth']) : '');
+    $v["dateofbirth"] = empty($row) ? "" : (isset($row['dateofbirth']) ? date('m/d/Y', $row['dateofbirth']) : '');
     $v["address"] = empty($row) ? "" : $row["address"];
     $v["ar1selected"] = "";
     $v["ar2selected"] = "";
@@ -1264,7 +1286,7 @@ global $USER, $CFG, $MYVARS;
     $v["sub18display"] = empty($v["ar1selected"]) ? "display:none" : "";
     $v["workerconsent"] = empty($row) ? "" : $row["workerconsent"];
     $v["workerconsentsig"] = empty($row) ? "" : ($row["workerconsentsig"] == "on" && $viewonly  ? "checked" : "");
-    $v["workerconsentdate"] = empty($row) ? date('m/d/Y') : (!empty($row['workerconsentdate']) && $viewonly ? date('m/d/Y',$row['workerconsentdate']) : date('m/d/Y'));
+    $v["workerconsentdate"] = empty($row) ? date('m/d/Y') : (!empty($row['workerconsentdate']) && $viewonly ? date('m/d/Y', $row['workerconsentdate']) : date('m/d/Y'));
 
     $v["ref1name"] = empty($row) ? "" : $row["ref1name"];
     $v["ref1relationship"] = empty($row) ? "" : $row["ref1relationship"];
@@ -1769,9 +1791,18 @@ global $USER, $CFG;
     return "No other addable locations.";
 }
 
-function events_delete($pageid, $featureid, $sectionid) {
-    execute_db_sql("DELETE FROM pages_features WHERE feature='events' AND pageid='$pageid' AND featureid='$featureid'");
-    execute_db_sql("DELETE FROM settings WHERE type='events' AND pageid='$pageid' AND featureid='$featureid'");
+function events_delete($pageid, $featureid) {
+	$params = [
+		"pageid" => $pageid,
+		"featureid" => $featureid,
+		"feature" => "events",
+	];
+
+	$SQL = template_use("dbsql/features.sql", $params, "delete_feature");
+	execute_db_sql($SQL);
+	$SQL = template_use("dbsql/features.sql", $params, "delete_feature_settings");
+	execute_db_sql($SQL);
+
     resort_page_features($pageid);
 }
 
@@ -1844,7 +1875,7 @@ function get_events_admin_contacts() {
     			Contacts List:
     		</td>
     		<td class="field_input">
-    			'.make_select("admin_contacts",$contacts,"admin_contact","admin_contact",false,"onchange='fill_admin_contacts(this.value)'",true).'
+    			'.make_select("admin_contacts", $contacts,"admin_contact","admin_contact", false,"onchange='fill_admin_contacts(this.value)'", true).'
     		</td>
     	</tr><tr><td></td><td class="field_input"><span id="contact_error" class="error_text"></span></td></tr>
     </table>';
@@ -1866,7 +1897,7 @@ function get_events_admin_payable() {
     			Payable List:
     		</td>
     		<td class="field_input">
-    			'.make_select("admin_contacts",$contacts,"admin_contact","admin_contact",false,"onchange='fill_admin_payable(this.value)'",true).'
+    			'.make_select("admin_contacts", $contacts,"admin_contact","admin_contact", false,"onchange='fill_admin_payable(this.value)'", true).'
     		</td>
     	</tr><tr><td></td><td class="field_input"><span id="contact_error" class="error_text"></span></td></tr>
     </table>';
@@ -1879,25 +1910,178 @@ global $CFG, $USER;
     return $returnme;
 }
 
-function events_default_settings($feature,$pageid,$featureid) {
-	$settings_array[] = array(false,"$feature","$pageid","$featureid","feature_title","Events",false,"Events","Feature Title","text");
-	$settings_array[] = array(false,"$feature","$pageid","$featureid","upcomingdays","30",false,"30","Show Upcoming Events (days)","text",true,"<=0","Must be greater than 0.");
-	$settings_array[] = array(false,"$feature","$pageid","$featureid","recentdays","5",false,"5","Recent Events (days)","text",true,"<=0","Must be greater than 0.");
-	$settings_array[] = array(false,"$feature","$pageid","$featureid","archivedays","30",false,"30","Admin Recent Events (days)","text",true,"<=0","Must be greater than 0.");
-	$settings_array[] = array(false,"$feature","$pageid","$featureid","showpastevents","1",false,"1","Show Past Events","yes/no");
-	$settings_array[] = array(false,"$feature","$pageid","$featureid","allowrequests","0","SELECT id as selectvalue,location as selectname FROM events_locations WHERE shared=1","0","Allow Location Reservations","select",null,null,"Select a location to allow event requests on.");
-    $settings_array[] = array(false,"$feature","$pageid","$featureid","emaillistconfirm","","3","","Request Email List","textarea");
-    $settings_array[] = array(false,"$feature","$pageid","$featureid","requestapprovalvotes","1",false,"1","Approval Votes Required","text",true,"<=0","Must be greater than 0.  Should be equal or less than the amount of email addresses.");
-    $settings_array[] = array(false,"$feature","$pageid","$featureid","requestdenyvotes","1",false,"1","Denial Votes Required","text",true,"<=0","Must be greater than 0.  Should be equal or less than the amount of email addresses.");
-    $settings_array[] = array(false,"$feature","$pageid","$featureid","request_text","","3","","Request Form Text","textarea");
-    $settings_array[] = array(false,"$feature","$pageid","$featureid","bgcheck_url","","3","","Background Check URL","textarea");
-    $settings_array[] = array(false,"$feature","$pageid","$featureid","bgcheck_years","5",false,"5","Background Check Expires (years)","text",true,"<=0","Must be greater than 0.");
-    $settings_array[] = array(false,"$feature","$pageid","$featureid","staffapp_expires","1/1",false,"1/1","Staff Application Expires (day/month)","text");
+function events_default_settings($type, $pageid, $featureid) {
+    $settings = [
+        [
+            "type" => "$type",
+            "pageid" => "$pageid",
+            "featureid" => "$featureid",
+            "setting_name" => "feature_title",
+            "setting" => "Events",
+            "extra" => false,
+            "defaultsetting" => "Events",
+            "display" => "Feature Title",
+            "inputtype" => "text",
+        ],
+        [
+            "type" => "$type",
+            "pageid" => "$pageid",
+            "featureid" => "$featureid",
+            "setting_name" => "upcomingdays",
+            "setting" => "30",
+            "extra" => false,
+            "defaultsetting" => "30",
+            "display" => "Show Upcoming Events (days)",
+            "inputtype" => "text",
+            "numeric" => true,
+            "validation" => "<=0",
+            "warning" => "Must be greater than 0.",
+        ],
+        [
+            "type" => "$type",
+            "pageid" => "$pageid",
+            "featureid" => "$featureid",
+            "setting_name" => "recentdays",
+            "setting" => "5",
+            "extra" => false,
+            "defaultsetting" => "5",
+            "display" => "Recent Events (days)",
+            "inputtype" => "text",
+            "numeric" => true,
+            "validation" => "<=0",
+            "warning" => "Must be greater than 0.",
+        ],
+        [
+            "type" => "$type",
+            "pageid" => "$pageid",
+            "featureid" => "$featureid",
+            "setting_name" => "archivedays",
+            "setting" => "30",
+            "extra" => false,
+            "defaultsetting" => "30",
+            "display" => "Admin Recent Events (days)",
+            "inputtype" => "text",
+            "numeric" => true,
+            "validation" => "<=0",
+            "warning" => "Must be greater than 0.",
+        ],
+        [
+            "type" => "$type",
+            "pageid" => "$pageid",
+            "featureid" => "$featureid",
+            "setting_name" => "showpastevents",
+            "setting" => "1",
+            "extra" => false,
+            "defaultsetting" => "1",
+            "display" => "Show Past Events",
+            "inputtype" => "yes/no",
+        ],
+        [
+            "type" => "$type",
+            "pageid" => "$pageid",
+            "featureid" => "$featureid",
+            "setting_name" => "allowrequests",
+            "setting" => "0",
+            "extra" => "SELECT id as selectvalue, location as selectname FROM events_locations WHERE shared = 1",
+            "defaultsetting" => "0",
+            "display" => "Allow Location Reservations",
+            "inputtype" => "select",
+            "numeric" => null,
+            "validation" => null,
+            "warning" => "Select a location to allow event requests on.",
+        ],
+        [
+            "type" => "$type",
+            "pageid" => "$pageid",
+            "featureid" => "$featureid",
+            "setting_name" => "emaillistconfirm",
+            "setting" => "",
+            "extra" => "3",
+            "defaultsetting" => "",
+            "display" => "Request Email List",
+            "inputtype" => "textarea",
+        ],
+        [
+            "type" => "$type",
+            "pageid" => "$pageid",
+            "featureid" => "$featureid",
+            "setting_name" => "requestapprovalvotes",
+            "setting" => "1",
+            "extra" => false,
+            "defaultsetting" => "1",
+            "display" => "Approval Votes Required",
+            "inputtype" => "text",
+            "numeric" => true,
+            "validation" => "<=0",
+            "warning" => "Must be greater than 0.  Should be less than or equal to the amount of email addresses.",
+        ],
+        [
+            "type" => "$type",
+            "pageid" => "$pageid",
+            "featureid" => "$featureid",
+            "setting_name" => "requestdenyvotes",
+            "setting" => "1",
+            "extra" => false,
+            "defaultsetting" => "1",
+            "display" => "Denial Votes Required",
+            "inputtype" => "text",
+            "numeric" => true,
+            "validation" => "<=0",
+            "warning" => "Must be greater than 0.  Should be less than or equal to the amount of email addresses.",
+        ],
+        [
+            "type" => "$type",
+            "pageid" => "$pageid",
+            "featureid" => "$featureid",
+            "setting_name" => "request_text",
+            "setting" => "",
+            "extra" => "3",
+            "defaultsetting" => "",
+            "display" => "Request Form Text",
+            "inputtype" => "textarea",
+        ],
+        [
+            "type" => "$type",
+            "pageid" => "$pageid",
+            "featureid" => "$featureid",
+            "setting_name" => "bgcheck_url",
+            "setting" => "",
+            "extra" => "3",
+            "defaultsetting" => "",
+            "display" => "Background Check URL",
+            "inputtype" => "textarea",
+        ],
+        [
+            "type" => "$type",
+            "pageid" => "$pageid",
+            "featureid" => "$featureid",
+            "setting_name" => "bgcheck_years",
+            "setting" => "5",
+            "extra" => false,
+            "defaultsetting" => "5",
+            "display" => "Background Check Expires (years)",
+            "inputtype" => "text",
+            "numeric" => true,
+            "validation" => "<=0",
+            "warning" => "Must be greater than 0.",
+        ],
+        [
+            "type" => "$type",
+            "pageid" => "$pageid",
+            "featureid" => "$featureid",
+            "setting_name" => "staffapp_expires",
+            "setting" => "1/1",
+            "extra" => false,
+            "defaultsetting" => "1/1",
+            "display" => "Staff Application Expires (day/month)",
+            "inputtype" => "text",
+        ],
+    ];
 
-    return $settings_array;
+    return $settings;
 }
 
-function facebook_share_button($eventid,$name,$keys=false) {
+function facebook_share_button($eventid, $name, $keys=false) {
 global $CFG;
     if (!empty($keys)) {
         require_once ($CFG->dirroot . '/features/events/facebook/facebook.php'); //'<path to facebook library, you uploaded>/facebook.php';
@@ -1908,7 +2092,7 @@ global $CFG;
         $event = get_db_row("SELECT * FROM events WHERE eventid = '$eventid'");
         $facebook = new Facebook($config);
         $login_url = $facebook->getLoginUrl( array( 'scope' => 'publish_stream',
-                           'redirect_uri' => $CFG->wwwroot . '/features/events/events_ajax.php?action=send_facebook_message&info='.base64_encode(serialize(array($eventid,$name,$keys))) ) );
+                           'redirect_uri' => $CFG->wwwroot . '/features/events/events_ajax.php?action=send_facebook_message&info='.base64_encode(serialize(array($eventid, $name, $keys))) ) );
         return '<a title="Tell your friends about '.$name.'\'s registration for '.$event["name"].'!" href="' . $login_url . '" target="_blank"><img src="'.$CFG->wwwroot.'/images/facebook_button.png" /></a>';
     }
 
@@ -1918,7 +2102,7 @@ function events_adminpanel($pageid) {
 global $CFG, $USER;
     $content = "";
     //Event Template Manager
-    $content .= user_has_ability_in_page($USER->userid,"manageeventtemplates",$pageid) ? make_modal_links(array("title"  => "Event Templates",
+    $content .= user_has_ability_in_page($USER->userid,"manageeventtemplates", $pageid) ? make_modal_links(array("title"  => "Event Templates",
                                                                                                      "text"   => "Event Templates",
                                                                                                      "path"   => $CFG->wwwroot . "/features/events/events.php?action=template_manager&amp;pageid=$pageid",
                                                                                                      "iframe" => "true",
@@ -1929,7 +2113,7 @@ global $CFG, $USER;
                                                                                                      "styles" => "padding:1px;display:block;"))
                                                                             : "";
     //Course Event Manager
-    $content .= user_has_ability_in_page($USER->userid,"manageevents",$pageid) ? make_modal_links(array("title"  => "Event Registrations",
+    $content .= user_has_ability_in_page($USER->userid,"manageevents", $pageid) ? make_modal_links(array("title"  => "Event Registrations",
                                                                                                      "text"   => "Event Registrations",
                                                                                                      "path"   => $CFG->wwwroot . "/features/events/events.php?action=event_manager&amp;pageid=$pageid",
                                                                                                      "iframe" => "true",
@@ -1940,7 +2124,7 @@ global $CFG, $USER;
                                                                                                      "styles" => "padding:1px;display:block;"))
                                                                             : "";
     //Application Manager
-    $content .= user_has_ability_in_page($USER->userid,"manageapplications",$pageid) ? make_modal_links(array("title"  => "Staff Applications",
+    $content .= user_has_ability_in_page($USER->userid,"manageapplications", $pageid) ? make_modal_links(array("title"  => "Staff Applications",
                                                                                                      "text"   => "Staff Applications",
                                                                                                      "path"   => $CFG->wwwroot . "/features/events/events.php?action=application_manager&amp;pageid=$pageid",
                                                                                                      "iframe" => "true",
@@ -1951,7 +2135,7 @@ global $CFG, $USER;
                                                                                                      "styles" => "padding:1px;display:block;"))
                                                                             : "";
     //Staff Notifications
-    $content .= user_has_ability_in_page($USER->userid,"manageapplications",$pageid) ? make_modal_links(array("title"  => "Staff Process Email",
+    $content .= user_has_ability_in_page($USER->userid,"manageapplications", $pageid) ? make_modal_links(array("title"  => "Staff Process Email",
                                                                                                      "text"   => "Staff Process Email",
                                                                                                      "path"   => $CFG->wwwroot . "/features/events/events.php?action=staff_emailer&amp;pageid=$pageid",
                                                                                                      "iframe" => "true",

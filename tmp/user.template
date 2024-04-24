@@ -219,7 +219,7 @@ change_profile_validation_template||
   );
 ||change_profile_validation_template
 
-forgot_password_template||
+forgot_password_form_template||
   <div id="forgot_password">
     Please type the email address that is associated with your user account.  A new temporary password will be sent to this address.  You will then be able to log into the website and change your password.
     <br />
@@ -240,7 +240,7 @@ forgot_password_template||
       </fieldset>
     </form>
   </div>
-||forgot_password_template
+||forgot_password_form_template
 
 forgot_password_validation_template||
   ajaxapi('/ajax/site_ajax.php',

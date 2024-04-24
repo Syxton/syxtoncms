@@ -124,11 +124,11 @@ if ($autofill) {
             <input type="hidden" name="campership" value="'.$campership.'" />';
             
 } else {
- echo ' <input type="hidden" id="event_day" value="'.date("j",$event["event_begin_date"]).'" />
-        <input type="hidden" id="event_month" value="'.date("n",$event["event_begin_date"]).'" />
-        <input type="hidden" id="event_year" value="'.date("Y",$event["event_begin_date"]).'" />
-        <input style="border:none;" type="hidden" name="HealthConsentFrom" id="HealthConsentFrom" value="'.date("m/d/Y",$event["event_begin_date"]).'" readonly />
-        <input style="border:none;" type="hidden" name="HealthConsentTo" id="HealthConsentTo" value="'.date("m/d/Y",$event["event_end_date"]).'" readonly />
+ echo ' <input type="hidden" id="event_day" value="'.date("j", $event["event_begin_date"]).'" />
+        <input type="hidden" id="event_month" value="'.date("n", $event["event_begin_date"]).'" />
+        <input type="hidden" id="event_year" value="'.date("Y", $event["event_begin_date"]).'" />
+        <input style="border:none;" type="hidden" name="HealthConsentFrom" id="HealthConsentFrom" value="'.date("m/d/Y", $event["event_begin_date"]).'" readonly />
+        <input style="border:none;" type="hidden" name="HealthConsentTo" id="HealthConsentTo" value="'.date("m/d/Y", $event["event_end_date"]).'" readonly />
 
         <style> .calendarDateInput{margin-right:5px !important;}.info{ width: 92%; } .rowContainer textarea { width:80%;max-width: 480px; margin-right: 20px; } .rowContainer select { margin-right: 20px; }</style>
             <input type="hidden" name="Camper_Name" />
@@ -415,7 +415,7 @@ if (empty($payment_method) || $payment_method == "Paypal") { // Don't show for c
     echo '
     <div class="rowContainer costinfo paywithapp">
         <label class="rowTitle" for="Camp_Fee">Pay With Application</label>
-        '.make_fee_options($event['fee_min'],$event['fee_full'],"payment_amount",'onchange="updateTotal();" onclick="updateTotal();"',$event['sale_end'],$event['sale_fee']).'
+        '.make_fee_options($event['fee_min'], $event['fee_full'],"payment_amount",'onchange="updateTotal();" onclick="updateTotal();"', $event['sale_end'], $event['sale_fee']).'
         <div class="tooltipContainer info">'.get_help("help_paywithapp:events:templates/camp_new").'</div>
         <div class="spacer" style="clear: both;"></div>
     </div>';

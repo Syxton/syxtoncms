@@ -36,7 +36,7 @@ $HELP->new_category = "Please type the name of the new forum category.";
 
 function get_help($help) {
 global $CFG, $HELP;
-    $lang = explode(":",$help);
+    $lang = explode(":", $help);
     $string = $lang[0];
     if (isset($lang[2])) {
         include($CFG->dirroot . '/features/'.$lang[1]."/".$lang[2]."/lang.php");

@@ -30,7 +30,7 @@ global $CFG, $MYVARS, $USER, $smarty;
 		
 	//split the search words and find out what they mean
 	$searchwords = trim($MYVARS->GET["search"]);
-	$searcharray = explode('/',$searchwords);
+	$searcharray = explode('/', $searchwords);
 	if ($searcharray[0] == "" && isset($searcharray[1])) {array_shift($searcharray);}
 	
 	foreach ($searcharray as $term) {
@@ -107,8 +107,8 @@ global $CFG, $MYVARS, $USER, $smarty;
 		foreach ($customsort as $sortby) {
 			$temp = explode(" ",trim($sortby));
 			foreach ($temp as $x) {
-				$x = strstr($x,"-") ? str_replace("-","",$x) . " DESC" : "$x";
-				$SORT .= $SORT == "" ? "$x" : ",$x";	
+				$x = strstr($x,"-") ? str_replace("-", "", $x) . " DESC" : "$x";
+				$SORT .= $SORT == "" ? "$x" : ", $x";	
 			}
 		}
 		
@@ -135,8 +135,8 @@ global $CFG, $MYVARS, $USER, $smarty;
 
 		if (!isset($MYVARS->GET["mailman"]) && !isset($MYVARS->GET["csv"])) { $SQL .= $LIMIT; }//Limit to one page of return.
 		$pages = get_db_result($SQL);
-		$prev = $pagenum > 0 ? '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;pagenum=' . ($pagenum - 1) . '&amp;search=\'+escape(\'' . $searchwords . '\'),function() { if (xmlHttp.readyState == 4) { simple_display(\'mem_resultsdiv\'); }},true);" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/arrow_left.gif" title="Previous Page" alt="Previous Page"></a>' : "";
-		$next = $firstonpage + $perpage < $total ? '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;pagenum=' . ($pagenum + 1) . '&amp;search=\'+escape(\'' . $searchwords . '\'),function() { if (xmlHttp.readyState == 4) { simple_display(\'mem_resultsdiv\'); }},true);" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/arrow_right.gif" title="Next Page" alt="Next Page"></a>' : "";
+		$prev = $pagenum > 0 ? '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;pagenum=' . ($pagenum - 1) . '&amp;search=\'+escape(\'' . $searchwords . '\'),function() { if (xmlHttp.readyState == 4) { simple_display(\'mem_resultsdiv\'); }}, true);" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/arrow_left.gif" title="Previous Page" alt="Previous Page"></a>' : "";
+		$next = $firstonpage + $perpage < $total ? '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;pagenum=' . ($pagenum + 1) . '&amp;search=\'+escape(\'' . $searchwords . '\'),function() { if (xmlHttp.readyState == 4) { simple_display(\'mem_resultsdiv\'); }}, true);" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/arrow_right.gif" title="Next Page" alt="Next Page"></a>' : "";
 
 		//echo $SQL;
 		$header = ""; $fileoutput = "";
@@ -200,12 +200,12 @@ global $CFG, $MYVARS, $USER, $smarty;
 			}
 
             $body .= "</table>";
-   	        $export = '<div style="font-size:.65em;padding:2px;"><a href="javascript: ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;csv=1&amp;search='.$searchwords.'\',function() { if (xmlHttp.readyState == 4) { run_this(); }},true);" >Export to CSV</a>&nbsp;&nbsp;<a href="javascript: ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;mailman=1&amp;search='.$searchwords.'\',function() { if (xmlHttp.readyState == 4) { run_this(); }},true);" >Export to Mailman</a></div>';
+   	        $export = '<div style="font-size:.65em;padding:2px;"><a href="javascript: ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;csv=1&amp;search='.$searchwords.'\',function() { if (xmlHttp.readyState == 4) { run_this(); }}, true);" >Export to CSV</a>&nbsp;&nbsp;<a href="javascript: ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;mailman=1&amp;search='.$searchwords.'\',function() { if (xmlHttp.readyState == 4) { run_this(); }}, true);" >Export to Mailman</a></div>';
 			
 	        if (!isset($MYVARS->GET["mailman"]) && !isset($MYVARS->GET["csv"])) { echo $header . $export . $body; 
             } else {
 		    	$filename = isset($MYVARS->GET["mailman"]) ? "users_export.txt" : "users_export.csv";
-                echo get_download_link($filename,$fileoutput);
+                echo get_download_link($filename, $fileoutput);
 			}
 		} else {
 	        echo $body . '<tr><td colspan="9" style="font-size:.8em;text-align:center;"><b>No matches found.</b></td></tr></table>';

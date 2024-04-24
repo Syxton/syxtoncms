@@ -17,10 +17,10 @@ callfunction();
 function edit_name() {
 global $MYVARS;
 	$rssname = dbescape($MYVARS->GET["rssname"]);
-	$rssid = $MYVARS->GET["rssid"];
-  $SQL = "UPDATE rss
-						 SET rssname = '$rssname'
-					 WHERE rssid = '$rssid'";
+	$rssid = dbescape($MYVARS->GET["rssid"]);
+	$SQL = "UPDATE rss
+			   SET rssname = '$rssname'
+			 WHERE rssid = '$rssid'";
 
 	if (execute_db_sql($SQL)) {
 		echo "Saved";
@@ -29,20 +29,24 @@ global $MYVARS;
 
 function add_feed() {
 global $CFG, $MYVARS, $USER;
-	$pageid = $MYVARS->GET["pageid"];
-	$type = $MYVARS->GET["type"];
-	$featureid = $MYVARS->GET["featureid"];
-	$userkey = $MYVARS->GET["key"];
+	$pageid = dbescape($MYVARS->GET["pageid"]);
+	$type = dbescape($MYVARS->GET["type"]);
+	$featureid = dbescape($MYVARS->GET["featureid"]);
 	$rssname = dbescape($MYVARS->GET["rssname"]);
 
 	$SQL = "INSERT INTO rss (userid,rssname)
-							 VALUES ('$USER->userid', '$rssname')";
+				 VALUES ('$USER->userid', '$rssname')";
 	if ($rssid = execute_db_sql($SQL)) {
 		$SQL = "INSERT INTO rss_feeds (rssid, type, featureid, pageid)
-								 VALUES ('$rssid', '$type', '$featureid', '$pageid')";
+					 VALUES ('$rssid', '$type', '$featureid', '$pageid')";
 		if (execute_db_sql($SQL)) {
-			echo template_use("tmp/rss_ajax.template", array("wwwroot" => $CFG->wwwroot, "rssid" => $rssid, "userkey" => $userkey), "add_feed_template");
+			$p = [ "wwwroot" => $CFG->wwwroot,
+				   "rssid" => $rssid,
+				   "userkey" => $MYVARS->GET["key"],
+			];
+			echo template_use("tmp/rss_ajax.template", $p, "add_feed_template");
 		}
 	}
 }
+
 ?>

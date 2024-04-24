@@ -240,7 +240,7 @@ function upgrade_check() {
   if (!get_db_row("SELECT * FROM pages WHERE pageid=1")) {
     //INITIALIZE
     execute_db_sql("INSERT INTO pages (pageid,name,short_name,description,default_role,menu_page,opendoorpolicy,siteviewable,keywords) VALUES(1,'Home','home','home','4','0','1','1','home')");
-    execute_db_sql("INSERT INTO users (userid,fname,lname,email,password,first_activity,last_activity,ip,temp,alternate,userkey,joined) VALUES(1,'Admin','User','admin@admin.com','" . md5("admin") . "','0','0','','','','" . (md5("admin@admin.com") . md5(time())) . "','" . get_timestamp() . "')");
+    execute_db_sql("INSERT INTO users (userid,fname,lname,email,password,first_activity,last_activity,ip,temp,alternate,userkey,joined) VALUES(1,'Admin','User','admin@admin.com','" . md5("admin") . "','0','0', '', '', '','" . (md5("admin@admin.com") . md5(time())) . "','" . get_timestamp() . "')");
     execute_db_sql("INSERT INTO roles_assignment (assignmentid,userid,roleid,pageid,confirm) VALUES(1,1,1,1,0)");
   }
 
@@ -881,15 +881,11 @@ global $CFG, $USER, $ROLES, $PAGE;
       }
     }
   }
-  return json_encode(array("false", $CFG->SITEID, get_error_message("page_not_created")));
+  return json_encode(["false", $CFG->SITEID, get_error_message("page_not_created")]);
 }
 
 function delete_page($pageid) {
-  // implement delete_all feature function
-  // $SQL = "SELECT * FROM features WHERE pageid='$pageid'";
-  // all_features_function($SQL, false, "", "_delete_all", false, $pageid);
-
-  $SQL = template_use("dbsql/pages.sql", array("pageid" => $pageid), "delete_page");
+  $SQL = template_use("dbsql/pages.sql", ["pageid" => $pageid], "delete_page");
   execute_db_sqls($SQL);
 }
 
@@ -917,7 +913,7 @@ global $USER;
   return false;
 }
 
-function get_page_contents($pageid = false, $area) {
+function get_page_contents($pageid = false, $area = "middle") {
 global $CFG, $PAGE;
   $returnme = '';
 
@@ -989,7 +985,7 @@ global $PAGE;
   if (get_db_row("SELECT * FROM features WHERE feature='$featuretype' AND multiples_allowed='1'")) {
     $featureid = all_features_function(false, $featuretype, "insert_blank_", "", false, $pageid);
   } else {
-    echo "INSERT INTO pages_features (pageid, feature, sort, area, featureid) VALUES('$pageid','$featuretype','$sort','$default_area','')";
+    echo "INSERT INTO pages_features (pageid, feature, sort, area, featureid) VALUES('$pageid','$featuretype','$sort','$default_area', '')";
     $featureid = execute_db_sql("INSERT INTO pages_features (pageid, feature, sort, area) VALUES('$pageid','$featuretype','$sort','$default_area')");
     execute_db_sql("UPDATE pages_features SET featureid='$featureid' WHERE id='$featureid'");
   }
@@ -1052,14 +1048,14 @@ global $CFG, $USER;
 
       //Remove feature button
       if (user_has_ability_in_page($USER->userid, "removefeatures", $pageid, $featuretype, $featureid)) {
-        $returnme .= ' <a title="Delete" class="slide_menu_button" href="javascript: if (confirm(\'Are you sure you want to delete this?\')) { ajaxapi(\'/ajax/site_ajax.php\',\'delete_feature\',\'&amp;pageid=' . $pageid . '&amp;featuretype=' . $featuretype . '&amp;sectionid=&amp;featureid=' . $featureid . '\',function() { update_login_contents(' . $pageid . ');});}"><img src="' . $CFG->wwwroot . '/images/delete.png" alt="Delete Feature" /></a> ';
+        $returnme .= ' <a title="Delete" class="slide_menu_button" href="javascript: if (confirm(\'Are you sure you want to delete this?\')) { ajaxapi(\'/ajax/site_ajax.php\',\'delete_feature\',\'&amp;pageid=' . $pageid . '&amp;featuretype=' . $featuretype . '&amp;featureid=' . $featureid . '\',function() { update_login_contents(' . $pageid . ');});}"><img src="' . $CFG->wwwroot . '/images/delete.png" alt="Delete Feature" /></a> ';
       }
     }
   }
   return $returnme;
 }
 
-function get_button_layout($featuretype, $featureid = "", $pageid) {
+function get_button_layout($featuretype, $featureid = "", $pageid = 0) {
 global $CFG, $PAGE;
   $returnme = "";
   if ($featuretype == 'pagename' || $featuretype == 'pagelist') {
@@ -1093,14 +1089,30 @@ global $CFG, $PAGE;
   return $returnme;
 }
 
-function get_search_page_variables($total, $perpage, $pagenum) {
-  $array['firstonpage'] = $perpage * $pagenum;
-  $array['count']       = $total > (($pagenum + 1) * $perpage) ? $perpage : $total - (($pagenum) * $perpage);
-  $array['amountshown'] = $array['firstonpage'] + $perpage < $total ? $array['firstonpage'] + $perpage : $total;
-  $array['prev']        = $pagenum > 0 ? true : false;
-  $array['info']        = 'Viewing ' . ($array['firstonpage'] + 1) . " through " . $array['amountshown'] . " out of $total";
-  $array['next']        = $array['firstonpage'] + $perpage < $total ? true : false;
-  return $array;
+/**
+ * Returns a set of variables for a search page
+ * @param int $total Total number of search results
+ * @param int $perpage Number of results to display on each page
+ * @param int $pagenum Current page number
+ * @return array An array of variables for the search page
+ */
+function get_search_page_variables(int $total, int $perpage, int $pagenum) {
+  $firstonpage = $perpage * $pagenum; // First result on this page
+
+  $vars = [ // Variables for the "Viewing x through y out of z" message
+    "first" => $firstonpage + 1,
+    "last" => $firstonpage + $perpage < $total ? $firstonpage + $perpage : $total,
+    "total" => $total,
+  ];
+
+  return [
+    "firstonpage" => $firstonpage, // First result on this page
+    "count"       => $total > (($pagenum + 1) * $perpage) ? $perpage : $total - $firstonpage, // Number of results on this page
+    "amountshown" => $vars["last"], // Last result on this page
+    "prev"        => $pagenum > 0 ? true : false, // Whether there is a previous page
+    "info"        => fill_string('Viewing {first} through {last} out of {total}', $vars), // Viewing x through y out of z message
+    "next"        => $firstonpage + $perpage < $total ? true : false, // Whether there is a next page
+  ];
 }
 
 function make_search_box($contents = "", $name_addition = "") {
@@ -1109,18 +1121,60 @@ global $CFG;
   return template_use("tmp/pagelib.template", $params, "make_search_box_template");
 }
 
-function format_popup($content = "", $title = "", $height = "calc(100% - 60px)", $padding = "15px") {
-  $params = array("padding" => $padding, "height" => $height, "title" => $title, "content" => $content);
+/**
+ * Formats the content in a popup window
+ *
+ * @param string $content The content to put in the popup
+ * @param string $title The title for the popup
+ * @param string $height The height of the popup (defaults to "calc(100% - 60px)")
+ * @param string $padding The padding of the popup (defaults to "15px")
+ * @return string The HTML for the popup
+ */
+function format_popup(string $content = "", string $title = "", string $height = "", string $padding = "15px") {
+  $params = [
+    "padding" => $padding,
+    "height" => $height,
+    "title" => $title,
+    "content" => $content,
+  ];
   return template_use("tmp/pagelib.template", $params, "format_popup_template");
 }
 
+/**
+ * Include a hidden iframe to keep the session alive
+ *
+ * @return string The HTML for the hidden iframe
+ */
 function keepalive() {
-global $CFG;
-  $params = array("wwwroot" => $CFG->wwwroot);
-  return template_use("tmp/pagelib.template", $params, "keepalive_template");
+    global $CFG;
+
+    // Parameters for the template
+    $params = ["wwwroot" => $CFG->wwwroot];
+
+    return template_use("tmp/pagelib.template", $params, "keepalive_template");
 }
 
 function donothing() {
   echo "";
 }
+
+/**
+ * Replaces placeholders in a string with the given values.
+ *
+ * @param string $string The string with placeholders.
+ * @param array $vars The key-value pairs used for replacement.
+ * @return string The modified string.
+ */
+function fill_string(string $string, array $vars) {
+  /* Iterate over the given key-value pairs and replace their
+     placeholders in the given string. */
+  foreach ($vars as $key => $value) {
+    /* Replace the placeholder "{key}" with the value. */
+    $string = str_replace("{" . $key . "}", $value, $string);
+  }
+
+  /* Return the modified string. */
+  return $string;
+}
+
 ?>

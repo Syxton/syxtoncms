@@ -3,6 +3,16 @@ simple||
   This is a ||variable||
 ||simple
 
+simple2||
+  <br />
+  This is complex: ||variable[0]||, ||variable[1]||, ||variable[2]||
+||simple2
+
+simple3||
+  <br />
+  This is complex: ||variables->one||, ||variables->two||, ||variables->three||
+||simple3
+
 code1||
 <br />
   CODE1:
@@ -26,3 +36,9 @@ code4||
   CODE4:
   ||echo min(variables->one, variables->two, variables->three);::variables||
 ||code4
+
+optional||
+  <br />
+  Optional variables: ||*variable1||||*variabl2||||*variable3||
+  
+||optional

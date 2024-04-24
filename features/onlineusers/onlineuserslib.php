@@ -24,7 +24,7 @@ global $CFG, $USER, $ROLES;
 	if (is_logged_in()) {
 		if (user_has_ability_in_page($USER->userid, "seeusers", $pageid)) {
     		$content .= '<div id="onlineusersfeature">'.get_onlineusers($pageid, $featureid, $settings). '</div>';
-			$buttons = get_button_layout($feature,$featureid,$pageid); 
+			$buttons = get_button_layout($feature, $featureid, $pageid); 
 		}
 	} else {
 		if (role_has_ability_in_page($ROLES->visitor, "seeusers", $pageid)) {
@@ -100,23 +100,81 @@ global $CFG, $USER;
 	return $returnme;
 }
 
-function onlineusers_delete($pageid,$featureid,$sectionid) {
-	execute_db_sql("DELETE FROM pages_features WHERE feature='onlineusers' AND pageid='$pageid' AND featureid='$featureid'");
-	execute_db_sql("DELETE FROM settings WHERE type='onlineusers' AND pageid='$pageid' AND featureid='$featureid'");
+function onlineusers_delete($pageid, $featureid) {
+	$params = [
+		"pageid" => $pageid,
+		"featureid" => $featureid,
+		"feature" => "onlineusers",
+	];
+
+	$SQL = template_use("dbsql/features.sql", $params, "delete_feature");
+	execute_db_sql($SQL);
+	$SQL = template_use("dbsql/features.sql", $params, "delete_feature_settings");
+	execute_db_sql($SQL);
+
 	resort_page_features($pageid);
 }
 
-function onlineusers_buttons($pageid,$featuretype,$featureid) {
-global $CFG,$USER;
+function onlineusers_buttons($pageid, $featuretype, $featureid) {
+global $CFG, $USER;
 	$returnme = "";
     return $returnme;
 }
 
-function onlineusers_default_settings($feature,$pageid,$featureid) {
-	$settings_array[] = array(false,"$feature","$pageid","$featureid","feature_title","Online Users",false,"Online Users","Feature Title","text");
-	$settings_array[] = array(false,"$feature","$pageid","$featureid","viewable_limit","25",false,"25","Viewable Limit","text",true,"<=0","Must be greater than 0.");
-	$settings_array[] = array(false,"$feature","$pageid","$featureid","minutes_online","30",false,"30","Show last active (min)","text",true,"<=0","Must be greater than 0.");
-	$settings_array[] = array(false,"$feature","$pageid","$featureid","show_total","1",false,"1","Show Total","yes/no");
-	return $settings_array;
+function onlineusers_default_settings($type, $pageid, $featureid) {
+	$settings = [
+		[
+			"type" => "$type",
+			"pageid" => "$pageid",
+			"featureid" => "$featureid",
+			"setting_name" => "feature_title",
+			"setting" => "Online Users",
+			"extra" => false,
+			"defaultsetting" => "Online Users",
+			"display" => "Feature Title",
+			"inputtype" => "text",
+		],
+		[
+			"type" => "$type",
+			"pageid" => "$pageid",
+			"featureid" => "$featureid",
+			"setting_name" => "viewable_limit",
+			"setting" => "25",
+			"extra" => false,
+			"defaultsetting" => "25",
+			"display" => "Viewable Limit",
+			"inputtype" => "text",
+			"numeric" => true,
+			"validation" => "<=0",
+			"warning" => "Must be greater than 0.",
+		],
+		[
+			"type" => "$type",
+			"pageid" => "$pageid",
+			"featureid" => "$featureid",
+			"setting_name" => "minutes_online",
+			"setting" => "30",
+			"extra" => false,
+			"defaultsetting" => "30",
+			"display" => "Show last active (min)",
+			"inputtype" => "text",
+			"numeric" => true,
+			"validation" => "<=0",
+			"warning" => "Must be greater than 0.",
+		],
+		[
+			"type" => "$type",
+			"pageid" => "$pageid",
+			"featureid" => "$featureid",
+			"setting_name" => "show_total",
+			"setting" => "1",
+			"extra" => false,
+			"defaultsetting" => "1",
+			"display" => "Show Total",
+			"inputtype" => "yes/no",
+		],
+	];
+
+	return $settings;
 }
 ?>

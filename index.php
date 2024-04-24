@@ -56,7 +56,7 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
     upgrade_check();
 
     if (is_logged_in()) {
-        $params = array("timeout" => 14599); // Javascript that checks for valid login every x seconds.
+        $params = ["timeout" => 14599]; // Javascript that checks for valid login every x seconds.
         echo template_use("tmp/index.template", $params, "valid_login_check");
 
         $ABILITIES = get_user_abilities($USER->userid, $PAGE->id);
@@ -75,10 +75,11 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
     }
 
     // Main Layout
-    $params = array("mainmast" => page_masthead(true),
-                    "sidemast" => page_masthead(false),
-                    "sidecontents" => get_page_contents($PAGE->id, 'side'),
-                    "middlecontents" => get_page_contents($PAGE->id, 'middle'));
+    $params = [ "mainmast" => page_masthead(true),
+                "sidemast" => page_masthead(false),
+                "sidecontents" => get_page_contents($PAGE->id, 'side'),
+                "middlecontents" => get_page_contents($PAGE->id, 'middle'),
+    ];
 
     echo template_use("tmp/index.template", $params, "mainlayout_template");
 

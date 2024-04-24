@@ -64,49 +64,56 @@ global $conn;
   return $returns;
 }
 
-function authenticate($username, $password) {
-global $CFG, $USER;
-	$time = get_timestamp();
+/**
+ * Authenticate a user by username and password.
+ * 
+ * @param string $username The username of the user to authenticate.
+ * @param string $password The password of the user to authenticate.
+ * @return \array|false The user object if authentication is successful, false otherwise.
+ */
+function authenticate(string $username, string $password) {
+  global $CFG, $USER;
+  $time = get_timestamp();
   $params = array("username" => $username, "password" => $password);
   $SQL = template_use("dbsql/db.sql", $params, "authenticate"); // Authenticate
-	if (!$user = get_db_row($SQL)) { // COULD NOT AUTHENTICATE
+  if (!$user = get_db_row($SQL)) { // COULD NOT AUTHENTICATE
     $SQL = template_use("dbsql/db.sql", $params, "authenticate_alt");
-		if ($user = get_db_row($SQL)) { // Attempt authentication on alternate password field
+    if ($user = get_db_row($SQL)) { // Attempt authentication on alternate password field
       $_SESSION['userid'] = $user['userid'];
       $params = array("userid" => $user['userid'], "time" => $time, "ip" => $_SERVER['REMOTE_ADDR'], "isfirst" => false, "clear_alt" => false);
       $SQL = template_use("dbsql/db.sql", $params, "update_last_activity");
-			execute_db_sql($SQL);
-			return $user; // Password reset authentication successful
-		}
+      execute_db_sql($SQL);
+      return $user; // Password reset authentication successful
+    }
 
-		log_entry("user", $username, "Failed Login"); // Log
-		return false; // Password authentication failed
-	} else { // Regular authentication successful.
-		if (strlen($user['temp']) > 0) { // on first ever login, switch temp password for actual password
+    log_entry("user", $username, "Failed Login"); // Log
+    return false; // Password authentication failed
+  } else { // Regular authentication successful.
+    if (strlen($user['temp']) > 0) { // on first ever login, switch temp password for actual password
       $SQL = template_use("dbsql/db.sql", array("user" => $user), "activate_account");
-			execute_db_sql($SQL);
+      execute_db_sql($SQL);
 
       // Send account activated email.
       $FROMUSER = new \stdClass;
-  		$FROMUSER->fname = $CFG->sitename;
-  		$FROMUSER->lname = '';
-  		$FROMUSER->email = $CFG->siteemail;
+      $FROMUSER->fname = $CFG->sitename;
+      $FROMUSER->lname = '';
+      $FROMUSER->email = $CFG->siteemail;
       $params = array("user" => $user, "sitename" => $CFG->sitename, "siteowner" => $CFG->siteowner, "siteemail" => $CFG->siteemail);
       $message = template_use("tmp/page.template", $params, "account_activation_email");
       $subject = $CFG->sitename . ' Account Activation';
 
-      send_email($user, $FROMUSER, false, $subject, $message);
-      send_email($FROMUSER, $FROMUSER, false, $subject, $message);
-		}
+      send_email($user, $FROMUSER, $subject, $message);
+      send_email($FROMUSER, $FROMUSER, $subject, $message);
+    }
 
     $_SESSION['userid'] = $user['userid'];
     $params = array("userid" => $user['userid'], "time" => $time, "ip" => $_SERVER['REMOTE_ADDR'], "isfirst" => (!$user["first_activity"]), "clear_alt" => true);
     $SQL = template_use("dbsql/db.sql", $params, "update_last_activity");
     execute_db_sql($SQL);
 
-		log_entry("user", $user['userid'], "Login");
-		return $user;
-	}
+    log_entry("user", $user['userid'], "Login");
+    return $user;
+  }
 }
 
 function key_login($key) {

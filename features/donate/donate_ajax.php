@@ -17,13 +17,13 @@ callfunction();
 function select_campaign_form() {
 global $CFG, $MYVARS, $USER;
     $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']); 
-    echo select_campaign_forms($featureid,$pageid);  
+    echo select_campaign_forms($featureid, $pageid);  
 }
 
 function add_or_manage_form() {
 global $CFG, $MYVARS, $USER;
     $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']); 
-    echo add_or_manage_forms($featureid,$pageid);  
+    echo add_or_manage_forms($featureid, $pageid);  
 }
 
 function new_campaign_form() {
@@ -34,7 +34,7 @@ global $CFG, $MYVARS, $USER;
     
     $c = $campaign_id ? get_db_row("SELECT * FROM donate_campaign WHERE campaign_id='$campaign_id'") : false;
     $title = $campaign_id ? $c["title"] : "";
-    $goal = $campaign_id ? number_format($c["goal_amount"],2,".","") : "";
+    $goal = $campaign_id ? number_format($c["goal_amount"],2,".", "") : "";
     $description = $campaign_id ? $c["goal_description"] : "";
     $email = $campaign_id ? $c["paypal_email"] : "";
     $token = $campaign_id ? $c["token"] : "";
@@ -98,7 +98,7 @@ global $CFG, $MYVARS, $USER;
     			</fieldset>
     		</form>
     	</div>';
-    echo '<div id="donation_script" style="display:none">' . create_validation_script("campaign_form" , "ajaxapi('/features/donate/donate_ajax.php','add_new_campaign','&campaign_id=$campaign_id&featureid=$featureid&pageid=$pageid&email=' + escape($('#email').val()) + '&token=' + escape($('#token').val()) + '&title=' + escape($('#title').val()) + '&goal=' + escape($('#goal').val()) + '&description=' + escape($('#description').val()) + '&shared=' + escape($('#shared').val()),function() { var returned = trim(xmlHttp.responseText).split('**'); if (returned[0] == 'true') { $('#new_campaign_div').html(returned[1]);} else { $('#error_div').html(returned[1])}});",true) . "</div>";
+    echo '<div id="donation_script" style="display:none">' . create_validation_script("campaign_form" , "ajaxapi('/features/donate/donate_ajax.php','add_new_campaign','&campaign_id=$campaign_id&featureid=$featureid&pageid=$pageid&email=' + escape($('#email').val()) + '&token=' + escape($('#token').val()) + '&title=' + escape($('#title').val()) + '&goal=' + escape($('#goal').val()) + '&description=' + escape($('#description').val()) + '&shared=' + escape($('#shared').val()),function() { var returned = trim(xmlHttp.responseText).split('**'); if (returned[0] == 'true') { $('#new_campaign_div').html(returned[1]);} else { $('#error_div').html(returned[1])}});", true) . "</div>";
     echo format_popup($content,'Start a Donation Campaign',"380px");
 }
 
@@ -201,14 +201,14 @@ global $CFG, $MYVARS, $USER;
     			</fieldset>
     		</form>
     	</div>';
-    echo '<div id="donation_script" style="display:none">' . create_validation_script("donation_form" , "ajaxapi('/features/donate/donate_ajax.php','add_offline_donation','&featureid=$featureid&pageid=$pageid&amount=' + escape($('#amount').val()) + '&name=' + escape($('#name').val()),function() { var returned = trim(xmlHttp.responseText).split('**'); if (returned[0] == 'true') { $('#donation_display').html(returned[1]);} else { $('#error_div').html(returned[1])}});",true) . "</div>";
+    echo '<div id="donation_script" style="display:none">' . create_validation_script("donation_form" , "ajaxapi('/features/donate/donate_ajax.php','add_offline_donation','&featureid=$featureid&pageid=$pageid&amount=' + escape($('#amount').val()) + '&name=' + escape($('#name').val()),function() { var returned = trim(xmlHttp.responseText).split('**'); if (returned[0] == 'true') { $('#donation_display').html(returned[1]);} else { $('#error_div').html(returned[1])}});", true) . "</div>";
     echo format_popup($content,'Start a Donation Campaign',"380px");    
 }
 
 function add_offline_donation() {
 global $CFG, $MYVARS, $USER;
     $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']); 
-    $amount = dbescape(number_format($MYVARS->GET['amount'],2,".","")); $name = $MYVARS->GET['name'];
+    $amount = dbescape(number_format($MYVARS->GET['amount'],2,".", "")); $name = $MYVARS->GET['name'];
     
     $campaign = get_db_row("SELECT * FROM donate_campaign WHERE campaign_id IN (SELECT campaign_id FROM donate_instance WHERE donate_id='$featureid')");	
 	
@@ -216,7 +216,7 @@ global $CFG, $MYVARS, $USER;
     $SQL = "INSERT INTO donate_donations (campaign_id,name,paypal_TX,amount,timestamp) VALUES('".$campaign["campaign_id"]."','$name','Offline','$amount','".get_timestamp()."')";
     execute_db_sql($SQL);   
     
-    echo "true**".add_or_manage_forms($featureid,$pageid);
+    echo "true**".add_or_manage_forms($featureid, $pageid);
 }
 
 function manage_donations_form() {
@@ -244,8 +244,8 @@ global $CFG, $MYVARS, $USER;
                 <tr style="border:1px solid gainsboro;background-color: '.$bg.'">
                     <td>'.$type.'</td>
                     <td>'.$name.'</td>
-                    <td>$'.number_format($row["amount"],2,".","").'</td>
-                    <td>'.date('m/d/Y',$row["timestamp"]+get_offset()).'</td>
+                    <td>$'.number_format($row["amount"],2,".", "").'</td>
+                    <td>'.date('m/d/Y', $row["timestamp"]+get_offset()).'</td>
                     <td>'.$tx.'</td>
                     <td><a href="javascript: void(0);" onclick="'.$edit.'"><img src="'.$CFG->wwwroot.'/images/edit.png" /></a></td>
                     <td><a href="javascript: void(0);" onclick="'.$delete.'"><img src="'.$CFG->wwwroot.'/images/delete.png" /></a></td>
@@ -305,7 +305,7 @@ global $CFG, $MYVARS, $USER;
                     </div>
     
                     <div class="rowContainer">
-    					<label for="amount">Donation Amount $</label><input type="text" id="amount" name="amount" value="'.number_format($row["amount"],2,".","").'" data-rule-required="true" data-rule-number="true" data-rule-min="0.01" data-msg-required="'.get_error_message('donate_req_amount:donate').'" data-msg-min="'.get_error_message('donate_req_min:donate').'" /><div class="tooltipContainer info">'.get_help("donate_amount:donate").'</div><br />
+    					<label for="amount">Donation Amount $</label><input type="text" id="amount" name="amount" value="'.number_format($row["amount"],2,".", "").'" data-rule-required="true" data-rule-number="true" data-rule-min="0.01" data-msg-required="'.get_error_message('donate_req_amount:donate').'" data-msg-min="'.get_error_message('donate_req_min:donate').'" /><div class="tooltipContainer info">'.get_help("donate_amount:donate").'</div><br />
     	  			</div>
     				<div class="rowContainer">
     					<label for="name">Name</label><input type="text" id="name" name="name" value="'.$row["name"].'" /><div class="tooltipContainer info">'.get_help("donate_name:donate").'</div><br />
@@ -319,7 +319,7 @@ global $CFG, $MYVARS, $USER;
     			</fieldset>
     		</form>
     	</div>';
-    echo '<div id="donation_script" style="display:none">' . create_validation_script("donation_form" , "ajaxapi('/features/donate/donate_ajax.php','edit_donation_save','&donationid=$donationid&featureid=$featureid&pageid=$pageid&amount=' + escape($('#amount').val()) + '&name=' + escape($('#name').val()) + '&campaign_id=' + escape($('#campaign_id').val()) + '&paypal_TX=' + escape($('#paypal_TX').val()),function() { var returned = trim(xmlHttp.responseText).split('**'); if (returned[0] == 'true') { $('#donation_display').html(returned[1]);} else { $('#error_div').html(returned[1])}});",true) . "</div>";
+    echo '<div id="donation_script" style="display:none">' . create_validation_script("donation_form" , "ajaxapi('/features/donate/donate_ajax.php','edit_donation_save','&donationid=$donationid&featureid=$featureid&pageid=$pageid&amount=' + escape($('#amount').val()) + '&name=' + escape($('#name').val()) + '&campaign_id=' + escape($('#campaign_id').val()) + '&paypal_TX=' + escape($('#paypal_TX').val()),function() { var returned = trim(xmlHttp.responseText).split('**'); if (returned[0] == 'true') { $('#donation_display').html(returned[1]);} else { $('#error_div').html(returned[1])}});", true) . "</div>";
     echo format_popup($content,'Edit Donation',"380px");    
 }
 
@@ -327,7 +327,7 @@ function edit_donation_save() {
 global $CFG, $MYVARS, $USER;
     $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
     $donationid = dbescape($MYVARS->GET['donationid']);$name = $MYVARS->GET['name']; $campaign_id = dbescape($MYVARS->GET['campaign_id']); 
-    $paypal_TX = $MYVARS->GET['paypal_TX']; $amount = dbescape(number_format($MYVARS->GET['amount'],2,".",""));
+    $paypal_TX = $MYVARS->GET['paypal_TX']; $amount = dbescape(number_format($MYVARS->GET['amount'],2,".", ""));
     
     $name = $name == "" || strtolower($name) == "anonymous" ? "" : dbescape($name);
     $paypal_TX = $paypal_TX == "" || strtolower($paypal_TX) == "offline" ? "Offline" : dbescape($paypal_TX);

@@ -11,12 +11,12 @@ if (!isset($LIBHEADER)) if (file_exists('./lib/header.php')) { include('./lib/he
 $PARTICIPANTSLIB = true;
 //PARTICIPANTSLIB Config
 
-function display_participants($pageid,$area,$featureid) {
+function display_participants($pageid, $area, $featureid) {
 global $CFG, $USER, $ABILITIES;
     $feature = "participants";
-    if (!$settings = fetch_settings($feature,$featureid,$pageid)) {
-		make_or_update_settings_array(default_settings($feature,$pageid,$featureid));
-		$settings = fetch_settings($feature,$featureid,$pageid);
+    if (!$settings = fetch_settings($feature, $featureid, $pageid)) {
+		make_or_update_settings_array(default_settings($feature, $pageid, $featureid));
+		$settings = fetch_settings($feature, $featureid, $pageid);
 	}
 	
 	$title = $settings->$feature->$featureid->feature_title->setting;
@@ -24,28 +24,73 @@ global $CFG, $USER, $ABILITIES;
 	if (is_logged_in()) {
 		if (user_has_ability_in_page($USER->userid, 'viewparticipants', $pageid)) {
             $content = make_modal_links(array("title"=> stripslashes($title),"text"=> stripslashes($title),"path"=>$CFG->wwwroot."/features/participants/participants.php?action=view_participants&amp;pageid=$pageid&amp;featureid=$featureid","width"=>"400","image"=>$CFG->wwwroot."/images/user.png","styles"=>"vertical-align: top;")); 
-			$buttons = get_button_layout("participants",$featureid,$pageid); 
-			return get_css_box($title,$content,$buttons,NULL,"participants",$featureid);
+			$buttons = get_button_layout("participants", $featureid, $pageid); 
+			return get_css_box($title, $content, $buttons,NULL,"participants", $featureid);
 		}
 	}
 }
 
-function participants_delete($pageid,$featureid,$sectionid) {
-	execute_db_sql("DELETE FROM pages_features WHERE feature='participants' AND pageid='$pageid' AND featureid='$featureid'");
+function participants_delete($pageid, $featureid) {
+	$params = [
+		"pageid" => $pageid,
+		"featureid" => $featureid,
+		"feature" => "participants",
+	];
+
+	$SQL = template_use("dbsql/features.sql", $params, "delete_feature");
+	execute_db_sql($SQL);
+	$SQL = template_use("dbsql/features.sql", $params, "delete_feature_settings");
+	execute_db_sql($SQL);
+
 	resort_page_features($pageid);
 }
 
-function participants_buttons($pageid,$featuretype,$featureid) {
-global $CFG,$USER;
+function participants_buttons($pageid, $featuretype, $featureid) {
+global $CFG, $USER;
 	$returnme = "";
     return $returnme;
 }
 
-function participants_default_settings($feature,$pageid,$featureid) {
-	$settings_array[] = array(false,"$feature","$pageid","$featureid","feature_title","Participants",false,"Participants","Feature Title","text");
-	$settings_array[] = array(false,"$feature","$pageid","$featureid","viewable_limit","25",false,"25","Viewable Limit","text",true,"<=0","Must be greater than 0.");
-//	$settings_array[] = array(false,"$feature","$pageid","$featureid","sorty_by","30",false,"30","Sort By","text",true,"<=0","Must be greater than 0.");
-	$settings_array[] = array(false,"$feature","$pageid","$featureid","show_total","1",false,"1","Show Total","yes/no");
-	return $settings_array;
+function participants_default_settings($type, $pageid, $featureid) {
+	$settings = [
+		[
+			"type" => "$type",
+			"pageid" => "$pageid",
+			"featureid" => "$featureid",
+			"setting_name" => "feature_title",
+			"setting" => "Participants",
+			"extra" => false,
+			"defaultsetting" => "Participants",
+			"display" => "Feature Title",
+			"inputtype" => "text",
+		],
+		[
+			"type" => "$type",
+			"pageid" => "$pageid",
+			"featureid" => "$featureid",
+			"setting_name" => "viewable_limit",
+			"setting" => "25",
+			"extra" => false,
+			"defaultsetting" => "25",
+			"display" => "Viewable Limit",
+			"inputtype" => "text",
+			"numeric" => true,
+			"validation" => "<=0",
+			"warning" => "Must be greater than 0.",
+		],
+		[
+			"type" => "$type",
+			"pageid" => "$pageid",
+			"featureid" => "$featureid",
+			"setting_name" => "show_total",
+			"setting" => "1",
+			"extra" => false,
+			"defaultsetting" => "1",
+			"display" => "Show Total",
+			"inputtype" => "yes/no",
+		],
+	];
+
+	return $settings;
 }
 ?>

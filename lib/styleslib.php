@@ -11,23 +11,27 @@ if (!isset($LIBHEADER)) { include('header.php'); }
 $STYLESLIB = true;
 $STYLES = new \stdClass;
 
-function get_styles($pageid, $themeid=false, $feature='', $featureid='') {
-global $CFG,$MYVARS;
+function get_styles($pageid, $themeid = false, $feature = '', $featureid = '') {
+global $CFG, $MYVARS;
 	// THEME RULES
 	// Default styles are given pageid = 0
 	// Global styles are given forced = 1
 	// Feature type specific styles are given featureid = 0
 	$revised_pageid = $pageid == $CFG->SITEID ? 0 : $pageid;
-	$params = array("pageid" => $revised_pageid, "themeid" => $themeid, "feature" => $feature, "featureid" => $featureid);
+	$params = [	"pageid" => $revised_pageid,
+				"themeid" => $themeid,
+				"feature" => $feature,
+				"featureid" => $featureid,
+	];
 
 	if ($themeid === "0") { // CUSTOM THEME
 		// Hasn't saved custom colors yet return defaults;
 		if (!get_db_field("id", "styles", "pageid = '$revised_pageid'")) {
 			$feature = "page";
 			if ($default_list = get_custom_styles($revised_pageid, $feature)) {
-        foreach ($default_list as $style) {
-  				$temparray[$style[1]] = isset($MYVARS->GET[$style[1]]) ? dbescape($MYVARS->GET[$style[1]]) : false;
-  			}
+				foreach ($default_list as $style) {
+					$temparray[$style[1]] = isset($MYVARS->GET[$style[1]]) ? dbescape($MYVARS->GET[$style[1]]) : false;
+				}
 			}
 			return $temparray;
 		}
@@ -40,11 +44,11 @@ global $CFG,$MYVARS;
 	}
 
 	if ($result = get_db_result($SQL)) {
-    $styles = false;
+    $styles = [];
 		while ($row = fetch_row($result)) {
 			$styles[$row["attribute"]] = $row["value"];
 		}
-		return $styles;
+		return empty($styles) ? false : $styles;
 	}
     return false;
 }
@@ -210,7 +214,7 @@ function make_or_update_styles($id=false, $feature=false, $pageid=false, $featur
 
 function make_or_update_styles_array($array) {
 	foreach ($array as $style) {
-		if (!make_or_update_styles($style[0],$style[1],$style[2],$style[3],$style[4],$style[5],$style[6],$style[7])) {
+		if (!make_or_update_styles($style[0], $style[1], $style[2], $style[3], $style[4], $style[5], $style[6], $style[7])) {
 			return false;
 		}
 	}

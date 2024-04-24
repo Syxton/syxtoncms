@@ -13,7 +13,7 @@ reset_password_passfail_template||
         </span>
 ||reset_password_passfail_template
 
-change_profile_template||
+change_profile_success_template||
   <br />
   <br />
   <span class="centered_span">
@@ -27,7 +27,7 @@ change_profile_template||
       }}notused||
     }}success||
   </span>
-||change_profile_template
+||change_profile_success_template
 
 forgot_password_email_template||
   <p>
@@ -99,7 +99,7 @@ forgot_password_email_template||
   </p>
 ||forgot_password_email_template
 
-forgot_password_template||
+forgot_password_submitted_template||
   ||admin{{
       ||success{{
         <img src="||wwwroot||/images/reset_disabled.png" />
@@ -123,7 +123,7 @@ forgot_password_template||
       </span>
       <br />
   }}admin||
-||forgot_password_template
+||forgot_password_submitted_template
 
 delete_user_template||
   ||yourself{{

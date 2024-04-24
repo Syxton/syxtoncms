@@ -1,6 +1,6 @@
 main_js_css||
   ||echo js_code_wrap('var dirfromroot = "' . directory . '";');::directory||
-  ||echo js_code_wrap(template_use("tmp/pagelib.template", array(), "defer_script"));::none||
+  ||echo js_code_wrap(template_use("tmp/pagelib.template", [], "defer_script"));::none||
   ||echo get_js_set("main");::none||
   ||echo get_css_tags(array("main"));::none||
 ||main_js_css
@@ -105,7 +105,7 @@ get_css_box_template1||
           ||content||
         </span>
     </div>
-    ||buttons||
+    ||*buttons||
 </div>
 ||get_css_box_template1
 
@@ -115,7 +115,7 @@ get_css_box_template2||
         <div class="box_title"  style="line-height:23px;color:||titlefontcolor||;">
             ||title||
         </div>
-        ||buttons||
+        ||*buttons||
     </div>
     <div class="box_content ||class||" style="border: 2px solid ||bordercolor||;border-top: none;background-color:||contentbgcolor||;||padding||">
       ||content||
@@ -170,7 +170,7 @@ get_login_form_template||
 get_button_layout_template||
 <div id="slide_menu" class="slide_menu_invisible slide_menu" style="border-top:1px solid ||bordercolor||;border-bottom:1px solid ||bordercolor||;">
   <div id="||featuretype||_||featureid||_buttons" style="padding:0;">
-    ||buttons||
+    ||*buttons||
   </div>
 </div>
 <div class="slide_menu slide_menu_tab" style="background-color:||titlefontcolor||;color:||titlebgcolor||;border-left:1px solid ||bordercolor||;border-top:1px solid ||bordercolor||;border-bottom:1px solid ||bordercolor||;" onclick="$(this).prev('#slide_menu').animate({width: 'toggle'}, function() { $(this).toggleClass('slide_menu_visible'); });">

@@ -10,7 +10,7 @@
 if (!isset($LIBHEADER)) include('header.php');
 $COMLIB = true;
 
-function send_email($touser, $fromuser, $cc = false, $subject, $message, $bcc = false) {
+function send_email($touser, $fromuser, $subject, $message, $cc = false, $bcc = false) {
  global $MYVARS, $CFG;
   $touser = is_array($touser) ? (object)$touser : $touser;
   $fromuser = is_array($fromuser) ? (object)$fromuser : $fromuser;
@@ -34,7 +34,7 @@ function send_email($touser, $fromuser, $cc = false, $subject, $message, $bcc = 
       		$success = true;
     	}
 	} else {
-		if (@smtp($touser, $fromuser, $cc, $subject, $message, $bcc)) {
+		if (@smtp($touser, $fromuser, $subject, $message, $cc, $bcc)) {
 			$success = true;
 		}
 	}
@@ -42,13 +42,13 @@ function send_email($touser, $fromuser, $cc = false, $subject, $message, $bcc = 
 	return $success;
 }
 
-function send_multi_email($tolist,$fromuser,$cc = false,$subject, $message, $bcc = false) {
+function send_multi_email($tolist, $fromuser, $subject, $message, $cc = false, $bcc = false) {
     foreach ($tolist as $touser) {
-        send_email($touser, $fromuser, $cc, $subject, $message, $bcc);
+        send_email($touser, $fromuser, $subject, $message, $cc, $bcc);
     }
 }
 
-function smtp($touser, $fromuser, $cc = false, $subject, $message, $bcc = false) {
+function smtp($touser, $fromuser, $subject, $message, $cc = false, $bcc = false) {
 	global $CFG;
 	require_once($CFG->dirroot . "/scripts/PEAR/Mail.php");
 	$to = ucwords(strtolower($touser->fname) . ' ' . strtolower($touser->lname)) . ' <' . $touser->email . '>';

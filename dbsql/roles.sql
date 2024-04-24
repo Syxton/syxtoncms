@@ -467,6 +467,19 @@ print_abilities||
   ORDER BY section, ability
 ||print_abilities
 
+remove_role_override||
+  DELETE
+    FROM roles_ability
+   WHERE roleid = '||roleid||'
+     AND ability = '||ability||'
+||remove_role_override
+
+insert_role_override||
+  INSERT INTO roles_ability
+              (roleid, section, ability, allow)
+       VALUES ('||roleid||', '||section||', '||ability||', '||setting||')
+||insert_role_override
+
 get_page_role_override||
   SELECT *
     FROM roles_ability_perpage
@@ -474,6 +487,28 @@ get_page_role_override||
      AND roleid = '||roleid||'
      AND ability = '||ability||'
 ||get_page_role_override
+
+remove_page_role_override||
+  DELETE
+    FROM roles_ability_perpage
+   WHERE pageid = '||pageid||'
+     AND roleid = '||roleid||'
+     AND ability = '||ability||'
+||remove_page_role_override
+
+update_page_role_override||
+  UPDATE roles_ability_perpage
+     SET allow = '||setting||'
+   WHERE pageid = '||pageid||'
+     AND roleid = '||roleid||'
+     AND ability = '||ability||'
+||update_page_role_override
+
+insert_page_role_override||
+  INSERT INTO roles_ability_perpage
+              (pageid, roleid, ability, allow)
+       VALUES ('||pageid||', '||roleid||', '||ability||', '||setting||')
+||insert_page_role_override
 
 get_page_group_feature_override||
   SELECT *
@@ -510,3 +545,39 @@ get_page_user_override||
      AND userid = '||userid||'
      AND ability = '||ability||'
 ||get_page_user_override
+
+get_page_role_feature_override||
+  SELECT *
+    FROM roles_ability_perfeature
+   WHERE feature = '||feature||'
+     AND featureid = '||featureid||'
+     AND pageid = '||pageid||'
+     AND roleid = '||roleid||'
+     AND ability = '||ability||'
+||get_page_role_feature_override
+
+remove_page_role_feature_override||
+  DELETE
+    FROM roles_ability_perfeature
+   WHERE feature = '||feature||'
+     AND featureid = '||featureid||'
+     AND pageid = '||pageid||'
+     AND roleid = '||roleid||'
+     AND ability = '||ability||'
+||remove_roles_ability_perfeature
+
+update_page_role_feature_override||
+  UPDATE roles_ability_perfeature
+     SET allow = '||setting||'
+   WHERE feature = '||feature||'
+     AND featureid = '||featureid||'
+     AND pageid = '||pageid||'
+     AND roleid = '||roleid||'
+     AND ability = '||ability||'
+||update_page_role_feature_override
+
+insert_page_role_feature_override||
+  INSERT INTO roles_ability_perfeature 
+              (feature, featureid, pageid, roleid, ability, allow)
+       VALUES ('||feature||', '||featureid||', '||pageid||', '||roleid||', '||ability||', '||setting||')
+||insert_page_role_feature_override

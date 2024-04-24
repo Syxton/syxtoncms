@@ -9,8 +9,7 @@
 
 include ('../header.php');
 
-$params = array("dirroot" => $CFG->directory);
-echo template_use("tmp/page.template", $params, "page_js_css");
+echo template_use("tmp/page.template", ["dirroot" => $CFG->directory], "page_js_css");
 ?>
 
 <h3>Camper Lists</h3>

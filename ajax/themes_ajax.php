@@ -46,13 +46,13 @@ global $CFG, $MYVARS, $USER;
 		$default_list = get_custom_styles($pageid, $feature);
 		$i=0;
 		foreach ($default_list as $style) {
-			$styles[$i] = array(false, false, "$pageid", false, $style[1], dbescape($MYVARS->GET[$style[1]]), '0', '0');
+			$styles[$i] = [false, false, "$pageid", false, $style[1], dbescape($MYVARS->GET[$style[1]]), '0', '0'];
 			$i++;
 		}
 	} else {
 		$default_list = get_custom_styles($pageid, $feature, $featureid);
 		foreach ($default_list as $style) {
-			$styles[$i] = array(false, "$feature", "$pageid", $featureid, $style[1], dbescape($MYVARS->GET[$style[1]]), '0', '0');
+			$styles[$i] = [false, "$feature", "$pageid", $featureid, $style[1], dbescape($MYVARS->GET[$style[1]]), '0', '0'];
 			$i++;
 		}
 	}
@@ -106,23 +106,25 @@ global $CFG, $MYVARS, $USER;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
 
 	if ($feature == "page") {
-		$left = custom_styles_selector($pageid, $feature);
-
 		$pagename = get_db_field("name", "pages", "pageid = '$pageid'");
 		$rolename = get_db_field("display_name", "roles", "roleid = " . get_user_role($USER->userid, $pageid));
 
 		$params = [];
 		$params["pagelist"] = get_css_box($pagename, $rolename, false, NULL, 'pagename', NULL, '0', NULL, $pageid);
 		$params["block"] = get_css_box("Title", "Content", NULL, NULL, NULL, NULL, '0', NULL, $pageid);
-		$right = template_use("tmp/themes.template", $params, "theme_selector_right_template");
-
-		echo template_use("tmp/themes.template", array("left" => $left, "right" => $right), "make_template_selector_panes_template");
+		$p = [
+			"left" => custom_styles_selector($pageid, $feature),
+			"right" => template_use("tmp/themes.template", $params, "theme_selector_right_template"),
+		];
+		echo template_use("tmp/themes.template", $p, "make_template_selector_panes_template");
 	} else {
-    	include_once($CFG->dirroot . '/features/'.$feature.'/'.$feature.'lib.php');
+    	include_once($CFG->dirroot . '/features/' . $feature . '/' . $feature . 'lib.php');
     	$function = "display_$feature";
-			$left = custom_styles_selector($pageid, $feature, $featureid);
-			$right = $function($pageid, "side", $featureid);
-			echo template_use("tmp/themes.template", array("left" => $left, "right" => $right), "make_template_selector_panes_template");
+		$p = [
+			"left" => custom_styles_selector($pageid, $feature, $featureid),
+			"right" => $function($pageid, "side", $featureid),
+		];
+		echo template_use("tmp/themes.template", $p, "make_template_selector_panes_template");
 	}
 }
 
@@ -135,7 +137,7 @@ global $CFG, $MYVARS, $USER;
 	if ($themeid == "" && $pageid != $CFG->SITEID) {
 		execute_db_sql("DELETE FROM settings WHERE pageid='$pageid' AND setting_name='themeid'");
 	} else {
-		make_or_update_setting(false, 'page', $pageid , 0, "themeid", $themeid, false, false);
+		make_or_update_setting(false, ["feature" => "page", "pageid" => $pageid, "setting_name" => "themeid"], $themeid);
 	}
 
 	//Page has theme selected show themes

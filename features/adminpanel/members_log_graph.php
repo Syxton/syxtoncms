@@ -81,7 +81,7 @@ function get_user_data($userid, $year, $month) {
             $day++;
         }
         $day--; // Undo the last $day++ at the end of the loop
-        while ($day <= date('t',$date)) {
+        while ($day <= date('t', $date)) {
             $datastring .= ',["' . date('M jS', mktime(0, 0, 0, $month, $day, $year)) . '", 0]'; // Create a string of data with 0 hits
             $day++;
         }

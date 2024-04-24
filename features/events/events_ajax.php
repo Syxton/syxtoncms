@@ -16,7 +16,7 @@ callfunction();
 
 //See if the date given is open for a requested event
 function request_date_open() {
-global $CFG,$MYVARS,$USER;
+global $CFG, $MYVARS, $USER;
     $featureid = $MYVARS->GET["featureid"];
     $startdate = $MYVARS->GET["startdate"];
     if (isset($featureid)) {
@@ -25,9 +25,9 @@ global $CFG,$MYVARS,$USER;
         //Only site events need to be set to confirm=1
         $confirm = $pageid == $CFG->SITEID ? "confirmed=1 AND" : "pageid=$pageid AND";
 
-        if (!$settings = fetch_settings("events",$featureid,$pageid)) {
-    		make_or_update_settings_array(default_settings("events",$pageid,$featureid));
-    		$settings = fetch_settings("events",$featureid,$pageid);
+        if (!$settings = fetch_settings("events", $featureid, $pageid)) {
+    		make_or_update_settings_array(default_settings("events", $pageid, $featureid));
+    		$settings = fetch_settings("events", $featureid, $pageid);
     	}
 
         $locationid = $settings->events->$featureid->allowrequests->setting;
@@ -62,7 +62,7 @@ global $CFG,$MYVARS,$USER;
 }
 
 function event_request() {
-global $CFG,$MYVARS,$USER;
+global $CFG, $MYVARS, $USER;
     $featureid = dbescape($MYVARS->GET["featureid"]);
     $contact_name = dbescape($MYVARS->GET["name"]);
     $contact_email = dbescape($MYVARS->GET["email"]);
@@ -85,7 +85,7 @@ global $CFG,$MYVARS,$USER;
         //Requesting email setup
         $contact->email = $contact_email;
         if (strstr($contact_name, " ")) {
-            $name = explode(" ",$contact_name);
+            $name = explode(" ", $contact_name);
             $contact->fname = $name[0];
             $contact->lname = $name[1];
         } else {
@@ -102,7 +102,7 @@ global $CFG,$MYVARS,$USER;
                     $request_info";
 
         //Send email to the requester letting them know we received the request
-        send_email($contact, $from, false, $subject, $message);
+        send_email($contact, $from, $subject, $message);
 
         if (isset($featureid)) {
             //Get feature request settings
@@ -114,11 +114,9 @@ global $CFG,$MYVARS,$USER;
 
             $subject = $CFG->sitename . " Event Request";
 
-            //Get and send to email list
-            $emaillist = $settings->events->$featureid->emaillistconfirm->setting;
-            $emaillist = str_replace(array(","," ","\t","\r"), "\n", $emaillist);
-            $emaillist = str_replace("\n\n", "\n", $emaillist);
-            $emaillist = explode("\n", $emaillist);
+            // Get and send to email list
+            $emaillist = prepare_email_list($settings->events->$featureid->emaillistconfirm->setting);
+
             foreach ($emaillist as $emailuser) {
                 //Each message must has an md5'd email address so I know if a person has voted or not
                 $voteid = md5($emailuser);
@@ -135,7 +133,7 @@ global $CFG,$MYVARS,$USER;
                 $thisuser->email = $emailuser;
                 $thisuser->fname = "";
                 $thisuser->lname = "";
-                send_email($thisuser, $from, false, $subject, $message);
+                send_email($thisuser, $from, $subject, $message);
             }
         }
         echo '<div style="width:100%;text-align:center;">
@@ -153,23 +151,29 @@ global $CFG,$MYVARS,$USER;
     }
 }
 
+function prepare_email_list($emaillist) {
+    $replacechars = [",", " ", "\t", "\r"];
+    $emaillist = str_replace($replacechars, "\n", $emaillist);
+    $emaillist = str_replace("\n\n", "\n", $emaillist);
+    return explode("\n", $emaillist);
+}
+
 function valid_voter($pageid, $featureid, $voteid) {
     $validvote = false;
 
-    if (!$settings = fetch_settings("events",$featureid,$pageid)) {
+    if (!$settings = fetch_settings("events", $featureid, $pageid)) {
     	make_or_update_settings_array(default_settings("events", $pageid, $featureid));
     	$settings = fetch_settings("events", $featureid, $pageid);
     }
     $locationid = $settings->events->$featureid->allowrequests->setting;
 
     //Get email list to check and see if the voteid matches one
-    $emaillist = $settings->events->$featureid->emaillistconfirm->setting;
-    $emaillist = str_replace(array(","," ","\t","\r"), "\n", $emaillist);
-    $emaillist = str_replace("\n\n", "\n", $emaillist);
-    $emaillist = explode("\n", $emaillist);
+    $emaillist = prepare_email_list($settings->events->$featureid->emaillistconfirm->setting);
 
     foreach ($emaillist as $emailuser) {
-        if (md5($emailuser) == $voteid) { $validvote = true;}
+        if (md5($emailuser) == $voteid) {
+            $validvote = true;
+        }
     }
     return $validvote;
 }
@@ -184,7 +188,7 @@ global $CFG, $MYVARS;
     if ($featureid = get_db_field("featureid","events_requests","reqid=$reqid")) {
         //Get feature request settings
         $pageid = get_db_field("pageid","pages_features","feature='events' AND featureid=$featureid");
-        if (!$settings = fetch_settings("events",$featureid,$pageid)) {
+        if (!$settings = fetch_settings("events", $featureid, $pageid)) {
         	make_or_update_settings_array(default_settings("events", $pageid, $featureid));
         	$settings = fetch_settings("events", $featureid, $pageid);
         }
@@ -195,7 +199,7 @@ global $CFG, $MYVARS;
             $qtime = get_timestamp();
             $SQL = "INSERT INTO events_requests_questions
                         (reqid,question,answer,question_time,answer_time)
-                        VALUES('$reqid','$question','','$qtime','0')";
+                        VALUES('$reqid','$question', '','$qtime','0')";
             if ($qid = execute_db_sql($SQL)) { //Question is saved.  Now send it to everyone.
                 $subject = $CFG->sitename . " Event Request Question";
                 $message = '<strong>A question has been asked about the event ('.stripslashes($request["event_name"]).').</strong><br />
@@ -210,17 +214,13 @@ global $CFG, $MYVARS;
                 $from->fname = $CFG->sitename;
                 $from->lname = "";
 
-                $emaillist = $settings->events->$featureid->emaillistconfirm->setting;
-                $emaillist = str_replace(array(","," ","\t","\r"),"\n",$emaillist);
-                $emaillist = str_replace("\n\n","\n",$emaillist);
-                $emaillist = explode("\n",$emaillist);
-
+                $emaillist = prepare_email_list($settings->events->$featureid->emaillistconfirm->setting);
                 foreach ($emaillist as $emailuser) {
                     //Let everyone know the event has been questioned
                     $thisuser->email = $emailuser;
                     $thisuser->fname = "";
                     $thisuser->lname = "";
-                    send_email($thisuser,$from,false,$subject, $message);
+                    send_email($thisuser, $from, false, $subject, $message);
                 }
 
                 $message .= '<br /><br />
@@ -239,7 +239,7 @@ global $CFG, $MYVARS;
                 }
 
                 //Send email to the requester letting them know a question has been raised
-                send_email($contact,$from,false,$subject, $message);
+                send_email($contact, $from, $subject, $message);
 
                 echo request_question(true);
             } else {
@@ -283,17 +283,13 @@ global $CFG, $MYVARS;
             $from->fname = $CFG->sitename;
             $from->lname = "";
 
-            $emaillist = $settings->events->$featureid->emaillistconfirm->setting;
-            $emaillist = str_replace(array(","," ","\t","\r"),"\n",$emaillist);
-            $emaillist = str_replace("\n\n","\n",$emaillist);
-            $emaillist = explode("\n",$emaillist);
-
+            $emaillist = prepare_email_list($settings->events->$featureid->emaillistconfirm->setting);
             foreach ($emaillist as $emailuser) {
                 //Let everyone know the event has been questioned
                 $thisuser->email = $emailuser;
                 $thisuser->fname = "";
                 $thisuser->lname = "";
-                send_email($thisuser, $from, false, $subject, $message);
+                send_email($thisuser, $from, $subject, $message);
             }
             echo request_answer(true);
         } else {
@@ -336,9 +332,9 @@ global $CFG, $MYVARS;
             if (!$refresh) {
                echo '<html><head><title>Event Request Question Page</title>';
                echo js_code_wrap('var dirfromroot = "' . $CFG->directory . '";');
-               echo get_js_tags(array("siteajax"));
+               echo get_js_tags(["siteajax"]);
                echo get_editor_javascript();
-               echo get_css_tags(array("main"));
+               echo get_css_tags(["main"]);
                echo '</head><body><div id="question_form">';
             }
             echo '<h2>Questions Regarding Event Request</h2>'.get_request_info($reqid);
@@ -410,9 +406,9 @@ global $CFG, $MYVARS;
         if (!$refresh) {
             echo '<html><head><title>Event Request Question Page</title>';
             echo js_code_wrap('var dirfromroot = "' . $CFG->directory . '";');
-            echo get_js_tags(array("siteajax"));
+            echo get_js_tags(["siteajax"]);
             echo get_editor_javascript();
-            echo get_css_tags(array("main"));
+            echo get_js_tags(["main"]);
             echo '</head><body><div id="answer_form">';
          }
 
@@ -482,71 +478,74 @@ global $CFG, $MYVARS;
 function request_vote() {
 global $CFG, $MYVARS;
     $reqid = $MYVARS->GET["reqid"];
-    $approve = $MYVARS->GET["approve"];
+    $newvote = $MYVARS->GET["approve"];
     $voteid = $MYVARS->GET["voteid"];
 
-    $stance = $approve == "1" ? "approve" : "deny";
+    $stance = $newvote == "1" ? "approve" : "deny";
     echo "<html><title>Event Request has been voted on.</title><body>";
     //Make sure request exists and get the featureid
     if ($featureid = get_db_field("featureid","events_requests","reqid=$reqid")) {
         //Get feature request settings
         $pageid = get_db_field("pageid","pages_features","feature='events' AND featureid=$featureid");
 
-        if (!$settings = fetch_settings("events",$featureid,$pageid)) {
-        	make_or_update_settings_array(default_settings("events",$pageid,$featureid));
-        	$settings = fetch_settings("events",$featureid,$pageid);
+        if (!$settings = fetch_settings("events", $featureid, $pageid)) {
+        	make_or_update_settings_array(default_settings("events", $pageid, $featureid));
+        	$settings = fetch_settings("events", $featureid, $pageid);
         }
         $locationid = $settings->events->$featureid->allowrequests->setting;
 
-        if (valid_voter($pageid,$featureid,$voteid)) {
+        if (valid_voter($pageid, $featureid, $voteid)) {
             //See if the person has already voted
             if ($row = get_db_row("SELECT * FROM events_requests
                                     WHERE reqid='$reqid'
                                         AND voted LIKE '%:$voteid;%'")) { //Person has already voted
-                $voted = explode("::",$row["voted"]);
+                $voted = explode("::", $row["voted"]);
                 foreach ($voted as $vote) {
-                    $vote = trim($vote,":");
-                    $entry = explode(";",$vote);
+                    $vote = trim($vote, ":");
+                    $entry = explode(";", $vote);
                     if ($entry[0] == $voteid) { //This is the vote that needs removed
-                        if ($entry[1] == $approve) { //Same vote, nothing else needs done
+                        if ($entry[1] == $newvote) { //Same vote, nothing else needs done
                             echo "You have already voted to $stance this event.";
                         } else { //They have changed their vote.
                             //Remove old vote
-                            execute_db_sql("UPDATE events_requests
-                                                SET voted = replace(voted, ':$voteid;$entry[1]:', ':$voteid;$approve:')
-                                                WHERE reqid=$reqid;");
+                            $p = [
+                                "reqid" => $reqid,
+                                "voteid" => $voteid,
+                                "newvote" => $newvote,
+                                "oldvote" => $entry[1],
+                            ];
 
-                            if ($approve == "1") { //Remove 1 from against and add 1 to for
-                                execute_db_sql("UPDATE events_requests
-                                                    SET votes_against = (votes_against - 1), votes_for = (votes_for + 1)
-                                                    WHERE reqid=$reqid;");
-                            } else { //Remove 1 from for and add 1 to against
-                                execute_db_sql("UPDATE events_requests
-                                                    SET votes_for = (votes_for - 1),votes_against = (votes_against + 1)
-                                                    WHERE reqid=$reqid;");
+                            // Update vote record.
+                            execute_db_sql(template_use("dbsql/events.sql", $p, "events_requests_change_vote", "events"));
+
+                            if ($newvote == "1") { // Remove 1 from against and add 1 to for
+                                execute_db_sql(template_use("dbsql/events.sql", ["reqid" => $reqid, "approve" => true], "events_requests_recalculate", "events"));
+                            } else { //Remove 1 from for and add 1 to against    
+                                execute_db_sql(template_use("dbsql/events.sql", ["reqid" => $reqid, "approve" => false], "events_requests_recalculate", "events"));
                             }
                             echo "You have changed your vote to $stance.";
                         }
                     }
                 }
             } else { //New vote
-                execute_db_sql("UPDATE events_requests
-                                    SET voted = CONCAT(voted,':$voteid;$approve:')
-                                    WHERE reqid=$reqid;");
-                if ($approve == "1") { //Remove 1 from against and add 1 to for
-                    execute_db_sql("UPDATE events_requests
-                                        SET votes_for = (votes_for + 1)
-                                        WHERE reqid=$reqid;");
-                } else { //Remove 1 from for and add 1 to against
-                    execute_db_sql("UPDATE events_requests
-                                        SET votes_against = (votes_against + 1)
-                                        WHERE reqid=$reqid;");
+                // Update vote record.
+                $p = [
+                    "reqid" => $reqid,
+                    "voteid" => $voteid,
+                    "newvote" => $newvote,
+                ];
+                execute_db_sql(template_use("dbsql/events.sql", $p, "events_requests_new_vote", "events"));
+
+                if ($newvote == "1") { // Add 1 to the for column
+                    execute_db_sql(template_use("dbsql/events.sql", ["reqid" => $reqid, "approve" => true], "events_requests_calculate", "events"));
+                } else { // Add 1 to the against column
+                    execute_db_sql(template_use("dbsql/events.sql", ["reqid" => $reqid, "approve" => false], "events_requests_calculate", "events"));
                 }
                 echo "You have voted to $stance this event.";
             }
 
             //See if the voting on this request is finished
-            if ($request = get_db_row("SELECT * FROM events_requests WHERE reqid='$reqid'")) {
+            if ($request = get_db_row(template_use("dbsql/events.sql", ["reqid" => $reqid], "get_events_requests", "events"))) {
                 $from = new \stdClass;
                 $from->email = $CFG->siteemail;
                 $from->fname = $CFG->sitename;
@@ -579,37 +578,33 @@ global $CFG, $MYVARS;
                     $request_info;
 
                     //Send email to the requester letting them know we denied the request
-                    send_email($contact,$from,false,$subject, $message);
+                    send_email($contact, $from, $subject, $message);
 
-                    $emaillist = $settings->events->$featureid->emaillistconfirm->setting;
-                    $emaillist = str_replace(array(","," ","\t","\r"),"\n",$emaillist);
-                    $emaillist = str_replace("\n\n","\n",$emaillist);
-                    $emaillist = explode("\n",$emaillist);
+                    $emaillist = prepare_email_list($settings->events->$featureid->emaillistconfirm->setting);
                     foreach ($emaillist as $emailuser) {
                         //Let everyone know the event has been denied
                         $thisuser->email = $emailuser;
                         $thisuser->fname = "";
                         $thisuser->lname = "";
-                        send_email($thisuser,$from,false,$subject, $message);
+                        send_email($thisuser, $from, $subject, $message);
                     }
 
                     //Make event
                     $MYVARS->GET["pageid"] = $pageid;
                     $MYVARS->GET["featureid"] = $featureid;
-                    $eventid = convert_to_event($request,$locationid);
+                    $eventid = convert_to_event($request, $locationid);
 
                     //Confirm event
                     $siteviewable = $pageid == $CFG->SITEID ? "1" : "0"; //if feature is on site, then yes...otherwise no.
-                    confirm_event($pageid,$eventid,$siteviewable);
+                    confirm_event($pageid, $eventid, $siteviewable);
 
                     //Delete event request
-                    execute_db_sql("DELETE FROM events_requests
-                                        WHERE reqid=$reqid");
-                    execute_db_sql("DELETE FROM events_requests_questions
-                                        WHERE reqid=$reqid");
+                    execute_db_sql(template_use("dbsql/events.sql", ["reqid" => $reqid], "delete_events_requests", "events"));
+                    execute_db_sql(template_use("dbsql/events.sql", ["reqid" => $reqid], "delete_events_requests_questions", "events"));
 
-                }elseif ($request["votes_for"] < $settings->events->$featureid->requestapprovalvotes->setting &&
-                        $request["votes_against"] == $settings->events->$featureid->requestdenyvotes->setting) {
+                } elseif ($request["votes_for"] < $settings->events->$featureid->requestapprovalvotes->setting
+                          &&
+                          $request["votes_against"] == $settings->events->$featureid->requestdenyvotes->setting) {
                     //Event Denied
                     $subject = $CFG->sitename . " Event Request Denied";
                     $message = '<strong>The event ('.stripslashes($request["event_name"]).') has been denied by a vote of '.$request["votes_for"].' to '.$request["votes_against"].'.</strong>
@@ -617,26 +612,21 @@ global $CFG, $MYVARS;
                     $request_info;
 
                     //Send email to the requester letting them know we denied the request
-                    send_email($contact,$from,false,$subject, $message);
+                    send_email($contact, $from, $subject, $message);
 
-                    $emaillist = $settings->events->$featureid->emaillistconfirm->setting;
-                    $emaillist = str_replace(array(","," ","\t","\r"),"\n",$emaillist);
-                    $emaillist = str_replace("\n\n","\n",$emaillist);
-                    $emaillist = explode("\n",$emaillist);
+                    $emaillist = prepare_email_list($settings->events->$featureid->emaillistconfirm->setting);
                     foreach ($emaillist as $emailuser) {
                         //Let everyone know the event has been denied
                         $thisuser->email = $emailuser;
                         $thisuser->fname = "";
                         $thisuser->lname = "";
-                        send_email($thisuser,$from,false,$subject, $message);
+                        send_email($thisuser, $from, $subject, $message);
                     }
 
                     //Delete event request
-                    execute_db_sql("DELETE FROM events_requests
-                                        WHERE reqid=$reqid;");
-                    execute_db_sql("DELETE FROM events_requests_questions
-                                        WHERE reqid=$reqid");
-                }elseif ($request["votes_for"] > $settings->events->$featureid->requestapprovalvotes->setting) {
+                    execute_db_sql(template_use("dbsql/events.sql", ["reqid" => $reqid], "delete_events_requests", "events"));
+                    execute_db_sql(template_use("dbsql/events.sql", ["reqid" => $reqid], "delete_events_requests_questions", "events"));
+                } elseif ($request["votes_for"] > $settings->events->$featureid->requestapprovalvotes->setting) {
                     echo "Event has already been approved.  Thank you for voting.";
                 }
             }
@@ -648,8 +638,8 @@ global $CFG, $MYVARS;
     echo "</body></html>";
 }
 
-function convert_to_event($request,$location) {
-global $CFG,$MYVARS;
+function convert_to_event($request, $location) {
+global $CFG, $MYVARS;
     $pageid = $MYVARS->GET["pageid"];
 	$MYVARS->GET["event_name"] = $request["event_name"];
 	$MYVARS->GET["contact"] = $request["contact_name"];
@@ -664,8 +654,8 @@ global $CFG,$MYVARS;
 
 	$MYVARS->GET["multiday"] = $request["startdate"] == $request["enddate"] ? "0" : "1";
 
-    $MYVARS->GET["event_begin_date"] = date(DATE_RFC822,$request["startdate"]);
-    $MYVARS->GET["event_end_date"] = $MYVARS->GET["multiday"] == "1" ? date(DATE_RFC822,$request["enddate"]) : $MYVARS->GET["event_begin_date"];
+    $MYVARS->GET["event_begin_date"] = date(DATE_RFC822, $request["startdate"]);
+    $MYVARS->GET["event_end_date"] = $MYVARS->GET["multiday"] == "1" ? date(DATE_RFC822, $request["enddate"]) : $MYVARS->GET["event_begin_date"];
     $MYVARS->GET["allday"] = "1"; $MYVARS->GET["reg"] = "0"; $MYVARS->GET["fee"] = "0";
 
     return submit_new_event(true);
@@ -680,8 +670,8 @@ global $CFG;
         <strong>Contact Email:</strong> '.$request["contact_email"].'<br />
         <strong>Contact Phone:</strong> '.$request["contact_phone"].'<br />
         <strong>Estimated Participants:</strong> '.$request["participants"].'<br />
-        <strong>Start Date:</strong> '.date('l jS \of F Y',$request["startdate"]).'<br />
-        <strong>End Date:</strong> '.date('l jS \of F Y',$request["enddate"]).'<br />
+        <strong>Start Date:</strong> '.date('l jS \of F Y', $request["startdate"]).'<br />
+        <strong>End Date:</strong> '.date('l jS \of F Y', $request["enddate"]).'<br />
         <strong>Description:</strong> '.stripslashes($request["description"]).'<br />';
     }
 }
@@ -714,12 +704,12 @@ global $CFG, $MYVARS, $USER;
                 </a>';
 
 	if ($regid != "false") { //Print form for 1 registration
-		$printarea .= printable_registration($regid,$eventid,$template_id);
+		$printarea .= printable_registration($regid, $eventid, $template_id);
 	} else { //Batch print all registrations
-        if ($registrations = get_db_result(get_registration_sort_sql($eventid,$online_only))) {
+        if ($registrations = get_db_result(get_registration_sort_sql($eventid, $online_only))) {
 			while ($registration = fetch_row($registrations)) {
 				$printarea .= $printarea == '' ? '<p style="font-size:.95em;" class="print">' : '<p style="font-size:.95em;" class="pagestart print">';
-				$printarea .= printable_registration($registration["regid"],$eventid,$template_id);
+				$printarea .= printable_registration($registration["regid"], $eventid, $template_id);
 				$printarea .= "</p>";
 			}
 		}
@@ -735,7 +725,7 @@ global $CFG, $MYVARS, $USER;
 	echo $returnme;
 }
 
-function get_registration_sort_sql($eventid,$online_only=false) {
+function get_registration_sort_sql($eventid, $online_only=false) {
     if ($online_only) { $online_only = "AND e.manual = 0"; }
     $SQL = "SELECT e.*"; $orderby = "";
 
@@ -744,7 +734,7 @@ function get_registration_sort_sql($eventid,$online_only=false) {
                                 WHERE eventid='$eventid'");
 
    	if ($sort_info["folder"] == "none") { //form template
-        $sort_elements=explode(",",$sort_info["orderbyfield"]);$i=0;
+        $sort_elements=explode(",", $sort_info["orderbyfield"]);$i=0;
         while (isset($sort_elements[$i])) {
             $SQL .= ",(SELECT value FROM events_registrations_values
                             WHERE elementid='$sort_elements[$i]' AND regid=v.regid) as val$i";
@@ -755,9 +745,9 @@ function get_registration_sort_sql($eventid,$online_only=false) {
                     JOIN events_registrations_values as v ON (e.regid=v.regid)
                     WHERE e.eventid='$eventid' $online_only
                     GROUP BY regid
-                    ORDER BY val0 LIKE '%Reserved%' DESC,$orderby";
+                    ORDER BY val0 LIKE '%Reserved%' DESC, $orderby";
    	} else { //custom template
-        $sort_elements=explode(",",$sort_info["orderbyfield"]);$i=0;
+        $sort_elements=explode(",", $sort_info["orderbyfield"]);$i=0;
         while (isset($sort_elements[$i])) {
             $SQL .= ",(SELECT value FROM events_registrations_values
                             WHERE elementname='$sort_elements[$i]' AND regid=v.regid) as val$i";
@@ -768,7 +758,7 @@ function get_registration_sort_sql($eventid,$online_only=false) {
                     JOIN events_registrations_values as v ON (e.regid=v.regid)
                     WHERE e.eventid='$eventid' $online_only
                     GROUP BY regid
-                    ORDER BY val0 LIKE '%Reserved%' DESC,$orderby";
+                    ORDER BY val0 LIKE '%Reserved%' DESC, $orderby";
    	}
 
 return $SQL;
@@ -815,10 +805,10 @@ function printable_registration($regid, $eventid, $template_id) {
 			}
         }
     } else {
-        $template_forms = explode(";",$template["formlist"]);
+        $template_forms = explode(";", $template["formlist"]);
         $i=0;
         while (!empty($template_forms[$i])) {
-        	$form = explode(":",$template_forms[$i]);
+        	$form = explode(":", $template_forms[$i]);
         	$value = get_db_row("SELECT * FROM events_registrations_values
                                     WHERE regid='$regid'
                                         AND elementname='".$form[0]."'");
@@ -871,13 +861,16 @@ global $CFG, $MYVARS, $USER;
                             WHERE regid='$regid'");
     }
 
-	$SQL = "SELECT * FROM events_registrations_values
-                WHERE regid='$regid'
-                ORDER BY entryid";
+	$SQL = "SELECT *
+              FROM events_registrations_values
+             WHERE regid = '$regid'
+          ORDER BY entryid";
 	if ($entries = get_db_result($SQL)) {
 		$SQL2 = '';
 		while ($entry = fetch_row($entries)) {
-			$SQL2 .= $SQL2 == "" ? "('".$entry["entryid"]."','".addslashes(urldecode($MYVARS->GET[$entry["entryid"]]))."')" : ",('".$entry["entryid"]."','".addslashes(urldecode($MYVARS->GET[$entry["entryid"]]))."')";
+            if (isset($MYVARS->GET[$entry["entryid"]])) {
+                $SQL2 .= $SQL2 == "" ? "('" . $entry["entryid"] . "','" . dbescape($MYVARS->GET[$entry["entryid"]]) . "')" : ", ('" . $entry["entryid"] . "', '" . dbescape($MYVARS->GET[$entry["entryid"]]) . "')";
+            }
 		}
 
 		$SQL1 = "CREATE TEMPORARY TABLE temp_updates (
@@ -915,8 +908,8 @@ global $CFG, $MYVARS, $USER;
                 		$fromuser->fname = $CFG->sitename;
                 		$fromuser->lname = "";
                 		$message = registration_email($regid, $touser);
-                		if (send_email($touser, $fromuser, null, $CFG->sitename . " Registration", $message)) {
-                			send_email($fromuser, $fromuser, null, $CFG->sitename . " Registration", $message);
+                		if (send_email($touser, $fromuser, $CFG->sitename . " Registration", $message)) {
+                			send_email($fromuser, $fromuser, $CFG->sitename . " Registration", $message);
                 		}
                     }
                 } else {
@@ -979,7 +972,7 @@ global $CFG, $MYVARS, $USER;
                                   'lname' => "");
 
 		$message = registration_email($regid, $touser);
-		if (send_email($touser, $fromuser, null, $event["name"] . " Registration", $message)) {
+		if (send_email($touser, $fromuser, $event["name"] . " Registration", $message)) {
 		  echo $link . '<br /><br />
                         <div style="text-align:center">
                             Registration Email sent
@@ -1027,6 +1020,7 @@ global $CFG, $MYVARS, $USER;
 
     // Get all events beginning 3 months in the past, to a year in the future.
     $today = get_timestamp();
+    
     $events = get_db_result("SELECT eventid, (CONCAT(FROM_UNIXTIME(e.event_begin_date , '%Y'), ' ', e.name)) AS name
                                FROM events e
                               WHERE e.confirmed = 1
@@ -1034,41 +1028,46 @@ global $CFG, $MYVARS, $USER;
                                 AND e.start_reg > 0
                                 AND ((e.event_begin_date - $today) < 31560000 && (e.event_begin_date - $today) > -7776000)");
 
-    // Open copy form.
-    $copy_form_code = '
-    if ($(\'#copy_reg_to\').val() > 0) { 
-        document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
-        ajaxapi(\'/features/events/events_ajax.php\',
-                \'copy_registration\',
-                \'&amp;regid='.$regid.'\' + create_request_string(\'copy_form\'),
-                function() {
-                    if (xmlHttp.readyState == 4) {
-                        ajaxapi(\'/features/events/events_ajax.php\',
-                                \'show_registrations\',
-                                \'&amp;eventid=\'+$(\'#copy_reg_to\').val(),
-                                function() {
-                                    if (xmlHttp.readyState == 4) {
-                                        simple_display(\'searchcontainer\');
-                                        document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
-                                        init_event_menu();
+
+    // If there is only one event, then show the link to that event.
+    if ($events) {
+        // Open copy form.
+        $copy_form_code = '
+        if ($(\'#copy_reg_to\').val() > 0) { 
+            document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
+            ajaxapi(\'/features/events/events_ajax.php\',
+                    \'copy_registration\',
+                    \'&amp;regid='.$regid.'\' + create_request_string(\'copy_form\'),
+                    function() {
+                        if (xmlHttp.readyState == 4) {
+                            ajaxapi(\'/features/events/events_ajax.php\',
+                                    \'show_registrations\',
+                                    \'&amp;eventid=\'+$(\'#copy_reg_to\').val(),
+                                    function() {
+                                        if (xmlHttp.readyState == 4) {
+                                            simple_display(\'searchcontainer\');
+                                            document.getElementById(\'loading_overlay\').style.visibility=\'hidden\';
+                                            init_event_menu();
+                                        }
                                     }
-                                }
-                        );
-                    }
-                },
-                true
-        ); 
+                            );
+                        }
+                    },
+                    true
+            ); 
+        }
+        return false;';
+        $returnme .= '<h3>Copy Registration</h3>
+                    <form name="copy_form" onsubmit="'.$copy_form_code.'">';
+        $returnme .= '<table style="border-top: 1px solid grey;">';
+        $returnme .= '<tr><td style="width: 125px;">Copy To </td><td>' .
+                        make_select("copy_reg_to", $events, "eventid", "name", false, "", true, 1, "width: 420px", "", $eventid) .
+                    '</td></tr>
+                    <tr><td colspan="2" style="text-align: right"><input type="submit" value="Copy Registration" /><br /><br /></td></tr>';
+        
+        $returnme .= '</table></form>';
     }
-    return false;';
-    $returnme .= '<h3>Copy Registration</h3>
-                  <form name="copy_form" onsubmit="'.$copy_form_code.'">';
-    $returnme .= '<table style="border-top: 1px solid grey;">';
-    $returnme .= '<tr><td style="width: 125px;">Copy To </td><td>' .
-                    make_select("copy_reg_to", $events, "eventid", "name", false, "", true, 1, "width: 420px", "", $eventid) .
-                 '</td></tr>
-                  <tr><td colspan="2" style="text-align: right"><input type="submit" value="Copy Registration" /><br /><br /></td></tr>';
-    
-    $returnme .= '</table></form>';
+
 
     $edit_form_code = 'document.getElementById(\'loading_overlay\').style.visibility=\'visible\';
                        ajaxapi(\'/features/events/events_ajax.php\',
@@ -1104,10 +1103,15 @@ global $CFG, $MYVARS, $USER;
     $reg_status = !$reg_status ? "Pending" : "Completed";
     $returnme .= '<tr><td>Status </td><td>' . $reg_status . '</td></tr>';
 
-    db_goto_row($events); // reset pointer to use it again.
-    $returnme .= '<tr><td>Event </td><td>' .
-                    make_select("reg_eventid", $events, "eventid", "name", $eventid, "", false, 1, "width: 420px") .
-                 '</td></tr>';
+    if ($events) {
+        db_goto_row($events); // reset pointer to use it again.
+        $returnme .= '<tr><td>Event </td><td>' .
+                        make_select("reg_eventid", $events, "eventid", "name", $eventid, "", false, 1, "width: 420px") .
+                     '</td></tr>';
+    } else {
+        $returnme .= '<tr><td>Event </td><td><input id="reg_eventid" name="reg_eventid" type="hidden" value="' . $eventid . '" />' . $event["name"] . '</td></tr>';
+    }
+
     
     $event_reg = get_db_row("SELECT * FROM events_registrations WHERE regid='$regid'");
     $returnme .= '<tr><td>Email </td><td>' .
@@ -1145,13 +1149,37 @@ global $CFG, $MYVARS, $USER;
         }
     } else {
         $template_forms = explode(";", trim($template["formlist"], ';'));
-        $i=0;
+        $i = 0;
         while (isset($template_forms[$i])) {
-        	$form = explode(":",$template_forms[$i]);
-        	$value = get_db_row("SELECT * FROM events_registrations_values
-                                    WHERE regid='$regid'
-                                        AND elementname='".$form[0]."'");
-        	$returnme .= '<tr><td>'.$form[2].' </td><td><input id="'.$value["entryid"].'" name="'.$value["entryid"].'" type="text" size="45" value="'.stripslashes($value["value"]).'" /></td></tr>';
+        	$form = explode(":", $template_forms[$i]);
+
+        	$value = get_db_row("SELECT *
+                                   FROM events_registrations_values
+                                  WHERE regid = '$regid'
+                                    AND elementname = '" . $form[0] . "'");
+
+            $val = "";
+            $entryid = "";
+            if (!$value) { // No value so we create a blank.
+                $SQL = "INSERT INTO events_registrations_values
+                                    (regid, value, eventid, elementname)
+                             VALUES ('$regid', '', '$eventid', '" . $form[0] . "')";
+                $entryid = execute_db_sql($SQL);
+		    } else {
+                $val = stripslashes($value["value"]);
+                $entryid = $value["entryid"];
+            }
+
+            $formfield = '<input id="' . $entryid . '" name="' . $entryid . '" type="text" size="45" value="' . $val . '" />';
+
+            $returnme .= '<tr>
+                            <td>' . 
+                                $form[2] . '
+                            </td>
+                            <td>
+                                ' . $formfield . '
+                            </td>
+                        </tr>';
         	$i++;
 		}
     }
@@ -1177,7 +1205,7 @@ global $CFG, $MYVARS, $USER;
 		$SQL = "";$SQL2 = "";
 		if ($regid = execute_db_sql("INSERT INTO events_registrations
                                     (eventid,date,code,manual)
-                                    VALUES('$eventid','".get_timestamp()."','".uniqid("",true)."',1)")) {
+                                    VALUES('$eventid','".get_timestamp()."','".uniqid("", true)."',1)")) {
 			$SQL = "SELECT * FROM events_templates WHERE template_id='$template_id'";
 			$template = get_db_row($SQL);
 		    if ($template["folder"] == "none") {
@@ -1187,7 +1215,7 @@ global $CFG, $MYVARS, $USER;
 		        	while ($form_element = fetch_row($template_forms)) {
 		        		if ($form_element["type"] == "payment") {
 		    				$SQL2 .= $SQL2 == "" ? "" : ",";
-		        			$SQL2 .= "('$regid','".$form_element["elementid"]."','','$eventid','total_owed'),('$regid',".$form_element["elementid"].",'','$eventid','paid'),('$regid','".$form_element["elementid"]."','','$eventid','payment_method')";
+		        			$SQL2 .= "('$regid','".$form_element["elementid"]."', '','$eventid','total_owed'),('$regid',".$form_element["elementid"].", '','$eventid','paid'),('$regid','".$form_element["elementid"]."', '','$eventid','payment_method')";
 						} else {
 		        			$SQL2 .= $SQL2 == "" ? "" : ",";
 		        			$value = $form_element["nameforemail"] == 1 ? "Reserved" : "";
@@ -1581,7 +1609,7 @@ global $CFG, $MYVARS, $USER;
                             </a>
                         </td>
                         <td style="width:20%;padding:5px;font-size:.75em;">
-                            '.date("m/d/Y",$event["event_begin_date"]).' '.$export.'
+                            '.date("m/d/Y", $event["event_begin_date"]).' '.$export.'
                         </td>
                         <td style="text-align:right;padding:5px;">
                             <a href="mailto:'.$event["email"].'" />'.$event["contact"].'</a>
@@ -1708,7 +1736,7 @@ global $CFG, $MYVARS, $USER, $error;
                                   'lname' => "");
 
 		$message = registration_email($regid, $touser);
-		send_email($touser, $fromuser, null, $event["name"] . " Registration", $message);
+		send_email($touser, $fromuser, $event["name"] . " Registration", $message);
 
 		log_entry("events", dbescape($MYVARS->GET["eventid"]), "Registered for Event"); //Log
 	} else { //failed registration
@@ -1739,7 +1767,7 @@ global $CFG, $MYVARS;
 		while (isset($limits_array[$i])) {
 			if (!($limit_type == "hard_limits" && $limit_num == $i)) {
 				$limit = explode(":", $limits_array[$i]);
-                $displayname = get_template_field_displayname($template["template_id"],$limit[0]);
+                $displayname = get_template_field_displayname($template["template_id"], $limit[0]);
 				$returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <a href="javascript:void(0);" onclick="delete_limit(\'hard_limits\',\'' . ($i - $alter) . '\');">Delete</a><br />';
 				$hidden_variable1 .= $hidden_variable1 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
 			} else {  $alter++; }
@@ -1757,7 +1785,7 @@ global $CFG, $MYVARS;
 		while (isset($limits_array[$i])) {
 			if (!($limit_type == "soft_limits" && $limit_num == $i)) {
 				$limit = explode(":", $limits_array[$i]);
-                $displayname = get_template_field_displayname($template["template_id"],$limit[0]);
+                $displayname = get_template_field_displayname($template["template_id"], $limit[0]);
 				$returnme2 .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <a href="javascript:void(0);" onclick="delete_limit(\'soft_limits\',\'' . ($i - $alter) . '\');">Delete</a><br />';
 				$hidden_variable2 .= $hidden_variable2 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
 			} else { $alter++; }
@@ -1901,11 +1929,11 @@ global $CFG, $MYVARS, $USER;
 
 	$id = execute_db_sql("INSERT INTO events_locations
                             (location,address_1,address_2,zip,phone,userid,shared)
-                            VALUES('" . addslashes($name) . "','" . addslashes($add1) . "','" . addslashes($add2) . "',$zip,'$phone','," . $USER->userid . ",',$shared)");
+                            VALUES('" . addslashes($name) . "','" . addslashes($add1) . "','" . addslashes($add2) . "', $zip,'$phone','," . $USER->userid . ",', $shared)");
 
 	//Log
 	log_entry("events", $name, "Added Location");
-	echo get_my_locations($USER->userid,$id,$eventid);
+	echo get_my_locations($USER->userid, $id, $eventid);
 }
 
 function submit_new_event($request=false) {
@@ -1926,12 +1954,12 @@ global $CFG, $MYVARS;
 
     //strtotime php5 fixes
     if (isset($MYVARS->GET["event_begin_date"])) {
-        $ebd = explode(" ",$MYVARS->GET["event_begin_date"]);
+        $ebd = explode(" ", $MYVARS->GET["event_begin_date"]);
         $event_begin_date = strtotime("$ebd[0] $ebd[1] $ebd[2] $ebd[3] $ebd[4] $ebd[5]");
     } else { die("No Event Begin Date"); }
 
     if (isset($MYVARS->GET["event_end_date"])) {
-        $eed = explode(" ",$MYVARS->GET["event_end_date"]);
+        $eed = explode(" ", $MYVARS->GET["event_end_date"]);
         $event_end_date = $multiday == "1" ? strtotime("$eed[0] $eed[1] $eed[2] $eed[3] $eed[4] $eed[5]") : $event_begin_date;
     } else { $event_end_date = $event_begin_date; }
 
@@ -1948,10 +1976,10 @@ global $CFG, $MYVARS;
     //strtotime php5 fixes
     if (isset($MYVARS->GET["start_reg"])) {
         if (strstr($MYVARS->GET["start_reg"],"/")) {
-            $startr = explode("/",$MYVARS->GET["start_reg"]);
+            $startr = explode("/", $MYVARS->GET["start_reg"]);
             $start_reg = $reg == "1" && isset($MYVARS->GET["start_reg"]) ? strtotime("$startr[1]/$startr[2]/$startr[0]") : '0';
         } else {
-            $startr = explode(" ",$MYVARS->GET["start_reg"]);
+            $startr = explode(" ", $MYVARS->GET["start_reg"]);
             $start_reg = $reg == "1" && isset($MYVARS->GET["start_reg"]) ? strtotime("$startr[0] $startr[1] $startr[2] $startr[3] $startr[4] $startr[5]") : '0';
         }
 
@@ -1959,10 +1987,10 @@ global $CFG, $MYVARS;
 
     if (isset($MYVARS->GET["stop_reg"])) {
         if (strstr($MYVARS->GET["stop_reg"],"/")) {
-            $stopr = explode("/",$MYVARS->GET["stop_reg"]);
+            $stopr = explode("/", $MYVARS->GET["stop_reg"]);
             $stop_reg = $reg == "1" ? strtotime("$stopr[1]/$stopr[2]/$stopr[0]") : '0';
         } else {
-            $stopr = explode(" ",$MYVARS->GET["stop_reg"]);
+            $stopr = explode(" ", $MYVARS->GET["stop_reg"]);
             $stop_reg = $reg == "1" ? strtotime("$stopr[0] $stopr[1] $stopr[2] $stopr[3] $stopr[4] $stopr[5]") : '0';
         }
     } else { $stop_reg = '0'; }
@@ -1977,10 +2005,10 @@ global $CFG, $MYVARS;
 
     if (isset($MYVARS->GET["sale_end"])) {
         if (strstr($MYVARS->GET["sale_end"],"/")) {
-            $se = explode("/",$MYVARS->GET["sale_end"]);
+            $se = explode("/", $MYVARS->GET["sale_end"]);
             $sale_end = $sale_fee != '0' ? strtotime("$se[1]/$se[2]/$se[0]") : '0';
         } else {
-            $se = explode(" ",$MYVARS->GET["sale_end"]);
+            $se = explode(" ", $MYVARS->GET["sale_end"]);
             $sale_end = $sale_fee != '0' ? strtotime("$se[0] $se[1] $se[2] $se[3] $se[4] $se[5]") : '0';
         }
     } else { $sale_end = '0'; }
@@ -2017,7 +2045,7 @@ global $CFG, $MYVARS;
                     $settings = unserialize($settings);
                     foreach ($settings as $setting) { //save each setting with the default if no other is given
                         $current_setting = isset($MYVARS->GET[$setting['name']]) ? $MYVARS->GET[$setting['name']] : $setting['default'];
-                        execute_db_sql("INSERT INTO settings (type,pageid,featureid,setting_name,setting,extra,defaultsetting) VALUES('events_template',false,false,'".$setting['name']."','".$current_setting."','".$eventid."','".$setting['default']."')");
+                        execute_db_sql("INSERT INTO settings (type,pageid,featureid,setting_name,setting,extra,defaultsetting) VALUES('events_template', false, false,'".$setting['name']."','".$current_setting."','".$eventid."','".$setting['default']."')");
                     }
                 }
             }
@@ -2062,7 +2090,7 @@ global $CFG, $MYVARS;
                         $current_setting = isset($MYVARS->GET[$setting['name']]) ? $MYVARS->GET[$setting['name']] : $setting['default'];
                         execute_db_sql("INSERT INTO settings
                                             (type,pageid,featureid,setting_name,setting,extra,defaultsetting)
-                                            VALUES('events_template',false,false,'".$setting['name']."','".$current_setting."','".$MYVARS->GET['eventid']."','".$setting['default']."')");
+                                            VALUES('events_template', false, false,'".$setting['name']."','".$current_setting."','".$MYVARS->GET['eventid']."','".$setting['default']."')");
                     }
                 }
             }
@@ -2080,7 +2108,7 @@ global $CFG, $MYVARS;
 	}
 
 	if ($pageid == $CFG->SITEID && !empty($MYVARS->GET['eventid'])) {
-		confirm_event($pageid,$MYVARS->GET['eventid'],true);
+		confirm_event($pageid, $MYVARS->GET['eventid'], true);
 	}
 }
 
@@ -2133,7 +2161,7 @@ function copy_location() {
 global $USER, $CFG, $MYVARS;
 	$location = dbescape($MYVARS->GET["location"]);
 	execute_db_sql("UPDATE events_locations SET userid = CONCAT(userid,'" . $USER->userid . ",') WHERE id='$location'");
-	echo get_my_locations($USER->userid,$location,$MYVARS->GET["eventid"]);
+	echo get_my_locations($USER->userid, $location, $MYVARS->GET["eventid"]);
 }
 
 function get_location_details() {
@@ -2278,12 +2306,12 @@ global $MYVARS, $CFG, $USER;
 			$CSV .= $row . "\n";
 		}
 	}
-	echo get_download_link("export.csv",$CSV);
+	echo get_download_link("export.csv", $CSV);
 }
 
 function show_template_settings() {
 global $USER, $CFG, $MYVARS;
-    echo get_template_settings($MYVARS->GET["templateid"],$MYVARS->GET["eventid"]);
+    echo get_template_settings($MYVARS->GET["templateid"], $MYVARS->GET["eventid"]);
 }
 
 function send_facebook_message() {
@@ -2544,7 +2572,7 @@ global $CFG, $MYVARS, $USER;
 
                     // Send email to the requester letting them know we received the request.
                     if (!empty($sendemails)) {
-                        send_email($contact, $emailnotice, false, $subject, $m1.$m2.$m3);
+                        send_email($contact, $emailnotice, $subject, $m1.$m2.$m3);
                         $staffcomstatus[] = "$name($email) contacted.";
                     } else {
                         $staffcomstatus[] = "$name($email) <strong> Requires: " . implode(", ", array_column($status, 'tag')) . "</strong>";
@@ -2741,7 +2769,7 @@ global $CFG, $MYVARS, $USER;
 			$values->$i->year = $vals["year"];
 			$i++;
 		}
-        echo "<br />" . make_select_from_array("year",$values,"year","year",$year,"",'onchange="'.$applookup.'"',true) ."<br />";
+        echo "<br />" . make_select_from_array("year", $values,"year","year", $year, "",'onchange="'.$applookup.'"', true) ."<br />";
     }
 
     if ($row = get_db_row("SELECT * FROM events_staff_archive WHERE staffid='$staffid' AND year='$year'")) {
@@ -2815,7 +2843,7 @@ global $CFG, $MYVARS, $USER;
         } else {
             $SQL = "INSERT INTO events_staff
                         (userid,pageid,name,phone,dateofbirth,address,agerange,cocmember,congregation,priorwork,q1_1,q1_2,q1_3,q2_1,q2_2,q2_3,parentalconsent,parentalconsentsig,workerconsent,workerconsentsig,workerconsentdate,ref1name,ref1relationship,ref1phone,ref2name,ref2relationship,ref2phone,ref3name,ref3relationship,ref3phone,bgcheckpass,bgcheckpassdate)
-                        VALUES('$userid','$pageid','$name','$phone','$dateofbirth','$address','$agerange','$cocmember','$congregation','$priorwork','$q1_1','$q1_2','$q1_3','$q2_1','$q2_2','$q2_3','$parentalconsent','$parentalconsentsig','$workerconsent','$workerconsentsig','$workerconsentdate','$ref1name','$ref1relationship','$ref1phone','$ref2name','$ref2relationship','$ref2phone','$ref3name','$ref3relationship','$ref3phone','',0)";
+                        VALUES('$userid','$pageid','$name','$phone','$dateofbirth','$address','$agerange','$cocmember','$congregation','$priorwork','$q1_1','$q1_2','$q1_3','$q2_1','$q2_2','$q2_3','$parentalconsent','$parentalconsentsig','$workerconsent','$workerconsentsig','$workerconsentdate','$ref1name','$ref1relationship','$ref1phone','$ref2name','$ref2relationship','$ref2phone','$ref3name','$ref3relationship','$ref3phone', '',0)";
             $success = execute_db_sql($SQL);
             $subject = "Application Complete";
         }
@@ -2857,7 +2885,7 @@ global $CFG, $MYVARS, $USER;
             $message = "<strong>$name has applied to work</strong>";
 
             //Send email to the requester letting them know we received the request
-            send_email($emailnotice, $emailnotice, false, $subject, $message);
+            send_email($emailnotice, $emailnotice, $subject, $message);
 
             $backgroundchecklink = '';
             $featureid = "*";
@@ -2950,7 +2978,7 @@ global $MYVARS, $CFG, $USER;
             $CSV .= '"'.implode(" | " , array_column($status, 'full')).
                     '","'.$app["name"].
                     '","'.$email.
-                    '","'.date('m/d/Y',$app["dateofbirth"]).
+                    '","'.date('m/d/Y', $app["dateofbirth"]).
                     '","'.$app["phone"].
                     '","'.$app["address"].
                     '","'.$app["agerange"].
@@ -2967,7 +2995,7 @@ global $MYVARS, $CFG, $USER;
                     '","'.$app["parentalconsentsig"].
                     '","'.$app["workerconsent"].
                     '","'.$app["workerconsentsig"].
-                    '","'.date('m/d/Y',$app["workerconsentdate"]).
+                    '","'.date('m/d/Y', $app["workerconsentdate"]).
                     '","'.$app["ref1name"].
                     '","'.$app["ref1phone"].
                     '","'.$app["ref1relationship"].
@@ -2978,10 +3006,10 @@ global $MYVARS, $CFG, $USER;
                     '","'.$app["ref1phone"].
                     '","'.$app["ref3relationship"].
                     '","'.$app["bgcheckpass"].
-                    '","'.(!empty($app["bgcheckpassdate"]) ? date('m/d/Y',$app["bgcheckpassdate"]) : '').
+                    '","'.(!empty($app["bgcheckpassdate"]) ? date('m/d/Y', $app["bgcheckpassdate"]) : '').
                     '"' . "\n";
           }
     }
-	echo get_download_link("staffapps($year).csv",$CSV);
+	echo get_download_link("staffapps($year).csv", $CSV);
 }
 ?>

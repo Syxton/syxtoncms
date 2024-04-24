@@ -18,27 +18,27 @@ if (empty($_POST["aslib"])) {
 }
 
 function pics_settings() {
-global $CFG,$MYVARS,$USER;
+global $CFG, $MYVARS, $USER;
 	$featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
 	$feature = "pics";
 
 	//Default Settings	
-	$default_settings = default_settings($feature,$pageid,$featureid);
+	$default_settings = default_settings($feature, $pageid, $featureid);
 	$setting_names = get_setting_names($default_settings);
     
 	//Check if any settings exist for this feature
-	if ($settings = fetch_settings($feature,$featureid,$pageid)) {
-        echo make_settings_page($setting_names,$settings,$default_settings,$feature,$featureid,$pageid);
+	if ($settings = fetch_settings($feature, $featureid, $pageid)) {
+        echo make_settings_page($setting_names, $settings, $default_settings);
 	} else { //No Settings found...setup default settings
 		if (make_or_update_settings_array($default_settings)) { pics_settings(); }
 	}
 }	
 
 function add_pics() {
-global $CFG,$MYVARS,$USER;
+global $CFG, $MYVARS, $USER;
 	$featureid = $MYVARS->GET["featureid"];
 	$pageid = $MYVARS->GET["pageid"];
-	if (!user_has_ability_in_page($USER->userid,"addpics",$pageid)) { echo get_page_error_message("no_permission",array("addpics")); return; }
+	if (!user_has_ability_in_page($USER->userid,"addpics", $pageid)) { echo get_page_error_message("no_permission",array("addpics")); return; }
 	echo '
     <form id="pics_form" method="post" action="'.$CFG->wwwroot.'/features/pics/pics_ajax.php" enctype="multipart/form-data">
     <input type="hidden" id="filenames" name="filenames" />
@@ -91,16 +91,16 @@ global $CFG,$MYVARS,$USER;
 }
 
 function manage_pics() {
-global $CFG,$MYVARS,$USER;
+global $CFG, $MYVARS, $USER;
 	$featureid = $MYVARS->GET["featureid"];
 	$pageid = $MYVARS->GET["pageid"];
     
     echo '<div id="pics_manager">';
-    echo get_pics_manager($pageid,$featureid);
+    echo get_pics_manager($pageid, $featureid);
     echo '</div>';
 }
 
-function get_galleries($pageid,$featureid) {	
+function get_galleries($pageid, $featureid) {	
 	if ($results = get_db_result("SELECT picsid, gallery_title FROM pics WHERE pageid='$pageid' AND featureid='$featureid' GROUP BY gallery_title ORDER BY dateadded DESC")) {
 		$returnme = '<select id="galleries" width="205" style="width: 205">';
 		while ($row = fetch_row($results)) {

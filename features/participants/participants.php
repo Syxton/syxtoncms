@@ -16,20 +16,20 @@ if (empty($_POST["aslib"])) {
 }
 
 function view_participants() {
-global $MYVARS,$CFG,$USER;
+global $MYVARS, $CFG, $USER;
 	$pageid = $MYVARS->GET['pageid'];
     $featureid = $MYVARS->GET['featureid'];
     
     $feature = "participants";
-    if (!$settings = fetch_settings($feature,$featureid,$pageid)) {
-		make_or_update_settings_array(default_settings($feature,$pageid,$featureid));
-		$settings = fetch_settings($feature,$featureid,$pageid);
+    if (!$settings = fetch_settings($feature, $featureid, $pageid)) {
+		make_or_update_settings_array(default_settings($feature, $pageid, $featureid));
+		$settings = fetch_settings($feature, $featureid, $pageid);
 	}
 	
 	$limit = $settings->$feature->$featureid->viewable_limit->setting;
     $show_total = $settings->$feature->$featureid->show_total->setting;
     
-    if (!user_has_ability_in_page($USER->userid,"viewparticipants",$pageid)) { echo get_page_error_message("no_permission",array("viewparticipants")); return; }
+    if (!user_has_ability_in_page($USER->userid,"viewparticipants", $pageid)) { echo get_page_error_message("no_permission",array("viewparticipants")); return; }
 
     $SQL = "SELECT * FROM roles_assignment ra JOIN users u ON u.userid=ra.userid JOIN roles r ON r.roleid = ra.roleid WHERE ra.pageid='$pageid' AND ra.confirm=0 ORDER BY r.display_name,u.lname";
 	if ($results = get_db_result($SQL . " LIMIT $limit")) {
@@ -49,17 +49,17 @@ global $MYVARS,$CFG,$USER;
 }
 
 function participants_settings() {
-global $CFG,$MYVARS,$USER;
+global $CFG, $MYVARS, $USER;
 	$featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
 	$feature = "participants";
 
 	//Default Settings	
-	$default_settings = default_settings($feature,$pageid,$featureid);
+	$default_settings = default_settings($feature, $pageid, $featureid);
 	$setting_names = get_setting_names($default_settings);
     
 	//Check if any settings exist for this feature
-	if ($settings = fetch_settings($feature,$featureid,$pageid)) {
-        echo make_settings_page($setting_names,$settings,$default_settings,$feature,$featureid,$pageid);
+	if ($settings = fetch_settings($feature, $featureid, $pageid)) {
+        echo make_settings_page($setting_names, $settings, $default_settings);
 	} else { //No Settings found...setup default settings
 		if (make_or_update_settings_array($default_settings)) { participants_settings(); }
 	}

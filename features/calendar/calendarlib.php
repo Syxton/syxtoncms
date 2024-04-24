@@ -14,16 +14,16 @@ function display_calendar($pageid, $area, $featureid) {
 global $CFG, $USER, $ROLES;
     $content = '';
 
-	if (!$settings = fetch_settings("calendar",$featureid,$pageid)) {
-		make_or_update_settings_array(default_settings("calendar",$pageid,$featureid));
-		$settings = fetch_settings("calendar",$featureid,$pageid);
+	if (!$settings = fetch_settings("calendar", $featureid, $pageid)) {
+		make_or_update_settings_array(default_settings("calendar", $pageid, $featureid));
+		$settings = fetch_settings("calendar", $featureid, $pageid);
 	}
 
 	$title = $settings->calendar->$featureid->feature_title->setting;
 	
     if (user_has_ability_in_page($USER->userid, "viewcalendar", $pageid, "calendar", $featureid)) {
         if ($area == "middle") {
-            $content .= '<span id="calendarmarker"></span><div id="calendar_div" style="width:100%;z-index:2;">' . get_large_calendar($pageid,$USER->userid) . '</div><div id="day_info" style="display:none"></div>';
+            $content .= '<span id="calendarmarker"></span><div id="calendar_div" style="width:100%;z-index:2;">' . get_large_calendar($pageid, $USER->userid) . '</div><div id="day_info" style="display:none"></div>';
         } else {
             $content .= '<span id="calendarmarker"></span><div id="calendar_div" style="width:100%;z-index:2;">' . get_small_calendar($pageid, $USER->userid) . '</div><div id="day_info" style="display:none"></div>';
         }
@@ -98,7 +98,7 @@ function get_small_calendar($pageid, $userid = 0, $month = false, $year = false,
         $tm = date("U", mktime(0, 0, 0, $month, $list_day, $year)) - 86400; // Bir g�n �nce
         $tn = date("U", mktime(0, 0, 0, $month, $list_day, $year)); // O g�n ...
         $tp = date("U", mktime(0, 0, 0, $month, $list_day, $year)) + 86400; // Bir g�n sonra
-        $SQL = sprintf("SELECT * FROM `calendar_events` WHERE `date` > '%s' AND `date` < '%s' AND `day` = '%s' $whichevents ORDER BY day;",$tm, $tp, $list_day);
+        $SQL = sprintf("SELECT * FROM `calendar_events` WHERE `date` > '%s' AND `date` < '%s' AND `day` = '%s' $whichevents ORDER BY day;", $tm, $tp, $list_day);
         $count = get_db_count($SQL);
         if ($count) { //Event exists
             if ($result = get_db_result($SQL)) {
@@ -144,7 +144,7 @@ function get_small_calendar($pageid, $userid = 0, $month = false, $year = false,
     return $returnme;
 }
 
-function get_large_calendar($pageid, $userid = 0, $month = false, $year = false,$extra_row = false) {
+function get_large_calendar($pageid, $userid = 0, $month = false, $year = false, $extra_row = false) {
 global $CFG;
     $show_site_events = ($pageid == $CFG->SITEID) || get_db_field("setting","settings","type='calendar' AND pageid=$pageid AND setting_name='dont_show_site_events' AND setting='1'") ? true : false;
     date_default_timezone_set($CFG->timezone);
@@ -204,7 +204,7 @@ global $CFG;
         $tm = date("U", mktime(0, 0, 0, $month, $list_day, $year)) - 86400; // Bir g�n �nce
         $tn = date("U", mktime(0, 0, 0, $month, $list_day, $year)); // O g�n ...
         $tp = date("U", mktime(0, 0, 0, $month, $list_day, $year)) + 86400; // Bir g�n sonra
-        $SQL = sprintf("SELECT * FROM `calendar_events` WHERE `date` > '%s' AND `date` < '%s' AND `day` = '%s' $whichevents ORDER BY date;",$tm, $tp, $list_day);
+        $SQL = sprintf("SELECT * FROM `calendar_events` WHERE `date` > '%s' AND `date` < '%s' AND `day` = '%s' $whichevents ORDER BY date;", $tm, $tp, $list_day);
 
 		if ($count = get_db_count($SQL)) { //Event exists
             if ($result = get_db_result($SQL)) {
@@ -250,9 +250,17 @@ global $CFG;
     return $returnme;
 }
 
-function calendar_delete($pageid, $featureid, $sectionid) {
-    execute_db_sql("DELETE FROM pages_features WHERE feature='calendar' AND pageid='$pageid' AND featureid='$featureid'");
-    execute_db_sql("DELETE FROM settings WHERE type='calendar' AND pageid='$pageid' AND featureid='$featureid'");
+function calendar_delete($pageid, $featureid) {
+    $params = [
+		"pageid" => $pageid,
+		"featureid" => $featureid,
+		"feature" => "calendar",
+	];
+
+	$SQL = template_use("dbsql/features.sql", $params, "delete_feature");
+    execute_db_sql($SQL);
+    $SQL = template_use("dbsql/features.sql", $params, "delete_feature_settings");
+    execute_db_sql($SQL);
     
     resort_page_features($pageid);
 }
@@ -263,9 +271,32 @@ function calendar_buttons($pageid, $featuretype, $featureid) {
     return $returnme;
 }
 
-function calendar_default_settings($feature,$pageid,$featureid) {
-	$settings_array[] = array(false,"$feature","$pageid","$featureid","feature_title","Calendar",false,"Calendar","Feature Title","text");
-	$settings_array[] = array(false,"$feature","$pageid","$featureid","dont_show_site_events","0",false,"0","Show Global Events","yes/no");
-	return $settings_array;
+function calendar_default_settings($type, $pageid, $featureid) {
+    $settings = [
+        [
+            "type" => "$type",
+            "pageid" => "$pageid",
+            "featureid" => "$featureid",
+            "setting_name" => "feature_title",
+            "setting" => "Calendar",
+            "extra" => false,
+            "defaultsetting" => "Calendar",
+            "display" => "Feature Title",
+            "inputtype" => "text",
+        ],
+        [
+            "type" => "$type",
+            "pageid" => "$pageid",
+            "featureid" => "$featureid",
+            "setting_name" => "dont_show_site_events",
+            "setting" => "0",
+            "extra" => false,
+            "defaultsetting" => "0",
+            "display" => "Show Global Events",
+            "inputtype" => "yes/no",
+        ],
+    ];
+
+	return $settings;
 }
 ?>

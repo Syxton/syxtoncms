@@ -16,15 +16,15 @@ $CFG->news->maxlength = 500;
 $CFG->news->modalheight = 600;
 $CFG->news->modalwidth = 640;
 
-function display_news($pageid,$area,$featureid=false) {
-global $CFG,$USER,$ROLES;
+function display_news($pageid, $area, $featureid=false) {
+global $CFG, $USER, $ROLES;
 if (!$pageid) { $pageid = $CFG->SITEID; }
 $returnme = ''; $section_content = ""; $toggle = "";
 
 	$main_section = get_db_row("SELECT * FROM news_features WHERE featureid=".$featureid);
-	if (!$settings = fetch_settings("news",$featureid,$pageid)) {
-		make_or_update_settings_array(default_settings("news",$pageid,$featureid));
-		$settings = fetch_settings("news",$featureid,$pageid);
+	if (!$settings = fetch_settings("news", $featureid, $pageid)) {
+		make_or_update_settings_array(default_settings("news", $pageid, $featureid));
+		$settings = fetch_settings("news", $featureid, $pageid);
 	}
 
 	$limit = $settings->news->$featureid->limit_viewable->setting;
@@ -37,9 +37,9 @@ $returnme = ''; $section_content = ""; $toggle = "";
 						$i=0; $newdate=false;
                         foreach ($pagenews as $news) {
                             if (isset($news->content)) {
-                                $daygraphic = !$newdate || date('j',$newdate) != date('j',$news->submitted) ? get_date_graphic($news->submitted,true) : get_date_graphic($news->submitted,false);
+                                $daygraphic = !$newdate || date('j', $newdate) != date('j', $news->submitted) ? get_date_graphic($news->submitted, true) : get_date_graphic($news->submitted, false);
                                 $newdate = $pagenews->$i->submitted;
-                                $section_content .= make_news_table($pageid,$news,$area,$daygraphic);
+                                $section_content .= make_news_table($pageid, $news, $area, $daygraphic);
                                 $section = $news->featureid;
                             }
                         }
@@ -49,8 +49,8 @@ $returnme = ''; $section_content = ""; $toggle = "";
 				//Get the Archived News Area
 				$section_content .= get_section_archives($pageid, $featureid, NULL, $area);
 				if (empty($section_content)) { $section_content = "No news added yet"; }
-				$buttons = get_button_layout("news_features",$featureid,$pageid);
-				$returnme .= get_css_box($title,$section_content,$buttons,NULL,"news",$featureid);
+				$buttons = get_button_layout("news_features", $featureid, $pageid);
+				$returnme .= get_css_box($title, $section_content, $buttons,NULL,"news", $featureid);
 			}
 
 	} else { //User is signed in
@@ -68,9 +68,9 @@ $returnme = ''; $section_content = ""; $toggle = "";
 							$newdate=false;
                             foreach ($pagenews as $news) {
                                 if (isset($news->content)) {
-                                    $daygraphic = !$newdate || date('j',$newdate) != date('j',$news->submitted) ? get_date_graphic($news->submitted,true) : get_date_graphic($news->submitted,false);
+                                    $daygraphic = !$newdate || date('j', $newdate) != date('j', $news->submitted) ? get_date_graphic($news->submitted, true) : get_date_graphic($news->submitted, false);
     								$newdate = $news->submitted;
-    								$section_content .= make_news_table($pageid,$news,$area,$daygraphic);
+    								$section_content .= make_news_table($pageid, $news, $area, $daygraphic);
     								$section = $news->featureid;
                                 }
                             }
@@ -80,27 +80,27 @@ $returnme = ''; $section_content = ""; $toggle = "";
 					if ($pagenews = get_section_news($featureid, "LIMIT ".$limit)) {
 						$newdate=false;
                         foreach ($pagenews as $news) {
-                            $daygraphic = !$newdate || date('j',$newdate) != date('j',$news->submitted) ? get_date_graphic($news->submitted,true) : get_date_graphic($news->submitted,false);
+                            $daygraphic = !$newdate || date('j', $newdate) != date('j', $news->submitted) ? get_date_graphic($news->submitted, true) : get_date_graphic($news->submitted, false);
 							$newdate = $news->submitted;
-							$section_content .= make_news_table($pageid,$news,$area,$daygraphic);
+							$section_content .= make_news_table($pageid, $news, $area, $daygraphic);
 							$section = $news->featureid;
                         }
 					}
 				}
 			}
-			$buttons = get_button_layout("news_features",$featureid,$pageid);
+			$buttons = get_button_layout("news_features", $featureid, $pageid);
 			//Get the Archived News Area
 			$section_content .= get_section_archives($pageid, $featureid, $USER->userid, $area);
 			if (empty($section_content)) { $section_content = "No news added yet"; }
-			$returnme .= get_css_box($rss . $title,$section_content,$buttons, NULL, "news", $featureid);
+			$returnme .= get_css_box($rss . $title, $section_content, $buttons, NULL, "news", $featureid);
 		}
 	}
     return $toggle . $returnme;
 }
 
-function make_news_table($pageid,$pagenews,$area,$daygraphic,$standalone = false) {
+function make_news_table($pageid, $pagenews, $area, $daygraphic, $standalone = false) {
 global $CFG;
-	$buttons = $standalone ? '' : get_button_layout("news",$pagenews->newsid, $pagenews->pageid);
+	$buttons = $standalone ? '' : get_button_layout("news", $pagenews->newsid, $pagenews->pageid);
 	$user = get_db_row("SELECT * FROM users where userid = " . $pagenews->userid);
 	if ($area == "middle") {
     	$dots = strlen($pagenews->caption) > 350 ? "..." : "";
@@ -199,14 +199,14 @@ global $CFG;
     		$returnme = '<br/><table style="background-color:#FCD163;border:1px solid gray;width:100%;text-align:right;font-size:.85em;">
     				<tr><td style="width:100px;text-align:center;"><strong><span>Archive</span></strong></td><td class="field_title" style="width: 60px;">Year: </td><td class="field_input" style="width: 60px;"><span id="year_span_'.$featureid.'_archive">';
     		$years = years_with_news($userid, $pagenews);
-    		$returnme .= make_select_from_array("news_".$featureid."_archive_year", $years, "year", "year", $lastyear, '', 'onchange="ajaxapi(\'/features/news/news_ajax.php\',\'update_archive_months\',\'&amp;year=\'+this.value+\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'\',function() { simple_display(\'month_span_'.$featureid.'_archive\');});ajaxapi(\'/features/news/news_ajax.php\',\'update_archive_articles\',\'&amp;year=\'+$(\'#news_'.$featureid.'_archive_year\').val()+\'&amp;month=\'+$(\'#news_'.$featureid.'_archive_month\').val()+\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'\',function() { simple_display(\'article_span_'.$featureid.'_archive\');});"',false,NULL,'font-size:.8em;');
+    		$returnme .= make_select_from_array("news_".$featureid."_archive_year", $years, "year", "year", $lastyear, '', 'onchange="ajaxapi(\'/features/news/news_ajax.php\',\'update_archive_months\',\'&amp;year=\'+this.value+\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'\',function() { simple_display(\'month_span_'.$featureid.'_archive\');});ajaxapi(\'/features/news/news_ajax.php\',\'update_archive_articles\',\'&amp;year=\'+$(\'#news_'.$featureid.'_archive_year\').val()+\'&amp;month=\'+$(\'#news_'.$featureid.'_archive_month\').val()+\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'\',function() { simple_display(\'article_span_'.$featureid.'_archive\');});"', false,NULL,'font-size:.8em;');
     		$returnme .= '</span></td><td class="field_title" style="width: 60px;">Month: </td><td class="field_input" style="width: 100px;"><span id="month_span_'.$featureid.'_archive">';
     		$months = months_with_news($userid, $years->$zero->year, $pagenews);
     		$lastrow = get_array_count($months)-1;
-    		$returnme .= make_select_from_array("news_".$featureid."_archive_month", $months, "month", "monthname", $months->$lastrow->month ,'', 'onchange="ajaxapi(\'/features/news/news_ajax.php\',\'update_archive_articles\',\'&amp;year=\'+$(\'#news_'.$featureid.'_archive_year\').val()+\'&amp;month=\'+this.value+\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'\',function() { simple_display(\'article_span_'.$featureid.'_archive\');});"',false,NULL,'font-size:.8em;');
+    		$returnme .= make_select_from_array("news_".$featureid."_archive_month", $months, "month", "monthname", $months->$lastrow->month , '', 'onchange="ajaxapi(\'/features/news/news_ajax.php\',\'update_archive_articles\',\'&amp;year=\'+$(\'#news_'.$featureid.'_archive_year\').val()+\'&amp;month=\'+this.value+\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'\',function() { simple_display(\'article_span_'.$featureid.'_archive\');});"', false,NULL,'font-size:.8em;');
     		$returnme .= '</span></td><td class="field_title" style="width: 60px;">Article: </td><td class="field_input"><span id="article_span_'.$featureid.'_archive">';
     		$newsarticles = get_month_news($userid, $years->$zero->year, $months->$lastrow->month, $pagenews);
-    		$returnme .= make_select_from_array("news_".$featureid."_archive_news", $newsarticles, "newsid", "title", NULL ,'','',false,NULL,'font-size:.8em;');
+    		$returnme .= make_select_from_array("news_".$featureid."_archive_news", $newsarticles, "newsid", "title", NULL , '', '', false,NULL,'font-size:.8em;');
     		$returnme .= '</span></td><td>'.make_modal_links(array("title"=> "Get News","id"=>"fetch_".$featureid."_button","path"=>$CFG->wwwroot."/features/news/news.php?action=viewnews&amp;newsonly=1&amp;pageid=$pageid&amp;newsid='+$('#news_15_archive_news').val()+'&amp;featureid=$featureid","width"=>"800","image"=>$CFG->wwwroot."/images/magnifying_glass.png")).'</td></tr></table>';
             return $returnme;
 		} else { return ""; }
@@ -216,14 +216,14 @@ global $CFG;
     		$returnme = '<table style="background-color:#FCD163;border:1px solid gray;width:100%;text-align:left;font-size:.85em;">
     				<tr><td colspan="3" style="text-align:center;"><strong>Archive</strong></td></tr><tr><td class="field_title" style="width:5%;padding:0px 2px;">Year: </td><td><span id="year_span_'.$featureid.'_archive">';
     		$years = years_with_news($userid, $pagenews);
-    		$returnme .= make_select_from_array("news_".$featureid."_archive_year", $years, "year", "year", $lastyear, '', 'onchange="ajaxapi(\'/features/news/news_ajax.php\',\'update_archive_months\',\'&amp;year=\'+this.value+\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'\',function() { simple_display(\'month_span_'.$featureid.'_archive\');}); ajaxapi(\'/features/news/news_ajax.php\',\'update_archive_articles\',\'&amp;year=\'+$(\'#news_'.$featureid.'_archive_year\').val()+\'&amp;month=\'+$(\'#news_'.$featureid.'_archive_month\').val()+\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'\',function() { simple_display(\'article_span_'.$featureid.'_archive\');});"',false,NULL,'font-size:.8em;');
+    		$returnme .= make_select_from_array("news_".$featureid."_archive_year", $years, "year", "year", $lastyear, '', 'onchange="ajaxapi(\'/features/news/news_ajax.php\',\'update_archive_months\',\'&amp;year=\'+this.value+\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'\',function() { simple_display(\'month_span_'.$featureid.'_archive\');}); ajaxapi(\'/features/news/news_ajax.php\',\'update_archive_articles\',\'&amp;year=\'+$(\'#news_'.$featureid.'_archive_year\').val()+\'&amp;month=\'+$(\'#news_'.$featureid.'_archive_month\').val()+\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'\',function() { simple_display(\'article_span_'.$featureid.'_archive\');});"', false,NULL,'font-size:.8em;');
     		$returnme .= '</span></td><td style="width:5%;"></td></tr><tr><td class="field_title" style="width:5%;padding:0px 2px;">Month: </td><td><span id="month_span_'.$featureid.'_archive">';
     		$months = months_with_news($userid, $years->$zero->year, $pagenews);
     		$lastrow = get_array_count($months)-1;
-    		$returnme .= make_select_from_array("news_".$featureid."_archive_month", $months, "month", "monthname", $months->$lastrow->month ,'', 'onchange="ajaxapi(\'/features/news/news_ajax.php\',\'update_archive_articles\',\'&amp;year=\'+$(\'#news_'.$featureid.'_archive_year\').val()+\'&amp;month=\'+this.value+\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'\',function() { simple_display(\'article_span_'.$featureid.'_archive\'); });"',false,NULL,'font-size:.8em;');
+    		$returnme .= make_select_from_array("news_".$featureid."_archive_month", $months, "month", "monthname", $months->$lastrow->month , '', 'onchange="ajaxapi(\'/features/news/news_ajax.php\',\'update_archive_articles\',\'&amp;year=\'+$(\'#news_'.$featureid.'_archive_year\').val()+\'&amp;month=\'+this.value+\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'\',function() { simple_display(\'article_span_'.$featureid.'_archive\'); });"', false,NULL,'font-size:.8em;');
     		$returnme .= '</span></td><td></td></tr><tr><td class="field_title" style="width:5%;padding:0px 2px;">Article: </td><td><span id="article_span_'.$featureid.'_archive">';
     		$newsarticles = get_month_news($userid, $years->$zero->year, $months->$lastrow->month, $pagenews);
-    		$returnme .= make_select_from_array("news_".$featureid."_archive_news", $newsarticles, "newsid", "title", NULL ,'', 'onchange=""',false,NULL,'font-size:.8em;');
+    		$returnme .= make_select_from_array("news_".$featureid."_archive_news", $newsarticles, "newsid", "title", NULL , '', 'onchange=""', false,NULL,'font-size:.8em;');
     		$returnme .= '</span></td><td>'.make_modal_links(array("title"=> "Get News","id"=>"fetch_".$featureid."_button","path"=>$CFG->wwwroot."/features/news/news.php?action=viewnews&amp;newsonly=1&amp;pageid=$pageid&amp;newsid='+$('#news_15_archive_news').val()+'&amp;featureid=$featureid","width"=>"800","image"=>$CFG->wwwroot."/images/magnifying_glass.png")).'</td></tr></table>';
     		return $returnme;
 		} else { return ""; }
@@ -259,11 +259,11 @@ global $CFG, $USER;
 }
 
 function get_month_news($userid, $year, $month, $pagenews=false, $pageid=false, $featureid=false) {
-	if (!$pagenews) { $pagenews = get_all_news($userid,$pageid,$featureid); }
+	if (!$pagenews) { $pagenews = get_all_news($userid, $pageid, $featureid); }
 	$y=$currentmonth=$last=$i=0; $first = false;
 	if (isset($pagenews->$i)) {
 		while (isset($pagenews->$i)) { //Find first and last month of given year that a news item was exists in pagenews set
-			if (date("Y",$pagenews->$i->submitted) == $year && date("n",$pagenews->$i->submitted) == $month) {
+			if (date("Y", $pagenews->$i->submitted) == $year && date("n", $pagenews->$i->submitted) == $month) {
 				if ($first === false) { $first = $i; }
 				$last = $i;
 			}$i++;
@@ -283,11 +283,11 @@ function get_month_news($userid, $year, $month, $pagenews=false, $pageid=false, 
 }
 
 function months_with_news($userid, $year, $pagenews=false, $pageid=false, $featureid=false) {
-	if (!$pagenews) { $pagenews = get_all_news($userid,$pageid,$featureid);	}
+	if (!$pagenews) { $pagenews = get_all_news($userid, $pageid, $featureid);	}
 	$last=$i=0; $first = false;
 	if (isset($pagenews->$i)) {
 		while (isset($pagenews->$i)) { //Find first and last month of given year that a news item was exists in pagenews set
-			if (date("Y",$pagenews->$i->submitted) == $year) {
+			if (date("Y", $pagenews->$i->submitted) == $year) {
 				if ($first === false) { $first = $i; }
 				$last = $i;
 			}$i++;
@@ -297,18 +297,18 @@ function months_with_news($userid, $year, $pagenews=false, $pageid=false, $featu
 			$firststamp = $pagenews->$first->submitted;
 			$laststamp = $pagenews->$last->submitted;
 			$temp = $first;$first = $last;$last = $temp;
-			$firstmonth = date("n",$firststamp);
-			$lastmonth = date("n",$laststamp);
+			$firstmonth = date("n", $firststamp);
+			$lastmonth = date("n", $laststamp);
 			$y = 0; $currentmonth = 0;
 			while ($firstmonth >= $lastmonth) {
-				$beginmonth = mktime(0,0,0,$lastmonth,1,$year);
-				$daysinmonth = cal_days_in_month(CAL_GREGORIAN,$firstmonth,$year) + 1;
-				$endmonth = mktime(0,0,0,$firstmonth,$daysinmonth,$year);
+				$beginmonth = mktime(0,0,0, $lastmonth,1, $year);
+				$daysinmonth = cal_days_in_month(CAL_GREGORIAN, $firstmonth, $year) + 1;
+				$endmonth = mktime(0,0,0, $firstmonth, $daysinmonth, $year);
 				$i=$first;
 				while (isset($pagenews->$i)) {
 					if ($pagenews->$i->submitted >= $beginmonth && $pagenews->$i->submitted <= $endmonth) {
-						if (date("n",$pagenews->$i->submitted) > $currentmonth) {
-							$currentmonth = date("n",$pagenews->$i->submitted);
+						if (date("n", $pagenews->$i->submitted) > $currentmonth) {
+							$currentmonth = date("n", $pagenews->$i->submitted);
 							if (empty($returnme)) { $returnme = new \stdClass; }
                             $returnme->$y = new \stdClass;
                             $returnme->$y->month = $currentmonth;
@@ -327,18 +327,18 @@ function months_with_news($userid, $year, $pagenews=false, $pageid=false, $featu
 }
 
 function years_with_news($userid, $pagenews=false, $pageid=false, $featureid=false) {
-	if (!$pagenews) { $pagenews = get_all_news($userid,$pageid,$featureid);	}
+	if (!$pagenews) { $pagenews = get_all_news($userid, $pageid, $featureid);	}
 	$zero=$last=0;
     if (isset($pagenews->$zero)) {
 		foreach ($pagenews as $news) { $last++; } $last--; //counts news items -- count() doesn't work on objects)
 		$first = $pagenews->$zero->submitted;
 		$last = $pagenews->$last->submitted;
-		$firstyear = date("Y",$last);
-		$currentyear = date("Y",$first);
+		$firstyear = date("Y", $last);
+		$currentyear = date("Y", $first);
         $y = 0;
 		while ($currentyear >= $firstyear) {
-			$beginyear = mktime(0,0,0,1,1,$currentyear);
-			$endyear = mktime(0,0,0,12,32,$currentyear);
+			$beginyear = mktime(0,0,0,1,1, $currentyear);
+			$endyear = mktime(0,0,0,12,32, $currentyear);
 
             foreach ($pagenews as $news) {
                 if ($news->submitted >= $beginyear && $news->submitted <= $endyear) {
@@ -384,22 +384,31 @@ global $CFG;
 function get_page_news($pageid, $limit = "") {
 global $CFG;
 	$sections = "";
-	$SQL = "
-	SELECT * FROM news_features
-	WHERE pageid=$pageid
-	ORDER BY lastupdate";
+	$SQL = "SELECT *
+			FROM news_features
+			WHERE pageid = '$pageid'
+			ORDER BY lastupdate";
+
 	if ($section_results = get_db_result($SQL)) {
 		while ($section = fetch_row($section_results)) {
 			$sections .= $sections == "" ? "featureid=".$section['featureid'] : " OR featureid=".$section['featureid'];
 		}
 	}
 	if ($sections != "") {
-		if (!$limit) { $limit = "LIMIT " . $section['limit_viewable']; }
-		$SQL = "
-		SELECT * FROM news
-		WHERE ($sections)
-		ORDER BY submitted DESC $limit
-		";
+		if (!$limit) { 
+			if (!$settings = fetch_settings("news", $featureid, $pageid)) {
+				make_or_update_settings_array(default_settings("news", $pageid, $featureid));
+				$settings = fetch_settings("news", $featureid, $pageid);
+			}
+		
+			$limit = "LIMIT " . $settings->news->$featureid->limit_viewable->setting;
+		}
+
+		$SQL = "SELECT *
+				FROM news
+				WHERE ($sections)
+				ORDER BY submitted DESC
+				$limit";
 		$i=0;
 		if ($news_results = get_db_result($SQL)) {
 			while ($row = fetch_row($news_results)) {
@@ -461,7 +470,7 @@ global $CFG;
 //function format_news_clip($newscontent) {
 //global $CFG;
 //	if (strlen($newscontent->content) > $CFG->news->maxlength) {
-//		$newscontent->content = substr($newscontent->content,0,$CFG->news->maxlength);
+//		$newscontent->content = substr($newscontent->content,0, $CFG->news->maxlength);
 //		$newscontent->content = closetags($newscontent->content);
 //		$newscontent->content .= '
 //        <br />
@@ -480,7 +489,7 @@ function closetags($html) {
 	preg_match_all("#<([a-z]+)(?: .*)?(?<![/|/ ])>#iU", $html, $result);
 	$openedtags=$result[1];
 	//put all closed tags into an array
-	preg_match_all("#</([a-z]+)>#iU",$html,$result);
+	preg_match_all("#</([a-z]+)>#iU", $html, $result);
 	$closedtags=$result[1];
 	$len_opened = count($openedtags);
 
@@ -492,26 +501,40 @@ function closetags($html) {
 	for ($i=0;$i < $len_opened;$i++) {
 		$temp = $openedtags[$i];
 		switch ($openedtags[$i]) {
-			case strstr($selfclosing,",$temp,"):
+			case strstr($selfclosing,", $temp,"):
 				break;
 			default:
-				if (!in_array($openedtags[$i],$closedtags)) {
+				if (!in_array($openedtags[$i], $closedtags)) {
 					$html .= '</'.$openedtags[$i].'>';
 				} else {
-					unset($closedtags[array_search($openedtags[$i],$closedtags)]);
+					unset($closedtags[array_search($openedtags[$i], $closedtags)]);
 				}
 		}
 	}
 	return $html;
 }
 
-function news_delete($pageid,$featureid,$newsid) {
-	if (empty($newsid)) { //News feature delete
-		if (execute_db_sql("DELETE FROM pages_features WHERE feature='news' AND pageid='$pageid' AND featureid='$featureid'") && execute_db_sql("DELETE FROM news_features WHERE pageid='$pageid' and featureid='$featureid'") && execute_db_sql("DELETE FROM news WHERE pageid='$pageid' and featureid='$featureid'") && execute_db_sql("DELETE FROM settings WHERE type='news' AND pageid='$pageid' AND featureid='$featureid'")) {
-			resort_page_features($pageid);
-		}
-	} else { //News item delete
-		execute_db_sql("DELETE FROM news WHERE newsid='$newsid'");
+function news_delete($pageid, $featureid = false, $newsid = false) {
+	if (empty($newsid)) { // News feature delete
+		$params = [
+			"pageid" => $pageid,
+			"featureid" => $featureid,
+			"feature" => "news",
+		];
+
+		$SQL = template_use("dbsql/features.sql", $params, "delete_feature");
+		execute_db_sql($SQL);
+		$SQL = template_use("dbsql/features.sql", $params, "delete_feature_settings");
+		execute_db_sql($SQL);
+		$SQL = template_use("dbsql/news.sql", $params, "delete_news_features", "news");
+		execute_db_sql($SQL);
+		$SQL = template_use("dbsql/news.sql", $params, "delete_all_news_items", "news");
+		execute_db_sql($SQL);
+
+		resort_page_features($pageid);
+	} else { // News item delete
+		$SQL = template_use("dbsql/news.sql", ["newsid" => $newsid], "delete_news_item", "news");
+		execute_db_sql($SQL);
 	}
 }
 
@@ -523,7 +546,7 @@ global $CFG;
 			if ($pagenews = get_pages_news($pages,"LIMIT 50")) {
                 foreach ($pagenews as $news) {
                     if (isset($news->content)) {
-                       $feeds .= fill_feed($news->title,strip_tags($news->caption),$CFG->wwwroot.'/features/news/news.php?action=viewnews&key='.$userkey.'&pageid='.$feed["pageid"].'&newsid='.$news->newsid,$news->submitted);
+                       $feeds .= fill_feed($news->title,strip_tags($news->caption), $CFG->wwwroot.'/features/news/news.php?action=viewnews&key='.$userkey.'&pageid='.$feed["pageid"].'&newsid='.$news->newsid, $news->submitted);
                      }
                 }
 			}
@@ -532,7 +555,7 @@ global $CFG;
 		if ($pagenews = get_section_news($feed["featureid"], "LIMIT 50")) {
 			foreach ($pagenews as $news) {
                 if (isset($news->content)) {
-                    $feeds .= fill_feed($news->title,strip_tags($news->caption),$CFG->wwwroot.'/features/news/news.php?action=viewnews&key='.$userkey.'&pageid='.$feed["pageid"].'&newsid='.$news->newsid,$news->submitted);
+                    $feeds .= fill_feed($news->title,strip_tags($news->caption), $CFG->wwwroot.'/features/news/news.php?action=viewnews&key='.$userkey.'&pageid='.$feed["pageid"].'&newsid='.$news->newsid, $news->submitted);
                 }
 			}
 		}
@@ -552,21 +575,47 @@ global $CFG;
 	return false;
 }
 
-function news_buttons($pageid,$featuretype,$featureid) {
-global $CFG,$USER;
+function news_buttons($pageid, $featuretype, $featureid) {
+global $CFG, $USER;
 	$returnme = "";
-	if (strstr($featuretype,"_features")) {
-        $returnme .= user_has_ability_in_page($USER->userid,"addnews",$pageid) ? make_modal_links(array("title"=> "Add News Item","path"=>$CFG->wwwroot."/features/news/news.php?action=addeditnews&amp;pageid=$pageid&amp;featureid=$featureid","iframe"=>"true","refresh"=>"true","width"=>"850","height"=>"600","image"=>$CFG->wwwroot."/images/add.png","class"=>"slide_menu_button")) : '';
-	} else {
-        $returnme .= user_has_ability_in_page($USER->userid,"editnews",$pageid) ? make_modal_links(array("title"=> "Edit News Item","path"=>$CFG->wwwroot."/features/news/news.php?action=addeditnews&amp;pageid=$pageid&amp;newsid=$featureid","iframe"=>"true","refresh"=>"true","width"=>"850","height"=>"600","image"=>$CFG->wwwroot."/images/edit.png","class"=>"slide_menu_button")) : '';
-        $returnme .= user_has_ability_in_page($USER->userid,"deletenews",$pageid) ? ' <a class="slide_menu_button" title="Delete News Item" onclick="if (confirm(\'Are you sure you want to delete this?\')) { ajaxapi(\'/ajax/site_ajax.php\',\'delete_feature\',\'&amp;pageid='.$pageid.'&amp;featuretype='.$featuretype.'&amp;sectionid='.$featureid.'&amp;featureid='.$featureid.'\',function() { update_login_contents('.$pageid.');});}"><img src="'.$CFG->wwwroot.'/images/delete.png" alt="Delete News Item" /></a> ' : '';
+	if (strstr($featuretype, "_features")) { // Overall news feature.
+        $returnme .= user_has_ability_in_page($USER->userid, "addnews", $pageid) ? make_modal_links(array("title"=> "Add News Item","path"=>$CFG->wwwroot."/features/news/news.php?action=addeditnews&amp;pageid=$pageid&amp;featureid=$featureid","iframe"=>"true","refresh"=>"true","width"=>"850","height"=>"600","image"=>$CFG->wwwroot."/images/add.png","class"=>"slide_menu_button")) : '';
+	} else { // Individual news item.
+        $returnme .= user_has_ability_in_page($USER->userid, "editnews", $pageid) ? make_modal_links(array("title"=> "Edit News Item","path"=>$CFG->wwwroot."/features/news/news.php?action=addeditnews&amp;pageid=$pageid&amp;newsid=$featureid","iframe"=>"true","refresh"=>"true","width"=>"850","height"=>"600","image"=>$CFG->wwwroot."/images/edit.png","class"=>"slide_menu_button")) : '';
+        $returnme .= user_has_ability_in_page($USER->userid, "deletenews", $pageid) ? ' <a class="slide_menu_button" title="Delete News Item" onclick="if (confirm(\'Are you sure you want to delete this?\')) { ajaxapi(\'/ajax/site_ajax.php\',\'delete_feature\',\'&amp;pageid='.$pageid.'&amp;featuretype='.$featuretype.'&amp;subid='.$featureid.'\',function() { update_login_contents('.$pageid.');});}"><img src="'.$CFG->wwwroot.'/images/delete.png" alt="Delete News Item" /></a> ' : '';
     }
 	return $returnme;
 }
 
-function news_default_settings($feature,$pageid,$featureid) {
-	$settings_array[] = array(false,"$feature","$pageid","$featureid","feature_title","News Section",false,"News Section","Feature Title","text");
-	$settings_array[] = array(false,"$feature","$pageid","$featureid","limit_viewable","5",false,"5","Viewable Limit","text",true,"<=0","Must be greater than 0.");
-	return $settings_array;
+function news_default_settings($type, $pageid, $featureid) {
+	$settings = [
+		[
+			"type" => "$type",
+			"pageid" => "$pageid",
+			"featureid" => "$featureid",
+			"setting_name" => "feature_title",
+			"setting" => "News Section",
+			"extra" => false,
+			"defaultsetting" => "News Section",
+			"display" => "Feature Title",
+			"inputtype" => "text",
+		],
+		[
+			"type" => "$type",
+			"pageid" => "$pageid",
+			"featureid" => "$featureid",
+			"setting_name" => "limit_viewable",
+			"setting" => "5",
+			"extra" => false,
+			"defaultsetting" => "5",
+			"display" => "Viewable Limit",
+			"inputtype" => "text",
+			"numeric" => true,
+			"validation" => "<=0",
+			"warning" => "Must be greater than 0.",
+		],
+	];
+
+	return $settings;
 }
 ?>

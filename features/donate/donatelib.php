@@ -11,10 +11,10 @@ $donateLIB = true;
 	
 function display_donate($pageid, $area, $featureid) {
 global $CFG, $USER, $donateSETTINGS;
-	$abilities = get_user_abilities($USER->userid,$pageid,"donate","donate",$featureid);
-	if (!$settings = fetch_settings("donate",$featureid,$pageid)) {
-		make_or_update_settings_array(default_settings("donate",$pageid,$featureid));
-		$settings = fetch_settings("donate",$featureid,$pageid);
+	$abilities = get_user_abilities($USER->userid, $pageid,"donate","donate", $featureid);
+	if (!$settings = fetch_settings("donate", $featureid, $pageid)) {
+		make_or_update_settings_array(default_settings("donate", $pageid, $featureid));
+		$settings = fetch_settings("donate", $featureid, $pageid);
 	}
     
     if (!empty($abilities->makedonation->allow)) {
@@ -22,44 +22,45 @@ global $CFG, $USER, $donateSETTINGS;
     }
 }
 
-function get_donate($pageid,$featureid,$settings,$abilities,$area=false,$resultsonly=false) {
-global $CFG,$USER;
-	$SQL = "SELECT * FROM donate_instance WHERE donate_id=$featureid";
+function get_donate($pageid, $featureid, $settings, $abilities, $area=false, $resultsonly=false) {
+global $CFG, $USER;
 	$returnme = ""; $rss = "";
+    $SQL = template_use("dbsql/donate.sql", ["featureid" => $featureid], "get_donate_instance", "donate");
 	if ($result = get_db_result($SQL)) {
 		while ($row = fetch_row($result)) {
             //if viewing from rss feed
 			if ($resultsonly) { 
                 $returnme .= '<table style="width:100%;border:1px solid silver;padding:10px;"><tr><th>'. $settings->donate->$featureid->feature_title->setting.'</th></tr><tr><td><br /><br /><div class="htmlblock">' .get_donation_results($row["id"]) .'</div></td></tr></table>'; 
             } else { //regular donate feature viewing
-                $buttons = get_button_layout("donate",$featureid,$pageid);
-				$returnme .= get_css_box($settings->donate->$featureid->feature_title->setting,'<div class="htmlblock">'.donation_form($featureid,$settings).'</div>',$buttons, null, 'donate', $featureid, false, false, false, false, false, false);
+                $buttons = get_button_layout("donate", $featureid, $pageid);
+				$returnme .= get_css_box($settings->donate->$featureid->feature_title->setting,'<div class="htmlblock">'.donation_form($featureid, $settings).'</div>', $buttons, null, 'donate', $featureid, false, false, false, false, false, false);
 			}
 		}
 	}
 	return $returnme;
 }
 
-function donation_form($featureid,$settings) {
+function donation_form($featureid, $settings) {
 global $CFG;
     $returnme = "";
 
     $protocol = get_protocol();
-
-    if ($campaign = get_db_row("SELECT * FROM donate_campaign WHERE campaign_id IN (SELECT campaign_id FROM donate_instance WHERE donate_id='$featureid')")) {
+    $SQL = template_use("dbsql/donate.sql", ["featureid" => $featureid], "get_campaign", "donate");
+    if ($campaign = get_db_row($SQL)) {
         if ($CFG->paypal) { 
             $paypal = 'www.paypal.com';
         } else { 
             $paypal = 'www.sandbox.paypal.com';
         }
         
-        if ($donations = get_db_row("SELECT SUM(amount) as total FROM donate_donations WHERE campaign_id = '".$campaign["campaign_id"]."'")) {
+        $SQL = template_use("dbsql/donate.sql", ["campaignid" => $campaign["campaign_id"]], "get_campaign_donations_total", "donate");
+        if ($donations = get_db_row($SQL)) {
             $total = $donations["total"];
             $total = empty($total) ? "0" : $total;
         }
 
-        $returnme .= get_css_tags(array("features/donate/donate.css"));
-        $returnme .= get_js_tags(array("features/donate/donate.js"));
+        $returnme .= get_css_tags(["features/donate/donate.css"]);
+        $returnme .= get_js_tags(["features/donate/donate.js"]);
 
         $button = '
         <form action="https://'.$paypal.'/cgi-bin/webscr" method="post">
@@ -163,7 +164,7 @@ $returnme = "";
     return $returnme;    
 }
 
-function insert_blank_donate($pageid,$settings = false) {
+function insert_blank_donate($pageid, $settings = false) {
 global $CFG;
 	if ($featureid = execute_db_sql("INSERT INTO donate_instance (campaign_id) VALUES('0')")) {
 		$area = get_db_field("default_area", "features", "feature='donate'");
@@ -174,29 +175,62 @@ global $CFG;
 	return false;
 }
 
-function donate_delete($pageid,$featureid,$sectionid) {
-	execute_db_sql("DELETE FROM pages_features WHERE feature='donate' AND pageid='$pageid' AND featureid='$featureid'");
-	execute_db_sql("DELETE FROM donate_instance WHERE id='$featureid'");
+function donate_delete($pageid, $featureid) {
+    $params = [
+		"pageid" => $pageid,
+		"featureid" => $featureid,
+		"feature" => "donate",
+	];
+
+	$SQL = template_use("dbsql/features.sql", $params, "delete_feature");
+	execute_db_sql($SQL);
+	$SQL = template_use("dbsql/features.sql", $params, "delete_feature_settings");
+	execute_db_sql($SQL);
+	$SQL = template_use("dbsql/donate.sql", $params, "delete_donate_instance", "donate");
+	execute_db_sql($SQL);
+
 	resort_page_features($pageid);
 }
 
-function donate_buttons($pageid,$featuretype,$featureid) {
-global $CFG,$USER;
-	$settings = fetch_settings("donate",$featureid,$pageid);
+function donate_buttons($pageid, $featuretype, $featureid) {
+global $CFG, $USER;
+	$settings = fetch_settings("donate", $featureid, $pageid);
     $returnme = "";
 	
-    $donate_abilities = get_user_abilities($USER->userid,$pageid,"donate","donate",$featureid);
-	$feature_abilities = get_user_abilities($USER->userid,$pageid,"features","donate",$featureid);
+    $donate_abilities = get_user_abilities($USER->userid, $pageid,"donate","donate", $featureid);
+	$feature_abilities = get_user_abilities($USER->userid, $pageid,"features","donate", $featureid);
     
     $campaign = get_db_row("SELECT * FROM donate_campaign WHERE campaign_id IN (SELECT campaign_id FROM donate_instance WHERE donate_id='$featureid')");	
     $edit = get_db_row("SELECT * FROM donate_instance WHERE donate_id='$featureid' AND campaign_id IN (SELECT campaign_id FROM donate_campaign WHERE origin_page='$pageid')") ? true : false;
     
-    if ($campaign && $edit && $donate_abilities->adddonation->allow) { 
-        $returnme .= make_modal_links(array("title"=> "Manage Donations","path"=>$CFG->wwwroot."/features/donate/donate.php?action=managedonations&amp;pageid=$pageid&amp;featureid=$featureid","refresh"=>"true","iframe"=>"true","validate"=>"true","width"=>"750","height"=>"600","image"=>$CFG->wwwroot."/images/money.png","class"=>"slide_menu_button"));
+    if ($campaign && $edit && $donate_abilities->adddonation->allow) {
+        $p = [
+            "title" => "Manage Donations",
+            "path" => $CFG->wwwroot . "/features/donate/donate.php?action=managedonations&amp;pageid=$pageid&amp;featureid=$featureid",
+            "refresh" => "true",
+            "iframe" => "true",
+            "validate" => "true",
+            "width" => "750",
+            "height" => "600",
+            "image" => $CFG->wwwroot . "/images/money.png",
+            "class"=>"slide_menu_button",
+        ];
+        $returnme .= make_modal_links($p);
     }
     
-    if ($donate_abilities->managedonation->allow) { 
-        $returnme .= make_modal_links(array("title"=> "Campaign Settings","path"=>$CFG->wwwroot."/features/donate/donate.php?action=editcampaign&amp;pageid=$pageid&amp;featureid=$featureid","refresh"=>"true","iframe"=>"true","validate"=>"true","width"=>"750","height"=>"600","image"=>$CFG->wwwroot."/images/edit.png","class"=>"slide_menu_button"));
+    if ($donate_abilities->managedonation->allow) {
+        $p = [
+            "title" => "Campaign Settings",
+            "path" => $CFG->wwwroot . "/features/donate/donate.php?action=editcampaign&amp;pageid=$pageid&amp;featureid=$featureid",
+            "refresh" => "true",
+            "iframe" => "true",
+            "validate" => "true",
+            "width" => "750",
+            "height" => "600",
+            "image" => $CFG->wwwroot . "/images/edit.png",
+            "class"=>"slide_menu_button",
+        ];
+        $returnme .= make_modal_links($p);
     }
 	return $returnme;
 }
@@ -243,40 +277,51 @@ global $CFG, $MYVARS, $USER;
     
     return $returnme;    
 }
-//function donate_rss($feed, $userid, $userkey) {
-//global $CFG;
-//	$feeds = "";
-//	
-//	$settings = fetch_settings("donate",$feed["featureid"],$feed["pageid"]);
-//	if ($settings->donate->$feed["featureid"]->enablerss->setting) {
-//		if ($settings->donate->$feed["featureid"]->blog->setting) {
-//			$donate = get_db_row("SELECT * FROM donate WHERE donateid='".$feed["featureid"]."'");
-//			if ($donate['firstedition']) { //this is not a first edition
-//				$donateresults = get_db_result("SELECT * FROM donate WHERE donateid='".$donate["firstedition"]."' OR firstedition='".$donate["firstedition"]."' ORDER BY donateid DESC LIMIT 50");
-//			} else {
-//				$donateresults = get_db_result("SELECT * FROM donate WHERE donateid='".$donate["donateid"]."' OR firstedition='".$donate["donateid"]."' ORDER BY donateid DESC LIMIT 50");
-//			}
-//			
-//			while ($donate = fetch_row($donateresults)) {
-//				$settings = fetch_settings("donate",$donate["donateid"],$feed["pageid"]);
-//				$feeds .= fill_feed($settings->donate->$donate["donateid"]->feature_title->setting . " " . date('d/m/Y',$donate["dateposted"]),substr($donate["donate"],0,100),$CFG->wwwroot.'/features/donate/donate.php?action=viewdonate&key='.$userkey.'&pageid='.$feed["pageid"].'&donateid='.$donate["donateid"],$donate["dateposted"]);
-//			}
-//		} else {
-//			$donate = get_db_row("SELECT * FROM donate WHERE donateid='".$feed["featureid"]."'");
-//			$feeds .= fill_feed($settings->donate->$feed["featureid"]->feature_title->setting,substr($donate["donate"],0,100),$CFG->wwwroot.'/features/donate/donate.php?action=viewdonate&key='.$userkey.'&pageid='.$feed["pageid"].'&donateid='.$feed["featureid"],$donate["dateposted"]);
-//		}
-//	}
-//	return $feeds;
-//}
 
-function donate_default_settings($feature,$pageid,$featureid) {
+function donate_default_settings($type, $pageid, $featureid) {
 global $CFG;
-	$settings_array[] = array(false,"$feature","$pageid","$featureid","feature_title","Donate",false,"Donate","Feature Title","text");
-    $orientation[] = array("selectvalue" => "horizontal", "selectname" => "Horizontal");
-    $orientation[] = array("selectvalue" => "vertical", "selectname" => "Vertical");
-    $settings_array[] = array(false,"$feature","$pageid","$featureid","metertype","horizontal",$orientation,"horizontal","Thermometer Orientation","select_array",null,null,"Select the orientation of the donation thermometer.");
-    $settings_array[] = array(false,"$feature","$pageid","$featureid","enablerss","0",false,"0","Enable RSS","yes/no");
+    $settings = [
+        [
+            "type" => "$type",
+            "pageid" => "$pageid",
+            "featureid" => "$featureid",
+            "setting_name" => "feature_title",
+            "setting" => "Donate",
+            "extra" => false,
+            "defaultsetting" => "Donate",
+            "display" => "Feature Title",
+            "inputtype" => "text",
+        ],
+        [
+            "type" => "$type",
+            "pageid" => "$pageid",
+            "featureid" => "$featureid",
+            "setting_name" => "metertype",
+            "setting" => "horizontal",
+            "extra" => [
+                ["selectvalue" => "horizontal", "selectname" => "Horizontal"],
+                ["selectvalue" => "vertical", "selectname" => "Vertical"],
+            ],
+            "defaultsetting" => "horizontal",
+            "display" => "Thermometer Orientation",
+            "inputtype" => "select_array",
+            "numeric" => null,
+            "validation" => null,
+            "warning" => "Select the orientation of the donation thermometer.",
+        ],
+        [
+            "type" => "$type",
+            "pageid" => "$pageid",
+            "featureid" => "$featureid",
+            "setting_name" => "enablerss",
+            "setting" => "0",
+            "extra" => false,
+            "defaultsetting" => "0",
+            "display" => "Enable RSS",
+            "inputtype" => "yes/no",
+        ],
+    ];
 
-	return $settings_array;
+	return $settings;
 }
 ?>

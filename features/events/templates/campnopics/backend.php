@@ -25,7 +25,7 @@ update_user_cookie();
 
 function register()
 {
-global $CFG,$MYVARS,$USER,$error;
+global $CFG, $MYVARS, $USER, $error;
 
 if (!isset($COMLIB)) include_once($CFG->dirroot.'/lib/comlib.php');
 
@@ -35,17 +35,17 @@ if (!isset($COMLIB)) include_once($CFG->dirroot.'/lib/comlib.php');
 	$MYVARS->GET["cart_total"] = $MYVARS->GET["total_owed"] != 0 ? $MYVARS->GET["total_owed"] + $MYVARS->GET["paypal_amount"] : $MYVARS->GET["paypal_amount"];
 	$MYVARS->GET["total_owed"] = get_timestamp() < $event["sale_end"] ? $event["sale_fee"] : $event["fee_full"];
 	
-	$formlist = explode(";",$template['formlist']);
+	$formlist = explode(";", $template['formlist']);
 
 	$i=0;
 	while (isset($formlist[$i])) {
-		$element = explode(":",$formlist[$i]);
+		$element = explode(":", $formlist[$i]);
 		$reg[$element[0]] = $MYVARS->GET[$element[0]];
 		$i++;
 	}
 	$error = "";
 	
-	if ($regid = enter_registration($MYVARS->GET["eventid"],$reg, $MYVARS->GET["email"])) //successful registration
+	if ($regid = enter_registration($MYVARS->GET["eventid"], $reg, $MYVARS->GET["email"])) //successful registration
 	{
 		echo '<center><div style="width:90%">You have successfully registered for '.$event['name'] . '.<br />';
 		
@@ -66,11 +66,11 @@ if (!isset($COMLIB)) include_once($CFG->dirroot.'/lib/comlib.php');
 			echo '<div id="backup"><input type="hidden" name="total_owed" id="total_owed" value="'.$MYVARS->GET["cart_total"].'" />
 				 <input type="hidden" name="items" id="items" value="'.$items.'" /></div>';
 			
-			$items = explode("**",$items);
+			$items = explode("**", $items);
 			$i=0;
 			while (isset($items[$i]))
 			{
-				$itm = explode("::",$items[$i]);
+				$itm = explode("::", $items[$i]);
 				$cart_items[$i]->regid = $itm[0];
 				$cart_items[$i]->description = $itm[1];
 				$cart_items[$i]->cost = $itm[2];	
@@ -85,7 +85,7 @@ if (!isset($COMLIB)) include_once($CFG->dirroot.'/lib/comlib.php');
 				<br />
 				If you would like to pay the <span style="color:blue;font-size:1.25em;">$'.$MYVARS->GET["cart_total"].'</span> fee now, click the Paypal button below.
 				<center>
-				'.make_paypal_button($cart_items,$event['paypal']).'
+				'.make_paypal_button($cart_items, $event['paypal']).'
 				</center>
 				<br /><br />
 				Thank you for registering for this event. ';	
@@ -115,9 +115,8 @@ if (!isset($COMLIB)) include_once($CFG->dirroot.'/lib/comlib.php');
 		$fromuser->lname = "";
 		$message = registration_email($regid, $touser);
 		
-		if (send_email($touser,$fromuser,null,"Camp Wabashi Registration", $message))
-		{
-			send_email($fromuser,$fromuser,null,"Camp Wabashi Registration", $message);
+		if (send_email($touser, $fromuser, "Camp Wabashi Registration", $message)) {
+			send_email($fromuser, $fromuser, "Camp Wabashi Registration", $message);
 		}
 		else{ echo "<br /><br />Registration Email NOT Sent."; }
 		
@@ -134,11 +133,11 @@ if (!isset($COMLIB)) include_once($CFG->dirroot.'/lib/comlib.php');
 				echo '<div id="backup"><input type="hidden" name="total_owed" id="total_owed" value="'.$MYVARS->GET["cart_total"].'" />
 					 <input type="hidden" name="items" id="items" value="'.$items.'" /></div>';
 				
-				$items = explode("**",$items);
+				$items = explode("**", $items);
 				$i=0;
 				while (isset($items[$i]))
 				{
-					$itm = explode("::",$items[$i]);
+					$itm = explode("::", $items[$i]);
 					$cart_items[$i]->regid = $itm[0];
 					$cart_items[$i]->description = $itm[1];
 					$cart_items[$i]->cost = $itm[2];	
@@ -152,7 +151,7 @@ if (!isset($COMLIB)) include_once($CFG->dirroot.'/lib/comlib.php');
 					<br />
 					If you would like to pay the <span style="color:blue;font-size:1.25em;">$'.$MYVARS->GET["cart_total"].'</span> fee now, click the Paypal button below.
 					<center>
-					'.make_paypal_button($cart_items,$event['paypal']).'
+					'.make_paypal_button($cart_items, $event['paypal']).'
 					</center>
 					<br /><br />
 					Thank you for registering for this event. ';	
@@ -178,7 +177,7 @@ if (!isset($COMLIB)) include_once($CFG->dirroot.'/lib/comlib.php');
 
 function common_weeks($event, $included = true, $id, $regid = "")
 {
-	global $CFG,$USER,$PAGE;
+	global $CFG, $USER, $PAGE;
 	$returnme = '<select id="'.$id.'">';
 	$time = get_timestamp();
 	$siteviewable = $event["pageid"] == $CFG->SITEID ? " OR siteviewable = '1' AND confirmed = '1'" : "";

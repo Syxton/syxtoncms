@@ -57,9 +57,9 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
     $MYVARS->GET["Parent_Phone4"] = preg_replace('/\d{3}/', '$0-', trim(preg_replace("/\D/", "", $MYVARS->GET["Parent_Phone4"])), 2);
     
     //Go through entire template form list
-	$formlist = explode(";",$template['formlist']);
+	$formlist = explode(";", $template['formlist']);
     foreach ($formlist as $formelements) {
-        $element = explode(":",$formelements);
+        $element = explode(":", $formelements);
         $reg[$element[0]] = isset($MYVARS->GET[$element[0]]) ? $MYVARS->GET[$element[0]] : ""; 
     }
 	$error = "";
@@ -82,7 +82,7 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
 			$items = explode("**", $items);
             $i = 0;
             foreach ($items as $item) {
-                $itm = explode("::",$item);
+                $itm = explode("::", $item);
 				$cart_items[$i]->regid = $itm[0];
 				$cart_items[$i]->description = $itm[1];
 				$cart_items[$i]->cost = $itm[2];     
@@ -113,7 +113,7 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
                                 <br />Click the Paypal button below to pay for your camper fees.
                                 <br /><br />
                                 <div style="text-align:center;">
-                                    '.make_paypal_button($cart_items,$event['paypal']).'
+                                    '.make_paypal_button($cart_items, $event['paypal']).'
                                 </div>';
             } else if ($MYVARS->GET['payment_method'] == "Campership") { // Campership selected.
                 $waivefee = true; // Campership is a free registration.
@@ -149,8 +149,8 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
     		$fromuser->fname = $CFG->sitename;
     		$fromuser->lname = "";    
             $message = registration_email($regid, $touser, $pending, $waivefee);
-    		if (send_email($touser, $fromuser, null, $emailsubject, $message)) {
-    			send_email($fromuser, $fromuser, null, $campershipreq.$emailsubject, $message);
+    		if (send_email($touser, $fromuser, $emailsubject, $message)) {
+    			send_email($fromuser, $fromuser, $campershipreq.$emailsubject, $message);
     		}
 
 		} else { // Support for a free event.
@@ -168,8 +168,8 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
     		$fromuser->fname = $CFG->sitename;
     		$fromuser->lname = "";
     		$message = registration_email($regid, $touser);
-    		if (send_email($touser,$fromuser,null,"Camp Wabashi Registration", $message)) {
-    			send_email($fromuser,$fromuser,null,"Camp Wabashi Registration", $message);
+    		if (send_email($touser, $fromuser, "Camp Wabashi Registration", $message)) {
+    			send_email($fromuser, $fromuser, "Camp Wabashi Registration", $message);
     		}
         }
 
@@ -183,7 +183,7 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
         //Facebook share button
         echo '</div>
               <br />
-              <div style="margin:auto;width:90%;text-align:center;">' . facebook_share_button($eventid,$MYVARS->GET["Camper_Name_First"],$keys) . '</div>';
+              <div style="margin:auto;width:90%;text-align:center;">' . facebook_share_button($eventid, $MYVARS->GET["Camper_Name_First"], $keys) . '</div>';
 	} else { // Failed registration.
 		$MYVARS->GET["cart_total"] = $MYVARS->GET["cart_total"] - $MYVARS->GET["owed"];
 		echo '<div style="text-align:center;">
@@ -204,7 +204,7 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
     				$items = explode("**", $items);
                     $i = 0;
                     foreach ($items as $item) {
-    					$itm = explode("::",$item);
+    					$itm = explode("::", $item);
     					$cart_items[$i]->regid = $itm[0];
     					$cart_items[$i]->description = $itm[1];
     					$cart_items[$i]->cost = $itm[2];                    
@@ -218,7 +218,7 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
     					If you would like to pay the <span style="color:blue;font-size:1.25em;">$'.$MYVARS->GET["cart_total"].'</span> fee now, click the Paypal button below.
     					<br /><br />
                         <div style="text-align:center;">
-    					'.make_paypal_button($cart_items,$event['paypal']).'
+    					'.make_paypal_button($cart_items, $event['paypal']).'
     					</div>';	
     				} else if ($MYVARS->GET['payment_method'] == "Campership") { // Campership
                         echo '<br />
@@ -244,7 +244,7 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
 }
 
 function common_weeks($event, $included = true, $id, $regid = "", $autofill = 0) {
-global $CFG,$USER,$PAGE;
+global $CFG, $USER, $PAGE;
 	$returnme = "";
 	$time = get_timestamp();
     $camper_age = $autofill == 0 ? false : get_db_field("value","events_registrations_values","regid='$regid' AND elementname='Camper_Age'");

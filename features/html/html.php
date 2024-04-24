@@ -24,14 +24,14 @@ global $CFG, $MYVARS, $USER;
 	$feature = "html";
 
 	//Default Settings
-	$default_settings = default_settings($feature,$pageid,$featureid);
+	$default_settings = default_settings($feature, $pageid, $featureid);
 	$setting_names = get_setting_names($default_settings);
 
 	//Check if any settings exist for this feature
-	if ($settings = fetch_settings($feature,$featureid,$pageid)) {
-        echo make_settings_page($setting_names,$settings,$default_settings,$feature,$featureid,$pageid);
+	if ($settings = fetch_settings($feature, $featureid, $pageid)) {
+        echo make_settings_page($setting_names, $settings, $default_settings);
 	} else { //No Settings found...setup default settings
-		if (make_or_update_settings_array($settings_array)) { html_settings(); }
+		if (make_or_update_settings_array($default_settings)) { html_settings(); }
 	}
 }
 
@@ -40,7 +40,7 @@ global $CFG, $MYVARS, $USER;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
 	$featureid = dbescape($MYVARS->GET['featureid']);
 	$now = get_timestamp();
-	if (!user_has_ability_in_page($USER->userid,"edithtml",$pageid)) { echo get_page_error_message("no_permission",array("edithtml")); return; }
+	if (!user_has_ability_in_page($USER->userid,"edithtml", $pageid)) { echo get_page_error_message("no_permission",array("edithtml")); return; }
 	$SQL = "SELECT * FROM html WHERE htmlid='$featureid'";
     if ($row = get_db_row($SQL)) {
         if (($now - $row["edit_time"]) > 30) {
@@ -57,7 +57,7 @@ global $CFG, $MYVARS, $USER;
     				</tr>
     			</table>
     		</div>';
-    		echo js_code_wrap('var stillediting = setInterval(function() { ajaxapi(\'/features/html/html_ajax.php\',\'still_editing\',\'&htmlid='.$featureid.'&userid='.$userid.'\',function() { if (xmlHttp.readyState == 4) { do_nothing(); }},true);},5000);');
+    		echo js_code_wrap('var stillediting = setInterval(function() { ajaxapi(\'/features/html/html_ajax.php\',\'still_editing\',\'&htmlid='.$featureid.'&userid='.$userid.'\',function() { if (xmlHttp.readyState == 4) { do_nothing(); }}, true);},5000);');
 			execute_db_sql("UPDATE html SET edit_user='$userid',edit_time='$now' WHERE htmlid=$featureid");
     	} else {
     		echo '
@@ -77,7 +77,7 @@ function deletecomment() {
 global $CFG, $MYVARS, $USER;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
 	$userid = dbescape($MYVARS->GET["userid"]);
-	if (!(user_has_ability_in_page($USER->userid,"deletecomments",$pageid) || ($USER->userid == $userid && user_has_ability_in_page($USER->userid,"makecomments",$pageid)))) { echo get_page_error_message("generic_permissions"); return;}
+	if (!(user_has_ability_in_page($USER->userid,"deletecomments", $pageid) || ($USER->userid == $userid && user_has_ability_in_page($USER->userid,"makecomments", $pageid)))) { echo get_page_error_message("generic_permissions"); return;}
 	$commentid = dbescape($MYVARS->GET["commentid"]);
 	echo '
 	<table style="width:80%;margin-left: auto; margin-right: auto;">
@@ -98,7 +98,7 @@ global $CFG, $MYVARS, $USER;
 function makecomment() {
 global $CFG, $MYVARS, $USER;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
-    if (!user_has_ability_in_page($USER->userid,"makecomments",$pageid)) { echo get_page_error_message("no_permission",array("makecomments")); return; }
+    if (!user_has_ability_in_page($USER->userid,"makecomments", $pageid)) { echo get_page_error_message("no_permission",array("makecomments")); return; }
 
 	$htmlid = dbescape($MYVARS->GET["htmlid"]);
 	echo '
@@ -125,7 +125,7 @@ global $CFG, $MYVARS, $USER;
 function makereply() {
 global $CFG, $MYVARS, $USER;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
-    if (!user_has_ability_in_page($USER->userid,"makereplies",$pageid)) { echo get_page_error_message("no_permission",array("makereplies")); return; }
+    if (!user_has_ability_in_page($USER->userid,"makereplies", $pageid)) { echo get_page_error_message("no_permission",array("makereplies")); return; }
 
 	$commentid = dbescape($MYVARS->GET["commentid"]);
 	$comment = htmlentities(get_db_field("comment","html_comments","commentid='$commentid'"));
@@ -163,7 +163,7 @@ global $CFG, $MYVARS, $USER;
 function editreply() {
 global $CFG, $MYVARS, $USER;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
-    if (!user_has_ability_in_page($USER->userid,"makereplies",$pageid)) { echo get_page_error_message("no_permission",array("makereplies")); return; }
+    if (!user_has_ability_in_page($USER->userid,"makereplies", $pageid)) { echo get_page_error_message("no_permission",array("makereplies")); return; }
 
 	$commentid = dbescape($MYVARS->GET["commentid"]);
 	$replyid = dbescape($MYVARS->GET["replyid"]);
@@ -205,7 +205,7 @@ global $CFG, $MYVARS, $USER;
 	$userid = dbescape($MYVARS->GET["userid"]);
 	$commentid = dbescape($MYVARS->GET["commentid"]);
 	$commentuser = htmlentities(get_db_field("userid","html_comments","commentid='$commentid'"));
-	if (!(user_has_ability_in_page($USER->userid,"editanycomment",$pageid) || ($USER->userid == $userid && user_has_ability_in_page($USER->userid,"makecomments",$pageid)))) { echo get_page_error_message("generic_permissions"); return;}
+	if (!(user_has_ability_in_page($USER->userid,"editanycomment", $pageid) || ($USER->userid == $userid && user_has_ability_in_page($USER->userid,"makecomments", $pageid)))) { echo get_page_error_message("generic_permissions"); return;}
 
 	$comment = htmlentities(get_db_field("comment","html_comments","commentid='$commentid'"));
 	echo '
@@ -241,7 +241,7 @@ global $CFG, $MYVARS, $USER;
 function deletereply() {
 global $CFG, $MYVARS, $USER;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
-    if (!user_has_ability_in_page($USER->userid,"deletereply",$pageid)) { echo get_page_error_message("no_permission",array("deletereply")); return; }
+    if (!user_has_ability_in_page($USER->userid,"deletereply", $pageid)) { echo get_page_error_message("no_permission",array("deletereply")); return; }
 
 	$replyid = dbescape($MYVARS->GET["replyid"]);
 	echo '
@@ -268,17 +268,17 @@ global $CFG, $MYVARS, $USER, $ROLES;
 
     if (!is_logged_in() && isset($key)) { key_login($key); }
 
-    $settings = fetch_settings("html",$htmlid,$pageid);
+    $settings = fetch_settings("html", $htmlid, $pageid);
 
 	if (is_logged_in()) {
-		if (user_has_ability_in_page($USER->userid,"viewhtml",$pageid)) {
-			$abilities = get_user_abilities($USER->userid,$pageid,"html");
+		if (user_has_ability_in_page($USER->userid,"viewhtml", $pageid)) {
+			$abilities = get_user_abilities($USER->userid, $pageid,"html");
 			echo '<a href="'.$CFG->wwwroot.'/index.php?pageid='.$pageid.'">Home</a>
 			<table style="margin-left:auto;margin-right:auto;width:100%">
 				<tr>
 					<td>
 						'.
-						get_html($pageid,$htmlid,$settings,$abilities,false,true)
+						get_html($pageid, $htmlid, $settings, $abilities, false, true)
 						.'
 					</td>
 				</tr>
@@ -286,20 +286,20 @@ global $CFG, $MYVARS, $USER, $ROLES;
 		} else { echo '<center>You do not have proper permissions to view this item.</center>';}
 	} else {
 		if (get_db_field("siteviewable","pages","pageid=$pageid") && role_has_ability_in_page($ROLES->visitor, 'viewhtml', $pageid)) {
-			$abilities = get_user_abilities($USER->userid,$pageid,"html");
+			$abilities = get_user_abilities($USER->userid, $pageid,"html");
 			echo '<a href="'.$CFG->wwwroot.'/index.php?pageid='.$pageid.'">Home</a>
 			<table style="margin-left:auto;margin-right:auto;width:100%">
 				<tr>
 					<td>
 						'.
-						get_html($pageid,$htmlid,$settings,$abilities,false,true)
+						get_html($pageid, $htmlid, $settings, $abilities, false, true)
 						.'
 					</td>
 				</tr>
 			</table>';
 		} else {
             echo '<div id="standalone_div"><input type="hidden" id="reroute" value="/features/html/html.php:viewhtml:&amp;pageid='.$pageid.'&amp;htmlid='.$htmlid . ':standalone_div" />';
-            echo '<div style="width:100%; text-align:center;">You must login to see this content.<br /><center>'.get_login_form(true,false) . '</center></div></div>';
+            echo '<div style="width:100%; text-align:center;">You must login to see this content.<br /><center>'.get_login_form(true, false) . '</center></div></div>';
 		}
 	}
 }
