@@ -39,10 +39,10 @@ global $CFG, $HELP;
     $lang = explode(":", $help);
     $string = $lang[0];
     if (isset($lang[2])) {
-        include($CFG->dirroot . '/features/'.$lang[1]."/".$lang[2]."/lang.php");
+        include($CFG->dirroot . '/features/' . $lang[1]. "/" . $lang[2]."/lang.php");
         return $HELP->$string;        
     }elseif (isset($lang[1])) {
-        include($CFG->dirroot . '/features/'.$lang[1]."/lang.php");
+        include($CFG->dirroot . '/features/' . $lang[1]."/lang.php");
         return $HELP->$string;
     } else { return $HELP->$help; }
 }

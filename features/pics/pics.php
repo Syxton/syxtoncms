@@ -12,7 +12,7 @@ if (empty($_POST["aslib"])) {
     
     callfunction();
     
-	echo get_js_tags(array("features/pics/pics.js", "features/pics/uploads.js"));
+	echo get_js_tags(["features/pics/pics.js", "features/pics/uploads.js"]);
     
     echo '</body></html>';
 }
@@ -40,11 +40,11 @@ global $CFG, $MYVARS, $USER;
 	$pageid = $MYVARS->GET["pageid"];
 	if (!user_has_ability_in_page($USER->userid,"addpics", $pageid)) { echo get_page_error_message("no_permission",array("addpics")); return; }
 	echo '
-    <form id="pics_form" method="post" action="'.$CFG->wwwroot.'/features/pics/pics_ajax.php" enctype="multipart/form-data">
+    <form id="pics_form" method="post" action="' . $CFG->wwwroot . '/features/pics/pics_ajax.php" enctype="multipart/form-data">
     <input type="hidden" id="filenames" name="filenames" />
     <input type="hidden" name="action" value="pics_upload" />
-    <input type="hidden" name="featureid" value="'.$featureid.'" />
-    <input type="hidden" name="pageid" value="'.$pageid.'" />
+    <input type="hidden" name="featureid" value="' . $featureid . '" />
+    <input type="hidden" name="pageid" value="' . $pageid . '" />
     <input style="margin:10px;vertical-align:bottom; float:right;" type="button" name="upload_form" value="Upload Files" onclick="update_picslist();">
     Click the browse button to choose the images you would like to upload.  You can add as many as you would like.  The images will not be uploaded to the server until you click the Upload File button.
     <p>
@@ -58,7 +58,7 @@ global $CFG, $MYVARS, $USER;
     						New Gallery:
     					</td>
     					<td class="field_input">
-    						<select id="new_gallery" name="new_gallery" onchange="ajaxapi(\'/features/pics/pics_ajax.php\',\'new_gallery\',\'&param=\' + this.value + \'&pageid='.$pageid.'\',function() { simple_display(\'gallery_name_div\');});"><option value="1">Yes</option><option value="0">No</option></select>
+    						<select id="new_gallery" name="new_gallery" onchange="ajaxapi(\'/features/pics/pics_ajax.php\',\'new_gallery\',\'&param=\' + this.value + \'&pageid=' . $pageid . '\',function() { simple_display(\'gallery_name_div\');});"><option value="1">Yes</option><option value="0">No</option></select>
     					</td>
     				</tr>
     			</table>
@@ -104,9 +104,9 @@ function get_galleries($pageid, $featureid) {
 	if ($results = get_db_result("SELECT picsid, gallery_title FROM pics WHERE pageid='$pageid' AND featureid='$featureid' GROUP BY gallery_title ORDER BY dateadded DESC")) {
 		$returnme = '<select id="galleries" width="205" style="width: 205">';
 		while ($row = fetch_row($results)) {
-			$returnme .= '<option value="'.$row['picsid'].'">'. $row['gallery_title'] .'</option>';
+			$returnme .= '<option value="' . $row['picsid'] . '">' . $row['gallery_title'] . '</option>';
 		}
-        $returnme .= '</select>&nbsp;<input type="button" value="Select" onclick="ajaxapi(\'/features/pics/pics_ajax.php\',\'get_gallery_pics\',\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'&amp;galleryid=\'document.getElementById(\'galleries\').value\',function() { simple_display(\'pics_list\');});" />';
+        $returnme .= '</select>&nbsp;<input type="button" value="Select" onclick="ajaxapi(\'/features/pics/pics_ajax.php\',\'get_gallery_pics\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;galleryid=\'document.getElementById(\'galleries\').value\',function() { simple_display(\'pics_list\');});" />';
         return $returnme;
 	}
     return false;

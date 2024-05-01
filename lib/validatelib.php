@@ -7,7 +7,7 @@
 * Revision: 0.0.4
 ***************************************************************************/
 
-if (!isset($LIBHEADER)) include('header.php');
+if (!isset($LIBHEADER)) { include('header.php'); }
 $VALIDATELIB = true;
 
 function create_validation_script($formname, $function, $ajax=false) {
@@ -15,9 +15,9 @@ global $CFG;
 	$setup = '';
 	$script = '
 	$.validator.setDefaults({done: \'valid\'});
-	$(\'#'.$formname.'\').validate({
+	$(\'#' . $formname . '\').validate({
 		meta: \'validate\',
-		submitHandler: function() { '.$function.' },
+		submitHandler: function() { ' . $function . ' },
 		ignore: \'.calendarDateInput\'
 	});';
 

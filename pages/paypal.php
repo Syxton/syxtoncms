@@ -62,11 +62,11 @@ if (!$fp) {
   	if (!empty($keyarray['item_number']) && $keyarray['item_number'] == "DONATE") {
   		$SQL = "SELECT *
                 FROM donate_donations
-               WHERE paypal_TX ='".$keyarra["txn_id"]."'";
+               WHERE paypal_TX ='" . $keyarra["txn_id"] . "'";
       if (!get_db_row($SQL)) {
           $SQL = "INSERT INTO donate_donations
                              (campaign_id, paypal_TX, amount, timestamp)
-                       VALUES('".$keyarray["custom"]."','".$keyarray['txn_id']."','".$keyarray["payment_gross"]."',".get_timestamp().")";
+                       VALUES('" . $keyarray["custom"] . "','" . $keyarray['txn_id'] . "','" . $keyarray["payment_gross"] . "'," . get_timestamp() . ")";
           execute_db_sql($SQL);
       }
       echo template_use("tmp/paypal.template", array("type" => "donation"), "transaction_complete");
@@ -76,7 +76,7 @@ if (!$fp) {
                 FROM logfile
                WHERE feature = 'events'
                  AND description = 'Paypal'
-                 AND info = '".$keyarray['txn_id']."'";
+                 AND info = '" . $keyarray['txn_id'] . "'";
   		if (!get_db_row($SQL)) {
   			$regids = $keyarray['custom'];
   			$regids = explode(":", $regids);
@@ -85,7 +85,7 @@ if (!$fp) {
           $rid = $regids[$i];
   				$paid = get_db_field("value", "events_registrations_values", "elementname='paid' AND regid='$rid'");
   				$SQL = "UPDATE events_registrations_values
-                     SET value = ".($paid + $keyarray["mc_gross_".($i+1)])."
+                     SET value = " . ($paid + $keyarray["mc_gross_" . ($i + 1)]) . "
                    WHERE elementname = 'paid'
                      AND regid = '$rid'";
   				execute_db_sql($SQL);
@@ -142,7 +142,7 @@ function print_cart($items, $donation = false) {
 global $CFG;
 	$i = 0; $cartitems = "";
   while ($i < $items["num_cart_items"]) {
-    $params = array("itemname" => $items["item_name".($i+1)] , "itemprice" => $items["mc_gross_".($i+1)]);
+    $params = array("itemname" => $items["item_name" . ($i + 1)] , "itemprice" => $items["mc_gross_" . ($i + 1)]);
 		$cartitems .= template_use("tmp/paypal.template", $params, "print_cart_row_template");
 		$i++;
 	}

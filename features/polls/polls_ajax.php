@@ -24,17 +24,17 @@ global $CFG, $MYVARS;
 	$startdate = $MYVARS->GET["startdate"]; $stopdate = $MYVARS->GET["stopdate"];
 
 	if ($MYVARS->GET["startdateenabled"] && $startdate) { //checked box and a date is included.
-		$startdate = ",startdate='".strtotime($startdate)."'";
+		$startdate = ",startdate='" . strtotime($startdate) . "'";
 	}elseif (!$MYVARS->GET["startdateenabled"] && $startdate) {
-		$startdate = ",startdate='".strtotime($startdate)."'";
+		$startdate = ",startdate='" . strtotime($startdate) . "'";
 	}elseif (!$MYVARS->GET["startdateenabled"] && !$startdate) {
 		$startdate = ",startdate='0'";
 	}
 
 	if ($MYVARS->GET["stopdateenabled"] && $stopdate) { //checked box and a date is included.
-		$stopdate = ",stopdate='".strtotime($stopdate)."'";
+		$stopdate = ",stopdate='" . strtotime($stopdate) . "'";
 	}elseif (!$MYVARS->GET["stopdateenabled"] && $stopdate) {
-		$stopdate = ",stopdate='".strtotime($stopdate)."'";
+		$stopdate = ",stopdate='" . strtotime($stopdate) . "'";
 	}elseif (!$MYVARS->GET["stopdateenabled"] && !$stopdate) {
 		$stopdate = ",stopdate='0'";
 	}
@@ -42,10 +42,10 @@ global $CFG, $MYVARS;
 	$answers = explode(',', $answers);
 	$i = 1;
 	while (isset($answers[$i-1])) {
-        if ($answer = get_db_row("SELECT * FROM polls_answers WHERE pollid='$pollid' AND answer='".$answers[$i-1]."'")) { //already exists so just update the sort
-            execute_db_sql("UPDATE polls_answere SET sort='$i' WHERE answerid='".$answer["answerid"]."'");
+        if ($answer = get_db_row("SELECT * FROM polls_answers WHERE pollid='$pollid' AND answer='" . $answers[$i-1]."'")) { //already exists so just update the sort
+            execute_db_sql("UPDATE polls_answere SET sort='$i' WHERE answerid='" . $answer["answerid"] . "'");
         } else { //answer doesn't exist so make it
-            $SQL = "INSERT INTO polls_answers (pollid,answer,sort) VALUES('$pollid','".$answers[$i-1]."','$i')";
+            $SQL = "INSERT INTO polls_answers (pollid,answer,sort) VALUES('$pollid','" . $answers[$i-1]."','$i')";
             execute_db_sql($SQL);
         }
 		$i++;
@@ -63,7 +63,7 @@ global $CFG, $MYVARS;
         	}
 
             if (!$found) {
-                execute_db_sql("DELETE FROM polls_answers WHERE answerid='".$row["answerid"]."'");
+                execute_db_sql("DELETE FROM polls_answers WHERE answerid='" . $row["answerid"] . "'");
             }
         }
     }
@@ -82,7 +82,7 @@ global $CFG, $USER, $MYVARS;
     $extra = $MYVARS->GET["extra"];
 
 	$userid = is_logged_in() ? $USER->userid : '0';
-	execute_db_sql("INSERT INTO polls_response (pollid,ip,userid,answer) VALUES('$featureid','".$USER->ip."','$userid','$extra')");
+	execute_db_sql("INSERT INTO polls_response (pollid,ip,userid,answer) VALUES('$featureid','" . $USER->ip."','$userid','$extra')");
     $area = get_db_field("area","pages_features","feature='polls' AND featureid=$featureid");
 	echo get_poll_results($featureid, $area);
 }
@@ -119,10 +119,10 @@ global $CFG, $MYVARS, $USER;
 	if ($extra == 'open') {
 		$returnme = "";
 		if (user_has_ability_in_page($USER->userid,"editopenpolls", $pageid,"polls", $featureid)) {
-            $returnme .= make_modal_links(array("title"=> "Edit Feature","path"=>$CFG->wwwroot."/features/polls/polls.php?action=editpoll&amp;pageid=$pageid&amp;featureid=$featureid","refresh"=>"true","iframe"=>"true","width"=>"800","height"=>"400","image"=>$CFG->wwwroot."/images/edit.png"));
+            $returnme .= make_modal_links(array("title"=> "Edit Feature","path" => $CFG->wwwroot . "/features/polls/polls.php?action=editpoll&amp;pageid=$pageid&amp;featureid=$featureid","refresh" => "true","iframe" => "true","width" => "800","height" => "400","image" => $CFG->wwwroot . "/images/edit.png"));
         }
         if (user_has_ability_in_page($USER->userid,"closepolls", $pageid,"polls", $featureid)) {
-            $returnme .= '<a title="Close Poll" onclick="if (confirm(\'Are you sure you would like to close this poll?  Once a poll is closed, it cannot be reopened.\')) { ajaxapi(\'/features/polls/polls_ajax.php\',\'closepoll\',\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'&amp;extra=\',function() { simple_display(\'polldiv'.$featureid.'\'); ajaxapi(\'/features/polls/polls_ajax.php\',\'pollstatuspic\',\'&amp;pageid='.$pageid.'&amp;featureid='.$featureid.'&amp;extra=close\',function() { simple_display(\'pollstatus'.$featureid.'\'); });}); }"><img src="'.$CFG->wwwroot.'/images/stop.png" alt="Close Poll" /></a> ';
+            $returnme .= '<a title="Close Poll" onclick="if (confirm(\'Are you sure you would like to close this poll?  Once a poll is closed, it cannot be reopened.\')) { ajaxapi(\'/features/polls/polls_ajax.php\',\'closepoll\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;extra=\',function() { simple_display(\'polldiv' . $featureid . '\'); ajaxapi(\'/features/polls/polls_ajax.php\',\'pollstatuspic\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;extra=close\',function() { simple_display(\'pollstatus' . $featureid . '\'); });}); }"><img src="' . $CFG->wwwroot . '/images/stop.png" alt="Close Poll" /></a> ';
         }
 		echo $returnme;
 	} else {

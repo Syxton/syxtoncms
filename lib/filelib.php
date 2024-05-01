@@ -86,8 +86,8 @@ function make_csv($filename, $contents) {
         fputcsv($handle, $fields);
     }
     fclose($handle);
-    rename($tmpfname, $tempdir."/".$filename);
-    return addslashes($tempdir."/".$filename);
+    rename($tmpfname, $tempdir. "/" . $filename);
+    return addslashes($tempdir. "/" . $filename);
 }
 
 function create_file($filename, $contents, $makecsv=false) {
@@ -101,14 +101,14 @@ function create_file($filename, $contents, $makecsv=false) {
 
         fwrite($handle, stripslashes($contents));
         fclose($handle);
-        rename($tmpfname, $tempdir."/".$filename);
-        return addslashes($tempdir."/".$filename);
+        rename($tmpfname, $tempdir. "/" . $filename);
+        return addslashes($tempdir. "/" . $filename);
     }
 }
 
 function get_download_link($filename, $contents, $makecsv=false) {
     global $CFG;
-    return 'window.open("'.$CFG->wwwroot . '/scripts/download.php?file='.create_file($filename, $contents, $makecsv).'", "download","menubar=yes,toolbar=yes,scrollbars=1,resizable=1,width=600,height=400");';
+    return 'window.open("' . $CFG->wwwroot . '/scripts/download.php?file=' . create_file($filename, $contents, $makecsv) . '", "download","menubar=yes,toolbar=yes,scrollbars=1,resizable=1,width=600,height=400");';
 }
 
 function return_bytes ($size_str) {

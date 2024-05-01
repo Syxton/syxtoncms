@@ -39,8 +39,7 @@ class Facebook extends BaseFacebook
     parent::__construct($config);
   }
 
-  protected static $kSupportedKeys =
-    array('state', 'code', 'access_token', 'user_id');
+  protected static $kSupportedKeys = ['state', 'code', 'access_token', 'user_id'];
 
   /**
    * Provides the implementations of the inherited abstract
@@ -86,8 +85,6 @@ class Facebook extends BaseFacebook
   }
 
   protected function constructSessionVariableName($key) {
-    return implode('_', array('fb',
-                              $this->getAppId(),
-                              $key));
+    return implode('_', ['fb', $this->getAppId(), $key]);
   }
 }

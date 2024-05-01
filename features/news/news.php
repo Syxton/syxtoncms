@@ -47,10 +47,10 @@ global $CFG, $MYVARS, $USER;
         $title = stripslashes(htmlentities($row["title"]));
         $caption = stripslashes(htmlentities($row["caption"]));
         $content = stripslashes($row["content"]);
-        $button = '<input type="button" value="Save" onclick="ajaxapi(\'/features/news/news_ajax.php\',\'edit_news\',\'&amp;title=\'+escape($(\'#news_title\').val())+\'&amp;summary=\' + escape($(\'#news_summary\').val()) + \'&amp;pageid='.$pageid.'&amp;html=\'+escape('.get_editor_value_javascript().')+\'&amp;newsid='.$newsid.'\',function() { close_modal(); });" />';
+        $button = '<input type="button" value="Save" onclick="ajaxapi(\'/features/news/news_ajax.php\',\'edit_news\',\'&amp;title=\'+escape($(\'#news_title\').val())+\'&amp;summary=\' + escape($(\'#news_summary\').val()) + \'&amp;pageid=' . $pageid . '&amp;html=\'+escape(' . get_editor_value_javascript() . ')+\'&amp;newsid=' . $newsid . '\',function() { close_modal(); });" />';
     } else {
         if (!user_has_ability_in_page($USER->userid,"addnews", $pageid,"news", $featureid)) { echo get_page_error_message("no_permission",array("addnews")); return; }
-        $button = '<input type="button" value="Save" onclick="ajaxapi(\'/features/news/news_ajax.php\',\'add_news\',\'&amp;title=\'+escape($(\'#news_title\').val())+\'&amp;summary=\' + escape($(\'#news_summary\').val()) + \'&amp;pageid='.$pageid.'&amp;html=\'+escape('.get_editor_value_javascript().')+\'&amp;featureid='.$featureid.'\',function() { close_modal(); });" />';
+        $button = '<input type="button" value="Save" onclick="ajaxapi(\'/features/news/news_ajax.php\',\'add_news\',\'&amp;title=\'+escape($(\'#news_title\').val())+\'&amp;summary=\' + escape($(\'#news_summary\').val()) + \'&amp;pageid=' . $pageid . '&amp;html=\'+escape(' . get_editor_value_javascript() . ')+\'&amp;featureid=' . $featureid . '\',function() { close_modal(); });" />';
     }
 
 	echo '
@@ -61,7 +61,7 @@ global $CFG, $MYVARS, $USER;
 							News Title:
 						</td>
 						<td style="text-align:left; width:86%;">
-							<input type="text" id="news_title" size="60" maxlength="60" value="'. $title .'"/>
+							<input type="text" id="news_title" size="60" maxlength="60" value="' . $title . '"/>
 						</td>
 					</tr>
 					<tr>
@@ -69,7 +69,7 @@ global $CFG, $MYVARS, $USER;
 							Summary:
 						</td>
 						<td style="text-align:left; width:86%;">
-							<textarea id="news_summary" cols="60" rows="2" >'. $caption .'</textarea>
+							<textarea id="news_summary" cols="60" rows="2" >' . $caption . '</textarea>
 						</td>
 					</tr>
 					<tr>
@@ -80,7 +80,7 @@ global $CFG, $MYVARS, $USER;
 					<tr>
 						<td colspan="2">';
                             echo get_editor_box($content,null,"230",null,"News");
-							echo '<br />'.$button.'
+							echo '<br />' . $button . '
 						</td>
 					</tr>
 				</table>
@@ -93,13 +93,26 @@ global $CFG, $MYVARS, $USER, $ROLES;
     $pageid = $MYVARS->GET['pageid'];
     $newsonly = isset($MYVARS->GET['newsonly']) ? true : false;
 	if (is_logged_in()) {
-	    if (!user_has_ability_in_page($USER->userid,"viewnews", $pageid)) { echo get_page_error_message("no_permission",array("viewnews")); return; } else { echo news_wrapper($newsid, $pageid, $newsonly); }
+	    if (!user_has_ability_in_page($USER->userid, "viewnews", $pageid)) {
+			echo get_page_error_message("no_permission", ["viewnews"]);
+			return;
+		} else {
+			echo news_wrapper($newsid, $pageid, $newsonly);
+		}
 	} else {
 		if (get_db_field("siteviewable","pages","pageid=$pageid") && role_has_ability_in_page($ROLES->visitor, 'viewnews', $pageid)) {
             echo news_wrapper($newsid, $pageid, $newsonly);
 		} else {
-    		echo '<div id="standalone_div"><input type="hidden" id="reroute" value="/features/news/news.php:viewnews:&amp;pageid='.$pageid.'&amp;newsid='.$newsid . ':standalone_div" />
-    		      <div style="width:100%; text-align:center;">You must login to see this content.<br /><center>'.get_login_form(true, false) . '</center></div></div>';
+    		echo '	<div id="standalone_div">
+						<input type="hidden" id="reroute" value="/features/news/news.php:viewnews:&amp;pageid=' . $pageid . '&amp;newsid=' . $newsid . ':standalone_div" />
+						<div style="width:100%; text-align:center;">
+							You must login to see this content.
+							<br />
+							<center>
+								' . get_login_form(true, false) . '
+							</center>
+						</div>
+				    </div>';
 		}
 	}
 }
@@ -116,23 +129,21 @@ global $CFG;
 	$pagenews->userid = $news['userid'];
 	$display_news = $news['content'] == "" ? stripslashes($news['caption']) : stripslashes($news['content']);
 	if ($newsonly) {
-		return '
-		 <input id="lasthint" type="hidden" />
-			<table style="width:100%">
-				<tr>
-					<td>
-						'.$display_news.'
-					</td>
-				</tr>
-			</table>';
+		return '<div>
+					<h1 style="font-size:3em;text-align: center;">' . $pagenews->title . '</h1>
+					<div style="font-size:1.8em;text-align: center;color:grey;">' . $pagenews->caption . '</div>
+					<div style="font-size:1em;text-align:right;padding:10px;">By: ' . get_user_name($pagenews->userid) . '</div>
+					<br />
+					' . $display_news . '
+				</div>';
 	} else {
-		return main_body(true).'
-		<a href="'.$CFG->wwwroot.'/index.php?pageid='.$pageid.'">Home</a>
+		return main_body(true) . '
+		<a href="' . $CFG->wwwroot . '/index.php?pageid=' . $pageid . '">Home</a>
 		<table style="margin-left:auto;margin-right:auto;width:800px">
 			<tr>
 				<td>
-					'. make_news_table($pageid, $pagenews,"middle", $daygraphic, true) .'<br />
-					'.$display_news.'
+					' . make_news_table($pageid, $pagenews, "middle", $daygraphic, true) . '<br />
+					' . $display_news . '
 				</td>
 			</tr>
 		</table>';

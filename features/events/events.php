@@ -13,7 +13,7 @@ if (empty($_POST["aslib"])) {
     callfunction();
 
     echo '<input id="lasthint" type="hidden" />';
-	echo get_js_tags(array("features/events/events.js"));
+	echo get_js_tags(["features/events/events.js"]);
     echo get_editor_javascript();
 
     echo '</body></html>';
@@ -40,20 +40,20 @@ global $CFG, $MYVARS, $USER;
 function event_manager() {
 global $CFG, $MYVARS, $USER;
 
-    echo '<div class="dontprint"><form onsubmit="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';ajaxapi(\'/features/events/events_ajax.php\',\'eventsearch\',\'&amp;pageid='.$MYVARS->GET["pageid"].'&amp;searchwords=\'+escape(document.getElementById(\'searchbox\').value),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }}, true); return false;">
+    echo '<div class="dontprint"><form onsubmit="$(\'#loading_overlay\').show();ajaxapi(\'/features/events/events_ajax.php\',\'eventsearch\',\'&amp;pageid=' . $MYVARS->GET["pageid"] . '&amp;searchwords=\'+escape(document.getElementById(\'searchbox\').value),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); $(\'#loading_overlay\').hide(); }}, true); return false;">
 	Event Search <input type="text" id="searchbox" name="searchbox" />&nbsp;<input type="submit" value="Search" /><div style="float:right;width: 150px;">Search for events by their name.</div>
 	<br /></form></div>
-	<div id="loading_overlay" class="dontprint" style="text-align:center;position:absolute;width:98%;height:85%;background-color:white;opacity:.6;visibility:hidden;"><br /><br /><br /><img src="' . $CFG->wwwroot . '/images/loading_large.gif" /></div>
+	<div id="loading_overlay" class="dontprint" style="text-align:center;position:absolute;width:98%;height:85%;background-color:white;opacity:.6;display:none;"><br /><br /><br /><img src="' . $CFG->wwwroot . '/images/loading_large.gif" /></div>
 	<span id="searchcontainer"></span>';
 }
 
 function template_manager() {
 global $CFG, $MYVARS, $USER;
 
-    echo '<div class="dontprint"><form onsubmit="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';ajaxapi(\'/features/events/events_ajax.php\',\'templatesearch\',\'&amp;pageid='.$MYVARS->GET["pageid"].'&amp;searchwords=\'+escape(document.getElementById(\'searchbox\').value),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }}, true); return false;">
+    echo '<div class="dontprint"><form onsubmit="$(\'#loading_overlay\').show();ajaxapi(\'/features/events/events_ajax.php\',\'templatesearch\',\'&amp;pageid=' . $MYVARS->GET["pageid"] . '&amp;searchwords=\'+escape(document.getElementById(\'searchbox\').value),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); $(\'#loading_overlay\').hide(); }}, true); return false;">
 	Template Search <input type="text" id="searchbox" name="searchbox" />&nbsp;<input type="submit" value="Search" /><div style="float:right;width: 150px;">Search for templates by their name.</div>
 	<br /></form></div>
-	<div id="loading_overlay" class="dontprint" style="text-align:center;position:absolute;width:98%;height:85%;background-color:white;opacity:.6;visibility:hidden;"><br /><br /><br /><img src="' . $CFG->wwwroot . '/images/loading_large.gif" /></div>
+	<div id="loading_overlay" class="dontprint" style="text-align:center;position:absolute;width:98%;height:85%;background-color:white;opacity:.6;display:none;"><br /><br /><br /><img src="' . $CFG->wwwroot . '/images/loading_large.gif" /></div>
 	<span id="searchcontainer"></span>';
 }
 
@@ -70,35 +70,45 @@ global $CFG, $MYVARS, $USER;
 			$i++;
 		}
 
+		$params = [
+			"properties" => [
+				"name" => "appyears",
+				"id" => "appyears",
+			],
+			"values" => $values,
+			"valuename" => "year",
+			"displayname" => "year",
+			"selected" => date("Y"),
+		];
         $export = '<div style="float:right;">
-                    ' . make_select_from_array("appyears", $values,"year","year",date("Y")) . '
+                    ' . make_select($params) . '
                     <a href="javascript: void(0);"
-                                       onclick="ajaxapi(\'/features/events/events_ajax.php\',
-                                                        \'export_staffapp\',
-                                                        \'&amp;pageid='.$pageid.'&amp;year=\'+$(\'#appyears\').val(),
-                                                        function() {
-                                                            if (xmlHttp.readyState == 4) {
-                                                                run_this();
-                                                            }
-                                                        },
-                                                        true
-                                                );">
+						onclick="ajaxapi(\'/features/events/events_ajax.php\',
+										\'export_staffapp\',
+										\'&amp;pageid=' . $pageid . '&amp;year=\'+$(\'#appyears\').val(),
+										function() {
+											if (xmlHttp.readyState == 4) {
+												run_this();
+											}
+										},
+										true
+								);">
                         <img src="' . $CFG->wwwroot . '/images/csv.png" title="Export" />
                     </a><div></div>
                     </div>';
     }
 
-    echo '<div class="dontprint"><form onsubmit="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';ajaxapi(\'/features/events/events_ajax.php\',\'appsearch\',\'&amp;pageid='.$MYVARS->GET["pageid"].'&amp;searchwords=\'+escape($(\'#searchbox\').val()),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }}, true); return false;">
+    echo '<div class="dontprint"><form onsubmit="$(\'#loading_overlay\').show(); ajaxapi(\'/features/events/events_ajax.php\',\'appsearch\',\'&amp;pageid=' . $MYVARS->GET["pageid"] . '&amp;searchwords=\'+escape($(\'#searchbox\').val()),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); $(\'#loading_overlay\').hide(); }}, true); return false;">
 	Applicant Search <input type="text" id="searchbox" name="searchbox" />&nbsp;<input type="submit" value="Search" /><div style="float:right;width: 150px;">Search for applicants by their name.</div>
-	'.$export.'
+	' . $export . '
     </form></div>
-	<div id="loading_overlay" class="dontprint" style="text-align:center;position:absolute;width:98%;height:85%;background-color:white;opacity:.6;visibility:hidden;"><br /><br /><br /><img src="' . $CFG->wwwroot . '/images/loading_large.gif" /></div>
+	<div id="loading_overlay" class="dontprint" style="text-align:center;position:absolute;width:98%;height:85%;background-color:white;opacity:.6;display:none;"><br /><br /><br /><img src="' . $CFG->wwwroot . '/images/loading_large.gif" /></div>
 	<span id="searchcontainer"></span>';
 }
 
 function staff_emailer() {
 global $CFG, $MYVARS, $USER;
-    echo '<div class="dontprint"><form onsubmit="document.getElementById(\'loading_overlay\').style.visibility=\'visible\';ajaxapi(\'/features/events/events_ajax.php\',\'sendstaffemails\',\'&amp;sendemails=\'+$(\'#sendemails\').prop(\'checked\')+\'&amp;stafflist=\'+encodeURIComponent($(\'#stafflist\').val()),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); document.getElementById(\'loading_overlay\').style.visibility=\'hidden\'; }}, true); return false;">
+    echo '<div class="dontprint"><form onsubmit="$(\'#loading_overlay\').show(); ajaxapi(\'/features/events/events_ajax.php\',\'sendstaffemails\',\'&amp;sendemails=\'+$(\'#sendemails\').prop(\'checked\')+\'&amp;stafflist=\'+encodeURIComponent($(\'#stafflist\').val()),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); $(\'#loading_overlay\').hide(); }}, true); return false;">
 	<div style="text-align:center;margin:5px;font-weight: bolder;">Staff Status Checker</div>
     <div style="float:right;line-height:35px;">
 		<label class="rowTitle" for="workerconsentsig">Send Emails</label>
@@ -108,7 +118,7 @@ global $CFG, $MYVARS, $USER;
     <textarea rows="15" id="stafflist" name="stafflist" style="width:100%;max-width:500px"></textarea>
     <div style="text-align:center;margin:5px;"><input type="submit" value="Process" /></div>
     </form></div>
-	<div id="loading_overlay" class="dontprint" style="text-align:center;position:absolute;width:98%;background-color:white;opacity:.6;visibility:hidden;"><br /><br /><br /><img src="' . $CFG->wwwroot . '/images/loading_large.gif" /></div>
+	<div id="loading_overlay" class="dontprint" style="text-align:center;position:absolute;width:98%;background-color:white;opacity:.6;display:none;"><br /><br /><br /><img src="' . $CFG->wwwroot . '/images/loading_large.gif" /></div>
 	<span id="searchcontainer"></span>';
 }
 
@@ -117,16 +127,16 @@ global $CFG, $MYVARS, $USER;
     $regcode = isset($MYVARS->GET["regcode"]) ? $MYVARS->GET["regcode"] : "";
 
     if (empty($MYVARS->GET["modal"])) {
-		echo get_js_tags(array("jquery"));
+		echo get_js_tags(["jquery"]);
         echo main_body(true) . '<br /><br />';
     }
 
 	echo js_code_wrap('window.onload = function () { if ($("#code").val() != "") { lookup_reg($("#code").val()); } }', "", true);
     echo '
         <div style="text-align:center;padding:15px;">
-            <h3>'.$CFG->sitename.' Registration Lookup</h3><br />
+            <h3>' . $CFG->sitename . ' Registration Lookup</h3><br />
             <form id="payarea_form" onsubmit="lookup_reg($(\'#code\').val()); return false;">
-            Enter your Registration ID: <input type="text" id="code" size="35" value="'.$regcode.'" /> <input type="submit" value="Submit" />
+            Enter your Registration ID: <input type="text" id="code" size="35" value="' . $regcode . '" /> <input type="submit" value="Submit" />
             </form>
         </div>
         <div id="payarea" style="padding:15px;"></div>
@@ -150,37 +160,37 @@ global $CFG, $MYVARS, $USER;
 
     	echo create_validation_script("request_form" , "ajaxapi('/features/events/events_ajax.php','event_request',create_request_string('request_form'),function() { simple_display('request_form_div'); });") . '
     	<div class="formDiv" id="request_form_div">
-        <p align="center"><b><font size="+1">Event Request Form</font></b></p><br />'.$request_text.'<br />If you would like to have your event hosted at ' . get_db_field("location","events_locations","id=$locationid") . ' please fill out the below form and we will get back to you.<br />
+        <p align="center"><b><font size="+1">Event Request Form</font></b></p><br />' . $request_text . '<br />If you would like to have your event hosted at ' . get_db_field("location","events_locations","id=$locationid") . ' please fill out the below form and we will get back to you.<br />
     		<br /><br />
     		<form name="request_form" id="request_form">
-                <input type="hidden" id="featureid" name="featureid" value="'.$featureid.'" />
+                <input type="hidden" id="featureid" name="featureid" value="' . $featureid . '" />
     			<fieldset class="formContainer">
                     <div class="rowContainer">
-    					<label for="name">Contact Name</label><input type="text" id="name" name="name" data-rule-required="true" data-msg-required="'.get_error_message('valid_request_name:events').'" /><div class="tooltipContainer info">'.get_help("input_request_name:events").'</div><br />
+    					<label for="name">Contact Name</label><input type="text" id="name" name="name" data-rule-required="true" data-msg-required="' . get_error_message('valid_request_name:events') . '" /><div class="tooltipContainer info">' . get_help("input_request_name:events") . '</div><br />
     				</div>
     				<div class="rowContainer">
-    					<label for="email">Email Address</label><input type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-msg-required="'.get_error_message('valid_request_email:events').'" data-msg-email="'.get_error_message('valid_request_email_invalid:events').'" /><div class="tooltipContainer info">'.get_help("input_request_email:events").'</div><br />
+    					<label for="email">Email Address</label><input type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-msg-required="' . get_error_message('valid_request_email:events') . '" data-msg-email="' . get_error_message('valid_request_email_invalid:events') . '" /><div class="tooltipContainer info">' . get_help("input_request_email:events") . '</div><br />
     				</div>
        	            <div class="rowContainer">
-				        <label for="phone">Phone</label><input type="text" id="phone" name="phone" data-rule-required="true"  data-rule-phone="true" data-msg-required="'.get_error_message('valid_request_phone:events').'" data-msg-phone="'.get_error_message('valid_request_phone_invalid:events').'" /><div class="tooltipContainer info">'.get_help("input_request_phone:events").'</div><br />
+				        <label for="phone">Phone</label><input type="text" id="phone" name="phone" data-rule-required="true"  data-rule-phone="true" data-msg-required="' . get_error_message('valid_request_phone:events') . '" data-msg-phone="' . get_error_message('valid_request_phone_invalid:events') . '" /><div class="tooltipContainer info">' . get_help("input_request_phone:events") . '</div><br />
                     </div>
                     <div class="rowContainer">
-    					<label for="event_name">Event Name</label><input type="text" id="event_name" name="event_name" data-rule-required="true" data-msg-required="'.get_error_message('valid_request_event_name:events').'" /><div class="tooltipContainer info">'.get_help("input_request_event_name:events").'</div><br />
+    					<label for="event_name">Event Name</label><input type="text" id="event_name" name="event_name" data-rule-required="true" data-msg-required="' . get_error_message('valid_request_event_name:events') . '" /><div class="tooltipContainer info">' . get_help("input_request_event_name:events") . '</div><br />
     				</div>
         			<div class="rowContainer">
-        				<label for="startdate">Event Start Date</label><input type="text" id="startdate" name="startdate" data-rule-required="true" data-rule-date="true" data-rule-futuredate="true" date-rule-ajax1="features/events/events_ajax.php::request_date_open::&featureid='.$featureid.'&startdate=::true" data-msg-ajax1="'.get_error_message('valid_request_date_used:events').'" data-msg-futuredate="'.get_error_message('valid_request_date_future:events').'" /><div class="tooltipContainer info">'.get_help("input_request_startdate:events").'</div>
+        				<label for="startdate">Event Start Date</label><input type="text" id="startdate" name="startdate" data-rule-required="true" data-rule-date="true" data-rule-futuredate="true" date-rule-ajax1="features/events/events_ajax.php::request_date_open::&featureid=' . $featureid . '&startdate=::true" data-msg-ajax1="' . get_error_message('valid_request_date_used:events') . '" data-msg-futuredate="' . get_error_message('valid_request_date_future:events') . '" /><div class="tooltipContainer info">' . get_help("input_request_startdate:events") . '</div>
         			</div>
         			<div class="rowContainer">
         				<label>&nbsp;</label><span style="font-size:.8em;">through</span>
         			</div>
         			<div class="rowContainer">
-        				<label for="enddate">Event End Date</label><input type="text" id="enddate" name="enddate" data-rule-date="true" data-rule-futuredate="#startdate" data-rule-ajax1="features/events/events_ajax.php::request_date_open::&featureid='.$featureid.'&startdate=#startdate&enddate=::true" data-msg-ajax1="'.get_error_message('valid_request_date_used:events').'" data-msg-futuredate="'.get_error_message('valid_request_date_later:events').'" /><div class="tooltipContainer info">'.get_help("input_request_enddate:events").'</div>
+        				<label for="enddate">Event End Date</label><input type="text" id="enddate" name="enddate" data-rule-date="true" data-rule-futuredate="#startdate" data-rule-ajax1="features/events/events_ajax.php::request_date_open::&featureid=' . $featureid . '&startdate=#startdate&enddate=::true" data-msg-ajax1="' . get_error_message('valid_request_date_used:events') . '" data-msg-futuredate="' . get_error_message('valid_request_date_later:events') . '" /><div class="tooltipContainer info">' . get_help("input_request_enddate:events") . '</div>
         			</div>
                     <div class="rowContainer">
-				        <label for="participants"># of participants</label><input type="text" id="participants" name="participants" data-rule-required="true" data-rule-number="true" /><div class="tooltipContainer info">'.get_help("input_request_participants:events").'</div>
+				        <label for="participants"># of participants</label><input type="text" id="participants" name="participants" data-rule-required="true" data-rule-number="true" /><div class="tooltipContainer info">' . get_help("input_request_participants:events") . '</div>
 			        </div>
     				<div class="rowContainer">
-    					<label for="description">Event Description</label><textarea rows="10" id="description" name="description" data-rule-required="true" data-msg-required="'.get_error_message('valid_request_description:events').'" /><div class="tooltipContainer info">'.get_help("input_request_description:events").'</div><br />
+    					<label for="description">Event Description</label><textarea rows="10" id="description" name="description" data-rule-required="true" data-msg-required="' . get_error_message('valid_request_description:events') . '" /><div class="tooltipContainer info">' . get_help("input_request_description:events") . '</div><br />
     	  			</div>
     		  		<input class="submit" name="submit" type="submit" onmouseover="this.focus();" value="Submit" />
     			</fieldset>
@@ -205,27 +215,27 @@ function info() {
 global $CFG, $MYVARS, $USER;
     $eventid = !empty($MYVARS->GET["eventid"]) && is_numeric($MYVARS->GET["eventid"]) ? dbescape($MYVARS->GET["eventid"]) : false;
     if (!empty($eventid) && $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'")) {
-        $location = get_db_row("SELECT * FROM events_locations WHERE id='".$event["location"]."'");
+        $location = get_db_row("SELECT * FROM events_locations WHERE id='" . $event["location"] . "'");
         date_default_timezone_set("UTC");
 
-        echo '<div style="text-align:center"><h1>'.stripslashes($event["name"]).'</h1>'.stripslashes($event["byline"]).'</div>';
-        echo '<div>'.stripslashes($event["description"]).'</div><br /><center>';
+        echo '<div style="text-align:center"><h1>' . stripslashes($event["name"]) . '</h1>' . stripslashes($event["byline"]) . '</div>';
+        echo '<div>' . stripslashes($event["description"]) . '</div><br /><center>';
 
         if ($event['event_begin_date'] != $event['event_end_date']) { //Multi day event
-        	echo 'When: '.date('F \t\h\e jS, Y', $event["event_begin_date"]).' to '.date('F \t\h\e jS, Y', $event["event_end_date"]).'<br />';
+        	echo 'When: ' . date('F \t\h\e jS, Y', $event["event_begin_date"]) . ' to ' . date('F \t\h\e jS, Y', $event["event_end_date"]) . '<br />';
         } else {
-        	echo 'When: '.date('F \t\h\e jS, Y', $event["event_begin_date"]).'<br />';
+        	echo 'When: ' . date('F \t\h\e jS, Y', $event["event_begin_date"]) . '<br />';
         }
 
-    	echo '<br /><table style="font-size:1em"><tr><td>Where: </td><td>'.stripslashes($location["location"]).'</td></tr>
-        <tr><td></td><td>'.stripslashes($location["address_1"]).'<br />'.$location["address_2"].'&nbsp;'.$location["zip"].'</td></tr></table>
-    	<span class="centered_span"><a title="Get Directions" href="'.$CFG->wwwroot.'/features/events/googlemaps.php?address_1='.stripslashes($location["address_1"]).'&address_2='.stripslashes($location["address_2"]).'">Get Directions</a></span><br />';
+    	echo '<br /><table style="font-size:1em"><tr><td>Where: </td><td>' . stripslashes($location["location"]) . '</td></tr>
+        <tr><td></td><td>' . stripslashes($location["address_1"]) . '<br />' . $location["address_2"] . '&nbsp;' . $location["zip"] . '</td></tr></table>
+    	<span class="centered_span"><a title="Get Directions" href="' . $CFG->wwwroot . '/features/events/googlemaps.php?address_1=' . stripslashes($location["address_1"]) . '&address_2=' . stripslashes($location["address_2"]) . '">Get Directions</a></span><br />';
 
     	if ($event['allday'] != 1) { //All day event
-    		echo 'Times: '.convert_time($event['event_begin_time']).' to '.convert_time($event['event_end_time']).'. <br />';
+    		echo 'Times: ' . convert_time($event['event_begin_time']) . ' to ' . convert_time($event['event_end_time']) . '. <br />';
     	}
 
-        echo '<br />For more information about this event<br /> contact '.stripslashes($event["contact"]).' at '.$event["email"].'<br />or call '.$event["phone"].'.</center><br />';
+        echo '<br />For more information about this event<br /> contact ' . stripslashes($event["contact"]) . ' at ' . $event["email"] . '<br />or call ' . $event["phone"] . '.</center><br />';
 
         //Log
     	log_entry("events", $eventid, "View Event Info");
@@ -249,14 +259,14 @@ global $CFG, $MYVARS, $USER;
 
 	if (isset($MYVARS->GET["eventid"])) { //Update existing event
 		$eventid = $MYVARS->GET["eventid"];
-        if (!user_has_ability_in_page($USER->userid,"editevents", $pageid)) { echo get_page_error_message("no_permission",array("editevents")); return; }
-		$row = get_db_row("SELECT * FROM events WHERE eventid='".$MYVARS->GET["eventid"]."'");
+        if (!user_has_ability_in_page($USER->userid,"editevents", $pageid)) { echo get_page_error_message("no_permission", ["editevents"]); return; }
+		$row = get_db_row("SELECT * FROM events WHERE eventid='" . $MYVARS->GET["eventid"] . "'");
 		$name = $row["name"]; $contact = $row['contact'];
 		$email = $row['email']; $fee_min = $row['fee_min'];
 		$fee_full = $row['fee_full']; $sale_fee = $row['sale_fee'];
 		$payableto = $row['payableto']; $checksaddress = $row['checksaddress'];
 		$paypal = $row['paypal'];
-		echo '<input type="hidden" id="eventid" value="'.$MYVARS->GET["eventid"].'" />';
+		echo '<input type="hidden" id="eventid" value="' . $MYVARS->GET["eventid"] . '" />';
 		$phone = explode("-", $row['phone']);
 		$global_display = $row['pageid'] == $CFG->SITEID ? 'none' : 'inline';
 		$start_reg = isset($row['start_reg']) ? "false,'YYYY/MM/DD','" . date('Y/m/d', $row['start_reg']) . "'" : 'true';
@@ -299,11 +309,11 @@ global $CFG, $MYVARS, $USER;
 		$mylocations = get_my_locations($USER->userid, $row['location'], $MYVARS->GET["eventid"]);
 		$hidden_limits = get_my_hidden_limits($template, $row['hard_limits'], $row['soft_limits']);
 	} else { //New event form
-        if (!user_has_ability_in_page($USER->userid,"addevents", $pageid)) { echo get_page_error_message("no_permission",array("addevents")); return; }
+        if (!user_has_ability_in_page($USER->userid,"addevents", $pageid)) { echo get_page_error_message("no_permission", ["addevents"]); return; }
 		$eventid = $template = false;
 		$global_display = $pageid == $CFG->SITEID ? 'none' : 'inline';
 		$hidden_limits = '<input type="hidden" id="hard_limits" value="" /><input type="hidden" id="soft_limits" value="" />';
-		$phone = array(0 => "", 1 => "", 2 => "");
+		$phone = [0 => "", 1 => "", 2 => ""];
 		$start_reg = $stop_reg = $sale_end = $event_begin_date = $event_end_date = 'true';
 		$end_date_display = $limits_display = $times_display = $reg_display = $fee_display = 'none';
 		$max_users = $cost = '0';
@@ -315,7 +325,7 @@ global $CFG, $MYVARS, $USER;
         $auto_allowinpage_display = "none";
 	}
 
-	echo get_js_tags(array("popupcal"));
+	echo get_js_tags(["popupcal"]);
 	echo '
     <div id="add_event_div">
         <form>
@@ -325,8 +335,8 @@ global $CFG, $MYVARS, $USER;
             			Event Name:
             		</td>
             		<td class="field_input">
-            			<input type="text" id="event_name" size="30" value="'. stripslashes($name) .'"/>
-            			<span class="hint">'.get_help("input_event_name:events").'<span class="hint-pointer">&nbsp;</span></span>
+            			<input type="text" id="event_name" size="30" value="' . stripslashes($name) . '"/>
+            			<span class="hint">' . get_help("input_event_name:events") . '<span class="hint-pointer">&nbsp;</span></span>
             		</td>
             	</tr><tr><td></td><td class="field_input"><span id="event_name_error" class="error_text"></span></td></tr>
             </table>
@@ -336,7 +346,7 @@ global $CFG, $MYVARS, $USER;
             			Category:
             		</td>
             		<td class="field_input">
-            			<span id="select_category">'.$mycategories.'<span class="hint">'.get_help("input_event_category:events").'<span class="hint-pointer">&nbsp;</span></span></span>
+            			<span id="select_category">' . $mycategories . '<span class="hint">' . get_help("input_event_category:events") . '<span class="hint-pointer">&nbsp;</span></span></span>
             		</td>
             	</tr><tr><td></td><td class="field_input"><span id="category_error" class="error_text"></span></td></tr>
             </table>
@@ -346,8 +356,8 @@ global $CFG, $MYVARS, $USER;
             			Byline:
             		</td>
             		<td class="field_input">
-            			<textarea id="byline" cols="40" rows="5">'. stripslashes($byline) .'</textarea>
-            			<span class="hint">'.get_help("input_byline:events").'<span class="hint-pointer">&nbsp;</span></span>
+            			<textarea id="byline" cols="40" rows="5">' . stripslashes($byline) . '</textarea>
+            			<span class="hint">' . get_help("input_byline:events") . '<span class="hint-pointer">&nbsp;</span></span>
             		</td>
             	</tr><tr><td></td><td class="field_input"><span id="event_name_error" class="error_text"></span></td></tr>
             </table>
@@ -357,20 +367,20 @@ global $CFG, $MYVARS, $USER;
             			Description:
             		</td>
             		<td class="field_input">
-                        '.get_editor_box(stripslashes($description),"editor1","300").'
-            			<span class="hint">'.get_help("input_description:events").'<span class="hint-pointer">&nbsp;</span></span>
+                        ' . get_editor_box(stripslashes($description), "editor1", "300") . '
+            			<span class="hint">' . get_help("input_description:events") . '<span class="hint-pointer">&nbsp;</span></span>
             		</td>
             	</tr><tr><td></td><td class="field_input"><span id="event_name_error" class="error_text"></span></td></tr>
             </table>
-            '.$admin_contacts.'
+            ' . $admin_contacts . '
             <table style="width:100%">
             	<tr>
             		<td class="field_title" style="width:115px;">
             			Contact Name:
             		</td>
             		<td class="field_input">
-            			<input type="text" id="contact" size="30" value="'. stripslashes($contact) .'"/>
-            			<span class="hint">'.get_help("input_contact:events").'<span class="hint-pointer">&nbsp;</span></span>
+            			<input type="text" id="contact" size="30" value="' . stripslashes($contact) . '"/>
+            			<span class="hint">' . get_help("input_contact:events") . '<span class="hint-pointer">&nbsp;</span></span>
             		</td>
             	</tr><tr><td></td><td class="field_input"><span id="contact_error" class="error_text"></span></td></tr>
             </table>
@@ -380,8 +390,8 @@ global $CFG, $MYVARS, $USER;
             			Contact Email:
             		</td>
             		<td class="field_input">
-            			<input type="text" id="email" size="30" value="'. stripslashes($email) .'"/>
-            			<span class="hint">'.get_help("input_event_email:events").'<span class="hint-pointer">&nbsp;</span></span>
+            			<input type="text" id="email" size="30" value="' . stripslashes($email) . '"/>
+            			<span class="hint">' . get_help("input_event_email:events") . '<span class="hint-pointer">&nbsp;</span></span>
             		</td>
             	</tr><tr><td></td><td class="field_input"><span id="email_error" class="error_text"></span></td></tr>
             </table>
@@ -391,20 +401,20 @@ global $CFG, $MYVARS, $USER;
             			Contact Phone:
             		</td>
             		<td class="field_input">
-            			<input id="phone_1" type="text" onkeyup="movetonextbox(event);" size="1" maxlength="3" value="'.$phone[0].'" />-
-                        <input id="phone_2" type="text" onkeyup="movetonextbox(event);" maxlength="3" size="1" value="'.$phone[1].'" />-
-                        <input id="phone_3" type="text" maxlength="4" size="2" value="'.$phone[2].'" />
+            			<input id="phone_1" type="text" onkeyup="movetonextbox(event);" size="1" maxlength="3" value="' . $phone[0] . '" />-
+                        <input id="phone_2" type="text" onkeyup="movetonextbox(event);" maxlength="3" size="1" value="' . $phone[1] . '" />-
+                        <input id="phone_3" type="text" maxlength="4" size="2" value="' . $phone[2] . '" />
             		</td>
             	</tr><tr><td></td><td class="field_input"><span id="phone_error" class="error_text"></span></td></tr>
             </table>
-            <table style="width:100%; display:'.$global_display.'">
+            <table style="width:100%; display:' . $global_display . '">
             	<tr>
             		<td class="field_title" style="width:115px;">
             			Request Site Event:
             		</td>
             		<td class="field_input">
-            			<select id="siteviewable" onchange="if (this.value==0) { hide_section(\'auto_allowinpage\'); document.getElementById(\'allowinpage\').value=0; } else { show_section(\'auto_allowinpage\'); }" ><option value="0" '.$siteviewable_no.'>No</option><option value="1" '.$siteviewable_yes.'>Yes</option></select>
-            			<span class="hint">'.get_help("input_event_siteviewable:events").'<span class="hint-pointer">&nbsp;</span></span>
+            			<select id="siteviewable" onchange="if (this.value==0) { hide_section(\'auto_allowinpage\'); document.getElementById(\'allowinpage\').value=0; } else { show_section(\'auto_allowinpage\'); }" ><option value="0" ' . $siteviewable_no . '>No</option><option value="1" ' . $siteviewable_yes . '>Yes</option></select>
+            			<span class="hint">' . get_help("input_event_siteviewable:events") . '<span class="hint-pointer">&nbsp;</span></span>
             		</td>
             	</tr><tr><td></td><td class="field_input"><span id="event_name_error" class="error_text"></span></td></tr>
             </table>
@@ -416,7 +426,7 @@ global $CFG, $MYVARS, $USER;
                 			Location:
                 		</td>
                 		<td class="field_input">
-                			<span id="select_location">'.$mylocations.'<span class="hint">'.get_help("input_event_location:events").'<span class="hint-pointer">&nbsp;</span></span></span>
+                			<span id="select_location">' . $mylocations . '<span class="hint">' . get_help("input_event_location:events") . '<span class="hint-pointer">&nbsp;</span></span></span>
                 			<span id="addtolist" style="display:inline"><a href="javascript:void(0);" onclick="hide_show_buttons(\'addtolist\');hide_show_buttons(\'hide_menu\');hide_show_buttons(\'add_location_div\');"> Add to list</a></span>
                 			<span id="hide_menu" style="display:none"><a href="javascript:void(0);" onclick="hide_show_buttons(\'hide_menu\');hide_show_buttons(\'addtolist\');hide_show_buttons(\'add_location_div\');"> Hide Menu</a></span>
                 		</td>
@@ -430,9 +440,9 @@ global $CFG, $MYVARS, $USER;
                         			<tr>
                         				<td style="width:115px;"></td>
                         				<td class="field_input" style="width:400px; background-color:buttonface; text-align:center">
-                        					<span id="new_button" style="display:inline"><a href="javascript:void(0);" onclick="hide_show_buttons(\'browse_button\');hide_show_buttons(\'or\');hide_show_buttons(\'location_menu\');add_location_form(\'new\',\''.$eventid.'\');"><img src="'.$CFG->wwwroot.'/images/add.png" title="Add Location" alt="Add Location"> New Location</a></span>
+                        					<span id="new_button" style="display:inline"><a href="javascript:void(0);" onclick="hide_show_buttons(\'browse_button\');hide_show_buttons(\'or\');hide_show_buttons(\'location_menu\');add_location_form(\'new\',\'' . $eventid . '\');"><img src="' . $CFG->wwwroot . '/images/add.png" title="Add Location" alt="Add Location"> New Location</a></span>
                         					<span id="or" style="display:inline">&nbsp; or &nbsp;</span>
-                        					<span id="browse_button" style="display:inline"><a href="javascript:void(0);" onclick="hide_show_buttons(\'new_button\');hide_show_buttons(\'or\');hide_show_buttons(\'location_menu\');add_location_form(\'existing\',\''.$eventid.'\');"><img src="'.$CFG->wwwroot.'/images/folder.png" title="Add Location" alt="Add Location"> Browse Locations</a></span>
+                        					<span id="browse_button" style="display:inline"><a href="javascript:void(0);" onclick="hide_show_buttons(\'new_button\');hide_show_buttons(\'or\');hide_show_buttons(\'location_menu\');add_location_form(\'existing\',\'' . $eventid . '\');"><img src="' . $CFG->wwwroot . '/images/folder.png" title="Add Location" alt="Add Location"> Browse Locations</a></span>
                         				</td>
                         			</tr>
                         			<tr>
@@ -464,8 +474,8 @@ global $CFG, $MYVARS, $USER;
                         				Worker Application:
                         			</td>
                         			<td class="field_input">
-                        				<select id="workers"><option value="0" '.$workers_no.'>No</option><option value="1" '.$workers_yes.'>Yes</option></select>
-                        				<span class="hint">'.get_help("input_event_workers:events").'<span class="hint-pointer">&nbsp;</span></span>
+                        				<select id="workers"><option value="0" ' . $workers_no . '>No</option><option value="1" ' . $workers_yes . '>Yes</option></select>
+                        				<span class="hint">' . get_help("input_event_workers:events") . '<span class="hint-pointer">&nbsp;</span></span>
                         			</td>
                         		</tr><tr><td></td><td class="field_input"><span id="workers_error" class="error_text"></span></td></tr>
                         	</table>
@@ -484,8 +494,8 @@ global $CFG, $MYVARS, $USER;
                         				Multi-day Event:
                         			</td>
                         			<td class="field_input">
-                        				<select id="multiday" onchange="hide_show_buttons(\'event_end_date_div\'); if (document.getElementById(\'begin_time\').value != \'\') { get_end_time(document.getElementById(\'begin_time\').value) }" ><option value="0" '.$multiday_no.'>No</option><option value="1" '.$multiday_yes.'>Yes</option></select>
-                        				<span class="hint">'.get_help("input_event_multiday:events").'<span class="hint-pointer">&nbsp;</span></span>
+                        				<select id="multiday" onchange="hide_show_buttons(\'event_end_date_div\'); if (document.getElementById(\'begin_time\').value != \'\') { get_end_time(document.getElementById(\'begin_time\').value) }" ><option value="0" ' . $multiday_no . '>No</option><option value="1" ' . $multiday_yes . '>Yes</option></select>
+                        				<span class="hint">' . get_help("input_event_multiday:events") . '<span class="hint-pointer">&nbsp;</span></span>
                         			</td>
                         		</tr><tr><td></td><td class="field_input"><span id="allowinpage_error" class="error_text"></span></td></tr>
                         	</table>
@@ -502,7 +512,7 @@ global $CFG, $MYVARS, $USER;
                             					</td>
                             				</tr><tr><td></td><td class="field_input"><span id="event_begin_date_error" class="error_text"></span></td></tr>
                         				</table>
-                        				<span id="event_end_date_div" style="display:'.$end_date_display.'">
+                        				<span id="event_end_date_div" style="display:' . $end_date_display . '">
                         					<table style="margin:0px 0px 0px 50px;">
                             					<tr>
                             						<td class="field_title" style="width:115px; background-color:buttonface;">
@@ -532,26 +542,26 @@ global $CFG, $MYVARS, $USER;
                         				All Day Event:
                         			</td>
                         			<td class="field_input">
-                        				<select id="allday" onchange="hide_show_buttons(\'event_times_div\');" /><option value="1" '.$allday_yes.'>Yes</option><option value="0" '.$allday_no.'>No</option></select>
-                        				<span class="hint">'.get_help("input_event_allday:events").'<span class="hint-pointer">&nbsp;</span></span>
+                        				<select id="allday" onchange="hide_show_buttons(\'event_times_div\');" /><option value="1" ' . $allday_yes . '>Yes</option><option value="0" ' . $allday_no . '>No</option></select>
+                        				<span class="hint">' . get_help("input_event_allday:events") . '<span class="hint-pointer">&nbsp;</span></span>
                         			</td>
                         		</tr><tr><td></td><td class="field_input"><span id="allowinpage_error" class="error_text"></span></td></tr>
                         	</table>
                         	<table style="width:100%">
                                 <tr>
                                     <td colspan="2">
-                            			<span id="event_times_div" style="display:'.$times_display.'">
+                            			<span id="event_times_div" style="display:' . $times_display . '">
                             				<table style="margin:0px 0px 0px 50px;">
                                 				<tr>
                                 					<td class="field_title" style="width:115px; background-color:buttonface;">
                                 						Times:
                                 					</td>
                                 					<td class="field_input">
-                                						'.$event_begin_time_form.'
+                                						' . $event_begin_time_form . '
                                 					</td>
                                 					<td class="field_input">
                                 						<span id="end_time_span">
-                                						'.$event_end_time_form.'
+                                						' . $event_end_time_form . '
                                 						</span>
                                 					</td>
                                 				</tr>
@@ -573,22 +583,22 @@ global $CFG, $MYVARS, $USER;
                 			Registration:
                 		</td>
                 		<td class="field_input">
-                			<select id="reg" onchange="hide_show_buttons(\'registration_panel\');" ><option value="0" '.$reg_no.'>No</option><option value="1" '.$reg_yes.'>Yes</option></select>
-                			<span class="hint">'.get_help("input_event_registration:events").'<span class="hint-pointer">&nbsp;</span></span>
+                			<select id="reg" onchange="hide_show_buttons(\'registration_panel\');" ><option value="0" ' . $reg_no . '>No</option><option value="1" ' . $reg_yes . '>Yes</option></select>
+                			<span class="hint">' . get_help("input_event_registration:events") . '<span class="hint-pointer">&nbsp;</span></span>
                 		</td>
                 	</tr>
                     <tr>
                         <td colspan="2">
-                            <div id="registration_panel" style="display:'.$reg_display.'">
-                                <div id="auto_allowinpage" style="display:'.$auto_allowinpage_display.'">
+                            <div id="registration_panel" style="display:' . $reg_display . '">
+                                <div id="auto_allowinpage" style="display:' . $auto_allowinpage_display . '">
                                     <table style="margin:0px 0px 0px 50px;">
                             			<tr>
                             				<td class="field_title" style="width:115px;">
                             					Auto Access:
                             				</td>
                             				<td class="field_input">
-                            					<select id="allowinpage" /><option value="0" '.$allowinpage_no.'>No</option><option value="1" '.$allowinpage_yes.'>Yes</option></select>
-                            					<span class="hint">'.get_help("input_event_allowinpage:events").'<span class="hint-pointer">&nbsp;</span></span>
+                            					<select id="allowinpage" /><option value="0" ' . $allowinpage_no . '>No</option><option value="1" ' . $allowinpage_yes . '>Yes</option></select>
+                            					<span class="hint">' . get_help("input_event_allowinpage:events") . '<span class="hint-pointer">&nbsp;</span></span>
                             				</td>
                             			</tr><tr><td></td><td class="field_input"><span id="allowinpage_error" class="error_text"></span></td></tr>
                         			</table>
@@ -599,12 +609,12 @@ global $CFG, $MYVARS, $USER;
                     						Registration Form Template:
                     					</td>
                     					<td class="field_input">
-                    						'.get_templates($template, $eventid, true).'
+                    						' . get_templates($template, $eventid, true) . '
                     					</td>
                     				</tr><tr><td></td><td class="field_input"><span id="template_error" class="error_text"></span></td></tr>
                     			</table>
                                 <div name="template_settings_form">
-                                    <div id="template_settings_div">'.$template_settings.'</div>
+                                    <div id="template_settings_div">' . $template_settings . '</div>
                                 </div>
                     			<table style="margin:0px 0px 0px 50px;">
                                     <tr>
@@ -636,12 +646,12 @@ global $CFG, $MYVARS, $USER;
                                         				Limits:
                                         			</td>
                                         			<td class="field_input">
-                                        				<select id="limits" onchange="hide_show_buttons(\'limits_div\');" ><option value="0" '.$limits_no.'>No</option><option value="1" '.$limits_yes.'>Yes</option></select>
-                                        				<span class="hint">'.get_help("input_event_limits:events").'<span class="hint-pointer">&nbsp;</span></span>
+                                        				<select id="limits" onchange="hide_show_buttons(\'limits_div\');" ><option value="0" ' . $limits_no . '>No</option><option value="1" ' . $limits_yes . '>Yes</option></select>
+                                        				<span class="hint">' . get_help("input_event_limits:events") . '<span class="hint-pointer">&nbsp;</span></span>
                                         			</td>
                                         		</tr>
                                         	</table>
-                                        	<span id="limits_div" style="display:'.$limits_display.'">
+                                        	<span id="limits_div" style="display:' . $limits_display . '">
                                             	<table style="width:100%">
                                             		<tr>
                                                         <td colspan="2">
@@ -651,8 +661,8 @@ global $CFG, $MYVARS, $USER;
                                             							Total Max:
                                             						</td>
                                             						<td class="field_input">
-                                            							<input type="text" id="max" size="4" maxlength="4" value="'. $max_users .'"/>
-                                            							<span class="hint">'.get_help("input_event_max_users:events").'<span class="hint-pointer">&nbsp;</span></span>
+                                            							<input type="text" id="max" size="4" maxlength="4" value="' . $max_users . '"/>
+                                            							<span class="hint">' . get_help("input_event_max_users:events") . '<span class="hint-pointer">&nbsp;</span></span>
                                             						</td>
                                             					</tr><tr><td></td><td class="field_input"><span id="max_error" class="error_text"></span></td></tr>
                                             				</table>
@@ -672,7 +682,7 @@ global $CFG, $MYVARS, $USER;
                                             							<div id="limit_form">
                                             							</div>
                                             							<div id="custom_limits" style="font-size:.7em;">
-                                            							'.$hidden_limits.'
+                                            							' . $hidden_limits . '
                                             							</div>
                                             						</td>
                                             					</tr><tr><td></td><td class="field_input"><span id="max_error" class="error_text"></span></td></tr>
@@ -694,12 +704,12 @@ global $CFG, $MYVARS, $USER;
                                         				Fee:
                                         			</td>
                                         			<td class="field_input">
-                                        				<select id="fee" onchange="hide_show_buttons(\'fee_div\');" ><option value="0" '.$fee_no.'>No</option><option value="1" '.$fee_yes.'>Yes</option></select>
-                                        				<span class="hint">'.get_help("input_event_cost:events").'<span class="hint-pointer">&nbsp;</span></span>
+                                        				<select id="fee" onchange="hide_show_buttons(\'fee_div\');" ><option value="0" ' . $fee_no . '>No</option><option value="1" ' . $fee_yes . '>Yes</option></select>
+                                        				<span class="hint">' . get_help("input_event_cost:events") . '<span class="hint-pointer">&nbsp;</span></span>
                                         			</td>
                                         		</tr>
                                         	</table>
-                                            <span id="fee_div" style="display:'.$fee_display.'">
+                                            <span id="fee_div" style="display:' . $fee_display . '">
                                             	<table style="width:100%">
                                             		<tr>
                                                         <td colspan="2">
@@ -709,8 +719,8 @@ global $CFG, $MYVARS, $USER;
                                                 						Minimum Payment:
                                                 					</td>
                                                 					<td class="field_input">
-                                                						<input type="text" id="min_fee" size="4" value="'. $fee_min .'"/>
-                                                						<span class="hint">'.get_help("input_event_min_cost:events").'<span class="hint-pointer">&nbsp;</span></span>
+                                                						<input type="text" id="min_fee" size="4" value="' . $fee_min . '"/>
+                                                						<span class="hint">' . get_help("input_event_min_cost:events") . '<span class="hint-pointer">&nbsp;</span></span>
                                                 					</td>
                                                 				</tr>
                                             				    <tr>
@@ -724,8 +734,8 @@ global $CFG, $MYVARS, $USER;
                                                 						Full Price:
                                                 					</td>
                                                 					<td class="field_input">
-                                                						<input type="text" id="full_fee" size="4" value="'. $fee_full .'"/>
-                                                						<span class="hint">'.get_help("input_event_full_cost:events").'<span class="hint-pointer">&nbsp;</span></span>
+                                                						<input type="text" id="full_fee" size="4" value="' . $fee_full . '"/>
+                                                						<span class="hint">' . get_help("input_event_full_cost:events") . '<span class="hint-pointer">&nbsp;</span></span>
                                                 					</td>
                                                 				</tr><tr><td></td><td class="field_input"><span id="event_full_fee_error" class="error_text"></span></td></tr>
                                             				</table>
@@ -735,8 +745,8 @@ global $CFG, $MYVARS, $USER;
                                                 						Sale Price:
                                                 					</td>
                                                 					<td class="field_input">
-                                                						<input type="text" id="sale_fee" size="4" value="'. $sale_fee .'"/>
-                                                						<span class="hint">'.get_help("input_event_sale_fee:events").'<span class="hint-pointer">&nbsp;</span></span>
+                                                						<input type="text" id="sale_fee" size="4" value="' . $sale_fee . '"/>
+                                                						<span class="hint">' . get_help("input_event_sale_fee:events") . '<span class="hint-pointer">&nbsp;</span></span>
                                                 					</td>
                                                 				</tr><tr><td></td><td class="field_input"><span id="event_sale_fee_error" class="error_text"></span></td></tr>
                                             				</table>
@@ -747,19 +757,19 @@ global $CFG, $MYVARS, $USER;
                                                 					</td>
                                                 					<td class="field_input">
 																		' . js_code_wrap('DateInput(\'sale_end\', ' . $sale_end . ');') . '
-                                                						<span class="hint">'.get_help("input_event_sale_end:events").'<span class="hint-pointer">&nbsp;</span></span>
+                                                						<span class="hint">' . get_help("input_event_sale_end:events") . '<span class="hint-pointer">&nbsp;</span></span>
                                                 					</td>
                                                 				</tr><tr><td></td><td class="field_input"><span id="sale_end_error" class="error_text"></span></td></tr>
                                             				</table>
-                                                            '.$admin_payable.'
+                                                            ' . $admin_payable . '
                                             				<table style="margin:0px 0px 0px 50px;">
                                                 				<tr>
                                                 					<td class="field_title"  style="width:115px; background-color:buttonface;">
                                                 						Payable To:
                                                 					</td>
                                                 					<td class="field_input">
-                                                						<input type="text" id="payableto" size="28" value="'. $payableto .'"/>
-                                                						<span class="hint">'.get_help("input_event_payableto:events").'<span class="hint-pointer">&nbsp;</span></span>
+                                                						<input type="text" id="payableto" size="28" value="' . $payableto . '"/>
+                                                						<span class="hint">' . get_help("input_event_payableto:events") . '<span class="hint-pointer">&nbsp;</span></span>
                                                 					</td>
                                                 				</tr><tr><td></td><td class="field_input"><span id="event_payableto_error" class="error_text"></span></td></tr>
                                             				</table>
@@ -769,8 +779,8 @@ global $CFG, $MYVARS, $USER;
                                                 						Send To:
                                                 					</td>
                                                 					<td class="field_input">
-                                                						<textarea id="checksaddress" cols="21" rows="3">'.$checksaddress.'</textarea>
-                                                						<span class="hint">'.get_help("input_event_checksaddress:events").'<span class="hint-pointer">&nbsp;</span></span>
+                                                						<textarea id="checksaddress" cols="21" rows="3">' . $checksaddress . '</textarea>
+                                                						<span class="hint">' . get_help("input_event_checksaddress:events") . '<span class="hint-pointer">&nbsp;</span></span>
                                                 					</td>
                                                 				</tr><tr><td></td><td class="field_input"><span id="event_checksaddress_error" class="error_text"></span></td></tr>
                                             				</table>
@@ -780,8 +790,8 @@ global $CFG, $MYVARS, $USER;
                                                 						Paypal Account:
                                                 					</td>
                                                 					<td class="field_input">
-                                                						<input type="text" id="paypal" size="28" value="'. $paypal .'"/>
-                                                						<span class="hint">'.get_help("input_event_paypal:events").'<span class="hint-pointer">&nbsp;</span></span>
+                                                						<input type="text" id="paypal" size="28" value="' . $paypal . '"/>
+                                                						<span class="hint">' . get_help("input_event_paypal:events") . '<span class="hint-pointer">&nbsp;</span></span>
                                                 					</td>
                                                 				</tr><tr><td></td><td class="field_input"><span id="event_paypal_error" class="error_text"></span></td></tr>
                                             				</table>
@@ -802,7 +812,7 @@ global $CFG, $MYVARS, $USER;
             	<tr>
             		<td></td>
             		<td style="text-align:left;">
-            			<input type="button" value="Save" onclick="new_event_submit(\''. $pageid .'\');" />
+            			<input type="button" value="Save" onclick="new_event_submit(\'' . $pageid . '\');" />
             		</td>
             	</tr>
         	</table>
@@ -816,14 +826,14 @@ function show_registration() {
 global $CFG, $MYVARS, $USER;
 	$eventid = $MYVARS->GET['eventid'];
 	$pageid = empty($MYVARS->GET['pageid']) ? $CFG->SITEID : $MYVARS->GET['pageid'];
-	if (!user_has_ability_in_page($USER->userid,"signupforevents", $pageid)) { echo get_page_error_message("no_permission",array("signupforevents")); return; }
+	if (!user_has_ability_in_page($USER->userid,"signupforevents", $pageid)) { echo get_page_error_message("no_permission", ["signupforevents"]); return; }
 
     $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
-	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='".$event['template_id']."'");
+	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='" . $event['template_id'] . "'");
 	$formlist = ""; $form = "";
 
     $returnme = '<div id="registration_div">
-                    <table class="registration"><tr><td>'.$template['intro'].' </td></tr></table>';
+                    <table class="registration"><tr><td>' . $template['intro'] . ' </td></tr></table>';
 
 	if ($template['folder'] != "none") { //registration template refers to a file
         ob_start();
@@ -831,20 +841,20 @@ global $CFG, $MYVARS, $USER;
         $returnme .= ob_get_clean();
 	} else { //registration template refers to a database style template
 		$form = '<table style="width:100%">';
-		$templateform = get_db_result("SELECT * FROM events_templates_forms WHERE template_id='".$template['template_id']."' ORDER BY sort");
+		$templateform = get_db_result("SELECT * FROM events_templates_forms WHERE template_id='" . $template['template_id'] . "' ORDER BY sort");
 		while ($element = fetch_row($templateform)) {
 			$opt = $element['optional'] ? '<font size="1.2em" color="blue">(optional)</font> ' : '';
 			$formlist .= $formlist == "" ? $element['type'] . ":" . $element['elementid'] . ":" . $element['optional'] . ":" . $element['allowduplicates'] . ":" . $element['list'] : "*" . $element['type'] . ":" . $element['elementid'] . ":" . $element['optional'] . ":" . $element['allowduplicates'] . ":" . $element['list'];
 			if ($element['type'] == 'select') {
 			}elseif ($element['type'] == 'phone') {
 				$form .= '<tr><td class="field_title">' . $opt . $element['display'] . ': </td><td class="field_input" style="width:70%">' . create_form_element($element['type'], $element['elementid'], $element['optional'], $element['length'], false) . '</td></tr>';
-				$form .= '<tr><td></td><td class="field_input"><span id="'.$element['elementid'].'_error" class="error_text"></span></td></tr>';
+				$form .= '<tr><td></td><td class="field_input"><span id="' . $element['elementid'] . '_error" class="error_text"></span></td></tr>';
 			}elseif ($element['type'] == 'payment') {
 				if ($event["fee_full"] != "0") {
 				$form .= '
     				<tr>
     					<td class="field_title">Payment Amount:</td>
-    					<td class="field_input">'.make_fee_options($event['fee_min'], $event['fee_full'],'payment_amount', '', $event['sale_end'], $event['sale_fee']).'</td>
+    					<td class="field_input">' . make_fee_options($event['fee_min'], $event['fee_full'],'payment_amount', '', $event['sale_end'], $event['sale_fee']) . '</td>
     				</tr>
     				<tr>
     					<td class="field_title">Method of Payment:</td>
@@ -859,14 +869,14 @@ global $CFG, $MYVARS, $USER;
     				<tr><td></td><td class="field_input"><span id="payment_method_error" class="error_text"></span></td></tr>';
 				}
 			}elseif ($element['type'] == 'contact') {
-				$form .= '<tr><td class="field_title">' . $opt . $element['display'] . ': </td><td class="field_input" style="width:70%">' . create_form_element($element['type'], $element['elementid'], $element['optional'], $element['length'], false) . '<span class="hint">'.get_help("input_event_email:events").'<span class="hint-pointer">&nbsp;</span></span></td></tr>';
-				$form .= '<tr><td></td><td class="field_input"><span id="'.$element['elementid'].'_error" class="error_text"></span></td></tr>';
+				$form .= '<tr><td class="field_title">' . $opt . $element['display'] . ': </td><td class="field_input" style="width:70%">' . create_form_element($element['type'], $element['elementid'], $element['optional'], $element['length'], false) . '<span class="hint">' . get_help("input_event_email:events") . '<span class="hint-pointer">&nbsp;</span></span></td></tr>';
+				$form .= '<tr><td></td><td class="field_input"><span id="' . $element['elementid'] . '_error" class="error_text"></span></td></tr>';
 			} else {
-				$form .= '<tr><td class="field_title">' . $opt . $element['display'] . ': </td><td class="field_input" style="width:70%">' . create_form_element($element['type'], $element['elementid'], $element['optional'], $element['length'], false) . '<span class="hint">'. $element['hint'] . '<span class="hint-pointer">&nbsp;</span></span></td></tr>';
-				$form .= '<tr><td></td><td class="field_input"><span id="'.$element['elementid'].'_error" class="error_text"></span></td></tr>';
+				$form .= '<tr><td class="field_title">' . $opt . $element['display'] . ': </td><td class="field_input" style="width:70%">' . create_form_element($element['type'], $element['elementid'], $element['optional'], $element['length'], false) . '<span class="hint">' . $element['hint'] . '<span class="hint-pointer">&nbsp;</span></span></td></tr>';
+				$form .= '<tr><td></td><td class="field_input"><span id="' . $element['elementid'] . '_error" class="error_text"></span></td></tr>';
 			}
 		}
-		$form .= '<tr><td></td><td><input type="button" value="Submit" onclick="submit_registration(\''.$eventid.'\',\''.$formlist.'\');" /></td></tr></table>';
+		$form .= '<tr><td></td><td><input type="button" value="Submit" onclick="submit_registration(\'' . $eventid . '\',\'' . $formlist . '\');" /></td></tr></table>';
         $returnme .= create_validation_javascript($formlist, $eventid) . $form . '</div>' . js_code_wrap('prepareInputsForHints();');
 	}
 
@@ -898,81 +908,81 @@ global $CFG;
     	switch ($attribute[0]) {
     	case "text":
     		$validation_script .= '
-    		if (document.getElementById(\'opt_'.$attribute[1].'\').value == 0 || (document.getElementById("opt_'.$attribute[1].'").value != 0 && document.getElementById("'.$attribute[1].'").value.length > 0)) {
-    			if (!document.getElementById("'.$attribute[1].'").value.length > 0) {
-    		  		document.getElementById("'.$attribute[1].'_error").innerHTML = "This is a required field.";
+    		if (document.getElementById(\'opt_' . $attribute[1] . '\').value == 0 || (document.getElementById("opt_' . $attribute[1] . '").value != 0 && document.getElementById("' . $attribute[1] . '").value.length > 0)) {
+    			if (!document.getElementById("' . $attribute[1] . '").value.length > 0) {
+    		  		document.getElementById("' . $attribute[1] . '_error").innerHTML = "This is a required field.";
     		  		valid = false;
-    		  	} else { document.getElementById("'.$attribute[1].'_error").innerHTML = ""; }
-      			if ('.$attribute[3].' == 0) {
+    		  	} else { document.getElementById("' . $attribute[1] . '_error").innerHTML = ""; }
+      			if (' . $attribute[3] . ' == 0) {
         			// Build the URL to connect to
-        		  	var url = "'.$CFG->wwwroot.'/features/events/events_ajax.php?action=unique&elementid='.$attribute[1].'&value="+document.getElementById("'.$attribute[1].'").value + "&eventid=" + '.$eventid.';
+        		  	var url = "' . $CFG->wwwroot . '/features/events/events_ajax.php?action=unique&elementid=' . $attribute[1] . '&value="+document.getElementById("' . $attribute[1] . '").value + "&eventid=" + ' . $eventid . ';
         			// Open a connection to the server\
         		     var d = new Date();
         		  	xmlHttp.open("GET", url + "&currTime=" + d.toUTCString(), false);
         		  	// Send the request
         			xmlHttp.send(null);
     				if (!istrue()) {
-    					document.getElementById("'.$attribute[1].'_error").innerHTML = "This value already exists in our database.";
+    					document.getElementById("' . $attribute[1] . '_error").innerHTML = "This value already exists in our database.";
     					valid = false;
-    				} else { document.getElementById("'.$attribute[1].'_error").innerHTML = ""; }
+    				} else { document.getElementById("' . $attribute[1] . '_error").innerHTML = ""; }
     			}
     		}';
     	    break;
     	case "email":
     		$validation_script .= '
-    		if (document.getElementById("opt_'.$attribute[1].'").value == 0 || (document.getElementById("opt_'.$attribute[1].'").value != 0 && document.getElementById("'.$attribute[1].'").value.length > 0)) {
+    		if (document.getElementById("opt_' . $attribute[1] . '").value == 0 || (document.getElementById("opt_' . $attribute[1] . '").value != 0 && document.getElementById("' . $attribute[1] . '").value.length > 0)) {
     			//Email address validity test
-    			if (document.getElementById("'.$attribute[1].'").value.length > 0) {
-    				if (echeck(document.getElementById("'.$attribute[1].'").value)) {
-    					if ('.$attribute[3].' == 0) {
+    			if (document.getElementById("' . $attribute[1] . '").value.length > 0) {
+    				if (echeck(document.getElementById("' . $attribute[1] . '").value)) {
+    					if (' . $attribute[3] . ' == 0) {
         					// Build the URL to connect to
-        				  	var url = "'.$CFG->wwwroot.'/features/events/events_ajax.php?action=unique&elementid='.$attribute[1].'&value="+document.getElementById("'.$attribute[1].'").value + "&eventid=" + '.$eventid.';
+        				  	var url = "' . $CFG->wwwroot . '/features/events/events_ajax.php?action=unique&elementid=' . $attribute[1] . '&value="+document.getElementById("' . $attribute[1] . '").value + "&eventid=" + ' . $eventid . ';
         					// Open a connection to the server\
         				     var d = new Date();
         				  	xmlHttp.open("GET", url + "&currTime=" + d.toUTCString(), false);
         				  	// Send the request
         					xmlHttp.send(null);
     						if (!istrue()) {
-    							document.getElementById("'.$attribute[1].'_error").innerHTML = "This email address has already been registered with.";
+    							document.getElementById("' . $attribute[1] . '_error").innerHTML = "This email address has already been registered with.";
     							valid = false;
-    						} else {	document.getElementById("'.$attribute[1].'_error").innerHTML = ""; }
+    						} else {	document.getElementById("' . $attribute[1] . '_error").innerHTML = ""; }
     					}
     			  	} else {
-    					document.getElementById("'.$attribute[1].'_error").innerHTML = "Email address is not valid.";
+    					document.getElementById("' . $attribute[1] . '_error").innerHTML = "Email address is not valid.";
     					valid = false;
     				}
     			} else {
-    		  		document.getElementById("'.$attribute[1].'_error").innerHTML = "Email address is required.";
+    		  		document.getElementById("' . $attribute[1] . '_error").innerHTML = "Email address is required.";
     		  		valid = false;
     		  	}
     		}';
     		break;
     	case "contact":
     		$validation_script .= '
-    			if (document.getElementById("'.$attribute[1].'").value.length > 0) {
-    				if (echeck(document.getElementById("'.$attribute[1].'").value)) {
-    					document.getElementById("'.$attribute[1].'_error").innerHTML = "";
+    			if (document.getElementById("' . $attribute[1] . '").value.length > 0) {
+    				if (echeck(document.getElementById("' . $attribute[1] . '").value)) {
+    					document.getElementById("' . $attribute[1] . '_error").innerHTML = "";
     			  	} else {
-    					document.getElementById("'.$attribute[1].'_error").innerHTML = "Email address is not valid.";
+    					document.getElementById("' . $attribute[1] . '_error").innerHTML = "Email address is not valid.";
     					valid = false;
     				}
     			} else {
-    		  		document.getElementById("'.$attribute[1].'_error").innerHTML = "Email address is required.";
+    		  		document.getElementById("' . $attribute[1] . '_error").innerHTML = "Email address is required.";
     		  		valid = false;
     		  	}
     			  ';
     		break;
     	case "phone":
     		$validation_script .= '
-    		if (document.getElementById("opt_'.$attribute[1].'").value == 0 || (document.getElementById("opt_'.$attribute[1].'").value != 0 && (document.getElementById("'.$attribute[1].'_1").value.length > 0 || document.getElementById("'.$attribute[1].'_2").value.length > 0 || document.getElementById("'.$attribute[1].'_3").value.length > 0))) {
+    		if (document.getElementById("opt_' . $attribute[1] . '").value == 0 || (document.getElementById("opt_' . $attribute[1] . '").value != 0 && (document.getElementById("' . $attribute[1] . '_1").value.length > 0 || document.getElementById("' . $attribute[1] . '_2").value.length > 0 || document.getElementById("' . $attribute[1] . '_3").value.length > 0))) {
     			//Phone # validity test
-    			if (document.getElementById("'.$attribute[1].'_1").value.length == 3 && document.getElementById("'.$attribute[1].'_2").value.length == 3 && document.getElementById("'.$attribute[1].'_3").value.length == 4) {
-    				if (!(IsNumeric(document.getElementById("'.$attribute[1].'_1").value) && IsNumeric(document.getElementById("'.$attribute[1].'_2").value) && IsNumeric(document.getElementById("'.$attribute[1].'_3").value))) {
-    					document.getElementById("'.$attribute[1].'_error").innerHTML = "Not a valid phone #";
+    			if (document.getElementById("' . $attribute[1] . '_1").value.length == 3 && document.getElementById("' . $attribute[1] . '_2").value.length == 3 && document.getElementById("' . $attribute[1] . '_3").value.length == 4) {
+    				if (!(IsNumeric(document.getElementById("' . $attribute[1] . '_1").value) && IsNumeric(document.getElementById("' . $attribute[1] . '_2").value) && IsNumeric(document.getElementById("' . $attribute[1] . '_3").value))) {
+    					document.getElementById("' . $attribute[1] . '_error").innerHTML = "Not a valid phone #";
     		  			valid = false;
-    				} else { document.getElementById("'.$attribute[1].'_error").innerHTML = ""; }
+    				} else { document.getElementById("' . $attribute[1] . '_error").innerHTML = ""; }
     			} else {
-    		  		document.getElementById("'.$attribute[1].'_error").innerHTML = "Phone # is not complete.";
+    		  		document.getElementById("' . $attribute[1] . '_error").innerHTML = "Phone # is not complete.";
     		  		valid = false;
     		  	}
     		}
@@ -993,32 +1003,32 @@ global $CFG;
     	case "password":
     	//Password validity test
     	$validation_script .= '
-      	if (!document.getElementById("'.$attribute[1].'").value.length > 4) {
-    	  	if (document.getElementById("'.$attribute[1].'").value.length > 0) {
-    			document.getElementById("'.$attribute[1].'_error").innerHTML = "Password must be between 5-20 characters long.";
+      	if (!document.getElementById("' . $attribute[1] . '").value.length > 4) {
+    	  	if (document.getElementById("' . $attribute[1] . '").value.length > 0) {
+    			document.getElementById("' . $attribute[1] . '_error").innerHTML = "Password must be between 5-20 characters long.";
     	  		valid = false;
-    	  	}else if (!document.getElementById("'.$attribute[1].'").value.length > 0) {
-    	  		document.getElementById("'.$attribute[1].'_error").innerHTML = "Password is required.";
+    	  	}else if (!document.getElementById("' . $attribute[1] . '").value.length > 0) {
+    	  		document.getElementById("' . $attribute[1] . '_error").innerHTML = "Password is required.";
     	  		valid = false;
     	  	}
     	} else {
-      		if (!checkPassword(document.getElementById("'.$attribute[1].'"),document.getElementById("verify_'.$attribute[1].'"),document.getElementById("'.$attribute[1].'"), true)) {
-      			document.getElementById("'.$attribute[1].'_error").innerHTML = "Password and Verify fields must match."
+      		if (!checkPassword(document.getElementById("' . $attribute[1] . '"),document.getElementById("verify_' . $attribute[1] . '"),document.getElementById("' . $attribute[1] . '"), true)) {
+      			document.getElementById("' . $attribute[1] . '_error").innerHTML = "Password and Verify fields must match."
       			valid = false;
-      		} else { document.getElementById("'.$attribute[1].'_error").innerHTML = ""; }
+      		} else { document.getElementById("' . $attribute[1] . '_error").innerHTML = ""; }
 
-            if ('.$attribute[3].' == 0) {
+            if (' . $attribute[3] . ' == 0) {
         		// Build the URL to connect to
-        	  	var url = "'.$CFG->wwwroot.'/features/events/events_ajax.php?action=unique&elementid='.$attribute[1].'&value="+document.getElementById("'.$attribute[1].'").value + "&eventid=" + '.$eventid.';
+        	  	var url = "' . $CFG->wwwroot . '/features/events/events_ajax.php?action=unique&elementid=' . $attribute[1] . '&value="+document.getElementById("' . $attribute[1] . '").value + "&eventid=" + ' . $eventid . ';
         		// Open a connection to the server\
         	     var d = new Date();
         	  	xmlHttp.open("GET", url + "&currTime=" + d.toUTCString(), false);
         	  	// Send the request
         		xmlHttp.send(null);
     			if (!istrue()) {
-    				document.getElementById("'.$attribute[1].'_error").innerHTML = "This value already exists in our database.";
+    				document.getElementById("' . $attribute[1] . '_error").innerHTML = "This value already exists in our database.";
     				valid = false;
-    			} else { document.getElementById("'.$attribute[1].'_error").innerHTML = ""; }
+    			} else { document.getElementById("' . $attribute[1] . '_error").innerHTML = ""; }
     		}
       	}';
     	    break;
@@ -1056,7 +1066,7 @@ global $CFG;
     //set cacert.pem verisign certificate path in curl using 'CURLOPT_CAINFO' field here,
     //if your server does not bundled with default verisign certificates.
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array("Host: $pp_hostname"));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ["Host: $pp_hostname"]);
     $res = curl_exec($ch);
     curl_close($ch);
 
@@ -1093,84 +1103,13 @@ global $CFG;
             echo $redirect;
         }
     }
-
-
- //
-//
-//    // read the post from PayPal system and add 'cmd'
-//    $req = 'cmd=_notify-synch';
-//    $tx_token = $_GET['tx'];
-//    $auth_token = $CFG->paypal_auth;
-//    $req .= "&tx=$tx_token&at=$auth_token";
-//    // post back to PayPal system to validate
-//    $header = "POST /cgi-bin/webscr HTTP/1.0\r\n";
-//    $header .= "Content-Type: application/x-www-form-urlencoded\r\n";
-//    $header .= "Content-Length: " . strlen($req) . "\r\n\r\n";
-//    if ($CFG->paypal) { $fp = fsockopen ('www.paypal.com', 80, $errno, $errstr, 30);
-//    } else { $fp = fsockopen ('www.sandbox.paypal.com', 80, $errno, $errstr, 30);}
-//
-//    // If possible, securely post back to paypal using HTTPS
-//    // Your PHP server will need to be SSL enabled
-//    // $fp = fsockopen ('ssl://www.sandbox.paypal.com', 443, $errno, $errstr, 30);
-//    if (!$fp) {
-//    // HTTP ERROR
-//    } else {
-//    	fputs ($fp, $header . $req);
-//    	// read the body data
-//    	$res = '';
-//    	$headerdone = false;
-//    	while (!feof($fp)) {
-//        	$line = fgets ($fp, 1024);
-//        	if (strcmp($line, "\r\n") == 0) {
-//            	// read the header
-//            	$headerdone = true;
-//        	}elseif ($headerdone) {
-//            	// header has been read. now read the contents
-//            	$res .= $line;
-//        	}
-//    	}
-//
-//    	// parse the data
-//    	$lines = explode("\n", $res);
-//    	$keyarray = [];
-//    	if (strcmp ($lines[0], "SUCCESS") == 0) {
-//        	for ($i=1; $i<count($lines);$i++) {
-//            	list($key, $val) = explode("=", $lines[$i]);
-//            	$keyarray[urldecode($key)] = urldecode($val);
-//        	}
-//        	// check the payment_status is Completed
-//        	// check that txn_id has not been previously processed
-//        	// check that receiver_email is your Primary PayPal email
-//        	// check that payment_amount/payment_currency are correct
-//        	// process payment
-////    		if (!get_db_row("SELECT * FROM logfile WHERE feature='events' AND description='Paypal' AND info='".$keyarray['txn_id']."'")) {
-////    			$regids = $keyarray['custom'];
-////    			$regids = explode(":", $regids);
-////    			$i=0;
-////    			while (isset($regids[$i])) {
-////    				$paid = get_db_field("value", "events_registrations_values", "elementname='paid' AND regid=".$regids[$i]);
-////    				$SQL = "UPDATE events_registrations_values SET value=".($paid + $keyarray["mc_gross_".($i+1)])." WHERE elementname='paid' AND regid=".$regids[$i];
-////    				execute_db_sql($SQL);
-////    				$i++;
-////    			}
-//
-//			//Log
-//			//log_entry('events', $keyarray['txn_id'], "Paypal");
-//    	   echo "Your transaction has been completed, and a receipt for your purchase has been emailed to you.<br>You may log into your account at <a href='https://www.paypal.com'>www.paypal.com</a> to view details of this transaction.<br>";
-//    	   echo print_cart($keyarray);
-//    	}elseif (strcmp ($lines[0], "FAIL") == 0) {
-//        	//Log
-//        	log_entry('events', $lines[0], "Paypal (failed)");
-//    	}
-//     }
-//    fclose ($fp);
 }
 
 function print_cart($items) {
 global $MYVARS, $CFG;
-	$i=0; $returnme = '<a href="'.$CFG->wwwroot.'">Go back to '.$CFG->sitename.'</a><br /><br /><table style="border-collapse:collapse;width:60%; margin-right:auto; margin-left:auto;"><tr><td colspan=2><b>What you have paid for:</b></td></tr>';
+	$i=0; $returnme = '<a href="' . $CFG->wwwroot . '">Go back to ' . $CFG->sitename . '</a><br /><br /><table style="border-collapse:collapse;width:60%; margin-right:auto; margin-left:auto;"><tr><td colspan=2><b>What you have paid for:</b></td></tr>';
 	while ($i < $items["num_cart_items"]) {
-		$returnme .= '<tr style="background-color:#FFF1FF;"><td style="text-align:left; font-size:.8em;">'.$items["item_name".($i+1)] . '</td><td style="text-align:left; padding:10px; font-size:.8em;">' . '$' . $items["mc_gross_".($i+1)] . '</td></tr><td colspan="2"></td></tr>';
+		$returnme .= '<tr style="background-color:#FFF1FF;"><td style="text-align:left; font-size:.8em;">' . $items["item_name" . ($i + 1)] . '</td><td style="text-align:left; padding:10px; font-size:.8em;">$' . $items["mc_gross_" . ($i + 1)] . '</td></tr><td colspan="2"></td></tr>';
 		$i++;
 	}
 	$returnme .= '<tr><td style="text-align:right;"><b>Total</b></td><td style="border-top: 1px solid gray;text-align:left;padding:10px; font-size:.8em;">$' . $items["mc_gross"] . '</td></tr><td style="text-align:right;"><b>Paid</b></td><td style="text-align:left;padding:10px; font-size:.8em;">$' . $items["payment_gross"] . '</td></tr></table>';

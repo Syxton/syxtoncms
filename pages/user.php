@@ -25,7 +25,7 @@ global $MYVARS, $CFG;
 			   "vpassword_match" => get_error_message('valid_vpassword_match'), "vpassword_help" => get_help("input_vpassword")];
 
 	echo create_validation_script("signup_form" , template_use("tmp/user.template", [], "new_user_validation"));
-  	echo format_popup(template_use("tmp/user.template", $params, "new_user_template"), $CFG->sitename.' Signup',"500px");
+  	echo format_popup(template_use("tmp/user.template", $params, "new_user_template"), $CFG->sitename . ' Signup',"500px");
 }
 
 function reset_password() {
@@ -36,7 +36,7 @@ global $MYVARS, $PAGE, $CFG;
 	echo get_js_tags(["validate"]);
 
 	$userid = $MYVARS->GET["userid"];
-	$alternate = get_db_row("SELECT * FROM users WHERE userid='$userid' AND alternate='".$MYVARS->GET["alternate"]."'") ? true : false;
+	$alternate = get_db_row("SELECT * FROM users WHERE userid='$userid' AND alternate='" . $MYVARS->GET["alternate"] . "'") ? true : false;
 	$params = ["siteid" => $CFG->SITEID, "userid" => $userid, "wwwroot" => $CFG->wwwroot, "directory" => (empty($CFG->directory) ? '' : $CFG->directory . '/'), "alternate" => $alternate];
 
 	if ($alternate) {

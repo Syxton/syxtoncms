@@ -7,21 +7,27 @@
  * @license Modified MIT License
  * @link https://blueimp.net/ajax/
  */
-if (!isset($CFG)) include('../../../config.php');
+if (!isset($CFG)) {
+    $sub = '../';
+    while (!file_exists($sub . 'config.php')) {
+        $sub .= '../';
+    }
+    include($sub . 'config.php'); 
+}
 include_once($CFG->dirroot . '/lib/header.php');
-define('PAGEID', $_COOKIE["pageid"]);
+define('PAGEID', get_pageid());
 
 // Suppress errors:
 //error_reporting(0);
 
 // Path to the chat directory:
-define('AJAX_CHAT_PATH', dirname($_SERVER['SCRIPT_FILENAME']).'/');
+define('AJAX_CHAT_PATH', dirname($_SERVER['SCRIPT_FILENAME']) . '/');
 
 // Include custom libraries and initialization code:
-require(AJAX_CHAT_PATH.'lib/custom.php');
+require(AJAX_CHAT_PATH . 'lib/custom.php');
 
 // Include Class libraries:
-require(AJAX_CHAT_PATH.'lib/classes.php');
+require(AJAX_CHAT_PATH . 'lib/classes.php');
 
 // Initialize the chat:
 $ajaxChat = new CustomAJAXChat();

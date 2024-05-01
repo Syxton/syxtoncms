@@ -63,37 +63,37 @@ global $CFG, $MYVARS, $USER;
             }
         </style>';
         
-    echo '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'select_campaign_form\',\'&featureid='.$featureid.'&pageid='.$pageid.'\',function() { simple_display(\'donation_display\'); });">Back</a><br /><br />';   
+    echo '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'select_campaign_form\',\'&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); });">Back</a><br /><br />';   
     $content = '
             <div class="formDiv" id="new_campaign_div">
     		<form id="campaign_form">
     			<fieldset class="formContainer">
     				<div class="rowContainer">
-    					<label for="title">Campaign Name</label><input type="text" id="title" name="title" value="'.$title.'" data-rule-required="true" data-msg-required="'.get_error_message('donate_req_title:donate').'" /><div class="tooltipContainer info">'.get_help("donate_title:donate").'</div><br />
+    					<label for="title">Campaign Name</label><input type="text" id="title" name="title" value="' . $title . '" data-rule-required="true" data-msg-required="' . get_error_message('donate_req_title:donate') . '" /><div class="tooltipContainer info">' . get_help("donate_title:donate") . '</div><br />
     				</div>
                     <div class="rowContainer">
-    					<label for="title">Goal Amount $</label><input type="text" id="goal" name="goal" value="'.$goal.'" data-rule-required="true" data-rule-number="true"  data-rule-min="0" data-msg-required="'.get_error_message('donate_req_goal:donate').'" /><div class="tooltipContainer info">'.get_help("donate_goal:donate").'</div><br />
+    					<label for="title">Goal Amount $</label><input type="text" id="goal" name="goal" value="' . $goal . '" data-rule-required="true" data-rule-number="true"  data-rule-min="0" data-msg-required="' . get_error_message('donate_req_goal:donate') . '" /><div class="tooltipContainer info">' . get_help("donate_goal:donate") . '</div><br />
     	  			</div>
     				<div class="rowContainer">
-    					<label for="description">Goal Description</label><textarea type="text" id="description" name="description" data-rule-required="true" data-msg-required="'.get_error_message('donate_req_description:donate').'">'.$description.'</textarea><div class="tooltipContainer info">'.get_help("donate_description:donate").'</div><br />
+    					<label for="description">Goal Description</label><textarea type="text" id="description" name="description" data-rule-required="true" data-msg-required="' . get_error_message('donate_req_description:donate') . '">' . $description . '</textarea><div class="tooltipContainer info">' . get_help("donate_description:donate") . '</div><br />
     	  			</div>
       				<div class="rowContainer">
-    					<label for="email">Paypal Email Address</label><input type="text" id="email" name="email" value="'.$email.'" data-rule-required="true" data-rule-email="true" data-msg-required="'.get_error_message('valid_req_email').'" data-msg-email="'.get_error_message('valid_email_invalid').'" /><div class="tooltipContainer info">'.get_help("donate_paypal_email:donate").'</div><br />
+    					<label for="email">Paypal Email Address</label><input type="text" id="email" name="email" value="' . $email . '" data-rule-required="true" data-rule-email="true" data-msg-required="' . get_error_message('valid_req_email') . '" data-msg-email="' . get_error_message('valid_email_invalid') . '" /><div class="tooltipContainer info">' . get_help("donate_paypal_email:donate") . '</div><br />
     				</div>
                     <div class="rowContainer">
-    					<label for="email">Paypal PDT token</label><input type="text" id="token" name="token" value="'.$token.'" data-rule-required="true" data-msg-required="'.get_error_message('donate_req_token:donate').'" /><div class="tooltipContainer info">'.get_help("donate_token:donate").'</div><br />
+    					<label for="email">Paypal PDT token</label><input type="text" id="token" name="token" value="' . $token . '" data-rule-required="true" data-msg-required="' . get_error_message('donate_req_token:donate') . '" /><div class="tooltipContainer info">' . get_help("donate_token:donate") . '</div><br />
     				</div>
     		  		<div class="rowContainer">
                         <label for="shared">Share Campaign</label>
                         <select id="shared" name="shared" data-rule-required="true">
                             <option value="">Select One...</option>
-                            <option value="0" '.$no_selected.'>Not Shared</option>
-                            <option value="1" '.$yes_selected.'>Shared</option>
+                            <option value="0" ' . $no_selected . '>Not Shared</option>
+                            <option value="1" ' . $yes_selected . '>Shared</option>
                         </select>
-                        <div class="tooltipContainer info">'.get_help("donate_shared:donate").'</div><br />
+                        <div class="tooltipContainer info">' . get_help("donate_shared:donate") . '</div><br />
                     </div>
                     <br />
-                    <input class="submit" name="submit" type="submit" value="'.$startoredit.' Campaign" style="margin: auto;display:block;clear:both;" />
+                    <input class="submit" name="submit" type="submit" value="' . $startoredit . ' Campaign" style="margin: auto;display:block;clear:both;" />
                     <div id="error_div"></div>	
     			</fieldset>
     		</form>
@@ -118,7 +118,7 @@ global $CFG, $MYVARS, $USER;
             echo "false**An error has occurred, please try again later.";    
         }         
     } else { //INSERT NEW
-        $SQL = "INSERT INTO donate_campaign (origin_page,title,goal_amount,goal_description,paypal_email,token,shared,datestarted,metgoal) VALUES('$pageid','$title','$goal','$description','$email','$token','$shared','".get_timestamp()."','0')";
+        $SQL = "INSERT INTO donate_campaign (origin_page,title,goal_amount,goal_description,paypal_email,token,shared,datestarted,metgoal) VALUES('$pageid','$title','$goal','$description','$email','$token','$shared','" . get_timestamp() . "','0')";
         if ($campaign_id = execute_db_sql($SQL)) { //New campaign made
             //Save campaign ID in instance
             execute_db_sql("UPDATE donate_instance SET campaign_id=$campaign_id WHERE donate_id=$featureid");
@@ -135,14 +135,14 @@ function join_campaign_form() {
 global $CFG, $MYVARS, $USER;
     $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
     echo '<center><h1>Join a Campaign</h1></center>';
-    echo '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'select_campaign_form\',\'&featureid='.$featureid.'&pageid='.$pageid.'\',function() { simple_display(\'donation_display\'); });">Back</a><br /><br />';   
+    echo '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'select_campaign_form\',\'&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); });">Back</a><br /><br />';   
     $SQL = "SELECT * FROM donate_campaign WHERE origin_page='$pageid' AND campaign_id NOT IN (SELECT campaign_id FROM donate_instance WHERE donate_id IN (SELECT featureid FROM pages_features WHERE pageid='$pageid' AND feature='donate')) OR shared='1'";
     if ($result = get_db_result($SQL)) {
         echo '<select id="campaign_id">';
         while ($row = fetch_row($result)) {
-            echo '<option value="'.$row["campaign_id"].'">'.$row["title"]."</option>";    
+            echo '<option value="' . $row["campaign_id"] . '">' . $row["title"] . "</option>";    
         }
-        echo '</select> <button onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'join_campaign\',\'&campaign_id=\'+$(\'#campaign_id\').val()+\'&featureid='.$featureid.'&pageid='.$pageid.'\',function() { simple_display(\'donation_display\'); });">Join Campaign</button>';
+        echo '</select> <button onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'join_campaign\',\'&campaign_id=\'+$(\'#campaign_id\').val()+\'&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); });">Join Campaign</button>';
     } else {
         echo "There are no active campaigns available.";
     }
@@ -184,16 +184,16 @@ global $CFG, $MYVARS, $USER;
             }
         </style>';
         
-    echo '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'add_or_manage_form\',\'&featureid='.$featureid.'&pageid='.$pageid.'\',function() { simple_display(\'donation_display\'); });">Back</a><br /><br />';   
+    echo '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'add_or_manage_form\',\'&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); });">Back</a><br /><br />';   
     $content = '
             <div class="formDiv" id="new_donation_div">
     		<form id="donation_form">
     			<fieldset class="formContainer">
                     <div class="rowContainer">
-    					<label for="amount">Donation Amount $</label><input type="text" id="amount" name="amount" value="0.00" data-rule-required="true" data-rule-number="true" data-rule-min="0.01" data-msg-required="'.get_error_message('donate_req_amount:donate').'" data-msg-min="'.get_error_message('donate_req_min:donate').'" /><div class="tooltipContainer info">'.get_help("donate_amount:donate").'</div><br />
+    					<label for="amount">Donation Amount $</label><input type="text" id="amount" name="amount" value="0.00" data-rule-required="true" data-rule-number="true" data-rule-min="0.01" data-msg-required="' . get_error_message('donate_req_amount:donate') . '" data-msg-min="' . get_error_message('donate_req_min:donate') . '" /><div class="tooltipContainer info">' . get_help("donate_amount:donate") . '</div><br />
     	  			</div>
     				<div class="rowContainer">
-    					<label for="name">Name</label><input type="text" id="name" name="name" value="Anonymous" /><div class="tooltipContainer info">'.get_help("donate_name:donate").'</div><br />
+    					<label for="name">Name</label><input type="text" id="name" name="name" value="Anonymous" /><div class="tooltipContainer info">' . get_help("donate_name:donate") . '</div><br />
     				</div>
                     <br />
                     <input class="submit" name="submit" type="submit" value="Add Donation" style="margin: auto;display:block;" />
@@ -213,20 +213,20 @@ global $CFG, $MYVARS, $USER;
     $campaign = get_db_row("SELECT * FROM donate_campaign WHERE campaign_id IN (SELECT campaign_id FROM donate_instance WHERE donate_id='$featureid')");	
 	
     $name = $name == "" || strtolower($name) == "anonymous" ? "" : dbescape($name);
-    $SQL = "INSERT INTO donate_donations (campaign_id,name,paypal_TX,amount,timestamp) VALUES('".$campaign["campaign_id"]."','$name','Offline','$amount','".get_timestamp()."')";
+    $SQL = "INSERT INTO donate_donations (campaign_id,name,paypal_TX,amount,timestamp) VALUES('" . $campaign["campaign_id"] . "','$name','Offline','$amount','" . get_timestamp() . "')";
     execute_db_sql($SQL);   
     
-    echo "true**".add_or_manage_forms($featureid, $pageid);
+    echo "true**" . add_or_manage_forms($featureid, $pageid);
 }
 
 function manage_donations_form() {
 global $CFG, $MYVARS, $USER;
     $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']); 
     $content = '';
-    echo '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'add_or_manage_form\',\'&featureid='.$featureid.'&pageid='.$pageid.'\',function() { simple_display(\'donation_display\'); });">Back</a><br /><br />';   
+    echo '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'add_or_manage_form\',\'&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); });">Back</a><br /><br />';   
     $content .= '<div style="max-height:340px;overflow-x:hidden;overflow-y:auto;">';
     $campaign = get_db_row("SELECT * FROM donate_campaign WHERE campaign_id IN (SELECT campaign_id FROM donate_instance WHERE donate_id='$featureid')");	    
-    if ($result = get_db_result("SELECT * FROM donate_donations WHERE campaign_id='".$campaign["campaign_id"]."' ORDER BY timestamp DESC")) {
+    if ($result = get_db_result("SELECT * FROM donate_donations WHERE campaign_id='" . $campaign["campaign_id"] . "' ORDER BY timestamp DESC")) {
         $content .= '<table style="font-size: 10px;width:100%;border-collapse: collapse;">
                     <tr><td style="width:55px"><strong>Type</strong></td><td><strong>Name</strong></td><td><strong>Amount</strong></td><td style="width:80px"><strong>Date</strong></td><td><strong>Paypal TX</strong></td><td style="width:20px"></td><td style="width:20px"></td></tr>';
         $i = 1;
@@ -237,24 +237,24 @@ global $CFG, $MYVARS, $USER;
             $name = $row["name"] == "" ? "Anonymous" : $row["name"];
             
             //Edit and Delete buttons
-            $edit = 'ajaxapi(\'/features/donate/donate_ajax.php\',\'edit_donation_form\',\'&featureid='.$featureid.'&pageid='.$pageid.'&donationid='.$row["donationid"].'\',function() { simple_display(\'donation_display\'); loaddynamicjs(\'donation_script\'); });';
-            $delete = 'if (confirm(\'Are you sure you want to delete this donation record?\')) { ajaxapi(\'/features/donate/donate_ajax.php\',\'delete_donation\',\'&featureid='.$featureid.'&pageid='.$pageid.'&donationid='.$row["donationid"].'\',function() { simple_display(\'donation_display\'); }); }';
+            $edit = 'ajaxapi(\'/features/donate/donate_ajax.php\',\'edit_donation_form\',\'&featureid=' . $featureid . '&pageid=' . $pageid . '&donationid=' . $row["donationid"] . '\',function() { simple_display(\'donation_display\'); loaddynamicjs(\'donation_script\'); });';
+            $delete = 'if (confirm(\'Are you sure you want to delete this donation record?\')) { ajaxapi(\'/features/donate/donate_ajax.php\',\'delete_donation\',\'&featureid=' . $featureid . '&pageid=' . $pageid . '&donationid=' . $row["donationid"] . '\',function() { simple_display(\'donation_display\'); }); }';
             
             $content .= '
-                <tr style="border:1px solid gainsboro;background-color: '.$bg.'">
-                    <td>'.$type.'</td>
-                    <td>'.$name.'</td>
-                    <td>$'.number_format($row["amount"],2,".", "").'</td>
-                    <td>'.date('m/d/Y', $row["timestamp"]+get_offset()).'</td>
-                    <td>'.$tx.'</td>
-                    <td><a href="javascript: void(0);" onclick="'.$edit.'"><img src="'.$CFG->wwwroot.'/images/edit.png" /></a></td>
-                    <td><a href="javascript: void(0);" onclick="'.$delete.'"><img src="'.$CFG->wwwroot.'/images/delete.png" /></a></td>
+                <tr style="border:1px solid gainsboro;background-color: ' . $bg . '">
+                    <td>' . $type . '</td>
+                    <td>' . $name . '</td>
+                    <td>$' . number_format($row["amount"],2,".", "") . '</td>
+                    <td>' . date('m/d/Y', $row["timestamp"]+get_offset()) . '</td>
+                    <td>' . $tx . '</td>
+                    <td><a href="javascript: void(0);" onclick="' . $edit . '"><img src="' . $CFG->wwwroot . '/images/edit.png" /></a></td>
+                    <td><a href="javascript: void(0);" onclick="' . $delete . '"><img src="' . $CFG->wwwroot . '/images/delete.png" /></a></td>
                 </tr>';       
             $i++; 
         }    
         $content .= '</table>';
     } else {
-        $content .= 'No donations have been made yet.';
+        $content .= 'No donations have been made yet . ';
     }
     
     $content .= '</div>';
@@ -285,7 +285,7 @@ global $CFG, $MYVARS, $USER;
             }
         </style>';
         
-    echo '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'manage_donations_form\',\'&featureid='.$featureid.'&pageid='.$pageid.'\',function() { simple_display(\'donation_display\'); });">Back</a><br /><br />';   
+    echo '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'manage_donations_form\',\'&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); });">Back</a><br /><br />';   
     $content = '
             <div class="formDiv" id="new_donation_div">
     		<form id="donation_form">
@@ -293,25 +293,25 @@ global $CFG, $MYVARS, $USER;
                     <div class="rowContainer">
                         <label for="campaign_id">Donated to:</label>
                         <select id="campaign_id" name="campaign_id" data-rule-required="true">';
-                        if ($result = get_db_result("SELECT * FROM donate_campaign WHERE shared=1 OR campaign_id='".$row["campaign_id"]."'")) {
+                        if ($result = get_db_result("SELECT * FROM donate_campaign WHERE shared=1 OR campaign_id='" . $row["campaign_id"] . "'")) {
                             $selected = $row["campaign_id"];
                             while ($c = fetch_row($result)) {
                                 $select = $selected == $c["campaign_id"] ? "selected" : "";
-                                $content .= '<option value="'.$c["campaign_id"].'" '.$select.'>'.$c["title"].'</option>';    
+                                $content .= '<option value="' . $c["campaign_id"] . '" ' . $select . '>' . $c["title"] . '</option>';    
                             }
                         }  
     $content .= '       </select>
-                        <div class="tooltipContainer info">'.get_help("donate_campaign:donate").'</div><br />
+                        <div class="tooltipContainer info">' . get_help("donate_campaign:donate") . '</div><br />
                     </div>
     
                     <div class="rowContainer">
-    					<label for="amount">Donation Amount $</label><input type="text" id="amount" name="amount" value="'.number_format($row["amount"],2,".", "").'" data-rule-required="true" data-rule-number="true" data-rule-min="0.01" data-msg-required="'.get_error_message('donate_req_amount:donate').'" data-msg-min="'.get_error_message('donate_req_min:donate').'" /><div class="tooltipContainer info">'.get_help("donate_amount:donate").'</div><br />
+    					<label for="amount">Donation Amount $</label><input type="text" id="amount" name="amount" value="' . number_format($row["amount"],2,".", "") . '" data-rule-required="true" data-rule-number="true" data-rule-min="0.01" data-msg-required="' . get_error_message('donate_req_amount:donate') . '" data-msg-min="' . get_error_message('donate_req_min:donate') . '" /><div class="tooltipContainer info">' . get_help("donate_amount:donate") . '</div><br />
     	  			</div>
     				<div class="rowContainer">
-    					<label for="name">Name</label><input type="text" id="name" name="name" value="'.$row["name"].'" /><div class="tooltipContainer info">'.get_help("donate_name:donate").'</div><br />
+    					<label for="name">Name</label><input type="text" id="name" name="name" value="' . $row["name"] . '" /><div class="tooltipContainer info">' . get_help("donate_name:donate") . '</div><br />
     				</div>
                     <div class="rowContainer">
-    					<label for="paypal_TX">Paypal TX</label><input type="text" id="paypal_TX" paypal_TX="name" value="'.$row["paypal_TX"].'" /><div class="tooltipContainer info">'.get_help("donate_paypaltx:donate").'</div><br />
+    					<label for="paypal_TX">Paypal TX</label><input type="text" id="paypal_TX" paypal_TX="name" value="' . $row["paypal_TX"] . '" /><div class="tooltipContainer info">' . get_help("donate_paypaltx:donate") . '</div><br />
     				</div>
                     <br />
                     <input class="submit" name="submit" type="submit" value="Save" style="margin: auto;display:block;" />

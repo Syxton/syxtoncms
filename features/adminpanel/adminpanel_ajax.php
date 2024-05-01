@@ -76,7 +76,7 @@ function site_versions() {
     echo '<tr><td colspan="2" style="text-align:center"></td></tr><tr><td colspan="2" style="text-align:center"><ins>Feature db version</ins></td><td></tr>';
     if ($result = get_db_result("SELECT * FROM features ORDER BY feature")) {
         while ($row = fetch_row($result)) {
-            echo '<tr><td style="width:50%;text-align:right;border:1px solid silver;padding:3px;">'.$row["feature_title"].'</td><td style="padding:3px;border:1px solid silver;text-align:left">'.$row["version"].'</td></tr>';
+            echo '<tr><td style="width:50%;text-align:right;border:1px solid silver;padding:3px;">' . $row["feature_title"] . '</td><td style="padding:3px;border:1px solid silver;text-align:left">' . $row["version"] . '</td></tr>';
         }
     }
     echo '</table>';
@@ -117,8 +117,8 @@ global $USER, $MYVARS;
     }
     
     // Next and Previous Month links
-    $next = date('Y') < $nextyear || (date('Y') == $nextyear && date('m') < $nextmonth) ? '' : '<div class="button" style="display: inline-block" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'view_logfile\',\'&amp;year='.$nextyear.'&amp;month='.$nextmonth.'&amp;userid='.$userid.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'display\'); }}, true);" onmouseup="this.blur()">View '.date("F Y",mktime(0,0,0, $nextmonth,1, $nextyear)) . '</div>';
-    $prev = '<div class="button" style="display: inline-block" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'view_logfile\',\'&amp;year='.$prevyear.'&amp;month='.$prevmonth.'&amp;userid='.$userid.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'display\'); }}, true);" onmouseup="this.blur()">View ' . date("F Y",mktime(0,0,0, $prevmonth,1, $prevyear)).'</div>';
+    $next = date('Y') < $nextyear || (date('Y') == $nextyear && date('m') < $nextmonth) ? '' : '<div class="button" style="display: inline-block" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'view_logfile\',\'&amp;year=' . $nextyear . '&amp;month=' . $nextmonth . '&amp;userid=' . $userid . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'display\'); }}, true);" onmouseup="this.blur()">View ' . date("F Y",mktime(0,0,0, $nextmonth,1, $nextyear)) . '</div>';
+    $prev = '<div class="button" style="display: inline-block" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'view_logfile\',\'&amp;year=' . $prevyear . '&amp;month=' . $prevmonth . '&amp;userid=' . $userid . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'display\'); }}, true);" onmouseup="this.blur()">View ' . date("F Y",mktime(0,0,0, $prevmonth,1, $prevyear)) . '</div>';
     
     echo '<div style="caret-color: transparent;">
             <div>
@@ -132,7 +132,7 @@ global $USER, $MYVARS;
                         </td>
                     </tr>
                 </table>
-                <iframe src="members_log_graph.php?rnd='.time().'&userid='.$userid.'&year='.$year.'&month='.$month.'" style="width:100%;height:425px;border:none;"></iframe>
+                <iframe src="members_log_graph.php?rnd=' . time() . '&userid=' . $userid . '&year=' . $year . '&month=' . $month . '" style="width:100%;height:425px;border:none;"></iframe>
                 <br />
             </div>
             <div id="actions_div">
@@ -171,16 +171,16 @@ global $MYVARS, $USER;
           ORDER BY timeline
               DESC $LIMIT";
 
-    $next = $pagenum > 0 ? '<div class="button" style="display: inline-block" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'get_user_usage_page\',\'&amp;pagenum=' . ($pagenum - 1) . '&amp;year='.$year.'&amp;month='.$month.'&amp;userid='.$userid.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'actions_div\'); }}, true);" onmouseup="this.blur()">Later Actions</div>' : "";
-    $prev = $firstonpage + $perpage < $total ? '<div class="button" style="display: inline-block" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'get_user_usage_page\',\'&amp;pagenum=' . ($pagenum + 1) . '&amp;year='.$year.'&amp;month='.$month.'&amp;userid='.$userid.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'actions_div\'); }}, true);" onmouseup="this.blur()">Previous Actions</div>' : "";
+    $next = $pagenum > 0 ? '<div class="button" style="display: inline-block" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'get_user_usage_page\',\'&amp;pagenum=' . ($pagenum - 1) . '&amp;year=' . $year . '&amp;month=' . $month . '&amp;userid=' . $userid . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'actions_div\'); }}, true);" onmouseup="this.blur()">Later Actions</div>' : "";
+    $prev = $firstonpage + $perpage < $total ? '<div class="button" style="display: inline-block" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'get_user_usage_page\',\'&amp;pagenum=' . ($pagenum + 1) . '&amp;year=' . $year . '&amp;month=' . $month . '&amp;userid=' . $userid . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'actions_div\'); }}, true);" onmouseup="this.blur()">Previous Actions</div>' : "";
 
     $returnme .= '<table style="font-size:.75em;width: 100%;">
                     <tr>
                         <td style="text-align:left">
-                            '.$prev.'
+                            ' . $prev . '
                         </td>
                         <td style="text-align:right">
-                            '.$next.'
+                            ' . $next . '
                         </td>
                     </tr>
                   </table>
@@ -216,7 +216,7 @@ global $MYVARS, $USER;
             $info = $info != "" ? $info : $data[$i]["feature"];
             $returnme .= '<tr>
                             <td>
-                                ' . date("m/d/Y g:i a", $data[$i]["timeline"]) .'
+                                ' . date("m/d/Y g:i a", $data[$i]["timeline"]) . '
                             </td>
                             <td>
                                 ' . stripslashes(get_db_field("name", "pages", "pageid='" . $data[$i]["pageid"] . "'")) . '
@@ -241,7 +241,7 @@ global $MYVARS, $USER;
 function ipmap() {
 global $CFG, $MYVARS;
     $json = json_decode($MYVARS->GET["json"]);
-    echo '<iframe style="height:100%;width:100%" src="https://www.google.com/maps/embed/v1/place?q='.$json->lat.','.$json->lon.'&key='.$CFG->googlemapsembedkey.'"></iframe>';
+    echo '<iframe style="height:100%;width:100%" src="https://www.google.com/maps/embed/v1/place?q=' . $json->lat . ',' . $json->lon . '&key=' . $CFG->googlemapsembedkey . '"></iframe>';
 }
 
 function loginas() {

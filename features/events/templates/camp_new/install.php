@@ -55,12 +55,12 @@ HealthRelationship:Health:Relationship;
 HealthTetanusDate:Health:Tetanus Date';
 
 //Event template specific settings
-$settings[] = array('name' => 'template_setting_min_age','title'=> 'Minimum Age','type' => 'text','numeric' => false,'default' => '', 'extravalidation' => '', 'extra_alert' => '');
-$settings[] = array('name' => 'template_setting_max_age','title'=> 'Maximum Age','type' => 'text','numeric' => false,'default' => '', 'extravalidation' => '', 'extra_alert' => '');
-$settings[] = array('name' => 'template_setting_pictures','title'=> 'Pictures','type' => 'yes/no','numeric' => false,'default' => "true", 'extravalidation' => '', 'extra_alert' => '');
-$settings[] = array('name' => 'template_setting_pictures_price','title'=> 'Pictures Price','type' => 'text','numeric' => false,'default' => '5', 'extravalidation' => '', 'extra_alert' => '');
-$settings[] = array('name' => 'template_setting_shirt','title'=> 'Shirts','type' => 'yes/no','numeric' => false,'default' => "false", 'extravalidation' => '', 'extra_alert' => '');
-$settings[] = array('name' => 'template_setting_shirt_price','title'=> 'Shirt Price','type' => 'text','numeric' => false,'default' => '0', 'extravalidation' => '', 'extra_alert' => '');
+$settings[] = ['name' => 'template_setting_min_age','title'=> 'Minimum Age','type' => 'text','numeric' => false,'default' => '', 'extravalidation' => '', 'extra_alert' => ''];
+$settings[] = ['name' => 'template_setting_max_age','title'=> 'Maximum Age','type' => 'text','numeric' => false,'default' => '', 'extravalidation' => '', 'extra_alert' => ''];
+$settings[] = ['name' => 'template_setting_pictures','title'=> 'Pictures','type' => 'yes/no','numeric' => false,'default' => "true", 'extravalidation' => '', 'extra_alert' => ''];
+$settings[] = ['name' => 'template_setting_pictures_price','title'=> 'Pictures Price','type' => 'text','numeric' => false,'default' => '5', 'extravalidation' => '', 'extra_alert' => ''];
+$settings[] = ['name' => 'template_setting_shirt','title'=> 'Shirts','type' => 'yes/no','numeric' => false,'default' => "false", 'extravalidation' => '', 'extra_alert' => ''];
+$settings[] = ['name' => 'template_setting_shirt_price','title'=> 'Shirt Price','type' => 'text','numeric' => false,'default' => '0', 'extravalidation' => '', 'extra_alert' => ''];
 $settings = dbescape(serialize($settings));
 
 //If it is already installed, don't install it again.
@@ -68,12 +68,12 @@ if (!get_db_row("SELECT * FROM events_templates WHERE name = '$templatename'")) 
 	$SQL = "INSERT INTO events_templates
 	(name, folder, formlist, registrant_name, orderbyfield, settings)
 	VALUES 
-	('$templatename','$templatefolder','".str_replace(array("\r", "\n", "\t"), '', $formlist)."', '$registrant_name', '$orderbyfield', '$settings')";
+	('$templatename','$templatefolder','" . str_replace(["\r", "\n", "\t"], '', $formlist) . "', '$registrant_name', '$orderbyfield', '$settings')";
 
 	execute_db_sql($SQL);
 } else { // Update formslist, settings, and orderbyfield in case they have changed.
 	$SQL = "UPDATE events_templates
-			   SET formlist = '" . str_replace(array("\r", "\n", "\t"), '', $formlist) . "',
+			   SET formlist = '" . str_replace(["\r", "\n", "\t"], '', $formlist) . "',
 			   	   settings = '$settings', orderbyfield = '$orderbyfield'
 			 WHERE name = '$templatename'
 			   AND folder = '$templatefolder'";

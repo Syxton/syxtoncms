@@ -5,7 +5,7 @@ search_template||
       <tr>
         <td style="width:25%;text-align:left;">
           ||isprev{{
-            <a href="javascript: void(0);" onclick="$('#loading_overlay_||searchtype||').css('visibility', 'visible');
+            <a href="javascript: void(0);" onclick="$('#loading_overlay_||searchtype||').show();
                                                     ajaxapi('/ajax/page_ajax.php',
                                                             '||searchtype||',
                                                             '&pagenum=||prev_pagenum||' +
@@ -13,7 +13,7 @@ search_template||
                                                             function() {
                                                               if (xmlHttp.readyState == 4) {
                                                                 simple_display('searchcontainer_||searchtype||');
-                                                                $('#loading_overlay_||searchtype||').css('visibility', 'hidden');
+                                                                $('#loading_overlay_||searchtype||').hide();
                                                               }
                                                             },
                                                             true);" onmouseup="this.blur();">
@@ -26,7 +26,7 @@ search_template||
         </td>
         <td style="width:25%;text-align:right;">
           ||isnext{{
-            <a href="javascript: void(0);" onclick="$('#loading_overlay_||searchtype||').css('visibility', 'visible');
+            <a href="javascript: void(0);" onclick="$('#loading_overlay_||searchtype||').show();
                                                     ajaxapi('/ajax/page_ajax.php',
                                                             '||searchtype||',
                                                             '&pagenum=||next_pagenum||' +
@@ -34,7 +34,7 @@ search_template||
                                                             function() {
                                                               if (xmlHttp.readyState == 4) {
                                                                 simple_display('searchcontainer_||searchtype||');
-                                                                $('#loading_overlay_||searchtype||').css('visibility', 'hidden');
+                                                                $('#loading_overlay_||searchtype||').hide();
                                                               }
                                                             },
                                                             true);" onmouseup="this.blur();">

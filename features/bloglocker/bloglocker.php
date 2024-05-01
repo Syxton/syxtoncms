@@ -47,7 +47,7 @@ global $MYVARS, $CFG, $USER;
 	
 	echo '
 	<div style="width:550px">
-		'.$row['html'] . $comments.'
+		' . $row['html'] . $comments . '
 	</div>';
 }
 ?>

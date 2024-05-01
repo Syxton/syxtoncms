@@ -7,7 +7,13 @@
 * Revision: 1.2.8
 ***************************************************************************/
 
-if (!isset($LIBHEADER)) { if (file_exists('./lib/header.php')) { include('./lib/header.php'); }elseif (file_exists('../lib/header.php')) { include('../lib/header.php'); }elseif (file_exists('../../lib/header.php')) { include('../../lib/header.php'); }}
+if (!isset($LIBHEADER)) {
+	$sub = './';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == './' ? '../' : $sub . '../';
+	}
+	include($sub . 'lib/header.php'); 
+}
 $CALENDARLIB = true;
 
 function display_calendar($pageid, $area, $featureid) {
@@ -106,13 +112,13 @@ function get_small_calendar($pageid, $userid = 0, $month = false, $year = false,
                 while ($event = fetch_row($result)) {
                     if ($event["cat"] != 0) {
                         $category = get_db_row("SELECT * FROM calendar_cat WHERE cat_id=" . $event["cat"]);
-                        $background_color = $category["cat_color"] != "" ? 'color:' . $category["cat_color"].';' : 'color: #333333;';
-                        $font_color = $category["cat_bgcolor"] != '' ? 'background-color:' . $category["cat_bgcolor"].';' : 'background-color: #CCFF00;';
+                        $background_color = $category["cat_color"] != "" ? 'color:' . $category["cat_color"] . ';' : 'color: #333333;';
+                        $font_color = $category["cat_bgcolor"] != '' ? 'background-color:' . $category["cat_bgcolor"] . ';' : 'background-color: #CCFF00;';
                         $category_colors = $background_color . $font_color;
                     } else { $category_colors = 'background-color: #CCFF00; color: #333333;'; }
                 }
         
-                $returnme .= '<td style="text-align:center;' . $category_colors .' cursor: pointer;" onclick="ajaxapi(\'/features/calendar/calendar_ajax.php\',\'get_date_info\',\'&amp;show_site_events='.$show_site_events.'&amp;pageid='.$pageid.'&amp;tm='.$tm.'&amp;tn='.$tn.'&amp;tp='.$tp.'&amp;list_day='.$list_day.'\',function() { simple_display(\'day_info\'); show_section(\'day_info\'); var temptimer=10; countdown(\'cal_countdown\',temptimer,function() { hide_section(\'day_info\'); });})">';
+                $returnme .= '<td style="text-align:center;' . $category_colors . ' cursor: pointer;" onclick="ajaxapi(\'/features/calendar/calendar_ajax.php\',\'get_date_info\',\'&amp;show_site_events=' . $show_site_events . '&amp;pageid=' . $pageid . '&amp;tm=' . $tm . '&amp;tn=' . $tn . '&amp;tp=' . $tp . '&amp;list_day=' . $list_day . '\',function() { simple_display(\'day_info\'); show_section(\'day_info\'); var temptimer=10; countdown(\'cal_countdown\',temptimer,function() { hide_section(\'day_info\'); });})">';
                 db_free_result($result);
             }
         }elseif ($tn > $tm && $tn < $tp && date('j') == $list_day && date('m') == $month && date('Y') == $year) {
@@ -212,13 +218,13 @@ global $CFG;
                 while ($event = fetch_row($result)) {
                     if ($event["cat"] != 0) {
                         $category = get_db_row("SELECT * FROM calendar_cat WHERE cat_id=" . $event["cat"]);
-                        $background_color = $category["cat_color"] != "" ? 'color:' . $category["cat_color"].';' : 'color: #333333;';
-                        $font_color = $category["cat_bgcolor"] != '' ? 'background-color:' . $category["cat_bgcolor"].';' : 'background-color: #CCFF00;';
+                        $background_color = $category["cat_color"] != "" ? 'color:' . $category["cat_color"] . ';' : 'color: #333333;';
+                        $font_color = $category["cat_bgcolor"] != '' ? 'background-color:' . $category["cat_bgcolor"] . ';' : 'background-color: #CCFF00;';
                         $category_colors = $background_color . $font_color;
                     } else { $category_colors = 'background-color: #CCFF00; color: #333333;'; }
                 }
         
-                $returnme .= '<td style="text-align:center;' . $category_colors .' cursor: pointer;" onclick="ajaxapi(\'/features/calendar/calendar_ajax.php\',\'get_date_info\',\'&amp;show_site_events='.$show_site_events.'&amp;pageid='.$pageid.'&amp;tm='.$tm.'&amp;tn='.$tn.'&amp;tp='.$tp.'&amp;list_day='.$list_day.'\',function() { simple_display(\'day_info\'); show_section(\'day_info\'); clearTimeout(temptimer); temptimer = setTimeout(function() {hide_section(\'day_info\')},10000); var temptimer2=10; countdown(\'cal_countdown\',temptimer2);})">';
+                $returnme .= '<td style="text-align:center;' . $category_colors . ' cursor: pointer;" onclick="ajaxapi(\'/features/calendar/calendar_ajax.php\',\'get_date_info\',\'&amp;show_site_events=' . $show_site_events . '&amp;pageid=' . $pageid . '&amp;tm=' . $tm . '&amp;tn=' . $tn . '&amp;tp=' . $tp . '&amp;list_day=' . $list_day . '\',function() { simple_display(\'day_info\'); show_section(\'day_info\'); clearTimeout(temptimer); temptimer = setTimeout(function() {hide_section(\'day_info\')},10000); var temptimer2=10; countdown(\'cal_countdown\',temptimer2);})">';
                 db_free_result($result);
             }
         }elseif ($tn > $tm && $tn < $tp && date('j') == $list_day && date('m') == $month && date('Y') == $year) {

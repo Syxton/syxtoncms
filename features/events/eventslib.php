@@ -7,7 +7,13 @@
 * Revision: 2.8.7
 ***************************************************************************/
 
-if (!isset($LIBHEADER)) { if (file_exists('./lib/header.php')) { include('./lib/header.php'); }elseif (file_exists('../lib/header.php')) { include('../lib/header.php'); }elseif (file_exists('../../lib/header.php')) { include('../../lib/header.php'); }}
+if (!isset($LIBHEADER)) {
+	$sub = './';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == './' ? '../' : $sub . '../';
+	}
+	include($sub . 'lib/header.php'); 
+}
 $EVENTSLIB = true;
 
 function display_events($pageid, $area, $featureid) {
@@ -31,7 +37,7 @@ global $CFG, $USER, $ROLES;
         return get_calendar_of_events($title, $pageid, $featureid, false, $showpastevents, $content, $allowrequests);
     } else {
         if (is_logged_in()) { //Logged in user will see...
-            if (get_db_row("SELECT eventid FROM events WHERE workers=1 AND event_begin_date > " .time())) {
+            if (get_db_row("SELECT eventid FROM events WHERE workers=1 AND event_begin_date > " . time())) {
                 if (user_has_ability_in_page($USER->userid, "staffapply", $pageid, "events", $featureid)) {
                     $content .= get_staff_application_button();
                 }
@@ -95,22 +101,47 @@ global $CFG, $USER, $ROLES;
 
 function get_staff_application_button() {
 global $CFG;
-$returnme = '';
-    if (is_logged_in()) { // Staff Apply visible only if logged in
-        $menuitem = '<li>'.make_modal_links(array("title"=> "Staff Apply","path"=>$CFG->wwwroot."/features/events/events.php?action=staff_application","validate"=>"true","width"=>"600","height"=>"650")).'</li>';
+    $returnme = '';
+    if (is_logged_in()) { // Staff Apply menu item visible only if logged in
+        $p = [
+            "title" => "Staff Apply",
+            "path" => $CFG->wwwroot . "/features/events/events.php?action=staff_application",
+            "validate" => "true",
+            "width" => "600",
+            "height" => "650",
+        ];
+        $menuitem = '<li>' . make_modal_links($p) . '</li>';
         $returnme .= js_code_wrap('var item = "' . addslashes($menuitem) . '"; $("#pagenav").append(item);', 'defer', true);
     }
-    $returnme .= '<div style="margin:5px;text-align:right;">'.make_modal_links(array("title"=>"Staff Application/Renewal Form","path"=>$CFG->wwwroot."/features/events/events.php?action=staff_application","validate"=>"true","width"=>"600","height"=>"650","image"=>$CFG->wwwroot."/images/staff.png","confirmexit"=>"true")).'</div>';
+
+    $p = [
+        "title" => "Staff Application/Renewal Form",
+        "path" => $CFG->wwwroot . "/features/events/events.php?action=staff_application",
+        "validate" => "true",
+        "width" => "600",
+        "height" => "650",
+        "image" => $CFG->wwwroot . "/images/staff.png",
+        "confirmexit" => "true",
+    ];
+    $returnme .= '<div style="margin:5px;text-align:right;">' . make_modal_links($p) . '</div>';
 
     return $returnme;
 }
 
 function get_event_request_link($area, $featureid) {
 global $CFG;
+    $p = [
+        "title" => "Request an Event",
+        "path" => $CFG->wwwroot . "/features/events/events.php?action=event_request_form&amp;featureid=$featureid",
+        "validate" => "true",
+        "width" => "550",
+        "height" => "650",
+        "image" => $CFG->wwwroot . "/images/request.gif",
+    ];
     if ($area == "middle") {
-        return '<div style="text-align:right;">'.make_modal_links(array("title"=>"Request an Event","path"=>$CFG->wwwroot."/features/events/events.php?action=event_request_form&amp;featureid=$featureid","validate"=>"true","width"=>"550","height"=>"650","image"=>$CFG->wwwroot."/images/request.gif")).'</div>';
+        return '<div style="text-align:right;">' . make_modal_links($p) . '</div>';
     } else {
-        return '<div style="text-align:right;">'.make_modal_links(array("title"=>"Request an Event","path"=>$CFG->wwwroot."/features/events/events.php?action=event_request_form&amp;featureid=$featureid","validate"=>"true","width"=>"550","height"=>"650","image"=>$CFG->wwwroot."/images/request.gif")).'</div><br />';
+        return '<div style="text-align:right;">' . make_modal_links($p) . '</div><br />';
     }
 }
 
@@ -209,26 +240,30 @@ global $CFG, $USER;
 
                 // Can you sign up for this event.
                 if (user_has_ability_in_page($USER->userid, "signupforevents", $pageid, "events", $featureid)) {
-                    $params = array("button" => "button",
-                                    "title" => "Register $left",
-                                    "text" => "Register",
-                                    "path" => $CFG->wwwroot . "/features/events/events.php?action=show_registration&amp;pageid=$pageid&amp;eventid=".$event['eventid'],
-                                    "iframe" => "true",
-                                    "validate" => "true",
-                                    "width" => "630",
-                                    "height" => "95%",
-                                    "confirmexit" => "true");
+                    $params = [
+                        "button" => "button",
+                        "title" => "Register $left",
+                        "text" => "Register",
+                        "path" => $CFG->wwwroot . "/features/events/events.php?action=show_registration&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                        "iframe" => "true",
+                        "validate" => "true",
+                        "width" => "630",
+                        "height" => "95%",
+                        "confirmexit" => "true",
+                    ];
                     $eventbuttons .= make_modal_links($params);
                 }
 
                 // Can you pay for this event.
 	            if ($event["paypal"] != "") {
-                    $params = array("button" => "button",
-                                    "title" => "Event Payment",
-                                    "text" => "Pay",
-                                    "path" => $CFG->wwwroot . "/features/events/events.php?action=pay&amp;modal=1&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
-                                    "width" => "95%",
-                                    "height" => "95%");
+                    $params = [
+                        "button" => "button",
+                        "title" => "Event Payment",
+                        "text" => "Pay",
+                        "path" => $CFG->wwwroot . "/features/events/events.php?action=pay&amp;modal=1&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                        "width" => "95%",
+                        "height" => "95%",
+                    ];
                     $eventbuttons .= make_modal_links($params);
 	            }
 	        } else {
@@ -247,7 +282,7 @@ global $CFG, $USER;
     }
 
     if ($info == "") { // If the info is empty, let's put something there.
-        $location = get_db_row("SELECT * FROM events_locations WHERE id='".$event['location']."'");
+        $location = get_db_row("SELECT * FROM events_locations WHERE id='" . $event['location'] . "'");
         $info = "Event Location: " . stripslashes($location["location"]);
     }
 
@@ -265,11 +300,13 @@ global $CFG, $USER;
                                         <tr>
                                             <td>
                                     			<div class="event_title" style="color:gray;">Unconfirmed:
-                                                    '.make_modal_links(array("title" => stripslashes($event["name"]),
-                                                                             "path" => $CFG->wwwroot."/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=".$event['eventid'],
-                                                                             "iframe" => "true",
-                                                                             "width" => "700",
-                                                                             "height" => "650")).'
+                                                    ' . make_modal_links([
+                                                            "title" => stripslashes($event["name"]),
+                                                            "path" => $CFG->wwwroot . "/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                                                            "iframe" => "true",
+                                                            "width" => "700",
+                                                            "height" => "650",
+                                                        ]) . '
                                                 </div>
                                                 <span style="font-size:.85em">&nbsp;
                                                     ' . stripslashes(strip_tags($event["byline"],'<a>')) . '
@@ -303,14 +340,16 @@ global $CFG, $USER;
                                         <tr>
                                             <td>
                                     			<div class="event_title" style="color:blue;">
-                                                    '.make_modal_links(array("title" => stripslashes($event["name"]),
-                                                                             "path" => $CFG->wwwroot."/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=".$event['eventid'],
-                                                                             "iframe" => "true",
-                                                                             "width" => "700",
-                                                                             "height" => "650")).'
+                                                    ' . make_modal_links([
+                                                            "title" => stripslashes($event["name"]),
+                                                            "path" => $CFG->wwwroot . "/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                                                            "iframe" => "true",
+                                                            "width" => "700",
+                                                            "height" => "650",
+                                                        ]) . '
                                                 </div>
                                     			<span style="font-size:.85em">
-                                                    &nbsp;' . stripslashes(strip_tags($event["byline"],'<a>')) . '
+                                                    &nbsp;' . stripslashes(strip_tags($event["byline"], '<a>')) . '
                                     			</span>
                                                 <div class="hprcp_n" style="margin-top:4px;">
                                                     <div class="hprcp_e">
@@ -349,12 +388,12 @@ global $CFG;
 
 	if (strlen($buttons) > 0) {
 	   	   return '
-        <div id="slide_menu" class="slide_menu_invisible slide_menu" style="border-top:1px solid '.$bordercolor.';border-bottom:1px solid '.$bordercolor.';">
+        <div id="slide_menu" class="slide_menu_invisible slide_menu" style="border-top:1px solid ' . $bordercolor . ';border-bottom:1px solid ' . $bordercolor . ';">
             <div id="event_' . $event["eventid"] . '_buttons" style="padding:0;">
     		  ' . $buttons . '
     		</div>
         </div>
-        <div onclick="$(this).prev(\'#slide_menu\').animate({width: \'toggle\'},function() {$(this).toggleClass(\'slide_menu_visible\');});" class="slide_menu slide_menu_tab" style="background-color:'.$titlefontcolor.';color:'.$titlebgcolor.';border-left:1px solid '.$bordercolor.';border-top:1px solid '.$bordercolor.';border-bottom:1px solid '.$bordercolor.';"><strong>+</strong></div>
+        <div onclick="$(this).prev(\'#slide_menu\').animate({width: \'toggle\'},function() {$(this).toggleClass(\'slide_menu_visible\');});" class="slide_menu slide_menu_tab" style="background-color:' . $titlefontcolor . ';color:' . $titlebgcolor . ';border-left:1px solid ' . $bordercolor . ';border-top:1px solid ' . $bordercolor . ';border-bottom:1px solid ' . $bordercolor . ';"><strong>+</strong></div>
         ';
 	}
 
@@ -375,7 +414,16 @@ global $CFG, $USER;
         }
         //Edit && Delete button
         if ($canedit && $editable) {
-            $returnme .= make_modal_links(array("title"=> "Edit Event","path"=>$CFG->wwwroot."/features/events/events.php?action=add_event_form&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"refresh"=>"true","iframe"=>"true","width"=>"800","height"=>"95%","image"=>$CFG->wwwroot . "/images/edit.png","class"=>"slide_menu_button"));
+            $returnme .= make_modal_links([
+                            "title" => "Edit Event",
+                            "path" => $CFG->wwwroot . "/features/events/events.php?action=add_event_form&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                            "refresh" => "true",
+                            "iframe" => "true",
+                            "width" => "800",
+                            "height" => "95%",
+                            "image" => $CFG->wwwroot . "/images/edit.png",
+                            "class" => "slide_menu_button",
+                        ]);
 
             //Delete button
             $returnme .= ' <a class="slide_menu_button" title="Delete Event" href="javascript: if (confirm(\'Are you sure you want to delete this event?\')) { ajaxapi(\'/features/events/events_ajax.php\',\'delete_events_relay\',\'&amp;featureid=' . $event['eventid'] . '\',function() { update_login_contents(\'' . $pageid . '\'); });}"> <img src="' . $CFG->wwwroot . '/images/delete.png" title="Delete Event" alt="Delete Event" /></a>';
@@ -399,11 +447,25 @@ global $CFG, $USER;
                     <tr>
                         <td>
                             <span id="confirm_' . $event['eventid'] . '">
-                                '.make_modal_links(array("title"=> stripslashes($event['name']),"path"=>$CFG->wwwroot."/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","width"=>"700","height"=>"650"));
+                                ' . make_modal_links([
+                                        "title" => stripslashes($event['name']),
+                                        "path" => $CFG->wwwroot . "/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                                        "iframe" => "true",
+                                        "width" => "700",
+                                        "height" => "650",
+                                    ]);
 
             $featureid = get_db_field("featureid","pages_features","pageid='$pageid' AND feature='events'");
             if (user_has_ability_in_page($USER->userid, "editevents", $pageid, "events", $featureid)) {
-                $returnme .= make_modal_links(array("title"=> "Edit Event","path"=>$CFG->wwwroot."/features/events/events.php?action=add_event_form&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"refresh"=>"true","iframe"=>"true","width"=>"800","height"=>"95%","image"=>$CFG->wwwroot."/images/edit.png"));
+                $returnme .= make_modal_links([
+                                "title" => "Edit Event",
+                                "path" => $CFG->wwwroot . "/features/events/events.php?action=add_event_form&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                                "refresh" => "true",
+                                "iframe" => "true",
+                                "width" => "800",
+                                "height" => "95%",
+                                "image" => $CFG->wwwroot . "/images/edit.png",
+                            ]);
             }
 
             $returnme .= '      <a href="javascript: if (confirm(\'Are you sure you want to confirm this event?\')) { ajaxapi(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '&amp;confirm=1\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); update_login_contents(\'' . $pageid . '\');});}"> <img src="' . $CFG->wwwroot . '/images/add.png" title="Confirm Event" alt="Confirm Event" /></a>';
@@ -432,8 +494,22 @@ global $CFG, $USER;
                             <table style="width:100%;background-color:#edfafa;border-bottom:1px gray inset; margin:1px;">
                                 <tr>
                                     <td>
-                                        '.make_modal_links(array("title"=> stripslashes($event['name']),"path"=>$CFG->wwwroot."/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","width"=>"700","height"=>"650"));
-            $returnme .= " ".make_modal_links(array("title"=> "Edit Event","path"=>$CFG->wwwroot."/features/events/events.php?action=add_event_form&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"refresh"=>"true","iframe"=>"true","width"=>"750","height"=>"650","image"=>$CFG->wwwroot."/images/edit.png"));
+                                        ' . make_modal_links([
+                                                "title" => stripslashes($event['name']),
+                                                "path" => $CFG->wwwroot . "/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                                                "iframe" => "true",
+                                                "width" => "700",
+                                                "height" => "650",
+                                            ]);
+            $returnme .= " " . make_modal_links([
+                                    "title" => "Edit Event",
+                                    "path" => $CFG->wwwroot . "/features/events/events.php?action=add_event_form&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                                    "refresh" => "true",
+                                    "iframe" => "true",
+                                    "width" => "750",
+                                    "height" => "650",
+                                    "image" => $CFG->wwwroot . "/images/edit.png",
+                                ]);
             $returnme .= ' <a href="javascript: if (confirm(\'Are you sure you want to delete this event?\')) { ajaxapi(\'/features/events/events_ajax.php\',\'delete_events_relay\',\'&amp;featureid=' . $event['eventid'] . '\',function() { update_login_contents(\'' . $pageid . '\');});}"> <img src="' . $CFG->wwwroot . '/images/delete.png" title="Delete Event" alt="Delete Event" /></a>';
             $returnme .= '</td></tr></table></span>';
         }
@@ -455,10 +531,16 @@ global $CFG, $USER;
             $returnme .= '<table style="width:100%;background-color:#edfafa;border-bottom:1px gray inset; margin:1px;">
                             <tr>
                                 <td style="white-space:normal">
-                                    '.make_modal_links(array("title"=> stripslashes($event["name"]),"path"=>$CFG->wwwroot."/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","width"=>"700","height"=>"650")).'
+                                    ' . make_modal_links([
+                                            "title" => stripslashes($event["name"]),
+                                            "path" => $CFG->wwwroot . "/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                                            "iframe" => "true",
+                                            "width" => "700",
+                                            "height" => "650",
+                                        ]) . '
                                 </td>
                                 <td style="text-align:right; padding:2px;white-space:nowrap;">';
-            $regcount = get_db_count("SELECT * FROM events_registrations WHERE eventid='".$event['eventid']."' AND verified='1'");
+            $regcount = get_db_count("SELECT * FROM events_registrations WHERE eventid='" . $event['eventid'] . "' AND verified='1'");
             $limit = $event['max_users'] == "0" ? "&#8734;" : $event['max_users'];
             $left = $event['max_users'] == "0" ? "&#8734;" : '(' . ($limit - $regcount) . ' out of ' . $limit . ' openings left)';
             $featureid = get_db_field("featureid","pages_features","pageid='$pageid' AND feature='events'");
@@ -470,12 +552,27 @@ global $CFG, $USER;
 
             // Registration button
             if (user_has_ability_in_page($USER->userid, "signupforevents", $pageid, "events", $featureid)) {
-                $returnme .= make_modal_links(array("title"=> "Register $left","path"=>$CFG->wwwroot."/features/events/events.php?action=show_registration&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","validate"=>"true","width"=>"630","height"=>"95%","confirmexit"=>"true","image"=>$CFG->wwwroot . "/images/register.png"));
+                $returnme .= make_modal_links([
+                                "title" => "Register $left",
+                                "path" => $CFG->wwwroot . "/features/events/events.php?action=show_registration&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                                "iframe" => "true",
+                                "validate" => "true",
+                                "width" => "630",
+                                "height" => "95%",
+                                "confirmexit" => "true",
+                                "image" => $CFG->wwwroot . "/images/register.png",
+                            ]);
             }
 
             // Payment Area
             if ($event["paypal"] != "") {
-                $returnme .= make_modal_links(array("title"=> "Event Payment","path"=>$CFG->wwwroot.'/features/events/events.php?action=pay&amp;modal=1&amp;pageid='.$pageid.'&amp;eventid=' . $event['eventid'],"width"=>"95%","height"=>"95%","image"=>$CFG->wwwroot . "/images/pay.png"));
+                $returnme .= make_modal_links([
+                                "title" => "Event Payment",
+                                "path" => $CFG->wwwroot . "/features/events/events.php?action=pay&amp;modal=1&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                                "width" => "95%",
+                                "height" => "95%",
+                                "image" => $CFG->wwwroot . "/images/pay.png",
+                            ]);
             }
 
             $returnme .= '</td></tr></table>';
@@ -501,7 +598,13 @@ global $CFG;
             $returnme .= '<table style="width:100%;background-color:#edfafa;border-bottom:1px gray inset; margin:1px;">
                             <tr>
                                 <td>
-                                    '.make_modal_links(array("title"=> stripslashes($event["name"]),"path"=>$CFG->wwwroot."/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","width"=>"700","height"=>"650")).'
+                                    ' . make_modal_links([
+                                            "title" => stripslashes($event["name"]),
+                                            "path" => $CFG->wwwroot . "/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                                            "iframe" => "true",
+                                            "width" => "700",
+                                            "height" => "650",
+                                        ]) . '
                                     <span style="display:block;color:gray; font-size:.75em;">' . $length . '</span>
                                 </td>
                             </tr>
@@ -527,11 +630,17 @@ global $CFG, $USER;
             $returnme .= '<table style="width:100%;background-color:#edfafa;border-bottom:1px gray inset; margin:1px;">
                             <tr>
                                 <td>
-                                    '.make_modal_links(array("title"=> stripslashes($event["name"]),"path"=>$CFG->wwwroot."/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","width"=>"700","height"=>"650")).'
+                                    ' . make_modal_links([
+                                            "title" => stripslashes($event["name"]),
+                                            "path" => $CFG->wwwroot . "/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                                            "iframe" => "true",
+                                            "width" => "700",
+                                            "height" => "650",
+                                        ]) . '
                                     <span style="display:block;color:gray; font-size:.75em;">' . $length . '</span>
                                 </td>
                                 <td style="text-align:right; padding:2px;white-space:nowrap;">';
-            $regcount = get_db_count("SELECT * FROM events_registrations WHERE eventid='".$event['eventid']."' AND verified='1'");
+            $regcount = get_db_count("SELECT * FROM events_registrations WHERE eventid='" . $event['eventid'] . "' AND verified='1'");
             $limit = $event['max_users'] == "0" ? "&#8734;" : $event['max_users'];
             $featureid = get_db_field("featureid","pages_features","pageid='$pageid' AND feature='events'");
             if (user_has_ability_in_page($USER->userid, "exportcsv", $pageid, "events", $featureid)) { $returnme .= '<a href="javascript:ajaxapi(\'/features/events/events_ajax.php\',\'export_csv\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '\',function() { run_this();});"><img src="' . $CFG->wwwroot . '/images/csv.png" title="Export ' . $regcount . '/' . $limit . ' Registrations" alt="Export ' . $regcount . ' Registrations" /></a>';}
@@ -560,7 +669,13 @@ global $CFG, $USER;
             $returnme .= '<table style="width:100%;background-color:#edfafa;border-bottom:1px gray inset; margin:1px;">
                             <tr>
                                 <td style="white-space:normal">
-                                    '.make_modal_links(array("title"=> stripslashes($event["name"]),"path"=>$CFG->wwwroot."/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=".$event['eventid'],"iframe"=>"true","width"=>"700","height"=>"650")).'
+                                    ' . make_modal_links([
+                                            "title" => stripslashes($event["name"]),
+                                            "path" => $CFG->wwwroot . "/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                                            "iframe" => "true",
+                                            "width" => "700",
+                                            "height" => "650",
+                                        ]) . '
                                     <span style="display:block;color:gray; font-size:.75em;">' . $length . '</span>
                                 </td>
                                 <td style="text-align:right; padding:2px;white-space:nowrap;">';
@@ -600,8 +715,8 @@ global $CFG;
     $returnme .= '
         <input type="hidden" name="upload" value="1">
         <input type="hidden" name="cmd" value="_cart">
-        <input type="hidden" name="return" value="'.$protocol.$CFG->wwwroot.'/features/events/events.php?action=showcart">
-        <input type="hidden" name="notify_url" value="'.$protocol.$CFG->wwwroot.'/features/events/ipn.php">
+        <input type="hidden" name="return" value="' . $protocol.$CFG->wwwroot . '/features/events/events.php?action=showcart">
+        <input type="hidden" name="notify_url" value="' . $protocol.$CFG->wwwroot . '/features/events/ipn.php">
         <input type="hidden" name="business" value="' . $sellersemail . '">';
     $i = 1;
     foreach ($items as $item) {
@@ -626,7 +741,7 @@ global $CFG;
     if ($template["folder"] == "none") {
         if ($name_fields = get_db_result("SELECT * FROM events_templates_forms WHERE template_id=" . $template["template_id"] . " AND nameforemail=1")) {
             while ($name_field = fetch_row($name_fields)) {
-                $value = stripslashes(get_db_field("value", "events_registrations_values", "regid='$regid' AND elementid='". $name_field["elementid"] ."'"));
+                $value = stripslashes(get_db_field("value", "events_registrations_values", "regid='$regid' AND elementid='" . $name_field["elementid"] . "'"));
                 $name .= $name == "" ? $value : " " . $value;
             }
         }
@@ -719,15 +834,15 @@ global $CFG, $why, $error;
 function registration_email($regid, $touser, $pending=false, $waivefee=false) {
 global $CFG;
     $reg = get_db_row("SELECT * FROM events_registrations WHERE regid='$regid'");
-    $event = get_db_row("SELECT * FROM events WHERE eventid='" . $reg["eventid"]."'");
-    $template = get_db_row("SELECT * FROM events_templates WHERE template_id='" . $event["template_id"]."'");
+    $event = get_db_row("SELECT * FROM events WHERE eventid='" . $reg["eventid"] . "'");
+    $template = get_db_row("SELECT * FROM events_templates WHERE template_id='" . $event["template_id"] . "'");
 
     $protocol = get_protocol();
 
     if (!empty($CFG->logofile)) {
-        $email = '<img src="'.$protocol.$CFG->wwwroot.'/images/'.$CFG->logofile.'" style="5em" /><br />';
+        $email = '<img src="' . $protocol.$CFG->wwwroot . '/images/' . $CFG->logofile . '" style="5em" /><br />';
     } else {
-        $email = '<h1>'.$CFG->sitename.'</h1>';
+        $email = '<h1>' . $CFG->sitename . '</h1>';
     }
 
     if ($pending) {
@@ -744,13 +859,13 @@ global $CFG;
     		$remaining = $total_owed - $paid;
 
             $email .= '
-                <h2>We show a PENDING registration for ' . $touser->fname ." ". $touser->lname . ' to attend ' . $event["name"] . '.</h2>
+                <h2>We show a PENDING registration for ' . $touser->fname . " " . $touser->lname . ' to attend ' . $event["name"] . '.</h2>
                 <h2 style="color:red">This registration is NOT COMPLETED until a payment is received.</h2>
                 <strong>Please keep this email for your records.  It contains a registration ID that can allow you to make payments on your registration.</strong>
-                <br /><br /><h3>Total Paid: $'.number_format($paid,2).'</h3><h3>Remaining Balance: $'.number_format($remaining,2).'</h3><br /><em>Note:This event requires payment in full to complete the registration process.  The above balances may not reflect recent changes.</em>
+                <br /><br /><h3>Total Paid: $' . number_format($paid,2) . '</h3><h3>Remaining Balance: $' . number_format($remaining,2) . '</h3><br /><em>Note:This event requires payment in full to complete the registration process.  The above balances may not reflect recent changes.</em>
                 <br /><br /><strong>Registration ID:</strong><span style="color:#993300;"><strong> ' . $reg["code"] . '</strong></span>
-                '.(!empty($event["paypal"]) ? '<br /><br /><strong>Make payment online:</strong> <a href="'.$protocol.$CFG->wwwroot.'/features/events/events.php?action=pay&amp;i=!&amp;regcode='.$reg["code"].'">Make Payment</a>' : '').'
-                <br /><br /><strong>Make payment by check or money order: </strong><br />Payable to: ' . stripslashes($event['payableto']) . '<br />' . stripslashes($event['checksaddress']) . '<br />On the memo line be sure to write "' . $touser->fname ." ". $touser->lname . ' - ' . $event["name"] . '".
+                ' . (!empty($event["paypal"]) ? '<br /><br /><strong>Make payment online:</strong> <a href="' . $protocol.$CFG->wwwroot . '/features/events/events.php?action=pay&amp;i=!&amp;regcode=' . $reg["code"] . '">Make Payment</a>' : '') . '
+                <br /><br /><strong>Make payment by check or money order: </strong><br />Payable to: ' . stripslashes($event['payableto']) . '<br />' . stripslashes($event['checksaddress']) . '<br />On the memo line be sure to write "' . $touser->fname . " " . $touser->lname . ' - ' . $event["name"] . '".
                 <br /><br />
                 If you have any questions about this event, contact ' . $event["contact"] . ' at <a href="mailto:' . $event["email"] . '">' . $event["email"] . '</a>.
                 <br />
@@ -771,12 +886,12 @@ global $CFG;
     		$remaining = $total_owed - $paid;
 
             $email .= '
-                <h2>Thank you for registering ' . $touser->fname ." ". $touser->lname . ' to attend ' . $event["name"] . '.</h2>
+                <h2>Thank you for registering ' . $touser->fname . " " . $touser->lname . ' to attend ' . $event["name"] . '.</h2>
                 <strong>Please keep this email for your records.  It contains a registration ID that can allow you to make payments on your registration.</strong>
-                <br /><br /><h3>Total Paid: $'.number_format($paid,2).'</h3><h3>Remaining Balance: $'.number_format($remaining,2).'</h3><br /><em>Note:This event requires payment in full to complete the registration process.  The above balances may not reflect recent changes.</em>
+                <br /><br /><h3>Total Paid: $' . number_format($paid,2) . '</h3><h3>Remaining Balance: $' . number_format($remaining,2) . '</h3><br /><em>Note:This event requires payment in full to complete the registration process.  The above balances may not reflect recent changes.</em>
                 <br /><br /><strong>Registration ID:</strong><span style="color:#993300;"><strong> ' . $reg["code"] . '</strong></span>
-                '.(!empty($event["paypal"]) ? '<br /><br /><strong>Make payment online:</strong> <a href="'.$protocol.$CFG->wwwroot.'/features/events/events.php?action=pay&amp;i=!&amp;regcode='.$reg["code"].'">Make Payment</a>' : '').'
-                <br /><br /><strong>Make payment by check or money order: </strong><br />Payable to: ' . stripslashes($event['payableto']) . '<br />' . stripslashes($event['checksaddress']) . '<br />On the memo line be sure to write "' . $touser->fname ." ". $touser->lname . ' - ' . $event["name"] . '".
+                ' . (!empty($event["paypal"]) ? '<br /><br /><strong>Make payment online:</strong> <a href="' . $protocol.$CFG->wwwroot . '/features/events/events.php?action=pay&amp;i=!&amp;regcode=' . $reg["code"] . '">Make Payment</a>' : '') . '
+                <br /><br /><strong>Make payment by check or money order: </strong><br />Payable to: ' . stripslashes($event['payableto']) . '<br />' . stripslashes($event['checksaddress']) . '<br />On the memo line be sure to write "' . $touser->fname . " " . $touser->lname . ' - ' . $event["name"] . '".
                 <br /><br />
                 If you have any questions about this event, contact ' . $event["contact"] . ' at <a href="mailto:' . $event["email"] . '">' . $event["email"] . '</a>.
                 <br />
@@ -784,7 +899,7 @@ global $CFG;
             ';
         } else { // This event does NOT require payment
             $email .= '
-                <h2>Thank you for registering ' . $touser->fname ." ". $touser->lname . ' to attend ' . $event["name"] . '.</h2>
+                <h2>Thank you for registering ' . $touser->fname . " " . $touser->lname . ' to attend ' . $event["name"] . '.</h2>
                 <strong>Please keep this email for your records.  It contains a registration ID as proof of your registration.</strong>
                 <br /><br />
                 <strong>Registration ID:</strong><span style="color:#993300;"><strong> ' . $reg["code"] . '</strong></span>
@@ -955,7 +1070,7 @@ function refresh_calendar_events($eventid) {
         $year = date('Y', $startdate);
         $event_begin_time = $event["event_begin_time"] == "NULL" ? "" : $event["event_begin_time"];
         $event_end_time = $event["event_end_time"] == "NULL" ? "" : $event["event_end_time"];
-        $SQL = "INSERT INTO calendar_events (eventid,date,title,event,location,cat,starttime,endtime,day,month,year,site_viewable,groupid,pageid) VALUES('$eventid',".$startdate.",'" .dbescape($event["name"]). "','".dbescape($event["byline"]). "','" .$event["location"]. "','" .$event["category"]. "','" .$event_begin_time . "','" . $event_end_time . "', $day, $month, $year, $siteviewable,0," .$event["pageid"]. ")";
+        $SQL = "INSERT INTO calendar_events (eventid,date,title,event,location,cat,starttime,endtime,day,month,year,site_viewable,groupid,pageid) VALUES('$eventid'," . $startdate.",'" .dbescape($event["name"]). "','" . dbescape($event["byline"]). "','" .$event["location"]. "','" .$event["category"]. "','" .$event_begin_time . "','" . $event_end_time . "', $day, $month, $year, $siteviewable,0," .$event["pageid"]. ")";
         $caleventid .= execute_db_sql($SQL);
         $startdate += 86400; //Advance 1 day
     }
@@ -1024,7 +1139,7 @@ global $CFG;
     $active = !empty($activeonly) ? ' activated=1' : '';
     if ($templates = get_db_result("SELECT * FROM events_templates WHERE $active ORDER BY name")) {
         while ($template = fetch_row($templates)) {
-            $returnme .= $returnme == "" ? '<select id="template" onchange="clear_limits(); ajaxapi(\'/features/events/events_ajax.php\',\'show_template_settings\',\'&amp;eventid='.$eventid.'&amp;templateid=\'+document.getElementById(\'template\').value,function() { simple_display(\'template_settings_div\');});"><option value="0">Select a template</option>' : '';
+            $returnme .= $returnme == "" ? '<select id="template" onchange="clear_limits(); ajaxapi(\'/features/events/events_ajax.php\',\'show_template_settings\',\'&amp;eventid=' . $eventid . '&amp;templateid=\'+document.getElementById(\'template\').value,function() { simple_display(\'template_settings_div\');});"><option value="0">Select a template</option>' : '';
             $selectme = $selected && ($template['template_id'] == $selected) ? ' selected' : '';
             $returnme .= '<option value="' . $template['template_id'] . '"' . $selectme . '>' . stripslashes($template['name']) . '</option>';
         }
@@ -1043,7 +1158,7 @@ global $CFG;
                             <tr><td>';
             $settings = unserialize($template_settings);
             foreach ($settings as $setting) { //save each setting with the default if no other is given
-                $set = get_db_field("setting","settings","type='events_template' AND extra='$eventid' AND setting_name='".$setting['name']."'");
+                $set = get_db_field("setting","settings","type='events_template' AND extra='$eventid' AND setting_name='" . $setting['name'] . "'");
                 $current_setting = !empty($set) ? $set : $setting['default'];
                 $returnme .= make_setting_input($setting["name"], $setting, NULL, NULL, $current_setting, false);
             }
@@ -1054,7 +1169,7 @@ global $CFG;
 }
 
 function get_possible_times($formid, $selected_time = "false", $start_time = "false") {
-    $times = array("00:00*12:00 am", "00:30*12:30 am", "01:00*01:00 am", "01:30*01:30 am", "02:00*02:00 am", "02:30*02:30 am", "03:00*03:00 am", "03:30*03:30 am", "04:00*04:00 am", "04:30*04:30 am", "05:00*05:00 am", "05:30*05:30 am", "06:00*06:00 am", "06:30*06:30 am", "07:00*07:00 am", "07:30*07:30 am", "08:00*08:00 am", "08:30*08:30 am", "09:00*09:00 am", "09:30*09:30 am", "10:00*10:00 am", "10:30*10:30 am", "11:00*11:00 am", "11:30*11:30 am", "12:00*12:00 pm", "12:30*12:30 pm", "13:00*01:00 pm", "13:30*01:30 pm", "14:00*02:00 pm", "14:30*02:30 pm", "15:00*03:00 pm", "15:30*03:30 pm", "16:00*04:00 pm", "16:30*04:30 pm", "17:00*05:00 pm", "17:30*05:30 pm", "18:00*06:00 pm", "18:30*06:30 pm", "19:00*07:00 pm", "19:30*07:30 pm", "20:00*08:00 pm", "20:30*08:30 pm", "21:00*09:00 pm", "21:30*09:30 pm", "22:00*10:00 pm", "22:30*10:30 pm", "23:00*11:00 pm", "23:30*11:30 pm");
+    $times = ["00:00*12:00 am", "00:30*12:30 am", "01:00*01:00 am", "01:30*01:30 am", "02:00*02:00 am", "02:30*02:30 am", "03:00*03:00 am", "03:30*03:30 am", "04:00*04:00 am", "04:30*04:30 am", "05:00*05:00 am", "05:30*05:30 am", "06:00*06:00 am", "06:30*06:30 am", "07:00*07:00 am", "07:30*07:30 am", "08:00*08:00 am", "08:30*08:30 am", "09:00*09:00 am", "09:30*09:30 am", "10:00*10:00 am", "10:30*10:30 am", "11:00*11:00 am", "11:30*11:30 am", "12:00*12:00 pm", "12:30*12:30 pm", "13:00*01:00 pm", "13:30*01:30 pm", "14:00*02:00 pm", "14:30*02:30 pm", "15:00*03:00 pm", "15:30*03:30 pm", "16:00*04:00 pm", "16:30*04:30 pm", "17:00*05:00 pm", "17:30*05:30 pm", "18:00*06:00 pm", "18:30*06:30 pm", "19:00*07:00 pm", "19:30*07:30 pm", "20:00*08:00 pm", "20:30*08:30 pm", "21:00*09:00 pm", "21:30*09:30 pm", "22:00*10:00 pm", "22:30*10:30 pm", "23:00*11:00 pm", "23:30*11:30 pm"];
     $onchange = $formid == 'begin_time' ? 'onchange="get_end_time(this.value);"' : '';
     $to = $formid == 'begin_time' ? '<div style="font-size:.75em; color:green;">From </div>' : '<div style="font-size:.75em; color:green;">&nbsp; To </div>';
     $returnme = $to . '<select id="' . $formid . '" ' . $onchange . '><option></option>';
@@ -1135,7 +1250,7 @@ function get_my_hidden_limits($templateid, $hard_limits, $soft_limits) {
             $i++;
         }
     }
-    return $returnme . '<input type="hidden" id="hard_limits" value="' . $hidden_variable1 . '" />' . '<input type="hidden" id="soft_limits" value="' . $hidden_variable2 . '" />';
+    return $returnme . '<input type="hidden" id="hard_limits" value="' . $hidden_variable1 . '" /><input type="hidden" id="soft_limits" value="' . $hidden_variable2 . '" />';
 }
 
 function get_my_category($selected = false) {
@@ -1223,10 +1338,10 @@ global $CFG;
     $print = '';
     if (!empty($status)) {
         foreach ($status as $s) {
-            $print .= '<div style="color:red;font-weight:bold"><img style="vertical-align: middle;" src="'.$protocol.$CFG->wwwroot.'/images/error.gif" /> ' . $s["full"] . '</div>';
+            $print .= '<div style="color:red;font-weight:bold"><img style="vertical-align: middle;" src="' . $protocol.$CFG->wwwroot . '/images/error.gif" /> ' . $s["full"] . '</div>';
         }
     } else {
-        $print = '<div style="color:green;font-size:1.3em;font-weight:bold"><img style="vertical-align: bottom;" src="'.$protocol.$CFG->wwwroot.'/images/checked.gif" /> APPROVED</div>';
+        $print = '<div style="color:green;font-size:1.3em;font-weight:bold"><img style="vertical-align: bottom;" src="' . $protocol.$CFG->wwwroot . '/images/checked.gif" /> APPROVED</div>';
     }
     return $print;
 }
@@ -1302,69 +1417,69 @@ global $USER, $CFG, $MYVARS;
 
     return '<div class="formDiv" id="staffapplication_form_div">
             <div style="text-align:center">
-            <h2>'.(!$viewonly ? 'Staff Application' : $v["name"] . ' Application').'</h2>
+            <h2>' . (!$viewonly ? 'Staff Application' : $v["name"] . ' Application') . '</h2>
             <span style="font-weight:bold;font-size:.9em">If you are not ' . $v["name"] . ', please sign into your own account.</span>
             </div><br />
     		<form name="staffapplication_form" id="staffapplication_form">
-                '.(empty($v["staffid"]) ? '' : '<input type="hidden" id="staffid" name="staffid" value="'.$v["staffid"].'" />').'
-    			<fieldset class="formContainer" '.($viewonly ? '' : 'style="width: 420px;margin-left: auto;margin-right: auto;"').'>
+                ' . (empty($v["staffid"]) ? '' : '<input type="hidden" id="staffid" name="staffid" value="' . $v["staffid"] . '" />') . '
+    			<fieldset class="formContainer" ' . ($viewonly ? '' : 'style="width: 420px;margin-left: auto;margin-right: auto;"') . '>
                     <div class="rowContainer">
     					<label class="rowTitle" for="name">Name</label>
-                        <input disabled="disabled" type="text" id="name" name="name" value="'.$v["name"].'"
+                        <input disabled="disabled" type="text" id="name" name="name" value="' . $v["name"] . '"
                             data-rule-required="true"
-                            data-msg-required="'.get_error_message('valid_staff_name:events').'"
-                        /><div class="tooltipContainer info">'.get_help("input_staff_name:events").'</div>
+                            data-msg-required="' . get_error_message('valid_staff_name:events') . '"
+                        /><div class="tooltipContainer info">' . get_help("input_staff_name:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
                     </div>
                     <div class="rowContainer">
         				<label class="rowTitle" for="dateofbirth">Date of Birth</label>
-                        <input '.($viewonly ? 'disabled="disabled"' : '').'
+                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text"
                             id="dateofbirth"
                             name="dateofbirth"
-                            value="'.$v["dateofbirth"].'"
+                            value="' . $v["dateofbirth"] . '"
                             data-rule-required="true"
                             data-rule-custom="^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$"
-                            data-msg-custom="'.get_error_message('valid_staff_dateformat:events').'"
+                            data-msg-custom="' . get_error_message('valid_staff_dateformat:events') . '"
                             data-rule-date="true"
                             onblur="
                                 var d = new Date($(this).val()).getTime() / 1000;
-                                if ('.time().' - d < 567648000) {
+                                if (' . time() . ' - d < 567648000) {
                                     $(\'#agerange\').val(0);
-                                } else if ('.time().' - d < 788400000) {
+                                } else if (' . time() . ' - d < 788400000) {
                                     $(\'#agerange\').val(1);
                                 } else {
                                     $(\'#agerange\').val(2);
                                 }
                                 $(\'#agerange\').change();
                             "
-                        /><div class="tooltipContainer info">'.get_help("input_staff_dob:events").'</div>
+                        /><div class="tooltipContainer info">' . get_help("input_staff_dob:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
         			</div>
                     <div class="rowContainer">
 				        <label class="rowTitle" for="phone">Phone</label>
-                        <input '.($viewonly ? 'disabled="disabled"' : '').'
-                            type="text" id="phone" name="phone" value="'.$v["phone"].'"
+                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
+                            type="text" id="phone" name="phone" value="' . $v["phone"] . '"
                             data-rule-required="true"
                             data-rule-phone="true"
-                            data-msg-required="'.get_error_message('valid_staff_phone:events').'"
-                            data-msg-phone="'.get_error_message('valid_staff_phone_invalid:events').'"
+                            data-msg-required="' . get_error_message('valid_staff_phone:events') . '"
+                            data-msg-phone="' . get_error_message('valid_staff_phone_invalid:events') . '"
                         />
-                        <div class="tooltipContainer info">'.get_help("input_staff_phone:events").'</div>
+                        <div class="tooltipContainer info">' . get_help("input_staff_phone:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
                     </div>
                     <div class="rowContainer">
     					<label class="rowTitle" for="address">Address</label>
-                        <textarea '.($viewonly ? 'disabled="disabled"' : '').'
+                        <textarea ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             rows="3" id="address" name="address"
                             data-rule-required="true"
-                        >'.$v["address"].'</textarea>
-                        <div class="tooltipContainer info">'.get_help("input_staff_address:events").'</div>
+                        >' . $v["address"] . '</textarea>
+                        <div class="tooltipContainer info">' . get_help("input_staff_address:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
     	  			</div>
                     <div class="rowContainer">
     					<label class="rowTitle" for="agerange">Age Range</label>
-                        <select '.($viewonly ? 'disabled="disabled"' : '').'
+                        <select ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             id="agerange"
                             name="agerange"
                             data-rule-required="true"
@@ -1384,47 +1499,47 @@ global $USER, $CFG, $MYVARS;
                                 }"
                         >
                             <option>Please select</option>
-                            <option value="0" '.$v["ar1selected"].'>younger than 18</option>
-                            <option value="1" '.$v["ar2selected"].'>18-25</option>
-                            <option value="2" '.$v["ar3selected"].'>26 or older</option>
-                        </select><div class="tooltipContainer info">'.get_help("input_staff_agerange:events").'</div><br />
+                            <option value="0" ' . $v["ar1selected"] . '>younger than 18</option>
+                            <option value="1" ' . $v["ar2selected"] . '>18-25</option>
+                            <option value="2" ' . $v["ar3selected"] . '>26 or older</option>
+                        </select><div class="tooltipContainer info">' . get_help("input_staff_agerange:events") . '</div><br />
     				    <div class="spacer" style="clear: both;"></div>
     	  			</div>
                     <div class="rowContainer">
     					<label class="rowTitle" for="cocmember">Are you a member of the church of Christ?</label>
-                        <select '.($viewonly ? 'disabled="disabled"' : '').' style="width:80px" id="cocmember" name="cocmember"
+                        <select ' . ($viewonly ? 'disabled="disabled"' : '') . ' style="width:80px" id="cocmember" name="cocmember"
                             data-rule-required="true"
                         >
-                            <option value="0" '.$v["cocmembernoselected"].'>No</option>
-                            <option value="1" '.$v["cocmemberyesselected"].'>Yes</option>
+                            <option value="0" ' . $v["cocmembernoselected"] . '>No</option>
+                            <option value="1" ' . $v["cocmemberyesselected"] . '>Yes</option>
                         </select>
-                        <div class="tooltipContainer info">'.get_help("input_staff_cocmember:events").'</div>
+                        <div class="tooltipContainer info">' . get_help("input_staff_cocmember:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
     	  			</div>
                     <div class="rowContainer">
     					<label class="rowTitle" for="congregation">Congregation Name</label>
-                        <input '.($viewonly ? 'disabled="disabled"' : '').' type="text" id="congregation" name="congregation" value="'.$v["congregation"].'"
+                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . ' type="text" id="congregation" name="congregation" value="' . $v["congregation"] . '"
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">'.get_help("input_staff_congregation:events").'</div>
+                        <div class="tooltipContainer info">' . get_help("input_staff_congregation:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
     	  			</div>
                     <div class="rowContainer">
     					<label class="rowTitle" for="priorwork">Have you worked at Camp Wabashi as a staff member before?</label>
-                        <select '.($viewonly ? 'disabled="disabled"' : '').' style="width:80px" id="priorwork" name="priorwork"
+                        <select ' . ($viewonly ? 'disabled="disabled"' : '') . ' style="width:80px" id="priorwork" name="priorwork"
                             data-rule-required="true"
                         >
-                            <option value="0" '.$v["priorworknoselected"].'>No</option>
-                            <option value="1" '.$v["priorworkyesselected"].'>Yes</option>
+                            <option value="0" ' . $v["priorworknoselected"] . '>No</option>
+                            <option value="1" ' . $v["priorworkyesselected"] . '>Yes</option>
                         </select>
-                        <div class="tooltipContainer info">'.get_help("input_staff_priorwork:events").'</div>
+                        <div class="tooltipContainer info">' . get_help("input_staff_priorwork:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
     	  			</div>
                     <br /><hr><br />
                     <h3>Have you at any time ever:</h3>
                     <div class="rowContainer">
     					<label class="rowTitle" for="q1_1">Been arrested for any reason?</label>
-                        <select '.($viewonly ? 'disabled="disabled"' : '').'
+                        <select ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             onchange="
                                 if (($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0) {
                                     $(\'#q2_3\').attr(\'data-rule-required\', \'true\');
@@ -1435,15 +1550,15 @@ global $USER, $CFG, $MYVARS;
                             style="width:80px" id="q1_1" name="q1_1"
                             data-rule-required="true"
                         >
-                            <option value="0" '.$v["q1_1noselected"].'>No</option>
-                            <option value="1" '.$v["q1_1yesselected"].'>Yes</option>
+                            <option value="0" ' . $v["q1_1noselected"] . '>No</option>
+                            <option value="1" ' . $v["q1_1yesselected"] . '>Yes</option>
                         </select>
-                        <div class="tooltipContainer info">'.get_help("input_staff_q1_1:events").'</div>
+                        <div class="tooltipContainer info">' . get_help("input_staff_q1_1:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
     	  			</div>
                     <div class="rowContainer">
     					<label class="rowTitle" for="q1_2">Been convicted of, or pleaded guilty or no contest to, any crime?</label>
-                        <select '.($viewonly ? 'disabled="disabled"' : '').'
+                        <select ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             onchange="
                                 if (($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0) {
                                     $(\'#q2_3\').attr(\'data-rule-required\', \'true\');
@@ -1454,15 +1569,15 @@ global $USER, $CFG, $MYVARS;
                             style="width:80px" id="q1_2" name="q1_2"
                             data-rule-required="true"
                         >
-                            <option value="0" '.$v["q1_2noselected"].'>No</option>
-                            <option value="1" '.$v["q1_2yesselected"].'>Yes</option>
+                            <option value="0" ' . $v["q1_2noselected"] . '>No</option>
+                            <option value="1" ' . $v["q1_2yesselected"] . '>Yes</option>
                         </select>
-                        <div class="tooltipContainer info">'.get_help("input_staff_q1_2:events").'</div>
+                        <div class="tooltipContainer info">' . get_help("input_staff_q1_2:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
     	  			</div>
                     <div class="rowContainer">
     					<label class="rowTitle" for="q1_3">Engaged in, or been accused of, any child molestation, exploitation, or abuse?</label>
-                        <select '.($viewonly ? 'disabled="disabled"' : '').'
+                        <select ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             onchange="
                                 if (($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0) {
                                     $(\'#q2_3\').attr(\'data-rule-required\', \'true\');
@@ -1472,17 +1587,17 @@ global $USER, $CFG, $MYVARS;
                             style="width:80px" id="q1_3" name="q1_3"
                             data-rule-required="true"
                         >
-                            <option value="0" '.$v["q1_3noselected"].'>No</option>
-                            <option value="1" '.$v["q1_3yesselected"].'>Yes</option>
+                            <option value="0" ' . $v["q1_3noselected"] . '>No</option>
+                            <option value="1" ' . $v["q1_3yesselected"] . '>Yes</option>
                         </select>
-                        <div class="tooltipContainer info">'.get_help("input_staff_q1_3:events").'</div>
+                        <div class="tooltipContainer info">' . get_help("input_staff_q1_3:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
     	  			</div>
                     <br /><hr><br />
                     <h3>Are you aware of:</h3>
                     <div class="rowContainer">
     					<label class="rowTitle" for="q2_1">Having any traits or tendencies that could pose any threat to children, youth, or others?</label>
-                        <select '.($viewonly ? 'disabled="disabled"' : '').'
+                        <select ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             onchange="
                                 if (($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0) {
                                     $(\'#q2_3\').attr(\'data-rule-required\', \'true\');
@@ -1493,15 +1608,15 @@ global $USER, $CFG, $MYVARS;
                             style="width:80px" id="q2_1" name="q2_1"
                             data-rule-required="true"
                         >
-                            <option value="0" '.$v["q2_1noselected"].'>No</option>
-                            <option value="1" '.$v["q2_1yesselected"].'>Yes</option>
+                            <option value="0" ' . $v["q2_1noselected"] . '>No</option>
+                            <option value="1" ' . $v["q2_1yesselected"] . '>Yes</option>
                         </select>
-                        <div class="tooltipContainer info">'.get_help("input_staff_q2_1:events").'</div>
+                        <div class="tooltipContainer info">' . get_help("input_staff_q2_1:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
     	  			</div>
                     <div class="rowContainer">
     					<label class="rowTitle" for="q2_2">Any reason why you should not work with children, youth, or others?</label>
-                        <select '.($viewonly ? 'disabled="disabled"' : '').'
+                        <select ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             onchange="
                                 if (($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0) {
                                     $(\'#q2_3\').attr(\'data-rule-required\', \'true\');
@@ -1512,116 +1627,116 @@ global $USER, $CFG, $MYVARS;
                             style="width:80px" id="q2_2" name="q2_2"
                             data-rule-required="true"
                         >
-                            <option value="0" '.$v["q2_2noselected"].'>No</option>
-                            <option value="1" '.$v["q2_2yesselected"].'>Yes</option>
+                            <option value="0" ' . $v["q2_2noselected"] . '>No</option>
+                            <option value="1" ' . $v["q2_2yesselected"] . '>Yes</option>
                         </select>
-                        <div class="tooltipContainer info">'.get_help("input_staff_q2_2:events").'</div>
+                        <div class="tooltipContainer info">' . get_help("input_staff_q2_2:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
     	  			</div>
                     <div class="rowContainer">
     					<label class="rowTitle" for="q2_3">If the answer to any of these questions is "Yes", please explain in detail</label>
-                            <textarea '.($viewonly ? 'disabled="disabled"' : '').'
+                            <textarea ' . ($viewonly ? 'disabled="disabled"' : '') . '
                                 rows="3" id="q2_3" name="q2_3"
-                                '.(empty($v["yestotal"]) ? '' : 'data-rule-required="true"').'
-                            >'.$v["q2_3"].'</textarea>
-                            <div class="tooltipContainer info">'.get_help("input_staff_q1_3:events").'</div>
+                                ' . (empty($v["yestotal"]) ? '' : 'data-rule-required="true"') . '
+                            >' . $v["q2_3"] . '</textarea>
+                            <div class="tooltipContainer info">' . get_help("input_staff_q1_3:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
     	  			</div>
-                    '.($viewonly ? '<div style="text-align:center"><h2>' . $v["name"] . ' References</h2></div>' : '<br /><hr><br />').'
+                    ' . ($viewonly ? '<div style="text-align:center"><h2>' . $v["name"] . ' References</h2></div>' : '<br /><hr><br />') . '
                     <h3>References #1</h3><br />
     		  		<br />
                     <div class="rowContainer">
     					<label class="rowTitle" for="ref1name">Name</label>
-                        <input '.($viewonly ? 'disabled="disabled"' : '').'
-                            type="text" id="ref1name" name="ref1name" value="'.$v["ref1name"].'"
+                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
+                            type="text" id="ref1name" name="ref1name" value="' . $v["ref1name"] . '"
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">'.get_help("input_staff_refname:events").'</div>
+                        <div class="tooltipContainer info">' . get_help("input_staff_refname:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
     				</div>
                     <div class="rowContainer">
     					<label class="rowTitle" for="ref1relationship">Relationship</label>
-                        <input '.($viewonly ? 'disabled="disabled"' : '').'
-                            type="text" id="ref1relationship" name="ref1relationship" value="'.$v["ref1relationship"].'"
+                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
+                            type="text" id="ref1relationship" name="ref1relationship" value="' . $v["ref1relationship"] . '"
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">'.get_help("input_staff_refrelationship:events").'</div>
+                        <div class="tooltipContainer info">' . get_help("input_staff_refrelationship:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
     				</div>
                     <div class="rowContainer">
 				        <label class="rowTitle" for="ref1phone">Phone</label>
-                        <input '.($viewonly ? 'disabled="disabled"' : '').'
-                            type="text" id="ref1phone" name="ref1phone" value="'.$v["ref1phone"].'"
+                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
+                            type="text" id="ref1phone" name="ref1phone" value="' . $v["ref1phone"] . '"
                             data-rule-required="true"
                             data-rule-phone="true"
-                            data-msg-required="'.get_error_message('valid_staff_phone:events').'"
-                            data-msg-phone="'.get_error_message('valid_staff_phone_invalid:events').'"
+                            data-msg-required="' . get_error_message('valid_staff_phone:events') . '"
+                            data-msg-phone="' . get_error_message('valid_staff_phone_invalid:events') . '"
                         />
-                        <div class="tooltipContainer info">'.get_help("input_staff_phone:events").'</div>
+                        <div class="tooltipContainer info">' . get_help("input_staff_phone:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
                     </div>
                     <br /><hr><br />
                     <h3>References #2</h3><br />
                     <div class="rowContainer">
     					<label class="rowTitle" for="ref2name">Name</label>
-                        <input '.($viewonly ? 'disabled="disabled"' : '').'
-                            type="text" id="ref2name" name="ref2name" value="'.$v["ref2name"].'"
+                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
+                            type="text" id="ref2name" name="ref2name" value="' . $v["ref2name"] . '"
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">'.get_help("input_staff_refname:events").'</div>
+                        <div class="tooltipContainer info">' . get_help("input_staff_refname:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
     				</div>
                     <div class="rowContainer">
     					<label class="rowTitle" for="ref2relationship">Relationship</label>
-                        <input '.($viewonly ? 'disabled="disabled"' : '').'
-                            type="text" id="ref2relationship" name="ref2relationship" value="'.$v["ref2relationship"].'"
+                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
+                            type="text" id="ref2relationship" name="ref2relationship" value="' . $v["ref2relationship"] . '"
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">'.get_help("input_staff_refrelationship:events").'</div>
+                        <div class="tooltipContainer info">' . get_help("input_staff_refrelationship:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
     				</div>
                     <div class="rowContainer">
 				        <label class="rowTitle" for="ref2phone">Phone</label>
-                        <input '.($viewonly ? 'disabled="disabled"' : '').'
-                            type="text" id="ref2phone" name="ref2phone" value="'.$v["ref2phone"].'"
+                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
+                            type="text" id="ref2phone" name="ref2phone" value="' . $v["ref2phone"] . '"
                             data-rule-required="true"
                             data-rule-phone="true"
-                            data-msg-required="'.get_error_message('valid_staff_phone:events').'"
-                            data-msg-phone="'.get_error_message('valid_staff_phone_invalid:events').'"
+                            data-msg-required="' . get_error_message('valid_staff_phone:events') . '"
+                            data-msg-phone="' . get_error_message('valid_staff_phone_invalid:events') . '"
                         />
-                        <div class="tooltipContainer info">'.get_help("input_staff_phone:events").'</div>
+                        <div class="tooltipContainer info">' . get_help("input_staff_phone:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
                     </div>
                     <br /><hr><br />
                     <h3>References #3</h3><br />
                     <div class="rowContainer">
     					<label class="rowTitle" for="ref3name">Name</label>
-                        <input '.($viewonly ? 'disabled="disabled"' : '').'
-                            type="text" id="ref3name" name="ref3name" value="'.$v["ref3name"].'"
+                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
+                            type="text" id="ref3name" name="ref3name" value="' . $v["ref3name"] . '"
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">'.get_help("input_staff_refname:events").'</div>
+                        <div class="tooltipContainer info">' . get_help("input_staff_refname:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
     				</div>
                     <div class="rowContainer">
     					<label class="rowTitle" for="ref3relationship">Relationship</label>
-                        <input '.($viewonly ? 'disabled="disabled"' : '').'
-                            type="text" id="ref3relationship" name="ref3relationship" value="'.$v["ref3relationship"].'"
+                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
+                            type="text" id="ref3relationship" name="ref3relationship" value="' . $v["ref3relationship"] . '"
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">'.get_help("input_staff_refrelationship:events").'</div>
+                        <div class="tooltipContainer info">' . get_help("input_staff_refrelationship:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
     				</div>
                     <div class="rowContainer">
 				        <label class="rowTitle" for="ref3phone">Phone</label>
-                        <input '.($viewonly ? 'disabled="disabled"' : '').'
-                            type="text" id="ref3phone" name="ref3phone" value="'.$v["ref3phone"].'"
+                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
+                            type="text" id="ref3phone" name="ref3phone" value="' . $v["ref3phone"] . '"
                             data-rule-required="true"
                             data-rule-phone="true"
-                            data-msg-required="'.get_error_message('valid_staff_phone:events').'"
-                            data-msg-phone="'.get_error_message('valid_staff_phone_invalid:events').'"
+                            data-msg-required="' . get_error_message('valid_staff_phone:events') . '"
+                            data-msg-phone="' . get_error_message('valid_staff_phone_invalid:events') . '"
                         />
-                        <div class="tooltipContainer info">'.get_help("input_staff_phone:events").'</div>
+                        <div class="tooltipContainer info">' . get_help("input_staff_phone:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
                     </div>
                     <br /><hr><br />
@@ -1635,24 +1750,24 @@ global $USER, $CFG, $MYVARS;
     		  		<br /><br />
                     <div class="rowContainer">
     					<label class="rowTitle" for="workerconsent">Full Name</label>
-                        <input '.($viewonly ? 'disabled="disabled"' : '').'
-                            type="text" id="workerconsent" name="workerconsent" value="'.$v["workerconsent"].'"
+                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
+                            type="text" id="workerconsent" name="workerconsent" value="' . $v["workerconsent"] . '"
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">'.get_help("input_staff_workerconsent:events").'</div>
+                        <div class="tooltipContainer info">' . get_help("input_staff_workerconsent:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
     				</div>
                     <div class="rowContainer">
         				<label class="rowTitle" for="workerconsentdate">Date</label>
-                        <input '.($viewonly ? 'disabled="disabled"' : '').'
-                            type="text" id="workerconsentdate" name="workerconsentdate" value="'.$v["workerconsentdate"].'"
+                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
+                            type="text" id="workerconsentdate" name="workerconsentdate" value="' . $v["workerconsentdate"] . '"
                             data-rule-required="true"
                             data-rule-custom="^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$"
-                            data-msg-custom="'.get_error_message('valid_staff_dateformat:events').'"
+                            data-msg-custom="' . get_error_message('valid_staff_dateformat:events') . '"
                             data-rule-date="true"
                             disabled="disabled"
                         />
-                        <div class="tooltipContainer info">'.get_help("input_staff_workerconsentdate:events").'</div>
+                        <div class="tooltipContainer info">' . get_help("input_staff_workerconsentdate:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
         			</div>
                     <div>
@@ -1661,14 +1776,14 @@ global $USER, $CFG, $MYVARS;
                     <br />
                     <div class="rowContainer">
     					<label class="rowTitle" for="workerconsentsig">Signature</label>
-                        <input '.($viewonly ? 'disabled="disabled"' : '').'
-                            type="checkbox" id="workerconsentsig" name="workerconsentsig" '.$v["workerconsentsig"].'
+                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
+                            type="checkbox" id="workerconsentsig" name="workerconsentsig" ' . $v["workerconsentsig"] . '
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">'.get_help("input_staff_workerconsentsig:events").'</div>
+                        <div class="tooltipContainer info">' . get_help("input_staff_workerconsentsig:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
     				</div>
-                    <div id="sub18" style="'.$v["sub18display"].'">
+                    <div id="sub18" style="' . $v["sub18display"] . '">
                         <br /><hr><br />
                             <div style="background:#FFED00;padding:5px;">
                             <strong>If you are under 18, please have a parent or guardian affirm to the following:</strong><br />
@@ -1676,11 +1791,11 @@ global $USER, $CFG, $MYVARS;
             		  		<br /><br />
                             <div class="rowContainer">
             					<label class="rowTitle" for="parentalconsent">Parent or Gurdian Full Name</label>
-                                <input '.($viewonly ? 'disabled="disabled"' : '').'
-                                    type="text" id="parentalconsent" name="parentalconsent" value="'.$v["parentalconsent"].'"
-                                    '.(empty($v["ar1selected"]) ? '' : 'data-rule-required="true"').'
+                                <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
+                                    type="text" id="parentalconsent" name="parentalconsent" value="' . $v["parentalconsent"] . '"
+                                    ' . (empty($v["ar1selected"]) ? '' : 'data-rule-required="true"') . '
                                 />
-                                <div class="tooltipContainer info">'.get_help("input_staff_parentalconsent:events").'</div>
+                                <div class="tooltipContainer info">' . get_help("input_staff_parentalconsent:events") . '</div>
             				</div>
                             <div>
                                 <strong>You should understand that the name field and signature field have the same legal effect and can be enforced in the same way as a written signature.</strong>
@@ -1688,20 +1803,20 @@ global $USER, $CFG, $MYVARS;
                             <br />
                             <div class="rowContainer">
             					<label class="rowTitle" for="parentalconsentsig">Parent or Guardian Signature</label>
-                                <input '.($viewonly ? 'disabled="disabled"' : '').'
+                                <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                                     type="checkbox" id="parentalconsentsig" name="parentalconsentsig"
-                                    '.$v["parentalconsentsig"].'
-                                    '.(empty($v["ar1selected"]) ? '' : 'data-rule-required="true"').'
+                                    ' . $v["parentalconsentsig"] . '
+                                    ' . (empty($v["ar1selected"]) ? '' : 'data-rule-required="true"') . '
                                 />
-                                <div class="tooltipContainer info">'.get_help("input_staff_parentalconsentsig:events").'</div>
+                                <div class="tooltipContainer info">' . get_help("input_staff_parentalconsentsig:events") . '</div>
     				            <div class="spacer" style="clear: both;"></div>
             				</div>
                         </div>
                     </div>
-                    '.($viewonly ? '' : '<input class="submit" name="submit" type="submit" onmouseover="this.focus();" value="Submit Application" />').'
+                    ' . ($viewonly ? '' : '<input class="submit" name="submit" type="submit" onmouseover="this.focus();" value="Submit Application" />') . '
     			</fieldset>
     		</form>
-            '.keepalive().'
+            ' . keepalive() . '
     	</div>';
 }
 
@@ -1762,7 +1877,7 @@ function new_location_form($eventid) {
 		<tr>
 			<td class="field_title"></td>
 			<td class="field_input">
-				<input type="button" value="Submit" onclick="add_new_location(\''.$eventid.'\');" />
+				<input type="button" value="Submit" onclick="add_new_location(\'' . $eventid . '\');" />
 			</td>
 		</tr>
 	</table>
@@ -1781,7 +1896,7 @@ global $USER, $CFG;
             $selectme = $selected && ($location['id'] == $selected) ? ' selected' : '';
             $returnme .= '<option value="' . $location['id'] . '"' . $selectme . '>' . $location['location'] . '</option>';
         }
-        $returnme .= '</select><a href="javascript:void(0);" onclick="copy_location(document.getElementById(\'add_location\').value,\''.$eventid.'\');"> <img src="' . $CFG->wwwroot . '/images/add.png" title="Add Location" alt="Add Location" /></a></td><td style="vertical-align:top"><span id="location_details_div" style="vertical-align:top"></span></td></tr></table>';
+        $returnme .= '</select><a href="javascript:void(0);" onclick="copy_location(document.getElementById(\'add_location\').value,\'' . $eventid . '\');"> <img src="' . $CFG->wwwroot . '/images/add.png" title="Add Location" alt="Add Location" /></a></td><td style="vertical-align:top"><span id="location_details_div" style="vertical-align:top"></span></td></tr></table>';
     }
 
     if (!$listyes) {
@@ -1851,23 +1966,33 @@ global $CFG, $USER;
     if (isset($directorylist)) {
     	foreach ($directorylist as $folder) {
 	        $name = $folder['name'];
-	        include ($CFG->dirroot."/features/events/templates/$name/install.php");
+	        include ($CFG->dirroot . "/features/events/templates/$name/install.php");
 	    }
     }
 }
 
 function get_events_admin_contacts() {
-    $contacts = get_db_result("SELECT DISTINCT CONCAT(contact,': ',email,': ',phone) as admin_contact FROM events WHERE confirmed=1 ORDER BY contact,eventid DESC");
+    $script = '
+        function fill_admin_contacts(values) {
+            values = values.split(": ");
+            document.getElementById("contact").value = values[0];
+            document.getElementById("email").value = values[1];
+            var phone = values[2].split("-");
+            document.getElementById("phone_1").value = phone[0];
+            document.getElementById("phone_2").value = phone[1];
+            document.getElementById("phone_3").value = phone[2];
+        }';
 
-    $script = 'function fill_admin_contacts(values) {
-                    values = values.split(": ");
-                    document.getElementById("contact").value = values[0];
-                    document.getElementById("email").value = values[1];
-                    var phone = values[2].split("-");
-                    document.getElementById("phone_1").value = phone[0];
-                    document.getElementById("phone_2").value = phone[1];
-                    document.getElementById("phone_3").value = phone[2];
-                }';
+    $p = [
+        "properties" => [
+            "name" => "admin_contacts",
+            "id" => "admin_contacts",
+            "onchange" => 'fill_admin_contacts(this.value);',
+        ],
+        "values" => get_db_result(template_use("dbsql/events.sql", [], "get_contacts_list", "events")),
+        "valuename" => "admin_contact",
+        "firstoption" => "",
+    ];
 
     return js_code_wrap($script) . '<br /><table style="width:100%">
     	<tr>
@@ -1875,21 +2000,31 @@ function get_events_admin_contacts() {
     			Contacts List:
     		</td>
     		<td class="field_input">
-    			'.make_select("admin_contacts", $contacts,"admin_contact","admin_contact", false,"onchange='fill_admin_contacts(this.value)'", true).'
+    			' . make_select($p) . '
     		</td>
     	</tr><tr><td></td><td class="field_input"><span id="contact_error" class="error_text"></span></td></tr>
     </table>';
 }
 
 function get_events_admin_payable() {
-    $contacts = get_db_result("SELECT DISTINCT CONCAT(payableto,': ',checksaddress,': ',paypal) as admin_contact FROM events WHERE payableto!='' AND confirmed=1");
-
-    $script = 'function fill_admin_payable(values) {
-                    values = values.split(": ");
-                    document.getElementById("payableto").value = values[0];
-                    document.getElementById("checksaddress").value = values[1];
-                    document.getElementById("paypal").value = values[2];
-                }';
+    $script = '
+        function fill_admin_payable(values) {
+            values = values.split(": ");
+            $("#payableto").val(values[0]);
+            $("#checksaddress").val(values[1]);
+            $("#paypal").val(values[2]);
+        }';
+          
+    $p = [
+        "properties" => [
+            "name" => "admin_contacts",
+            "id" => "admin_contacts",
+            "onchange" => 'fill_admin_payable(this.value);',
+        ],
+        "values" => get_db_result(template_use("dbsql/events.sql", [], "get_payable_list", "events")),
+        "valuename" => "admin_contact",
+        "firstoption" => "",
+    ];
 
     return js_code_wrap($script) . '<br /><table style="width:100%">
     	<tr>
@@ -1897,7 +2032,7 @@ function get_events_admin_payable() {
     			Payable List:
     		</td>
     		<td class="field_input">
-    			'.make_select("admin_contacts", $contacts,"admin_contact","admin_contact", false,"onchange='fill_admin_payable(this.value)'", true).'
+    			' . make_select($p) . '
     		</td>
     	</tr><tr><td></td><td class="field_input"><span id="contact_error" class="error_text"></span></td></tr>
     </table>';
@@ -1906,7 +2041,18 @@ function get_events_admin_payable() {
 function events_buttons($pageid, $featuretype, $featureid) {
 global $CFG, $USER;
     $returnme = "";
-    if (user_has_ability_in_page($USER->userid, "addevents", $pageid, $featuretype, $featureid)) { $returnme .= make_modal_links(array("title"=> "Add Event","path"=>$CFG->wwwroot."/features/events/events.php?action=add_event_form&amp;pageid=$pageid","refresh"=>"true","iframe"=>"true","width"=>"800","height"=>"95%","image"=>$CFG->wwwroot."/images/add.png","class"=>"slide_menu_button")); }
+    if (user_has_ability_in_page($USER->userid, "addevents", $pageid, $featuretype, $featureid)) {
+        $returnme .= make_modal_links([
+                        "title" => "Add Event",
+                        "path" => $CFG->wwwroot . "/features/events/events.php?action=add_event_form&amp;pageid=$pageid",
+                        "refresh" => "true",
+                        "iframe" => "true",
+                        "width" => "95%",
+                        "height" => "95%",
+                        "image" => $CFG->wwwroot . "/images/add.png",
+                        "class" => "slide_menu_button",
+                    ]);
+    }
     return $returnme;
 }
 
@@ -2085,15 +2231,17 @@ function facebook_share_button($eventid, $name, $keys=false) {
 global $CFG;
     if (!empty($keys)) {
         require_once ($CFG->dirroot . '/features/events/facebook/facebook.php'); //'<path to facebook library, you uploaded>/facebook.php';
-        $config = array(
+        $config = [
             'appId' => $keys->app_key,
             'secret' => $keys->app_secret,
-        );
+        ];
         $event = get_db_row("SELECT * FROM events WHERE eventid = '$eventid'");
         $facebook = new Facebook($config);
-        $login_url = $facebook->getLoginUrl( array( 'scope' => 'publish_stream',
-                           'redirect_uri' => $CFG->wwwroot . '/features/events/events_ajax.php?action=send_facebook_message&info='.base64_encode(serialize(array($eventid, $name, $keys))) ) );
-        return '<a title="Tell your friends about '.$name.'\'s registration for '.$event["name"].'!" href="' . $login_url . '" target="_blank"><img src="'.$CFG->wwwroot.'/images/facebook_button.png" /></a>';
+        $login_url = $facebook->getLoginUrl([
+                                    'scope' => 'publish_stream',
+                                    'redirect_uri' => $CFG->wwwroot . '/features/events/events_ajax.php?action=send_facebook_message&info=' . base64_encode(serialize([$eventid, $name, $keys])),
+                                ]);
+        return '<a title="Tell your friends about ' . $name . '\'s registration for ' . $event["name"] . '!" href="' . $login_url . '" target="_blank"><img src="' . $CFG->wwwroot . '/images/facebook_button.png" /></a>';
     }
 
 }
@@ -2102,49 +2250,53 @@ function events_adminpanel($pageid) {
 global $CFG, $USER;
     $content = "";
     //Event Template Manager
-    $content .= user_has_ability_in_page($USER->userid,"manageeventtemplates", $pageid) ? make_modal_links(array("title"  => "Event Templates",
-                                                                                                     "text"   => "Event Templates",
-                                                                                                     "path"   => $CFG->wwwroot . "/features/events/events.php?action=template_manager&amp;pageid=$pageid",
-                                                                                                     "iframe" => "true",
-                                                                                                     "width"  => "640",
-                                                                                                     "height" => "600",
-                                                                                                     "iframe" => "true",
-                                                                                                     "image"  => $CFG->wwwroot . "/images/template.png",
-                                                                                                     "styles" => "padding:1px;display:block;"))
-                                                                            : "";
+    $content .= user_has_ability_in_page($USER->userid, "manageeventtemplates", $pageid) ? make_modal_links([
+                                                                                            "title"  => "Event Templates",
+                                                                                            "text"   => "Event Templates",
+                                                                                            "path"   => $CFG->wwwroot . "/features/events/events.php?action=template_manager&amp;pageid=$pageid",
+                                                                                            "iframe" => "true",
+                                                                                            "width"  => "640",
+                                                                                            "height" => "600",
+                                                                                            "iframe" => "true",
+                                                                                            "image"  => $CFG->wwwroot . "/images/template.png",
+                                                                                            "styles" => "padding:1px;display:block;",
+                                                                                            ]) : "";
     //Course Event Manager
-    $content .= user_has_ability_in_page($USER->userid,"manageevents", $pageid) ? make_modal_links(array("title"  => "Event Registrations",
-                                                                                                     "text"   => "Event Registrations",
-                                                                                                     "path"   => $CFG->wwwroot . "/features/events/events.php?action=event_manager&amp;pageid=$pageid",
-                                                                                                     "iframe" => "true",
-                                                                                                     "width"  => "640",
-                                                                                                     "height" => "600",
-                                                                                                     "iframe" => "true",
-                                                                                                     "image"  => $CFG->wwwroot . "/images/manage.png",
-                                                                                                     "styles" => "padding:1px;display:block;"))
-                                                                            : "";
+    $content .= user_has_ability_in_page($USER->userid, "manageevents", $pageid) ? make_modal_links([
+                                                                                    "title"  => "Event Registrations",
+                                                                                    "text"   => "Event Registrations",
+                                                                                    "path"   => $CFG->wwwroot . "/features/events/events.php?action=event_manager&amp;pageid=$pageid",
+                                                                                    "iframe" => "true",
+                                                                                    "width"  => "640",
+                                                                                    "height" => "600",
+                                                                                    "iframe" => "true",
+                                                                                    "image"  => $CFG->wwwroot . "/images/manage.png",
+                                                                                    "styles" => "padding:1px;display:block;",
+                                                                                    ]) : "";
     //Application Manager
-    $content .= user_has_ability_in_page($USER->userid,"manageapplications", $pageid) ? make_modal_links(array("title"  => "Staff Applications",
-                                                                                                     "text"   => "Staff Applications",
-                                                                                                     "path"   => $CFG->wwwroot . "/features/events/events.php?action=application_manager&amp;pageid=$pageid",
-                                                                                                     "iframe" => "true",
-                                                                                                     "width"  => "640",
-                                                                                                     "height" => "600",
-                                                                                                     "iframe" => "true",
-                                                                                                     "image"  => $CFG->wwwroot . "/images/apps.png",
-                                                                                                     "styles" => "padding:1px;display:block;"))
-                                                                            : "";
+    $content .= user_has_ability_in_page($USER->userid, "manageapplications", $pageid) ? make_modal_links([
+                                                                                            "title"  => "Staff Applications",
+                                                                                            "text"   => "Staff Applications",
+                                                                                            "path"   => $CFG->wwwroot . "/features/events/events.php?action=application_manager&amp;pageid=$pageid",
+                                                                                            "iframe" => "true",
+                                                                                            "width"  => "640",
+                                                                                            "height" => "600",
+                                                                                            "iframe" => "true",
+                                                                                            "image"  => $CFG->wwwroot . "/images/apps.png",
+                                                                                            "styles" => "padding:1px;display:block;",
+                                                                                        ]) : "";
     //Staff Notifications
-    $content .= user_has_ability_in_page($USER->userid,"manageapplications", $pageid) ? make_modal_links(array("title"  => "Staff Process Email",
-                                                                                                     "text"   => "Staff Process Email",
-                                                                                                     "path"   => $CFG->wwwroot . "/features/events/events.php?action=staff_emailer&amp;pageid=$pageid",
-                                                                                                     "iframe" => "true",
-                                                                                                     "width"  => "640",
-                                                                                                     "height" => "600",
-                                                                                                     "iframe" => "true",
-                                                                                                     "image"  => $CFG->wwwroot . "/images/staffapp.png",
-                                                                                                     "styles" => "padding:1px;display:block;"))
-                                                                            : "";
+    $content .= user_has_ability_in_page($USER->userid, "manageapplications", $pageid) ? make_modal_links([
+                                                                                            "title"  => "Staff Process Email",
+                                                                                            "text"   => "Staff Process Email",
+                                                                                            "path"   => $CFG->wwwroot . "/features/events/events.php?action=staff_emailer&amp;pageid=$pageid",
+                                                                                            "iframe" => "true",
+                                                                                            "width"  => "640",
+                                                                                            "height" => "600",
+                                                                                            "iframe" => "true",
+                                                                                            "image"  => $CFG->wwwroot . "/images/staffapp.png",
+                                                                                            "styles" => "padding:1px;display:block;",
+                                                                                        ]) : "";
     return $content;
 }
 ?>

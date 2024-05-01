@@ -7,7 +7,7 @@
 * Revision: 0.0.8
 ***************************************************************************/
 
-if (!isset($LIBHEADER)) include('header.php');
+if (!isset($LIBHEADER)) { include('header.php'); }
 $COMLIB = true;
 
 function send_email($touser, $fromuser, $subject, $message, $cc = false, $bcc = false) {
@@ -23,7 +23,7 @@ function send_email($touser, $fromuser, $subject, $message, $cc = false, $bcc = 
 
 		// Additional headers
 		$headers['To'] = ucwords(strtolower($touser->fname) . ' ' . strtolower($touser->lname)) . ' <' . $touser->email . '>';
-		$headers['From'] = ucwords(strtolower($fromuser->fname).' '. strtolower($fromuser->lname)).' <' . $fromuser->email . '>';
+		$headers['From'] = ucwords(strtolower($fromuser->fname) . ' ' . strtolower($fromuser->lname)) . ' <' . $fromuser->email . '>';
 		$headers['Reply-To'] = $fromuser->email;
 		$headers['Return-Path'] = $fromuser->email;
 		$headers['X-Mailer'] = 'PHP/' . phpversion();
@@ -52,11 +52,11 @@ function smtp($touser, $fromuser, $subject, $message, $cc = false, $bcc = false)
 	global $CFG;
 	require_once($CFG->dirroot . "/scripts/PEAR/Mail.php");
 	$to = ucwords(strtolower($touser->fname) . ' ' . strtolower($touser->lname)) . ' <' . $touser->email . '>';
-	$from = ucwords(strtolower($fromuser->fname).' '. strtolower($fromuser->lname)). ' <' . $fromuser->email . '>';
+	$from = ucwords(strtolower($fromuser->fname) . ' ' . strtolower($fromuser->lname)). ' <' . $fromuser->email . '>';
 	$subject = $subject;
-	$body = '<html><head></head><body>'.$message.'</body></html>';
-	$cc = $cc ? '<'.$cc.'>' : '';
-	$bcc = $bcc ? '<'.$bcc.'>' : '';
+	$body = '<html><head></head><body>' . $message . '</body></html>';
+	$cc = $cc ? '<' . $cc . '>' : '';
+	$bcc = $bcc ? '<' . $bcc . '>' : '';
 
 	$headers = array (
 		'MIME-Version' => '1.0',

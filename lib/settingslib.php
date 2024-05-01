@@ -250,29 +250,30 @@ function make_or_update_setting($settingid = false, $defaults = [], $value = fal
 	}
 
 	if ($settingid = execute_db_sql($SQL)) { // Whether insert or update statement succeeded we will get the settingid.
-		$settings = update_settings_variable($settingid, $settings, $defaults, $value, $extravalue);
+		$settings = update_settings_variable(["settingid" => $settingid, "settings" => $settings, "defaults" => $defaults, "value" => $value, "extravalue" => $extravalue]);
 		return true;
 	}
 
 	return false;
 }
 
-function update_settings_variable($settingid, $settings, $default_settings, $value, $extravalue = false) {
-	if (!empty($settings)) { // Update settings variable to show changes
-		$type = $defaults["type"];
-		$featureid = $defaults["featureid"];
-		$name = $defaults["setting_name"];
-		if (empty($settings->$type)) { $settings->$type = new \stdClass; }
-		if (empty($settings->$type->$featureid)) { $settings->$type->$featureid = new \stdClass; }
-		if (empty($settings->$type->$featureid->$name)) { $settings->$type->$featureid->$name = new \stdClass; }
+function update_settings_variable($params) {
+	if (!empty($params["settings"])) { // Update settings variable to show changes
+		$type = $params["defaults"]["type"];
+		$featureid = $params["defaults"]["featureid"];
+		$name = $params["defaults"]["setting_name"];
 
-		$settings->$type->$featureid->$name->settingid = $settingid;
-		$settings->$type->$featureid->$name->setting = stripslashes($value);
+		if (empty($params["settings"]->$type)) { $params["settings"]->$type = new \stdClass; }
+		if (empty($params["settings"]->$type->$featureid)) { $params["settings"]->$type->$featureid = new \stdClass; }
+		if (empty($params["settings"]->$type->$featureid->$name)) { $params["settings"]->$type->$featureid->$name = new \stdClass; }
 
-		if ($extravalue) { $settings->$type->$featureid->$name->extra = is_string($extravalue) ? stripslashes($extravalue) : $extravalue; }
-		if (isset($defaults["defaultsetting"])) { $settings->$type->$featureid->$name->defaultsetting = stripslashes($defaults["defaultsetting"]); }
+		$params["settings"]->$type->$featureid->$name->settingid = $params["settingid"];
+		$params["settings"]->$type->$featureid->$name->setting = stripslashes($params["value"]);
+
+		if ($params["extravalue"]) { $params["settings"]->$type->$featureid->$name->extra = is_string($params["extravalue"]) ? stripslashes($params["extravalue"]) : $extravalue; }
+		if (isset($params["defaults"]["defaultsetting"])) { $params["settings"]->$type->$featureid->$name->defaultsetting = stripslashes($params["defaults"]["defaultsetting"]); }
 	}
-	return $settings;
+	return $params["settings"];
 }
 
 /**

@@ -6,7 +6,13 @@
 * Date: 4/09/2013
  * $Revision: 2.1.2
  ***************************************************************************/
-if (!isset($CFG)) { require('../../../../config.php'); }
+if (!isset($CFG)) {
+	$sub = '../';
+	while (!file_exists($sub . 'config.php')) {
+		$sub .= '../';
+	}
+	require($sub . 'config.php'); 
+}
 if (!isset($EVENTSLIB)) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 if (!isset($VALIDATELIB)) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
 
@@ -51,59 +57,59 @@ $items = isset($MYVARS->GET["items"]) ? $MYVARS->GET["items"] : "";
 echo '<form name="form1" id="form1">
     <div id="camp">
         <fieldset class="formContainer">
-            <input type="hidden" name="eventid" value="'.$eventid.'" />
+            <input type="hidden" name="eventid" value="' . $eventid . '" />
             <input type="hidden" name="paid" value="0" />
-            <input type="hidden" name="total_owed" id="total_owed" value="'.$total_owed.'" />
-            <input type="hidden" name="items" id="items" value="'.$items.'" />';
+            <input type="hidden" name="total_owed" id="total_owed" value="' . $total_owed . '" />
+            <input type="hidden" name="items" id="items" value="' . $items . '" />';
 
 // Get full event info.
 $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
 echo '<div style="font-size:15px;text-align:center;font-weight:bold">Online Registration</div>
-      <div style="font-size:13px;text-align:center;font-weight:bold">'.$event["name"].'</div><br />';
+      <div style="font-size:13px;text-align:center;font-weight:bold">' . $event["name"] . '</div><br />';
 
 if ($autofill) {
- echo '     <strong>Registrant: '.$Name.'</strong>
-			<input type="hidden" name="Name" value="'.$Name.'" />
-            <input type="hidden" name="Name_First" value="'.$Name_First.'" />
-            <input type="hidden" name="Name_Last" value="'.$Name_Last.'" />
-			<input type="hidden" name="email" value="'.$email.'" />
-			<input type="hidden" name="Address_Line1" value="'.$Address_Line1.'" />
-			<input type="hidden" name="Address_Line2" value="'.$Address_Line2.'" />
-			<input type="hidden" name="Address_City" value="'.$Address_City.'" />
-			<input type="hidden" name="Address_State" value="'.$Address_State.'" />
-			<input type="hidden" name="Address_Zipcode" value="'.$Address_Zipcode.'" />
-			<input type="hidden" name="Phone1" value="'.$Phone1.'" />';
+ echo '     <strong>Registrant: ' . $Name . '</strong>
+			<input type="hidden" name="Name" value="' . $Name . '" />
+            <input type="hidden" name="Name_First" value="' . $Name_First . '" />
+            <input type="hidden" name="Name_Last" value="' . $Name_Last . '" />
+			<input type="hidden" name="email" value="' . $email . '" />
+			<input type="hidden" name="Address_Line1" value="' . $Address_Line1 . '" />
+			<input type="hidden" name="Address_Line2" value="' . $Address_Line2 . '" />
+			<input type="hidden" name="Address_City" value="' . $Address_City . '" />
+			<input type="hidden" name="Address_State" value="' . $Address_State . '" />
+			<input type="hidden" name="Address_Zipcode" value="' . $Address_Zipcode . '" />
+			<input type="hidden" name="Phone1" value="' . $Phone1 . '" />';
 } else {
- echo ' <input type="hidden" id="event_day" value="'.date("j", $event["event_begin_date"]).'" />
-        <input type="hidden" id="event_month" value="'.date("n", $event["event_begin_date"]).'" />
-        <input type="hidden" id="event_year" value="'.date("Y", $event["event_begin_date"]).'" />
-        <input style="border:none;" type="hidden" name="HealthConsentFrom" id="HealthConsentFrom" value="'.date("m/d/Y", $event["event_begin_date"]).'" readonly />
-        <input style="border:none;" type="hidden" name="HealthConsentTo" id="HealthConsentTo" value="'.date("m/d/Y", $event["event_end_date"]).'" readonly />
+ echo ' <input type="hidden" id="event_day" value="' . date("j", $event["event_begin_date"]) . '" />
+        <input type="hidden" id="event_month" value="' . date("n", $event["event_begin_date"]) . '" />
+        <input type="hidden" id="event_year" value="' . date("Y", $event["event_begin_date"]) . '" />
+        <input style="border:none;" type="hidden" name="HealthConsentFrom" id="HealthConsentFrom" value="' . date("m/d/Y", $event["event_begin_date"]) . '" readonly />
+        <input style="border:none;" type="hidden" name="HealthConsentTo" id="HealthConsentTo" value="' . date("m/d/Y", $event["event_end_date"]) . '" readonly />
 
         <style> .calendarDateInput{margin-right:5px !important;}.info{ width: 92%; } .rowContainer textarea { width:80%;max-width: 480px; margin-right: 20px; } .rowContainer select { margin-right: 20px; }</style>
             <input type="hidden" name="Name" />
 			<div class="rowContainer">
-				<label class="rowTitle" for="email">Email Address *</label><input tabindex="1" type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-msg-required="'.get_error_message('valid_req_email').'" data-msg-email="'.get_error_message('valid_email_invalid').'" /><div class="tooltipContainer info">'.get_help("help_email:events:templates/simple_contact_form").'</div>
+				<label class="rowTitle" for="email">Email Address *</label><input tabindex="1" type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-msg-required="' . get_error_message('valid_req_email') . '" data-msg-email="' . get_error_message('valid_email_invalid') . '" /><div class="tooltipContainer info">' . get_help("help_email:events:templates/simple_contact_form") . '</div>
 			    <div class="spacer" style="clear: both;"></div>
             </div>
 			<div class="rowContainer">
-				<label class="rowTitle" for="Name_First">First Name *</label><input tabindex="2" type="text" id="Name_First" name="Name_First" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="'.get_error_message('valid_req_fname').'" /><div class="tooltipContainer info">'.get_help("input_fname").'</div>
+				<label class="rowTitle" for="Name_First">First Name *</label><input tabindex="2" type="text" id="Name_First" name="Name_First" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="' . get_error_message('valid_req_fname') . '" /><div class="tooltipContainer info">' . get_help("input_fname") . '</div>
 			    <div class="spacer" style="clear: both;"></div>
             </div>
 			<div class="rowContainer">
-				<label class="rowTitle" for="Name_Last">Last Name *</label><input tabindex="3" type="text" id="Name_Last" name="Name_Last" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="'.get_error_message('valid_req_lname').'" /><div class="tooltipContainer info">'.get_help("input_lname").'</div>
+				<label class="rowTitle" for="Name_Last">Last Name *</label><input tabindex="3" type="text" id="Name_Last" name="Name_Last" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="' . get_error_message('valid_req_lname') . '" /><div class="tooltipContainer info">' . get_help("input_lname") . '</div>
   			    <div class="spacer" style="clear: both;"></div>
             </div>
 			<div class="rowContainer">
-				<label class="rowTitle" for="Address_Line1">Mailing Address Line One *</label><input tabindex="9" type="text" id="Address_Line1" name="Address_Line1" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("help_address:events:templates/simple_contact_form").'</div>
+				<label class="rowTitle" for="Address_Line1">Mailing Address Line One *</label><input tabindex="9" type="text" id="Address_Line1" name="Address_Line1" data-rule-required="true" /><div class="tooltipContainer info">' . get_help("help_address:events:templates/simple_contact_form") . '</div>
                 <div class="spacer" style="clear: both;"></div>
 			</div>
 			<div class="rowContainer">
-				<label class="rowTitle" for="Address_Line2">Mailing Address Line Two</label><input tabindex="10" type="text" id="Address_Line2" name="Address_Line2" /><div class="tooltipContainer info">'.get_help("help_address:events:templates/simple_contact_form").'</div>
+				<label class="rowTitle" for="Address_Line2">Mailing Address Line Two</label><input tabindex="10" type="text" id="Address_Line2" name="Address_Line2" /><div class="tooltipContainer info">' . get_help("help_address:events:templates/simple_contact_form") . '</div>
                 <div class="spacer" style="clear: both;"></div>
 			</div>
 			<div class="rowContainer">
-				<label class="rowTitle" for="Address_City">City *</label><input tabindex="11" type="text" id="Address_City" name="Address_City" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">'.get_help("help_city:events:templates/simple_contact_form").'</div>
+				<label class="rowTitle" for="Address_City">City *</label><input tabindex="11" type="text" id="Address_City" name="Address_City" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">' . get_help("help_city:events:templates/simple_contact_form") . '</div>
                 <div class="spacer" style="clear: both;"></div>
 			</div>
 			<div class="rowContainer">
@@ -161,15 +167,15 @@ if ($autofill) {
                     <option value="WI">Wisconsin
                     <option value="WY">Wyoming
                 </select>
-                <div class="tooltipContainer info">'.get_help("help_state:events:templates/simple_contact_form").'</div>
+                <div class="tooltipContainer info">' . get_help("help_state:events:templates/simple_contact_form") . '</div>
                 <div class="spacer" style="clear: both;"></div>
 			</div>
             <div class="rowContainer">
-                <label class="rowTitle" for="Address_Zipcode">Zipcode *</label><input tabindex="13" type="text" size="5" maxlength="5" id="Address_Zipcode" name="Address_Zipcode" data-rule-required="true" data-rule-number="true" data-rule-minlength="5" /><div class="tooltipContainer info">'.get_help("help_zip:events:templates/simple_contact_form").'</div>
+                <label class="rowTitle" for="Address_Zipcode">Zipcode *</label><input tabindex="13" type="text" size="5" maxlength="5" id="Address_Zipcode" name="Address_Zipcode" data-rule-required="true" data-rule-number="true" data-rule-minlength="5" /><div class="tooltipContainer info">' . get_help("help_zip:events:templates/simple_contact_form") . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
-                <label class="rowTitle" for="Phone">Phone *</label><input tabindex="14" type="text" maxlength="22" id="Phone" name="Phone" data-rule-phone="true" data-rule-required="true" /><div class="tooltipContainer info">'.get_help("help_phone:events:templates/simple_contact_form").'</div>
+                <label class="rowTitle" for="Phone">Phone *</label><input tabindex="14" type="text" maxlength="22" id="Phone" name="Phone" data-rule-phone="true" data-rule-required="true" /><div class="tooltipContainer info">' . get_help("help_phone:events:templates/simple_contact_form") . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>';
 
@@ -187,7 +193,7 @@ if ($autofill) {
                         <option value="Yes">Yes</option>
                         <option value="No">No</option>
                     </select>
-                    <div class="tooltipContainer info">'.get_help("help_overnight:events:templates/simple_contact_form").'</div>
+                    <div class="tooltipContainer info">' . get_help("help_overnight:events:templates/simple_contact_form") . '</div>
                     <div class="spacer" style="clear: both;"></div>
                 </div>
                 <div class="rowContainer">
@@ -197,7 +203,7 @@ if ($autofill) {
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
                     </select>
-                    <div class="tooltipContainer info">'.get_help("help_gender:events:templates/simple_contact_form").'</div>
+                    <div class="tooltipContainer info">' . get_help("help_gender:events:templates/simple_contact_form") . '</div>
                     <div class="spacer" style="clear: both;"></div>
                 </div>';
             }
@@ -207,14 +213,14 @@ if ($event['fee_full']) {
     echo '
         <div class="rowContainer">
             <label class="rowTitle" for="Camp_Fee">Pay With Application</label>
-            '.make_fee_options($event['fee_min'], $event['fee_full'],"payment_amount",'onchange="updateTotal();" onclick="updateTotal();"', $event['sale_end'], $event['sale_fee']).'
-            <div class="tooltipContainer info">'.get_help("help_paywithapp:events:templates/simple_contact_form").'</div>
+            ' . make_fee_options($event['fee_min'], $event['fee_full'],"payment_amount",'onchange="updateTotal();" onclick="updateTotal();"', $event['sale_end'], $event['sale_fee']) . '
+            <div class="tooltipContainer info">' . get_help("help_paywithapp:events:templates/simple_contact_form") . '</div>
             <div class="spacer" style="clear: both;"></div>
         </div>
 
         <div class="rowContainer">
             <label class="rowTitle" for="owed">Total:</label>
-            <span style="display:inline-block;width:12px;">$</span><input style="float:none;width:100px;border:none;" name="owed" id="owed" size="5" value="'.$event['fee_min'].'" type="text" readonly />
+            <span style="display:inline-block;width:12px;">$</span><input style="float:none;width:100px;border:none;" name="owed" id="owed" size="5" value="' . $event['fee_min'] . '" type="text" readonly />
         </div>';
 } else {
     echo '
@@ -223,10 +229,10 @@ if ($event['fee_full']) {
     ';
 }
 
-    echo '<input tabindex="33" class="submit" name="submit" type="submit" value="Submit Application" '.$preview.'/>
+    echo '<input tabindex="33" class="submit" name="submit" type="submit" value="Submit Application" ' . $preview . '/>
         </fieldset>
     </div>
-    '.keepalive().'
+    ' . keepalive() . '
 </form>
 ';
 

@@ -1,5 +1,11 @@
 <?php
-if (!isset($CFG)) { include('../../config.php'); }
+if (!isset($CFG)) {
+    $sub = '../';
+    while (!file_exists($sub . 'config.php')) {
+        $sub .= '../';
+    }
+    include($sub . 'config.php'); 
+}
 include_once($CFG->dirroot . '/lib/header.php');
 
 // STEP 1: Read POST data
@@ -71,14 +77,14 @@ if (strcmp ($res, "VERIFIED") == 0) {
     $custom = $_POST['custom'];
     $receiver_email = $_POST['receiver_email'];
     $payer_email = $_POST['payer_email'];
-    $name = !empty($_POST["firstname"]) && !empty($_POST["lastname"]) ? $_POST["firstname"].' '.$_POST["lastname"] : $payer_email;
+    $name = !empty($_POST["firstname"]) && !empty($_POST["lastname"]) ? $_POST["firstname"] . ' ' . $_POST["lastname"] : $payer_email;
     if ($_SERVER['REQUEST_METHOD'] != "POST") {
         die("No Post Variables");
     }
 
     if (!empty($custom)) {
         if (!get_db_row("SELECT * FROM logfile WHERE feature='donate' AND description='Paypal' AND info='$txn_id'")) {
-            $SQL = "INSERT INTO donate_donations (campaign_id,name,paypal_TX,amount,timestamp) VALUES('$custom','$name','$txn_id','$payment',".get_timestamp().")";
+            $SQL = "INSERT INTO donate_donations (campaign_id,name,paypal_TX,amount,timestamp) VALUES('$custom','$name','$txn_id','$payment'," . get_timestamp() . ")";
             if (!get_db_row("SELECT * FROM donate_donations WHERE paypal_TX='$txn_id'")) {
                 execute_db_sql($SQL);
 
@@ -96,7 +102,7 @@ if (strcmp ($res, "VERIFIED") == 0) {
                 log_entry('donate', $txn_id, "Paypal");
 
                 // Mail yourself the details.
-                mail($c["paypal_email"], "Donation Made", "A donation of $".$payment." has been made to the ".$c["title"]." donation campaign.", "From: ".$c["paypal_email"]);
+                mail($c["paypal_email"], "Donation Made", "A donation of $" . $payment." has been made to the " . $c["title"] . " donation campaign.", "From: " . $c["paypal_email"]);
             } else {
                 echo "This donation has already been processed.";
             }

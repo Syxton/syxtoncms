@@ -29,8 +29,8 @@ function polls_upgrade()
                     $i=1;$sort=1;
                     while (isset($row["a$i"])) {
                         if ($row["a$i"] != "") { //a1, a2, a3 used to be the answer format.  
-                            $answerid = execute_db_sql("INSERT INTO polls_answers (pollid,answer,sort) VALUES('".$row["pollid"]."','".$row["a$i"]."','$sort')");
-                            execute_db_sql("UPDATE polls_response SET answer='$answerid' WHERE pollid='".$row["pollid"]."' AND answer='$i'"); //update all responses
+                            $answerid = execute_db_sql("INSERT INTO polls_answers (pollid,answer,sort) VALUES('" . $row["pollid"] . "','" . $row["a$i"] . "','$sort')");
+                            execute_db_sql("UPDATE polls_response SET answer='$answerid' WHERE pollid='" . $row["pollid"] . "' AND answer='$i'"); //update all responses
                             $sort++;    
                         }
                         $i++;     

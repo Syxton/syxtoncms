@@ -6,7 +6,13 @@
 * Date: 4/04/2013
 * Revision: 1.1.5
 ***************************************************************************/
-if (!isset($LIBHEADER)) { if (file_exists('./lib/header.php')) { include('./lib/header.php'); }elseif (file_exists('../lib/header.php')) { include('../lib/header.php'); }elseif (file_exists('../../lib/header.php')) { include('../../lib/header.php'); }}
+if (!isset($LIBHEADER)) {
+	$sub = './';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == './' ? '../' : $sub . '../';
+	}
+	include($sub . 'lib/header.php'); 
+}
 $donateLIB = true;
 	
 function display_donate($pageid, $area, $featureid) {
@@ -30,10 +36,10 @@ global $CFG, $USER;
 		while ($row = fetch_row($result)) {
             //if viewing from rss feed
 			if ($resultsonly) { 
-                $returnme .= '<table style="width:100%;border:1px solid silver;padding:10px;"><tr><th>'. $settings->donate->$featureid->feature_title->setting.'</th></tr><tr><td><br /><br /><div class="htmlblock">' .get_donation_results($row["id"]) .'</div></td></tr></table>'; 
+                $returnme .= '<table style="width:100%;border:1px solid silver;padding:10px;"><tr><th>' . $settings->donate->$featureid->feature_title->setting . '</th></tr><tr><td><br /><br /><div class="htmlblock">' .get_donation_results($row["id"]) . '</div></td></tr></table>'; 
             } else { //regular donate feature viewing
                 $buttons = get_button_layout("donate", $featureid, $pageid);
-				$returnme .= get_css_box($settings->donate->$featureid->feature_title->setting,'<div class="htmlblock">'.donation_form($featureid, $settings).'</div>', $buttons, null, 'donate', $featureid, false, false, false, false, false, false);
+				$returnme .= get_css_box($settings->donate->$featureid->feature_title->setting,'<div class="htmlblock">' . donation_form($featureid, $settings) . '</div>', $buttons, null, 'donate', $featureid, false, false, false, false, false, false);
 			}
 		}
 	}
@@ -63,16 +69,16 @@ global $CFG;
         $returnme .= get_js_tags(["features/donate/donate.js"]);
 
         $button = '
-        <form action="https://'.$paypal.'/cgi-bin/webscr" method="post">
+        <form action="https://' . $paypal . '/cgi-bin/webscr" method="post">
     	       <div style="width: 100%; text-align: center;">
     		      <input name="cmd" type="hidden" value="_donations" />
-                  <input name="business" type="hidden" value="'.$campaign["paypal_email"].'" />
-                  <input name="item_name" type="hidden" value="'.$campaign["title"].'" />
+                  <input name="business" type="hidden" value="' . $campaign["paypal_email"] . '" />
+                  <input name="item_name" type="hidden" value="' . $campaign["title"] . '" />
                   <input name="item_number" type="hidden" value="DONATE" />
-                  <input name="custom" type="hidden" value="'.$campaign["campaign_id"].'" />
+                  <input name="custom" type="hidden" value="' . $campaign["campaign_id"] . '" />
                   <input name="no_shipping" type="hidden" value="1" />
-                  <input name="return" type="hidden" value="'.$CFG->wwwroot.'/features/donate/donate.php?action=thankyou" />
-                  <input type="hidden" name="notify_url" value="'.$protocol.$CFG->wwwroot.'/features/donate/ipn.php'.'">
+                  <input name="return" type="hidden" value="' . $CFG->wwwroot . '/features/donate/donate.php?action=thankyou" />
+                  <input name="notify_url" type="hidden" value="' . $protocol.$CFG->wwwroot . '/features/donate/ipn.php" />
                   <input name="currency_code" type="hidden" value="USD" />
                   <input name="tax" type="hidden" value="0" />
                   <input name="rm" type="hidden" value="2" />
@@ -106,16 +112,16 @@ $returnme = "";
                 <div id="thermometer" class="thermometer">
                     <div class="track">
                         <div class="goal">
-                            <div class="amount"> '.$campaign["goal_amount"].' </div>
+                            <div class="amount"> ' . $campaign["goal_amount"] . ' </div>
                         </div>
                         <div class="progress">
-                            <div class="amount">'.$total.' </div>
+                            <div class="amount">' . $total . ' </div>
                         </div>
                     </div>
                 </div>';
             $returnme .= "
                 <div style='text-align:center'>
-                    <strong>".$campaign["title"]."</strong>
+                    <strong>" . $campaign["title"] . "</strong>
                 </div><br />
                 <table>
                     <tr>
@@ -126,7 +132,7 @@ $returnme = "";
                         </td>
                         <td style='vertical-align:top'>
                             <div style='text-align:left;padding:4px;'>
-                                ".$campaign["goal_description"]."
+                                " . $campaign["goal_description"] . "
                             </div>
                         </td>
                     </tr>
@@ -139,19 +145,19 @@ $returnme = "";
             <div id="thermometer" class="thermometer horizontal">
                 <div class="track">
                     <div class="goal">
-                        <div class="amount"> '.$campaign["goal_amount"].' </div>
+                        <div class="amount"> ' . $campaign["goal_amount"] . ' </div>
                     </div>
                     <div class="progress">
-                        <div class="amount">'.$total.' </div>
+                        <div class="amount">' . $total . ' </div>
                     </div>
                 </div>
             </div>';
         $returnme .= "
             <div style='text-align:center'>
-                <strong>".$campaign["title"]."</strong>
+                <strong>" . $campaign["title"] . "</strong>
             </div><br />
             <div style='text-align:center'>
-                ".$campaign["goal_description"]."
+                " . $campaign["goal_description"] . "
             </div>
             $graph
             <br /><div style='text-align: center;'><strong>$perc% complete</strong></div><br />
@@ -213,7 +219,7 @@ global $CFG, $USER;
             "width" => "750",
             "height" => "600",
             "image" => $CFG->wwwroot . "/images/money.png",
-            "class"=>"slide_menu_button",
+            "class" => "slide_menu_button",
         ];
         $returnme .= make_modal_links($p);
     }
@@ -228,7 +234,7 @@ global $CFG, $USER;
             "width" => "750",
             "height" => "600",
             "image" => $CFG->wwwroot . "/images/edit.png",
-            "class"=>"slide_menu_button",
+            "class" => "slide_menu_button",
         ];
         $returnme .= make_modal_links($p);
     }
@@ -242,12 +248,12 @@ global $CFG, $MYVARS, $USER;
     $returnme = '<div style="text-align:center"><h1>Choose a Campaign</h1></div>';
     if ($edit = get_db_row($SQL)) {
         $current = '
-                You are involved in a campaign you started called: <strong>'.get_db_field("title","donate_campaign","campaign_id='".$edit["campaign_id"]."'").'</strong><br />    
-                <br />Would you like to edit the current campaign? <a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'new_campaign_form\',\'&campaign_id='.$edit["campaign_id"].'&featureid='.$featureid.'&pageid='.$pageid.'\',function() { simple_display(\'donation_display\'); loaddynamicjs(\'donation_script\');});">Edit Campaign</a>
+                You are involved in a campaign you started called: <strong>' . get_db_field("title","donate_campaign","campaign_id='" . $edit["campaign_id"] . "'") . '</strong><br />    
+                <br />Would you like to edit the current campaign? <a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'new_campaign_form\',\'&campaign_id=' . $edit["campaign_id"] . '&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); loaddynamicjs(\'donation_script\');});">Edit Campaign</a>
         <br /><br /><br />';        
     } else {
         if ($joined = get_db_row("SELECT * FROM donate_instance WHERE donate_id='$featureid' AND campaign_id != '0'")) {
-            $current = 'You are currently joined to a campaign called: <strong>'.get_db_field("title","donate_campaign","campaign_id='".$joined["campaign_id"]."'").'</strong><br />';    
+            $current = 'You are currently joined to a campaign called: <strong>' . get_db_field("title","donate_campaign","campaign_id='" . $joined["campaign_id"] . "'") . '</strong><br />';    
         } else {
             $current = 'You are not currently associated with an active campaign.<br />';    
         }       
@@ -255,11 +261,11 @@ global $CFG, $MYVARS, $USER;
     
     $returnme .= $current. '
             Would you like to start a new campaign or join an existing donation campaign?<br /><br />
-            <a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'new_campaign_form\',\'&featureid='.$featureid.'&pageid='.$pageid.'\',function() { simple_display(\'donation_display\'); loaddynamicjs(\'donation_script\');});">Start New Campaign</a>
+            <a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'new_campaign_form\',\'&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); loaddynamicjs(\'donation_script\');});">Start New Campaign</a>
     '; 
     $returnme .= '    
         <br /><br />
-        <a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'join_campaign_form\',\'&featureid='.$featureid.'&pageid='.$pageid.'\',function() { simple_display(\'donation_display\'); });">Join Existing Campaign</a>';
+        <a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'join_campaign_form\',\'&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); });">Join Existing Campaign</a>';
     
     return $returnme;
 }
@@ -269,10 +275,10 @@ global $CFG, $MYVARS, $USER;
     $returnme = '<div style="text-align:center"><h1>What would you like to do?</h1></div>';
     $returnme .= '
             Would you like to add offline donations to this campaign?<br /><br />
-            <a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'add_offline_donations_form\',\'&featureid='.$featureid.'&pageid='.$pageid.'\',function() { simple_display(\'donation_display\'); loaddynamicjs(\'donation_script\');});">Add Offline Donations</a>
+            <a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'add_offline_donations_form\',\'&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); loaddynamicjs(\'donation_script\');});">Add Offline Donations</a>
             <br /><br /><br />
             Would you like to manage all donations made to this campaign?<br /><br />
-            <a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'manage_donations_form\',\'&featureid='.$featureid.'&pageid='.$pageid.'\',function() { simple_display(\'donation_display\'); });">Manage Donations</a>
+            <a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'manage_donations_form\',\'&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); });">Manage Donations</a>
     ';        
     
     return $returnme;    

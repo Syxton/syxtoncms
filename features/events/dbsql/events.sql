@@ -73,3 +73,17 @@ events_requests_recalculate||
     }}approve||
     WHERE reqid='||reqid||'
 ||events_requests_recalculate
+
+get_contacts_list||
+    SELECT DISTINCT CONCAT(contact,': ',email,': ',phone) as admin_contact
+    FROM events
+    WHERE confirmed = 1
+    ORDER BY contact, eventid DESC
+||get_contacts_list
+
+get_payable_list||
+    SELECT DISTINCT CONCAT(payableto,': ',checksaddress,': ',paypal) as admin_contact
+    FROM events
+    WHERE payableto != ''
+    AND confirmed = 1
+||get_payable_list

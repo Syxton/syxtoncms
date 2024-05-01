@@ -24,7 +24,7 @@ global $CFG, $MYVARS;
 	$newhtmlid = insert_blank_html($pageid, $settings->html->$htmlid);	
 	
 	//Move new html to the previous location
-	$SQL = "UPDATE pages_features SET area='".$html["area"]."',sort='".$html["sort"]."' WHERE feature='html' AND featureid=$newhtmlid";
+	$SQL = "UPDATE pages_features SET area='" . $html["area"] . "',sort='" . $html["sort"] . "' WHERE feature='html' AND featureid=$newhtmlid";
 	execute_db_sql($SQL);
 	
 	//Move old html to the locker
@@ -37,7 +37,7 @@ global $CFG, $MYVARS;
 		execute_db_sql($SQL);
 	} else { //This is not a first edition
 		//Set first edition field
-		$SQL = "UPDATE html SET firstedition='".$html["firstedition"]."' WHERE htmlid=$newhtmlid";
+		$SQL = "UPDATE html SET firstedition='" . $html["firstedition"] . "' WHERE htmlid=$newhtmlid";
 		execute_db_sql($SQL);
 	}
 	
@@ -76,7 +76,7 @@ global $CFG, $MYVARS;
 	//http://www.bioinformatics.org/phplabware/internal_utilities/htmLawed/more.htm
 	
 	include_once ($CFG->dirroot . '/scripts/wordcleaner.php');
-	$html = htmLawed($html, array('comment'=>1, 'clean_ms_char'=>1, 'css_expression'=>1, 'keep_bad'=>0, 'make_tag_strict'=>1, 'schemes'=>'*:*', 'valid_xhtml'=>1, 'balance'=>1));
+	$html = htmLawed($html, array('comment' => 1, 'clean_ms_char' => 1, 'css_expression' => 1, 'keep_bad' => 0, 'make_tag_strict' => 1, 'schemes' => '*:*', 'valid_xhtml' => 1, 'balance' => 1));
 	
 	$html = dbescape(urldecode($html));
     $SQL = "UPDATE html SET html='$html', dateposted='" . get_timestamp() . "',edit_user=0,edit_time=0 WHERE htmlid='$htmlid'";

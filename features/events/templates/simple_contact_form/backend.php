@@ -6,10 +6,16 @@
  * $Date: 08/16/2013
  * $Revision: 0.1.4
  ***************************************************************************/
-if (!isset($CFG)) { include('../../../../config.php'); } 
+if (!isset($CFG)) {
+	$sub = '../';
+	while (!file_exists($sub . 'config.php')) {
+		$sub .= '../';
+	}
+	include($sub . 'config.php'); 
+} 
 include($CFG->dirroot . '/pages/header.php');
 
-if (!isset($EVENTSLIB)) include_once($CFG->dirroot . '/features/events/eventslib.php');
+if (!isset($EVENTSLIB)) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 
 callfunction();
 
@@ -23,10 +29,10 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
     $keys->app_key = '350430668323766';
     $keys->app_secret = '7c43774dbcf542b0700e338bc5625296';
   
-    if (!isset($COMLIB)) { include_once($CFG->dirroot.'/lib/comlib.php'); }
+    if (!isset($COMLIB)) { include_once($CFG->dirroot . '/lib/comlib.php'); }
     $eventid = $MYVARS->GET["eventid"];
 	$event = get_db_row("SELECT * FROM events WHERE eventid = '$eventid'");
-	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='".$event['template_id']."'");
+	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='" . $event['template_id'] . "'");
     
     //Total up the registration bill
     //owed -> full price of this item
@@ -69,9 +75,9 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
 		if ($event['fee_full'] != 0) { // Not free event.
 			$items = !empty($MYVARS->GET["items"]) ? $MYVARS->GET["items"] . "**" . $regid . "::" . $MYVARS->GET["Name"] . " - " . $event["name"] . "::" . $MYVARS->GET["payment_amount"] : $regid . "::" . $MYVARS->GET["Name"] . " - " . $event["name"] . "::" . $MYVARS->GET["payment_amount"];
 			echo '<div id="backup">
-                    <input type="hidden" name="cart_total" id="cart_total" value="'.$MYVARS->GET["cart_total"].'" />
-                    <input type="hidden" name="total_owed" id="total_owed" value="'.$MYVARS->GET["total_owed"].'" />
-				    <input type="hidden" name="items" id="items" value="'.$items.'" /></div>';
+                    <input type="hidden" name="cart_total" id="cart_total" value="' . $MYVARS->GET["cart_total"] . '" />
+                    <input type="hidden" name="total_owed" id="total_owed" value="' . $MYVARS->GET["total_owed"] . '" />
+				    <input type="hidden" name="items" id="items" value="' . $items . '" /></div>';
 
 			$items = explode("**", $items);
             $i=0;
@@ -83,7 +89,7 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
                 $i++;           
             }
 
-            echo '<div style="margin:auto;width:90%;text-align:center;"><h3>You have successfully registered '.$MYVARS->GET["Name_First"].' '.$MYVARS->GET["Name_Last"].'<br />for<br />'.$event['name'] . '.</h3>';
+            echo '<div style="margin:auto;width:90%;text-align:center;"><h3>You have successfully registered ' . $MYVARS->GET["Name_First"] . ' ' . $MYVARS->GET["Name_Last"] . '<br />for<br />' . $event['name'] . '.</h3>';
        
             execute_db_sql("UPDATE events_registrations SET verified='1' WHERE regid='$regid'");
             
@@ -95,29 +101,29 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
     		$fromuser->fname = $CFG->sitename;
     		$fromuser->lname = "";
     		$message = registration_email($regid, $touser);
-    		if (send_email($touser, $fromuser, $event['name']." Registration", $message)) {
-    			send_email($fromuser, $fromuser, $event['name']." Registration", $message);
+    		if (send_email($touser, $fromuser, $event['name'] . " Registration", $message)) {
+    			send_email($fromuser, $fromuser, $event['name'] . " Registration", $message);
     		}
 
 			if ($MYVARS->GET["cart_total"] > 0) { // Event paid by paypal.
                 
-                echo '<br />The full payment amount of <span style="color:blue;font-size:1.25em;">$'.number_format($event['fee_full'],2).'</span> will be expected when you show up to the event.'; 
+                echo '<br />The full payment amount of <span style="color:blue;font-size:1.25em;">$' . number_format($event['fee_full'],2) . '</span> will be expected when you show up to the event.'; 
                 if ($MYVARS->GET["cart_total"] < $MYVARS->GET["total_owed"]) {
-                    echo '<br />You have indicated that you would like to pay:  <span style="color:blue;font-size:1.25em;">$'.number_format($MYVARS->GET["cart_total"],2).'</span> right now.';    
+                    echo '<br />You have indicated that you would like to pay:  <span style="color:blue;font-size:1.25em;">$' . number_format($MYVARS->GET["cart_total"],2) . '</span> right now.';    
                 } else {
-                    echo '<br />You have indicated that you would like to pay the full event cost of:  <span style="color:blue;font-size:1.25em;">$'.number_format($MYVARS->GET["cart_total"],2).'</span> right now.';
+                    echo '<br />You have indicated that you would like to pay the full event cost of:  <span style="color:blue;font-size:1.25em;">$' . number_format($MYVARS->GET["cart_total"],2) . '</span> right now.';
                 }
                 
                 echo '<br /><br />Click the Paypal button below to make that payment.
   				    <br />
                     <div style="text-align:center;">
-    				'.make_paypal_button($cart_items, $event['paypal']).'
+    				' . make_paypal_button($cart_items, $event['paypal']) . '
     				</div>';
             } else {
-                echo '<br />Please bring cash, check or money order in the amount of <span style="color:blue;font-size:1.25em;">$'.number_format($event['fee_full'],2).'</span><br />payable to <strong>'.$event["payableto"].'</strong> on the day of the event.';
+                echo '<br />Please bring cash, check or money order in the amount of <span style="color:blue;font-size:1.25em;">$' . number_format($event['fee_full'],2) . '</span><br />payable to <strong>' . $event["payableto"] . '</strong> on the day of the event.';
             }
 		} else { // Support for a free event
-            echo '<div style="margin:auto;width:90%;text-align:center;"><h3>You have successfully registered '.$MYVARS->GET["Name_First"].' '.$MYVARS->GET["Name_Last"].'<br />for<br />'.$event['name'] . '.</h3>';
+            echo '<div style="margin:auto;width:90%;text-align:center;"><h3>You have successfully registered ' . $MYVARS->GET["Name_First"] . ' ' . $MYVARS->GET["Name_Last"] . '<br />for<br />' . $event['name'] . '.</h3>';
             execute_db_sql("UPDATE events_registrations SET verified='1' WHERE regid='$regid'");
                 
             //Send registration email
@@ -128,8 +134,8 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
     		$fromuser->fname = $CFG->sitename;
     		$fromuser->lname = "";
     		$message = registration_email($regid, $touser);
-    		if (send_email($touser, $fromuser, $event['name']." Registration", $message)) {
-    			send_email($fromuser, $fromuser, $event['name']." Registration", $message);
+    		if (send_email($touser, $fromuser, $event['name'] . " Registration", $message)) {
+    			send_email($fromuser, $fromuser, $event['name'] . " Registration", $message);
     		}
         }
 		

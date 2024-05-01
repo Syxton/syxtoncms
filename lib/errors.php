@@ -31,6 +31,7 @@ $ERRORS = new \stdClass;
 	$ERRORS->page_not_created = "Your page was NOT created successfully.";
     $ERRORS->no_function = "The function: <strong>[0]</strong> could not be found.";
 	$ERRORS->no_data = "The expected data of [0] could not be found.";
+	$ERRORS->pagenotfound = "Page not found.";
 
 //Polls *********************************************************
 	$ERRORS->no_poll_permissions = "You do not have the correct permissions to view this poll.";
@@ -74,7 +75,7 @@ global $CFG, $ERRORS;
         return $ERRORS->$string;        
     } elseif (isset($lang[1])) {
         include($CFG->dirroot . '/features/' . $lang[1] . "/lang.php");
-        if ($vars) { 
+        if ($vars) {
 			return fill_template($ERRORS->$string, $vars);
 		}
         return $ERRORS->$string;
@@ -91,6 +92,7 @@ function get_page_error_message($error, $vars = false) {
 }
 
 function fill_template($string, $vars) {
+	$vars = is_array($vars) ? $vars : [$vars];
     $i = 0;
     foreach ($vars as $var) {
 		// Check if $var is array.

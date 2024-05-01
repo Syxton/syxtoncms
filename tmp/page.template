@@ -52,14 +52,14 @@ browse_usersearch_template||
 ||browse_usersearch_template
 
 browse_search_template||
-<form onsubmit="document.getElementById('loading_overlay_pagesearch').style.visibility='visible';
+<form onsubmit="$('#loading_overlay_pagesearch').show();
                 ajaxapi('/ajax/page_ajax.php',
                         'pagesearch',
                         '&searchwords='+escape(document.getElementById('searchbox').value),
                         function() {
                           if (xmlHttp.readyState == 4) {
                             simple_display('searchcontainer_pagesearch');
-                            document.getElementById('loading_overlay_pagesearch').style.visibility='hidden';
+                            $('#loading_overlay_pagesearch').hide();
                           }
                         },
                         true);
@@ -75,14 +75,14 @@ browse_search_template||
 ||browse_search_template
 
 browse_user_template||
-<form onsubmit="document.getElementById('loading_overlay_usersearch').style.visibility='visible';
+<form onsubmit="$('#loading_overlay_usersearch').show();
                 ajaxapi('/ajax/page_ajax.php',
                         'usersearch',
                         '&searchwords='+escape(document.getElementById('searchbox').value),
                         function() {
                           if (xmlHttp.readyState == 4) {
                             simple_display('searchcontainer_usersearch');
-                            document.getElementById('loading_overlay_usersearch').style.visibility='hidden';
+                            $('#loading_overlay_usersearch').hide();
                           }
                         },
                         true);

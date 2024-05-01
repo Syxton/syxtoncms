@@ -51,21 +51,21 @@ global $CFG, $MYVARS, $USER;
     			<table style="width:100%">
     				<tr>
     					<td colspan="2" style="text-align:center">';
-                        echo get_editor_box($content);
-    				    echo '<input type="button" value="Save" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'edit_html\',\'&amp;htmlid='.$featureid.'&amp;html=\'+ escape('.get_editor_value_javascript().'),function() { do_nothing();}); close_modal();" />
+                        echo get_editor_box($content, "edit_html_$featureid", "550", "100%");
+    				    echo '<input type="button" value="Save" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'edit_html\',\'&amp;htmlid=' . $featureid . '&amp;html=\'+ escape(' . get_editor_value_javascript("edit_html_$featureid") . '),function() { do_nothing();}); close_modal();" />
     					</td>
     				</tr>
     			</table>
     		</div>';
-    		echo js_code_wrap('var stillediting = setInterval(function() { ajaxapi(\'/features/html/html_ajax.php\',\'still_editing\',\'&htmlid='.$featureid.'&userid='.$userid.'\',function() { if (xmlHttp.readyState == 4) { do_nothing(); }}, true);},5000);');
+    		echo js_code_wrap('var stillediting = setInterval(function() { ajaxapi(\'/features/html/html_ajax.php\',\'still_editing\',\'&htmlid=' . $featureid . '&userid=' . $userid . '\',function() { if (xmlHttp.readyState == 4) { do_nothing(); }}, true);},5000);');
 			execute_db_sql("UPDATE html SET edit_user='$userid',edit_time='$now' WHERE htmlid=$featureid");
     	} else {
     		echo '
     		<div style="width:100%;text-align:center;">
-    			<img src="'.$CFG->wwwroot.'/images/underconstruction.gif" />
+    			<img src="' . $CFG->wwwroot . '/images/underconstruction.gif" />
     		</div>
     		<div style="width:100%;text-align:center;">
-    		This area is currently being edited by: '.get_user_name($row["edit_user"]).'
+    		This area is currently being edited by: ' . get_user_name($row["edit_user"]) . '
     		</div>
     		';
     	}
@@ -88,7 +88,7 @@ global $CFG, $MYVARS, $USER;
 	</tr>
 	<tr>
 		<td style="text-align:center;">
-			<input type="button" value="Yes" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'deletecomment\',\'&amp;commentid='.$commentid.'&amp;pageid='.$pageid.'\',function() { close_modal();});" />
+			<input type="button" value="Yes" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'deletecomment\',\'&amp;commentid=' . $commentid . '&amp;pageid=' . $pageid . '\',function() { close_modal();});" />
 		</td>
 	</tr>
 	</table>
@@ -115,7 +115,7 @@ global $CFG, $MYVARS, $USER;
 	</tr>
 	<tr>
 		<td style="text-align:center;">
-			<input type="button" value="Submit Comment" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'makecomment\',\'&amp;htmlid='.$htmlid.'&amp;pageid='.$pageid.'&amp;comment=\'+escape(document.getElementById(\'comment\').value),function() { close_modal();});" />
+			<input type="button" value="Submit Comment" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'makecomment\',\'&amp;htmlid=' . $htmlid . '&amp;pageid=' . $pageid . '&amp;comment=\'+escape(document.getElementById(\'comment\').value),function() { close_modal();});" />
 		</td>
 	</tr>
 	</table>
@@ -138,7 +138,7 @@ global $CFG, $MYVARS, $USER;
 	</tr>
 	<tr>
 		<td style="text-align:left; font-size:.75em; color:gray">
-			'.$comment.'
+			' . $comment . '
 		<br /><br /></td>
 	</tr>
 	<tr>
@@ -153,7 +153,7 @@ global $CFG, $MYVARS, $USER;
 	</tr>
 	<tr>
 		<td style="text-align:center;">
-			<input type="button" value="Reply to Comment" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'makereply\',\'&amp;commentid='.$commentid.'&amp;pageid='.$pageid.'&amp;reply=\'+escape(document.getElementById(\'reply\').value),function() { close_modal();});" />
+			<input type="button" value="Reply to Comment" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'makereply\',\'&amp;commentid=' . $commentid . '&amp;pageid=' . $pageid . '&amp;reply=\'+escape(document.getElementById(\'reply\').value),function() { close_modal();});" />
 		</td>
 	</tr>
 	</table>
@@ -178,7 +178,7 @@ global $CFG, $MYVARS, $USER;
 	</tr>
 	<tr>
 		<td style="text-align:left; font-size:.75em; color:gray">
-			'.$comment.'
+			' . $comment . '
 		<br /><br /></td>
 	</tr>
 	<tr>
@@ -188,12 +188,12 @@ global $CFG, $MYVARS, $USER;
 	</tr>
 	<tr>
 		<td style="text-align:center;">
-			<textarea id="reply" cols="40" rows="8">'.$reply.'</textarea>
+			<textarea id="reply" cols="40" rows="8">' . $reply . '</textarea>
 		</td>
 	</tr>
 	<tr>
 		<td style="text-align:center;">
-			<input type="button" value="Edit Reply" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'editreply\',\'&amp;replyid='.$replyid.'&amp;pageid='.$pageid.'&amp;reply=\'+escape(document.getElementById(\'reply\').value),function() { close_modal();});" />
+			<input type="button" value="Edit Reply" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'editreply\',\'&amp;replyid=' . $replyid . '&amp;pageid=' . $pageid . '&amp;reply=\'+escape(document.getElementById(\'reply\').value),function() { close_modal();});" />
 		</td>
 	</tr>
 	</table>';
@@ -217,7 +217,7 @@ global $CFG, $MYVARS, $USER;
 	</tr>
 	<tr>
 		<td style="text-align:left; font-size:.75em; color:gray">
-			'.$comment.'
+			' . $comment . '
 		<br /><br /></td>
 	</tr>
 	<tr>
@@ -227,12 +227,12 @@ global $CFG, $MYVARS, $USER;
 	</tr>
 	<tr>
 		<td style="text-align:center;">
-			<textarea id="comment" cols="40" rows="8">'.$comment.'</textarea>
+			<textarea id="comment" cols="40" rows="8">' . $comment . '</textarea>
 		</td>
 	</tr>
 	<tr>
 		<td style="text-align:center;">
-			<input type="button" value="Edit Comment" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'editcomment\',\'&amp;commentid='.$commentid.'&amp;pageid='.$pageid.'&amp;comment=\'+escape(document.getElementById(\'comment\').value),function() { close_modal();});" />
+			<input type="button" value="Edit Comment" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'editcomment\',\'&amp;commentid=' . $commentid . '&amp;pageid=' . $pageid . '&amp;comment=\'+escape(document.getElementById(\'comment\').value),function() { close_modal();});" />
 		</td>
 	</tr>
 	</table>';
@@ -253,7 +253,7 @@ global $CFG, $MYVARS, $USER;
 	</tr>
 	<tr>
 		<td style="text-align:center;">
-			<input type="button" value="Yes" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'deletereply\',\'&amp;replyid='.$replyid.'&amp;pageid='.$pageid.'\',function() { close_modal();});" />
+			<input type="button" value="Yes" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'deletereply\',\'&amp;replyid=' . $replyid . '&amp;pageid=' . $pageid . '\',function() { close_modal();});" />
 		</td>
 	</tr>
 	</table>
@@ -273,7 +273,7 @@ global $CFG, $MYVARS, $USER, $ROLES;
 	if (is_logged_in()) {
 		if (user_has_ability_in_page($USER->userid,"viewhtml", $pageid)) {
 			$abilities = get_user_abilities($USER->userid, $pageid,"html");
-			echo '<a href="'.$CFG->wwwroot.'/index.php?pageid='.$pageid.'">Home</a>
+			echo '<a href="' . $CFG->wwwroot . '/index.php?pageid=' . $pageid . '">Home</a>
 			<table style="margin-left:auto;margin-right:auto;width:100%">
 				<tr>
 					<td>
@@ -287,7 +287,7 @@ global $CFG, $MYVARS, $USER, $ROLES;
 	} else {
 		if (get_db_field("siteviewable","pages","pageid=$pageid") && role_has_ability_in_page($ROLES->visitor, 'viewhtml', $pageid)) {
 			$abilities = get_user_abilities($USER->userid, $pageid,"html");
-			echo '<a href="'.$CFG->wwwroot.'/index.php?pageid='.$pageid.'">Home</a>
+			echo '<a href="' . $CFG->wwwroot . '/index.php?pageid=' . $pageid . '">Home</a>
 			<table style="margin-left:auto;margin-right:auto;width:100%">
 				<tr>
 					<td>
@@ -298,8 +298,8 @@ global $CFG, $MYVARS, $USER, $ROLES;
 				</tr>
 			</table>';
 		} else {
-            echo '<div id="standalone_div"><input type="hidden" id="reroute" value="/features/html/html.php:viewhtml:&amp;pageid='.$pageid.'&amp;htmlid='.$htmlid . ':standalone_div" />';
-            echo '<div style="width:100%; text-align:center;">You must login to see this content.<br /><center>'.get_login_form(true, false) . '</center></div></div>';
+            echo '<div id="standalone_div"><input type="hidden" id="reroute" value="/features/html/html.php:viewhtml:&amp;pageid=' . $pageid . '&amp;htmlid=' . $htmlid . ':standalone_div" />';
+            echo '<div style="width:100%; text-align:center;">You must login to see this content.<br /><center>' . get_login_form(true, false) . '</center></div></div>';
 		}
 	}
 }

@@ -55,11 +55,27 @@ global $CFG, $MYVARS;
 
 function theme_selector($pageid, $themeid, $feature="page", $checked1="checked", $checked2="") {
 global $CFG, $MYVARS, $USER;
-	$selected = $themeid;
+	$params =[
+		"pageid" => $pageid,
+		"feature" => $feature,
+		"checked1" => $checked1,
+		"checked2" => $checked2,
+		"iscustom" => ($themeid === '0' ),
+	];
 
-	$SQL = template_use("dbsql/styles.sql", array("notsite" => ($pageid != $CFG->SITEID)), "theme_selector_sql");
-	$params = array("pageid" => $pageid, "feature" => $feature, "checked1" => $checked1, "checked2" => $checked2, "iscustom" => ($themeid === '0' ));
-	$params["menu"] = make_select("themes", get_db_result($SQL), "themeid", "name", $selected, 'onchange="' . template_use("tmp/themes.template", $params, "theme_selector_menu_action_template") . '"', false, null, "width:225px;");
+	$themeselector = [
+		"properties" => [
+			"name" => "themes",
+			"id" => "themes",
+			"onchange" => template_use("tmp/themes.template", $params, "theme_selector_menu_action_template"),
+			"style" => "width:225px;",
+		],
+		"values" => get_db_result(template_use("dbsql/styles.sql", ["notsite" => ($pageid != $CFG->SITEID)], "theme_selector_sql")),
+		"valuename" => "themeid",
+		"displayname" => "name",
+		"selected" => $themeid,
+	];
+	$params["menu"] = make_select($themeselector);
 	$tabs = template_use("tmp/themes.template", $params, "theme_selector_tabs_template");
 	$left = $tabs . template_use("tmp/themes.template", $params, "theme_selector_left_template");
 
@@ -70,35 +86,42 @@ global $CFG, $MYVARS, $USER;
 	$params["block"] = get_css_box("Title", "Content", null, null, null, null, $themeid, null, $pageid);
 	$right = template_use("tmp/themes.template", $params, "theme_selector_right_template");
 
-	return template_use("tmp/themes.template", array("left" => $left, "right" => $right), "make_template_selector_panes_template");
+	return template_use("tmp/themes.template", ["left" => $left, "right" => $right], "make_template_selector_panes_template");
 }
 
 function custom_styles_selector($pageid, $feature, $featureid=false) {
 	global $CFG;
-		$params = array("pageid" => $pageid, "feature" => $feature, "featureid" => $featureid, "checked1" => "", "checked2" => "checked", "iscustom" => ($feature == "page"));
+		$params = [
+			"pageid" => $pageid,
+			"feature" => $feature,
+			"featureid" => $featureid,
+			"checked1" => "",
+			"checked2" => "checked",
+			"iscustom" => ($feature == "page"),
+		];
 		$tabs = template_use("tmp/themes.template", $params, "theme_selector_tabs_template");
 
 		// Styles function
-		$styles = $feature.'_default_styles';
+		$styles = $feature . '_default_styles';
 		$styles = $styles();
 	  $revised_pageid = $pageid == $CFG->SITEID ? 0 : $pageid;
 
 		if ($feature != "page") {
-			include_once($CFG->dirroot . '/features/'.$feature."/".$feature.'lib.php');
+			include_once($CFG->dirroot . '/features/' . $feature. "/" . $feature . 'lib.php');
 		}
 
 		$style_inputs = "";
 		foreach ($styles as $style) { // go through each style type and see if there is a db setting that can replace it.
 			if ($feature == "page") {
-				$SQL = "themeid=0 AND attribute='".$style[1]."' AND pageid='$revised_pageid' AND feature <= '' AND featureid <= 0 ORDER BY pageid DESC";
+				$SQL = "themeid=0 AND attribute='" . $style[1]."' AND pageid='$revised_pageid' AND feature <= '' AND featureid <= 0 ORDER BY pageid DESC";
 			} else {
-				$SQL = "themeid=0 AND attribute='".$style[1]."' AND pageid='$revised_pageid' AND feature='$feature' AND featureid='$featureid' ORDER BY pageid DESC";
+				$SQL = "themeid=0 AND attribute='" . $style[1]."' AND pageid='$revised_pageid' AND feature='$feature' AND featureid='$featureid' ORDER BY pageid DESC";
 			}
 			$value = get_db_field("value","styles", $SQL);
 			if (!$value) { // No db value found, use the hard coded default value.
 				$value = $style[2];
 			}
-			$style_inputs .= template_use("tmp/themes.template", array("style" => $style, "value" => $value, "wwwroot" => $CFG->wwwroot), "style_inputs_template");
+			$style_inputs .= template_use("tmp/themes.template", ["style" => $style, "value" => $value, "wwwroot" => $CFG->wwwroot], "style_inputs_template");
 		}
 
 		$params["style_inputs"] = $style_inputs;
@@ -108,21 +131,21 @@ function custom_styles_selector($pageid, $feature, $featureid=false) {
 function get_custom_styles($pageid, $feature, $featureid=false) {
 global $CFG;
 	//Styles function
-	$styles = $feature.'_default_styles';
+	$styles = $feature . '_default_styles';
 	$styles = $styles();
 
   $revised_pageid = $pageid == $CFG->SITEID ? 0 : $pageid;
 
 	if ($feature != "page") {
-		include_once($CFG->dirroot . '/features/'.$feature."/".$feature.'lib.php');
+		include_once($CFG->dirroot . '/features/' . $feature. "/" . $feature . 'lib.php');
 	}
 
 	$i = 0;
 	foreach ($styles as $style) { // go through each style type and see if there is a db setting that can replace it.
 		if ($feature == "page") {
-			$SQL = "themeid=0 AND attribute='".$style[1]."' AND pageid='$revised_pageid' AND feature <= '' AND featureid <= 0 ORDER BY pageid DESC";
+			$SQL = "themeid=0 AND attribute='" . $style[1]."' AND pageid='$revised_pageid' AND feature <= '' AND featureid <= 0 ORDER BY pageid DESC";
 		} else {
-			$SQL = "themeid=0 AND attribute='".$style[1]."' AND pageid='$revised_pageid' AND feature='$feature' AND featureid='$featureid' ORDER BY pageid DESC";
+			$SQL = "themeid=0 AND attribute='" . $style[1]."' AND pageid='$revised_pageid' AND feature='$feature' AND featureid='$featureid' ORDER BY pageid DESC";
 		}
 		$value = get_db_field("value","styles", $SQL);
 		if ($value) { // No db value found, use the hard coded default value.
@@ -149,75 +172,89 @@ function get_page_themeid($pageid) {
   }
 }
 
-function make_or_update_styles($id=false, $feature=false, $pageid=false, $featureid=false, $attribute=false, $value=false, $themeid=false, $forced=false) {
-	//Make select to find out if setting exists
-	$SQL = "";
-	$SQL2 = $id !== false ? "id='$id'" : false;
-	$SQL3 = $feature !== false ? "feature='$feature'" : false;
-	$SQL4 = $pageid !== false ? "pageid='$pageid'" : false;
-	$SQL5 = $featureid !== false ? "featureid='$featureid'" : false;
-	$SQL6 = $attribute !== false ? "attribute='$attribute'" : false;
-	$SQL7 = $value !== false ? "value='$value'" : false;
-	$SQL8 = $themeid !== false ? "themeid='$themeid'" : false;
-	$SQL9 = $forced !== false ? "forced='$forced'" : false;
+/**
+ * Make or update a style setting.
+ *
+ * If id is not provided in $params, it will try to find the id based on
+ * the values provided. If id is found, it will update the setting. If
+ * id is not found, it will insert a new setting.
+ *
+ * @param array $params An array of settings objects with the following keys
+ *   - id: The id of the setting to update. If not provided it will be found.
+ *   - feature: The feature of the setting.
+ *   - pageid: The pageid of the setting.
+ *   - featureid: The featureid of the setting.
+ *   - attribute: The attribute of the setting.
+ *   - themeid: The themeid of the setting.
+ *   - value: The value of the setting.
+ *
+ * @return integer|boolean The id of the setting that was made/updated or false
+ *   if the statement failed.
+ */
+function make_or_update_styles($params = []) {
+	$vars = ["list" => "", "values" => "", "fields" => ["value"]];
 
-	if (!$id) {
-  	$SQL .= $SQL2 ? $SQL2 : "";
-  	if ($SQL3) { $SQL .= $SQL2 ? " AND $SQL3" : $SQL3; }
-  	if ($SQL4) { $SQL .= $SQL2 || $SQL3 ? " AND $SQL4" : $SQL4; }
-  	if ($SQL5) { $SQL .= $SQL2 || $SQL3 || $SQL4 ? " AND $SQL5" : $SQL5; }
-  	if ($SQL6) { $SQL .= $SQL2 || $SQL3 || $SQL4 || $SQL5 ? " AND $SQL6" : $SQL6; }
-  	if ($SQL8) { $SQL .= $SQL2 || $SQL3 || $SQL4 || $SQL5 || $SQL6 ? " AND $SQL8" : $SQL8; }
-	}
-	////////////////////////////////////////////////////////////////////////////////////////////////////////
+	$fields = ["feature", "pageid", "featureid", "attribute", "themeid"];
+	$vars["fields"] += $fields;
 
-	$id = $id ? $id : get_db_field("id", "styles", $SQL);
+	// Check if id was not provided but can be found.
+	if (!isset($params["id"])) {
+		$idsql = "";
+		foreach ($fields as $f) {
+			if (isset($params[$f]) && $params[$f] !== false) {
+				$idsql .= $idsql == "" ? "" : " AND "; // Add AND if not first field.
+				$idsql .= "$f = '" . $params[$f] . "'";
+			}
+		}
 
-	if ($id) { //Setting Exists
-		//Make update SQL
-		$SQL = "UPDATE styles s SET ";
-		if ($SQL3) { $SQL .= "s.".$SQL3; }
-		if ($SQL4) { $SQL .= $SQL3 ? ", s.$SQL4" : "s.".$SQL4; }
-		if ($SQL5) { $SQL .= $SQL3 || $SQL4 ? ", s.$SQL5" : "s.".$SQL5; }
-		if ($SQL6) { $SQL .= $SQL3 || $SQL4 || $SQL5 ? ", s.$SQL6" : "s.".$SQL6; }
-		if ($SQL7) { $SQL .= $SQL3 || $SQL4 || $SQL5 || $SQL6 ? ", s.$SQL7" : "s.".$SQL7; }
-		if ($SQL8) { $SQL .= $SQL3 || $SQL4 || $SQL5 || $SQL6 || $SQL7 ? ", s.$SQL8" : "s.".$SQL8; }
-		if ($SQL9) { $SQL .= $SQL3 || $SQL4 || $SQL5 || $SQL6 || $SQL7 || $SQL8 ? ", s.$SQL9" : "s.".$SQL9; }
-		$SQL .= " WHERE s.id='$id'";
-	} else { //Setting does not exist
-		//Make insert SQL
-		$SQL = "INSERT INTO styles (";
-		if ($SQL3) { $SQL .= "feature"; }
-		if ($SQL4) { $SQL .= $SQL3 ? ",pageid" : "pageid"; }
-		if ($SQL5) { $SQL .= $SQL3 || $SQL4 ? ", featureid" : "featureid"; }
-		if ($SQL6) { $SQL .= $SQL3 || $SQL4 || $SQL5 ? ", attribute" : "attribute"; }
-		if ($SQL7) { $SQL .= $SQL3 || $SQL4 || $SQL5 || $SQL6 ? ", value" : "value"; }
-		if ($SQL8) { $SQL .= $SQL3 || $SQL4 || $SQL5 || $SQL6 || $SQL7 ? ", themeid" : "themeid"; }
-		if ($SQL9) { $SQL .= $SQL3 || $SQL4 || $SQL5 || $SQL6 || $SQL7 || $SQL8 ? ", forced" : "forced"; }
-		$SQL .= ")";
-
-		$SQL2 = " VALUES (";
-		if ($SQL3) { $SQL2 .= "'$feature'"; }
-		if ($SQL4) { $SQL2 .= $SQL3 ? ",'$pageid'" : "'$pageid'"; }
-		if ($SQL5) { $SQL2 .= $SQL3 || $SQL4 ? ", '$featureid'" : "'$featureid'"; }
-		if ($SQL6) { $SQL2 .= $SQL3 || $SQL4 || $SQL5 ? ", '$attribute'" : "'$attribute'"; }
-		if ($SQL7) { $SQL2 .= $SQL3 || $SQL4 || $SQL5 || $SQL6 ? ", '$value'" : "'$value'"; }
-		if ($SQL8) { $SQL2 .= $SQL3 || $SQL4 || $SQL5 || $SQL6 || $SQL7 ? ", '$themeid'" : "'$themeid'"; }
-		if ($SQL9) { $SQL2 .= $SQL3 || $SQL4 || $SQL5 || $SQL6 || $SQL7 || $SQL8 ? ", '$forced'" : "'$forced'"; }
-		$SQL2 .= ")";
-		$SQL .= $SQL2;
+		// Make sure you have enough info to find only a single setting.
+		if ($idsql !== "" && get_db_count("SELECT * FROM styles WHERE $idsql") == 1) {
+			$params["id"] = get_db_field("id", "styles", $idsql);
+		}
 	}
 
-	if (execute_db_sql($SQL)) { return true; }
-	return false;
+	if (isset($params["id"])) { // Update statement.
+		$vars["id"] = $params["id"];
+		foreach ($vars["fields"] as $field) {
+			if (isset($params[$field]) && $params[$field] !== false) { // Check $value is set.
+				$vars["list"] .= $vars["list"] == "" ? "" : ", "; // Add comma if not first field.
+				$vars["list"] .= "$field = '" . $params[$field] . "'";	
+			}
+		}
+		$SQL = "UPDATE styles SET " . $vars["list"] . " WHERE id = '" . $vars["id"] . "'";
+	} else { // Insert statement.
+		foreach ($vars["fields"] as $field) {
+			if (isset($params[$field]) && $params[$field] !== false) { // Check $value or $extravalue is set.
+				$vars["list"] .= $vars["list"] == "" ? "" : ", "; // Add comma if not first field.
+				$vars["list"] .= "$field"; // Add field to list of fields.
+				$vars["values"] .= $vars["values"] == "" ? "" : ", "; // Add comma if not first field.
+				$vars["values"] .= "'" . $params[$field] . "'"; // Add value to list of values.
+			}
+		}
+		$SQL = "INSERT INTO styles(" . $vars["list"] . ") VALUES(" . $vars["values"] . ")";
+	}
+
+	// Whether insert or update statement succeeded we will get the settingid.
+	return execute_db_sql($SQL);
 }
 
-function make_or_update_styles_array($array) {
-	foreach ($array as $style) {
-		if (!make_or_update_styles($style[0], $style[1], $style[2], $style[3], $style[4], $style[5], $style[6], $style[7])) {
+/**
+ * Update settings array with new settings or update existing settings
+ *
+ * @param array $settings An array of settings objects
+ *
+ * @return boolean Returns true if all settings were updated or inserted successfully
+ */
+function make_or_update_styles_array($params) {
+	/* Loop through each setting and make it */
+	foreach ($params as $p) {
+		/* Make or update the setting */
+		if (!make_or_update_styles($p)) {
+			/* If one setting fails, return false */
 			return false;
 		}
 	}
+	/* Return true if all settings were updated or inserted */
 	return true;
 }
 ?>

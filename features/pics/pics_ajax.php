@@ -21,7 +21,7 @@ global $CFG, $MYVARS;
 	$perpage = !isset($MYVARS->GET["perpage"]) ? NULL : $MYVARS->GET["perpage"];
 	$order = !isset($MYVARS->GET["order"]) ? NULL : urldecode($MYVARS->GET["order"]);
 	
-	echo get_pics($MYVARS->GET["pageid"], $MYVARS->GET["featureid"], $galleryid, $pagenum, $editable, $perpage, $order);
+	echo get_pics($MYVARS->GET["pageid"], $MYVARS->GET["featureid"], $galleryid, $pagenum, $editable, $perpage);
 }
 
 function new_gallery() {
@@ -29,10 +29,19 @@ global $CFG, $MYVARS;
 	$param = $MYVARS->GET['param'];
 	$pageid = $MYVARS->GET['pageid'];
 	if ($param == "1") {
-		echo '<input name="gallery_name" id="gallery_name" type="text" size="32" onkeypress="return handleEnter(this, event)" />';
+		echo '<input name="gallery_name" id="gallery_name" type="text" size="32" onkeypress="return handleEnter(this, event);" />';
 	} else {
-		$SQL = "SELECT * FROM pics_galleries WHERE galleryid IN (SELECT galleryid FROM pics WHERE pageid=$pageid)";
-		echo make_select("gallery_name", get_db_result($SQL), "galleryid", "name", false, '', true, '1', '', 'None selected');
+        $p = [
+            "properties" => [
+                "name" => "gallery_name",
+                "id" => "gallery_name",
+            ],
+            "values" => get_db_result(template_use("dbsql/pics.sql", ["pageid" => $pageid], "get_page_galleries", "pics")),
+            "valuename" => "galleryid",
+            "displayname" => "name",
+            "firstoption" => "None selected",
+        ];
+		echo make_select($p);
 	}
 }
 
@@ -61,7 +70,7 @@ function delete_pic() {
 global $CFG, $MYVARS;
     $picsid = $MYVARS->GET['picsid'];
     $row = get_db_row("SELECT * FROM pics WHERE picsid='$picsid'");
-    delete_file($CFG->dirroot.'/features/pics/files/'.$row["pageid"]."/".$row["featureid"]."/".$row["imagename"]);
+    delete_file($CFG->dirroot . '/features/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row["imagename"]);
     execute_db_sql("DELETE FROM pics WHERE picsid='$picsid'");
     echo '<font style="font-color:gray">Picture Deleted</font>';
 }
@@ -77,17 +86,17 @@ global $CFG, $MYVARS;
             while ($row = fetch_row($result)) {
                 if ($pageid != $CFG->SITEID && !empty($row["siteviewable"])) { //siteviewable images from a page other than SITE.  Move them to site
                     $copy = true;
-                    $site_featureid = get_db_field("featureid","pages_features","feature='pics' AND pageid='".$CFG->SITEID."'");
-                    $old = $CFG->dirroot.'/features/pics/files/'.$row["pageid"]."/".$row["featureid"]."/".$row["imagename"];
-                    $new = $CFG->dirroot.'/features/pics/files/'.$CFG->SITEID."/".$site_featureid."/".$row["imagename"];
+                    $site_featureid = get_db_field("featureid","pages_features","feature='pics' AND pageid='" . $CFG->SITEID."'");
+                    $old = $CFG->dirroot . '/features/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row["imagename"];
+                    $new = $CFG->dirroot . '/features/pics/files/' . $CFG->SITEID. "/" . $site_featureid. "/" . $row["imagename"];
                     copy_file($old, $new);
                     delete_file($old);
                 }elseif ($pageid == $CFG->SITEID && $pageid != $row["pageid"]) {  //SITE is dealing with images from another page
                     execute_db_sql("UPDATE pics SET siteviewable=0 WHERE galleryid='$galleryid'");
                 } else { //nobody is using it, so delete it
                     $delete = true;
-                    delete_file($CFG->dirroot.'/features/pics/files/'.$row["pageid"]."/".$row["featureid"]."/".$row["imagename"]);
-                    execute_db_sql("DELETE FROM pics WHERE picsid='".$row["picsid"]."'");    
+                    delete_file($CFG->dirroot . '/features/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row["imagename"]);
+                    execute_db_sql("DELETE FROM pics WHERE picsid='" . $row["picsid"] . "'");    
                 }
             }
         }
@@ -126,7 +135,7 @@ global $CFG, $MYVARS;
         $size_bytes = $max_upload_bytes < $max_post_bytes ? $max_upload_bytes : $max_post_bytes; //use the smaller of the two
         
         //Extensions you want files uploaded limited to.
-        $limitedext = array(".gif",".jpg",".jpeg",".png",".bmp");
+        $limitedext = [".gif", ".jpg", ".jpeg", ".png", ".bmp"];
         
         //check if the directory exists or not.
         if (!is_dir("$upload_dir")) {
@@ -161,7 +170,7 @@ global $CFG, $MYVARS;
                  #-----------------------------------------------------------#
                  # this code will check file extension                       #
                  #-----------------------------------------------------------#
-                 $ext = strrchr($file_name,'.');
+                 $ext = strrchr($file_name, '.');
                  if (!in_array(strtolower($ext), $limitedext)) {
                     echo "Skipping file ($file_name) Incompatible file extension. <br />";
                  } else {
@@ -169,7 +178,7 @@ global $CFG, $MYVARS;
                        # this code will check file size is correct                 #
                        #-----------------------------------------------------------#
                        if ($file_size > $size_bytes) {
-                           echo "Skipping file ($file_name) File must be less than <strong>". $size_bytes / 1024 ."</strong> KB. <br />";
+                           echo "Skipping file ($file_name) File must be less than <strong>" . $size_bytes / 1024 . "</strong> KB. <br />";
                        } else {
                              #-----------------------------------------------------------#
                              # this code check if file is Already EXISTS.                #
@@ -234,6 +243,6 @@ global $CFG, $MYVARS;
 
     $row = get_db_row("SELECT * FROM pics WHERE picsid=$picsid");
     
-    echo '<div style="text-align:center;width:171px;font-size:.85em;'.$activated.'">'.$row["imagename"].'</div>';
+    echo '<div style="text-align:center;width:171px;font-size:.85em;' . $activated . '">' . $row["imagename"] . '</div>';
 }
 ?>

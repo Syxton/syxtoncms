@@ -7,7 +7,13 @@
 * Revision: 0.9.1
 ***************************************************************************/
 
-if (!isset($LIBHEADER)) { if (file_exists('./lib/header.php')) { include('./lib/header.php'); }elseif (file_exists('../lib/header.php')) { include('../lib/header.php'); }elseif (file_exists('../../lib/header.php')) { include('../../lib/header.php'); }}
+if (!isset($LIBHEADER)) {
+	$sub = './';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == './' ? '../' : $sub . '../';
+	}
+	include($sub . 'lib/header.php'); 
+}
 $BLOGLOCKERLIB = true;
 
 //BLOGLOCKERLIB Config
@@ -42,7 +48,7 @@ global $CFG, $USER, $ROLES;
 				];
 				$content .= make_modal_links($p);
 				if (!$lockeritem->blog && is_logged_in() && user_has_ability_in_page($USER->userid, "addtolocker", $pageid)) {
-					$content .= '<a title="Move back to its original state" href="#" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'move_feature\',\'&amp;pageid='.$pageid.'&amp;featuretype=html&amp;featureid=' . $lockeritem->htmlid . '&amp;direction=middle\',function() { update_login_contents(' . $pageid . ');});">
+					$content .= '<a title="Move back to its original state" href="#" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'move_feature\',\'&amp;pageid=' . $pageid . '&amp;featuretype=html&amp;featureid=' . $lockeritem->htmlid . '&amp;direction=middle\',function() { update_login_contents(' . $pageid . ');});">
 									<img src="' . $CFG->wwwroot . '/images/undo.png" alt="Move feature to the middle area" />
 								 </a>';
 				}	

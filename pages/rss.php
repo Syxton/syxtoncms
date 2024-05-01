@@ -36,7 +36,7 @@ global $CFG, $MYVARS, $USER;
 	if ($feed = get_db_row($SQL)) {
 		$SQL = "SELECT *
 						  FROM rss
-						 WHERE rssid='".$feed["rssid"]."'";
+						 WHERE rssid='" . $feed["rssid"] . "'";
 
 		$params = array('wwwroot' => $CFG->wwwroot, 'feed' => true, 'rss' => get_db_row($SQL), 'userkey' => $userkey);
 		echo template_use("tmp/rss.template", $params, "rss_subscribe_feature_template");

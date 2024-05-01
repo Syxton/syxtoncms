@@ -7,7 +7,13 @@
 * Revision: 0.4.1
 ***************************************************************************/
  
-if (!isset($LIBHEADER)) { if (file_exists('./lib/header.php')) { include('./lib/header.php'); }elseif (file_exists('../lib/header.php')) { include('../lib/header.php'); }elseif (file_exists('../../lib/header.php')) { include('../../lib/header.php'); }}
+if (!isset($LIBHEADER)) {
+	$sub = './';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == './' ? '../' : $sub . '../';
+	}
+	include($sub . 'lib/header.php'); 
+}
 $ONLINEUSERSLIB = true;
 
 function display_onlineusers($pageid, $area, $featureid) {
@@ -23,12 +29,12 @@ global $CFG, $USER, $ROLES;
 	
 	if (is_logged_in()) {
 		if (user_has_ability_in_page($USER->userid, "seeusers", $pageid)) {
-    		$content .= '<div id="onlineusersfeature">'.get_onlineusers($pageid, $featureid, $settings). '</div>';
+    		$content .= '<div id="onlineusersfeature">' . get_onlineusers($pageid, $featureid, $settings). '</div>';
 			$buttons = get_button_layout($feature, $featureid, $pageid); 
 		}
 	} else {
 		if (role_has_ability_in_page($ROLES->visitor, "seeusers", $pageid)) {
-			$content .= '<div id="onlineusersfeature">'.get_onlineusers($pageid, $featureid, $settings). '</div>';
+			$content .= '<div id="onlineusersfeature">' . get_onlineusers($pageid, $featureid, $settings). '</div>';
 			$buttons = get_button_layout($feature, $featureid, $pageid); 
 		}
 	}
@@ -37,7 +43,7 @@ global $CFG, $USER, $ROLES;
 	var onlineuserstimeout = setInterval(function() { 
 											ajaxapi("/features/onlineusers/onlineusers_ajax.php",
 													"run_lib_function",
-													"&amp;runthis=get_onlineusers&amp;var1='.$pageid.'&amp;var2='.$featureid.'",
+													"&amp;runthis=get_onlineusers&amp;var1=' . $pageid . '&amp;var2=' . $featureid . '",
 													function() { 
 														if (xmlHttp.readyState == 4) { 
 															simple_display("onlineusersfeature"); 
@@ -76,13 +82,13 @@ global $CFG, $USER;
 		if ($show_total) { 
 			$onlineusers = get_db_count($SQL);
 			if (!$onlineusers) { $onlineusers = 1;}
-			$returnme .= '<div style="width:100%;text-align:center;font-size:.9em;">Online Users: '.$onlineusers.'</div>'; 
+			$returnme .= '<div style="width:100%;text-align:center;font-size:.9em;">Online Users: ' . $onlineusers . '</div>'; 
 		}
 		
 		if ($users = get_db_result($SQL.$limit)) {
 			while ($user = fetch_row($users)) {
 				$returnme .= '<div style="width:100%;text-align:left;color:blue;font-size:.9em;overflow:auto;margin:2px;">
-									<div title="'.ago($user["last_activity"]).'">'. $user["fname"] . " " . $user["lname"] . '</div>
+									<div title="' . ago($user["last_activity"]) . '">' . $user["fname"] . " " . $user["lname"] . '</div>
 							  </div>';
 			}
 		}
@@ -95,7 +101,7 @@ global $CFG, $USER;
 		
 		$onlineusers = get_db_count($SQL);
 		if (!$onlineusers) { $onlineusers = 1;}
-		if ($show_total) { $returnme .= '<div style="width:100%;text-align:center;font-size:.8em;">Online Visitors: '.$onlineusers.'</div>'; }
+		if ($show_total) { $returnme .= '<div style="width:100%;text-align:center;font-size:.8em;">Online Visitors: ' . $onlineusers . '</div>'; }
 	}
 	return $returnme;
 }

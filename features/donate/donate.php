@@ -60,7 +60,7 @@ global $CFG;
     echo main_body(true);
     
     if (!empty($_GET['cm'])) {
-        $c = get_db_row("SELECT * FROM donate_campaign WHERE campaign_id='".$_GET['cm']."'");
+        $c = get_db_row("SELECT * FROM donate_campaign WHERE campaign_id='" . $_GET['cm'] . "'");
         $auth_token = $c["token"]; 
         
         $pp_hostname = $CFG->paypal ? 'www.paypal.com' : 'www.sandbox.paypal.com';

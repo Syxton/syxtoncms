@@ -7,7 +7,7 @@
 * Revision: 0.3.2
 ***************************************************************************/
 
-if (!isset($LIBHEADER)) include('header.php');
+if (!isset($LIBHEADER)) { include('header.php'); }
 $TIMELIB = true;
 
 function get_timestamp($timezone = "UTC") {
@@ -101,10 +101,10 @@ global $CFG;
 			return '
 			<td style="vertical-align:top;width:60px;height:60px;">
 			<table style="vertical-align:top;width:60px;height:60px;max-height:89px;"><tr>
-				<td style="background-image: url('.$CFG->wwwroot.'/images/'.$graphic.'); '.$alterfont.'">
-				<div style="text-align:center; font-size:.75em;line-height:10px;"><b>'.date('F', $timestamp).'</b></div>
-				<div style="text-align:center; font-size:1.65em;line-height:27px;"><b>'.date('jS', $timestamp).'</b></div>
-				<div style="text-align:right; font-size:.75em;">'.date('Y', $timestamp).' &nbsp;</div>
+				<td style="background-image: url(' . $CFG->wwwroot . '/images/' . $graphic . '); ' . $alterfont . '">
+				<div style="text-align:center; font-size:.75em;line-height:10px;"><b>' . date('F', $timestamp) . '</b></div>
+				<div style="text-align:center; font-size:1.65em;line-height:27px;"><b>' . date('jS', $timestamp) . '</b></div>
+				<div style="text-align:right; font-size:.75em;">' . date('Y', $timestamp) . ' &nbsp;</div>
 				</td>
 			</tr>
 			</table>
@@ -125,10 +125,10 @@ global $CFG;
 			return '
 			<td style="vertical-align:top;width:78px;height:78px;">
 			<table style="vertical-align:top;width:78px;height:78px;max-height:89px;"><tr>
-				<td style="background-image: url('.$CFG->wwwroot.'/images/'.$graphic.'); '.$alterfont.'">
-				<div style="text-align:center; font-size:.85em;line-height:20px;"><b>'.date('F', $timestamp).'</b></div>
-				<div style="text-align:center; font-size:2.2em;line-height:30px;"><b>'.date('jS', $timestamp).'</b></div>
-				<div style="text-align:right; font-size:.85em;">'.date('Y', $timestamp).' &nbsp;</div>
+				<td style="background-image: url(' . $CFG->wwwroot . '/images/' . $graphic . '); ' . $alterfont . '">
+				<div style="text-align:center; font-size:.85em;line-height:20px;"><b>' . date('F', $timestamp) . '</b></div>
+				<div style="text-align:center; font-size:2.2em;line-height:30px;"><b>' . date('jS', $timestamp) . '</b></div>
+				<div style="text-align:right; font-size:.85em;">' . date('Y', $timestamp) . ' &nbsp;</div>
 				</td>
 			</tr>
 			</table>

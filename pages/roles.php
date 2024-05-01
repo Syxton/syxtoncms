@@ -32,7 +32,7 @@ global $CFG, $MYVARS, $USER, $ROLES;
 															 WHERE ra.confirm = 0 AND ra.pageid='$pageid')
 						 AND u.userid NOT IN (SELECT ra.userid
 							 											FROM roles_assignment ra
-																	 WHERE ra.roleid = ".$ROLES->none."
+																	 WHERE ra.roleid = " . $ROLES->none."
 																	 	  OR (ra.pageid='$pageid' AND ra.roleid <= '$myroleid'))
         ORDER BY u.lname";
 

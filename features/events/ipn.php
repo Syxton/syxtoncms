@@ -1,5 +1,11 @@
 <?php
-if (!isset($CFG)) { include('../../config.php'); }
+if (!isset($CFG)) {
+  $sub = '../';
+  while (!file_exists($sub . 'config.php')) {
+      $sub .= '../';
+  }
+  include($sub . 'config.php'); 
+}
 include_once($CFG->dirroot . '/lib/header.php');
 if (!isset($EVENTSLIB)) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 
@@ -38,7 +44,7 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, $req);
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 1);
 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
 curl_setopt($ch, CURLOPT_FORBID_REUSE, 1);
-curl_setopt($ch, CURLOPT_HTTPHEADER, array('Connection: Close'));
+curl_setopt($ch, CURLOPT_HTTPHEADER, ['Connection: Close']);
 
 
 // In wamp like environments that do not come bundled with root authority certificates,
@@ -68,12 +74,12 @@ if (strcmp ($res, "VERIFIED") == 0) {
 	if (!empty($txid) && !get_db_row("SELECT * FROM logfile WHERE feature='events' AND description='Paypal' AND info='$txid'")) {
 		$regids = $keyarray['custom'];
 		$regids = explode(":", $regids);
-		$i=0;
+		$i = 0;
 		while (isset($regids[$i])) {
       $regid = dbescape($regids[$i]);
-      $add = $_POST["mc_gross_".($i+1)];
+      $add = $_POST["mc_gross_" . ($i + 1)];
 			$paid = get_db_field("value", "events_registrations_values", "elementname='paid' AND regid='$regid'");
-			$SQL = "UPDATE events_registrations_values SET value='".((float) $paid + (float) $add)."' WHERE elementname='paid' AND regid='$regid'";
+			$SQL = "UPDATE events_registrations_values SET value='" . ((float) $paid + (float) $add) . "' WHERE elementname='paid' AND regid='$regid'";
 			execute_db_sql($SQL);
 
       // If payment is made, it is no longer in queue.
@@ -82,10 +88,12 @@ if (strcmp ($res, "VERIFIED") == 0) {
 
       // Make an entry for this transaction that links it to this registration.
       $eventid = get_db_field("eventid","events_registrations_values","regid='$regid'"); // Get eventid.
-      $params = array("date" => get_timestamp(),
-                    "amount" => $add,
-                      "txid" => $txid);
-      $SQL = "INSERT INTO events_registrations_values (eventid, elementname, regid, value) VALUES('$eventid','tx','$regid','".dbescape(serialize($params))."')";
+      $params = [
+        "date" => get_timestamp(),
+        "amount" => $add,
+        "txid" => $txid,
+      ];
+      $SQL = "INSERT INTO events_registrations_values (eventid, elementname, regid, value) VALUES('$eventid','tx','$regid','" . dbescape(serialize($params)) . "')";
       execute_db_sql($SQL);
 
       $touser = new \stdClass;

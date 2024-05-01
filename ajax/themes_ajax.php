@@ -41,24 +41,38 @@ global $CFG, $MYVARS, $USER;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
 
 	$pageid = $pageid == $CFG->SITEID ? 0 : $pageid;
-
+	$styles = [];
 	if ($feature == "page") {
 		$default_list = get_custom_styles($pageid, $feature);
-		$i=0;
 		foreach ($default_list as $style) {
-			$styles[$i] = [false, false, "$pageid", false, $style[1], dbescape($MYVARS->GET[$style[1]]), '0', '0'];
-			$i++;
+			$styles[] = [
+				"pageid" => $pageid,
+				"attribute" => $style[1],
+				"value" => dbescape($MYVARS->GET[$style[1]]),
+				"themeid" => '0',
+				"forced" =>'0',
+			];
 		}
 	} else {
 		$default_list = get_custom_styles($pageid, $feature, $featureid);
 		foreach ($default_list as $style) {
-			$styles[$i] = [false, "$feature", "$pageid", $featureid, $style[1], dbescape($MYVARS->GET[$style[1]]), '0', '0'];
-			$i++;
+			$styles[] = [
+				"feature" => $feature,
+				"pageid" => $pageid,
+				"featureid" => $featureid,
+				"attribute" => $style[1],
+				"value" => dbescape($MYVARS->GET[$style[1]]),
+				"themeid" => '0',
+				"forced" =>'0',
+			];
 		}
 	}
 
-	if (make_or_update_styles_array($styles)) { echo "Saved";
-	} else { echo "Failed"; }
+	if (make_or_update_styles_array($styles)) {
+		echo "Saved";
+	} else {
+		echo "Failed";
+	}
 }
 
 function preview() {
@@ -93,7 +107,7 @@ global $CFG, $MYVARS, $USER, $STYLES;
 		}
 		$STYLES->$feature = $temparray;
 
-		include_once($CFG->dirroot . '/features/'.$feature.'/'.$feature.'lib.php');
+		include_once($CFG->dirroot . '/features/' . $feature . '/' . $feature . 'lib.php');
 		$function = "display_$feature";
 		echo $function($pageid, "side", $featureid);
 		unset($STYLES->preview);
@@ -134,10 +148,10 @@ global $CFG, $MYVARS, $USER;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
 
 	//Save selected Theme
-	if ($themeid == "" && $pageid != $CFG->SITEID) {
+	if ($themeid === "" && $pageid != $CFG->SITEID) {
 		execute_db_sql("DELETE FROM settings WHERE pageid='$pageid' AND setting_name='themeid'");
 	} else {
-		make_or_update_setting(false, ["feature" => "page", "pageid" => $pageid, "setting_name" => "themeid"], $themeid);
+		make_or_update_setting(false, ["type" => "page", "pageid" => $pageid, "setting_name" => "themeid"], $themeid);
 	}
 
 	//Page has theme selected show themes

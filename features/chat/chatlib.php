@@ -7,7 +7,13 @@
 * Revision: 0.3.7
 ***************************************************************************/
 
-if (!isset($LIBHEADER)) { if (file_exists('./lib/header.php')) { include('./lib/header.php'); }elseif (file_exists('../lib/header.php')) { include('../lib/header.php'); }elseif (file_exists('../../lib/header.php')) { include('../../lib/header.php'); }}
+if (!isset($LIBHEADER)) {
+	$sub = './';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == './' ? '../' : $sub . '../';
+	}
+	include($sub . 'lib/header.php'); 
+}
 $CHATLIB = true;
 
 function display_chat($pageid, $area, $featureid) {
@@ -30,7 +36,7 @@ global $CFG, $USER, $ROLES, $PAGE;
 	if ((is_logged_in() && user_has_ability_in_page($USER->userid,"chat", $pageid)) || (!is_logged_in() && role_has_ability_in_page($ROLES->visitor,"chat", $pageid))) {
         $styles=get_styles($pageid, $PAGE->themeid);
 		if ($area == "middle") { 
-		  $content .= '<div style="width:100%;"><iframe id="myframe" onload="resizeCaller();" src="'.$CFG->wwwroot.'/features/chat/plugin/index.php?pageid='.$pageid.'" frameborder="0" style="background-color:'.$styles['contentbgcolor'].';overflow:hidden;height:500px;width:100%;"></iframe></div>';
+		  $content .= '<div style="width:100%;"><iframe id="myframe" onload="resizeCaller();" src="' . $CFG->wwwroot . '/features/chat/plugin/index.php?pageid=' . $pageid . '" frameborder="0" style="background-color:' . $styles['contentbgcolor'] . ';overflow:hidden;height:500px;width:100%;"></iframe></div>';
 		} else { 
 		  $content .= '<span class="centered_span">Cannot be used as a side panel.</span>'; 
         }

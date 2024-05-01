@@ -153,7 +153,7 @@ global $CFG, $MYVARS, $USER;
   $SQL .= $limit; //Limit to one page of return.
   $pages = get_db_result($SQL);
 
-  $count = $total > (($pagenum+1) * $CFG->sitesearch->perpage) ? $CFG->sitesearch->perpage : $total - (($pagenum) * $CFG->sitesearch->perpage); //get the amount returned...is it a full page of results?
+  $count = $total > (($pagenum + 1) * $CFG->sitesearch->perpage) ? $CFG->sitesearch->perpage : $total - (($pagenum) * $CFG->sitesearch->perpage); //get the amount returned...is it a full page of results?
   $amountshown = $firstonpage + $CFG->sitesearch->perpage < $total ? $firstonpage + $CFG->sitesearch->perpage : $total;
 
   $params = [ "resultsfound" => ($count > 0),
@@ -249,7 +249,7 @@ global $CFG, $MYVARS, $USER;
   $total = get_db_count($SQL); //get the total for all pages returned.
   $SQL .= $limit; //Limit to one page of return.
   $users = get_db_result($SQL);
-  $count = $total > (($pagenum+1) * $CFG->sitesearch->perpage) ? $CFG->sitesearch->perpage : $total - (($pagenum) * $CFG->sitesearch->perpage); //get the amount returned...is it a full page of results?
+  $count = $total > (($pagenum + 1) * $CFG->sitesearch->perpage) ? $CFG->sitesearch->perpage : $total - (($pagenum) * $CFG->sitesearch->perpage); //get the amount returned...is it a full page of results?
   $amountshown = $firstonpage + $CFG->sitesearch->perpage < $total ? $firstonpage + $CFG->sitesearch->perpage : $total;
 
   $params = [ "resultsfound" => ($count > 0),
@@ -376,7 +376,7 @@ global $CFG, $MYVARS, $USER;
   $SQL .= $limit; //Limit to one page of return.
   $pages = get_db_result($SQL);
 
-  $count = $total > (($pagenum+1) * $CFG->sitesearch->perpage) ? $CFG->sitesearch->perpage : $total - (($pagenum) * $CFG->sitesearch->perpage); //get the amount returned...is it a full page of results?
+  $count = $total > (($pagenum + 1) * $CFG->sitesearch->perpage) ? $CFG->sitesearch->perpage : $total - (($pagenum) * $CFG->sitesearch->perpage); //get the amount returned...is it a full page of results?
   $amountshown = $firstonpage + $CFG->sitesearch->perpage < $total ? $firstonpage + $CFG->sitesearch->perpage : $total;
 
   $params = [ "resultsfound" => ($count > 0),
@@ -513,11 +513,21 @@ function get_inviteable_pages() {
 global $CFG, $MYVARS;
   $inviter = $MYVARS->GET["inviter"];
   $invitee = $MYVARS->GET["invitee"];
-  $pages = user_has_ability_in_pages($inviter, "invite", false, false); //list pages you have invite permissions in
-  $notthese = user_has_ability_in_pages($invitee, "viewpages", false, false); //remove pages that the user already has access to
 
-  $invite_button = template_use("tmp/page_ajax.template", ["invitee" => $invitee], "get_inviteable_button_template");
-  echo make_select("page_invite_list", $pages, "pageid", "name", null, $invite_button, true, 1 , "width:150px;", "", $notthese);
+  $p = [
+    "properties" => [
+      "name" => "page_invite_list",
+      "id" => "page_invite_list",
+      "style" => "width:150px;",
+      "onchange" => template_use("tmp/page_ajax.template", ["invitee" => $invitee], "get_inviteable_button_template"),
+    ],
+    "values" => user_has_ability_in_pages($inviter, "invite", false, false),
+    "valuename" => "pageid",
+    "displayname" => "name",
+    "firstoption" => "",
+    "exclude" => user_has_ability_in_pages($invitee, "viewpages", false, false),
+  ];
+  echo make_select($p);
 }
 
 function invite_user() {

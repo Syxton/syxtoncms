@@ -303,7 +303,7 @@ function groups_SQL($userid, $pageid, $ability='a.ability', $feature=false, $fea
 	if (empty($hierarchy)) { $groupsSQL[0] = ""; $groupsSQL[1] = "";	return $groupsSQL; }
 
 	//Add quotes around a specific ability or link to SQL variable if not given
-	$ability = $ability == 'a.ability' ? 'a.ability' : "'".$ability."'";
+	$ability = $ability == 'a.ability' ? 'a.ability' : "'" . $ability."'";
 
 	//Decide which table the SQL requires
 	$table = $feature && $featureid ? 'roles_ability_perfeature_pergroup' : 'roles_ability_pergroup';
@@ -459,7 +459,7 @@ global $CFG;
 			];
 			$abilities .= template_use("tmp/roles.template", $params, "print_abilities_ability");
 
-			$rightslist .= $rightslist == "" ? $row['ability'] : "**".$row['ability'];
+			$rightslist .= $rightslist == "" ? $row['ability'] : "**" . $row['ability'];
 			$section = $row['section']; // Remmember last section so we know when a new section starts.
 			$i++;
 		}

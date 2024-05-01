@@ -6,7 +6,13 @@
 * Date: 12/22/2015
 * Revision: 2.4.9
 ***************************************************************************/
-if (!isset($LIBHEADER)) { if (file_exists('./lib/header.php')) { include('./lib/header.php'); }elseif (file_exists('../lib/header.php')) { include('../lib/header.php'); }elseif (file_exists('../../lib/header.php')) { include('../../lib/header.php'); }}
+if (!isset($LIBHEADER)) {
+	$sub = './';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == './' ? '../' : $sub . '../';
+	}
+	include($sub . 'lib/header.php'); 
+}
 $HTMLLIB = true;
 
 function display_html($pageid, $area, $featureid) {
@@ -33,18 +39,18 @@ global $CFG, $USER;
 			if ($settings->html->$featureid->allowcomments->setting) {
 				$hidebuttons = $htmlonly ? true : false;
 				$comments = $abilities->viewcomments->allow && $settings->html->$featureid->allowcomments->setting ? get_html_comments($row['htmlid'], $pageid, $hidebuttons, $limit) : '';
-        $makecomment = $abilities->makecomments->allow ? make_modal_links(array("title"=>"Comment","path"=>$CFG->wwwroot."/features/html/html.php?action=makecomment&amp;pageid=$pageid&amp;htmlid=".$row['htmlid'],"styles"=>"float:right;","refresh"=>"true")) : '';
+        $makecomment = $abilities->makecomments->allow ? make_modal_links(array("title" => "Comment","path" => $CFG->wwwroot . "/features/html/html.php?action=makecomment&amp;pageid=$pageid&amp;htmlid=" . $row['htmlid'],"styles" => "float:right;","refresh" => "true")) : '';
       }
 			$nomargin = "";
 			if (isset($settings->html->$featureid->allowfullscreen->setting) && $settings->html->$featureid->allowfullscreen->setting == 1) { // if fullscreen option is on, remove margin.
 				$nomargin = 'style="margin:-8px"';
 			}
-			$html = '<div class="htmlblock" '.$nomargin.'>' . fullscreen_toggle(filter(stripslashes($row['html']), $featureid, $settings, $area), $featureid, $settings) . '</div><br />';
+			$html = '<div class="htmlblock" ' . $nomargin . '>' . fullscreen_toggle(filter(stripslashes($row['html']), $featureid, $settings, $area), $featureid, $settings) . '</div><br />';
     	//if viewing from rss feed
 			if ($htmlonly) {
-        $returnme .= '<table style="width:100%;border:1px solid silver;padding:10px;"><tr><th>'. $settings->html->$featureid->feature_title->setting.'</th></tr><tr><td><br /><br />' . $html . $comments . '</td></tr></table>';
+        $returnme .= '<table style="width:100%;border:1px solid silver;padding:10px;"><tr><th>' . $settings->html->$featureid->feature_title->setting . '</th></tr><tr><td><br /><br />' . $html . $comments . '</td></tr></table>';
       } else { //regular html feature viewing
-        $stopped_editing = '<input type="hidden" id="html_'.$featureid.'_stopped_editing" value="ajaxapi(\'/features/html/html_ajax.php\',\'stopped_editing\',\'&amp;htmlid='.$featureid.'&amp;userid=0\',function() {if (xmlHttp.readyState == 4) { do_nothing(); }}, true);" />';
+        $stopped_editing = '<input type="hidden" id="html_' . $featureid . '_stopped_editing" value="ajaxapi(\'/features/html/html_ajax.php\',\'stopped_editing\',\'&amp;htmlid=' . $featureid . '&amp;userid=0\',function() {if (xmlHttp.readyState == 4) { do_nothing(); }}, true);" />';
         if (is_logged_in() && $settings->html->$featureid->enablerss->setting) {
 					$modalsettings = array("title" => "RSS Feed", "path" => $CFG->wwwroot . "/pages/rss.php?action=rss_subscribe_feature&amp;pageid=$pageid&amp;featureid=$featureid&amp;feature=html",
 																 "styles" => "position: relative;top: 4px;padding-right:2px;", "iframe" => "true",
@@ -106,7 +112,7 @@ global $CFG;
 					$icon = "save.png";
 					$filetypes = '/([\.[pP][dD][fF]|\.[dD][oO][cC]|\.[rR][tT][fF]|\.[pP][sS]|\.[pP][pP][tT]|\.[pP][pP][sS]|\.[tT][xX][tT]|\.[sS][xX][cC]|\.[oO][dD][sS]|\.[xX][lL][sS]|\.[oO][dD][tT]|\.[sS][xX][wW]|\.[oO][dD][pP]|\.[sS][xX][iI]])/';
 					if (preg_match($filetypes, $match[2])) {
-						if (strstr($match[2], $CFG->directory.'/userfiles') || strstr($match[2], $CFG->wwwroot)) { // internal link.
+						if (strstr($match[2], $CFG->directory . '/userfiles') || strstr($match[2], $CFG->wwwroot)) { // internal link.
 							$url = $CFG->wwwroot . strstr($match[2], '/userfiles/');
 						} else { // external link.
 							$url = $match[2];
@@ -142,7 +148,7 @@ global $CFG;
 
 						$link = "";
 						$text = $match[4].$match[5];
-						if (strstr($url, $CFG->directory.'/userfiles') && 
+						if (strstr($url, $CFG->directory . '/userfiles') && 
 							strstr($url, $CFG->wwwroot) && 
 							!file_exists($CFG->docroot . strstr($url, '/userfiles/'))) { // internal link check.
 							$icon = "deny.png";
@@ -151,9 +157,9 @@ global $CFG;
 							$url = "";
 						} else {
 							$title = $url;
-							$link = $CFG->wwwroot.'/scripts/download.php?file='.$url;
+							$link = $CFG->wwwroot . '/scripts/download.php?file=' . $url;
 						}
-						$html = str_replace($match[0],'<a title="'.$title.'" href="'.$link.'" onclick="blur();"><img src="'.$CFG->wwwroot.'/images/'.$icon.'" alt="Save" /></a>&nbsp;'.make_modal_links(array("text" => $text, "title" => $title, "path" => $CFG->wwwroot."/pages/ipaper.php?action=view_ipaper&amp;doc_url=".base64_encode($url),"height"=>"80%","width"=>"80%")), $html);
+						$html = str_replace($match[0],'<a title="' . $title . '" href="' . $link . '" onclick="blur();"><img src="' . $CFG->wwwroot . '/images/' . $icon . '" alt="Save" /></a>&nbsp;' . make_modal_links(array("text" => $text, "title" => $title, "path" => $CFG->wwwroot . "/pages/ipaper.php?action=view_ipaper&amp;doc_url=" . base64_encode($url),"height" => "80%","width" => "80%")), $html);
 					}
 				}
 			}
@@ -173,18 +179,18 @@ global $CFG;
 				$filetypes = '/([\.[aA][aA][cC]|\.[mM][4][aA])/';
 				if (preg_match($filetypes, $match[2])) {
 					//make internal links full paths
-					$url = strstr($match[2], $CFG->directory.'/userfiles') && !strstr($match[2], $CFG->wwwroot) ? str_replace($CFG->directory.'/userfiles', $CFG->wwwroot.'/userfiles', $match[2]) : $match[2];
+					$url = strstr($match[2], $CFG->directory . '/userfiles') && !strstr($match[2], $CFG->wwwroot) ? str_replace($CFG->directory . '/userfiles', $CFG->wwwroot . '/userfiles', $match[2]) : $match[2];
 					//remove target from urls
 					if (preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/', $url, $target, PREG_OFFSET_CAPTURE)) { $url = str_replace($target[0], "", $url);}
 					$url = preg_replace('/([\'|\"])/', '', $url);
 
 					$url = str_replace('\\', '', $url);
 					$info = explode(".", $match[4].$match[5]);
-					$script = "var s$i = new SWFObject('".$CFG->wwwroot."/scripts/filters/video/player.swf','ply','290','30','9','#ffffff');
+					$script = "var s$i = new SWFObject('" . $CFG->wwwroot . "/scripts/filters/video/player.swf','ply','290','30','9','#ffffff');
 							   s$i.addParam('allowfullscreen','true');
 							   s$i.addParam('allowscriptaccess','always');
 							   s$i.addParam('wmode','opaque');
-							   s$i.addParam('flashvars','file=".stripslashes(urlencode($url))."&amp;skin=".$CFG->wwwroot."/scripts/filters/video/skins/stylish_slim.swf');
+							   s$i.addParam('flashvars','file=" . stripslashes(urlencode($url)) . "&amp;skin=" . $CFG->wwwroot . "/scripts/filters/video/skins/stylish_slim.swf');
 							   s$i.write('mediaspace_s$i');";
 					$html = str_replace($match[0], js_script_wrap($CFG->wwwroot . "/scripts/filters/video/swfobject.js") . "<span id='mediaspace_s$i'></span>" . js_code_wrap($script), $html);
 				}
@@ -199,7 +205,7 @@ global $CFG;
 
 					$found = true;
 					//make internal links full paths
-					$url = strstr($match[2], $CFG->directory.'/userfiles') && !strstr($match[2], $CFG->wwwroot) ? str_replace($CFG->directory.'/userfiles', $CFG->wwwroot.'/userfiles', $match[2]) : $match[2];
+					$url = strstr($match[2], $CFG->directory . '/userfiles') && !strstr($match[2], $CFG->wwwroot) ? str_replace($CFG->directory . '/userfiles', $CFG->wwwroot . '/userfiles', $match[2]) : $match[2];
 					//remove target from urls
 					if (preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/', $url, $target, PREG_OFFSET_CAPTURE)) { $url = str_replace($target[0], "", $url);}
 					$url = preg_replace('/([\'|\"])/', '', $url);
@@ -207,12 +213,12 @@ global $CFG;
 					$info = explode(".", $match[4].$match[5]);
 					$info = explode("-", $info[0]);
 					$script = "AudioPlayer.embed('audioplayer_$featureid"."_$i"."', {
-									soundFile: '".stripslashes($url)."',
+									soundFile: '" . stripslashes($url) . "',
 									titles: '$info[1]',
 									artists: '$info[0]',
 									autostart: 'no'
 								});";
-					$html = str_replace($match[0], $player ."<span id='audioplayer_$featureid"."_$i"."'></span>" . js_code_wrap($script), $html);
+					$html = str_replace($match[0], $player . "<span id='audioplayer_$featureid"."_$i"."'></span>" . js_code_wrap($script), $html);
 				}
 			}
 		$i++;
@@ -230,7 +236,7 @@ global $CFG;
 				$filetypes = '/([\.[fF][lL][vV]|\.[mM][pP][4])/';
 				if (preg_match($filetypes, $match[2])) {
 					//make internal links full paths
-					$url = strstr($match[2], $CFG->directory.'/userfiles') && !strstr($match[2], $CFG->wwwroot) ? str_replace($CFG->directory.'/userfiles', $CFG->wwwroot.'/userfiles', $match[2]) : $match[2];
+					$url = strstr($match[2], $CFG->directory . '/userfiles') && !strstr($match[2], $CFG->wwwroot) ? str_replace($CFG->directory . '/userfiles', $CFG->wwwroot . '/userfiles', $match[2]) : $match[2];
 					//remove target from urls
 					if (preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/', $url, $target, PREG_OFFSET_CAPTURE)) { $url = str_replace($target[0], "", $url);}
 					$url = preg_replace('/([\'|\"])/', '', $url);
@@ -277,7 +283,7 @@ global $CFG;
 			if (!strstr($url,'#noembed')) {
 				if (!strstr($match[0],'javascript:') && strlen($id) > 0) {
 					if (preg_match('/((http:\/\/)?(?:youtu\.be\/|(?:[a-z]{2,3}\.)?youtube\.com\/v\/)([\w-]{11}).*|http:\/\/(?:youtu\.be\/|(?:[a-z]{2,3}\.)?youtube\.com\/watch(?:\?|#\!)v=)([\w-]{11}).*)/i', $match[0]) || preg_match('/(\s*\.[yY][oO][uU][tT][uU][bB][eE]\.[cC][oO][mM][\/]\s*)/', $url)) {
-							$html = str_replace($match[0], '<div style="'.($area == "middle" ? 'max-width:500px;margin:auto;' : '').'"><div style="width: 100%; padding-top: 60%; margin-bottom: 5px; position: relative;"><iframe style="position: absolute; width: 100%; height: 100%; top: 0; left: 0;" src="//www.youtube.com/embed/'.$id.'"></iframe></div></div>', $html);
+							$html = str_replace($match[0], '<div style="' . ($area == "middle" ? 'max-width:500px;margin:auto;' : '') . '"><div style="width: 100%; padding-top: 60%; margin-bottom: 5px; position: relative;"><iframe style="position: absolute; width: 100%; height: 100%; top: 0; left: 0;" src="//www.youtube.com/embed/' . $id . '"></iframe></div></div>', $html);
 					}
 				}
 			}
@@ -314,9 +320,9 @@ global $CFG;
 										$fileurl = $url . '/' . $file; // Use web url instead of local link.
 										$caption = isset($captions[$file]) ? $captions[$file] : $file; // Either a caption or the filename
 										$display = empty($gallery) ? "" : "display:none;";
-										$name = empty($display) ? '<img style="width:17px;height:17px;vertical-align: middle;" src="'.$CFG->wwwroot.'/images/gallery.png" /> ' . $match[4] : $match[4]; // Use text inside original hyperlink.
+										$name = empty($display) ? '<img style="width:17px;height:17px;vertical-align: middle;" src="' . $CFG->wwwroot . '/images/gallery.png" /> ' . $match[4] : $match[4]; // Use text inside original hyperlink.
 										$modalsettings = array("id" => "autogallery_$i", "title" => $caption, "text" => $name, "gallery" => $galleryid, "path" => $fileurl, "styles" => $display);
-							      $gallery .= empty($display) ? make_modal_links($modalsettings) : '<a href="'.$fileurl.'" title="'.$caption.'" data-rel="'.$galleryid.'" style="'.$display.'"></a>';
+							      $gallery .= empty($display) ? make_modal_links($modalsettings) : '<a href="' . $fileurl . '" title="' . $caption . '" data-rel="' . $galleryid . '" style="' . $display . '"></a>';
 									}
 								}
 							}
@@ -370,7 +376,7 @@ function youtube_id_from_url($url) {
 
 function insert_blank_html($pageid, $settings = false) {
 global $CFG;
-	if ($featureid = execute_db_sql("INSERT INTO html (pageid,html,dateposted) VALUES('$pageid', '','".get_timestamp()."')")) {
+	if ($featureid = execute_db_sql("INSERT INTO html (pageid,html,dateposted) VALUES('$pageid', '','" . get_timestamp() . "')")) {
 		$area = get_db_field("default_area", "features", "feature='html'");
 		$sort = get_db_count("SELECT * FROM pages_features WHERE pageid='$pageid' AND area='$area'") + 1;
 		execute_db_sql("INSERT INTO pages_features (pageid,feature,sort,area,featureid) VALUES('$pageid','html','$sort','$area','$featureid')");
@@ -388,9 +394,9 @@ global $CFG, $USER;
 	if ($perpage) {
 		$total = get_db_count("SELECT * FROM html_comments WHERE htmlid=$htmlid");
 		$searchvars = get_search_page_variables($total, $perpage, $pagenum);
-		$prev = $searchvars["prev"] ? '<a href="javascript: document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/html/html_ajax.php\',\'commentspage\',\'&pagenum=' . ($pagenum - 1) . '&perpage='.$perpage.'&pageid='.$pageid.'&htmlid='.$htmlid.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer_'."html_$htmlid".'\'); document.getElementById(\'loading_overlay'."html_$featureid".'\').style.visibility=\'hidden\'; }}, true); " onmouseup="this.blur()">Previous</a>' : "";
+		$prev = $searchvars["prev"] ? '<a href="javascript: $(\'#loading_overlay_html_' . $htmlid . '\').show(); ajaxapi(\'/features/html/html_ajax.php\',\'commentspage\',\'&pagenum=' . ($pagenum - 1) . '&perpage=' . $perpage . '&pageid=' . $pageid . '&htmlid=' . $htmlid . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer_html_' . $htmlid . '\'); $(\'#loading_overlay_html_' . $htmlid . '\').hide(); }}, true); " onmouseup="this.blur()">Previous</a>' : "";
 	    $info = $searchvars["info"];
-    	$next = $searchvars["next"] ? '<a href="javascript: document.getElementById(\'loading_overlay\').style.visibility=\'visible\'; ajaxapi(\'/features/html/html_ajax.php\',\'commentspage\',\'&pagenum=' . ($pagenum + 1) . '&perpage='.$perpage.'&pageid='.$pageid.'&htmlid='.$htmlid.'\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer'."html_$htmlid".'\'); document.getElementById(\'loading_overlay'."html_$featureid".'\').style.visibility=\'hidden\'; }}, true);" onmouseup="this.blur()">Next</a>' : "";
+    	$next = $searchvars["next"] ? '<a href="javascript: $(\'#loading_overlay_html_' . $htmlid . '\').show(); ajaxapi(\'/features/html/html_ajax.php\',\'commentspage\',\'&pagenum=' . ($pagenum + 1) . '&perpage=' . $perpage . '&pageid=' . $pageid . '&htmlid=' . $htmlid . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer_html_' . $htmlid . '\'); $(\'#loading_overlay_html_' . $htmlid . '\').hide(); }}, true);" onmouseup="this.blur()">Next</a>' : "";
     	$arrows = '<table style="width:100%;"><tr><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;font-size:.75em;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><br /><br />';
 		$limit = "LIMIT " .$searchvars["firstonpage"] . "," . $perpage;
 	} else { $limit = "LIMIT $perpage";}
@@ -398,42 +404,52 @@ global $CFG, $USER;
 	$SQL = "SELECT * FROM html_comments WHERE htmlid=$htmlid ORDER BY commentid DESC $limit";
 
 	if ($result = get_db_result($SQL)) {
-		$header = '<div class="button" id="hmtl_'.$htmlid.'_hide_button" style="display:block;margin-right:auto;margin-left:auto;font-size:.8em;width:90px;" onclick="hide_show_buttons(\'hmtl_'.$htmlid.'_comments_button\', true); hide_show_buttons(\'hmtl_'.$htmlid.'_comments\', true)">Hide Comments</div><br />';
+		$header = '<div class="button" id="hmtl_' . $htmlid . '_hide_button" style="display:block;margin-right:auto;margin-left:auto;font-size:.8em;width:90px;" onclick="hide_show_buttons(\'hmtl_' . $htmlid . '_comments_button\', true); hide_show_buttons(\'hmtl_' . $htmlid . '_comments\', true)">Hide Comments</div><br />';
 
 		while ($row = fetch_row($result)) {
 			$makecomment = $makereply = $editcomment = $deletecomment = $username = "";
 			$username = !$row['userid'] ? "Visitor" : get_user_name($row['userid']);
 			$reply = get_html_replies($row['commentid'], $hidebuttons, $pageid);
-			if (!$hidebuttons) { $deletecomment = user_has_ability_in_page($USER->userid,"deletecomments", $pageid) || ($USER->userid == $row["userid"] && user_has_ability_in_page($USER->userid,"makecomments", $pageid)) ? make_modal_links(array("title"=>"Delete Comment","path"=>$CFG->wwwroot."/features/html/html.php?action=deletecomment&amp;userid=".$row["userid"].'&amp;pageid='.$pageid.'&amp;commentid='.$row['commentid'],"refresh"=>"true","image"=>$CFG->wwwroot."/images/delete.png")) : "";}
-			if (!$hidebuttons && !strlen($reply) > 0 && user_has_ability_in_page($USER->userid,"makereplies", $pageid)) { $makereply = make_modal_links(array("title"=>"Reply","path"=>$CFG->wwwroot."/features/html/html.php?action=makereply&amp;pageid=$pageid&amp;commentid=".$row['commentid'],"refresh"=>"true","styles"=>"float:right;padding: 2px;"));}
-			if (!$hidebuttons) { $editcomment = user_has_ability_in_page($USER->userid,"editanycomment", $pageid) || ($USER->userid == $row["userid"] && user_has_ability_in_page($USER->userid,"makecomments", $pageid)) ? '<br />'.make_modal_links(array("title"=>"Edit","path"=>$CFG->wwwroot."/features/html/html.php?action=editcomment&amp;pageid=$pageid&amp;commentid=".$row['commentid'].'&amp;userid='.$row["userid"],"refresh"=>"true","styles"=>"float:left;padding: 2px;")) : ''; }
+			if (!$hidebuttons) { $deletecomment = user_has_ability_in_page($USER->userid,"deletecomments", $pageid) || ($USER->userid == $row["userid"] && user_has_ability_in_page($USER->userid,"makecomments", $pageid)) ? make_modal_links(array("title" => "Delete Comment","path" => $CFG->wwwroot . "/features/html/html.php?action=deletecomment&amp;userid=" . $row["userid"] . '&amp;pageid=' . $pageid . '&amp;commentid=' . $row['commentid'],"refresh" => "true","image" => $CFG->wwwroot . "/images/delete.png")) : "";}
+			if (!$hidebuttons && !strlen($reply) > 0 && user_has_ability_in_page($USER->userid,"makereplies", $pageid)) { $makereply = make_modal_links(array("title" => "Reply","path" => $CFG->wwwroot . "/features/html/html.php?action=makereply&amp;pageid=$pageid&amp;commentid=" . $row['commentid'],"refresh" => "true","styles" => "float:right;padding: 2px;"));}
+			if (!$hidebuttons) { $editcomment = user_has_ability_in_page($USER->userid,"editanycomment", $pageid) || ($USER->userid == $row["userid"] && user_has_ability_in_page($USER->userid,"makecomments", $pageid)) ? '<br />' . make_modal_links(array("title" => "Edit","path" => $CFG->wwwroot . "/features/html/html.php?action=editcomment&amp;pageid=$pageid&amp;commentid=" . $row['commentid'] . '&amp;userid=' . $row["userid"],"refresh" => "true","styles" => "float:left;padding: 2px;")) : ''; }
 			$comments .=
 			'
 			<table class="blogbox">
 				<tr class="blogreplyheader">
 					<td style="text-align:left;vertical-align:middle;">
-						'.$username.' says
+						' . $username . ' says
 					</td>
 					<td style="text-align:right;">
-						'.$deletecomment.'
+						' . $deletecomment . '
 					</td>
 				</tr>
 				<tr class="blogreply">
 					<td colspan="2">
-					'.$row['comment'].'<br />
-					'.$editcomment.'&nbsp;
-					'.$makereply.'
+					' . $row['comment'] . '<br />
+					' . $editcomment . '&nbsp;
+					' . $makereply . '
 					</td>
 				</tr>
-				'.$reply.'
+				' . $reply . '
 			</table>
 			';
 		}
 		//Don't make the overlay div over and over'
-		if ($original) { $comments = make_search_box($arrows.$comments,"html_$htmlid");
-        } else { $comments = $arrows.$comments; }
+		if ($original) {
+			$comments = make_search_box($arrows . $comments, "html_$htmlid");
+        } else {
+			$comments = $arrows.$comments; 
+		}
 
-		if ($hide) { $comments = '<div id="hmtl_'.$htmlid.'_comments_button" class="button" style="display:block;margin-right:auto;margin-left:auto;font-size:.8em;width:90px;" onclick="hide_show_buttons(\'hmtl_'.$htmlid.'_comments_button\', true); hide_show_buttons(\'hmtl_'.$htmlid.'_comments\', true)">Show Comments</div><div id="hmtl_'.$htmlid.'_comments" style="display:none;">' . $header . $comments . '</div>'; }
+		if ($hide) {
+			$comments = '<div id="hmtl_' . $htmlid . '_comments_button" class="button" style="display:block;margin-right:auto;margin-left:auto;font-size:.8em;width:90px;" onclick="hide_show_buttons(\'hmtl_' . $htmlid . '_comments_button\', true); hide_show_buttons(\'hmtl_' . $htmlid . '_comments\', true)">
+							Show Comments
+						</div>
+						<div id="hmtl_' . $htmlid . '_comments" style="display:none;">
+							' . $header . $comments . '
+						</div>';
+		}
 	}
 	return $comments;
 }
@@ -445,22 +461,22 @@ global $CFG, $USER;
 	if ($result = get_db_result($SQL)) {
 		while ($row = fetch_row($result)) {
 			$username = get_user_name($row['userid']);
-			if (!$hidebuttons) { $editreply = user_has_ability_in_page($USER->userid,"makereplies", $pageid) ? '<br />'.make_modal_links(array("title"=>"Edit","path"=>$CFG->wwwroot."/features/html/html.php?action=editreply&amp;pageid=$pageid&amp;commentid=$commentid&amp;replyid=".$row["replyid"],"refresh"=>"true","styles"=>"float:left;padding: 2px;")).'<br />' : '';}
-			if (!$hidebuttons) { $deletereply = user_has_ability_in_page($USER->userid,"deletereply", $pageid) ? make_modal_links(array("title"=>"Delete Reply","path"=>$CFG->wwwroot."/features/html/html.php?action=deletereply&amp;pageid=$pageid&amp;replyid=".$row["replyid"],"refresh"=>"true","image"=>$CFG->wwwroot."/images/delete.png")) : "";}
+			if (!$hidebuttons) { $editreply = user_has_ability_in_page($USER->userid,"makereplies", $pageid) ? '<br />' . make_modal_links(array("title" => "Edit","path" => $CFG->wwwroot . "/features/html/html.php?action=editreply&amp;pageid=$pageid&amp;commentid=$commentid&amp;replyid=" . $row["replyid"],"refresh" => "true","styles" => "float:left;padding: 2px;")) . '<br />' : '';}
+			if (!$hidebuttons) { $deletereply = user_has_ability_in_page($USER->userid,"deletereply", $pageid) ? make_modal_links(array("title" => "Delete Reply","path" => $CFG->wwwroot . "/features/html/html.php?action=deletereply&amp;pageid=$pageid&amp;replyid=" . $row["replyid"],"refresh" => "true","image" => $CFG->wwwroot . "/images/delete.png")) : "";}
 			$replies =
 			'
 				<tr class="blogcommentheader">
 					<td style="text-align:left;vertical-align:middle;">
-						'.$username.' replies
+						' . $username . ' replies
 					</td>
 					<td style="text-align:right;">
-						'.$deletereply.'
+						' . $deletereply . '
 					</td>
 				</tr>
 				<tr class="blogcomment">
 					<td colspan="2">
-					'.$row['reply'].'<br />
-					'.$editreply.'
+					' . $row['reply'] . '<br />
+					' . $editreply . '
 					</td>
 				</tr>
 			';
@@ -495,16 +511,16 @@ global $CFG, $USER;
 	$feature_abilities = get_user_abilities($USER->userid, $pageid,"features","html", $featureid);
 
 	$returnme = "";
-	if ($blog && !empty($feature_abilities->addfeature->allow)) { $returnme .= ' <a class="slide_menu_button" title="Add Blog Edition" onclick="if (confirm(\'Do you want to make a new blog edition?  This will move the current blog to the Blog Locker.\')) { ajaxapi(\'/features/html/html_ajax.php\',\'new_edition\',\'&amp;pageid='.$pageid.'&amp;htmlid='.$featureid.'\',function() { refresh_page(); });}"><img src="'.$CFG->wwwroot.'/images/add.png" alt="Delete Feature" /></a> '; }
+	if ($blog && !empty($feature_abilities->addfeature->allow)) { $returnme .= ' <a class="slide_menu_button" title="Add Blog Edition" onclick="if (confirm(\'Do you want to make a new blog edition?  This will move the current blog to the Blog Locker.\')) { ajaxapi(\'/features/html/html_ajax.php\',\'new_edition\',\'&amp;pageid=' . $pageid . '&amp;htmlid=' . $featureid . '\',function() { refresh_page(); });}"><img src="' . $CFG->wwwroot . '/images/add.png" alt="Delete Feature" /></a> '; }
 
-    if (!empty($html_abilities->edithtml->allow)) { $returnme .= make_modal_links(array("title"=>"Edit HTML","path"=>$CFG->wwwroot."/features/html/html.php?action=edithtml&amp;pageid=$pageid&amp;featureid=$featureid","runafter"=>"html_".$featureid."_stopped_editing","iframe"=>"true","refresh"=>"true","width"=>"950","image"=>$CFG->wwwroot."/images/edit.png","class"=>"slide_menu_button")); }
+    if (!empty($html_abilities->edithtml->allow)) { $returnme .= make_modal_links(array("title" => "Edit HTML","path" => $CFG->wwwroot . "/features/html/html.php?action=edithtml&amp;pageid=$pageid&amp;featureid=$featureid","runafter" => "html_" . $featureid."_stopped_editing","iframe" => "true","refresh" => "true","width" => "950","image" => $CFG->wwwroot . "/images/edit.png","class" => "slide_menu_button")); }
 
-    if (!$blog && user_has_ability_in_page($USER->userid,"addtolocker", $pageid)) { $returnme .= '  <a class="slide_menu_button" title="Move to Blog Locker" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'move_feature\',\'&amp;pageid='.$pageid.'&amp;featuretype='.$featuretype.'&amp;featureid='.$featureid.'&amp;direction=locker\',function() { refresh_page(); });"><img src="'.$CFG->wwwroot.'/images/vault.png" alt="Move to Blog Locker" /></a> '; }
+    if (!$blog && user_has_ability_in_page($USER->userid,"addtolocker", $pageid)) { $returnme .= '  <a class="slide_menu_button" title="Move to Blog Locker" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'move_feature\',\'&amp;pageid=' . $pageid . '&amp;featuretype=' . $featuretype . '&amp;featureid=' . $featureid . '&amp;direction=locker\',function() { refresh_page(); });"><img src="' . $CFG->wwwroot . '/images/vault.png" alt="Move to Blog Locker" /></a> '; }
 	return $returnme;
 }
 
 function html_template($html) {
-	return '<div class="html_template">'.$html.'</div>';
+	return '<div class="html_template">' . $html . '</div>';
 }
 
 function html_rss($feed, $userid, $userkey) {
@@ -514,20 +530,20 @@ global $CFG;
 	$settings = fetch_settings("html", $feed["featureid"], $feed["pageid"]);
 	if ($settings->html->$feed["featureid"]->enablerss->setting) {
 		if ($settings->html->$feed["featureid"]->blog->setting) {
-			$html = get_db_row("SELECT * FROM html WHERE htmlid='".$feed["featureid"]."'");
+			$html = get_db_row("SELECT * FROM html WHERE htmlid='" . $feed["featureid"] . "'");
 			if ($html['firstedition']) { //this is not a first edition
-				$htmlresults = get_db_result("SELECT * FROM html WHERE htmlid='".$html["firstedition"]."' OR firstedition='".$html["firstedition"]."' ORDER BY htmlid DESC LIMIT 50");
+				$htmlresults = get_db_result("SELECT * FROM html WHERE htmlid='" . $html["firstedition"] . "' OR firstedition='" . $html["firstedition"] . "' ORDER BY htmlid DESC LIMIT 50");
 			} else {
-				$htmlresults = get_db_result("SELECT * FROM html WHERE htmlid='".$html["htmlid"]."' OR firstedition='".$html["htmlid"]."' ORDER BY htmlid DESC LIMIT 50");
+				$htmlresults = get_db_result("SELECT * FROM html WHERE htmlid='" . $html["htmlid"] . "' OR firstedition='" . $html["htmlid"] . "' ORDER BY htmlid DESC LIMIT 50");
 			}
 
 			while ($html = fetch_row($htmlresults)) {
 				$settings = fetch_settings("html", $html["htmlid"], $feed["pageid"]);
-				$feeds .= fill_feed($settings->html->$html["htmlid"]->feature_title->setting . " " . date('d/m/Y', $html["dateposted"]),substr($html["html"],0,100), $CFG->wwwroot.'/features/html/html.php?action=viewhtml&key='.$userkey.'&pageid='.$feed["pageid"].'&htmlid='.$html["htmlid"], $html["dateposted"]);
+				$feeds .= fill_feed($settings->html->$html["htmlid"]->feature_title->setting . " " . date('d/m/Y', $html["dateposted"]),substr($html["html"],0,100), $CFG->wwwroot . '/features/html/html.php?action=viewhtml&key=' . $userkey . '&pageid=' . $feed["pageid"] . '&htmlid=' . $html["htmlid"], $html["dateposted"]);
 			}
 		} else {
-			$html = get_db_row("SELECT * FROM html WHERE htmlid='".$feed["featureid"]."'");
-			$feeds .= fill_feed($settings->html->$feed["featureid"]->feature_title->setting,substr($html["html"],0,100), $CFG->wwwroot.'/features/html/html.php?action=viewhtml&key='.$userkey.'&pageid='.$feed["pageid"].'&htmlid='.$feed["featureid"], $html["dateposted"]);
+			$html = get_db_row("SELECT * FROM html WHERE htmlid='" . $feed["featureid"] . "'");
+			$feeds .= fill_feed($settings->html->$feed["featureid"]->feature_title->setting,substr($html["html"],0,100), $CFG->wwwroot . '/features/html/html.php?action=viewhtml&key=' . $userkey . '&pageid=' . $feed["pageid"] . '&htmlid=' . $feed["featureid"], $html["dateposted"]);
 		}
 	}
 	return $feeds;

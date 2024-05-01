@@ -18,3 +18,27 @@ delete_pics||
   WHERE pageid = '||pageid||'
   AND pollid = '||featureid||'
 ||delete_pics
+
+get_galleries||
+  SELECT DISTINCT galleryid, galleryid, gallery_title
+  FROM pics p
+  WHERE (
+        p.pageid='||pageid||'
+        AND
+        p.featureid='||featureid||'
+        )
+  ||siteviewable{{
+    OR (p.siteviewable = 1)
+  }}siteviewable||
+  ORDER BY p.galleryid
+||get_galleries
+
+get_page_galleries||
+  SELECT *
+  FROM pics_galleries
+  WHERE galleryid IN  (
+                      SELECT galleryid
+                      FROM pics
+                      WHERE pageid='||pageid||'
+                      )
+||get_page_galleries

@@ -35,7 +35,7 @@ global $CFG, $MYVARS, $USER, $PAGE;
 	if ($feature == "page") {
 		$params["pane"] = theme_selector($pageid, $PAGE->themeid, $feature);
 	} else {
-		include_once($CFG->dirroot . '/features/'.$feature.'/'.$feature.'lib.php');
+		include_once($CFG->dirroot . '/features/' . $feature . '/' . $feature . 'lib.php');
 		$function = "display_$feature";
 		$params["pane"] = template_use("tmp/themes.template", array("left" => custom_styles_selector($pageid, $feature, $featureid), "right" => $function($pageid,"side", $featureid)), "make_template_selector_panes_template");
 	}

@@ -6,10 +6,17 @@
  * $Date: 1/30/2012
  * $Revision: .7
  ***************************************************************************/
-if (!isset($CFG)) { include('../../../../config.php'); } 
+
+if (!isset($CFG)) {
+	$sub = '../';
+	while (!file_exists($sub . 'config.php')) {
+		$sub .= '../';
+	}
+	include($sub . 'config.php'); 
+}
 include($CFG->dirroot . '/pages/header.php');
 
-if (!isset($EVENTSLIB)) include_once($CFG->dirroot . '/features/events/eventslib.php');
+if (!isset($EVENTSLIB)) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 
 //Retrieve from Javascript
 $postorget = isset($_GET["action"]) ? $_GET : $_POST;
@@ -25,10 +32,10 @@ update_user_cookie();
 
 function register() {
 global $CFG, $MYVARS, $USER, $error;
-    if (!isset($COMLIB)) { include_once($CFG->dirroot.'/lib/comlib.php'); }
+    if (!isset($COMLIB)) { include_once($CFG->dirroot . '/lib/comlib.php'); }
 
-	$event = get_db_row("SELECT * FROM events WHERE eventid = ".$MYVARS->GET["eventid"]);
-	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='".$event['template_id']."'");
+	$event = get_db_row("SELECT * FROM events WHERE eventid = " . $MYVARS->GET["eventid"]);
+	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='" . $event['template_id'] . "'");
 	
 	$MYVARS->GET["cart_total"] = $MYVARS->GET["total_owed"] != 0 ? $MYVARS->GET["total_owed"] + $MYVARS->GET["paypal_amount"] : $MYVARS->GET["paypal_amount"];
 	$MYVARS->GET["total_owed"] = get_timestamp() < $event["sale_end"] ? $event["sale_fee"] + $MYVARS->GET["Camper_Picture"] : $event["fee_full"] + $MYVARS->GET["Camper_Picture"];
@@ -43,7 +50,7 @@ global $CFG, $MYVARS, $USER, $error;
 	$error = "";
 	
 	if ($regid = enter_registration($MYVARS->GET["eventid"], $reg, $MYVARS->GET["email"])) { //successful registration
-		echo '<center><div style="width:90%">You have successfully registered for '.$event['name'] . '.<br />';
+		echo '<center><div style="width:90%">You have successfully registered for ' . $event['name'] . '.<br />';
 		
 		if ($error != "") { echo $error . "<br />"; }
 		
@@ -56,8 +63,8 @@ global $CFG, $MYVARS, $USER, $error;
 		
 		if ($event['fee_full'] != 0) {
 			$items = isset($MYVARS->GET["items"]) ? $MYVARS->GET["items"] . "**" . $regid . "::" . $MYVARS->GET["Camper_Name"] . " - " . $event["name"] . "::" . $MYVARS->GET["paypal_amount"] : $regid . "::" . $MYVARS->GET["Camper_Name"] . " - " . $event["name"] . "::" . $MYVARS->GET["paypal_amount"];
-			echo '<div id="backup"><input type="hidden" name="total_owed" id="total_owed" value="'.$MYVARS->GET["cart_total"].'" />
-				 <input type="hidden" name="items" id="items" value="'.$items.'" /></div>';
+			echo '<div id="backup"><input type="hidden" name="total_owed" id="total_owed" value="' . $MYVARS->GET["cart_total"] . '" />
+				 <input type="hidden" name="items" id="items" value="' . $items . '" /></div>';
 			
 			$items = explode("**", $items);
             $i=0;
@@ -71,24 +78,24 @@ global $CFG, $MYVARS, $USER, $error;
 			
 			if ($MYVARS->GET['payment_method'] == "PayPal") {
     			echo '<br />
-				To register a <b>different</b> child:  Select the week '.common_weeks($event, true, "week1", $regid).'.<br />
-				To register the <b>same child</b> for a <b>different week</b>:  Select the week '.common_weeks($event, false, "week2", $regid, 1).'.<br />
+				To register a <b>different</b> child:  Select the week ' . common_weeks($event, true, "week1", $regid) . '.<br />
+				To register the <b>same child</b> for a <b>different week</b>:  Select the week ' . common_weeks($event, false, "week2", $regid, 1) . '.<br />
 				<br />
-				If you would like to pay the <span style="color:blue;font-size:1.25em;">$'.$MYVARS->GET["cart_total"].'</span> fee now, click the Paypal button below.
+				If you would like to pay the <span style="color:blue;font-size:1.25em;">$' . $MYVARS->GET["cart_total"] . '</span> fee now, click the Paypal button below.
 				<center>
-				'.make_paypal_button($cart_items, $event['paypal']).'
+				' . make_paypal_button($cart_items, $event['paypal']) . '
 				</center>
 				<br /><br />
 				Thank you for registering for this event. ';	
 			} else {
 				echo '<br />
-				To register a <b>different</b> child:  Select the week '.common_weeks($event, true, "week1", $regid).'.<br />
-				To register the <b>same child</b> for a <b>different week</b>:  Select the week '.common_weeks($event, false, "week2", $regid, 1).'.<br />
+				To register a <b>different</b> child:  Select the week ' . common_weeks($event, true, "week1", $regid) . '.<br />
+				To register the <b>same child</b> for a <b>different week</b>:  Select the week ' . common_weeks($event, false, "week2", $regid, 1) . '.<br />
 				<br />
 				If you are done with the registration process, please make out your <br />
-				check or money order in the amount of <span style="color:blue;font-size:1.25em;">$'.$MYVARS->GET["cart_total"].'</span> payable to <b>'.$event["payableto"].'</b> and send it to <br /><br />
+				check or money order in the amount of <span style="color:blue;font-size:1.25em;">$' . $MYVARS->GET["cart_total"] . '</span> payable to <b>' . $event["payableto"] . '</b> and send it to <br /><br />
 				<center>
-				'.$event['checksaddress'].'.  
+				' . $event['checksaddress'] . '.  
 				</center>
 				<br /><br />
 				Thank you for registering for this event. 
@@ -109,12 +116,12 @@ global $CFG, $MYVARS, $USER, $error;
 		
 	} else { //failed registration
 		$MYVARS->GET["cart_total"] = $MYVARS->GET["cart_total"] - $MYVARS->GET["paypal_amount"];
-		echo '<center><div style="width:60%"><span class="error_text">Your registration for '.$event['name'].' has failed. </span><br /> '.$error . '</div>';	
+		echo '<center><div style="width:60%"><span class="error_text">Your registration for ' . $event['name'] . ' has failed. </span><br /> ' . $error . '</div>';	
 		if (isset($MYVARS->GET["items"])) { //other registrations have already occured
 			if ($event['fee_full'] != 0) {
 				$items = $MYVARS->GET["items"];
-				echo '<div id="backup"><input type="hidden" name="total_owed" id="total_owed" value="'.$MYVARS->GET["cart_total"].'" />
-					 <input type="hidden" name="items" id="items" value="'.$items.'" /></div>';
+				echo '<div id="backup"><input type="hidden" name="total_owed" id="total_owed" value="' . $MYVARS->GET["cart_total"] . '" />
+					 <input type="hidden" name="items" id="items" value="' . $items . '" /></div>';
 				
 				$items = explode("**", $items);
                 $i=0;
@@ -128,22 +135,22 @@ global $CFG, $MYVARS, $USER, $error;
 				
 				if ($MYVARS->GET['payment_method'] == "PayPal") {
 					echo '<br />
-					To register a child: Select the week '.common_weeks($event, true, "week1", "").'.<br />
+					To register a child: Select the week ' . common_weeks($event, true, "week1", "") . '.<br />
 					<br />
-					If you would like to pay the <span style="color:blue;font-size:1.25em;">$'.$MYVARS->GET["cart_total"].'</span> fee now, click the Paypal button below.
+					If you would like to pay the <span style="color:blue;font-size:1.25em;">$' . $MYVARS->GET["cart_total"] . '</span> fee now, click the Paypal button below.
 					<center>
-					'.make_paypal_button($cart_items, $event['paypal']).'
+					' . make_paypal_button($cart_items, $event['paypal']) . '
 					</center>
 					<br /><br />
 					Thank you for registering for this event. ';	
 				} else { //Pay by check
 					echo '<br />
-					To register a child:  Select the week '.common_weeks($event, true, "week1", $regid).'.<br />
+					To register a child:  Select the week ' . common_weeks($event, true, "week1", $regid) . '.<br />
 					<br />
 					If you are done with the registration process, please make out your <br />
-					check or money order in the amount of <span style="color:blue;font-size:1.25em;">$'.$MYVARS->GET["cart_total"].'</span> payable to <b>'.$event["payableto"].'</b> and send it to <br /><br />
+					check or money order in the amount of <span style="color:blue;font-size:1.25em;">$' . $MYVARS->GET["cart_total"] . '</span> payable to <b>' . $event["payableto"] . '</b> and send it to <br /><br />
 					<center>
-					'.$event['checksaddress'].'.  
+					' . $event['checksaddress'] . '.  
 					</center>
 					<br /><br />
 					Thank you for registering for this event. 
@@ -159,16 +166,16 @@ global $CFG, $USER, $PAGE;
 	$returnme = "";
 	$time = get_timestamp();
 	$siteviewable = $event["pageid"] == $CFG->SITEID || ($event["siteviewable"] == 1 && $event["confirmed"] == 1) ? " OR (siteviewable = '1' AND confirmed = '1')" : "";
-	$includelastevent = $included ? "" : "e.eventid != ".$event["eventid"]. " AND ";
-	$SQL = "SELECT e.* FROM events e WHERE $includelastevent (e.template_id=".$event["template_id"]." AND (e.pageid='".$event["pageid"]."' $siteviewable)) AND (e.start_reg < $time AND e.stop_reg > ($time - 86400)) AND (e.max_users=0 OR (e.max_users != 0 AND e.max_users > (SELECT COUNT(*) FROM events_registrations er WHERE er.eventid=e.eventid)))";
+	$includelastevent = $included ? "" : "e.eventid != " . $event["eventid"]. " AND ";
+	$SQL = "SELECT e.* FROM events e WHERE $includelastevent (e.template_id=" . $event["template_id"] . " AND (e.pageid='" . $event["pageid"] . "' $siteviewable)) AND (e.start_reg < $time AND e.stop_reg > ($time - 86400)) AND (e.max_users=0 OR (e.max_users != 0 AND e.max_users > (SELECT COUNT(*) FROM events_registrations er WHERE er.eventid=e.eventid)))";
 
 	if ($events = get_db_result($SQL)) {
-		$returnme .= '<select id="'.$id.'">';
+		$returnme .= '<select id="' . $id . '">';
 		while ($evnt = fetch_row($events)) {
 			$selected = $event["eventid"] == $evnt["eventid"] ? " SELECTED " : "";
-			$returnme .= '<option value="'.$evnt['eventid'].'" '.$selected.'>'.$evnt['name'].'</option>';
+			$returnme .= '<option value="' . $evnt['eventid'] . '" ' . $selected . '>' . $evnt['name'] . '</option>';
 		}
-		$returnme .= '</select>' . ' and click <a href="javascript:show_form_again(document.getElementById(\''.$id.'\').value,\''.$regid.'\', '.$autofill.');"><b>Continue</b></a>';
+		$returnme .= '</select> and click <a href="javascript:show_form_again(document.getElementById(\'' . $id . '\').value,\'' . $regid . '\', ' . $autofill . ');"><b>Continue</b></a>';
 	} else { $returnme = '&nbsp;<span style="color:red;">There are no other weeks available. </span>'; }
 	return $returnme;
 }

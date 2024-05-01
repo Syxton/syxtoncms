@@ -7,7 +7,13 @@
  * $Revision: .12
  ***************************************************************************/
  
-if (!isset($CFG)) include_once('../../config.php');
+if (!isset($CFG)) {
+  $sub = '../';
+  while (!file_exists($sub . 'config.php')) {
+      $sub .= '../';
+  }
+  include_once($sub . 'config.php'); 
+}
 
 $postorget = isset($_GET["address_1"]) ? $_GET : $_POST;
 $postorget = isset($postorget["address_1"]) ? $postorget : "";
@@ -22,7 +28,7 @@ echo '
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
     <title>Directions</title>
-    <script src="//maps.google.com/?file=api&amp;v=2.x&amp;key='.$CFG->googleapikey.'"
+    <script src="//maps.google.com/?file=api&amp;v=2.x&amp;key=' . $CFG->googleapikey . '"
       type="text/javascript"></script>
     <style type="text/css">
       body {
@@ -53,7 +59,7 @@ echo '
         GEvent.addListener(gdir, "error", handleErrors);
         map.addControl(new GSmallMapControl());
         map.addControl(new GMapTypeControl());
-        setDirections("'.$CFG->defaultaddress.'", "'.$MYVARS->GET["address_1"].' '.$MYVARS->GET["address_2"].'", "en_US");
+        setDirections("' . $CFG->defaultaddress . '", "' . $MYVARS->GET["address_1"] . ' ' . $MYVARS->GET["address_2"] . '", "en_US");
       }
     }
     
@@ -105,10 +111,10 @@ echo '
    <tr><th align="right">From:&nbsp;</th>
 
    <td><input type="text" size="25" id="fromAddress" name="from"
-     value="'.$CFG->defaultaddress.'"/></td>
+     value="' . $CFG->defaultaddress . '"/></td>
    <th align="right">&nbsp;&nbsp;To:&nbsp;</th>
    <td align="right"><input type="text" size="25" id="toAddress" name="to"
-     value="'.$MYVARS->GET["address_1"].' '.$MYVARS->GET["address_2"].'" /></td></tr>
+     value="' . $MYVARS->GET["address_1"] . ' ' . $MYVARS->GET["address_2"] . '" /></td></tr>
 
    <tr><th></th>
    <td colspan="3"><select id="locale" name="locale" style="display:none;">

@@ -30,12 +30,12 @@ global $CFG, $MYVARS;
 			if (user_has_ability_in_page($userid,"viewpage", $pageid)) {	
 				//User has already created rssid...just needs the link for it again.
 				if ($feed = get_db_row("SELECT * FROM rss_feeds WHERE pageid=$pageid AND type='page' AND rssid IN (SELECT rssid FROM rss WHERE userid=$userid)")) {
-					$rssname = get_db_field("rssname","rss","rssid=".$feed["rssid"]);
+					$rssname = get_db_field("rssname","rss","rssid=" . $feed["rssid"]);
 					$feeds = create_feed($feed["rssid"], $userid, $userkey);
 				} else { //Need to create new rssid and feed
 					$page = get_db_row("SELECT * FROM pages WHERE pageid=$pageid");
 					$rssname = $page["name"];
-					if ($rssid = execute_db_sql("INSERT INTO rss (userid,rssname) VALUES($userid,'".dbescape($page["name"])."')")) {
+					if ($rssid = execute_db_sql("INSERT INTO rss (userid,rssname) VALUES($userid,'" . dbescape($page["name"]) . "')")) {
 						$SQL = "INSERT INTO rss_feeds (rssid,type,pageid) VALUES($rssid,'page', $pageid)";
 						if (execute_db_sql($SQL)) {
 							$feeds = create_feed($feed["rssid"], $userid, $userkey);
@@ -46,10 +46,10 @@ global $CFG, $MYVARS;
 		}
 	
 	$rssfeed = '<?xml version="1.0" ?><rss version="2.0"><channel>
-    <title>'.htmlspecialchars($rssname).'</title>
+    <title>' . htmlspecialchars($rssname) . '</title>
 	<description>RSS Syndication</description>
-	<pubDate>'.date(DATE_RFC822,get_timestamp()).'</pubDate>
-	<link>'.htmlspecialchars($CFG->wwwroot).'</link>' . $feeds . '</channel></rss>';
+	<pubDate>' . date(DATE_RFC822,get_timestamp()) . '</pubDate>
+	<link>' . htmlspecialchars($CFG->wwwroot) . '</link>' . $feeds . '</channel></rss>';
 	
 	return $rssfeed;
 	}
@@ -66,7 +66,11 @@ global $CFG;
 		$item = str_replace('</',',</', $item);
 		$item = strip_tags($item); 
 		$item = explode(',', $item);
-		$sorteditems[] = array("title" => $item[0], "description" => $item[1].", ".$item[2], "link" => $item[3]);
+		$sorteditems[] = [
+			"title" => $item[0],
+			"description" => $item[1] . ", " . $item[2],
+			"link" => $item[3],
+		];
 	}
 	
 	//sort feed
@@ -77,7 +81,17 @@ global $CFG;
     $sorteditems = array_slice($sorteditems, 0, $CFG->rsslimit); //cut off array at rsslimit amount
 
     foreach ($sorteditems as $item) {
-		$feed .= '<item>'.'<title>'.$item["title"].'</title>'.'<description>'.$item["description"].'</description>'.'<link>'.$item["link"].'</link>'.'</item>';	
+		$feed .= '<item>
+					<title>
+					' . $item["title"] . 
+					'</title>
+					<description>
+					' . $item["description"] . 
+					'</description>
+					<link>
+					' . $item["link"] . 
+					'</link>
+				</item>';	
 	}
 	return $feed;
 }
@@ -124,9 +138,9 @@ global $CFG;
 }
 
 function fill_feed($title, $description, $link, $date) {
-	return "<item><title>".htmlspecialchars($title)."</title>
-            <description>".date(DATE_RFC822, $date)."</description>
-            <link>".htmlspecialchars($link)."</link></item>";
+	return "<item><title>" . htmlspecialchars($title) . "</title>
+            <description>" . date(DATE_RFC822, $date) . "</description>
+            <link>" . htmlspecialchars($link) . "</link></item>";
 }
 
 ?>

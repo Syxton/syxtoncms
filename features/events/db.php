@@ -198,11 +198,11 @@ global $CFG;
                 while ($row = fetch_row($result)) {                    
                     $SQL = "INSERT INTO events_staff_archive 
                     (staffid,userid,pageid,year,name,phone,dateofbirth,address,agerange,cocmember,congregation,priorwork,q1_1,q1_2,q1_3,q2_1,q2_2,q2_3,parentalconsent,parentalconsentsig,workerconsent,workerconsentsig,workerconsentdate,ref1name,ref1relationship,ref1phone,ref2name,ref2relationship,ref2phone,ref3name,ref3relationship,ref3phone,bgcheckpass,bgcheckpassdate) 
-                    VALUES('".$row["staffid"]."','".$row["userid"]."','".$row["pageid"]."','".date("Y", $row["workerconsentdate"])."','".$row["name"]."','".$row["phone"]."',
-                           '".$row["dateofbirth"]."','".$row["address"]."','".$row["agerange"]."','".$row["cocmember"]."','".$row["congregation"]."',
-                           '".$row["priorwork"]."','".$row["q1_1"]."','".$row["q1_2"]."','".$row["q1_3"]."','".$row["q2_1"]."','".$row["q2_2"]."','".$row["q2_3"]."',
-                           '".$row["parentalconsent"]."','".$row["parentalconsentsig"]."','".$row["workerconsent"]."','".$row["workerconsentsig"]."','".$row["workerconsentdate"]."',
-                           '".$row["ref1name"]."','".$row["ref1relationship"]."','".$row["ref1phone"]."','".$row["ref2name"]."','".$row["ref2relationship"]."','".$row["ref2phone"]."','".$row["ref3name"]."','".$row["ref3relationship"]."','".$row["ref3phone"]."','".$row["bgcheckpass"]."','".$row["bgcheckpassdate"]."')";
+                    VALUES('" . $row["staffid"] . "','" . $row["userid"] . "','" . $row["pageid"] . "','" . date("Y", $row["workerconsentdate"]) . "','" . $row["name"] . "','" . $row["phone"] . "',
+                           '" . $row["dateofbirth"] . "','" . $row["address"] . "','" . $row["agerange"] . "','" . $row["cocmember"] . "','" . $row["congregation"] . "',
+                           '" . $row["priorwork"] . "','" . $row["q1_1"] . "','" . $row["q1_2"] . "','" . $row["q1_3"] . "','" . $row["q2_1"] . "','" . $row["q2_2"] . "','" . $row["q2_3"] . "',
+                           '" . $row["parentalconsent"] . "','" . $row["parentalconsentsig"] . "','" . $row["workerconsent"] . "','" . $row["workerconsentsig"] . "','" . $row["workerconsentdate"] . "',
+                           '" . $row["ref1name"] . "','" . $row["ref1relationship"] . "','" . $row["ref1phone"] . "','" . $row["ref2name"] . "','" . $row["ref2relationship"] . "','" . $row["ref2phone"] . "','" . $row["ref3name"] . "','" . $row["ref3relationship"] . "','" . $row["ref3phone"] . "','" . $row["bgcheckpass"] . "','" . $row["bgcheckpassdate"] . "')";
                     execute_db_sql($SQL);    
                 }
             }

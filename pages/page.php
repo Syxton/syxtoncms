@@ -101,16 +101,24 @@ global $CFG, $MYVARS, $ROLES, $USER;
   	$content .= create_validation_script("create_page_form" , template_use("tmp/page.template", [], "create_page_validation"));
   }
 
-  $SQL = 'SELECT * FROM roles WHERE roleid > "' . $ROLES->creator . '" AND roleid < "'.$ROLES->none.'" ORDER BY roleid DESC';
-  $roles = get_db_result($SQL);
-
+  $SQL = 'SELECT * FROM roles WHERE roleid > "' . $ROLES->creator . '" AND roleid < "' . $ROLES->none . '" ORDER BY roleid DESC';
+  $roleselector = [
+    "properties" => [
+      "name" => "role_select",
+      "id" => "role_select",
+    ],
+    "values" => get_db_result($SQL),
+    "valuename" => "roleid",
+    "displayname" => "display_name",
+    "selected" => $role_selected,
+  ];
 	$params = [ "name" => $name,
               "input_name_help" => get_help("input_page_name"),
 						  "keywords" => $keywords,
               "input_page_tags" => get_help("input_page_tags"),
 							"description" => stripslashes($description),
               "input_page_summary" => get_help("input_page_summary"),
-							"roleselector" => make_select("role_select", $roles, "roleid", "display_name", $role_selected),
+							"roleselector" => make_select($roleselector),
               "input_page_default_role" => get_help("input_page_default_role"),
 							"openno" => $open_no,
               "openyes" => $open_yes,

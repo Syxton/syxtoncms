@@ -7,9 +7,7 @@
  * Revision: 3.1.7
  ***************************************************************************/
 
-if (!isset($LIBHEADER)) {
-  include('header.php');
-}
+if (!isset($LIBHEADER)) { include('header.php'); }
 $PAGELIB = true;
 
 //Get page info
@@ -60,8 +58,10 @@ global $CFG;
 }
 
 function main_body($header_only = false) {
-  $params = array("page_masthead_1" => page_masthead(true),
-                  "page_masthead_2" => page_masthead(false, $header_only));
+  $params = [
+    "page_masthead_1" => page_masthead(true),
+    "page_masthead_2" => page_masthead(false, $header_only),
+  ];
   return template_use("tmp/pagelib.template", $params, "main_body_template");
 }
 
@@ -98,17 +98,19 @@ global $CFG, $USER, $PAGE;
   	$header_color = isset($styles['pagenamebgcolor']) ? $styles['pagenamebgcolor'] : "";
   	$header_text = isset($styles['pagenamefontcolor']) ? $styles['pagenamefontcolor'] : "";
 
-    $params = array("wwwroot" => $CFG->wwwroot,
-                    "haslogo" => isset($CFG->logofile),
-                    "logofile" => $CFG->logofile,
-                    "hasmobilelogo" => !empty($CFG->mobilelogofile),
-                    "mobilelogofile" => $CFG->mobilelogofile,
-                    "sitename" => $CFG->sitename,
-                    "header_only" => ($header_only ? "" : get_nav_items($PAGE->id)),
-                    "quote" => random_quote(),
-                    "pagename" => $PAGE->name,
-                    "header_text" => $header_text,
-                    "header_color" => $header_color);
+    $params = [
+      "wwwroot" => $CFG->wwwroot,
+      "haslogo" => isset($CFG->logofile),
+      "logofile" => $CFG->logofile,
+      "hasmobilelogo" => !empty($CFG->mobilelogofile),
+      "mobilelogofile" => $CFG->mobilelogofile,
+      "sitename" => $CFG->sitename,
+      "header_only" => ($header_only ? "" : get_nav_items($PAGE->id)),
+      "quote" => random_quote(),
+      "pagename" => $PAGE->name,
+      "header_text" => $header_text,
+      "header_color" => $header_color,
+    ];
     return template_use("tmp/pagelib.template", $params, "page_masthead_template");
   }
 
@@ -124,7 +126,7 @@ function get_editor_value_javascript($editorname = "editor1") {
   return '$(\'#' . $editorname . '\').val()';
 }
 
-function get_editor_box($initialValue = "", $name = "editor1", $height = "550", $width = "100%", $type = "HTML") {
+function get_editor_box($initialValue = "", $name = "editor1", $height = "550", $width = "95%", $type = "HTML") {
 global $CFG;
   $variables = new \stdClass();
   $variables->wwwroot = $CFG->wwwroot;
@@ -133,8 +135,8 @@ global $CFG;
   $variables->width = $width;
   $variables->plugins = get_editor_plugins($type);
   $variables->directory = get_directory();
-  $params = array("variables" => $variables, "initialvalue" => $initialValue);
-  return template_use("tmp/pagelib.template", $params, "editor_box_template");
+
+  return template_use("tmp/pagelib.template", ["name" => $name, "variables" => $variables, "initialvalue" => $initialValue], "editor_box_template");
 }
 
 function get_editor_plugins($type) {
@@ -196,41 +198,41 @@ function get_editor_toolbar($type) {
 }
 
 function page_default_styles() {
-  $styles_array[] = array(
+  $styles_array[] = [
     "Page Name Border",
     "pagenamebordercolor",
-    "#000000"
-  );
-  $styles_array[] = array(
+    "#000000",
+  ];
+  $styles_array[] = [
     "Page Name Background",
     "pagenamebgcolor",
-    "#FFFFFF"
-  );
-  $styles_array[] = array(
+    "#FFFFFF",
+  ];
+  $styles_array[] = [
     "Page Name Text",
     "pagenamefontcolor",
-    "#000000"
-  );
-  $styles_array[] = array(
+    "#000000",
+  ];
+  $styles_array[] = [
     "Title Background",
     "titlebgcolor",
-    "#FFFFFF"
-  );
-  $styles_array[] = array(
+    "#FFFFFF",
+  ];
+  $styles_array[] = [
     "Title Text",
     "titlefontcolor",
-    "#000000"
-  );
-  $styles_array[] = array(
+    "#000000",
+  ];
+  $styles_array[] = [
     "Border",
     "bordercolor",
-    "#000000"
-  );
-  $styles_array[] = array(
+    "#000000",
+  ];
+  $styles_array[] = [
     "Content Background",
     "contentbgcolor",
-    "#FFFFFF"
-  );
+    "#FFFFFF",
+  ];
   return $styles_array;
 }
 
@@ -349,14 +351,14 @@ global $CFG;
   $gallery_name     = empty($v["gallery"]) ? "" : $v["gallery"];
   $gallery          = empty($v["gallery"]) ? "" : "('*[data-rel=\'$gallery_name\']')";
   $v["gallery"]     = empty($v["gallery"]) ? "" : ",rel:'$gallery_name',photo:'true',preloading:'true'";
-  $v["imagestyles"] = empty($v["imagestyles"]) ? "" : $v["imagestyles"];
+  $v["imagestyles"] = empty($v["imagestyles"]) ? ($v["button"] == "link" ? "" : "vertical-align: middle;") : $v["imagestyles"];
   $v["image"]       = empty($v["image"]) ? "" : '<img alt="' . $v["title"] . '" title="' . $v["title"] . '" src="' . $v["image"] . '" style="' . $v["imagestyles"] . '" />';
   $v["width"]       = empty($v["width"]) ? (empty($v["gallery"]) ? "" : "") : ",width:'" . $v["width"] . "'";
   $v["height"]      = empty($v["height"]) ? (empty($v["gallery"]) ? "" : "") : ",height:'" . $v["height"] . "'";
   $v["path"]        = empty($v["path"]) ? "" : $v["path"];
   $v["class"]       = empty($v["class"]) ? "" : $v["class"];
   $path             = $v["path"] && $v["gallery"] ? $v["path"] : "javascript: void(0);";
-  $v["text"]        = empty($v["text"]) ? (empty($v["image"]) ? (empty($v["title"]) ? "" : $v["title"]) : $v["image"]) : (empty($v["image"]) ? $v["text"] : $v["image"] . " " . $v["text"]);
+  $v["text"]        = empty($v["text"]) ? (empty($v["image"]) ? (empty($v["title"]) ? "" : $v["title"]) : $v["image"]) : (empty($v["image"]) ? $v["text"] :  $v["image"] . ' <span style="vertical-align: middle;">' . $v["text"] . "</span>");
 
   $iframe      = empty($v["iframe"]) ? "" : ",fastIframe:true,iframe:true";
   $i           = empty($v["iframe"]) ? "" : "&amp;i=!";
@@ -369,7 +371,7 @@ global $CFG;
   $modal = $onOpen = $onComplete = $valid = '';
 
   if (!empty($v["validate"]) && empty($v["iframe"])) { //load validation javascript
-    $onOpen .= "loadjs('" . get_js_tags(array("validate"), true) . "');";
+    $onOpen .= "loadjs('" . get_js_tags(["validate"], true) . "');";
   } elseif (!empty($v["validate"]) && !empty($v["iframe"])) {
     $valid = "&amp;v=!";
   }
@@ -439,16 +441,16 @@ global $CFG;
   $alerts   = get_user_alerts($userid);
   if ($alerts) {
     $alerts_text = $alerts == 1 ? "Alert" : "Alerts";
-    $returnme .= '<span class="profile_links">' . make_modal_links(array(
-        "title" => "Alerts",
-        "id" => "alerts_link",
-        "text" => "<span id=\"alerts_span\">$alerts $alerts_text</span>",
-        "path" => $CFG->wwwroot . "/pages/user.php?action=user_alerts&amp;userid=$userid",
-        "width" => "600",
-        "height" => "500",
-        "image" => $CFG->wwwroot . "/images/error.gif"
-    )) . '</span>';
-  }
+    $returnme .= '<span class="profile_links">' . make_modal_links([
+                                                    "title" => "Alerts",
+                                                    "id" => "alerts_link",
+                                                    "text" => '<span id="alerts_span">' . "$alerts $alerts_text" . '</span>',
+                                                    "path" => $CFG->wwwroot . "/pages/user.php?action=user_alerts&amp;userid=$userid",
+                                                    "width" => "600",
+                                                    "height" => "500",
+                                                    "image" => $CFG->wwwroot . "/images/error.gif",
+                                                  ]) . '</span>';
+                                              }
   $returnme .= '<input type="hidden" id="alerts" value="' . $alerts . '" />';
   return $returnme;
 }
@@ -601,32 +603,32 @@ global $CFG, $USER;
   if (empty($pageid)) {
     $pageid = $CFG->SITEID;
   }
-  $edit    = user_has_ability_in_page($USER->userid, "editprofile", $pageid) ? true : false;
-  $param   = array(
-      "siteid" => $CFG->SITEID,
-      "title" => "Edit Profile",
-      "text" => "$fname $lname",
-      "path" => $CFG->wwwroot . "/pages/user.php?action=change_profile",
-      "validate" => "true",
-      "width" => "500",
-      "image" => $CFG->wwwroot . "/images/user.png",
-      "styles" => ""
-  );
-  $profile = $edit ? make_modal_links($param) : "$fname $lname";
+  $edit = user_has_ability_in_page($USER->userid, "editprofile", $pageid) ? true : false;
+  $params   = [
+    "siteid" => $CFG->SITEID,
+    "title" => "Edit Profile",
+    "text" => "$fname $lname",
+    "path" => $CFG->wwwroot . "/pages/user.php?action=change_profile",
+    "validate" => "true",
+    "width" => "500",
+    "image" => $CFG->wwwroot . "/images/user.png",
+    "styles" => "",
+  ];
+  $profile = $edit ? make_modal_links($params) : "$fname $lname";
 
   // Logged in as someone else.
   $logoutas = "";
   if (!empty($_SESSION["lia_original"])) {
     $lia_name = get_user_name($_SESSION["lia_original"]);
-    $params = array("lia_name" => $lia_name);
-    $logoutas = template_use("tmp/pagelib.template", $params, "print_logout_button_switchback_template");
+    $logoutas = template_use("tmp/pagelib.template", ["lia_name" => $lia_name], "print_logout_button_switchback_template");
   }
 
-  $params = array("siteid" => $CFG->SITEID,
-                  "logoutas" => $logoutas,
-                  "profile" => $profile,
-                  "userlinks" => get_user_links($USER->userid, $pageid));
-
+  $params = [
+    "siteid" => $CFG->SITEID,
+    "logoutas" => $logoutas,
+    "profile" => $profile,
+    "userlinks" => get_user_links($USER->userid, $pageid),
+  ];
   return template_use("tmp/pagelib.template", $params, "print_logout_button_template");
 }
 
@@ -651,32 +653,38 @@ global $CFG, $USER, $PAGE;
       $selected = $pageid == $row['pageid'] ? true : false;
       $link = empty($row["link"]) ? "#" : $CFG->wwwroot . "/index.php?pageid=" . $row['link'];
       $text = stripslashes($row['text']) . ' ' . $parent;
-      $params = array("is_selected" => $selected, "menu_children" => $menu_children, "text" => stripslashes($row['text']), "is_parent" => $parent, "link" => $link);
+      $params = [
+        "is_selected" => $selected,
+        "menu_children" => $menu_children,
+        "text" => stripslashes($row['text']),
+        "is_parent" => $parent,
+        "link" => $link,
+      ];
       $items .= template_use("tmp/page.template", $params, "get_nav_item");
     }
   }
 
   if (is_logged_in() && is_siteadmin($USER->userid)) { // Members list visible only if logged in admin
-    $members_modal = make_modal_links(array(
-        "title" => "Members List",
-        "path" => $CFG->wwwroot . "/pages/page.php?action=browse&amp;section=users&amp;userid=$USER->userid",
-        "iframe" => "true",
-        "width" => "640",
-        "height" => "623",
-        "confirmexit" => "true"
-    ));
-    $items .= template_use("tmp/page.template", array("members_modal" => $members_modal), "get_members_item");
+    $members_modal = make_modal_links([
+                        "title" => "Members List",
+                        "path" => $CFG->wwwroot . "/pages/page.php?action=browse&amp;section=users&amp;userid=" . $USER->userid,
+                        "iframe" => "true",
+                        "width" => "640",
+                        "height" => "623",
+                        "confirmexit" => "true",
+                      ]);
+    $items .= template_use("tmp/page.template", ["members_modal" => $members_modal], "get_members_item");
   }
 
   if (!empty($items)) {
-    return template_use("tmp/page.template", array("id" => "pagenav", "class" => "navtabs", "items" => $items), "make_ul");
+    return template_use("tmp/page.template", ["id" => "pagenav", "class" => "navtabs", "items" => $items], "make_ul");
   }
   return "";
 }
 
 function get_menu_children($menuid, $pageid) {
 global $CFG;
-  $SQL = template_use("dbsql/pages.sql", array("menuid" => $menuid), "get_menu_children");
+  $SQL = template_use("dbsql/pages.sql", ["menuid" => $menuid], "get_menu_children");
   if ($result = get_db_result($SQL)) {
     $items = "";
     while ($row = fetch_row($result)) {
@@ -685,10 +693,16 @@ global $CFG;
       $selected = $pageid == $row['pageid'] ? true : false;
       $link = empty($row["link"]) ? "#" : $CFG->wwwroot . "/index.php?pageid=" . $row['link'];
       $text = stripslashes($row['text']) . ' ' . $parent;
-      $params = array("is_selected" => $selected, "menu_children" => $menu_children, "text" => stripslashes($row['text']), "is_parent" => $parent, "link" => $link);
+      $params = [
+        "is_selected" => $selected,
+        "menu_children" => $menu_children,
+        "text" => stripslashes($row['text']),
+        "is_parent" => $parent,
+        "link" => $link,
+      ];
       $items .= template_use("tmp/page.template", $params, "get_nav_item");
     }
-    return template_use("tmp/page.template", array("id" => "pagenavchild", "class" => "dropdown", "items" => $items), "make_ul");
+    return template_use("tmp/page.template", ["id" => "pagenavchild", "class" => "dropdown", "items" => $items], "make_ul");
   }
   return "";
 }
@@ -716,9 +730,14 @@ global $CFG, $PAGE, $STYLES;
     $pagenamebgcolor     = isset($styles['pagenamebgcolor']) ? $styles['pagenamebgcolor'] : "";
     $pagenamefontcolor   = isset($styles['pagenamefontcolor']) ? $styles['pagenamefontcolor'] : "";
 
-    $params = array("pagenamebordercolor" => $pagenamebordercolor, "pagenamebgcolor" => $pagenamebgcolor,
-                    "pagenamefontcolor" => $pagenamefontcolor, "title" => stripslashes($title),
-                    "content" => $content, "buttons" => $buttons);
+    $params = [
+      "pagenamebordercolor" => $pagenamebordercolor,
+      "pagenamebgcolor" => $pagenamebgcolor,
+      "pagenamefontcolor" => $pagenamefontcolor,
+      "title" => stripslashes($title),
+      "content" => $content,
+      "buttons" => $buttons,
+    ];
     $returnme = template_use("tmp/pagelib.template", $params, "get_css_box_template1");
   } else {
     if ($preview) {
@@ -734,97 +753,134 @@ global $CFG, $PAGE, $STYLES;
 
     $bottom = "";
     if ($bottom_left || $bottom_center || $bottom_right) {
-      $params = array("bottom_left" => $bottom_left, "bottom_right" => $bottom_right, "contentbgcolor" => $contentbgcolor);
+      $params = [
+        "bottom_left" => $bottom_left,
+        "bottom_right" => $bottom_right,
+        "contentbgcolor" => $contentbgcolor,
+      ];
       $returnme .= template_use("tmp/pagelib.template", $params, "get_css_box_bottom_template");
     }
 
     $opendiv = empty($feature) || $feature == 'pagelist' || $feature == 'addfeature' ? '' : 'class="box" id="' . $feature . '_' . $featureid . '"';
     $padding = isset($padding) ? ' padding:' . $padding . ";" : "";
-    $params = array("opendiv" => $opendiv, "bordercolor" => $bordercolor, "titlebgcolor" => $titlebgcolor, "buttons" => $buttons,
-                    "titlefontcolor" => $titlefontcolor, "title" => stripslashes($title), "class" => $class,
-                    "padding" => $padding, "contentbgcolor" => $contentbgcolor, "content" => $content, "bottom" => $bottom);
+    $params = [
+      "opendiv" => $opendiv,
+      "bordercolor" => $bordercolor,
+      "titlebgcolor" => $titlebgcolor,
+      "buttons" => $buttons,
+      "titlefontcolor" => $titlefontcolor,
+      "title" => stripslashes($title),
+      "class" => $class,
+      "padding" => $padding,
+      "contentbgcolor" => $contentbgcolor,
+      "content" => $content,
+      "bottom" => $bottom,
+    ];
     $returnme .= template_use("tmp/pagelib.template", $params, "get_css_box_template2");
   }
   return $returnme;
 }
 
-function make_select($name, $values, $valuename, $displayname, $selected = false, $onchange = "", $leadingblank = false, $size = 1, $style = "", $leadingblanktitle = "", $excludevalue = false) {
-  $returnme = '<select size="' . $size . '" id="' . $name . '" name="' . $name . '" ' . $onchange . ' style="' . $style . '" >';
-  if ($leadingblank) {
-    $returnme .= '<option value="">' . $leadingblanktitle . '</option>';
+/**
+ * Create a select from an array of objects or database results
+ *
+ * @param array $params Parameters for creating the select
+ * @return string HTML of the select
+ */
+function make_select($params) {
+  // Create properties string
+  $properties = "";
+  foreach ($params["properties"] as $prop => $v) {
+    $properties .= $prop . '="' . $v . '" ';
   }
-  if ($values) {
-    while ($row = fetch_row($values)) {
-      $exclude = false;
-      if ($excludevalue) { //exclude value
-        switch (gettype($excludevalue)) {
-          case "string":
-            $exclude = $excludevalue == $row[$valuename] ? true : false;
-            break;
-          case "array":
-            foreach ($excludevalue as $e) {
-              if ($e == $row[$valuename]) {
-                $exclude = true;
-              }
-            }
-            break;
-        case "object":
-          while ($e = fetch_row($excludevalue)) {
-            if ($e[$valuename] == $row[$valuename]) {
-              $exclude = true;
-            }
-          }
 
-          db_goto_row($excludevalue);
-          break;
-        }
+  // Initialize return string
+  $returnme = '<select ' . $properties . '>';
+
+  // Get value and display names
+  $valuename = $params["valuename"];
+  $displayname = $params["displayname"] ?? $valuename;
+
+  if (!empty($params["values"])) {
+    // Add first option, if given
+    if (isset($params["firstoption"])) {
+      $returnme .= '<option value="">' . $params["firstoption"] . '</option>';
+    }
+  
+    if (get_class($params["values"]) !== "stdClass") {
+      // Database object.
+      while ($row = fetch_row($params["values"])) {
+        $options = [
+          "value" => $row[$valuename],
+          "valuename" => $valuename,
+          "display" => $row[$displayname],
+          "selected" => $params["selected"] ?? null,
+          "exclude" => $params["exclude"] ?? null,
+        ];
+        $returnme .= make_options($options);
       }
-
-      if (!$excludevalue || !$exclude) {
-        $returnme .= $row[$valuename] == $selected ? '<option value="' . $row[$valuename] . '" selected="selected">' . $row[$displayname] . '</option>' : '<option value="' . $row[$valuename] . '">' . $row[$displayname] . '</option>';
+    } else {
+      // Standard object.
+      foreach ($params["values"] as $value) {
+        $options = [
+          "value" => $value->$valuename,
+          "valuename" => $valuename,
+          "display" => $value->$displayname,
+          "selected" => $params["selected"] ?? null,
+          "exclude" => $params["exclude"] ?? null,
+        ];
+        $returnme .= make_options($options);
       }
     }
+  } else {
+    $returnme .= '<option value="">None</option>';
   }
+
   $returnme .= '</select>';
   return $returnme;
 }
 
-function make_select_from_array($name, $values, $valuename, $displayname, $selected = false, $width = "", $onchange = "", $leadingblank = false, $size = 1, $style = "", $leadingblanktitle = "", $excludevalue = false) {
-  $returnme = '<select size="' . $size . '" id="' . $name . '" name="' . $name . '" ' . $onchange . ' ' . $width . ' style="' . $style . '">';
-  if ($leadingblank) {
-    $returnme .= '<option value="">' . $leadingblanktitle . '</option>';
-  }
-  foreach ($values as $value) {
-    $exclude = false;
-    if ($excludevalue) { //exclude value
-      switch (gettype($excludevalue)) {
-        case "string":
-          $exclude = $excludevalue == $value->$valuename ? true : false;
-          break;
-        case "array":
-          foreach ($excludevalue as $e) {
-            if ($e == $value->$valuename) {
-              $exclude = true;
-            }
-          }
-          break;
-        case "object":
-          while ($e = fetch_row($excludevalue)) {
-            if ($e[$valuename] == $value->$valuename) {
-              $exclude = true;
-            }
-          }
+function make_options($params) {
+  // Initialize return string
+  $returnme = "";
 
-          db_goto_row($excludevalue);
-          break;
-      }
-    }
-    if (!$excludevalue || !$exclude) {
-      $returnme .= $value->$valuename == $selected ? '<option value="' . $value->$valuename . '" selected="selected">' . $value->$displayname . '</option>' : '<option value="' . $value->$valuename . '">' . $value->$displayname . '</option>';
+  // Determine if value should be excluded
+  $exclude = false;
+  if (isset($params["exclude"])) { // exclude value
+    switch (gettype($params["exclude"])) {
+      case "string":
+        $exclude = $params["exclude"] == $params["value"] ? true : false;
+        break;
+      case "array":
+        foreach ($params["exclude"] as $e) {
+          if ($e == $params["value"]) {
+            $exclude = true;
+          }
+        }
+        break;
+      case "object":
+        while ($e = fetch_row($params["exclude"])) {
+          if ($e[$params["valuename"]] == $params["value"]) {
+            $exclude = true;
+          }
+        }
+
+        db_goto_row($params["exclude"]);
+        break;
     }
   }
 
-  $returnme .= '</select>';
+  // Add option if not excluded
+  if (!$exclude) {
+    // Determine if option is selected
+    $selected = "";
+    if (isset($params["selected"]) && $params["value"] == $params["selected"]) {
+      $selected = 'selected="selected"';
+    }
+
+    $returnme = '<option value="' . $params["value"] . '" ' . $selected . '>' . $params["display"] . '</option>';
+  }
+
   return $returnme;
 }
 
@@ -853,17 +909,17 @@ function sort_object($object, $value, $sorttype = SORT_REGULAR) {
 
 function create_new_page($page) {
 global $CFG, $USER, $ROLES, $PAGE;
-  $SQL = template_use("dbsql/pages.sql", array("page" => $page, "short_name" => strtolower(str_replace(" ", "", $page->name))), "create_page");
+  $SQL = template_use("dbsql/pages.sql", ["page" => $page, "short_name" => strtolower(str_replace(" ", "", $page->name))], "create_page");
   $pageid = execute_db_sql($SQL);
 
   if ($pageid) {
-    $SQL = template_use("dbsql/roles.sql", array("userid" => $USER->userid, "roleid" => $ROLES->creator, "pageid" => $pageid), "insert_role_assignment");
+    $SQL = template_use("dbsql/roles.sql", ["userid" => $USER->userid, "roleid" => $ROLES->creator, "pageid" => $pageid], "insert_role_assignment");
     $role_assignment = execute_db_sql($SQL);
 
     if ($newpage->menu_page == 1) {
       $sort = get_db_field("sort", "menus", "id > 0 ORDER BY sort DESC");
       $sort++;
-      $SQL = template_use("dbsql/pages.sql", array("pageid" => $pageid, "text" => $page->name, "link" => $pageid, "sort" => $sort, "hidefromvisitors" => $page->hidefromvisitors), "add_page_menu");
+      $SQL = template_use("dbsql/pages.sql", ["pageid" => $pageid, "text" => $page->name, "link" => $pageid, "sort" => $sort, "hidefromvisitors" => $page->hidefromvisitors], "add_page_menu");
       execute_db_sql($SQL);
     }
 
@@ -874,7 +930,7 @@ global $CFG, $USER, $ROLES, $PAGE;
       $PAGE->id = $pageid;
       //Log
       log_entry("page", $pageid, "Page Created");
-      return json_encode(array("true", $pageid, "Course Created"));
+      return json_encode(["true", $pageid, "Course Created"]);
     } else {
       if ($pageid) {
         delete_page($pageid);
@@ -894,15 +950,15 @@ global $USER;
   $userid        = $userid ? $userid : $USER->userid;
   $defaultrole = get_db_field("default_role", "pages", "pageid='$pageid'");
   if (!$addorremove) {
-    $SQL = template_use("dbsql/roles.sql", array("userid" => $userid, "roleid" => $defaultrole, "pageid" => $pageid), "insert_role_assignment");
+    $SQL = template_use("dbsql/roles.sql", ["userid" => $userid, "roleid" => $defaultrole, "pageid" => $pageid], "insert_role_assignment");
     $role_assignment = execute_db_sql($SQL);
   } else {
-    $SQL = template_use("dbsql/roles.sql", array("userid" => $userid, "pageid" => $pageid), "check_for_role_assignment");
+    $SQL = template_use("dbsql/roles.sql", ["userid" => $userid, "pageid" => $pageid], "check_for_role_assignment");
     if (get_db_count($SQL)) { //role already exists
-      $SQL = template_use("dbsql/roles.sql", array("userid" => $userid, "pageid" => $pageid), "remove_role_assignment");
+      $SQL = template_use("dbsql/roles.sql", ["userid" => $userid, "pageid" => $pageid], "remove_role_assignment");
       $role_assignment = execute_db_sql($SQL);
     } else {
-      $SQL = template_use("dbsql/roles.sql", array("userid" => $user, "roleid" => $defaultrole, "pageid" => $pageid), "insert_role_assignment");
+      $SQL = template_use("dbsql/roles.sql", ["userid" => $user, "roleid" => $defaultrole, "pageid" => $pageid], "insert_role_assignment");
       $role_assignment = execute_db_sql($SQL);
     }
   }
@@ -951,23 +1007,29 @@ global $CFG;
     include_once($CFG->dirroot . '/lib/validatelib.php');
   }
 
-  $newuserlink = $newuser ? make_modal_links(array("title" => "New User",
-                                                   "path" => $CFG->wwwroot . "/pages/user.php?action=new_user",
-                                                   "width" => "500")) : '';
+  $newuserlink = $newuser ? make_modal_links([
+                              "title" => "New User",
+                              "path" => $CFG->wwwroot . "/pages/user.php?action=new_user",
+                              "width" => "500",]
+                            ) : '';
 
-  $forgotpasswordlink = make_modal_links(array("title" => "Forgot password?",
-                                               "path" => $CFG->wwwroot . "/pages/user.php?action=forgot_password",
-                                               "width" => "500"));
+  $forgotpasswordlink = make_modal_links([
+                          "title" => "Forgot password?",
+                          "path" => $CFG->wwwroot . "/pages/user.php?action=forgot_password",
+                          "width" => "500",
+                        ]);
 
-  $params = array("wwwroot" => $CFG->wwwroot,
-                  "directory" => get_directory(),
-                  "validation_script" => create_validation_script("login_form", "login(document.getElementById('username').value,document.getElementById('password').value);"),
-                  "valid_req_username" => get_error_message('valid_req_username'),
-                  "input_username" => get_help("input_username"),
-                  "valid_req_password" => get_error_message('valid_req_password'),
-                  "input_password2" => get_help("input_password2"),
-                  "newuserlink" => $newuserlink,
-                  "forgotpasswordlink" => $forgotpasswordlink);
+  $params = [
+    "wwwroot" => $CFG->wwwroot,
+    "directory" => get_directory(),
+    "validation_script" => create_validation_script("login_form", "login($('#username').val(), $('#password').val());"),
+    "valid_req_username" => get_error_message('valid_req_username'),
+    "input_username" => get_help("input_username"),
+    "valid_req_password" => get_error_message('valid_req_password'),
+    "input_password2" => get_help("input_password2"),
+    "newuserlink" => $newuserlink,
+    "forgotpasswordlink" => $forgotpasswordlink,
+  ];
   $content = template_use("tmp/pagelib.template", $params, "get_login_form_template");
 
   $returnme = $loginonly ? $content : get_css_box("Login", $content);
@@ -996,14 +1058,14 @@ global $PAGE;
 
 function get_edit_buttons($pageid, $featuretype, $featureid = false) {
 global $CFG, $USER;
-  $returnme        = "";
+  $returnme = "";
   $is_feature_menu = true; //Assume it is a main feature block button menu
   //User must be logged in
   if (is_logged_in()) {
     //Is this a feature with sections?
     //If is it a feature with sections...get the correct feature id.  If it is a normal feature, set is_section to true
     if (!strstr($featuretype, "_features")) {
-      $subset          = get_db_row("SHOW TABLE STATUS LIKE '$featuretype" . "_features'");
+      $subset = get_db_row("SHOW TABLE STATUS LIKE '$featuretype" . "_features'");
       $is_feature_menu = $featuretype == "pagename" || empty($subset) ? true : false;
     } else {
       $featuretype = str_replace("_features", "", $featuretype);
@@ -1018,13 +1080,16 @@ global $CFG, $USER;
 
       //Role and Abilities Manger button
       if ($featureid && (user_has_ability_in_page($USER->userid, "edit_feature_abilities", $pageid, $featuretype, $featureid) || user_has_ability_in_page($USER->userid, "edit_feature_user_abilities", $pageid, $featuretype, $featureid) || user_has_ability_in_page($USER->userid, "edit_feature_group_abilities", $pageid, $featuretype, $featureid))) {
-        $returnme .= make_modal_links(array("title" => "Roles & Abilities Manager",
-                                            "path" => $CFG->wwwroot . "/pages/roles.php?action=manager&amp;feature=$featuretype&amp;pageid=$pageid&amp;featureid=$featureid",
-                                            "iframe" => "true",
-                                            "width" => "700",
-                                            "height" => "580",
-                                            "image" => $CFG->wwwroot . "/images/key.png",
-                                            "class" => "slide_menu_button"));
+        $params = [
+          "title" => "Roles & Abilities Manager",
+          "path" => $CFG->wwwroot . "/pages/roles.php?action=manager&amp;feature=$featuretype&amp;pageid=$pageid&amp;featureid=$featureid",
+          "iframe" => "true",
+          "width" => "700",
+          "height" => "580",
+          "image" => $CFG->wwwroot . "/images/key.png",
+          "class" => "slide_menu_button",
+        ];
+        $returnme .= make_modal_links($params);
       }
 
       //Feature Settings
@@ -1034,14 +1099,15 @@ global $CFG, $USER;
 
         //Settings link for all features
         if (function_exists($featuretype . '_settings') && user_has_ability_in_page($USER->userid, "editfeaturesettings", $pageid, $featuretype, $featureid)) {
-          $returnme .= make_modal_links(array(
-              "title" => "Edit Settings",
-              "path" => $CFG->wwwroot . "/features/$featuretype/$featuretype.php?action=" . $featuretype . "_settings&amp;pageid=$pageid&amp;featureid=$featureid",
-              "width" => "640",
-              "refresh" => "true",
-              "image" => $CFG->wwwroot . "/images/settings.png",
-              "class" => "slide_menu_button"
-          ));
+          $params = [
+            "title" => "Edit Settings",
+            "path" => $CFG->wwwroot . "/features/$featuretype/$featuretype.php?action=" . $featuretype . "_settings&amp;pageid=$pageid&amp;featureid=$featureid",
+            "width" => "640",
+            "refresh" => "true",
+            "image" => $CFG->wwwroot . "/images/settings.png",
+            "class" => "slide_menu_button",
+          ];
+          $returnme .= make_modal_links($params);
         }
         $_POST["aslib"] = false;
       }
@@ -1081,8 +1147,14 @@ global $CFG, $PAGE;
   $titlefontcolor = isset($styles['titlefontcolor']) ? $styles['titlefontcolor'] : "";
 
   if (strlen($buttons) > 0) {
-    $params = array("bordercolor" => $bordercolor, "titlefontcolor" => $titlefontcolor, "titlebgcolor" => $titlebgcolor,
-                    "featuretype" => $featuretype, "featureid" => $featureid, "buttons" => $buttons);
+    $params = [
+      "bordercolor" => $bordercolor,
+      "titlefontcolor" => $titlefontcolor,
+      "titlebgcolor" => $titlebgcolor,
+      "featuretype" => $featuretype,
+      "featureid" => $featureid,
+      "buttons" => $buttons,
+    ];
     $returnme = template_use("tmp/pagelib.template", $params, "get_button_layout_template");
   }
 
@@ -1117,7 +1189,11 @@ function get_search_page_variables(int $total, int $perpage, int $pagenum) {
 
 function make_search_box($contents = "", $name_addition = "") {
 global $CFG;
-  $params = array("name_addition" => $name_addition, "wwwroot" => $CFG->wwwroot, "contents" => $contents);
+  $params = [
+    "name_addition" => $name_addition,
+    "wwwroot" => $CFG->wwwroot,
+    "contents" => $contents,
+  ];
   return template_use("tmp/pagelib.template", $params, "make_search_box_template");
 }
 

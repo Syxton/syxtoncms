@@ -28,7 +28,7 @@ total_owed:Pay:Amount Owed;
 paid:Pay:Amount Paid";
 
 // Format it for db;
-$formlist = str_replace(array("\r", "\n", "\t"), '', $formlist);
+$formlist = str_replace(["\r", "\n", "\t"], '', $formlist);
 
 // If it is already installed, don't install it again.
 if (!get_db_row("SELECT * FROM events_templates WHERE name = '$templatename'")) {

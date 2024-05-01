@@ -36,7 +36,7 @@ global $CFG, $MYVARS;
 	$tn = $MYVARS->GET["tn"];
 	$tp = $MYVARS->GET["tp"];
 	$list_day = $MYVARS->GET["list_day"];
- 	$whichevents = $show_site_events ? 'AND ((pageid=' . $pageid . ') OR (pageid='.$CFG->SITEID . ') OR (site_viewable=1))' : 'AND pageid=' . $pageid;
+ 	$whichevents = $show_site_events ? 'AND ((pageid=' . $pageid . ') OR (pageid=' . $CFG->SITEID . ') OR (site_viewable=1))' : 'AND pageid=' . $pageid;
 	$SQL = sprintf("SELECT * FROM `calendar_events` WHERE `date` > '%s' AND `date` < '%s' AND `day` = '%s' $whichevents ORDER BY day;", $tm, $tp, $list_day);
  	if ($result = get_db_result($SQL)) {
         $eventlist = '';

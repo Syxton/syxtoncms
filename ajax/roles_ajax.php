@@ -138,7 +138,7 @@ global $CFG, $ROLES, $USER, $MYVARS;
                 FROM `groups`
                WHERE groupid IN (SELECT groupid
                                    FROM groups_users
-                                  WHERE userid = '".$row['userid']."'
+                                  WHERE userid = '" . $row['userid'] . "'
                                     AND pageid = '$pageid')";
       if ($groups = get_db_result($SQL)) {
         while ($group_info = fetch_row($groups)) {
@@ -291,7 +291,7 @@ global $CFG, $MYVARS, $ROLES, $USER;
                 FROM groups
                WHERE groupid IN (SELECT groupid
                                    FROM groups_users
-                                  WHERE userid = '".$row['userid']."'
+                                  WHERE userid = '" . $row['userid'] . "'
                                     AND pageid = '$pageid')";
       if ($groups = get_db_result($SQL)) {
         while ($group_info = fetch_row($groups)) {
@@ -325,7 +325,7 @@ global $CFG, $MYVARS, $ROLES, $USER;
                 FROM `groups`
                WHERE groupid IN (SELECT groupid
                                    FROM groups_users
-                                  WHERE userid = '".$row['userid']."'
+                                  WHERE userid = '" . $row['userid'] . "'
                                     AND pageid='$pageid')";
       if ($groups = get_db_result($SQL)) {
           while ($group_info = fetch_row($groups)) {

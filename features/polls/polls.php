@@ -12,7 +12,7 @@ if (empty($_POST["aslib"])) {
 
     callfunction();
 
-    echo js_script_wrap($CFG->wwwroot .'/features/polls/polls.js');
+    echo js_script_wrap($CFG->wwwroot . '/features/polls/polls.js');
 
     echo '</body></html>';
 }
@@ -50,14 +50,14 @@ global $CFG, $MYVARS, $USER;
 	$answers = "";
     if ($result = get_db_result("SELECT * FROM polls_answers WHERE pollid='$pollid' ORDER BY sort")) {
         while ($answer = fetch_row($result)) {
-            $answers .= $answers == "" ? $answer["answer"] : ",".$answer["answer"];    
+            $answers .= $answers == "" ? $answer["answer"] : "," . $answer["answer"];    
         }
     }
     
-	echo js_script_wrap($CFG->wwwroot .'/scripts/popupcalendar.js');
+	echo js_script_wrap($CFG->wwwroot . '/scripts/popupcalendar.js');
     echo '
-    <input id="savedstartdate" type="hidden" value='.$savedstart.' />
-    <input id="savedstopdate" type="hidden" value='.$savedstop.' />
+    <input id="savedstartdate" type="hidden" value=' . $savedstart . ' />
+    <input id="savedstopdate" type="hidden" value=' . $savedstop . ' />
     <input id="lasthint" type="hidden" />
     <div id="edit_html_div">
     <form>
@@ -67,7 +67,7 @@ global $CFG, $MYVARS, $USER;
     			Poll Question:
     		</td>
     		<td class="field_input">
-    			<input type="text" id="polls_question" size="30" value="'. $row['question'] .'"/>
+    			<input type="text" id="polls_question" size="30" value="' . $row['question'] . '"/>
     			<span class="hint">This is the question of your poll ex. (What is your favorite fruit?)<span class="hint-pointer">&nbsp;</span></span>
     		</td>
     	</tr><tr><td></td><td class="field_input"><span id="question_error" class="error_text"></span></td></tr>
@@ -76,7 +76,7 @@ global $CFG, $MYVARS, $USER;
     			Poll Answers:
     		</td>
     		<td class="field_input">
-    			<input type="text" id="polls_answers" size="30" value="'. $answers .'"/>
+    			<input type="text" id="polls_answers" size="30" value="' . $answers . '"/>
     			<span class="hint">These are the answers to your poll, comma delimited. <br /> ex. (Apples,Oranges,Pears)<span class="hint-pointer">&nbsp;</span></span>
     		</td>
     	</tr><tr><td></td><td class="field_input"><span id="answers_error" class="error_text"></span></td></tr>
@@ -88,7 +88,7 @@ global $CFG, $MYVARS, $USER;
     			Start Date:
     		</td>
     		<td class="field_input">
-    			<input type="checkbox" id="startdateenabled" onclick="hide_show_span(\'startdatespan\')" /> (optional) '.$startdate.'
+    			<input type="checkbox" id="startdateenabled" onclick="hide_show_span(\'startdatespan\')" /> (optional) ' . $startdate . '
     		</td>
     	</tr>
     	<tr>
@@ -106,7 +106,7 @@ global $CFG, $MYVARS, $USER;
     			Stop Date:
     		</td>
     		<td class="field_input">
-    			<input type="checkbox" id="stopdateenabled" onclick="hide_show_span(\'stopdatespan\')" /> (optional) '.$stopdate.'
+    			<input type="checkbox" id="stopdateenabled" onclick="hide_show_span(\'stopdatespan\')" /> (optional) ' . $stopdate . '
     		</td>
     	</tr>
     	<tr>
@@ -121,7 +121,7 @@ global $CFG, $MYVARS, $USER;
     	<tr>
     		<td></td>
     		<td style="text-align:left;">
-    			<input type="button" value="Save" onclick="if (valid_poll_fields()) { var startdateenabled = !document.getElementById(\'startdateenabled\').checked ? \'&amp;startdateenabled=0&amp;startdate=\' + document.getElementById(\'savedstartdate\').value : \'&amp;startdateenabled=1&amp;startdate=\' + document.getElementById(\'startdate\').value; var stopdateenabled = !document.getElementById(\'stopdateenabled\').checked ? \'&amp;stopdateenabled=0&amp;stopdate=\' + document.getElementById(\'savedstopdate\').value : \'&amp;stopdateenabled=1&amp;stopdate=\' + document.getElementById(\'stopdate\').value; ajaxapi(\'/features/polls/polls_ajax.php\',\'poll_submit\',\'&amp;question=\' + document.getElementById(\'polls_question\').value + \'&amp;answers=\' + document.getElementById(\'polls_answers\').value + startdateenabled + stopdateenabled + \'&amp;pollid='.$pollid.'\',function() { close_modal();});}" />
+    			<input type="button" value="Save" onclick="if (valid_poll_fields()) { var startdateenabled = !document.getElementById(\'startdateenabled\').checked ? \'&amp;startdateenabled=0&amp;startdate=\' + document.getElementById(\'savedstartdate\').value : \'&amp;startdateenabled=1&amp;startdate=\' + document.getElementById(\'startdate\').value; var stopdateenabled = !document.getElementById(\'stopdateenabled\').checked ? \'&amp;stopdateenabled=0&amp;stopdate=\' + document.getElementById(\'savedstopdate\').value : \'&amp;stopdateenabled=1&amp;stopdate=\' + document.getElementById(\'stopdate\').value; ajaxapi(\'/features/polls/polls_ajax.php\',\'poll_submit\',\'&amp;question=\' + document.getElementById(\'polls_question\').value + \'&amp;answers=\' + document.getElementById(\'polls_answers\').value + startdateenabled + stopdateenabled + \'&amp;pollid=' . $pollid . '\',function() { close_modal();});}" />
     		</td>
     	</tr>
     	</table>

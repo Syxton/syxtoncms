@@ -38,8 +38,23 @@ global $CFG, $USER, $MYVARS;
     $year = $MYVARS->GET["year"];	
     $userid = is_logged_in() ? $USER->userid : false;
     $months = months_with_news($userid, $year, false, $pageid, $featureid);
-    $lastrow = get_array_count($months,-1);
-    echo make_select_from_array("news_".$featureid."_archive_month", $months, "month", "monthname", $months->$lastrow->month ,NULL, 'onchange="ajaxapi(\'/features/news/news_ajax.php\',\'update_archive_articles\',\'&amp;year=\'+document.getElementById(\'news_'.$featureid.'_archive_year\').value+\'&month=\'+this.value+\'&pageid='.$pageid.'&featureid='.$featureid.'\',function() { simple_display(\'article_span_'.$featureid.'_archive\');});"',NULL,NULL,'font-size:.8em;');
+    $lastrow = get_array_count($months, -1);
+    $params = [
+        "properties" => [
+            "name" => "news_" . $featureid . "_archive_month",
+            "id" => "news_" . $featureid . "_archive_month",
+            "style" => "font-size:.8em;",
+            "onchange" => 'ajaxapi(\'/features/news/news_ajax.php\',
+                                    \'update_archive_articles\',
+                                    \'&amp;year=\' + $(\'#news_' . $featureid . '_archive_year\').val() + \'&month=\' + this.value + \'&pageid=' . $pageid . '&featureid=' . $featureid . '\',
+                                    function() { simple_display(\'article_span_' . $featureid . '_archive\'); });',
+        ],
+        "values" => $months,
+        "valuename" => "month",
+        "displayname" => "monthname",
+        "selected" => $months->$lastrow->month,
+    ];
+    echo make_select($params);
 }
 
 function update_archive_articles() {
@@ -50,7 +65,17 @@ global $CFG, $USER, $MYVARS;
     $year = $MYVARS->GET["year"];
     $userid = is_logged_in() ? $USER->userid : false;	
     $newsarticles = get_month_news($userid, $year, $month, false, $pageid, $featureid);
-    echo make_select_from_array("news_".$featureid."_archive_news", $newsarticles, "newsid", "title", NULL ,NULL, '',NULL,NULL,'font-size:.8em;');
+    $params = [
+        "properties" => [
+            "name" => "news_" . $featureid . "_archive_news",
+            "id" => "news_" . $featureid . "_archive_news",
+            "style" => "font-size:.8em;",
+        ],
+        "values" => $newsarticles,
+        "valuename" => "newsid",
+        "displayname" => "title",
+    ];
+    echo make_select($params);
 }
 
 function edit_news() {

@@ -53,7 +53,7 @@ if (!get_db_row("SELECT * FROM events_templates WHERE name = '$templatename'"))
 	$SQL = "INSERT INTO events_templates
 	(name, folder, formlist, registrant_name, orderbyfield)
 	VALUES 
-	('$templatename','$templatefolder','".str_replace(array("\r", "\n", "\t"), '', $formlist)."', '$registrant_name', '$orderbyfield')";
+	('$templatename','$templatefolder','" . str_replace(["\r", "\n", "\t"], '', $formlist) . "', '$registrant_name', '$orderbyfield')";
 
 	execute_db_sql($SQL);
 }

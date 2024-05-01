@@ -28,9 +28,14 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
     unset($_COOKIE["pageid"]);
     unset($_SESSION['pageid']);
     $pageid = get_pageid();
+
+    if (!$currentpage = get_db_row("SELECT * FROM pages WHERE pageid='$pageid'")) {
+        header('Location: ' . $CFG->wwwroot);
+        die();
+    }
+
     setcookie('pageid', $pageid, get_timestamp() + $CFG->cookietimeout, '/');
     $_SESSION['pageid'] = $pageid;
-    $currentpage = get_db_row("SELECT * FROM pages WHERE pageid='$pageid'");
 
     $PAGE->title   = $CFG->sitename . " - " . $currentpage["name"]; // Title of page
     $PAGE->name   = $currentpage["name"]; // Title of page
@@ -75,10 +80,11 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
     }
 
     // Main Layout
-    $params = [ "mainmast" => page_masthead(true),
-                "sidemast" => page_masthead(false),
-                "sidecontents" => get_page_contents($PAGE->id, 'side'),
-                "middlecontents" => get_page_contents($PAGE->id, 'middle'),
+    $params = [
+        "mainmast" => page_masthead(true),
+        "sidemast" => page_masthead(false),
+        "sidecontents" => get_page_contents($PAGE->id, 'side'),
+        "middlecontents" => get_page_contents($PAGE->id, 'middle'),
     ];
 
     echo template_use("tmp/index.template", $params, "mainlayout_template");
