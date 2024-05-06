@@ -55,28 +55,94 @@ HealthRelationship:Health:Relationship;
 HealthTetanusDate:Health:Tetanus Date';
 
 //Event template specific settings
-$settings[] = ['name' => 'template_setting_min_age','title'=> 'Minimum Age','type' => 'text','numeric' => false,'default' => '', 'extravalidation' => '', 'extra_alert' => ''];
-$settings[] = ['name' => 'template_setting_max_age','title'=> 'Maximum Age','type' => 'text','numeric' => false,'default' => '', 'extravalidation' => '', 'extra_alert' => ''];
-$settings[] = ['name' => 'template_setting_pictures','title'=> 'Pictures','type' => 'yes/no','numeric' => false,'default' => "true", 'extravalidation' => '', 'extra_alert' => ''];
-$settings[] = ['name' => 'template_setting_pictures_price','title'=> 'Pictures Price','type' => 'text','numeric' => false,'default' => '5', 'extravalidation' => '', 'extra_alert' => ''];
-$settings[] = ['name' => 'template_setting_shirt','title'=> 'Shirts','type' => 'yes/no','numeric' => false,'default' => "false", 'extravalidation' => '', 'extra_alert' => ''];
-$settings[] = ['name' => 'template_setting_shirt_price','title'=> 'Shirt Price','type' => 'text','numeric' => false,'default' => '0', 'extravalidation' => '', 'extra_alert' => ''];
+$settings = [
+    [
+        'setting_name' => 'template_setting_min_age',
+        'display'=> 'Minimum Age',
+        'inputtype' => 'text',
+        'numeric' => true,
+        'defaultsetting' => '0',
+    ],
+    [
+        'setting_name' => 'template_setting_pictures',
+        'display'=> 'Pictures',
+        'inputtype' => 'yes/no',
+        'numeric' => false,
+        'defaultsetting' => "0",
+    ],
+    [
+        'setting_name' => 'template_setting_pictures_price',
+        'display'=> 'Pictures Price',
+        'inputtype' => 'text',
+        'numeric' => false,
+        'defaultsetting' => '0',
+    ],
+    [
+        'setting_name' => 'template_setting_shirt',
+        'display'=> 'Shirts',
+        'inputtype' => 'yes/no',
+        'defaultsetting' => "0",
+    ],
+    [
+        'setting_name' => 'template_setting_shirt_price',
+        'display'=> 'Shirt Price',
+        'inputtype' => 'text',
+        'numeric' => false,
+        'defaultsetting' => '0',
+    ],
+    [
+        'global' => true,
+        'setting_name' => 'facebookappid',
+        'display'=> 'Facebook App ID',
+        'inputtype' => 'text',
+        'defaultsetting' => '',
+    ],
+    [
+        'global' => true,
+        'setting_name' => 'facebooksecret',
+        'display'=> 'Facebook App Secret',
+        'inputtype' => 'text',
+        'defaultsetting' => '',
+    ],
+];
+
 $settings = dbescape(serialize($settings));
 
 //If it is already installed, don't install it again.
-if (!get_db_row("SELECT * FROM events_templates WHERE name = '$templatename'")) {
+if (!$template = get_db_row("SELECT * FROM events_templates WHERE name = '$templatename'")) {
 	$SQL = "INSERT INTO events_templates
-	(name, folder, formlist, registrant_name, orderbyfield, settings)
-	VALUES 
-	('$templatename','$templatefolder','" . str_replace(["\r", "\n", "\t"], '', $formlist) . "', '$registrant_name', '$orderbyfield', '$settings')";
+	                    (name, folder, formlist, registrant_name, orderbyfield, settings)
+	             VALUES ('$templatename', '$templatefolder','" . str_replace(["\r", "\n", "\t"], '', $formlist) . "', '$registrant_name', '$orderbyfield', '$settings')";
 
-	execute_db_sql($SQL);
+    execute_db_sql($SQL);
+    $templateid = get_db_field("template_id", "events_templates", "name = '$templatename'");
 } else { // Update formslist, settings, and orderbyfield in case they have changed.
+    $templateid = $template["template_id"];
 	$SQL = "UPDATE events_templates
 			   SET formlist = '" . str_replace(["\r", "\n", "\t"], '', $formlist) . "',
-			   	   settings = '$settings', orderbyfield = '$orderbyfield'
+			   	   settings = '$settings',
+                   orderbyfield = '$orderbyfield'
 			 WHERE name = '$templatename'
 			   AND folder = '$templatefolder'";
-	execute_db_sql($SQL);
+    execute_db_sql($SQL);
 }
+
+$globalsettings = [
+    [
+        "type" => "events_template_global",
+        "featureid" => $templateid,
+        "setting_name" => "facebookappid",
+        "defaultsetting" => "",
+    ],
+    [
+        "type" => "events_template_global",
+        "featureid" => $templateid,
+        "setting_name" => "facebooksecret",
+        "defaultsetting" => "",
+    ],
+];
+
+// Make sure that global settings exist.
+save_batch_settings($globalsettings);
+
 ?>

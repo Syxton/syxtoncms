@@ -25,26 +25,26 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
     echo get_js_set("main");
 
     $params = ["variable" => "TEST"];
-    echo template_use("tmp/test.template", $params, "simple");
+    echo use_template("tmp/test.template", $params, "simple");
 
-    echo template_use("tmp/test.template", $params, "code1");
+    echo use_template("tmp/test.template", $params, "code1");
 
     $params = ["variable" => [5, 4, 3, 2, 1]];
-    echo template_use("tmp/test.template", $params, "simple2");
-    echo template_use("tmp/test.template", $params, "code2");
+    echo use_template("tmp/test.template", $params, "simple2");
+    echo use_template("tmp/test.template", $params, "code2");
 
     $params = ["variables" => [1, 2, 3, 4, 5]];
-    echo template_use("tmp/test.template", $params, "code3");
+    echo use_template("tmp/test.template", $params, "code3");
 
     $variables = new \stdClass();
     $variables->one = 1;
     $variables->two = 2;
     $variables->three = 3;
     $params = ["variables" => $variables];
-    echo template_use("tmp/test.template", $params, "simple3");
-    echo template_use("tmp/test.template", $params, "code4");
+    echo use_template("tmp/test.template", $params, "simple3");
+    echo use_template("tmp/test.template", $params, "code4");
 
     $params = ["variable1" => "variable1", "variable3" => "variable3"];
-    echo template_use("tmp/test.template", $params, "optional");
+    echo use_template("tmp/test.template", $params, "optional");
 }
 ?>

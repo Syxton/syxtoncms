@@ -35,12 +35,12 @@ global $CFG, $MYVARS;
 			}
 			return $temparray;
 		}
-		$SQL = template_use("dbsql/styles.sql", $params, "custom_theme_styles");
+		$SQL = use_template("dbsql/styles.sql", $params, "custom_theme_styles");
 	} elseif ($themeid > 0) { // PAGE THEME IS SET TO A SAVED THEME
-		$SQL = template_use("dbsql/styles.sql", $params, "set_theme_styles");
+		$SQL = use_template("dbsql/styles.sql", $params, "set_theme_styles");
 	} else { // NO THEME...LOOK FOR PARENT THEMES
 		$params["themeid"] = get_page_themeid($CFG->SITEID);
-		$SQL = template_use("dbsql/styles.sql", $params, "parent_theme_styles");
+		$SQL = use_template("dbsql/styles.sql", $params, "parent_theme_styles");
 	}
 
 	if ($result = get_db_result($SQL)) {
@@ -67,26 +67,26 @@ global $CFG, $MYVARS, $USER;
 		"properties" => [
 			"name" => "themes",
 			"id" => "themes",
-			"onchange" => template_use("tmp/themes.template", $params, "theme_selector_menu_action_template"),
+			"onchange" => use_template("tmp/themes.template", $params, "theme_selector_menu_action_template"),
 			"style" => "width:225px;",
 		],
-		"values" => get_db_result(template_use("dbsql/styles.sql", ["notsite" => ($pageid != $CFG->SITEID)], "theme_selector_sql")),
+		"values" => get_db_result(use_template("dbsql/styles.sql", ["notsite" => ($pageid != $CFG->SITEID)], "theme_selector_sql")),
 		"valuename" => "themeid",
 		"displayname" => "name",
 		"selected" => $themeid,
 	];
 	$params["menu"] = make_select($themeselector);
-	$tabs = template_use("tmp/themes.template", $params, "theme_selector_tabs_template");
-	$left = $tabs . template_use("tmp/themes.template", $params, "theme_selector_left_template");
+	$tabs = use_template("tmp/themes.template", $params, "theme_selector_tabs_template");
+	$left = $tabs . use_template("tmp/themes.template", $params, "theme_selector_left_template");
 
 	$pagename = get_db_field("name", "pages", "pageid = '$pageid'");
-	$rolename = get_db_field("display_name", "roles", "roleid = " . get_user_role($USER->userid, $pageid));
+	$rolename = get_db_field("display_name", "roles", "roleid = " . user_role($USER->userid, $pageid));
 
 	$params["pagelist"] = get_css_box($pagename, $rolename, false, NULL, 'pagename', NULL, $themeid, null, $pageid);
 	$params["block"] = get_css_box("Title", "Content", null, null, null, null, $themeid, null, $pageid);
-	$right = template_use("tmp/themes.template", $params, "theme_selector_right_template");
+	$right = use_template("tmp/themes.template", $params, "theme_selector_right_template");
 
-	return template_use("tmp/themes.template", ["left" => $left, "right" => $right], "make_template_selector_panes_template");
+	return use_template("tmp/themes.template", ["left" => $left, "right" => $right], "make_template_selector_panes_template");
 }
 
 function custom_styles_selector($pageid, $feature, $featureid=false) {
@@ -99,7 +99,7 @@ function custom_styles_selector($pageid, $feature, $featureid=false) {
 			"checked2" => "checked",
 			"iscustom" => ($feature == "page"),
 		];
-		$tabs = template_use("tmp/themes.template", $params, "theme_selector_tabs_template");
+		$tabs = use_template("tmp/themes.template", $params, "theme_selector_tabs_template");
 
 		// Styles function
 		$styles = $feature . '_default_styles';
@@ -117,15 +117,15 @@ function custom_styles_selector($pageid, $feature, $featureid=false) {
 			} else {
 				$SQL = "themeid=0 AND attribute='" . $style[1]."' AND pageid='$revised_pageid' AND feature='$feature' AND featureid='$featureid' ORDER BY pageid DESC";
 			}
-			$value = get_db_field("value","styles", $SQL);
+			$value = get_db_field("value", "styles", $SQL);
 			if (!$value) { // No db value found, use the hard coded default value.
 				$value = $style[2];
 			}
-			$style_inputs .= template_use("tmp/themes.template", ["style" => $style, "value" => $value, "wwwroot" => $CFG->wwwroot], "style_inputs_template");
+			$style_inputs .= use_template("tmp/themes.template", ["style" => $style, "value" => $value, "wwwroot" => $CFG->wwwroot], "style_inputs_template");
 		}
 
 		$params["style_inputs"] = $style_inputs;
-		return $tabs . template_use("tmp/themes.template", $params, "custom_styles_selector_template");
+		return $tabs . use_template("tmp/themes.template", $params, "custom_styles_selector_template");
 }
 
 function get_custom_styles($pageid, $feature, $featureid=false) {
@@ -147,7 +147,7 @@ global $CFG;
 		} else {
 			$SQL = "themeid=0 AND attribute='" . $style[1]."' AND pageid='$revised_pageid' AND feature='$feature' AND featureid='$featureid' ORDER BY pageid DESC";
 		}
-		$value = get_db_field("value","styles", $SQL);
+		$value = get_db_field("value", "styles", $SQL);
 		if ($value) { // No db value found, use the hard coded default value.
 			$styles[$i][2] = $value;
 		}
@@ -192,18 +192,17 @@ function get_page_themeid($pageid) {
  *   if the statement failed.
  */
 function make_or_update_styles($params = []) {
-	$vars = ["list" => "", "values" => "", "fields" => ["value"]];
-
 	$fields = ["feature", "pageid", "featureid", "attribute", "themeid"];
-	$vars["fields"] += $fields;
+    $sqlfields = "";
+    $sqlvalues = "";
 
 	// Check if id was not provided but can be found.
 	if (!isset($params["id"])) {
 		$idsql = "";
-		foreach ($fields as $f) {
-			if (isset($params[$f]) && $params[$f] !== false) {
+		foreach ($fields as $field) {
+			if (isset($params[$field]) && $params[$field] !== false) {
 				$idsql .= $idsql == "" ? "" : " AND "; // Add AND if not first field.
-				$idsql .= "$f = '" . $params[$f] . "'";
+				$idsql .= "$field = '" . $params[$field] . "'";
 			}
 		}
 
@@ -213,25 +212,26 @@ function make_or_update_styles($params = []) {
 		}
 	}
 
+    $fields += ["value"]; // Add value field to list.
 	if (isset($params["id"])) { // Update statement.
 		$vars["id"] = $params["id"];
-		foreach ($vars["fields"] as $field) {
+		foreach ($fields as $field) {
 			if (isset($params[$field]) && $params[$field] !== false) { // Check $value is set.
-				$vars["list"] .= $vars["list"] == "" ? "" : ", "; // Add comma if not first field.
-				$vars["list"] .= "$field = '" . $params[$field] . "'";	
+				$sqlfields .= empty($sqlfields) ? "" : ", "; // Add comma if not first field.
+				$sqlfields .= "$field = '" . $params[$field] . "'";	
 			}
 		}
-		$SQL = "UPDATE styles SET " . $vars["list"] . " WHERE id = '" . $vars["id"] . "'";
+		$SQL = "UPDATE styles SET $sqlfields WHERE id = '" . $vars["id"] . "'";
 	} else { // Insert statement.
-		foreach ($vars["fields"] as $field) {
-			if (isset($params[$field]) && $params[$field] !== false) { // Check $value or $extravalue is set.
-				$vars["list"] .= $vars["list"] == "" ? "" : ", "; // Add comma if not first field.
-				$vars["list"] .= "$field"; // Add field to list of fields.
-				$vars["values"] .= $vars["values"] == "" ? "" : ", "; // Add comma if not first field.
-				$vars["values"] .= "'" . $params[$field] . "'"; // Add value to list of values.
+		foreach ($fields as $field) {
+			if (isset($params[$field]) && $params[$field] !== false) { // Check if field is set.
+				$sqlfields .= empty($sqlfields) ? "" : ", "; // Add comma if not first field.
+				$sqlfields .= "$field"; // Add field to list of fields.
+				$sqlvalues .= empty($sqlvalues) ? "" : ", "; // Add comma if not first field.
+				$sqlvalues .= "'" . $params[$field] . "'"; // Add value to list of values.
 			}
 		}
-		$SQL = "INSERT INTO styles(" . $vars["list"] . ") VALUES(" . $vars["values"] . ")";
+		$SQL = "INSERT INTO styles($sqlfields) VALUES($sqlvalues)";
 	}
 
 	// Whether insert or update statement succeeded we will get the settingid.

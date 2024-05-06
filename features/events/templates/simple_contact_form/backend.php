@@ -25,15 +25,15 @@ function register() {
 global $CFG, $MYVARS, $USER, $error;
 error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
 
-    //Facebook keys
-    $keys->app_key = '350430668323766';
-    $keys->app_secret = '7c43774dbcf542b0700e338bc5625296';
-  
+    //$keys->app_key = '350430668323766';
+    //$keys->app_secret = '7c43774dbcf542b0700e338bc5625296';
+
     if (!isset($COMLIB)) { include_once($CFG->dirroot . '/lib/comlib.php'); }
     $eventid = $MYVARS->GET["eventid"];
 	$event = get_db_row("SELECT * FROM events WHERE eventid = '$eventid'");
-	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='" . $event['template_id'] . "'");
-    
+    $templateid = $event['template_id'];
+	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='$templateid'");
+
     //Total up the registration bill
     //owed -> full price of this item
     //total_owed -> full price eventually due of entire cart of items
@@ -96,7 +96,7 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
             //Send registration email
             $touser->fname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Name_First'");
     		$touser->lname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Name_Last'");
-    		$touser->email = get_db_field("email","events_registrations","regid='$regid'");
+    		$touser->email = get_db_field("email", "events_registrations", "regid='$regid'");
     		$fromuser->email = $CFG->siteemail;
     		$fromuser->fname = $CFG->sitename;
     		$fromuser->lname = "";
@@ -129,7 +129,7 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
             //Send registration email
             $touser->fname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Name_First'");
     		$touser->lname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Name_Last'");
-    		$touser->email = get_db_field("email","events_registrations","regid='$regid'");
+    		$touser->email = get_db_field("email", "events_registrations", "regid='$regid'");
     		$fromuser->email = $CFG->siteemail;
     		$fromuser->fname = $CFG->sitename;
     		$fromuser->lname = "";
@@ -140,9 +140,7 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
         }
 		
         echo "<h2>Thank you for registering!</h2>";
-
-        //Facebook share button
-        echo '<br /><br />' . facebook_share_button($eventid, $MYVARS->GET["Name_First"], $keys);
+        echo '<br /><br />' . facebook_share_button($event, $MYVARS->GET["Name_First"]);
 
 	} else { // Failed registration      
         echo "<br /><br /><strong>We were unable to register you for this event.  Please try again at a later date.</strong>";

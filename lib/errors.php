@@ -12,6 +12,13 @@ if (!isset($LIBHEADER)) { include('header.php'); }
 
 $ERRORS = new \stdClass;
 
+ini_set('display_errors', '0');
+set_error_handler(function($severity, $message, $file, $line) {
+    if (error_reporting() & $severity) {
+        throw new ErrorException($message, 0, $severity, $file, $line);
+    }
+}, E_ERROR | E_PARSE);
+
 //Login Errors *********************************************************
 	$ERRORS->no_login = "Username or password was incorrect.<br />Please try again.";
 
@@ -66,7 +73,7 @@ $ERRORS = new \stdClass;
 	$ERRORS->valid_req_vpassword = "Please verify your password.";
 	$ERRORS->valid_vpassword_match = "Must match the password field.";
 
-function get_error_message($error, $vars = false) {
+function error_string($error, $vars = false) {
 global $CFG, $ERRORS;
     $lang = explode(":", $error);
     $string = $lang[0];
@@ -87,10 +94,6 @@ global $CFG, $ERRORS;
 	}
 }
 
-function get_page_error_message($error, $vars = false) {
-    return '<div style="background:red;padding:20px;text-align:center;">' . get_error_message($error, $vars) . '</div>';    
-}
-
 function fill_template($string, $vars) {
 	$vars = is_array($vars) ? $vars : [$vars];
     $i = 0;
@@ -108,5 +111,95 @@ function fill_template($string, $vars) {
         $i++;
     }
     return $string;
+}
+
+/**
+ * debugging
+ *
+ * This function is used to debug code. It can log the message and
+ * optionally display it on the page (level 2 or above). It will not
+ * display the message unless the debug setting in config.php is set
+ * to a level greater than 0.
+ *
+ * @param string $message The message to log and possibly display
+ * @param int $level The level of debugging. 0: No debugging, 1: Log only, 2: Display on page, 3: Display with backtrace
+ * @param bool $forced If true, use the level value regardless of config.php
+ *
+ * @return string HTML to display on the page if level is 2 or above
+ */
+function debugging($message = '', $level = 1, $forced = false) {
+    global $CFG, $USER;
+
+    $display = "";
+    $default = $CFG->debug ?? $level;
+    $default = $level > $default ? $level : $default;
+    $level = $forced ? $level : $default;
+
+    if (!$level) {
+        return $display;
+    }
+
+    if ($message) {
+        $from = ""; $from_printable = "";
+
+        if ($level > 2) {
+            // Include backtrace if level is 2 or above or $backtrace is true
+            $backtrace = debug_backtrace();
+            $from = " in " . format_backtrace($backtrace, true);
+            $from_printable = " in " . format_backtrace($backtrace, false);
+        }
+
+        // Log any level above 0
+        error_log('Debugging: ' . $message . $from);
+
+        $display = '<div style="background:red;padding:20px;text-align:center;">
+                    ' . $message . $from_printable . '
+                    </div>';
+
+        if ($level >= 2) {
+            echo $display;
+            die();
+        }
+    }
+    return $display;
+}
+
+function format_backtrace($callers, $plaintext = false) {
+    // do not use $CFG->dirroot because it might not be available in destructors
+    $dirroot = dirname(__DIR__);
+
+    if (empty($callers)) {
+        return '';
+    }
+
+    $from = $plaintext ? '' : '<ul style="text-align: left" data-rel="backtrace">';
+    foreach ($callers as $caller) {
+        if (!isset($caller['line'])) {
+            $caller['line'] = '?'; // probably call_user_func()
+        }
+        if (!isset($caller['file'])) {
+            $caller['file'] = 'unknownfile'; // probably call_user_func()
+        }
+        $line = $plaintext ? '* ' : '<li>';
+        $line .= 'line ' . $caller['line'] . ' of ' . str_replace($dirroot, '', $caller['file']);
+        if (isset($caller['function'])) {
+            $line .= ': call to ';
+            if (isset($caller['class'])) {
+                $line .= $caller['class'] . $caller['type'];
+            }
+            $line .= $caller['function'] . '()';
+        } else if (isset($caller['exception'])) {
+            $line .= ': '.$caller['exception'].' thrown';
+        }
+
+        // Remove any non printable chars.
+        $line = preg_replace('/[[:^print:]]/', '', $line);
+
+        $line .= $plaintext ? "\n" : '</li>';
+        $from .= $line;
+    }
+    $from .= $plaintext ? '' : '</ul>';
+
+    return $from;
 }
 ?>

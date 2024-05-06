@@ -7,10 +7,9 @@
 * Revision: 0.0.2
 ***************************************************************************/
 
-function participants_upgrade()
-{
+function participants_upgrade() {
 	global $CFG;
-    $version = get_db_field("version","features","feature='participants'");		
+    $version = get_db_field("version", "features", "feature='participants'");		
     $thisversion = 20100819;
 	if ($version < $thisversion) { execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='participants'"); }
         
@@ -25,8 +24,7 @@ function participants_upgrade()
 
 }
 
-function participants_install()
-{
+function participants_install() {
     //Make sure this hasn't already been done
     if (!get_db_row("SELECT * FROM features WHERE feature='participants'")) {
         $thisversion = 20100801;

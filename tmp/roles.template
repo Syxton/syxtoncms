@@ -210,8 +210,8 @@ group_specific_template||
 ||group_specific_template
 
 roles_manager_template||
-  ||echo get_js_tags(array("ui"));::none||
-  ||echo get_css_tags(array("ui"));::none||
+  ||echo get_js_tags(["ui"]);::none||
+  ||echo get_css_tags(["ui"]);::none||
   ||echo js_code_wrap('
     $("#tabs").tabs({
       beforeLoad: function( event, ui ) {

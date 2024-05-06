@@ -7,7 +7,7 @@
  * $Revision: 0.1.4
  ***************************************************************************/
 if (!isset($CFG)) {
-	$sub = '../';
+	$sub = '';
 	while (!file_exists($sub . 'config.php')) {
 		$sub .= '../';
 	}
@@ -23,20 +23,20 @@ update_user_cookie();
 
 function register() {
 global $CFG, $MYVARS, $USER, $error;
-error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
-
-    //Facebook keys
-    $keys->app_key = '350430668323766';
-    $keys->app_secret = '7c43774dbcf542b0700e338bc5625296';
-  
+//error_reporting(E_ERROR | E_PARSE); // Keep warnings from showing
+ 
     if (!isset($COMLIB)) { include_once($CFG->dirroot . '/lib/comlib.php'); }
     $eventid = $MYVARS->GET["eventid"];
 	$event = get_db_row("SELECT * FROM events WHERE eventid = '$eventid'");
-	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='" . $event['template_id'] . "'");
-	
+    $templateid = $event['template_id'];
+	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='$templateid'");
+
+    // Facebook keys
+    $global_settings = fetch_settings("events_template_global", $templateid);
+
     //Get charges for pictures and shirts
-    $picture_cost = get_db_field("setting","settings","type='events_template' AND extra='$eventid' AND setting_name='template_setting_pictures_price'");
-    $shirt_cost = get_db_field("setting","settings","type='events_template' AND extra='$eventid' AND setting_name='template_setting_shirt_price'");
+    $picture_cost = get_db_field("setting", "settings", "type='events_template' AND extra='$eventid' AND setting_name='template_setting_pictures_price'");
+    $shirt_cost = get_db_field("setting", "settings", "type='events_template' AND extra='$eventid' AND setting_name='template_setting_shirt_price'");
     $MYVARS->GET["Camper_Picture"] = $MYVARS->GET["Camper_Picture"] != "0" ? 1 : 0;
     $MYVARS->GET["Camper_Shirt"] = !empty($MYVARS->GET["Camper_Shirt_Size"]) ? 1 : 0;
     $picture_cost = $MYVARS->GET["Camper_Picture"] ? $picture_cost : 0; 
@@ -76,7 +76,8 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
         
         // Open registration div.
         echo '<div style="margin:auto;width:90%;text-align:center;">
-                <h1>Congratulations!</h1><br />';
+                <h1>Congratulations!</h1>
+                <br /><br />';
 		
 		if ($event['fee_full'] != 0) {
 			$items = !empty($MYVARS->GET["items"]) ? $MYVARS->GET["items"] . "**" . $regid . "::" . $MYVARS->GET["Camper_Name"] . " - " . $event["name"] . "::" . $MYVARS->GET["owed"] : $regid . "::" . $MYVARS->GET["Camper_Name"] . " - " . $event["name"] . "::" . $MYVARS->GET["owed"];
@@ -148,10 +149,12 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
             echo $regmessage; // Close registration div.
 
             // Send registration email.
+            $touser = new stdClass();
             $touser->fname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_First'");
     		$touser->lname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_Last'");
-    		$touser->email = get_db_field("email","events_registrations","regid='$regid'");
-    		$fromuser->email = $CFG->siteemail;
+    		$touser->email = get_db_field("email", "events_registrations", "regid='$regid'");
+    		$fromuser = new stdClass();
+            $fromuser->email = $CFG->siteemail;
     		$fromuser->fname = $CFG->sitename;
     		$fromuser->lname = "";    
             $message = registration_email($regid, $touser, $pending, $waivefee);
@@ -160,17 +163,17 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
     		}
 
 		} else { // Support for a free event.
-            echo '<h1>Congratulations!</h1>
-                    <br />
-                    <h3>You have successfully registered ' . $MYVARS->GET["Camper_Name_First"] . ' for ' . $event['name'] . '.</h3>';
+            echo '<h3>You have successfully registered ' . $MYVARS->GET["Camper_Name_First"] . ' for ' . $event['name'] . '.</h3>';
 
             execute_db_sql("UPDATE events_registrations SET verified='1' WHERE regid='$regid'");
 
             //Send registration email
+            $touser = new stdClass();
             $touser->fname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_First'");
     		$touser->lname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_Last'");
-    		$touser->email = get_db_field("email","events_registrations","regid='$regid'");
-    		$fromuser->email = $CFG->siteemail;
+    		$touser->email = get_db_field("email", "events_registrations", "regid='$regid'");
+    		$fromuser = new stdClass();
+            $fromuser->email = $CFG->siteemail;
     		$fromuser->fname = $CFG->sitename;
     		$fromuser->lname = "";
     		$message = registration_email($regid, $touser);
@@ -186,10 +189,9 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
 			}
 		}
 
-        //Facebook share button
         echo '</div>
               <br />
-              <div style="margin:auto;width:90%;text-align:center;">' . facebook_share_button($eventid, $MYVARS->GET["Camper_Name_First"], $keys) . '</div>';
+              <div style="margin:auto;width:90%;text-align:center;">' . facebook_share_button($event, $MYVARS->GET["Camper_Name_First"]) . '</div>';
 	} else { // Failed registration.
 		$MYVARS->GET["cart_total"] = $MYVARS->GET["cart_total"] - $MYVARS->GET["owed"];
 		echo '<div style="text-align:center;">
@@ -249,12 +251,12 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
 	}
 }
 
-function common_weeks($event, $included = true, $id, $regid = "", $autofill = 0) {
+function common_weeks($event, $included = true, $id = "", $regid = "", $autofill = 0) {
 global $CFG, $USER, $PAGE;
 	$returnme = "";
 	$time = get_timestamp();
-    $camper_age = $autofill == 0 ? false : get_db_field("value","events_registrations_values","regid='$regid' AND elementname='Camper_Age'");
-    $camper_name = $autofill == 0 ? false : get_db_field("value","events_registrations_values","regid='$regid' AND elementname='Camper_Name'");
+    $camper_age = $autofill == 0 ? false : get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Age'");
+    $camper_name = $autofill == 0 ? false : get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name'");
 	$siteviewable = $event["pageid"] == $CFG->SITEID || ($event["siteviewable"] == 1 && $event["confirmed"] == 1) ? " OR (siteviewable = '1' AND confirmed = '1')" : "";
 	$includelastevent = $included ? "" : "e.eventid != " . $event["eventid"]. " AND ";
 	$SQL = "SELECT e.* FROM events e WHERE $includelastevent (e.template_id=" . $event["template_id"] . " AND (e.pageid='" . $event["pageid"] . "' $siteviewable)) AND (e.start_reg < $time AND e.stop_reg > ($time - 86400)) AND (e.max_users=0 OR (e.max_users != 0 AND e.max_users > (SELECT COUNT(*) FROM events_registrations er WHERE er.eventid=e.eventid AND verified='1')))";
@@ -262,15 +264,15 @@ global $CFG, $USER, $PAGE;
         $common = [];
 		while ($evnt = fetch_row($events)) {
 			$selected = $event["eventid"] == $evnt["eventid"] ? " SELECTED " : "";
-            $min_age = get_db_field("setting","settings","type='events_template' AND extra='" . $evnt["eventid"] . "' AND setting_name='template_setting_min_age'");
-            $max_age = get_db_field("setting","settings","type='events_template' AND extra='" . $evnt["eventid"] . "' AND setting_name='template_setting_max_age'");
+            $min_age = get_db_field("setting", "settings", "type='events_template' AND extra='" . $evnt["eventid"] . "' AND setting_name='template_setting_min_age'");
+            $max_age = get_db_field("setting", "settings", "type='events_template' AND extra='" . $evnt["eventid"] . "' AND setting_name='template_setting_max_age'");
             $already_registered = get_db_count("SELECT * FROM events_registrations WHERE regid IN (SELECT regid FROM events_registrations_values WHERE elementname='Camper_Name' AND value='$camper_name') AND regid IN (SELECT regid FROM events_registrations_values WHERE elementname='Camper_Age' AND value='$camper_age') AND eventid='" . $evnt["eventid"] . "'");
-            //meets minimum age and maximum age requirements if set
+            // Meets minimum age and maximum age requirements if set
             if (!$camper_age || ((!$min_age && !$max_age) || ($min_age && $camper_age >= $min_age && $max_age && $camper_age <= $max_age) || 
                (!$max_age && ($min_age && $camper_age >= $min_age)) || 
                (!$min_age && ($max_age && $camper_age >= $max_age)))
             ) { 
-                if (!$already_registered) { $common[] = array('eventid' => $evnt['eventid'],'selected' => $selected,'name' => $evnt['name']); }       
+                if (!$already_registered) { $common[] = array('eventid' => $evnt['eventid'], 'selected' => $selected,'name' => $evnt['name']); }       
             }
 		}
         $returnme = count($common) ? '<select id="' . $id . '">' : '&nbsp;<span style="color:red;">There are no other weeks available. </span>';

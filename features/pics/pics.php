@@ -24,13 +24,12 @@ global $CFG, $MYVARS, $USER;
 
 	//Default Settings	
 	$default_settings = default_settings($feature, $pageid, $featureid);
-	$setting_names = get_setting_names($default_settings);
     
 	//Check if any settings exist for this feature
 	if ($settings = fetch_settings($feature, $featureid, $pageid)) {
-        echo make_settings_page($setting_names, $settings, $default_settings);
+        echo make_settings_page($settings, $default_settings);
 	} else { //No Settings found...setup default settings
-		if (make_or_update_settings_array($default_settings)) { pics_settings(); }
+		if (save_batch_settings($default_settings)) { pics_settings(); }
 	}
 }	
 
@@ -38,7 +37,7 @@ function add_pics() {
 global $CFG, $MYVARS, $USER;
 	$featureid = $MYVARS->GET["featureid"];
 	$pageid = $MYVARS->GET["pageid"];
-	if (!user_has_ability_in_page($USER->userid,"addpics", $pageid)) { echo get_page_error_message("no_permission",array("addpics")); return; }
+	if (!user_is_able($USER->userid, "addpics", $pageid)) { debugging(error_string("no_permission", ["addpics"]), 2); return; }
 	echo '
     <form id="pics_form" method="post" action="' . $CFG->wwwroot . '/features/pics/pics_ajax.php" enctype="multipart/form-data">
     <input type="hidden" id="filenames" name="filenames" />
@@ -48,7 +47,7 @@ global $CFG, $MYVARS, $USER;
     <input style="margin:10px;vertical-align:bottom; float:right;" type="button" name="upload_form" value="Upload Files" onclick="update_picslist();">
     Click the browse button to choose the images you would like to upload.  You can add as many as you would like.  The images will not be uploaded to the server until you click the Upload File button.
     <p>
-    <table style="width:98%; border-color:buttonface; border-style:dotted; padding: 10px 0px 10px 0px;">
+    <table class="dotted">
     	<tr>
     		<td>
     		<strong>Gallery</strong><br /><br />

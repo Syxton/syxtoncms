@@ -10,7 +10,7 @@
 function adminpanel_upgrade() {
 	global $CFG;
 
-    $version = get_db_field("version","features","feature='adminpanel'");	
+    $version = get_db_field("version", "features", "feature='adminpanel'");	
     $thisversion = 20100819;
 	if ($version < $thisversion) { execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='adminpanel'"); }
 

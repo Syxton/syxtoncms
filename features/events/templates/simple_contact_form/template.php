@@ -34,7 +34,7 @@ if ($show_again) { // This is not the first time through.
 		while ($reginfo = fetch_row($last_reg)) {
 			${$reginfo["elementname"]} = $reginfo["value"];
 		}
-		$email = get_db_field("email","events_registrations","regid='$regid'");
+		$email = get_db_field("email", "events_registrations", "regid='$regid'");
 	} else { // Different person...but auto fill the payment method and hide it.
 		$payment_method = get_db_field("value", "events_registrations_values", "elementname='payment_method' AND regid='$regid'");
 	}
@@ -43,8 +43,8 @@ if ($show_again) { // This is not the first time through.
 //output required javascript
 echo '<html>
         <head>
-        ' . get_js_tags(array("jquery", "validate")) . '
-        ' . get_js_tags(array("features/events/templates/simple_contact_form/ajax.js")) . '
+        ' . get_js_tags(["jquery", "validate"]) . '
+        ' . get_js_tags(["features/events/templates/simple_contact_form/ajax.js"]) . '
         </head>
         <body>
 ';
@@ -63,7 +63,7 @@ echo '<form name="form1" id="form1">
             <input type="hidden" name="items" id="items" value="' . $items . '" />';
 
 // Get full event info.
-$event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
+$event = get_event($eventid);
 echo '<div style="font-size:15px;text-align:center;font-weight:bold">Online Registration</div>
       <div style="font-size:13px;text-align:center;font-weight:bold">' . $event["name"] . '</div><br />';
 
@@ -89,15 +89,15 @@ if ($autofill) {
         <style> .calendarDateInput{margin-right:5px !important;}.info{ width: 92%; } .rowContainer textarea { width:80%;max-width: 480px; margin-right: 20px; } .rowContainer select { margin-right: 20px; }</style>
             <input type="hidden" name="Name" />
 			<div class="rowContainer">
-				<label class="rowTitle" for="email">Email Address *</label><input tabindex="1" type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-msg-required="' . get_error_message('valid_req_email') . '" data-msg-email="' . get_error_message('valid_email_invalid') . '" /><div class="tooltipContainer info">' . get_help("help_email:events:templates/simple_contact_form") . '</div>
+				<label class="rowTitle" for="email">Email Address *</label><input tabindex="1" type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-msg-required="' . error_string('valid_req_email') . '" data-msg-email="' . error_string('valid_email_invalid') . '" /><div class="tooltipContainer info">' . get_help("help_email:events:templates/simple_contact_form") . '</div>
 			    <div class="spacer" style="clear: both;"></div>
             </div>
 			<div class="rowContainer">
-				<label class="rowTitle" for="Name_First">First Name *</label><input tabindex="2" type="text" id="Name_First" name="Name_First" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="' . get_error_message('valid_req_fname') . '" /><div class="tooltipContainer info">' . get_help("input_fname") . '</div>
+				<label class="rowTitle" for="Name_First">First Name *</label><input tabindex="2" type="text" id="Name_First" name="Name_First" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="' . error_string('valid_req_fname') . '" /><div class="tooltipContainer info">' . get_help("input_fname") . '</div>
 			    <div class="spacer" style="clear: both;"></div>
             </div>
 			<div class="rowContainer">
-				<label class="rowTitle" for="Name_Last">Last Name *</label><input tabindex="3" type="text" id="Name_Last" name="Name_Last" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="' . get_error_message('valid_req_lname') . '" /><div class="tooltipContainer info">' . get_help("input_lname") . '</div>
+				<label class="rowTitle" for="Name_Last">Last Name *</label><input tabindex="3" type="text" id="Name_Last" name="Name_Last" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="' . error_string('valid_req_lname') . '" /><div class="tooltipContainer info">' . get_help("input_lname") . '</div>
   			    <div class="spacer" style="clear: both;"></div>
             </div>
 			<div class="rowContainer">
@@ -179,7 +179,7 @@ if ($autofill) {
                 <div class="spacer" style="clear: both;"></div>
             </div>';
 
-            $overnight = get_db_field("setting","settings","type='events_template' AND extra='$eventid' AND setting_name='template_setting_overnight'");
+            $overnight = get_db_field("setting", "settings", "type='events_template' AND extra='$eventid' AND setting_name='template_setting_overnight'");
             $overnight = empty($overnight) ? false : true;
             if (!$overnight) {
                 echo '<input type="hidden" id="Overnight" name="Overnight" value="No" />';
@@ -213,7 +213,7 @@ if ($event['fee_full']) {
     echo '
         <div class="rowContainer">
             <label class="rowTitle" for="Camp_Fee">Pay With Application</label>
-            ' . make_fee_options($event['fee_min'], $event['fee_full'],"payment_amount",'onchange="updateTotal();" onclick="updateTotal();"', $event['sale_end'], $event['sale_fee']) . '
+            ' . make_fee_options($event['fee_min'], $event['fee_full'], "payment_amount",'onchange="updateTotal();" onclick="updateTotal();"', $event['sale_end'], $event['sale_fee']) . '
             <div class="tooltipContainer info">' . get_help("help_paywithapp:events:templates/simple_contact_form") . '</div>
             <div class="spacer" style="clear: both;"></div>
         </div>
@@ -238,7 +238,7 @@ if ($event['fee_full']) {
 
 // Finalize and activate validation code.
 echo create_validation_script("form1" , "submit_simple_contact_form_registration()");
-$script = '$("input,select,textarea").bind("focus",function() { $(this).closest(".rowContainer").css("background-color","whitesmoke"); });
-           $("input,select,textarea").bind("blur",function() { $(this).closest(".rowContainer").css("background-color","white"); });';
+$script = '$("input,select,textarea").bind("focus",function() { $(this).closest(".rowContainer").css("background-color", "whitesmoke"); });
+           $("input,select,textarea").bind("blur",function() { $(this).closest(".rowContainer").css("background-color", "white"); });';
 echo js_code_wrap($script, "defer", true);
 ?>

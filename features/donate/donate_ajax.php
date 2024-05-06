@@ -69,19 +69,19 @@ global $CFG, $MYVARS, $USER;
     		<form id="campaign_form">
     			<fieldset class="formContainer">
     				<div class="rowContainer">
-    					<label for="title">Campaign Name</label><input type="text" id="title" name="title" value="' . $title . '" data-rule-required="true" data-msg-required="' . get_error_message('donate_req_title:donate') . '" /><div class="tooltipContainer info">' . get_help("donate_title:donate") . '</div><br />
+    					<label for="title">Campaign Name</label><input type="text" id="title" name="title" value="' . $title . '" data-rule-required="true" data-msg-required="' . error_string('donate_req_title:donate') . '" /><div class="tooltipContainer info">' . get_help("donate_title:donate") . '</div><br />
     				</div>
                     <div class="rowContainer">
-    					<label for="title">Goal Amount $</label><input type="text" id="goal" name="goal" value="' . $goal . '" data-rule-required="true" data-rule-number="true"  data-rule-min="0" data-msg-required="' . get_error_message('donate_req_goal:donate') . '" /><div class="tooltipContainer info">' . get_help("donate_goal:donate") . '</div><br />
+    					<label for="title">Goal Amount $</label><input type="text" id="goal" name="goal" value="' . $goal . '" data-rule-required="true" data-rule-number="true"  data-rule-min="0" data-msg-required="' . error_string('donate_req_goal:donate') . '" /><div class="tooltipContainer info">' . get_help("donate_goal:donate") . '</div><br />
     	  			</div>
     				<div class="rowContainer">
-    					<label for="description">Goal Description</label><textarea type="text" id="description" name="description" data-rule-required="true" data-msg-required="' . get_error_message('donate_req_description:donate') . '">' . $description . '</textarea><div class="tooltipContainer info">' . get_help("donate_description:donate") . '</div><br />
+    					<label for="description">Goal Description</label><textarea type="text" id="description" name="description" data-rule-required="true" data-msg-required="' . error_string('donate_req_description:donate') . '">' . $description . '</textarea><div class="tooltipContainer info">' . get_help("donate_description:donate") . '</div><br />
     	  			</div>
       				<div class="rowContainer">
-    					<label for="email">Paypal Email Address</label><input type="text" id="email" name="email" value="' . $email . '" data-rule-required="true" data-rule-email="true" data-msg-required="' . get_error_message('valid_req_email') . '" data-msg-email="' . get_error_message('valid_email_invalid') . '" /><div class="tooltipContainer info">' . get_help("donate_paypal_email:donate") . '</div><br />
+    					<label for="email">Paypal Email Address</label><input type="text" id="email" name="email" value="' . $email . '" data-rule-required="true" data-rule-email="true" data-msg-required="' . error_string('valid_req_email') . '" data-msg-email="' . error_string('valid_email_invalid') . '" /><div class="tooltipContainer info">' . get_help("donate_paypal_email:donate") . '</div><br />
     				</div>
                     <div class="rowContainer">
-    					<label for="email">Paypal PDT token</label><input type="text" id="token" name="token" value="' . $token . '" data-rule-required="true" data-msg-required="' . get_error_message('donate_req_token:donate') . '" /><div class="tooltipContainer info">' . get_help("donate_token:donate") . '</div><br />
+    					<label for="email">Paypal PDT token</label><input type="text" id="token" name="token" value="' . $token . '" data-rule-required="true" data-msg-required="' . error_string('donate_req_token:donate') . '" /><div class="tooltipContainer info">' . get_help("donate_token:donate") . '</div><br />
     				</div>
     		  		<div class="rowContainer">
                         <label for="shared">Share Campaign</label>
@@ -99,7 +99,7 @@ global $CFG, $MYVARS, $USER;
     		</form>
     	</div>';
     echo '<div id="donation_script" style="display:none">' . create_validation_script("campaign_form" , "ajaxapi('/features/donate/donate_ajax.php','add_new_campaign','&campaign_id=$campaign_id&featureid=$featureid&pageid=$pageid&email=' + escape($('#email').val()) + '&token=' + escape($('#token').val()) + '&title=' + escape($('#title').val()) + '&goal=' + escape($('#goal').val()) + '&description=' + escape($('#description').val()) + '&shared=' + escape($('#shared').val()),function() { var returned = trim(xmlHttp.responseText).split('**'); if (returned[0] == 'true') { $('#new_campaign_div').html(returned[1]);} else { $('#error_div').html(returned[1])}});", true) . "</div>";
-    echo format_popup($content,'Start a Donation Campaign',"380px");
+    echo format_popup($content, 'Start a Donation Campaign', "calc(100% - 70px)");
 }
 
 function add_new_campaign() {
@@ -190,7 +190,7 @@ global $CFG, $MYVARS, $USER;
     		<form id="donation_form">
     			<fieldset class="formContainer">
                     <div class="rowContainer">
-    					<label for="amount">Donation Amount $</label><input type="text" id="amount" name="amount" value="0.00" data-rule-required="true" data-rule-number="true" data-rule-min="0.01" data-msg-required="' . get_error_message('donate_req_amount:donate') . '" data-msg-min="' . get_error_message('donate_req_min:donate') . '" /><div class="tooltipContainer info">' . get_help("donate_amount:donate") . '</div><br />
+    					<label for="amount">Donation Amount $</label><input type="text" id="amount" name="amount" value="0.00" data-rule-required="true" data-rule-number="true" data-rule-min="0.01" data-msg-required="' . error_string('donate_req_amount:donate') . '" data-msg-min="' . error_string('donate_req_min:donate') . '" /><div class="tooltipContainer info">' . get_help("donate_amount:donate") . '</div><br />
     	  			</div>
     				<div class="rowContainer">
     					<label for="name">Name</label><input type="text" id="name" name="name" value="Anonymous" /><div class="tooltipContainer info">' . get_help("donate_name:donate") . '</div><br />
@@ -202,7 +202,7 @@ global $CFG, $MYVARS, $USER;
     		</form>
     	</div>';
     echo '<div id="donation_script" style="display:none">' . create_validation_script("donation_form" , "ajaxapi('/features/donate/donate_ajax.php','add_offline_donation','&featureid=$featureid&pageid=$pageid&amount=' + escape($('#amount').val()) + '&name=' + escape($('#name').val()),function() { var returned = trim(xmlHttp.responseText).split('**'); if (returned[0] == 'true') { $('#donation_display').html(returned[1]);} else { $('#error_div').html(returned[1])}});", true) . "</div>";
-    echo format_popup($content,'Start a Donation Campaign',"380px");    
+    echo format_popup($content, "Start a Donation Campaign", "calc(100% - 70px)");    
 }
 
 function add_offline_donation() {
@@ -305,7 +305,7 @@ global $CFG, $MYVARS, $USER;
                     </div>
     
                     <div class="rowContainer">
-    					<label for="amount">Donation Amount $</label><input type="text" id="amount" name="amount" value="' . number_format($row["amount"],2,".", "") . '" data-rule-required="true" data-rule-number="true" data-rule-min="0.01" data-msg-required="' . get_error_message('donate_req_amount:donate') . '" data-msg-min="' . get_error_message('donate_req_min:donate') . '" /><div class="tooltipContainer info">' . get_help("donate_amount:donate") . '</div><br />
+    					<label for="amount">Donation Amount $</label><input type="text" id="amount" name="amount" value="' . number_format($row["amount"],2,".", "") . '" data-rule-required="true" data-rule-number="true" data-rule-min="0.01" data-msg-required="' . error_string('donate_req_amount:donate') . '" data-msg-min="' . error_string('donate_req_min:donate') . '" /><div class="tooltipContainer info">' . get_help("donate_amount:donate") . '</div><br />
     	  			</div>
     				<div class="rowContainer">
     					<label for="name">Name</label><input type="text" id="name" name="name" value="' . $row["name"] . '" /><div class="tooltipContainer info">' . get_help("donate_name:donate") . '</div><br />
@@ -320,7 +320,7 @@ global $CFG, $MYVARS, $USER;
     		</form>
     	</div>';
     echo '<div id="donation_script" style="display:none">' . create_validation_script("donation_form" , "ajaxapi('/features/donate/donate_ajax.php','edit_donation_save','&donationid=$donationid&featureid=$featureid&pageid=$pageid&amount=' + escape($('#amount').val()) + '&name=' + escape($('#name').val()) + '&campaign_id=' + escape($('#campaign_id').val()) + '&paypal_TX=' + escape($('#paypal_TX').val()),function() { var returned = trim(xmlHttp.responseText).split('**'); if (returned[0] == 'true') { $('#donation_display').html(returned[1]);} else { $('#error_div').html(returned[1])}});", true) . "</div>";
-    echo format_popup($content,'Edit Donation',"380px");    
+    echo format_popup($content, "Edit Donation" , "calc(100% - 70px)");    
 }
 
 function edit_donation_save() {

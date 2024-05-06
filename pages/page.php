@@ -11,7 +11,7 @@ include ('header.php');
 
 callfunction();
 
-echo template_use("tmp/page.template", [], "end_of_page_template");
+echo use_template("tmp/page.template", [], "end_of_page_template");
 
 function browse() {
 global $CFG;
@@ -30,14 +30,14 @@ global $CFG;
 
   $searchtab = "";
   if (is_logged_in()) {
-    $searchtab = template_use("tmp/page.template", ["usersearchselected" => $usersearch], "browse_usersearch_template");
+    $searchtab = use_template("tmp/page.template", ["usersearchselected" => $usersearch], "browse_usersearch_template");
   }
   
   $params = [ "pagesearchselected" => $pagesearch,
 							"usersearchtab" => $searchtab,
   ];
 
-	echo template_use("tmp/page.template", $params, "browse_template");
+	echo use_template("tmp/page.template", $params, "browse_template");
 }
 
 function browse_search() {
@@ -45,7 +45,7 @@ global $CFG;
 	$params = [ "wwwroot" => $CFG->wwwroot,
               "search_results_box" => make_search_box(false, "pagesearch"),
   ];
-	echo template_use("tmp/page.template", $params, "browse_search_template");
+	echo use_template("tmp/page.template", $params, "browse_search_template");
 }
 
 function browse_users() {
@@ -53,7 +53,7 @@ global $CFG;
   $params = [ "wwwroot" => $CFG->wwwroot,
               "search_results_box" => make_search_box(false, "usersearch"),
   ];
-	echo template_use("tmp/page.template", $params, "browse_user_template");
+	echo use_template("tmp/page.template", $params, "browse_user_template");
 }
 
 function create_edit_page() {
@@ -63,8 +63,8 @@ global $CFG, $MYVARS, $ROLES, $USER;
   $content = '';
   $admin = is_siteadmin($USER->userid) ? true : false;
   if (isset($MYVARS->GET["pageid"])) {
-      if (!user_has_ability_in_page($USER->userid, "editpage", $MYVARS->GET["pageid"])) {
-          $content .= get_error_message("generic_permissions");
+      if (!user_is_able($USER->userid, "editpage", $MYVARS->GET["pageid"])) {
+          $content .= error_string("generic_permissions");
           return;
       }
       $page = get_db_row("SELECT * FROM pages WHERE pageid=" . $MYVARS->GET["pageid"]);
@@ -86,8 +86,8 @@ global $CFG, $MYVARS, $ROLES, $USER;
           $hide_no = $hide_yes == "" ? "selected" : "";
       }
   } else {
-      if (!user_has_ability_in_page($USER->userid, "createpage", $CFG->SITEID)) {
-          $content .= get_error_message("generic_permissions");
+      if (!user_is_able($USER->userid, "createpage", $CFG->SITEID)) {
+          $content .= error_string("generic_permissions");
           return;
       }
 
@@ -96,9 +96,9 @@ global $CFG, $MYVARS, $ROLES, $USER;
   }
 
   if (isset($MYVARS->GET["pageid"])) {
-  	$content .= create_validation_script("create_page_form" , template_use("tmp/page.template", ["pageid" => $MYVARS->GET["pageid"]], "edit_page_validation"));
+  	$content .= create_validation_script("create_page_form" , use_template("tmp/page.template", ["pageid" => $MYVARS->GET["pageid"]], "edit_page_validation"));
   } else {
-  	$content .= create_validation_script("create_page_form" , template_use("tmp/page.template", [], "create_page_validation"));
+  	$content .= create_validation_script("create_page_form" , use_template("tmp/page.template", [], "create_page_validation"));
   }
 
   $SQL = 'SELECT * FROM roles WHERE roleid > "' . $ROLES->creator . '" AND roleid < "' . $ROLES->none . '" ORDER BY roleid DESC';
@@ -137,7 +137,7 @@ global $CFG, $MYVARS, $ROLES, $USER;
               "hidefromvisitors" => $hidefromvisitors ?? false,
 							"buttonname" => (isset($MYVARS->GET["pageid"]) ? "Submit Changes" : "Create Page"),
   ];
-	$content .= template_use("tmp/page.template", $params, "create_edit_page_template");
+	$content .= use_template("tmp/page.template", $params, "create_edit_page_template");
 
   echo format_popup($content, 'Create/Edit Page');
 }
@@ -147,13 +147,13 @@ global $CFG, $MYVARS, $USER;
   $content = '';
   $pageid = $MYVARS->GET["pageid"];
   //Stop right there you!
-  if (!user_has_ability_in_page($USER->userid, "editpage", $pageid)) {
-      $content .= get_error_message("generic_permissions");
+  if (!user_is_able($USER->userid, "editpage", $pageid)) {
+      $content .= error_string("generic_permissions");
       return;
   }
 
 	$params = ["pageid" => $pageid];
-	$content .= template_use("tmp/page.template", $params, "create_edit_links_template");
+	$content .= use_template("tmp/page.template", $params, "create_edit_links_template");
   echo format_popup($content,'Edit Links');
 }
 ?>

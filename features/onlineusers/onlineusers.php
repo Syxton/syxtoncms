@@ -21,13 +21,12 @@ global $CFG, $MYVARS, $USER;
 
 	//Default Settings	
 	$default_settings = default_settings($feature, $pageid, $featureid);
-	$setting_names = get_setting_names($default_settings);
     
 	//Check if any settings exist for this feature
 	if ($settings = fetch_settings($feature, $featureid, $pageid)) {
-        echo make_settings_page($setting_names, $settings, $default_settings);
+        echo make_settings_page($settings, $default_settings);
 	} else { //No Settings found...setup default settings
-		if (make_or_update_settings_array($default_settings)) { onlineusers_settings(); }
+		if (save_batch_settings($default_settings)) { onlineusers_settings(); }
 	}
 }
 ?>

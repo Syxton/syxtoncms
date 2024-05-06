@@ -10,7 +10,7 @@
 if (!isset($CFG)) { include('../header.php'); } 
 update_user_cookie();
 
-if (!is_siteadmin($USER->userid)) { echo get_page_error_message("generic_permissions"); return; }
+if (!is_siteadmin($USER->userid)) { debugging(error_string("generic_permissions"), 2); return; }
 
 callfunction();
 
@@ -166,7 +166,7 @@ foreach ($searcharray as $term) {
 				}elseif (isset($MYVARS->GET["csv"])) { //Export to CSV
 					$fileoutput .= $row["fname"] . "," . $row["lname"] . "," . $row["email"] . "\n";
 				} else {
-					$lastip = get_db_field("ip","logfile","userid='" . $row["userid"] . "' ORDER BY timeline DESC");
+					$lastip = get_db_field("ip", "logfile", "userid='" . $row["userid"] . "' ORDER BY timeline DESC");
                     $locate = $lastip ? '<a title="IP Location" href="javascript: void(0);" onclick="get_coordinates(\'' . $lastip . '\',\'display\');"><img src="' . $CFG->wwwroot . '/images/locate.png" alt="IP Location" /></a>' : "";
 					$delete = !is_siteadmin($row["userid"]) ? '<a title="Delete User" href="javascript: void(0);" onclick="if (confirm(\'Do you want to delete ' . addslashes($row['fname']) . ' ' . addslashes($row['lname']) . '\\\'s account?\')) { ajaxapi(\'/ajax/site_ajax.php\',\'delete_user\',\'&userid=' . $row['userid'] . '\',function() { ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;pagenum=' . $pagenum . '&amp;search=' . $searchwords . '\',function() { simple_display(\'mem_resultsdiv\'); });}); }" ><img src="' . $CFG->wwwroot . '/images/delete.png" alt="Delete User" /></a>' : "";
                     $reset  = !is_siteadmin($row["userid"]) ? '<a title="Reset ' . $row['fname'] . ' ' . $row['lname'] . ' Password" href="javascript: void(0);" onclick="if (confirm(\'Do you want to reset ' . addslashes($row['fname']) . ' ' . addslashes($row['lname']) . '\\\'s password?\')) { ajaxapi(\'/ajax/site_ajax.php\',\'forgot_password\',\'&amp;admin=true&amp;userid=' . $row['userid'] . '\',function() { simple_display(\'reset_password_' . $row['userid'] . '\'); });}" ><img src="' . $CFG->wwwroot . '/images/reset.png" alt="Reset ' . $row['fname'] . ' ' . $row['lname'] . ' Password" /></a>' : "";
@@ -209,7 +209,7 @@ foreach ($searcharray as $term) {
 			}
 
             $body .= "</table>";
-   	        $export = '<div style="font-size:.65em;padding:2px;"><a href="javascript: ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;csv=1&amp;search=' . $searchwords . '\',function() { if (xmlHttp.readyState == 4) { run_this(); }}, true);" >Export to CSV</a>&nbsp;&nbsp;<a href="javascript: ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;mailman=1&amp;search=' . $searchwords . '\',function() { if (xmlHttp.readyState == 4) { run_this(); }}, true);" >Export to Mailman</a></div>';
+   	        $export = '<div style="font-size:.65em;padding:2px;"><a href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;csv=1&amp;search=' . $searchwords . '\',function() { if (xmlHttp.readyState == 4) { run_this(); }}, true);" >Export to CSV</a>&nbsp;&nbsp;<a href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;mailman=1&amp;search=' . $searchwords . '\',function() { if (xmlHttp.readyState == 4) { run_this(); }}, true);" >Export to Mailman</a></div>';
 			
 	        if (!isset($MYVARS->GET["mailman"]) && !isset($MYVARS->GET["csv"])) { echo $header . $export . $body; 
             } else {

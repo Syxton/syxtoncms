@@ -29,7 +29,7 @@ if ($show_again) //This is not the first time through
 		while ($reginfo = fetch_row($last_reg)) {
 			${$reginfo["elementname"]} = $reginfo["value"];
 		}
-		$email = get_db_field("email","events_registrations","regid=$regid");
+		$email = get_db_field("email", "events_registrations", "regid=$regid");
 	}
 	else //Different person...but auto fill the payment method and hide it.
 	{
@@ -61,8 +61,7 @@ echo '
     <a target="policy" href="' . $CFG->wwwroot . '/userfiles/1/file/regpolicy.html">Registration Policy</a>
   </p></td></tr>';
   
-if ($autofill)
-{
+if ($autofill) {
  echo '  <tr> 
             <td>
             	Camper: ' . $Camper_Name . '
@@ -274,11 +273,10 @@ else
 echo '<tr><td colspan="2"><hr></td></tr>
     <tr>
       <td align="right"><strong><font size="2">Pay With Application</font></strong></td>
-      <td>' . make_fee_options($row['fee_min'], $row['fee_full'],"payment_amount",'onchange="updateTotal();" onclick="updateTotal();"', $row['sale_end'], $row['sale_fee']) . '</td>
+      <td>' . make_fee_options($row['fee_min'], $row['fee_full'], "payment_amount",'onchange="updateTotal();" onclick="updateTotal();"', $row['sale_end'], $row['sale_fee']) . '</td>
     </tr>';
     
-if ($picturecost)
-{
+if ($picturecost) {
 echo '<tr>
       <td align="right"><strong><font size="2">Camp&nbsp;Picture:&nbsp;</font></strong></td>
        <td><input name="Camper_Picture" value="' . $picturecost . '" onchange="updateTotal();" onclick="updateTotal();" type="radio">Yes
@@ -293,8 +291,7 @@ echo
         <td>$<input name="paypal_amount" size="5" value="' . $row['fee_min'] . '" type="text" READONLY></td>
     </tr>';
 
-if (!$show_again)
-{
+if (!$show_again) {
   echo '<tr>
       <td align="right"><strong><font size="2">Method&nbsp;of&nbsp;Payment:&nbsp;</font></strong></td>
         <td><select name="payment_method" size="1" onchange="updateMessage();" onclick="updateMessage();">
@@ -324,8 +321,7 @@ echo '<tr>
         </tr>
       </table>';
 
-if (!$show_again)
-{
+if (!$show_again) {
 	echo '</div></form>';
 }
 

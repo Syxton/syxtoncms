@@ -21,7 +21,7 @@ global $CFG, $USER, $ROLES, $PAGE;
 	
 	//get settings or create default settings if they don't exist
 	if (!$settings = fetch_settings("chat", $featureid, $pageid)) {
-		make_or_update_settings_array(default_settings("chat", $pageid, $featureid));
+		save_batch_settings(default_settings("chat", $pageid, $featureid));
 		$settings = fetch_settings("chat", $featureid, $pageid);
 	}
 	
@@ -33,7 +33,7 @@ global $CFG, $USER, $ROLES, $PAGE;
 	
 	$content = get_js_tags(["scripts/frame_resize.js"]);
 
-	if ((is_logged_in() && user_has_ability_in_page($USER->userid,"chat", $pageid)) || (!is_logged_in() && role_has_ability_in_page($ROLES->visitor,"chat", $pageid))) {
+	if ((is_logged_in() && user_is_able($USER->userid, "chat", $pageid)) || (!is_logged_in() && role_is_able($ROLES->visitor,"chat", $pageid))) {
         $styles=get_styles($pageid, $PAGE->themeid);
 		if ($area == "middle") { 
 		  $content .= '<div style="width:100%;"><iframe id="myframe" onload="resizeCaller();" src="' . $CFG->wwwroot . '/features/chat/plugin/index.php?pageid=' . $pageid . '" frameborder="0" style="background-color:' . $styles['contentbgcolor'] . ';overflow:hidden;height:500px;width:100%;"></iframe></div>';
@@ -54,11 +54,11 @@ function chat_delete($pageid, $featureid) {
 		"feature" => "chat",
 	];
 
-	$SQL = template_use("dbsql/features.sql", $params, "delete_feature");
+	$SQL = use_template("dbsql/features.sql", $params, "delete_feature");
 	execute_db_sql($SQL);
-	$SQL = template_use("dbsql/features.sql", $params, "delete_feature_settings");
+	$SQL = use_template("dbsql/features.sql", $params, "delete_feature_settings");
 	execute_db_sql($SQL);
-	$SQL = template_use("dbsql/chat.sql", $params, "delete_chat", "chat");
+	$SQL = use_template("dbsql/chat.sql", $params, "delete_chat", "chat");
 	execute_db_sql($SQL);
 
 	resort_page_features($pageid);
@@ -73,18 +73,14 @@ global $CFG, $USER;
 function chat_default_settings($type, $pageid, $featureid) {
 	$settings = [
 		[
-			"type" => "$type",
-			"pageid" => "$pageid",
-			"featureid" => "$featureid",
 			"setting_name" => "feature_title",
-			"setting" => "Chat",
-			"extra" => false,
 			"defaultsetting" => "Chat",
 			"display" => "Feature Title",
 			"inputtype" => "text",
 		],
 	];
 
+    $settings = attach_setting_identifiers($settings, $type, $pageid, $featureid);
 	return $settings;
 }
 
@@ -111,7 +107,7 @@ global $CFG;
    
 	if ($users_list = users_that_have_ability_in_page("chat", $pageid)) {
     	while ($user = fetch_row($users_list)) {
-    		$users[$i]['userRole'] = user_has_ability_in_page($user["userid"], "moderate", $pageid) ? 2:0;
+    		$users[$i]['userRole'] = user_is_able($user["userid"], "moderate", $pageid) ? 2:0;
     		$users[$i]['userName'] = substr($user["fname"],0,1) . "." . $user["lname"];
     		$users[$i]['password'] = "";
     		$users[$i]['channels'] = explode(",", $channel_list);

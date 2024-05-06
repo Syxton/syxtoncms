@@ -18,7 +18,7 @@
 
 	<?php
 		echo js_code_wrap('var dirfromroot = "' . $CFG->directory . '";');
-		echo js_code_wrap(template_use("tmp/pagelib.template", [], "defer_script"));
+		echo js_code_wrap(use_template("tmp/pagelib.template", [], "defer_script"));
 		echo get_js_set("main"); // Load javascript.
 	?>
 

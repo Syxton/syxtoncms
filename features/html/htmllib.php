@@ -17,13 +17,13 @@ $HTMLLIB = true;
 
 function display_html($pageid, $area, $featureid) {
 global $CFG, $USER, $HTMLSETTINGS;
-	$abilities = get_user_abilities($USER->userid, $pageid, "html", "html", $featureid);
+	$abilities = user_abilities($USER->userid, $pageid, "html", "html", $featureid);
 	if (!$settings = fetch_settings("html", $featureid, $pageid)) {
-		make_or_update_settings_array(default_settings("html", $pageid, $featureid));
+		save_batch_settings(default_settings("html", $pageid, $featureid));
 		$settings = fetch_settings("html", $featureid, $pageid);
 	}
 
-  //if (user_has_ability_in_page($USER->userid, "viewhtml", $pageid, "html", $featureid)) {
+  //if (user_is_able($USER->userid, "viewhtml", $pageid, "html", $featureid)) {
   if (!empty($abilities->viewhtml->allow)) {
     return get_html($pageid, $featureid, $settings, $abilities, $area);
   }
@@ -39,7 +39,7 @@ global $CFG, $USER;
 			if ($settings->html->$featureid->allowcomments->setting) {
 				$hidebuttons = $htmlonly ? true : false;
 				$comments = $abilities->viewcomments->allow && $settings->html->$featureid->allowcomments->setting ? get_html_comments($row['htmlid'], $pageid, $hidebuttons, $limit) : '';
-        $makecomment = $abilities->makecomments->allow ? make_modal_links(array("title" => "Comment","path" => $CFG->wwwroot . "/features/html/html.php?action=makecomment&amp;pageid=$pageid&amp;htmlid=" . $row['htmlid'],"styles" => "float:right;","refresh" => "true")) : '';
+        $makecomment = $abilities->makecomments->allow ? make_modal_links(array("title" => "Comment", "path" => action_path("html") . "makecomment&amp;pageid=$pageid&amp;htmlid=" . $row['htmlid'], "styles" => "float:right;", "refresh" => "true")) : '';
       }
 			$nomargin = "";
 			if (isset($settings->html->$featureid->allowfullscreen->setting) && $settings->html->$featureid->allowfullscreen->setting == 1) { // if fullscreen option is on, remove margin.
@@ -53,7 +53,7 @@ global $CFG, $USER;
         $stopped_editing = '<input type="hidden" id="html_' . $featureid . '_stopped_editing" value="ajaxapi(\'/features/html/html_ajax.php\',\'stopped_editing\',\'&amp;htmlid=' . $featureid . '&amp;userid=0\',function() {if (xmlHttp.readyState == 4) { do_nothing(); }}, true);" />';
         if (is_logged_in() && $settings->html->$featureid->enablerss->setting) {
 					$modalsettings = array("title" => "RSS Feed", "path" => $CFG->wwwroot . "/pages/rss.php?action=rss_subscribe_feature&amp;pageid=$pageid&amp;featureid=$featureid&amp;feature=html",
-																 "styles" => "position: relative;top: 4px;padding-right:2px;", "iframe" => "true",
+																 "styles" => "position: relative;top: 4px;padding-right:2px;", "iframe" => true,
 																 "refresh" => "true", "height" => "300", "width" => "640", "image" => $CFG->wwwroot . "/images/small_rss.png");
 					$rss = make_modal_links($modalsettings);
 				}
@@ -159,7 +159,7 @@ global $CFG;
 							$title = $url;
 							$link = $CFG->wwwroot . '/scripts/download.php?file=' . $url;
 						}
-						$html = str_replace($match[0],'<a title="' . $title . '" href="' . $link . '" onclick="blur();"><img src="' . $CFG->wwwroot . '/images/' . $icon . '" alt="Save" /></a>&nbsp;' . make_modal_links(array("text" => $text, "title" => $title, "path" => $CFG->wwwroot . "/pages/ipaper.php?action=view_ipaper&amp;doc_url=" . base64_encode($url),"height" => "80%","width" => "80%")), $html);
+						$html = str_replace($match[0], '<a title="' . $title . '" href="' . $link . '" onclick="blur();"><img src="' . $CFG->wwwroot . '/images/' . $icon . '" alt="Save" /></a>&nbsp;' . make_modal_links(array("text" => $text, "title" => $title, "path" => $CFG->wwwroot . "/pages/ipaper.php?action=view_ipaper&amp;doc_url=" . base64_encode($url),"height" => "80%", "width" => "80%")), $html);
 					}
 				}
 			}
@@ -174,7 +174,7 @@ global $CFG;
 	if (preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) {
 		$i = 0;
 		foreach ($matches as $match) {
-			if (!strstr($match[0],'javascript:')) {
+			if (!strstr($match[0], 'javascript:')) {
 				$found = false;
 				$filetypes = '/([\.[aA][aA][cC]|\.[mM][4][aA])/';
 				if (preg_match($filetypes, $match[2])) {
@@ -232,7 +232,7 @@ global $CFG;
 	if (preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) {
 		$i = 0;
 		foreach ($matches as $match) {
-			if (!strstr($match[0],'javascript:')) {
+			if (!strstr($match[0], 'javascript:')) {
 				$filetypes = '/([\.[fF][lL][vV]|\.[mM][pP][4])/';
 				if (preg_match($filetypes, $match[2])) {
 					//make internal links full paths
@@ -281,7 +281,7 @@ global $CFG;
 			$url = $match[2];
 			$id = youtube_id_from_url($url);
 			if (!strstr($url,'#noembed')) {
-				if (!strstr($match[0],'javascript:') && strlen($id) > 0) {
+				if (!strstr($match[0], 'javascript:') && strlen($id) > 0) {
 					if (preg_match('/((http:\/\/)?(?:youtu\.be\/|(?:[a-z]{2,3}\.)?youtube\.com\/v\/)([\w-]{11}).*|http:\/\/(?:youtu\.be\/|(?:[a-z]{2,3}\.)?youtube\.com\/watch(?:\?|#\!)v=)([\w-]{11}).*)/i', $match[0]) || preg_match('/(\s*\.[yY][oO][uU][tT][uU][bB][eE]\.[cC][oO][mM][\/]\s*)/', $url)) {
 							$html = str_replace($match[0], '<div style="' . ($area == "middle" ? 'max-width:500px;margin:auto;' : '') . '"><div style="width: 100%; padding-top: 60%; margin-bottom: 5px; position: relative;"><iframe style="position: absolute; width: 100%; height: 100%; top: 0; left: 0;" src="//www.youtube.com/embed/' . $id . '"></iframe></div></div>', $html);
 					}
@@ -410,9 +410,9 @@ global $CFG, $USER;
 			$makecomment = $makereply = $editcomment = $deletecomment = $username = "";
 			$username = !$row['userid'] ? "Visitor" : get_user_name($row['userid']);
 			$reply = get_html_replies($row['commentid'], $hidebuttons, $pageid);
-			if (!$hidebuttons) { $deletecomment = user_has_ability_in_page($USER->userid,"deletecomments", $pageid) || ($USER->userid == $row["userid"] && user_has_ability_in_page($USER->userid,"makecomments", $pageid)) ? make_modal_links(array("title" => "Delete Comment","path" => $CFG->wwwroot . "/features/html/html.php?action=deletecomment&amp;userid=" . $row["userid"] . '&amp;pageid=' . $pageid . '&amp;commentid=' . $row['commentid'],"refresh" => "true","image" => $CFG->wwwroot . "/images/delete.png")) : "";}
-			if (!$hidebuttons && !strlen($reply) > 0 && user_has_ability_in_page($USER->userid,"makereplies", $pageid)) { $makereply = make_modal_links(array("title" => "Reply","path" => $CFG->wwwroot . "/features/html/html.php?action=makereply&amp;pageid=$pageid&amp;commentid=" . $row['commentid'],"refresh" => "true","styles" => "float:right;padding: 2px;"));}
-			if (!$hidebuttons) { $editcomment = user_has_ability_in_page($USER->userid,"editanycomment", $pageid) || ($USER->userid == $row["userid"] && user_has_ability_in_page($USER->userid,"makecomments", $pageid)) ? '<br />' . make_modal_links(array("title" => "Edit","path" => $CFG->wwwroot . "/features/html/html.php?action=editcomment&amp;pageid=$pageid&amp;commentid=" . $row['commentid'] . '&amp;userid=' . $row["userid"],"refresh" => "true","styles" => "float:left;padding: 2px;")) : ''; }
+			if (!$hidebuttons) { $deletecomment = user_is_able($USER->userid, "deletecomments", $pageid) || ($USER->userid == $row["userid"] && user_is_able($USER->userid, "makecomments", $pageid)) ? make_modal_links(array("title" => "Delete Comment", "path" => action_path("html") . "deletecomment&amp;userid=" . $row["userid"] . '&amp;pageid=' . $pageid . '&amp;commentid=' . $row['commentid'], "refresh" => "true", "image" => $CFG->wwwroot . "/images/delete.png")) : "";}
+			if (!$hidebuttons && !strlen($reply) > 0 && user_is_able($USER->userid, "makereplies", $pageid)) { $makereply = make_modal_links(array("title" => "Reply", "path" => action_path("html") . "makereply&amp;pageid=$pageid&amp;commentid=" . $row['commentid'], "refresh" => "true", "styles" => "float:right;padding: 2px;"));}
+			if (!$hidebuttons) { $editcomment = user_is_able($USER->userid, "editanycomment", $pageid) || ($USER->userid == $row["userid"] && user_is_able($USER->userid, "makecomments", $pageid)) ? '<br />' . make_modal_links(array("title" => "Edit", "path" => action_path("html") . "editcomment&amp;pageid=$pageid&amp;commentid=" . $row['commentid'] . '&amp;userid=' . $row["userid"], "refresh" => "true", "styles" => "float:left;padding: 2px;")) : ''; }
 			$comments .=
 			'
 			<table class="blogbox">
@@ -461,8 +461,8 @@ global $CFG, $USER;
 	if ($result = get_db_result($SQL)) {
 		while ($row = fetch_row($result)) {
 			$username = get_user_name($row['userid']);
-			if (!$hidebuttons) { $editreply = user_has_ability_in_page($USER->userid,"makereplies", $pageid) ? '<br />' . make_modal_links(array("title" => "Edit","path" => $CFG->wwwroot . "/features/html/html.php?action=editreply&amp;pageid=$pageid&amp;commentid=$commentid&amp;replyid=" . $row["replyid"],"refresh" => "true","styles" => "float:left;padding: 2px;")) . '<br />' : '';}
-			if (!$hidebuttons) { $deletereply = user_has_ability_in_page($USER->userid,"deletereply", $pageid) ? make_modal_links(array("title" => "Delete Reply","path" => $CFG->wwwroot . "/features/html/html.php?action=deletereply&amp;pageid=$pageid&amp;replyid=" . $row["replyid"],"refresh" => "true","image" => $CFG->wwwroot . "/images/delete.png")) : "";}
+			if (!$hidebuttons) { $editreply = user_is_able($USER->userid, "makereplies", $pageid) ? '<br />' . make_modal_links(array("title" => "Edit", "path" => action_path("html") . "editreply&amp;pageid=$pageid&amp;commentid=$commentid&amp;replyid=" . $row["replyid"], "refresh" => "true", "styles" => "float:left;padding: 2px;")) . '<br />' : '';}
+			if (!$hidebuttons) { $deletereply = user_is_able($USER->userid, "deletereply", $pageid) ? make_modal_links(array("title" => "Delete Reply", "path" => action_path("html") . "deletereply&amp;pageid=$pageid&amp;replyid=" . $row["replyid"], "refresh" => "true", "image" => $CFG->wwwroot . "/images/delete.png")) : "";}
 			$replies =
 			'
 				<tr class="blogcommentheader">
@@ -492,11 +492,11 @@ function html_delete($pageid, $featureid) {
 		"feature" => "html",
 	];
 
-	$SQL = template_use("dbsql/features.sql", $params, "delete_feature");
+	$SQL = use_template("dbsql/features.sql", $params, "delete_feature");
     execute_db_sql($SQL);
-    $SQL = template_use("dbsql/features.sql", $params, "delete_feature_settings");
+    $SQL = use_template("dbsql/features.sql", $params, "delete_feature_settings");
     execute_db_sql($SQL);
-	$SQL = template_use("dbsql/html.sql", $params, "delete_html", "html");
+	$SQL = use_template("dbsql/html.sql", $params, "delete_html", "html");
     execute_db_sql($SQL);
 
 	resort_page_features($pageid);
@@ -507,15 +507,15 @@ global $CFG, $USER;
 	$settings = fetch_settings("html", $featureid, $pageid);
 	$blog = $settings->html->$featureid->blog->setting;
 
-	$html_abilities = get_user_abilities($USER->userid, $pageid,"html","html", $featureid);
-	$feature_abilities = get_user_abilities($USER->userid, $pageid,"features","html", $featureid);
+	$html_abilities = user_abilities($USER->userid, $pageid,"html", "html", $featureid);
+	$feature_abilities = user_abilities($USER->userid, $pageid,"features", "html", $featureid);
 
 	$returnme = "";
 	if ($blog && !empty($feature_abilities->addfeature->allow)) { $returnme .= ' <a class="slide_menu_button" title="Add Blog Edition" onclick="if (confirm(\'Do you want to make a new blog edition?  This will move the current blog to the Blog Locker.\')) { ajaxapi(\'/features/html/html_ajax.php\',\'new_edition\',\'&amp;pageid=' . $pageid . '&amp;htmlid=' . $featureid . '\',function() { refresh_page(); });}"><img src="' . $CFG->wwwroot . '/images/add.png" alt="Delete Feature" /></a> '; }
 
-    if (!empty($html_abilities->edithtml->allow)) { $returnme .= make_modal_links(array("title" => "Edit HTML","path" => $CFG->wwwroot . "/features/html/html.php?action=edithtml&amp;pageid=$pageid&amp;featureid=$featureid","runafter" => "html_" . $featureid."_stopped_editing","iframe" => "true","refresh" => "true","width" => "950","image" => $CFG->wwwroot . "/images/edit.png","class" => "slide_menu_button")); }
+    if (!empty($html_abilities->edithtml->allow)) { $returnme .= make_modal_links(array("title" => "Edit HTML", "path" => action_path("html") . "edithtml&amp;pageid=$pageid&amp;featureid=$featureid", "runafter" => "html_" . $featureid."_stopped_editing", "iframe" => true, "refresh" => "true", "width" => "950", "image" => $CFG->wwwroot . "/images/edit.png", "class" => "slide_menu_button")); }
 
-    if (!$blog && user_has_ability_in_page($USER->userid,"addtolocker", $pageid)) { $returnme .= '  <a class="slide_menu_button" title="Move to Blog Locker" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'move_feature\',\'&amp;pageid=' . $pageid . '&amp;featuretype=' . $featuretype . '&amp;featureid=' . $featureid . '&amp;direction=locker\',function() { refresh_page(); });"><img src="' . $CFG->wwwroot . '/images/vault.png" alt="Move to Blog Locker" /></a> '; }
+    if (!$blog && user_is_able($USER->userid, "addtolocker", $pageid)) { $returnme .= '  <a class="slide_menu_button" title="Move to Blog Locker" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'move_feature\',\'&amp;pageid=' . $pageid . '&amp;featuretype=' . $featuretype . '&amp;featureid=' . $featureid . '&amp;direction=locker\',function() { refresh_page(); });"><img src="' . $CFG->wwwroot . '/images/vault.png" alt="Move to Blog Locker" /></a> '; }
 	return $returnme;
 }
 
@@ -552,56 +552,31 @@ global $CFG;
 function html_default_settings($type, $pageid, $featureid) {
 	$settings = [
 		[
-			"type" => "$type",
-			"pageid" => "$pageid",
-			"featureid" => "$featureid",
 			"setting_name" => "feature_title",
-			"setting" => "HTML",
-			"extra" => false,
 			"defaultsetting" => "HTML",
 			"display" => "Feature Title",
 			"inputtype" => "text",
 		],
 		[
-			"type" => "$type",
-			"pageid" => "$pageid",
-			"featureid" => "$featureid",
 			"setting_name" => "blog",
-			"setting" => "0",
-			"extra" => false,
 			"defaultsetting" => "0",
 			"display" => "Blog Mode (editions)",
 			"inputtype" => "yes/no",
 		],
 		[
-			"type" => "$type",
-			"pageid" => "$pageid",
-			"featureid" => "$featureid",
 			"setting_name" => "enablerss",
-			"setting" => "0",
-			"extra" => false,
 			"defaultsetting" => "0",
 			"display" => "Enable RSS",
 			"inputtype" => "yes/no",
 		],
 		[
-			"type" => "$type",
-			"pageid" => "$pageid",
-			"featureid" => "$featureid",
 			"setting_name" => "allowcomments",
-			"setting" => "0",
-			"extra" => false,
 			"defaultsetting" => "0",
 			"display" => "Allow Comments",
 			"inputtype" => "yes/no",
 		],
 		[
-			"type" => "$type",
-			"pageid" => "$pageid",
-			"featureid" => "$featureid",
 			"setting_name" => "middlecommentlimit",
-			"setting" => "10",
-			"extra" => false,
 			"defaultsetting" => "10",
 			"display" => "Limit Replies Shown in Middle",
 			"inputtype" => "text",
@@ -610,12 +585,7 @@ function html_default_settings($type, $pageid, $featureid) {
 			"warning" => "Must be greater than 0.",
 		],
 		[
-			"type" => "$type",
-			"pageid" => "$pageid",
-			"featureid" => "$featureid",
 			"setting_name" => "sidecommentlimit",
-			"setting" => "3",
-			"extra" => false,
 			"defaultsetting" => "3",
 			"display" => "Limit Replies Shown on Side",
 			"inputtype" => "text",
@@ -624,73 +594,44 @@ function html_default_settings($type, $pageid, $featureid) {
 			"warning" => "Must be greater than 0.",
 		],
 		[
-			"type" => "$type",
-			"pageid" => "$pageid",
-			"featureid" => "$featureid",
 			"setting_name" => "documentviewer",
-			"setting" => "0",
-			"extra" => false,
 			"defaultsetting" => "0",
 			"display" => "Document Viewer Filter",
 			"inputtype" => "yes/no",
 		],
 		[
-			"type" => "$type",
-			"pageid" => "$pageid",
-			"featureid" => "$featureid",
 			"setting_name" => "embedaudio",
-			"setting" => "0",
-			"extra" => false,
 			"defaultsetting" => "0",
 			"display" => "Embed Audio Links",
 			"inputtype" => "yes/no",
 		],
 		[
-			"type" => "$type",
-			"pageid" => "$pageid",
-			"featureid" => "$featureid",
 			"setting_name" => "embedvideo",
-			"setting" => "0",
-			"extra" => false,
 			"defaultsetting" => "0",
 			"display" => "Embed Video Links",
 			"inputtype" => "yes/no",
 		],
 		[
-			"type" => "$type",
-			"pageid" => "$pageid",
-			"featureid" => "$featureid",
 			"setting_name" => "embedyoutube",
-			"setting" => "0",
-			"extra" => false,
 			"defaultsetting" => "0",
 			"display" => "Embed Youtube Links",
 			"inputtype" => "yes/no",
 		],
 		[
-			"type" => "$type",
-			"pageid" => "$pageid",
-			"featureid" => "$featureid",
 			"setting_name" => "photogallery",
-			"setting" => "0",
-			"extra" => false,
 			"defaultsetting" => "0",
 			"display" => "Auto Photogallery",
 			"inputtype" => "yes/no",
 		],
 		[
-			"type" => "$type",
-			"pageid" => "$pageid",
-			"featureid" => "$featureid",
 			"setting_name" => "allowfullscreen",
-			"setting" => "0",
-			"extra" => false,
 			"defaultsetting" => "0",
 			"display" => "Allow Fullscreen",
 			"inputtype" => "yes/no",
 		],
 	];
 
+    $settings = attach_setting_identifiers($settings, $type, $pageid, $featureid);
 	return $settings;
 }
 ?>

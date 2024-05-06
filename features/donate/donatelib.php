@@ -17,9 +17,9 @@ $donateLIB = true;
 	
 function display_donate($pageid, $area, $featureid) {
 global $CFG, $USER, $donateSETTINGS;
-	$abilities = get_user_abilities($USER->userid, $pageid,"donate","donate", $featureid);
+	$abilities = user_abilities($USER->userid, $pageid,"donate", "donate", $featureid);
 	if (!$settings = fetch_settings("donate", $featureid, $pageid)) {
-		make_or_update_settings_array(default_settings("donate", $pageid, $featureid));
+		save_batch_settings(default_settings("donate", $pageid, $featureid));
 		$settings = fetch_settings("donate", $featureid, $pageid);
 	}
     
@@ -31,7 +31,7 @@ global $CFG, $USER, $donateSETTINGS;
 function get_donate($pageid, $featureid, $settings, $abilities, $area=false, $resultsonly=false) {
 global $CFG, $USER;
 	$returnme = ""; $rss = "";
-    $SQL = template_use("dbsql/donate.sql", ["featureid" => $featureid], "get_donate_instance", "donate");
+    $SQL = use_template("dbsql/donate.sql", ["featureid" => $featureid], "get_donate_instance", "donate");
 	if ($result = get_db_result($SQL)) {
 		while ($row = fetch_row($result)) {
             //if viewing from rss feed
@@ -51,7 +51,7 @@ global $CFG;
     $returnme = "";
 
     $protocol = get_protocol();
-    $SQL = template_use("dbsql/donate.sql", ["featureid" => $featureid], "get_campaign", "donate");
+    $SQL = use_template("dbsql/donate.sql", ["featureid" => $featureid], "get_campaign", "donate");
     if ($campaign = get_db_row($SQL)) {
         if ($CFG->paypal) { 
             $paypal = 'www.paypal.com';
@@ -59,7 +59,7 @@ global $CFG;
             $paypal = 'www.sandbox.paypal.com';
         }
         
-        $SQL = template_use("dbsql/donate.sql", ["campaignid" => $campaign["campaign_id"]], "get_campaign_donations_total", "donate");
+        $SQL = use_template("dbsql/donate.sql", ["campaignid" => $campaign["campaign_id"]], "get_campaign_donations_total", "donate");
         if ($donations = get_db_row($SQL)) {
             $total = $donations["total"];
             $total = empty($total) ? "0" : $total;
@@ -188,11 +188,11 @@ function donate_delete($pageid, $featureid) {
 		"feature" => "donate",
 	];
 
-	$SQL = template_use("dbsql/features.sql", $params, "delete_feature");
+	$SQL = use_template("dbsql/features.sql", $params, "delete_feature");
 	execute_db_sql($SQL);
-	$SQL = template_use("dbsql/features.sql", $params, "delete_feature_settings");
+	$SQL = use_template("dbsql/features.sql", $params, "delete_feature_settings");
 	execute_db_sql($SQL);
-	$SQL = template_use("dbsql/donate.sql", $params, "delete_donate_instance", "donate");
+	$SQL = use_template("dbsql/donate.sql", $params, "delete_donate_instance", "donate");
 	execute_db_sql($SQL);
 
 	resort_page_features($pageid);
@@ -203,8 +203,8 @@ global $CFG, $USER;
 	$settings = fetch_settings("donate", $featureid, $pageid);
     $returnme = "";
 	
-    $donate_abilities = get_user_abilities($USER->userid, $pageid,"donate","donate", $featureid);
-	$feature_abilities = get_user_abilities($USER->userid, $pageid,"features","donate", $featureid);
+    $donate_abilities = user_abilities($USER->userid, $pageid,"donate", "donate", $featureid);
+	$feature_abilities = user_abilities($USER->userid, $pageid,"features", "donate", $featureid);
     
     $campaign = get_db_row("SELECT * FROM donate_campaign WHERE campaign_id IN (SELECT campaign_id FROM donate_instance WHERE donate_id='$featureid')");	
     $edit = get_db_row("SELECT * FROM donate_instance WHERE donate_id='$featureid' AND campaign_id IN (SELECT campaign_id FROM donate_campaign WHERE origin_page='$pageid')") ? true : false;
@@ -212,9 +212,9 @@ global $CFG, $USER;
     if ($campaign && $edit && $donate_abilities->adddonation->allow) {
         $p = [
             "title" => "Manage Donations",
-            "path" => $CFG->wwwroot . "/features/donate/donate.php?action=managedonations&amp;pageid=$pageid&amp;featureid=$featureid",
+            "path" => action_path("donate") . "managedonations&amp;pageid=$pageid&amp;featureid=$featureid",
             "refresh" => "true",
-            "iframe" => "true",
+            "iframe" => true,
             "validate" => "true",
             "width" => "750",
             "height" => "600",
@@ -227,9 +227,9 @@ global $CFG, $USER;
     if ($donate_abilities->managedonation->allow) {
         $p = [
             "title" => "Campaign Settings",
-            "path" => $CFG->wwwroot . "/features/donate/donate.php?action=editcampaign&amp;pageid=$pageid&amp;featureid=$featureid",
+            "path" => action_path("donate") . "editcampaign&amp;pageid=$pageid&amp;featureid=$featureid",
             "refresh" => "true",
-            "iframe" => "true",
+            "iframe" => true,
             "validate" => "true",
             "width" => "750",
             "height" => "600",
@@ -245,15 +245,15 @@ function select_campaign_forms($featureid, $pageid) {
 global $CFG, $MYVARS, $USER;
     $SQL = "SELECT * FROM donate_instance WHERE donate_id='$featureid' AND campaign_id IN (SELECT campaign_id FROM donate_campaign WHERE origin_page='$pageid')";
 
-    $returnme = '<div style="text-align:center"><h1>Choose a Campaign</h1></div>';
+    $returnme = '<div style="text-align:center"><h1>Choose a Campaign</h1></div><br />';
     if ($edit = get_db_row($SQL)) {
         $current = '
-                You are involved in a campaign you started called: <strong>' . get_db_field("title","donate_campaign","campaign_id='" . $edit["campaign_id"] . "'") . '</strong><br />    
+                You are involved in a campaign you started called: <strong>' . get_db_field("title", "donate_campaign", "campaign_id='" . $edit["campaign_id"] . "'") . '</strong><br />    
                 <br />Would you like to edit the current campaign? <a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'new_campaign_form\',\'&campaign_id=' . $edit["campaign_id"] . '&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); loaddynamicjs(\'donation_script\');});">Edit Campaign</a>
         <br /><br /><br />';        
     } else {
         if ($joined = get_db_row("SELECT * FROM donate_instance WHERE donate_id='$featureid' AND campaign_id != '0'")) {
-            $current = 'You are currently joined to a campaign called: <strong>' . get_db_field("title","donate_campaign","campaign_id='" . $joined["campaign_id"] . "'") . '</strong><br />';    
+            $current = 'You are currently joined to a campaign called: <strong>' . get_db_field("title", "donate_campaign", "campaign_id='" . $joined["campaign_id"] . "'") . '</strong><br />';    
         } else {
             $current = 'You are not currently associated with an active campaign.<br />';    
         }       
@@ -288,46 +288,33 @@ function donate_default_settings($type, $pageid, $featureid) {
 global $CFG;
     $settings = [
         [
-            "type" => "$type",
-            "pageid" => "$pageid",
-            "featureid" => "$featureid",
             "setting_name" => "feature_title",
-            "setting" => "Donate",
-            "extra" => false,
             "defaultsetting" => "Donate",
             "display" => "Feature Title",
             "inputtype" => "text",
         ],
         [
-            "type" => "$type",
-            "pageid" => "$pageid",
-            "featureid" => "$featureid",
+            "defaultsetting" => "horizontal",
+            "display" => "Thermometer Orientation",
             "setting_name" => "metertype",
-            "setting" => "horizontal",
-            "extra" => [
+            "inputtype" => "select_array",
+            "extraforminfo" => [
                 ["selectvalue" => "horizontal", "selectname" => "Horizontal"],
                 ["selectvalue" => "vertical", "selectname" => "Vertical"],
             ],
-            "defaultsetting" => "horizontal",
-            "display" => "Thermometer Orientation",
-            "inputtype" => "select_array",
             "numeric" => null,
             "validation" => null,
             "warning" => "Select the orientation of the donation thermometer.",
         ],
         [
-            "type" => "$type",
-            "pageid" => "$pageid",
-            "featureid" => "$featureid",
             "setting_name" => "enablerss",
-            "setting" => "0",
-            "extra" => false,
             "defaultsetting" => "0",
             "display" => "Enable RSS",
             "inputtype" => "yes/no",
         ],
     ];
 
+    $settings = attach_setting_identifiers($settings, $type, $pageid, $featureid);
 	return $settings;
 }
 ?>

@@ -49,8 +49,8 @@ global $CFG, $MYVARS;
             $p = [
                 "title" => "Event Info",
                 "text" => stripslashes($event["title"]),
-                "path" => $CFG->wwwroot . "/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=" . $event["eventid"],
-                "iframe" => "true",
+                "path" => action_path("events") . "info&amp;pageid=$pageid&amp;eventid=" . $event["eventid"],
+                "iframe" => true,
                 "width" => "700",
                 "height" => "650",
                 "styles" => "float:left;padding:2px;",

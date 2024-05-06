@@ -47,8 +47,7 @@ HealthRelationship:Health:Relationship;
 HealthTetanusDate:Health:Tetanus Date;';
 
 //If it is already installed, don't install it again.
-if (!get_db_row("SELECT * FROM events_templates WHERE name = '$templatename'"))
-{
+if (!get_db_row("SELECT * FROM events_templates WHERE name = '$templatename'")) {
 	$SQL = "INSERT INTO events_templates
 	(name, folder, formlist, registrant_name, orderbyfield)
 	VALUES 

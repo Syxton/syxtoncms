@@ -9,7 +9,7 @@
 
 function events_upgrade() {
 global $CFG;
-    $version = get_db_field("version","features","feature='events'");	
+    $version = get_db_field("version", "features", "feature='events'");	
     
     //Events request upgrade ///////////////////////////////////////////////////
 	$thisversion = 20100715;

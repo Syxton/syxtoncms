@@ -7,11 +7,10 @@
 * Revision: 0.0.2
 ***************************************************************************/
 
-function calendar_upgrade()
-{
+function calendar_upgrade() {
 	global $CFG;
     
-    $version = get_db_field("version","features","feature='calendar'");	    
+    $version = get_db_field("version", "features", "feature='calendar'");	    
     $thisversion = 20100819;
 	if ($version < $thisversion) { execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='calendar'"); }
 

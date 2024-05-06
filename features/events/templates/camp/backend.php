@@ -105,7 +105,7 @@ global $CFG, $MYVARS, $USER, $error;
 		
 		$touser->fname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name'");
 		$touser->lname = "";
-		$touser->email = get_db_field("email","events_registrations","regid='$regid'");
+		$touser->email = get_db_field("email", "events_registrations", "regid='$regid'");
 		$fromuser->email = $CFG->siteemail;
 		$fromuser->fname = $CFG->sitename;
 		$fromuser->lname = "";
@@ -161,7 +161,7 @@ global $CFG, $MYVARS, $USER, $error;
 	}
 }
 
-function common_weeks($event, $included = true, $id, $regid = "", $autofill = 0) {
+function common_weeks($event, $included = true, $id = "", $regid = "", $autofill = 0) {
 global $CFG, $USER, $PAGE;
 	$returnme = "";
 	$time = get_timestamp();

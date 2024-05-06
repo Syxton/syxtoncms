@@ -22,7 +22,6 @@ function send_email($touser, $fromuser, $subject, $message, $cc = false, $bcc = 
 		$headers['Content-type'] = 'text/html; charset=iso-8859-1';
 
 		// Additional headers
-		$headers['To'] = ucwords(strtolower($touser->fname) . ' ' . strtolower($touser->lname)) . ' <' . $touser->email . '>';
 		$headers['From'] = ucwords(strtolower($fromuser->fname) . ' ' . strtolower($fromuser->lname)) . ' <' . $fromuser->email . '>';
 		$headers['Reply-To'] = $fromuser->email;
 		$headers['Return-Path'] = $fromuser->email;
@@ -58,31 +57,31 @@ function smtp($touser, $fromuser, $subject, $message, $cc = false, $bcc = false)
 	$cc = $cc ? '<' . $cc . '>' : '';
 	$bcc = $bcc ? '<' . $bcc . '>' : '';
 
-	$headers = array (
+	$headers = [
 		'MIME-Version' => '1.0',
 		'Content-type' => 'text/html; charset=iso-8859-1',
 		'Reply-To' => $from,
 		'Return-Path'=> $fromuser->email,
 		'From' => $from,
-	  	'To' => $to,
 	  	'Cc' => $cc,
 	  	'Bcc' => $bcc,
-	  	'Subject' => $subject);
+	  	'Subject' => $subject,
+	];
 
-  $smtpinfo["host"] = $CFG->smtp;
-  $smtpinfo["port"] = $CFG->smtpport;
-  $smtpinfo["auth"] = $CFG->smtpauth;
-  $smtpinfo["username"] = $CFG->smtpuser;
-  $smtpinfo["password"] = $CFG->smtppass;
+	$smtpinfo["host"] = $CFG->smtp;
+	$smtpinfo["port"] = $CFG->smtpport;
+	$smtpinfo["auth"] = $CFG->smtpauth;
+	$smtpinfo["username"] = $CFG->smtpuser;
+	$smtpinfo["password"] = $CFG->smtppass;
 
-  $mail_object =& Mail::factory("smtp", $smtpinfo);
+	$mail_object =& Mail::factory("smtp", $smtpinfo);
 
-  $mail_object->send($to, $headers, $body);
+	$mail_object->send($to, $headers, $body);
 
-  if (PEAR::isError($mail_object)) {
-    return false;
-  } else {
-    return true;
-  }
+	if (PEAR::isError($mail_object)) {
+		return false;
+	} else {
+		return true;
+	}
 }
 ?>

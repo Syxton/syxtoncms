@@ -3204,7 +3204,7 @@ class AJAXChat {
 		$userData = [];
 		$userData['userID'] = $this->createGuestUserID();
 		$userData['userName'] = $userName;
-		$userData['userRole'] = user_has_ability_in_page($USER->userid, "moderate", $_COOKIE["pageid"]) ? AJAX_CHAT_MODERATOR : AJAX_CHAT_GUEST;
+		$userData['userRole'] = user_is_able($USER->userid, "moderate", $_COOKIE["pageid"]) ? AJAX_CHAT_MODERATOR : AJAX_CHAT_GUEST;
 		return $userData;
 	}
 

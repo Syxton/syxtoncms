@@ -20,14 +20,14 @@ function display_pics($pageid, $area, $featureid) {
 global $CFG, $USER, $ROLES;
 
 	if (!$settings = fetch_settings("pics", $featureid, $pageid)) {
-		make_or_update_settings_array(default_settings("pics", $pageid, $featureid));
+		save_batch_settings(default_settings("pics", $pageid, $featureid));
 		$settings = fetch_settings("pics", $featureid, $pageid);
 	}
 
 	$title = $settings->pics->$featureid->feature_title->setting;
 
 	if (is_logged_in()) {
-		if (user_has_ability_in_page($USER->userid,"viewpics", $pageid,"pics", $featureid)) {
+		if (user_is_able($USER->userid, "viewpics", $pageid,"pics", $featureid)) {
 			if ($pageid==$CFG->SITEID) {
 				$SQL = "SELECT * FROM pics_features WHERE pageid='$pageid' LIMIT 1";
 				if ($sections = get_db_result($SQL)) {
@@ -49,7 +49,7 @@ global $CFG, $USER, $ROLES;
 			}
 		}
 	} else {
-		if (role_has_ability_in_page($ROLES->visitor,"viewpics", $pageid)) {
+		if (role_is_able($ROLES->visitor,"viewpics", $pageid)) {
 			$title = get_db_field("setting", "settings", "type='pics' AND pageid=$pageid AND featureid=$featureid");
 			$content = get_gallery_links($pageid, $featureid, true);
 			return get_css_box($title, $content,NULL,NULL,"pics", $featureid);
@@ -60,8 +60,8 @@ global $CFG, $USER, $ROLES;
 function get_pics_manager($pageid, $featureid) {
 global $CFG, $MYVARS, $USER;
     $returnme = '';
-    if (!user_has_ability_in_page($USER->userid,"managepics", $pageid)) {
-		return get_page_error_message("no_permission", ["managepics"]);
+    if (!user_is_able($USER->userid, "managepics", $pageid)) {
+        return debugging(error_string("no_permission", ["managepics"]));
 	}
 
 	$params = [
@@ -70,7 +70,7 @@ global $CFG, $MYVARS, $USER;
 		"siteviewable" => ($pageid == $CFG->SITEID ? true : false),
 	];
 
-	$SQL = template_use("dbsql/pics.sql", $params, "get_galleries", "pics");
+	$SQL = use_template("dbsql/pics.sql", $params, "get_galleries", "pics");
 
 	if ($allgalleries = get_db_result($SQL)) {
 		$g = 0;
@@ -197,8 +197,8 @@ global $CFG, $USER;
 			}
 
 			if ($editable != 'false') {
-				if (user_has_ability_in_page($USER->userid, "deletepics", $pageid, "pics", $featureid)) {
-					$deletepic = ' <a href="#" onclick="if(confirm(\'Do you want to delete this image?\')) {
+				if (user_is_able($USER->userid, "deletepics", $pageid, "pics", $featureid)) {
+					$deletepic = ' <a href="#" onclick="if (confirm(\'Do you want to delete this image?\')) {
 															$(\'#loading_overlay\').show();
 															ajaxapi(\'/features/pics/pics_ajax.php\',
 																	\'delete_pic\',
@@ -327,7 +327,7 @@ global $CFG, $USER;
 											<tr>
 												<td>
 													<div style="width:165px; height:130px; overflow:hidden; text-align:center;">
-														' . $deletepic . '<a onclick="blur();" href="javascript: ajaxapi(\'/features/pics/pics_ajax.php\',\'toggle_activate\',\'&amp;pageid=' . $pageid . '&amp;picsid=' . $row["picsid"] . '\',function() {simple_display(\'activated_picsid_' . $row["picsid"] . '\');});"><img src="' . $webpath . '"' . imgResize($mypicture[0], $mypicture[1], 165) . ' /></a>
+														' . $deletepic . '<a onclick="blur();" href="javascript: void(0);" onclick="ajaxapi(\'/features/pics/pics_ajax.php\',\'toggle_activate\',\'&amp;pageid=' . $pageid . '&amp;picsid=' . $row["picsid"] . '\',function() {simple_display(\'activated_picsid_' . $row["picsid"] . '\');});"><img src="' . $webpath . '"' . imgResize($mypicture[0], $mypicture[1], 165) . ' /></a>
 													</div>
 												</td>
 											</tr>
@@ -356,15 +356,15 @@ global $CFG;
 			"feature" => "pics",
 		];
 	
-		$SQL = template_use("dbsql/features.sql", $params, "delete_feature");
+		$SQL = use_template("dbsql/features.sql", $params, "delete_feature");
 		execute_db_sql($SQL);
-		$SQL = template_use("dbsql/features.sql", $params, "delete_feature_settings");
+		$SQL = use_template("dbsql/features.sql", $params, "delete_feature_settings");
 		execute_db_sql($SQL);
-		$SQL = template_use("dbsql/pics.sql", $params, "delete_galleries", "pics");
+		$SQL = use_template("dbsql/pics.sql", $params, "delete_galleries", "pics");
 		execute_db_sql($SQL);
-		$SQL = template_use("dbsql/pics.sql", $params, "delete_pics_features", "pics");
+		$SQL = use_template("dbsql/pics.sql", $params, "delete_pics_features", "pics");
 		execute_db_sql($SQL);
-		$SQL = template_use("dbsql/pics.sql", $params, "delete_pics", "pics");
+		$SQL = use_template("dbsql/pics.sql", $params, "delete_pics", "pics");
 		execute_db_sql($SQL);
 
 		resort_page_features($pageid);
@@ -436,13 +436,13 @@ function pics_buttons($pageid, $featuretype, $featureid) {
 global $CFG, $USER;
 	$returnme = "";
 	if (strstr($featuretype,"_features")) {
-		$pics_abilities = get_user_abilities($USER->userid, $pageid,"pics","pics", $featureid);
-		$feature_abilities = get_user_abilities($USER->userid, $pageid,"features","pics", $featureid);
+		$pics_abilities = user_abilities($USER->userid, $pageid,"pics", "pics", $featureid);
+		$feature_abilities = user_abilities($USER->userid, $pageid,"features", "pics", $featureid);
 
         if (!empty($pics_abilities->managepics->allow) && get_db_row("SELECT * FROM pics WHERE pageid='$pageid' and featureid='$featureid'")) {
             $returnme .= make_modal_links([
 							"title" => "Manage Galleries",
-							"path" => $CFG->wwwroot . "/features/pics/pics.php?action=manage_pics&amp;pageid=$pageid&amp;featureid=$featureid",
+							"path" => action_path("pics") . "manage_pics&amp;pageid=$pageid&amp;featureid=$featureid",
 							"refresh" => "true",
 							"image" => $CFG->wwwroot . "/images/swap.png",
 							"class" => "slide_menu_button",
@@ -452,8 +452,8 @@ global $CFG, $USER;
         if (!empty($pics_abilities->addpics->allow)) {
             $returnme .= make_modal_links([
 							"title" => "Add Images",
-							"path" => $CFG->wwwroot . "/features/pics/pics.php?action=add_pics&amp;pageid=$pageid&amp;featureid=$featureid",
-							"iframe" => "true",
+							"path" => action_path("pics") . "add_pics&amp;pageid=$pageid&amp;featureid=$featureid",
+							"iframe" => true,
 							"refresh" => "true",
 							"width" => "640",
 							"height" => "500",
@@ -468,23 +468,13 @@ global $CFG, $USER;
 function pics_default_settings($type, $pageid, $featureid) {
 	$settings = [
 		[
-			"type" => "$type",
-			"pageid" => "$pageid",
-			"featureid" => "$featureid",
 			"setting_name" => "feature_title",
-			"setting" => "Image Gallery",
-			"extra" => false,
 			"defaultsetting" => "Image Gallery",
 			"display" => "Feature Title",
 			"inputtype" => "text",
 		],
 		[
-			"type" => "$type",
-			"pageid" => "$pageid",
-			"featureid" => "$featureid",
 			"setting_name" => "picsperpage",
-			"setting" => "12",
-			"extra" => false,
 			"defaultsetting" => "12",
 			"display" => "Pictures Per Page",
 			"inputtype" => "text",
@@ -494,6 +484,7 @@ function pics_default_settings($type, $pageid, $featureid) {
 		],
 	];
 
+    $settings = attach_setting_identifiers($settings, $type, $pageid, $featureid);
 	return $settings;
 }
 ?>

@@ -75,13 +75,13 @@ function authenticate(string $username, string $password) {
   global $CFG, $USER;
   $time = get_timestamp();
   $params = array("username" => $username, "password" => $password);
-  $SQL = template_use("dbsql/db.sql", $params, "authenticate"); // Authenticate
+  $SQL = use_template("dbsql/db.sql", $params, "authenticate"); // Authenticate
   if (!$user = get_db_row($SQL)) { // COULD NOT AUTHENTICATE
-    $SQL = template_use("dbsql/db.sql", $params, "authenticate_alt");
+    $SQL = use_template("dbsql/db.sql", $params, "authenticate_alt");
     if ($user = get_db_row($SQL)) { // Attempt authentication on alternate password field
       $_SESSION['userid'] = $user['userid'];
       $params = array("userid" => $user['userid'], "time" => $time, "ip" => $_SERVER['REMOTE_ADDR'], "isfirst" => false, "clear_alt" => false);
-      $SQL = template_use("dbsql/db.sql", $params, "update_last_activity");
+      $SQL = use_template("dbsql/db.sql", $params, "update_last_activity");
       execute_db_sql($SQL);
       return $user; // Password reset authentication successful
     }
@@ -90,7 +90,7 @@ function authenticate(string $username, string $password) {
     return false; // Password authentication failed
   } else { // Regular authentication successful.
     if (strlen($user['temp']) > 0) { // on first ever login, switch temp password for actual password
-      $SQL = template_use("dbsql/db.sql", array("user" => $user), "activate_account");
+      $SQL = use_template("dbsql/db.sql", array("user" => $user), "activate_account");
       execute_db_sql($SQL);
 
       // Send account activated email.
@@ -99,7 +99,7 @@ function authenticate(string $username, string $password) {
       $FROMUSER->lname = '';
       $FROMUSER->email = $CFG->siteemail;
       $params = array("user" => $user, "sitename" => $CFG->sitename, "siteowner" => $CFG->siteowner, "siteemail" => $CFG->siteemail);
-      $message = template_use("tmp/page.template", $params, "account_activation_email");
+      $message = use_template("tmp/page.template", $params, "account_activation_email");
       $subject = $CFG->sitename . ' Account Activation';
 
       send_email($user, $FROMUSER, $subject, $message);
@@ -108,7 +108,7 @@ function authenticate(string $username, string $password) {
 
     $_SESSION['userid'] = $user['userid'];
     $params = array("userid" => $user['userid'], "time" => $time, "ip" => $_SERVER['REMOTE_ADDR'], "isfirst" => (!$user["first_activity"]), "clear_alt" => true);
-    $SQL = template_use("dbsql/db.sql", $params, "update_last_activity");
+    $SQL = use_template("dbsql/db.sql", $params, "update_last_activity");
     execute_db_sql($SQL);
 
     log_entry("user", $user['userid'], "Login");
@@ -118,7 +118,7 @@ function authenticate(string $username, string $password) {
 
 function key_login($key) {
 global $CFG, $USER;
-  $SQL = template_use("dbsql/db.sql", array("key" => $key), "authenticate_key");
+  $SQL = use_template("dbsql/db.sql", array("key" => $key), "authenticate_key");
 	if ($user = get_db_row($SQL)) {
 		$USER->userid = $user['userid'];
     $_SESSION['userid'] = $user['userid'];
@@ -164,7 +164,7 @@ function even($var) {
 
 function senderror($message) {
   $message = preg_replace(array("\r,\t,\n"), "", $message);
-  error_log($message);
+  debugging($message);
   die($message);
 }
 
@@ -183,7 +183,7 @@ global $CFG, $USER, $PAGE;
 
   $params = array("userid" => $userid, "ip" => $_SERVER['REMOTE_ADDR'], "pageid" => $pageid, "time" => get_timestamp(),
                   "feature" => dbescape($feature), "info" => dbescape($info), "desc" => dbescape($desc), "debug" => dbescape($debug));
-  $SQL = template_use("dbsql/db.sql", $params, "logsql");
+  $SQL = use_template("dbsql/db.sql", $params, "logsql");
 	execute_db_sql($SQL);
 }
 

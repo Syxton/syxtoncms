@@ -21,13 +21,13 @@ global $CFG, $USER, $ROLES;
     $content = '';
 
 	if (!$settings = fetch_settings("calendar", $featureid, $pageid)) {
-		make_or_update_settings_array(default_settings("calendar", $pageid, $featureid));
+		save_batch_settings(default_settings("calendar", $pageid, $featureid));
 		$settings = fetch_settings("calendar", $featureid, $pageid);
 	}
 
 	$title = $settings->calendar->$featureid->feature_title->setting;
 	
-    if (user_has_ability_in_page($USER->userid, "viewcalendar", $pageid, "calendar", $featureid)) {
+    if (user_is_able($USER->userid, "viewcalendar", $pageid, "calendar", $featureid)) {
         if ($area == "middle") {
             $content .= '<span id="calendarmarker"></span><div id="calendar_div" style="width:100%;z-index:2;">' . get_large_calendar($pageid, $USER->userid) . '</div><div id="day_info" style="display:none"></div>';
         } else {
@@ -45,7 +45,7 @@ function clean_for_overlib($str) {
 
 function get_small_calendar($pageid, $userid = 0, $month = false, $year = false, $extra_row = false) {
     global $CFG;
-    $show_site_events = ($pageid == $CFG->SITEID) || get_db_field("setting","settings","type='calendar' AND pageid=$pageid AND setting_name='dont_show_site_events' AND setting='1'") ? true : false;
+    $show_site_events = ($pageid == $CFG->SITEID) || get_db_field("setting", "settings", "type='calendar' AND pageid=$pageid AND setting_name='dont_show_site_events' AND setting='1'") ? true : false;
     date_default_timezone_set($CFG->timezone);
     if (!$month) {
         $month = date('m');
@@ -63,7 +63,7 @@ function get_small_calendar($pageid, $userid = 0, $month = false, $year = false,
         $prevyear = $year;
     }
     $returnme = '<table class="mainTable2"><tr><td style="text-align:center" colspan="7" class="monthRow">
-              		<a href="javascript: ajaxapi(\'/features/calendar/calendar_ajax.php\',\'print_calendar\',\'&amp;displaymode=0&amp;userid=' .
+              		<a href="javascript: void(0);" onclick="ajaxapi(\'/features/calendar/calendar_ajax.php\',\'print_calendar\',\'&amp;displaymode=0&amp;userid=' .
         $userid . '&amp;pageid=' . $pageid . '&amp;month=' . $prevmonth . '&amp;year=' .
         $prevyear . '\',function() { simple_display(\'calendar_div\');});">&laquo;</a>&nbsp;';
     $monthName = date('F', mktime(0, 0, 0, $month, 1, $year));
@@ -77,7 +77,7 @@ function get_small_calendar($pageid, $userid = 0, $month = false, $year = false,
         $nextyear = $year;
     }
     
-    $returnme .= '&nbsp;<a href="javascript: ajaxapi(\'/features/calendar/calendar_ajax.php\',\'print_calendar\',\'&amp;displaymode=0&amp;userid=' .
+    $returnme .= '&nbsp;<a href="javascript: void(0);" onclick="ajaxapi(\'/features/calendar/calendar_ajax.php\',\'print_calendar\',\'&amp;displaymode=0&amp;userid=' .
         $userid . '&amp;pageid=' . $pageid . '&amp;month=' . $nextmonth . '&amp;year=' .
         $nextyear . '\',function() { simple_display(\'calendar_div\');});">&raquo;</a>
       			</td>
@@ -152,7 +152,7 @@ function get_small_calendar($pageid, $userid = 0, $month = false, $year = false,
 
 function get_large_calendar($pageid, $userid = 0, $month = false, $year = false, $extra_row = false) {
 global $CFG;
-    $show_site_events = ($pageid == $CFG->SITEID) || get_db_field("setting","settings","type='calendar' AND pageid=$pageid AND setting_name='dont_show_site_events' AND setting='1'") ? true : false;
+    $show_site_events = ($pageid == $CFG->SITEID) || get_db_field("setting", "settings", "type='calendar' AND pageid=$pageid AND setting_name='dont_show_site_events' AND setting='1'") ? true : false;
     date_default_timezone_set($CFG->timezone);
     if (!$month) {
         $month = date('m');
@@ -170,7 +170,7 @@ global $CFG;
         $prevyear = $year;
     }
     $returnme = '<table class="mainTableLarge"><tr><td style="text-align:center;" colspan="7" class="monthRowLarge">
-              		<a href="javascript: ajaxapi(\'/features/calendar/calendar_ajax.php\',\'print_calendar\',\'&amp;displaymode=1&amp;userid=' .
+              		<a href="javascript: void(0);" onclick="ajaxapi(\'/features/calendar/calendar_ajax.php\',\'print_calendar\',\'&amp;displaymode=1&amp;userid=' .
         $userid . '&amp;pageid=' . $pageid . '&amp;month=' . $prevmonth . '&amp;year=' .
         $prevyear . '\',function() { simple_display(\'calendar_div\');});">&laquo;</a>&nbsp;';
     $monthName = date('F', mktime(0, 0, 0, $month, 1, $year));
@@ -183,7 +183,7 @@ global $CFG;
         $nextmonth = $month + 1;
         $nextyear = $year;
     }
-    $returnme .= '&nbsp;<a href="javascript: ajaxapi(\'/features/calendar/calendar_ajax.php\',\'print_calendar\',\'&amp;displaymode=1&amp;userid=' .
+    $returnme .= '&nbsp;<a href="javascript: void(0);" onclick="ajaxapi(\'/features/calendar/calendar_ajax.php\',\'print_calendar\',\'&amp;displaymode=1&amp;userid=' .
         $userid . '&amp;pageid=' . $pageid . '&amp;month=' . $nextmonth . '&amp;year=' .
         $nextyear . '\',function() { simple_display(\'calendar_div\');});">&raquo;</a>
   			</td>
@@ -263,9 +263,9 @@ function calendar_delete($pageid, $featureid) {
 		"feature" => "calendar",
 	];
 
-	$SQL = template_use("dbsql/features.sql", $params, "delete_feature");
+	$SQL = use_template("dbsql/features.sql", $params, "delete_feature");
     execute_db_sql($SQL);
-    $SQL = template_use("dbsql/features.sql", $params, "delete_feature_settings");
+    $SQL = use_template("dbsql/features.sql", $params, "delete_feature_settings");
     execute_db_sql($SQL);
     
     resort_page_features($pageid);
@@ -280,29 +280,20 @@ function calendar_buttons($pageid, $featuretype, $featureid) {
 function calendar_default_settings($type, $pageid, $featureid) {
     $settings = [
         [
-            "type" => "$type",
-            "pageid" => "$pageid",
-            "featureid" => "$featureid",
             "setting_name" => "feature_title",
-            "setting" => "Calendar",
-            "extra" => false,
             "defaultsetting" => "Calendar",
             "display" => "Feature Title",
             "inputtype" => "text",
         ],
         [
-            "type" => "$type",
-            "pageid" => "$pageid",
-            "featureid" => "$featureid",
             "setting_name" => "dont_show_site_events",
-            "setting" => "0",
-            "extra" => false,
             "defaultsetting" => "0",
             "display" => "Show Global Events",
             "inputtype" => "yes/no",
         ],
     ];
 
+    $settings = attach_setting_identifiers($settings, $type, $pageid, $featureid);
 	return $settings;
 }
 ?>

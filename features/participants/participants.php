@@ -22,14 +22,14 @@ global $MYVARS, $CFG, $USER;
     
     $feature = "participants";
     if (!$settings = fetch_settings($feature, $featureid, $pageid)) {
-		make_or_update_settings_array(default_settings($feature, $pageid, $featureid));
+		save_batch_settings(default_settings($feature, $pageid, $featureid));
 		$settings = fetch_settings($feature, $featureid, $pageid);
 	}
 	
 	$limit = $settings->$feature->$featureid->viewable_limit->setting;
     $show_total = $settings->$feature->$featureid->show_total->setting;
     
-    if (!user_has_ability_in_page($USER->userid,"viewparticipants", $pageid)) { echo get_page_error_message("no_permission",array("viewparticipants")); return; }
+    if (!user_is_able($USER->userid, "viewparticipants", $pageid)) { debugging(error_string("no_permission", ["viewparticipants"]), 2); return; }
 
     $SQL = "SELECT * FROM roles_assignment ra JOIN users u ON u.userid=ra.userid JOIN roles r ON r.roleid = ra.roleid WHERE ra.pageid='$pageid' AND ra.confirm=0 ORDER BY r.display_name,u.lname";
 	if ($results = get_db_result($SQL . " LIMIT $limit")) {
@@ -55,13 +55,12 @@ global $CFG, $MYVARS, $USER;
 
 	//Default Settings	
 	$default_settings = default_settings($feature, $pageid, $featureid);
-	$setting_names = get_setting_names($default_settings);
     
 	//Check if any settings exist for this feature
 	if ($settings = fetch_settings($feature, $featureid, $pageid)) {
-        echo make_settings_page($setting_names, $settings, $default_settings);
+        echo make_settings_page($settings, $default_settings);
 	} else { //No Settings found...setup default settings
-		if (make_or_update_settings_array($default_settings)) { participants_settings(); }
+		if (save_batch_settings($default_settings)) { participants_settings(); }
 	}
 }
 ?>

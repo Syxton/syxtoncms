@@ -36,7 +36,7 @@ add_to_group_search_template||
 ||add_to_group_search_template
 
 refresh_group_users_template||
-  ||groupname||
+  <strong>Group: ||groupname||</strong>
   <span style="float:right">
     ||canmanage{{
       <a href="javascript: void(0);" onclick="ajaxapi('/ajax/roles_ajax.php',
@@ -87,6 +87,7 @@ refresh_group_users_template||
 ||refresh_group_users_template
 
 refresh_manage_groups_template||
+    <strong>Group: ||groupname||</strong>
     <form onsubmit="ajaxapi('/ajax/roles_ajax.php',
                             'add_to_group_search',
                             '&pageid=||pageid||' +

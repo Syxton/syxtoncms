@@ -7,11 +7,10 @@
 * Revision: 0.0.2
 ***************************************************************************/
 
-function chat_upgrade()
-{
+function chat_upgrade() {
 	global $CFG;
     
-    $version = get_db_field("version","features","feature='chat'");	
+    $version = get_db_field("version", "features", "feature='chat'");	
     $thisversion = 20100819;
 	if ($version < $thisversion) { execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='chat'"); }
 

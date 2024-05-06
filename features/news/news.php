@@ -24,13 +24,12 @@ global $CFG, $MYVARS, $USER;
 
 	//Default Settings
 	$default_settings = default_settings($feature, $pageid, $featureid);
-	$setting_names = get_setting_names($default_settings);
 
 	//Check if any settings exist for this feature
 	if ($settings = fetch_settings($feature, $featureid, $pageid)) {
-        echo make_settings_page($setting_names, $settings, $default_settings);
+        echo make_settings_page($settings, $default_settings);
 	} else { //No Settings found...setup default settings
-		if (make_or_update_settings_array($default_settings)) { news_settings(); }
+		if (save_batch_settings($default_settings)) { news_settings(); }
 	}
 }
 
@@ -42,14 +41,14 @@ global $CFG, $MYVARS, $USER;
 
     $title = $caption = $content = "";
     if ($newsid) {
-        if (!user_has_ability_in_page($USER->userid,"editnews", $pageid,"news", $featureid)) { echo get_page_error_message("no_permission",array("editnews")); return; }
+        if (!user_is_able($USER->userid, "editnews", $pageid,"news", $featureid)) { debugging(error_string("no_permission", ["editnews"]), 2); return; }
         $row = get_db_row("SELECT * FROM news WHERE newsid='$newsid'");
         $title = stripslashes(htmlentities($row["title"]));
         $caption = stripslashes(htmlentities($row["caption"]));
         $content = stripslashes($row["content"]);
         $button = '<input type="button" value="Save" onclick="ajaxapi(\'/features/news/news_ajax.php\',\'edit_news\',\'&amp;title=\'+escape($(\'#news_title\').val())+\'&amp;summary=\' + escape($(\'#news_summary\').val()) + \'&amp;pageid=' . $pageid . '&amp;html=\'+escape(' . get_editor_value_javascript() . ')+\'&amp;newsid=' . $newsid . '\',function() { close_modal(); });" />';
     } else {
-        if (!user_has_ability_in_page($USER->userid,"addnews", $pageid,"news", $featureid)) { echo get_page_error_message("no_permission",array("addnews")); return; }
+        if (!user_is_able($USER->userid, "addnews", $pageid,"news", $featureid)) { debugging(error_string("no_permission", ["addnews"]), 2); return; }
         $button = '<input type="button" value="Save" onclick="ajaxapi(\'/features/news/news_ajax.php\',\'add_news\',\'&amp;title=\'+escape($(\'#news_title\').val())+\'&amp;summary=\' + escape($(\'#news_summary\').val()) + \'&amp;pageid=' . $pageid . '&amp;html=\'+escape(' . get_editor_value_javascript() . ')+\'&amp;featureid=' . $featureid . '\',function() { close_modal(); });" />';
     }
 
@@ -79,7 +78,7 @@ global $CFG, $MYVARS, $USER;
 					</tr>
 					<tr>
 						<td colspan="2">';
-                            echo get_editor_box($content,null,"230",null,"News");
+                            echo get_editor_box(["initialvalue" => $content, "type" => "News", "height" => "230"]);
 							echo '<br />' . $button . '
 						</td>
 					</tr>
@@ -93,14 +92,14 @@ global $CFG, $MYVARS, $USER, $ROLES;
     $pageid = $MYVARS->GET['pageid'];
     $newsonly = isset($MYVARS->GET['newsonly']) ? true : false;
 	if (is_logged_in()) {
-	    if (!user_has_ability_in_page($USER->userid, "viewnews", $pageid)) {
-			echo get_page_error_message("no_permission", ["viewnews"]);
+	    if (!user_is_able($USER->userid, "viewnews", $pageid)) {
+            debugging(error_string("no_permission", ["viewnews"]), 2);
 			return;
 		} else {
 			echo news_wrapper($newsid, $pageid, $newsonly);
 		}
 	} else {
-		if (get_db_field("siteviewable","pages","pageid=$pageid") && role_has_ability_in_page($ROLES->visitor, 'viewnews', $pageid)) {
+		if (get_db_field("siteviewable", "pages", "pageid=$pageid") && role_is_able($ROLES->visitor, 'viewnews', $pageid)) {
             echo news_wrapper($newsid, $pageid, $newsonly);
 		} else {
     		echo '	<div id="standalone_div">

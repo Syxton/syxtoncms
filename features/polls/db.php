@@ -7,10 +7,9 @@
 * Revision: 0.0.2
 ***************************************************************************/
 
-function polls_upgrade()
-{
+function polls_upgrade() {
 	global $CFG;
-    $version = get_db_field("version","features","feature='polls'");
+    $version = get_db_field("version", "features", "feature='polls'");
     //Polls update to make non limited answer amount and integrate Google Charts API
 	$thisversion = 20100817;
 	if ($version < $thisversion) { # = new version number.  If this is the first...start at 1

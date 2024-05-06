@@ -96,7 +96,7 @@ global $CFG, $USER;
 	$temp = create_random_password();
 	$key = md5($user->email) . md5(time());
 	$userid = execute_db_sql("INSERT INTO users (email,fname,lname,temp,password,userkey,joined) VALUES('" . dbescape($user->email) . "','" . dbescape($user->fname) . "','" . dbescape($user->lname) . "','" . dbescape($user->password) . "','".md5($temp) . "','$key','" . get_timestamp() . "')");
-	$defaultrole = get_db_field("default_role","pages","pageid='" . $CFG->SITEID."'");
+	$defaultrole = get_db_field("default_role", "pages", "pageid='" . $CFG->SITEID."'");
 	$role_assignment = execute_db_sql("INSERT INTO roles_assignment (userid,roleid,pageid) VALUES('$userid','$defaultrole','" . $CFG->SITEID."')");
 
     if ($userid && $role_assignment) {
@@ -120,17 +120,17 @@ global $CFG, $USER;
 			execute_db_sql("DELETE FROM users WHERE userid='$userid'");
 			execute_db_sql("DELETE FROM roles_assignment WHERE userid='$userid'");
 		}
-		return "false**" . get_error_message("user_not_added");
+		return "false**" . error_string("user_not_added");
 	}
 }
 
 function create_random_password() {
 	//Make random password and activation code
-	$pass1 = array("little","big","loud","quiet","short","tall","tiny","huge","old","young","nice","mean","scary","sneaky","snooty","pretty","happy","sneezy","itchy");
+	$pass1 = array("little", "big", "loud", "quiet", "short", "tall", "tiny", "huge", "old", "young", "nice", "mean", "scary", "sneaky", "snooty", "pretty", "happy", "sneezy", "itchy");
 	$rnd1 = array_rand($pass1);
 	srand ((double) microtime( )*1000000);
 	$pass2 = rand(1,9);
-	$pass3 = array("cat","dog","chicken","mouse","deer","snake","fawn","rat","lion","tiger","chipmunk","owl","bear","rooster","whale","fish","puma","panther","horse");
+	$pass3 = array("cat", "dog", "chicken", "mouse", "deer", "snake", "fawn", "rat", "lion", "tiger", "chipmunk", "owl", "bear", "rooster", "whale", "fish", "puma", "panther", "horse");
 	$rnd3 = array_rand($pass3);
 	return $pass1[$rnd1] . $pass2 . $pass3[$rnd3];
 }

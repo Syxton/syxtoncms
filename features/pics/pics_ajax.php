@@ -36,7 +36,7 @@ global $CFG, $MYVARS;
                 "name" => "gallery_name",
                 "id" => "gallery_name",
             ],
-            "values" => get_db_result(template_use("dbsql/pics.sql", ["pageid" => $pageid], "get_page_galleries", "pics")),
+            "values" => get_db_result(use_template("dbsql/pics.sql", ["pageid" => $pageid], "get_page_galleries", "pics")),
             "valuename" => "galleryid",
             "displayname" => "name",
             "firstoption" => "None selected",
@@ -86,7 +86,7 @@ global $CFG, $MYVARS;
             while ($row = fetch_row($result)) {
                 if ($pageid != $CFG->SITEID && !empty($row["siteviewable"])) { //siteviewable images from a page other than SITE.  Move them to site
                     $copy = true;
-                    $site_featureid = get_db_field("featureid","pages_features","feature='pics' AND pageid='" . $CFG->SITEID."'");
+                    $site_featureid = get_db_field("featureid", "pages_features", "feature='pics' AND pageid='" . $CFG->SITEID."'");
                     $old = $CFG->dirroot . '/features/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row["imagename"];
                     $new = $CFG->dirroot . '/features/pics/files/' . $CFG->SITEID. "/" . $site_featureid. "/" . $row["imagename"];
                     copy_file($old, $new);
@@ -200,7 +200,7 @@ global $CFG, $MYVARS;
         							    }
         								
         								execute_db_sql("INSERT INTO pics (pageid,featureid,galleryid,gallery_title,imagename,siteviewable,caption,alttext,dateadded) VALUES('$pageid','$featureid','$galleryid','$gallery_name','$file_name','0', '', '','$dateadded')");
-        							    resizeImage($upload_dir.$file_name, $upload_dir.$file_name,"600","600");
+        							    resizeImage($upload_dir.$file_name, $upload_dir.$file_name,"600", "600");
                                         $success++;
         						   }#end of (move_uploaded_file).
                              }#end of (file_exists).

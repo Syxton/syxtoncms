@@ -7,11 +7,10 @@
 * Revision: 0.0.2
 ***************************************************************************/
 
-function news_upgrade()
-{
+function news_upgrade() {
 	global $CFG;
 
-    $version = get_db_field("version","features","feature='news'");		
+    $version = get_db_field("version", "features", "feature='news'");		
     $thisversion = 20100819;
 	if ($version < $thisversion) { execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='news'"); }
     

@@ -29,7 +29,7 @@ $returnme = ''; $section_content = ""; $toggle = "";
 
 	$main_section = get_db_row("SELECT * FROM news_features WHERE featureid=" . $featureid);
 	if (!$settings = fetch_settings("news", $featureid, $pageid)) {
-		make_or_update_settings_array(default_settings("news", $pageid, $featureid));
+		save_batch_settings(default_settings("news", $pageid, $featureid));
 		$settings = fetch_settings("news", $featureid, $pageid);
 	}
 
@@ -37,7 +37,7 @@ $returnme = ''; $section_content = ""; $toggle = "";
 	$title = $settings->news->$featureid->feature_title->setting;
 
 	if (!is_logged_in()) { //If the user is not signed in
-		if (role_has_ability_in_page($ROLES->visitor, 'viewnews', $pageid)) { //Has ability to see the news items
+		if (role_is_able($ROLES->visitor, 'viewnews', $pageid)) { //Has ability to see the news items
 				if ($area == "middle") {
 					if ($pagenews = get_section_news($featureid, "LIMIT " . $limit)) { //Gets the news from the given section
 						$i=0; $newdate=false;
@@ -61,15 +61,15 @@ $returnme = ''; $section_content = ""; $toggle = "";
 
 	} else { //User is signed in
 
-		if (user_has_ability_in_page($USER->userid, 'viewnews', $pageid)) {
+		if (user_is_able($USER->userid, 'viewnews', $pageid)) {
 			if (is_logged_in()) {
-      	$rss = make_modal_links(array("title" => "News RSS Feed","path" => $CFG->wwwroot . "/pages/rss.php?action=rss_subscribe_feature&amp;feature=news&amp;pageid=$pageid&amp;featureid=$featureid","width" => "640","styles" => "position: relative;top: 4px;padding-right:2px;","height" => "400","image" => $CFG->wwwroot . "/images/small_rss.png"));
+      	$rss = make_modal_links(array("title" => "News RSS Feed", "path" => $CFG->wwwroot . "/pages/rss.php?action=rss_subscribe_feature&amp;feature=news&amp;pageid=$pageid&amp;featureid=$featureid", "width" => "640", "styles" => "position: relative;top: 4px;padding-right:2px;", "height" => "400", "image" => $CFG->wwwroot . "/images/small_rss.png"));
       }
 
 			if ($area == "middle") {
 				if ($pageid == $CFG->SITEID) { //This is the site page
 					$returnme .= '';
-					if ($pages = get_users_news_pages($USER->userid,"LIMIT $limit")) {
+					if ($pages = get_users_news_pages($USER->userid, "LIMIT $limit")) {
 						if ($pagenews = get_pages_news($pages,"LIMIT $limit")) {
 							$newdate=false;
                             foreach ($pagenews as $news) {
@@ -121,7 +121,7 @@ global $CFG;
     					<span style="font-size:.9em">
     		     		' . substr(stripslashes(strip_tags($pagenews->caption)),0,350).$dots . '
     		     		</span> ';
-                        $returnme .= !$standalone  && stripslashes($pagenews->content) != "" ? '<span style="font-size:.9em; color:gray;">' . make_modal_links(array("title"=> stripslashes(htmlentities($pagenews->title)),"text" => "[More...]","path" => $CFG->wwwroot . "/features/news/news.php?action=viewnews&amp;newsonly=1&amp;pageid=$pageid&amp;newsid=$pagenews->newsid","width" => "98%","height" => "95%")) . '</span>' : '';
+                        $returnme .= !$standalone  && stripslashes($pagenews->content) != "" ? '<span style="font-size:.9em; color:gray;">' . make_modal_links(array("title"=> stripslashes(htmlentities($pagenews->title)),"text" => "[More...]", "path" => action_path("news") . "viewnews&amp;newsonly=1&amp;pageid=$pageid&amp;newsid=$pagenews->newsid", "width" => "98%", "height" => "95%")) . '</span>' : '';
     					$returnme .= '<div class="hprcp_n" style="margin-top:4px;"><div class="hprcp_e"><div class="hprcp_w"></div></div></div>
     					<div class="hprcp_head">
     						<div style="width:100%;vertical-align:middle;color:gray;position:relative;_right:2px;top:-8px;">
@@ -149,7 +149,7 @@ global $CFG;
     		     		' . stripslashes(substr(strip_tags($pagenews->caption),0,50)).$dots . '
     		     		</span>&nbsp;
     				 		<span style="font-size:.95em; color:gray;">
-                                ' . make_modal_links(array("title"=> stripslashes(htmlentities($pagenews->title)),"text" => "[More...]","path" => $CFG->wwwroot . "/features/news/news.php?action=viewnews&amp;pageid=$pageid&amp;newsid=$pagenews->newsid","width" => "98%","height" => "95%")) . '
+                                ' . make_modal_links(array("title"=> stripslashes(htmlentities($pagenews->title)),"text" => "[More...]", "path" => action_path("news") . "viewnews&amp;pageid=$pageid&amp;newsid=$pagenews->newsid", "width" => "98%", "height" => "95%")) . '
     				 		</span>
     					<div class="hprcp_n" style="margin-top:4px;">
     						<div class="hprcp_e">
@@ -270,7 +270,7 @@ global $CFG;
 			"text" => "Get News",
 			"id" => "fetch_" . $featureid . "_button",
 			"button" => true,
-			"path" => $CFG->wwwroot . "/features/news/news.php?action=viewnews&amp;newsonly=1&amp;pageid=$pageid&amp;newsid=' + $('#news_" . $featureid . "_archive_news').val() + '&amp;featureid=$featureid",
+			"path" => action_path("news") . "viewnews&amp;newsonly=1&amp;pageid=$pageid&amp;newsid=' + $('#news_" . $featureid . "_archive_news').val() + '&amp;featureid=$featureid",
 			"width" => "98%",
 			"image" => $CFG->wwwroot . "/images/magnifying_glass.png",
 		];
@@ -469,7 +469,7 @@ global $CFG;
 	if ($sections != "") {
 		if (!$limit) { 
 			if (!$settings = fetch_settings("news", $featureid, $pageid)) {
-				make_or_update_settings_array(default_settings("news", $pageid, $featureid));
+				save_batch_settings(default_settings("news", $pageid, $featureid));
 				$settings = fetch_settings("news", $featureid, $pageid);
 			}
 		
@@ -578,18 +578,18 @@ function news_delete($pageid, $featureid = false, $newsid = false) {
 			"feature" => "news",
 		];
 
-		$SQL = template_use("dbsql/features.sql", $params, "delete_feature");
+		$SQL = use_template("dbsql/features.sql", $params, "delete_feature");
 		execute_db_sql($SQL);
-		$SQL = template_use("dbsql/features.sql", $params, "delete_feature_settings");
+		$SQL = use_template("dbsql/features.sql", $params, "delete_feature_settings");
 		execute_db_sql($SQL);
-		$SQL = template_use("dbsql/news.sql", $params, "delete_news_features", "news");
+		$SQL = use_template("dbsql/news.sql", $params, "delete_news_features", "news");
 		execute_db_sql($SQL);
-		$SQL = template_use("dbsql/news.sql", $params, "delete_all_news_items", "news");
+		$SQL = use_template("dbsql/news.sql", $params, "delete_all_news_items", "news");
 		execute_db_sql($SQL);
 
 		resort_page_features($pageid);
 	} else { // News item delete
-		$SQL = template_use("dbsql/news.sql", ["newsid" => $newsid], "delete_news_item", "news");
+		$SQL = use_template("dbsql/news.sql", ["newsid" => $newsid], "delete_news_item", "news");
 		execute_db_sql($SQL);
 	}
 }
@@ -635,10 +635,10 @@ function news_buttons($pageid, $featuretype, $featureid) {
 global $CFG, $USER;
 	$returnme = "";
 	if (strstr($featuretype, "_features")) { // Overall news feature.
-        $returnme .= user_has_ability_in_page($USER->userid, "addnews", $pageid) ? make_modal_links(array("title"=> "Add News Item","path" => $CFG->wwwroot . "/features/news/news.php?action=addeditnews&amp;pageid=$pageid&amp;featureid=$featureid","iframe" => "true","refresh" => "true","width" => "850","height" => "600","image" => $CFG->wwwroot . "/images/add.png","class" => "slide_menu_button")) : '';
+        $returnme .= user_is_able($USER->userid, "addnews", $pageid) ? make_modal_links(array("title"=> "Add News Item", "path" => action_path("news") . "addeditnews&amp;pageid=$pageid&amp;featureid=$featureid", "iframe" => true, "refresh" => "true", "width" => "850", "height" => "600", "image" => $CFG->wwwroot . "/images/add.png", "class" => "slide_menu_button")) : '';
 	} else { // Individual news item.
-        $returnme .= user_has_ability_in_page($USER->userid, "editnews", $pageid) ? make_modal_links(array("title"=> "Edit News Item","path" => $CFG->wwwroot . "/features/news/news.php?action=addeditnews&amp;pageid=$pageid&amp;newsid=$featureid","iframe" => "true","refresh" => "true","width" => "850","height" => "600","image" => $CFG->wwwroot . "/images/edit.png","class" => "slide_menu_button")) : '';
-        $returnme .= user_has_ability_in_page($USER->userid, "deletenews", $pageid) ? ' <a class="slide_menu_button" title="Delete News Item" onclick="if (confirm(\'Are you sure you want to delete this?\')) { ajaxapi(\'/ajax/site_ajax.php\',\'delete_feature\',\'&amp;pageid=' . $pageid . '&amp;featuretype=' . $featuretype . '&amp;subid=' . $featureid . '\',function() { update_login_contents(' . $pageid . ');});}"><img src="' . $CFG->wwwroot . '/images/delete.png" alt="Delete News Item" /></a> ' : '';
+        $returnme .= user_is_able($USER->userid, "editnews", $pageid) ? make_modal_links(array("title"=> "Edit News Item", "path" => action_path("news") . "addeditnews&amp;pageid=$pageid&amp;newsid=$featureid", "iframe" => true, "refresh" => "true", "width" => "850", "height" => "600", "image" => $CFG->wwwroot . "/images/edit.png", "class" => "slide_menu_button")) : '';
+        $returnme .= user_is_able($USER->userid, "deletenews", $pageid) ? ' <a class="slide_menu_button" title="Delete News Item" onclick="if (confirm(\'Are you sure you want to delete this?\')) { ajaxapi(\'/ajax/site_ajax.php\',\'delete_feature\',\'&amp;pageid=' . $pageid . '&amp;featuretype=' . $featuretype . '&amp;subid=' . $featureid . '\',function() { update_login_contents(' . $pageid . ');});}"><img src="' . $CFG->wwwroot . '/images/delete.png" alt="Delete News Item" /></a> ' : '';
     }
 	return $returnme;
 }
@@ -646,23 +646,13 @@ global $CFG, $USER;
 function news_default_settings($type, $pageid, $featureid) {
 	$settings = [
 		[
-			"type" => "$type",
-			"pageid" => "$pageid",
-			"featureid" => "$featureid",
 			"setting_name" => "feature_title",
-			"setting" => "News Section",
-			"extra" => false,
 			"defaultsetting" => "News Section",
 			"display" => "Feature Title",
 			"inputtype" => "text",
 		],
 		[
-			"type" => "$type",
-			"pageid" => "$pageid",
-			"featureid" => "$featureid",
 			"setting_name" => "limit_viewable",
-			"setting" => "5",
-			"extra" => false,
 			"defaultsetting" => "5",
 			"display" => "Viewable Limit",
 			"inputtype" => "text",
@@ -672,6 +662,7 @@ function news_default_settings($type, $pageid, $featureid) {
 		],
 	];
 
+    $settings = attach_setting_identifiers($settings, $type, $pageid, $featureid);
 	return $settings;
 }
 ?>

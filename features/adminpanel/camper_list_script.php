@@ -27,21 +27,21 @@ function all_campers_list($filename = "camperlist", $year = false, $removeduplic
         "fromdate" => $year ? mktime(0, 0, 0, 0, 0, $year) : "",
         "todate" => $year ? mktime(23, 59, 59, 12, 31, $year) : "",
     ];
-    $SQL = template_use("dbsql/events.sql", $params, "get_events_having_same_template", "events");
+    $SQL = use_template("dbsql/events.sql", $params, "get_events_having_same_template", "events");
     if ($registrations = get_db_result($SQL)) {
         $camperlist[] = ["REGID", "Event", "Name", "Gender", "Birthday", "Current Age", "Address1", "Address2", "City", "State", "Zip", "Email", "Payment Method", "Sponsor",];
         while ($reg = fetch_row($registrations)) {
-            $event = get_db_row(template_use("dbsql/events.sql", ["eventid" => $reg["eventid"]], "get_event", "events"));
-            $SQL = template_use("dbsql/events.sql", ["regid" => $reg["regid"]], "get_registration_values", "events");
+            $event = get_db_row(use_template("dbsql/events.sql", ["eventid" => $reg["eventid"]], "get_event", "events"));
+            $SQL = use_template("dbsql/events.sql", ["regid" => $reg["regid"]], "get_registration_values", "events");
             $temp = $age = $bday = false;
             if ($entries = get_db_result($SQL)) {
                 unset($temp); unset($bday); unset($age);
                 while ($entry = fetch_row($entries)) {
                     $temp[$entry["elementname"]] = $entry["value"];
                 }
-                if (strstr($temp["Camper_Birth_Date"],'-')) {
-                    $bday = date("m/d/Y",strtotime(str_replace("-","/", $temp["Camper_Birth_Date"])));
-                }elseif (!strstr($temp["Camper_Birth_Date"],'/') && !strstr($temp["Camper_Birth_Date"],'-')) {
+                if (strstr($temp["Camper_Birth_Date"], '-')) {
+                    $bday = date("m/d/Y",strtotime(str_replace("-", "/", $temp["Camper_Birth_Date"])));
+                }elseif (!strstr($temp["Camper_Birth_Date"], '/') && !strstr($temp["Camper_Birth_Date"], '-')) {
                     if (strlen($temp["Camper_Birth_Date"])==6) {
                         $century = $temp["Camper_Birth_Date"][4] > 1 ? "19" : "20";
                         $bday = date("m/d/Y",strtotime($temp["Camper_Birth_Date"][0].$temp["Camper_Birth_Date"][1] . '/' . $temp["Camper_Birth_Date"][2].$temp["Camper_Birth_Date"][3] . '/' . $century.$temp["Camper_Birth_Date"][4].$temp["Camper_Birth_Date"][5]));

@@ -23,42 +23,42 @@ global $CFG;
 
     //Text fields and new HTML5 types
     $setup .= '$(\'.formContainer input[type=text],[type=email],[type=search],[type=url]\').focus(function() {
-    		        $(this).parent().find(\'label.error\').css(\'display\', \'none\');
-    		        $(this).parent().find(\'.info\').css(\'display\', \'block\');
+    		        $(this).parent().find(\'label.error\').css(\'visibility\', \'hidden\');
+    		        $(this).parent().find(\'.info\').css(\'visibility\', \'visible\')
     		    }).blur(function() {
-    		        $(this).parent().find(\'.info\').css(\'display\', \'none\');
+    		        $(this).parent().find(\'.info\').css(\'visibility\', \'hidden\');
     		    });';
 
     //Password fields
     $setup .= '$(\'.formContainer input[type=password]\').focus(function() {
-    		        $(this).parent().find(\'label.error\').css(\'display\', \'none\');
-    		        $(this).parent().find(\'.info\').css(\'display\', \'block\');
+    		        $(this).parent().find(\'label.error\').css(\'visibility\', \'hidden\');
+    		        $(this).parent().find(\'.info\').css(\'visibility\', \'visible\')
     		    }).blur(function() {
-    		        $(this).parent().find(\'.info\').css(\'display\', \'none\');
+    		        $(this).parent().find(\'.info\').css(\'visibility\', \'hidden\');
     		    });';
 
     //Textarea fields
     $setup .= '$(\'.formContainer textarea\').focus(function() {
-    		        $(this).parent().find(\'label.error\').css(\'display\', \'none\');
-    		        $(this).parent().find(\'.info\').css(\'display\', \'block\');
+    		        $(this).parent().find(\'label.error\').css(\'visibility\', \'hidden\');
+    		        $(this).parent().find(\'.info\').css(\'visibility\', \'visible\')
     		    }).blur(function() {
-    		        $(this).parent().find(\'.info\').css(\'display\', \'none\');
+    		        $(this).parent().find(\'.info\').css(\'visibility\', \'hidden\');
     		    });';
 
     //CHECK fields
     $setup .= '$(\'.formContainer input[type=checkbox]\').focus(function() {
-    		        $(this).parent().find(\'label.error\').css(\'display\', \'none\');
-    		        $(this).parent().find(\'.info\').css(\'display\', \'block\');
+    		        $(this).parent().find(\'label.error\').css(\'visibility\', \'hidden\');
+    		        $(this).parent().find(\'.info\').css(\'visibility\', \'visible\')
     		    }).blur(function() {
-    		        $(this).parent().find(\'.info\').css(\'display\', \'none\');
+    		        $(this).parent().find(\'.info\').css(\'visibility\', \'hidden\');
     		    });';
 
     //SELECT fields
     $setup .= '$(\'.formContainer select\').focus(function() {
-    		        $(this).parent().find(\'label.error\').css(\'display\', \'none\');
-    		        $(this).parent().find(\'.info\').css(\'display\', \'block\');
+    		        $(this).parent().find(\'label.error\').css(\'visibility\', \'hidden\');
+    		        $(this).parent().find(\'.info\').css(\'visibility\', \'visible\')
     		    }).blur(function() {
-    		        $(this).parent().find(\'.info\').css(\'display\', \'none\');
+    		        $(this).parent().find(\'.info\').css(\'visibility\', \'hidden\');
     		    });';
 
     if ($ajax) {

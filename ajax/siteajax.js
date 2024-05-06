@@ -67,6 +67,16 @@ String.prototype.entityify = function () {
     return this.replace(/&amp;/g,"&");
 };
 
+String.prototype.singleline = function () {
+    return this.replace(/(\r\n|\n|\r)/gm, "").replace(/\s\s+/g, ' ');
+};
+
+function save_action(objecta, objectb) {
+    if ($(objecta).attr("onclick") != undefined) {
+        $(objectb).val($(objecta).attr("onclick").singleline());
+    }
+}
+
 //Display or Return Functions
 function simple_display(divname){ if(document.getElementById(divname)){ document.getElementById(divname).innerHTML = xmlHttp.responseText; setTimeout(function(){ resize_modal(divname)},100); } }
 function clear_display(divname){ if(document.getElementById(divname)){ document.getElementById(divname).innerHTML = ''; } }

@@ -45,7 +45,7 @@ global $CFG, $MYVARS;
 	$SQL = "SELECT * FROM settings WHERE type='html' AND featureid=$htmlid";
 	if ($result = get_db_result($SQL)) {
 		while ($row = fetch_row($result)) {
-			copy_db_row($row,"settings","settingid=null,featureid=$newhtmlid");
+			copy_db_row($row,"settings", "settingid=null,featureid=$newhtmlid");
 		}
 	}
 }

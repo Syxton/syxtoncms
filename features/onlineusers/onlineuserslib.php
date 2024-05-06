@@ -21,19 +21,19 @@ global $CFG, $USER, $ROLES;
 	$content=""; $feature = "onlineusers";
 	
 	if (!$settings = fetch_settings($feature, $featureid, $pageid)) {
-		make_or_update_settings_array(default_settings($feature, $pageid, $featureid));
+		save_batch_settings(default_settings($feature, $pageid, $featureid));
 		$settings = fetch_settings($feature, $featureid, $pageid);
 	}
 	
 	$title = $settings->$feature->$featureid->feature_title->setting;
 	
 	if (is_logged_in()) {
-		if (user_has_ability_in_page($USER->userid, "seeusers", $pageid)) {
+		if (user_is_able($USER->userid, "seeusers", $pageid)) {
     		$content .= '<div id="onlineusersfeature">' . get_onlineusers($pageid, $featureid, $settings). '</div>';
 			$buttons = get_button_layout($feature, $featureid, $pageid); 
 		}
 	} else {
-		if (role_has_ability_in_page($ROLES->visitor, "seeusers", $pageid)) {
+		if (role_is_able($ROLES->visitor, "seeusers", $pageid)) {
 			$content .= '<div id="onlineusersfeature">' . get_onlineusers($pageid, $featureid, $settings). '</div>';
 			$buttons = get_button_layout($feature, $featureid, $pageid); 
 		}
@@ -62,7 +62,7 @@ global $CFG, $USER;
 
     //Settings will usually come from display setting, but they could come from ajax call without settings
 	if (!$settings && !$settings = fetch_settings("onlineusers", $featureid, $pageid)) {
-		make_or_update_settings_array(default_settings("onlineusers", $pageid, $featureid));
+		save_batch_settings(default_settings("onlineusers", $pageid, $featureid));
 		$settings = fetch_settings("onlineusers", $featureid, $pageid);
 	}
     
@@ -113,9 +113,9 @@ function onlineusers_delete($pageid, $featureid) {
 		"feature" => "onlineusers",
 	];
 
-	$SQL = template_use("dbsql/features.sql", $params, "delete_feature");
+	$SQL = use_template("dbsql/features.sql", $params, "delete_feature");
 	execute_db_sql($SQL);
-	$SQL = template_use("dbsql/features.sql", $params, "delete_feature_settings");
+	$SQL = use_template("dbsql/features.sql", $params, "delete_feature_settings");
 	execute_db_sql($SQL);
 
 	resort_page_features($pageid);
@@ -130,23 +130,13 @@ global $CFG, $USER;
 function onlineusers_default_settings($type, $pageid, $featureid) {
 	$settings = [
 		[
-			"type" => "$type",
-			"pageid" => "$pageid",
-			"featureid" => "$featureid",
 			"setting_name" => "feature_title",
-			"setting" => "Online Users",
-			"extra" => false,
 			"defaultsetting" => "Online Users",
 			"display" => "Feature Title",
 			"inputtype" => "text",
 		],
 		[
-			"type" => "$type",
-			"pageid" => "$pageid",
-			"featureid" => "$featureid",
 			"setting_name" => "viewable_limit",
-			"setting" => "25",
-			"extra" => false,
 			"defaultsetting" => "25",
 			"display" => "Viewable Limit",
 			"inputtype" => "text",
@@ -155,12 +145,7 @@ function onlineusers_default_settings($type, $pageid, $featureid) {
 			"warning" => "Must be greater than 0.",
 		],
 		[
-			"type" => "$type",
-			"pageid" => "$pageid",
-			"featureid" => "$featureid",
 			"setting_name" => "minutes_online",
-			"setting" => "30",
-			"extra" => false,
 			"defaultsetting" => "30",
 			"display" => "Show last active (min)",
 			"inputtype" => "text",
@@ -169,18 +154,14 @@ function onlineusers_default_settings($type, $pageid, $featureid) {
 			"warning" => "Must be greater than 0.",
 		],
 		[
-			"type" => "$type",
-			"pageid" => "$pageid",
-			"featureid" => "$featureid",
 			"setting_name" => "show_total",
-			"setting" => "1",
-			"extra" => false,
 			"defaultsetting" => "1",
 			"display" => "Show Total",
 			"inputtype" => "yes/no",
 		],
 	];
 
+    $settings = attach_setting_identifiers($settings, $type, $pageid, $featureid);
 	return $settings;
 }
 ?>

@@ -87,7 +87,7 @@ if (strcmp ($res, "VERIFIED") == 0) {
 			execute_db_sql($SQL);
 
       // Make an entry for this transaction that links it to this registration.
-      $eventid = get_db_field("eventid","events_registrations_values","regid='$regid'"); // Get eventid.
+      $eventid = get_db_field("eventid", "events_registrations_values", "regid='$regid'"); // Get eventid.
       $params = [
         "date" => get_timestamp(),
         "amount" => $add,
@@ -99,7 +99,7 @@ if (strcmp ($res, "VERIFIED") == 0) {
       $touser = new \stdClass;
       $touser->fname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_First'");
   		$touser->lname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_Last'");
-  		$touser->email = get_db_field("email","events_registrations","regid='$regid'");
+  		$touser->email = get_db_field("email", "events_registrations", "regid='$regid'");
 
       $fromuser = new \stdClass;
       $fromuser->email = $CFG->siteemail;

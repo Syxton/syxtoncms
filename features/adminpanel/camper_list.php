@@ -9,7 +9,7 @@
 
 include ('../header.php');
 
-echo template_use("tmp/page.template", ["dirroot" => $CFG->directory], "page_js_css");
+echo use_template("tmp/page.template", ["dirroot" => $CFG->directory], "page_js_css");
 ?>
 
 <h3>Camper Lists</h3>
@@ -47,19 +47,19 @@ campers 13+ years old as of June 1st of the current year (or today if past June 
         </td>   
         <td>
             <br />
-            <a href="javascript: ajaxapi('/features/adminpanel/camper_list_script.php','all_campers_list','&removeduplicates=' + $('#remdup').val() + '&year=' + $('#year').val(),function() { simple_display('downloadfile'); } );">
+            <a href="javascript: void(0);" onclick="ajaxapi('/features/adminpanel/camper_list_script.php','all_campers_list','&removeduplicates=' + $('#remdup').val() + '&year=' + $('#year').val(),function() { simple_display('downloadfile'); } );">
                 All Ages
             </a>
             <br />
-            <a href="javascript: ajaxapi('/features/adminpanel/camper_list_script.php','all_campers_list','&removeduplicates=' + $('#remdup').val() + '&year=' + $('#year').val() + '&minage=19',function() { simple_display('downloadfile'); } );">
+            <a href="javascript: void(0);" onclick="ajaxapi('/features/adminpanel/camper_list_script.php','all_campers_list','&removeduplicates=' + $('#remdup').val() + '&year=' + $('#year').val() + '&minage=19',function() { simple_display('downloadfile'); } );">
                 Age 19+
             </a>
             <br />
-            <a href="javascript: ajaxapi('/features/adminpanel/camper_list_script.php','all_campers_list','&removeduplicates=' + $('#remdup').val() + '&year=' + $('#year').val() + '&maxage=19.5',function() { simple_display('downloadfile'); } );">
+            <a href="javascript: void(0);" onclick="ajaxapi('/features/adminpanel/camper_list_script.php','all_campers_list','&removeduplicates=' + $('#remdup').val() + '&year=' + $('#year').val() + '&maxage=19.5',function() { simple_display('downloadfile'); } );">
                 Age 19 and under
             </a>
             <br />
-            <a href="javascript: ajaxapi('/features/adminpanel/camper_list_script.php','all_campers_list','&removeduplicates=' + $('#remdup').val() + '&year=' + $('#year').val() + '&minage=13&maxage=19.5',function() { simple_display('downloadfile'); } );">
+            <a href="javascript: void(0);" onclick="ajaxapi('/features/adminpanel/camper_list_script.php','all_campers_list','&removeduplicates=' + $('#remdup').val() + '&year=' + $('#year').val() + '&minage=13&maxage=19.5',function() { simple_display('downloadfile'); } );">
                 Ages 13-19
             </a>
         </td> 
@@ -69,5 +69,5 @@ campers 13+ years old as of June 1st of the current year (or today if past June 
 <div id="downloadfile" style="display: none"></div>
 
 <?php
-    echo template_use("tmp/page.template", [], "end_of_page_template");
+    echo use_template("tmp/page.template", [], "end_of_page_template");
 ?>

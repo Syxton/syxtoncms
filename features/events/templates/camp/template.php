@@ -36,7 +36,7 @@ if ($show_again) { //This is not the first time through
 		while ($reginfo = fetch_row($last_reg)) {
 			${$reginfo["elementname"]} = $reginfo["value"];
 		}
-		$email = get_db_field("email","events_registrations","regid=$regid");
+		$email = get_db_field("email", "events_registrations", "regid=$regid");
 	} else { //Different person...but auto fill the payment method and hide it.
 		$payment_method = get_db_field("value", "events_registrations_values", "elementname='payment_method' AND regid=$regid");
 	}
@@ -275,7 +275,7 @@ if ($autofill) {
 echo '<tr><td colspan="2"><hr></td></tr>
     <tr>
       <td align="right"><strong><font size="2">Pay With Application</font></strong></td>
-      <td>' . make_fee_options($row['fee_min'], $row['fee_full'],"payment_amount",'onchange="updateTotal();" onclick="updateTotal();"', $row['sale_end'], $row['sale_fee']) . '</td>
+      <td>' . make_fee_options($row['fee_min'], $row['fee_full'], "payment_amount",'onchange="updateTotal();" onclick="updateTotal();"', $row['sale_end'], $row['sale_fee']) . '</td>
     </tr>';
     
 if ($picturecost) {

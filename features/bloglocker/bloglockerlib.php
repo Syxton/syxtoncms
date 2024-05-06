@@ -26,7 +26,7 @@ global $CFG, $USER, $ROLES;
 	$content="";
 
 	if (!$settings = fetch_settings("bloglocker", $featureid, $pageid)) {
-		make_or_update_settings_array(default_settings("bloglocker", $pageid, $featureid));
+		save_batch_settings(default_settings("bloglocker", $pageid, $featureid));
 		$settings = fetch_settings("bloglocker", $featureid, $pageid);
 	}
 
@@ -34,7 +34,7 @@ global $CFG, $USER, $ROLES;
 	$viewable_limit = $settings->bloglocker->$featureid->viewable_limit->setting;
 	
 	if (get_db_count("SELECT * FROM pages_features pf WHERE pf.pageid='$pageid' AND pf.feature='html' AND pf.area='locker'")) {
-		if (user_has_ability_in_page($USER->userid, "viewbloglocker", $pageid)) {
+		if (user_is_able($USER->userid, "viewbloglocker", $pageid)) {
 			$lockeritems = get_bloglocker($pageid);
 			$i = 0;
 			foreach ($lockeritems as $lockeritem) {
@@ -44,10 +44,10 @@ global $CFG, $USER, $ROLES;
 							' </span>';
 				$p = [
 					"title" => $lockeritem->title,
-					"path" => $CFG->wwwroot . "/features/bloglocker/bloglocker.php?action=view_locker&amp;pageid=$pageid&amp;htmlid=" . $lockeritem->htmlid,
+					"path" => action_path("bloglocker") . "view_locker&amp;pageid=$pageid&amp;htmlid=" . $lockeritem->htmlid,
 				];
 				$content .= make_modal_links($p);
-				if (!$lockeritem->blog && is_logged_in() && user_has_ability_in_page($USER->userid, "addtolocker", $pageid)) {
+				if (!$lockeritem->blog && is_logged_in() && user_is_able($USER->userid, "addtolocker", $pageid)) {
 					$content .= '<a title="Move back to its original state" href="#" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'move_feature\',\'&amp;pageid=' . $pageid . '&amp;featuretype=html&amp;featureid=' . $lockeritem->htmlid . '&amp;direction=middle\',function() { update_login_contents(' . $pageid . ');});">
 									<img src="' . $CFG->wwwroot . '/images/undo.png" alt="Move feature to the middle area" />
 								 </a>';
@@ -74,7 +74,7 @@ global $CFG;
 			$featureid = $row["htmlid"];
 			
 			if (!$settings = fetch_settings("html", $featureid, $pageid)) {
-				make_or_update_settings_array(default_settings("html", $pageid, $featureid));
+				save_batch_settings(default_settings("html", $pageid, $featureid));
 				$settings = fetch_settings("html", $featureid, $pageid);
 			}
             
@@ -97,9 +97,9 @@ function bloglocker_delete($pageid, $featureid) {
 		"feature" => "bloglocker",
 	];
 
-	$SQL = template_use("dbsql/features.sql", $params, "delete_feature");
+	$SQL = use_template("dbsql/features.sql", $params, "delete_feature");
     execute_db_sql($SQL);
-    $SQL = template_use("dbsql/features.sql", $params, "delete_feature_settings");
+    $SQL = use_template("dbsql/features.sql", $params, "delete_feature_settings");
     execute_db_sql($SQL);
 
 	resort_page_features($pageid);
@@ -114,23 +114,13 @@ function bloglocker_buttons($pageid, $featuretype, $featureid) {
 function bloglocker_default_settings($type, $pageid, $featureid) {
 	$settings = [
 		[
-			"type" => "$type",
-			"pageid" => "$pageid",
-			"featureid" => "$featureid",
 			"setting_name" => "feature_title",
-			"setting" => "Blog Locker",
-			"extra" => false,
 			"defaultsetting" => "Blog Locker",
 			"display" => "Feature Title",
 			"inputtype" => "text",
 		],
         [
-            "type" => "$type",
-            "pageid" => "$pageid",
-            "featureid" => "$featureid",
             "setting_name" => "viewable_limit",
-            "setting" => "20",
-            "extra" => false,
             "defaultsetting" => "20",
             "display" => "Viewable Blog Limit",
             "inputtype" => "text",
@@ -140,6 +130,7 @@ function bloglocker_default_settings($type, $pageid, $featureid) {
         ]
 	];
 
+    $settings = attach_setting_identifiers($settings, $type, $pageid, $featureid);
 	return $settings;
 }
 ?>

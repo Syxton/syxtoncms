@@ -46,19 +46,27 @@ if (!get_db_row("SELECT * FROM events_templates WHERE name = '$templatename'")) 
 
 	execute_db_sql($SQL);
 } else { // Update event template.
-    $version = get_db_field("setting","settings","setting_name='version' AND type='events_template' AND extra='$templatefolder'");
+    $version = get_db_field("setting", "settings", "setting_name='version' AND type='events_template' AND extra='$templatefolder'");
 
 	$thisversion = 2018031200;
 	if ($version < $thisversion) {
-	   $settings = [];
-       $settings[] = array('name' => 'template_setting_overnight','title'=> 'Overnight Option','type' => 'yes/no','numeric' => false,'default' => "false", 'extravalidation' => '', 'extra_alert' => '');
-       $settings = dbescape(serialize($settings));
+	    $settings = [
+            [
+                'setting_name' => 'template_setting_overnight',
+                'display'=> 'Overnight Option',
+                'inputtype' => 'yes/no',
+                'defaultsetting' => "1",
+                'validation' => '',
+                'warning' => '',
+            ],
+        ];
+        $settings = dbescape(serialize($settings));
 
-       $SQL = "UPDATE events_templates SET settings = '$settings' WHERE folder='$templatefolder'";
+        $SQL = "UPDATE events_templates SET settings = '$settings' WHERE folder='$templatefolder'";
 
-	   if (execute_db_sql($SQL)) { // If successful upgrade.
-	       execute_db_sql("INSERT INTO settings (type,pageid,featureid,setting_name,setting,extra) VALUES('events_template', 0, 0, 'version', '$thisversion', '$templatefolder')");
-	   }
+        if (execute_db_sql($SQL)) { // If successful upgrade.
+            execute_db_sql("INSERT INTO settings (type,pageid,featureid,setting_name,setting,extra) VALUES('events_template', 0, 0, 'version', '$thisversion', '$templatefolder')");
+	    }
 	}
 
     $thisversion = 2018082101;

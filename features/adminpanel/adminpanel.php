@@ -12,7 +12,7 @@ if (empty($_POST["aslib"])) {
     
     callfunction();
 
-    echo template_use("tmp/main.template", [], "header", "adminpanel");
+    echo use_template("tmp/main.template", [], "header", "adminpanel");
     
     echo '</body></html>';
 }
@@ -41,17 +41,17 @@ function site_administration() {
                             <li>
                                 <a href="#" class="active">Admin Features</a>
                                 <ul class="acitem">
-                                    <li><a href="javascript: ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'user_admin\',\'\',function() { simple_display(\'display\');});">User Admin</a></li>
+                                    <li><a href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'user_admin\',\'\',function() { simple_display(\'display\');});">User Admin</a></li>
                                     <li><a href="#">Page Admin (Not Yet Available)</a></li>
-                                    <li><a href="javascript: ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'camper_list\',\'\',function() { simple_display(\'display\');});"">Camper Lists</a></li>
-                                    <li><a href="javascript: ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'site_versions\',\'\',function() { simple_display(\'display\');});">Version Checker</a></li>
+                                    <li><a href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'camper_list\',\'\',function() { simple_display(\'display\');});"">Camper Lists</a></li>
+                                    <li><a href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'site_versions\',\'\',function() { simple_display(\'display\');});">Version Checker</a></li>
                                 </ul>
                             </li>
                             <li>
                                 <a href="#">Framework Checks</a>
                                 <ul class="acitem">
-                                    <li><a href="javascript: ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'get_phpinfo\',\'\',function() { simple_display(\'display\');});">PHPinfo()</a></li>
-                                    <li><a href="javascript: ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'admin_email_tester\',\'\',function() { simple_display(\'display\');});">Email Tester</a></li>
+                                    <li><a href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'get_phpinfo\',\'\',function() { simple_display(\'display\');});">PHPinfo()</a></li>
+                                    <li><a href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'admin_email_tester\',\'\',function() { simple_display(\'display\');});">Email Tester</a></li>
                                 </ul>
                             </li>
                         </ul>

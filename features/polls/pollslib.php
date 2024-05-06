@@ -20,7 +20,7 @@ function display_polls($pageid, $area, $featureid=false) {
 global $CFG, $USER, $ROLES;
 	
 	if (!$settings = fetch_settings("polls", $featureid, $pageid)) {
-		make_or_update_settings_array(default_settings("polls", $pageid, $featureid));
+		save_batch_settings(default_settings("polls", $pageid, $featureid));
 		$settings = fetch_settings("polls", $featureid, $pageid);
 	}
 	
@@ -39,8 +39,8 @@ global $CFG, $USER, $ROLES;
 		if ($time < $poll['startdate']) execute_db_sql("UPDATE polls SET status='1' WHERE pollid='$featureid'");
 	}
 	
-	$viewpollability = user_has_ability_in_page($USER->userid,"viewpolls", $pageid,"polls", $featureid);
-	$takepollability = user_has_ability_in_page($USER->userid,"takepolls", $pageid,"polls", $featureid);
+	$viewpollability = user_is_able($USER->userid, "viewpolls", $pageid,"polls", $featureid);
+	$takepollability = user_is_able($USER->userid, "takepolls", $pageid,"polls", $featureid);
 	
 	if ($viewpollability) {
 		$buttons = get_button_layout("polls", $featureid, $pageid);
@@ -68,12 +68,12 @@ global $CFG, $USER, $ROLES;
 		} else { //Poll is closed so show results
 			return get_css_box($title,get_poll_results($featureid, $area), $buttons,'0px',"polls", $featureid);	
 		}
-	} else { return get_error_message("no_poll_permissions"); }
+	} else { return error_string("no_poll_permissions"); }
 }
 
 function already_taken_poll($pollid) {
 global $CFG, $USER;
-	if (get_db_field("id","polls_response","pollid='$pollid' AND (userid='" . $USER->userid."' OR ip='" . $USER->ip."')")) { return true; }
+	if (get_db_field("id", "polls_response", "pollid='$pollid' AND (userid='" . $USER->userid."' OR ip='" . $USER->ip."')")) { return true; }
     return false;
 }
 
@@ -90,7 +90,7 @@ function get_poll_colors($pollid) {
 
 function get_poll_data($pollid) {
     $total = get_db_count("SELECT * FROM polls_response WHERE pollid='$pollid'");
-    $area = get_db_field("area","pages_features","feature='polls' AND featureid=$pollid");
+    $area = get_db_field("area", "pages_features", "feature='polls' AND featureid=$pollid");
 
     $data = $label = "";
      if ($result = get_db_result("SELECT COUNT(*) as count,a.sort,a.answerid FROM polls_response r JOIN polls_answers a ON r.answer=a.answerid WHERE r.pollid='$pollid' GROUP BY r.answer ORDER BY a.sort")) {
@@ -128,7 +128,7 @@ global $CFG;
     if (!get_db_row("SELECT * FROM polls_answers WHERE pollid='$pollid'")) {
        $chart = "<br />This poll is not setup yet.<br /><br />"; 
     }elseif (get_db_row("SELECT * FROM polls_response WHERE pollid='$pollid'")) {
-        $area = $area ? $area : get_db_field("area","pages_features","feature='polls' AND featureid=$pollid");
+        $area = $area ? $area : get_db_field("area", "pages_features", "feature='polls' AND featureid=$pollid");
     	$total = get_db_count("SELECT * FROM polls_response WHERE pollid='$pollid'");
         $settings = fetch_settings("polls", $pollid, $poll["pageid"]);
     	//$title = $settings->polls->$featureid->feature_title->setting;
@@ -143,8 +143,8 @@ global $CFG;
         $chartdata = "&chds=0,1&chd=t:" . get_poll_data($pollid); //t: text formatted
         $answerkey = "&chdl=" . rawurlencode(get_poll_legend($pollid));
         $gridlines = $area == "middle" ? "&chg=10,0,0,0" : "&chg=0,10,0,0"; //every 20 percentage points
-        $title = "&chtt=" . rawurlencode(get_db_field("question","polls","pollid=$pollid"));     
-        $chart = make_modal_links(array("title"=> "See Full Size","path" => "//chart.apis.google.com/chart?" . $charttype.$chartsize.$chartcolors.$chartdata.$answerkey.$gridlines.$title.$showaxis.$barWandS . '&width=' . ($chartwidth+25) . '&height=' . ($chartheight+25),"height" => ($chartheight+25),"gallery" => $title,"width" => ($chartwidth+25),"image" => "http://chart.apis.google.com/chart?" . $charttype.$chartsize.$chartcolors.$chartdata.$answerkey.$gridlines.$title.$showaxis.$barWandS,"imagestyles" => "width:100%"));
+        $title = "&chtt=" . rawurlencode(get_db_field("question", "polls", "pollid=$pollid"));     
+        $chart = make_modal_links(array("title"=> "See Full Size", "path" => "//chart.apis.google.com/chart?" . $charttype.$chartsize.$chartcolors.$chartdata.$answerkey.$gridlines.$title.$showaxis.$barWandS . '&width=' . ($chartwidth+25) . '&height=' . ($chartheight+25),"height" => ($chartheight+25),"gallery" => $title,"width" => ($chartwidth+25),"image" => "http://chart.apis.google.com/chart?" . $charttype.$chartsize.$chartcolors.$chartdata.$answerkey.$gridlines.$title.$showaxis.$barWandS,"imagestyles" => "width:100%"));
         $chart .= '<table style="width:100%; text-align:center;"><tr><td>' . $total . ' Total Votes</td></tr></table>';
     } else { $chart = "<br />No responses yet.<br /><br />"; }
      
@@ -191,15 +191,15 @@ function polls_delete($pageid, $featureid) {
 		"feature" => "polls",
 	];
 
-	$SQL = template_use("dbsql/features.sql", $params, "delete_feature");
+	$SQL = use_template("dbsql/features.sql", $params, "delete_feature");
     execute_db_sql($SQL);
-    $SQL = template_use("dbsql/features.sql", $params, "delete_feature_settings");
+    $SQL = use_template("dbsql/features.sql", $params, "delete_feature_settings");
     execute_db_sql($SQL);
-	$SQL = template_use("dbsql/polls.sql", $params, "delete_polls", "polls");
+	$SQL = use_template("dbsql/polls.sql", $params, "delete_polls", "polls");
     execute_db_sql($SQL);
-	$SQL = template_use("dbsql/polls.sql", $params, "delete_answers", "polls");
+	$SQL = use_template("dbsql/polls.sql", $params, "delete_answers", "polls");
     execute_db_sql($SQL);
-	$SQL = template_use("dbsql/polls.sql", $params, "delete_responses", "polls");
+	$SQL = use_template("dbsql/polls.sql", $params, "delete_responses", "polls");
     execute_db_sql($SQL);
 
 	resort_page_features($pageid);
@@ -212,7 +212,7 @@ global $CFG;
 		$area = get_db_field("default_area", "features", "feature='polls'");
 		$sort = get_db_count("SELECT * FROM pages_features WHERE pageid='$pageid' AND area='$area'") + 1;
 		execute_db_sql("INSERT INTO pages_features (pageid,feature,sort,area,featureid) VALUES('$pageid','polls','$sort','$area','$featureid')");
-		execute_db_sql("INSERT INTO settings (type,pageid,featureid,setting_name,setting,extra,defaultsetting) VALUES('$type'," . $pageid."," . $featureid.",'feature_title','Blank Poll', '','Blank Poll'),('$type'," . $pageid."," . $featureid.",'allowmultiples','0', '','0'),('$type'," . $pageid."," . $featureid.",'totalvotelimit','0',NULL,'0'),('$type'," . $pageid."," . $featureid.",'votelimit','0',NULL,'0')");
+		execute_db_sql("INSERT INTO settings (type,pageid,featureid,setting_name,setting,extra,defaultsetting) VALUES('$type'," . $pageid.", " . $featureid.",'feature_title','Blank Poll', '','Blank Poll'),('$type'," . $pageid.", " . $featureid.",'allowmultiples','0', '','0'),('$type'," . $pageid.", " . $featureid.",'totalvotelimit','0',NULL,'0'),('$type'," . $pageid.", " . $featureid.",'votelimit','0',NULL,'0')");
 		return $featureid;
 	}
 	return false;
@@ -221,16 +221,16 @@ global $CFG;
 function polls_buttons($pageid, $featuretype, $featureid) {
 global $CFG, $USER;
 	$returnme = "";
-	$pollstatus = get_db_field("status","polls", "pollid='$featureid'");
+	$pollstatus = get_db_field("status", "polls", "pollid='$featureid'");
     $returnme .= '<span id="pollstatus' . $featureid . '" style="display:inline;">';
 	
-    if (($pollstatus < 2 && user_has_ability_in_page($USER->userid,"editpolls", $pageid,"polls", $featureid)) || ($pollstatus == 2 && user_has_ability_in_page($USER->userid,"editopenpolls", $pageid,"polls", $featureid))) { //Poll not created yet
-        $returnme .= make_modal_links(array("title"=> "Edit Feature","path" => $CFG->wwwroot . "/features/polls/polls.php?action=editpoll&amp;pageid=$pageid&amp;featureid=$featureid","refresh" => "true","iframe" => "true","width" => "800","height" => "400","image" => $CFG->wwwroot . "/images/edit.png","class" => "slide_menu_button"));
+    if (($pollstatus < 2 && user_is_able($USER->userid, "editpolls", $pageid,"polls", $featureid)) || ($pollstatus == 2 && user_is_able($USER->userid, "editopenpolls", $pageid,"polls", $featureid))) { //Poll not created yet
+        $returnme .= make_modal_links(array("title"=> "Edit Feature", "path" => action_path("polls") . "editpoll&amp;pageid=$pageid&amp;featureid=$featureid", "refresh" => "true", "iframe" => true, "width" => "800", "height" => "400", "image" => $CFG->wwwroot . "/images/edit.png", "class" => "slide_menu_button"));
 	}
     
-    if ($pollstatus == '1' && user_has_ability_in_page($USER->userid,"openpolls", $pageid,"polls", $featureid)) { //Poll is created but not opened
+    if ($pollstatus == '1' && user_is_able($USER->userid, "openpolls", $pageid,"polls", $featureid)) { //Poll is created but not opened
         $returnme .= ' <a class="slide_menu_button" title="Open Poll" onclick="if (confirm(\'Are you sure you would like to open this poll?  Once a poll is opened, it cannot be edited except by site admins.\')) { ajaxapi(\'/features/polls/polls_ajax.php\',\'openpoll\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;extra=\',function() { simple_display(\'polldiv' . $featureid . '\'); ajaxapi(\'/features/polls/polls_ajax.php\',\'pollstatuspic\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;extra=open\',function() { simple_display(\'pollstatus' . $featureid . '\'); });});} "><img src="' . $CFG->wwwroot . '/images/start.png" alt="Open Poll" /></a> ';
-	}elseif ($pollstatus == '2' && user_has_ability_in_page($USER->userid,"closepolls", $pageid,"polls", $featureid)) { //Poll is opened
+	}elseif ($pollstatus == '2' && user_is_able($USER->userid, "closepolls", $pageid,"polls", $featureid)) { //Poll is opened
         $returnme .= ' <a class="slide_menu_button" title="Close Poll" onclick="if (confirm(\'Are you sure you would like to close this poll?  Once a poll is closed, it cannot be reopened.\')) { ajaxapi(\'/features/polls/polls_ajax.php\',\'closepoll\',\'&amp;pageid=' . $pageid . '&amp;featuretype=polls&amp;functionname=closepoll&amp;featureid=' . $featureid . '&amp;extra=\',function() { simple_display(\'polldiv' . $featureid . '\'); ajaxapi(\'/features/polls/polls_ajax.php\',\'pollstatuspic\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;extra=close\',function() { simple_display(\'pollstatus' . $featureid . '\'); });});}"><img src="' . $CFG->wwwroot . '/images/stop.png" alt="Close Poll" /></a> ';
 	}
     
@@ -242,34 +242,19 @@ global $CFG, $USER;
 function polls_default_settings($type, $pageid, $featureid) {
 	$settings = [
 		[
-			"type" => "$type",
-			"pageid" => "$pageid",
-			"featureid" => "$featureid",
 			"setting_name" => "feature_title",
-			"setting" => "Poll",
-			"extra" => false,
 			"defaultsetting" => "Poll",
 			"display" => "Feature Title",
 			"inputtype" => "text",
 		],
 		[
-			"type" => "$type",
-			"pageid" => "$pageid",
-			"featureid" => "$featureid",
 			"setting_name" => "allowmultiples",
-			"setting" => "0",
-			"extra" => false,
 			"defaultsetting" => "0",
 			"display" => "Allow Multiple Votes",
 			"inputtype" => "yes/no",
 		],
 		[
-			"type" => "$type",
-			"pageid" => "$pageid",
-			"featureid" => "$featureid",
 			"setting_name" => "totalvotelimit",
-			"setting" => "0",
-			"extra" => false,
 			"defaultsetting" => "0",
 			"display" => "Total Vote Limit",
 			"inputtype" => "text",
@@ -278,12 +263,7 @@ function polls_default_settings($type, $pageid, $featureid) {
 			"warning" => "Cannot be a negative number. (0 = no limit)",
 		],
 		[
-			"type" => "$type",
-			"pageid" => "$pageid",
-			"featureid" => "$featureid",
 			"setting_name" => "individualvotelimit",
-			"setting" => "0",
-			"extra" => false,
 			"defaultsetting" => "0",
 			"display" => "Individual Vote Limit",
 			"inputtype" => "text",
@@ -293,6 +273,7 @@ function polls_default_settings($type, $pageid, $featureid) {
 		],
 	];
 
+    $settings = attach_setting_identifiers($settings, $type, $pageid, $featureid);
 	return $settings;
 }
 ?>

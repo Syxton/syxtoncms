@@ -7,7 +7,7 @@
  * $Revision: .6
  ***************************************************************************/
 if (!isset($CFG)) {
-	$sub = '../';
+	$sub = '';
 	while (!file_exists($sub . 'config.php')) {
 		$sub .= '../';
 	}
@@ -21,16 +21,14 @@ $postorget = isset($_GET["action"]) ? $_GET : $_POST;
 $postorget = isset($postorget["action"]) ? $postorget : "";
 
 $MYVARS->GET = $postorget;
-if ($postorget != "")
-{
+if ($postorget != "") {
 	$action = $postorget["action"];
 	$action(); //Go to the function that was called.
 }
 
 update_user_cookie();
 
-function register()
-{
+function register() {
 global $CFG, $MYVARS, $USER, $error;
 
 if (!isset($COMLIB)) include_once($CFG->dirroot . '/lib/comlib.php');
@@ -115,7 +113,7 @@ if (!isset($COMLIB)) include_once($CFG->dirroot . '/lib/comlib.php');
 		
 		$touser->fname = get_db_field("value", "events_registrations_values", "regid=$regid AND elementname='Camper_Name'");
 		$touser->lname = "";
-		$touser->email = get_db_field("email","events_registrations","regid=$regid");
+		$touser->email = get_db_field("email", "events_registrations", "regid=$regid");
 		$fromuser->email = $event['email'];
 		$fromuser->fname = $CFG->sitename;
 		$fromuser->lname = "";
@@ -181,8 +179,7 @@ if (!isset($COMLIB)) include_once($CFG->dirroot . '/lib/comlib.php');
 	}
 }
 
-function common_weeks($event, $included = true, $id, $regid = "")
-{
+function common_weeks($event, $included = true, $id = "", $regid = "") {
 	global $CFG, $USER, $PAGE;
 	$returnme = '<select id="' . $id . '">';
 	$time = get_timestamp();
@@ -201,8 +198,7 @@ function common_weeks($event, $included = true, $id, $regid = "")
 	return $returnme;
 }
 
-function show_form_again()
-{
+function show_form_again() {
 	include("template.php");
 }
 

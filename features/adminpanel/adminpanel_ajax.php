@@ -10,9 +10,9 @@ if (!isset($CFG)) { include('../header.php'); }
 update_user_cookie();
 
 if (!empty($_SESSION["lia_original"])) {
-    if (!is_siteadmin($_SESSION["lia_original"])) { echo get_page_error_message("generic_permissions"); return;}
+    if (!is_siteadmin($_SESSION["lia_original"])) { debugging(error_string("generic_permissions"), 2); return;}
 } else {
-    if (!is_siteadmin($USER->userid)) { echo get_page_error_message("generic_permissions"); return;}
+    if (!is_siteadmin($USER->userid)) { debugging(error_string("generic_permissions"), 2); return;}
 }
 
 callfunction();
@@ -70,7 +70,7 @@ function site_versions() {
     echo '<table style="width:100%;font-size:.8em;">';
 
     //Site DB version
-    echo '<tr><td colspan="2" style="text-align:center"><ins>Site db version</ins></td><td></tr><tr><td colspan="2" style="text-align:center">' . get_db_field("setting","settings","type='site' AND setting_name='version'") . '</td></tr>';
+    echo '<tr><td colspan="2" style="text-align:center"><ins>Site db version</ins></td><td></tr><tr><td colspan="2" style="text-align:center">' . get_db_field("setting", "settings", "type='site' AND setting_name='version'") . '</td></tr>';
 
     //Feature versions
     echo '<tr><td colspan="2" style="text-align:center"></td></tr><tr><td colspan="2" style="text-align:center"><ins>Feature db version</ins></td><td></tr>';

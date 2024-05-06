@@ -1,6 +1,6 @@
 main_js_css||
   ||echo js_code_wrap('var dirfromroot = "' . directory . '";');::directory||
-  ||echo js_code_wrap(template_use("tmp/pagelib.template", [], "defer_script"));::none||
+  ||echo js_code_wrap(use_template("tmp/pagelib.template", [], "defer_script"));::none||
   ||echo get_js_set("main");::none||
   ||echo get_css_tags(array("main"));::none||
 ||main_js_css
@@ -55,20 +55,20 @@ editor_box_template||
 ||echo js_code_wrap('
   $(window).on("load", function() {
       $(".wysiwyg_editor").tinymce({
-          script_url : "' . variables->wwwroot . '/scripts/tinymce/tinymce.min.js",
-          toolbar: "' . variables->toolbar . '",
-          height: "' . variables->height . '",
-          width: "' . variables->width . '",
+          script_url : "' . vars["wwwroot"] . '/scripts/tinymce/tinymce.min.js",
+          toolbar: "' . vars["toolbar"] . '",
+          height: "' . vars["height"] . '",
+          width: "' . vars["width"] . '",
           removed_menuitems: "newdocument",
           theme : "silver",
           convert_urls: false,
-          plugins: [' . variables->plugins . '],
-          external_filemanager_path: "' . variables->directory . '/scripts/tinymce/plugins/filemanager/",
+          plugins: [' . vars["plugins"] . '],
+          external_filemanager_path: "' . vars["wwwroot"] . '/scripts/tinymce/plugins/filemanager/",
           filemanager_title: "File Manager" ,
-          external_plugins: { "filemanager" : "' . variables->directory . '/scripts/tinymce/plugins/filemanager/plugin.min.js"}
+          external_plugins: { "filemanager" : "' . vars["wwwroot"] . '/scripts/tinymce/plugins/filemanager/plugin.min.js"}
       });
   });
-', "defer", true);::variables||
+', "defer", true);::vars||
 ||editor_box_template
 
 defer_script||
@@ -140,7 +140,7 @@ get_css_box_bottom_template||
 ||get_css_box_bottom_template
 
 get_login_form_template||
-||echo get_js_tags(array("validate"));::none||
+||echo get_js_tags(["validate"]);::none||
 ||validation_script||
 <form id="login_form">
     <fieldset>
@@ -192,7 +192,7 @@ make_search_box_template||
 
 format_popup_template||
 <div style="padding:||padding||;border:1px solid silver;border-radius: 5px;height:||height||;">
-    <h3>||title||</h3>
+    <h3>||title||</h3><br />
     ||content||
 </div>
 ||format_popup_template

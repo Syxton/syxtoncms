@@ -10,7 +10,7 @@
 include('header.php');
 
 $params = array("dirroot" => $CFG->directory);
-echo template_use("tmp/page.template", $params, "page_js_css");
+echo use_template("tmp/page.template", $params, "page_js_css");
 
 if (!isset($EVENTSLIB)) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 
@@ -69,7 +69,7 @@ if (!$fp) {
                        VALUES('" . $keyarray["custom"] . "','" . $keyarray['txn_id'] . "','" . $keyarray["payment_gross"] . "'," . get_timestamp() . ")";
           execute_db_sql($SQL);
       }
-      echo template_use("tmp/paypal.template", array("type" => "donation"), "transaction_complete");
+      echo use_template("tmp/paypal.template", array("type" => "donation"), "transaction_complete");
       echo print_cart($keyarray, true);
   	} else {
       $SQL = "SELECT *
@@ -90,7 +90,7 @@ if (!$fp) {
                      AND regid = '$rid'";
   				execute_db_sql($SQL);
 
-          $eventid = get_db_field("eventid","events_registrations_values","regid='$rid'"); // Get eventid.
+          $eventid = get_db_field("eventid", "events_registrations_values", "regid='$rid'"); // Get eventid.
           $minimum = get_db_field("fee_min", "events", "eventid='$eventid'");
           $verified = get_db_field("verified", "events_registrations", "regid='$rid'");
 
@@ -105,7 +105,7 @@ if (!$fp) {
               $touser = new \stdClass;
               $touser->fname = get_db_field("value", "events_registrations_values", "regid='$rid' AND elementname='Camper_Name_First'");
           		$touser->lname = get_db_field("value", "events_registrations_values", "regid='$rid' AND elementname='Camper_Name_Last'");
-          		$touser->email = get_db_field("email","events_registrations","regid='$rid'");
+          		$touser->email = get_db_field("email", "events_registrations", "regid='$rid'");
 
               $fromuser = new \stdClass;
               $fromuser->email = $CFG->siteemail;
@@ -128,7 +128,7 @@ if (!$fp) {
   			//Log
   			log_entry('events', $keyarray['txn_id'], "Paypal");
   		}
-    echo template_use("tmp/paypal.template", array("type" => "transaction"), "transaction_complete");
+    echo use_template("tmp/paypal.template", array("type" => "transaction"), "transaction_complete");
   	echo print_cart($keyarray);
   	}
 	} elseif (strcmp ($lines[0], "FAIL") == 0) {
@@ -143,10 +143,10 @@ global $CFG;
 	$i = 0; $cartitems = "";
   while ($i < $items["num_cart_items"]) {
     $params = array("itemname" => $items["item_name" . ($i + 1)] , "itemprice" => $items["mc_gross_" . ($i + 1)]);
-		$cartitems .= template_use("tmp/paypal.template", $params, "print_cart_row_template");
+		$cartitems .= use_template("tmp/paypal.template", $params, "print_cart_row_template");
 		$i++;
 	}
   $params = array("wwwroot" => $CFG->wwwroot, "sitename" => $CFG->sitename, "cartitems" => $cartitems, "items" => $items, "type" => (!$donation ? "paid for" : "donated"));
-  return template_use("tmp/paypal.template", array("type" => "transaction"), "print_cart_template");
+  return use_template("tmp/paypal.template", array("type" => "transaction"), "print_cart_template");
 }
 ?>

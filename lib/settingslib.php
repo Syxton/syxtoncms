@@ -14,6 +14,7 @@ function fetch_settings($type, &$featureid, $pageid = false) {
 global $CFG;
 
 	if (empty($featureid)) { // Non Feature settings ex. Site or page
+        $pageid = $pageid ?: "0"; // Set to 0 if page not set.
 		$SQL = "SELECT * FROM settings WHERE type='$type' AND pageid='$pageid'";
 		if ($results = get_db_result($SQL)) {
       		$settings = new \stdClass;
@@ -38,9 +39,9 @@ global $CFG;
       		}
     	}
 
+        $settings = new \stdClass;
 		$SQL = "SELECT * FROM settings WHERE type='$type' AND featureid='$featureid'";
 		if ($results = get_db_result($SQL)) {
-    		$settings = new \stdClass;
       		$settings->$type = new \stdClass;
       		$settings->$type->$featureid = new \stdClass;
 			while ($row = fetch_row($results)) {
@@ -56,12 +57,14 @@ global $CFG;
 
 		//Make sure all settings are set
 		$defaultsettings = default_settings($type, $pageid, $featureid); //get all default settings for the feature
-		foreach ($defaultsettings as $defaults) {
-			$name = $defaults["setting_name"];
-			if (!isset($settings->$type->$featureid->$name->setting)) {
-				make_or_update_setting(false, $defaults, $defaults["defaultsetting"], false, $settings);
-			}
-		}
+        if (is_array($defaultsettings)) {
+            foreach ($defaultsettings as $info) {
+                $name = $info["setting_name"];
+                if (!isset($settings->$type->$featureid->$name->setting)) {
+                    save_setting(false, $info, $info["defaultsetting"], false, $settings);
+                }
+            }
+        }
 		return $settings;
 	}
 }
@@ -74,32 +77,32 @@ function get_setting_names($settings_list) {
   return $setting_names;
 }
 
-function make_settings_page($setting_names, $settings, $default_settings) {
+function make_settings_page($settings, $settinginfo, $title = "Feature Settings") {
 global $CFG, $USER, $PAGE;
 	//Check if user has permission to be here
-	if (!user_has_ability_in_page($USER->userid, "editfeaturesettings", $PAGE->id)) {
-		echo get_error_message("generic_permissions");
+	if (!user_is_able($USER->userid, "editfeaturesettings", $PAGE->id)) {
+		echo error_string("generic_permissions");
 		return;
 	}
 
-	$settingslist = "";
-	foreach ($setting_names as $name) {
-		$defaults = get_setting($name, $default_settings); // Get single setting defaults array.
-		$type = $defaults["type"];
-		$featureid = $defaults["featureid"];
-		if (!isset($settings->$type->$featureid->$name)) { //Setting has never been saved for this type instance.
-			make_or_update_setting(false, $defaults, $defaults["defaultsetting"], $settings);
+    $settingslist = "";
+	foreach ($settinginfo as $info) {
+		$type = $info["type"];
+		$featureid = $info["featureid"];
+        $name = $info["setting_name"];
+		if (!isset($settings->$type->$featureid->$name)) { // Setting has never been saved for this type instance.
+			save_setting(false, $info, $info["defaultsetting"], false, $settings);
 		}
 
-		$settingslist .= make_setting_input($name, $defaults, $settings->$type->$featureid->$name->settingid, $settings->$type->$featureid->$name->setting);
+		$settingslist .= make_setting_input($info, $settings->$type->$featureid->$name->settingid, $settings->$type->$featureid->$name->setting);
 	}
 
-  return template_use("tmp/settings.template", array("settingslist" => $settingslist), "make_settings_page_template");
+  return use_template("tmp/settings.template", ["title" => $title, "settingslist" => $settingslist], "make_settings_page_template");
 }
 
-function make_setting_input($name, $defaults, $settingid = false, $setting = "", $savebutton = true) {
+function make_setting_input($info, $settingid = false, $value = "", $savebutton = true) {
 global $CFG;
-	$valign = $defaults["inputtype"] == "textarea" ? "top" : "middle";
+	$valign = $info["inputtype"] == "textarea" ? "top" : "middle";
 	$params = [	
 		"valign" => $valign,
 		"istext" => false,
@@ -108,75 +111,75 @@ global $CFG;
 		"isselect" => false,
 		"istextarea" => false,
 		"settingid" => $settingid,
-		"title" => $defaults["display"],
-		"name" => $name,
-		"numeric" => $defaults["numeric"] ?? false,
-		"setting" => stripslashes($setting),
+		"title" => $info["display"],
+		"name" => $info["setting_name"],
+		"numeric" => $info["numeric"] ?? false,
+		"setting" => stripslashes($value),
 		"savebutton" => $savebutton,
 		"ifnumeric" => false,
-		"ifextravalidation" => false,
-		"extra" => $defaults["extra"] ?? false,
-		"extravalidation" => $defaults["validation"] ?? false, 
-		"extra_alert" => $defaults["warning"] ?? false,
+		"ifvalidation" => false,
+		"validation" => $info["validation"] ?? false, 
+		"warning" => $info["warning"] ?? false,
 	];
 
-	switch ($defaults["inputtype"]) {
+	switch ($info["inputtype"]) {
 		case "text":
 			$params["istext"] = true;
-			$params["ifnumeric"] = $defaults["numeric"] ?? false;
-			$params["ifextravalidation"] = $defaults["validation"] ?? false;
+			$params["ifnumeric"] = $info["numeric"] ?? false;
+			$params["ifvalidation"] = $info["validation"] ?? false;
 		    break;
 		case "yes/no":
 			$params["isyesno"] = true;
-			$params["yes"] = (string) $setting == "1" ? "selected" : "";
-			$params["no"] = (string) $setting != "1" ? "selected" : "";
+			$params["yes"] = (string) $value == "1" ? "selected" : "";
+			$params["no"] = (string) $value != "1" ? "selected" : "";
 			break;
 		case "no/yes":
 			$params["isnoyes"] = true;
-			$params["yes"] = (string) $setting == "1" ? "selected" : "";
-			$params["no"] = (string) $setting != "1" ? "selected" : "";
+			$params["yes"] = (string) $value == "1" ? "selected" : "";
+			$params["no"] = (string) $value != "1" ? "selected" : "";
 			break;
 	  	case "select": //extra will look like 'SELECT id as selectvalue,text as selectname from table'  the value and name must be labeled as selectvalue and selectname
 			$params["isselect"] = true;
-			$selected = $setting != 0 ? "" : "selected";
-			$params["options"] = template_use("tmp/page.template", ["selected" => $selected, "value" => "0", "display" => "No"], "select_options_template");
+			$selected = $value != 0 ? "" : "selected";
+			$params["options"] = use_template("tmp/page.template", ["selected" => $selected, "value" => "0", "display" => "No"], "select_options_template");
 
-			if (!empty($defaults["extra"]))	{
-				if ($data = get_db_result($defaults["extra"])) {
+			if (isset($info["extraforminfo"]))	{
+				if ($data = get_db_result($info["extraforminfo"])) {
 					while ($row = fetch_row($data)) {
-						$selected = $setting == $row["selectvalue"] ? "selected" : "";
+						$selected = $value == $row["selectvalue"] ? "selected" : "";
 						$p = [
 							"selected" => $selected,
 							"value" => $row["selectvalue"],
 							"display" => stripslashes($row["selectname"]),
 						];
-						$params["options"] .= template_use("tmp/page.template", $p, "select_options_template");
+						$params["options"] .= use_template("tmp/page.template", $p, "select_options_template");
 					}
 				}
 			}
 			break;
-	  	case "select_array": //extra will be an array of arrays. The value and name must be labeled as selectvalue and selectname
+	  	case "select_array": // extraforminfo will be an array of arrays. The value and name must be labeled as selectvalue and selectname
 			$params["isselect"] = true;
 			$params["options"] = "";
-			if (!empty($defaults["extra"]))	{
-				foreach ($defaults["extra"] as $e) {
-					$selected = $setting == $e["selectvalue"] ? "selected" : "";
+			if (isset($info["extraforminfo"]))	{
+				foreach ($info["extraforminfo"] as $e) {
+					$selected = $value == $e["selectvalue"] ? "selected" : "";
 					$p = [
 						"selected" => $selected,
 						"value" => $e["selectvalue"],
 						"display" => stripslashes($e["selectname"]),
 					];
-					$params["options"] .= template_use("tmp/page.template", $p, "select_options_template");
+					$params["options"] .= use_template("tmp/page.template", $p, "select_options_template");
 				}
 			}
 			break;
 		case "textarea":
 			$params["istextarea"] = true;
-			$params["ifnumeric"] = $defaults["numeric"] ?? false;
-			$params["ifextravalidation"] = $defaults["validation"] ?? false;
+            $params["extraforminfo"] = $info["extraforminfo"] ?? false;
+			$params["ifnumeric"] = $info["numeric"] ?? false;
+			$params["ifvalidation"] = $info["validation"] ?? false;
 	      	break;
 	}
-	return template_use("tmp/settings.template", $params, "make_setting_input_template");
+	return use_template("tmp/settings.template", $params, "make_setting_input_template");
 }
 
 /**
@@ -190,21 +193,25 @@ global $CFG;
  *
  * @return bool Whether the setting was updated successfully.
  */
-function make_or_update_setting($settingid = false, $defaults = [], $value = false, $extravalue = false, &$settings = false) {
-	$vars = ["list" => "", "values" => "", "fields" => ["value" => "setting", "extravalue" => "extra"]];
+function save_setting($settingid = false, $settinginfo = [], $value = false, $extravalue = false, &$settings = false) {
+	$fields = [];
+    $sqlfields = "";
+    $sqlvalues = "";
 
-	if (!empty($defaults)) {
-		$fields = ["type", "pageid", "featureid", "setting_name", "defaultsetting"];
-		$vars["fields"] += $fields;
+    // If settingid wasn't provided, we may be able to find it with the provided values.
+	if (!empty($settinginfo)) {
+        // Add settinginfo fields to list of possible fields to check/update.
+		$fields += ["type", "pageid", "featureid", "setting_name", "defaultsetting"];
 
 		// Check if settingid was not provided but can be found.
-		if (!$settingid) {
+        // Also check that the forced insert is not requested.
+		if (!$settingid && !isset($settinginfo["insert"])) {
 			$idsql = "";
-			foreach ($fields as $f) {
-				if ($f !== "defaultsetting") {
-					if (isset($defaults[$f]) && $defaults[$f] !== false) {
+			foreach ($fields as $field) {
+				if ($field !== "defaultsetting") {
+					if (isset($settinginfo[$field]) && $settinginfo[$field] !== false) {
 						$idsql .= $idsql == "" ? "" : " AND "; // Add AND if not first field.
-						$idsql .= "$f = '" . $defaults[$f] . "'";
+						$idsql .= "$field = '" . $settinginfo[$field] . "'";
 					}
 				}
 			}
@@ -216,62 +223,79 @@ function make_or_update_setting($settingid = false, $defaults = [], $value = fal
 		}
 	}
 
-	if ($settingid) { // Update statement.
-		$vars["settingid"] = $settingid;
-		foreach ($vars["fields"] as $k => $field) {
-			if ($k == "value" || $k == "extravalue") { // Setting values.
-				if ($$k !== false) { // Check $value or $extravalue is set.
-					$vars["list"] .= $vars["list"] == "" ? "" : ", "; // Add comma if not first field.
-					$vars["list"] .= "$field = '" . $$k . "'";	
+    // Add value and extravalue fields to the list of possible fields to insert/update.
+    // <-TODO-> The key/value pairs exist for these fieldsbecause of naming differences in the database.
+    $fields += ["value" => "setting", "extravalue" => "extra"];
+
+    // Was setting already found in the db?
+	if ($settingid) {
+        // Setting already exists.  Let's update the row in the settings table.
+		foreach ($fields as $index => $field) {
+			if ($index == "value" || $index == "extravalue") { // Setting values.
+				if ($$index !== false) { // Check $value or $extravalue is set.
+					$sqlfields .= empty($sqlfields) ? "" : ", "; // Add comma if not first field.
+					$sqlfields .= "$field = '" . $$index . "'";	
 				}
-			} elseif (isset($defaults[$field]) && $defaults[$field] !== false) { // Standard fields from default array.
-				$vars["list"] .= $vars["list"] == "" ? "" : ", "; // Add comma if not first field.
-				$vars["list"] .= "$field = '" . $defaults[$field] . "'"; // Add field set statement.
+			} elseif (isset($settinginfo[$field]) && $settinginfo[$field] !== false) { // Standard fields from default array.
+				$sqlfields .= empty($sqlfields) ? "" : ", "; // Add comma if not first field.
+				$sqlfields .= "$field = '" . $settinginfo[$field] . "'"; // Add field set statement.
 			}
 		}
-		$SQL = "UPDATE settings SET " . $vars["list"] . " WHERE settingid = '" . $vars["settingid"] . "'";
-	} else { // Insert statement.
-		foreach ($vars["fields"] as $k => $field) {
-			if ($k == "value" || $k == "extravalue") { // Setting values.
-				if ($$k !== false) { // Check $value or $extravalue is set.
-					$vars["list"] .= $vars["list"] == "" ? "" : ", "; // Add comma if not first field.
-					$vars["list"] .= "$field"; // Add field to list of fields.
-					$vars["values"] .= $vars["values"] == "" ? "" : ", "; // Add comma if not first field.
-					$vars["values"] .= "'" . $$k . "'"; // Add value to list of values.
-				}
-			} elseif (isset($defaults[$field]) && $defaults[$field] !== false) { // Standard fields from default array.
-				$vars["list"] .= $vars["list"] == "" ? "" : ", "; // Add comma if not first field.
-				$vars["list"] .= "$field"; // Add field to list of fields.
-				$vars["values"] .= $vars["values"] == "" ? "" : ", "; // Add comma if not first field.
-				$vars["values"] .= "'" . $defaults[$field] . "'"; // Add value to list of values.
+		$SQL = "UPDATE settings SET $sqlfields WHERE settingid = '$settingid'";
+	} else {
+        // Setting has never been created.  Let's insert a row in the settings table.
+		foreach ($fields as $index => $field) {
+            // Insert requires default values.
+			if ($index == "value" || $index == "extravalue") { // Setting values.
+				if ($$index === false && isset($settinginfo["default$field"])) { // Check $value or $extravalue is set and not empty.
+                    $$index = $settinginfo["default$field"] ?? ""; // Use default value if set and blank if empty.
+                    $settinginfo[$field] = $$index; // Set value in settinginfo.
+				} elseif ($$index !== false) {
+                    $settinginfo[$field] = $$index; // Set value in settinginfo.
+                }
+            }
+
+            if (isset($settinginfo[$field]) && $settinginfo[$field] !== false) { // Standard fields from default array.
+				$sqlfields .= empty($sqlfields) ? "" : ", "; // Add comma if not first field.
+				$sqlfields .= "$field"; // Add field to list of fields.
+				$sqlvalues .= empty($sqlvalues) ? "" : ", "; // Add comma if not first field.
+				$sqlvalues .= "'" . $settinginfo[$field] . "'"; // Add value to list of values.
 			}
 		}
-		$SQL = "INSERT INTO settings(" . $vars["list"] . ") VALUES(" . $vars["values"] . ")";
+		$SQL = "INSERT INTO settings($sqlfields) VALUES($sqlvalues)";
 	}
 
 	if ($settingid = execute_db_sql($SQL)) { // Whether insert or update statement succeeded we will get the settingid.
-		$settings = update_settings_variable(["settingid" => $settingid, "settings" => $settings, "defaults" => $defaults, "value" => $value, "extravalue" => $extravalue]);
+		$settings = refresh_settings(["settingid" => $settingid, "settings" => $settings, "settinginfo" => $settinginfo, "value" => $value, "extravalue" => $extravalue]);
 		return true;
 	}
 
 	return false;
 }
 
-function update_settings_variable($params) {
+function refresh_settings($params) {
 	if (!empty($params["settings"])) { // Update settings variable to show changes
-		$type = $params["defaults"]["type"];
-		$featureid = $params["defaults"]["featureid"];
-		$name = $params["defaults"]["setting_name"];
+		$type = $params["settinginfo"]["type"];
+		$featureid = $params["settinginfo"]["featureid"];
+		$name = $params["settinginfo"]["setting_name"];
 
 		if (empty($params["settings"]->$type)) { $params["settings"]->$type = new \stdClass; }
 		if (empty($params["settings"]->$type->$featureid)) { $params["settings"]->$type->$featureid = new \stdClass; }
 		if (empty($params["settings"]->$type->$featureid->$name)) { $params["settings"]->$type->$featureid->$name = new \stdClass; }
 
-		$params["settings"]->$type->$featureid->$name->settingid = $params["settingid"];
-		$params["settings"]->$type->$featureid->$name->setting = stripslashes($params["value"]);
+        $params["settings"]->$type->$featureid->$name->settingid = $params["settingid"];
 
-		if ($params["extravalue"]) { $params["settings"]->$type->$featureid->$name->extra = is_string($params["extravalue"]) ? stripslashes($params["extravalue"]) : $extravalue; }
-		if (isset($params["defaults"]["defaultsetting"])) { $params["settings"]->$type->$featureid->$name->defaultsetting = stripslashes($params["defaults"]["defaultsetting"]); }
+        if ($params["value"] !== false) {
+            $params["settings"]->$type->$featureid->$name->setting = is_string($params["value"]) ? stripslashes($params["value"]) : $params["value"];
+        }
+
+        if ($params["extravalue"] !== false) {
+            $params["settings"]->$type->$featureid->$name->extra = is_string($params["extravalue"]) ? stripslashes($params["extravalue"]) : $params["extravalue"];
+        }
+
+        if (isset($params["settinginfo"]["defaultsetting"])) {
+            $params["settings"]->$type->$featureid->$name->defaultsetting = stripslashes($params["settinginfo"]["defaultsetting"]);
+        }
 	}
 	return $params["settings"];
 }
@@ -283,17 +307,22 @@ function update_settings_variable($params) {
  *
  * @return boolean Returns true if all settings were updated or inserted successfully
  */
-function make_or_update_settings_array($settings) {
+function save_batch_settings($settings) {
 	/* Loop through each setting and make it */
-	foreach ($settings as $setting) {
+	foreach ($settings as $info) {
+        $value = $info["value"] ?? false;
+        $extravalue= $info["extravalue"] ?? false;
+
 		/* Make or update the setting */
-		if (!make_or_update_setting(
+		if (!save_setting(
 			/* If settingid is set, we are updating */
-			($setting["settingid"] ?? false), 
-			/* The setting object */
-			$setting, 
-			/* Default setting value */
-			$setting["defaultsetting"]
+			($info["settingid"] ?? false),
+			/* The setting information */
+			$info,
+			/* The setting value */
+			$value,
+            /* Extra setting value */
+            $extravalue
 		)) {
 			/* If one setting fails, return false */
 			return false;
@@ -312,16 +341,9 @@ function make_or_update_settings_array($settings) {
  *
  * @return mixed The setting object or false if not found
  */
-function get_setting($setting, $settings) {
-	// Search through each settings object in the array to find the setting we are looking for.
-	foreach ($settings as $s) {
-		// If the setting we are looking for is in the current settings object, return it.
-		if (array_search($setting, $s, true)) {
-			return $s;
-		}
-	}
-	// If the setting was not found, return false.
-	return false;
+function get_setting_value($type, $setting_name, $extra = false) {
+	$extrasql = $extra ? "AND extra='$extra'" : "";
+	return get_db_field("setting", "settings", "type='$type' AND setting_name='$setting_name'" . $extrasql);
 }
 
 function default_settings($feature, $pageid, $featureid) {
@@ -333,5 +355,15 @@ function default_settings($feature, $pageid, $featureid) {
 		}
     }
 	return all_features_function(false, $feature, "", "_default_settings", false, $feature, $pageid, $featureid);
+}
+
+function attach_setting_identifiers($settings, $type = "", $pageid = "", $featureid = "") {
+    // Loop through settings and if set, add type, pageid and featureid attributes to each setting.
+    foreach ($settings as $key => $setting) {
+        $settings[$key]["type"] = $type;
+        $settings[$key]["pageid"] = $pageid;
+        $settings[$key]["featureid"] = $featureid;
+    }
+    return $settings;
 }
 ?>

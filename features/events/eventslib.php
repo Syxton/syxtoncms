@@ -21,7 +21,7 @@ global $CFG, $USER, $ROLES;
     $content = "";
 
 	if (!$settings = fetch_settings("events", $featureid, $pageid)) {
-		make_or_update_settings_array(default_settings("events", $pageid, $featureid));
+		save_batch_settings(default_settings("events", $pageid, $featureid));
 		$settings = fetch_settings("events", $featureid, $pageid);
 	}
 
@@ -38,19 +38,19 @@ global $CFG, $USER, $ROLES;
     } else {
         if (is_logged_in()) { //Logged in user will see...
             if (get_db_row("SELECT eventid FROM events WHERE workers=1 AND event_begin_date > " . time())) {
-                if (user_has_ability_in_page($USER->userid, "staffapply", $pageid, "events", $featureid)) {
+                if (user_is_able($USER->userid, "staffapply", $pageid, "events", $featureid)) {
                     $content .= get_staff_application_button();
                 }
             }
 
-            if (user_has_ability_in_page($USER->userid, "viewevents", $pageid, "events", $featureid)) {
+            if (user_is_able($USER->userid, "viewevents", $pageid, "events", $featureid)) {
                 //Get events that must be confirmed
                 if ($pageid == $CFG->SITEID) {
-                    if (user_has_ability_in_page($USER->userid, "confirmevents", $pageid, "events", $featureid) && $section = get_confirm_events()) { $content .= $section . "<br />";}
+                    if (user_is_able($USER->userid, "confirmevents", $pageid, "events", $featureid) && $section = get_confirm_events()) { $content .= $section . "<br />";}
                 }
 
                 //Get events that can be edited
-                if (user_has_ability_in_page($USER->userid, "editevents", $pageid, "events", $featureid) && $section = get_editable_events($pageid)) { $content .= $section . "<br />";}
+                if (user_is_able($USER->userid, "editevents", $pageid, "events", $featureid) && $section = get_editable_events($pageid)) { $content .= $section . "<br />";}
 
                 //Get current events
                 if ($section = get_current_events($pageid)) { $content .= $section . "<br />"; }
@@ -74,7 +74,7 @@ global $CFG, $USER, $ROLES;
                 $buttons = get_button_layout("events", $featureid, $pageid);
                 return get_css_box($title, $content, $buttons, NULL, "events", $featureid);
             }
-        }elseif (role_has_ability_in_page($ROLES->visitor, "viewevents", $pageid)) { //If unlogged in users can see...
+        }elseif (role_is_able($ROLES->visitor, "viewevents", $pageid)) { //If unlogged in users can see...
             //Get current events
             if ($section = get_current_events($pageid)) { $content .= $section . "<br />";}
 
@@ -105,7 +105,7 @@ global $CFG;
     if (is_logged_in()) { // Staff Apply menu item visible only if logged in
         $p = [
             "title" => "Staff Apply",
-            "path" => $CFG->wwwroot . "/features/events/events.php?action=staff_application",
+            "path" => action_path("events") . "staff_application",
             "validate" => "true",
             "width" => "600",
             "height" => "650",
@@ -116,7 +116,7 @@ global $CFG;
 
     $p = [
         "title" => "Staff Application/Renewal Form",
-        "path" => $CFG->wwwroot . "/features/events/events.php?action=staff_application",
+        "path" => action_path("events") . "staff_application",
         "validate" => "true",
         "width" => "600",
         "height" => "650",
@@ -132,7 +132,7 @@ function get_event_request_link($area, $featureid) {
 global $CFG;
     $p = [
         "title" => "Request an Event",
-        "path" => $CFG->wwwroot . "/features/events/events.php?action=event_request_form&amp;featureid=$featureid",
+        "path" => action_path("events") . "event_request_form&amp;featureid=$featureid",
         "validate" => "true",
         "width" => "550",
         "height" => "650",
@@ -160,12 +160,12 @@ global $CFG, $USER, $ROLES;
     $site = $pageid == $CFG->SITEID ? "((e.pageid != $pageid AND siteviewable=1) OR (e.pageid = $pageid))" : "e.pageid = $pageid";
 
     if (is_logged_in()) {
-        if (user_has_ability_in_page($USER->userid, "staffapply", $pageid, "events", $featureid)) {
+        if (user_is_able($USER->userid, "staffapply", $pageid, "events", $featureid)) {
             $content .= get_staff_application_button($featureid, $pageid);
         }
-        if (user_has_ability_in_page($USER->userid, "viewevents", $pageid, "events", $featureid)) {
+        if (user_is_able($USER->userid, "viewevents", $pageid, "events", $featureid)) {
             $canview = true;
-            $canconfirm = user_has_ability_in_page($USER->userid, "confirmevents", $CFG->SITEID, "events", $featureid) ? true : false;
+            $canconfirm = user_is_able($USER->userid, "confirmevents", $CFG->SITEID, "events", $featureid) ? true : false;
             $buttons = get_button_layout("events", $featureid, $pageid);
             if ($canconfirm) {
                 $SQL = "SELECT * FROM events e WHERE $site AND $begincurrentyear < e.event_begin_date AND $endcurrentyear > e.event_begin_date ORDER BY e.event_begin_date, e.event_begin_time";
@@ -174,7 +174,7 @@ global $CFG, $USER, $ROLES;
             }
         }
     } else {
-        $canview = role_has_ability_in_page($ROLES->visitor, "viewevents", $pageid) ? true : false;
+        $canview = role_is_able($ROLES->visitor, "viewevents", $pageid) ? true : false;
         if ($canview && $pageid == $CFG->SITEID) {
             $SQL = "SELECT * FROM events e WHERE $site AND $begincurrentyear < e.event_begin_date AND $endcurrentyear > e.event_begin_date AND e.confirmed=1 ORDER BY e.event_begin_date, e.event_begin_time";
         } elseif ($canview) {
@@ -190,7 +190,7 @@ global $CFG, $USER, $ROLES;
 				$newday = true;
 	            $newday = $lastday == date("n/d/Y", $event["event_begin_date"]) ? false : true;
 	            $lastday = date("n/d/Y", $event["event_begin_date"]);
-	            $canedit = user_has_ability_in_page($USER->userid, "editevents", $event["pageid"], "events", $featureid) ? true : false;
+	            $canedit = user_is_able($USER->userid, "editevents", $event["pageid"], "events", $featureid) ? true : false;
 	            $event_buttons = get_event_button_layout($pageid, $event, $canedit, $canconfirm);
 	            $needsconfirmed = $canconfirm && $event["confirmed"] != 1 && $pageid == $CFG->SITEID ? true : false;
 	            $dategraphic = $needsconfirmed || ($event["event_end_date"] < ($time - 86400)) ? get_date_graphic($event["event_begin_date"], $newday, null, true, true) : get_date_graphic($event["event_begin_date"], $newday, null, true);
@@ -217,7 +217,7 @@ global $CFG, $USER;
     $registration_info = "";
     $alert = $export = $info = $eventbuttons = "";
 
-    $featureid = get_db_field("featureid","pages_features","pageid='$pageid' AND feature='events'");
+    $featureid = get_db_field("featureid", "pages_features", "pageid='$pageid' AND feature='events'");
     if ($event["start_reg"] > 0) { // Event is a registerable page...at one time.
 		$regcount = get_db_count("SELECT * FROM events_registrations WHERE eventid='" . $event['eventid'] . "'");
 		$limit = $event['max_users'] == "0" ? "&#8734;" : $event['max_users'];
@@ -239,13 +239,13 @@ global $CFG, $USER;
                 }
 
                 // Can you sign up for this event.
-                if (user_has_ability_in_page($USER->userid, "signupforevents", $pageid, "events", $featureid)) {
+                if (user_is_able($USER->userid, "signupforevents", $pageid, "events", $featureid)) {
                     $params = [
                         "button" => "button",
                         "title" => "Register $left",
                         "text" => "Register",
-                        "path" => $CFG->wwwroot . "/features/events/events.php?action=show_registration&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
-                        "iframe" => "true",
+                        "path" => action_path("events") . "show_registration&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                        "iframe" => true,
                         "validate" => "true",
                         "width" => "630",
                         "height" => "95%",
@@ -260,7 +260,7 @@ global $CFG, $USER;
                         "button" => "button",
                         "title" => "Event Payment",
                         "text" => "Pay",
-                        "path" => $CFG->wwwroot . "/features/events/events.php?action=pay&amp;modal=1&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                        "path" => action_path("events") . "pay&amp;modal=1&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
                         "width" => "95%",
                         "height" => "95%",
                     ];
@@ -276,7 +276,7 @@ global $CFG, $USER;
         }
 
 		// GET EXPORT CSV BUTTON
-		if (user_has_ability_in_page($USER->userid, "exportcsv", $event["pageid"], "events", $featureid)) {
+		if (user_is_able($USER->userid, "exportcsv", $event["pageid"], "events", $featureid)) {
             $export = '<a href="javascript: void(0)" onclick="ajaxapi(\'/features/events/events_ajax.php\',\'export_csv\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '\',function() { run_this();});"><img src="' . $CFG->wwwroot . '/images/csv.png" title="Export ' . $regcount . '/' . $limit . ' Registrations" alt="Export ' . $regcount . ' Registrations" /></a>';
         }
     }
@@ -302,14 +302,14 @@ global $CFG, $USER;
                                     			<div class="event_title" style="color:gray;">Unconfirmed:
                                                     ' . make_modal_links([
                                                             "title" => stripslashes($event["name"]),
-                                                            "path" => $CFG->wwwroot . "/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
-                                                            "iframe" => "true",
+                                                            "path" => action_path("events") . "info&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                                                            "iframe" => true,
                                                             "width" => "700",
                                                             "height" => "650",
                                                         ]) . '
                                                 </div>
                                                 <span style="font-size:.85em">&nbsp;
-                                                    ' . stripslashes(strip_tags($event["byline"],'<a>')) . '
+                                                    ' . stripslashes(strip_tags($event["byline"], '<a>')) . '
                                     			</span>
                                                 <div class="hprcp_n" style="margin-top:4px;">
                                                     <div class="hprcp_e">
@@ -342,8 +342,8 @@ global $CFG, $USER;
                                     			<div class="event_title" style="color:blue;">
                                                     ' . make_modal_links([
                                                             "title" => stripslashes($event["name"]),
-                                                            "path" => $CFG->wwwroot . "/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
-                                                            "iframe" => "true",
+                                                            "path" => action_path("events") . "info&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                                                            "iframe" => true,
                                                             "width" => "700",
                                                             "height" => "650",
                                                         ]) . '
@@ -416,9 +416,9 @@ global $CFG, $USER;
         if ($canedit && $editable) {
             $returnme .= make_modal_links([
                             "title" => "Edit Event",
-                            "path" => $CFG->wwwroot . "/features/events/events.php?action=add_event_form&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                            "path" => action_path("events") . "add_event_form&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
                             "refresh" => "true",
-                            "iframe" => "true",
+                            "iframe" => true,
                             "width" => "800",
                             "height" => "95%",
                             "image" => $CFG->wwwroot . "/images/edit.png",
@@ -449,19 +449,19 @@ global $CFG, $USER;
                             <span id="confirm_' . $event['eventid'] . '">
                                 ' . make_modal_links([
                                         "title" => stripslashes($event['name']),
-                                        "path" => $CFG->wwwroot . "/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
-                                        "iframe" => "true",
+                                        "path" => action_path("events") . "info&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                                        "iframe" => true,
                                         "width" => "700",
                                         "height" => "650",
                                     ]);
 
-            $featureid = get_db_field("featureid","pages_features","pageid='$pageid' AND feature='events'");
-            if (user_has_ability_in_page($USER->userid, "editevents", $pageid, "events", $featureid)) {
+            $featureid = get_db_field("featureid", "pages_features", "pageid='$pageid' AND feature='events'");
+            if (user_is_able($USER->userid, "editevents", $pageid, "events", $featureid)) {
                 $returnme .= make_modal_links([
                                 "title" => "Edit Event",
-                                "path" => $CFG->wwwroot . "/features/events/events.php?action=add_event_form&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                                "path" => action_path("events") . "add_event_form&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
                                 "refresh" => "true",
-                                "iframe" => "true",
+                                "iframe" => true,
                                 "width" => "800",
                                 "height" => "95%",
                                 "image" => $CFG->wwwroot . "/images/edit.png",
@@ -496,16 +496,16 @@ global $CFG, $USER;
                                     <td>
                                         ' . make_modal_links([
                                                 "title" => stripslashes($event['name']),
-                                                "path" => $CFG->wwwroot . "/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
-                                                "iframe" => "true",
+                                                "path" => action_path("events") . "info&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                                                "iframe" => true,
                                                 "width" => "700",
                                                 "height" => "650",
                                             ]);
             $returnme .= " " . make_modal_links([
                                     "title" => "Edit Event",
-                                    "path" => $CFG->wwwroot . "/features/events/events.php?action=add_event_form&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                                    "path" => action_path("events") . "add_event_form&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
                                     "refresh" => "true",
-                                    "iframe" => "true",
+                                    "iframe" => true,
                                     "width" => "750",
                                     "height" => "650",
                                     "image" => $CFG->wwwroot . "/images/edit.png",
@@ -533,8 +533,8 @@ global $CFG, $USER;
                                 <td style="white-space:normal">
                                     ' . make_modal_links([
                                             "title" => stripslashes($event["name"]),
-                                            "path" => $CFG->wwwroot . "/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
-                                            "iframe" => "true",
+                                            "path" => action_path("events") . "info&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                                            "iframe" => true,
                                             "width" => "700",
                                             "height" => "650",
                                         ]) . '
@@ -543,19 +543,19 @@ global $CFG, $USER;
             $regcount = get_db_count("SELECT * FROM events_registrations WHERE eventid='" . $event['eventid'] . "' AND verified='1'");
             $limit = $event['max_users'] == "0" ? "&#8734;" : $event['max_users'];
             $left = $event['max_users'] == "0" ? "&#8734;" : '(' . ($limit - $regcount) . ' out of ' . $limit . ' openings left)';
-            $featureid = get_db_field("featureid","pages_features","pageid='$pageid' AND feature='events'");
+            $featureid = get_db_field("featureid", "pages_features", "pageid='$pageid' AND feature='events'");
 
             // Export registrations
-            if (user_has_ability_in_page($USER->userid, "exportcsv", $pageid,"events", $featureid)) {
+            if (user_is_able($USER->userid, "exportcsv", $pageid,"events", $featureid)) {
                 $returnme .= '<a href="javascript:ajaxapi(\'/features/events/events_ajax.php\',\'export_csv\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '\',function() { run_this();});"><img src="' . $CFG->wwwroot . '/images/csv.png" title="Export ' . $regcount . '/' . $limit . ' Registrations" alt="Export ' . $regcount . ' Registrations" /></a>';
             }
 
             // Registration button
-            if (user_has_ability_in_page($USER->userid, "signupforevents", $pageid, "events", $featureid)) {
+            if (user_is_able($USER->userid, "signupforevents", $pageid, "events", $featureid)) {
                 $returnme .= make_modal_links([
                                 "title" => "Register $left",
-                                "path" => $CFG->wwwroot . "/features/events/events.php?action=show_registration&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
-                                "iframe" => "true",
+                                "path" => action_path("events") . "show_registration&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                                "iframe" => true,
                                 "validate" => "true",
                                 "width" => "630",
                                 "height" => "95%",
@@ -568,7 +568,7 @@ global $CFG, $USER;
             if ($event["paypal"] != "") {
                 $returnme .= make_modal_links([
                                 "title" => "Event Payment",
-                                "path" => $CFG->wwwroot . "/features/events/events.php?action=pay&amp;modal=1&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                                "path" => action_path("events") . "pay&amp;modal=1&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
                                 "width" => "95%",
                                 "height" => "95%",
                                 "image" => $CFG->wwwroot . "/images/pay.png",
@@ -600,8 +600,8 @@ global $CFG;
                                 <td>
                                     ' . make_modal_links([
                                             "title" => stripslashes($event["name"]),
-                                            "path" => $CFG->wwwroot . "/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
-                                            "iframe" => "true",
+                                            "path" => action_path("events") . "info&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                                            "iframe" => true,
                                             "width" => "700",
                                             "height" => "650",
                                         ]) . '
@@ -632,8 +632,8 @@ global $CFG, $USER;
                                 <td>
                                     ' . make_modal_links([
                                             "title" => stripslashes($event["name"]),
-                                            "path" => $CFG->wwwroot . "/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
-                                            "iframe" => "true",
+                                            "path" => action_path("events") . "info&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                                            "iframe" => true,
                                             "width" => "700",
                                             "height" => "650",
                                         ]) . '
@@ -642,8 +642,8 @@ global $CFG, $USER;
                                 <td style="text-align:right; padding:2px;white-space:nowrap;">';
             $regcount = get_db_count("SELECT * FROM events_registrations WHERE eventid='" . $event['eventid'] . "' AND verified='1'");
             $limit = $event['max_users'] == "0" ? "&#8734;" : $event['max_users'];
-            $featureid = get_db_field("featureid","pages_features","pageid='$pageid' AND feature='events'");
-            if (user_has_ability_in_page($USER->userid, "exportcsv", $pageid, "events", $featureid)) { $returnme .= '<a href="javascript:ajaxapi(\'/features/events/events_ajax.php\',\'export_csv\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '\',function() { run_this();});"><img src="' . $CFG->wwwroot . '/images/csv.png" title="Export ' . $regcount . '/' . $limit . ' Registrations" alt="Export ' . $regcount . ' Registrations" /></a>';}
+            $featureid = get_db_field("featureid", "pages_features", "pageid='$pageid' AND feature='events'");
+            if (user_is_able($USER->userid, "exportcsv", $pageid, "events", $featureid)) { $returnme .= '<a href="javascript:ajaxapi(\'/features/events/events_ajax.php\',\'export_csv\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '\',function() { run_this();});"><img src="' . $CFG->wwwroot . '/images/csv.png" title="Export ' . $regcount . '/' . $limit . ' Registrations" alt="Export ' . $regcount . ' Registrations" /></a>';}
             $returnme .= "</td></tr></table>";
         }
     }
@@ -658,8 +658,8 @@ global $CFG, $USER;
     $time = get_timestamp();
     date_default_timezone_set("UTC");
     $oneday = 86400;
-    $featureid = get_db_field("featureid","pages_features","pageid='$pageid' AND feature='events'");
-    $dayspan = user_has_ability_in_page($USER->userid, "exportcsv", $pageid, "events", $featureid) ? $archivedays : $recentdays;
+    $featureid = get_db_field("featureid", "pages_features", "pageid='$pageid' AND feature='events'");
+    $dayspan = user_is_able($USER->userid, "exportcsv", $pageid, "events", $featureid) ? $archivedays : $recentdays;
     $to_day = ($dayspan * $oneday);
     $siteviewable = $pageid == $CFG->SITEID ? " OR siteviewable = '1' AND confirmed = '1'" : "";
     $SQL = "SELECT e.* FROM events e WHERE (e.pageid='$pageid' $siteviewable) AND (e.event_end_date + $to_day) > $time AND e.event_end_date < $time ORDER BY e.event_begin_date DESC, e.event_begin_time DESC";
@@ -671,15 +671,15 @@ global $CFG, $USER;
                                 <td style="white-space:normal">
                                     ' . make_modal_links([
                                             "title" => stripslashes($event["name"]),
-                                            "path" => $CFG->wwwroot . "/features/events/events.php?action=info&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
-                                            "iframe" => "true",
+                                            "path" => action_path("events") . "info&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
+                                            "iframe" => true,
                                             "width" => "700",
                                             "height" => "650",
                                         ]) . '
                                     <span style="display:block;color:gray; font-size:.75em;">' . $length . '</span>
                                 </td>
                                 <td style="text-align:right; padding:2px;white-space:nowrap;">';
-            if (!empty($event["start_reg"]) && user_has_ability_in_page($USER->userid, "exportcsv", $pageid, "events", $featureid)) {
+            if (!empty($event["start_reg"]) && user_is_able($USER->userid, "exportcsv", $pageid, "events", $featureid)) {
                 $returnme .= '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/events/events_ajax.php\',\'export_csv\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $event['eventid'] . '\',function() { run_this();});"><img src="' . $CFG->wwwroot . '/images/csv.png" title="Export Registrations" alt="Export Registrations" /></a>';
             }
             $returnme .= '</td></tr></table>';
@@ -760,7 +760,7 @@ global $CFG;
 
 function enter_registration($eventid, $reg, $contactemail, $pending = true) {
 global $CFG, $why, $error;
-    $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
+    $event = get_event($eventid);
     $template = get_db_row("SELECT * FROM events_templates WHERE template_id='" . $event['template_id'] . "'");
     $nolimit = true;
     $why = "";
@@ -834,7 +834,7 @@ global $CFG, $why, $error;
 function registration_email($regid, $touser, $pending=false, $waivefee=false) {
 global $CFG;
     $reg = get_db_row("SELECT * FROM events_registrations WHERE regid='$regid'");
-    $event = get_db_row("SELECT * FROM events WHERE eventid='" . $reg["eventid"] . "'");
+    $event = get_event($reg["eventid"]);
     $template = get_db_row("SELECT * FROM events_templates WHERE template_id='" . $event["template_id"] . "'");
 
     $protocol = get_protocol();
@@ -938,14 +938,16 @@ global $CFG, $why;
     $i = 0;
     while (isset($limits_array[$i])) {
         $limit = explode(":", $limits_array[$i]);
-        $elementtype = $template["folder"] == "none" ? "elementid" : "elementname";
-        $SQL = "SELECT * FROM events_registrations_values WHERE eventid='" . $event["eventid"] . "' AND $elementtype='" . $limit[0] . "' AND value" . make_limit_statement($limit[1], $limit[2], true);
-        if (get_db_row($SQL . "AND regid='$regid'")) {
-            $field_count = get_db_count($SQL);
-            if ($field_count > $limit[3]) { //if registration limit is reached
-                $displayname = get_template_field_displayname($template["template_id"], $limit[0]);
-                $why = "reached the limit of " . $limit[3] . " registrations where " . $displayname . make_limit_statement($limit[1], $limit[2], false);
-                return false;
+        if (isset($limit[2])) {
+            $elementtype = $template["folder"] == "none" ? "elementid" : "elementname";
+            $SQL = "SELECT * FROM events_registrations_values WHERE eventid='" . $event["eventid"] . "' AND $elementtype='" . $limit[0] . "' AND value" . make_limit_statement($limit[1], $limit[2], true);
+            if (get_db_row($SQL . "AND regid='$regid'")) {
+                $field_count = get_db_count($SQL);
+                if ($field_count > $limit[3]) { //if registration limit is reached
+                    $displayname = get_template_field_displayname($template["template_id"], $limit[0]);
+                    $why = "reached the limit of " . $limit[3] . " registrations where " . $displayname . make_limit_statement($limit[1], $limit[2], false);
+                    return false;
+                }
             }
         }
         $i++;
@@ -961,14 +963,16 @@ global $CFG, $why;
     $i = 0;
     while (isset($limits_array[$i])) {
         $limit = explode(":", $limits_array[$i]);
-        $elementtype = $template["folder"] == "none" ? "elementid" : "elementname";
-        $SQL = "SELECT * FROM events_registrations_values WHERE eventid='" . $event["eventid"] . "' AND $elementtype='" . $limit[0] . "' AND value" . make_limit_statement($limit[1], $limit[2], true);
-        if (get_db_row($SQL . "AND regid='$regid'")) {
-            $field_count = get_db_count($SQL);
-            if ($field_count > $limit[3]) { //if registration limit is reached
-                $displayname = get_template_field_displayname($template["template_id"], $limit[0]);
-                $why = "reached the limit of " . $limit[3] . " registrations where " . $displayname . make_limit_statement($limit[1], $limit[2], false);
-                return false;
+        if (isset($limit[2])) {
+            $elementtype = $template["folder"] == "none" ? "elementid" : "elementname";
+            $SQL = "SELECT * FROM events_registrations_values WHERE eventid='" . $event["eventid"] . "' AND $elementtype='" . $limit[0] . "' AND value" . make_limit_statement($limit[1], $limit[2], true);
+            if (get_db_row($SQL . "AND regid='$regid'")) {
+                $field_count = get_db_count($SQL);
+                if ($field_count > $limit[3]) { //if registration limit is reached
+                    $displayname = get_template_field_displayname($template["template_id"], $limit[0]);
+                    $why = "reached the limit of " . $limit[3] . " registrations where " . $displayname . make_limit_statement($limit[1], $limit[2], false);
+                    return false;
+                }
             }
         }
         $i++;
@@ -1039,7 +1043,7 @@ function make_limit_statement($operator, $value, $SQLmode = false) {
 function delete_event($eventid = false) {
 global $MYVARS, $CFG, $USER;
     $eventid = empty($eventid) ? dbescape($MYVARS->GET['featureid']) : $eventid;
-    $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
+    $event = get_event($eventid);
     delete_calendar_events($event);
 
     if ($eventid) {
@@ -1055,7 +1059,7 @@ global $MYVARS, $CFG, $USER;
 }
 
 function refresh_calendar_events($eventid) {
-    $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
+    $event = get_event($eventid);
     $siteviewable = $event["confirmed"];
     $startdate = $event["event_begin_date"];
     $event_end_date = $event["event_end_date"];
@@ -1083,7 +1087,7 @@ function confirm_event($pageid = false, $eventid = false, $confirm = false) {
 global $MYVARS, $CFG, $USER;
     date_default_timezone_set("UTC");
     $eventid = $eventid ? $eventid : dbescape($MYVARS->GET['featureid']);
-    $event = get_db_row("SELECT * FROM events WHERE eventid='$eventid'");
+    $event = get_event($eventid);
     $confirm = !empty($confirm) ? '1' : (empty($MYVARS->GET['confirm']) ? "0" : "1");
 
     //Make Calendar event
@@ -1116,6 +1120,11 @@ function delete_calendar_events($event) {
     }
 }
 
+function get_event($eventid) {
+    $eventid = dbescape($eventid);
+    return get_db_row("SELECT * FROM events WHERE eventid = '$eventid'");
+}
+
 function get_event_length($startdate, $enddate, $allday, $starttime, $endtime) {
     date_default_timezone_set(date_default_timezone_get());
     if ($startdate == $enddate) { //ONE DAY EVENT
@@ -1133,7 +1142,7 @@ function get_event_length($startdate, $enddate, $allday, $starttime, $endtime) {
     return $length;
 }
 
-function get_templates($selected = false, $eventid="", $activeonly=false) {
+function get_templates($selected = false, $eventid = "", $activeonly = false) {
 global $CFG;
     $returnme = check_for_new_templates();
     $active = !empty($activeonly) ? ' activated=1' : '';
@@ -1148,24 +1157,90 @@ global $CFG;
     return $returnme;
 }
 
-function get_template_settings($templateid, $eventid) {
+function get_template_settings_form($templateid, $eventid = false, $globalsettings = false) {
 global $CFG;
     $returnme = "";
-    if (!empty($templateid) && $template_settings = get_db_field("settings", "events_templates", "template_id='$templateid'")) { // template settings
-        if (!empty($template_settings)) { //there are settings in this template
-            $returnme = '<table style="margin:0px 0px 0px 50px;min-width: 485px;">
-                            <tr><td class="field_title" style="width:115px;text-align: center;">Template Settings</td></tr>
-                            <tr><td>';
-            $settings = unserialize($template_settings);
-            foreach ($settings as $setting) { //save each setting with the default if no other is given
-                $set = get_db_field("setting","settings","type='events_template' AND extra='$eventid' AND setting_name='" . $setting['name'] . "'");
-                $current_setting = !empty($set) ? $set : $setting['default'];
-                $returnme .= make_setting_input($setting["name"], $setting, NULL, NULL, $current_setting, false);
+    $settings = get_template_settings($templateid, $globalsettings);
+    if (!empty($settings)) { // There are settings in this template
+        $settingform = "";
+        foreach ($settings as $setting) { // Save each setting with the default if no other is given
+            if ($globalsettings) {
+                $value = get_setting_value('events_template_global', $setting['setting_name']);
+            } else {
+                $value = get_setting_value('events_template', $setting['setting_name'], $eventid);
             }
-            $returnme .= '</td></tr></table>';
+            $current_setting = !empty($value) ? $value : $setting['defaultsetting'];
+            $settingform .= make_setting_input($setting, NULL, $current_setting, false);
         }
+
+        $returnme = '
+        <table style="margin:0px 0px 0px 50px;min-width: 485px;">
+            <tr>
+                <td class="field_title" style="width:115px;text-align: center;">
+                    Template Settings
+                </td>
+            </tr>
+            <tr>
+                <td>
+                ' . $settingform . '
+                </td>
+            </tr>
+        </table>';
     }
     return $returnme;
+}
+
+function get_template_settings($templateid, $globalsettings = false) {
+    $templatesettings = [];
+    if ($template_settings = get_db_field("settings", "events_templates", "template_id='$templateid'")) { // Template settings
+        if (!empty($template_settings)) { // There are settings in this template
+            $settingform = '';
+            $settings = unserialize($template_settings);
+            foreach ($settings as $setting) { // Save each setting with the default if no other is given
+                if ($globalsettings && isset($setting["global"])) {
+                    $setting["type"] = "events_template_global";
+                    $setting["featureid"] = $templateid;
+                    $templatesettings[] = $setting;
+                } elseif (!$globalsettings && !isset($setting["global"])) {
+                    $setting["type"] = "events_template";
+                    $setting["featureid"] = $templateid;
+                    $templatesettings[] = $setting;
+                }
+            }
+        }
+    }
+    return $templatesettings;
+}
+
+function save_template_settings($template_id, $savearray) {
+    // Save any event template settings if necessary
+    if ($template_id > 0) { // If a template is chosen continue
+        //See if it should contain settings
+        $settings = get_template_settings($template_id);
+        if (!empty($settings)) { // There are settings in this template
+            foreach ($settings as $setting) { // Save each setting with the default if no other is given
+                if (isset($setting["global"])) { 
+                    $current_setting = isset($savearray[$setting['setting_name']]) ? $savearray[$setting['setting_name']] : $setting['defaultsetting'];
+                    $info = [
+                        "type" => "events_template_global",
+                        "featureid" => $template_id,
+                        "setting_name" => $setting['setting_name'],
+                        "defaultsetting" => $setting['defaultsetting'],
+                    ];
+                    save_setting(false, $info, $current_setting, $savearray['eventid']);
+                } else {
+                    $current_setting = isset($savearray[$setting['setting_name']]) ? $savearray[$setting['setting_name']] : $setting['defaultsetting'];
+                    $info = [
+                        "insert" => true, // Always inserting because all settings will be deleted first.
+                        "type" => "events_template",
+                        "setting_name" => $setting['setting_name'],
+                        "defaultsetting" => $setting['defaultsetting'],
+                    ];
+                    save_setting(false, $info, $current_setting, $savearray['eventid']);
+                }
+            }
+        }
+    }
 }
 
 function get_possible_times($formid, $selected_time = "false", $start_time = "false") {
@@ -1201,7 +1276,7 @@ function get_possible_times($formid, $selected_time = "false", $start_time = "fa
 function get_my_locations($userid, $selected = false, $eventid=false) {
     $returnme = "";
     $union_statement = $eventid ? " UNION SELECT * FROM events_locations WHERE id IN (SELECT location FROM events WHERE eventid=$eventid)" : "";
-    $SQL = "SELECT * FROM events_locations WHERE userid LIKE '%, $userid,%' $union_statement GROUP BY id ORDER BY location";
+    $SQL = "SELECT * FROM events_locations WHERE userid LIKE '%,$userid,%' $union_statement GROUP BY id ORDER BY location";
 
 	if ($locations = get_db_result($SQL)) {
         while ($location = fetch_row($locations)) {
@@ -1275,7 +1350,7 @@ function staff_status($staff, $userid = true) {
         $pageid = $_SESSION["pageid"];
         $featureid = "*";
         if (!$settings = fetch_settings("events", $featureid, $pageid)) {
-            make_or_update_settings_array(default_settings("events", $pageid, $featureid));
+            save_batch_settings(default_settings("events", $pageid, $featureid));
             $settings = fetch_settings("events", $featureid, $pageid);
         }
 
@@ -1427,7 +1502,7 @@ global $USER, $CFG, $MYVARS;
     					<label class="rowTitle" for="name">Name</label>
                         <input disabled="disabled" type="text" id="name" name="name" value="' . $v["name"] . '"
                             data-rule-required="true"
-                            data-msg-required="' . get_error_message('valid_staff_name:events') . '"
+                            data-msg-required="' . error_string('valid_staff_name:events') . '"
                         /><div class="tooltipContainer info">' . get_help("input_staff_name:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
                     </div>
@@ -1440,7 +1515,7 @@ global $USER, $CFG, $MYVARS;
                             value="' . $v["dateofbirth"] . '"
                             data-rule-required="true"
                             data-rule-custom="^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$"
-                            data-msg-custom="' . get_error_message('valid_staff_dateformat:events') . '"
+                            data-msg-custom="' . error_string('valid_staff_dateformat:events') . '"
                             data-rule-date="true"
                             onblur="
                                 var d = new Date($(this).val()).getTime() / 1000;
@@ -1462,8 +1537,8 @@ global $USER, $CFG, $MYVARS;
                             type="text" id="phone" name="phone" value="' . $v["phone"] . '"
                             data-rule-required="true"
                             data-rule-phone="true"
-                            data-msg-required="' . get_error_message('valid_staff_phone:events') . '"
-                            data-msg-phone="' . get_error_message('valid_staff_phone_invalid:events') . '"
+                            data-msg-required="' . error_string('valid_staff_phone:events') . '"
+                            data-msg-phone="' . error_string('valid_staff_phone_invalid:events') . '"
                         />
                         <div class="tooltipContainer info">' . get_help("input_staff_phone:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
@@ -1669,8 +1744,8 @@ global $USER, $CFG, $MYVARS;
                             type="text" id="ref1phone" name="ref1phone" value="' . $v["ref1phone"] . '"
                             data-rule-required="true"
                             data-rule-phone="true"
-                            data-msg-required="' . get_error_message('valid_staff_phone:events') . '"
-                            data-msg-phone="' . get_error_message('valid_staff_phone_invalid:events') . '"
+                            data-msg-required="' . error_string('valid_staff_phone:events') . '"
+                            data-msg-phone="' . error_string('valid_staff_phone_invalid:events') . '"
                         />
                         <div class="tooltipContainer info">' . get_help("input_staff_phone:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
@@ -1701,8 +1776,8 @@ global $USER, $CFG, $MYVARS;
                             type="text" id="ref2phone" name="ref2phone" value="' . $v["ref2phone"] . '"
                             data-rule-required="true"
                             data-rule-phone="true"
-                            data-msg-required="' . get_error_message('valid_staff_phone:events') . '"
-                            data-msg-phone="' . get_error_message('valid_staff_phone_invalid:events') . '"
+                            data-msg-required="' . error_string('valid_staff_phone:events') . '"
+                            data-msg-phone="' . error_string('valid_staff_phone_invalid:events') . '"
                         />
                         <div class="tooltipContainer info">' . get_help("input_staff_phone:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
@@ -1733,8 +1808,8 @@ global $USER, $CFG, $MYVARS;
                             type="text" id="ref3phone" name="ref3phone" value="' . $v["ref3phone"] . '"
                             data-rule-required="true"
                             data-rule-phone="true"
-                            data-msg-required="' . get_error_message('valid_staff_phone:events') . '"
-                            data-msg-phone="' . get_error_message('valid_staff_phone_invalid:events') . '"
+                            data-msg-required="' . error_string('valid_staff_phone:events') . '"
+                            data-msg-phone="' . error_string('valid_staff_phone_invalid:events') . '"
                         />
                         <div class="tooltipContainer info">' . get_help("input_staff_phone:events") . '</div>
     				    <div class="spacer" style="clear: both;"></div>
@@ -1763,7 +1838,7 @@ global $USER, $CFG, $MYVARS;
                             type="text" id="workerconsentdate" name="workerconsentdate" value="' . $v["workerconsentdate"] . '"
                             data-rule-required="true"
                             data-rule-custom="^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$"
-                            data-msg-custom="' . get_error_message('valid_staff_dateformat:events') . '"
+                            data-msg-custom="' . error_string('valid_staff_dateformat:events') . '"
                             data-rule-date="true"
                             disabled="disabled"
                         />
@@ -1886,7 +1961,10 @@ function new_location_form($eventid) {
 
 function location_list_form($eventid) {
 global $USER, $CFG;
-    $locations = get_db_result("SELECT * FROM events_locations WHERE shared=1 and userid NOT LIKE '%," . $USER->userid . ",%' ORDER BY location");
+    $locations = get_db_result("SELECT *
+                                FROM events_locations
+                                WHERE shared = 1
+                                AND userid NOT LIKE '%," . $USER->userid . ",%' ORDER BY location");
     $listyes = true;
     $returnme = '';
     if ($locations) {
@@ -1913,9 +1991,9 @@ function events_delete($pageid, $featureid) {
 		"feature" => "events",
 	];
 
-	$SQL = template_use("dbsql/features.sql", $params, "delete_feature");
+	$SQL = use_template("dbsql/features.sql", $params, "delete_feature");
 	execute_db_sql($SQL);
-	$SQL = template_use("dbsql/features.sql", $params, "delete_feature_settings");
+	$SQL = use_template("dbsql/features.sql", $params, "delete_feature_settings");
 	execute_db_sql($SQL);
 
     resort_page_features($pageid);
@@ -1989,7 +2067,7 @@ function get_events_admin_contacts() {
             "id" => "admin_contacts",
             "onchange" => 'fill_admin_contacts(this.value);',
         ],
-        "values" => get_db_result(template_use("dbsql/events.sql", [], "get_contacts_list", "events")),
+        "values" => get_db_result(use_template("dbsql/events.sql", [], "get_contacts_list", "events")),
         "valuename" => "admin_contact",
         "firstoption" => "",
     ];
@@ -2021,7 +2099,7 @@ function get_events_admin_payable() {
             "id" => "admin_contacts",
             "onchange" => 'fill_admin_payable(this.value);',
         ],
-        "values" => get_db_result(template_use("dbsql/events.sql", [], "get_payable_list", "events")),
+        "values" => get_db_result(use_template("dbsql/events.sql", [], "get_payable_list", "events")),
         "valuename" => "admin_contact",
         "firstoption" => "",
     ];
@@ -2041,12 +2119,12 @@ function get_events_admin_payable() {
 function events_buttons($pageid, $featuretype, $featureid) {
 global $CFG, $USER;
     $returnme = "";
-    if (user_has_ability_in_page($USER->userid, "addevents", $pageid, $featuretype, $featureid)) {
+    if (user_is_able($USER->userid, "addevents", $pageid, $featuretype, $featureid)) {
         $returnme .= make_modal_links([
                         "title" => "Add Event",
-                        "path" => $CFG->wwwroot . "/features/events/events.php?action=add_event_form&amp;pageid=$pageid",
+                        "path" => action_path("events") . "add_event_form&amp;pageid=$pageid",
                         "refresh" => "true",
-                        "iframe" => "true",
+                        "iframe" => true,
                         "width" => "95%",
                         "height" => "95%",
                         "image" => $CFG->wwwroot . "/images/add.png",
@@ -2059,23 +2137,13 @@ global $CFG, $USER;
 function events_default_settings($type, $pageid, $featureid) {
     $settings = [
         [
-            "type" => "$type",
-            "pageid" => "$pageid",
-            "featureid" => "$featureid",
             "setting_name" => "feature_title",
-            "setting" => "Events",
-            "extra" => false,
             "defaultsetting" => "Events",
             "display" => "Feature Title",
             "inputtype" => "text",
         ],
         [
-            "type" => "$type",
-            "pageid" => "$pageid",
-            "featureid" => "$featureid",
             "setting_name" => "upcomingdays",
-            "setting" => "30",
-            "extra" => false,
             "defaultsetting" => "30",
             "display" => "Show Upcoming Events (days)",
             "inputtype" => "text",
@@ -2084,12 +2152,7 @@ function events_default_settings($type, $pageid, $featureid) {
             "warning" => "Must be greater than 0.",
         ],
         [
-            "type" => "$type",
-            "pageid" => "$pageid",
-            "featureid" => "$featureid",
             "setting_name" => "recentdays",
-            "setting" => "5",
-            "extra" => false,
             "defaultsetting" => "5",
             "display" => "Recent Events (days)",
             "inputtype" => "text",
@@ -2098,12 +2161,7 @@ function events_default_settings($type, $pageid, $featureid) {
             "warning" => "Must be greater than 0.",
         ],
         [
-            "type" => "$type",
-            "pageid" => "$pageid",
-            "featureid" => "$featureid",
             "setting_name" => "archivedays",
-            "setting" => "30",
-            "extra" => false,
             "defaultsetting" => "30",
             "display" => "Admin Recent Events (days)",
             "inputtype" => "text",
@@ -2112,48 +2170,32 @@ function events_default_settings($type, $pageid, $featureid) {
             "warning" => "Must be greater than 0.",
         ],
         [
-            "type" => "$type",
-            "pageid" => "$pageid",
-            "featureid" => "$featureid",
             "setting_name" => "showpastevents",
-            "setting" => "1",
-            "extra" => false,
             "defaultsetting" => "1",
             "display" => "Show Past Events",
             "inputtype" => "yes/no",
         ],
         [
-            "type" => "$type",
-            "pageid" => "$pageid",
-            "featureid" => "$featureid",
             "setting_name" => "allowrequests",
-            "setting" => "0",
-            "extra" => "SELECT id as selectvalue, location as selectname FROM events_locations WHERE shared = 1",
             "defaultsetting" => "0",
             "display" => "Allow Location Reservations",
             "inputtype" => "select",
+            "extraforminfo" => "SELECT id as selectvalue, location as selectname
+                                FROM events_locations
+                                WHERE shared = 1",
             "numeric" => null,
             "validation" => null,
             "warning" => "Select a location to allow event requests on.",
         ],
         [
-            "type" => "$type",
-            "pageid" => "$pageid",
-            "featureid" => "$featureid",
             "setting_name" => "emaillistconfirm",
-            "setting" => "",
-            "extra" => "3",
             "defaultsetting" => "",
             "display" => "Request Email List",
             "inputtype" => "textarea",
+            "extraforminfo" => "3",
         ],
         [
-            "type" => "$type",
-            "pageid" => "$pageid",
-            "featureid" => "$featureid",
             "setting_name" => "requestapprovalvotes",
-            "setting" => "1",
-            "extra" => false,
             "defaultsetting" => "1",
             "display" => "Approval Votes Required",
             "inputtype" => "text",
@@ -2162,12 +2204,7 @@ function events_default_settings($type, $pageid, $featureid) {
             "warning" => "Must be greater than 0.  Should be less than or equal to the amount of email addresses.",
         ],
         [
-            "type" => "$type",
-            "pageid" => "$pageid",
-            "featureid" => "$featureid",
             "setting_name" => "requestdenyvotes",
-            "setting" => "1",
-            "extra" => false,
             "defaultsetting" => "1",
             "display" => "Denial Votes Required",
             "inputtype" => "text",
@@ -2176,34 +2213,21 @@ function events_default_settings($type, $pageid, $featureid) {
             "warning" => "Must be greater than 0.  Should be less than or equal to the amount of email addresses.",
         ],
         [
-            "type" => "$type",
-            "pageid" => "$pageid",
-            "featureid" => "$featureid",
             "setting_name" => "request_text",
-            "setting" => "",
-            "extra" => "3",
             "defaultsetting" => "",
             "display" => "Request Form Text",
             "inputtype" => "textarea",
+            "extraforminfo" => "3",
         ],
         [
-            "type" => "$type",
-            "pageid" => "$pageid",
-            "featureid" => "$featureid",
             "setting_name" => "bgcheck_url",
-            "setting" => "",
-            "extra" => "3",
             "defaultsetting" => "",
             "display" => "Background Check URL",
             "inputtype" => "textarea",
+            "extraforminfo" => "3",
         ],
         [
-            "type" => "$type",
-            "pageid" => "$pageid",
-            "featureid" => "$featureid",
             "setting_name" => "bgcheck_years",
-            "setting" => "5",
-            "extra" => false,
             "defaultsetting" => "5",
             "display" => "Background Check Expires (years)",
             "inputtype" => "text",
@@ -2212,88 +2236,93 @@ function events_default_settings($type, $pageid, $featureid) {
             "warning" => "Must be greater than 0.",
         ],
         [
-            "type" => "$type",
-            "pageid" => "$pageid",
-            "featureid" => "$featureid",
             "setting_name" => "staffapp_expires",
-            "setting" => "1/1",
-            "extra" => false,
             "defaultsetting" => "1/1",
             "display" => "Staff Application Expires (day/month)",
             "inputtype" => "text",
         ],
     ];
 
+    $settings = attach_setting_identifiers($settings, $type, $pageid, $featureid);
     return $settings;
 }
 
-function facebook_share_button($eventid, $name, $keys=false) {
+function facebook_share_button($event, $name) {
 global $CFG;
-    if (!empty($keys)) {
-        require_once ($CFG->dirroot . '/features/events/facebook/facebook.php'); //'<path to facebook library, you uploaded>/facebook.php';
+    $keys = [];
+
+    // Check for global settings in template.
+    $templateid = $event["template_id"];
+    $global_settings = fetch_settings("events_template_global", $templateid);
+    if (isset($global_settings->events_template_global->$templateid->facebookappid->setting)
+        &&
+        isset($global_settings->events_template_global->$templateid->facebooksecret->setting)) {
+        
+        // Load facebook library.
+        require_once ($CFG->dirroot . '/features/events/facebook/facebook.php');
         $config = [
-            'appId' => $keys->app_key,
-            'secret' => $keys->app_secret,
+            "appId" =>  $global_settings->events_template_global->$templateid->facebookappid->setting,
+            "secret" => $global_settings->events_template_global->$templateid->facebooksecret->setting,
         ];
-        $event = get_db_row("SELECT * FROM events WHERE eventid = '$eventid'");
+
         $facebook = new Facebook($config);
         $login_url = $facebook->getLoginUrl([
                                     'scope' => 'publish_stream',
-                                    'redirect_uri' => $CFG->wwwroot . '/features/events/events_ajax.php?action=send_facebook_message&info=' . base64_encode(serialize([$eventid, $name, $keys])),
+                                    'redirect_uri' => $CFG->wwwroot . '/features/events/events_ajax.php?action=send_facebook_message&info=' . base64_encode(serialize([$event["eventid"], $name, $config])),
                                 ]);
         return '<a title="Tell your friends about ' . $name . '\'s registration for ' . $event["name"] . '!" href="' . $login_url . '" target="_blank"><img src="' . $CFG->wwwroot . '/images/facebook_button.png" /></a>';
     }
-
+    return "";
 }
 
 function events_adminpanel($pageid) {
 global $CFG, $USER;
     $content = "";
     //Event Template Manager
-    $content .= user_has_ability_in_page($USER->userid, "manageeventtemplates", $pageid) ? make_modal_links([
+    $content .= user_is_able($USER->userid, "manageeventtemplates", $pageid) ? make_modal_links([
                                                                                             "title"  => "Event Templates",
                                                                                             "text"   => "Event Templates",
-                                                                                            "path"   => $CFG->wwwroot . "/features/events/events.php?action=template_manager&amp;pageid=$pageid",
-                                                                                            "iframe" => "true",
+                                                                                            "path"   => action_path("events") . "template_manager&amp;pageid=$pageid",
+                                                                                            "iframe" => true,
                                                                                             "width"  => "640",
                                                                                             "height" => "600",
-                                                                                            "iframe" => "true",
+                                                                                            "iframe" => true,
                                                                                             "image"  => $CFG->wwwroot . "/images/template.png",
                                                                                             "styles" => "padding:1px;display:block;",
                                                                                             ]) : "";
     //Course Event Manager
-    $content .= user_has_ability_in_page($USER->userid, "manageevents", $pageid) ? make_modal_links([
+    $content .= user_is_able($USER->userid, "manageevents", $pageid) ? make_modal_links([
                                                                                     "title"  => "Event Registrations",
                                                                                     "text"   => "Event Registrations",
-                                                                                    "path"   => $CFG->wwwroot . "/features/events/events.php?action=event_manager&amp;pageid=$pageid",
-                                                                                    "iframe" => "true",
+                                                                                    "path"   => action_path("events") . "event_manager&amp;pageid=$pageid",
+                                                                                    "iframe" => true,
                                                                                     "width"  => "640",
                                                                                     "height" => "600",
-                                                                                    "iframe" => "true",
+                                                                                    "iframe" => true,
                                                                                     "image"  => $CFG->wwwroot . "/images/manage.png",
                                                                                     "styles" => "padding:1px;display:block;",
                                                                                     ]) : "";
     //Application Manager
-    $content .= user_has_ability_in_page($USER->userid, "manageapplications", $pageid) ? make_modal_links([
+    $content .= user_is_able($USER->userid, "manageapplications", $pageid) ? make_modal_links([
                                                                                             "title"  => "Staff Applications",
                                                                                             "text"   => "Staff Applications",
-                                                                                            "path"   => $CFG->wwwroot . "/features/events/events.php?action=application_manager&amp;pageid=$pageid",
-                                                                                            "iframe" => "true",
+                                                                                            "path"   => action_path("events") . "application_manager&amp;pageid=$pageid",
+                                                                                            "iframe" => true,
                                                                                             "width"  => "640",
                                                                                             "height" => "600",
-                                                                                            "iframe" => "true",
+                                                                                            "iframe" => true,
                                                                                             "image"  => $CFG->wwwroot . "/images/apps.png",
                                                                                             "styles" => "padding:1px;display:block;",
                                                                                         ]) : "";
     //Staff Notifications
-    $content .= user_has_ability_in_page($USER->userid, "manageapplications", $pageid) ? make_modal_links([
+    $content .= user_is_able($USER->userid, "manageapplications", $pageid) ? make_modal_links([
                                                                                             "title"  => "Staff Process Email",
                                                                                             "text"   => "Staff Process Email",
-                                                                                            "path"   => $CFG->wwwroot . "/features/events/events.php?action=staff_emailer&amp;pageid=$pageid",
-                                                                                            "iframe" => "true",
+                                                                                            "path"   => action_path("events") . "staff_emailer&amp;pageid=$pageid",
+                                                                                            "iframe" => true,
                                                                                             "width"  => "640",
                                                                                             "height" => "600",
-                                                                                            "iframe" => "true",
+                                                                                            "iframe" => true,
                                                                                             "image"  => $CFG->wwwroot . "/images/staffapp.png",
                                                                                             "styles" => "padding:1px;display:block;",
                                                                                         ]) : "";

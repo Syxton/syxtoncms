@@ -6,7 +6,7 @@
  * @license Modified MIT License
  * @link https://blueimp.net/ajax/
  */
-if(!isset($CFG) && file_exists('../../../config.php')){ include('../../../config.php'); } 
+if (!isset($CFG) && file_exists('../../../config.php')) { include('../../../config.php'); } 
 
 // Define AJAX Chat user roles:
 define('AJAX_CHAT_BANNED',		6);

@@ -1,17 +1,13 @@
 make_settings_page_template||
-  <div id="settings_div">
-    <table style="width:100%; border-color:buttonface; border-style:dotted; padding: 10px 0px 10px 0px;">
-      <tr>
-        <td>
-          <strong>
-            Feature Attributes
-          </strong>
-          <br />
-          <br />
-          ||settingslist||
-        </td>
-      </tr>
-    </table>
+  <div id="settings_div" class="dotted" style="height: calc(100% - 40px);">
+    <h3>
+      ||title||
+    </h3>
+    <br />
+    <br />
+    ||settingslist||
+    <br />
+    <br />
   </div>
 ||make_settings_page_template
 
@@ -46,7 +42,7 @@ make_setting_input_template||
       }}isselect||
 
       ||istextarea{{
-        <textarea style="width: calc(100% - 150px);" id="||name||" wrap="off" rows="||extra||" >
+        <textarea style="width: calc(100% - 150px);" id="||name||" wrap="off" rows="||extraforminfo||" >
           ||setting||
         </textarea>
       }}istextarea||
@@ -57,11 +53,11 @@ make_setting_input_template||
                                                                            alert('Must be numeric!');
                                                                          } else {
                                                                        }}ifnumeric||
-                                                                            ||ifextravalidation{{
-                                                                              if ($('#||name||').val() ||extravalidation||) {
-                                                                                alert('||extra_alert||');
+                                                                            ||ifvalidation{{
+                                                                              if ($('#||name||').val() ||validation||) {
+                                                                                alert('||warning||');
                                                                               } else {
-                                                                            }}ifextravalidation||
+                                                                            }}ifvalidation||
                                                                               ajaxapi('/ajax/site_ajax.php',
                                                                                       'save_settings',
                                                                                       '&settingid=||settingid||' +
@@ -72,9 +68,9 @@ make_setting_input_template||
                                                                                           clear_display('||name||_results');
                                                                                         }, 3000);
                                                                                       });
-                                                                            ||ifextravalidation{{
+                                                                            ||ifvalidation{{
                                                                               }
-                                                                            }}ifextravalidation||
+                                                                            }}ifvalidation||
                                                                        ||ifnumeric{{
                                                                          }
                                                                        }}ifnumeric||" />

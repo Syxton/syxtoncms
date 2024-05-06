@@ -51,7 +51,6 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, ['Connection: Close']);
 
 curl_setopt($ch, CURLOPT_CAINFO, dirname(__FILE__) . '/cacert.pem');
 if ( !($res = curl_exec($ch)) ) {
-    // error_log("Got " . curl_error($ch) . " when processing IPN data");
     curl_close($ch);
     exit;
 }
@@ -90,7 +89,7 @@ if (strcmp ($res, "VERIFIED") == 0) {
 
                 $c = get_db_row("SELECT * FROM donate_campaign WHERE campaign_id='$custom'");
                 if ($c["metgoal"] == "0") {
-                    $sum = get_db_field("SUM(amount)","donate_donations","campaign_id='$custom'");
+                    $sum = get_db_field("SUM(amount)", "donate_donations", "campaign_id='$custom'");
                     if ($sum >= $c["goal_amount"]) {
                         execute_db_sql("UPDATE donate_campaign SET metgoal=1 WHERE campaign_id='$custom'");
                         //Log

@@ -1,7 +1,7 @@
 rss_subscribe_feature_template||
 ||feed{{
   <div id="add_feed_div">
-    <table style="width:100%; border-color:buttonface; border-style:dotted; padding: 10px 0px 10px 0px;">
+    <table class="dotted">
       <tr>
         <td>
           <span style="float:left;">
@@ -48,7 +48,7 @@ rss_subscribe_feature_template||
   </div>
   //OR//
   <div id="add_feed_div">
-    <table style="width:100%; border-color:buttonface; border-style:dotted; padding: 10px 0px 10px 0px;">
+    <table class="dotted">
       <tr>
         <td>
           <span style="float:left;">

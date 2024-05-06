@@ -63,4 +63,7 @@ $CFG->doc_view_key = '';
 
 //Google Analytics id
 $CFG->analytics = '';
+
+// Debug level. 0 no errors, 1 log errors, 2 log and print, 3 log and print with extra debug.
+$CFG->debug = 0;
 ?>

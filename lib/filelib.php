@@ -108,7 +108,7 @@ function create_file($filename, $contents, $makecsv=false) {
 
 function get_download_link($filename, $contents, $makecsv=false) {
     global $CFG;
-    return 'window.open("' . $CFG->wwwroot . '/scripts/download.php?file=' . create_file($filename, $contents, $makecsv) . '", "download","menubar=yes,toolbar=yes,scrollbars=1,resizable=1,width=600,height=400");';
+    return 'window.open("' . $CFG->wwwroot . '/scripts/download.php?file=' . create_file($filename, $contents, $makecsv) . '", "download", "menubar=yes,toolbar=yes,scrollbars=1,resizable=1,width=600,height=400");';
 }
 
 function return_bytes ($size_str) {
@@ -128,7 +128,7 @@ function get_protocol() {
 }
 
 // Main template function
-function template_use($file, $params = [], $subsection = "", $feature = false) {
+function use_template($file, $params = [], $subsection = "", $feature = false) {
 	global $CFG;
     $v = $params;
 
@@ -175,7 +175,7 @@ function template_use($file, $params = [], $subsection = "", $feature = false) {
           $contents = str_replace("||$optional$match||", "", $contents);
           
           if (!$optional) {
-            error_log("[WARNING] - Expected $subsection template variable $match not found in parameters array.");
+            debugging("[WARNING] - Expected $subsection template variable $match not found in parameters array.");
           }
         }
     }
@@ -414,14 +414,14 @@ function get_js_tags($params, $linkonly = false, $loadtype = false) {
   $filelist = [];
   $dir = empty($CFG->directory) ? '' : $CFG->directory . '/';
   foreach ($javascript as $path => $files) {
-    foreach($files as $file){
+    foreach ($files as $file) {
       array_push($filelist, $dir . $path . "/" . $file);
     }
   }
 
-  if(count($filelist)) {
+  if (count($filelist)) {
     $link = $CFG->wwwroot . '/min/?f=' . implode(",", $filelist);
-    if($linkonly){
+    if ($linkonly) {
       return $link; // for loadjs() so we don't know if it is actually every loaded.
     } else {
       $LOADED = array_merge_recursive($LOADED, $javascript); // set global to loaded javascript.
@@ -544,12 +544,12 @@ function get_css_tags($params) {
   $filelist = [];
   $dir = empty($CFG->directory) ? '' : $CFG->directory . '/';
   foreach ($css as $path => $files) {
-    foreach($files as $file){
+    foreach ($files as $file) {
       array_push($filelist, $dir . $path . "/" . $file);
     }
   }
 
-  if(count($filelist)) {
+  if (count($filelist)) {
     $link = $CFG->wwwroot . '/min/?f=' . implode(",", $filelist);
     return css_script_wrap($link);
   }

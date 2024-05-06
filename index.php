@@ -62,16 +62,16 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
 
     if (is_logged_in()) {
         $params = ["timeout" => 14599]; // Javascript that checks for valid login every x seconds.
-        echo template_use("tmp/index.template", $params, "valid_login_check");
+        echo use_template("tmp/index.template", $params, "valid_login_check");
 
-        $ABILITIES = get_user_abilities($USER->userid, $PAGE->id);
+        $ABILITIES = user_abilities($USER->userid, $PAGE->id);
         if (empty($ABILITIES->viewpages->allow)) {
             if ($currentpage["opendoorpolicy"] == "0") {
                 $PAGE->id = $CFG->SITEID;
             }
         }
     } else {
-        $ABILITIES = get_role_abilities($ROLES->visitor, $PAGE->id);
+        $ABILITIES = role_abilities($ROLES->visitor, $PAGE->id);
         if (!($currentpage["siteviewable"] && !empty($ABILITIES->viewpages->allow))) {
             if ($currentpage["opendoorpolicy"] == "0") {
                 $PAGE->id = $CFG->SITEID;
@@ -87,7 +87,7 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
         "middlecontents" => get_page_contents($PAGE->id, 'middle'),
     ];
 
-    echo template_use("tmp/index.template", $params, "mainlayout_template");
+    echo use_template("tmp/index.template", $params, "mainlayout_template");
 
     // End Page
     include('footer.html');

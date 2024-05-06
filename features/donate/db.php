@@ -9,7 +9,7 @@
 
 function donate_upgrade() {
 global $CFG;
-    $version = get_db_field("version","features","feature='donate'");		
+    $version = get_db_field("version", "features", "feature='donate'");		
     $thisversion = 20130320;
 	if ($version < $thisversion) { execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='donate'"); }
 

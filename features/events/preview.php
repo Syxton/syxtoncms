@@ -57,7 +57,7 @@ global $CFG, $MYVARS;
 				$form .= '
 				<tr>
 					<td class="field_title">Payment Amount:</td>
-					<td class="field_input">' . make_fee_options($event['fee_min'], $event['fee_full'],'payment_amount', '') . '</td>
+					<td class="field_input">' . make_fee_options($event['fee_min'], $event['fee_full'], 'payment_amount', '') . '</td>
 				</tr>
 				<tr>
 					<td class="field_title">Method of Payment:</td>
