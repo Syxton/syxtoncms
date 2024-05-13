@@ -3,7 +3,7 @@
 * db.php - feature db upgrades
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 8/19/2010
+* Date: 5/14/2024
 * Revision: 0.0.2
 ***************************************************************************/
 
@@ -19,7 +19,7 @@ function polls_upgrade() {
         `answer` VARCHAR( 200 ) NOT NULL ,
         `sort` INT NOT NULL ,
         INDEX ( `pollid` , `sort` )
-        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
+        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;";
         
 		if (execute_db_sql($SQL)) //if successful creating table, go ahead with upgrade
 		{
@@ -41,9 +41,9 @@ function polls_upgrade() {
             $SQL2 = "ALTER TABLE `polls` DROP `a1`, DROP `a2`, DROP `a3`, DROP `a4`, DROP `a5`, DROP `a6`, DROP `a7`, DROP `a8`, DROP `a9`, DROP `a10`;";
             
             if (execute_db_sql($SQL2)) //if successful creating table, go ahead with upgrade
-		    {
+			  {
                 execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='polls'");
-		    }
+			  }
 		}
 	}
 

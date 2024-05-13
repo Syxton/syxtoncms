@@ -8,14 +8,28 @@ mainlayout_template||
 </div>
 <div class="colmask rightmenu">
   <div class="colleft">
-    <div class="col2 pagesort2 connectedSortable">
-      ||sidemast||
-      ||sidecontents||
-    </div>
-    <div class="col1 pagesort1 connectedSortable">
-      <span id="column_width" style="width:100%;"></span>
-      ||middlecontents||
-    </div>
+	<div class="col2 pagesort2 connectedSortable">
+		||sidemast||
+		||sidecontents||
+	</div>
+	<div class="col1 pagesort1 connectedSortable">
+		<span id="column_width" style="width:100%;"></span>
+		||middlecontents||
+	</div>
   </div>
 </div>
 ||mainlayout_template
+
+simplelayout_template||
+<div class="logo_nav">
+  ||mainmast||
+</div>
+<div class="colmask rightmenu">
+  <div>
+	<div>
+		<span id="column_width" style="width:100%;"></span>
+		||middlecontents||
+	</div>
+  </div>
+</div>
+||simplelayout_template

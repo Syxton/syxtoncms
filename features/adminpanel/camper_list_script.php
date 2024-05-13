@@ -3,7 +3,7 @@
 * camper_list.php - Page relevent page file
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 10/12/2022
+* Date: 5/14/2024
 * Revision: 2.0.1
 ***************************************************************************/
 
@@ -41,11 +41,11 @@ function all_campers_list($filename = "camperlist", $year = false, $removeduplic
                 }
                 if (strstr($temp["Camper_Birth_Date"], '-')) {
                     $bday = date("m/d/Y",strtotime(str_replace("-", "/", $temp["Camper_Birth_Date"])));
-                }elseif (!strstr($temp["Camper_Birth_Date"], '/') && !strstr($temp["Camper_Birth_Date"], '-')) {
+                } elseif (!strstr($temp["Camper_Birth_Date"], '/') && !strstr($temp["Camper_Birth_Date"], '-')) {
                     if (strlen($temp["Camper_Birth_Date"])==6) {
                         $century = $temp["Camper_Birth_Date"][4] > 1 ? "19" : "20";
                         $bday = date("m/d/Y",strtotime($temp["Camper_Birth_Date"][0].$temp["Camper_Birth_Date"][1] . '/' . $temp["Camper_Birth_Date"][2].$temp["Camper_Birth_Date"][3] . '/' . $century.$temp["Camper_Birth_Date"][4].$temp["Camper_Birth_Date"][5]));
-                    }elseif (strlen($temp["Camper_Birth_Date"])==8) {
+                    } elseif (strlen($temp["Camper_Birth_Date"])==8) {
                         $bday = date("m/d/Y",strtotime($temp["Camper_Birth_Date"][0].$temp["Camper_Birth_Date"][1] . '/' . $temp["Camper_Birth_Date"][2].$temp["Camper_Birth_Date"][3] . '/' . $temp["Camper_Birth_Date"][4].$temp["Camper_Birth_Date"][5].$temp["Camper_Birth_Date"][6].$temp["Camper_Birth_Date"][7]));
                     } else { //Most likely empty so try the age field
                         if (!empty($temp["Camper_Age"])) {

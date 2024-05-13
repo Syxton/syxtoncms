@@ -3,7 +3,7 @@
 * page_ajax.php - Page backend ajax script
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 05/11/2021
+* Date: 5/14/2024
 * Revision: 1.4.3
 ***************************************************************************/
 
@@ -137,16 +137,16 @@ global $CFG, $MYVARS, $USER;
               $check_rights
                 FROM pages p
                WHERE p.pageid != '$CFG->SITEID'
-	               AND ($searchstring)
-	               AND p.menu_page = 0
-	          ORDER BY p.name";
+		             AND ($searchstring)
+		             AND p.menu_page = 0
+		        ORDER BY p.name";
   } else {
       $SQL = "SELECT p.*
                 FROM pages p
                WHERE p.pageid != '$CFG->SITEID'
-    	           AND ($searchstring)
+  			         AND ($searchstring)
     $siteviewableonly
-    	       ORDER BY p.name";
+  			     ORDER BY p.name";
   }
 
   $total = get_db_count($SQL); //get the total for all pages returned.
@@ -559,7 +559,7 @@ global $CFG, $USER, $MYVARS;
   $userid = $USER->userid;
   $pageid = $MYVARS->GET["pageid"];
 
-  if (!isset($PAGELISTLIB)) { include_once ($CFG->dirroot . '/lib/pagelistlib.php'); }
+  if (!defined('PAGELISTLIB')) { include_once ($CFG->dirroot . '/lib/pagelistlib.php'); }
 
   echo get_page_links($pageid, $userid);
 }

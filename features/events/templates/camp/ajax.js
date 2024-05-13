@@ -36,7 +36,7 @@ function submit_registration(){
         // Setup a function for the server to run when it's done
         document.getElementById("camp").innerHTML = "";
         simple_display("registration_div");
-  	}
+		}
     //Show form
     document.form1.style.display = 'block';    
 }

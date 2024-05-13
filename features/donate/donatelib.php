@@ -3,17 +3,17 @@
 * donatelib.php - donate feature library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 4/04/2013
+* Date: 5/14/2024
 * Revision: 1.1.5
 ***************************************************************************/
-if (!isset($LIBHEADER)) {
+if (!LIBHEADER) {
 	$sub = './';
 	while (!file_exists($sub . 'lib/header.php')) {
 		$sub = $sub == './' ? '../' : $sub . '../';
 	}
 	include($sub . 'lib/header.php'); 
 }
-$donateLIB = true;
+define('DONATELIB', true);
 	
 function display_donate($pageid, $area, $featureid) {
 global $CFG, $USER, $donateSETTINGS;
@@ -70,8 +70,8 @@ global $CFG;
 
         $button = '
         <form action="https://' . $paypal . '/cgi-bin/webscr" method="post">
-    	       <div style="width: 100%; text-align: center;">
-    		      <input name="cmd" type="hidden" value="_donations" />
+  			     <div style="width: 100%; text-align: center;">
+  				    <input name="cmd" type="hidden" value="_donations" />
                   <input name="business" type="hidden" value="' . $campaign["paypal_email"] . '" />
                   <input name="item_name" type="hidden" value="' . $campaign["title"] . '" />
                   <input name="item_number" type="hidden" value="DONATE" />

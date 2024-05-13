@@ -3,12 +3,20 @@
 * chat.php - Chat modal page lib
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 8/16/2011
+* Date: 5/14/2024
 * Revision: 0.1.6
 ***************************************************************************/
 if (empty($_POST["aslib"])) {
-    if (!isset($CFG)) { include('../header.php'); }
-    
+    if (!isset($CFG)) {
+		$sub = '';
+		while (!file_exists($sub . 'header.php')) {
+			$sub = $sub == '' ? '../' : $sub . '../';
+		}
+		include($sub . 'header.php');
+	}
+
+	if (!isset($CHATLIB)) { include_once($CFG->dirroot . '/features/chat/chatlib.php'); }
+
     callfunction();
     
     echo '</body></html>';
@@ -17,7 +25,8 @@ if (empty($_POST["aslib"])) {
 
 function chat_settings() {
 global $CFG, $MYVARS, $USER;
-	$featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
+	$featureid = dbescape($MYVARS->GET['featureid']);
+	$pageid = dbescape($MYVARS->GET['pageid']);
 	$feature = "chat";
 
 	//Default Settings	

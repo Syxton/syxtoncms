@@ -3,7 +3,7 @@
 * db.php - feature db upgrades
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 4/08/2016
+* Date: 5/14/2024
 * Revision: 0.0.7
 ***************************************************************************/
 
@@ -131,7 +131,7 @@ global $CFG;
           KEY `userid` (`userid`),
           KEY `dateofbirth` (`dateofbirth`),
           KEY `priorwork` (`priorwork`)
-        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
+        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;";
 		if (execute_db_sql($SQL)) { //if successful upgrade
             add_role_ability('events','staffapply','Events','1','Apply as staff','1','1','1');
 			execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
@@ -192,7 +192,7 @@ global $CFG;
           KEY `userid` (`userid`),
           KEY `dateofbirth` (`dateofbirth`),
           KEY `priorwork` (`priorwork`)
-        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
+        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;";
 		if (execute_db_sql($SQL)) { //if successful upgrade
             if ($result = get_db_result("SELECT * FROM events_staff")) {
                 while ($row = fetch_row($result)) {                    
@@ -223,7 +223,7 @@ global $CFG;
     
 	$thisversion = 20160516;
 	if ($version < $thisversion) {
-	    $SQL1 = "UPDATE `events_staff` SET agerange=1, parentalconsent='', parentalconsentsig='' WHERE agerange=0 AND (UNIX_TIMESTAMP() - dateofbirth) > 567648000";
+		  $SQL1 = "UPDATE `events_staff` SET agerange=1, parentalconsent='', parentalconsentsig='' WHERE agerange=0 AND (UNIX_TIMESTAMP() - dateofbirth) > 567648000";
         $SQL2 = "UPDATE `events_staff_archive` SET agerange=1, parentalconsent='', parentalconsentsig='' WHERE year=2016 AND agerange=0 AND (UNIX_TIMESTAMP() - dateofbirth) > 567648000";
         if (execute_db_sql($SQL1) && execute_db_sql($SQL2)) {
            execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'"); 
@@ -269,7 +269,7 @@ function events_install() {
           `confirmed` tinyint(1) DEFAULT '0',
           PRIMARY KEY (`eventid`),
           KEYKEY `workers` (`workers`)
-          ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
+          ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;";
         
         $SQL2 = "CREATE TABLE IF NOT EXISTS `events_locations` (
           `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -281,7 +281,7 @@ function events_install() {
           `userid` text,
           `shared` int(1) NOT NULL DEFAULT '0',
           PRIMARY KEY (`id`)
-        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
+        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;";
 
         $SQL3 = "CREATE TABLE IF NOT EXISTS `events_registrations` (
           `regid` int(11) NOT NULL AUTO_INCREMENT,
@@ -293,7 +293,7 @@ function events_install() {
           PRIMARY KEY (`regid`),
           KEY `eventid` (`eventid`),
           KEY `code` (`code`)
-        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
+        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;";
 
         $SQL4 = "CREATE TABLE IF NOT EXISTS `events_registrations_values` (
           `entryid` int(11) NOT NULL AUTO_INCREMENT,
@@ -306,7 +306,7 @@ function events_install() {
           KEY `regid` (`regid`),
           KEY `elementid` (`elementid`),
           KEY `eventid` (`eventid`)
-        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
+        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;";
 
         $SQL5 = "CREATE TABLE IF NOT EXISTS `events_templates` (
           `template_id` int(11) NOT NULL AUTO_INCREMENT,
@@ -319,7 +319,7 @@ function events_install() {
           `activated` tinyint(1) NOT NULL DEFAULT '1',
           PRIMARY KEY `template_id` (`template_id`),
           KEY `activated` (`activated`),
-        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
+        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;";
 
         $SQL6 = "CREATE TABLE IF NOT EXISTS `events_templates_forms` (
           `elementid` int(11) NOT NULL AUTO_INCREMENT,
@@ -335,7 +335,7 @@ function events_install() {
           `nameforemail` tinyint(4) DEFAULT '0',
           PRIMARY KEY (`elementid`),
           KEY `template_id` (`template_id`)
-        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
+        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;";
         
         $SQL7 = "CREATE TABLE IF NOT EXISTS `events_staff` (
           `staffid` int(11) NOT NULL AUTO_INCREMENT,
@@ -375,7 +375,7 @@ function events_install() {
           KEY `userid` (`userid`),
           KEY `dateofbirth` (`dateofbirth`),
           KEY `priorwork` (`priorwork`),
-        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
+        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;";
         
         $SQL8 = "CREATE TABLE IF NOT EXISTS `events_staff_archive` (
           `archiveid` int(11) NOT NULL AUTO_INCREMENT,
@@ -419,7 +419,7 @@ function events_install() {
           KEY `userid` (`userid`),
           KEY `dateofbirth` (`dateofbirth`),
           KEY `priorwork` (`priorwork`)
-        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
+        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;";
 
 		if (execute_db_sql($SQL) && execute_db_sql($SQL2) && execute_db_sql($SQL3) &&
            execute_db_sql($SQL4) && execute_db_sql($SQL5) && execute_db_sql($SQL6) && 

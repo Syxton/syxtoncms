@@ -27,7 +27,7 @@ function submit_registration()
 	var reqstring = create_request_string('form1');
 
 	// Build the URL to connect to
-  	var url = WWW_ROOT + dirfromroot + "/features/events/templates/" + folder + "/backend.php";
+		var url = WWW_ROOT + dirfromroot + "/features/events/templates/" + folder + "/backend.php";
 	var d = new Date();
 	var parameters = "action=register&currTime=" + d.toUTCString() + reqstring;
 	
@@ -39,14 +39,14 @@ function submit_registration()
 
 	// Setup a function for the server to run when it's done
 	document.getElementById("camp").innerHTML = "";
-  	simple_display("registration_div");
-  	}
+		simple_display("registration_div");
+		}
 }
 
 function show_form_again(eventid, regid, autofill)
 {
 	// Build the URL to connect to
-  	var url = WWW_ROOT + dirfromroot + "/features/events/templates/" + folder + "/backend.php";
+		var url = WWW_ROOT + dirfromroot + "/features/events/templates/" + folder + "/backend.php";
 	var d = new Date();
 	var parameters = "action=show_form_again&currTime=" + d.toUTCString() + "&eventid=" + eventid + "&regid=" + regid + "&show_again=1&autofill=" + autofill;
 	
@@ -57,8 +57,8 @@ function show_form_again(eventid, regid, autofill)
      xmlHttp.send(parameters);
 
 	// Setup a function for the server to run when it's done
-  	display_backup("camp","backup");
-  	document.getElementById("registration_div").innerHTML = "";
+		display_backup("camp","backup");
+		document.getElementById("registration_div").innerHTML = "";
 }
 
 function updateMessage() 

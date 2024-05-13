@@ -3,14 +3,14 @@
 * rss_ajax.php - RSS ajax backend script
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 05/18/2021
+* Date: 5/14/2024
 * Revision: 1.2.3
 ***************************************************************************/
 
 include ('header.php');
 update_user_cookie();
 
-if (!isset($RSSLIB)) { include_once($CFG->dirroot . '/lib/rsslib.php'); }
+if (!defined('RSSLIB')) { include_once($CFG->dirroot . '/lib/rsslib.php'); }
 
 callfunction();
 
@@ -19,7 +19,7 @@ global $MYVARS;
 	$rssname = dbescape($MYVARS->GET["rssname"]);
 	$rssid = dbescape($MYVARS->GET["rssid"]);
 	$SQL = "UPDATE rss
-			   SET rssname = '$rssname'
+				 SET rssname = '$rssname'
 			 WHERE rssid = '$rssid'";
 
 	if (execute_db_sql($SQL)) {
@@ -41,8 +41,8 @@ global $CFG, $MYVARS, $USER;
 					 VALUES ('$rssid', '$type', '$featureid', '$pageid')";
 		if (execute_db_sql($SQL)) {
 			$p = [ "wwwroot" => $CFG->wwwroot,
-				   "rssid" => $rssid,
-				   "userkey" => $MYVARS->GET["key"],
+					 "rssid" => $rssid,
+					 "userkey" => $MYVARS->GET["key"],
 			];
 			echo use_template("tmp/rss_ajax.template", $p, "add_feed_template");
 		}

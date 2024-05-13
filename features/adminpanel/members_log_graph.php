@@ -39,7 +39,7 @@
             </script>
             <div id="chart_div" style="width: 100%; height: 400px;"></div>'; 
         } else {
-            debugging(error_string("no_data", [["Userid: $userid", "Year: $year", "Month: $month"]]), 2);
+            trigger_error(error_string("no_data", [["Userid: $userid", "Year: $year", "Month: $month"]]), E_USER_WARNING);
         }
     ?>
     </body>

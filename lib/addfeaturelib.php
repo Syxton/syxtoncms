@@ -3,13 +3,12 @@
 * addfeaturelib.php - Add Feature function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 05/28/2021
+* Date: 5/14/2024
 * Revision: 0.9.4
 ***************************************************************************/
 
-$ADDFEATURELIB = true;
-include('header.php');
-//ADDFEATURELIB Config
+if (!LIBHEADER) { include('header.php'); }
+define('ADDFEATURELIB', true);
 
 function display_addfeature($pageid, $area) {
 	global $CFG, $USER, $ABILITIES;

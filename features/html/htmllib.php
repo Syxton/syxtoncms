@@ -3,17 +3,17 @@
 * htmllib.php - HTML feature library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 12/22/2015
+* Date: 5/14/2024
 * Revision: 2.4.9
 ***************************************************************************/
-if (!isset($LIBHEADER)) {
+if (!LIBHEADER) {
 	$sub = './';
 	while (!file_exists($sub . 'lib/header.php')) {
 		$sub = $sub == './' ? '../' : $sub . '../';
 	}
 	include($sub . 'lib/header.php'); 
 }
-$HTMLLIB = true;
+define('HTMLLIB', true);
 
 function display_html($pageid, $area, $featureid) {
 global $CFG, $USER, $HTMLSETTINGS;
@@ -32,33 +32,70 @@ global $CFG, $USER, $HTMLSETTINGS;
 function get_html($pageid, $featureid, $settings, $abilities, $area=false, $htmlonly=false) {
 global $CFG, $USER;
 	$SQL = "SELECT * FROM html WHERE htmlid='$featureid'";
-	$returnme = ""; $makecomment = ""; $comments = $rss = "";
+	$returnme = $makecomment = $comments = $rss = "";
+
 	if ($result = get_db_result($SQL)) {
 		while ($row = fetch_row($result)) {
 			$limit = $area == "side" ? $settings->html->$featureid->sidecommentlimit->setting : $settings->html->$featureid->middlecommentlimit->setting;
 			if ($settings->html->$featureid->allowcomments->setting) {
 				$hidebuttons = $htmlonly ? true : false;
-				$comments = $abilities->viewcomments->allow && $settings->html->$featureid->allowcomments->setting ? get_html_comments($row['htmlid'], $pageid, $hidebuttons, $limit) : '';
-        $makecomment = $abilities->makecomments->allow ? make_modal_links(array("title" => "Comment", "path" => action_path("html") . "makecomment&amp;pageid=$pageid&amp;htmlid=" . $row['htmlid'], "styles" => "float:right;", "refresh" => "true")) : '';
-      }
-			$nomargin = "";
+                
+                if (user_is_able($USER->userid, "viewcomments", $pageid, "html", $row['htmlid'])) {
+                    $comments = get_html_comments($row['htmlid'], $pageid, $hidebuttons, $limit);
+                }
+
+                if (user_is_able($USER->userid, "makecomments", $pageid, "html", $row['htmlid'])) {
+                    $params = [
+                        "title" => "Comment",
+                        "path" => action_path("html") . "commentform&htmlid=" . $row['htmlid'],
+                        "refresh" => "true",
+                    ];
+                    $makecomment = '<div class="html_makecomment">' . make_modal_links($params) . '</div>';
+                }
+            }
+
+			$nomargin = 'style="margin: 12px;"';
 			if (isset($settings->html->$featureid->allowfullscreen->setting) && $settings->html->$featureid->allowfullscreen->setting == 1) { // if fullscreen option is on, remove margin.
-				$nomargin = 'style="margin:-8px"';
+				$nomargin = 'style="margin:-8px;"';
 			}
-			$html = '<div class="htmlblock" ' . $nomargin . '>' . fullscreen_toggle(filter(stripslashes($row['html']), $featureid, $settings, $area), $featureid, $settings) . '</div><br />';
-    	//if viewing from rss feed
+
+			$html = '<div class="htmlblock" ' . $nomargin . '>
+                        ' . fullscreen_toggle(filter(stripslashes($row['html']), $featureid, $settings, $area), $featureid, $settings) . '
+                    </div>';
+
+  			  // If viewing from rss feed
 			if ($htmlonly) {
-        $returnme .= '<table style="width:100%;border:1px solid silver;padding:10px;"><tr><th>' . $settings->html->$featureid->feature_title->setting . '</th></tr><tr><td><br /><br />' . $html . $comments . '</td></tr></table>';
-      } else { //regular html feature viewing
-        $stopped_editing = '<input type="hidden" id="html_' . $featureid . '_stopped_editing" value="ajaxapi(\'/features/html/html_ajax.php\',\'stopped_editing\',\'&amp;htmlid=' . $featureid . '&amp;userid=0\',function() {if (xmlHttp.readyState == 4) { do_nothing(); }}, true);" />';
-        if (is_logged_in() && $settings->html->$featureid->enablerss->setting) {
-					$modalsettings = array("title" => "RSS Feed", "path" => $CFG->wwwroot . "/pages/rss.php?action=rss_subscribe_feature&amp;pageid=$pageid&amp;featureid=$featureid&amp;feature=html",
-																 "styles" => "position: relative;top: 4px;padding-right:2px;", "iframe" => true,
-																 "refresh" => "true", "height" => "300", "width" => "640", "image" => $CFG->wwwroot . "/images/small_rss.png");
+                $middlecontents = '<div class="html_mini">
+                                        <div class="html_title">
+                                        ' . $settings->html->$featureid->feature_title->setting . '
+                                        </div>
+                                        <div class="html_text">
+                                        ' . $html . '
+                                        </div>
+                                    </div>';
+                $returnme .= use_template("tmp/index.template", ["mainmast" => page_masthead(true, true), "middlecontents" => $middlecontents], "simplelayout_template");
+                
+            } else { // Regular html feature viewing
+                $stopped_editing = '<input type="hidden" id="html_' . $featureid . '_stopped_editing" value="ajaxapi(\'/features/html/html_ajax.php\',\'stopped_editing\',\'&amp;htmlid=' . $featureid . '&amp;userid=0\',function() {if (xmlHttp.readyState == 4) { do_nothing(); }}, true);" />';
+                if (is_logged_in() && $settings->html->$featureid->enablerss->setting) {
+					$modalsettings = [
+                        "title" => "RSS Feed",
+                        "path" => action_path("rss", false) . "rss_subscribe_feature&amp;pageid=$pageid&amp;featureid=$featureid&amp;feature=html",
+                        "styles" => "position: relative;top: 4px;padding-right:2px;",
+                        "iframe" => true,
+                        "refresh" => "true",
+                        "height" => "300",
+                        "width" => "640",
+                        "image" => $CFG->wwwroot . "/images/small_rss.png",
+                    ];
 					$rss = make_modal_links($modalsettings);
+
+                    if ($feed = find_feed(false, "html", $featureid)) {
+                        $rss .= feed_link($feed["rssid"], $feed["userkey"], $settings->html->$featureid->feature_title->setting);
+                    }
 				}
 				$buttons = get_button_layout("html", $row['htmlid'], $pageid);
-				$returnme .= get_css_box($rss . $settings->html->$featureid->feature_title->setting, $stopped_editing . $html . $makecomment . $comments, $buttons, null, 'html', $featureid, false, false, false, false, false, false);
+				$returnme .= get_css_box($rss . $settings->html->$featureid->feature_title->setting, $stopped_editing . $html . $comments . $makecomment, $buttons, null, 'html', $featureid, false, false, false, false, false, false);
 			}
 		}
 	}
@@ -94,10 +131,13 @@ function fullscreen_toggle($html, $featureid, $settings) {
 global $CFG;
 	if (isset($settings->html->$featureid->allowfullscreen->setting) && $settings->html->$featureid->allowfullscreen->setting == 1) { // Allow fullscreen toggle.
 		$html = '<div class="html_notfullscreen">
-							<a title="View Full Screen" href="javascript: void(0);" onclick="$(\'.html_notfullscreen div\').toggleClass(\'fs_icon_on\'); $(this).closest(\'.htmlblock\').toggleClass(\'html_fullscreen\');">
-								<div class="fs_icon"></div>
-						 	</a>
-						 </div>' . $html;
+                    <a title="View Full Screen" href="javascript: void(0);" onclick="$(\'.html_notfullscreen div\').toggleClass(\'fs_icon_on\'); $(this).closest(\'.htmlblock\').toggleClass(\'html_fullscreen\');">
+                        <div class="fs_icon"></div>
+                    </a>
+                </div>
+                <div class="html_text">
+                ' . $html . '
+                </div>';
 	}
 	return $html;
 }
@@ -159,7 +199,7 @@ global $CFG;
 							$title = $url;
 							$link = $CFG->wwwroot . '/scripts/download.php?file=' . $url;
 						}
-						$html = str_replace($match[0], '<a title="' . $title . '" href="' . $link . '" onclick="blur();"><img src="' . $CFG->wwwroot . '/images/' . $icon . '" alt="Save" /></a>&nbsp;' . make_modal_links(array("text" => $text, "title" => $title, "path" => $CFG->wwwroot . "/pages/ipaper.php?action=view_ipaper&amp;doc_url=" . base64_encode($url),"height" => "80%", "width" => "80%")), $html);
+						$html = str_replace($match[0], '<a title="' . $title . '" href="' . $link . '" onclick="blur();"><img src="' . $CFG->wwwroot . '/images/' . $icon . '" alt="Save" /></a>&nbsp;' . make_modal_links(["text" => $text, "title" => $title, "path" => $CFG->wwwroot . "/pages/ipaper.php?action=view_ipaper&amp;doc_url=" . base64_encode($url),"height" => "80%", "width" => "80%"]), $html);
 					}
 				}
 			}
@@ -187,11 +227,11 @@ global $CFG;
 					$url = str_replace('\\', '', $url);
 					$info = explode(".", $match[4].$match[5]);
 					$script = "var s$i = new SWFObject('" . $CFG->wwwroot . "/scripts/filters/video/player.swf','ply','290','30','9','#ffffff');
-							   s$i.addParam('allowfullscreen','true');
-							   s$i.addParam('allowscriptaccess','always');
-							   s$i.addParam('wmode','opaque');
-							   s$i.addParam('flashvars','file=" . stripslashes(urlencode($url)) . "&amp;skin=" . $CFG->wwwroot . "/scripts/filters/video/skins/stylish_slim.swf');
-							   s$i.write('mediaspace_s$i');";
+								 s$i.addParam('allowfullscreen','true');
+								 s$i.addParam('allowscriptaccess','always');
+								 s$i.addParam('wmode','opaque');
+								 s$i.addParam('flashvars','file=" . stripslashes(urlencode($url)) . "&amp;skin=" . $CFG->wwwroot . "/scripts/filters/video/skins/stylish_slim.swf');
+								 s$i.write('mediaspace_s$i');";
 					$html = str_replace($match[0], js_script_wrap($CFG->wwwroot . "/scripts/filters/video/swfobject.js") . "<span id='mediaspace_s$i'></span>" . js_code_wrap($script), $html);
 				}
 
@@ -242,7 +282,7 @@ global $CFG;
 					$url = preg_replace('/([\'|\"])/', '', $url);
 
 					$url = str_replace('\\', '', $url);
-					$rand = rand(0,time());
+					$rand = rand(0, time());
 					$script = " flowplayer('a.flowplayers', '" . $CFG->wwwroot . "/scripts/filters/video/flowplayer/flowplayer-3.2.4.swf',{
 								clip: {
 										autoPlay: false,
@@ -262,7 +302,7 @@ global $CFG;
 										}
 								});";
 					$html = str_replace($match[0], js_script_wrap($CFG->wwwroot . '/scripts/filters/video/flowplayer/flowplayer-3.2.4.min.js') . 
-						   "<div id='vid_$rand' class='flowplayer_div' style='width:100%;'>
+							 "<div id='vid_$rand' class='flowplayer_div' style='width:100%;'>
 								<a href='$url' style='display:block;' class='flowplayers' id='player_$rand'></a>
 							</div>" . js_code_wrap($script), $html);
 				}
@@ -280,7 +320,7 @@ global $CFG;
 		foreach ($matches as $match) {
 			$url = $match[2];
 			$id = youtube_id_from_url($url);
-			if (!strstr($url,'#noembed')) {
+			if (!strstr($url, '#noembed')) {
 				if (!strstr($match[0], 'javascript:') && strlen($id) > 0) {
 					if (preg_match('/((http:\/\/)?(?:youtu\.be\/|(?:[a-z]{2,3}\.)?youtube\.com\/v\/)([\w-]{11}).*|http:\/\/(?:youtu\.be\/|(?:[a-z]{2,3}\.)?youtube\.com\/watch(?:\?|#\!)v=)([\w-]{11}).*)/i', $match[0]) || preg_match('/(\s*\.[yY][oO][uU][tT][uU][bB][eE]\.[cC][oO][mM][\/]\s*)/', $url)) {
 							$html = str_replace($match[0], '<div style="' . ($area == "middle" ? 'max-width:500px;margin:auto;' : '') . '"><div style="width: 100%; padding-top: 60%; margin-bottom: 5px; position: relative;"><iframe style="position: absolute; width: 100%; height: 100%; top: 0; left: 0;" src="//www.youtube.com/embed/' . $id . '"></iframe></div></div>', $html);
@@ -294,7 +334,7 @@ global $CFG;
 
 function filter_photogallery($html) {
 global $CFG;
-	$exts = array('jpeg', 'jpg', 'gif', 'png');
+	$exts = ['jpeg', 'jpg', 'gif', 'png'];
 	$regex = '/(<[aA]\s*.[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s""\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(<\/[aA]>)/';
 	if (preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) {
 		$i = 0;
@@ -318,11 +358,11 @@ global $CFG;
 								if (is_readable($path)) {
 									if (is_file($path) && in_array(end(explode('.', end(explode('/', $file)))), $exts)) {
 										$fileurl = $url . '/' . $file; // Use web url instead of local link.
-										$caption = isset($captions[$file]) ? $captions[$file] : $file; // Either a caption or the filename
+										$caption = $captions[$file] ?? $file; // Either a caption or the filename
 										$display = empty($gallery) ? "" : "display:none;";
 										$name = empty($display) ? '<img style="width:17px;height:17px;vertical-align: middle;" src="' . $CFG->wwwroot . '/images/gallery.png" /> ' . $match[4] : $match[4]; // Use text inside original hyperlink.
-										$modalsettings = array("id" => "autogallery_$i", "title" => $caption, "text" => $name, "gallery" => $galleryid, "path" => $fileurl, "styles" => $display);
-							      $gallery .= empty($display) ? make_modal_links($modalsettings) : '<a href="' . $fileurl . '" title="' . $caption . '" data-rel="' . $galleryid . '" style="' . $display . '"></a>';
+										$modalsettings = ["id" => "autogallery_$i", "title" => $caption, "text" => $name, "gallery" => $galleryid, "path" => $fileurl, "styles" => $display];
+								    $gallery .= empty($display) ? make_modal_links($modalsettings) : '<a href="' . $fileurl . '" title="' . $caption . '" data-rel="' . $galleryid . '" style="' . $display . '"></a>';
 									}
 								}
 							}
@@ -334,9 +374,9 @@ global $CFG;
 					$file = basename($localdirectory); // get just the filename and extention.
 					$captions = get_file_captions(str_replace($file, "", $localdirectory)); // get the caption from the image directory if possible
 					$fileurl = $url; // Use web url instead of local link.
-					$caption = isset($captions[$file]) ? $captions[$file] : $file; // Either a caption or the filename
+					$caption = $captions[$file] ?? $file; // Either a caption or the filename
 					$name = '<img style="width:15px;height:15px;vertical-align: middle;" src="' . $CFG->wwwroot . '/images/image.png" /> ' . $match[4]; // Use text inside original hyperlink.
-					$modalsettings = array("id" => "autogallery_$i", "title" => $caption, "text" => $name, "gallery" => $galleryid, "path" => $fileurl);
+					$modalsettings = ["id" => "autogallery_$i", "title" => $caption, "text" => $name, "gallery" => $galleryid, "path" => $fileurl];
 					$gallery = make_modal_links($modalsettings);
 				}
 
@@ -385,104 +425,169 @@ global $CFG;
 	return false;
 }
 
-function get_html_comments($htmlid, $pageid, $hidebuttons=false, $perpage=0, $pagenum=false, $hide=true) {
-global $CFG, $USER;
-	$comments = $prev = $info = $next = $header = $arrows = $limit = "";
-	$original = $pagenum === false ? true : false;
-	$pagenum = $pagenum === false ? 0 : $pagenum;
+function gather_comments($htmlid, $pagenum, $perpage, $collection = [], $totalcount = 0, $parentid = 0) {
+    $SQL = "SELECT *
+            FROM html_comments
+            WHERE htmlid = '$htmlid'
+            AND parentid = '$parentid'
+            ORDER BY created, commentid";
 
+    if ($comments = get_db_result($SQL)) {
+        while ($comment = fetch_row($comments)) {
+            // Too far.
+            if ($totalcount > (($pagenum + 1) * $perpage)) {
+                return ["collection" => $collection, "totalcount" => $totalcount];
+            }
+
+            // Enough collected.
+            if (count($collection) >= $perpage) {
+                return ["collection" => $collection, "totalcount" => $totalcount];
+            }
+
+            // Correct comments to be shown.
+            if ($totalcount >= ($pagenum * $perpage)) {
+                $collection[] = $comment;
+            }
+
+            $totalcount++;
+            $replies = gather_comments($htmlid, $pagenum, $perpage, $collection, $totalcount, $comment["commentid"]);
+            $collection = $replies["collection"];
+            $totalcount = $replies["totalcount"];
+        }
+    }
+
+    return ["collection" => $collection, "totalcount" => $totalcount];
+}
+
+function get_html_comments($htmlid, $pageid, $hidebuttons = false, $perpage = false, $pagenum = false, $hide = true) {
+global $CFG, $USER;
+	$returnme = $commenttext = $prev = $info = $next = $header = $arrows = $limit = "";
+	$original = $pagenum === false ? true : false;
+	$pagenum ??= 0;
+    $perpage ??= 0;
+
+    $comments = gather_comments($htmlid, $pagenum, $perpage);
 	if ($perpage) {
-		$total = get_db_count("SELECT * FROM html_comments WHERE htmlid=$htmlid");
+		$total = get_db_count("SELECT * FROM html_comments WHERE htmlid = '$htmlid'");
 		$searchvars = get_search_page_variables($total, $perpage, $pagenum);
 		$prev = $searchvars["prev"] ? '<a href="javascript: $(\'#loading_overlay_html_' . $htmlid . '\').show(); ajaxapi(\'/features/html/html_ajax.php\',\'commentspage\',\'&pagenum=' . ($pagenum - 1) . '&perpage=' . $perpage . '&pageid=' . $pageid . '&htmlid=' . $htmlid . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer_html_' . $htmlid . '\'); $(\'#loading_overlay_html_' . $htmlid . '\').hide(); }}, true); " onmouseup="this.blur()">Previous</a>' : "";
-	    $info = $searchvars["info"];
-    	$next = $searchvars["next"] ? '<a href="javascript: $(\'#loading_overlay_html_' . $htmlid . '\').show(); ajaxapi(\'/features/html/html_ajax.php\',\'commentspage\',\'&pagenum=' . ($pagenum + 1) . '&perpage=' . $perpage . '&pageid=' . $pageid . '&htmlid=' . $htmlid . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer_html_' . $htmlid . '\'); $(\'#loading_overlay_html_' . $htmlid . '\').hide(); }}, true);" onmouseup="this.blur()">Next</a>' : "";
-    	$arrows = '<table style="width:100%;"><tr><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;font-size:.75em;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><br /><br />';
+		  $info = $searchvars["info"];
+  		$next = $searchvars["next"] ? '<a href="javascript: $(\'#loading_overlay_html_' . $htmlid . '\').show(); ajaxapi(\'/features/html/html_ajax.php\',\'commentspage\',\'&pagenum=' . ($pagenum + 1) . '&perpage=' . $perpage . '&pageid=' . $pageid . '&htmlid=' . $htmlid . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer_html_' . $htmlid . '\'); $(\'#loading_overlay_html_' . $htmlid . '\').hide(); }}, true);" onmouseup="this.blur()">Next</a>' : "";
+  		$arrows = '<table style="width:100%;"><tr><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><br /><br />';
 		$limit = "LIMIT " .$searchvars["firstonpage"] . "," . $perpage;
-	} else { $limit = "LIMIT $perpage";}
+	} else {
+        $limit = "LIMIT $perpage";
+    }
 
-	$SQL = "SELECT * FROM html_comments WHERE htmlid=$htmlid ORDER BY commentid DESC $limit";
+	if ($comments["collection"]) {
+		$header = '<button class="smallbutton" id="html_' . $htmlid . '_hide_button" onclick="$(\'#html_' . $htmlid . '_comments_button, #html_' . $htmlid . '_comments\').toggle();">Hide Comments</button><br />';
 
-	if ($result = get_db_result($SQL)) {
-		$header = '<div class="button" id="hmtl_' . $htmlid . '_hide_button" style="display:block;margin-right:auto;margin-left:auto;font-size:.8em;width:90px;" onclick="hide_show_buttons(\'hmtl_' . $htmlid . '_comments_button\', true); hide_show_buttons(\'hmtl_' . $htmlid . '_comments\', true)">Hide Comments</div><br />';
-
-		while ($row = fetch_row($result)) {
-			$makecomment = $makereply = $editcomment = $deletecomment = $username = "";
+		foreach ($comments["collection"] as $row) {
 			$username = !$row['userid'] ? "Visitor" : get_user_name($row['userid']);
-			$reply = get_html_replies($row['commentid'], $hidebuttons, $pageid);
-			if (!$hidebuttons) { $deletecomment = user_is_able($USER->userid, "deletecomments", $pageid) || ($USER->userid == $row["userid"] && user_is_able($USER->userid, "makecomments", $pageid)) ? make_modal_links(array("title" => "Delete Comment", "path" => action_path("html") . "deletecomment&amp;userid=" . $row["userid"] . '&amp;pageid=' . $pageid . '&amp;commentid=' . $row['commentid'], "refresh" => "true", "image" => $CFG->wwwroot . "/images/delete.png")) : "";}
-			if (!$hidebuttons && !strlen($reply) > 0 && user_is_able($USER->userid, "makereplies", $pageid)) { $makereply = make_modal_links(array("title" => "Reply", "path" => action_path("html") . "makereply&amp;pageid=$pageid&amp;commentid=" . $row['commentid'], "refresh" => "true", "styles" => "float:right;padding: 2px;"));}
-			if (!$hidebuttons) { $editcomment = user_is_able($USER->userid, "editanycomment", $pageid) || ($USER->userid == $row["userid"] && user_is_able($USER->userid, "makecomments", $pageid)) ? '<br />' . make_modal_links(array("title" => "Edit", "path" => action_path("html") . "editcomment&amp;pageid=$pageid&amp;commentid=" . $row['commentid'] . '&amp;userid=' . $row["userid"], "refresh" => "true", "styles" => "float:left;padding: 2px;")) : ''; }
-			$comments .=
-			'
-			<table class="blogbox">
-				<tr class="blogreplyheader">
-					<td style="text-align:left;vertical-align:middle;">
-						' . $username . ' says
-					</td>
-					<td style="text-align:right;">
-						' . $deletecomment . '
-					</td>
-				</tr>
-				<tr class="blogreply">
-					<td colspan="2">
-					' . $row['comment'] . '<br />
-					' . $editcomment . '&nbsp;
-					' . $makereply . '
-					</td>
-				</tr>
-				' . $reply . '
-			</table>
-			';
+
+            $commentbuttons = ["delete" => "", "edit" => "", "reply" => ""];
+			if (!$hidebuttons) {
+                $commentbuttons = get_comment_buttons(["pageid" => $pageid, "comment" => $row]);
+            }
+
+            $params = [
+                "username" => $username,
+                "says" => $row['parentid'] ? "replied" : "says",
+                "time" => $row['modified'] ? ($row['modified'] > $row['created'] ? "edited " : "") . ago($row['modified']) : "",
+                "comment" => $row['comment'],
+                "childclass" => $row['parentid'] ? "childcomment" : "",
+                "buttons" => $commentbuttons,
+            ];
+            $commenttext .= use_template("tmp/html.template", $params, "comment_template", "html");
 		}
-		//Don't make the overlay div over and over'
+
+        // Wrap comments in div.
+        $commenttext = '<div class="html_comments">' . $commenttext . '</div>';
+
+		// Don't make the overlay div over and over'
 		if ($original) {
-			$comments = make_search_box($arrows . $comments, "html_$htmlid");
+			$returnme = make_search_box($arrows . $commenttext, "html_$htmlid");
         } else {
-			$comments = $arrows.$comments; 
+			$returnme = $arrows . $commenttext; 
 		}
 
 		if ($hide) {
-			$comments = '<div id="hmtl_' . $htmlid . '_comments_button" class="button" style="display:block;margin-right:auto;margin-left:auto;font-size:.8em;width:90px;" onclick="hide_show_buttons(\'hmtl_' . $htmlid . '_comments_button\', true); hide_show_buttons(\'hmtl_' . $htmlid . '_comments\', true)">
-							Show Comments
-						</div>
-						<div id="hmtl_' . $htmlid . '_comments" style="display:none;">
-							' . $header . $comments . '
-						</div>';
+			$returnme = '<div class="centered">
+                            <button id="html_' . $htmlid . '_comments_button" class="smallbutton" onclick="$(\'#html_' . $htmlid . '_comments_button, #html_' . $htmlid . '_comments\').toggle();">
+								  Show Comments
+                            </button>
+                            <div id="html_' . $htmlid . '_comments" style="display:none;">
+                                ' . $header . $returnme . '
+                            </div>
+                        </div>';
 		}
 	}
-	return $comments;
+	return $returnme;
+}
+
+function get_comment_buttons($params) {
+global $CFG, $USER, $PAGE;
+    $pageid = $params["pageid"] ?? $PAGE->id;
+
+    $caneditowncomment = ($USER->userid == $params["comment"]["userid"] && user_is_able($USER->userid, "makecomments", $pageid));
+    $deletecomment = $editcomment = $makereply = false;
+    // DELETE BUTTON.
+    if ($caneditowncomment || user_is_able($USER->userid, "deletecomments", $pageid)) {
+        $deletecomment = make_modal_links([
+            "title" => "Delete Comment",
+            "path" => action_path("html") . "deletecomment&commentid=" . $params["comment"]['commentid'],
+            "refresh" => "true",
+            "image" => $CFG->wwwroot . "/images/delete.png",
+        ]);
+    }
+
+    // EDIT BUTTON.
+    if ($caneditowncomment || user_is_able($USER->userid, "editanycomment", $pageid)) {
+        $editcomment = make_modal_links([
+            "title" => "Edit Comment",
+            "path" => action_path("html") . "commentform&commentid=" . $params["comment"]['commentid'],
+            "refresh" => "true",
+            "image" => $CFG->wwwroot . "/images/edit.png",
+        ]);
+    }
+
+    // REPLY BUTTON.
+    if (user_is_able($USER->userid, "makereplies", $pageid)) {
+        $makereply = make_modal_links([
+            "title" => "Reply",
+            "path" => action_path("html") . "commentform&replytoid=" . $params["comment"]['commentid'],
+            "refresh" => "true",
+            "image" => $CFG->wwwroot . "/images/undo.png",
+        ]);
+    }
+
+    return ["delete" => $deletecomment, "edit" => $editcomment, "reply" => $makereply];
 }
 
 function get_html_replies($commentid, $hidebuttons, $pageid) {
 global $CFG, $USER;
-	$replies = $editreply = $deletereply = "";
-	$SQL = "SELECT * FROM html_replies WHERE commentid='$commentid' LIMIT 1";
+	$replies = "";
+	$SQL = "SELECT *
+            FROM html_comments
+            WHERE parentid = '$commentid'
+            ORDER BY created, commentid";
 	if ($result = get_db_result($SQL)) {
 		while ($row = fetch_row($result)) {
-			$username = get_user_name($row['userid']);
-			if (!$hidebuttons) { $editreply = user_is_able($USER->userid, "makereplies", $pageid) ? '<br />' . make_modal_links(array("title" => "Edit", "path" => action_path("html") . "editreply&amp;pageid=$pageid&amp;commentid=$commentid&amp;replyid=" . $row["replyid"], "refresh" => "true", "styles" => "float:left;padding: 2px;")) . '<br />' : '';}
-			if (!$hidebuttons) { $deletereply = user_is_able($USER->userid, "deletereply", $pageid) ? make_modal_links(array("title" => "Delete Reply", "path" => action_path("html") . "deletereply&amp;pageid=$pageid&amp;replyid=" . $row["replyid"], "refresh" => "true", "image" => $CFG->wwwroot . "/images/delete.png")) : "";}
-			$replies =
-			'
-				<tr class="blogcommentheader">
-					<td style="text-align:left;vertical-align:middle;">
-						' . $username . ' replies
-					</td>
-					<td style="text-align:right;">
-						' . $deletereply . '
-					</td>
-				</tr>
-				<tr class="blogcomment">
-					<td colspan="2">
-					' . $row['reply'] . '<br />
-					' . $editreply . '
-					</td>
-				</tr>
-			';
+			$username = !$row['userid'] ? "Visitor" : get_user_name($row['userid']);
+			$commentbuttons = ["delete" => "", "edit" => "", "reply" => ""];
+			if (!$hidebuttons) {
+                $commentbuttons = get_comment_buttons(["pageid" => $pageid, "comment" => $row]);
+            }
+            $params = [
+                "username" => $username,
+                "comment" => $row['comment'],
+                "buttons" => $commentbuttons,
+            ];
+            $replies .= use_template("tmp/html.template", $params, "comment_template", "html");
 		}
+        return $replies;
 	}
-	return $replies;
+	return false;
 }
 
 function html_delete($pageid, $featureid) {
@@ -507,13 +612,13 @@ global $CFG, $USER;
 	$settings = fetch_settings("html", $featureid, $pageid);
 	$blog = $settings->html->$featureid->blog->setting;
 
-	$html_abilities = user_abilities($USER->userid, $pageid,"html", "html", $featureid);
-	$feature_abilities = user_abilities($USER->userid, $pageid,"features", "html", $featureid);
+	$html_abilities = user_abilities($USER->userid, $pageid, "html", "html", $featureid);
+	$feature_abilities = user_abilities($USER->userid, $pageid, "features", "html", $featureid);
 
 	$returnme = "";
 	if ($blog && !empty($feature_abilities->addfeature->allow)) { $returnme .= ' <a class="slide_menu_button" title="Add Blog Edition" onclick="if (confirm(\'Do you want to make a new blog edition?  This will move the current blog to the Blog Locker.\')) { ajaxapi(\'/features/html/html_ajax.php\',\'new_edition\',\'&amp;pageid=' . $pageid . '&amp;htmlid=' . $featureid . '\',function() { refresh_page(); });}"><img src="' . $CFG->wwwroot . '/images/add.png" alt="Delete Feature" /></a> '; }
 
-    if (!empty($html_abilities->edithtml->allow)) { $returnme .= make_modal_links(array("title" => "Edit HTML", "path" => action_path("html") . "edithtml&amp;pageid=$pageid&amp;featureid=$featureid", "runafter" => "html_" . $featureid."_stopped_editing", "iframe" => true, "refresh" => "true", "width" => "950", "image" => $CFG->wwwroot . "/images/edit.png", "class" => "slide_menu_button")); }
+    if (!empty($html_abilities->edithtml->allow)) { $returnme .= make_modal_links(["title" => "Edit HTML", "path" => action_path("html") . "edithtml&amp;pageid=$pageid&amp;featureid=$featureid", "runafter" => "html_" . $featureid."_stopped_editing", "iframe" => true, "refresh" => "true", "width" => "950", "image" => $CFG->wwwroot . "/images/edit.png", "class" => "slide_menu_button"]); }
 
     if (!$blog && user_is_able($USER->userid, "addtolocker", $pageid)) { $returnme .= '  <a class="slide_menu_button" title="Move to Blog Locker" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'move_feature\',\'&amp;pageid=' . $pageid . '&amp;featuretype=' . $featuretype . '&amp;featureid=' . $featureid . '&amp;direction=locker\',function() { refresh_page(); });"><img src="' . $CFG->wwwroot . '/images/vault.png" alt="Move to Blog Locker" /></a> '; }
 	return $returnme;
@@ -527,10 +632,11 @@ function html_rss($feed, $userid, $userkey) {
 global $CFG;
 	$feeds = "";
 
-	$settings = fetch_settings("html", $feed["featureid"], $feed["pageid"]);
-	if ($settings->html->$feed["featureid"]->enablerss->setting) {
-		if ($settings->html->$feed["featureid"]->blog->setting) {
-			$html = get_db_row("SELECT * FROM html WHERE htmlid='" . $feed["featureid"] . "'");
+    $featureid = $feed["featureid"];
+	$settings = fetch_settings("html", $featureid, $feed["pageid"]);
+	if ($settings->html->$featureid->enablerss->setting) {
+        $html = get_db_row("SELECT * FROM html WHERE htmlid = '$featureid'");
+		if ($settings->html->$featureid->blog->setting) {
 			if ($html['firstedition']) { //this is not a first edition
 				$htmlresults = get_db_result("SELECT * FROM html WHERE htmlid='" . $html["firstedition"] . "' OR firstedition='" . $html["firstedition"] . "' ORDER BY htmlid DESC LIMIT 50");
 			} else {
@@ -538,12 +644,12 @@ global $CFG;
 			}
 
 			while ($html = fetch_row($htmlresults)) {
-				$settings = fetch_settings("html", $html["htmlid"], $feed["pageid"]);
-				$feeds .= fill_feed($settings->html->$html["htmlid"]->feature_title->setting . " " . date('d/m/Y', $html["dateposted"]),substr($html["html"],0,100), $CFG->wwwroot . '/features/html/html.php?action=viewhtml&key=' . $userkey . '&pageid=' . $feed["pageid"] . '&htmlid=' . $html["htmlid"], $html["dateposted"]);
+                $htmlid = $html["htmlid"];
+				$settings = fetch_settings("html", $htmlid, $feed["pageid"]);
+				$feeds .= fill_feed($settings->html->$htmlid->feature_title->setting . " " . date('d/m/Y', $html["dateposted"]), substr($html["html"], 0, 100), $CFG->wwwroot . '/features/html/html.php?action=viewhtml&key=' . $userkey . '&pageid=' . $feed["pageid"] . '&htmlid=' . $htmlid, $html["dateposted"]);
 			}
 		} else {
-			$html = get_db_row("SELECT * FROM html WHERE htmlid='" . $feed["featureid"] . "'");
-			$feeds .= fill_feed($settings->html->$feed["featureid"]->feature_title->setting,substr($html["html"],0,100), $CFG->wwwroot . '/features/html/html.php?action=viewhtml&key=' . $userkey . '&pageid=' . $feed["pageid"] . '&htmlid=' . $feed["featureid"], $html["dateposted"]);
+			$feeds .= fill_feed($settings->html->$featureid->feature_title->setting, substr($html["html"], 0, 100), $CFG->wwwroot . '/features/html/html.php?action=viewhtml&key=' . $userkey . '&pageid=' . $feed["pageid"] . '&htmlid=' . $featureid, $html["dateposted"]);
 		}
 	}
 	return $feeds;
@@ -578,7 +684,7 @@ function html_default_settings($type, $pageid, $featureid) {
 		[
 			"setting_name" => "middlecommentlimit",
 			"defaultsetting" => "10",
-			"display" => "Limit Replies Shown in Middle",
+			"display" => "Limit Comments Shown in Middle",
 			"inputtype" => "text",
 			"numeric" => true,
 			"validation" => "<=0",
@@ -587,7 +693,7 @@ function html_default_settings($type, $pageid, $featureid) {
 		[
 			"setting_name" => "sidecommentlimit",
 			"defaultsetting" => "3",
-			"display" => "Limit Replies Shown on Side",
+			"display" => "Limit Comments Shown on Side",
 			"inputtype" => "text",
 			"numeric" => true,
 			"validation" => "<=0",

@@ -3,11 +3,17 @@
 * bloglocker.php - Blog Locker Page
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 8/16/2011
+* Date: 5/14/2024
 * Revision: 0.2.6
 ***************************************************************************/
 if (empty($_POST["aslib"])) {
-    if (!isset($CFG)) { include('../header.php'); } 
+    if (!isset($CFG)) {
+		$sub = '';
+		while (!file_exists($sub . 'header.php')) {
+			$sub = $sub == '' ? '../' : $sub . '../';
+		}
+		include($sub . 'header.php');
+	} 
     
     callfunction();
     
@@ -32,11 +38,11 @@ global $MYVARS, $CFG, $USER;
 
 function view_locker() {
 global $MYVARS, $CFG, $USER;
-	if (!isset($HTMLLIB)) { include_once('../html/htmllib.php');}
+	if (!defined('HTMLLIB')) { include_once('../html/htmllib.php');}
 	$htmlid = $MYVARS->GET['htmlid'];
 	$pageid = $MYVARS->GET['pageid'];
     if (!user_is_able($USER->userid, "viewbloglocker", $pageid)) {
-        debugging(error_string("no_permission", ["viewbloglocker"]), 2);
+        trigger_error(error_string("no_permission", ["viewbloglocker"]), E_USER_WARNING);
 		return;
 	}
 

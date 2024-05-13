@@ -3,7 +3,7 @@
 * lang.php - Event Lang library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 1/26/2016
+* Date: 5/14/2024
 * Revision: 0.0.4
 ***************************************************************************/
  
@@ -40,7 +40,7 @@ $ERRORS->valid_request_description = "A description is required.  Please be thor
 $ERRORS->invalid_old_request = "Event request is either invalid or voting has finished.";
 
 //EVENT CREATION FORM
-$HELP->input_event_name = "Please enter the name of your event (ex. John's Birthday)";
+$HELP->input_event_name = "Please enter the name of your event.";
 $HELP->input_contact = "The person to contact for questions about this event.";
 $HELP->input_event_email = "The email address of the contact person.";
 $HELP->input_event_cost = "Does this event costs money to attend?";

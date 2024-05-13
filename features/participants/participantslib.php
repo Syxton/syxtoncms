@@ -3,18 +3,18 @@
 * participantslib.php - Participants feature library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 8/19/2010
+* Date: 5/14/2024
 * Revision: 0.0.4
 ***************************************************************************/
 
-if (!isset($LIBHEADER)) {
+if (!LIBHEADER) {
 	$sub = './';
 	while (!file_exists($sub . 'lib/header.php')) {
 		$sub = $sub == './' ? '../' : $sub . '../';
 	}
 	include($sub . 'lib/header.php'); 
 }
-$PARTICIPANTSLIB = true;
+define('PARTICIPANTSLIB', true);
 
 function display_participants($pageid, $area, $featureid) {
 global $CFG, $USER, $ABILITIES;
@@ -25,12 +25,12 @@ global $CFG, $USER, $ABILITIES;
 	}
 	
 	$title = $settings->$feature->$featureid->feature_title->setting;
-    	
+  		
 	if (is_logged_in()) {
 		if (user_is_able($USER->userid, 'viewparticipants', $pageid)) {
-            $content = make_modal_links(array("title"=> stripslashes($title),"text"=> stripslashes($title),"path" => action_path("participants") . "view_participants&amp;pageid=$pageid&amp;featureid=$featureid", "width" => "400", "image" => $CFG->wwwroot . "/images/user.png", "styles" => "vertical-align: top;")); 
+            $content = make_modal_links(["title"=> stripslashes($title),"text"=> stripslashes($title),"path" => action_path("participants") . "view_participants&amp;pageid=$pageid&amp;featureid=$featureid", "width" => "400", "image" => $CFG->wwwroot . "/images/user.png", "styles" => "vertical-align: top;"]); 
 			$buttons = get_button_layout("participants", $featureid, $pageid); 
-			return get_css_box($title, $content, $buttons,NULL,"participants", $featureid);
+			return get_css_box($title, $content, $buttons, NULL, "participants", $featureid);
 		}
 	}
 }

@@ -1,8 +1,7 @@
 <?php
 if (!isset($CFG)) { include_once('../config.php'); }
 include($CFG->dirroot.'/lib/header.php');
-$allowed_ext = array(
-
+$allowed_ext = [
   // archives
   'zip' => 'application/zip',
   'rar' => 'application/zip',
@@ -19,6 +18,7 @@ $allowed_ext = array(
   'ppt' => 'application/vnd.ms-powerpoint',
   'pptx' => 'application/vnd.ms-powerpoint',
   'csv' => 'application/vnd.ms-excel',
+  'xml' => 'application/xml',
   
   // executables
   'exe' => 'application/octet-stream',
@@ -38,12 +38,12 @@ $allowed_ext = array(
   'mpg' => 'video/mpeg',
   'mpe' => 'video/mpeg',
   'mov' => 'video/quicktime',
-  'avi' => 'video/x-msvideo'
-);
+  'avi' => 'video/x-msvideo',
+];
 
 if (!empty($_GET['file'])) {
     $file = $_GET['file'];
-    $file = str_replace("\\","/",$file);
+    $file = str_replace("\\", "/", $file);
     
     $path_parts = pathinfo($file);
     if (empty($path_parts['filename']) && empty($path_parts['extension'])) { exit; }
@@ -82,7 +82,7 @@ if (!empty($_GET['file'])) {
     header("Content-Transfer-Encoding: binary");
     ob_clean();
     flush();
-    readfile(str_replace(" ","%20",$file));
+    readfile(str_replace(" ", "%20", $file));
 }
 exit;
 ?>

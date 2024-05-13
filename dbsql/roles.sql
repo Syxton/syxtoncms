@@ -104,7 +104,7 @@ user_has_ability_in_page||
                      AND ability = '||ability||'
                      AND feature = '||feature||'
                      AND featureid = '||featureid||'
-                     AND allow='1')
+                     AND allow = '1')
             OR
             (1 IN (SELECT allow
                      FROM roles_ability_perpage
@@ -156,7 +156,6 @@ user_has_ability_in_page||
    LIMIT 1
 ||user_has_ability_in_page
 
-
 //	This is a fully implemented roles structure for the system.  The following is the importance structure
 //
 //	Feature specific per individual user per page
@@ -177,29 +176,29 @@ get_user_abilities||
             (
             SELECT 1 as allowed FROM roles_ability ra WHERE
               (
-                1 IN (SELECT allow FROM roles_ability_perfeature_peruser WHERE pageid='||pageid||' AND userid='||userid||' AND feature='||feature||' AND featureid='||featureid||' AND ability=a.ability AND allow='1')
+                1 IN (SELECT allow FROM roles_ability_perfeature_peruser WHERE pageid = '||pageid||' AND userid = '||userid||' AND feature='||feature||' AND featureid = '||featureid||' AND ability = a.ability AND allow = '1')
                 OR
                 (
-                  1 IN (SELECT allow FROM roles_ability_peruser WHERE userid='||userid||' AND pageid='||pageid||' AND ability=a.ability AND allow='1')
+                  1 IN (SELECT allow FROM roles_ability_peruser WHERE userid = '||userid||' AND pageid = '||pageid||' AND ability = a.ability AND allow = '1')
                   OR
                   ||featuregroupsql[0]|| ||groupsql[0]||
                   (
-                    1 IN (SELECT allow FROM roles_ability_perfeature WHERE pageid='||pageid||' AND roleid='||roleid||' AND feature='||feature||' AND featureid='||featureid||' AND ability=a.ability AND allow='1')
+                    1 IN (SELECT allow FROM roles_ability_perfeature WHERE pageid = '||pageid||' AND roleid = '||roleid||' AND feature='||feature||' AND featureid = '||featureid||' AND ability = a.ability AND allow = '1')
                     OR
                     (
-                      1 IN (SELECT allow FROM roles_ability_perpage WHERE roleid='||roleid||' AND pageid='||pageid||' AND ability=a.ability AND allow='1')
+                      1 IN (SELECT allow FROM roles_ability_perpage WHERE roleid = '||roleid||' AND pageid = '||pageid||' AND ability = a.ability AND allow = '1')
                       OR
                       (
-                        1 IN (SELECT allow FROM roles_ability WHERE roleid='||roleid||' AND ability=a.ability AND allow='1')
+                        1 IN (SELECT allow FROM roles_ability WHERE roleid = '||roleid||' AND ability = a.ability AND allow = '1')
                       )
-                      AND 0 NOT IN (SELECT allow FROM roles_ability_perpage WHERE roleid='||roleid||' AND pageid='||pageid||' AND ability=a.ability AND allow='0')
+                      AND 0 NOT IN (SELECT allow FROM roles_ability_perpage WHERE roleid = '||roleid||' AND pageid = '||pageid||' AND ability = a.ability AND allow = '0')
                   )
-                  AND 0 NOT IN (SELECT allow FROM roles_ability_perfeature WHERE pageid='||pageid||' AND roleid='||roleid||' AND feature='||feature||' AND featureid='||featureid||' AND ability=a.ability AND allow='0')
+                  AND 0 NOT IN (SELECT allow FROM roles_ability_perfeature WHERE pageid = '||pageid||' AND roleid = '||roleid||' AND feature='||feature||' AND featureid = '||featureid||' AND ability = a.ability AND allow = '0')
                   ||groupsql[1]|| ||featuregroupsql[1]||
                 )
-                AND 0 NOT IN (SELECT allow FROM roles_ability_peruser WHERE userid='||userid||' AND pageid='||pageid||' AND ability=a.ability AND allow='0')
+                AND 0 NOT IN (SELECT allow FROM roles_ability_peruser WHERE userid = '||userid||' AND pageid = '||pageid||' AND ability = a.ability AND allow = '0')
               )
-              AND 0 NOT IN (SELECT allow FROM roles_ability_perfeature_peruser WHERE pageid='||pageid||' AND userid='||userid||' AND feature='||feature||' AND featureid='||featureid||' AND ability=a.ability AND allow='0')
+              AND 0 NOT IN (SELECT allow FROM roles_ability_perfeature_peruser WHERE pageid = '||pageid||' AND userid = '||userid||' AND feature='||feature||' AND featureid = '||featureid||' AND ability = a.ability AND allow = '0')
             )
           LIMIT 1) as allowed
        FROM abilities a
@@ -285,17 +284,17 @@ get_role_abilities||
         (
           SELECT 1 as allowed FROM roles_ability ra WHERE
           (
-            1 IN (SELECT allow FROM roles_ability_perfeature WHERE pageid='||pageid||' AND roleid='||roleid||' AND feature='||feature||' AND featureid='||featureid||' AND ability=a.ability AND allow=1)
+            1 IN (SELECT allow FROM roles_ability_perfeature WHERE pageid = '||pageid||' AND roleid = '||roleid||' AND feature = '||feature||' AND featureid = '||featureid||' AND ability = a.ability AND allow = 1)
             OR
             (
-              1 IN (SELECT allow FROM roles_ability_perpage WHERE roleid='||roleid||' AND pageid='||pageid||' AND ability=a.ability AND allow=1)
+              1 IN (SELECT allow FROM roles_ability_perpage WHERE roleid = '||roleid||' AND pageid = '||pageid||' AND ability = a.ability AND allow = 1)
               OR
-              1 IN (SELECT allow FROM roles_ability WHERE roleid='||roleid||' AND ability=a.ability AND allow=1)
+              1 IN (SELECT allow FROM roles_ability WHERE roleid = '||roleid||' AND ability = a.ability AND allow = 1)
               AND
-              0 NOT IN (SELECT allow FROM roles_ability_perpage WHERE roleid='||roleid||' AND pageid='||pageid||' AND ability=a.ability AND allow=0)
+              0 NOT IN (SELECT allow FROM roles_ability_perpage WHERE roleid = '||roleid||' AND pageid = '||pageid||' AND ability = a.ability AND allow = 0)
             )
             AND
-            0 NOT IN (SELECT allow FROM roles_ability_perfeature WHERE pageid='||pageid||' AND roleid='||roleid||' AND feature='||feature||' AND featureid='||featureid||' AND ability=a.ability AND allow=0)
+            0 NOT IN (SELECT allow FROM roles_ability_perfeature WHERE pageid = '||pageid||' AND roleid = '||roleid||' AND feature = '||feature||' AND featureid = '||featureid||' AND ability = a.ability AND allow = 0)
         )
       LIMIT 1) as allowed
        FROM abilities a
@@ -318,12 +317,12 @@ role_has_ability_in_page||
     1 IN (SELECT allow FROM roles_ability_perfeature WHERE pageid = '||pageid||' AND roleid = '||roleid||' AND feature = '||feature||' AND featureid = '||featureid||' AND ability = '||ability||' AND allow = '1')
     OR
       (
-      1 IN (SELECT allow FROM roles_ability_perpage WHERE roleid='||roleid||' AND pageid='||pageid||' AND ability = '||ability||' AND allow = '1')
+      1 IN (SELECT allow FROM roles_ability_perpage WHERE roleid = '||roleid||' AND pageid = '||pageid||' AND ability = '||ability||' AND allow = '1')
       OR
         (
-        1 IN (SELECT allow FROM roles_ability WHERE roleid='||roleid||' AND ability = '||ability||' AND allow = '1')
+        1 IN (SELECT allow FROM roles_ability WHERE roleid = '||roleid||' AND ability = '||ability||' AND allow = '1')
         )
-      AND 0 NOT IN (SELECT allow FROM roles_ability_perpage WHERE roleid = '||roleid||' AND pageid = '||pageid||' AND ability='||ability||' AND allow = '0')
+      AND 0 NOT IN (SELECT allow FROM roles_ability_perpage WHERE roleid = '||roleid||' AND pageid = '||pageid||' AND ability = '||ability||' AND allow = '0')
       )
     AND 0 NOT IN (SELECT allow FROM roles_ability_perfeature WHERE pageid = '||pageid||' AND roleid = '||roleid||' AND feature = '||feature||' AND featureid = '||featureid||' AND ability = '||ability||' AND allow = '0')
     )

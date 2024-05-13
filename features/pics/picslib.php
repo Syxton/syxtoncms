@@ -3,18 +3,18 @@
 * picslib.php - Pics function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 4/3/2014
+* Date: 5/14/2024
 * Revision: 2.3.4
 ***************************************************************************/
 
-if (!isset($LIBHEADER)) {
+if (!LIBHEADER) {
 	$sub = './';
 	while (!file_exists($sub . 'lib/header.php')) {
 		$sub = $sub == './' ? '../' : $sub . '../';
 	}
 	include($sub . 'lib/header.php'); 
 }
-$PICSLIB = true;
+define('PICSLIB', true);
 
 function display_pics($pageid, $area, $featureid) {
 global $CFG, $USER, $ROLES;
@@ -61,7 +61,7 @@ function get_pics_manager($pageid, $featureid) {
 global $CFG, $MYVARS, $USER;
     $returnme = '';
     if (!user_is_able($USER->userid, "managepics", $pageid)) {
-        return debugging(error_string("no_permission", ["managepics"]));
+        return trigger_error(error_string("no_permission", ["managepics"]));
 	}
 
 	$params = [
@@ -74,8 +74,8 @@ global $CFG, $MYVARS, $USER;
 
 	if ($allgalleries = get_db_result($SQL)) {
 		$g = 0;
-	  	$gallerylist = new \stdClass;
-	    $gallerylist->$g = new \stdClass;
+			$gallerylist = new \stdClass;
+		  $gallerylist->$g = new \stdClass;
 		$gallerylist->$g->name = "All";
 		$gallerylist->$g->value = "all";
 		$g++;
@@ -178,10 +178,10 @@ global $CFG, $USER;
 	if ($pages = get_db_result($SQL)) {
 		$deletepic = ""; $activated = "";
 		$count = $total > (($pagenum + 1) * $perpage) ? $perpage : $total - (($pagenum) * $perpage); //get the amount returned...is it a full page of results?
-	    $amountshown = $firstonpage + $perpage < $total ? $firstonpage + $perpage : $total;
-	    $prev = $pagenum > 0 ? '<a href="javascript: $(\'#loading_overlay\').show(); ajaxapi(\'/features/pics/pics_ajax.php\',\'pics_pageturn\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;galleryid=' . $galleryid . '&amp;editable=' . $editable . '&amp;perpage=' . $perpage . '&amp;order=' . urlencode($order) . '&amp;pagenum=' . ($pagenum - 1) . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); $(\'#loading_overlay\').hide(); }}, true);" onmouseup="this.blur();"><img src="' . $CFG->wwwroot . '/images/prev.gif" title="Previous Page" alt="Previous Page" /></a>' : "";
-	    $info = 'Viewing ' . ($firstonpage + 1) . " through " . $amountshown . " out of $total";
-	    $next = $firstonpage + $perpage < $total ? '<a href="javascript: $(\'#loading_overlay\').show(); ajaxapi(\'/features/pics/pics_ajax.php\',\'pics_pageturn\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;galleryid=' . $galleryid . '&amp;editable=' . $editable . '&amp;perpage=' . $perpage . '&amp;order=' . urlencode($order) . '&amp;pagenum=' . ($pagenum + 1) . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); $(\'#loading_overlay\').hide(); }}, true);" onmouseup="this.blur();"><img src="' . $CFG->wwwroot . '/images/next.gif" title="Next Page" alt="Next Page" /></a>' : "";
+		  $amountshown = $firstonpage + $perpage < $total ? $firstonpage + $perpage : $total;
+		  $prev = $pagenum > 0 ? '<a href="javascript: $(\'#loading_overlay\').show(); ajaxapi(\'/features/pics/pics_ajax.php\',\'pics_pageturn\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;galleryid=' . $galleryid . '&amp;editable=' . $editable . '&amp;perpage=' . $perpage . '&amp;order=' . urlencode($order) . '&amp;pagenum=' . ($pagenum - 1) . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); $(\'#loading_overlay\').hide(); }}, true);" onmouseup="this.blur();"><img src="' . $CFG->wwwroot . '/images/prev.gif" title="Previous Page" alt="Previous Page" /></a>' : "";
+		  $info = 'Viewing ' . ($firstonpage + 1) . " through " . $amountshown . " out of $total";
+		  $next = $firstonpage + $perpage < $total ? '<a href="javascript: $(\'#loading_overlay\').show(); ajaxapi(\'/features/pics/pics_ajax.php\',\'pics_pageturn\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;galleryid=' . $galleryid . '&amp;editable=' . $editable . '&amp;perpage=' . $perpage . '&amp;order=' . urlencode($order) . '&amp;pagenum=' . ($pagenum + 1) . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); $(\'#loading_overlay\').hide(); }}, true);" onmouseup="this.blur();"><img src="' . $CFG->wwwroot . '/images/next.gif" title="Next Page" alt="Next Page" /></a>' : "";
  		$header = '<table style="width:100%;"><tr style="height:45px;"><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;font-size:.75em;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><p>';
 
 		$returnme = '<div style="width:760px;overflow:auto;margin-right:auto;margin-left:auto;">';
@@ -258,7 +258,7 @@ global $CFG, $USER;
 												\'&amp;picsid=' . $row["picsid"] . '&amp;siteviewable=\' + $(\'#siteviewable_' . $row["picsid"] . '\').prop(\'checked\'),
 												function() { ' . $alreadysite1 . ' });
 												' . $alreadysite2 . '
-										   } else {
+											 } else {
 												if ($(\'#siteviewable_' . $row["picsid"] . '\').prop(\'checked\')) {
 													$(\'#siteviewable_' . $row["picsid"] . '\').prop(\'checked\', false);
 												} else {
@@ -273,7 +273,7 @@ global $CFG, $USER;
 			} else {
 				$caption = '<div style="font-size:.85em;' . $captionsize . '">
 							' . stripslashes($row["caption"]) . 
-						   '</div>';
+							 '</div>';
 			}
 
 			if ($row["pageid"] != $pageid) { //this image is from another page and must be copied rather than moved.
@@ -393,30 +393,30 @@ function resizeImage($name, $filename, $new_w, $new_h) {
 	if (preg_match("/gif/",strtolower($system[1]))) {$src_img=imagecreatefromgif ($name);}
 	if (preg_match("/png/",strtolower($system[1]))) {$src_img=imagecreatefrompng($name);}
 	if (isset($src_img)) {
-    	$old_x=imageSX($src_img);
-    	$old_y=imageSY($src_img);
-    	if ($old_x < $new_w && $old_y < $new_h) { return false; }
-    	if ($old_x > $old_y) {
-    		$thumb_w=$new_w;
-    		$thumb_h=$old_y*($new_h/$old_x);
-    	}
-    	if ($old_x < $old_y) {
-    		$thumb_w=$old_x*($new_w/$old_y);
-    		$thumb_h=$new_h;
-    	}
-    	if ($old_x == $old_y) {
-    		$thumb_w=$new_w;
-    		$thumb_h=$new_h;
-    	}
-    	$dst_img=ImageCreateTrueColor($thumb_w, $thumb_h);
-    	imagecopyresampled($dst_img, $src_img,0,0,0,0, $thumb_w, $thumb_h, $old_x, $old_y);
-    	if (preg_match("/png/", $system[1])) {
-    		imagepng($dst_img, $filename);
-    	} else {
-    		imagejpeg($dst_img, $filename);
-    	}
-    	imagedestroy($dst_img);
-    	imagedestroy($src_img);
+  		$old_x=imageSX($src_img);
+  		$old_y=imageSY($src_img);
+  		if ($old_x < $new_w && $old_y < $new_h) { return false; }
+  		if ($old_x > $old_y) {
+  			$thumb_w=$new_w;
+  			$thumb_h=$old_y*($new_h/$old_x);
+  		}
+  		if ($old_x < $old_y) {
+  			$thumb_w=$old_x*($new_w/$old_y);
+  			$thumb_h=$new_h;
+  		}
+  		if ($old_x == $old_y) {
+  			$thumb_w=$new_w;
+  			$thumb_h=$new_h;
+  		}
+  		$dst_img=ImageCreateTrueColor($thumb_w, $thumb_h);
+  		imagecopyresampled($dst_img, $src_img,0,0,0,0, $thumb_w, $thumb_h, $old_x, $old_y);
+  		if (preg_match("/png/", $system[1])) {
+  			imagepng($dst_img, $filename);
+  		} else {
+  			imagejpeg($dst_img, $filename);
+  		}
+  		imagedestroy($dst_img);
+  		imagedestroy($src_img);
 	}
 }
 

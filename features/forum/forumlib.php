@@ -3,23 +3,26 @@
 * forumlib.php - Forum function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 3/23/2012
+* Date: 5/14/2024
 * Revision: 0.8.8
 ***************************************************************************/
 
-if (!isset($LIBHEADER)) {
+if (!LIBHEADER) {
 	$sub = './';
 	while (!file_exists($sub . 'lib/header.php')) {
 		$sub = $sub == './' ? '../' : $sub . '../';
 	}
 	include($sub . 'lib/header.php'); 
 }
-$FORUMLIB = true;
+define('FORUMLIB', true);
 
 function display_forum($pageid, $area, $forumid) {
 global $CFG, $USER, $ROLES;
 	date_default_timezone_set(date_default_timezone_get());
-	$content='<div id="forum_div_' . $forumid . '">';
+    // Forum auto refresh.
+    $refresh_time = 1 * 60000; // The 1 could be a setting for minutes
+
+	$content = '<div id="forum_div_' . $forumid . '" style="margin: 10px;">';
 
     //get settings or create default settings if they don't exist
 	if (!$settings = fetch_settings("forum", $forumid, $pageid)) {
@@ -28,7 +31,7 @@ global $CFG, $USER, $ROLES;
 	}
 
 	$title = $settings->forum->$forumid->feature_title->setting;
-	$refresh_time = 1 * 60000; //the 1 could be a setting for minutes
+
 	if ($area == "middle") { //This is a FORUM
 		if (user_is_able($USER->userid, "viewforums", $pageid)) {
 			$content .= get_forum_categories($forumid);
@@ -38,7 +41,7 @@ global $CFG, $USER, $ROLES;
 		$content .= '</div><input type="hidden" name="forum_refresh_' . $forumid . '" id="forum_refresh_' . $forumid . '" value="ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_categories_ajax\',\'&amp;forumid=' . $forumid . '\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_' . $forumid . '\'); }}, true);" />';
 
         //Refresh Script
-        $script ='var forum' . $forumid . '_interval = setInterval(function() { eval(stripslashes(unescape(window.parent.$("#forum_refresh_' . $forumid . '").val()))); },' . $refresh_time . ');';
+        $script ='var forum' . $forumid . '_interval = setInterval(function() { eval(stripslashes(unescape($("#forum_refresh_' . $forumid . '").val()))); },' . $refresh_time . ');';
 		$content .= js_code_wrap($script);
 	} else { //This is a SHOUTBOX
 		if (user_is_able($USER->userid, "viewshoutbox", $pageid)) {
@@ -96,16 +99,79 @@ global $USER, $CFG;
 			$discussion_count = get_db_count("SELECT * FROM forum_discussions WHERE catid=" . $category["catid"] . " AND shoutbox=0");
 			$posts_count = get_db_count("SELECT * FROM forum_posts WHERE catid=" . $category["catid"]);
 			$viewclass = $notviewed ? 'forum_col1' : 'forum_col1_viewed';
-			$content .= '	<tr><td class="' . $viewclass . '"><span style="position:relative;float:left;"><a href="javascript: void(0);" onclick="save_action($(this), $(\'#forum_refresh_' . $forumid . '\')); ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_discussions\',\'&amp;dpagenum=0&amp;pageid=' . $category['pageid'] . '&amp;forumid=' . $forumid . '&amp;catid=' . $category['catid'] . '\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_' . $forumid . '\'); }}, true);" >' . $category["title"] . '</a></span>';
+			$content .= '	<tr>
+                                <td class="' . $viewclass . '">
+                                    <span style="position:relative;float:left;">
+                                        <a title="Get Forum Discussions"
+                                           href="javascript: void(0);"
+                                           onclick="save_action($(this), $(\'#forum_refresh_' . $forumid . '\'));
+                                                    ajaxapi(\'/features/forum/forum_ajax.php\',
+                                                            \'get_forum_discussions\',
+                                                            \'&amp;dpagenum=0&amp;pageid=' . $category['pageid'] . '&amp;forumid=' . $forumid . '&amp;catid=' . $category['catid'] . '\',
+                                                            function() {
+                                                                if (xmlHttp.readyState == 4) {
+                                                                    simple_display(\'forum_div_' . $forumid . '\');
+                                                                }
+                                                            },
+                                                            true);">
+                                            ' . $category["title"] . '
+                                        </a>
+                                    </span>';
 			$edit = user_is_able($USER->userid, "editforumcategory", $category['pageid']);
 			$content .= '<span style="position:relative;float:right;">';
 
             if ($edit) {
-				if ($category["sort"] > 1) $content .= '<a title="Move Up" onclick="this.blur();" href="javascript: void(0);" onclick="ajaxapi(\'/features/forum/forum_ajax.php\',\'move_category\',\'&amp;catid=' . $category['catid'] . '&amp;forumid=' . $forumid . '&amp;pageid=' . $category['pageid'] . '&amp;direction=up\',function() {if (xmlHttp.readyState == 4) {  simple_display(\'forum_div_' . $forumid . '\');}}, true);"><img alt="Move Up" src="' . $CFG->wwwroot . '/images/up.gif" /></a>';
-				if ($category["sort"] != get_db_field("sort", "forum_categories", "forumid=$forumid AND shoutbox=0 ORDER BY sort DESC")) $content .= '<a title="Move Down" onclick="this.blur();" href="javascript: void(0);" onclick="ajaxapi(\'/features/forum/forum_ajax.php\',\'move_category\',\'&amp;catid=' . $category['catid'] . '&amp;forumid=' . $forumid . '&amp;pageid=' . $category['pageid'] . '&amp;direction=down\',function() { simple_display(\'forum_div_' . $forumid . '\');});"><img alt="Move Down" src="' . $CFG->wwwroot . '/images/down.gif" /></a>';
+				if ($category["sort"] > 1) {
+                    $content .= '<a title="Move Up" 
+                                    href="javascript: void(0);"
+                                    onclick="this.blur();
+                                            ajaxapi(\'/features/forum/forum_ajax.php\',
+                                                    \'move_category\',
+                                                    \'&amp;catid=' . $category['catid'] . '&amp;forumid=' . $forumid . '&amp;pageid=' . $category['pageid'] . '&amp;direction=up\',
+                                                    function() {
+                                                        if (xmlHttp.readyState == 4) {
+                                                            simple_display(\'forum_div_' . $forumid . '\');
+                                                        }
+                                                    }, 
+                                                    true);">
+                                    <img alt="Move Up" src="' . $CFG->wwwroot . '/images/up.gif" />
+                                </a>';
+                } 
+				if ($category["sort"] != get_db_field("MAX(sort)", "forum_categories", "forumid = '$forumid' AND shoutbox = '0'")) {
+                    $content .= '<a title="Move Down"
+                                    href="javascript: void(0);"
+                                    onclick="this.blur();
+                                            ajaxapi(\'/features/forum/forum_ajax.php\',
+                                                    \'move_category\',
+                                                    \'&amp;catid=' . $category['catid'] . '&amp;forumid=' . $forumid . '&amp;pageid=' . $category['pageid'] . '&amp;direction=down\',
+                                                    function() {
+                                                        if (xmlHttp.readyState == 4) {
+                                                            simple_display(\'forum_div_' . $forumid . '\');
+                                                        }
+                                                    },
+                                                    true);">
+                                    <img alt="Move Down" src="' . $CFG->wwwroot . '/images/down.gif" />
+                                </a>';
+                }
 			}
 
-            if (user_is_able($USER->userid, "deleteforumcategory", $category['pageid'])) { $content .= '<a title="Delete Category" onclick="this.blur();" href="javascript: if (confirm(\'Are you sure you wish to delete this category? \nThis will delete all discussions and posts inside this category.\')) { ajaxapi(\'/features/forum/forum_ajax.php\',\'delete_category\',\'&amp;forumid=' . $forumid . '&amp;catid=' . $category['catid'] . '\',function() {if (xmlHttp.readyState == 4) {  simple_display(\'forum_div_' . $forumid . '\');}}, true);}"><img alt="Delete Category" src="' . $CFG->wwwroot . '/images/delete.png" /></a>';}
+            if (user_is_able($USER->userid, "deleteforumcategory", $category['pageid'])) {
+                $content .= '<a title="Delete Category" href="javascript: void(0);" class="forum_inline_buttons"
+                                onclick="if (confirm(\'Are you sure you wish to delete this category? \nThis will delete all discussions and posts inside this category.\')) {
+                                            this.blur();
+                                            ajaxapi(\'/features/forum/forum_ajax.php\',
+                                                    \'delete_category\',
+                                                    \'&amp;forumid=' . $forumid . '&amp;catid=' . $category['catid'] . '\',
+                                                    function() {
+                                                        if (xmlHttp.readyState == 4) {
+                                                            simple_display(\'forum_div_' . $forumid . '\');
+                                                        }
+                                                    },
+                                                    true);
+                                        }">
+                                <img alt="Delete Category" src="' . $CFG->wwwroot . '/images/delete.png" />
+                            </a>';
+            }
 
             if ($edit) {
 				$params = [
@@ -114,9 +180,10 @@ global $USER, $CFG;
 					"runafter" => "forum_refresh_$forumid",
 					"height" => "200",
 					"width" => "640",
+                    "class" => "forum_inline_buttons",
 					"validate" => "true", "image" => $CFG->wwwroot . "/images/edit.png",
 				];
-                $content .= make_modal_links(array());
+                $content .= make_modal_links($params);
             }
 
 			$content .= '</span>
@@ -139,9 +206,9 @@ function update_user_views($catid, $discussionid, $userid) {
 global $CFG;
 	$time = get_timestamp();
 	if (!get_db_row("SELECT * FROM forum_views WHERE userid='$userid' AND discussionid='$discussionid'")) {
-	   execute_db_sql("INSERT INTO forum_views (userid,catid,discussionid,lastviewed) VALUES('$userid','$catid','$discussionid','$time')");
+		 execute_db_sql("INSERT INTO forum_views (userid,catid,discussionid,lastviewed) VALUES('$userid','$catid','$discussionid','$time')");
 	} else {
-	   execute_db_sql("UPDATE forum_views SET lastviewed='$time' WHERE userid='$userid' AND discussionid='$discussionid'");
+		 execute_db_sql("UPDATE forum_views SET lastviewed='$time' WHERE userid='$userid' AND discussionid='$discussionid'");
 	}
 }
 
@@ -199,63 +266,157 @@ global $CFG;
 
 	$perpage = $settings->forum->$forumid->postsperpage->setting;
 	$pagenum = $pagenum === false ? false : $pagenum;
-	$previous = ""; $next = "";
-	if ($post_count = get_db_count("SELECT * FROM forum_posts WHERE discussionid=" . $discussion["discussionid"])) {
+	$previous = "";
+    $next = "";
+    $params = [
+        "forumid" => $discussion["forumid"],
+        "catid" => $discussion["catid"],
+        "pageid" => $discussion["pageid"],
+        "discussionid" => $discussion["discussionid"],
+    ];
+
+    $post_count = get_db_count("SELECT * FROM forum_posts WHERE discussionid=" . $discussion["discussionid"]);
+	if ($post_count) {
 		$page_counter = 1;
 		$lastpage = (ceil($post_count / $perpage) - 1);
-		$countdown = $post_count;
-		if ($buttons && !($pagenum === false) && $pagenum > 0) $previous = '<a href="javascript: void(0);" onclick="save_action($(this), $(\'#forum_refresh_' . $forumid . '\')); ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_posts\',\'&amp;discussionid=' . $discussion['discussionid'] . '&amp;pagenum=' . ($pagenum - 1) . '&amp;catid=' . $discussion['catid'] . '&amp;forumid=' . $discussion['forumid'] . '&amp;pageid=' . $discussion["pageid"] . '\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_' . $forumid . '\'); }}, true); " > Back </a>';
-		if ($buttons && !($pagenum === false) && $pagenum < $lastpage) $next = '<a href="javascript: void(0);" onclick="save_action($(this), $(\'#forum_refresh_' . $forumid . '\')); ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_posts\',\'&amp;discussionid=' . $discussion['discussionid'] . '&amp;pagenum=' . ($pagenum + 1) . '&amp;catid=' . $discussion['catid'] . '&amp;forumid=' . $discussion['forumid'] . '&amp;pageid=' . $discussion["pageid"] . '\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_' . $forumid . '\'); }}, true);" > Next </a>';
-		$returnme = '<span style="font-size:.8em;">Page: ' . $previous;
-		while ($countdown > 0) {
+		if ($buttons && !($pagenum === false) && $pagenum > 0) {
+            $params = array_merge($params, [
+                "pagenum" => $pagenum - 1,
+                "title" => "Previous Page",
+                "display" => "Prev",
+            ]);
+            $previous = use_template("tmp/forum.template", $params, "get_posts_page_link", "forum");
+        }
+		if ($buttons && !($pagenum === false) && $pagenum < $lastpage) {
+            $params = array_merge($params, [
+                "pagenum" => $pagenum + 1,
+                "title" => "Next Page",
+                "display" => "Next",
+            ]);
+            $next = use_template("tmp/forum.template", $params, "get_posts_page_link", "forum");
+        }
+
+        $pagelinks = "";
+		while ($post_count > 0) {
 			if ($page_counter > $beforeskipping) {
-				$returnme .= !($pagenum === false) && $pagenum == $lastpage ? ' Last ' : ' <a href="javascript: void(0);" onclick="save_action($(this), $(\'#forum_refresh_' . $forumid . '\')); ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_posts\',\'&amp;discussionid=' . $discussion['discussionid'] . '&amp;pagenum=' . $lastpage . '&amp;catid=' . $discussion['catid'] . '&amp;forumid=' . $discussion['forumid'] . '&amp;pageid=' . $discussion["pageid"] . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'forum_div_' . $forumid . '\'); }}, true); "> Last </a>';
-				$countdown = 0;
+                if ($pagenum === false || $pagenum != $lastpage) {
+                    $params = array_merge($params, [
+                        "pagenum" => $lastpage,
+                        "title" => "Last Page",
+                        "display" => "Last",
+                    ]);
+                    $pagelinks .= use_template("tmp/forum.template", $params, "get_posts_page_link", "forum");
+                } else {
+                    $pagelinks .= " Last ";
+                }
+				$post_count = 0;
 			} else {
-				$returnme .= !($pagenum === false) && $pagenum == ($page_counter - 1) ? ' ' . $page_counter . ' ' : ' <a href="javascript: void(0);" onclick="save_action($(this), $(\'#forum_refresh_' . $forumid . '\')); ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_posts\',\'&amp;discussionid=' . $discussion['discussionid'] . '&amp;pagenum=' . ($page_counter - 1) . '&amp;catid=' . $discussion['catid'] . '&amp;forumid=' . $discussion['forumid'] . '&amp;pageid=' . $discussion["pageid"] . '\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_' . $forumid . '\'); }}, true); ">' . $page_counter . ' </a>';
-				$countdown -= $perpage;
+                if ($pagenum === false || $pagenum != ($page_counter - 1)) {
+                    $params = array_merge($params, [
+                        "pagenum" => $page_counter - 1,
+                        "title" => "Page $page_counter",
+                        "display" => $page_counter,
+                    ]);
+                    $pagelinks .= use_template("tmp/forum.template", $params, "get_posts_page_link", "forum");
+                } else {
+                    $pagelinks .= " $page_counter ";
+                }
+				$post_count -= $perpage;
 			}
 			$page_counter++;
 		}
 		if ($page_counter == 2) { return "";}
 	} else { return ""; }
 
-    return '' . $returnme.$next . '</span>';
+    return '<div class="forum_page_links">Page: ' . $previous . $pagelinks . $next . '</div>';
 }
 
-function get_discussion_pages($forumid, $category, $pagenum, $beforeskipping=20, $buttons = true) {
+function get_discussion_pages($forumid, $category, $pagenum, $beforeskipping = 20, $buttons = true) {
 global $CFG;
 
 	$settings = fetch_settings("forum", $forumid, $category['pageid']);
 	$perpage = $settings->forum->$forumid->discussionsperpage->setting;
 
 	$pagenum = $pagenum === false ? false : $pagenum;
-	$previous = ""; $next = "";
-	if ($discussion_count = get_db_count("SELECT * FROM forum_discussions WHERE bulletin=0 AND catid=" . $category["catid"] . " AND shoutbox=0")) {
+	$previous = "";
+    $next = "";
+    $discussion_count = get_db_count("SELECT *
+                                      FROM forum_discussions
+                                      WHERE bulletin = 0
+                                      AND shoutbox = 0
+                                      AND catid = '" . $category["catid"] . "'");
+    if ($discussion_count) {
 		$page_counter = 1;
 		$lastpage = (ceil($discussion_count / $perpage) - 1);
-		$countdown = $discussion_count;
-		if ($buttons && !($pagenum === false) && $pagenum > 0) { $previous = '<a href="javascript: void(0);" onclick="save_action($(this), $(\'#forum_refresh_' . $forumid . '\')); ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_discussions\',\'&amp;dpagenum=' . ($pagenum - 1) . '&amp;pageid=' . $category['pageid'] . '&amp;forumid=' . $category['forumid'] . '&amp;catid=' . $category['catid'] . '\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_' . $forumid . '\'); }}, true);" > Back </a>';}
-		if ($buttons && !($pagenum === false) && $pagenum < $lastpage) { $next = '<a href="javascript: void(0);" onclick="save_action($(this), $(\'#forum_refresh_' . $forumid . '\')); ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_discussions\',\'&amp;dpagenum=' . ($pagenum + 1) . '&amp;pageid=' . $category['pageid'] . '&amp;forumid=' . $category['forumid'] . '&amp;catid=' . $category['catid'] . '\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_' . $forumid . '\'); }}, true);" > Next </a>';}
-		$returnme = '<span style="font-size:.8em;">Page: ' . $previous;
-		while ($countdown > 0) {
+		$params = [
+            "forumid" => $forumid,
+            "catid" => $category['catid'],
+            "pageid" => $category['pageid'],
+        ];
+
+        if ($buttons && !($pagenum === false) && $pagenum > 0) {
+            $params = array_merge($params, [
+                "dpagenum" => $pagenum - 1,
+                "title" => "Previous Page",
+                "display" => "Prev",
+            ]);
+            $previous = use_template("tmp/forum.template", $params, "get_discussions_page_link", "forum");
+        }
+
+		if ($buttons && !($pagenum === false) && $pagenum < $lastpage) {
+            $params = array_merge($params, [
+                "dpagenum" => $pagenum + 1,
+                "title" => "Next Page",
+                "display" => "Next",
+            ]);
+            $next = use_template("tmp/forum.template", $params, "get_discussions_page_link", "forum");
+        }
+
+        // Wittle down the discussions until we have no discussions left to create page links.
+        $pagelinks = "";
+		while ($discussion_count > 0) {
+            // At some point we will not show page links and just allow a jump to last page.
 			if ($page_counter > $beforeskipping) {
-				$returnme .= !($pagenum === false) && $pagenum == $lastpage ? ' Last ' : ' <a href="javascript: void(0);" onclick="save_action($(this), $(\'#forum_refresh_' . $forumid . '\')); ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_discussions\',\'&amp;dpagenum=' . $lastpage . '&amp;pageid=' . $category['pageid'] . '&amp;forumid=' . $category['forumid'] . '&amp;catid=' . $category['catid'] . '\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_' . $forumid . '\'); }}, true);"> Last </a>';
-				$countdown = 0;
+                if ($pagenum === false || $pagenum !== $lastpage) {
+                    $params = array_merge($params, [
+                        "dpagenum" => $lastpage,
+                        "title" => "Last Page",
+                        "display" => "Last",
+                    ]);
+                    $pagelinks .= use_template("tmp/forum.template", $params, "get_discussions_page_link", "forum");
+                } else {
+                    $pagelinks .= " Last ";
+                }
+				$discussion_count = 0; // Remove the rest of the discussions from counter.
 			} else {
-				$returnme .= !($pagenum === false) && $pagenum == ($page_counter - 1) ? ' ' . $page_counter . ' ' : ' <a href="javascript: void(0);" onclick="save_action($(this), $(\'#forum_refresh_' . $forumid . '\')); ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_discussions\',\'&amp;dpagenum=' . ($page_counter - 1) . '&amp;pageid=' . $category['pageid'] . '&amp;forumid=' . $category['forumid'] . '&amp;catid=' . $category['catid'] . '\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_' . $forumid . '\'); }}, true);">' . $page_counter . ' </a>';
-				$countdown -= $perpage;
+                if ($pagenum === false || $pagenum !== ($page_counter - 1)) {
+                    $params = array_merge($params, [
+                        "dpagenum" => $page_counter - 1,
+                        "title" => "Page " . $page_counter,
+                        "display" => $page_counter,
+                    ]);
+                    $pagelinks .= use_template("tmp/forum.template", $params, "get_discussions_page_link", "forum");
+                } else {
+                    $pagelinks .= " $page_counter ";
+                }
+				$discussion_count -= $perpage; // Remove a page worth of discussions from counter.
 			}
 			$page_counter++;
 		}
-		if ($page_counter == 2) { return "";}
-	} else { return ""; }
 
-	return '' . $returnme.$next . '</span>';
+		if ($page_counter == 2) { // Only one page, so we don't need a page number link.
+            return "";
+        }
+
+        return '<div class="forum_page_links">Page: ' . $previous . $pagelinks . $next . '</div>';
+
+	} else {
+        return "";
+    }
 }
 
 function first_post($discussionid) {
-	$postid = get_db_field("postid", "forum_posts", "discussionid=$discussionid ORDER BY postid");
+	$postid = get_db_field("MIN(postid)", "forum_posts", "discussionid='$discussionid'");
 	return $postid;
 }
 
@@ -270,14 +431,26 @@ function resort_categories($forumid) {
 }
 
 function insert_blank_forum($pageid) {
-	$title = "Forum"; $type="forum";
+	$title = "Forum";
+    $type = "forum";
 	if ($featureid = execute_db_sql("INSERT INTO forum (pageid) VALUES('$pageid')")) {
 		$area = get_db_field("default_area", "features", "feature='forum'");
-		$sort = get_db_count("SELECT * FROM pages_features WHERE pageid='$pageid' AND area='$area'") + 1;
-		execute_db_sql("INSERT INTO pages_features (pageid,feature,sort,area,featureid) VALUES('$pageid','forum','$sort','$area','$featureid')");
-		$catid = execute_db_sql("INSERT INTO forum_categories (forumid,pageid,title,shoutbox) VALUES('$featureid','$pageid','Shoutbox',1)");
-		$discussionid = execute_db_sql("INSERT INTO forum_discussions (catid,forumid,pageid,title,shoutbox) VALUES('$catid','$featureid','$pageid','Shoutbox',1)");
-		execute_db_sql("INSERT INTO settings (type,pageid,featureid,setting_name,setting,extra,defaultsetting) VALUES('$type'," . $pageid.", " . $featureid.",'feature_title','$title',NULL,'$title'),('$type'," . $pageid.", " . $featureid.",'shoutboxlimit','10',NULL,'10'),('$type'," . $pageid.", " . $featureid.",'postsperpage','10',NULL,'10'),('$type'," . $pageid.", " . $featureid.",'discussionsperpage','10',NULL,'10')");
+		$sort = get_db_count("SELECT *
+                              FROM pages_features
+                              WHERE pageid = '$pageid'
+                              AND area = '$area'") + 1;
+		execute_db_sql("INSERT INTO pages_features (pageid, feature, sort, area, featureid)
+                                             VALUES('$pageid', 'forum', '$sort', '$area', '$featureid')");
+	
+        $catid = execute_db_sql("INSERT INTO forum_categories (forumid, pageid, title, shoutbox) 
+                                                        VALUES('$featureid', '$pageid', 'Shoutbox', 1)");
+		$discussionid = execute_db_sql("INSERT INTO forum_discussions (catid, forumid, pageid, title, shoutbox)
+                                                                VALUES('$catid', '$featureid', '$pageid', 'Shoutbox', 1)");
+		execute_db_sql("INSERT INTO settings (type, pageid, featureid, setting_name, setting, extra, defaultsetting)
+                                       VALUES('$type', '$pageid', '$featureid', 'feature_title', '$title', NULL, '$title'),
+                                             ('$type', '$pageid', '$featureid', 'shoutboxlimit', '10', NULL, '10'),
+                                             ('$type', '$pageid', '$featureid', 'postsperpage', '10', NULL, '10'),
+                                             ('$type', '$pageid', '$featureid', 'discussionsperpage', '10', NULL, '10')");
 
 		return $featureid;
 	}

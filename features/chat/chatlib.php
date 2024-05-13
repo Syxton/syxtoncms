@@ -3,18 +3,18 @@
 * chatlib.php - Chat function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 1/17/2011
+* Date: 5/14/2024
 * Revision: 0.3.7
 ***************************************************************************/
 
-if (!isset($LIBHEADER)) {
+if (!LIBHEADER) {
 	$sub = './';
 	while (!file_exists($sub . 'lib/header.php')) {
 		$sub = $sub == './' ? '../' : $sub . '../';
 	}
 	include($sub . 'lib/header.php'); 
 }
-$CHATLIB = true;
+define('CHATLIB', true);
 
 function display_chat($pageid, $area, $featureid) {
 global $CFG, $USER, $ROLES, $PAGE;
@@ -36,9 +36,9 @@ global $CFG, $USER, $ROLES, $PAGE;
 	if ((is_logged_in() && user_is_able($USER->userid, "chat", $pageid)) || (!is_logged_in() && role_is_able($ROLES->visitor,"chat", $pageid))) {
         $styles=get_styles($pageid, $PAGE->themeid);
 		if ($area == "middle") { 
-		  $content .= '<div style="width:100%;"><iframe id="myframe" onload="resizeCaller();" src="' . $CFG->wwwroot . '/features/chat/plugin/index.php?pageid=' . $pageid . '" frameborder="0" style="background-color:' . $styles['contentbgcolor'] . ';overflow:hidden;height:500px;width:100%;"></iframe></div>';
+			$content .= '<div style="width:100%;"><iframe id="myframe" onload="resizeCaller();" src="' . $CFG->wwwroot . '/features/chat/plugin/index.php?pageid=' . $pageid . '" frameborder="0" style="background-color:' . $styles['contentbgcolor'] . ';overflow:hidden;height:500px;width:100%;"></iframe></div>';
 		} else { 
-		  $content .= '<span class="centered_span">Cannot be used as a side panel.</span>'; 
+			$content .= '<span class="centered_span">Cannot be used as a side panel.</span>'; 
         }
 	} else {
 		$content .= '<span class="centered_span">You do not have permission to join this chat.</span>';
@@ -88,9 +88,9 @@ function get_course_channels($pageid) {
 global $CFG;
 	$channels_array = [];
 	if ($channels = get_db_result("SELECT * FROM chat WHERE pageid='$pageid'")) {
-    	while ($channel = fetch_row($channels)) {
+  		while ($channel = fetch_row($channels)) {
 			$channels_array[$channel['channel_id']] = $channel['name'];
-    	}	   
+  		}		 
 	}
 	return $channels_array;
 }
@@ -100,19 +100,19 @@ global $CFG;
     $i=0; $channel_list=""; 
     
     if ($channels = get_db_result("SELECT * FROM chat WHERE pageid='$pageid'")) {
-    	while ($channel = fetch_row($channels)) {
-    		$channel_list .= $channel_list == "" ? $channel["channel_id"] : "," . $channel["channel_id"];	
-    	}        
+  		while ($channel = fetch_row($channels)) {
+  			$channel_list .= $channel_list == "" ? $channel["channel_id"] : "," . $channel["channel_id"];	
+  		}        
     }
    
 	if ($users_list = users_that_have_ability_in_page("chat", $pageid)) {
-    	while ($user = fetch_row($users_list)) {
-    		$users[$i]['userRole'] = user_is_able($user["userid"], "moderate", $pageid) ? 2:0;
-    		$users[$i]['userName'] = substr($user["fname"],0,1) . "." . $user["lname"];
-    		$users[$i]['password'] = "";
-    		$users[$i]['channels'] = explode(",", $channel_list);
-    		$i++;
-    	}	   
+  		while ($user = fetch_row($users_list)) {
+  			$users[$i]['userRole'] = user_is_able($user["userid"], "moderate", $pageid) ? 2:0;
+  			$users[$i]['userName'] = substr($user["fname"],0,1) . "." . $user["lname"];
+  			$users[$i]['password'] = "";
+  			$users[$i]['channels'] = explode(",", $channel_list);
+  			$i++;
+  		}		 
 	}
 
     return $users;

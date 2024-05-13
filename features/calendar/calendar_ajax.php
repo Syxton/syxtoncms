@@ -3,12 +3,20 @@
 * calendar_ajax.php - Calendar backend ajax script
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 4/09/2013
+* Date: 5/14/2024
 * Revision: 1.0.7
 ***************************************************************************/
 
-if (!isset($CFG)) { include('../header.php'); } 
-if (!isset($CALENDARLIB)) { include_once($CFG->dirroot . '/features/calendar/calendarlib.php'); }
+if (!isset($CFG)) {
+	$sub = '';
+	while (!file_exists($sub . 'header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
+	}
+	include($sub . 'header.php');
+}
+
+if (!defined('CALENDARLIB')) { include_once($CFG->dirroot . '/features/calendar/calendarlib.php'); }
+
 update_user_cookie();
 
 callfunction();
@@ -41,7 +49,7 @@ global $CFG, $MYVARS;
  	if ($result = get_db_result($SQL)) {
         $eventlist = '';
         while ($event = fetch_row($result)) {
-        	if ($eventlist != "") { 
+      		if ($eventlist != "") { 
                 $eventlist .= '<br />'; $firstevent = ''; 
             } else { 
                 $firstevent = '<span style="width:35px;text-align:center;float:right;font-size:.7em;color:gray;">hide<br /><span id="cal_countdown"></span></span>';

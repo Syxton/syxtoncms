@@ -3,18 +3,18 @@
 * calendarlib.php - Calendar function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 1/17/2011
+* Date: 5/14/2024
 * Revision: 1.2.8
 ***************************************************************************/
 
-if (!isset($LIBHEADER)) {
+if (!LIBHEADER) {
 	$sub = './';
 	while (!file_exists($sub . 'lib/header.php')) {
 		$sub = $sub == './' ? '../' : $sub . '../';
 	}
 	include($sub . 'lib/header.php'); 
 }
-$CALENDARLIB = true;
+define('CALENDARLIB', true);
 
 function display_calendar($pageid, $area, $featureid) {
 global $CFG, $USER, $ROLES;
@@ -63,7 +63,7 @@ function get_small_calendar($pageid, $userid = 0, $month = false, $year = false,
         $prevyear = $year;
     }
     $returnme = '<table class="mainTable2"><tr><td style="text-align:center" colspan="7" class="monthRow">
-              		<a href="javascript: void(0);" onclick="ajaxapi(\'/features/calendar/calendar_ajax.php\',\'print_calendar\',\'&amp;displaymode=0&amp;userid=' .
+            			<a href="javascript: void(0);" onclick="ajaxapi(\'/features/calendar/calendar_ajax.php\',\'print_calendar\',\'&amp;displaymode=0&amp;userid=' .
         $userid . '&amp;pageid=' . $pageid . '&amp;month=' . $prevmonth . '&amp;year=' .
         $prevyear . '\',function() { simple_display(\'calendar_div\');});">&laquo;</a>&nbsp;';
     $monthName = date('F', mktime(0, 0, 0, $month, 1, $year));
@@ -80,18 +80,18 @@ function get_small_calendar($pageid, $userid = 0, $month = false, $year = false,
     $returnme .= '&nbsp;<a href="javascript: void(0);" onclick="ajaxapi(\'/features/calendar/calendar_ajax.php\',\'print_calendar\',\'&amp;displaymode=0&amp;userid=' .
         $userid . '&amp;pageid=' . $pageid . '&amp;month=' . $nextmonth . '&amp;year=' .
         $nextyear . '\',function() { simple_display(\'calendar_div\');});">&raquo;</a>
-      			</td>
-	      	</tr>
-	      	<tr class="dayNamesText">
-	      		<td style="width:14.5%;text-align:center">S</td>
-	      		<td style="width:14.5%;text-align:center">M</td>
-	      		<td style="width:14.5%;text-align:center">T</td>
-	      		<td style="width:14.5%;text-align:center">W</td>
-	      		<td style="width:14.5%;text-align:center">T</td>
-	      		<td style="width:14.5%;text-align:center">F</td>
-	      		<td style="width:14.5%;text-align:center">S</td>
-	      	</tr>
-	      	<tr class="rows">';
+    				</td>
+		  		</tr>
+		  		<tr class="dayNamesText">
+		  			<td style="width:14.5%;text-align:center">S</td>
+		  			<td style="width:14.5%;text-align:center">M</td>
+		  			<td style="width:14.5%;text-align:center">T</td>
+		  			<td style="width:14.5%;text-align:center">W</td>
+		  			<td style="width:14.5%;text-align:center">T</td>
+		  			<td style="width:14.5%;text-align:center">F</td>
+		  			<td style="width:14.5%;text-align:center">S</td>
+		  		</tr>
+		  		<tr class="rows">';
             
     for ($i = 0; $i < $theday; $i++) {
         $returnme .= '<td>&nbsp;</td>';
@@ -121,9 +121,9 @@ function get_small_calendar($pageid, $userid = 0, $month = false, $year = false,
                 $returnme .= '<td style="text-align:center;' . $category_colors . ' cursor: pointer;" onclick="ajaxapi(\'/features/calendar/calendar_ajax.php\',\'get_date_info\',\'&amp;show_site_events=' . $show_site_events . '&amp;pageid=' . $pageid . '&amp;tm=' . $tm . '&amp;tn=' . $tn . '&amp;tp=' . $tp . '&amp;list_day=' . $list_day . '\',function() { simple_display(\'day_info\'); show_section(\'day_info\'); var temptimer=10; countdown(\'cal_countdown\',temptimer,function() { hide_section(\'day_info\'); });})">';
                 db_free_result($result);
             }
-        }elseif ($tn > $tm && $tn < $tp && date('j') == $list_day && date('m') == $month && date('Y') == $year) {
+        } elseif ($tn > $tm && $tn < $tp && date('j') == $list_day && date('m') == $month && date('Y') == $year) {
             $returnme .= '<td style="text-align:center;background-color: #FFC18A; color: #CF0000;">';
-        }elseif ($theday == 6 or $theday == 0) {
+        } elseif ($theday == 6 or $theday == 0) {
             $returnme .= '<td style="text-align:center;background-color: #EEEEEE; color: #666666;">';
         } else {
             $returnme .= '<td style="text-align:center;background-color: #CCCCCC; color: #333333;">';
@@ -170,7 +170,7 @@ global $CFG;
         $prevyear = $year;
     }
     $returnme = '<table class="mainTableLarge"><tr><td style="text-align:center;" colspan="7" class="monthRowLarge">
-              		<a href="javascript: void(0);" onclick="ajaxapi(\'/features/calendar/calendar_ajax.php\',\'print_calendar\',\'&amp;displaymode=1&amp;userid=' .
+            			<a href="javascript: void(0);" onclick="ajaxapi(\'/features/calendar/calendar_ajax.php\',\'print_calendar\',\'&amp;displaymode=1&amp;userid=' .
         $userid . '&amp;pageid=' . $pageid . '&amp;month=' . $prevmonth . '&amp;year=' .
         $prevyear . '\',function() { simple_display(\'calendar_div\');});">&laquo;</a>&nbsp;';
     $monthName = date('F', mktime(0, 0, 0, $month, 1, $year));
@@ -186,18 +186,18 @@ global $CFG;
     $returnme .= '&nbsp;<a href="javascript: void(0);" onclick="ajaxapi(\'/features/calendar/calendar_ajax.php\',\'print_calendar\',\'&amp;displaymode=1&amp;userid=' .
         $userid . '&amp;pageid=' . $pageid . '&amp;month=' . $nextmonth . '&amp;year=' .
         $nextyear . '\',function() { simple_display(\'calendar_div\');});">&raquo;</a>
-  			</td>
-      	</tr>
-      	<tr class="dayNamesTextLarge">
-      		<td style="text-align:center">S</td>
-      		<td style="text-align:center">M</td>
-      		<td style="text-align:center">T</td>
-      		<td style="text-align:center">W</td>
-      		<td style="text-align:center">T</td>
-      		<td style="text-align:center">F</td>
-      		<td style="text-align:center">S</td>
-      	</tr>
-      	<tr class="rowsLarge">';
+				</td>
+    		</tr>
+    		<tr class="dayNamesTextLarge">
+    			<td style="text-align:center">S</td>
+    			<td style="text-align:center">M</td>
+    			<td style="text-align:center">T</td>
+    			<td style="text-align:center">W</td>
+    			<td style="text-align:center">T</td>
+    			<td style="text-align:center">F</td>
+    			<td style="text-align:center">S</td>
+    		</tr>
+    		<tr class="rowsLarge">';
     for ($i = 0; $i < $theday; $i++) {
         $returnme .= '<td>&nbsp;</td>';
     }
@@ -227,9 +227,9 @@ global $CFG;
                 $returnme .= '<td style="text-align:center;' . $category_colors . ' cursor: pointer;" onclick="ajaxapi(\'/features/calendar/calendar_ajax.php\',\'get_date_info\',\'&amp;show_site_events=' . $show_site_events . '&amp;pageid=' . $pageid . '&amp;tm=' . $tm . '&amp;tn=' . $tn . '&amp;tp=' . $tp . '&amp;list_day=' . $list_day . '\',function() { simple_display(\'day_info\'); show_section(\'day_info\'); clearTimeout(temptimer); temptimer = setTimeout(function() {hide_section(\'day_info\')},10000); var temptimer2=10; countdown(\'cal_countdown\',temptimer2);})">';
                 db_free_result($result);
             }
-        }elseif ($tn > $tm && $tn < $tp && date('j') == $list_day && date('m') == $month && date('Y') == $year) {
+        } elseif ($tn > $tm && $tn < $tp && date('j') == $list_day && date('m') == $month && date('Y') == $year) {
             $returnme .= '<td style="text-align:center;background-color: #FFC18A; color: #CF0000;">';
-        }elseif ($theday == 6 or $theday == 0) {
+        } elseif ($theday == 6 or $theday == 0) {
             $returnme .= '<td style="text-align:center;background-color: #EEEEEE; color: #666666;">';
         } else {
             $returnme .= '<td style="text-align:center;background-color: #CCCCCC; color: #333333;">';
@@ -240,7 +240,7 @@ global $CFG;
                 $returnme .= '<br><span>Today</span>';
             }
             $returnme .= '<br><span>Event info.</span>';
-        }elseif ($tn > $tm && $tn < $tp && date('j') == $list_day && date('m') == $month && date('Y') == $year) {
+        } elseif ($tn > $tm && $tn < $tp && date('j') == $list_day && date('m') == $month && date('Y') == $year) {
             $returnme .= '<br><span>Today</span>';
         }
         $returnme .= '</td>';

@@ -1,0 +1,33 @@
+get_discussions_page_link||
+    <a title="Get ||title|| of Forum Discussions"
+        href="javascript: void(0);"
+        onclick="save_action($(this), $('#forum_refresh_||forumid||'));
+        ajaxapi('/features/forum/forum_ajax.php',
+                'get_forum_discussions',
+                '&amp;dpagenum=||dpagenum||&amp;pageid=||pageid||&amp;forumid=||forumid||&amp;catid=||catid||',
+                function() {
+                    if (xmlHttp.readyState == 4) {
+                        simple_display('forum_div_||forumid||');
+                    }
+                },
+                true);">
+        &nbsp;||display||&nbsp;
+    </a>
+||get_discussions_page_link
+
+get_posts_page_link||
+    <a title="Get ||title|| of Forum Posts"
+        href="javascript: void(0);"
+        onclick="save_action($(this), $('#forum_refresh_||forumid||'));
+        ajaxapi('/features/forum/forum_ajax.php',
+                'get_forum_posts',
+                '&amp;pagenum=||pagenum||&amp;pageid=||pageid||&amp;forumid=||forumid||&amp;catid=||catid||&amp;discussionid=||discussionid||',
+                function() {
+                    if (xmlHttp.readyState == 4) {
+                        simple_display('forum_div_||forumid||');
+                    }
+                },
+                true);">
+        &nbsp;||display||&nbsp;
+    </a>
+||get_posts_page_link

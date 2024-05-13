@@ -630,7 +630,7 @@ function check_file_extension($extension,$config) {
 			$check = true;
 		}
     } else {
-    	if (!in_array(mb_strtolower($extension), $conf['ext_blacklist'])) {
+  		if (!in_array(mb_strtolower($extension), $conf['ext_blacklist'])) {
 			$check = true;
 		}
     }
@@ -1005,10 +1005,10 @@ function get_file_by_url($url)
 	if (ini_get('allow_url_fopen'))
 	{
 		$arrContextOptions=array(
-		    "ssl"=>array(
-		        "verify_peer"=>false,
-		        "verify_peer_name"=>false,
-		    ),
+			  "ssl"=>array(
+			      "verify_peer"=>false,
+			      "verify_peer_name"=>false,
+			  ),
 		);
 		return file_get_contents($url, false, stream_context_create($arrContextOptions));
 	}

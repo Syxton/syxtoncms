@@ -3,11 +3,18 @@
 * pics_ajax.php - Pics feature ajax backend
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 8/16/2011
+* Date: 5/14/2024
 * Revision: 1.7.4
 ***************************************************************************/
-if (!isset($CFG)) { include('../header.php'); } 
-if (!isset($PICSLIB)) include_once ($CFG->dirroot . '/features/pics/picslib.php');
+if (!isset($CFG)) {
+	$sub = '';
+	while (!file_exists($sub . 'header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
+	}
+	include($sub . 'header.php');
+}
+
+if (!defined('PICSLIB')) include_once ($CFG->dirroot . '/features/pics/picslib.php');
 
 update_user_cookie();
 
@@ -91,7 +98,7 @@ global $CFG, $MYVARS;
                     $new = $CFG->dirroot . '/features/pics/files/' . $CFG->SITEID. "/" . $site_featureid. "/" . $row["imagename"];
                     copy_file($old, $new);
                     delete_file($old);
-                }elseif ($pageid == $CFG->SITEID && $pageid != $row["pageid"]) {  //SITE is dealing with images from another page
+                } elseif ($pageid == $CFG->SITEID && $pageid != $row["pageid"]) {  //SITE is dealing with images from another page
                     execute_db_sql("UPDATE pics SET siteviewable=0 WHERE galleryid='$galleryid'");
                 } else { //nobody is using it, so delete it
                     $delete = true;
@@ -191,18 +198,18 @@ global $CFG, $MYVARS;
                                    #-----------------------------------------------------------#
                                    if (move_uploaded_file($file_tmp, $upload_dir.$file_name)) {
                                         $dateadded = get_timestamp();
-        								if ($newgallery == 1 && !$galleryid) {
-        							    	$gallery_name = addslashes($MYVARS->GET['gallery_name']);
-        							    	$galleryid = execute_db_sql("INSERT INTO pics_galleries (pageid,featureid,name) VALUES('$pageid','$featureid','$gallery_name')");
-        								}elseif ($newgallery != 1) {
-        							    	$galleryid = $MYVARS->GET['gallery_name'];
-        							    	$gallery_name = get_db_field("name", "pics_galleries", "galleryid='$galleryid'");
-        							    }
-        								
-        								execute_db_sql("INSERT INTO pics (pageid,featureid,galleryid,gallery_title,imagename,siteviewable,caption,alttext,dateadded) VALUES('$pageid','$featureid','$galleryid','$gallery_name','$file_name','0', '', '','$dateadded')");
-        							    resizeImage($upload_dir.$file_name, $upload_dir.$file_name,"600", "600");
+      									if ($newgallery == 1 && !$galleryid) {
+      											$gallery_name = addslashes($MYVARS->GET['gallery_name']);
+      											$galleryid = execute_db_sql("INSERT INTO pics_galleries (pageid,featureid,name) VALUES('$pageid','$featureid','$gallery_name')");
+      									} elseif ($newgallery != 1) {
+      											$galleryid = $MYVARS->GET['gallery_name'];
+      											$gallery_name = get_db_field("name", "pics_galleries", "galleryid='$galleryid'");
+      									  }
+      									
+      									execute_db_sql("INSERT INTO pics (pageid,featureid,galleryid,gallery_title,imagename,siteviewable,caption,alttext,dateadded) VALUES('$pageid','$featureid','$galleryid','$gallery_name','$file_name','0', '', '','$dateadded')");
+      									  resizeImage($upload_dir.$file_name, $upload_dir.$file_name,"600", "600");
                                         $success++;
-        						   }#end of (move_uploaded_file).
+      								 }#end of (move_uploaded_file).
                              }#end of (file_exists).
                        }#end of (file_size).
                  }#end of (limitedext).

@@ -3,13 +3,20 @@
 * forum.php - Forum modal page lib
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 3/25/2014
+* Date: 5/14/2024
 * Revision: 0.2.8
 ***************************************************************************/
 
 if (empty($_POST["aslib"])) {
-    if (!isset($CFG)) { include('../header.php'); }
-    if (!isset($FORUMLIB)) { include_once($CFG->dirroot . '/features/forum/forumlib.php'); }
+    if (!isset($CFG)) {
+		$sub = '';
+		while (!file_exists($sub . 'header.php')) {
+			$sub = $sub == '' ? '../' : $sub . '../';
+		}
+		include($sub . 'header.php');
+	}
+
+    if (!defined('FORUMLIB')) { include_once($CFG->dirroot . '/features/forum/forumlib.php'); }
 
     callfunction();
 
@@ -36,18 +43,18 @@ global $CFG, $MYVARS, $USER;
 
 function createforumcategory() {
 global $MYVARS, $CFG, $USER;
-	if (!isset($VALIDATELIB)) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
+	if (!defined('VALIDATELIB')) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
 
 	$forumid = dbescape($MYVARS->GET['forumid']); $pageid = dbescape($MYVARS->GET['pageid']);
 	$title = "";
 
 	if (isset($MYVARS->GET["catid"])) {
-        if (!user_is_able($USER->userid, "editforumcategory", $pageid)) { debugging(error_string("no_permission", ["editforumcategory"]), 2); return; }
+        if (!user_is_able($USER->userid, "editforumcategory", $pageid)) { trigger_error(error_string("no_permission", ["editforumcategory"]), E_USER_WARNING); return; }
 		$category = get_db_row("SELECT * FROM forum_categories WHERE catid=" . dbescape($MYVARS->GET["catid"]));
 		$title = $category["title"];
 	} else {
-        if (!user_is_able($USER->userid, "createforumcategory", $pageid)) { debugging(error_string("no_permission", ["createforumcategory"]), 2); return; }
-		if (!user_is_able($USER->userid, "createforumcategory", $pageid)) { debugging(error_string("generic_permissions"), 2); return;}
+        if (!user_is_able($USER->userid, "createforumcategory", $pageid)) { trigger_error(error_string("no_permission", ["createforumcategory"]), E_USER_WARNING); return; }
+		if (!user_is_able($USER->userid, "createforumcategory", $pageid)) { trigger_error(error_string("generic_permissions"), E_USER_WARNING); return;}
 	}
 
 	if (isset($MYVARS->GET["catid"])) { echo create_validation_script("new_category_form" , 'ajaxapi(\'/features/forum/forum_ajax.php\',\'edit_category\',\'&catid=' . dbescape($MYVARS->GET["catid"]) . '&catname=\'+escape(document.getElementById(\'catname\').value),function() { simple_display(\'category_div\');}); close_modal();');
@@ -69,14 +76,18 @@ global $MYVARS, $CFG, $USER;
 
 function show_forum_editor() {
 global $CFG, $MYVARS;
-	$postid = $MYVARS->GET["postid"];
-    $quote = $MYVARS->GET["quote"];
-    $edit = $MYVARS->GET["edit"];
+	$postid = $MYVARS->GET["postid"] ?? false;
+    $discussionid = $MYVARS->GET["discussionid"] ?? false;
+    $quote = $MYVARS->GET["quote"] ?? false;
+    $edit = $MYVARS->GET["edit"] ?? false;
+    $pagenum = $MYVARS->GET["pagenum"] ?? 0;
+    $forumid = $MYVARS->GET["forumid"] ?? false;
 
-	$forumid = get_db_field("forumid", "forum_discussions", "discussionid IN (SELECT discussionid FROM forum_posts WHERE postid = '$postid')");
-	$pagenum = $MYVARS->GET["pagenum"];
-
-	$value = $edit == 1 ? get_db_field("message", "forum_posts", "postid='$postid'") : "";
+    $value = "";
+    if (!$forumid && $postid) {
+        $forumid = get_db_field("forumid", "forum_discussions", "discussionid IN (SELECT discussionid FROM forum_posts WHERE postid = '$postid')");
+        $value = $edit == 1 ? get_db_field("message", "forum_posts", "postid='$postid'") : "";
+    }
 
 	echo '<img id="edit_area_' . $forumid . '" name="edit_area_' . $forumid . '" src="' . $CFG->wwwroot . '/images/edit_area.gif" />';
 	if ($quote == 1) {
@@ -87,15 +98,15 @@ global $CFG, $MYVARS;
         echo '<br /><span style="font-size:.8em; color:#CCCCCC;">Editing Post: #' . $postid . '</span>';
     }
 
-    echo get_editor_box(["initialvalue" => stripslashes($value), "type" => "Forum", "height" => "400","width" => "700"]);
-	echo '<input type="button" style="margin: 10px auto;display: block;"
+    echo get_editor_box(["initialvalue" => stripslashes($value), "type" => "Forum", "height" => "400", "width" => "700"]) . '
+		 <input type="button" style="margin: 10px auto;display: block;"
                 name="forum_submit"
                 id="forum_submit"
                 value="Submit"
                 onclick="if (' . get_editor_value_javascript() . ' != \'\') {
                             ajaxapi(\'/features/forum/forum_ajax.php\',
                                     \'post\',
-                                    \'&message=\' + escape(' . get_editor_value_javascript() . ') + \'&postid=' . $postid . '&quote=' . $quote . '&edit=' . $edit . '\',
+                                    \'&message=\' + escape(' . get_editor_value_javascript() . ') + \'&amp;forumid=' . $forumid . '&amp;discussionid=' . $discussionid . '&amp;postid=' . $postid . '&amp;quote=' . $quote . '&amp;edit=' . $edit . '\',
                                     function() {
                                         close_modal();
                                     }
@@ -127,11 +138,34 @@ global $CFG, $MYVARS;
 		$title = $discussion["title"];
 	}
 
-	echo '<img id="edit_area_' . $forumid . '" name="edit_area_' . $forumid . '" src="' . $CFG->wwwroot . '/images/edit_area.gif" /><br />';
-	echo '<br /><span style="padding:2px;"><strong>Discussion Title</strong>: <input type="text" size="80" id="discussion_title" value="' . $title . '" /></span><br /><br />';
-	echo get_editor_box(["initialvalue" => stripslashes($message), "type" => "Forum", "height" => "300"]);
-	if (isset($MYVARS->GET["discussionid"])) { echo '<span style="position:relative; float:right;"><input type="button" name="forum_submit" id="forum_submit" value="Submit" onclick="if (' . get_editor_value_javascript() . ' != \'\' && document.getElementById(\'discussion_title\').value != \'\') { ajaxapi(\'/features/forum/forum_ajax.php\',\'create_discussion\',\'&message=\'+escape(' . get_editor_value_javascript() . ')+\'&title=\'+escape(document.getElementById(\'discussion_title\').value)+\'&pageid=' . $pageid . '&forumid=' . $forumid . '&catid=' . $catid . '&postid=' . $postid . '&discussionid=' . $discussionid . '\',function() { close_modal(); }); }" /></span>';
-	} else { echo '<span style="position:relative; float:right;"><input type="button" name="forum_submit" id="forum_submit" value="Submit" onclick="javascript: if (' . get_editor_value_javascript() . ' != \'\' && document.getElementById(\'discussion_title\').value != \'\') { ajaxapi(\'/features/forum/forum_ajax.php\',\'create_discussion\',\'&message=\'+escape(' . get_editor_value_javascript() . ')+\'&title=\'+escape(document.getElementById(\'discussion_title\').value)+\'&pageid=' . $pageid . '&forumid=' . $forumid . '&catid=' . $catid . '\',function() { close_modal(); });  }" /></span>';}
+	echo '<img id="edit_area_' . $forumid . '" name="edit_area_' . $forumid . '" src="' . $CFG->wwwroot . '/images/edit_area.gif" />
+			<br /><br />
+			<span style="padding:2px;">
+				<strong>Discussion Title</strong>
+				<input type="text" size="80" id="discussion_title" value="' . $title . '" />
+			</span>
+			<br /><br />
+			' . get_editor_box(["initialvalue" => stripslashes($message), "type" => "Forum", "height" => "300"]);
+	
+	$existingpost = "";
+	if (isset($MYVARS->GET["discussionid"])) {
+		$existingpost = '&postid=' . $postid . '&discussionid=' . $discussionid;
+	}
+
+	$saveaction = 'if (' . get_editor_value_javascript() . ' != \'\' && document.getElementById(\'discussion_title\').value != \'\') {
+						ajaxapi(\'/features/forum/forum_ajax.php\',
+								\'create_discussion\',
+								\'&message=\' + escape(' . get_editor_value_javascript() . ') + \'&title=\' + escape(document.getElementById(\'discussion_title\').value)+\'&pageid=' . $pageid . '&forumid=' . $forumid . '&catid=' . $catid . $existingpost . '\',
+								function() {
+									close_modal();
+								});
+					}';
+
+	echo '<div style="text-align:center">
+			<br />
+			<input type="button" name="forum_submit" id="forum_submit" value="Submit"
+					 onclick="' . $saveaction . '" />
+			</div>';
 }
 
 ?>

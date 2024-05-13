@@ -7,7 +7,7 @@ if (!isset($CFG)) {
   include($sub . 'config.php'); 
 }
 include_once($CFG->dirroot . '/lib/header.php');
-if (!isset($EVENTSLIB)) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
+if (!defined('EVENTSLIB')) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 
 // STEP 1: Read POST data
 
@@ -98,18 +98,18 @@ if (strcmp ($res, "VERIFIED") == 0) {
 
       $touser = new \stdClass;
       $touser->fname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_First'");
-  		$touser->lname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_Last'");
-  		$touser->email = get_db_field("email", "events_registrations", "regid='$regid'");
+			$touser->lname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_Last'");
+			$touser->email = get_db_field("email", "events_registrations", "regid='$regid'");
 
       $fromuser = new \stdClass;
       $fromuser->email = $CFG->siteemail;
-  		$fromuser->fname = $CFG->sitename;
-  		$fromuser->lname = "";
+			$fromuser->fname = $CFG->sitename;
+			$fromuser->lname = "";
 
       if (!empty($touser->email)) {
         $message = registration_email($regids[$i], $touser);
         send_email($fromuser, $fromuser, $CFG->sitename . " Registration", $message);
-    		send_email($touser, $fromuser, $CFG->sitename . " Registration", $message);
+  			send_email($touser, $fromuser, $CFG->sitename . " Registration", $message);
       }
 			$i++;
 		}

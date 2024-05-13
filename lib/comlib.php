@@ -3,12 +3,12 @@
 * comlib.php - Communication Library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 2/25/2014
+* Date: 5/14/2024
 * Revision: 0.0.8
 ***************************************************************************/
 
-if (!isset($LIBHEADER)) { include('header.php'); }
-$COMLIB = true;
+if (!LIBHEADER) { include('header.php'); }
+define('COMLIB', true);
 
 function send_email($touser, $fromuser, $subject, $message, $cc = false, $bcc = false) {
  global $MYVARS, $CFG;
@@ -30,8 +30,8 @@ function send_email($touser, $fromuser, $subject, $message, $cc = false, $bcc = 
 		if ($bcc) { $headers['Bcc'] = $bcc; }
 
 		if (@mail($touser->email, $subject, $message, $headers, "-f" . $fromuser->email)) {
-      		$success = true;
-    	}
+    			$success = true;
+  		}
 	} else {
 		if (@smtp($touser, $fromuser, $subject, $message, $cc, $bcc)) {
 			$success = true;
@@ -63,9 +63,9 @@ function smtp($touser, $fromuser, $subject, $message, $cc = false, $bcc = false)
 		'Reply-To' => $from,
 		'Return-Path'=> $fromuser->email,
 		'From' => $from,
-	  	'Cc' => $cc,
-	  	'Bcc' => $bcc,
-	  	'Subject' => $subject,
+			'Cc' => $cc,
+			'Bcc' => $bcc,
+			'Subject' => $subject,
 	];
 
 	$smtpinfo["host"] = $CFG->smtp;

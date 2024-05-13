@@ -3,18 +3,18 @@
 * newslib.php - News function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 8/19/2013
+* Date: 5/14/2024
 * Revision: 2.8.3
 ***************************************************************************/
 
-if (!isset($LIBHEADER)) {
+if (!LIBHEADER) {
 	$sub = './';
 	while (!file_exists($sub . 'lib/header.php')) {
 		$sub = $sub == './' ? '../' : $sub . '../';
 	}
 	include($sub . 'lib/header.php'); 
 }
-$NEWSLIB = true;
+define('NEWSLIB', true);
 
 //NEWSLIB Config
 $CFG->news = new \stdClass;
@@ -56,28 +56,28 @@ $returnme = ''; $section_content = ""; $toggle = "";
 				$section_content .= get_section_archives($pageid, $featureid, NULL, $area);
 				if (empty($section_content)) { $section_content = "No news added yet"; }
 				$buttons = get_button_layout("news_features", $featureid, $pageid);
-				$returnme .= get_css_box($title, $section_content, $buttons,NULL,"news", $featureid);
+				$returnme .= get_css_box($title, $section_content, $buttons, NULL, "news", $featureid);
 			}
 
 	} else { //User is signed in
 
 		if (user_is_able($USER->userid, 'viewnews', $pageid)) {
 			if (is_logged_in()) {
-      	$rss = make_modal_links(array("title" => "News RSS Feed", "path" => $CFG->wwwroot . "/pages/rss.php?action=rss_subscribe_feature&amp;feature=news&amp;pageid=$pageid&amp;featureid=$featureid", "width" => "640", "styles" => "position: relative;top: 4px;padding-right:2px;", "height" => "400", "image" => $CFG->wwwroot . "/images/small_rss.png"));
+    		$rss = make_modal_links(["title" => "News RSS Feed", "path" => $CFG->wwwroot . "/pages/rss.php?action=rss_subscribe_feature&amp;feature=news&amp;pageid=$pageid&amp;featureid=$featureid", "width" => "640", "styles" => "position: relative;top: 4px;padding-right:2px;", "height" => "400", "image" => $CFG->wwwroot . "/images/small_rss.png"]);
       }
 
 			if ($area == "middle") {
 				if ($pageid == $CFG->SITEID) { //This is the site page
 					$returnme .= '';
 					if ($pages = get_users_news_pages($USER->userid, "LIMIT $limit")) {
-						if ($pagenews = get_pages_news($pages,"LIMIT $limit")) {
+						if ($pagenews = get_pages_news($pages, "LIMIT $limit")) {
 							$newdate=false;
                             foreach ($pagenews as $news) {
                                 if (isset($news->content)) {
                                     $daygraphic = !$newdate || date('j', $newdate) != date('j', $news->submitted) ? get_date_graphic($news->submitted, true) : get_date_graphic($news->submitted, false);
-    								$newdate = $news->submitted;
-    								$section_content .= make_news_table($pageid, $news, $area, $daygraphic);
-    								$section = $news->featureid;
+  									$newdate = $news->submitted;
+  									$section_content .= make_news_table($pageid, $news, $area, $daygraphic);
+  									$section = $news->featureid;
                                 }
                             }
 						}
@@ -109,68 +109,68 @@ global $CFG;
 	$buttons = $standalone ? '' : get_button_layout("news", $pagenews->newsid, $pagenews->pageid);
 	$user = get_db_row("SELECT * FROM users where userid = " . $pagenews->userid);
 	if ($area == "middle") {
-    	$dots = strlen($pagenews->caption) > 350 ? "..." : "";
-    	$returnme = '
-    	<table class="newstable">
+  		$dots = strlen($pagenews->caption) > 350 ? "..." : "";
+  		$returnme = '
+  		<table class="newstable">
             <tr>
                 ' . $daygraphic . '
-                  	<table style="width:100%;border-spacing: 0px;">
-    	     		<tr>
-    		     		<td colspan="2">
-    		     		<div style="font-size:1em; color:red;"><strong>' . stripslashes($pagenews->title) . '</strong></div>
-    					<span style="font-size:.9em">
-    		     		' . substr(stripslashes(strip_tags($pagenews->caption)),0,350).$dots . '
-    		     		</span> ';
-                        $returnme .= !$standalone  && stripslashes($pagenews->content) != "" ? '<span style="font-size:.9em; color:gray;">' . make_modal_links(array("title"=> stripslashes(htmlentities($pagenews->title)),"text" => "[More...]", "path" => action_path("news") . "viewnews&amp;newsonly=1&amp;pageid=$pageid&amp;newsid=$pagenews->newsid", "width" => "98%", "height" => "95%")) . '</span>' : '';
-    					$returnme .= '<div class="hprcp_n" style="margin-top:4px;"><div class="hprcp_e"><div class="hprcp_w"></div></div></div>
-    					<div class="hprcp_head">
-    						<div style="width:100%;vertical-align:middle;color:gray;position:relative;_right:2px;top:-8px;">
-    						<span style="font-size:.85em;line-height:28px;">
-    						Submitted: ' . ago($pagenews->submitted) . ' by ' . stripslashes($user['fname']) . ' ' . stripslashes($user['lname']) . '</span><div style="line-height:0px;position:relative;top:0px;right:0px;font-size:.01em; padding-top:2px;float:right">' . $buttons . '</div>
-    						</div>
-    					</div>
-    	     			</td>
-    	     		</tr>
-    	     	  </table>
-    		  </td>
+                		<table style="width:100%;border-spacing: 0px;">
+  			 			<tr>
+  				 			<td colspan="2">
+  				 			<div style="font-size:1em; color:red;"><strong>' . stripslashes($pagenews->title) . '</strong></div>
+  						<span style="font-size:.9em">
+  				 			' . substr(stripslashes(strip_tags($pagenews->caption)), 0, 350).$dots . '
+  				 			</span> ';
+                        $returnme .= !$standalone  && stripslashes($pagenews->content) != "" ? '<span style="font-size:.9em; color:gray;">' . make_modal_links(["title"=> stripslashes(htmlentities($pagenews->title)),"text" => "[More...]", "path" => action_path("news") . "viewnews&amp;newsonly=1&amp;pageid=$pageid&amp;newsid=$pagenews->newsid", "width" => "98%", "height" => "95%"]) . '</span>' : '';
+  						$returnme .= '<div class="hprcp_n" style="margin-top:4px;"><div class="hprcp_e"><div class="hprcp_w"></div></div></div>
+  						<div class="hprcp_head">
+  							<div style="width:100%;vertical-align:middle;color:gray;position:relative;_right:2px;top:-8px;">
+  							<span style="font-size:.85em;line-height:28px;">
+  							Submitted: ' . ago($pagenews->submitted) . ' by ' . stripslashes($user['fname']) . ' ' . stripslashes($user['lname']) . '</span><div style="line-height:0px;position:relative;top:0px;right:0px;font-size:.01em; padding-top:2px;float:right">' . $buttons . '</div>
+  							</div>
+  						</div>
+  			 				</td>
+  			 			</tr>
+  			 			</table>
+  				</td>
             </tr>
-    	</table>';
+  		</table>';
     } else {
         $dots = strlen($pagenews->caption) > 50 ? "..." : "";
-    	$returnme = '
-    	<table class="newstable">
+  		$returnme = '
+  		<table class="newstable">
             <tr>
-         	<td>
-    		    <table style="width:100%;border-spacing: 0px;">
-    	     		<tr colspan="2">
-    		     		<td>
-    		     		<div style="font-size:1.35em; color:red;">' . stripslashes($pagenews->title) . '</div>
-    					<span style="font-size:1em">
-    		     		' . stripslashes(substr(strip_tags($pagenews->caption),0,50)).$dots . '
-    		     		</span>&nbsp;
-    				 		<span style="font-size:.95em; color:gray;">
-                                ' . make_modal_links(array("title"=> stripslashes(htmlentities($pagenews->title)),"text" => "[More...]", "path" => action_path("news") . "viewnews&amp;pageid=$pageid&amp;newsid=$pagenews->newsid", "width" => "98%", "height" => "95%")) . '
-    				 		</span>
-    					<div class="hprcp_n" style="margin-top:4px;">
-    						<div class="hprcp_e">
-    							<div class="hprcp_w">
-    							</div>
-    						</div>
-    					</div>
-    					<div class="hprcp_head">
-    						<div style="width:100%;vertical-align:middle;color:gray;position:relative;_right:2px;top:-8px;">
-    							<span style="font-size:.85em; float:left;line-height:28px;">
-    							' . ago($pagenews->submitted) . '
-    							</span>
-    							<div style="line-height:0px;position:relative;top:2px;right:2px;font-size:.01em; padding-top:2px;">' . $buttons . '</div>
-    						</div>
-    					</div>
-    	     			</td>
-    	     		</tr>
-    	     	  </table>
-    		  </td>
+       		<td>
+  				  <table style="width:100%;border-spacing: 0px;">
+  			 			<tr colspan="2">
+  				 			<td>
+  				 			<div style="font-size:1.35em; color:red;">' . stripslashes($pagenews->title) . '</div>
+  						<span style="font-size:1em">
+  				 			' . stripslashes(substr(strip_tags($pagenews->caption), 0, 50)).$dots . '
+  				 			</span>&nbsp;
+  					 		<span style="font-size:.95em; color:gray;">
+                                ' . make_modal_links(["title"=> stripslashes(htmlentities($pagenews->title)),"text" => "[More...]", "path" => action_path("news") . "viewnews&amp;pageid=$pageid&amp;newsid=$pagenews->newsid", "width" => "98%", "height" => "95%"]) . '
+  					 		</span>
+  						<div class="hprcp_n" style="margin-top:4px;">
+  							<div class="hprcp_e">
+  								<div class="hprcp_w">
+  								</div>
+  							</div>
+  						</div>
+  						<div class="hprcp_head">
+  							<div style="width:100%;vertical-align:middle;color:gray;position:relative;_right:2px;top:-8px;">
+  								<span style="font-size:.85em; float:left;line-height:28px;">
+  								' . ago($pagenews->submitted) . '
+  								</span>
+  								<div style="line-height:0px;position:relative;top:2px;right:2px;font-size:.01em; padding-top:2px;">' . $buttons . '</div>
+  							</div>
+  						</div>
+  			 				</td>
+  			 			</tr>
+  			 			</table>
+  				</td>
             </tr>
-    	</table>';
+  		</table>';
 	}
 	return $returnme;
 }
@@ -185,13 +185,13 @@ global $CFG;
 		$includesite
 		 ORDER BY ns.pageid,ns.lastupdate DESC $limit";
 	} else {
-    	$SQL = "
-    	SELECT DISTINCT ns.pageidns.lastupdate FROM news_features ns
-    	INNER JOIN roles_assignment ra ON ra.userid=$userid AND ra.pageid = ns.pageid AND confirm=0
-    	INNER JOIN roles_ability ry ON ry.roleid=ra.roleid AND ry.ability='viewnews' AND allow='1'
-    	INNER JOIN pages_features pf on pf.pageid=ns.pageid AND pf.feature='news' AND pf.featureid=ns.featureid
-    	$includesite
-    	 ORDER BY ns.pageid,ns.lastupdate DESC $limit";
+  		$SQL = "
+  		SELECT DISTINCT ns.pageidns.lastupdate FROM news_features ns
+  		INNER JOIN roles_assignment ra ON ra.userid=$userid AND ra.pageid = ns.pageid AND confirm=0
+  		INNER JOIN roles_ability ry ON ry.roleid=ra.roleid AND ry.ability='viewnews' AND allow='1'
+  		INNER JOIN pages_features pf on pf.pageid=ns.pageid AND pf.feature='news' AND pf.featureid=ns.featureid
+  		$includesite
+  		 ORDER BY ns.pageid,ns.lastupdate DESC $limit";
 	}
     return get_db_result($SQL);
 }
@@ -295,7 +295,7 @@ global $CFG;
 							<div class="field_title" style="' . $style3 . '">
 								' . $showarticle . '
 							</div>
-				    	</div>';
+							</div>';
 		return $returnme;
 	} else { 
 		return "";
@@ -373,9 +373,9 @@ function months_with_news($userid, $year, $pagenews=false, $pageid=false, $featu
 			$lastmonth = date("n", $laststamp);
 			$y = 0; $currentmonth = 0;
 			while ($firstmonth >= $lastmonth) {
-				$beginmonth = mktime(0,0,0, $lastmonth,1, $year);
+				$beginmonth = mktime(0, 0, 0, $lastmonth, 1, $year);
 				$daysinmonth = cal_days_in_month(CAL_GREGORIAN, $firstmonth, $year) + 1;
-				$endmonth = mktime(0,0,0, $firstmonth, $daysinmonth, $year);
+				$endmonth = mktime(0, 0, 0, $firstmonth, $daysinmonth, $year);
 				$i=$first;
 				while (isset($pagenews->$i)) {
 					if ($pagenews->$i->submitted >= $beginmonth && $pagenews->$i->submitted <= $endmonth) {
@@ -409,8 +409,8 @@ function years_with_news($userid, $pagenews=false, $pageid=false, $featureid=fal
 		$currentyear = date("Y", $first);
         $y = 0;
 		while ($currentyear >= $firstyear) {
-			$beginyear = mktime(0,0,0,1,1, $currentyear);
-			$endyear = mktime(0,0,0,12,32, $currentyear);
+			$beginyear = mktime(0, 0, 0, 1, 1, $currentyear);
+			$endyear = mktime(0, 0, 0, 12, 32, $currentyear);
 
             foreach ($pagenews as $news) {
                 if ($news->submitted >= $beginyear && $news->submitted <= $endyear) {
@@ -506,11 +506,11 @@ function get_pages_news($pages, $limit = "") {
 global $CFG;
 	$mypages = "";
 	if ($pages) {
-		while ($page = fetch_row($pages,"num")) {
+		while ($page = fetch_row($pages, "num")) {
 			$mypages .= $mypages == "" ? '(pageid=' . $page[0] : ' OR pageid=' . $page[0];
 		} $mypages .= ')';
 
-	  $SQL = "SELECT *
+		$SQL = "SELECT *
 							FROM news
 						 WHERE $mypages
 					ORDER BY submitted DESC
@@ -557,7 +557,7 @@ function closetags($html) {
 	for ($i=0;$i < $len_opened;$i++) {
 		$temp = $openedtags[$i];
 		switch ($openedtags[$i]) {
-			case strstr($selfclosing,", $temp,"):
+			case strstr($selfclosing, ", $temp,"):
 				break;
 			default:
 				if (!in_array($openedtags[$i], $closedtags)) {
@@ -597,21 +597,21 @@ function news_delete($pageid, $featureid = false, $newsid = false) {
 function news_rss($feed, $userid, $userkey) {
 global $CFG;
 	$feeds = "";
-	if ($feed["pageid"] == $CFG->SITEID && $userid) { //This is the site page for people who are members
+	if ($feed["pageid"] == $CFG->SITEID && $userid) { //T his is the site page for people who are members
 		if ($pages = get_users_news_pages($userid, "LIMIT 50")) {
 			if ($pagenews = get_pages_news($pages, "LIMIT 50")) {
                 foreach ($pagenews as $news) {
                     if (isset($news->content)) {
-                       $feeds .= fill_feed($news->title,strip_tags($news->caption), $CFG->wwwroot . '/features/news/news.php?action=viewnews&key=' . $userkey . '&pageid=' . $feed["pageid"] . '&newsid=' . $news->newsid, $news->submitted);
+                       $feeds .= fill_feed($news->title, strip_tags($news->caption), $CFG->wwwroot . '/features/news/news.php?action=viewnews&key=' . $userkey . '&pageid=' . $feed["pageid"] . '&newsid=' . $news->newsid, $news->submitted);
                      }
                 }
 			}
 		}
-	} else { //This is for any page other than site
+	} else { // This is for any page other than site
 		if ($pagenews = get_section_news($feed["featureid"], "LIMIT 50")) {
 			foreach ($pagenews as $news) {
                 if (isset($news->content)) {
-                    $feeds .= fill_feed($news->title,strip_tags($news->caption), $CFG->wwwroot . '/features/news/news.php?action=viewnews&key=' . $userkey . '&pageid=' . $feed["pageid"] . '&newsid=' . $news->newsid, $news->submitted);
+                    $feeds .= fill_feed($news->title, strip_tags($news->caption), $CFG->wwwroot . '/features/news/news.php?action=viewnews&key=' . $userkey . '&pageid=' . $feed["pageid"] . '&newsid=' . $news->newsid, $news->submitted);
                 }
 			}
 		}
@@ -635,9 +635,9 @@ function news_buttons($pageid, $featuretype, $featureid) {
 global $CFG, $USER;
 	$returnme = "";
 	if (strstr($featuretype, "_features")) { // Overall news feature.
-        $returnme .= user_is_able($USER->userid, "addnews", $pageid) ? make_modal_links(array("title"=> "Add News Item", "path" => action_path("news") . "addeditnews&amp;pageid=$pageid&amp;featureid=$featureid", "iframe" => true, "refresh" => "true", "width" => "850", "height" => "600", "image" => $CFG->wwwroot . "/images/add.png", "class" => "slide_menu_button")) : '';
+        $returnme .= user_is_able($USER->userid, "addnews", $pageid) ? make_modal_links(["title"=> "Add News Item", "path" => action_path("news") . "addeditnews&amp;pageid=$pageid&amp;featureid=$featureid", "iframe" => true, "refresh" => "true", "width" => "850", "height" => "600", "image" => $CFG->wwwroot . "/images/add.png", "class" => "slide_menu_button"]) : '';
 	} else { // Individual news item.
-        $returnme .= user_is_able($USER->userid, "editnews", $pageid) ? make_modal_links(array("title"=> "Edit News Item", "path" => action_path("news") . "addeditnews&amp;pageid=$pageid&amp;newsid=$featureid", "iframe" => true, "refresh" => "true", "width" => "850", "height" => "600", "image" => $CFG->wwwroot . "/images/edit.png", "class" => "slide_menu_button")) : '';
+        $returnme .= user_is_able($USER->userid, "editnews", $pageid) ? make_modal_links(["title"=> "Edit News Item", "path" => action_path("news") . "addeditnews&amp;pageid=$pageid&amp;newsid=$featureid", "iframe" => true, "refresh" => "true", "width" => "850", "height" => "600", "image" => $CFG->wwwroot . "/images/edit.png", "class" => "slide_menu_button"]) : '';
         $returnme .= user_is_able($USER->userid, "deletenews", $pageid) ? ' <a class="slide_menu_button" title="Delete News Item" onclick="if (confirm(\'Are you sure you want to delete this?\')) { ajaxapi(\'/ajax/site_ajax.php\',\'delete_feature\',\'&amp;pageid=' . $pageid . '&amp;featuretype=' . $featuretype . '&amp;subid=' . $featureid . '\',function() { update_login_contents(' . $pageid . ');});}"><img src="' . $CFG->wwwroot . '/images/delete.png" alt="Delete News Item" /></a> ' : '';
     }
 	return $returnme;

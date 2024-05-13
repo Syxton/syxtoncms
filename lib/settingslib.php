@@ -3,12 +3,12 @@
 * settingslib.php - Settings Library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 5/20/2021
+* Date: 5/14/2024
 * Revision: 0.2.6
 ***************************************************************************/
 
-if (!isset($LIBHEADER)) { include('header.php'); }
-$SETTINGSLIB = true;
+if (!LIBHEADER) { include('header.php'); }
+define('SETTINGSLIB', true);
 
 function fetch_settings($type, &$featureid, $pageid = false) {
 global $CFG;
@@ -17,11 +17,11 @@ global $CFG;
         $pageid = $pageid ?: "0"; // Set to 0 if page not set.
 		$SQL = "SELECT * FROM settings WHERE type='$type' AND pageid='$pageid'";
 		if ($results = get_db_result($SQL)) {
-      		$settings = new \stdClass;
-      		$settings->$type = new \stdClass;
+    			$settings = new \stdClass;
+    			$settings->$type = new \stdClass;
 			while ($row = fetch_row($results)) {
-        		$setting_name = $row["setting_name"];
-        		if (empty($settings->$type->$setting_name)) { $settings->$type->$setting_name = new \stdClass; }
+      			$setting_name = $row["setting_name"];
+      			if (empty($settings->$type->$setting_name)) { $settings->$type->$setting_name = new \stdClass; }
 				if (isset($row["settingid"])) { $settings->$type->$setting_name->settingid = $row["settingid"]; }
 				if (isset($row["setting"])) { $settings->$type->$setting_name->setting = stripslashes($row["setting"]); }
 				if (isset($row["extra"])) { $settings->$type->$setting_name->extra = stripslashes($row["extra"]); }
@@ -32,21 +32,21 @@ global $CFG;
 		}
 		return false;
 	} else { // Feature settings
-    	if ($featureid == "*") { // Find the featureid: Only valid on features that cannot have duplicates on a page
-      		$featureid = get_db_field("featureid", "pages_features", "feature='$type' AND pageid='$pageid'");
-      		if (empty($featureid)) {
-        		return false;
-      		}
-    	}
+  		if ($featureid == "*") { // Find the featureid: Only valid on features that cannot have duplicates on a page
+    			$featureid = get_db_field("featureid", "pages_features", "feature='$type' AND pageid='$pageid'");
+    			if (empty($featureid)) {
+      			return false;
+    			}
+  		}
 
         $settings = new \stdClass;
 		$SQL = "SELECT * FROM settings WHERE type='$type' AND featureid='$featureid'";
 		if ($results = get_db_result($SQL)) {
-      		$settings->$type = new \stdClass;
-      		$settings->$type->$featureid = new \stdClass;
+    			$settings->$type = new \stdClass;
+    			$settings->$type->$featureid = new \stdClass;
 			while ($row = fetch_row($results)) {
-        		$setting_name = $row["setting_name"];
-        		if (empty($settings->$type->$featureid->$setting_name)) { $settings->$type->$featureid->$setting_name = new \stdClass; }
+      			$setting_name = $row["setting_name"];
+      			if (empty($settings->$type->$featureid->$setting_name)) { $settings->$type->$featureid->$setting_name = new \stdClass; }
 				if (isset($row["settingid"])) { $settings->$type->$featureid->$setting_name->settingid = $row["settingid"];}
 				if (isset($row["setting"])) { $settings->$type->$featureid->$setting_name->setting = stripslashes($row["setting"]);}
 				if (isset($row["extra"])) { $settings->$type->$featureid->$setting_name->extra = stripslashes($row["extra"]);}
@@ -127,7 +127,7 @@ global $CFG;
 			$params["istext"] = true;
 			$params["ifnumeric"] = $info["numeric"] ?? false;
 			$params["ifvalidation"] = $info["validation"] ?? false;
-		    break;
+			  break;
 		case "yes/no":
 			$params["isyesno"] = true;
 			$params["yes"] = (string) $value == "1" ? "selected" : "";
@@ -138,7 +138,7 @@ global $CFG;
 			$params["yes"] = (string) $value == "1" ? "selected" : "";
 			$params["no"] = (string) $value != "1" ? "selected" : "";
 			break;
-	  	case "select": //extra will look like 'SELECT id as selectvalue,text as selectname from table'  the value and name must be labeled as selectvalue and selectname
+			case "select": //extra will look like 'SELECT id as selectvalue,text as selectname from table'  the value and name must be labeled as selectvalue and selectname
 			$params["isselect"] = true;
 			$selected = $value != 0 ? "" : "selected";
 			$params["options"] = use_template("tmp/page.template", ["selected" => $selected, "value" => "0", "display" => "No"], "select_options_template");
@@ -157,7 +157,7 @@ global $CFG;
 				}
 			}
 			break;
-	  	case "select_array": // extraforminfo will be an array of arrays. The value and name must be labeled as selectvalue and selectname
+			case "select_array": // extraforminfo will be an array of arrays. The value and name must be labeled as selectvalue and selectname
 			$params["isselect"] = true;
 			$params["options"] = "";
 			if (isset($info["extraforminfo"]))	{
@@ -177,7 +177,7 @@ global $CFG;
             $params["extraforminfo"] = $info["extraforminfo"] ?? false;
 			$params["ifnumeric"] = $info["numeric"] ?? false;
 			$params["ifvalidation"] = $info["validation"] ?? false;
-	      	break;
+		  		break;
 	}
 	return use_template("tmp/settings.template", $params, "make_setting_input_template");
 }
@@ -349,7 +349,7 @@ function get_setting_value($type, $setting_name, $extra = false) {
 function default_settings($feature, $pageid, $featureid) {
 	global $CFG;
     if ($featureid == "*") { // Find the featureid: Only valid on features that cannot have duplicates on a page
-      	$featureid = get_db_field("featureid", "pages_features", "feature = '$feature' AND pageid = '$pageid'");
+    		$featureid = get_db_field("featureid", "pages_features", "feature = '$feature' AND pageid = '$pageid'");
 		if (!empty($featureid)) {
 			return false;
 		}

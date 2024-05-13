@@ -3,7 +3,7 @@
 * themes_ajax.php - Themes and Styles ajax
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 8/16/2011
+* Date: 5/14/2024
 * Revision: 0.1.6
 ***************************************************************************/
 
@@ -132,8 +132,8 @@ global $CFG, $MYVARS, $USER;
 		];
 		echo use_template("tmp/themes.template", $p, "make_template_selector_panes_template");
 	} else {
-    	include_once($CFG->dirroot . '/features/' . $feature . '/' . $feature . 'lib.php');
-    	$function = "display_$feature";
+  		include_once($CFG->dirroot . '/features/' . $feature . '/' . $feature . 'lib.php');
+  		$function = "display_$feature";
 		$p = [
 			"left" => custom_styles_selector($pageid, $feature, $featureid),
 			"right" => $function($pageid, "side", $featureid),

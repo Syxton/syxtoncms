@@ -3,7 +3,7 @@
 * roles_ajax.php - Roles Ajax backend script
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 06/11/2021
+* Date: 5/14/2024
 * Revision: 2.0.4
 ***************************************************************************/
 
@@ -704,7 +704,7 @@ global $CFG, $MYVARS;
         $SQL = "INSERT INTO roles_ability_peruser (userid, pageid, ability, allow)
                      VALUES ('$userid', '$pageid', '$ability', '$setting')";
         execute_db_sql($SQL);
-    	}
+  		}
 		}
 		$i++;
 	}
@@ -791,7 +791,7 @@ global $CFG, $MYVARS;
         $SQL = "INSERT INTO roles_ability_pergroup (groupid, pageid, ability, allow)
                      VALUES('$groupid', '$pageid', '$ability', '$allow')";
         execute_db_sql($SQL);
-    	}
+  		}
 		}
 		$i++;
 	}
@@ -812,8 +812,8 @@ global $CFG, $USER, $MYVARS, $ROLES;
       $rolename = get_db_field("display_name", "roles", "roleid = '$roleid'");
     }
   } else {
-  	$roleid = 0;
-  	$rolename = "Unassigned";
+		$roleid = 0;
+		$rolename = "Unassigned";
   }
 
 

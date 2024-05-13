@@ -3,7 +3,7 @@
  * template.php - simple_contact_form Template page
  * -------------------------------------------------------------------------
  * $Author: Matthew Davidson
-* Date: 4/09/2013
+* Date: 5/14/2024
  * $Revision: 2.1.2
  ***************************************************************************/
 if (!isset($CFG)) {
@@ -13,8 +13,8 @@ if (!isset($CFG)) {
 	}
 	require($sub . 'config.php'); 
 }
-if (!isset($EVENTSLIB)) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
-if (!isset($VALIDATELIB)) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
+if (!defined('EVENTSLIB')) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
+if (!defined('VALIDATELIB')) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
 
 // Retrieve from Javascript.
 $postorget = isset($_GET["eventid"]) ? $_GET : $_POST;
@@ -90,15 +90,15 @@ if ($autofill) {
             <input type="hidden" name="Name" />
 			<div class="rowContainer">
 				<label class="rowTitle" for="email">Email Address *</label><input tabindex="1" type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-msg-required="' . error_string('valid_req_email') . '" data-msg-email="' . error_string('valid_email_invalid') . '" /><div class="tooltipContainer info">' . get_help("help_email:events:templates/simple_contact_form") . '</div>
-			    <div class="spacer" style="clear: both;"></div>
+				  <div class="spacer" style="clear: both;"></div>
             </div>
 			<div class="rowContainer">
 				<label class="rowTitle" for="Name_First">First Name *</label><input tabindex="2" type="text" id="Name_First" name="Name_First" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="' . error_string('valid_req_fname') . '" /><div class="tooltipContainer info">' . get_help("input_fname") . '</div>
-			    <div class="spacer" style="clear: both;"></div>
+				  <div class="spacer" style="clear: both;"></div>
             </div>
 			<div class="rowContainer">
 				<label class="rowTitle" for="Name_Last">Last Name *</label><input tabindex="3" type="text" id="Name_Last" name="Name_Last" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="' . error_string('valid_req_lname') . '" /><div class="tooltipContainer info">' . get_help("input_lname") . '</div>
-  			    <div class="spacer" style="clear: both;"></div>
+					  <div class="spacer" style="clear: both;"></div>
             </div>
 			<div class="rowContainer">
 				<label class="rowTitle" for="Address_Line1">Mailing Address Line One *</label><input tabindex="9" type="text" id="Address_Line1" name="Address_Line1" data-rule-required="true" /><div class="tooltipContainer info">' . get_help("help_address:events:templates/simple_contact_form") . '</div>

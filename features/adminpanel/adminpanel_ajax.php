@@ -3,16 +3,24 @@
 * adminpanel_ajax.php - Adminpanel backend ajax script
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 6/07/2016
+* Date: 5/14/2024
 * Revision: 0.0.8
 ***************************************************************************/
-if (!isset($CFG)) { include('../header.php'); }
+
+if (!isset($CFG)) {
+	$sub = '';
+	while (!file_exists($sub . 'header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
+	}
+	include($sub . 'header.php');
+}
+
 update_user_cookie();
 
 if (!empty($_SESSION["lia_original"])) {
-    if (!is_siteadmin($_SESSION["lia_original"])) { debugging(error_string("generic_permissions"), 2); return;}
+    if (!is_siteadmin($_SESSION["lia_original"])) { trigger_error(error_string("no_permission", ["administrative"]), E_USER_WARNING); return;}
 } else {
-    if (!is_siteadmin($USER->userid)) { debugging(error_string("generic_permissions"), 2); return;}
+    if (!is_siteadmin($USER->userid)) { trigger_error(error_string("no_permission", ["administrative"]), E_USER_WARNING); return;}
 }
 
 callfunction();

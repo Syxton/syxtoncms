@@ -3,18 +3,18 @@
 * onlineuserslib.php - Online Users function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 3/16/2016
+* Date: 5/14/2024
 * Revision: 0.4.1
 ***************************************************************************/
  
-if (!isset($LIBHEADER)) {
+if (!LIBHEADER) {
 	$sub = './';
 	while (!file_exists($sub . 'lib/header.php')) {
 		$sub = $sub == './' ? '../' : $sub . '../';
 	}
 	include($sub . 'lib/header.php'); 
 }
-$ONLINEUSERSLIB = true;
+define('ONLINEUSERSLIB', true);
 
 function display_onlineusers($pageid, $area, $featureid) {
 global $CFG, $USER, $ROLES;
@@ -29,7 +29,7 @@ global $CFG, $USER, $ROLES;
 	
 	if (is_logged_in()) {
 		if (user_is_able($USER->userid, "seeusers", $pageid)) {
-    		$content .= '<div id="onlineusersfeature">' . get_onlineusers($pageid, $featureid, $settings). '</div>';
+  			$content .= '<div id="onlineusersfeature">' . get_onlineusers($pageid, $featureid, $settings). '</div>';
 			$buttons = get_button_layout($feature, $featureid, $pageid); 
 		}
 	} else {
@@ -89,7 +89,7 @@ global $CFG, $USER;
 			while ($user = fetch_row($users)) {
 				$returnme .= '<div style="width:100%;text-align:left;color:blue;font-size:.9em;overflow:auto;margin:2px;">
 									<div title="' . ago($user["last_activity"]) . '">' . $user["fname"] . " " . $user["lname"] . '</div>
-							  </div>';
+								</div>';
 			}
 		}
 	} else {

@@ -16,7 +16,7 @@ if (!isset($CFG)) {
 }
 include($CFG->dirroot . '/pages/header.php');
 
-if (!isset($EVENTSLIB)) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
+if (!defined('EVENTSLIB')) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 
 //Retrieve from Javascript
 $postorget = isset($_GET["action"]) ? $_GET : $_POST;
@@ -32,7 +32,7 @@ update_user_cookie();
 
 function register() {
 global $CFG, $MYVARS, $USER, $error;
-    if (!isset($COMLIB)) { include_once($CFG->dirroot . '/lib/comlib.php'); }
+    if (!defined('COMLIB')) { include_once($CFG->dirroot . '/lib/comlib.php'); }
 
 	$event = get_db_row("SELECT * FROM events WHERE eventid = " . $MYVARS->GET["eventid"]);
 	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='" . $event['template_id'] . "'");
@@ -77,7 +77,7 @@ global $CFG, $MYVARS, $USER, $error;
             }
 			
 			if ($MYVARS->GET['payment_method'] == "PayPal") {
-    			echo '<br />
+  				echo '<br />
 				To register a <b>different</b> child:  Select the week ' . common_weeks($event, true, "week1", $regid) . '.<br />
 				To register the <b>same child</b> for a <b>different week</b>:  Select the week ' . common_weeks($event, false, "week2", $regid, 1) . '.<br />
 				<br />

@@ -1,44 +1,47 @@
-simple||
-<br />
-  This is a ||variable||
-||simple
+fill_in_the_blank||
+	This was a ||variable||.
+||fill_in_the_blank
 
-simple2||
-  <br />
-  This is complex: ||variable[0]||, ||variable[1]||, ||variable[2]||
-||simple2
+a+b=c||
+	||variable[0]|| + ||variable[1]|| = ||variable[2]||
+||a+b=c
 
-simple3||
-  <br />
-  This is complex: ||variables->one||, ||variables->two||, ||variables->three||
-||simple3
+list||
+	||variables->one||, ||variables->two||, ||variables->three||
+||list
 
-code1||
-<br />
-  CODE1:
-  ||echo print_r(array(1,2,3,4,5), true);::none||
-||code1
+print_r123||
+  ||echo print_r([1, 2, 3], true);::none||
+||print_r123
 
-code2||
-<br />
-  CODE2:
+print_r||
   ||echo print_r(variable, true);::variable||
-||code2
+||print_r
 
-code3||
-  <br />
-  CODE3:
-  ||echo max(variables[0],variables[1],variables[2],variables[3],variables[4]);::variables||
-||code3
+get_max||
+  ||echo max(variables[0], variables[1], variables[2], variables[3], variables[4]);::variables||
+||get_max
 
-code4||
-  <br />
-  CODE4:
+min||
   ||echo min(variables->one, variables->two, variables->three);::variables||
-||code4
+||min
 
 optional||
-  <br />
-  Optional variables: ||*variable1||||*variabl2||||*variable3||
-  
+  ||*one||||*two||||*three||||*four||
 ||optional
+
+sql_template||
+	SELECT * FROM testing_table WHERE test_id = ||id||
+||sql_template
+
+multiple_sql_template||
+	SELECT * FROM testing_table WHERE test_id > ||id1|| LIMIT 1;
+	SELECT * FROM testing_table WHERE test_id > ||id2|| LIMIT 2;
+	SELECT * FROM testing_table WHERE test_id > ||id3|| LIMIT 3;
+||multiple_sql_template
+
+fail_sqls_template||
+	UPDATE testing_table SET test_field = ||value1|| WHERE test_id > ||id1||;
+	UPDATE testing_table SET test_field = ||value2|| WHERE test_id > ||id2||;
+	UPDATE testing_table SET test_field = ||value3|| WHERE test_ids > ||id3||;
+||fail_sqls_template

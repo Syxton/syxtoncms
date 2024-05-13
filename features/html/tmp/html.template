@@ -1,0 +1,43 @@
+comment_template||
+    <div class="html_comment ||childclass||">
+        <span class="comment_byline">
+            <span class="comment_user">||username|| ||says||</span>
+            <span class="comment_time">||time||</span>
+        </span>
+        <span class="comment_message">||comment||</span>
+        <span class="comment_buttons">
+            <span class="comment_replylink">||buttons["reply"]||</span>
+            <span class="comment_editlink">||buttons["edit"]||</span>
+            <span class="comment_deletelink">||buttons["delete"]||</span>
+        </span>
+    </div>
+||comment_template
+
+comment_form_template||
+    <div class="html_comment_form">
+        <div class="title">
+            <strong>||title||</strong>
+        </div>
+        ||replytoid{{
+        <div class="html_replytocomment">
+            ||replytocomment||
+		  </div>
+        }}replytoid||
+        <div class="html_commentinput">
+            <textarea id="comment" cols="100" rows="8">||comment||</textarea>
+        </div>
+        <div class="centered">
+            <input type="button" value="||title||"
+                    onclick="if (document.getElementById('comment').value.length > 0) {
+                                ajaxapi('/features/html/html_ajax.php',
+                                        'comment',
+                                        '||commentid{{&commentid=||commentid||}}commentid||||replytoid{{&replytoid=||replytoid||}}replytoid||||htmlid{{&htmlid=||htmlid||}}htmlid||&pageid=||pageid||&comment=' + escape(document.getElementById('comment').value),
+                                        function() {
+                                            if (xmlHttp.readyState == 4) {
+                                                close_modal();
+                                            }
+                                        });
+                            }" />
+        </div>
+    </div>
+||comment_form_template

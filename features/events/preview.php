@@ -8,19 +8,21 @@
  ***************************************************************************/
  
 if (!isset($CFG)) {
-	$sub = '../';
+	$sub = '';
 	while (!file_exists($sub . 'config.php')) {
 		$sub .= '../';
 	}
 	include_once($sub . 'config.php'); 
 }
-$libs = ['DBLIB', 'PAGELIB', 'USERLIB', 'ERRORS'];
+
+$libs = ['ERRORSLIB', 'DBLIB', 'PAGELIB', 'USERLIB', 'ROLESLIB'];
 foreach ($libs as $lib) {
-    if (!isset($$lib)) {
+    if (!defined($lib)) {
         include_once($CFG->dirroot . '/lib/' . strtolower($lib) . '.php');
     }
 }
-if (!isset($EVENTSLIB)) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
+
+if (!defined('EVENTSLIB')) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 
 callfunction();
 
@@ -28,6 +30,7 @@ function preview_template() {
 global $CFG, $MYVARS;
     $form = "";
 	echo js_code_wrap('var dirfromroot = "' . $CFG->directory . '";');
+	echo js_code_wrap(use_template("tmp/pagelib.template", [], "defer_script"));
 	echo get_js_tags(["siteajax", "features/events/events.js"]);
 	echo get_css_tags(["main"]);
      
@@ -50,10 +53,10 @@ global $CFG, $MYVARS;
 			
 			if ($element['type'] == 'select') {
 				
-			}elseif ($element['type'] == 'phone') {
+			} elseif ($element['type'] == 'phone') {
 				$form .= '<tr><td class="field_title">' . $opt . $element['display'] . ': </td><td class="field_input" style="width:70%">' . create_form_element($element['type'], $element['elementid'], $element['optional'], $element['length'], false) . '</td></tr>';
 				$form .= '<tr><td></td><td class="field_input"><span id="' . $element['elementid'] . '_error" class="error_text"></span></td></tr>';
-			}elseif ($element['type'] == 'payment') {
+			} elseif ($element['type'] == 'payment') {
 				$form .= '
 				<tr>
 					<td class="field_title">Payment Amount:</td>
@@ -70,9 +73,9 @@ global $CFG, $MYVARS;
 					</td>
 				</tr>
 				<tr><td></td><td class="field_input"><span id="payment_method_error" class="error_text"></span></td></tr>
-    				';
+  					';
 			} else {
-				$form .= '<tr><td class="field_title">' . $opt . $element['display'] . ': </td><td class="field_input" style="width:70%">' . create_form_element($element['type'], $element['elementid'], $element['optional'], $element['length'], false) . '<span class="hint">' . $element['hint'] . '<span class="hint-pointer">&nbsp;</span></span></td></tr>';
+				$form .= '<tr><td class="field_title">' . $opt . $element['display'] . ': </td><td class="field_input" style="width:70%">' . create_form_element($element['type'], $element['elementid'], $element['optional'], $element['length'], false) . '<span class="hint">' . $element['hint'] . '</td></tr>';
 				$form .= '<tr><td></td><td class="field_input"><span id="' . $element['elementid'] . '_error" class="error_text"></span></td></tr>';
 			}
 		}

@@ -11,7 +11,7 @@ function handleEnter (field, event) {
 	}
 	return true;
 }
-	      
+		    
 function update_picslist(){
     var cansubmit = true;
 	var reqStr = get_file_names($("#pics_form"));
@@ -20,9 +20,9 @@ function update_picslist(){
 	if($("#gallery_name").val().length == 0){ cansubmit = false; }
 	if($("#filenames").val().length == 0){ cansubmit = false; }
 	if(cansubmit){
-	   $('#pics_form').submit();   
+		 $('#pics_form').submit();   
 	}else{
-	   alert('A gallery must be selected or created and files must be attached.');
+		 alert('A gallery must be selected or created and files must be attached.');
 	} 
 }
 

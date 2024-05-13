@@ -3,12 +3,13 @@
 * roleslib.php - Roles function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 6/11/2021
+* Date: 5/14/2024
 * Revision: 1.3.0
 ***************************************************************************/
 
-if (!isset($LIBHEADER)) { include('header.php'); }
-$ROLESLIB = true;
+if (!LIBHEADER) { include('header.php'); }
+define("ROLES", true);
+
 $ABILITIES = new \stdClass;
 
 function is_siteadmin($userid) {
@@ -21,9 +22,11 @@ global $CFG, $ROLES;
 }
 
 function remove_all_roles($userid) {
-	return execute_db_sqls(use_template("dbsql/roles.sql",
-                                        ["userid" => $userid],
-                                        "remove_all_user_roles"));
+	return execute_db_sqls(use_template(
+		  "dbsql/roles.sql",
+		  ["userid" => $userid],
+		  "remove_all_user_roles"
+	));
 }
 
 //Add an ability and assign a role it's value
@@ -46,7 +49,7 @@ function add_role_ability($section, $ability, $displayname, $power, $desc, $crea
     }
 }
 
-function user_is_able($userid, $ability, $pageid, $feature = "", $featureid=0) {
+function user_is_able($userid, $ability, $pageid, $feature = "", $featureid = 0) {
 global $CFG, $ROLES, $ABILITIES;
 	if (!$featureid && isset($ABILITIES->$ability)) { // Get cached abilities first (SAVES TIME!)
 		if ($ABILITIES->$ability->allow) { return true; }
@@ -126,7 +129,7 @@ global $CFG, $ROLES, $ABILITIES;
                 $abilities->$ability->allow = $allow;
             }
         } else {
-            debugging("FAILED SQL: $SQL");
+            trigger_error("FAILED SQL: $SQL", E_USER_ERROR);
         }
 
         if (!$section) {
@@ -140,7 +143,7 @@ function pages_user_is_able($userid, $ability, $siteviewable = true, $menuitems 
 global $CFG, $ROLES;
 	if (is_siteadmin($userid)) {
 		$params = ["notsiteviewable" => (!$siteviewable), "notmenuitems" => (!$menuitems)];
-  	    $SQL = use_template("dbsql/roles.sql", $params, "admin_has_ability_in_pages");
+			  $SQL = use_template("dbsql/roles.sql", $params, "admin_has_ability_in_pages");
 		return get_db_result($SQL);
 	}
 
@@ -187,8 +190,9 @@ global $CFG, $ROLES, $ABILITIES;
 			$abilities->$ability->allow = $allow;
 		}
 	} else {
-        debugging("FAILED SQL: $SQL");
+        trigger_error("FAILED SQL: $SQL", E_USER_ERROR);
 	}
+
 	if (empty($section) && !empty($abilities)) {
 		$ABILITIES = $abilities;
 	}
@@ -279,9 +283,9 @@ global $CFG, $ROLES, $USER;
 
 function users_that_have_ability_in_page($ability, $pageid) {
 global $CFG, $ROLES;
-	$page = get_db_row(use_template("dbsql/pages.sql", array("pageid" => $pageid), "get_page"));
+	$page = get_db_row(use_template("dbsql/pages.sql", ["pageid" => $pageid], "get_page"));
 
-	$params = array("pageid" => $pageid, "ability" => $ability, "siteid" => $CFG->SITEID, "siteoropen" => ($page["siteviewable"] || $page["opendoorpolicy"]));
+	$params = ["pageid" => $pageid, "ability" => $ability, "siteid" => $CFG->SITEID, "siteoropen" => ($page["siteviewable"] || $page["opendoorpolicy"])];
 	$SQL = use_template("dbsql/roles.sql", $params, "users_that_have_ability_in_page");
 
     if ($results = get_db_result($SQL)) {
@@ -347,7 +351,7 @@ function groups_SQL($userid, $pageid, $ability = 'a.ability', $feature = false, 
 function merge_abilities($abilities) {
   $merged = [];
   foreach ($abilities as $ability) {
-  	$merged = (object) array_merge((array) $merged, (array) $ability);
+		$merged = (object) array_merge((array) $merged, (array) $ability);
   }
   return $merged;
 }
@@ -437,7 +441,7 @@ global $CFG;
 	}
 
 	$SQL = use_template("dbsql/roles.sql", ["feature" => $feature, "is_feature" => ($feature && $featureid)], "print_abilities");
-  	if ($allabilities = get_db_result($SQL)) {
+		if ($allabilities = get_db_result($SQL)) {
 		$i = 0; $abilities = "";
 		$style_row1 = 'class="roles_row1"';
 		$style_row2 = 'class="roles_row2"';
@@ -496,7 +500,7 @@ global $CFG;
 			$section = $row['section']; // Remmember last section so we know when a new section starts.
 			$i++;
 		}
-  	}
+		}
 
 	$params = [
 		"default" => $default,

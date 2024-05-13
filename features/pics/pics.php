@@ -3,12 +3,19 @@
 * pics.php - Pics modal page lib
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 8/16/2011
+* Date: 5/14/2024
 * Revision: 2.5.9
 ***************************************************************************/
 if (empty($_POST["aslib"])) {
-    if (!isset($CFG)) { include('../header.php'); } 
-    if (!isset($PICSLIB)) { include_once ($CFG->dirroot . '/features/pics/picslib.php'); }
+    if (!isset($CFG)) {
+		$sub = '';
+		while (!file_exists($sub . 'header.php')) {
+			$sub = $sub == '' ? '../' : $sub . '../';
+		}
+		include($sub . 'header.php');
+	}
+
+    if (!defined('PICSLIB')) { include_once ($CFG->dirroot . '/features/pics/picslib.php'); }
     
     callfunction();
     
@@ -37,7 +44,7 @@ function add_pics() {
 global $CFG, $MYVARS, $USER;
 	$featureid = $MYVARS->GET["featureid"];
 	$pageid = $MYVARS->GET["pageid"];
-	if (!user_is_able($USER->userid, "addpics", $pageid)) { debugging(error_string("no_permission", ["addpics"]), 2); return; }
+	if (!user_is_able($USER->userid, "addpics", $pageid)) { trigger_error(error_string("no_permission", ["addpics"]), E_USER_WARNING); return; }
 	echo '
     <form id="pics_form" method="post" action="' . $CFG->wwwroot . '/features/pics/pics_ajax.php" enctype="multipart/form-data">
     <input type="hidden" id="filenames" name="filenames" />
@@ -48,43 +55,43 @@ global $CFG, $MYVARS, $USER;
     Click the browse button to choose the images you would like to upload.  You can add as many as you would like.  The images will not be uploaded to the server until you click the Upload File button.
     <p>
     <table class="dotted">
-    	<tr>
-    		<td>
-    		<strong>Gallery</strong><br /><br />
-    			<table style="width:100%;">
-    				<tr>
-    					<td class="field_title" style="width:100px;">
-    						New Gallery:
-    					</td>
-    					<td class="field_input">
-    						<select id="new_gallery" name="new_gallery" onchange="ajaxapi(\'/features/pics/pics_ajax.php\',\'new_gallery\',\'&param=\' + this.value + \'&pageid=' . $pageid . '\',function() { simple_display(\'gallery_name_div\');});"><option value="1">Yes</option><option value="0">No</option></select>
-    					</td>
-    				</tr>
-    			</table>
-    			<table style="width:100%;">
-    				<tr>
-    					<td class="field_title" style="width:100px;">
-    						Gallery Name:
-    					</td>
-    					<td class="field_input">
-    						<span id="gallery_name_div">
-    						<input name="gallery_name" id="gallery_name" type="text" size="32" onkeypress="return handleEnter(this, event)"/>
-    						</span>
-    					</td>
-    				</tr>
-    			</table>
-    			<table style="width:100%;">
-    					<tr>
-    					<td class="field_title" style="width:100px;">
-    						File Uploads:
-    					</td>
-    					<td class="field_input">
-    						<input type="file" class="multi" accept="gif|jpg|png|bmp" id="multi_0_0" name="files[]" onkeypress="return handleEnter(this, event)"/><p>
-    					</td>
-    				</tr>
-    			</table>
-    		</td>
-    	</tr>
+  		<tr>
+  			<td>
+  			<strong>Gallery</strong><br /><br />
+  				<table style="width:100%;">
+  					<tr>
+  						<td class="field_title" style="width:100px;">
+  							New Gallery:
+  						</td>
+  						<td class="field_input">
+  							<select id="new_gallery" name="new_gallery" onchange="ajaxapi(\'/features/pics/pics_ajax.php\',\'new_gallery\',\'&param=\' + this.value + \'&pageid=' . $pageid . '\',function() { simple_display(\'gallery_name_div\');});"><option value="1">Yes</option><option value="0">No</option></select>
+  						</td>
+  					</tr>
+  				</table>
+  				<table style="width:100%;">
+  					<tr>
+  						<td class="field_title" style="width:100px;">
+  							Gallery Name:
+  						</td>
+  						<td class="field_input">
+  							<span id="gallery_name_div">
+  							<input name="gallery_name" id="gallery_name" type="text" size="32" onkeypress="return handleEnter(this, event)"/>
+  							</span>
+  						</td>
+  					</tr>
+  				</table>
+  				<table style="width:100%;">
+  						<tr>
+  						<td class="field_title" style="width:100px;">
+  							File Uploads:
+  						</td>
+  						<td class="field_input">
+  							<input type="file" class="multi" accept="gif|jpg|png|bmp" id="multi_0_0" name="files[]" onkeypress="return handleEnter(this, event)"/><p>
+  						</td>
+  					</tr>
+  				</table>
+  			</td>
+  		</tr>
     </table>
     </form>';
 }

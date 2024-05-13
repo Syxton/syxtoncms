@@ -13,129 +13,138 @@ try {
   }
 }
 @end @*/
-if(!xmlHttp && typeof XMLHttpRequest != 'undefined'){ xmlHttp = new XMLHttpRequest(); }
-function movetonextbox(e){
+if (!xmlHttp && typeof XMLHttpRequest != 'undefined') { xmlHttp = new XMLHttpRequest(); }
+
+function movetonextbox(e) {
     var unicode=e.keyCode? e.keyCode : e.charCode;
-    if(unicode == 8 || unicode == 46){ return false; }
-    if($("#lasthint").val().match("_1") && $("#"+$("#lasthint").val()).val().length == 3){ document.getElementById($("#lasthint").val().replace("_1","_2")).focus(); }
-    if($("#lasthint").val().match("_2") && $("#"+$("#lasthint").val()).val().length == 3){ document.getElementById($("#lasthint").val().replace("_2","_3")).focus();}
+    if (unicode == 8 || unicode == 46) { return false; }
+    if ($("#lasthint").val().match("_1") && $("#"+$("#lasthint").val()).val().length == 3) { document.getElementById($("#lasthint").val().replace("_1","_2")).focus(); }
+    if ($("#lasthint").val().match("_2") && $("#"+$("#lasthint").val()).val().length == 3) { document.getElementById($("#lasthint").val().replace("_2","_3")).focus();}
 }
-function submit_registration(eventid,formlist){
-	if(validate_fields()){
-    	var d = new Date();
-    	var parameters = "action=pick_registration&eventid=" + eventid + "&currTime=" + d.toUTCString();
-    	var elements = formlist.split("*");
-    	var i = 0;
-    	while (elements[i]){
-    		elparam = elements[i].split(":");
-    		if(elparam[0] == "text"){ 
-    			parameters += "&" + elparam[1] + "=";
-    			parameters += $("#"+elparam[1]).val();
-    		}else if(elparam[0] == "email"){
-    			parameters += "&" + elparam[1] + "=";
-    			parameters += $("#"+elparam[1]).val();
-    			parameters += "&email=" + $("#"+elparam[1]).val();
-    		}else if(elparam[0] == "contact"){
-    			parameters += "&" + elparam[1] + "=";
-    			parameters += $("#"+elparam[1]).val();
-    			parameters += "&email=" + $("#"+elparam[1]).val();
-    		}else if(elparam[0] == "phone"){
-    				parameters += "&" + elparam[1] + "=";
-    				parameters += $("#"+elparam[1]+"_1").val() + "-" + $("#"+elparam[1]+"_2").val() + "-" + $("#"+elparam[1]+"_3").val();
-    		}else if(elparam[0] == "payment"){
-    			if($("#payment_amount").length){
-    				parameters += "&payment_amount=" + $("#payment_amount").val();
-    				parameters += "&payment_method=" + $("#payment_method").val();
-    				parameters += $("#total_owed") ? "&total_owed=" + $("#total_owed").val() : "&total_owed=0";
+
+function submit_registration(eventid,formlist) {
+	if (validate_fields()) {
+  		var d = new Date();
+  		var parameters = "action=pick_registration&eventid=" + eventid + "&currTime=" + d.toUTCString();
+  		var elements = formlist.split("*");
+  		var i = 0;
+  		while (elements[i]) {
+  			elparam = elements[i].split(":");
+  			if (elparam[0] == "text") { 
+  				parameters += "&" + elparam[1] + "=";
+  				parameters += $("#"+elparam[1]).val();
+  			} else if (elparam[0] == "email") {
+  				parameters += "&" + elparam[1] + "=";
+  				parameters += $("#"+elparam[1]).val();
+  				parameters += "&email=" + $("#"+elparam[1]).val();
+  			} else if (elparam[0] == "contact") {
+  				parameters += "&" + elparam[1] + "=";
+  				parameters += $("#"+elparam[1]).val();
+  				parameters += "&email=" + $("#"+elparam[1]).val();
+  			} else if (elparam[0] == "phone") {
+  					parameters += "&" + elparam[1] + "=";
+  					parameters += $("#"+elparam[1]+"_1").val() + "-" + $("#"+elparam[1]+"_2").val() + "-" + $("#"+elparam[1]+"_3").val();
+  			} else if (elparam[0] == "payment") {
+  				if ($("#payment_amount").length) {
+  					parameters += "&payment_amount=" + $("#payment_amount").val();
+  					parameters += "&payment_method=" + $("#payment_method").val();
+  					parameters += $("#total_owed") ? "&total_owed=" + $("#total_owed").val() : "&total_owed=0";
                     parameters += $("#items") ? "&items=" + $("#items").val() : "";
-    			}
-    		}
-    		i++;
-    	}
-    	// Build the URL to connect to
-      	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
-    	// Open a connection to the server\
-    	ajaxpost(url,parameters);
-    	// Setup a function for the server to run when it's done
-      	simple_display("registration_div");
-  	}
+  				}
+  			}
+  			i++;
+  		}
+  		// Build the URL to connect to
+    		var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
+  		// Open a connection to the server\
+  		ajaxpost(url,parameters);
+  		// Setup a function for the server to run when it's done
+    		simple_display("registration_div");
+		}
 }
-function clear_limits(){
+
+function clear_limits() {
 	$("#limit_form").html("");
 	$("#custom_limits").html('<input type="hidden" id="hard_limits" value="" /><input type="hidden" id="soft_limits" value="" />');
 }
-function get_end_time(starttime){
-	if($("#begin_time").val() != ""){
-    	var d = new Date();
-    	var endtime = $("#end_time").length && $("#end_time").val() != "" ? "&endtime=" + $("#end_time").val() : "";
-    	var limit = $("#multiday").val() == 1 ? "&limit=0" : "&limit=1";
-    	var parameters = "action=get_end_time&starttime=" + starttime + endtime + limit + "&currTime=" + d.toUTCString();
-    	// Build the URL to connect to
-      	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
-    	// Open a connection to the server\
-    	ajaxpost(url,parameters);
-    	simple_display("end_time_span");
+
+function get_end_time(starttime) {
+	if ($("#begin_time").val() != "") {
+  		var d = new Date();
+  		var endtime = $("#end_time").length && $("#end_time").val() != "" ? "&endtime=" + $("#end_time").val() : "";
+  		var limit = $("#multiday").val() == 1 ? "&limit=0" : "&limit=1";
+  		var parameters = "action=get_end_time&starttime=" + starttime + endtime + limit + "&currTime=" + d.toUTCString();
+  		// Build the URL to connect to
+    		var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
+  		// Open a connection to the server\
+  		ajaxpost(url,parameters);
+  		simple_display("end_time_span");
 	}
 }
-function lookup_reg(code){
+
+function lookup_reg(code) {
 	var d = new Date();
 	var parameters = "action=lookup_reg&code=" + code + "&currTime=" + d.toUTCString();
 	// Build the URL to connect to
-  	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
+		var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
 	// Open a connection to the server\
 	ajaxpost(url,parameters);
 	simple_display("payarea");
 }
-function get_limit_form(template_id){
+
+function get_limit_form(template_id) {
 	var d = new Date();
 	var parameters = "action=get_limit_form&template_id=" + template_id + "&currTime=" + d.toUTCString();
 	// Build the URL to connect to
-  	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
+		var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
 	// Open a connection to the server\
 	ajaxpost(url,parameters);
 	simple_display("limit_form");
 }
-function validate_limit(){
+
+function validate_limit() {
     var valid = true;
-	if(!$("#custom_limit_value").val().length > 0){
-  		$("#custom_limit_value_error").html("You must add a field value.");
-  		valid = false;
-  	}else if(!IsNumeric($("#custom_limit_value").val()) && ($("#operators").val() == "gt" || $("#operators").val() == "gteq" ||	$("#operators").val() == "lt" || $("#operators").val() == "lteq")){
-  		$("#custom_limit_value_error").html("Value must be a number.");
-  		valid = false;
-  	}else{ $("#custom_limit_value_error").html(""); }
+	if (!$("#custom_limit_value").val().length > 0) {
+			$("#custom_limit_value_error").html("You must add a field value.");
+			valid = false;
+		} else if (!IsNumeric($("#custom_limit_value").val()) && ($("#operators").val() == "gt" || $("#operators").val() == "gteq" ||	$("#operators").val() == "lt" || $("#operators").val() == "lteq")) {
+			$("#custom_limit_value_error").html("Value must be a number.");
+			valid = false;
+		} else { $("#custom_limit_value_error").html(""); }
 	
-    if(!$("#custom_limit_num").val().length > 0){
-  		$("#custom_limit_num_error").html("You must add a limit amount.");
-  		valid = false;
-  	}else if(! IsNumeric($("#custom_limit_num").val())){
-  		$("#custom_limit_num_error").html("Value must be a number.");
-  		valid = false;
-  	}else{ $("#custom_limit_num_error").html(""); }
-  	return valid;
+    if (!$("#custom_limit_num").val().length > 0) {
+			$("#custom_limit_num_error").html("You must add a limit amount.");
+			valid = false;
+		} else if (! IsNumeric($("#custom_limit_num").val())) {
+			$("#custom_limit_num_error").html("Value must be a number.");
+			valid = false;
+		} else { $("#custom_limit_num_error").html(""); }
+		return valid;
 }
-function add_custom_limit(){
-	if(validate_limit()){
-    	var d = new Date();
-    	if($("#custom_limit_sorh").val() == 0){
-        	var hard = $("#hard_limits").length && $("#hard_limits").val() == "" ? $("#custom_limit_fields").val() + ":" + $("#operators").val() + ":" + $("#custom_limit_value").val() + ":" + $("#custom_limit_num").val() : $("#hard_limits").val() + "*" + $("#custom_limit_fields").val() + ":" + $("#operators").val() + ":" + $("#custom_limit_value").val() + ":" + $("#custom_limit_num").val();
-        	var soft = $("#soft_limits").length ? $("#soft_limits").val() : "";
-    	}else{
-        	var soft = $("#soft_limits").length && $("#soft_limits").val() == "" ? $("#custom_limit_fields").val() + ":" + $("#operators").val() + ":" + $("#custom_limit_value").val() + ":" + $("#custom_limit_num").val() : $("#soft_limits").val() + "*" + $("#custom_limit_fields").val() + ":" + $("#operators").val() + ":" + $("#custom_limit_value").val() + ":" + $("#custom_limit_num").val();
-        	var hard = $("#hard_limits").length ? $("#hard_limits").val() : "";
-    	}
-    	var template_id = "&template_id=" + $("#template").val();
-    	var hard_limits = "&hard_limits=" + hard;
-    	var soft_limits = "&soft_limits=" + soft;
-    	var parameters = "action=add_custom_limit" + hard_limits + soft_limits + template_id + "&currTime=" + d.toUTCString();
-    	// Build the URL to connect to
-      	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
-    	ajaxpost(url,parameters);
-    	simple_display("custom_limits");
-    	document.getElementById("limit_form").innerHTML = "";
+
+function add_custom_limit() {
+	if (validate_limit()) {
+  		var d = new Date();
+  		if ($("#custom_limit_sorh").val() == 0) {
+      		var hard = $("#hard_limits").length && $("#hard_limits").val() == "" ? $("#custom_limit_fields").val() + ":" + $("#operators").val() + ":" + $("#custom_limit_value").val() + ":" + $("#custom_limit_num").val() : $("#hard_limits").val() + "*" + $("#custom_limit_fields").val() + ":" + $("#operators").val() + ":" + $("#custom_limit_value").val() + ":" + $("#custom_limit_num").val();
+      		var soft = $("#soft_limits").length ? $("#soft_limits").val() : "";
+  		} else {
+      		var soft = $("#soft_limits").length && $("#soft_limits").val() == "" ? $("#custom_limit_fields").val() + ":" + $("#operators").val() + ":" + $("#custom_limit_value").val() + ":" + $("#custom_limit_num").val() : $("#soft_limits").val() + "*" + $("#custom_limit_fields").val() + ":" + $("#operators").val() + ":" + $("#custom_limit_value").val() + ":" + $("#custom_limit_num").val();
+      		var hard = $("#hard_limits").length ? $("#hard_limits").val() : "";
+  		}
+  		var template_id = "&template_id=" + $("#template").val();
+  		var hard_limits = "&hard_limits=" + hard;
+  		var soft_limits = "&soft_limits=" + soft;
+  		var parameters = "action=add_custom_limit" + hard_limits + soft_limits + template_id + "&currTime=" + d.toUTCString();
+  		// Build the URL to connect to
+    		var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
+  		ajaxpost(url,parameters);
+  		simple_display("custom_limits");
+  		document.getElementById("limit_form").innerHTML = "";
 	}
 }
-function delete_limit(limit_type,limit_num){
+
+function delete_limit(limit_type, limit_num) {
 	var hard_limits = "&hard_limits=" + $("#hard_limits").val();
 	var soft_limits = "&soft_limits=" + $("#soft_limits").val();
 	var template_id = "&template_id=" + $("#template").val();
@@ -144,339 +153,347 @@ function delete_limit(limit_type,limit_num){
 	var d = new Date();
 	var parameters = "action=delete_limit" + hard_limits + soft_limits + template_id + limit_type + limit_num + "&currTime=" + d.toUTCString();
 	// Build the URL to connect to
-  	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
+		var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
 	// Open a connection to the server\
 	ajaxpost(url,parameters);
 	simple_display("custom_limits");
 }
-function add_location_form(formtype,eventid){
-	if(document.getElementById("location_menu").style.display == "inline"){
-    	var d = new Date();
-    	var parameters = "action=add_location_form&formtype=" + formtype + "&eventid=" + eventid + "&currTime=" + d.toUTCString();
-    	// Build the URL to connect to
-      	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
-    	// Open a connection to the server\
-    	ajaxpost(url,parameters);
-    	simple_display("location_menu");
-    	prepareInputsForHints();
+
+function add_location_form(formtype, eventid) {
+	if (document.getElementById("location_menu").style.display !== "none") {
+  		var d = new Date();
+  		var parameters = "action=add_location_form&formtype=" + formtype + "&eventid=" + eventid + "&currTime=" + d.toUTCString();
+  		// Build the URL to connect to
+    		var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
+  		// Open a connection to the server\
+  		ajaxpost(url,parameters);
+  		simple_display("location_menu");
+  		prepareInputsForHints();
 	}
 }
-function copy_location(location,eventid){
-	if(location != "false"){
-    	var d = new Date();
-    	var parameters = "action=copy_location&location=" + location + "&eventid=" + eventid + "&currTime=" + d.toUTCString();
-    	// Build the URL to connect to
-      	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
-    	// Open a connection to the server\
-    	ajaxpost(url,parameters);
-    	simple_display("select_location");
-    	$("#location_status").html("Location Added");
-    	hide_show_buttons("addtolist");
-    	hide_show_buttons("hide_menu");
-    	hide_show_buttons("new_button");
-    	hide_show_buttons("or");
-    	hide_show_buttons("location_menu");
-    	hide_show_buttons("add_location_div");
-    	setTimeout("clear_display(\'location_status\')",2000);
+
+function copy_location(location,eventid) {
+	if (location != "false") {
+  		var d = new Date();
+  		var parameters = "action=copy_location&location=" + location + "&eventid=" + eventid + "&currTime=" + d.toUTCString();
+  		// Build the URL to connect to
+    		var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
+  		// Open a connection to the server\
+  		ajaxpost(url,parameters);
+  		simple_display("select_location");
+  		$("#location_status").html("Location Added");
+  		hide_show_buttons("addtolist");
+  		hide_show_buttons("hide_menu");
+  		hide_show_buttons("new_button");
+  		hide_show_buttons("or");
+  		hide_show_buttons("location_menu");
+  		hide_show_buttons("add_location_div");
+  		setTimeout("clear_display(\'location_status\')",2000);
 	}
 }
-function get_location_details(location){
-    if(location != "false"){
-    	var d = new Date();
-    	var parameters = "action=get_location_details&location=" + location + "&currTime=" + d.toUTCString();
-    	// Build the URL to connect to
-      	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
-    	// Open a connection to the server\
-    	ajaxpost(url,parameters);
-    	simple_display("location_details_div");
-   	}else{
-    	clear_display("location_details_div");
+
+function get_location_details(location) {
+    if (location != "false") {
+  		var d = new Date();
+  		var parameters = "action=get_location_details&location=" + location + "&currTime=" + d.toUTCString();
+  		// Build the URL to connect to
+    		var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
+  		// Open a connection to the server\
+  		ajaxpost(url,parameters);
+  		simple_display("location_details_div");
+ 		} else {
+  		clear_display("location_details_div");
     }
 }
-function valid_new_location(){
+
+function valid_new_location() {
 	var valid = true;
-	if(!$('#location_name').val().length > 0){
-  		$("#location_name_error").html("This is a required field.");
-  		valid = false;
-  	}else{ 
+	if (!$('#location_name').val().length > 0) {
+			$("#location_name_error").html("This is a required field.");
+			valid = false;
+		} else { 
 		// Build the URL to connect to
-	  	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php?action=unique_relay&table=events_locations&key=location&value="+$('#location_name').val();
+			var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php?action=unique_relay&table=events_locations&key=location&value="+$('#location_name').val();
 		// Open a connection to the server\
-	    var d = new Date();
-	  	xmlHttp.open("GET", url + "&currTime=" + d.toUTCString(), false);
-	  	// Send the request
+		  var d = new Date();
+			xmlHttp.open("GET", url + "&currTime=" + d.toUTCString(), false);
+			// Send the request
 		xmlHttp.send(null);
-		if(!istrue()){
+		if (!istrue()) {
 			$("#location_name_error").html("This value already exists in our database.");
 			valid = false;
-		}else{ $("#location_name_error").html(""); }
+		} else { $("#location_name_error").html(""); }
 	}
-	if(!$('#location_address_1').val().length > 0){
-  		$("#location_address_1_error").html("This is a required field.");
-  		valid = false;
-  	}else{ $("#location_address_1_error").html(""); }
-	if(!$('#location_address_2').val().length > 0){
-  		$("#location_address_2_error").html("This is a required field.");
-  		valid = false;
-  	}else{ $("#location_address_2_error").html(""); }
-	if(!$("#zip").val().length > 0){
-  		$("#zip_error").html("This is a required field.");
-  		valid = false;
-  	}else if($("#zip").val().length < 5){
-  		$("#zip_error").html("This is an invalid zipcode.");
-  		valid = false;
-  	}else if(! IsNumeric($("#zip").val())){
-  		$("#zip_error").html("This is an invalid zipcode.");
-  		valid = false;
-  	}else{ $("#zip_error").html(""); }
-	if($("#opt_location_phone").val() == 0 || ($("#opt_location_phone").val() != 0 && ($('#location_phone_1').val().length > 0 || $('#location_phone_2').val().length > 0 || $('#location_phone_3').val().length > 0))){
+	if (!$('#location_address_1').val().length > 0) {
+			$("#location_address_1_error").html("This is a required field.");
+			valid = false;
+		} else { $("#location_address_1_error").html(""); }
+	if (!$('#location_address_2').val().length > 0) {
+			$("#location_address_2_error").html("This is a required field.");
+			valid = false;
+		} else { $("#location_address_2_error").html(""); }
+	if (!$("#zip").val().length > 0) {
+			$("#zip_error").html("This is a required field.");
+			valid = false;
+		} else if ($("#zip").val().length < 5) {
+			$("#zip_error").html("This is an invalid zipcode.");
+			valid = false;
+		} else if (! IsNumeric($("#zip").val())) {
+			$("#zip_error").html("This is an invalid zipcode.");
+			valid = false;
+		} else { $("#zip_error").html(""); }
+	if ($("#opt_location_phone").val() == 0 || ($("#opt_location_phone").val() != 0 && ($('#location_phone_1').val().length > 0 || $('#location_phone_2').val().length > 0 || $('#location_phone_3').val().length > 0))) {
 		//Phone # validity test
-		if($('#location_phone_1').val().length == 3 && $('#location_phone_2').val().length == 3 && $('#location_phone_3').val().length == 4){
-			if(!(IsNumeric($('#location_phone_1').val()) && IsNumeric($('#location_phone_2').val()) && IsNumeric($('#location_phone_3').val()))){
+		if ($('#location_phone_1').val().length == 3 && $('#location_phone_2').val().length == 3 && $('#location_phone_3').val().length == 4) {
+			if (!(IsNumeric($('#location_phone_1').val()) && IsNumeric($('#location_phone_2').val()) && IsNumeric($('#location_phone_3').val()))) {
 				$("#location_phone_error").html("Not a valid phone #");
-	  			valid = false;
-			}else{ $("#location_phone_error").html(""); }
-		}else{
-	  		$("#location_phone_error").html("Phone # is not complete.");
-	  		valid = false;
-	  	}
+					valid = false;
+			} else { $("#location_phone_error").html(""); }
+		} else {
+				$("#location_phone_error").html("Phone # is not complete.");
+				valid = false;
+			}
 	}
    return valid;
 }
-function valid_new_event(){
+
+function valid_new_event() {
 		var valid = true;
 		var Today = new Date();
 		Today.setDate(Today.getDate()-1)
 		//event name
-		if(!$('#event_name').val().length > 0){
-	  		$("#event_name_error").html("This is a required field.");
-	  		valid = false;
-	  	}else{ $("#event_name_error").html(""); }
+		if (!$('#event_name').val().length > 0) {
+				$("#event_name_error").html("This is a required field.");
+				valid = false;
+			} else { $("#event_name_error").html(""); }
 		//contact name
-		if(!$("#contact").val().length > 0){
-	  		$("#contact_error").html("This is a required field.");
-	  		valid = false;
-	  	}else{ $("#contact_error").html(""); }
+		if (!$("#contact").val().length > 0) {
+				$("#contact_error").html("This is a required field.");
+				valid = false;
+			} else { $("#contact_error").html(""); }
 		//contact email
-		if($("#email").val().length > 0){
-			if(echeck($("#email").val())){
+		if ($("#email").val().length > 0) {
+			if (echeck($("#email").val())) {
 				$("#email_error").html("");
-		  	}else{
+				} else {
 				$("#email_error").html("Email address is not valid.");
 				valid = false;
 			}
-		}else{
-	  		$("#email_error").html("Email address is required.");
-	  		valid = false;
-	  	}
-	  	//contact phone #
-		if($("#phone_1").val().length == 3 && $("#phone_2").val().length == 3 && $("#phone_3").val().length == 4){
-			if(!(IsNumeric($("#phone_1").val()) && IsNumeric($("#phone_2").val()) && IsNumeric($("#phone_3").val()))){
+		} else {
+				$("#email_error").html("Email address is required.");
+				valid = false;
+			}
+			//contact phone #
+		if ($("#phone_1").val().length == 3 && $("#phone_2").val().length == 3 && $("#phone_3").val().length == 4) {
+			if (!(IsNumeric($("#phone_1").val()) && IsNumeric($("#phone_2").val()) && IsNumeric($("#phone_3").val()))) {
 				$("#phone_error").html("Not a valid phone #");
-	  			valid = false;
-			}else{ $("#phone_error").html(""); }
-		}else{
-	  		$("#phone_error").html("Phone # is not complete.");
-	  		valid = false;
-	  	}
-		if($("#fee").val() == "1"){ //Fee = YES
+					valid = false;
+			} else { $("#phone_error").html(""); }
+		} else {
+				$("#phone_error").html("Phone # is not complete.");
+				valid = false;
+			}
+		if ($("#fee").val() == "1") { //Fee = YES
 			//min fee
-			if(!(IsNumeric($("#min_fee").val()))){
+			if (!(IsNumeric($("#min_fee").val()))) {
 				$("#event_min_fee_error").html("Must be a numeric value.");
-			  	valid = false;
-			}else if(parseInt($("#min_fee").val()) > parseInt($("#full_fee").val())){
+					valid = false;
+			} else if (parseInt($("#min_fee").val()) > parseInt($("#full_fee").val())) {
 				$("#event_min_fee_error").html("Cannot be greater than full fee.");
-			  	valid = false;
-			}else{ $("#event_min_fee_error").html(""); }
+					valid = false;
+			} else { $("#event_min_fee_error").html(""); }
 			//full fee
-			if(!(IsNumeric($("#full_fee").val()))){
+			if (!(IsNumeric($("#full_fee").val()))) {
 				$("#event_full_fee_error").html("Must be a numeric value.");
-			  	valid = false;
-			}else if($("#full_fee").val() == "0"){
+					valid = false;
+			} else if ($("#full_fee").val() == "0") {
 				$("#event_full_fee_error").html("Must be greater than 0.");
-			  	valid = false;
-			}else{ $("#event_full_fee_error").html(""); }
+					valid = false;
+			} else { $("#event_full_fee_error").html(""); }
 			//sale fee
-			if(parseInt($("#sale_fee").val()) != 0){
-				if(!(IsNumeric($("#sale_fee").val()))){
+			if (parseInt($("#sale_fee").val()) != 0) {
+				if (!(IsNumeric($("#sale_fee").val()))) {
 					$("#event_sale_fee_error").html("Must be a numeric value.");
-				  	valid = false;
-				}else{ $("#event_sale_fee_error").html(""); }
-				if(sale_end_Object.picked.date < Today){
+						valid = false;
+				} else { $("#event_sale_fee_error").html(""); }
+				if (sale_end_Object.picked.date < Today) {
 					$("#sale_end_error").html('Cannot select a date in the past.');
 					valid = false;
-				}else{ $("#sale_end_error").html(""); }
+				} else { $("#sale_end_error").html(""); }
 			}
 			//payable to
-			if($("#payableto").val() == ""){
+			if ($("#payableto").val() == "") {
 				$("#event_payableto_error").html("This is a required field.");
-			  	valid = false;
-			}else{ $("#event_payableto_error").html(""); }
+					valid = false;
+			} else { $("#event_payableto_error").html(""); }
 			//checksaddress to
-			if($("#checksaddress").val() == ""){
+			if ($("#checksaddress").val() == "") {
 				$("#event_checksaddress_error").html("This is a required field.");
-			  	valid = false;
-			}else{ $("#event_checksaddress_error").html(""); }
+					valid = false;
+			} else { $("#event_checksaddress_error").html(""); }
 			//paypal
-			if($("#paypal").val() != "" && !echeck($("#paypal").val())){
+			if ($("#paypal").val() != "" && !echeck($("#paypal").val())) {
 				$("#event_paypal_error").html("This is not a valid email address.");
-			  	valid = false;
-			}else{ $("#event_paypal_error").html(""); }
+					valid = false;
+			} else { $("#event_paypal_error").html(""); }
 		}		
 		//event location
-		if($("#location").length){
+		if ($("#location").length) {
 			$("#location_error").html("");
-		}else{
+		} else {
 			$("#location_error").html("Add a location for your event.");
-		  	valid = false;
+				valid = false;
 		}
 		//multiday event
 		//event_begin_date	
-		if (event_begin_date_Object.picked.date < Today){
+		if (event_begin_date_Object.picked.date < Today) {
 			$("#event_begin_date_error").html('Cannot select a date in the past.');
 			valid = false;
-        }else{ $("#event_begin_date_error").html(""); }
-		if($("#multiday").val() == "1"){ //Multi day = YES
-   			//event_end_date	
-			if (event_end_date_Object.picked.date <= event_begin_date_Object.picked.date){
+        } else { $("#event_begin_date_error").html(""); }
+		if ($("#multiday").val() == "1") { //Multi day = YES
+ 				//event_end_date	
+			if (event_end_date_Object.picked.date <= event_begin_date_Object.picked.date) {
 				$("#event_end_date_error").html('Must select a date after the event start date');
 				valid = false;
-			}else if (event_end_date_Object.picked.date < Today){
+			} else if (event_end_date_Object.picked.date < Today) {
 				$("#event_end_date_error").html('Cannot select a date in the past.');
 				valid = false;
-			}else{ $("#event_end_date_error").html(""); }
+			} else { $("#event_end_date_error").html(""); }
 		}
-		if($("#allday").val() == "0"){ //All day = NO
+		if ($("#allday").val() == "0") { //All day = NO
 			//begin time
-			if($("#begin_time").val() == ""){
+			if ($("#begin_time").val() == "") {
 				$("#time_error").html("You must select a start time.");
-			  	valid = false;
-			}else if($("#end_time").val() == ""){
+					valid = false;
+			} else if ($("#end_time").val() == "") {
 				$("#time_error").html("You must select an end time.");
-			  	valid = false;
-			}else{ $("#time_error").html(""); }
+					valid = false;
+			} else { $("#time_error").html(""); }
 		}
-		if($("#reg").val() == "1"){ //Registration = YES
-            if($("#template").val() < 1){ 
+		if ($("#reg").val() == "1") { //Registration = YES
+            if ($("#template").val() < 1) { 
                 $("#template_error").html("Template must be selected.");
                 valid = false; 
             }
-			if($("#max").val() == ""){ $("#max").val("0"); }
-			if($("#limits").val() == "1"){
+			if ($("#max").val() == "") { $("#max").val("0"); }
+			if ($("#limits").val() == "1") {
 				//max reg
-				if(!IsNumeric($("#max").val())){
+				if (!IsNumeric($("#max").val())) {
 					$("#max_error").html("Must be a numeric value.");
-				  	valid = false;
-				}else{ $("#max_error").html(""); }
+						valid = false;
+				} else { $("#max_error").html(""); }
 			}
 			//registration dates
-   			//start_reg	
-			if(start_reg_Object.picked.date < Today && !$("#eventid").length){
+ 				//start_reg	
+			if (start_reg_Object.picked.date < Today && !$("#eventid").length) {
 				$("#start_reg_error").html('Cannot select a date in the past.');
 				valid = false;
-			}else if (start_reg_Object.picked.date >= event_begin_date_Object.picked.date){ 
+			} else if (start_reg_Object.picked.date >= event_begin_date_Object.picked.date) { 
 				$("#start_reg_error").html('Registration must start and end before event starts.');
 				valid = false
-   			}else{ $("#start_reg_error").html(""); }
+ 				} else { $("#start_reg_error").html(""); }
 			//stop_reg	
-			if(stop_reg_Object.picked.date < Today && !$("#eventid").length){
+			if (stop_reg_Object.picked.date < Today && !$("#eventid").length) {
 				$("#stop_reg_error").html('Cannot select a date in the past.');
 				valid = false;
-			}else if (stop_reg_Object.picked.date <= start_reg_Object.picked.date){ 
+			} else if (stop_reg_Object.picked.date <= start_reg_Object.picked.date) { 
 				$("#stop_reg_error").html('Must be a date after registration start.');
 				valid = false
-   			}else if (stop_reg_Object.picked.date > event_begin_date_Object.picked.date){ 
+ 				} else if (stop_reg_Object.picked.date > event_begin_date_Object.picked.date) { 
 				$("#stop_reg_error").html('Registration must start and end before event starts.');
 				valid = false
-   			}else{ $("#stop_reg_error").html(""); }
+ 				} else { $("#stop_reg_error").html(""); }
 		}
 	return valid;
 }
-function new_event_submit(pageid){
-	if(valid_new_event()){
-    	var d = new Date();
-    	var eventid = $('#eventid').val() ? '&eventid=' + $('#eventid').val() : ''; //Event id if update event
-    	var event_name = "&event_name=" + escape($('#event_name').val()); //Event name
-    	var contact = "&contact=" + escape($('#contact').val()); //Contacts name
-    	var email = "&email=" + escape($('#email').val()); //Contacts email
-    	var phone = "&phone=" + $('#phone_1').val() + "-" + $('#phone_2').val() + "-" + $('#phone_3').val(); //Event name
-    	var byline = "&byline=" + escape($('#byline').val()); //Event byline
+
+function new_event_submit(pageid) {
+	if (valid_new_event()) {
+  		var d = new Date();
+  		var eventid = $('#eventid').val() ? '&eventid=' + $('#eventid').val() : ''; //Event id if update event
+  		var event_name = "&event_name=" + escape($('#event_name').val()); //Event name
+  		var contact = "&contact=" + escape($('#contact').val()); //Contacts name
+  		var email = "&email=" + escape($('#email').val()); //Contacts email
+  		var phone = "&phone=" + $('#phone_1').val() + "-" + $('#phone_2').val() + "-" + $('#phone_3').val(); //Event name
+  		var byline = "&byline=" + escape($('#byline').val()); //Event byline
         var description = "&description=" + escape($('#editor1').val()); //Event byline
-    	var siteviewable = "&siteviewable=" + $('#siteviewable').val(); //If event is viewable on front page
-    	var location = "&location=" + $('#location').val(); //Where event is located
-    	var category = "&category=" + $('#category').val(); //Event category (birthday, aniversary..)
-    	var multiday = "&multiday=" + $("#multiday").val(); //If the event is more than 1 day
-    	var allday = "&allday=" + $("#allday").val(); //all day event?
+  		var siteviewable = "&siteviewable=" + $('#siteviewable').val(); //If event is viewable on front page
+  		var location = "&location=" + $('#location').val(); //Where event is located
+  		var category = "&category=" + $('#category').val(); //Event category (birthday, aniversary..)
+  		var multiday = "&multiday=" + $("#multiday").val(); //If the event is more than 1 day
+  		var allday = "&allday=" + $("#allday").val(); //all day event?
         var workers = "&workers=" + $("#workers").val(); //all day event?
-    	var event_begin_date = "&event_begin_date=" + event_begin_date_Object.picked.date; //when event begins
-    	var event_end_date = $("#multiday").val() == "1" ? "&event_end_date=" + event_end_date_Object.picked.date : ""; //when event ends
-    	var begin_time = $("#allday").val() == "1" ? "" : "&begin_time=" + $("#begin_time").val(); //If not an all day event, when does it begin
-    	var end_time = $("#allday").val() == "1" ? "" : "&end_time=" + $("#end_time").val(); //If not an all day event, when does it end
+  		var event_begin_date = "&event_begin_date=" + event_begin_date_Object.picked.date; //when event begins
+  		var event_end_date = $("#multiday").val() == "1" ? "&event_end_date=" + event_end_date_Object.picked.date : ""; //when event ends
+  		var begin_time = $("#allday").val() == "1" ? "" : "&begin_time=" + $("#begin_time").val(); //If not an all day event, when does it begin
+  		var end_time = $("#allday").val() == "1" ? "" : "&end_time=" + $("#end_time").val(); //If not an all day event, when does it end
         var max = $("#reg").val() == "1" ? "&max=" + $("#max").val() : ""; //Maximum registrations HARD
-    	var hard_limits = $("#hard_limits").length && $("#hard_limits").val() != "" ? "&hard_limits=" + $("#hard_limits").val() : ""; //custom limits that keep people from registering
-    	var soft_limits = $("#soft_limits").length && $("#soft_limits").val() != "" ? "&soft_limits=" + $("#soft_limits").val() : ""; //custom limits that place people in queue
+  		var hard_limits = $("#hard_limits").length && $("#hard_limits").val() != "" ? "&hard_limits=" + $("#hard_limits").val() : ""; //custom limits that keep people from registering
+  		var soft_limits = $("#soft_limits").length && $("#soft_limits").val() != "" ? "&soft_limits=" + $("#soft_limits").val() : ""; //custom limits that place people in queue
         var fee = "&fee=" + $("#fee").val(); //Are there fees associated with this reg page?
-    	var min_fee = "&min_fee=" + $("#min_fee").val(); //minimum amount needed to pay to register
-    	var full_fee = "&full_fee=" + $("#full_fee").val(); //full payment for registration
-    	var sale_fee = "&sale_fee=" + $("#sale_fee").val(); //temporary sale payment
-    	var sale_end = $("#sale_fee").val() != "" ? "&sale_end=" + sale_end_Object.picked.date : ""; //when temporary sale price ends
-    	var checksaddress = "&checksaddress=" + escape($("#checksaddress").val()); //Address to send checks to
-    	var payableto = "&payableto=" + escape($("#payableto").val()); //Make checks payable to
-    	var paypal = "&paypal=" + $("#paypal").val(); //Paypal account
-    	var reg = "&reg=" + $("#reg").val(); //Event has a registration page
-    	var allowinpage = $("#reg").val() == "1" ? "&allowinpage=" + $("#allowinpage").val() : ""; //If a logged in user registers...allow them into the page that this event was created in.
-    	var template = $("#reg").val() == "1" ? "&template=" + $("#template").val() : ""; //registration template
+  		var min_fee = "&min_fee=" + $("#min_fee").val(); //minimum amount needed to pay to register
+  		var full_fee = "&full_fee=" + $("#full_fee").val(); //full payment for registration
+  		var sale_fee = "&sale_fee=" + $("#sale_fee").val(); //temporary sale payment
+  		var sale_end = $("#sale_fee").val() != "" ? "&sale_end=" + sale_end_Object.picked.date : ""; //when temporary sale price ends
+  		var checksaddress = "&checksaddress=" + escape($("#checksaddress").val()); //Address to send checks to
+  		var payableto = "&payableto=" + escape($("#payableto").val()); //Make checks payable to
+  		var paypal = "&paypal=" + $("#paypal").val(); //Paypal account
+  		var reg = "&reg=" + $("#reg").val(); //Event has a registration page
+  		var allowinpage = $("#reg").val() == "1" ? "&allowinpage=" + $("#allowinpage").val() : ""; //If a logged in user registers...allow them into the page that this event was created in.
+  		var template = $("#reg").val() == "1" ? "&template=" + $("#template").val() : ""; //registration template
         var template_settings = create_request_string('template_settings_form');
         var start_reg = $("#reg").val() == "1" ? "&start_reg=" + start_reg_Object.picked.date : ""; //Registration open date
-    	var stop_reg = $("#reg").val() == "1" ? "&stop_reg=" + stop_reg_Object.picked.date : ""; //Registration ending date
-    	var parameters = "action=submit_new_event&pageid=" + pageid + workers + email + contact + phone + fee + min_fee + full_fee + sale_fee + sale_end + hard_limits + soft_limits + checksaddress + payableto + paypal + eventid + event_name + category + byline + description + siteviewable + location + multiday + template + event_begin_date + event_end_date + allday + begin_time + end_time + reg + allowinpage + max + start_reg + stop_reg + template_settings + "&currTime=" + d.toUTCString();
+  		var stop_reg = $("#reg").val() == "1" ? "&stop_reg=" + stop_reg_Object.picked.date : ""; //Registration ending date
+  		var parameters = "action=submit_new_event&pageid=" + pageid + workers + email + contact + phone + fee + min_fee + full_fee + sale_fee + sale_end + hard_limits + soft_limits + checksaddress + payableto + paypal + eventid + event_name + category + byline + description + siteviewable + location + multiday + template + event_begin_date + event_end_date + allday + begin_time + end_time + reg + allowinpage + max + start_reg + stop_reg + template_settings + "&currTime=" + d.toUTCString();
         // Build the URL to connect to
-      	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
-    	// Open a connection to the server\
-    	ajaxpost(url,parameters);
-    	// Setup a function for the server to run when it's done
-      	
+    		var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
+  		// Open a connection to the server\
+  		ajaxpost(url,parameters);
+  		// Setup a function for the server to run when it's done
+    		
         simple_display("add_event_div");
-      	close_modal();
-  	}	
+    		close_modal();
+		}	
 }
 
-function add_new_location(eventid){
-	if(valid_new_location()){
-    	var d = new Date();
-    	var name = "&name=" + escape($('#location_name').val());
-    	var add1 = "&add1=" + escape($('#location_address_1').val());
-    	var add2 = "&add2=" + escape($('#location_address_2').val());
-    	var zip = "&zip=" + document.getElementById("zip").value;
-    	var eventid = "&eventid=" + eventid;
-    	var share = document.getElementById("share").checked == true ? "&share=1" : "";
-    	var phone = $('#location_phone_1').val() != "" ? "&phone=" + $('#location_phone_1').val() + "-" + $('#location_phone_2').val() + "-" + $('#location_phone_3').val() : "";
-    	var parameters = "action=add_new_location" + name + add1 + add2 + zip + share + phone + eventid + "&currTime=" + d.toUTCString();
-    	// Build the URL to connect to
-      	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
-    	// Open a connection to the server\
-    	ajaxpost(url,parameters);
-    	simple_display("select_location");
+function add_new_location(eventid) {
+	if (valid_new_location()) {
+  		var d = new Date();
+  		var name = "&name=" + escape($('#location_name').val());
+  		var add1 = "&add1=" + escape($('#location_address_1').val());
+  		var add2 = "&add2=" + escape($('#location_address_2').val());
+  		var zip = "&zip=" + document.getElementById("zip").value;
+  		var eventid = "&eventid=" + eventid;
+  		var share = document.getElementById("share").checked == true ? "&share=1" : "";
+  		var phone = $('#location_phone_1').val() != "" ? "&phone=" + $('#location_phone_1').val() + "-" + $('#location_phone_2').val() + "-" + $('#location_phone_3').val() : "";
+  		var parameters = "action=add_new_location" + name + add1 + add2 + zip + share + phone + eventid + "&currTime=" + d.toUTCString();
+  		// Build the URL to connect to
+    		var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
+  		// Open a connection to the server\
+  		ajaxpost(url,parameters);
+  		simple_display("select_location");
         $('#location_status').html("Location Added");
-    	hide_show_buttons("addtolist");
-    	hide_show_buttons("hide_menu");
-    	hide_show_buttons("new_button");
-    	hide_show_buttons("or");
-    	hide_show_buttons("location_menu");
-    	hide_show_buttons("add_location_div");
-    	setTimeout("clear_display(\'location_status\')",2000);
+  		hide_show_buttons("addtolist");
+  		hide_show_buttons("hide_menu");
+  		hide_show_buttons("new_button");
+  		hide_show_buttons("or");
+  		hide_show_buttons("location_menu");
+  		hide_show_buttons("add_location_div");
+  		setTimeout("clear_display(\'location_status\')",2000);
 	}	
 }
-function clear_display(divname){
-	if($("#"+divname).length){ $('#'+divname).html(""); }
+
+function clear_display(divname) {
+	if ($("#"+divname).length) { $('#'+divname).html(""); }
 }
-function init_event_menu(){
-    $('#event_menu_button').click( function(event){
+
+function init_event_menu() {
+    $('#event_menu_button').click( function(event) {
         event.stopPropagation();
         $('#event_menu').toggle();
     });
 
-    $(document).click( function(){
+    $(document).click( function() {
         $('#event_menu').hide();
     });
 }

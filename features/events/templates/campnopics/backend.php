@@ -14,7 +14,7 @@ if (!isset($CFG)) {
 	include($sub . 'config.php'); 
 }
 include($CFG->dirroot . '/pages/header.php');
-if (!isset($EVENTSLIB)) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
+if (!defined('EVENTSLIB')) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 
 //Retrieve from Javascript
 $postorget = isset($_GET["action"]) ? $_GET : $_POST;
@@ -31,7 +31,7 @@ update_user_cookie();
 function register() {
 global $CFG, $MYVARS, $USER, $error;
 
-if (!isset($COMLIB)) include_once($CFG->dirroot . '/lib/comlib.php');
+if (!defined('COMLIB')) include_once($CFG->dirroot . '/lib/comlib.php');
 
 	$event = get_db_row("SELECT * FROM events WHERE eventid = " . $MYVARS->GET["eventid"]);
 	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='" . $event['template_id'] . "'");

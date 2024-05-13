@@ -3,12 +3,19 @@
 * participants.php - View page participants
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 8/16/2011
+* Date: 5/14/2024
 * Revision: 0.0.5
 ***************************************************************************/
 if (empty($_POST["aslib"])) {
-    if (!isset($CFG)) { include('../header.php'); } 
-    if (!isset($HTMLLIB)) { include_once($CFG->dirroot . '/features/html/htmllib.php'); }
+    if (!isset($CFG)) {
+		$sub = '';
+		while (!file_exists($sub . 'header.php')) {
+			$sub = $sub == '' ? '../' : $sub . '../';
+		}
+		include($sub . 'header.php');
+	}
+
+    if (!defined('HTMLLIB')) { include_once($CFG->dirroot . '/features/html/htmllib.php'); }
     
     callfunction();
     
@@ -29,7 +36,7 @@ global $MYVARS, $CFG, $USER;
 	$limit = $settings->$feature->$featureid->viewable_limit->setting;
     $show_total = $settings->$feature->$featureid->show_total->setting;
     
-    if (!user_is_able($USER->userid, "viewparticipants", $pageid)) { debugging(error_string("no_permission", ["viewparticipants"]), 2); return; }
+    if (!user_is_able($USER->userid, "viewparticipants", $pageid)) { trigger_error(error_string("no_permission", ["viewparticipants"]), E_USER_WARNING); return; }
 
     $SQL = "SELECT * FROM roles_assignment ra JOIN users u ON u.userid=ra.userid JOIN roles r ON r.roleid = ra.roleid WHERE ra.pageid='$pageid' AND ra.confirm=0 ORDER BY r.display_name,u.lname";
 	if ($results = get_db_result($SQL . " LIMIT $limit")) {

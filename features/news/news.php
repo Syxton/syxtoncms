@@ -3,12 +3,19 @@
 * news.php - News thickbox page lib
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 3/25/2014
+* Date: 5/14/2024
 * Revision: 0.4.0
 ***************************************************************************/
 if (empty($_POST["aslib"])) {
-    if (!isset($CFG)) { include('../header.php'); }
-    if (!isset($NEWSLIB)) { include_once($CFG->dirroot . '/features/news/newslib.php');}
+    if (!isset($CFG)) {
+		$sub = '';
+		while (!file_exists($sub . 'header.php')) {
+			$sub = $sub == '' ? '../' : $sub . '../';
+		}
+		include($sub . 'header.php');
+	}
+
+    if (!defined('NEWSLIB')) { include_once($CFG->dirroot . '/features/news/newslib.php');}
 
     callfunction();
 
@@ -41,14 +48,14 @@ global $CFG, $MYVARS, $USER;
 
     $title = $caption = $content = "";
     if ($newsid) {
-        if (!user_is_able($USER->userid, "editnews", $pageid,"news", $featureid)) { debugging(error_string("no_permission", ["editnews"]), 2); return; }
+        if (!user_is_able($USER->userid, "editnews", $pageid,"news", $featureid)) { trigger_error(error_string("no_permission", ["editnews"]), E_USER_WARNING); return; }
         $row = get_db_row("SELECT * FROM news WHERE newsid='$newsid'");
         $title = stripslashes(htmlentities($row["title"]));
         $caption = stripslashes(htmlentities($row["caption"]));
         $content = stripslashes($row["content"]);
         $button = '<input type="button" value="Save" onclick="ajaxapi(\'/features/news/news_ajax.php\',\'edit_news\',\'&amp;title=\'+escape($(\'#news_title\').val())+\'&amp;summary=\' + escape($(\'#news_summary\').val()) + \'&amp;pageid=' . $pageid . '&amp;html=\'+escape(' . get_editor_value_javascript() . ')+\'&amp;newsid=' . $newsid . '\',function() { close_modal(); });" />';
     } else {
-        if (!user_is_able($USER->userid, "addnews", $pageid,"news", $featureid)) { debugging(error_string("no_permission", ["addnews"]), 2); return; }
+        if (!user_is_able($USER->userid, "addnews", $pageid,"news", $featureid)) { trigger_error(error_string("no_permission", ["addnews"]), E_USER_WARNING); return; }
         $button = '<input type="button" value="Save" onclick="ajaxapi(\'/features/news/news_ajax.php\',\'add_news\',\'&amp;title=\'+escape($(\'#news_title\').val())+\'&amp;summary=\' + escape($(\'#news_summary\').val()) + \'&amp;pageid=' . $pageid . '&amp;html=\'+escape(' . get_editor_value_javascript() . ')+\'&amp;featureid=' . $featureid . '\',function() { close_modal(); });" />';
     }
 
@@ -92,8 +99,8 @@ global $CFG, $MYVARS, $USER, $ROLES;
     $pageid = $MYVARS->GET['pageid'];
     $newsonly = isset($MYVARS->GET['newsonly']) ? true : false;
 	if (is_logged_in()) {
-	    if (!user_is_able($USER->userid, "viewnews", $pageid)) {
-            debugging(error_string("no_permission", ["viewnews"]), 2);
+		  if (!user_is_able($USER->userid, "viewnews", $pageid, "news", $newsid)) {
+            trigger_error(error_string("no_permission", ["viewnews"]), E_USER_WARNING);
 			return;
 		} else {
 			echo news_wrapper($newsid, $pageid, $newsonly);
@@ -102,7 +109,7 @@ global $CFG, $MYVARS, $USER, $ROLES;
 		if (get_db_field("siteviewable", "pages", "pageid=$pageid") && role_is_able($ROLES->visitor, 'viewnews', $pageid)) {
             echo news_wrapper($newsid, $pageid, $newsonly);
 		} else {
-    		echo '	<div id="standalone_div">
+  			echo '	<div id="standalone_div">
 						<input type="hidden" id="reroute" value="/features/news/news.php:viewnews:&amp;pageid=' . $pageid . '&amp;newsid=' . $newsid . ':standalone_div" />
 						<div style="width:100%; text-align:center;">
 							You must login to see this content.
@@ -111,7 +118,7 @@ global $CFG, $MYVARS, $USER, $ROLES;
 								' . get_login_form(true, false) . '
 							</center>
 						</div>
-				    </div>';
+					  </div>';
 		}
 	}
 }
@@ -136,16 +143,13 @@ global $CFG;
 					' . $display_news . '
 				</div>';
 	} else {
-		return main_body(true) . '
-		<a href="' . $CFG->wwwroot . '/index.php?pageid=' . $pageid . '">Home</a>
-		<table style="margin-left:auto;margin-right:auto;width:800px">
-			<tr>
-				<td>
-					' . make_news_table($pageid, $pagenews, "middle", $daygraphic, true) . '<br />
-					' . $display_news . '
-				</td>
-			</tr>
-		</table>';
+        $pagename = get_db_field("name", "pages", "pageid = '$pageid'");
+        $middlecontents = '<a class="buttonlike" style="margin: 10px" href="' . $CFG->wwwroot . '/index.php?pageid=' . $pageid . '">Navigate to ' . $pagename . '</a>
+                            <div class="html_mini">
+                            ' . make_news_table($pageid, $pagenews, "middle", $daygraphic, true) . '<br />
+                            ' . $display_news . '
+                            </div>';
+        return get_css_set("main") . use_template("tmp/index.template", ["mainmast" => page_masthead(true, true), "middlecontents" => $middlecontents], "simplelayout_template");
 	}
 }
 ?>

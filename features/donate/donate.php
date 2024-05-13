@@ -3,12 +3,19 @@
 * donate.php - donate page
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 8/16/2011
+* Date: 5/14/2024
 * Revision: 1.7.3
 ***************************************************************************/
 if (empty($_POST["aslib"])) {
-    if (!isset($CFG)) { include('../header.php'); }
-    if (!isset($donateLIB)) { include_once($CFG->dirroot . '/features/donate/donatelib.php'); }
+    if (!isset($CFG)) {
+        $sub = '';
+        while (!file_exists($sub . 'header.php')) {
+            $sub = $sub == '' ? '../' : $sub . '../';
+        }
+        include($sub . 'header.php');
+    }
+
+    if (!defined('DONATELIB')) { include_once($CFG->dirroot . '/features/donate/donatelib.php'); }
     
     header_remove('X-Frame-Options');    
         

@@ -3,12 +3,18 @@
 * adminpanel.php - Site Admin Panel Area
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 6/07/2016
+* Date: 5/14/2024
 * Revision: 0.0.6
 ***************************************************************************/
 
 if (empty($_POST["aslib"])) {
-    if (!isset($CFG)) { include('../header.php'); } 
+    if (!isset($CFG)) {
+        $sub = '';
+        while (!file_exists($sub . 'header.php')) {
+            $sub = $sub == '' ? '../' : $sub . '../';
+        }
+        include($sub . 'header.php');
+    } 
     
     callfunction();
 

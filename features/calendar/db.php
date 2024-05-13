@@ -3,14 +3,14 @@
 * db.php - feature db upgrades
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 8/19/2010
+* Date: 5/14/2024
 * Revision: 0.0.2
 ***************************************************************************/
 
 function calendar_upgrade() {
 	global $CFG;
     
-    $version = get_db_field("version", "features", "feature='calendar'");	    
+    $version = get_db_field("version", "features", "feature='calendar'");		  
     $thisversion = 20100819;
 	if ($version < $thisversion) { execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='calendar'"); }
 

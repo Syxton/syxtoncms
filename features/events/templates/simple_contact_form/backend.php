@@ -15,7 +15,7 @@ if (!isset($CFG)) {
 } 
 include($CFG->dirroot . '/pages/header.php');
 
-if (!isset($EVENTSLIB)) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
+if (!defined('EVENTSLIB')) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 
 callfunction();
 
@@ -28,7 +28,7 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
     //$keys->app_key = '350430668323766';
     //$keys->app_secret = '7c43774dbcf542b0700e338bc5625296';
 
-    if (!isset($COMLIB)) { include_once($CFG->dirroot . '/lib/comlib.php'); }
+    if (!defined('COMLIB')) { include_once($CFG->dirroot . '/lib/comlib.php'); }
     $eventid = $MYVARS->GET["eventid"];
 	$event = get_db_row("SELECT * FROM events WHERE eventid = '$eventid'");
     $templateid = $event['template_id'];
@@ -77,7 +77,7 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
 			echo '<div id="backup">
                     <input type="hidden" name="cart_total" id="cart_total" value="' . $MYVARS->GET["cart_total"] . '" />
                     <input type="hidden" name="total_owed" id="total_owed" value="' . $MYVARS->GET["total_owed"] . '" />
-				    <input type="hidden" name="items" id="items" value="' . $items . '" /></div>';
+					  <input type="hidden" name="items" id="items" value="' . $items . '" /></div>';
 
 			$items = explode("**", $items);
             $i=0;
@@ -95,15 +95,15 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
             
             //Send registration email
             $touser->fname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Name_First'");
-    		$touser->lname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Name_Last'");
-    		$touser->email = get_db_field("email", "events_registrations", "regid='$regid'");
-    		$fromuser->email = $CFG->siteemail;
-    		$fromuser->fname = $CFG->sitename;
-    		$fromuser->lname = "";
-    		$message = registration_email($regid, $touser);
-    		if (send_email($touser, $fromuser, $event['name'] . " Registration", $message)) {
-    			send_email($fromuser, $fromuser, $event['name'] . " Registration", $message);
-    		}
+  			$touser->lname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Name_Last'");
+  			$touser->email = get_db_field("email", "events_registrations", "regid='$regid'");
+  			$fromuser->email = $CFG->siteemail;
+  			$fromuser->fname = $CFG->sitename;
+  			$fromuser->lname = "";
+  			$message = registration_email($regid, $touser);
+  			if (send_email($touser, $fromuser, $event['name'] . " Registration", $message)) {
+  				send_email($fromuser, $fromuser, $event['name'] . " Registration", $message);
+  			}
 
 			if ($MYVARS->GET["cart_total"] > 0) { // Event paid by paypal.
                 
@@ -115,10 +115,10 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
                 }
                 
                 echo '<br /><br />Click the Paypal button below to make that payment.
-  				    <br />
+						  <br />
                     <div style="text-align:center;">
-    				' . make_paypal_button($cart_items, $event['paypal']) . '
-    				</div>';
+  					' . make_paypal_button($cart_items, $event['paypal']) . '
+  					</div>';
             } else {
                 echo '<br />Please bring cash, check or money order in the amount of <span style="color:blue;font-size:1.25em;">$' . number_format($event['fee_full'],2) . '</span><br />payable to <strong>' . $event["payableto"] . '</strong> on the day of the event.';
             }
@@ -128,15 +128,15 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
                 
             //Send registration email
             $touser->fname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Name_First'");
-    		$touser->lname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Name_Last'");
-    		$touser->email = get_db_field("email", "events_registrations", "regid='$regid'");
-    		$fromuser->email = $CFG->siteemail;
-    		$fromuser->fname = $CFG->sitename;
-    		$fromuser->lname = "";
-    		$message = registration_email($regid, $touser);
-    		if (send_email($touser, $fromuser, $event['name'] . " Registration", $message)) {
-    			send_email($fromuser, $fromuser, $event['name'] . " Registration", $message);
-    		}
+  			$touser->lname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Name_Last'");
+  			$touser->email = get_db_field("email", "events_registrations", "regid='$regid'");
+  			$fromuser->email = $CFG->siteemail;
+  			$fromuser->fname = $CFG->sitename;
+  			$fromuser->lname = "";
+  			$message = registration_email($regid, $touser);
+  			if (send_email($touser, $fromuser, $event['name'] . " Registration", $message)) {
+  				send_email($fromuser, $fromuser, $event['name'] . " Registration", $message);
+  			}
         }
 		
         echo "<h2>Thank you for registering!</h2>";

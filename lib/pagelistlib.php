@@ -3,16 +3,16 @@
 * pagelistlib.php - Page list function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 05/28/2021
+* Date: 5/14/2024
 * Revision: 2.3.5
 ***************************************************************************/
 
-if (!isset($LIBHEADER)) { include ('header.php'); }
-$PAGELISTLIB = true;
+if (!LIBHEADER) { include ('header.php'); }
+define('PAGELISTLIB', true);
 
-if (empty($MYVARS)) {
-  $MYVARS = new \stdClass;
-}
+global $MYVARS;
+
+collect_vars();
 $MYVARS->search_perpage = 8;
 
 function display_pagelist($pageid) {
@@ -66,10 +66,10 @@ function format_pagelist($pageresults) {
 global $CFG, $USER, $PAGE;
   $returnme = "";
   if (!empty($pageresults)) {
-	  while ($row = fetch_row($pageresults)) {
+		while ($row = fetch_row($pageresults)) {
       $selected = $PAGE->id == $row['pageid'] ? "selected" : ""; // Preselect page if you are there
 			$options .= use_template("tmp/page.template", ["value" => $row['pageid'], "display" => $row['name'], "selected" => $selected], "select_options_template");
-	  }
+		}
 		$returnme = use_template("tmp/page.template", ["options" => $options], "format_pagelist_select");
   }
   return $returnme;

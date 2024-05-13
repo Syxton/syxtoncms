@@ -30,6 +30,11 @@ p {
     margin: 0 0 1em 0
 }
 
+.adminpanel_links {
+    display: block;
+    margin: 5px;
+}
+
 .html_notfullscreen {
     float: right
 }
@@ -48,6 +53,31 @@ p {
     background: inherit;
     background-color: #fff;
     overflow: visible !important
+}
+
+.html_makecomment {
+    float: right;
+    margin-top: 10px;
+}
+
+.html_comment_form {
+    padding: 10px;
+}
+
+.html_comment_form .title {
+    padding-bottom: 10px;
+}
+
+.html_replytocomment {
+    padding: 5px 0px 20px 0px;
+    background: #f3f3f3;
+    border-radius: 10px 10px 0px;
+    padding: 10px 20px 10px 20px;
+    margin-bottom: 10px;
+}
+
+.html_commentinput {
+    padding-bottom: 10px;
 }
 
 .fs_icon {
@@ -115,9 +145,8 @@ h1 {
 }
 
 .rowContainer {
-    margin-bottom: 10px;
+    margin-bottom: 5px;
     width: 100%;
-    padding-bottom: 5px;
     clear: both
 }
 
@@ -182,7 +211,7 @@ label.error {
     float: left;
     background: url('../images/error.gif') no-repeat;
     padding-left: 20px;
-    margin-left: 4px;
+    margin: 2px 4px;
     white-space: nowrap;
     width: 75%
 }
@@ -226,7 +255,7 @@ label.valid {
 .info {
     float: left;
     background-image: url('../images/info.gif');
-    margin: 2px 2px 10px 4px;
+    margin: 2px 4px;
     padding-left: 20px;
     width: initial
 }
@@ -243,18 +272,20 @@ label.valid {
     width: 16px
 }
 
-div.button {
-    cursor: pointer;
-    cursor: hand;
-    background: #fff url('../images/shade.gif') repeat-x scroll left top;
-    border: 1px solid #778;
-    color: #2d2b2b;
-    margin-right: 3px;
-    padding: 3px 7px;
-    text-align: center
+.phone1 {
+    margin-right: 10px;
 }
 
-div.centered_div {
+.phone2 {
+    margin-right: 10px;
+    margin-left: 10px;
+}
+
+.phone3 {
+    margin-left: 10px;
+}
+
+.centered {
     margin-left: auto;
     margin-right: auto;
     text-align: center
@@ -263,12 +294,6 @@ div.centered_div {
 span.centered_span {
     display: block;
     width: 100%;
-    text-align: center
-}
-
-td.centered_td {
-    margin-left: auto;
-    margin-right: auto;
     text-align: center
 }
 
@@ -361,48 +386,83 @@ div.html_template {
     width: 500px
 }
 
-table.blogbox {
+.html_mini {
+    width: 100%;
+    max-width: 800px;
+    margin-top: 10px;
     margin-left: auto;
     margin-right: auto;
-    font-size: .95em;
+    background: #fbfbfb;
+    border-radius: 15px;
+    padding: 15px;
+    line-height: 2em;
+}
+
+.html_title {
+    font-size: 2em;
+    font-weight: bold;
+    text-align: center;
+    padding: 20px;
+}
+
+.html_text {
+    padding: 20px;
+}
+
+.html_comments {
+    width: 100%;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.html_comment {
+    text-align: right;
+    padding: 10px 20px 5px 20px;
     margin-top: 5px;
-    border-style: none;
-    border-collapse: collapse;
-    border-style: outset;
-    border: 1px solid gray;
-    width: 100%
+    background: #f3f3f3;
+    border-radius: 10px 10px 0px;
 }
 
-tr.blogreplyheader {
-    background-color: #feffdc;
-    font-size: .9em
+.html_comment.childcomment {
+    margin-left: 30px;
 }
 
-tr.blogreplyheader td {
-    padding: 3px;
-    border-bottom: 2px solid gray
+.comment_user {
+    font-weight: bold;
 }
 
-tr.blogreply td {
-    padding: 2px 2px 2px 5px;
-    font-size: .9em
+.comment_time {
+    font-style: italic;
+    font-size: .8em;
 }
 
-tr.blogcommentheader {
-    background-color: #e0e0e0;
-    font-size: .9em
+.comment_message {
+    display: block;
+    text-align: left;
+    font-style: italic;
+    margin: 0px 0px 15px 0px;
 }
 
-tr.blogcommentheader td {
-    padding: 5px;
-    border-top: 2px dotted gray;
-    border-bottom: 2px dotted gray
+.comment_buttons, .comment_byline {
+    display: flex;
+    justify-content: space-between;
 }
 
-tr.blogcomment td {
-    padding: 2px 2px 2px 5px;
-    font-size: .9em;
-    background-color: #f0f0f0
+.comment_deletelink {
+
+}
+
+.comment_editlink {
+
+}
+
+.comment_replylink {
+
+}
+
+.comment_editlink a, .comment_replylink a, .comment_deletelink a {
+    text-decoration: none
 }
 
 table.roles_table {
@@ -434,18 +494,29 @@ tr.roles_row2 {
 div.login_box {
     vertical-align: top;
     font-size: .9em;
-    margin-left: 2px
+    margin-left: 2px;
 }
 
 td.field_title {
-    font-size: .85em;
+    font-size: .95em;
     text-align: right;
-    vertical-align: middle
+    vertical-align: middle;
+}
+
+td.sub_field_title {
+    font-size: .95em;
+    text-align: right;
+    vertical-align: middle;
+    background-color: buttonface;
+    padding: 0px 12px;
+    border-radius: 12px;
 }
 
 td.field_input {
     text-align: left;
-    white-space: nowrap
+    white-space: nowrap;
+    font-size: 0.95em;
+    padding: 0px 10px;
 }
 
 table.login_table {
@@ -825,9 +896,9 @@ div.box_content {
 .hint {
     display: none;
     position: absolute;
-    font-size: .75em;
-    margin-top: -4px;
-    margin-left: 10px;
+    font-size: .8em;
+    margin-top: 0px;
+    margin-left: -10px;
     border: 1px solid #c93;
     padding: 10px 12px;
     background-color: #ffc
@@ -1110,6 +1181,17 @@ tr.pics_title td:hover {
     display: inline-block;
 }
 
+.forum_inline_buttons {
+    display: inline-block;
+    margin: 5px;
+    vertical-align: middle;
+}
+
+.forum_inline_buttons * {
+    display: inline-block;
+    vertical-align: middle;
+}
+
 .forum_newbutton {
     font-size: .8em;
     float: right;
@@ -1212,6 +1294,22 @@ tr.pics_title td:hover {
     padding: 5px;
     background-color: #d1d7dc;
     color: #000
+}
+
+.forum_page_links {
+    font-size: 10px;
+    padding: 15px 10px 5px 10px;
+    text-align: right;
+}
+
+.forum_post_actions {
+    font-size: 10px;
+    padding: 10px;
+}
+
+.forum_post_message {
+    padding: 10px;
+    margin: 5px 0px;
 }
 
 .shoutbox {
@@ -1341,13 +1439,16 @@ tr.pics_title td:hover {
 
 input,
 select,
-textarea {
-    margin-right: 20px;
+textarea,
+button,
+a.buttonlike,
+div.button {
+    display: inline-block;
+    vertical-align: middle;
     padding: 6px 12px;
     font-size: 1em;
     line-height: 1.42857143;
     color: #555;
-    background-image: none;
     border: 1px solid #ccc;
     border-radius: 4px;
     -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
@@ -1357,22 +1458,31 @@ textarea {
     transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s
 }
 
-input[type=submit]:hover {
-    cursor: pointer
+button > span *, .smallbutton * {
+    vertical-align: middle;
 }
 
-input[type=button]:hover {
-    cursor: pointer
+input[type=submit]:hover,
+input[type=button]:hover,
+.buttonlike:hover,
+button:hover,
+.button:hover {
+    cursor: pointer;
+    background: rgb(0 0 0 / 10%);
 }
 
-button:hover {
-    cursor: pointer
+input[type=submit]:active,
+input[type=button]:active,
+.buttonlike:active,
+button:active,
+.button:active {
+    cursor: pointer;
+    background: rgb(0 0 0 / 15%);
 }
 
-button.smallbutton {
-    font-size: 1em;
+.smallbutton {
+    font-size: .9em;
     padding: 3px 6px;
-    font-weight: 700;
     margin: 2px
 }
 

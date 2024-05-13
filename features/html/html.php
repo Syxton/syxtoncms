@@ -3,13 +3,20 @@
 * html.php - html page
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 4/3/2014
+* Date: 5/14/2024
 * Revision: 1.7.5
 ***************************************************************************/
 
 if (empty($_POST["aslib"])) {
-    if (!isset($CFG)) { include('../header.php'); }
-    if (!isset($HTMLLIB)) { include_once($CFG->dirroot . '/features/html/htmllib.php'); }
+	if (!isset($CFG)) {
+		$sub = '';
+		while (!file_exists($sub . 'header.php')) {
+			$sub = $sub == '' ? '../' : $sub . '../';
+		}
+		include($sub . 'header.php');
+	}
+
+    if (!defined('HTMLLIB')) { include_once($CFG->dirroot . '/features/html/htmllib.php'); }
 
     callfunction();
 
@@ -39,44 +46,47 @@ global $CFG, $MYVARS, $USER;
 	$pageid = dbescape($MYVARS->GET["pageid"]);
 	$featureid = dbescape($MYVARS->GET['featureid']);
 	$now = get_timestamp();
-	if (!user_is_able($USER->userid, "edithtml", $pageid)) { debugging(error_string("no_permission", ["edithtml"]), 2); return; }
+	if (!user_is_able($USER->userid, "edithtml", $pageid)) { trigger_error(error_string("no_permission", ["edithtml"]), E_USER_WARNING); return; }
 	$SQL = "SELECT * FROM html WHERE htmlid='$featureid'";
     if ($row = get_db_row($SQL)) {
         if (($now - $row["edit_time"]) > 30) {
-    		$userid = is_logged_in() ? $USER->userid : "0";
-    		echo '
-    		<div id="edit_html_div">
-    			<table style="width:100%">
-    				<tr>
-    					<td colspan="2" style="text-align:center">';
-                        echo get_editor_box(["initialvalue" => stripslashes($row['html']), "name" => "edit_html_$featureid", "width" => "100%"]);
-    				    echo '<input type="button" value="Save" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'edit_html\',\'&amp;htmlid=' . $featureid . '&amp;html=\'+ escape(' . get_editor_value_javascript("edit_html_$featureid") . '),function() { do_nothing();}); close_modal();" />
-    					</td>
-    				</tr>
-    			</table>
-    		</div>';
-    		echo js_code_wrap('var stillediting = setInterval(function() { ajaxapi(\'/features/html/html_ajax.php\',\'still_editing\',\'&htmlid=' . $featureid . '&userid=' . $userid . '\',function() { if (xmlHttp.readyState == 4) { do_nothing(); }}, true);},5000);');
+  			$userid = is_logged_in() ? $USER->userid : "0";
+  			echo '
+  			<div id="edit_html_div">
+  				<table style="width:100%">
+  					<tr>
+  						<td colspan="2" style="text-align:center">
+                        ' . get_editor_box(["initialvalue" => stripslashes($row['html']), "name" => "edit_html_$featureid", "width" => "100%"]) . '
+  								<br /><br />
+							<input type="button" value="Save" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'edit_html\',\'&amp;htmlid=' . $featureid . '&amp;html=\'+ escape(' . get_editor_value_javascript("edit_html_$featureid") . '),function() { if (xmlHttp.readyState == 4) { close_modal(); } });" />
+  						</td>
+  					</tr>
+  				</table>
+  			</div>';
+  			echo js_code_wrap('var stillediting = setInterval(function() { ajaxapi(\'/features/html/html_ajax.php\',\'still_editing\',\'&htmlid=' . $featureid . '&userid=' . $userid . '\',function() { if (xmlHttp.readyState == 4) { do_nothing(); }}, true);},5000);');
 			execute_db_sql("UPDATE html SET edit_user='$userid',edit_time='$now' WHERE htmlid=$featureid");
-    	} else {
-    		echo '
-    		<div style="width:100%;text-align:center;">
-    			<img src="' . $CFG->wwwroot . '/images/underconstruction.gif" />
-    		</div>
-    		<div style="width:100%;text-align:center;">
-    		This area is currently being edited by: ' . get_user_name($row["edit_user"]) . '
-    		</div>
-    		';
-    	}
+  		} else {
+  			echo '
+  			<div style="width:100%;text-align:center;">
+  				<img src="' . $CFG->wwwroot . '/images/underconstruction.gif" />
+  			</div>
+  			<div style="width:100%;text-align:center;">
+  			This area is currently being edited by: ' . get_user_name($row["edit_user"]) . '
+  			</div>
+  			';
+  		}
     }
     donothing();
 }
 
 function deletecomment() {
 global $CFG, $MYVARS, $USER;
-	$pageid = dbescape($MYVARS->GET["pageid"]);
-	$userid = dbescape($MYVARS->GET["userid"]);
-	if (!(user_is_able($USER->userid, "deletecomments", $pageid) || ($USER->userid == $userid && user_is_able($USER->userid, "makecomments", $pageid)))) { debugging(error_string("generic_permissions"), 2); return;}
-	$commentid = dbescape($MYVARS->GET["commentid"]);
+    $pageid = dbescape($MYVARS->GET["pageid"]);
+    $commentid = dbescape($MYVARS->GET["commentid"]);
+    $comment = get_db_row("SELECT * FROM html_comments WHERE commentid='$commentid'");
+
+	if (!(user_is_able($USER->userid, "deletecomments", $pageid) || ($USER->userid == $userid && user_is_able($USER->userid, "makecomments", $pageid)))) { trigger_error(error_string("generic_permissions"), E_USER_WARNING); return;}
+	
 	echo '
 	<table style="width:80%;margin-left: auto; margin-right: auto;">
 	<tr>
@@ -86,176 +96,97 @@ global $CFG, $MYVARS, $USER;
 	</tr>
 	<tr>
 		<td style="text-align:center;">
-			<input type="button" value="Yes" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'deletecomment\',\'&amp;commentid=' . $commentid . '&amp;pageid=' . $pageid . '\',function() { close_modal();});" />
+			<input type="button" value="Yes" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'deletecomment\',\'&amp;commentid=' . $commentid . '&amp;pageid=' . $pageid . '\',function() { if (xmlHttp.readyState == 4) { close_modal(); } });" />
 		</td>
 	</tr>
 	</table>
 	';
 }
 
-function makecomment() {
-global $CFG, $MYVARS, $USER;
-	$pageid = dbescape($MYVARS->GET["pageid"]);
-    if (!user_is_able($USER->userid, "makecomments", $pageid)) { debugging(error_string("no_permission", ["makecomments"]), 2); return; }
+function can_edit_comment($comment) {
+    global $USER;
+        if (user_is_able($USER->userid, "editanycomment", $comment["pageid"], "html", $comment["htmlid"])) {
+            return true;
+        }
+    
+        if ($USER->userid == $comment["userid"]) {
+            if (user_is_able($USER->userid, "makecomments", $comment["pageid"], "html", $comment["htmlid"])) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+function commentform() {
+global $CFG, $MYVARS, $USER, $PAGE;
+    $commentid = $MYVARS->GET["commentid"] ?? false;
+    $replytoid = $MYVARS->GET["replytoid"] ?? false;
 
-	$htmlid = dbescape($MYVARS->GET["htmlid"]);
-	echo '
-	<table style="width:80%;margin-left: auto; margin-right: auto;">
-	<tr>
-		<td style="text-align:left; font-size:.85em;">
-			<b><u>Make Comment</u></b>
-		</td>
-	</tr>
-	<tr>
-		<td style="text-align:center;">
-			<textarea id="comment" cols="40" rows="10"></textarea>
-		</td>
-	</tr>
-	<tr>
-		<td style="text-align:center;">
-			<input type="button" value="Submit Comment" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'makecomment\',\'&amp;htmlid=' . $htmlid . '&amp;pageid=' . $pageid . '&amp;comment=\'+escape(document.getElementById(\'comment\').value),function() { close_modal();});" />
-		</td>
-	</tr>
-	</table>
-	';
-}
+    $id = false;
+    if ($replytoid) {
+        $id = dbescape($replytoid);
+    } elseif ($commentid) {
+        $id = dbescape($commentid);
+    }
 
-function makereply() {
-global $CFG, $MYVARS, $USER;
-	$pageid = dbescape($MYVARS->GET["pageid"]);
-    if (!user_is_able($USER->userid, "makereplies", $pageid)) { debugging(error_string("no_permission", ["makereplies"]), 2); return; }
+    // An edit or reply.
+    if ($id) {
+        if ($comment = get_db_row(use_template("dbsql/html.sql", ["commentid" => $id], "get_comment_info", "html"))) {
+            $params = [
+                "pageid" => $comment["pageid"],
+                "comment" => "",
+                "commentid" => false,
+                "replytoid" => false,
+                "htmlid" => false,
+            ];
 
-	$commentid = dbescape($MYVARS->GET["commentid"]);
-	$comment = htmlentities(get_db_field("comment", "html_comments", "commentid='$commentid'"));
-	echo '
-	<table style="width:80%;margin-left: auto; margin-right: auto;">
-	<tr>
-		<td style="text-align:left; font-size:.85em;">
-			<b><u>Comment</u></b>
-		</td>
-	</tr>
-	<tr>
-		<td style="text-align:left; font-size:.75em; color:gray">
-			' . $comment . '
-		<br /><br /></td>
-	</tr>
-	<tr>
-		<td style="text-align:left; font-size:.85em;">
-			<b><u>Make Reply</u></b>
-		</td>
-	</tr>
-	<tr>
-		<td style="text-align:center;">
-			<textarea id="reply" cols="40" rows="8"></textarea>
-		</td>
-	</tr>
-	<tr>
-		<td style="text-align:center;">
-			<input type="button" value="Reply to Comment" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'makereply\',\'&amp;commentid=' . $commentid . '&amp;pageid=' . $pageid . '&amp;reply=\'+escape(document.getElementById(\'reply\').value),function() { close_modal();});" />
-		</td>
-	</tr>
-	</table>
-	';
-}
-
-function editreply() {
-global $CFG, $MYVARS, $USER;
-	$pageid = dbescape($MYVARS->GET["pageid"]);
-    if (!user_is_able($USER->userid, "makereplies", $pageid)) { debugging(error_string("no_permission", ["makereplies"]), 2); return; }
-
-	$commentid = dbescape($MYVARS->GET["commentid"]);
-	$replyid = dbescape($MYVARS->GET["replyid"]);
-	$reply = htmlentities(get_db_field("reply", "html_replies", "replyid='$replyid'"));
-	$comment = htmlentities(get_db_field("comment", "html_comments", "commentid='$commentid'"));
-	echo '
-	<table style="width:80%;margin-left: auto; margin-right: auto;">
-	<tr>
-		<td style="text-align:left; font-size:.85em;">
-			<b><u>Comment</u></b>
-		</td>
-	</tr>
-	<tr>
-		<td style="text-align:left; font-size:.75em; color:gray">
-			' . $comment . '
-		<br /><br /></td>
-	</tr>
-	<tr>
-		<td style="text-align:left; font-size:.85em;">
-			<b><u>Edit Reply</u></b>
-		</td>
-	</tr>
-	<tr>
-		<td style="text-align:center;">
-			<textarea id="reply" cols="40" rows="8">' . $reply . '</textarea>
-		</td>
-	</tr>
-	<tr>
-		<td style="text-align:center;">
-			<input type="button" value="Edit Reply" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'editreply\',\'&amp;replyid=' . $replyid . '&amp;pageid=' . $pageid . '&amp;reply=\'+escape(document.getElementById(\'reply\').value),function() { close_modal();});" />
-		</td>
-	</tr>
-	</table>';
-}
-
-function editcomment() {
-global $CFG, $MYVARS, $USER;
-	$pageid = dbescape($MYVARS->GET["pageid"]);
-	$userid = dbescape($MYVARS->GET["userid"]);
-	$commentid = dbescape($MYVARS->GET["commentid"]);
-	$commentuser = htmlentities(get_db_field("userid", "html_comments", "commentid='$commentid'"));
-	if (!(user_is_able($USER->userid, "editanycomment", $pageid) || ($USER->userid == $userid && user_is_able($USER->userid, "makecomments", $pageid)))) { debugging(error_string("generic_permissions"), 2); return;}
-
-	$comment = htmlentities(get_db_field("comment", "html_comments", "commentid='$commentid'"));
-	echo '
-	<table style="width:80%;margin-left: auto; margin-right: auto;">
-	<tr>
-		<td style="text-align:left; font-size:.85em;">
-			<b><u>Comment</u></b>
-		</td>
-	</tr>
-	<tr>
-		<td style="text-align:left; font-size:.75em; color:gray">
-			' . $comment . '
-		<br /><br /></td>
-	</tr>
-	<tr>
-		<td style="text-align:left; font-size:.85em;">
-			<b><u>Edit Comment</u></b>
-		</td>
-	</tr>
-	<tr>
-		<td style="text-align:center;">
-			<textarea id="comment" cols="40" rows="8">' . $comment . '</textarea>
-		</td>
-	</tr>
-	<tr>
-		<td style="text-align:center;">
-			<input type="button" value="Edit Comment" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'editcomment\',\'&amp;commentid=' . $commentid . '&amp;pageid=' . $pageid . '&amp;comment=\'+escape(document.getElementById(\'comment\').value),function() { close_modal();});" />
-		</td>
-	</tr>
-	</table>';
-}
-
-function deletereply() {
-global $CFG, $MYVARS, $USER;
-	$pageid = dbescape($MYVARS->GET["pageid"]);
-    if (!user_is_able($USER->userid, "deletereply", $pageid)) { debugging(error_string("no_permission", ["deletereply"]), 2); return; }
-
-	$replyid = dbescape($MYVARS->GET["replyid"]);
-	echo '
-	<table style="width:80%;margin-left: auto; margin-right: auto;">
-	<tr>
-		<td style="text-align:center;">
-			Are you sure you want to delete this reply message?
-		</td>
-	</tr>
-	<tr>
-		<td style="text-align:center;">
-			<input type="button" value="Yes" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'deletereply\',\'&amp;replyid=' . $replyid . '&amp;pageid=' . $pageid . '\',function() { close_modal();});" />
-		</td>
-	</tr>
-	</table>
-	';
+            if ($replytoid) {
+                $params = array_merge($params, [
+                    "title" => "Reply to Comment",
+                    "replytocomment" => htmlentities($comment["comment"]),
+                    "replytoid" => $comment["commentid"],
+                ]);
+                if (user_is_able($USER->userid, "makereplies", $comment["pageid"])) {
+                    echo use_template("tmp/html.template", $params, "comment_form_template", "html");
+                } else {
+                    trigger_error(error_string("no_permission", ["makecomments"]), E_USER_WARNING);
+                }
+            } else {
+                $params = array_merge($params, [
+                    "commentid" => $comment["commentid"],
+                    "title" => "Edit Comment",
+                    "comment" => htmlentities($comment["comment"]),
+                ]);
+                if (!can_edit_comment($comment)) {
+                    trigger_error(error_string("no_permission", ["editing"]), E_USER_WARNING);
+                    return;
+                }
+                echo use_template("tmp/html.template", $params, "comment_form_template", "html");
+            }
+        } else {
+            trigger_error(error_string("no_data", ["commentid"]), E_USER_WARNING);
+            return;
+        }
+    } else { // New Comment.
+        $htmlid = $MYVARS->GET["htmlid"] ?? false;
+        if ($htmlid) {
+            if (user_is_able($USER->userid, "makecomments", $PAGE->id, "html", $htmlid)) {
+                $params = [
+                    "pageid" => $PAGE->id,
+                    "comment" => "",
+                    "htmlid" => $htmlid,
+                    "commentid" => false,
+                    "replytoid" => false,
+                    "title" => "Make Comment",
+                ];
+                echo use_template("tmp/html.template", $params, "comment_form_template", "html");           
+            } else {
+                trigger_error(error_string("no_permission", ["makecomments"]), E_USER_WARNING);
+            }
+        } else {
+            trigger_error(error_string("no_data", ["htmlid"]), E_USER_WARNING);
+        }   
+    }
 }
 
 function viewhtml() {
@@ -263,42 +194,38 @@ global $CFG, $MYVARS, $USER, $ROLES;
     $key = $MYVARS->GET['key'];
     $htmlid = $MYVARS->GET['htmlid'];
     $pageid = $MYVARS->GET['pageid'];
+    $pagename = get_db_field("name", "pages", "pageid = '$pageid'");
 
     if (!is_logged_in() && isset($key)) { key_login($key); }
 
     $settings = fetch_settings("html", $htmlid, $pageid);
+    $allowed = false;
 
 	if (is_logged_in()) {
-		if (user_is_able($USER->userid, "viewhtml", $pageid)) {
-			$abilities = user_abilities($USER->userid, $pageid,"html");
-			echo '<a href="' . $CFG->wwwroot . '/index.php?pageid=' . $pageid . '">Home</a>
-			<table style="margin-left:auto;margin-right:auto;width:100%">
-				<tr>
-					<td>
-						'.
-						get_html($pageid, $htmlid, $settings, $abilities, false, true)
-						.'
-					</td>
-				</tr>
-			</table>';
-		} else { echo '<center>You do not have proper permissions to view this item.</center>';}
+		if (user_is_able($USER->userid, "viewhtml", $pageid, "html", $htmlid)) {
+			$abilities = user_abilities($USER->userid, $pageid, false, "html", $htmlid);
+            $allowed = true;
+		} else {
+            echo '<center>You do not have proper permissions to view this item.</center>';
+        }
 	} else {
 		if (get_db_field("siteviewable", "pages", "pageid=$pageid") && role_is_able($ROLES->visitor, 'viewhtml', $pageid)) {
-			$abilities = user_abilities($USER->userid, $pageid,"html");
-			echo '<a href="' . $CFG->wwwroot . '/index.php?pageid=' . $pageid . '">Home</a>
-			<table style="margin-left:auto;margin-right:auto;width:100%">
-				<tr>
-					<td>
-						'.
-						get_html($pageid, $htmlid, $settings, $abilities, false, true)
-						.'
-					</td>
-				</tr>
-			</table>';
+			$abilities = user_abilities($USER->userid, $pageid, "html", $htmlid);
+            $allowed = true;
 		} else {
             echo '<div id="standalone_div"><input type="hidden" id="reroute" value="/features/html/html.php:viewhtml:&amp;pageid=' . $pageid . '&amp;htmlid=' . $htmlid . ':standalone_div" />';
             echo '<div style="width:100%; text-align:center;">You must login to see this content.<br /><center>' . get_login_form(true, false) . '</center></div></div>';
 		}
 	}
+
+    if ($allowed) {
+		echo get_css_set("main"); // Load CSS.
+
+        echo '
+            <a class="buttonlike" style="margin: 10px" href="' . $CFG->wwwroot . '/index.php?pageid=' . $pageid . '">Navigate to ' . $pagename . '</a>
+            <div class="html_main">
+            ' . get_html($pageid, $htmlid, $settings, $abilities, false, true) . '
+            </div>';
+    }
 }
 ?>

@@ -3,12 +3,12 @@
 * userlib.php - User function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 6/07/2016
+* Date: 5/14/2024
 * Revision: 2.8.0
 ***************************************************************************/
 
-if (!isset($LIBHEADER)) { include('header.php'); }
-$USERLIB = true;
+if (!LIBHEADER) { include('header.php'); }
+define('USERLIB', true);
 
 function random_quote() {
 global $CFG;
@@ -53,13 +53,13 @@ global $CFG, $USER;
 		$SQL = "SELECT * FROM users WHERE userid='" . $_SESSION['userid'] . "' $advanced_login";
         if ($row = get_db_row($SQL)) { //Get user info from db, load into $USER global
             $temp = new \stdClass;
-    		$temp->userid = $row['userid'];
-    		$temp->fname = $row['fname'];
-    		$temp->lname = $row['lname'];
-    		$temp->email = $row['email'];
-    		$temp->key = $row['userkey'];
-    		$temp->ip = $row['ip'];
-    		$_SESSION['userid'] = $temp->userid; //Used for CKeditor to know if user is logged in.
+  			$temp->userid = $row['userid'];
+  			$temp->fname = $row['fname'];
+  			$temp->lname = $row['lname'];
+  			$temp->email = $row['email'];
+  			$temp->key = $row['userkey'];
+  			$temp->ip = $row['ip'];
+  			$_SESSION['userid'] = $temp->userid; //Used for CKeditor to know if user is logged in.
 		} else {
             $temp = new \stdClass;
             $temp->userid = 0; $_SESSION['userid'] = "";
@@ -92,7 +92,7 @@ global $CFG, $USER;
 
 function create_new_user($user) {
 global $CFG, $USER;
-	if (!isset($COMLIB)) { include_once($CFG->dirroot . '/lib/comlib.php'); }
+	if (!defined('COMLIB')) { include_once($CFG->dirroot . '/lib/comlib.php'); }
 	$temp = create_random_password();
 	$key = md5($user->email) . md5(time());
 	$userid = execute_db_sql("INSERT INTO users (email,fname,lname,temp,password,userkey,joined) VALUES('" . dbescape($user->email) . "','" . dbescape($user->fname) . "','" . dbescape($user->lname) . "','" . dbescape($user->password) . "','".md5($temp) . "','$key','" . get_timestamp() . "')");
@@ -100,16 +100,16 @@ global $CFG, $USER;
 	$role_assignment = execute_db_sql("INSERT INTO roles_assignment (userid,roleid,pageid) VALUES('$userid','$defaultrole','" . $CFG->SITEID."')");
 
     if ($userid && $role_assignment) {
-    	$USER->userid = $userid;
+  		$USER->userid = $userid;
         $USER->fname = $user->fname;
         $USER->lname = $user->lname;
         $USER->email = $user->email;
         $FROMUSER = new \stdClass;
-    	$FROMUSER->fname = $CFG->sitename;
+  		$FROMUSER->fname = $CFG->sitename;
         $FROMUSER->lname = '';
-    	$FROMUSER->email = $CFG->siteemail;
-    	$message = write_confirmation_email($user, $temp);
-    	$subject = $CFG->sitename . ' New User Confirmation';
+  		$FROMUSER->email = $CFG->siteemail;
+  		$message = write_confirmation_email($user, $temp);
+  		$subject = $CFG->sitename . ' New User Confirmation';
 
 		if (send_email($USER, $FROMUSER, $subject, $message)) {
 			send_email($FROMUSER, $FROMUSER, $subject, $message);
@@ -126,11 +126,11 @@ global $CFG, $USER;
 
 function create_random_password() {
 	//Make random password and activation code
-	$pass1 = array("little", "big", "loud", "quiet", "short", "tall", "tiny", "huge", "old", "young", "nice", "mean", "scary", "sneaky", "snooty", "pretty", "happy", "sneezy", "itchy");
+	$pass1 = ["little", "big", "loud", "quiet", "short", "tall", "tiny", "huge", "old", "young", "nice", "mean", "scary", "sneaky", "snooty", "pretty", "happy", "sneezy", "itchy"];
 	$rnd1 = array_rand($pass1);
-	srand ((double) microtime( )*1000000);
-	$pass2 = rand(1,9);
-	$pass3 = array("cat", "dog", "chicken", "mouse", "deer", "snake", "fawn", "rat", "lion", "tiger", "chipmunk", "owl", "bear", "rooster", "whale", "fish", "puma", "panther", "horse");
+	srand ((float) microtime( )*1000000);
+	$pass2 = rand(1, 9);
+	$pass3 = ["cat", "dog", "chicken", "mouse", "deer", "snake", "fawn", "rat", "lion", "tiger", "chipmunk", "owl", "bear", "rooster", "whale", "fish", "puma", "panther", "horse"];
 	$rnd3 = array_rand($pass3);
 	return $pass1[$rnd1] . $pass2 . $pass3[$rnd3];
 }
@@ -138,41 +138,41 @@ function create_random_password() {
 function new_user_confirmation($user) {
 global $CFG;
 	return '
-    	<p><font size="3" face="Tahoma"><strong>' . ucfirst($user->fname) . ' ' . ucfirst($user->lname) . '\'s</strong> account was created </font><font size="3" face="Tahoma" color="#999999">successfully!</font></p>
-    	<p><font face="Tahoma">An email has been sent to your email </font><font face="Tahoma" color="#3366ff">(<strong><em>' . $user->email . '</em></strong>) </font><font face="Tahoma">account to verify your ability to check this account.&nbsp; </font></p>
-    	<p><font face="Tahoma">Instructions of how to log into your </font><font face="Tahoma"><strong>' . $CFG->sitename . ' </strong></font><font face="Tahoma">account will be given inside this email address.&nbsp; This will includes a randomly generated password that is required to enter the site for the first time.&nbsp; </font></p>
-    	<p><font face="Tahoma">After your first login, the password that you specified will automatically be used for every login thereafter. </font></p>
-    	<p><br />
-    	<font face="Tahoma">Thank you for using <strong>' . $CFG->sitename . '</strong><br />
-    	</font></p>
-    	';
+  		<p><font size="3" face="Tahoma"><strong>' . ucfirst($user->fname) . ' ' . ucfirst($user->lname) . '\'s</strong> account was created </font><font size="3" face="Tahoma" color="#999999">successfully!</font></p>
+  		<p><font face="Tahoma">An email has been sent to your email </font><font face="Tahoma" color="#3366ff">(<strong><em>' . $user->email . '</em></strong>) </font><font face="Tahoma">account to verify your ability to check this account.&nbsp; </font></p>
+  		<p><font face="Tahoma">Instructions of how to log into your </font><font face="Tahoma"><strong>' . $CFG->sitename . ' </strong></font><font face="Tahoma">account will be given inside this email address.&nbsp; This will includes a randomly generated password that is required to enter the site for the first time.&nbsp; </font></p>
+  		<p><font face="Tahoma">After your first login, the password that you specified will automatically be used for every login thereafter. </font></p>
+  		<p><br />
+  		<font face="Tahoma">Thank you for using <strong>' . $CFG->sitename . '</strong><br />
+  		</font></p>
+  		';
 }
 
 function write_confirmation_email($user, $temp) {
 global $CFG;
 	return '
         <p><font face="Tahoma"><font size="3" color="#993366">Dear <strong>' . $user->fname . ' ' . $user->lname . '</strong>,</font><br />
-    	</font></p>
-    	<blockquote>
-    	<p><font size="3" face="Tahoma">Thank you for joining <strong>' . $CFG->sitename . '</strong>.&nbsp; To finalize the account creation process, use the following instructions to log into the site.</font></p>
-    	</blockquote>
-    	<p>&nbsp;</p>
-    	<hr width="100%" size="2" />
-    	<p>&nbsp;</p>
-    	<blockquote>
-    	<p align="left"><font face="Tahoma"><strong>Username:</strong> <font color="#3366ff">' . $user->email . '</font></font></p>
-    	<p align="left"><font face="Tahoma"><strong>Password:</strong> <font color="#3366ff">' . $temp . '</font></font></p>
-    	</blockquote>
-    	<p>&nbsp;</p>
-    	<hr width="100%" size="2" />
-    	<blockquote>
-    	<p><font size="3" face="Tahoma">After you have successfully logged into the site using the password provided, your account will be finalized and your password will then be changed to the password you specified inside the account creation form.&nbsp; Again, we would like to thank you for joining <strong>' . $CFG->sitename . '</strong> and if you have any questions during your use of the site, feel free to contact us at <font color="#ff0000">' . $CFG->siteemail . '</font>.<br />
-    	</font></p>
-    	</blockquote>
-    	<p>&nbsp;</p>
-    	<p><font face="Tahoma"><strong><font size="3" color="#666699">Enjoy the site,</font></strong></font></p>
-    	<p><font size="3" face="Tahoma"><em>' . $CFG->siteowner . ' </em></font><font size="3" face="Tahoma" color="#ff0000">&lt;' . $CFG->siteemail . '</font><font face="Tahoma"><font size="3" color="#ff0000">&gt;</font></font></p>
-    	<p>&nbsp;</p>';
+  		</font></p>
+  		<blockquote>
+  		<p><font size="3" face="Tahoma">Thank you for joining <strong>' . $CFG->sitename . '</strong>.&nbsp; To finalize the account creation process, use the following instructions to log into the site.</font></p>
+  		</blockquote>
+  		<p>&nbsp;</p>
+  		<hr width="100%" size="2" />
+  		<p>&nbsp;</p>
+  		<blockquote>
+  		<p align="left"><font face="Tahoma"><strong>Username:</strong> <font color="#3366ff">' . $user->email . '</font></font></p>
+  		<p align="left"><font face="Tahoma"><strong>Password:</strong> <font color="#3366ff">' . $temp . '</font></font></p>
+  		</blockquote>
+  		<p>&nbsp;</p>
+  		<hr width="100%" size="2" />
+  		<blockquote>
+  		<p><font size="3" face="Tahoma">After you have successfully logged into the site using the password provided, your account will be finalized and your password will then be changed to the password you specified inside the account creation form.&nbsp; Again, we would like to thank you for joining <strong>' . $CFG->sitename . '</strong> and if you have any questions during your use of the site, feel free to contact us at <font color="#ff0000">' . $CFG->siteemail . '</font>.<br />
+  		</font></p>
+  		</blockquote>
+  		<p>&nbsp;</p>
+  		<p><font face="Tahoma"><strong><font size="3" color="#666699">Enjoy the site,</font></strong></font></p>
+  		<p><font size="3" face="Tahoma"><em>' . $CFG->siteowner . ' </em></font><font size="3" face="Tahoma" color="#ff0000">&lt;' . $CFG->siteemail . '</font><font face="Tahoma"><font size="3" color="#ff0000">&gt;</font></font></p>
+  		<p>&nbsp;</p>';
 }
 
 function get_user_name($userid) {
@@ -181,18 +181,24 @@ function get_user_name($userid) {
 }
 
 function is_logged_in($userid = false) {
-global $CFG, $USER;
+global $CFG, $USER, $MYVARS;
 	if (!$userid) {
-		if (empty($USER->userid)) { 
-			return false; 
-		}
-		$userid = $USER->userid;
+		if (empty($USER->userid)) {
+            if (isset($MYVARS->GET["key"])) {
+                $userid = get_db_field("userid", "users", "userkey='" . dbescape($MYVARS->GET["key"]) . "'");
+            } else {
+                return false;
+            }
+		} else {
+            $userid = $USER->userid;
+        }
 	}
 
 	$userid = $userid ? $userid : $USER->userid;
 	if (!empty($userid)) {
-	   recursive_mkdir($CFG->userfilespath . '/' . $userid);
-       return true;
+        $USER->userid = $userid;
+        recursive_mkdir($CFG->userfilespath . '/' . $userid);
+        return true;
     }
 	return false;
 }
@@ -210,17 +216,17 @@ function nameize($str, $a_char = ["'", "-", " ", '"', '.']) {
         return trim($output);
     } else {
         //the tricky part is finding names like DeMarco: 2 capitals
-    	for ($i=0;$i<strlen($str);$i++) {
-    		if ($i > 0 && ctype_lower($str[($i - 1)]) && ctype_upper($str[$i]) && isset($str[($i + 1)]) && ctype_lower($str[($i + 1)])) {
-    			$temp = $str;
-    			$str = substr($temp,0,($i)) . "+ " . substr($temp,($i),(strlen($str)-($i)));
-    			$i++; $i++;
-    		}
-    	}
+  		for ($i=0;$i<strlen($str);$i++) {
+  			if ($i > 0 && ctype_lower($str[($i - 1)]) && ctype_upper($str[$i]) && isset($str[($i + 1)]) && ctype_lower($str[($i + 1)])) {
+  				$temp = $str;
+  				$str = substr($temp, 0, ($i)) . "+ " . substr($temp, ($i), (strlen($str)-($i)));
+  				$i++; $i++;
+  			}
+  		}
 
-    	//$str contains the complete raw name string
+  		//$str contains the complete raw name string
         //$a_char is an array containing the characters we use as separators for capitalization. If you don't pass anything, there are three in there as default.
-    	$string = strtolower($str);
+  		$string = strtolower($str);
         foreach ($a_char as $temp) {
             $pos = strpos($string, $temp);
             if ($pos !== -1) {
@@ -231,23 +237,23 @@ function nameize($str, $a_char = ["'", "-", " ", '"', '.']) {
                     //capitalize each portion of the string which was separated at a special character
                     $mend .= ucfirst($temp2).$temp;
                 }
-                $string = substr($mend,0,-1);
+                $string = substr($mend, 0, -1);
             }
         }
 
         $str = "";
-       	for ($i=0;$i<strlen($string);$i++) {
-    		if (array_search($string[$i], $a_char)) {
+     		for ($i=0;$i<strlen($string);$i++) {
+  			if (array_search($string[$i], $a_char)) {
                 if ($string[$i] !== $string[(strlen($string)-$i - 1)]) {
                     $str .= $string[$i];
                 }
-    		} else {
+  			} else {
                 $str .= $string[$i];
-    		}
-    	}
+  			}
+  		}
         $str = str_replace("+ ", "", $str);
         $str = str_replace("+", "", $str);
-        $str = str_replace('""','"', $str);
+        $str = str_replace('""', '"', $str);
         return trim(ucfirst($str));
     }
 }

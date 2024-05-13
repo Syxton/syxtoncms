@@ -3,18 +3,18 @@
 * eventslib.php - Events function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 4/12/2021
+* Date: 5/14/2024
 * Revision: 2.8.7
 ***************************************************************************/
 
-if (!isset($LIBHEADER)) {
+if (!LIBHEADER) {
 	$sub = './';
 	while (!file_exists($sub . 'lib/header.php')) {
 		$sub = $sub == './' ? '../' : $sub . '../';
 	}
 	include($sub . 'lib/header.php'); 
 }
-$EVENTSLIB = true;
+define('EVENTSLIB', true);
 
 function display_events($pageid, $area, $featureid) {
 global $CFG, $USER, $ROLES;
@@ -36,7 +36,7 @@ global $CFG, $USER, $ROLES;
         //Get calendar of events
         return get_calendar_of_events($title, $pageid, $featureid, false, $showpastevents, $content, $allowrequests);
     } else {
-        if (is_logged_in()) { //Logged in user will see...
+        if (is_logged_in()) { // Logged in user will see...
             if (get_db_row("SELECT eventid FROM events WHERE workers=1 AND event_begin_date > " . time())) {
                 if (user_is_able($USER->userid, "staffapply", $pageid, "events", $featureid)) {
                     $content .= get_staff_application_button();
@@ -74,7 +74,7 @@ global $CFG, $USER, $ROLES;
                 $buttons = get_button_layout("events", $featureid, $pageid);
                 return get_css_box($title, $content, $buttons, NULL, "events", $featureid);
             }
-        }elseif (role_is_able($ROLES->visitor, "viewevents", $pageid)) { //If unlogged in users can see...
+        } elseif (role_is_able($ROLES->visitor, "viewevents", $pageid)) { //If unlogged in users can see...
             //Get current events
             if ($section = get_current_events($pageid)) { $content .= $section . "<br />";}
 
@@ -188,13 +188,13 @@ global $CFG, $USER, $ROLES;
         while ($event = fetch_row($result)) {
             if ($showpastevents || ($event["event_end_date"] >= ($time - 86400))) {
 				$newday = true;
-	            $newday = $lastday == date("n/d/Y", $event["event_begin_date"]) ? false : true;
-	            $lastday = date("n/d/Y", $event["event_begin_date"]);
-	            $canedit = user_is_able($USER->userid, "editevents", $event["pageid"], "events", $featureid) ? true : false;
-	            $event_buttons = get_event_button_layout($pageid, $event, $canedit, $canconfirm);
-	            $needsconfirmed = $canconfirm && $event["confirmed"] != 1 && $pageid == $CFG->SITEID ? true : false;
-	            $dategraphic = $needsconfirmed || ($event["event_end_date"] < ($time - 86400)) ? get_date_graphic($event["event_begin_date"], $newday, null, true, true) : get_date_graphic($event["event_begin_date"], $newday, null, true);
-	            $content .= make_calendar_table($pageid, $dategraphic, $event, $event_buttons, $needsconfirmed);
+		          $newday = $lastday == date("n/d/Y", $event["event_begin_date"]) ? false : true;
+		          $lastday = date("n/d/Y", $event["event_begin_date"]);
+		          $canedit = user_is_able($USER->userid, "editevents", $event["pageid"], "events", $featureid) ? true : false;
+		          $event_buttons = get_event_button_layout($pageid, $event, $canedit, $canconfirm);
+		          $needsconfirmed = $canconfirm && $event["confirmed"] != 1 && $pageid == $CFG->SITEID ? true : false;
+		          $dategraphic = $needsconfirmed || ($event["event_end_date"] < ($time - 86400)) ? get_date_graphic($event["event_begin_date"], $newday, null, true, true) : get_date_graphic($event["event_begin_date"], $newday, null, true);
+		          $content .= make_calendar_table($pageid, $dategraphic, $event, $event_buttons, $needsconfirmed);
             }
         }
     }
@@ -223,13 +223,13 @@ global $CFG, $USER;
 		$limit = $event['max_users'] == "0" ? "&#8734;" : $event['max_users'];
 
 		// Currently can register for event (time check)
-	    if ($event["start_reg"] < $time && $event["stop_reg"] > ($time - 86400)) {
-	        $info  = "Registration ends in " . ago($event["event_begin_date"]);
-	        $maxreached = $event["max_users"] == 0 || ($event["max_users"] != 0 and $event["max_users"] > $regcount) ? false : true;
+		  if ($event["start_reg"] < $time && $event["stop_reg"] > ($time - 86400)) {
+		      $info  = "Registration ends in " . ago($event["event_begin_date"]);
+		      $maxreached = $event["max_users"] == 0 || ($event["max_users"] != 0 and $event["max_users"] > $regcount) ? false : true;
 
             // Availability check
-	        if (!$maxreached) {
-	            $left = $event['max_users'] == "0" ? "&#8734;" : '(' . ($limit - $regcount) . ' out of ' . $limit . ' openings left)';
+		      if (!$maxreached) {
+		          $left = $event['max_users'] == "0" ? "&#8734;" : '(' . ($limit - $regcount) . ' out of ' . $limit . ' openings left)';
 
                 // Alert
                 if ($event['max_users'] > 0 && (($limit - $regcount) < 10)) {
@@ -255,7 +255,7 @@ global $CFG, $USER;
                 }
 
                 // Can you pay for this event.
-	            if ($event["paypal"] != "") {
+		          if ($event["paypal"] != "") {
                     $params = [
                         "button" => "button",
                         "title" => "Event Payment",
@@ -265,11 +265,11 @@ global $CFG, $USER;
                         "height" => "95%",
                     ];
                     $eventbuttons .= make_modal_links($params);
-	            }
-	        } else {
-	           $alert = '<span class="events_limit_alert">No spots available.</span>';
-	        }
-	    }
+		          }
+		      } else {
+		         $alert = '<span class="events_limit_alert">No spots available.</span>';
+		      }
+		  }
 
         if ($time > $event["event_begin_date"] && $time < $event["event_end_date"]) {
             $info = '<span class="events_alert">This event is currently underway!</span>';
@@ -293,13 +293,13 @@ global $CFG, $USER;
 
     if ($needsconfirmed) {
         $returnme = '<div id="confirm_' . $event['eventid'] . '">
-            			<table class="eventstable">
-                			<tr>
-                    			' . $daygraphic . '
-                        			<table style="width:100%;border-spacing: 0px;">
+          				<table class="eventstable">
+              				<tr>
+                  				' . $daygraphic . '
+                      				<table style="width:100%;border-spacing: 0px;">
                                         <tr>
                                             <td>
-                                    			<div class="event_title" style="color:gray;">Unconfirmed:
+                                  				<div class="event_title" style="color:gray;">Unconfirmed:
                                                     ' . make_modal_links([
                                                             "title" => stripslashes($event["name"]),
                                                             "path" => action_path("events") . "info&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
@@ -310,36 +310,36 @@ global $CFG, $USER;
                                                 </div>
                                                 <span style="font-size:.85em">&nbsp;
                                                     ' . stripslashes(strip_tags($event["byline"], '<a>')) . '
-                                    			</span>
+                                  				</span>
                                                 <div class="hprcp_n" style="margin-top:4px;">
                                                     <div class="hprcp_e">
                                                         <div class="hprcp_w"></div>
                                                     </div>
                                                 </div>
-                                    			<div class="hprcp_head">
-                                        			<div class="event_info_box">
+                                  				<div class="hprcp_head">
+                                      				<div class="event_info_box">
                                                         ' . $buttons . '
-                                            			<div class="event_info">
+                                          				<div class="event_info">
                                                             ' . $registration_info . '
-                                            			</div>
-                                        			</div>
-                                    			</div>
+                                          				</div>
+                                      				</div>
+                                  				</div>
                                             </td>
                                         </tr>
                                     </table>
                                 </td>
-                			</tr>
-            			</table>
+              				</tr>
+          				</table>
                     </div>';
     } else {
         $returnme = '<div id="confirm_' . $event['eventid'] . '">
-            			<table class="eventstable">
+          				<table class="eventstable">
                             <tr>
-                    			' . $daygraphic . '
-                        			<table style="width:100%;border-spacing: 0px;">
+                  				' . $daygraphic . '
+                      				<table style="width:100%;border-spacing: 0px;">
                                         <tr>
                                             <td>
-                                    			<div class="event_title" style="color:blue;">
+                                  				<div class="event_title" style="color:blue;">
                                                     ' . make_modal_links([
                                                             "title" => stripslashes($event["name"]),
                                                             "path" => action_path("events") . "info&amp;pageid=$pageid&amp;eventid=" . $event['eventid'],
@@ -348,27 +348,27 @@ global $CFG, $USER;
                                                             "height" => "650",
                                                         ]) . '
                                                 </div>
-                                    			<span style="font-size:.85em">
+                                  				<span style="font-size:.85em">
                                                     &nbsp;' . stripslashes(strip_tags($event["byline"], '<a>')) . '
-                                    			</span>
+                                  				</span>
                                                 <div class="hprcp_n" style="margin-top:4px;">
                                                     <div class="hprcp_e">
                                                         <div class="hprcp_w"></div>
                                                     </div>
                                                 </div>
-                                    			<div class="hprcp_head">
+                                  				<div class="hprcp_head">
                                                     <div class="event_info_box">
-                                            			' . $buttons . '
+                                          				' . $buttons . '
                                                         <div class="event_info">
-                                            			' . $registration_info . '
-                                            			</div>
-                                    			    </div>
+                                          				' . $registration_info . '
+                                          				</div>
+                                  					  </div>
                                                 </div>
-                        			         </td>
+                      					       </td>
                                         </tr>
                                     </table>
-                    			</td>
-            			     </tr>
+                  				</td>
+          					   </tr>
                         </table>
                     </div>';
     }
@@ -387,11 +387,11 @@ global $CFG;
 	$titlefontcolor = isset($styles['titlefontcolor']) ? $styles['titlefontcolor'] : "";
 
 	if (strlen($buttons) > 0) {
-	   	   return '
+	 			 return '
         <div id="slide_menu" class="slide_menu_invisible slide_menu" style="border-top:1px solid ' . $bordercolor . ';border-bottom:1px solid ' . $bordercolor . ';">
             <div id="event_' . $event["eventid"] . '_buttons" style="padding:0;">
-    		  ' . $buttons . '
-    		</div>
+  				' . $buttons . '
+  			</div>
         </div>
         <div onclick="$(this).prev(\'#slide_menu\').animate({width: \'toggle\'},function() {$(this).toggleClass(\'slide_menu_visible\');});" class="slide_menu slide_menu_tab" style="background-color:' . $titlefontcolor . ';color:' . $titlebgcolor . ';border-left:1px solid ' . $bordercolor . ';border-top:1px solid ' . $bordercolor . ';border-bottom:1px solid ' . $bordercolor . ';"><strong>+</strong></div>
         ';
@@ -802,13 +802,13 @@ global $CFG, $why, $error;
     } else { //db form style
         $sql_values = "";
         if ($elements = get_db_result("SELECT * FROM events_templates_forms WHERE template_id='" . $event['template_id'] . "' ORDER BY sort")) {
-	        while ($element = fetch_row($elements)) {
-	            if ($event["fee_full"] != 0 && $element["type"] == "payment") {
-	                $sql_values .= $sql_values == "" ? "('$eventid','$regid','" . $element['elementid'] . "','" . $event["fee_full"] . "','total_owed'),('$eventid','$regid','" . $element['elementid'] . "','0','paid'),('$eventid','$regid','" . $element['elementid'] . "','" . $reg["payment_method"] . "','payment_method')" : ",('$eventid','$regid','" . $element['elementid'] . "','" . $event["fee_full"] . "','total_owed'),('$eventid','$regid','" . $element['elementid'] . "','0','paid'),('$eventid','$regid','" . $element['elementid'] . "','" . $reg["payment_method"] . "','payment_method')";
-	            } elseif (isset($reg[$element['elementid']])) {
+		      while ($element = fetch_row($elements)) {
+		          if ($event["fee_full"] != 0 && $element["type"] == "payment") {
+		              $sql_values .= $sql_values == "" ? "('$eventid','$regid','" . $element['elementid'] . "','" . $event["fee_full"] . "','total_owed'),('$eventid','$regid','" . $element['elementid'] . "','0','paid'),('$eventid','$regid','" . $element['elementid'] . "','" . $reg["payment_method"] . "','payment_method')" : ",('$eventid','$regid','" . $element['elementid'] . "','" . $event["fee_full"] . "','total_owed'),('$eventid','$regid','" . $element['elementid'] . "','0','paid'),('$eventid','$regid','" . $element['elementid'] . "','" . $reg["payment_method"] . "','payment_method')";
+		          } elseif (isset($reg[$element['elementid']])) {
                     $sql_values .= $sql_values == "" ? "('$eventid','$regid','" . $element['elementid'] . "','" . $reg[$element['elementid']] . "','" . $element['display'] . "')" : ",('$eventid','$regid','" . $element['elementid'] . "','" . dbescape($reg[$element['elementid']]) . "','" . $element['display'] . "')";
                 }
-	        }
+		      }
         }
         $SQL = "INSERT INTO events_registrations_values (eventid,regid,elementid,value,elementname) VALUES" . $sql_values;
         if ($entries = execute_db_sql($SQL) && $nolimit = hard_limits($regid, $event, $template)) {
@@ -856,7 +856,7 @@ global $CFG;
             $total_owed = empty($total_owed) ? $event["fee_full"] : $total_owed;
             $paid = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='paid'");
             $paid = empty($paid) ? 0 : $paid;
-    		$remaining = $total_owed - $paid;
+  			$remaining = $total_owed - $paid;
 
             $email .= '
                 <h2>We show a PENDING registration for ' . $touser->fname . " " . $touser->lname . ' to attend ' . $event["name"] . '.</h2>
@@ -883,7 +883,7 @@ global $CFG;
             $total_owed = empty($total_owed) ? $event["fee_full"] : $total_owed;
             $paid = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='paid'");
             $paid = empty($paid) ? 0 : $paid;
-    		$remaining = $total_owed - $paid;
+  			$remaining = $total_owed - $paid;
 
             $email .= '
                 <h2>Thank you for registering ' . $touser->fname . " " . $touser->lname . ' to attend ' . $event["name"] . '.</h2>
@@ -1053,7 +1053,7 @@ global $MYVARS, $CFG, $USER;
         execute_db_sql("DELETE FROM events_registrations_values WHERE eventid='$eventid'");
     }
 
-    //Log
+    // Log
     log_entry("event", $event["name"], "Deleted Event");
     donothing();
 }
@@ -1102,7 +1102,7 @@ global $MYVARS, $CFG, $USER;
         }
         execute_db_sql("UPDATE events SET confirmed='$confirm' WHERE eventid='$eventid'");
     }
-    //Log
+    // Log
     log_entry("events", $event["name"], "Confirmed Event's Visibility");
     donothing();
 }
@@ -1142,18 +1142,47 @@ function get_event_length($startdate, $enddate, $allday, $starttime, $endtime) {
     return $length;
 }
 
-function get_templates($selected = false, $eventid = "", $activeonly = false) {
+function get_templates($selected = false, $eventid = false, $activeonly = false) {
 global $CFG;
-    $returnme = check_for_new_templates();
-    $active = !empty($activeonly) ? ' activated=1' : '';
-    if ($templates = get_db_result("SELECT * FROM events_templates WHERE $active ORDER BY name")) {
-        while ($template = fetch_row($templates)) {
-            $returnme .= $returnme == "" ? '<select id="template" onchange="clear_limits(); ajaxapi(\'/features/events/events_ajax.php\',\'show_template_settings\',\'&amp;eventid=' . $eventid . '&amp;templateid=\'+document.getElementById(\'template\').value,function() { simple_display(\'template_settings_div\');});"><option value="0">Select a template</option>' : '';
-            $selectme = $selected && ($template['template_id'] == $selected) ? ' selected' : '';
-            $returnme .= '<option value="' . $template['template_id'] . '"' . $selectme . '>' . stripslashes($template['name']) . '</option>';
-        }
+    check_for_new_templates();
+
+    $activeonly = $activeonly == true ? ' WHERE activated = 1' : '';
+    $fallback = "No templates found";
+    $templateselect = [
+        "properties" => [
+            "name" => 'template',
+            "id" => 'template',
+            "onchange" =>  'clear_limits();
+                            ajaxapi(\'/features/events/events_ajax.php\',
+                                   \'show_template_settings\',
+                                   \'&amp;eventid=' . $eventid . '&amp;templateid=\' + document.getElementById(\'template\').value,
+                                   function() {
+                                        simple_display(\'template_settings_div\');
+                                    }
+                            );',
+        ],
+        "values" => get_db_result("SELECT *
+                                     FROM events_templates
+                                     $activeonly
+                                     ORDER BY name"),
+        "valuename" => "template_id",
+        "selected" => $selected,
+        "firstoption" => "Select a template",
+        "displayname" => "name",
+        "fallback" => $fallback,
+    ];
+
+    $returnme = make_select($templateselect);
+    if ($returnme !== $fallback) { // There are templates.
+        $returnme .= '
+            <a  href="javascript: void(0);"
+                onclick="if (document.getElementById(\'template\').value){
+                            window.open(\'' . $CFG->wwwroot . '/features/events/preview.php?action=preview_template&amp;template_id=\' + document.getElementById(\'template\').value, \'Template\', \'menubar=yes,toolbar=yes,scrollbars=1,resizable=1,width=600,height=400\');
+                        }">
+                Preview
+            </a>';
     }
-    $returnme .= $returnme == "" ? "No templates exist" : '</select> <a href="javascript:void(0);" onclick="window.open(\'' . $CFG->wwwroot . '/features/events/preview.php?action=preview_template&amp;template_id=\'+document.getElementById(\'template\').value,\'Template\',\'menubar=yes,toolbar=yes,scrollbars=1,resizable=1,width=600,height=400\');">Preview</a>';
+
     return $returnme;
 }
 
@@ -1243,7 +1272,10 @@ function save_template_settings($template_id, $savearray) {
     }
 }
 
-function get_possible_times($formid, $selected_time = "false", $start_time = "false") {
+function get_possible_times($formid, $selected_time = false, $start_time = false) {
+    $selected_time = $selected_time ?? false;
+    $start_time = $start_time ?? false;
+
     $times = ["00:00*12:00 am", "00:30*12:30 am", "01:00*01:00 am", "01:30*01:30 am", "02:00*02:00 am", "02:30*02:30 am", "03:00*03:00 am", "03:30*03:30 am", "04:00*04:00 am", "04:30*04:30 am", "05:00*05:00 am", "05:30*05:30 am", "06:00*06:00 am", "06:30*06:30 am", "07:00*07:00 am", "07:30*07:30 am", "08:00*08:00 am", "08:30*08:30 am", "09:00*09:00 am", "09:30*09:30 am", "10:00*10:00 am", "10:30*10:30 am", "11:00*11:00 am", "11:30*11:30 am", "12:00*12:00 pm", "12:30*12:30 pm", "13:00*01:00 pm", "13:30*01:30 pm", "14:00*02:00 pm", "14:30*02:30 pm", "15:00*03:00 pm", "15:30*03:30 pm", "16:00*04:00 pm", "16:30*04:30 pm", "17:00*05:00 pm", "17:30*05:30 pm", "18:00*06:00 pm", "18:30*06:30 pm", "19:00*07:00 pm", "19:30*07:30 pm", "20:00*08:00 pm", "20:30*08:30 pm", "21:00*09:00 pm", "21:30*09:30 pm", "22:00*10:00 pm", "22:30*10:30 pm", "23:00*11:00 pm", "23:30*11:30 pm"];
     $onchange = $formid == 'begin_time' ? 'onchange="get_end_time(this.value);"' : '';
     $to = $formid == 'begin_time' ? '<div style="font-size:.75em; color:green;">From </div>' : '<div style="font-size:.75em; color:green;">&nbsp; To </div>';
@@ -1252,15 +1284,15 @@ function get_possible_times($formid, $selected_time = "false", $start_time = "fa
     $from = false;
     while (isset($times[$i])) {
         $time = explode("*", $times[$i]);
-        if ($start_time != "false" && $from) {
-            if (strstr($time[0], $selected_time)) {
+        if ($start_time && $from) {
+            if ($selected_time && strstr($time[0], $selected_time)) {
                 $returnme .= '<option value="' . $time[0] . '" selected>' . $time[1] . '</option>';
             } else {
                 $returnme .= '<option value="' . $time[0] . '">' . $time[1] . '</option>';
             }
         }
-        if ($start_time == "false") {
-            if (strstr($time[0], $selected_time)) {
+        if (!$start_time) {
+            if ($selected_time && strstr($time[0], $selected_time)) {
                 $returnme .= '<option value="' . $time[0] . '" selected>' . $time[1] . '</option>';
             } else {
                 $returnme .= '<option value="' . $time[0] . '">' . $time[1] . '</option>';
@@ -1495,19 +1527,19 @@ global $USER, $CFG, $MYVARS;
             <h2>' . (!$viewonly ? 'Staff Application' : $v["name"] . ' Application') . '</h2>
             <span style="font-weight:bold;font-size:.9em">If you are not ' . $v["name"] . ', please sign into your own account.</span>
             </div><br />
-    		<form name="staffapplication_form" id="staffapplication_form">
+  			<form name="staffapplication_form" id="staffapplication_form">
                 ' . (empty($v["staffid"]) ? '' : '<input type="hidden" id="staffid" name="staffid" value="' . $v["staffid"] . '" />') . '
-    			<fieldset class="formContainer" ' . ($viewonly ? '' : 'style="width: 420px;margin-left: auto;margin-right: auto;"') . '>
+  				<fieldset class="formContainer" ' . ($viewonly ? '' : 'style="width: 420px;margin-left: auto;margin-right: auto;"') . '>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="name">Name</label>
+  						<label class="rowTitle" for="name">Name</label>
                         <input disabled="disabled" type="text" id="name" name="name" value="' . $v["name"] . '"
                             data-rule-required="true"
                             data-msg-required="' . error_string('valid_staff_name:events') . '"
                         /><div class="tooltipContainer info">' . get_help("input_staff_name:events") . '</div>
-    				    <div class="spacer" style="clear: both;"></div>
+  						  <div class="spacer" style="clear: both;"></div>
                     </div>
                     <div class="rowContainer">
-        				<label class="rowTitle" for="dateofbirth">Date of Birth</label>
+      					<label class="rowTitle" for="dateofbirth">Date of Birth</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text"
                             id="dateofbirth"
@@ -1529,10 +1561,10 @@ global $USER, $CFG, $MYVARS;
                                 $(\'#agerange\').change();
                             "
                         /><div class="tooltipContainer info">' . get_help("input_staff_dob:events") . '</div>
-    				    <div class="spacer" style="clear: both;"></div>
-        			</div>
+  						  <div class="spacer" style="clear: both;"></div>
+      				</div>
                     <div class="rowContainer">
-				        <label class="rowTitle" for="phone">Phone</label>
+					      <label class="rowTitle" for="phone">Phone</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text" id="phone" name="phone" value="' . $v["phone"] . '"
                             data-rule-required="true"
@@ -1541,19 +1573,19 @@ global $USER, $CFG, $MYVARS;
                             data-msg-phone="' . error_string('valid_staff_phone_invalid:events') . '"
                         />
                         <div class="tooltipContainer info">' . get_help("input_staff_phone:events") . '</div>
-    				    <div class="spacer" style="clear: both;"></div>
+  						  <div class="spacer" style="clear: both;"></div>
                     </div>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="address">Address</label>
+  						<label class="rowTitle" for="address">Address</label>
                         <textarea ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             rows="3" id="address" name="address"
                             data-rule-required="true"
                         >' . $v["address"] . '</textarea>
                         <div class="tooltipContainer info">' . get_help("input_staff_address:events") . '</div>
-    				    <div class="spacer" style="clear: both;"></div>
-    	  			</div>
+  						  <div class="spacer" style="clear: both;"></div>
+  						</div>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="agerange">Age Range</label>
+  						<label class="rowTitle" for="agerange">Age Range</label>
                         <select ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             id="agerange"
                             name="agerange"
@@ -1578,10 +1610,10 @@ global $USER, $CFG, $MYVARS;
                             <option value="1" ' . $v["ar2selected"] . '>18-25</option>
                             <option value="2" ' . $v["ar3selected"] . '>26 or older</option>
                         </select><div class="tooltipContainer info">' . get_help("input_staff_agerange:events") . '</div><br />
-    				    <div class="spacer" style="clear: both;"></div>
-    	  			</div>
+  						  <div class="spacer" style="clear: both;"></div>
+  						</div>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="cocmember">Are you a member of the church of Christ?</label>
+  						<label class="rowTitle" for="cocmember">Are you a member of the church of Christ?</label>
                         <select ' . ($viewonly ? 'disabled="disabled"' : '') . ' style="width:80px" id="cocmember" name="cocmember"
                             data-rule-required="true"
                         >
@@ -1589,18 +1621,18 @@ global $USER, $CFG, $MYVARS;
                             <option value="1" ' . $v["cocmemberyesselected"] . '>Yes</option>
                         </select>
                         <div class="tooltipContainer info">' . get_help("input_staff_cocmember:events") . '</div>
-    				    <div class="spacer" style="clear: both;"></div>
-    	  			</div>
+  						  <div class="spacer" style="clear: both;"></div>
+  						</div>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="congregation">Congregation Name</label>
+  						<label class="rowTitle" for="congregation">Congregation Name</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . ' type="text" id="congregation" name="congregation" value="' . $v["congregation"] . '"
                             data-rule-required="true"
                         />
                         <div class="tooltipContainer info">' . get_help("input_staff_congregation:events") . '</div>
-    				    <div class="spacer" style="clear: both;"></div>
-    	  			</div>
+  						  <div class="spacer" style="clear: both;"></div>
+  						</div>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="priorwork">Have you worked at Camp Wabashi as a staff member before?</label>
+  						<label class="rowTitle" for="priorwork">Have you worked at Camp Wabashi as a staff member before?</label>
                         <select ' . ($viewonly ? 'disabled="disabled"' : '') . ' style="width:80px" id="priorwork" name="priorwork"
                             data-rule-required="true"
                         >
@@ -1608,12 +1640,12 @@ global $USER, $CFG, $MYVARS;
                             <option value="1" ' . $v["priorworkyesselected"] . '>Yes</option>
                         </select>
                         <div class="tooltipContainer info">' . get_help("input_staff_priorwork:events") . '</div>
-    				    <div class="spacer" style="clear: both;"></div>
-    	  			</div>
+  						  <div class="spacer" style="clear: both;"></div>
+  						</div>
                     <br /><hr><br />
                     <h3>Have you at any time ever:</h3>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="q1_1">Been arrested for any reason?</label>
+  						<label class="rowTitle" for="q1_1">Been arrested for any reason?</label>
                         <select ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             onchange="
                                 if (($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0) {
@@ -1629,10 +1661,10 @@ global $USER, $CFG, $MYVARS;
                             <option value="1" ' . $v["q1_1yesselected"] . '>Yes</option>
                         </select>
                         <div class="tooltipContainer info">' . get_help("input_staff_q1_1:events") . '</div>
-    				    <div class="spacer" style="clear: both;"></div>
-    	  			</div>
+  						  <div class="spacer" style="clear: both;"></div>
+  						</div>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="q1_2">Been convicted of, or pleaded guilty or no contest to, any crime?</label>
+  						<label class="rowTitle" for="q1_2">Been convicted of, or pleaded guilty or no contest to, any crime?</label>
                         <select ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             onchange="
                                 if (($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0) {
@@ -1648,10 +1680,10 @@ global $USER, $CFG, $MYVARS;
                             <option value="1" ' . $v["q1_2yesselected"] . '>Yes</option>
                         </select>
                         <div class="tooltipContainer info">' . get_help("input_staff_q1_2:events") . '</div>
-    				    <div class="spacer" style="clear: both;"></div>
-    	  			</div>
+  						  <div class="spacer" style="clear: both;"></div>
+  						</div>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="q1_3">Engaged in, or been accused of, any child molestation, exploitation, or abuse?</label>
+  						<label class="rowTitle" for="q1_3">Engaged in, or been accused of, any child molestation, exploitation, or abuse?</label>
                         <select ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             onchange="
                                 if (($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0) {
@@ -1666,12 +1698,12 @@ global $USER, $CFG, $MYVARS;
                             <option value="1" ' . $v["q1_3yesselected"] . '>Yes</option>
                         </select>
                         <div class="tooltipContainer info">' . get_help("input_staff_q1_3:events") . '</div>
-    				    <div class="spacer" style="clear: both;"></div>
-    	  			</div>
+  						  <div class="spacer" style="clear: both;"></div>
+  						</div>
                     <br /><hr><br />
                     <h3>Are you aware of:</h3>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="q2_1">Having any traits or tendencies that could pose any threat to children, youth, or others?</label>
+  						<label class="rowTitle" for="q2_1">Having any traits or tendencies that could pose any threat to children, youth, or others?</label>
                         <select ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             onchange="
                                 if (($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0) {
@@ -1687,10 +1719,10 @@ global $USER, $CFG, $MYVARS;
                             <option value="1" ' . $v["q2_1yesselected"] . '>Yes</option>
                         </select>
                         <div class="tooltipContainer info">' . get_help("input_staff_q2_1:events") . '</div>
-    				    <div class="spacer" style="clear: both;"></div>
-    	  			</div>
+  						  <div class="spacer" style="clear: both;"></div>
+  						</div>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="q2_2">Any reason why you should not work with children, youth, or others?</label>
+  						<label class="rowTitle" for="q2_2">Any reason why you should not work with children, youth, or others?</label>
                         <select ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             onchange="
                                 if (($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0) {
@@ -1706,40 +1738,40 @@ global $USER, $CFG, $MYVARS;
                             <option value="1" ' . $v["q2_2yesselected"] . '>Yes</option>
                         </select>
                         <div class="tooltipContainer info">' . get_help("input_staff_q2_2:events") . '</div>
-    				    <div class="spacer" style="clear: both;"></div>
-    	  			</div>
+  						  <div class="spacer" style="clear: both;"></div>
+  						</div>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="q2_3">If the answer to any of these questions is "Yes", please explain in detail</label>
+  						<label class="rowTitle" for="q2_3">If the answer to any of these questions is "Yes", please explain in detail</label>
                             <textarea ' . ($viewonly ? 'disabled="disabled"' : '') . '
                                 rows="3" id="q2_3" name="q2_3"
                                 ' . (empty($v["yestotal"]) ? '' : 'data-rule-required="true"') . '
                             >' . $v["q2_3"] . '</textarea>
                             <div class="tooltipContainer info">' . get_help("input_staff_q1_3:events") . '</div>
-    				    <div class="spacer" style="clear: both;"></div>
-    	  			</div>
+  						  <div class="spacer" style="clear: both;"></div>
+  						</div>
                     ' . ($viewonly ? '<div style="text-align:center"><h2>' . $v["name"] . ' References</h2></div>' : '<br /><hr><br />') . '
                     <h3>References #1</h3><br />
-    		  		<br />
+  						<br />
                     <div class="rowContainer">
-    					<label class="rowTitle" for="ref1name">Name</label>
+  						<label class="rowTitle" for="ref1name">Name</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text" id="ref1name" name="ref1name" value="' . $v["ref1name"] . '"
                             data-rule-required="true"
                         />
                         <div class="tooltipContainer info">' . get_help("input_staff_refname:events") . '</div>
-    				    <div class="spacer" style="clear: both;"></div>
-    				</div>
+  						  <div class="spacer" style="clear: both;"></div>
+  					</div>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="ref1relationship">Relationship</label>
+  						<label class="rowTitle" for="ref1relationship">Relationship</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text" id="ref1relationship" name="ref1relationship" value="' . $v["ref1relationship"] . '"
                             data-rule-required="true"
                         />
                         <div class="tooltipContainer info">' . get_help("input_staff_refrelationship:events") . '</div>
-    				    <div class="spacer" style="clear: both;"></div>
-    				</div>
+  						  <div class="spacer" style="clear: both;"></div>
+  					</div>
                     <div class="rowContainer">
-				        <label class="rowTitle" for="ref1phone">Phone</label>
+					      <label class="rowTitle" for="ref1phone">Phone</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text" id="ref1phone" name="ref1phone" value="' . $v["ref1phone"] . '"
                             data-rule-required="true"
@@ -1748,30 +1780,30 @@ global $USER, $CFG, $MYVARS;
                             data-msg-phone="' . error_string('valid_staff_phone_invalid:events') . '"
                         />
                         <div class="tooltipContainer info">' . get_help("input_staff_phone:events") . '</div>
-    				    <div class="spacer" style="clear: both;"></div>
+  						  <div class="spacer" style="clear: both;"></div>
                     </div>
                     <br /><hr><br />
                     <h3>References #2</h3><br />
                     <div class="rowContainer">
-    					<label class="rowTitle" for="ref2name">Name</label>
+  						<label class="rowTitle" for="ref2name">Name</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text" id="ref2name" name="ref2name" value="' . $v["ref2name"] . '"
                             data-rule-required="true"
                         />
                         <div class="tooltipContainer info">' . get_help("input_staff_refname:events") . '</div>
-    				    <div class="spacer" style="clear: both;"></div>
-    				</div>
+  						  <div class="spacer" style="clear: both;"></div>
+  					</div>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="ref2relationship">Relationship</label>
+  						<label class="rowTitle" for="ref2relationship">Relationship</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text" id="ref2relationship" name="ref2relationship" value="' . $v["ref2relationship"] . '"
                             data-rule-required="true"
                         />
                         <div class="tooltipContainer info">' . get_help("input_staff_refrelationship:events") . '</div>
-    				    <div class="spacer" style="clear: both;"></div>
-    				</div>
+  						  <div class="spacer" style="clear: both;"></div>
+  					</div>
                     <div class="rowContainer">
-				        <label class="rowTitle" for="ref2phone">Phone</label>
+					      <label class="rowTitle" for="ref2phone">Phone</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text" id="ref2phone" name="ref2phone" value="' . $v["ref2phone"] . '"
                             data-rule-required="true"
@@ -1780,30 +1812,30 @@ global $USER, $CFG, $MYVARS;
                             data-msg-phone="' . error_string('valid_staff_phone_invalid:events') . '"
                         />
                         <div class="tooltipContainer info">' . get_help("input_staff_phone:events") . '</div>
-    				    <div class="spacer" style="clear: both;"></div>
+  						  <div class="spacer" style="clear: both;"></div>
                     </div>
                     <br /><hr><br />
                     <h3>References #3</h3><br />
                     <div class="rowContainer">
-    					<label class="rowTitle" for="ref3name">Name</label>
+  						<label class="rowTitle" for="ref3name">Name</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text" id="ref3name" name="ref3name" value="' . $v["ref3name"] . '"
                             data-rule-required="true"
                         />
                         <div class="tooltipContainer info">' . get_help("input_staff_refname:events") . '</div>
-    				    <div class="spacer" style="clear: both;"></div>
-    				</div>
+  						  <div class="spacer" style="clear: both;"></div>
+  					</div>
                     <div class="rowContainer">
-    					<label class="rowTitle" for="ref3relationship">Relationship</label>
+  						<label class="rowTitle" for="ref3relationship">Relationship</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text" id="ref3relationship" name="ref3relationship" value="' . $v["ref3relationship"] . '"
                             data-rule-required="true"
                         />
                         <div class="tooltipContainer info">' . get_help("input_staff_refrelationship:events") . '</div>
-    				    <div class="spacer" style="clear: both;"></div>
-    				</div>
+  						  <div class="spacer" style="clear: both;"></div>
+  					</div>
                     <div class="rowContainer">
-				        <label class="rowTitle" for="ref3phone">Phone</label>
+					      <label class="rowTitle" for="ref3phone">Phone</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text" id="ref3phone" name="ref3phone" value="' . $v["ref3phone"] . '"
                             data-rule-required="true"
@@ -1812,7 +1844,7 @@ global $USER, $CFG, $MYVARS;
                             data-msg-phone="' . error_string('valid_staff_phone_invalid:events') . '"
                         />
                         <div class="tooltipContainer info">' . get_help("input_staff_phone:events") . '</div>
-    				    <div class="spacer" style="clear: both;"></div>
+  						  <div class="spacer" style="clear: both;"></div>
                     </div>
                     <br /><hr><br />
                     <h3>Worker Renewal Work Verification and Release</h3><br />
@@ -1822,18 +1854,18 @@ global $USER, $CFG, $MYVARS;
                     <br />
                     I agree to abide by all policies and procedures of the organization and to protect the health and safety of the children or youth assigned to my care or supervision at all times.
                     </em>
-    		  		<br /><br />
+  						<br /><br />
                     <div class="rowContainer">
-    					<label class="rowTitle" for="workerconsent">Full Name</label>
+  						<label class="rowTitle" for="workerconsent">Full Name</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text" id="workerconsent" name="workerconsent" value="' . $v["workerconsent"] . '"
                             data-rule-required="true"
                         />
                         <div class="tooltipContainer info">' . get_help("input_staff_workerconsent:events") . '</div>
-    				    <div class="spacer" style="clear: both;"></div>
-    				</div>
+  						  <div class="spacer" style="clear: both;"></div>
+  					</div>
                     <div class="rowContainer">
-        				<label class="rowTitle" for="workerconsentdate">Date</label>
+      					<label class="rowTitle" for="workerconsentdate">Date</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text" id="workerconsentdate" name="workerconsentdate" value="' . $v["workerconsentdate"] . '"
                             data-rule-required="true"
@@ -1843,56 +1875,63 @@ global $USER, $CFG, $MYVARS;
                             disabled="disabled"
                         />
                         <div class="tooltipContainer info">' . get_help("input_staff_workerconsentdate:events") . '</div>
-    				    <div class="spacer" style="clear: both;"></div>
-        			</div>
+  						  <div class="spacer" style="clear: both;"></div>
+      				</div>
                     <div>
                         <strong>You should understand that the name field and signature field have the same legal effect and can be enforced in the same way as a written signature.</strong>
                     </div>
                     <br />
                     <div class="rowContainer">
-    					<label class="rowTitle" for="workerconsentsig">Signature</label>
+  						<label class="rowTitle" for="workerconsentsig">Signature</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="checkbox" id="workerconsentsig" name="workerconsentsig" ' . $v["workerconsentsig"] . '
                             data-rule-required="true"
                         />
                         <div class="tooltipContainer info">' . get_help("input_staff_workerconsentsig:events") . '</div>
-    				    <div class="spacer" style="clear: both;"></div>
-    				</div>
+  						  <div class="spacer" style="clear: both;"></div>
+  					</div>
                     <div id="sub18" style="' . $v["sub18display"] . '">
                         <br /><hr><br />
                             <div style="background:#FFED00;padding:5px;">
                             <strong>If you are under 18, please have a parent or guardian affirm to the following:</strong><br />
                             <em>I swear and affirm that I am not aware of any traits or tendencies of the applicant that could pose a threat to children, youth or others and that I am not aware of any reasons why the applicant should not work with children, youth, or others.</em>
-            		  		<br /><br />
+          						<br /><br />
                             <div class="rowContainer">
-            					<label class="rowTitle" for="parentalconsent">Parent or Gurdian Full Name</label>
+          						<label class="rowTitle" for="parentalconsent">Parent or Gurdian Full Name</label>
                                 <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                                     type="text" id="parentalconsent" name="parentalconsent" value="' . $v["parentalconsent"] . '"
                                     ' . (empty($v["ar1selected"]) ? '' : 'data-rule-required="true"') . '
                                 />
                                 <div class="tooltipContainer info">' . get_help("input_staff_parentalconsent:events") . '</div>
-            				</div>
+          					</div>
                             <div>
                                 <strong>You should understand that the name field and signature field have the same legal effect and can be enforced in the same way as a written signature.</strong>
                             </div>
                             <br />
                             <div class="rowContainer">
-            					<label class="rowTitle" for="parentalconsentsig">Parent or Guardian Signature</label>
+          						<label class="rowTitle" for="parentalconsentsig">Parent or Guardian Signature</label>
                                 <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                                     type="checkbox" id="parentalconsentsig" name="parentalconsentsig"
                                     ' . $v["parentalconsentsig"] . '
                                     ' . (empty($v["ar1selected"]) ? '' : 'data-rule-required="true"') . '
                                 />
                                 <div class="tooltipContainer info">' . get_help("input_staff_parentalconsentsig:events") . '</div>
-    				            <div class="spacer" style="clear: both;"></div>
-            				</div>
+  						          <div class="spacer" style="clear: both;"></div>
+          					</div>
                         </div>
                     </div>
                     ' . ($viewonly ? '' : '<input class="submit" name="submit" type="submit" onmouseover="this.focus();" value="Submit Application" />') . '
-    			</fieldset>
-    		</form>
+  				</fieldset>
+  			</form>
             ' . keepalive() . '
-    	</div>';
+  		</div>';
+}
+
+function get_hint_box($hintstring) {
+    return '<span class="hint">
+                <span class="hint-pointer">&nbsp;</span>
+                ' . get_help($hintstring) . '
+            </span>';
 }
 
 function new_location_form($eventid) {
@@ -1904,7 +1943,7 @@ function new_location_form($eventid) {
 			</td>
 			<td class="field_input">
 				<input type="text" id="location_name" />
-				<span class="hint">' . get_help("input_location_name:events") . '<span class="hint-pointer">&nbsp;</span></span>
+                ' . get_hint_box("input_location_name:events") . '
 			</td>
 		</tr><tr><td></td><td class="field_input"><span id="location_name_error" class="error_text"></span></td></tr>
 		<tr>
@@ -1913,14 +1952,14 @@ function new_location_form($eventid) {
 			</td>
 			<td class="field_input">
 				<input type="text" id="location_address_1" />
-				<span class="hint">' . get_help("input_location_add1:events") . '<span class="hint-pointer">&nbsp;</span></span>
+				' . get_hint_box("input_location_add1:events") . '
 			</td>
 		</tr><tr><td></td><td class="field_input"><span id="location_address_1_error" class="error_text"></span></td></tr>
 		<tr>
 			<td></td>
 			<td class="field_input">
 				<input type="text" id="location_address_2" />
-				<span class="hint">' . get_help("input_location_add2:events") . '<span class="hint-pointer">&nbsp;</span></span>
+				' . get_hint_box("input_location_add2:events") . '
 			</td>
 		</tr><tr><td></td><td class="field_input"><span id="location_address_2_error" class="error_text"></span></td></tr>
 		<tr>
@@ -1929,7 +1968,7 @@ function new_location_form($eventid) {
 			</td>
 			<td class="field_input">
 				<input type="text" id="zip" size="7" maxlength="5" />
-				<span class="hint">' . get_help("input_location_zip:events") . '<span class="hint-pointer">&nbsp;</span></span>
+				' . get_hint_box("input_location_zip:events") . '
 			</td>
 		</tr><tr><td></td><td class="field_input"><span id="zip_error" class="error_text"></span></td></tr>
 		<tr>
@@ -1938,7 +1977,7 @@ function new_location_form($eventid) {
 			</td>
 			<td class="field_input">
 				<input type="checkbox" id="share" />
-				<span class="hint">' . get_help("input_location_share:events") . '<span class="hint-pointer">&nbsp;</span></span>
+				' . get_hint_box("input_location_share:events") . '
 			</td>
 		</tr>
 		<tr>
@@ -1946,7 +1985,7 @@ function new_location_form($eventid) {
 				<span style="font-size:1.2em; color:blue;">(optional)</span> Phone:
 			</td>
 			<td class="field_input">
-				<input type="hidden" id="opt_location_phone" value="1" /><input type="text" id="location_phone_1" maxlength="3" size="1" onkeyup="movetonextbox(event);" />-<input type="text" id="location_phone_2" size="1" maxlength="3" onkeyup="movetonextbox(event);" />-<input type="text" id="location_phone_3" size="2" maxlength="4" />
+				<input type="hidden" id="opt_location_phone" value="1" /><input type="text" class="phone1" id="location_phone_1" size="1" maxlength="3" onkeyup="movetonextbox(event);" />-<input class="phone2" type="text" id="location_phone_2" size="1" maxlength="3" onkeyup="movetonextbox(event);" />-<input class="phone3" type="text" id="location_phone_3" size="2" maxlength="4" />
 			</td>
 		</tr><tr><td></td><td class="field_input"><span id="location_phone_error" class="error_text"></span></td></tr>
 		<tr>
@@ -2042,10 +2081,10 @@ global $CFG, $USER;
         }
     }
     if (isset($directorylist)) {
-    	foreach ($directorylist as $folder) {
-	        $name = $folder['name'];
-	        include ($CFG->dirroot . "/features/events/templates/$name/install.php");
-	    }
+  		foreach ($directorylist as $folder) {
+		      $name = $folder['name'];
+		      include ($CFG->dirroot . "/features/events/templates/$name/install.php");
+		  }
     }
 }
 
@@ -2073,14 +2112,14 @@ function get_events_admin_contacts() {
     ];
 
     return js_code_wrap($script) . '<br /><table style="width:100%">
-    	<tr>
-    		<td class="field_title" style="width:115px;">
-    			Contacts List:
-    		</td>
-    		<td class="field_input">
-    			' . make_select($p) . '
-    		</td>
-    	</tr><tr><td></td><td class="field_input"><span id="contact_error" class="error_text"></span></td></tr>
+  		<tr>
+  			<td class="field_title" style="width:115px;">
+  				Contacts List:
+  			</td>
+  			<td class="field_input">
+  				' . make_select($p) . '
+  			</td>
+  		</tr><tr><td></td><td class="field_input"><span id="contact_error" class="error_text"></span></td></tr>
     </table>';
 }
 
@@ -2105,14 +2144,14 @@ function get_events_admin_payable() {
     ];
 
     return js_code_wrap($script) . '<br /><table style="width:100%">
-    	<tr>
-    		<td class="field_title" style="width:115px;">
-    			Payable List:
-    		</td>
-    		<td class="field_input">
-    			' . make_select($p) . '
-    		</td>
-    	</tr><tr><td></td><td class="field_input"><span id="contact_error" class="error_text"></span></td></tr>
+  		<tr>
+  			<td class="field_title" style="width:115px;">
+  				Payable List:
+  			</td>
+  			<td class="field_input">
+  				' . make_select($p) . '
+  			</td>
+  		</tr><tr><td></td><td class="field_input"><span id="contact_error" class="error_text"></span></td></tr>
     </table>';
 }
 
@@ -2286,9 +2325,8 @@ global $CFG, $USER;
                                                                                             "iframe" => true,
                                                                                             "width"  => "640",
                                                                                             "height" => "600",
-                                                                                            "iframe" => true,
                                                                                             "image"  => $CFG->wwwroot . "/images/template.png",
-                                                                                            "styles" => "padding:1px;display:block;",
+                                                                                            "class" => "adminpanel_links",
                                                                                             ]) : "";
     //Course Event Manager
     $content .= user_is_able($USER->userid, "manageevents", $pageid) ? make_modal_links([
@@ -2298,9 +2336,8 @@ global $CFG, $USER;
                                                                                     "iframe" => true,
                                                                                     "width"  => "640",
                                                                                     "height" => "600",
-                                                                                    "iframe" => true,
                                                                                     "image"  => $CFG->wwwroot . "/images/manage.png",
-                                                                                    "styles" => "padding:1px;display:block;",
+                                                                                    "class" => "adminpanel_links",
                                                                                     ]) : "";
     //Application Manager
     $content .= user_is_able($USER->userid, "manageapplications", $pageid) ? make_modal_links([
@@ -2310,9 +2347,8 @@ global $CFG, $USER;
                                                                                             "iframe" => true,
                                                                                             "width"  => "640",
                                                                                             "height" => "600",
-                                                                                            "iframe" => true,
                                                                                             "image"  => $CFG->wwwroot . "/images/apps.png",
-                                                                                            "styles" => "padding:1px;display:block;",
+                                                                                            "class" => "adminpanel_links",
                                                                                         ]) : "";
     //Staff Notifications
     $content .= user_is_able($USER->userid, "manageapplications", $pageid) ? make_modal_links([
@@ -2322,9 +2358,8 @@ global $CFG, $USER;
                                                                                             "iframe" => true,
                                                                                             "width"  => "640",
                                                                                             "height" => "600",
-                                                                                            "iframe" => true,
                                                                                             "image"  => $CFG->wwwroot . "/images/staffapp.png",
-                                                                                            "styles" => "padding:1px;display:block;",
+                                                                                            "class" => "adminpanel_links",
                                                                                         ]) : "";
     return $content;
 }

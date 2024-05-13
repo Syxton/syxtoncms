@@ -50,7 +50,7 @@ if (!get_db_row("SELECT * FROM events_templates WHERE name = '$templatename'")) 
 
 	$thisversion = 2018031200;
 	if ($version < $thisversion) {
-	    $settings = [
+		  $settings = [
             [
                 'setting_name' => 'template_setting_overnight',
                 'display'=> 'Overnight Option',
@@ -66,14 +66,14 @@ if (!get_db_row("SELECT * FROM events_templates WHERE name = '$templatename'")) 
 
         if (execute_db_sql($SQL)) { // If successful upgrade.
             execute_db_sql("INSERT INTO settings (type,pageid,featureid,setting_name,setting,extra) VALUES('events_template', 0, 0, 'version', '$thisversion', '$templatefolder')");
-	    }
+		  }
 	}
 
     $thisversion = 2018082101;
 	if ($version < $thisversion) {
        $SQL = "UPDATE events_templates SET formlist = '$formlist' WHERE folder='$templatefolder'";
 
-	   execute_db_sql($SQL);
+		 execute_db_sql($SQL);
 	}
 }
 ?>

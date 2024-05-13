@@ -3,12 +3,19 @@
 * polls_ajax.php - Polls backend ajax script
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 8/16/2011
+* Date: 5/14/2024
 * Revision: 1.4.2
 ***************************************************************************/
 
-if (!isset($CFG)) { include('../header.php'); }
-if (!isset($POLLSLIB)) include_once ($CFG->dirroot . '/features/polls/pollslib.php');
+if (!isset($CFG)) {
+	$sub = '';
+	while (!file_exists($sub . 'header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
+	}
+	include($sub . 'header.php');
+}
+
+if (!defined('POLLSLIB')) include_once ($CFG->dirroot . '/features/polls/pollslib.php');
 
 update_user_cookie();
 
@@ -25,17 +32,17 @@ global $CFG, $MYVARS;
 
 	if ($MYVARS->GET["startdateenabled"] && $startdate) { //checked box and a date is included.
 		$startdate = ",startdate='" . strtotime($startdate) . "'";
-	}elseif (!$MYVARS->GET["startdateenabled"] && $startdate) {
+	} elseif (!$MYVARS->GET["startdateenabled"] && $startdate) {
 		$startdate = ",startdate='" . strtotime($startdate) . "'";
-	}elseif (!$MYVARS->GET["startdateenabled"] && !$startdate) {
+	} elseif (!$MYVARS->GET["startdateenabled"] && !$startdate) {
 		$startdate = ",startdate='0'";
 	}
 
 	if ($MYVARS->GET["stopdateenabled"] && $stopdate) { //checked box and a date is included.
 		$stopdate = ",stopdate='" . strtotime($stopdate) . "'";
-	}elseif (!$MYVARS->GET["stopdateenabled"] && $stopdate) {
+	} elseif (!$MYVARS->GET["stopdateenabled"] && $stopdate) {
 		$stopdate = ",stopdate='" . strtotime($stopdate) . "'";
-	}elseif (!$MYVARS->GET["stopdateenabled"] && !$stopdate) {
+	} elseif (!$MYVARS->GET["stopdateenabled"] && !$stopdate) {
 		$stopdate = ",stopdate='0'";
 	}
 
@@ -54,13 +61,13 @@ global $CFG, $MYVARS;
     //Check for old answers and remove them
     if ($result = get_db_result("SELECT * FROM polls_answers WHERE pollid='$pollid'")) {
         while ($row = fetch_row($result)) {
-       	    $i=1; $found=false;
+     			  $i=1; $found=false;
             while (isset($answers[$i-1])) {
                 if ($answers[$i-1] == $row["answer"]) {
                     $found=true;
                 }
-        		$i++;
-        	}
+      			$i++;
+      		}
 
             if (!$found) {
                 execute_db_sql("DELETE FROM polls_answers WHERE answerid='" . $row["answerid"] . "'");
@@ -118,10 +125,10 @@ global $CFG, $MYVARS, $USER;
 
 	if ($extra == 'open') {
 		$returnme = "";
-		if (user_is_able($USER->userid, "editopenpolls", $pageid,"polls", $featureid)) {
-            $returnme .= make_modal_links(array("title"=> "Edit Feature", "path" => action_path("polls") . "editpoll&amp;pageid=$pageid&amp;featureid=$featureid", "refresh" => "true", "iframe" => true, "width" => "800", "height" => "400", "image" => $CFG->wwwroot . "/images/edit.png"));
+		if (user_is_able($USER->userid, "editopenpolls", $pageid, "polls", $featureid)) {
+            $returnme .= make_modal_links(["title"=> "Edit Feature", "path" => action_path("polls") . "editpoll&amp;pageid=$pageid&amp;featureid=$featureid", "refresh" => "true", "iframe" => true, "width" => "800", "height" => "400", "image" => $CFG->wwwroot . "/images/edit.png"]);
         }
-        if (user_is_able($USER->userid, "closepolls", $pageid,"polls", $featureid)) {
+        if (user_is_able($USER->userid, "closepolls", $pageid, "polls", $featureid)) {
             $returnme .= '<a title="Close Poll" onclick="if (confirm(\'Are you sure you would like to close this poll?  Once a poll is closed, it cannot be reopened.\')) { ajaxapi(\'/features/polls/polls_ajax.php\',\'closepoll\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;extra=\',function() { simple_display(\'polldiv' . $featureid . '\'); ajaxapi(\'/features/polls/polls_ajax.php\',\'pollstatuspic\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;extra=close\',function() { simple_display(\'pollstatus' . $featureid . '\'); });}); }"><img src="' . $CFG->wwwroot . '/images/stop.png" alt="Close Poll" /></a> ';
         }
 		echo $returnme;

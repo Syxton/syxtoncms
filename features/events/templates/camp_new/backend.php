@@ -15,7 +15,7 @@ if (!isset($CFG)) {
 }
 include($CFG->dirroot . '/pages/header.php');
 
-if (!isset($EVENTSLIB)) { include_once($CFG->dirroot . '/features/events/eventslib.php');}
+if (!defined('EVENTSLIB')) { include_once($CFG->dirroot . '/features/events/eventslib.php');}
 
 callfunction();
 
@@ -25,7 +25,7 @@ function register() {
 global $CFG, $MYVARS, $USER, $error;
 //error_reporting(E_ERROR | E_PARSE); // Keep warnings from showing
  
-    if (!isset($COMLIB)) { include_once($CFG->dirroot . '/lib/comlib.php'); }
+    if (!defined('COMLIB')) { include_once($CFG->dirroot . '/lib/comlib.php'); }
     $eventid = $MYVARS->GET["eventid"];
 	$event = get_db_row("SELECT * FROM events WHERE eventid = '$eventid'");
     $templateid = $event['template_id'];
@@ -66,7 +66,7 @@ global $CFG, $MYVARS, $USER, $error;
 	$formlist = explode(";", $template['formlist']);
     foreach ($formlist as $formelements) {
         $element = explode(":", $formelements);
-        $reg[$element[0]] = isset($MYVARS->GET[$element[0]]) ? $MYVARS->GET[$element[0]] : ""; 
+        $reg[$element[0]] = $MYVARS->GET[$element[0]] ?? ""; 
     }
 	$error = "";
 	
@@ -83,7 +83,7 @@ global $CFG, $MYVARS, $USER, $error;
 			$items = !empty($MYVARS->GET["items"]) ? $MYVARS->GET["items"] . "**" . $regid . "::" . $MYVARS->GET["Camper_Name"] . " - " . $event["name"] . "::" . $MYVARS->GET["owed"] : $regid . "::" . $MYVARS->GET["Camper_Name"] . " - " . $event["name"] . "::" . $MYVARS->GET["owed"];
 			echo '<div id="backup">
                     <input type="hidden" name="total_owed" id="total_owed" value="' . $MYVARS->GET["cart_total"] . '" />
-				    <input type="hidden" name="items" id="items" value="' . $items . '" />
+					  <input type="hidden" name="items" id="items" value="' . $items . '" />
                   </div>';
 
 			$items = explode("**", $items);
@@ -98,7 +98,7 @@ global $CFG, $MYVARS, $USER, $error;
 
             if ($MYVARS->GET['payment_method'] !== "Campership") {
                 echo '  <h3>You have successfully added: ' . $MYVARS->GET["Camper_Name_First"] . ' for ' . $event['name'] . ' to your cart.</h3>';
-                echo '  <br />Your current cart total is:  <span style="color:blue;font-size:1.25em;">$' . number_format($MYVARS->GET["cart_total"],2) . '</span>';
+                echo '  <br />Your current cart total is:  <span style="color:blue;font-size:1.25em;">$' . number_format($MYVARS->GET["cart_total"], 2) . '</span>';
             } else { // Campership
                 echo '  <h3>You have successfully registered: ' . $MYVARS->GET["Camper_Name_First"] . ' for ' . $event['name'] . '.</h3>';
             }
@@ -109,7 +109,7 @@ global $CFG, $MYVARS, $USER, $error;
             if ($more1 || $more2) {
                 echo '<br /><br /><h3 style="color:green">Do you need to do more?</h3><br />';
                 echo empty($more1) ? "" : '<strong>Register ' . $MYVARS->GET["Camper_Name_First"] . ' for another week.<br />Select from the weeks available</strong><br />' . $more1 . '.<br />';
-			    echo !empty($more1) && !empty($more2) ? '<br />' : ""; 
+				  echo !empty($more1) && !empty($more2) ? '<br />' : ""; 
                 echo empty($more2) ? "" : '<strong>Register another child.<br />Select from the weeks available</strong><br />' . $more2 . '<br />';
             }
 
@@ -151,16 +151,16 @@ global $CFG, $MYVARS, $USER, $error;
             // Send registration email.
             $touser = new stdClass();
             $touser->fname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_First'");
-    		$touser->lname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_Last'");
-    		$touser->email = get_db_field("email", "events_registrations", "regid='$regid'");
-    		$fromuser = new stdClass();
+  			$touser->lname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_Last'");
+  			$touser->email = get_db_field("email", "events_registrations", "regid='$regid'");
+  			$fromuser = new stdClass();
             $fromuser->email = $CFG->siteemail;
-    		$fromuser->fname = $CFG->sitename;
-    		$fromuser->lname = "";    
+  			$fromuser->fname = $CFG->sitename;
+  			$fromuser->lname = "";    
             $message = registration_email($regid, $touser, $pending, $waivefee);
-    		if (send_email($touser, $fromuser, $emailsubject, $message)) {
-    			send_email($fromuser, $fromuser, $campershipreq.$emailsubject, $message);
-    		}
+  			if (send_email($touser, $fromuser, $emailsubject, $message)) {
+  				send_email($fromuser, $fromuser, $campershipreq.$emailsubject, $message);
+  			}
 
 		} else { // Support for a free event.
             echo '<h3>You have successfully registered ' . $MYVARS->GET["Camper_Name_First"] . ' for ' . $event['name'] . '.</h3>';
@@ -170,16 +170,16 @@ global $CFG, $MYVARS, $USER, $error;
             //Send registration email
             $touser = new stdClass();
             $touser->fname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_First'");
-    		$touser->lname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_Last'");
-    		$touser->email = get_db_field("email", "events_registrations", "regid='$regid'");
-    		$fromuser = new stdClass();
+  			$touser->lname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_Last'");
+  			$touser->email = get_db_field("email", "events_registrations", "regid='$regid'");
+  			$fromuser = new stdClass();
             $fromuser->email = $CFG->siteemail;
-    		$fromuser->fname = $CFG->sitename;
-    		$fromuser->lname = "";
-    		$message = registration_email($regid, $touser);
-    		if (send_email($touser, $fromuser, "Camp Wabashi Registration", $message)) {
-    			send_email($fromuser, $fromuser, "Camp Wabashi Registration", $message);
-    		}
+  			$fromuser->fname = $CFG->sitename;
+  			$fromuser->lname = "";
+  			$message = registration_email($regid, $touser);
+  			if (send_email($touser, $fromuser, "Camp Wabashi Registration", $message)) {
+  				send_email($fromuser, $fromuser, "Camp Wabashi Registration", $message);
+  			}
         }
 
         if ($event['allowinpage'] !== 0) {
@@ -204,46 +204,46 @@ global $CFG, $MYVARS, $USER, $error;
 			if ($event['fee_full'] != 0) {
                 if (!empty($MYVARS->GET["items"])) {
                     $items = $MYVARS->GET["items"];
-    				echo '<div id="backup">
+  					echo '<div id="backup">
                             <input type="hidden" name="total_owed" id="total_owed" value="' . $MYVARS->GET["cart_total"] . '" />
-    					    <input type="hidden" name="items" id="items" value="' . $items . '" />
+  							  <input type="hidden" name="items" id="items" value="' . $items . '" />
                           </div>';
 
-    				$items = explode("**", $items);
+  					$items = explode("**", $items);
                     $i = 0;
                     foreach ($items as $item) {
-    					$itm = explode("::", $item);
-    					$cart_items[$i]->regid = $itm[0];
-    					$cart_items[$i]->description = $itm[1];
-    					$cart_items[$i]->cost = $itm[2];                    
+  						$itm = explode("::", $item);
+  						$cart_items[$i]->regid = $itm[0];
+  						$cart_items[$i]->description = $itm[1];
+  						$cart_items[$i]->cost = $itm[2];                    
                         $i++;
                     }
 
-    				if ($MYVARS->GET['payment_method'] == "PayPal") {
-    					echo '<br />
-    					To register a child: Select the week ' . common_weeks($event, true, "week1", "") . '.<br />
-    					<br />
-    					If you would like to pay the <span style="color:blue;font-size:1.25em;">$' . $MYVARS->GET["cart_total"] . '</span> fee now, click the Paypal button below.
-    					<br /><br />
+  					if ($MYVARS->GET['payment_method'] == "PayPal") {
+  						echo '<br />
+  						To register a child: Select the week ' . common_weeks($event, true, "week1", "") . '.<br />
+  						<br />
+  						If you would like to pay the <span style="color:blue;font-size:1.25em;">$' . $MYVARS->GET["cart_total"] . '</span> fee now, click the Paypal button below.
+  						<br /><br />
                         <div style="text-align:center;">
-    					' . make_paypal_button($cart_items, $event['paypal']) . '
-    					</div>';	
-    				} else if ($MYVARS->GET['payment_method'] == "Campership") { // Campership
+  						' . make_paypal_button($cart_items, $event['paypal']) . '
+  						</div>';	
+  					} else if ($MYVARS->GET['payment_method'] == "Campership") { // Campership
                         echo '<br />
-    					To register a child:  Select the week ' . common_weeks($event, true, "week1", $regid) . '<br />';
+  						To register a child:  Select the week ' . common_weeks($event, true, "week1", $regid) . '<br />';
                     } else { // Pay by check
-    					echo '<br />
-    					To register a child:  Select the week ' . common_weeks($event, true, "week1", $regid) . '<br />
-    					<br />
-    					If you are done with the registration process, please make out your <br />
-    					check or money order in the amount of <span style="color:blue;font-size:1.25em;">$' . $MYVARS->GET["cart_total"] . '</span> payable to <b>' . $event["payableto"] . '</b> and send it to <br /><br />
-    					<br />
+  						echo '<br />
+  						To register a child:  Select the week ' . common_weeks($event, true, "week1", $regid) . '<br />
+  						<br />
+  						If you are done with the registration process, please make out your <br />
+  						check or money order in the amount of <span style="color:blue;font-size:1.25em;">$' . $MYVARS->GET["cart_total"] . '</span> payable to <b>' . $event["payableto"] . '</b> and send it to <br /><br />
+  						<br />
                         <div style="text-align:center;">
-    					' . $event['checksaddress'] . '.  
-    					</div>';
-    				}
+  						' . $event['checksaddress'] . '.  
+  						</div>';
+  					}
 
-                    echo "<br /><br /><strong>Thank you for registering for this event.</strong>";	                   
+                    echo "<br /><br /><strong>Thank you for registering for this event.</strong>";		                 
                 }
 			}
 		}
@@ -272,7 +272,7 @@ global $CFG, $USER, $PAGE;
                (!$max_age && ($min_age && $camper_age >= $min_age)) || 
                (!$min_age && ($max_age && $camper_age >= $max_age)))
             ) { 
-                if (!$already_registered) { $common[] = array('eventid' => $evnt['eventid'], 'selected' => $selected,'name' => $evnt['name']); }       
+                if (!$already_registered) { $common[] = ['eventid' => $evnt['eventid'], 'selected' => $selected,'name' => $evnt['name']]; }       
             }
 		}
         $returnme = count($common) ? '<select id="' . $id . '">' : '&nbsp;<span style="color:red;">There are no other weeks available. </span>';

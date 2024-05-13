@@ -111,19 +111,19 @@ $settings = dbescape(serialize($settings));
 //If it is already installed, don't install it again.
 if (!$template = get_db_row("SELECT * FROM events_templates WHERE name = '$templatename'")) {
 	$SQL = "INSERT INTO events_templates
-	                    (name, folder, formlist, registrant_name, orderbyfield, settings)
-	             VALUES ('$templatename', '$templatefolder','" . str_replace(["\r", "\n", "\t"], '', $formlist) . "', '$registrant_name', '$orderbyfield', '$settings')";
+		                  (name, folder, formlist, registrant_name, orderbyfield, settings)
+		           VALUES ('$templatename', '$templatefolder','" . str_replace(["\r", "\n", "\t"], '', $formlist) . "', '$registrant_name', '$orderbyfield', '$settings')";
 
     execute_db_sql($SQL);
     $templateid = get_db_field("template_id", "events_templates", "name = '$templatename'");
 } else { // Update formslist, settings, and orderbyfield in case they have changed.
     $templateid = $template["template_id"];
 	$SQL = "UPDATE events_templates
-			   SET formlist = '" . str_replace(["\r", "\n", "\t"], '', $formlist) . "',
-			   	   settings = '$settings',
+				 SET formlist = '" . str_replace(["\r", "\n", "\t"], '', $formlist) . "',
+			 			 settings = '$settings',
                    orderbyfield = '$orderbyfield'
 			 WHERE name = '$templatename'
-			   AND folder = '$templatefolder'";
+				 AND folder = '$templatefolder'";
     execute_db_sql($SQL);
 }
 

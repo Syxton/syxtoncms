@@ -36,10 +36,10 @@ function oncontentready(classID) {
 
 	this.className = this.className.concat(' ', classID);
 	var arcSize = Math.min(parseInt(this.currentStyle['-moz-border-radius'] ||
-	                                this.currentStyle['-webkit-border-radius'] ||
-	                                this.currentStyle['border-radius'] ||
-	                                this.currentStyle['-khtml-border-radius']) /
-	                       Math.min(this.offsetWidth, this.offsetHeight), 1);
+		                              this.currentStyle['-webkit-border-radius'] ||
+		                              this.currentStyle['border-radius'] ||
+		                              this.currentStyle['-khtml-border-radius']) /
+		                     Math.min(this.offsetWidth, this.offsetHeight), 1);
 	var fillColor = this.currentStyle.backgroundColor;
 	var fillSrc = this.currentStyle.backgroundImage.replace(/^url\("(.+)"\)$/, '$1');
 	var strokeColor = this.currentStyle.borderColor;

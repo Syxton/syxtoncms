@@ -92,7 +92,7 @@ if (strcmp ($res, "VERIFIED") == 0) {
                     $sum = get_db_field("SUM(amount)", "donate_donations", "campaign_id='$custom'");
                     if ($sum >= $c["goal_amount"]) {
                         execute_db_sql("UPDATE donate_campaign SET metgoal=1 WHERE campaign_id='$custom'");
-                        //Log
+                        // Log
                         log_entry('donate', $custom, "Campaign Goal Met");
                     }
                 }
@@ -108,7 +108,7 @@ if (strcmp ($res, "VERIFIED") == 0) {
         }
     }
 } else if (strcmp ($res, "INVALID") == 0) {
-    //Log
-   	log_entry('donate', $res, "Paypal (failed)");
+    // Log
+ 		log_entry('donate', $res, "Paypal (failed)");
 }
 ?>

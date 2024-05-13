@@ -64,7 +64,7 @@ echo '
 if ($autofill) {
  echo '  <tr> 
             <td>
-            	Camper: ' . $Camper_Name . '
+          		Camper: ' . $Camper_Name . '
 			<input type="hidden" name="Camper_Name" value="' . $Camper_Name . '" />
 			<input type="hidden" name="email" value="' . $email . '" />
 			<input type="hidden" name="Camper_Birth_Date" value="' . $Camper_Birth_Date . '" />
@@ -102,12 +102,12 @@ else
 {
  echo '  
 		<tr>
-		  <td class="field_title" align="right" style="width:115px;">
+			<td class="field_title" align="right" style="width:115px;">
 			<strong><font size="2">Contact Email&nbsp;*&nbsp;</font></strong>
-		  </td>
-		  <td class="field_input" align="left">
+			</td>
+			<td class="field_input" align="left">
 			<input type="text" id="email" name="email" size="40" value="' . $email . '"/>
-		  </td>
+			</td>
 		</tr><tr><td></td><td class="field_input"><span id="email_error" class="error_text"></span></td></tr>
  		<tr> 
             <td align="right"><strong><font size="2">Camper&nbsp;Name&nbsp;<strong>(Last,&nbsp;First&nbsp;Middle)</strong>&nbsp;*&nbsp;</font></strong></td>

@@ -3,12 +3,13 @@
 * styleslib.php - Styles and Theme function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 5/19/2021
+* Date: 5/14/2024
 * Revision: 0.1.9
 ***************************************************************************/
 
-if (!isset($LIBHEADER)) { include('header.php'); }
-$STYLESLIB = true;
+if (!LIBHEADER) { include('header.php'); }
+define('STYLESLIB', true);
+
 $STYLES = new \stdClass;
 
 function get_styles($pageid, $themeid = false, $feature = '', $featureid = '') {
@@ -104,7 +105,7 @@ function custom_styles_selector($pageid, $feature, $featureid=false) {
 		// Styles function
 		$styles = $feature . '_default_styles';
 		$styles = $styles();
-	  $revised_pageid = $pageid == $CFG->SITEID ? 0 : $pageid;
+		$revised_pageid = $pageid == $CFG->SITEID ? 0 : $pageid;
 
 		if ($feature != "page") {
 			include_once($CFG->dirroot . '/features/' . $feature. "/" . $feature . 'lib.php');
@@ -162,7 +163,7 @@ function get_page_themeid($pageid) {
 	$settings = fetch_settings("page", $featureid, $pageid);
 
 	if ($settings === false) {
-	   return "";
+		 return "";
   } else {
     if (isset($settings->page->themeid->setting)) {
       return $settings->page->themeid->setting;

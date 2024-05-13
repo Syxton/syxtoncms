@@ -3,7 +3,7 @@
 * page.php - Page relevent page file
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 04/28/2021
+* Date: 5/14/2024
 * Revision: 1.5.8
 ***************************************************************************/
 
@@ -59,7 +59,7 @@ global $CFG;
 function create_edit_page() {
 global $CFG, $MYVARS, $ROLES, $USER;
 
-	if (!isset($VALIDATELIB)) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
+	if (!defined('VALIDATELIB')) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
   $content = '';
   $admin = is_siteadmin($USER->userid) ? true : false;
   if (isset($MYVARS->GET["pageid"])) {
@@ -96,9 +96,9 @@ global $CFG, $MYVARS, $ROLES, $USER;
   }
 
   if (isset($MYVARS->GET["pageid"])) {
-  	$content .= create_validation_script("create_page_form" , use_template("tmp/page.template", ["pageid" => $MYVARS->GET["pageid"]], "edit_page_validation"));
+		$content .= create_validation_script("create_page_form" , use_template("tmp/page.template", ["pageid" => $MYVARS->GET["pageid"]], "edit_page_validation"));
   } else {
-  	$content .= create_validation_script("create_page_form" , use_template("tmp/page.template", [], "create_page_validation"));
+		$content .= create_validation_script("create_page_form" , use_template("tmp/page.template", [], "create_page_validation"));
   }
 
   $SQL = 'SELECT * FROM roles WHERE roleid > "' . $ROLES->creator . '" AND roleid < "' . $ROLES->none . '" ORDER BY roleid DESC';
@@ -114,7 +114,7 @@ global $CFG, $MYVARS, $ROLES, $USER;
   ];
 	$params = [ "name" => $name,
               "input_name_help" => get_help("input_page_name"),
-						  "keywords" => $keywords,
+							"keywords" => $keywords,
               "input_page_tags" => get_help("input_page_tags"),
 							"description" => stripslashes($description),
               "input_page_summary" => get_help("input_page_summary"),

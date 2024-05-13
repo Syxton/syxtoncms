@@ -3,7 +3,7 @@
 * site_ajax.php - Main backend ajax script.  Usually sends off to feature libraries.
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 05/18/2021
+* Date: 5/14/2024
 * Revision: 2.9.8
 ***************************************************************************/
 
@@ -20,7 +20,7 @@ global $MYVARS;
 		if ($row["alternate"] == $password) {
 			$reroute = use_template("tmp/site_ajax.template", ["userid" => $row["userid"], "password" => $password], "password_change_reroute_template");
 		}
-    	echo 'true**' . $reroute;
+  		echo 'true**' . $reroute;
 	} else {
 		echo "false**" . error_string("no_login");
 	}
@@ -46,7 +46,7 @@ global $MYVARS;
 	$password = md5($MYVARS->GET["password"]);
 
 	$SQL = "UPDATE users
-			   SET alternate = '', password = '$password'
+				 SET alternate = '', password = '$password'
 			 WHERE userid = '$userid'";
 
 	$success = false;
@@ -122,7 +122,7 @@ function forgot_password() {
 global $CFG, $MYVARS;
 
 	// Load COMLIB if it isn't already loaded.
-	if (!isset($COMLIB)) { include_once ($CFG->dirroot . '/lib/comlib.php'); }
+	if (!defined('COMLIB')) { include_once ($CFG->dirroot . '/lib/comlib.php'); }
 
 	// Check if the request is coming from an admin trying to reset someone else's password.
 	$admin = isset($MYVARS->GET["admin"]) ? true : false;
@@ -305,7 +305,7 @@ global $USER, $MYVARS;
 			echo "true**" . print_logout_button($USER->fname, $USER->lname, $pageid);
 		}
 	} else { //Cookie has timed out or they haven't logged in yet.
-  	load_user_cookie();
+		load_user_cookie();
 		echo "false";
 	}
 }

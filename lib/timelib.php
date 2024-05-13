@@ -3,12 +3,12 @@
 * timelib.php - Time Library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 4/24/2012
+* Date: 5/14/2024
 * Revision: 0.3.2
 ***************************************************************************/
 
-if (!isset($LIBHEADER)) { include('header.php'); }
-$TIMELIB = true;
+if (!LIBHEADER) { include('header.php'); }
+define("TIMELIB", true);
 
 function get_timestamp($timezone = "UTC") {
 global $CFG;
@@ -84,9 +84,9 @@ global $CFG;
 	if ($difference == 0) { $seconds = ""; }
 	
 	if (isset($years)) { return "$years $weeks $ago";
-	}elseif (isset($weeks)) { return "$weeks $days $ago";
-	}elseif (isset($days)) { return "$days $hours $ago";
-	}elseif (isset($hours)) { return "$hours $minutes $ago";
+	} elseif (isset($weeks)) { return "$weeks $days $ago";
+	} elseif (isset($days)) { return "$days $hours $ago";
+	} elseif (isset($hours)) { return "$hours $minutes $ago";
 	} else { return "$minutes $seconds $ago"; }
 }
 

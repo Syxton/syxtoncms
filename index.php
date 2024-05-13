@@ -17,7 +17,7 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
 } else {
     include_once($CFG->dirroot . '/lib/header.php');
 
-    //Get User info
+    // Get User info
     load_user_cookie();
     update_user_cookie();
 
@@ -29,6 +29,7 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
     unset($_SESSION['pageid']);
     $pageid = get_pageid();
 
+    // Get Page info
     if (!$currentpage = get_db_row("SELECT * FROM pages WHERE pageid='$pageid'")) {
         header('Location: ' . $CFG->wwwroot);
         die();

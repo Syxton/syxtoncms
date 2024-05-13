@@ -3,12 +3,19 @@
 * news_ajax.php - News backend ajax script
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 4/03/2013
+* Date: 5/14/2024
 * Revision: 2.4.5
 ***************************************************************************/
 
-if (!isset($CFG)) { include('../header.php'); } 
-if (!isset($NEWSLIB)) { include_once($CFG->dirroot . '/features/news/newslib.php'); }
+if (!isset($CFG)) {
+	$sub = '';
+	while (!file_exists($sub . 'header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
+	}
+	include($sub . 'header.php');
+}
+
+if (!defined('NEWSLIB')) { include_once($CFG->dirroot . '/features/news/newslib.php'); }
 
 update_user_cookie();
 
@@ -89,7 +96,7 @@ global $CFG, $MYVARS;
     $SQL = "UPDATE news SET content='$html', title='$title', caption='$summary', edited='$edited' WHERE newsid='$newsid'";
 
     if (execute_db_sql($SQL)) { 
-    	echo "$pageid News edited successfully";
+  		echo "$pageid News edited successfully";
     } 
 }
 

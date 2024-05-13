@@ -3,12 +3,12 @@
 * themes.php - Themes and Styles
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 8/16/2011
+* Date: 5/14/2024
 * Revision: 0.1.5
 ***************************************************************************/
 include('header.php');
 
-$params = array("dirroot" => $CFG->directory);
+$params = ["dirroot" => $CFG->directory];
 echo use_template("tmp/page.template", $params, "page_js_css");
 echo use_template("tmp/themes.template", $params, "theme_manager_header_template");
 
@@ -29,7 +29,7 @@ global $CFG, $MYVARS, $USER, $PAGE;
 	$variables->pageid = $pageid;
 	$variables->feature = $feature;
 	$variables->featureid = $featureid;
-	$params = array("variables" => $variables);
+	$params = ["variables" => $variables];
 
 	// Allow the Theme Selector
 	if ($feature == "page") {
@@ -37,7 +37,7 @@ global $CFG, $MYVARS, $USER, $PAGE;
 	} else {
 		include_once($CFG->dirroot . '/features/' . $feature . '/' . $feature . 'lib.php');
 		$function = "display_$feature";
-		$params["pane"] = use_template("tmp/themes.template", array("left" => custom_styles_selector($pageid, $feature, $featureid), "right" => $function($pageid,"side", $featureid)), "make_template_selector_panes_template");
+		$params["pane"] = use_template("tmp/themes.template", ["left" => custom_styles_selector($pageid, $feature, $featureid), "right" => $function($pageid, "side", $featureid)], "make_template_selector_panes_template");
 	}
 
 	

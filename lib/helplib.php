@@ -1,14 +1,14 @@
 <?php
 /***************************************************************************
-* help.php - Help library
+* helplib.php - Help library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 1/29/2016
+* Date: 5/14/2024
 * Revision: 0.1.2
 ***************************************************************************/
- 
-unset($HELP);
-if (!isset($LIBHEADER)) { include('header.php'); }
+
+if (!LIBHEADER) { include('header.php'); }
+define("HELPLIB", true);
 
 $HELP = new \stdClass;
 
@@ -41,7 +41,7 @@ global $CFG, $HELP;
     if (isset($lang[2])) {
         include($CFG->dirroot . '/features/' . $lang[1]. "/" . $lang[2]."/lang.php");
         return $HELP->$string;        
-    }elseif (isset($lang[1])) {
+    } elseif (isset($lang[1])) {
         include($CFG->dirroot . '/features/' . $lang[1]."/lang.php");
         return $HELP->$string;
     } else { return $HELP->$help; }

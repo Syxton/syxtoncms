@@ -3,7 +3,7 @@
 * roles.php - Role relevent page file
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 8/19/2013
+* Date: 5/14/2024
 * Revision: 2.5.1
 ***************************************************************************/
 
@@ -20,7 +20,7 @@ global $CFG, $MYVARS, $USER, $ROLES;
     $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : $CFG->SITEID; // Should always be passed
 
 	if (!user_is_able($USER->userid, "assign_roles", $pageid)) {
-        debugging(error_string("no_function", ["assign_roles"]), 2);
+        trigger_error(error_string("no_function", ["assign_roles"]), E_USER_WARNING);
 		return;
   }
 
@@ -33,19 +33,19 @@ global $CFG, $MYVARS, $USER, $ROLES;
 						 AND u.userid NOT IN (SELECT ra.userid
 							 											FROM roles_assignment ra
 																	 WHERE ra.roleid = " . $ROLES->none."
-																	 	  OR (ra.pageid='$pageid' AND ra.roleid <= '$myroleid'))
+																	 		OR (ra.pageid='$pageid' AND ra.roleid <= '$myroleid'))
         ORDER BY u.lname";
 
 	$options = "";
 	if ($pageid != $CFG->SITEID) {
 		if ($roles = get_db_result($SQL)) {
 			while ($row = fetch_row($roles)) {
-				$options .= use_template("tmp/roles.template", array("user" => $row), "assign_roles_options_template");
+				$options .= use_template("tmp/roles.template", ["user" => $row], "assign_roles_options_template");
 			}
 		}
 	}
 
-	$params = array("pageid" => $pageid, "issiteid" => ($pageid == $CFG->SITEID), "options" => $options);
+	$params = ["pageid" => $pageid, "issiteid" => ($pageid == $CFG->SITEID), "options" => $options];
 	echo use_template("tmp/roles.template", $params, "assign_roles_template");
 }
 
@@ -54,7 +54,7 @@ global $CFG, $USER, $MYVARS, $ROLES;
     $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : $CFG->SITEID; //Should always be passed
     $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
     $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
-    $abilities = user_abilities($USER->userid, $pageid,"roles", $feature, $featureid);
+    $abilities = user_abilities($USER->userid, $pageid, "roles", $feature, $featureid);
 		$roleid = false; $options = "";
 
 	if (!((!$featureid && $abilities->edit_roles->allow) || (($featureid && $abilities->edit_feature_abilities->allow)))) {
@@ -63,20 +63,20 @@ global $CFG, $USER, $MYVARS, $ROLES;
 	}
 
 	$SQL = 'SELECT *
-			  FROM roles
+				FROM roles
 			 WHERE roleid > ' . user_role($USER->userid, $pageid) . '
-		  ORDER BY roleid';
+			ORDER BY roleid';
 
 	if ($roles = get_db_result($SQL)) {
 		while ($row = fetch_row($roles)) {
-    	$roleid = !$roleid ? $row["roleid"] : $roleid;
+  		$roleid = !$roleid ? $row["roleid"] : $roleid;
 			$options .= use_template("tmp/roles.template", ["roles" => $row], "role_specific_options_template");
 		}
 	}
 
-	$params = array("pageid" => $pageid, "feature" => $feature,
+	$params = ["pageid" => $pageid, "feature" => $feature,
 									"featureid" => $featureid, "options" => $options,
-									"abilities" => print_abilities($pageid, "per_role_", $roleid, false, $feature, $featureid));
+									"abilities" => print_abilities($pageid, "per_role_", $roleid, false, $feature, $featureid)];
 	echo use_template("tmp/roles.template", $params, "role_specific_template");
 }
 
@@ -85,7 +85,7 @@ global $CFG, $USER, $MYVARS, $ROLES;
 	$pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : $CFG->SITEID; //Should always be passed
 	$featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
 	$feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
-	$abilities = user_abilities($USER->userid, $pageid,"roles", $feature, $featureid);
+	$abilities = user_abilities($USER->userid, $pageid, "roles", $feature, $featureid);
 
 	if (!((!$featureid && $abilities->edit_user_abilities->allow) || ($featureid && $abilities->edit_feature_user_abilities->allow))) {
 		echo error_string("generic_permissions");
@@ -94,20 +94,20 @@ global $CFG, $USER, $MYVARS, $ROLES;
 
 	$myroleid = user_role($USER->userid, $pageid);
 
-  	$SQL = "SELECT u.*
-			  FROM users u
+		$SQL = "SELECT u.*
+				FROM users u
 			 WHERE u.userid IN (SELECT ra.userid
-								  FROM roles_assignment ra
+									FROM roles_assignment ra
 								 WHERE ra.pageid='$pageid')
-			   AND u.userid NOT IN (SELECT ra.userid
-									  FROM roles_assignment ra
+				 AND u.userid NOT IN (SELECT ra.userid
+										FROM roles_assignment ra
 									 WHERE ra.pageid='" . $CFG->SITEID . "'
-									   AND ra.roleid='" . $ROLES->admin . "')
-			   AND u.userid NOT IN (SELECT ra.userid
-							 		  FROM roles_assignment ra
+										 AND ra.roleid='" . $ROLES->admin . "')
+				 AND u.userid NOT IN (SELECT ra.userid
+							 			FROM roles_assignment ra
 									 WHERE ra.pageid='$pageid'
-									   AND ra.roleid <= '$myroleid')
-			   AND u.userid != '" . $USER->userid . "'
+										 AND ra.roleid <= '$myroleid')
+				 AND u.userid != '" . $USER->userid . "'
 			 ORDER BY u.lname";
 
 	$options = "";
@@ -121,7 +121,7 @@ global $CFG, $USER, $MYVARS, $ROLES;
 				"feature" => $feature,
 				"featureid" => $featureid,
 				"options" => $options,
-				"issiteid" => ($pageid == $CFG->SITEID)
+				"issiteid" => ($pageid == $CFG->SITEID),
 	];
 	echo use_template("tmp/roles.template", $params, "user_specific_template");
 }
@@ -144,7 +144,7 @@ global $CFG, $USER, $MYVARS, $ROLES;
 		return;
 	}
 
-	$params = array("grouppage" => group_page($pageid, $feature, $featureid));
+	$params = ["grouppage" => group_page($pageid, $feature, $featureid)];
 	echo use_template("tmp/roles.template", $params, "group_specific_template");
 }
 

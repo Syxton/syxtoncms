@@ -1,15 +1,15 @@
 function valid_poll_fields(){
 	var valid = true;
-  	if(!document.getElementById("polls_question").value.length > 0){
-  		document.getElementById("question_error").innerHTML = "Poll question is required.";
-  		valid = false;
-  	}else{ document.getElementById("question_error").innerHTML = ""; }
-  	
+		if(!document.getElementById("polls_question").value.length > 0){
+			document.getElementById("question_error").innerHTML = "Poll question is required.";
+			valid = false;
+		}else{ document.getElementById("question_error").innerHTML = ""; }
+		
  	if(document.getElementById("polls_answers").value.indexOf(',') == -1){
-  		document.getElementById("answers_error").innerHTML = "At least 2 poll answers are required.";
-  		valid = false;
-  	}else{ document.getElementById("answers_error").innerHTML = ""; }
-  	
+			document.getElementById("answers_error").innerHTML = "At least 2 poll answers are required.";
+			valid = false;
+		}else{ document.getElementById("answers_error").innerHTML = ""; }
+		
 	if(document.getElementById("startdateenabled").checked == 1){
 		var error = validatestartdate();
 		if(error != "true"){ 
@@ -25,7 +25,7 @@ function valid_poll_fields(){
 			valid = false;
 		}
 	}else{ document.getElementById("stopdate_error").innerHTML = ""; }
-  	return valid;
+		return valid;
 }
 
 function validatestartdate(){

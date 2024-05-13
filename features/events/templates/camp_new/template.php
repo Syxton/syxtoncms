@@ -3,7 +3,7 @@
  * template.php - Camp Wabashi Template page
  * -------------------------------------------------------------------------
  * $Author: Matthew Davidson
-* Date: 4/09/2013
+* Date: 5/14/2024
  * $Revision: 2.1.2
  ***************************************************************************/
 
@@ -14,20 +14,36 @@ if (!isset($CFG)) {
 	}
 	require($sub . 'config.php'); 
 }
-if (!isset($EVENTSLIB)) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
-if (!isset($VALIDATELIB)) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
+if (!defined('EVENTSLIB')) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
+if (!defined('VALIDATELIB')) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
 
  //Retrieve from Javascript
 $postorget = isset($_GET["eventid"]) ? $_GET : $_POST;
 $postorget = isset($postorget["eventid"]) ? $postorget : "";
 
 $MYVARS->GET = $postorget;
-$preview = isset($preview) ? 'disabled="disabled"': "";
+
+$email = $payment_method = $disable = "";
+// Preview of template.
+if (isset($preview)) {
+    $disable = isset($preview) ? 'disabled="disabled"': "";
+    $event = [
+        "name" => "Preview Event",
+        "event_begin_date" => date("j"),
+        "event_end_date" => date("j"),
+        "fee_full" => 0,
+    ];
+}
+
 $eventid = empty($MYVARS->GET['eventid']) ? false : $MYVARS->GET['eventid'];
+if ($eventid) {
+    // Get full event info
+    $event = get_event($eventid);
+}
+
 $show_again = isset($MYVARS->GET['show_again']) ? true : false;
 $regid = isset($MYVARS->GET['regid']) && $MYVARS->GET['regid'] != "false" ? $MYVARS->GET['regid'] : false;
 $autofill = isset($MYVARS->GET['autofill']) && $MYVARS->GET['autofill'] == "1" ? true : false;
-$email = $payment_method = "";
 
 if ($show_again) { // This is not the first time through
 	if ($autofill) { // Same person..so auto fill all items
@@ -63,8 +79,6 @@ echo '<form name="form1" id="form1">
             <input type="hidden" name="total_owed" id="total_owed" value="' . $total_owed . '" />
             <input type="hidden" name="items" id="items" value="' . $items . '" />';
                  
-//Get full event info
-$event = get_event($eventid);
 echo '
     <div style="font-size:15px;text-align:center;font-weight:bold">Camp Wabashi Online Pre-Registration</div>
     <div style="font-size:13px;text-align:center;font-weight:bold">' . $event["name"] . '</div>
@@ -141,19 +155,19 @@ if ($autofill) {
             <input type="hidden" name="Camper_Name" />
 			<div class="rowContainer">
 				<label class="rowTitle" for="email">Email Address *</label><input tabindex="1" type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-msg-required="' . error_string('valid_req_email') . '" data-msg-email="' . error_string('valid_email_invalid') . '" /><div class="tooltipContainer info">' . get_help("help_email:events:templates/camp_new") . '</div>
-			    <div class="spacer" style="clear: both;"></div>
+				  <div class="spacer" style="clear: both;"></div>
             </div>
 			<div class="rowContainer">
 				<label class="rowTitle" for="Camper_Name_First">Camper First Name *</label><input tabindex="2" type="text" id="Camper_Name_First" name="Camper_Name_First" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="' . error_string('valid_req_fname') . '" /><div class="tooltipContainer info">' . get_help("input_fname") . '</div>
-			    <div class="spacer" style="clear: both;"></div>
+				  <div class="spacer" style="clear: both;"></div>
             </div>
 			<div class="rowContainer">
 				<label class="rowTitle" for="Camper_Name_Last">Camper Last Name *</label><input tabindex="3" type="text" id="Camper_Name_Last" name="Camper_Name_Last" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="' . error_string('valid_req_lname') . '" /><div class="tooltipContainer info">' . get_help("input_lname") . '</div>
-  			    <div class="spacer" style="clear: both;"></div>
+					  <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
 				<label class="rowTitle" for="Camper_Name_Middle">Camper Middle Initial</label><input tabindex="4" style="width:50px;" maxlength="1" type="text" id="Camper_Name_Middle" name="Camper_Name_Middle" data-rule-maxlength="1" data-rule-letters="true" /><div class="tooltipContainer info">' . get_help("help_middlei:events:templates/camp_new") . '</div>
-  			    <div class="spacer" style="clear: both;"></div>
+					  <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
 				<label class="rowTitle" for="Camper_Birth_Date">Camper Birthdate *</label>' . js_code_wrap('DateInput(\'Camper_Birth_Date\', true)') . '<div class="tooltipContainer info">' . get_help("help_bday:events:templates/camp_new") . '</div>
@@ -177,7 +191,7 @@ if ($autofill) {
                 <div class="tooltipContainer info">' . get_help("help_gender:events:templates/camp_new") . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div> 
-  			<div class="rowContainer">
+				<div class="rowContainer">
 				<label class="rowTitle" for="Camper_Home_Congregation">Home Congregation</label><input tabindex="7" type="text" id="Camper_Home_Congregation" name="Camper_Home_Congregation" data-rule-nonumbers="true" /><div class="tooltipContainer info">' . get_help("help_congregation:events:templates/camp_new") . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>             
@@ -187,7 +201,7 @@ if ($autofill) {
             </div>
 			<div class="rowContainer">
 				<label class="rowTitle" for="Parent_Address_Line1">Mailing Address Line One *</label><input tabindex="9" type="text" id="Parent_Address_Line1" name="Parent_Address_Line1" data-rule-required="true" /><div class="tooltipContainer info">' . get_help("help_address:events:templates/camp_new") . '</div>
-			    <div class="spacer" style="clear: both;"></div>
+				  <div class="spacer" style="clear: both;"></div>
             </div>            
 			<div class="rowContainer">
 				<label class="rowTitle" for="Parent_Address_Line2">Mailing Address Line Two</label><input tabindex="10" type="text" id="Parent_Address_Line2" name="Parent_Address_Line2" /><div class="tooltipContainer info">' . get_help("help_address:events:templates/camp_new") . '</div>
@@ -306,53 +320,53 @@ if ($autofill) {
                     as fully thought I, myself, did so. 
               </p>
             </div>
-           	<div class="rowContainer">
+         		<div class="rowContainer">
 				<label class="rowTitle" for="HealthMemberName">Member\'s Name *</label><input tabindex="18" type="text" id="HealthMemberName" name="HealthMemberName" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">' . get_help("help_membername:events:templates/camp_new") . '</div>
                 <div class="spacer" style="clear: both;"></div>
 			</div>
-           	<div class="rowContainer">
+         		<div class="rowContainer">
 				<label class="rowTitle" for="HealthRelationship">Relationship *</label><input tabindex="19" type="text" id="HealthRelationship" name="HealthRelationship" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">' . get_help("help_relationship:events:templates/camp_new") . '</div>
                 <div class="spacer" style="clear: both;"></div>
 			</div>
-           	<div class="rowContainer">
+         		<div class="rowContainer">
 				<label class="rowTitle" for="HealthInsurance">Medical Insurance Carrier *</label><input tabindex="20" type="text" id="HealthInsurance" name="HealthInsurance" data-rule-required="true" /><div class="tooltipContainer info">' . get_help("help_carrier:events:templates/camp_new") . '</div>
                 <div class="spacer" style="clear: both;"></div>
 			</div>
-           	<div class="rowContainer">
+         		<div class="rowContainer">
 				<label class="rowTitle" for="HealthIdentification">Medical Identification Number</label><input tabindex="21" type="text" id="HealthIdentification" name="HealthIdentification" /><div class="tooltipContainer info">' . get_help("help_memberid:events:templates/camp_new") . '</div>
                 <div class="spacer" style="clear: both;"></div>
 			</div>
-           	<div class="rowContainer">
+         		<div class="rowContainer">
 				<label class="rowTitle" for="HealthBenefitCode">Benefit Code</label><input tabindex="22" type="text" id="HealthBenefitCode" name="HealthBenefitCode" /><div class="tooltipContainer info">' . get_help("help_membercode:events:templates/camp_new") . '</div>
                 <div class="spacer" style="clear: both;"></div>
 			</div>
-           	<div class="rowContainer">
+         		<div class="rowContainer">
 				<label class="rowTitle" for="HealthAccount">Account Number</label><input tabindex="23" type="text" id="HealthAccount" name="HealthAccount" /><div class="tooltipContainer info">' . get_help("help_memberaccount:events:templates/camp_new") . '</div>
                 <div class="spacer" style="clear: both;"></div>
 			</div>
             <div class="rowContainer">
 				<label class="rowTitle" for="HealthExpirationDate">Expiration Date</label>' . js_code_wrap('DateInput(\'HealthExpirationDate\', true)') . '<div class="tooltipContainer info">' . get_help("help_healthto:events:templates/camp_new") . '</div>
                 <div class="spacer" style="clear: both;"></div>
-  			</div>
-           	<div class="rowContainer" style="height: auto;">
+				</div>
+         		<div class="rowContainer" style="height: auto;">
 				<label class="rowTitle" for="HealthHistory">Medical History *</label>
                 <textarea tabindex="24" id="HealthHistory" name="HealthHistory" rows="8" cols="60" data-rule-required="true">-none-</textarea>
                 <div class="tooltipContainer info">' . get_help("help_history:events:templates/camp_new") . '</div>
                 <div class="spacer" style="clear: both;"></div>
 			</div>
-           	<div class="rowContainer" style="height: auto;">
+         		<div class="rowContainer" style="height: auto;">
 				<label class="rowTitle" for="HealthAllergies">Allergies *</label>
                 <textarea tabindex="25" id="HealthAllergies" name="HealthAllergies" rows="8" cols="60" data-rule-required="true">-none-</textarea>
                 <div class="tooltipContainer info">' . get_help("help_alergies:events:templates/camp_new") . '</div>
                 <div class="spacer" style="clear: both;"></div>
 			</div>
-           	<div class="rowContainer" style="height: auto;">
+         		<div class="rowContainer" style="height: auto;">
 				<label class="rowTitle" for="HealthExisting">Chronic/existing diseases/medical issues *</label>
                 <textarea tabindex="26" id="HealthExisting" name="HealthExisting" rows="8" cols="60" data-rule-required="true">-none-</textarea>
                 <div class="tooltipContainer info">' . get_help("help_existing:events:templates/camp_new") . '</div>
                 <div class="spacer" style="clear: both;"></div>
 			</div>
-           	<div class="rowContainer" style="height: auto;">
+         		<div class="rowContainer" style="height: auto;">
 				<label class="rowTitle" for="HealthMedicines">Medicines *</label>
                 <textarea tabindex="27" id="HealthMedicines" name="HealthMedicines" rows="8" cols="60" data-rule-required="true">-none-</textarea>
                 <div class="tooltipContainer info">' . get_help("help_meds:events:templates/camp_new") . '</div>
@@ -360,7 +374,7 @@ if ($autofill) {
 			</div>           
             <div class="rowContainer">
 				<label class="rowTitle" for="HealthTetanusDate">Date of last Tetanus injection/booster *</label>' . js_code_wrap('DateInput(\'HealthTetanusDate\', true)') . '<div class="tooltipContainer info">' . get_help("help_tetanus:events:templates/camp_new") . '</div>
-  			    <div class="spacer" style="clear: both;"></div>
+					  <div class="spacer" style="clear: both;"></div>
             </div>'; 
 }
   
@@ -479,9 +493,9 @@ if ($event['fee_full'] > 0) {
 
 // Submit Print and Reset buttons
 echo '
-    <input tabindex="33" name="print" value="Print" onclick="window.print()" style="position: fixed;top: 10px;right: 10px;font-size: .7em;" type="button" ' . $preview . '/><br /><br />
-    <input tabindex="34" class="submit" name="submit" type="submit" value="Send Application" style="background: green;color: white;" ' . $preview . ' />
-    <input tabindex="35" name="reset" type="reset" onclick="return confirm(\'Are you sure you want to reset the application?\');" style="cursor:pointer;background: red;color: white;float:right;" ' . $preview . '/>
+    <input tabindex="33" name="print" value="Print" onclick="window.print()" style="position: fixed;top: 10px;right: 10px;font-size: .7em;" type="button" ' . $disable . '/><br /><br />
+    <input tabindex="34" class="submit" name="submit" type="submit" value="Send Application" style="background: green;color: white;" ' . $disable . ' />
+    <input tabindex="35" name="reset" type="reset" onclick="return confirm(\'Are you sure you want to reset the application?\');" style="cursor:pointer;background: red;color: white;float:right;" ' . $disable . '/>
     </fieldset>
 </form>
 ' . keepalive();

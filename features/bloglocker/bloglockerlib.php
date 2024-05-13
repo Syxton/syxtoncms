@@ -3,18 +3,18 @@
 * bloglockerlib.php - Blog Locker function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 8/19/2013
+* Date: 5/14/2024
 * Revision: 0.9.1
 ***************************************************************************/
 
-if (!isset($LIBHEADER)) {
+if (!LIBHEADER) {
 	$sub = './';
 	while (!file_exists($sub . 'lib/header.php')) {
 		$sub = $sub == './' ? '../' : $sub . '../';
 	}
 	include($sub . 'lib/header.php'); 
 }
-$BLOGLOCKERLIB = true;
+define('BLOGLOCKERLIB', true);
 
 //BLOGLOCKERLIB Config
 $CFG->bloglocker = new \stdClass; 

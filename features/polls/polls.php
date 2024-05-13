@@ -3,12 +3,18 @@
 * polls.php - modal page lib
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 8/16/2011
+* Date: 5/14/2024
 * Revision: 0.9.6
 ***************************************************************************/
 
 if (empty($_POST["aslib"])) {
-    if (!isset($CFG)) { include('../header.php'); } 
+    if (!isset($CFG)) {
+		$sub = '';
+		while (!file_exists($sub . 'header.php')) {
+			$sub = $sub == '' ? '../' : $sub . '../';
+		}
+		include($sub . 'header.php');
+	}
 
     callfunction();
 
@@ -38,7 +44,7 @@ function editpoll() {
 global $CFG, $MYVARS, $USER;
 	date_default_timezone_set("UTC");
 	$pageid = $MYVARS->GET["pageid"];
-    if (!user_is_able($USER->userid, "editpolls", $pageid)) { debugging(error_string("no_permission", ["editpolls"]), 2); return; }
+    if (!user_is_able($USER->userid, "editpolls", $pageid)) { trigger_error(error_string("no_permission", ["editpolls"]), E_USER_WARNING); return; }
 	$pollid= $MYVARS->GET["featureid"];
 	$row = get_db_row("SELECT * FROM polls WHERE pollid='$pollid'");
 	$savedstart = $row['startdate'] ? date('m/d/Y', $row['startdate']) : '0';
@@ -61,69 +67,69 @@ global $CFG, $MYVARS, $USER;
     <div id="edit_html_div">
     <form>
     <table style="width:100%">
-    	<tr>
-    		<td class="field_title" style="width:150px;">
-    			Poll Question:
-    		</td>
-    		<td class="field_input">
-    			<input type="text" id="polls_question" size="30" value="' . $row['question'] . '"/>
-    			<span class="hint">This is the question of your poll ex. (What is your favorite fruit?)<span class="hint-pointer">&nbsp;</span></span>
-    		</td>
-    	</tr><tr><td></td><td class="field_input"><span id="question_error" class="error_text"></span></td></tr>
-    	<tr>
-    		<td class="field_title" style="width:150px;">
-    			Poll Answers:
-    		</td>
-    		<td class="field_input">
-    			<input type="text" id="polls_answers" size="30" value="' . $answers . '"/>
-    			<span class="hint">These are the answers to your poll, comma delimited. <br /> ex. (Apples,Oranges,Pears)<span class="hint-pointer">&nbsp;</span></span>
-    		</td>
-    	</tr><tr><td></td><td class="field_input"><span id="answers_error" class="error_text"></span></td></tr>
-    	</table>
+  		<tr>
+  			<td class="field_title" style="width:150px;">
+  				Poll Question:
+  			</td>
+  			<td class="field_input">
+  				<input type="text" id="polls_question" size="30" value="' . $row['question'] . '"/>
+  				<span class="hint">This is the question of your poll ex. (What is your favorite fruit?)
+  			</td>
+  		</tr><tr><td></td><td class="field_input"><span id="question_error" class="error_text"></span></td></tr>
+  		<tr>
+  			<td class="field_title" style="width:150px;">
+  				Poll Answers:
+  			</td>
+  			<td class="field_input">
+  				<input type="text" id="polls_answers" size="30" value="' . $answers . '"/>
+  				<span class="hint">These are the answers to your poll, comma delimited. <br /> ex. (Apples,Oranges,Pears)
+  			</td>
+  		</tr><tr><td></td><td class="field_input"><span id="answers_error" class="error_text"></span></td></tr>
+  		</table>
 		' . js_code_wrap('prepareInputsForHints();') . '
-    	<table>
-    	<tr>
-    		<td class="field_title" style="width:150px;">
-    			Start Date:
-    		</td>
-    		<td class="field_input">
-    			<input type="checkbox" id="startdateenabled" onclick="hide_show_span(\'startdatespan\')" /> (optional) ' . $startdate . '
-    		</td>
-    	</tr>
-    	<tr>
-    	<tr>
-    		<td class="field_title" style="width:150px;">
-    		</td>
-    		<td class="field_input">
-    		<div id="startdatespan" style="display:none;">
+  		<table>
+  		<tr>
+  			<td class="field_title" style="width:150px;">
+  				Start Date:
+  			</td>
+  			<td class="field_input">
+  				<input type="checkbox" id="startdateenabled" onclick="hide_show_span(\'startdatespan\')" /> (optional) ' . $startdate . '
+  			</td>
+  		</tr>
+  		<tr>
+  		<tr>
+  			<td class="field_title" style="width:150px;">
+  			</td>
+  			<td class="field_input">
+  			<div id="startdatespan" style="display:none;">
 			' . js_code_wrap('DateInput(\'startdate\', true);') . '
-    		</div>
-    		</td>
-    	</tr><tr><td></td><td class="field_input"><div id="startdate_error" class="error_text"></div></td></tr>
-    	<tr>
-    		<td class="field_title" style="width:150px;">
-    			Stop Date:
-    		</td>
-    		<td class="field_input">
-    			<input type="checkbox" id="stopdateenabled" onclick="hide_show_span(\'stopdatespan\')" /> (optional) ' . $stopdate . '
-    		</td>
-    	</tr>
-    	<tr>
-    		<td class="field_title" style="width:150px;">
-    		</td>
-    		<td class="field_input">
-    			<div id="stopdatespan" style="display:none;">
+  			</div>
+  			</td>
+  		</tr><tr><td></td><td class="field_input"><div id="startdate_error" class="error_text"></div></td></tr>
+  		<tr>
+  			<td class="field_title" style="width:150px;">
+  				Stop Date:
+  			</td>
+  			<td class="field_input">
+  				<input type="checkbox" id="stopdateenabled" onclick="hide_show_span(\'stopdatespan\')" /> (optional) ' . $stopdate . '
+  			</td>
+  		</tr>
+  		<tr>
+  			<td class="field_title" style="width:150px;">
+  			</td>
+  			<td class="field_input">
+  				<div id="stopdatespan" style="display:none;">
 				' . js_code_wrap('DateInput(\'stopdate\', true);') . '
-    			</div>
-    		</td>
-    	</tr><tr><td></td><td class="field_input"><div id="stopdate_error" class="error_text"></div></td></tr>
-    	<tr>
-    		<td></td>
-    		<td style="text-align:left;">
-    			<input type="button" value="Save" onclick="if (valid_poll_fields()) { var startdateenabled = !document.getElementById(\'startdateenabled\').checked ? \'&amp;startdateenabled=0&amp;startdate=\' + document.getElementById(\'savedstartdate\').value : \'&amp;startdateenabled=1&amp;startdate=\' + document.getElementById(\'startdate\').value; var stopdateenabled = !document.getElementById(\'stopdateenabled\').checked ? \'&amp;stopdateenabled=0&amp;stopdate=\' + document.getElementById(\'savedstopdate\').value : \'&amp;stopdateenabled=1&amp;stopdate=\' + document.getElementById(\'stopdate\').value; ajaxapi(\'/features/polls/polls_ajax.php\',\'poll_submit\',\'&amp;question=\' + document.getElementById(\'polls_question\').value + \'&amp;answers=\' + document.getElementById(\'polls_answers\').value + startdateenabled + stopdateenabled + \'&amp;pollid=' . $pollid . '\',function() { close_modal();});}" />
-    		</td>
-    	</tr>
-    	</table>
+  				</div>
+  			</td>
+  		</tr><tr><td></td><td class="field_input"><div id="stopdate_error" class="error_text"></div></td></tr>
+  		<tr>
+  			<td></td>
+  			<td style="text-align:left;">
+  				<input type="button" value="Save" onclick="if (valid_poll_fields()) { var startdateenabled = !document.getElementById(\'startdateenabled\').checked ? \'&amp;startdateenabled=0&amp;startdate=\' + document.getElementById(\'savedstartdate\').value : \'&amp;startdateenabled=1&amp;startdate=\' + document.getElementById(\'startdate\').value; var stopdateenabled = !document.getElementById(\'stopdateenabled\').checked ? \'&amp;stopdateenabled=0&amp;stopdate=\' + document.getElementById(\'savedstopdate\').value : \'&amp;stopdateenabled=1&amp;stopdate=\' + document.getElementById(\'stopdate\').value; ajaxapi(\'/features/polls/polls_ajax.php\',\'poll_submit\',\'&amp;question=\' + document.getElementById(\'polls_question\').value + \'&amp;answers=\' + document.getElementById(\'polls_answers\').value + startdateenabled + stopdateenabled + \'&amp;pollid=' . $pollid . '\',function() { close_modal();});}" />
+  			</td>
+  		</tr>
+  		</table>
     </form>
     </div>';
 }
