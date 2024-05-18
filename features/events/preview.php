@@ -15,7 +15,7 @@ if (!isset($CFG)) {
 	include_once($sub . 'config.php'); 
 }
 
-$libs = ['ERRORSLIB', 'DBLIB', 'PAGELIB', 'USERLIB', 'ROLESLIB'];
+$libs = ['ERRORSLIB', 'DBLIB','FILELIB', 'PAGELIB', 'USERLIB', 'ROLESLIB'];
 foreach ($libs as $lib) {
     if (!defined($lib)) {
         include_once($CFG->dirroot . '/lib/' . strtolower($lib) . '.php');

@@ -20,7 +20,7 @@ global $CFG, $USER, $ROLES, $PAGE, $STYLES;
     $preview = isset($STYLES->preview) ? true : false;
     if (!$pageid) { $pageid = $CFG->SITEID; }
 
-    $name = stripslashes(get_db_field("name", "pages", "pageid = $pageid"));
+    $title = stripslashes(get_db_field("name", "pages", "pageid = $pageid"));
     $rolename = get_db_field("display_name", "roles", "roleid=" . user_role($USER->userid, $pageid));
     $buttons = $userid = $button_layout = NULL;
     $browse_vars = "";
@@ -45,8 +45,8 @@ global $CFG, $USER, $ROLES, $PAGE, $STYLES;
     $pagelist = use_template("tmp/page.template", $params, "pagelist_template");
 
     $params = [
-        "roleonpage" => get_css_box($name, $rolename, $button_layout, NULL, 'pagename'),
-        "pagelistblock" => get_css_box('My Page List', $pagelist, $buttons, null, "pagelist", null, false, $preview),
+        "roleonpage" => get_css_box($title, $rolename, $button_layout, NULL, 'pagename'),
+        "pagelistblock" => get_css_box('<span class="box_title_text">My Page List</span>', $pagelist, $buttons, null, "pagelist", null, false, $preview),
     ];
     return use_template("tmp/page.template", $params, "role_on_pagelist_template");
 }

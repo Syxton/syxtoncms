@@ -80,11 +80,12 @@ global $CFG, $MYVARS, $USER;
 	$tabs = use_template("tmp/themes.template", $params, "theme_selector_tabs_template");
 	$left = $tabs . use_template("tmp/themes.template", $params, "theme_selector_left_template");
 
-	$pagename = get_db_field("name", "pages", "pageid = '$pageid'");
+	$title = get_db_field("name", "pages", "pageid = '$pageid'");
+	$title = '<span class="box_title_text">' . $title . '</span>';
 	$rolename = get_db_field("display_name", "roles", "roleid = " . user_role($USER->userid, $pageid));
 
-	$params["pagelist"] = get_css_box($pagename, $rolename, false, NULL, 'pagename', NULL, $themeid, null, $pageid);
-	$params["block"] = get_css_box("Title", "Content", null, null, null, null, $themeid, null, $pageid);
+	$params["pagelist"] = get_css_box($title, $rolename, false, NULL, 'pagename', NULL, $themeid, null, $pageid);
+	$params["block"] = get_css_box('<span class="box_title_text">Title</span>', "Content", null, null, null, null, $themeid, null, $pageid);
 	$right = use_template("tmp/themes.template", $params, "theme_selector_right_template");
 
 	return use_template("tmp/themes.template", ["left" => $left, "right" => $right], "make_template_selector_panes_template");

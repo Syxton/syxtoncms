@@ -27,6 +27,7 @@ global $CFG, $USER, $ROLES;
 	$title = $settings->pics->$featureid->feature_title->setting;
 
 	if (is_logged_in()) {
+		$title = '<span class="box_title_text">' . $title . '</span>';
 		if (user_is_able($USER->userid, "viewpics", $pageid,"pics", $featureid)) {
 			if ($pageid==$CFG->SITEID) {
 				$SQL = "SELECT * FROM pics_features WHERE pageid='$pageid' LIMIT 1";
@@ -52,6 +53,7 @@ global $CFG, $USER, $ROLES;
 		if (role_is_able($ROLES->visitor,"viewpics", $pageid)) {
 			$title = get_db_field("setting", "settings", "type='pics' AND pageid=$pageid AND featureid=$featureid");
 			$content = get_gallery_links($pageid, $featureid, true);
+			$title = '<span class="box_title_text">' . $title . '</span>';
 			return get_css_box($title, $content,NULL,NULL,"pics", $featureid);
 		}
 	}

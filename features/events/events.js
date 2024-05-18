@@ -427,33 +427,40 @@ function new_event_submit(pageid) {
   		var event_end_date = $("#multiday").val() == "1" ? "&event_end_date=" + event_end_date_Object.picked.date : ""; //when event ends
   		var begin_time = $("#allday").val() == "1" ? "" : "&begin_time=" + $("#begin_time").val(); //If not an all day event, when does it begin
   		var end_time = $("#allday").val() == "1" ? "" : "&end_time=" + $("#end_time").val(); //If not an all day event, when does it end
-        var max = $("#reg").val() == "1" ? "&max=" + $("#max").val() : ""; //Maximum registrations HARD
-  		var hard_limits = $("#hard_limits").length && $("#hard_limits").val() != "" ? "&hard_limits=" + $("#hard_limits").val() : ""; //custom limits that keep people from registering
-  		var soft_limits = $("#soft_limits").length && $("#soft_limits").val() != "" ? "&soft_limits=" + $("#soft_limits").val() : ""; //custom limits that place people in queue
-        var fee = "&fee=" + $("#fee").val(); //Are there fees associated with this reg page?
-  		var min_fee = "&min_fee=" + $("#min_fee").val(); //minimum amount needed to pay to register
-  		var full_fee = "&full_fee=" + $("#full_fee").val(); //full payment for registration
-  		var sale_fee = "&sale_fee=" + $("#sale_fee").val(); //temporary sale payment
-  		var sale_end = $("#sale_fee").val() != "" ? "&sale_end=" + sale_end_Object.picked.date : ""; //when temporary sale price ends
-  		var checksaddress = "&checksaddress=" + escape($("#checksaddress").val()); //Address to send checks to
-  		var payableto = "&payableto=" + escape($("#payableto").val()); //Make checks payable to
-  		var paypal = "&paypal=" + $("#paypal").val(); //Paypal account
-  		var reg = "&reg=" + $("#reg").val(); //Event has a registration page
-  		var allowinpage = $("#reg").val() == "1" ? "&allowinpage=" + $("#allowinpage").val() : ""; //If a logged in user registers...allow them into the page that this event was created in.
-  		var template = $("#reg").val() == "1" ? "&template=" + $("#template").val() : ""; //registration template
-        var template_settings = create_request_string('template_settings_form');
-        var start_reg = $("#reg").val() == "1" ? "&start_reg=" + start_reg_Object.picked.date : ""; //Registration open date
-  		var stop_reg = $("#reg").val() == "1" ? "&stop_reg=" + stop_reg_Object.picked.date : ""; //Registration ending date
+        let hard_limits = soft_limits = max = fee = min_fee = full_fee = sale_fee = sale_end = checksaddress = payableto = paypal = allowinpage = template = template_settings = start_reg = stop_reg = "";
+        if ($("#reg").val() == "1") {
+            allowinpage = "&allowinpage=" + $("#allowinpage").val(); //If a logged in user registers...allow them into the page that this event was created in.
+            template = "&template=" + $("#template").val(); //registration template
+            template_settings = create_request_string('template_settings_form');
+            start_reg = "&start_reg=" + start_reg_Object.picked.date; //Registration open date
+            stop_reg = "&stop_reg=" + stop_reg_Object.picked.date; //Registration ending date
+            fee = "&fee=" + $("#fee").val(); //Are there fees associated with this reg page?
+            min_fee = "&min_fee=" + $("#min_fee").val(); //minimum amount needed to pay to register
+            full_fee = "&full_fee=" + $("#full_fee").val(); //full payment for registration
+            sale_fee = "&sale_fee=" + $("#sale_fee").val(); //temporary sale payment
+            sale_end = $("#sale_fee").val() != "" ? "&sale_end=" + sale_end_Object.picked.date : ""; //when temporary sale price ends
+            checksaddress = "&checksaddress=" + escape($("#checksaddress").val()); //Address to send checks to
+            payableto = "&payableto=" + escape($("#payableto").val()); //Make checks payable to
+            paypal = "&paypal=" + $("#paypal").val(); //Paypal account
+
+            if ($("#limits").val() == "1") {
+                max = "&max=" + $("#max").val(); //Maximum registrations HARD
+                hard_limits = $("#hard_limits").length && $("#hard_limits").val() != "" ? "&hard_limits=" + $("#hard_limits").val() : ""; //custom limits that keep people from registering
+                soft_limits = $("#soft_limits").length && $("#soft_limits").val() != "" ? "&soft_limits=" + $("#soft_limits").val() : ""; //custom limits that place people in queue  
+            }
+        }
+  		var reg = "&reg=" + $("#reg").val(); // Event has a registration page
+
   		var parameters = "action=submit_new_event&pageid=" + pageid + workers + email + contact + phone + fee + min_fee + full_fee + sale_fee + sale_end + hard_limits + soft_limits + checksaddress + payableto + paypal + eventid + event_name + category + byline + description + siteviewable + location + multiday + template + event_begin_date + event_end_date + allday + begin_time + end_time + reg + allowinpage + max + start_reg + stop_reg + template_settings + "&currTime=" + d.toUTCString();
         // Build the URL to connect to
-    		var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
+    	var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
   		// Open a connection to the server\
-  		ajaxpost(url,parameters);
+        ajaxpost(url, parameters);
   		// Setup a function for the server to run when it's done
-    		
         simple_display("add_event_div");
-    		close_modal();
-		}	
+        close_modal();
+    }
+    return false;
 }
 
 function add_new_location(eventid) {
@@ -464,7 +471,7 @@ function add_new_location(eventid) {
   		var add2 = "&add2=" + escape($('#location_address_2').val());
   		var zip = "&zip=" + document.getElementById("zip").value;
   		var eventid = "&eventid=" + eventid;
-  		var share = document.getElementById("share").checked == true ? "&share=1" : "";
+  		var share = document.getElementById("shared").checked == true ? "&shared=1" : "";
   		var phone = $('#location_phone_1').val() != "" ? "&phone=" + $('#location_phone_1').val() + "-" + $('#location_phone_2').val() + "-" + $('#location_phone_3').val() : "";
   		var parameters = "action=add_new_location" + name + add1 + add2 + zip + share + phone + eventid + "&currTime=" + d.toUTCString();
   		// Build the URL to connect to

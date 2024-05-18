@@ -52,7 +52,7 @@ global $CFG, $USER, $ROLES;
 										}, 30000);
 	// -->';
 	$content .= js_code_wrap($script);
-				
+	$title = '<span class="box_title_text">' . $title . '</span>';
 	return get_css_box($title, $content, $buttons, NULL, "onlineusers", $featureid);
 }
 

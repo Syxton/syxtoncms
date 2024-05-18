@@ -29,7 +29,7 @@ global $MYVARS;
 
 function add_feed() {
 global $CFG, $MYVARS, $USER;
-	$pageid = dbescape($MYVARS->GET["pageid"]);
+	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	$type = dbescape($MYVARS->GET["type"]);
 	$featureid = dbescape($MYVARS->GET["featureid"]);
 	$rssname = dbescape($MYVARS->GET["rssname"]);

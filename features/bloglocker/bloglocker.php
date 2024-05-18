@@ -22,7 +22,8 @@ if (empty($_POST["aslib"])) {
 
 function bloglocker_settings() {
 global $MYVARS, $CFG, $USER;
-	$featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
+	$featureid = clean_myvar_opt("featureid", "int", false);
+    $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	$feature = "bloglocker";
 
 	//Default Settings	
@@ -39,8 +40,8 @@ global $MYVARS, $CFG, $USER;
 function view_locker() {
 global $MYVARS, $CFG, $USER;
 	if (!defined('HTMLLIB')) { include_once('../html/htmllib.php');}
-	$htmlid = $MYVARS->GET['htmlid'];
-	$pageid = $MYVARS->GET['pageid'];
+	$htmlid = clean_myvar_req("htmlid", "int");
+	$pageid = clean_myvar_req("pageid", "int");
     if (!user_is_able($USER->userid, "viewbloglocker", $pageid)) {
         trigger_error(error_string("no_permission", ["viewbloglocker"]), E_USER_WARNING);
 		return;

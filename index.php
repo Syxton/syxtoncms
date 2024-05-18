@@ -68,14 +68,14 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
         $ABILITIES = user_abilities($USER->userid, $PAGE->id);
         if (empty($ABILITIES->viewpages->allow)) {
             if ($currentpage["opendoorpolicy"] == "0") {
-                $PAGE->id = $CFG->SITEID;
+				set_pageid($CFG->SITEID);
             }
         }
     } else {
         $ABILITIES = role_abilities($ROLES->visitor, $PAGE->id);
         if (!($currentpage["siteviewable"] && !empty($ABILITIES->viewpages->allow))) {
             if ($currentpage["opendoorpolicy"] == "0") {
-                $PAGE->id = $CFG->SITEID;
+                set_pageid($CFG->SITEID);
             }
         }
     }

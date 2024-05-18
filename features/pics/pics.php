@@ -26,7 +26,7 @@ if (empty($_POST["aslib"])) {
 
 function pics_settings() {
 global $CFG, $MYVARS, $USER;
-	$featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
+	$featureid = clean_myvar_opt("featureid", "int", false); $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	$feature = "pics";
 
 	//Default Settings	
@@ -42,8 +42,8 @@ global $CFG, $MYVARS, $USER;
 
 function add_pics() {
 global $CFG, $MYVARS, $USER;
-	$featureid = $MYVARS->GET["featureid"];
-	$pageid = $MYVARS->GET["pageid"];
+	$featureid = clean_myvar_opt("featureid", "int", false);
+	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	if (!user_is_able($USER->userid, "addpics", $pageid)) { trigger_error(error_string("no_permission", ["addpics"]), E_USER_WARNING); return; }
 	echo '
     <form id="pics_form" method="post" action="' . $CFG->wwwroot . '/features/pics/pics_ajax.php" enctype="multipart/form-data">
@@ -98,8 +98,8 @@ global $CFG, $MYVARS, $USER;
 
 function manage_pics() {
 global $CFG, $MYVARS, $USER;
-	$featureid = $MYVARS->GET["featureid"];
-	$pageid = $MYVARS->GET["pageid"];
+	$featureid = clean_myvar_opt("featureid", "int", false);
+	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
     
     echo '<div id="pics_manager">';
     echo get_pics_manager($pageid, $featureid);

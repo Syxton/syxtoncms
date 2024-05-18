@@ -16,9 +16,9 @@ echo use_template("tmp/page.template", [], "end_of_page_template");
 
 function rss_subscribe_feature() {
 global $CFG, $MYVARS, $USER;
-	$pageid = $MYVARS->GET["pageid"];
+	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	$feature = $MYVARS->GET["feature"];
-	$featureid = $MYVARS->GET["featureid"];
+	$featureid = clean_myvar_opt("featureid", "int", false);
 	$userid = $USER->userid;
 	$userkey = get_db_field("userkey", "users", "userid='$userid'");
 

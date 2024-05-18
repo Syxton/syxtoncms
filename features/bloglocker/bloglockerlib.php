@@ -31,6 +31,8 @@ global $CFG, $USER, $ROLES;
 	}
 
 	$title = $settings->bloglocker->$featureid->feature_title->setting;
+	$title = '<span class="box_title_text">' . $title . '</span>';
+
 	$viewable_limit = $settings->bloglocker->$featureid->viewable_limit->setting;
 	
 	if (get_db_count("SELECT * FROM pages_features pf WHERE pf.pageid='$pageid' AND pf.feature='html' AND pf.area='locker'")) {
@@ -48,8 +50,8 @@ global $CFG, $USER, $ROLES;
 				];
 				$content .= make_modal_links($p);
 				if (!$lockeritem->blog && is_logged_in() && user_is_able($USER->userid, "addtolocker", $pageid)) {
-					$content .= '<a title="Move back to its original state" href="#" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'move_feature\',\'&amp;pageid=' . $pageid . '&amp;featuretype=html&amp;featureid=' . $lockeritem->htmlid . '&amp;direction=middle\',function() { update_login_contents(' . $pageid . ');});">
-									<img src="' . $CFG->wwwroot . '/images/undo.png" alt="Move feature to the middle area" />
+					$content .= '<a title="Release from the blog locker" href="#" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'change_locker_state\',\'&amp;pageid=' . $pageid . '&amp;featuretype=html&amp;featureid=' . $lockeritem->htmlid . '&amp;direction=released\',function() { update_login_contents(' . $pageid . ');});">
+									<img src="' . $CFG->wwwroot . '/images/undo.png" alt="Release from the blog locker" />
 								 </a>';
 				}	
 				$content .= '<br />';

@@ -26,7 +26,7 @@ global $CFG, $MYVARS;
 				$feeds = create_feed($rssid, $userid, $userkey);
 			}
 		} else {
-			$pageid = dbescape($MYVARS->GET["pageid"]);
+			$pageid = clean_myvar_opt("pageid", "int", get_pageid());
 			if (user_is_able($userid, "viewpage", $pageid)) {	
 				// User has already created rssid...just needs the link for it again.
 				if ($feed = get_db_row("SELECT * FROM rss_feeds WHERE pageid = '$pageid' AND type='page' AND rssid IN (SELECT rssid FROM rss WHERE userid = '$userid')")) {

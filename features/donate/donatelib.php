@@ -39,7 +39,9 @@ global $CFG, $USER;
                 $returnme .= '<table style="width:100%;border:1px solid silver;padding:10px;"><tr><th>' . $settings->donate->$featureid->feature_title->setting . '</th></tr><tr><td><br /><br /><div class="htmlblock">' .get_donation_results($row["id"]) . '</div></td></tr></table>'; 
             } else { //regular donate feature viewing
                 $buttons = get_button_layout("donate", $featureid, $pageid);
-				$returnme .= get_css_box($settings->donate->$featureid->feature_title->setting,'<div class="htmlblock">' . donation_form($featureid, $settings) . '</div>', $buttons, null, 'donate', $featureid, false, false, false, false, false, false);
+				$title = $settings->donate->$featureid->feature_title->setting;
+				$title = '<span class="box_title_text">' . $title . '</span>';
+				$returnme .= get_css_box($title, '<div class="htmlblock">' . donation_form($featureid, $settings) . '</div>', $buttons, null, 'donate', $featureid, false, false, false, false, false, false);
 			}
 		}
 	}

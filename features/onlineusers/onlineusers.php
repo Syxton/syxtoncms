@@ -22,7 +22,7 @@ if (empty($_POST["aslib"])) {
 
 function onlineusers_settings() {
 global $CFG, $MYVARS, $USER;
-	$featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
+	$featureid = clean_myvar_opt("featureid", "int", false); $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	$feature = "onlineusers";
 
 	//Default Settings	

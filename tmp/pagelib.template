@@ -115,7 +115,7 @@ get_css_box_template1||
 get_css_box_template2||
 <div ||opendiv||>
 	<div class="box_header"  style="border: 2px solid ||bordercolor||;background-color:||titlebgcolor||;">
-		<div class="box_title"  style="line-height:23px;color:||titlefontcolor||;">
+		<div class="box_title" style="line-height:23px;color:||titlefontcolor||;">
 			||title||
 		</div>
 		||*buttons||

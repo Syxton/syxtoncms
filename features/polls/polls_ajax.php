@@ -84,8 +84,8 @@ global $CFG, $MYVARS;
 
 function submitanswer() {
 global $CFG, $USER, $MYVARS;
-    $pageid = $MYVARS->GET["pageid"];
-    $featureid = $MYVARS->GET["featureid"];
+    $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+    $featureid = clean_myvar_opt("featureid", "int", false);
     $extra = $MYVARS->GET["extra"];
 
 	$userid = is_logged_in() ? $USER->userid : '0';
@@ -97,8 +97,8 @@ global $CFG, $USER, $MYVARS;
 
 function openpoll() {
 global $CFG, $USER, $MYVARS;
-    $pageid = $MYVARS->GET["pageid"];
-    $featureid = $MYVARS->GET["featureid"];
+    $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+    $featureid = clean_myvar_opt("featureid", "int", false);
     $extra = $MYVARS->GET["extra"];
 	$today = get_timestamp();
 	execute_db_sql("UPDATE polls SET status='2',startdate='$today' WHERE pollid='$featureid'");
@@ -108,8 +108,8 @@ global $CFG, $USER, $MYVARS;
 
 function closepoll() {
 global $CFG, $USER, $MYVARS;
-    $pageid = $MYVARS->GET["pageid"];
-    $featureid = $MYVARS->GET["featureid"];
+    $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+    $featureid = clean_myvar_opt("featureid", "int", false);
     $extra = $MYVARS->GET["extra"];
 	$today = get_timestamp();
 	execute_db_sql("UPDATE polls SET status='3',stopdate='$today' WHERE pollid='$featureid'");
@@ -119,8 +119,8 @@ global $CFG, $USER, $MYVARS;
 
 function pollstatuspic() {
 global $CFG, $MYVARS, $USER;
-    $pageid = $MYVARS->GET["pageid"];
-    $featureid = $MYVARS->GET["featureid"];
+    $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+    $featureid = clean_myvar_opt("featureid", "int", false);
     $extra = $MYVARS->GET["extra"];
 
 	if ($extra == 'open') {
@@ -133,7 +133,7 @@ global $CFG, $MYVARS, $USER;
         }
 		echo $returnme;
 	} else {
-		donothing();
+		emptyreturn();
 	}
 }
 ?>

@@ -25,7 +25,7 @@ if (empty($_POST["aslib"])) {
 
 function polls_settings() {
 global $CFG, $MYVARS, $USER;
-	$featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
+	$featureid = clean_myvar_opt("featureid", "int", false); $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	$feature = "polls";
 
 	//Default Settings	
@@ -43,7 +43,7 @@ global $CFG, $MYVARS, $USER;
 function editpoll() {
 global $CFG, $MYVARS, $USER;
 	date_default_timezone_set("UTC");
-	$pageid = $MYVARS->GET["pageid"];
+	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
     if (!user_is_able($USER->userid, "editpolls", $pageid)) { trigger_error(error_string("no_permission", ["editpolls"]), E_USER_WARNING); return; }
 	$pollid= $MYVARS->GET["featureid"];
 	$row = get_db_row("SELECT * FROM polls WHERE pollid='$pollid'");
@@ -58,8 +58,8 @@ global $CFG, $MYVARS, $USER;
             $answers .= $answers == "" ? $answer["answer"] : "," . $answer["answer"];    
         }
     }
-    
-	echo js_script_wrap($CFG->wwwroot . '/scripts/popupcalendar.js');
+
+	echo get_js_tags(["popupcal"]);
     echo '
     <input id="savedstartdate" type="hidden" value=' . $savedstart . ' />
     <input id="savedstopdate" type="hidden" value=' . $savedstop . ' />

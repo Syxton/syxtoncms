@@ -14,7 +14,7 @@ $ERRORS = new \stdClass;
 
 $CFG->debug = $CFG->debug ?? 1;
 $reportlevel = 0;
-$reportlevel = $CFG->debug == 1 ? E_ERROR : $reportlevel;
+$reportlevel = $CFG->debug == 1 ? E_USER_ERROR | E_ERROR : $reportlevel;
 $reportlevel = $CFG->debug == 2 ? E_ERROR | E_USER_ERROR | E_WARNING | E_USER_WARNING | E_NOTICE | E_USER_NOTICE | E_PARSE : $reportlevel;
 $reportlevel = $CFG->debug == 3 ? E_ALL | E_STRICT : $reportlevel;
 
@@ -29,11 +29,12 @@ set_error_handler("myErrorHandler", $reportlevel);
 	$ERRORS->no_buttons = "You have rights to 0 buttons";
 	$ERRORS->generic_permissions = "You do not have the correct permissions to do this.";
 	$ERRORS->no_permission = "You do not have the <strong>[0]</strong> permission.";
-	$ERRORS->generic_error = "Congratulations, you found a bug.  Please inform " . $CFG->siteemail;
-	$ERRORS->generic_db_error = "Database Error. Please inform " . $CFG->siteemail;
+	$ERRORS->generic_error = "Congratulations, you found a bug.  Please inform the site admin. " . $CFG->siteemail;
+	$ERRORS->generic_db_error = "Database Error. Please inform the site admin. " . $CFG->siteemail;
 
 //User Creation *********************************************************
 	$ERRORS->user_not_added = "The user could not be created correctly.";
+	$ERRORS->user_not_emailed = "The user account has been created, but the confirmation email has failed to send.  Please inform the site admin. " . $CFG->siteemail;
 
 //Page Errors *********************************************************
 	$ERRORS->could_not_subscribe = "You did NOT add this page successfully.";
@@ -146,10 +147,10 @@ global $CFG;
 	switch ($errno) {
 		case E_USER_ERROR:
 			$message = "<b>ERROR</b> [$errno] $errstr\nFatal error on line $errline in file $errfile\n";
-			debugging($message, 3);
+			debugging($message);
 			break;
 		case E_USER_WARNING:
-			debugging("<b>WARNING</b> [$errno] $errstr\n", 2);
+			debugging("<b>WARNING</b> [$errno] $errstr\n");
 			break;
 		case E_USER_NOTICE:
 			debugging("<b>NOTICE</b> [$errno] $errstr\n");
@@ -202,15 +203,23 @@ function debugging($message = '', $level = 1, $forced = false) {
 		}
 
 		// Log any level above 0
-		error_log('Debugging: ' . $message . $from);
+		error_log('Debugging (Level ' . $level . '): ' . $message . $from);
 
-		$display = '<div style="background:red;padding:20px;text-align:center;font-size: 15px;">
+		$display = '<div class="debugging">
 					' . $message . $from_printable . '
 					</div>';
 
 		// Display on page if level is 2 or above
 		if ($level >= 2) {
 			echo '<pre>' . $display . '</pre>';
+		}
+
+		if ($level < 2) {
+			echo '<div class="error_text" style="font-size: 3vw;padding: 6%;">
+					<h3>Site Error</h3>
+					<br />
+					<p>' . error_string("generic_error") . '</p>
+				</div>';
 		}
 	}
 	return $display;

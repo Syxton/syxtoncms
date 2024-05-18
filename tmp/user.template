@@ -256,3 +256,69 @@ user_alerts_template||
 	||alerts||
   </div>
 ||user_alerts_template
+
+confirmation_email_template||
+	<p>
+		<font face="Tahoma">
+			<font size="3" color="#993366">
+				Dear <strong>||fname|| ||lname||</strong>,
+			</font><br />
+		</font>
+	</p>
+	<blockquote>
+		<p>
+			<font size="3" face="Tahoma">
+				Thank you for joining <strong>||config->sitename||</strong>.&nbsp; To finalize the account creation process, use the following instructions to log into the site.
+			</font>
+		</p>
+	</blockquote>
+	<p>&nbsp;</p>
+	<hr width="100%" size="2" />
+	<p>&nbsp;</p>
+	<blockquote>
+		<p align="left">
+			<font face="Tahoma">
+				<strong>Username: </strong>
+				<font color="#3366ff">
+					||email||
+				</font>
+			</font>
+		</p>
+		<p align="left">
+			<font face="Tahoma">
+				<strong>Password: </strong>
+				<font color="#3366ff">
+					||temp||
+				</font>
+			</font>
+		</p>
+	</blockquote>
+	<p>&nbsp;</p>
+	<hr width="100%" size="2" />
+	<blockquote>
+		<p>
+			<font size="3" face="Tahoma">
+				After you have successfully logged into the site using the password provided, your account will be finalized and your password will then be changed to the password you specified inside the account creation form.&nbsp; Again, we would like to thank you for joining <strong>||config->sitename||</strong> and if you have any questions during your use of the site, feel free to contact us at <font color="#ff0000">||config->siteemail||</font>.<br />
+			</font>
+		</p>
+	</blockquote>
+	<p>&nbsp;</p>
+	<p>
+		<font face="Tahoma">
+			<strong>
+				<font size="3" color="#666699">
+					Enjoy the site,
+				</font>
+			</strong>
+		</font>
+	</p>
+	<p>
+		<font size="3" face="Tahoma">
+			<em>||config->siteowner|| </em>
+		</font>
+		<font size="3" face="Tahoma" color="#ff0000">
+			&lt;||config->siteemail||&gt;
+		</font>
+	</p>
+	<p>&nbsp;</p>
+||confirmation_email_template

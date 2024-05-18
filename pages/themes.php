@@ -18,7 +18,7 @@ echo use_template("tmp/page.template", [], "end_of_page_template");
 
 function change_theme() {
 global $CFG, $MYVARS, $USER, $PAGE;
-	$pageid = dbescape($MYVARS->GET["pageid"]);
+	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	$feature = isset($MYVARS->GET['feature']) ? dbescape($MYVARS->GET['feature']) : false;
 	$featureid = isset($MYVARS->GET['featureid']) ? dbescape($MYVARS->GET['featureid']) : false;
 	$PAGE = new \stdClass;

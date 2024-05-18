@@ -115,7 +115,11 @@ forgot_password_submitted_template||
 				<br />
 				If you remember your password and log into the site, the password contained in the email will no longer work.
 			//OR//
-				A password reset could not be done at this time.  Please try again later.
+				<h3>We are sorry.</h3>
+				<br /><br />
+				A password reset could not be done at this time.
+				<br />
+				Please try again later.
 			}}success||
 		//OR//
 			There is no user with this email address.

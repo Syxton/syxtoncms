@@ -1,65 +1,124 @@
 is_siteadmin||
-  SELECT *
-    FROM roles_assignment
-   WHERE roleid = '||adminroleid||'
-     AND userid = '||userid||'
-     AND pageid = '||siteid||'
-     AND confirm = 0
+	SELECT *
+	FROM roles_assignment
+	WHERE roleid = '||adminroleid||'
+	AND userid = '||userid||'
+	AND pageid = '||siteid||'
+	AND confirm = 0
 ||is_siteadmin
 
 get_roles||
-    SELECT *
-      FROM roles
-  ORDER BY roleid
+	SELECT *
+	FROM roles
+	ORDER BY roleid
 ||get_roles
 
-remove_all_user_roles||
-  DELETE FROM roles_assignment
-        WHERE userid = '||userid||';
-
-  DELETE FROM roles_ability_peruser
-        WHERE userid = '||userid||';
-
-  DELETE FROM roles_ability_perfeature_peruser
-        WHERE userid = '||userid||';
-||remove_all_user_roles
+confirm_role_assignment||
+	UPDATE roles_assignment
+	SET confirm = 0
+	WHERE assignmentid = ||assignmentid||
+||confirm_role_assignment
 
 remove_role_assignment||
+	DELETE
+	FROM roles_assignment
+	WHERE assignmentid = ||assignmentid||
+||remove_role_assignment
+
+remove_page_role_assignments||
+	DELETE
+	FROM roles_assignment
+	WHERE pageid = ||pageid||
+||remove_page_role_assignments
+
+remove_page_roles_ability_perfeature||
+	DELETE
+	FROM roles_ability_perfeature
+	WHERE pageid = ||pageid||
+||remove_page_roles_ability_perfeature
+
+remove_page_roles_ability_perfeature_pergroup||
+	DELETE
+	FROM roles_ability_perfeature_pergroup
+	WHERE pageid = ||pageid||
+||remove_page_roles_ability_perfeature_pergroup
+
+remove_page_roles_ability_perfeature_peruser||
+	DELETE
+	FROM roles_ability_perfeature_peruser
+	WHERE pageid = ||pageid||
+||remove_page_roles_ability_perfeature_peruser
+
+remove_page_roles_ability_pergroup||
+	DELETE
+	FROM roles_ability_pergroup
+	WHERE pageid = ||pageid||
+||remove_page_roles_ability_pergroup
+
+remove_page_roles_ability_perpage||
+	DELETE
+	FROM roles_ability_perpage
+	WHERE pageid = ||pageid||
+||remove_page_roles_ability_perpage
+
+remove_page_roles_ability_peruser||
+	DELETE
+	FROM roles_ability_peruser
+	WHERE pageid = ||pageid||;
+||remove_page_roles_ability_peruser
+
+remove_user_roles_assignment||
+    DELETE
+    FROM roles_assignment
+    WHERE userid = ||userid||
+remove_user_roles_assignment||
+
+remove_user_roles_ability_peruser||
+    DELETE
+    FROM roles_ability_peruser
+    WHERE userid = ||userid||
+remove_user_roles_ability_peruser||
+
+remove_user_roles_ability_perfeature_peruser||
+    DELETE
+    FROM roles_ability_perfeature_peruser
+    WHERE userid = ||userid||
+||remove_user_roles_ability_perfeature_peruser
+
+remove_user_role_assignment||
   DELETE
     FROM roles_assignment
    WHERE pageid = "||pageid||"
      AND userid = "||userid||"
-||remove_role_assignment
+||remove_user_role_assignment
 
 insert_role_assignment||
-  INSERT INTO roles_assignment (userid,
-                                roleid,
-                                pageid)
-                      VALUES("||userid||",
-                             "||roleid||",
-                             "||pageid||")
+	INSERT INTO roles_assignment (userid, roleid, pageid)
+		VALUES(||userid||, ||roleid||, ||pageid||)
 ||insert_role_assignment
 
 check_for_role_assignment||
-  SELECT *
-    FROM roles_assignment
-   WHERE pageid = "||pageid||"
-     AND userid = "||userid||"
-     AND confirm = 0
+	SELECT *
+	FROM roles_assignment
+	WHERE pageid = "||pageid||"
+	AND userid = "||userid||"
+	AND confirm = 0
 ||check_for_role_assignment
 
-add_role_ability||
+insert_abilities||
   INSERT INTO abilities (section, section_display, ability, ability_display, power)
-       VALUES('||section||', '||displayname||', '||ability||', '||desc||', '||power||');
+       VALUES(||section||, ||displayname||, ||ability||, ||desc||, ||power||)
+||insert_abilities
 
-  INSERT INTO roles_ability (roleid, ability, allow, section)
-       VALUES(1, '||ability||', '1', '||section||'),
-             (2, '||ability||', '||creator||', '||section||'),
-             (3, '||ability||', '||editor||', '||section||'),
-             (4, '||ability||', '||guest||', '||section||'),
-             (5, '||ability||', '||visitor||', '||section||'),
-             (6, '||ability||', '0', '||section||')
-||add_role_ability
+insert_roles_ability||
+	INSERT INTO roles_ability (roleid, ability, allow, section)
+		VALUES(1, ||ability||, 1, ||section||),
+              (2, ||ability||, ||creator||, ||section||),
+              (3, ||ability||, ||editor||, ||section||),
+              (4, ||ability||, ||guest||, ||section||),
+              (5, ||ability||, ||visitor||, ||section||),
+              (6, ||ability||, 0, ||section||)
+||insert_roles_ability
 
 
 //	This is a fully implemented roles structure for the system.  The following is the importance structure

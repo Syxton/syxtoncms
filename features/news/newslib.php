@@ -56,6 +56,7 @@ $returnme = ''; $section_content = ""; $toggle = "";
 				$section_content .= get_section_archives($pageid, $featureid, NULL, $area);
 				if (empty($section_content)) { $section_content = "No news added yet"; }
 				$buttons = get_button_layout("news_features", $featureid, $pageid);
+				$title = '<span class="box_title_text">' . $title . '</span>';
 				$returnme .= get_css_box($title, $section_content, $buttons, NULL, "news", $featureid);
 			}
 
@@ -98,6 +99,7 @@ $returnme = ''; $section_content = ""; $toggle = "";
 			//Get the Archived News Area
 			$section_content .= get_section_archives($pageid, $featureid, $USER->userid, $area);
 			if (empty($section_content)) { $section_content = "No news added yet"; }
+			$title = '<span class="box_title_text">' . $title . '</span>';
 			$returnme .= get_css_box($rss . $title, $section_content, $buttons, NULL, "news", $featureid);
 		}
 	}

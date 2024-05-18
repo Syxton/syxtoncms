@@ -32,62 +32,221 @@ global $CFG;
 	return $conn;
 }
 
-function get_db_row($SQL, $vars = [], $type = false) {
-global $CFG;
-	if (is_select($SQL)) {
-		$count = get_db_count($SQL, $vars);
-		if ($count > 1) {
-			trigger_error("get_db_row: $SQL returned $count results. Expected 1", E_USER_WARNING);
-		}
-	}
+function clean_myvar_req($key, $type) {
+global $MYVARS;
+    if (isset($MYVARS->GET[$key])) {
+        return clean_var_req($MYVARS->GET[$key], $type, $key);
+    }
+    trigger_error("Missing required variable: $key", E_USER_ERROR);
+    return NULL;
+}
 
-	$type = get_mysql_array_type($type);
-	if ($result = get_db_result($SQL, $vars)) {
-		return fetch_row($result, $type);
-	}
-	return false;
+function clean_myvar_opt($key, $type, $default) {
+global $MYVARS;
+    if (isset($MYVARS->GET[$key])) {
+        return clean_var_opt($MYVARS->GET[$key], $type, $default);
+    }
+    return clean_var_opt($default, $type, $default);
+}
+
+function clean_var_req($var, $type, $name = "") {
+    $var = clean_var_opt($var, $type, NULL);
+    if ($var === NULL) {
+        trigger_error("Missing required variable: $name", E_USER_ERROR);
+        throw new Exception("Missing required variable: $name");
+    }
+    return $var;
+}
+
+function clean_var_opt($var, $type, $default) {
+global $CFG;
+    if (empty($var)) { return $default; }
+
+    switch ($type) {
+        case "int":
+            $var = empty($var) ? $default : (int)$var;
+            break;
+        case "float":
+            $var = empty($var) ? $default : (float)$var;
+            break;
+        case "string":
+            $var = empty($var) ? $default : urldecode((string)$var);
+            break;
+		case "array":
+			$var = empty($var) ? $default : (array)$var;
+			break;
+        case "html":
+            //MS Word Cleaner HTMLawed
+	        //http://www.bioinformatics.org/phplabware/internal_utilities/htmLawed/more.htm
+	        include_once ($CFG->dirroot . '/scripts/wordcleaner.php');
+            $params = [
+                'comment' => 1,
+                'clean_ms_char' => 1,
+                'css_expression' => 1,
+                'keep_bad' => 0,
+                'make_tag_strict' => 1,
+                'schemes' => '*:*',
+                'valid_xhtml' => 1,
+                'balance' => 1,
+            ];
+            $var = empty($var) ? $default : urldecode(htmLawed((string)$var, $params));
+            break;
+        case "bool":
+            $var = trim((string)strtolower($var)) === "false" ? false : $var;
+            $var = trim((string)$var) === "0" ? false : $var;
+            $var = (bool)$var;
+            break;
+        default:
+            return $default;
+            break;
+    }
+
+    return $var;
 }
 
 function execute_db_sqls($SQLS, $vars = []) {
 global $conn;
-	$SQLS = trim($SQLS, ";\r\n");
-	$sql_array = explode(";\r\n", $SQLS);
-	$sql_array = array_filter($sql_array); // Remove any empty array elements.
-	$returns = [];
+    if (is_array($SQLS)) {
+        $sql_array = $SQLS;
+    } else { // BAD METHOD....
+        $SQLS = trim($SQLS, ";\r\n");
+        $sql_array = explode(";\r\n", $SQLS);
+        $sql_array = array_filter($sql_array); // Remove any empty array elements.
+    }
 
-	/* Start transaction */
-	start_db_transaction($conn);
-	try {
-		$i = 0;
-		foreach ($sql_array as $SQL) {
-			$v = $vars[$i] ?? [];
-			if ($result = execute_db_sql($SQL, $v)) {
-				$returns[] = $result;
-			}
-			$i++;
-		}
-		commit_db_transaction($conn);
-	} catch (\Throwable $e) {
-		error_log("ROLLBACK: " . $e->getMessage());
-		rollback_db_transaction($conn);
-		return false;
+	$result = [];
+    $i = 0;
+    foreach ($sql_array as $SQL) {
+        $v = $vars;
+        if (!empty($vars)) {
+            // If an array of arrays is passed, use each array as a variable set for each SQL independantly.
+            // Otherwise, use all the variables passed for each SQL.
+            $v = ismultiarray($vars) ? array_slice($vars, $i, 1)[0] : $vars;
+            $v = insert_result_data_as_var($v, $result);
+        } else {
+            $SQL = insert_result_data_as_template($SQL, $result);
+        }
+        // Execute SQL
+        $result[] = execute_db_sql($SQL, $v);
+        $i++;
+    }
+	return $result;
+}
+
+function insert_result_data_as_var($vars, $result) {
+    $pattern = '/\|\|result\[([0-9]+)\]\|\|/i'; //Look for stuff between ||xxx||
+    foreach ($vars as $key => $value) {
+        preg_match_all($pattern, $value, $matches);
+        foreach ($matches[1] as $match) {
+            if (is_numeric($match)) {
+                if (isset($result[$match])) {
+                    $vars[$key] = $result[$match];
+                }
+            }
+        }
+    }
+    return $vars;
+}
+
+function insert_result_data_as_template($SQL, $result) {
+    $pattern = '/(\|\|result\[[0-9]+\]\|\|)/i'; //Look for stuff between ||xxx||
+    preg_match_all($pattern, $SQL, $matches);
+    foreach ($matches[1] as $match) {
+        $pattern = '/\|\|result\[([0-9]+)\]\|\|/i'; //Look for stuff between ||xxx||
+        preg_match_all($pattern, $match, $keys);
+        foreach ($keys[1] as $key) {
+            if (is_numeric($key)) {
+                if (isset($result[$key])) {
+                    $SQL = str_replace($match, "'" . $result[$key] . "'", $SQL);
+                }
+            }
+        }
+    }
+    return $SQL;
+}
+
+function ismultiarray($a) {
+    if (is_array($a) && !empty($a)) {
+        foreach ($a as $v) { 
+            if (!is_array($v)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
+function build_prepared_variables($SQL, $vars, $pattern) {
+    $typestring = "";
+    $data = [];
+	preg_match_all($pattern, $SQL, $matches);
+	foreach ($matches[0] as $match) {
+        $match = trim($match, "|\"'"); // cuts off template tags leaving only xxx
+        if (isset($vars[$match])) {
+            $data[] = $vars[$match];
+            $typestring .= find_var_type($vars[$match]);
+        } else {
+            throw new \Exception("No value found for variable: " . $match);
+        }
 	}
-	return $returns;
+    return ["data" => $data, "typestring" => $typestring];
+}
+
+function find_var_type($var) {
+    switch(gettype($var)) {
+        case "string":
+            return "s";
+            break;
+        case "integer":
+            return "i";
+            break;
+        case "double":
+            return "d";
+            break;
+        default:
+            return "b";
+            break;
+    }
 }
 
 function get_db_field($field, $from, $where, $vars = []) {
-global $CFG;
 	$SQL = "SELECT $field FROM $from WHERE $where";
-	$count = get_db_count($SQL, $vars);
-	if ($count > 1) {
-		trigger_error("get_db_field -> $count: $SQL returned $count results. Expected 1", E_USER_WARNING);
-	}
-
+    $SQL = place_sql_limit($SQL, 1);
 	if ($result = get_db_result($SQL, $vars)) {
+        if ($result->num_rows > 1) {
+            trigger_error("get_db_field: $SQL returned $result->num_rows results. Expected 1", E_USER_NOTICE);
+        }
 		$row = fetch_row($result);
 		return $row[$field];
 	}
 	return false;
+}
+
+function get_db_row($SQL, $vars = [], $type = false) {
+    $SQL = place_sql_limit($SQL, 1);
+    if ($result = get_db_result($SQL, $vars)) {
+        if (is_select($SQL) && $result->num_rows > 1) {
+            trigger_error("get_db_row: $SQL returned $result->num_rows results. Expected 1", E_USER_NOTICE);
+        }
+        return fetch_row($result, get_mysql_array_type($type));
+    }
+    return false;
+}
+
+function place_sql_limit($SQL, $limit) {
+    if (!is_select($SQL)) { return $SQL; }
+    $p = strrpos(strtoupper($SQL), "LIMIT"); // last "LIMIT" found in SQL.
+    if ($p !== false) { // "LIMIT" was found in SQL;
+        $q = strpos($SQL, ")", $p); // ")" found after "LIMIT" denoting a subquery clause.
+        $r = strpos($SQL, "'", $p); // "'" found after "LIMIT" denoting a string and not clause.
+        $s = strpos($SQL, "\"", $p); // '"' found after "LIMIT" denoting a string and not clause.
+        if ($q === false && $r === false && $s === false) {
+            $SQL = substr($SQL, 0, $p); // Remove LIMIT clause from SQL.
+        }
+    }
+
+    return $SQL . " LIMIT $limit";
 }
 
 function get_db_count($SQL, $vars = []) {
@@ -174,31 +333,40 @@ global $CFG, $USER;
 	}
 }
 
-function copy_db_row($row, $table, $variablechanges) {
-global $USER, $CFG, $MYVARS;
-	$paired = explode(",", $variablechanges);
-	$newkey = $newvalue = [];
-	$keylist = $valuelist = "";
-	$i = 0;
-	while (isset($paired[$i])) {
-		$split = explode("=", $paired[$i]);
-		$newkey[$i] = $split[0];
-		$newvalue[$i] = $split[1];
-		$i++;
-	}
+function copy_db_row($row, $table, $copychanges) {
+    // Check if first variable is an array (denotes multiple copies).
+    // If not, make it an array of a single array for consistency.
+    if (!ismultiarray($copychanges)) {
+        $copychanges = [$copychanges];
+    }
 
-	$keys = array_keys($row);
-	foreach ($keys as $key) {
-		$found = array_search($key, $newkey);
-		$keylist .= $keylist == "" ? $key : "," . $key;
-		if ($found === false) {
-			$valuelist .= $valuelist == "" ? "'" . $row[$key] . "'" : ",'" . $row[$key] . "'";
-		} else {
-			$valuelist .= $valuelist == "" ? "'" . $newvalue[$found] . "'" : ",'" . $newvalue[$found] . "'";
-		}
-	}
-	$SQL = "INSERT INTO $table ($keylist) VALUES($valuelist)";
-	return execute_db_sql($SQL);
+    $data = [];
+    // Loop through each key in the table row.
+    foreach ($row as $key => $value) {
+        $i = 0;
+        foreach ($copychanges as $varchanges) { // Loop through each set of copy changes.
+            if (array_key_exists($key, $varchanges)) { // If the key exists in the set of changes.
+                if ($varchanges[$key] !== NULL) { // NULL values are skipped.
+                    $data[$i][$key] = $varchanges[$key];
+                }
+            } else {
+                $data[$i][$key] = $value;
+            }
+            $i++;
+        }
+    }
+
+    $SQLS = [];
+    foreach ($data as $d) {
+        $keylist = $values = "";
+        foreach ($d as $k => $v) {
+            $keylist .= $keylist == "" ? $k : ", $k";
+            $values .= $values == "" ? "||$k||" : ", ||$k||";
+        }
+        $SQLS[] = "INSERT INTO $table ($keylist) VALUES($values)";
+    }
+
+    return execute_db_sqls($SQLS, $data);
 }
 
 function is_unique($table, $where) {

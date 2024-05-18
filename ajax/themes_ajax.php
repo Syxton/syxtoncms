@@ -15,7 +15,7 @@ callfunction();
 function theme_change() {
 global $CFG, $MYVARS, $USER, $PAGE;
 	$themeid = dbescape($MYVARS->GET["themeid"]);
-	$pageid = dbescape($MYVARS->GET["pageid"]);
+	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
 
 	$pagename = get_db_field("name", "pages", "pageid = '$pageid'");
 	$rolename = get_db_field("display_name", "roles", "roleid = " . user_role($USER->userid, $pageid));
@@ -27,7 +27,7 @@ global $CFG, $MYVARS, $USER, $PAGE;
 
 function show_themes() {
 global $CFG, $MYVARS, $USER, $PAGE;
-	$pageid = dbescape($MYVARS->GET["pageid"]);
+	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	$themeid = get_page_themeid($pageid);
 	$themeid = $themeid !== false ? $themeid : $PAGE->thememid;
 
@@ -38,7 +38,7 @@ function save_custom_theme() {
 global $CFG, $MYVARS, $USER;
 	$featureid = dbescape($MYVARS->GET["featureid"]);
 	$feature = dbescape($MYVARS->GET["feature"]);
-	$pageid = dbescape($MYVARS->GET["pageid"]);
+	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
 
 	$pageid = $pageid == $CFG->SITEID ? 0 : $pageid;
 	$styles = [];
@@ -79,7 +79,7 @@ function preview() {
 global $CFG, $MYVARS, $USER, $STYLES;
 	$featureid = dbescape($MYVARS->GET["featureid"]);
 	$feature = dbescape($MYVARS->GET["feature"]);
-	$pageid = dbescape($MYVARS->GET["pageid"]);
+	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
 
 	if ($feature == "page") {
 		$default_list = get_custom_styles($pageid, $feature);
@@ -117,7 +117,7 @@ global $CFG, $MYVARS, $USER, $STYLES;
 function show_styles() {
 global $CFG, $MYVARS, $USER;
 	$feature = dbescape($MYVARS->GET["feature"]);
-	$pageid = dbescape($MYVARS->GET["pageid"]);
+	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
 
 	if ($feature == "page") {
 		$pagename = get_db_field("name", "pages", "pageid = '$pageid'");
@@ -145,7 +145,7 @@ global $CFG, $MYVARS, $USER;
 function change_theme_save() {
 global $CFG, $MYVARS, $USER;
 	$themeid = dbescape($MYVARS->GET["themeid"]);
-	$pageid = dbescape($MYVARS->GET["pageid"]);
+	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
 
 	//Save selected Theme
 	if ($themeid === "" && $pageid != $CFG->SITEID) {

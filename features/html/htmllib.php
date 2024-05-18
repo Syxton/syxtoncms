@@ -60,7 +60,7 @@ global $CFG, $USER;
 			}
 
 			$html = '<div class="htmlblock" ' . $nomargin . '>
-                        ' . fullscreen_toggle(filter(stripslashes($row['html']), $featureid, $settings, $area), $featureid, $settings) . '
+                        ' . fullscreen_toggle(filter($row['html'], $featureid, $settings, $area), $featureid, $settings) . '
                     </div>';
 
   			  // If viewing from rss feed
@@ -76,12 +76,12 @@ global $CFG, $USER;
                 $returnme .= use_template("tmp/index.template", ["mainmast" => page_masthead(true, true), "middlecontents" => $middlecontents], "simplelayout_template");
                 
             } else { // Regular html feature viewing
-                $stopped_editing = '<input type="hidden" id="html_' . $featureid . '_stopped_editing" value="ajaxapi(\'/features/html/html_ajax.php\',\'stopped_editing\',\'&amp;htmlid=' . $featureid . '&amp;userid=0\',function() {if (xmlHttp.readyState == 4) { do_nothing(); }}, true);" />';
+                $stopped_editing = '<input type="hidden" id="html_' . $featureid . '_stopped_editing" value="ajaxapi(\'/features/html/html_ajax.php\',\'stopped_editing\',\'&htmlid=' . $featureid . '\',function() {if (xmlHttp.readyState == 4) { do_nothing(); }}, true);" />';
                 if (is_logged_in() && $settings->html->$featureid->enablerss->setting) {
 					$modalsettings = [
                         "title" => "RSS Feed",
-                        "path" => action_path("rss", false) . "rss_subscribe_feature&amp;pageid=$pageid&amp;featureid=$featureid&amp;feature=html",
-                        "styles" => "position: relative;top: 4px;padding-right:2px;",
+                        "path" => action_path("rss", false) . "rss_subscribe_feature&pageid=$pageid&featureid=$featureid&feature=html",
+                        "styles" => "vertical-align:middle;display:inline-block;padding-right: 4px;",
                         "iframe" => true,
                         "refresh" => "true",
                         "height" => "300",
@@ -95,7 +95,9 @@ global $CFG, $USER;
                     }
 				}
 				$buttons = get_button_layout("html", $row['htmlid'], $pageid);
-				$returnme .= get_css_box($rss . $settings->html->$featureid->feature_title->setting, $stopped_editing . $html . $comments . $makecomment, $buttons, null, 'html', $featureid, false, false, false, false, false, false);
+				$title = $settings->html->$featureid->feature_title->setting;
+				$title = '<span class="box_title_text">' . $title . '</span>';
+				$returnme .= get_css_box($rss . $title, $stopped_editing . $html . $comments . $makecomment, $buttons, null, 'html', $featureid, false, false, false, false, false, false);
 			}
 		}
 	}
@@ -414,7 +416,7 @@ function youtube_id_from_url($url) {
     return false;
 }
 
-function insert_blank_html($pageid, $settings = false) {
+function insert_blank_html($pageid) {
 global $CFG;
 	if ($featureid = execute_db_sql("INSERT INTO html (pageid,html,dateposted) VALUES('$pageid', '','" . get_timestamp() . "')")) {
 		$area = get_db_field("default_area", "features", "feature='html'");
@@ -618,9 +620,9 @@ global $CFG, $USER;
 	$returnme = "";
 	if ($blog && !empty($feature_abilities->addfeature->allow)) { $returnme .= ' <a class="slide_menu_button" title="Add Blog Edition" onclick="if (confirm(\'Do you want to make a new blog edition?  This will move the current blog to the Blog Locker.\')) { ajaxapi(\'/features/html/html_ajax.php\',\'new_edition\',\'&amp;pageid=' . $pageid . '&amp;htmlid=' . $featureid . '\',function() { refresh_page(); });}"><img src="' . $CFG->wwwroot . '/images/add.png" alt="Delete Feature" /></a> '; }
 
-    if (!empty($html_abilities->edithtml->allow)) { $returnme .= make_modal_links(["title" => "Edit HTML", "path" => action_path("html") . "edithtml&amp;pageid=$pageid&amp;featureid=$featureid", "runafter" => "html_" . $featureid."_stopped_editing", "iframe" => true, "refresh" => "true", "width" => "950", "image" => $CFG->wwwroot . "/images/edit.png", "class" => "slide_menu_button"]); }
+    if (!empty($html_abilities->edithtml->allow)) { $returnme .= make_modal_links(["title" => "Edit HTML", "path" => action_path("html") . "edithtml&pageid=$pageid&htmlid=$featureid", "runafter" => "html_" . $featureid."_stopped_editing", "iframe" => true, "refresh" => "true", "width" => "950", "image" => $CFG->wwwroot . "/images/edit.png", "class" => "slide_menu_button"]); }
 
-    if (!$blog && user_is_able($USER->userid, "addtolocker", $pageid)) { $returnme .= '  <a class="slide_menu_button" title="Move to Blog Locker" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'move_feature\',\'&amp;pageid=' . $pageid . '&amp;featuretype=' . $featuretype . '&amp;featureid=' . $featureid . '&amp;direction=locker\',function() { refresh_page(); });"><img src="' . $CFG->wwwroot . '/images/vault.png" alt="Move to Blog Locker" /></a> '; }
+    if (!$blog && user_is_able($USER->userid, "addtolocker", $pageid)) { $returnme .= '  <a class="slide_menu_button" title="Move to Blog Locker" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'change_locker_state\',\'&amp;pageid=' . $pageid . '&amp;featuretype=' . $featuretype . '&amp;featureid=' . $featureid . '&amp;direction=locker\',function() { refresh_page(); });"><img src="' . $CFG->wwwroot . '/images/vault.png" alt="Move to Blog Locker" /></a> '; }
 	return $returnme;
 }
 

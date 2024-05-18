@@ -161,7 +161,7 @@ global $USER, $CFG;
                                             this.blur();
                                             ajaxapi(\'/features/forum/forum_ajax.php\',
                                                     \'delete_category\',
-                                                    \'&amp;forumid=' . $forumid . '&amp;catid=' . $category['catid'] . '\',
+                                                    \'&catid=' . $category['catid'] . '\',
                                                     function() {
                                                         if (xmlHttp.readyState == 4) {
                                                             simple_display(\'forum_div_' . $forumid . '\');
@@ -245,7 +245,7 @@ global $USER, $CFG;
 	$shoutboxid = get_db_field("discussionid", "forum_discussions", "forumid=$forumid AND shoutbox=1");
 	if ($posts = get_db_result("SELECT * FROM forum_posts WHERE discussionid=$shoutboxid ORDER BY posted DESC $shoutboxlimit")) {
 		while ($post = fetch_row($posts)) {
-			$alias = $post["ownerid"] != 0 ? get_user_name($post["ownerid"]): $post["alias"];
+			$alias = $post["userid"] != 0 ? get_user_name($post["userid"]): $post["alias"];
 			$posted = date("m.d.y g:ia", $post["posted"]);
             $message = strip_tags($post["message"], "<img><a>");
 			$returnme .= '  <tr>
@@ -458,24 +458,35 @@ function insert_blank_forum($pageid) {
 }
 
 function forum_delete($pageid, $featureid) {
-	$params = [
-		"pageid" => $pageid,
-		"featureid" => $featureid,
-		"feature" => "forum",
-	];
+	try {
+		start_db_transaction();
+        $templates = [];
+        $templates[] = [
+            "file" => "dbsql/forum.sql",
+            "feature" => "forum",
+            "subsection" => [
+                "delete_forum",
+                "delete_categories",
+                "delete_discussions",
+                "delete_posts",
+            ],
+        ];
+        execute_db_sqls(fetch_template_set($templates), ["forumid" => $featureid]);
 
-	$SQL = use_template("dbsql/features.sql", $params, "delete_feature");
-	execute_db_sql($SQL);
-	$SQL = use_template("dbsql/features.sql", $params, "delete_feature_settings");
-	execute_db_sql($SQL);
-	$SQL = use_template("dbsql/forum.sql", $params, "delete_forum", "forum");
-	execute_db_sql($SQL);
-	$SQL = use_template("dbsql/forum.sql", $params, "delete_categories", "forum");
-	execute_db_sql($SQL);
-	$SQL = use_template("dbsql/forum.sql", $params, "delete_discussions", "forum");
-	execute_db_sql($SQL);
-	$SQL = use_template("dbsql/forum.sql", $params, "delete_posts", "forum");
-	execute_db_sql($SQL);
+        $templates = [];
+        $templates[] = [
+            "file" => "dbsql/features.sql",
+            "subsection" => [
+                "delete_feature",
+                "delete_feature_settings",
+            ],
+        ];
+        execute_db_sqls(fetch_template_set($templates), ["featureid" => $featureid, "feature" => "forum", "pageid" => $pageid]);
+		commit_db_transaction();
+	} catch (\Throwable $e) {
+		rollback_db_transaction($e->getMessage());
+		trigger_error("Failed to delete forum.", E_USER_WARNING);
+	}
 
 	resort_page_features($pageid);
 }

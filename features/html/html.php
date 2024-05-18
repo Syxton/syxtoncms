@@ -20,14 +20,13 @@ if (empty($_POST["aslib"])) {
 
     callfunction();
 
-    echo get_editor_javascript();
-
     echo '</body></html>';
 }
 
 function html_settings() {
 global $CFG, $MYVARS, $USER;
-	$featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
+    $featureid = clean_myvar_req("featureid", "int");
+    $pageid = clean_myvar_req("pageid", "int");
 	$feature = "html";
 
 	//Default Settings
@@ -43,11 +42,12 @@ global $CFG, $MYVARS, $USER;
 
 function edithtml() {
 global $CFG, $MYVARS, $USER;
-	$pageid = dbescape($MYVARS->GET["pageid"]);
-	$featureid = dbescape($MYVARS->GET['featureid']);
+	$pageid = clean_myvar_req("pageid", "int");
+	$htmlid = clean_myvar_req("htmlid", "int");
+
 	$now = get_timestamp();
 	if (!user_is_able($USER->userid, "edithtml", $pageid)) { trigger_error(error_string("no_permission", ["edithtml"]), E_USER_WARNING); return; }
-	$SQL = "SELECT * FROM html WHERE htmlid='$featureid'";
+	$SQL = "SELECT * FROM html WHERE htmlid='$htmlid'";
     if ($row = get_db_row($SQL)) {
         if (($now - $row["edit_time"]) > 30) {
   			$userid = is_logged_in() ? $USER->userid : "0";
@@ -56,15 +56,15 @@ global $CFG, $MYVARS, $USER;
   				<table style="width:100%">
   					<tr>
   						<td colspan="2" style="text-align:center">
-                        ' . get_editor_box(["initialvalue" => stripslashes($row['html']), "name" => "edit_html_$featureid", "width" => "100%"]) . '
+                        ' . get_editor_box(["initialvalue" => $row['html'], "name" => "edit_html_$htmlid", "width" => "100%"]) . '
   								<br /><br />
-							<input type="button" value="Save" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'edit_html\',\'&amp;htmlid=' . $featureid . '&amp;html=\'+ escape(' . get_editor_value_javascript("edit_html_$featureid") . '),function() { if (xmlHttp.readyState == 4) { close_modal(); } });" />
+							<input type="button" value="Save" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'edit_html\',\'&amp;htmlid=' . $htmlid . '&amp;html=\'+ escape(' . get_editor_value_javascript("edit_html_$htmlid") . '),function() { if (xmlHttp.readyState == 4) { close_modal(); } });" />
   						</td>
   					</tr>
   				</table>
   			</div>';
-  			echo js_code_wrap('var stillediting = setInterval(function() { ajaxapi(\'/features/html/html_ajax.php\',\'still_editing\',\'&htmlid=' . $featureid . '&userid=' . $userid . '\',function() { if (xmlHttp.readyState == 4) { do_nothing(); }}, true);},5000);');
-			execute_db_sql("UPDATE html SET edit_user='$userid',edit_time='$now' WHERE htmlid=$featureid");
+  			echo js_code_wrap('var stillediting = setInterval(function() { ajaxapi(\'/features/html/html_ajax.php\',\'still_editing\',\'&htmlid=' . $htmlid . '&userid=' . $userid . '\',function() { if (xmlHttp.readyState == 4) { do_nothing(); }}, true);},5000);');
+			execute_db_sql("UPDATE html SET edit_user='$userid',edit_time='$now' WHERE htmlid=$htmlid");
   		} else {
   			echo '
   			<div style="width:100%;text-align:center;">
@@ -76,12 +76,11 @@ global $CFG, $MYVARS, $USER;
   			';
   		}
     }
-    donothing();
 }
 
 function deletecomment() {
 global $CFG, $MYVARS, $USER;
-    $pageid = dbescape($MYVARS->GET["pageid"]);
+    $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     $commentid = dbescape($MYVARS->GET["commentid"]);
     $comment = get_db_row("SELECT * FROM html_comments WHERE commentid='$commentid'");
 
@@ -192,8 +191,8 @@ global $CFG, $MYVARS, $USER, $PAGE;
 function viewhtml() {
 global $CFG, $MYVARS, $USER, $ROLES;
     $key = $MYVARS->GET['key'];
-    $htmlid = $MYVARS->GET['htmlid'];
-    $pageid = $MYVARS->GET['pageid'];
+    $htmlid = clean_myvar_req("htmlid", "int");
+    $pageid = clean_myvar_req("pageid", "int");
     $pagename = get_db_field("name", "pages", "pageid = '$pageid'");
 
     if (!is_logged_in() && isset($key)) { key_login($key); }

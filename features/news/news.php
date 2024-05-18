@@ -19,14 +19,12 @@ if (empty($_POST["aslib"])) {
 
     callfunction();
 
-    echo get_editor_javascript();
-
     echo '</body></html>';
 }
 
 function news_settings() {
 global $CFG, $MYVARS, $USER;
-	$featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
+	$featureid = clean_myvar_opt("featureid", "int", false); $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	$feature = "news";
 
 	//Default Settings
@@ -42,7 +40,7 @@ global $CFG, $MYVARS, $USER;
 
 function addeditnews() {
 global $CFG, $MYVARS, $USER;
-	$pageid = $MYVARS->GET["pageid"];
+	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
     $featureid= empty($MYVARS->GET["featureid"]) ? false : $MYVARS->GET["featureid"];
 	$newsid= empty($MYVARS->GET["newsid"]) ? false : $MYVARS->GET["newsid"];
 
@@ -96,7 +94,7 @@ global $CFG, $MYVARS, $USER;
 function viewnews() {
 global $CFG, $MYVARS, $USER, $ROLES;
     $newsid = $MYVARS->GET['newsid'];
-    $pageid = $MYVARS->GET['pageid'];
+    $pageid = clean_myvar_req("pageid", "int");
     $newsonly = isset($MYVARS->GET['newsonly']) ? true : false;
 	if (is_logged_in()) {
 		  if (!user_is_able($USER->userid, "viewnews", $pageid, "news", $newsid)) {

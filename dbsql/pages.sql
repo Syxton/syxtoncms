@@ -1,94 +1,55 @@
 get_page||
-  SELECT *
-    FROM pages
-   WHERE pageid = '||pageid||'
+	SELECT *
+	FROM pages
+	WHERE pageid = ||pageid||
 ||get_page
 
 create_page||
-  INSERT INTO pages (name,
-                     short_name,
-                     description,
-                     keywords,
-                     default_role,
-                     opendoorpolicy,
-                     siteviewable,
-                     menu_page)
-           VALUES("||page->name||",
-                  "||short_name||",
-                  "||page->description||",
-                  "||page->keywords||",
-                  "||page->defaultrole||",
-                  "||page->opendoor||",
-                  "||page->siteviewable||",
-                  "||page->menu_page||")
+	INSERT INTO pages (name, short_name, description, keywords, default_role, opendoorpolicy, siteviewable, menu_page)
+		VALUES(||name||, ||short_name||, ||description||, ||keywords||, ||default_role||, ||opendoorpolicy||, ||siteviewable||, ||menu_page||)
 ||create_page
 
+edit_page||
+	UPDATE pages
+	SET description = ||description||,
+		name = ||name||,
+		short_name = ||shortname||,
+		keywords = ||keywords||,
+		siteviewable = ||siteviewable||,
+		menu_page = ||menu_page||,
+		default_role = ||defaultrole||,
+		opendoorpolicy = ||opendoorpolicy||
+	WHERE pageid = ||pageid||
+||edit_page
+
 delete_page||
-  DELETE
-    FROM `pages`
-   WHERE pageid = "||pageid||";
-
-  DELETE
-    FROM `roles_assignment`
-   WHERE pageid = "||pageid||";
-
-  DELETE
-    FROM `pages_features`
-   WHERE pageid = "||pageid||";
-
-  DELETE
-    FROM `menus`
-   WHERE pageid = "||pageid||";
-
-  DELETE
-    FROM `roles_ability_perfeature`
-   WHERE pageid = "||pageid||";
-
-  DELETE
-    FROM `roles_ability_perfeature_pergroup`
-   WHERE pageid = "||pageid||";
-
-  DELETE
-    FROM `roles_ability_perfeature_peruser`
-   WHERE pageid = "||pageid||";
-
-  DELETE
-    FROM `roles_ability_pergroup`
-   WHERE pageid = "||pageid||";
-
-  DELETE
-    FROM `roles_ability_perpage`
-   WHERE pageid = "||pageid||";
-
-  DELETE
-    FROM `roles_ability_peruser`
-   WHERE pageid = "||pageid||";
-
-  DELETE
-    FROM `roles_assignment`
-   WHERE pageid = "||pageid||";
-
-  DELETE
-    FROM `settings`
-   WHERE pageid = "||pageid||";
-
-  DELETE
-    FROM `styles`
-   WHERE pageid = "||pageid||";
+	DELETE
+	FROM `pages`
+	WHERE pageid = ||pageid||
 ||delete_page
 
+delete_page_menus||
+	DELETE
+	FROM `menus`
+	WHERE pageid = ||pageid||
+||delete_page_menus
+
+delete_page_settings||
+	DELETE
+	FROM `settings`
+	WHERE pageid = ||pageid||
+||delete_page_settings
+
 add_page_menu||
-  INSERT INTO menus (pageid,
-                       text,
-                       link,
-                       sort,
-                       hidefromvisitors)
-              VALUES("||pageid||",
-                     "||text||",
-                     "||link||",
-                     "||sort||",
-                     "||hidefromvisitors||")
+  INSERT INTO menus (pageid, text, link, sort, hidefromvisitors)
+		VALUES(||pageid||, ||text||, ||link||, ||sort||, ||hidefromvisitors||)
 ||add_page_menu
+
+update_page_menu||
+	UPDATE menus
+	SET hidefromvisitors = ||hidefromvisitors||, link = ||pageid||, text = ||text||
+	WHERE pageid = ||pageid||
+||update_page_menu
 
 my_pagelist||
     SELECT p.*
@@ -190,36 +151,42 @@ user_pagelinks||
 ||user_pagelinks
 
 default_pagelinks||
-    SELECT pl.*
-      FROM pages_links pl
-     WHERE pl.linkpageid IN (SELECT p.pageid
-                               FROM pages p
-                              WHERE p.pageid = pl.linkpageid
-                                AND siteviewable = 1)
-       AND pl.hostpageid = ||pageid||
-       AND pl.linkpageid != ||siteid||
-       AND pl.linkpageid != ||pageid||
-    ORDER BY pl.sort
+	SELECT pl.*
+	FROM pages_links pl
+	WHERE pl.linkpageid IN (SELECT p.pageid
+							FROM pages p
+							WHERE p.pageid = pl.linkpageid
+							AND siteviewable = 1)
+	AND pl.hostpageid = ||pageid||
+	AND pl.linkpageid != ||siteid||
+	AND pl.linkpageid != ||pageid||
+	ORDER BY pl.sort
 ||default_pagelinks
 
+get_page_menu||
+	SELECT *
+	FROM menus
+	WHERE pageid = ||pageid||
+||get_page_menu
+
 get_menu_for_users||
-  SELECT *
-    FROM menus
-   WHERE parent IS NULL
-  ORDER BY sort
+	SELECT *
+	FROM menus
+	WHERE parent IS NULL
+	ORDER BY sort
 ||get_menu_for_users
 
 get_menu_for_visitors||
-    SELECT *
-      FROM menus
-     WHERE hidefromvisitors = 0
-       AND parent IS NULL
-  ORDER BY sort
+	SELECT *
+	FROM menus
+	WHERE hidefromvisitors = 0
+	AND parent IS NULL
+	ORDER BY sort
 ||get_menu_for_visitors
 
 get_menu_children||
-    SELECT *
-      FROM menus
-     WHERE parent = '||menuid||'
-  ORDER BY sort
+	SELECT *
+	FROM menus
+	WHERE parent = '||menuid||'
+	ORDER BY sort
 ||get_menu_children

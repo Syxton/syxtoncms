@@ -9,17 +9,12 @@
 
 if (!LIBHEADER) { include('header.php'); }
 define('PAGELIB', true);
+define('DEFAULT_PAGEROLE', 4);
 
-//Get page info
-if (empty($PAGE)) {
-	$PAGE = new \stdClass;
-}
-$PAGE->id = isset($_GET['pageid']) ? $_GET['pageid'] : $CFG->SITEID;
-if (!is_numeric($PAGE->id)) { // Somebody could be playing with this variable.
-	$PAGE->id = $CFG->SITEID;
-}
+// Set PAGE global.
+$PAGE = set_pageid();
 
-function callfunction() {
+function callfunction($action = false) {
 global $CFG, $MYVARS;
 	if (empty($_POST["aslib"])) {
 		collect_vars(); // Place all passed variables in MYVARS global.
@@ -32,7 +27,7 @@ global $CFG, $MYVARS;
 			echo get_js_tags(["validate"]);
 			unset($MYVARS->GET["v"]);
 		}
-		$action = $MYVARS->GET["action"] ?? "[action not provided]";
+		$action = $MYVARS->GET["action"] ?? ($action ? $action : "[action not provided]");
 		if (function_exists($action)) {
 			$action();
 		} else {
@@ -46,7 +41,7 @@ global $CFG, $MYVARS;
 	//Retrieve from Javascript
 	$postorget = isset($_POST["action"]) ? $_POST : false;
 
-	$MYVARS = $MYVARS ?? new stdClass();
+	$MYVARS ??= new stdClass();
 	$MYVARS->GET = !$postorget && isset($_GET["action"]) ? $_GET : $postorget;
 	$MYVARS->GET = !$MYVARS->GET ? $_GET : $MYVARS->GET;
 }
@@ -64,11 +59,32 @@ function main_body($header_only = false) {
 	return use_template("tmp/pagelib.template", $params, "main_body_template");
 }
 
+function set_pageid($pageid = NULL) {
+global $PAGE;
+	if (empty($PAGE)) {
+		$PAGE = new \stdClass;
+	}
+
+	if (!isset($pageid)) {
+		$pageid = get_pageid();
+	}
+
+	$pageid = clean_var_opt($pageid, "int", 0);
+	if (isset($pageid) && !get_db_row(fetch_template("dbsql/pages.sql", "get_page"), ["pageid" => $pageid])) {
+		return false; // Page cannot be set.
+	}
+
+	$PAGE->id = $pageid;
+	$_SESSION["pageid"] = $pageid;
+	$_COOKIE["pageid"] = $pageid;
+	return $PAGE;
+}
+
 function get_pageid() {
 global $PAGE, $CFG, $MYVARS;
 
-	if (!empty($MYVARS->GET["pageid"]) && is_numeric($MYVARS->GET["pageid"])) {
-		return $MYVARS->GET["pageid"];
+	if (clean_myvar_opt("pageid", "int", false)) {
+		return clean_myvar_opt("pageid", "int", false);
 	}
 
 	if (!empty($_GET["pageid"]) && is_numeric($_GET["pageid"])) {
@@ -93,14 +109,15 @@ global $PAGE, $CFG, $MYVARS;
 function page_masthead($left = true, $header_only = false) {
 global $CFG, $USER, $PAGE;
 	if ($left) {
-		$pageid = get_pageid();
-		$PAGE->themeid = $PAGE->themeid ?? get_page_themeid($PAGE->id);
-		$PAGE->id = $pageid;
+		$PAGE = set_pageid();
+		$pageid = $PAGE->id;
+		$PAGE->themeid ??= get_page_themeid($pageid);
+
 		if (!$currentpage = get_db_row("SELECT * FROM pages WHERE pageid='$pageid'")) {
 			header('Location: ' . $CFG->wwwroot);
 			die();
 		}
-		$styles = get_styles($PAGE->id, $PAGE->themeid);
+		$styles = get_styles($pageid, $PAGE->themeid);
 		$header_color = $styles['pagenamebgcolor'] ?? "";
 		$header_text = $styles['pagenamefontcolor'] ?? "";
 
@@ -111,7 +128,7 @@ global $CFG, $USER, $PAGE;
 			"hasmobilelogo" => !empty($CFG->mobilelogofile),
 			"mobilelogofile" => $CFG->mobilelogofile,
 			"sitename" => $CFG->sitename,
-			"header_only" => ($header_only ? "" : get_nav_items($PAGE->id)),
+			"header_only" => ($header_only ? "" : get_nav_items($pageid)),
 			"quote" => random_quote(),
 			"pagename" => $currentpage["name"],
 			"header_text" => $header_text,
@@ -134,8 +151,8 @@ function get_editor_value_javascript($editorname = "editor1") {
 
 function get_editor_box($params = []) {
 global $CFG;
-	$params["initialvalue"] = $params["initialvalue"] ?? "";
-	$params["name"] = $params["name"] ?? "editor1";
+	$params["initialvalue"] ??= "";
+	$params["name"] ??= "editor1";
 	$params["vars"]["height"] = $params["height"] ?? "550";
 	$params["vars"]["width"] = $params["width"] ?? "95%";
 	$params["vars"]["type"] = $params["type"] ?? "HTML";
@@ -143,8 +160,7 @@ global $CFG;
 	$params["vars"]["toolbar"] = get_editor_toolbar($params["vars"]["type"]);
 	$params["vars"]["wwwroot"] = $CFG->wwwroot;
 	$params["vars"]["directory"] = get_directory();
-
-	return use_template("tmp/pagelib.template", $params, "editor_box_template");
+	return get_editor_javascript(). use_template("tmp/pagelib.template", $params, "editor_box_template");
 }
 
 function get_editor_plugins($type) {
@@ -303,33 +319,6 @@ global $CFG;
 	}
 }
 
-function move_page_feature($pageid, $featuretype, $featureid, $direction) {
-global $PAGE;
-	$PAGE->id = $pageid;
-	$current_position = get_db_field("sort", "pages_features", "pageid='$pageid' AND feature='$featuretype' AND featureid='$featureid'");
-	$area = get_db_field("area", "pages_features", "pageid='$pageid' AND feature='$featuretype' AND featureid='$featureid'");
-	if ($direction == 'up') {
-		$up_position = $current_position - 1;
-		execute_db_sql("UPDATE pages_features SET sort='$current_position' WHERE pageid='$pageid' AND area='$area' AND sort='$up_position'");
-		execute_db_sql("UPDATE pages_features SET sort='$up_position' WHERE pageid='$pageid' AND feature='$featuretype' AND featureid='$featureid'");
-	} elseif ($direction == 'down') {
-		$down_position = $current_position + 1;
-		execute_db_sql("UPDATE pages_features SET sort='$current_position' WHERE pageid='$pageid' AND area='$area' AND sort='$down_position'");
-		execute_db_sql("UPDATE pages_features SET sort='$down_position' WHERE pageid='$pageid' AND feature='$featuretype' AND featureid='$featureid'");
-	} elseif ($direction == 'middle') {
-		execute_db_sql("UPDATE pages_features SET area='middle',sort='9999' WHERE pageid='$pageid' AND feature='$featuretype' AND featureid='$featureid'");
-		resort_page_features($pageid);
-	} elseif ($direction == 'side') {
-		execute_db_sql("UPDATE pages_features SET area='side',sort='9999' WHERE pageid='$pageid' AND feature='$featuretype' AND featureid='$featureid'");
-		resort_page_features($pageid);
-	} elseif ($direction == 'locker') {
-		execute_db_sql("UPDATE pages_features SET area='locker' WHERE pageid='$pageid' AND feature='$featuretype' AND featureid='$featureid'");
-		resort_page_features($pageid);
-	}
-
-	log_entry($featuretype, $featureid, "Move Feature");
-}
-
 function resort_page_features($pageid) {
 	// Middle first.
 	$i = 1;
@@ -359,23 +348,23 @@ global $CFG;
 	$gallery_name     = $v["gallery"] ?? "";
 	$gallery          = empty($v["gallery"]) ? "" : "('*[data-rel=\'$gallery_name\']')";
 	$v["gallery"]     = empty($v["gallery"]) ? "" : ",rel:'$gallery_name',photo:'true',preloading:'true'";
-	$v["onclick"]     = $v["onclick"] ?? "";
+	$v["onclick"] ??= "";
 	$v["imagestyles"] = empty($v["imagestyles"]) ? ($v["button"] == "link" ? "" : "vertical-align: middle;") : $v["imagestyles"];
 	$v["image"]       = empty($v["image"]) ? "" : '<img alt="' . $v["title"] . '" title="' . $v["title"] . '" src="' . $v["image"] . '" style="vertical-align: middle;' . $v["imagestyles"] . '" />';
 	$v["width"]       = empty($v["width"]) ? (empty($v["gallery"]) ? "" : "") : ",width:'" . $v["width"] . "'";
 	$v["height"]      = empty($v["height"]) ? (empty($v["gallery"]) ? "" : "") : ",height:'" . $v["height"] . "'";
-	$v["path"]        = $v["path"] ?? "";
-	$v["class"]       = $v["class"] ?? "";
+	$v["path"] ??= "";
+	$v["class"] ??= "";
 	$path             = $v["path"] && $v["gallery"] ? $v["path"] : "javascript: void(0);";
 	$v["text"]        = empty($v["text"]) ? (empty($v["image"]) ? (empty($v["title"]) ? "" : $v["title"]) : $v["image"]) : (empty($v["image"]) ? $v["text"] :  $v["image"] . ' <span style="vertical-align: middle;">' . $v["text"] . "</span>");
-	$v["styles"] = $v["styles"] ?? false;
+	$v["styles"] ??= false;
 
 	$iframe      = empty($v["iframe"]) ? "" : ",fastIframe:true,iframe:true";
 	$i           = empty($v["iframe"]) ? "" : "&amp;i=!";
 
-	$v["refresh"]  = $v["refresh"] ?? false;
-	$v["runafter"] = $v["runafter"] ?? false;
-	$v["closefirst"] = $v["closefirst"] ?? false;
+	$v["refresh"] ??= false;
+	$v["runafter"] ??= false;
+	$v["closefirst"] ??= false;
 
 	$modal = $onOpen = $onComplete = $valid = '';
 
@@ -501,136 +490,132 @@ function is_visitor_allowed_page($pageid) {
 
 function all_features_function($SQL = false, $feature = false, $pre = "", $post = "", $count = false, $var1 = "#false#", $var2 = "#false#", $var3 = "#false#", $var4 = "#false#", $type_in_name = true) {
 global $CFG;
-  $returnme = $count ? 0 : "";
-  $t1       = $t2 = $t3 = $t4 = false;
+	$returnme = $count ? 0 : "";
+	$t1 = $t2 = $t3 = $t4 = false;
 
-  if ($SQL !== false) {
-	if ($features = get_db_result($SQL)) {
-		while ($row = fetch_row($features)) {
-		//prepare variables
-		if ($var1 !== "#false#") {
-			$t1 = strstr($var1, '#->') ? str_replace("#->", "", $var1) : $t1;
-			if ($t1) {
-				$var1 = $row[$t1];
-			}
-		}
-		if ($var2 !== "#false#") {
-			$t2 = strstr($var2, '#->') ? str_replace("#->", "", $var2) : $t2;
-			if ($t2) {
-				$var2 = $row[$t2];
-			}
-		}
-		if ($var3 !== "#false#") {
-			$t3 = strstr($var3, '#->') ? str_replace("#->", "", $var3) : $t3;
-			if ($t3) {
-				$var3 = $row[$t3];
-			}
-		}
-		if ($var4 !== "#false#") {
-			$t4 = strstr($var4, '#->') ? str_replace("#->", "", $var4) : $t4;
-			if ($t4) {
-				$var4 = $row[$t4];
-			}
-		}
+	if ($SQL !== false) {
+		if ($features = get_db_result($SQL)) {
+			while ($row = fetch_row($features)) {
+				//prepare variables
+				if ($var1 !== "#false#") {
+					$t1 = strstr($var1, '#->') ? str_replace("#->", "", $var1) : $t1;
+					if ($t1) {
+						$var1 = $row[$t1];
+					}
+				}
+				if ($var2 !== "#false#") {
+					$t2 = strstr($var2, '#->') ? str_replace("#->", "", $var2) : $t2;
+					if ($t2) {
+						$var2 = $row[$t2];
+					}
+				}
+				if ($var3 !== "#false#") {
+					$t3 = strstr($var3, '#->') ? str_replace("#->", "", $var3) : $t3;
+					if ($t3) {
+						$var3 = $row[$t3];
+					}
+				}
+				if ($var4 !== "#false#") {
+					$t4 = strstr($var4, '#->') ? str_replace("#->", "", $var4) : $t4;
+					if ($t4) {
+						$var4 = $row[$t4];
+					}
+				}
 
-		$featuretype = $row['feature'];
-		$featurelib  = $featuretype . "lib.php";
-		$libname     = strtoupper($featuretype . "lib");
-		if (!defined($libname)) {
-			if ($featuretype == "pagelist") {
+				$featuretype = $row['feature'];
+				$featurelib  = $featuretype . "lib.php";
+				$libname     = strtoupper($featuretype . "lib");
+				if (!defined($libname)) {
+					if ($featuretype == "pagelist") {
+						if (file_exists($CFG->dirroot . "/lib/" . $featurelib)) {
+							include_once($CFG->dirroot . "/lib/" . $featurelib);
+						}
+					} else {
+						if (file_exists($CFG->dirroot . "/features/$featuretype/" . $featurelib)) {
+							include_once($CFG->dirroot . "/features/$featuretype/" . $featurelib);
+						}
+					}
+				}
+
+				$action = $type_in_name ? $pre . $featuretype . $post : $pre . $post;
+
+				if (function_exists($action)) {
+					if ($var4 !== "#false#") {
+						if ($count) {
+							$returnme += $action($var1, $var2, $var3, $var4);
+						} else {
+							$returnme .= $action($var1, $var2, $var3, $var4);
+						}
+					} elseif ($var3 !== "#false#") {
+						if ($count) {
+							$returnme += $action($var1, $var2, $var3);
+						} else {
+							$returnme .= $action($var1, $var2, $var3);
+						}
+					} elseif ($var2 !== "#false#") {
+						if ($count) {
+							$returnme += $action($var1, $var2);
+						} else {
+							$returnme .= $action($var1, $var2);
+						}
+					} elseif ($var1 !== "#false#") {
+						if ($count) {
+							$returnme += $action($var1);
+						} else {
+							$returnme .= $action($var1);
+						}
+					} else {
+						if ($count) {
+							$returnme += $action();
+						} else {
+							$returnme .= $action();
+						}
+					}
+				}
+			}
+		}
+	} elseif ($feature !== false) {
+		$featurelib = $feature . "lib.php";
+		$libname = strtoupper($feature . "lib");
+		if ($feature == "pagelist") {
+			if (!defined($libname)) {
 				if (file_exists($CFG->dirroot . "/lib/" . $featurelib)) {
-						include_once($CFG->dirroot . "/lib/" . $featurelib);
+					include_once($CFG->dirroot . "/lib/" . $featurelib);
 				}
-			} else {
-				if (file_exists($CFG->dirroot . "/features/$featuretype/" . $featurelib)) {
-					include_once($CFG->dirroot . "/features/$featuretype/" . $featurelib);
+			}
+		} else {
+			if (!defined($libname)) {
+				if (file_exists($CFG->dirroot . "/features/$feature/" . $featurelib)) {
+					include_once($CFG->dirroot . "/features/$feature/" . $featurelib);
 				}
 			}
 		}
 
-		$action = $type_in_name ? $pre . $featuretype . $post : $pre . $post;
-
+		$action = $type_in_name ? $pre . $feature . $post : $pre . $post;
 		if (function_exists($action)) {
 			if ($var4 !== "#false#") {
-			if ($count) {
-				$returnme += $action($var1, $var2, $var3, $var4);
-			} else {
-				$returnme .= $action($var1, $var2, $var3, $var4);
-			}
+				$returnme = $action($var1, $var2, $var3, $var4);
 			} elseif ($var3 !== "#false#") {
-			if ($count) {
-				$returnme += $action($var1, $var2, $var3);
-			} else {
-				$returnme .= $action($var1, $var2, $var3);
-			}
+				$returnme = $action($var1, $var2, $var3);
 			} elseif ($var2 !== "#false#") {
-			if ($count) {
-				$returnme += $action($var1, $var2);
-			} else {
-				$returnme .= $action($var1, $var2);
-			}
+				$returnme = $action($var1, $var2);
 			} elseif ($var1 !== "#false#") {
-			if ($count) {
-				$returnme += $action($var1);
-			} else {
 				$returnme .= $action($var1);
-			}
 			} else {
-			if ($count) {
-				$returnme += $action();
-			} else {
-				$returnme .= $action();
-			}
-			}
-		}
-		}
-	}
-  } elseif ($feature !== false) {
-	$featurelib = $feature . "lib.php";
-	$libname    = strtoupper($feature . "lib");
-	if ($feature == "pagelist") {
-		if (!defined($libname)) {
-			if (file_exists($CFG->dirroot . "/lib/" . $featurelib)) {
-				include_once($CFG->dirroot . "/lib/" . $featurelib);
-			}
-		}
-	} else {
-		if (!defined($libname)) {
-			if (file_exists($CFG->dirroot . "/features/$feature/" . $featurelib)) {
-				include_once($CFG->dirroot . "/features/$feature/" . $featurelib);
+				$returnme = $action();
 			}
 		}
 	}
-
-	$action = $type_in_name ? $pre . $feature . $post : $pre . $post;
-	if (function_exists($action)) {
-		if ($var4 !== "#false#") {
-		$returnme = $action($var1, $var2, $var3, $var4);
-		} elseif ($var3 !== "#false#") {
-		$returnme = $action($var1, $var2, $var3);
-		} elseif ($var2 !== "#false#") {
-		$returnme = $action($var1, $var2);
-		} elseif ($var1 !== "#false#") {
-		$returnme .= $action($var1);
-		} else {
-		$returnme = $action();
-		}
-	}
-  }
-  return $returnme;
+	return $returnme;
 }
 
-function get_user_alerts($userid, $returncount = true, $internal = true) {
+function get_user_alerts($userid, $returncount = true) {
 	$returnme = all_features_function("SELECT * FROM features", false, "get_", "_alerts", $returncount, $userid, $returncount);
 	if (!$returncount) {
 		$returnme = $returnme == "" ? use_template("tmp/pagelib.template", [], "get_user_alerts_template") : $returnme;
 	}
 
-	if ($internal) {
-		return $returnme;
-	} else {
-		echo $returnme;
-	}
+	return $returnme;
 }
 
 function print_logout_button($fname, $lname, $pageid = false) {
@@ -961,42 +946,57 @@ function sort_object($object, $value, $sorttype = SORT_REGULAR) {
 	return $newobject;
 }
 
-function create_new_page($page) {
-	global $CFG, $USER, $ROLES, $PAGE;
-	$SQL = use_template("dbsql/pages.sql", ["page" => $page, "short_name" => strtolower(str_replace(" ", "", $page->name))], "create_page");
-	$pageid = execute_db_sql($SQL);
+function create_page_shortname($var) {
+	return substr(strtolower(preg_replace("/\W|_/", '', $var)), 0, 20);
+}
 
-	if ($pageid) {
-		$SQL = use_template("dbsql/roles.sql", ["userid" => $USER->userid, "roleid" => $ROLES->creator, "pageid" => $pageid], "insert_role_assignment");
-		$role_assignment = execute_db_sql($SQL);
-
-		if ($newpage->menu_page == 1) {
-			$sort = get_db_field("sort", "menus", "id > 0 ORDER BY sort DESC");
-			$sort++;
-			$SQL = use_template("dbsql/pages.sql", ["pageid" => $pageid, "text" => $page->name, "link" => $pageid, "sort" => $sort, "hidefromvisitors" => $page->hidefromvisitors], "add_page_menu");
-			execute_db_sql($SQL);
-		}
-
-		if ($pageid && $role_assignment) {
-			if (empty($PAGE)) {
-				$PAGE = new \stdClass;
-			}
-			$PAGE->id = $pageid;
-			// Log
-			log_entry("page", $pageid, "Page Created");
-			return json_encode(["true", $pageid, "Course Created"]);
-		} else {
-			if ($pageid) {
-				delete_page($pageid);
-			}
-		}
+function modify_menu_page($params) {
+	if (!isset($params["text"]) && isset($params["name"])) {
+		$params["text"] = $params["name"];
 	}
-	return json_encode(["false", $CFG->SITEID, error_string("page_not_created")]);
+	if (get_db_row(fetch_template("dbsql/pages.sql", "get_page_menu"), $params)) {
+		return execute_db_sql(fetch_template("dbsql/pages.sql", "update_page_menu"), $params);
+	} else { // Make new menu item.
+		$params["sort"] = get_db_field("sort", "menus", "id > 0 ORDER BY sort DESC") + 1;
+		return execute_db_sql(fetch_template("dbsql/pages.sql", "add_page_menu"), $params);
+	}
 }
 
 function delete_page($pageid) {
-  $SQL = use_template("dbsql/pages.sql", ["pageid" => $pageid], "delete_page");
-  execute_db_sqls($SQL);
+	$pageid = clean_var_req($pageid, "int");
+	$templates = [];
+	$templates[] = [
+		"file" => "dbsql/pages.sql",
+		"subsection" => [
+			"delete_page",
+			"delete_page_menus",
+			"delete_page_settings",
+		],
+	];
+	$templates[] = [
+		"file" => "dbsql/roles.sql",
+		"subsection" => [
+			"remove_page_role_assignments",
+			"remove_page_roles_ability_perpage",
+			"remove_page_roles_ability_peruser",
+			"remove_page_roles_ability_perfeature",
+			"remove_page_roles_ability_pergroup",
+			"remove_page_roles_ability_perfeature_peruser",
+			"remove_page_roles_ability_perfeature_pergroup",
+		],
+	];
+	$templates[] = ["file" => "dbsql/features.sql", "subsection" => "delete_page_features"];
+	$templates[] = ["file" => "dbsql/styles.sql", "subsection" => "delete_page_styles"];
+
+	try {
+		start_db_transaction();
+		execute_db_sqls(fetch_template_set($templates), ["pageid" => $pageid]);
+		commit_db_transaction();
+	} catch (\Throwable $e) {
+		rollback_db_transaction($e->getMessage());
+		return false;
+	}
+	return true;
 }
 
 function subscribe_to_page($pageid, $userid = false, $addorremove = false) {
@@ -1009,7 +1009,7 @@ global $USER;
 	} else {
 		$SQL = use_template("dbsql/roles.sql", ["userid" => $userid, "pageid" => $pageid], "check_for_role_assignment");
 		if (get_db_count($SQL)) { //role already exists
-			$SQL = use_template("dbsql/roles.sql", ["userid" => $userid, "pageid" => $pageid], "remove_role_assignment");
+			$SQL = use_template("dbsql/roles.sql", ["userid" => $userid, "pageid" => $pageid], "remove_user_role_assignment");
 			$role_assignment = execute_db_sql($SQL);
 		} else {
 			$SQL = use_template("dbsql/roles.sql", ["userid" => $user, "roleid" => $defaultrole, "pageid" => $pageid], "insert_role_assignment");
@@ -1028,10 +1028,8 @@ global $CFG, $PAGE;
 	$returnme = '';
 
 	if (!$pageid) {
-		$pageid   = $CFG->SITEID;
-		$PAGE->id = $pageid;
-		} else {
-	$PAGE->id = $pageid;
+		$PAGE = set_pageid();
+		$pageid = $PAGE->pageid;
 	}
 
 	if ($area == "side") { // ADD pagelist to top of right side
@@ -1067,7 +1065,7 @@ global $CFG;
 
 	$forgotpasswordlink = make_modal_links([
 							"title" => "Forgot password?",
-							"path" => $CFG->wwwroot . "/pages/user.php?action=forgot_password",
+							"path" => $CFG->wwwroot . "/pages/user.php?action=forgot_password_form",
 							"width" => "500",
 						]);
 
@@ -1088,23 +1086,20 @@ global $CFG;
 
 function add_page_feature($pageid, $featuretype) {
 global $PAGE;
-	if (empty($PAGE)) {
-		$PAGE = new \stdClass;
-	}
-	$PAGE->id = $pageid;
-	$default_area = get_db_field("default_area", "features", "feature='$featuretype'");
-	$sort = get_db_count("SELECT * FROM pages_features WHERE pageid = '$pageid' AND area = '$default_area'") + 1;
+	if (set_pageid($pageid)) {
+		// Add feature
+		$default_area = get_db_field("default_area", "features", "feature='$featuretype'");
+		$sort = get_db_count("SELECT * FROM pages_features WHERE pageid = '$pageid' AND area = '$default_area'") + 1;
 
-	if (get_db_row("SELECT * FROM features WHERE feature='$featuretype' AND multiples_allowed = '1'")) {
-		$featureid = all_features_function(false, $featuretype, "insert_blank_", "", false, $pageid);
-	} else {
-		echo "INSERT INTO pages_features (pageid, feature, sort, area, featureid) VALUES('$pageid','$featuretype','$sort','$default_area', '')";
-		$featureid = execute_db_sql("INSERT INTO pages_features (pageid, feature, sort, area) VALUES('$pageid','$featuretype','$sort','$default_area')");
-		execute_db_sql("UPDATE pages_features SET featureid='$featureid' WHERE id='$featureid'");
-	}
+		if (get_db_row("SELECT * FROM features WHERE feature='$featuretype' AND multiples_allowed = '1'")) {
+			$featureid = all_features_function(false, $featuretype, "insert_blank_", "", false, $pageid);
+		} else {
+			$featureid = execute_db_sql("INSERT INTO pages_features (pageid, feature, sort, area) VALUES('$pageid','$featuretype','$sort','$default_area')");
+			execute_db_sql("UPDATE pages_features SET featureid='$featureid' WHERE id='$featureid'");
+		}
 
-	// Log
-	log_entry($featuretype, $featureid, "Added Feature");
+		log_entry($featuretype, $featureid, "Added Feature");
+	}
 }
 
 function get_edit_buttons($pageid, $featuretype, $featureid = false) {
@@ -1126,7 +1121,7 @@ global $CFG, $USER;
 		if ($is_feature_menu) {
 			//Move block buttons
 			if (user_is_able($USER->userid, "movefeatures", $pageid, $featuretype, $featureid)) {
-				$returnme .= ' <a class="slide_menu_button pagesorthandle" href="javascript: void(0);" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'move_feature\',\'&amp;pageid=' . $pageid . '&amp;featuretype=' . $featuretype . '&amp;featureid=' . $featureid . '&amp;direction=drag\',function() { update_login_contents(' . $pageid . ');});"><img title="Move feature" src="' . $CFG->wwwroot . '/images/move.png" alt="Move feature" /></a> ';
+				$returnme .= ' <a class="slide_menu_button pagesorthandle" href="javascript: void(0);" title="Move feature"><img title="Move feature" src="' . $CFG->wwwroot . '/images/move.png" alt="Move feature" /></a> ';
 			}
 
 			//Role and Abilities Manger button
@@ -1272,6 +1267,44 @@ function format_popup(string $content = "", string $title = "", string $height =
 }
 
 /**
+ * Move a feature in a specific area of a page
+ *
+ * @param array $params Parameters to pass to the function
+ * @param string $params["column"] Array of feature IDs with their current column and row information
+ * @param string $params["pageid"] The ID of the page to move the feature to
+ * @param string $params["area"] The area to move the feature to
+ *
+ * @throws Exception If there is an issue with the feature data or the database query
+ */
+function move_features($params) {
+	$i = 1;
+	foreach ($params["column"] as $featureinfo) {
+		$feature = explode("_", $featureinfo);
+		$featuretype = $feature[0] ?? false;
+		$featureid = $feature[1] ?? false;
+
+		if (!$featuretype || !$featureid) {
+			throw new Exception("Invalid feature data passed to move_features");
+		}
+
+		$SQL = fetch_template("dbsql/features.sql", "get_feature");
+		$current = get_db_row($SQL, ["pageid" => $params["pageid"], "feature" => $featuretype, "featureid" => $featureid]);
+
+		if (!$current) {
+			throw new Exception("Cannot get_feature during move");
+		}
+
+		$SQL = fetch_template("dbsql/features.sql", "update_feature_sort");
+		execute_db_sql($SQL, [
+			"id" => $current["id"],
+			"sort" => $i,
+			"area" => $params["area"],
+		]);
+		$i++;
+	}
+}
+
+/**
  * Include a hidden iframe to keep the session alive
  *
  * @return string The HTML for the hidden iframe
@@ -1285,7 +1318,7 @@ global $CFG;
 	return use_template("tmp/pagelib.template", $params, "keepalive_template");
 }
 
-function donothing() {
+function emptyreturn() {
 	echo "";
 }
 
@@ -1307,4 +1340,11 @@ function fill_string(string $string, array $vars) {
 	/* Return the modified string. */
 	return $string;
 }
+
+function preg_grep_keys($pattern, $input, $flags = 0) {
+    return array_filter($input, function($key) use ($pattern, $flags) {
+           return preg_match($pattern, $key, $flags);
+    }, ARRAY_FILTER_USE_KEY);
+}
+
 ?>

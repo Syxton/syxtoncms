@@ -22,23 +22,21 @@ update_user_cookie();
 callfunction();
 
 function get_forum_categories_ajax() {
-global $CFG, $MYVARS;
-	$forumid = $MYVARS->GET["forumid"];
+	$forumid = clean_myvar_req("forumid", "int");
 	echo get_forum_categories($forumid);	
 }
 
 function get_shoutbox_ajax() {
-global $CFG, $MYVARS;
-	$forumid = $MYVARS->GET["forumid"];
+	$forumid = clean_myvar_req("forumid", "int");
 	echo get_shoutbox($forumid);	
 }
 
 function get_forum_discussions() {
-global $CFG, $MYVARS, $USER;
-	$catid = $MYVARS->GET["catid"];
-    $forumid = $MYVARS->GET["forumid"];
-	$pageid = $MYVARS->GET["pageid"];
-	$dpagenum = $MYVARS->GET["dpagenum"] ?? 0;
+global $CFG, $USER;
+	$catid = clean_myvar_req("catid", "int");
+    $forumid = clean_myvar_req("forumid", "int");
+	$pageid = clean_myvar_req("pageid", "int");
+	$dpagenum = clean_myvar_opt("dpagenum", "string", 0);
 
     if ($dpagenum !== "last" && !is_numeric($dpagenum)) {
         $dpagenum = 0;
@@ -51,24 +49,24 @@ global $CFG, $MYVARS, $USER;
 	
 	$content = "";
 	date_default_timezone_set(date_default_timezone_get());
-	$category = get_db_row("SELECT * FROM forum_categories WHERE catid = '$catid'");
-	$discussioncount = get_db_count("SELECT * FROM forum_discussions WHERE catid ='$catid' AND shoutbox = 0 AND bulletin = 0");
+	$category = get_db_row("SELECT * FROM forum_categories WHERE catid = ||catid||", ["catid" => $catid]);
+	$discussioncount = get_db_count("SELECT * FROM forum_discussions WHERE catid = ||catid|| AND shoutbox = 0 AND bulletin = 0", ["catid" => $catid]);
 	$dpagenum = $dpagenum == "last" ? (ceil($discussioncount / $CFG->forum->discussionsperpage) - 1) : $dpagenum;
 	$limit = $settings->forum->$forumid->discussionsperpage->setting * $dpagenum;
 	
     $SQL = "SELECT *
 			FROM forum_discussions
-			WHERE catid = '$catid'
+			WHERE catid = ||catid||
 			AND bulletin = 0
 			AND shoutbox = 0
 			ORDER BY lastpost DESC
 			LIMIT $limit," . $settings->forum->$forumid->discussionsperpage->setting;
 
-    while ($dpagenum >= 0 && !$discussions = get_db_result($SQL)) { // Pagenum problem...aka deleted last post on page...go to previous page.
+    while ($dpagenum >= 0 && !$discussions = get_db_result($SQL, ["catid" => $catid])) { // Pagenum problem...aka deleted last post on page...go to previous page.
 		$limit = $settings->forum->$forumid->discussionsperpage->setting * $dpagenum;
 		$SQL = "SELECT *
 				FROM forum_discussions
-				WHERE catid = '$catid'
+				WHERE catid = ||catid||
 				AND bulletin = 0
 				AND shoutbox = 0
 				ORDER BY lastpost DESC
@@ -105,29 +103,44 @@ global $CFG, $MYVARS, $USER;
 			"button" => "button",
 			"title" => "New Discussion",
 			"text" => '<img src="' . $CFG->wwwroot . '/images/discussion.gif" alt=""> New Discussion',
-			"path" => action_path("forum") . "create_discussion_form&amp;pageid=$pageid&amp;forumid=$forumid&amp;catid=$catid",
+			"path" => action_path("forum") . "create_discussion_form&pageid=$pageid&forumid=$forumid&catid=$catid",
 			"width" => "750",
 			"height" => "600",
 			"iframe" => true,
 			"runafter" => "forum_refresh_$forumid",
 		];
-        $returnme .= '  <div class="forum_newbutton">
-                            ' . make_modal_links($discussionlinkparam) . '
-                        </div>';
+        $returnme .= '<div class="forum_newbutton">
+						' . make_modal_links($discussionlinkparam) . '
+                    </div>';
     }
 	$returnme .= get_discussion_pages($forumid, $category, $dpagenum);
 	
     // GET BULLETIN BOARDS
-	$SQL = "SELECT * FROM forum_discussions WHERE catid = '$catid' AND bulletin = 1 AND shoutbox = 0 ORDER BY title";
-	if ($bulletins = get_db_result($SQL)) {
-		if ($bulletins != false) { $returnme .= '<table class="forum_discussions"><tr><td class="forum_headers"><b>Bulletins</b></td><td class="forum_headers" style="width:50px;">Replies</td><td class="forum_headers" style="width:50px;">Views</td><td  class="forum_headers" style="width:150px;">Last Posted</td></tr>';}
+	$SQL = "SELECT * FROM forum_discussions WHERE catid = ||catid|| AND bulletin = 1 AND shoutbox = 0 ORDER BY title";
+	if ($bulletins = get_db_result($SQL, ["catid" => $catid])) {
+		if ($bulletins) {
+			$returnme .= '<table class="forum_discussions">
+							<tr>
+								<td class="forum_headers">
+									<b>Bulletins</b>
+								</td>
+								<td class="forum_headers" style="width:50px;">
+									Replies
+								</td>
+								<td class="forum_headers" style="width:50px;">
+									Views
+								</td>
+								<td  class="forum_headers" style="width:150px;">
+									Last Posted
+								</td>
+							</tr>';}
 		while ($bulletin = fetch_row($bulletins)) {
-			$posts_count = get_db_count("SELECT * FROM forum_posts WHERE discussionid=" . $bulletin["discussionid"]) - 1;
-			$lastpost = get_db_row("SELECT * FROM forum_posts WHERE discussionid=" . $bulletin["discussionid"] . " ORDER BY posted DESC LIMIT 1");
+			$posts_count = get_db_count("SELECT * FROM forum_posts WHERE discussionid = ||discussionid||", ["discussionid" => $bulletin["discussionid"]]) - 1;
+			$lastpost = get_db_row("SELECT * FROM forum_posts WHERE discussionid = ||discussionid|| ORDER BY posted DESC LIMIT 1", ["discussionid" => $bulletin["discussionid"]]);
 			$notviewed = true;
 			// Find if new posts are available
 			if (is_logged_in()) {
-				if (!$lastviewed = get_db_field("lastviewed", "forum_views", "discussionid=" . $bulletin["discussionid"] . " ORDER BY lastviewed DESC")) { $lastviewed = 0;}
+				if (!$lastviewed = get_db_field("lastviewed", "forum_views", "discussionid = ||discussionid|| ORDER BY lastviewed DESC", ["discussionid" => $bulletin["discussionid"]])) { $lastviewed = 0;}
 				$notviewed =  $lastpost["posted"] > $lastviewed ? true : false;
 			}
 			$viewclass = $notviewed ? 'forum_bulletin' : 'forum_bulletin_viewed';
@@ -146,21 +159,67 @@ global $CFG, $MYVARS, $USER;
                                                                 simple_display(\'forum_div_' . $forumid . '\');
                                                             }
                                                         }, true);">
-                                    ' . stripslashes($bulletin["title"]) . '
+                                    ' . $bulletin["title"] . '
                                     </a>
                                     <br />
                                     ' . get_post_pages($forumid, $bulletin, false, 3, false) . '
                                 </span>';
 
-			$content .= '<span style="position:relative;float:right;">';
-			
+			$content .= '		<span style="position:relative;float:right;">';
+
             // UNPIN BULLETIN
-			if ($bulletinability) { $content .= '<a class="forum_inline_buttons" alt="Undesignate as Bulletin" title="Undesignate as Bulletin" href="javascript: if (confirm(\'Are you sure you wish to unpin this bulletin?\')) { ajaxapi(\'/features/forum/forum_ajax.php\',\'unpin_bulletin\',\'&dpagenum=' . $dpagenum . '&pageid=' . $pageid . '&forumid=' . $forumid . '&catid=' . $catid . '&discussionid=' . $bulletin['discussionid'] . '\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_' . $forumid . '\'); }}, true);}"><img src="' . $CFG->wwwroot . '/images/unpin.png" /></a>';}
-			
+			if ($bulletinability) {
+				$content .= '<a class="forum_inline_buttons" alt="Undesignate as Bulletin" title="Undesignate as Bulletin" href="javascript: void(0);"
+								onclick="if (confirm(\'Are you sure you wish to unpin this bulletin?\')) {
+											ajaxapi(\'/features/forum/forum_ajax.php\',
+													\'unpin_bulletin\',
+													\'&dpagenum=' . $dpagenum . '&pageid=' . $pageid . '&forumid=' . $forumid . '&catid=' . $catid . '&discussionid=' . $bulletin['discussionid'] . '\',
+													function() {
+														if (xmlHttp.readyState == 4) {
+															simple_display(\'forum_div_' . $forumid . '\');
+														}
+													},
+													true);
+										}">
+								<img src="' . $CFG->wwwroot . '/images/unpin.png" />
+							</a>';
+			}
+
             // LOCK/UNLOCK BULLETIN
-			if ($lockability && $bulletin["locked"] == 1) { $content .= '<a class="forum_inline_buttons" alt="Unlock Bulletin" title="Unlock Bulletin" href="javascript: if (confirm(\'Are you sure you wish to unlock this bulletin?\')) { ajaxapi(\'/features/forum/forum_ajax.php\',\'unlock_discussion\',\'&dpagenum=' . $dpagenum . '&pageid=' . $pageid . '&forumid=' . $forumid . '&catid=' . $catid . '&discussionid=' . $bulletin['discussionid'] . '\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_' . $forumid . '\'); }}, true);}"><img src="' . $CFG->wwwroot . '/images/unlock.png" /></a>';}
-			if ($lockability && $bulletin["locked"] == 0) { $content .= '<a class="forum_inline_buttons" alt="Lock Bulletin" title="Lock Bulletin" href="javascript: if (confirm(\'Are you sure you wish to lock this bulletin?\')) { ajaxapi(\'/features/forum/forum_ajax.php\',\'lock_discussion\',\'&dpagenum=' . $dpagenum . '&pageid=' . $pageid . '&forumid=' . $forumid . '&catid=' . $catid . '&discussionid=' . $bulletin['discussionid'] . '\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_' . $forumid . '\'); }}, true);}"><img src="' . $CFG->wwwroot . '/images/lock.png" /></a>';}
-			
+			if ($lockability && $bulletin["locked"] == 1) {
+				$content .= '<a class="forum_inline_buttons" alt="Unlock Bulletin" title="Unlock Bulletin" href="javascript: void(0);"
+								onclick="if (confirm(\'Are you sure you wish to unlock this bulletin?\')) {
+											ajaxapi(\'/features/forum/forum_ajax.php\',
+													\'unlock_discussion\',
+													\'&dpagenum=' . $dpagenum . '&pageid=' . $pageid . '&forumid=' . $forumid . '&catid=' . $catid . '&discussionid=' . $bulletin['discussionid'] . '\',
+													function() {
+														if (xmlHttp.readyState == 4) {
+															simple_display(\'forum_div_' . $forumid . '\');
+														}
+													},
+													true);
+										}">
+								<img src="' . $CFG->wwwroot . '/images/unlock.png" />
+							</a>';
+			}
+
+			if ($lockability && $bulletin["locked"] == 0) {
+				$content .= '<a class="forum_inline_buttons" alt="Lock Bulletin" title="Lock Bulletin" href="javascript: void(0);"
+								onclick="if (confirm(\'Are you sure you wish to lock this bulletin?\')) {
+											ajaxapi(\'/features/forum/forum_ajax.php\',
+													\'lock_discussion\',
+													\'&dpagenum=' . $dpagenum . '&pageid=' . $pageid . '&forumid=' . $forumid . '&catid=' . $catid . '&discussionid=' . $bulletin['discussionid'] . '\',
+													function() {
+														if (xmlHttp.readyState == 4) {
+															simple_display(\'forum_div_' . $forumid . '\');
+														}
+													},
+													true);
+										}">
+								<img src="' . $CFG->wwwroot . '/images/lock.png" />
+							</a>';
+			}
+
             // DELETE BULLETIN		
 			if ($deleteability) {
 				$content .= '<a class="forum_inline_buttons" alt="Delete Bulletin" title="Delete Bulletin" href="javascript: void(0)"
@@ -193,16 +252,26 @@ global $CFG, $MYVARS, $USER;
 				];
 				$content .= make_modal_links($editlinkparams);
 			}
-			$content .= '</span></td>
-						<td class="forum_col2">' . $posts_count . '</td>
-						<td class="forum_col3">' . $bulletin["views"] . '</td>
-						<td class="forum_col2" style="font-size:1em;">' . date("M j, Y, g:i a", $lastpost["posted"]) . "<br />" . get_user_name($lastpost["ownerid"]) . '</td>
-						</tr>';
+			$content .= '</span>
+					</td>
+					<td class="forum_col2">
+						' . $posts_count . '
+					</td>
+					<td class="forum_col3">
+						' . $bulletin["views"] . '
+					</td>
+					<td class="forum_col2" style="font-size:1em;">
+						' . date("M j, Y, g:i a", $lastpost["posted"]) . '
+						<br />
+						' . get_user_name($lastpost["userid"]) . '
+					</td>
+				</tr>';
 		}
-		if ($bulletins != false) { $returnme .= $content . "</table>"; }
+
+		if ($bulletins) { $returnme .= $content . "</table>"; }
 	}
-    
-	//GET REGULAR DISCUSSIONS
+
+	// GET REGULAR DISCUSSIONS
 	$content = "";
 	$returnme .= '<table class="forum_discussions">
                     <tr>
@@ -222,8 +291,8 @@ global $CFG, $MYVARS, $USER;
 
 	if ($discussions) {
 		while ($discussion = fetch_row($discussions)) {
-			$posts_count = get_db_count("SELECT * FROM forum_posts WHERE discussionid = '" . $discussion["discussionid"] . "'");
-			$lastpost = get_db_row("SELECT * FROM forum_posts WHERE discussionid = '" . $discussion["discussionid"] . "' ORDER BY posted DESC LIMIT 1");
+			$posts_count = get_db_count("SELECT * FROM forum_posts WHERE discussionid = ||discussionid||", ["discussionid" => $discussion["discussionid"]]);
+			$lastpost = get_db_row("SELECT * FROM forum_posts WHERE discussionid = ||discussionid|| ORDER BY posted DESC LIMIT 1", ["discussionid" => $discussion["discussionid"]]);
 			$notviewed = true;
             $viewclass = $notviewed ? 'forum_col1' : 'forum_col1_viewed';
             $lastviewed = 0;
@@ -241,12 +310,12 @@ global $CFG, $MYVARS, $USER;
                 $content .= '<tr>
                                 <td class="' . $viewclass . '">
                                     <span style="position:relative;float:left;max-width:95%;">
-                                        <a class="forum_inline_buttons" href="javascript: void(0);" onclick="save_action($(this), $(\'#forum_refresh_' . $forumid . '\')); ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_posts\',\'&discussionid=' . $discussion['discussionid'] . '&pagenum=0&catid=' . $catid . '&forumid=' . $forumid . '&pageid=' . $discussion["pageid"] . '\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_' . $forumid . '\'); }}, true); " >' . $lock.stripslashes($discussion["title"]) . '
+                                        <a class="forum_inline_buttons" href="javascript: void(0);" onclick="save_action($(this), $(\'#forum_refresh_' . $forumid . '\')); ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_posts\',\'&discussionid=' . $discussion['discussionid'] . '&pagenum=0&catid=' . $catid . '&forumid=' . $forumid . '&pageid=' . $discussion["pageid"] . '\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_' . $forumid . '\'); }}, true); " >' . $lock . $discussion["title"] . '
                                         </a>
                                         <br />
                                         ' . get_post_pages($forumid, $discussion, false, 3, false) . '
                                     </span>';
-                $editability = $editability || $USER->userid == $discussion["ownerid"] ? true : false;
+                $editability = $editability || $USER->userid == $discussion["userid"] ? true : false;
                 $content .= '<span style="position:relative;float:right;">';
                 
                 // PIN DISCUSSION
@@ -277,14 +346,14 @@ global $CFG, $MYVARS, $USER;
                 $content .= '</span></td>
                 <td class="forum_col2">' . $posts_count - 1 . '</td>
                 <td class="forum_col3">' . $discussion["views"] . '</td>
-                <td class="forum_col2" style="font-size:1em;">' . date("M j, Y, g:i a", $lastpost["posted"]) . "<br />" . get_user_name($lastpost["ownerid"]) . '</td>
+                <td class="forum_col2" style="font-size:1em;">' . date("M j, Y, g:i a", $lastpost["posted"]) . "<br />" . get_user_name($lastpost["userid"]) . '</td>
                 </tr>';
             } else {
                 $content .= '<tr>
                                 <td class="' . $viewclass . '">
                                     <span style="position:relative;float:left;max-width:95%;">
                                         <a href="javascript: void(0);" onclick="save_action($(this), $(\'#forum_refresh_' . $forumid . '\')); ajaxapi(\'/features/forum/forum_ajax.php\',\'get_forum_posts\',\'&discussionid=' . $discussion['discussionid'] . '&pagenum=0&catid=' . $catid . '&forumid=' . $forumid . '&pageid=' . $discussion["pageid"] . '\',function() {if (xmlHttp.readyState == 4) { simple_display(\'forum_div_' . $forumid . '\'); }}, true); " >
-                                        ' . $lock.stripslashes($discussion["title"]) . '
+                                        ' . $lock . $discussion["title"] . '
                                         </a>
                                         <br />
                                         ' . get_post_pages($forumid, $discussion, false, 3, false) . '
@@ -303,12 +372,12 @@ global $CFG, $MYVARS, $USER;
 }
 
 function get_forum_posts() {
-global $CFG, $MYVARS, $USER;
-    $pagenum = $MYVARS->GET["pagenum"] ?? 0;
-	$pageid = $MYVARS->GET["pageid"]; 
-    $forumid = $MYVARS->GET["forumid"];
-	$catid = $MYVARS->GET["catid"];
-    $discussionid = $MYVARS->GET["discussionid"];
+global $CFG, $USER;
+	$catid = clean_myvar_req("catid", "int");
+	$forumid = clean_myvar_req("forumid", "int");
+	$pageid = clean_myvar_req("pageid", "int");
+	$discussionid = clean_myvar_req("discussionid", "int");
+	$pagenum = clean_myvar_opt("pagenum", "string", 0);
 
 	if (is_logged_in()) {
         update_user_views($catid, $discussionid, $USER->userid);
@@ -405,11 +474,11 @@ global $CFG, $MYVARS, $USER;
     if ($posts) {
         while ($post = fetch_row($posts)) {
             $content .= '<tr>
-                            <td class="forum_author">' . get_user_name($post["ownerid"]) . '<br />
-                                Posts: ' . get_db_count("SELECT * FROM forum_posts WHERE ownerid=" . $post["ownerid"]) . '
+                            <td class="forum_author">' . get_user_name($post["userid"]) . '<br />
+                                Posts: ' . get_db_count("SELECT * FROM forum_posts WHERE userid=" . $post["userid"]) . '
                             </td>
                             <td class="forum_message">';
-            
+
             // QUOTE
             if (!$discussion["locked"] && user_is_able($USER->userid, "forumreply", $pageid)) {
                 $params = [
@@ -424,18 +493,18 @@ global $CFG, $MYVARS, $USER;
                                 ' . make_modal_links($params) . '
                             </span>';   
             } 
-            
+
             // POST MESSAGE
             $content .= '<span class="forum_post_actions" style="float:right;">
                             Posted: ' . ago($post["posted"]) . '
                         </span>
                         <div class="forum_post_message">
-                        ' . stripslashes($post["message"]) . '
+                        ' . $post["message"] . '
                         </div>';
             $content .= $post["edited"] ? '<span class="centered_span" style="font-size:.9em; color:gray;">[edited by ' . get_user_name($post["editedby"]) . ' ' . ago($post["edited"]) . ']</span>' : '';
-            
+
             // EDIT POST
-            if (!$discussion["locked"] && (user_is_able($USER->userid, "editforumposts", $pageid) || $USER->userid == $post["ownerid"])) {
+            if (!$discussion["locked"] && (user_is_able($USER->userid, "editforumposts", $pageid) || $USER->userid == $post["userid"])) {
                 $params = [
                     "title" => "Edit",
                     "path" => action_path("forum") . "show_forum_editor&amp;quote=0&amp;edit=1&amp;pagenum=$pagenum&amp;postid=" . $post["postid"],
@@ -448,7 +517,7 @@ global $CFG, $MYVARS, $USER;
                                 ' . make_modal_links($params) . '
                             </span>';
             }
-                
+
             // DELETE POST
             if (!$discussion["locked"] && user_is_able($USER->userid, "deleteforumpost", $pageid)) {
                 $content .= '<span class="forum_post_actions" style="">
@@ -468,12 +537,12 @@ global $CFG, $MYVARS, $USER;
                                 </a>
                             </span>';  
             }
-    
+
             // REPLY
             if (!$discussion["locked"] && user_is_able($USER->userid, "forumreply", $pageid)) {
                 $params = [
                     "title" => "Reply",
-                    "path" => action_path("forum") . "show_forum_editor&amp;quote=0&amp;edit=0&amp;pagenum=$pagenum&amp;postid=" . $post["postid"],
+                    "path" => action_path("forum") . "show_forum_editor&quote=0&edit=0&pagenum=$pagenum&postid=" . $post["postid"],
                     "width" => "750",
                     "height" => "600",
                     "iframe" => true,
@@ -493,7 +562,7 @@ global $CFG, $MYVARS, $USER;
         if (!$discussion["locked"] && user_is_able($USER->userid, "forumreply", $pageid)) {
             $params = [
                 "title" => "Post",
-                "path" => action_path("forum") . "show_forum_editor&amp;pageid=$pageid&amp;catid=$catid&amp;forumid=$forumid&amp;discussionid=$discussionid",
+                "path" => action_path("forum") . "show_forum_editor&pageid=$pageid&catid=$catid&forumid=$forumid&discussionid=$discussionid",
                 "width" => "750",
                 "height" => "600",
                 "iframe" => true,
@@ -511,49 +580,82 @@ global $CFG, $MYVARS, $USER;
 }
 
 function post() {
-global $CFG, $MYVARS, $USER;
-	$message = addslashes(urldecode($MYVARS->GET["message"])); $quote = $MYVARS->GET["quote"];
-	$postid = $MYVARS->GET["postid"] ?? false;
-    $edit = $MYVARS->GET["edit"] ?? false;
-    $pageid = $MYVARS->GET["pageid"] ?? false;
-    $forumid = $MYVARS->GET["forumid"] ?? false;
-    $catid = $MYVARS->GET["catid"] ?? false;
-    $discussionid = $MYVARS->GET["discussionid"] ?? false;
+global $USER;
+	$message = clean_myvar_req("message", "html");
+	$quote = clean_myvar_opt("quote", "int", false);
+	$postid = clean_myvar_opt("postid", "int", false);
+    $edit = clean_myvar_opt("edit", "int", false);
+    $pageid = clean_myvar_opt("pageid", "int", false);
+    $forumid = clean_myvar_opt("forumid", "int", false);
+    $catid = clean_myvar_opt("catid", "int", false);
+    $discussionid = clean_myvar_opt("discussionid", "int", false);
 
-	$time = get_timestamp();
-	if (!$edit) {
-        if ($postid) {
-            $post = get_db_row("SELECT * FROM forum_posts WHERE postid = '$postid'");
-            $discussionid = $post["discussionid"];
-            $forumid = $post["forumid"];
-            $pageid = $post["pageid"];
-            $catid = $post["catid"];
-        }
-		
-		if ($quote == 1) {
-			$message = '<blockquote class="forum_quote">[quoted from ' . get_user_name($post["ownerid"]) . ']<br />' . $post["message"] . '</blockquote>' . $message;
+	try {
+		start_db_transaction();
+		$time = get_timestamp();
+		if (!$edit) {
+			if ($postid) {
+				$post = get_db_row("SELECT * FROM forum_posts WHERE postid = '$postid'");
+				$discussionid = $post["discussionid"];
+				$forumid = $post["forumid"];
+				$pageid = $post["pageid"];
+				$catid = $post["catid"];
+			}
+	
+			if ($quote) {
+				$message = '<blockquote class="forum_quote">
+								[quoted from ' . get_user_name($post["userid"]) . ']
+								<br />
+								' . $post["message"] . '
+							</blockquote>' . $message;
+			}
+	
+			// Insert Post.
+			$params = [
+				"discussionid" => $discussionid,
+				"catid" => $catid,
+				"forumid" => $forumid,
+				"pageid" => $pageid,
+				"userid" => $USER->userid,
+				"message" => $message,
+				"posted" => $time,
+			];
+			execute_db_sql(fetch_template("dbsql/forum.sql", "insert_post", "forum"), $params);
+	
+			// Update Discussion.update_discussion_lastpost.
+			$params = [
+				"discussionid" => $discussionid,
+				"lastpost" => $time,
+			];
+			execute_db_sql(fetch_template("dbsql/forum.sql", "update_discussion_lastpost", "forum"), $params);
+		} else {
+			$params = [
+				"message" => $message,
+				"edited" => $time,
+				"editedby" => $USER->userid,
+				"postid" => $postid,
+			];
+			execute_db_sql(fetch_template("dbsql/forum.sql", "update_post", "forum"), $params);
 		}
-
-        if (execute_db_sql("INSERT INTO forum_posts (discussionid, catid, forumid, pageid, ownerid, message, posted) VALUES('$discussionid', '$catid', '$forumid', '$pageid', " . $USER->userid.", '" . $message."', '$time')")) {
-            execute_db_sql("UPDATE forum_discussions SET lastpost = '$time' WHERE discussionid = '$discussionid'");
-        }
-	} else {
-        execute_db_sql("UPDATE forum_posts SET message = '" . $message . "', edited = '$time', editedby = '" . $USER->userid . "' WHERE postid = '$postid'");
-    }
-	echo "Post Successful.";		
+		commit_db_transaction();
+		echo "Post Successful.";
+	} catch (\Throwable $e) {
+		rollback_db_transaction($e->getMessage());
+		echo "failed";
+	}
 }
 
 function edit_category() {
-global $CFG, $MYVARS, $USER;
-	$title = addslashes(urldecode($MYVARS->GET["catname"])); $catid = $MYVARS->GET["catid"];
+    $title = clean_myvar_req("catname", "html");
+	$catid = clean_myvar_req("catid", "int");
 	execute_db_sql("UPDATE forum_categories SET title='$title' WHERE catid=$catid");
 	echo "Edit Successful.";
 }
 
 function create_category() {
-global $CFG, $MYVARS, $USER;
-	$title = addslashes(urldecode($MYVARS->GET["catname"]));
-	$pageid = $MYVARS->GET["pageid"]; $forumid = $MYVARS->GET["forumid"]; 
+    $title = clean_myvar_req("catname", "html");
+	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
+	$forumid = clean_myvar_req("forumid", "int"); 
 	$sort = get_db_count("SELECT * FROM forum_categories WHERE forumid=$forumid AND shoutbox=0");
 	$sort++;
 	execute_db_sql("INSERT INTO forum_categories (forumid,pageid,title,sort) VALUES($forumid, $pageid,'$title', $sort)");
@@ -561,27 +663,53 @@ global $CFG, $MYVARS, $USER;
 }
 
 function create_discussion() {
-global $CFG, $MYVARS, $USER;
-	$message = urldecode($MYVARS->GET["message"]); $title = urldecode($MYVARS->GET["title"]);
-	$pageid = $MYVARS->GET["pageid"]; $forumid = $MYVARS->GET["forumid"]; $catid = $MYVARS->GET["catid"];
+global $USER;
+	$message = clean_myvar_req("message", "html");
+	$title = clean_myvar_req("title", "html");
+	$pageid = clean_myvar_req("pageid", "int");
+	$forumid = clean_myvar_req("forumid", "int");
+	$catid = clean_myvar_req("catid", "int");
+	$discussionid = clean_myvar_opt("discussionid", "int", false);
+	$postid = clean_myvar_opt("postid", "int", false);
 	$time = get_timestamp();
-	if (isset($MYVARS->GET["discussionid"])) {
-		execute_db_sql("UPDATE forum_discussions SET title='" . addslashes($title) . "' WHERE discussionid=" . $MYVARS->GET["discussionid"]);
-		execute_db_sql("UPDATE forum_posts SET message='" . addslashes($message) . "' WHERE postid=" . $MYVARS->GET["postid"]);
-		echo "Discussion Edited Successful";
-	} else {
-		if ($discussionid = execute_db_sql("INSERT INTO forum_discussions (catid,forumid,pageid,ownerid,title,lastpost) VALUES(" . $catid.", " . $forumid.", " . $pageid.", " . $USER->userid.",'" . addslashes($title) . "', $time)")) {
-			execute_db_sql("INSERT INTO forum_posts (discussionid,catid,forumid,pageid,ownerid,message,posted) VALUES(" . $discussionid.", " . $catid.", " . $forumid.", " . $pageid.", " . $USER->userid.",'" . addslashes($message) . "', $time)");
+
+	try {
+		start_db_transaction();
+		$params = [
+			"message" => $message,
+			"catid" => $catid,
+			"forumid" => $forumid,
+			"pageid" => $pageid,
+			"userid" => $USER->userid,
+			"posted" => $time,
+			"title" => $title,
+			"lastpost" => $time,
+			"alias" => '',
+		];
+
+		if ($discussionid) {
+			$params["discussionid"] = $discussionid;
+			execute_db_sql(fetch_template("dbsql/forum.sql", "update_discussion_title"), ["discussionid" => $discussionid, "title" => $title]);
+			execute_db_sql(fetch_template("dbsql/forum.sql", "update_post"), $params);
+			echo "Discussion Edited Successful";
+		} else {
+			$discussionid = execute_db_sql(fetch_template("dbsql/forum.sql", "insert_discussion", "forum"), $params);
+			$params["discussionid"] = $discussionid;
+			execute_db_sql(fetch_template("dbsql/forum.sql", "insert_post", "forum"), $params);
+			echo "Discussion Creation Successful";
 		}
-		echo "Discussion Creation Successful";
+		commit_db_transaction();
+	} catch (\Throwable $e) {
+		rollback_db_transaction($e->getMessage());
 	}
 }
 
 function move_category() {
 global $CFG, $MYVARS;
-	$direction = $MYVARS->GET["direction"]; $forumid = $MYVARS->GET["forumid"];
-	$catid = $MYVARS->GET["catid"];
-	$current_position = get_db_field("sort", "forum_categories", "catid=$catid"); 
+	$direction = clean_myvar_req("direction", "string");
+	$forumid = clean_myvar_req("forumid", "int");
+    $catid = clean_myvar_req("catid", "int");
+	$current_position = get_db_field("sort", "forum_categories", "catid = ||catid||", ["catid" => $catid]); 
 	if ($direction == 'up') {
 		$up_position = $current_position - 1;
 		execute_db_sql("UPDATE forum_categories SET sort='$current_position' WHERE forumid='$forumid' AND shoutbox=0 AND sort='$up_position'");
@@ -595,75 +723,124 @@ global $CFG, $MYVARS;
 }
 
 function delete_category() {
-global $CFG, $MYVARS;
-	$forumid = $MYVARS->GET["forumid"];
-	$catid = $MYVARS->GET["catid"];
-	execute_db_sql("DELETE FROM forum_categories WHERE catid='$catid'");
-	execute_db_sql("DELETE FROM forum_discussions WHERE catid='$catid'");
-	execute_db_sql("DELETE FROM forum_posts WHERE catid='$catid'");
-	//Make sure the sort columns are correct
+	$catid = clean_myvar_req("catid", "int");
+	$forumid = get_db_field("forumid", "forum_categories", "catid = ||catid||", ["catid" => $catid]);
+
+	try {
+		start_db_transaction();
+		$templates = [
+			[
+				"feature" => "forum",
+				"file" => "dbsql/forum.sql",
+				"subsection" => [
+					"delete_category",
+					"delete_category_discussions",
+					"delete_category_posts",
+				]
+			],
+		];
+		execute_db_sqls(fetch_template_set($templates), ["catid" => $catid]);
+
+		commit_db_transaction();
+	} catch (\Throwable $e) {
+		rollback_db_transaction($e->getMessage());
+		trigger_error("Failed to delete category", E_USER_WARNING);
+	}
+
+	// Make sure the sort columns are correct.
 	resort_categories($forumid);
-	echo get_forum_categories($forumid);	
+	echo get_forum_categories($forumid);
 }
 
 function delete_discussion() {
-global $CFG, $MYVARS;
-	$discussionid = $MYVARS->GET["discussionid"];
-	execute_db_sql("DELETE FROM forum_discussions WHERE discussionid='$discussionid'");
-	execute_db_sql("DELETE FROM forum_posts WHERE discussionid='$discussionid'");
+	$discussionid = clean_myvar_req("discussionid", "int");
+	try {
+		start_db_transaction();
+		$templates = [
+			[
+				"feature" => "forum",
+				"file" => "dbsql/forum.sql",
+				"subsection" => [
+					"delete_discussion",
+					"delete_discussion_posts",
+				]
+			],
+		];
+		execute_db_sqls(fetch_template_set($templates), ["discussionid" => $discussionid]);
+		commit_db_transaction();
+	} catch (\Throwable $e) {
+		rollback_db_transaction($e->getMessage());
+		trigger_error("Failed to delete discussion", E_USER_WARNING);
+	}
 	get_forum_discussions();		
 }
 
 function delete_post() {
-global $CFG, $MYVARS;
-	$postid = $MYVARS->GET["postid"];
-	execute_db_sql("DELETE FROM forum_posts WHERE postid = '$postid'");
+	$postid = clean_myvar_req("postid", "int");
+	execute_db_sql(fetch_template("dbsql/forum.sql", "delete_post"), ["postid" => $postid]);
 	get_forum_posts();		
 }
 
 function pin_bulletin() {
-global $CFG, $MYVARS;
-	$discussionid = $MYVARS->GET["discussionid"];
-	execute_db_sql("UPDATE forum_discussions SET bulletin=1 WHERE discussionid=" . $discussionid);
+	$discussionid = clean_myvar_req("discussionid", "int");
+	execute_db_sql(fetch_template("dbsql/forum.sql", "pin_discussion"), ["discussionid" => $discussionid]);
 	get_forum_discussions();	
 }
 
 function unpin_bulletin() {
-global $CFG, $MYVARS;
-	$discussionid = $MYVARS->GET["discussionid"];
-	execute_db_sql("UPDATE forum_discussions SET bulletin=0 WHERE discussionid=" . $discussionid);
+	$discussionid = clean_myvar_req("discussionid", "int");
+	execute_db_sql(fetch_template("dbsql/forum.sql", "unpin_discussion"), ["discussionid" => $discussionid]);
 	get_forum_discussions();	
 }
 
 function lock_discussion() {
-global $CFG, $MYVARS;
-	$discussionid = $MYVARS->GET["discussionid"];
-	execute_db_sql("UPDATE forum_discussions SET locked=1 WHERE discussionid=" . $discussionid);
+	$discussionid = clean_myvar_req("discussionid", "int");
+	execute_db_sql(fetch_template("dbsql/forum.sql", "lock_discussion"), ["discussionid" => $discussionid]);
 	get_forum_discussions();	
 }
 
 function unlock_discussion() {
-global $CFG, $MYVARS;
-	$discussionid = $MYVARS->GET["discussionid"];
-	execute_db_sql("UPDATE forum_discussions SET locked=0 WHERE discussionid=" . $discussionid);
+	$discussionid = clean_myvar_req("discussionid", "int");
+	execute_db_sql(fetch_template("dbsql/forum.sql", "unlock_discussion"), ["discussionid" => $discussionid]);
 	get_forum_discussions();	
 }
 
 function shoutbox_post() {
-global $CFG, $MYVARS;
-	$message = $MYVARS->GET["message"];
-	$alias = $MYVARS->GET["alias"];
-	$forumid = $MYVARS->GET["forumid"];
-	$discussion = get_db_row("SELECT * FROM forum_discussions WHERE shoutbox=1 and forumid=$forumid");
-	$ownerid = $MYVARS->GET["ownerid"];
-	$pageid = $discussion["pageid"];
-	$discussionid = $discussion["discussionid"];
-	$catid = $discussion["catid"];
-	$posted = get_timestamp();
-	if ($ownerid == "" && $alias == "") { $alias = "Anonymous";}	
-	if (!execute_db_sql("INSERT INTO forum_posts (discussionid,catid,forumid,pageid,ownerid,message,posted,alias) VALUES('$discussionid','$catid','$forumid','$pageid','$ownerid','$message','$posted','$alias')")) {
-		echo "Could not save message inside shoutbox.";
+	$message = clean_myvar_req("message", "html");
+	$forumid = clean_myvar_req("forumid", "int");
+	$alias = clean_myvar_opt("alias", "string", false);
+	$userid = clean_myvar_opt("userid", "int", false);
+
+	try {
+		start_db_transaction();
+		$SQL = "SELECT *
+				FROM forum_discussions
+				WHERE shoutbox = 1 AND forumid = ||forumid||";
+		if (!$discussion = get_db_row($SQL, ["forumid" => $forumid])) {
+			trigger_error("Could not find discussion.", E_USER_ERROR);
+		}
+	
+		// Owner userid not give, and alias not provided.
+		if (!$userid && !$alias) { $alias = "Anonymous"; }
+
+		// Save message
+		$params = [
+			"discussionid" => $discussion["discussionid"],
+			"catid" => $discussion["catid"],
+			"forumid" => $forumid,
+			"pageid" => $discussion["pageid"],
+			"userid" => $userid,
+			"message" => $message,
+			"posted" => get_timestamp(),
+			"alias" => $alias
+		];
+		execute_db_sql(fetch_template("dbsql/forum.sql", "insert_post", "forum"), $params);
+		commit_db_transaction();
+	} catch (\Throwable $e) {
+		rollback_db_transaction($e->getMessage());
+		echo "<p>Could not save post. Please try again later.</p>";
 	}
+
 	echo get_shoutbox($forumid);
 }
 ?>

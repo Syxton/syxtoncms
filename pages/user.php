@@ -24,8 +24,8 @@ global $MYVARS, $CFG;
 				 "password_help" => get_help("input_password"), "vpassword_req" => error_string('valid_req_vpassword'),
 				 "vpassword_match" => error_string('valid_vpassword_match'), "vpassword_help" => get_help("input_vpassword")];
 
-	echo create_validation_script("signup_form" , use_template("tmp/user.template", [], "new_user_validation"));
-		echo format_popup(use_template("tmp/user.template", $params, "new_user_template"), $CFG->sitename . ' Signup',"500px");
+	echo create_validation_script("signup_form", use_template("tmp/user.template", [], "new_user_validation"));
+		echo format_popup(use_template("tmp/user.template", $params, "new_user_template"), $CFG->sitename . ' Signup', "500px");
 }
 
 function reset_password() {
@@ -50,7 +50,7 @@ global $MYVARS, $PAGE, $CFG;
 		$params["vpassword_help"] = get_help("input_vpassword");
 
 		$password_validate_form = use_template("tmp/user.template", $params, "reset_password_validation_template");
-		$validation_script = create_validation_script("password_reset_form" , $password_validate_form);
+		$validation_script = create_validation_script("password_reset_form", $password_validate_form);
 		$middle_contents = use_template("tmp/user.template", $params, "reset_password_template") . $validation_script;
 
 		// Main Layout
@@ -87,13 +87,13 @@ global $CFG, $USER;
 		$params["vpassword_match"] = error_string('valid_vpassword_match');
 		$params["vpassword_help"] = get_help("input_vpassword");
 		echo create_validation_script("profile_change_form", use_template("tmp/user.template", $params, "change_profile_validation_template"));
-  		echo format_popup(use_template("tmp/user.template", $params, "change_profile_template"),'Edit Profile',"500px");
+  		echo format_popup(use_template("tmp/user.template", $params, "change_profile_template"), 'Edit Profile', "500px");
 	} else {
 		echo use_template("tmp/user.template", $params, "change_profile_template");
 	}
 }
 
-function forgot_password() {
+function forgot_password_form() {
 global $CFG;
 	if (!defined('VALIDATELIB')) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
 
@@ -110,6 +110,6 @@ global $CFG;
 
 function user_alerts() {
 global $MYVARS;
-	echo use_template("tmp/user.template", ["alerts" => get_user_alerts($MYVARS->GET["userid"], false, true)], "user_alerts_template");
+	echo use_template("tmp/user.template", ["alerts" => get_user_alerts($MYVARS->GET["userid"], false)], "user_alerts_template");
 }
 ?>

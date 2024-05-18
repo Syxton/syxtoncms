@@ -9,9 +9,6 @@
 
 function get_mysql_array_type($type = "assoc") {
 	switch($type) {
-		case "assoc":
-			return MYSQLI_ASSOC;
-			break;
 		case "num":
 			return MYSQLI_NUM;
 			break;
@@ -29,41 +26,18 @@ function db_goto_row($result, $rownum = 0) {
 }
 
 function fetch_row($result, $type = false) {
-		$type = get_mysql_array_type($type);
+    $type = get_mysql_array_type($type);
 	return mysqli_fetch_array($result, $type);
 }
 
 function db_prepare_statement($SQL, $vars) {
 global $conn;
-	$typestring = "";
-	$data = [];
+    $pattern = '/([\'\"]?)(\|\|)((?s).*?)(\|\|)([\'\"]?)/i'; //Look for stuff like ||xxx|| or '||xxx||'
+    $variables = build_prepared_variables($SQL, $vars, $pattern);
 
-	$pattern = '/\|\|((?s).*?)\|\|/i'; //Look for stuff between ||
-	preg_match_all($pattern, $SQL, $matches);
-	foreach ($matches[1] as $match) {
-		switch(gettype($vars[$match])) {
-			case "string":
-				$typestring .= "s";
-				$data[] = $vars[$match];
-				break;
-			case "integer":
-				$typestring .= "i";
-				$data[] = $vars[$match];
-				break;
-			case "double":
-				$typestring .= "d";
-				$data[] = $vars[$match];
-				break;
-			default:
-				$typestring .= "b";
-				$data[] = $vars[$match];
-				break;
-		}
-	}
-
-	$SQL = preg_replace($pattern, '?', $SQL);
+	$SQL = preg_replace($pattern, '?', $SQL); // Replace all ||xxx|| and '||xxx||' with ?
 	$statement = mysqli_prepare($conn, $SQL);
-	mysqli_stmt_bind_param($statement, $typestring, ...$data);
+	mysqli_stmt_bind_param($statement, $variables["typestring"], ...$variables["data"]);
 	return $statement;
 }
 
@@ -124,7 +98,7 @@ global $conn;
 			$result = mysqli_query($conn, $SQL);
 			$result = ($select && mysqli_num_rows($result) == 0) ? false : $result;
 		}
-	
+
 		if ($result) {
 			if ($update) {
 				$id = empty($vars) ? mysqli_affected_rows($conn) : mysqli_stmt_affected_rows($statement);
@@ -160,8 +134,9 @@ global $conn;
 	mysqli_commit($conn);
 }
 
-function rollback_db_transaction() {
+function rollback_db_transaction($message = false) {
 global $conn;
+    if (!empty($message)) { error_log("ROLLBACK " . $message); }
 	mysqli_rollback($conn);
 }
 

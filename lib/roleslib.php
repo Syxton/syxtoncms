@@ -22,38 +22,64 @@ global $CFG, $ROLES;
 }
 
 function remove_all_roles($userid) {
-	return execute_db_sqls(use_template(
-		  "dbsql/roles.sql",
-		  ["userid" => $userid],
-		  "remove_all_user_roles"
-	));
+	$templates = [];
+	$templates[] = [
+		"file" => "dbsql/roles.sql",
+		"subsection" => [
+			"remove_user_roles_assignment",
+			"remove_user_roles_ability_peruser",
+			"remove_user_roles_ability_perfeature_peruser",
+		],
+	];
+	try {
+		start_db_transaction();
+		$results = execute_db_sqls(fetch_template_set($templates), ["userid" => $userid]);
+		commit_db_transaction();
+	} catch (\Throwable $e) {
+		rollback_db_transaction($e->getMessage());
+	}
+	return $results;
 }
 
-//Add an ability and assign a role it's value
+// Add an ability and assign a role it's value
 function add_role_ability($section, $ability, $displayname, $power, $desc, $creator='0', $editor='0', $guest='0', $visitor='0') {
-    if (!get_db_row("SELECT * FROM abilities WHERE section='$section' AND section_display='$displayname'")) {
-        // CREATE ROLE ABILITY AND ASSIGN PERMISSIONS
-        $params = [
-            "section" => $section,
-            "ability" => $ability,
-            "displayname" => $displayname,
-            "power" => $power,
-            "desc" => $desc,
-            "creator" => $creator,
-            "editor" => $editor,
-            "guest" => $guest,
-            "visitor" => $visitor,
-        ];
-        $SQL = use_template("dbsql/roles.sql", $params, "add_role_ability");
-        execute_db_sqls($SQL);
-    }
+	try {
+		start_db_transaction();
+		$SQL = "SELECT ability
+				FROM abilities
+				WHERE section = ||section||
+				AND section_display = ||displayname||";
+		if (!get_db_row($SQL, ["section" => $section, "displayname" => $displayname])) {
+			$templates = $params = [];
+			$templates[] = ["file" => "dbsql/roles.sql", "subsection" => ["insert_abilities", "insert_roles_ability"]];
+			$params[] = [ // vars for insert_abilities
+				"section" => $section,
+				"displayname" => $displayname,
+				"ability" => $ability,
+				"desc" => $desc,
+				"power" => $power,
+			];
+			$params[] = [ // vars for insert_roles_ability
+				"section" => $section,
+				"ability" => $ability,
+				"creator" => $creator,
+				"editor" => $editor,
+				"guest" => $guest,
+				"visitor" => $visitor,
+			];
+			execute_db_sqls(fetch_template_set($templates), $params);
+			commit_db_transaction();
+		}
+	} catch (\Throwable $e) {
+		rollback_db_transaction($e->getMessage());
+	}
 }
 
 function user_is_able($userid, $ability, $pageid, $feature = "", $featureid = 0) {
 global $CFG, $ROLES, $ABILITIES;
 	if (!$featureid && isset($ABILITIES->$ability)) { // Get cached abilities first (SAVES TIME!)
 		if ($ABILITIES->$ability->allow) { return true; }
-        return false;
+		return false;
 	}
 
 	if (is_siteadmin($userid)) { return true; }
@@ -65,21 +91,21 @@ global $CFG, $ROLES, $ABILITIES;
 			return true;
 		}
 	} else {
-        $params = [
-            "pageid" => $pageid,
-            "roleid" => $roleid,
-            "userid" => $userid,
-            "ability" => $ability,
-            "feature" => $feature,
-            "featureid" => $featureid,
-            "groupsql" => groups_SQL($userid, $pageid, $ability),
-            "featuregroupsql" => groups_SQL($userid, $pageid, $ability, $feature, $featureid),
-        ];
-        $SQL = use_template("dbsql/roles.sql", $params, "user_has_ability_in_page");
+		$params = [
+			"pageid" => $pageid,
+			"roleid" => $roleid,
+			"userid" => $userid,
+			"ability" => $ability,
+			"feature" => $feature,
+			"featureid" => $featureid,
+			"groupsql" => groups_SQL($userid, $pageid, $ability),
+			"featuregroupsql" => groups_SQL($userid, $pageid, $ability, $feature, $featureid),
+		];
+		$SQL = use_template("dbsql/roles.sql", $params, "user_has_ability_in_page");
 
-        if (get_db_row($SQL)) {
-            return true;
-        }
+		if (get_db_row($SQL)) {
+			return true;
+		}
 	}
 	return false;
 }
@@ -97,45 +123,45 @@ global $CFG, $ROLES, $ABILITIES;
 		return role_abilities($ROLES->visitor, $pageid, $section, $feature, $featureid);
 	} else {
 		$section_sql = "";
-        if ($section) {
-            foreach ((array) $section as $s) { // if string, cast to array and keep going
-                $section_sql .= $section_sql == "" ? "section = '$s'" : " OR section = '$s'";
-            }
-        }
+		if ($section) {
+			foreach ((array) $section as $s) { // if string, cast to array and keep going
+				$section_sql .= $section_sql == "" ? "section = '$s'" : " OR section = '$s'";
+			}
+		}
 
-        $params = [
-            "pageid" => $pageid,
-            "userid" => $userid,
-            "feature" => $feature,
-            "featureid" => $featureid,
-            "ability" => $ability,
-            "roleid" => $roleid,
-            "issection" => ($section),
-            "section" => $section_sql,
-            "groupsql" => groups_SQL($userid, $pageid),
-            "featuregroupsql" => groups_SQL($userid, $pageid, 'a.ability', $feature, $featureid),
-        ];
-        $SQL = use_template("dbsql/roles.sql", $params, "get_user_abilities");
+		$params = [
+			"pageid" => $pageid,
+			"userid" => $userid,
+			"feature" => $feature,
+			"featureid" => $featureid,
+			"ability" => $ability,
+			"roleid" => $roleid,
+			"issection" => ($section),
+			"section" => $section_sql,
+			"groupsql" => groups_SQL($userid, $pageid),
+			"featuregroupsql" => groups_SQL($userid, $pageid, 'a.ability', $feature, $featureid),
+		];
+		$SQL = use_template("dbsql/roles.sql", $params, "get_user_abilities");
 
-        if ($results = get_db_result($SQL)) {
-            $abilities = new \stdClass;
-            while ($row = fetch_row($results)) {
-                $ability = $row["ability"];
-                $allow = $row["allowed"] == 1 ? 1 : 0;
+		if ($results = get_db_result($SQL)) {
+			$abilities = new \stdClass;
+			while ($row = fetch_row($results)) {
+				$ability = $row["ability"];
+				$allow = $row["allowed"] == 1 ? 1 : 0;
 
-                if (empty($abilities->$ability)) {
-                    $abilities->$ability = new \stdClass;
-                }
-                $abilities->$ability->allow = $allow;
-            }
-        } else {
-            trigger_error("FAILED SQL: $SQL", E_USER_ERROR);
-        }
+				if (empty($abilities->$ability)) {
+					$abilities->$ability = new \stdClass;
+				}
+				$abilities->$ability->allow = $allow;
+			}
+		} else {
+			trigger_error("FAILED SQL: $SQL", E_USER_ERROR);
+		}
 
-        if (!$section) {
-            $ABILITIES = $abilities;
-        }
-        return $abilities;
+		if (!$section) {
+			$ABILITIES = $abilities;
+		}
+		return $abilities;
 	}
 }
 
@@ -156,9 +182,9 @@ global $CFG, $ROLES;
 	$params = ["userid" => $userid, "ability" => $ability, "perrole" => $perrole];
  	$SQL = use_template("dbsql/roles.sql", $params, "user_has_ability_in_pages");
 
-    if ($results = get_db_result($SQL)) {
-        return $results;
-    }
+	if ($results = get_db_result($SQL)) {
+		return $results;
+	}
 	return false;
 }
 
@@ -172,25 +198,25 @@ global $CFG, $ROLES, $ABILITIES;
 	}
 
 	$params = [
-        "pageid" => $pageid,
-        "feature" => $feature,
-        "featureid" => $featureid,
-        "roleid" => $roleid,
+		"pageid" => $pageid,
+		"feature" => $feature,
+		"featureid" => $featureid,
+		"roleid" => $roleid,
 		"issection" => ($section),
-        "section" => $section_sql,
-    ];
+		"section" => $section_sql,
+	];
 	$SQL = use_template("dbsql/roles.sql", $params, "get_role_abilities");
 
 	if ($results = get_db_result($SQL)) {
-        $abilities = new \stdClass;
+		$abilities = new \stdClass;
 		while ($row = fetch_row($results)) {
 			$ability = $row["ability"];
 			$allow = $row["allowed"] == 1 ? 1 : 0;
-            $abilities->$ability = new \stdClass;
+			$abilities->$ability = new \stdClass;
 			$abilities->$ability->allow = $allow;
 		}
 	} else {
-        trigger_error("FAILED SQL: $SQL", E_USER_ERROR);
+		trigger_error("FAILED SQL: $SQL", E_USER_ERROR);
 	}
 
 	if (empty($section) && !empty($abilities)) {
@@ -231,17 +257,17 @@ function role_is_able($roleid, $ability, $pageid, $feature = "", $featureid = 0)
  */
 function load_roles() {
 global $CFG;
-    // Get all roles from the database
-    $allroles = get_db_result(use_template("dbsql/roles.sql", [], "get_roles"));
+	// Get all roles from the database
+	$allroles = get_db_result(use_template("dbsql/roles.sql", [], "get_roles"));
 
-    // Store all roles in a global object, keyed by role name
-    $ROLES = new \stdClass;
-    while ($row = fetch_row($allroles)) {
-        $rolename = $row['name'];
-        $ROLES->$rolename = $row['roleid'];
-    }
+	// Store all roles in a global object, keyed by role name
+	$ROLES = new \stdClass;
+	while ($row = fetch_row($allroles)) {
+		$rolename = $row['name'];
+		$ROLES->$rolename = $row['roleid'];
+	}
 
-    return $ROLES;
+	return $ROLES;
 }
 
 
@@ -288,10 +314,10 @@ global $CFG, $ROLES;
 	$params = ["pageid" => $pageid, "ability" => $ability, "siteid" => $CFG->SITEID, "siteoropen" => ($page["siteviewable"] || $page["opendoorpolicy"])];
 	$SQL = use_template("dbsql/roles.sql", $params, "users_that_have_ability_in_page");
 
-    if ($results = get_db_result($SQL)) {
-        return $results;
-    }
-    return false;
+	if ($results = get_db_result($SQL)) {
+		return $results;
+	}
+	return false;
 }
 
 //
@@ -304,18 +330,18 @@ function get_groups_hierarchy($userid, $pageid, $parent = 0) {
 	$SQL = use_template("dbsql/roles.sql", $params, "get_groups_hierarchy");
 
 	if ($groups = get_db_result($SQL)) {	// If you are in a group on this page.
-        $groups_array = [];
-        while ($group = fetch_row($groups)) {
-            $groups_array[] = $group["groupid"];
-            // Check for child groups
-            // Check if user is in a group that is a child of this group
-            if ($child_group = get_groups_hierarchy($userid, $pageid, $group["groupid"])) {
-                $groups_array = array_merge($groups_array, $child_group);
-            }
-        }
-        return $groups_array;
+		$groups_array = [];
+		while ($group = fetch_row($groups)) {
+			$groups_array[] = $group["groupid"];
+			// Check for child groups
+			// Check if user is in a group that is a child of this group
+			if ($child_group = get_groups_hierarchy($userid, $pageid, $group["groupid"])) {
+				$groups_array = array_merge($groups_array, $child_group);
+			}
+		}
+		return $groups_array;
 	}
-    return false;
+	return false;
 }
 
 //This function gets the permission of an ability according to groups
@@ -337,10 +363,10 @@ function groups_SQL($userid, $pageid, $ability = 'a.ability', $feature = false, 
 
 	//Create dynamic groups sql
 	$SQL1 = "";	$SQL2 = "";
-    foreach ($hierarchy as $group) {
-        $SQL1 .= "( 1 IN (SELECT allow FROM $table WHERE groupid='$group' AND ability=$ability AND allow='1' $extraSQL) OR ";
-        $SQL2 .= " ) AND 0 NOT IN (SELECT allow FROM $table WHERE groupid='$group' AND ability=$ability AND allow='0' $extraSQL) ";
-    }
+	foreach ($hierarchy as $group) {
+		$SQL1 .= "( 1 IN (SELECT allow FROM $table WHERE groupid='$group' AND ability=$ability AND allow='1' $extraSQL) OR ";
+		$SQL2 .= " ) AND 0 NOT IN (SELECT allow FROM $table WHERE groupid='$group' AND ability=$ability AND allow='0' $extraSQL) ";
+	}
 
 	$groupsSQL[0] = $SQL1;
 	$groupsSQL[1] = $SQL2;
@@ -359,49 +385,49 @@ function merge_abilities($abilities) {
 function group_page($pageid, $feature, $featureid) {
 global $CFG, $USER;
 	$params = [
-        "pageid" => $pageid,
-        "feature" => $feature,
-        "featureid" => $featureid,
-        "wwwroot" => $CFG->wwwroot,
+		"pageid" => $pageid,
+		"feature" => $feature,
+		"featureid" => $featureid,
+		"wwwroot" => $CFG->wwwroot,
 		"groups_list" => groups_list($pageid, $feature, $featureid),
 		"canmanagegroups" => user_is_able($USER->userid, "manage_groups", $pageid),
-    ];
+	];
 	return use_template("tmp/roles.template", $params, "group_page_template");
 }
 
 function groups_list($pageid, $feature = false, $featureid = false, $action = true, $selectid = 0, $excludeid = 0, $excludechildrenofid = 0, $width = "100%", $id = "group_select", $name = "groupid") {
 	$params = [
-        "name" => $name,
-        "pageid" => $pageid,
-        "feature" => $feature,
-        "featureid" => $featureid,
-        "width" => $width,
-        "id" => $id,
-        "enableaction" => $action,
-        "groups" => sub_groups_list($pageid, false, "", $selectid, $excludeid, $excludechildrenofid),
-    ];
-    return use_template("tmp/roles.template", $params, "groups_list_template");
+		"name" => $name,
+		"pageid" => $pageid,
+		"feature" => $feature,
+		"featureid" => $featureid,
+		"width" => $width,
+		"id" => $id,
+		"enableaction" => $action,
+		"groups" => sub_groups_list($pageid, false, "", $selectid, $excludeid, $excludechildrenofid),
+	];
+	return use_template("tmp/roles.template", $params, "groups_list_template");
 }
 
 function sub_groups_list($pageid, $parent = false, $level = "", $selectid = 0, $excludeid = 0, $excludechildrenofid = 0) {
-    $options = "";
-    $parent = $parent ? $parent : "0";
-    $SQL = use_template("dbsql/roles.sql", ["pageid" => $pageid, "parent" => $parent], "get_subgroups");
-    if ($groups = get_db_result($SQL)) {
-        while ($group = fetch_row($groups)) {
-            $group_count = get_db_count(use_template("dbsql/roles.sql", ["groupid" => $group['groupid']], "get_group_users"));
-            $display = $level . $group['name'] . ' (' . $group_count . ')';
-            $selected = $selectid == $group["groupid"] ? "selected" : "";
-            $options .= $excludeid != $group["groupid"] ? use_template("tmp/page.template", ["value" => $group['groupid'], "display" => $display, "selected" => $selected], "select_options_template") : '';
+	$options = "";
+	$parent = $parent ? $parent : "0";
+	$SQL = use_template("dbsql/roles.sql", ["pageid" => $pageid, "parent" => $parent], "get_subgroups");
+	if ($groups = get_db_result($SQL)) {
+		while ($group = fetch_row($groups)) {
+			$group_count = get_db_count(use_template("dbsql/roles.sql", ["groupid" => $group['groupid']], "get_group_users"));
+			$display = $level . $group['name'] . ' (' . $group_count . ')';
+			$selected = $selectid == $group["groupid"] ? "selected" : "";
+			$options .= $excludeid != $group["groupid"] ? use_template("tmp/page.template", ["value" => $group['groupid'], "display" => $display, "selected" => $selected], "select_options_template") : '';
 
-            // get subgroups using recurssive call.
-            $SQL = use_template("dbsql/roles.sql", ["pageid" => $pageid, "parent" => $group['groupid']], "get_subgroups");
-            if ($subgroups = get_db_row($SQL)) {
-                $options .= $excludechildrenofid != $group["groupid"] ? sub_groups_list($pageid, $group['groupid'], $level . "-- ", $selectid, $excludeid) : '';
-            }
-        }
-    }
-    return $options;
+			// get subgroups using recurssive call.
+			$SQL = use_template("dbsql/roles.sql", ["pageid" => $pageid, "parent" => $group['groupid']], "get_subgroups");
+			if ($subgroups = get_db_row($SQL)) {
+				$options .= $excludechildrenofid != $group["groupid"] ? sub_groups_list($pageid, $group['groupid'], $level . "-- ", $selectid, $excludeid) : '';
+			}
+		}
+	}
+	return $options;
 }
 
 function print_abilities($pageid, $type = "per_role_", $roleid = false, $userid = false, $feature = false, $featureid = false, $groupid = false) {

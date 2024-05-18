@@ -125,9 +125,17 @@ p {
 
 .error_text {
     font-size: .95em;
-    color: brown;
+    color: darkred;
     text-align: center;
     vertical-align: bottom
+}
+
+.debugging {
+	background: red;
+	padding: 20px;
+	text-align: center;
+	font-size: 15px;
+	white-space: normal;
 }
 
 .heading2 {
@@ -768,6 +776,12 @@ div.box_title {
     padding: 0 0 0 10px
 }
 
+span.box_title_text {
+	padding-left: 4px;
+	vertical-align: middle;
+    display: inline-block;
+}
+
 .pagename_box {
     height: 30px;
     padding: 2px 0 2px 4px;
@@ -844,7 +858,7 @@ div.box_content {
 }
 
 .slide_menu_tab {
-    cursor: hand;
+    caret-color: transparent;
     cursor: pointer;
     display: inline-block;
     width: 15px;
@@ -869,10 +883,13 @@ div.box_content {
 }
 
 .slide_menu_button {
-    display: inline-block;
-    font-size: 12px;
+    position: relative;
+    top: -1px;
+    padding: 2px 4px;
+}
+
+.slide_menu_button img {
     vertical-align: middle;
-    padding: 2px
 }
 
 .drop_zone {
@@ -898,9 +915,10 @@ div.box_content {
     position: absolute;
     font-size: .8em;
     margin-top: 0px;
-    margin-left: -10px;
+    margin-left: 10px;
     border: 1px solid #c93;
-    padding: 10px 12px;
+    padding: 8px;
+    white-space: normal;
     background-color: #ffc
 }
 

@@ -92,36 +92,58 @@ global $CFG, $USER;
 
 function create_new_user($user) {
 global $CFG, $USER;
-	if (!defined('COMLIB')) { include_once($CFG->dirroot . '/lib/comlib.php'); }
-	$temp = create_random_password();
-	$key = md5($user->email) . md5(time());
-	$userid = execute_db_sql("INSERT INTO users (email,fname,lname,temp,password,userkey,joined) VALUES('" . dbescape($user->email) . "','" . dbescape($user->fname) . "','" . dbescape($user->lname) . "','" . dbescape($user->password) . "','".md5($temp) . "','$key','" . get_timestamp() . "')");
-	$defaultrole = get_db_field("default_role", "pages", "pageid='" . $CFG->SITEID."'");
-	$role_assignment = execute_db_sql("INSERT INTO roles_assignment (userid,roleid,pageid) VALUES('$userid','$defaultrole','" . $CFG->SITEID."')");
+	$created = false;
 
-    if ($userid && $role_assignment) {
-  		$USER->userid = $userid;
-        $USER->fname = $user->fname;
-        $USER->lname = $user->lname;
-        $USER->email = $user->email;
-        $FROMUSER = new \stdClass;
-  		$FROMUSER->fname = $CFG->sitename;
-        $FROMUSER->lname = '';
-  		$FROMUSER->email = $CFG->siteemail;
-  		$message = write_confirmation_email($user, $temp);
-  		$subject = $CFG->sitename . ' New User Confirmation';
+	try {
+        start_db_transaction();
+		$temp = create_random_password();
+		$key = md5($user['email']) . md5(time());
+		$time = get_timestamp();
+	
+		// Create new user
+		$params = [
+			'fname' => $user['fname'],
+			'lname' => $user['lname'],
+			'email' => $user['email'],
+			'temp' => $temp,
+			'password' => $temp,
+			'userkey' => $key,
+			'time' => $time,
+		];
+		$userid = execute_db_sql(fetch_template("dbsql/users.sql", "create_user"), $params);
+		$defaultrole = get_db_field("default_role", "pages", "pageid = ||pageid||", ["pageid" => $CFG->SITEID]);
+		$role_assignment = execute_db_sql(fetch_template("dbsql/roles.sql", "insert_role_assignment"), ["userid" => $userid, "roleid" => $defaultrole, "pageid" => $CFG->SITEID]);
+		commit_db_transaction();
 
-		if (send_email($USER, $FROMUSER, $subject, $message)) {
-			send_email($FROMUSER, $FROMUSER, $subject, $message);
-			return "true**" . new_user_confirmation($user);
+		if ($userid && $role_assignment) {
+			$created = true;
+			$USER->userid = $userid;
+			$USER->fname = $user['fname'];
+			$USER->lname = $user['lname'];
+			$USER->email = $user['email'];
+			$FROMUSER = new \stdClass;
+			$FROMUSER->fname = $CFG->sitename;
+			$FROMUSER->lname = '';
+			$FROMUSER->email = $CFG->siteemail;
+
+			// Send confirmation email
+			if (!defined('COMLIB')) { include_once($CFG->dirroot . '/lib/comlib.php'); }
+			$subject = $CFG->sitename . ' New User Confirmation';
+			$message = write_confirmation_email($user, $temp);
+
+			if (@send_email($USER, $FROMUSER, $subject, $message)) {
+				@send_email($FROMUSER, $FROMUSER, $subject, $message);
+				return "true**" . new_user_confirmation($user);
+			}
 		}
-	} else {
-		if ($userid) {
-			execute_db_sql("DELETE FROM users WHERE userid='$userid'");
-			execute_db_sql("DELETE FROM roles_assignment WHERE userid='$userid'");
+	} catch (\Throwable $e) {
+		if ($created) {
+			return "false**" . error_string("user_not_emailed");
+		} else {
+			rollback_db_transaction($e->getMessage());
 		}
-		return "false**" . error_string("user_not_added");
 	}
+	return "false**" . error_string("user_not_added");
 }
 
 function create_random_password() {
@@ -150,29 +172,14 @@ global $CFG;
 
 function write_confirmation_email($user, $temp) {
 global $CFG;
-	return '
-        <p><font face="Tahoma"><font size="3" color="#993366">Dear <strong>' . $user->fname . ' ' . $user->lname . '</strong>,</font><br />
-  		</font></p>
-  		<blockquote>
-  		<p><font size="3" face="Tahoma">Thank you for joining <strong>' . $CFG->sitename . '</strong>.&nbsp; To finalize the account creation process, use the following instructions to log into the site.</font></p>
-  		</blockquote>
-  		<p>&nbsp;</p>
-  		<hr width="100%" size="2" />
-  		<p>&nbsp;</p>
-  		<blockquote>
-  		<p align="left"><font face="Tahoma"><strong>Username:</strong> <font color="#3366ff">' . $user->email . '</font></font></p>
-  		<p align="left"><font face="Tahoma"><strong>Password:</strong> <font color="#3366ff">' . $temp . '</font></font></p>
-  		</blockquote>
-  		<p>&nbsp;</p>
-  		<hr width="100%" size="2" />
-  		<blockquote>
-  		<p><font size="3" face="Tahoma">After you have successfully logged into the site using the password provided, your account will be finalized and your password will then be changed to the password you specified inside the account creation form.&nbsp; Again, we would like to thank you for joining <strong>' . $CFG->sitename . '</strong> and if you have any questions during your use of the site, feel free to contact us at <font color="#ff0000">' . $CFG->siteemail . '</font>.<br />
-  		</font></p>
-  		</blockquote>
-  		<p>&nbsp;</p>
-  		<p><font face="Tahoma"><strong><font size="3" color="#666699">Enjoy the site,</font></strong></font></p>
-  		<p><font size="3" face="Tahoma"><em>' . $CFG->siteowner . ' </em></font><font size="3" face="Tahoma" color="#ff0000">&lt;' . $CFG->siteemail . '</font><font face="Tahoma"><font size="3" color="#ff0000">&gt;</font></font></p>
-  		<p>&nbsp;</p>';
+	$params = [
+		"fname" => $user["fname"],
+		"lname" => $user["lname"],
+		"email" => $user["email"],
+		"temp" => $temp,
+		"config" => $CFG,
+	];
+	return use_template("tmp/user.template", $params, "confirmation_email_template");
 }
 
 function get_user_name($userid) {

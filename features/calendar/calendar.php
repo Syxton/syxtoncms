@@ -23,8 +23,8 @@ if (empty($_POST["aslib"])) {
 
 function calendar_settings() {
 global $MYVARS;
-	$featureid = dbescape($MYVARS->GET['featureid']);
-	$pageid = dbescape($MYVARS->GET['pageid']);
+	$featureid = clean_myvar_opt("featureid", "int", false);
+	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	$feature = "calendar";
 
 	//Default Settings	

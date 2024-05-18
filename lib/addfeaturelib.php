@@ -24,6 +24,7 @@ function display_addfeature($pageid, $area) {
 			}
 			$content = use_template("tmp/page.template", ["pageid" => $pageid, "options" => $options], "display_addfeature_template");
 			$title = "Add Features";
+			$title = '<span class="box_title_text">' . $title . '</span>';
 			return get_css_box($title, $content, NULL, NULL, "addfeature");
 		}
 	}

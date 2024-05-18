@@ -26,7 +26,7 @@ if (empty($_POST["aslib"])) {
 
 function donate_settings() {
 global $CFG, $MYVARS, $USER;
-	$featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
+	$featureid = clean_myvar_opt("featureid", "int", false); $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	$feature = "donate";
 
 	//Default Settings	
@@ -42,7 +42,7 @@ global $CFG, $MYVARS, $USER;
 
 function editcampaign() {
 global $CFG, $MYVARS, $USER;
-$featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
+$featureid = clean_myvar_opt("featureid", "int", false); $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     $returnme = '<div id="donation_display">';
     $returnme .= select_campaign_forms($featureid, $pageid);
     $returnme .= '</div>';
@@ -51,7 +51,7 @@ $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GE
 
 function managedonations() {
 global $CFG, $MYVARS, $USER;
-    $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
+    $featureid = clean_myvar_opt("featureid", "int", false); $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     $returnme = '<div id="donation_display">';
     $returnme .= add_or_manage_forms($featureid, $pageid);
     $returnme .= '</div>';

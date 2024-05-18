@@ -127,61 +127,145 @@ global $CFG;
 	return $protocol;
 }
 
-function fetch_template($file, $subsection = "", $feature = false) {
+function fetch_template($file, $subsection, $feature = false) {
 global $CFG;
-	if ($feature) {
-		$file = "features/$feature/$file";
-	}
+    if (is_array($subsection)) {
+        $contents = [];
+        foreach($subsection as $sub) {
+            if (!$temp = fetch_template($file, $sub, $feature)) {
+                trigger_error("Fetching template $file:$subsection failed.", E_USER_ERROR);
+				throw new Exception("Fetching template $file:$subsection failed.");
+			}
+            $contents[] = $temp;
+        }
+    } else {
+        if ($feature) {
+            $file = "features/$feature/$file";
+        }
 
-	if (!file_exists($CFG->dirroot . '/' . $file)) { // template file not found.
-		echo $CFG->dirroot . '/' . $file . " not found.";
-		return;
-	}
+        if (!file_exists($CFG->dirroot . '/' . $file)) { // Template file not found.
+            trigger_error($CFG->dirroot . '/' . $file . " not found.", E_USER_ERROR);
+            throw new Exception($CFG->dirroot . '/' . $file . " not found.");
+        }
 
-	$contents = file_get_contents($CFG->dirroot . '/' . $file);
-	if (!empty($subsection)) { // Templates with multiple sections.
-		if (!$contents = template_subsection($contents, $subsection)) {
-			echo "Subsection $subsection not found.";
-			return;
-		}
-	}
-	return $contents;
+        if (!$contents = file_get_contents($CFG->dirroot . '/' . $file)) {
+            trigger_error($CFG->dirroot . '/' . $file . " not able to be opened.", E_USER_ERROR);
+            throw new Exception($CFG->dirroot . '/' . $file . " not able to be opened.");
+        }
+
+        if (!empty($subsection)) { // Templates with multiple sections.
+            if (!$contents = template_subsection($contents, $subsection)) {
+				trigger_error("Fetching template $file:$subsection failed.", E_USER_ERROR);
+				throw new Exception("Fetching template $file:$subsection failed.");
+            }
+        }
+        $contents = trim($contents);
+    }
+	return is_array($contents) ? $contents : trim($contents);
+}
+
+function fetch_template_set($templates) {
+global $CFG;
+    $contents = [];
+    foreach ($templates as $template) {
+		$temp = false;
+        $file = $template['file'] ?? false;
+        $subsection = $template['subsection'] ?? false;
+        $feature = $template['feature'] ?? false;
+        if ($file && $subsection) { // required.
+            if (!$temp = fetch_template($file, $subsection, $feature)) {
+				trigger_error("Fetching template $file:$subsection failed.", E_USER_ERROR);
+                throw new \Exception("Fetching template $file:$subsection failed.");
+			}
+            if (is_array($subsection)) {
+                $contents = array_merge($contents, $temp);
+            } else {
+                $contents[] = $temp;
+            }
+        }
+    }
+    return $contents;
 }
 
 // Main template function
-function use_template($file, $params = [], $subsection = "", $feature = false) {
+function use_template($file, $params = [], $subsection = false, $feature = false) {
 	$v = $params;
+    $contents = "";
 
-	$contents = fetch_template($file, $subsection, $feature);
-	$contents = templates_process_qualifiers($contents, $params); // Look for qualifiers ||x{{ ~~ }}x||
-
-		$pattern = '/\|\|((?s).*?)\|\|/i'; //Look for stuff between ||
-	preg_match_all($pattern, $contents, $matches);
-
-	foreach ($matches[1] as $match) { // Loop through each instance where the template variable bars are found. ie || xxx ||
-		$optional = "";
-		// Check for leading asterisks denoting optional variables.
-		if (strpos($match, "*") === 0) {
-			// Remove leading asterisks.
-			$match = substr($match, 1);
-			$optional = "*";
+    if (is_array($subsection)) {
+        $contents = [];
+        $i = 0;
+        foreach($subsection as $sub) {
+            $p = ismultiarray($params) ? array_slice($params, $i, 1)[0] : $params;
+            $contents[] = use_template($file, $p, $sub, $feature);
+            $i++;
+        }
+    } else {
+		if (!$temp = fetch_template($file, $subsection, $feature)) {
+			trigger_error("Fetching template $file:$subsection failed.", E_USER_ERROR);
+			throw new \Exception("Fetching template $file:$subsection failed.");
 		}
+        $contents = $temp;
+        $contents = templates_process_qualifiers($contents, $params); // Look for qualifiers ||x{{ ~~ }}x||
 
-		$replacement = template_get_functionality($match);
+        // Look for template variables
+        $pattern = '/\|\|((?s).*?)\|\|/i'; //Look for stuff between ||
+        preg_match_all($pattern, $contents, $matches);
 
-		// Check to make sure that a matched variable exists.
-		if ($varisset = template_variable_exists($match, $params)) {
-			ob_start(); // Capture eval() output
-			eval($replacement);
-			$contents = str_replace("||$optional$match||", ob_get_clean(), $contents);
-		} else {
-			$contents = str_replace("||$optional$match||", "", $contents);
+        foreach ($matches[1] as $match) { // Loop through each instance where the template variable bars are found. ie || xxx ||
+            $optional = "";
+            // Check for leading asterisks denoting optional variables.
+            if (strpos($match, "*") === 0) {
+                // Remove leading asterisks.
+                $match = substr($match, 1);
+                $optional = "*";
+            }
 
-			if (!$optional) {
-				trigger_error("Expected $subsection template variable $match not found in parameters array.", E_USER_NOTICE);
-			}
-		}
-	}
+            $replacement = template_get_functionality($match);
+
+            // Check to make sure that a matched variable exists.
+            if ($varisset = template_variable_exists($match, $params)) {
+                ob_start(); // Capture eval() output
+                eval($replacement);
+                $contents = str_replace("||$optional$match||", ob_get_clean(), $contents);
+            } else {
+                $contents = str_replace("||$optional$match||", "", $contents);
+
+                if (!$optional) {
+                    trigger_error("Expected $subsection template variable $match not found in parameters array.", E_USER_NOTICE);
+                }
+            }
+        }
+    }
+	return is_array($contents) ? $contents : trim($contents);
+}
+
+function use_template_set($templates, $params = []) {
+	$v = $params;
+    $contents = [];
+
+    if (is_array($templates)) {
+        $i = 0;
+        foreach($templates as $template) {
+            $file = $template['file'] ?? false;
+            $subsection = $template['subsection'] ?? false;
+            $feature = $template['feature'] ?? false;
+            $sliceoff = 1;
+            if ($file && $subsection) { // required.
+                if (is_array($subsection)) {
+                    $sliceoff = count($subsection);
+                    $p = ismultiarray($params) ? array_slice($params, $i, $sliceoff)[0] : $params;
+                    //$contents += use_template($file, $p, $subsection, $feature);
+					$contents = array_merge($contents, use_template($file, $p, $subsection, $feature));
+                } else {
+                    $p = ismultiarray($params) ? array_slice($params, $i, $sliceoff)[0] : $params;
+                    $contents[] = use_template($file, $p, $subsection, $feature);
+                }
+            }
+
+            $i += $sliceoff;
+        }
+    }
 
 	return $contents;
 }
@@ -195,9 +279,9 @@ function template_subsection($contents, $subsection) {
 
 		$startsAt = strpos($contents, "$subsection||") + strlen("$subsection||");
 		$endsAt = strpos($contents, "||$subsection", $startsAt);
-		return substr($contents, $startsAt, $endsAt - $startsAt);
+		return trim(substr($contents, $startsAt, $endsAt - $startsAt));
 	}
-	return $contents;
+	return trim($contents);
 }
 
 function templates_process_qualifiers($contents, $params) {
@@ -498,8 +582,8 @@ function build_from_js_library($params) {
 	if (array_search("tabs", $params) !== false) { // Tabs.
 		add_js_to_array("scripts", "ajaxtabs.js", $javascript);
 	}
-	if (array_search("popupcal", $params) !== false) { // Tabs.
-		
+	if (array_search("popupcal", $params) !== false) { // Calendar.
+		add_js_to_array("scripts", "popupcalendar.js", $javascript);
 	}
 	if (array_search("validate", $params) !== false) { // jQuery validate.
 		add_js_to_array("scripts", "jquery.min.js", $javascript);
@@ -507,7 +591,7 @@ function build_from_js_library($params) {
 		add_js_to_array("scripts", "jqvalidate.js", $javascript);
 		add_js_to_array("scripts", "jqvalidate_addon.js", $javascript);
 	}
-	if (array_search("picker", $params) !== false) { // Tabs.
+	if (array_search("picker", $params) !== false) { // Color picker.
 		add_js_to_array("scripts/picker", "picker.js", $javascript);
 	}
 	if (array_search("flickity", $params) !== false) { // Image carolsel.

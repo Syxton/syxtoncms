@@ -18,18 +18,38 @@ addable_features||
   ORDER BY f.feature_title
 ||addable_features
 
+get_feature||
+    SELECT *
+    FROM pages_features
+    WHERE pageid = ||pageid||
+    AND feature = ||feature||
+    AND featureid = ||featureid||
+||get_feature
+
+update_feature_sort||
+    UPDATE pages_features
+    SET sort = ||sort||, area = ||area||
+    WHERE id = ||id||
+||update_feature_sort
+
 delete_feature||
-  DELETE
-	FROM pages_features
-	WHERE feature = '||feature||'
-	AND pageid = '||pageid||'
-	AND featureid = '||featureid||'
+    DELETE
+    FROM pages_features
+    WHERE feature = ||feature||
+    AND pageid = ||pageid||
+    AND featureid = ||featureid||
 ||delete_feature
 
 delete_feature_settings||
-  DELETE
-  FROM settings
-  WHERE type = '||feature||'
-  AND pageid = '||pageid||'
-  AND featureid = '||featureid||'
+    DELETE
+    FROM settings
+    WHERE type = '||feature||'
+    AND pageid = '||pageid||'
+    AND featureid = '||featureid||'
 ||delete_feature_settings
+
+delete_page_features||
+    DELETE
+    FROM pages_features
+    WHERE pageid = ||pageid||
+||delete_page_features

@@ -32,9 +32,9 @@ function all_campers_list($filename = "camperlist", $year = false, $removeduplic
         $camperlist[] = ["REGID", "Event", "Name", "Gender", "Birthday", "Current Age", "Address1", "Address2", "City", "State", "Zip", "Email", "Payment Method", "Sponsor",];
         while ($reg = fetch_row($registrations)) {
             $event = get_db_row(use_template("dbsql/events.sql", ["eventid" => $reg["eventid"]], "get_event", "events"));
-            $SQL = use_template("dbsql/events.sql", ["regid" => $reg["regid"]], "get_registration_values", "events");
+            $SQL = fetch_template("dbsql/events.sql", "get_registration_values", "events");
             $temp = $age = $bday = false;
-            if ($entries = get_db_result($SQL)) {
+            if ($entries = get_db_result($SQL, ["regid" => $reg["regid"]])) {
                 unset($temp); unset($bday); unset($age);
                 while ($entry = fetch_row($entries)) {
                     $temp[$entry["elementname"]] = $entry["value"];

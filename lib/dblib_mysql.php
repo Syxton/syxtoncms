@@ -9,9 +9,6 @@
 
 function get_mysql_array_type($type = "assoc") {
 	switch($type) {
-		case "assoc":
-			return MYSQL_ASSOC;
-			break;
 		case "num":
 			return MYSQL_NUM;
 			break;
@@ -35,35 +32,12 @@ function fetch_row($result, $type = false) {
 
 function db_prepare_statement($SQL, $vars) {
 global $conn;
-	$typestring = "";
-	$data = [];
+    $pattern = '/([\'\"]?)(\|\|)((?s).*?)(\|\|)([\'\"]?)/i'; //Look for stuff like ||xxx|| or '||xxx||'
+    $variables = build_prepared_variables($SQL, $vars, $pattern);
 
-	$pattern = '/\|\|((?s).*?)\|\|/i'; //Look for stuff between ||
-	preg_match_all($pattern, $SQL, $matches);
-	foreach ($matches[1] as $match) {
-		switch(gettype($vars[$match])) {
-			case "string":
-				$typestring .= "s";
-				$data[] = $vars[$match];
-				break;
-			case "integer":
-				$typestring .= "i";
-				$data[] = $vars[$match];
-				break;
-			case "double":
-				$typestring .= "d";
-				$data[] = $vars[$match];
-				break;
-			default:
-				$typestring .= "b";
-				$data[] = $vars[$match];
-				break;
-		}
-	}
-
-	$SQL = preg_replace($pattern, '?', $SQL);
+	$SQL = preg_replace($pattern, '?', $SQL); // Replace all ||xxx|| and '||xxx||' with ?
 	$statement = mysql_prepare($conn, $SQL);
-	mysql_stmt_bind_param($statement, $typestring, ...$data);
+	mysql_stmt_bind_param($statement, $variables["typestring"], ...$variables["data"]);
 	return $statement;
 }
 
@@ -160,12 +134,13 @@ global $conn;
 	mysql_commit($conn);
 }
 
-function rollback_db_transaction() {
+function rollback_db_transaction($message = false) {
 global $conn;
+    if (!empty($message)) { error_log("ROLLBACK " . $message); }
 	mysql_rollback($conn);
 }
 
-function set_db_report_level($level = mysql_REPORT_ERROR | mysql_REPORT_STRICT) {
+function set_db_report_level($level = MYSQL_REPORT_ERROR | MYSQL_REPORT_STRICT) {
 	mysql_report($level);
 }
 

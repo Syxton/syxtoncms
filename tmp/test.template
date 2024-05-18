@@ -34,14 +34,50 @@ sql_template||
 	SELECT * FROM testing_table WHERE test_id = ||id||
 ||sql_template
 
-multiple_sql_template||
-	SELECT * FROM testing_table WHERE test_id > ||id1|| LIMIT 1;
-	SELECT * FROM testing_table WHERE test_id > ||id2|| LIMIT 2;
-	SELECT * FROM testing_table WHERE test_id > ||id3|| LIMIT 3;
-||multiple_sql_template
+multiple_select_template1||
+	SELECT * FROM testing_table WHERE test_id > ||id|| LIMIT 1;
+||multiple_select_template1
 
-fail_sqls_template||
-	UPDATE testing_table SET test_field = ||value1|| WHERE test_id > ||id1||;
-	UPDATE testing_table SET test_field = ||value2|| WHERE test_id > ||id2||;
-	UPDATE testing_table SET test_field = ||value3|| WHERE test_ids > ||id3||;
-||fail_sqls_template
+multiple_select_template2||
+	SELECT * FROM testing_table WHERE test_id > ||id|| LIMIT 2;
+||multiple_select_template2
+
+multiple_select_template3||
+	SELECT * FROM testing_table WHERE test_id > ||id|| LIMIT 3;
+||multiple_select_template3
+
+broken_update_templates1||
+	UPDATE testing_table SET test_field = ||value|| WHERE test_id > ||id||;
+||broken_update_templates1
+
+broken_update_templates2||
+	UPDATE testing_table SET test_field = ||value|| WHERE test_id > ||id||;
+||broken_update_templates2
+
+broken_update_templates3||
+	UPDATE testing_table SET test_field = ||value|| WHERE test_ids > ||id||;
+||broken_update_templates3
+
+working_update_templates1||
+	UPDATE testing_table SET test_field = ||value|| WHERE test_id = (||id|| + 1);
+||working_update_templates1
+
+working_update_templates2||
+	UPDATE testing_table SET test_field = ||value|| WHERE test_id = (||id|| + 1);
+||working_update_templates2
+
+working_update_templates3||
+	UPDATE testing_table SET test_field = ||value|| WHERE test_id = (||id|| + 3);
+||working_update_templates3
+
+insert_update_delete1||
+    INSERT INTO testing_table (test_field, test_string) VALUES (||test_field||, ||test_string||)
+||insert_update_delete1
+
+insert_update_delete2||
+    UPDATE testing_table SET test_field = ||test_field|| WHERE test_id = ||test_id||;
+||insert_update_delete2
+
+insert_update_delete3||
+    DELETE FROM testing_table WHERE test_id = ||test_id||
+||insert_update_delete3

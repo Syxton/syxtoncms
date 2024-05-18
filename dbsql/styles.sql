@@ -95,3 +95,9 @@ SELECT *, 9999 as sort
         SELECT '0', 'Custom', 2
       ORDER BY sort
 ||theme_selector_sql
+
+delete_page_styles||
+	DELETE
+	FROM `styles`
+	WHERE pageid = ||pageid||;
+||delete_page_styles

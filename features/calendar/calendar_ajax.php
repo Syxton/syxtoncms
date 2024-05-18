@@ -38,7 +38,7 @@ global $CFG, $MYVARS;
 
 function get_date_info() {
 global $CFG, $MYVARS;
-	$pageid = $MYVARS->GET["pageid"];
+	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	$show_site_events = $MYVARS->GET["show_site_events"];
 	$tm = $MYVARS->GET["tm"];
 	$tn = $MYVARS->GET["tn"];

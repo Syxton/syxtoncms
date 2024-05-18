@@ -42,3 +42,13 @@ get_page_galleries||
                       WHERE pageid='||pageid||'
                       )
 ||get_page_galleries
+
+insert_pic||
+    INSERT INTO pics (pageid, featureid, galleryid, gallery_title, imagename, siteviewable, caption, alttext, dateadded)
+    VALUES(||pageid||, ||featureid||, ||galleryid||, ||gallery_title||, ||imagename||, ||siteviewable||, ||caption||, ||alttext||, ||dateadded||)
+||insert_pic
+
+insert_gallery||
+    INSERT INTO pics_galleries (pageid, featureid, name)
+    VALUES(||pageid||, ||featureid||, ||gallery_name||)
+||insert_gallery

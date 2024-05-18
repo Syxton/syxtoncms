@@ -26,7 +26,7 @@ global $CFG, $USER, $ROLES, $PAGE;
 	}
 	
 	$title = $settings->chat->$featureid->feature_title->setting;
-	
+	$title = '<span class="box_title_text">' . $title . '</span>';
 	if (!get_db_row("SELECT * FROM chat WHERE pageid=$pageid")) {
 		execute_db_sql("INSERT INTO chat (pageid, name) VALUES($pageid, 'Chat Room')");
 	}

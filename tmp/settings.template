@@ -22,29 +22,27 @@ make_setting_input_template||
 		}}istext||
 
 		||isyesno{{
-		<select style="width: calc(100% - 150px);" name="||name||" id="||name||">
-					<option value="1" ||yes||>Yes</option>
-					<option value="0" ||no||>No</option>
-				</select>
+			<select style="width: calc(100% - 150px);" name="||name||" id="||name||">
+				<option value="1" ||yes||>Yes</option>
+				<option value="0" ||no||>No</option>
+			</select>
 		}}isyesno||
 
 		||isnoyes{{
-		<select style="width: calc(100% - 150px);" name="||name||" id="||name||">
-			<option value="0" ||no||>No</option>
-			<option value="1" ||yes||>Yes</option>
-		</select>
+			<select style="width: calc(100% - 150px);" name="||name||" id="||name||">
+				<option value="0" ||no||>No</option>
+				<option value="1" ||yes||>Yes</option>
+			</select>
 		}}isnoyes||
 
 		||isselect{{
-		<select style="width: calc(100% - 150px);" name="||name||" id="||name||">
-			||options||
-		</select>
+			<select style="width: calc(100% - 150px);" name="||name||" id="||name||">
+				||options||
+			</select>
 		}}isselect||
 
 		||istextarea{{
-		<textarea style="width: calc(100% - 150px);" id="||name||" wrap="off" rows="||extraforminfo||" >
-			||setting||
-		</textarea>
+			<textarea style="width: calc(100% - 150px);" id="||name||" wrap="off" rows="||extraforminfo||" >||setting||</textarea>
 		}}istextarea||
 
 		||savebutton{{

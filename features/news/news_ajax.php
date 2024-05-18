@@ -23,11 +23,11 @@ callfunction();
 
 function add_news() {
 global $CFG, $USER, $MYVARS;
-    $pageid = $MYVARS->GET["pageid"];
-    $featureid = $MYVARS->GET["featureid"];
-    $html = dbescape(urldecode($MYVARS->GET["html"]));
-    $title = dbescape(urldecode($MYVARS->GET["title"]));
-    $summary = dbescape(urldecode($MYVARS->GET["summary"]));
+    $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+    $featureid = clean_myvar_req("featureid", "int");
+    $html = clean_myvar_req("html", "html");
+    $title = clean_myvar_req("title", "html");
+    $summary = clean_myvar_req("summary", "html");
 
     $submitted = get_timestamp();
     $SQL = "INSERT INTO news (pageid,featureid,title,caption,content,submitted,userid) VALUES('$pageid', '$featureid', '$title', '$summary', '$html', '$submitted', '" . $USER->userid . "')";
@@ -40,9 +40,10 @@ global $CFG, $USER, $MYVARS;
 
 function update_archive_months() {
 global $CFG, $USER, $MYVARS;
-    $pageid = $MYVARS->GET["pageid"];
-    $featureid = $MYVARS->GET["featureid"];
-    $year = $MYVARS->GET["year"];	
+    $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+    $featureid = clean_myvar_opt("featureid", "int", false);
+    $year = clean_myvar_opt("year", "int", false);
+
     $userid = is_logged_in() ? $USER->userid : false;
     $months = months_with_news($userid, $year, false, $pageid, $featureid);
     $lastrow = get_array_count($months, -1);
@@ -66,10 +67,10 @@ global $CFG, $USER, $MYVARS;
 
 function update_archive_articles() {
 global $CFG, $USER, $MYVARS;
-    $pageid = $MYVARS->GET["pageid"];
-    $featureid = $MYVARS->GET["featureid"];
-    $month = $MYVARS->GET["month"];
-    $year = $MYVARS->GET["year"];
+    $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+    $featureid = clean_myvar_opt("featureid", "int", false);
+    $month = clean_myvar_opt("month", "int", false);
+    $year = clean_myvar_opt("year", "int", false);
     $userid = is_logged_in() ? $USER->userid : false;	
     $newsarticles = get_month_news($userid, $year, $month, false, $pageid, $featureid);
     $params = [
@@ -87,11 +88,11 @@ global $CFG, $USER, $MYVARS;
 
 function edit_news() {
 global $CFG, $MYVARS;
-    $newsid = dbescape($MYVARS->GET["newsid"]);
-    $html = dbescape(urldecode($MYVARS->GET["html"]));
-    $title = dbescape(urldecode($MYVARS->GET["title"]));
-    $summary = dbescape(urldecode($MYVARS->GET["summary"]));
-    $pageid = dbescape($MYVARS->GET["pageid"]);
+    $newsid = clean_myvar_req("newsid", "int");
+    $html = clean_myvar_req("html", "html");
+    $title = clean_myvar_req("title", "html");
+    $summary = clean_myvar_req("summary", "html");
+    $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     $edited = get_timestamp();
     $SQL = "UPDATE news SET content='$html', title='$title', caption='$summary', edited='$edited' WHERE newsid='$newsid'";
 

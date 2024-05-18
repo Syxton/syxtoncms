@@ -20,14 +20,12 @@ if (empty($_POST["aslib"])) {
 
     callfunction();
 
-    echo get_editor_javascript();
-
     echo '</body></html>';
 }
 
 function forum_settings() {
 global $CFG, $MYVARS, $USER;
-	$featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
+	$featureid = clean_myvar_opt("featureid", "int", false); $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	$feature = "forum";
 
 	//Default Settings
@@ -45,7 +43,7 @@ function createforumcategory() {
 global $MYVARS, $CFG, $USER;
 	if (!defined('VALIDATELIB')) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
 
-	$forumid = dbescape($MYVARS->GET['forumid']); $pageid = dbescape($MYVARS->GET['pageid']);
+	$forumid = dbescape($MYVARS->GET['forumid']); $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	$title = "";
 
 	if (isset($MYVARS->GET["catid"])) {
@@ -98,7 +96,7 @@ global $CFG, $MYVARS;
         echo '<br /><span style="font-size:.8em; color:#CCCCCC;">Editing Post: #' . $postid . '</span>';
     }
 
-    echo get_editor_box(["initialvalue" => stripslashes($value), "type" => "Forum", "height" => "400", "width" => "700"]) . '
+    echo get_editor_box(["initialvalue" => $value, "type" => "Forum", "height" => "400", "width" => "700"]) . '
 		 <input type="button" style="margin: 10px auto;display: block;"
                 name="forum_submit"
                 id="forum_submit"
@@ -117,55 +115,47 @@ global $CFG, $MYVARS;
 
 function shoutbox_editor() {
 global $CFG, $MYVARS, $USER;
-    $forumid = $MYVARS->GET["forumid"];
-	$username = isset($USER->userid) && $USER->userid > 0 ? '<input type="hidden" id="ownerid" name="ownerid" value="' . $USER->userid . '" /><input type="hidden" id="alias" name="alias" />' : '<span class="shoutbox_editortext" style="float:left;margin-top:3px;"><img src="' . $CFG->wwwroot . '/images/shoutbox_alias.gif" style="margin-bottom:-12px;" /></span><input type="text" id="alias" size="21" name="alias" style="float:left;margin-top:5px; margin-left:-195px;" /><input type="hidden" id="ownerid" name="ownerid" />';
+	$forumid = clean_myvar_req("forumid", "int");
+
+	if (isset($USER->userid) && $USER->userid > 0) {
+		$username = '<input type="hidden" id="userid" name="userid" value="' . $USER->userid . '" />';
+	}
+	$username = isset($USER->userid) && $USER->userid > 0 ?  : '<span class="shoutbox_editortext" style="float:left;margin-top:3px;"><img src="' . $CFG->wwwroot . '/images/shoutbox_alias.gif" style="margin-bottom:-12px;" /></span><input type="text" id="alias" size="21" name="alias" style="float:left;margin-top:5px; margin-left:-195px;" /><input type="hidden" id="userid" name="userid" />';
     echo '<input name="contentWordCount" type="hidden" value="5" />';
     echo get_editor_box(["type" => "Shoutbox", "height" => "400"]);
 	echo $username;
-    echo '<input type="button" value="Submit" style="float:right;margin-top:3px" onclick="if (' . get_editor_value_javascript() . '.length > 0) { ajaxapi(\'/features/forum/forum_ajax.php\',\'shoutbox_post\',\'&amp;forumid=' . $forumid . '&amp;alias=\'+document.getElementById(\'alias\').value+\'&amp;ownerid=\'+document.getElementById(\'ownerid\').value+\'&amp;message=\'+escape(' . get_editor_value_javascript() . '),function() { close_modal(); }); this.blur();}" />';
+    echo '<input type="button" value="Submit" style="float:right;margin-top:3px" onclick="if (' . get_editor_value_javascript() . '.length > 0) { ajaxapi(\'/features/forum/forum_ajax.php\',\'shoutbox_post\',\'&amp;forumid=' . $forumid . '&amp;alias=\'+document.getElementById(\'alias\').value+\'&amp;userid=\'+document.getElementById(\'userid\').value+\'&amp;message=\'+escape(' . get_editor_value_javascript() . '),function() { close_modal(); }); this.blur();}" />';
 }
 
 function create_discussion_form() {
-global $CFG, $MYVARS;
+global $CFG;
 	$title = $message = "";
-	$pageid = $MYVARS->GET["pageid"]; $forumid = $MYVARS->GET["forumid"]; $catid = $MYVARS->GET["catid"];
+	$catid = clean_myvar_req("catid", "int");
+	$forumid = clean_myvar_req("forumid", "int");
+	$pageid = clean_myvar_req("pageid", "int");
+	$discussionid = clean_myvar_opt("discussionid", "int", false);
 
-	if (isset($MYVARS->GET["discussionid"])) { //EDIT MODE
-		$discussionid = $MYVARS->GET["discussionid"];
+	if ($discussionid) { // EDIT MODE
 		$discussion = get_db_row("SELECT * FROM forum_discussions WHERE discussionid=$discussionid");
 		$postid = first_post($discussionid);
 		$message = get_db_field("message", "forum_posts", "postid=$postid ORDER BY postid");
 		$title = $discussion["title"];
 	}
 
-	echo '<img id="edit_area_' . $forumid . '" name="edit_area_' . $forumid . '" src="' . $CFG->wwwroot . '/images/edit_area.gif" />
-			<br /><br />
-			<span style="padding:2px;">
-				<strong>Discussion Title</strong>
-				<input type="text" size="80" id="discussion_title" value="' . $title . '" />
-			</span>
-			<br /><br />
-			' . get_editor_box(["initialvalue" => stripslashes($message), "type" => "Forum", "height" => "300"]);
-	
-	$existingpost = "";
-	if (isset($MYVARS->GET["discussionid"])) {
-		$existingpost = '&postid=' . $postid . '&discussionid=' . $discussionid;
-	}
-
-	$saveaction = 'if (' . get_editor_value_javascript() . ' != \'\' && document.getElementById(\'discussion_title\').value != \'\') {
-						ajaxapi(\'/features/forum/forum_ajax.php\',
-								\'create_discussion\',
-								\'&message=\' + escape(' . get_editor_value_javascript() . ') + \'&title=\' + escape(document.getElementById(\'discussion_title\').value)+\'&pageid=' . $pageid . '&forumid=' . $forumid . '&catid=' . $catid . $existingpost . '\',
-								function() {
-									close_modal();
-								});
-					}';
-
-	echo '<div style="text-align:center">
-			<br />
-			<input type="button" name="forum_submit" id="forum_submit" value="Submit"
-					 onclick="' . $saveaction . '" />
-			</div>';
+	$existingpost = $discussionid ? '&postid=' . $postid . '&discussionid=' . $discussionid : '';
+	$editor = get_editor_box(["initialvalue" => $message, "type" => "Forum", "height" => "300"]);
+	$editorvalue = get_editor_value_javascript();
+	$params = [
+		"forumid" => $forumid,
+		"catid" => $catid,
+		"pageid" => $pageid,
+		"wwwroot" => $CFG->wwwroot,
+		"existingpost" => $existingpost,
+		"editor" => $editor,
+		"editorvalue" => $editorvalue,
+		"title" => $title,
+	];
+	echo use_template("tmp/forum.template", $params, "create_discussion_form", "forum");
 }
 
 ?>

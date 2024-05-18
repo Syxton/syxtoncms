@@ -26,7 +26,7 @@ global $CFG, $USER, $ROLES;
 	}
 
 	$title = $settings->calendar->$featureid->feature_title->setting;
-	
+	$title = '<span class="box_title_text">' . $title . '</span>';
     if (user_is_able($USER->userid, "viewcalendar", $pageid, "calendar", $featureid)) {
         if ($area == "middle") {
             $content .= '<span id="calendarmarker"></span><div id="calendar_div" style="width:100%;z-index:2;">' . get_large_calendar($pageid, $USER->userid) . '</div><div id="day_info" style="display:none"></div>';

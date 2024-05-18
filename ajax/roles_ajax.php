@@ -24,10 +24,10 @@ function name_search() {
 global $CFG, $USER, $MYVARS;
 
     // Search for users based on name, email, or username
-    $pageid = isset($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; // The page to search on
-    $type = isset($MYVARS->GET['type']) ? $MYVARS->GET['type'] : "per_page_"; // The type of search being performed (per_page_ or feature specific)
-    $featureid = isset($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; // The feature ID, if feature specific
-    $feature = isset($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; // The feature name, if feature specific
+    $pageid = clean_myvar_opt("pageid ", "int", false); // The page to search on
+    $type = clean_myvar_opt("type ", "string", "per_page_"); // The type of search being performed (per_page_ or feature specific)
+    $featureid = clean_myvar_opt("featureid", "int", false); // The feature ID, if feature specific
+    $feature = clean_myvar_opt("type ", "string", false); // The feature name, if feature specific
 
     $searchstring = "";
     $searcharray = explode(" ", $MYVARS->GET["searchstring"]);
@@ -94,11 +94,11 @@ global $CFG, $USER, $MYVARS;
 
 function add_to_group_search() {
 global $CFG, $ROLES, $USER, $MYVARS;
-  $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
-  $type = !empty($MYVARS->GET['type']) ? $MYVARS->GET['type'] : "per_page_"; //Should always be passed
-  $groupid = !empty($MYVARS->GET['groupid']) ? $MYVARS->GET['groupid'] : false; //Should always be passed
-  $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
-  $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
+  $pageid= clean_myvar_opt("pageid", "int", get_pageid()); //Should always be passed
+  $type = clean_myvar_opt("type", "string", "per_page_"); //Should always be passed
+  $groupid = clean_myvar_opt("groupid", "int", false); //Should always be passed
+  $featureid = clean_myvar_opt("featureid", "int", false); //Only passed on feature specific managing
+  $feature = clean_myvar_opt("feature", "string", false); //Only passed on feature specific managing
 
   $searchstring = "";	$searcharray = explode(" ", $MYVARS->GET["searchstring"]);
   $i=0;
@@ -160,10 +160,10 @@ global $CFG, $ROLES, $USER, $MYVARS;
 
 function refresh_group_users() {
 global $CFG, $MYVARS, $USER;
-  $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
-  $groupid = !empty($MYVARS->GET['groupid']) ? $MYVARS->GET['groupid'] : false; //Should always be passed
-  $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
-  $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
+  $pageid= clean_myvar_opt("pageid", "int", get_pageid()); //Should always be passed
+  $groupid = clean_myvar_opt("groupid", "int", false); //Should always be passed
+  $featureid = clean_myvar_opt("featureid", "int", false); //Only passed on feature specific managing
+  $feature = clean_myvar_opt("feature", "string", false); //Only passed on feature specific managing
 
  	if ($pageid == $CFG->SITEID && is_siteadmin($USER->userid)) {
     $SQL = "SELECT u.*
@@ -220,21 +220,21 @@ global $CFG, $MYVARS, $USER;
 
 function manage_group_users_form() {
 global $CFG, $MYVARS;
-    $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
-    $groupid = !empty($MYVARS->GET['groupid']) ? $MYVARS->GET['groupid'] : false; //Should always be passed
-    $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
-    $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
+    $pageid= clean_myvar_opt("pageid", "int", get_pageid()); //Should always be passed
+    $groupid = clean_myvar_opt("groupid", "int", false); //Should always be passed
+    $featureid = clean_myvar_opt("featureid", "int", false); //Only passed on feature specific managing
+    $feature = clean_myvar_opt("feature", "string", false); //Only passed on feature specific managing
 
     echo refresh_manage_groups($pageid, $groupid, $feature, $featureid);
 }
 
 function add_group_user() {
 global $CFG, $MYVARS;
-    $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
-    $userid = !empty($MYVARS->GET['userid']) ? $MYVARS->GET['userid'] : false; //Should always be passed
-    $groupid = !empty($MYVARS->GET['groupid']) ? $MYVARS->GET['groupid'] : false; //Should always be passed
-    $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
-    $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
+    $pageid= clean_myvar_opt("pageid", "int", get_pageid()); //Should always be passed
+    $userid = clean_myvar_opt("userid ", "int", false); //Should always be passed
+    $groupid = clean_myvar_opt("groupid", "int", false); //Should always be passed
+    $featureid = clean_myvar_opt("featureid", "int", false); //Only passed on feature specific managing
+    $feature = clean_myvar_opt("feature", "string", false); //Only passed on feature specific managing
 
     $SQL = "INSERT INTO groups_users (userid, pageid, groupid)
                 VALUES('$userid', '$pageid', '$groupid')";
@@ -245,11 +245,11 @@ global $CFG, $MYVARS;
 
 function remove_group_user() {
 global $CFG, $MYVARS;
-    $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
-    $userid = !empty($MYVARS->GET['userid']) ? $MYVARS->GET['userid'] : false; //Should always be passed
-    $groupid = !empty($MYVARS->GET['groupid']) ? $MYVARS->GET['groupid'] : false; //Should always be passed
-    $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
-    $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
+    $pageid= clean_myvar_opt("pageid", "int", get_pageid()); //Should always be passed
+    $userid = clean_myvar_opt("userid ", "int", false); //Should always be passed
+    $groupid = clean_myvar_opt("groupid", "int", false); //Should always be passed
+    $featureid = clean_myvar_opt("featureid", "int", false); //Only passed on feature specific managing
+    $feature = clean_myvar_opt("feature", "string", false); //Only passed on feature specific managing
 
     $SQL = "DELETE
             FROM groups_users
@@ -358,10 +358,10 @@ global $CFG, $MYVARS, $ROLES, $USER;
 
 function delete_group() {
 global $CFG, $MYVARS, $USER;
-    $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
-    $groupid = !empty($MYVARS->GET['groupid']) ? $MYVARS->GET['groupid'] : false; //Should always be passed
-    $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
-    $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
+    $pageid= clean_myvar_opt("pageid", "int", get_pageid()); //Should always be passed
+    $groupid = clean_myvar_opt("groupid", "int", false); //Should always be passed
+    $featureid = clean_myvar_opt("featureid", "int", false); //Only passed on feature specific managing
+    $feature = clean_myvar_opt("feature", "string", false); //Only passed on feature specific managing
 
     if ($pageid && $groupid) {
     $SQL = "DELETE
@@ -394,29 +394,29 @@ global $CFG, $MYVARS, $USER;
 
 function refresh_groups_page() {
 global $MYVARS;
-  $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
-  $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
-  $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
+  $pageid= clean_myvar_opt("pageid", "int", get_pageid()); //Should always be passed
+  $featureid = clean_myvar_opt("featureid", "int", false); //Only passed on feature specific managing
+  $feature = clean_myvar_opt("feature", "string", false); //Only passed on feature specific managing
 
   echo group_page($pageid, $feature, $featureid);
 }
 
 function refresh_groups_list() {
 global $MYVARS;
-  $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
-  $groupid = !empty($MYVARS->GET['groupid']) ? $MYVARS->GET['groupid'] : false; //Only passed when editing
-  $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
-  $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
+  $pageid= clean_myvar_opt("pageid", "int", get_pageid()); //Should always be passed
+  $groupid = clean_myvar_opt("groupid", "int", false); //Only passed when editing
+  $featureid = clean_myvar_opt("featureid", "int", false); //Only passed on feature specific managing
+  $feature = clean_myvar_opt("feature", "string", false); //Only passed on feature specific managing
 
   echo groups_list($pageid, $feature, $featureid, true, $groupid);
 }
 
 function create_edit_group_form() {
 global $CFG, $MYVARS;
-  $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
-  $groupid = !empty($MYVARS->GET['groupid']) ? $MYVARS->GET['groupid'] : false; //Only passed when editing
-  $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
-  $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
+  $pageid= clean_myvar_opt("pageid", "int", get_pageid()); //Should always be passed
+  $groupid = clean_myvar_opt("groupid", "int", false); //Only passed when editing
+  $featureid = clean_myvar_opt("featureid", "int", false); //Only passed on feature specific managing
+  $feature = clean_myvar_opt("feature", "string", false); //Only passed on feature specific managing
 
   $name = "";
   if ($groupid) { // EDITING: get form values to fill in
@@ -441,12 +441,12 @@ global $CFG, $MYVARS;
 
 function save_group() {
 global $MYVARS;
-  $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
+  $pageid= clean_myvar_opt("pageid", "int", get_pageid()); //Should always be passed
   $name = !empty($MYVARS->GET['name']) ? dbescape($MYVARS->GET['name']) : false; //Should always be passed
   $parent = !empty($MYVARS->GET['parent']) ? $MYVARS->GET['parent'] : false; //Should always be passed
-  $groupid = !empty($MYVARS->GET['groupid']) ? $MYVARS->GET['groupid'] : false; //Only passed when editing
-  $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
-  $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
+  $groupid = clean_myvar_opt("groupid", "int", false); //Only passed when editing
+  $featureid = clean_myvar_opt("featureid", "int", false); //Only passed on feature specific managing
+  $feature = clean_myvar_opt("feature", "string", false); //Only passed on feature specific managing
 
   $parent = $parent ? $parent : "0";
   $params = [ "is_editing" => boolval($groupid),
@@ -463,10 +463,10 @@ global $MYVARS;
 
 function refresh_edit_roles() {
 global $MYVARS;
-  $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
+  $pageid= clean_myvar_opt("pageid", "int", get_pageid()); //Should always be passed
   $roleid = !empty($MYVARS->GET['roleid']) ? $MYVARS->GET['roleid'] : false; //Should always be passed
-  $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
-  $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
+  $feature = clean_myvar_opt("feature", "string", false); //Only passed on feature specific managing
+  $featureid = clean_myvar_opt("featureid", "int", false); //Only passed on feature specific managing
 
   if ($pageid && $roleid) {
     echo print_abilities($pageid, "per_role_", $roleid, false, $feature, $featureid);
@@ -479,10 +479,10 @@ global $MYVARS;
 //TOP LEVEL PER USER OVERRIDES
 function refresh_user_abilities() {
 global $MYVARS;
-	$pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
-  $userid = !empty($MYVARS->GET['userid']) ? $MYVARS->GET['userid'] : false; //Should always be passed
-  $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
-  $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
+	$pageid= clean_myvar_opt("pageid", "int", get_pageid()); //Should always be passed
+  $userid = clean_myvar_opt("userid ", "int", false); //Should always be passed
+  $featureid = clean_myvar_opt("featureid", "int", false); //Only passed on feature specific managing
+  $feature = clean_myvar_opt("feature", "string", false); //Only passed on feature specific managing
 
   if ($pageid && $userid) {
     echo print_abilities($pageid, "per_user_", false, $userid, $feature, $featureid);
@@ -494,10 +494,10 @@ global $MYVARS;
 
 function refresh_group_abilities() {
 global $MYVARS;
-	$pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
-  $groupid = !empty($MYVARS->GET['groupid']) ? $MYVARS->GET['groupid'] : false; //Should always be passed
-  $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
-  $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
+	$pageid= clean_myvar_opt("pageid", "int", get_pageid()); //Should always be passed
+  $groupid = clean_myvar_opt("groupid", "int", false); //Should always be passed
+  $featureid = clean_myvar_opt("featureid", "int", false); //Only passed on feature specific managing
+  $feature = clean_myvar_opt("feature", "string", false); //Only passed on feature specific managing
 
   if ($pageid && $groupid) {
     echo '<form id="per_group_roles_form">' .
@@ -526,12 +526,12 @@ function save_ability_changes() {
   $abilities = explode("**", $MYVARS->GET['per_role_rightslist']);
 
   // Extract the page and role ids from the post
-  $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
+  $pageid= clean_myvar_opt("pageid", "int", get_pageid()); //Should always be passed
   $roleid = !empty($MYVARS->GET['per_role_roleid']) ? $MYVARS->GET['per_role_roleid'] : false; //Should always be passed
 
   // Extract the feature and feature id from the post (if present)
-  $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false;
-  $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false;
+  $featureid = clean_myvar_opt("featureid", "int", false);
+  $feature = clean_myvar_opt("feature", "string", false);
 
   // Initialize the success flag
   $success = false;
@@ -620,10 +620,10 @@ function save_ability_changes() {
 function save_user_ability_changes() {
 global $CFG, $MYVARS;
   $abilities = explode("**", $MYVARS->GET['per_user_rightslist']);
-	$pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
-  $userid = !empty($MYVARS->GET['userid']) ? $MYVARS->GET['userid'] : false; //Should always be passed
-  $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
-  $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
+	$pageid= clean_myvar_opt("pageid", "int", get_pageid()); //Should always be passed
+  $userid = clean_myvar_opt("userid ", "int", false); //Should always be passed
+  $featureid = clean_myvar_opt("featureid", "int", false); //Only passed on feature specific managing
+  $feature = clean_myvar_opt("feature", "string", false); //Only passed on feature specific managing
 
   $i = 0;
 	while (isset($abilities[$i])) {
@@ -714,10 +714,10 @@ global $CFG, $MYVARS;
 function save_group_ability_changes() {
 global $CFG, $MYVARS;
   $abilities = explode("**", $MYVARS->GET['per_group_rightslist']);
-	$pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
-  $groupid = !empty($MYVARS->GET['groupid']) ? $MYVARS->GET['groupid'] : false; //Should always be passed
-  $featureid = !empty($MYVARS->GET['featureid']) ? $MYVARS->GET['featureid'] : false; //Only passed on feature specific managing
-  $feature = !empty($MYVARS->GET['feature']) ? $MYVARS->GET['feature'] : false; //Only passed on feature specific managing
+	$pageid= clean_myvar_opt("pageid", "int", get_pageid()); //Should always be passed
+  $groupid = clean_myvar_opt("groupid", "int", false); //Should always be passed
+  $featureid = clean_myvar_opt("featureid", "int", false); //Only passed on feature specific managing
+  $feature = clean_myvar_opt("feature", "string", false); //Only passed on feature specific managing
 
   $i = 0;
 	while (isset($abilities[$i])) {
@@ -800,8 +800,8 @@ global $CFG, $MYVARS;
 
 function refresh_user_roles() {
 global $CFG, $USER, $MYVARS, $ROLES;
-  $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : false; //Should always be passed
-  $userid = !empty($MYVARS->GET['userid']) ? $MYVARS->GET['userid'] : false; //Should always be passed
+  $pageid= clean_myvar_opt("pageid", "int", get_pageid()); //Should always be passed
+  $userid = clean_myvar_opt("userid ", "int", false); //Should always be passed
   $myroleid = user_role($USER->userid, $pageid);
   $roleid = user_role($userid, $pageid, true);
 
@@ -847,7 +847,7 @@ function assign_role() {
 global $MYVARS, $ROLES;
 	$roleid = $MYVARS->GET['roleid'];
 	$userid = $MYVARS->GET['userid'];
-	$pageid = $MYVARS->GET['pageid'];
+	$pageid = clean_myvar_req("pageid", "int");
 
   $SQL = "DELETE
             FROM roles_assignment

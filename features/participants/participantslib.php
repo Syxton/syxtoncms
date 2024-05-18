@@ -29,7 +29,8 @@ global $CFG, $USER, $ABILITIES;
 	if (is_logged_in()) {
 		if (user_is_able($USER->userid, 'viewparticipants', $pageid)) {
             $content = make_modal_links(["title"=> stripslashes($title),"text"=> stripslashes($title),"path" => action_path("participants") . "view_participants&amp;pageid=$pageid&amp;featureid=$featureid", "width" => "400", "image" => $CFG->wwwroot . "/images/user.png", "styles" => "vertical-align: top;"]); 
-			$buttons = get_button_layout("participants", $featureid, $pageid); 
+			$buttons = get_button_layout("participants", $featureid, $pageid);
+			$title = '<span class="box_title_text">' . $title . '</span>';
 			return get_css_box($title, $content, $buttons, NULL, "participants", $featureid);
 		}
 	}

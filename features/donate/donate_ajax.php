@@ -23,19 +23,19 @@ callfunction();
 
 function select_campaign_form() {
 global $CFG, $MYVARS, $USER;
-    $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']); 
+    $featureid = clean_myvar_opt("featureid", "int", false); $pageid = clean_myvar_opt("pageid", "int", get_pageid()); 
     echo select_campaign_forms($featureid, $pageid);  
 }
 
 function add_or_manage_form() {
 global $CFG, $MYVARS, $USER;
-    $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']); 
+    $featureid = clean_myvar_opt("featureid", "int", false); $pageid = clean_myvar_opt("pageid", "int", get_pageid()); 
     echo add_or_manage_forms($featureid, $pageid);  
 }
 
 function new_campaign_form() {
 global $CFG, $MYVARS, $USER;
-    $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']); 
+    $featureid = clean_myvar_opt("featureid", "int", false); $pageid = clean_myvar_opt("pageid", "int", get_pageid()); 
     $campaign_id = empty($MYVARS->GET['campaign_id']) ? false : dbescape($MYVARS->GET['campaign_id']);
     if (!defined('VALIDATELIB')) { include_once($CFG->dirroot . '/lib/validatelib.php'); }   
     
@@ -111,7 +111,7 @@ global $CFG, $MYVARS, $USER;
 
 function add_new_campaign() {
 global $CFG, $MYVARS, $USER;
-    $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']); 
+    $featureid = clean_myvar_opt("featureid", "int", false); $pageid = clean_myvar_opt("pageid", "int", get_pageid()); 
     $campaign_id = empty($MYVARS->GET['campaign_id']) ? false : dbescape($MYVARS->GET['campaign_id']);
     $goal = dbescape($MYVARS->GET['goal']); $description = dbescape($MYVARS->GET['description']);
     $email = dbescape($MYVARS->GET['email']); $token = dbescape($MYVARS->GET['token']);
@@ -140,7 +140,7 @@ global $CFG, $MYVARS, $USER;
 
 function join_campaign_form() {
 global $CFG, $MYVARS, $USER;
-    $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
+    $featureid = clean_myvar_opt("featureid", "int", false); $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     echo '<center><h1>Join a Campaign</h1></center>';
     echo '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'select_campaign_form\',\'&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); });">Back</a><br /><br />';   
     $SQL = "SELECT * FROM donate_campaign WHERE origin_page='$pageid' AND campaign_id NOT IN (SELECT campaign_id FROM donate_instance WHERE donate_id IN (SELECT featureid FROM pages_features WHERE pageid='$pageid' AND feature='donate')) OR shared='1'";
@@ -157,7 +157,7 @@ global $CFG, $MYVARS, $USER;
 
 function join_campaign() {
 global $CFG, $MYVARS, $USER;    
-    $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
+    $featureid = clean_myvar_opt("featureid", "int", false); $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     $campaign_id = dbescape($MYVARS->GET['campaign_id']); 
     
     if ($campaign_id) { //Campaign ID chosen
@@ -173,7 +173,7 @@ global $CFG, $MYVARS, $USER;
 
 function add_offline_donations_form() {
 global $CFG, $MYVARS, $USER;
-    $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']); 
+    $featureid = clean_myvar_opt("featureid", "int", false); $pageid = clean_myvar_opt("pageid", "int", get_pageid()); 
     if (!defined('VALIDATELIB')) { include_once($CFG->dirroot . '/lib/validatelib.php'); }   
     echo '
         <style>
@@ -214,7 +214,7 @@ global $CFG, $MYVARS, $USER;
 
 function add_offline_donation() {
 global $CFG, $MYVARS, $USER;
-    $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']); 
+    $featureid = clean_myvar_opt("featureid", "int", false); $pageid = clean_myvar_opt("pageid", "int", get_pageid()); 
     $amount = dbescape(number_format($MYVARS->GET['amount'],2,".", "")); $name = $MYVARS->GET['name'];
     
     $campaign = get_db_row("SELECT * FROM donate_campaign WHERE campaign_id IN (SELECT campaign_id FROM donate_instance WHERE donate_id='$featureid')");	
@@ -228,7 +228,7 @@ global $CFG, $MYVARS, $USER;
 
 function manage_donations_form() {
 global $CFG, $MYVARS, $USER;
-    $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']); 
+    $featureid = clean_myvar_opt("featureid", "int", false); $pageid = clean_myvar_opt("pageid", "int", get_pageid()); 
     $content = '';
     echo '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'add_or_manage_form\',\'&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); });">Back</a><br /><br />';   
     $content .= '<div style="max-height:340px;overflow-x:hidden;overflow-y:auto;">';
@@ -271,7 +271,7 @@ global $CFG, $MYVARS, $USER;
 function edit_donation_form() {
 global $CFG, $MYVARS, $USER;
     $donationid = dbescape($MYVARS->GET['donationid']);  
-    $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']); 
+    $featureid = clean_myvar_opt("featureid", "int", false); $pageid = clean_myvar_opt("pageid", "int", get_pageid()); 
     if (!defined('VALIDATELIB')) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
       
     $row = get_db_row("SELECT * FROM donate_donations WHERE donationid='$donationid'");
@@ -332,7 +332,7 @@ global $CFG, $MYVARS, $USER;
 
 function edit_donation_save() {
 global $CFG, $MYVARS, $USER;
-    $featureid = dbescape($MYVARS->GET['featureid']); $pageid = dbescape($MYVARS->GET['pageid']);
+    $featureid = clean_myvar_opt("featureid", "int", false); $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     $donationid = dbescape($MYVARS->GET['donationid']);$name = $MYVARS->GET['name']; $campaign_id = dbescape($MYVARS->GET['campaign_id']); 
     $paypal_TX = $MYVARS->GET['paypal_TX']; $amount = dbescape(number_format($MYVARS->GET['amount'],2,".", ""));
     

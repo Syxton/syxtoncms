@@ -84,6 +84,7 @@ global $CFG, $USER, $ROLES, $ABILITIES;
 	}
 
 	$buttons = get_button_layout("adminpanel", $featureid, $pageid);
+	$title = '<span class="box_title_text">' . $title . '</span>';
 	$returnme = $content != "" ? get_css_box($title, $content, $buttons, NULL, "adminpanel", $featureid) : "";
 	return $returnme;
 }

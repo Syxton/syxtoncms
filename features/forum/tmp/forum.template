@@ -31,3 +31,26 @@ get_posts_page_link||
         &nbsp;||display||&nbsp;
     </a>
 ||get_posts_page_link
+
+create_discussion_form||
+	<img id="edit_area_||forumid||" name="edit_area_||forumid||" src="||wwwroot||/images/edit_area.gif" />
+	<br /><br />
+	<span style="padding:2px;">
+		<strong>Discussion Title</strong>
+		<input type="text" size="80" id="discussion_title" value="||title||" />
+	</span>
+	<br /><br />
+	||editor||
+	<div style="text-align:center">
+	<br />
+	<input type="button" name="forum_submit" id="forum_submit" value="Submit"
+		onclick="if (||editorvalue|| !== '' && $('#discussion_title').val() != '') {
+					ajaxapi('/features/forum/forum_ajax.php',
+							'create_discussion',
+							'&message=' + escape(||editorvalue||) + '&title=' + escape($('#discussion_title').val()) + '&pageid=||pageid||&forumid=||forumid||&catid=||catid||||existingpost||',
+							function() {
+								close_modal();
+							});
+	}" />
+	</div>
+||create_discussion_form
