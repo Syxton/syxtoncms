@@ -6,8 +6,13 @@
  * Date: 5/28/2021
  * Revision: 3.1.7
  ***************************************************************************/
-
-if (!LIBHEADER) { include('header.php'); }
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
+	}
+	include($sub . 'lib/header.php');
+}
 define('PAGELIB', true);
 define('DEFAULT_PAGEROLE', 4);
 
@@ -21,9 +26,10 @@ global $CFG, $MYVARS;
 	
 		if (!empty($MYVARS->GET["i"])) { // Universal javascript and CSS.
 			$params = ["directory" => get_directory()];
-			echo use_template("tmp/pagelib.template", $params, "main_js_css");
+			echo fill_template("tmp/pagelib.template", "main_js_css", false, $params);
 		}
 		if (!empty($MYVARS->GET["v"])) { // Validation javascript and CSS.
+			echo get_js_tags(["jquery"]);
 			echo get_js_tags(["validate"]);
 			unset($MYVARS->GET["v"]);
 		}
@@ -56,7 +62,7 @@ function main_body($header_only = false) {
 		"page_masthead_1" => page_masthead(true),
 		"page_masthead_2" => page_masthead(false, $header_only),
 	];
-	return use_template("tmp/pagelib.template", $params, "main_body_template");
+	return fill_template("tmp/pagelib.template", "main_body_template", false, $params);
 }
 
 function set_pageid($pageid = NULL) {
@@ -106,6 +112,10 @@ global $PAGE, $CFG, $MYVARS;
 	return $CFG->SITEID;
 }
 
+function get_default_role($pageid) {
+	return get_db_field("default_role", "pages", "pageid = ||pageid||", ["pageid" => $pageid]);
+}
+
 function page_masthead($left = true, $header_only = false) {
 global $CFG, $USER, $PAGE;
 	if ($left) {
@@ -113,7 +123,7 @@ global $CFG, $USER, $PAGE;
 		$pageid = $PAGE->id;
 		$PAGE->themeid ??= get_page_themeid($pageid);
 
-		if (!$currentpage = get_db_row("SELECT * FROM pages WHERE pageid='$pageid'")) {
+		if (!$currentpage = get_db_row("SELECT * FROM pages WHERE pageid = ||pageid||", ["pageid" => $pageid])) {
 			header('Location: ' . $CFG->wwwroot);
 			die();
 		}
@@ -134,7 +144,7 @@ global $CFG, $USER, $PAGE;
 			"header_text" => $header_text,
 			"header_color" => $header_color,
 		];
-		return use_template("tmp/pagelib.template", $params, "page_masthead_template");
+		return fill_template("tmp/pagelib.template", "page_masthead_template", false, $params);
 	}
 
 	return (!$header_only ? (is_logged_in() ? print_logout_button($USER->fname, $USER->lname, $PAGE->id) : get_login_form()) : '');
@@ -160,7 +170,7 @@ global $CFG;
 	$params["vars"]["toolbar"] = get_editor_toolbar($params["vars"]["type"]);
 	$params["vars"]["wwwroot"] = $CFG->wwwroot;
 	$params["vars"]["directory"] = get_directory();
-	return get_editor_javascript(). use_template("tmp/pagelib.template", $params, "editor_box_template");
+	return get_editor_javascript(). fill_template("tmp/pagelib.template", "editor_box_template", false, $params);
 }
 
 function get_editor_plugins($type) {
@@ -263,7 +273,7 @@ function page_default_styles() {
 function upgrade_check() {
 	global $CFG;
 	//MAKE SURE INITIALIZED
-	if (!get_db_row("SELECT * FROM pages WHERE pageid=1")) {
+	if (!get_db_row("SELECT * FROM pages WHERE pageid = 1")) {
 		//INITIALIZE
 		execute_db_sql("INSERT INTO pages (pageid,name,short_name,description,default_role,menu_page,opendoorpolicy,siteviewable,keywords) VALUES(1,'Home','home','home','4','0','1','1','home')");
 		execute_db_sql("INSERT INTO users (userid,fname,lname,email,password,first_activity,last_activity,ip,temp,alternate,userkey,joined) VALUES(1,'Admin','User','admin@admin.com','" . md5("admin") . "','0','0', '', '', '','" . (md5("admin@admin.com") . md5(time())) . "','" . get_timestamp() . "')");
@@ -401,7 +411,7 @@ global $CFG;
 		var originalClose = $.colorbox.close;
 		$.colorbox.close = function() {
 			if (confirm(\'Are you sure you wish to close this window?\')) {
-				originalClose(); $.colorbox.close = originalClose;
+				setTimeout(function() { originalClose(); $.colorbox.close = originalClose; }, 100);
 			}
 		};';
 	}
@@ -467,7 +477,7 @@ global $CFG;
 													"path" => $CFG->wwwroot . "/pages/user.php?action=user_alerts&amp;userid=$userid",
 													"width" => "600",
 													"height" => "500",
-													"image" => $CFG->wwwroot . "/images/error.gif",
+													"image" => $CFG->wwwroot . "/images/error.png",
 													]) . '</span>';
 												}
   $returnme .= '<input type="hidden" id="alerts" value="' . $alerts . '" />';
@@ -612,7 +622,7 @@ global $CFG;
 function get_user_alerts($userid, $returncount = true) {
 	$returnme = all_features_function("SELECT * FROM features", false, "get_", "_alerts", $returncount, $userid, $returncount);
 	if (!$returncount) {
-		$returnme = $returnme == "" ? use_template("tmp/pagelib.template", [], "get_user_alerts_template") : $returnme;
+		$returnme = $returnme == "" ? fill_template("tmp/pagelib.template", "get_user_alerts_template") : $returnme;
 	}
 
 	return $returnme;
@@ -640,7 +650,7 @@ global $CFG, $USER;
 	$logoutas = "";
 	if (!empty($_SESSION["lia_original"])) {
 		$lia_name = get_user_name($_SESSION["lia_original"]);
-		$logoutas = use_template("tmp/pagelib.template", ["lia_name" => $lia_name], "print_logout_button_switchback_template");
+		$logoutas = fill_template("tmp/pagelib.template", "print_logout_button_switchback_template", false, ["siteid" => $CFG->SITEID, "lia_name" => $lia_name]);
 	}
 
 	$params = [
@@ -649,7 +659,7 @@ global $CFG, $USER;
 		"profile" => $profile,
 		"userlinks" => get_user_links($USER->userid, $pageid),
 	];
-	return use_template("tmp/pagelib.template", $params, "print_logout_button_template");
+	return fill_template("tmp/pagelib.template", "print_logout_button_template", false, $params);
 }
 
 function get_nav_items($pageid = false) {
@@ -658,9 +668,9 @@ global $CFG, $USER, $PAGE;
 
 	//SQL Creation
 	if (is_logged_in()) {
-		$SQL = use_template("dbsql/pages.sql", [], "get_menu_for_users");
+		$SQL = fetch_template("dbsql/pages.sql", "get_menu_for_users");
 	} else {
-		$SQL = use_template("dbsql/pages.sql", [], "get_menu_for_visitors");
+		$SQL = fetch_template("dbsql/pages.sql", "get_menu_for_visitors");
 	}
 
 	$selected = $pageid == $CFG->SITEID ? true : false;
@@ -672,40 +682,39 @@ global $CFG, $USER, $PAGE;
 			$parent = empty($menu_children) ? false : true;
 			$selected = $pageid == $row['pageid'] ? true : false;
 			$link = empty($row["link"]) ? "#" : $CFG->wwwroot . "/index.php?pageid=" . $row['link'];
-			$text = stripslashes($row['text']) . ' ' . $parent;
+			$text = $row['text'] . ' ' . $parent;
 			$params = [
 				"is_selected" => $selected,
 				"menu_children" => $menu_children,
-				"text" => stripslashes($row['text']),
+				"text" => $row['text'],
 				"is_parent" => $parent,
 				"link" => $link,
 			];
-			$items .= use_template("tmp/page.template", $params, "get_nav_item");
+			$items .= fill_template("tmp/page.template", "get_nav_item", false, $params);
 		}
 	}
 
 	if (is_logged_in() && is_siteadmin($USER->userid)) { // Members list visible only if logged in admin
 		$members_modal = make_modal_links([
-							"title" => "Members List",
-							"path" => $CFG->wwwroot . "/pages/page.php?action=browse&amp;section=users&amp;userid=" . $USER->userid,
-							"iframe" => true,
-							"width" => "640",
-							"height" => "623",
-							"confirmexit" => "true",
-						]);
-		$items .= use_template("tmp/page.template", ["members_modal" => $members_modal], "get_members_item");
+			"title" => "Members List",
+			"path" => $CFG->wwwroot . "/pages/page.php?action=browse&amp;section=users&amp;userid=" . $USER->userid,
+			"iframe" => true,
+			"width" => "640",
+			"height" => "623",
+			"confirmexit" => "true",
+		]);
+		$items .= fill_template("tmp/page.template", "get_members_item", false, ["members_modal" => $members_modal]);
 	}
 
 	if (!empty($items)) {
-		return use_template("tmp/page.template", ["id" => "pagenav", "class" => "navtabs", "items" => $items], "make_ul");
+		return fill_template("tmp/page.template", "make_ul", false, ["id" => "pagenav", "class" => "navtabs", "items" => $items]);
 	}
 	return "";
 }
 
 function get_menu_children($menuid, $pageid) {
 global $CFG;
-	$SQL = use_template("dbsql/pages.sql", ["menuid" => $menuid], "get_menu_children");
-	if ($result = get_db_result($SQL)) {
+	if ($result = get_db_result(fetch_template("dbsql/pages.sql", "get_menu_children"), ["menuid" => $menuid])) {
 		$items = "";
 		while ($row = fetch_row($result)) {
 			$menu_children = get_menu_children($row["id"], $pageid);
@@ -720,9 +729,9 @@ global $CFG;
 				"is_parent" => $parent,
 				"link" => $link,
 			];
-			$items .= use_template("tmp/page.template", $params, "get_nav_item");
+			$items .= fill_template("tmp/page.template", "get_nav_item", false, $params);
 		}
-		return use_template("tmp/page.template", ["id" => "pagenavchild", "class" => "dropdown", "items" => $items], "make_ul");
+		return fill_template("tmp/page.template", "make_ul", false, ["id" => "pagenavchild", "class" => "dropdown", "items" => $items]);
 	}
 	return "";
 }
@@ -754,11 +763,11 @@ global $CFG, $PAGE, $STYLES;
 			"pagenamebordercolor" => $pagenamebordercolor,
 			"pagenamebgcolor" => $pagenamebgcolor,
 			"pagenamefontcolor" => $pagenamefontcolor,
-			"title" => stripslashes($title),
+			"title" => $title,
 			"content" => $content,
 			"buttons" => $buttons,
 		];
-		$returnme = use_template("tmp/pagelib.template", $params, "get_css_box_template1");
+		$returnme = fill_template("tmp/pagelib.template", "get_css_box_template1", false, $params);
 	} else {
 		if ($preview) {
 			$styles = $STYLES->$feature;
@@ -778,7 +787,7 @@ global $CFG, $PAGE, $STYLES;
 				"bottom_right" => $bottom_right,
 				"contentbgcolor" => $contentbgcolor,
 			];
-			$returnme .= use_template("tmp/pagelib.template", $params, "get_css_box_bottom_template");
+			$returnme .= fill_template("tmp/pagelib.template", "get_css_box_bottom_template", false, $params);
 		}
 
 		$opendiv = empty($feature) || $feature == 'pagelist' || $feature == 'addfeature' ? '' : 'class="box" id="' . $feature . '_' . $featureid . '"';
@@ -796,7 +805,7 @@ global $CFG, $PAGE, $STYLES;
 			"content" => $content,
 			"bottom" => $bottom,
 		];
-		$returnme .= use_template("tmp/pagelib.template", $params, "get_css_box_template2");
+		$returnme .= fill_template("tmp/pagelib.template", "get_css_box_template2", false, $params);
 	}
 	return $returnme;
 }
@@ -1002,18 +1011,17 @@ function delete_page($pageid) {
 function subscribe_to_page($pageid, $userid = false, $addorremove = false) {
 global $USER;
 	$userid = $userid ? $userid : $USER->userid;
-	$defaultrole = get_db_field("default_role", "pages", "pageid='$pageid'");
+	$defaultrole = get_default_role($pageid);
 	if (!$addorremove) {
-		$SQL = use_template("dbsql/roles.sql", ["userid" => $userid, "roleid" => $defaultrole, "pageid" => $pageid], "insert_role_assignment");
-		$role_assignment = execute_db_sql($SQL);
+		$SQL = fetch_template("dbsql/roles.sql", "insert_role_assignment");
+		$role_assignment = execute_db_sql($SQL, ["userid" => $userid, "roleid" => $defaultrole, "pageid" => $pageid, "confirm" => 0]);
 	} else {
-		$SQL = use_template("dbsql/roles.sql", ["userid" => $userid, "pageid" => $pageid], "check_for_role_assignment");
-		if (get_db_count($SQL)) { //role already exists
-			$SQL = use_template("dbsql/roles.sql", ["userid" => $userid, "pageid" => $pageid], "remove_user_role_assignment");
-			$role_assignment = execute_db_sql($SQL);
+		$SQL = fetch_template("dbsql/roles.sql", "get_role_assignment");
+		if (get_db_count($SQL, ["userid" => $userid, "pageid" => $pageid, "confirm" => 0])) { // role already exists
+			$role_assignment = execute_db_sql(fetch_template("dbsql/roles.sql", "remove_user_role_assignment"), ["userid" => $userid, "pageid" => $pageid]);
 		} else {
-			$SQL = use_template("dbsql/roles.sql", ["userid" => $user, "roleid" => $defaultrole, "pageid" => $pageid], "insert_role_assignment");
-			$role_assignment = execute_db_sql($SQL);
+			$SQL = fetch_template("dbsql/roles.sql", "insert_role_assignment");
+			$role_assignment = execute_db_sql($SQL, ["userid" => $user, "roleid" => $defaultrole, "pageid" => $pageid, "confirm" => 0]);
 		}
 	}
 
@@ -1078,7 +1086,7 @@ global $CFG;
 		"newuserlink" => $newuserlink,
 		"forgotpasswordlink" => $forgotpasswordlink,
 	];
-	$content = use_template("tmp/pagelib.template", $params, "get_login_form_template");
+	$content = fill_template("tmp/pagelib.template", "get_login_form_template", false, $params);
 
 	$returnme = $loginonly ? $content : get_css_box("Login", $content);
 	return $returnme;
@@ -1089,8 +1097,7 @@ global $PAGE;
 	if (set_pageid($pageid)) {
 		// Add feature
 		$default_area = get_db_field("default_area", "features", "feature='$featuretype'");
-		$sort = get_db_count("SELECT * FROM pages_features WHERE pageid = '$pageid' AND area = '$default_area'") + 1;
-
+        $sort = get_db_count(fetch_template("dbsql/features.sql", "get_features_by_page_area"), ["pageid" => $pageid, "area" => $default_area]) + 1;
 		if (get_db_row("SELECT * FROM features WHERE feature='$featuretype' AND multiples_allowed = '1'")) {
 			$featureid = all_features_function(false, $featuretype, "insert_blank_", "", false, $pageid);
 		} else {
@@ -1205,7 +1212,7 @@ global $CFG, $PAGE;
 			"featureid" => $featureid,
 			"buttons" => $buttons,
 		];
-		$returnme = use_template("tmp/pagelib.template", $params, "get_button_layout_template");
+		$returnme = fill_template("tmp/pagelib.template", "get_button_layout_template", false, $params);
 	}
 
 	return $returnme;
@@ -1244,7 +1251,7 @@ global $CFG;
 		"wwwroot" => $CFG->wwwroot,
 		"contents" => $contents,
 	];
-	return use_template("tmp/pagelib.template", $params, "make_search_box_template");
+	return fill_template("tmp/pagelib.template", "make_search_box_template", false, $params);
 }
 
 /**
@@ -1256,14 +1263,14 @@ global $CFG;
  * @param string $padding The padding of the popup (defaults to "15px")
  * @return string The HTML for the popup
  */
-function format_popup(string $content = "", string $title = "", string $height = "", string $padding = "15px") {
+function format_popup(string $content = "", string $title = "", string $height = "auto", string $padding = "15px") {
 	$params = [
 		"padding" => $padding,
 		"height" => $height,
 		"title" => $title,
 		"content" => $content,
 	];
-	return use_template("tmp/pagelib.template", $params, "format_popup_template");
+	return fill_template("tmp/pagelib.template", "format_popup_template", false, $params);
 }
 
 /**
@@ -1311,11 +1318,7 @@ function move_features($params) {
  */
 function keepalive() {
 global $CFG;
-
-	// Parameters for the template
-	$params = ["wwwroot" => $CFG->wwwroot];
-
-	return use_template("tmp/pagelib.template", $params, "keepalive_template");
+	return fill_template("tmp/pagelib.template", "keepalive_template", false, ["wwwroot" => $CFG->wwwroot]);
 }
 
 function emptyreturn() {

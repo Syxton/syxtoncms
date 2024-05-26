@@ -43,22 +43,20 @@ function updateMessage(){
     return true;
 }
 
-function updateAge(){
-    var bday_year = $("#Camper_Birth_Date_Year_ID").val();
-    var event_year = $("#event_year").val();
-    difference = event_year - bday_year - 1;
-    var bday_date = new Date($("#event_year").val(), $("#Camper_Birth_Date_Month_ID").val(), $("#Camper_Birth_Date_Day_ID").val());
-    var event_date = new Date($("#event_year").val(), $("#event_month").val()-1, $("#event_day").val());   
-    
-    if(event_date > bday_date){
-        difference++;
-    }
-    
-    difference = difference > 0 ? difference : 0;
-    difference = difference > 110 ? "Yikes!" : difference;
-    
-    $("#Camper_Age").val(difference);
-    $("#Camper_Age").focus();$("#Camper_Age").blur();
+function updateAge() {
+	var bday = datetype("Camper_Birth_Date");
+	var event = datetype("event_begin_date");
+	difference = event.getFullYear() - bday.getFullYear() - 1;
+
+	if(event > bday){
+		difference++;
+	}
+
+	difference = difference > 0 ? difference : 0;
+	difference = difference > 110 ? "Yikes!" : difference;
+
+	$("#Camper_Age").val(difference);
+	$("#Camper_Age").focus();$("#Camper_Age").blur();
 }
 
 function updateTotal(){

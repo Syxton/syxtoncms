@@ -28,14 +28,14 @@ callfunction();
 
 function preview_template() {
 global $CFG, $MYVARS;
-    $form = "";
+	$form = "";
 	echo js_code_wrap('var dirfromroot = "' . $CFG->directory . '";');
-	echo js_code_wrap(use_template("tmp/pagelib.template", [], "defer_script"));
+	echo js_code_wrap(fetch_template("tmp/pagelib.template", "defer_script"));
 	echo get_js_tags(["siteajax", "features/events/events.js"]);
 	echo get_css_tags(["main"]);
-     
-	$template_id = $MYVARS->GET['template_id'];
-	$template = get_db_row("SELECT * FROM events_templates WHERE template_id = '" . $template_id . "'");
+
+	$template_id = clean_myvar_req("template_id", "int");
+	$template = get_event_template($template_id);
 	
 	$formlist = "";
 	$returnme = '<input id="lasthint" type="hidden" /><div id="registration_div"><table class="registration"><tr><td>' . $template['intro'] . '</td></tr></table>';

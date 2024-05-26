@@ -59,6 +59,10 @@ function get_prepared_result($statement, $select = false) {
 	return false;
 }
 
+function count_db_result($results) {
+	return mysql_num_rows($results);
+}
+
 function get_db_result($SQL, $vars = []) {
 global $conn;
 	if (!$conn) { $conn = reconnect(); }

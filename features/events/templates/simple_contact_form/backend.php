@@ -6,14 +6,13 @@
  * $Date: 08/16/2013
  * $Revision: 0.1.4
  ***************************************************************************/
-if (!isset($CFG)) {
-	$sub = '../';
-	while (!file_exists($sub . 'config.php')) {
-		$sub .= '../';
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
 	}
-	include($sub . 'config.php'); 
-} 
-include($CFG->dirroot . '/pages/header.php');
+	include($sub . 'lib/header.php');
+}
 
 if (!defined('EVENTSLIB')) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 
@@ -24,15 +23,11 @@ update_user_cookie();
 function register() {
 global $CFG, $MYVARS, $USER, $error;
 error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
+	if (!defined('COMLIB')) { include_once($CFG->dirroot . '/lib/comlib.php'); }
 
-    //$keys->app_key = '350430668323766';
-    //$keys->app_secret = '7c43774dbcf542b0700e338bc5625296';
-
-    if (!defined('COMLIB')) { include_once($CFG->dirroot . '/lib/comlib.php'); }
-    $eventid = $MYVARS->GET["eventid"];
-	$event = get_db_row("SELECT * FROM events WHERE eventid = '$eventid'");
-    $templateid = $event['template_id'];
-	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='$templateid'");
+	$eventid = clean_myvar_req("eventid", "int");
+	$event = get_event($eventid);
+	$template = get_event_template($event['template_id']);
 
     //Total up the registration bill
     //owed -> full price of this item
@@ -55,10 +50,10 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
 
     //Go through entire template form list
 	$formlist = explode(";", $template['formlist']);
-    foreach ($formlist as $formelements) {
-        $element = explode(":", $formelements);
-        $reg[$element[0]] = isset($MYVARS->GET[$element[0]]) ? $MYVARS->GET[$element[0]] : ""; 
-    }
+	foreach ($formlist as $formelements) {
+		$element = explode(":", $formelements);
+		$reg[$element[0]] = isset($MYVARS->GET[$element[0]]) ? $MYVARS->GET[$element[0]] : ""; 
+	}
 	$error = "";
 	
 	if ($regid = enter_registration($eventid, $reg, $MYVARS->GET["email"])) { // Successful registration.
@@ -83,9 +78,12 @@ error_reporting(E_ERROR | E_PARSE); //keep warnings from showing
             $i=0;
             foreach ($items as $item) {
                 $itm = explode("::", $item);
-				$cart_items[$i]->regid = $itm[0];
-				$cart_items[$i]->description = $itm[1];
-				$cart_items[$i]->cost = $itm[2];     
+					 $cart_items = [];
+					 $cart_items[$i] = (object)[
+						 "regid" => $itm[0],
+						 "description" => $itm[1],
+						 "cost" => $itm[2],
+					 ];   
                 $i++;           
             }
 

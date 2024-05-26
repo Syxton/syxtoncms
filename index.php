@@ -63,7 +63,7 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
 
     if (is_logged_in()) {
         $params = ["timeout" => 14599]; // Javascript that checks for valid login every x seconds.
-        echo use_template("tmp/index.template", $params, "valid_login_check");
+        echo fill_template("tmp/index.template", "valid_login_check", false, $params);
 
         $ABILITIES = user_abilities($USER->userid, $PAGE->id);
         if (empty($ABILITIES->viewpages->allow)) {
@@ -88,7 +88,7 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
         "middlecontents" => get_page_contents($PAGE->id, 'middle'),
     ];
 
-    echo use_template("tmp/index.template", $params, "mainlayout_template");
+    echo fill_template("tmp/index.template", "mainlayout_template", false, $params);
 
     // End Page
     include('footer.html');

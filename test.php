@@ -35,51 +35,86 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
 	}
 
 	///////////////////////////////////////////// FUNCTION TESTS /////////////////////////////////////////////
-	echo "<h3>Clean Variable Test</h3>";
-	echo clean_var_opt("", "string", false) === false ? "PASS " : "FAIL ";
-	echo clean_var_opt(" 123 ", "int", 0) === 123 ? "PASS " : "FAIL ";
-	echo clean_var_opt("123.123", "float", 0) === 123.123 ? "PASS " : "FAIL ";
-	echo clean_var_opt(NULL, "string", 0) === 0 ? "PASS " : "FAIL ";
-	echo clean_var_opt(NULL, "string", "notset") === "notset" ? "PASS " : "FAIL ";
-	echo clean_var_opt("true ", "bool", false) === true ? "PASS " : "FAIL ";
+	echo "<h2>Function Tests</h2><br />";
+	echo "<h3>Clean INT Test</h3>";
+	echo clean_var_opt("1", "int", false) === 1 ? "PASS " : "FAIL ";
+	echo clean_var_opt("0", "int", false) === 0 ? "PASS " : "FAIL ";
+	echo clean_var_opt(1, "int", false) === 1 ? "PASS " : "FAIL ";
+	echo clean_var_opt(0, "int", false) === 0 ? "PASS " : "FAIL ";
+	echo clean_var_opt(NULL, "int", "default") === "default" ? "PASS " : "FAIL ";
+	echo clean_var_opt('', "int", "default") === "default" ? "PASS " : "FAIL ";
+	echo "<h3>Clean FLOAT Test</h3>";
+	echo clean_var_opt("1", "float", false) === 1.0 ? "PASS " : "FAIL ";
+	echo clean_var_opt("0", "float", false) === 0.0 ? "PASS " : "FAIL ";
+	echo clean_var_opt(1, "float", false) === 1.0 ? "PASS " : "FAIL ";
+	echo clean_var_opt(0, "float", false) === 0.0 ? "PASS " : "FAIL ";
+	echo clean_var_opt("1.0", "float", false) === 1.0 ? "PASS " : "FAIL ";
+	echo clean_var_opt("0.0", "float", false) === 0.0 ? "PASS " : "FAIL ";
+	echo clean_var_opt(1.0, "float", false) === 1.0 ? "PASS " : "FAIL ";
+	echo clean_var_opt(0.0, "float", false) === 0.0 ? "PASS " : "FAIL ";
+	echo clean_var_opt(NULL, "float", "default") === "default" ? "PASS " : "FAIL ";
+	echo clean_var_opt('', "float", "default") === "default" ? "PASS " : "FAIL ";
+	echo "<h3>Clean STRING Test</h3>";
+	echo clean_var_opt("", "string", "default") === "default" ? "PASS " : "FAIL ";
+	echo clean_var_opt(NULL, "string", "default") === "default" ? "PASS " : "FAIL ";
+	echo clean_var_opt(false, "string", "default") === "default" ? "PASS " : "FAIL ";
+	echo clean_var_opt("false", "string", "default") === "false" ? "PASS " : "FAIL ";
+	echo clean_var_opt(0, "string", "default") === "0" ? "PASS " : "FAIL ";
+	echo "<h3>Clean BOOL Test</h3>";
+	echo clean_var_opt(" true ", "bool", false) === true ? "PASS " : "FAIL ";
 	echo clean_var_opt(" false ", "bool", true) === false ? "PASS " : "FAIL ";
-	echo clean_var_opt("0", "bool", false) === false ? "PASS " : "FAIL ";
-	echo clean_var_opt("", "string", NULL) === NULL ? "PASS " : "FAIL ";
+	echo clean_var_opt(1, "bool", false) === true ? "PASS " : "FAIL ";
+	echo clean_var_opt(0, "bool", true) === false ? "PASS " : "FAIL ";
+	echo clean_var_opt("on", "bool", false) === true ? "PASS " : "FAIL ";
+	echo clean_var_opt("off", "bool", "default") === false ? "PASS " : "FAIL ";
+	echo clean_var_opt("1", "bool", "default") === true ? "PASS " : "FAIL ";
+	echo clean_var_opt("0", "bool", "default") === false ? "PASS " : "FAIL ";
+	echo clean_var_opt("", "bool", "default") === false ? "PASS " : "FAIL ";
+	echo clean_var_opt(NULL, "bool", "default") === "default" ? "PASS " : "FAIL ";
+	echo "<h3>Clean Array Test</h3>";
+	echo clean_var_opt(["this"], "array", "default") === ["this"] ? "PASS " : "FAIL ";
+	echo clean_var_opt((object)["this" => "that"], "array", "default") === ["this" => "that"] ? "PASS " : "FAIL ";
+	echo clean_var_opt([], "array", "default") === "default" ? "PASS " : "FAIL ";
+	echo clean_var_opt("", "array", "default") === "default" ? "PASS " : "FAIL ";
+	echo clean_var_opt(NULL, "array", "default") === "default" ? "PASS " : "FAIL ";
+	echo clean_var_opt(false, "array", "default") === "default" ? "PASS " : "FAIL ";
+	echo clean_var_opt("false", "array", "default") === ["false"] ? "PASS " : "FAIL ";
+	echo clean_var_opt(0, "array", "default") === "default" ? "PASS " : "FAIL ";
 
 	///////////////////////////////////////////// TEMPLATE TESTS /////////////////////////////////////////////
 	echo "<br /><br />";
 	echo "<h2>Template Tests</h2><br />";
 
 	echo "<h3>Simple Variable Test</h3>";
-	$result = use_template("tmp/test.template", ["variable" => "PASS"], "fill_in_the_blank");
+	$result = fill_template("tmp/test.template", "fill_in_the_blank", false, ["variable" => "PASS"]);
 	echo trim($result) == "This was a PASS." ? "PASS" : "FAIL";
 
 	echo "<br /><br /><h3>No Variable Code Test</h3>";
-	$result = use_template("tmp/test.template", [], "print_r123");
+	$result = fill_template("tmp/test.template", "print_r123");
 	echo trim($result) == trim(print_r([1, 2, 3], true)) ? "PASS" : "FAIL" . trim($result);
 
 	echo "<br /><br /><h3>Array Variable Test</h3>";
-	$result = use_template("tmp/test.template", ["variable" => [2, 3, 5]], "a+b=c");
+	$result = fill_template("tmp/test.template", "a+b=c", false, ["variable" => [2, 3, 5]]);
 	echo trim($result) == "2 + 3 = 5" ? "PASS" : "FAIL";
 
 	echo "<br /><br /><h3>Array Variable Code Test 1</h3>";
-	$result = use_template("tmp/test.template", ["variable" => [5, 4, 3, 2, 1]], "print_r");
+	$result = fill_template("tmp/test.template", "print_r", false, ["variable" => [5, 4, 3, 2, 1]]);
 	echo trim($result) == trim(print_r([5, 4, 3, 2, 1], true)) ? "PASS" : "FAIL";
 
 	echo "<br /><br /><h3>Array Variable Code Test 2</h3>";
-	$result = use_template("tmp/test.template", ["variables" => [1, 2, 3, 4, 5]], "get_max");
+	$result = fill_template("tmp/test.template", "get_max", false, ["variables" => [1, 2, 3, 4, 5]]);
 	echo trim($result) == trim("5") ? "PASS" : "FAIL";
 
 	echo "<br /><br /><h3>Objecct Variable Test</h3>";
-	$result = use_template("tmp/test.template", ["variables" => (object) ['one' => '1', 'two' => '2', 'three' => '3']], "list");
+	$result = fill_template("tmp/test.template", "list", false, ["variables" => (object) ['one' => '1', 'two' => '2', 'three' => '3']]);
 	echo trim($result) == trim("1, 2, 3") ? "PASS" : "FAIL";
 
 	echo "<br /><br /><h3>Objecct Variable Code Test</h3>";
-	$result = use_template("tmp/test.template", ["variables" => (object) ['one' => '1', 'two' => '2', 'three' => '3']], "min");
+	$result = fill_template("tmp/test.template", "min", false, ["variables" => (object) ['one' => '1', 'two' => '2', 'three' => '3']]);
 	echo trim($result) == trim("1") ? "PASS" : "FAIL";
 
 	echo "<br /><br /><h3>Optional Variable Test</h3>";
-	$result = use_template("tmp/test.template", ["one" => "1", "two" => "2", "four" => "4"], "optional");
+	$result = fill_template("tmp/test.template", "optional", false, ["one" => "1", "two" => "2", "four" => "4"]);
 	echo trim($result) == trim("124") ? "PASS" : "FAIL";
 
 	echo "<br /><br />";
@@ -149,7 +184,7 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
 		echo $result === 2 ? "PASS" : "FAIL: Expected 2, Received $result";
 
 		echo "<br /><br /><h3>Insecure SELECT From Template</h3>";
-		$SQL = use_template("tmp/test.template", ["id" => 1], "sql_template");
+		$SQL = fill_template("tmp/test.template", "sql_template", false, ["id" => 1]);
 		$result = get_db_row($SQL);
 		echo $result["test_field"] == 500 ? "PASS" : "FAIL: Expected 500, Received " . $result["test_field"];
 
@@ -174,7 +209,7 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
 			start_db_transaction();
 			$sum = 0;
 			$templates = [["file" => "tmp/test.template", "subsection" => ["multiple_select_template1", "multiple_select_template2", "multiple_select_template3"]]];
-			$results = execute_db_sqls(use_template_set($templates, [["id" => 1], ["id" => 2], ["id" => 3]]));
+			$results = execute_db_sqls(fill_template_set($templates, [["id" => 1], ["id" => 2], ["id" => 3]]));
 			foreach ($results as $result) { $sum += $result->num_rows; }
 			commit_db_transaction();
 		} catch (\Throwable $e) {
@@ -204,7 +239,7 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
 				["file" => "tmp/test.template", "subsection" => "insert_update_delete2"],
 				["file" => "tmp/test.template", "subsection" => "insert_update_delete3"],
 			];
-			$results = execute_db_sqls(use_template_set($templates, [["test_field" => 3000, "test_string" => "'TEST'"], ["test_id" => "||result[0]||", "test_field" => 5000], ["test_id" => "||result[0]||", "test_field" => 3000]]));
+			$results = execute_db_sqls(fill_template_set($templates, [["test_field" => 3000, "test_string" => "'TEST'"], ["test_id" => "||result[0]||", "test_field" => 5000], ["test_id" => "||result[0]||", "test_field" => 3000]]));
 			foreach ($results as $result) { $sum += $result; }
 			commit_db_transaction();
 		} catch (\Throwable $e) {
@@ -234,7 +269,7 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
 			start_db_transaction();
 			$sum = 0;
 			$templates = [["file" => "tmp/test.template", "subsection" => ["working_update_templates1", "working_update_templates2", "working_update_templates3"]]];
-			$results = execute_db_sqls(use_template_set($templates, ["id" => 1, "value" => 2000]));
+			$results = execute_db_sqls(fill_template_set($templates, ["id" => 1, "value" => 2000]));
 			foreach ($results as $result) { $sum += $result; }
 			commit_db_transaction();
 		} catch (\Throwable $e) {
@@ -270,7 +305,7 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
 			start_db_transaction();
 			$templates = [["file" => "tmp/test.template", "subsection" => ["broken_update_templates1", "broken_update_templates2", "broken_update_templates3"]]];
 			$original = get_db_row("SELECT * FROM testing_table WHERE test_id = 4");
-			$results = execute_db_sqls(use_template_set($templates, [["id" => 1, "value" => 150], ["id" => 2, "value" => 250], ["id" => 3, "value" => 350]]));
+			$results = execute_db_sqls(fill_template_set($templates, [["id" => 1, "value" => 150], ["id" => 2, "value" => 250], ["id" => 3, "value" => 350]]));
 			commit_db_transaction();
 		} catch (\Throwable $e) {
 			rollback_db_transaction($e->getMessage());

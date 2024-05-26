@@ -6,8 +6,13 @@
 * Date: 5/14/2024
 * Revision: 0.1.4
 ***************************************************************************/
- 
-if (!LIBHEADER) { include('header.php'); }
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
+	}
+	include($sub . 'lib/header.php');
+}
 define("ERRORSLIB", true);
 
 $ERRORS = new \stdClass;
@@ -86,18 +91,18 @@ global $CFG, $ERRORS;
 	} elseif (isset($lang[1])) {
 		include($CFG->dirroot . '/features/' . $lang[1] . "/lang.php");
 		if ($vars) {
-			return fill_template($ERRORS->$string, $vars);
+			return fill_error_string_blanks($ERRORS->$string, $vars);
 		}
 		return $ERRORS->$string;
 	} else { 
 		if ($vars) { 
-			return fill_template($ERRORS->$error, $vars);
+			return fill_error_string_blanks($ERRORS->$error, $vars);
 		} 
 		return $ERRORS->$error;
 	}
 }
 
-function fill_template($string, $vars) {
+function fill_error_string_blanks($string, $vars) {
 	$vars = is_array($vars) ? $vars : [$vars];
 	$i = 0;
 	foreach ($vars as $var) {

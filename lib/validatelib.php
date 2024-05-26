@@ -6,8 +6,13 @@
 * Date: 5/14/2024
 * Revision: 0.0.4
 ***************************************************************************/
-
-if (!LIBHEADER) { include('header.php'); }
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
+	}
+	include($sub . 'lib/header.php');
+}
 define("VALIDATELIB", true);
 
 function create_validation_script($formname, $function, $ajax=false) {

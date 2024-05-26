@@ -15,23 +15,22 @@ callfunction();
 function all_campers_list($filename = "camperlist", $year = false, $removeduplicates = false, $minage = 0, $maxage = 100) {
     global $CFG, $MYVARS, $USER;
 
-    $filename = isset($MYVARS->GET["filename"]) ? $MYVARS->GET["filename"] : "camperlist";
-    $year = empty($MYVARS->GET["year"]) ? false : $MYVARS->GET["year"];
-    $removeduplicates = empty($MYVARS->GET["removeduplicates"]) ? false : true;
-    $minage = empty($MYVARS->GET["minage"]) ? 0 : $MYVARS->GET["minage"];
-    $maxage = empty($MYVARS->GET["maxage"]) ? 100 : $MYVARS->GET["maxage"];
+	 $filename = clean_myvar_opt("filename", "string", "camperlist");
+	 $year = clean_myvar_opt("year", "int", false);
+	 $removeduplicates = clean_myvar_opt("removeduplicates", "bool", false);
+	 $minage = clean_myvar_opt("minage", "int", 0);
+	 $maxage = clean_myvar_opt("maxage", "int", 100);
 
     $params = [
         "templateid" => 10,
-        "year" => $year,
         "fromdate" => $year ? mktime(0, 0, 0, 0, 0, $year) : "",
         "todate" => $year ? mktime(23, 59, 59, 12, 31, $year) : "",
     ];
-    $SQL = use_template("dbsql/events.sql", $params, "get_events_having_same_template", "events");
-    if ($registrations = get_db_result($SQL)) {
+    $SQL = fetch_template("dbsql/events.sql", "get_events_having_same_template", "events", ["year" => $year]);
+    if ($registrations = get_db_result($SQL, $params)) {
         $camperlist[] = ["REGID", "Event", "Name", "Gender", "Birthday", "Current Age", "Address1", "Address2", "City", "State", "Zip", "Email", "Payment Method", "Sponsor",];
         while ($reg = fetch_row($registrations)) {
-            $event = get_db_row(use_template("dbsql/events.sql", ["eventid" => $reg["eventid"]], "get_event", "events"));
+            $event = get_db_row(fetch_template("dbsql/events.sql", "get_event", "events"), ["eventid" => $reg["eventid"]]);
             $SQL = fetch_template("dbsql/events.sql", "get_registration_values", "events");
             $temp = $age = $bday = false;
             if ($entries = get_db_result($SQL, ["regid" => $reg["regid"]])) {
@@ -44,9 +43,9 @@ function all_campers_list($filename = "camperlist", $year = false, $removeduplic
                 } elseif (!strstr($temp["Camper_Birth_Date"], '/') && !strstr($temp["Camper_Birth_Date"], '-')) {
                     if (strlen($temp["Camper_Birth_Date"])==6) {
                         $century = $temp["Camper_Birth_Date"][4] > 1 ? "19" : "20";
-                        $bday = date("m/d/Y",strtotime($temp["Camper_Birth_Date"][0].$temp["Camper_Birth_Date"][1] . '/' . $temp["Camper_Birth_Date"][2].$temp["Camper_Birth_Date"][3] . '/' . $century.$temp["Camper_Birth_Date"][4].$temp["Camper_Birth_Date"][5]));
+                        $bday = date("m/d/Y", strtotime($temp["Camper_Birth_Date"][0].$temp["Camper_Birth_Date"][1] . '/' . $temp["Camper_Birth_Date"][2].$temp["Camper_Birth_Date"][3] . '/' . $century.$temp["Camper_Birth_Date"][4].$temp["Camper_Birth_Date"][5]));
                     } elseif (strlen($temp["Camper_Birth_Date"])==8) {
-                        $bday = date("m/d/Y",strtotime($temp["Camper_Birth_Date"][0].$temp["Camper_Birth_Date"][1] . '/' . $temp["Camper_Birth_Date"][2].$temp["Camper_Birth_Date"][3] . '/' . $temp["Camper_Birth_Date"][4].$temp["Camper_Birth_Date"][5].$temp["Camper_Birth_Date"][6].$temp["Camper_Birth_Date"][7]));
+                        $bday = date("m/d/Y", strtotime($temp["Camper_Birth_Date"][0].$temp["Camper_Birth_Date"][1] . '/' . $temp["Camper_Birth_Date"][2].$temp["Camper_Birth_Date"][3] . '/' . $temp["Camper_Birth_Date"][4].$temp["Camper_Birth_Date"][5].$temp["Camper_Birth_Date"][6].$temp["Camper_Birth_Date"][7]));
                     } else { //Most likely empty so try the age field
                         if (!empty($temp["Camper_Age"])) {
                             $regdate = $reg["date"];//datetime when they registered
@@ -57,7 +56,7 @@ function all_campers_list($filename = "camperlist", $year = false, $removeduplic
                         }
                         $bday = "Unknown";
                     }
-                } else { $bday = date("m/d/Y",strtotime($temp["Camper_Birth_Date"])); };
+                } else { $bday = date("m/d/Y", strtotime($temp["Camper_Birth_Date"])); };
                 
                 $temp["Camper_Gender"] = $temp["Camper_Gender"] == "F" ? "Female" : $temp["Camper_Gender"];
                 $temp["Camper_Gender"] = $temp["Camper_Gender"] == "M" ? "Male" : $temp["Camper_Gender"];

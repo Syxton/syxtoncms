@@ -44,7 +44,7 @@ global $CFG, $MYVARS, $USER;
 					 "rssid" => $rssid,
 					 "userkey" => $MYVARS->GET["key"],
 			];
-			echo use_template("tmp/rss_ajax.template", $p, "add_feed_template");
+			echo fill_template("tmp/rss_ajax.template", "add_feed_template", false, $p);
 		}
 	}
 }

@@ -6,16 +6,15 @@
 * Date: 5/14/2024
 * Revision: 1.7.4
 ***************************************************************************/
-if (!isset($CFG)) {
+if (!isset($CFG) || !defined('LIBHEADER')) {
 	$sub = '';
-	while (!file_exists($sub . 'header.php')) {
+	while (!file_exists($sub . 'lib/header.php')) {
 		$sub = $sub == '' ? '../' : $sub . '../';
 	}
-	include($sub . 'header.php');
+	include($sub . 'lib/header.php');
 }
 
-if (!defined('PICSLIB')) include_once ($CFG->dirroot . '/features/pics/picslib.php');
-
+if (!defined('PICSLIB')) { include_once ($CFG->dirroot . '/features/pics/picslib.php'); }
 update_user_cookie();
 
 callfunction();
@@ -43,7 +42,7 @@ global $CFG, $MYVARS;
                 "name" => "galleryid",
                 "id" => "galleryid",
             ],
-            "values" => get_db_result(use_template("dbsql/pics.sql", ["pageid" => $pageid], "get_page_galleries", "pics")),
+            "values" => get_db_result(fetch_template("dbsql/pics.sql", "get_page_galleries", "pics"), ["pageid" => $pageid]),
             "valuename" => "galleryid",
             "displayname" => "name",
             "firstoption" => "None selected",
@@ -130,13 +129,13 @@ global $CFG, $MYVARS;
     $pageid = clean_myvar_req("pageid", "int");
     $featureid = clean_myvar_req("featureid", "int");
 
+    //upload directory.
+    $upload_dir = 'files/' . "$pageid/$featureid/";
+
     try {
         start_db_transaction();
         //must have a featureid and pageid
         if (!empty($featureid) && !empty($pageid)) {
-            //upload directory.
-            $upload_dir = 'files/' . "$pageid/$featureid/";
-            
             //Make sure that upload directory exists
             recursive_mkdir($upload_dir);
             
@@ -195,37 +194,44 @@ global $CFG, $MYVARS;
                             #-----------------------------------------------------------#
                             # this code check if file is Already EXISTS.                #
                             #-----------------------------------------------------------#
-                            if (file_exists($upload_dir.$file_name)) {
-                                echo "Skipping file ($file_name) File already exists. <br />";
-                            } else {
-                                #-----------------------------------------------------------#
-                                # this function will upload the files.  :) ;) cool          #
-                                #-----------------------------------------------------------#
-                                if (move_uploaded_file($file_tmp, $upload_dir.$file_name)) {
-                                    $dateadded = get_timestamp();
-                                    if ($newgallery && !$galleryid) {
-                                        $gallery_name = clean_myvar_req("gallery_name", "string");
-                                        $SQL = fetch_template("dbsql/pics.sql", "insert_gallery", "pics");
-                                        $galleryid = execute_db_sql($SQL, ["pageid" => $pageid, "featureid" => $featureid, "gallery_name" => $gallery_name]);
-                                    } elseif (!$newgallery && $galleryid) {
-                                        $gallery_name = get_db_field("name", "pics_galleries", "galleryid = ||galleryid||", ["galleryid" => $galleryid]);
-                                    }
-                                    $params = [
-                                        "pageid" => $pageid,
-                                        "featureid" => $featureid,
-                                        "galleryid" => $galleryid,
-                                        "gallery_title" => $gallery_name,
-                                        "imagename" => $filename,
-                                        "siteviewable" => 0,
-                                        "caption" => '',
-                                        "alttext" => '',
-                                        "dateadded" => $dateadded,
-                                    ];
-                                    execute_db_sql(fetch_template("dbsql/pics.sql", "insert_pic", "pics"), $params);
-                                    resizeImage($upload_dir.$file_name, $upload_dir.$file_name,"600", "600");
-                                    $success++;
-                                } // end of (move_uploaded_file).
-                            } // end of (file_exists).
+                            $n = 0;
+                            $original_filename = $file_name;
+                            while(file_exists($upload_dir . $file_name)) {
+                                $n++;
+                                $file_name = str_replace($ext, "", $original_filename) . " ($n)" . $ext;
+                            }
+                            $files["name"][$i] = $file_name;
+
+                            #-----------------------------------------------------------#
+                            # this function will upload the files.  :) ;) cool          #
+                            #-----------------------------------------------------------#
+                            if (move_uploaded_file($file_tmp, $upload_dir . $file_name)) {
+                                $dateadded = get_timestamp();
+                                if ($newgallery && !$galleryid) {
+                                    $gallery_name = clean_myvar_req("gallery_name", "string");
+                                    $SQL = fetch_template("dbsql/pics.sql", "insert_gallery", "pics");
+                                    $galleryid = execute_db_sql($SQL, ["pageid" => $pageid, "featureid" => $featureid, "gallery_name" => $gallery_name]);
+                                } elseif (!$newgallery && $galleryid) {
+                                    $gallery_name = get_db_field("name", "pics_galleries", "galleryid = ||galleryid||", ["galleryid" => $galleryid]);
+                                }
+                                $params = [
+                                    "pageid" => $pageid,
+                                    "featureid" => $featureid,
+                                    "galleryid" => $galleryid,
+                                    "gallery_title" => $gallery_name,
+                                    "imagename" => $file_name,
+                                    "siteviewable" => 0,
+                                    "caption" => '',
+                                    "alttext" => '',
+                                    "dateadded" => $dateadded,
+                                ];
+                                $SQL = fetch_template("dbsql/pics.sql", "insert_pic", "pics");
+                                if(!execute_db_sql($SQL, $params)) {
+                                    throw new \Exception("Error: Failed to insert file record ($file_name) into database. ($file_name).");
+                                }
+                                resizeImage($upload_dir . $file_name, $upload_dir . $file_name, "1000", "1000");
+                                $success++;
+                            } // end of (move_uploaded_file).
                         } // end of (file_size).
                     } // end of (limitedext).
                 } // end of (!is_uploaded_file).
@@ -235,12 +241,19 @@ global $CFG, $MYVARS;
             if (empty($success)) {
                 throw new \Exception("Error: No file was uploaded.");
             } else {
+                commit_db_transaction();
                 die("<strong>$success file[s] uploaded.</strong>");
             }       
         }
-        commit_db_transaction();
     } catch (\Throwable $e) {
         rollback_db_transaction($e->getMessage());
+        $i = 0;
+        while (isset($filenames[$i]) && isset($files["name"][$i])) {
+            if (file_exists($upload_dir . $files["name"][$i])) {
+                unlink($upload_dir . $files["name"][$i]);
+            }
+            $i++;
+        }
     }
 }
 

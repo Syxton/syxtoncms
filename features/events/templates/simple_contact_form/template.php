@@ -6,27 +6,49 @@
 * Date: 5/14/2024
  * $Revision: 2.1.2
  ***************************************************************************/
-if (!isset($CFG)) {
-	$sub = '../';
-	while (!file_exists($sub . 'config.php')) {
-		$sub .= '../';
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
 	}
-	require($sub . 'config.php'); 
+	include($sub . 'lib/header.php');
 }
 if (!defined('EVENTSLIB')) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 if (!defined('VALIDATELIB')) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
 
-// Retrieve from Javascript.
-$postorget = isset($_GET["eventid"]) ? $_GET : $_POST;
-$postorget = isset($postorget["eventid"]) ? $postorget : "";
+//Retrieve from Javascript
+global $MYVARS;
+collect_vars();
 
-$MYVARS->GET = $postorget;
-$preview = isset($preview) ? 'disabled="disabled"': "";
-$eventid = empty($MYVARS->GET['eventid']) ? false : $MYVARS->GET['eventid'];
-$show_again = isset($MYVARS->GET['show_again']) ? true : false;
-$regid = isset($MYVARS->GET['regid']) && $MYVARS->GET['regid'] != "false" ? $MYVARS->GET['regid'] : false;
-$autofill = isset($MYVARS->GET['autofill']) && $MYVARS->GET['autofill'] == "1" ? true : false;
-$email = "";
+$eventid = clean_myvar_opt("eventid", "int", false);
+$regid = clean_myvar_opt("regid", "int", false);
+$show_again = clean_myvar_opt("show_again", "bool", false);
+$autofill = clean_myvar_opt("autofill", "bool", false);
+
+$email = $payment_method = $disable = "";
+
+// Preview of template.
+if (isset($preview)) {
+	$disable = 'disabled="disabled"';
+	$event = [
+		"name" => "Preview Event",
+		"event_begin_date" => date("j"),
+		"event_end_date" => date("j"),
+		"fee_full" => 0,
+		"fee_min" => 0,
+		"sale_fee" => 0,
+		"sale_end" => 0,
+	];
+}
+
+// Get full event info
+if ($eventid) {
+	$event = get_event($eventid);
+}
+
+//output any passed on hidden info from previous registrations
+$total_owed = clean_myvar_opt("total_owed", "float", 0);
+$items = clean_myvar_opt("items", "string", "");
 
 if ($show_again) { // This is not the first time through.
 	if ($autofill) { //Same person..so auto fill all items
@@ -49,21 +71,15 @@ echo '<html>
         <body>
 ';
 
-// Output any passed on hidden info from previous registrations.
-$total_owed = isset($MYVARS->GET['total_owed']) ? $MYVARS->GET['total_owed'] : 0;
-$items = isset($MYVARS->GET["items"]) ? $MYVARS->GET["items"] : "";
-
 // Somebody please tell me why I MUST HAVE THE &nbsp; before the form to make it show up?
-echo '<form name="form1" id="form1">
-    <div id="camp">
-        <fieldset class="formContainer">
-            <input type="hidden" name="eventid" value="' . $eventid . '" />
-            <input type="hidden" name="paid" value="0" />
-            <input type="hidden" name="total_owed" id="total_owed" value="' . $total_owed . '" />
-            <input type="hidden" name="items" id="items" value="' . $items . '" />';
+echo '<form class="event_template_form" name="form1" id="form1">
+			<div id="camp">
+				<fieldset class="formContainer">
+						<input type="hidden" name="eventid" value="' . $eventid . '" />
+						<input type="hidden" name="paid" value="0" />
+						<input type="hidden" name="total_owed" id="total_owed" value="' . $total_owed . '" />
+						<input type="hidden" name="items" id="items" value="' . $items . '" />';
 
-// Get full event info.
-$event = get_event($eventid);
 echo '<div style="font-size:15px;text-align:center;font-weight:bold">Online Registration</div>
       <div style="font-size:13px;text-align:center;font-weight:bold">' . $event["name"] . '</div><br />';
 
@@ -80,13 +96,10 @@ if ($autofill) {
 			<input type="hidden" name="Address_Zipcode" value="' . $Address_Zipcode . '" />
 			<input type="hidden" name="Phone1" value="' . $Phone1 . '" />';
 } else {
- echo ' <input type="hidden" id="event_day" value="' . date("j", $event["event_begin_date"]) . '" />
-        <input type="hidden" id="event_month" value="' . date("n", $event["event_begin_date"]) . '" />
-        <input type="hidden" id="event_year" value="' . date("Y", $event["event_begin_date"]) . '" />
+ echo ' <input type="hidden" id="event_begin_date" value="' . date("Y-m-d", $event["event_begin_date"]) . '" />
         <input style="border:none;" type="hidden" name="HealthConsentFrom" id="HealthConsentFrom" value="' . date("m/d/Y", $event["event_begin_date"]) . '" readonly />
         <input style="border:none;" type="hidden" name="HealthConsentTo" id="HealthConsentTo" value="' . date("m/d/Y", $event["event_end_date"]) . '" readonly />
 
-        <style> .calendarDateInput{margin-right:5px !important;}.info{ width: 92%; } .rowContainer textarea { width:80%;max-width: 480px; margin-right: 20px; } .rowContainer select { margin-right: 20px; }</style>
             <input type="hidden" name="Name" />
 			<div class="rowContainer">
 				<label class="rowTitle" for="email">Email Address *</label><input tabindex="1" type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-msg-required="' . error_string('valid_req_email') . '" data-msg-email="' . error_string('valid_email_invalid') . '" /><div class="tooltipContainer info">' . get_help("help_email:events:templates/simple_contact_form") . '</div>
@@ -229,7 +242,7 @@ if ($event['fee_full']) {
     ';
 }
 
-    echo '<input tabindex="33" class="submit" name="submit" type="submit" value="Submit Application" ' . $preview . '/>
+    echo '<input tabindex="33" class="submit" name="submit" type="submit" value="Submit Application" ' . $disable . '/>
         </fieldset>
     </div>
     ' . keepalive() . '

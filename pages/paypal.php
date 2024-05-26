@@ -7,10 +7,15 @@
 * Revision: 0.2.0
 ***************************************************************************/
 
-include('header.php');
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
+	}
+	include($sub . 'lib/header.php');
+}
 
-$params = ["dirroot" => $CFG->directory];
-echo use_template("tmp/page.template", $params, "page_js_css");
+echo fill_template("tmp/page.template", "page_js_css", false, ["dirroot" => $CFG->directory]);
 
 if (!defined('EVENTSLIB')) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 
@@ -60,93 +65,84 @@ if (!$fp) {
 		// check that payment_amount/payment_currency are correct
 		// process payment
 		if (!empty($keyarray['item_number']) && $keyarray['item_number'] == "DONATE") {
-			$SQL = "SELECT *
-                FROM donate_donations
-               WHERE paypal_TX ='" . $keyarra["txn_id"] . "'";
-      if (!get_db_row($SQL)) {
-          $SQL = "INSERT INTO donate_donations
-                             (campaign_id, paypal_TX, amount, timestamp)
-                       VALUES('" . $keyarray["custom"] . "','" . $keyarray['txn_id'] . "','" . $keyarray["payment_gross"] . "'," . get_timestamp() . ")";
-          execute_db_sql($SQL);
-      }
-      echo use_template("tmp/paypal.template", ["type" => "donation"], "transaction_complete");
-      echo print_cart($keyarray, true);
+			$SQL = "SELECT * FROM donate_donations WHERE paypal_TX = ||paypal_TX||";
+			if (!get_db_row($SQL, ["paypal_TX" => $keyarray["txn_id"]])) {
+				$params = [];
+				$params["campaign_id"] = clean_var_req($keyarray["custom"], "int");
+				$params["name"] = "Online Donation";
+				$params["amount"] = clean_var_opt($keyarray['payment_gross'], "float", 0.00);
+				$params["paypal_TX"] = clean_var_opt($keyarray['txn_id'], "string", "");
+				$params["timestamp"] = get_timestamp();
+				$SQL = fetch_template("dbsql/donate.sql", "insert_donation", "donate");
+				execute_db_sql($SQL, $params);
+			}
+			echo fill_template("tmp/paypal.template", "transaction_complete", false, ["type" => "donation"]);
+			echo print_cart($keyarray, true);
 		} else {
-      $SQL = "SELECT *
-                FROM logfile
-               WHERE feature = 'events'
-                 AND description = 'Paypal'
-                 AND info = '" . $keyarray['txn_id'] . "'";
-			if (!get_db_row($SQL)) {
+			$SQL = fetch_template("dbsql/events.sql", "find_paypal_transfer", "events");
+			if (!get_db_row($SQL, ["info" => $keyarray['txn_id']])) {
 				$regids = $keyarray['custom'];
 				$regids = explode(":", $regids);
-				$i=0;
+				$i = 0;
 				while (isset($regids[$i])) {
-          $rid = $regids[$i];
-					$paid = get_db_field("value", "events_registrations_values", "elementname='paid' AND regid='$rid'");
-					$SQL = "UPDATE events_registrations_values
-                     SET value = " . ($paid + $keyarray["mc_gross_" . ($i + 1)]) . "
-                   WHERE elementname = 'paid'
-                     AND regid = '$rid'";
-					execute_db_sql($SQL);
+          		$rid = $regids[$i];
+					$paid = get_db_field("value", "events_registrations_values", "elementname = 'paid' AND regid = |||regid||", ["regid" => $rid]);
+					$params = [
+						"regid" => $rid,
+						"value" => $paid + $keyarray["mc_gross_" . ($i + 1)],
+						"elementname" => "paid",
+					];
+					execute_db_sql(fetch_template("dbsql/events.sql", "update_reg_value", "events"), $params);
 
-          $eventid = get_db_field("eventid", "events_registrations_values", "regid='$rid'"); // Get eventid.
-          $minimum = get_db_field("fee_min", "events", "eventid='$eventid'");
-          $verified = get_db_field("verified", "events_registrations", "regid='$rid'");
+					$eventid = get_db_field("eventid", "events_registrations_values", "regid = |||regid||", ["regid" => $rid]);
+					$minimum = get_db_field("fee_min", "events", "eventid = |||eventid||", ["eventid" => $eventid]);
+					$verified = get_db_field("verified", "events_registrations", "regid = |||regid||", ["regid" => $rid]);
 
-          if ($paid >= $minimum) {
-            if (empty($verified)) { // Not already verified.
-              // If payment is made, it is no longer in queue.
-              $SQL = "UPDATE events_registrations
-                         SET verified = '1'
-                       WHERE regid = '$rid'";
-    					execute_db_sql($SQL);
+					if ($paid >= $minimum) {
+						if (!$verified) { // Not already verified.
+							// If payment is made, it is no longer in queue.
+							execute_db_sql(fetch_template("dbsql/events.sql", "update_reg_status", "events"), ["regid" => $rid, "verified" => 1]);
 
-              $touser = new \stdClass;
-              $touser->fname = get_db_field("value", "events_registrations_values", "regid='$rid' AND elementname='Camper_Name_First'");
-        			$touser->lname = get_db_field("value", "events_registrations_values", "regid='$rid' AND elementname='Camper_Name_Last'");
-        			$touser->email = get_db_field("email", "events_registrations", "regid='$rid'");
+							$touser = new \stdClass;
+							$touser->fname = get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname='Camper_Name_First'", ["regid" => $rid]);
+							$touser->lname = get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname='Camper_Name_Last'", ["regid" => $rid]);
+							$touser->email = get_db_field("email", "events_registrations", "regid = ||regid||", ["regid" => $rid]);
 
-              $fromuser = new \stdClass;
-              $fromuser->email = $CFG->siteemail;
-        			$fromuser->fname = $CFG->sitename;
-        			$fromuser->lname = "";
-        			$message = registration_email($rid, $touser);
-        			if (send_email($touser, $fromuser, $CFG->sitename . " Registration", $message)) {
-        				send_email($fromuser, $fromuser, $CFG->sitename . " Registration", $message);
-        			}
-            }
-          } else {
-            $SQL = "UPDATE events_registrations
-                       SET verified = '0'
-                     WHERE regid = '$rid'";
-					  execute_db_sql($SQL);
-          }
+							$fromuser = new \stdClass;
+							$fromuser->email = $CFG->siteemail;
+							$fromuser->fname = $CFG->sitename;
+							$fromuser->lname = "";
+							$message = registration_email($rid, $touser);
+							if (send_email($touser, $fromuser, $CFG->sitename . " Registration", $message)) {
+								send_email($fromuser, $fromuser, $CFG->sitename . " Registration", $message);
+							}
+						}
+					} else {
+						execute_db_sql(fetch_template("dbsql/events.sql", "update_reg_status", "events"), ["regid" => $rid, "verified" => 0]);
+					}
 					$i++;
 				}
-
-				// Log
 				log_entry('events', $keyarray['txn_id'], "Paypal");
 			}
-    echo use_template("tmp/paypal.template", ["type" => "transaction"], "transaction_complete");
-		echo print_cart($keyarray);
+    		echo fill_template("tmp/paypal.template", "transaction_complete", false, ["type" => "transaction"]);
+			echo print_cart($keyarray);
 		}
-	} elseif (strcmp ($lines[0], "FAIL") == 0) {
-    // Log
-    log_entry('events', $lines[0], "Paypal (failed)");
+	} elseif (strcmp($lines[0], "FAIL") == 0) {
+		log_entry('events', $lines[0], "Paypal (failed)");
 	}
-  fclose ($fp);
+	fclose ($fp);
 }
 
 function print_cart($items, $donation = false) {
 global $CFG;
-	$i = 0; $cartitems = "";
-  while ($i < $items["num_cart_items"]) {
-    $params = ["itemname" => $items["item_name" . ($i + 1)], "itemprice" => $items["mc_gross_" . ($i + 1)]];
-		$cartitems .= use_template("tmp/paypal.template", $params, "print_cart_row_template");
+	$i = 0;
+	$cartitems = "";
+	while ($i < $items["num_cart_items"]) {
+		$params = ["itemname" => $items["item_name" . ($i + 1)], "itemprice" => $items["mc_gross_" . ($i + 1)]];
+		$cartitems .= fill_template("tmp/paypal.template", "print_cart_row_template", false, $params);
 		$i++;
 	}
-  $params = ["wwwroot" => $CFG->wwwroot, "sitename" => $CFG->sitename, "cartitems" => $cartitems, "items" => $items, "type" => (!$donation ? "paid for" : "donated")];
-  return use_template("tmp/paypal.template", ["type" => "transaction"], "print_cart_template");
+	$params = ["wwwroot" => $CFG->wwwroot, "sitename" => $CFG->sitename, "cartitems" => $cartitems, "items" => $items, "type" => (!$donation ? "paid for" : "donated")];
+	return fill_template("tmp/paypal.template", "print_cart_template", false, $params);
 }
 ?>

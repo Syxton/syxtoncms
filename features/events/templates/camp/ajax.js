@@ -17,7 +17,7 @@ try {
 
 if(!xmlHttp && typeof XMLHttpRequest != 'undefined'){ xmlHttp = new XMLHttpRequest(); }
 
-function submit_registration(){
+function camp_submit_registration(){
     //Hide form during validation
     document.form1.style.display = 'none';
 	if(validate()){

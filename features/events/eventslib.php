@@ -6,13 +6,12 @@
 * Date: 5/14/2024
 * Revision: 2.8.7
 ***************************************************************************/
-
-if (!LIBHEADER) {
-	$sub = './';
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
 	while (!file_exists($sub . 'lib/header.php')) {
-		$sub = $sub == './' ? '../' : $sub . '../';
+		$sub = $sub == '' ? '../' : $sub . '../';
 	}
-	include($sub . 'lib/header.php'); 
+	include($sub . 'lib/header.php');
 }
 define('EVENTSLIB', true);
 
@@ -763,82 +762,99 @@ global $CFG;
 
 function enter_registration($eventid, $reg, $contactemail, $pending = true) {
 global $CFG, $why, $error;
-	$event = get_event($eventid);
-	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='" . $event['template_id'] . "'");
-	$nolimit = true;
-	$why = "";
-	$time = get_timestamp();
-	$pending = $pending ? "0" : "1";
-	$REGIDSQL = "INSERT INTO events_registrations (eventid,date,email,code,verified) VALUES(" . $eventid . "," . $time . ",'$contactemail','" . md5($time . $contactemail) . "','$pending')";
-	$regid = execute_db_sql($REGIDSQL);
-	if ($template['folder'] != "none") { //custom file style
-		if ($regid) {
-			$formlist = explode(";", get_db_field("formlist", "events_templates", "folder='" . $template['folder'] . "'"));
-			$sql_values = "";
-			foreach ($formlist as $list) {
-				$element = explode(":", $list);
-				$sql_values .= $sql_values == "" ? "($regid,'" . dbescape($reg[$element[0]]) . "'," . $eventid . ",'" . $element[0] . "')" : ",($regid,'" . dbescape($reg[$element[0]]) . "'," . $eventid . ",'" . $element[0] . "')";
+
+	try {
+		start_db_transaction();
+
+		$event = get_event($eventid);
+		$template = get_event_template($event['template_id']);
+		$nolimit = true;
+		$why = "";
+		$time = get_timestamp();
+		$pending = $pending ? 0 : 1;
+	
+		$SQL = fetch_template("dbsql/events.sql", "insert_registration", "events");
+		$params = ["eventid" => $eventid, "date" => $time, "email" => $contactemail, "code" => md5($time . $contactemail), "verified" => $pending];
+		$regid = execute_db_sql($SQL, $params);
+		if ($template['folder'] != "none") { // custom file style
+			if ($regid) {
+				$formlist = explode(";", get_db_field("formlist", "events_templates", "folder = '" . $template['folder'] . "'"));
+				$sql_values = "";
+				$SQL = fetch_template("dbsql/events.sql", "insert_registration_values", "events");
+				foreach ($formlist as $list) {
+					$element = explode(":", $list);
+					execute_db_sql($SQL, ["regid" => $regid, "value" => $reg[$element[0]], "eventid" => $eventid, "elementname" => $element[0]]);
+				}
+	
+				if ($nolimit = hard_limits($regid, $event, $template)) {
+					if (!$nolimit = soft_limits($regid, $event, $template)) {
+						$error = "Because this event has $why, you have been placed in the waiting line for this event.";
+						execute_db_sql("UPDATE events_registrations SET queue = 1 WHERE regid = ||regid||", ["regid" => $regid]);
+					}
+					return $regid; // Success
+				} else {
+					if (!$nolimit) {
+						$error = "We are sorry, because this event has $why, you are unable to register for this event.";
+					} else {
+						$error = "We are sorry, there has been an error while trying to register for this event.  Please try again. ERROR CODE: 0001";
+					}
+					$params = [
+						"file" => "dbsql/events.sql",
+						"feature" => "events",
+						"subsection" => ["delete_registration", "delete_registration_values"],
+					];
+					execute_db_sqls(fetch_template_set($params), ["regid" => $regid]);
+					log_entry("event", $event["name"], "Failed Registration", $error);
+					return false;
+				}
+			} else {
+				$error = "We are sorry, there has been an error while trying to register for this event.  Please try again. ERROR CODE: 0002";
+				log_entry("event", $event["name"], "Failed Registration", $error);
+				return false;
 			}
-			$SQL = "INSERT INTO events_registrations_values (regid,value,eventid,elementname) VALUES" . $sql_values;
+		} else { //db form style
+			$sql_values = "";
+			if ($elements = get_db_result("SELECT * FROM events_templates_forms WHERE template_id='" . $event['template_id'] . "' ORDER BY sort")) {
+				  while ($element = fetch_row($elements)) {
+					  if ($event["fee_full"] != 0 && $element["type"] == "payment") {
+						  $sql_values .= $sql_values == "" ? "('$eventid','$regid','" . $element['elementid'] . "','" . $event["fee_full"] . "','total_owed'),('$eventid','$regid','" . $element['elementid'] . "','0','paid'),('$eventid','$regid','" . $element['elementid'] . "','" . $reg["payment_method"] . "','payment_method')" : ",('$eventid','$regid','" . $element['elementid'] . "','" . $event["fee_full"] . "','total_owed'),('$eventid','$regid','" . $element['elementid'] . "','0','paid'),('$eventid','$regid','" . $element['elementid'] . "','" . $reg["payment_method"] . "','payment_method')";
+					  } elseif (isset($reg[$element['elementid']])) {
+						$sql_values .= $sql_values == "" ? "('$eventid','$regid','" . $element['elementid'] . "','" . $reg[$element['elementid']] . "','" . $element['display'] . "')" : ",('$eventid','$regid','" . $element['elementid'] . "','" . dbescape($reg[$element['elementid']]) . "','" . $element['display'] . "')";
+					}
+				  }
+			}
+			$SQL = "INSERT INTO events_registrations_values (eventid,regid,elementid,value,elementname) VALUES" . $sql_values;
 			if ($entries = execute_db_sql($SQL) && $nolimit = hard_limits($regid, $event, $template)) {
 				if (!$nolimit = soft_limits($regid, $event, $template)) {
 					$error = "Because this event has $why, you have been placed in the waiting line for this event.";
-					execute_db_sql("UPDATE events_registrations SET queue='1' WHERE regid='$regid'");
+					execute_db_sql("UPDATE events_registrations SET queue=1 WHERE regid=" . $regid);
 				}
 				return $regid; //Success
-			}else {
+			} else {
 				if (!$nolimit) {
 					$error = "We are sorry, because this event has $why, you are unable to register for this event.";
 				} else {
-					$error = "We are sorry, there has been an error while trying to register for this event.  Please try again. ERROR CODE: 0001";
+					$error = "We are sorry, there has been an error while trying to register for this event.  Please try again. ERROR CODE: 0003";
 				}
 				execute_db_sql("DELETE FROM events_registrations WHERE regid='$regid'");
 				execute_db_sql("DELETE FROM events_registrations_values WHERE regid='$regid'");
-				log_entry("event", $event["name"], "Failed Registration", $error . ": " . $SQL);
+				log_entry("event", $event["name"], "Failed Registration", $error);
 				return false;
 			}
-		} else {
-			$error = "We are sorry, there has been an error while trying to register for this event.  Please try again. ERROR CODE: 0002";
-			log_entry("event", $event["name"], "Failed Registration", $error . ": " . $REGIDSQL);
-			return false;
 		}
-	} else { //db form style
-		$sql_values = "";
-		if ($elements = get_db_result("SELECT * FROM events_templates_forms WHERE template_id='" . $event['template_id'] . "' ORDER BY sort")) {
-			  while ($element = fetch_row($elements)) {
-				  if ($event["fee_full"] != 0 && $element["type"] == "payment") {
-					  $sql_values .= $sql_values == "" ? "('$eventid','$regid','" . $element['elementid'] . "','" . $event["fee_full"] . "','total_owed'),('$eventid','$regid','" . $element['elementid'] . "','0','paid'),('$eventid','$regid','" . $element['elementid'] . "','" . $reg["payment_method"] . "','payment_method')" : ",('$eventid','$regid','" . $element['elementid'] . "','" . $event["fee_full"] . "','total_owed'),('$eventid','$regid','" . $element['elementid'] . "','0','paid'),('$eventid','$regid','" . $element['elementid'] . "','" . $reg["payment_method"] . "','payment_method')";
-				  } elseif (isset($reg[$element['elementid']])) {
-					$sql_values .= $sql_values == "" ? "('$eventid','$regid','" . $element['elementid'] . "','" . $reg[$element['elementid']] . "','" . $element['display'] . "')" : ",('$eventid','$regid','" . $element['elementid'] . "','" . dbescape($reg[$element['elementid']]) . "','" . $element['display'] . "')";
-				}
-			  }
-		}
-		$SQL = "INSERT INTO events_registrations_values (eventid,regid,elementid,value,elementname) VALUES" . $sql_values;
-		if ($entries = execute_db_sql($SQL) && $nolimit = hard_limits($regid, $event, $template)) {
-			if (!$nolimit = soft_limits($regid, $event, $template)) {
-				$error = "Because this event has $why, you have been placed in the waiting line for this event.";
-				execute_db_sql("UPDATE events_registrations SET queue=1 WHERE regid=" . $regid);
-			}
-			return $regid; //Success
-		} else {
-			if (!$nolimit) {
-				$error = "We are sorry, because this event has $why, you are unable to register for this event.";
-			} else {
-				$error = "We are sorry, there has been an error while trying to register for this event.  Please try again. ERROR CODE: 0003";
-			}
-			execute_db_sql("DELETE FROM events_registrations WHERE regid='$regid'");
-			execute_db_sql("DELETE FROM events_registrations_values WHERE regid='$regid'");
-			log_entry("event", $event["name"], "Failed Registration", $error);
-			return false;
-		}
+		commit_db_transaction();
+	} catch (\Throwable $e) {
+		rollback_db_transaction($e->getMessage());
+		trigger_error($e->getMessage(), E_USER_WARNING);
 	}
+	
 }
 
 function registration_email($regid, $touser, $pending=false, $waivefee=false) {
 global $CFG;
 	$reg = get_db_row("SELECT * FROM events_registrations WHERE regid='$regid'");
 	$event = get_event($reg["eventid"]);
-	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='" . $event["template_id"] . "'");
+	$template = get_event_template($event['template_id']);
 
 	$protocol = get_protocol();
 
@@ -918,7 +934,7 @@ global $CFG;
 }
 
 function get_template_field_displayname($templateid, $fieldname) {
-	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='$templateid'");
+	$template = get_event_template($templateid);
 	if ($template["folder"] == "none") {
 		return get_db_field("display", "events_templates_forms", "elementid='$fieldname'");
 	} else {
@@ -1142,9 +1158,12 @@ function delete_calendar_events($event) {
 	}
 }
 
-function get_event($eventid) {
-	$eventid = dbescape($eventid);
-	return get_db_row("SELECT * FROM events WHERE eventid = '$eventid'");
+function get_event($id) {
+	return get_db_row("SELECT * FROM events WHERE eventid = ||eventid||", ["eventid" => $id]);
+}
+
+function get_event_template($id) {
+	return get_db_row("SELECT * FROM events_templates WHERE template_id = ||template_id||", ["template_id" => $id]);
 }
 
 function get_event_length($startdate, $enddate, $allday, $starttime, $endtime) {
@@ -1212,6 +1231,7 @@ function get_template_settings_form($templateid, $eventid = false, $globalsettin
 global $CFG;
 	$returnme = "";
 	$settings = get_template_settings($templateid, $globalsettings);
+
 	if (!empty($settings)) { // There are settings in this template
 		$settingform = "";
 		foreach ($settings as $setting) { // Save each setting with the default if no other is given
@@ -1467,7 +1487,7 @@ global $CFG;
 	$print = '';
 	if (!empty($status)) {
 		foreach ($status as $s) {
-			$print .= '<div style="color:red;font-weight:bold"><img style="vertical-align: middle;" src="' . $protocol.$CFG->wwwroot . '/images/error.gif" /> ' . $s["full"] . '</div>';
+			$print .= '<div style="color:red;font-weight:bold"><img style="vertical-align: middle;" src="' . $protocol.$CFG->wwwroot . '/images/error.png" /> ' . $s["full"] . '</div>';
 		}
 	} else {
 		$print = '<div style="color:green;font-size:1.3em;font-weight:bold"><img style="vertical-align: bottom;" src="' . $protocol.$CFG->wwwroot . '/images/checked.gif" /> APPROVED</div>';
@@ -2052,12 +2072,21 @@ function events_delete($pageid, $featureid) {
 		"feature" => "events",
 	];
 
-	$SQL = use_template("dbsql/features.sql", $params, "delete_feature");
-	execute_db_sql($SQL);
-	$SQL = use_template("dbsql/features.sql", $params, "delete_feature_settings");
-	execute_db_sql($SQL);
+	try {
+		start_db_transaction();
+		$sql = [];
+		$sql[] = ["file" => "dbsql/features.sql", "subsection" => "delete_feature"];
+		$sql[] = ["file" => "dbsql/features.sql", "subsection" => "delete_feature_settings"];
 
-	resort_page_features($pageid);
+		// Delete feature
+		execute_db_sqls(fetch_template_set($sql), $params);
+
+		resort_page_features($pageid);
+		commit_db_transaction();
+	} catch (\Throwable $e) {
+		rollback_db_transaction($e->getMessage());
+		return false;
+	}
 }
 
 function create_form_element($type, $id, $optional, $length, $list = false) {
@@ -2128,7 +2157,7 @@ function get_events_admin_contacts() {
 			"id" => "admin_contacts",
 			"onchange" => 'fill_admin_contacts(this.value);',
 		],
-		"values" => get_db_result(use_template("dbsql/events.sql", [], "get_contacts_list", "events")),
+		"values" => get_db_result(fetch_template("dbsql/events.sql", "get_contacts_list", "events")),
 		"valuename" => "admin_contact",
 		"firstoption" => "",
 	];
@@ -2160,7 +2189,7 @@ function get_events_admin_payable() {
 			"id" => "admin_contacts",
 			"onchange" => 'fill_admin_payable(this.value);',
 		],
-		"values" => get_db_result(use_template("dbsql/events.sql", [], "get_payable_list", "events")),
+		"values" => get_db_result(fetch_template("dbsql/events.sql", "get_payable_list", "events")),
 		"valuename" => "admin_contact",
 		"firstoption" => "",
 	];

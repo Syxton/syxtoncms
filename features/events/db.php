@@ -9,9 +9,9 @@
 
 function events_upgrade() {
 global $CFG;
-    $version = get_db_field("version", "features", "feature='events'");	
+	$version = get_db_field("version", "features", "feature='events'");	
     
-    //Events request upgrade ///////////////////////////////////////////////////
+	//Events request upgrade ///////////////////////////////////////////////////
 	$thisversion = 20100715;
 	if ($version < $thisversion) { //# = new version number.  If this is the first...start at 1
 		$SQL = "CREATE TABLE IF NOT EXISTS `events_requests` (
@@ -48,7 +48,7 @@ global $CFG;
 		}
 	}
     
-    //Events templates upgrade ///////////////////////////////////////////////////
+	//Events templates upgrade ///////////////////////////////////////////////////
 	$thisversion = 20120210;
 	if ($version < $thisversion) {
 		$SQL = "ALTER TABLE events_templates ADD settings TEXT NULL";
@@ -57,7 +57,7 @@ global $CFG;
 		}
 	}
     
-    //Register upon payment
+	//Register upon payment
 	$thisversion = 20130409;
 	if ($version < $thisversion) {
 		$SQL = "ALTER TABLE `events_registrations` ADD  `verified` INT( 1 ) NOT NULL DEFAULT  '1', ADD INDEX (  `verified` )";
@@ -66,7 +66,7 @@ global $CFG;
 		}
 	}
     
-    //Manually entered vs online registration field
+	//Manually entered vs online registration field
 	$thisversion = 20150625;
 	if ($version < $thisversion) {
 		$SQL = "ALTER TABLE `events_registrations` ADD  `manual` INT( 1 ) NOT NULL DEFAULT  '0', ADD INDEX (  `manual` )";
@@ -76,7 +76,7 @@ global $CFG;
 		}
 	}
            
-    //Activate and Deactivate templates
+	//Activate and Deactivate templates
 	$thisversion = 20151223;
 	if ($version < $thisversion) {
 		$SQL = "ALTER TABLE `events_templates` ADD `activated` INT( 1 ) NOT NULL DEFAULT  '1', ADD INDEX (  `activated` )";
@@ -91,10 +91,10 @@ global $CFG;
 		}
 	}
 
-    //Activate and Deactivate templates
+	//Activate and Deactivate templates
 	$thisversion = 20160125;
 	if ($version < $thisversion) {
-        $SQL = "CREATE TABLE IF NOT EXISTS `events_staff` (
+		$SQL = "CREATE TABLE IF NOT EXISTS `events_staff` (
           `staffid` int(11) NOT NULL AUTO_INCREMENT,
           `userid` int(11) NOT NULL,
           `name` varchar(200) NOT NULL,
@@ -133,7 +133,7 @@ global $CFG;
           KEY `priorwork` (`priorwork`)
         ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;";
 		if (execute_db_sql($SQL)) { //if successful upgrade
-            add_role_ability('events','staffapply','Events','1','Apply as staff','1','1','1');
+			add_role_ability('events','staffapply','Events','1','Apply as staff','1','1','1');
 			execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
 		}
 	}
@@ -141,7 +141,7 @@ global $CFG;
 	$thisversion = 20160128;
 	if ($version < $thisversion) {
 		$SQL = "ALTER TABLE `events_staff` ADD `pageid` INT( 11 ) NOT NULL DEFAULT '0', ADD INDEX ( `pageid` )";
-        execute_db_sql($SQL);
+		execute_db_sql($SQL);
 		if (get_db_row("SELECT * FROM events WHERE pageid >= 0")) { //if successful upgrade
 			execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
 		}
@@ -150,7 +150,7 @@ global $CFG;
     //Activate and Deactivate templates
 	$thisversion = 20160201;
 	if ($version < $thisversion) {
-        $SQL = "CREATE TABLE IF NOT EXISTS `events_staff_archive` (
+		$SQL = "CREATE TABLE IF NOT EXISTS `events_staff_archive` (
           `archiveid` int(11) NOT NULL AUTO_INCREMENT,
           `staffid` int(11) NOT NULL,
           `userid` int(11) NOT NULL,
@@ -194,18 +194,18 @@ global $CFG;
           KEY `priorwork` (`priorwork`)
         ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;";
 		if (execute_db_sql($SQL)) { //if successful upgrade
-            if ($result = get_db_result("SELECT * FROM events_staff")) {
-                while ($row = fetch_row($result)) {                    
-                    $SQL = "INSERT INTO events_staff_archive 
-                    (staffid,userid,pageid,year,name,phone,dateofbirth,address,agerange,cocmember,congregation,priorwork,q1_1,q1_2,q1_3,q2_1,q2_2,q2_3,parentalconsent,parentalconsentsig,workerconsent,workerconsentsig,workerconsentdate,ref1name,ref1relationship,ref1phone,ref2name,ref2relationship,ref2phone,ref3name,ref3relationship,ref3phone,bgcheckpass,bgcheckpassdate) 
-                    VALUES('" . $row["staffid"] . "','" . $row["userid"] . "','" . $row["pageid"] . "','" . date("Y", $row["workerconsentdate"]) . "','" . $row["name"] . "','" . $row["phone"] . "',
-                           '" . $row["dateofbirth"] . "','" . $row["address"] . "','" . $row["agerange"] . "','" . $row["cocmember"] . "','" . $row["congregation"] . "',
-                           '" . $row["priorwork"] . "','" . $row["q1_1"] . "','" . $row["q1_2"] . "','" . $row["q1_3"] . "','" . $row["q2_1"] . "','" . $row["q2_2"] . "','" . $row["q2_3"] . "',
-                           '" . $row["parentalconsent"] . "','" . $row["parentalconsentsig"] . "','" . $row["workerconsent"] . "','" . $row["workerconsentsig"] . "','" . $row["workerconsentdate"] . "',
-                           '" . $row["ref1name"] . "','" . $row["ref1relationship"] . "','" . $row["ref1phone"] . "','" . $row["ref2name"] . "','" . $row["ref2relationship"] . "','" . $row["ref2phone"] . "','" . $row["ref3name"] . "','" . $row["ref3relationship"] . "','" . $row["ref3phone"] . "','" . $row["bgcheckpass"] . "','" . $row["bgcheckpassdate"] . "')";
-                    execute_db_sql($SQL);    
-                }
-            }
+			if ($result = get_db_result("SELECT * FROM events_staff")) {
+				while ($row = fetch_row($result)) {                    
+					$SQL = "INSERT INTO events_staff_archive 
+					(staffid,userid,pageid,year,name,phone,dateofbirth,address,agerange,cocmember,congregation,priorwork,q1_1,q1_2,q1_3,q2_1,q2_2,q2_3,parentalconsent,parentalconsentsig,workerconsent,workerconsentsig,workerconsentdate,ref1name,ref1relationship,ref1phone,ref2name,ref2relationship,ref2phone,ref3name,ref3relationship,ref3phone,bgcheckpass,bgcheckpassdate) 
+					VALUES('" . $row["staffid"] . "','" . $row["userid"] . "','" . $row["pageid"] . "','" . date("Y", $row["workerconsentdate"]) . "','" . $row["name"] . "','" . $row["phone"] . "',
+							'" . $row["dateofbirth"] . "','" . $row["address"] . "','" . $row["agerange"] . "','" . $row["cocmember"] . "','" . $row["congregation"] . "',
+							'" . $row["priorwork"] . "','" . $row["q1_1"] . "','" . $row["q1_2"] . "','" . $row["q1_3"] . "','" . $row["q2_1"] . "','" . $row["q2_2"] . "','" . $row["q2_3"] . "',
+							'" . $row["parentalconsent"] . "','" . $row["parentalconsentsig"] . "','" . $row["workerconsent"] . "','" . $row["workerconsentsig"] . "','" . $row["workerconsentdate"] . "',
+							'" . $row["ref1name"] . "','" . $row["ref1relationship"] . "','" . $row["ref1phone"] . "','" . $row["ref2name"] . "','" . $row["ref2relationship"] . "','" . $row["ref2phone"] . "','" . $row["ref3name"] . "','" . $row["ref3relationship"] . "','" . $row["ref3phone"] . "','" . $row["bgcheckpass"] . "','" . $row["bgcheckpassdate"] . "')";
+					execute_db_sql($SQL);    
+				}
+			}
 			execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
 		}
 	}
@@ -213,9 +213,9 @@ global $CFG;
 	$thisversion = 20160408;
 	if ($version < $thisversion) {
 		$SQL = "ALTER TABLE `events` ADD `description` LONGTEXT NULL";
-        execute_db_sql($SQL);
-        $SQL = "ALTER TABLE `events` CHANGE `extrainfo` `byline` LONGTEXT NULL";
-        execute_db_sql($SQL);
+		execute_db_sql($SQL);
+		$SQL = "ALTER TABLE `events` CHANGE `extrainfo` `byline` LONGTEXT NULL";
+		execute_db_sql($SQL);
 		if (get_db_row("SELECT * FROM events WHERE description != 'xxxxxxxx'")) { //if successful upgrade
 			execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
 		}
@@ -223,11 +223,11 @@ global $CFG;
     
 	$thisversion = 20160516;
 	if ($version < $thisversion) {
-		  $SQL1 = "UPDATE `events_staff` SET agerange=1, parentalconsent='', parentalconsentsig='' WHERE agerange=0 AND (UNIX_TIMESTAMP() - dateofbirth) > 567648000";
-        $SQL2 = "UPDATE `events_staff_archive` SET agerange=1, parentalconsent='', parentalconsentsig='' WHERE year=2016 AND agerange=0 AND (UNIX_TIMESTAMP() - dateofbirth) > 567648000";
-        if (execute_db_sql($SQL1) && execute_db_sql($SQL2)) {
-           execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'"); 
-        }
+		$SQL1 = "UPDATE `events_staff` SET agerange=1, parentalconsent='', parentalconsentsig='' WHERE agerange=0 AND (UNIX_TIMESTAMP() - dateofbirth) > 567648000";
+		$SQL2 = "UPDATE `events_staff_archive` SET agerange=1, parentalconsent='', parentalconsentsig='' WHERE year=2016 AND agerange=0 AND (UNIX_TIMESTAMP() - dateofbirth) > 567648000";
+		if (execute_db_sql($SQL1) && execute_db_sql($SQL2)) {
+			execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'"); 
+		}
 	}
 }
 

@@ -96,10 +96,8 @@ function adminpanel_delete($pageid, $featureid) {
 		"feature" => "adminpanel",
 	];
 
-	$SQL = use_template("dbsql/features.sql", $params, "delete_feature");
-	execute_db_sql($SQL);
-	$SQL = use_template("dbsql/features.sql", $params, "delete_feature_settings");
-	execute_db_sql($SQL);
+	execute_db_sql(fetch_template("dbsql/features.sql", "delete_feature"), $params);
+	execute_db_sql(fetch_template("dbsql/features.sql", "delete_feature_settings"), $params);
 
 	resort_page_features($pageid);
 }

@@ -45,32 +45,38 @@ global $CFG, $MYVARS, $USER;
 	$featureid = clean_myvar_opt("featureid", "int", false);
 	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	if (!user_is_able($USER->userid, "addpics", $pageid)) { trigger_error(error_string("no_permission", ["addpics"]), E_USER_WARNING); return; }
-	echo '
+
+    $existing_galleries = get_db_result(fetch_template("dbsql/pics.sql", "get_page_galleries", "pics"), ["pageid" => $pageid]);
+
+    $hide_select = $existing_galleries ? '' : 'display:none;';
+
+    echo '
     <form id="pics_form" method="post" action="' . $CFG->wwwroot . '/features/pics/pics_ajax.php" enctype="multipart/form-data">
     <input type="hidden" id="filenames" name="filenames" />
     <input type="hidden" name="action" value="pics_upload" />
     <input type="hidden" name="featureid" value="' . $featureid . '" />
     <input type="hidden" name="pageid" value="' . $pageid . '" />
-    <input style="margin:10px;vertical-align:bottom; float:right;" type="button" name="upload_form" value="Upload Files" onclick="update_picslist();">
-    Click the browse button to choose the images you would like to upload.  You can add as many as you would like.  The images will not be uploaded to the server until you click the Upload File button.
     <p>
-    <table class="dotted">
+        Click the browse button to choose the images you would like to upload.  You can add as many as you would like.  The images will not be uploaded to the server until you click the Upload File button.
+    </p>
+    <table class="dotted" style="width:100%;>
   		<tr>
   			<td>
-  			<strong>Gallery</strong><br /><br />
+  			    <strong>Gallery</strong><br /><br />
   				<table style="width:100%;">
-  					<tr>
-  						<td class="field_title" style="width:100px;">
+  					<tr style="' . $hide_select . '">
+  						<td class="field_title">
   							New Gallery:
   						</td>
   						<td class="field_input">
-  							<select id="new_gallery" name="new_gallery" onchange="ajaxapi(\'/features/pics/pics_ajax.php\',\'new_gallery\',\'&param=\' + this.value + \'&pageid=' . $pageid . '\',function() { simple_display(\'gallery_name_div\');});"><option value="1">Yes</option><option value="0">No</option></select>
+  							<select id="new_gallery" name="new_gallery" onchange="ajaxapi(\'/features/pics/pics_ajax.php\',\'new_gallery\',\'&param=\' + this.value + \'&pageid=' . $pageid . '\',function() { simple_display(\'gallery_name_div\');});">
+                                <option value="1">Yes</option>
+                                <option value="0">No</option>
+                            </select>
   						</td>
   					</tr>
-  				</table>
-  				<table style="width:100%;">
   					<tr>
-  						<td class="field_title" style="width:100px;">
+  						<td class="field_title">
   							Gallery Name:
   						</td>
   						<td class="field_input">
@@ -79,20 +85,19 @@ global $CFG, $MYVARS, $USER;
   							</span>
   						</td>
   					</tr>
-  				</table>
-  				<table style="width:100%;">
-  						<tr>
-  						<td class="field_title" style="width:100px;">
+  					<tr>
+  						<td class="field_title">
   							File Uploads:
   						</td>
   						<td class="field_input">
-  							<input type="file" class="multi" accept="gif|jpg|png|bmp" id="multi_0_0" name="files[]" onkeypress="return handleEnter(this, event)"/><p>
+  							<input type="file" class="multi" multiple="multiple" accept="gif|jpg|jpeg|png|bmp" id="multi_0_0" name="files[]" onkeypress="return handleEnter(this, event)"/>
   						</td>
   					</tr>
   				</table>
   			</td>
   		</tr>
     </table>
+    <input style="position: absolute;margin: 10px;bottom: 0px;right: 0px;" type="button" name="upload_form" value="Submit Gallery" onclick="update_picslist();">
     </form>';
 }
 

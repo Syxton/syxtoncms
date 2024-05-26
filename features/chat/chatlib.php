@@ -6,13 +6,12 @@
 * Date: 5/14/2024
 * Revision: 0.3.7
 ***************************************************************************/
-
-if (!LIBHEADER) {
-	$sub = './';
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
 	while (!file_exists($sub . 'lib/header.php')) {
-		$sub = $sub == './' ? '../' : $sub . '../';
+		$sub = $sub == '' ? '../' : $sub . '../';
 	}
-	include($sub . 'lib/header.php'); 
+	include($sub . 'lib/header.php');
 }
 define('CHATLIB', true);
 
@@ -36,7 +35,7 @@ global $CFG, $USER, $ROLES, $PAGE;
 	if ((is_logged_in() && user_is_able($USER->userid, "chat", $pageid)) || (!is_logged_in() && role_is_able($ROLES->visitor,"chat", $pageid))) {
         $styles=get_styles($pageid, $PAGE->themeid);
 		if ($area == "middle") { 
-			$content .= '<div style="width:100%;"><iframe id="myframe" onload="resizeCaller();" src="' . $CFG->wwwroot . '/features/chat/plugin/index.php?pageid=' . $pageid . '" frameborder="0" style="background-color:' . $styles['contentbgcolor'] . ';overflow:hidden;height:500px;width:100%;"></iframe></div>';
+			$content .= '<div style="width:100%;"><iframe id="myframe" onload="resizeCaller(this.id);" src="' . $CFG->wwwroot . '/features/chat/plugin/index.php?pageid=' . $pageid . '" frameborder="0" style="background-color:' . $styles['contentbgcolor'] . ';overflow:hidden;height:500px;width:100%;"></iframe></div>';
 		} else { 
 			$content .= '<span class="centered_span">Cannot be used as a side panel.</span>'; 
         }
@@ -54,14 +53,17 @@ function chat_delete($pageid, $featureid) {
 		"feature" => "chat",
 	];
 
-	$SQL = use_template("dbsql/features.sql", $params, "delete_feature");
-	execute_db_sql($SQL);
-	$SQL = use_template("dbsql/features.sql", $params, "delete_feature_settings");
-	execute_db_sql($SQL);
-	$SQL = use_template("dbsql/chat.sql", $params, "delete_chat", "chat");
-	execute_db_sql($SQL);
-
-	resort_page_features($pageid);
+	try {
+		start_db_transaction();
+		execute_db_sql(fetch_template("dbsql/features.sql", "delete_feature"), $params);
+		execute_db_sql(fetch_template("dbsql/features.sql", "delete_feature_settings"), $params);
+		execute_db_sql(fetch_template("dbsql/chat.sql", "delete_chat", "chat"), $params);
+		resort_page_features($pageid);
+		commit_db_transaction();
+	} catch (\Throwable $e) {
+		rollback_db_transaction($e->getMessage());
+		return false;
+	}
 }
 
 function chat_buttons($pageid, $featuretype, $featureid) {

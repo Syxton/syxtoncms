@@ -1,4 +1,4 @@
-var iframeids = ["myframe"];
+var iframeids = [];
 
 //Should script hide iframe from browsers that don't support this script (non IE5+/NS6+ browsers. Recommended):
 var iframehide = "yes";
@@ -6,7 +6,8 @@ var iframehide = "yes";
 var getFFVersion=navigator.userAgent.substring(navigator.userAgent.indexOf("Firefox")).split("/")[1];
 var FFextraHeight=parseFloat(getFFVersion)>=0.1? 16 : 0; //extra height in px to add to iframe in FireFox 1.0+ browsers
 
-function resizeCaller() {
+function resizeCaller(id) {
+    iframeids.push(id);
 	for (i=0; i<iframeids.length; i++) {
 		if (document.getElementById) {
 			resizeIframe(iframeids[i]);

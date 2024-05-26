@@ -6,28 +6,39 @@
 * Date: 5/14/2024
 * Revision: 0.1.9
 ***************************************************************************/
-
-if (!LIBHEADER) { include('header.php'); }
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
+	}
+	include($sub . 'lib/header.php');
+}
 define('STYLESLIB', true);
 
 $STYLES = new \stdClass;
 
 function get_styles($pageid, $themeid = false, $feature = '', $featureid = '') {
 global $CFG, $MYVARS;
+	$pageid = clean_var_opt($pageid, "int", get_pageid());
+	$themeid = clean_var_opt($themeid, "int", false);
+	$feature = clean_var_opt($feature, "string", "");
+	$featureid = clean_var_opt($featureid, "int", "");
+
 	// THEME RULES
 	// Default styles are given pageid = 0
 	// Global styles are given forced = 1
 	// Feature type specific styles are given featureid = 0
-	$revised_pageid = $pageid == $CFG->SITEID ? 0 : $pageid;
-	$params = [	"pageid" => $revised_pageid,
-				"themeid" => $themeid,
-				"feature" => $feature,
-				"featureid" => $featureid,
+	$revised_pageid = $pageid === $CFG->SITEID ? 0 : $pageid;
+	$params = [
+		"pageid" => $revised_pageid,
+		"themeid" => $themeid,
+		"feature" => $feature,
+		"featureid" => $featureid,
 	];
 
-	if ($themeid === "0") { // CUSTOM THEME
+	if (!$themeid === 0) { // CUSTOM THEME
 		// Hasn't saved custom colors yet return defaults;
-		if (!get_db_field("id", "styles", "pageid = '$revised_pageid'")) {
+		if (!get_db_field("id", "styles", "pageid = ||pageid||", ["pageid" => $revised_pageid])) {
 			$feature = "page";
 			if ($default_list = get_custom_styles($revised_pageid, $feature)) {
 				foreach ($default_list as $style) {
@@ -36,15 +47,15 @@ global $CFG, $MYVARS;
 			}
 			return $temparray;
 		}
-		$SQL = use_template("dbsql/styles.sql", $params, "custom_theme_styles");
+		$SQL = fetch_template("dbsql/styles.sql", "custom_theme_styles");
 	} elseif ($themeid > 0) { // PAGE THEME IS SET TO A SAVED THEME
-		$SQL = use_template("dbsql/styles.sql", $params, "set_theme_styles");
+		$SQL = fetch_template("dbsql/styles.sql", "saved_theme_styles");
 	} else { // NO THEME...LOOK FOR PARENT THEMES
 		$params["themeid"] = get_page_themeid($CFG->SITEID);
-		$SQL = use_template("dbsql/styles.sql", $params, "parent_theme_styles");
+		$SQL = fetch_template("dbsql/styles.sql", "parent_theme_styles");
 	}
 
-	if ($result = get_db_result($SQL)) {
+	if ($result = get_db_result($SQL, $params)) {
     $styles = [];
 		while ($row = fetch_row($result)) {
 			$styles[$row["attribute"]] = $row["value"];
@@ -68,27 +79,27 @@ global $CFG, $MYVARS, $USER;
 		"properties" => [
 			"name" => "themes",
 			"id" => "themes",
-			"onchange" => use_template("tmp/themes.template", $params, "theme_selector_menu_action_template"),
+			"onchange" => fill_template("tmp/themes.template", "theme_selector_menu_action_template", false, $params),
 			"style" => "width:225px;",
 		],
-		"values" => get_db_result(use_template("dbsql/styles.sql", ["notsite" => ($pageid != $CFG->SITEID)], "theme_selector_sql")),
+		"values" => get_db_result(fetch_template("dbsql/styles.sql", "theme_selector_sql", false, ["notsite" => ($pageid != $CFG->SITEID)])),
 		"valuename" => "themeid",
 		"displayname" => "name",
 		"selected" => $themeid,
 	];
 	$params["menu"] = make_select($themeselector);
-	$tabs = use_template("tmp/themes.template", $params, "theme_selector_tabs_template");
-	$left = $tabs . use_template("tmp/themes.template", $params, "theme_selector_left_template");
+	$tabs = fill_template("tmp/themes.template", "theme_selector_tabs_template", false, $params);
+	$left = $tabs . fill_template("tmp/themes.template", "theme_selector_left_template", false, $params);
 
-	$title = get_db_field("name", "pages", "pageid = '$pageid'");
+	$title = get_db_field("name", "pages", "pageid = ||pageid||", ["pageid" => $pageid]);
 	$title = '<span class="box_title_text">' . $title . '</span>';
 	$rolename = get_db_field("display_name", "roles", "roleid = " . user_role($USER->userid, $pageid));
 
 	$params["pagelist"] = get_css_box($title, $rolename, false, NULL, 'pagename', NULL, $themeid, null, $pageid);
 	$params["block"] = get_css_box('<span class="box_title_text">Title</span>', "Content", null, null, null, null, $themeid, null, $pageid);
-	$right = use_template("tmp/themes.template", $params, "theme_selector_right_template");
+	$right = fill_template("tmp/themes.template", "theme_selector_right_template", false, $params);
 
-	return use_template("tmp/themes.template", ["left" => $left, "right" => $right], "make_template_selector_panes_template");
+	return fill_template("tmp/themes.template", "make_template_selector_panes_template", false, ["left" => $left, "right" => $right]);
 }
 
 function custom_styles_selector($pageid, $feature, $featureid=false) {
@@ -101,7 +112,7 @@ function custom_styles_selector($pageid, $feature, $featureid=false) {
 			"checked2" => "checked",
 			"iscustom" => ($feature == "page"),
 		];
-		$tabs = use_template("tmp/themes.template", $params, "theme_selector_tabs_template");
+		$tabs = fill_template("tmp/themes.template", "theme_selector_tabs_template", false, $params);
 
 		// Styles function
 		$styles = $feature . '_default_styles';
@@ -114,20 +125,25 @@ function custom_styles_selector($pageid, $feature, $featureid=false) {
 
 		$style_inputs = "";
 		foreach ($styles as $style) { // go through each style type and see if there is a db setting that can replace it.
-			if ($feature == "page") {
-				$SQL = "themeid=0 AND attribute='" . $style[1]."' AND pageid='$revised_pageid' AND feature <= '' AND featureid <= 0 ORDER BY pageid DESC";
-			} else {
-				$SQL = "themeid=0 AND attribute='" . $style[1]."' AND pageid='$revised_pageid' AND feature='$feature' AND featureid='$featureid' ORDER BY pageid DESC";
+			$p = [
+				"pageid" => $revised_pageid,
+				"attribute" => $style[1],
+			];
+			$featuresql = "";
+			if ($feature !== "page") {
+				$p["featureid"] = $featureid;
+				$p["feature"] = $feature;
+				$featuresql = " AND feature = ||feature|| AND featureid = ||featureid|| ";
 			}
-			$value = get_db_field("value", "styles", $SQL);
+			$value = get_db_field("value", "styles", "themeid = 0 AND attribute = ||attribute|| AND pageid = ||pageid|| $featuresql ORDER BY pageid DESC", $p);
 			if (!$value) { // No db value found, use the hard coded default value.
 				$value = $style[2];
 			}
-			$style_inputs .= use_template("tmp/themes.template", ["style" => $style, "value" => $value, "wwwroot" => $CFG->wwwroot], "style_inputs_template");
+			$style_inputs .= fill_template("tmp/themes.template", "style_inputs_template", false, ["style" => $style, "value" => $value, "wwwroot" => $CFG->wwwroot]);
 		}
 
 		$params["style_inputs"] = $style_inputs;
-		return $tabs . use_template("tmp/themes.template", $params, "custom_styles_selector_template");
+		return $tabs . fill_template("tmp/themes.template", "custom_styles_selector_template", false, $params);
 }
 
 function get_custom_styles($pageid, $feature, $featureid=false) {

@@ -20,27 +20,25 @@ if (!xmlHttp && typeof XMLHttpRequest != 'undefined') {
 }
 
 
-function submit_registration()
-{
-	if(validate())
-	{
-	var reqstring = create_request_string('form1');
+function campnopics_submit_registration() {
+	if(validate()) {
+        var reqstring = create_request_string('form1');
 
-	// Build the URL to connect to
-		var url = WWW_ROOT + dirfromroot + "/features/events/templates/" + folder + "/backend.php";
-	var d = new Date();
-	var parameters = "action=register&currTime=" + d.toUTCString() + reqstring;
-	
-	xmlHttp.open('POST', url, false);
-     xmlHttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-     xmlHttp.setRequestHeader("Content-length", parameters.length);
-     xmlHttp.setRequestHeader("Connection", "close");
-     xmlHttp.send(parameters);
+        // Build the URL to connect to
+            var url = WWW_ROOT + dirfromroot + "/features/events/templates/" + folder + "/backend.php";
+        var d = new Date();
+        var parameters = "action=register&currTime=" + d.toUTCString() + reqstring;
+        
+        xmlHttp.open('POST', url, false);
+        xmlHttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xmlHttp.setRequestHeader("Content-length", parameters.length);
+        xmlHttp.setRequestHeader("Connection", "close");
+        xmlHttp.send(parameters);
 
-	// Setup a function for the server to run when it's done
-	document.getElementById("camp").innerHTML = "";
-		simple_display("registration_div");
-		}
+        // Setup a function for the server to run when it's done
+        document.getElementById("camp").innerHTML = "";
+        simple_display("registration_div");
+	}
 }
 
 function show_form_again(eventid, regid, autofill)

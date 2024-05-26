@@ -147,7 +147,7 @@ global $CFG;
                             ' . make_news_table($pageid, $pagenews, "middle", $daygraphic, true) . '<br />
                             ' . $display_news . '
                             </div>';
-        return get_css_set("main") . use_template("tmp/index.template", ["mainmast" => page_masthead(true, true), "middlecontents" => $middlecontents], "simplelayout_template");
+        return get_css_set("main") . fill_template("tmp/index.template", "simplelayout_template", false, ["mainmast" => page_masthead(true, true), "middlecontents" => $middlecontents]);
 	}
 }
 ?>

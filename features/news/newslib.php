@@ -6,13 +6,12 @@
 * Date: 5/14/2024
 * Revision: 2.8.3
 ***************************************************************************/
-
-if (!LIBHEADER) {
-	$sub = './';
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
 	while (!file_exists($sub . 'lib/header.php')) {
-		$sub = $sub == './' ? '../' : $sub . '../';
+		$sub = $sub == '' ? '../' : $sub . '../';
 	}
-	include($sub . 'lib/header.php'); 
+	include($sub . 'lib/header.php');
 }
 define('NEWSLIB', true);
 
@@ -188,7 +187,7 @@ global $CFG;
 		 ORDER BY ns.pageid,ns.lastupdate DESC $limit";
 	} else {
   		$SQL = "
-  		SELECT DISTINCT ns.pageidns.lastupdate FROM news_features ns
+  		SELECT DISTINCT ns.pageid,ns.lastupdate FROM news_features ns
   		INNER JOIN roles_assignment ra ON ra.userid=$userid AND ra.pageid = ns.pageid AND confirm=0
   		INNER JOIN roles_ability ry ON ry.roleid=ra.roleid AND ry.ability='viewnews' AND allow='1'
   		INNER JOIN pages_features pf on pf.pageid=ns.pageid AND pf.feature='news' AND pf.featureid=ns.featureid
@@ -332,7 +331,7 @@ global $CFG, $USER;
 	}
 }
 
-function get_month_news($userid, $year, $month, $pagenews=false, $pageid=false, $featureid=false) {
+function get_month_news($userid, $year, $month, $pagenews=false, $pageid =false, $featureid=false) {
 	if (!$pagenews) { $pagenews = get_all_news($userid, $pageid, $featureid); }
 	$y=$currentmonth=$last=$i=0; $first = false;
 	if (isset($pagenews->$i)) {
@@ -356,7 +355,7 @@ function get_month_news($userid, $year, $month, $pagenews=false, $pageid=false, 
 	} else { return false; }
 }
 
-function months_with_news($userid, $year, $pagenews=false, $pageid=false, $featureid=false) {
+function months_with_news($userid, $year, $pagenews=false, $pageid =false, $featureid=false) {
 	if (!$pagenews) { $pagenews = get_all_news($userid, $pageid, $featureid);	}
 	$last=$i=0; $first = false;
 	if (isset($pagenews->$i)) {
@@ -400,7 +399,7 @@ function months_with_news($userid, $year, $pagenews=false, $pageid=false, $featu
 	return false;
 }
 
-function years_with_news($userid, $pagenews=false, $pageid=false, $featureid=false) {
+function years_with_news($userid, $pagenews=false, $pageid =false, $featureid=false) {
 	if (!$pagenews) { $pagenews = get_all_news($userid, $pageid, $featureid);	}
 	$zero=$last=0;
     if (isset($pagenews->$zero)) {
@@ -574,25 +573,32 @@ function closetags($html) {
 
 function news_delete($pageid, $featureid = false, $newsid = false) {
 	if (empty($newsid)) { // News feature delete
-		$params = [
-			"pageid" => $pageid,
-			"featureid" => $featureid,
-			"feature" => "news",
-		];
+		try {
+			start_db_transaction();
+			$sql = [];
+			$sql[] = ["file" => "dbsql/features.sql", "subsection" => "delete_feature"];
+			$sql[] = ["file" => "dbsql/features.sql", "subsection" => "delete_feature_settings"];
+			$sql[] = ["file" => "dbsql/news.sql", "feature" => "news", "subsection" => "delete_news_features"];
+			$sql[] = ["file" => "dbsql/news.sql", "feature" => "news", "subsection" => "delete_all_news_items"];
+	
+			// Delete feature
+			execute_db_sqls(fetch_template_set($sql), $params);
 
-		$SQL = use_template("dbsql/features.sql", $params, "delete_feature");
-		execute_db_sql($SQL);
-		$SQL = use_template("dbsql/features.sql", $params, "delete_feature_settings");
-		execute_db_sql($SQL);
-		$SQL = use_template("dbsql/news.sql", $params, "delete_news_features", "news");
-		execute_db_sql($SQL);
-		$SQL = use_template("dbsql/news.sql", $params, "delete_all_news_items", "news");
-		execute_db_sql($SQL);
-
-		resort_page_features($pageid);
+			resort_page_features($pageid);
+			commit_db_transaction();
+		} catch (\Throwable $e) {
+			rollback_db_transaction($e->getMessage());
+			return false;
+		}
 	} else { // News item delete
-		$SQL = use_template("dbsql/news.sql", ["newsid" => $newsid], "delete_news_item", "news");
-		execute_db_sql($SQL);
+		try {
+			start_db_transaction();
+			execute_db_sql(fetch_template("dbsql/news.sql", "delete_news_item", "news"), ["newsid" => $newsid]);
+			commit_db_transaction();
+		} catch (\Throwable $e) {
+			rollback_db_transaction($e->getMessage());
+			return false;
+		}
 	}
 }
 
@@ -622,14 +628,27 @@ global $CFG;
 }
 
 function insert_blank_news($pageid) {
-global $CFG;
-	if ($featureid = execute_db_sql("INSERT INTO news_features (pageid,lastupdate) VALUES('$pageid','" . get_timestamp() . "')")) {
-		$feature = "news";
-		$area = get_db_field("default_area", "features", "feature='news'");
-		$sort = get_db_count("SELECT * FROM pages_features WHERE pageid='$pageid' AND area='$area'") + 1;
-		execute_db_sql("INSERT INTO pages_features (pageid,feature,sort,area,featureid) VALUES('$pageid','news','$sort','$area','$featureid')");
-		return $featureid;
-	}
+    $type = "news";
+    try {
+        start_db_transaction();
+        fetch_template("dbsql/news.sql", "insert_news_feature", "news");
+        if ($featureid = execute_db_sql(fetch_template("dbsql/news.sql", "insert_news_feature", $type), ["pageid" => $pageid, "lastupdate" => get_timestamp()])) {
+            $area = get_db_field("default_area", "features", "feature = ||feature||", ["feature" => $type]);
+            $sort = get_db_count(fetch_template("dbsql/features.sql", "get_features_by_page_area"), ["pageid" => $pageid, "area" => $area]) + 1;
+            $params = [
+                "pageid" => $pageid,
+                "feature" => $type,
+                "featureid" => $featureid,
+                "sort" => $sort,
+                "area" => $area,
+            ];
+            execute_db_sql(fetch_template("dbsql/features.sql", "insert_page_feature"), $params);
+            commit_db_transaction();
+            return $featureid;
+        }
+    } catch (\Throwable $e) {
+        rollback_db_transaction($e->getMessage());
+    }
 	return false;
 }
 

@@ -532,9 +532,9 @@ global $CFG, $MYVARS;
 							execute_db_sql(fetch_template("dbsql/events.sql", "events_requests_change_vote", "events"), $p);
 
 							if ($newvote) { // Remove 1 from against and add 1 to for
-								execute_db_sql(use_template("dbsql/events.sql", ["reqid" => $reqid, "approve" => true], "events_requests_recalculate", "events"));
+								execute_db_sql(fetch_template("dbsql/events.sql", "events_requests_recalculate", "events", ["approve" => true]), ["reqid" => $reqid]);
 							} else { //Remove 1 from for and add 1 to against    
-								execute_db_sql(use_template("dbsql/events.sql", ["reqid" => $reqid, "approve" => false], "events_requests_recalculate", "events"));
+								execute_db_sql(fetch_template("dbsql/events.sql", "events_requests_recalculate", "events", ["approve" => false]), ["reqid" => $reqid]);
 							}
 							echo "You have changed your vote to $stance.";
 						}
@@ -546,9 +546,9 @@ global $CFG, $MYVARS;
 				execute_db_sql(fetch_template("dbsql/events.sql", "events_requests_new_vote", "events"), $p);
 
 				if ($newvote == "1") { // Add 1 to the for column
-					execute_db_sql(use_template("dbsql/events.sql", ["reqid" => $reqid, "approve" => true], "events_requests_calculate", "events"));
+					execute_db_sql(fetch_template("dbsql/events.sql", "events_requests_calculate", "events", ["approve" => true]), ["reqid" => $reqid]);
 				} else { // Add 1 to the against column
-					execute_db_sql(use_template("dbsql/events.sql", ["reqid" => $reqid, "approve" => false], "events_requests_calculate", "events"));
+					execute_db_sql(fetch_template("dbsql/events.sql", "events_requests_calculate", "events", ["approve" => false]), ["reqid" => $reqid]);
 				}
 				echo "You have voted to $stance this event.";
 			}
@@ -775,9 +775,7 @@ return $SQL;
 
 function printable_registration($regid, $eventid, $template_id) {
 	$returnme = '<div>';
-
-	$SQL = "SELECT * FROM events_templates WHERE template_id='$template_id'";
-	$template = get_db_row($SQL);
+	$template = get_event_template($template_id);
 	if ($template["folder"] == "none") {
 		if ($template_forms = get_db_result("SELECT * FROM events_templates_forms
 												WHERE template_id='$template_id'
@@ -854,96 +852,95 @@ function printable_registration($regid, $eventid, $template_id) {
 
 function save_reg_changes() {
 global $CFG, $MYVARS, $USER;
-	$eventid = dbescape($MYVARS->GET["eventid"]);
-	$regid = isset($MYVARS->GET["regid"]) ? dbescape($MYVARS->GET["regid"]) : false;
+	$eventid = clean_var_opt("eventid", "int", false);
+	$regid = clean_var_opt("regid", "int", false);
+	$reg_eventid = clean_var_opt("reg_eventid", "int", false);
 
-	// Changing core registration values
-	$reg_eventid = dbescape($MYVARS->GET["reg_eventid"]);
-	if (!empty($reg_eventid) && get_event($reg_eventid)) {
-		$reg_email = dbescape($MYVARS->GET["reg_email"]);
-		$reg_code = dbescape($MYVARS->GET["reg_code"]);
-		execute_db_sql("UPDATE events_registrations
-							SET eventid='$reg_eventid', email='$reg_email', code='$reg_code'
-							WHERE regid='$regid'");
-		execute_db_sql("UPDATE events_registrations_values
-							SET eventid='$reg_eventid'
-							WHERE regid='$regid'");
-	}
+	try {
+		start_db_transaction();
+		// Changing core registration values
+		if ($reg_eventid && get_event($reg_eventid)) {
+			$reg_email = clean_var_opt("reg_email", "string", "");
+			$reg_code = clean_var_opt("reg_code", "string", "");
 
-	$SQL = "SELECT *
-			  FROM events_registrations_values
-			 WHERE regid = '$regid'
-		  ORDER BY entryid";
-	if ($entries = get_db_result($SQL)) {
-		$SQL2 = '';
-		while ($entry = fetch_row($entries)) {
-			if (isset($MYVARS->GET[$entry["entryid"]])) {
-				$SQL2 .= $SQL2 == "" ? "('" . $entry["entryid"] . "','" . dbescape($MYVARS->GET[$entry["entryid"]]) . "')" : ", ('" . $entry["entryid"] . "', '" . dbescape($MYVARS->GET[$entry["entryid"]]) . "')";
-			}
+			execute_db_sql(fetch_template("dbsql/events.sql", "update_reg_event_info", "events"), ["regid" => $regid, "eventid" => $reg_eventid, "email" => $reg_email, "code" => $reg_code]);
+			execute_db_sql(fetch_template("dbsql/events.sql", "update_reg_event", "events"), ["regid" => $regid, "eventid" => $reg_eventid]);
 		}
 
-		$SQL1 = "CREATE TEMPORARY TABLE temp_updates (
-			id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-			entryid INT(11) UNSIGNED NOT NULL,
-			newvalue LONGTEXT COLLATE 'utf8_general_ci')";
-
-		$SQL2 = "INSERT INTO temp_updates (entryid,newvalue) VALUES" . $SQL2;
-
-		$SQL3 = "UPDATE events_registrations_values e, temp_updates t
-		SET e.value = t.newvalue WHERE e.entryid = t.entryid AND e.regid='$regid'";
-	}
-
-	if (execute_db_sql($SQL1)) {
-		if (execute_db_sql($SQL2)) {
-			if (execute_db_sql($SQL3)) {
-				// check paid status
-				$paid = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='paid'");
-				$payment_method = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='payment_method'");
-				$minimum = get_db_field("fee_min", "events", "eventid='$eventid'");
-				$verified = get_db_field("verified", "events_registrations", "regid='$regid'");
-				if ($paid >= $minimum) {
-					if (empty($verified)) { // Not already verified.
-						// If payment is made, it is no longer in queue.
-						$SQL = "UPDATE events_registrations SET verified='1' WHERE regid='$regid'";
-		  				execute_db_sql($SQL);
-
-						$touser = new \stdClass;
-						$touser->fname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_First'");
-			  			$touser->lname = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='Camper_Name_Last'");
-			  			$touser->email = get_db_field("email", "events_registrations", "regid='$regid'");
-
-						$fromuser = new \stdClass;
-						$fromuser->email = $CFG->siteemail;
-			  			$fromuser->fname = $CFG->sitename;
-			  			$fromuser->lname = "";
-			  			$message = registration_email($regid, $touser);
-			  			if (send_email($touser, $fromuser, $CFG->sitename . " Registration", $message)) {
-			  				send_email($fromuser, $fromuser, $CFG->sitename . " Registration", $message);
-			  			}
+		// Create temp table
+		if (execute_db_sql(fetch_template("dbsql/events.sql", "reg_copy_create_temptable", "events"))) {
+			if ($entries = get_db_result(fetch_template("dbsql/events.sql", "get_registration_values", "events"), ["regid" => $regid])) {
+				$SQL = '';
+				while ($entry = fetch_row($entries)) {
+					if (isset($MYVARS->GET[$entry["entryid"]])) {
+						$SQL .= $SQL == "" ? "('" . $entry["entryid"] . "','" . clean_var_opt($entry["entryid"], "string", "") . "')" : ", ('" . $entry["entryid"] . "', '" . clean_var_opt($entry["entryid"], "string", "") . "')";
 					}
-				} else {
-					if ($payment_method = "Campership") {
-						$SQL = "UPDATE events_registrations SET verified='1' WHERE regid='$regid'";
-					} else {
-						$SQL = "UPDATE events_registrations SET verified='0' WHERE regid='$regid'";
-					}
-	  				execute_db_sql($SQL);
 				}
-				echo "Saved";
-			} else { echo $SQL3; }
-		} else { echo $SQL2; }
-	} else { echo $SQL1; }
+				$SQL = "INSERT INTO temp_updates (entryid,newvalue) VALUES" . $SQL;
+			}
+
+			if (execute_db_sql($SQL)) {
+				if (execute_db_sql(fetch_template("dbsql/events.sql", "reg_update_from_temptable", "events"), ["regid" => $regid])) {
+					// check paid status
+					$paid = get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname = 'paid'", ["regid" => $regid]);
+					$payment_method = get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname = 'payment_method'", ["regid" => $regid]);
+					$minimum = get_db_field("fee_min", "events", "eventid = ||eventid||", ["eventid" => $eventid]);
+					$verified = get_db_field("verified", "events_registrations", "regid = ||regid||", ["regid" => $regid]);
+					if ($paid >= $minimum) {
+						if (empty($verified)) { // Not already verified.
+							// If payment is made, it is no longer in queue.
+							execute_db_sql(fetch_template("dbsql/events.sql", "update_reg_status", "events"), ["regid" => $regid, "verified" => 1]);
+
+							$touser = new \stdClass;
+							$touser->fname = get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname='Camper_Name_First'", ["regid" => $regid]);
+							$touser->lname = get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname='Camper_Name_Last'", ["regid" => $regid]);
+							$touser->email = get_db_field("email", "events_registrations", "regid = ||regid||", ["regid" => $regid]);
+
+							$fromuser = new \stdClass;
+							$fromuser->email = $CFG->siteemail;
+							$fromuser->fname = $CFG->sitename;
+							$fromuser->lname = "";
+							$message = registration_email($regid, $touser);
+							if (send_email($touser, $fromuser, $CFG->sitename . " Registration", $message)) {
+								send_email($fromuser, $fromuser, $CFG->sitename . " Registration", $message);
+							}
+						}
+					} else {
+						if ($payment_method = "Campership") {
+							execute_db_sql(fetch_template("dbsql/events.sql", "update_reg_status", "events"), ["regid" => $regid, "verified" => 1]);
+						} else {
+							execute_db_sql(fetch_template("dbsql/events.sql", "update_reg_status", "events"), ["regid" => $regid, "verified" => 0]);
+						}
+					}
+					echo "Saved";
+				}
+			}
+		}
+		commit_db_transaction();
+		echo "Saved Changes";
+	} catch (\Throwable $e) {
+		rollback_db_transaction($e->getMessage());
+		trigger_error($e->getMessage(), E_USER_WARNING);
+	}
 }
 
 function delete_registration_info() {
 global $CFG, $MYVARS, $USER;
-	$regid = isset($MYVARS->GET["regid"]) ? dbescape($MYVARS->GET["regid"]) : false;
-	if (execute_db_sql("DELETE FROM events_registrations
-							WHERE regid='$regid'") &&
-		execute_db_sql("DELETE FROM events_registrations_values
-							WHERE regid='$regid'")) {
-		echo "Deleted Registration";
-	} else { echo "Failed"; }
+	$regid = clean_myvar_req("regid", "int");
+	try {
+		start_db_transaction();
+		$params = [
+			"file" => "dbsql/events.sql",
+			"feature" => "events",
+			"subsection" => ["delete_registration", "delete_registration_values"],
+		];
+		execute_db_sqls(fetch_template_set($params), ["regid" => $regid]);
+		commit_db_transaction();
+		echo "Registration deleted";
+	} catch (\Throwable $e) {
+		rollback_db_transaction($e->getMessage());
+		trigger_error($e->getMessage(), E_USER_WARNING);
+	}
 }
 
 function resend_registration_email() {
@@ -1185,8 +1182,7 @@ global $CFG, $MYVARS, $USER;
 					'<input id="reg_code" name="reg_code" type="text" size="45" value="' . stripslashes($event_reg["code"]) . '" />' .
 				 '</td></tr>';
 
-	$SQL = "SELECT * FROM events_templates WHERE template_id='$template_id'";
-	$template = get_db_row($SQL);
+	$template = get_event_template($template_id);
 	if ($template["folder"] == "none") {
 		if ($template_forms = get_db_result("SELECT * FROM events_templates_forms
 												WHERE template_id='$template_id'
@@ -1270,10 +1266,9 @@ global $CFG, $MYVARS, $USER;
 		if ($regid = execute_db_sql("INSERT INTO events_registrations
 									(eventid,date,code,manual)
 									VALUES('$eventid','" . get_timestamp() . "','" . uniqid("", true) . "',1)")) {
-			$SQL = "SELECT * FROM events_templates WHERE template_id='$template_id'";
-			$template = get_db_row($SQL);
-			  if ($template["folder"] == "none") {
-				  if ($template_forms = get_db_result("SELECT * FROM events_templates_forms
+			$template = get_event_template($template_id);
+			if ($template["folder"] == "none") {
+				if ($template_forms = get_db_result("SELECT * FROM events_templates_forms
 														WHERE template_id='$template_id'
 														ORDER BY sort")) {
 						while ($form_element = fetch_row($template_forms)) {
@@ -1537,7 +1532,7 @@ global $CFG, $MYVARS, $USER;
 																	true
 															);
 														}">
-												<img src="' . $CFG->wwwroot . '/images/mail.gif" /> Send Registration Email
+												<img src="' . $CFG->wwwroot . '/images/mail.png" /> Send Registration Email
 											</a>
 										</li>' .
 									'</ul>' .
@@ -1575,7 +1570,7 @@ global $CFG, $MYVARS, $USER;
 
 function eventsearch() {
 global $CFG, $MYVARS, $USER;
-	$MYVARS->search_perpage = 8;
+	if (!defined('SEARCH_PERPAGE')) { define('SEARCH_PERPAGE', 8); }
 	$userid = $USER->userid; $searchstring = "";
 	$searchwords = trim(clean_myvar_opt("searchwords", "string", ""));
 	//no search words given
@@ -1588,8 +1583,8 @@ global $CFG, $MYVARS, $USER;
 	//Create the page limiter
 	$pagenum = clean_myvar_opt("pagenum", "int", 0);
 
-	$firstonpage = $MYVARS->search_perpage * $pagenum;
-	$limit = " LIMIT $firstonpage," . $MYVARS->search_perpage;
+	$firstonpage = SEARCH_PERPAGE * $pagenum;
+	$limit = " LIMIT $firstonpage," . SEARCH_PERPAGE;
 	$words = explode(" ", $searchwords);
 	$i = 0;
 	while (isset($words[$i])) {
@@ -1615,9 +1610,9 @@ global $CFG, $MYVARS, $USER;
 
 	$total = get_db_count($SQL); //get the total for all pages returned.
 	$SQL .= $limit; //Limit to one page of return.
-	$count = $total > (($pagenum + 1) * $MYVARS->search_perpage) ? $MYVARS->search_perpage : $total - (($pagenum) * $MYVARS->search_perpage); //get the amount returned...is it a full page of results?
+	$count = $total > (($pagenum + 1) * SEARCH_PERPAGE) ? SEARCH_PERPAGE : $total - (($pagenum) * SEARCH_PERPAGE); //get the amount returned...is it a full page of results?
 	$events = get_db_result($SQL);
-	$amountshown = $firstonpage + $MYVARS->search_perpage < $total ? $firstonpage + $MYVARS->search_perpage : $total;
+	$amountshown = $firstonpage + SEARCH_PERPAGE < $total ? $firstonpage + SEARCH_PERPAGE : $total;
 	$prev = $pagenum > 0 ? '<a href="javascript: void(0);" onclick="$(\'#loading_overlay\').show();
 																	ajaxapi(\'/features/events/events_ajax.php\',
 																			\'eventsearch\',
@@ -1634,7 +1629,7 @@ global $CFG, $MYVARS, $USER;
 								<img src="' . $CFG->wwwroot . '/images/prev.gif" title="Previous Page" alt="Previous Page">
 							</a>' : "";
 	$info = 'Viewing ' . ($firstonpage + 1) . " through " . $amountshown . " out of $total";
-	$next = $firstonpage + $MYVARS->search_perpage < $total ? '<a href="javascript: void(0);" onclick="$(\'#loading_overlay\').show();
+	$next = $firstonpage + SEARCH_PERPAGE < $total ? '<a href="javascript: void(0);" onclick="$(\'#loading_overlay\').show();
 																										ajaxapi(\'/features/events/events_ajax.php\',
 																												\'eventsearch\',
 																												\'&amp;pageid=' . $MYVARS->GET["pageid"] . '&amp;pagenum=' . ($pagenum + 1) . '&amp;searchwords=\'+escape(\'' . $searchwords . '\'),
@@ -1785,9 +1780,12 @@ global $CFG, $MYVARS, $USER, $error;
 				$i = 0;
 				while (isset($items[$i])) {
 					$itm = explode("::", $items[$i]);
-					$cart_items[$i]->regid = $itm[0];
-					$cart_items[$i]->description = $itm[1];
-					$cart_items[$i]->cost = $itm[2];
+					$cart_items = [];
+					$cart_items[$i] = (object)[
+						"regid" => $itm[0],
+						"description" => $itm[1],
+						"cost" => $itm[2],
+					];
 					$i++;
 				}
 
@@ -1848,7 +1846,7 @@ global $CFG, $MYVARS;
 	$returnme = "";
 	if (!$template_id) { echo $returnme;}
 
-	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='$template_id'");
+	$template = get_event_template($template_id);
 
 	if ($hard_limits) { // There are some hard limits
 		$limits_array = explode("*", $hard_limits);
@@ -1898,7 +1896,7 @@ function add_custom_limit() {
 	$returnme = "";
 	if (!$template_id) { emptyreturn(); }
 
-	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='$template_id'");
+	$template = get_event_template($template_id);
 
 	if ($hard_limits) { // There are some hard limits
 		$limits_array = explode("*", $hard_limits);
@@ -1944,7 +1942,7 @@ function add_custom_limit() {
 
 function get_limit_form() {
 	$template_id = clean_myvar_req("template_id", "int");
-	$template = get_db_row("SELECT * FROM events_templates WHERE template_id = ||template_id||", ["template_id" => $template_id]);
+	$template = get_event_template($template_id);
 
 	if ($template) {
 		if ($template["folder"] == "none") {
@@ -2083,14 +2081,12 @@ global $CFG, $MYVARS;
 	//strtotime php5 fixes
 	$event_begin_date = clean_myvar_req("event_begin_date", "string");
 	if ($event_begin_date) {
-		$ebd = explode(" ", $event_begin_date);
-		$event_begin_date = strtotime("$ebd[0] $ebd[1] $ebd[2] $ebd[3] $ebd[4] $ebd[5]");
+		$event_begin_date = strtotime($event_begin_date);
 	}
 
 	$event_end_date = clean_myvar_opt("event_end_date", "string", $event_begin_date);
 	if ($event_end_date) {
-		$eed = explode(" ", $event_end_date);
-		$event_end_date = $multiday == "1" ? strtotime("$eed[0] $eed[1] $eed[2] $eed[3] $eed[4] $eed[5]") : $event_begin_date;
+		$event_end_date = $multiday == "1" ? strtotime($event_end_date) : $event_begin_date;
 	}
 
 	$allday = clean_myvar_opt("allday", "bool", true);
@@ -2115,8 +2111,7 @@ global $CFG, $MYVARS;
 			$startr = explode("/", $start_reg);
 			$start_reg = $reg ? strtotime("$startr[1]/$startr[2]/$startr[0]") : 0;
 		} else {
-			$startr = explode(" ", $start_reg);
-			$start_reg = $reg ? strtotime("$startr[0] $startr[1] $startr[2] $startr[3] $startr[4] $startr[5]") : 0;
+			$start_reg = $reg ? strtotime($start_reg) : 0;
 		}
 	} else { $start_reg = 0; }
 
@@ -2126,8 +2121,7 @@ global $CFG, $MYVARS;
 			$stopr = explode("/", $stop_reg);
 			$stop_reg = $reg ? strtotime("$stopr[1]/$stopr[2]/$stopr[0]") : 0;
 		} else {
-			$stopr = explode(" ", $stop_reg);
-			$stop_reg = $reg ? strtotime("$stopr[0] $stopr[1] $stopr[2] $stopr[3] $stopr[4] $stopr[5]") : 0;
+			$stop_reg = $reg ? strtotime($stop_reg) : 0;
 		}
 	} else { $stop_reg = 0; }
 
@@ -2146,8 +2140,7 @@ global $CFG, $MYVARS;
 			$se = explode("/", $sale_end);
 			$sale_end = $sale_fee != '0' ? strtotime("$se[1]/$se[2]/$se[0]") : 0;
 		} else {
-			$se = explode(" ", $sale_end);
-			$sale_end = $sale_fee != '0' ? strtotime("$se[0] $se[1] $se[2] $se[3] $se[4] $se[5]") : 0;
+			$sale_end = $sale_fee != '0' ? strtotime($sale_end) : 0;
 		}
 	} else { $sale_end = 0; }
 
@@ -2172,18 +2165,19 @@ global $CFG, $MYVARS;
 			];
 			if ($eventid = execute_db_sql($SQL, $params)) {
 				refresh_calendar_events($eventid);
+				$MYVARS->GET["eventid"] = $eventid;
 				save_template_settings($template_id, $MYVARS->GET);
 
 				if ($request) { return $eventid; }
 
-				// Log event added
 				log_entry("events", $eventid, "Event Added");
 				if (!$request) { echo "Event Added"; }
 			} else {
 				if (!$request) {
 					// Log event error
 					log_entry("events", 0, "Event could NOT be added");
-					echo "Event could NOT be added <br /> <br /> $SQL";
+
+					throw new \Exception("Event could NOT be added");
 				}
 			}
 
@@ -2321,7 +2315,7 @@ global $CFG, $USER;
 	$CSV = "Registration Date,Contact Email";
 	$eventid = clean_myvar_req("eventid", "int");
 	$event = get_event($eventid);
-	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='" . $event['template_id'] . "'");
+	$template = get_event_template($event['template_id']);
 
 	if ($template['folder'] != "none") {
 		$formlist = explode(";", $template['formlist']);
@@ -2453,8 +2447,8 @@ global $CFG, $USER;
 }
 
 function show_template_settings() {
-	$eventid = clean_myvar_req("eventid", "int");
 	$templateid = clean_myvar_req("templateid", "int");
+	$eventid = clean_myvar_opt("eventid", "int", false);
 	echo get_template_settings_form($templateid, $eventid);
 }
 
@@ -2489,7 +2483,7 @@ global $CFG, $MYVARS;
 
 function templatesearch() {
 global $CFG, $MYVARS, $USER;
-	$MYVARS->search_perpage = 8;
+	if (!defined('SEARCH_PERPAGE')) { define('SEARCH_PERPAGE', 8); }
 	$userid = $USER->userid; $searchstring = "";
 	$searchwords = trim($MYVARS->GET["searchwords"]);
 	//no search words given
@@ -2502,8 +2496,8 @@ global $CFG, $MYVARS, $USER;
 	//Create the page limiter
 	$pagenum = clean_myvar_opt("pagenum", "int", 0);
 
-	$firstonpage = $MYVARS->search_perpage * $pagenum;
-	$limit = " LIMIT $firstonpage," . $MYVARS->search_perpage;
+	$firstonpage = SEARCH_PERPAGE * $pagenum;
+	$limit = " LIMIT $firstonpage," . SEARCH_PERPAGE;
 	$words = explode(" ", $searchwords);
 	$i = 0;
 	while (isset($words[$i])) {
@@ -2519,9 +2513,9 @@ global $CFG, $MYVARS, $USER;
 
 	$total = get_db_count($SQL); //get the total for all pages returned.
 	$SQL .= $limit; //Limit to one page of return.
-	$count = $total > (($pagenum + 1) * $MYVARS->search_perpage) ? $MYVARS->search_perpage : $total - (($pagenum) * $MYVARS->search_perpage); //get the amount returned...is it a full page of results?
+	$count = $total > (($pagenum + 1) * SEARCH_PERPAGE) ? SEARCH_PERPAGE : $total - (($pagenum) * SEARCH_PERPAGE); //get the amount returned...is it a full page of results?
 	$results = get_db_result($SQL);
-	$amountshown = $firstonpage + $MYVARS->search_perpage < $total ? $firstonpage + $MYVARS->search_perpage : $total;
+	$amountshown = $firstonpage + SEARCH_PERPAGE < $total ? $firstonpage + SEARCH_PERPAGE : $total;
 	$prev = $pagenum > 0 ? '<a href="javascript: void(0);" onclick="$(\'#loading_overlay\').show();
 																	ajaxapi(\'/features/events/events_ajax.php\',
 																			\'templatesearch\',
@@ -2538,7 +2532,7 @@ global $CFG, $MYVARS, $USER;
 								<img src="' . $CFG->wwwroot . '/images/prev.gif" title="Previous Page" alt="Previous Page">
 							</a>' : "";
 	$info = 'Viewing ' . ($firstonpage + 1) . " through " . $amountshown . " out of $total";
-	$next = $firstonpage + $MYVARS->search_perpage < $total ? '<a onmouseup="this.blur()" href="javascript: void(0);" onclick="$(\'#loading_overlay\').show();
+	$next = $firstonpage + SEARCH_PERPAGE < $total ? '<a onmouseup="this.blur()" href="javascript: void(0);" onclick="$(\'#loading_overlay\').show();
 																																ajaxapi(\'/features/events/events_ajax.php\',
 																																		\'templatesearch\',
 																																		\'&amp;pagenum=' . ($pagenum + 1) . '&amp;searchwords=\'+escape(\'' . $searchwords . '\'),
@@ -2760,7 +2754,7 @@ global $CFG, $USER;
 
 function appsearch() {
 global $CFG, $MYVARS, $USER;
-	$MYVARS->search_perpage = 8;
+	if (!defined('SEARCH_PERPAGE')) { define('SEARCH_PERPAGE', 8); }
 	$userid = $USER->userid; $searchstring = "";
 	$searchwords = trim(clean_myvar_opt("searchwords", "string", ""));
 	//no search words given
@@ -2773,8 +2767,8 @@ global $CFG, $MYVARS, $USER;
 	//Create the page limiter
 	$pagenum = clean_myvar_opt("pagenum", "int", 0);
 
-	$firstonpage = $MYVARS->search_perpage * $pagenum;
-	$limit = " LIMIT $firstonpage," . $MYVARS->search_perpage;
+	$firstonpage = SEARCH_PERPAGE * $pagenum;
+	$limit = " LIMIT $firstonpage," . SEARCH_PERPAGE;
 	$words = explode(" ", $searchwords);
 	$i = 0;
 	while (isset($words[$i])) {
@@ -2790,9 +2784,9 @@ global $CFG, $MYVARS, $USER;
 
 	$total = get_db_count($SQL); //get the total for all pages returned.
 	$SQL .= $limit; //Limit to one page of return.
-	$count = $total > (($pagenum + 1) * $MYVARS->search_perpage) ? $MYVARS->search_perpage : $total - (($pagenum) * $MYVARS->search_perpage); //get the amount returned...is it a full page of results?
+	$count = $total > (($pagenum + 1) * SEARCH_PERPAGE) ? SEARCH_PERPAGE : $total - (($pagenum) * SEARCH_PERPAGE); //get the amount returned...is it a full page of results?
 	$results = get_db_result($SQL);
-	$amountshown = $firstonpage + $MYVARS->search_perpage < $total ? $firstonpage + $MYVARS->search_perpage : $total;
+	$amountshown = $firstonpage + SEARCH_PERPAGE < $total ? $firstonpage + SEARCH_PERPAGE : $total;
 	$prev = $pagenum > 0 ? '<a href="javascript: void(0);" onclick="$(\'#loading_overlay\').show();
 																	ajaxapi(\'/features/events/events_ajax.php\',
 																			\'appsearch\',
@@ -2809,7 +2803,7 @@ global $CFG, $MYVARS, $USER;
 								<img src="' . $CFG->wwwroot . '/images/prev.gif" title="Previous Page" alt="Previous Page">
 							</a>' : "";
 	$info = 'Viewing ' . ($firstonpage + 1) . " through " . $amountshown . " out of $total";
-	$next = $firstonpage + $MYVARS->search_perpage < $total ? '<a onmouseup="this.blur()" href="javascript: void(0);" onclick="$(\'#loading_overlay\').show();
+	$next = $firstonpage + SEARCH_PERPAGE < $total ? '<a onmouseup="this.blur()" href="javascript: void(0);" onclick="$(\'#loading_overlay\').show();
 																																ajaxapi(\'/features/events/events_ajax.php\',
 																																		\'appsearch\',
 																																		\'&amp;pagenum=' . ($pagenum + 1) . '&amp;searchwords=\'+escape(\'' . $searchwords . '\'),

@@ -8,11 +8,11 @@
 ***************************************************************************/
 include('header.php');
 
-echo use_template("tmp/page.template", ["dirroot" => $CFG->directory], "page_js_css");
+echo fill_template("tmp/page.template", "page_js_css", false, ["dirroot" => $CFG->directory]);
 
 callfunction();
 
-echo use_template("tmp/page.template", [], "end_of_page_template");
+echo fetch_template("tmp/page.template", "end_of_page_template");
 
 function rss_subscribe_feature() {
 global $CFG, $MYVARS, $USER;
@@ -23,42 +23,29 @@ global $CFG, $MYVARS, $USER;
 	$userkey = get_db_field("userkey", "users", "userid='$userid'");
 
 	// User has already created rssid...just needs the link for it again.
-	$SQL = "SELECT *
-            FROM rss_feeds
-			WHERE pageid = '$pageid'
-			AND type = '$feature'
-            AND featureid = '$featureid'
-            AND rssid IN (SELECT rssid
-                          FROM rss
-                          WHERE userid = '$userid'
-                         )";
-
-	if ($feed = get_db_row($SQL)) {
-		$SQL = "SELECT *
-                FROM rss
-				WHERE rssid = '" . $feed["rssid"] . "'";
-
+	$SQL = fetch_template("dbsql/users.sql", "lookup_user_rss");
+	if ($feed = get_db_row($SQL, ["pageid" => $pageid, "type" => $feature, "featureid" => $featureid, "userid" => $userid])) {
 		$params = [
-            'wwwroot' => $CFG->wwwroot,
-            'feed' => true,
-            'rss' => get_db_row($SQL),
-            'userkey' => $userkey,
-        ];
-		echo use_template("tmp/rss.template", $params, "rss_subscribe_feature_template");
+			'wwwroot' => $CFG->wwwroot,
+			'feed' => true,
+			'rss' => get_db_row(fetch_template("dbsql/users.sql", "get_rss"), ["rssid" => $feed["rssid"]]),
+			'userkey' => $userkey,
+		];
+		echo fill_template("tmp/rss.template", "rss_subscribe_feature_template", false, $params);
 	} else { // Need to create new rssid and feed
 		$settings = fetch_settings($feature, $featureid, $pageid);
 		$title = $settings->$feature->$featureid->feature_title->setting;
 
 		$params =[
-            'wwwroot' => $CFG->wwwroot,
-            'feed' => false,
-            'title' => $title,
-            'userkey' => $userkey,
-            'pageid' => $pageid,
-            'feature' => $feature,
-            'featureid' => $featureid,
-        ];
-		echo use_template("tmp/rss.template", $params, "rss_subscribe_feature_template");
+			'wwwroot' => $CFG->wwwroot,
+			'feed' => false,
+			'title' => $title,
+			'userkey' => $userkey,
+			'pageid' => $pageid,
+			'feature' => $feature,
+			'featureid' => $featureid,
+		];
+		echo fill_template("tmp/rss.template", "rss_subscribe_feature_template", false, $params);
 	}
 }
 ?>

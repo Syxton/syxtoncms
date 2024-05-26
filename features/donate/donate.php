@@ -41,22 +41,19 @@ global $CFG, $MYVARS, $USER;
 }
 
 function editcampaign() {
-global $CFG, $MYVARS, $USER;
-$featureid = clean_myvar_opt("featureid", "int", false); $pageid = clean_myvar_opt("pageid", "int", get_pageid());
-    $returnme = '<div id="donation_display">';
-    $returnme .= select_campaign_forms($featureid, $pageid);
-    $returnme .= '</div>';
-    echo $returnme;
+	$featureid = clean_myvar_opt("featureid", "int", false);
+	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
+	echo '<div id="donation_display" style="padding: 20px">
+			' . select_campaign_forms($featureid, $pageid) . '
+			</div>';
 }
 
 function managedonations() {
-global $CFG, $MYVARS, $USER;
-    $featureid = clean_myvar_opt("featureid", "int", false); $pageid = clean_myvar_opt("pageid", "int", get_pageid());
-    $returnme = '<div id="donation_display">';
-    $returnme .= add_or_manage_forms($featureid, $pageid);
-    $returnme .= '</div>';
-
-    echo $returnme; 
+    $featureid = clean_myvar_opt("featureid", "int", false);
+	 $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+	 echo '<div id="donation_display" style="padding: 20px">
+	 		' . add_or_manage_forms($featureid, $pageid) . '
+ 			</div>';
 }
 
 function thankyou() {

@@ -6,8 +6,13 @@
 * Date: 5/14/2024
 * Revision: 0.9.4
 ***************************************************************************/
-
-if (!LIBHEADER) { include('header.php'); }
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
+	}
+	include($sub . 'lib/header.php');
+}
 define('ADDFEATURELIB', true);
 
 function display_addfeature($pageid, $area) {
@@ -16,16 +21,16 @@ function display_addfeature($pageid, $area) {
 	if (is_logged_in()) {
 		if (user_is_able($USER->userid, 'addfeature', $pageid)) {
 			$options = "";
-			$SQL = use_template("dbsql/features.sql", ["pageid" => $pageid, "issite" => ($pageid == $CFG->SITEID)], "addable_features");
-			if ($result = get_db_result($SQL)) {
+			$SQL = fetch_template("dbsql/features.sql", "addable_features", false, ["issite" => ($pageid == $CFG->SITEID)]);
+			if ($result = get_db_result($SQL, ["pageid" => $pageid])) {
 				while ($row = fetch_row($result)) {
-					$options .= use_template("tmp/page.template", ["value" => $row['feature'], "display" => $row['feature_title']], "select_options_template");
+					$options .= fill_template("tmp/page.template", "select_options_template", false, ["value" => $row['feature'], "display" => $row['feature_title']]);
 				}
 			}
-			$content = use_template("tmp/page.template", ["pageid" => $pageid, "options" => $options], "display_addfeature_template");
+			$content = fill_template("tmp/page.template", "display_addfeature_template", false, ["pageid" => $pageid, "options" => $options]);
 			$title = "Add Features";
 			$title = '<span class="box_title_text">' . $title . '</span>';
-			return get_css_box($title, $content, NULL, NULL, "addfeature");
+			return get_css_box($title, $content, "", NULL, "addfeature");
 		}
 	}
 }

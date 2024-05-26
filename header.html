@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<?php
-		echo get_css_set("main"); // Load CSS.
-	?>
 	<title><?php echo $PAGE->title ?></title>
 	<meta name="description" content="<?php echo $PAGE->description ?>"/>
 	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
@@ -18,21 +15,27 @@
 
 	<?php
 		echo js_code_wrap('var dirfromroot = "' . $CFG->directory . '";');
-		echo js_code_wrap(use_template("tmp/pagelib.template", [], "defer_script"));
-		echo get_js_set("main"); // Load javascript.
+		echo js_code_wrap(fill_template("tmp/pagelib.template", "defer_script"));
+
+		// Load javascript.
+		echo get_js_set("main");
+
+		// Load CSS.
+		echo get_css_set("main");
+	
+		// RSS
+		if(isset($USER->userkey)) {
+			echo '<link href="' . $CFG->wwwroot . '/scripts/rss/rss.php?pageid=' . $PAGE->id . '&key=' . $USER->userkey . '" title="' . $CFG->sitename . ' [RSS]" type="application/rss+xml" rel="alternate"/>';
+		} 
 	?>
 
-	<?php if(isset($USER->key)){ ?>
-		<link href="<?php echo $CFG->wwwroot ?>/scripts/rss/rss.php?pageid=<?php echo $PAGE->id ?>&amp;key=<?php echo $USER->key ?>" title="<?php echo $CFG->sitename ?> [RSS]" type="application/rss+xml" rel="alternate"/>
-	<?php } ?>
-
-		<!-- Global site tag (gtag.js) - Google Analytics -->
+	<!-- Global site tag (gtag.js) - Google Analytics -->
 		<script async src="https://www.googletagmanager.com/gtag/js?id=<?php echo $CFG->analytics; ?>"></script>
 		<script>
-		window.dataLayer = window.dataLayer || [];
-		function gtag(){dataLayer.push(arguments);}
-		gtag('js', new Date());
-		gtag('config', '<?php echo $CFG->analytics; ?>');
+			window.dataLayer = window.dataLayer || [];
+			function gtag(){dataLayer.push(arguments);}
+			gtag('js', new Date());
+			gtag('config', '<?php echo $CFG->analytics; ?>');
 		</script>
 	<!-- End Google Analytics -->
 

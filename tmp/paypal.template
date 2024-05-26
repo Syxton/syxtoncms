@@ -1,46 +1,46 @@
 transaction_complete||
-  Your ||type|| has been completed, and a receipt for your ||type|| has been emailed to you.
-  <br />
-  You may log into your account at <a href="https://www.paypal.com">www.paypal.com</a> to view details of this transaction.
-  <br />
+	Your ||type|| has been completed, and a receipt for your ||type|| has been emailed to you.
+	<br />
+	You may log into your account at <a href="https://www.paypal.com">www.paypal.com</a> to view details of this transaction.
+	<br />
 ||transaction_complete
 
 print_cart_template||
-  <a href="||wwwroot||">
+	<a href="||wwwroot||">
 	Go back to ||sitename||
-  </a>
-  <br />
-  <br />
-  <table style="border-collapse:collapse;width:60%; margin-right:auto; margin-left:auto;">
-	<tr>
-		<td colspan=2>
-		<strong>
-			What you have ||type||?:
-		</strong>
-		</td>
-	</tr>
-	||cartitems||
-	<tr>
-		<td style="text-align:right;">
-		<strong>
-			Total
-		</strong>
-		</td>
-		<td style="border-top: 1px solid gray;text-align:left;padding:10px; font-size:.8em;">
-		$||items["gross"]||
-		</td>
-	</tr>
-	<tr>
-		<td style="text-align:right;">
-		<strong>
-			Paid
-		</strong>
-		</td>
-		<td style="text-align:left;padding:10px; font-size:.8em;">
-		$||items["payment_gross"]||
-		</td>
-	</tr>
-  </table>
+	</a>
+	<br />
+	<br />
+	<table style="border-collapse:collapse;width:60%; margin-right:auto; margin-left:auto;">
+		<tr>
+			<td colspan=2>
+				<strong>
+					What you have ||type||?:
+				</strong>
+			</td>
+		</tr>
+		||cartitems||
+		<tr>
+			<td style="text-align:right;">
+				<strong>
+					Total
+				</strong>
+			</td>
+			<td style="border-top: 1px solid gray;text-align:left;padding:10px; font-size:.8em;">
+				
+			</td>
+		</tr>
+		<tr>
+			<td style="text-align:right;">
+				<strong>
+					Paid
+				</strong>
+			</td>
+			<td style="text-align:left;padding:10px; font-size:.8em;">
+				$||items["payment_gross"]||
+			</td>
+		</tr>
+	</table>
 ||print_cart_template
 
 print_cart_row_template||

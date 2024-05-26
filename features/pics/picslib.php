@@ -6,13 +6,12 @@
 * Date: 5/14/2024
 * Revision: 2.3.4
 ***************************************************************************/
-
-if (!LIBHEADER) {
-	$sub = './';
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
 	while (!file_exists($sub . 'lib/header.php')) {
-		$sub = $sub == './' ? '../' : $sub . '../';
+		$sub = $sub == '' ? '../' : $sub . '../';
 	}
-	include($sub . 'lib/header.php'); 
+	include($sub . 'lib/header.php');
 }
 define('PICSLIB', true);
 
@@ -29,7 +28,7 @@ global $CFG, $USER, $ROLES;
 	if (is_logged_in()) {
 		$title = '<span class="box_title_text">' . $title . '</span>';
 		if (user_is_able($USER->userid, "viewpics", $pageid,"pics", $featureid)) {
-			if ($pageid==$CFG->SITEID) {
+			if ($pageid ==$CFG->SITEID) {
 				$SQL = "SELECT * FROM pics_features WHERE pageid='$pageid' LIMIT 1";
 				if ($sections = get_db_result($SQL)) {
 					while ($row = fetch_row($sections)) {
@@ -66,15 +65,12 @@ global $CFG, $MYVARS, $USER;
         return trigger_error(error_string("no_permission", ["managepics"]));
 	}
 
+	$SQL = fetch_template("dbsql/pics.sql", "get_galleries", "pics", ["siteviewable" => ($pageid == $CFG->SITEID ? true : false)]);
 	$params = [
 		"pageid" => $pageid,
 		"featureid" => $featureid,
-		"siteviewable" => ($pageid == $CFG->SITEID ? true : false),
 	];
-
-	$SQL = use_template("dbsql/pics.sql", $params, "get_galleries", "pics");
-
-	if ($allgalleries = get_db_result($SQL)) {
+	if ($allgalleries = get_db_result($SQL, $params)) {
 		$g = 0;
 			$gallerylist = new \stdClass;
 		  $gallerylist->$g = new \stdClass;
@@ -228,7 +224,7 @@ global $CFG, $USER;
 			$disabled =  $pageid == $CFG->SITEID && $row["pageid"] == $pageid ? "DISABLED" : "";
 			$checked = $row["siteviewable"] == 1 ? " checked=checked" : "";
 
-			if ($pageid == $CFG->SITEID && $row["pageid"] != $pageidv) {
+			if ($pageid == $CFG->SITEID && $row["pageid"] != $pageid) {
 				$alreadysite1 = 'do_nothing();';
 				$alreadysite2 = 'ajaxapi(\'/features/pics/pics_ajax.php\',
 										 \'pics_pageturn\',
@@ -329,7 +325,7 @@ global $CFG, $USER;
 											<tr>
 												<td>
 													<div style="width:165px; height:130px; overflow:hidden; text-align:center;">
-														' . $deletepic . '<a onclick="blur();" href="javascript: void(0);" onclick="ajaxapi(\'/features/pics/pics_ajax.php\',\'toggle_activate\',\'&amp;pageid=' . $pageid . '&amp;picsid=' . $row["picsid"] . '\',function() {simple_display(\'activated_picsid_' . $row["picsid"] . '\');});"><img src="' . $webpath . '"' . imgResize($mypicture[0], $mypicture[1], 165) . ' /></a>
+														' . $deletepic . '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/pics/pics_ajax.php\',\'toggle_activate\',\'&amp;pageid=' . $pageid . '&amp;picsid=' . $row["picsid"] . '\',function() {simple_display(\'activated_picsid_' . $row["picsid"] . '\');}); blur();"><img src="' . $webpath . '"' . imgResize($mypicture[0], $mypicture[1], 165) . ' /></a>
 													</div>
 												</td>
 											</tr>
@@ -357,23 +353,29 @@ global $CFG;
 			"featureid" => $featureid,
 			"feature" => "pics",
 		];
-	
-		$SQL = use_template("dbsql/features.sql", $params, "delete_feature");
-		execute_db_sql($SQL);
-		$SQL = use_template("dbsql/features.sql", $params, "delete_feature_settings");
-		execute_db_sql($SQL);
-		$SQL = use_template("dbsql/pics.sql", $params, "delete_galleries", "pics");
-		execute_db_sql($SQL);
-		$SQL = use_template("dbsql/pics.sql", $params, "delete_pics_features", "pics");
-		execute_db_sql($SQL);
-		$SQL = use_template("dbsql/pics.sql", $params, "delete_pics", "pics");
-		execute_db_sql($SQL);
 
-		resort_page_features($pageid);
+		try {
+			start_db_transaction();
+			$sql = [];
+			$sql[] = ["file" => "dbsql/features.sql", "subsection" => "delete_feature"];
+			$sql[] = ["file" => "dbsql/features.sql", "subsection" => "delete_feature_settings"];
+			$sql[] = ["file" => "dbsql/pics.sql", "feature" => "pics", "subsection" => "delete_galleries"];
+			$sql[] = ["file" => "dbsql/pics.sql", "feature" => "pics", "subsection" => "delete_pics_features"];
+			$sql[] = ["file" => "dbsql/pics.sql", "feature" => "pics", "subsection" => "delete_pics"];
+	
+			// Delete feature
+			execute_db_sqls(fetch_template_set($sql), $params);
+
+			resort_page_features($pageid);
+			commit_db_transaction();
+		} catch (\Throwable $e) {
+			rollback_db_transaction($e->getMessage());
+			return false;
+		}
 	}
 }
 
-//Just changes the view size of an image
+// Just changes the view size of an image
 function imgResize($width, $height, $target) {
 	//takes the larger size of the width and height and applies the formula. Your function is designed to work with any image in any size.
 	if ($width > $height) {
@@ -388,7 +390,7 @@ function imgResize($width, $height, $target) {
 	return "width=\"$width\" height=\"$height\"";
 }
 
-//Changes the actual pixels of an image
+// Changes the actual pixels of an image
 function resizeImage($name, $filename, $new_w, $new_h) {
 	$system=explode(".", $name);
 	if (preg_match("/jpg|jpeg/",strtolower($system[1]))) {$src_img=imagecreatefromjpeg($name);}
@@ -424,13 +426,26 @@ function resizeImage($name, $filename, $new_w, $new_h) {
 
 function insert_blank_pics($pageid) {
 global $CFG;
-	if ($featureid = execute_db_sql("INSERT INTO pics_features (pageid) VALUES('$pageid')")) {
-		$type = "pics";
-		$area = get_db_field("default_area", "features", "feature='pics'");
-		$sort = get_db_count("SELECT * FROM pages_features WHERE pageid='$pageid' AND area='$area'") + 1;
-		execute_db_sql("INSERT INTO pages_features (pageid,feature,sort,area,featureid) VALUES('$pageid','pics','$sort','$area','$featureid')");
-		return $featureid;
-	}
+    $type = "pics";
+    try {
+        start_db_transaction();
+        if ($featureid = execute_db_sql(fetch_template("dbsql/pics.sql", "insert_pics_feature", "pics"), ["pageid" => $pageid])) {
+            $area = get_db_field("default_area", "features", "feature = ||feature||", ["feature" => $type]);
+            $sort = get_db_count(fetch_template("dbsql/features.sql", "get_features_by_page_area"), ["pageid" => $pageid, "area" => $area]) + 1;
+            $params = [
+                "pageid" => $pageid,
+                "feature" => $type,
+                "featureid" => $featureid,
+                "sort" => $sort,
+                "area" => $area,
+            ];
+            execute_db_sql(fetch_template("dbsql/features.sql", "insert_page_feature"), $params);
+            commit_db_transaction();
+            return $featureid;
+        }
+    } catch (\Throwable $e) {
+        rollback_db_transaction($e->getMessage());
+    }
 	return false;
 }
 

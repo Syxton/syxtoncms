@@ -172,7 +172,7 @@ foreach ($searcharray as $term) {
                     $reset  = !is_siteadmin($row["userid"]) ? '<a title="Reset ' . $row['fname'] . ' ' . $row['lname'] . ' Password" href="javascript: void(0);" onclick="if (confirm(\'Do you want to reset ' . addslashes($row['fname']) . ' ' . addslashes($row['lname']) . '\\\'s password?\')) { ajaxapi(\'/ajax/site_ajax.php\',\'forgot_password\',\'&admin=true&userid=' . $row['userid'] . '\',function() { simple_display(\'reset_password_' . $row['userid'] . '\'); });}" ><img src="' . $CFG->wwwroot . '/images/reset.png" alt="Reset ' . $row['fname'] . ' ' . $row['lname'] . ' Password" /></a>' : "";
                     $info = 'Viewing ' . ($firstonpage + 1) . " through " . $amountshown . " out of $total";
 				      if ($amountshown > 0) { $header = '<table style="width:100%;"><tr><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;font-size:.75em;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><br /><br />'; }
-                    $body .= '<tr style="height:40px;background-color:white;" onmouseover="this.style.backgroundColor=\'#E7F1F8\';" onmouseout="this.style.backgroundColor=\'white\';">
+                    $body .= '<tr style="height:40px;background-color: white;" onmouseover="this.style.backgroundColor=\'#E7F1F8\';" onmouseout="this.style.backgroundColor=\'white\';">
                           		<td style="vertical-align:middle;overflow:hidden;font-size:.85em;white-space:nowrap;">
                                     <input type="hidden" id="' . $row['userid'] . '" value="' . $row['userid'] . '" />&nbsp;
                           			' . $row['fname'] . ' ' . $row['lname'] . ' ' . ($row['userid'] !== $USER->userid ? '(<a href="javascript: void(0)" onclick=loginas(' . $row['userid'] . ')>log in as</a>)' : '') . '
@@ -186,7 +186,7 @@ foreach ($searcharray as $term) {
                           			' . $locate . '
                           		</td>
                           		<td style="width:40px;white-space:nowrap;text-align:center;" onmouseover="this.style.backgroundColor=\'#BBD8EC\';" onmouseout="this.style.backgroundColor=\'\'" >
-                          		 	<a title="User Logs" href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'view_logfile\',\'&amp;userid=' . $row["userid"] . '\',function() { simple_display(\'display\');});"><img src="' . $CFG->wwwroot . '/images/graph.gif" alt="User Logs" /></a>
+                          		 	<a title="User Logs" href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'view_logfile\',\'&amp;userid=' . $row["userid"] . '\',function() { simple_display(\'display\');});"><img src="' . $CFG->wwwroot . '/images/graph.png" alt="User Logs" /></a>
                           		</td>
                           		<td style="width:10%;white-space:nowrap;text-align:left;">
                           			<span style="font-size:.6em">

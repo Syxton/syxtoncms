@@ -6,8 +6,13 @@
 * Date: 5/14/2024
 * Revision: 0.1.2
 ***************************************************************************/
-
-if (!LIBHEADER) { include('header.php'); }
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
+	}
+	include($sub . 'lib/header.php');
+}
 define("HELPLIB", true);
 
 $HELP = new \stdClass;

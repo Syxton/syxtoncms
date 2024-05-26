@@ -8,19 +8,19 @@
 ***************************************************************************/
 
 if (empty($_POST["aslib"])) {
-    if (!isset($CFG)) {
-        $sub = '';
-        while (!file_exists($sub . 'header.php')) {
-            $sub = $sub == '' ? '../' : $sub . '../';
-        }
-        include($sub . 'header.php');
-    } 
-    
-    callfunction();
+	if (!isset($CFG)) {
+		$sub = '';
+		while (!file_exists($sub . 'header.php')) {
+			$sub = $sub == '' ? '../' : $sub . '../';
+		}
+		include($sub . 'header.php');
+	}
 
-    echo use_template("tmp/main.template", [], "header", "adminpanel");
-    
-    echo '</body></html>';
+	callfunction();
+
+	echo fill_template("tmp/main.template", "header", "adminpanel");
+
+	echo '</body></html>';
 }
 
 

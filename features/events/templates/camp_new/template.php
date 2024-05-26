@@ -3,47 +3,52 @@
  * template.php - Camp Wabashi Template page
  * -------------------------------------------------------------------------
  * $Author: Matthew Davidson
-* Date: 5/14/2024
+ * Date: 5/14/2024
  * $Revision: 2.1.2
  ***************************************************************************/
-
-if (!isset($CFG)) {
-	$sub = '../';
-	while (!file_exists($sub . 'config.php')) {
-		$sub .= '../';
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
 	}
-	require($sub . 'config.php'); 
+	include($sub . 'lib/header.php');
 }
 if (!defined('EVENTSLIB')) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 if (!defined('VALIDATELIB')) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
 
- //Retrieve from Javascript
-$postorget = isset($_GET["eventid"]) ? $_GET : $_POST;
-$postorget = isset($postorget["eventid"]) ? $postorget : "";
+//Retrieve from Javascript
+global $MYVARS;
+collect_vars();
 
-$MYVARS->GET = $postorget;
+$eventid = clean_myvar_opt("eventid", "int", false);
+$regid = clean_myvar_opt("regid", "int", false);
+$show_again = clean_myvar_opt("show_again", "bool", false);
+$autofill = clean_myvar_opt("autofill", "bool", false);
 
 $email = $payment_method = $disable = "";
+
 // Preview of template.
 if (isset($preview)) {
-    $disable = isset($preview) ? 'disabled="disabled"': "";
-    $event = [
-        "name" => "Preview Event",
-        "event_begin_date" => date("j"),
-        "event_end_date" => date("j"),
-        "fee_full" => 0,
-    ];
+	$disable = 'disabled="disabled"';
+	$event = [
+		"name" => "Preview Event",
+		"event_begin_date" => date("j"),
+		"event_end_date" => date("j"),
+		"fee_full" => 0,
+		"fee_min" => 0,
+		"sale_fee" => 0,
+		"sale_end" => 0,
+	];
 }
 
-$eventid = empty($MYVARS->GET['eventid']) ? false : $MYVARS->GET['eventid'];
+// Get full event info
 if ($eventid) {
-    // Get full event info
-    $event = get_event($eventid);
+	$event = get_event($eventid);
 }
 
-$show_again = isset($MYVARS->GET['show_again']) ? true : false;
-$regid = isset($MYVARS->GET['regid']) && $MYVARS->GET['regid'] != "false" ? $MYVARS->GET['regid'] : false;
-$autofill = isset($MYVARS->GET['autofill']) && $MYVARS->GET['autofill'] == "1" ? true : false;
+//output any passed on hidden info from previous registrations
+$total_owed = clean_myvar_opt("total_owed", "float", 0);
+$items = clean_myvar_opt("items", "string", "");
 
 if ($show_again) { // This is not the first time through
 	if ($autofill) { // Same person..so auto fill all items
@@ -61,18 +66,14 @@ if ($show_again) { // This is not the first time through
 //output required javascript
 echo '  <html>
         <head>
-        ' . get_js_tags(["jquery", "validate", "popupcal"]) . '
+        ' . get_js_tags(["jquery", "validate"]) . '
         ' . get_js_tags(["features/events/templates/camp_new/ajax.js"]) . '
         </head>
         <body>
-';    
-
-//output any passed on hidden info from previous registrations
-$total_owed = isset($MYVARS->GET['total_owed']) ? $MYVARS->GET['total_owed'] : 0;
-$items = isset($MYVARS->GET["items"]) ? $MYVARS->GET["items"] : "";
+';
 
 //Somebody please tell me why I MUST HAVE THE &nbsp; before the form to make it show up?
-echo '<form name="form1" id="form1">
+echo '<form class="event_template_form" name="form1" id="form1">
         <fieldset class="formContainer">
             <input type="hidden" name="eventid" value="' . $eventid . '" />
             <input type="hidden" name="paid" value="0" />
@@ -145,13 +146,10 @@ if ($autofill) {
             <input type="hidden" name="campership" value="' . $campership . '" />';
             
 } else {
- echo ' <input type="hidden" id="event_day" value="' . date("j", $event["event_begin_date"]) . '" />
-        <input type="hidden" id="event_month" value="' . date("n", $event["event_begin_date"]) . '" />
-        <input type="hidden" id="event_year" value="' . date("Y", $event["event_begin_date"]) . '" />
-        <input style="border:none;" type="hidden" name="HealthConsentFrom" id="HealthConsentFrom" value="' . date("m/d/Y", $event["event_begin_date"]) . '" readonly />
-        <input style="border:none;" type="hidden" name="HealthConsentTo" id="HealthConsentTo" value="' . date("m/d/Y", $event["event_end_date"]) . '" readonly />
+ echo ' <input type="hidden" id="event_begin_date" value="' . date("Y-m-d", $event["event_begin_date"]) . '" />
+        <input type="hidden" name="HealthConsentFrom" id="HealthConsentFrom" value="' . date("Y-m-d", $event["event_begin_date"]) . '" readonly />
+        <input type="hidden" name="HealthConsentTo" id="HealthConsentTo" value="' . date("Y-m-d", $event["event_end_date"]) . '" readonly />
 
-        <style> .calendarDateInput{margin-right:5px !important;}.info{ width: 92%; } .rowContainer textarea { width:80%;max-width: 480px; margin-right: 20px; } .rowContainer select { margin-right: 20px; }</style>
             <input type="hidden" name="Camper_Name" />
 			<div class="rowContainer">
 				<label class="rowTitle" for="email">Email Address *</label><input tabindex="1" type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-msg-required="' . error_string('valid_req_email') . '" data-msg-email="' . error_string('valid_email_invalid') . '" /><div class="tooltipContainer info">' . get_help("help_email:events:templates/camp_new") . '</div>
@@ -170,8 +168,10 @@ if ($autofill) {
 					  <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
-				<label class="rowTitle" for="Camper_Birth_Date">Camper Birthdate *</label>' . js_code_wrap('DateInput(\'Camper_Birth_Date\', true)') . '<div class="tooltipContainer info">' . get_help("help_bday:events:templates/camp_new") . '</div>
-                <div class="spacer" style="clear: both;"></div>
+					<label class="rowTitle" for="Camper_Birth_Date">Camper Birthdate *</label>
+					<input type="date" id="Camper_Birth_Date" value="' . date("Y-m-d") . '" name="Camper_Birth_Date">
+					<div class="tooltipContainer info">' . get_help("help_bday:events:templates/camp_new") . '</div>
+					<div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
                 <label class="rowTitle" for="Camper_Age">Age during week</label><input style="background-color: lightgray;border: 1px solid grey; width:50px;" type="text" id="Camper_Age" name="Camper_Age" data-rule-required="true" data-rule-number="true" ' . $min_age.$max_age.$min_age_error.$max_age_error . ' readonly /><div class="tooltipContainer info">' . get_help("help_age:events:templates/camp_new") . '</div>
@@ -332,50 +332,58 @@ if ($autofill) {
 				<label class="rowTitle" for="HealthInsurance">Medical Insurance Carrier *</label><input tabindex="20" type="text" id="HealthInsurance" name="HealthInsurance" data-rule-required="true" /><div class="tooltipContainer info">' . get_help("help_carrier:events:templates/camp_new") . '</div>
                 <div class="spacer" style="clear: both;"></div>
 			</div>
-         		<div class="rowContainer">
+			<div class="rowContainer">
 				<label class="rowTitle" for="HealthIdentification">Medical Identification Number</label><input tabindex="21" type="text" id="HealthIdentification" name="HealthIdentification" /><div class="tooltipContainer info">' . get_help("help_memberid:events:templates/camp_new") . '</div>
-                <div class="spacer" style="clear: both;"></div>
+				<div class="spacer" style="clear: both;"></div>
 			</div>
-         		<div class="rowContainer">
-				<label class="rowTitle" for="HealthBenefitCode">Benefit Code</label><input tabindex="22" type="text" id="HealthBenefitCode" name="HealthBenefitCode" /><div class="tooltipContainer info">' . get_help("help_membercode:events:templates/camp_new") . '</div>
-                <div class="spacer" style="clear: both;"></div>
+			<div class="rowContainer">
+				<label class="rowTitle" for="HealthBenefitCode">Benefit Code</label>
+				<input tabindex="22" type="text" id="HealthBenefitCode" name="HealthBenefitCode" />
+				<div class="tooltipContainer info">' . get_help("help_membercode:events:templates/camp_new") . '</div>
+				<div class="spacer" style="clear: both;"></div>
 			</div>
-         		<div class="rowContainer">
-				<label class="rowTitle" for="HealthAccount">Account Number</label><input tabindex="23" type="text" id="HealthAccount" name="HealthAccount" /><div class="tooltipContainer info">' . get_help("help_memberaccount:events:templates/camp_new") . '</div>
-                <div class="spacer" style="clear: both;"></div>
+			<div class="rowContainer">
+				<label class="rowTitle" for="HealthAccount">Account Number</label>
+				<input tabindex="23" type="text" id="HealthAccount" name="HealthAccount" />
+				<div class="tooltipContainer info">' . get_help("help_memberaccount:events:templates/camp_new") . '</div>
+				<div class="spacer" style="clear: both;"></div>
 			</div>
-            <div class="rowContainer">
-				<label class="rowTitle" for="HealthExpirationDate">Expiration Date</label>' . js_code_wrap('DateInput(\'HealthExpirationDate\', true)') . '<div class="tooltipContainer info">' . get_help("help_healthto:events:templates/camp_new") . '</div>
-                <div class="spacer" style="clear: both;"></div>
-				</div>
-         		<div class="rowContainer" style="height: auto;">
+			<div class="rowContainer">
+				<label class="rowTitle" for="HealthExpirationDate">Expiration Date</label>
+				<input type="date" id="HealthExpirationDate" name="HealthExpirationDate" value="' . date("Y-m-d") . '">
+				<div class="tooltipContainer info">' . get_help("help_healthto:events:templates/camp_new") . '</div>
+				<div class="spacer" style="clear: both;"></div>
+			</div>
+			<div class="rowContainer" style="height: auto;">
 				<label class="rowTitle" for="HealthHistory">Medical History *</label>
-                <textarea tabindex="24" id="HealthHistory" name="HealthHistory" rows="8" cols="60" data-rule-required="true">-none-</textarea>
-                <div class="tooltipContainer info">' . get_help("help_history:events:templates/camp_new") . '</div>
-                <div class="spacer" style="clear: both;"></div>
+				<textarea tabindex="24" id="HealthHistory" name="HealthHistory" rows="8" cols="60" data-rule-required="true">-none-</textarea>
+				<div class="tooltipContainer info">' . get_help("help_history:events:templates/camp_new") . '</div>
+				<div class="spacer" style="clear: both;"></div>
 			</div>
-         		<div class="rowContainer" style="height: auto;">
+			<div class="rowContainer" style="height: auto;">
 				<label class="rowTitle" for="HealthAllergies">Allergies *</label>
-                <textarea tabindex="25" id="HealthAllergies" name="HealthAllergies" rows="8" cols="60" data-rule-required="true">-none-</textarea>
-                <div class="tooltipContainer info">' . get_help("help_alergies:events:templates/camp_new") . '</div>
-                <div class="spacer" style="clear: both;"></div>
+				<textarea tabindex="25" id="HealthAllergies" name="HealthAllergies" rows="8" cols="60" data-rule-required="true">-none-</textarea>
+				<div class="tooltipContainer info">' . get_help("help_alergies:events:templates/camp_new") . '</div>
+				<div class="spacer" style="clear: both;"></div>
 			</div>
-         		<div class="rowContainer" style="height: auto;">
+			<div class="rowContainer" style="height: auto;">
 				<label class="rowTitle" for="HealthExisting">Chronic/existing diseases/medical issues *</label>
-                <textarea tabindex="26" id="HealthExisting" name="HealthExisting" rows="8" cols="60" data-rule-required="true">-none-</textarea>
-                <div class="tooltipContainer info">' . get_help("help_existing:events:templates/camp_new") . '</div>
-                <div class="spacer" style="clear: both;"></div>
+				<textarea tabindex="26" id="HealthExisting" name="HealthExisting" rows="8" cols="60" data-rule-required="true">-none-</textarea>
+				<div class="tooltipContainer info">' . get_help("help_existing:events:templates/camp_new") . '</div>
+				<div class="spacer" style="clear: both;"></div>
 			</div>
-         		<div class="rowContainer" style="height: auto;">
+			<div class="rowContainer" style="height: auto;">
 				<label class="rowTitle" for="HealthMedicines">Medicines *</label>
-                <textarea tabindex="27" id="HealthMedicines" name="HealthMedicines" rows="8" cols="60" data-rule-required="true">-none-</textarea>
-                <div class="tooltipContainer info">' . get_help("help_meds:events:templates/camp_new") . '</div>
-                <div class="spacer" style="clear: both;"></div>
+				<textarea tabindex="27" id="HealthMedicines" name="HealthMedicines" rows="8" cols="60" data-rule-required="true">-none-</textarea>
+				<div class="tooltipContainer info">' . get_help("help_meds:events:templates/camp_new") . '</div>
+				<div class="spacer" style="clear: both;"></div>
 			</div>           
-            <div class="rowContainer">
-				<label class="rowTitle" for="HealthTetanusDate">Date of last Tetanus injection/booster *</label>' . js_code_wrap('DateInput(\'HealthTetanusDate\', true)') . '<div class="tooltipContainer info">' . get_help("help_tetanus:events:templates/camp_new") . '</div>
-					  <div class="spacer" style="clear: both;"></div>
-            </div>'; 
+			<div class="rowContainer">
+				<label class="rowTitle" for="HealthTetanusDate">Date of last Tetanus injection/booster *</label>
+				<input type="date" id="HealthTetanusDate" name="HealthTetanusDate" value="' . date("Y-m-d") . '">
+				<div class="tooltipContainer info">' . get_help("help_tetanus:events:templates/camp_new") . '</div>
+				<div class="spacer" style="clear: both;"></div>
+			</div>'; 
 }
   
 if ($pictures) {

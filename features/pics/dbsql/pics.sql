@@ -23,9 +23,9 @@ get_galleries||
   SELECT DISTINCT galleryid, galleryid, gallery_title
   FROM pics p
   WHERE (
-        p.pageid='||pageid||'
+        p.pageid = ||pageid||
         AND
-        p.featureid='||featureid||'
+        p.featureid = ||featureid||
         )
   ||siteviewable{{
     OR (p.siteviewable = 1)
@@ -39,9 +39,13 @@ get_page_galleries||
   WHERE galleryid IN  (
                       SELECT galleryid
                       FROM pics
-                      WHERE pageid='||pageid||'
+                      WHERE pageid = ||pageid||
                       )
 ||get_page_galleries
+
+insert_pics_feature||
+    INSERT INTO pics_features (pageid) VALUES(||pageid||)
+||insert_pics_feature
 
 insert_pic||
     INSERT INTO pics (pageid, featureid, galleryid, gallery_title, imagename, siteviewable, caption, alttext, dateadded)

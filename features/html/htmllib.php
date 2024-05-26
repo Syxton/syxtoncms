@@ -6,12 +6,12 @@
 * Date: 5/14/2024
 * Revision: 2.4.9
 ***************************************************************************/
-if (!LIBHEADER) {
-	$sub = './';
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
 	while (!file_exists($sub . 'lib/header.php')) {
-		$sub = $sub == './' ? '../' : $sub . '../';
+		$sub = $sub == '' ? '../' : $sub . '../';
 	}
-	include($sub . 'lib/header.php'); 
+	include($sub . 'lib/header.php');
 }
 define('HTMLLIB', true);
 
@@ -39,7 +39,6 @@ global $CFG, $USER;
 			$limit = $area == "side" ? $settings->html->$featureid->sidecommentlimit->setting : $settings->html->$featureid->middlecommentlimit->setting;
 			if ($settings->html->$featureid->allowcomments->setting) {
 				$hidebuttons = $htmlonly ? true : false;
-                
                 if (user_is_able($USER->userid, "viewcomments", $pageid, "html", $row['htmlid'])) {
                     $comments = get_html_comments($row['htmlid'], $pageid, $hidebuttons, $limit);
                 }
@@ -65,34 +64,34 @@ global $CFG, $USER;
 
   			  // If viewing from rss feed
 			if ($htmlonly) {
-                $middlecontents = '<div class="html_mini">
-                                        <div class="html_title">
-                                        ' . $settings->html->$featureid->feature_title->setting . '
-                                        </div>
-                                        <div class="html_text">
-                                        ' . $html . '
-                                        </div>
-                                    </div>';
-                $returnme .= use_template("tmp/index.template", ["mainmast" => page_masthead(true, true), "middlecontents" => $middlecontents], "simplelayout_template");
-                
-            } else { // Regular html feature viewing
-                $stopped_editing = '<input type="hidden" id="html_' . $featureid . '_stopped_editing" value="ajaxapi(\'/features/html/html_ajax.php\',\'stopped_editing\',\'&htmlid=' . $featureid . '\',function() {if (xmlHttp.readyState == 4) { do_nothing(); }}, true);" />';
-                if (is_logged_in() && $settings->html->$featureid->enablerss->setting) {
+				$middlecontents = '<div class="html_mini">
+												<div class="html_title">
+												' . $settings->html->$featureid->feature_title->setting . '
+												</div>
+												<div class="html_text">
+												' . $html . '
+												</div>
+										</div>';
+				$returnme .= fill_template("tmp/index.template", "simplelayout_template", false, ["mainmast" => page_masthead(true, true), "middlecontents" => $middlecontents]);
+				
+			} else { // Regular html feature viewing
+				$stopped_editing = '<input type="hidden" id="html_' . $featureid . '_stopped_editing" value="ajaxapi(\'/features/html/html_ajax.php\',\'stopped_editing\',\'&htmlid=' . $featureid . '\',function() {if (xmlHttp.readyState == 4) { do_nothing(); }}, true);" />';
+				if (is_logged_in() && $settings->html->$featureid->enablerss->setting) {
 					$modalsettings = [
-                        "title" => "RSS Feed",
-                        "path" => action_path("rss", false) . "rss_subscribe_feature&pageid=$pageid&featureid=$featureid&feature=html",
-                        "styles" => "vertical-align:middle;display:inline-block;padding-right: 4px;",
-                        "iframe" => true,
-                        "refresh" => "true",
-                        "height" => "300",
-                        "width" => "640",
-                        "image" => $CFG->wwwroot . "/images/small_rss.png",
-                    ];
+						"title" => "RSS Feed",
+						"path" => action_path("rss", false) . "rss_subscribe_feature&pageid=$pageid&featureid=$featureid&feature=html",
+						"styles" => "vertical-align:middle;display:inline-block;padding-right: 4px;",
+						"iframe" => true,
+						"refresh" => "true",
+						"height" => "300",
+						"width" => "640",
+						"image" => $CFG->wwwroot . "/images/small_rss.png",
+					];
 					$rss = make_modal_links($modalsettings);
 
-                    if ($feed = find_feed(false, "html", $featureid)) {
-                        $rss .= feed_link($feed["rssid"], $feed["userkey"], $settings->html->$featureid->feature_title->setting);
-                    }
+					if ($feed = find_feed(false, "html", $featureid)) {
+						$rss .= feed_link($feed["rssid"], $feed["userkey"], $settings->html->$featureid->feature_title->setting);
+					}
 				}
 				$buttons = get_button_layout("html", $row['htmlid'], $pageid);
 				$title = $settings->html->$featureid->feature_title->setting;
@@ -418,12 +417,26 @@ function youtube_id_from_url($url) {
 
 function insert_blank_html($pageid) {
 global $CFG;
-	if ($featureid = execute_db_sql("INSERT INTO html (pageid,html,dateposted) VALUES('$pageid', '','" . get_timestamp() . "')")) {
-		$area = get_db_field("default_area", "features", "feature='html'");
-		$sort = get_db_count("SELECT * FROM pages_features WHERE pageid='$pageid' AND area='$area'") + 1;
-		execute_db_sql("INSERT INTO pages_features (pageid,feature,sort,area,featureid) VALUES('$pageid','html','$sort','$area','$featureid')");
-		return $featureid;
-	}
+    $type = "html";
+    try {
+        start_db_transaction();
+        if ($featureid = execute_db_sql(fetch_template("dbsql/html.sql", "insert_html", "html"), ["pageid" => $pageid, "html" => "", "dateposted" => get_timestamp()])) {
+            $area = get_db_field("default_area", "features", "feature = ||feature||", ["feature" => $type]);
+            $sort = get_db_count(fetch_template("dbsql/features.sql", "get_features_by_page_area"), ["pageid" => $pageid, "area" => $area]) + 1;
+            $params = [
+                "pageid" => $pageid,
+                "feature" => $type,
+                "sort" => $sort,
+                "area" => $area,
+                "featureid" => $featureid,
+            ];
+            execute_db_sql(fetch_template("dbsql/features.sql", "insert_page_feature"), $params);
+            commit_db_transaction();
+            return $featureid;
+        }
+    } catch (\Throwable $e) {
+        rollback_db_transaction($e->getMessage());
+    }
 	return false;
 }
 
@@ -464,10 +477,11 @@ function gather_comments($htmlid, $pagenum, $perpage, $collection = [], $totalco
 function get_html_comments($htmlid, $pageid, $hidebuttons = false, $perpage = false, $pagenum = false, $hide = true) {
 global $CFG, $USER;
 	$returnme = $commenttext = $prev = $info = $next = $header = $arrows = $limit = "";
-	$original = $pagenum === false ? true : false;
-	$pagenum ??= 0;
-    $perpage ??= 0;
 
+	$pagenum = $pagenum ?: 0;
+    $perpage = $perpage ?: 0;
+
+    $original = $pagenum ? false : true;
     $comments = gather_comments($htmlid, $pagenum, $perpage);
 	if ($perpage) {
 		$total = get_db_count("SELECT * FROM html_comments WHERE htmlid = '$htmlid'");
@@ -496,11 +510,11 @@ global $CFG, $USER;
                 "username" => $username,
                 "says" => $row['parentid'] ? "replied" : "says",
                 "time" => $row['modified'] ? ($row['modified'] > $row['created'] ? "edited " : "") . ago($row['modified']) : "",
-                "comment" => $row['comment'],
+                "comment" => nl2br($row['comment']),
                 "childclass" => $row['parentid'] ? "childcomment" : "",
                 "buttons" => $commentbuttons,
             ];
-            $commenttext .= use_template("tmp/html.template", $params, "comment_template", "html");
+            $commenttext .= fill_template("tmp/html.template", "comment_template", "html", $params);
 		}
 
         // Wrap comments in div.
@@ -582,10 +596,10 @@ global $CFG, $USER;
             }
             $params = [
                 "username" => $username,
-                "comment" => $row['comment'],
+                "comment" => nl2br($row['comment']),
                 "buttons" => $commentbuttons,
             ];
-            $replies .= use_template("tmp/html.template", $params, "comment_template", "html");
+            $replies .= fill_template("tmp/html.template", "comment_template", "html", $params);
 		}
         return $replies;
 	}
@@ -599,14 +613,22 @@ function html_delete($pageid, $featureid) {
 		"feature" => "html",
 	];
 
-	$SQL = use_template("dbsql/features.sql", $params, "delete_feature");
-    execute_db_sql($SQL);
-    $SQL = use_template("dbsql/features.sql", $params, "delete_feature_settings");
-    execute_db_sql($SQL);
-	$SQL = use_template("dbsql/html.sql", $params, "delete_html", "html");
-    execute_db_sql($SQL);
+	try {
+		start_db_transaction();
+		$sql = [];
+		$sql[] = ["file" => "dbsql/features.sql", "subsection" => "delete_feature"];
+		$sql[] = ["file" => "dbsql/features.sql", "subsection" => "delete_feature_settings"];
+		$sql[] = ["file" => "dbsql/html.sql", "feature" => "html", "subsection" => "delete_html"];
 
-	resort_page_features($pageid);
+		// Delete feature
+		execute_db_sqls(fetch_template_set($sql), $params);
+
+		resort_page_features($pageid);
+		commit_db_transaction();
+	} catch (\Throwable $e) {
+		rollback_db_transaction($e->getMessage());
+		return false;
+	}
 }
 
 function html_buttons($pageid, $featuretype, $featureid) {

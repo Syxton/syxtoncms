@@ -6,29 +6,49 @@
  * $Date: 01/30/2012
  * $Revision: .9
  ***************************************************************************/
-
-if (!isset($CFG)) {
-	$sub = '../';
-	while (!file_exists($sub . 'config.php')) {
-		$sub .= '../';
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
 	}
-	require($sub . 'config.php'); 
+	include($sub . 'lib/header.php');
 }
 
- //Retrieve from Javascript
-$postorget = isset($_GET["eventid"]) ? $_GET : $_POST;
-$postorget = isset($postorget["eventid"]) ? $postorget : "";
+//Retrieve from Javascript
+global $MYVARS;
+collect_vars();
 
-$MYVARS->GET = $postorget;
+$eventid = clean_myvar_opt("eventid", "int", false);
+$regid = clean_myvar_opt("regid", "int", false);
+$show_again = clean_myvar_opt("show_again", "bool", false);
+$autofill = clean_myvar_opt("autofill", "bool", false);
 
-$preview = isset($preview) ? 'disabled="disabled"': "";
-$eventid = empty($MYVARS->GET['eventid']) ? false : $MYVARS->GET['eventid'];
-$show_again = isset($MYVARS->GET['show_again']) ? true : false;
-$regid = isset($MYVARS->GET['regid']) && $MYVARS->GET['regid'] != "false" ? $MYVARS->GET['regid'] : false;
-$autofill = isset($MYVARS->GET['autofill']) && $MYVARS->GET['autofill'] == "1" ? true : false;
+$email = $payment_method = $disable = "";
+
+// Preview of template.
+if (isset($preview)) {
+	$disable = 'disabled="disabled"';
+	$event = [
+		"name" => "Preview Event",
+		"event_begin_date" => date("j"),
+		"event_end_date" => date("j"),
+		"fee_full" => 0,
+		"fee_min" => 0,
+		"sale_fee" => 0,
+		"sale_end" => 0,
+	];
+}
+
+// Get full event info
+if ($eventid) {
+	$event = get_event($eventid);
+}
+
+//output any passed on hidden info from previous registrations
+$total_owed = clean_myvar_opt("total_owed", "float", 0);
+$items = clean_myvar_opt("items", "string", "");
 
 $picturecost = 5; //if no picture is needed, set to false
-$email = "";
 
 if ($show_again) { //This is not the first time through
 	if ($autofill) { //Same person..so auto fill all items
@@ -42,12 +62,9 @@ if ($show_again) { //This is not the first time through
 	}
 }
 
-$total_owed = isset($MYVARS->GET['total_owed']) ? $MYVARS->GET['total_owed'] : 0;
-$row = get_db_row("SELECT * FROM events WHERE eventid=" . $eventid);
-
 if (!$show_again) {
     echo get_js_tags(["features/events/templates/camp/ajax.js"]);
-    echo '<form name="form1">
+    echo '<form class="event_template_form" name="form1">
             <div id="camp"><input type="hidden" name="total_owed" id="total_owed" value="' . $total_owed . '" />';
 }
 
@@ -117,7 +134,7 @@ if ($autofill) {
           </tr>
           <tr> 
             <td align="right"><strong><font size="2">Date&nbsp;of&nbsp;Birth&nbsp;*&nbsp;</font></strong></td>
-            <td align="left"><input name="Camper_Birth_Date" size="10" maxlength="10" value="mm/dd/yy" type="text" /></td>
+            <td align="left"><input name="Camper_Birth_Date" size="10" maxlength="10" type="date" /></td>
           </tr>
           <tr> 
             <td align="right"><strong><font size="2">Age&nbsp;*&nbsp;</font></strong></td>
@@ -219,8 +236,8 @@ if ($autofill) {
           <tr>
             <td align="right"><strong><font size="2">This consent effective&nbsp;*&nbsp;</font></strong></td>
             <td align="left"><font size="2">
-            From: <input name="HealthConsentFrom" size="13" maxlength="13" value="' . date("m/d/Y", $row["event_begin_date"]) . '" type="text">
-            To: <input name="HealthConsentTo" size="13" maxlength="13" value="' . date("m/d/Y", $row["event_end_date"]) . '" type="text"></font></td>
+            From: <input name="HealthConsentFrom" size="13" maxlength="13" value="' . date("Y-m-d", $row["event_begin_date"]) . '" type="date">
+            To: <input name="HealthConsentTo" size="13" maxlength="13" value="' . date("Y-m-d", $row["event_end_date"]) . '" type="date"></font></td>
           </tr>
           <tr>
             <td align="right"><strong><font size="2">Member\'s Name&nbsp;*&nbsp;</font></strong></td>
@@ -248,7 +265,7 @@ if ($autofill) {
           </tr>
           <tr>
             <td align="right"><strong><font size="2">Expiration Date&nbsp;*&nbsp;</font></strong></td>
-            <td align="left"><input name="HealthExpirationDate" size="20" value="mm/dd/yy" type="text"></td>
+            <td align="left"><input name="HealthExpirationDate" size="20" value="" type="date"></td>
           </tr>
           <tr>
             <td align="right"><strong><font size="2">Medical History&nbsp;*&nbsp;</font></strong></td>
@@ -268,7 +285,7 @@ if ($autofill) {
           </tr>
           <tr>
             <td align="right"><strong><font size="2">Date of last Tetanus injection/booster&nbsp;*&nbsp;</font></strong></td>
-            <td align="left"><input name="HealthTetanusDate" size="20" value="mm/dd/yy" type="text"></td>
+            <td align="left"><input name="HealthTetanusDate" size="20" value="" type="date"></td>
           </tr>';
 }
 
@@ -315,9 +332,9 @@ if (!$show_again) {
    
 echo '<tr> 
           <td colspan="2" align="center">
-            <input name="print" value="Print Application" onclick="window.print()" type="button" ' . $preview . '/>
-            &nbsp;<input onclick="submit_registration();" value="Send Application" type="button" ' . $preview . ' /> 
-            &nbsp;<input name="reset" type="reset" ' . $preview . '/> </td>
+            <input name="print" value="Print Application" onclick="window.print()" type="button" ' . $disable . '/>
+            &nbsp;<input onclick="camp_submit_registration();" value="Send Application" type="button" ' . $disable . ' /> 
+            &nbsp;<input name="reset" type="reset" ' . $disable . '/> </td>
         </tr>
       </table>';
 

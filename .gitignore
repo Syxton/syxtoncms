@@ -213,4 +213,8 @@ pip-log.txt
 #Mr Developer
 .mr.developer.cfg
 config.php
+features/pics/files
 httpd.conf
+/userfiles
+images/logo.png
+/images/carousel

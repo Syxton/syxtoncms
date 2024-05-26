@@ -29,16 +29,26 @@ function valid_poll_fields(){
 }
 
 function validatestartdate(){
-   var Today = new Date();
-   if (startdate_Object.picked.date < Today){ return 'Must select a date in the future.';
-   }else if(Today.getFullYear() - startdate_Object.picked.yearValue > 10){ return 'Cannot select dates beyond 10 years from now.'; }
+	var Today = new Date();
+	Today.setHours(0, 0, 0, 0);
+	let Compare = datetype("startdate");
+	if (Compare < Today) {
+		return 'Must select a date in the future.';
+	} else if (Today.getFullYear() - Compare.getFullYear() > 10) {
+		return 'Cannot select dates beyond 10 years from now.';
+	}
    return "true";
 }
 
 function validatestopdate(){
-   var Today = new Date();
-   if (stopdate_Object.picked.date < Today){ return 'Cannot select a date in the past.';
-   }else if(stopdate_Object.picked.yearValue - Today.getFullYear() > 10){ return 'Cannot select dates beyond 10 years from now.'; }
+	var Today = new Date();
+	Today.setHours(0, 0, 0, 0);
+	let Compare = datetype("stopdate");
+	if (Compare < Today) {
+		return 'Cannot select a date in the past.';
+	} else if (Compare.getFullYear() - Today.getFullYear() > 10) {
+		return 'Cannot select dates beyond 10 years from now.';
+	}
    return "true";
 }
 

@@ -6,13 +6,12 @@
 * Date: 5/14/2024
 * Revision: 0.8.8
 ***************************************************************************/
-
-if (!LIBHEADER) {
-	$sub = './';
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
 	while (!file_exists($sub . 'lib/header.php')) {
-		$sub = $sub == './' ? '../' : $sub . '../';
+		$sub = $sub == '' ? '../' : $sub . '../';
 	}
-	include($sub . 'lib/header.php'); 
+	include($sub . 'lib/header.php');
 }
 define('FORUMLIB', true);
 
@@ -71,7 +70,7 @@ global $USER, $CFG;
 						</td>
 					</tr>';
 	$content = "";
-	if ($categories = get_db_result("SELECT * FROM forum_categories WHERE forumid=$forumid AND shoutbox=0 ORDER BY sort")) {
+	if ($categories = get_db_result(fetch_template("dbsql/forum.sql", "get_forum_categories", "forum"), ["forumid" => $forumid])) {
 		while ($category = fetch_row($categories)) {
 			$notviewed = true;
 			//Find if new posts are available
@@ -178,10 +177,10 @@ global $USER, $CFG;
 					"title" => "Edit Category",
 					"path" => action_path("forum") . "createforumcategory&amp;catid=" . $category['catid'] . '&amp;pageid=' . $category['pageid'] . '&amp;forumid=' . $forumid,
 					"runafter" => "forum_refresh_$forumid",
-					"height" => "200",
-					"width" => "640",
+					"width" => "500",
                     "class" => "forum_inline_buttons",
-					"validate" => "true", "image" => $CFG->wwwroot . "/images/edit.png",
+					"validate" => "true",
+                    "image" => $CFG->wwwroot . "/images/edit.png",
 				];
                 $content .= make_modal_links($params);
             }
@@ -285,7 +284,7 @@ global $CFG;
                 "title" => "Previous Page",
                 "display" => "Prev",
             ]);
-            $previous = use_template("tmp/forum.template", $params, "get_posts_page_link", "forum");
+            $previous = fill_template("tmp/forum.template", "get_posts_page_link", "forum", $params);
         }
 		if ($buttons && !($pagenum === false) && $pagenum < $lastpage) {
             $params = array_merge($params, [
@@ -293,7 +292,7 @@ global $CFG;
                 "title" => "Next Page",
                 "display" => "Next",
             ]);
-            $next = use_template("tmp/forum.template", $params, "get_posts_page_link", "forum");
+            $next = fill_template("tmp/forum.template", "get_posts_page_link", "forum", $params);
         }
 
         $pagelinks = "";
@@ -305,7 +304,7 @@ global $CFG;
                         "title" => "Last Page",
                         "display" => "Last",
                     ]);
-                    $pagelinks .= use_template("tmp/forum.template", $params, "get_posts_page_link", "forum");
+                    $pagelinks .= fill_template("tmp/forum.template", "get_posts_page_link", "forum", $params);
                 } else {
                     $pagelinks .= " Last ";
                 }
@@ -317,7 +316,7 @@ global $CFG;
                         "title" => "Page $page_counter",
                         "display" => $page_counter,
                     ]);
-                    $pagelinks .= use_template("tmp/forum.template", $params, "get_posts_page_link", "forum");
+                    $pagelinks .= fill_template("tmp/forum.template", "get_posts_page_link", "forum", $params);
                 } else {
                     $pagelinks .= " $page_counter ";
                 }
@@ -360,7 +359,7 @@ global $CFG;
                 "title" => "Previous Page",
                 "display" => "Prev",
             ]);
-            $previous = use_template("tmp/forum.template", $params, "get_discussions_page_link", "forum");
+            $previous = fill_template("tmp/forum.template", "get_discussions_page_link", "forum", $params);
         }
 
 		if ($buttons && !($pagenum === false) && $pagenum < $lastpage) {
@@ -369,7 +368,7 @@ global $CFG;
                 "title" => "Next Page",
                 "display" => "Next",
             ]);
-            $next = use_template("tmp/forum.template", $params, "get_discussions_page_link", "forum");
+            $next = fill_template("tmp/forum.template", "get_discussions_page_link", "forum", $params);
         }
 
         // Wittle down the discussions until we have no discussions left to create page links.
@@ -383,7 +382,7 @@ global $CFG;
                         "title" => "Last Page",
                         "display" => "Last",
                     ]);
-                    $pagelinks .= use_template("tmp/forum.template", $params, "get_discussions_page_link", "forum");
+                    $pagelinks .= fill_template("tmp/forum.template", "get_discussions_page_link", "forum", $params);
                 } else {
                     $pagelinks .= " Last ";
                 }
@@ -395,7 +394,7 @@ global $CFG;
                         "title" => "Page " . $page_counter,
                         "display" => $page_counter,
                     ]);
-                    $pagelinks .= use_template("tmp/forum.template", $params, "get_discussions_page_link", "forum");
+                    $pagelinks .= fill_template("tmp/forum.template", "get_discussions_page_link", "forum", $params);
                 } else {
                     $pagelinks .= " $page_counter ";
                 }
@@ -416,79 +415,76 @@ global $CFG;
 }
 
 function first_post($discussionid) {
-	$postid = get_db_field("MIN(postid)", "forum_posts", "discussionid='$discussionid'");
+	$postid = get_db_field("MIN(postid)", "forum_posts", "discussionid = ||discussionid||", ["discussionid" => $discussionid]);
 	return $postid;
 }
 
 function resort_categories($forumid) {
-	if ($result = get_db_result("SELECT * FROM forum_categories WHERE forumid='$forumid' AND shoutbox=0 ORDER BY sort")) {
+	if ($result = get_db_result(fetch_template("dbsql/forum.sql", "get_forum_categories", "forum"), ["forumid" => $forumid])) {
 		$i = 1;
 		while ($row = fetch_row($result)) {
-			execute_db_sql("UPDATE forum_categories SET sort='$i' WHERE catid='" . $row['catid'] . "'");
+			execute_db_sql(fetch_template("dbsql/forum.sql", "set_category_sort", "forum"), ["sort" => $i, "catid" => $row['catid']]);
 			$i++;
 		}
 	}
 }
 
 function insert_blank_forum($pageid) {
-	$title = "Forum";
     $type = "forum";
-	if ($featureid = execute_db_sql("INSERT INTO forum (pageid) VALUES('$pageid')")) {
-		$area = get_db_field("default_area", "features", "feature='forum'");
-		$sort = get_db_count("SELECT *
-                              FROM pages_features
-                              WHERE pageid = '$pageid'
-                              AND area = '$area'") + 1;
-		execute_db_sql("INSERT INTO pages_features (pageid, feature, sort, area, featureid)
-                                             VALUES('$pageid', 'forum', '$sort', '$area', '$featureid')");
-	
-        $catid = execute_db_sql("INSERT INTO forum_categories (forumid, pageid, title, shoutbox) 
-                                                        VALUES('$featureid', '$pageid', 'Shoutbox', 1)");
-		$discussionid = execute_db_sql("INSERT INTO forum_discussions (catid, forumid, pageid, title, shoutbox)
-                                                                VALUES('$catid', '$featureid', '$pageid', 'Shoutbox', 1)");
-		execute_db_sql("INSERT INTO settings (type, pageid, featureid, setting_name, setting, extra, defaultsetting)
-                                       VALUES('$type', '$pageid', '$featureid', 'feature_title', '$title', NULL, '$title'),
-                                             ('$type', '$pageid', '$featureid', 'shoutboxlimit', '10', NULL, '10'),
-                                             ('$type', '$pageid', '$featureid', 'postsperpage', '10', NULL, '10'),
-                                             ('$type', '$pageid', '$featureid', 'discussionsperpage', '10', NULL, '10')");
-
-		return $featureid;
-	}
+    try {
+        start_db_transaction();
+        if ($featureid = execute_db_sql(fetch_template("dbsql/forum.sql", "insert_forum", $type), ["pageid" => $pageid])) {
+            $area = get_db_field("default_area", "features", "feature = ||feature||", ["feature" => $type]);
+            $sort = get_db_count(fetch_template("dbsql/features.sql", "get_features_by_page_area"), ["pageid" => $pageid, "area" => $area]) + 1;
+            $params = [
+                "pageid" => $pageid,
+                "feature" => $type,
+                "featureid" => $featureid,
+                "forumid" => $featureid,
+                "sort" => $sort,
+                "area" => $area,
+                "lastpost" => 0,
+            ];
+            execute_db_sql(fetch_template("dbsql/features.sql", "insert_page_feature"), $params);
+    
+            // Every forum gets a shoutbox category.
+            $catid = execute_db_sql(fetch_template("dbsql/forum.sql", "insert_category", $type), ["forumid" => $featureid, "pageid" => $pageid, "title" => "Shoutbox", "sort" => 0, "shoutbox" => 1]);
+    
+            $params["catid"] = $catid;
+            execute_db_sql(fetch_template("dbsql/forum.sql", "insert_discussion", $type), $params);
+            commit_db_transaction();
+            return $featureid;
+        }
+    } catch (\Throwable $e) {
+        rollback_db_transaction($e->getMessage());
+    }
 	return false;
 }
 
 function forum_delete($pageid, $featureid) {
 	try {
 		start_db_transaction();
-        $templates = [];
-        $templates[] = [
-            "file" => "dbsql/forum.sql",
-            "feature" => "forum",
-            "subsection" => [
-                "delete_forum",
-                "delete_categories",
-                "delete_discussions",
-                "delete_posts",
-            ],
-        ];
-        execute_db_sqls(fetch_template_set($templates), ["forumid" => $featureid]);
+		$sql = [];
+		$sql[] = ["file" => "dbsql/forum.sql", "feature" => "forum", "subsection" => "delete_forum"];
+		$sql[] = ["file" => "dbsql/forum.sql", "feature" => "forum", "subsection" => "delete_categories"];
+		$sql[] = ["file" => "dbsql/forum.sql", "feature" => "forum", "subsection" => "delete_discussions"];
+		$sql[] = ["file" => "dbsql/forum.sql", "feature" => "forum", "subsection" => "delete_posts"];
 
-        $templates = [];
-        $templates[] = [
-            "file" => "dbsql/features.sql",
-            "subsection" => [
-                "delete_feature",
-                "delete_feature_settings",
-            ],
-        ];
-        execute_db_sqls(fetch_template_set($templates), ["featureid" => $featureid, "feature" => "forum", "pageid" => $pageid]);
+		execute_db_sqls(fetch_template_set($sql), ["forumid" => $featureid]);
+
+		$sql = [];
+		$sql[] = ["file" => "dbsql/features.sql", "subsection" => "delete_feature"];
+		$sql[] = ["file" => "dbsql/features.sql", "subsection" => "delete_feature_settings"];
+
+		// Delete feature
+		execute_db_sqls(fetch_template_set($sql), ["featureid" => $featureid, "feature" => "forum", "pageid" => $pageid]);
+
+		resort_page_features($pageid);
 		commit_db_transaction();
 	} catch (\Throwable $e) {
 		rollback_db_transaction($e->getMessage());
-		trigger_error("Failed to delete forum.", E_USER_WARNING);
+		return false;
 	}
-
-	resort_page_features($pageid);
 }
 
 function forum_buttons($pageid, $featuretype, $featureid) {

@@ -68,7 +68,7 @@ global $CFG, $MYVARS, $USER;
   		} else {
   			echo '
   			<div style="width:100%;text-align:center;">
-  				<img src="' . $CFG->wwwroot . '/images/underconstruction.gif" />
+  				<img src="' . $CFG->wwwroot . '/images/underconstruction.png" />
   			</div>
   			<div style="width:100%;text-align:center;">
   			This area is currently being edited by: ' . get_user_name($row["edit_user"]) . '
@@ -130,7 +130,7 @@ global $CFG, $MYVARS, $USER, $PAGE;
 
     // An edit or reply.
     if ($id) {
-        if ($comment = get_db_row(use_template("dbsql/html.sql", ["commentid" => $id], "get_comment_info", "html"))) {
+        if ($comment = get_db_row(fetch_template("dbsql/html.sql", "get_comment_info", "html"), ["commentid" => $id])) {
             $params = [
                 "pageid" => $comment["pageid"],
                 "comment" => "",
@@ -146,7 +146,7 @@ global $CFG, $MYVARS, $USER, $PAGE;
                     "replytoid" => $comment["commentid"],
                 ]);
                 if (user_is_able($USER->userid, "makereplies", $comment["pageid"])) {
-                    echo use_template("tmp/html.template", $params, "comment_form_template", "html");
+                    echo fill_template("tmp/html.template", "comment_form_template", "html", $params);
                 } else {
                     trigger_error(error_string("no_permission", ["makecomments"]), E_USER_WARNING);
                 }
@@ -160,7 +160,7 @@ global $CFG, $MYVARS, $USER, $PAGE;
                     trigger_error(error_string("no_permission", ["editing"]), E_USER_WARNING);
                     return;
                 }
-                echo use_template("tmp/html.template", $params, "comment_form_template", "html");
+                echo fill_template("tmp/html.template", "comment_form_template", "html", $params);
             }
         } else {
             trigger_error(error_string("no_data", ["commentid"]), E_USER_WARNING);
@@ -178,7 +178,7 @@ global $CFG, $MYVARS, $USER, $PAGE;
                     "replytoid" => false,
                     "title" => "Make Comment",
                 ];
-                echo use_template("tmp/html.template", $params, "comment_form_template", "html");           
+                echo fill_template("tmp/html.template", "comment_form_template", "html", $params);           
             } else {
                 trigger_error(error_string("no_permission", ["makecomments"]), E_USER_WARNING);
             }

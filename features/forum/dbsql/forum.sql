@@ -1,3 +1,9 @@
+insert_forum||
+	INSERT INTO forum
+	(pageid)
+	VALUES(||pageid||)
+||insert_forum
+
 delete_forum||
 	DELETE
 	FROM forum
@@ -10,10 +16,36 @@ delete_categories||
 	WHERE forumid = ||forumid||
 ||delete_categories
 
+get_forum_categories||
+	SELECT *
+	FROM forum_categories
+	WHERE forumid = ||forumid||
+	AND shoutbox = 0
+	ORDER BY sort
+||get_forum_categories
+
+set_category_sort||
+	UPDATE forum_categories
+	SET sort = ||sort||
+	WHERE catid = ||catid||
+||set_category_sort
+
 delete_category||
 	DELETE FROM forum_categories
 	WHERE catid = ||catid||
 ||delete_category
+
+insert_shoutbox||
+	INSERT INTO forum_categories
+	(forumid, pageid, title, shoutbox) 
+	VALUES(||forumid||, ||pageid||, 'Shoutbox', 1)
+||insert_shoutbox
+
+insert_category||
+	INSERT INTO forum_categories
+	(forumid, pageid, title, sort, shoutbox)
+	VALUES(||forumid||, ||pageid||, ||title||, ||sort||, ||shoutbox||)
+||insert_category
 
 delete_category_discussions||
 	DELETE
@@ -83,8 +115,8 @@ update_discussion_title||
 
 insert_discussion||
 	INSERT INTO forum_discussions 
-	(catid, forumid, pageid, userid, title, lastpost)
-	VALUES(||catid||, ||forumid||, ||pageid||, ||userid||, ||title||, ||lastpost||)
+	(catid, forumid, pageid, userid, title, shoutbox, lastpost)
+	VALUES(||catid||, ||forumid||, ||pageid||, ||userid||, ||title||, ||shoutbox||, ||lastpost||)
 ||insert_discussion
 
 delete_posts||

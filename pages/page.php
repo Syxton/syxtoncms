@@ -7,70 +7,78 @@
 * Revision: 1.5.8
 ***************************************************************************/
 
-include ('header.php');
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
+	}
+	include($sub . 'lib/header.php');
+}
 
 callfunction();
 
-echo use_template("tmp/page.template", [], "end_of_page_template");
+echo fetch_template("tmp/page.template", "end_of_page_template");
 
 function browse() {
-global $CFG;
-  $section = isset($MYVARS->GET["section"]) ? $MYVARS->GET["section"] : "search";
+	$section = clean_myvar_opt("section", "string", "search");
 
 	switch($section) {
-			case "users":
-					$pagesearch = "notselected";
-					$usersearch = "selected";
-					break;
-			default:
-					$pagesearch = "selected";
-					$usersearch = "notselected";
-					break;
+		case "users":
+			$pagesearch = "notselected";
+			$usersearch = "selected";
+			break;
+		default:
+			$pagesearch = "selected";
+			$usersearch = "notselected";
+			break;
 	}
 
-  $searchtab = "";
-  if (is_logged_in()) {
-    $searchtab = use_template("tmp/page.template", ["usersearchselected" => $usersearch], "browse_usersearch_template");
-  }
-  
-  $params = [ "pagesearchselected" => $pagesearch,
-							"usersearchtab" => $searchtab,
-  ];
+	$searchtab = "";
+	if (is_logged_in()) {
+		$searchtab = fill_template("tmp/page.template", "browse_usersearch_template", false, ["usersearchselected" => $usersearch]);
+	}
 
-	echo use_template("tmp/page.template", $params, "browse_template");
+	$params = [
+		"pagesearchselected" => $pagesearch,
+		"usersearchtab" => $searchtab,
+	];
+
+	echo fill_template("tmp/page.template", "browse_template", false, $params);
 }
 
 function browse_search() {
 global $CFG;
-	$params = [ "wwwroot" => $CFG->wwwroot,
-              "search_results_box" => make_search_box(false, "pagesearch"),
-  ];
-	echo use_template("tmp/page.template", $params, "browse_search_template");
+	$params = [
+		"wwwroot" => $CFG->wwwroot,
+		"search_results_box" => make_search_box(false, "pagesearch"),
+	];
+	echo fill_template("tmp/page.template", "browse_search_template", false, $params);
 }
 
 function browse_users() {
 global $CFG;
-  $params = [ "wwwroot" => $CFG->wwwroot,
-              "search_results_box" => make_search_box(false, "usersearch"),
-  ];
-	echo use_template("tmp/page.template", $params, "browse_user_template");
+	$params = [
+		"wwwroot" => $CFG->wwwroot,
+		"search_results_box" => make_search_box(false, "usersearch"),
+	];
+	echo fill_template("tmp/page.template", "browse_user_template", false, $params);
 }
 
 function create_edit_page() {
 global $CFG, $MYVARS, $ROLES, $USER;
-
 	if (!defined('VALIDATELIB')) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
-		$content = '';
-		$admin = is_siteadmin($USER->userid) ? true : false;
-	if (isset($MYVARS->GET["pageid"])) {
-		if (!user_is_able($USER->userid, "editpage", $MYVARS->GET["pageid"])) {
+	$content = '';
+	$admin = is_siteadmin($USER->userid) ? true : false;
+	$pageid = clean_myvar_opt("pageid", "int", false);
+	if ($pageid) {
+		if (!user_is_able($USER->userid, "editpage", $pageid)) {
 			$content .= error_string("generic_permissions");
 			return;
 		}
-		$page = get_db_row("SELECT * FROM pages WHERE pageid=" . $MYVARS->GET["pageid"]);
-		$name = stripslashes($page["name"]);
-		$description = stripslashes($page["description"]);
-		$keywords = stripslashes($page["keywords"]);
+		$page = get_db_row("SELECT * FROM pages WHERE pageid = ||pageid||", ["pageid" => $pageid]);
+		$name = $page["name"];
+		$description = $page["description"];
+		$keywords = $page["keywords"];
 		$role_selected = $page["default_role"];
 		$global_yes = $page["siteviewable"] != "0" ? "selected" : "";
 		$global_no = $global_yes == "" ? "selected" : "";
@@ -81,7 +89,7 @@ global $CFG, $MYVARS, $ROLES, $USER;
 		$menu_page = $page["menu_page"];
 		$hide_no = $hide_yes = "";
 		if ($page["menu_page"] != "0") {
-			$hidefromvisitors = get_db_field("hidefromvisitors", "menus", "pageid=" . $MYVARS->GET["pageid"]);
+			$hidefromvisitors = get_db_field("hidefromvisitors", "menus", "pageid=" . $pageid);
 			$hide_yes = $hidefromvisitors != "0" ? "selected" : "";
 			$hide_no = $hide_yes == "" ? "selected" : "";
 		}
@@ -97,19 +105,19 @@ global $CFG, $MYVARS, $ROLES, $USER;
 		$hidefromvisitors = 0;
 	}
 
-	if (isset($MYVARS->GET["pageid"])) {
-		$content .= create_validation_script("create_page_form" , use_template("tmp/page.template", ["pageid" => $MYVARS->GET["pageid"]], "edit_page_validation"));
+	if ($pageid) {
+		$content .= create_validation_script("create_page_form" , fill_template("tmp/page.template", "edit_page_validation", false, ["pageid" => $pageid]));
 	} else {
-		$content .= create_validation_script("create_page_form" , use_template("tmp/page.template", [], "create_page_validation"));
+		$content .= create_validation_script("create_page_form" , fetch_template("tmp/page.template", "create_page_validation"));
 	}
 
-	$SQL = 'SELECT * FROM roles WHERE roleid > "' . $ROLES->creator . '" AND roleid < "' . $ROLES->none . '" ORDER BY roleid DESC';
+	$SQL = 'SELECT * FROM roles WHERE roleid > ||creator|| AND roleid < ||none|| ORDER BY roleid DESC';
 	$roleselector = [
 			"properties" => [
 			"name" => "role_select",
 			"id" => "role_select",
 		],
-		"values" => get_db_result($SQL),
+		"values" => get_db_result($SQL, ["creator" => $ROLES->creator, "none" => $ROLES->none]),
 		"valuename" => "roleid",
 		"displayname" => "display_name",
 		"selected" => $role_selected,
@@ -138,25 +146,25 @@ global $CFG, $MYVARS, $ROLES, $USER;
 		"input_page_menulink" => get_help("input_page_menulink"),
 		"menupage" => $menu_page,
 		"hidefromvisitors" => $hidefromvisitors ?? false,
-		"buttonname" => (isset($MYVARS->GET["pageid"]) ? "Submit Changes" : "Create Page"),
+		"buttonname" => $pageid ? "Submit Changes" : "Create Page",
 	];
-	$content .= use_template("tmp/page.template", $params, "create_edit_page_template");
+	$content .= fill_template("tmp/page.template", "create_edit_page_template", false, $params);
 
 	echo format_popup($content, 'Create/Edit Page');
 }
 
 function create_edit_links() {
-global $CFG, $MYVARS, $USER;
-  $content = '';
-  $pageid = clean_myvar_opt("pageid", "int", get_pageid());
-  //Stop right there you!
-  if (!user_is_able($USER->userid, "editpage", $pageid)) {
-      $content .= error_string("generic_permissions");
-      return;
-  }
+global $USER;
+	$content = '';
+	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
+
+	if (!user_is_able($USER->userid, "editpage", $pageid)) {
+		$content .= error_string("generic_permissions");
+		return;
+	}
 
 	$params = ["pageid" => $pageid];
-	$content .= use_template("tmp/page.template", $params, "create_edit_links_template");
-  echo format_popup($content,'Edit Links');
+	$content .= fill_template("tmp/page.template", "create_edit_links_template", false, $params);
+	echo format_popup($content, 'Edit Links');
 }
 ?>

@@ -4,7 +4,7 @@ $config = include 'config/config.php';
 
 require_once 'include/utils.php';
 
-if ($_SESSION['RF']["verify"] != "RESPONSIVEfilemanager") {
+if ($_SESSION['RF']["verify"] !== "RESPONSIVEfilemanager") {
     response(trans('forbidden').AddErrorLocation())->send();
     exit;
 }
@@ -30,7 +30,7 @@ if (isset($_GET['file']) && !checkRelativePath($_GET['file'])) {
 }
 
 //check $_POST['file']
-if (isset($_POST['path']) && !checkRelativePath($_POST['path'])) {
+if(isset($_POST['path']) && !checkRelativePath($_POST['path'])) {
     response(trans('wrong path').AddErrorLocation())->send();
     exit;
 }
@@ -81,10 +81,24 @@ if (isset($_GET['action'])) {
 		case 'save_img':
 			$info = pathinfo($_POST['name']);
             $image_data = $_POST['url'];
+            $ext = strtolower($info['extension']);
 
             if (preg_match('/^data:image\/(\w+);base64,/', $image_data, $type)) {
                 $image_data = substr($image_data, strpos($image_data, ',') + 1);
                 $type = strtolower($type[1]); // jpg, png, gif
+
+                // Images get some additional checks
+                if (!in_array($type, array('gif', 'jpg', 'jpeg', 'jpe', 'png', 'webp'), TRUE)) 
+                {
+                    response('File type not allowed')->send();
+                    exit;
+                }
+                
+                if (!in_array($ext, array('gif', 'jpg', 'jpeg', 'jpe', 'png', 'webp'), TRUE)) 
+                {
+                    response('Extension not allowed')->send();
+                    exit;
+                }
 
                 $image_data = base64_decode($image_data);
 
@@ -111,6 +125,12 @@ if (isset($_GET['action'])) {
                 unlink($temp);
                 $temp .=".".substr(strrchr($_POST['url'], '.'), 1);
                 file_put_contents($temp, $image_data);
+                
+                // remove file if not image
+                if (@getimagesize($temp) === FALSE) {                    
+                    unlink($temp);                    
+                    exit;
+                }
 
                 $ftp->put($config['ftp_base_folder'].$config['upload_dir'] . $_POST['path'] . $_POST['name'], $temp, FTP_BINARY);
 
@@ -119,8 +139,15 @@ if (isset($_GET['action'])) {
 
                 unlink($temp);
             } else {
-                file_put_contents($config['current_path'] . $_POST['path'] . $_POST['name'], $image_data);
-                create_img($config['current_path'] . $_POST['path'] . $_POST['name'], $config['thumbs_base_path'].$_POST['path'].$_POST['name'], 122, 91);
+                $pathFileName = $config['current_path'] . $_POST['path'] . $_POST['name'];
+                file_put_contents($pathFileName, $image_data);
+
+                // remove file if not image
+                if (@getimagesize($pathFileName) === FALSE) {                    
+                    unlink($pathFileName);
+                    exit;
+                }                
+                create_img($pathFileName, $config['thumbs_base_path'].$_POST['path'].$_POST['name'], 122, 91);
                 // TODO something with this function cause its blowing my mind
                 new_thumbnails_creation(
                     $config['current_path'].$_POST['path'],
@@ -211,7 +238,7 @@ if (isset($_GET['action'])) {
                     // unarchive from the tar
                     $phar = new PharData($path);
                     $phar->decompressFiles();
-                    $files = array();
+                    $files = [];
                     check_files_extensions_on_phar($phar, $files, '', $config);
                     $phar->extractTo($base_folder, $files, true);
                     break;
@@ -230,15 +257,15 @@ if (isset($_GET['action'])) {
 
 			break;
 		case 'media_preview':
-			if (isset($_GET['file'])) {
+			if(isset($_GET['file'])){
 				$_GET['file'] = sanitize($_GET['file']);
 			}
-			if (isset($_GET['title'])) {
+			if(isset($_GET['title'])){
 				$_GET['title'] = sanitize($_GET['title']);
 			}
-			if ($ftp) {
+			if($ftp){
 				$preview_file = $config['ftp_base_url'].$config['upload_dir'] . $_GET['file'];
-			} else {
+			}else{
 				$preview_file = $config['current_path'] . $_GET["file"];
 			}
 			$info = pathinfo($preview_file);
@@ -291,7 +318,7 @@ if (isset($_GET['action'])) {
 				</div>
 				</div>
 			</div>
-			<?php if (in_array(strtolower($info['extension']), $config['ext_music'])): ?>
+			<?php if(in_array(strtolower($info['extension']), $config['ext_music'])): ?>
 
             <script type="text/javascript">
                 $(document).ready(function () {
@@ -596,7 +623,7 @@ if (isset($_GET['action'])) {
             }
 
             if (! isset($allowed_file_exts) || ! is_array($allowed_file_exts)) {
-                $allowed_file_exts = array();
+                $allowed_file_exts = [];
             }
 
             if (!isset($info['extension'])) {
@@ -629,11 +656,11 @@ if (isset($_GET['action'])) {
 					$googledoc_url = urlencode($url_file);
 					$ret = "<iframe src=\"https://docs.google.com/viewer?url=" . $url_file . "&embedded=true\" class=\"google-iframe\"></iframe>";
 				}
-			} else {
+			}else{
 				$data = stripslashes(htmlspecialchars(file_get_contents($selected_file)));
-				if (in_array($info['extension'],array('html','html'))) {
-					$ret = '<script src="https://cdn.ckeditor.com/ckeditor5/12.1.0/classic/ckeditor.js"></script><textarea id="textfile_edit_area" style="width:100%;height:300px;">'.$data.'</textarea><script>setTimeout(function() { ClassicEditor.create( document.querySelector( "#textfile_edit_area" )).catch( function(error) { console.error( error ); } );  }, 500);</script>';
-				} else {
+				if(in_array($info['extension'], ['html','html'])){
+					$ret = '<script src="https://cdn.ckeditor.com/ckeditor5/12.1.0/classic/ckeditor.js"></script><textarea id="textfile_edit_area" style="width:100%;height:300px;">'.$data.'</textarea><script>setTimeout(function(){ ClassicEditor.create( document.querySelector( "#textfile_edit_area" )).catch( function(error){ console.error( error ); } );  }, 500);</script>';
+				}else{
 					$ret = '<textarea id="textfile_edit_area" style="width:100%;height:300px;">'.$data.'</textarea>';
 				}
 

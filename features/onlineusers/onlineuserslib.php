@@ -6,13 +6,12 @@
 * Date: 5/14/2024
 * Revision: 0.4.1
 ***************************************************************************/
- 
-if (!LIBHEADER) {
-	$sub = './';
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
 	while (!file_exists($sub . 'lib/header.php')) {
-		$sub = $sub == './' ? '../' : $sub . '../';
+		$sub = $sub == '' ? '../' : $sub . '../';
 	}
-	include($sub . 'lib/header.php'); 
+	include($sub . 'lib/header.php');
 }
 define('ONLINEUSERSLIB', true);
 
@@ -113,12 +112,21 @@ function onlineusers_delete($pageid, $featureid) {
 		"feature" => "onlineusers",
 	];
 
-	$SQL = use_template("dbsql/features.sql", $params, "delete_feature");
-	execute_db_sql($SQL);
-	$SQL = use_template("dbsql/features.sql", $params, "delete_feature_settings");
-	execute_db_sql($SQL);
+	try {
+		start_db_transaction();
+		$sql = [];
+		$sql[] = ["file" => "dbsql/features.sql", "subsection" => "delete_feature"];
+		$sql[] = ["file" => "dbsql/features.sql", "subsection" => "delete_feature_settings"];
 
-	resort_page_features($pageid);
+		// Delete feature
+		execute_db_sqls(fetch_template_set($sql), $params);
+
+		resort_page_features($pageid);
+		commit_db_transaction();
+	} catch (\Throwable $e) {
+		rollback_db_transaction($e->getMessage());
+		return false;
+	}
 }
 
 function onlineusers_buttons($pageid, $featuretype, $featureid) {

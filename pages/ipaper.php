@@ -11,12 +11,10 @@ include('header.php');
 
 callfunction();
 
-echo use_template("tmp/page.template", [], "end_of_page_template");
+echo fetch_template("tmp/page.template", "end_of_page_template");
 
 function view_ipaper() {
-	global $MYVARS;
-    $url = urlencode(trim(base64_decode($MYVARS->GET["doc_url"])));
-    //echo $url;
-    echo use_template("tmp/ipaper.template", ["doc_url" => $url], "view_ipaper_template");
+	$url = clean_myvar_req("doc_url", "string");
+	echo fill_template("tmp/ipaper.template", "view_ipaper_template", false, ["doc_url" => urlencode(trim(base64_decode($url)))]);
 }
 ?>

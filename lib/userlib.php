@@ -6,8 +6,13 @@
 * Date: 5/14/2024
 * Revision: 2.8.0
 ***************************************************************************/
-
-if (!LIBHEADER) { include('header.php'); }
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
+	}
+	include($sub . 'lib/header.php');
+}
 define('USERLIB', true);
 
 function random_quote() {
@@ -45,28 +50,26 @@ function randomimages($dir) {
     return $images;
 }
 
+function get_ip_address() {
+	return getHostByName(getHostName());
+}
+
 function load_user_cookie() {
 global $CFG, $USER;
 	if (!empty($_SESSION['userid'])) { //cookie exists
         $time = get_timestamp();
         $advanced_login = !empty($_SESSION["lia_original"]) ? "" : " AND ($time - last_activity < " . $CFG->cookietimeout.")";
 		$SQL = "SELECT * FROM users WHERE userid='" . $_SESSION['userid'] . "' $advanced_login";
-        if ($row = get_db_row($SQL)) { //Get user info from db, load into $USER global
-            $temp = new \stdClass;
-  			$temp->userid = $row['userid'];
-  			$temp->fname = $row['fname'];
-  			$temp->lname = $row['lname'];
-  			$temp->email = $row['email'];
-  			$temp->key = $row['userkey'];
-  			$temp->ip = $row['ip'];
-  			$_SESSION['userid'] = $temp->userid; //Used for CKeditor to know if user is logged in.
+		if ($row = get_db_row($SQL)) { //Get user info from db, load into $USER global
+			$temp = (object)$row;
+			$_SESSION['userid'] = $temp->userid; //Used for CKeditor to know if user is logged in.
 		} else {
-            $temp = new \stdClass;
-            $temp->userid = 0; $_SESSION['userid'] = "";
+			$temp = (object)["userid" => 0];
+			$_SESSION['userid'] = "";
 		}
 	} else {
-        $temp = new \stdClass;
-        $temp->userid = 0; $_SESSION['userid'] = "";
+		$temp = (object)["userid" => 0];
+		$_SESSION['userid'] = "";
     }
     $USER = $temp;
 }
@@ -95,7 +98,7 @@ global $CFG, $USER;
 	$created = false;
 
 	try {
-        start_db_transaction();
+      start_db_transaction();
 		$temp = create_random_password();
 		$key = md5($user['email']) . md5(time());
 		$time = get_timestamp();
@@ -111,8 +114,9 @@ global $CFG, $USER;
 			'time' => $time,
 		];
 		$userid = execute_db_sql(fetch_template("dbsql/users.sql", "create_user"), $params);
-		$defaultrole = get_db_field("default_role", "pages", "pageid = ||pageid||", ["pageid" => $CFG->SITEID]);
-		$role_assignment = execute_db_sql(fetch_template("dbsql/roles.sql", "insert_role_assignment"), ["userid" => $userid, "roleid" => $defaultrole, "pageid" => $CFG->SITEID]);
+		$defaultrole = get_default_role($CFG->SITEID);
+		$SQL = fetch_template("dbsql/roles.sql", "insert_role_assignment");
+		$role_assignment = execute_db_sql($SQL, ["userid" => $userid, "roleid" => $defaultrole, "pageid" => $CFG->SITEID, "confirm" => 0]);
 		commit_db_transaction();
 
 		if ($userid && $role_assignment) {
@@ -179,7 +183,7 @@ global $CFG;
 		"temp" => $temp,
 		"config" => $CFG,
 	];
-	return use_template("tmp/user.template", $params, "confirmation_email_template");
+	return fill_template("tmp/user.template", "confirmation_email_template", false, $params);
 }
 
 function get_user_name($userid) {
@@ -211,7 +215,7 @@ global $CFG, $USER, $MYVARS;
 }
 
 function nameize($str, $a_char = ["'", "-", " ", '"', '.']) {
-    $str = stripslashes(trim($str));
+    $str = trim($str);
     $str = preg_replace('!\s+!', ' ', $str);
     $name_parts = explode(" ", $str);
 

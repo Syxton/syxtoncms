@@ -9,7 +9,7 @@
 
 include ('../header.php');
 
-echo use_template("tmp/page.template", ["dirroot" => $CFG->directory], "page_js_css");
+echo fill_template("tmp/page.template", "page_js_css", false, ["dirroot" => $CFG->directory]);
 ?>
 
 <h3>Camper Lists</h3>
@@ -69,5 +69,5 @@ campers 13+ years old as of June 1st of the current year (or today if past June 
 <div id="downloadfile" style="display: none"></div>
 
 <?php
-    echo use_template("tmp/page.template", [], "end_of_page_template");
+    echo fetch_template("tmp/page.template", "end_of_page_template");
 ?>

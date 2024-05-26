@@ -59,12 +59,15 @@ global $MYVARS, $CFG, $USER;
 	} else { echo create_validation_script("new_category_form" , 'ajaxapi(\'/features/forum/forum_ajax.php\',\'create_category\',\'&forumid=' . $forumid . '&pageid=' . $pageid . '&catname=\'+escape(document.getElementById(\'catname\').value),function() { simple_display(\'category_div\');}); close_modal();');}
 
 	echo '
-	<div class="formDiv" id="category_div">
+	<div class="formDiv" id="category_div" style="padding: 20px">
 		<input id="hiddenusername" type="hidden" /><input id="hiddenpassword" type="hidden" />
 		<form id="new_category_form">
 			<fieldset class="formContainer">
 				<div class="rowContainer">
-					<label for="catname">Category Name</label><input type="text" id="catname" name="catname" value="' . $title . '" data-rule-required="true" /><div class="tooltipContainer info">' . get_help("new_category") . '</div><br />
+					<label class="rowTitle" for="catname">Category Name</label>
+                    <input type="text" id="catname" name="catname" value="' . $title . '" data-rule-required="true" />
+                    <div class="tooltipContainer info">' . get_help("new_category") . '</div>
+                    <div class="spacer" style="clear: both;"></div>
 				</div>
 			</fieldset>
             <input class="submit" name="submit" type="submit" value="Submit" style="margin: 0px auto;display: block;" />
@@ -155,7 +158,7 @@ global $CFG;
 		"editorvalue" => $editorvalue,
 		"title" => $title,
 	];
-	echo use_template("tmp/forum.template", $params, "create_discussion_form", "forum");
+	echo fill_template("tmp/forum.template", "create_discussion_form", "forum", $params);
 }
 
 ?>

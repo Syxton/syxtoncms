@@ -1,0 +1,58 @@
+add_edit_form||
+	<div class="formDiv" id="new_campaign_div">
+		<form id="campaign_form">
+			<fieldset class="formContainer">
+				<div class="rowContainer">
+					<label class="rowTitle" for="title">Campaign Name</label>
+					<input type="text" id="title" name="title" value="||title||" data-rule-required="true" data-msg-required="||titlereq||" />
+					<div class="tooltipContainer info">||titlehelp||</div><br />
+				</div>
+				<div class="rowContainer">
+					<label class="rowTitle" for="title">Goal Amount $</label>
+					<input type="text" id="goal" name="goal" value="||goal||" data-rule-required="true" data-rule-number="true"  data-rule-min="0" data-msg-required="||goalreq||" />
+					<div class="tooltipContainer info">||goalhelp||</div><br />
+				</div>
+				<div class="rowContainer">
+					<label class="rowTitle" for="description">Goal Description</label>
+					<textarea type="text" id="description" name="description" data-rule-required="true" data-msg-required="||descreq||">||description||</textarea>
+					<div class="tooltipContainer info">||deschelp||</div><br />
+				</div>
+				<div class="rowContainer">
+					<label class="rowTitle" for="email">Paypal Email Address</label>
+					<input type="text" id="email" name="email" value="||email||" data-rule-required="true" data-rule-email="true" data-msg-required="||emailreq||" data-msg-email="||emailerror||" />
+					<div class="tooltipContainer info">||emailhelp||</div><br />
+				</div>
+				<div class="rowContainer">
+					<label class="rowTitle" for="email">Paypal PDT token</label>
+					<input type="text" id="token" name="token" value="||token||" data-rule-required="true" data-msg-required="||tokenreq||" />
+					<div class="tooltipContainer info">||tokenhelp||</div><br />
+				</div>
+				<div class="rowContainer">
+					<label class="rowTitle" for="shared">Share Campaign</label>
+					<select id="shared" name="shared" data-rule-required="true">
+							<option value="">Select One...</option>
+							<option value="0" ||noselected||>Not Shared</option>
+							<option value="1" ||yesselected||>Shared</option>
+					</select>
+					<div class="tooltipContainer info">||sharedhelp||</div><br />
+				</div>
+					<br />
+					<input class="submit" name="submit" type="submit" value="||button|| Campaign" style="margin: auto;display:block;clear:both;" />
+					<div id="error_div"></div>	
+			</fieldset>
+		</form>
+	</div>
+	<div id="donation_script" style="display:none">||validationscript||</div>
+||add_edit_form
+
+back_to_campaign_form||
+	<a class="buttonlike" style="position: absolute;" href="javascript: void(0);"
+		onclick="ajaxapi('/features/donate/donate_ajax.php',
+								'select_campaign_form',
+								'&featureid=||featureid||&pageid=||pageid||',
+								function() {
+									simple_display('donation_display');
+								});">
+		Back
+	</a>
+||back_to_campaign_form

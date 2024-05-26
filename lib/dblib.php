@@ -6,8 +6,13 @@
 * Date: 5/14/2024
 * Revision: 1.7.7
 ***************************************************************************/
-
-if (!LIBHEADER) { include ('header.php'); }
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
+	}
+	include($sub . 'lib/header.php');
+}
 define('DBLIB', true);
 
 global $conn; // Database connection global;
@@ -51,7 +56,7 @@ global $MYVARS;
 
 function clean_var_req($var, $type, $name = "") {
     $var = clean_var_opt($var, $type, NULL);
-    if ($var === NULL) {
+    if (is_null($var)) {
         trigger_error("Missing required variable: $name", E_USER_ERROR);
         throw new Exception("Missing required variable: $name");
     }
@@ -60,48 +65,46 @@ function clean_var_req($var, $type, $name = "") {
 
 function clean_var_opt($var, $type, $default) {
 global $CFG;
-    if (empty($var)) { return $default; }
+	if (is_null($var)) { return $default; }
 
-    switch ($type) {
-        case "int":
-            $var = empty($var) ? $default : (int)$var;
-            break;
-        case "float":
-            $var = empty($var) ? $default : (float)$var;
-            break;
-        case "string":
-            $var = empty($var) ? $default : urldecode((string)$var);
-            break;
+	switch ($type) {
+		case "int":
+			$var = filter_var($var, FILTER_VALIDATE_INT, FILTER_NULL_ON_FAILURE) ?? $default;
+			break;
+		case "float":
+			$var = filter_var($var, FILTER_VALIDATE_FLOAT, FILTER_NULL_ON_FAILURE) ?? $default;
+			break;
+		case "string":
+			$var = !strlen((string)$var) ? $default : urldecode((string)$var);
+			break;
 		case "array":
 			$var = empty($var) ? $default : (array)$var;
 			break;
-        case "html":
-            //MS Word Cleaner HTMLawed
-	        //http://www.bioinformatics.org/phplabware/internal_utilities/htmLawed/more.htm
-	        include_once ($CFG->dirroot . '/scripts/wordcleaner.php');
-            $params = [
-                'comment' => 1,
-                'clean_ms_char' => 1,
-                'css_expression' => 1,
-                'keep_bad' => 0,
-                'make_tag_strict' => 1,
-                'schemes' => '*:*',
-                'valid_xhtml' => 1,
-                'balance' => 1,
-            ];
-            $var = empty($var) ? $default : urldecode(htmLawed((string)$var, $params));
-            break;
-        case "bool":
-            $var = trim((string)strtolower($var)) === "false" ? false : $var;
-            $var = trim((string)$var) === "0" ? false : $var;
-            $var = (bool)$var;
-            break;
-        default:
-            return $default;
-            break;
-    }
+		case "html":
+			//MS Word Cleaner HTMLawed
+			//http://www.bioinformatics.org/phplabware/internal_utilities/htmLawed/more.htm
+			include_once ($CFG->dirroot . '/scripts/wordcleaner.php');
+			$params = [
+					'comment' => 1,
+					'clean_ms_char' => 1,
+					'css_expression' => 1,
+					'keep_bad' => 0,
+					'make_tag_strict' => 1,
+					'schemes' => '*:*',
+					'valid_xhtml' => 1,
+					'balance' => 1,
+			];
+			$var = empty($var) ? $default : urldecode(htmLawed((string)$var, $params));
+			break;
+		case "bool":
+			$var = filter_var($var, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE) ?? $default;
+			break;
+		default:
+			return $default;
+			break;
+	}
 
-    return $var;
+	return $var;
 }
 
 function execute_db_sqls($SQLS, $vars = []) {
@@ -277,14 +280,14 @@ function authenticate(string $username, string $password) {
 	global $CFG, $USER;
 	$time = get_timestamp();
 	$params = ["username" => $username, "password" => $password];
-	$SQL = use_template("dbsql/db.sql", $params, "authenticate"); // Authenticate
-	if (!$user = get_db_row($SQL)) { // COULD NOT AUTHENTICATE
-		$SQL = use_template("dbsql/db.sql", $params, "authenticate_alt");
-		if ($user = get_db_row($SQL)) { // Attempt authentication on alternate password field
+	// Authenticate
+	if (!$user = get_db_row(fetch_template("dbsql/db.sql", "authenticate"), $params)) { // COULD NOT Authenticate
+		// Check alternate password field.
+		if ($user = get_db_row(fetch_template("dbsql/db.sql", "authenticate_alt"), $params)) { // Attempt authentication on alternate password field
 			$_SESSION['userid'] = $user['userid'];
-			$params = ["userid" => $user['userid'], "time" => $time, "ip" => $_SERVER['REMOTE_ADDR'], "isfirst" => false, "clear_alt" => false];
-			$SQL = use_template("dbsql/db.sql", $params, "update_last_activity");
-			execute_db_sql($SQL);
+			$params = ["userid" => $user['userid'], "time" => $time, "ip" => $_SERVER['REMOTE_ADDR']];
+
+			execute_db_sql(fetch_template("dbsql/db.sql", "update_last_activity", false, ["isfirst" => false, "clear_alt" => false]), $params);
 			return $user; // Password reset authentication successful
 		}
 
@@ -292,8 +295,8 @@ function authenticate(string $username, string $password) {
 		return false; // Password authentication failed
 	} else { // Regular authentication successful.
 		if (strlen($user['temp']) > 0) { // on first ever login, switch temp password for actual password
-			$SQL = use_template("dbsql/db.sql", ["user" => $user], "activate_account");
-			execute_db_sql($SQL);
+			$SQL = fetch_template("dbsql/db.sql", "activate_account");
+			execute_db_sql($SQL, ["user" => $user]);
 
 			// Send account activated email.
 			$FROMUSER = new \stdClass;
@@ -306,7 +309,7 @@ function authenticate(string $username, string $password) {
 				"siteowner" => $CFG->siteowner,
 				"siteemail" => $CFG->siteemail,
 			];
-			$message = use_template("tmp/page.template", $params, "account_activation_email");
+			$message = fill_template("tmp/page.template", "account_activation_email", false, $params);
 			$subject = $CFG->sitename . ' Account Activation';
 
 			send_email($user, $FROMUSER, $subject, $message);
@@ -314,9 +317,9 @@ function authenticate(string $username, string $password) {
 		}
 
 		$_SESSION['userid'] = $user['userid'];
-		$params = ["userid" => $user['userid'], "time" => $time, "ip" => $_SERVER['REMOTE_ADDR'], "isfirst" => (!$user["first_activity"]), "clear_alt" => true];
-		$SQL = use_template("dbsql/db.sql", $params, "update_last_activity");
-		execute_db_sql($SQL);
+		$params = ["userid" => $user['userid'], "time" => $time, "ip" => $_SERVER['REMOTE_ADDR']];
+		$SQL = fetch_template("dbsql/db.sql", "update_last_activity", false, ["isfirst" => (!$user["first_activity"]), "clear_alt" => true]);
+		execute_db_sql($SQL, $params);
 
 		log_entry("user", $user['userid'], "Login");
 		return $user;
@@ -325,8 +328,7 @@ function authenticate(string $username, string $password) {
 
 function key_login($key) {
 global $CFG, $USER;
-	$SQL = use_template("dbsql/db.sql", ["key" => $key], "authenticate_key");
-	if ($user = get_db_row($SQL)) {
+	if ($user = get_db_row(fetch_template("dbsql/db.sql", "authenticate_key"), ["key" => $key])) {
 		$USER->userid = $user['userid'];
 		$_SESSION['userid'] = $user['userid'];
 		log_entry("user", $user['userid'], "Login");
@@ -384,7 +386,7 @@ function senderror($message) {
 	die($message);
 }
 
-function log_entry($feature = null, $info = null, $desc = null, $debug = null) {
+function log_entry($feature = '', $info = '', $desc = '', $debug = '') {
 global $CFG, $USER, $PAGE;
 	$userid = is_logged_in() ? $USER->userid : 0;
 	$pageid = $PAGE->id ?? $CFG->SITEID;
@@ -395,21 +397,24 @@ global $CFG, $USER, $PAGE;
 	}
 	if (!$userid && $desc == "Login") {
 		$userid = $info;
-		$info = null;
 	}
+
+	$info ??= '';
+	$desc ??= '';
+	$debug ??= '';
 
 	$params = [
 		"userid" => $userid,
 		"ip" => $_SERVER['REMOTE_ADDR'],
 		"pageid" => $pageid,
 		"time" => get_timestamp(),
-		"feature" => dbescape($feature),
-		"info" => dbescape($info),
-		"desc" => dbescape($desc),
-		"debug" => dbescape($debug),
+		"feature" => $feature,
+		"info" => $info,
+		"desc" => $desc,
+		"debug" => $debug,
 	];
-	$SQL = use_template("dbsql/db.sql", $params, "logsql");
-	execute_db_sql($SQL);
+
+	execute_db_sql(fetch_template("dbsql/db.sql", "logsql"), $params);
 }
 
 ?>

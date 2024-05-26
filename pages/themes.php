@@ -8,19 +8,19 @@
 ***************************************************************************/
 include('header.php');
 
-$params = ["dirroot" => $CFG->directory];
-echo use_template("tmp/page.template", $params, "page_js_css");
-echo use_template("tmp/themes.template", $params, "theme_manager_header_template");
+echo fill_template("tmp/page.template", "page_js_css", false, ["dirroot" => $CFG->directory]);
+echo fill_template("tmp/themes.template", "theme_manager_header_template", false, ["dirroot" => $CFG->directory]);
 
 callfunction();
 
-echo use_template("tmp/page.template", [], "end_of_page_template");
+echo fetch_template("tmp/page.template", "end_of_page_template");
 
 function change_theme() {
-global $CFG, $MYVARS, $USER, $PAGE;
+global $CFG, $PAGE;
 	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
-	$feature = isset($MYVARS->GET['feature']) ? dbescape($MYVARS->GET['feature']) : false;
-	$featureid = isset($MYVARS->GET['featureid']) ? dbescape($MYVARS->GET['featureid']) : false;
+	$feature = clean_myvar_opt("feature", "string", false);
+	$featureid = clean_myvar_opt("featureid", "int", false);
+
 	$PAGE = new \stdClass;
 	$PAGE->id = $pageid;
 	$PAGE->themeid = get_page_themeid($PAGE->id);
@@ -37,10 +37,10 @@ global $CFG, $MYVARS, $USER, $PAGE;
 	} else {
 		include_once($CFG->dirroot . '/features/' . $feature . '/' . $feature . 'lib.php');
 		$function = "display_$feature";
-		$params["pane"] = use_template("tmp/themes.template", ["left" => custom_styles_selector($pageid, $feature, $featureid), "right" => $function($pageid, "side", $featureid)], "make_template_selector_panes_template");
+		$p = ["left" => custom_styles_selector($pageid, $feature, $featureid), "right" => $function($pageid, "side", $featureid)];
+		$params["pane"] = fill_template("tmp/themes.template", "make_template_selector_panes_template", false, $p);
 	}
-
 	
-	echo use_template("tmp/themes.template", $params, "change_theme_template");
+	echo fill_template("tmp/themes.template", "change_theme_template", false, $params);
 }
 ?>

@@ -4,6 +4,12 @@ get_event||
     WHERE eventid = ||eventid||
 ||get_event
 
+update_reg_event||
+	UPDATE events_registrations_values
+	SET eventid = ||eventid||
+	WHERE regid = ||regid||
+||update_reg_event
+
 insert_event||
     INSERT INTO events
 	(pageid, template_id, name, category, location, allowinpage, start_reg, stop_reg, max_users, event_begin_date, event_begin_time, event_end_date, event_end_time,
@@ -56,7 +62,7 @@ get_events_having_same_template||
                         WHERE template_id = ||templateid||
                      )
     ||year{{
-    AND date > '||fromdate||' AND date < '||todate||'
+    AND date > ||fromdate|| AND date < ||todate||
     }}year||
     ORDER BY regid DESC
 ||get_events_having_same_template
@@ -112,15 +118,75 @@ events_requests_recalculate||
 ||events_requests_recalculate
 
 get_contacts_list||
-    SELECT DISTINCT CONCAT(contact,': ',email,': ',phone) as admin_contact
+    SELECT DISTINCT CONCAT(contact, ': ', email, ': ', phone) as admin_contact
     FROM events
     WHERE confirmed = 1
     ORDER BY contact, eventid DESC
 ||get_contacts_list
 
 get_payable_list||
-    SELECT DISTINCT CONCAT(payableto,': ',checksaddress,': ',paypal) as admin_contact
+    SELECT DISTINCT CONCAT(payableto, ': ', checksaddress, ': ', paypal) as admin_contact
     FROM events
     WHERE payableto != ''
     AND confirmed = 1
 ||get_payable_list
+
+find_paypal_transfer||
+	SELECT *
+	FROM logfile
+	WHERE feature = "events"
+	AND description = "Paypal"
+	AND info = ||info||
+||find_paypal_transfer
+
+update_reg_value||
+	UPDATE events_registrations_values
+	SET value = ||value||
+	WHERE elementname = ||elementname||
+	AND regid = ||regid||
+||update_reg_value
+
+update_reg_status||
+	UPDATE events_registrations
+	SET verified = ||verified||
+	WHERE regid = ||regid||
+||update_reg_status
+
+update_reg_event_info||
+	UPDATE events_registrations
+	SET eventid = ||eventid||, email = ||email||, code = ||code||
+	WHERE regid = ||regid||
+||update_reg_event_info
+
+reg_copy_create_temptable||
+	CREATE TEMPORARY TABLE temp_updates (
+		id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+		entryid INT(11) UNSIGNED NOT NULL,
+		newvalue LONGTEXT COLLATE 'utf8_general_ci'
+	)
+||reg_copy_create_temptable
+
+reg_update_from_temptable||
+	UPDATE events_registrations_values e, temp_updates t
+	SET e.value = t.newvalue WHERE e.entryid = t.entryid AND e.regid = ||regid||
+||reg_update_from_temptable
+
+insert_registration||
+	INSERT INTO events_registrations (eventid, date, email, code, verified)
+	VALUES(||eventid||, ||date||, ||email||, ||code||, ||verified||)
+||insert_registration
+
+insert_registration_values||
+	INSERT INTO events_registrations_values (regid, value, eventid, elementname)
+	VALUES(||regid||, ||value||, ||eventid||, ||elementname||)
+||insert_registration_values
+
+delete_registration||
+	DELETE FROM events_registrations
+	WHERE regid = ||regid||
+||delete_registration
+
+delete_registration_values||
+	DELETE FROM events_registrations_values
+	WHERE regid = ||regid||
+||delete_registration_values

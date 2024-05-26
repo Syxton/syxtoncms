@@ -99,12 +99,16 @@ function bloglocker_delete($pageid, $featureid) {
 		"feature" => "bloglocker",
 	];
 
-	$SQL = use_template("dbsql/features.sql", $params, "delete_feature");
-    execute_db_sql($SQL);
-    $SQL = use_template("dbsql/features.sql", $params, "delete_feature_settings");
-    execute_db_sql($SQL);
-
-	resort_page_features($pageid);
+	try {
+		start_db_transaction();
+		execute_db_sql(fetch_template("dbsql/features.sql", "delete_feature"), $params);
+		execute_db_sql(fetch_template("dbsql/features.sql", "delete_feature_settings"), $params);
+		resort_page_features($pageid);
+		commit_db_transaction();
+	} catch (\Throwable $e) {
+		rollback_db_transaction($e->getMessage());
+		return false;
+	}
 }
 
 function bloglocker_buttons($pageid, $featuretype, $featureid) {

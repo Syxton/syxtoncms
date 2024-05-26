@@ -6,8 +6,13 @@
 * Date: 5/14/2024
 * Revision: 0.0.8
 ***************************************************************************/
-
-if (!LIBHEADER) { include('header.php'); }
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
+	}
+	include($sub . 'lib/header.php');
+}
 define('COMLIB', true);
 
 function send_email($touser, $fromuser, $subject, $message, $cc = false, $bcc = false) {

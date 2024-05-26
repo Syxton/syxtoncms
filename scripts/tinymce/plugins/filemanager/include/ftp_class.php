@@ -5,7 +5,7 @@ Class FTPClient
 	// *** Class variables
 	private $connectionId;
 	private $loginOk = false;
-	private $messageArray = array();
+	private $messageArray = [];
 
 	public function __construct() { }
 
@@ -60,13 +60,13 @@ Class FTPClient
 
 	public function changeDir($directory)
 	{
-		  if (ftp_chdir($this->connectionId, $directory)) {
-		      $this->logMessage('Current directory is now: ' . ftp_pwd($this->connectionId));
-		      return true;
-		  } else { 
-		      $this->logMessage('Couldn\'t change directory');
-		      return false;
-		  }
+	    if (ftp_chdir($this->connectionId, $directory)) {
+	        $this->logMessage('Current directory is now: ' . ftp_pwd($this->connectionId));
+	        return true;
+	    } else { 
+	        $this->logMessage('Couldn\'t change directory');
+	        return false;
+	    }
 	}
 
 	public function getDirListing($directory = '.', $parameters = '-la')
@@ -74,9 +74,9 @@ Class FTPClient
 		echo shell_exec('whoami')." is who i am </br>";
 		echo "Current directory is now: " . ftp_pwd($this->connectionId) . "</br>";
 
-		  // get contents of the current directory
-		  $contentsArray = ftp_rawlist($this->connectionId, $parameters . '  ' . $directory);
+	    // get contents of the current directory
+	    $contentsArray = ftp_rawlist($this->connectionId, $parameters . '  ' . $directory);
 	 	echo error_get_last();
-		  return $contentsArray;
+	    return $contentsArray;
 	}
 }

@@ -1,6 +1,6 @@
 main_js_css||
   ||echo js_code_wrap('var dirfromroot = "' . directory . '";');::directory||
-  ||echo js_code_wrap(use_template("tmp/pagelib.template", [], "defer_script"));::none||
+  ||echo js_code_wrap(fill_template("tmp/pagelib.template", "defer_script"));::none||
   ||echo get_js_set("main");::none||
   ||echo get_css_tags(["main"]);::none||
 ||main_js_css
@@ -85,7 +85,15 @@ defer_script||
 ||defer_script
 
 print_logout_button_switchback_template||
-<a title="Switch back to: ||lia_name||" href="javascript: void(0)" onclick="ajaxapi('/features/adminpanel/adminpanel_ajax.php','logoutas','',function() { go_to_page(||siteid||);});">Switch back to: ||lia_name||</a><br />
+    <a title="Switch back to: ||lia_name||" href="javascript: void(0)"
+        onclick="ajaxapi('/features/adminpanel/adminpanel_ajax.php',
+                         'logoutas',
+                         '',
+                         function() {
+                            go_to_page(||siteid||);
+                         });">
+        Switch back to: ||lia_name||
+    </a><br />
 ||print_logout_button_switchback_template
 
 print_logout_button_template||
@@ -100,16 +108,16 @@ print_logout_button_template||
 ||print_logout_button_template
 
 get_css_box_template1||
-<div class="pagename_box" style="border: 2px solid ||pagenamebordercolor||;background-color:||pagenamebgcolor||;">
-	<div class="box_title" style="color:||pagenamefontcolor||;">
-		<strong>||title||</strong>
-		<br />
-		<span style="color:||pagenamefontcolor||;font-size:.75em;">
-			||content||
-		</span>
+	<div class="pagename_box" style="border: 2px solid ||pagenamebordercolor||;background-color:||pagenamebgcolor||;">
+		<div class="box_title" style="color:||pagenamefontcolor||;">
+			<strong>||title||</strong>
+			<br />
+			<span style="color:||pagenamefontcolor||;font-size:.75em;">
+				||content||
+			</span>
+		</div>
+		||*buttons||
 	</div>
-	||*buttons||
-</div>
 ||get_css_box_template1
 
 get_css_box_template2||
@@ -183,8 +191,8 @@ get_button_layout_template||
 ||get_button_layout_template
 
 make_search_box_template||
-<div style="position:relative;width:95%;margin-right:auto;margin-left:auto;">
-  <div id="loading_overlay_||name_addition||" style="text-align:center;position:absolute;width:100%;height:99%;vertical-align:middle;background-color:white;opacity:.6;display:none;">
+<div>
+  <div id="loading_overlay_||name_addition||" style="text-align:center;position:absolute;width:100%;height:99%;vertical-align:middle;background-color: white;opacity:.6;display:none;">
 	<img src="||wwwroot||/images/loading_large.gif" alt="loading image" />
   </div>
   <div id="searchcontainer_||name_addition||" style="padding:5px; display:block; width:99%;">
@@ -194,8 +202,9 @@ make_search_box_template||
 ||make_search_box_template
 
 format_popup_template||
-<div style="padding:||padding||;border:1px solid silver;border-radius: 5px;height:||height||;">
-	<h3>||title||</h3><br />
+<div style="padding:||padding||;height:||*height||;">
+	<h2 style="text-align:center">||title||</h2>
+	<br />
 	||content||
 </div>
 ||format_popup_template

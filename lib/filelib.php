@@ -6,13 +6,18 @@
 * Date: 5/14/2024
 * Revision: 0.0.7
 ***************************************************************************/
-
-if (!LIBHEADER) { include('header.php'); }
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
+	}
+	include($sub . 'lib/header.php');
+}
 define('FILELIB', true);
 
 // Make Javascript loaded array.
 if (!isset($LOADED)) {
-  $LOADED = [];
+    $LOADED = [];
 }
 
 function get_file_captions($path) {
@@ -127,56 +132,90 @@ global $CFG;
 	return $protocol;
 }
 
-function fetch_template($file, $subsection, $feature = false) {
-global $CFG;
+/**
+ * Fetches a template file and returns its contents.
+ *
+ * @param string $file The name of the file to fetch.
+ * @param mixed $subsection The subsection(s) of the file to fetch. Can be a string or an array.
+ * @param bool|string $feature Optional. The name of the feature the file belongs to.
+ * @param array $params Optional. An array of parameters to process qualifiers with.
+ * @return string|array The contents of the fetched template. If $subsection is an array, an array of fetched templates is returned.
+ * @throws Exception If the template or subsection is not found.
+ */
+function fetch_template($file, $subsection, $feature = false, $params = []) {
+    global $CFG;
+    
+    // If $subsection is an array, fetch each subsection, store the results in $contents.
     if (is_array($subsection)) {
         $contents = [];
-        foreach($subsection as $sub) {
-            if (!$temp = fetch_template($file, $sub, $feature)) {
-                trigger_error("Fetching template $file:$subsection failed.", E_USER_ERROR);
-				throw new Exception("Fetching template $file:$subsection failed.");
-			}
-            $contents[] = $temp;
+        foreach ($subsection as $sub) {
+            $contents[] = fetch_template($file, $sub, $feature, $params);
         }
     } else {
+        // If $feature is set, add the feature to the file path.
         if ($feature) {
             $file = "features/$feature/$file";
         }
-
-        if (!file_exists($CFG->dirroot . '/' . $file)) { // Template file not found.
-            trigger_error($CFG->dirroot . '/' . $file . " not found.", E_USER_ERROR);
-            throw new Exception($CFG->dirroot . '/' . $file . " not found.");
+        
+        // Check if the file exists.
+        $filePath = $CFG->dirroot . '/' . $file;
+        if (!file_exists($filePath)) {
+            throw new Exception("$filePath not found.");
         }
-
-        if (!$contents = file_get_contents($CFG->dirroot . '/' . $file)) {
-            trigger_error($CFG->dirroot . '/' . $file . " not able to be opened.", E_USER_ERROR);
-            throw new Exception($CFG->dirroot . '/' . $file . " not able to be opened.");
+        
+        // Fetch the contents of the file.
+        $contents = file_get_contents($filePath);
+        if ($contents === false) {
+            throw new Exception("$filePath not able to be opened.");
         }
-
-        if (!empty($subsection)) { // Templates with multiple sections.
-            if (!$contents = template_subsection($contents, $subsection)) {
-				trigger_error("Fetching template $file:$subsection failed.", E_USER_ERROR);
-				throw new Exception("Fetching template $file:$subsection failed.");
+        
+        // If $subsection is set, process the subsection.
+        if (!empty($subsection)) {
+            $contents = template_subsection($contents, $subsection);
+            if ($contents === false) {
+                throw new Exception("Fetching template $file:$subsection failed.");
             }
         }
-        $contents = trim($contents);
+        
+        // If $params is set, process qualifiers.
+        if (!empty($params)) {
+            $contents = templates_process_qualifiers($contents, $params);
+        }
     }
-	return is_array($contents) ? $contents : trim($contents);
+    
+    // Return the contents of the template(s).
+    return is_array($contents) ? $contents : trim($contents);
 }
 
+/**
+ * Fetches a set of templates and returns their contents.  Only processes qualifiers if params are sent.
+ *
+ * @param array $templates An array of templates, each containing 'file', 'subsection' and 'feature' keys.
+ * @return array The contents of the fetched templates.
+ * @throws Exception If a template or subsection is not found.
+ */
 function fetch_template_set($templates) {
-global $CFG;
+    global $CFG;
+    
+    // Initialize variables.
     $contents = [];
+
+    // Loop through each template.
     foreach ($templates as $template) {
-		$temp = false;
         $file = $template['file'] ?? false;
         $subsection = $template['subsection'] ?? false;
         $feature = $template['feature'] ?? false;
-        if ($file && $subsection) { // required.
+
+        // Check if the template has both a file and subsection.
+        if ($file && $subsection) {
+            // Fetch the template and check if it was found.
             if (!$temp = fetch_template($file, $subsection, $feature)) {
-				trigger_error("Fetching template $file:$subsection failed.", E_USER_ERROR);
+                trigger_error("Fetching template $file:$subsection failed.", E_USER_ERROR);
                 throw new \Exception("Fetching template $file:$subsection failed.");
-			}
+            }
+            
+            // If the subsection is an array, merge the template contents with the contents.
+            // Otherwise, add the template contents to the contents.
             if (is_array($subsection)) {
                 $contents = array_merge($contents, $temp);
             } else {
@@ -184,164 +223,273 @@ global $CFG;
             }
         }
     }
+    
+    // Return the fetched templates.
     return $contents;
 }
 
-// Main template function
-function use_template($file, $params = [], $subsection = false, $feature = false) {
+/**
+ * Fill a template with variables.
+ * @param string $file The name of the template file that the template is found in.
+ * @param string|array $subsection The subsection of the template to fill. Can be a string or an array of strings.
+ * @param string $feature The name of the feature template folders are in. Defaults to false for core templates.
+ * @param array $params The parameters to use when filling the template. Defaults to an empty array.
+ * @param bool $allowpartial Whether to allow a return of a partially filled template. Defaults to false. (Used mostly for dynamic sql building)
+ * @return string|array The filled template. If the template is an array, it will be returned as an array. Otherwise, it will be returned as a string.
+ * @throws Exception If the template or subsection is not found.
+ */
+function fill_template($file, $subsection, $feature = false, $params = [], $allowpartial = false) {
 	$v = $params;
-    $contents = "";
+	$contents = "";
 
-    if (is_array($subsection)) {
-        $contents = [];
-        $i = 0;
-        foreach($subsection as $sub) {
-            $p = ismultiarray($params) ? array_slice($params, $i, 1)[0] : $params;
-            $contents[] = use_template($file, $p, $sub, $feature);
-            $i++;
-        }
-    } else {
-		if (!$temp = fetch_template($file, $subsection, $feature)) {
+	// If subsection is an array, fill each subsection separately.
+	if (is_array($subsection)) {
+		$contents = [];
+		$i = 0;
+		foreach($subsection as $sub) {
+			$p = ismultiarray($params) ? array_slice($params, $i, 1)[0] : $params;
+			$contents[] = fill_template($file, $sub, $feature, $p);
+			$i++;
+		}
+	} else {
+		// Fetch the template and check if it was found.
+		if (!$temp = fetch_template($file, $subsection, $feature, $params)) {
 			trigger_error("Fetching template $file:$subsection failed.", E_USER_ERROR);
 			throw new \Exception("Fetching template $file:$subsection failed.");
 		}
-        $contents = $temp;
-        $contents = templates_process_qualifiers($contents, $params); // Look for qualifiers ||x{{ ~~ }}x||
+		$contents = $temp;
 
-        // Look for template variables
-        $pattern = '/\|\|((?s).*?)\|\|/i'; //Look for stuff between ||
-        preg_match_all($pattern, $contents, $matches);
+		// Look for template variables
+		$pattern = '/\|\|((?s).*?)\|\|/i'; //Look for stuff between ||
+		preg_match_all($pattern, $contents, $matches);
 
-        foreach ($matches[1] as $match) { // Loop through each instance where the template variable bars are found. ie || xxx ||
-            $optional = "";
-            // Check for leading asterisks denoting optional variables.
-            if (strpos($match, "*") === 0) {
-                // Remove leading asterisks.
-                $match = substr($match, 1);
-                $optional = "*";
-            }
+		// Loop through each instance where the template variable bars are found. ie || xxx ||
+		foreach ($matches[1] as $match) {
+			$optional = "";
+			// Check for leading asterisks denoting optional variables.
+			if (strpos($match, "*") === 0) {
+				// Remove leading asterisks.
+				$match = substr($match, 1);
+				$optional = "*";
+			}
 
-            $replacement = template_get_functionality($match);
+			// Check if the matched variable exists.
+			if ($varisset = template_variable_exists($match, $params)) {
+				// Get the functionality of the variable.
+				$replacement = template_get_functionality($match);
 
-            // Check to make sure that a matched variable exists.
-            if ($varisset = template_variable_exists($match, $params)) {
-                ob_start(); // Capture eval() output
-                eval($replacement);
-                $contents = str_replace("||$optional$match||", ob_get_clean(), $contents);
-            } else {
-                $contents = str_replace("||$optional$match||", "", $contents);
+				ob_start(); // Capture eval() output
+				eval($replacement);
+				$contents = str_replace("||$optional$match||", ob_get_clean(), $contents);
+			} else {
+				// If the variable is not found, remove it from the template.
+				if (!$allowpartial) {
+					$contents = str_replace("||$optional$match||", "", $contents);
+				}
 
-                if (!$optional) {
-                    trigger_error("Expected $subsection template variable $match not found in parameters array.", E_USER_NOTICE);
-                }
-            }
-        }
-    }
+				// If the variable is not optional and allowpartial is false, trigger a notice.
+				if (!$optional && !$allowpartial) {
+					error_log(print_r($contents, true));
+					trigger_error("Expected $subsection template variable $match not found in parameters array.", E_USER_NOTICE);
+				}
+			}
+		}
+	}
 	return is_array($contents) ? $contents : trim($contents);
 }
 
-function use_template_set($templates, $params = []) {
-	$v = $params;
-    $contents = [];
+/**
+ * Fills a set of templates with given parameters and returns the contents.
+ *
+ * @param array $templates An array of templates, each containing 'file', 'subsection' and 'feature' keys.
+ * @param array $params An optional array of parameters to fill the templates with.
+ * @return array The contents of the filled templates.
+ */
+function fill_template_set($templates, $params = []) {
+	// Initialize variables.
+	$contents = [];
 
-    if (is_array($templates)) {
-        $i = 0;
-        foreach($templates as $template) {
-            $file = $template['file'] ?? false;
-            $subsection = $template['subsection'] ?? false;
-            $feature = $template['feature'] ?? false;
-            $sliceoff = 1;
-            if ($file && $subsection) { // required.
-                if (is_array($subsection)) {
-                    $sliceoff = count($subsection);
-                    $p = ismultiarray($params) ? array_slice($params, $i, $sliceoff)[0] : $params;
-                    //$contents += use_template($file, $p, $subsection, $feature);
-					$contents = array_merge($contents, use_template($file, $p, $subsection, $feature));
-                } else {
-                    $p = ismultiarray($params) ? array_slice($params, $i, $sliceoff)[0] : $params;
-                    $contents[] = use_template($file, $p, $subsection, $feature);
-                }
-            }
+	// If templates is an array, fill each template separately.
+	if (is_array($templates)) {
+		$i = 0; // Counter for params array.
+		foreach($templates as $template) {
+			$file = $template['file'] ?? false; // Get the template file.
+			$subsection = $template['subsection'] ?? false; // Get the template subsection.
+			$feature = $template['feature'] ?? false; // Get the template feature.
+			$sliceoff = 1; // Number of params to slice off.
 
-            $i += $sliceoff;
-        }
-    }
+			// If template file and subsection are specified, fill the template.
+			if ($file && $subsection) {
+				if (is_array($subsection)) {
+					$sliceoff = count($subsection); // If subsection is an array, slice off the count of subsections.
+					$p = ismultiarray($params) ? array_slice($params, $i, $sliceoff) : $params; // Get the params for the template.
+					$contents = array_merge($contents, fill_template($file, $subsection, $feature, $p)); // Fill the template and merge with contents.
+				} else {
+					// If a single subsection, but multiarray, slicing 1 off, and only send a simple array. array()[0]
+					$p = ismultiarray($params) ? array_slice($params, $i, 1)[0] : $params; // Get the params for the template.
 
+					$contents[] = fill_template($file, $subsection, $feature, $p); // Fill the template and add to contents.
+				}
+			}
+			$i += $sliceoff; // Increment the params counter.
+		}
+	}
+	
+	// Return the filled templates.
 	return $contents;
 }
 
-// Grab only a subsection of the template
-function template_subsection($contents, $subsection) {
-	if (!empty($subsection)) { // Templates with multiple sections.
-		// Check if subsection exists.
-		if (strpos($contents, "$subsection||") === false) { return false; }
-		if (strpos($contents, "||$subsection") === false) { return false; }
+/**
+ * Replaces placeholders in content with actual values from an array.
+ *
+ * @param string $content The content to replace placeholders in.
+ * @param array $params An associative array of placeholders and their values.
+ * @return string The content with placeholders replaced.
+ */
+function fill_in_blanks($content, $params) {
+	// Loop through the parameters and replace placeholders in content.
+	foreach ($params as $key => $value) {
+		// Replace "||$key||" with the value in the content.
+		$content = str_replace("||$key||", $value, $content);
+	}
+	// Return the content with placeholders replaced.
+	return $content;
+}
 
+/**
+ * Extracts a subsection of a template.
+ *
+ * @param string $contents The contents of the template.
+ * @param string $subsection The subsection to extract.
+ * @return string|false The extracted subsection or false if not found.
+ */
+function template_subsection($contents, $subsection) {
+	// Templates with multiple sections.
+	if (!empty($subsection)) {
+		// Check if subsection exists.
+		if (strpos($contents, "$subsection||") === false) {
+			return false; // Subsection not found.
+		}
+		if (strpos($contents, "||$subsection") === false) {
+			return false; // Subsection not found.
+		}
+
+		// Get the start and end positions of the subsection.
 		$startsAt = strpos($contents, "$subsection||") + strlen("$subsection||");
 		$endsAt = strpos($contents, "||$subsection", $startsAt);
+
+		// Extract the subsection and trim whitespace.
 		return trim(substr($contents, $startsAt, $endsAt - $startsAt));
 	}
+
+	// Return the trimmed contents.
 	return trim($contents);
 }
 
+/**
+ * Process qualifiers in the content.
+ *
+ * @param string $contents The contents to process.
+ * @param array $params The parameters to replace placeholders with.
+ * @return string The processed content.
+ */
 function templates_process_qualifiers($contents, $params) {
-	$pattern = '/\|\|(?<x>.*)\{\{((?s).*?)\}\}\k<x>\|\|/i'; //Look for stuff between ||x{{ ---- }}x||
-	preg_match_all($pattern, $contents, $qualifiers); // Match all on the same level (does not see nested)
-	if (!empty($qualifiers[0])) { // Qualifiers found
+	// Define the pattern to match the qualifiers.
+	$pattern = '/\|\|(?<x>.*)\{\{((?s).*?)\}\}\k<x>\|\|/i'; 
+	
+	// Find all the qualifiers in the content.
+	preg_match_all($pattern, $contents, $qualifiers); 
+	
+	// Check if qualifiers were found.
+	if (!empty($qualifiers[0])) { 
 		$i = 0;
-		while (!empty($qualifiers[0][$i])) { // Full code match found
-			// Make replacements in the found qualifier.
+		
+		// Loop through all the qualifiers found.
+		while (!empty($qualifiers[0][$i])) { 
+			// Replace the qualifier with the processed version.
 			$contents = templates_replace_qualifiers($qualifiers['x'][$i], $qualifiers[0][$i], $qualifiers[2][$i], $params, $contents);
 			$i++;
 		}
 	}
+	
+	// Return the processed content.
 	return $contents;
 }
 
+/**
+ * Replaces a qualifier in the content with the appropriate part based on the evaluation result.
+ *
+ * @param string $eval The evaluation to check.
+ * @param string $fullcode The full code of the qualifier.
+ * @param string $innercode The inner code of the qualifier.
+ * @param array $params The parameters to replace placeholders with.
+ * @param string $contents The contents to process.
+ * @return string The processed content.
+ */
 function templates_replace_qualifiers($eval, $fullcode, $innercode, $params, $contents) {
-	$innercontent = templates_process_qualifiers($innercode, $params); // Look for nested qualifiers.
+	// Recursively process the inner code to check for nested qualifiers.
+	$innercontent = templates_process_qualifiers($innercode, $params); 
+
+	// Split the inner content based on the //OR// delimiter.
 	$replacewith = explode("//OR//", $innercontent);
 
-	if (count($replacewith) < 2) { // If no //OR// is found, fill the missing array with an empty string.
+	// If no //OR// is found, fill the missing array with an empty string.
+	if (count($replacewith) < 2) { 
 		$replacewith[1] = "";
 	}
 
+	// Replace the qualifier with the appropriate part based on the evaluation result.
 	if ($params[$eval] === false) { // If eval variable is false, replace with the 2nd part of the OR
 		$contents = str_replace($fullcode, $replacewith[1], $contents);
 	} else { // If eval variable is true, replace with the 1st part of the OR
 		$contents = str_replace($fullcode, $replacewith[0], $contents);
 	}
+
 	return $contents;
 }
 
-// Looks for functions or loops and arrange parts.
+/**
+ * Looks for functions or loops and arrange parts.
+ *
+ * @param string $match
+ *   The function or loop call with variables.
+ *
+ * @return string
+ *   The completed PHP code.
+ */
 function template_get_functionality($match) {
+	// Determine if direct function or code provided.
 	$type = strpos($match, "::") === false ? "simple" : "code";
 	$varslist = ""; $code = ""; $func = "";  $variables = $match; $replacement = "";
-	if ($type === "code") { // Either direct functon or code provided
-		$template = explode("::", $match); // Split function::variablename
-		$func = $template[0];
-		$variables = template_clean_complex_variables($template[1]);
+
+	if ($type === "code") { // Code provided from the template.
+		// Split function::variablename.
+		$template = explode("::", $match);
+		$func = $template[0]; // Get the function name.
+		$variables = template_clean_complex_variables($template[1]); // Get the variables.
 	}
 
+	// Split the variables.
 	$vars = explode("|", $variables);
-	foreach ($vars as $var) {
-		$cp = template_get_complex_variables($var); // cut off and store any complex variable parts. ie [] arrays or -> objects
-		$vr = template_clean_complex_variables($var); // cut off the complex variable parts and return the root variable.
-		$v = template_create_v($var, $vr, $cp); // take the root and complex parts (if any) and recombine them to work in the template.
 
-		if ($type === "code") { // Is code provided from the template?
-			$code = empty($code) ? $func : $code; // Get code on the first variable.  Keep the old version for the next variables.
-			$code = str_replace($var, $v, $code, $count); // Replace the placeholder in code with the PHP variable.
-			if ($var != "none" && !$count) { // If there isn't a perfect match in the template code, it is either a mistake or an unneccesary variable given.
-				echo "<br />Variable '$v' could not be matched in the supplied code.<br /><br />";
+	// Loop through each variable.
+	foreach ($vars as $var) {
+		$cp = template_get_complex_variables($var); // Get complex variable parts.
+		$vr = template_clean_complex_variables($var); // Get root variable.
+		$v = template_create_v($var, $vr, $cp); // Combine root and complex parts.
+
+		if ($type === "code") { // If code is provided.
+			$code = empty($code) ? $func : $code; // Get code on the first variable.
+			$code = str_replace($var, $v, $code, $count); // Replace the placeholder in code.
+			if ($var !== "none" && !$count) { // If there isn't a perfect match in the template code.
+				echo "<br />Variable '$v' given for the template code section could not be found.<br /><br />";
 			}
-		} else { // Simple echo of single variables;
-			$replacement .= 'echo ' . $v . ';';
+		} else { // Simple echo of single variables.
+			$replacement .= 'echo ' . $v . ';' . PHP_EOL;
 		}
 	}
 
-	if ($type === "code") { $replacement = $code; }  // Completed code is set as the replacement text.
+	if ($type === "code") { $replacement = $code; } // Completed code is set as the replacement text.
 
 	return $replacement;
 }
@@ -405,7 +553,7 @@ function template_variable_tests($match, $params) {
 	}
 
 	if ($return = template_variable_isset($params, $vr, $v)) {
-			return $return;
+		return $return;
 	}
 	return false;
 }
@@ -440,7 +588,7 @@ function template_variable_isset($params, $var, $test) {
 	// If the variable was not found, notify the user.
 	echo "<br /><br />Template variable '$var' not found.<br /><br />";
 	return false;
-  }
+}
 
 /**
  * Creates the template variable string ie $v["name"] or $v->name
@@ -456,41 +604,72 @@ function template_variable_isset($params, $var, $test) {
  *   The PHP variable string to use in the template
  */
 function template_create_v($match, $var, $complex_parts) {
-  if (strpos($match, "[") !== false) { // Complex variable in associative array form
-	$v = '$v["' . $var . '"]' . $complex_parts;
-  } elseif (strpos($match, "-") !== false) { // Complex variable in object form
-	if (empty($var)) {
-		$v = '$v' . $complex_parts;
-	} else {
+	if (strpos($match, "[") !== false) { // Complex variable in associative array form
 		$v = '$v["' . $var . '"]' . $complex_parts;
+	} elseif (strpos($match, "-") !== false) { // Complex variable in object form
+		if (empty($var)) {
+			$v = '$v' . $complex_parts;
+		} else {
+			$v = '$v["' . $var . '"]' . $complex_parts;
+		}
+	} else { // Simple variable.
+		$v = '$v["' . $var . '"]';
 	}
-  } else { // Simple variable.
-	$v = '$v["' . $var . '"]';
-  }
-  return $v;
+	return $v;
 }
 
-// Strips off array brackets or object pointers to be reattached later.
+/**
+ * Strips off array brackets or object pointers to be reattached later.
+ *
+ * @param string $var
+ *   The variable to extract complex parts from.
+ *
+ * @return string
+ *   The complex parts of the variable.
+ */
 function template_get_complex_variables($var) {
+	// Initialize the variable to store the complex parts.
 	$part = "";
-  if (strpos($var, "[") !== false) {
-	$bracket = strpos($var, "[");
-	$part = substr($var, $bracket, strlen($var) - $bracket);
+
+	// If the variable contains array brackets...
+	if (strpos($var, "[") !== false) {
+		// Get the starting position of the brackets.
+		$bracket = strpos($var, "[");
+		// Get the complex parts.
+		$part = substr($var, $bracket, strlen($var) - $bracket);
+		// Remove any double quotes.
 		$part = str_replace('"', '', $part);
-	$part = str_replace('[', '["', $part);
-	$part = str_replace(']', '"]', $part);
-  } elseif (strpos($var, "-") !== false) {
-	$part = substr($var, strpos($var, "-"), strlen($var) - strpos($var, "-"));
-  }
-  return $part;
+		// Change the brackets to be in the format used in PHP.
+		$part = str_replace('[', '["', $part);
+		$part = str_replace(']', '"]', $part);
+	} elseif (strpos($var, "-") !== false) { // If the variable contains object pointers...
+		// Get the complex parts.
+		$part = substr($var, strpos($var, "-"), strlen($var) - strpos($var, "-"));
+	}
+
+	// Return the complex parts of the variable.
+	return $part;
 }
 
-// Gets the root variable.  For arrays this will be the key, for objects it will be blank.
+/**
+ * Gets the root variable.
+ * For arrays this will be the key, for objects it will be blank.
+ *
+ * @param string $var
+ *   The variable to extract the root from.
+ *
+ * @return string
+ *   The root part of the variable.
+ */
 function template_clean_complex_variables($var) {
-  if (strpos($var, "[") !== false) { $var = substr($var, 0, strpos($var, "[")); } // Remove assoiative array brackets
-  if (strpos($var, "-") !== false) { $var = substr($var, 0, strpos($var, "-")); } // Remove everything after object arrows
-	if (strpos($var, "{{") !== false) { $var = substr($var, 0, strpos($var, "{{")); } // Remove everything after qualifier code.
-  return $var;
+	// Remove assoiative array brackets.
+	if (strpos($var, "[") !== false) { $var = substr($var, 0, strpos($var, "[")); }
+	// Remove everything after object arrows.
+	if (strpos($var, "-") !== false) { $var = substr($var, 0, strpos($var, "-")); }
+	// Remove everything after qualifier code.
+	if (strpos($var, "{{") !== false) { $var = substr($var, 0, strpos($var, "{{")); }
+	
+	return $var;
 }
 
 // Smarter Javascript gathering.
@@ -509,7 +688,7 @@ function get_js_tags($params, $linkonly = false, $loadtype = false) {
   if (count($filelist)) {
 	$link = $CFG->wwwroot . '/min/?f=' . implode(",", $filelist);
 	if ($linkonly) {
-		return $link; // for loadjs() so we don't know if it is actually every loaded.
+		return $link; // for loadjs() so we don't know if it is actually ever loaded.
 	} else {
 		$LOADED = array_merge_recursive($LOADED, $javascript); // set global to loaded javascript.
 		return js_script_wrap($link, $loadtype);
@@ -586,8 +765,6 @@ function build_from_js_library($params) {
 		add_js_to_array("scripts", "popupcalendar.js", $javascript);
 	}
 	if (array_search("validate", $params) !== false) { // jQuery validate.
-		add_js_to_array("scripts", "jquery.min.js", $javascript);
-		add_js_to_array("scripts", "jquery.extend.js", $javascript);
 		add_js_to_array("scripts", "jqvalidate.js", $javascript);
 		add_js_to_array("scripts", "jqvalidate_addon.js", $javascript);
 	}

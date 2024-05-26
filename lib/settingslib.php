@@ -6,8 +6,13 @@
 * Date: 5/14/2024
 * Revision: 0.2.6
 ***************************************************************************/
-
-if (!LIBHEADER) { include('header.php'); }
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
+	}
+	include($sub . 'lib/header.php');
+}
 define('SETTINGSLIB', true);
 
 function fetch_settings($type, &$featureid, $pageid = false) {
@@ -85,11 +90,11 @@ global $CFG, $USER, $PAGE;
 		return;
 	}
 
-    $settingslist = "";
+		$settingslist = "";
 	foreach ($settinginfo as $info) {
 		$type = $info["type"];
 		$featureid = $info["featureid"];
-        $name = $info["setting_name"];
+			$name = $info["setting_name"];
 		if (!isset($settings->$type->$featureid->$name)) { // Setting has never been saved for this type instance.
 			save_setting(false, $info, $info["defaultsetting"], false, $settings);
 		}
@@ -97,7 +102,7 @@ global $CFG, $USER, $PAGE;
 		$settingslist .= make_setting_input($info, $settings->$type->$featureid->$name->settingid, $settings->$type->$featureid->$name->setting);
 	}
 
-  return use_template("tmp/settings.template", ["title" => $title, "settingslist" => $settingslist], "make_settings_page_template");
+	return fill_template("tmp/settings.template", "make_settings_page_template", false, ["title" => $title, "settingslist" => $settingslist]);
 }
 
 function make_setting_input($info, $settingid = false, $value = "", $savebutton = true) {
@@ -141,7 +146,7 @@ global $CFG;
 			case "select": //extra will look like 'SELECT id as selectvalue,text as selectname from table'  the value and name must be labeled as selectvalue and selectname
 			$params["isselect"] = true;
 			$selected = $value != 0 ? "" : "selected";
-			$params["options"] = use_template("tmp/page.template", ["selected" => $selected, "value" => "0", "display" => "No"], "select_options_template");
+			$params["options"] = fill_template("tmp/page.template", "select_options_template", false, ["selected" => $selected, "value" => "0", "display" => "No"]);
 
 			if (isset($info["extraforminfo"]))	{
 				if ($data = get_db_result($info["extraforminfo"])) {
@@ -152,7 +157,7 @@ global $CFG;
 							"value" => $row["selectvalue"],
 							"display" => stripslashes($row["selectname"]),
 						];
-						$params["options"] .= use_template("tmp/page.template", $p, "select_options_template");
+						$params["options"] .= fill_template("tmp/page.template", "select_options_template", false, $p);
 					}
 				}
 			}
@@ -168,7 +173,7 @@ global $CFG;
 						"value" => $e["selectvalue"],
 						"display" => stripslashes($e["selectname"]),
 					];
-					$params["options"] .= use_template("tmp/page.template", $p, "select_options_template");
+					$params["options"] .= fill_template("tmp/page.template", "select_options_template", false, $p);
 				}
 			}
 			break;
@@ -179,7 +184,7 @@ global $CFG;
 			$params["ifvalidation"] = $info["validation"] ?? false;
 		  		break;
 	}
-	return use_template("tmp/settings.template", $params, "make_setting_input_template");
+	return fill_template("tmp/settings.template", "make_setting_input_template", false, $params);
 }
 
 /**
@@ -198,6 +203,7 @@ function save_setting($settingid = false, $settinginfo = [], $value = false, $ex
     $sqlfields = "";
     $sqlvalues = "";
 
+    $params = [];
     // If settingid wasn't provided, we may be able to find it with the provided values.
 	if (!empty($settinginfo)) {
         // Add settinginfo fields to list of possible fields to check/update.
@@ -211,14 +217,15 @@ function save_setting($settingid = false, $settinginfo = [], $value = false, $ex
 				if ($field !== "defaultsetting") {
 					if (isset($settinginfo[$field]) && $settinginfo[$field] !== false) {
 						$idsql .= $idsql == "" ? "" : " AND "; // Add AND if not first field.
-						$idsql .= "$field = '" . $settinginfo[$field] . "'";
+						$idsql .= "$field = ||$field||";
+                        $params[$field] = $settinginfo[$field];
 					}
 				}
 			}
 
 			// Make sure you have enough info to find only a single setting.
-			if ($idsql !== "" && get_db_count("SELECT * FROM settings WHERE $idsql") == 1) {
-				$settingid = get_db_field("settingid", "settings", $idsql);
+			if ($idsql !== "" && get_db_count("SELECT * FROM settings WHERE $idsql", $params) == 1) {
+				$settingid = get_db_field("settingid", "settings", $idsql, $params);
 			}
 		}
 	}
@@ -227,21 +234,25 @@ function save_setting($settingid = false, $settinginfo = [], $value = false, $ex
     // <-TODO-> The key/value pairs exist for these fieldsbecause of naming differences in the database.
     $fields += ["value" => "setting", "extravalue" => "extra"];
 
+    $params = [];
     // Was setting already found in the db?
 	if ($settingid) {
+        $params["settingid"] = $settingid;
         // Setting already exists.  Let's update the row in the settings table.
 		foreach ($fields as $index => $field) {
 			if ($index == "value" || $index == "extravalue") { // Setting values.
 				if ($$index !== false) { // Check $value or $extravalue is set.
 					$sqlfields .= empty($sqlfields) ? "" : ", "; // Add comma if not first field.
-					$sqlfields .= "$field = '" . $$index . "'";	
+					$sqlfields .= "$field = ||$field||";
+                    $params[$field] = $$index;	
 				}
 			} elseif (isset($settinginfo[$field]) && $settinginfo[$field] !== false) { // Standard fields from default array.
 				$sqlfields .= empty($sqlfields) ? "" : ", "; // Add comma if not first field.
-				$sqlfields .= "$field = '" . $settinginfo[$field] . "'"; // Add field set statement.
+				$sqlfields .= "$field = ||$field||"; // Add field set statement.
+                $params[$field] = $settinginfo[$field];
 			}
 		}
-		$SQL = "UPDATE settings SET $sqlfields WHERE settingid = '$settingid'";
+		$SQL = "UPDATE settings SET $sqlfields WHERE settingid = ||settingid||";
 	} else {
         // Setting has never been created.  Let's insert a row in the settings table.
 		foreach ($fields as $index => $field) {
@@ -257,15 +268,16 @@ function save_setting($settingid = false, $settinginfo = [], $value = false, $ex
 
             if (isset($settinginfo[$field]) && $settinginfo[$field] !== false) { // Standard fields from default array.
 				$sqlfields .= empty($sqlfields) ? "" : ", "; // Add comma if not first field.
-				$sqlfields .= "$field"; // Add field to list of fields.
+				$sqlfields .= $field; // Add field to list of fields.
 				$sqlvalues .= empty($sqlvalues) ? "" : ", "; // Add comma if not first field.
-				$sqlvalues .= "'" . $settinginfo[$field] . "'"; // Add value to list of values.
+				$sqlvalues .= "||$field||"; // Add value to list of values.
+                $params[$field] = $settinginfo[$field];
 			}
 		}
 		$SQL = "INSERT INTO settings($sqlfields) VALUES($sqlvalues)";
 	}
 
-	if ($settingid = execute_db_sql($SQL)) { // Whether insert or update statement succeeded we will get the settingid.
+	if ($settingid = execute_db_sql($SQL, $params)) { // Whether insert or update statement succeeded we will get the settingid.
 		$settings = refresh_settings(["settingid" => $settingid, "settings" => $settings, "settinginfo" => $settinginfo, "value" => $value, "extravalue" => $extravalue]);
 		return true;
 	}

@@ -66,10 +66,10 @@ roles_header_script||
 		option1 = "#"+option1;
 		option2 = "#"+option2;
 		if ($(option1).emptybg() && $(option2).emptybg()) {
-		$(option1).css("background-color","yellow");
+			$(option1).css("background-color","yellow");
 		} else if ($(option1).emptybg()) {
-		$(option1).css("background-color","inherit");
-		$(option2).css("background-color","inherit");
+			$(option1).css("background-color","inherit");
+			$(option2).css("background-color","inherit");
 		}
 		blur();
 	}
@@ -78,10 +78,10 @@ roles_header_script||
 		option1 = "#"+option1;
 		option2 = "#"+option2;
 		if ($(option1).emptybg() && $(option2).emptybg()) {
-		$(option1).css("background-color","yellow");
+			$(option1).css("background-color","yellow");
 		} else {
-		$(option1).css("background-color","yellow");
-		$(option2).css("background-color","inherit");
+			$(option1).css("background-color","yellow");
+			$(option2).css("background-color","inherit");
 		}
 		blur();
 	}
@@ -126,12 +126,12 @@ assign_roles_template||
 				}}issiteid||
 				||options||
 		</select>
-  </div>
-  <div id="per_page_roles_div" style="width:100%;"></div>
+	</div>
+	<div id="per_page_roles_div" style="width:100%;"></div>
 ||assign_roles_template
 
 assign_roles_options_template||
-  <option value="||user[userid]||">||user[fname]|| ||user[lname]|| (||user[email]||)</option>
+	<option value="||user[userid]||">||user[fname]|| ||user[lname]|| (||user[email]||)</option>
 ||assign_roles_options_template
 
 role_specific_template||

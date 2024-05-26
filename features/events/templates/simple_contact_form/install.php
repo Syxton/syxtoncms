@@ -46,7 +46,7 @@ if (!get_db_row("SELECT * FROM events_templates WHERE name = '$templatename'")) 
 
 	execute_db_sql($SQL);
 } else { // Update event template.
-    $version = get_db_field("setting", "settings", "setting_name='version' AND type='events_template' AND extra='$templatefolder'");
+	$version = get_db_field("setting", "settings", "setting_name='version' AND type='events_template' AND extra='$templatefolder'");
 
 	$thisversion = 2018031200;
 	if ($version < $thisversion) {
@@ -74,6 +74,47 @@ if (!get_db_row("SELECT * FROM events_templates WHERE name = '$templatename'")) 
        $SQL = "UPDATE events_templates SET formlist = '$formlist' WHERE folder='$templatefolder'";
 
 		 execute_db_sql($SQL);
+	}
+
+	$thisversion = 2024053000;
+	if ($version < $thisversion) {
+		$templatesettings = [];
+		if ($templates = get_db_result("SELECT * FROM events_templates WHERE folder='$templatefolder'")) {
+			while ($template = fetch_row($templates)) {
+				if (!empty($template["settings"])) { // There are settings in this template
+					$settings = unserialize($template["settings"]);
+					$newsettings = [];
+					foreach ($settings as $setting) {
+						$newsetting = [];
+						foreach ($setting as $key => $value) { // Save each setting with the default if no other is given
+							switch ($key) {
+								case "name":
+									$newsetting["setting_name"] = $value;
+									break;
+								case "default":
+									$newsetting["defaultsetting"] = $value;
+									break;
+								case "type":
+									$newsetting["inputtype"] = $value;
+									break;
+								case "title":
+									$newsetting["display"] = $value;
+									break;
+								default:
+									$newsetting[$key] = $value;
+									break;
+							}
+						}
+						$newsettings[] = $newsetting;
+					}
+					$newsettings = dbescape(serialize($newsettings));
+					$SQL = "UPDATE events_templates SET settings = '$newsettings' WHERE folder='$templatefolder'";
+					if (execute_db_sql($SQL)) { // If successful upgrade.
+						execute_db_sql("UPDATE settings SET setting = '$thisversion' WHERE setting_name = 'version' AND type = 'events_template' AND extra = '$templatefolder'");
+					}
+				}
+			}
+		}
 	}
 }
 ?>

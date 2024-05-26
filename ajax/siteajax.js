@@ -170,11 +170,11 @@ function print_r(theObj) {
 	alert(printme);
 }
 
-function loadjs(scriptName,callback) {
+function loadjs(scriptName, callback) {
     if (typeof callback == "undefined") {
         callback = function() {};
     }
-    $.getScript(scriptName,callback).fail(function(jqxhr, settings, exception) { alert( "Some javascript files failed to load ("+scriptName+"), the page may not work as intended." );});
+    $.getScript(scriptName, callback).fail(function(jqxhr, settings, exception) { alert( "Some javascript files failed to load ("+scriptName+"), the page may not work as intended." );});
     return;
 }
 
@@ -292,6 +292,12 @@ function IsNumeric(sText) {
 		if (ValidChars.indexOf(Char) == -1) IsNumber = false;
 	}
 	return IsNumber;
+}
+
+function datetype(element) {
+	let datetype = new Date(document.getElementById(element).value + " ");
+	datetype.setHours(0, 0, 0, 0);
+	return datetype;
 }
 
 function checkPassword(x, y, f, alertsoff) {
@@ -464,14 +470,14 @@ function login(username, password) {
 //print function
 function update_login_display(pageid) {
 	var returned = trim(xmlHttp.responseText).split("**");
-	if (returned[0] == "true") { if (returned[1] != "check") {	go_to_page(pageid); }
+	if (returned[0] == "true") { if (returned[1] !== "check") {	go_to_page(pageid); }
     } else { if (document.getElementById("loggedin")) { go_to_page(1); } }
 }
 
 //checks to see if user should still be logged in
 function update_login_contents(pageid, check) {
 	if (check == "check") {
-		ajaxapi('/ajax/site_ajax.php','update_login_contents','&pageid='+pageid+'&check=1',function() {if (xmlHttp.readyState == 4) { update_login_display(pageid); }},true);
+		ajaxapi('/ajax/site_ajax.php','update_login_contents','&pageid=0&check=1',function() {if (xmlHttp.readyState == 4) { update_login_display(pageid); }},true);
 	} else {
 		ajaxapi('/ajax/site_ajax.php','update_login_contents','&pageid='+pageid,function() {if (xmlHttp.readyState == 4) { update_login_display(pageid); }},true);
 	}

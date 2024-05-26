@@ -6,21 +6,26 @@
 * Date: 5/14/2024
 * Revision: 2.3.5
 ***************************************************************************/
-
-if (!LIBHEADER) { include ('header.php'); }
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
+	}
+	include($sub . 'lib/header.php');
+}
 define('PAGELISTLIB', true);
 
 global $MYVARS;
 
 collect_vars();
-$MYVARS->search_perpage = 8;
+if (!defined('SEARCH_PERPAGE')) { define('SEARCH_PERPAGE', 8); }
 
 function display_pagelist($pageid) {
 global $CFG, $USER, $ROLES, $PAGE, $STYLES;
     $preview = isset($STYLES->preview) ? true : false;
     if (!$pageid) { $pageid = $CFG->SITEID; }
 
-    $title = stripslashes(get_db_field("name", "pages", "pageid = $pageid"));
+    $title = get_db_field("name", "pages", "pageid = ||pageid||", ["pageid" => $pageid]);
     $rolename = get_db_field("display_name", "roles", "roleid=" . user_role($USER->userid, $pageid));
     $buttons = $userid = $button_layout = NULL;
     $browse_vars = "";
@@ -42,21 +47,21 @@ global $CFG, $USER, $ROLES, $PAGE, $STYLES;
                     ]),
         "pagelinks" => get_page_links($pageid, $userid),
     ];
-    $pagelist = use_template("tmp/page.template", $params, "pagelist_template");
+    $pagelist = fill_template("tmp/page.template", "pagelist_template", false, $params);
 
     $params = [
         "roleonpage" => get_css_box($title, $rolename, $button_layout, NULL, 'pagename'),
         "pagelistblock" => get_css_box('<span class="box_title_text">My Page List</span>', $pagelist, $buttons, null, "pagelist", null, false, $preview),
     ];
-    return use_template("tmp/page.template", $params, "role_on_pagelist_template");
+    return fill_template("tmp/page.template", "role_on_pagelist_template", false, $params);
 }
 
     function get_pagelist($userid) {
     global $CFG, $ROLES, $USER;
     $roleid = user_role($userid, $CFG->SITEID);
     $returnme = "";
-    $SQL = use_template("dbsql/pages.sql", ["userid" => $userid, "siteid" => $CFG->SITEID, "roleid" => $roleid], "my_pagelist");
-    if ($result = get_db_result($SQL)) {
+    $SQL = fetch_template("dbsql/pages.sql", "my_pagelist");
+    if ($result = get_db_result($SQL, ["userid" => $userid, "siteid" => $CFG->SITEID, "roleid" => $roleid])) {
         $returnme = format_pagelist($result);
     }
     return $returnme;
@@ -68,9 +73,9 @@ global $CFG, $USER, $PAGE;
   if (!empty($pageresults)) {
 		while ($row = fetch_row($pageresults)) {
       $selected = $PAGE->id == $row['pageid'] ? "selected" : ""; // Preselect page if you are there
-			$options .= use_template("tmp/page.template", ["value" => $row['pageid'], "display" => $row['name'], "selected" => $selected], "select_options_template");
+			$options .= fill_template("tmp/page.template", "select_options_template", false, ["value" => $row['pageid'], "display" => $row['name'], "selected" => $selected]);
 		}
-		$returnme = use_template("tmp/page.template", ["options" => $options], "format_pagelist_select");
+		$returnme = fill_template("tmp/page.template", "format_pagelist_select", false, ["options" => $options]);
   }
   return $returnme;
 }
@@ -80,27 +85,27 @@ global $CFG, $ROLES, $USER;
     $links = "";
 	$params = ["siteid" => $CFG->SITEID, "pageid" => $pageid, "userid" => $userid];
 
-    if ($userid) {
-        if (is_siteadmin($userid)) {
-            $SQL = use_template("dbsql/pages.sql", $params, "admin_pagelinks");
-        } else {
-			$SQL = use_template("dbsql/pages.sql", $params, "user_pagelinks");
-        }
-    } else {
-		$SQL = use_template("dbsql/pages.sql", $params, "default_pagelinks");
-    }
-
-    if ($result = get_db_result($SQL)) {
-		$params = ["wwwroot" => $CFG->wwwroot, "pageid" => $pageid];
-        while ($page = fetch_row($result)) {
-			$params["page"] = $page;
-            $params["canedit"] = user_is_able($userid, "editpage", $pageid);
-			$links .= use_template("tmp/page.template", $params, "pagelinks_links_template");
+	if ($userid) {
+		if (is_siteadmin($userid)) {
+			$SQL = fetch_template("dbsql/pages.sql", "admin_pagelinks");
+		} else {
+			$SQL = fetch_template("dbsql/pages.sql", "user_pagelinks");
 		}
-        $params["links"] = $links;
-        return use_template("tmp/page.template", $params, "pagelinks_template");
-    }
-    return "";
+	} else {
+		$SQL = fetch_template("dbsql/pages.sql", "default_pagelinks");
+	}
+
+	if ($result = get_db_result($SQL, $params)) {
+		$params = ["wwwroot" => $CFG->wwwroot, "pageid" => $pageid];
+		while ($page = fetch_row($result)) {
+			$params["page"] = $page;
+			$params["canedit"] = user_is_able($userid, "editpage", $pageid);
+			$links .= fill_template("tmp/page.template", "pagelinks_links_template", false, $params);
+		}
+		$params["links"] = $links;
+		return fill_template("tmp/page.template", "pagelinks_template", false, $params);
+	}
+	return "";
 }
 
 function pagelist_buttons($pageid, $featuretype, $featureid) {

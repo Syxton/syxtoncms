@@ -33,8 +33,9 @@ global $CFG, $MYVARS, $USER, $error;
 
 if (!defined('COMLIB')) include_once($CFG->dirroot . '/lib/comlib.php');
 
-	$event = get_db_row("SELECT * FROM events WHERE eventid = " . $MYVARS->GET["eventid"]);
-	$template = get_db_row("SELECT * FROM events_templates WHERE template_id='" . $event['template_id'] . "'");
+	$eventid = clean_myvar_req("eventid", "int");
+	$event = get_event($eventid);
+	$template = get_event_template($event['template_id']);
 	
 	$MYVARS->GET["cart_total"] = $MYVARS->GET["total_owed"] != 0 ? $MYVARS->GET["total_owed"] + $MYVARS->GET["paypal_amount"] : $MYVARS->GET["paypal_amount"];
 	$MYVARS->GET["total_owed"] = get_timestamp() < $event["sale_end"] ? $event["sale_fee"] : $event["fee_full"];
@@ -72,12 +73,14 @@ if (!defined('COMLIB')) include_once($CFG->dirroot . '/lib/comlib.php');
 			
 			$items = explode("**", $items);
 			$i=0;
-			while (isset($items[$i]))
-			{
+			while (isset($items[$i])) {
 				$itm = explode("::", $items[$i]);
-				$cart_items[$i]->regid = $itm[0];
-				$cart_items[$i]->description = $itm[1];
-				$cart_items[$i]->cost = $itm[2];	
+				$cart_items = [];
+				$cart_items[$i] = (object)[
+					"regid" => $itm[0],
+					"description" => $itm[1],
+					"cost" => $itm[2],
+				];  
 				$i++;
 			}
 			
@@ -139,12 +142,14 @@ if (!defined('COMLIB')) include_once($CFG->dirroot . '/lib/comlib.php');
 				
 				$items = explode("**", $items);
 				$i=0;
-				while (isset($items[$i]))
-				{
+				while (isset($items[$i])) {
 					$itm = explode("::", $items[$i]);
-					$cart_items[$i]->regid = $itm[0];
-					$cart_items[$i]->description = $itm[1];
-					$cart_items[$i]->cost = $itm[2];	
+					$cart_items = [];
+					$cart_items[$i] = (object)[
+						"regid" => $itm[0],
+						"description" => $itm[1],
+						"cost" => $itm[2],
+					];
 					$i++;
 				}
 				

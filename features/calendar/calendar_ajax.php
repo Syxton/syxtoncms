@@ -52,12 +52,12 @@ global $CFG, $MYVARS;
       		if ($eventlist != "") { 
                 $eventlist .= '<br />'; $firstevent = ''; 
             } else { 
-                $firstevent = '<span style="width:35px;text-align:center;float:right;font-size:.7em;color:gray;">hide<br /><span id="cal_countdown"></span></span>';
+                $firstevent = '<span style="text-align:center;float:right;font-size:.9em;color:gray;">hide <span id="cal_countdown"></span></span>';
             }
             $p = [
                 "title" => "Event Info",
-                "text" => stripslashes($event["title"]),
-                "path" => action_path("events") . "info&amp;pageid=$pageid&amp;eventid=" . $event["eventid"],
+                "text" => $event["title"],
+                "path" => action_path("events") . "info&pageid=$pageid&eventid=" . $event["eventid"],
                 "iframe" => true,
                 "width" => "700",
                 "height" => "650",
@@ -79,9 +79,9 @@ global $CFG, $MYVARS;
                 convert_time($event["endtime"]) . "<br />";
             }
             $location = get_db_field("location", "events_locations", "id='" . $event["location"] . "'");
-            $eventlist .= '<strong>Location:</strong> ' . stripslashes($location);
+            $eventlist .= '<strong>Location:</strong> ' . $location;
             $dots = strlen(stripslashes($event["event"])) > 200 ? '...' : '';
-            $eventlist .= $event["event"] !== '' ? '<br /><strong>Description:</strong> ' . substr(stripslashes(strip_tags($event["event"])),0,200) . $dots : '';
+            $eventlist .= $event["event"] !== '' ? '<br /><strong>Description:</strong> ' . substr(strip_tags($event["event"]),0,200) . $dots : '';
             $eventlist .= '</div>';
         }
     }

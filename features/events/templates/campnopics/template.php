@@ -3,100 +3,126 @@
  * template.php - Camp Wabashi Template page
  * -------------------------------------------------------------------------
  * $Author: Matthew Davidson
- * $Date: 10/05/07
+ * Date: 5/14/2022
  * $Revision: .8
  ***************************************************************************/
- //Retrieve from Javascript
-$postorget = isset($_GET["eventid"]) ? $_GET : $_POST;
-$postorget = isset($postorget["eventid"]) ? $postorget : "";
-
-$MYVARS->GET = $postorget;
-
-$preview = isset($preview) ? 'disabled="disabled"': "";
-$eventid = $MYVARS->GET['eventid'];
-$show_again = isset($MYVARS->GET['show_again']) ? true : false;
-$regid = isset($MYVARS->GET['regid']) && $MYVARS->GET['regid'] != "false" ? $MYVARS->GET['regid'] : false;
-$autofill = isset($MYVARS->GET['autofill']) && $MYVARS->GET['autofill'] == "1" ? true : false;
-
-$picturecost = false; //if no picture is needed, set to false
-$email = "";
-
-if ($show_again) //This is not the first time through
-{
-	if ($autofill) //Same person..so auto fill all items
-	{
-		$last_reg = get_db_result("SELECT * FROM events_registrations_values WHERE regid=$regid");
-		while ($reginfo = fetch_row($last_reg)) {
-			${$reginfo["elementname"]} = $reginfo["value"];
-		}
-		$email = get_db_field("email", "events_registrations", "regid=$regid");
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
 	}
-	else //Different person...but auto fill the payment method and hide it.
-	{
-		$payment_method = get_db_field("value", "events_registrations_values", "elementname='payment_method' AND regid=$regid");
-	}
+	include($sub . 'lib/header.php');
 }
 
-$total_owed = isset($MYVARS->GET['total_owed']) ? $MYVARS->GET['total_owed'] : 0;
-$row = get_db_row("SELECT * FROM events WHERE eventid=" . $eventid);
+//Retrieve from Javascript
+global $MYVARS;
+collect_vars();
+
+$eventid = clean_myvar_opt("eventid", "int", false);
+$regid = clean_myvar_opt("regid", "int", false);
+$show_again = clean_myvar_opt("show_again", "bool", false);
+$autofill = clean_myvar_opt("autofill", "bool", false);
+
+$email = $payment_method = $disable = "";
+
+// Preview of template.
+if (isset($preview)) {
+	$disable = 'disabled="disabled"';
+	$event = [
+		"name" => "Preview Event",
+		"event_begin_date" => date("j"),
+		"event_end_date" => date("j"),
+		"fee_full" => 0,
+		"fee_min" => 0,
+		"sale_fee" => 0,
+		"sale_end" => 0,
+	];
+}
+
+// Get full event info
+if ($eventid) {
+	$event = get_event($eventid);
+}
+
+//output any passed on hidden info from previous registrations
+$total_owed = clean_myvar_opt("total_owed", "float", 0);
+$items = clean_myvar_opt("items", "string", "");
+
+$picturecost = false; //if no picture is needed, set to false
+
+if ($show_again) {
+    if ($autofill) {
+        $lastRegistration = get_db_result("SELECT * FROM events_registrations_values WHERE regid=$regId");
+        while ($registrationInfo = fetch_row($lastRegistration)) {
+            ${$registrationInfo["elementname"]} = $registrationInfo["value"];
+        }
+        $email = get_db_field("email", "events_registrations", "regid=$regId");
+    } else {
+        $paymentMethod = get_db_field("value", "events_registrations_values", "elementname='payment_method' AND regid=$regId");
+    }
+}
 
 if (!$show_again) {
-  echo js_script_wrap($CFG->wwwroot . '/features/events/templates/camp/ajax.js');
-  echo '<form name="form1">
-          <div id="camp">
-            <input type="hidden" name="total_owed" id="total_owed" value="' . $total_owed . '" />';
+  echo js_script_wrap($CFG->wwwroot . '/features/events/templates/campnopics/ajax.js');
+  echo '	<form class="event_template_form" name="form1">
+				<div id="camp">
+					<input type="hidden" name="total_owed" id="total_owed" value="' . $total_owed . '" />';
 }
 
 echo '
-<input type="hidden" name="eventid" value="' . $eventid . '" />
-<input type="hidden" name="paid" value="0" />
-<table>
-  <tr>
-    <td colspan="2" align="center" valign="top">
-    <h1 align="center">Camp Wabashi Online Pre-Registration</h1>
-    <h3 align="center">' . $row["name"] . '</h3>
-    </td>
-  </tr>
-  <tr><td colspan="2"><p>
-    <a target="policy" href="' . $CFG->wwwroot . '/userfiles/1/file/regpolicy.html">Registration Policy</a>
-  </p></td></tr>';
+	<input type="hidden" name="eventid" value="' . $eventid . '" />
+	<input type="hidden" name="paid" value="0" />
+	<table>
+		<tr>
+			<td colspan="2" align="center" valign="top">
+				<h1 align="center">Camp Wabashi Online Pre-Registration</h1>
+				<h3 align="center">' . $event["name"] . '</h3>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="2">
+				<p>
+					<a target="policy" href="' . $CFG->wwwroot . '/userfiles/1/file/regpolicy.html">Registration Policy</a>
+				</p>
+			</td>
+		</tr>';
   
 if ($autofill) {
  echo '  <tr> 
             <td>
           		Camper: ' . $Camper_Name . '
-			<input type="hidden" name="Camper_Name" value="' . $Camper_Name . '" />
-			<input type="hidden" name="email" value="' . $email . '" />
-			<input type="hidden" name="Camper_Birth_Date" value="' . $Camper_Birth_Date . '" />
-			<input type="hidden" name="Camper_Age" value="' . $Camper_Age . '" />
-			<input type="hidden" name="Camper_Grade" value="' . $Camper_Grade . '" />
-			<input type="hidden" name="Camper_Gender" value="' . $Camper_Gender . '" />
-			<input type="hidden" name="Camper_Home_Congregation" value="' . $Camper_Home_Congregation . '" />
-			<input type="hidden" name="Parent_Address_Line1" value="' . $Parent_Address_Line1 . '" />
-			<input type="hidden" name="Parent_Address_Line2" value="' . $Parent_Address_Line2 . '" />
-			<input type="hidden" name="Parent_Address_City" value="' . $Parent_Address_City . '" />
-			<input type="hidden" name="Parent_Address_State" value="' . $Parent_Address_State . '" />
-			<input type="hidden" name="Parent_Address_Zipcode" value="' . $Parent_Address_Zipcode . '" />
-			<input type="hidden" name="Parent_Phone1" value="' . $Parent_Phone1 . '" />
-			<input type="hidden" name="Parent_Phone2" value="' . $Parent_Phone2 . '" />
-			<input type="hidden" name="Parent_Phone3" value="' . $Parent_Phone3 . '" />
-			<input type="hidden" name="Parent_Phone4" value="' . $Parent_Phone4 . '" />
-			<input type="hidden" name="HealthConsentFrom" value="' . $HealthConsentFrom . '" />
-			<input type="hidden" name="HealthConsentTo" value="' . $HealthConsentTo . '" />
-			<input type="hidden" name="HealthMemberName" value="' . $HealthMemberName . '" />
-			<input type="hidden" name="HealthRelationship" value="' . $HealthRelationship . '" />
-			<input type="hidden" name="HealthInsurance" value="' . $HealthInsurance . '" />
-			<input type="hidden" name="HealthIdentification" value="' . $HealthIdentification . '" />
-			<input type="hidden" name="HealthBenefitCode" value="' . $HealthBenefitCode . '" />
-			<input type="hidden" name="HealthAccount" value="' . $HealthAccount . '" />
-			<input type="hidden" name="HealthExpirationDate" value="' . $HealthExpirationDate . '" />
-			<input type="hidden" name="HealthHistory" value="' . $HealthHistory . '" />
-			<input type="hidden" name="HealthAllergies" value="' . $HealthAllergies . '" />
-			<input type="hidden" name="HealthExisting" value="' . $HealthExisting . '" />
-			<input type="hidden" name="HealthMedicines" value="' . $HealthMedicines . '" />
-			<input type="hidden" name="HealthTetanusDate" value="' . $HealthTetanusDate . '" />
-		</td>
-     </tr>';
+					<input type="hidden" name="Camper_Name" value="' . $Camper_Name . '" />
+					<input type="hidden" name="email" value="' . $email . '" />
+					<input type="hidden" name="Camper_Birth_Date" value="' . $Camper_Birth_Date . '" />
+					<input type="hidden" name="Camper_Age" value="' . $Camper_Age . '" />
+					<input type="hidden" name="Camper_Grade" value="' . $Camper_Grade . '" />
+					<input type="hidden" name="Camper_Gender" value="' . $Camper_Gender . '" />
+					<input type="hidden" name="Camper_Home_Congregation" value="' . $Camper_Home_Congregation . '" />
+					<input type="hidden" name="Parent_Address_Line1" value="' . $Parent_Address_Line1 . '" />
+					<input type="hidden" name="Parent_Address_Line2" value="' . $Parent_Address_Line2 . '" />
+					<input type="hidden" name="Parent_Address_City" value="' . $Parent_Address_City . '" />
+					<input type="hidden" name="Parent_Address_State" value="' . $Parent_Address_State . '" />
+					<input type="hidden" name="Parent_Address_Zipcode" value="' . $Parent_Address_Zipcode . '" />
+					<input type="hidden" name="Parent_Phone1" value="' . $Parent_Phone1 . '" />
+					<input type="hidden" name="Parent_Phone2" value="' . $Parent_Phone2 . '" />
+					<input type="hidden" name="Parent_Phone3" value="' . $Parent_Phone3 . '" />
+					<input type="hidden" name="Parent_Phone4" value="' . $Parent_Phone4 . '" />
+					<input type="hidden" name="HealthConsentFrom" value="' . $HealthConsentFrom . '" />
+					<input type="hidden" name="HealthConsentTo" value="' . $HealthConsentTo . '" />
+					<input type="hidden" name="HealthMemberName" value="' . $HealthMemberName . '" />
+					<input type="hidden" name="HealthRelationship" value="' . $HealthRelationship . '" />
+					<input type="hidden" name="HealthInsurance" value="' . $HealthInsurance . '" />
+					<input type="hidden" name="HealthIdentification" value="' . $HealthIdentification . '" />
+					<input type="hidden" name="HealthBenefitCode" value="' . $HealthBenefitCode . '" />
+					<input type="hidden" name="HealthAccount" value="' . $HealthAccount . '" />
+					<input type="hidden" name="HealthExpirationDate" value="' . $HealthExpirationDate . '" />
+					<input type="hidden" name="HealthHistory" value="' . $HealthHistory . '" />
+					<input type="hidden" name="HealthAllergies" value="' . $HealthAllergies . '" />
+					<input type="hidden" name="HealthExisting" value="' . $HealthExisting . '" />
+					<input type="hidden" name="HealthMedicines" value="' . $HealthMedicines . '" />
+					<input type="hidden" name="HealthTetanusDate" value="' . $HealthTetanusDate . '" />
+				</td>
+			</tr>';
 }
 else
 {
@@ -217,8 +243,8 @@ else
           <tr>
             <td align="right"><strong><font size="2">This consent effective&nbsp;*&nbsp;</font></strong></td>
             <td align="left"><font size="2">
-            From: <input name="HealthConsentFrom" size="13" maxlength="13" value="' . date("m/d/Y", $row["event_begin_date"]) . '" type="text">
-            To: <input name="HealthConsentTo" size="13" maxlength="13" value="' . date("m/d/Y", $row["event_end_date"]) . '" type="text"></font></td>
+            From: <input name="HealthConsentFrom" size="13" maxlength="13" value="' . date("m/d/Y", $event["event_begin_date"]) . '" type="text">
+            To: <input name="HealthConsentTo" size="13" maxlength="13" value="' . date("m/d/Y", $event["event_end_date"]) . '" type="text"></font></td>
           </tr>
           <tr>
             <td align="right"><strong><font size="2">Member\'s Name&nbsp;*&nbsp;</font></strong></td>
@@ -273,7 +299,7 @@ else
 echo '<tr><td colspan="2"><hr></td></tr>
     <tr>
       <td align="right"><strong><font size="2">Pay With Application</font></strong></td>
-      <td>' . make_fee_options($row['fee_min'], $row['fee_full'], "payment_amount",'onchange="updateTotal();" onclick="updateTotal();"', $row['sale_end'], $row['sale_fee']) . '</td>
+      <td>' . make_fee_options($event['fee_min'], $event['fee_full'], "payment_amount",'onchange="updateTotal();" onclick="updateTotal();"', $event['sale_end'], $event['sale_fee']) . '</td>
     </tr>';
     
 if ($picturecost) {
@@ -288,7 +314,7 @@ echo '<tr>
 echo
     '<tr>
       <td align="right"><strong><font size="2">Total:&nbsp;</font></strong></td>
-        <td>$<input name="paypal_amount" size="5" value="' . $row['fee_min'] . '" type="text" READONLY></td>
+        <td>$<input name="paypal_amount" size="5" value="' . $event['fee_min'] . '" type="text" READONLY></td>
     </tr>';
 
 if (!$show_again) {
@@ -315,9 +341,9 @@ else
    
 echo '<tr> 
           <td colspan="2" align="center">
-            <input name="print" value="Print Application" onclick="window.print()" type="button" ' . $preview . '/>
-            &nbsp;<input onclick="javascript:submit_registration();" value="Send Application" type="button" ' . $preview . ' /> 
-            &nbsp;<input name="reset" type="reset" ' . $preview . '/> </td>
+            <input name="print" value="Print Application" onclick="window.print()" type="button" ' . $disable . '/>
+            &nbsp;<input onclick="campnopics_submit_registration();" value="Send Application" type="button" ' . $disable . ' /> 
+            &nbsp;<input name="reset" type="reset" ' . $disable . '/> </td>
         </tr>
       </table>';
 

@@ -93,7 +93,7 @@ global $CFG, $USER;
                                         }, true); ">
                         Categories
                     </a>
-                    <img style="margin: 0 5px" src="' . $CFG->wwwroot . '/images/calendarNext.gif" alt="breadcrumbarrow" />
+                    <img style="margin: 0 5px" src="' . $CFG->wwwroot . '/images/calendarNext.png" alt="breadcrumbarrow" />
                     ' . get_db_field("title", "forum_categories", "catid = '$catid'") . '
                 </div>';
 	
@@ -433,7 +433,7 @@ global $CFG, $USER;
                                         }, true);" >
                         Categories
                     </a>
-                    <img style="margin: 0 5px" src="' . $CFG->wwwroot . '/images/calendarNext.gif" alt="breadcrumbarrow" />
+                    <img style="margin: 0 5px" src="' . $CFG->wwwroot . '/images/calendarNext.png" alt="breadcrumbarrow" />
                     <a href="javascript: void(0);"
                        onclick="save_action($(this), $(\'#forum_refresh_' . $forumid . '\'));
                                 ajaxapi(\'/features/forum/forum_ajax.php\',
@@ -446,7 +446,7 @@ global $CFG, $USER;
                                         }, true);" >
                     ' . get_db_field("title", "forum_categories", "catid=$catid") . '
                     </a>
-                    <img style="margin: 0 5px" src="' . $CFG->wwwroot . '/images/calendarNext.gif" alt="breadcrumbarrow" />
+                    <img style="margin: 0 5px" src="' . $CFG->wwwroot . '/images/calendarNext.png" alt="breadcrumbarrow" />
                     ' . get_db_field("title", "forum_discussions", "discussionid = '$discussionid'") . '
                 </div> ';
 	
@@ -655,10 +655,10 @@ function edit_category() {
 function create_category() {
     $title = clean_myvar_req("catname", "html");
 	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
-	$forumid = clean_myvar_req("forumid", "int"); 
-	$sort = get_db_count("SELECT * FROM forum_categories WHERE forumid=$forumid AND shoutbox=0");
-	$sort++;
-	execute_db_sql("INSERT INTO forum_categories (forumid,pageid,title,sort) VALUES($forumid, $pageid,'$title', $sort)");
+	$forumid = clean_myvar_req("forumid", "int");
+	$sort = get_db_count(fetch_template("dbsql/forum.sql", "get_forum_categories", "forum"), ["forumid" => $forumid]) + 1;
+    $params = ["forumid" => $featureid, "pageid" => $pageid, "title" => $title, "sort" => $sort, "shoutbox" => 0];
+    $catid = execute_db_sql(fetch_template("dbsql/forum.sql", "insert_category", "forum"), $params);
 	echo "Category Creation Successful.";
 }
 
@@ -684,6 +684,7 @@ global $USER;
 			"posted" => $time,
 			"title" => $title,
 			"lastpost" => $time,
+            "shoutbox" => 0,
 			"alias" => '',
 		];
 

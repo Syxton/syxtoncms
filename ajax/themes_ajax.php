@@ -22,7 +22,7 @@ global $CFG, $MYVARS, $USER, $PAGE;
 
 	$params["pagelist"] = get_css_box($pagename, $rolename, false, NULL, 'pagename', NULL, $themeid, false, $pageid);
 	$params["block"] = get_css_box("Title", "Content", null, null, null, null, $themeid, false, $pageid);
-	echo use_template("tmp/themes.template", $params, "theme_selector_right_template");
+	echo fill_template("tmp/themes.template", "theme_selector_right_template", false, $params);
 }
 
 function show_themes() {
@@ -98,7 +98,7 @@ global $CFG, $MYVARS, $USER, $STYLES;
 		$rolename = get_db_field("display_name", "roles", "roleid = " . user_role($USER->userid, $pageid));
 		$params["pagelist"] = get_css_box($pagename, $rolename, false, NULL, 'pagename', NULL, NULL, true);
 		$params["block"] = get_css_box("Title", "Content", NULL, NULL, "page", NULL, NULL, true);
-		echo use_template("tmp/themes.template", $params, "theme_selector_right_template");
+		echo fill_template("tmp/themes.template", "theme_selector_right_template", false, $params);
 	} else {
 		$STYLES->preview = true;
 		$default_list = get_custom_styles($pageid, $feature, $featureid);
@@ -116,7 +116,7 @@ global $CFG, $MYVARS, $USER, $STYLES;
 
 function show_styles() {
 global $CFG, $MYVARS, $USER;
-	$feature = dbescape($MYVARS->GET["feature"]);
+	$feature = clean_myvar_req("feature", "string");
 	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
 
 	if ($feature == "page") {
@@ -128,9 +128,9 @@ global $CFG, $MYVARS, $USER;
 		$params["block"] = get_css_box("Title", "Content", NULL, NULL, NULL, NULL, '0', NULL, $pageid);
 		$p = [
 			"left" => custom_styles_selector($pageid, $feature),
-			"right" => use_template("tmp/themes.template", $params, "theme_selector_right_template"),
+			"right" => fill_template("tmp/themes.template", "theme_selector_right_template", false, $params),
 		];
-		echo use_template("tmp/themes.template", $p, "make_template_selector_panes_template");
+		echo fill_template("tmp/themes.template", "make_template_selector_panes_template", false, $p);
 	} else {
   		include_once($CFG->dirroot . '/features/' . $feature . '/' . $feature . 'lib.php');
   		$function = "display_$feature";
@@ -138,17 +138,17 @@ global $CFG, $MYVARS, $USER;
 			"left" => custom_styles_selector($pageid, $feature, $featureid),
 			"right" => $function($pageid, "side", $featureid),
 		];
-		echo use_template("tmp/themes.template", $p, "make_template_selector_panes_template");
+		echo fill_template("tmp/themes.template", "make_template_selector_panes_template", false, $p);
 	}
 }
 
 function change_theme_save() {
 global $CFG, $MYVARS, $USER;
-	$themeid = dbescape($MYVARS->GET["themeid"]);
+	$themeid = clean_myvar_opt("themeid", "int", false);
 	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
 
 	//Save selected Theme
-	if ($themeid === "" && $pageid != $CFG->SITEID) {
+	if (!$themeid && $pageid !== $CFG->SITEID) {
 		execute_db_sql("DELETE FROM settings WHERE pageid='$pageid' AND setting_name='themeid'");
 	} else {
 		save_setting(false, ["type" => "page", "pageid" => $pageid, "setting_name" => "themeid"], $themeid);

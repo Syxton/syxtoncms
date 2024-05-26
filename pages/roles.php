@@ -9,11 +9,11 @@
 
 include('header.php');
 
-echo use_template("tmp/roles.template", [], "roles_header_script");
+echo fetch_template("tmp/roles.template", "roles_header_script");
 
 callfunction();
 
-echo use_template("tmp/page.template", [], "end_of_page_template");
+echo fetch_template("tmp/page.template", "end_of_page_template");
 
 function assign_roles() {
 global $CFG, $MYVARS, $USER, $ROLES;
@@ -40,13 +40,13 @@ global $CFG, $MYVARS, $USER, $ROLES;
 	if ($pageid != $CFG->SITEID) {
 		if ($roles = get_db_result($SQL)) {
 			while ($row = fetch_row($roles)) {
-				$options .= use_template("tmp/roles.template", ["user" => $row], "assign_roles_options_template");
+				$options .= fill_template("tmp/roles.template", "assign_roles_options_template", false, ["user" => $row]);
 			}
 		}
 	}
 
 	$params = ["pageid" => $pageid, "issiteid" => ($pageid == $CFG->SITEID), "options" => $options];
-	echo use_template("tmp/roles.template", $params, "assign_roles_template");
+	echo fill_template("tmp/roles.template", "assign_roles_template", false, $params);
 }
 
 function role_specific() {
@@ -62,27 +62,25 @@ global $CFG, $USER, $MYVARS, $ROLES;
 		return;
 	}
 
-	$SQL = 'SELECT *
-				FROM roles
-			 WHERE roleid > ' . user_role($USER->userid, $pageid) . '
-			ORDER BY roleid';
-
-	if ($roles = get_db_result($SQL)) {
+	if ($roles = get_db_result(fetch_template("dbsql/roles.sql", "get_lower_roles"), ["roleid" => user_role($USER->userid, $pageid)])) {
 		while ($row = fetch_row($roles)) {
   		$roleid = !$roleid ? $row["roleid"] : $roleid;
-			$options .= use_template("tmp/roles.template", ["roles" => $row], "role_specific_options_template");
+			$options .= fill_template("tmp/roles.template", "role_specific_options_template", false, ["roles" => $row]);
 		}
 	}
 
-	$params = ["pageid" => $pageid, "feature" => $feature,
-									"featureid" => $featureid, "options" => $options,
-									"abilities" => print_abilities($pageid, "per_role_", $roleid, false, $feature, $featureid)];
-	echo use_template("tmp/roles.template", $params, "role_specific_template");
+	$params = [
+		"pageid" => $pageid,
+		"feature" => $feature,
+		"featureid" => $featureid, "options" => $options,
+		"abilities" => print_abilities($pageid, "per_role_", $roleid, false, $feature, $featureid),
+	];
+	echo fill_template("tmp/roles.template", "role_specific_template", false, $params);
 }
 
 function user_specific() {
 global $CFG, $USER, $MYVARS, $ROLES;
-	$pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : $CFG->SITEID; //Should always be passed
+	$pageid = clean_myvar_opt("pageid", "int", get_pageid()); //Should always be passed
 	$featureid = clean_myvar_opt("featureid", "int", false); //Only passed on feature specific managing
 	$feature = clean_myvar_opt("feature", "string", false); //Only passed on feature specific managing
 	$abilities = user_abilities($USER->userid, $pageid, "roles", $feature, $featureid);
@@ -92,38 +90,29 @@ global $CFG, $USER, $MYVARS, $ROLES;
 		return;
 	}
 
-	$myroleid = user_role($USER->userid, $pageid);
-
-		$SQL = "SELECT u.*
-				FROM users u
-			 WHERE u.userid IN (SELECT ra.userid
-									FROM roles_assignment ra
-								 WHERE ra.pageid='$pageid')
-				 AND u.userid NOT IN (SELECT ra.userid
-										FROM roles_assignment ra
-									 WHERE ra.pageid='" . $CFG->SITEID . "'
-										 AND ra.roleid='" . $ROLES->admin . "')
-				 AND u.userid NOT IN (SELECT ra.userid
-							 			FROM roles_assignment ra
-									 WHERE ra.pageid='$pageid'
-										 AND ra.roleid <= '$myroleid')
-				 AND u.userid != '" . $USER->userid . "'
-			 ORDER BY u.lname";
-
 	$options = "";
-	if ($roles = get_db_result($SQL)) {
+
+	$SQL = fetch_template("dbsql/roles.sql", "users_that_can_have_abilities_modified");
+	$params = [];
+	$params["pageid"] = $pageid;
+	$params["siteid"] = $CFG->SITEID;
+	$params["adminrole"] = $ROLES->admin;
+	$params["myrole"] = user_role($USER->userid, $pageid);
+	$params["userid"] = $USER->userid;
+	if ($roles = get_db_result($SQL, $params)) {
 		while ($row = fetch_row($roles)) {
-			$options .= use_template("tmp/roles.template", ["user" => $row], "user_specific_options_template");
+			$options .= fill_template("tmp/roles.template", "user_specific_options_template", ["user" => $row]);
 		}
 	}
 
-	$params = [ "pageid" => $pageid,
-				"feature" => $feature,
-				"featureid" => $featureid,
-				"options" => $options,
-				"issiteid" => ($pageid == $CFG->SITEID),
+	$params = [
+		"pageid" => $pageid,
+		"feature" => $feature,
+		"featureid" => $featureid,
+		"options" => $options,
+		"issiteid" => ($pageid == $CFG->SITEID),
 	];
-	echo use_template("tmp/roles.template", $params, "user_specific_template");
+	echo fill_template("tmp/roles.template", "user_specific_template", $params);
 }
 
 function group_specific() {
@@ -145,41 +134,41 @@ global $CFG, $USER, $MYVARS, $ROLES;
 	}
 
 	$params = ["grouppage" => group_page($pageid, $feature, $featureid)];
-	echo use_template("tmp/roles.template", $params, "group_specific_template");
+	echo fill_template("tmp/roles.template", "group_specific_template", false, $params);
 }
 
 function manager() {
 global $CFG, $USER, $MYVARS, $ROLES;
-	$pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : $CFG->SITEID; //Should always be passed
-    $featureid = clean_myvar_opt("featureid", "int", false); //Only passed on feature specific managing
-    $feature = clean_myvar_opt("feature", "string", false); //Only passed on feature specific managing
+	$pageid = clean_myvar_opt("pageid", "int", get_pageid()); //Should always be passed
+	$featureid = clean_myvar_opt("featureid", "int", false); //Only passed on feature specific managing
+	$feature = clean_myvar_opt("feature", "string", false); //Only passed on feature specific managing
 
-    $abilities = merge_abilities([
-        user_abilities($USER->userid, $pageid, "roles", $feature, $featureid),
-        user_abilities($USER->userid, $pageid, ["feature", "html"], $feature, $featureid),
-    ]);
-    $params = [
-        "feature" => $feature,
-        "featureid" => $featureid,
-        "warning" => ($pageid == $CFG->SITEID && !$featureid),
-        "tab_assign_roles" => (!$featureid && $abilities->assign_roles->allow),
-        "tab_modify_roles" => (!$featureid && $abilities->edit_roles->allow) || (($featureid && $abilities->edit_feature_abilities->allow)),
-        "tab_groups" => (!$featureid && $abilities->edit_group_abilities->allow) || (($featureid && $abilities->edit_feature_group_abilities->allow)),
-        "tab_user" => (!$featureid && $abilities->edit_user_abilities->allow) || (($featureid && $abilities->edit_feature_user_abilities->allow)),
-        "pagename" => stripslashes(get_db_field("name", "pages", "pageid='$pageid'")),
-        "pageid" => $pageid,
-        "featurecontext" => false,
-    ];
+	$abilities = merge_abilities([
+		user_abilities($USER->userid, $pageid, "roles", $feature, $featureid),
+		user_abilities($USER->userid, $pageid, ["feature", "html"], $feature, $featureid),
+	]);
+	$params = [
+		"feature" => $feature,
+		"featureid" => $featureid,
+		"warning" => ($pageid == $CFG->SITEID && !$featureid),
+		"tab_assign_roles" => (!$featureid && $abilities->assign_roles->allow),
+		"tab_modify_roles" => (!$featureid && $abilities->edit_roles->allow) || (($featureid && $abilities->edit_feature_abilities->allow)),
+		"tab_groups" => (!$featureid && $abilities->edit_group_abilities->allow) || (($featureid && $abilities->edit_feature_group_abilities->allow)),
+		"tab_user" => (!$featureid && $abilities->edit_user_abilities->allow) || (($featureid && $abilities->edit_feature_user_abilities->allow)),
+		"pagename" => stripslashes(get_db_field("name", "pages", "pageid='$pageid'")),
+		"pageid" => $pageid,
+		"featurecontext" => false,
+	];
 
-    if ($featureid && $feature) {
-        if (!$settings = fetch_settings($feature, $featureid, $pageid)) {
-        save_batch_settings(default_settings($feature, $pageid, $featureid));
-            $settings = fetch_settings($feature, $featureid, $pageid);
-        }
-            $params["featurecontext"] = true;
-            $params["setting"] = $settings->$feature->$featureid->feature_title->setting;
-    }
+	if ($featureid && $feature) {
+		if (!$settings = fetch_settings($feature, $featureid, $pageid)) {
+			save_batch_settings(default_settings($feature, $pageid, $featureid));
+			$settings = fetch_settings($feature, $featureid, $pageid);
+		}
+		$params["featurecontext"] = true;
+		$params["setting"] = $settings->$feature->$featureid->feature_title->setting;
+	}
 
-	echo use_template("tmp/roles.template", $params, "roles_manager_template");
+	echo fill_template("tmp/roles.template", "roles_manager_template", false, $params);
 }
 ?>
