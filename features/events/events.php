@@ -61,28 +61,24 @@ function events_settings() {
 
 function event_manager() {
 global $CFG;
-	 $pageid = clean_myvar_opt("pageid", "int", get_pageid());
-	 echo '<div class="dontprint" style="text-align:center;">
-				<h3>Search for events by their name.</h3>
-				<form onsubmit="$(\'#loading_overlay\').show();
-									 ajaxapi(\'/features/events/events_ajax.php\',
-												\'eventsearch\',
-												\'&amp;pageid=' . $pageid . '&amp;searchwords=\' + escape($(\'#searchbox\').val()),
-												function() {
-													 if (xmlHttp.readyState == 4) {
-														  simple_display(\'searchcontainer\');
-														  $(\'#loading_overlay\').hide();
-													 }
-												}, true); return false;">
-					 Event Name <input type="text" id="searchbox" name="searchbox" />&nbsp;<input type="submit" value="Search" />
-				</form>
-				<br />
-		  </div>
-		  <div id="loading_overlay" class="dontprint" style="text-align:center;position:absolute;width:98%;height:85%;background-color: white;opacity:.6;display:none;">
-				<br /><br /><br />
-				<img src="' . $CFG->wwwroot . '/images/loading_large.gif" />
-		  </div>
-		  <span id="searchcontainer"></span>';
+	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
+	ajaxapi([
+		"id" => "eventsearchform",
+		"url" => "/features/events/events_ajax.php",
+		"data" => ["action" => "eventsearch", "pageid" => $pageid, "searchwords" => "js|| escape($('#searchbox').val()) ||js"],
+		"display" => "searchcontainer",
+		"loading" => "loading_overlay",
+		"event" => "submit",
+	]);
+
+	echo '<div class="dontprint" style="text-align:center;">
+			<h3>Search for events by their name.</h3>
+			<form id="eventsearchform">
+					Event Name <input type="text" id="searchbox" name="searchbox" />&nbsp;<input type="submit" value="Search" />
+			</form>
+			<br />
+		</div>
+		' . get_searchcontainer();
 }
 
 function template_manager() {
@@ -105,23 +101,18 @@ global $CFG;
 				</form>
 				<br />
 		  </div>
-		  <div id="loading_overlay" class="dontprint" style="text-align:center;position:absolute;width:98%;height:85%;background-color: white;opacity:.6;display:none;">
-				<br /><br /><br />
-				<img src="' . $CFG->wwwroot . '/images/loading_large.gif" />
-		  </div>
-		  <span id="searchcontainer"></span>';
+		  ' . get_searchcontainer();
 }
 
 function application_manager() {
 global $CFG;
-	 $pageid = clean_myvar_opt("pageid", "int", get_pageid());
-	 $export = "";
-	 if ($archive = get_db_result("SELECT * FROM events_staff_archive WHERE pageid='$pageid' GROUP BY year ORDER BY year")) {
-		  $i = 0;
-		  $values = new \stdClass;
+	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
+	$export = "";
+	if ($archive = get_db_result(fetch_template("dbsql/events.sql", "get_all_staff_by_page", "events"), ["pageid" => $pageid])) {
+		$i = 0;
+		$values = [];
 		while ($vals = fetch_row($archive)) {
-				$values->$i = new \stdClass;
-			$values->$i->year = $vals["year"];
+			$values[$i]["year"] = $vals["year"];
 			$i++;
 		}
 
@@ -135,68 +126,87 @@ global $CFG;
 			"displayname" => "year",
 			"selected" => date("Y"),
 		];
-		  $export = '<div style="float:right;">
-						  ' . make_select($params) . '
-						  <a href="javascript: void(0);"
-						onclick="ajaxapi(\'/features/events/events_ajax.php\',
-										\'export_staffapp\',
-										\'&amp;pageid=' . $pageid . '&amp;year=\'+$(\'#appyears\').val(),
-										function() {
-											if (xmlHttp.readyState == 4) {
-												run_this();
-											}
-										},
-										true
-								);">
-								<img src="' . $CFG->wwwroot . '/images/csv.png" title="Export" />
-						  </a><div></div>
-						  </div>';
-	 }
+		$id = "export_staffapp_$pageid";
+		$export = '<div style="float:right;">
+					' . make_select($params) . '
+					<a href="javascript: void(0);" id="' . $id . '">
+						<img src="' . $CFG->wwwroot . '/images/csv.png" title="Export" />
+					</a>
+					<div></div>
+				</div>';
 
-	 echo '<div class="dontprint"><form onsubmit="$(\'#loading_overlay\').show(); ajaxapi(\'/features/events/events_ajax.php\',\'appsearch\',\'&amp;pageid=' . $pageid . '&amp;searchwords=\'+escape($(\'#searchbox\').val()),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); $(\'#loading_overlay\').hide(); }}, true); return false;">
-	Applicant Search <input type="text" id="searchbox" name="searchbox" />&nbsp;<input type="submit" value="Search" /><div style="float:right;width: 150px;">Search for applicants by their name.</div>
-	' . $export . '
-	 </form></div>
-	<div id="loading_overlay" class="dontprint" style="text-align:center;position:absolute;width:98%;height:85%;background-color: white;opacity:.6;display:none;"><br /><br /><br /><img src="' . $CFG->wwwroot . '/images/loading_large.gif" /></div>
-	<span id="searchcontainer"></span>';
+		ajaxapi([
+			"id" => $id,
+			"url" => "/features/events/events_ajax.php",
+			"data" => ["action" => "export_staffapp", "pageid" => $pageid, "year" => "js|| $('#appyears').val() ||js"],
+			"ondone" => "jq_eval(data);",
+		]);
+	}
+
+	ajaxapi([
+		"id" => "appsearchform",
+		"url" => "/features/events/events_ajax.php",
+		"data" => ["action" => "appsearch", "pageid" => $pageid, "searchwords" => "js|| escape($('#searchbox').val()) ||js"],
+		"display" => "searchcontainer",
+		"loading" => "loading_overlay",
+		"event" => "submit",
+	]);
+
+	echo   '<div class="dontprint">
+				<form id="appsearchform" >
+					Applicant Search <input type="text" id="searchbox" name="searchbox" />&nbsp;<input type="submit" value="Search" />
+					<div style="float:right;width: 150px;">
+						Search for applicants by their name.
+					</div>
+					' . $export . '
+				</form>
+			</div>
+			' . get_searchcontainer();
 }
 
 function staff_emailer() {
 global $CFG;
-	 echo '<div class="dontprint"><form onsubmit="$(\'#loading_overlay\').show(); ajaxapi(\'/features/events/events_ajax.php\',\'sendstaffemails\',\'&amp;sendemails=\'+$(\'#sendemails\').prop(\'checked\')+\'&amp;stafflist=\'+encodeURIComponent($(\'#stafflist\').val()),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); $(\'#loading_overlay\').hide(); }}, true); return false;">
-	<div style="text-align:center;margin:5px;font-weight: bolder;">Staff Status Checker</div>
-	 <div style="float:right;line-height:35px;">
-		<label class="rowTitle" for="workerconsentsig">Send Emails</label>
-		  <input id="sendemails" name="sendemails" type="checkbox" />
-	</div>
-	 <div style="text-align:center;width: 50%;">List of email addresses of staff, one email address per line.</div>
-	 <textarea rows="15" id="stafflist" name="stafflist" style="width:100%;max-width:500px"></textarea>
-	 <div style="text-align:center;margin:5px;"><input type="submit" value="Process" /></div>
-	 </form></div>
-	<div id="loading_overlay" class="dontprint" style="text-align:center;position:absolute;width:98%;background-color: white;opacity:.6;display:none;"><br /><br /><br /><img src="' . $CFG->wwwroot . '/images/loading_large.gif" /></div>
-	<span id="searchcontainer"></span>';
+	 echo '
+	 	<div class="dontprint">
+	 		<form onsubmit="$(\'#loading_overlay\').show(); ajaxapi(\'/features/events/events_ajax.php\',\'sendstaffemails\',\'&amp;sendemails=\'+$(\'#sendemails\').prop(\'checked\')+\'&amp;stafflist=\'+encodeURIComponent($(\'#stafflist\').val()),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); $(\'#loading_overlay\').hide(); }}, true); return false;">
+				<div style="text-align:center;margin:5px;font-weight: bolder;">
+					Staff Status Checker
+				</div>
+				<div style="float:right;line-height:35px;">
+					<label class="rowTitle" for="workerconsentsig">Send Emails</label>
+		  			<input id="sendemails" name="sendemails" type="checkbox" />
+				</div>
+	 			<div style="text-align:center;width: 50%;">
+					List of email addresses of staff, one email address per line.
+				</div>
+	 			<textarea rows="15" id="stafflist" name="stafflist" style="width:100%;max-width:500px"></textarea>
+				<div style="text-align:center;margin:5px;">
+					<input type="submit" value="Process" />
+				</div>
+	 		</form>
+		</div>' . get_searchcontainer();
 }
 
 function pay() {
 global $CFG;
-	 $regcode = clean_myvar_opt("regcode", "string", "");
-	 $modal = clean_myvar_opt("modal", "string", false);
+	$regcode = clean_myvar_opt("regcode", "string", "");
+	$modal = clean_myvar_opt("modal", "string", false);
 
-	 if (!$modal) {
+	if (!$modal) {
 		echo get_js_tags(["jquery"]);
-		  echo main_body(true) . '<br /><br />';
-	 }
+		echo main_body(true) . '<br /><br />';
+	}
 
 	echo js_code_wrap('window.onload = function () { if ($("#code").val() != "") { lookup_reg($("#code").val()); } }', "", true);
-	 echo '
-		  <div style="text-align:center;padding:15px;">
-				<h3>' . $CFG->sitename . ' Registration Lookup</h3><br />
-				<form id="payarea_form" onsubmit="lookup_reg($(\'#code\').val()); return false;">
-				Enter your Registration ID: <input type="text" id="code" size="35" value="' . $regcode . '" /> <input type="submit" value="Submit" />
-				</form>
-		  </div>
-		  <div id="payarea" style="padding:15px;"></div>
-	 ';
+	echo '
+		<div style="text-align:center;padding:15px;">
+			<h3>' . $CFG->sitename . ' Registration Lookup</h3><br />
+			<form id="payarea_form" onsubmit="lookup_reg($(\'#code\').val()); return false;">
+			Enter your Registration ID: <input type="text" id="code" size="35" value="' . $regcode . '" /> <input type="submit" value="Submit" />
+			</form>
+		</div>
+		<div id="payarea" style="padding:15px;"></div>
+	';
 }
 
 function event_request_form() {
@@ -928,22 +938,28 @@ global $CFG, $USER;
 //Show registration form
 function show_registration() {
 global $CFG, $USER;
-	 $eventid = clean_myvar_req("eventid", "int");
+	$eventid = clean_myvar_req("eventid", "int");
 	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
 
 	if (!user_is_able($USER->userid, "signupforevents", $pageid)) { trigger_error(error_string("no_permission", ["signupforevents"]), E_USER_WARNING); return; }
 
 	$event = get_event($eventid);
 	$template = get_event_template($event['template_id']);
-	$formlist = ""; $form = "";
+	$formlist = $form = "";
 
-	 $returnme = '<div id="registration_div">
-						  <table class="registration"><tr><td>' . $template['intro'] . ' </td></tr></table>';
+	$returnme = '<div id="registration_div">
+							<table class="registration">
+								<tr>
+									<td>
+									' . $template['intro'] . '
+									</td>
+								</tr>
+							</table>';
 
 	if ($template['folder'] != "none") { //registration template refers to a file
-		  ob_start();
-		  include($CFG->dirroot . '/features/events/templates/' . $template['folder'] . '/template.php');
-		  $returnme .= ob_get_clean();
+		ob_start();
+		include($CFG->dirroot . '/features/events/templates/' . $template['folder'] . '/template.php');
+		$returnme .= ob_get_clean();
 	} else { //registration template refers to a database style template
 		$form = '<table style="width:100%">';
 		$templateform = get_db_result("SELECT * FROM events_templates_forms WHERE template_id='" . $template['template_id'] . "' ORDER BY sort");
@@ -982,21 +998,21 @@ global $CFG, $USER;
 			}
 		}
 		$form .= '<tr><td></td><td><input type="button" value="Submit" onclick="submit_registration(\'' . $eventid . '\',\'' . $formlist . '\');" /></td></tr></table>';
-		  $returnme .= create_validation_javascript($formlist, $eventid) . $form . '</div>' . js_code_wrap('prepareInputsForHints();');
+		$returnme .= create_validation_javascript($formlist, $eventid) . $form . '</div>' . js_code_wrap('prepareInputsForHints();');
 	}
 
-	 $returnme .= '</div>'; //end registration div
+	$returnme .= '</div>'; //end registration div
 
-	 $code = '$(document).keydown(function(e) {
-				var nodeName = e.target.nodeName.toLowerCase();
+	$code = '$(document).keydown(function(e) {
+					var nodeName = e.target.nodeName.toLowerCase();
 
-				if (e.which === 8) {
-					if ((nodeName === "input" && e.target.type === "text") || nodeName === "textarea") {
-						// do nothing
-					} else {
-						e.preventDefault();
+					if (e.which === 8) {
+						if ((nodeName === "input" && e.target.type === "text") || nodeName === "textarea") {
+							// do nothing
+						} else {
+							e.preventDefault();
+						}
 					}
-				}
 				});';
 	$returnme .= js_code_wrap($code, "defer", true);
 	echo $returnme;

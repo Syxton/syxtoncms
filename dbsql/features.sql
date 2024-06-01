@@ -7,7 +7,7 @@ addable_features||
                            FROM pages_features pf
                            WHERE pf.pageid = '||pageid||'
                           )
-         AND f.feature != "addfeature"
+         AND f.feature <> "addfeature"
         )
       ||issite{{
         OR f.site_multiples_allowed = 1

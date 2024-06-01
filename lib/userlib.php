@@ -57,8 +57,8 @@ function get_ip_address() {
 function load_user_cookie() {
 global $CFG, $USER;
 	if (!empty($_SESSION['userid'])) { //cookie exists
-        $time = get_timestamp();
-        $advanced_login = !empty($_SESSION["lia_original"]) ? "" : " AND ($time - last_activity < " . $CFG->cookietimeout.")";
+		$time = get_timestamp();
+		$advanced_login = !empty($_SESSION["lia_original"]) ? "" : " AND ($time - last_activity < " . $CFG->cookietimeout.")";
 		$SQL = "SELECT * FROM users WHERE userid='" . $_SESSION['userid'] . "' $advanced_login";
 		if ($row = get_db_row($SQL)) { //Get user info from db, load into $USER global
 			$temp = (object)$row;

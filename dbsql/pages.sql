@@ -56,7 +56,7 @@ update_page_menu||
 page_search||
 	SELECT p.*||admin{{//OR//||checkrights||}}admin||
 	FROM pages p
-	WHERE p.pageid != ||siteid||
+	WHERE p.pageid <> ||siteid||
 	AND (||searchstring||)
 	||viewablepages||
 	ORDER BY p.name
@@ -93,8 +93,8 @@ page_search_checkrights||
 																	AND rau.ability = "viewpages"
 																	AND allow = 0
 									)
-									AND p.pageid != ||siteid||
-									AND p.menu_page != 1
+									AND p.pageid <> ||siteid||
+									AND p.menu_page <> 1
 							), 1, 0) as added
 ||page_search_checkrights
 
@@ -120,8 +120,8 @@ INNER JOIN roles_ability ry ON ry.roleid = ||roleid||
                              WHERE rau.userid = ||userid||
                                AND rau.ability = "viewpages"
                                AND allow = 0)
-       AND p.pageid != ||siteid||
-       AND p.menu_page != 1
+       AND p.pageid <> ||siteid||
+       AND p.menu_page <> 1
   ORDER BY p.name
 ||my_pagelist
 
@@ -129,8 +129,8 @@ admin_pagelinks||
 	SELECT *
 	FROM pages_links
 	WHERE hostpageid = ||pageid||
-	AND linkpageid != ||siteid||
-	AND linkpageid != ||pageid||
+	AND linkpageid <> ||siteid||
+	AND linkpageid <> ||pageid||
 	ORDER BY sort
 ||admin_pagelinks
 
@@ -139,8 +139,8 @@ user_pagelinks||
       FROM pages_links pl
      WHERE (
                 pl.hostpageid = ||pageid||
-            AND pl.linkpageid != ||siteid||
-            AND pl.linkpageid != ||pageid||
+            AND pl.linkpageid <> ||siteid||
+            AND pl.linkpageid <> ||pageid||
            )
        AND (
                (
@@ -205,8 +205,8 @@ default_pagelinks||
 									WHERE p.pageid = pl.linkpageid
 									AND siteviewable = 1)
 	AND pl.hostpageid = ||pageid||
-	AND pl.linkpageid != ||siteid||
-	AND pl.linkpageid != ||pageid||
+	AND pl.linkpageid <> ||siteid||
+	AND pl.linkpageid <> ||pageid||
 	ORDER BY pl.sort
 ||default_pagelinks
 

@@ -200,17 +200,17 @@ global $CFG;
  */
 function save_setting($settingid = false, $settinginfo = [], $value = false, $extravalue = false, &$settings = false) {
 	$fields = [];
-    $sqlfields = "";
-    $sqlvalues = "";
+	$sqlfields = "";
+	$sqlvalues = "";
 
-    $params = [];
-    // If settingid wasn't provided, we may be able to find it with the provided values.
+	$params = [];
+	// If settingid wasn't provided, we may be able to find it with the provided values.
 	if (!empty($settinginfo)) {
-        // Add settinginfo fields to list of possible fields to check/update.
+		// Add settinginfo fields to list of possible fields to check/update.
 		$fields += ["type", "pageid", "featureid", "setting_name", "defaultsetting"];
 
 		// Check if settingid was not provided but can be found.
-        // Also check that the forced insert is not requested.
+		// Also check that the forced insert is not requested.
 		if (!$settingid && !isset($settinginfo["insert"])) {
 			$idsql = "";
 			foreach ($fields as $field) {
@@ -218,7 +218,7 @@ function save_setting($settingid = false, $settinginfo = [], $value = false, $ex
 					if (isset($settinginfo[$field]) && $settinginfo[$field] !== false) {
 						$idsql .= $idsql == "" ? "" : " AND "; // Add AND if not first field.
 						$idsql .= "$field = ||$field||";
-                        $params[$field] = $settinginfo[$field];
+								$params[$field] = $settinginfo[$field];
 					}
 				}
 			}

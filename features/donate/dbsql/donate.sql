@@ -20,6 +20,24 @@ get_donation_campaign||
 								)
 ||get_donation_campaign
 
+get_donation_instance_if_owner_of_campaign||
+	SELECT *
+	FROM donate_instance
+	WHERE donate_id = ||donate_id||
+	AND campaign_id IN (
+								SELECT campaign_id
+								FROM donate_campaign
+								WHERE origin_page = ||origin_page||
+							)
+||get_donation_instance_if_owner_of_campaign
+
+get_donation_instance_if_joined_to_campaign||
+	SELECT *
+	FROM donate_instance
+	WHERE donate_id = ||donate_id||
+	AND campaign_id <> 0
+||get_donation_instance_if_joined_to_campaign
+
 get_donate_instance||
 	SELECT *
 	FROM donate_instance

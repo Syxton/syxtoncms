@@ -31,8 +31,8 @@ function ajaxapi(script, action, param, display, async) {
     };
 
     //Build the URL to connect to
-		var myurl = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + script;
-		var d = new Date();
+	var myurl = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + script;
+	var d = new Date();
 	var parameters = "action=" + action + param.entityify() + "&currTime=" + d.toUTCString();
 
 	if (async != true) {
@@ -40,7 +40,8 @@ function ajaxapi(script, action, param, display, async) {
   		display();
     } else {
         ajaxpost(myurl, parameters, true, display);
-    }
+	}
+	setTimeout(function() { enableajaxjs(); }, 500);
 }
 
 function ajaxpost(url, parameters, async, display) {
@@ -90,6 +91,18 @@ function simple_display(divname) {
         setTimeout(function () { resize_modal(divname); }, 100);
     }
 }
+
+function jq_display(target, data) {
+	if ($("#" + target).length > 0) {
+        $("#" + target).html(data.message);
+        setTimeout(function () { resize_modal(target); }, 100);
+    }
+}
+
+function jq_eval(data) {
+    eval(data.message);
+}
+
 function clear_display(divname) { if (document.getElementById(divname)) { document.getElementById(divname).innerHTML = ''; } }
 function display_backup(divname,backupdiv) {	document.getElementById(divname).innerHTML = document.getElementById(backupdiv).innerHTML + xmlHttp.responseText; }
 function run_this() { eval(xmlHttp.responseText); }
@@ -179,7 +192,7 @@ function loadjs(scriptName, callback) {
 }
 
 function loaddynamicjs(scriptname) {
-    var js=$('#'+scriptname).html();
+    var js = $('#'+scriptname).html();
     setTimeout(function() { return false; }, 2000);
 	var head = document.getElementsByTagName("head")[0];
     script = document.createElement('script');
@@ -189,6 +202,27 @@ function loaddynamicjs(scriptname) {
     head.appendChild(script);
     setTimeout(function() { return false; }, 100);
 }
+
+function loadajaxjs(data) {
+	$.each(data.loadjs, function (key, value) {
+		$("#script_" + key).remove();
+		$("body").append($('<script class="ajaxapi active" id="script_' + key + '">' + value.singleline().trim() + '</script>'));
+	});
+}
+
+function enableajaxjs() {
+	$.each($('.ajaxapi.inactive'), function () {
+		let key = $(this).attr('id');
+		let value = $(this).html();
+		$(this).remove(); // Remove the inactive script
+		$("#script_" + key).remove(); // Remove any previously loaded script with the same id.
+		$("body").append($('<script class="ajaxapi active" id="script_' + key + '">' + value.singleline().trim() + '</script>'));
+	});
+}
+
+$(function () { // At the end of the document, check for inactive ajax javascript and attempt to activate it.
+	enableajaxjs();
+});
 
 //2.0 jquery version
 function create_request_string(container) {

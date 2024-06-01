@@ -51,7 +51,7 @@ $(window).smartresize(function(){
                     $.colorbox.resize({width:width,height: ($(window).height() * .95)});     
                 }else{ //window is larger than modal
                     if($("#cboxLoadedContent").hasScrollBar()){ //and there are scrollbars
-                        if($(window).height() > obj.scrollHeight){
+                        if(typeof obj != 'undefined' && $(window).height() > obj.scrollHeight){
                             setTimeout(function(){ $.colorbox.resize(); },500);  
                         }
                     }

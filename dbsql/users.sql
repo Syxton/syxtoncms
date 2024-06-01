@@ -4,6 +4,19 @@ get_user||
 	WHERE userid = ||userid||
 ||get_user
 
+get_user_by_email||
+	SELECT *
+	FROM users
+	WHERE email = ||email||
+||get_user_by_email
+
+used_email||
+	SELECT *
+	FROM users
+	WHERE email = ||email||
+	AND userid <> ||userid||
+||used_email
+
 delete_user||
 	DELETE
 	FROM users
@@ -15,6 +28,12 @@ delete_user_logs||
 	FROM logfile
 	WHERE userid = ||userid||
 ||delete_user_logs
+
+update_password||
+	UPDATE users
+	SET alternate = '', password = ||password||
+	WHERE userid = ||userid||
+||update_password
 
 create_user||
 	INSERT INTO users (email, fname, lname, temp, password, userkey, joined)

@@ -84,7 +84,6 @@ global $CFG, $MYVARS, $USER;
 			$g++;
 		}
 
-		$returnme .= '<div id="loading_overlay" style="text-align: center; position: absolute; width: 98%; z-index:4;height: 98%; background-color: white; opacity: 0.6; display: none;"><br /><br /><br /><img src="' . $CFG->wwwroot . '/images/loading_large.gif" /></div>';
 		$params = [
 			"properties" => [
 				"name" => "gallery",
@@ -102,7 +101,7 @@ global $CFG, $MYVARS, $USER;
 		$gallery_select = 'Select which gallery you wish to view. ' . make_select($params);
         $returnme .= $gallery_select . ' Click on a picture to activate or deactivate it.';
         $returnme .= '<a title="Delete Gallery" style="float:right;padding:2px;" href="javascript: void(0);" onclick="if ($(\'#gallery\').val() != \'all\') { ajaxapi(\'/features/pics/pics_ajax.php\',\'delete_gallery\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;galleryid=\'+$(\'#gallery\').val(),function() { if (xmlHttp.readyState == 4) { simple_display(\'pics_manager\'); }}, true); } else { alert(\'Cannot delete all galleries at once.\') }"><img src="' . $CFG->wwwroot . '/images/trash.gif" /></a>';
-		$returnme .= '<span id="searchcontainer">' . get_pics($pageid, $featureid,"all",0,"true") . '</span>';
+		$returnme .= get_searchcontainer(get_pics($pageid, $featureid, "all", 0, "true"));
 	} else {
 		$returnme .= '<br /><br /><div style="text-align:center">No images have been added.</div>';
 	}
@@ -177,9 +176,9 @@ global $CFG, $USER;
 		$deletepic = ""; $activated = "";
 		$count = $total > (($pagenum + 1) * $perpage) ? $perpage : $total - (($pagenum) * $perpage); //get the amount returned...is it a full page of results?
 		  $amountshown = $firstonpage + $perpage < $total ? $firstonpage + $perpage : $total;
-		  $prev = $pagenum > 0 ? '<a href="javascript: $(\'#loading_overlay\').show(); ajaxapi(\'/features/pics/pics_ajax.php\',\'pics_pageturn\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;galleryid=' . $galleryid . '&amp;editable=' . $editable . '&amp;perpage=' . $perpage . '&amp;order=' . urlencode($order) . '&amp;pagenum=' . ($pagenum - 1) . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); $(\'#loading_overlay\').hide(); }}, true);" onmouseup="this.blur();"><img src="' . $CFG->wwwroot . '/images/prev.gif" title="Previous Page" alt="Previous Page" /></a>' : "";
+		  $prev = $pagenum > 0 ? '<a href="javascript: $(\'#loading_overlay\').show(); ajaxapi(\'/features/pics/pics_ajax.php\',\'pics_pageturn\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;galleryid=' . $galleryid . '&amp;editable=' . $editable . '&amp;perpage=' . $perpage . '&amp;order=' . urlencode($order) . '&amp;pagenum=' . ($pagenum - 1) . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); $(\'#loading_overlay\').hide(); }}, true);" onmouseup="this.blur();"><img src="' . $CFG->wwwroot . '/images/prev.png" title="Previous Page" alt="Previous Page" /></a>' : "";
 		  $info = 'Viewing ' . ($firstonpage + 1) . " through " . $amountshown . " out of $total";
-		  $next = $firstonpage + $perpage < $total ? '<a href="javascript: $(\'#loading_overlay\').show(); ajaxapi(\'/features/pics/pics_ajax.php\',\'pics_pageturn\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;galleryid=' . $galleryid . '&amp;editable=' . $editable . '&amp;perpage=' . $perpage . '&amp;order=' . urlencode($order) . '&amp;pagenum=' . ($pagenum + 1) . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); $(\'#loading_overlay\').hide(); }}, true);" onmouseup="this.blur();"><img src="' . $CFG->wwwroot . '/images/next.gif" title="Next Page" alt="Next Page" /></a>' : "";
+		  $next = $firstonpage + $perpage < $total ? '<a href="javascript: $(\'#loading_overlay\').show(); ajaxapi(\'/features/pics/pics_ajax.php\',\'pics_pageturn\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;galleryid=' . $galleryid . '&amp;editable=' . $editable . '&amp;perpage=' . $perpage . '&amp;order=' . urlencode($order) . '&amp;pagenum=' . ($pagenum + 1) . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); $(\'#loading_overlay\').hide(); }}, true);" onmouseup="this.blur();"><img src="' . $CFG->wwwroot . '/images/next.png" title="Next Page" alt="Next Page" /></a>' : "";
  		$header = '<table style="width:100%;"><tr style="height:45px;"><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;font-size:.75em;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><p>';
 
 		$returnme = '<div style="width:760px;overflow:auto;margin-right:auto;margin-left:auto;">';

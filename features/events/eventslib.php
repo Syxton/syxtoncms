@@ -1487,10 +1487,16 @@ global $CFG;
 	$print = '';
 	if (!empty($status)) {
 		foreach ($status as $s) {
-			$print .= '<div style="color:red;font-weight:bold"><img style="vertical-align: middle;" src="' . $protocol.$CFG->wwwroot . '/images/error.png" /> ' . $s["full"] . '</div>';
+			$print .= '
+				<div class="staff_status_alert">
+					<img style="vertical-align: middle;" src="' . $protocol.$CFG->wwwroot . '/images/error.png" /> ' . $s["full"] . '
+				</div>';
 		}
 	} else {
-		$print = '<div style="color:green;font-size:1.3em;font-weight:bold"><img style="vertical-align: bottom;" src="' . $protocol.$CFG->wwwroot . '/images/checked.gif" /> APPROVED</div>';
+		$print = '
+			<div class="staff_status_approved">
+				<img style="vertical-align: bottom;" src="' . $protocol.$CFG->wwwroot . '/images/checked.gif" /> APPROVED
+			</div>';
 	}
 	return $print;
 }
@@ -2372,7 +2378,7 @@ global $CFG, $USER;
 	$content .= user_is_able($USER->userid, "manageeventtemplates", $pageid) ? make_modal_links([
 																							"title"  => "Event Templates",
 																							"text"   => "Event Templates",
-																							"path"   => action_path("events") . "template_manager&amp;pageid=$pageid",
+																							"path"   => action_path("events") . "template_manager&pageid=$pageid",
 																							"iframe" => true,
 																							"width"  => "640",
 																							"height" => "600",
@@ -2383,7 +2389,7 @@ global $CFG, $USER;
 	$content .= user_is_able($USER->userid, "manageevents", $pageid) ? make_modal_links([
 																					"title"  => "Event Registrations",
 																					"text"   => "Event Registrations",
-																					"path"   => action_path("events") . "event_manager&amp;pageid=$pageid",
+																					"path"   => action_path("events") . "event_manager&pageid=$pageid",
 																					"iframe" => true,
 																					"width"  => "640",
 																					"height" => "600",
@@ -2394,7 +2400,7 @@ global $CFG, $USER;
 	$content .= user_is_able($USER->userid, "manageapplications", $pageid) ? make_modal_links([
 																							"title"  => "Staff Applications",
 																							"text"   => "Staff Applications",
-																							"path"   => action_path("events") . "application_manager&amp;pageid=$pageid",
+																							"path"   => action_path("events") . "application_manager&pageid=$pageid",
 																							"iframe" => true,
 																							"width"  => "640",
 																							"height" => "600",
@@ -2405,7 +2411,7 @@ global $CFG, $USER;
 	$content .= user_is_able($USER->userid, "manageapplications", $pageid) ? make_modal_links([
 																							"title"  => "Staff Process Email",
 																							"text"   => "Staff Process Email",
-																							"path"   => action_path("events") . "staff_emailer&amp;pageid=$pageid",
+																							"path"   => action_path("events") . "staff_emailer&pageid=$pageid",
 																							"iframe" => true,
 																							"width"  => "640",
 																							"height" => "600",
@@ -2414,4 +2420,64 @@ global $CFG, $USER;
 																						]) : "";
 	return $content;
 }
+
+function add_blank_registration($eventid, $reserveamount = 1) {
+	$event = get_event($eventid);
+	$template_id = $event["template_id"];
+	$eventname = $event["name"];
+	$pageid = $event["pageid"];
+
+	$reserved = 0;
+	$return = [];
+	while ($reserved < $reserveamount) {
+		$SQL = "";$SQL2 = "";
+		if ($regid = execute_db_sql("INSERT INTO events_registrations
+									(eventid,date,code,manual)
+									VALUES('$eventid','" . get_timestamp() . "','" . uniqid("", true) . "',1)")) {
+			$template = get_event_template($template_id);
+			if ($template["folder"] == "none") {
+				if ($template_forms = get_db_result("SELECT * FROM events_templates_forms
+														WHERE template_id='$template_id'
+														ORDER BY sort")) {
+						while ($form_element = fetch_row($template_forms)) {
+							if ($form_element["type"] == "payment") {
+								$SQL2 .= $SQL2 == "" ? "" : ",";
+								$SQL2 .= "('$regid','" . $form_element["elementid"] . "', '','$eventid','total_owed'),('$regid'," . $form_element["elementid"] . ", '','$eventid','paid'),('$regid','" . $form_element["elementid"] . "', '','$eventid','payment_method')";
+						} else {
+								$SQL2 .= $SQL2 == "" ? "" : ",";
+								$value = $form_element["nameforemail"] == 1 ? "Reserved" : "";
+								$SQL2 .= "('$regid'," . $form_element["elementid"] . ",'$value','$eventid','" . $form_element["elementname"] . "')";
+							}
+					}
+				  }
+				  $SQL2 = "INSERT INTO events_registrations_values
+							(regid,elementid,value,eventid,elementname)
+							VALUES" . $SQL2;
+			  } else {
+				  $template_forms = explode(";", trim($template["formlist"], ';'));
+				foreach ($template_forms as $formset) {
+					$form = explode(":", $formset);
+						$value = strstr($template["registrant_name"], $form[0]) ? "Reserved" : "";
+					$SQL2 .= $SQL2 == "" ? "" : ",";
+					$SQL2 .= "('$regid','$value','$eventid','" . $form[0]."')";
+				}
+
+				$SQL2 = "INSERT INTO events_registrations_values
+							(regid,value,eventid,elementname)
+							VALUES" . $SQL2;
+			  }
+
+			  if (execute_db_sql($SQL2)) { 
+				$return[$reserved] = $regid;
+			  } else {
+				execute_db_sql("DELETE FROM events_registrations
+									WHERE regid='$regid'");
+				$return[$reserved] = false;
+			}
+		} else { $return[$reserved] = false; }
+		$reserved++;
+	}
+	return $return;
+}
+
 ?>

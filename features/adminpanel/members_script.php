@@ -31,8 +31,9 @@ global $CFG, $MYVARS, $USER, $smarty;
     //split the search words and find out what they mean
     $searchwords = trim($MYVARS->GET["search"]);
     $searcharray = explode('/', $searchwords);
-if ($searcharray[0] == "" && isset($searcharray[1])) {array_shift($searcharray);
-}
+	if ($searcharray[0] == "" && isset($searcharray[1])) {
+		array_shift($searcharray);
+	}
     
 foreach ($searcharray as $term) {
     $switch = strpos($term, " ") ? substr($term, 0, strpos($term, " ")) : trim($term);

@@ -17,7 +17,7 @@ search_template||
 																}
 															},
 															true);" onmouseup="this.blur();">
-				<img src="||wwwroot||/images/prev.gif" title="Previous Page" alt="Previous Page" />
+				<img src="||wwwroot||/images/prev.png" title="Previous Page" alt="Previous Page" />
 			</a>
 			}}isprev||
 		</td>
@@ -38,7 +38,7 @@ search_template||
 																}
 															},
 															true);" onmouseup="this.blur();">
-				<img src="||wwwroot||/images/next.gif" title="Next Page" alt="Next Page" />
+				<img src="||wwwroot||/images/next.png" title="Next Page" alt="Next Page" />
 			</a>
 			}}isnext||
 		</td>

@@ -580,7 +580,7 @@ users_that_can_have_abilities_modified||
 								WHERE ra.pageid = ||pageid||
 								AND ra.roleid <= ||myrole||
 	)
-	AND u.userid != ||userid||
+	AND u.userid <> ||userid||
 	ORDER BY u.lname
 ||users_that_can_have_abilities_modified
 

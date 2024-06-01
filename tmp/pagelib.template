@@ -191,14 +191,11 @@ get_button_layout_template||
 ||get_button_layout_template
 
 make_search_box_template||
-<div>
-  <div id="loading_overlay_||name_addition||" style="text-align:center;position:absolute;width:100%;height:99%;vertical-align:middle;background-color: white;opacity:.6;display:none;">
-	<img src="||wwwroot||/images/loading_large.gif" alt="loading image" />
-  </div>
-  <div id="searchcontainer_||name_addition||" style="padding:5px; display:block; width:99%;">
-	||contents||
-  </div>
-</div>
+	<div id="loading_overlay||name_addition{{_||name_addition||//OR//}}name_addition||" class="loading_overlay dontprint" style="display: none;">
+		<span class="verticalalignhelper"></span>
+		<img src="||wwwroot||/images/loading_large.gif" />
+	</div>
+	<span id="searchcontainer||name_addition{{_||name_addition||//OR//}}name_addition||">||contents||</span>
 ||make_search_box_template
 
 format_popup_template||

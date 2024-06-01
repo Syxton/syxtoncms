@@ -12,9 +12,9 @@ include('header.php');
 callfunction();
 
 function login() {
-global $MYVARS;
-	$username = dbescape($MYVARS->GET["username"]);
-	$password = md5($MYVARS->GET["password"]);
+	$username = clean_myvar_req("username", "string");
+	$password = md5(clean_myvar_req("password", "string"));
+
 	if ($row = authenticate($username, $password)) {
 		$reroute = '';
 		if ($row["alternate"] == $password) {
@@ -27,13 +27,9 @@ global $MYVARS;
 }
 
 function unique_email() {
-global $MYVARS;
-	$email = dbescape($MYVARS->GET["email"]);
-	$SQL = "SELECT *
-			FROM users
-			WHERE email = '$email'";
+	$email = clean_myvar_req("email", "string");
 
-	if (get_db_count($SQL)) {
+	if (get_db_row(fetch_template("dbsql/users.sql", "get_user_by_email"), ["email" => $email])) {
 		echo "false";
 	} else {
 		echo "true";
@@ -41,16 +37,11 @@ global $MYVARS;
 }
 
 function reset_password() {
-global $MYVARS;
-	$userid = dbescape($MYVARS->GET["userid"]);
-	$password = md5($MYVARS->GET["password"]);
-
-	$SQL = "UPDATE users
-				 SET alternate = '', password = '$password'
-			 WHERE userid = '$userid'";
+	$userid = clean_myvar_req("userid", "int");
+	$password = clean_myvar_req("password", "string");
 
 	$success = false;
-	if ($success = execute_db_sql($SQL)) {
+	if ($success = execute_db_sql(fetch_template("dbsql/users.sql", "update_password"), ["userid" => $userid, "password" => md5($password)])) {
 		log_entry("user", null, "Password changed"); // Log
 	} else {
 		log_entry("user", null, "Password change failed"); // Log
@@ -60,32 +51,22 @@ global $MYVARS;
 }
 
 function change_profile() {
-global $CFG, $MYVARS;
-	$userid = dbescape($MYVARS->GET["userid"]);
-	$email = dbescape($MYVARS->GET["email"]);
-	$fname = dbescape(nameize($MYVARS->GET["fname"]));
-	$lname = dbescape(nameize($MYVARS->GET["lname"]));
+	$userid = clean_myvar_req("userid", "int");
+	$email = clean_myvar_req("email", "string");
+	$fname = clean_myvar_req("fname", "string");
+	$lname = clean_myvar_req("lname", "string");
+	$password = clean_myvar_opt("password", "string", false);
 
 	$success = false;
 	$notused = false;
 
-	$SQL = "SELECT *
-			FROM users
-			WHERE email = '$email'
-			AND userid != '$userid'";
-	if (!get_db_row($SQL)) { // email address isn't being used by another user
-		$passchanged = empty($MYVARS->GET["password"]) ? false : true;
-		$password = md5($MYVARS->GET["password"]);
-		$passwordsql = $passchanged ? ", alternate = '', password = '$password'" : "";
-
+	if (!get_db_row(fetch_template("dbsql/users.sql", "used_email"), ["email" => $email, "userid" => $userid])) { // email address isn't being used by another user
+		$passwordsql = $password ? ", alternate = '', password = ||password||" : "";
 		$SQL = "UPDATE users
-				SET fname = '$fname',
-					lname = '$lname',
-					email = '$email'
-					$passwordsql
-				WHERE userid = '$userid'";
+					SET fname = ||fname||, lname = ||lname||, email = ||email||$passwordsql
+					WHERE userid = ||userid||";
 		$notused = true;
-		if ($success = execute_db_sql($SQL)) {
+		if ($success = execute_db_sql($SQL, ["email" => $email, "fname" => $fname, "lname" => $lname, "userid" => $userid, "password" =>  md5($password)])) {
 			log_entry("user", null, "Profile changed"); // Log
 		} else {
 			log_entry("user", null, "Profile change failed"); // Log
@@ -95,10 +76,10 @@ global $CFG, $MYVARS;
 }
 
 function save_settings() {
-global $CFG, $MYVARS;
-	$settingid = dbescape($MYVARS->GET["settingid"]);
-	$setting = dbescape((urldecode($MYVARS->GET["setting"])));
-	$extra = isset($MYVARS->GET["extra"]) ? dbescape((urldecode($MYVARS->GET["extra"]))) : false;
+global $CFG;
+	$settingid = clean_myvar_req("settingid", "int");
+	$setting = clean_myvar_opt("setting", "string", "");
+	$extra = clean_myvar_opt("extra", "string", false);
 
 	if ($success = save_setting($settingid, [], $setting, $extra)) {
 		log_entry("setting", $settingid . ":" . $setting, "Setting Changed"); // Log
@@ -300,7 +281,7 @@ global $USER;
 }
 
 function update_login_contents() {
-global $USER, $MYVARS;
+global $USER;
 	$pageid = clean_myvar_req("pageid", "int") ?? get_pageid();
 	$check = clean_myvar_opt("check", "int", false);
 	if (is_logged_in()) {
@@ -331,16 +312,17 @@ function get_cookie() {
 }
 
 function addfeature() {
-global $MYVARS;
+	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
+	$type = clean_myvar_req("feature", "string");
+
 	update_user_cookie();
-	add_page_feature($MYVARS->GET["pageid"], $MYVARS->GET["feature"]);
+	add_page_feature($pageid, $type);
 }
 
 function delete_feature() {
-global $PAGE;
 	update_user_cookie();
-    $type = clean_myvar_req("featuretype", "string");
-    $pageid = clean_myvar_opt("pageid", "int", false);
+	$type = clean_myvar_req("featuretype", "string");
+	$pageid = clean_myvar_opt("pageid", "int", false);
 	$featureid = clean_myvar_opt("featureid", "int", false);
 	$subid = clean_myvar_opt("subid", "int", false);
 
@@ -356,11 +338,12 @@ global $PAGE;
 }
 
 function change_locker_state() {
-	update_user_cookie();
 	$pageid = clean_myvar_req("pageid", "int") ?? get_pageid();
 	$feature = clean_myvar_req("featuretype", "string");
 	$featureid = clean_myvar_req("featureid", "int");
 	$direction = clean_myvar_req("direction", "string");
+
+	update_user_cookie();
 
 	try {
 		start_db_transaction();

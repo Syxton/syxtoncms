@@ -15,6 +15,7 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
 }
 define('PAGELIB', true);
 define('DEFAULT_PAGEROLE', 4);
+$LOADJS = [];
 
 // Set PAGE global.
 $PAGE = set_pageid();
@@ -148,6 +149,97 @@ global $CFG, $USER, $PAGE;
 	}
 
 	return (!$header_only ? (is_logged_in() ? print_logout_button($USER->fname, $USER->lname, $PAGE->id) : get_login_form()) : '');
+}
+
+function ajaxapi($params) {
+global $CFG, $LOADJS;
+	$ajaxapi = clean_myvar_opt("ajaxapi", "bool", false);
+	$id = clean_var_req($params["id"], "string");
+	$url = $CFG->wwwroot . clean_var_req($params["url"], "string");
+
+	$data = $params["data"] ?? [];
+	$if = $params["if"] ?? false;
+	$display = $params["display"] ?? false;
+	$ondone = $params["ondone"] ?? "";
+	$onerror = $params["onerror"] ?? "";
+	$always = $params["always"] ?? "";
+	$method = $params["method"] ?? "POST";
+	$event = $params["event"] ?? "click";
+	$loading = $params["loading"] ?? "";
+
+	$ondone = $display && empty($ondone) ? "jq_display('$display', data);" : ($display ? "jq_display('$display', data); $ondone" : $ondone);
+	$onerror = empty($onerror) ? "console.log(data);" : $onerror;
+
+	$showloading = $hideloading = "";
+	if ($loading) {
+		$showloading = "$('#$loading').show();";
+		$hideloading = "$('#$loading').hide();";
+	}
+
+	$always = ".always(function(data) { $always $(this).blur();})";
+
+	$ifclose = "";
+	if ($if) {
+		$if = "if ($if) {";
+		$ifclose = "}";
+	}
+
+	$data["timestamp"] = time();
+	$data["ajaxapi"] = 1;
+	$data = json_encode($data);
+	$data = str_replace(['"js||', '||js"', '\'js||', '||js\''], '', $data);
+
+	$script = "
+		$if
+		$showloading
+		\$.ajax({
+			url: '$url',
+			type: '$method',
+			data: " . ($method === 'POST' ? $data : "{}") . ",
+			dataType: 'json',
+		}).done(function(data) {
+			$ondone
+			$hideloading
+			loadajaxjs(data);
+		}).fail(function(data) {
+			console.log('$id failed');
+			$onerror
+			$hideloading
+		})$always;
+		$ifclose";
+
+	if ($event) {
+		$script = "
+		\$('#$id').on('$event', function(e) {
+			e.preventDefault();
+			$script
+		});";
+	} else {
+		$script = "function $id() { $script }";
+	}
+
+	if ($ajaxapi) {
+		$LOADJS["$id"] = $script;
+	} else {
+		echo js_code_wrap($script, false, true, $id, "ajaxapi inactive");
+	}
+}
+
+function ajax_return($response) {
+global $LOADJS;
+	$ajaxapi = clean_myvar_opt("ajaxapi", "bool", false);
+
+	if ($ajaxapi) {
+		header('Content-Type: application/json');
+		$response = ["message" => $response, "loadjs" => $LOADJS];
+		echo json_encode($response);
+	} else {
+		echo $response;
+		foreach ($LOADJS as $script) {
+			echo js_code_wrap($script);
+		}
+	}
+	
 }
 
 function get_editor_javascript() {
@@ -1242,6 +1334,15 @@ function get_search_page_variables(int $total, int $perpage, int $pagenum) {
 		"info"        => fill_string('Viewing {first} through {last} out of {total}', $vars), // Viewing x through y out of z message
 		"next"        => $firstonpage + $perpage < $total ? true : false, // Whether there is a next page
 	];
+}
+
+function get_searchcontainer($initial = "") {
+	global $CFG;
+	return '<div id="loading_overlay" class="loading_overlay dontprint" style="display: none;">
+				<span class="verticalalignhelper"></span>
+				<img src="' . $CFG->wwwroot . '/images/loading_large.gif" />
+			</div>
+			<span id="searchcontainer">' . $initial . '</span>';
 }
 
 function make_search_box($contents = "", $name_addition = "") {

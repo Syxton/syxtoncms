@@ -815,7 +815,7 @@ global $CFG, $USER, $MYVARS, $ROLES;
 		$rolename = "Unassigned";
 	}
 
-	$sql_admin = $pageid != $CFG->SITEID ? " WHERE roleid != '$ROLES->admin'" : "";
+	$sql_admin = $pageid !== $CFG->SITEID ? " WHERE roleid <> '$ROLES->admin'" : "";
 	$SQL = "SELECT *
 				FROM roles
 				$sql_admin

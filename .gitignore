@@ -218,3 +218,4 @@ httpd.conf
 /userfiles
 images/logo.png
 /images/carousel
+/.vscode

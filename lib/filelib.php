@@ -113,7 +113,7 @@ function create_file($filename, $contents, $makecsv=false) {
 
 function get_download_link($filename, $contents, $makecsv=false) {
 	global $CFG;
-	return 'window.open("' . $CFG->wwwroot . '/scripts/download.php?file=' . create_file($filename, $contents, $makecsv) . '", "download", "menubar=yes,toolbar=yes,scrollbars=1,resizable=1,width=600,height=400");';
+	return 'window.open("' . $CFG->wwwroot . '/scripts/download.php?file=' . create_file($filename, $contents, $makecsv) . '", "downloadframe");';
 }
 
 function return_bytes ($size_str) {
@@ -200,6 +200,10 @@ function fetch_template_set($templates) {
     // Initialize variables.
     $contents = [];
 
+	if (isset($templates["file"])) { // Single array passed.  Make it a multiarray.
+		$templates = [$templates];
+	}
+
     // Loop through each template.
     foreach ($templates as $template) {
         $file = $template['file'] ?? false;
@@ -223,7 +227,7 @@ function fetch_template_set($templates) {
             }
         }
     }
-    
+
     // Return the fetched templates.
     return $contents;
 }
@@ -289,7 +293,6 @@ function fill_template($file, $subsection, $feature = false, $params = [], $allo
 
 				// If the variable is not optional and allowpartial is false, trigger a notice.
 				if (!$optional && !$allowpartial) {
-					error_log(print_r($contents, true));
 					trigger_error("Expected $subsection template variable $match not found in parameters array.", E_USER_NOTICE);
 				}
 			}
@@ -702,12 +705,12 @@ function js_script_wrap($link, $loadtype = false) {
   return '<script type="text/javascript" src="' . $link . '" ' . $loadtype . '></script>';
 }
 
-function js_code_wrap($code, $loadtype = false, $jquery = false) {
+function js_code_wrap($code, $loadtype = false, $jquery = false, $id = "", $class = "") {
 	$loadtype = !$loadtype ? "" : $loadtype;
 	$jq_open = $jquery ? 'defer(function () { $(function() {' : '';
 	$jq_close = $jquery ? '}); });' : '';
 	return <<<EOT
-		<script type="text/javascript" $loadtype >
+		<script id="$id" class="$class" type="text/javascript" $loadtype >
 			$jq_open
 			$code
 			$jq_close
@@ -741,6 +744,8 @@ global $LOADED;
 function build_from_js_library($params) {
 	$javascript = [];
 	if (array_search("siteajax", $params) !== false) { // Site javascript.
+		add_js_to_array("scripts", "jquery.min.js", $javascript);
+		add_js_to_array("scripts", "jquery.extend.js", $javascript);
 		add_js_to_array("ajax", "siteajax.js", $javascript);
 	}
 	if (array_search("jquery", $params) !== false) { // jQuery.
@@ -791,10 +796,10 @@ function get_js_set($setname, $loadtype = false) {
 	$params = [];
 	switch ($setname) {
 		case "main":
-			$params = ["siteajax", "jquery", "colorbox", "ui", "flickity"];
+			$params = ["siteajax", "colorbox", "ui", "flickity"];
 			break;
 		case "basics":
-			$params = ["siteajax", "jquery"];
+			$params = ["siteajax"];
 			break;
 	}
 	return get_js_tags($params, false, $loadtype);

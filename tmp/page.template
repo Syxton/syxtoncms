@@ -33,19 +33,19 @@ browse_template||
 <body style="background-color: white;">
   <ul id="findpagetabs" class="shadetabs">
 	<li>
-		<a class="||pagesearchselected||" href="page.php?action=browse_search" style="text-decoration: none;position: relative;z-index: 1;padding-top: 3px; padding-right: 7px; padding-left: 7px;margin-right: 3px;border-top: 1px solid #778;border-right: 1px solid #778;border-left: 1px solid #778;color: #2d2b2b;" rel="contentscontainer" onmouseup="this.blur()">
+		<a class="||pagesearchselected||" href="page.php?action=browse_search" style="text-decoration: none;position: relative;top: 3px;z-index: 1;padding-top: 3px; padding-right: 7px; padding-left: 7px;margin-right: 3px;border-top: 1px solid #778;border-right: 1px solid #778;border-left: 1px solid #778;color: #2d2b2b;" rel="contentscontainer" onmouseup="this.blur()">
 		Search Pages
 		</a>
 	</li>
 	||usersearchtab||
-	<div id="contentscontainer" style="border-top:1px solid gray;position:relative;padding: 10px 10px 0px 10px;"></div>
   </ul>
+  <div id="contentscontainer" style="height: calc(100vh - 70px);border-top:1px solid gray;position:relative;padding: 10px 10px 0px 10px;"></div>
   ||echo js_code_wrap('var findmethods=new ddajaxtabs("findpagetabs", "contentscontainer");findmethods.setpersist(false);findmethods.setselectedClassTarget("link");findmethods.init();');::none||
 ||browse_template
 
 browse_usersearch_template||
 <li>
-  <a class="||usersearchselected||" href="page.php?action=browse_users" style="text-decoration: none;position: relative;z-index: 1;padding-top: 3px; padding-right: 7px; padding-left: 7px;margin-right: 3px;border-top: 1px solid #778;border-right: 1px solid #778;border-left: 1px solid #778;color: #2d2b2b;" rel="contentscontainer" onmouseup="this.blur()">
+  <a class="||usersearchselected||" href="page.php?action=browse_users" style="text-decoration: none;position: relative;top: 3px;z-index: 1;padding-top: 3px; padding-right: 7px; padding-left: 7px;margin-right: 3px;border-top: 1px solid #778;border-right: 1px solid #778;border-left: 1px solid #778;color: #2d2b2b;" rel="contentscontainer" onmouseup="this.blur()">
 	Search Members
   </a>
 </li>

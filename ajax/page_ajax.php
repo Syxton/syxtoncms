@@ -16,7 +16,7 @@ $CFG->sitesearch->perpage = 8;
 callfunction();
 
 function edit_page() {
-global $CFG, $MYVARS;
+global $CFG;
 	$pageid = clean_myvar_req("pageid", "int");
 	$text = clean_myvar_req("name", "string");
 
@@ -108,14 +108,12 @@ global $CFG, $USER, $ROLES, $PAGE;
 }
 
 function pagesearch() {
-global $CFG, $MYVARS, $USER;
+global $CFG, $USER;
 	$searchwords = trim(clean_myvar_opt("searchwords", "string", ""));
 	$pagenum = clean_myvar_opt("pagenum", "int", 0);
 
 	// no search words given
-	if ($searchwords == "") {
-		$searchwords = '%';
-	}
+	$dbsearchwords = $searchwords == "" ? "%" : $searchwords;
 
 	// logged in
 	$loggedin = is_logged_in() ? true : false;
@@ -128,7 +126,7 @@ global $CFG, $MYVARS, $USER;
 	$searchparams = ["siteid" => $CFG->SITEID];
 
 	$i = 0; $searchstring = "";
-	$words = explode(" ", $searchwords);
+	$words = explode(" ", $dbsearchwords);
 	while (isset($words[$i])) {
 		$searchparams["words$i"] = "%" . $words[$i] . "%";
 		$searchpart = "(p.name LIKE ||words$i|| OR p.keywords LIKE ||words$i|| OR p.description LIKE ||words$i||)";
@@ -241,75 +239,74 @@ global $CFG, $MYVARS, $USER;
 }
 
 function usersearch() {
-global $CFG, $MYVARS, $USER;
-  $userid = $USER->userid;
-  $searchwords = trim($MYVARS->GET["searchwords"]);
-  //no search words given
-  if ($searchwords == "") {
-	  $searchwords = '%';
-  }
+global $CFG, $USER;
+	$userid = $USER->userid;
+	$searchwords = trim(clean_myvar_opt("searchwords", "string", ""));
+	$pagenum = clean_myvar_opt("pagenum", "int", 0);
 
-  echo '<input type="hidden" id="searchwords" value="' . $searchwords . '" />';
+	// no search words given
+	$dbsearchwords = $searchwords == "" ? "%" : $searchwords;
 
-  //is a site admin
-  $admin = is_siteadmin($userid) ? true : false;
+	echo '<input type="hidden" id="searchwords" value="' . $searchwords . '" />';
 
-  //Create the page limiter
-  $pagenum = isset($MYVARS->GET["pagenum"]) ? $MYVARS->GET["pagenum"] : 0;
-  $firstonpage = $CFG->sitesearch->perpage * $pagenum;
-  $limit = " LIMIT $firstonpage," . $CFG->sitesearch->perpage;
-  $words = explode(" ", $searchwords);
+	//is a site admin
+	$admin = is_siteadmin($userid) ? true : false;
 
-  $i = 0; $searchstring = "";
-  while (isset($words[$i])) {
-	  $searchpart = "(u.fname LIKE '%" . $words[$i] . "%' OR u.lname LIKE '%" . $words[$i] . "%' OR u.email LIKE '%" . $words[$i] . "%')";
-	  $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
-	  $i++;
-  }
+	//Create the page limiter
+	$firstonpage = $CFG->sitesearch->perpage * $pagenum;
+	$limit = " LIMIT $firstonpage," . $CFG->sitesearch->perpage;
+	$words = explode(" ", $dbsearchwords);
 
-  $SQL = "SELECT u.*
+	$i = 0; $searchstring = "";
+	while (isset($words[$i])) {
+		$searchpart = "(u.fname LIKE '%" . $words[$i] . "%' OR u.lname LIKE '%" . $words[$i] . "%' OR u.email LIKE '%" . $words[$i] . "%')";
+		$searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
+		$i++;
+	}
+
+	$SQL = "SELECT u.*
 			FROM users u
-		   WHERE ($searchstring)
-		   ORDER BY u.lname";
+			WHERE ($searchstring)
+			ORDER BY u.lname";
 
-    $total = get_db_count($SQL); //get the total for all pages returned.
-    $SQL .= $limit; //Limit to one page of return.
-    $users = get_db_result($SQL);
-    $count = $total > (($pagenum + 1) * $CFG->sitesearch->perpage) ? $CFG->sitesearch->perpage : $total - (($pagenum) * $CFG->sitesearch->perpage); //get the amount returned...is it a full page of results?
-    $amountshown = $firstonpage + $CFG->sitesearch->perpage < $total ? $firstonpage + $CFG->sitesearch->perpage : $total;
+	$total = get_db_count($SQL); //get the total for all pages returned.
+	$SQL .= $limit; //Limit to one page of return.
+	$users = get_db_result($SQL);
+	$count = $total > (($pagenum + 1) * $CFG->sitesearch->perpage) ? $CFG->sitesearch->perpage : $total - (($pagenum) * $CFG->sitesearch->perpage); //get the amount returned...is it a full page of results?
+	$amountshown = $firstonpage + $CFG->sitesearch->perpage < $total ? $firstonpage + $CFG->sitesearch->perpage : $total;
 
-    $params = [
-        "resultsfound" => ($count > 0),
-        "searchresults" => "",
-        "searchwords" => $searchwords,
-        "searchtype" => "usersearch",
-        "isprev" => ($pagenum > 0),
-        "isnext" => ($firstonpage + $CFG->sitesearch->perpage < $total),
-        "wwwroot" => $CFG->wwwroot,
-        "prev_pagenum" => ($pagenum - 1),
-        "next_pagenum" => ($pagenum + 1),
-        "pagenum" => $pagenum,
-        "viewing" => ($firstonpage + 1),
-        "amountshown" => $amountshown,
-        "total" => $total,
-    ];
+	$params = [
+		"resultsfound" => ($count > 0),
+		"searchresults" => "",
+		"searchwords" => $searchwords,
+		"searchtype" => "usersearch",
+		"isprev" => ($pagenum > 0),
+		"isnext" => ($firstonpage + $CFG->sitesearch->perpage < $total),
+		"wwwroot" => $CFG->wwwroot,
+		"prev_pagenum" => ($pagenum - 1),
+		"next_pagenum" => ($pagenum + 1),
+		"pagenum" => $pagenum,
+		"viewing" => ($firstonpage + 1),
+		"amountshown" => $amountshown,
+		"total" => $total,
+	];
 
-    if ($count > 0) {
-        while ($user = fetch_row($users)) {
-            $params["userid"] = $userid;
-            $params["user"] = $user;
-            $params["col1"] = $user["fname"] . " " . $user["lname"];
-            $params["col2"] = $user["email"];
-            $params["col3"] = "";
+	if ($count > 0) {
+		while ($user = fetch_row($users)) {
+			$params["userid"] = $userid;
+			$params["user"] = $user;
+			$params["col1"] = $user["fname"] . " " . $user["lname"];
+			$params["col2"] = $user["email"];
+			$params["col3"] = "";
 
-            if ($user["userid"] !== $userid && !is_siteadmin($user["userid"])) {
-                $params["col3"] = fill_template("tmp/page_ajax.template", "search_users_buttons_template", false, $params);
-            }
+			if ($user["userid"] !== $userid && !is_siteadmin($user["userid"])) {
+				$params["col3"] = fill_template("tmp/page_ajax.template", "search_users_buttons_template", false, $params);
+			}
 
-            $params["searchresults"] = $params["searchresults"] . fill_template("tmp/page_ajax.template", "search_row_template", false, $params);
-        }
-    }
-    echo fill_template("tmp/page_ajax.template", "search_template", false, $params);
+			$params["searchresults"] = $params["searchresults"] . fill_template("tmp/page_ajax.template", "search_row_template", false, $params);
+		}
+	}
+	echo fill_template("tmp/page_ajax.template", "search_template", false, $params);
 }
 
 function get_new_link_form() {
@@ -354,113 +351,110 @@ global $CFG;
 }
 
 function linkpagesearch() {
-global $CFG, $MYVARS, $USER;
-  $searchwords = trim($MYVARS->GET["searchwords"]);
-  $pageid = get_pageid();
+global $CFG, $USER;
+	$searchwords = trim(clean_myvar_opt("searchwords", "string", ""));
+	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
+	$pagenum = clean_myvar_opt("pagenum", "int", 0);
 
-  // no search words given
-  if ($searchwords == "") {
-	$searchwords = '%';
-  }
+	// no search words given
+	$dbsearchwords = $searchwords == "" ? "%" : $searchwords;
 
-  // logged in
-  $loggedin = is_logged_in() ? true : false;
-  $userid = $loggedin ? $USER->userid : "";
+	// logged in
+	$loggedin = is_logged_in() ? true : false;
+	$userid = $loggedin ? $USER->userid : "";
 
-  // is a site admin
-  $admin = $loggedin && is_siteadmin($userid) ? true : false;
+	// is a site admin
+	$admin = $loggedin && is_siteadmin($userid) ? true : false;
 
-  //restrict possible page listings
-  $siteviewableonly = $loggedin ? "" : " AND p.siteviewable=1";
-  $opendoorpolicy = $admin ? "" : " AND (p.opendoorpolicy=1 OR p.siteviewable=1)";
+	//restrict possible page listings
+	$siteviewableonly = $loggedin ? "" : " AND p.siteviewable=1";
+	$opendoorpolicy = $admin ? "" : " AND (p.opendoorpolicy=1 OR p.siteviewable=1)";
 
-  //Create the page limiter
-  $pagenum = isset($MYVARS->GET["pagenum"]) ? $MYVARS->GET["pagenum"] : 0;
-  $firstonpage = $CFG->sitesearch->perpage * $pagenum;
-  $limit = " LIMIT $firstonpage," . $CFG->sitesearch->perpage;
-  $words = explode(" ", $searchwords);
+	//Create the page limiter
+	$firstonpage = $CFG->sitesearch->perpage * $pagenum;
+	$limit = " LIMIT $firstonpage," . $CFG->sitesearch->perpage;
+	$words = explode(" ", $dbsearchwords);
 
-  $i = 0; $searchstring = "";
-  while (isset($words[$i])) {
-	  $searchpart = "(p.name LIKE '%" . $words[$i] . "%' OR p.keywords LIKE '%" . $words[$i] . "%' OR p.description LIKE '%" . $words[$i] . "%')";
-	  $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
-	  $i++;
-  }
-
-  if ($loggedin) {
-	  $roleid = user_role($userid, $CFG->SITEID);
-	  $SQL = "SELECT p.*, (SELECT pl.linkid
-							 FROM pages_links pl
-							WHERE pl.linkpageid = p.pageid
-							  AND pl.hostpageid = '$pageid') as alreadylinked
-				FROM pages p
-			   WHERE p.pageid != '$CFG->SITEID'
-				 AND ($searchstring)
-				 AND p.pageid != '$pageid'
-			ORDER BY p.name";
-  }
-
-  $total = get_db_count($SQL); //get the total for all pages returned.
-  $SQL .= $limit; //Limit to one page of return.
-  $pages = get_db_result($SQL);
-
-  $count = $total > (($pagenum + 1) * $CFG->sitesearch->perpage) ? $CFG->sitesearch->perpage : $total - (($pagenum) * $CFG->sitesearch->perpage); //get the amount returned...is it a full page of results?
-  $amountshown = $firstonpage + $CFG->sitesearch->perpage < $total ? $firstonpage + $CFG->sitesearch->perpage : $total;
-
-  $params = [ "resultsfound" => ($count > 0),
-			  "searchresults" => "",
-			  "searchwords" => $searchwords,
-			  "searchtype" => "linkpagesearch",
-			  "isprev" => ($pagenum > 0),
-			  "isnext" => ($firstonpage + $CFG->sitesearch->perpage < $total),
-			  "wwwroot" => $CFG->wwwroot,
-			  "prev_pagenum" => ($pagenum - 1),
-			  "next_pagenum" => ($pagenum + 1),
-			  "pagenum" => $pagenum,
-			  "viewing" => ($firstonpage + 1),
-			  "amountshown" => $amountshown,
-			  "total" => $total,
-			  "loggedin" => $loggedin,
-			  "pageid" => $pageid,
-  ];
-
-  if ($count > 0) {
-	while ($page = fetch_row($pages)) {
-	  $params["alreadylinked"] = ($loggedin && empty($page["alreadylinked"]));
-	  $params["confirmopen"] = ($page["siteviewable"] == 0);
-	  $params["linkpageid"] = $page["pageid"];
-
-	  $params["col1"] = substr(stripslashes($page["name"]), 0, 30);
-	  $params["col2"] = substr(stripslashes(strip_tags($page["description"])), 0, 100);
-	  $params["col3"] = ($loggedin) ? fill_template("tmp/page_ajax.template", "search_linkpagesearch_buttons_template", false, $params) : "";
-	  $params["searchresults"] = $params["searchresults"] . fill_template("tmp/page_ajax.template", "search_row_template", false, $params);
+	$i = 0; $searchstring = "";
+	while (isset($words[$i])) {
+		$searchpart = "(p.name LIKE '%" . $words[$i] . "%' OR p.keywords LIKE '%" . $words[$i] . "%' OR p.description LIKE '%" . $words[$i] . "%')";
+		$searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
+		$i++;
 	}
-  }
 
-  echo fill_template("tmp/page_ajax.template", "search_template", false, $params);
+	if ($loggedin) {
+		$roleid = user_role($userid, $CFG->SITEID);
+		$SQL = "SELECT p.*, (SELECT pl.linkid
+								FROM pages_links pl
+								WHERE pl.linkpageid = p.pageid
+								AND pl.hostpageid = '$pageid') as alreadylinked
+					FROM pages p
+				WHERE p.pageid <> '$CFG->SITEID'
+					AND ($searchstring)
+					AND p.pageid <> '$pageid'
+				ORDER BY p.name";
+	}
+
+	$total = get_db_count($SQL); //get the total for all pages returned.
+	$SQL .= $limit; //Limit to one page of return.
+	$pages = get_db_result($SQL);
+
+	$count = $total > (($pagenum + 1) * $CFG->sitesearch->perpage) ? $CFG->sitesearch->perpage : $total - (($pagenum) * $CFG->sitesearch->perpage); //get the amount returned...is it a full page of results?
+	$amountshown = $firstonpage + $CFG->sitesearch->perpage < $total ? $firstonpage + $CFG->sitesearch->perpage : $total;
+
+	$params = [ "resultsfound" => ($count > 0),
+				"searchresults" => "",
+				"searchwords" => $searchwords,
+				"searchtype" => "linkpagesearch",
+				"isprev" => ($pagenum > 0),
+				"isnext" => ($firstonpage + $CFG->sitesearch->perpage < $total),
+				"wwwroot" => $CFG->wwwroot,
+				"prev_pagenum" => ($pagenum - 1),
+				"next_pagenum" => ($pagenum + 1),
+				"pagenum" => $pagenum,
+				"viewing" => ($firstonpage + 1),
+				"amountshown" => $amountshown,
+				"total" => $total,
+				"loggedin" => $loggedin,
+				"pageid" => $pageid,
+	];
+
+	if ($count > 0) {
+		while ($page = fetch_row($pages)) {
+		$params["alreadylinked"] = ($loggedin && empty($page["alreadylinked"]));
+		$params["confirmopen"] = ($page["siteviewable"] == 0);
+		$params["linkpageid"] = $page["pageid"];
+
+		$params["col1"] = substr(stripslashes($page["name"]), 0, 30);
+		$params["col2"] = substr(stripslashes(strip_tags($page["description"])), 0, 100);
+		$params["col3"] = ($loggedin) ? fill_template("tmp/page_ajax.template", "search_linkpagesearch_buttons_template", false, $params) : "";
+		$params["searchresults"] = $params["searchresults"] . fill_template("tmp/page_ajax.template", "search_row_template", false, $params);
+		}
+	}
+
+	echo fill_template("tmp/page_ajax.template", "search_template", false, $params);
 }
 
 function make_page_link() {
-global $MYVARS, $CFG, $USER;
+global $CFG, $USER;
 	$pageid = clean_myvar_req("pageid", "int");
-	$linkid = $MYVARS->GET['linkpageid'];
+	$linkpageid = clean_myvar_req("linkpageid", "int");
 	$SQL = "SELECT *
 			  FROM pages_links
 			 WHERE hostpageid = '$pageid'";
 	$sort = get_db_count($SQL);
 	$sort++;
-	$page_name = get_db_field("name", "pages", "pageid='$linkid'");
+	$page_name = get_db_field("name", "pages", "pageid='$linkpageid'");
 
 	$SQL = "INSERT INTO pages_links (hostpageid, linkpageid, sort, linkdisplay)
-				 VALUES($pageid, $linkid, $sort, '$page_name')";
+				 VALUES($pageid, $linkpageid, $sort, '$page_name')";
 	execute_db_sql($SQL);
 	emptyreturn();
 }
 
 
 function unlink_page() {
-global $MYVARS;
-  $linkpageid = $MYVARS->GET['linkpageid'];
+  $linkpageid = clean_myvar_req("linkpageid", "int");
   $pageid = clean_myvar_req("pageid", "int");
   $SQL = "DELETE FROM pages_links
 				WHERE hostpageid = '$pageid'
@@ -471,7 +465,6 @@ global $MYVARS;
 }
 
 function move_link() {
-global $MYVARS;
 	$linkid = clean_myvar_req("linkid", "int");
 	$linkdisplay = clean_myvar_req("linkdisplay", "string");
 	$pageid = clean_myvar_req("pageid", "int");
