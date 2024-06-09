@@ -28,7 +28,7 @@ global $CFG, $MYVARS;
 	$month = isset($MYVARS->GET["month"]) ? $MYVARS->GET["month"] : "";
 	$year = isset($MYVARS->GET["year"]) ? $MYVARS->GET["year"] : "";
 	$extra_row = isset($MYVARS->GET["extra_row"]) ? $MYVARS->GET["extra_row"] : "";
-	
+
 	if ($MYVARS->GET["displaymode"] == 1) {
 		echo get_large_calendar($pageid, $userid, $month, $year, $extra_row);
 	} else {
@@ -39,19 +39,20 @@ global $CFG, $MYVARS;
 function get_date_info() {
 global $CFG, $MYVARS;
 	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
-	$show_site_events = $MYVARS->GET["show_site_events"];
-	$tm = $MYVARS->GET["tm"];
-	$tn = $MYVARS->GET["tn"];
-	$tp = $MYVARS->GET["tp"];
-	$list_day = $MYVARS->GET["list_day"];
+    $show_site_events = clean_myvar_opt("show_site_events", "bool", false);
+    $tm = clean_myvar_req("tm", "int");
+    $tn = clean_myvar_req("tn", "int");
+    $tp = clean_myvar_req("tp", "int");
+    $list_day = clean_myvar_req("list_day", "int");
+
  	$whichevents = $show_site_events ? 'AND ((pageid=' . $pageid . ') OR (pageid=' . $CFG->SITEID . ') OR (site_viewable=1))' : 'AND pageid=' . $pageid;
 	$SQL = sprintf("SELECT * FROM `calendar_events` WHERE `date` > '%s' AND `date` < '%s' AND `day` = '%s' $whichevents ORDER BY day;", $tm, $tp, $list_day);
  	if ($result = get_db_result($SQL)) {
         $eventlist = '';
         while ($event = fetch_row($result)) {
-      		if ($eventlist != "") { 
-                $eventlist .= '<br />'; $firstevent = ''; 
-            } else { 
+      		if ($eventlist != "") {
+                $eventlist .= '<br />'; $firstevent = '';
+            } else {
                 $firstevent = '<span style="text-align:center;float:right;font-size:.9em;color:gray;">hide <span id="cal_countdown"></span></span>';
             }
             $p = [
@@ -65,14 +66,14 @@ global $CFG, $MYVARS;
                 "image" => $CFG->wwwroot . '/images/info.gif',
                 'styles' => 'vertical-align:top;',
             ];
-            $eventlist .= '<div class="popupEventTitle">' . 
-                                make_modal_links($p) . $firstevent . 
+            $eventlist .= '<div class="popupEventTitle">' .
+                                make_modal_links($p) . $firstevent .
                           '</div>';
-            
+
 			if ($event['picture_1'] != "") {
                 $eventlist .= '<img style="margin:3px;height:50px;margin-bottom:0px;" src="' . $CFG->wwwroot . '/scripts/calendar/event_images/' . $event['picture_1'] . '" />';
             }
-            
+
             $eventlist .= '<div class="popupEventDescription">';
             if ($event["starttime"] != "" && $event["starttime"] != "NULL") {
                 $eventlist .= 'Time: ' . convert_time($event["starttime"]) . ' - ' .
@@ -80,11 +81,10 @@ global $CFG, $MYVARS;
             }
             $location = get_db_field("location", "events_locations", "id='" . $event["location"] . "'");
             $eventlist .= '<strong>Location:</strong> ' . $location;
-            $dots = strlen(stripslashes($event["event"])) > 200 ? '...' : '';
-            $eventlist .= $event["event"] !== '' ? '<br /><strong>Description:</strong> ' . substr(strip_tags($event["event"]),0,200) . $dots : '';
+            $eventlist .= $event["event"] !== '' ? '<br /><strong>Description:</strong> ' . truncate(strip_tags($event["event"]), 200) : '';
             $eventlist .= '</div>';
         }
     }
-    echo $eventlist;
+    ajax_return($eventlist);
 }
 ?>

@@ -3,4 +3,5 @@ header||
     ||echo get_js_tags(["features/events/events.js"]);::none||
     ||echo get_js_tags(["features/adminpanel/adminpanel.js"]);::none||
     ||echo get_js_tags(["scripts/vertmenu.js"]);::none||
+    ||echo get_js_tags(["scripts/frame_resize.js"]);::none||
 ||header

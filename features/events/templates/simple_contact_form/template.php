@@ -63,7 +63,8 @@ if ($show_again) { // This is not the first time through.
 }
 
 //output required javascript
-echo '<html>
+echo '  <!DOCTYPE HTML>
+        <html>
         <head>
         ' . get_js_tags(["jquery", "validate"]) . '
         ' . get_js_tags(["features/events/templates/simple_contact_form/ajax.js"]) . '

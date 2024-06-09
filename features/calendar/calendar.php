@@ -14,11 +14,13 @@ if (empty($_POST["aslib"])) {
 			$sub = $sub == '' ? '../' : $sub . '../';
 		}
 		include($sub . 'header.php');
-	} 
-    
-    callfunction(); 
-    
-    echo '</body></html>';
+	}
+
+    echo fill_template("tmp/page.template", "start_of_page_template");
+
+    callfunction();
+
+    echo fill_template("tmp/page.template", "end_of_page_template");
 }
 
 function calendar_settings() {
@@ -27,7 +29,7 @@ global $MYVARS;
 	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	$feature = "calendar";
 
-	//Default Settings	
+	//Default Settings
 	$default_settings = default_settings($feature, $pageid, $featureid);
 
 	//Check if any settings exist for this feature

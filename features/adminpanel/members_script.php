@@ -7,7 +7,7 @@
 * Revision: 0.0.6
 ***************************************************************************/
 
-if (!isset($CFG)) { include('../header.php'); } 
+if (!isset($CFG)) { include('../header.php'); }
 update_user_cookie();
 
 if (!is_siteadmin($USER->userid)) { trigger_error(error_string("generic_permissions"), E_USER_WARNING); return; }
@@ -34,7 +34,7 @@ global $CFG, $MYVARS, $USER, $smarty;
 	if ($searcharray[0] == "" && isset($searcharray[1])) {
 		array_shift($searcharray);
 	}
-    
+
 foreach ($searcharray as $term) {
     $switch = strpos($term, " ") ? substr($term, 0, strpos($term, " ")) : trim($term);
     switch ($switch) {
@@ -58,34 +58,34 @@ foreach ($searcharray as $term) {
         $namesearch[] = trim($term);
     }
 }
-	
+
 	//MAKE NAME SEARCH SQL
 	if ($name) {
 		foreach ($namesearch as $name) {
             $not = "";
             //userid search
-            if (is_numeric(trim($name))) {          
+            if (is_numeric(trim($name))) {
                 $x = trim($name);
-                $NAMESEARCHSQL .= $NAMESEARCHSQL == "" ? "(u.userid = $x)" : " AND (u.userid = $x)";	
+                $NAMESEARCHSQL .= $NAMESEARCHSQL == "" ? "(u.userid = $x)" : " AND (u.userid = $x)";
             } else {
                 preg_match_all('/"(?:\\\\.|[^\\\\"])*"|\S+/', trim(stripslashes($name)), $temp);
                 foreach ($temp[0] as $x) {
                     if (strstr($x," ")) {
                         $tx = explode(" ",trim($x,'\"\''));
-                        $NAMESEARCHSQL .= $NAMESEARCHSQL == "" ? "((u.fname = '$tx[0]') AND (u.lname = '$tx[1]')) OR ((u.fname = '$tx[1]') AND (u.lname = '$tx[0]'))" : " AND ((u.fname = '$tx[1]') OR (u.lname = '$tx[0]')) OR ((u.fname = '$tx[0]') AND (u.lname = '$tx[1]'))";   
+                        $NAMESEARCHSQL .= $NAMESEARCHSQL == "" ? "((u.fname = '$tx[0]') AND (u.lname = '$tx[1]')) OR ((u.fname = '$tx[1]') AND (u.lname = '$tx[0]'))" : " AND ((u.fname = '$tx[1]') OR (u.lname = '$tx[0]')) OR ((u.fname = '$tx[0]') AND (u.lname = '$tx[1]'))";
                     } elseif (strstr($x,"\"") || strstr($x,"\'")) {
                         $x = trim($x,'\"\'');
-                        $NAMESEARCHSQL .= $NAMESEARCHSQL == "" ? "((u.fname = '$x') OR (u.lname = '$x'))" : " AND ((u.fname = '$x') OR (u.lname = '$x'))";   
+                        $NAMESEARCHSQL .= $NAMESEARCHSQL == "" ? "((u.fname = '$x') OR (u.lname = '$x'))" : " AND ((u.fname = '$x') OR (u.lname = '$x'))";
                     } else {
                         $NAMESEARCHSQL .= $NAMESEARCHSQL == "" ? "((u.fname LIKE '%$x%') OR (u.lname LIKE '%$x%'))" : " AND ((u.fname LIKE '%$x%') OR (u.lname LIKE '%$x%'))";
-                    }	
+                    }
   				}
             }
 
 		}
         $NAMESEARCHSQL = empty($NAMESEARCHSQL) ? "" : "($NAMESEARCHSQL)";
 	}
-	
+
 	//MAKE CUSTOM FIELD SEARCH SQL
 	if ($cfield) {
 		foreach ($fieldsearch as $field) {
@@ -99,7 +99,7 @@ foreach ($searcharray as $term) {
                     if ($customtype == 'like') {
                         $FIELDSEARCHSQL .= $FIELDSEARCHSQL == "" ? "($customfield LIKE '%$x%')" : " AND ($customfield LIKE '%$x%')";
                     } elseif ($customtype == '!like') {
-                        $FIELDSEARCHSQL .= $FIELDSEARCHSQL == "" ? "($customfield NOT LIKE '%$x%')" : " AND ($customfield NOT LIKE '%$x%')";	
+                        $FIELDSEARCHSQL .= $FIELDSEARCHSQL == "" ? "($customfield NOT LIKE '%$x%')" : " AND ($customfield NOT LIKE '%$x%')";
                     } else {
                         $FIELDSEARCHSQL .= $FIELDSEARCHSQL == "" ? "($customfield $customtype '$x')" : " AND ($customfield $customtype '$x')";
                     }
@@ -107,11 +107,11 @@ foreach ($searcharray as $term) {
             } else {
                 $cfield = false;
             }
-			
+
 		}
 		$FIELDSEARCHSQL = empty($FIELDSEARCHSQL) ? "" : "($FIELDSEARCHSQL)";
 	}
-	
+
 	//MAKE CUSTOM SORT SQL
 	if ($csort) {
 		$SORT = "";
@@ -119,10 +119,10 @@ foreach ($searcharray as $term) {
 			$temp = explode(" ",trim($sortby));
 			foreach ($temp as $x) {
 				$x = strstr($x,"-") ? str_replace("-", "", $x) . " DESC" : "$x";
-				$SORT .= $SORT == "" ? "$x" : ", $x";	
+				$SORT .= $SORT == "" ? "$x" : ", $x";
 			}
 		}
-		
+
 		//Back to default if empty
 		$SORT = $SORT == "" ? "u.lname,u.fname" : $SORT;
 	}
@@ -133,20 +133,20 @@ foreach ($searcharray as $term) {
 		}
 	} else {
 		$and1 = !empty($name) ? " AND " : "";
-		$and2 = !empty($cfield) ? " AND " : "";		
-			
+		$and2 = !empty($cfield) ? " AND " : "";
+
 		$SQL = "SELECT * FROM users u WHERE userid!=0 $and1 $NAMESEARCHSQL $and2 $FIELDSEARCHSQL ORDER BY $SORT";
 
 		  //Create the page limiter
 		  $total = get_db_count($SQL); //get the total for all pages returned.
 		  $count = $total > (($pagenum + 1) * $perpage) ? $perpage : $total - (($pagenum) * $perpage); //get the amount returned...is it a full page of results?
 		$amountshown = $firstonpage + $perpage < $total ? $firstonpage + $perpage : $total;
-		
+
 
 		if (!isset($MYVARS->GET["mailman"]) && !isset($MYVARS->GET["csv"])) { $SQL .= $LIMIT; }//Limit to one page of return.
 		$pages = get_db_result($SQL);
-		$prev = $pagenum > 0 ? '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;pagenum=' . ($pagenum - 1) . '&amp;search=\'+escape(\'' . $searchwords . '\'),function() { if (xmlHttp.readyState == 4) { simple_display(\'mem_resultsdiv\'); }}, true);" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/arrow_left.gif" title="Previous Page" alt="Previous Page"></a>' : "";
-		$next = $firstonpage + $perpage < $total ? '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;pagenum=' . ($pagenum + 1) . '&amp;search=\'+escape(\'' . $searchwords . '\'),function() { if (xmlHttp.readyState == 4) { simple_display(\'mem_resultsdiv\'); }}, true);" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/arrow_right.gif" title="Next Page" alt="Next Page"></a>' : "";
+		$prev = $pagenum > 0 ? '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;pagenum=' . ($pagenum - 1) . '&amp;search=\'+encodeURIComponent(\'' . $searchwords . '\'),function() { if (xmlHttp.readyState == 4) { simple_display(\'mem_resultsdiv\'); }}, true);" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/arrow_left.gif" title="Previous Page" alt="Previous Page"></a>' : "";
+		$next = $firstonpage + $perpage < $total ? '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;pagenum=' . ($pagenum + 1) . '&amp;search=\'+encodeURIComponent(\'' . $searchwords . '\'),function() { if (xmlHttp.readyState == 4) { simple_display(\'mem_resultsdiv\'); }}, true);" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/arrow_right.gif" title="Next Page" alt="Next Page"></a>' : "";
 
 		//echo $SQL;
 		$header = ""; $fileoutput = "";
@@ -159,9 +159,9 @@ foreach ($searcharray as $term) {
 						<td style="text-align:center;font-size:.75em;"><b>Last Access</b></td>
 						<td></td>
 					</tr>';
-		 
+
 	 		if ($count > 0) {
-		      while ($row = fetch_row($pages)) {		
+		      while ($row = fetch_row($pages)) {
 				if (isset($MYVARS->GET["mailman"])) { //Export to Mailman
 					$fileoutput .= $row["fname"] . " " . $row["lname"] . " <" . $row["email"] . ">\r\n";
 				} elseif (isset($MYVARS->GET["csv"])) { //Export to CSV
@@ -169,7 +169,7 @@ foreach ($searcharray as $term) {
 				} else {
 					$lastip = get_db_field("ip", "logfile", "userid='" . $row["userid"] . "' ORDER BY timeline DESC");
                     $locate = $lastip ? '<a title="IP Location" href="javascript: void(0);" onclick="get_coordinates(\'' . $lastip . '\',\'display\');"><img src="' . $CFG->wwwroot . '/images/locate.png" alt="IP Location" /></a>' : "";
-					$delete = !is_siteadmin($row["userid"]) ? '<a title="Delete User" href="javascript: void(0);" onclick="if (confirm(\'Do you want to delete ' . addslashes($row['fname']) . ' ' . addslashes($row['lname']) . '\\\'s account?\')) { ajaxapi(\'/ajax/site_ajax.php\',\'delete_user\',\'&userid=' . $row['userid'] . '\',function() { ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;pagenum=' . $pagenum . '&amp;search=' . $searchwords . '\',function() { simple_display(\'mem_resultsdiv\'); });}); }" ><img src="' . $CFG->wwwroot . '/images/delete.png" alt="Delete User" /></a>' : "";
+					$delete = !is_siteadmin($row["userid"]) ? '<a title="Delete User" href="javascript: void(0);" onclick="if (confirm(\'Do you want to delete ' . addslashes($row['fname']) . ' ' . addslashes($row['lname']) . '\\\'s account?\')) { ajaxapi(\'/ajax/site_ajax.php\',\'delete_user\',\'&userid=' . $row['userid'] . '\',function() { ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;pagenum=' . $pagenum . '&amp;search=' . $searchwords . '\',function() { simple_display(\'mem_resultsdiv\'); });}); }" >' . icon("trash") . '</a>' : "";
                     $reset  = !is_siteadmin($row["userid"]) ? '<a title="Reset ' . $row['fname'] . ' ' . $row['lname'] . ' Password" href="javascript: void(0);" onclick="if (confirm(\'Do you want to reset ' . addslashes($row['fname']) . ' ' . addslashes($row['lname']) . '\\\'s password?\')) { ajaxapi(\'/ajax/site_ajax.php\',\'forgot_password\',\'&admin=true&userid=' . $row['userid'] . '\',function() { simple_display(\'reset_password_' . $row['userid'] . '\'); });}" ><img src="' . $CFG->wwwroot . '/images/reset.png" alt="Reset ' . $row['fname'] . ' ' . $row['lname'] . ' Password" /></a>' : "";
                     $info = 'Viewing ' . ($firstonpage + 1) . " through " . $amountshown . " out of $total";
 				      if ($amountshown > 0) { $header = '<table style="width:100%;"><tr><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;font-size:.75em;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><br /><br />'; }
@@ -211,8 +211,8 @@ foreach ($searcharray as $term) {
 
             $body .= "</table>";
  			      $export = '<div style="font-size:.65em;padding:2px;"><a href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;csv=1&amp;search=' . $searchwords . '\',function() { if (xmlHttp.readyState == 4) { run_this(); }}, true);" >Export to CSV</a>&nbsp;&nbsp;<a href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;mailman=1&amp;search=' . $searchwords . '\',function() { if (xmlHttp.readyState == 4) { run_this(); }}, true);" >Export to Mailman</a></div>';
-			
-		      if (!isset($MYVARS->GET["mailman"]) && !isset($MYVARS->GET["csv"])) { echo $header . $export . $body; 
+
+		      if (!isset($MYVARS->GET["mailman"]) && !isset($MYVARS->GET["csv"])) { echo $header . $export . $body;
             } else {
 					$filename = isset($MYVARS->GET["mailman"]) ? "users_export.txt" : "users_export.csv";
                 echo get_download_link($filename, $fileoutput);

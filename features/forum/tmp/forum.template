@@ -1,56 +1,124 @@
-get_discussions_page_link||
-    <a title="Get ||title|| of Forum Discussions"
-        href="javascript: void(0);"
-        onclick="save_action($(this), $('#forum_refresh_||forumid||'));
-        ajaxapi('/features/forum/forum_ajax.php',
-                'get_forum_discussions',
-                '&amp;dpagenum=||dpagenum||&amp;pageid=||pageid||&amp;forumid=||forumid||&amp;catid=||catid||',
-                function() {
-                    if (xmlHttp.readyState == 4) {
-                        simple_display('forum_div_||forumid||');
-                    }
-                },
-                true);">
-        &nbsp;||display||&nbsp;
-    </a>
-||get_discussions_page_link
+discussion_form||
+	<img src="||wwwroot||/images/edit_area.gif" alt="This is the discussion creation and editing form" />
+	<form id="||formid||">
+		<div class="centered">
+			<div style="padding:10px;text-align:left;">
+				<strong>Discussion Title</strong>
+				<br />
+				<input type="text" style="width: 100%;" id="discussion_title" value="||title||" />
+			</div>
+			||editor||
+			<input type="submit" style="margin: 10px;" value="Save" />
+		</div>
+	</form>
+||discussion_form
 
-get_posts_page_link||
-    <a title="Get ||title|| of Forum Posts"
-        href="javascript: void(0);"
-        onclick="save_action($(this), $('#forum_refresh_||forumid||'));
-        ajaxapi('/features/forum/forum_ajax.php',
-                'get_forum_posts',
-                '&amp;pagenum=||pagenum||&amp;pageid=||pageid||&amp;forumid=||forumid||&amp;catid=||catid||&amp;discussionid=||discussionid||',
-                function() {
-                    if (xmlHttp.readyState == 4) {
-                        simple_display('forum_div_||forumid||');
-                    }
-                },
-                true);">
-        &nbsp;||display||&nbsp;
-    </a>
-||get_posts_page_link
-
-create_discussion_form||
-	<img id="edit_area_||forumid||" name="edit_area_||forumid||" src="||wwwroot||/images/edit_area.gif" />
-	<br /><br />
-	<span style="padding:2px;">
-		<strong>Discussion Title</strong>
-		<input type="text" size="80" id="discussion_title" value="||title||" />
-	</span>
-	<br /><br />
-	||editor||
-	<div style="text-align:center">
-	<br />
-	<input type="button" name="forum_submit" id="forum_submit" value="Submit"
-		onclick="if (||editorvalue|| !== '' && $('#discussion_title').val() != '') {
-					ajaxapi('/features/forum/forum_ajax.php',
-							'create_discussion',
-							'&message=' + escape(||editorvalue||) + '&title=' + escape($('#discussion_title').val()) + '&pageid=||pageid||&forumid=||forumid||&catid=||catid||||existingpost||',
-							function() {
-								close_modal();
-							});
-	}" />
+shoutbox||
+	<div class="shoutbox">
+		<span class="shoutbox_tabtext">
+			||tab||
+		</span>
+		||shouts||
 	</div>
-||create_discussion_form
+||shoutbox||
+
+shoutbox_posts||
+	<div class="shoutbox_post">
+		<div class="shoutbox_post_content">
+			<div class="post_message">||message||</div>
+			<div class="post_by">||alias|| ||posted||</div>
+		</div>
+	</div>
+||shoutbox_posts
+
+shoutbox_form||
+	<form id="||formid||">
+		<div class="centered">
+			||alias{{
+				<div>
+					Alias: <input type="text" id="alias" size="21" name="alias" value="Anonymous" />
+				</div>
+			}}alias||
+			||editor||
+			<input type="hidden" id="userid" name="userid" value="||userid||" />
+			<input type="submit" style="margin: 10px;" value="Shout" />
+		</div>
+	</form>
+||shoutbox_form
+
+edit_post_form||
+	<form id="||formid||">
+		<div class="centered">
+			<h3>
+				Editing post made by ||author|| ||time||
+			</h3>
+			<br />
+			||editor||
+			<input type="submit" style="margin: 10px;" value="Save" />
+		</div>
+	</form>
+||edit_post_form
+
+post_form||
+	<form id="||formid||">
+		<div class="centered">
+			<h3>
+				Post
+			</h3>
+			<br />
+			||editor||
+			<input type="submit" style="margin: 10px;" value="Post" />
+		</div>
+	</form>
+||post_form
+
+quote_post_form||
+	<form id="||formid||">
+		<div class="centered">
+			<h3>
+				Post
+			</h3>
+			||quote||
+			<br />
+			||editor||
+			<input type="submit" style="margin: 10px;" value="Post" />
+		</div>
+	</form>
+||quote_post_form
+
+forum_quote||
+	<div class="forum_quote">
+		||quotemessage||
+		<div style="text-align: right;">
+			[quoted from ||author|| ||time||]
+		</div>
+	</div>
+||forum_quote
+
+category_form||
+	<div class="formDiv" id="category_div_||forumid||" style="padding: 20px">
+		<form id="||formid||">
+			<fieldset class="formContainer">
+				<div class="rowContainer">
+					<label class="rowTitle" for="title">Category Name</label>
+					<input type="text" id="title" name="title" value="||*title||" data-rule-required="true" />
+					<div class="tooltipContainer info">||help||</div>
+					<div class="spacer" style="clear: both;"></div>
+				</div>
+			</fieldset>
+			<input class="submit" name="submit" type="submit" value="Submit" style="margin: 0px auto;display: block;" />
+		</form>
+	</div>
+||category_form
+
+forum_breadcrumb||
+	<div class="forum_breadcrumb">
+		<div>
+			<button id="get_categories_||forumid||" class="alike">
+				Categories
+			</button>
+			<i class="fa-solid fa-caret-right"></i>
+			||title||
+		</div>
+	</div>
+||forum_breadcrumb

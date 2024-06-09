@@ -7,13 +7,19 @@
 * Revision: 2.5.1
 ***************************************************************************/
 
-include('header.php');
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
+	}
+	include($sub . 'lib/header.php');
+}
 
-echo fetch_template("tmp/roles.template", "roles_header_script");
+echo fill_template("tmp/roles.template", "roles_header_script");
 
 callfunction();
 
-echo fetch_template("tmp/page.template", "end_of_page_template");
+echo fill_template("tmp/page.template", "end_of_page_template");
 
 function assign_roles() {
 global $CFG, $MYVARS, $USER, $ROLES;
@@ -101,7 +107,7 @@ global $CFG, $USER, $MYVARS, $ROLES;
 	$params["userid"] = $USER->userid;
 	if ($roles = get_db_result($SQL, $params)) {
 		while ($row = fetch_row($roles)) {
-			$options .= fill_template("tmp/roles.template", "user_specific_options_template", ["user" => $row]);
+			$options .= fill_template("tmp/roles.template", "user_specific_options_template", false, ["user" => $row]);
 		}
 	}
 
@@ -112,7 +118,7 @@ global $CFG, $USER, $MYVARS, $ROLES;
 		"options" => $options,
 		"issiteid" => ($pageid == $CFG->SITEID),
 	];
-	echo fill_template("tmp/roles.template", "user_specific_template", $params);
+	echo fill_template("tmp/roles.template", "user_specific_template", false, $params);
 }
 
 function group_specific() {

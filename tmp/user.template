@@ -60,9 +60,9 @@ new_user_validation||
   ajaxapi('/ajax/site_ajax.php',
 			'add_new_user',
 			'&email=' + encodeURIComponent($('#email').val()) +
-			'&fname=' + escape($('#fname').val()) +
-			'&lname=' + escape($('#lname').val()) +
-			'&password=' + escape($('#mypassword').val()),
+			'&fname=' + encodeURIComponent($('#fname').val()) +
+			'&lname=' + encodeURIComponent($('#lname').val()) +
+			'&password=' + encodeURIComponent($('#mypassword').val()),
 			function() {
 			var returned = trim(xmlHttp.responseText).split('**');
 			if (returned[0] == 'true') {
@@ -128,7 +128,7 @@ reset_password_validation_template||
   ajaxapi('/ajax/site_ajax.php',
 			'reset_password',
 			'&userid=||userid||' +
-			'&password=' + escape($('#mypassword').val()),
+			'&password=' + encodeURIComponent($('#mypassword').val()),
 			function() {
 			go_to_page(||siteid||);
 			});
@@ -209,10 +209,10 @@ change_profile_validation_template||
   ajaxapi('/ajax/site_ajax.php',
 			'change_profile',
 			'&userid=||user->userid||' +
-			'&password=' + escape($('#mypassword').val()) +
+			'&password=' + encodeURIComponent($('#mypassword').val()) +
 			'&email=' + encodeURIComponent($('#email').val()) +
-			'&fname=' + escape($('#myfname').val()) +
-			'&lname=' + escape($('#mylname').val()),
+			'&fname=' + encodeURIComponent($('#myfname').val()) +
+			'&lname=' + encodeURIComponent($('#mylname').val()),
 			function() {
 			simple_display('change_profile');
 			}

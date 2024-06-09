@@ -53,7 +53,8 @@ function get_prepared_result($statement, $select = false) {
 			return $result;
 		}
 	} catch (\Throwable $e) {
-		throw $e;
+		debugging($e->getMessage());
+		throw new Exception(error_string("generic_db_error") . "\n\n" . get_db_error());
 	}
 
 	return false;
@@ -80,8 +81,8 @@ global $conn;
 		}
 		return $result;
 	} catch (\Throwable $e) {
-		trigger_error(error_string("generic_db_error") . "\n\n" . get_db_error(), E_USER_ERROR);
-		throw $e;
+		debugging($e->getMessage());
+		throw new Exception(error_string("generic_db_error") . "\n\n" . get_db_error());
 	}
 	return false;
 }
@@ -121,8 +122,8 @@ global $conn;
 			return $id;
 		}
 	} catch (\Throwable $e) {
-		trigger_error(error_string("generic_db_error") . "\n\n" . get_db_error(), E_USER_ERROR);
-		throw $e;
+		debugging($e->getMessage());
+		throw new Exception(error_string("generic_db_error") . "\n\n" . get_db_error());
 	}
 
 	return false;

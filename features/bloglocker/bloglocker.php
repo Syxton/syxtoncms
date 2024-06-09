@@ -13,11 +13,13 @@ if (empty($_POST["aslib"])) {
 			$sub = $sub == '' ? '../' : $sub . '../';
 		}
 		include($sub . 'header.php');
-	} 
-    
+	}
+
+    echo fill_template("tmp/page.template", "start_of_page_template");
+
     callfunction();
-    
-    echo '</body></html>';
+
+    echo fill_template("tmp/page.template", "end_of_page_template");
 }
 
 function bloglocker_settings() {
@@ -26,7 +28,7 @@ global $MYVARS, $CFG, $USER;
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	$feature = "bloglocker";
 
-	//Default Settings	
+	//Default Settings
 	$default_settings = default_settings($feature, $pageid, $featureid);
 
 	//Check if any settings exist for this feature
@@ -50,7 +52,7 @@ global $MYVARS, $CFG, $USER;
 	$row = get_db_row("SELECT * FROM html WHERE htmlid='$htmlid'");
 	$settings = fetch_settings("html", $htmlid, $pageid);
 	$comments = $settings->html->$htmlid->allowcomments->setting && user_is_able($USER->userid, "viewcomments", $pageid) ? get_html_comments($row['htmlid'], $pageid, true,10) : '';
-	
+
 	echo '
 	<div style="width:550px">
 		' . $row['html'] . $comments . '

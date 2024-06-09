@@ -214,17 +214,23 @@ function debugging($message = '', $level = 1, $forced = false) {
 					' . $message . $from_printable . '
 					</div>';
 
+		$print = "";
 		// Display on page if level is 2 or above
 		if ($level >= 2) {
-			echo '<pre>' . $display . '</pre>';
+			$print .= '<pre>' . $display . '</pre>';
 		}
 
 		if ($level < 2) {
-			echo '<div class="error_text" style="font-size: 3vw;padding: 6%;">
+			$print .= '
+				<div class="error_text" style="font-size: 3vw;padding: 6%;">
 					<h3>Site Error</h3>
 					<br />
 					<p>' . error_string("generic_error") . '</p>
 				</div>';
+		}
+
+		if (!empty($print)) {
+			ajax_return("", $print);
 		}
 	}
 	return $display;

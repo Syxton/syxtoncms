@@ -22,10 +22,10 @@ get_members_item||
 ||get_members_item
 
 page_js_css||
-  <input id="lasthint" type="hidden" />
   ||echo js_code_wrap('var dirfromroot = "' . dirroot . '";');::dirroot||
   ||echo get_js_set("basics");::none||
   ||echo get_css_set("main");::none||
+  <input id="lasthint" type="hidden" />
 ||page_js_css
 
 browse_template||
@@ -39,7 +39,7 @@ browse_template||
 	</li>
 	||usersearchtab||
   </ul>
-  <div id="contentscontainer" style="height: calc(100vh - 70px);border-top:1px solid gray;position:relative;padding: 10px 10px 0px 10px;"></div>
+  <div id="contentscontainer" style="border-top:1px solid gray;position:relative;padding: 10px 10px 0px 10px;"></div>
   ||echo js_code_wrap('var findmethods=new ddajaxtabs("findpagetabs", "contentscontainer");findmethods.setpersist(false);findmethods.setselectedClassTarget("link");findmethods.init();');::none||
 ||browse_template
 
@@ -55,7 +55,7 @@ browse_search_template||
 <form onsubmit="$('#loading_overlay_pagesearch').show();
 				ajaxapi('/ajax/page_ajax.php',
 						'pagesearch',
-						'&searchwords='+escape(document.getElementById('searchbox').value),
+						'&searchwords='+encodeURIComponent(document.getElementById('searchbox').value),
 						function() {
 							if (xmlHttp.readyState == 4) {
 							simple_display('searchcontainer_pagesearch');
@@ -84,7 +84,7 @@ browse_user_template||
 	<form onsubmit="$('#loading_overlay_usersearch').show();
 						ajaxapi('/ajax/page_ajax.php',
 									'usersearch',
-									'&searchwords='+escape(document.getElementById('searchbox').value),
+									'&searchwords='+encodeURIComponent(document.getElementById('searchbox').value),
 									function() {
 										if (xmlHttp.readyState == 4) {
 											simple_display('searchcontainer_usersearch');
@@ -107,9 +107,9 @@ browse_user_template||
 create_page_validation||
 	ajaxapi('/ajax/page_ajax.php',
 			'create_page',
-			'&name=' + escape(document.getElementById('name').value) +
-			'&description=' + escape(document.getElementById('summary').value) +
-			'&keywords=' + escape(document.getElementById('keywords').value) +
+			'&name=' + encodeURIComponent(document.getElementById('name').value) +
+			'&description=' + encodeURIComponent(document.getElementById('summary').value) +
+			'&keywords=' + encodeURIComponent(document.getElementById('keywords').value) +
 			'&defaultrole=' + document.getElementById('role_select').value +
 			'&opendoor=' + document.getElementById('opendoor').value +
 			'&siteviewable=' + document.getElementById('siteviewable').value +
@@ -122,9 +122,9 @@ create_page_validation||
 edit_page_validation||
 	ajaxapi('/ajax/page_ajax.php',
 			'edit_page',
-			'&name=' + escape(document.getElementById('name').value) +
-			'&description=' + escape(document.getElementById('summary').value) +
-			'&keywords=' + escape(document.getElementById('keywords').value) +
+			'&name=' + encodeURIComponent(document.getElementById('name').value) +
+			'&description=' + encodeURIComponent(document.getElementById('summary').value) +
+			'&keywords=' + encodeURIComponent(document.getElementById('keywords').value) +
 			'&defaultrole=' + document.getElementById('role_select').value +
 			'&opendoor=' + document.getElementById('opendoor').value +
 			'&siteviewable=' + document.getElementById('siteviewable').value +
@@ -349,9 +349,19 @@ pagelinks_links_template||
   </div>
 ||pagelinks_links_template
 
+start_of_page_template||
+	<!DOCTYPE HTML>
+		<html>
+			<head>
+				||echo get_css_set("main");::none||
+				||*head||
+			</head>
+			<body>
+||start_of_page_template
+
 end_of_page_template||
-  </body>
-</html>
+		</body>
+	</html>
 ||end_of_page_template
 
 select_options_template||

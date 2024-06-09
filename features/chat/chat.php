@@ -17,9 +17,11 @@ if (empty($_POST["aslib"])) {
 
 	if (!isset($CHATLIB)) { include_once($CFG->dirroot . '/features/chat/chatlib.php'); }
 
+    echo fill_template("tmp/page.template", "start_of_page_template");
+
     callfunction();
-    
-    echo '</body></html>';
+
+    echo fill_template("tmp/page.template", "end_of_page_template");
 }
 
 
@@ -29,9 +31,9 @@ global $CFG, $MYVARS, $USER;
 	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	$feature = "chat";
 
-	//Default Settings	
+	//Default Settings
 	$default_settings = default_settings($feature, $pageid, $featureid);
-    
+
 	//Check if any settings exist for this feature
 	if ($settings = fetch_settings($feature, $featureid, $pageid)) {
         echo make_settings_page($settings, $default_settings);

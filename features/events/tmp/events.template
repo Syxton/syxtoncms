@@ -1,0 +1,62 @@
+show_registrations_page||
+	<select id="print_registrations" style="float: right;">
+		<option>Print Registrations</option>
+		<option value="0">Print All Registrations</option>
+		<option value="1">Print Online Registrations</option>
+	</select>
+	<br />
+	<div style="font-size:.9em;padding:15px 5px;">
+		<h2>||eventname||</h2>
+		||registrationlist||
+		<div>
+			<div style="padding: 5px;">
+				<strong>Quick Reserve Spot</strong>
+			</div>
+			<div style="display: inline-block;padding: 5px;">
+				<span>Reserve </span>
+				<input type="text" size="2" maxlength="2" id="reserveamount" value="1" onchange="if (!IsNumeric(this.value) || this.value <= 0) { this.value = 1; }" />
+				<span> Spot(s): </span>
+			</div>
+			<button id="add_blank_registration">
+				Reserve Registration
+			</button>
+		</div>
+	</div>
+||show_registrations_page
+
+show_registrations_menu_tools||
+	<div>
+		<div style="padding: 5px;">
+			<strong>Edit Registration of </strong>
+		</div>
+		<div style="display: inline-block;padding: 5px;width: 50%;">
+			||menu||
+		</div>
+		<div style="display: inline-block;padding: 5px;">
+			<button class="alike" id="event_menu_button" title="Menu" style="padding-right: 5px;||display||">
+				||echo icon("bars", 2);::none||
+			</button>
+			<ul id="event_menu" style="||display||">
+				<li>
+					<button id="edit_registration" title="Edit Registration" class="alike">
+						||echo icon("pencil");::none||
+						<span> Edit Registration</span>
+					</button>
+				</li>
+				<li>
+					<button id="delete_registration" title="Delete Registration" class="alike">
+						||echo icon("trash");::none||
+						<span>Delete Registration</span>
+					</button>
+				</li>
+				<li>
+					<button id="email_registration" title="Send Registration Email" class="alike">
+						||echo icon("envelope");::none||
+						<span> Send Registration Email</span>
+					</button>
+				</li>
+			</ul>
+		</div>
+	</div>
+	<br />
+||show_registrations_menu_tools

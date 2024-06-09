@@ -58,7 +58,7 @@ function smtp($touser, $fromuser, $subject, $message, $cc = false, $bcc = false)
 	$to = ucwords(strtolower($touser->fname) . ' ' . strtolower($touser->lname)) . ' <' . $touser->email . '>';
 	$from = ucwords(strtolower($fromuser->fname) . ' ' . strtolower($fromuser->lname)). ' <' . $fromuser->email . '>';
 	$subject = $subject;
-	$body = '<html><head></head><body>' . $message . '</body></html>';
+	$body = '<!DOCTYPE HTML><html><head></head><body>' . $message . '</body></html>';
 	$cc = $cc ? '<' . $cc . '>' : '';
 	$bcc = $bcc ? '<' . $bcc . '>' : '';
 

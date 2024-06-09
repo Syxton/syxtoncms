@@ -449,7 +449,7 @@ get_role_abilities||
 								FROM roles_ability_perpage
 								WHERE roleid = ||roleid||
 								AND pageid = ||pageid||
-								AND ability = a.ability 
+								AND ability = a.ability
 								AND allow = 1
 						)
 						OR 1 IN (
@@ -478,7 +478,7 @@ get_role_abilities||
 										AND ability = a.ability
 										AND allow = 0
 					)
-				)	
+				)
       LIMIT 1
 		) as allowed
 		FROM abilities a
@@ -551,7 +551,7 @@ role_has_ability_in_page||
 	LIMIT 1
 ||role_has_ability_in_page
 
-	get_user_role||
+get_user_role||
 	SELECT *
 	FROM roles_assignment
 	WHERE userid = ||userid||
@@ -771,7 +771,7 @@ get_page_group_override||
 	AND ability = ||ability||
 ||get_page_group_override
 
-	get_page_feature_user_override||
+get_page_feature_user_override||
 	SELECT *
 	FROM roles_ability_perfeature_peruser
 	WHERE pageid = ||pageid||

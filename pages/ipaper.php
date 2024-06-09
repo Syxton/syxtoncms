@@ -7,11 +7,19 @@
 * Revision: 0.1.6
 ***************************************************************************/
 
-include('header.php');
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
+	}
+	include($sub . 'lib/header.php');
+}
+
+echo fill_template("tmp/roles.template", "roles_header_script");
 
 callfunction();
 
-echo fetch_template("tmp/page.template", "end_of_page_template");
+echo fill_template("tmp/page.template", "end_of_page_template");
 
 function view_ipaper() {
 	$url = clean_myvar_req("doc_url", "string");

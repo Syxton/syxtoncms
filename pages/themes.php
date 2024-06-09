@@ -8,12 +8,14 @@
 ***************************************************************************/
 include('header.php');
 
-echo fill_template("tmp/page.template", "page_js_css", false, ["dirroot" => $CFG->directory]);
-echo fill_template("tmp/themes.template", "theme_manager_header_template", false, ["dirroot" => $CFG->directory]);
+$head = fill_template("tmp/page.template", "page_js_css", false, ["dirroot" => $CFG->directory]);
+$head .= fill_template("tmp/themes.template", "theme_manager_header_template", false, ["dirroot" => $CFG->directory]);
+
+echo fill_template("tmp/page.template", "start_of_page_template", false, ["head" => $head]);
 
 callfunction();
 
-echo fetch_template("tmp/page.template", "end_of_page_template");
+echo fill_template("tmp/page.template", "end_of_page_template");
 
 function change_theme() {
 global $CFG, $PAGE;
@@ -40,7 +42,7 @@ global $CFG, $PAGE;
 		$p = ["left" => custom_styles_selector($pageid, $feature, $featureid), "right" => $function($pageid, "side", $featureid)];
 		$params["pane"] = fill_template("tmp/themes.template", "make_template_selector_panes_template", false, $p);
 	}
-	
+
 	echo fill_template("tmp/themes.template", "change_theme_template", false, $params);
 }
 ?>

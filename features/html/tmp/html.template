@@ -31,7 +31,7 @@ comment_form_template||
                     onclick="if (document.getElementById('comment').value.length > 0) {
                                 ajaxapi('/features/html/html_ajax.php',
                                         'comment',
-                                        '||commentid{{&commentid=||commentid||}}commentid||||replytoid{{&replytoid=||replytoid||}}replytoid||||htmlid{{&htmlid=||htmlid||}}htmlid||&pageid=||pageid||&comment=' + escape(document.getElementById('comment').value),
+                                        '||commentid{{&commentid=||commentid||}}commentid||||replytoid{{&replytoid=||replytoid||}}replytoid||||htmlid{{&htmlid=||htmlid||}}htmlid||&pageid=||pageid||&comment=' + encodeURIComponent(document.getElementById('comment').value),
                                         function() {
                                             if (xmlHttp.readyState == 4) {
                                                 close_modal();
@@ -41,3 +41,12 @@ comment_form_template||
         </div>
     </div>
 ||comment_form_template
+
+edit_form||
+	<form id="||formid||">
+		<div class="centered">
+			||editor||
+			<input type="submit" class="html_editor_save" value="Save" />
+		</div>
+	</form>
+||edit_form

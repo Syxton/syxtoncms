@@ -23,6 +23,7 @@ if (!empty($_SESSION["lia_original"])) {
     if (!is_siteadmin($USER->userid)) { trigger_error(error_string("no_permission", ["administrative"]), E_USER_WARNING); return;}
 }
 
+echo '<style> .center table { margin: auto !important; }</style>';
 callfunction();
 
 function admin_email_tester() {
@@ -35,12 +36,12 @@ function admin_email_tester() {
 
 function get_phpinfo() {
 global $CFG;
-    echo "<iframe style='width:100%;height:100%;border:none;' src='$CFG->wwwroot/features/adminpanel/adminpanel_ajax.php?action=phpinfo'></iframe>";
+    echo "<iframe id='php_info' onload='resizeCaller(this.id);' style='width:100%;border:none;' src='$CFG->wwwroot/features/adminpanel/adminpanel_ajax.php?action=phpinfo'></iframe>";
 }
 
 function camper_list() {
 global $CFG;
-    echo "<iframe style='width:100%;height:100%;border:none;' src='$CFG->wwwroot/features/adminpanel/camper_list.php'></iframe>";
+    echo "<iframe id='camperlist' onload='resizeCaller(this.id);' style='width:100%;border:none;' src='$CFG->wwwroot/features/adminpanel/camper_list.php'></iframe>";
 }
 
 function admin_email_test() {
@@ -75,19 +76,25 @@ function user_admin() {
 }
 
 function site_versions() {
-    echo '<table style="width:100%;font-size:.8em;">';
+    echo '<div style="display: flex;flex-wrap: nowrap;flex-direction: column;align-items: center;">';
 
     //Site DB version
-    echo '<tr><td colspan="2" style="text-align:center"><ins>Site db version</ins></td><td></tr><tr><td colspan="2" style="text-align:center">' . get_db_field("setting", "settings", "type='site' AND setting_name='version'") . '</td></tr>';
+    echo '<h3>Site Version</h3>';
+    echo  '<span>' . get_db_field("setting", "settings", "type='site' AND setting_name='version'") . '</span>';
 
     //Feature versions
-    echo '<tr><td colspan="2" style="text-align:center"></td></tr><tr><td colspan="2" style="text-align:center"><ins>Feature db version</ins></td><td></tr>';
-    if ($result = get_db_result("SELECT * FROM features ORDER BY feature")) {
+    echo "<br /><br />";
+    echo '<h3>Feature Versions</h3>';
+    echo '<div style="display: flex;align-items: flex-end;flex-direction: column;">';
+    if ($result = get_db_result("SELECT * FROM features ORDER BY feature_title")) {
         while ($row = fetch_row($result)) {
-            echo '<tr><td style="width:50%;text-align:right;border:1px solid silver;padding:3px;">' . $row["feature_title"] . '</td><td style="padding:3px;border:1px solid silver;text-align:left">' . $row["version"] . '</td></tr>';
+            echo '<span style="display: flex;justify-content: center;align-items: center;">';
+            echo '<span style="padding: 4px;font-weight: bold">' . $row["feature_title"] . '</span><span style="padding: 4px">' . $row["version"] . '</span>';
+            echo '</span>';
         }
     }
-    echo '</table>';
+    echo '</div>';
+    echo '</div>';
 }
 
 /**
@@ -97,25 +104,25 @@ function view_logfile() {
 global $USER, $MYVARS;
     // Set the view type, default to all
     $viewtype = isset($MYVARS->GET["viewtype"]) ? $MYVARS->GET["viewtype"] : "all";
-    
+
     // Set the year, default to current
     $year = isset($MYVARS->GET["year"]) ? $MYVARS->GET["year"] : date("Y");
-    
+
     // Set the month, default to current
     $month = isset($MYVARS->GET["month"]) ? $MYVARS->GET["month"] : date("m");
-    
+
     // Set the user id, default to current user
     $userid = isset($MYVARS->GET["userid"]) ? $MYVARS->GET["userid"] : $USER->userid;
-    
+
     // Set the page number, default to 0
     $pagenum = isset($MYVARS->GET["pagenum"]) ? $MYVARS->GET["pagenum"] : 0;
-    
+
     // Set the previous and next years and months
     $prevyear = $year;
     $nextyear = $year;
     $prevmonth = $month - 1;
     $nextmonth = $month + 1;
-    
+
     if ($month == 1) { // January.
         $prevyear--;
         $prevmonth = 12;
@@ -123,11 +130,11 @@ global $USER, $MYVARS;
         $nextyear++;
         $nextmonth = 1;
     }
-    
+
     // Next and Previous Month links
     $next = date('Y') < $nextyear || (date('Y') == $nextyear && date('m') < $nextmonth) ? '' : '<div class="button" style="display: inline-block" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'view_logfile\',\'&amp;year=' . $nextyear . '&amp;month=' . $nextmonth . '&amp;userid=' . $userid . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'display\'); }}, true);" onmouseup="this.blur()">View ' . date("F Y",mktime(0,0,0, $nextmonth,1, $nextyear)) . '</div>';
     $prev = '<div class="button" style="display: inline-block" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'view_logfile\',\'&amp;year=' . $prevyear . '&amp;month=' . $prevmonth . '&amp;userid=' . $userid . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'display\'); }}, true);" onmouseup="this.blur()">View ' . date("F Y",mktime(0,0,0, $prevmonth,1, $prevyear)) . '</div>';
-    
+
     echo '<div style="caret-color: transparent;">
             <div>
                 <table style="font-size:.75em;width:98%;margin-right:auto;margin-left:auto;">
@@ -140,7 +147,7 @@ global $USER, $MYVARS;
                         </td>
                     </tr>
                 </table>
-                <iframe src="members_log_graph.php?rnd=' . time() . '&userid=' . $userid . '&year=' . $year . '&month=' . $month . '" style="width:100%;height:425px;border:none;"></iframe>
+                <iframe src="members_log_graph.php?rnd=' . time() . '&userid=' . $userid . '&year=' . $year . '&month=' . $month . '" style="width:100%;border:none;"></iframe>
                 <br />
             </div>
             <div id="actions_div">
@@ -171,7 +178,7 @@ global $MYVARS, $USER;
     $SQL = "SELECT *,
                    YEAR(FROM_UNIXTIME(timeline)) as myyear,
                    MONTH(FROM_UNIXTIME(timeline)) as mymonth,
-                   DAYOFMONTH(FROM_UNIXTIME(timeline)) as myday 
+                   DAYOFMONTH(FROM_UNIXTIME(timeline)) as myday
               FROM logfile
              WHERE userid = $userid
                AND YEAR(FROM_UNIXTIME(timeline)) = $year
@@ -249,7 +256,7 @@ global $MYVARS, $USER;
 function ipmap() {
 global $CFG, $MYVARS;
     $json = json_decode($MYVARS->GET["json"]);
-    echo '<iframe style="height:100%;width:100%" src="https://www.google.com/maps/embed/v1/place?q=' . $json->lat . ',' . $json->lon . '&key=' . $CFG->googlemapsembedkey . '"></iframe>';
+    echo '<iframe id="ip_map" onload="resizeCaller(this.id);" style="width:100%;border:none;" src="https://www.google.com/maps/embed/v1/place?q=' . $json->lat . ',' . $json->lon . '&key=' . $CFG->googlemapsembedkey . '"></iframe>';
 }
 
 function loginas() {

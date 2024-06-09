@@ -6,13 +6,20 @@
 * Date: 5/14/2024
 * Revision: 1.1.3
 ***************************************************************************/
-include('header.php');
 
-echo fill_template("tmp/page.template", "page_js_css", false, ["dirroot" => $CFG->directory]);
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
+	}
+	include($sub . 'lib/header.php');
+}
+
+echo fill_template("tmp/roles.template", "roles_header_script");
 
 callfunction();
 
-echo fetch_template("tmp/page.template", "end_of_page_template");
+echo fill_template("tmp/page.template", "end_of_page_template");
 
 function rss_subscribe_feature() {
 global $CFG, $MYVARS, $USER;

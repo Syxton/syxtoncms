@@ -16,12 +16,14 @@ if (empty($_POST["aslib"])) {
     }
 
     if (!defined('DONATELIB')) { include_once($CFG->dirroot . '/features/donate/donatelib.php'); }
-    
-    header_remove('X-Frame-Options');    
-        
+
+    header_remove('X-Frame-Options');
+
+    echo fill_template("tmp/page.template", "start_of_page_template");
+
     callfunction();
-        
-    echo '</body></html>';    
+
+    echo fill_template("tmp/page.template", "end_of_page_template");
 }
 
 function donate_settings() {
@@ -29,15 +31,15 @@ global $CFG, $MYVARS, $USER;
 	$featureid = clean_myvar_opt("featureid", "int", false); $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	$feature = "donate";
 
-	//Default Settings	
+	//Default Settings
 	$default_settings = default_settings($feature, $pageid, $featureid);
-    
+
 	//Check if any settings exist for this feature
 	if ($settings = fetch_settings($feature, $featureid, $pageid)) {
         echo make_settings_page($settings, $default_settings);
-	} else { //No Settings found...setup default settings			
+	} else { //No Settings found...setup default settings
 		if (save_batch_settings($default_settings)) { donate_settings(); }
-	}	
+	}
 }
 
 function editcampaign() {
@@ -61,19 +63,19 @@ global $CFG;
     $redirect = js_code_wrap('window.location = "' . $CFG->wwwroot . '";');
 
     echo main_body(true);
-    
+
     if (!empty($_GET['cm'])) {
         $c = get_db_row("SELECT * FROM donate_campaign WHERE campaign_id='" . $_GET['cm'] . "'");
-        $auth_token = $c["token"]; 
-        
+        $auth_token = $c["token"];
+
         $pp_hostname = $CFG->paypal ? 'www.paypal.com' : 'www.sandbox.paypal.com';
-         
+
         // read the post from PayPal system and add 'cmd'
         $req = 'cmd=_notify-synch';
-         
+
         $tx_token = $_GET['tx'];
         $req .= "&tx=$tx_token&at=$auth_token";
-         
+
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, "//$pp_hostname/cgi-bin/webscr");
         curl_setopt($ch, CURLOPT_POST, 1);
@@ -87,7 +89,7 @@ global $CFG;
         curl_setopt($ch, CURLOPT_HTTPHEADER, ["Host: $pp_hostname"]);
         $res = curl_exec($ch);
         curl_close($ch);
-                
+
         if (!$res) {
             //HTTP ERROR
             echo $redirect;
@@ -112,7 +114,7 @@ global $CFG;
                     Your transaction has been completed, and a receipt for your donation has been emailed to you.
                     <br />You may log into your account at <a href="//www.paypal.com">www.paypal.com</a> to view details of this transaction.
                 </div>
-                ';  
+                ';
             }
             else if (strcmp ($lines[0], "FAIL") == 0) {
                 // log for manual investigation

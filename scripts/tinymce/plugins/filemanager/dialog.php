@@ -20,7 +20,7 @@ $_SESSION['RF']["verify"] = "RESPONSIVEfilemanager";
 
 if (!empty($_FILES)) {
 	$directorio = $config['current_path'];
-	if (!file_exists($directorio)) { 
+	if (!file_exists($directorio)) {
 		mkdir($directorio);
 	}
 

@@ -14,10 +14,12 @@ if (empty($_POST["aslib"])) {
 		}
 		include($sub . 'header.php');
 	}
-    
+
+    echo fill_template("tmp/page.template", "start_of_page_template");
+
     callfunction();
-    
-    echo '</body></html>';
+
+    echo fill_template("tmp/page.template", "end_of_page_template");
 }
 
 function onlineusers_settings() {
@@ -25,9 +27,9 @@ global $CFG, $MYVARS, $USER;
 	$featureid = clean_myvar_opt("featureid", "int", false); $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	$feature = "onlineusers";
 
-	//Default Settings	
+	//Default Settings
 	$default_settings = default_settings($feature, $pageid, $featureid);
-    
+
 	//Check if any settings exist for this feature
 	if ($settings = fetch_settings($feature, $featureid, $pageid)) {
         echo make_settings_page($settings, $default_settings);

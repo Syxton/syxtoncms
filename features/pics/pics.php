@@ -16,12 +16,12 @@ if (empty($_POST["aslib"])) {
 	}
 
     if (!defined('PICSLIB')) { include_once ($CFG->dirroot . '/features/pics/picslib.php'); }
-    
+
+	echo fill_template("tmp/page.template", "start_of_page_template", false, ["head" => get_js_tags(["features/pics/pics.js", "features/pics/uploads.js"])]);
+
     callfunction();
-    
-	echo get_js_tags(["features/pics/pics.js", "features/pics/uploads.js"]);
-    
-    echo '</body></html>';
+
+    echo fill_template("tmp/page.template", "end_of_page_template");
 }
 
 function pics_settings() {
@@ -29,16 +29,16 @@ global $CFG, $MYVARS, $USER;
 	$featureid = clean_myvar_opt("featureid", "int", false); $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	$feature = "pics";
 
-	//Default Settings	
+	//Default Settings
 	$default_settings = default_settings($feature, $pageid, $featureid);
-    
+
 	//Check if any settings exist for this feature
 	if ($settings = fetch_settings($feature, $featureid, $pageid)) {
         echo make_settings_page($settings, $default_settings);
 	} else { //No Settings found...setup default settings
 		if (save_batch_settings($default_settings)) { pics_settings(); }
 	}
-}	
+}
 
 function add_pics() {
 global $CFG, $MYVARS, $USER;
@@ -105,13 +105,13 @@ function manage_pics() {
 global $CFG, $MYVARS, $USER;
 	$featureid = clean_myvar_opt("featureid", "int", false);
 	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
-    
+
     echo '<div id="pics_manager">';
     echo get_pics_manager($pageid, $featureid);
     echo '</div>';
 }
 
-function get_galleries($pageid, $featureid) {	
+function get_galleries($pageid, $featureid) {
 	if ($results = get_db_result("SELECT picsid, gallery_title FROM pics WHERE pageid='$pageid' AND featureid='$featureid' GROUP BY gallery_title ORDER BY dateadded DESC")) {
 		$returnme = '<select id="galleries" width="205" style="width: 205">';
 		while ($row = fetch_row($results)) {

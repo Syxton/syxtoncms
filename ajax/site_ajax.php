@@ -125,7 +125,7 @@ global $CFG;
 
 				// Check to see if account is activated. If so, save the new password in the database.
 				// Place new password in password field (if real password is still in temp field)
-				// Plane new password in alternate field (if temp field is empty, meaning real password is in password field) 
+				// Plane new password in alternate field (if temp field is empty, meaning real password is in password field)
 				$field = empty(trim($user["temp"])) ? "alternate" : "password";
 				$SQL = "UPDATE users SET $field = ||password|| WHERE email = ||email||";
 				$reset = execute_db_sql($SQL, ["password" => md5($alternate), "email" => $email]);
@@ -151,7 +151,7 @@ global $CFG;
 				$message = fill_template("tmp/site_ajax.template", "forgot_password_email_template", false, $params);
 
 				$subject = $CFG->sitename . ' Password Reset';
-				
+
 				if (@send_email($user, $SITEUSER, $subject, $message)) {
 					$success = true;
 					@send_email($SITEUSER, $SITEUSER, $subject, $message); // Send a copy to the site admin
@@ -253,7 +253,7 @@ function allow_page_request() {
 		echo "false";
 		return;
 	}
-	
+
 	if ($approve) { // confirmed request
 		$SQL = fetch_template("dbsql/roles.sql", "confirm_role_assignment");
 	} else { // denied request
@@ -333,8 +333,15 @@ function delete_feature() {
 	$var2 = $featureid ?? "#false#";
 	$var3 = $subid ?? "#false#";
 
-	all_features_function(false, $featuretype, "", "_delete", false, $var1, $var2, $var3);
-	log_entry($featuretype, null, "Deleted Feature"); // Log
+	$error = "";
+	try {
+		all_features_function(false, $featuretype, "", "_delete", false, $var1, $var2, $var3);
+		log_entry($featuretype, null, "Deleted Feature"); // Log
+	} catch (\Throwable $e) {
+		$error = $e->getMessage();
+	}
+
+	ajax_return("", $error);
 }
 
 function change_locker_state() {

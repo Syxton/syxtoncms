@@ -29,8 +29,8 @@ rss_subscribe_feature_template||
                             <input type="button" value="Save Changes"
                                     onclick="ajaxapi('/ajax/rss_ajax.php',
                                                     'edit_name',
-                                                    '&rssname=' + escape(document.getElementById('rssname').value) +
-                                                    '&rssid=' + escape(document.getElementById('rssid').value),
+                                                    '&rssname=' + encodeURIComponent(document.getElementById('rssname').value) +
+                                                    '&rssid=' + encodeURIComponent(document.getElementById('rssid').value),
                                                     function() {
                                                         simple_display('saved');
                                                         setTimeout(function() {
@@ -76,7 +76,7 @@ rss_subscribe_feature_template||
                                                     '&pageid=||pageid||' +
                                                     '&type=||feature||' +
                                                     '&featureid=||featureid||' +
-                                                    '&rssname=' + escape(document.getElementById('rssname').value),
+                                                    '&rssname=' + encodeURIComponent(document.getElementById('rssname').value),
                                                     function() {
                                                         simple_display('add_feed_div');
                                                     });" />

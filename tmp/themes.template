@@ -36,7 +36,7 @@ theme_selector_menu_action_template||
   ajaxapi('/ajax/themes_ajax.php',
 			'theme_change',
 			'&pageid=||pageid||' +
-			'&themeid=' + escape($('#themes').val()),
+			'&themeid=' + encodeURIComponent($('#themes').val()),
 			function() {
 			simple_display('color_preview');
 			});
@@ -81,7 +81,7 @@ theme_selector_left_template||
 		<input type="button" value="Save" onclick="ajaxapi('/ajax/themes_ajax.php',
 															 'change_theme_save',
 															 '&pageid=||pageid||' +
-															 '&themeid=' + escape($('#themes').val()),
+															 '&themeid=' + encodeURIComponent($('#themes').val()),
 															 function() {
 															 simple_display('themes_page');
 															 });" />

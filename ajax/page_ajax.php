@@ -134,10 +134,10 @@ global $CFG, $USER;
 		$i++;
 	}
 
+	$checkrights = "";
 	if ($loggedin) {
 		$searchparams["userid"] = $USER->userid;
 		$searchparams["roleid"] = user_role($userid, $CFG->SITEID);
-		$checkrights = "";
 		if (!$admin) { // Is my site role allowed to view pages.  REPLACE WITH user_has_ability_in_page?????
 			$checkrights = fetch_template("dbsql/pages.sql", "page_search_checkrights");
 		}
@@ -146,7 +146,7 @@ global $CFG, $USER;
 	//restrict possible page listings
 	$viewablepages = "";
 	$viewablepages .= $loggedin ? ($admin ? "" : "AND p.menu_page = 0 AND (p.opendoorpolicy = 1 OR p.siteviewable = 1)")  : " AND p.siteviewable = 1";
-	
+
 	$sqlparams = [
 		"admin" => $admin,
 		"checkrights" => $checkrights,

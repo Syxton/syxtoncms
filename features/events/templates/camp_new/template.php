@@ -64,7 +64,8 @@ if ($show_again) { // This is not the first time through
 }
 
 //output required javascript
-echo '  <html>
+echo '  <!DOCTYPE HTML>
+        <html>
         <head>
         ' . get_js_tags(["jquery", "validate"]) . '
         ' . get_js_tags(["features/events/templates/camp_new/ajax.js"]) . '
@@ -79,7 +80,7 @@ echo '<form class="event_template_form" name="form1" id="form1">
             <input type="hidden" name="paid" value="0" />
             <input type="hidden" name="total_owed" id="total_owed" value="' . $total_owed . '" />
             <input type="hidden" name="items" id="items" value="' . $items . '" />';
-                 
+
 echo '
     <div style="font-size:15px;text-align:center;font-weight:bold">Camp Wabashi Online Pre-Registration</div>
     <div style="font-size:13px;text-align:center;font-weight:bold">' . $event["name"] . '</div>
@@ -92,21 +93,21 @@ $min_age_error = empty($min_age) ? "" : ' data-msg-min="' . error_string('error_
 $max_age_error = empty($max_age) ? "" : ' data-msg-max="' . error_string('error_age_max:events:templates/camp_new') . '"';
 $min_age = empty($min_age) ? "" : " data-rule-min=\"$min_age\"";
 $max_age = empty($max_age) ? "" : " data-rule-max=\"$max_age\"";
- 
+
 $pictures = get_db_field("setting", "settings", "type='events_template' AND extra='$eventid' AND setting_name='template_setting_pictures'");
 $pictures = empty($pictures) ? false : true;
 if ($pictures) {
-    $pictures_price = get_db_field("setting", "settings", "type='events_template' AND extra='$eventid' AND setting_name='template_setting_pictures_price'");   
-    $pictures_price = empty($pictures_price) ? "0" : $pictures_price; 
+    $pictures_price = get_db_field("setting", "settings", "type='events_template' AND extra='$eventid' AND setting_name='template_setting_pictures_price'");
+    $pictures_price = empty($pictures_price) ? "0" : $pictures_price;
 }
 
 $shirt = get_db_field("setting", "settings", "type='events_template' AND extra='$eventid' AND setting_name='template_setting_shirt'");
 $shirt = empty($shirt) ? false : true;
 if ($shirt) {
-    $shirt_price = get_db_field("setting", "settings", "type='events_template' AND extra='$eventid' AND setting_name='template_setting_shirt_price'");   
-    $shirt_price = empty($shirt_price) ? "0" : $shirt_price; 
+    $shirt_price = get_db_field("setting", "settings", "type='events_template' AND extra='$eventid' AND setting_name='template_setting_shirt_price'");
+    $shirt_price = empty($shirt_price) ? "0" : $shirt_price;
 }
-  
+
 if ($autofill) {
  echo '     <strong>Camper: ' . $Camper_Name . '</strong>
 			<input type="hidden" name="Camper_Name" value="' . $Camper_Name . '" />
@@ -144,7 +145,7 @@ if ($autofill) {
 			<input type="hidden" name="HealthMedicines" value="' . $HealthMedicines . '" />
 			<input type="hidden" name="HealthTetanusDate" value="' . $HealthTetanusDate . '" />
             <input type="hidden" name="campership" value="' . $campership . '" />';
-            
+
 } else {
  echo ' <input type="hidden" id="event_begin_date" value="' . date("Y-m-d", $event["event_begin_date"]) . '" />
         <input type="hidden" name="HealthConsentFrom" id="HealthConsentFrom" value="' . date("Y-m-d", $event["event_begin_date"]) . '" readonly />
@@ -180,7 +181,7 @@ if ($autofill) {
             <div class="rowContainer">
                 <label class="rowTitle" for="Camper_Grade">Last Completed Grade *</label><input tabindex="5" style="width:50px;" type="text" size="2" maxlength="2" id="Camper_Grade" name="Camper_Grade" data-rule-required="true" data-rule-number="true" data-rule-max="12" data-rule-min="0" /><div class="tooltipContainer info">' . get_help("help_grade:events:templates/camp_new") . '</div>
                 <div class="spacer" style="clear: both;"></div>
-            </div>            
+            </div>
             <div class="rowContainer">
                 <label class="rowTitle" for="Camper_Gender">Gender *</label>
                 <select tabindex="6" id="Camper_Gender" name="Camper_Gender" data-rule-required="true">
@@ -190,11 +191,11 @@ if ($autofill) {
                 </select>
                 <div class="tooltipContainer info">' . get_help("help_gender:events:templates/camp_new") . '</div>
                 <div class="spacer" style="clear: both;"></div>
-            </div> 
+            </div>
 				<div class="rowContainer">
 				<label class="rowTitle" for="Camper_Home_Congregation">Home Congregation</label><input tabindex="7" type="text" id="Camper_Home_Congregation" name="Camper_Home_Congregation" data-rule-nonumbers="true" /><div class="tooltipContainer info">' . get_help("help_congregation:events:templates/camp_new") . '</div>
                 <div class="spacer" style="clear: both;"></div>
-            </div>             
+            </div>
 			<div class="rowContainer">
 				<label class="rowTitle" for="Parent_Name">Parent/Guardian *</label><input tabindex="8" type="text" id="Parent_Name" name="Parent_Name" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">' . get_help("help_parent:events:templates/camp_new") . '</div>
                 <div class="spacer" style="clear: both;"></div>
@@ -202,15 +203,15 @@ if ($autofill) {
 			<div class="rowContainer">
 				<label class="rowTitle" for="Parent_Address_Line1">Mailing Address Line One *</label><input tabindex="9" type="text" id="Parent_Address_Line1" name="Parent_Address_Line1" data-rule-required="true" /><div class="tooltipContainer info">' . get_help("help_address:events:templates/camp_new") . '</div>
 				  <div class="spacer" style="clear: both;"></div>
-            </div>            
+            </div>
 			<div class="rowContainer">
 				<label class="rowTitle" for="Parent_Address_Line2">Mailing Address Line Two</label><input tabindex="10" type="text" id="Parent_Address_Line2" name="Parent_Address_Line2" /><div class="tooltipContainer info">' . get_help("help_address:events:templates/camp_new") . '</div>
                 <div class="spacer" style="clear: both;"></div>
-            </div>         
+            </div>
 			<div class="rowContainer">
 				<label class="rowTitle" for="Parent_Address_City">City *</label><input tabindex="11" type="text" id="Parent_Address_City" name="Parent_Address_City" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">' . get_help("help_city:events:templates/camp_new") . '</div>
                 <div class="spacer" style="clear: both;"></div>
-            </div>             
+            </div>
 			<div class="rowContainer">
 				<label class="rowTitle" for="Parent_Address_State">State *</label>
                 <select tabindex="12" id="Parent_Address_State" name="Parent_Address_State" data-rule-required="true">
@@ -268,11 +269,11 @@ if ($autofill) {
                 </select>
                 <div class="tooltipContainer info">' . get_help("help_state:events:templates/camp_new") . '</div>
                 <div class="spacer" style="clear: both;"></div>
-            </div>             
+            </div>
             <div class="rowContainer">
                 <label class="rowTitle" for="Parent_Address_Zipcode">Zipcode *</label><input tabindex="13" type="text" size="5" maxlength="5" id="Parent_Address_Zipcode" name="Parent_Address_Zipcode" data-rule-required="true" data-rule-number="true" data-rule-minlength="5" /><div class="tooltipContainer info">' . get_help("help_zip:events:templates/camp_new") . '</div>
                 <div class="spacer" style="clear: both;"></div>
-            </div>            
+            </div>
             <div class="rowContainer">
                 <label class="rowTitle" for="Parent_Phone1">Parent/Guardian Phone 1 *</label><input tabindex="14" type="text" maxlength="22" id="Parent_Phone1" name="Parent_Phone1" data-rule-required="true" data-rule-phone="true" /><div class="tooltipContainer info">' . get_help("help_phone:events:templates/camp_new") . '</div>
                 <div class="spacer" style="clear: both;"></div>
@@ -289,35 +290,35 @@ if ($autofill) {
                 <label class="rowTitle" for="Parent_Phone4">Parent/Guardian Phone 4</label><input tabindex="17" type="text" maxlength="22" id="Parent_Phone4" name="Parent_Phone4" data-rule-phone="true" /><div class="tooltipContainer info">' . get_help("help_phone:events:templates/camp_new") . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
-            <div style="text-align:left;width:85%;font-size:13px;font-weight:bold"> 
+            <div style="text-align:left;width:85%;font-size:13px;font-weight:bold">
               CONSENT FOR MEDICAL TREATMENT OF A MINOR CHILD
             </div>
-            <div style="font-size:12px;"> 
-                <p style="text-align:left;width:85%"> 
-                    I herewith authorize Camp Wabashi staff at the Wabash 
-                    Valley Christian Youth Camp to request and consent in writing or 
-                    otherwise as requested by Union Hospital, Inc. and/or any other 
-                    medical facility to any and all examinations, medical treatment 
-                    and/or procedures to or for the above named minor, either on or 
-                    off the premises of medical facility, as deemed advisable or appropriate 
-                    by any physician or surgeon licensed to practice medicine in the 
+            <div style="font-size:12px;">
+                <p style="text-align:left;width:85%">
+                    I herewith authorize Camp Wabashi staff at the Wabash
+                    Valley Christian Youth Camp to request and consent in writing or
+                    otherwise as requested by Union Hospital, Inc. and/or any other
+                    medical facility to any and all examinations, medical treatment
+                    and/or procedures to or for the above named minor, either on or
+                    off the premises of medical facility, as deemed advisable or appropriate
+                    by any physician or surgeon licensed to practice medicine in the
                     State of Indiana. I understand that verbal concent will be sought using
                     the phone numbers listed in this application.<br />
                     <br />
-                    In consideration of the acceptance of the above named camper, I 
-                    covenant and agree with Wabash Valley Christian Youth Camp, that 
-                    I will at all times hereafter indemnify, and save harmless the said 
-                    Wabash Valley Christian Youth Camp from all actions, proceedings, 
-                    claims, demands, costs, damages and expenses which may be brought 
-                    against, or claimed from Wabash Valley Christian Youth Camp, or 
-                    which it may pay, sustain, or incur as a result of illness, accident, 
-                    or misadventure to the above named camper during the period said 
+                    In consideration of the acceptance of the above named camper, I
+                    covenant and agree with Wabash Valley Christian Youth Camp, that
+                    I will at all times hereafter indemnify, and save harmless the said
+                    Wabash Valley Christian Youth Camp from all actions, proceedings,
+                    claims, demands, costs, damages and expenses which may be brought
+                    against, or claimed from Wabash Valley Christian Youth Camp, or
+                    which it may pay, sustain, or incur as a result of illness, accident,
+                    or misadventure to the above named camper during the period said
                     camper is a participant in the Wabash Valley Christian Youth Camp.<br />
                     <br />
-                    This authorization constitutes a Power of Attorney and waiver of 
-                    liability appointing the above named adult or staff of Wabash Valley 
-                    Christian Youth Camp as Attorney-In-Fact to sign said requests and 
-                    as fully thought I, myself, did so. 
+                    This authorization constitutes a Power of Attorney and waiver of
+                    liability appointing the above named adult or staff of Wabash Valley
+                    Christian Youth Camp as Attorney-In-Fact to sign said requests and
+                    as fully thought I, myself, did so.
               </p>
             </div>
          		<div class="rowContainer">
@@ -377,15 +378,15 @@ if ($autofill) {
 				<textarea tabindex="27" id="HealthMedicines" name="HealthMedicines" rows="8" cols="60" data-rule-required="true">-none-</textarea>
 				<div class="tooltipContainer info">' . get_help("help_meds:events:templates/camp_new") . '</div>
 				<div class="spacer" style="clear: both;"></div>
-			</div>           
+			</div>
 			<div class="rowContainer">
 				<label class="rowTitle" for="HealthTetanusDate">Date of last Tetanus injection/booster *</label>
 				<input type="date" id="HealthTetanusDate" name="HealthTetanusDate" value="' . date("Y-m-d") . '">
 				<div class="tooltipContainer info">' . get_help("help_tetanus:events:templates/camp_new") . '</div>
 				<div class="spacer" style="clear: both;"></div>
-			</div>'; 
+			</div>';
 }
-  
+
 if ($pictures) {
     if ($event['fee_full'] > 0 && $pictures_price > 0) {
         echo '
@@ -397,9 +398,9 @@ if ($pictures) {
                 </select>
                 <div class="tooltipContainer info">' . get_help("help_pictures:events:templates/camp_new") . ' ($' . $pictures_price . '.00 for 8x10 color picture of all campers and staff)</div>
                 <div class="spacer" style="clear: both;"></div>
-            </div>';        
+            </div>';
     } else {
-        echo '<input type="hidden" size="5" maxlength="5" id="Camper_Picture" name="Camper_Picture" value="1" readonly />';        
+        echo '<input type="hidden" size="5" maxlength="5" id="Camper_Picture" name="Camper_Picture" value="1" readonly />';
     }
 } else { echo '<input type="hidden" size="5" maxlength="5" id="Camper_Picture" name="Camper_Picture" value="0" readonly />'; }
 
@@ -416,12 +417,12 @@ if ($shirt) {
                 foreach ($shirt_sizes as $ss) {
                     echo '<option value="' . $ss . '">' . $ss . '</option>';
                 }
-        echo '        
+        echo '
             </select>
             <div class="tooltipContainer info">' . get_help("help_shirt:events:templates/camp_new") . ' ($' . $shirt_price . '.00 for camp shirt)</div>
             <div class="spacer" style="clear: both;"></div>
         </div>
-        ';        
+        ';
     } else {
         echo '
         <div class="rowContainer">
@@ -436,9 +437,9 @@ if ($shirt) {
             </select>
             <div class="tooltipContainer info">' . get_help("help_shirt_size:events:templates/camp_new") . ' (no extra charge)</div>
             <div class="spacer" style="clear: both;"></div>
-        </div>';        
+        </div>';
     }
-} else { 
+} else {
     echo '<input type="hidden" id="Camper_Shirt" name="Camper_Shirt_Size" value="0" readonly />
           <input type="hidden" id="Camper_Shirt_Price" name="Camper_Shirt_Price" value="0" readonly />';
 }

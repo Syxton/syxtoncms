@@ -9,7 +9,7 @@ search_template||
 													ajaxapi('/ajax/page_ajax.php',
 															'||searchtype||',
 															'&pagenum=||prev_pagenum||' +
-															'&searchwords=' + escape('||searchwords||'),
+															'&searchwords=' + encodeURIComponent('||searchwords||'),
 															function() {
 																if (xmlHttp.readyState == 4) {
 																simple_display('searchcontainer_||searchtype||');
@@ -30,7 +30,7 @@ search_template||
 													ajaxapi('/ajax/page_ajax.php',
 															'||searchtype||',
 															'&pagenum=||next_pagenum||' +
-															'&searchwords=' + escape('||searchwords||'),
+															'&searchwords=' + encodeURIComponent('||searchwords||'),
 															function() {
 																if (xmlHttp.readyState == 4) {
 																simple_display('searchcontainer_||searchtype||');
@@ -113,7 +113,7 @@ search_pages_buttons_template||
 												ajaxapi('/ajax/page_ajax.php',
 														'pagesearch',
 														'&pagenum=||pagenum||' +
-														'&searchwords=' + escape('||searchwords||'),
+														'&searchwords=' + encodeURIComponent('||searchwords||'),
 														function() {
 															simple_display('searchcontainer_pagesearch');
 														});" onmouseup="this.blur();">
@@ -131,7 +131,7 @@ search_pages_buttons_template||
 													 ajaxapi('/ajax/page_ajax.php',
 															 'pagesearch',
 															 '&pagenum=||pagenum||' +
-															 '&searchwords=' + escape('||searchwords||'),
+															 '&searchwords=' + encodeURIComponent('||searchwords||'),
 															 function() {
 																simple_display('searchcontainer_pagesearch');
 															 });
@@ -195,7 +195,7 @@ new_link_form_template||
 		<form onsubmit="ajaxapi('/ajax/page_ajax.php',
 								'linkpagesearch',
 								'&pageid=||pageid||' +
-								'&searchwords=' + escape($('#searchbox').val()),
+								'&searchwords=' + encodeURIComponent($('#searchbox').val()),
 								function() {
 								simple_display('searchcontainer_linkpagesearch');
 								}); return false;">
@@ -226,7 +226,7 @@ search_linkpagesearch_buttons_template||
 																		'linkpagesearch',
 																		'&pageid=||pageid||' +
 																		'&pagenum=||pagenum||' +
-																		'&searchwords=' + escape('||searchwords||'),
+																		'&searchwords=' + encodeURIComponent('||searchwords||'),
 																		function() {
 																		simple_display('page_search_span');
 																		});
@@ -245,7 +245,7 @@ search_linkpagesearch_buttons_template||
 													 'linkpagesearch',
 													 '&pageid=||pageid||' +
 													 '&pagenum=||pagenum||' +
-													 '&searchwords=' + escape('||searchwords||'),
+													 '&searchwords=' + encodeURIComponent('||searchwords||'),
 													 function() {
 													 simple_display('page_search_span');
 													 });" onmouseup="this.blur();">
@@ -287,7 +287,7 @@ change_subscription_template||
 												ajaxapi('/ajax/page_ajax.php',
 														'pagesearch',
 														'&pagenum=||pagenum||' +
-														'&searchwords=' + escape($('#searchwords').val()),
+														'&searchwords=' + encodeURIComponent($('#searchwords').val()),
 														function() {
 														simple_display('searchcontainer_pagesearch');
 														});
@@ -306,7 +306,7 @@ change_subscription_template||
 											 ajaxapi('/ajax/page_ajax.php',
 													 'pagesearch',
 													 '&pagenum=||pagenum||' +
-													 '&searchwords=' + escape($('#searchwords').val()),
+													 '&searchwords=' + encodeURIComponent($('#searchwords').val()),
 													 function() {
 														 simple_display('searchcontainer_pagesearch');
 													 });" onmouseup="this.blur()">
@@ -382,7 +382,7 @@ sortable_links_template||
 														'&pageid=||pageid||' +
 														'&direction=up' +
 														'&linkid=||linkid||' +
-														'&linkdisplay=' + escape($('#linkdisplay||order||').val()),
+														'&linkdisplay=' + encodeURIComponent($('#linkdisplay||order||').val()),
 														function() {
 														ajaxapi('/ajax/page_ajax.php',
 																'get_link_manager',
@@ -401,7 +401,7 @@ sortable_links_template||
 														'&pageid=||pageid||' +
 														'&direction=down' +
 														'&linkid=||linkid||' +
-														'&linkdisplay=' + escape($('#linkdisplay||order||').val()),
+														'&linkdisplay=' + encodeURIComponent($('#linkdisplay||order||').val()),
 														function() {
 														ajaxapi('/ajax/page_ajax.php',
 																'get_link_manager',
@@ -419,7 +419,7 @@ sortable_links_template||
 		<input type="button" value="Save Name" style="font-size:.75em;display:inline;" onclick="ajaxapi('/ajax/page_ajax.php',
 																										'rename_link',
 																										'&linkid=||linkid||' +
-																										'&linkdisplay=' + escape($('#linkdisplay||order||').val()),
+																										'&linkdisplay=' + encodeURIComponent($('#linkdisplay||order||').val()),
 																										function() {
 																											$('#linkdisplay||order||_hidden').val($('#linkdisplay||order||').val());
 																										});

@@ -1,12 +1,11 @@
 make_settings_page_template||
-  <div id="settings_div" class="dotted" style="height: calc(100% - 40px);">
+  <div id="settings_div" class="dotted">
 	<h3>
 		||title||
 	</h3>
 	<br />
 	<br />
 	||settingslist||
-	<br />
 	<br />
   </div>
 ||make_settings_page_template
@@ -59,7 +58,7 @@ make_setting_input_template||
 																				ajaxapi('/ajax/site_ajax.php',
 																						'save_settings',
 																						'&settingid=||settingid||' +
-																						'&setting=' + escape($('#||name||').val()),
+																						'&setting=' + encodeURIComponent($('#||name||').val()),
 																						function() {
 																						simple_display('||name||_results');
 																						setTimeout(function() {

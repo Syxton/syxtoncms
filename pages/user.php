@@ -6,11 +6,20 @@
 * Date: 5/14/2024
 * Revision: 0.4.6
 ***************************************************************************/
-include('header.php');
+
+if (!isset($CFG) || !defined('LIBHEADER')) {
+	$sub = '';
+	while (!file_exists($sub . 'lib/header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
+	}
+	include($sub . 'lib/header.php');
+}
+
+echo fill_template("tmp/roles.template", "roles_header_script");
 
 callfunction();
 
-echo fetch_template("tmp/page.template", "end_of_page_template");
+echo fill_template("tmp/page.template", "end_of_page_template");
 
 function new_user() {
 global $MYVARS, $CFG;

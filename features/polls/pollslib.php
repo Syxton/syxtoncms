@@ -17,17 +17,16 @@ define('POLLSLIB', true);
 
 function display_polls($pageid, $area, $featureid=false) {
 global $CFG, $USER, $ROLES;
-	
 	if (!$settings = fetch_settings("polls", $featureid, $pageid)) {
 		save_batch_settings(default_settings("polls", $pageid, $featureid));
 		$settings = fetch_settings("polls", $featureid, $pageid);
 	}
-	
+
 	$title = $settings->polls->$featureid->feature_title->setting;
 	$title = '<span class="box_title_text">' . $title . '</span>';
 	$poll = get_db_row(fetch_template("dbsql/polls.sql", "get_poll", "polls"), ["pollid" => $featureid]);
 	$time = get_timestamp();
-	
+
 	//Start Poll if past startdate
 	$SQL = fetch_template("dbsql/polls.sql", "update_poll_status", "polls");
 	if ($poll['startdate'] && $poll['status'] == 1) {
@@ -45,13 +44,13 @@ global $CFG, $USER, $ROLES;
 			execute_db_sql($SQL, ["status" => 1, "pollid" => $featureid]);
 		}
 	}
-	
+
 	$viewpollability = user_is_able($USER->userid, "viewpolls", $pageid, "polls", $featureid);
 	$takepollability = user_is_able($USER->userid, "takepolls", $pageid, "polls", $featureid);
-	
+
 	if ($viewpollability) {
 		$buttons = get_button_layout("polls", $featureid, $pageid);
-		
+
 		if ($poll['status'] == '2') { // Poll is open
 			if ($settings->polls->$featureid->allowmultiples->setting == "1") { //Multiple votes are allowed per IP
 				if ($settings->polls->$featureid->totalvotelimit->setting != "0" || $settings->polls->$featureid->individualvotelimit->setting != "0") { //A limit is set
@@ -60,7 +59,7 @@ global $CFG, $USER, $ROLES;
 					} elseif ($settings->polls->$featureid->individualvotelimit->setting != "0" && $settings->polls->$featureid->individualvotelimit->setting <= already_taken_poll($featureid)) {
 						return get_css_box($title, get_poll_results($featureid, $area), $buttons, '0px', "polls", $featureid);
 					} else { //No limits are met
-						return get_css_box($title, take_poll_form($pageid, $featureid, $area), $buttons, '0px', "polls", $featureid);	
+						return get_css_box($title, take_poll_form($pageid, $featureid, $area), $buttons, '0px', "polls", $featureid);
 					}
 				} else { //A limit is not set
 					return get_css_box($title, take_poll_form($pageid, $featureid, $area), $buttons, '0px', "polls", $featureid);
@@ -71,9 +70,9 @@ global $CFG, $USER, $ROLES;
 				return get_css_box($title, get_poll_results($featureid, $area), $buttons, '0px', "polls", $featureid);
 			}
 		} elseif ($poll['status'] == '1') { //Poll is created but not yet open
-			return get_css_box($title, locked_take_poll_form($pageid, $featureid, $area), $buttons, '0px', "polls", $featureid);	
+			return get_css_box($title, locked_take_poll_form($pageid, $featureid, $area), $buttons, '0px', "polls", $featureid);
 		} else { //Poll is closed so show results
-			return get_css_box($title, get_poll_results($featureid, $area), $buttons, '0px', "polls", $featureid);	
+			return get_css_box($title, get_poll_results($featureid, $area), $buttons, '0px', "polls", $featureid);
 		}
 	} else { return error_string("no_poll_permissions"); }
 }
@@ -96,7 +95,7 @@ function get_poll_colors($pollid) {
 			$colors .= $colors == "" ? $color : ", $color";
 		}
 	}
-	return $colors;   
+	return $colors;
 }
 
 function get_poll_data($pollid) {
@@ -110,30 +109,31 @@ function get_poll_data($pollid) {
 			$perc = $total ? $data["stat"] / $total : 0;
 		}
 	}
-	
-	return $datastring;   
+
+	return $datastring;
 }
 
-function get_poll_legend($pollid) {    
+function get_poll_legend($pollid) {
 	$answers = "";
 	 if ($result = get_db_result("SELECT * FROM polls_answers WHERE pollid='$pollid' ORDER BY sort")) {
 		while ($answer = fetch_row($result)) {
 			$answers .= $answers == "" ? $answer["answer"] : "|" . $answer["answer"];
 		}
 	}
-	return $answers;   
+	return $answers;
 }
 
 function get_poll_results($pollid, $area=false) {
 global $CFG;
-	$popup = $chart = "";
+	$popup = "";
+	echo get_js_tags(["scripts/frame_resize.js"]);
 	$poll = get_db_row(fetch_template("dbsql/polls.sql", "get_poll", "polls"), ["pollid" => $pollid]);
 	if (!get_db_row(fetch_template("dbsql/polls.sql", "get_answers", "polls"), ["pollid" => $pollid])) {
-	   $chart = "<br />This poll is not setup yet.<br /><br />"; 
+	   $chart = "<br />This poll is not setup yet.<br /><br />";
 	} elseif (get_db_row(fetch_template("dbsql/polls.sql", "get_responses", "polls"), ["pollid" => $pollid])) {
   		$total = get_db_count(fetch_template("dbsql/polls.sql", "get_responses", "polls"), ["pollid" => $pollid]);
 		$settings = fetch_settings("polls", $pollid, $poll["pageid"]);
- 
+
 		$p = [
 			"title" => "See Full Size",
 			"text" => "See Full Size",
@@ -148,7 +148,7 @@ global $CFG;
 		$chart = '<div style="padding: 5px;text-align:center;">' . $total . ' Total Votes</div>';
 	} else { $chart = '<div style="padding: 5px;text-align:center;">No responses yet.</div>'; }
 
-	return $chart . '<iframe id="pollresults_' . $pollid . '" src="' . $CFG->wwwroot . '/features/polls/polls_graph.php?pollid=' . $pollid . '" width="100%" style="height: 460px;" frameborder="0"></iframe>' . $popup;
+	return $chart . '<iframe id="pollresults_' . $pollid . '" onload="resizeCaller(this.id);" src="' . $CFG->wwwroot . '/features/polls/polls_graph.php?pollid=' . $pollid . '" width="100%" frameborder="0"></iframe>' . $popup;
 }
 
 function take_poll_form($pageid, $pollid, $area) {
@@ -160,11 +160,11 @@ global $CFG;
 	<br /><br />';
 	if ($result = get_db_result("SELECT * FROM polls_answers WHERE pollid='$pollid' ORDER BY sort")) {
 		while ($answer = fetch_row($result)) {
-			$form .= '<input type="radio" name="poll' . $pollid . '" value="' . $answer["answerid"] . '" /> ' . $answer["answer"] . '<br />';    
+			$form .= '<input type="radio" name="poll' . $pollid . '" value="' . $answer["answerid"] . '" /> ' . $answer["answer"] . '<br />';
 		}
 	}
 
-	$form .= '<br /><input type="button" value="Submit" onclick="ajaxapi(\'/features/polls/polls_ajax.php\',\'submitanswer\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $pollid . '&amp;extra=\' + getRadioValue(\'poll' . $pollid . '\'),function() { simple_display(\'polldiv' . $pollid . '\'); });" /><br /><br /></div></div>';
+	$form .= '<br /><input type="button" value="Submit" onclick="ajaxapi(\'/features/polls/polls_ajax.php\',\'submitanswer\',\'&pageid=' . $pageid . '&featureid=' . $pollid . '&extra=\' + getRadioValue(\'poll' . $pollid . '\'),function() { simple_display(\'polldiv' . $pollid . '\'); });" /><br /><br /></div></div>';
 	return $form;
 }
 
@@ -177,7 +177,7 @@ global $CFG;
 	<br /><br />';
 	if ($result = get_db_result("SELECT * FROM polls_answers WHERE pollid='$pollid' ORDER BY sort")) {
 		while ($answer = fetch_row($result)) {
-			$form .= '<input type="radio" name="poll' . $pollid . '" value="' . $answer["answerid"] . '" disabled/> ' . $answer["answer"] . '<br />';    
+			$form .= '<input type="radio" name="poll' . $pollid . '" value="' . $answer["answerid"] . '" disabled/> ' . $answer["answer"] . '<br />';
 		}
 	}
 	$form .= '<br /><input type="button" value="Submit" disabled /><br /><br /></div></div>';
@@ -199,7 +199,7 @@ function polls_delete($pageid, $featureid) {
 
 		// Delete feature
 		execute_db_sqls(fetch_template_set($sql), $params);
-	
+
 		resort_page_features($pageid);
 		commit_db_transaction();
 	} catch (\Throwable $e) {
@@ -235,21 +235,27 @@ global $CFG;
 function polls_buttons($pageid, $featuretype, $featureid) {
 global $CFG, $USER;
 	$returnme = "";
-	$pollstatus = get_db_field("status", "polls", "pollid='$featureid'");
-	$returnme .= '<span id="pollstatus' . $featureid . '" style="display:inline;">';
-	
+	$pollstatus = get_db_field("status", "polls", "pollid = ||pollid||", ["pollid" => $featureid]);
 	if (($pollstatus < 2 && user_is_able($USER->userid, "editpolls", $pageid, "polls", $featureid)) || ($pollstatus == 2 && user_is_able($USER->userid, "editopenpolls", $pageid, "polls", $featureid))) { //Poll not created yet
-		$returnme .= make_modal_links(["title"=> "Edit Feature", "path" => action_path("polls") . "editpoll&amp;pageid=$pageid&amp;featureid=$featureid", "refresh" => "true", "iframe" => true, "width" => "800", "height" => "400", "image" => $CFG->wwwroot . "/images/edit.png", "class" => "slide_menu_button"]);
+		$returnme .= make_modal_links([
+			"title"=> "Edit Feature",
+			"path" => action_path("polls") . "editpoll&pageid=$pageid&featureid=$featureid",
+			"refresh" => "true",
+			"iframe" => true,
+			"width" => "800",
+			"height" => "400",
+			"image" => $CFG->wwwroot . "/images/edit.png",
+			"class" => "slide_menu_button"
+		]);
 	}
-	
+
 	if ($pollstatus == '1' && user_is_able($USER->userid, "openpolls", $pageid, "polls", $featureid)) { //Poll is created but not opened
-		$returnme .= ' <a class="slide_menu_button" title="Open Poll" onclick="if (confirm(\'Are you sure you would like to open this poll?  Once a poll is opened, it cannot be edited except by site admins.\')) { ajaxapi(\'/features/polls/polls_ajax.php\',\'openpoll\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;extra=\',function() { simple_display(\'polldiv' . $featureid . '\'); ajaxapi(\'/features/polls/polls_ajax.php\',\'pollstatuspic\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;extra=open\',function() { simple_display(\'pollstatus' . $featureid . '\'); });});} "><img src="' . $CFG->wwwroot . '/images/start.png" alt="Open Poll" /></a> ';
+		$returnme .= ' <a class="slide_menu_button" title="Open Poll" onclick="if (confirm(\'Are you sure you would like to open this poll?  Once a poll is opened, it cannot be edited except by site admins.\')) { ajaxapi(\'/features/polls/polls_ajax.php\',\'openpoll\',\'&pageid=' . $pageid . '&featureid=' . $featureid . '&extra=\',function() { simple_display(\'polldiv' . $featureid . '\'); ajaxapi(\'/features/polls/polls_ajax.php\',\'pollstatuspic\',\'&pageid=' . $pageid . '&featureid=' . $featureid . '&extra=open\',function() { simple_display(\'pollstatus' . $featureid . '\'); });});} "><img src="' . $CFG->wwwroot . '/images/start.png" alt="Open Poll" /></a> ';
 	} elseif ($pollstatus == '2' && user_is_able($USER->userid, "closepolls", $pageid, "polls", $featureid)) { //Poll is opened
-		$returnme .= ' <a class="slide_menu_button" title="Close Poll" onclick="if (confirm(\'Are you sure you would like to close this poll?  Once a poll is closed, it cannot be reopened.\')) { ajaxapi(\'/features/polls/polls_ajax.php\',\'closepoll\',\'&amp;pageid=' . $pageid . '&amp;featuretype=polls&amp;functionname=closepoll&amp;featureid=' . $featureid . '&amp;extra=\',function() { simple_display(\'polldiv' . $featureid . '\'); ajaxapi(\'/features/polls/polls_ajax.php\',\'pollstatuspic\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;extra=close\',function() { simple_display(\'pollstatus' . $featureid . '\'); });});}"><img src="' . $CFG->wwwroot . '/images/stop.png" alt="Close Poll" /></a> ';
+		$returnme .= ' <a class="slide_menu_button" title="Close Poll" onclick="if (confirm(\'Are you sure you would like to close this poll?  Once a poll is closed, it cannot be reopened.\')) { ajaxapi(\'/features/polls/polls_ajax.php\',\'closepoll\',\'&pageid=' . $pageid . '&featuretype=polls&functionname=closepoll&featureid=' . $featureid . '&extra=\',function() { simple_display(\'polldiv' . $featureid . '\'); ajaxapi(\'/features/polls/polls_ajax.php\',\'pollstatuspic\',\'&pageid=' . $pageid . '&featureid=' . $featureid . '&extra=close\',function() { simple_display(\'pollstatus' . $featureid . '\'); });});}"><img src="' . $CFG->wwwroot . '/images/stop.png" alt="Close Poll" /></a> ';
 	}
-	
-	$returnme .= '</span>';
-	$returnme = $returnme == '<span id="pollstatus' . $featureid . '" style="display:inline;"></span>' ? '' : $returnme;
+
+	$returnme = empty($returnme) ? '' : '<span class="dynamicbuttons" id="pollstatus' . $featureid . '">' . $returnme . '</span>';
 	return $returnme;
 }
 

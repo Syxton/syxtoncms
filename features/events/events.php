@@ -17,30 +17,14 @@ if (empty($_POST["aslib"])) {
 
 	if (!defined('EVENTSLIB')) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 
-	echo '<input id="lasthint" type="hidden" />';
-	echo get_js_tags(["features/events/events.js"]);
+	$head = get_js_tags(["features/events/events.js"]);
 
-	callfunction();
+	echo fill_template("tmp/page.template", "start_of_page_template", false, ["head" => $head]);
 
-}
+    callfunction();
 
-function global_template_settings() { 
-	$templateid = clean_myvar_req("templateid", "int");
-	$feature = "events_template_global";
+    echo fill_template("tmp/page.template", "end_of_page_template");
 
-	//Default Settings
-	$default_settings = get_template_settings($templateid, true);
-
-	$template_name = get_db_field("name", "events_templates", "template_id = '$templateid'");
-
-	//Check if any settings exist for this feature
-	 if ($settings = fetch_settings($feature, $templateid)) {
-		  echo make_settings_page($settings, $default_settings, "Template ($template_name) Settings");
-	 } else { // No Settings found...setup default settings
-		  if (save_batch_settings($default_settings)) {
-			global_template_settings();
-		}
-	 }
 }
 
 function events_settings() {
@@ -65,7 +49,7 @@ global $CFG;
 	ajaxapi([
 		"id" => "eventsearchform",
 		"url" => "/features/events/events_ajax.php",
-		"data" => ["action" => "eventsearch", "pageid" => $pageid, "searchwords" => "js|| escape($('#searchbox').val()) ||js"],
+		"data" => ["action" => "eventsearch", "pageid" => $pageid, "searchwords" => "js|| encodeURIComponent($('#searchbox').val()) ||js"],
 		"display" => "searchcontainer",
 		"loading" => "loading_overlay",
 		"event" => "submit",
@@ -90,7 +74,7 @@ global $CFG;
 				<form onsubmit="$(\'#loading_overlay\').show();
 									 ajaxapi(\'/features/events/events_ajax.php\',
 												\'templatesearch\',
-												\'&amp;pageid=' . $pageid . '&amp;searchwords=\' + escape($(\'#searchbox\').val()),
+												\'&amp;pageid=' . $pageid . '&amp;searchwords=\' + encodeURIComponent($(\'#searchbox\').val()),
 												function() {
 													 if (xmlHttp.readyState == 4) {
 														  simple_display(\'searchcontainer\');
@@ -146,7 +130,7 @@ global $CFG;
 	ajaxapi([
 		"id" => "appsearchform",
 		"url" => "/features/events/events_ajax.php",
-		"data" => ["action" => "appsearch", "pageid" => $pageid, "searchwords" => "js|| escape($('#searchbox').val()) ||js"],
+		"data" => ["action" => "appsearch", "pageid" => $pageid, "searchwords" => "js|| encodeURIComponent($('#searchbox').val()) ||js"],
 		"display" => "searchcontainer",
 		"loading" => "loading_overlay",
 		"event" => "submit",
@@ -344,7 +328,7 @@ global $CFG, $USER;
 		$sale_fee = $event['sale_fee'];
 		$payableto = $event['payableto'];
 		$checksaddress = $event['checksaddress'];
-		$paypal = $event['paypal'];		
+		$paypal = $event['paypal'];
 		$phone = explode("-", $event['phone']);
 		$global_display = $event['pageid'] == $CFG->SITEID ? 'none' : 'inline';
 		$start_reg = isset($event['start_reg']) ? date('Y-m-d', $event['start_reg']) : date('Y-m-d');
@@ -516,7 +500,7 @@ global $CFG, $USER;
 								' . $mylocations . '
 								' . get_hint_box("input_event_location:events") . '
 							</span>
-				  				<button id="addtolist" type="button" style="display:inline;float:right;" 
+				  				<button id="addtolist" type="button" style="display:inline;float:right;"
 									onclick="hide_show_buttons(\'addtolist\');
 											 hide_show_buttons(\'hide_menu\');
 											 hide_show_buttons(\'add_location_div\', true);">
@@ -539,7 +523,7 @@ global $CFG, $USER;
 							 				<tr>
 							 					<td style="width:115px;"></td>
 							 					<td class="sub_field_title" style="width:400px;padding: 10px;">
-							 						<button type="button" id="new_button" style="margin-right: 10px;margin-left: 0px;display:inline;float:left" 
+							 						<button type="button" id="new_button" style="margin-right: 10px;margin-left: 0px;display:inline;float:left"
 													onclick="hide_show_buttons(\'browse_button\');
 															 hide_show_buttons(\'or\');
 															 hide_show_buttons(\'location_menu\', true);
@@ -548,7 +532,7 @@ global $CFG, $USER;
 													<img src="' . $CFG->wwwroot . '/images/add.png" title="Add Location" alt="Add Location">
 													<span> Toggle Add Form</span>
 												</span>
-															 
+
 											</button>
 							 						<span id="or" style="display:inline">&nbsp; or &nbsp;</span>
 							 						<button type="button" id="browse_button" style="margin-right: 0px;margin-left: 10px;display:inline"

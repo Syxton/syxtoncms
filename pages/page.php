@@ -15,9 +15,11 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
 	include($sub . 'lib/header.php');
 }
 
+echo fill_template("tmp/roles.template", "roles_header_script");
+
 callfunction();
 
-echo fetch_template("tmp/page.template", "end_of_page_template");
+echo fill_template("tmp/page.template", "end_of_page_template");
 
 function browse() {
 	$section = clean_myvar_opt("section", "string", "search");

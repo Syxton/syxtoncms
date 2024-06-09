@@ -24,6 +24,13 @@ get_forum_categories||
 	ORDER BY sort
 ||get_forum_categories
 
+get_shoutbox||
+	SELECT *
+	FROM forum_discussions
+	WHERE forumid = ||forumid||
+	AND shoutbox = 1
+||get_shoutbox
+
 set_category_sort||
 	UPDATE forum_categories
 	SET sort = ||sort||
@@ -47,16 +54,37 @@ insert_category||
 	VALUES(||forumid||, ||pageid||, ||title||, ||sort||, ||shoutbox||)
 ||insert_category
 
+update_category||
+	UPDATE forum_categories
+	SET title = ||title||
+	WHERE catid = ||catid||
+||update_category
+
+get_category||
+	SELECT *
+	FROM forum_categories
+	WHERE catid = ||catid||
+||get_category
+
+get_category_discussions||
+	SELECT *
+	FROM forum_discussions
+	WHERE catid = ||catid||
+	AND shoutbox = 0
+	AND bulletin = ||bulletin||
+	ORDER BY lastpost DESC
+||get_category_discussions
+
 delete_category_discussions||
 	DELETE
 	FROM forum_discussions
-	WHERE catid = '||catid||'
+	WHERE catid = ||catid||
 ||delete_category_discussions
 
 delete_category_posts||
 	DELETE
 	FROM forum_posts
-	WHERE catid = '||catid||'
+	WHERE catid = ||catid||
 ||delete_category_posts
 
 delete_discussions||
@@ -71,11 +99,23 @@ delete_discussion||
 	WHERE discussionid = ||discussionid||
 ||delete_discussion
 
+get_discussion_posts||
+	SELECT *
+	FROM forum_posts
+	WHERE discussionid = ||discussionid||
+||get_discussion_posts
+
 delete_discussion_posts||
 	DELETE
 	FROM forum_posts
 	WHERE discussionid = ||discussionid||
 ||delete_discussion_posts
+
+get_discussion||
+	SELECT *
+	FROM forum_discussions
+	WHERE discussionid = ||discussionid||
+||get_discussion
 
 pin_discussion||
 	UPDATE forum_discussions
@@ -106,6 +146,12 @@ update_discussion_lastpost||
 	SET lastpost = ||lastpost||
 	WHERE discussionid = ||discussionid||
 ||update_discussion_lastpost
+
+update_discussion_views||
+	UPDATE forum_discussions
+	SET views = views + 1
+	WHERE discussionid = ||discussionid||
+||update_discussion_views
 
 update_discussion_title||
 	UPDATE forum_discussions
@@ -142,3 +188,9 @@ insert_post||
 	(discussionid, catid, forumid, pageid, userid, message, posted, alias)
 	VALUES(||discussionid||, ||catid||, ||forumid||, ||pageid||, ||userid||, ||message||, ||posted||, ||alias||)
 ||insert_post
+
+get_post||
+	SELECT *
+	FROM forum_posts
+	WHERE postid = ||postid||
+||get_post

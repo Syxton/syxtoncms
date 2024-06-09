@@ -240,7 +240,7 @@ global $CFG, $USER;
 							<a onclick="$(\'#picsid_' . $row["picsid"] . '\').show();
 										ajaxapi(\'/features/pics/pics_ajax.php\',
 												\'save_caption\',
-												\'&amp;picsid=' . $row["picsid"] . '&amp;caption=\' + escape($(\'#caption_' . $row["picsid"] . '\').val()),
+												\'&amp;picsid=' . $row["picsid"] . '&amp;caption=\' + encodeURIComponent($(\'#caption_' . $row["picsid"] . '\').val()),
 												function() { simple_display(\'picsid_' . $row["picsid"] . '\'); });
 												setTimeout(function() { $(\'#picsid_' . $row["picsid"] . '\').hide(); }, 3000);">
 								<img src="' . $CFG->wwwroot . '/images/save.png" />

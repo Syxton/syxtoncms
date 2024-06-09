@@ -16,11 +16,14 @@ if (empty($_POST["aslib"])) {
 		include($sub . 'header.php');
 	}
 
-	callfunction();
+    $head = fill_template("tmp/page.template", "page_js_css", false, ["dirroot" => $CFG->directory]);
+    echo fill_template("tmp/page.template", "start_of_page_template", false, ["head" => $head]);
 
-	echo fill_template("tmp/main.template", "header", "adminpanel");
+    callfunction();
 
-	echo '</body></html>';
+    echo fill_template("tmp/main.template", "header", "adminpanel");
+
+    echo fill_template("tmp/page.template", "end_of_page_template");
 }
 
 
@@ -41,14 +44,13 @@ if (empty($_POST["aslib"])) {
 function site_administration() {
     echo '<table style="height:98%;width:100%">
             <tr>
-                <td style="width:1%;font-size:.75em;border:2px solid silver;background-color:DarkSlateGray;">
+                <td style="width:1%;border:2px solid silver;background-color:DarkSlateGray;">
                     <div style="height:100%;">
                         <ul class="vertmenu">
                             <li>
                                 <a href="#" class="active">Admin Features</a>
                                 <ul class="acitem">
                                     <li><a href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'user_admin\',\'\',function() { simple_display(\'display\');});">User Admin</a></li>
-                                    <li><a href="#">Page Admin (Not Yet Available)</a></li>
                                     <li><a href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'camper_list\',\'\',function() { simple_display(\'display\');});"">Camper Lists</a></li>
                                     <li><a href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'site_versions\',\'\',function() { simple_display(\'display\');});">Version Checker</a></li>
                                 </ul>

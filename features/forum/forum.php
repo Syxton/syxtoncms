@@ -18,13 +18,14 @@ if (empty($_POST["aslib"])) {
 
     if (!defined('FORUMLIB')) { include_once($CFG->dirroot . '/features/forum/forumlib.php'); }
 
+    echo fill_template("tmp/page.template", "start_of_page_template");
+
     callfunction();
 
-    echo '</body></html>';
+    echo fill_template("tmp/page.template", "end_of_page_template");
 }
 
 function forum_settings() {
-global $CFG, $MYVARS, $USER;
 	$featureid = clean_myvar_opt("featureid", "int", false); $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	$feature = "forum";
 
@@ -39,126 +40,252 @@ global $CFG, $MYVARS, $USER;
 	}
 }
 
-function createforumcategory() {
-global $MYVARS, $CFG, $USER;
+function createcategory() {
+global $CFG, $USER;
 	if (!defined('VALIDATELIB')) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
+	$forumid = clean_myvar_req("forumid", "int");
+	$pageid = get_db_field("pageid", "forum", "forumid = ||forumid||", ["forumid" => $forumid]);
 
-	$forumid = dbescape($MYVARS->GET['forumid']); $pageid = clean_myvar_opt("pageid", "int", get_pageid());
-	$title = "";
-
-	if (isset($MYVARS->GET["catid"])) {
-        if (!user_is_able($USER->userid, "editforumcategory", $pageid)) { trigger_error(error_string("no_permission", ["editforumcategory"]), E_USER_WARNING); return; }
-		$category = get_db_row("SELECT * FROM forum_categories WHERE catid=" . dbescape($MYVARS->GET["catid"]));
-		$title = $category["title"];
-	} else {
-        if (!user_is_able($USER->userid, "createforumcategory", $pageid)) { trigger_error(error_string("no_permission", ["createforumcategory"]), E_USER_WARNING); return; }
-		if (!user_is_able($USER->userid, "createforumcategory", $pageid)) { trigger_error(error_string("generic_permissions"), E_USER_WARNING); return;}
+	$returnme = $error = "";
+	try {
+		if ($forumid && $pageid) {
+			if (!user_is_able($USER->userid, "createforumcategory", $pageid)) {
+				trigger_error(error_string("no_permission", ["createforumcategory"]), E_USER_WARNING);
+				return;
+			}
+			if (!user_is_able($USER->userid, "createforumcategory", $pageid)) {
+				trigger_error(error_string("generic_permissions"), E_USER_WARNING);
+				return;
+			}
+			$script = ajaxapi([
+				"url" => "/features/forum/forum_ajax.php",
+				"data" => ["action" => "create_category", "forumid" => $forumid, "title" => "js|| encodeURIComponent($('#title').val()) ||js"],
+				"display" => "category_div_$forumid",
+				"ondone" => "close_modal();",
+			], "code");
+			$returnme = create_validation_script("new_category_form" , $script);
+			$params = [
+				"formid" => "new_category_form",
+				"forumid" => $forumid,
+				"help" => get_help("new_category"),
+			];
+			$returnme .= fill_template("tmp/forum.template", "category_form", "forum", $params);
+		}
+	} catch (Exception $e) {
+		throw new Exception($e->getMessage());
+		$error = $e->getMessage();
 	}
 
-	if (isset($MYVARS->GET["catid"])) { echo create_validation_script("new_category_form" , 'ajaxapi(\'/features/forum/forum_ajax.php\',\'edit_category\',\'&catid=' . dbescape($MYVARS->GET["catid"]) . '&catname=\'+escape(document.getElementById(\'catname\').value),function() { simple_display(\'category_div\');}); close_modal();');
-	} else { echo create_validation_script("new_category_form" , 'ajaxapi(\'/features/forum/forum_ajax.php\',\'create_category\',\'&forumid=' . $forumid . '&pageid=' . $pageid . '&catname=\'+escape(document.getElementById(\'catname\').value),function() { simple_display(\'category_div\');}); close_modal();');}
-
-	echo '
-	<div class="formDiv" id="category_div" style="padding: 20px">
-		<input id="hiddenusername" type="hidden" /><input id="hiddenpassword" type="hidden" />
-		<form id="new_category_form">
-			<fieldset class="formContainer">
-				<div class="rowContainer">
-					<label class="rowTitle" for="catname">Category Name</label>
-                    <input type="text" id="catname" name="catname" value="' . $title . '" data-rule-required="true" />
-                    <div class="tooltipContainer info">' . get_help("new_category") . '</div>
-                    <div class="spacer" style="clear: both;"></div>
-				</div>
-			</fieldset>
-            <input class="submit" name="submit" type="submit" value="Submit" style="margin: 0px auto;display: block;" />
-		</form>
-	</div>';
+	ajax_return($returnme, $error);
 }
 
-function show_forum_editor() {
-global $CFG, $MYVARS;
-	$postid = $MYVARS->GET["postid"] ?? false;
-    $discussionid = $MYVARS->GET["discussionid"] ?? false;
-    $quote = $MYVARS->GET["quote"] ?? false;
-    $edit = $MYVARS->GET["edit"] ?? false;
-    $pagenum = $MYVARS->GET["pagenum"] ?? 0;
-    $forumid = $MYVARS->GET["forumid"] ?? false;
+function editcategory() {
+global $CFG, $USER;
+	if (!defined('VALIDATELIB')) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
+	$catid = clean_myvar_req("catid", "int");
+	try {
+		$category = get_db_row("SELECT * FROM forum_categories WHERE catid = ||catid||", ["catid" => $catid]);
+		$forumid = $category["forumid"];
+		$pageid = $category["pageid"];
 
-    $value = "";
-    if (!$forumid && $postid) {
-        $forumid = get_db_field("forumid", "forum_discussions", "discussionid IN (SELECT discussionid FROM forum_posts WHERE postid = '$postid')");
-        $value = $edit == 1 ? get_db_field("message", "forum_posts", "postid='$postid'") : "";
-    }
+		$returnme = $error = "";
 
-	echo '<img id="edit_area_' . $forumid . '" name="edit_area_' . $forumid . '" src="' . $CFG->wwwroot . '/images/edit_area.gif" />';
-	if ($quote == 1) {
-        echo '<br /><span style="font-size:.8em; color:#CCCCCC;">Quoting Post: #' . $postid . '</span>';
-    }
+		if (!user_is_able($USER->userid, "editforumcategory", $pageid)) {
+			trigger_error(error_string("no_permission", ["editforumcategory"]), E_USER_WARNING);
+			return;
+		}
 
-	if ($edit == 1) {
-        echo '<br /><span style="font-size:.8em; color:#CCCCCC;">Editing Post: #' . $postid . '</span>';
-    }
+		$script = ajaxapi([
+			"url" => "/features/forum/forum_ajax.php",
+			"data" => ["action" => "edit_category", "catid" => $catid, "title" => "js|| encodeURIComponent($('#title').val()) ||js"],
+			"display" => "category_div_$forumid",
+			"ondone" => "close_modal();",
+		], "code");
+		$returnme = create_validation_script("edit_category_form" , $script);
+		$params = [
+			"formid" => "edit_category_form",
+			"forumid" => $forumid,
+			"title" => $category["title"],
+			"help" => get_help("new_category"),
+		];
+		$returnme .= fill_template("tmp/forum.template", "category_form", "forum", $params);
+	} catch (Exception $e) {
+		throw new Exception($e->getMessage());
+		$error = $e->getMessage();
+	}
 
-    echo get_editor_box(["initialvalue" => $value, "type" => "Forum", "height" => "400", "width" => "700"]) . '
-		 <input type="button" style="margin: 10px auto;display: block;"
-                name="forum_submit"
-                id="forum_submit"
-                value="Submit"
-                onclick="if (' . get_editor_value_javascript() . ' != \'\') {
-                            ajaxapi(\'/features/forum/forum_ajax.php\',
-                                    \'post\',
-                                    \'&message=\' + escape(' . get_editor_value_javascript() . ') + \'&amp;forumid=' . $forumid . '&amp;discussionid=' . $discussionid . '&amp;postid=' . $postid . '&amp;quote=' . $quote . '&amp;edit=' . $edit . '\',
-                                    function() {
-                                        close_modal();
-                                    }
-                            );
-                            this.blur();
-                        }" />';
+	ajax_return($returnme, $error);
+}
+
+function edit_post_form() {
+global $CFG;
+	$postid = clean_myvar_opt("postid", "int", false);
+	$message = get_db_field("message", "forum_posts", "postid='$postid'");
+
+	$post = get_db_row(fetch_template("dbsql/forum.sql", "get_post", "forum"), ["postid" => $postid]);
+
+	$editorcontent = get_editor_value_javascript();
+	ajaxapi([
+		"id" => "edit_post_submit",
+		"if" => "$editorcontent.length > 0",
+		"url" => "/features/forum/forum_ajax.php",
+		"data" => ["action" => "edit_post", "postid" => $postid, "message" => "js|| encodeURIComponent($editorcontent) ||js"],
+		"ondone" => "close_modal();",
+		"event" => "submit",
+	]);
+
+	$params = [
+		"author" => ($post["userid"] ? get_user_name($post["userid"]) : ($post["alias"] ? $post["alias"] : "Anonymous")),
+		"time" => ago($post["posted"], true),
+		"formid" => "edit_post_submit",
+		"editor" => get_editor_box(["initialvalue" => $message, "type" => "Forum", "height" => "calc(100% - 75px)", "width" => "700"]),
+	];
+	ajax_return(fill_template("tmp/forum.template", "edit_post_form", "forum", $params));
+}
+
+function quote_post_form() {
+global $CFG;
+	$quotepost = clean_myvar_req("quotepost", "int");
+	$post = get_db_row(fetch_template("dbsql/forum.sql", "get_post", "forum"), ["postid" => $quotepost]);
+
+	$editorcontent = get_editor_value_javascript();
+	ajaxapi([
+		"id" => "quote_post_submit",
+		"if" => "$editorcontent.length > 0",
+		"url" => "/features/forum/forum_ajax.php",
+		"data" => ["action" => "quote_post", "quotepost" => $quotepost, "message" => "js|| encodeURIComponent($editorcontent) ||js"],
+		"ondone" => "close_modal();",
+		"event" => "submit",
+	]);
+
+	$quoteparams = [
+		"author" => ($post["userid"] ? get_user_name($post["userid"]) : ($post["alias"] ? $post["alias"] : "Anonymous")),
+		"time" => ago($post["posted"], true),
+		"quotemessage" => truncate($post["message"], 300),
+	];
+	$params = [
+		"quote" => fill_template("tmp/forum.template", "forum_quote", "forum", $quoteparams),
+		"formid" => "quote_post_submit",
+		"editor" => get_editor_box(["initialvalue" => '', "type" => "Forum", "height" => "calc(100% - 75px)", "width" => "700"]),
+	];
+
+	ajax_return(fill_template("tmp/forum.template", "quote_post_form", "forum", $params));
+}
+
+function post_form() {
+global $CFG;
+	$replyto = clean_myvar_opt("replyto", "int", false);
+	$discussionid = clean_myvar_opt("discussionid", "int", false);
+
+	$error = "";
+	try {
+		if (!$replyto && !$discussionid) {
+			throw new \Exception("Not enough information was provided to post.");
+		}
+
+		$editorcontent = get_editor_value_javascript();
+		$data = ["action" => "post", "message" => "js|| encodeURIComponent($editorcontent) ||js"];
+
+		if ($replyto) {
+			$data["replyto"] = $replyto;
+		} elseif ($discussionid) {
+			$data["discussionid"] = $discussionid;
+		}
+
+		ajaxapi([
+			"id" => "post_submit",
+			"if" => "$editorcontent.length > 0",
+			"url" => "/features/forum/forum_ajax.php",
+			"data" => $data,
+			"ondone" => "close_modal();",
+			"event" => "submit",
+		]);
+
+		$params = [
+			"formid" => "post_submit",
+			"editor" => get_editor_box(["initialvalue" => '', "type" => "Forum", "height" => "calc(100% - 75px)", "width" => "700"]),
+		];
+		ajax_return(fill_template("tmp/forum.template", "post_form", "forum", $params));
+	} catch (\Exception $e) {
+		ajax_return("", debugging($e->getMessage()));
+	}
 }
 
 function shoutbox_editor() {
-global $CFG, $MYVARS, $USER;
+global $CFG, $USER;
 	$forumid = clean_myvar_req("forumid", "int");
+	$userid = isset($USER->userid) && $USER->userid > 0 ? $USER->userid : "";
+	$editorcontent = get_editor_value_javascript();
+	ajaxapi([
+		"id" => "shoutbox_post_submit",
+		"if" => "$editorcontent.length > 0",
+		"url" => "/features/forum/forum_ajax.php",
+		"data" => ["action" => "shoutbox_post", "forumid" => $forumid, "alias" => "js|| $('#alias').val() ||js", "userid" => "js|| $('#userid').val() ||js", "message" => "js|| encodeURIComponent($editorcontent) ||js"],
+		"ondone" => "close_modal();",
+		"event" => "submit",
+	]);
+	$params = [
+		"editor" => get_editor_box(["type" => "Shoutbox", "width" => "100%", "height" => "calc(100% - 75px)", "charlimit" => 500]),
+		"formid" => "shoutbox_post_submit",
+		"userid" => $userid,
+		"alias" => empty($userid),
+		"wwwroot" => $CFG->wwwroot,
+	];
+    ajax_return(fill_template("tmp/forum.template", "shoutbox_form", "forum", $params));
+}
 
-	if (isset($USER->userid) && $USER->userid > 0) {
-		$username = '<input type="hidden" id="userid" name="userid" value="' . $USER->userid . '" />';
-	}
-	$username = isset($USER->userid) && $USER->userid > 0 ?  : '<span class="shoutbox_editortext" style="float:left;margin-top:3px;"><img src="' . $CFG->wwwroot . '/images/shoutbox_alias.gif" style="margin-bottom:-12px;" /></span><input type="text" id="alias" size="21" name="alias" style="float:left;margin-top:5px; margin-left:-195px;" /><input type="hidden" id="userid" name="userid" />';
-    echo '<input name="contentWordCount" type="hidden" value="5" />';
-    echo get_editor_box(["type" => "Shoutbox", "height" => "400"]);
-	echo $username;
-    echo '<input type="button" value="Submit" style="float:right;margin-top:3px" onclick="if (' . get_editor_value_javascript() . '.length > 0) { ajaxapi(\'/features/forum/forum_ajax.php\',\'shoutbox_post\',\'&amp;forumid=' . $forumid . '&amp;alias=\'+document.getElementById(\'alias\').value+\'&amp;userid=\'+document.getElementById(\'userid\').value+\'&amp;message=\'+escape(' . get_editor_value_javascript() . '),function() { close_modal(); }); this.blur();}" />';
+function edit_discussion_form() {
+global $CFG;
+	$discussionid = clean_myvar_req("discussionid", "int");
+	$discussion = get_db_row(fetch_template("dbsql/forum.sql", "get_discussion", "forum"), ["discussionid" => $discussionid]);
+	$catid = $discussion["catid"];
+
+	$postid = first_post($discussionid);
+	$message = get_db_field("message", "forum_posts", "postid = ||postid|| ORDER BY postid", ["postid" => $postid]);
+	$title = $discussion["title"];
+
+	$editor = get_editor_box(["initialvalue" => $message, "type" => "Forum", "width" => "100%", "height" => "calc(100% - 75px)"]);
+	$editorcontent = get_editor_value_javascript();
+
+	ajaxapi([
+		"id" => "edit_discussion_submit",
+		"if" => "$editorcontent.length > 0 && $('#discussion_title').val().length > 0",
+		"url" => "/features/forum/forum_ajax.php",
+		"data" => ["action" => "edit_discussion", "postid" => $postid, "discussionid" => $discussionid, "message" => "js|| encodeURIComponent($editorcontent) ||js", "title" => "js|| encodeURIComponent($('#discussion_title').val()) ||js"],
+		"ondone" => "close_modal();",
+		"event" => "submit",
+	]);
+
+	$params = [
+		"formid" => "edit_discussion_submit",
+		"wwwroot" => $CFG->wwwroot,
+		"editor" => $editor,
+		"title" => $title,
+	];
+	echo fill_template("tmp/forum.template", "discussion_form", "forum", $params);
 }
 
 function create_discussion_form() {
 global $CFG;
-	$title = $message = "";
 	$catid = clean_myvar_req("catid", "int");
-	$forumid = clean_myvar_req("forumid", "int");
-	$pageid = clean_myvar_req("pageid", "int");
-	$discussionid = clean_myvar_opt("discussionid", "int", false);
 
-	if ($discussionid) { // EDIT MODE
-		$discussion = get_db_row("SELECT * FROM forum_discussions WHERE discussionid=$discussionid");
-		$postid = first_post($discussionid);
-		$message = get_db_field("message", "forum_posts", "postid=$postid ORDER BY postid");
-		$title = $discussion["title"];
-	}
-
-	$existingpost = $discussionid ? '&postid=' . $postid . '&discussionid=' . $discussionid : '';
-	$editor = get_editor_box(["initialvalue" => $message, "type" => "Forum", "height" => "300"]);
-	$editorvalue = get_editor_value_javascript();
+	$editor = get_editor_box(["initialvalue" => "", "type" => "Forum", "width" => "100%", "height" => "calc(100% - 75px)"]);
+	$editorcontent = get_editor_value_javascript();
+	ajaxapi([
+		"id" => "create_discussion_submit",
+		"if" => "$editorcontent.length > 0 && $('#discussion_title').val().length > 0",
+		"url" => "/features/forum/forum_ajax.php",
+		"data" => ["action" => "create_discussion", "catid" => $catid, "message" => "js|| encodeURIComponent($editorcontent) ||js", "title" => "js|| encodeURIComponent($('#discussion_title').val()) ||js"],
+		"ondone" => "close_modal();",
+		"event" => "submit",
+	]);
 	$params = [
-		"forumid" => $forumid,
-		"catid" => $catid,
-		"pageid" => $pageid,
+		"formid" => "create_discussion_submit",
 		"wwwroot" => $CFG->wwwroot,
-		"existingpost" => $existingpost,
 		"editor" => $editor,
-		"editorvalue" => $editorvalue,
-		"title" => $title,
+		"title" => "",
 	];
-	echo fill_template("tmp/forum.template", "create_discussion_form", "forum", $params);
+	echo fill_template("tmp/forum.template", "discussion_form", "forum", $params);
 }
 
 ?>

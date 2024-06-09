@@ -32,7 +32,7 @@ global $CFG;
 	return $timeOffset;
 }
 
-function ago($timestamp) {
+function ago($timestamp, $shorten = false) {
 global $CFG;
     if (!$timestamp) { return "Never"; };
 	$minutes = ""; $seconds = "";
@@ -40,7 +40,39 @@ global $CFG;
 	if ($difference == 0) { return "now"; }
 	$ago = $difference >= 0 ? "ago" : "";
 	$difference = abs($difference);
-	
+
+	if ($shorten) {
+		if (floor($difference / 31449600) > 1) {
+			return floor($difference/31449600) . " years ago";
+		} elseif (floor($difference / 31449600) == 1) {
+			return floor($difference/ 31449600) . " year ago";
+		} elseif (floor($difference / 2628288) > 1) {
+			return floor($difference / 2628288) . " months ago";
+		} elseif (floor($difference / 2628288) == 1) {
+			return floor($difference / 2628288) . " month ago";
+		} elseif (floor($difference / 604800) > 1) {
+			return floor($difference / 604800) . " weeks ago";
+		} elseif (floor($difference / 604800) == 1) {
+			return floor($difference / 604800) . " week ago";
+		} elseif (floor($difference / 86400) > 1) {
+			return floor($difference / 86400) . " days ago";
+		} elseif (floor($difference / 86400) == 1) {
+			return floor($difference / 86400) . " day ago";
+		} elseif (floor($difference / 3600) > 1) {
+			return floor($difference / 3600) . " hours ago";
+		} elseif (floor($difference / 3600) == 1) {
+			return floor($difference / 3600) . " hour ago";
+		} elseif (floor($difference / 60) > 1) {
+			return floor($difference / 60) . " minutes ago";
+		} elseif (floor($difference / 60) == 1) {
+			return floor($difference / 60) . " minute ago";
+		} elseif (floor($difference) > 1) {
+			return floor($difference / 60) . " seconds ago";
+		} elseif (floor($difference / 60) == 1) {
+			return floor($difference / 60) . " now";
+		}
+	}
+
 	if ($difference > 31449600) {
         $years = floor($difference / 31449600) > 1 ? floor($difference/31449600) . " years" : floor($difference/31449600) . " year";
         $weeks = "";

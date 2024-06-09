@@ -16,11 +16,12 @@ if (empty($_POST["aslib"])) {
 		include($sub . 'header.php');
 	}
 
+	echo fill_template("tmp/page.template", "start_of_page_template", false, ["head" => js_script_wrap($CFG->wwwroot . '/features/polls/polls.js')]);
+
     callfunction();
 
-    echo js_script_wrap($CFG->wwwroot . '/features/polls/polls.js');
+    echo fill_template("tmp/page.template", "end_of_page_template");
 
-    echo '</body></html>';
 }
 
 function polls_settings() {
@@ -28,9 +29,9 @@ global $CFG, $MYVARS, $USER;
 	$featureid = clean_myvar_opt("featureid", "int", false); $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	$feature = "polls";
 
-	//Default Settings	
+	//Default Settings
 	$default_settings = default_settings($feature, $pageid, $featureid);
-    
+
 	//Check if any settings exist for this feature
 	if ($settings = fetch_settings($feature, $featureid, $pageid)) {
         echo make_settings_page($settings, $default_settings);
@@ -56,11 +57,11 @@ global $CFG, $MYVARS, $USER;
 	$startdate = $row['startdate'] ? '<div id="savedstartdatediv" style="color:gray;display:inline;">Currently set for: ' . date('l dS \of F Y', $row['startdate']) . ' <input type="button" value="Clear" onclick="zeroout(\'savedstartdate\');" /></div>' : false;
 	$savedstop = $row['stopdate'] ? date('Y-m-d', $row['stopdate']) : '';
 	$stopdate = $row['stopdate'] ? '<div id="savedstopdatediv" style="color:gray;display:inline;">Currently set for: ' . date('l dS \of F Y', $row['stopdate']) . ' <input type="button" value="Clear" onclick="zeroout(\'savedstopdate\');" /></div>' : false;
-	
+
 	$answers = "";
 	if ($result = get_db_result("SELECT * FROM polls_answers WHERE pollid='$pollid' ORDER BY sort")) {
 		while ($answer = fetch_row($result)) {
-			$answers .= $answers == "" ? $answer["answer"] : "," . $answer["answer"];    
+			$answers .= $answers == "" ? $answer["answer"] : "," . $answer["answer"];
 		}
 	}
 

@@ -1,3 +1,11 @@
+get_html||
+    SELECT h.*, pf.area
+    FROM html h
+    JOIN pages_features pf ON pf.featureid = h.htmlid
+    WHERE pf.feature = "html"
+    AND h.htmlid = ||htmlid||
+||get_html
+
 insert_html||
     INSERT INTO html (pageid, html, dateposted)
     VALUES(||pageid||, ||html||, ||dateposted||)

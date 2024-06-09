@@ -14,7 +14,7 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
 	include($sub . 'lib/header.php');
 }
 define('DONATELIB', true);
-	
+
 function display_donate($pageid, $area, $featureid) {
 global $CFG, $USER, $donateSETTINGS;
 	$abilities = user_abilities($USER->userid, $pageid,"donate", "donate", $featureid);
@@ -22,7 +22,7 @@ global $CFG, $USER, $donateSETTINGS;
 		save_batch_settings(default_settings("donate", $pageid, $featureid));
 		$settings = fetch_settings("donate", $featureid, $pageid);
 	}
-    
+
     if (!empty($abilities->makedonation->allow)) {
         return get_donate($pageid, $featureid, $settings, $abilities, $area);
     }
@@ -34,7 +34,7 @@ global $CFG, $USER;
 	if ($result = get_db_result(fetch_template("dbsql/donate.sql", "get_donate_instance", "donate"), ["donate_id" => $featureid])) {
 		while ($row = fetch_row($result)) {
          // if viewing from rss feed
-			if ($resultsonly) { 
+			if ($resultsonly) {
                 $returnme .= '<table style="width:100%;border:1px solid silver;padding:10px;">
 					 						<tr>
 												<th>' . $settings->donate->$featureid->feature_title->setting . '</th>
@@ -47,7 +47,7 @@ global $CFG, $USER;
 													</div>
 												</td>
 											</tr>
-										</table>'; 
+										</table>';
             } else { //regular donate feature viewing
                 $buttons = get_button_layout("donate", $featureid, $pageid);
 				$title = $settings->donate->$featureid->feature_title->setting;
@@ -65,9 +65,9 @@ global $CFG;
 
 	$protocol = get_protocol();
 	if ($campaign = get_db_row(fetch_template("dbsql/donate.sql", "get_donation_campaign", "donate"), ["donate_id" => $featureid])) {
-		if ($CFG->paypal) { 
+		if ($CFG->paypal) {
 			$paypal = 'www.paypal.com';
-		} else { 
+		} else {
 			$paypal = 'www.sandbox.paypal.com';
 		}
 
@@ -78,42 +78,42 @@ global $CFG;
 
 		$returnme .= get_css_tags(["features/donate/donate.css"]);
 		$returnme .= get_js_tags(["features/donate/donate.js"]);
-
+		$protocol = get_protocol();
 		$button = '
-		<form action="https://' . $paypal . '/cgi-bin/webscr" method="post">
-				<div style="width: 100%; text-align: center;">
-					<input name="cmd" type="hidden" value="_donations" />
-					<input name="business" type="hidden" value="' . $campaign["paypal_email"] . '" />
-					<input name="item_name" type="hidden" value="' . $campaign["title"] . '" />
-					<input name="item_number" type="hidden" value="DONATE" />
-					<input name="custom" type="hidden" value="' . $campaign["campaign_id"] . '" />
-					<input name="no_shipping" type="hidden" value="1" />
-					<input name="return" type="hidden" value="' . $CFG->wwwroot . '/features/donate/donate.php?action=thankyou" />
-					<input name="notify_url" type="hidden" value="' . $protocol.$CFG->wwwroot . '/features/donate/ipn.php" />
-					<input name="currency_code" type="hidden" value="USD" />
-					<input name="tax" type="hidden" value="0" />
-					<input name="rm" type="hidden" value="2" />
-					<input name="lc" type="hidden" value="US" />
-					<input name="bn" type="hidden" value="Donate_WPS_US" />
-					<br />
-					<input alt="PayPal - The safer, easier way to pay online!" name="submit" src="https://www.paypal.com/en_US/i/btn/btn_donate_SM.gif" style="border: 0px none ;" type="image" /> <img alt="" height="1" src="https://www.paypal.com/en_US/i/scr/pixel.gif" style="border: 0px none ;" width="1" />
+		<form style="margin: auto; text-align: center;" action="https://' . $paypal . '/cgi-bin/webscr" method="post" target="_top">
+			<div style="width: 100%; text-align: center;">
+			<input name="cmd" type="hidden" value="_donations">
+			<input name="item_number" type="hidden" value="DONATE" />
+			<input name="item_name" type="hidden" value="' . $campaign["title"] . '">
+			<input name="business" type="hidden" value="' . $campaign["paypal_email"] . '">
+			<input name="custom" type="hidden" value="' . $campaign["campaign_id"] . '" />
+			<input name="return" type="hidden" value="' . $protocol.$CFG->wwwroot . '/features/donate/donate.php?action=thankyou" />
+			<input name="notify_url" type="hidden" value="' . $protocol.$CFG->wwwroot . '/features/donate/ipn.php" />
+			<input name="lc" type="hidden" value="US">
+			<input name="tax" type="hidden" value="0" />
+			<input name="rm" type="hidden" value="2" />
+			<input name="currency_code" type="hidden" value="USD">
+			<input name="bn" type="hidden" value="PP-DonationsBF:btn_donateCC_LG.gif:NonHostedGuest">
+			<br />
+			<input style="border: 0px;" alt="PayPal - The safer, easier way to pay online!" name="submit" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" type="image">
+			<img style="border: 0px; display: block; margin-left: auto; margin-right: auto; width: 80%;" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" alt="" width="1" height="1">
 			</div>
-		</form>'; 
-    
-		$returnme .= donate_meter($campaign, $total, $button, $settings->donate->$featureid->metertype->setting);        
+		</form>';
+
+		$returnme .= donate_meter($campaign, $total, $button, $settings->donate->$featureid->metertype->setting);
 	} else { // Not setup yet
-		$returnme .= 'You must first setup a donation campaign.<br />';    
+		$returnme .= 'You must first setup a donation campaign.<br />';
 	}
 
-	return $returnme;    
+	return $returnme;
 }
 
-function donate_meter($campaign, $total, $button, $type = "horizontal") {    
+function donate_meter($campaign, $total, $button, $type = "horizontal") {
 $returnme = "";
 	if ($campaign["metgoal"] == 1 || (round($total / $campaign["goal_amount"],2) * 100) > 100) {
 		$perc = "100";
 	} else {
-		$perc = round($total / $campaign["goal_amount"],2) * 100;    
+		$perc = round($total / $campaign["goal_amount"],2) * 100;
 	}
 
 	switch ($type) {
@@ -173,7 +173,7 @@ $returnme = "";
 				<br /><div style='text-align: center;'><strong>$perc% complete</strong></div><br />
 				$button";
 			break;
-	} 
+	}
 
 	$returnme .= js_code_wrap('thermometer("thermometer");', "", true);
 
@@ -229,11 +229,11 @@ function donate_buttons($pageid, $featuretype, $featureid) {
 global $CFG, $USER;
 	$settings = fetch_settings("donate", $featureid, $pageid);
 	$returnme = "";
-	
+
 	$donate_abilities = user_abilities($USER->userid, $pageid,"donate", "donate", $featureid);
 	$feature_abilities = user_abilities($USER->userid, $pageid,"features", "donate", $featureid);
-    
-	$campaign = get_db_row(fetch_template("dbsql/donate.sql", "get_donation_campaign", "donate"), ["donate_id" => $featureid]);	
+
+	$campaign = get_db_row(fetch_template("dbsql/donate.sql", "get_donation_campaign", "donate"), ["donate_id" => $featureid]);
 	$edit = get_db_row(fetch_template("dbsql/donate.sql", "get_donation_instance_if_owner_of_campaign", "donate"), ["donate_id" => $featureid, "origin_page" => $pageid]) ? true : false;
 	if ($campaign && $edit && $donate_abilities->adddonation->allow) {
 		$p = [
@@ -249,7 +249,7 @@ global $CFG, $USER;
 		];
 		$returnme .= make_modal_links($p);
 	}
-	
+
 	if ($donate_abilities->managedonation->allow) {
 		$p = [
 			"title" => "Campaign Settings",
@@ -270,16 +270,16 @@ global $CFG, $USER;
 function select_campaign_forms($featureid, $pageid) {
 	if ($edit = get_db_row(fetch_template("dbsql/donate.sql", "get_donation_instance_if_owner_of_campaign", "donate"), ["donate_id" => $featureid, "origin_page" => $pageid])) {
 		$current = '
-			You are involved in a campaign you started called: <strong>' . get_db_field("title", "donate_campaign", "campaign_id='" . $edit["campaign_id"] . "'") . '</strong><br />    
+			You are involved in a campaign you started called: <strong>' . get_db_field("title", "donate_campaign", "campaign_id='" . $edit["campaign_id"] . "'") . '</strong><br />
 			<br />
 			Would you like to edit the current campaign? <a class="buttonlike" href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'new_campaign_form\',\'&campaign_id=' . $edit["campaign_id"] . '&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); loaddynamicjs(\'donation_script\');});">Edit Campaign</a>
-			<br /><br /><br />';        
+			<br /><br /><br />';
 	} else {
 		if ($joined = get_db_row(fetch_template("dbsql/donate.sql", "get_donation_instance_if_joined_to_campaign", "donate"), ["donate_id" => $featureid])) {
-			$current = 'You are currently joined to a campaign called: <strong>' . get_db_field("title", "donate_campaign", "campaign_id='" . $joined["campaign_id"] . "'") . '</strong><br />';    
+			$current = 'You are currently joined to a campaign called: <strong>' . get_db_field("title", "donate_campaign", "campaign_id='" . $joined["campaign_id"] . "'") . '</strong><br />';
 		} else {
-			$current = 'You are not currently associated with an active campaign.<br />';    
-		}       
+			$current = 'You are not currently associated with an active campaign.<br />';
+		}
 	}
 
 	$returnme = '<div style="text-align:center">
@@ -289,10 +289,10 @@ function select_campaign_forms($featureid, $pageid) {
 					' . $current. '
 					Would you like to start a new campaign or join an existing donation campaign?
 					<br /><br />
-					<a class="buttonlike" href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'new_campaign_form\',\'&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); loaddynamicjs(\'donation_script\');});">Start New Campaign</a>    
+					<a class="buttonlike" href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'new_campaign_form\',\'&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); loaddynamicjs(\'donation_script\');});">Start New Campaign</a>
 					<br /><br />
 					<a class="buttonlike" href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'join_campaign_form\',\'&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); });">Join Existing Campaign</a>';
-    
+
     return $returnme;
 }
 
@@ -305,7 +305,7 @@ global $CFG, $USER;
 		<br /><br /><br />
 		Would you like to manage all donations made to this campaign?<br /><br />
 		<a class="buttonlike" href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'manage_donations_form\',\'&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); });">Manage Donations</a>';
-    return $returnme;    
+    return $returnme;
 }
 
 function donate_default_settings($type, $pageid, $featureid) {

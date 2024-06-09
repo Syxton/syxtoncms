@@ -22,7 +22,9 @@ global $CFG;
 	$.validator.setDefaults({done: \'valid\'});
 	$(\'#' . $formname . '\').validate({
 		meta: \'validate\',
-		submitHandler: function() { ' . $function . ' },
+		submitHandler: function() {
+		' . $function . '
+		},
 		ignore: \'.calendarDateInput\'
 	});';
 

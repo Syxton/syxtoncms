@@ -1,3 +1,4 @@
+<!DOCTYPE HTML>
 <html style="overflow: hidden;caret-color: transparent;">
     <head>
         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
@@ -19,7 +20,7 @@
     $area = clean_myvar_opt("area", "string", get_db_field("area", "pages_features", 'feature = "polls" AND featureid = ||pollid||', ["pollid" => $pollid]));
 
     if ($pollid && $area) {
-        $height = $area == "middle" ? "calc(100% - 40px)" : "360";
+        $height = $area == "middle" ? "calc(95vh - 40px)" : "auto";
         $titlesize = $area == "middle" ? "25" : "15";
         $poll = get_db_row("SELECT * FROM polls WHERE pollid = ||pollid||", ["pollid" => $pollid]);
         echo '
@@ -30,7 +31,7 @@
                 var data = google.visualization.arrayToDataTable([["Answer", "Votes", { role: \'style\' }]' . get_poll_data($pollid) . ']);
 
 					var options = {
-							chartArea: {left:0,top:0,width:"100%",height:"100%" },
+							chartArea: {left:0, top:0, width:"100%", height:"100%" },
 							height: "' . $height . '",
 							width: "100%",
 							is3D: true,
@@ -45,7 +46,7 @@
             }
         </script>
         <div style="font-size:' . $titlesize . 'px;font-weight:bold;text-align:center;padding: 10px;">' . $poll["question"] . '</div>
-        <div id="chart_div" style="width: 100%;height:' . $height . '"></div>'; 
+        <div id="chart_div" style="display: flex;justify-content: center;width: 100%;height:' . $height . '"></div>';
     } else {
         trigger_error(error_string("no_data", [["Userid: $userid", "Year: $year", "Month: $month"]]), E_USER_WARNING);
     }

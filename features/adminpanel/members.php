@@ -16,7 +16,7 @@ global $CFG;
         <h2>
             Search the Member Directory
         </h2>
-        <a class="search_links" href="#" onclick="$('#instructions').toggle();">
+        <a class="search_links" href="#" onclick="$('#allfields').hide();$('#instructions').toggle();">
             Show/Hide Instructions
         </a>
         <div id="instructions">
@@ -43,37 +43,39 @@ global $CFG;
             </div>
         </div>
         <br />
-        <a class="search_links" href="#" onclick="$('#allfields').toggle();">
+        <a class="search_links" href="#" onclick="$('#instructions').hide();$('#allfields').toggle();">
             Show/Hide Available fields
         </a>
-        <span id="allfields">
+        <div id="allfields">
             <?php
             // Get list of all fields that can be searched on.
             if ($result = get_db_result("SHOW COLUMNS FROM users")) {
-                echo "<select>";
+                echo '<select onchange="if($(this).val().length) { $(\'#searchbox\').val($(\'#searchbox\').val() + \' /f \' + $(this).val()); }" id="searchfield">';
+                echo '<option>Select Field</option>';
                 while ($field = fetch_row($result)) {
-                    echo '<option>' . $field["Field"] . '</option>';
+                    echo '<option val="' . $field["Field"] . '">' . $field["Field"] . '</option>';
                 }
                 echo "</select>";
             }
             ?>
-        </span>
+        </div>
+
         <div id="mem_searchbardiv">
             Common Searches:
-            <a href="#" 
-                onclick="$('#waiting_span').show(); 
+            <a href="#"
+                onclick="$('#waiting_span').show();
                         ajaxapi('/features/adminpanel/members_script.php',
                                 'members_search',
                                 '&search=/s -joined',
                                 function() {
-                                if (xmlHttp.readyState == 4) { 
+                                if (xmlHttp.readyState == 4) {
                                     simple_display('mem_resultsdiv');
                                     $('#waiting_span').hide();
                                 }
                             }, true);">
                 New Members
             </a>
-            <a href="#" 
+            <a href="#"
                 onclick="$('#waiting_span').show();
                         ajaxapi('/features/adminpanel/members_script.php',
                                 'members_search',
@@ -100,7 +102,7 @@ global $CFG;
                    onclick="$('#waiting_span').show();
                             ajaxapi('/features/adminpanel/members_script.php',
                                     'members_search',
-                                    '&search=' + escape($('#searchbox').val()),
+                                    '&search=' + encodeURIComponent($('#searchbox').val()),
                                     function() {
                                         if (xmlHttp.readyState == 4) {
                                             simple_display('mem_resultsdiv');
@@ -115,10 +117,13 @@ global $CFG;
     <div id="mem_resultsdiv"></div>
     <div id="mem_debug"></div>
 </div>
+
 <style>
 .members {
+    position: relative;
     text-align: center;
     border: none;
+    font-size: 1.2em;
 }
 
 .members_searchbutton {
@@ -126,7 +131,7 @@ global $CFG;
 }
 
 .members_searchform {
-    display: inline-block;
+    display: block;
     margin-right: auto;
     margin-left: auto;
 }
@@ -137,16 +142,22 @@ global $CFG;
 }
 
 #mem_searchbardiv {
-    text-align: left;
     font-size: .75em;
     margin-top: 10px;
 }
 
 #instructions,
 #allfields {
-    font-size: .75em;
-    display: none;
-    text-align: left
+    position: absolute;
+    text-align: left;
+    background: silver;
+    padding: 7px;
+    font-size: 0.8em;
+    border-radius: 5px;
+    border: 1px solid grey;
+    left: 50%;
+    transform: translate(-50%, 0);
+    display:none;
 }
 
 #instructions code {

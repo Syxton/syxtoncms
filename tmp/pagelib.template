@@ -7,80 +7,100 @@ main_js_css||
 
 main_body_template||
 <div id="wholepage">
-	<div class="logo_nav">||page_masthead_1||</div>
-	<div class="colmask rightmenu">
-		<div class="colleft">
-			<div class="col2 pagesort2 connectedSortable">
-				||page_masthead_2||
-			</div>
-			<div class="col1 pagesort1 connectedSortable">
-				<span id="column_width" style="width:100%;"></span>
-			</div>
-		</div>
-	 </div>
+    <div class="logo_nav">||page_masthead_1||</div>
+    <div class="colmask rightmenu">
+        <div class="colleft">
+            <div class="col2 pagesort2 connectedSortable">
+                ||page_masthead_2||
+            </div>
+            <div class="col1 pagesort1 connectedSortable">
+                <span id="column_width" style="width:100%;"></span>
+            </div>
+        </div>
+     </div>
 </div>
 <div style="clear:both;"></div>
 ||main_body_template
 
 page_masthead_template||
 <div class="nav_header">
-	<div id="logo_div">
-		<a href="||wwwroot||">
-			||hasmobilelogo{{
-				<img id="logosmall" src="||wwwroot||/images/||mobilelogofile||" alt="||sitename|| Logo" />
-			}}hasmobilelogo||
-			||haslogo{{
-				<img id="logo" src="||wwwroot||/images/||logofile||" alt="||sitename|| Logo" />
-				//OR//
-				<div id="logo">
-				||sitename||
-				</div>
-			}}haslogo||
-		</a>
-	</div>
-	<div class="nav">
-		<div id="menu-icon"></div>
-		||header_only||
-	</div>
+    <div id="logo_div">
+        <a href="||wwwroot||">
+            ||hasmobilelogo{{
+                <img id="logosmall" src="||wwwroot||/images/||mobilelogofile||" alt="||sitename|| Logo" />
+            }}hasmobilelogo||
+            ||haslogo{{
+                <img id="logo" src="||wwwroot||/images/||logofile||" alt="||sitename|| Logo" />
+                //OR//
+                <div id="logo">
+                ||sitename||
+                </div>
+            }}haslogo||
+        </a>
+    </div>
+    <div class="nav">
+        <div id="menu-icon"></div>
+        ||header_only||
+    </div>
 </div>||quote||
 <div style="background: linear-gradient(to right, rgba(0, 0, 0, 0), ||header_color||, rgba(0, 0, 0, 0));">
-	<h1 style="text-align: center;color: ||header_text||;">
-		||pagename||
-	</h1>
+    <h1 style="text-align: center;color: ||header_text||;">
+        ||pagename||
+    </h1>
 </div>
 ||page_masthead_template
 
 editor_box_template||
-<textarea id="||name||" name="||name||" class="wysiwyg_editor">||initialvalue||</textarea>
-||echo js_code_wrap('
-  $(window).on("load", function() {
-		$(".wysiwyg_editor").tinymce({
-			script_url : "' . vars["wwwroot"] . '/scripts/tinymce/tinymce.min.js",
-			toolbar: "' . vars["toolbar"] . '",
-			height: ' . (is_numeric(vars["height"]) ? vars["height"] : '"' . vars["height"] . '"') . ',
-			width: ' . (is_numeric(vars["width"]) ? vars["width"] : '"' . vars["width"] . '"') . ',
-			max_height: (screen.height - 100),
-			removed_menuitems: "newdocument",
-			theme : "silver",
-			convert_urls: false,
-			plugins: [' . vars["plugins"] . '],
-			resize: true,
-			autoresize_bottom_margin: 200,
-			external_filemanager_path: "' . vars["wwwroot"] . '/scripts/tinymce/plugins/filemanager/",
-			filemanager_title: "File Manager" ,
-			external_plugins: { "filemanager" : "' . vars["wwwroot"] . '/scripts/tinymce/plugins/filemanager/plugin.min.js"}
-		});
-  });
-', "defer", true);::vars||
+    <textarea id="||name||" name="||name||" class="wysiwyg_editor">||initialvalue||</textarea>
+    ||echo js_code_wrap('
+    $(window).on("load", function() {
+            $(".wysiwyg_editor").tinymce({
+                script_url : "' . vars["wwwroot"] . '/scripts/tinymce/tinymce.min.js",
+                toolbar: "' . vars["toolbar"] . '",
+                height: ' . (is_numeric(vars["height"]) ? vars["height"] - 70 : '"' . vars["height"] . '"') . ',
+                width: ' . (is_numeric(vars["width"]) ? vars["width"] - 70 : '"' . vars["width"] . '"') . ',' .
+                (vars["charlimit"] > 0 ? '
+                setup: function(editor) {
+                    var max = ' . vars["charlimit"] . ';
+                    $("form").bind("form-pre-serialize", function(e) {
+                        tinyMCE.triggerSave();
+                    });
+                    editor.on("change", function(event) {
+                        var numChars = tinymce.activeEditor.plugins.wordcount.body.getCharacterCount();
+                        if (numChars > max) {
+                            $(".tinyMCE_toomany").remove();
+                            $("form > button,input").last().before("<div class=\'tinyMCE_toomany\'>Too many characters: " + numChars + "/" + max + "</div>");
+                            getglobals().exitEvent = true;
+                        } else {
+                            $(".tinyMCE_toomany").remove();
+                            getglobals().exitEvent = false;
+                        }
+                    });
+                },' : '') . '
+                removed_menuitems: "newdocument",
+                theme : "silver",
+                convert_urls: false,
+                plugins: [' . vars["plugins"] . '],
+                resize: true,
+                min_height: 300,
+                min_width: 300,
+                selector: "textarea",
+                autoresize_bottom_margin: 50,
+                external_filemanager_path: "' . vars["wwwroot"] . '/scripts/tinymce/plugins/filemanager/",
+                filemanager_title: "File Manager" ,
+                external_plugins: { "filemanager" : "' . vars["wwwroot"] . '/scripts/tinymce/plugins/filemanager/plugin.min.js"}
+            });
+    });
+    ', "defer", true);::vars||
 ||editor_box_template
 
 defer_script||
   function defer(method) {
-	if (window.jQuery) {
-		method();
-	} else {
-		setTimeout(function() { defer(method) }, 50);
-	}
+    if (window.jQuery) {
+        method();
+    } else {
+        setTimeout(function() { defer(method) }, 50);
+    }
   }
 ||defer_script
 
@@ -98,54 +118,54 @@ print_logout_button_switchback_template||
 
 print_logout_button_template||
 <div id="login_box" class="login_box logout" style="text-align:right;">
-	||logoutas||
-	<span style="display:inline-block;line-height: 18px;">
-		||profile|| <a title="Log Out" href="javascript: void(0)" onclick="ajaxapi('/ajax/site_ajax.php','get_login_box','&amp;logout=1',function() { clearInterval(myInterval); go_to_page(||siteid||);});">(Log Out)</a>
-	</span>
+    ||logoutas||
+    <span style="display:inline-block;line-height: 18px;">
+        ||profile|| <a title="Log Out" href="javascript: void(0)" onclick="ajaxapi('/ajax/site_ajax.php','get_login_box','&amp;logout=1',function() { clearInterval(myInterval); go_to_page(||siteid||);});">(Log Out)</a>
+    </span>
 </div>
 <br />
 ||userlinks||
 ||print_logout_button_template
 
 get_css_box_template1||
-	<div class="pagename_box" style="border: 2px solid ||pagenamebordercolor||;background-color:||pagenamebgcolor||;">
-		<div class="box_title" style="color:||pagenamefontcolor||;">
-			<strong>||title||</strong>
-			<br />
-			<span style="color:||pagenamefontcolor||;font-size:.75em;">
-				||content||
-			</span>
-		</div>
-		||*buttons||
-	</div>
+    <div class="pagename_box" style="border: 2px solid ||pagenamebordercolor||;background-color:||pagenamebgcolor||;">
+        <div class="box_title" style="color:||pagenamefontcolor||;">
+            <strong>||title||</strong>
+            <br />
+            <span style="color:||pagenamefontcolor||;font-size:.75em;">
+                ||content||
+            </span>
+        </div>
+        ||*buttons||
+    </div>
 ||get_css_box_template1
 
 get_css_box_template2||
 <div ||opendiv||>
-	<div class="box_header"  style="border: 2px solid ||bordercolor||;background-color:||titlebgcolor||;">
-		<div class="box_title" style="line-height:23px;color:||titlefontcolor||;">
-			||title||
-		</div>
-		||*buttons||
-	</div>
-	<div class="box_content ||class||" style="border: 2px solid ||bordercolor||;border-top: none;background-color:||contentbgcolor||;||padding||">
-		||content||
-		||bottom||
-	</div>
-	<div style="padding:3px;"></div>
+    <div class="box_header"  style="border: 2px solid ||bordercolor||;background-color:||titlebgcolor||;">
+        <div class="box_title" style="color:||titlefontcolor||;">
+            ||title||
+        </div>
+        ||*buttons||
+    </div>
+    <div class="box_content ||class||" style="border: 2px solid ||bordercolor||;border-top: none;background-color:||contentbgcolor||;||padding||">
+        ||content||
+        ||bottom||
+    </div>
+    <div style="padding:3px;"></div>
 </div>
 ||get_css_box_template2
 
 get_css_box_bottom_template||
 <div style="display:table;width:100%;background-color:||contentbgcolor||">
   <div style="float:left;padding-left:2px;">
-	||bottom_left||
+    ||bottom_left||
   </div>
   <div style="text-align:center;position:relative;float:left;left:18%;width:60%">
-	||bottom_center||
+    ||bottom_center||
   </div>
   <div style="float:right;padding-right:2px;">
-	||bottom_right||
+    ||bottom_right||
   </div>
 </div>
 ||get_css_box_bottom_template
@@ -154,55 +174,55 @@ get_login_form_template||
 ||echo get_js_tags(["validate"]);::none||
 ||validation_script||
 <form id="login_form">
-	<fieldset>
-			 <div class="rowContainer">
-				 <label class="rowTitle" for="username">Username</label>
-				 <input tabindex=1 style="margin-right:0px;width:80%" type="email" id="username" name="username" autocomplete="username" data-rule-required="true" data-msg-required="||valid_req_username||" />
-				 <div class="tooltipContainer info">||input_username||</div>
-				 <div class="spacer" style="clear: both;"></div>
-			 </div>
-			 <div class="rowContainer">
-				 <label class="rowTitle" for="password">Password</label>
-				 <input tabindex=2 style="margin-right:0px;width:80%" type="password" id="password" name="password" autocomplete="current-password" data-rule-required="true" data-msg-required="||valid_req_password||" />
-				 <div class="tooltipContainer info">||input_password2||</div>
-				 <div class="spacer" style="clear: both;"></div>
-			 </div>
+    <fieldset>
+             <div class="rowContainer">
+                 <label class="rowTitle" for="username">Username</label>
+                 <input tabindex=1 style="margin-right:0px;width:80%" type="email" id="username" name="username" autocomplete="username" data-rule-required="true" data-msg-required="||valid_req_username||" />
+                 <div class="tooltipContainer info">||input_username||</div>
+                 <div class="spacer" style="clear: both;"></div>
+             </div>
+             <div class="rowContainer">
+                 <label class="rowTitle" for="password">Password</label>
+                 <input tabindex=2 style="margin-right:0px;width:80%" type="password" id="password" name="password" autocomplete="current-password" data-rule-required="true" data-msg-required="||valid_req_password||" />
+                 <div class="tooltipContainer info">||input_password2||</div>
+                 <div class="spacer" style="clear: both;"></div>
+             </div>
    </fieldset>
    <input name="submit" type="submit" value="Sign In" style="margin-left:5px;" />
    <span style="float:right;font-size:.9em">
-	 ||newuserlink||
-	 <br />
-	 ||forgotpasswordlink||
+     ||newuserlink||
+     <br />
+     ||forgotpasswordlink||
    </span>
 </form>
 <div id="login_box_error" class="error_text"></div>
 ||get_login_form_template
 
 get_button_layout_template||
-<div id="slide_menu" class="slide_menu_invisible slide_menu" style="border-top:1px solid ||bordercolor||;border-bottom:1px solid ||bordercolor||;">
-  <div id="||featuretype||_||featureid||_buttons" style="padding:0;">
-	||*buttons||
-  </div>
-</div>
-<div class="slide_menu slide_menu_tab" style="background-color:||titlefontcolor||;color:||titlebgcolor||;border-left:1px solid ||bordercolor||;border-top:1px solid ||bordercolor||;border-bottom:1px solid ||bordercolor||;" onclick="$(this).prev('#slide_menu').animate({width: 'toggle'}, function() { $(this).toggleClass('slide_menu_visible'); });">
-  <strong>+</strong>
-</div>
-<div style="clear:both"></div>
+    <div id="slide_menu" class="slide_menu_invisible slide_menu" style="border-top:1px solid ||bordercolor||;border-bottom:1px solid ||bordercolor||;">
+        <div id="||featuretype||_||featureid||_buttons" class="slide_button_wrap">
+            ||*buttons||
+        </div>
+    </div>
+        <div class="slide_menu slide_menu_tab" style="background-color:||titlefontcolor||;color:||titlebgcolor||;border:1px solid ||bordercolor||;border-right:none;" onclick="$(this).prev('#slide_menu').animate({width: 'toggle'}, function() { $(this).toggleClass('slide_menu_visible'); })">
+            ||icon||
+        </div>
+    <div style="clear:both"></div>
 ||get_button_layout_template
 
 make_search_box_template||
-	<div id="loading_overlay||name_addition{{_||name_addition||//OR//}}name_addition||" class="loading_overlay dontprint" style="display: none;">
-		<span class="verticalalignhelper"></span>
-		<img src="||wwwroot||/images/loading_large.gif" />
-	</div>
-	<span id="searchcontainer||name_addition{{_||name_addition||//OR//}}name_addition||">||contents||</span>
+    <div id="loading_overlay||name_addition{{_||name_addition||//OR//}}name_addition||" class="loading_overlay dontprint" style="display: none;">
+        <span class="verticalalignhelper"></span>
+        <img src="||wwwroot||/images/loading_large.gif" />
+    </div>
+    <span id="searchcontainer||name_addition{{_||name_addition||//OR//}}name_addition||">||contents||</span>
 ||make_search_box_template
 
 format_popup_template||
 <div style="padding:||padding||;height:||*height||;">
-	<h2 style="text-align:center">||title||</h2>
-	<br />
-	||content||
+    <h2 style="text-align:center">||title||</h2>
+    <br />
+    ||content||
 </div>
 ||format_popup_template
 
