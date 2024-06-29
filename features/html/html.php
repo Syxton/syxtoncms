@@ -137,7 +137,7 @@ function deletecomment() {
         </tr>
         <tr>
             <td style="text-align:center;">
-                <input type="button" value="Yes" onclick="ajaxapi(\'/features/html/html_ajax.php\',\'deletecomment\',\'&amp;commentid=' . $commentid . '&amp;pageid=' . $pageid . '\',function() { if (xmlHttp.readyState == 4) { close_modal(); } });" />
+                <input type="button" value="Yes" onclick="ajaxapi_old(\'/features/html/html_ajax.php\',\'deletecomment\',\'&amp;commentid=' . $commentid . '&amp;pageid=' . $pageid . '\',function() { if (xmlHttp.readyState == 4) { close_modal(); } });" />
             </td>
         </tr>
     </table>

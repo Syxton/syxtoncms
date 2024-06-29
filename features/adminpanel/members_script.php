@@ -7,7 +7,14 @@
 * Revision: 0.0.6
 ***************************************************************************/
 
-if (!isset($CFG)) { include('../header.php'); }
+if (!isset($CFG)) {
+	$sub = '';
+	while (!file_exists($sub . 'header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
+	}
+	include($sub . 'header.php');
+}
+
 update_user_cookie();
 
 if (!is_siteadmin($USER->userid)) { trigger_error(error_string("generic_permissions"), E_USER_WARNING); return; }
@@ -15,53 +22,56 @@ if (!is_siteadmin($USER->userid)) { trigger_error(error_string("generic_permissi
 callfunction();
 
 function members_search() {
-global $CFG, $MYVARS, $USER, $smarty;
+global $CFG, $MYVARS, $USER;
 
     //Search variables
-    $perpage=10;
-    $pagenum = isset($MYVARS->GET["pagenum"]) ? $MYVARS->GET["pagenum"] : 0;
+    $perpage = 10;
+    $searchwords = clean_myvar_opt("search", "string", "");
+    $pagenum = clean_myvar_opt("pagenum", "int", 0);
+    $mailman = clean_myvar_opt("mailman", "int", false);
+    $csv = clean_myvar_opt("csv", "int", false);
+
     $firstonpage = $perpage * $pagenum;
     $LIMIT = " LIMIT $firstonpage," . $perpage;
 
     $name = false; $NAMESEARCHSQL = ""; $namesearch = [];
     $cfield = false; $FIELDSEARCHSQL = ""; $fieldsearch = [];
-    $csort = false; $SORT = "u.lname,u.fname";
+    $csort = false; $SORT = "u.lname, u.fname";
     $easteregg = false;
 
     //split the search words and find out what they mean
-    $searchwords = trim($MYVARS->GET["search"]);
     $searcharray = explode('/', $searchwords);
-	if ($searcharray[0] == "" && isset($searcharray[1])) {
-		array_shift($searcharray);
-	}
-
-foreach ($searcharray as $term) {
-    $switch = strpos($term, " ") ? substr($term, 0, strpos($term, " ")) : trim($term);
-    switch ($switch) {
-    case "n":
-        $name = true;
-        $namesearch[] = substr($term, (strpos($term, " ")));
-        break;
-    case "s":
-        $csort = true;
-        $customsort[] = substr($term, (strpos($term, " ")));
-        break;
-    case "f":
-        $cfield = true;
-        $fieldsearch[] = substr($term, (strpos($term, " ")));
-        break;
-    case "fail":
-        $easteregg = $term;
-        break;
-    default:
-        $name = true;
-        $namesearch[] = trim($term);
+    if ($searcharray[0] == "" && isset($searcharray[1])) {
+        array_shift($searcharray);
     }
-}
 
-	//MAKE NAME SEARCH SQL
-	if ($name) {
-		foreach ($namesearch as $name) {
+    foreach ($searcharray as $term) {
+        $switch = strpos($term, " ") ? substr($term, 0, strpos($term, " ")) : trim($term);
+        switch ($switch) {
+            case "n":
+                $name = true;
+                $namesearch[] = substr($term, (strpos($term, " ")));
+                break;
+            case "s":
+                $csort = true;
+                $customsort[] = substr($term, (strpos($term, " ")));
+                break;
+            case "f":
+                $cfield = true;
+                $fieldsearch[] = substr($term, (strpos($term, " ")));
+                break;
+            case "fail":
+                $easteregg = $term;
+                break;
+            default:
+                $name = true;
+                $namesearch[] = trim($term);
+        }
+    }
+
+    // MAKE NAME SEARCH SQL
+    if ($name) {
+        foreach ($namesearch as $name) {
             $not = "";
             //userid search
             if (is_numeric(trim($name))) {
@@ -79,21 +89,21 @@ foreach ($searcharray as $term) {
                     } else {
                         $NAMESEARCHSQL .= $NAMESEARCHSQL == "" ? "((u.fname LIKE '%$x%') OR (u.lname LIKE '%$x%'))" : " AND ((u.fname LIKE '%$x%') OR (u.lname LIKE '%$x%'))";
                     }
-  				}
+                  }
             }
 
-		}
+        }
         $NAMESEARCHSQL = empty($NAMESEARCHSQL) ? "" : "($NAMESEARCHSQL)";
-	}
+    }
 
-	//MAKE CUSTOM FIELD SEARCH SQL
-	if ($cfield) {
-		foreach ($fieldsearch as $field) {
-			$temp = explode(" ", trim($field));
-			$customfield = strtolower(array_shift($temp));
-			$test = strtolower(trim($temp[0]));
-			if ($test != '=' && $test != '!=' && $test != '>' && $test != '<' && $test != '>=' && $test != '<=' && $test != 'like' && $test != '!like') { $customtype = '=';
-			} else { $customtype = strtolower(trim(array_shift($temp))); }
+    //MAKE CUSTOM FIELD SEARCH SQL
+    if ($cfield) {
+        foreach ($fieldsearch as $field) {
+            $temp = explode(" ", trim($field));
+            $customfield = strtolower(array_shift($temp));
+            $test = strtolower(trim($temp[0]));
+            if ($test != '=' && $test != '!=' && $test != '>' && $test != '<' && $test != '>=' && $test != '<=' && $test != 'like' && $test != '!like') { $customtype = '=';
+            } else { $customtype = strtolower(trim(array_shift($temp))); }
             if (!empty($temp)) {
                 foreach ($temp as $x) {
                     if ($customtype == 'like') {
@@ -108,118 +118,199 @@ foreach ($searcharray as $term) {
                 $cfield = false;
             }
 
-		}
-		$FIELDSEARCHSQL = empty($FIELDSEARCHSQL) ? "" : "($FIELDSEARCHSQL)";
-	}
+        }
+        $FIELDSEARCHSQL = empty($FIELDSEARCHSQL) ? "" : "($FIELDSEARCHSQL)";
+    }
 
-	//MAKE CUSTOM SORT SQL
-	if ($csort) {
-		$SORT = "";
-		foreach ($customsort as $sortby) {
-			$temp = explode(" ",trim($sortby));
-			foreach ($temp as $x) {
-				$x = strstr($x,"-") ? str_replace("-", "", $x) . " DESC" : "$x";
-				$SORT .= $SORT == "" ? "$x" : ", $x";
-			}
-		}
+    //MAKE CUSTOM SORT SQL
+    if ($csort) {
+        $SORT = "";
+        foreach ($customsort as $sortby) {
+            $temp = explode(" ",trim($sortby));
+            foreach ($temp as $x) {
+                $x = strstr($x,"-") ? str_replace("-", "", $x) . " DESC" : "$x";
+                $SORT .= $SORT == "" ? "$x" : ", $x";
+            }
+        }
 
-		//Back to default if empty
-		$SORT = $SORT == "" ? "u.lname,u.fname" : $SORT;
-	}
+        //Back to default if empty
+        $SORT = $SORT == "" ? "u.lname,u.fname" : $SORT;
+    }
 
-	if ($easteregg) {
-		if ($easteregg == "fail") {
-			echo '<iframe src="//failblog.org/" style="width:100%;border:none;height:800px;" />';
-		}
-	} else {
-		$and1 = !empty($name) ? " AND " : "";
-		$and2 = !empty($cfield) ? " AND " : "";
+    $ANDNAME = !empty($name) ? " AND " : "";
+    $ANDCUSTOMFIELD = !empty($cfield) ? " AND " : "";
 
-		$SQL = "SELECT * FROM users u WHERE userid!=0 $and1 $NAMESEARCHSQL $and2 $FIELDSEARCHSQL ORDER BY $SORT";
+    $SQL = "SELECT * FROM users u WHERE userid != 0 $ANDNAME $NAMESEARCHSQL $ANDCUSTOMFIELD $FIELDSEARCHSQL ORDER BY $SORT";
 
-		  //Create the page limiter
-		  $total = get_db_count($SQL); //get the total for all pages returned.
-		  $count = $total > (($pagenum + 1) * $perpage) ? $perpage : $total - (($pagenum) * $perpage); //get the amount returned...is it a full page of results?
-		$amountshown = $firstonpage + $perpage < $total ? $firstonpage + $perpage : $total;
+    // Create the page limiter
+    $total = get_db_count($SQL); //get the total for all pages returned.
+    $count = $total > (($pagenum + 1) * $perpage) ? $perpage : $total - (($pagenum) * $perpage); // get the amount returned...is it a full page of results?
+    $amountshown = $firstonpage + $perpage < $total ? $firstonpage + $perpage : $total;
 
+    $fileoutput = $searchresult = $export = "";
+    if ($count > 0) {
+        ajaxapi([
+            "id" => "members_delete_user",
+            "if" => "confirm('Do you want to delete ' + $('#user_id_' + userid).next('.user_name').val() + '\'s account?')",
+            "url" => "/ajax/site_ajax.php",
+            "paramlist" => "userid",
+            "data" => ["action" => "delete_user", "userid" => "js||userid||js"],
+            "ondone" => "members_search();",
+            "event" => "none",
+        ]);
 
-		if (!isset($MYVARS->GET["mailman"]) && !isset($MYVARS->GET["csv"])) { $SQL .= $LIMIT; }//Limit to one page of return.
-		$pages = get_db_result($SQL);
-		$prev = $pagenum > 0 ? '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;pagenum=' . ($pagenum - 1) . '&amp;search=\'+encodeURIComponent(\'' . $searchwords . '\'),function() { if (xmlHttp.readyState == 4) { simple_display(\'mem_resultsdiv\'); }}, true);" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/arrow_left.gif" title="Previous Page" alt="Previous Page"></a>' : "";
-		$next = $firstonpage + $perpage < $total ? '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;pagenum=' . ($pagenum + 1) . '&amp;search=\'+encodeURIComponent(\'' . $searchwords . '\'),function() { if (xmlHttp.readyState == 4) { simple_display(\'mem_resultsdiv\'); }}, true);" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/arrow_right.gif" title="Next Page" alt="Next Page"></a>' : "";
+        ajaxapi([
+            "id" => "members_reset_password",
+            "if" => "confirm('Do you want to reset ' + $('#user_id_' + userid).next('.user_name').val() + '\'s password?')",
+            "url" => "/ajax/site_ajax.php",
+            "paramlist" => "userid",
+            "data" => ["action" => "forgot_password", "admin" => "true", "userid" => "js||userid||js"],
+            "ondone" => "jq_display('reset_password_' + userid, data);",
+            "event" => "none",
+        ]);
 
-		//echo $SQL;
-		$header = ""; $fileoutput = "";
-		  $body = '<input type="hidden" id="searchwords" value="' . $searchwords . '" />
-                <table style="border:1px solid gray;width:100%;border-collapse:collapse;">
-					<tr style="border:1px solid gray;background-color:#BBD8EC;">
-						<td style="text-align:left;font-size:.75em;"><b>Name</b></td>
-						<td></td><td></td><td></td>
-						<td style="text-align:center;font-size:.75em;"><b>Joined</b></td><td></td>
-						<td style="text-align:center;font-size:.75em;"><b>Last Access</b></td>
-						<td></td>
-					</tr>';
+        ajaxapi([
+            "id" => "ipmap",
+            "url" => "/features/adminpanel/adminpanel_ajax.php",
+            "data" => ["action" => "ipmap", "geodata" => "js||geodata||js"],
+            "paramlist" => "geodata, display",
+            "display" => "js||display||js",
+            "event" => "none",
+        ]);
 
-	 		if ($count > 0) {
-		      while ($row = fetch_row($pages)) {
-				if (isset($MYVARS->GET["mailman"])) { //Export to Mailman
-					$fileoutput .= $row["fname"] . " " . $row["lname"] . " <" . $row["email"] . ">\r\n";
-				} elseif (isset($MYVARS->GET["csv"])) { //Export to CSV
-					$fileoutput .= $row["fname"] . "," . $row["lname"] . "," . $row["email"] . "\n";
-				} else {
-					$lastip = get_db_field("ip", "logfile", "userid='" . $row["userid"] . "' ORDER BY timeline DESC");
-                    $locate = $lastip ? '<a title="IP Location" href="javascript: void(0);" onclick="get_coordinates(\'' . $lastip . '\',\'display\');"><img src="' . $CFG->wwwroot . '/images/locate.png" alt="IP Location" /></a>' : "";
-					$delete = !is_siteadmin($row["userid"]) ? '<a title="Delete User" href="javascript: void(0);" onclick="if (confirm(\'Do you want to delete ' . addslashes($row['fname']) . ' ' . addslashes($row['lname']) . '\\\'s account?\')) { ajaxapi(\'/ajax/site_ajax.php\',\'delete_user\',\'&userid=' . $row['userid'] . '\',function() { ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;pagenum=' . $pagenum . '&amp;search=' . $searchwords . '\',function() { simple_display(\'mem_resultsdiv\'); });}); }" >' . icon("trash") . '</a>' : "";
-                    $reset  = !is_siteadmin($row["userid"]) ? '<a title="Reset ' . $row['fname'] . ' ' . $row['lname'] . ' Password" href="javascript: void(0);" onclick="if (confirm(\'Do you want to reset ' . addslashes($row['fname']) . ' ' . addslashes($row['lname']) . '\\\'s password?\')) { ajaxapi(\'/ajax/site_ajax.php\',\'forgot_password\',\'&admin=true&userid=' . $row['userid'] . '\',function() { simple_display(\'reset_password_' . $row['userid'] . '\'); });}" ><img src="' . $CFG->wwwroot . '/images/reset.png" alt="Reset ' . $row['fname'] . ' ' . $row['lname'] . ' Password" /></a>' : "";
-                    $info = 'Viewing ' . ($firstonpage + 1) . " through " . $amountshown . " out of $total";
-				      if ($amountshown > 0) { $header = '<table style="width:100%;"><tr><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;font-size:.75em;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><br /><br />'; }
-                    $body .= '<tr style="height:40px;background-color: white;" onmouseover="this.style.backgroundColor=\'#E7F1F8\';" onmouseout="this.style.backgroundColor=\'white\';">
-                          		<td style="vertical-align:middle;overflow:hidden;font-size:.85em;white-space:nowrap;">
-                                    <input type="hidden" id="' . $row['userid'] . '" value="' . $row['userid'] . '" />&nbsp;
-                          			' . $row['fname'] . ' ' . $row['lname'] . ' ' . ($row['userid'] !== $USER->userid ? '(<a href="javascript: void(0)" onclick=loginas(' . $row['userid'] . ')>log in as</a>)' : '') . '
-                          		</td>
-                          		<td style="width:40px;white-space:nowrap;text-align:center;" onmouseover="this.style.backgroundColor=\'#BBD8EC\';" onmouseout="this.style.backgroundColor=\'\'">
-                          			<span style="font-size:.6em" id="reset_password_' . $row['userid'] . '">
-                                    ' . $reset . '
-                                    </span>
-                                </td>
-                          		<td style="width:40px;white-space:nowrap;text-align:center;" onmouseover="this.style.backgroundColor=\'#BBD8EC\';" onmouseout="this.style.backgroundColor=\'\'">
-                          			' . $locate . '
-                          		</td>
-                          		<td style="width:40px;white-space:nowrap;text-align:center;" onmouseover="this.style.backgroundColor=\'#BBD8EC\';" onmouseout="this.style.backgroundColor=\'\'" >
-                          		 	<a title="User Logs" href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'view_logfile\',\'&amp;userid=' . $row["userid"] . '\',function() { simple_display(\'display\');});"><img src="' . $CFG->wwwroot . '/images/graph.png" alt="User Logs" /></a>
-                          		</td>
-                          		<td style="width:10%;white-space:nowrap;text-align:left;">
-                          			<span style="font-size:.6em">
-                          				' . ago($row['joined']) . '
-                          			</span>
-                          		</td>
-                          		<td style="text-align:left;width:10px;"></td>
-                          		<td style="width:10%;white-space:nowrap;text-align:left;">
-                          			<span style="font-size:.6em">
-                          				' . ago($row['last_activity']) . '
-                          			</span>
-                          		</td>
-                          		<td style="width:40px;white-space:nowrap;text-align:center;" onmouseover="this.style.backgroundColor=\'red\';" onmouseout="this.style.backgroundColor=\'\'">
-                          			<span style="font-size:.6em">
-                          			' . $delete . '
-                                    </span>
-                          		</td>
-                            </tr>';
-				}
-			}
+        ajaxapi([
+            "id" => "members_get_geodata",
+            "external" => true,
+            "datatype" => "jsonp",
+            "callback" => "jsonpCallback: 'jsonCallback',",
+            "url" => '//extreme-ip-lookup.com/json/${ip}',
+            "data" => ["key" => $CFG->geolocationkey],
+            "paramlist" => "ip, display",
+            "ondone" => "if (data.status !== 'success') {
+                            alert('Location could not be found.');
+                        } else {
+                            ipmap(JSON.stringify(data), display);
+                        }",
+            "event" => "none",
+        ]);
 
-            $body .= "</table>";
- 			      $export = '<div style="font-size:.65em;padding:2px;"><a href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;csv=1&amp;search=' . $searchwords . '\',function() { if (xmlHttp.readyState == 4) { run_this(); }}, true);" >Export to CSV</a>&nbsp;&nbsp;<a href="javascript: void(0);" onclick="ajaxapi(\'/features/adminpanel/members_script.php\',\'members_search\',\'&amp;mailman=1&amp;search=' . $searchwords . '\',function() { if (xmlHttp.readyState == 4) { run_this(); }}, true);" >Export to Mailman</a></div>';
-
-		      if (!isset($MYVARS->GET["mailman"]) && !isset($MYVARS->GET["csv"])) { echo $header . $export . $body;
+        // Limit to one page of return.
+        if (!$mailman && !$csv) {
+            $SQL .= $LIMIT;
+        }
+        $pages = get_db_result($SQL);
+        while ($row = fetch_row($pages)) {
+            if ($mailman) { // Export to Mailman
+                $fileoutput .= $row["fname"] . " " . $row["lname"] . " <" . $row["email"] . ">\r\n";
+            } elseif ($csv) { // Export to CSV
+                $fileoutput .= $row["fname"] . "," . $row["lname"] . "," . $row["email"] . "\n";
             } else {
-					$filename = isset($MYVARS->GET["mailman"]) ? "users_export.txt" : "users_export.csv";
-                echo get_download_link($filename, $fileoutput);
-			}
-		} else {
-		      echo $body . '<tr><td colspan="9" style="font-size:.8em;text-align:center;"><b>No matches found.</b></td></tr></table>';
-		  }
-	}
+                $delete = $locate = "";
+                if (isset($USER->ip)) {
+                    $locate = '
+                        <button class="alike" title="IP Location" onclick="members_get_geodata(\'' . $USER->ip . '\', \'display\');">
+                            ' . icon("compass", 2) . '
+                        </button>';
+                }
+
+                if (!is_siteadmin($row["userid"])) {
+                    $delete = '
+                        <button class="alike" title="Delete ' . $row['fname'] . ' ' . $row['lname'] . '" onclick="members_delete_user(\'' . $row['userid'] . '\');">
+                            ' . icon("trash", 2) . '
+                        </button>';
+                    $reset = '
+                        <button class="alike" title="Reset ' . $row['fname'] . ' ' . $row['lname'] . ' Password" onclick="members_reset_password(\'' . $row['userid'] . '\');">
+                            ' . icon("retweet", 2, "", "orange") . '
+                        </button>';
+                }
+
+                $searchresult .= '
+                    <tr style="font-size:.85em;">
+                        <td style="vertical-align:middle;overflow:hidden;white-space:nowrap;">
+                            <input type="hidden" class="user_id" id="user_id_' . $row['userid'] . '" value="' . $row['userid'] . '" />
+                            <input type="hidden" class="user_name" value="' . $row['fname'] . ' ' . $row['lname'] . '" />
+                            ' . $row['fname'] . ' ' . $row['lname'] . ' ' . ($row['userid'] !== $USER->userid ? '(<a href="javascript: void(0)" onclick=loginas(' . $row['userid'] . ')>log in as</a>)' : '') . '
+                        </td>
+                        <td style="width:40px;white-space:nowrap;text-align:center;" onmouseover="this.style.backgroundColor=\'#BBD8EC\';" onmouseout="this.style.backgroundColor=\'\'">
+                            <span id="reset_password_' . $row['userid'] . '">
+                                ' . $reset . '
+                            </span>
+                        </td>
+                        <td style="width:40px;white-space:nowrap;text-align:center;" onmouseover="this.style.backgroundColor=\'#BBD8EC\';" onmouseout="this.style.backgroundColor=\'\'">
+                            ' . $locate . '
+                        </td>
+                        <td style="width:40px;white-space:nowrap;text-align:center;" onmouseover="this.style.backgroundColor=\'#BBD8EC\';" onmouseout="this.style.backgroundColor=\'\'" >
+                            <a title="User Logs" href="javascript: void(0);" onclick="ajaxapi_old(\'/features/adminpanel/adminpanel_ajax.php\',\'view_logfile\',\'&userid=' . $row["userid"] . '\',function() { simple_display(\'display\');});"><img src="' . $CFG->wwwroot . '/images/graph.png" alt="User Logs" /></a>
+                        </td>
+                        <td style="text-align:center;white-space:nowrap;padding: 0 10px;">
+                            ' . ago($row['joined']) . '
+                        </td>
+                        <td style="text-align:center;white-space:nowrap;padding: 0 10px;">
+                            <span>
+                                ' . ago($row['last_activity']) . '
+                            </span>
+                        </td>
+                        <td style="text-align:center;min-width:60px;">
+                            ' . $delete . '
+                        </td>
+                    </tr>';
+            }
+        }
+        $export = '<div style="font-size:.65em;padding:2px;"><a href="javascript: void(0);" onclick="ajaxapi_old(\'/features/adminpanel/members_script.php\',\'members_search\',\'&csv=1&search=' . $searchwords . '\',function() { if (xmlHttp.readyState == 4) { run_this(); }}, true);" >Export to CSV</a>&nbsp;&nbsp;<a href="javascript: void(0);" onclick="ajaxapi_old(\'/features/adminpanel/members_script.php\',\'members_search\',\'&mailman=1&search=' . $searchwords . '\',function() { if (xmlHttp.readyState == 4) { run_this(); }}, true);" >Export to Mailman</a></div>';
+    }
+
+    if (!$mailman && !$csv) {
+        if (empty($searchresult)) {
+            $searchresult = '<tr><td colspan="7" style="font-size:.8em;text-align:center;"><b>No matches found.</b></td></tr></table>';
+        }
+
+        $prev = $pagenum > 0 ? '<a href="javascript: void(0);" onclick="ajaxapi_old(\'/features/adminpanel/members_script.php\',\'members_search\',\'&pagenum=' . ($pagenum - 1) . '&search=\'+encodeURIComponent(\'' . $searchwords . '\'),function() { if (xmlHttp.readyState == 4) { simple_display(\'mem_resultsdiv\'); }}, true);" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/arrow_left.gif" title="Previous Page" alt="Previous Page"></a>' : "";
+        $next = $firstonpage + $perpage < $total ? '<a href="javascript: void(0);" onclick="ajaxapi_old(\'/features/adminpanel/members_script.php\',\'members_search\',\'&pagenum=' . ($pagenum + 1) . '&search=\'+encodeURIComponent(\'' . $searchwords . '\'),function() { if (xmlHttp.readyState == 4) { simple_display(\'mem_resultsdiv\'); }}, true);" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/arrow_right.gif" title="Next Page" alt="Next Page"></a>' : "";
+        $info = 'Viewing ' . ($firstonpage + 1) . " through " . $amountshown . " out of $total";
+
+        $return = '
+        <table style="width:100%;">
+            <tr>
+                <td style="width:25%;text-align:left;">
+                    ' . $prev . '
+                </td>
+                <td style="width:50%;text-align:center;font-size:.75em;color:green;">
+                    ' . $info . '
+                </td>
+                <td style="width:25%;text-align:right;">
+                    ' . $next . '
+                </td>
+            </tr>
+        </table>
+        <br /><br />
+        ' . $export . '
+        <input type="hidden" id="searchwords" value="' . $searchwords . '" />
+        <table class="searchresults">
+            <tr>
+                <th style="text-align:left;width: 100%;">
+                    <strong>Name</strong>
+                </th>
+                <th>
+                </th>
+                <th>
+                </th>
+                <th>
+                </th>
+                <th style="text-align:center;min-width: 100px;">
+                    <strong>Joined</strong>
+                </th>
+                <th style="text-align:center;min-width: 100px;">
+                    <strong>Last Access</strong>
+                </th>
+                <th style="text-align:center;min-width: 60px;">
+                </th>
+            </tr>
+            ' . $searchresult . '
+        </table>';
+        ajax_return($return);
+    } else {
+        $filename = $mailman ? "users_export.txt" : "users_export.csv";
+        ajax_return(get_download_link($filename, $fileoutput));
+    }
 }
 ?>

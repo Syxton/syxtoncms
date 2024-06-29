@@ -53,7 +53,7 @@ browse_usersearch_template||
 
 browse_search_template||
 <form onsubmit="$('#loading_overlay_pagesearch').show();
-				ajaxapi('/ajax/page_ajax.php',
+				ajaxapi_old('/ajax/page_ajax.php',
 						'pagesearch',
 						'&searchwords='+encodeURIComponent(document.getElementById('searchbox').value),
 						function() {
@@ -67,9 +67,9 @@ browse_search_template||
 	<div>
 		<div style="line-height: 20px;">
 			Search for pages by either their name, thier keywords, or their description.<br />
-			Add it to your personal pagelist with the <img style="vertical-align: text-bottom;" src="||wwwroot||/images/add.png" title="Add" alt="Add"> button.<br />
-			Remove it from your pagelist with the <img style="vertical-align: text-bottom;" src="||wwwroot||/images/delete.png" title="Remove" alt="Remove"> button.<br />
-			Request access to a private page with the <img style="vertical-align: text-bottom;" src="||wwwroot||/images/mail.png" title=Request" alt="Request"> button.
+			Add it to your personal pagelist with the ||echo icon("plus");::none|| button.<br />
+			Remove it from your pagelist with the ||echo icon("trash");::none|| button.<br />
+			Request access to a private page with the ||echo icon("envelope");::none|| button.
 		</div>
 		<br />
 		<div style="text-align: center">
@@ -82,7 +82,7 @@ browse_search_template||
 
 browse_user_template||
 	<form onsubmit="$('#loading_overlay_usersearch').show();
-						ajaxapi('/ajax/page_ajax.php',
+						ajaxapi_old('/ajax/page_ajax.php',
 									'usersearch',
 									'&searchwords='+encodeURIComponent(document.getElementById('searchbox').value),
 									function() {
@@ -94,7 +94,7 @@ browse_user_template||
 									true); return false;">
 	<div style="line-height: 20px;">
 		Search for users by either their name or thier email address.<br />
-		Invite a user to a private page with the <img style="vertical-align: text-bottom;" src="||wwwroot||/images/mail.png" title=Request" alt="Request"> button, then select the page you would like to invite them to.
+		Invite a user to a private page with the ||echo icon("envelope");::none|| button, then select the page you would like to invite them to.
 	</div>
 	<br />
 	<div style="text-align: center">
@@ -105,7 +105,7 @@ browse_user_template||
 ||browse_user_template
 
 create_page_validation||
-	ajaxapi('/ajax/page_ajax.php',
+	ajaxapi_old('/ajax/page_ajax.php',
 			'create_page',
 			'&name=' + encodeURIComponent(document.getElementById('name').value) +
 			'&description=' + encodeURIComponent(document.getElementById('summary').value) +
@@ -120,7 +120,7 @@ create_page_validation||
 ||create_page_validation
 
 edit_page_validation||
-	ajaxapi('/ajax/page_ajax.php',
+	ajaxapi_old('/ajax/page_ajax.php',
 			'edit_page',
 			'&name=' + encodeURIComponent(document.getElementById('name').value) +
 			'&description=' + encodeURIComponent(document.getElementById('summary').value) +
@@ -217,9 +217,9 @@ create_edit_links_template||
 			<td>
 				<b>Links Editor Mode</b>
 				&nbsp;&nbsp;
-				<input type="button" value="Add/Remove Links" onclick="ajaxapi('/ajax/page_ajax.php','get_new_link_form','&pageid=||pageid||',function() { simple_display('links_mode_span');});">
+				<input type="button" value="Add/Remove Links" onclick="ajaxapi_old('/ajax/page_ajax.php','get_new_link_form','&pageid=||pageid||',function() { simple_display('links_mode_span');});">
 				&nbsp;
-				<input type="button" value="Sort Links" onclick="ajaxapi('/ajax/page_ajax.php','get_link_manager','&pageid=||pageid||&linkid=||pageid||',function() { simple_display('links_mode_span');  });">
+				<input type="button" value="Sort Links" onclick="ajaxapi_old('/ajax/page_ajax.php','get_link_manager','&pageid=||pageid||&linkid=||pageid||',function() { simple_display('links_mode_span');  });">
 			</td>
 		</tr>
 		</table>
@@ -239,7 +239,7 @@ display_addfeature_template||
 		</td>
 		<td style="vertical-align:top; text-align:left;">
 		<input type="button" value="Add" onclick="if ($('#addfeaturelist').val() != '') {
-													ajaxapi('/ajax/site_ajax.php',
+													ajaxapi_old('/ajax/site_ajax.php',
 															'addfeature',
 															'&feature=' + $('#addfeaturelist').val() +
 															'&pageid=||pageid||',
@@ -312,29 +312,29 @@ pagelinks_template||
   <div id="page_links_div">
 	<br />
 	<div style="border: 1px solid gray; background-color:#EFEFEF;">
-		<span style="line-height:2em; width:100%; display:block; background-color:#D1D7DC;">
-		<b>&nbsp;Page Links</b>
-		</span>
+		<div style="padding:5px;background-color:grey;color:white;">
+			<strong>Page Links</strong>
+		</div>
+		<div class="pagelinklist">
 		||links||
+		</div>
 	</div>
   </div>
 ||pagelinks_template
 
 pagelinks_links_template||
-  <div style="line-height:1.5em; padding:5px;" id="link_span_||page[linkid]||">
-	<span style="width:100%;">
-		<a style="vertical-align:middle;" href="||wwwroot||/index.php?pageid=||page[linkpageid]||">
-		||page[linkdisplay]||
+	<div class="pagelink" id="link_span_||page[linkid]||">
+		<a href="||wwwroot||/index.php?pageid=||page[linkpageid]||">
+			||page[linkdisplay]||
 		</a>
 		||canedit{{
-		&nbsp;
-		<a style="vertical-align:middle;" href="javascript: void(0);" onclick="if (confirm('Are you sure you want to unlink this page?')) {
-																					ajaxapi('/ajax/page_ajax.php',
+		<button class="alike" title="Unlink Page" onclick="if (confirm('Are you sure you want to unlink this page?')) {
+																					ajaxapi_old('/ajax/page_ajax.php',
 																							'unlink_page',
 																							'&pageid=||pageid||' +
 																							'&linkpageid=||page[linkpageid]||',
 																							function() {
-																							ajaxapi('/ajax/page_ajax.php',
+																							ajaxapi_old('/ajax/page_ajax.php',
 																									'refresh_page_links',
 																									'&pageid=||pageid||',
 																									function() {
@@ -342,11 +342,10 @@ pagelinks_links_template||
 																									});
 																							});
 																					}">
-			<img src="||wwwroot||/images/unlink.png" title="Unlink Page" alt="Unlink Page" />
-		</a>
+			|| echo icon("link-slash");::none||
+		</button>
 		}}canedit||
-	</span>
-  </div>
+	</div>
 ||pagelinks_links_template
 
 start_of_page_template||
@@ -372,8 +371,8 @@ select_options_template||
 
 setting_change_template||
   ||success{{
-		<img src="||wwwroot||/images/checked.gif" />
+		|| echo icon("circle-check");::none||
 	//OR//
-		<img src="||wwwroot||/images/error.png" />
+		|| echo icon("circle-exclamation");::none||
   }}success||
 ||setting_change_template

@@ -6,11 +6,13 @@
 
 			<?php
 				$code = <<<EOT
-					$("#accordion").accordion({
-						header: "h3",
-						collapsible: true,
-						heightStyle: "content",
-						navigation: true 
+					$(".accordioncontent").each(function() {
+						$(this).accordion({
+							header: "h3",
+							collapsible: true,
+							heightStyle: "content",
+							navigation: true
+						});
 					});
 					adjustStyle($(window).width());
 					setTimeout(function() {
@@ -36,7 +38,7 @@
 							$.ajax({
 								url: WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/ajax/site_ajax.php",
 								data: { "action":"drop_move_feature",
-										"pageid": $PAGE->id, 
+										"pageid": $PAGE->id,
 										"col1": $(".pagesort1").sortable("toArray"),
 										"col2": $(".pagesort2").sortable("toArray"),
 										"moved": $(ui.item).attr("id")},
@@ -48,7 +50,7 @@
 							});
 						},
 						update: function(event, ui) {
-							
+
 						}
 					});
 					$("#menu-icon").on("click", function() {

@@ -69,12 +69,12 @@
 // usage:
 $(window).advModalResizer(function() {
     // code that makes it easy...
-    if (typeof $($(top)[0].$.find("#cboxLoadedContent")).get(0) != 'undefined') {
+    if (typeof getRoot("#cboxLoadedContent")[0] !== 'undefined') {
         setTimeout(function () {
             // Get widths and heights
-            var width = $(top)[0].$("#colorbox").width() > $(top).width() ? $(top).width() : $(top)[0].$("#colorbox").width();
-            var topheight = $(top).height();
-            var topwidth = $(top).width();
+            var width = getRoot("#colorbox").width() > getRoot().width() ? getRoot().width() : getRoot("#colorbox").width();
+            var topheight = getRoot().height();
+            var topwidth = getRoot().width();
 
             // Set heights
             var heightspace = 70; // 42 is the combined top and bottom border of color box + 28 bottom margin of color box.
@@ -85,18 +85,19 @@ $(window).advModalResizer(function() {
                 topwidth: topwidth
             };
 
-            if (typeof $($(top)[0].$.find("iframe[class=cboxIframe]")) == 'undefined' || $($(top)[0].$.find("iframe[class=cboxIframe]")).length == 0) {
-                var contentheight = $("#cboxLoadedContent").innerHeight();
+            // Get content height.
+            if (typeof getRoot("iframe[class=cboxIframe]") == 'undefined' || getRoot("iframe[class=cboxIframe]").length == 0) {
+                var contentheight = parseInt($("#cboxLoadedContent").innerHeight());
                 debug.area = "root";
                 debug.contentheight = contentheight;
             } else { // iframe inside modal.
-                var contentheight = parseInt($($(top)[0].$.find("iframe[class=cboxIframe]")).attr("height"));
+                var contentheight = parseInt(getRoot("iframe[class=cboxIframe]").attr("height"));
                 debug.area = "iframe";
                 debug.contentheight = contentheight;
             }
 
-            // Get widths and heights
-            if (typeof contentheight != 'undefined') {
+            // Set new heights.
+            if (typeof contentheight !== 'undefined') {
                 if (topheight < contentheight + heightspace) { // The content is larger than the largest modal.
                     var newheight = topheight;
                 } else { // Content is smaller than largestpossible modal.
@@ -104,12 +105,12 @@ $(window).advModalResizer(function() {
                 }
                 debug.newheight = newheight;
 
-                $(top)[0].$.colorbox.resize({
+                getColorbox().resize({
                     width: width,
                     height: newheight
                 });
             }
-            console.log(debug);
+            //console.log(debug);
         }, 20);
     }
 });

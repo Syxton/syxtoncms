@@ -17,7 +17,7 @@ change_theme_template||
 					if (themelist != newlist) {
 					themelist = newlist;
 					newlist = "";
-					ajaxapi("/ajax/themes_ajax.php",
+					ajaxapi_old("/ajax/themes_ajax.php",
 							"preview",
 							"&" + create_request_string("colors") +
 							"&pageid=' . variables->pageid . '" +
@@ -33,7 +33,7 @@ change_theme_template||
 ||change_theme_template
 
 theme_selector_menu_action_template||
-  ajaxapi('/ajax/themes_ajax.php',
+  ajaxapi_old('/ajax/themes_ajax.php',
 			'theme_change',
 			'&pageid=||pageid||' +
 			'&themeid=' + encodeURIComponent($('#themes').val()),
@@ -44,7 +44,7 @@ theme_selector_menu_action_template||
 
 theme_selector_tabs_template||
   ||iscustom{{
-		<input type="radio" name="group1" value="Theme Selector" onclick="ajaxapi('/ajax/themes_ajax.php',
+		<input type="radio" name="group1" value="Theme Selector" onclick="ajaxapi_old('/ajax/themes_ajax.php',
 																				'show_themes',
 																				'&pageid=||pageid||' +
 																				'&feature=||feature||',
@@ -53,7 +53,7 @@ theme_selector_tabs_template||
 																				}); blur();" ||checked1|| />
 		Theme Selector
 		&nbsp;
-		<input type="radio" name="group1" value="Page Styles" onclick="ajaxapi('/ajax/themes_ajax.php',
+		<input type="radio" name="group1" value="Page Styles" onclick="ajaxapi_old('/ajax/themes_ajax.php',
 																				 'show_styles',
 																				 '&pageid=||pageid||' +
 																				 '&feature=||feature||',
@@ -78,7 +78,7 @@ theme_selector_left_template||
 		||menu||
 		<br />
 		<br />
-		<input type="button" value="Save" onclick="ajaxapi('/ajax/themes_ajax.php',
+		<input type="button" value="Save" onclick="ajaxapi_old('/ajax/themes_ajax.php',
 															 'change_theme_save',
 															 '&pageid=||pageid||' +
 															 '&themeid=' + encodeURIComponent($('#themes').val()),
@@ -113,7 +113,7 @@ custom_styles_selector_template||
   <form id="colors" name="colors">
 	||style_inputs||
 	<br />
-	<input type="button" value="Save" onclick="ajaxapi('/ajax/themes_ajax.php',
+	<input type="button" value="Save" onclick="ajaxapi_old('/ajax/themes_ajax.php',
 														 'save_custom_theme',
 														 create_request_string('colors') +
 														 '&pageid=||pageid||' +

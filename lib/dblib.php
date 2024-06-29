@@ -69,9 +69,11 @@ global $CFG;
 
 	switch ($type) {
 		case "int":
+			$var = ltrim($var, "0"); // leading zeros should be removed.
 			$var = filter_var($var, FILTER_VALIDATE_INT, FILTER_NULL_ON_FAILURE) ?? $default;
 			break;
 		case "float":
+			$var = ltrim($var, "0"); // leading zeros should be removed.
 			$var = filter_var($var, FILTER_VALIDATE_FLOAT, FILTER_NULL_ON_FAILURE) ?? $default;
 			break;
 		case "string":
@@ -79,6 +81,17 @@ global $CFG;
 			break;
 		case "array":
 			$var = empty($var) ? $default : (array)$var;
+			break;
+		case "json":
+			if (empty($var)) {
+				$var = $default;
+				break;
+			}
+
+			$var = json_decode($var);
+			if (json_last_error() !== JSON_ERROR_NONE) {
+				$var = $default;
+			}
 			break;
 		case "html":
 			//MS Word Cleaner HTMLawed
@@ -170,7 +183,7 @@ function insert_result_data_as_template($SQL, $result) {
 
 function ismultiarray($a) {
     if (is_array($a) && !empty($a)) {
-        foreach ($a as $v) { 
+        foreach ($a as $v) {
             if (!is_array($v)) {
                 return false;
             }
@@ -185,15 +198,19 @@ function build_prepared_variables($SQL, $vars, $pattern) {
     $data = [];
 	preg_match_all($pattern, $SQL, $matches);
 	foreach ($matches[0] as $match) {
-        $match = trim($match, "|\"'"); // cuts off template tags leaving only xxx
-        if (isset($vars[$match])) {
-            $data[] = $vars[$match];
-            $typestring .= find_var_type($vars[$match]);
+        $variablename = trim($match, "|\"'"); // cuts off template tags leaving only xxx
+        if (isset($vars[$variablename])) {
+            $data[] = $vars[$variablename];
+            $typestring .= find_var_type($vars[$variablename]);
         } else {
-            throw new \Exception("No value found for variable: " . $match);
+			if (strpos($variablename, "*") === false) { // check if it's an optional variable.
+				throw new \Exception("No value found for variable: " . $variablename);
+			}
+			// Variable is optional and not sent so remove from SQL.
+            $SQL = str_replace($match, "", $SQL);
         }
 	}
-    return ["data" => $data, "typestring" => $typestring];
+    return ["data" => $data, "typestring" => $typestring, "sql" => $SQL];
 }
 
 function find_var_type($var) {
@@ -279,13 +296,14 @@ function is_select($SQL) {
 function authenticate(string $username, string $password) {
 	global $CFG, $USER;
 	$time = get_timestamp();
+	$ip = get_ip_address();
 	$params = ["username" => $username, "password" => $password];
 	// Authenticate
 	if (!$user = get_db_row(fetch_template("dbsql/db.sql", "authenticate"), $params)) { // COULD NOT Authenticate
 		// Check alternate password field.
 		if ($user = get_db_row(fetch_template("dbsql/db.sql", "authenticate_alt"), $params)) { // Attempt authentication on alternate password field
 			$_SESSION['userid'] = $user['userid'];
-			$params = ["userid" => $user['userid'], "time" => $time, "ip" => $_SERVER['REMOTE_ADDR']];
+			$params = ["userid" => $user['userid'], "time" => $time, "ip" => $ip];
 
 			execute_db_sql(fetch_template("dbsql/db.sql", "update_last_activity", false, ["isfirst" => false, "clear_alt" => false]), $params);
 			return $user; // Password reset authentication successful
@@ -317,7 +335,7 @@ function authenticate(string $username, string $password) {
 		}
 
 		$_SESSION['userid'] = $user['userid'];
-		$params = ["userid" => $user['userid'], "time" => $time, "ip" => $_SERVER['REMOTE_ADDR']];
+		$params = ["userid" => $user['userid'], "time" => $time, "ip" => $ip];
 		$SQL = fetch_template("dbsql/db.sql", "update_last_activity", false, ["isfirst" => (!$user["first_activity"]), "clear_alt" => true]);
 		execute_db_sql($SQL, $params);
 
@@ -405,7 +423,7 @@ global $CFG, $USER, $PAGE;
 
 	$params = [
 		"userid" => $userid,
-		"ip" => $_SERVER['REMOTE_ADDR'],
+		"ip" => get_ip_address(),
 		"pageid" => $pageid,
 		"time" => get_timestamp(),
 		"feature" => $feature,

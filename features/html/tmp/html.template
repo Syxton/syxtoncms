@@ -29,7 +29,7 @@ comment_form_template||
         <div class="centered">
             <input type="button" value="||title||"
                     onclick="if (document.getElementById('comment').value.length > 0) {
-                                ajaxapi('/features/html/html_ajax.php',
+                                ajaxapi_old('/features/html/html_ajax.php',
                                         'comment',
                                         '||commentid{{&commentid=||commentid||}}commentid||||replytoid{{&replytoid=||replytoid||}}replytoid||||htmlid{{&htmlid=||htmlid||}}htmlid||&pageid=||pageid||&comment=' + encodeURIComponent(document.getElementById('comment').value),
                                         function() {

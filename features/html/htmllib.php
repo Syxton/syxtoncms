@@ -87,7 +87,10 @@ global $CFG, $USER;
                         "iframe" => true,
                         "refresh" => "true",
                         "width" => "640",
-                        "icon" => icon("square-rss", 2, false, "square"),
+                        "icon" => icon([
+                            ["icon" => "square", "stacksize" => 2, "color" => "white"],
+                            ["icon" => "square-rss"],
+                        ]),
                     ];
                     $rss = make_modal_links($modalsettings);
 
@@ -212,7 +215,7 @@ global $CFG;
                             $title = $url;
                             $link = $CFG->wwwroot . '/scripts/download.php?file=' . $url;
                         }
-                        $html = str_replace($match[0], '<a title="' . $title . '" href="' . $link . '" onclick="blur();"><img src="' . $CFG->wwwroot . '/images/' . $icon . '" alt="Save" /></a>&nbsp;' . make_modal_links(["text" => $text, "title" => $title, "path" => $CFG->wwwroot . "/pages/ipaper.php?action=view_ipaper&amp;doc_url=" . base64_encode($url),"height" => "80%", "width" => "80%"]), $html);
+                        $html = str_replace($match[0], '<a title="' . $title . '" href="' . $link . '" onclick="blur();"><img src="' . $CFG->wwwroot . '/images/' . $icon . '" alt="Save" /></a>&nbsp;' . make_modal_links(["text" => $text, "title" => $title, "path" => $CFG->wwwroot . "/pages/ipaper.php?action=view_ipaper&doc_url=" . base64_encode($url),"height" => "80%", "width" => "80%"]), $html);
                     }
                 }
             }
@@ -243,7 +246,7 @@ global $CFG;
                                  s$i.addParam('allowfullscreen','true');
                                  s$i.addParam('allowscriptaccess','always');
                                  s$i.addParam('wmode','opaque');
-                                 s$i.addParam('flashvars','file=" . stripslashes(urlencode($url)) . "&amp;skin=" . $CFG->wwwroot . "/scripts/filters/video/skins/stylish_slim.swf');
+                                 s$i.addParam('flashvars','file=" . stripslashes(urlencode($url)) . "&skin=" . $CFG->wwwroot . "/scripts/filters/video/skins/stylish_slim.swf');
                                  s$i.write('mediaspace_s$i');";
                     $html = str_replace($match[0], js_script_wrap($CFG->wwwroot . "/scripts/filters/video/swfobject.js") . "<span id='mediaspace_s$i'></span>" . js_code_wrap($script), $html);
                 }
@@ -498,9 +501,9 @@ global $CFG, $USER;
     if ($perpage) {
         $total = get_db_count("SELECT * FROM html_comments WHERE htmlid = '$htmlid'");
         $searchvars = get_search_page_variables($total, $perpage, $pagenum);
-        $prev = $searchvars["prev"] ? '<a href="javascript: $(\'#loading_overlay_html_' . $htmlid . '\').show(); ajaxapi(\'/features/html/html_ajax.php\',\'commentspage\',\'&pagenum=' . ($pagenum - 1) . '&perpage=' . $perpage . '&pageid=' . $pageid . '&htmlid=' . $htmlid . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer_html_' . $htmlid . '\'); $(\'#loading_overlay_html_' . $htmlid . '\').hide(); }}, true); " onmouseup="this.blur()">Previous</a>' : "";
+        $prev = $searchvars["prev"] ? '<a href="javascript: $(\'#loading_overlay_html_' . $htmlid . '\').show(); ajaxapi_old(\'/features/html/html_ajax.php\',\'commentspage\',\'&pagenum=' . ($pagenum - 1) . '&perpage=' . $perpage . '&pageid=' . $pageid . '&htmlid=' . $htmlid . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer_html_' . $htmlid . '\'); $(\'#loading_overlay_html_' . $htmlid . '\').hide(); }}, true); " onmouseup="this.blur()">Previous</a>' : "";
           $info = $searchvars["info"];
-          $next = $searchvars["next"] ? '<a href="javascript: $(\'#loading_overlay_html_' . $htmlid . '\').show(); ajaxapi(\'/features/html/html_ajax.php\',\'commentspage\',\'&pagenum=' . ($pagenum + 1) . '&perpage=' . $perpage . '&pageid=' . $pageid . '&htmlid=' . $htmlid . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer_html_' . $htmlid . '\'); $(\'#loading_overlay_html_' . $htmlid . '\').hide(); }}, true);" onmouseup="this.blur()">Next</a>' : "";
+          $next = $searchvars["next"] ? '<a href="javascript: $(\'#loading_overlay_html_' . $htmlid . '\').show(); ajaxapi_old(\'/features/html/html_ajax.php\',\'commentspage\',\'&pagenum=' . ($pagenum + 1) . '&perpage=' . $perpage . '&pageid=' . $pageid . '&htmlid=' . $htmlid . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer_html_' . $htmlid . '\'); $(\'#loading_overlay_html_' . $htmlid . '\').hide(); }}, true);" onmouseup="this.blur()">Next</a>' : "";
           $arrows = '<table style="width:100%;"><tr><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><br /><br />';
         $limit = "LIMIT " .$searchvars["firstonpage"] . "," . $perpage;
     } else {
@@ -575,7 +578,7 @@ global $CFG, $USER, $PAGE;
             "title" => "Edit Comment",
             "path" => action_path("html") . "commentform&commentid=" . $params["comment"]['commentid'],
             "refresh" => "true",
-            "image" => $CFG->wwwroot . "/images/edit.png",
+            "icon" => icon("pencil"),
         ]);
     }
 
@@ -655,7 +658,7 @@ global $CFG, $USER;
 
     $returnme = "";
     if ($blog && !empty($feature_abilities->addfeature->allow)) {
-        $returnme .= ' <a class="slide_menu_button" title="Add Blog Edition" onclick="if (confirm(\'Do you want to make a new blog edition?  This will move the current blog to the Blog Locker.\')) { ajaxapi(\'/features/html/html_ajax.php\',\'new_edition\',\'&amp;pageid=' . $pageid . '&amp;htmlid=' . $featureid . '\',function() { refresh_page(); });}"><img src="' . $CFG->wwwroot . '/images/add.png" alt="Delete Feature" /></a> '; }
+        $returnme .= ' <a class="slide_menu_button" title="Add Blog Edition" onclick="if (confirm(\'Do you want to make a new blog edition?  This will move the current blog to the Blog Locker.\')) { ajaxapi_old(\'/features/html/html_ajax.php\',\'new_edition\',\'&pageid=' . $pageid . '&htmlid=' . $featureid . '\',function() { refresh_page(); });}">' . icon("plus") . '</a> '; }
 
     if (!empty($html_abilities->edithtml->allow)) {
         $returnme .= make_modal_links([
@@ -665,12 +668,12 @@ global $CFG, $USER;
             "iframe" => true,
             "refresh" => "true",
             "width" => "$('#html_$featureid').width()",
-            "image" => $CFG->wwwroot . "/images/edit.png",
+            "icon" => icon("pencil"),
             "class" => "slide_menu_button",
         ]);
     }
 
-    if (!$blog && user_is_able($USER->userid, "addtolocker", $pageid)) { $returnme .= '  <a class="slide_menu_button" title="Move to Blog Locker" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'change_locker_state\',\'&amp;pageid=' . $pageid . '&amp;featuretype=' . $featuretype . '&amp;featureid=' . $featureid . '&amp;direction=locker\',function() { refresh_page(); });"><img src="' . $CFG->wwwroot . '/images/vault.png" alt="Move to Blog Locker" /></a> '; }
+    if (!$blog && user_is_able($USER->userid, "addtolocker", $pageid)) { $returnme .= '  <a class="slide_menu_button" title="Move to Blog Locker" onclick="ajaxapi_old(\'/ajax/site_ajax.php\',\'change_locker_state\',\'&pageid=' . $pageid . '&featuretype=' . $featuretype . '&featureid=' . $featureid . '&direction=locker\',function() { refresh_page(); });">' . icon("box-archive") . '</a> '; }
     return $returnme;
 }
 

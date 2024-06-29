@@ -69,7 +69,7 @@ global $CFG, $MYVARS, $USER;
   							New Gallery:
   						</td>
   						<td class="field_input">
-  							<select id="new_gallery" name="new_gallery" onchange="ajaxapi(\'/features/pics/pics_ajax.php\',\'new_gallery\',\'&param=\' + this.value + \'&pageid=' . $pageid . '\',function() { simple_display(\'gallery_name_div\');});">
+  							<select id="new_gallery" name="new_gallery" onchange="ajaxapi_old(\'/features/pics/pics_ajax.php\',\'new_gallery\',\'&param=\' + this.value + \'&pageid=' . $pageid . '\',function() { simple_display(\'gallery_name_div\');});">
                                 <option value="1">Yes</option>
                                 <option value="0">No</option>
                             </select>
@@ -117,7 +117,7 @@ function get_galleries($pageid, $featureid) {
 		while ($row = fetch_row($results)) {
 			$returnme .= '<option value="' . $row['picsid'] . '">' . $row['gallery_title'] . '</option>';
 		}
-        $returnme .= '</select>&nbsp;<input type="button" value="Select" onclick="ajaxapi(\'/features/pics/pics_ajax.php\',\'get_gallery_pics\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;galleryid=\'document.getElementById(\'galleries\').value\',function() { simple_display(\'pics_list\');});" />';
+        $returnme .= '</select>&nbsp;<input type="button" value="Select" onclick="ajaxapi_old(\'/features/pics/pics_ajax.php\',\'get_gallery_pics\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;galleryid=\'document.getElementById(\'galleries\').value\',function() { simple_display(\'pics_list\');});" />';
         return $returnme;
 	}
     return false;

@@ -18,57 +18,80 @@ if (!isset($CFG)) {
 update_user_cookie();
 
 if (!empty($_SESSION["lia_original"])) {
-    if (!is_siteadmin($_SESSION["lia_original"])) { trigger_error(error_string("no_permission", ["administrative"]), E_USER_WARNING); return;}
+    if (!is_siteadmin($_SESSION["lia_original"])) {
+        trigger_error(error_string("no_permission", ["administrative"]), E_USER_WARNING);
+        return;
+    }
 } else {
-    if (!is_siteadmin($USER->userid)) { trigger_error(error_string("no_permission", ["administrative"]), E_USER_WARNING); return;}
+    if (!is_siteadmin($USER->userid)) {
+        trigger_error(error_string("no_permission", ["administrative"]), E_USER_WARNING);
+        return;
+    }
 }
 
-echo '<style> .center table { margin: auto !important; }</style>';
 callfunction();
 
 function admin_email_tester() {
-    echo '
-    <strong>Send Test Email</strong><br /><br />
-    Email Address: <input type="text" id="email" />
-    <input type="button" value="Send Test" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'admin_email_test\',\'&amp;email=\'+document.getElementById(\'email\').value,function() { simple_display(\'display\');});" />
-    ';
+    ajax_return(admin_email_test_form());
+}
+
+function admin_email_test_form() {
+    ajaxapi([
+        "id" => "emailtester",
+        "if" => "$('#email').val().length > 0",
+        "url" => "/features/adminpanel/adminpanel_ajax.php",
+        "data" => ["action" => "admin_email_test", "email" => "js||$('#email').val()||js"],
+        "display" => "display",
+    ]);
+
+    return '
+        <strong>Send Test Email</strong>
+        <br /><br />
+        Email Address: <input type="text" id="email" />
+        <input id="emailtester" type="button" value="Send Test" />';
 }
 
 function get_phpinfo() {
 global $CFG;
-    echo "<iframe id='php_info' onload='resizeCaller(this.id);' style='width:100%;border:none;' src='$CFG->wwwroot/features/adminpanel/adminpanel_ajax.php?action=phpinfo'></iframe>";
+    echo "<iframe id='php_info' onload='resizeCaller(this.id);' style='width:100%;height: 100vh;border:none;' src='$CFG->wwwroot/features/adminpanel/adminpanel_ajax.php?action=phpinfo'></iframe>";
 }
 
 function camper_list() {
 global $CFG;
-    echo "<iframe id='camperlist' onload='resizeCaller(this.id);' style='width:100%;border:none;' src='$CFG->wwwroot/features/adminpanel/camper_list.php'></iframe>";
+    echo "<iframe id='camperlist' onload='resizeCaller(this.id);' style='width:100%;height: 100vh;' src='$CFG->wwwroot/features/adminpanel/camper_list.php'></iframe>";
 }
 
 function admin_email_test() {
-global $CFG, $MYVARS;
+global $CFG;
+    $error = "";
+    try {
+        $returnme = admin_email_test_form();
 
-    admin_email_tester(); //Send for again
+        $touser = (object) [
+            "email" => clean_myvar_req("email", "string"),
+            "fname" => "Test",
+            "lname" => "Email",
+        ];
 
-    $touser = new \stdClass;
-    $fromuser = new \stdClass;
+        $fromuser = (object) [
+            "email" => $CFG->siteemail,
+            "fname" => $CFG->sitename,
+            "lname" => "",
+        ];
 
-    //Now output the last test.
-    $touser->email = $MYVARS->GET["email"];
-    $touser->fname = "Test";
-    $touser->lname = "Email";
+        $subject = "SERVER: EMAIL TEST";
+        $message = "This is a test message sent: " . date('l jS \of F Y h:i:s A');
 
-    $fromuser->email = $CFG->siteemail;
-    $fromuser->fname = $CFG->sitename;
-    $fromuser->lname = "";
-
-    $subject = "SERVER: EMAIL TEST";
-    $message = "This is a test message sent: " . date('l jS \of F Y h:i:s A');
-
-    if (send_email($touser, $fromuser, $subject, $message)) {
-        echo "<br />Email Success";
-    } else {
-        echo "<br />Email Failed";
+        if (send_email($touser, $fromuser, $subject, $message)) {
+            $returnme .= "<br />Email Success";
+        } else {
+            $returnme .= "<br />Email Failed";
+        }
+    } catch (Exception $e) {
+        $error = $e->getMessage();
     }
+
+    ajax_return($returnme, $error);
 }
 
 function user_admin() {
@@ -101,21 +124,21 @@ function site_versions() {
  * View a user's log file
  */
 function view_logfile() {
-global $USER, $MYVARS;
+global $USER;
     // Set the view type, default to all
-    $viewtype = isset($MYVARS->GET["viewtype"]) ? $MYVARS->GET["viewtype"] : "all";
+    $viewtype = clean_myvar_opt("viewtype", "string", "all");
 
     // Set the year, default to current
-    $year = isset($MYVARS->GET["year"]) ? $MYVARS->GET["year"] : date("Y");
+    $year = clean_myvar_opt("year", "int", date("Y"));
 
     // Set the month, default to current
-    $month = isset($MYVARS->GET["month"]) ? $MYVARS->GET["month"] : date("m");
+    $month = clean_myvar_opt("month", "int", date("m"));
 
     // Set the user id, default to current user
-    $userid = isset($MYVARS->GET["userid"]) ? $MYVARS->GET["userid"] : $USER->userid;
+    $userid = clean_myvar_opt("userid", "int", $USER->userid);
 
     // Set the page number, default to 0
-    $pagenum = isset($MYVARS->GET["pagenum"]) ? $MYVARS->GET["pagenum"] : 0;
+    $pagenum = clean_myvar_opt("pagenum", "int", 0);
 
     // Set the previous and next years and months
     $prevyear = $year;
@@ -132,93 +155,72 @@ global $USER, $MYVARS;
     }
 
     // Next and Previous Month links
-    $next = date('Y') < $nextyear || (date('Y') == $nextyear && date('m') < $nextmonth) ? '' : '<div class="button" style="display: inline-block" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'view_logfile\',\'&amp;year=' . $nextyear . '&amp;month=' . $nextmonth . '&amp;userid=' . $userid . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'display\'); }}, true);" onmouseup="this.blur()">View ' . date("F Y",mktime(0,0,0, $nextmonth,1, $nextyear)) . '</div>';
-    $prev = '<div class="button" style="display: inline-block" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'view_logfile\',\'&amp;year=' . $prevyear . '&amp;month=' . $prevmonth . '&amp;userid=' . $userid . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'display\'); }}, true);" onmouseup="this.blur()">View ' . date("F Y",mktime(0,0,0, $prevmonth,1, $prevyear)) . '</div>';
+    $next = $prev = "";
+    if ($nextyear <= date('Y') || ($nextyear === date('Y') && $nextmonth <= date('m'))) {
+        ajaxapi([
+            "id" => "nextmonthlog",
+            "url" => "/features/adminpanel/adminpanel_ajax.php",
+            "data" => ["action" => "view_logfile", "year" => $nextyear, "month" => $nextmonth, "userid" => $userid],
+            "display" => "display",
+        ]);
+        $next = '<button id="nextmonthlog" onmouseup="this.blur()">View ' . date("F Y",mktime(0,0,0, $nextmonth,1, $nextyear)) . '</button>';
+    }
 
-    echo '<div style="caret-color: transparent;">
-            <div>
-                <table style="font-size:.75em;width:98%;margin-right:auto;margin-left:auto;">
-                    <tr>
-                        <td style="text-align:left">
-                            ' . $prev . '
-                        </td>
-                        <td style="text-align:right">
-                        ' . $next . '
-                        </td>
-                    </tr>
-                </table>
-                <iframe src="members_log_graph.php?rnd=' . time() . '&userid=' . $userid . '&year=' . $year . '&month=' . $month . '" style="width:100%;border:none;"></iframe>
-                <br />
-            </div>
-            <div id="actions_div">
-                ' . get_user_usage($userid, $pagenum, $year, $month) . '
-            </div>
-          </div>';
+    ajaxapi([
+        "id" => "prevmonthlog",
+        "url" => "/features/adminpanel/adminpanel_ajax.php",
+        "data" => ["action" => "view_logfile", "year" => $prevyear, "month" => $prevmonth, "userid" => $userid],
+        "display" => "display",
+    ]);
+    $prev = '<button id="prevmonthlog" onmouseup="this.blur()">View ' . date("F Y",mktime(0,0,0, $prevmonth,1, $prevyear)) . '</button>';
+
+    $params = [
+        "prev" => $prev,
+        "next" => $next,
+        "url" => "members_log_graph.php?rnd=" . time() . "&userid=" . $userid . "&year=" . $year . "&month=" . $month,
+        "useractions" => get_user_usage($userid, $pagenum, $year, $month),
+    ];
+    $return = fill_template("tmp/main.template", "userlog", "adminpanel", $params);
+    ajax_return($return);
 }
 
 function get_user_usage_page() {
-global $MYVARS;
-    echo get_user_usage($MYVARS->GET["userid"], $MYVARS->GET["pagenum"], $MYVARS->GET["year"], $MYVARS->GET["month"]);
+    $userid = clean_myvar_req("userid", "int");
+    $pagenum = clean_myvar_opt("pagenum", "int", 0);
+    $year = clean_myvar_req("year", "int");
+    $month = clean_myvar_req("month", "int");
+
+    $data = $error = "";
+    try {
+        $data = get_user_usage($userid, $pagenum, $year, $month);
+    } catch (Exception $e) {
+        $error = $e->getMessage();
+    }
+
+    ajax_return($data, $error);
 }
 
 function get_user_usage($userid, $pagenum, $year, $month) {
-global $MYVARS, $USER;
-    $returnme = ""; $perpage=20;
+global $USER;
+    $perpage = 20;
     $firstonpage = $perpage * $pagenum;
     $LIMIT = " LIMIT $firstonpage," . $perpage;
-    $data = []; $i=0;
+    $data = []; $i = 0;
 
-    $SQL = "SELECT *
-              FROM logfile
-             WHERE userid = $userid
-               AND YEAR(FROM_UNIXTIME(timeline)) = $year
-               AND MONTH(FROM_UNIXTIME(timeline)) = $month";
-    $total = get_db_count($SQL);
+    $sqlvalues = ["userid" => $userid, "year" => $year, "month" => $month];
 
-    $SQL = "SELECT *,
-                   YEAR(FROM_UNIXTIME(timeline)) as myyear,
-                   MONTH(FROM_UNIXTIME(timeline)) as mymonth,
-                   DAYOFMONTH(FROM_UNIXTIME(timeline)) as myday
-              FROM logfile
-             WHERE userid = $userid
-               AND YEAR(FROM_UNIXTIME(timeline)) = $year
-               AND MONTH(FROM_UNIXTIME(timeline)) = $month
-          ORDER BY timeline
-              DESC $LIMIT";
+    $SQL = fill_template("dbsql/adminpanel.sql", "useractions", "adminpanel", ["fields" => "userid"], true);
+    $total = get_db_count($SQL, $sqlvalues);
 
-    $next = $pagenum > 0 ? '<div class="button" style="display: inline-block" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'get_user_usage_page\',\'&amp;pagenum=' . ($pagenum - 1) . '&amp;year=' . $year . '&amp;month=' . $month . '&amp;userid=' . $userid . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'actions_div\'); }}, true);" onmouseup="this.blur()">Later Actions</div>' : "";
-    $prev = $firstonpage + $perpage < $total ? '<div class="button" style="display: inline-block" onclick="ajaxapi(\'/features/adminpanel/adminpanel_ajax.php\',\'get_user_usage_page\',\'&amp;pagenum=' . ($pagenum + 1) . '&amp;year=' . $year . '&amp;month=' . $month . '&amp;userid=' . $userid . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'actions_div\'); }}, true);" onmouseup="this.blur()">Previous Actions</div>' : "";
+    $sqlparams = [
+        "fields" => "*, YEAR(FROM_UNIXTIME(timeline)) as myyear, MONTH(FROM_UNIXTIME(timeline)) as mymonth, DAYOFMONTH(FROM_UNIXTIME(timeline)) as myday",
+        "order" => "ORDER BY timeline",
+        "limit" => "DESC $LIMIT",
+    ];
+    $SQL = fill_template("dbsql/adminpanel.sql", "useractions", "adminpanel", $sqlparams, true);
 
-    $returnme .= '<table style="font-size:.75em;width: 100%;">
-                    <tr>
-                        <td style="text-align:left">
-                            ' . $prev . '
-                        </td>
-                        <td style="text-align:right">
-                            ' . $next . '
-                        </td>
-                    </tr>
-                  </table>
-                  <table class="datatable">
-                    <thead>
-                        <tr>
-                            <th>
-                                Date
-                            </th>
-                            <th style="width:35%;">
-                                Page
-                            </th>
-                            <th style="width:10%;">
-                                Feature
-                            </th>
-                            <th style="width:30%;">
-                                Action
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>';
-
-    if ($result = get_db_result($SQL)) {
+    $actions = "";
+    if ($result = get_db_result($SQL, $sqlvalues)) {
         while ($row = fetch_row($result)) {
             $data[$i] = $row;
             $i++;
@@ -229,39 +231,71 @@ global $MYVARS, $USER;
         while (isset($data[$i])) {
             $info = get_db_field("setting", "settings", "type='" . $data[$i]["feature"] . "' AND setting_name='feature_title' AND pageid='" . $data[$i]["pageid"] . "' AND featureid='" . $data[$i]["info"] . "'");
             $info = $info != "" ? $info : $data[$i]["feature"];
-            $returnme .= '<tr>
-                            <td>
-                                ' . date("m/d/Y g:i a", $data[$i]["timeline"]) . '
-                            </td>
-                            <td>
-                                ' . stripslashes(get_db_field("name", "pages", "pageid='" . $data[$i]["pageid"] . "'")) . '
-                            </td>
-                            <td>
-                                ' . $info . '
-                            </td>
-                            <td>
-                                ' . stripslashes($data[$i]["description"]) . '
-                            </td>
-                          </tr>';
+
+            $params = [
+                "date" => date("m/d/Y g:i a", $data[$i]["timeline"]),
+                "page" => stripslashes(get_db_field("name", "pages", "pageid='" . $data[$i]["pageid"] . "'")),
+                "info" => $info,
+                "action" => stripslashes($data[$i]["description"]),
+                "ip" => $data[$i]["ip"],
+            ];
+            $actions .= fill_template("tmp/main.template", "useractionrow", "adminpanel", $params);
             $i++;
         }
     } else {
-        $returnme .= '<tr><td colspan="4">No Usage</td></tr>';
+        $actions = fill_template("tmp/main.template", "useractionemptyrow", "adminpanel");
     }
 
-    $returnme .= '</tbody></table></div>';
-    return $returnme;
+    $next = $prev = "";
+    if ($pagenum > 0) {
+        ajaxapi([
+            "id" => "nextuseractions",
+            "url" => "/features/adminpanel/adminpanel_ajax.php",
+            "data" => [
+                "action" => "get_user_usage_page",
+                "year" => $year,
+                "month" => $month,
+                "userid" => $userid,
+                "pagenum" => $pagenum - 1
+            ],
+            "display" => "actions_div",
+        ]);
+        $next = '<button id="nextuseractions">Later Actions</button>';
+    }
+
+    if ($firstonpage + $perpage < $total) {
+        ajaxapi([
+            "id" => "prevuseractions",
+            "url" => "/features/adminpanel/adminpanel_ajax.php",
+            "data" => [
+                "action" => "get_user_usage_page",
+                "year" => $year,
+                "month" => $month,
+                "userid" => $userid,
+                "pagenum" => $pagenum + 1
+            ],
+            "display" => "actions_div",
+        ]);
+        $prev = '<button id="prevuseractions">Previous Actions</button>';
+    }
+
+    $params = [
+        "actions" => $actions,
+        "prev" => $prev,
+        "next" => $next,
+    ];
+    return fill_template("tmp/main.template", "useractionstable", "adminpanel", $params);
 }
 
 function ipmap() {
-global $CFG, $MYVARS;
-    $json = json_decode($MYVARS->GET["json"]);
-    echo '<iframe id="ip_map" onload="resizeCaller(this.id);" style="width:100%;border:none;" src="https://www.google.com/maps/embed/v1/place?q=' . $json->lat . ',' . $json->lon . '&key=' . $CFG->googlemapsembedkey . '"></iframe>';
+global $CFG;
+    $geodata = clean_myvar_req("geodata", "json");
+    $googlemapsiframe = '<iframe id="ip_map" onload="resizeCaller(this.id);" style="width:100%;height: 100vh;border:none;" src="https://www.google.com/maps/embed/v1/place?q=' . $geodata->lat . ',' . $geodata->lon . '&key=' . $CFG->googlemapsembedkey . '"></iframe>';
+    ajax_return($googlemapsiframe);
 }
 
 function loginas() {
-global $MYVARS;
-    $userid = $MYVARS->GET["userid"];
+    $userid = clean_myvar_opt("userid", "int", false);
     if (!empty($userid)) {
         if (empty($_SESSION["lia_original"])) {
             $_SESSION["lia_original"] = $_SESSION["userid"];

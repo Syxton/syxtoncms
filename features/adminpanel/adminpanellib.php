@@ -12,7 +12,7 @@ if (!LIBHEADER) {
 	while (!file_exists($sub . 'lib/header.php')) {
 		$sub = $sub == './' ? '../' : $sub . '../';
 	}
-	include($sub . 'lib/header.php'); 
+	include($sub . 'lib/header.php');
 }
 define('ADMINPANELLIB', true);
 
@@ -34,7 +34,7 @@ global $CFG, $USER, $ROLES, $ABILITIES;
 		"title" => "Manage files",
 		"text" => "Manage files",
 		"onclick" => "window.open('./scripts/tinymce/plugins/filemanager/dialog.php?type=0&editor=mce_0/','File Mananger','modal, width=850, height=600')",
-		"image" => $CFG->wwwroot . "/images/kfm.gif",
+		"icon" => icon("laptop-file"),
 		"class" => "adminpanel_links",
 	];
 	$content .= user_is_able($USER->userid, "manage_files", $pageid) ? make_modal_links($p) : "";
@@ -47,7 +47,7 @@ global $CFG, $USER, $ROLES, $ABILITIES;
 		"width" => "700",
 		"height" => "600",
 		"iframe" => true,
-		"image" => $CFG->wwwroot . "/images/key.png",
+		"icon" => icon("key"),
 		"class" => "adminpanel_links",
 	];
 	$content .= !empty($abilities->edit_roles->allow) || !empty($abilities->assign_roles->allow) || !empty($abilities->edit_user_abilities->allow) ? make_modal_links($p) : "";
@@ -61,7 +61,7 @@ global $CFG, $USER, $ROLES, $ABILITIES;
 			"iframe" => true,
 			"width"=> "95%",
 			"height"=> "95%",
-			"image" => $CFG->wwwroot . "/images/admin.gif",
+			"icon" => icon("screwdriver-wrench"),
 			"class" => "adminpanel_links",
 		];
 		$content .= user_is_able($USER->userid, "addevents", $pageid) ? make_modal_links($p) : "";
@@ -124,8 +124,8 @@ global $CFG;
 					while ($request = fetch_row($result)) { //Loops through all requests from a page.
 						$display_alerts .= '<div id="userspan_' . $request["userid"] . '_' . $request["pageid"] . '">
 												Allow ' . get_user_name($request["userid"]) . " into " .get_db_field("name", "pages", "pageid=" . $request["pageid"]) . "? ";
-						$display_alerts .= '&nbsp; <a href="javascript: void(0);" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'allow_page_request\',\'&amp;requestid=' . $request["assignmentid"] . '&amp;approve=1\',function() { if (istrue()) { simple_display(\'userspan_' . $request["userid"] . '_' . $request["pageid"] . '\'); ajaxapi(\'/ajax/site_ajax.php\',\'refresh_user_alerts\',\'&amp;userid=' . $userid . '\',function() {simple_display(\'user_alerts_div\');}); update_alerts(0); }}); " onmouseup="this.blur();"> [Yes]</a>';
-						$display_alerts .= '&nbsp; <a href="javascript: void(0);" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'allow_page_request\',\'&amp;requestid=' . $request["assignmentid"] . '&amp;approve=0\',function() { if (istrue()) { simple_display(\'userspan_' . $request["userid"] . '_' . $request["pageid"] . '\'); ajaxapi(\'/ajax/site_ajax.php\',\'refresh_user_alerts\',\'&amp;userid=' . $userid . '\',function() {simple_display(\'user_alerts_div\');}); update_alerts(0); }});" onmouseup="this.blur();"> [No]</a></div>';
+						$display_alerts .= '&nbsp; <a href="javascript: void(0);" onclick="ajaxapi_old(\'/ajax/site_ajax.php\',\'allow_page_request\',\'&amp;requestid=' . $request["assignmentid"] . '&amp;approve=1\',function() { if (istrue()) { simple_display(\'userspan_' . $request["userid"] . '_' . $request["pageid"] . '\'); ajaxapi_old(\'/ajax/site_ajax.php\',\'refresh_user_alerts\',\'&amp;userid=' . $userid . '\',function() {simple_display(\'user_alerts_div\');}); update_alerts(0); }}); " onmouseup="this.blur();"> [Yes]</a>';
+						$display_alerts .= '&nbsp; <a href="javascript: void(0);" onclick="ajaxapi_old(\'/ajax/site_ajax.php\',\'allow_page_request\',\'&amp;requestid=' . $request["assignmentid"] . '&amp;approve=0\',function() { if (istrue()) { simple_display(\'userspan_' . $request["userid"] . '_' . $request["pageid"] . '\'); ajaxapi_old(\'/ajax/site_ajax.php\',\'refresh_user_alerts\',\'&amp;userid=' . $userid . '\',function() {simple_display(\'user_alerts_div\');}); update_alerts(0); }});" onmouseup="this.blur();"> [No]</a></div>';
 						$display_alerts .= ' <br />';
 					}
 				}
@@ -145,8 +145,8 @@ global $CFG;
 			while ($invite = fetch_row($result)) { //Loops through all requests from a page.
 				$display_alerts .= '<div id="pagespan_' . $invite["userid"] . '_' . $invite["pageid"] . '">
 										Accept invitation to ' . get_db_field("name", "pages", "pageid=" . $invite["pageid"]) . "? ";
-				$display_alerts .= '&nbsp; <a href="javascript: void(0);" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'allow_page_request\',\'&amp;requestid=' . $invite["assignmentid"] . '&amp;approve=1\',function() { if (istrue()) { simple_display(\'userspan_' . $invite["userid"] . '_' . $invite["pageid"] . '\'); ajaxapi(\'/ajax/site_ajax.php\',\'refresh_user_alerts\',\'&amp;userid=' . $userid . '\',function() {simple_display(\'user_alerts_div\');}); update_alerts(0); }}); " onmouseup="this.blur();"> [Yes]</a>';
-				$display_alerts .= '&nbsp; <a href="javascript: void(0);" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'allow_page_request\',\'&amp;requestid=' . $invite["assignmentid"] . '&amp;approve=0\',function() { if (istrue()) { simple_display(\'userspan_' . $invite["userid"] . '_' . $invite["pageid"] . '\'); ajaxapi(\'/ajax/site_ajax.php\',\'refresh_user_alerts\',\'&amp;userid=' . $userid . '\',function() {simple_display(\'user_alerts_div\');}); update_alerts(0); }});" onmouseup="this.blur();"> [No]</a></div>';
+				$display_alerts .= '&nbsp; <a href="javascript: void(0);" onclick="ajaxapi_old(\'/ajax/site_ajax.php\',\'allow_page_request\',\'&amp;requestid=' . $invite["assignmentid"] . '&amp;approve=1\',function() { if (istrue()) { simple_display(\'userspan_' . $invite["userid"] . '_' . $invite["pageid"] . '\'); ajaxapi_old(\'/ajax/site_ajax.php\',\'refresh_user_alerts\',\'&amp;userid=' . $userid . '\',function() {simple_display(\'user_alerts_div\');}); update_alerts(0); }}); " onmouseup="this.blur();"> [Yes]</a>';
+				$display_alerts .= '&nbsp; <a href="javascript: void(0);" onclick="ajaxapi_old(\'/ajax/site_ajax.php\',\'allow_page_request\',\'&amp;requestid=' . $invite["assignmentid"] . '&amp;approve=0\',function() { if (istrue()) { simple_display(\'userspan_' . $invite["userid"] . '_' . $invite["pageid"] . '\'); ajaxapi_old(\'/ajax/site_ajax.php\',\'refresh_user_alerts\',\'&amp;userid=' . $userid . '\',function() {simple_display(\'user_alerts_div\');}); update_alerts(0); }});" onmouseup="this.blur();"> [No]</a></div>';
 				$display_alerts .= ' <br />';
 			}
 		}

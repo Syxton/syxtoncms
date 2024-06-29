@@ -2,6 +2,7 @@ var iframeids = [];
 
 //Should script hide iframe from browsers that don't support this script (non IE5+/NS6+ browsers. Recommended):
 var iframehide = "yes";
+var cushion = 10;
 
 function resizeCaller(id) {
 	iframeids.push(id);
@@ -27,12 +28,23 @@ function resizeIframe(frameid) {
 		currentfr.style.display = "block";
 		if (currentfr.contentDocument) {
 			if (currentfr.contentDocument.body !== null) {
-				currentfr.height = currentfr.contentWindow.document.body.offsetHeight;
+				let newheight = parseInt(currentfr.contentDocument.body.scrollHeight) + cushion;
+				//console.log(frameid + " contentDocument.body.scrollHeight: " + newheight);
+				currentfr.height = newheight;
 			}
 		} else if (currentfr.Document) {
 			if (currentfr.Document.body !== null) {
-				currentfr.height = currentfr.Document.body.scrollHeight;
+				let newheight = parseInt(currentfr.Document.body.scrollHeight) + cushion;
+				//console.log(frameid + " Document.body.scrollHeight: " + newheight);
+				currentfr.height = newheight;
 			}
+		}
+
+		// Something in the iframe hasn't loaded. wait and try again.
+		if (currentfr.height <= cushion) {
+			//console.log(frameid + " Still waiting...");
+			setTimeout(function () { resizeIframe(frameid); }, 250);
+			return;
 		}
 
 		if (currentfr.addEventListener) {
@@ -40,11 +52,6 @@ function resizeIframe(frameid) {
         } else if (currentfr.attachEvent) {
             currentfr.detachEvent("onload", readjustIframe); // Bug fix line
             currentfr.attachEvent("onload", readjustIframe);
-		}
-
-		// Something in the iframe hasn't loaded. wait and try again.
-		if (currentfr.height == 0) {
-			setTimeout(function () { resizeIframe(frameid); }, 250);
 		}
     }
 }

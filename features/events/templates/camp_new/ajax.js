@@ -2,7 +2,7 @@ var folder = "camp_new";
 
 function submit_camp_new_registration(){
     var reqstring = create_request_string('form1');
-    ajaxapi("/features/events/templates/" + folder + "/backend.php",'register',reqstring,function(){ simple_display('registration_div'); });
+    ajaxapi_old("/features/events/templates/" + folder + "/backend.php",'register',reqstring,function(){ simple_display('registration_div'); });
 }
 
 function show_form_again(eventid, regid, autofill){
@@ -64,7 +64,7 @@ function updateTotal(){
     if($("#Camper_Picture")){
         total += parseFloat($("#Camper_Picture").val());
     }
-    
+
     if($("#Camper_Shirt_Size")){
         if($("#Camper_Shirt_Price").val() != "0"){ total += parseFloat($("#Camper_Shirt_Price").val()); }
     }

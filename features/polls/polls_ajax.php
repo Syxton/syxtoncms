@@ -50,7 +50,7 @@ global $CFG, $MYVARS;
 			}
 			$i++;
 		}
-	
+
 		//Check for old answers and remove them
 		if ($result = get_db_result(fetch_template("dbsql/polls.sql", "get_answers", "polls"), ["pollid" => $pollid])) {
 			while ($row = fetch_row($result)) {
@@ -62,16 +62,16 @@ global $CFG, $MYVARS;
 					}
 					$i++;
 				}
-	
+
 				if (!$found) {
 					execute_db_sql(fetch_template("dbsql/polls.sql", "delete_answer", "polls"), ["answerid" => $row["answerid"]]);
 				}
 			}
 		}
-	
+
 		// Remove responses for answers that no longer exist
 		execute_db_sql(fetch_template("dbsql/polls.sql", "delete_deprecated_responses", "polls"), ["pollid" => $pollid]);
-	
+
 		$params = [
 			"status" => $status,
 			"question" => $question,
@@ -133,10 +133,10 @@ global $CFG, $MYVARS, $USER;
 	if ($extra == 'open') {
 		$returnme = "";
 		if (user_is_able($USER->userid, "editopenpolls", $pageid, "polls", $featureid)) {
-				$returnme .= make_modal_links(["title"=> "Edit Feature", "class" => "slide_menu_button", "path" => action_path("polls") . "editpoll&amp;pageid=$pageid&amp;featureid=$featureid", "refresh" => "true", "iframe" => true, "width" => "800", "height" => "400", "image" => $CFG->wwwroot . "/images/edit.png"]);
+				$returnme .= make_modal_links(["title"=> "Edit Feature", "class" => "slide_menu_button", "path" => action_path("polls") . "editpoll&pageid=$pageid&featureid=$featureid", "refresh" => "true", "iframe" => true, "width" => "800", "height" => "400", "icon" => icon("pencil")]);
 		}
 		if (user_is_able($USER->userid, "closepolls", $pageid, "polls", $featureid)) {
-				$returnme .= '<a class="slide_menu_button" title="Close Poll" onclick="if (confirm(\'Are you sure you would like to close this poll?  Once a poll is closed, it cannot be reopened.\')) { ajaxapi(\'/features/polls/polls_ajax.php\',\'closepoll\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;extra=\',function() { simple_display(\'polldiv' . $featureid . '\'); ajaxapi(\'/features/polls/polls_ajax.php\',\'pollstatuspic\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;extra=close\',function() { simple_display(\'pollstatus' . $featureid . '\'); });}); }"><img src="' . $CFG->wwwroot . '/images/stop.png" alt="Close Poll" style="vertical-align: middle;"/></a> ';
+				$returnme .= '<button class="slide_menu_button alike" title="Close Poll" onclick="if (confirm(\'Are you sure you would like to close this poll?  Once a poll is closed, it cannot be reopened.\')) { ajaxapi_old(\'/features/polls/polls_ajax.php\',\'closepoll\',\'&pageid=' . $pageid . '&featureid=' . $featureid . '&extra=\',function() { simple_display(\'polldiv' . $featureid . '\'); ajaxapi_old(\'/features/polls/polls_ajax.php\',\'pollstatuspic\',\'&pageid=' . $pageid . '&featureid=' . $featureid . '&extra=close\',function() { simple_display(\'pollstatus' . $featureid . '\'); });}); }">' . icon("circle-stop") . '</button> ';
 		}
 		echo $returnme;
 	} else {

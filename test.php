@@ -20,13 +20,14 @@ global $CFG, $USER;
 $CFG->debugoverride = true;
 $CFG->debug = 3;
 
-if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',' . $_SERVER['REMOTE_ADDR'] . ',')) {
+if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',' . get_ip_address() . ',')) {
 	include($CFG->dirroot . $CFG->alternatepage);
 } else {
 	///////////////////////////////////////////// TESTING SETUP /////////////////////////////////////////////
 	include_once($CFG->dirroot . '/lib/header.php');
 	echo get_css_set("main");
 	echo get_js_set("main");
+
 	echo '<div style="padding: 0px 20px;">';
 
 	if (!is_siteadmin($USER->userid)) {
@@ -229,7 +230,7 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
 			rollback_db_transaction($e->getMessage());
 		}
 		echo $sum == 6 ? "PASS" : "FAIL: Expected 6, Received $sum";
-		
+
 		echo "<br /><br /><h3>Insecure Insert then Update Queries</h3>";
 		try {
 			start_db_transaction();
@@ -287,7 +288,7 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
 			commit_db_transaction();
 		} catch (\Throwable $e) {
 			rollback_db_transaction($e->getMessage());
-		} 
+		}
 		echo $sum == 3 ? "PASS" : "FAIL: Expected 3, Received $sum";
 
 		$CFG->debug = 0; // Testing Errors and Rollbacks which require errors, so we supress error output.

@@ -1,5 +1,5 @@
 password_change_reroute_template||
-  <input type="hidden" id="reroute" value="/pages/user.php?action=reset_password&userid=||userid||&alternate=||password||" />
+	<input type="hidden" id="reroute" value="/pages/user.php?action=reset_password&userid=||userid||&alternate=||password||" />
 ||password_change_reroute_template
 
 reset_password_passfail_template||
@@ -100,9 +100,9 @@ forgot_password_email_template||
 ||forgot_password_email_template
 
 forgot_password_submitted_template||
-  ||admin{{
+	||admin{{
 		||success{{
-		<img src="||wwwroot||/images/reset_disabled.png" />
+			|| echo icon("retweet disabled", 2);::none||
 		}}success||
 	//OR//
 		<br />
@@ -126,7 +126,7 @@ forgot_password_submitted_template||
 		}}user||
 		</span>
 		<br />
-  }}admin||
+  	}}admin||
 ||forgot_password_submitted_template
 
 delete_user_template||

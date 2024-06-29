@@ -9,30 +9,37 @@ var myGlobals = {
 };
 
 var xmlHttp = createXMLHttpRequest(); // OLD XMLHTTP OBJECT THAT I'M TRYING NOT TO USE ANYMORE.
-var myInterval; // OLD interval object that I'M TRYING NOT TO USE ANYMORE.
 
 if (document.layers) {
     document.captureEvents(Event.MOUSEOVER | Event.MOUSEOUT)
 } // Not sure why I need this.
 
-function getglobals() {
-    if (typeof $(top)[0] !== 'undefined') {
-        return $(top)[0].myGlobals;
+function getGlobals() {
+    if (typeof getRoot()[0] !== 'undefined') {
+        return getRoot()[0].myGlobals;
     }
     if (typeof myGlobals !== 'undefined') {
+        console.log("do we ever actually use this?");
         return myGlobals;
     }
 }
 
+function getRoot(element = false) {
+    if (!element) {
+        return $($(top)[0], $(top)[0].document)
+    }
+    return $(element, $(top)[0].document);
+}
+
 function getColorbox(gallery = "") {
     if (gallery.length > 0) {
-        return $(gallery, $(top)[0].document).colorbox;
+        return getRoot(gallery).colorbox;
     }
-    return $(top, $(top)[0].document).colorbox;
+    return getRoot().colorbox;
 }
 
 function getIntervals() {
-    return getglobals().myIntervals;
+    return getGlobals().myIntervals;
 }
 
 function makeInterval(identifier, action, interval) {
@@ -75,7 +82,7 @@ function createXMLHttpRequest() {
     return xmlHttp;
 }
 
-function ajaxapi(script, action, param, display, async) {
+function ajaxapi_old(script, action, param, display, async) {
     if (!ajaxready(script, action, param, display, async)) {
         return false;
     };
@@ -117,7 +124,7 @@ function ajaxready(script, action, param, display, async) {
             return true;
         }
         setTimeout(function() {
-            ajaxapi(script, action, param, display, async);
+            ajaxapi_old(script, action, param, display, async);
         }, 500); // if there is an ajax conflict.  Wait 1 second before trying again.
         return false;
     }
@@ -148,8 +155,7 @@ function simple_display(container) {
             $("#" + container).html(xmlHttp.responseText);
             // make sure updating flag is gone, signifying dom is updated.
             $().waitTillGone($("#" + container), '#updating_' + container, function () {
-                $(top)[0].resizeAll();
-                $(top)[0].resize_modal();
+                resize_modal();
             });
         });
     }
@@ -162,14 +168,14 @@ function plant_update_flag(container) {
 function ajaxerror(data) {
     if (data.ajaxerror != undefined && data.ajaxerror.length > 0) {
         var container = "ajax_error_display";
-        var containerobj = $("#" + container, $(top)[0].document);
+        var containerobj = getRoot("#" + container);
 
         plant_update_flag(containerobj);
 
         $().waitTillExists(containerobj, '#updating_' + container, function () {
             // update dom container.
             containerobj.html(data.ajaxerror);
-            //$($(top)[0].$.find('#' + container)).html(data.ajaxerror);
+
             // make sure updating flag is gone, signifying dom is updated.
             $().waitTillGone(containerobj, '#updating_' + container, function () {
                 containerobj.slideDown(1000, function () {
@@ -194,8 +200,7 @@ function jq_display(container, data) {
             $("#" + container).html(data.message);
             // make sure updating flag is gone, signifying dom is updated.
             $().waitTillGone($("#" + container), '#updating_' + container, function () {
-                $(top)[0].resizeAll();
-                $(top)[0].resize_modal()
+                resize_modal();
             });
         });
     }
@@ -301,18 +306,34 @@ function rtrim(stringToTrim) {
 }
 
 //Modal Functions
-function close_modal() {
+function close_colorbox() {
     getColorbox().close();
 }
 
-function resize_modal(container) {
-    if (window.self !== window.top) {
-        $(top)[0].resize_modal();
-        return;
+function close_modal() {
+    getRoot()[0].close_colorbox();
+}
+
+function resize_modal() {
+    getRoot()[0].resize_colorbox();
+}
+
+function resize_colorbox(container) {
+    getRoot()[0].initialize_colorbox_iframes();
+    setTimeout(function () {
+        getRoot()[0].resizeAll();
+        getRoot().trigger("resize");
+    }, 50);
+}
+
+function initialize_colorbox_iframes() {
+    if (getRoot("iframe.cboxIframe").length && !getRoot("iframe.cboxIframe").attr("id")) {
+        getRoot("iframe.cboxIframe").attr("id", "colorboxiframe");
+        getRoot("iframe.cboxIframe").on('load', function () {
+            getRoot()[0].resizeCaller("colorboxiframe");
+        });
+        getRoot("iframe.cboxIframe").trigger('load');
     }
-    $(top)[0].resizeAll();
-    $($(top)[0]).trigger("resize");
-    return;
 }
 
 function refresh_page() {
@@ -703,67 +724,34 @@ function getQueryVariable(variable) {
     return false;
 }
 
-function login_display(reroute) {
-    var returned = trim(xmlHttp.responseText).split("**");
-    if (returned[0] == "false") { //login failed
-        document.getElementById("login_box_error").innerHTML = returned[1];
+function verify_login(data) {
+    let message = JSON.parse(data.message);
+    let status = message.status;
+    if (status === "failed") {
+        $("#login_box_error").html(message.content);
         return false;
-    } else if (returned[1] != '') { //login with a reroute
-        document.getElementById("login_box_error").innerHTML = returned[1];
-        reroute.value = true;
-        return true;
-    } else if (returned[0] == 'true') {
-        return true;
-    } //regular login success
-}
+    }
 
-function login(username, password) {
-    var reroute = new Object();
-    reroute.value = document.getElementById("reroute") ? true : false;
-    ajaxapi('/ajax/site_ajax.php', 'login', "&username=" + encodeURIComponent(username) + "&password=" + password, function() {
-        if (login_display(reroute)) {
-            if (!reroute.value) {
-                pageid = getCookie("pageid");
-                if (pageid && pageid.isNumeric) {
-                    go_to_page(pageid);
-                } else {
-                    go_to_page(1);
-                }
-            } else {
-                window.location = WWW_ROOT + document.getElementById("reroute").value;
-            }
-        }
-    });
-}
+    if (status === "reroute") {
+        $("#login_box_error").html(message.content);
+        window.location = WWW_ROOT + $("#reroute").val();
+        return;
+    }
 
-//print function
-function update_login_display(pageid) {
-    var returned = trim(xmlHttp.responseText).split("**");
-    if (returned[0] == "true") {
-        if (returned[1] !== "check") {
+    if (status === "success") {
+        let pageid = getCookie("pageid");
+        if (pageid && pageid.isNumeric) {
             go_to_page(pageid);
-        }
-    } else {
-        if (document.getElementById("loggedin")) {
+        } else {
             go_to_page(1);
         }
     }
 }
 
-//checks to see if user should still be logged in
-function update_login_contents(pageid, check) {
-    if (check == "check") {
-        ajaxapi('/ajax/site_ajax.php', 'update_login_contents', '&pageid=0&check=1', function() {
-            if (xmlHttp.readyState == 4) {
-                update_login_display(pageid);
-            }
-        }, true);
-    } else {
-        ajaxapi('/ajax/site_ajax.php', 'update_login_contents', '&pageid=' + pageid, function() {
-            if (xmlHttp.readyState == 4) {
-                update_login_display(pageid);
-            }
-        }, true);
+function login_check_response(data) {
+    let message = JSON.parse(data.message);
+    if (message.status !== "active" && $("#loggedin").length) {
+        go_to_page(message.pageid);
     }
 }
 
@@ -824,7 +812,7 @@ function preloadImg(image) {
 }
 
 function getSession(cname) {
-    ajaxapi('/ajax/site_ajax.php', 'get_cookie', '&cname=' + cname, function() {
+    ajaxapi_old('/ajax/site_ajax.php', 'get_cookie', '&cname=' + cname, function() {
         if (xmlHttp.readyState == 4) {
             return xmlHttp.responseText;
         }
@@ -844,18 +832,4 @@ function getCookie(cname) {
 
 $(function() { // At the end of the document load.  do these things.
     activatejs(); // Check for inactive ajax javascript and attempt to activate it.
-
-    if (window.self !== window.top) {
-        return;
-    }
-    // Watch for modal iframe to attach an id so it can be resized dynamically.
-    let fn = `
-        if ($("iframe.cboxIframe").length && !$("iframe.cboxIframe").attr("id")) {
-            $("iframe.cboxIframe").attr("id", "colorboxiframe");
-            $("iframe.cboxIframe").on('load', function () {
-                resizeCaller("colorboxiframe");
-            });
-            $("iframe.cboxIframe").trigger('load');
-        }`;
-    makeInterval("colorboxiframewatcher", fn, 500);
 });

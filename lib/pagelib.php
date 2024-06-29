@@ -43,18 +43,57 @@ global $CFG, $MYVARS;
     }
 }
 
-function icon($icon, $size = 1, $rotate = false, $bgicon = false) {
-    $rotate = $rotate ? " rotate-$rotate" : '';
+function icon(...$icons) {
     $return = '';
-    $bg = '';
-    if ($bgicon) {
-        $return .= '<span class="fa-stack">';
-        $bg = icon($bgicon, $size);
+
+    if (!ismultiarray($icons)) { // Simple icon.
+        // rotate is rotate-90, rotate-180, rotate-270 classes.
+        $icon = (isset($icons["icon"]) ? $icons["icon"] : (isset($icons[0]) ? $icons[0] : $icons));
+        $icons = [
+            [
+                "icon" => $icon,
+                "size" => isset($icons["size"]) ? $icons["size"] : (isset($icons[1]) ? $icons[1] : 1),
+                "class" => isset($icons["class"]) ? $icons["class"] : (isset($icons[2]) ? $icons[2] : ""),
+                "color" => isset($icons["color"]) ? $icons["color"] : (isset($icons[3]) ? $icons[3] : icon_color($icon)),
+                "transform" => isset($icons["transform"]) ? $icons["transform"] : (isset($icons[4]) ? $icons[4] : ""),
+            ],
+        ];
+    } else {
+        $icons = $icons[0];
     }
-    $return .=  $bg . '<i style="' . icon_color($icon) . '" class="fa fa-' . $icon . ' fa-' . $size . 'x' . $rotate . '"></i>';
-    if ($bgicon) {
-        $return .= '</span>';
+
+    foreach ($icons as $layer) {
+        if (isset($layer["stacksize"])) {
+            $stacksize = $layer["stacksize"];
+        }
+        if (isset($layer["stackclass"])) {
+            $stackclass = $layer["stackclass"];
+        }
+        $content = $layer["content"] ?? "";
+        $icon = $layer["icon"] ?? "";
+        $styles = $layer["style"] ?? "";
+        $transform = $layer["transform"] ?? "";
+        $layersize = $layer["size"] ?? "";
+        $layersize = empty($layersize) ? "" : " fa-" . $layersize . 'x';
+
+        $layerclass = $layer["class"] ?? "";
+        $color = isset($layer["color"]) && !empty($layer["color"]) ? $layer["color"] : icon_color($icon);
+        $color = empty($color) ? "" : "color: " . $color . ";";
+
+        if (!empty($icon)) {
+            $return .= '<i style="' . $color . $styles . '" data-fa-transform="' . $transform . '" class="' . $layerclass . $layersize . ' fa-solid fa-' . $icon . '"></i>';
+        } else {
+            $return .= '<span style="' . $styles . '" data-fa-transform="' . $transform . '" class="fa-layers-text ' . $layerclass . '">' . $content . '</span>';
+        }
     }
+
+    if (count($icons) > 1) {
+        $stacksize = $stacksize ?? "";
+        $stacksize = empty($stacksize) ? "" : "fa-" . $stacksize . "x";
+        $stackclass = $stackclass ?? "";
+        $return = '<span class="fa-layers fa-fw ' . $stacksize . ' ' . $stackclass . '">' . $return . '</span>';
+    }
+
     return $return;
 }
 
@@ -62,20 +101,24 @@ function icon_color($icon) {
     // Certain icons have different color than others.
     switch ($icon) {
         case "key":
-            return "color:#d2df22";
+            $color = "#d2df22";
+            break;
         case "sliders":
-            return "color:#2e4c5abd";
+            $color = "#2e4c5abd";
+            break;
         case "trash":
-            return "color:#bb0202";
+            $color = "#bb0202";
+            break;
         case "pencil":
-            return "color:#519d58";
+            $color = "#519d58";
+            break;
         case "square-rss":
-            return "color:orange";
-        case "square":
-            return "color:white";
+            $color = "orange";
+            break;
         default:
             return "";
     }
+    return $color;
 }
 
 function collect_vars() {
@@ -189,14 +232,19 @@ global $CFG, $USER, $PAGE;
 function ajaxapi($params, $forcereturn = false) {
 global $CFG, $LOADAJAX;
     $ajaxapi = clean_myvar_opt("ajaxapi", "bool", false);
-    $url = $CFG->wwwroot . clean_var_req($params["url"], "string");
+    $external = $params["external"] ?? false;
+    $url = $external ? clean_var_req($params["url"], "string") : $CFG->wwwroot . clean_var_req($params["url"], "string");
 
     try {
         $id = $params["id"] ?? false;
         $data = $params["data"] ?? [];
         $if = $params["if"] ?? false;
+        $else = $params["else"] ?? false;
         $display = $params["display"] ?? false;
         $classes = $params["classes"] ?? "ajaxapi inactive";
+        $datatype = $params["datatype"] ?? "json";
+        $contenttype = $params["contenttype"] ?? "application/x-www-form-urlencoded; charset=UTF-8";
+        $callback = $params["callback"] ?? "";
 
         $method = $params["method"] ?? "POST";
         $event = $params["event"] ?? "click";
@@ -214,7 +262,8 @@ global $CFG, $LOADAJAX;
         $always = $params["always"] ?? ""; // Function run after success or error.
         $beforeajax = $params["beforeajax"] ?? ""; // Function run before ajax call.
 
-        $ondone = $display && empty($ondone) ? "jq_display('$display', data);" : ($display ? "jq_display('$display', data); $ondone" : $ondone);
+        $display = $display ? (strpos($display, "js||") === false ? "'$display'" : str_replace(['js||', '||js'], '', $display)) : false;
+        $ondone = $display && empty($ondone) ? "jq_display($display, data);" : ($display ? "jq_display($display, data); $ondone" : $ondone);
         $onerror = empty($onerror) ? "console.log(data);" : $onerror;
 
         $showloading = $hideloading = "";
@@ -226,7 +275,8 @@ global $CFG, $LOADAJAX;
         $always = ".always(function(data) { $always $(this).blur();})";
 
         $if = $if ? "if ($if) {" : "";
-        $ifclose = $if ? "}" : "";
+        $else = $else ? "else { $else }" : "";
+        $ifclose = $if ? "} $else" : "";
 
         $data["timestamp"] = "js|| Date.now() ||js";
         $data["ajaxapi"] = 1;
@@ -235,17 +285,20 @@ global $CFG, $LOADAJAX;
 
         $script = "
             ajax: {
-                if (getglobals().exitEvent) {
+                if (getGlobals().exitEvent) {
                     break ajax;
                 }
                 $if
                 $showloading
                 $beforeajax
-                \$.ajax({
-                    url: '$url',
-                    type: '$method',
+                $.ajax({
+                    url: `$url`,
+                    type: `$method`,
+                    $callback
+                    contentType: '$contenttype',
                     data: " . ($method === 'POST' ? $data : "{}") . ",
-                    dataType: 'json',
+                    dataType: '$datatype',
+                    cache: false,
                 }).fail(function(data) {
                     ajaxerror(data);
                     $onerror
@@ -262,8 +315,8 @@ global $CFG, $LOADAJAX;
         if ($intervalid) {
             $script = preg_replace('/\s+/S', " ", $script);
             $script = $script . '
-                killInterval("' . $intervalid . '");
-                makeInterval("' . $intervalid . '", `' . $script . '`, ' . $interval . ');';
+                killInterval(`' . $intervalid . '`);
+                makeInterval(`' . $intervalid . '`, `' . str_replace("`", "\`", $script) . '`, ' . $interval . ');';
         }
 
         if (!$forcereturn) {
@@ -575,15 +628,15 @@ global $CFG;
 
     if (empty($v["refresh"]) && empty($v["reuse"])) {
         $unq = "cachedClose_$unq";
-        $modal .= "getglobals().$unq = cb.close;
+        $modal .= "getGlobals().$unq = cb.close;
                    cb.close = (function() {
-                   let fn = getglobals().$unq;";
+                   let fn = getGlobals().$unq;";
         $modal .= !empty($v["confirmexit"]) ? "if (confirm('Are you sure you wish to close this window?')) {" : "";
         $modal .= !empty($v["onExit"]) ? $v["onExit"] : "";
         //$modal .= "killInterval('colorbox');";
         $modal .= "fn.apply(fn);
-                   cb.close = getglobals().$unq;
-                   delete getglobals().$unq;";
+                   cb.close = getGlobals().$unq;
+                   delete getGlobals().$unq;";
         $modal .= !empty($v["confirmexit"]) ? "}" : "";
         $modal .= "});";
     }
@@ -592,7 +645,7 @@ global $CFG;
         $modal .= "cb.close = (function() {";
         $modal .= !empty($v["confirmexit"]) ? "if (confirm('Are you sure you wish to close this window?')) {" : "";
         $modal .= !empty($v["onExit"]) ? $v["onExit"] : "";
-        $modal .= "setTimeout(function() { $(top)[0].location.reload(true); }, 1000);";
+        $modal .= "setTimeout(function() { getRoot()[0].location.reload(true); }, 1000);";
         $modal .= !empty($v["confirmexit"]) ? "}" : "";
         $modal .= "});";
     }
@@ -813,8 +866,7 @@ global $CFG, $USER;
         "path" => $CFG->wwwroot . "/pages/user.php?action=change_profile",
         "validate" => "true",
         "width" => "500",
-        "image" => $CFG->wwwroot . "/images/user.png",
-        "styles" => "",
+        "icon" => icon([["icon" => "user", "style" => "font-size: 1.5em"]]),
     ];
     $profile = $edit ? make_modal_links($params) : "$fname $lname";
 
@@ -825,12 +877,24 @@ global $CFG, $USER;
         $logoutas = fill_template("tmp/pagelib.template", "print_logout_button_switchback_template", false, ["siteid" => $CFG->SITEID, "lia_name" => $lia_name]);
     }
 
+    $rolename = get_db_field("display_name", "roles", "roleid = " . user_role($USER->userid, $pageid));
+
     $params = [
-        "siteid" => $CFG->SITEID,
+        "role" => $rolename,
         "logoutas" => $logoutas,
         "profile" => $profile,
         "userlinks" => get_user_links($USER->userid, $pageid),
     ];
+
+    ajaxapi([
+        'id'     => "logout",
+        'url'    => '/ajax/site_ajax.php',
+        'data'   => [
+            'action' => 'get_login_box',
+            'logout' => 1,
+        ],
+        'ondone' => 'killInterval("logincheck"); go_to_page(' . $CFG->SITEID . ');',
+    ]);
     return fill_template("tmp/pagelib.template", "print_logout_button_template", false, $params);
 }
 
@@ -936,7 +1000,6 @@ global $CFG, $PAGE, $STYLES;
             "pagenamebgcolor" => $pagenamebgcolor,
             "pagenamefontcolor" => $pagenamefontcolor,
             "title" => $title,
-            "content" => $content,
             "buttons" => $buttons,
         ];
         $returnme = fill_template("tmp/pagelib.template", "get_css_box_template1", false, $params);
@@ -1249,8 +1312,20 @@ global $CFG;
                             "width" => "500",
                         ]);
 
+    ajaxapi([
+        'id'     => "jq_login",
+        'url'    => '/ajax/site_ajax.php',
+        'data'   => [
+            'action' => "login",
+            'username' => "js||encodeURIComponent($('#username').val())||js",
+            'password' => "js||$('#password').val()||js",
+        ],
+        "event" => "none",
+        "ondone" => "verify_login(data);",
+    ]);
+
     $params = [
-        "validation_script" => create_validation_script("login_form", "login($('#username').val(), $('#password').val());"),
+        "validation_script" => create_validation_script("login_form", "jq_login();"),
         "valid_req_username" => error_string('valid_req_username'),
         "input_username" => get_help("input_username"),
         "valid_req_password" => error_string('valid_req_password'),
@@ -1348,7 +1423,7 @@ global $CFG, $USER;
                     "id" => "delete_" . $featuretype . "_" . $featureid,
                     "url" => "/ajax/site_ajax.php",
                     "data" => ["action" => "delete_feature", "pageid" => $pageid, "featuretype" => $featuretype, "featureid" =>  $featureid],
-                    "ondone" => "update_login_contents(' . $pageid . ');",
+                    "ondone" => "go_to_page(' . $pageid . ');",
                 ]);
                 $returnme .= '<button id="delete_' . $featuretype . "_" . $featureid . '" class="alike slide_menu_button" title="Delete Feature">' . icon("trash") . '</button>';
             }
@@ -1390,7 +1465,7 @@ global $CFG, $PAGE;
             "featuretype" => $featuretype,
             "featureid" => $featureid,
             "buttons" => $buttons,
-            "icon" => icon("grip-vertical"),
+            "icon" => icon("grip-vertical", 1, "", $titlebgcolor),
         ];
         $returnme = fill_template("tmp/pagelib.template", "get_button_layout_template", false, $params);
     }
@@ -1427,8 +1502,7 @@ function get_search_page_variables(int $total, int $perpage, int $pagenum) {
 function get_searchcontainer($initial = "") {
     global $CFG;
     return '<div id="loading_overlay" class="loading_overlay dontprint" style="display: none;">
-                <span class="verticalalignhelper"></span>
-                <img src="' . $CFG->wwwroot . '/images/loading_large.gif" />
+                ' . icon("spinner fa-spin-pulse") . '
             </div>
             <span id="searchcontainer">' . $initial . '</span>';
 }

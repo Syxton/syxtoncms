@@ -5,3 +5,195 @@ header||
     ||echo get_js_tags(["scripts/vertmenu.js"]);::none||
     ||echo get_js_tags(["scripts/frame_resize.js"]);::none||
 ||header
+
+userlog||
+    <div style="display:flex;justify-content: space-between;caret-color: transparent;">
+        ||prev||
+        ||next||
+    </div>
+    <iframe id="userlog_graph" onload="resizeCaller(this.id);" src="||url||" style="width:100%;border:none;"></iframe>
+    <div id="actions_div">
+        ||useractions||
+    </div>
+||userlog
+
+useractionstable||
+    <table style="font-size:.75em;width: 100%;">
+        <tr>
+            <td style="text-align:left">
+                ||prev||
+            </td>
+            <td style="text-align:right">
+                ||next||
+            </td>
+        </tr>
+    </table>
+    <table class="datatable">
+        <thead>
+            <tr>
+                <th>
+                    Date
+                </th>
+                <th style="width:15%;">
+                    Page
+                </th>
+                <th style="width:15%;">
+                    Feature
+                </th>
+                <th style="width:15%;">
+                    Action
+                </th>
+                <th style="width:15%;">
+                    Location
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            ||actions||
+        </tbody>
+    </table>
+||useractionstable
+
+useractionrow||
+    <tr>
+        <td>
+            ||date||
+        </td>
+        <td>
+            ||page||
+        </td>
+        <td>
+            ||info||
+        </td>
+        <td>
+            ||action||
+        </td>
+        <td>
+            ||ip||
+        </td>
+    </tr>
+||useractionrow
+
+useractionemptyrow||
+    <tr>
+        <td colspan="4">
+            No Usage
+        </td>
+    </tr>
+||useractionemptyrow
+
+members_search_page||
+    <style>
+        .members {
+            position: relative;
+            text-align: center;
+            border: none;
+            font-size: 1.2em;
+        }
+
+        .members_searchbutton {
+            margin-right: 0;
+        }
+
+        .members_searchform {
+            display: block;
+            margin-right: auto;
+            margin-left: auto;
+        }
+
+        #mem_resultsdiv {
+            text-align: left;
+        }
+
+        #mem_searchbardiv {
+            font-size: .75em;
+            margin-top: 10px;
+        }
+
+        #instructions,
+        #allfields {
+            position: absolute;
+            text-align: left;
+            background: silver;
+            padding: 7px;
+            font-size: 0.8em;
+            border-radius: 5px;
+            border: 1px solid grey;
+            left: 50%;
+            transform: translate(-50%, 0);
+            display:none;
+        }
+
+        #instructions code {
+            color: blue;
+            padding: 0 5px;
+        }
+
+        .search_links {
+            font-size: .75em;
+        }
+    </style>
+    <div class="members">
+        <div class="members_searchform">
+            <h2>
+                Search the Member Directory
+            </h2>
+            <a class="search_links" href="#" onclick="$('#allfields').hide(); $('#instructions').toggle();">
+                Show/Hide Instructions
+            </a>
+            <div id="instructions">
+                <div>
+                    <strong>By Name:</strong>
+                    <code>
+                        /n Joe
+                    </code>
+                    Default search. "/n" only needed if following another tag.
+                </div>
+                <div>
+                    <strong>Field Search:</strong>
+                    <code>
+                        /f department like parent
+                    </code>
+                    /f :fieldname: (=, !=, &gt;, &lt;, &gt;=, &lt;=, or like) :value:
+                </div>
+                <div>
+                    <strong>Sort:</strong>
+                    <code>
+                        /s -joined
+                    </code>
+                    /s (+ for ascending - for decending) :fieldname:
+                </div>
+            </div>
+            <br />
+            <a class="search_links" href="#" onclick="$('#instructions').hide(); $('#allfields').toggle();">
+                Show/Hide Available fields
+            </a>
+            <div id="allfields">
+                <select onchange="if ($(this).val().length) { $('#searchbox').val($('#searchbox').val() + ' /f ' + $(this).val()); }" id="searchfield">
+                    <option>Select Field</option>
+                    ||allfields||
+                </select>
+            </div>
+            <div id="mem_searchbardiv">
+                Common Searches:
+                <button class="alike" onclick="members_search('/s -joined')">
+                    New Members
+                </button>
+                <button class="alike" onclick="members_search('/s -last_activity')">
+                    Last Accessed
+                </button>
+                <br />
+                <input type="text" id="searchbox" size="50" onkeypress="if (event.keyCode !== 13 && event.which !== 13) { $('.members_searchbutton').click(); }" />
+                &nbsp;
+                <button class="members_searchbutton" onclick="members_search($('#searchbox').val())">
+                    Search
+                </button>
+            </div>
+        </div>
+        <div id="mem_resultsdiv"></div>
+        <div style="display:none;" id="loading_overlay">
+            ||echo icon("spinner fa-spin-pulse");::none||
+        </div>
+        <div id="mem_debug"></div>
+    </div>
+||members_search_page

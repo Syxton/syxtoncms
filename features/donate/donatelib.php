@@ -244,7 +244,7 @@ global $CFG, $USER;
 			"validate" => "true",
 			"width" => "750",
 			"height" => "600",
-			"image" => $CFG->wwwroot . "/images/money.png",
+			"icon" => icon("sack-dollar"),
 			"class" => "slide_menu_button",
 		];
 		$returnme .= make_modal_links($p);
@@ -259,7 +259,7 @@ global $CFG, $USER;
 			"validate" => "true",
 			"width" => "750",
 			"height" => "600",
-			"image" => $CFG->wwwroot . "/images/edit.png",
+			"icon" => icon("pencil"),
 			"class" => "slide_menu_button",
 		];
 		$returnme .= make_modal_links($p);
@@ -272,7 +272,7 @@ function select_campaign_forms($featureid, $pageid) {
 		$current = '
 			You are involved in a campaign you started called: <strong>' . get_db_field("title", "donate_campaign", "campaign_id='" . $edit["campaign_id"] . "'") . '</strong><br />
 			<br />
-			Would you like to edit the current campaign? <a class="buttonlike" href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'new_campaign_form\',\'&campaign_id=' . $edit["campaign_id"] . '&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); loaddynamicjs(\'donation_script\');});">Edit Campaign</a>
+			Would you like to edit the current campaign? <a class="buttonlike" href="javascript: void(0);" onclick="ajaxapi_old(\'/features/donate/donate_ajax.php\',\'new_campaign_form\',\'&campaign_id=' . $edit["campaign_id"] . '&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); loaddynamicjs(\'donation_script\');});">Edit Campaign</a>
 			<br /><br /><br />';
 	} else {
 		if ($joined = get_db_row(fetch_template("dbsql/donate.sql", "get_donation_instance_if_joined_to_campaign", "donate"), ["donate_id" => $featureid])) {
@@ -289,9 +289,9 @@ function select_campaign_forms($featureid, $pageid) {
 					' . $current. '
 					Would you like to start a new campaign or join an existing donation campaign?
 					<br /><br />
-					<a class="buttonlike" href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'new_campaign_form\',\'&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); loaddynamicjs(\'donation_script\');});">Start New Campaign</a>
+					<a class="buttonlike" href="javascript: void(0);" onclick="ajaxapi_old(\'/features/donate/donate_ajax.php\',\'new_campaign_form\',\'&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); loaddynamicjs(\'donation_script\');});">Start New Campaign</a>
 					<br /><br />
-					<a class="buttonlike" href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'join_campaign_form\',\'&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); });">Join Existing Campaign</a>';
+					<a class="buttonlike" href="javascript: void(0);" onclick="ajaxapi_old(\'/features/donate/donate_ajax.php\',\'join_campaign_form\',\'&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); });">Join Existing Campaign</a>';
 
     return $returnme;
 }
@@ -301,10 +301,10 @@ global $CFG, $USER;
 	$returnme = '<div style="text-align:center"><h1>What would you like to do?</h1><br /><br /></div>';
 	$returnme .= '
 		Would you like to add offline donations to this campaign?<br /><br />
-		<a class="buttonlike" href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'add_offline_donations_form\',\'&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); loaddynamicjs(\'donation_script\');});">Add Offline Donations</a>
+		<a class="buttonlike" href="javascript: void(0);" onclick="ajaxapi_old(\'/features/donate/donate_ajax.php\',\'add_offline_donations_form\',\'&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); loaddynamicjs(\'donation_script\');});">Add Offline Donations</a>
 		<br /><br /><br />
 		Would you like to manage all donations made to this campaign?<br /><br />
-		<a class="buttonlike" href="javascript: void(0);" onclick="ajaxapi(\'/features/donate/donate_ajax.php\',\'manage_donations_form\',\'&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); });">Manage Donations</a>';
+		<a class="buttonlike" href="javascript: void(0);" onclick="ajaxapi_old(\'/features/donate/donate_ajax.php\',\'manage_donations_form\',\'&featureid=' . $featureid . '&pageid=' . $pageid . '\',function() { simple_display(\'donation_display\'); });">Manage Donations</a>';
     return $returnme;
 }
 

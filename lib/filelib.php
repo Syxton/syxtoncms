@@ -788,6 +788,10 @@ function build_from_js_library($params) {
         add_js_to_array("scripts", "jquery.min.js", $javascript);
         add_js_to_array("scripts", "jquery.extend.js", $javascript);
         add_js_to_array("ajax", "siteajax.js", $javascript);
+        add_js_to_array("scripts/fontawesome", "fontawesome.min.js", $javascript);
+        add_js_to_array("scripts/fontawesome", "solid.min.js", $javascript);
+        add_js_to_array("scripts/fontawesome", "regular.min.js", $javascript);
+        add_js_to_array("scripts/fontawesome", "brands.min.js", $javascript);
     }
     if (array_search("jquery", $params) !== false) { // jQuery.
         add_js_to_array("scripts", "jquery.min.js", $javascript);
@@ -885,10 +889,6 @@ function build_from_css_library($params) {
     $css = [];
     if (array_search("main", $params) !== false) { // Site javascript.
         add_css_to_array("styles", "styles_main.css", $css);
-        add_css_to_array("styles/fontawesome/css", "fontawesome.css", $css);
-        add_css_to_array("styles/fontawesome/css", "brands.css", $css);
-        add_css_to_array("styles/fontawesome/css", "regular.css", $css);
-        add_css_to_array("styles/fontawesome/css", "solid.css", $css);
     }
     if (array_search("colorbox", $params) !== false) { // Modal popups.
         add_css_to_array("styles", "colorbox.css", $css);

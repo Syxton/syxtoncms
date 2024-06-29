@@ -69,6 +69,7 @@ global $CFG, $USER;
 				"forumid" => $forumid,
 				"help" => get_help("new_category"),
 			];
+			$returnme .= '<h3>Create Category</h3>';
 			$returnme .= fill_template("tmp/forum.template", "category_form", "forum", $params);
 		}
 	} catch (Exception $e) {
@@ -108,6 +109,7 @@ global $CFG, $USER;
 			"title" => $category["title"],
 			"help" => get_help("new_category"),
 		];
+		$returnme .= '<h3>Edit Category</h3>';
 		$returnme .= fill_template("tmp/forum.template", "category_form", "forum", $params);
 	} catch (Exception $e) {
 		throw new Exception($e->getMessage());
@@ -138,7 +140,7 @@ global $CFG;
 		"author" => ($post["userid"] ? get_user_name($post["userid"]) : ($post["alias"] ? $post["alias"] : "Anonymous")),
 		"time" => ago($post["posted"], true),
 		"formid" => "edit_post_submit",
-		"editor" => get_editor_box(["initialvalue" => $message, "type" => "Forum", "height" => "calc(100% - 75px)", "width" => "700"]),
+		"editor" => get_editor_box(["initialvalue" => $message, "type" => "Forum", "height" => "calc(100% - 75px)"]),
 	];
 	ajax_return(fill_template("tmp/forum.template", "edit_post_form", "forum", $params));
 }
@@ -166,7 +168,7 @@ global $CFG;
 	$params = [
 		"quote" => fill_template("tmp/forum.template", "forum_quote", "forum", $quoteparams),
 		"formid" => "quote_post_submit",
-		"editor" => get_editor_box(["initialvalue" => '', "type" => "Forum", "height" => "calc(100% - 75px)", "width" => "700"]),
+		"editor" => get_editor_box(["initialvalue" => '', "type" => "Forum", "height" => "calc(100% - 75px)"]),
 	];
 
 	ajax_return(fill_template("tmp/forum.template", "quote_post_form", "forum", $params));
@@ -203,7 +205,7 @@ global $CFG;
 
 		$params = [
 			"formid" => "post_submit",
-			"editor" => get_editor_box(["initialvalue" => '', "type" => "Forum", "height" => "calc(100% - 75px)", "width" => "700"]),
+			"editor" => get_editor_box(["initialvalue" => '', "type" => "Forum", "height" => "calc(100% - 75px)"]),
 		];
 		ajax_return(fill_template("tmp/forum.template", "post_form", "forum", $params));
 	} catch (\Exception $e) {
@@ -225,7 +227,7 @@ global $CFG, $USER;
 		"event" => "submit",
 	]);
 	$params = [
-		"editor" => get_editor_box(["type" => "Shoutbox", "width" => "100%", "height" => "calc(100% - 75px)", "charlimit" => 500]),
+		"editor" => get_editor_box(["type" => "Shoutbox", "height" => "calc(100% - 75px)", "charlimit" => 500]),
 		"formid" => "shoutbox_post_submit",
 		"userid" => $userid,
 		"alias" => empty($userid),
@@ -244,7 +246,7 @@ global $CFG;
 	$message = get_db_field("message", "forum_posts", "postid = ||postid|| ORDER BY postid", ["postid" => $postid]);
 	$title = $discussion["title"];
 
-	$editor = get_editor_box(["initialvalue" => $message, "type" => "Forum", "width" => "100%", "height" => "calc(100% - 75px)"]);
+	$editor = get_editor_box(["initialvalue" => $message, "type" => "Forum", "height" => "calc(100% - 75px)"]);
 	$editorcontent = get_editor_value_javascript();
 
 	ajaxapi([
@@ -269,7 +271,7 @@ function create_discussion_form() {
 global $CFG;
 	$catid = clean_myvar_req("catid", "int");
 
-	$editor = get_editor_box(["initialvalue" => "", "type" => "Forum", "width" => "100%", "height" => "calc(100% - 75px)"]);
+	$editor = get_editor_box(["initialvalue" => "", "type" => "Forum", "height" => "calc(100% - 75px)"]);
 	$editorcontent = get_editor_value_javascript();
 	ajaxapi([
 		"id" => "create_discussion_submit",

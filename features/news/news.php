@@ -53,10 +53,10 @@ global $CFG, $MYVARS, $USER;
         $title = stripslashes(htmlentities($row["title"]));
         $caption = stripslashes(htmlentities($row["caption"]));
         $content = stripslashes($row["content"]);
-        $button = '<input type="button" value="Save" onclick="ajaxapi(\'/features/news/news_ajax.php\',\'edit_news\',\'&amp;title=\'+encodeURIComponent($(\'#news_title\').val())+\'&amp;summary=\' + encodeURIComponent($(\'#news_summary\').val()) + \'&amp;pageid=' . $pageid . '&amp;html=\'+encodeURIComponent(' . get_editor_value_javascript() . ')+\'&amp;newsid=' . $newsid . '\',function() { close_modal(); });" />';
+        $button = '<input type="button" value="Save" onclick="ajaxapi_old(\'/features/news/news_ajax.php\',\'edit_news\',\'&amp;title=\'+encodeURIComponent($(\'#news_title\').val())+\'&amp;summary=\' + encodeURIComponent($(\'#news_summary\').val()) + \'&amp;pageid=' . $pageid . '&amp;html=\'+encodeURIComponent(' . get_editor_value_javascript() . ')+\'&amp;newsid=' . $newsid . '\',function() { close_modal(); });" />';
     } else {
         if (!user_is_able($USER->userid, "addnews", $pageid,"news", $featureid)) { trigger_error(error_string("no_permission", ["addnews"]), E_USER_WARNING); return; }
-        $button = '<input type="button" value="Save" onclick="ajaxapi(\'/features/news/news_ajax.php\',\'add_news\',\'&amp;title=\'+encodeURIComponent($(\'#news_title\').val())+\'&amp;summary=\' + encodeURIComponent($(\'#news_summary\').val()) + \'&amp;pageid=' . $pageid . '&amp;html=\'+encodeURIComponent(' . get_editor_value_javascript() . ')+\'&amp;featureid=' . $featureid . '\',function() { close_modal(); });" />';
+        $button = '<input type="button" value="Save" onclick="ajaxapi_old(\'/features/news/news_ajax.php\',\'add_news\',\'&amp;title=\'+encodeURIComponent($(\'#news_title\').val())+\'&amp;summary=\' + encodeURIComponent($(\'#news_summary\').val()) + \'&amp;pageid=' . $pageid . '&amp;html=\'+encodeURIComponent(' . get_editor_value_javascript() . ')+\'&amp;featureid=' . $featureid . '\',function() { close_modal(); });" />';
     }
 
 	echo '

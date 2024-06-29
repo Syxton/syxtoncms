@@ -44,9 +44,9 @@ page_masthead_template||
     </div>
 </div>||quote||
 <div style="background: linear-gradient(to right, rgba(0, 0, 0, 0), ||header_color||, rgba(0, 0, 0, 0));">
-    <h1 style="text-align: center;color: ||header_text||;">
-        ||pagename||
-    </h1>
+    <div style="padding: 2px;text-align: center;justify-content: center;display: flex;align-items: center;height: 30px;">
+        <span style="font-size: 2em;position: relative;height: 24px;top: -6px;font-weight: bold;color: ||header_text||;">||pagename||</span>
+    </div>
 </div>
 ||page_masthead_template
 
@@ -54,42 +54,50 @@ editor_box_template||
     <textarea id="||name||" name="||name||" class="wysiwyg_editor">||initialvalue||</textarea>
     ||echo js_code_wrap('
     $(window).on("load", function() {
-            $(".wysiwyg_editor").tinymce({
-                script_url : "' . vars["wwwroot"] . '/scripts/tinymce/tinymce.min.js",
-                toolbar: "' . vars["toolbar"] . '",
-                height: ' . (is_numeric(vars["height"]) ? vars["height"] - 70 : '"' . vars["height"] . '"') . ',
-                width: ' . (is_numeric(vars["width"]) ? vars["width"] - 70 : '"' . vars["width"] . '"') . ',' .
-                (vars["charlimit"] > 0 ? '
-                setup: function(editor) {
-                    var max = ' . vars["charlimit"] . ';
-                    $("form").bind("form-pre-serialize", function(e) {
-                        tinyMCE.triggerSave();
-                    });
-                    editor.on("change", function(event) {
-                        var numChars = tinymce.activeEditor.plugins.wordcount.body.getCharacterCount();
-                        if (numChars > max) {
-                            $(".tinyMCE_toomany").remove();
-                            $("form > button,input").last().before("<div class=\'tinyMCE_toomany\'>Too many characters: " + numChars + "/" + max + "</div>");
-                            getglobals().exitEvent = true;
-                        } else {
-                            $(".tinyMCE_toomany").remove();
-                            getglobals().exitEvent = false;
-                        }
-                    });
-                },' : '') . '
-                removed_menuitems: "newdocument",
-                theme : "silver",
-                convert_urls: false,
-                plugins: [' . vars["plugins"] . '],
-                resize: true,
-                min_height: 300,
-                min_width: 300,
-                selector: "textarea",
-                autoresize_bottom_margin: 50,
-                external_filemanager_path: "' . vars["wwwroot"] . '/scripts/tinymce/plugins/filemanager/",
-                filemanager_title: "File Manager" ,
-                external_plugins: { "filemanager" : "' . vars["wwwroot"] . '/scripts/tinymce/plugins/filemanager/plugin.min.js"}
-            });
+        $(".wysiwyg_editor").tinymce({
+            script_url : "' . vars["wwwroot"] . '/scripts/tinymce/tinymce.min.js",
+            toolbar: "' . vars["toolbar"] . '",
+            height: ' . (is_numeric(vars["height"]) ? vars["height"] - 70 : '"' . vars["height"] . '"') . ',
+            width: ' . (is_numeric(vars["width"]) ? vars["width"] - 70 : '"' . vars["width"] . '"') . ',
+            setup: (editor) => {
+                ' . (vars["charlimit"] > 0 ? '
+                var max = ' . vars["charlimit"] . ';
+                $("form").bind("form-pre-serialize", function(e) {
+                    tinyMCE.triggerSave();
+                });
+                editor.on("change", (e) => {
+                    var numChars = tinymce.activeEditor.plugins.wordcount.body.getCharacterCount();
+                    if (numChars > max) {
+                        $(".tinyMCE_toomany").remove();
+                        $("form > button,input").last().before("<div class=\'tinyMCE_toomany\'>Too many characters: " + numChars + "/" + max + "</div>");
+                        getGlobals().exitEvent = true;
+                    } else {
+                        $(".tinyMCE_toomany").remove();
+                        getGlobals().exitEvent = false;
+                    }
+                });' : '') . '
+                editor.on("init", (e) => {
+                    //console.log("tinymce init");
+                    resize_modal();
+                });
+                editor.on("ResizeContent", (e) => {
+                    //console.log("tinymce resized");
+                    resize_modal();
+                })
+            },
+            removed_menuitems: "newdocument",
+            theme : "silver",
+            convert_urls: false,
+            plugins: [' . vars["plugins"] . '],
+            resize: true,
+            min_height: 300,
+            min_width: 300,
+            selector: "textarea",
+            autoresize_bottom_margin: 50,
+            external_filemanager_path: "' . vars["wwwroot"] . '/scripts/tinymce/plugins/filemanager/",
+            filemanager_title: "File Manager" ,
+            external_plugins: { "filemanager" : "' . vars["wwwroot"] . '/scripts/tinymce/plugins/filemanager/plugin.min.js"}
+        });
     });
     ', "defer", true);::vars||
 ||editor_box_template
@@ -106,7 +114,7 @@ defer_script||
 
 print_logout_button_switchback_template||
     <a title="Switch back to: ||lia_name||" href="javascript: void(0)"
-        onclick="ajaxapi('/features/adminpanel/adminpanel_ajax.php',
+        onclick="ajaxapi_old('/features/adminpanel/adminpanel_ajax.php',
                          'logoutas',
                          '',
                          function() {
@@ -117,13 +125,16 @@ print_logout_button_switchback_template||
 ||print_logout_button_switchback_template
 
 print_logout_button_template||
-<div id="login_box" class="login_box logout" style="text-align:right;">
+<div id="login_box" class="login_box logout" style="padding: 2px 5px 8px;">
     ||logoutas||
-    <span style="display:inline-block;line-height: 18px;">
-        ||profile|| <a title="Log Out" href="javascript: void(0)" onclick="ajaxapi('/ajax/site_ajax.php','get_login_box','&amp;logout=1',function() { clearInterval(myInterval); go_to_page(||siteid||);});">(Log Out)</a>
+    <span style="display: inline-flex;justify-content: space-between;align-items: center;width: 100%;">
+        <span class="pagerole">
+            ||role||
+        </span>
+        ||profile||
+        <button id="logout" class="alike" title="Log Out">||echo icon("right-from-bracket", 2);::none||</button>
     </span>
 </div>
-<br />
 ||userlinks||
 ||print_logout_button_template
 
@@ -131,10 +142,6 @@ get_css_box_template1||
     <div class="pagename_box" style="border: 2px solid ||pagenamebordercolor||;background-color:||pagenamebgcolor||;">
         <div class="box_title" style="color:||pagenamefontcolor||;">
             <strong>||title||</strong>
-            <br />
-            <span style="color:||pagenamefontcolor||;font-size:.75em;">
-                ||content||
-            </span>
         </div>
         ||*buttons||
     </div>
@@ -204,16 +211,15 @@ get_button_layout_template||
             ||*buttons||
         </div>
     </div>
-        <div class="slide_menu slide_menu_tab" style="background-color:||titlefontcolor||;color:||titlebgcolor||;border:1px solid ||bordercolor||;border-right:none;" onclick="$(this).prev('#slide_menu').animate({width: 'toggle'}, function() { $(this).toggleClass('slide_menu_visible'); })">
-            ||icon||
-        </div>
+    <div class="slide_menu slide_menu_tab" style="background-color:||titlefontcolor||;color:||titlebgcolor||;border:1px solid ||bordercolor||;border-right:none;" onclick="$(this).prev('#slide_menu').animate({width: 'toggle'}, function() { $(this).toggleClass('slide_menu_visible'); })">
+        ||icon||
+    </div>
     <div style="clear:both"></div>
 ||get_button_layout_template
 
 make_search_box_template||
     <div id="loading_overlay||name_addition{{_||name_addition||//OR//}}name_addition||" class="loading_overlay dontprint" style="display: none;">
-        <span class="verticalalignhelper"></span>
-        <img src="||wwwroot||/images/loading_large.gif" />
+        ||echo icon("spinner fa-spin-pulse");::none||
     </div>
     <span id="searchcontainer||name_addition{{_||name_addition||//OR//}}name_addition||">||contents||</span>
 ||make_search_box_template

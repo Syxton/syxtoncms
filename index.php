@@ -10,7 +10,7 @@ if (!isset($CFG)) {
     include_once('config.php');
 }
 
-if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',' . $_SERVER['REMOTE_ADDR'] . ',')) {
+if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',' . get_ip_address() . ',')) {
     header('Cache-Control: max-age=86400'); // HTTP 1.1.
     header('Expires: 0'); // Proxies.
     include($CFG->dirroot . $CFG->alternatepage);
@@ -42,7 +42,7 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
     $PAGE->name   = $currentpage["name"]; // Title of page
     $PAGE->description = $currentpage["description"]; // Descriptoin of page
     $PAGE->themeid = get_page_themeid($pageid);
-    
+
     header('Cache-Control: max-age=86400'); // HTTP 1.1.
     header('Expires: 0'); // Proxies.
 
@@ -63,6 +63,13 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
 
     if (is_logged_in()) {
         $params = ["timeout" => 14599]; // Javascript that checks for valid login every x seconds.
+        ajaxapi([
+            "id" => "login_check",
+            "url" => "/ajax/site_ajax.php",
+            "data" => ["action" => "login_check", "pageid" => $pageid, "check" => true],
+            "ondone" => "login_check_response(data);",
+            "event" => "none",
+        ]);
         echo fill_template("tmp/index.template", "valid_login_check", false, $params);
 
         $ABILITIES = user_abilities($USER->userid, $PAGE->id);

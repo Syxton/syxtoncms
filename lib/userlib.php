@@ -51,14 +51,53 @@ function randomimages($dir) {
 }
 
 function get_ip_address() {
-	return getHostByName(getHostName());
+global $USER;
+
+	$serverip = getHostByName(getHostName());
+	$ip = empty($USER->ip) ? "" : $USER->ip;
+	// already saved? Save some time.
+	if (isset($USER->ip) &&filter_var($USER->ip, FILTER_VALIDATE_IP) && strlen($ip) >= 7 && $ip !== $serverip) {
+		return $USER->ip;
+	}
+
+	// Best second choice.
+	if (!filter_var($ip, FILTER_VALIDATE_IP) || strlen($ip) < 7 || $ip == $serverip) {
+		$ip = $_SERVER['REMOTE_ADDR'];
+	}
+
+	// Ask 3rd party (ip4.me).
+	if (!filter_var($ip, FILTER_VALIDATE_IP) || strlen($ip) < 7 || $ip == $serverip) {
+		$file = file_get_contents('http://ip4.me/');
+
+		// Trim IP based on HTML formatting
+		$pos = strpos($file, '+3' ) + 3;
+		$ip = substr($file, $pos, strlen( $file ) );
+
+		// Trim IP based on HTML formatting
+		$pos = strpos($ip, '</' );
+		$ip = substr($ip, 0, $pos );
+	}
+
+	// Ask another 3rd party (Google).
+	if (!filter_var($ip, FILTER_VALIDATE_IP) || strlen($ip) < 7 || $ip == $serverip) {
+		// use Google to get IP.
+		$sock = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+		$res = socket_connect($sock, '8.8.8.8', 53);
+		// You might want error checking code here based on the value of $res
+		socket_getsockname($sock, $addr);
+		socket_shutdown($sock);
+		socket_close($sock);
+		$ip = $addr;
+	}
+	$USER->ip = $ip;
+	return $ip;
 }
 
 function load_user_cookie() {
 global $CFG, $USER;
 	if (!empty($_SESSION['userid'])) { //cookie exists
 		$time = get_timestamp();
-		$advanced_login = !empty($_SESSION["lia_original"]) ? "" : " AND ($time - last_activity < " . $CFG->cookietimeout.")";
+		$advanced_login = !empty($_SESSION["lia_original"]) ? "" : " AND ($time - last_activity < " . $CFG->cookietimeout .")";
 		$SQL = "SELECT * FROM users WHERE userid='" . $_SESSION['userid'] . "' $advanced_login";
 		if ($row = get_db_row($SQL)) { //Get user info from db, load into $USER global
 			$temp = (object)$row;
@@ -102,7 +141,7 @@ global $CFG, $USER;
 		$temp = create_random_password();
 		$key = md5($user['email']) . md5(time());
 		$time = get_timestamp();
-	
+
 		// Create new user
 		$params = [
 			'fname' => $user['fname'],

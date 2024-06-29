@@ -94,7 +94,7 @@ global $CFG, $USER;
     $SQL = fetch_template("dbsql/forum.sql", "get_category_discussions", "forum");
     $sqlparams = ["catid" => $catid, "bulletin" => 0, "perpage" => $settings->forum->$forumid->discussionsperpage->setting];
     $discussioncount = get_db_count($SQL, $sqlparams);
-    $dpagenum = $dpagenum == "last" ? (ceil($discussioncount / $sqlparams["perpage"]) - 1) : $dpagenum; // if last, set to last page int
+    $dpagenum = $dpagenum == "last" ? (int)(ceil($discussioncount / $sqlparams["perpage"]) - 1) : $dpagenum; // if last, set to last page int
 
     // Add limits onto query.
     $SQL .= ' LIMIT ||limit||, ||perpage||';
@@ -235,7 +235,7 @@ global $CFG, $USER;
         ]);
         $buttons .= '
             <button id="unpin_bulletin_' . $discussionid . '" class="alike" title="Undesignate as Bulletin">
-                ' . icon("thumbtack", 1, 180) . '
+                ' . icon("thumbtack", 1, "", "", "rotate--180") . '
             </button>';
     }
 
@@ -448,7 +448,7 @@ global $CFG, $USER;
                 $content .= '<span class="forum_post_actions" style="">
                                 <button id="delete_post_' . $post["postid"] . '" class="alike"
                                    onclick="if (confirm(\'Are you sure you want to delete this post?\')) {
-                                                ajaxapi(\'/features/forum/forum_ajax.php\',
+                                                ajaxapi_old(\'/features/forum/forum_ajax.php\',
                                                         \'delete_post\',
                                                         \'&pagenum=' . $pagenum . '&pageid=' . $pageid . '&forumid=' . $forumid . '&catid=' . $catid . '&discussionid=' . $discussionid . '&postid=' . $post["postid"] . '\',
                                                         function() {
@@ -665,7 +665,7 @@ global $USER, $CFG;
         "path" => action_path("forum") . "create_discussion_form&catid=$catid",
         "width" => "750",
         "iframe" => true,
-        "onExit" => "getIntervals()['forum_$forumid'].script();console.log('SUCCESS');",
+        "onExit" => "getIntervals()['forum_$forumid'].script();",
     ];
     return '<div class="forum_newbutton">
             ' . make_modal_links($discussionlinkparam) . '
@@ -709,24 +709,23 @@ global $USER, $CFG;
     return $returnme;
 }
 
-function get_post_pages($forumid, $discussion, $pagenum = 0, $beforeskipping = 10, $buttons = true) {
+function get_post_pages($forumid, $discussion, $pagenum = false, $beforeskipping = 10, $buttons = true) {
 global $CFG;
     $discussionid = $discussion["discussionid"];
     $catid = $discussion["catid"];
     $pageid = $discussion["pageid"];
 
-    $settings = fetch_settings("forum", $forumid, $pageid);
-    $perpage = isset($settings->forum->$forumid->postsperpage->setting) ? " LIMIT " . $settings->forum->$forumid->postsperpage->setting : "";
-
-    $perpage = $settings->forum->$forumid->postsperpage->setting;
-    $pagenum = clean_var_opt($pagenum, "int", 0);
-    $previous = "";
-    $next = "";
-
     // No posts, so we don't need page links.
     if (!$post_count = get_db_count(fetch_template("dbsql/forum.sql", "get_discussion_posts", "forum"), ["discussionid" => $discussionid])) {
         return "";
     }
+
+    if ($pagenum !== false) {
+        $pagenum = clean_var_opt($pagenum, "int", 0);
+    }
+
+    $settings = fetch_settings("forum", $forumid, $pageid);
+    $perpage = $settings->forum->$forumid->postsperpage->setting;
 
     // Only 1 page of posts, so we don't need page links.
     if ($post_count <= $perpage) {
@@ -734,37 +733,47 @@ global $CFG;
     }
 
     // Lastpage is just like $pagenum.  pages start at 0.
-    $lastpage = (ceil($post_count / $perpage) - 1);
+    $lastpage = (int)(ceil($post_count / $perpage) - 1);
 
-    $disabled = "disabled";
+    $previous = "";
+    $next = "";
+
     if ($buttons) { // Pagenum isn't 0, so there's a previous page.
-        ajaxapi([
-            "id" => "get_forum_posts_previous_$forumid",
-            "url" => "/features/forum/forum_ajax.php",
-            "data" => ["action" => "get_forum_posts", "discussionid" => $discussionid, "pagenum" => $pagenum - 1],
-            "display" => "forum_div_$forumid",
-            "intervalid" => "forum_$forumid",
-            "interval" => FORUM_REFRESH,
-        ]);
-        $disabled = "";
+        $disabled = "disabled";
+        if ($pagenum !== false && $pagenum !== 0) {
+            ajaxapi([
+                "id" => "get_forum_posts_previous_$forumid",
+                "url" => "/features/forum/forum_ajax.php",
+                "data" => ["action" => "get_forum_posts", "discussionid" => $discussionid, "pagenum" => $pagenum - 1],
+                "display" => "forum_div_$forumid",
+                "intervalid" => "forum_$forumid",
+                "interval" => FORUM_REFRESH,
+            ]);
+            $disabled = "";
+        }
+
         $previous = '
         <button id="get_forum_posts_previous_' . $forumid . '" class="pagelistbutton alike ' . $disabled . '" title="Get previous page of forum posts">
             ' . icon("backward-step") . '
         </button>';
     }
 
-
-    $disabled = "disabled";
     if ($buttons) { // Pagenum < lastpage (the largest possible pagenum), so there's a next page.
-        ajaxapi([
-            "id" => "get_forum_posts_next_$forumid",
-            "url" => "/features/forum/forum_ajax.php",
-            "data" => ["action" => "get_forum_posts", "discussionid" => $discussionid, "pagenum" => $pagenum + 1],
-            "display" => "forum_div_$forumid",
-            "intervalid" => "forum_$forumid",
-            "interval" => FORUM_REFRESH,
-        ]);
-        $disabled = "";
+        $disabled = "disabled";
+
+        if ($pagenum !== false && $pagenum !== $lastpage) {
+            error_log($pagenum . " - " . $lastpage);
+            ajaxapi([
+                "id" => "get_forum_posts_next_$forumid",
+                "url" => "/features/forum/forum_ajax.php",
+                "data" => ["action" => "get_forum_posts", "discussionid" => $discussionid, "pagenum" => $pagenum + 1],
+                "display" => "forum_div_$forumid",
+                "intervalid" => "forum_$forumid",
+                "interval" => FORUM_REFRESH,
+            ]);
+            $disabled = "";
+        }
+
         $next = '
         <button id="get_forum_posts_next_' . $forumid . '" class="pagelistbutton alike ' . $disabled . '" title="Get next page of forum posts">
             ' . icon("forward-step") . '
@@ -776,7 +785,7 @@ global $CFG;
     while ($post_count > 0) { // We are going to make a link for every $perpage worth of $post_count.
         $page_counter++; // starts at 1.  So page_count 1 is the same page as pagenum 0.
         if ($page_counter > $beforeskipping) { // if $beforeskipping is 5,Page links will go Ex. (1, 2, 3, 4, 5, Last)
-            if ($pagenum < $lastpage) { // Not currently on last page, so the Last button will have an action.
+            if ($pagenum === false || $pagenum < $lastpage) { // Not currently on last page, so the Last button will have an action.
                 ajaxapi([
                     "id" => "get_forum_posts_last_$forumid",
                     "url" => "/features/forum/forum_ajax.php",
@@ -793,7 +802,7 @@ global $CFG;
             $post_count = 0; // Subtract the rest of $post_count to end loop since the Last page link was created.
         } else {
             $current = "disabled";
-            if ($pagenum !== ($page_counter - 1)) { // Not on currently viewing page of posts. Add page action.
+            if ($pagenum === false || $pagenum !== ($page_counter - 1)) { // Not on currently viewing page of posts. Add page action.
                 $current = "";
                 ajaxapi([
                     "id" => "get_forum_posts_page_$forumid" . "_$page_counter",
@@ -828,7 +837,7 @@ global $CFG;
     $discussion_count = get_db_count(fetch_template("dbsql/forum.sql", "get_category_discussions", "forum"), ["catid" => $catid, "bulletin" => 0]);
     if ($discussion_count) {
         $page_counter = 1;
-        $lastpage = (ceil($discussion_count / $perpage) - 1);
+        $lastpage = (int)(ceil($discussion_count / $perpage) - 1);
         $params = [
             "forumid" => $forumid,
             "catid" => $catid,

@@ -35,9 +35,13 @@ global $conn;
     $pattern = '/([\'\"]?)(\|\|)((?s).*?)(\|\|)([\'\"]?)/i'; //Look for stuff like ||xxx|| or '||xxx||'
     $variables = build_prepared_variables($SQL, $vars, $pattern);
 
-	$SQL = preg_replace($pattern, '?', $SQL); // Replace all ||xxx|| and '||xxx||' with ?
+	$SQL = preg_replace($pattern, '?', $variables["sql"]); // Replace all ||xxx|| and '||xxx||' with ?
 	$statement = mysqli_prepare($conn, $SQL);
-	mysqli_stmt_bind_param($statement, $variables["typestring"], ...$variables["data"]);
+
+	if (!empty($variables["typestring"]) && !empty($variables["data"])) {
+		mysqli_stmt_bind_param($statement, $variables["typestring"], ...$variables["data"]);
+	}
+
 	return $statement;
 }
 

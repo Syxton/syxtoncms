@@ -767,7 +767,7 @@ get_page_group_override||
 	SELECT *
 	FROM roles_ability_pergroup
 	WHERE pageid = ||pageid||
-	AND groupid = |groupid||
+	AND groupid = ||groupid||
 	AND ability = ||ability||
 ||get_page_group_override
 

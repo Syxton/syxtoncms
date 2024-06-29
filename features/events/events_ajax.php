@@ -357,7 +357,7 @@ global $CFG, $MYVARS;
                               echo get_editor_box();
                                   echo ' <div style="width:100%;text-align:center">
                                           <input type="button" value="Send Question"
-                                              onclick="ajaxapi(\'/features/events/events_ajax.php\',
+                                              onclick="ajaxapi_old(\'/features/events/events_ajax.php\',
                                                                \'request_question_send\',
                                                                \'&voteid=' . $voteid . '&reqid=' . $reqid . '&question=\'+ encodeURIComponent(' . get_editor_value_javascript() . '),
                                                                function() { simple_display(\'question_form\');}
@@ -437,7 +437,7 @@ global $CFG;
                             ' . get_editor_box(["initialvalue" => $answer]) . '
                             <div style="width:100%;text-align:center">
                                 <input type="button" value="Send Answer"
-                                    onclick="ajaxapi(\'/features/events/events_ajax.php\',
+                                    onclick="ajaxapi_old(\'/features/events/events_ajax.php\',
                                                      \'request_answer_send\',
                                                      \'&qid=' . $qid . '&reqid=' . $reqid . '&answer=\'+ encodeURIComponent(' . get_editor_value_javascript() . '),
                                                      function() { simple_display(\'answer_form\');}
@@ -996,12 +996,12 @@ global $CFG, $MYVARS, $USER;
         $copy_form_code = '
             if ($(\'#copy_reg_to\').val() > 0) {
                 $(\'#loading_overlay\').show();
-                ajaxapi(\'/features/events/events_ajax.php\',
+                ajaxapi_old(\'/features/events/events_ajax.php\',
                         \'copy_registration\',
                         \'&regid=' . $regid . '\' + create_request_string(\'copy_form\'),
                         function() {
                             if (xmlHttp.readyState == 4) {
-                                ajaxapi(\'/features/events/events_ajax.php\',
+                                ajaxapi_old(\'/features/events/events_ajax.php\',
                                         \'show_registrations\',
                                         \'&eventid=\'+$(\'#copy_reg_to\').val(),
                                         function() {
@@ -1056,12 +1056,12 @@ global $CFG, $MYVARS, $USER;
 
     $edit_form_code = '
         $(\'#loading_overlay\').show();
-        ajaxapi(\'/features/events/events_ajax.php\',
+        ajaxapi_old(\'/features/events/events_ajax.php\',
                 \'save_reg_changes\',
                 \'&regid=' . $regid . '&eventid=' . $eventid . '\' + create_request_string(\'reg_form\'),
                 function() {
                     if (xmlHttp.readyState == 4) {
-                        ajaxapi(\'/features/events/events_ajax.php\',
+                        ajaxapi_old(\'/features/events/events_ajax.php\',
                                 \'show_registrations\',
                                 \'&eventid=' . $eventid . '&sel=' . $regid . '\',
                                 function() {
@@ -1450,13 +1450,16 @@ global $CFG, $MYVARS, $USER;
                 $limit = $event['max_users'] == "0" ? "&#8734;" : $event['max_users'];
                 //GET EXPORT CSV BUTTON
                 if (user_is_able($USER->userid, "exportcsv", $event["pageid"])) {
-                      $export = '<button class="alike" onclick="ajaxapi(\'/features/events/events_ajax.php\',
+                    $export = '
+                        <td>
+                            <button class="alike" onclick="ajaxapi_old(\'/features/events/events_ajax.php\',
                                                                         \'export_csv\',
                                                                         \'&pageid=' . $event["pageid"] . '&eventid=' . $event['eventid'] . '\',
                                                                         function() { run_this();}
-                                                                );">
-                                    <img src="' . $CFG->wwwroot . '/images/csv.png" title="Export ' . $regcount . '/' . $limit . ' Registrations" alt="Export ' . $regcount . ' Registrations" />
-                                </button>';
+                                                            );" title="Export ' . $regcount . '/' . $limit . ' Registrations" alt="Export ' . $regcount . ' Registrations">
+                                ' . icon([["icon" => "file-csv", "style" => "font-size: 1.3em"]]) . '
+                            </button>
+                        </td>';
                 }
              }
             $id = "show_registrations_" . $event["eventid"];
@@ -1477,8 +1480,9 @@ global $CFG, $MYVARS, $USER;
                         </button>
                     </td>
                     <td style="width:20%;">
-                        ' . date("m/d/Y", $event["event_begin_date"]) . ' ' . $export . '
+                        ' . date("m/d/Y", $event["event_begin_date"]) . '
                     </td>
+                    ' . $export . '
                     <td style="text-align:right;">
                         <a href="mailto:' . $event["email"] . '" />' . $event["contact"] . '</a>
                     </td>
@@ -2318,7 +2322,7 @@ global $CFG, $MYVARS, $USER;
 
     $error = "";
     try {
-        if (!defined('SEARCH_PERPAGE')) { define('SEARCH_PERPAGE', 3); }
+        if (!defined('SEARCH_PERPAGE')) { define('SEARCH_PERPAGE', 10); }
         $userid = $USER->userid; $searchstring = "";
         $searchwords = trim(clean_myvar_opt("searchwords", "string", ""));
 
@@ -2519,9 +2523,8 @@ function change_bgcheck_status() {
     } elseif ($pageid && $staffid && !$date) {
         execute_db_sql("UPDATE events_staff SET bgcheckpassdate = 0, bgcheckpass = '' WHERE staffid = ||staffid|| AND pageid = ||pageid||", ["staffid" => $staffid, "pageid" => $pageid]);
         execute_db_sql("UPDATE events_staff_archive SET bgcheckpassdate = 0, bgcheckpass = '' WHERE staffid = ||staffid|| AND year = '" . date('Y') . "' AND pageid = ||pageid||", ["staffid" => $staffid, "pageid" => $pageid]);
-    } else {
-        echo "Failed";
     }
+    appsearch();
 }
 
 function sendstaffemails() {
@@ -2636,7 +2639,7 @@ global $CFG, $MYVARS, $USER;
     $results = get_db_result($SQL);
     $amountshown = $firstonpage + SEARCH_PERPAGE < $total ? $firstonpage + SEARCH_PERPAGE : $total;
     $prev = $pagenum > 0 ? '<a href="javascript: void(0);" onclick="$(\'#loading_overlay\').show();
-                                                                    ajaxapi(\'/features/events/events_ajax.php\',
+                                                                    ajaxapi_old(\'/features/events/events_ajax.php\',
                                                                             \'appsearch\',
                                                                             \'&pagenum=' . ($pagenum - 1) . '&searchwords=\'+encodeURIComponent(\'' . $searchwords . '\'),
                                                                             function() {
@@ -2652,7 +2655,7 @@ global $CFG, $MYVARS, $USER;
                             </a>' : "";
     $info = 'Viewing ' . ($firstonpage + 1) . " through " . $amountshown . " out of $total";
     $next = $firstonpage + SEARCH_PERPAGE < $total ? '<a onmouseup="this.blur()" href="javascript: void(0);" onclick="$(\'#loading_overlay\').show();
-                                                                                                                                ajaxapi(\'/features/events/events_ajax.php\',
+                                                                                                                                ajaxapi_old(\'/features/events/events_ajax.php\',
                                                                                                                                         \'appsearch\',
                                                                                                                                         \'&pagenum=' . ($pagenum + 1) . '&searchwords=\'+encodeURIComponent(\'' . $searchwords . '\'),
                                                                                                                                         function() {
@@ -2679,26 +2682,24 @@ global $CFG, $MYVARS, $USER;
                     </th>
                 </tr>';
         while ($staff = fetch_row($results)) {
-              $export = "";
-            $button = '<a href="javascript: void(0)" onclick="if ($(\'#bgcheckdate_' . $staff["staffid"] . '\').prop(\'disabled\')) { $(\'#bgcheckdate_' . $staff["staffid"] . '\').prop(\'disabled\', false); } else { ajaxapi(\'/features/events/events_ajax.php\',
-                                                                      \'change_bgcheck_status\',
-                                                                      \'&bgcdate=\'+$(\'#bgcheckdate_' . $staff["staffid"] . '\').val()+\'&staffid=' . $staff["staffid"] . '\',
-                                                                      function() {
-                                                                        $(\'#loading_overlay\').show();
-                                                                        ajaxapi(\'/features/events/events_ajax.php\',
-                                                                                \'appsearch\',
-                                                                                \'&pagenum=' . $pagenum . '&searchwords=\'+encodeURIComponent(\'' . $MYVARS->GET["searchwords"] . '\'),
-                                                                                function() {
-                                                                                    if (xmlHttp.readyState == 4) {
-                                                                                        simple_display(\'searchcontainer\');
-                                                                                        $(\'#loading_overlay\').hide();
-                                                                                    }
-                                                                                },
-                                                                                true
-                                                                        );
-                                                                      }); }">
-                <img style="vertical-align: middle;" src="' . $CFG->wwwroot . '/images/manage.png" title="Edit Background Check Date" alt="Edit Background Check Date" />
-            </a>';
+            $export = "";
+            ajaxapi([
+                "id" => "save_staff_bg_" . $staff["staffid"],
+                "if" => "!$('#bgcheckdate_" . $staff["staffid"] . "').prop('disabled')",
+                "else" => "$('#bgcheckdate_" . $staff["staffid"] . "').prop('disabled', false);",
+                "url" => "/features/events/events_ajax.php",
+                "data" => [
+                    "action" => "change_bgcheck_status",
+                    "staffid" => $staff["staffid"],
+                    "bgcdate" => "js||$('#bgcheckdate_" . $staff["staffid"] . "').val()||js",
+                    "pagenum" => $pagenum,
+                    "searchwords" => "js|| encodeURIComponent('$searchwords') ||js"],
+                "display" => "searchcontainer",
+                "loading" => "loading_overlay",
+            ]);
+            $button = '<button id="save_staff_bg_' . $staff["staffid"] . '" class="alike" title="Edit Background Check Date">
+                ' . icon("floppy-disk") . '
+            </button>';
 
             ajaxapi([
                 "id" => "show_staff_app_" . $staff["staffid"],
@@ -2765,7 +2766,7 @@ global $CFG, $MYVARS, $USER;
     $returnme = '<link rel="stylesheet" type="text/css" href="' . $CFG->wwwroot . '/styles/print.css">
                     <a class="dontprint" title="Return to Staff Applications" href="javascript: void(0)"
                         onclick="$(\'#loading_overlay\').show();
-                                ajaxapi(\'/features/events/events_ajax.php\',
+                                ajaxapi_old(\'/features/events/events_ajax.php\',
                                         \'appsearch\',
                                         \'&pagenum=' . $pagenum . '&searchwords=' . $searchwords . '\',
                                         function() {

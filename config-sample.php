@@ -58,8 +58,8 @@ $CFG->defaultaddress = "My City, IL";
 //Google Maps API site key
 $CFG->googleapikey = "";
 
-//Scribd API key
-$CFG->doc_view_key = '';
+//Geolocation API key (https://extreme-ip-lookup.com/)
+$CFG->geolocationkey = "";
 
 //Google Analytics id
 $CFG->analytics = '';

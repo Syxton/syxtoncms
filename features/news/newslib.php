@@ -69,7 +69,10 @@ $returnme = ''; $section_content = ""; $toggle = "";
 				"iframe" => true,
 				"refresh" => "true",
 				"width" => "640",
-				"icon" => icon("square-rss", 2, false, "square"),
+				"icon" => icon([
+					["icon" => "square", "stacksize" => 2, "color" => "white"],
+					["icon" => "square-rss"],
+				]),
 			]);
       }
 
@@ -117,63 +120,71 @@ global $CFG;
 	$buttons = $standalone ? '' : get_button_layout("news", $pagenews->newsid, $pagenews->pageid);
 	$user = get_db_row("SELECT * FROM users where userid = " . $pagenews->userid);
 	if ($area == "middle") {
+		$readmore = !$standalone  && stripslashes($pagenews->content) != "" ? '<span style="font-size:.9em; color:gray;">' . make_modal_links(["title"=> stripslashes(htmlentities($pagenews->title)),"text" => "[More...]", "path" => action_path("news") . "viewnews&newsonly=1&pageid=$pageid&newsid=$pagenews->newsid", "width" => "98%", "height" => "95%"]) . '</span>' : '';
   		$returnme = '
   		<table class="newstable">
             <tr>
+				<td style="width: 8%;">
                 ' . $daygraphic . '
-                		<table style="width:100%;border-spacing: 0px;">
+				</td>
+				<td>
+					<table style="width:100%;border-spacing: 0px;">
   			 			<tr>
   				 			<td colspan="2">
-  				 			<div style="font-size:1em; color:red;"><strong>' . stripslashes($pagenews->title) . '</strong></div>
-  						<span style="font-size:.9em">
-						  ' . truncate($pagenews->caption, 350) . '
-  				 			</span> ';
-                        $returnme .= !$standalone  && stripslashes($pagenews->content) != "" ? '<span style="font-size:.9em; color:gray;">' . make_modal_links(["title"=> stripslashes(htmlentities($pagenews->title)),"text" => "[More...]", "path" => action_path("news") . "viewnews&newsonly=1&pageid=$pageid&newsid=$pagenews->newsid", "width" => "98%", "height" => "95%"]) . '</span>' : '';
-  						$returnme .= '<div class="hprcp_n" style="margin-top:4px;"><div class="hprcp_e"><div class="hprcp_w"></div></div></div>
-  						<div class="hprcp_head">
-  							<div style="width:100%;vertical-align:middle;color:gray;position:relative;_right:2px;top:-8px;">
-  							<span style="font-size:.85em;line-height:28px;">
-  							Submitted: ' . ago($pagenews->submitted) . ' by ' . stripslashes($user['fname']) . ' ' . stripslashes($user['lname']) . '</span><div style="line-height:0px;position:relative;top:0px;right:0px;font-size:.01em; padding-top:2px;float:right">' . $buttons . '</div>
-  							</div>
-  						</div>
+  				 				<div style="font-size:1em; color:red;"><strong>
+									' . stripslashes($pagenews->title) . '</strong>
+								</div>
+								<span style="font-size:.9em">
+									' . truncate($pagenews->caption, 350) . '
+								</span>
+								' . $readmore . '
+								<div class="hprcp_head">
+									<div style="width:100%;vertical-align:middle;color:gray;position:relative;_right:2px;top:-8px;">
+										<span style="font-size:.85em;line-height:28px;">
+											Submitted: ' . ago($pagenews->submitted) . ' by ' . stripslashes($user['fname']) . ' ' . stripslashes($user['lname']) . '
+										</span>
+										<div style="line-height:0px;position:relative;top:0px;right:0px;padding-top:2px;float:right">
+											' . $buttons . '
+										</div>
+									</div>
+								</div>
   			 				</td>
   			 			</tr>
-  			 			</table>
+					</table>
   				</td>
             </tr>
   		</table>';
     } else {
+		$readmore = make_modal_links(["title"=> stripslashes(htmlentities($pagenews->title)),"text" => "[More...]", "path" => action_path("news") . "viewnews&pageid=$pageid&newsid=$pagenews->newsid", "width" => "98%", "height" => "95%"]);
   		$returnme = '
   		<table class="newstable">
             <tr>
-       		<td>
-  				  <table style="width:100%;border-spacing: 0px;">
+       			<td>
+  				  	<table style="width:100%;border-spacing: 0px;">
   			 			<tr colspan="2">
   				 			<td>
-  				 			<div style="font-size:1.35em; color:red;">' . stripslashes($pagenews->title) . '</div>
-  						<span style="font-size:1em">
-							' . truncate($pagenews->caption, 50) . '
-  				 			</span>&nbsp;
-  					 		<span style="font-size:.95em; color:gray;">
-                                ' . make_modal_links(["title"=> stripslashes(htmlentities($pagenews->title)),"text" => "[More...]", "path" => action_path("news") . "viewnews&pageid=$pageid&newsid=$pagenews->newsid", "width" => "98%", "height" => "95%"]) . '
-  					 		</span>
-  						<div class="hprcp_n" style="margin-top:4px;">
-  							<div class="hprcp_e">
-  								<div class="hprcp_w">
-  								</div>
-  							</div>
-  						</div>
-  						<div class="hprcp_head">
-  							<div style="width:100%;vertical-align:middle;color:gray;position:relative;_right:2px;top:-8px;">
-  								<span style="font-size:.85em; float:left;line-height:28px;">
-  								' . ago($pagenews->submitted) . '
-  								</span>
-  								<div style="line-height:0px;position:relative;top:2px;right:2px;font-size:.01em; padding-top:2px;">' . $buttons . '</div>
-  							</div>
-  						</div>
-  			 				</td>
+  				 				<div style="font-size:1.35em; color:red;">
+									' . stripslashes($pagenews->title) . '
+								</div>
+								<span style="font-size:1em">
+								' . truncate($pagenews->caption, 50) . '
+								</span>&nbsp;
+								<span style="font-size:.95em; color:gray;">
+									' . $readmore . '
+								</span>
+								<div class="hprcp_head">
+									<div style="width:100%;vertical-align:middle;color:gray;position:relative;_right:2px;top:-8px;">
+										<span style="font-size:.85em; float:left;line-height:28px;">
+										' . ago($pagenews->submitted) . '
+										</span>
+										<div style="line-height:0px;position:relative;top:2px;right:2px;padding-top:2px;">
+											' . $buttons . '
+										</div>
+									</div>
+								</div>
+							</td>
   			 			</tr>
-  			 			</table>
+					</table>
   				</td>
             </tr>
   		</table>';
@@ -224,11 +235,11 @@ global $CFG;
 			"properties" => [
 				"name" => "news_" . $featureid . "_archive_year",
 				"id" => "news_" . $featureid . "_archive_year",
-				"onchange" => 'ajaxapi(\'/features/news/news_ajax.php\',
+				"onchange" => 'ajaxapi_old(\'/features/news/news_ajax.php\',
 										\'update_archive_months\',
 										\'&year=\' + this.value + \'&pageid=' . $pageid . '&featureid=' . $featureid . '\',
 										function() { simple_display(\'month_span_' . $featureid . '_archive\');});
-								ajaxapi(\'/features/news/news_ajax.php\',
+								ajaxapi_old(\'/features/news/news_ajax.php\',
 										\'update_archive_articles\',
 										\'&year=\' + $(\'#news_' . $featureid . '_archive_year\').val() + \'&month=\' + $(\'#news_' . $featureid . '_archive_month\').val() + \'&pageid=' . $pageid . '&featureid=' . $featureid . '\',
 										function() { simple_display(\'article_span_' . $featureid . '_archive\'); });',
@@ -246,7 +257,7 @@ global $CFG;
 			"properties" => [
 				"name" => "news_" . $featureid . "_archive_month",
 				"id" => "news_" . $featureid . "_archive_month",
-				"onchange" => 'ajaxapi(\'/features/news/news_ajax.php\',
+				"onchange" => 'ajaxapi_old(\'/features/news/news_ajax.php\',
 										\'update_archive_articles\',
 										\'&year=\' + $(\'#news_' . $featureid . '_archive_year\').val() + \'&month=\' + this.value + \'&pageid=' . $pageid . '&featureid=' . $featureid . '\',
 										function() { simple_display(\'article_span_' . $featureid . '_archive\'); });',
@@ -661,10 +672,10 @@ function news_buttons($pageid, $featuretype, $featureid) {
 global $CFG, $USER;
 	$returnme = "";
 	if (strstr($featuretype, "_features")) { // Overall news feature.
-        $returnme .= user_is_able($USER->userid, "addnews", $pageid) ? make_modal_links(["title"=> "Add News Item", "path" => action_path("news") . "addeditnews&pageid=$pageid&featureid=$featureid", "iframe" => true, "refresh" => "true", "width" => "850", "height" => "600", "image" => $CFG->wwwroot . "/images/add.png", "class" => "slide_menu_button"]) : '';
+        $returnme .= user_is_able($USER->userid, "addnews", $pageid) ? make_modal_links(["title"=> "Add News Item", "path" => action_path("news") . "addeditnews&pageid=$pageid&featureid=$featureid", "iframe" => true, "refresh" => "true", "width" => "850", "height" => "600", "icon" => icon("plus"), "class" => "slide_menu_button"]) : '';
 	} else { // Individual news item.
-        $returnme .= user_is_able($USER->userid, "editnews", $pageid) ? make_modal_links(["title"=> "Edit News Item", "path" => action_path("news") . "addeditnews&pageid=$pageid&newsid=$featureid", "iframe" => true, "refresh" => "true", "width" => "850", "height" => "600", "image" => $CFG->wwwroot . "/images/edit.png", "class" => "slide_menu_button"]) : '';
-        $returnme .= user_is_able($USER->userid, "deletenews", $pageid) ? ' <a class="slide_menu_button" title="Delete News Item" onclick="if (confirm(\'Are you sure you want to delete this?\')) { ajaxapi(\'/ajax/site_ajax.php\',\'delete_feature\',\'&pageid=' . $pageid . '&featuretype=' . $featuretype . '&subid=' . $featureid . '\',function() { update_login_contents(' . $pageid . ');});}"><img src="' . $CFG->wwwroot . '/images/delete.png" alt="Delete News Item" /></a> ' : '';
+        $returnme .= user_is_able($USER->userid, "editnews", $pageid) ? make_modal_links(["title"=> "Edit News Item", "path" => action_path("news") . "addeditnews&pageid=$pageid&newsid=$featureid", "iframe" => true, "refresh" => "true", "width" => "850", "height" => "600", "icon" => icon("pencil"), "class" => "slide_menu_button"]) : '';
+        $returnme .= user_is_able($USER->userid, "deletenews", $pageid) ? '<button class="slide_menu_button alike" title="Delete News Item" onclick="if (confirm(\'Are you sure you want to delete this?\')) { ajaxapi_old(\'/ajax/site_ajax.php\',\'delete_feature\',\'&pageid=' . $pageid . '&featuretype=' . $featuretype . '&subid=' . $featureid . '\',function() { go_to_page(' . $pageid . ');});}">' . icon("trash") . '</button>' : '';
     }
 	return $returnme;
 }

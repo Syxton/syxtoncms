@@ -1,5 +1,5 @@
 valid_login_check||
-	||echo js_code_wrap('if (typeof(window.myInterval) == "undefined") { var myInterval = setInterval( function() { update_login_contents(false, "check"); }, ' . timeout . '); }');::timeout||
+	||echo js_code_wrap("if (typeof getIntervals().logincheck === 'undefined') { makeInterval('logincheck', 'login_check();', " . timeout . "); }");::timeout||
 ||valid_login_check
 
 mainlayout_template||
