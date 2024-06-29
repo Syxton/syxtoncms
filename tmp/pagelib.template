@@ -44,9 +44,9 @@ page_masthead_template||
     </div>
 </div>||quote||
 <div style="background: linear-gradient(to right, rgba(0, 0, 0, 0), ||header_color||, rgba(0, 0, 0, 0));">
-    <h1 style="text-align: center;color: ||header_text||;">
-        ||pagename||
-    </h1>
+    <div style="padding: 2px;text-align: center;justify-content: center;display: flex;align-items: center;height: 30px;">
+        <span style="font-size: 2em;position: relative;height: 24px;top: -6px;font-weight: bold;color: ||header_text||;">||pagename||</span>
+    </div>
 </div>
 ||page_masthead_template
 
