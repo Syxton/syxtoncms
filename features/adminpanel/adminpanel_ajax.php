@@ -36,7 +36,7 @@ function admin_email_tester() {
 
 function get_phpinfo() {
 global $CFG;
-    echo "<iframe id='php_info' onload='resizeCaller(this.id);' style='width:100%;border:none;' src='$CFG->wwwroot/features/adminpanel/adminpanel_ajax.php?action=phpinfo'></iframe>";
+    echo "<iframe id='php_info' onload='resizeCaller(this.id);' style='width:100%;height: 100vh;border:none;' src='$CFG->wwwroot/features/adminpanel/adminpanel_ajax.php?action=phpinfo'></iframe>";
 }
 
 function camper_list() {

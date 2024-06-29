@@ -2318,7 +2318,7 @@ global $CFG, $MYVARS, $USER;
 
     $error = "";
     try {
-        if (!defined('SEARCH_PERPAGE')) { define('SEARCH_PERPAGE', 3); }
+        if (!defined('SEARCH_PERPAGE')) { define('SEARCH_PERPAGE', 10); }
         $userid = $USER->userid; $searchstring = "";
         $searchwords = trim(clean_myvar_opt("searchwords", "string", ""));
 

@@ -170,7 +170,7 @@ function insert_result_data_as_template($SQL, $result) {
 
 function ismultiarray($a) {
     if (is_array($a) && !empty($a)) {
-        foreach ($a as $v) { 
+        foreach ($a as $v) {
             if (!is_array($v)) {
                 return false;
             }

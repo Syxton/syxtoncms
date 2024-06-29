@@ -67,9 +67,9 @@ browse_search_template||
 	<div>
 		<div style="line-height: 20px;">
 			Search for pages by either their name, thier keywords, or their description.<br />
-			Add it to your personal pagelist with the <img style="vertical-align: text-bottom;" src="||wwwroot||/images/add.png" title="Add" alt="Add"> button.<br />
-			Remove it from your pagelist with the <img style="vertical-align: text-bottom;" src="||wwwroot||/images/delete.png" title="Remove" alt="Remove"> button.<br />
-			Request access to a private page with the <img style="vertical-align: text-bottom;" src="||wwwroot||/images/mail.png" title=Request" alt="Request"> button.
+			Add it to your personal pagelist with the ||echo icon("plus");::none|| button.<br />
+			Remove it from your pagelist with the ||echo icon("trash");::none|| button.<br />
+			Request access to a private page with the ||echo icon("envelope");::none|| button.
 		</div>
 		<br />
 		<div style="text-align: center">
@@ -94,7 +94,7 @@ browse_user_template||
 									true); return false;">
 	<div style="line-height: 20px;">
 		Search for users by either their name or thier email address.<br />
-		Invite a user to a private page with the <img style="vertical-align: text-bottom;" src="||wwwroot||/images/mail.png" title=Request" alt="Request"> button, then select the page you would like to invite them to.
+		Invite a user to a private page with the ||echo icon("envelope");::none|| button, then select the page you would like to invite them to.
 	</div>
 	<br />
 	<div style="text-align: center">
@@ -312,23 +312,23 @@ pagelinks_template||
   <div id="page_links_div">
 	<br />
 	<div style="border: 1px solid gray; background-color:#EFEFEF;">
-		<span style="line-height:2em; width:100%; display:block; background-color:#D1D7DC;">
-		<b>&nbsp;Page Links</b>
-		</span>
+		<div style="padding:5px;background-color:grey;color:white;">
+			<strong>Page Links</strong>
+		</div>
+		<div class="pagelinklist">
 		||links||
+		</div>
 	</div>
   </div>
 ||pagelinks_template
 
 pagelinks_links_template||
-  <div style="line-height:1.5em; padding:5px;" id="link_span_||page[linkid]||">
-	<span style="width:100%;">
-		<a style="vertical-align:middle;" href="||wwwroot||/index.php?pageid=||page[linkpageid]||">
+	<div class="pagelink" id="link_span_||page[linkid]||">
+		<button class="alike" href="||wwwroot||/index.php?pageid=||page[linkpageid]||">
 		||page[linkdisplay]||
-		</a>
+		</button>
 		||canedit{{
-		&nbsp;
-		<a style="vertical-align:middle;" href="javascript: void(0);" onclick="if (confirm('Are you sure you want to unlink this page?')) {
+		<button class="alike" title="Unlink Page" onclick="if (confirm('Are you sure you want to unlink this page?')) {
 																					ajaxapi('/ajax/page_ajax.php',
 																							'unlink_page',
 																							'&pageid=||pageid||' +
@@ -342,11 +342,10 @@ pagelinks_links_template||
 																									});
 																							});
 																					}">
-			<img src="||wwwroot||/images/unlink.png" title="Unlink Page" alt="Unlink Page" />
-		</a>
+			|| echo icon("link-slash");::none||
+		</button>
 		}}canedit||
-	</span>
-  </div>
+	</div>
 ||pagelinks_links_template
 
 start_of_page_template||

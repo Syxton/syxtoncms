@@ -74,7 +74,7 @@ global $CFG;
 				<form onsubmit="$(\'#loading_overlay\').show();
 									 ajaxapi(\'/features/events/events_ajax.php\',
 												\'templatesearch\',
-												\'&amp;pageid=' . $pageid . '&amp;searchwords=\' + encodeURIComponent($(\'#searchbox\').val()),
+												\'&pageid=' . $pageid . '&searchwords=\' + encodeURIComponent($(\'#searchbox\').val()),
 												function() {
 													 if (xmlHttp.readyState == 4) {
 														  simple_display(\'searchcontainer\');
@@ -152,7 +152,7 @@ function staff_emailer() {
 global $CFG;
 	 echo '
 	 	<div class="dontprint">
-	 		<form onsubmit="$(\'#loading_overlay\').show(); ajaxapi(\'/features/events/events_ajax.php\',\'sendstaffemails\',\'&amp;sendemails=\'+$(\'#sendemails\').prop(\'checked\')+\'&amp;stafflist=\'+encodeURIComponent($(\'#stafflist\').val()),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); $(\'#loading_overlay\').hide(); }}, true); return false;">
+	 		<form onsubmit="$(\'#loading_overlay\').show(); ajaxapi(\'/features/events/events_ajax.php\',\'sendstaffemails\',\'&sendemails=\'+$(\'#sendemails\').prop(\'checked\')+\'&stafflist=\'+encodeURIComponent($(\'#stafflist\').val()),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); $(\'#loading_overlay\').hide(); }}, true); return false;">
 				<div style="text-align:center;margin:5px;font-weight: bolder;">
 					Staff Status Checker
 				</div>
@@ -529,7 +529,7 @@ global $CFG, $USER;
 															 hide_show_buttons(\'location_menu\', true);
 															 add_location_form(\'new\', \'' . $eventid . '\');">
 												<span>
-													<img src="' . $CFG->wwwroot . '/images/add.png" title="Add Location" alt="Add Location">
+													' . icon("plus") . '
 													<span> Toggle Add Form</span>
 												</span>
 

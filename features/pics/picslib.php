@@ -100,7 +100,7 @@ global $CFG, $MYVARS, $USER;
 		];
 		$gallery_select = 'Select which gallery you wish to view. ' . make_select($params);
         $returnme .= $gallery_select . ' Click on a picture to activate or deactivate it.';
-        $returnme .= '<a title="Delete Gallery" style="float:right;padding:2px;" href="javascript: void(0);" onclick="if ($(\'#gallery\').val() != \'all\') { ajaxapi(\'/features/pics/pics_ajax.php\',\'delete_gallery\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;galleryid=\'+$(\'#gallery\').val(),function() { if (xmlHttp.readyState == 4) { simple_display(\'pics_manager\'); }}, true); } else { alert(\'Cannot delete all galleries at once.\') }"><img src="' . $CFG->wwwroot . '/images/trash.gif" /></a>';
+        $returnme .= '<a title="Delete Gallery" style="float:right;padding:2px;" href="javascript: void(0);" onclick="if ($(\'#gallery\').val() != \'all\') { ajaxapi(\'/features/pics/pics_ajax.php\',\'delete_gallery\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;galleryid=\'+$(\'#gallery\').val(),function() { if (xmlHttp.readyState == 4) { simple_display(\'pics_manager\'); }}, true); } else { alert(\'Cannot delete all galleries at once.\') }">' . icon("trash") . '</a>';
 		$returnme .= get_searchcontainer(get_pics($pageid, $featureid, "all", 0, "true"));
 	} else {
 		$returnme .= '<br /><br /><div style="text-align:center">No images have been added.</div>';
@@ -181,7 +181,7 @@ global $CFG, $USER;
 		  $next = $firstonpage + $perpage < $total ? '<a href="javascript: $(\'#loading_overlay\').show(); ajaxapi(\'/features/pics/pics_ajax.php\',\'pics_pageturn\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;galleryid=' . $galleryid . '&amp;editable=' . $editable . '&amp;perpage=' . $perpage . '&amp;order=' . urlencode($order) . '&amp;pagenum=' . ($pagenum + 1) . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); $(\'#loading_overlay\').hide(); }}, true);" onmouseup="this.blur();"><img src="' . $CFG->wwwroot . '/images/next.png" title="Next Page" alt="Next Page" /></a>' : "";
  		$header = '<table style="width:100%;"><tr style="height:45px;"><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;font-size:.75em;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><p>';
 
-		$returnme = '<div style="width:760px;overflow:auto;margin-right:auto;margin-left:auto;">';
+		$returnme = '<div style="overflow:auto;margin-right:auto;margin-left:auto;">';
 		while ($row = fetch_row($pages)) {
 			if (file_exists($CFG->dirroot . '/features/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row['imagename'])) {
 				$filepath = $CFG->dirroot . '/features/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row['imagename'];
@@ -195,7 +195,7 @@ global $CFG, $USER;
 
 			if ($editable != 'false') {
 				if (user_is_able($USER->userid, "deletepics", $pageid, "pics", $featureid)) {
-					$deletepic = ' <a href="#" onclick="if (confirm(\'Do you want to delete this image?\')) {
+					$deletepic = ' <button class="alike" title="Delete" onclick="if (confirm(\'Do you want to delete this image?\')) {
 															$(\'#loading_overlay\').show();
 															ajaxapi(\'/features/pics/pics_ajax.php\',
 																	\'delete_pic\',
@@ -206,10 +206,10 @@ global $CFG, $USER;
 																	\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;galleryid=' . $galleryid . '&amp;editable=' . $editable . '&amp;perpage=' . $perpage . '&amp;order=' . urlencode($order) . '&amp;pagenum=' . ($pagenum) . '\',
 																	function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); $(\'#loading_overlay\').hide(); }}, true);
 														}">
-										<img style="position:absolute; z-index:2; border:none;" src="' . $CFG->wwwroot . '/images/trash.gif" title="Delete" alt="Delete Feature" />
-									</a>';
+										<span style="position:absolute; z-index:2; border:none;">' . icon("trash") . '</span>
+									</button>';
 				}
-				
+
 				if (($pageid == $CFG->SITEID && $row["sitehidden"] == 1) || ($pageid != $CFG->SITEID && $row["pagehidden"] == 1)) {
 					$activated = '';
 				} else { //image is activated
@@ -234,7 +234,7 @@ global $CFG, $USER;
 								 setTimeout(function() { $(\'#picsid_' . $row["picsid"] . '\').hide(); }, 3000);';
 				$alreadysite2 = '';
 			}
-			
+
 			if ($editable != 'false') {
 				$caption = '<textarea id="caption_' . $row["picsid"] . '" style="margin-left:2px;font-size:1em;' . $captionsize . '" type="text">' . stripslashes($row["caption"]) . '</textarea>
 							<a onclick="$(\'#picsid_' . $row["picsid"] . '\').show();
@@ -246,7 +246,7 @@ global $CFG, $USER;
 								<img src="' . $CFG->wwwroot . '/images/save.png" />
 							</a>
 							<span style="font-size:.85em;display: inline-block;padding: 5px;">
-								<input type="checkbox" style="vertical-align:middle" id="siteviewable_' . $row["picsid"] . '" 
+								<input type="checkbox" style="vertical-align:middle" id="siteviewable_' . $row["picsid"] . '"
 								' . $disabled . '
 								 onchange="if (confirm(\'Do you want to change the site viewability of this image?\')) {
 												$(\'#picsid_' . $row["picsid"] . '\').show();
@@ -269,7 +269,7 @@ global $CFG, $USER;
 							</span>';
 			} else {
 				$caption = '<div style="font-size:.85em;' . $captionsize . '">
-							' . stripslashes($row["caption"]) . 
+							' . stripslashes($row["caption"]) .
 							 '</div>';
 			}
 
@@ -296,7 +296,7 @@ global $CFG, $USER;
 										ajaxapi(\'/features/pics/pics_ajax.php\',
 												\'move_pic\',
 												\'&amp;picsid=' . $row["picsid"] . '&amp;galleryid=\'+$(\'#movepics_' . $row["picsid"] . '\').val(),
-												function() { do_nothing(); }); 
+												function() { do_nothing(); });
 										ajaxapi(\'/features/pics/pics_ajax.php\',
 												\'pics_pageturn\',
 												\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;galleryid=' . $galleryid . '&amp;editable=' . $editable . '&amp;perpage=' . $perpage . '&amp;order=' . urlencode($order) . '&amp;pagenum=' . ($pagenum) . '\',
@@ -361,7 +361,7 @@ global $CFG;
 			$sql[] = ["file" => "dbsql/pics.sql", "feature" => "pics", "subsection" => "delete_galleries"];
 			$sql[] = ["file" => "dbsql/pics.sql", "feature" => "pics", "subsection" => "delete_pics_features"];
 			$sql[] = ["file" => "dbsql/pics.sql", "feature" => "pics", "subsection" => "delete_pics"];
-	
+
 			// Delete feature
 			execute_db_sqls(fetch_template_set($sql), $params);
 
@@ -460,7 +460,7 @@ global $CFG, $USER;
 							"title" => "Manage Galleries",
 							"path" => action_path("pics") . "manage_pics&amp;pageid=$pageid&amp;featureid=$featureid",
 							"refresh" => "true",
-							"image" => $CFG->wwwroot . "/images/swap.png",
+							"icon" => icon("images"),
 							"class" => "slide_menu_button",
 						]);
         }
@@ -473,7 +473,7 @@ global $CFG, $USER;
 							"refresh" => "true",
 							"width" => "640",
 							"height" => "500",
-							"image" => $CFG->wwwroot . "/images/add.png",
+							"icon" => icon("plus"),
 							"class" => "slide_menu_button",
 						]);
         }

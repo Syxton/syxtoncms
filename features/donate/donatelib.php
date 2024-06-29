@@ -244,7 +244,7 @@ global $CFG, $USER;
 			"validate" => "true",
 			"width" => "750",
 			"height" => "600",
-			"image" => $CFG->wwwroot . "/images/money.png",
+			"icon" => icon("sack-dollar"),
 			"class" => "slide_menu_button",
 		];
 		$returnme .= make_modal_links($p);
@@ -259,7 +259,7 @@ global $CFG, $USER;
 			"validate" => "true",
 			"width" => "750",
 			"height" => "600",
-			"image" => $CFG->wwwroot . "/images/edit.png",
+			"icon" => icon("pencil"),
 			"class" => "slide_menu_button",
 		];
 		$returnme .= make_modal_links($p);

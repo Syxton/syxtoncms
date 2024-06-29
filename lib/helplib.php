@@ -37,7 +37,7 @@ $HELP->input_fname = "Please use your full first name, not just an initial.";
 $HELP->input_lname = "Please use your full last name, not just an initial.";
 
 //FORUM HINTS
-$HELP->new_category = "Please type the name of the new forum category.";
+$HELP->new_category = "Please type the new name for this category.";
 
 function get_help($help) {
 global $CFG, $HELP;
@@ -45,7 +45,7 @@ global $CFG, $HELP;
     $string = $lang[0];
     if (isset($lang[2])) {
         include($CFG->dirroot . '/features/' . $lang[1]. "/" . $lang[2]."/lang.php");
-        return $HELP->$string;        
+        return $HELP->$string;
     } elseif (isset($lang[1])) {
         include($CFG->dirroot . '/features/' . $lang[1]."/lang.php");
         return $HELP->$string;

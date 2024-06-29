@@ -117,11 +117,13 @@ global $CFG;
 
     $p = [
         "title" => "Staff Application/Renewal Form",
+        "text" => "Staff Apply",
         "path" => action_path("events") . "staff_application",
         "validate" => "true",
         "width" => "600",
         "height" => "650",
-        "image" => $CFG->wwwroot . "/images/staff.png",
+        "icon" => icon("clipboard-user"),
+        "styles" => "font-size: 1.5em;font-weight: bold;",
         "confirmexit" => "true",
     ];
     $returnme .= '<div style="margin:5px;text-align:right;">' . make_modal_links($p) . '</div>';
@@ -424,8 +426,8 @@ global $CFG, $USER;
         $editable = ($time - 86400) < $event["event_end_date"] ? true : false;
         //Confirm Event Buttons
         if ($canconfirm && $event["confirmed"] != 1 && $event["siteviewable"] == 1) {
-            $returnme .= ' <a class="slide_menu_button" href="javascript: void(0);" onclick="if (confirm(\'Are you sure you want to confirm this event?\')) { ajaxapi(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&pageid=' . $pageid . '&featureid=' . $event['eventid'] . '&confirm=1\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); update_login_contents(\'' . $pageid . '\');});}"> <img src="' . $CFG->wwwroot . '/images/add.png" title="Confirm Event\'s Global Visibility" alt="Confirm Event" /></a>';
-            $returnme .= ' <a class="slide_menu_button" href="javascript: void(0);" onclick="if (confirm(\'Are you sure you want to deny this event?\')) { ajaxapi(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&pageid=' . $pageid . '&featureid=' . $event['eventid'] . '&confirm=0\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); update_login_contents(\'' . $pageid . '\');});}"> <img src="' . $CFG->wwwroot . '/images/deny.png" title="Deny Event\'s Global Visibility" alt="Deny Event" /></a>';
+            $returnme .= ' <button class="slide_menu_button alike" title="Confirm Event\'s Global Visibility" onclick="if (confirm(\'Are you sure you want to confirm this event?\')) { ajaxapi(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&pageid=' . $pageid . '&featureid=' . $event['eventid'] . '&confirm=1\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); update_login_contents(\'' . $pageid . '\');});}">' . icon("thumbs-up") . '</button>';
+            $returnme .= ' <a class="slide_menu_button alike" title="Deny Event\'s Global Visibility" onclick="if (confirm(\'Are you sure you want to deny this event?\')) { ajaxapi(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&pageid=' . $pageid . '&featureid=' . $event['eventid'] . '&confirm=0\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); update_login_contents(\'' . $pageid . '\');});}">' . icon("thumbs-down") . '</button>';
         }
         //Edit && Delete button
         if ($canedit && $editable) {
@@ -479,12 +481,12 @@ global $CFG, $USER;
                                 "iframe" => true,
                                 "width" => "800",
                                 "height" => "95%",
-                                "image" => $CFG->wwwroot . "/images/edit.png",
+                                "icon" => icon("pencil"),
                             ]);
             }
 
-            $returnme .= '      <a href="javascript: if (confirm(\'Are you sure you want to confirm this event?\')) { ajaxapi(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&pageid=' . $pageid . '&featureid=' . $event['eventid'] . '&confirm=1\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); update_login_contents(\'' . $pageid . '\');});}"> <img src="' . $CFG->wwwroot . '/images/add.png" title="Confirm Event" alt="Confirm Event" /></a>';
-            $returnme .= '      <a href="javascript: if (confirm(\'Are you sure you want to deny this event?\')) { ajaxapi(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&pageid=' . $pageid . '&featureid=' . $event['eventid'] . '&confirm=0\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); update_login_contents(\'' . $pageid . '\');});}"> <img src="' . $CFG->wwwroot . '/images/deny.png" title="Deny Event" alt="Deny Event" /></a>';
+            $returnme .= '      <button class="alike" title="Confirm Event" onclick="if (confirm(\'Are you sure you want to confirm this event?\')) { ajaxapi(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&pageid=' . $pageid . '&featureid=' . $event['eventid'] . '&confirm=1\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); update_login_contents(\'' . $pageid . '\');});}">' . icon("thumbs-up") . '</button>';
+            $returnme .= '      <button class="alike" title="Deny Event" onclick="if (confirm(\'Are you sure you want to deny this event?\')) { ajaxapi(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&pageid=' . $pageid . '&featureid=' . $event['eventid'] . '&confirm=0\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); update_login_contents(\'' . $pageid . '\');});}">' . icon("thumbs-down") . '</button>';
             $returnme .= '  </span>
                         </td>
                     </tr>
@@ -2105,7 +2107,14 @@ global $USER, $CFG;
             $selectme = $selected && ($location['id'] == $selected) ? ' selected' : '';
             $returnme .= '<option value="' . $location['id'] . '"' . $selectme . '>' . $location['location'] . '</option>';
         }
-        $returnme .= '</select><a href="javascript:void(0);" onclick="copy_location(document.getElementById(\'add_location\').value,\'' . $eventid . '\');"> <img src="' . $CFG->wwwroot . '/images/add.png" title="Add Location" alt="Add Location" /></a></td><td style="vertical-align:top"><span id="location_details_div" style="vertical-align:top"></span></td></tr></table>';
+        $returnme .= '  </select>
+                        <button class="alike" title="Add Location" onclick="copy_location(document.getElementById(\'add_location\').value,\'' . $eventid . '\');">' . icon("plus") . '</button>
+                    </td>
+                    <td style="vertical-align:top">
+                        <span id="location_details_div" style="vertical-align:top"></span>
+                    </td>
+                </tr>
+            </table>';
     }
 
     if (!$listyes) {
@@ -2267,7 +2276,7 @@ global $CFG, $USER;
                         "iframe" => true,
                         "width" => "95%",
                         "height" => "95%",
-                        "image" => $CFG->wwwroot . "/images/add.png",
+                        "icon" => icon("plus"),
                         "class" => "slide_menu_button",
                     ]);
     }
@@ -2425,7 +2434,7 @@ global $CFG, $USER;
                                                                                             "path"   => action_path("events") . "template_manager&pageid=$pageid",
                                                                                             "iframe" => true,
                                                                                             "width"  => "640",
-                                                                                            "image"  => $CFG->wwwroot . "/images/template.png",
+                                                                                            "icon"  => icon("table-list"),
                                                                                             "class" => "adminpanel_links",
                                                                                             ]) : "";
     //Course Event Manager
@@ -2435,7 +2444,7 @@ global $CFG, $USER;
                                                                                     "path"   => action_path("events") . "event_manager&pageid=$pageid",
                                                                                     "iframe" => true,
                                                                                     "width"  => "640",
-                                                                                    "image"  => $CFG->wwwroot . "/images/manage.png",
+                                                                                    "icon"  => icon("list-check"),
                                                                                     "class" => "adminpanel_links",
                                                                                     ]) : "";
     //Application Manager
@@ -2445,7 +2454,7 @@ global $CFG, $USER;
                                                                                             "path"   => action_path("events") . "application_manager&pageid=$pageid",
                                                                                             "iframe" => true,
                                                                                             "width"  => "640",
-                                                                                            "image"  => $CFG->wwwroot . "/images/apps.png",
+                                                                                            "icon"  => icon("clipboard-user"),
                                                                                             "class" => "adminpanel_links",
                                                                                         ]) : "";
     //Staff Notifications
@@ -2455,7 +2464,7 @@ global $CFG, $USER;
                                                                                             "path"   => action_path("events") . "staff_emailer&pageid=$pageid",
                                                                                             "iframe" => true,
                                                                                             "width"  => "640",
-                                                                                            "image"  => $CFG->wwwroot . "/images/staffapp.png",
+                                                                                            "icon"  => icon("envelopes-bulk"),
                                                                                             "class" => "adminpanel_links",
                                                                                         ]) : "";
     return $content;

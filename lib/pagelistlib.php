@@ -33,7 +33,7 @@ global $CFG, $USER, $ROLES, $PAGE, $STYLES;
     if (is_logged_in()) {
         $userid = $USER->userid;
         $button_layout = get_button_layout("pagename", 1, $pageid);
-        $browse_vars = "&amp;section=search&amp;userid=$USER->userid";
+        $browse_vars = "&section=search&userid=$USER->userid";
         $buttons = get_button_layout("pagelist", 1, $pageid);
     }
     $params = [
@@ -119,7 +119,7 @@ global $CFG, $USER, $PAGE;
             "validate" => "true",
             "width" => "640",
             "height" => "475",
-            "image" => $CFG->wwwroot . "/images/add.png",
+            "icon" => icon("plus"),
             "class" => "slide_menu_button",
         ];
         $returnme .= make_modal_links($params);
@@ -128,11 +128,11 @@ global $CFG, $USER, $PAGE;
     if (user_is_able($USER->userid, "editpage", $pageid)) {
         $params = [
             "title" => "Create/Edit Page Links",
-            "path" => $CFG->wwwroot . "/pages/page.php?action=create_edit_links&amp;pageid=$pageid",
+            "path" => $CFG->wwwroot . "/pages/page.php?action=create_edit_links&pageid=$pageid",
             "refresh" => "true",
             "width" => "600",
             "height" => "500",
-            "image" => $CFG->wwwroot . "/images/link.gif",
+            "icon" => icon("link"),
             "class" => "slide_menu_button",
         ];
         $returnme .= make_modal_links($params);
@@ -146,12 +146,12 @@ global $CFG, $USER, $PAGE;
     if (user_is_able($USER->userid, "editpage", $pageid)) {
         $params = [
             "title" => "Edit Page Settings",
-            "path" => $CFG->wwwroot . "/pages/page.php?action=create_edit_page&amp;pageid=$pageid",
+            "path" => $CFG->wwwroot . "/pages/page.php?action=create_edit_page&pageid=$pageid",
             "refresh" => "true",
             "validate" => "true",
             "width" => "640",
             "height" => "475",
-            "image"=> $CFG->wwwroot . "/images/settings.png",
+            "icon"=> icon("sliders"),
             "class" => "slide_menu_button",
         ];
         $returnme .= make_modal_links($params);
@@ -160,12 +160,12 @@ global $CFG, $USER, $PAGE;
     if (user_is_able($USER->userid, "editpage", $pageid)) {
         $params = [
             "title" => "Edit Page Theme",
-            "path" => $CFG->wwwroot . "/pages/themes.php?action=change_theme&amp;pageid=$pageid&amp;feature=page",
+            "path" => $CFG->wwwroot . "/pages/themes.php?action=change_theme&pageid=$pageid&feature=page",
             "iframe" => true,
             "refresh" => "true",
             "width" => "640",
             "height" => "600",
-            "image" => $CFG->wwwroot . "/images/themes.gif",
+            "icon" => icon("palette"),
             "class" => "slide_menu_button",
         ];
         $returnme .= make_modal_links($params);

@@ -12,7 +12,7 @@ if (!LIBHEADER) {
 	while (!file_exists($sub . 'lib/header.php')) {
 		$sub = $sub == './' ? '../' : $sub . '../';
 	}
-	include($sub . 'lib/header.php'); 
+	include($sub . 'lib/header.php');
 }
 define('ADMINPANELLIB', true);
 
@@ -34,7 +34,7 @@ global $CFG, $USER, $ROLES, $ABILITIES;
 		"title" => "Manage files",
 		"text" => "Manage files",
 		"onclick" => "window.open('./scripts/tinymce/plugins/filemanager/dialog.php?type=0&editor=mce_0/','File Mananger','modal, width=850, height=600')",
-		"image" => $CFG->wwwroot . "/images/kfm.gif",
+		"icon" => icon("laptop-file"),
 		"class" => "adminpanel_links",
 	];
 	$content .= user_is_able($USER->userid, "manage_files", $pageid) ? make_modal_links($p) : "";
@@ -47,7 +47,7 @@ global $CFG, $USER, $ROLES, $ABILITIES;
 		"width" => "700",
 		"height" => "600",
 		"iframe" => true,
-		"image" => $CFG->wwwroot . "/images/key.png",
+		"icon" => icon("key"),
 		"class" => "adminpanel_links",
 	];
 	$content .= !empty($abilities->edit_roles->allow) || !empty($abilities->assign_roles->allow) || !empty($abilities->edit_user_abilities->allow) ? make_modal_links($p) : "";
@@ -61,7 +61,7 @@ global $CFG, $USER, $ROLES, $ABILITIES;
 			"iframe" => true,
 			"width"=> "95%",
 			"height"=> "95%",
-			"image" => $CFG->wwwroot . "/images/admin.gif",
+			"icon" => icon("screwdriver-wrench"),
 			"class" => "adminpanel_links",
 		];
 		$content .= user_is_able($USER->userid, "addevents", $pageid) ? make_modal_links($p) : "";

@@ -54,42 +54,50 @@ editor_box_template||
     <textarea id="||name||" name="||name||" class="wysiwyg_editor">||initialvalue||</textarea>
     ||echo js_code_wrap('
     $(window).on("load", function() {
-            $(".wysiwyg_editor").tinymce({
-                script_url : "' . vars["wwwroot"] . '/scripts/tinymce/tinymce.min.js",
-                toolbar: "' . vars["toolbar"] . '",
-                height: ' . (is_numeric(vars["height"]) ? vars["height"] - 70 : '"' . vars["height"] . '"') . ',
-                width: ' . (is_numeric(vars["width"]) ? vars["width"] - 70 : '"' . vars["width"] . '"') . ',' .
-                (vars["charlimit"] > 0 ? '
-                setup: function(editor) {
-                    var max = ' . vars["charlimit"] . ';
-                    $("form").bind("form-pre-serialize", function(e) {
-                        tinyMCE.triggerSave();
-                    });
-                    editor.on("change", function(event) {
-                        var numChars = tinymce.activeEditor.plugins.wordcount.body.getCharacterCount();
-                        if (numChars > max) {
-                            $(".tinyMCE_toomany").remove();
-                            $("form > button,input").last().before("<div class=\'tinyMCE_toomany\'>Too many characters: " + numChars + "/" + max + "</div>");
-                            getglobals().exitEvent = true;
-                        } else {
-                            $(".tinyMCE_toomany").remove();
-                            getglobals().exitEvent = false;
-                        }
-                    });
-                },' : '') . '
-                removed_menuitems: "newdocument",
-                theme : "silver",
-                convert_urls: false,
-                plugins: [' . vars["plugins"] . '],
-                resize: true,
-                min_height: 300,
-                min_width: 300,
-                selector: "textarea",
-                autoresize_bottom_margin: 50,
-                external_filemanager_path: "' . vars["wwwroot"] . '/scripts/tinymce/plugins/filemanager/",
-                filemanager_title: "File Manager" ,
-                external_plugins: { "filemanager" : "' . vars["wwwroot"] . '/scripts/tinymce/plugins/filemanager/plugin.min.js"}
-            });
+        $(".wysiwyg_editor").tinymce({
+            script_url : "' . vars["wwwroot"] . '/scripts/tinymce/tinymce.min.js",
+            toolbar: "' . vars["toolbar"] . '",
+            height: ' . (is_numeric(vars["height"]) ? vars["height"] - 70 : '"' . vars["height"] . '"') . ',
+            width: ' . (is_numeric(vars["width"]) ? vars["width"] - 70 : '"' . vars["width"] . '"') . ',
+            setup: (editor) => {
+                ' . (vars["charlimit"] > 0 ? '
+                var max = ' . vars["charlimit"] . ';
+                $("form").bind("form-pre-serialize", function(e) {
+                    tinyMCE.triggerSave();
+                });
+                editor.on("change", (e) => {
+                    var numChars = tinymce.activeEditor.plugins.wordcount.body.getCharacterCount();
+                    if (numChars > max) {
+                        $(".tinyMCE_toomany").remove();
+                        $("form > button,input").last().before("<div class=\'tinyMCE_toomany\'>Too many characters: " + numChars + "/" + max + "</div>");
+                        getGlobals().exitEvent = true;
+                    } else {
+                        $(".tinyMCE_toomany").remove();
+                        getGlobals().exitEvent = false;
+                    }
+                });' : '') . '
+                editor.on("init", (e) => {
+                    console.log("tinymce init");
+                    resize_modal();
+                });
+                editor.on("ResizeContent", (e) => {
+                    console.log("tinymce resized");
+                    resize_modal();
+                })
+            },
+            removed_menuitems: "newdocument",
+            theme : "silver",
+            convert_urls: false,
+            plugins: [' . vars["plugins"] . '],
+            resize: true,
+            min_height: 300,
+            min_width: 300,
+            selector: "textarea",
+            autoresize_bottom_margin: 50,
+            external_filemanager_path: "' . vars["wwwroot"] . '/scripts/tinymce/plugins/filemanager/",
+            filemanager_title: "File Manager" ,
+            external_plugins: { "filemanager" : "' . vars["wwwroot"] . '/scripts/tinymce/plugins/filemanager/plugin.min.js"}
+        });
     });
     ', "defer", true);::vars||
 ||editor_box_template
@@ -117,13 +125,16 @@ print_logout_button_switchback_template||
 ||print_logout_button_switchback_template
 
 print_logout_button_template||
-<div id="login_box" class="login_box logout" style="text-align:right;">
+<div id="login_box" class="login_box logout" style="padding: 2px 5px 8px;">
     ||logoutas||
-    <span style="display:inline-block;line-height: 18px;">
-        ||profile|| <a title="Log Out" href="javascript: void(0)" onclick="ajaxapi('/ajax/site_ajax.php','get_login_box','&amp;logout=1',function() { clearInterval(myInterval); go_to_page(||siteid||);});">(Log Out)</a>
+    <span style="display: inline-flex;justify-content: space-between;align-items: center;width: 100%;">
+        <span class="pagerole">
+            ||role||
+        </span>
+        ||profile||
+        <button class="alike" title="Log Out" onclick="ajaxapi('/ajax/site_ajax.php','get_login_box','&amp;logout=1',function() { clearInterval(myInterval); go_to_page(||siteid||);});">||echo icon("right-from-bracket", 2);::none||</button>
     </span>
 </div>
-<br />
 ||userlinks||
 ||print_logout_button_template
 
@@ -131,10 +142,6 @@ get_css_box_template1||
     <div class="pagename_box" style="border: 2px solid ||pagenamebordercolor||;background-color:||pagenamebgcolor||;">
         <div class="box_title" style="color:||pagenamefontcolor||;">
             <strong>||title||</strong>
-            <br />
-            <span style="color:||pagenamefontcolor||;font-size:.75em;">
-                ||content||
-            </span>
         </div>
         ||*buttons||
     </div>

@@ -93,9 +93,8 @@ global $CFG, $MYVARS, $USER;
 
 	$title = get_db_field("name", "pages", "pageid = ||pageid||", ["pageid" => $pageid]);
 	$title = '<span class="box_title_text">' . $title . '</span>';
-	$rolename = get_db_field("display_name", "roles", "roleid = " . user_role($USER->userid, $pageid));
 
-	$params["pagelist"] = get_css_box($title, $rolename, false, NULL, 'pagename', NULL, $themeid, null, $pageid);
+	$params["pagelist"] = get_css_box($title, "", false, NULL, 'pagename', NULL, $themeid, null, $pageid);
 	$params["block"] = get_css_box('<span class="box_title_text">Title</span>', "Content", null, null, null, null, $themeid, null, $pageid);
 	$right = fill_template("tmp/themes.template", "theme_selector_right_template", false, $params);
 
@@ -236,7 +235,7 @@ function make_or_update_styles($params = []) {
 		foreach ($fields as $field) {
 			if (isset($params[$field]) && $params[$field] !== false) { // Check $value is set.
 				$sqlfields .= empty($sqlfields) ? "" : ", "; // Add comma if not first field.
-				$sqlfields .= "$field = '" . $params[$field] . "'";	
+				$sqlfields .= "$field = '" . $params[$field] . "'";
 			}
 		}
 		$SQL = "UPDATE styles SET $sqlfields WHERE id = '" . $vars["id"] . "'";

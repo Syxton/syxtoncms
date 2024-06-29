@@ -15,7 +15,7 @@ group_page_template||
 																			 function() {
 																				 simple_display('per_group_display_div');
 																			 });">
-			<img src="||wwwroot||/images/add.png" /> Create New Group
+			||echo icon("plus");::none|| Create New Group
 			</a>
 		}}canmanagegroups||
 		<br />

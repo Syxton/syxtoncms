@@ -107,7 +107,6 @@ global $MYVARS;
 }
 
 function edit_html() {
-global $CFG, $MYVARS;
     $htmlid = clean_myvar_req("htmlid", "int");
     $html = clean_myvar_req("html", "html");
 

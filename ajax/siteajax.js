@@ -15,24 +15,32 @@ if (document.layers) {
     document.captureEvents(Event.MOUSEOVER | Event.MOUSEOUT)
 } // Not sure why I need this.
 
-function getglobals() {
-    if (typeof $(top)[0] !== 'undefined') {
-        return $(top)[0].myGlobals;
+function getGlobals() {
+    if (typeof getRoot()[0] !== 'undefined') {
+        return getRoot()[0].myGlobals;
     }
     if (typeof myGlobals !== 'undefined') {
+        console.log("do we ever actually use this?");
         return myGlobals;
     }
 }
 
+function getRoot(element = false) {
+    if (!element) {
+        return $($(top)[0], $(top)[0].document)
+    }
+    return $(element, $(top)[0].document);
+}
+
 function getColorbox(gallery = "") {
     if (gallery.length > 0) {
-        return $(gallery, $(top)[0].document).colorbox;
+        return getRoot(gallery).colorbox;
     }
-    return $(top, $(top)[0].document).colorbox;
+    return getRoot().colorbox;
 }
 
 function getIntervals() {
-    return getglobals().myIntervals;
+    return getGlobals().myIntervals;
 }
 
 function makeInterval(identifier, action, interval) {
@@ -148,8 +156,7 @@ function simple_display(container) {
             $("#" + container).html(xmlHttp.responseText);
             // make sure updating flag is gone, signifying dom is updated.
             $().waitTillGone($("#" + container), '#updating_' + container, function () {
-                $(top)[0].resizeAll();
-                $(top)[0].resize_modal();
+                resize_modal();
             });
         });
     }
@@ -162,14 +169,14 @@ function plant_update_flag(container) {
 function ajaxerror(data) {
     if (data.ajaxerror != undefined && data.ajaxerror.length > 0) {
         var container = "ajax_error_display";
-        var containerobj = $("#" + container, $(top)[0].document);
+        var containerobj = getRoot("#" + container);
 
         plant_update_flag(containerobj);
 
         $().waitTillExists(containerobj, '#updating_' + container, function () {
             // update dom container.
             containerobj.html(data.ajaxerror);
-            //$($(top)[0].$.find('#' + container)).html(data.ajaxerror);
+
             // make sure updating flag is gone, signifying dom is updated.
             $().waitTillGone(containerobj, '#updating_' + container, function () {
                 containerobj.slideDown(1000, function () {
@@ -194,8 +201,7 @@ function jq_display(container, data) {
             $("#" + container).html(data.message);
             // make sure updating flag is gone, signifying dom is updated.
             $().waitTillGone($("#" + container), '#updating_' + container, function () {
-                $(top)[0].resizeAll();
-                $(top)[0].resize_modal()
+                resize_modal();
             });
         });
     }
@@ -301,18 +307,34 @@ function rtrim(stringToTrim) {
 }
 
 //Modal Functions
-function close_modal() {
+function close_colorbox() {
     getColorbox().close();
 }
 
-function resize_modal(container) {
-    if (window.self !== window.top) {
-        $(top)[0].resize_modal();
-        return;
+function close_modal() {
+    getRoot()[0].close_colorbox();
+}
+
+function resize_modal() {
+    getRoot()[0].resize_colorbox();
+}
+
+function resize_colorbox(container) {
+    getRoot()[0].initialize_colorbox_iframes();
+    setTimeout(function () {
+        getRoot()[0].resizeAll();
+        getRoot().trigger("resize");
+    }, 50);
+}
+
+function initialize_colorbox_iframes() {
+    if (getRoot("iframe.cboxIframe").length && !getRoot("iframe.cboxIframe").attr("id")) {
+        getRoot("iframe.cboxIframe").attr("id", "colorboxiframe");
+        getRoot("iframe.cboxIframe").on('load', function () {
+            getRoot()[0].resizeCaller("colorboxiframe");
+        });
+        getRoot("iframe.cboxIframe").trigger('load');
     }
-    $(top)[0].resizeAll();
-    $($(top)[0]).trigger("resize");
-    return;
 }
 
 function refresh_page() {
@@ -844,18 +866,4 @@ function getCookie(cname) {
 
 $(function() { // At the end of the document load.  do these things.
     activatejs(); // Check for inactive ajax javascript and attempt to activate it.
-
-    if (window.self !== window.top) {
-        return;
-    }
-    // Watch for modal iframe to attach an id so it can be resized dynamically.
-    let fn = `
-        if ($("iframe.cboxIframe").length && !$("iframe.cboxIframe").attr("id")) {
-            $("iframe.cboxIframe").attr("id", "colorboxiframe");
-            $("iframe.cboxIframe").on('load', function () {
-                resizeCaller("colorboxiframe");
-            });
-            $("iframe.cboxIframe").trigger('load');
-        }`;
-    makeInterval("colorboxiframewatcher", fn, 500);
 });

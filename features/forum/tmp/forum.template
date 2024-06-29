@@ -101,7 +101,7 @@ category_form||
 			<fieldset class="formContainer">
 				<div class="rowContainer">
 					<label class="rowTitle" for="title">Category Name</label>
-					<input type="text" id="title" name="title" value="||*title||" data-rule-required="true" />
+					<input type="text" id="title" name="title" value="||*title||" data-rule-required="true" style="width: 100%;" />
 					<div class="tooltipContainer info">||help||</div>
 					<div class="spacer" style="clear: both;"></div>
 				</div>

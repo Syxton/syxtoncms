@@ -37,7 +37,11 @@ global $conn;
 
 	$SQL = preg_replace($pattern, '?', $SQL); // Replace all ||xxx|| and '||xxx||' with ?
 	$statement = mysqli_prepare($conn, $SQL);
-	mysqli_stmt_bind_param($statement, $variables["typestring"], ...$variables["data"]);
+
+	if (!empty($variables["typestring"]) && !empty($variables["data"])) {
+		mysqli_stmt_bind_param($statement, $variables["typestring"], ...$variables["data"]);
+	}
+
 	return $statement;
 }
 

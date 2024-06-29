@@ -235,7 +235,7 @@ global $CFG, $LOADAJAX;
 
         $script = "
             ajax: {
-                if (getglobals().exitEvent) {
+                if (getGlobals().exitEvent) {
                     break ajax;
                 }
                 $if
@@ -575,15 +575,15 @@ global $CFG;
 
     if (empty($v["refresh"]) && empty($v["reuse"])) {
         $unq = "cachedClose_$unq";
-        $modal .= "getglobals().$unq = cb.close;
+        $modal .= "getGlobals().$unq = cb.close;
                    cb.close = (function() {
-                   let fn = getglobals().$unq;";
+                   let fn = getGlobals().$unq;";
         $modal .= !empty($v["confirmexit"]) ? "if (confirm('Are you sure you wish to close this window?')) {" : "";
         $modal .= !empty($v["onExit"]) ? $v["onExit"] : "";
         //$modal .= "killInterval('colorbox');";
         $modal .= "fn.apply(fn);
-                   cb.close = getglobals().$unq;
-                   delete getglobals().$unq;";
+                   cb.close = getGlobals().$unq;
+                   delete getGlobals().$unq;";
         $modal .= !empty($v["confirmexit"]) ? "}" : "";
         $modal .= "});";
     }
@@ -592,7 +592,7 @@ global $CFG;
         $modal .= "cb.close = (function() {";
         $modal .= !empty($v["confirmexit"]) ? "if (confirm('Are you sure you wish to close this window?')) {" : "";
         $modal .= !empty($v["onExit"]) ? $v["onExit"] : "";
-        $modal .= "setTimeout(function() { $(top)[0].location.reload(true); }, 1000);";
+        $modal .= "setTimeout(function() { getRoot()[0].location.reload(true); }, 1000);";
         $modal .= !empty($v["confirmexit"]) ? "}" : "";
         $modal .= "});";
     }
@@ -813,8 +813,7 @@ global $CFG, $USER;
         "path" => $CFG->wwwroot . "/pages/user.php?action=change_profile",
         "validate" => "true",
         "width" => "500",
-        "image" => $CFG->wwwroot . "/images/user.png",
-        "styles" => "",
+        "icon" => icon("user", "1_5"),
     ];
     $profile = $edit ? make_modal_links($params) : "$fname $lname";
 
@@ -825,8 +824,11 @@ global $CFG, $USER;
         $logoutas = fill_template("tmp/pagelib.template", "print_logout_button_switchback_template", false, ["siteid" => $CFG->SITEID, "lia_name" => $lia_name]);
     }
 
+    $rolename = get_db_field("display_name", "roles", "roleid = " . user_role($USER->userid, $pageid));
+
     $params = [
         "siteid" => $CFG->SITEID,
+        "role" => $rolename,
         "logoutas" => $logoutas,
         "profile" => $profile,
         "userlinks" => get_user_links($USER->userid, $pageid),
@@ -936,7 +938,6 @@ global $CFG, $PAGE, $STYLES;
             "pagenamebgcolor" => $pagenamebgcolor,
             "pagenamefontcolor" => $pagenamefontcolor,
             "title" => $title,
-            "content" => $content,
             "buttons" => $buttons,
         ];
         $returnme = fill_template("tmp/pagelib.template", "get_css_box_template1", false, $params);

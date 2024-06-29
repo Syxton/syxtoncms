@@ -37,7 +37,11 @@ global $conn;
 
 	$SQL = preg_replace($pattern, '?', $SQL); // Replace all ||xxx|| and '||xxx||' with ?
 	$statement = mysql_prepare($conn, $SQL);
-	mysql_stmt_bind_param($statement, $variables["typestring"], ...$variables["data"]);
+
+	if (!empty($variables["typestring"]) && !empty($variables["data"])) {
+		mysql_stmt_bind_param($statement, $variables["typestring"], ...$variables["data"]);
+	}
+
 	return $statement;
 }
 
@@ -102,7 +106,7 @@ global $conn;
 			$result = mysql_query($conn, $SQL);
 			$result = ($select && mysql_num_rows($result) == 0) ? false : $result;
 		}
-	
+
 		if ($result) {
 			if ($update) {
 				$id = empty($vars) ? mysql_affected_rows($conn) : mysql_stmt_affected_rows($statement);

@@ -661,10 +661,10 @@ function news_buttons($pageid, $featuretype, $featureid) {
 global $CFG, $USER;
 	$returnme = "";
 	if (strstr($featuretype, "_features")) { // Overall news feature.
-        $returnme .= user_is_able($USER->userid, "addnews", $pageid) ? make_modal_links(["title"=> "Add News Item", "path" => action_path("news") . "addeditnews&pageid=$pageid&featureid=$featureid", "iframe" => true, "refresh" => "true", "width" => "850", "height" => "600", "image" => $CFG->wwwroot . "/images/add.png", "class" => "slide_menu_button"]) : '';
+        $returnme .= user_is_able($USER->userid, "addnews", $pageid) ? make_modal_links(["title"=> "Add News Item", "path" => action_path("news") . "addeditnews&pageid=$pageid&featureid=$featureid", "iframe" => true, "refresh" => "true", "width" => "850", "height" => "600", "icon" => icon("plus"), "class" => "slide_menu_button"]) : '';
 	} else { // Individual news item.
-        $returnme .= user_is_able($USER->userid, "editnews", $pageid) ? make_modal_links(["title"=> "Edit News Item", "path" => action_path("news") . "addeditnews&pageid=$pageid&newsid=$featureid", "iframe" => true, "refresh" => "true", "width" => "850", "height" => "600", "image" => $CFG->wwwroot . "/images/edit.png", "class" => "slide_menu_button"]) : '';
-        $returnme .= user_is_able($USER->userid, "deletenews", $pageid) ? ' <a class="slide_menu_button" title="Delete News Item" onclick="if (confirm(\'Are you sure you want to delete this?\')) { ajaxapi(\'/ajax/site_ajax.php\',\'delete_feature\',\'&pageid=' . $pageid . '&featuretype=' . $featuretype . '&subid=' . $featureid . '\',function() { update_login_contents(' . $pageid . ');});}"><img src="' . $CFG->wwwroot . '/images/delete.png" alt="Delete News Item" /></a> ' : '';
+        $returnme .= user_is_able($USER->userid, "editnews", $pageid) ? make_modal_links(["title"=> "Edit News Item", "path" => action_path("news") . "addeditnews&pageid=$pageid&newsid=$featureid", "iframe" => true, "refresh" => "true", "width" => "850", "height" => "600", "icon" => icon("pencil"), "class" => "slide_menu_button"]) : '';
+        $returnme .= user_is_able($USER->userid, "deletenews", $pageid) ? '<button class="slide_menu_button alike" title="Delete News Item" onclick="if (confirm(\'Are you sure you want to delete this?\')) { ajaxapi(\'/ajax/site_ajax.php\',\'delete_feature\',\'&pageid=' . $pageid . '&featuretype=' . $featuretype . '&subid=' . $featureid . '\',function() { update_login_contents(' . $pageid . ');});}">' . icon("trash") . '</button>' : '';
     }
 	return $returnme;
 }

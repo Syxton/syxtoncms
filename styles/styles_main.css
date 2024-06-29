@@ -6,6 +6,7 @@
 i.fa {
     color: #606060;
     display: inline-block;
+    box-sizing: border-box;
     vertical-align: middle;
     line-height: inherit;
 }
@@ -20,6 +21,26 @@ i.fa:hover {
 
 i.fa:active {
     color: #5f5f5f;
+}
+
+i.fa-1_1x {
+    font-size: 1.1em;
+}
+
+i.fa-1_2x {
+    font-size: 1.2em;
+}
+
+i.fa-1_3x {
+    font-size: 1.3m;
+}
+
+i.fa-1_4x {
+    font-size: 1.4em;
+}
+
+i.fa-1_5x {
+    font-size: 1.5em;
 }
 
 i.rotate-90 {
@@ -61,11 +82,12 @@ div#ajax_error_display {
 a, .alike {
     text-decoration: none;
     cursor: pointer;
-    color: blue;
+    color: #2900cf;
 }
 
 a:hover, .alike:hover {
-    text-decoration: none
+    text-decoration: none;
+    color: #026572;
 }
 
 a img, .alike img {
@@ -163,8 +185,14 @@ table.searchresults tr:hover {
 }
 
 .adminpanel_links {
-    display: block;
-    margin: 5px;
+    display: flex;
+    padding: 5px;
+    justify-content: left;
+    align-items: center;
+}
+
+a.adminpanel_links * {
+    padding: 0 2px;
 }
 
 .html_notfullscreen {
@@ -746,6 +774,28 @@ span.pagename_header {
     font-size: .98em
 }
 
+div.pagelinklist {
+}
+
+div.pagelink {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+}
+
+div.pagelinklist div:nth-child(even) {
+    background-color: #f0f0f0;
+}
+
+div.pagelinklist div:nth-child(odd) {
+    background-color: #e0e0e0;
+}
+
+div.pagelinklist div:nth-child(even):hover,
+div.pagelinklist div:nth-child(odd):hover {
+    background-color: #ffffff9c;
+}
+
 a.header_links {
     color: green;
     text-decoration: none
@@ -1053,6 +1103,13 @@ span.box_title_text {
     font-weight: 700
 }
 
+span.pagerole {
+    font-size: .9em;
+    padding: 5px;
+    background: cadetblue;
+    border-radius: 5px;
+}
+
 .box_header {
     min-height: 24px;
     padding: 2px 0 2px 0
@@ -1150,7 +1207,7 @@ div.box_content {
     z-index: 2;
     float: right;
     background-color: #b3b3b3;
-    height: 20px;
+    height: 24px;
 }
 
 .slide_button_wrap {
@@ -1199,9 +1256,8 @@ div.box_content {
 }
 
 .slide_menu a.slide_menu_button, .slide_menu button.slide_menu_button {
-    display: inline-block;
     line-height: 0;
-    padding: 3px;
+    padding: 0px 8px;
 }
 
 .drop_zone {
@@ -1854,6 +1910,7 @@ button,
 a.buttonlike,
 div.button {
     display: inline-block;
+    box-sizing: border-box;
     padding: 6px 12px;
     color: #555;
     border: 1px solid #ccc;
