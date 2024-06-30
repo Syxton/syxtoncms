@@ -67,7 +67,7 @@ function get_small_calendar($pageid, $userid = 0, $month = false, $year = false,
                                 <td class="calendar_month" colspan="7">
                                     <div class="calendar_month_flex">
                                     <a class="calendar_change_month" style="float:left;" href="javascript: void(0);"
-                                            onclick="ajaxapi(\'/features/calendar/calendar_ajax.php\',
+                                            onclick="ajaxapi_old(\'/features/calendar/calendar_ajax.php\',
                                                                     \'print_calendar\',
                                                                     \'&displaymode=0&userid=' . $userid . '&pageid=' . $pageid . '&month=' . $prevmonth . '&year=' . $prevyear . '\',
                                                                     function() {
@@ -85,7 +85,7 @@ function get_small_calendar($pageid, $userid = 0, $month = false, $year = false,
     }
 
     $returnme .= 				'<a class="calendar_change_month" style="float:right;" href="javascript: void(0);"
-                                         onclick="ajaxapi(\'/features/calendar/calendar_ajax.php\',
+                                         onclick="ajaxapi_old(\'/features/calendar/calendar_ajax.php\',
                                                                 \'print_calendar\',
                                                                 \'&displaymode=0&userid=' . $userid . '&pageid=' . $pageid . '&month=' . $nextmonth . '&year=' . $nextyear . '\',
                                                                 function() {
@@ -201,7 +201,7 @@ global $CFG;
                             <td style="text-align:center;" colspan="7" class="calendar_monthLarge">
                                 <div class="calendar_month_flex">
                                     <a class="calendar_change_monthLarge" style="float:left;" href="javascript: void(0);"
-                                        onclick="ajaxapi(\'/features/calendar/calendar_ajax.php\',
+                                        onclick="ajaxapi_old(\'/features/calendar/calendar_ajax.php\',
                                                                 \'print_calendar\',
                                                                 \'&displaymode=1&userid=' . $userid . '&pageid=' . $pageid . '&month=' . $prevmonth . '&year=' . $prevyear . '\',
                                                                 function() {
@@ -218,7 +218,7 @@ global $CFG;
         $nextyear = $year;
     }
     $returnme .= 				'<a class="calendar_change_monthLarge" style="float:right;" href="javascript: void(0);"
-                                            onclick="ajaxapi(\'/features/calendar/calendar_ajax.php\',
+                                            onclick="ajaxapi_old(\'/features/calendar/calendar_ajax.php\',
                                                                     \'print_calendar\',
                                                                     \'&displaymode=1&userid=' . $userid . '&pageid=' . $pageid . '&month=' . $nextmonth . '&year=' . $nextyear . '\',
                                                                     function() {

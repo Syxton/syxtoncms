@@ -281,7 +281,7 @@ global $CFG, $USER;
 
         // GET EXPORT CSV BUTTON
         if (user_is_able($USER->userid, "exportcsv", $event["pageid"], "events", $featureid)) {
-            $export = '<a href="javascript: void(0)" onclick="ajaxapi(\'/features/events/events_ajax.php\',\'export_csv\',\'&pageid=' . $pageid . '&eventid=' . $event['eventid'] . '\',function() { run_this();});"><img src="' . $CFG->wwwroot . '/images/csv.png" title="Export ' . $regcount . '/' . $limit . ' Registrations" alt="Export ' . $regcount . ' Registrations" /></a>';
+            $export = '<button class="alike" title="Export ' . $regcount . '/' . $limit . ' Registrations" onclick="ajaxapi_old(\'/features/events/events_ajax.php\',\'export_csv\',\'&pageid=' . $pageid . '&eventid=' . $event['eventid'] . '\',function() { run_this();});">' . icon("file-csv") . '</button>';
         }
     }
 
@@ -426,8 +426,8 @@ global $CFG, $USER;
         $editable = ($time - 86400) < $event["event_end_date"] ? true : false;
         //Confirm Event Buttons
         if ($canconfirm && $event["confirmed"] != 1 && $event["siteviewable"] == 1) {
-            $returnme .= ' <button class="slide_menu_button alike" title="Confirm Event\'s Global Visibility" onclick="if (confirm(\'Are you sure you want to confirm this event?\')) { ajaxapi(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&pageid=' . $pageid . '&featureid=' . $event['eventid'] . '&confirm=1\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); update_login_contents(\'' . $pageid . '\');});}">' . icon("thumbs-up") . '</button>';
-            $returnme .= ' <a class="slide_menu_button alike" title="Deny Event\'s Global Visibility" onclick="if (confirm(\'Are you sure you want to deny this event?\')) { ajaxapi(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&pageid=' . $pageid . '&featureid=' . $event['eventid'] . '&confirm=0\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); update_login_contents(\'' . $pageid . '\');});}">' . icon("thumbs-down") . '</button>';
+            $returnme .= ' <button class="slide_menu_button alike" title="Confirm Event\'s Global Visibility" onclick="if (confirm(\'Are you sure you want to confirm this event?\')) { ajaxapi_old(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&pageid=' . $pageid . '&featureid=' . $event['eventid'] . '&confirm=1\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); go_to_page(\'' . $pageid . '\');});}">' . icon("thumbs-up") . '</button>';
+            $returnme .= ' <a class="slide_menu_button alike" title="Deny Event\'s Global Visibility" onclick="if (confirm(\'Are you sure you want to deny this event?\')) { ajaxapi_old(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&pageid=' . $pageid . '&featureid=' . $event['eventid'] . '&confirm=0\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); go_to_page(\'' . $pageid . '\');});}">' . icon("thumbs-down") . '</button>';
         }
         //Edit && Delete button
         if ($canedit && $editable) {
@@ -443,7 +443,7 @@ global $CFG, $USER;
                         ]);
 
             //Delete button
-            $returnme .= ' <a class="slide_menu_button" title="Delete Event" href="javascript: if (confirm(\'Are you sure you want to delete this event?\')) { ajaxapi(\'/features/events/events_ajax.php\',\'delete_events_relay\',\'&eventid=' . $event['eventid'] . '\',function() { update_login_contents(\'' . $pageid . '\'); });}">' . icon("trash") . '</a>';
+            $returnme .= ' <a class="slide_menu_button" title="Delete Event" href="javascript: if (confirm(\'Are you sure you want to delete this event?\')) { ajaxapi_old(\'/features/events/events_ajax.php\',\'delete_events_relay\',\'&eventid=' . $event['eventid'] . '\',function() { go_to_page(\'' . $pageid . '\'); });}">' . icon("trash") . '</a>';
         }
     } else {  return "";}
     return $returnme;
@@ -485,8 +485,8 @@ global $CFG, $USER;
                             ]);
             }
 
-            $returnme .= '      <button class="alike" title="Confirm Event" onclick="if (confirm(\'Are you sure you want to confirm this event?\')) { ajaxapi(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&pageid=' . $pageid . '&featureid=' . $event['eventid'] . '&confirm=1\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); update_login_contents(\'' . $pageid . '\');});}">' . icon("thumbs-up") . '</button>';
-            $returnme .= '      <button class="alike" title="Deny Event" onclick="if (confirm(\'Are you sure you want to deny this event?\')) { ajaxapi(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&pageid=' . $pageid . '&featureid=' . $event['eventid'] . '&confirm=0\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); update_login_contents(\'' . $pageid . '\');});}">' . icon("thumbs-down") . '</button>';
+            $returnme .= '      <button class="alike" title="Confirm Event" onclick="if (confirm(\'Are you sure you want to confirm this event?\')) { ajaxapi_old(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&pageid=' . $pageid . '&featureid=' . $event['eventid'] . '&confirm=1\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); go_to_page(\'' . $pageid . '\');});}">' . icon("thumbs-up") . '</button>';
+            $returnme .= '      <button class="alike" title="Deny Event" onclick="if (confirm(\'Are you sure you want to deny this event?\')) { ajaxapi_old(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&pageid=' . $pageid . '&featureid=' . $event['eventid'] . '&confirm=0\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); go_to_page(\'' . $pageid . '\');});}">' . icon("thumbs-down") . '</button>';
             $returnme .= '  </span>
                         </td>
                     </tr>
@@ -525,7 +525,7 @@ global $CFG, $USER;
                                     "width" => "750",
                                     "icon" => icon("pencil"),
                                 ]);
-            $returnme .= ' <a href="javascript: if (confirm(\'Are you sure you want to delete this event?\')) { ajaxapi(\'/features/events/events_ajax.php\',\'delete_events_relay\',\'&eventid=' . $event['eventid'] . '\',function() { update_login_contents(\'' . $pageid . '\');});}">' . icon("trash") . '</a>';
+            $returnme .= ' <a href="javascript: if (confirm(\'Are you sure you want to delete this event?\')) { ajaxapi_old(\'/features/events/events_ajax.php\',\'delete_events_relay\',\'&eventid=' . $event['eventid'] . '\',function() { go_to_page(\'' . $pageid . '\');});}">' . icon("trash") . '</a>';
             $returnme .= '</td></tr></table></span>';
         }
     }
@@ -562,7 +562,7 @@ global $CFG, $USER;
 
             // Export registrations
             if (user_is_able($USER->userid, "exportcsv", $pageid,"events", $featureid)) {
-                $returnme .= '<a href="javascript:ajaxapi(\'/features/events/events_ajax.php\',\'export_csv\',\'&pageid=' . $pageid . '&eventid=' . $event['eventid'] . '\',function() { run_this();});"><img src="' . $CFG->wwwroot . '/images/csv.png" title="Export ' . $regcount . '/' . $limit . ' Registrations" alt="Export ' . $regcount . ' Registrations" /></a>';
+                $returnme .= '<button class="alike" title="Export ' . $regcount . '/' . $limit . ' Registrations" onclick="ajaxapi_old(\'/features/events/events_ajax.php\',\'export_csv\',\'&pageid=' . $pageid . '&eventid=' . $event['eventid'] . '\',function() { run_this();});">' . icon("file-csv") . '</button>';
             }
 
             // Registration button
@@ -658,7 +658,7 @@ global $CFG, $USER;
             $regcount = get_db_count("SELECT * FROM events_registrations WHERE eventid='" . $event['eventid'] . "' AND verified='1'");
             $limit = $event['max_users'] == "0" ? "&#8734;" : $event['max_users'];
             $featureid = get_db_field("featureid", "pages_features", "pageid='$pageid' AND feature='events'");
-            if (user_is_able($USER->userid, "exportcsv", $pageid, "events", $featureid)) { $returnme .= '<a href="javascript:ajaxapi(\'/features/events/events_ajax.php\',\'export_csv\',\'&pageid=' . $pageid . '&eventid=' . $event['eventid'] . '\',function() { run_this();});"><img src="' . $CFG->wwwroot . '/images/csv.png" title="Export ' . $regcount . '/' . $limit . ' Registrations" alt="Export ' . $regcount . ' Registrations" /></a>';}
+            if (user_is_able($USER->userid, "exportcsv", $pageid, "events", $featureid)) { $returnme .= '<button class="alike" title="Export ' . $regcount . '/' . $limit . ' Registrations" onclick="ajaxapi_old(\'/features/events/events_ajax.php\',\'export_csv\',\'&pageid=' . $pageid . '&eventid=' . $event['eventid'] . '\',function() { run_this();});">' . icon("file-csv") . '</button>';}
             $returnme .= "</td></tr></table>";
         }
     }
@@ -695,7 +695,7 @@ global $CFG, $USER;
                                 </td>
                                 <td style="text-align:right; padding:2px;white-space:nowrap;">';
             if (!empty($event["start_reg"]) && user_is_able($USER->userid, "exportcsv", $pageid, "events", $featureid)) {
-                $returnme .= '<a href="javascript: void(0);" onclick="ajaxapi(\'/features/events/events_ajax.php\',\'export_csv\',\'&pageid=' . $pageid . '&eventid=' . $event['eventid'] . '\',function() { run_this();});"><img src="' . $CFG->wwwroot . '/images/csv.png" title="Export Registrations" alt="Export Registrations" /></a>';
+                $returnme .= '<button class="alike" title="Export Registrations" onclick="ajaxapi_old(\'/features/events/events_ajax.php\',\'export_csv\',\'&pageid=' . $pageid . '&eventid=' . $event['eventid'] . '\',function() { run_this();});">' . icon("file-csv") . '</button>';
             }
             $returnme .= '</td></tr></table>';
         }
@@ -1240,7 +1240,7 @@ global $CFG;
             "name" => 'template',
             "id" => 'template',
             "onchange" =>  'clear_limits();
-                            ajaxapi(\'/features/events/events_ajax.php\',
+                            ajaxapi_old(\'/features/events/events_ajax.php\',
                                    \'show_template_settings\',
                                    \'&eventid=' . $eventid . '&templateid=\' + document.getElementById(\'template\').value,
                                    function() {
@@ -1535,13 +1535,13 @@ global $CFG;
         foreach ($status as $s) {
             $print .= '
                 <div class="staff_status_alert">
-                    <img style="vertical-align: middle;" src="' . $protocol.$CFG->wwwroot . '/images/error.png" /> ' . $s["full"] . '
+                    ' . icon("circle-exclamation") . ' ' . $s["full"] . '
                 </div>';
         }
     } else {
         $print = '
             <div class="staff_status_approved">
-                <img style="vertical-align: bottom;" src="' . $protocol.$CFG->wwwroot . '/images/checked.gif" /> APPROVED
+                ' . icon("circle-check") . ' APPROVED
             </div>';
     }
     return $print;

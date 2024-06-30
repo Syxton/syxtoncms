@@ -55,7 +55,7 @@ make_setting_input_template||
 																				alert('||warning||');
 																				} else {
 																			}}ifvalidation||
-																				ajaxapi('/ajax/site_ajax.php',
+																				ajaxapi_old('/ajax/site_ajax.php',
 																						'save_settings',
 																						'&settingid=||settingid||' +
 																						'&setting=' + encodeURIComponent($('#||name||').val()),

@@ -31,7 +31,7 @@ global $CFG, $USER, $MYVARS;
 
     $submitted = get_timestamp();
     $SQL = "INSERT INTO news (pageid,featureid,title,caption,content,submitted,userid) VALUES('$pageid', '$featureid', '$title', '$summary', '$html', '$submitted', '" . $USER->userid . "')";
-	if (execute_db_sql($SQL)) { 
+	if (execute_db_sql($SQL)) {
 		create_rss($pageid);
 		create_rss($pageid, $featureid);
 		echo "News posted successfully";
@@ -52,7 +52,7 @@ global $CFG, $USER, $MYVARS;
             "name" => "news_" . $featureid . "_archive_month",
             "id" => "news_" . $featureid . "_archive_month",
             "style" => "font-size:.8em;",
-            "onchange" => 'ajaxapi(\'/features/news/news_ajax.php\',
+            "onchange" => 'ajaxapi_old(\'/features/news/news_ajax.php\',
                                     \'update_archive_articles\',
                                     \'&amp;year=\' + $(\'#news_' . $featureid . '_archive_year\').val() + \'&month=\' + this.value + \'&pageid=' . $pageid . '&featureid=' . $featureid . '\',
                                     function() { simple_display(\'article_span_' . $featureid . '_archive\'); });',
@@ -71,7 +71,7 @@ global $CFG, $USER, $MYVARS;
     $featureid = clean_myvar_opt("featureid", "int", false);
     $month = clean_myvar_opt("month", "int", false);
     $year = clean_myvar_opt("year", "int", false);
-    $userid = is_logged_in() ? $USER->userid : false;	
+    $userid = is_logged_in() ? $USER->userid : false;
     $newsarticles = get_month_news($userid, $year, $month, false, $pageid, $featureid);
     $params = [
         "properties" => [
@@ -96,9 +96,9 @@ global $CFG, $MYVARS;
     $edited = get_timestamp();
     $SQL = "UPDATE news SET content='$html', title='$title', caption='$summary', edited='$edited' WHERE newsid='$newsid'";
 
-    if (execute_db_sql($SQL)) { 
+    if (execute_db_sql($SQL)) {
   		echo "$pageid News edited successfully";
-    } 
+    }
 }
 
 ?>

@@ -77,11 +77,11 @@ editor_box_template||
                     }
                 });' : '') . '
                 editor.on("init", (e) => {
-                    console.log("tinymce init");
+                    //console.log("tinymce init");
                     resize_modal();
                 });
                 editor.on("ResizeContent", (e) => {
-                    console.log("tinymce resized");
+                    //console.log("tinymce resized");
                     resize_modal();
                 })
             },
@@ -114,7 +114,7 @@ defer_script||
 
 print_logout_button_switchback_template||
     <a title="Switch back to: ||lia_name||" href="javascript: void(0)"
-        onclick="ajaxapi('/features/adminpanel/adminpanel_ajax.php',
+        onclick="ajaxapi_old('/features/adminpanel/adminpanel_ajax.php',
                          'logoutas',
                          '',
                          function() {
@@ -132,7 +132,7 @@ print_logout_button_template||
             ||role||
         </span>
         ||profile||
-        <button class="alike" title="Log Out" onclick="ajaxapi('/ajax/site_ajax.php','get_login_box','&amp;logout=1',function() { clearInterval(myInterval); go_to_page(||siteid||);});">||echo icon("right-from-bracket", 2);::none||</button>
+        <button id="logout" class="alike" title="Log Out">||echo icon("right-from-bracket", 2);::none||</button>
     </span>
 </div>
 ||userlinks||

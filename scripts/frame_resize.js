@@ -29,20 +29,20 @@ function resizeIframe(frameid) {
 		if (currentfr.contentDocument) {
 			if (currentfr.contentDocument.body !== null) {
 				let newheight = parseInt(currentfr.contentDocument.body.scrollHeight) + cushion;
-				console.log(frameid + " contentDocument.body.scrollHeight: " + newheight);
+				//console.log(frameid + " contentDocument.body.scrollHeight: " + newheight);
 				currentfr.height = newheight;
 			}
 		} else if (currentfr.Document) {
 			if (currentfr.Document.body !== null) {
 				let newheight = parseInt(currentfr.Document.body.scrollHeight) + cushion;
-				console.log(frameid + " Document.body.scrollHeight: " + newheight);
+				//console.log(frameid + " Document.body.scrollHeight: " + newheight);
 				currentfr.height = newheight;
 			}
 		}
 
 		// Something in the iframe hasn't loaded. wait and try again.
 		if (currentfr.height <= cushion) {
-			console.log(frameid + " Still waiting...");
+			//console.log(frameid + " Still waiting...");
 			setTimeout(function () { resizeIframe(frameid); }, 250);
 			return;
 		}

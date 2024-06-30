@@ -1,5 +1,5 @@
 password_change_reroute_template||
-  <input type="hidden" id="reroute" value="/pages/user.php?action=reset_password&userid=||userid||&alternate=||password||" />
+	<input type="hidden" id="reroute" value="/pages/user.php?action=reset_password&userid=||userid||&alternate=||password||" />
 ||password_change_reroute_template
 
 reset_password_passfail_template||

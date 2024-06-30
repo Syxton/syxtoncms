@@ -58,7 +58,7 @@ function load_user_cookie() {
 global $CFG, $USER;
 	if (!empty($_SESSION['userid'])) { //cookie exists
 		$time = get_timestamp();
-		$advanced_login = !empty($_SESSION["lia_original"]) ? "" : " AND ($time - last_activity < " . $CFG->cookietimeout.")";
+		$advanced_login = !empty($_SESSION["lia_original"]) ? "" : " AND ($time - last_activity < " . $CFG->cookietimeout .")";
 		$SQL = "SELECT * FROM users WHERE userid='" . $_SESSION['userid'] . "' $advanced_login";
 		if ($row = get_db_row($SQL)) { //Get user info from db, load into $USER global
 			$temp = (object)$row;
@@ -102,7 +102,7 @@ global $CFG, $USER;
 		$temp = create_random_password();
 		$key = md5($user['email']) . md5(time());
 		$time = get_timestamp();
-	
+
 		// Create new user
 		$params = [
 			'fname' => $user['fname'],

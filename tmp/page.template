@@ -53,7 +53,7 @@ browse_usersearch_template||
 
 browse_search_template||
 <form onsubmit="$('#loading_overlay_pagesearch').show();
-				ajaxapi('/ajax/page_ajax.php',
+				ajaxapi_old('/ajax/page_ajax.php',
 						'pagesearch',
 						'&searchwords='+encodeURIComponent(document.getElementById('searchbox').value),
 						function() {
@@ -82,7 +82,7 @@ browse_search_template||
 
 browse_user_template||
 	<form onsubmit="$('#loading_overlay_usersearch').show();
-						ajaxapi('/ajax/page_ajax.php',
+						ajaxapi_old('/ajax/page_ajax.php',
 									'usersearch',
 									'&searchwords='+encodeURIComponent(document.getElementById('searchbox').value),
 									function() {
@@ -105,7 +105,7 @@ browse_user_template||
 ||browse_user_template
 
 create_page_validation||
-	ajaxapi('/ajax/page_ajax.php',
+	ajaxapi_old('/ajax/page_ajax.php',
 			'create_page',
 			'&name=' + encodeURIComponent(document.getElementById('name').value) +
 			'&description=' + encodeURIComponent(document.getElementById('summary').value) +
@@ -120,7 +120,7 @@ create_page_validation||
 ||create_page_validation
 
 edit_page_validation||
-	ajaxapi('/ajax/page_ajax.php',
+	ajaxapi_old('/ajax/page_ajax.php',
 			'edit_page',
 			'&name=' + encodeURIComponent(document.getElementById('name').value) +
 			'&description=' + encodeURIComponent(document.getElementById('summary').value) +
@@ -217,9 +217,9 @@ create_edit_links_template||
 			<td>
 				<b>Links Editor Mode</b>
 				&nbsp;&nbsp;
-				<input type="button" value="Add/Remove Links" onclick="ajaxapi('/ajax/page_ajax.php','get_new_link_form','&pageid=||pageid||',function() { simple_display('links_mode_span');});">
+				<input type="button" value="Add/Remove Links" onclick="ajaxapi_old('/ajax/page_ajax.php','get_new_link_form','&pageid=||pageid||',function() { simple_display('links_mode_span');});">
 				&nbsp;
-				<input type="button" value="Sort Links" onclick="ajaxapi('/ajax/page_ajax.php','get_link_manager','&pageid=||pageid||&linkid=||pageid||',function() { simple_display('links_mode_span');  });">
+				<input type="button" value="Sort Links" onclick="ajaxapi_old('/ajax/page_ajax.php','get_link_manager','&pageid=||pageid||&linkid=||pageid||',function() { simple_display('links_mode_span');  });">
 			</td>
 		</tr>
 		</table>
@@ -239,7 +239,7 @@ display_addfeature_template||
 		</td>
 		<td style="vertical-align:top; text-align:left;">
 		<input type="button" value="Add" onclick="if ($('#addfeaturelist').val() != '') {
-													ajaxapi('/ajax/site_ajax.php',
+													ajaxapi_old('/ajax/site_ajax.php',
 															'addfeature',
 															'&feature=' + $('#addfeaturelist').val() +
 															'&pageid=||pageid||',
@@ -324,17 +324,17 @@ pagelinks_template||
 
 pagelinks_links_template||
 	<div class="pagelink" id="link_span_||page[linkid]||">
-		<button class="alike" href="||wwwroot||/index.php?pageid=||page[linkpageid]||">
-		||page[linkdisplay]||
-		</button>
+		<a href="||wwwroot||/index.php?pageid=||page[linkpageid]||">
+			||page[linkdisplay]||
+		</a>
 		||canedit{{
 		<button class="alike" title="Unlink Page" onclick="if (confirm('Are you sure you want to unlink this page?')) {
-																					ajaxapi('/ajax/page_ajax.php',
+																					ajaxapi_old('/ajax/page_ajax.php',
 																							'unlink_page',
 																							'&pageid=||pageid||' +
 																							'&linkpageid=||page[linkpageid]||',
 																							function() {
-																							ajaxapi('/ajax/page_ajax.php',
+																							ajaxapi_old('/ajax/page_ajax.php',
 																									'refresh_page_links',
 																									'&pageid=||pageid||',
 																									function() {
@@ -371,8 +371,8 @@ select_options_template||
 
 setting_change_template||
   ||success{{
-		<img src="||wwwroot||/images/checked.gif" />
+		|| echo icon("circle-check");::none||
 	//OR//
-		<img src="||wwwroot||/images/error.png" />
+		|| echo icon("circle-exclamation");::none||
   }}success||
 ||setting_change_template

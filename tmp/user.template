@@ -57,7 +57,7 @@ new_user_template||
 ||new_user_template
 
 new_user_validation||
-  ajaxapi('/ajax/site_ajax.php',
+  ajaxapi_old('/ajax/site_ajax.php',
 			'add_new_user',
 			'&email=' + encodeURIComponent($('#email').val()) +
 			'&fname=' + encodeURIComponent($('#fname').val()) +
@@ -125,7 +125,7 @@ reset_password_template||
 ||reset_password_template
 
 reset_password_validation_template||
-  ajaxapi('/ajax/site_ajax.php',
+  ajaxapi_old('/ajax/site_ajax.php',
 			'reset_password',
 			'&userid=||userid||' +
 			'&password=' + encodeURIComponent($('#mypassword').val()),
@@ -206,7 +206,7 @@ change_profile_template||
 ||change_profile_template
 
 change_profile_validation_template||
-  ajaxapi('/ajax/site_ajax.php',
+  ajaxapi_old('/ajax/site_ajax.php',
 			'change_profile',
 			'&userid=||user->userid||' +
 			'&password=' + encodeURIComponent($('#mypassword').val()) +
@@ -243,7 +243,7 @@ forgot_password_form_template||
 ||forgot_password_form_template
 
 forgot_password_validation_template||
-  ajaxapi('/ajax/site_ajax.php',
+  ajaxapi_old('/ajax/site_ajax.php',
 			'forgot_password',
 			'&email=' + encodeURIComponent($('#email').val()),
 			function() {

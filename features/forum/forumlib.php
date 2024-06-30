@@ -448,7 +448,7 @@ global $CFG, $USER;
                 $content .= '<span class="forum_post_actions" style="">
                                 <button id="delete_post_' . $post["postid"] . '" class="alike"
                                    onclick="if (confirm(\'Are you sure you want to delete this post?\')) {
-                                                ajaxapi(\'/features/forum/forum_ajax.php\',
+                                                ajaxapi_old(\'/features/forum/forum_ajax.php\',
                                                         \'delete_post\',
                                                         \'&pagenum=' . $pagenum . '&pageid=' . $pageid . '&forumid=' . $forumid . '&catid=' . $catid . '&discussionid=' . $discussionid . '&postid=' . $post["postid"] . '\',
                                                         function() {
@@ -665,7 +665,7 @@ global $USER, $CFG;
         "path" => action_path("forum") . "create_discussion_form&catid=$catid",
         "width" => "750",
         "iframe" => true,
-        "onExit" => "getIntervals()['forum_$forumid'].script();console.log('SUCCESS');",
+        "onExit" => "getIntervals()['forum_$forumid'].script();",
     ];
     return '<div class="forum_newbutton">
             ' . make_modal_links($discussionlinkparam) . '

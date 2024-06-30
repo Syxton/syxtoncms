@@ -38,7 +38,7 @@ add_edit_form||
 				</div>
 					<br />
 					<input class="submit" name="submit" type="submit" value="||button|| Campaign" style="margin: auto;display:block;clear:both;" />
-					<div id="error_div"></div>	
+					<div id="error_div"></div>
 			</fieldset>
 		</form>
 	</div>
@@ -47,7 +47,7 @@ add_edit_form||
 
 back_to_campaign_form||
 	<a class="buttonlike" style="position: absolute;" href="javascript: void(0);"
-		onclick="ajaxapi('/features/donate/donate_ajax.php',
+		onclick="ajaxapi_old('/features/donate/donate_ajax.php',
 								'select_campaign_form',
 								'&featureid=||featureid||&pageid=||pageid||',
 								function() {

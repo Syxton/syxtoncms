@@ -7,11 +7,11 @@ polls_edit_form||
 			<form action="javascript: if (valid_poll_fields()) {
 													let startdateenabled = !$('#startdateenabled').is(':checked') ? '&startdateenabled=0&astartdate=' + $('#savedstartdate').val() : '&startdateenabled=1&startdate=' + $('#startdate').val();
 													let stopdateenabled = !$('#stopdateenabled').is(':checked') ? '&stopdateenabled=0&stopdate=' + $('#savedstopdate').val() : '&stopdateenabled=1&stopdate=' + $('#stopdate').val();
-													ajaxapi('/features/polls/polls_ajax.php',
+													ajaxapi_old('/features/polls/polls_ajax.php',
 															  'poll_submit',
-															  startdateenabled + stopdateenabled + 
-															  '&question=' + $('#polls_question').val() + 
-															  '&answers=' + $('#polls_answers').val() + 
+															  startdateenabled + stopdateenabled +
+															  '&question=' + $('#polls_question').val() +
+															  '&answers=' + $('#polls_answers').val() +
 															  '&pollid=||pollid||',
 													function() {
 														close_modal();

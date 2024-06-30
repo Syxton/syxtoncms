@@ -27,7 +27,7 @@ rss_subscribe_feature_template||
                         </td>
                         <td style="text-align:left; width:50px;">
                             <input type="button" value="Save Changes"
-                                    onclick="ajaxapi('/ajax/rss_ajax.php',
+                                    onclick="ajaxapi_old('/ajax/rss_ajax.php',
                                                     'edit_name',
                                                     '&rssname=' + encodeURIComponent(document.getElementById('rssname').value) +
                                                     '&rssid=' + encodeURIComponent(document.getElementById('rssid').value),
@@ -70,7 +70,7 @@ rss_subscribe_feature_template||
                         </td>
                         <td style="text-align:left; width:50px;">
                             <input type="button" value="Add Feed" \
-                                    onclick="ajaxapi('/ajax/rss_ajax.php',
+                                    onclick="ajaxapi_old('/ajax/rss_ajax.php',
                                                     'add_feed',
                                                     '&key=||userkey||' +
                                                     '&pageid=||pageid||' +

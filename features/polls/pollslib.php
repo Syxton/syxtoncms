@@ -164,7 +164,7 @@ global $CFG;
 		}
 	}
 
-	$form .= '<br /><input type="button" value="Submit" onclick="ajaxapi(\'/features/polls/polls_ajax.php\',\'submitanswer\',\'&pageid=' . $pageid . '&featureid=' . $pollid . '&extra=\' + getRadioValue(\'poll' . $pollid . '\'),function() { simple_display(\'polldiv' . $pollid . '\'); });" /><br /><br /></div></div>';
+	$form .= '<br /><input type="button" value="Submit" onclick="ajaxapi_old(\'/features/polls/polls_ajax.php\',\'submitanswer\',\'&pageid=' . $pageid . '&featureid=' . $pollid . '&extra=\' + getRadioValue(\'poll' . $pollid . '\'),function() { simple_display(\'polldiv' . $pollid . '\'); });" /><br /><br /></div></div>';
 	return $form;
 }
 
@@ -250,9 +250,9 @@ global $CFG, $USER;
 	}
 
 	if ($pollstatus == '1' && user_is_able($USER->userid, "openpolls", $pageid, "polls", $featureid)) { //Poll is created but not opened
-		$returnme .= ' <button class="slide_menu_button alike" title="Open Poll" onclick="if (confirm(\'Are you sure you would like to open this poll?  Once a poll is opened, it cannot be edited except by site admins.\')) { ajaxapi(\'/features/polls/polls_ajax.php\',\'openpoll\',\'&pageid=' . $pageid . '&featureid=' . $featureid . '&extra=\',function() { simple_display(\'polldiv' . $featureid . '\'); ajaxapi(\'/features/polls/polls_ajax.php\',\'pollstatuspic\',\'&pageid=' . $pageid . '&featureid=' . $featureid . '&extra=open\',function() { simple_display(\'pollstatus' . $featureid . '\'); });});} ">' . icon("circle-play") . '</button> ';
+		$returnme .= ' <button class="slide_menu_button alike" title="Open Poll" onclick="if (confirm(\'Are you sure you would like to open this poll?  Once a poll is opened, it cannot be edited except by site admins.\')) { ajaxapi_old(\'/features/polls/polls_ajax.php\',\'openpoll\',\'&pageid=' . $pageid . '&featureid=' . $featureid . '&extra=\',function() { simple_display(\'polldiv' . $featureid . '\'); ajaxapi_old(\'/features/polls/polls_ajax.php\',\'pollstatuspic\',\'&pageid=' . $pageid . '&featureid=' . $featureid . '&extra=open\',function() { simple_display(\'pollstatus' . $featureid . '\'); });});} ">' . icon("circle-play") . '</button> ';
 	} elseif ($pollstatus == '2' && user_is_able($USER->userid, "closepolls", $pageid, "polls", $featureid)) { //Poll is opened
-		$returnme .= ' <button class="slide_menu_button alike" title="Close Poll" onclick="if (confirm(\'Are you sure you would like to close this poll?  Once a poll is closed, it cannot be reopened.\')) { ajaxapi(\'/features/polls/polls_ajax.php\',\'closepoll\',\'&pageid=' . $pageid . '&featuretype=polls&functionname=closepoll&featureid=' . $featureid . '&extra=\',function() { simple_display(\'polldiv' . $featureid . '\'); ajaxapi(\'/features/polls/polls_ajax.php\',\'pollstatuspic\',\'&pageid=' . $pageid . '&featureid=' . $featureid . '&extra=close\',function() { simple_display(\'pollstatus' . $featureid . '\'); });});}">' . icon("circle-stop") . '</button> ';
+		$returnme .= ' <button class="slide_menu_button alike" title="Close Poll" onclick="if (confirm(\'Are you sure you would like to close this poll?  Once a poll is closed, it cannot be reopened.\')) { ajaxapi_old(\'/features/polls/polls_ajax.php\',\'closepoll\',\'&pageid=' . $pageid . '&featuretype=polls&functionname=closepoll&featureid=' . $featureid . '&extra=\',function() { simple_display(\'polldiv' . $featureid . '\'); ajaxapi_old(\'/features/polls/polls_ajax.php\',\'pollstatuspic\',\'&pageid=' . $pageid . '&featureid=' . $featureid . '&extra=close\',function() { simple_display(\'pollstatus' . $featureid . '\'); });});}">' . icon("circle-stop") . '</button> ';
 	}
 
 	$returnme = empty($returnme) ? '' : '<span class="dynamicbuttons" id="pollstatus' . $featureid . '">' . $returnme . '</span>';

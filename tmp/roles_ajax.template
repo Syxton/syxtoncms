@@ -2,7 +2,7 @@ name_search_template||
   ||refreshroles{{
         <div style="width:100%; text-align:center;">
             <select size="10" width="100%" style="width: 100%; font-size:.85em;" name="userid" id="||type||user_select" onclick="if($('#||type||user_select').val() > 0) {
-                                                                                                                                    ajaxapi('/ajax/roles_ajax.php',
+                                                                                                                                    ajaxapi_old('/ajax/roles_ajax.php',
                                                                                                                                             'refresh_user_roles',
                                                                                                                                             '&pageid=||pageid||' +
                                                                                                                                             '&userid=' + $('#||type||user_select').val(),
@@ -13,7 +13,7 @@ name_search_template||
         //OR//
         <div style="width:100%; text-align:center;">
             <select size="10" width="100%" style="width: 100%; font-size:.85em;" name="userid" id="||type||user_select" onclick="if($('#||type||user_select').val() > 0) {
-                                                                                                                                    ajaxapi('/ajax/roles_ajax.php',
+                                                                                                                                    ajaxapi_old('/ajax/roles_ajax.php',
                                                                                                                                             'refresh_user_abilities',
                                                                                                                                             '&pageid=||pageid||' +
                                                                                                                                             '&feature=||feature||' +
@@ -39,7 +39,7 @@ refresh_group_users_template||
   <strong>Group: ||groupname||</strong>
   <span style="float:right">
     ||canmanage{{
-        <button class="alike" onclick="ajaxapi('/ajax/roles_ajax.php',
+        <button class="alike" onclick="ajaxapi_old('/ajax/roles_ajax.php',
                                                 'create_edit_group_form',
                                                 '&pageid=||pageid||' +
                                                 '&groupid=||groupid||' +
@@ -52,7 +52,7 @@ refresh_group_users_template||
         </button>
         &nbsp;
         <button class="alike" onclick="if (confirm('Are you sure you wish to delete this group?')) {
-                                            ajaxapi('/ajax/roles_ajax.php',
+                                            ajaxapi_old('/ajax/roles_ajax.php',
                                                     'delete_group',
                                                     '&pageid=||pageid||' +
                                                     '&groupid=||groupid||' +
@@ -71,7 +71,7 @@ refresh_group_users_template||
         ||options||
     </select>
     ||canmanage{{
-        <a href="javascript: void(0);" onclick="ajaxapi('/ajax/roles_ajax.php',
+        <a href="javascript: void(0);" onclick="ajaxapi_old('/ajax/roles_ajax.php',
                                                         'manage_group_users_form',
                                                         '&pageid=||pageid||' +
                                                         '&groupid=||groupid||' +
@@ -88,7 +88,7 @@ refresh_group_users_template||
 
 refresh_manage_groups_template||
     <strong>Group: ||groupname||</strong>
-    <form onsubmit="ajaxapi('/ajax/roles_ajax.php',
+    <form onsubmit="ajaxapi_old('/ajax/roles_ajax.php',
                             'add_to_group_search',
                             '&pageid=||pageid||' +
                             '&groupid=||groupid||' +
@@ -109,7 +109,7 @@ refresh_manage_groups_template||
         </select>
     </div>
     <a style="float:right;" class="imgandlink" href="javascript: void(0);" onclick="if ($('#add_user_select').val() > 0) {
-                                                                                        ajaxapi('/ajax/roles_ajax.php',
+                                                                                        ajaxapi_old('/ajax/roles_ajax.php',
                                                                                                 'add_group_user',
                                                                                                 '&userid=' + $('#add_user_select').val() +
                                                                                                 '&pageid=||pageid||' +
@@ -119,7 +119,7 @@ refresh_manage_groups_template||
                                                                                                 function() {
                                                                                                 simple_display('per_group_display_div');
                                                                                                 });
-                                                                                        ajaxapi('/ajax/roles_ajax.php',
+                                                                                        ajaxapi_old('/ajax/roles_ajax.php',
                                                                                                 'refresh_groups_list',
                                                                                                 '&pageid=||pageid||' +
                                                                                                 '&groupid=||groupid||' +
@@ -140,7 +140,7 @@ refresh_manage_groups_template||
         </select>
     </div>
     <a style="float:right;" class="imgandlink" href="javascript: void(0);" onclick="if ($('#remove_user_select').val() > 0) {
-                                                                                        ajaxapi('/ajax/roles_ajax.php',
+                                                                                        ajaxapi_old('/ajax/roles_ajax.php',
                                                                                                 'remove_group_user',
                                                                                                 '&userid=' + $('#remove_user_select').val() +
                                                                                                 '&pageid=||pageid||' +
@@ -150,7 +150,7 @@ refresh_manage_groups_template||
                                                                                                 function() {
                                                                                                 simple_display('per_group_display_div');
                                                                                                 });
-                                                                                        ajaxapi('/ajax/roles_ajax.php',
+                                                                                        ajaxapi_old('/ajax/roles_ajax.php',
                                                                                                 'refresh_groups_list',
                                                                                                 '&pageid=||pageid||' +
                                                                                                 '&groupid=||groupid||' +
@@ -190,7 +190,7 @@ create_edit_group_form_template||
     <tr>
         <td colspan="2" style="text-align:right;">
         <a class="imgandlink" href="javascript: void(0);" onclick="if (trim($('#per_group_name').val()).length > 0) {
-                                                                                            ajaxapi('/ajax/roles_ajax.php',
+                                                                                            ajaxapi_old('/ajax/roles_ajax.php',
                                                                                                     'save_group',
                                                                                                     '&name=' + $('#per_group_name').val() +
                                                                                                     '&parent=' + $('#per_group_edit_group_select').val() +
@@ -222,7 +222,7 @@ refresh_user_roles_template||
         ||options||
         </select>
         &nbsp;
-        <input type="button" value="Assign" onclick="ajaxapi('/ajax/roles_ajax.php',
+        <input type="button" value="Assign" onclick="ajaxapi_old('/ajax/roles_ajax.php',
                                                              'assign_role',
                                                              '&pageid=||pageid||' +
                                                              '&userid=||userid||' +
@@ -230,7 +230,7 @@ refresh_user_roles_template||
                                                              function() {
                                                             simple_display('per_page_saved_div1');
                                                             simple_display('per_page_saved_div2');
-                                                            ajaxapi('/ajax/roles_ajax.php',
+                                                            ajaxapi_old('/ajax/roles_ajax.php',
                                                                     'refresh_user_roles',
                                                                     '&pageid=||pageid||' +
                                                                     '&userid=' + $('#per_page_user_select').val(),

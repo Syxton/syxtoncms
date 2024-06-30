@@ -224,11 +224,11 @@ global $CFG;
 			"properties" => [
 				"name" => "news_" . $featureid . "_archive_year",
 				"id" => "news_" . $featureid . "_archive_year",
-				"onchange" => 'ajaxapi(\'/features/news/news_ajax.php\',
+				"onchange" => 'ajaxapi_old(\'/features/news/news_ajax.php\',
 										\'update_archive_months\',
 										\'&year=\' + this.value + \'&pageid=' . $pageid . '&featureid=' . $featureid . '\',
 										function() { simple_display(\'month_span_' . $featureid . '_archive\');});
-								ajaxapi(\'/features/news/news_ajax.php\',
+								ajaxapi_old(\'/features/news/news_ajax.php\',
 										\'update_archive_articles\',
 										\'&year=\' + $(\'#news_' . $featureid . '_archive_year\').val() + \'&month=\' + $(\'#news_' . $featureid . '_archive_month\').val() + \'&pageid=' . $pageid . '&featureid=' . $featureid . '\',
 										function() { simple_display(\'article_span_' . $featureid . '_archive\'); });',
@@ -246,7 +246,7 @@ global $CFG;
 			"properties" => [
 				"name" => "news_" . $featureid . "_archive_month",
 				"id" => "news_" . $featureid . "_archive_month",
-				"onchange" => 'ajaxapi(\'/features/news/news_ajax.php\',
+				"onchange" => 'ajaxapi_old(\'/features/news/news_ajax.php\',
 										\'update_archive_articles\',
 										\'&year=\' + $(\'#news_' . $featureid . '_archive_year\').val() + \'&month=\' + this.value + \'&pageid=' . $pageid . '&featureid=' . $featureid . '\',
 										function() { simple_display(\'article_span_' . $featureid . '_archive\'); });',
@@ -664,7 +664,7 @@ global $CFG, $USER;
         $returnme .= user_is_able($USER->userid, "addnews", $pageid) ? make_modal_links(["title"=> "Add News Item", "path" => action_path("news") . "addeditnews&pageid=$pageid&featureid=$featureid", "iframe" => true, "refresh" => "true", "width" => "850", "height" => "600", "icon" => icon("plus"), "class" => "slide_menu_button"]) : '';
 	} else { // Individual news item.
         $returnme .= user_is_able($USER->userid, "editnews", $pageid) ? make_modal_links(["title"=> "Edit News Item", "path" => action_path("news") . "addeditnews&pageid=$pageid&newsid=$featureid", "iframe" => true, "refresh" => "true", "width" => "850", "height" => "600", "icon" => icon("pencil"), "class" => "slide_menu_button"]) : '';
-        $returnme .= user_is_able($USER->userid, "deletenews", $pageid) ? '<button class="slide_menu_button alike" title="Delete News Item" onclick="if (confirm(\'Are you sure you want to delete this?\')) { ajaxapi(\'/ajax/site_ajax.php\',\'delete_feature\',\'&pageid=' . $pageid . '&featuretype=' . $featuretype . '&subid=' . $featureid . '\',function() { update_login_contents(' . $pageid . ');});}">' . icon("trash") . '</button>' : '';
+        $returnme .= user_is_able($USER->userid, "deletenews", $pageid) ? '<button class="slide_menu_button alike" title="Delete News Item" onclick="if (confirm(\'Are you sure you want to delete this?\')) { ajaxapi_old(\'/ajax/site_ajax.php\',\'delete_feature\',\'&pageid=' . $pageid . '&featuretype=' . $featuretype . '&subid=' . $featureid . '\',function() { go_to_page(' . $pageid . ');});}">' . icon("trash") . '</button>' : '';
     }
 	return $returnme;
 }

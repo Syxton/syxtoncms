@@ -9,7 +9,6 @@ var myGlobals = {
 };
 
 var xmlHttp = createXMLHttpRequest(); // OLD XMLHTTP OBJECT THAT I'M TRYING NOT TO USE ANYMORE.
-var myInterval; // OLD interval object that I'M TRYING NOT TO USE ANYMORE.
 
 if (document.layers) {
     document.captureEvents(Event.MOUSEOVER | Event.MOUSEOUT)
@@ -83,7 +82,7 @@ function createXMLHttpRequest() {
     return xmlHttp;
 }
 
-function ajaxapi(script, action, param, display, async) {
+function ajaxapi_old(script, action, param, display, async) {
     if (!ajaxready(script, action, param, display, async)) {
         return false;
     };
@@ -125,7 +124,7 @@ function ajaxready(script, action, param, display, async) {
             return true;
         }
         setTimeout(function() {
-            ajaxapi(script, action, param, display, async);
+            ajaxapi_old(script, action, param, display, async);
         }, 500); // if there is an ajax conflict.  Wait 1 second before trying again.
         return false;
     }
@@ -725,67 +724,34 @@ function getQueryVariable(variable) {
     return false;
 }
 
-function login_display(reroute) {
-    var returned = trim(xmlHttp.responseText).split("**");
-    if (returned[0] == "false") { //login failed
-        document.getElementById("login_box_error").innerHTML = returned[1];
+function verify_login(data) {
+    let message = JSON.parse(data.message);
+    let status = message.status;
+    if (status === "failed") {
+        $("#login_box_error").html(message.content);
         return false;
-    } else if (returned[1] != '') { //login with a reroute
-        document.getElementById("login_box_error").innerHTML = returned[1];
-        reroute.value = true;
-        return true;
-    } else if (returned[0] == 'true') {
-        return true;
-    } //regular login success
-}
+    }
 
-function login(username, password) {
-    var reroute = new Object();
-    reroute.value = document.getElementById("reroute") ? true : false;
-    ajaxapi('/ajax/site_ajax.php', 'login', "&username=" + encodeURIComponent(username) + "&password=" + password, function() {
-        if (login_display(reroute)) {
-            if (!reroute.value) {
-                pageid = getCookie("pageid");
-                if (pageid && pageid.isNumeric) {
-                    go_to_page(pageid);
-                } else {
-                    go_to_page(1);
-                }
-            } else {
-                window.location = WWW_ROOT + document.getElementById("reroute").value;
-            }
-        }
-    });
-}
+    if (status === "reroute") {
+        $("#login_box_error").html(message.content);
+        window.location = WWW_ROOT + $("#reroute").val();
+        return;
+    }
 
-//print function
-function update_login_display(pageid) {
-    var returned = trim(xmlHttp.responseText).split("**");
-    if (returned[0] == "true") {
-        if (returned[1] !== "check") {
+    if (status === "success") {
+        let pageid = getCookie("pageid");
+        if (pageid && pageid.isNumeric) {
             go_to_page(pageid);
-        }
-    } else {
-        if (document.getElementById("loggedin")) {
+        } else {
             go_to_page(1);
         }
     }
 }
 
-//checks to see if user should still be logged in
-function update_login_contents(pageid, check) {
-    if (check == "check") {
-        ajaxapi('/ajax/site_ajax.php', 'update_login_contents', '&pageid=0&check=1', function() {
-            if (xmlHttp.readyState == 4) {
-                update_login_display(pageid);
-            }
-        }, true);
-    } else {
-        ajaxapi('/ajax/site_ajax.php', 'update_login_contents', '&pageid=' + pageid, function() {
-            if (xmlHttp.readyState == 4) {
-                update_login_display(pageid);
-            }
-        }, true);
+function login_check_response(data) {
+    let message = JSON.parse(data.message);
+    if (message.status !== "active" && $("#loggedin").length) {
+        go_to_page(message.pageid);
     }
 }
 
@@ -846,7 +812,7 @@ function preloadImg(image) {
 }
 
 function getSession(cname) {
-    ajaxapi('/ajax/site_ajax.php', 'get_cookie', '&cname=' + cname, function() {
+    ajaxapi_old('/ajax/site_ajax.php', 'get_cookie', '&cname=' + cname, function() {
         if (xmlHttp.readyState == 4) {
             return xmlHttp.responseText;
         }

@@ -498,9 +498,9 @@ global $CFG, $USER;
     if ($perpage) {
         $total = get_db_count("SELECT * FROM html_comments WHERE htmlid = '$htmlid'");
         $searchvars = get_search_page_variables($total, $perpage, $pagenum);
-        $prev = $searchvars["prev"] ? '<a href="javascript: $(\'#loading_overlay_html_' . $htmlid . '\').show(); ajaxapi(\'/features/html/html_ajax.php\',\'commentspage\',\'&pagenum=' . ($pagenum - 1) . '&perpage=' . $perpage . '&pageid=' . $pageid . '&htmlid=' . $htmlid . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer_html_' . $htmlid . '\'); $(\'#loading_overlay_html_' . $htmlid . '\').hide(); }}, true); " onmouseup="this.blur()">Previous</a>' : "";
+        $prev = $searchvars["prev"] ? '<a href="javascript: $(\'#loading_overlay_html_' . $htmlid . '\').show(); ajaxapi_old(\'/features/html/html_ajax.php\',\'commentspage\',\'&pagenum=' . ($pagenum - 1) . '&perpage=' . $perpage . '&pageid=' . $pageid . '&htmlid=' . $htmlid . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer_html_' . $htmlid . '\'); $(\'#loading_overlay_html_' . $htmlid . '\').hide(); }}, true); " onmouseup="this.blur()">Previous</a>' : "";
           $info = $searchvars["info"];
-          $next = $searchvars["next"] ? '<a href="javascript: $(\'#loading_overlay_html_' . $htmlid . '\').show(); ajaxapi(\'/features/html/html_ajax.php\',\'commentspage\',\'&pagenum=' . ($pagenum + 1) . '&perpage=' . $perpage . '&pageid=' . $pageid . '&htmlid=' . $htmlid . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer_html_' . $htmlid . '\'); $(\'#loading_overlay_html_' . $htmlid . '\').hide(); }}, true);" onmouseup="this.blur()">Next</a>' : "";
+          $next = $searchvars["next"] ? '<a href="javascript: $(\'#loading_overlay_html_' . $htmlid . '\').show(); ajaxapi_old(\'/features/html/html_ajax.php\',\'commentspage\',\'&pagenum=' . ($pagenum + 1) . '&perpage=' . $perpage . '&pageid=' . $pageid . '&htmlid=' . $htmlid . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer_html_' . $htmlid . '\'); $(\'#loading_overlay_html_' . $htmlid . '\').hide(); }}, true);" onmouseup="this.blur()">Next</a>' : "";
           $arrows = '<table style="width:100%;"><tr><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><br /><br />';
         $limit = "LIMIT " .$searchvars["firstonpage"] . "," . $perpage;
     } else {
@@ -655,7 +655,7 @@ global $CFG, $USER;
 
     $returnme = "";
     if ($blog && !empty($feature_abilities->addfeature->allow)) {
-        $returnme .= ' <a class="slide_menu_button" title="Add Blog Edition" onclick="if (confirm(\'Do you want to make a new blog edition?  This will move the current blog to the Blog Locker.\')) { ajaxapi(\'/features/html/html_ajax.php\',\'new_edition\',\'&pageid=' . $pageid . '&htmlid=' . $featureid . '\',function() { refresh_page(); });}">' . icon("plus") . '</a> '; }
+        $returnme .= ' <a class="slide_menu_button" title="Add Blog Edition" onclick="if (confirm(\'Do you want to make a new blog edition?  This will move the current blog to the Blog Locker.\')) { ajaxapi_old(\'/features/html/html_ajax.php\',\'new_edition\',\'&pageid=' . $pageid . '&htmlid=' . $featureid . '\',function() { refresh_page(); });}">' . icon("plus") . '</a> '; }
 
     if (!empty($html_abilities->edithtml->allow)) {
         $returnme .= make_modal_links([
@@ -670,7 +670,7 @@ global $CFG, $USER;
         ]);
     }
 
-    if (!$blog && user_is_able($USER->userid, "addtolocker", $pageid)) { $returnme .= '  <a class="slide_menu_button" title="Move to Blog Locker" onclick="ajaxapi(\'/ajax/site_ajax.php\',\'change_locker_state\',\'&pageid=' . $pageid . '&featuretype=' . $featuretype . '&featureid=' . $featureid . '&direction=locker\',function() { refresh_page(); });">' . icon("box-archive") . '</a> '; }
+    if (!$blog && user_is_able($USER->userid, "addtolocker", $pageid)) { $returnme .= '  <a class="slide_menu_button" title="Move to Blog Locker" onclick="ajaxapi_old(\'/ajax/site_ajax.php\',\'change_locker_state\',\'&pageid=' . $pageid . '&featuretype=' . $featuretype . '&featureid=' . $featureid . '&direction=locker\',function() { refresh_page(); });">' . icon("box-archive") . '</a> '; }
     return $returnme;
 }
 

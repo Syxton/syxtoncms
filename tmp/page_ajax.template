@@ -6,7 +6,7 @@ search_template||
         <td style="width:25%;text-align:left;">
             ||isprev{{
             <a href="javascript: void(0);" onclick="$('#loading_overlay_||searchtype||').show();
-                                                    ajaxapi('/ajax/page_ajax.php',
+                                                    ajaxapi_old('/ajax/page_ajax.php',
                                                             '||searchtype||',
                                                             '&pagenum=||prev_pagenum||' +
                                                             '&searchwords=' + encodeURIComponent('||searchwords||'),
@@ -27,7 +27,7 @@ search_template||
         <td style="width:25%;text-align:right;">
             ||isnext{{
             <a href="javascript: void(0);" onclick="$('#loading_overlay_||searchtype||').show();
-                                                    ajaxapi('/ajax/page_ajax.php',
+                                                    ajaxapi_old('/ajax/page_ajax.php',
                                                             '||searchtype||',
                                                             '&pagenum=||next_pagenum||' +
                                                             '&searchwords=' + encodeURIComponent('||searchwords||'),
@@ -82,7 +82,7 @@ search_pages_buttons_template||
   <span id="addremove_||pageid||">
   ||must_request{{
     ||alreadyrequested{{
-        <button class="alike" title="Remove Request" onclick="ajaxapi('/ajax/page_ajax.php',
+        <button class="alike" title="Remove Request" onclick="ajaxapi_old('/ajax/page_ajax.php',
                                                         'remove_request',
                                                         '&pageid=||pageid||',
                                                         function() {
@@ -91,7 +91,7 @@ search_pages_buttons_template||
             || echo icon("ban");::none||
         </button>
     //OR//
-        <button class="alike" title="Send Request" onclick="ajaxapi('/ajax/page_ajax.php',
+        <button class="alike" title="Send Request" onclick="ajaxapi_old('/ajax/page_ajax.php',
                                                         'add_request',
                                                         '&pageid=||pageid||',
                                                         function() {
@@ -103,14 +103,14 @@ search_pages_buttons_template||
   //OR//
     ||can_add_remove{{
         ||isadd{{
-        <button class="alike" title="Add Page" onclick="ajaxapi('/ajax/page_ajax.php',
+        <button class="alike" title="Add Page" onclick="ajaxapi_old('/ajax/page_ajax.php',
                                                         'change_subscription',
                                                         '&pagenum=||pagenum||' +
                                                         '&pageid=||pageid||',
                                                         function() {
                                                             simple_display('addremove_||pageid||');
                                                         });
-                                                ajaxapi('/ajax/page_ajax.php',
+                                                ajaxapi_old('/ajax/page_ajax.php',
                                                         'pagesearch',
                                                         '&pagenum=||pagenum||' +
                                                         '&searchwords=' + encodeURIComponent('||searchwords||'),
@@ -121,14 +121,14 @@ search_pages_buttons_template||
         </button>
         //OR//
         <button class="alike" title="Remove Page" onclick="if (confirm('Are you sure you want to remove yourself from this page? \n You might not be able to get into this page again.')) {
-                                                     ajaxapi('/ajax/page_ajax.php',
+                                                     ajaxapi_old('/ajax/page_ajax.php',
                                                              'change_subscription',
                                                              '&pagenum=||pagenum||' +
                                                              '&pageid=||pageid||',
                                                              function() {
                                                                 simple_display('addremove_||pageid||');
                                                              });
-                                                     ajaxapi('/ajax/page_ajax.php',
+                                                     ajaxapi_old('/ajax/page_ajax.php',
                                                              'pagesearch',
                                                              '&pagenum=||pagenum||' +
                                                              '&searchwords=' + encodeURIComponent('||searchwords||'),
@@ -143,7 +143,7 @@ search_pages_buttons_template||
   }}must_request||
   ||admin{{
     <button class="alike" title="Delete Page" onclick="if (confirm('Are you sure you want to delete this page completely? \n There is no going back from this!')) {
-                                                ajaxapi('/ajax/page_ajax.php',
+                                                ajaxapi_old('/ajax/page_ajax.php',
                                                         'delete_page_ajax',
                                                         '&pagenum=||pagenum||' +
                                                         '&pageid=||pageid||',
@@ -172,7 +172,7 @@ search_pages_link_template||
 
 search_users_buttons_template||
     <span id="pagelist_||user[userid]||">
-        <button class="alike" title="Invite" onclick="ajaxapi('/ajax/page_ajax.php',
+        <button class="alike" title="Invite" onclick="ajaxapi_old('/ajax/page_ajax.php',
                                                         'get_inviteable_pages',
                                                         '&inviter=||userid||' +
                                                         '&invitee=||user[userid]||',
@@ -192,7 +192,7 @@ new_link_form_template||
         Link Page Search:
     </td>
     <td class="field_input">
-        <form onsubmit="ajaxapi('/ajax/page_ajax.php',
+        <form onsubmit="ajaxapi_old('/ajax/page_ajax.php',
                                 'linkpagesearch',
                                 '&pageid=||pageid||' +
                                 '&searchwords=' + encodeURIComponent($('#searchbox').val()),
@@ -215,14 +215,14 @@ search_linkpagesearch_buttons_template||
   <span id="addremove_||pageid||">
   ||alreadylinked{{
     <button class="alike" title="Add Page Link" onclick="||confirmopen{{ if (confirm('This linked page is not viewable to everyone and will only show up for people who have viewing rights.')) { }}confirmopen||
-                                                                ajaxapi('/ajax/page_ajax.php',
+                                                                ajaxapi_old('/ajax/page_ajax.php',
                                                                         'make_page_link',
                                                                         '&pageid=||pageid||' +
                                                                         '&linkpageid=||linkpageid||',
                                                                         function() {
                                                                         simple_display('addremove_||pageid||');
                                                                         });
-                                                                ajaxapi('/ajax/page_ajax.php',
+                                                                ajaxapi_old('/ajax/page_ajax.php',
                                                                         'linkpagesearch',
                                                                         '&pageid=||pageid||' +
                                                                         '&pagenum=||pagenum||' +
@@ -234,14 +234,14 @@ search_linkpagesearch_buttons_template||
         ||echo icon("plus");::none||
     </button>
     //OR//
-    <button class="alike" title="Remove Page Link" onclick="ajaxapi('/ajax/page_ajax.php',
+    <button class="alike" title="Remove Page Link" onclick="ajaxapi_old('/ajax/page_ajax.php',
                                                     'unlink_page',
                                                     '&pageid=||pageid||' +
                                                     '&linkpageid=||linkpageid||',
                                                     function() {
                                                         simple_display('addremove_||pageid||');
                                                     });
-                                            ajaxapi('/ajax/page_ajax.php',
+                                            ajaxapi_old('/ajax/page_ajax.php',
                                                      'linkpagesearch',
                                                      '&pageid=||pageid||' +
                                                      '&pagenum=||pagenum||' +
@@ -257,7 +257,7 @@ search_linkpagesearch_buttons_template||
 
 get_inviteable_button_template||
   onchange="if ($('#page_invite_list').val() != '' && confirm('Do you wish to send an invitation to this user?')) {
-                ajaxapi('/ajax/page_ajax.php',
+                ajaxapi_old('/ajax/page_ajax.php',
                         'invite_user',
                         '&pageid=' + $('#page_invite_list').val() +
                         '&userid=||invitee||',
@@ -265,7 +265,7 @@ get_inviteable_button_template||
                         simple_display('pagelist_||invitee||');
                         });
             } else {
-                ajaxapi('/ajax/site_ajax.php',
+                ajaxapi_old('/ajax/site_ajax.php',
                         'donothing',
                         '',
                         function() {
@@ -277,14 +277,14 @@ get_inviteable_button_template||
 change_subscription_template||
   ||subscription_added{{
     <a href="javascript: void(0);" onclick="if(confirm('Are you sure you want to remove yourself from this page? \n You might not be able to get into this page again.')) {
-                                                ajaxapi('/ajax/page_ajax.php',
+                                                ajaxapi_old('/ajax/page_ajax.php',
                                                         'change_subscription',
                                                         '&pagenum=||pagenum||' +
                                                         '&pageid=||pageid||',
                                                         function() {
                                                         simple_display('addremove_||pageid||');
                                                         });
-                                                ajaxapi('/ajax/page_ajax.php',
+                                                ajaxapi_old('/ajax/page_ajax.php',
                                                         'pagesearch',
                                                         '&pagenum=||pagenum||' +
                                                         '&searchwords=' + encodeURIComponent($('#searchwords').val()),
@@ -296,14 +296,14 @@ change_subscription_template||
         </a>
     //OR//
     ||can_add{{
-        <button class="alike" title="Add Page" onclick="ajaxapi('/ajax/page_ajax.php',
+        <button class="alike" title="Add Page" onclick="ajaxapi_old('/ajax/page_ajax.php',
                                                         'change_subscription',
                                                         '&pagenum=||pagenum||' +
                                                         '&pageid=||pageid||',
                                                         function() {
                                                         simple_display('addremove_||pageid||');
                                                         });
-                                             ajaxapi('/ajax/page_ajax.php',
+                                             ajaxapi_old('/ajax/page_ajax.php',
                                                      'pagesearch',
                                                      '&pagenum=||pagenum||' +
                                                      '&searchwords=' + encodeURIComponent($('#searchwords').val()),
@@ -313,7 +313,7 @@ change_subscription_template||
             ||echo icon("plus");::none||
         </button>
         //OR//
-        <button class="alike" title="Send Request" onclick="ajaxapi('/ajax/page_ajax.php',
+        <button class="alike" title="Send Request" onclick="ajaxapi_old('/ajax/page_ajax.php',
                                                         'add_request',
                                                         '&pageid=||pageid||',
                                                         function() {
@@ -327,7 +327,7 @@ change_subscription_template||
 
 add_remove_request_template||
   ||request_added{{
-        <button class="alike" title="Remove Request" onclick="ajaxapi('/ajax/page_ajax.php',
+        <button class="alike" title="Remove Request" onclick="ajaxapi_old('/ajax/page_ajax.php',
                                                         'remove_request',\
                                                         &pageid=||pageid||',
                                                         function() {
@@ -336,7 +336,7 @@ add_remove_request_template||
             ||echo icon("ban");::none||
         </button>
     //OR//
-        <button class="alike" title="Send Request" onclick="ajaxapi('/ajax/page_ajax.php',
+        <button class="alike" title="Send Request" onclick="ajaxapi_old('/ajax/page_ajax.php',
                                                         'add_request',
                                                         '&pageid=||pageid||',
                                                         function() {
@@ -377,14 +377,14 @@ sortable_links_template||
                                                                                             }" />
     <input type="hidden" id="linkdisplay||order||_hidden" value="||linkdisplay||" />&nbsp;
     ||notfirstrow{{
-        <button class="alike" title="Move Up" onclick="ajaxapi('/ajax/page_ajax.php',
+        <button class="alike" title="Move Up" onclick="ajaxapi_old('/ajax/page_ajax.php',
                                                         'move_link',
                                                         '&pageid=||pageid||' +
                                                         '&direction=up' +
                                                         '&linkid=||linkid||' +
                                                         '&linkdisplay=' + encodeURIComponent($('#linkdisplay||order||').val()),
                                                         function() {
-                                                        ajaxapi('/ajax/page_ajax.php',
+                                                        ajaxapi_old('/ajax/page_ajax.php',
                                                                 'get_link_manager',
                                                                 '&pageid=||pageid||' +
                                                                 '&linkid=||linkid||',
@@ -396,14 +396,14 @@ sortable_links_template||
         </button>
     }}notfirstrow||
     ||notlastrow{{
-        <button class="alike" title="Move Down" onclick="ajaxapi('/ajax/page_ajax.php',
+        <button class="alike" title="Move Down" onclick="ajaxapi_old('/ajax/page_ajax.php',
                                                         'move_link',
                                                         '&pageid=||pageid||' +
                                                         '&direction=down' +
                                                         '&linkid=||linkid||' +
                                                         '&linkdisplay=' + encodeURIComponent($('#linkdisplay||order||').val()),
                                                         function() {
-                                                        ajaxapi('/ajax/page_ajax.php',
+                                                        ajaxapi_old('/ajax/page_ajax.php',
                                                                 'get_link_manager',
                                                                 '&pageid=||pageid||' +
                                                                 '&linkid=||linkid||',
@@ -416,7 +416,7 @@ sortable_links_template||
     }}notlastrow||
         &nbsp;
         <span id="linkdisplay||order||_save" style="display:none;">
-        <input type="button" value="Save Name" style="font-size:.75em;display:inline;" onclick="ajaxapi('/ajax/page_ajax.php',
+        <input type="button" value="Save Name" style="font-size:.75em;display:inline;" onclick="ajaxapi_old('/ajax/page_ajax.php',
                                                                                                         'rename_link',
                                                                                                         '&linkid=||linkid||' +
                                                                                                         '&linkdisplay=' + encodeURIComponent($('#linkdisplay||order||').val()),

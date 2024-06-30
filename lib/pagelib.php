@@ -195,6 +195,7 @@ global $CFG, $LOADAJAX;
         $id = $params["id"] ?? false;
         $data = $params["data"] ?? [];
         $if = $params["if"] ?? false;
+        $else = $params["else"] ?? false;
         $display = $params["display"] ?? false;
         $classes = $params["classes"] ?? "ajaxapi inactive";
 
@@ -226,7 +227,8 @@ global $CFG, $LOADAJAX;
         $always = ".always(function(data) { $always $(this).blur();})";
 
         $if = $if ? "if ($if) {" : "";
-        $ifclose = $if ? "}" : "";
+        $else = $else ? "else { $else }" : "";
+        $ifclose = $if ? "} $else" : "";
 
         $data["timestamp"] = "js|| Date.now() ||js";
         $data["ajaxapi"] = 1;
@@ -827,12 +829,21 @@ global $CFG, $USER;
     $rolename = get_db_field("display_name", "roles", "roleid = " . user_role($USER->userid, $pageid));
 
     $params = [
-        "siteid" => $CFG->SITEID,
         "role" => $rolename,
         "logoutas" => $logoutas,
         "profile" => $profile,
         "userlinks" => get_user_links($USER->userid, $pageid),
     ];
+
+    ajaxapi([
+        'id'     => "logout",
+        'url'    => '/ajax/site_ajax.php',
+        'data'   => [
+            'action' => 'get_login_box',
+            'logout' => 1,
+        ],
+        'ondone' => 'killInterval("logincheck"); go_to_page(' . $CFG->SITEID . ');',
+    ]);
     return fill_template("tmp/pagelib.template", "print_logout_button_template", false, $params);
 }
 
@@ -1250,8 +1261,20 @@ global $CFG;
                             "width" => "500",
                         ]);
 
+    ajaxapi([
+        'id'     => "jq_login",
+        'url'    => '/ajax/site_ajax.php',
+        'data'   => [
+            'action' => "login",
+            'username' => "js||encodeURIComponent($('#username').val())||js",
+            'password' => "js||$('#password').val()||js",
+        ],
+        "event" => "none",
+        "ondone" => "verify_login(data);",
+    ]);
+
     $params = [
-        "validation_script" => create_validation_script("login_form", "login($('#username').val(), $('#password').val());"),
+        "validation_script" => create_validation_script("login_form", "jq_login();"),
         "valid_req_username" => error_string('valid_req_username'),
         "input_username" => get_help("input_username"),
         "valid_req_password" => error_string('valid_req_password'),
@@ -1349,7 +1372,7 @@ global $CFG, $USER;
                     "id" => "delete_" . $featuretype . "_" . $featureid,
                     "url" => "/ajax/site_ajax.php",
                     "data" => ["action" => "delete_feature", "pageid" => $pageid, "featuretype" => $featuretype, "featureid" =>  $featureid],
-                    "ondone" => "update_login_contents(' . $pageid . ');",
+                    "ondone" => "go_to_page(' . $pageid . ');",
                 ]);
                 $returnme .= '<button id="delete_' . $featuretype . "_" . $featureid . '" class="alike slide_menu_button" title="Delete Feature">' . icon("trash") . '</button>';
             }

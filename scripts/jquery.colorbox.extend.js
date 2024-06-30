@@ -110,7 +110,7 @@ $(window).advModalResizer(function() {
                     height: newheight
                 });
             }
-            console.log(debug);
+            //console.log(debug);
         }, 20);
     }
 });

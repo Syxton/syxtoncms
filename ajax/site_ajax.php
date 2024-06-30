@@ -17,12 +17,22 @@ function login() {
 
 	if ($row = authenticate($username, $password)) {
 		$reroute = '';
-		if ($row["alternate"] == $password) {
+		if ($row["alternate"] === $password) {
 			$reroute = fill_template("tmp/site_ajax.template", "password_change_reroute_template", false, ["userid" => $row["userid"], "password" => $password]);
+			ajax_return(json_encode([
+				'status' => 'reroute',
+				'content' => $reroute,
+			]));
+			exit;
 		}
-  		echo 'true**' . $reroute;
+		ajax_return(json_encode([
+			'status' => 'success',
+		]));
 	} else {
-		echo "false**" . error_string("no_login");
+		ajax_return(json_encode([
+			'status' => 'failed',
+			'content' => error_string("no_login"),
+		]));
 	}
 }
 
@@ -277,30 +287,32 @@ global $USER;
 		unset($USER);
 		log_entry("user", null, "Logout"); // Log
 	}
-	echo get_login_form();
+	ajax_return(get_login_form());
 }
 
-function update_login_contents() {
+function login_check() {
 global $USER;
 	$pageid = clean_myvar_req("pageid", "int") ?? get_pageid();
-	$check = clean_myvar_opt("check", "int", false);
+	$check = clean_myvar_opt("check", "bool", false);
+
+	// Checks last activity and cookie age limit to see if user is session is still active.
+	load_user_cookie();
+
 	if (is_logged_in()) {
 		if ($check) {
 			if (isset($_SESSION['userid'])) {
 				$USER->userid = $_SESSION['userid'];
-				echo "true**check";
-			} else {
-				load_user_cookie();
-				echo "false";
+				ajax_return(json_encode(["status" => "active", "check" => $check, "pageid" => $pageid]));
+				exit;
 			}
 		} else {
 			update_user_cookie();
-			echo "true**" . print_logout_button($USER->fname, $USER->lname, $pageid);
+			ajax_return(json_encode(["status" => "active", "pageid" => $pageid, "content" => print_logout_button($USER->fname, $USER->lname, $pageid), "check" => $check]));
+			exit;
 		}
-	} else { //Cookie has timed out or they haven't logged in yet.
-		load_user_cookie();
-		echo "false";
 	}
+
+	ajax_return(json_encode(["status" => "inactive", "check" => $check, "pageid" => $pageid]));
 }
 
 function get_cookie() {

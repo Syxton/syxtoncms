@@ -64,7 +64,7 @@ global $CFG;
             Common Searches:
             <a href="#"
                 onclick="$('#waiting_span').show();
-                        ajaxapi('/features/adminpanel/members_script.php',
+                        ajaxapi_old('/features/adminpanel/members_script.php',
                                 'members_search',
                                 '&search=/s -joined',
                                 function() {
@@ -77,7 +77,7 @@ global $CFG;
             </a>
             <a href="#"
                 onclick="$('#waiting_span').show();
-                        ajaxapi('/features/adminpanel/members_script.php',
+                        ajaxapi_old('/features/adminpanel/members_script.php',
                                 'members_search',
                                 '&search=/s -last_activity',
                                 function() {
@@ -100,7 +100,7 @@ global $CFG;
                    type="button"
                    value="Search"
                    onclick="$('#waiting_span').show();
-                            ajaxapi('/features/adminpanel/members_script.php',
+                            ajaxapi_old('/features/adminpanel/members_script.php',
                                     'members_search',
                                     '&search=' + encodeURIComponent($('#searchbox').val()),
                                     function() {

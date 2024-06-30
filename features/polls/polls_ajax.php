@@ -136,7 +136,7 @@ global $CFG, $MYVARS, $USER;
 				$returnme .= make_modal_links(["title"=> "Edit Feature", "class" => "slide_menu_button", "path" => action_path("polls") . "editpoll&pageid=$pageid&featureid=$featureid", "refresh" => "true", "iframe" => true, "width" => "800", "height" => "400", "icon" => icon("pencil")]);
 		}
 		if (user_is_able($USER->userid, "closepolls", $pageid, "polls", $featureid)) {
-				$returnme .= '<button class="slide_menu_button alike" title="Close Poll" onclick="if (confirm(\'Are you sure you would like to close this poll?  Once a poll is closed, it cannot be reopened.\')) { ajaxapi(\'/features/polls/polls_ajax.php\',\'closepoll\',\'&pageid=' . $pageid . '&featureid=' . $featureid . '&extra=\',function() { simple_display(\'polldiv' . $featureid . '\'); ajaxapi(\'/features/polls/polls_ajax.php\',\'pollstatuspic\',\'&pageid=' . $pageid . '&featureid=' . $featureid . '&extra=close\',function() { simple_display(\'pollstatus' . $featureid . '\'); });}); }">' . icon("circle-stop") . '</button> ';
+				$returnme .= '<button class="slide_menu_button alike" title="Close Poll" onclick="if (confirm(\'Are you sure you would like to close this poll?  Once a poll is closed, it cannot be reopened.\')) { ajaxapi_old(\'/features/polls/polls_ajax.php\',\'closepoll\',\'&pageid=' . $pageid . '&featureid=' . $featureid . '&extra=\',function() { simple_display(\'polldiv' . $featureid . '\'); ajaxapi_old(\'/features/polls/polls_ajax.php\',\'pollstatuspic\',\'&pageid=' . $pageid . '&featureid=' . $featureid . '&extra=close\',function() { simple_display(\'pollstatus' . $featureid . '\'); });}); }">' . icon("circle-stop") . '</button> ';
 		}
 		echo $returnme;
 	} else {
