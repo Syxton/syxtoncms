@@ -3,56 +3,27 @@
     margin: 0
 }
 
-i.fa {
+.svg-inline--fa {
     color: #606060;
-    display: inline-block;
-    box-sizing: border-box;
-    vertical-align: middle;
-    line-height: inherit;
 }
 
-.fa-stack i.fa {
-    position: absolute;
+span.fa-stack {
+    display: inline-grid !important;
+    height: auto;
+    width: auto;
+    line-height: normal;
 }
 
-i.fa:hover {
+svg.svg-inline--fa:hover {
     color: #7a7a7a;
 }
 
-i.fa:active {
+svg.svg-inline--fa:active {
     color: #5f5f5f;
 }
 
-i.fa-1_1x {
-    font-size: 1.1em;
-}
-
-i.fa-1_2x {
-    font-size: 1.2em;
-}
-
-i.fa-1_3x {
-    font-size: 1.3m;
-}
-
-i.fa-1_4x {
-    font-size: 1.4em;
-}
-
-i.fa-1_5x {
-    font-size: 1.5em;
-}
-
-i.rotate-90 {
-    transform: translateX(-18%) translateY(-9%) rotate(90deg);
-}
-
-i.rotate-180 {
-    transform: translateX(0%) translateY(-18%) rotate(180deg);
-}
-
-i.rotate-270 {
-    transform: translateX(0%) translateY(-9%) rotate(270deg);
+svg.dropshadow {
+    filter: drop-shadow(1px 2px 2px black);
 }
 
 div#ajax_error_display.visible {
@@ -1135,21 +1106,6 @@ div.box_content {
     padding: 10px 0 10px 10px;
 }
 
-.hprcp_n .hprcp_e {
-    right: -1px;
-    top: 26px
-}
-
-.hpmb_e,
-.hprcp_n .hprcp_e {
-    display: block;
-    font-size: 0px;
-    height: 6px;
-    line-height: 0;
-    margin: 0;
-    position: relative
-}
-
 .hpmb_e,
 .hprcp_n .hprcp_w {
     display: block;
@@ -1165,40 +1121,40 @@ div.box_content {
     width: 6px
 }
 
-.slide_menu_tab i {
+.slide_menu_tab svg {
     color: inherit;
     filter: brightness(150%);
     font-weight: 600;
 }
 
-.slide_menu_tab i:hover {
+.slide_menu_tab svg:hover {
     filter: brightness(130%);
 }
 
-.slide_menu_tab i:active {
+.slide_menu_tab svg:active {
     filter: brightness(100%);
 }
 
-.slide_menu_button i {
+.slide_menu_button svg {
     font-size: 16px;
     color: #5a5a5a;
     font-weight: 700;
 }
 
-.slide_menu_button i:hover, i:hover {
+.slide_menu_button svg:hover, svg:hover {
     filter: brightness(120%);
 }
 
-.disabled i {
+.disabled svg {
     color: grey;
 }
 
-.disabled i:hover {
+.disabled svg:hover {
     filter: brightness(100%);
     color: grey;
 }
 
-.slide_menu_button i:active {
+.slide_menu_button svg:active {
     filter: brightness(50%);
 }
 

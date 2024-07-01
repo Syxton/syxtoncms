@@ -1451,13 +1451,15 @@ global $CFG, $MYVARS, $USER;
                 //GET EXPORT CSV BUTTON
                 if (user_is_able($USER->userid, "exportcsv", $event["pageid"])) {
                     $export = '
-                        <button class="alike" onclick="ajaxapi_old(\'/features/events/events_ajax.php\',
-                                                                    \'export_csv\',
-                                                                    \'&pageid=' . $event["pageid"] . '&eventid=' . $event['eventid'] . '\',
-                                                                    function() { run_this();}
-                                                        );" title="Export ' . $regcount . '/' . $limit . ' Registrations" alt="Export ' . $regcount . ' Registrations">
-                            ' . icon("file-csv") . '
-                        </button>';
+                        <td>
+                            <button class="alike" onclick="ajaxapi_old(\'/features/events/events_ajax.php\',
+                                                                        \'export_csv\',
+                                                                        \'&pageid=' . $event["pageid"] . '&eventid=' . $event['eventid'] . '\',
+                                                                        function() { run_this();}
+                                                            );" title="Export ' . $regcount . '/' . $limit . ' Registrations" alt="Export ' . $regcount . ' Registrations">
+                                ' . icon([["icon" => "file-csv", "style" => "font-size: 1.3em"]]) . '
+                            </button>
+                        </td>';
                 }
              }
             $id = "show_registrations_" . $event["eventid"];
@@ -1478,8 +1480,9 @@ global $CFG, $MYVARS, $USER;
                         </button>
                     </td>
                     <td style="width:20%;">
-                        ' . date("m/d/Y", $event["event_begin_date"]) . ' ' . $export . '
+                        ' . date("m/d/Y", $event["event_begin_date"]) . '
                     </td>
+                    ' . $export . '
                     <td style="text-align:right;">
                         <a href="mailto:' . $event["email"] . '" />' . $event["contact"] . '</a>
                     </td>

@@ -69,7 +69,10 @@ $returnme = ''; $section_content = ""; $toggle = "";
 				"iframe" => true,
 				"refresh" => "true",
 				"width" => "640",
-				"icon" => icon("square-rss", 2, false, "square"),
+				"icon" => icon([
+					["icon" => "square", "stacksize" => 2, "color" => "white"],
+					["icon" => "square-rss"],
+				]),
 			]);
       }
 
@@ -117,63 +120,71 @@ global $CFG;
 	$buttons = $standalone ? '' : get_button_layout("news", $pagenews->newsid, $pagenews->pageid);
 	$user = get_db_row("SELECT * FROM users where userid = " . $pagenews->userid);
 	if ($area == "middle") {
+		$readmore = !$standalone  && stripslashes($pagenews->content) != "" ? '<span style="font-size:.9em; color:gray;">' . make_modal_links(["title"=> stripslashes(htmlentities($pagenews->title)),"text" => "[More...]", "path" => action_path("news") . "viewnews&newsonly=1&pageid=$pageid&newsid=$pagenews->newsid", "width" => "98%", "height" => "95%"]) . '</span>' : '';
   		$returnme = '
   		<table class="newstable">
             <tr>
+				<td style="width: 8%;">
                 ' . $daygraphic . '
-                		<table style="width:100%;border-spacing: 0px;">
+				</td>
+				<td>
+					<table style="width:100%;border-spacing: 0px;">
   			 			<tr>
   				 			<td colspan="2">
-  				 			<div style="font-size:1em; color:red;"><strong>' . stripslashes($pagenews->title) . '</strong></div>
-  						<span style="font-size:.9em">
-						  ' . truncate($pagenews->caption, 350) . '
-  				 			</span> ';
-                        $returnme .= !$standalone  && stripslashes($pagenews->content) != "" ? '<span style="font-size:.9em; color:gray;">' . make_modal_links(["title"=> stripslashes(htmlentities($pagenews->title)),"text" => "[More...]", "path" => action_path("news") . "viewnews&newsonly=1&pageid=$pageid&newsid=$pagenews->newsid", "width" => "98%", "height" => "95%"]) . '</span>' : '';
-  						$returnme .= '<div class="hprcp_n" style="margin-top:4px;"><div class="hprcp_e"><div class="hprcp_w"></div></div></div>
-  						<div class="hprcp_head">
-  							<div style="width:100%;vertical-align:middle;color:gray;position:relative;_right:2px;top:-8px;">
-  							<span style="font-size:.85em;line-height:28px;">
-  							Submitted: ' . ago($pagenews->submitted) . ' by ' . stripslashes($user['fname']) . ' ' . stripslashes($user['lname']) . '</span><div style="line-height:0px;position:relative;top:0px;right:0px;font-size:.01em; padding-top:2px;float:right">' . $buttons . '</div>
-  							</div>
-  						</div>
+  				 				<div style="font-size:1em; color:red;"><strong>
+									' . stripslashes($pagenews->title) . '</strong>
+								</div>
+								<span style="font-size:.9em">
+									' . truncate($pagenews->caption, 350) . '
+								</span>
+								' . $readmore . '
+								<div class="hprcp_head">
+									<div style="width:100%;vertical-align:middle;color:gray;position:relative;_right:2px;top:-8px;">
+										<span style="font-size:.85em;line-height:28px;">
+											Submitted: ' . ago($pagenews->submitted) . ' by ' . stripslashes($user['fname']) . ' ' . stripslashes($user['lname']) . '
+										</span>
+										<div style="line-height:0px;position:relative;top:0px;right:0px;padding-top:2px;float:right">
+											' . $buttons . '
+										</div>
+									</div>
+								</div>
   			 				</td>
   			 			</tr>
-  			 			</table>
+					</table>
   				</td>
             </tr>
   		</table>';
     } else {
+		$readmore = make_modal_links(["title"=> stripslashes(htmlentities($pagenews->title)),"text" => "[More...]", "path" => action_path("news") . "viewnews&pageid=$pageid&newsid=$pagenews->newsid", "width" => "98%", "height" => "95%"]);
   		$returnme = '
   		<table class="newstable">
             <tr>
-       		<td>
-  				  <table style="width:100%;border-spacing: 0px;">
+       			<td>
+  				  	<table style="width:100%;border-spacing: 0px;">
   			 			<tr colspan="2">
   				 			<td>
-  				 			<div style="font-size:1.35em; color:red;">' . stripslashes($pagenews->title) . '</div>
-  						<span style="font-size:1em">
-							' . truncate($pagenews->caption, 50) . '
-  				 			</span>&nbsp;
-  					 		<span style="font-size:.95em; color:gray;">
-                                ' . make_modal_links(["title"=> stripslashes(htmlentities($pagenews->title)),"text" => "[More...]", "path" => action_path("news") . "viewnews&pageid=$pageid&newsid=$pagenews->newsid", "width" => "98%", "height" => "95%"]) . '
-  					 		</span>
-  						<div class="hprcp_n" style="margin-top:4px;">
-  							<div class="hprcp_e">
-  								<div class="hprcp_w">
-  								</div>
-  							</div>
-  						</div>
-  						<div class="hprcp_head">
-  							<div style="width:100%;vertical-align:middle;color:gray;position:relative;_right:2px;top:-8px;">
-  								<span style="font-size:.85em; float:left;line-height:28px;">
-  								' . ago($pagenews->submitted) . '
-  								</span>
-  								<div style="line-height:0px;position:relative;top:2px;right:2px;font-size:.01em; padding-top:2px;">' . $buttons . '</div>
-  							</div>
-  						</div>
-  			 				</td>
+  				 				<div style="font-size:1.35em; color:red;">
+									' . stripslashes($pagenews->title) . '
+								</div>
+								<span style="font-size:1em">
+								' . truncate($pagenews->caption, 50) . '
+								</span>&nbsp;
+								<span style="font-size:.95em; color:gray;">
+									' . $readmore . '
+								</span>
+								<div class="hprcp_head">
+									<div style="width:100%;vertical-align:middle;color:gray;position:relative;_right:2px;top:-8px;">
+										<span style="font-size:.85em; float:left;line-height:28px;">
+										' . ago($pagenews->submitted) . '
+										</span>
+										<div style="line-height:0px;position:relative;top:2px;right:2px;padding-top:2px;">
+											' . $buttons . '
+										</div>
+									</div>
+								</div>
+							</td>
   			 			</tr>
-  			 			</table>
+					</table>
   				</td>
             </tr>
   		</table>';

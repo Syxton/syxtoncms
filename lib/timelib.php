@@ -117,9 +117,9 @@ global $CFG;
 	if ($difference == 60) {
 		$minutes = "1 min";
 	} else { $seconds = floor($difference) > 1 ? $difference . " secs" : $difference . " sec"; }
-	
+
 	if ($difference == 0) { $seconds = ""; }
-	
+
 	if (isset($years)) { return "$years $weeks $ago";
 	} elseif (isset($weeks)) { return "$weeks $days $ago";
 	} elseif (isset($days)) { return "$days $hours $ago";
@@ -129,57 +129,41 @@ global $CFG;
 
 function get_date_graphic($timestamp = false, $newday = false, $alter = false, $small = false, $inactive = false) {
 global $CFG;
+	$gradients = '
+	<!-- Define svg gradients -->
+    <svg width="0" height="0">
+		<linearGradient id="gradient_active" x1="100%" y1="100%" x2="0%" y2="0%">
+			<stop offset="0%" style="stop-color: rgb(186 241 58);stop-opacity:1"></stop>
+			<stop offset="100%" style="stop-color: rgb(255 255 255);stop-opacity:1"></stop>
+		</linearGradient>
+		<linearGradient id="gradient_inactive" x1="100%" y1="100%" x2="0%" y2="0%" >
+			<stop offset="0%" style="stop-color: rgb(151 151 151);stop-opacity:1"></stop>
+			<stop offset="100%" style="stop-color: rgb(255 255 255);stop-opacity:1"></stop>
+		</linearGradient>
+	</svg>
+	';
+
 	date_default_timezone_set("UTC");
-	if (!$timestamp) { $timestamp = get_timestamp(); }
-    if ($small) {
-		$alterfont = $alter ? "font-size:.75em;" : "";
-		$graphic = $inactive ? "datestamp_small_inactive.png" : "datestamp_small.png";
-		if ($newday) {
-			return '
-			<td style="vertical-align:top;width:60px;height:60px;">
-			<table style="vertical-align:top;width:60px;height:60px;max-height:89px;"><tr>
-				<td style="background-image: url(' . $CFG->wwwroot . '/images/' . $graphic . '); ' . $alterfont . '">
-				<div style="text-align:center; font-size:.75em;line-height:10px;"><b>' . date('F', $timestamp) . '</b></div>
-				<div style="text-align:center; font-size:1.65em;line-height:27px;"><b>' . date('jS', $timestamp) . '</b></div>
-				<div style="text-align:right; font-size:.75em;">' . date('Y', $timestamp) . ' &nbsp;</div>
-				</td>
-			</tr>
-			</table>
-			</td>
-			<td style="vertical-align:top;"><br />
-			';
-		} else {
-			return '
-			<td style="vertical-align:middle;width:60px;height:60px;">
-			</td>
-			<td style="vertical-align:top;">
-			';
-		}
-	} else {
-		$alterfont = $alter ? "font-size:.8em;" : "";
-		$graphic = $inactive ? "datestamp_inactive.png" : "datestamp.png";
-		if ($newday) {
-			return '
-			<td style="vertical-align:top;width:78px;height:78px;">
-			<table style="vertical-align:top;width:78px;height:78px;max-height:89px;"><tr>
-				<td style="background-image: url(' . $CFG->wwwroot . '/images/' . $graphic . '); ' . $alterfont . '">
-				<div style="text-align:center; font-size:.85em;line-height:20px;"><b>' . date('F', $timestamp) . '</b></div>
-				<div style="text-align:center; font-size:2.2em;line-height:30px;"><b>' . date('jS', $timestamp) . '</b></div>
-				<div style="text-align:right; font-size:.85em;">' . date('Y', $timestamp) . ' &nbsp;</div>
-				</td>
-			</tr>
-			</table>
-			</td>
-			<td style="vertical-align:top;"><br />
-			';
-		} else {
-			return '
-			<td style="vertical-align:top;width:78px;height:78px;">
-			</td>
-			<td rowspan="2" style="vertical-align:top;">
-			';
-		}
+	$timestamp = !$timestamp ? get_timestamp() : $timestamp;
+
+	$size = $small ? "fa-5x" : "fa-7x";
+	if (!$newday) {
+		return '<div class="dategraphic ' . $size . '"></div>';
 	}
+
+	$icon = icon([
+		["icon" => "square", "class" => "dropshadow"],
+		["content" => date('F', $timestamp), "style" => "top: 20%;font-weight: bold;", "transform" => "shrink-14"],
+		["content" => date('jS', $timestamp), "style" => "top: 45%;font-weight: bold;", "transform" => "shrink-10"],
+		["content" => date('Y', $timestamp), "style" => "top: 80%;left: 66%;font-weight: bold;", "transform" => "shrink-14"],
+	]);
+
+	$status = $inactive ? "inactive" : "active";
+	$dategraphic = '
+		<style> .dategraphic svg:first-child * { fill: url(#gradient_' . $status . '); } </style>
+		<div class="dategraphic ' . $size . '">' . $icon . '</div>' . $gradients;
+
+	return $dategraphic;
 }
 
 function convert_time($time) {

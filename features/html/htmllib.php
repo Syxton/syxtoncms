@@ -87,7 +87,10 @@ global $CFG, $USER;
                         "iframe" => true,
                         "refresh" => "true",
                         "width" => "640",
-                        "icon" => icon("square-rss", 2, false, "square"),
+                        "icon" => icon([
+                            ["icon" => "square", "stacksize" => 2, "color" => "white"],
+                            ["icon" => "square-rss"],
+                        ]),
                     ];
                     $rss = make_modal_links($modalsettings);
 

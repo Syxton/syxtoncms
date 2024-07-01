@@ -235,7 +235,7 @@ global $CFG, $USER;
         ]);
         $buttons .= '
             <button id="unpin_bulletin_' . $discussionid . '" class="alike" title="Undesignate as Bulletin">
-                ' . icon("thumbtack", 1, 180) . '
+                ' . icon("thumbtack", 1, "", "", "rotate--180") . '
             </button>';
     }
 

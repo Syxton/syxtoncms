@@ -43,18 +43,57 @@ global $CFG, $MYVARS;
     }
 }
 
-function icon($icon, $size = 1, $rotate = false, $bgicon = false) {
-    $rotate = $rotate ? " rotate-$rotate" : '';
+function icon(...$icons) {
     $return = '';
-    $bg = '';
-    if ($bgicon) {
-        $return .= '<span class="fa-stack">';
-        $bg = icon($bgicon, $size);
+
+    if (!ismultiarray($icons)) { // Simple icon.
+        // rotate is rotate-90, rotate-180, rotate-270 classes.
+        $icon = (isset($icons["icon"]) ? $icons["icon"] : (isset($icons[0]) ? $icons[0] : $icons));
+        $icons = [
+            [
+                "icon" => $icon,
+                "size" => isset($icons["size"]) ? $icons["size"] : (isset($icons[1]) ? $icons[1] : 1),
+                "class" => isset($icons["class"]) ? $icons["class"] : (isset($icons[2]) ? $icons[2] : ""),
+                "color" => isset($icons["color"]) ? $icons["color"] : (isset($icons[3]) ? $icons[3] : icon_color($icon)),
+                "transform" => isset($icons["transform"]) ? $icons["transform"] : (isset($icons[4]) ? $icons[4] : ""),
+            ],
+        ];
+    } else {
+        $icons = $icons[0];
     }
-    $return .=  $bg . '<i style="' . icon_color($icon) . '" class="fa fa-' . $icon . ' fa-' . $size . 'x' . $rotate . '"></i>';
-    if ($bgicon) {
-        $return .= '</span>';
+
+    foreach ($icons as $layer) {
+        if (isset($layer["stacksize"])) {
+            $stacksize = $layer["stacksize"];
+        }
+        if (isset($layer["stackclass"])) {
+            $stackclass = $layer["stackclass"];
+        }
+        $content = $layer["content"] ?? "";
+        $icon = $layer["icon"] ?? "";
+        $styles = $layer["style"] ?? "";
+        $transform = $layer["transform"] ?? "";
+        $layersize = $layer["size"] ?? "";
+        $layersize = empty($layersize) ? "" : " fa-" . $layersize . 'x';
+
+        $layerclass = $layer["class"] ?? "";
+        $color = isset($layer["color"]) && !empty($layer["color"]) ? $layer["color"] : icon_color($icon);
+        $color = empty($color) ? "" : "color: " . $color . ";";
+
+        if (!empty($icon)) {
+            $return .= '<i style="' . $color . $styles . '" data-fa-transform="' . $transform . '" class="' . $layerclass . $layersize . ' fa-solid fa-' . $icon . '"></i>';
+        } else {
+            $return .= '<span style="' . $styles . '" data-fa-transform="' . $transform . '" class="fa-layers-text ' . $layerclass . '">' . $content . '</span>';
+        }
     }
+
+    if (count($icons) > 1) {
+        $stacksize = $stacksize ?? "";
+        $stacksize = empty($stacksize) ? "" : "fa-" . $stacksize . "x";
+        $stackclass = $stackclass ?? "";
+        $return = '<span class="fa-layers fa-fw ' . $stacksize . ' ' . $stackclass . '">' . $return . '</span>';
+    }
+
     return $return;
 }
 
@@ -62,20 +101,25 @@ function icon_color($icon) {
     // Certain icons have different color than others.
     switch ($icon) {
         case "key":
-            return "color:#d2df22";
+            $color = "#d2df22";
+            break;
         case "sliders":
-            return "color:#2e4c5abd";
+            $color = "#2e4c5abd";
+            break;
         case "trash":
-            return "color:#bb0202";
+            $color = "#bb0202";
+            break;
         case "pencil":
-            return "color:#519d58";
+            $color = "#519d58";
+            break;
         case "square-rss":
-            return "color:orange";
-        case "square":
-            return "color:white";
+            $color = "orange";
+            break;
         default:
             return "";
     }
+    error_log("Icon ($icon) has color: $color");
+    return $color;
 }
 
 function collect_vars() {
@@ -815,7 +859,7 @@ global $CFG, $USER;
         "path" => $CFG->wwwroot . "/pages/user.php?action=change_profile",
         "validate" => "true",
         "width" => "500",
-        "icon" => icon("user", "1_5"),
+        "icon" => icon([["icon" => "user", "style" => "font-size: 1.5em"]]),
     ];
     $profile = $edit ? make_modal_links($params) : "$fname $lname";
 
@@ -1414,7 +1458,7 @@ global $CFG, $PAGE;
             "featuretype" => $featuretype,
             "featureid" => $featureid,
             "buttons" => $buttons,
-            "icon" => icon("grip-vertical"),
+            "icon" => icon("grip-vertical", 1, "", $titlebgcolor),
         ];
         $returnme = fill_template("tmp/pagelib.template", "get_button_layout_template", false, $params);
     }
