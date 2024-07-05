@@ -53,12 +53,20 @@ function admin_email_test_form() {
 
 function get_phpinfo() {
 global $CFG;
-    echo "<iframe id='php_info' onload='resizeCaller(this.id);' style='width:100%;height: 100vh;border:none;' src='$CFG->wwwroot/features/adminpanel/adminpanel_ajax.php?action=phpinfo'></iframe>";
+    $params = [
+        "id" => "phpinfo",
+        "src" => $CFG->wwwroot . "/features/adminpanel/adminpanel_ajax.php?action=phpinfo",
+    ];
+    ajax_return(fill_template("tmp/main.template", "admin_iframe", "adminpanel", $params));
 }
 
 function camper_list() {
 global $CFG;
-    echo "<iframe id='camperlist' onload='resizeCaller(this.id);' style='width:100%;height: 100vh;' src='$CFG->wwwroot/features/adminpanel/camper_list.php'></iframe>";
+    $params = [
+        "id" => "camperlist",
+        "src" => $CFG->wwwroot . "/features/adminpanel/camper_list.php",
+    ];
+    ajax_return(fill_template("tmp/main.template", "admin_iframe", "adminpanel", $params));
 }
 
 function admin_email_test() {
@@ -87,7 +95,7 @@ global $CFG;
         } else {
             $returnme .= "<br />Email Failed";
         }
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $error = $e->getMessage();
     }
 
@@ -99,25 +107,19 @@ function user_admin() {
 }
 
 function site_versions() {
-    echo '<div style="display: flex;flex-wrap: nowrap;flex-direction: column;align-items: center;">';
-
-    //Site DB version
-    echo '<h3>Site Version</h3>';
-    echo  '<span>' . get_db_field("setting", "settings", "type='site' AND setting_name='version'") . '</span>';
-
-    //Feature versions
-    echo "<br /><br />";
-    echo '<h3>Feature Versions</h3>';
-    echo '<div style="display: flex;align-items: flex-end;flex-direction: column;">';
+    $versions = [];
+    // Feature versions
     if ($result = get_db_result("SELECT * FROM features ORDER BY feature_title")) {
         while ($row = fetch_row($result)) {
-            echo '<span style="display: flex;justify-content: center;align-items: center;">';
-            echo '<span style="padding: 4px;font-weight: bold">' . $row["feature_title"] . '</span><span style="padding: 4px">' . $row["version"] . '</span>';
-            echo '</span>';
+            $versions[] = (object)["title" => $row["feature_title"], "version" => $row["version"]];
         }
     }
-    echo '</div>';
-    echo '</div>';
+
+    $params = [
+        "siteversion" => get_db_field("setting", "settings", "type='site' AND setting_name='version'"),
+        "featureversions" => (object)$versions,
+    ];
+    ajax_return(fill_template("tmp/main.template", "admin_versions", "adminpanel", $params));
 }
 
 /**
@@ -193,7 +195,7 @@ function get_user_usage_page() {
     $data = $error = "";
     try {
         $data = get_user_usage($userid, $pagenum, $year, $month);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $error = $e->getMessage();
     }
 
@@ -303,12 +305,12 @@ function loginas() {
         $_SESSION["userid"] = $userid;
     }
 
-    echo $_SESSION["pageid"];
+    ajax_return($_SESSION["pageid"]);
 }
 
 function logoutas() {
     $_SESSION["userid"] = $_SESSION["lia_original"];
     unset($_SESSION["lia_original"]);
-    echo $_SESSION["pageid"];
+    ajax_return($_SESSION["pageid"]);
 }
 ?>

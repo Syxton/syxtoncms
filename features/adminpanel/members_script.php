@@ -147,7 +147,7 @@ global $CFG, $MYVARS, $USER;
     $count = $total > (($pagenum + 1) * $perpage) ? $perpage : $total - (($pagenum) * $perpage); // get the amount returned...is it a full page of results?
     $amountshown = $firstonpage + $perpage < $total ? $firstonpage + $perpage : $total;
 
-    $fileoutput = $searchresult = $export = "";
+    $searchresult = $export = "";
     if ($count > 0) {
         ajaxapi([
             "id" => "members_delete_user",
@@ -194,18 +194,50 @@ global $CFG, $MYVARS, $USER;
             "event" => "none",
         ]);
 
+        ajaxapi([
+            "id" => "loginas",
+            "url" => "/features/adminpanel/adminpanel_ajax.php",
+            "data" => [
+                "action" => "loginas",
+                "userid" => "js||userid||js",
+            ],
+            "paramlist" => "userid",
+            "ondone" => "getRoot()[0].go_to_page(data.message);",
+            "event" => "none",
+        ]);
+
+        ajaxapi([
+            "id" => "view_logfile",
+            "url" => "/features/adminpanel/adminpanel_ajax.php",
+            "data" => [
+                "action" => "view_logfile",
+                "userid" => "js||userid||js",
+            ],
+            "paramlist" => "userid",
+            "display" => "display",
+            "event" => "none",
+        ]);
+
+        if ($mailman) {
+            $fileoutput = "";
+        }
+
+        if ($csv) {
+            $fileoutput = [];
+        }
         // Limit to one page of return.
         if (!$mailman && !$csv) {
             $SQL .= $LIMIT;
         }
         $pages = get_db_result($SQL);
         while ($row = fetch_row($pages)) {
+            $fullname = $row['fname'] . ' ' . $row['lname'];
             if ($mailman) { // Export to Mailman
-                $fileoutput .= $row["fname"] . " " . $row["lname"] . " <" . $row["email"] . ">\r\n";
+                $fileoutput .= "$fullname <" . $row["email"] . ">\r\n";
             } elseif ($csv) { // Export to CSV
-                $fileoutput .= $row["fname"] . "," . $row["lname"] . "," . $row["email"] . "\n";
+                $fileoutput[] = ["fname" => $row["fname"], "lname" => $row["lname"], "email" => $row["email"]];
             } else {
-                $delete = $locate = "";
+                $delete = $locate = $logs = $reset = "";
                 if (isset($USER->ip)) {
                     $locate = '
                         <button class="alike" title="IP Location" onclick="members_get_geodata(\'' . $USER->ip . '\', \'display\');">
@@ -215,12 +247,26 @@ global $CFG, $MYVARS, $USER;
 
                 if (!is_siteadmin($row["userid"])) {
                     $delete = '
-                        <button class="alike" title="Delete ' . $row['fname'] . ' ' . $row['lname'] . '" onclick="members_delete_user(\'' . $row['userid'] . '\');">
+                        <button class="alike" title="Delete ' . $fullname . '" onclick="members_delete_user(\'' . $row['userid'] . '\');">
                             ' . icon("trash", 2) . '
                         </button>';
                     $reset = '
-                        <button class="alike" title="Reset ' . $row['fname'] . ' ' . $row['lname'] . ' Password" onclick="members_reset_password(\'' . $row['userid'] . '\');">
+                        <button class="alike" title="Reset ' . $fullname . ' Password" onclick="members_reset_password(\'' . $row['userid'] . '\');">
                             ' . icon("retweet", 2, "", "orange") . '
+                        </button>';
+                }
+
+                $logs = '
+                    <button class="alike" title="View ' . $fullname . ' Logs" onclick="view_logfile(\'' . $row['userid'] . '\');">
+                        ' . icon("chart-simple", 2, "", "green") . '
+                    </button>';
+
+                // Login as another user.
+                $loginas = '';
+                if ($USER->userid !== $row['userid']) {
+                    $loginas = '
+                        <button class="alike" title="Log in as ' . $fullname . '" onclick=loginas(' . $row['userid'] . ')>
+                            ' . icon("user-secret", 2) . '
                         </button>';
                 }
 
@@ -228,19 +274,24 @@ global $CFG, $MYVARS, $USER;
                     <tr style="font-size:.85em;">
                         <td style="vertical-align:middle;overflow:hidden;white-space:nowrap;">
                             <input type="hidden" class="user_id" id="user_id_' . $row['userid'] . '" value="' . $row['userid'] . '" />
-                            <input type="hidden" class="user_name" value="' . $row['fname'] . ' ' . $row['lname'] . '" />
-                            ' . $row['fname'] . ' ' . $row['lname'] . ' ' . ($row['userid'] !== $USER->userid ? '(<a href="javascript: void(0)" onclick=loginas(' . $row['userid'] . ')>log in as</a>)' : '') . '
+                            <input type="hidden" class="user_name" value="' . $fullname . '" />
+                            ' . $fullname . '
                         </td>
-                        <td style="width:40px;white-space:nowrap;text-align:center;" onmouseover="this.style.backgroundColor=\'#BBD8EC\';" onmouseout="this.style.backgroundColor=\'\'">
+                        <td style="width:60px;white-space:nowrap;text-align:center;" onmouseover="this.style.backgroundColor=\'#BBD8EC\';" onmouseout="this.style.backgroundColor=\'\'">
+                            <span id="loginas_' . $row['userid'] . '">
+                                ' . $loginas . '
+                            </span>
+                        </td>
+                        <td style="width:60px;white-space:nowrap;text-align:center;" onmouseover="this.style.backgroundColor=\'#BBD8EC\';" onmouseout="this.style.backgroundColor=\'\'">
                             <span id="reset_password_' . $row['userid'] . '">
                                 ' . $reset . '
                             </span>
                         </td>
-                        <td style="width:40px;white-space:nowrap;text-align:center;" onmouseover="this.style.backgroundColor=\'#BBD8EC\';" onmouseout="this.style.backgroundColor=\'\'">
+                        <td style="width:60px;white-space:nowrap;text-align:center;" onmouseover="this.style.backgroundColor=\'#BBD8EC\';" onmouseout="this.style.backgroundColor=\'\'">
                             ' . $locate . '
                         </td>
-                        <td style="width:40px;white-space:nowrap;text-align:center;" onmouseover="this.style.backgroundColor=\'#BBD8EC\';" onmouseout="this.style.backgroundColor=\'\'" >
-                            <a title="User Logs" href="javascript: void(0);" onclick="ajaxapi_old(\'/features/adminpanel/adminpanel_ajax.php\',\'view_logfile\',\'&userid=' . $row["userid"] . '\',function() { simple_display(\'display\');});"><img src="' . $CFG->wwwroot . '/images/graph.png" alt="User Logs" /></a>
+                        <td style="width:60px;white-space:nowrap;text-align:center;" onmouseover="this.style.backgroundColor=\'#BBD8EC\';" onmouseout="this.style.backgroundColor=\'\'" >
+                            ' . $logs . '
                         </td>
                         <td style="text-align:center;white-space:nowrap;padding: 0 10px;">
                             ' . ago($row['joined']) . '
@@ -256,61 +307,72 @@ global $CFG, $MYVARS, $USER;
                     </tr>';
             }
         }
-        $export = '<div style="font-size:.65em;padding:2px;"><a href="javascript: void(0);" onclick="ajaxapi_old(\'/features/adminpanel/members_script.php\',\'members_search\',\'&csv=1&search=' . $searchwords . '\',function() { if (xmlHttp.readyState == 4) { run_this(); }}, true);" >Export to CSV</a>&nbsp;&nbsp;<a href="javascript: void(0);" onclick="ajaxapi_old(\'/features/adminpanel/members_script.php\',\'members_search\',\'&mailman=1&search=' . $searchwords . '\',function() { if (xmlHttp.readyState == 4) { run_this(); }}, true);" >Export to Mailman</a></div>';
+
+        $export = '
+            <div style="font-size:.65em;padding:2px;">
+                <button class="alike" title="Export to CSV" onclick="export_search(`' . $searchwords . '`, 1);" >
+                    ' . icon("file-csv", 2) . '
+                </button>
+                &nbsp;&nbsp;
+                <button class="alike" title="Export to Mailman" onclick="export_search(`' . $searchwords . '`, 0, 1);" >
+                    ' . icon("paper-plane", 2) . '
+                </button>
+            </div>';
     }
 
     if (!$mailman && !$csv) {
         if (empty($searchresult)) {
-            $searchresult = '<tr><td colspan="7" style="font-size:.8em;text-align:center;"><b>No matches found.</b></td></tr></table>';
+            $searchresult = '
+                <tr>
+                    <td colspan="7" style="font-size:.8em;text-align:center;">
+                        <strong>No matches found.</strong>
+                    </td>
+                </tr>';
         }
 
-        $prev = $pagenum > 0 ? '<a href="javascript: void(0);" onclick="ajaxapi_old(\'/features/adminpanel/members_script.php\',\'members_search\',\'&pagenum=' . ($pagenum - 1) . '&search=\'+encodeURIComponent(\'' . $searchwords . '\'),function() { if (xmlHttp.readyState == 4) { simple_display(\'mem_resultsdiv\'); }}, true);" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/arrow_left.gif" title="Previous Page" alt="Previous Page"></a>' : "";
-        $next = $firstonpage + $perpage < $total ? '<a href="javascript: void(0);" onclick="ajaxapi_old(\'/features/adminpanel/members_script.php\',\'members_search\',\'&pagenum=' . ($pagenum + 1) . '&search=\'+encodeURIComponent(\'' . $searchwords . '\'),function() { if (xmlHttp.readyState == 4) { simple_display(\'mem_resultsdiv\'); }}, true);" onmouseup="this.blur()"><img src="' . $CFG->wwwroot . '/images/arrow_right.gif" title="Next Page" alt="Next Page"></a>' : "";
+        $prev = $pagenum > 0 ? '<button class="alike" title="Previous Page" onclick="members_search(\'' . $searchwords . '\', ' . ($pagenum - 1) . ');">' . icon("circle-chevron-left", 2) . '</button>' : "";
+        $next = $firstonpage + $perpage < $total ? '<button class="alike" title="Next Page" onclick="members_search(\'' . $searchwords . '\', ' . ($pagenum + 1) . ');">' . icon("circle-chevron-right", 2) . '</button>' : "";
         $info = 'Viewing ' . ($firstonpage + 1) . " through " . $amountshown . " out of $total";
 
         $return = '
-        <table style="width:100%;">
-            <tr>
-                <td style="width:25%;text-align:left;">
-                    ' . $prev . '
-                </td>
-                <td style="width:50%;text-align:center;font-size:.75em;color:green;">
-                    ' . $info . '
-                </td>
-                <td style="width:25%;text-align:right;">
-                    ' . $next . '
-                </td>
-            </tr>
-        </table>
-        <br /><br />
-        ' . $export . '
-        <input type="hidden" id="searchwords" value="' . $searchwords . '" />
-        <table class="searchresults">
-            <tr>
-                <th style="text-align:left;width: 100%;">
-                    <strong>Name</strong>
-                </th>
-                <th>
-                </th>
-                <th>
-                </th>
-                <th>
-                </th>
-                <th style="text-align:center;min-width: 100px;">
-                    <strong>Joined</strong>
-                </th>
-                <th style="text-align:center;min-width: 100px;">
-                    <strong>Last Access</strong>
-                </th>
-                <th style="text-align:center;min-width: 60px;">
-                </th>
-            </tr>
-            ' . $searchresult . '
-        </table>';
+            <table style="width:100%;">
+                <tr>
+                    <td style="width:25%;text-align:left;">
+                        ' . $prev . '
+                    </td>
+                    <td style="width:50%;text-align:center;font-size:.75em;color:green;">
+                        ' . $info . '
+                    </td>
+                    <td style="width:25%;text-align:right;">
+                        ' . $next . '
+                    </td>
+                </tr>
+            </table>
+            <br /><br />
+            ' . $export . '
+            <input type="hidden" id="searchwords" value="' . $searchwords . '" />
+            <table class="searchresults">
+                <tr>
+                    <th style="text-align:left;width: 100%;">
+                        <strong>Name</strong>
+                    </th>
+                    <th colspan="4" style="min-width: 150px;">
+                    </th>
+                    <th style="text-align:center;min-width: 100px;">
+                        <strong>Joined</strong>
+                    </th>
+                    <th style="text-align:center;min-width: 100px;">
+                        <strong>Last Access</strong>
+                    </th>
+                    <th style="text-align:center;min-width: 60px;">
+                    </th>
+                </tr>
+                ' . $searchresult . '
+            </table>';
         ajax_return($return);
     } else {
-        $filename = $mailman ? "users_export.txt" : "users_export.csv";
-        ajax_return(get_download_link($filename, $fileoutput));
+        $filename = !empty($mailman) ? "users_export.txt" : "users_export.csv";
+        ajax_return('<iframe src="' . $CFG->wwwroot . '/scripts/download.php?file=' . create_file($filename, $fileoutput, empty($mailman)) . '"></iframe>');
     }
 }
 ?>

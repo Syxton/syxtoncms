@@ -13,6 +13,20 @@ get_roles||
 	ORDER BY roleid
 ||get_roles
 
+get_page_role_requests||
+	SELECT *
+	FROM roles_assignment
+	WHERE pageid = ||pageid||
+	AND confirm = 1
+||get_page_role_requests
+
+get_user_role_requests||
+	SELECT *
+	FROM roles_assignment
+	WHERE userid = ||userid||
+	AND confirm = 2
+||get_user_role_requests
+
 get_lower_roles||
 	SELECT *
 	FROM roles

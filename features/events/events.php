@@ -46,60 +46,73 @@ function events_settings() {
 function event_manager() {
 global $CFG;
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+
     ajaxapi([
-        "id" => "eventsearchform",
+        "id" => "perform_eventsearch",
+        "paramlist" => "pagenum = 0, searchwords = false",
+        "beforeajax" => "var searchwords = searchwords ? searchwords : $('#searchbox').val();",
         "url" => "/features/events/events_ajax.php",
-        "data" => ["action" => "eventsearch", "pageid" => $pageid, "searchwords" => "js|| encodeURIComponent($('#searchbox').val()) ||js"],
+        "data" => [
+            "action" => "eventsearch",
+            "pagenum" => "js||pagenum||js",
+            "searchwords" => "js||encodeURIComponent(searchwords)||js"],
         "display" => "searchcontainer",
+        "ondone" => "init_event_menu();",
         "loading" => "loading_overlay",
-        "event" => "submit",
+        "event" => "none",
     ]);
 
-    echo '<div class="dontprint" style="text-align:center;">
-            <h3>Search for events by their name.</h3>
-            <form id="eventsearchform">
-                    Event Name <input type="text" id="searchbox" name="searchbox" />&nbsp;<input type="submit" value="Search" />
-            </form>
-            <br />
-        </div>
-        ' . get_searchcontainer();
+    ajaxapi([
+        "id" => "show_registrations",
+        "paramlist" => "eventid, sel = false",
+        "url" => "/features/events/events_ajax.php",
+        "data" => [
+            "action" => "show_registrations",
+            "eventid" => "js||eventid||js",
+            "sel" => "js||sel||js",
+        ],
+        "display" => "searchcontainer",
+        "ondone" => "init_event_menu();",
+        "event" => "none",
+    ]);
+
+    echo fill_template("tmp/events.template", "eventsearchform", "events", ["searchcontainer" => get_searchcontainer()]);
 }
 
 function template_manager() {
 global $CFG;
-     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
-     check_for_new_templates();
-     echo '<div class="dontprint" style="text-align:center;">
-                <h3>Search for templates by their name.</h3>
-                <form onsubmit="$(\'#loading_overlay\').show();
-                                     ajaxapi_old(\'/features/events/events_ajax.php\',
-                                                \'templatesearch\',
-                                                \'&pageid=' . $pageid . '&searchwords=\' + encodeURIComponent($(\'#searchbox\').val()),
-                                                function() {
-                                                     if (xmlHttp.readyState == 4) {
-                                                          simple_display(\'searchcontainer\');
-                                                          $(\'#loading_overlay\').hide();
-                                                     }
-                                                }, true); return false;">
-                     Template Name <input type="text" id="searchbox" name="searchbox" />&nbsp;<input type="submit" value="Search" />
-                </form>
-                <br />
-          </div>
-          ' . get_searchcontainer();
+    $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+    check_for_new_templates();
+
+    ajaxapi([
+        "id" => "perform_templatesearch",
+        "paramlist" => "pagenum = 0, searchwords = false",
+        "beforeajax" => "var searchwords = searchwords ? searchwords : $('#searchbox').val();",
+        "url" => "/features/events/events_ajax.php",
+        "data" => [
+            "action" => "templatesearch",
+            "pagenum" => "js||pagenum||js",
+            "searchwords" => "js||encodeURIComponent(searchwords)||js"],
+        "display" => "searchcontainer",
+        "ondone" => "init_event_menu();",
+        "loading" => "loading_overlay",
+        "event" => "none",
+    ]);
+
+    echo fill_template("tmp/events.template", "templatesearchform", "events", ["searchcontainer" => get_searchcontainer()]);
 }
 
 function application_manager() {
 global $CFG;
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
-    $export = "";
+    $canexport = $exportselect = false;
     if ($archive = get_db_result(fetch_template("dbsql/events.sql", "get_all_staff_by_page", "events"), ["pageid" => $pageid])) {
-        $i = 0;
         $values = [];
         while ($vals = fetch_row($archive)) {
-            $values[$i]["year"] = $vals["year"];
-            $i++;
+            $values[] = ["year" => $vals["year"]];
         }
 
+        $canexport = true;
         $params = [
             "properties" => [
                 "name" => "appyears",
@@ -110,65 +123,60 @@ global $CFG;
             "displayname" => "year",
             "selected" => date("Y"),
         ];
-        $id = "export_staffapp_$pageid";
-        $export = '<div style="clear:both;text-align:right;">
-                    ' . make_select($params) . '
-                    <button class="alike" title="Export" id="' . $id . '">
-                        ' . icon("file-csv") . '
-                    </button>
-                    <div></div>
-                </div>';
+
+        $exportselect = make_select($params);
 
         ajaxapi([
-            "id" => $id,
+            "id" => "export_staffapp_$pageid",
             "url" => "/features/events/events_ajax.php",
-            "data" => ["action" => "export_staffapp", "pageid" => $pageid, "year" => "js|| $('#appyears').val() ||js"],
-            "ondone" => "jq_eval(data);",
+            "data" => [
+                "action" => "export_staffapp",
+                "pageid" => $pageid,
+                "year" => "js||$('#appyears').val()||js",
+            ],
+            "display" => "downloadframe",
         ]);
     }
 
     ajaxapi([
-        "id" => "appsearchform",
+        "id" => "perform_appsearch",
+        "paramlist" => "pagenum = 0, searchwords = false",
+        "beforeajax" => "var searchwords = searchwords ? searchwords : $('#searchbox').val();",
         "url" => "/features/events/events_ajax.php",
-        "data" => ["action" => "appsearch", "pageid" => $pageid, "searchwords" => "js|| encodeURIComponent($('#searchbox').val()) ||js"],
+        "data" => [
+            "action" => "appsearch",
+            "pagenum" => "js||pagenum||js",
+            "searchwords" => "js||encodeURIComponent(searchwords)||js"],
         "display" => "searchcontainer",
+        "ondone" => "init_event_menu();",
         "loading" => "loading_overlay",
-        "event" => "submit",
+        "event" => "none",
     ]);
 
-    echo   '<div class="dontprint">
-                <form id="appsearchform" >
-                    Applicant Search <input type="text" id="searchbox" name="searchbox" />&nbsp;<input type="submit" value="Search" />
-                    <div style="float:right;width: 150px;">
-                        Search for applicants by their name.
-                    </div>
-                    ' . $export . '
-                </form>
-            </div>
-            ' . get_searchcontainer();
+    $params = [
+        "pageid" => $pageid,
+        "canexport" => $canexport,
+        "exportselect" => $exportselect,
+        "searchcontainer" => get_searchcontainer(),
+    ];
+    echo fill_template("tmp/events.template", "appsearchtemplate", "events", $params);
 }
 
 function staff_emailer() {
 global $CFG;
-     echo '
-         <div class="dontprint">
-             <form onsubmit="$(\'#loading_overlay\').show(); ajaxapi_old(\'/features/events/events_ajax.php\',\'sendstaffemails\',\'&sendemails=\'+$(\'#sendemails\').prop(\'checked\')+\'&stafflist=\'+encodeURIComponent($(\'#stafflist\').val()),function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); $(\'#loading_overlay\').hide(); }}, true); return false;">
-                <div style="text-align:center;margin:5px;font-weight: bolder;">
-                    Staff Status Checker
-                </div>
-                <div style="float:right;line-height:35px;">
-                    <label class="rowTitle" for="workerconsentsig">Send Emails</label>
-                      <input id="sendemails" name="sendemails" type="checkbox" />
-                </div>
-                 <div style="text-align:center;width: 50%;">
-                    List of email addresses of staff, one email address per line.
-                </div>
-                 <textarea rows="15" id="stafflist" name="stafflist" style="width:100%;max-width:500px"></textarea>
-                <div style="text-align:center;margin:5px;">
-                    <input type="submit" value="Process" />
-                </div>
-             </form>
-        </div>' . get_searchcontainer();
+    ajaxapi([
+        "id" => "sendstaffemails",
+        "url" => "/features/events/events_ajax.php",
+        "data" => [
+            "action" => "sendstaffemails",
+            "stafflist" => "js||$('#stafflist').val()||js",
+            "sendemails" => "js||$('#sendemails').prop('checked')||js",
+        ],
+        "display" => "searchcontainer",
+        "loading" => "loading_overlay",
+        "event" => "submit",
+    ]);
+    echo fill_template("tmp/events.template", "staff_emailer_template", "events", ["searchcontainer" => get_searchcontainer()]);
 }
 
 function pay() {

@@ -367,31 +367,34 @@ function change_locker_state() {
 
 	update_user_cookie();
 
+	$error = "";
 	try {
 		start_db_transaction();
 		if (set_pageid($pageid)) {
+			$data = get_feature_data($feature, $featureid);
+			$current_position = $data["sort"];
+			$area = $data["area"];
+
 			// Every sql below uses the same where clause.
 			$where = "pageid = ||pageid|| AND feature = ||feature|| AND featureid = ||featureid||";
 			$params = ["pageid" => $pageid, "feature" => $feature, "featureid" => $featureid];
-
-			$current_position = get_db_field("sort", "pages_features", $where, $params);
-			$area = get_db_field("area", "pages_features", $where, $params);
 			if ($direction == 'released') {
 				execute_db_sql("UPDATE pages_features SET area = 'middle', sort = '9999' WHERE $where", $params);
 				resort_page_features($pageid);
-				log_entry($featuretype, $featureid, "Released from Blog Locker"); // Log
+				log_entry($feature, $featureid, "Released from Blog Locker"); // Log
 			} elseif ($direction == 'locker') {
 				execute_db_sql("UPDATE pages_features SET area = 'locker' WHERE $where", $params);
 				resort_page_features($pageid);
-				log_entry($featuretype, $featureid, "Moved to Blog Locker"); // Log
+				log_entry($feature, $featureid, "Moved to Blog Locker"); // Log
 			}
 		}
 		commit_db_transaction();
 	} catch (\Throwable $e) {
 		rollback_db_transaction($e->getMessage());
+		$error = $e->getMessage();
 	}
 
-	emptyreturn();
+	ajax_return(emptyreturn(), $error);
 }
 
 function drop_move_feature() {

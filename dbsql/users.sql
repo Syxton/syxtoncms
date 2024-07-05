@@ -10,6 +10,13 @@ get_user_by_email||
 	WHERE email = ||email||
 ||get_user_by_email
 
+get_active_user||
+	SELECT *
+	FROM users
+	WHERE userid = ||userid||
+	||*recentlyactive||
+||get_active_user
+
 used_email||
 	SELECT *
 	FROM users

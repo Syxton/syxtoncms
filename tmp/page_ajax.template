@@ -80,14 +80,14 @@ search_pages_link_template||
 
 search_pages_buttons_template||
   <span id="addremove_||pageid||">
-  ||must_request{{
-    ||alreadyrequested{{
+  ||*must_request{{
+    ||*alreadyrequested{{
         <button class="alike" title="Remove Request" onclick="ajaxapi_old('/ajax/page_ajax.php',
                                                         'remove_request',
                                                         '&pageid=||pageid||',
                                                         function() {
-                                                        simple_display('addremove_||pageid||');
-                                                        });" onmouseup="this.blur();">
+                                                            simple_display('addremove_||pageid||');
+                                                        });">
             || echo icon("ban");::none||
         </button>
     //OR//
@@ -95,14 +95,14 @@ search_pages_buttons_template||
                                                         'add_request',
                                                         '&pageid=||pageid||',
                                                         function() {
-                                                        simple_display('addremove_||pageid||');
-                                                        });" onmouseup="this.blur();">
+                                                            simple_display('addremove_||pageid||');
+                                                        });">
             || echo icon("envelope");::none||
         </button>
     }}alreadyrequested||
   //OR//
-    ||can_add_remove{{
-        ||isadd{{
+    ||*can_add_remove{{
+        ||*isadd{{
         <button class="alike" title="Add Page" onclick="ajaxapi_old('/ajax/page_ajax.php',
                                                         'change_subscription',
                                                         '&pagenum=||pagenum||' +
@@ -116,7 +116,7 @@ search_pages_buttons_template||
                                                         '&searchwords=' + encodeURIComponent('||searchwords||'),
                                                         function() {
                                                             simple_display('searchcontainer_pagesearch');
-                                                        });" onmouseup="this.blur();">
+                                                        });">
                                                         ||echo icon("plus");::none||
         </button>
         //OR//
@@ -135,13 +135,13 @@ search_pages_buttons_template||
                                                              function() {
                                                                 simple_display('searchcontainer_pagesearch');
                                                              });
-                                                }" onmouseup="this.blur();">
-                                                ||echo icon("trash");::none||
+                                                }">
+                                                ||echo icon("subtract");::none||
         </button>
         }}isadd||
     }}can_add_remove||
   }}must_request||
-  ||admin{{
+  ||*admin{{
     <button class="alike" title="Delete Page" onclick="if (confirm('Are you sure you want to delete this page completely? \n There is no going back from this!')) {
                                                 ajaxapi_old('/ajax/page_ajax.php',
                                                         'delete_page_ajax',

@@ -1,62 +1,363 @@
 show_registrations_page||
-	<select id="print_registrations" style="float: right;">
-		<option>Print Registrations</option>
-		<option value="0">Print All Registrations</option>
-		<option value="1">Print Online Registrations</option>
-	</select>
-	<br />
-	<div style="font-size:.9em;padding:15px 5px;">
-		<h2>||eventname||</h2>
-		||registrationlist||
-		<div>
-			<div style="padding: 5px;">
-				<strong>Quick Reserve Spot</strong>
-			</div>
-			<div style="display: inline-block;padding: 5px;">
-				<span>Reserve </span>
-				<input type="text" size="2" maxlength="2" id="reserveamount" value="1" onchange="if (!IsNumeric(this.value) || this.value <= 0) { this.value = 1; }" />
-				<span> Spot(s): </span>
-			</div>
-			<button id="add_blank_registration">
-				Reserve Registration
-			</button>
-		</div>
-	</div>
+    <select id="print_registrations" style="float: right;">
+        <option>Print Registrations</option>
+        <option value="0">Print All Registrations</option>
+        <option value="1">Print Online Registrations</option>
+    </select>
+    <br />
+    <div style="font-size:.9em;padding:15px 5px;">
+        <h2>||eventname||</h2>
+        ||registrationlist||
+        <div>
+            <div style="padding: 5px;">
+                <strong>Quick Reserve Spot</strong>
+            </div>
+            <div style="display: inline-block;padding: 5px;">
+                <span>Reserve </span>
+                <input type="text" size="2" maxlength="2" id="reserveamount" value="1" onchange="if (!IsNumeric(this.value) || this.value <= 0) { this.value = 1; }" />
+                <span> Spot(s): </span>
+            </div>
+            <button id="add_blank_registration">
+                Reserve Registration
+            </button>
+        </div>
+    </div>
 ||show_registrations_page
 
 show_registrations_menu_tools||
-	<div>
-		<div style="padding: 5px;">
-			<strong>Edit Registration of </strong>
-		</div>
-		<div style="display: inline-block;padding: 5px;width: 50%;">
-			||menu||
-		</div>
-		<div style="display: inline-block;padding: 5px;">
-			<button class="alike" id="event_menu_button" title="Menu" style="padding-right: 5px;||display||">
-				||echo icon("bars", 2);::none||
-			</button>
-			<ul id="event_menu" style="||display||">
-				<li>
-					<button id="edit_registration" title="Edit Registration" class="alike">
-						||echo icon("pencil");::none||
-						<span> Edit Registration</span>
-					</button>
-				</li>
-				<li>
-					<button id="delete_registration" title="Delete Registration" class="alike">
-						||echo icon("trash");::none||
-						<span>Delete Registration</span>
-					</button>
-				</li>
-				<li>
-					<button id="email_registration" title="Send Registration Email" class="alike">
-						||echo icon("envelope");::none||
-						<span> Send Registration Email</span>
-					</button>
-				</li>
-			</ul>
-		</div>
-	</div>
-	<br />
+    <div style="padding: 5px 0 0 5px;">
+        <strong>Edit Registration of </strong>
+    </div>
+    <div style="display: flex;align-items: center;">
+        <div style="display: inline-block;padding: 5px;width: 50%;">
+            ||menu||
+        </div>
+        <div style="display: inline-block;padding: 5px;">
+            <button class="alike" id="event_menu_button" title="Menu" style="padding-right: 5px;||display||">
+                ||echo icon("bars", 2);::none||
+            </button>
+            <ul id="event_menu" style="||display||">
+                <li>
+                    <button id="edit_registration" title="Edit Registration" class="alike">
+                        ||echo icon("pencil");::none||
+                        <span> Edit Registration</span>
+                    </button>
+                </li>
+                <li>
+                    <button id="delete_registration" title="Delete Registration" class="alike">
+                        ||echo icon("trash");::none||
+                        <span>Delete Registration</span>
+                    </button>
+                </li>
+                <li>
+                    <button id="email_registration" title="Send Registration Email" class="alike">
+                        ||echo icon("envelope");::none||
+                        <span> Send Registration Email</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <br />
 ||show_registrations_menu_tools
+
+staff_emailer_template||
+    <div class="dontprint">
+        <form id="sendstaffemails">
+            <div style="text-align:center;margin:5px;font-weight: bolder;">
+                Staff Status Checker
+            </div>
+            <div style="float:right;line-height:35px;">
+                <label class="rowTitle" for="workerconsentsig">Send Emails</label>
+                    <input id="sendemails" name="sendemails" type="checkbox" />
+            </div>
+                <div style="text-align:center;width: 50%;">
+                List of email addresses of staff, one email address per line.
+            </div>
+                <textarea rows="15" id="stafflist" name="stafflist" style="width:100%;max-width:500px"></textarea>
+            <div style="text-align:center;margin:5px;">
+                <input type="submit" value="Process" />
+            </div>
+        </form>
+        <br />
+    </div>
+    ||searchcontainer||
+||staff_emailer_template
+
+appsearchtemplate||
+    <div class="dontprint">
+        <div style="text-align:center">
+            <h3>Search for applicants by their name.</h3>
+        </div>
+        <form onsubmit="perform_appsearch();">
+            <div style="text-align:center;">
+                <input type="text" id="searchbox" name="searchbox" />
+                <input type="submit" value="Search" style="margin-left: 5px;" />
+            </div>
+            ||canexport{{
+                <div style="position:absolute;top:0;">
+                    ||exportselect||
+                    <button class="alike" title="Export" id="export_staffapp_||pageid||">
+                        ||echo icon("file-csv");::none||
+                    </button>
+                    <div></div>
+                </div>
+            }}canexport||
+        </form>
+        <br />
+    </div>
+    ||searchcontainer||
+||appsearchtemplate
+
+staffsearchresults||
+    ||searchnav||
+    <table class="searchresults">
+        <tr>
+            <th style="width:40%;">
+                Name
+            </th>
+            <th style="">
+                Status
+            </th>
+            <th style="width:125px;text-align:right;">
+                Date / Edit
+            </th>
+        </tr>
+        ||rows||
+    </table>
+||staffsearchresults
+
+staffsearchrow||
+    <tr>
+        <td>
+            <button class="alike" onclick="show_staff_app(||staff[staffid]||);">
+                ||staff[name]||
+            </button>
+            <br />
+            <span style="font-size:.9em">
+                ||staff[email]||
+            </span>
+        </td>
+        <td>
+            ||status||
+        </td>
+        <td style="text-align:right;">
+            <input style="width: 100px;margin: 0;" type="text" disabled="disabled" id="bgcheckdate_||staff[staffid]||" name="bgcheckdate_||staff[staffid]||" value="||bgcheckdate||" />
+            <button onclick="save_staff_bg(||staff[staffid]||);" class="alike" style="padding: 0 5px;" title="Edit Background Check Date">
+                ||echo icon("floppy-disk");::none||
+            </button>
+        </td>
+    </tr>
+||staffsearchrow
+
+eventsearchform||
+    <div class="dontprint">
+        <div style="text-align:center">
+            <h3>Search for events by their name.</h3>
+        </div>
+        <form onclick="perform_eventsearch();">
+            <div style="text-align:center;">
+                <input type="text" id="searchbox" name="searchbox" />
+                <input type="submit" value="Search" style="margin-left: 5px;" />
+            </div>
+        </form>
+        <br />
+    </div>
+    ||searchcontainer||
+||eventsearchform
+
+eventsearchresults||
+    ||searchnav||
+    <table class="searchresults">
+        <tr>
+            <th style="text-align:left;">
+                Name
+            </th>
+            <th style="width:100px;text-align:center;">
+                Start Date
+            </th>
+            <th style="width: 40px">
+            </th>
+            <th style="text-align:center;">
+                Contact
+            </th>
+        </tr>
+        ||rows||
+    </table>
+||eventsearchresults
+
+eventsearchrows||
+    <tr>
+        <td style="width:40%;">
+            <button class="alike" onclick="show_registrations(||event[eventid]||);">
+                ||event[name]||
+            </button>
+        </td>
+        <td style="text-align:center;">
+            ||begindate||
+        </td>
+        ||canexport{{
+            <td style="text-align:center;">
+                <button id="export_registrations_||event[eventid]||" class="alike" title="Export ||regcount||/||limit|| Registrations">
+                    ||echo icon([["icon" => "file-csv", "style" => "font-size: 1.3em"]]);::none||
+                </button>
+            </td>
+        }}canexport||
+        <td style="text-align:center;">
+            <a href="mailto: ||event[email]||" />||event[contact]||</a>
+        </td>
+    </tr>
+||eventsearchrows
+
+templatesearchform||
+    <div class="dontprint">
+        <div style="text-align:center">
+            <h3>Search for templates by their name.</h3>
+        </div>
+        <form onclick="perform_templatesearch();">
+            <div style="text-align:center;">
+                <input type="text" id="searchbox" name="searchbox" />
+                <input type="submit" value="Search" style="margin-left: 5px;" />
+            </div>
+        </form>
+        <br />
+    </div>
+    ||searchcontainer||
+||templatesearchform
+
+templatesearchresults||
+    ||searchnav||
+    <table class="searchresults">
+        <tr>
+            <th style="text-align:left;width:40%;">
+                Name
+            </th>
+            <th style="width:20%;">
+                Type
+            </th>
+            <th>
+                Settings
+            </th>
+            <th style="width: 10%;text-align:center;">
+                Activated
+            </th>
+        </tr>
+        ||rows||
+    </table>
+||templatesearchresults
+
+templatesearchrow||
+    <tr style="height:30px;border:3px solid white;">
+        <td style="width:40%;padding:5px;white-space:nowrap;">
+            ||name||
+        </td>
+        <td style="width:20%;padding:5px;text-align:center;">
+            ||type||
+        </td>
+        <td style="text-align:center;padding:5px;">
+            ||issettings{{
+                <button title="Edit Global Template Settings" class="alike" id="global_settings_||template_id||">
+                    ||echo icon("sliders");::none||
+                </button>
+            }}issettings||
+        </td>
+        <td style="text-align:center;padding:5px;">
+            ||isactive{{
+                <button class="alike" title="Deactivate Template" onclick="change_template_status(||template_id||);">
+                    ||echo icon("circle-check");::none||
+                </button>
+                //OR//
+                <button class="alike" title="Activate Template" onclick="change_template_status(||template_id||, 1);">
+                    ||echo icon("circle");::none||
+                </button>
+            }}isactive||
+        </td>
+    </tr>
+||templatesearchrow
+
+searchnav||
+    <div class="searchresultsnav">
+        <span style="width: 100px">
+            ||isprev{{
+                <button class="alike" onclick="||prev_action||" title="Previous Page">
+                    ||echo icon("chevron-left", 2);::none||
+                </button>
+            }}isprev||
+        </span>
+        <span>
+            Viewing ||firstonpage|| through ||amountshown|| out of ||total||
+        </span>
+        <span style="width: 100px">
+            ||isnext{{
+                <button class="alike" onclick="||next_action||" title="Next Page">
+                    ||echo icon("chevron-right", 2);::none||
+                </button>
+            }}isnext||
+        </span>
+    </div>
+||searchnav
+
+registration_info_form||
+    <h3>Edit Registration Values</h3>
+    <form name="reg_form" id="save_reg_changes">
+        <table style="border-top: 1px solid grey;">
+            <tr>
+                <td colspan="2" style="text-align: center">
+                    <input type="submit" value="Save Changes" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Event
+                </td>
+                <td>
+                    ||selected||
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Email
+                </td>
+                <td>
+                    <input id="reg_email" name="reg_email" type="text" size="45" value="||email||" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Pay Code
+                </td>
+                <td>
+                    <input id="reg_code" name="reg_code" type="text" size="45" value="||code||" />
+                </td>
+            </tr>
+            ||rows||
+            <tr>
+                <td colspan="2" style="text-align: center">
+                    <input type="submit" value="Save Changes" />
+                </td>
+            </tr>
+        </table>
+    </form>
+||registration_info_form
+
+copy_registration_info_form||
+    <h3>Copy Registration</h3>
+    <form name="copy_form" id="copy_registration">
+        <table style="border-top: 1px solid grey;">
+            <tr>
+                <td style="width: 125px;">
+                    Copy To
+                </td>
+                <td>
+                    ||eventselect||
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" style="text-align: right">
+                    <input type="submit" value="Copy Registration" />
+                    <br /><br />
+                </td>
+            </tr>
+        </table>
+    </form>
+||copy_registration_info_form

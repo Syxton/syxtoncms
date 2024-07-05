@@ -67,8 +67,7 @@ browse_search_template||
 	<div>
 		<div style="line-height: 20px;">
 			Search for pages by either their name, thier keywords, or their description.<br />
-			Add it to your personal pagelist with the ||echo icon("plus");::none|| button.<br />
-			Remove it from your pagelist with the ||echo icon("trash");::none|| button.<br />
+			Add or Remove from your personal pagelist with ||echo icon("plus");::none|| / ||echo icon("subtract");::none|| buttons.<br />
 			Request access to a private page with the ||echo icon("envelope");::none|| button.
 		</div>
 		<br />

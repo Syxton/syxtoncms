@@ -41,20 +41,41 @@ global $CFG, $USER, $ROLES;
 			$i = 0;
 			foreach ($lockeritems as $lockeritem) {
 				if (++$i > $viewable_limit) { break; }
-				$content .= '<span style="color:gray;font-size:.75em;">' .
-								date('m/d/Y', $lockeritem->dateposted) .
-							' </span>';
+				$date = '
+					<span style="color:gray;padding: 3px;">' .
+						date('m/d/Y', $lockeritem->dateposted) . '
+					</span>';
 				$p = [
 					"title" => $lockeritem->title,
 					"path" => action_path("bloglocker") . "view_locker&pageid=$pageid&htmlid=" . $lockeritem->htmlid,
+					"width" => "98%", "height" => "95%",
 				];
-				$content .= make_modal_links($p);
+				$title = make_modal_links($p);
+
+				$action = "";
 				if (!$lockeritem->blog && is_logged_in() && user_is_able($USER->userid, "addtolocker", $pageid)) {
-					$content .= '<a title="Release from the blog locker" href="#" onclick="ajaxapi_old(\'/ajax/site_ajax.php\',\'change_locker_state\',\'&pageid=' . $pageid . '&featuretype=html&featureid=' . $lockeritem->htmlid . '&direction=released\',function() { go_to_page(' . $pageid . ');});">
-									<img src="' . $CFG->wwwroot . '/images/undo.png" alt="Release from the blog locker" />
-								 </a>';
+					ajaxapi([
+						"id" => "release_bloglocker",
+						"url" => "/ajax/site_ajax.php",
+						"paramlist" => "pageid, featureid",
+						"data" => [
+							"action" => "change_locker_state",
+							"pageid" => "js||pageid||js",
+							"featuretype" => "html",
+							"featureid" => "js||featureid||js",
+							"direction" => "released",
+						],
+						"event" => "none",
+						"ondone" => "getRoot()[0].go_to_page($pageid);",
+					]);
+
+					$action = '
+						<button style="float: right;" class="alike" id="release_bloglocker" title="Release from the blog locker" onclick="release_bloglocker(' . $pageid . ', ' . $lockeritem->htmlid . ');">
+							' . icon("box-open") . '
+						</button>';
 				}
-				$content .= '<br />';
+
+				$content .= "<div>$date $title $action</div>";
 			}
 			$buttons = get_button_layout("bloglocker", $featureid, $pageid);
 			return get_css_box($title, $content, $buttons, NULL, "bloglocker", $featureid);

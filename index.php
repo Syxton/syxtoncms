@@ -10,9 +10,11 @@ if (!isset($CFG)) {
     include_once('config.php');
 }
 
+header("Cache-Control: no-cache, no-store, must-revalidate"); // HTTP 1.1.
+header("Pragma: no-cache"); // HTTP 1.0.
+header("Expires: 0");
+
 if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',' . get_ip_address() . ',')) {
-    header('Cache-Control: max-age=86400'); // HTTP 1.1.
-    header('Expires: 0'); // Proxies.
     include($CFG->dirroot . $CFG->alternatepage);
 } else {
     include_once($CFG->dirroot . '/lib/header.php');
@@ -42,9 +44,6 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
     $PAGE->name   = $currentpage["name"]; // Title of page
     $PAGE->description = $currentpage["description"]; // Descriptoin of page
     $PAGE->themeid = get_page_themeid($pageid);
-
-    header('Cache-Control: max-age=86400'); // HTTP 1.1.
-    header('Expires: 0'); // Proxies.
 
     //Use this page only to keep session and cookies refreshed (during forms)
     if (!empty($_GET['keepalive'])) {

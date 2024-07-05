@@ -87,6 +87,47 @@ p {
     margin: 0 0 1em 0
 }
 
+#alerts_link {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#user_alerts_div .alertrows:nth-child(even) {
+    background-color: #ebebeb;
+}
+
+#user_alerts_div .alertrows:nth-child(odd) {
+    background-color: #f5f5f5;
+}
+
+.alertrows {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px;
+}
+
+.alertrows:hover {
+    filter: brightness(.95);
+}
+
+.alertrows button.alike,
+.alertrows a {
+    padding: 0 5px;
+}
+
+div.searchresultsnav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+div.searchresultsnav span {
+    text-align: center;
+    color: green;
+}
+
 table.searchresultsnav {
     color: green;
 }
@@ -122,7 +163,7 @@ table.searchresults tr:hover {
 }
 
 .staff_status_alert {
-    font-size: .8em;
+    font-size: .9em;
     color: red;
     font-weight: bold;
 }
@@ -162,10 +203,6 @@ table.searchresults tr:hover {
     padding: 5px;
     justify-content: left;
     align-items: center;
-}
-
-a.adminpanel_links * {
-    padding: 0 2px;
 }
 
 .html_notfullscreen {
@@ -221,7 +258,6 @@ a.adminpanel_links * {
 }
 
 .donation_table {
-    font-size: 11px;
     width:100%;
     border-collapse: collapse;
 }
@@ -273,7 +309,21 @@ a.adminpanel_links * {
 
 .profile_links {
     color: green;
-    text-decoration: none
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+}
+
+.profile_links #alerts_span {
+    margin-left: 3px;
+    color: white;
+}
+
+.profile_links #alerts_link {
+    background: red;
+    padding: 5px 10px;
+    margin: 4px 0;
+    border-radius: 10px;
 }
 
 .profile_links:hover {
@@ -567,6 +617,7 @@ img.sitenews {
 
 .event_info {
     font-size: .85em;
+    display: inline-block;
 }
 
 #event_menu {
@@ -705,8 +756,14 @@ tr.roles_row2 {
 
 div.login_box {
     vertical-align: top;
-    font-size: .9em;
     margin-left: 2px;
+}
+
+.login_box .logout_buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
 }
 
 td.field_title {
@@ -792,8 +849,7 @@ a.header_links:hover {
     width: 175px
 }
 
-.calendar_table,
-.calendar_table_Large {
+.calendar_table {
     background-color: #e1e1e1;
     border: 1px solid #999;
     width: 100%;
@@ -807,11 +863,15 @@ a.header_links:hover {
 }
 
 .calendar_table td {
+    width: calc(100% / 7);
+}
+
+.area_side .calendar_table td {
     padding: 2% 1%;
     font-size: 12px;
 }
 
-.calendar_table_Large td {
+.area_middle .calendar_table td {
     border: 2px solid #ffffff4d;
     font-size: 1vw;
 }
@@ -827,7 +887,7 @@ a.header_links:hover {
     padding: 12px !important;
 }
 
-.calendar_monthLarge {
+.area_middle .calendar_month {
     background-color: #d5d5d5;
     vertical-align: middle;
     font-size: 2vw !important;
@@ -837,7 +897,7 @@ a.header_links:hover {
 }
 
 @media screen and (min-width: 1200px) {
-    .calendar_monthLarge {
+    .area_middle .calendar_month {
         font-size: 1.75vw;
     }
 }
@@ -849,9 +909,7 @@ a.header_links:hover {
 }
 
 .calendar_month a:link,
-.calendar_month a:visited,
-.calendar_monthLarge a:link,
-.calendar_monthLarge a:visited {
+.calendar_month a:visited {
     text-decoration: none;
     color: #252216
 }
@@ -861,7 +919,7 @@ a.header_links:hover {
     font-size: 20px;
 }
 
-.calendar_corner_day {
+.area_middle .calendar_day_label {
     background: #ffffff8a;
     padding: 3px;
     margin: 0 1em 1em 0;
@@ -873,36 +931,38 @@ a.header_links:hover {
     justify-content: center;
 }
 
-.calendar_change_monthLarge {
-    width: 40px;
-    font-size: 3vw;
-    line-height: 2vw;
-}
-
-.calendar_day_names,
-.calendar_day_namesLarge {
+.calendar_day_names {
     color: #333;
     background-color: whitesmoke;
     border: 1px solid lightgray;
 }
 
-.calendar_day_names td,
-.calendar_day_namesLarge td {
+.calendar_day_names td {
     width: calc(100% / 7);
 }
 
-.calendar_day_namesLarge td {
+.area_middle .calendar_day_names td {
     padding: 10px;
 }
 
-.calendar_event_label {
-    display: block;
-    padding: 0 10px 10px 10px;
-    font-size: .85vw;
+.area_side .calendar_today_label {
+    display: none;
 }
 
-span.calendar_today_label {
+.calendar_today_label {
     float: right;
+    font-size: .8em;
+    padding: 2px 5px;
+}
+
+.area_side .calendar_event_label {
+    display: none;
+}
+
+.area_middle .calendar_event_label {
+    display: block;
+    padding: 0 10px 10px 10px;
+    font-size: .8em;
 }
 
 .calendar_week {
@@ -913,36 +973,31 @@ span.calendar_today_label {
     vertical-align: middle
 }
 
-.calendar_week_Large {
+.area_middle .calendar_week {
     font-size: .8em;
     color: #433d27;
     height: 52pt;
     vertical-align: top;
-    text-align: left,
+    text-align: left;
 }
 
-.calendar_week td:empty,
-.calendar_week_Large td:empty {
+.calendar_week td:empty {
     background-color: #EEEEEE !important;
     color: #666666 !important;
 }
 
-.calendar_week td:not(:empty):hover,
-.calendar_week_Large td:not(:empty):hover {
+.calendar_week td:not(:empty):hover {
     background-color: #817e7e59 !important;
     color: #212121 !important;
 }
 
 .calendar_week td:first-child,
-.calendar_week td:last-child,
-.calendar_week_Large td:first-child,
-.calendar_week_Large td:last-child {
+.calendar_week td:last-child {
     background-color: #EEEEEE;
     color: #666666;
 }
 
-.calendar_week td:not(:first-child):not(:last-child),
-.calendar_week_Large td:not(:first-child):not(:last-child) {
+.calendar_week td:not(:first-child):not(:last-child) {
     background-color: #CCCCCC;
     color: #333333;
 }
@@ -994,7 +1049,7 @@ span.calendar_today_label {
 
 .popupEventDescription {
     font-size: 1em;
-    line-height: 18px;
+    line-height: 1.3em;
     color: #000;
     font-weight: 400;
     background-color: #fff;
@@ -1055,7 +1110,7 @@ div.footer-text {
 
 div.box_title {
     display: inline-flex;
-    height: 24px;
+    height: 30px;
     justify-content: flex-start;
     align-items: center;
     font-size: 12px;
@@ -1063,6 +1118,7 @@ div.box_title {
     font-weight: 700;
     border: none;
     padding: 0 0 0 1%;
+    max-width: calc(100% - 30px);
 }
 
 span.box_title_text {
@@ -1079,6 +1135,7 @@ span.pagerole {
     font-size: .9em;
     padding: 5px;
     background: cadetblue;
+    color: white;
     border-radius: 5px;
 }
 
@@ -1097,7 +1154,7 @@ div.box_content {
     border-radius: 0px 0px 15px 15px
 }
 
-.hprcp_head {
+.container_head {
     -moz-border-radius: 5px;
     -webkit-border-radius: 5px;
     -khtml-border-radius: 5px;
@@ -1105,21 +1162,6 @@ div.box_content {
     border: 1px solid #fcd163;
     z-index: -1;
     padding: 10px 0 10px 10px;
-}
-
-.hpmb_e,
-.hprcp_n .hprcp_w {
-    display: block;
-    font-size: 0px;
-    height: 6px;
-    line-height: 0;
-    margin: 0;
-    position: relative
-}
-
-.hprcp_n .hprcp_w {
-    left: -2px;
-    width: 6px
 }
 
 .slide_menu_tab svg {
@@ -1159,6 +1201,16 @@ button svg:hover {
 
 .slide_menu_button svg:active {
     filter: brightness(50%);
+}
+
+.slide_menu_wrap {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    height: 30px;
+    z-index: 999999999;
+    float: right;
+    flex-direction: row-reverse;
 }
 
 .slide_menu {
@@ -1369,7 +1421,7 @@ tr.pics_title td:hover {
 .carousel-cell {
     width: 100%;
     height: 400px;
-    background: #222;
+    background: transparent;
     display: flex;
     align-items: center;
     justify-content: center
@@ -1848,6 +1900,80 @@ tr.pics_title td:hover {
     margin-bottom: 8px
 }
 
+.newstable .container_head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 5px;
+}
+
+.newstable .dategraphic {
+    display: inline-block;
+    width: 110px;
+}
+
+.area_middle .newstable .article {
+    width: calc(100% - 125px);
+    display: inline-block;
+    margin-bottom: 15px;
+}
+
+.area_side .newstable .article {
+    width: 100%;
+}
+
+.newstable .title {
+    color:red;
+}
+
+.newstable .summary {
+    color: slategray;
+}
+
+.newstable .readmore {
+    color:slategray;
+}
+
+.news_archive_wrapper {
+    background-color:#FCD163;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    border:1px solid slategray;
+    width:100%;
+    text-align:center;
+    font-size: 1.3em;
+}
+
+.area_side .news_archive_wrapper {
+    text-align:left;
+}
+
+.area_middle .news_archive_wrapper .field_title {
+    display:inline-block;
+    padding: 5px;
+}
+
+.area_side .news_archive_wrapper .field_title {
+    padding: 5px;
+    text-align: center;
+}
+
+.news_archive_label {
+    text-align:center;
+}
+
+.area_middle .news_archive_label {
+    text-align:left;
+    display:inline-block;
+    width: 100px;
+}
+
+.area_side .news_archive_label {
+    display: none;
+}
+
+
 .aspect-ratio {
     position: relative;
     width: 100%;
@@ -1879,6 +2005,12 @@ div.button {
     -webkit-transition: border-color ease-in-out .15s, -webkit-box-shadow ease-in-out .15s;
     -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
     transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s
+}
+
+button.alike *:not(svg):nth-child(2),
+a *:not(svg):nth-child(2),
+button svg + * {
+    padding-left: 3px;
 }
 
 button {

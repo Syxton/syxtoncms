@@ -14,7 +14,7 @@ get_donation_campaign||
 	SELECT *
 	FROM donate_campaign
 	WHERE campaign_id IN (
-								SELECT campaign_id 
+								SELECT campaign_id
 								FROM donate_instance
 								WHERE donate_id = ||donate_id||
 								)
@@ -44,11 +44,35 @@ get_donate_instance||
 	WHERE donate_id = ||donate_id||
 ||get_donate_instance
 
+get_campaign_donations||
+	SELECT *
+	FROM donate_donations
+	WHERE campaign_id = ||campaign_id||
+	ORDER BY timestamp DESC
+||get_campaign_donations
+
 get_campaign_donations_total||
-	SELECT SUM(amount) as total 
+	SELECT SUM(amount) as total
 	FROM donate_donations
 	WHERE campaign_id = ||campaignid||
 ||get_campaign_donations_total
+
+get_shared_campaigns||
+	SELECT *
+	FROM donate_campaign
+	WHERE origin_page = ||pageid||
+	AND campaign_id NOT IN (
+								SELECT campaign_id
+								FROM donate_instance
+								WHERE donate_id IN (
+														SELECT featureid
+														FROM pages_features
+														WHERE pageid = ||pageid||
+														AND feature = 'donate'
+													)
+							)
+	OR shared='1'
+||get_shared_campaigns
 
 insert_donate_instance||
 	INSERT INTO donate_instance
@@ -88,4 +112,17 @@ update_donation||
 insert_donation||
 	INSERT INTO donate_donations (campaign_id, name, paypal_TX, amount, timestamp)
 	VALUES(||campaign_id||, ||name||, ||paypal_TX||, ||amount||, ||timestamp||)
-insert_donation
+||insert_donation
+
+get_donation||
+	SELECT *
+	FROM donate_donations
+	WHERE donationid = ||donationid||
+||get_donation
+
+get_donation_campaigns||
+	SELECT *
+	FROM donate_campaign
+	WHERE shared = 1
+	OR campaign_id = ||campaign_id||
+||get_donation_campaigns

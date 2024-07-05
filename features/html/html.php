@@ -110,7 +110,7 @@ function edithtml() {
                 </div>
                 ';
         }
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $error = $e->getMessage();
     }
     ajax_return($returnme, $error);

@@ -97,7 +97,8 @@ global $CFG, $USER, $MYVARS;
 	$userid = is_logged_in() ? $USER->userid : 0;
 	$ip = get_ip_address();
 	execute_db_sql("INSERT INTO polls_response (pollid,ip,userid,answer) VALUES('$featureid','" . $ip."','$userid','$extra')");
-	$area = get_db_field("area", "pages_features", "feature='polls' AND featureid=$featureid");
+	$data = get_feature_data("polls", $featureid);
+	$area = $data["area"];
 	echo get_poll_results($featureid, $area);
 }
 
@@ -109,7 +110,8 @@ global $CFG, $USER, $MYVARS;
 	$extra = $MYVARS->GET["extra"];
 	$today = get_timestamp();
 	execute_db_sql("UPDATE polls SET status='2',startdate='$today' WHERE pollid='$featureid'");
-	$area = get_db_field("area", "pages_features", "feature='polls' AND featureid=$featureid");
+	$data = get_feature_data("polls", $featureid);
+	$area = $data["area"];
 	echo take_poll_form($pageid, $featureid, $area);
 }
 
@@ -120,7 +122,8 @@ global $CFG, $USER, $MYVARS;
 	$extra = $MYVARS->GET["extra"];
 	$today = get_timestamp();
 	execute_db_sql("UPDATE polls SET status='3',stopdate='$today' WHERE pollid='$featureid'");
-	$area = get_db_field("area", "pages_features", "feature='polls' AND featureid=$featureid");
+	$data = get_feature_data("polls", $featureid);
+	$area = $data["area"];
 	echo get_poll_results($featureid, $area);
 }
 

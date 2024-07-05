@@ -1,58 +1,339 @@
 add_edit_form||
-	<div class="formDiv" id="new_campaign_div">
-		<form id="campaign_form">
-			<fieldset class="formContainer">
-				<div class="rowContainer">
-					<label class="rowTitle" for="title">Campaign Name</label>
-					<input type="text" id="title" name="title" value="||title||" data-rule-required="true" data-msg-required="||titlereq||" />
-					<div class="tooltipContainer info">||titlehelp||</div><br />
-				</div>
-				<div class="rowContainer">
-					<label class="rowTitle" for="title">Goal Amount $</label>
-					<input type="text" id="goal" name="goal" value="||goal||" data-rule-required="true" data-rule-number="true"  data-rule-min="0" data-msg-required="||goalreq||" />
-					<div class="tooltipContainer info">||goalhelp||</div><br />
-				</div>
-				<div class="rowContainer">
-					<label class="rowTitle" for="description">Goal Description</label>
-					<textarea type="text" id="description" name="description" data-rule-required="true" data-msg-required="||descreq||">||description||</textarea>
-					<div class="tooltipContainer info">||deschelp||</div><br />
-				</div>
-				<div class="rowContainer">
-					<label class="rowTitle" for="email">Paypal Email Address</label>
-					<input type="text" id="email" name="email" value="||email||" data-rule-required="true" data-rule-email="true" data-msg-required="||emailreq||" data-msg-email="||emailerror||" />
-					<div class="tooltipContainer info">||emailhelp||</div><br />
-				</div>
-				<div class="rowContainer">
-					<label class="rowTitle" for="email">Paypal PDT token</label>
-					<input type="text" id="token" name="token" value="||token||" data-rule-required="true" data-msg-required="||tokenreq||" />
-					<div class="tooltipContainer info">||tokenhelp||</div><br />
-				</div>
-				<div class="rowContainer">
-					<label class="rowTitle" for="shared">Share Campaign</label>
-					<select id="shared" name="shared" data-rule-required="true">
-							<option value="">Select One...</option>
-							<option value="0" ||noselected||>Not Shared</option>
-							<option value="1" ||yesselected||>Shared</option>
-					</select>
-					<div class="tooltipContainer info">||sharedhelp||</div><br />
-				</div>
-					<br />
-					<input class="submit" name="submit" type="submit" value="||button|| Campaign" style="margin: auto;display:block;clear:both;" />
-					<div id="error_div"></div>
-			</fieldset>
-		</form>
-	</div>
-	<div id="donation_script" style="display:none">||validationscript||</div>
+    <div class="formDiv" id="new_campaign_div">
+        <form id="campaign_form">
+            <fieldset class="formContainer">
+                <div class="rowContainer">
+                    <label class="rowTitle" for="title">Campaign Name</label>
+                    <input type="text" id="title" name="title" value="||title||" data-rule-required="true" data-msg-required="||echo error_string('donate_req_title:donate');::none||" />
+                    <div class="tooltipContainer info">||echo get_help("donate_title:donate");::none||</div><br />
+                </div>
+                <div class="rowContainer">
+                    <label class="rowTitle" for="title">Goal Amount $</label>
+                    <input type="text" id="goal" name="goal" value="||goal||" data-rule-required="true" data-rule-number="true"  data-rule-min="0" data-msg-required="||echo error_string('donate_req_goal:donate');::none||" />
+                    <div class="tooltipContainer info">||echo get_help("donate_goal:donate");::none||</div><br />
+                </div>
+                <div class="rowContainer">
+                    <label class="rowTitle" for="description">Goal Description</label>
+                    <textarea type="text" id="description" name="description" data-rule-required="true" data-msg-required="||echo error_string('donate_req_description:donate');::none||">||description||</textarea>
+                    <div class="tooltipContainer info">||echo get_help("donate_description:donate");::none||</div><br />
+                </div>
+                <div class="rowContainer">
+                    <label class="rowTitle" for="email">Paypal Email Address</label>
+                    <input type="text" id="email" name="email" value="||email||" data-rule-required="true" data-rule-email="true" data-msg-required="||echo error_string('valid_req_email');::none||" data-msg-email="||echo error_string('valid_email_invalid');::none||" />
+                    <div class="tooltipContainer info">||echo get_help("donate_paypal_email:donate");::none||</div><br />
+                </div>
+                <div class="rowContainer">
+                    <label class="rowTitle" for="email">Paypal PDT token</label>
+                    <input type="text" id="token" name="token" value="||token||" data-rule-required="true" data-msg-required="||echo error_string('donate_req_token:donate');::none||" />
+                    <div class="tooltipContainer info">||echo get_help("donate_token:donate");::none||</div><br />
+                </div>
+                <div class="rowContainer">
+                    <label class="rowTitle" for="shared">Share Campaign</label>
+                    <select id="shared" name="shared" data-rule-required="true">
+                            <option value="">Select One...</option>
+                            <option value="0" ||noselected||>Not Shared</option>
+                            <option value="1" ||yesselected||>Shared</option>
+                    </select>
+                    <div class="tooltipContainer info">||echo get_help("donate_shared:donate");::none||</div><br />
+                </div>
+                    <br />
+                    <input class="submit" name="submit" type="submit" value="||button|| Campaign" style="margin: auto;display:block;clear:both;" />
+                    <div id="error_div"></div>
+            </fieldset>
+        </form>
+    </div>
+    <div id="donation_script" style="display:none">||validationscript||</div>
 ||add_edit_form
 
-back_to_campaign_form||
-	<a class="buttonlike" style="position: absolute;" href="javascript: void(0);"
-		onclick="ajaxapi_old('/features/donate/donate_ajax.php',
-								'select_campaign_form',
-								'&featureid=||featureid||&pageid=||pageid||',
-								function() {
-									simple_display('donation_display');
-								});">
-		Back
-	</a>
-||back_to_campaign_form
+back_to_donate||
+    <button id="back_to_donate_||featureid||" style="position: absolute;">
+        Back
+    </button>
+||back_to_donate
+
+join_campaign_form||
+    ||back||
+    <div style="text-align:center">
+        <h1>||heading||</h1>
+        <br />
+        ||content||
+    </div>
+||join_campaign_form
+
+join_campaign_form_select||
+    <div style="display: inline-flex;align-items: center;">
+        ||select||
+        <button id="join_campaign_||featureid||" style="margin-left: 5px;">
+            ||echo icon("magnifying-glass-dollar");::none||
+            <span>Join Campaign</span>
+        </button>
+    </div>
+||join_campaign_form_select
+
+give_button||
+    <form style="margin: auto; text-align: center;" action="https://||paypal||/cgi-bin/webscr" method="post" target="_top">
+        <div style="width: 100%; text-align: center;">
+        <input name="cmd" type="hidden" value="_donations">
+        <input name="item_number" type="hidden" value="DONATE" />
+        <input name="item_name" type="hidden" value="||campaign["title"]||">
+        <input name="business" type="hidden" value="||campaign["paypal_email"]||">
+        <input name="custom" type="hidden" value="||campaign["campaign_id"]||" />
+        <input name="return" type="hidden" value="||wwwroot||/features/donate/donate.php?action=thankyou" />
+        <input name="notify_url" type="hidden" value="||wwwroot||/features/donate/ipn.php" />
+        <input name="lc" type="hidden" value="US">
+        <input name="tax" type="hidden" value="0" />
+        <input name="rm" type="hidden" value="2" />
+        <input name="currency_code" type="hidden" value="USD">
+        <input name="bn" type="hidden" value="PP-DonationsBF:btn_donateCC_LG.gif:NonHostedGuest">
+        <br />
+        <input style="border: 0px;" alt="PayPal - The safer, easier way to pay online!" name="submit" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" type="image">
+        <img style="border: 0px; display: block; margin-left: auto; margin-right: auto; width: 80%;" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" alt="" width="1" height="1">
+        </div>
+    </form>
+||give_button
+
+offline_donation_form||
+    <div class="formDiv" id="new_donation_div">
+        <form id="donation_form">
+            <fieldset class="formContainer">
+                <div class="rowContainer">
+                    <label class="rowTitle" for="amount">
+                        Donation Amount $
+                    </label>
+                    <input type="text" id="amount" name="amount" value="0.00" data-rule-required="true" data-rule-number="true" data-rule-min="0.01" data-msg-required="||echo error_string('donate_req_amount:donate');::none||" data-msg-min="||echo error_string('donate_req_min:donate');::none||" />
+                    <div class="tooltipContainer info">
+                        ||echo get_help("donate_amount:donate");::none||
+                    </div>
+                </div>
+                <div class="rowContainer">
+                    <label class="rowTitle" class="rowTitle" for="name">Name</label>
+                    <input type="text" id="name" name="name" value="Anonymous" />
+                    <div class="tooltipContainer info">
+                        ||echo get_help("donate_name:donate");::none||
+                    </div>
+                </div>
+                <br />
+                <input class="submit" name="submit" type="submit" value="Add Donation" style="margin: auto;display:block;" />
+                <div id="error_div"></div>
+            </fieldset>
+        </form>
+    </div>
+    <div id="donation_script" style="display:none">
+        ||validation||
+    </div>
+||offline_donation_form
+
+donations_table||
+    <table class="donation_table">
+        <tr>
+            <th style="width:55px">
+                <strong>Type</strong>
+            </th>
+            <th style="text-align:left">
+                <strong>Name</strong>
+            </th>
+            <th style="text-align:left">
+                <strong>Amount</strong>
+            </th>
+            <th style="width:80px">
+                <strong>Date</strong>
+            </th>
+            <th>
+                <strong>Paypal TX</strong>
+            </th>
+            <th style="width:20px">
+            </th>
+            <th style="width:20px"></th>
+        </tr>
+        ||donations||
+    </table>
+||donations_table
+
+donation_row||
+    <tr>
+        <td style="text-align:center">||type||</td>
+        <td>||name||</td>
+        <td>$||amount||</td>
+        <td style="text-align:center">||time||</td>
+        <td style="text-align:center">||tx||</td>
+        <td>
+            <button title="Edit Donation" class="alike" onclick="edit_donation_form(||donationid||);">
+                ||echo icon("pencil");::none||
+            </button>
+        </td>
+        <td>
+            <button title="Delete Donation" class="alike" onclick="delete_donation_form(||donationid||);">
+                ||echo icon("trash");::none||
+            </button>
+        </td>
+    </tr>
+||donation_row
+
+edit_donation_form||
+    <div class="formDiv" id="new_donation_div" style="max-width: 500px;margin: auto;">
+        <form id="donation_form">
+            <fieldset class="formContainer">
+                <div class="rowContainer">
+                    <label class="rowTitle" for="campaign_id">Donated to:</label>
+                    <select id="campaign_id" name="campaign_id" data-rule-required="true">
+                        ||options||
+                    </select>
+                    <div class="tooltipContainer info">
+                        ||echo get_help("donate_campaign:donate");::none||
+                    </div>
+                    <br />
+                </div>
+                <div class="rowContainer">
+                    <label class="rowTitle" for="amount">
+                        Donation Amount $
+                    </label>
+                    <input type="text" id="amount" name="amount" value="||amount||" data-rule-required="true" data-rule-number="true" data-rule-min="0.01" data-msg-required="||echo error_string('donate_req_amount:donate');::none||" data-msg-min="||echo error_string('donate_req_min:donate');::none||" />
+                    <div class="tooltipContainer info">
+                        ||echo get_help("donate_amount:donate");::none||
+                    </div>
+                    <br />
+                </div>
+                <div class="rowContainer">
+                    <label class="rowTitle" for="name">
+                        Name
+                    </label>
+                    <input type="text" id="name" name="name" value="||name||" />
+                    <div class="tooltipContainer info">
+                        ||echo get_help("donate_name:donate");::none||
+                    </div>
+                    <br />
+                </div>
+                <div class="rowContainer">
+                    <label class="rowTitle" for="paypal_TX">
+                        Paypal TX
+                    </label>
+                    <input type="text" id="paypal_TX" paypal_TX="name" value="||tx||" />
+                    <div class="tooltipContainer info">
+                        ||echo get_help("donate_paypaltx:donate");::none||
+                    </div>
+                    <br />
+                </div>
+                <br />
+                <input class="submit" name="submit" type="submit" value="Save" style="margin: auto;display:block;" />
+                <div id="error_div"></div>
+            </fieldset>
+        </form>
+    </div>
+||edit_donation_form
+
+get_campaign_forms||
+    <div style="text-align:center">
+        <h1>Choose a Campaign</h1>
+    </div>
+    <div style="margin: 15px;">
+    ||campaign_id{{
+            ||isjoined{{
+                    You are currently joined to a campaign called: <strong>||name||</strong>
+                //OR//
+                    You are involved in a campaign you started called: <strong>||name||</strong>
+                    <br /><br />
+                    Would you like to edit the current campaign?
+                    <button id="new_campaign_form">
+                        ||echo icon("pencil");::none||
+                        <span>Edit Campaign</span>
+                    </button>
+                    <br />
+            }}isjoined||
+        //OR//
+            You are not currently associated with an active campaign.
+    }}campaign_id||
+    </div>
+    <br />
+    <div style="margin: 15px;">
+        Would you like to start a new campaign or join an existing donation campaign?
+    </div>
+    <div style="margin: 15px;">
+        <button id="new_campaign_form" style="margin: 15px;">
+            ||echo icon("sack-dollar");::none||
+            <span>Start New Campaign</span>
+        </button>
+        <button id="join_campaign_form">
+            ||echo icon("handshake");::none||
+            <span>Join Existing Campaign</span>
+        </button>
+    </div>
+||get_campaign_forms
+
+add_or_manage_forms||
+    <div style="text-align:center">
+        <h1>What would you like to do?</h1>
+        <div style="margin: 15px;">
+            Would you like to add offline donations to this campaign?
+            <br />
+            <button id="add_offline_donations_form">
+                ||echo icon("money-bill-1");::none||
+                <span>Add Offline Donations</span>
+            </button>
+        </div>
+        <br />
+        <div style="margin: 15px;">
+            Would you like to manage all donations made to this campaign?
+            <br />
+            <button id="manage_donations_form">
+                ||echo icon("wallet");::none||
+                <span>Manage Donations</span>
+            </button>
+        </div>
+    </div>
+||add_or_manage_forms
+
+verticalmeter||
+    <div style="text-align: center">
+        <strong>||title||</strong>
+    </div>
+    <br />
+    <div style="text-align:center;padding:4px;">
+        ||goal_description||
+        <br /><br />
+        <div id="thermometer" class="thermometer">
+        <div class="track">
+            <div class="goal">
+                <div class="amount">
+                    ||goal_amount||
+                </div>
+            </div>
+            <div class="progress">
+                <div class="amount">
+                    ||total||
+                </div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <strong>||perc||% complete</strong>
+    </div>
+    </div>
+    <br />
+||verticalmeter
+
+horizontalmeter||
+    <div style="text-align: center">
+        <strong>||title||</strong>
+    </div><br />
+    <div style="text-align: center">
+        ||goal_description||
+    </div>
+    <div id="thermometer" class="thermometer horizontal">
+        <div class="track">
+            <div class="goal">
+                <div class="amount">
+                    ||goal_amount||
+                </div>
+            </div>
+            <div class="progress">
+                <div class="amount">
+                    ||total||
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style="text-align: center;">
+        <strong>||perc||% complete</strong>
+    </div>
+    <br />
+||horizontalmeter

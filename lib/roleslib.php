@@ -141,7 +141,7 @@ global $CFG, $ROLES, $ABILITIES;
         // This sql template has a few spots with generated sql that need filled in before the params are prepared.
         // It requires a fill_template instead of a fetch_template to add the additional sql to the template first.
         $sqlparams = [
-            "issection" => ($section),
+            "issection" => ($section ? true : false),
             "section" => $section_sql,
             "groupsql" => groups_SQL($userid, $pageid),
             "featuregroupsql" => groups_SQL($userid, $pageid, 'a.ability', $feature, $featureid),

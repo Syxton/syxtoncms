@@ -158,6 +158,8 @@ function simple_display(container) {
                 resize_modal();
             });
         });
+    } else if (getRoot()[0].$("#" + container).length) { // might be in an iframe and wanting to populate a parent container.
+        getRoot()[0].simple_display(container, data);
     }
 }
 
@@ -203,11 +205,9 @@ function jq_display(container, data) {
                 resize_modal();
             });
         });
+    } else if (getRoot()[0].$("#" + container).length) { // might be in an iframe and wanting to populate a parent container.
+        getRoot()[0].jq_display(container, data);
     }
-}
-
-function jq_eval(data) {
-    eval(data.message);
 }
 
 function clear_display(divname) {
@@ -220,16 +220,19 @@ function display_backup(divname, backupdiv) {
     document.getElementById(divname).innerHTML = document.getElementById(backupdiv).innerHTML + xmlHttp.responseText;
 }
 
-function run_this() {
-    eval(xmlHttp.responseText);
-}
-
-function istrue() {
+function istrue_old() {
     if (trim(xmlHttp.responseText) == "false") {
         return false;
     } else {
         return true;
     }
+}
+
+function istrue(data = false) {
+    if (!data) {
+        return istrue_old();
+    }
+    return data.message == "false" ? false : true;
 }
 
 function do_nothing() {}
@@ -334,10 +337,6 @@ function initialize_colorbox_iframes() {
         });
         getRoot("iframe.cboxIframe").trigger('load');
     }
-}
-
-function refresh_page() {
-    window.location.reload(true);
 }
 
 function stripslashes(str) {
@@ -448,6 +447,24 @@ function appendjs(id, script) {
     $("#jscontainer").append(
         $('<script class="ajaxapi active" id="script_' + id + '">' + script.singleline().trim() + '</script>')
     );
+}
+
+function mergeJSON(data1, data2) {
+    var json1 = JSON.parse(data1);
+    var json2 = JSON.parse(data2);
+    return JSON.stringify($.extend({}, json1, json2));
+}
+
+function create_request_json(container) {
+    let queryString = create_request_string(container);
+    let obj = {}
+    if(queryString) {
+      queryString.slice(1).split('&').map((item) => {
+        const [ k, v ] = item.split('=')
+        v ? obj[k] = v : null
+      })
+    }
+    return JSON.stringify(obj);
 }
 
 //2.0 jquery version
@@ -605,16 +622,15 @@ function checkPassword(x, y, f, alertsoff) {
 }
 
 //Minor usage functions
-function update_alerts(change) {
+function update_alerts(addalert = 0) {
     var alerts = $("#alerts").val();
-    if (change == 1) { //add an alert
+    if (addalert === 1) { // add an alert
         alerts++;
         $("#alerts_span").html(alerts + " Alerts");
-    } else { //subtract an alert
+    } else { // subtract an alert
         alerts--;
         $("#alerts_span").html(alerts == 0 ? "" : alerts + " Alerts");
-        if (alerts == 0) {
-            //remove entire link
+        if (alerts === 0) {
             $("#alerts_link").remove();
         }
     }

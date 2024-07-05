@@ -1,6 +1,5 @@
 .thermometer {
-    float: left;
-    margin: 0 80px;
+    margin: auto;
 }
 .thermometer {
     width:40px;
@@ -76,8 +75,6 @@
     right:0;
 }
 
-
-
 .thermometer.horizontal {
     margin: 40px auto 40px;
 }
@@ -92,7 +89,6 @@
     left:0;
     height:20px;
     margin: 0 auto;
-
     background: -webkit-gradient(linear, left top, right top, color-stop(0%,rgb(0,0,0)), color-stop(1%,rgb(255,255,255)));
     background: -webkit-linear-gradient(left, rgb(0,0,0) 0%,rgb(255,255,255) 10%);
     background:      -o-linear-gradient(left, rgb(0,0,0) 0%,rgb(255,255,255) 10%);
@@ -130,7 +126,7 @@
     position: absolute;
     padding: 45px 5px 15px 5px !important;
     border-top: 0;
-    border-left: 1px solid black !important;    
+    border-left: 1px solid black !important;
 }
 
 .thermometer.horizontal .progress .amount {

@@ -115,6 +115,9 @@ function icon_color($icon) {
         case "square-rss":
             $color = "orange";
             break;
+        case "circle-exclamation":
+            $color = "red";
+            break;
         default:
             return "";
     }
@@ -237,6 +240,7 @@ global $CFG, $LOADAJAX;
 
     try {
         $id = $params["id"] ?? false;
+        $reqstring = $params["reqstring"] ?? "";
         $data = $params["data"] ?? [];
         $if = $params["if"] ?? false;
         $else = $params["else"] ?? false;
@@ -274,20 +278,44 @@ global $CFG, $LOADAJAX;
 
         $always = ".always(function(data) { $always $(this).blur();})";
 
+        // if and else setup.
         $if = $if ? "if ($if) {" : "";
         $else = $else ? "else { $else }" : "";
         $ifclose = $if ? "} $else" : "";
 
+        // datestamp to make each call unique.
         $data["timestamp"] = "js|| Date.now() ||js";
         $data["ajaxapi"] = 1;
+
+        // prepare data json.
         $data = json_encode($data);
         $data = str_replace(['"js||', '||js"', '\'js||', '||js\''], '', $data);
 
+        // if entire form data is needed, merge it with the original request data.
+        if (!empty($reqstring)) {
+            $reqstring = '
+                let orgjson = ' . $data . ';
+                var reqdata = mergeJSON(create_request_json("' . $reqstring . '"), JSON.stringify(orgjson));
+            ';
+            $data = "{}";
+            if ($method === 'POST') {
+                $data = 'JSON.parse(reqdata)';
+            }
+        }
+
+        if (empty($reqstring) && $method !== 'POST') {
+            $data = '{}';
+        }
+
         $script = "
             ajax: {
+                if (typeof event !== 'undefined') {
+                    event.preventDefault();
+                }
                 if (getGlobals().exitEvent) {
                     break ajax;
                 }
+                $reqstring
                 $if
                 $showloading
                 $beforeajax
@@ -296,7 +324,7 @@ global $CFG, $LOADAJAX;
                     type: `$method`,
                     $callback
                     contentType: '$contenttype',
-                    data: " . ($method === 'POST' ? $data : "{}") . ",
+                    data: $data,
                     dataType: '$datatype',
                     cache: false,
                 }).fail(function(data) {
@@ -310,6 +338,7 @@ global $CFG, $LOADAJAX;
                     loadajaxjs(data);
                 })$always;
                 $ifclose
+                return false;
             }";
 
         if ($intervalid) {
@@ -360,7 +389,7 @@ global $CFG, $LOADAJAX;
             $script = preg_replace('/\s+/S', " ", $script) . "//# sourceURL=$id.js";
         }
         return $script;
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         throw new Exception($e->getMessage());
     }
     return false;
@@ -690,23 +719,25 @@ global $CFG;
 
 function get_user_links($userid, $pageid) {
 global $CFG;
-  $returnme = '<input type="hidden" id="loggedin" />';
-  $alerts   = false;
-  $alerts   = get_user_alerts($userid);
-  if ($alerts) {
-    $alerts_text = $alerts == 1 ? "Alert" : "Alerts";
-    $returnme .= '<span class="profile_links">' . make_modal_links([
-                                                    "title" => "Alerts",
-                                                    "id" => "alerts_link",
-                                                    "text" => '<span id="alerts_span">' . "$alerts $alerts_text" . '</span>',
-                                                    "path" => $CFG->wwwroot . "/pages/user.php?action=user_alerts&userid=$userid",
-                                                    "width" => "600",
-                                                    "height" => "500",
-                                                    "image" => $CFG->wwwroot . "/images/error.png",
-                                                    ]) . '</span>';
-                                                }
-  $returnme .= '<input type="hidden" id="alerts" value="' . $alerts . '" />';
-  return $returnme;
+    $returnme = '<input type="hidden" id="loggedin" />';
+    $alerts = get_user_alerts($userid);
+    if ($alerts) {
+        $alerts_text = $alerts == 1 ? "Alert" : "Alerts";
+        $returnme .= '
+            <span class="profile_links">
+            ' . make_modal_links([
+                    "title" => "Alerts",
+                    "id" => "alerts_link",
+                    "text" => '<span id="alerts_span">' . "$alerts $alerts_text" . '</span>',
+                    "path" => $CFG->wwwroot . "/pages/user.php?action=user_alerts&userid=$userid",
+                    "width" => "600",
+                    "height" => "500",
+                    "icon" => icon("circle-exclamation", 1, "", "white"),
+            ]) . '
+            </span>';
+    }
+    $returnme .= '<input type="hidden" id="alerts" value="' . $alerts . '" />';
+    return $returnme;
 }
 
 function is_opendoor_page($pageid) {
@@ -858,7 +889,25 @@ global $CFG, $USER;
     if (empty($pageid)) {
         $pageid = $CFG->SITEID;
     }
+
+    // Logged in as someone else.
+    $logoutas = "";
+    if (!empty($_SESSION["lia_original"])) {
+        $lia_name = get_user_name($_SESSION["lia_original"]);
+        ajaxapi([
+            "id" => "lia_switchback",
+            "url" => "/features/adminpanel/adminpanel_ajax.php",
+            "data" => [
+                "action" => "logoutas",
+            ],
+            "ondone" => "getRoot()[0].go_to_page('" . $CFG->SITEID . "');",
+        ]);
+
+        $logoutas = fill_template("tmp/pagelib.template", "print_logout_button_switchback_template", false, ["lia_name" => $lia_name]);
+    }
+
     $edit = user_is_able($USER->userid, "editprofile", $pageid) ? true : false;
+    $usericon = empty($logoutas) ? "user" : "user-secret";
     $params   = [
         "siteid" => $CFG->SITEID,
         "title" => "Edit Profile",
@@ -866,16 +915,9 @@ global $CFG, $USER;
         "path" => $CFG->wwwroot . "/pages/user.php?action=change_profile",
         "validate" => "true",
         "width" => "500",
-        "icon" => icon([["icon" => "user", "style" => "font-size: 1.5em"]]),
+        "icon" => icon([["icon" => $usericon, "style" => "font-size: 1.5em"]]),
     ];
     $profile = $edit ? make_modal_links($params) : "$fname $lname";
-
-    // Logged in as someone else.
-    $logoutas = "";
-    if (!empty($_SESSION["lia_original"])) {
-        $lia_name = get_user_name($_SESSION["lia_original"]);
-        $logoutas = fill_template("tmp/pagelib.template", "print_logout_button_switchback_template", false, ["siteid" => $CFG->SITEID, "lia_name" => $lia_name]);
-    }
 
     $rolename = get_db_field("display_name", "roles", "roleid = " . user_role($USER->userid, $pageid));
 
@@ -1025,7 +1067,12 @@ global $CFG, $PAGE, $STYLES;
             $returnme .= fill_template("tmp/pagelib.template", "get_css_box_bottom_template", false, $params);
         }
 
-        $opendiv = empty($feature) || $feature == 'pagelist' || $feature == 'addfeature' ? '' : 'class="box" id="' . $feature . '_' . $featureid . '"';
+        if ($featureid) {
+            $data = get_feature_data($feature, $featureid);
+        }
+	    $area = isset($data) && $data ? "area_" . $data['area'] : "";
+
+        $opendiv = empty($feature) || $feature == 'pagelist' || $feature == 'addfeature' ? '' : 'class="box ' . $area . '" id="' . $feature . '_' . $featureid . '"';
         $padding = isset($padding) ? ' padding:' . $padding . ";" : "";
         $params = [
             "opendiv" => $opendiv,
@@ -1256,7 +1303,7 @@ global $USER;
             $role_assignment = execute_db_sql(fetch_template("dbsql/roles.sql", "remove_user_role_assignment"), ["userid" => $userid, "pageid" => $pageid]);
         } else {
             $SQL = fetch_template("dbsql/roles.sql", "insert_role_assignment");
-            $role_assignment = execute_db_sql($SQL, ["userid" => $user, "roleid" => $defaultrole, "pageid" => $pageid, "confirm" => 0]);
+            $role_assignment = execute_db_sql($SQL, ["userid" => $userid, "roleid" => $defaultrole, "pageid" => $pageid, "confirm" => 0]);
         }
     }
 
@@ -1264,6 +1311,14 @@ global $USER;
         return true;
     }
     return false;
+}
+
+function get_feature_data($feature, $featureid) {
+    $SQL = "SELECT area
+            FROM pages_features
+            WHERE feature = ||feature||
+            AND featureid = ||featureid||";
+    return get_db_row($SQL, ["feature" => $feature, "featureid" => $featureid]);
 }
 
 function get_page_contents($pageid = false, $area = "middle") {
@@ -1499,6 +1554,24 @@ function get_search_page_variables(int $total, int $perpage, int $pagenum) {
     ];
 }
 
+function get_nav_params($pageparams) {
+    return $navparams = [
+        "isprev" => ($pageparams["pagenum"] > 0),
+        "isnext" => ($pageparams["firstonpage"] + $pageparams["perpage"] < $pageparams["total"]),
+        "firstonpage" => $pageparams["firstonpage"] + 1,
+        "amountshown" => $pageparams["firstonpage"] + $pageparams["perpage"] < $pageparams["total"] ? $pageparams["firstonpage"] + $pageparams["perpage"] : $pageparams["total"],
+        "total" => $pageparams["total"],
+    ];
+}
+
+function get_page_count($pageparams) {
+    if ($pageparams["total"] > (($pageparams["pagenum"] + 1) * $pageparams["perpage"])) {
+        return $pageparams["perpage"];
+    }
+
+    return  $pageparams["total"] - (($pageparams["pagenum"]) * $pageparams["perpage"]);
+}
+
 function get_searchcontainer($initial = "") {
     global $CFG;
     return '<div id="loading_overlay" class="loading_overlay dontprint" style="display: none;">
@@ -1526,8 +1599,9 @@ global $CFG;
  * @param string $padding The padding of the popup (defaults to "15px")
  * @return string The HTML for the popup
  */
-function format_popup(string $content = "", string $title = "", string $height = "auto", string $padding = "15px") {
+function format_popup(string $content = "", string $title = "", string $height = "auto", string $padding = "15px", string $before = "") {
     $params = [
+        "before" => $before,
         "padding" => $padding,
         "height" => $height,
         "title" => $title,

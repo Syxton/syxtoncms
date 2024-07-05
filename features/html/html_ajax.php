@@ -25,6 +25,7 @@ function new_edition() {
     $htmlid = clean_myvar_req("htmlid", "int");
     $pageid = clean_myvar_req("pageid", "int");
     $type = "html";
+    $error = "";
     try {
         start_db_transaction();
         $html = get_db_row("SELECT * FROM html h JOIN pages_features pf ON pf.featureid = h.htmlid WHERE h.htmlid = ||htmlid|| AND pf.feature = 'html'", ["htmlid" => $htmlid]);
@@ -60,7 +61,10 @@ function new_edition() {
         }
     } catch (\Throwable $e) {
         rollback_db_transaction($e->getMessage());
+        $error = $e->getMessage();
     }
+
+    ajax_return("", $error);
 }
 
 function still_editing() {

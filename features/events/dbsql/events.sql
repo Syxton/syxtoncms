@@ -85,6 +85,20 @@ delete_events_requests_questions||
     WHERE reqid = ||reqid||;
 ||delete_events_requests_questions
 
+insert_events_requests_questions||
+    INSERT INTO events_requests_questions
+    (reqid, question, answer, question_time, answer_time)
+    VALUES(||reqid||, ||question||, "", ||qtime||, 0)
+||insert_events_requests_questions
+
+get_events_requests_questions||
+    SELECT *
+    FROM events_requests_questions
+    WHERE reqid = ||reqid||
+    ||*mod||
+    ORDER BY question_time
+||get_events_requests_questions
+
 get_events_requests||
     SELECT *
     FROM events_requests
@@ -223,6 +237,15 @@ get_staff_app||
     WHERE staffid = ||staffid||
 ||get_staff_app
 
+search_staff_app||
+    SELECT s.*, u.email
+    FROM events_staff s
+    JOIN users u ON u.userid = s.userid
+    WHERE ||searchstring||
+    AND s.pageid = ||pageid||
+    ORDER BY s.name
+||search_staff_app
+
 update_staff_app_archive||
     UPDATE events_staff_archive
     SET userid = ||userid||, pageid = ||pageid||, name = ||name||, phone = ||phone||,
@@ -260,7 +283,6 @@ get_all_staff_by_year||
     ORDER BY name
 ||get_all_staff_by_year
 
-
 get_all_staff_by_page||
     SELECT *
     FROM events_staff_archive
@@ -268,3 +290,27 @@ get_all_staff_by_page||
     GROUP BY year
     ORDER BY year
 ||get_all_staff_by_page
+
+events_search||
+    SELECT *
+    FROM events
+    WHERE start_reg != ''
+    AND ||searchstring||
+    AND (
+        pageid = ||pageid||
+        ||issite{{
+        OR (
+            siteviewable = 1
+            AND confirmed = 1
+        )
+        }}issite||
+    )
+    ORDER BY event_begin_date DESC
+||events_search
+
+templates_search||
+    SELECT *
+    FROM events_templates
+    WHERE (||searchstring||)
+    ORDER BY name
+||templates_search

@@ -95,7 +95,7 @@ function make_csv($filename, $contents) {
     return addslashes($tempdir. "/" . $filename);
 }
 
-function create_file($filename, $contents, $makecsv=false) {
+function create_file($filename, $contents, $makecsv = false) {
     if ($makecsv) {
         return make_csv($filename, $contents);
     } else {
@@ -111,9 +111,9 @@ function create_file($filename, $contents, $makecsv=false) {
     }
 }
 
-function get_download_link($filename, $contents, $makecsv=false) {
+function get_download_link($filename, $contents, $makecsv = false, $iframename = "downloadframe") {
     global $CFG;
-    return 'window.open("' . $CFG->wwwroot . '/scripts/download.php?file=' . create_file($filename, $contents, $makecsv) . '", "downloadframe");';
+    return 'getRoot()[0].window.open("' . $CFG->wwwroot . '/scripts/download.php?file=' . create_file($filename, $contents, $makecsv) . '", "' . $iframename . '");';
 }
 
 function return_bytes ($size_str) {
@@ -288,7 +288,8 @@ function fill_template($file, $subsection, $feature = false, $params = [], $allo
                     // Get the functionality of the variable.
                     $replacement = template_get_functionality($match);
 
-                    ob_start(); // Capture eval() output
+                    $replacement = 'try { $t = error_reporting(); error_reporting(E_PARSE); ' . $replacement . ' } catch (\Throwable $e) { ob_get_clean(); error_reporting($t); throw new Exception($e->getMessage()); }';
+                    ob_start(); // Capture output
                     eval($replacement);
                     $contents = str_replace("||$optional$match||", ob_get_clean(), $contents);
                 } else {
@@ -307,7 +308,7 @@ function fill_template($file, $subsection, $feature = false, $params = [], $allo
         return is_array($contents) ? $contents : trim($contents);
     } catch (\Exception $e) {
         debugging($e->getMessage());
-        throw $e;
+        throw new \Exception($e->getMessage());
     }
     return false;
 }
@@ -424,7 +425,7 @@ function template_subsection($content, $subsection) {
  */
 function templates_process_qualifiers($contents, $params) {
     // Define the pattern to match the qualifiers.
-    $pattern = '/\|\|(?<x>.*)\{\{((?s).*?)\}\}\k<x>\|\|/i';
+    $pattern = '/(?<outer>\|\|(?<opt>\*?)(?<var>.*)\{\{(?<inner>(?s).*?)\}\}\k<var>\|\|)/i';
 
     // Find all the qualifiers in the content.
     preg_match_all($pattern, $contents, $qualifiers);
@@ -434,9 +435,10 @@ function templates_process_qualifiers($contents, $params) {
         $i = 0;
 
         // Loop through all the qualifiers found.
-        while (!empty($qualifiers[0][$i])) {
+        while (!empty($qualifiers['outer'][$i])) {
             // Replace the qualifier with the processed version.
-            $contents = templates_replace_qualifiers($qualifiers['x'][$i], $qualifiers[0][$i], $qualifiers[2][$i], $params, $contents);
+            $optional = empty($qualifiers['opt'][$i]) ? false : true;
+            $contents = templates_replace_qualifiers($qualifiers['var'][$i], $qualifiers['outer'][$i], $qualifiers['inner'][$i], $params, $contents, $optional);
             $i++;
         }
     }
@@ -455,7 +457,7 @@ function templates_process_qualifiers($contents, $params) {
  * @param string $contents The contents to process.
  * @return string The processed content.
  */
-function templates_replace_qualifiers($eval, $fullcode, $innercode, $params, $contents) {
+function templates_replace_qualifiers($var, $fullcode, $innercode, $params, $contents, $optional = false) {
     // Recursively process the inner code to check for nested qualifiers.
     $innercontent = templates_process_qualifiers($innercode, $params);
 
@@ -467,11 +469,17 @@ function templates_replace_qualifiers($eval, $fullcode, $innercode, $params, $co
         $replacewith[1] = "";
     }
 
-    // Replace the qualifier with the appropriate part based on the evaluation result.
-    if ($params[$eval] === false) { // If eval variable is false, replace with the 2nd part of the OR
-        $contents = str_replace($fullcode, $replacewith[1], $contents);
-    } else { // If eval variable is true, replace with the 1st part of the OR
-        $contents = str_replace($fullcode, $replacewith[0], $contents);
+    if (isset($params[$var])) {
+        if (!$params[$var]) { // If $var variable evaluates to false, replace with the 2nd part of the OR
+            $contents = str_replace($fullcode, $replacewith[1], $contents);
+        } elseif ($params[$var]) { // If eval variable evaluates to true, replace with the 1st part of the OR
+            $contents = str_replace($fullcode, $replacewith[0], $contents);
+        }
+    } else {
+        if (!$optional) {
+            throw new Exception("Missing qualifier variable: " . $var);
+        }
+        $contents = str_replace($fullcode, "", $contents);
     }
 
     return $contents;

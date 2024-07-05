@@ -98,7 +98,7 @@ function all_campers_list($filename = "camperlist", $year = false, $removeduplic
             }
             $return = '<iframe src="' . $CFG->wwwroot . '/scripts/download.php?file=' . create_file("$filename.csv", $camperlist, true) . '"></iframe>';
         }
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $error = $e->getMessage();
     }
 

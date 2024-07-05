@@ -59,7 +59,7 @@ global $CFG, $USER;
 			}
 			$script = ajaxapi([
 				"url" => "/features/forum/forum_ajax.php",
-				"data" => ["action" => "create_category", "forumid" => $forumid, "title" => "js|| encodeURIComponent($('#title').val()) ||js"],
+				"data" => ["action" => "create_category", "forumid" => $forumid, "title" => "js||encodeURIComponent($('#title').val()) ||js"],
 				"display" => "category_div_$forumid",
 				"ondone" => "close_modal();",
 			], "code");
@@ -72,7 +72,7 @@ global $CFG, $USER;
 			$returnme .= '<h3>Create Category</h3>';
 			$returnme .= fill_template("tmp/forum.template", "category_form", "forum", $params);
 		}
-	} catch (Exception $e) {
+	} catch (\Throwable $e) {
 		throw new Exception($e->getMessage());
 		$error = $e->getMessage();
 	}
@@ -98,7 +98,7 @@ global $CFG, $USER;
 
 		$script = ajaxapi([
 			"url" => "/features/forum/forum_ajax.php",
-			"data" => ["action" => "edit_category", "catid" => $catid, "title" => "js|| encodeURIComponent($('#title').val()) ||js"],
+			"data" => ["action" => "edit_category", "catid" => $catid, "title" => "js||encodeURIComponent($('#title').val()) ||js"],
 			"display" => "category_div_$forumid",
 			"ondone" => "close_modal();",
 		], "code");
@@ -111,7 +111,7 @@ global $CFG, $USER;
 		];
 		$returnme .= '<h3>Edit Category</h3>';
 		$returnme .= fill_template("tmp/forum.template", "category_form", "forum", $params);
-	} catch (Exception $e) {
+	} catch (\Throwable $e) {
 		throw new Exception($e->getMessage());
 		$error = $e->getMessage();
 	}
@@ -131,7 +131,7 @@ global $CFG;
 		"id" => "edit_post_submit",
 		"if" => "$editorcontent.length > 0",
 		"url" => "/features/forum/forum_ajax.php",
-		"data" => ["action" => "edit_post", "postid" => $postid, "message" => "js|| encodeURIComponent($editorcontent) ||js"],
+		"data" => ["action" => "edit_post", "postid" => $postid, "message" => "js||encodeURIComponent($editorcontent) ||js"],
 		"ondone" => "close_modal();",
 		"event" => "submit",
 	]);
@@ -155,7 +155,7 @@ global $CFG;
 		"id" => "quote_post_submit",
 		"if" => "$editorcontent.length > 0",
 		"url" => "/features/forum/forum_ajax.php",
-		"data" => ["action" => "quote_post", "quotepost" => $quotepost, "message" => "js|| encodeURIComponent($editorcontent) ||js"],
+		"data" => ["action" => "quote_post", "quotepost" => $quotepost, "message" => "js||encodeURIComponent($editorcontent) ||js"],
 		"ondone" => "close_modal();",
 		"event" => "submit",
 	]);
@@ -186,7 +186,7 @@ global $CFG;
 		}
 
 		$editorcontent = get_editor_value_javascript();
-		$data = ["action" => "post", "message" => "js|| encodeURIComponent($editorcontent) ||js"];
+		$data = ["action" => "post", "message" => "js||encodeURIComponent($editorcontent) ||js"];
 
 		if ($replyto) {
 			$data["replyto"] = $replyto;
@@ -222,7 +222,7 @@ global $CFG, $USER;
 		"id" => "shoutbox_post_submit",
 		"if" => "$editorcontent.length > 0",
 		"url" => "/features/forum/forum_ajax.php",
-		"data" => ["action" => "shoutbox_post", "forumid" => $forumid, "alias" => "js|| $('#alias').val() ||js", "userid" => "js|| $('#userid').val() ||js", "message" => "js|| encodeURIComponent($editorcontent) ||js"],
+		"data" => ["action" => "shoutbox_post", "forumid" => $forumid, "alias" => "js|| $('#alias').val() ||js", "userid" => "js|| $('#userid').val() ||js", "message" => "js||encodeURIComponent($editorcontent) ||js"],
 		"ondone" => "close_modal();",
 		"event" => "submit",
 	]);
@@ -253,7 +253,7 @@ global $CFG;
 		"id" => "edit_discussion_submit",
 		"if" => "$editorcontent.length > 0 && $('#discussion_title').val().length > 0",
 		"url" => "/features/forum/forum_ajax.php",
-		"data" => ["action" => "edit_discussion", "postid" => $postid, "discussionid" => $discussionid, "message" => "js|| encodeURIComponent($editorcontent) ||js", "title" => "js|| encodeURIComponent($('#discussion_title').val()) ||js"],
+		"data" => ["action" => "edit_discussion", "postid" => $postid, "discussionid" => $discussionid, "message" => "js||encodeURIComponent($editorcontent) ||js", "title" => "js||encodeURIComponent($('#discussion_title').val()) ||js"],
 		"ondone" => "close_modal();",
 		"event" => "submit",
 	]);
@@ -277,7 +277,7 @@ global $CFG;
 		"id" => "create_discussion_submit",
 		"if" => "$editorcontent.length > 0 && $('#discussion_title').val().length > 0",
 		"url" => "/features/forum/forum_ajax.php",
-		"data" => ["action" => "create_discussion", "catid" => $catid, "message" => "js|| encodeURIComponent($editorcontent) ||js", "title" => "js|| encodeURIComponent($('#discussion_title').val()) ||js"],
+		"data" => ["action" => "create_discussion", "catid" => $catid, "message" => "js||encodeURIComponent($editorcontent) ||js", "title" => "js||encodeURIComponent($('#discussion_title').val()) ||js"],
 		"ondone" => "close_modal();",
 		"event" => "submit",
 	]);

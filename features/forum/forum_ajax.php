@@ -39,7 +39,7 @@ global $CFG, $USER;
     $returnme = $error = "";
     try {
         $returnme = get_discussions($catid, $dpagenum);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $error = $e->getMessage();
     }
     ajax_return($returnme, $error);
@@ -52,7 +52,7 @@ function get_forum_posts() {
     $returnme = $error = "";
     try {
         $returnme = get_posts($discussionid, $pagenum);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $error = $e->getMessage();
     }
     ajax_return($returnme, $error);
@@ -376,7 +376,7 @@ function delete_post() {
         $discussionid = get_db_field("discussionid", "forum_posts", "postid = ||postid||", ["postid" => $postid]);
         execute_db_sql(fetch_template("dbsql/forum.sql", "delete_post", "forum"), ["postid" => $postid]);
         $returnme = get_posts($discussionid, $pagenum);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $error = $e->getMessage();
     }
     ajax_return($returnme, $error);
@@ -391,7 +391,7 @@ function pin_bulletin() {
         $discussionid = get_db_field("discussionid", "forum_posts", "postid = ||postid||", ["postid" => $postid]);
         execute_db_sql(fetch_template("dbsql/forum.sql", "delete_post", "forum"), ["postid" => $postid]);
         $returnme = get_posts($discussionid, $pagenum);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $error = $e->getMessage();
     }
     ajax_return($returnme, $error);

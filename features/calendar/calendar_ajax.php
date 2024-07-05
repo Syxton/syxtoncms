@@ -22,18 +22,15 @@ update_user_cookie();
 callfunction();
 
 function print_calendar() {
-global $CFG, $MYVARS;
-	$pageid = isset($MYVARS->GET["pageid"]) ? $MYVARS->GET["pageid"] : "";
-	$userid = isset($MYVARS->GET["userid"]) ? $MYVARS->GET["userid"] : "";
-	$month = isset($MYVARS->GET["month"]) ? $MYVARS->GET["month"] : "";
-	$year = isset($MYVARS->GET["year"]) ? $MYVARS->GET["year"] : "";
-	$extra_row = isset($MYVARS->GET["extra_row"]) ? $MYVARS->GET["extra_row"] : "";
+    $pageid = clean_myvar_opt("pageid", "int", "");
+    $userid = clean_myvar_opt("userid", "int", "");
+    $month = clean_myvar_opt("month", "int", "");
+    $year = clean_myvar_opt("year", "int", "");
+    $extra_row = clean_myvar_opt("extra_row", "int", "");
 
-	if ($MYVARS->GET["displaymode"] == 1) {
-		echo get_large_calendar($pageid, $userid, $month, $year, $extra_row);
-	} else {
-		echo get_small_calendar($pageid, $userid, $month, $year, $extra_row);
-	}
+    $area = get_calendar_area($pageid);
+	$display = get_calendar(["pageid" => $pageid, "userid" => $userid, "month" => $month, "year" => $year, "extra_row" => $extra_row, "area" => $area]);
+	ajax_return($display);
 }
 
 function get_date_info() {

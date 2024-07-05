@@ -2,6 +2,9 @@
 <html style="overflow: hidden;caret-color: transparent;">
     <head>
         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+        <style>
+            svg > g > g:last-child { pointer-events:none; }
+        </style>
     </head>
     <body>
     <?php

@@ -37,6 +37,23 @@ global $CFG;
 	return $conn;
 }
 
+function clean_params_req($params, $key, $type) {
+	if (isset($params[$key])) {
+		return clean_var_req($params[$key], $type, $key);
+	} else {
+		trigger_error("Missing required variable: $key", E_USER_ERROR);
+		return NULL;
+	}
+}
+
+function clean_params_opt($params, $key, $type, $default) {
+	if (isset($params[$key])) {
+		return clean_var_opt($params[$key], $type, $default);
+	} else {
+		return clean_var_opt($default, $type, $default);
+	}
+}
+
 function clean_myvar_req($key, $type) {
 global $MYVARS;
     if (isset($MYVARS->GET[$key])) {

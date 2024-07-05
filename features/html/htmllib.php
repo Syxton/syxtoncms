@@ -658,7 +658,22 @@ global $CFG, $USER;
 
     $returnme = "";
     if ($blog && !empty($feature_abilities->addfeature->allow)) {
-        $returnme .= ' <a class="slide_menu_button" title="Add Blog Edition" onclick="if (confirm(\'Do you want to make a new blog edition?  This will move the current blog to the Blog Locker.\')) { ajaxapi_old(\'/features/html/html_ajax.php\',\'new_edition\',\'&pageid=' . $pageid . '&htmlid=' . $featureid . '\',function() { refresh_page(); });}">' . icon("plus") . '</a> '; }
+        ajaxapi([
+            "id" => "add_edition_$featureid",
+            "url" => "/features/html/html_ajax.php",
+            "if" => "confirm('Do you want to make a new blog edition?  This will move the current blog to the Blog Locker.')",
+            "data" => [
+                "action" => "new_edition",
+                "pageid" => $pageid,
+                "htmlid" => $featureid,
+            ],
+            "ondone" => "getRoot()[0].go_to_page($pageid);",
+        ]);
+        $returnme .= '
+            <button class="slide_menu_button alike" title="Add Blog Edition" id="add_edition_' . $featureid . '">
+                ' . icon("plus") . '
+            </button>';
+    }
 
     if (!empty($html_abilities->edithtml->allow)) {
         $returnme .= make_modal_links([
@@ -673,7 +688,26 @@ global $CFG, $USER;
         ]);
     }
 
-    if (!$blog && user_is_able($USER->userid, "addtolocker", $pageid)) { $returnme .= '  <a class="slide_menu_button" title="Move to Blog Locker" onclick="ajaxapi_old(\'/ajax/site_ajax.php\',\'change_locker_state\',\'&pageid=' . $pageid . '&featuretype=' . $featuretype . '&featureid=' . $featureid . '&direction=locker\',function() { refresh_page(); });">' . icon("box-archive") . '</a> '; }
+    if (!$blog && user_is_able($USER->userid, "addtolocker", $pageid)) {
+        ajaxapi([
+            "id" => "movetolocker",
+            "url" => "/ajax/site_ajax.php",
+            "paramlist" => "pageid, featureid",
+            "data" => [
+                "action" => "change_locker_state",
+                "pageid" => "js||pageid||js",
+                "featuretype" => "html",
+                "featureid" => "js||featureid||js",
+                "direction" => "locker",
+            ],
+            "event" => "none",
+            "ondone" => "getRoot()[0].go_to_page($pageid);",
+        ]);
+        $returnme .= '
+            <button class="slide_menu_button alike" title="Move to Blog Locker" onclick="movetolocker(' . $pageid . ', ' . $featureid . ');">
+                ' . icon("box-archive") . '
+            </button>';
+    }
     return $returnme;
 }
 

@@ -14,6 +14,7 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
     include($sub . 'lib/header.php');
 }
 define('EVENTSLIB', true);
+define('SEARCH_PERPAGE', 8);
 
 function display_events($pageid, $area, $featureid) {
 global $CFG, $USER, $ROLES;
@@ -281,7 +282,7 @@ global $CFG, $USER;
 
         // GET EXPORT CSV BUTTON
         if (user_is_able($USER->userid, "exportcsv", $event["pageid"], "events", $featureid)) {
-            $export = '<button class="alike" title="Export ' . $regcount . '/' . $limit . ' Registrations" onclick="ajaxapi_old(\'/features/events/events_ajax.php\',\'export_csv\',\'&pageid=' . $pageid . '&eventid=' . $event['eventid'] . '\',function() { run_this();});">' . icon([["icon" => "file-csv", "style" => "font-size: 1.3em"]]) . '</button>';
+            $export = '<button class="alike" title="Export ' . $regcount . '/' . $limit . ' Registrations" onclick="ajaxapi_old(\'/features/events/events_ajax.php\',\'export_csv\',\'&pageid=' . $pageid . '&eventid=' . $event['eventid'] . '\',function() { simple_display(\'downloadframe\');});">' . icon([["icon" => "file-csv", "style" => "font-size: 1.3em"]]) . '</button>';
         }
     }
 
@@ -320,12 +321,12 @@ global $CFG, $USER;
                                 <span style="font-size:.85em;padding-left:5px;">
                                     ' . stripslashes(strip_tags($event["byline"], '<a>')) . '
                                 </span>
-                                <div class="hprcp_head">
+                                <div class="container_head">
                                     <div class="event_info_box">
-                                        ' . $buttons . '
                                         <div class="event_info">
                                             ' . $registration_info . '
                                         </div>
+                                        ' . $buttons . '
                                     </div>
                                 </div>
                             </td>
@@ -508,7 +509,7 @@ global $CFG, $USER;
 
             // Export registrations
             if (user_is_able($USER->userid, "exportcsv", $pageid,"events", $featureid)) {
-                $returnme .= '<button class="alike" title="Export ' . $regcount . '/' . $limit . ' Registrations" onclick="ajaxapi_old(\'/features/events/events_ajax.php\',\'export_csv\',\'&pageid=' . $pageid . '&eventid=' . $event['eventid'] . '\',function() { run_this();});">' . icon([["icon" => "file-csv", "style" => "font-size: 1.3em"]]) . '</button>';
+                $returnme .= '<button class="alike" title="Export ' . $regcount . '/' . $limit . ' Registrations" onclick="ajaxapi_old(\'/features/events/events_ajax.php\',\'export_csv\',\'&pageid=' . $pageid . '&eventid=' . $event['eventid'] . '\',function() { simple_display(\'downloadframe\');});">' . icon([["icon" => "file-csv", "style" => "font-size: 1.3em"]]) . '</button>';
             }
 
             // Registration button
@@ -606,7 +607,7 @@ global $CFG, $USER;
             $featureid = get_db_field("featureid", "pages_features", "pageid='$pageid' AND feature='events'");
             if (user_is_able($USER->userid, "exportcsv", $pageid, "events", $featureid)) {
                 $returnme .= '
-                <button class="alike" title="Export ' . $regcount . '/' . $limit . ' Registrations" onclick="ajaxapi_old(\'/features/events/events_ajax.php\',\'export_csv\',\'&pageid=' . $pageid . '&eventid=' . $event['eventid'] . '\',function() { run_this();});">
+                <button class="alike" title="Export ' . $regcount . '/' . $limit . ' Registrations" onclick="ajaxapi_old(\'/features/events/events_ajax.php\',\'export_csv\',\'&pageid=' . $pageid . '&eventid=' . $event['eventid'] . '\',function() { simple_display(\'downloadframe\');});">
                     ' . icon([["icon" => "file-csv", "style" => "font-size: 1.3em"]]) . '
                 </button>';}
             $returnme .= "
@@ -649,7 +650,7 @@ global $CFG, $USER;
                                 <td style="text-align:right; padding:2px;white-space:nowrap;">';
             if (!empty($event["start_reg"]) && user_is_able($USER->userid, "exportcsv", $pageid, "events", $featureid)) {
                 $returnme .= '
-                    <button class="alike" title="Export Registrations" onclick="ajaxapi_old(\'/features/events/events_ajax.php\',\'export_csv\',\'&pageid=' . $pageid . '&eventid=' . $event['eventid'] . '\',function() { run_this();});">
+                    <button class="alike" title="Export Registrations" onclick="ajaxapi_old(\'/features/events/events_ajax.php\',\'export_csv\',\'&pageid=' . $pageid . '&eventid=' . $event['eventid'] . '\',function() { simple_display(\'downloadframe\');});">
                         ' . icon([["icon" => "file-csv", "style" => "font-size: 1.3em"]]) . '
                     </button>';
             }
@@ -1145,17 +1146,8 @@ function get_back_to_registrations_link($eventid) {
     $event = get_event($eventid);
     $eventname = $event["name"];
 
-    ajaxapi([
-        "id" => "back_to_registrations",
-        "url" => "/features/events/events_ajax.php",
-        "data" => ["action" => "show_registrations", "eventid" => $eventid],
-        "display" => "searchcontainer",
-        "loading" => "loading_overlay",
-        "ondone" => "init_event_menu();",
-    ]);
-
     return '
-    <button class="dontprint alike" id="back_to_registrations" title="Back to ' . $eventname . ' registrantions.">
+    <button class="dontprint alike" onclick="show_registrations(' . $eventid . ');" title="Back to ' . $eventname . ' registrantions.">
         Back to ' . $eventname . ' registrantions.
     </button>
     <div class="dontprint" style="padding: 10px"></div>';

@@ -51,7 +51,7 @@ global $CFG;
 				// If not a menu, delete from menu table.
 				execute_db_sql(fetch_template("dbsql/pages.sql", "delete_page_menus"), ["pageid" => $pageid]);
 			}
-			
+
 			if (execute_db_sql(fetch_template("dbsql/pages.sql", "edit_page"), $params)) {
 				echo "Page edited successfully";
 			}
@@ -145,7 +145,7 @@ global $CFG, $USER;
 
 	//restrict possible page listings
 	$viewablepages = "";
-	$viewablepages .= $loggedin ? ($admin ? "" : "AND p.menu_page = 0 AND (p.opendoorpolicy = 1 OR p.siteviewable = 1)")  : " AND p.siteviewable = 1";
+	$viewablepages .= $loggedin ? ($admin ? "" : "")  : " AND p.siteviewable = 1";
 
 	$sqlparams = [
 		"admin" => $admin,
@@ -184,42 +184,35 @@ global $CFG, $USER;
 	if ($pages = get_db_result($SQL, $searchparams)) {
 		if ($count > 0) {
 			while ($page = fetch_row($pages)) {
-				$linked = true;
+				$linked = $must_request = true;
+				$can_add_remove = $alreadyrequested = $isadd = false;
+
 				$resultsparams["col3"] = "";
 				if ($loggedin && !$admin) {
+					// Can view without requests.
 					if ($page["siteviewable"] == 1 || $page["opendoorpolicy"] == 1 || $page["added"] == 1 || user_is_able($userid, "assign_roles", $page["pageid"])) {
-						$vars = [
-							"must_request" => false,
-							"can_add_remove" => user_is_able($userid, "add_page", $CFG->SITEID),
-							"isadd" => ($page["added"] == 0),
-							"wwwroot" => $CFG->wwwroot,
-							"pagenum" => $pagenum,
-							"searchwords" => $searchwords,
-							"pageid" => $page["pageid"],
-						];
-						$resultsparams["col3"] = fill_template("tmp/page_ajax.template", "search_pages_buttons_template", false, $vars);
-					} else {
+						$can_add_remove = user_is_able($userid, "add_page", $CFG->SITEID);
+						$isadd = $page["added"] == "1" ? false : true;
+						$must_request = false;
+					} else { // Must request access.
 						$linked = false;
 						$SQL = fetch_template("dbsql/roles.sql", "get_role_assignment");
 						$alreadyrequested = get_db_row($SQL, ["userid" => $userid, "pageid" => $page["pageid"], "confirm" => 1]) ? true : false;
-						$vars = [
-							"must_request" => true,
-							"alreadyrequested" => $alreadyrequested,
-							"wwwroot" => $CFG->wwwroot,
-							"pagenum" => $pagenum,
-							"searchwords" => $searchwords,
-							"pageid" => $page["pageid"],
-						];
-						$resultsparams["col3"] = fill_template("tmp/page_ajax.template", "search_pages_buttons_template", false, $vars);
 					}
 				}
-	
+
+				if ($admin) {
+					$must_request = false; // Admins can always enter pages, and don't need to request access.
+					$isadd = false; // Admins can always enter pages and not need to add a role to enter a page.
+					$can_add_remove = false; // Admins can always enter pages, and don't need to add or remove access.
+				}
+
 				$resultsparams["linked"] = $linked;
 				$vars = [
-					"must_request" => false,
-					"can_add_remove" => false,
-					"alreadyrequested" => false,
-					"isadd" => false,
+					"must_request" => $must_request,
+					"can_add_remove" => $can_add_remove,
+					"alreadyrequested" => $alreadyrequested,
+					"isadd" => $isadd,
 					"wwwroot" => $CFG->wwwroot,
 					"pagenum" => $pagenum,
 					"searchwords" => $searchwords,
@@ -551,7 +544,7 @@ function invite_user() {
 	} else {
 		$SQL = fetch_template("dbsql/roles.sql", "insert_role_assignment");
 		$params = ["userid" => $userid, "pageid" => $pageid, "roleid" => $defaultrole, "confirm" => 2];
-	
+
 		if ($invite_received || execute_db_sql($SQL, $params)) {
 			echo "Invite Sent";
 			return;
@@ -574,11 +567,11 @@ global $CFG, $USER;
 function delete_page_ajax() {
 	$pageid = clean_myvar_req("pageid", "int");
 	if (delete_page($pageid)) {
-		echo "deleted";
+		ajax_return("deleted");
 		exit();
 	}
 
-	echo "error";
+	ajax_return("error", "error");
 }
 
 function change_subscription() {
@@ -597,11 +590,11 @@ global $CFG, $USER;
 		}
 	}
 
-  echo fill_template("tmp/page_ajax.template", "change_subscription_template", false, $params);
+	ajax_return(fill_template("tmp/page_ajax.template", "change_subscription_template", false, $params));
 }
 
 function add_request() {
-global $CFG;
+global $CFG, $USER;
 	$userid = $USER->userid;
 	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	$roleid = get_default_role($pageid);
@@ -609,8 +602,8 @@ global $CFG;
 	$SQL = fetch_template("dbsql/roles.sql", "insert_role_assignment");
 	$request_added = execute_db_sql($SQL, ["userid" => $userid, "pageid" => $pageid, "roleid" => $roleid, "confirm" => 1]);
 	$params = ["request_added" => $request_added, "wwwroot" => $CFG->wwwroot, "pageid" => $pageid];
-	echo fill_template("tmp/page_ajax.template", "add_remove_request_template", false, $params);
-	}
+	ajax_return(fill_template("tmp/page_ajax.template", "add_remove_request_template", false, $params));
+}
 
 function remove_request() {
 global $CFG;
@@ -621,6 +614,6 @@ global $CFG;
 	$request_removed = execute_db_sql($SQL, ["userid" => $userid, "pageid" => $pageid, "confirm" => 1]);
 
 	$params = ["request_removed" => (!$request_removed), "wwwroot" => $CFG->wwwroot, "pageid" => $pageid];
-	echo fill_template("tmp/page_ajax.template", "add_remove_request_template", false, $params);
+	ajax_return(fill_template("tmp/page_ajax.template", "add_remove_request_template", false, $params));
 }
 ?>

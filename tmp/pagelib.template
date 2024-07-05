@@ -113,21 +113,16 @@ defer_script||
 ||defer_script
 
 print_logout_button_switchback_template||
-    <a title="Switch back to: ||lia_name||" href="javascript: void(0)"
-        onclick="ajaxapi_old('/features/adminpanel/adminpanel_ajax.php',
-                         'logoutas',
-                         '',
-                         function() {
-                            go_to_page(||siteid||);
-                         });">
-        Switch back to: ||lia_name||
-    </a><br />
+    <button id="lia_switchback" class="alike" title="Switch back to: ||lia_name||" style="padding-bottom: 5px;">
+        || echo icon("rotate-left");::none||
+        <span style="padding-left: 2px;">Switch Back</span>
+    </button>
 ||print_logout_button_switchback_template
 
 print_logout_button_template||
 <div id="login_box" class="login_box logout" style="padding: 2px 5px 8px;">
     ||logoutas||
-    <span style="display: inline-flex;justify-content: space-between;align-items: center;width: 100%;">
+    <span class="logout_buttons">
         <span class="pagerole">
             ||role||
         </span>
@@ -139,9 +134,11 @@ print_logout_button_template||
 ||print_logout_button_template
 
 get_css_box_template1||
-    <div class="pagename_box" style="border: 2px solid ||pagenamebordercolor||;background-color:||pagenamebgcolor||;">
+    <div class="box_header pagename_box" style="border: 2px solid ||pagenamebordercolor||;background-color:||pagenamebgcolor||;">
         <div class="box_title" style="color:||pagenamefontcolor||;">
-            <strong>||title||</strong>
+            <span class="box_title_text">
+                <strong>||title||</strong>
+            </span>
         </div>
         ||*buttons||
     </div>
@@ -206,13 +203,15 @@ get_login_form_template||
 ||get_login_form_template
 
 get_button_layout_template||
-    <div id="slide_menu" class="slide_menu_invisible slide_menu" style="border-top:1px solid ||bordercolor||;border-bottom:1px solid ||bordercolor||;">
-        <div id="||featuretype||_||featureid||_buttons" class="slide_button_wrap">
-            ||*buttons||
+    <div class="slide_menu_wrap">
+        <div id="slide_menu" class="slide_menu_invisible slide_menu" style="border-top:1px solid ||bordercolor||;border-bottom:1px solid ||bordercolor||;">
+            <div id="||featuretype||_||featureid||_buttons" class="slide_button_wrap">
+                ||*buttons||
+            </div>
         </div>
-    </div>
-    <div class="slide_menu slide_menu_tab" style="background-color:||titlefontcolor||;color:||titlebgcolor||;border:1px solid ||bordercolor||;border-right:none;" onclick="$(this).prev('#slide_menu').animate({width: 'toggle'}, function() { $(this).toggleClass('slide_menu_visible'); })">
-        ||icon||
+        <div class="slide_menu slide_menu_tab" style="background-color:||titlefontcolor||;color:||titlebgcolor||;border:1px solid ||bordercolor||;border-right:none;" onclick="$(this).prev('#slide_menu').animate({width: 'toggle'}, function() { $(this).toggleClass('slide_menu_visible'); })">
+            ||icon||
+        </div>
     </div>
     <div style="clear:both"></div>
 ||get_button_layout_template
@@ -225,15 +224,20 @@ make_search_box_template||
 ||make_search_box_template
 
 format_popup_template||
-<div style="padding:||padding||;height:||*height||;">
-    <h2 style="text-align:center">||title||</h2>
-    <br />
-    ||content||
-</div>
+    ||*before||
+    <div style="padding:||padding||;height:||*height||;">
+        <h2 style="text-align:center">||title||</h2>
+        <br />
+        ||content||
+    </div>
 ||format_popup_template
 
 keepalive_template||
-<iframe style="display:none;" src="||wwwroot||/index.php?keepalive=true"></iframe>
+    <iframe style="display:none;" src="||wwwroot||/index.php?keepalive=true"></iframe>
 ||keepalive_template
 
-get_user_alerts_template||<span class="centered_span">There are no more alerts for you at this time.</span>||get_user_alerts_template
+get_user_alerts_template||
+    <span class="centered_span">
+        There are no more alerts for you at this time.
+    </span>
+||get_user_alerts_template

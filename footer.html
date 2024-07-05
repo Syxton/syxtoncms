@@ -1,82 +1,82 @@
-			<div class="footer-text">
-				<iframe id="downloadframe" style="display: none;"></iframe>
-				<br />
-				<?php echo $CFG->sitefooter; ?>
-			</div>
+            <div class="footer-text">
+                <div id="downloadframe" style="display: none;"></div>
+                <br />
+                <?php echo $CFG->sitefooter; ?>
+            </div>
 
-			<?php
-				$code = <<<EOT
-					$(".accordioncontent").each(function() {
-						$(this).accordion({
-							header: "h3",
-							collapsible: true,
-							heightStyle: "content",
-							navigation: true
-						});
-					});
-					adjustStyle($(window).width());
-					setTimeout(function() {
-						$("#carousel").flickity();
-					}, 500);
-					$(".pagesort1, .pagesort2" ).sortable({
-						connectWith: ".connectedSortable",
-						items: ".box",
-						handle: ".pagesorthandle",
-						tolerance: "pointer",
-						helper: function(){ return $('<div class="portable_box"></div>') },
-						placeholder: "inner_drop_zone",
-						cursor: "move",
-						cursorAt: { top: 0, left: 0 },
-						zIndex: 9999,
-						sort: function(event, ui) {
-							ui.helper.css({"top": ui.position.top + $(window).scrollTop() + "px",
-										   "left": ui.position.left + $(window).scrollLeft() + "px" });
-						},
-						stop: function(event, ui) {
-							var from = ui.item.parent()[0];
-							var to = this;
-							$.ajax({
-								url: WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/ajax/site_ajax.php",
-								data: { "action":"drop_move_feature",
-										"pageid": $PAGE->id,
-										"col1": $(".pagesort1").sortable("toArray"),
-										"col2": $(".pagesort2").sortable("toArray"),
-										"moved": $(ui.item).attr("id")},
-								cache: false
-								}).done(function(html) {
-									if (to !== from) {
-										location.reload();
-									}
-							});
-						},
-						update: function(event, ui) {
+            <?php
+                $code = <<<EOT
+                    $(".accordioncontent").each(function() {
+                        $(this).accordion({
+                            header: "h3",
+                            collapsible: true,
+                            heightStyle: "content",
+                            navigation: true
+                        });
+                    });
+                    adjustStyle($(window).width());
+                    setTimeout(function() {
+                        $("#carousel").flickity();
+                    }, 500);
+                    $(".pagesort1, .pagesort2" ).sortable({
+                        connectWith: ".connectedSortable",
+                        items: ".box",
+                        handle: ".pagesorthandle",
+                        tolerance: "pointer",
+                        helper: function(){ return $('<div class="portable_box"></div>') },
+                        placeholder: "inner_drop_zone",
+                        cursor: "move",
+                        cursorAt: { top: 0, left: 0 },
+                        zIndex: 9999,
+                        sort: function(event, ui) {
+                            ui.helper.css({"top": ui.position.top + $(window).scrollTop() + "px",
+                                           "left": ui.position.left + $(window).scrollLeft() + "px" });
+                        },
+                        stop: function(event, ui) {
+                            var from = ui.item.parent()[0];
+                            var to = this;
+                            $.ajax({
+                                url: WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/ajax/site_ajax.php",
+                                data: { "action":"drop_move_feature",
+                                        "pageid": $PAGE->id,
+                                        "col1": $(".pagesort1").sortable("toArray"),
+                                        "col2": $(".pagesort2").sortable("toArray"),
+                                        "moved": $(ui.item).attr("id")},
+                                cache: false
+                                }).done(function(html) {
+                                    if (to !== from) {
+                                        location.reload();
+                                    }
+                            });
+                        },
+                        update: function(event, ui) {
 
-						}
-					});
-					$("#menu-icon").on("click", function() {
-						$("#pagenav").toggle();
-					});
-					$('#pagenav li').hover(
-						function(){ $(this).addClass('sfhover') },
-						function(){ $(this).removeClass('sfhover') }
-					);
-					$(window).resize(function() {
-						setTimeout(function() {
-							adjustStyle($(window).width());
-						}, 100);
-					});
-					$(window).on('focus', function() {
-						$("#carousel").flickity();
-						window.dispatchEvent(new Event('resize'));
-					});
-					setTimeout(function() {
-						$("#carousel").flickity();
-						window.dispatchEvent(new Event('resize'));
-						$("#main-content").show();
-					}, 500);
-				EOT;
-				echo js_code_wrap($code, "defer", true);
-			?>
-		</div>
-	</body>
+                        }
+                    });
+                    $("#menu-icon").on("click", function() {
+                        $("#pagenav").toggle();
+                    });
+                    $('#pagenav li').hover(
+                        function(){ $(this).addClass('sfhover') },
+                        function(){ $(this).removeClass('sfhover') }
+                    );
+                    $(window).resize(function() {
+                        setTimeout(function() {
+                            adjustStyle($(window).width());
+                        }, 100);
+                    });
+                    $(window).on('focus', function() {
+                        $("#carousel").flickity();
+                        window.dispatchEvent(new Event('resize'));
+                    });
+                    setTimeout(function() {
+                        $("#carousel").flickity();
+                        window.dispatchEvent(new Event('resize'));
+                        $("#main-content").show();
+                    }, 500);
+                EOT;
+                echo js_code_wrap($code, "defer", true);
+            ?>
+        </div>
+    </body>
 </html>

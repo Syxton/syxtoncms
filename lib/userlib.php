@@ -97,11 +97,16 @@ function load_user_cookie() {
 global $CFG, $USER;
 	if (!empty($_SESSION['userid'])) { //cookie exists
 		$time = get_timestamp();
-		$advanced_login = !empty($_SESSION["lia_original"]) ? "" : " AND ($time - last_activity < " . $CFG->cookietimeout .")";
-		$SQL = "SELECT * FROM users WHERE userid='" . $_SESSION['userid'] . "' $advanced_login";
-		if ($row = get_db_row($SQL)) { //Get user info from db, load into $USER global
+		$recentlyactive = "";
+
+		$loggedinas = !empty($_SESSION["lia_original"]);
+		if (!$loggedinas) {
+			$recentlyactive = " AND last_activity > " . $CFG->cookietimeout;
+		}
+		$SQL = fetch_template("dbsql/users.sql", "get_active_user", false, ["recentlyactive" => $recentlyactive]);
+		if ($row = get_db_row($SQL, ["userid" => $_SESSION['userid']])) { // Get user info from db, load into $USER global
 			$temp = (object)$row;
-			$_SESSION['userid'] = $temp->userid; //Used for CKeditor to know if user is logged in.
+			$_SESSION['userid'] = $temp->userid;
 		} else {
 			$temp = (object)["userid" => 0];
 			$_SESSION['userid'] = "";
@@ -234,8 +239,9 @@ function is_logged_in($userid = false) {
 global $CFG, $USER, $MYVARS;
 	if (!$userid) {
 		if (empty($USER->userid)) {
-            if (isset($MYVARS->GET["key"])) {
-                $userid = get_db_field("userid", "users", "userkey='" . dbescape($MYVARS->GET["key"]) . "'");
+			$key = clean_myvar_opt("key", "string", false);
+            if ($key) {
+                $userid = get_db_field("userid", "users", "userkey=||key||", ["key" => $key]);
             } else {
                 return false;
             }

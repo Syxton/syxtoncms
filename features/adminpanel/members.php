@@ -25,6 +25,21 @@ ajaxapi([
     "event" => "none",
 ]);
 
+ajaxapi([
+    "id" => "export_search",
+    "url" => "/features/adminpanel/members_script.php",
+    "paramlist" => "search = '', csv = 0, mailman = 0",
+    "data" => [
+        "action" => "members_search",
+        "csv" => "js||csv||js",
+        "mailman" => "js||mailman||js",
+        "search" => "js||encodeURIComponent(search)||js",
+    ],
+    "display" => "mem_exportsdiv",
+    "loading" => "loading_overlay",
+    "event" => "none",
+]);
+
 $allfields = "";
 // Get list of all fields that can be searched on.
 if ($result = get_db_result("SHOW COLUMNS FROM users")) {

@@ -49,12 +49,12 @@ global $MYVARS, $CFG, $USER;
 		return;
 	}
 
-	$row = get_db_row("SELECT * FROM html WHERE htmlid='$htmlid'");
+	$row = get_html($htmlid);
 	$settings = fetch_settings("html", $htmlid, $pageid);
 	$comments = $settings->html->$htmlid->allowcomments->setting && user_is_able($USER->userid, "viewcomments", $pageid) ? get_html_comments($row['htmlid'], $pageid, true,10) : '';
 
 	echo '
-	<div style="width:550px">
+	<div style="width:100%;">
 		' . $row['html'] . $comments . '
 	</div>';
 }
