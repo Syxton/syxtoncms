@@ -25,8 +25,8 @@ callfunction();
 function request_date_open() {
 global $CFG;
     $featureid = clean_myvar_req("featureid", "int");
-    $startdate = clean_myvar_req("startdate", "int");
-    $enddate = clean_myvar_opt("enddate", "int", false);
+    $startdate = clean_myvar_req("startdate", "string");
+    $enddate = clean_myvar_opt("enddate", "string", false);
 
     if ($featureid) {
         $pageid = get_db_field("pageid", "pages_features", "feature = 'events' AND featureid = ||featureid||", ["featureid" => $featureid]);
@@ -76,41 +76,49 @@ global $CFG, $MYVARS, $USER;
     $contact_email = clean_myvar_req("email", "string");
     $contact_phone = clean_myvar_req("phone", "string");
     $event_name = clean_myvar_req("event_name", "string");
-    $startdate = clean_myvar_req("startdate", "int");
-    $enddate = clean_myvar_opt("enddate", "int", $startdate);
+    $startdate = clean_myvar_req("startdate", "string");
+    $enddate = clean_myvar_opt("enddate", "string", $startdate);
     $participants = clean_myvar_req("participants", "int");
     $description = clean_myvar_req("description", "html");
 
-    $startdate = strtotime($startdate);
-    $enddate = strtotime($enddate);
+    $return = $error = "";
+    try {
+        $startdate = strtotime($startdate);
+        $enddate = strtotime($enddate);
+        $protocol = get_protocol();
 
-    $SQL = "INSERT INTO events_requests
-                    (featureid,contact_name,contact_email,contact_phone,event_name,startdate,enddate,participants,description,votes_for,votes_against)
-                    VALUES('$featureid','$contact_name','$contact_email','$contact_phone','$event_name','$startdate','$enddate','$participants','$description', 0, 0)";
-    //Save the request
-    if ($reqid = execute_db_sql($SQL)) {
-        $from->email = $CFG->siteemail;
-        $from->fname = $CFG->sitename;
-        $from->lname = "";
+        $SQL = "INSERT INTO events_requests
+                        (featureid,contact_name,contact_email,contact_phone,event_name,startdate,enddate,participants,description,votes_for,votes_against)
+                        VALUES('$featureid','$contact_name','$contact_email','$contact_phone','$event_name','$startdate','$enddate','$participants','$description', 0, 0)";
+        //Save the request
+        if (!$reqid = execute_db_sql($SQL)) {
+            throw new Exception("Could not save request");
+        }
+
+        $from = (object)[
+            "email" => $CFG->siteemail,
+            "fname" => $CFG->sitename,
+            "lname" => "",
+        ];
 
         //Requesting email setup
-        $contact->email = $contact_email;
-        if (strstr($contact_name, " ")) {
-            $name = explode(" ", $contact_name);
-            $contact->fname = $name[0];
-            $contact->lname = $name[1];
-        } else {
-            $contact->fname = $contact_name;
-            $contact->lname = "";
-        }
+        $contact = (object)[
+            "email" => $contact_email,
+            "fname" => count(explode(" ", $contact_name)) > 1 ? explode(" ", $contact_name)[0] : $contact_name,
+            "lname" => count(explode(" ", $contact_name)) > 1 ? explode(" ", $contact_name)[1] : "",
+        ];
+
         $request_info = get_request_info($reqid);
         $subject = $CFG->sitename . " Event Request Received";
         $event_name = stripslashes($event_name);
-        $message = "<strong>Thank you for submitting a request for us to host your event: $event_name.</strong><br />
-                    <br />
-                    We will look over the details that you provided and respond shortly. <br />
-                    Through the approval process you may receive additional questions about your event.<br />
-                    $request_info";
+        $message = '
+            <strong>Thank you for submitting a request for us to host your event: ' . $event_name . '.</strong>
+            <br /><br />
+            We will look over the details that you provided and respond shortly.
+            <br />
+            Through the approval process you may receive additional questions about your event.
+            <br /><br />
+            ' . $request_info;
 
         //Send email to the requester letting them know we received the request
         send_email($contact, $from, $subject, $message);
@@ -131,35 +139,51 @@ global $CFG, $MYVARS, $USER;
             foreach ($emaillist as $emailuser) {
                 //Each message must has an md5'd email address so I know if a person has voted or not
                 $voteid = md5($emailuser);
-                $message = '<p>A new event request has been submitted. Your input is required to approve the event. This email contains specific links designed for you to be able to submit and view questions as well as vote for this event\'s approval.</p>
-                            <p>Do <strong>not </strong>delete this email.<strong>&nbsp; Please review the following event request.</strong></p>
-                            <br />
-                            <a href="' . $CFG->wwwroot . '/features/events/events_ajax.php?action=request_vote&reqid=' . $reqid . '&approve=1&voteid=' . $voteid . '">Approve</a>
-                            &nbsp;
-                            <a href="' . $CFG->wwwroot . '/features/events/events_ajax.php?action=request_vote&reqid=' . $reqid . '&approve=0&voteid=' . $voteid . '">Deny</a>
-                            &nbsp;
-                            <a href="' . $CFG->wwwroot . '/features/events/events_ajax.php?action=request_question&reqid=' . $reqid . '&voteid=' . $voteid . '">View/Ask Questions</a><br />'.
-                            $request_info;
+                $message = '
+                    <p>
+                        A new event request has been submitted. Your input is required to approve the event. This email contains specific links designed for you to be able to submit and view questions as well as vote for this event\'s approval.
+                    </p>
+                    <p>
+                        Do <strong>not</strong> delete this email. <strong>Please review the following event request.</strong>
+                    </p>
+                    <br />
+                    <a href="' . $protocol . $CFG->wwwroot . '/features/events/events_ajax.php?action=request_question&reqid=' . $reqid . '&voteid=' . $voteid . '">
+                        View / Ask Questions
+                    </a>
+                    <br />
+                    <a href="' . $protocol . $CFG->wwwroot . '/features/events/events_ajax.php?action=request_vote&reqid=' . $reqid . '&approve=1&voteid=' . $voteid . '">
+                        Approve
+                    </a>
+                    <br />
+                    <a href="' . $protocol . $CFG->wwwroot . '/features/events/events_ajax.php?action=request_vote&reqid=' . $reqid . '&approve=0&voteid=' . $voteid . '">
+                        Deny
+                    </a>
+                    <br /><br />
+                    ' . $request_info;
 
-                $thisuser->email = $emailuser;
-                $thisuser->fname = "";
-                $thisuser->lname = "";
+                $thisuser = (object)[
+                    "email" => $emailuser,
+                    "fname" => "",
+                    "lname" => "",
+                ];
                 send_email($thisuser, $from, $subject, $message);
             }
         }
-        echo '<div style="width:100%;text-align:center;">
+        $return = '
+            <div style="width:100%;text-align:center;">
                 <strong>Your request has been sent.</strong>
-              </div>
-              <div>
+            </div>
+            <div>
                 <br />
                 You should receive an email shortly informing you of the event approval process.<br />
                 <br />
                 Thank you.
-              </div>';
-
-    } else {
-      echo "Failed to make request";
+            </div>';
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
     }
+
+    ajax_return($return, $error);
 }
 
 function prepare_email_list($emaillist) {
@@ -189,94 +213,166 @@ function valid_voter($pageid, $featureid, $voteid) {
     return $validvote;
 }
 
-//Save question
+// Request question form
+function request_question() {
+global $CFG, $PAGE;
+    $reqid = clean_myvar_req("reqid", "int");
+    $voteid = clean_myvar_req("voteid", "string");
+
+    // Make sure request exists and get the featureid
+    if (!$featureid = get_db_field("featureid", "events_requests", "reqid = ||reqid||", ["reqid" => $reqid])) {
+        throw new Exception(error_string("invalid_old_request:events"));
+    }
+
+    if (!$pageid = get_db_field("pageid", "pages_features", "feature = 'events' AND featureid = ||featureid||", ["featureid" => $featureid])) {
+        throw new Exception(error_string("invalid_old_request:events"));
+    }
+
+    if (!valid_voter($pageid, $featureid, $voteid)) {
+        throw new Exception(error_string("generic_permissions"));
+    }
+
+    $PAGE->title = $CFG->sitename . " - Event Request"; // Title of page
+    $PAGE->name = $PAGE->title; // Title of page
+    $PAGE->description = "Event Request form for event request discussions and approval/denial"; // Description of page
+    $PAGE->themeid = get_page_themeid($pageid);
+
+    // Start Page
+    require($CFG->dirroot . '/header.html');
+
+    echo request_questions_form($reqid, $voteid, $featureid, $pageid);
+
+    // End Page
+    require($CFG->dirroot . '/footer.html');
+}
+
+// Save question
 function request_question_send() {
 global $CFG, $MYVARS;
     $reqid = clean_myvar_req("reqid", "int");
     $voteid = clean_myvar_req("voteid", "string");
-    $questiontext = clean_myvar_req("question", "string");
+    $question = clean_myvar_req("editor1", "string");
+    $question = strip_tags(trim($question, " \n\r\t"),'<a><em><u><img><br>');
 
-    $return = $error = "";
-    try {
-        $question = dbescape(strip_tags(trim($questiontext, " \n\r\t"), '<a><em><u><img><br>'));
-
-        //Make sure request exists and get the featureid
-        if (!$featureid = get_db_field("featureid", "events_requests", "reqid = ||reqid||", ["reqid" => $reqid])) {
-            throw new Exception(error_string("invalid_old_request:events"));
-        }
-
-        //Get feature request settings
-        $pageid = get_db_field("pageid", "pages_features", "feature = 'events' AND featureid = ||featureid||", ["featureid" => $featureid]);
-        if (!$settings = fetch_settings("events", $featureid, $pageid)) {
-                save_batch_settings(default_settings("events", $pageid, $featureid));
-                $settings = fetch_settings("events", $featureid, $pageid);
-        }
-        $locationid = $settings->events->$featureid->allowrequests->setting;
-        $request = get_db_row("SELECT * FROM events_requests WHERE reqid = ||reqid||", ["reqid" => $reqid]);
-
-        if (!valid_voter($pageid, $featureid, $voteid)) {
-            throw new Exception(error_string("generic_permissions"));
-        }
-
-        // Allowed to ask questions
-        $SQL = fetch_template("tmp/events.sql", "insert_events_requests_questions", "events");
-        if (!$qid = execute_db_sql($SQL, ["reqid" => $reqid, "question" => $question, "qtime" => get_timestamp()])) {
-            throw new Exception(error_string("generic_error"));
-        }
-
-        // Question is saved.  Now send it to everyone.
-        $subject = $CFG->sitename . " Event Request Question";
-        $message = '
-            <strong>A question has been asked about the event (' . stripslashes($request["event_name"]) . ').</strong>
-            <br /><br />
-            ' . trim($question,"\n\r\t") . '
-            <br /><br />
-            <a href="' . $CFG->wwwroot . '/features/events/events_ajax.php?action=request_question&reqid=' . $reqid . '&voteid=' . $voteid . '">
-                View / Ask Questions
-            </a>';
-
-        $from = (object) [
-            "email" => $CFG->siteemail,
-            "fname" => $CFG->sitename,
-            "lname" => "",
-        ];
-
-        $emaillist = prepare_email_list($settings->events->$featureid->emaillistconfirm->setting);
-        foreach ($emaillist as $emailuser) {
-            //Let everyone know the event has been questioned
-            $thisuser = (object) [
-                "email" => $emailuser,
-                "fname" => "",
-                "lname" => "",
-            ];
-            send_email($thisuser, $from, false, $subject, $message);
-        }
-
-        $message .= '
-            <br /><br />
-            <a href="' . $CFG->wwwroot . '/features/events/events_ajax.php?action=request_answer&qid=' . $qid . '&reqid=' . $reqid . '">
-                Answer Question
-            </a>';
-
-        $contact->email = $request["contact_email"];
-        if (strstr(stripslashes($request["contact_name"]), " ")) {
-            $name = explode(" ",stripslashes($request["contact_name"]));
-            $contact->fname = $name[0];
-            $contact->lname = $name[1];
-        } else {
-            $contact->fname = stripslashes($request["contact_name"]);
-            $contact->lname = "";
-        }
-
-        //Send email to the requester letting them know a question has been raised
-        send_email($contact, $from, $subject, $message);
-
-        $return = request_question(true);
-    } catch (Exception $e) {
-        $error = $e->getMessage();
+    // Make sure request exists and get the featureid
+    if (!$featureid = get_db_field("featureid", "events_requests", "reqid = ||reqid||", ["reqid" => $reqid])) {
+        throw new Exception(error_string("invalid_old_request:events"));
     }
 
-    ajax_return($return, $error);
+    // Get feature request settings
+    $pageid = get_db_field("pageid", "pages_features", "feature = 'events' AND featureid = ||featureid||", ["featureid" => $featureid]);
+    if (!$settings = fetch_settings("events", $featureid, $pageid)) {
+        save_batch_settings(default_settings("events", $pageid, $featureid));
+        $settings = fetch_settings("events", $featureid, $pageid);
+    }
+    $locationid = $settings->events->$featureid->allowrequests->setting;
+    $emaillist = prepare_email_list($settings->events->$featureid->emaillistconfirm->setting);
+
+    if (!valid_voter($pageid, $featureid, $voteid)) {
+        throw new Exception(error_string("generic_permissions"));
+    }
+
+    // Allowed to ask questions
+    $SQL = fetch_template("dbsql/events.sql", "insert_events_requests_questions", "events");
+    if (!$qid = execute_db_sql($SQL, ["reqid" => $reqid, "question" => $question, "qtime" => get_timestamp()])) {
+        throw new Exception(error_string("generic_error"));
+    }
+
+    if (!$request = get_db_row("SELECT * FROM events_requests WHERE reqid = ||reqid||", ["reqid" => $reqid])) {
+        throw new Exception(error_string("invalid_old_request:events"));
+    }
+
+    $protocol = get_protocol();
+
+    $from = (object) [
+        "email" => $CFG->siteemail,
+        "fname" => $CFG->sitename,
+        "lname" => "",
+    ];
+
+    $request_info = get_request_info($reqid);
+
+    // Question is saved.  Now send it to everyone.
+    $subject = $CFG->sitename . " Event Request Question";
+    foreach ($emaillist as $emailuser) {
+        //Each message must has an md5'd email address so I know if a person has voted or not
+        $voteid = md5($emailuser);
+        $message = '
+            <strong>A question has been asked about the event (' . $request["event_name"] . ').</strong>
+            <br /><br />
+            ' . $question . '
+            <br /><br />
+            <a href="' . $protocol . $CFG->wwwroot . '/features/events/events_ajax.php?action=request_question&reqid=' . $reqid . '&voteid=' . $voteid . '">
+                View / Ask Questions
+            </a>
+            <br />
+            <a href="' . $protocol . $CFG->wwwroot . '/features/events/events_ajax.php?action=request_vote&reqid=' . $reqid . '&approve=1&voteid=' . $voteid . '">
+                Approve
+            </a>
+            <br />
+            <a href="' . $protocol . $CFG->wwwroot . '/features/events/events_ajax.php?action=request_vote&reqid=' . $reqid . '&approve=0&voteid=' . $voteid . '">
+                Deny
+            </a>
+            <br /><br />
+            ' . $request_info;
+
+        $thisuser = (object)[
+            "email" => $emailuser,
+            "fname" => "",
+            "lname" => "",
+        ];
+        send_email($thisuser, $from, $subject, $message);
+    }
+
+    $subject = $CFG->sitename . " Event Request Answers Needed";
+    $message .= '
+        <br /><br />
+        <a href="' . $protocol . $CFG->wwwroot . '/features/events/events_ajax.php?action=request_answer&qid=' . $qid . '&reqid=' . $reqid . '">
+            Answer Question
+        </a>';
+
+    // Requesting email setup
+    $contact_email = clean_param_req($request, "contact_email", "string");
+    $contact_name = clean_param_req($request, "contact_name", "string");
+    $contact = (object)[
+        "email" => $contact_email,
+        "fname" => count(explode(" ", $contact_name)) > 1 ? explode(" ", $contact_name)[0] : $contact_name,
+        "lname" => count(explode(" ", $contact_name)) > 1 ? explode(" ", $contact_name)[1] : "",
+    ];
+
+    //Send email to the requester letting them know a question has been raised
+    send_email($contact, $from, $subject, $message);
+
+    request_question();
+}
+
+// Request question form
+function request_answer($qid = false) {
+global $CFG, $PAGE;
+    $reqid = clean_myvar_req("reqid", "int");
+    $qid = $qid === false ? clean_myvar_opt("qid", "int", 0) : $qid;
+
+    // Make sure request exists and get the featureid
+    if (!$featureid = get_db_field("featureid", "events_requests", "reqid = ||reqid||", ["reqid" => $reqid])) {
+        throw new Exception(error_string("invalid_old_request:events"));
+    }
+
+    if (!$pageid = get_db_field("pageid", "pages_features", "feature = 'events' AND featureid = ||featureid||", ["featureid" => $featureid])) {
+        throw new Exception(error_string("invalid_old_request:events"));
+    }
+
+    $PAGE->title = $CFG->sitename . " - Event Request"; // Title of page
+    $PAGE->name = $PAGE->title; // Title of page
+    $PAGE->description = "Event Request form for event request discussions and approval/denial"; // Description of page
+    $PAGE->themeid = get_page_themeid($pageid);
+
+    // Start Page
+    require($CFG->dirroot . '/header.html');
+
+    echo request_answers_form($reqid, $qid, $featureid, $pageid);
+
+    // End Page
+    require($CFG->dirroot . '/footer.html');
 }
 
 //Save question
@@ -284,448 +380,320 @@ function request_answer_send() {
 global $CFG;
     $reqid = clean_myvar_req("reqid", "int");
     $qid = clean_myvar_req("qid", "int");
-    $answer = clean_myvar_req("answer", "string");
-    $answer = dbescape(strip_tags(trim($answer, " \n\r\t"),'<a><em><u><img><br>'));
+    $answer = clean_myvar_req("editor1", "string");
+    $answer = strip_tags(trim($answer, " \n\r\t"),'<a><em><u><img><br>');
 
-    //Make sure request exists and get the featureid
-    if ($featureid = get_db_field("featureid", "events_requests", "reqid = ||reqid||", ["reqid" => $reqid])) {
-        //Get feature request settings
-        $pageid = get_db_field("pageid", "pages_features", "feature = 'events' AND featureid = ||featureid||", ["featureid" => $featureid]);
-        if (!$settings = fetch_settings("events", $featureid, $pageid)) {
-              save_batch_settings(default_settings("events", $pageid, $featureid));
-              $settings = fetch_settings("events", $featureid, $pageid);
-        }
-        $request = get_db_row("SELECT * FROM events_requests WHERE reqid = ||reqid||", ["reqid" => $reqid]);
-
-        $SQL = "UPDATE events_requests_questions set answer = |answer|||, answer_time = ||answer_time|| WHERE id = ||id||";
-        if (execute_db_sql($SQL, ["answer" => $answer, "answer_time" => get_timestamp(), "id" => $qid])) { // Question is saved.  Now send it to everyone.
-            $subject = $CFG->sitename . " Event Request Answer";
-            $message = '<strong>An answer to a question has been recieved about the event (' . stripslashes($request["event_name"]) . ').</strong><br />
-            <br />
-            <strong>Question:</strong> ' . get_db_field("question", "events_requests_questions", "id = ||id||", ["id" => $qid]) . '<br />
-            <br />
-            <strong>Answer:</strong>' . get_db_field("answer", "events_requests_questions", "id = ||id||", ["id" => $qid]);
-
-            $from->email = $CFG->siteemail;
-            $from->fname = $CFG->sitename;
-            $from->lname = "";
-
-            $emaillist = prepare_email_list($settings->events->$featureid->emaillistconfirm->setting);
-            foreach ($emaillist as $emailuser) {
-                //Let everyone know the event has been questioned
-                $thisuser->email = $emailuser;
-                $thisuser->fname = "";
-                $thisuser->lname = "";
-                send_email($thisuser, $from, $subject, $message);
-            }
-            echo request_answer(true);
-        } else {
-          error_string("generic_db_error");
-        }
-    } else {
-      echo error_string("invalid_old_request:events");
+    // Make sure request exists and get the featureid
+    if (!$featureid = get_db_field("featureid", "events_requests", "reqid = ||reqid||", ["reqid" => $reqid])) {
+        throw new Exception(error_string("invalid_old_request:events"));
     }
+
+    if (!$pageid = get_db_field("pageid", "pages_features", "feature = 'events' AND featureid = ||featureid||", ["featureid" => $featureid])) {
+        throw new Exception(error_string("invalid_old_request:events"));
+    }
+
+    if (!$settings = fetch_settings("events", $featureid, $pageid)) {
+        save_batch_settings(default_settings("events", $pageid, $featureid));
+        $settings = fetch_settings("events", $featureid, $pageid);
+    }
+    $request = get_db_row("SELECT * FROM events_requests WHERE reqid = ||reqid||", ["reqid" => $reqid]);
+
+    $SQL = "UPDATE events_requests_questions set answer = ||answer||, answer_time = ||answer_time|| WHERE id = ||id||";
+    if (!execute_db_sql($SQL, ["answer" => $answer, "answer_time" => get_timestamp(), "id" => $qid])) {
+        throw new Exception(error_string("generic_db_error"));
+    }
+
+    $protocol = get_protocol();
+
+    $from = (object) [
+        "email" => $CFG->siteemail,
+        "fname" => $CFG->sitename,
+        "lname" => "",
+    ];
+
+    // Question is saved.  Now send it to everyone.
+    $subject = $CFG->sitename . " Event Request Question Answered";
+    $question = get_db_field("question", "events_requests_questions", "id = ||id||", ["id" => $qid]);
+    $answer = get_db_field("answer", "events_requests_questions", "id = ||id||", ["id" => $qid]);
+
+    $emaillist = prepare_email_list($settings->events->$featureid->emaillistconfirm->setting);
+
+    foreach ($emaillist as $emailuser) {
+        //Each message must has an md5'd email address so I know if a person has voted or not
+        $voteid = md5($emailuser);
+        $message = '
+            <h2>Event Request Question Answered</h2>
+            <strong>Requested Event:</strong> ' . $request["event_name"] . '
+            <br /><br />
+            <strong>An answer to the following question has been received.</strong>
+            <br /><br />
+            <strong>Question:</strong> ' . $question . '
+            <br /><br />
+            <strong>Answer:</strong> ' . $answer . '
+            <br /><br />
+            <strong>Next Step:</strong>
+            <br />
+            <a href="' . $protocol . $CFG->wwwroot . '/features/events/events_ajax.php?action=request_question&reqid=' . $reqid . '&voteid=' . $voteid . '">
+                View / Ask Questions
+            </a>
+            <br />
+            <a href="' . $protocol . $CFG->wwwroot . '/features/events/events_ajax.php?action=request_vote&reqid=' . $reqid . '&approve=1&voteid=' . $voteid . '">
+                Approve
+            </a>
+            <br />
+            <a href="' . $protocol . $CFG->wwwroot . '/features/events/events_ajax.php?action=request_vote&reqid=' . $reqid . '&approve=0&voteid=' . $voteid . '">
+                Deny
+            </a>';
+
+        $thisuser = (object)[
+            "email" => $emailuser,
+            "fname" => "",
+            "lname" => "",
+        ];
+        send_email($thisuser, $from, $subject, $message);
+    }
+
+    request_answer(0);
 }
 
-function confirm_events_relay() {
-    confirm_event();
+function confirm_event_relay() {
+    $eventid = clean_myvar_req("eventid", "int");
+    $confirm = clean_myvar_req("confirm", "int");
+    $error = "";
+    if (!confirm_or_deny_event($eventid, $confirm)) {
+        $error = error_string("failed_confirm:events");
+    }
+    ajax_return("", $error);
 }
 
 function delete_events_relay() {
     $eventid = clean_myvar_req("eventid", "int");
-    delete_event($eventid);
+    $error = "";
+    try {
+        if (!delete_event($eventid)) {
+            throw new Exception("Could not delete event");
+        }
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+    }
+    ajax_return("", $error);
 }
 
-//Request question form
-function request_question($refresh=false) {
-global $CFG, $MYVARS;
+// Function is called on email votes
+function request_vote() {
+global $CFG, $PAGE, $MYVARS;
     $reqid = clean_myvar_req("reqid", "int");
+    $newvote = clean_myvar_opt("approve", "int", 0);
     $voteid = clean_myvar_req("voteid", "string");
 
-    $return = "";
-
-    //Make sure request exists and get the featureid
-    if ($featureid = get_db_field("featureid", "events_requests", "reqid = ||reqid||", ["reqid" => $reqid])) {
-        //Get feature request settings
-        $pageid = get_db_field("pageid", "pages_features", "feature = 'events' AND featureid = ||featureid||", ["featureid" => $featureid]);
-        if (!$settings = fetch_settings("events", $featureid, $pageid)) {
-              save_batch_settings(default_settings("events", $pageid, $featureid));
-              $settings = fetch_settings("events", $featureid, $pageid);
-        }
-        $locationid = $settings->events->$featureid->allowrequests->setting;
-
-        //Allowed to ask questions
-        if (valid_voter($pageid, $featureid, $voteid)) {
-            $return .= '<h2>Questions Regarding Event Request</h2>' . get_request_info($reqid);
-            if (!$refresh) {
-                ajaxapi([
-                    "id" => "send_question",
-                    "url" => "/features/events/events_ajax.php",
-                    "data" => [
-                        "action" => "request_question_send",
-                        "voteid" => $voteid,
-                        "reqid" => $reqid,
-                        "question" => "js||encodeURIComponent(" . get_editor_value_javascript() . ")||js",
-                    ],
-                    "display" => "question_form",
-                ]);
-
-                $return .= '
-                    <table style="width:100%">
-                        <tr>
-                            <td>
-                                <br />
-                                ' . get_editor_box() . '
-                                <div style="width:100%;text-align:center">
-                                    <button id="send_question">
-                                        Send Question
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </table>';
-            }
-
-            $return .= '<h3>Previous Questions</h3>';
-
-            //Print out previous questions and answers
-            if ($results = get_db_result("SELECT *
-                                            FROM events_requests_questions
-                                           WHERE reqid = ||reqid||
-                                        ORDER BY question_time", ["reqid" => $reqid])) {
-                while ($row = fetch_row($results)) {
-                    $return .= '<div style="background-color:Aquamarine;padding:4px;"><strong>' . $row['question'] . '</strong></div>';
-                    if ($row["answer"] == "") { //Not answered
-                        $return .= '<div style="background-color:PaleTurquoise;padding:4px;">Question has not been responed to at this time.</div><br /><br />';
-                    } else { //Print answer
-                        $return .= '<div style="background-color:Gold;padding:4px;">' . $row['answer'] . '</div><br /><br />';
-                    }
-                }
-            } else {
-              $return .= 'No questions have been asked yet.';
-            }
-
-            if (!$refresh) {
-                $return = '
-                    <!DOCTYPE HTML>
-                        <html>
-                            <head>
-                                <title>
-                                    Event Request Question Page
-                                </title>
-                                ' . js_code_wrap('var dirfromroot = "' . $CFG->directory . '";') . '
-                                ' . get_js_tags(["siteajax"]) . '
-                                ' . get_css_tags(["main"]) . '
-                            </head>
-                            <body>
-                                <div id="question_form">
-                                    ' . $return . '
-                                </div>
-                            </body>
-                        </html>';
-            }
-        } else {
-            $return .= error_string("generic_permissions");
-        }
-    } else {
-        $return .= error_string("invalid_old_request:events");
-    }
-
-    ajax_return($return);
-}
-
-//Request answer form
-function request_answer($refresh=false) {
-global $CFG;
-    $reqid = clean_myvar_req("reqid", "int");
-    $qid = clean_myvar_req("qid", "int");
-
-    $return = $error = "";
     try {
+        start_db_transaction();
+        $stance = $newvote ? "approve" : "deny";
+
         // Make sure request exists and get the featureid
         if (!$featureid = get_db_field("featureid", "events_requests", "reqid = ||reqid||", ["reqid" => $reqid])) {
             throw new Exception(error_string("invalid_old_request:events"));
         }
 
-        // Get feature request settings
-        $pageid = get_db_field("pageid", "pages_features", "feature = 'events' AND featureid = ||featureid||", ["featureid" => $featureid]);
-        if (!$settings = fetch_settings("events", $featureid, $pageid)) {
-                save_batch_settings(default_settings("events", $pageid, $featureid));
-                $settings = fetch_settings("events", $featureid, $pageid);
-        }
-        $locationid = $settings->events->$featureid->allowrequests->setting;
-
-        $return .= '<h2>Questions Regarding Event Request</h2>' . get_request_info($reqid);
-
-        $answer = get_db_field("answer", "events_requests_questions", "id = ||id||", ["id" => $qid]);
-        if (!$refresh) {
-            ajaxapi([
-                "id" => "send_answer",
-                "url" => "/features/events/events_ajax.php",
-                "data" => [
-                    "action" => "request_answer_send",
-                    "qid" => $qid,
-                    "reqid" => $reqid,
-                    "answer" => "js||encodeURIComponent(" . get_editor_value_javascript() . ")||js",
-                ],
-                "display" => "answer_form",
-            ]);
-
-            $return .= '
-                <table style="width:100%">
-                    <tr>
-                        <td>
-                            <br />
-                            <div style="background-color:Aquamarine;padding:4px;">
-                                <strong>Question: ' . get_db_field("question", "events_requests_questions", "id = ||id||", ["id" => $qid]) . '</strong>
-                            </div>
-                            <br />
-                            ' . get_editor_box(["initialvalue" => $answer]) . '
-                            <div style="width:100%;text-align:center">
-                                <button id="send_answer">
-                                    Send Answer
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                </table>';
+        if (!$pageid = get_db_field("pageid", "pages_features", "feature = 'events' AND featureid = ||featureid||", ["featureid" => $featureid])) {
+            throw new Exception(error_string("invalid_old_request:events"));
         }
 
-        $return .= '<h3>Previous Questions</h3>';
+        $PAGE->title = $CFG->sitename . " - Event Request has been voted on"; // Title of page
+        $PAGE->name = $PAGE->title; // Title of page
+        $PAGE->description = "Event Request form for event request discussions and approval/denial"; // Description of page
+        $PAGE->themeid = get_page_themeid($pageid);
 
-        //Print out previous questions and answers
-        $mod = "";
-        $params = ["reqid" => $reqid];
-        if (!$refresh) {
-            $mod = "AND id <> ||id||";
-            $params += ["id" => $qid];
-        }
-
-        $SQL = fetch_template("dbsql/events.sql", "get_events_requests_questions", "events", ["mod" => $mod]);
-        if ($results = get_db_result($SQL, $params)) {
-            while ($row = fetch_row($results)) {
-                $return .= '
-                    <div style="background-color:Aquamarine;padding:4px;">
-                        <strong>' . $row['question'] . '</strong>
-                    </div>';
-                if ($row["answer"] == "") { // Not answered
-                    $return .= '
-                        <div style="background-color:PaleTurquoise;padding:4px;overflow:hidden;">
-                            <strong>
-                                <a href="' . $CFG->wwwroot . '/features/events/events_ajax.php?action=request_answer&qid=' . $row['id'] . '&reqid=' . $reqid . '">
-                                    Answer Question
-                                </a>
-                            </strong>
-                        </div>
-                        <br /><br />';
-                } else { // Print answer
-                    $return .= '
-                        <div style="background-color:Gold;padding:4px;overflow:hidden;">
-                            ' . $row['answer'] . '<br />
-                            <strong>
-                                <a style="float:right" href="' . $CFG->wwwroot . '/features/events/events_ajax.php?action=request_answer&qid=' . $row['id'] . '&reqid=' . $reqid . '">
-                                    Update Answer
-                                </a>
-                            </strong>
-                        </div>
-                        <br /><br />';
-                }
-            }
-        } else {
-            $return .= 'No other questions have been asked yet.';
-        }
-
-        if (!$refresh) {
-            $return = '
-                <!DOCTYPE HTML>
-                    <html>
-                        <head>
-                            <title>Event Request Question Page</title>
-                        ' . js_code_wrap('var dirfromroot = "' . $CFG->directory . '";') . '
-                        ' . get_js_tags(["siteajax"]) . '
-                        ' . get_js_tags(["main"]) . '
-                        </head>
-                        <body>
-                            <div id="answer_form">
-                            ' . $return . '
-                            </div>
-                        </body>
-                    </html>';
-        }
-    } catch (\Throwable $e) {
-        $error = $e->getMessage();
-    }
-
-    ajax_return($return, $error);
-}
-
-//Function is called on email votes
-function request_vote() {
-global $CFG, $MYVARS;
-    $reqid = clean_myvar_req("reqid", "int");
-    $newvote = clean_myvar_req("approve", "int");
-    $voteid = clean_myvar_req("voteid", "string");
-
-    $stance = $newvote ? "approve" : "deny";
-    echo "<!DOCTYPE HTML><html><head><title>Event Request has been voted on.</title></head><body>";
-    //Make sure request exists and get the featureid
-    if ($featureid = get_db_field("featureid", "events_requests", "reqid = ||reqid||", ["reqid" => $reqid])) {
-        //Get feature request settings
-        $pageid = get_db_field("pageid", "pages_features", "feature = 'events' AND featureid = ||featureid||", ["featureid" => $featureid]);
+        // Start Page
+        require($CFG->dirroot . '/header.html');
 
         if (!$settings = fetch_settings("events", $featureid, $pageid)) {
-              save_batch_settings(default_settings("events", $pageid, $featureid));
-              $settings = fetch_settings("events", $featureid, $pageid);
+            save_batch_settings(default_settings("events", $pageid, $featureid));
+            $settings = fetch_settings("events", $featureid, $pageid);
         }
         $locationid = $settings->events->$featureid->allowrequests->setting;
+        $approveneeded = $settings->events->$featureid->requestapprovalvotes->setting;
+        $denyneeded = $settings->events->$featureid->requestdenyvotes->setting;
+        $emaillist = prepare_email_list($settings->events->$featureid->emaillistconfirm->setting);
 
-        if (valid_voter($pageid, $featureid, $voteid)) {
-            //See if the person has already voted
-            if ($row = get_db_row("SELECT * FROM events_requests
-                                    WHERE reqid = ||reqid||
-                                    AND voted LIKE ||voted||", ["reqid" => $reqid, "voted" => "%:$voteid;%"])) { //Person has already voted
-                $voted = explode("::", $row["voted"]);
-                foreach ($voted as $vote) {
-                    $vote = trim($vote, ":");
-                    $entry = explode(";", $vote);
-                    if ($entry[0] == $voteid) { //This is the vote that needs removed
-                        if ($entry[1] == $newvote) { //Same vote, nothing else needs done
-                            echo "You have already voted to $stance this event.";
-                        } else { //They have changed their vote.
-                            $oldvote = $entry[1];
-                            //Remove old vote
-                            $p = ["reqid" => $reqid, "voteid" => $voteid, "newvote" => ":$voteid;$newvote:", "oldvote" => ":$voteid;$oldvote:"];
+        if (!valid_voter($pageid, $featureid, $voteid)) {
+            throw new Exception(error_string("generic_permissions"));
+        }
 
-                            // Update vote record.
-                            execute_db_sql(fetch_template("dbsql/events.sql", "events_requests_change_vote", "events"), $p);
+        // See if the person has already voted
+        if ($record = request_has_already_voted($reqid, $voteid)) { // Person has already voted
+            $voted = explode("::", $record["voted"]);
+            foreach ($voted as $vote) {
+                $vote = trim($vote, ":");
+                $entry = explode(";", $vote);
+                if ($entry[0] == $voteid) { //This is the vote that needs removed
+                    if ($entry[1] == $newvote) { //Same vote, nothing else needs done
+                        $response = "You have already voted to $stance this event";
+                    } else { //They have changed their vote.
+                        $oldvote = $entry[1];
+                        // Remove old vote
+                        $p = ["reqid" => $reqid, "voteid" => $voteid, "newvote" => ":$voteid;$newvote:", "oldvote" => ":$voteid;$oldvote:"];
 
-                            if ($newvote) { // Remove 1 from against and add 1 to for
-                                execute_db_sql(fetch_template("dbsql/events.sql", "events_requests_recalculate", "events", ["approve" => true]), ["reqid" => $reqid]);
-                            } else { //Remove 1 from for and add 1 to against
-                                execute_db_sql(fetch_template("dbsql/events.sql", "events_requests_recalculate", "events", ["approve" => false]), ["reqid" => $reqid]);
-                            }
-                            echo "You have changed your vote to $stance.";
+                        // Update vote record.
+                        execute_db_sql(fetch_template("dbsql/events.sql", "events_requests_change_vote", "events"), $p);
+
+                        if ($newvote) { // Remove 1 from against and add 1 to for
+                            execute_db_sql(fetch_template("dbsql/events.sql", "events_requests_recalculate", "events", ["approve" => true]), ["reqid" => $reqid]);
+                        } else { // Remove 1 from for and add 1 to against
+                            execute_db_sql(fetch_template("dbsql/events.sql", "events_requests_recalculate", "events", ["approve" => false]), ["reqid" => $reqid]);
                         }
+                        $response = "You have changed your vote to $stance";
                     }
-                }
-            } else { //New vote
-                // Update vote record.
-                $p = ["reqid" => $reqid, "voteid" => $voteid, "newvote" => ":$voteid;$newvote:"];
-                execute_db_sql(fetch_template("dbsql/events.sql", "events_requests_new_vote", "events"), $p);
-
-                if ($newvote == "1") { // Add 1 to the for column
-                    execute_db_sql(fetch_template("dbsql/events.sql", "events_requests_calculate", "events", ["approve" => true]), ["reqid" => $reqid]);
-                } else { // Add 1 to the against column
-                    execute_db_sql(fetch_template("dbsql/events.sql", "events_requests_calculate", "events", ["approve" => false]), ["reqid" => $reqid]);
-                }
-                echo "You have voted to $stance this event.";
-            }
-
-            //See if the voting on this request is finished
-            if ($request = get_db_row(fetch_template("dbsql/events.sql", "get_events_requests", "events"), ["reqid" => $reqid])) {
-                $from = new \stdClass;
-                $from->email = $CFG->siteemail;
-                $from->fname = $CFG->sitename;
-                $from->lname = "";
-
-                //Requesting email setup
-                $contact = new \stdClass;
-                $contact->email = $request["contact_email"];
-                if (strstr(stripslashes($request["contact_name"]), " ")) {
-                    $name = explode(" ",stripslashes($request["contact_name"]));
-                    $contact->fname = $name[0];
-                    $contact->lname = $name[1];
-                } else {
-                    $contact->fname = stripslashes($request["contact_name"]);
-                    $contact->lname = "";
-                }
-                $request_info = get_request_info($reqid);
-                $subject = $CFG->sitename . " Event Request Received";
-                $message = "<strong>Thank you for submitting a request for us to host your event: " . $request["event_name"] . ".</strong><br />
-                            <br />
-                            We will look over the details that you provided and respond shortly.<br />
-                            Through the approval process you may receive additional questions about your event. $request_info";
-
-                if ($request["votes_for"] == $settings->events->$featureid->requestapprovalvotes->setting &&
-                    $request["votes_against"] < $settings->events->$featureid->requestdenyvotes->setting) {
-                    //Event Approved
-                    $subject = $CFG->sitename . " Event Request Approved";
-                    $message = '<strong>The event (' . stripslashes($request["event_name"]) . ') has been approved by a vote of ' . $request["votes_for"] . ' to ' . $request["votes_against"] . '.</strong>
-                    <br /><br />'.
-                    $request_info;
-
-                    //Send email to the requester letting them know we denied the request
-                    send_email($contact, $from, $subject, $message);
-
-                    $emaillist = prepare_email_list($settings->events->$featureid->emaillistconfirm->setting);
-                    foreach ($emaillist as $emailuser) {
-                        //Let everyone know the event has been denied
-                        $thisuser->email = $emailuser;
-                        $thisuser->fname = "";
-                        $thisuser->lname = "";
-                        send_email($thisuser, $from, $subject, $message);
-                    }
-
-                    //Make event
-                    $MYVARS->GET["pageid"] = $pageid;
-                    $MYVARS->GET["featureid"] = $featureid;
-                    $eventid = convert_to_event($request, $locationid);
-
-                    //Confirm event
-                    $siteviewable = $pageid == $CFG->SITEID ? "1" : "0"; //if feature is on site, then yes...otherwise no.
-                    confirm_event($pageid, $eventid, $siteviewable);
-
-                    //Delete event request
-                    execute_db_sql(fetch_template("dbsql/events.sql", "delete_events_requests", "events"), ["reqid" => $reqid]);
-                    execute_db_sql(fetch_template("dbsql/events.sql", "delete_events_requests_questions", "events"), ["reqid" => $reqid]);
-
-                } elseif ($request["votes_for"] < $settings->events->$featureid->requestapprovalvotes->setting
-                          &&
-                          $request["votes_against"] == $settings->events->$featureid->requestdenyvotes->setting) {
-                    //Event Denied
-                    $subject = $CFG->sitename . " Event Request Denied";
-                    $message = '<strong>The event (' . stripslashes($request["event_name"]) . ') has been denied by a vote of ' . $request["votes_for"] . ' to ' . $request["votes_against"] . '.</strong>
-                    <br /><br />'.
-                    $request_info;
-
-                    //Send email to the requester letting them know we denied the request
-                    send_email($contact, $from, $subject, $message);
-
-                    $emaillist = prepare_email_list($settings->events->$featureid->emaillistconfirm->setting);
-                    foreach ($emaillist as $emailuser) {
-                        //Let everyone know the event has been denied
-                        $thisuser->email = $emailuser;
-                        $thisuser->fname = "";
-                        $thisuser->lname = "";
-                        send_email($thisuser, $from, $subject, $message);
-                    }
-
-                    //Delete event request
-                    execute_db_sql(fetch_template("dbsql/events.sql", "delete_events_requests", "events"), ["reqid" => $reqid]);
-                    execute_db_sql(fetch_template("dbsql/events.sql", "delete_events_requests_questions", "events"), ["reqid" => $reqid]);
-                } elseif ($request["votes_for"] > $settings->events->$featureid->requestapprovalvotes->setting) {
-                    echo "Event has already been approved.  Thank you for voting.";
                 }
             }
+        } else { // New vote
+            // Update vote record.
+            $p = ["reqid" => $reqid, "voteid" => $voteid, "newvote" => ":$voteid;$newvote:"];
+            execute_db_sql(fetch_template("dbsql/events.sql", "events_requests_new_vote", "events"), $p);
 
-        } else { echo error_string("generic_permissions"); }
-    } else {
-        echo error_string("invalid_old_request:events");
+            if ($newvote == "1") { // Add 1 to the for column
+                execute_db_sql(fetch_template("dbsql/events.sql", "events_requests_calculate", "events", ["approve" => true]), ["reqid" => $reqid]);
+            } else { // Add 1 to the against column
+                execute_db_sql(fetch_template("dbsql/events.sql", "events_requests_calculate", "events", ["approve" => false]), ["reqid" => $reqid]);
+            }
+            $response = "You have voted to $stance this event";
+        }
+
+        // See if the voting on this request is finished
+        if (!$request = get_db_row(fetch_template("dbsql/events.sql", "get_events_requests", "events"), ["reqid" => $reqid])) {
+            throw new Exception(error_string("invalid_old_request:events"));
+        }
+
+        $votes_for = clean_param_opt($request, "votes_for", "int", 0);
+        $votes_against = clean_param_opt($request, "votes_against", "int", 0);
+
+        $from = (object) [
+            "email" => $CFG->siteemail,
+            "fname" => $CFG->sitename,
+            "lname" => "",
+        ];
+
+        //Requesting email setup
+        $contact_email = clean_param_req($request, "contact_email", "string");
+        $contact_name = clean_param_req($request, "contact_name", "string");
+        $contact = (object)[
+            "email" => $contact_email,
+            "fname" => count(explode(" ", $contact_name)) > 1 ? explode(" ", $contact_name)[0] : $contact_name,
+            "lname" => count(explode(" ", $contact_name)) > 1 ? explode(" ", $contact_name)[1] : "",
+        ];
+
+        $request_info = get_request_info($reqid);
+        $subject = $CFG->sitename . " Event Request Received";
+        $message = '
+            <strong>Thank you for submitting a request for us to host your event: ' . $request["event_name"] . '</strong>
+            <br /><br />
+            We will look over the details that you provided and respond shortly.
+            <br />
+            Through the approval process you may receive additional questions about your event.
+            <br /><br />
+            ' . $request_info;
+
+        if ($votes_for == $approveneeded && $votes_against < $denyneeded) {
+            // Make event
+            if (!$eventid = convert_to_event($request, $locationid, $pageid, $featureid)) {
+                throw new Exception(error_string("invalid_event:events"));
+            }
+
+            // Confirm event
+            $siteviewable = $pageid == $CFG->SITEID ? true : false; //if feature is on site, then yes...otherwise no.
+            if (!confirm_or_deny_event($eventid, $siteviewable)) {
+                throw new Exception(error_string("failed_confirm:events"));
+            }
+
+            // Delete event request
+            execute_db_sql(fetch_template("dbsql/events.sql", "delete_events_requests", "events"), ["reqid" => $reqid]);
+            execute_db_sql(fetch_template("dbsql/events.sql", "delete_events_requests_questions", "events"), ["reqid" => $reqid]);
+
+            // Event Approved
+            $subject = $CFG->sitename . " Event Request Approved";
+            $message = '
+                <strong>The event ' . stripslashes($request["event_name"]) . ' has been approved by a vote of ' . $votes_for . ' to ' . $votes_against . '.</strong>
+                <br /><br />
+                ' . $request_info;
+
+            //Send email to the requester letting them know we denied the request
+            send_email($contact, $from, $subject, $message);
+
+            foreach ($emaillist as $emailuser) {
+                //Let everyone know the event has been denied
+                $thisuser = (object) [
+                    "email" => $emailuser,
+                    "fname" => "",
+                    "lname" => "",
+                ];
+                send_email($thisuser, $from, $subject, $message);
+            }
+        } elseif ($votes_for < $approveneeded && $votes_against == $denyneeded) {
+            // Delete event request
+            execute_db_sql(fetch_template("dbsql/events.sql", "delete_events_requests", "events"), ["reqid" => $reqid]);
+            execute_db_sql(fetch_template("dbsql/events.sql", "delete_events_requests_questions", "events"), ["reqid" => $reqid]);
+
+            // Event Denied
+            $subject = $CFG->sitename . " Event Request Denied";
+            $message = '
+                <strong>The event: ' . stripslashes($request["event_name"]) . ' has been denied by a vote of ' . $votes_for . ' to ' . $votes_against . '.</strong>
+                <br /><br />
+                ' . $request_info;
+
+            //Send email to the requester letting them know we denied the request
+            send_email($contact, $from, $subject, $message);
+
+            foreach ($emaillist as $emailuser) {
+                //Let everyone know the event has been denied
+                $thisuser = (object) [
+                    "email" => $emailuser,
+                    "fname" => "",
+                    "lname" => "",
+                ];
+                send_email($thisuser, $from, $subject, $message);
+            }
+        } elseif ($request["votes_for"] > $approveneeded) {
+            $response = "Event has already been approved";
+        }
+
+        commit_db_transaction();
+
+        $middlecontents = '
+            <div id="question_form" style="padding: 20px;text-align: center;">
+                <h3>' . $response . '</h3>
+                <br />
+                <strong>Thank you for your feedback.</strong>
+            </div>';
+
+        $return = fill_template("tmp/index.template", "simplelayout_template", false, ["mainmast" => page_masthead(true, true), "middlecontents" => $middlecontents]);
+    } catch (\Throwable $e) {
+        rollback_db_transaction($e->getMessage());
+        $return = $e->getMessage();
     }
-    echo "</body></html>";
+
+    echo $return;
+
+    // End Page
+    require($CFG->dirroot . '/footer.html');
 }
 
-function convert_to_event($request, $location) {
+function convert_to_event($request, $location, $pageid, $featureid) {
 global $CFG, $MYVARS;
-    $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+    $featureid = clean_var_req($featureid, "int");
+    $pageid = clean_var_opt($pageid, "int", get_pageid());
+
+    $MYVARS->GET["pageid"] = $pageid;
+    $MYVARS->GET["featureid"] = $featureid;
+
     $MYVARS->GET["event_name"] = $request["event_name"];
+    $MYVARS->GET["byline"] = "w/ " . $request["contact_name"];
     $MYVARS->GET["contact"] = $request["contact_name"];
     $MYVARS->GET["email"] = $request["contact_email"];
     $MYVARS->GET["phone"] = $request["contact_phone"];
     $MYVARS->GET["location"] = $location;
 
     $MYVARS->GET["category"] = "1"; //Placed in general category...can be changed later
-    $MYVARS->GET["siteviewable"] = $pageid == $CFG->SITEID ? "1" : "0"; //if feature is on site, then yes...otherwise no.
+    $MYVARS->GET["siteviewable"] = $pageid == $CFG->SITEID ? "1" : "0"; // if feature is on site, then yes...otherwise no.
 
     $MYVARS->GET["description"] = $request["description"]; //event description
 
@@ -733,7 +701,9 @@ global $CFG, $MYVARS;
 
     $MYVARS->GET["event_begin_date"] = date(DATE_RFC822, $request["startdate"]);
     $MYVARS->GET["event_end_date"] = $MYVARS->GET["multiday"] == "1" ? date(DATE_RFC822, $request["enddate"]) : $MYVARS->GET["event_begin_date"];
-    $MYVARS->GET["allday"] = "1"; $MYVARS->GET["reg"] = "0"; $MYVARS->GET["fee"] = "0";
+    $MYVARS->GET["allday"] = "1";
+    $MYVARS->GET["reg"] = "0";
+    $MYVARS->GET["fee"] = "0";
 
     return submit_new_event(true);
 }
@@ -945,15 +915,18 @@ global $CFG, $MYVARS, $USER;
                                 // If payment is made, it is no longer in queue.
                                 execute_db_sql(fetch_template("dbsql/events.sql", "update_reg_status", "events"), ["regid" => $regid, "verified" => 1]);
 
-                                $touser = new \stdClass;
-                                $touser->fname = get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname='Camper_Name_First'", ["regid" => $regid]);
-                                $touser->lname = get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname='Camper_Name_Last'", ["regid" => $regid]);
-                                $touser->email = get_db_field("email", "events_registrations", "regid = ||regid||", ["regid" => $regid]);
+                                $touser = (object) [
+                                    "fname" => get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname='Camper_Name_First'", ["regid" => $regid]),
+                                    "lname" => get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname='Camper_Name_Last'", ["regid" => $regid]),
+                                    "email" => get_db_field("email", "events_registrations", "regid = ||regid||", ["regid" => $regid]),
+                                ];
 
-                                $fromuser = new \stdClass;
-                                $fromuser->email = $CFG->siteemail;
-                                $fromuser->fname = $CFG->sitename;
-                                $fromuser->lname = "";
+                                $fromuser = (object) [
+                                    "email" => $CFG->siteemail,
+                                    "fname" => $CFG->sitename,
+                                    "lname" => "",
+                                ];
+
                                 $message = registration_email($regid, $touser);
                                 if (send_email($touser, $fromuser, $CFG->sitename . " Registration", $message)) {
                                     send_email($fromuser, $fromuser, $CFG->sitename . " Registration", $message);
@@ -1451,10 +1424,23 @@ global $CFG, $USER;
                 throw new \Exception(error_string("generic_db_error"));
             }
 
+            ajaxapi([
+                "id" => "export_event_registrations" ,
+                "paramlist" => "eventid, pageid",
+                "url" => "/features/events/events_ajax.php",
+                "data" => [
+                    "action" => "export_registrations",
+                    "pagieid" => "js||pageid||js",
+                    "eventid" => "js||eventid||js",
+                ],
+                "display" => "downloadframe",
+                "event" => "none",
+            ]);
+
             $rows = "";
             while ($event = fetch_row($results)) {
                 $export = "";
-                $limit = "&#8734;";
+                $limit = "&#8734;"; // infinity symbol
                 if ($event["start_reg"] > 0) {
                     $regcount = get_db_count("SELECT * FROM events_registrations WHERE eventid='" . $event['eventid'] . "'");
                     $limit = $event['max_users'] == "0" ? $limit : $event['max_users'];
@@ -1463,16 +1449,6 @@ global $CFG, $USER;
                     $canexport = false;
                     if (user_is_able($USER->userid, "exportcsv", $event["pageid"])) {
                         $canexport = true;
-                        ajaxapi([
-                            "id" => "export_registrations_" . $event['eventid'],
-                            "url" => "/features/events/events_ajax.php",
-                            "data" => [
-                                "action" => "export_csv",
-                                "pageid" => $event["pageid"],
-                                "eventid" => $event['eventid'],
-                                "searchwords" => "js||encodeURIComponent('$searchwords')||js"],
-                            "display" => "downloadframe",
-                        ]);
                     }
                 }
 
@@ -1884,9 +1860,9 @@ global $CFG, $MYVARS;
     $category = clean_myvar_req("category", "int");
     $siteviewable = clean_myvar_opt("siteviewable", "int", 0);
     $byline = clean_myvar_req("byline", "string");
-    $description = clean_myvar_req("description", "html");
+    $description = clean_myvar_opt("description", "html", "");
     $multiday = clean_myvar_opt("multiday", "bool", false);
-    $workers = clean_myvar_opt("workers", "bool", false);
+    $workers = clean_myvar_opt("workers", "int", 0);
 
     //strtotime php5 fixes
     $event_begin_date = clean_myvar_req("event_begin_date", "string");
@@ -1899,7 +1875,7 @@ global $CFG, $MYVARS;
         $event_end_date = $multiday == "1" ? strtotime($event_end_date) : $event_begin_date;
     }
 
-    $allday = clean_myvar_opt("allday", "bool", true);
+    $allday = clean_myvar_opt("allday", "int", 1);
     $event_begin_time = !$allday ? clean_myvar_req("begin_time", "string") : '';
     $event_end_time = !$allday ? clean_myvar_req("end_time", "string") : '';
 
@@ -1992,7 +1968,9 @@ global $CFG, $MYVARS;
             }
 
             if ($pageid == $CFG->SITEID && $eventid) {
-                confirm_event($pageid, $eventid, true);
+                if (!confirm_or_deny_event($eventid, true)) {
+                    throw new Exception(error_string("failed_confirm:events"));
+                }
             }
 
             commit_db_transaction();
@@ -2011,6 +1989,7 @@ global $CFG, $MYVARS;
                 "fee_full" => $fee_full, "payableto" => $payableto, "checksaddress" => $checksaddress, "paypal" => $paypal, "sale_fee" => $sale_fee, "sale_end" => $sale_end,
                 "contact" => $contact, "email" => $email, "phone" => $phone, "hard_limits" => $hard_limits, "soft_limits" => $soft_limits, "workers" => $workers,
             ];
+
             if (execute_db_sql($SQL, $params)) {
                 refresh_calendar_events($eventid);
 
@@ -2032,7 +2011,9 @@ global $CFG, $MYVARS;
             }
 
             if ($pageid == $CFG->SITEID && $eventid) {
-                confirm_event($pageid, $eventid, true);
+                if (!confirm_or_deny_event($eventid, true)) {
+                    throw new Exception(error_string("failed_confirm:events"));
+                }
             }
             commit_db_transaction();
         } catch (\Throwable $e) {
@@ -2042,18 +2023,19 @@ global $CFG, $MYVARS;
 }
 
 function get_end_time() {
-    $starttime = clean_myvar_opt("starttime", "int", false);
-    $endtime = clean_myvar_opt("endtime", "int", false);
-    $limit = clean_myvar_opt("limit", "int", false);
+    $starttime = clean_myvar_opt("starttime", "string", false);
+    $endtime = clean_myvar_opt("endtime", "string", false);
+    $limit = clean_myvar_opt("limit", "int", 0);
+
 
     // event is not a multi day event and endtime is already set
-    if ($limit == 1 && $endtime) {
+    if ($limit === 1 && $endtime) {
         echo get_possible_times("end_time", $endtime, $starttime);
-    } elseif ($limit == 1) {
+    } elseif ($limit === 1) {
         echo get_possible_times("end_time", false, $starttime);
-    } elseif ($limit == 0 && $endtime) {
+    } elseif ($limit === 0 && $endtime) {
         echo get_possible_times("end_time", $endtime);
-    } elseif ($limit == 0) {
+    } elseif ($limit === 0) {
         echo get_possible_times("end_time");
     }
 }
@@ -2118,7 +2100,7 @@ function get_location_details() {
     echo $returnme;
 }
 
-function export_csv() {
+function export_registrations() {
 global $CFG, $USER;
     if (!defined('FILELIB')) { include_once ($CFG->dirroot . '/lib/filelib.php'); }
     date_default_timezone_set(date_default_timezone_get());
@@ -2259,7 +2241,15 @@ global $CFG, $USER;
 function show_template_settings() {
     $templateid = clean_myvar_req("templateid", "int");
     $eventid = clean_myvar_opt("eventid", "int", false);
-    echo get_template_settings_form($templateid, $eventid);
+
+    $return = $error = "";
+    try {
+        $return = get_template_settings_form($templateid, $eventid);
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+    }
+
+    ajax_return($return, $error);
 }
 
 function global_template_settings() {
@@ -2392,9 +2382,11 @@ global $CFG, $USER;
                     ]);
                 }
 
+                $version = empty($template["folder"]) ? "N/A" : get_db_field("setting", "settings", "setting_name='version' AND type='events_template' AND extra = ||folder||", ["folder" => $template["folder"]]);
                 $rowparams = [
                     "name" => $template["name"],
                     "type" => $template["folder"] == "none" ? "DB" : "FOLDER",
+                    "version" => $version,
                     "issettings" => $issettings,
                     "isactive" => !empty($template["activated"]),
                     "template_id" => $template["template_id"],
@@ -2490,16 +2482,16 @@ global $CFG, $USER;
             $email = trim($email);
             if (filter_var($email, FILTER_VALIDATE_EMAIL)) { // It is an email address, so let's get an email ready.
                 $user = get_db_row("SELECT * FROM users WHERE LOWER(email) LIKE LOWER(||email||)", ["email" => "%$email%"]);
-                $contact = new \stdClass;
-                $contact->email = $email;
-                $contact->fname = "";
-                $contact->lname = "";
+
+                $contact = (object)[
+                    "email" => $email,
+                    "fname" => $user ? $user["fname"] : "",
+                    "lname" => $user ? $user["lname"] : "",
+                ];
 
                 if ($user) {
                     $name = $user["fname"] . " " . $user["lname"] . " ";
                     $m1 = "Hello $name!,";
-                    $contact->fname = $user["fname"];
-                    $contact->lname = $user["lname"];
                     $archive = get_db_row("SELECT * FROM events_staff WHERE userid = ||userid|| LIMIT 1", ["userid" => $user["userid"]]);
                     $status = staff_status($archive);
                 } else {
@@ -2725,6 +2717,7 @@ global $CFG, $USER;
     $pageid = get_pageid();
 
     if ($pageid) {
+        $return = $error = "";
         try {
             start_db_transaction();
             $params = [
@@ -2817,15 +2810,28 @@ global $CFG, $USER;
                     If you have not already done so, please complete a background check.<br />
                     <h2><a href="' . $linkurl . '">Submit a background check</a></h2>';
 
-                echo "<div style='text-align:center;'><h1>$subject</h1>$backgroundchecklink</div>";
+                $return = '
+                    <div style="text-align:center;">
+                        <h1>' . $subject . '</h1>
+                        ' . $backgroundchecklink . '
+                    </div>';
             }
         } catch (\Throwable $e) {
-            rollback_db_transaction($e->getMessage());
-            echo "<div style='text-align:center;'><h1>Failed to save application.</h1></div>";
+            $error = $e->getMessage();
+            rollback_db_transaction($error);
+            $return = '
+                <div style="text-align:center;">
+                    <h1>Failed to save application.</h1>
+                </div>';
         }
     } else {
-        echo "<div style='text-align:center;'><h1>The page has timed out and the form could not be save for security reasons.  Please try again.</h1></div>";
+        $return = '
+            <div style="text-align:center;">
+                <h1>The page has timed out and the form could not be save for security reasons.  Please try again.</h1>
+            </div>';
     }
+
+    ajax_return($return, $error);
 }
 
 function export_staffapp() {

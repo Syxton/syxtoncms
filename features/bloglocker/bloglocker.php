@@ -55,7 +55,10 @@ global $MYVARS, $CFG, $USER;
 
 	echo '
 	<div style="width:100%;">
-		' . $row['html'] . $comments . '
+		' . $row['html'] . '
+		<div id="comment_area_' . $htmlid . '">
+		' . $comments . '
+		</div>
 	</div>';
 }
 ?>

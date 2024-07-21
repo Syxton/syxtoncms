@@ -203,70 +203,74 @@ global $CFG;
 
 function event_request_form() {
 global $CFG;
-     $featureid = clean_myvar_opt("featureid", "int", false);
-     if ($featureid) {
-          $pageid = get_db_field("pageid", "pages_features", "featureid=$featureid");
-          if (!$settings = fetch_settings("events", $featureid, $pageid)) {
-              save_batch_settings(default_settings("events", $pageid, $featureid));
-              $settings = fetch_settings("events", $featureid, $pageid);
-          }
-          $event_begin_date = $event_end_date = 'true';
-          $locationid = $settings->events->$featureid->allowrequests->setting;
-          $request_text = $settings->events->$featureid->request_text->setting;
+    $featureid = clean_myvar_opt("featureid", "int", false);
 
-          if (!defined('VALIDATELIB')) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
+    $return = $error = "";
+    try {
+        if (!$featureid) {
+            throw new Exception("Missing featureid");
+        }
 
-          echo create_validation_script("request_form" , "ajaxapi_old('/features/events/events_ajax.php','event_request',create_request_string('request_form'),function() { simple_display('request_form_div'); });") . '
-          <div class="formDiv" id="request_form_div">
-          <p align="center"><b><font size="+1">Event Request Form</font></b></p><br />' . $request_text . '<br />If you would like to have your event hosted at ' . get_db_field("location", "events_locations", "id=$locationid") . ' please fill out the below form and we will get back to you.<br />
-              <br /><br />
-              <form name="request_form" id="request_form">
-                     <input type="hidden" id="featureid" name="featureid" value="' . $featureid . '" />
-                  <fieldset class="formContainer">
-                          <div class="rowContainer">
-                          <label for="name">Contact Name</label><input type="text" id="name" name="name" data-rule-required="true" data-msg-required="' . error_string('valid_request_name:events') . '" /><div class="tooltipContainer info">' . get_help("input_request_name:events") . '</div><br />
-                      </div>
-                      <div class="rowContainer">
-                          <label for="email">Email Address</label><input type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-msg-required="' . error_string('valid_request_email:events') . '" data-msg-email="' . error_string('valid_request_email_invalid:events') . '" /><div class="tooltipContainer info">' . get_help("input_request_email:events") . '</div><br />
-                      </div>
-                               <div class="rowContainer">
-                            <label for="phone">Phone</label><input type="text" id="phone" name="phone" data-rule-required="true"  data-rule-phone="true" data-msg-required="' . error_string('valid_request_phone:events') . '" data-msg-phone="' . error_string('valid_request_phone_invalid:events') . '" /><div class="tooltipContainer info">' . get_help("input_request_phone:events") . '</div><br />
-                          </div>
-                          <div class="rowContainer">
-                          <label for="event_name">Event Name</label><input type="text" id="event_name" name="event_name" data-rule-required="true" data-msg-required="' . error_string('valid_request_event_name:events') . '" /><div class="tooltipContainer info">' . get_help("input_request_event_name:events") . '</div><br />
-                      </div>
-                        <div class="rowContainer">
-                            <label for="startdate">Event Start Date</label><input type="text" id="startdate" name="startdate" data-rule-required="true" data-rule-date="true" data-rule-futuredate="true" date-rule-ajax1="features/events/events_ajax.php::request_date_open::&featureid=' . $featureid . '&startdate=::true" data-msg-ajax1="' . error_string('valid_request_date_used:events') . '" data-msg-futuredate="' . error_string('valid_request_date_future:events') . '" /><div class="tooltipContainer info">' . get_help("input_request_startdate:events") . '</div>
-                        </div>
-                        <div class="rowContainer">
-                            <label>&nbsp;</label><span style="font-size:.8em;">through</span>
-                        </div>
-                        <div class="rowContainer">
-                            <label for="enddate">Event End Date</label><input type="text" id="enddate" name="enddate" data-rule-date="true" data-rule-futuredate="#startdate" data-rule-ajax1="features/events/events_ajax.php::request_date_open::&featureid=' . $featureid . '&startdate=#startdate&enddate=::true" data-msg-ajax1="' . error_string('valid_request_date_used:events') . '" data-msg-futuredate="' . error_string('valid_request_date_later:events') . '" /><div class="tooltipContainer info">' . get_help("input_request_enddate:events") . '</div>
-                        </div>
-                          <div class="rowContainer">
-                            <label for="participants"># of participants</label><input type="text" id="participants" name="participants" data-rule-required="true" data-rule-number="true" /><div class="tooltipContainer info">' . get_help("input_request_participants:events") . '</div>
-                        </div>
-                      <div class="rowContainer">
-                          <label for="description">Event Description</label><textarea rows="10" id="description" name="description" data-rule-required="true" data-msg-required="' . error_string('valid_request_description:events') . '" /><div class="tooltipContainer info">' . get_help("input_request_description:events") . '</div><br />
-                          </div>
-                          <input class="submit" name="submit" type="submit" onmouseover="this.focus();" value="Submit" />
-                  </fieldset>
-              </form>
-          </div>';
-     } else { echo "Sorry, This form is not available"; }
+        $pageid = get_db_field("pageid", "pages_features", "featureid=$featureid");
+        if (!$settings = fetch_settings("events", $featureid, $pageid)) {
+            save_batch_settings(default_settings("events", $pageid, $featureid));
+            $settings = fetch_settings("events", $featureid, $pageid);
+        }
+        $event_begin_date = $event_end_date = 'true';
+        $locationid = $settings->events->$featureid->allowrequests->setting;
+        $request_text = $settings->events->$featureid->request_text->setting;
+
+        if (!defined('VALIDATELIB')) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
+
+        ajaxapi([
+            "id" => "request_event",
+            "url" => "/features/events/events_ajax.php",
+            "data" => [
+                "action" => "event_request",
+                "stafflist" => "js||$('#stafflist').val()||js",
+                "sendemails" => "js||$('#sendemails').prop('checked')||js",
+            ],
+            "reqstring" => "request_form",
+            "display" => "request_form_div",
+            "event" => "none",
+        ]);
+
+        $params = [
+            "validation" => create_validation_script("request_form" , "request_event();"),
+            "request_text" => $request_text,
+            "location" => get_db_field("location", "events_locations", "id = ||id||", ["id" => $locationid]),
+            "featureid" => $featureid,
+            "locationid" => $locationid,
+        ];
+        $return = fill_template("tmp/events.template", "event_request_form", "events", $params);
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+    }
+
+    echo $return . $error;
 }
 
 function staff_application() {
 global $CFG, $USER;
-     if (isset($USER->userid)) {
-          $staff = get_db_row("SELECT * FROM events_staff WHERE userid='$USER->userid'"); //Update existing event
+    if (isset($USER->userid)) {
+        $staff = get_db_row("SELECT * FROM events_staff WHERE userid='$USER->userid'"); //Update existing event
 
-          if (!defined('VALIDATELIB')) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
+        if (!defined('VALIDATELIB')) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
 
-          echo create_validation_script("staffapplication_form" , "ajaxapi_old('/features/events/events_ajax.php','event_save_staffapp',create_request_string('staffapplication_form'),function() { simple_display('staffapplication_form_div'); });");
-          echo staff_application_form($staff);
-     } else { echo "Sorry, This form is not available"; }
+        ajaxapi([
+            "id" => "event_save_staffapp",
+            "url" => "/features/events/events_ajax.php",
+            "data" => [
+                "action" => "event_save_staffapp",
+            ],
+            "reqstring" => "staffapplication_form",
+            "display" => "staffapplication_form_div",
+            "event" => "none",
+        ]);
+
+        echo create_validation_script("staffapplication_form", "event_save_staffapp();");
+        echo staff_application_form($staff);
+    } else { echo "Sorry, This form is not available"; }
 }
 
 function info() {

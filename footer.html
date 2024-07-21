@@ -23,14 +23,16 @@
                         items: ".box",
                         handle: ".pagesorthandle",
                         tolerance: "pointer",
-                        helper: function(){ return $('<div class="portable_box"></div>') },
+                        helper: function(){ return $('<div class="portable_box"><i class="fa-solid fa-dolly fa-bounce" style="font-size: 4em"></i></div>') },
                         placeholder: "inner_drop_zone",
                         cursor: "move",
                         cursorAt: { top: 0, left: 0 },
                         zIndex: 9999,
                         sort: function(event, ui) {
-                            ui.helper.css({"top": ui.position.top + $(window).scrollTop() + "px",
-                                           "left": ui.position.left + $(window).scrollLeft() + "px" });
+                            ui.helper.css({
+                                "top": ui.position.top + "px",
+                                "left": ui.position.left + $(window).scrollLeft() + "px",
+                            });
                         },
                         stop: function(event, ui) {
                             var from = ui.item.parent()[0];
@@ -53,9 +55,13 @@
 
                         }
                     });
-                    $("#menu-icon").on("click", function() {
-                        $("#pagenav").toggle();
-                    });
+                    if ($("#pagenav").length) {
+                        $("#menu-icon").on("click", function() {
+                            $("#pagenav").toggle();
+                        });
+                    } else {
+                        $("#menu-icon").remove();
+                    }
                     $('#pagenav li').hover(
                         function(){ $(this).addClass('sfhover') },
                         function(){ $(this).removeClass('sfhover') }

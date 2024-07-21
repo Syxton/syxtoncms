@@ -73,12 +73,12 @@ function clean_for_overlib($str) {
 
 function get_calendar($params) {
 global $CFG;
-    $pageid = clean_params_opt($params, "pageid", "int", get_pageid());
-    $userid = clean_params_opt($params, "userid", "int", "");
-    $month = clean_params_opt($params, "month", "int", "");
-    $year = clean_params_opt($params, "year", "int", "");
-    $extra_row = clean_params_opt($params, "extra_row", "int", "");
-    $area = clean_params_opt($params, "area", "string", "side");
+    $pageid = clean_param_opt($params, "pageid", "int", get_pageid());
+    $userid = clean_param_opt($params, "userid", "int", "");
+    $month = clean_param_opt($params, "month", "int", "");
+    $year = clean_param_opt($params, "year", "int", "");
+    $extra_row = clean_param_opt($params, "extra_row", "int", "");
+    $area = clean_param_opt($params, "area", "string", "side");
 
     $no_site_events = get_db_field("setting", "settings", "type='calendar' AND pageid = ||pageid|| AND setting_name='dont_show_site_events' AND setting='1'", ["pageid" => $pageid]);
     $show_site_events = ($pageid == $CFG->SITEID) || $no_site_events ? true : false;

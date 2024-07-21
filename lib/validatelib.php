@@ -15,63 +15,18 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
 }
 define("VALIDATELIB", true);
 
-function create_validation_script($formname, $function, $ajax=false) {
+function create_validation_script($formname, $code, $ajax=false) {
 global $CFG;
-	$setup = '';
-	$script = '
-	$.validator.setDefaults({done: \'valid\'});
-	$(\'#' . $formname . '\').validate({
-		meta: \'validate\',
-		submitHandler: function() {
-		' . $function . '
-		},
-		ignore: \'.calendarDateInput\'
-	});';
-
-    //Text fields and new HTML5 types
-    $setup .= '$(\'.formContainer input[type=text],[type=email],[type=search],[type=url]\').focus(function() {
-  				      $(this).parent().find(\'label.error\').css(\'visibility\', \'visible\');
-  				      $(this).parent().find(\'.info\').css(\'visibility\', \'visible\')
-  				  }).blur(function() {
-  				      $(this).parent().find(\'.info\').css(\'visibility\', \'hidden\');
-  				  });';
-
-    //Password fields
-    $setup .= '$(\'.formContainer input[type=password]\').focus(function() {
-  				      $(this).parent().find(\'label.error\').css(\'visibility\', \'visible\');
-  				      $(this).parent().find(\'.info\').css(\'visibility\', \'visible\')
-  				  }).blur(function() {
-  				      $(this).parent().find(\'.info\').css(\'visibility\', \'hidden\');
-  				  });';
-
-    //Textarea fields
-    $setup .= '$(\'.formContainer textarea\').focus(function() {
-  				      $(this).parent().find(\'label.error\').css(\'visibility\', \'visible\');
-  				      $(this).parent().find(\'.info\').css(\'visibility\', \'visible\')
-  				  }).blur(function() {
-  				      $(this).parent().find(\'.info\').css(\'visibility\', \'hidden\');
-  				  });';
-
-    //CHECK fields
-    $setup .= '$(\'.formContainer input[type=checkbox]\').focus(function() {
-  				      $(this).parent().find(\'label.error\').css(\'visibility\', \'visible\');
-  				      $(this).parent().find(\'.info\').css(\'visibility\', \'visible\')
-  				  }).blur(function() {
-  				      $(this).parent().find(\'.info\').css(\'visibility\', \'hidden\');
-  				  });';
-
-    //SELECT fields
-    $setup .= '$(\'.formContainer select\').focus(function() {
-  				      $(this).parent().find(\'label.error\').css(\'visibility\', \'visible\');
-  				      $(this).parent().find(\'.info\').css(\'visibility\', \'visible\')
-  				  }).blur(function() {
-  				      $(this).parent().find(\'.info\').css(\'visibility\', \'hidden\');
-  				  });';
+	$params = [
+		"formname" => $formname,
+		"code" => $code,
+	];
+	$return = fill_template("tmp/pagelib.template", "validation_tooltip_actions", false, $params);
 
     if ($ajax) {
-		 return $script . $setup;
+		 return $return;
 	} else {
-		 return js_code_wrap($script . $setup, "defer", true);
+		 return js_code_wrap($return, "defer", true);
 	}
 }
 ?>

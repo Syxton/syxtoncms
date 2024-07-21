@@ -509,8 +509,19 @@ echo '
 </form>
 ' . keepalive();
 
+ajaxapi([
+    "id" => "submit_camp_new_registration",
+    "url" => "/features/events/templates/camp_new/backend.php",
+    "data" => [
+        "action" => "register",
+    ],
+    "reqstring" => "form1",
+    "display" => "registration_div",
+    "event" => "none",
+]);
+
 //Finalize and activate validation code
-echo create_validation_script("form1" , "submit_camp_new_registration()");
+echo create_validation_script("form1" , "submit_camp_new_registration();");
 $script = '$("select[id^=\'Camper_Birth_Date\']").change(function() { updateAge(); });
            $("select[id^=\'Camper_Birth_Date\']").attr("onKeyUp", "updateAge()");
            $("input[id^=\'Camper_Birth_Date\']").change(function() { updateAge(); });

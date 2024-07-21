@@ -37,7 +37,7 @@ global $CFG;
 	return $conn;
 }
 
-function clean_params_req($params, $key, $type) {
+function clean_param_req($params, $key, $type) {
 	if (isset($params[$key])) {
 		return clean_var_req($params[$key], $type, $key);
 	} else {
@@ -46,7 +46,7 @@ function clean_params_req($params, $key, $type) {
 	}
 }
 
-function clean_params_opt($params, $key, $type, $default) {
+function clean_param_opt($params, $key, $type, $default) {
 	if (isset($params[$key])) {
 		return clean_var_opt($params[$key], $type, $default);
 	} else {
@@ -86,10 +86,12 @@ global $CFG;
 
 	switch ($type) {
 		case "int":
+			if ($var === "0" || $var === 0) { return (int) 0; }
 			$var = ltrim($var, "0"); // leading zeros should be removed.
 			$var = filter_var($var, FILTER_VALIDATE_INT, FILTER_NULL_ON_FAILURE) ?? $default;
 			break;
 		case "float":
+			if ($var !== "" &&(float) $var === 0.0) { return 0.0; }
 			$var = ltrim($var, "0"); // leading zeros should be removed.
 			$var = filter_var($var, FILTER_VALIDATE_FLOAT, FILTER_NULL_ON_FAILURE) ?? $default;
 			break;

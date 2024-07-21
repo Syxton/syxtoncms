@@ -39,7 +39,10 @@ global $USER;
             ajaxapi([
                 "id" => $scriptid,
                 "url" => "/features/forum/forum_ajax.php",
-                "data" => ["action" => "get_forum_categories_ajax", "forumid" => $forumid],
+                "data" => [
+                    "action" => "get_forum_categories_ajax",
+                    "forumid" => $forumid,
+                ],
                 "display" => "forum_div_$forumid",
                 "event" => "none",
                 "intervalid" => "forum_$forumid",
@@ -57,7 +60,10 @@ global $USER;
             ajaxapi([
                 "id" => $scriptid,
                 "url" => "/features/forum/forum_ajax.php",
-                "data" => ["action" => "get_shoutbox_ajax", "forumid" => $forumid],
+                "data" => [
+                    "action" => "get_shoutbox_ajax",
+                    "forumid" => $forumid,
+                ],
                 "display" => "forum_div_$forumid",
                 "event" => "none",
                 "intervalid" => "forum_$forumid",
@@ -67,7 +73,7 @@ global $USER;
         $content .= "</div>";
     }
 
-    // ExecuteRefresh Script
+    // Execute Refresh Script
     if ($scriptid) {
         $content .= js_code_wrap(preg_replace('/\s+/S', " ", "$scriptid();"));
     }
@@ -329,12 +335,8 @@ global $CFG, $USER;
     //Add to the discussion view field
     execute_db_sql(fetch_template("dbsql/forum.sql", "update_discussion_views", "forum"), ["discussionid" => $discussionid]);
 
-
-
     $limit = $settings->forum->$forumid->postsperpage->setting * $pagenum;
-    $SQL = fetch_template("dbsql/forum.sql", "get_discussion_posts", "forum") . '
-            ORDER BY posted
-            LIMIT ||limit||,||perpage||';
+    $SQL = fetch_template("dbsql/forum.sql", "get_discussion_posts", "forum") . ' ORDER BY posted LIMIT ||limit||,||perpage||';
     while ($pagenum >= 0 && !$posts = get_db_result($SQL, ["discussionid" => $discussionid, "limit" => $limit, "perpage" => $settings->forum->$forumid->postsperpage->setting])) { // Pagenum problem...aka deleted last post on page...go to previous page.
         $pagenum--;
         $limit = $settings->forum->$forumid->postsperpage->setting * $pagenum;
@@ -358,48 +360,32 @@ global $CFG, $USER;
         "interval" => FORUM_REFRESH,
     ]);
 
-    $returnme = '<div class="forum_breadcrumb">
-                    <button id="get_categories_' . $forumid . '" class="alike">
-                        Categories
-                    </button>
-                    <img style="margin: 0 5px" src="' . $CFG->wwwroot . '/images/calendarNext.png" alt="breadcrumbarrow" />
-                    <button id="get_forum_discussions_' . $forumid . '" class="alike">
-                        ' . get_db_field("title", "forum_categories", "catid = ||catid||", ["catid" => $catid]) . '
-                    </button>
-                    <img style="margin: 0 5px" src="' . $CFG->wwwroot . '/images/calendarNext.png" alt="breadcrumbarrow" />
-                        ' . get_db_field("title", "forum_discussions", "discussionid = ||discussionid||", ["discussionid" => $discussionid]) . '
-                </div>';
-
-    // Create Discussion Link
-    $returnme .= make_discussion_link($pageid, $forumid, $catid);
-
-    // Get Post Pages
-    $post_pages = get_post_pages($forumid, $discussion, $pagenum);
-    $returnme .= $post_pages;
-
-    $returnme .= '
-        <table class="forum_discussion">
-            <tr>
-                <th class="forum_headers" style="width:125px;">
-                    Author
-                </th>
-                <th class="forum_headers">
-                    Message
-                </th>
-            </tr>';
-    $firstpost = first_post($discussionid);
     $content = "";
+    $can_reply = user_is_able($USER->userid, "forumreply", $pageid);
 
     if ($posts) {
-        while ($post = fetch_row($posts)) {
-            $content .= '<tr>
-                            <td class="forum_author">' . get_user_name($post["userid"]) . '<br />
-                                Posts: ' . get_db_count("SELECT * FROM forum_posts WHERE userid=" . $post["userid"]) . '
-                            </td>
-                            <td class="forum_message">';
+        $can_edit = user_is_able($USER->userid, "editforumposts", $pageid);
+        if ($can_delete = user_is_able($USER->userid, "deleteforumpost", $pageid)) {
+            // DELETE POST
+            ajaxapi([
+                "id" => 'delete_post',
+                "if" => "confirm('Are you sure you want to delete this post?')",
+                "paramlist" => "postid",
+                "url" => "/features/forum/forum_ajax.php",
+                "data" => [
+                    "action" => "delete_post",
+                    "postid" => "js||postid||js",
+                    "pagenum" => $pagenum,
+                ],
+                "display" => "forum_div_$forumid",
+                "event" => "none",
+            ]);
+        }
 
+        while ($post = fetch_row($posts)) {
+            $quote = $reply = $edit = $delete = $edited = false;
             // QUOTE
-            if (!$discussion["locked"] && user_is_able($USER->userid, "forumreply", $pageid)) {
+            if (!$discussion["locked"] && $can_reply) {
                 $params = [
                     "title" => "Quote",
                     "path" => action_path("forum") . "quote_post_form&quotepost=" . $post["postid"],
@@ -408,22 +394,15 @@ global $CFG, $USER;
                     "iframe" => true,
                     "onExit" => "getIntervals()['forum_$forumid'].script();",
                 ];
-                $content .= '<span class="forum_post_actions" style="">
-                                ' . make_modal_links($params) . '
-                            </span>';
+                $quote = make_modal_links($params);
             }
 
-            // POST MESSAGE
-            $content .= '<span class="forum_post_actions" style="float:right;">
-                            Posted: ' . ago($post["posted"]) . '
-                        </span>
-                        <div class="forum_post_message">
-                        ' . $post["message"] . '
-                        </div>';
-            $content .= $post["edited"] ? '<span class="centered_span" style="font-size:.9em; color:gray;">[edited by ' . get_user_name($post["editedby"]) . ' ' . ago($post["edited"]) . ']</span>' : '';
+            if ($post["edited"]) {
+                $edited = true;
+            }
 
             // EDIT POST
-            if (!$discussion["locked"] && (user_is_able($USER->userid, "editforumposts", $pageid) || $USER->userid == $post["userid"])) {
+            if (!$discussion["locked"] && ($can_edit || $USER->userid == $post["userid"])) {
                 $params = [
                     "title" => "Edit",
                     "path" => action_path("forum") . "edit_post_form&postid=" . $post["postid"],
@@ -432,39 +411,16 @@ global $CFG, $USER;
                     "iframe" => true,
                     "onExit" => "getIntervals()['forum_$forumid'].script();",
                 ];
-                $content .= '<span class="forum_post_actions" style="">
-                                ' . make_modal_links($params) . '
-                            </span>';
+                $edit = make_modal_links($params);
             }
 
-            // DELETE POST
-            ajaxapi([
-                "id" => 'delete_post_' . $post["postid"],
-                "url" => "/features/forum/forum_ajax.php",
-                "data" => ["action" => "delete_post", "postid" => $post["postid"]],
-                "display" => "forum_div_$forumid",
-            ]);
-            if (!$discussion["locked"] && user_is_able($USER->userid, "deleteforumpost", $pageid)) {
-                $content .= '<span class="forum_post_actions" style="">
-                                <button id="delete_post_' . $post["postid"] . '" class="alike"
-                                   onclick="if (confirm(\'Are you sure you want to delete this post?\')) {
-                                                ajaxapi_old(\'/features/forum/forum_ajax.php\',
-                                                        \'delete_post\',
-                                                        \'&pagenum=' . $pagenum . '&pageid=' . $pageid . '&forumid=' . $forumid . '&catid=' . $catid . '&discussionid=' . $discussionid . '&postid=' . $post["postid"] . '\',
-                                                        function() {
-                                                            if (xmlHttp.readyState == 4) {
-                                                                simple_display(\'forum_div_' . $forumid . '\');
-                                                            }
-                                                        },
-                                                        true);
-                                            }" >
-                                    Delete
-                                </button>
-                            </span>';
+
+            if (!$discussion["locked"] && $can_delete) {
+                $delete = true;
             }
 
             // REPLY
-            if (!$discussion["locked"] && user_is_able($USER->userid, "forumreply", $pageid)) {
+            if (!$discussion["locked"] && $can_reply) {
                 $params = [
                     "title" => "Reply",
                     "path" => action_path("forum") . "post_form&replyto=" . $post["postid"],
@@ -473,18 +429,23 @@ global $CFG, $USER;
                     "iframe" => true,
                     "onExit" => "getIntervals()['forum_$forumid'].script();",
                 ];
-                $content .= '<span class="forum_post_actions" style="float:right;">
-                                ' . make_modal_links($params) . '
-                            </span>';
+                $reply = make_modal_links($params);
             }
 
-            $content .= '</td></tr>';
+            $params = [
+                "forumpost" => $post,
+                "quote" => $quote,
+                "reply" => $reply,
+                "edit" => $edit,
+                "delete" => $delete,
+                "edited" => $edited,
+                "postcount" => get_db_count("SELECT * FROM forum_posts WHERE userid=" . $post["userid"]),
+            ];
+            $content .= fill_template("tmp/forum.template", "forum_post", "forum", $params);
         }
-    }
-
-    $postlink = "";
-    if ($content == "") { // Post the first message to a discussion.  Only possible if only post has been deleted.
-        if (!$discussion["locked"] && user_is_able($USER->userid, "forumreply", $pageid)) {
+    } else {
+        $postlink = false;
+        if (!$discussion["locked"] && $can_reply) {
             $params = [
                 "title" => "Post",
                 "path" => action_path("forum") . "post_form&discussionid=$discussionid",
@@ -493,15 +454,27 @@ global $CFG, $USER;
                 "iframe" => true,
                 "onExit" => "getIntervals()['forum_$forumid'].script();",
             ];
-            $postlink = '<span class="forum_post_actions" style="float:right;">
-                            ' . make_modal_links($params) . '
-                        </span>';
+            $postlink = make_modal_links($params);
         }
+        $content = fill_template("tmp/forum.template", "no_forum_post", "forum", ["postlink" => $postlink]);
     }
-    $returnme .= $content == "" ? '<tr><td colspan="4" class="forum_col1" style="text-align: center">No Posts Yet.' . $postlink . '</td></tr>' : $content;
-    $returnme .= '<tr><td colspan="4" class="forum_posts_lastrow">' . $post_pages . '</td></tr>';
-    $returnme .= "</table>";
-    return $returnme;
+
+    // Create Discussion Link
+    $discussionlink = make_discussion_link($pageid, $forumid, $catid);
+
+    // Get Post Pages
+    $postspage = get_post_pages($forumid, $discussion, $pagenum);
+
+    $params = [
+        "forumid" => $forumid,
+        "cattitle" => get_db_field("title", "forum_categories", "catid = ||catid||", ["catid" => $catid]),
+        "distitle" => get_db_field("title", "forum_discussions", "discussionid = ||discussionid||", ["discussionid" => $discussionid]),
+        "wwwroot" => $CFG->wwwroot,
+        "postspage" => $postspage,
+        "discussionlink" => $discussionlink,
+        "content" => $content,
+    ];
+    return fill_template("tmp/forum.template", "forum_template", "forum", $params);
 }
 
 function get_forum_categories($forumid) {
@@ -658,18 +631,19 @@ global $USER, $CFG;
         return "";
     }
 
-    $discussionlinkparam = [
-        "button" => "button",
+    $discussionbutton = make_modal_links([
+        "button" => true,
         "title" => "New Discussion",
         "text" => '<img src="' . $CFG->wwwroot . '/images/discussion.gif" alt=""> New Discussion',
         "path" => action_path("forum") . "create_discussion_form&catid=$catid",
         "width" => "750",
         "iframe" => true,
         "onExit" => "getIntervals()['forum_$forumid'].script();",
-    ];
-    return '<div class="forum_newbutton">
-            ' . make_modal_links($discussionlinkparam) . '
-            </div>';
+    ]);
+    return '
+        <div class="forum_newbutton">
+            ' . $discussionbutton . '
+        </div>';
 }
 
 function get_shoutbox($forumid) {

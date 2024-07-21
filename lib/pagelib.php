@@ -118,6 +118,12 @@ function icon_color($icon) {
         case "circle-exclamation":
             $color = "red";
             break;
+        case "thumbs-up":
+            $color = "green";
+            break;
+        case "thumbs-down":
+            $color = "red";
+            break;
         default:
             return "";
     }
@@ -194,6 +200,16 @@ global $PAGE, $CFG, $MYVARS;
     return $CFG->SITEID;
 }
 
+function get_feature_area($feature, $featureid) {
+    $SQL = "SELECT area
+            FROM pages_features
+            WHERE feature = ||feature||
+            AND featureid = ||featureid||";
+    $row = get_db_row($SQL, ["feature" => $feature, "featureid" => $featureid]);
+
+    return $row["area"];
+}
+
 function get_default_role($pageid) {
     return get_db_field("default_role", "pages", "pageid = ||pageid||", ["pageid" => $pageid]);
 }
@@ -232,23 +248,49 @@ global $CFG, $USER, $PAGE;
     return (!$header_only ? (is_logged_in() ? print_logout_button($USER->fname, $USER->lname, $PAGE->id) : get_login_form()) : '');
 }
 
+/**
+ * Sends an AJAX request to a specified URL.
+ *
+ * @param array $params The parameters for the AJAX request.
+ *                     - url (string): The URL to send the request to.
+ *                     - external (bool): Whether the URL is external or not.
+ *                     - id (string): The ID of the element to update.
+ *                     - reqstring (string): The request string.
+ *                     - data (array): The data to send with the request.
+ *                     - if (string): The condition to check before sending the request.
+ *                     - else (string): The code to execute if the condition is false.
+ *                     - display (string): The code to display the response.
+ *                     - classes (string): The classes to add to the AJAX element.
+ *                     - datatype (string): The data type of the response.
+ *                     - contenttype (string): The content type of the request.
+ *                     - callback (string): The code to execute after the request is successful.
+ * @param bool $forcereturn Whether to force a return statement or not.
+ * @return void
+ */
 function ajaxapi($params, $forcereturn = false) {
 global $CFG, $LOADAJAX;
+    // Get the value of the ajaxapi parameter and clean it.
     $ajaxapi = clean_myvar_opt("ajaxapi", "bool", false);
+
+    // Check if the URL is external or not.
     $external = $params["external"] ?? false;
+
+    // Build the URL based on whether it is external or not.
     $url = $external ? clean_var_req($params["url"], "string") : $CFG->wwwroot . clean_var_req($params["url"], "string");
 
+    // Add return false only if it is inside a function or event.
+    $falsereturn = $forcereturn && $forcereturn !== "function" ? "" : "return false;";
+
     try {
-        $id = $params["id"] ?? false;
-        $reqstring = $params["reqstring"] ?? "";
-        $data = $params["data"] ?? [];
-        $if = $params["if"] ?? false;
-        $else = $params["else"] ?? false;
-        $display = $params["display"] ?? false;
-        $classes = $params["classes"] ?? "ajaxapi inactive";
-        $datatype = $params["datatype"] ?? "json";
-        $contenttype = $params["contenttype"] ?? "application/x-www-form-urlencoded; charset=UTF-8";
-        $callback = $params["callback"] ?? "";
+        // Get the parameters for the AJAX request.
+        $id = $params["id"] ?? false; // The ID of the element to update. Also used as the name of function if event is "none".
+        $reqstring = $params["reqstring"] ?? ""; // The request string. Used to gather all data in a container. (ie formname)
+        $data = $params["data"] ?? []; // The data to send with the request.
+        $display = $params["display"] ?? false; // The code to display the response.
+        $classes = $params["classes"] ?? "ajaxapi inactive"; // The classes to add to the AJAX element.
+        $datatype = $params["datatype"] ?? "json"; // The data type of the response.
+        $contenttype = $params["contenttype"] ?? "application/x-www-form-urlencoded; charset=UTF-8"; // The content type of the request.
+        $callback = $params["callback"] ?? ""; // The code to execute after the request is successful.
 
         $method = $params["method"] ?? "POST";
         $event = $params["event"] ?? "click";
@@ -266,8 +308,32 @@ global $CFG, $LOADAJAX;
         $always = $params["always"] ?? ""; // Function run after success or error.
         $beforeajax = $params["beforeajax"] ?? ""; // Function run before ajax call.
 
-        $display = $display ? (strpos($display, "js||") === false ? "'$display'" : str_replace(['js||', '||js'], '', $display)) : false;
-        $ondone = $display && empty($ondone) ? "jq_display($display, data);" : ($display ? "jq_display($display, data); $ondone" : $ondone);
+        if ($display) {
+            if (strpos($display, "js||") === false) { // no embedded js code.
+                $display = "'$display'"; // container id is a string and should be in quotes.
+            } else {
+                // Define the pattern to match the qualifiers.
+                $pattern = '/((?<intro>.*)js\|\|(?<var>.*)\|\|js(?<outro>.*))/i';
+
+                // Find all the qualifiers in the content.
+                preg_match_all($pattern, $display, $matches);
+
+                // Check if qualifiers were found.
+                if (!empty($matches[0])) {
+                    $temp = $matches['var'][0]; // ex. id
+                    $temp = !empty($matches['intro'][0]) ? "'" . $matches['intro'][0] . "' + $temp" : $temp; // ex. 'unique_' + id
+                    $temp = !empty($matches['outro'][0]) ? "$temp + '" . $matches['outro'][0] . "'" : $temp; // ex. 'unique_' + id + '_identifier'
+                }
+                $display = $temp;
+            }
+
+            if (empty($ondone)) {
+                $ondone = "jq_display($display, data);"; // ondone becomes simple display.
+            } else {
+                $ondone = "jq_display($display, data); $ondone";  // prepend display.
+            }
+        }
+
         $onerror = empty($onerror) ? "console.log(data);" : $onerror;
 
         $showloading = $hideloading = "";
@@ -279,6 +345,8 @@ global $CFG, $LOADAJAX;
         $always = ".always(function(data) { $always $(this).blur();})";
 
         // if and else setup.
+        $if = $params["if"] ?? false; // The condition to check before sending the request.
+        $else = $params["else"] ?? false; // The code to execute if the condition is false.
         $if = $if ? "if ($if) {" : "";
         $else = $else ? "else { $else }" : "";
         $ifclose = $if ? "} $else" : "";
@@ -338,7 +406,6 @@ global $CFG, $LOADAJAX;
                     loadajaxjs(data);
                 })$always;
                 $ifclose
-                return false;
             }";
 
         if ($intervalid) {
@@ -347,6 +414,9 @@ global $CFG, $LOADAJAX;
                 killInterval(`' . $intervalid . '`);
                 makeInterval(`' . $intervalid . '`, `' . str_replace("`", "\`", $script) . '`, ' . $interval . ');';
         }
+
+        // Add return false; at the end if needed.
+        $script .= $falsereturn;
 
         if (!$forcereturn) {
             if (!$id) {
@@ -371,9 +441,12 @@ global $CFG, $LOADAJAX;
                 echo js_code_wrap($script, false, false, $id, $classes);
             }
         } else {
+            if (!$id) {
+                $id = uniqid();
+            }
             switch ($forcereturn) {
                 case "script":
-                    $script = js_code_wrap($script, false, false, $id, $classes);
+                    break;
                 case "event":
                     $event = $event == "none" ? "click" : $event;
                     $script = "
@@ -386,13 +459,23 @@ global $CFG, $LOADAJAX;
                     $script = "function $id($paramlist) { $script }";
                     break;
             }
-            $script = preg_replace('/\s+/S', " ", $script) . "//# sourceURL=$id.js";
+
+            $script = preg_replace('/\s+/S', " ", $script) . " //# sourceURL=$id.js";
+            if ($forcereturn !== "code") {
+                $script = js_code_wrap($script, false, false, $id, $classes);
+            }
         }
         return $script;
     } catch (\Throwable $e) {
         throw new Exception($e->getMessage());
     }
     return false;
+}
+
+function requireToVar($file){
+    ob_start();
+    require($file);
+    return ob_get_clean();
 }
 
 function ajax_return($response = "", $error = "") {
@@ -615,21 +698,25 @@ function resort_page_features($pageid) {
 function make_modal_links($v) {
 global $CFG;
     $v["button"]      = empty($v["button"]) ? "link" : "button";
-    $v["title"]       = empty($v["title"]) ? "" : trim(strip_tags($v["title"]));
-    $v["confirmexit"] = empty($v["confirmexit"]) ? "" : $v["confirmexit"];
-    $v["id"]          = empty($v["id"]) ? "" : 'id="' . $v["id"] . '"';
+    $v["title"]       ??= "";
+    $v["class"]       ??= "";
+    $v["confirmexit"] ??= "";
+    $v["onclick"]     ??= "";
+    $v["imagestyles"] ??= "";
+    $v["id"]          ??= "";
     $v["type"]        = empty($v["type"]) ? "" : 'type="' . $v["type"] . '"';
+
+    $v["image"]       = empty($v["image"]) ? "" : '<img alt="' . $v["title"] . '" title="' . $v["title"] . '" src="' . $v["image"] . '" style="vertical-align: middle;' . $v["imagestyles"] . '" />';
+    $v["image"]       = empty($v["icon"]) ? $v["image"] : $v["icon"];
+
     $gallery_name     = $v["gallery"] ?? "";
     $gallery          = empty($v["gallery"]) ? "" : "*[data-rel=\'$gallery_name\']";
     $v["gallery"]     = empty($v["gallery"]) ? "" : ",rel:'$gallery_name',photo:'true',preloading:'true'";
-    $v["onclick"] ??= "";
-    $v["imagestyles"] = empty($v["imagestyles"]) ? ($v["button"] == "link" ? "" : "vertical-align: middle;") : $v["imagestyles"];
-    $v["image"]       = empty($v["image"]) ? "" : '<img alt="' . $v["title"] . '" title="' . $v["title"] . '" src="' . $v["image"] . '" style="vertical-align: middle;' . $v["imagestyles"] . '" />';
-    $v["image"]       = empty($v["icon"]) ? $v["image"] : $v["icon"];
+
     $v["width"]       = empty($v["width"]) ? (empty($v["gallery"]) ? "" : "") : (is_numeric($v["width"]) || is_javascript($v["width"]) ? ",width: " . $v["width"] . "" : ",width: '" . $v["width"] . "'");
     $v["height"]      = empty($v["height"]) ? (empty($v["gallery"]) ? "" : "") : (is_numeric($v["height"]) || is_javascript($v["height"]) ? ",height: " . $v["height"] . "" : ",height: '" . $v["height"] . "'");
-    $v["path"] ??= "";
-    $v["class"] ??= "";
+    $v["path"]        ??= "";
+
     $path             = $v["path"] && $v["gallery"] ? $v["path"] : "javascript: void(0);";
     $v["text"]        = empty($v["text"]) ? (empty($v["image"]) ? (empty($v["title"]) ? "" : $v["title"]) : $v["image"]) : (empty($v["image"]) ? $v["text"] :  $v["image"] . ' <span style="vertical-align: middle;">' . $v["text"] . "</span>");
     $v["styles"] ??= false;
@@ -696,10 +783,13 @@ global $CFG;
     }
 
     $modal = preg_replace('/\s+/S', " ", $modal);
+
+    // make attributes that are the same in both a and button types.
+    $standardattrs = 'id="' . $v["id"] . '" type="' . $v["type"] . '" title="' . $v["title"] . '" style="' . $v["styles"] . '" onclick="' . $onOpen . ' ' . $modal . ' //# sourceURL='.$unq.'.js"';
     if ($v["button"] == "button") {
-        return '<button ' . trim($v["id"]) . ' class="smallbutton ' . $v["class"] . '" ' . trim($v["type"]) . ' title="' . $v["title"] . '" style="' . $v["styles"] . '" onclick="' . $onOpen . ' ' . $modal . ' //# sourceURL='.$unq.'.js" />' . $v["text"] . '</button>';
+        return '<button ' . $standardattrs . ' class="smallbutton ' . $v["class"] . '" />' . $v["text"] . '</button>';
     } else {
-        return '<a ' . trim($v["id"]) . ' class="' . $v["class"] . '" ' . trim($v["type"]) . ' data-rel="' . $gallery_name . '" title="' . $v["title"] . '" style="' . $v["styles"] . '" onclick="' . $onOpen . ' ' . $modal . ' //# sourceURL='.$unq.'.js" href="' . $path . '">' . $v["text"] . '</a>';
+        return '<a ' . $standardattrs . ' class="' . $v["class"] . '" data-rel="' . $gallery_name . '"   href="' . $path . '">' . $v["text"] . '</a>';
     }
 }
 
@@ -1331,7 +1421,7 @@ global $CFG, $PAGE;
     }
 
     if ($area == "side") { // ADD pagelist to top of right side
-        if (!defined('PAGELISTLIB')) { include_once ($CFG->dirroot . '/lib/pagelistlib.php'); }
+        if (!defined('PAGELISTLIB')) { require_once($CFG->dirroot . '/lib/pagelistlib.php'); }
         $returnme .= display_pagelist($pageid, $area);
     }
 
@@ -1368,9 +1458,9 @@ global $CFG;
                         ]);
 
     ajaxapi([
-        'id'     => "jq_login",
-        'url'    => '/ajax/site_ajax.php',
-        'data'   => [
+        'id' => "jq_login",
+        'url' => '/ajax/site_ajax.php',
+        'data' => [
             'action' => "login",
             'username' => "js||encodeURIComponent($('#username').val())||js",
             'password' => "js||$('#password').val()||js",

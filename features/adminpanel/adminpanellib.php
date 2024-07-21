@@ -86,6 +86,7 @@ global $CFG, $USER, $ROLES, $ABILITIES;
     $buttons = get_button_layout("adminpanel", $featureid, $pageid);
     $title = '<span class="box_title_text">' . $title . '</span>';
     $returnme = $content != "" ? get_css_box($title, $content, $buttons, NULL, "adminpanel", $featureid) : "";
+
     return $returnme;
 }
 
@@ -112,27 +113,29 @@ function get_adminpanel_alerts($userid, $countonly = true) {
 
     // This section creates alerts for users who have requested entry into a page that the user has rights to add them to.
     if ($pages = pages_user_is_able($userid, "assign_roles")) {
+        $alerts_rows = "";
         while ($page = fetch_row($pages)) {
             $SQL = fetch_template("dbsql/roles.sql", "get_page_role_requests");
             if ($result = get_db_result($SQL, ["pageid" => $page["pageid"]])) {
                 $alerts += count_db_result($result);
                 if (!$countonly) {
-                    $display_alerts .= '<h2 style="text-align: center;">The following people have requested page permission.</h2><br />';
                     // Loops through all requests from a page.
                     while ($request = fetch_row($result)) {
-                        $display_alerts .= '
-                            <div class="alertrows" id="userspan_' . $request["userid"] . '_' . $request["pageid"] . '">
-                                Allow ' . get_user_name($request["userid"]) . " into " . get_db_field("name", "pages", "pageid=" . $request["pageid"]) . '?
-                                <span>
-                                    <button class="alike" onclick="allow_page_request(' . $request["assignmentid"] . ', 1, \'userspan_' . $request["userid"] . '_' . $request["pageid"] . '\');">
-                                        ' . icon("thumbs-up", 2) . '
-                                    </button>
-                                    <button class="alike" onclick="allow_page_request(' . $request["assignmentid"] . ', 0, \'userspan_' . $request["userid"] . '_' . $request["pageid"] . '\');">
-                                        ' . icon("thumbs-down", 2) . '
-                                    </button>
-                                </span>
-                            </div>';
+                        $question = 'Allow ' . get_user_name($request["userid"]) . " into " . get_db_field("name", "pages", "pageid=" . $request["pageid"]) . '?';
+                        $buttons = '
+                            <button class="alike" onclick="allow_page_request(' . $request["assignmentid"] . ', 1, \'userspan_' . $request["userid"] . '_' . $request["pageid"] . '\');">
+                                ' . icon("thumbs-up", 2) . '
+                            </button>
+                            <button class="alike" onclick="allow_page_request(' . $request["assignmentid"] . ', 0, \'userspan_' . $request["userid"] . '_' . $request["pageid"] . '\');">
+                                ' . icon("thumbs-down", 2) . '
+                            </button>';
+                        $alerts_rows .= fill_template("tmp/pagelib.template", "user_alerts_row", false, ["question" => $question, "buttons" => $buttons]);
                     }
+                    $params = [
+                        "title" => "Page permission requests",
+                        "alerts_rows" => $alerts_rows,
+                    ];
+                    $display_alerts .= fill_template("tmp/pagelib.template", "user_alerts_group", false, $params);
                 }
             }
         }
@@ -143,22 +146,25 @@ function get_adminpanel_alerts($userid, $countonly = true) {
     if ($result = get_db_result($SQL, ["userid" => $userid])) {
         $alerts += count_db_result($result);
         if (!$countonly) {
-            $display_alerts .= '<h2 style="text-align: center;">You have been invited!</h2><br />';
+            $alerts_rows = "";
             // Loops through all requests from a page.
             while ($invite = fetch_row($result)) {
-                $display_alerts .= '
-                    <div class="alertrows" id="pagespan_' . $invite["userid"] . '_' . $invite["pageid"] . '">
-                        Allow ' . get_user_name($request["userid"]) . " into " . get_db_field("name", "pages", "pageid=" . $invite["pageid"]) . '?
-                        <span>
-                            <button class="alike" onclick="allow_page_request(' . $invite["assignmentid"] . ', 1, \'pagespan_' . $invite["userid"] . '_' . $invite["pageid"] . '\');">
-                                ' . icon("thumbs-up", 2) . '
-                            </button>
-                            <button class="alike" onclick="allow_page_request(' . $invite["assignmentid"] . ', 0, \'pagespan_' . $invite["userid"] . '_' . $invite["pageid"] . '\');">
-                                ' . icon("thumbs-down", 2) . '
-                            </button>
-                        </span>
-                    </div>';
+                $question = 'Allow ' . get_user_name($request["userid"]) . " into " . get_db_field("name", "pages", "pageid=" . $invite["pageid"]) . '?';
+                $buttons = '
+                    <button class="alike" onclick="allow_page_request(' . $invite["assignmentid"] . ', 1, \'pagespan_' . $invite["userid"] . '_' . $invite["pageid"] . '\');">
+                        ' . icon("thumbs-up", 2) . '
+                    </button>
+                    <button class="alike" onclick="allow_page_request(' . $invite["assignmentid"] . ', 0, \'pagespan_' . $invite["userid"] . '_' . $invite["pageid"] . '\');">
+                        ' . icon("thumbs-down", 2) . '
+                    </button>';
+                $alerts_rows .= fill_template("tmp/pagelib.template", "user_alerts_row", false, ["question" => $question, "buttons" => $buttons]);
             }
+
+            $params = [
+                "title" => "Page invitations for you",
+                "alerts_rows" => $alerts_rows,
+            ];
+            $display_alerts .= fill_template("tmp/pagelib.template", "user_alerts_group", false, $params);
         }
     }
 
@@ -195,7 +201,7 @@ function get_adminpanel_alerts($userid, $countonly = true) {
         ]);
     }
 
-    return $display_alerts;
+    return empty($display_alerts) ? false : $display_alerts;
 }
 
 function adminpanel_default_settings($type, $pageid, $featureid) {

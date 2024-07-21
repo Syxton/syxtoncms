@@ -136,11 +136,23 @@ function edit_html() {
 
 function commentspage() {
 global $CFG, $MYVARS;
-    echo get_html_comments(clean_myvar_req("htmlid", "int"), clean_myvar_opt("pageid", "int", get_pageid()), false, clean_myvar_opt("perpage", "int", false), clean_myvar_opt("pagenum", "int", false), false);
+    $comments = get_html_comments(clean_myvar_req("htmlid", "int"), clean_myvar_opt("pageid", "int", get_pageid()), false, clean_myvar_opt("perpage", "int", false), clean_myvar_opt("pagenum", "int", false), false);
+    ajax_return($comments);
 }
 
 function deletecomment() {
     $commentid = clean_myvar_req("commentid", "int");
+    $comment = get_db_row("SELECT * FROM html_comments WHERE commentid = ||commentid||", ["commentid" => $commentid]);
+    $htmlid = $comment["htmlid"];
+    $pageid = get_db_field("pageid", "html", "htmlid = ||htmlid||", ["htmlid" => $htmlid]);
+    $area = get_feature_area("html", $htmlid);
+
+    if (!$settings = fetch_settings("html", $htmlid, $pageid)) {
+        save_batch_settings(default_settings("html", $pageid, $htmlid));
+        $settings = fetch_settings("html", $htmlid, $pageid);
+    }
+
+    $perpage = $area == "side" ? $settings->html->$htmlid->sidecommentlimit->setting : $settings->html->$htmlid->middlecommentlimit->setting;
 
     // Has replies, so don't delete it, just remove data.
     if (get_db_result("SELECT * FROM html_comments WHERE parentid = ||parentid||", ["parentid" => $commentid])) {
@@ -153,6 +165,11 @@ function deletecomment() {
 
     // Log
     log_entry("html", $commentid, "Delete Comment");
+
+
+    $return = get_html_comments($htmlid, $pageid, false, $perpage, 0, false);
+
+    ajax_return($return);
 }
 
 function comment() {

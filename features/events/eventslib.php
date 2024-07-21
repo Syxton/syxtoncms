@@ -14,7 +14,7 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
     include($sub . 'lib/header.php');
 }
 define('EVENTSLIB', true);
-define('SEARCH_PERPAGE', 8);
+if (!defined('SEARCH_PERPAGE')) { define('SEARCH_PERPAGE', 8); }
 
 function display_events($pageid, $area, $featureid) {
 global $CFG, $USER, $ROLES;
@@ -39,48 +39,64 @@ global $CFG, $USER, $ROLES;
         if (is_logged_in()) { // Logged in user will see...
             if (get_db_row("SELECT eventid FROM events WHERE workers=1 AND event_begin_date > " . time())) {
                 if (user_is_able($USER->userid, "staffapply", $pageid, "events", $featureid)) {
-                    $content .= get_staff_application_button();
+                    $content .= get_staff_application_link();
                 }
             }
 
             if (user_is_able($USER->userid, "viewevents", $pageid, "events", $featureid)) {
-                //Get events that must be confirmed
+                // Get events that must be confirmed
                 if ($pageid == $CFG->SITEID) {
-                    if (user_is_able($USER->userid, "confirmevents", $pageid, "events", $featureid) && $section = get_confirm_events()) { $content .= $section . "<br />";}
+                    if (user_is_able($USER->userid, "confirmevents", $pageid, "events", $featureid) && $section = get_confirm_events()) {
+                        $content .= $section;
+                    }
                 }
 
-                //Get events that can be edited
-                if (user_is_able($USER->userid, "editevents", $pageid, "events", $featureid) && $section = get_editable_events($pageid)) { $content .= $section . "<br />";}
+                // Get events that can be edited
+                if (user_is_able($USER->userid, "editevents", $pageid, "events", $featureid) && $section = get_editable_events($pageid)) {
+                    $content .= $section;
+                }
 
-                //Get current events
-                if ($section = get_current_events($pageid)) { $content .= $section . "<br />"; }
+                // Get current events
+                if ($section = get_current_events($pageid)) {
+                    $content .= $section;
+                }
 
-                //Get upcoming events
-                if ($section = get_upcoming_events($pageid, $upcomingdays)) { $content .= $section . "<br />"; }
+                // Get upcoming events
+                if ($section = get_upcoming_events($pageid, $upcomingdays)) {
+                    $content .= $section . "<br />";
+                }
 
-                //Get events that are registerable
-                if ($section = get_open_enrollment_events($pageid)) { $content .= $section . ""; }
+                // Get events that are registerable
+                if ($section = get_open_enrollment_events($pageid)) {
+                    $content .= $section;
+                }
 
-                //No events
-                if ($content == "") { $content .= "There are no current or upcoming events."; }
+                // No events
+                if (empty($content)) {
+                    $content = "There are no current or upcoming events.";
+                }
 
-                //Get link for request form
-                if ($allowrequests) { $content = get_event_request_link($area, $featureid) . $content; }
+                // Get link for request form
+                if ($allowrequests) {
+                    $content = get_event_request_link($area, $featureid) . $content;
+                }
 
-                //Get recent events
-                if ($section = get_recent_events($pageid, $recentdays, $archivedays)) { $content .= $section; }
+                // Get recent events
+                if ($section = get_recent_events($pageid, $recentdays, $archivedays)) {
+                    $content .= $section;
+                }
 
-                //Get feature layout
+                // Get feature layout
                 $buttons = get_button_layout("events", $featureid, $pageid);
                 $title = '<span class="box_title_text">' . $title . '</span>';
                 return get_css_box($title, $content, $buttons, NULL, "events", $featureid);
             }
         } elseif (role_is_able($ROLES->visitor, "viewevents", $pageid)) { //If unlogged in users can see...
             //Get current events
-            if ($section = get_current_events($pageid)) { $content .= $section . "<br />";}
+            if ($section = get_current_events($pageid)) { $content .= $section;}
 
             //Get upcoming events
-            if ($section = get_upcoming_events($pageid, $upcomingdays)) { $content .= $section . "<br />";}
+            if ($section = get_upcoming_events($pageid, $upcomingdays)) { $content .= $section;}
 
             //Get registerable events
             if ($section = get_open_enrollment_events($pageid)) { $content .= $section . "";}
@@ -101,7 +117,7 @@ global $CFG, $USER, $ROLES;
     }
 }
 
-function get_staff_application_button() {
+function get_staff_application_link() {
 global $CFG;
     $returnme = '';
     if (is_logged_in()) { // Staff Apply menu item visible only if logged in
@@ -127,7 +143,7 @@ global $CFG;
         "styles" => "font-size: 1.5em;font-weight: bold;",
         "confirmexit" => "true",
     ];
-    $returnme .= '<div style="margin:5px;text-align:right;">' . make_modal_links($p) . '</div>';
+    $returnme .= '<div class="staff_application_link">' . make_modal_links($p) . '</div>';
 
     return $returnme;
 }
@@ -135,18 +151,16 @@ global $CFG;
 function get_event_request_link($area, $featureid) {
 global $CFG;
     $p = [
-        "title" => "Request an Event",
+        "title" => "Begin Event Request Process",
+        "text" => "Request an Event",
         "path" => action_path("events") . "event_request_form&featureid=$featureid",
         "validate" => "true",
-        "width" => "550",
+        "width" => "600",
         "height" => "650",
-        "image" => $CFG->wwwroot . "/images/request.gif",
+        "styles" => "font-size: 1.5em;font-weight: bold;",
+        "icon" => icon("bell-concierge", 1, "", "#c5c526"),
     ];
-    if ($area == "middle") {
-        return '<div style="text-align:right;">' . make_modal_links($p) . '</div>';
-    } else {
-        return '<div style="text-align:right;">' . make_modal_links($p) . '</div><br />';
-    }
+    return '<div class="request_event_link">' . make_modal_links($p) . '</div>';
 }
 
 function get_calendar_of_events($title, $pageid, $featureid, $year = false, $showpastevents = true, $content = "", $allowrequests=false) {
@@ -165,7 +179,7 @@ global $CFG, $USER, $ROLES;
 
     if (is_logged_in()) {
         if (user_is_able($USER->userid, "staffapply", $pageid, "events", $featureid)) {
-            $content .= get_staff_application_button($featureid, $pageid);
+            $content .= get_staff_application_link($featureid, $pageid);
         }
         if (user_is_able($USER->userid, "viewevents", $pageid, "events", $featureid)) {
             $canview = true;
@@ -228,13 +242,13 @@ global $CFG, $USER;
         $limit = $event['max_users'] == "0" ? "&#8734;" : $event['max_users'];
 
         // Currently can register for event (time check)
-          if ($event["start_reg"] < $time && $event["stop_reg"] > ($time - 86400)) {
-              $info  = "Registration ends in " . ago($event["event_begin_date"]);
-              $maxreached = $event["max_users"] == 0 || ($event["max_users"] != 0 and $event["max_users"] > $regcount) ? false : true;
+        if ($event["start_reg"] < $time && $event["stop_reg"] > ($time - 86400)) {
+            $info  = "Registration ends in " . ago($event["event_begin_date"]);
+            $maxreached = $event["max_users"] == 0 || ($event["max_users"] != 0 and $event["max_users"] > $regcount) ? false : true;
 
             // Availability check
-              if (!$maxreached) {
-                  $left = $event['max_users'] == "0" ? "&#8734;" : '(' . ($limit - $regcount) . ' out of ' . $limit . ' openings left)';
+            if (!$maxreached) {
+                $left = $event['max_users'] == "0" ? "&#8734;" : '(' . ($limit - $regcount) . ' out of ' . $limit . ' openings left)';
 
                 // Alert
                 if ($event['max_users'] > 0 && (($limit - $regcount) < 10)) {
@@ -245,36 +259,17 @@ global $CFG, $USER;
 
                 // Can you sign up for this event.
                 if (user_is_able($USER->userid, "signupforevents", $pageid, "events", $featureid)) {
-                    $params = [
-                        "button" => "button",
-                        "title" => "Register $left",
-                        "text" => "Register",
-                        "path" => action_path("events") . "show_registration&pageid=$pageid&eventid=" . $event['eventid'],
-                        "iframe" => true,
-                        "validate" => "true",
-                        "width" => "630",
-                        "height" => "95%",
-                        "confirmexit" => "true",
-                    ];
-                    $eventbuttons .= make_modal_links($params);
+                    $eventbuttons .= get_event_register_link($event, $pageid);
                 }
 
                 // Can you pay for this event.
-                  if ($event["paypal"] != "") {
-                    $params = [
-                        "button" => "button",
-                        "title" => "Event Payment",
-                        "text" => "Pay",
-                        "path" => action_path("events") . "pay&modal=1&pageid=$pageid&eventid=" . $event['eventid'],
-                        "width" => "95%",
-                        "height" => "95%",
-                    ];
-                    $eventbuttons .= make_modal_links($params);
-                  }
-              } else {
-                 $alert = '<span class="events_limit_alert">No spots available.</span>';
-              }
-          }
+                if ($event["paypal"] != "") {
+                    $eventbuttons .= get_event_pay_link($event, $pageid);
+                }
+            } else {
+                $alert = '<span class="events_limit_alert">No spots available.</span>';
+            }
+        }
 
         if ($time > $event["event_begin_date"] && $time < $event["event_end_date"]) {
             $info = '<span class="events_alert">This event is currently underway!</span>';
@@ -282,7 +277,22 @@ global $CFG, $USER;
 
         // GET EXPORT CSV BUTTON
         if (user_is_able($USER->userid, "exportcsv", $event["pageid"], "events", $featureid)) {
-            $export = '<button class="alike" title="Export ' . $regcount . '/' . $limit . ' Registrations" onclick="ajaxapi_old(\'/features/events/events_ajax.php\',\'export_csv\',\'&pageid=' . $pageid . '&eventid=' . $event['eventid'] . '\',function() { simple_display(\'downloadframe\');});">' . icon([["icon" => "file-csv", "style" => "font-size: 1.3em"]]) . '</button>';
+            ajaxapi([
+                "id" => "export_event_registrations" ,
+                "paramlist" => "eventid, pageid",
+                "url" => "/features/events/events_ajax.php",
+                "data" => [
+                    "action" => "export_registrations",
+                    "pagieid" => "js||pageid||js",
+                    "eventid" => "js||eventid||js",
+                ],
+                "display" => "downloadframe",
+                "event" => "none",
+            ]);
+            $export = '
+                <button onclick="export_event_registrations(' . $event['eventid'] . ', ' . $pageid . ');" title="Export ' . $regcount . '/' . $limit . ' Registrations" class="alike">
+                    ' . icon([["icon" => "file-csv", "style" => "font-size: 1.3em"]]) . '
+                </button>';
         }
     }
 
@@ -293,7 +303,7 @@ global $CFG, $USER;
 
     $registration_info = '<div role="export_button" class="events_reginfoblock">' . $export . '</div>' .
                          '<div role="event_info" class="events_reginfoblock">' . $info . '</div>' .
-                         '<div role="event_buttons" class="events_reginfoblock">' . $eventbuttons . '</div>' .
+                         '<div role="event_buttons" class="events_reginfoblock event_buttons">' . $eventbuttons . '</div>' .
                          '<div role="alert" class="events_reginfoblock">' . $alert . '</div>';
 
     $confirmed = $needsconfirmed ? "Unconfirmed:" : "";
@@ -371,294 +381,427 @@ global $CFG, $USER;
     $returnme = "";
     $is_section = true;
     if (is_logged_in()) {
-        //Confirm Event Buttons
+        // Confirm Event Buttons
         if ($canconfirm && $event["confirmed"] != 1 && $event["siteviewable"] == 1) {
-            $returnme .= ' <button class="slide_menu_button alike" title="Confirm Event\'s Global Visibility" onclick="if (confirm(\'Are you sure you want to confirm this event?\')) { ajaxapi_old(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&pageid=' . $pageid . '&featureid=' . $event['eventid'] . '&confirm=1\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); go_to_page(\'' . $pageid . '\');});}">' . icon("thumbs-up") . '</button>';
-            $returnme .= ' <a class="slide_menu_button alike" title="Deny Event\'s Global Visibility" onclick="if (confirm(\'Are you sure you want to deny this event?\')) { ajaxapi_old(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&pageid=' . $pageid . '&featureid=' . $event['eventid'] . '&confirm=0\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); go_to_page(\'' . $pageid . '\');});}">' . icon("thumbs-down") . '</button>';
+            ajaxapi([
+                "id" => "confirm_event_" . $event['eventid'],
+                "paramlist" => "confirm = 0",
+                "if" => "(confirm == 1 && confirm('Are you sure you want to confirm this event?')) || (confirm == 0 && confirm('Are you sure you want to deny this event?'))",
+                "url" => "/features/events/events_ajax.php",
+                "data" => [
+                    "action" => "confirm_event_relay",
+                    "confirm" => "js||confirm||js",
+                    "pagieid" => $pageid,
+                    "eventid" => $event['eventid'],
+                ],
+                "display" => "confirm_" . $event['eventid'],
+                "ondone" => "go_to_page('" . $pageid . "');",
+                "event" => "none",
+            ]);
+            $returnme .= '
+                <button title="Confirm Event\'s Global Visibility" onclick="confirm_event_' . $event['eventid'] . '(1);" class="slide_menu_button alike">
+                    ' . icon("thumbs-up") . '
+                </button>
+                <button title="Deny Event\'s Global Visibility" onclick="confirm_event_' . $event['eventid'] . '(0);" class="slide_menu_button alike">
+                    ' . icon("thumbs-down") . '
+                </button>';
         }
-        //Edit && Delete button
-        if ($canedit) {
-            $returnme .= make_modal_links([
-                            "title" => "Edit Event",
-                            "path" => action_path("events") . "add_event_form&pageid=$pageid&eventid=" . $event['eventid'],
-                            "refresh" => "true",
-                            "iframe" => true,
-                            "width" => "800",
-                            "height" => "95%",
-                            "icon" => icon("pencil"),
-                            "class" => "slide_menu_button",
-                        ]);
 
-            //Delete button
-            $returnme .= ' <a class="slide_menu_button" title="Delete Event" href="javascript: if (confirm(\'Are you sure you want to delete this event?\')) { ajaxapi_old(\'/features/events/events_ajax.php\',\'delete_events_relay\',\'&eventid=' . $event['eventid'] . '\',function() { go_to_page(\'' . $pageid . '\'); });}">' . icon("trash") . '</a>';
+        // Edit && Delete button
+        if ($canedit) {
+            $returnme .= get_event_edit_link($event, $pageid);
+
+            ajaxapi([
+                "id" => "delete_event_" . $event['eventid'],
+                "paramlist" => "confirm = 0",
+                "if" => "confirm('Are you sure you want to delete this event?')",
+                "url" => "/features/events/events_ajax.php",
+                "data" => [
+                    "action" => "delete_events_relay",
+                    "eventid" => $event['eventid'],
+                ],
+                "ondone" => "go_to_page('" . $pageid . "');",
+            ]);
+
+            // Delete button
+            $returnme .= '
+                <button id="delete_event_' . $event['eventid'] . '" title="Delete Event" class="slide_menu_button alike" >
+                    ' . icon("trash") . '
+                </button>';
         }
     } else {  return "";}
     return $returnme;
 }
 
-//Gathers the events that can be edited
+// Gathers the events that need to be confirmed
 function get_confirm_events() {
 global $CFG, $USER;
     $returnme = "";
     $pageid = $CFG->SITEID;
     $time = get_timestamp();
     date_default_timezone_set("UTC");
-    $SQL = "SELECT * FROM events e WHERE ((e.pageid != '$pageid' AND siteviewable='1') OR (e.pageid = '$pageid')) AND $time < e.event_end_date AND confirmed='3' ORDER BY e.event_begin_date, e.event_begin_time";
-    if ($events = get_db_result($SQL)) {
+    $SQL = fill_template("dbsql/events.sql", "confirmable_events", "events", ["time" => $time], true);
+    if ($events = get_db_result($SQL, ["pageid" => $pageid])) {
+        ajaxapi([
+            "id" => "confirm_event",
+            "paramlist" => "eventid, confirmed = 0",
+            "if" => "(confirmed == 1 && confirm('Are you sure you want to confirm this event?')) || (confirmed == 0 && confirm('Are you sure you want to deny this event?'))",
+            "url" => "/features/events/events_ajax.php",
+            "data" => [
+                "action" => "confirm_event_relay",
+                "confirm" => "js||confirmed||js",
+                "pagieid" => $pageid,
+                "eventid" => "js||eventid||js",
+            ],
+            "display" => "confirm_js||eventid||js",
+            "ondone" => "go_to_page('" . $pageid . "');",
+            "event" => "none",
+        ]);
+
+        $eventslist = "";
         while ($event = fetch_row($events)) {
-            $returnme .= '
-                <table style="width:100%;background-color:#edfafa;border-bottom:1px gray inset; margin:1px;">
-                    <tr>
-                        <td>
-                            <span id="confirm_' . $event['eventid'] . '">
-                                ' . make_modal_links([
-                                        "title" => stripslashes($event['name']),
-                                        "path" => action_path("events") . "info&pageid=$pageid&eventid=" . $event['eventid'],
-                                        "iframe" => true,
-                                        "width" => "700",
-                                        "height" => "650",
-                                    ]);
+            $buttons = [];
 
             $featureid = get_db_field("featureid", "pages_features", "pageid='$pageid' AND feature='events'");
-            if (user_is_able($USER->userid, "editevents", $pageid, "events", $featureid)) {
-                $returnme .= make_modal_links([
-                                "title" => "Edit Event",
-                                "path" => action_path("events") . "add_event_form&pageid=$pageid&eventid=" . $event['eventid'],
-                                "refresh" => "true",
-                                "iframe" => true,
-                                "width" => "800",
-                                "height" => "95%",
-                                "icon" => icon("pencil"),
-                            ]);
-            }
+            $buttons[] = user_is_able($USER->userid, "editevents", $pageid, "events", $featureid) ? get_event_edit_link($event, $pageid) : "";
 
-            $returnme .= '      <button class="alike" title="Confirm Event" onclick="if (confirm(\'Are you sure you want to confirm this event?\')) { ajaxapi_old(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&pageid=' . $pageid . '&featureid=' . $event['eventid'] . '&confirm=1\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); go_to_page(\'' . $pageid . '\');});}">' . icon("thumbs-up") . '</button>';
-            $returnme .= '      <button class="alike" title="Deny Event" onclick="if (confirm(\'Are you sure you want to deny this event?\')) { ajaxapi_old(\'/features/events/events_ajax.php\',\'confirm_events_relay\',\'&pageid=' . $pageid . '&featureid=' . $event['eventid'] . '&confirm=0\',function() { simple_display(\'confirm_' . $event['eventid'] . '\'); go_to_page(\'' . $pageid . '\');});}">' . icon("thumbs-down") . '</button>';
-            $returnme .= '  </span>
-                        </td>
-                    </tr>
-                </table>';
+            $buttons[] = '
+                <button title="Confirm Event" onclick="confirm_event(' . $event['eventid'] . ', 1);" class="alike slide_menu_button">
+                    ' . icon("thumbs-up") . '
+                </button>
+                <button title="Deny Event" onclick="confirm_event(' . $event['eventid'] . ', 0);"" class="alike slide_menu_button">
+                    ' . icon("thumbs-down") . '
+                </button>';
+
+            $params = [
+                "containername" => "confirm_" . $event['eventid'],
+                "info" => get_event_info_link($event, $pageid),
+                "buttons" => $buttons,
+                "extrainfo" => get_event_length($event),
+            ];
+            $eventslist .= fill_template("tmp/events.template", "eventslist", "events", $params);
         }
+
+        $params  = [
+            "title" => icon("bell-concierge", 1, "", "#c5c526") . " <span>Events Need Confirmed</span>",
+            "eventslist" => $eventslist];
+        return fill_template("tmp/events.template", "eventtype", "events", $params);
     }
-    $returnme = $returnme == "" ? false : '<b> Events Need Confirmed</b> <img src="' . $CFG->wwwroot . '/images/new.png" title="New" alt="New" /><br /><hr /><table style="width:100%;"><tr><td style="background-color:#edfafa; white-space:nowrap">' . $returnme . '</td></tr></table>';
-    return $returnme;
+    return false;
 }
 
-//Gathers the events that can be edited
+// Gathers the events that can be edited
 function get_editable_events($pageid) {
 global $CFG, $USER;
-    $returnme = "";
     $time = get_timestamp();
     date_default_timezone_set("UTC");
-    $siteviewable = $pageid == $CFG->SITEID ? " OR (siteviewable = '1' AND confirmed = '1')" : "";
-    $SQL = "SELECT e.* FROM events e WHERE (e.pageid='$pageid' $siteviewable) AND ($time -86400) < e.event_end_date ORDER BY e.event_begin_date, e.event_begin_time";
-    if ($events = get_db_result($SQL)) {
+    $siteviewable = $pageid == $CFG->SITEID ? " OR (siteviewable = 1 AND confirmed = 1)" : "";
+    $SQL = fill_template("dbsql/events.sql", "editable_events", "events", ["time" => $time, "siteviewable" => $siteviewable], true);
+    if ($events = get_db_result($SQL, ["pageid" => $pageid])) {
+        ajaxapi([
+            "id" => "delete_event",
+            "paramlist" => "eventid",
+            "if" => "confirm('Are you sure you want to delete this event?')",
+            "url" => "/features/events/events_ajax.php",
+            "data" => [
+                "action" => "delete_events_relay",
+                "eventid" => "js||eventid||js",
+            ],
+            "ondone" => "go_to_page('" . $pageid . "');",
+            "event" => "none",
+        ]);
+
+        $eventslist = "";
         while ($event = fetch_row($events)) {
-            $returnme .= '<span id="edit_' . $event['eventid'] . '">
-                            <table style="width:100%;background-color:#edfafa;border-bottom:1px gray inset; margin:1px;">
-                                <tr>
-                                    <td>
-                                        ' . make_modal_links([
-                                                "title" => stripslashes($event['name']),
-                                                "path" => action_path("events") . "info&pageid=$pageid&eventid=" . $event['eventid'],
-                                                "iframe" => true,
-                                                "width" => "700",
-                                            ]);
-            $returnme .= " " . make_modal_links([
-                                    "title" => "Edit Event",
-                                    "path" => action_path("events") . "add_event_form&pageid=$pageid&eventid=" . $event['eventid'],
-                                    "refresh" => "true",
-                                    "iframe" => true,
-                                    "width" => "750",
-                                    "icon" => icon("pencil"),
-                                ]);
-            $returnme .= ' <a href="javascript: if (confirm(\'Are you sure you want to delete this event?\')) { ajaxapi_old(\'/features/events/events_ajax.php\',\'delete_events_relay\',\'&eventid=' . $event['eventid'] . '\',function() { go_to_page(\'' . $pageid . '\');});}">' . icon("trash") . '</a>';
-            $returnme .= '</td></tr></table></span>';
+            $buttons = [];
+
+            // EDIT LINK
+            $buttons[] = get_event_edit_link($event, $pageid);
+
+            // DELETE LINK
+            $buttons[] = '
+                <button title="Delete Event" onclick="delete_event(' . $event['eventid'] . ');" class="alike slide_menu_button">
+                    ' . icon("trash") . '
+                </button>';
+
+            $params = [
+                "containername" => "edit_" . $event['eventid'],
+                "info" => get_event_info_link($event, $pageid),
+                "buttons" => $buttons,
+                "extrainfo" => get_event_length($event),
+            ];
+            $eventslist .= fill_template("tmp/events.template", "eventslist", "events", $params);
         }
+
+        $params  = [
+            "title" => icon("pencil") . " <span>Editable Events</span>",
+            "eventslist" => $eventslist];
+        return fill_template("tmp/events.template", "eventtype", "events", $params);
     }
-    $returnme = $returnme == "" ? false : '<strong>Edit Events</strong><br /><hr /><table style="width:100%;"><tr><td style="background-color:#edfafa; white-space:nowrap">' . $returnme . '</td></tr></table>';
-    return $returnme;
+    return false;
 }
 
-//Gathers the events that are currently available for enrollment
+// Gathers the events that are currently available for enrollment
 function get_open_enrollment_events($pageid) {
 global $CFG, $USER;
-    $returnme = "";
     $time = get_timestamp();
     date_default_timezone_set("UTC");
-    $siteviewable = $pageid == $CFG->SITEID ? " OR siteviewable = '1' AND confirmed = '1'" : "";
-    $SQL = "SELECT e.* FROM events e WHERE (e.pageid='$pageid' $siteviewable) AND e.start_reg < $time AND e.stop_reg > ($time - 86400) AND (e.max_users=0 OR (e.max_users != 0 AND e.max_users > (SELECT COUNT(*) FROM events_registrations er WHERE er.eventid=e.eventid AND verified='1'))) ORDER BY e.event_begin_date, e.event_begin_time";
-    if ($events = get_db_result($SQL)) {
-        while ($event = fetch_row($events)) {
-            $returnme .= '<table style="width:100%;background-color:#edfafa;border-bottom:1px gray inset; margin:1px;">
-                            <tr>
-                                <td style="white-space:normal">
-                                    ' . make_modal_links([
-                                            "title" => $event["name"],
-                                            "path" => action_path("events") . "info&pageid=$pageid&eventid=" . $event['eventid'],
-                                            "iframe" => true,
-                                            "width" => "700",
-                                            "height" => "650",
-                                        ]) . '
-                                </td>
-                                <td style="text-align:right; padding:2px;white-space:nowrap;">';
-            $regcount = get_db_count("SELECT * FROM events_registrations WHERE eventid='" . $event['eventid'] . "' AND verified='1'");
-            $limit = $event['max_users'] == "0" ? "&#8734;" : $event['max_users'];
-            $left = $event['max_users'] == "0" ? "&#8734;" : '(' . ($limit - $regcount) . ' out of ' . $limit . ' openings left)';
-            $featureid = get_db_field("featureid", "pages_features", "pageid='$pageid' AND feature='events'");
+    $siteviewable = $pageid == $CFG->SITEID ? " OR (siteviewable = 1 AND confirmed = 1)" : "";
+    $SQL = fill_template("dbsql/events.sql", "open_enrollable_events", "events", ["siteviewable" => $siteviewable, "time" => $time], true);
+    if ($events = get_db_result($SQL, ["pageid" => $pageid])) {
+        ajaxapi([
+            "id" => "delete_event",
+            "paramlist" => "eventid",
+            "if" => "confirm('Are you sure you want to delete this event?')",
+            "url" => "/features/events/events_ajax.php",
+            "data" => [
+                "action" => "delete_events_relay",
+                "eventid" => "js||eventid||js",
+            ],
+            "ondone" => "go_to_page('" . $pageid . "');",
+            "event" => "none",
+        ]);
 
-            // Export registrations
-            if (user_is_able($USER->userid, "exportcsv", $pageid,"events", $featureid)) {
-                $returnme .= '<button class="alike" title="Export ' . $regcount . '/' . $limit . ' Registrations" onclick="ajaxapi_old(\'/features/events/events_ajax.php\',\'export_csv\',\'&pageid=' . $pageid . '&eventid=' . $event['eventid'] . '\',function() { simple_display(\'downloadframe\');});">' . icon([["icon" => "file-csv", "style" => "font-size: 1.3em"]]) . '</button>';
-            }
+        ajaxapi([
+            "id" => "export_event_registrations" ,
+            "paramlist" => "eventid, pageid",
+            "url" => "/features/events/events_ajax.php",
+            "data" => [
+                "action" => "export_registrations",
+                "pagieid" => "js||pageid||js",
+                "eventid" => "js||eventid||js",
+            ],
+            "display" => "downloadframe",
+            "event" => "none",
+        ]);
+
+        $featureid = get_db_field("featureid", "pages_features", "pageid='$pageid' AND feature='events'");
+        $eventslist = "";
+        while ($event = fetch_row($events)) {
+            $buttons = [];
+            $exportlink = "";
+
+            // INFO LINK
+            $infolink = get_event_info_link($event, $pageid);
+
+            $SQL = fetch_template("dbsql/events.sql", "get_verified_event_registrations", "events");
+            $regcurrent = get_db_count($SQL, ["eventid" => $event['eventid']]);
 
             // Registration button
             if (user_is_able($USER->userid, "signupforevents", $pageid, "events", $featureid)) {
-                $returnme .= make_modal_links([
-                                "title" => "Register $left",
-                                "path" => action_path("events") . "show_registration&pageid=$pageid&eventid=" . $event['eventid'],
-                                "iframe" => true,
-                                "validate" => "true",
-                                "width" => "630",
-                                "height" => "95%",
-                                "confirmexit" => "true",
-                                "image" => $CFG->wwwroot . "/images/register.png",
-                            ]);
+                $titleinfo = "&#8734;"; $openings = true;
+                if (!empty($event['max_users'])) {
+                    $openings = $event['max_users'] - $regcurrent > 0 ? $event['max_users'] - $regcurrent : false;
+                    $titleinfo = $left ? $left . ' out of ' . $event['max_users'] : '0';
+                }
+
+                $titleinfo = $event['max_users'] == "0" ? "&#8734;" : $titleinfo . ' openings left)';
+                if (!$openings) {
+                    $titleinfo = 'Registrations will be added to the waitlist for this event';
+                }
+
+                $buttons[] = get_event_register_link($event, $pageid, $titleinfo);
+            }
+
+            $SQL = fetch_template("dbsql/events.sql", "get_pending_event_registrations", "events");
+            $regpending = get_db_count($SQL, ["eventid" => $event['eventid']]);
+
+            // Export registrations
+            if (user_is_able($USER->userid, "exportcsv", $pageid,"events", $featureid)) {
+                $buttons[] = '
+                    <button title="Export ' . $regcurrent . ' Verified Registrations and ' . $regpending . ' Pending Registrations" onclick="export_registrations(' . $event['eventid'] . ',' . $pageid . ');" class="alike slide_menu_button">
+                        ' . icon([["icon" => "file-csv", "style" => "font-size: 1.3em"]]) . '
+                    </button>';
             }
 
             // Payment Area
             if ($event["paypal"] != "") {
-                $returnme .= make_modal_links([
-                                "title" => "Event Payment",
-                                "path" => action_path("events") . "pay&modal=1&pageid=$pageid&eventid=" . $event['eventid'],
-                                "width" => "95%",
-                                "height" => "95%",
-                                "image" => $CFG->wwwroot . "/images/pay.png",
-                            ]);
+                $buttons[] = get_event_pay_link($event, $pageid);
             }
 
-            $returnme .= '</td></tr></table>';
+            $params = [
+                "containername" => "edit_" . $event['eventid'],
+                "info" => get_event_info_link($event, $pageid),
+                "buttons" => $buttons,
+                "extrainfo" => get_event_length($event),
+            ];
+            $eventslist .= fill_template("tmp/events.template", "eventslist", "events", $params);
         }
+
+        $params  = [
+            "title" => icon([["icon" => "clipboard-check", "color" => "green"],]) . " <span>Registerable Events</span>",
+            "eventslist" => $eventslist];
+        return fill_template("tmp/events.template", "eventtype", "events", $params);
     }
-    $returnme = $returnme == "" ? false : '<b>Open Registration</b><br /><hr /><table style="width:100%;"><tr><td style="white-space:nowrap">' . $returnme . '</td></tr></table>';
-    return $returnme;
+    return false;
 }
 
-//Gathers the events that are happening in the next (SETTINGS: upcomingdays) days
+// Gathers the events that are happening in the next (SETTINGS: upcomingdays) days
 function get_upcoming_events($pageid, $upcomingdays) {
 global $CFG;
     $returnme = "";
     $time = get_timestamp();
     date_default_timezone_set("UTC");
-    $oneday = 86400;
-    $totime = $time + ($upcomingdays * $oneday);
-    $siteviewable = $pageid == $CFG->SITEID ? " OR (siteviewable = '1' AND confirmed = '1')" : "";
-    $SQL = "SELECT e.* FROM events e WHERE (e.pageid=$pageid $siteviewable) AND e.event_begin_date < $totime AND e.event_begin_date > $time ORDER BY e.event_begin_date, e.event_begin_time";
-    if ($events = get_db_result($SQL)) {
+
+    $totime = $time + ($upcomingdays * 86400);
+    $siteviewable = $pageid == $CFG->SITEID ? " OR (siteviewable = 1 AND confirmed = 1)" : "";
+    $SQL = fill_template("dbsql/events.sql", "upcoming_events", "events", ["fromtime" => $time, "totime" => $totime, "siteviewable" => $siteviewable], true);
+    if ($events = get_db_result($SQL, ["pageid" => $pageid])) {
+        $eventslist = "";
         while ($event = fetch_row($events)) {
-            $length = get_event_length($event['event_begin_date'], $event['event_end_date'], $event['allday'], $event['event_begin_time'], $event['event_end_time']);
-            $returnme .= '<table style="width:100%;background-color:#edfafa;border-bottom:1px gray inset; margin:1px;">
-                            <tr>
-                                <td>
-                                    ' . make_modal_links([
-                                            "title" => $event["name"],
-                                            "path" => action_path("events") . "info&pageid=$pageid&eventid=" . $event['eventid'],
-                                            "iframe" => true,
-                                            "width" => "700",
-                                            "height" => "650",
-                                        ]) . '
-                                    <span style="display:block;color:gray; font-size:.75em;">' . $length . '</span>
-                                </td>
-                            </tr>
-                          </table>';
+            $params = [
+                "containername" => "upcoming_" . $event['eventid'],
+                "info" => get_event_info_link($event, $pageid),
+                "buttons" => [],
+                "extrainfo" => get_event_length($event),
+            ];
+            $eventslist .= fill_template("tmp/events.template", "eventslist", "events", $params);
         }
+
+        $params  = [
+            "title" => icon([["icon" => "clock", "color" => "#0098b3"],]) . " <span>Upcoming Events</span>",
+            "eventslist" => $eventslist];
+        return fill_template("tmp/events.template", "eventtype", "events", $params);
     }
-    $returnme = $returnme == "" ? false : '<b>Upcoming Events</b><br /><hr /><table style="width:100%;"><tr><td style="background-color:#edfafa; white-space:nowrap">' . $returnme . '</td></tr></table>';
-    return $returnme;
+
+    return false;
 }
 
-//Gathers the events that are happening right now
+// Gathers the events that are happening right now
 function get_current_events($pageid) {
 global $CFG, $USER;
-    $returnme = "";
     $time = get_timestamp();
     date_default_timezone_set("UTC");
-    $oneday = 86400;
-    $siteviewable = $pageid == $CFG->SITEID ? " OR (siteviewable = '1' AND confirmed = '1')" : "";
-    $SQL = "SELECT * FROM events e WHERE (e.pageid='$pageid' $siteviewable) AND ((((e.event_begin_date + $oneday) - $time) < $oneday AND ((e.event_begin_date + $oneday) - $time) > 0) OR ($time > (e.event_begin_date) AND $time < (e.event_end_date))) ORDER BY e.event_begin_date, e.event_begin_time";
-    if ($events = get_db_result($SQL)) {
+    $siteviewable = $pageid == $CFG->SITEID ? " OR (siteviewable = 1 AND confirmed = 1)" : "";
+    $SQL = fill_template("dbsql/events.sql", "current_events", "events", ["time" => $time, "siteviewable" => $siteviewable], true);
+    if ($events = get_db_result($SQL, ["pageid" => $pageid])) {
+        $featureid = get_db_field("featureid", "pages_features", "pageid = ||pageid|| AND feature='events'", ["pageid" => $pageid]);
+        $eventslist = "";
         while ($event = fetch_row($events)) {
-            $length = get_event_length($event['event_begin_date'], $event['event_end_date'], $event['allday'], $event['event_begin_time'], $event['event_end_time']);
-            $returnme .= '<table style="width:100%;background-color:#edfafa;border-bottom:1px gray inset; margin:1px;">
-                            <tr>
-                                <td>
-                                    ' . make_modal_links([
-                                            "title" => $event["name"],
-                                            "path" => action_path("events") . "info&pageid=$pageid&eventid=" . $event['eventid'],
-                                            "iframe" => true,
-                                            "width" => "700",
-                                            "height" => "650",
-                                        ]) . '
-                                    <span style="display:block;color:gray; font-size:.75em;">' . $length . '</span>
-                                </td>
-                                <td style="text-align:right; padding:2px;white-space:nowrap;">';
-            $regcount = get_db_count("SELECT * FROM events_registrations WHERE eventid='" . $event['eventid'] . "' AND verified='1'");
-            $limit = $event['max_users'] == "0" ? "&#8734;" : $event['max_users'];
-            $featureid = get_db_field("featureid", "pages_features", "pageid='$pageid' AND feature='events'");
-            if (user_is_able($USER->userid, "exportcsv", $pageid, "events", $featureid)) {
-                $returnme .= '
-                <button class="alike" title="Export ' . $regcount . '/' . $limit . ' Registrations" onclick="ajaxapi_old(\'/features/events/events_ajax.php\',\'export_csv\',\'&pageid=' . $pageid . '&eventid=' . $event['eventid'] . '\',function() { simple_display(\'downloadframe\');});">
-                    ' . icon([["icon" => "file-csv", "style" => "font-size: 1.3em"]]) . '
-                </button>';}
-            $returnme .= "
-                        </td>
-                    </tr>
-                </table>";
-        }
-    }
-    $returnme = $returnme == "" ? false : '<b>Currently Active Events</b><br /><hr /><table style="width:100%;"><tr><td style="background-color:#edfafa; white-space:nowrap">' . $returnme . '</td></tr></table>';
-    return $returnme;
-}
+            $buttons = [];
 
-//Gathers the events that are currently available for enrollment
-function get_recent_events($pageid, $recentdays, $archivedays) {
-global $CFG, $USER;
-    $returnme = "";
-    $time = get_timestamp();
-    date_default_timezone_set("UTC");
-    $oneday = 86400;
-    $featureid = get_db_field("featureid", "pages_features", "pageid = ||pageid|| AND feature = 'events'", ["pageid" => $pageid]);
-    $dayspan = user_is_able($USER->userid, "exportcsv", $pageid, "events", $featureid) ? $archivedays : $recentdays;
-    $to_day = ($dayspan * $oneday);
-    $siteviewable = $pageid == $CFG->SITEID ? " OR siteviewable = '1' AND confirmed = '1'" : "";
-    $SQL = "SELECT e.* FROM events e WHERE (e.pageid='$pageid' $siteviewable) AND (e.event_end_date + $to_day) > $time AND e.event_end_date < $time ORDER BY e.event_begin_date DESC, e.event_begin_time DESC";
-    if ($events = get_db_result($SQL)) {
-        while ($event = fetch_row($events)) {
-            $length = get_event_length($event['event_begin_date'], $event['event_end_date'], $event['allday'], $event['event_begin_time'], $event['event_end_time']);
-            $returnme .= '<table style="width:100%;background-color:#edfafa;border-bottom:1px gray inset; margin:1px;">
-                            <tr>
-                                <td style="white-space:normal">
-                                    ' . make_modal_links([
-                                            "title" => $event["name"],
-                                            "path" => action_path("events") . "info&pageid=$pageid&eventid=" . $event['eventid'],
-                                            "iframe" => true,
-                                            "width" => "700",
-                                            "height" => "650",
-                                        ]) . '
-                                    <span style="display:block;color:gray; font-size:.75em;">' . $length . '</span>
-                                </td>
-                                <td style="text-align:right; padding:2px;white-space:nowrap;">';
-            if (!empty($event["start_reg"]) && user_is_able($USER->userid, "exportcsv", $pageid, "events", $featureid)) {
-                $returnme .= '
-                    <button class="alike" title="Export Registrations" onclick="ajaxapi_old(\'/features/events/events_ajax.php\',\'export_csv\',\'&pageid=' . $pageid . '&eventid=' . $event['eventid'] . '\',function() { simple_display(\'downloadframe\');});">
+            // Export registrations
+            if (user_is_able($USER->userid, "exportcsv", $pageid, "events", $featureid)) {
+                $SQL = fetch_template("dbsql/events.sql", "get_verified_event_registrations", "events");
+                $regcurrent = get_db_count($SQL, ["eventid" => $event['eventid']]);
+                $SQL = fetch_template("dbsql/events.sql", "get_pending_event_registrations", "events");
+                $regpending = get_db_count($SQL, ["eventid" => $event['eventid']]);
+
+                $buttons[] = '
+                    <button title="Export ' . $regcurrent . ' Verified Registrations and ' . $regpending . ' Pending Registrations" onclick="export_registrations(' . $event['eventid'] . ',' . $pageid . ');" class="alike slide_menu_button">
                         ' . icon([["icon" => "file-csv", "style" => "font-size: 1.3em"]]) . '
                     </button>';
             }
-            $returnme .= '</td></tr></table>';
+
+            $params = [
+                "containername" => "current_" . $event['eventid'],
+                "info" => get_event_info_link($event, $pageid),
+                "buttons" => $buttons,
+                "extrainfo" => get_event_length($event),
+            ];
+            $eventslist .= fill_template("tmp/events.template", "eventslist", "events", $params);
         }
+
+        $params  = [
+            "title" => icon([["icon" => "fire", "color" => "red"],]) . " <span>Active Events</span>",
+            "eventslist" => $eventslist];
+        return fill_template("tmp/events.template", "eventtype", "events", $params);
     }
-    $returnme = $returnme == "" ? false : '<p><br /><b>Recent Events</b><br /><hr /><table style="width:100%;"><tr><td style="white-space:nowrap">' . $returnme . '</td></tr></table>';
-    return $returnme;
+
+    return false;
+}
+
+// Gathers the events that are happening right now
+function get_recent_events($pageid, $recentdays, $archivedays) {
+global $CFG, $USER;
+    $time = get_timestamp();
+    date_default_timezone_set("UTC");
+
+    $featureid = get_db_field("featureid", "pages_features", "pageid = ||pageid|| AND feature='events'", ["pageid" => $pageid]);
+    $dayspan = user_is_able($USER->userid, "exportcsv", $pageid, "events", $featureid) ? $archivedays : $recentdays;
+    $to_day = $dayspan * 86400;
+    $siteviewable = $pageid == $CFG->SITEID ? " OR (siteviewable = 1 AND confirmed = 1)" : "";
+    $SQL = fill_template("dbsql/events.sql", "recent_events", "events", ["time" => $time, "to_day" => $to_day, "siteviewable" => $siteviewable], true);
+    if ($events = get_db_result($SQL, ["pageid" => $pageid])) {
+        $eventslist = "";
+        while ($event = fetch_row($events)) {
+            $buttons = [];
+
+            // Export registrations
+            if (user_is_able($USER->userid, "exportcsv", $pageid,"events", $featureid)) {
+                $SQL = fetch_template("dbsql/events.sql", "get_verified_event_registrations", "events");
+                $regcurrent = get_db_count($SQL, ["eventid" => $event['eventid']]);
+                $SQL = fetch_template("dbsql/events.sql", "get_pending_event_registrations", "events");
+                $regpending = get_db_count($SQL, ["eventid" => $event['eventid']]);
+
+                $buttons[] = '
+                    <button title="Export ' . $regcurrent . ' Verified Registrations and ' . $regpending . ' Pending Registrations" onclick="export_registrations(' . $event['eventid'] . ',' . $pageid . ');" class="alike slide_menu_button">
+                        ' . icon([["icon" => "file-csv", "style" => "font-size: 1.3em"]]) . '
+                    </button>';
+            }
+
+            $params = [
+                "containername" => "recent_" . $event['eventid'],
+                "info" => get_event_info_link($event, $pageid),
+                "buttons" => $buttons,
+                "extrainfo" => get_event_length($event),
+            ];
+            $eventslist .= fill_template("tmp/events.template", "eventslist", "events", $params);
+        }
+
+        $params  = [
+            "title" => icon([["icon" => "clock-rotate-left", "color" => "red"],]) . " <span>Recent Events</span>",
+            "eventslist" => $eventslist];
+        return fill_template("tmp/events.template", "eventtype", "events", $params);
+    }
+
+    return false;
+}
+
+function get_event_info_link($event, $pageid) {
+    return make_modal_links([
+        "title" => $event['name'],
+        "path" => action_path("events") . "info&pageid=$pageid&eventid=" . $event['eventid'],
+        "iframe" => true,
+        "width" => "700",
+    ]);
+}
+
+function get_event_edit_link($event, $pageid) {
+    return make_modal_links([
+        "title" => "Edit Event",
+        "path" => action_path("events") . "add_event_form&pageid=$pageid&eventid=" . $event['eventid'],
+        "refresh" => "true",
+        "iframe" => true,
+        "width" => "800",
+        "icon" => icon("pencil"),
+        "class" => "slide_menu_button",
+    ]);
+}
+
+function get_event_register_link($event, $pageid, $titleinfo = "") {
+    return make_modal_links([
+        "title" => "Register $titleinfo",
+        "path" => action_path("events") . "show_registration&pageid=$pageid&eventid=" . $event['eventid'],
+        "iframe" => true,
+        "validate" => "true",
+        "width" => "630",
+        "height" => "95%",
+        "confirmexit" => "true",
+        "icon" => icon([["icon" => "clipboard-check", "color" => "green"],]),
+        "class" => "slide_menu_button",
+    ]);
+}
+
+function get_event_pay_link($event, $pageid) {
+    return make_modal_links([
+        "title" => "Make Payment",
+        "path" => action_path("events") . "pay&modal=1&pageid=$pageid&eventid=" . $event['eventid'],
+        "width" => "95%",
+        "height" => "95%",
+        "icon" => icon("credit-card"),
+        "class" => "slide_menu_button",
+    ]);
 }
 
 function make_fee_options($min, $full, $name, $options = "", $sale_end = "", $sale = false) {
@@ -684,7 +827,7 @@ global $CFG;
     $paypal = $CFG->paypal ? 'www.paypal.com' : 'www.sandbox.paypal.com';
     $protocol = get_protocol();
 
-    $returnme .= '
+    $returnme = '
         <form style="margin: auto; text-align: center;" action="https://' . $paypal . '/cgi-bin/webscr" method="post" target="_top">
             <div style="width: 100%; text-align: center;">
             <input name="upload" type="hidden" value="1" />
@@ -746,7 +889,6 @@ global $CFG;
 
 function enter_registration($eventid, $reg, $contactemail, $pending = true) {
 global $CFG, $why, $error;
-
     try {
         start_db_transaction();
 
@@ -1075,8 +1217,9 @@ function delete_event($eventid) {
         log_entry("event", $event["name"], "Deleted Event");
     } catch (\Throwable $e) {
         rollback_db_transaction($e->getMessage());
+        return false;
     }
-    emptyreturn();
+    return true;
 }
 
 function refresh_calendar_events($eventid) {
@@ -1103,29 +1246,32 @@ function refresh_calendar_events($eventid) {
     execute_db_sql("UPDATE events SET caleventid='$caleventid' WHERE eventid='$eventid'");
 }
 
-//Confirms a site event
-function confirm_event($pageid = false, $eventid = false, $confirm = false) {
-global $MYVARS, $CFG, $USER;
+// Confirms a site event
+function confirm_or_deny_event($eventid = false, $confirm = false) {
+global $CFG, $USER;
     date_default_timezone_set("UTC");
-    $eventid = $eventid ? $eventid : dbescape($MYVARS->GET['featureid']);
     $event = get_event($eventid);
-    $confirm = !empty($confirm) ? '1' : (empty($MYVARS->GET['confirm']) ? "0" : "1");
 
-    //Make Calendar event
+    $status = execute_db_sql("UPDATE events SET confirmed = ||confirmed|| WHERE eventid = ||eventid||", ["confirmed" => $confirm, "eventid" => $eventid]);
+
+    if (!$status) {
+        return false;
+    }
+
+    // Make Calendar event
     if (!empty($confirm)) {
         //Set events to confirm then refresh
-        execute_db_sql("UPDATE events SET confirmed='$confirm' WHERE eventid='$eventid'");
         refresh_calendar_events($eventid);
-    } else { //NO to site viewability
-        //Set events to confirm
+        log_entry("events", $event["name"], "Confirmed Event's Visibility");
+    } else { // NO to site viewability
+        // Set events to confirm
         if ($event["pageid"] == $CFG->SITEID) {
             delete_calendar_events($event);
         }
-        execute_db_sql("UPDATE events SET confirmed='$confirm' WHERE eventid='$eventid'");
+        log_entry("events", $event["name"], "Denied Event's Visibility");
     }
-    // Log
-    log_entry("events", $event["name"], "Confirmed Event's Visibility");
-    emptyreturn();
+
+    return true;
 }
 
 //Make sure that the calendar is edited when the event is edited.
@@ -1160,18 +1306,22 @@ function get_event_template($id) {
     return get_db_row("SELECT * FROM events_templates WHERE template_id = ||template_id||", ["template_id" => $id]);
 }
 
-function get_event_length($startdate, $enddate, $allday, $starttime, $endtime) {
-    date_default_timezone_set(date_default_timezone_get());
-    if ($startdate == $enddate) { //ONE DAY EVENT
-        $length = date("n/j/Y", $startdate);
-    } else { //Multiple Days
-        $length = date("n/j/Y", $startdate) . " - " . date("n/j/Y", $enddate);
+function get_event_length($event) {
+    if (!empty($event['allday'])) {
+        return "All day";
     }
 
-    if (!$allday) {
+    date_default_timezone_set(date_default_timezone_get());
+    if ($event['event_begin_date'] == $event['event_end_date']) { //ONE DAY EVENT
+        $length = date("n/j/Y", $event['event_begin_date']);
+    } else { //Multiple Days
+        $length = date("n/j/Y", $event['event_begin_date']) . " - " . date("n/j/Y", $event['event_end_date']);
+    }
+
+    if (empty($event['allday'])) {
         $length .= "<br />from ";
-        $start = convert_time($starttime);
-        $finish = convert_time($endtime);
+        $start = convert_time($event['event_begin_time']);
+        $finish = convert_time($event['event_end_time']);
         $length .= $start . " to " . $finish;
     }
     return $length;
@@ -1183,23 +1333,26 @@ global $CFG;
 
     $activeonly = $activeonly == true ? ' WHERE activated = 1' : '';
     $fallback = "No templates found";
+
+    ajaxapi([
+        "id" => "template" ,
+        "url" => "/features/events/events_ajax.php",
+        "data" => [
+            "action" => "show_template_settings",
+            "templateid" => "js||$('#template').val()||js",
+            "eventid" => $eventid,
+        ],
+        "display" => "template_settings_div",
+        "event" => "change",
+        "before" => "clear_limits();",
+    ]);
+
     $templateselect = [
         "properties" => [
             "name" => 'template',
             "id" => 'template',
-            "onchange" =>  'clear_limits();
-                            ajaxapi_old(\'/features/events/events_ajax.php\',
-                                   \'show_template_settings\',
-                                   \'&eventid=' . $eventid . '&templateid=\' + document.getElementById(\'template\').value,
-                                   function() {
-                                        simple_display(\'template_settings_div\');
-                                    }
-                            );',
         ],
-        "values" => get_db_result("SELECT *
-                                     FROM events_templates
-                                     $activeonly
-                                     ORDER BY name"),
+        "values" => get_db_result("SELECT * FROM events_templates $activeonly ORDER BY name"),
         "valuename" => "template_id",
         "selected" => $selected,
         "firstoption" => "Select a template",
@@ -1210,12 +1363,11 @@ global $CFG;
     $returnme = make_select($templateselect);
     if ($returnme !== $fallback) { // There are templates.
         $returnme .= '
-            <a  href="javascript: void(0);"
-                onclick="if (document.getElementById(\'template\').value){
-                            window.open(\'' . $CFG->wwwroot . '/features/events/preview.php?action=preview_template&template_id=\' + document.getElementById(\'template\').value, \'Template\', \'menubar=yes,toolbar=yes,scrollbars=1,resizable=1,width=600,height=400\');
-                        }">
+            <button class="alike" onclick="if ($(\'#template\').val()) {
+                    window.open(\'' . $CFG->wwwroot . '/features/events/preview.php?action=preview_template&template_id=\' + $(\'#template\').val(), \'Template\', \'menubar=yes,toolbar=yes,scrollbars=1,resizable=1,width=600,height=400\');
+                }">
                 Preview
-            </a>';
+            </button>';
     }
 
     return $returnme;
@@ -1309,8 +1461,8 @@ function save_template_settings($template_id, $savearray) {
 }
 
 function get_possible_times($formid, $selected_time = false, $start_time = false) {
-    $selected_time = $selected_time ?? false;
-    $start_time = $start_time ?? false;
+    $selected_time ??= false;
+    $start_time ??= false;
 
     $times = ["00:00*12:00 am", "00:30*12:30 am", "01:00*01:00 am", "01:30*01:30 am", "02:00*02:00 am", "02:30*02:30 am", "03:00*03:00 am", "03:30*03:30 am", "04:00*04:00 am", "04:30*04:30 am", "05:00*05:00 am", "05:30*05:30 am", "06:00*06:00 am", "06:30*06:30 am", "07:00*07:00 am", "07:30*07:30 am", "08:00*08:00 am", "08:30*08:30 am", "09:00*09:00 am", "09:30*09:30 am", "10:00*10:00 am", "10:30*10:30 am", "11:00*11:00 am", "11:30*11:30 am", "12:00*12:00 pm", "12:30*12:30 pm", "13:00*01:00 pm", "13:30*01:30 pm", "14:00*02:00 pm", "14:30*02:30 pm", "15:00*03:00 pm", "15:30*03:30 pm", "16:00*04:00 pm", "16:30*04:30 pm", "17:00*05:00 pm", "17:30*05:30 pm", "18:00*06:00 pm", "18:30*06:30 pm", "19:00*07:00 pm", "19:30*07:30 pm", "20:00*08:00 pm", "20:30*08:30 pm", "21:00*09:00 pm", "21:30*09:30 pm", "22:00*10:00 pm", "22:30*10:30 pm", "23:00*11:00 pm", "23:30*11:30 pm"];
     $onchange = $formid == 'begin_time' ? 'onchange="get_end_time(this.value);"' : '';
@@ -1334,6 +1486,7 @@ function get_possible_times($formid, $selected_time = false, $start_time = false
                 $returnme .= '<option value="' . $time[0] . '">' . $time[1] . '</option>';
             }
         }
+        error_log($time[0] . " " . $start_time);
         $from = strstr($time[0], $start_time) ? true : $from;
         $i++;
     }
@@ -2351,10 +2504,10 @@ global $CFG;
     // Check for global settings in template.
     $templateid = $event["template_id"];
     $global_settings = fetch_settings("events_template_global", $templateid);
-    if (isset($global_settings->events_template_global->$templateid->facebookappid->setting)
-        &&
-        isset($global_settings->events_template_global->$templateid->facebooksecret->setting)) {
+    $facebookappid = $global_settings->events_template_global->$templateid->facebookappid->setting;
+    $facebooksecret = $global_settings->events_template_global->$templateid->facebooksecret->setting;
 
+    if (!empty($facebookappid) && !empty(facebooksecret)) {
         // Load facebook library.
         require_once ($CFG->dirroot . '/features/events/facebook/facebook.php');
         $config = [
@@ -2364,9 +2517,9 @@ global $CFG;
 
         $facebook = new Facebook($config);
         $login_url = $facebook->getLoginUrl([
-                                    'scope' => 'publish_stream',
-                                    'redirect_uri' => $CFG->wwwroot . '/features/events/events_ajax.php?action=send_facebook_message&info=' . base64_encode(serialize([$event["eventid"], $name, $config])),
-                                ]);
+            'scope' => 'publish_stream',
+            'redirect_uri' => $CFG->wwwroot . '/features/events/events_ajax.php?action=send_facebook_message&info=' . base64_encode(serialize([$event["eventid"], $name, $config])),
+        ]);
         return '<a title="Tell your friends about ' . $name . '\'s registration for ' . $event["name"] . '!" href="' . $login_url . '" target="_blank"><img src="' . $CFG->wwwroot . '/images/facebook_button.png" /></a>';
     }
     return "";
@@ -2477,4 +2630,227 @@ function add_blank_registration($eventid, $reserveamount = 1) {
     return $return;
 }
 
+function request_questions_form($reqid, $voteid, $featureid, $pageid) {
+    $return = "";
+
+    // Check if any settings exist for this feature
+    if (!$settings = fetch_settings("events", $featureid, $pageid)) {
+        save_batch_settings(default_settings("events", $pageid, $featureid));
+        $settings = fetch_settings("events", $featureid, $pageid);
+    }
+    $locationid = $settings->events->$featureid->allowrequests->setting;
+
+    $prev_questions = '<h3>Previous Questions</h3>';
+    // Print out previous questions and answers
+    if ($results = get_db_result("SELECT *
+                                    FROM events_requests_questions
+                                WHERE reqid = ||reqid||
+                                ORDER BY question_time", ["reqid" => $reqid])) {
+        while ($row = fetch_row($results)) {
+            $question = strip_tags(trim($row['question'], " \n\r\t"),'<a><em><u><img><br>');
+            $prev_questions .= '
+                <div class="request_questions">
+                    <strong>' . icon("question") . ' ' . $question . '</strong>
+                </div>';
+
+            if (empty($row["answer"])) { // Not answered
+                $prev_questions .= '
+                    <div class="request_answers none">
+                        No response yet.
+                    </div>';
+            } else { //Print answer
+                $answer = strip_tags(trim($row['answer'], " \n\r\t"),'<a><em><u><img><br>');
+                $prev_questions .= '
+                    <div class="request_answers">
+                        ' . $answer . '
+                    </div>';
+            }
+        }
+    } else {
+        $prev_questions .= 'No questions have been asked yet.';
+    }
+
+    $middlecontents = '
+        <div id="question_form" style="padding: 20px;">
+            <h2>Questions Regarding Event Request</h2>
+            ' . get_request_info($reqid) . '
+            <form id="request_question_form" method="post" action="./events_ajax.php">
+                <br />
+                <input type="hidden" name="action" value="request_question_send" />
+                <input type="hidden" name="reqid" value="' . $reqid . '" />
+                <input type="hidden" name="voteid" value="' . $voteid . '" />
+                <div style="background-color:Aquamarine;padding:4px;">
+                    <strong>Ask a Question</strong>
+                </div>
+                <br />
+                ' . get_editor_box() . '
+                <br />
+                <div style="width:100%;text-align:center">
+                    <input type="submit" value="Send Question" id="send_question" />
+                </div>
+            </form>
+            ' . $prev_questions . '
+        </div>';
+    $params = [
+        "mainmast" => page_masthead(true, true),
+        "middlecontents" => $middlecontents,
+    ];
+    return fill_template("tmp/index.template", "simplelayout_template", false, $params);
+}
+
+function request_answers_form($reqid, $qid, $featureid, $pageid) {
+global $CFG;
+    if (!$settings = fetch_settings("events", $featureid, $pageid)) {
+        save_batch_settings(default_settings("events", $pageid, $featureid));
+        $settings = fetch_settings("events", $featureid, $pageid);
+    }
+    $locationid = $settings->events->$featureid->allowrequests->setting;
+
+    // Print out previous questions and answers
+    $params = [
+        "reqid" => $reqid,
+        "qid" => $qid,
+    ];
+    $mod = "AND id <> ||qid||";
+
+    $prev_questions = "";
+    $SQL = fill_template("dbsql/events.sql", "get_events_requests_questions", "events", ["mod" => $mod], true);
+    if ($results = get_db_result($SQL, $params)) {
+        while ($row = fetch_row($results)) {
+            $question = strip_tags(trim($row['question'], " \n\r\t"),'<a><em><u><img><br>');
+            $protocol = get_protocol();
+            $prev_questions .= '
+                <div style="background-color:Aquamarine;padding:4px;">
+                    <strong>' . $question . '</strong>
+                </div>';
+            if ($row["answer"] == "") { // Not answered
+                $prev_questions .= '
+                    <div style="background-color:PaleTurquoise;padding:4px;overflow:hidden;">
+                        <strong>
+                            <a href="' . $protocol . $CFG->wwwroot . '/features/events/events_ajax.php?action=request_answer&qid=' . $row['id'] . '&reqid=' . $reqid . '">
+                                Answer Question
+                            </a>
+                        </strong>
+                    </div>
+                    <br /><br />';
+            } else { // Print answer
+                $prev_questions .= '
+                    <div style="background-color:#feffaf;padding:8px;overflow:hidden;">
+                        ' . $row['answer'] . '
+                        <strong>
+                            <a style="float:right" href="' . $protocol . $CFG->wwwroot . '/features/events/events_ajax.php?action=request_answer&qid=' . $row['id'] . '&reqid=' . $reqid . '">
+                                Update Answer
+                            </a>
+                        </strong>
+                    </div>
+                    <br /><br />';
+            }
+        }
+    } else {
+        $prev_questions .= 'No other questions have been asked yet.';
+    }
+
+    $request_answer_form = "";
+    if (!empty($qid)) {
+        $answer = get_db_field("answer", "events_requests_questions", "id = ||id||", ["id" => $qid]);
+        $question = get_db_field("question", "events_requests_questions", "id = ||id||", ["id" => $qid]);
+        $question = strip_tags(trim($question, " \n\r\t"),'<a><em><u><img><br>');
+        $request_answer_form = '
+            <form id="request_answers_form" method="post" action="./events_ajax.php">
+                <input type="hidden" name="reqid" value="' . $reqid . '" />
+                <input type="hidden" name="qid" value="' . $qid . '" />
+                <input type="hidden" name="action" value="request_answer_send" />
+                <br />
+                <div style="background-color:Aquamarine;padding:4px;">
+                    <strong>Question: ' . $question . '</strong>
+                </div>
+                <br />
+                ' . get_editor_box(["initialvalue" => $answer]) . '
+                <br />
+                <div style="width:100%;text-align:center">
+                    <input type="submit" id="send_answer" value="Send Answer" />
+                </div>
+            </form>';
+    }
+
+    $middlecontents = '
+        <div id="question_form" style="padding: 20px;">
+            <h2>Questions Regarding Event Request</h2>
+            ' . get_request_info($reqid) . '
+            <br />
+            ' . $request_answer_form . '
+            <h3>Previous Questions</h3>
+            ' . $prev_questions . '
+        </div>';
+
+    return fill_template("tmp/index.template", "simplelayout_template", false, ["mainmast" => page_masthead(true, true), "middlecontents" => $middlecontents]);
+}
+
+function request_has_already_voted($reqid, $voteid) {
+    $SQL = 'SELECT *
+            FROM events_requests
+            WHERE reqid = ||reqid||
+            AND voted LIKE ||voted||';
+    return get_db_row($SQL, ["reqid" => $reqid, "voted" => "%:$voteid;%"]);
+}
+
+function get_events_alerts($userid, $countonly = true) {
+global $CFG, $USER;
+    $alerts = 0;
+    $pageid = get_pageid();
+    if ($pageid == $CFG->SITEID) {
+        if (user_is_able($USER->userid, "confirmevents", $pageid, "events")) {
+            // Confirmable events.
+            $SQL = fill_template("dbsql/events.sql", "confirmable_events", "events", ["time" => get_timestamp()], true);
+            if ($events = get_db_result($SQL, ["pageid" => $pageid])) {
+                $alerts = count_db_result($events);
+                $alerts_rows = "";
+                while ($event = fetch_row($events)) {
+                    $question = 'Allow ' . $event['name'] . ' on front page?';
+                    $buttons = '
+                        <button title="Confirm Event" onclick="confirm_event(' . $event['eventid'] . ', 1);" class="alike">
+                            ' . icon("thumbs-up", 2) . '
+                        </button>
+                        <button title="Deny Event" onclick="confirm_event(' . $event['eventid'] . ', 0);"" class="alike">
+                            ' . icon("thumbs-down", 2) . '
+                        </button>
+                    ';
+
+                    $alerts_rows .= fill_template("tmp/pagelib.template", "user_alerts_row", false, ["question" => $question, "buttons" => $buttons]);
+                }
+            }
+        }
+    }
+
+    // if you only want the count of alerts, we know that number now.
+    if ($countonly) {
+        return $alerts;
+    }
+
+    if ($alerts) {
+        ajaxapi([
+            "id" => "confirm_event",
+            "paramlist" => "eventid, confirm = 0",
+            "if" => "(confirm == 1 && confirm('Are you sure you want to confirm this event?')) || (confirm == 0 && confirm('Are you sure you want to deny this event?'))",
+            "url" => "/features/events/events_ajax.php",
+            "data" => [
+                "action" => "confirm_event_relay",
+                "confirm" => "js||confirm||js",
+                "pagieid" => $pageid,
+                "eventid" => "js||eventid||js",
+            ],
+            "event" => "none",
+            "display" => "user_alerts_div",
+            "ondone" => "getRoot()[0].update_alerts();",
+        ]);
+
+        $params = [
+            "title" => "Add page events to the front page",
+            "alerts_rows" => $alerts_rows,
+        ];
+        return fill_template("tmp/pagelib.template", "user_alerts_group", false, $params);
+    }
+
+    return false;
+}
 ?>

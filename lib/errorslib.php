@@ -57,26 +57,26 @@ set_error_handler("myErrorHandler", $reportlevel);
 // Validation Errors *********************************************************
 	//generic
 	$ERRORS->valid_req = "This field is required.";
-	
+
 	//username
 	$ERRORS->valid_req_username = "Please enter your username.";
-	
+
 	//first name
 	$ERRORS->valid_req_fname = "Please enter your first name.";
-	
+
 	//last name
 	$ERRORS->valid_req_lname = "Please enter your last name.";
-	
+
 	//email
 	$ERRORS->valid_req_email = "Please enter your email address.";
 	$ERRORS->valid_email_invalid = "Please enter a valid email address.";
 	$ERRORS->valid_email_unique = "This email address is already in use.";
 	$ERRORS->valid_email_used = "Could not find a user with that email.";
-	
+
 	//password
 	$ERRORS->valid_req_password = "Please enter a password.";
 	$ERRORS->valid_password_length = "Must be at least 6 characters long.";
-	
+
 	//verify password
 	$ERRORS->valid_req_vpassword = "Please verify your password.";
 	$ERRORS->valid_vpassword_match = "Must match the password field.";
@@ -87,17 +87,17 @@ global $CFG, $ERRORS;
 	$string = $lang[0];
 	if (isset($lang[2])) {
 		include($CFG->dirroot . '/features/' . $lang[1] . "/" . $lang[2] . "/lang.php");
-		return $ERRORS->$string;        
+		return $ERRORS->$string;
 	} elseif (isset($lang[1])) {
 		include($CFG->dirroot . '/features/' . $lang[1] . "/lang.php");
 		if ($vars) {
 			return fill_error_string_blanks($ERRORS->$string, $vars);
 		}
 		return $ERRORS->$string;
-	} else { 
-		if ($vars) { 
+	} else {
+		if ($vars) {
 			return fill_error_string_blanks($ERRORS->$error, $vars);
-		} 
+		}
 		return $ERRORS->$error;
 	}
 }
@@ -124,10 +124,10 @@ function fill_error_string_blanks($string, $vars) {
 
 function myErrorHandler($errno, $errstr, $errfile, $errline) {
 global $CFG;
-	if (error_reporting() == 0) {
+	if (error_reporting() === 0) {
 		return;
 	}
-	if (!(error_reporting() & $errno)) {
+	if (!(error_reporting() && $errno)) {
 		throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
 		return false;
 	}

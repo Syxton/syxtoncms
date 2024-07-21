@@ -1,124 +1,214 @@
 discussion_form||
-	<img src="||wwwroot||/images/edit_area.gif" alt="This is the discussion creation and editing form" />
-	<form id="||formid||">
-		<div class="centered">
-			<div style="padding:10px;text-align:left;">
-				<strong>Discussion Title</strong>
-				<br />
-				<input type="text" style="width: 100%;" id="discussion_title" value="||title||" />
-			</div>
-			||editor||
-			<input type="submit" style="margin: 10px;" value="Save" />
-		</div>
-	</form>
+    <img src="||wwwroot||/images/edit_area.gif" alt="This is the discussion creation and editing form" />
+    <form id="||formid||">
+        <div class="centered">
+            <div style="padding:10px;text-align:left;">
+                <strong>Discussion Title</strong>
+                <br />
+                <input type="text" style="width: 100%;" id="discussion_title" value="||title||" />
+            </div>
+            ||editor||
+            <input type="submit" style="margin: 10px;" value="Save" />
+        </div>
+    </form>
 ||discussion_form
 
 shoutbox||
-	<div class="shoutbox">
-		<span class="shoutbox_tabtext">
-			||tab||
-		</span>
-		||shouts||
-	</div>
+    <div class="shoutbox">
+        <span class="shoutbox_tabtext">
+            ||tab||
+        </span>
+        ||shouts||
+    </div>
 ||shoutbox||
 
 shoutbox_posts||
-	<div class="shoutbox_post">
-		<div class="shoutbox_post_content">
-			<div class="post_message">||message||</div>
-			<div class="post_by">||alias|| ||posted||</div>
-		</div>
-	</div>
+    <div class="shoutbox_post">
+        <div class="shoutbox_post_content">
+            <div class="post_message">||message||</div>
+            <div class="post_by">||alias|| ||posted||</div>
+        </div>
+    </div>
 ||shoutbox_posts
 
 shoutbox_form||
-	<form id="||formid||">
-		<div class="centered">
-			||alias{{
-				<div>
-					Alias: <input type="text" id="alias" size="21" name="alias" value="Anonymous" />
-				</div>
-			}}alias||
-			||editor||
-			<input type="hidden" id="userid" name="userid" value="||userid||" />
-			<input type="submit" style="margin: 10px;" value="Shout" />
-		</div>
-	</form>
+    <form id="||formid||">
+        <div class="centered">
+            ||alias{{
+                <div>
+                    Alias: <input type="text" id="alias" size="21" name="alias" value="Anonymous" />
+                </div>
+            }}alias||
+            ||editor||
+            <input type="hidden" id="userid" name="userid" value="||userid||" />
+            <input type="submit" style="margin: 10px;" value="Shout" />
+        </div>
+    </form>
 ||shoutbox_form
 
 edit_post_form||
-	<form id="||formid||">
-		<div class="centered">
-			<h3>
-				Editing post made by ||author|| ||time||
-			</h3>
-			<br />
-			||editor||
-			<input type="submit" style="margin: 10px;" value="Save" />
-		</div>
-	</form>
+    <form id="||formid||">
+        <div class="centered">
+            <h3>
+                Editing post made by ||author|| ||time||
+            </h3>
+            <br />
+            ||editor||
+            <input type="submit" style="margin: 10px;" value="Save" />
+        </div>
+    </form>
 ||edit_post_form
 
 post_form||
-	<form id="||formid||">
-		<div class="centered">
-			<h3>
-				Post
-			</h3>
-			<br />
-			||editor||
-			<input type="submit" style="margin: 10px;" value="Post" />
-		</div>
-	</form>
+    <form id="||formid||">
+        <div class="centered">
+            <h3>
+                Post
+            </h3>
+            <br />
+            ||editor||
+            <input type="submit" style="margin: 10px;" value="Post" />
+        </div>
+    </form>
 ||post_form
 
 quote_post_form||
-	<form id="||formid||">
-		<div class="centered">
-			<h3>
-				Post
-			</h3>
-			||quote||
-			<br />
-			||editor||
-			<input type="submit" style="margin: 10px;" value="Post" />
-		</div>
-	</form>
+    <form id="||formid||">
+        <div class="centered">
+            <h3>
+                Post
+            </h3>
+            ||quote||
+            <br />
+            ||editor||
+            <input type="submit" style="margin: 10px;" value="Post" />
+        </div>
+    </form>
 ||quote_post_form
 
 forum_quote||
-	<div class="forum_quote">
-		||quotemessage||
-		<div style="text-align: right;">
-			[quoted from ||author|| ||time||]
-		</div>
-	</div>
+    <div class="forum_quote">
+        ||quotemessage||
+        <div style="text-align: right;">
+            [quoted from ||author|| ||time||]
+        </div>
+    </div>
 ||forum_quote
 
 category_form||
-	<div class="formDiv" id="category_div_||forumid||" style="padding: 20px">
-		<form id="||formid||">
-			<fieldset class="formContainer">
-				<div class="rowContainer">
-					<label class="rowTitle" for="title">Category Name</label>
-					<input type="text" id="title" name="title" value="||*title||" data-rule-required="true" style="width: 100%;" />
-					<div class="tooltipContainer info">||help||</div>
-					<div class="spacer" style="clear: both;"></div>
-				</div>
-			</fieldset>
-			<input class="submit" name="submit" type="submit" value="Submit" style="margin: 0px auto;display: block;" />
-		</form>
-	</div>
+    <div class="formDiv" id="category_div_||forumid||" style="padding: 20px">
+        <form id="||formid||">
+            <fieldset class="formContainer">
+                <div class="rowContainer">
+                    <label class="rowTitle" for="title">Category Name</label>
+                    <input type="text" id="title" name="title" value="||*title||" data-rule-required="true" style="width: 100%;" />
+                    <div class="tooltipContainer info">||help||</div>
+                    <div class="spacer" style="clear: both;"></div>
+                </div>
+            </fieldset>
+            <input class="submit" name="submit" type="submit" value="Submit" style="margin: 0px auto;display: block;" />
+        </form>
+    </div>
 ||category_form
 
 forum_breadcrumb||
-	<div class="forum_breadcrumb">
-		<div>
-			<button id="get_categories_||forumid||" class="alike">
-				Categories
-			</button>
-			<i class="fa-solid fa-caret-right"></i>
-			||title||
-		</div>
-	</div>
+    <div class="forum_breadcrumb">
+        <div>
+            <button id="get_categories_||forumid||" class="alike">
+                Categories
+            </button>
+            <i class="fa-solid fa-caret-right"></i>
+            ||title||
+        </div>
+    </div>
 ||forum_breadcrumb
+
+forum_post||
+    <tr>
+        <td class="forum_author">
+            ||echo get_user_name(forumpost["userid"]);::forumpost||
+            <br />
+            Posts: ||postcount||
+        </td>
+        <td class="forum_message">
+            ||quote{{
+                <span class="forum_post_actions" style="">
+                    ||quote||
+                </span>
+            }}quote||
+            <span class="forum_post_actions" style="float:right;">
+                Posted: ||echo ago(forumpost["posted"]);::forumpost||
+            </span>
+            <div class="forum_post_message">
+                ||forumpost["message"]||
+            </div>
+            ||edited{{
+                <span class="centered_span" style="font-size:.9em; color:gray;">
+                    [edited by ||echo get_user_name(forumpost["editedby"]);::forumpost|| on ||echo ago(forumpost["edited"]);::forumpost||
+                </span>
+            }}edited||
+            ||edit{{
+                <span class="forum_post_actions" style="">
+                    ||edit||
+                </span>
+            }}edit||
+            ||delete{{
+                <span class="forum_post_actions" style="">
+                    <button onclick="delete_post(||forumpost["postid"]||);" class="alike">
+                        Delete
+                    </button>
+                </span>
+            }}delete||
+            ||reply{{
+                <span class="forum_post_actions" style="float:right;">
+                    ||reply||
+                </span>
+            }}reply||
+        </td>
+    </tr>
+||forum_post
+
+no_forum_post||
+    <tr>
+        <td colspan="4" class="forum_col1" style="text-align: center">
+            No Posts Yet.
+            ||postlink{{
+                <span class="forum_post_actions" style="float:right;">
+                    ||postlink||
+                </span>
+            }}postlink||
+        </td>
+    </tr>
+||no_forum_post
+
+forum_template||
+    <div class="forum_breadcrumb">
+        <button id="get_categories_||forumid||" class="alike">
+            Categories
+        </button>
+        ||echo icon("caret-right");::none||
+        <button id="get_forum_discussions_||forumid||" class="alike">
+            ||cattitle||
+        </button>
+        ||echo icon("caret-right");::none||
+        ||distitle||
+    </div>
+    ||discussionlink||
+    ||postspage||
+    <table class="forum_discussion">
+        <tr>
+            <th class="forum_headers" style="width:125px;">
+                Author
+            </th>
+            <th class="forum_headers">
+                Message
+            </th>
+        </tr>
+        ||content||
+        <tr>
+            <td colspan="4" class="forum_posts_lastrow">
+                ||postspage||
+            </td>
+        </tr>
+    </table>
+||forum_template

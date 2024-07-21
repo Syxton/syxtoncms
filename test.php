@@ -49,10 +49,17 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
 	echo clean_var_opt("0", "float", false) === 0.0 ? "PASS " : "FAIL ";
 	echo clean_var_opt(1, "float", false) === 1.0 ? "PASS " : "FAIL ";
 	echo clean_var_opt(0, "float", false) === 0.0 ? "PASS " : "FAIL ";
+	echo clean_var_opt(".0", "float", false) === 0.0 ? "PASS " : "FAIL ";
 	echo clean_var_opt("1.0", "float", false) === 1.0 ? "PASS " : "FAIL ";
-	echo clean_var_opt("0.0", "float", false) === 0.0 ? "PASS " : "FAIL ";
+	echo clean_var_opt("0.1", "float", false) === 0.1 ? "PASS " : "FAIL ";
+	echo clean_var_opt("01.1", "float", false) === 1.1 ? "PASS " : "FAIL ";
+	echo clean_var_opt(".1", "float", false) === 0.1 ? "PASS " : "FAIL ";
 	echo clean_var_opt(1.0, "float", false) === 1.0 ? "PASS " : "FAIL ";
 	echo clean_var_opt(0.0, "float", false) === 0.0 ? "PASS " : "FAIL ";
+	echo clean_var_opt(.0, "float", false) === 0.0 ? "PASS " : "FAIL ";
+	echo clean_var_opt(0.1, "float", false) === 0.1 ? "PASS " : "FAIL ";
+	echo clean_var_opt(01.1, "float", false) === 1.1 ? "PASS " : "FAIL ";
+	echo clean_var_opt(.1, "float", false) === 0.1 ? "PASS " : "FAIL ";
 	echo clean_var_opt(NULL, "float", "default") === "default" ? "PASS " : "FAIL ";
 	echo clean_var_opt('', "float", "default") === "default" ? "PASS " : "FAIL ";
 	echo "<h3>Clean STRING Test</h3>";

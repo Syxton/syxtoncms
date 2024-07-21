@@ -45,15 +45,37 @@ global $CFG, $USER;
                 $hidebuttons = $htmlonly ? true : false;
                 if (user_is_able($USER->userid, "viewcomments", $pageid, "html", $row['htmlid'])) {
                     $comments = get_html_comments($row['htmlid'], $pageid, $hidebuttons, $limit);
+                    $comments = '
+                        <div class="html_comment_button_box">
+                            <button id="html_' . $featureid . '_comments_button" title="Show Comments" onclick="$(\'#comment_area_' . $featureid . ', #html_' . $featureid . '_comments_button, #html_' . $featureid . '_hide_button\').toggle();" class="alike html_comment_button">
+                                ' . icon([
+                                    ["icon" => "comment", "stacksize" => 2, "color" => "#7676cf"],
+                                    ["icon" => "eye", "color" => "white", "transform" => "shrink-8.5 left-1 up-.5"],
+                                ]) . '
+                            </button>
+                            <button id="html_' . $featureid . '_hide_button" title="Hide Comments" onclick="$(\'#comment_area_' . $featureid . ', #html_' . $featureid . '_comments_button, #html_' . $featureid . '_hide_button\').toggle();" class="alike html_comment_button" style="display:none;">
+                                ' . icon([
+                                    ["icon" => "comment", "stacksize" => 2, "color" => "#7676cf"],
+                                    ["icon" => "eye-slash", "color" => "white", "transform" => "shrink-8.5 left-2 up-.5"],
+                                ]) . '
+                            </button>
+                        </div>
+                        <div id="comment_area_' . $featureid . '" class="html_comments_area" style="display:none;">
+                            ' . $comments . '
+                        </div>';
                 }
 
                 if (user_is_able($USER->userid, "makecomments", $pageid, "html", $row['htmlid'])) {
                     $params = [
-                        "title" => "Comment",
+                        "title" => "Make Comment",
                         "path" => action_path("html") . "commentform&htmlid=" . $row['htmlid'],
                         "refresh" => "true",
+                        "icon" => icon("comment-medical", 2),
                     ];
-                    $makecomment = '<div class="html_makecomment">' . make_modal_links($params) . '</div>';
+                    $makecomment = '
+                        <div class="html_makecomment">
+                            ' . make_modal_links($params) . '
+                        </div>';
                 }
             }
 
@@ -62,9 +84,10 @@ global $CFG, $USER;
                 $nomargin = 'style="margin:-8px;"';
             }
 
-            $html = '<div class="htmlblock" ' . $nomargin . '>
-                        ' . fullscreen_toggle(filter($row['html'], $featureid, $settings, $area), $featureid, $settings) . '
-                    </div>';
+            $html = '
+                <div class="htmlblock" ' . $nomargin . '>
+                    ' . fullscreen_toggle(filter($row['html'], $featureid, $settings, $area), $featureid, $settings) . '
+                </div>';
 
                 // If viewing from rss feed
             if ($htmlonly) {
@@ -111,7 +134,7 @@ global $CFG, $USER;
                 $buttons = get_button_layout("html", $row['htmlid'], $pageid);
                 $title = $settings->html->$featureid->feature_title->setting;
                 $title = '<span class="box_title_text">' . $title . '</span>';
-                $returnme .= get_css_box($rss . $title, $html . $comments . $makecomment, $buttons, null, 'html', $featureid, false, false, false, false, false, false);
+                $returnme .= get_css_box($rss . $title, $makecomment . $html . $comments, $buttons, null, 'html', $featureid, false, false, false, false, false, false);
             }
         }
     }
@@ -491,7 +514,7 @@ function gather_comments($htmlid, $pagenum, $perpage, $collection = [], $totalco
 
 function get_html_comments($htmlid, $pageid, $hidebuttons = false, $perpage = false, $pagenum = false, $hide = true) {
 global $CFG, $USER;
-    $returnme = $commenttext = $prev = $info = $next = $header = $arrows = $limit = "";
+    $returnme = $commenttext = $prev = $info = $next = $header = $pagenav = $limit = "";
 
     $pagenum = $pagenum ?: 0;
     $perpage = $perpage ?: 0;
@@ -501,18 +524,69 @@ global $CFG, $USER;
     if ($perpage) {
         $total = get_db_count("SELECT * FROM html_comments WHERE htmlid = '$htmlid'");
         $searchvars = get_search_page_variables($total, $perpage, $pagenum);
-        $prev = $searchvars["prev"] ? '<a href="javascript: $(\'#loading_overlay_html_' . $htmlid . '\').show(); ajaxapi_old(\'/features/html/html_ajax.php\',\'commentspage\',\'&pagenum=' . ($pagenum - 1) . '&perpage=' . $perpage . '&pageid=' . $pageid . '&htmlid=' . $htmlid . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer_html_' . $htmlid . '\'); $(\'#loading_overlay_html_' . $htmlid . '\').hide(); }}, true); " onmouseup="this.blur()">Previous</a>' : "";
-          $info = $searchvars["info"];
-          $next = $searchvars["next"] ? '<a href="javascript: $(\'#loading_overlay_html_' . $htmlid . '\').show(); ajaxapi_old(\'/features/html/html_ajax.php\',\'commentspage\',\'&pagenum=' . ($pagenum + 1) . '&perpage=' . $perpage . '&pageid=' . $pageid . '&htmlid=' . $htmlid . '\',function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer_html_' . $htmlid . '\'); $(\'#loading_overlay_html_' . $htmlid . '\').hide(); }}, true);" onmouseup="this.blur()">Next</a>' : "";
-          $arrows = '<table style="width:100%;"><tr><td style="width:25%;text-align:left;">' . $prev . '</td><td style="width:50%;text-align:center;color:green;">' . $info . '</td><td style="width:25%;text-align:right;">' . $next . '</td></tr></table><br /><br />';
+
+        if ($searchvars["prev"]) {
+            ajaxapi([
+                "id" => "prev_commentpage_html_$htmlid",
+                "url" => "/features/html/html_ajax.php",
+                "data" => [
+                    "action" => "commentspage",
+                    "pagenum" => $pagenum - 1,
+                    "perpage" => $perpage,
+                    "pageid" => $pageid,
+                    "htmlid" => $htmlid,
+                ],
+                "display" => "searchcontainer_html_$htmlid",
+                "loading" => "loading_overlay_html_$htmlid",
+            ]);
+            $prev = '
+                <button id="prev_commentpage_html_' . $htmlid . '" class="alike">
+                    ' . icon("circle-chevron-left", 2) . '
+                </button>';
+        }
+        $info = $searchvars["info"];
+
+        if ($searchvars["next"]) {
+            ajaxapi([
+                "id" => "next_commentpage_html_$htmlid",
+                "url" => "/features/html/html_ajax.php",
+                "data" => [
+                    "action" => "commentspage",
+                    "pagenum" => $pagenum + 1,
+                    "perpage" => $perpage,
+                    "pageid" => $pageid,
+                    "htmlid" => $htmlid,
+                ],
+                "display" => "searchcontainer_html_$htmlid",
+                "loading" => "loading_overlay_html_$htmlid",
+            ]);
+            $next = '
+                <button id="next_commentpage_html_' . $htmlid . '" class="alike">
+                    ' . icon("circle-chevron-right", 2) . '
+                </button>';
+        }
+
+        $pagenav = '
+            <table style="width:100%;">
+                <tr>
+                    <td style="width:25%;text-align:left;">
+                        ' . $prev . '
+                    </td>
+                    <td style="width:50%;text-align:center;color:green;">
+                        ' . $info . '
+                    </td>
+                    <td style="width:25%;text-align:right;">
+                        ' . $next . '
+                    </td>
+                </tr>
+            </table>
+            <br /><br />';
         $limit = "LIMIT " .$searchvars["firstonpage"] . "," . $perpage;
     } else {
         $limit = "LIMIT $perpage";
     }
 
     if ($comments["collection"]) {
-        $header = '<button class="smallbutton" id="html_' . $htmlid . '_hide_button" onclick="$(\'#html_' . $htmlid . '_comments_button, #html_' . $htmlid . '_comments\').toggle();">Hide Comments</button><br />';
-
         foreach ($comments["collection"] as $row) {
             $username = !$row['userid'] ? "Visitor" : get_user_name($row['userid']);
 
@@ -537,20 +611,16 @@ global $CFG, $USER;
 
         // Don't make the overlay div over and over'
         if ($original) {
-            $returnme = make_search_box($arrows . $commenttext, "html_$htmlid");
+            $returnme = make_search_box($pagenav . $commenttext, "html_$htmlid");
         } else {
-            $returnme = $arrows . $commenttext;
+            $returnme = $pagenav . $commenttext;
         }
 
         if ($hide) {
-            $returnme = '<div class="centered">
-                            <button id="html_' . $htmlid . '_comments_button" class="smallbutton" onclick="$(\'#html_' . $htmlid . '_comments_button, #html_' . $htmlid . '_comments\').toggle();">
-                                  Show Comments
-                            </button>
-                            <div id="html_' . $htmlid . '_comments" style="display:none;">
-                                ' . $header . $returnme . '
-                            </div>
-                        </div>';
+            $returnme = '
+                <div id="html_' . $htmlid . '_comments">
+                    ' . $returnme . '
+                </div>';
         }
     }
     return $returnme;
@@ -564,12 +634,19 @@ global $CFG, $USER, $PAGE;
     $deletecomment = $editcomment = $makereply = false;
     // DELETE BUTTON.
     if ($caneditowncomment || user_is_able($USER->userid, "deletecomments", $pageid)) {
-        $deletecomment = make_modal_links([
-            "title" => "Delete Comment",
-            "path" => action_path("html") . "deletecomment&commentid=" . $params["comment"]['commentid'],
-            "refresh" => "true",
-            "image" => $CFG->wwwroot . "/images/delete.png",
+        ajaxapi([
+            "id" => "delete_comment_" . $params["comment"]['commentid'],
+            "if" => "confirm('Are you sure you want to delete this comment?')",
+            "url" => "/features/html/html_ajax.php",
+            "data" => [
+                "action" => "deletecomment",
+                "commentid" => $params["comment"]['commentid'],
+                "pageid" => $pageid,
+            ],
+            "display" => "comment_area",
         ]);
+
+        $deletecomment = '<button id="delete_comment_' . $params["comment"]['commentid'] . '" class="alike">' . icon("trash") . '</button>';
     }
 
     // EDIT BUTTON.

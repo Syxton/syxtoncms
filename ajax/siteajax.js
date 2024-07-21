@@ -621,7 +621,7 @@ function checkPassword(x, y, f, alertsoff) {
     }
 }
 
-//Minor usage functions
+// Minor usage functions
 function update_alerts(addalert = 0) {
     var alerts = $("#alerts").val();
     if (addalert === 1) { // add an alert

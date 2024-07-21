@@ -253,6 +253,7 @@ forgot_password_validation_template||
 
 user_alerts_template||
   <div id="user_alerts_div">
+	<h2 style="text-align: center">User Alerts</h2>
 	||alerts||
   </div>
 ||user_alerts_template

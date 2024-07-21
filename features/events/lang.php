@@ -6,7 +6,7 @@
 * Date: 5/14/2024
 * Revision: 0.0.4
 ***************************************************************************/
- 
+
 unset($HELP);
 unset($ERRORS);
 
@@ -38,6 +38,7 @@ $ERRORS->valid_request_date_later = "Must be a date later than the first date ch
 $ERRORS->valid_request_date_used = "Sorry, This date is already reserved.";
 $ERRORS->valid_request_description = "A description is required.  Please be thorough.";
 $ERRORS->invalid_old_request = "Event request is either invalid or voting has finished.";
+$ERRORS->failed_confirm = "Event confirmation status could not be changed.";
 
 //EVENT CREATION FORM
 $HELP->input_event_name = "Please enter the name of your event.";

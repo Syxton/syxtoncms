@@ -88,7 +88,7 @@ function edithtml() {
             $returnme .= fill_template("tmp/html.template", "edit_form", "html", $params);
 
             // While editing, keep updating the edit_time field with the current time repeating every 5 seconds.
-            $checkscript = ajaxapi([
+            $returnme .= ajaxapi([
                 'url'  => '/features/html/html_ajax.php',
                 'data' => [
                     'action' => 'still_editing',
@@ -97,9 +97,7 @@ function edithtml() {
                 ],
                 "intervalid" => "html_$htmlid",
                 "interval" => 5000,
-            ], 'code');
-
-            $returnme .= js_code_wrap($checkscript);
+            ], "script");
         } else {
             $returnme .= '
                 <div style="width:100%;text-align:center;">
@@ -114,34 +112,6 @@ function edithtml() {
         $error = $e->getMessage();
     }
     ajax_return($returnme, $error);
-}
-
-function deletecomment() {
-    global $CFG, $MYVARS, $USER;
-    $pageid    = clean_myvar_opt('pageid', 'int', get_pageid());
-    $commentid = dbescape($MYVARS->GET['commentid']);
-    $comment   = get_db_row("SELECT * FROM html_comments WHERE commentid='$commentid'");
-
-    if (!(user_is_able($USER->userid, 'deletecomments', $pageid) || ($USER->userid === $userid && user_is_able($USER->userid, 'makecomments', $pageid)))) {
-        trigger_error(error_string('generic_permissions'), E_USER_WARNING);
-
-        return;
-    }
-
-    echo '
-    <table style="width:80%;margin-left: auto; margin-right: auto;">
-        <tr>
-            <td style="text-align:center;">
-                Are you sure you want to delete this comment?
-            </td>
-        </tr>
-        <tr>
-            <td style="text-align:center;">
-                <input type="button" value="Yes" onclick="ajaxapi_old(\'/features/html/html_ajax.php\',\'deletecomment\',\'&amp;commentid=' . $commentid . '&amp;pageid=' . $pageid . '\',function() { if (xmlHttp.readyState == 4) { close_modal(); } });" />
-            </td>
-        </tr>
-    </table>
-    ';
 }
 
 function can_edit_comment($comment) {

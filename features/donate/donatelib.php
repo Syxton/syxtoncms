@@ -42,7 +42,7 @@ global $CFG, $USER;
                                             <tr>
                                                 <td>
                                                     <br /><br />
-                                                    <div class="htmlblock">
+                                                    <div class="donationblock">
                                                     ' . get_donation_results($row["id"]) . '
                                                     </div>
                                                 </td>
@@ -52,7 +52,7 @@ global $CFG, $USER;
                 $buttons = get_button_layout("donate", $featureid, $pageid);
                 $title = $settings->donate->$featureid->feature_title->setting;
                 $title = '<span class="box_title_text">' . $title . '</span>';
-                $returnme .= get_css_box($title, '<div class="htmlblock">' . donation_form($featureid, $settings) . '</div>', $buttons, null, 'donate', $featureid, false, false, false, false, false, false);
+                $returnme .= get_css_box($title, '<div class="donationblock">' . donation_form($featureid, $settings) . '</div>', $buttons, null, 'donate', $featureid, false, false, false, false, false, false);
             }
         }
     }

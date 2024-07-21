@@ -6,6 +6,7 @@
  * Date: 6/07/2016
  * Revision: 1.0.2
  ***************************************************************************/
+
 if (!isset($CFG)) {
     include_once('config.php');
 }
@@ -42,7 +43,7 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
 
     $PAGE->title   = $CFG->sitename . " - " . $currentpage["name"]; // Title of page
     $PAGE->name   = $currentpage["name"]; // Title of page
-    $PAGE->description = $currentpage["description"]; // Descriptoin of page
+    $PAGE->description = $currentpage["description"]; // Description of page
     $PAGE->themeid = get_page_themeid($pageid);
 
     //Use this page only to keep session and cookies refreshed (during forms)
@@ -74,7 +75,7 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
         $ABILITIES = user_abilities($USER->userid, $PAGE->id);
         if (empty($ABILITIES->viewpages->allow)) {
             if ($currentpage["opendoorpolicy"] == "0") {
-				set_pageid($CFG->SITEID);
+                set_pageid($CFG->SITEID);
             }
         }
     } else {
@@ -93,7 +94,6 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
         "sidecontents" => get_page_contents($PAGE->id, 'side'),
         "middlecontents" => get_page_contents($PAGE->id, 'middle'),
     ];
-
     echo fill_template("tmp/index.template", "mainlayout_template", false, $params);
 
     // End Page

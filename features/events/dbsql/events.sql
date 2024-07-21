@@ -4,6 +4,20 @@ get_event||
     WHERE eventid = ||eventid||
 ||get_event
 
+get_verified_event_registrations||
+    SELECT *
+    FROM events_registrations
+    WHERE eventid = ||eventid||
+    AND verified = 1
+||get_verified_event_registrations
+
+get_pending_event_registrations||
+    SELECT *
+    FROM events_registrations
+    WHERE eventid = ||eventid||
+    AND verified = 0
+||get_pending_event_registrations
+
 update_reg_event||
     UPDATE events_registrations_values
     SET eventid = ||eventid||
@@ -307,6 +321,81 @@ events_search||
     )
     ORDER BY event_begin_date DESC
 ||events_search
+
+confirmable_events||
+    SELECT *
+    FROM events e
+    WHERE confirmed = 3
+    AND ||time|| < e.event_end_date
+    AND (   (e.pageid != ||pageid|| AND siteviewable = 1)
+            OR
+            (e.pageid = ||pageid||)
+    )
+    ORDER BY e.event_begin_date, e.event_begin_time
+||confirmable_events
+
+editable_events||
+    SELECT *
+    FROM events e
+    WHERE ((||time|| - 86400) < e.event_end_date)
+    AND (e.pageid = ||pageid|| ||siteviewable||)
+    ORDER BY e.event_begin_date, e.event_begin_time
+||editable_events
+
+open_enrollable_events||
+    SELECT *
+    FROM events e
+    WHERE (e.pageid = ||pageid|| ||siteviewable||)
+    AND e.start_reg < ||time||
+    AND e.stop_reg > (||time|| - 86400)
+    AND (   e.max_users = 0
+            OR (    e.max_users != 0
+                    AND e.max_users > (
+                                        SELECT COUNT(*)
+                                        FROM events_registrations er
+                                        WHERE er.eventid = e.eventid
+                                        AND verified = 1
+                    )
+            )
+    )
+    ORDER BY e.event_begin_date, e.event_begin_time
+||open_enrollable_events
+
+upcoming_events||
+    SELECT *
+    FROM events e
+    WHERE (e.pageid = ||pageid|| ||siteviewable||)
+    AND e.event_begin_date < ||totime||
+    AND e.event_begin_date > ||fromtime||
+    ORDER BY e.event_begin_date, e.event_begin_time
+||upcoming_events
+
+current_events||
+    SELECT *
+    FROM events e
+    WHERE (e.pageid = ||pageid|| ||siteviewable||)
+    AND (
+            (
+                ((e.event_begin_date + 86400) - ||time||) < 86400
+                AND ((e.event_begin_date + 86400) - ||time||) > 0
+            )
+            OR
+            (
+                ||time|| > e.event_begin_date
+                AND ||time|| < e.event_end_date
+            )
+    )
+    ORDER BY e.event_begin_date, e.event_begin_time
+||current_events
+
+recent_events||
+    SELECT *
+    FROM events e
+    WHERE (e.pageid = ||pageid|| ||siteviewable||)
+    AND (e.event_end_date + ||to_day||) > ||time||
+    AND e.event_end_date < ||time||
+    ORDER BY e.event_begin_date DESC, e.event_begin_time DESC
+||recent_events
 
 templates_search||
     SELECT *

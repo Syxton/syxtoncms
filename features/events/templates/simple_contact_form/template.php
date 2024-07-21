@@ -74,7 +74,7 @@ echo '  <!DOCTYPE HTML>
 
 // Somebody please tell me why I MUST HAVE THE &nbsp; before the form to make it show up?
 echo '<form class="event_template_form" name="form1" id="form1">
-			<div id="camp">
+			<div id="form1_display" style="padding:20px;">
 				<fieldset class="formContainer">
 						<input type="hidden" name="eventid" value="' . $eventid . '" />
 						<input type="hidden" name="paid" value="0" />
@@ -249,6 +249,19 @@ if ($event['fee_full']) {
     ' . keepalive() . '
 </form>
 ';
+
+ajaxapi([
+    "id" => "submit_simple_contact_form_registration",
+    "url" => "/features/events/templates/simple_contact_form/backend.php",
+    "data" => [
+        "action" => "register",
+    ],
+    "reqstring" => "form1",
+    "display" => "registration_div",
+    "before" => "$('#form1').hide();",
+    "ondone" => "$('#form1_display').html(''); $('#form1').show();",
+    "event" => "none",
+]);
 
 // Finalize and activate validation code.
 echo create_validation_script("form1" , "submit_simple_contact_form_registration()");

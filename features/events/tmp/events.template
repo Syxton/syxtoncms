@@ -198,7 +198,7 @@ eventsearchrows||
         </td>
         ||canexport{{
             <td style="text-align:center;">
-                <button id="export_registrations_||event[eventid]||" class="alike" title="Export ||regcount||/||limit|| Registrations">
+                <button onclick="export_event_registrations(||event[eventid]||,||event[pageid]||);" class="alike" title="Export ||regcount||/||limit|| Registrations">
                     ||echo icon([["icon" => "file-csv", "style" => "font-size: 1.3em"]]);::none||
                 </button>
             </td>
@@ -236,6 +236,9 @@ templatesearchresults||
                 Type
             </th>
             <th>
+                Version
+            </th>
+            <th>
                 Settings
             </th>
             <th style="width: 10%;text-align:center;">
@@ -253,6 +256,9 @@ templatesearchrow||
         </td>
         <td style="width:20%;padding:5px;text-align:center;">
             ||type||
+        </td>
+        <td style="text-align:center;padding:5px;">
+            ||*version||
         </td>
         <td style="text-align:center;padding:5px;">
             ||issettings{{
@@ -361,3 +367,97 @@ copy_registration_info_form||
         </table>
     </form>
 ||copy_registration_info_form
+
+event_request_form||
+    <div class="formDiv" id="request_form_div">
+        <p align="center">
+            <strong><font size="+1">Event Request Form</font></strong>
+        </p>
+        <br />
+        ||request_text||
+        <br />
+        If you would like to have your event hosted at ||location|| please fill out the below form and we will get back to you.
+        <br /><br /><br />
+        <form name="request_form" id="request_form">
+            <input type="hidden" id="featureid" name="featureid" value="||featureid||" />
+            <fieldset class="formContainer">
+                    <div class="rowContainer">
+                    <label for="name">Contact Name</label>
+                    <input type="text" id="name" name="name" data-rule-required="true" data-msg-required="||echo error_string('valid_request_name:events');::none||" />
+                    <div class="tooltipContainer info">||echo get_help("input_request_name:events");::none||</div>
+                    <br />
+                </div>
+                <div class="rowContainer">
+                    <label for="email">Email Address</label>
+                    <input type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-msg-required="||echo error_string('valid_request_email:events');::none||" data-msg-email="||echo error_string('valid_request_email_invalid:events');::none||" />
+                    <div class="tooltipContainer info">||echo get_help("input_request_email:events");::none||</div>
+                    <br />
+                </div>
+                <div class="rowContainer">
+                    <label for="phone">Phone</label>
+                    <input type="text" id="phone" name="phone" data-rule-required="true"  data-rule-phone="true" data-msg-required="||echo error_string('valid_request_phone:events');::none||" data-msg-phone="||echo error_string('valid_request_phone_invalid:events');::none||" />
+                    <div class="tooltipContainer info">||echo get_help("input_request_phone:events");::none||</div>
+                    <br />
+                </div>
+                <div class="rowContainer">
+                    <label for="event_name">Event Name</label>
+                    <input type="text" id="event_name" name="event_name" data-rule-required="true" data-msg-required="||echo error_string('valid_request_event_name:events');::none||" />
+                    <div class="tooltipContainer info">||echo get_help("input_request_event_name:events");::none||</div>
+                    <br />
+                </div>
+                <div class="rowContainer">
+                    <label for="startdate">Event Start Date</label>
+                    <input type="text" id="startdate" name="startdate" data-rule-required="true" data-rule-date="true" data-rule-futuredate="true" date-rule-ajax1="features/events/events_ajax.php::request_date_open::&featureid=||featureid||&startdate=::true" data-msg-ajax1="||echo error_string('valid_request_date_used:events');::none||" data-msg-futuredate="||echo error_string('valid_request_date_future:events');::none||" />
+                    <div class="tooltipContainer info">||echo get_help("input_request_startdate:events");::none||</div>
+                </div>
+                <div class="rowContainer">
+                    <label>&nbsp;</label><span style="font-size:.8em;">through</span>
+                </div>
+                <div class="rowContainer">
+                    <label for="enddate">Event End Date</label>
+                    <input type="text" id="enddate" name="enddate" data-rule-date="true" data-rule-futuredate="#startdate" data-rule-ajax1="features/events/events_ajax.php::request_date_open::&featureid=||featureid||&startdate=#startdate&enddate=::true" data-msg-ajax1="||echo error_string('valid_request_date_used:events');::none||" data-msg-futuredate="||echo error_string('valid_request_date_later:events');::none||" />
+                    <div class="tooltipContainer info">||echo get_help("input_request_enddate:events");::none||</div>
+                </div>
+                    <div class="rowContainer">
+                    <label for="participants"># of participants</label>
+                    <input type="text" id="participants" name="participants" data-rule-required="true" data-rule-number="true" />
+                    <div class="tooltipContainer info">||echo get_help("input_request_participants:events");::none||</div>
+                </div>
+                <div class="rowContainer">
+                    <label for="description">Event Description</label>
+                    <textarea rows="10" id="description" name="description" data-rule-required="true" data-msg-required="||echo error_string('valid_request_description:events');::none||"></textarea>
+                    <div class="tooltipContainer info">||echo get_help("input_request_description:events");::none||</div>
+                    <br />
+                </div>
+                <input class="submit" name="submit" type="submit" value="Submit" />
+            </fieldset>
+        </form>
+    </div>
+    ||validation||
+||event_request_form
+
+eventslist||
+    <div class="eventslist_container">
+        <span class="eventslist" id="||containername||">
+            ||info||
+            <span>
+            ||foreach (buttons as $b) { echo $b; }::buttons||
+            </span>
+        </span>
+        <div class="extrainfo">
+            ||*extrainfo||
+        </div>
+    </div>
+||eventslist
+
+eventtype||
+    <div class="eventtype">
+        <div class="eventtype_title">
+            ||title||
+        </div>
+        <hr />
+        <div class="eventtype_list">
+            ||eventslist||
+        </div>
+    </div>
+||eventtype

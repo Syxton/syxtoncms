@@ -98,8 +98,7 @@ editor_box_template||
             filemanager_title: "File Manager" ,
             external_plugins: { "filemanager" : "' . vars["wwwroot"] . '/scripts/tinymce/plugins/filemanager/plugin.min.js"}
         });
-    });
-    ', "defer", true);::vars||
+    });');::vars||
 ||editor_box_template
 
 defer_script||
@@ -107,7 +106,7 @@ defer_script||
     if (window.jQuery) {
         method();
     } else {
-        setTimeout(function() { defer(method) }, 50);
+        setTimeout(function() { defer(method) }, 10);
     }
   }
 ||defer_script
@@ -236,8 +235,46 @@ keepalive_template||
     <iframe style="display:none;" src="||wwwroot||/index.php?keepalive=true"></iframe>
 ||keepalive_template
 
+user_alerts_group||
+    <div class="alertgroup">
+        <div class="alerttitle">
+            ||title||
+        </div>
+        ||alerts_rows||
+    </div>
+||user_alerts_group
+
+user_alerts_row||
+    <div class="alertrows">
+        <div class="alertquestion">
+            ||question||
+        </div>
+        <span>
+            ||buttons||
+        </span>
+    </div>
+||user_alerts_row
+
 get_user_alerts_template||
     <span class="centered_span">
         There are no more alerts for you at this time.
     </span>
 ||get_user_alerts_template
+
+validation_tooltip_actions||
+    $.validator.setDefaults({done: 'valid'});
+	$('#||formname||').validate({
+		meta: 'validate',
+		submitHandler: function() {
+		    ||code||
+		},
+		ignore: '.calendarDateInput'
+	});
+
+    $('.formContainer textarea, .formContainer select, .formContainer input[type=text],[type=email],[type=password],[type=search],[type=url],[type=checkbox]').focus(function() {
+        $(this).parent().find('label.error').css('visibility', 'visible');
+        $(this).parent().find('.info').css('visibility', 'visible')
+    }).blur(function() {
+        $(this).parent().find('.info').css('visibility', 'hidden');
+    });
+||validation_tooltip_actions

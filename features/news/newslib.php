@@ -245,7 +245,7 @@ global $CFG;
         ];
         $articleselector = make_select($params);
 
-        $params = [
+        $showarticle = make_modal_links([
             "title" => "Get News",
             "text" => "Get News",
             "id" => "fetch_" . $featureid . "_button",
@@ -253,8 +253,7 @@ global $CFG;
             "path" => action_path("news") . "viewnews&newsonly=1&pageid=$pageid&newsid=' + $('#news_" . $featureid . "_archive_news').val() + '&featureid=$featureid",
             "width" => "98%",
             "image" => $CFG->wwwroot . "/images/magnifying_glass.png",
-        ];
-        $showarticle = make_modal_links($params);
+        ]);
 
         $returnme .= '
             <div class="news_archive_wrapper">

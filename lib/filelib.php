@@ -758,13 +758,7 @@ function js_code_wrap($code, $loadtype = '', $waitforjquery = false, $id = '', $
     $defer_close = $waitforjquery ? '}); });' : '';
 
     // Return the JavaScript code wrapped in a <script> tag.
-    return <<<EOT
-    <script id="$id" class="$class" type="text/javascript" $loadtype >
-        $defer_open
-        $code
-        $defer_close
-    </script>
-EOT;
+    return '<script id="' . $id . '" class="' . $class . '" type="text/javascript" ' . $loadtype . '>' . $defer_open . $code . $defer_close . '</script>';
 }
 
 function add_js_to_array($path, $script, &$javascript = []) {
@@ -818,9 +812,6 @@ function build_from_js_library($params) {
     }
     if (array_search("tabs", $params) !== false) { // Tabs.
         add_js_to_array("scripts", "ajaxtabs.js", $javascript);
-    }
-    if (array_search("popupcal", $params) !== false) { // Calendar.
-        add_js_to_array("scripts", "popupcalendar.js", $javascript);
     }
     if (array_search("validate", $params) !== false) { // jQuery validate.
         add_js_to_array("scripts", "jqvalidate.js", $javascript);

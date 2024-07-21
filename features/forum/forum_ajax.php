@@ -49,13 +49,14 @@ function get_forum_posts() {
     $discussionid = clean_myvar_req("discussionid", "int");
     $pagenum = clean_myvar_opt("pagenum", "int", 0);
 
-    $returnme = $error = "";
+    $return = $error = "";
     try {
-        $returnme = get_posts($discussionid, $pagenum);
+        $return = get_posts($discussionid, $pagenum);
     } catch (\Throwable $e) {
+        debugging($e);
         $error = $e->getMessage();
     }
-    ajax_return($returnme, $error);
+    ajax_return($return, $error);
 }
 
 function post() {

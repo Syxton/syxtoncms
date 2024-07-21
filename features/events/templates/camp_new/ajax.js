@@ -1,10 +1,5 @@
 var folder = "camp_new";
 
-function submit_camp_new_registration(){
-    var reqstring = create_request_string('form1');
-    ajaxapi_old("/features/events/templates/" + folder + "/backend.php",'register',reqstring,function(){ simple_display('registration_div'); });
-}
-
 function show_form_again(eventid, regid, autofill){
     var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events.php?action=show_registration&i=!&v=!&total_owed="+$("#total_owed").val()+"&items="+$("#items").val()+"&eventid=" + eventid + "&regid=" + regid + "&show_again=1&autofill=" + autofill;
     window.location=url;
@@ -24,7 +19,7 @@ function updateMessage(){
         message += "and adding https://www.paypal.com/ to your list of trusted sites.";
     }
 
-    if(document.form1.payment_method.selectedIndex == 2) {
+    if (document.form1.payment_method.selectedIndex == 2) {
         $(".costinfo").not(".paywithapp").show();
         $(".paywithapp").hide();
         message = "Make the check or money order out to: Camp Wabashi\n\n";
@@ -33,7 +28,7 @@ function updateMessage(){
         message = message + "Terre Haute, IN 47802";
     }
 
-    if(document.form1.payment_method.selectedIndex == 3) {
+    if (document.form1.payment_method.selectedIndex == 3) {
         $("#campershiprow").show();
         $(".costinfo").hide();
         message = "Please be sure to name the congregation/organization that is funding your campership in the box above.\n\n";
@@ -48,7 +43,7 @@ function updateAge() {
 	var event = datetype("event_begin_date");
 	difference = event.getFullYear() - bday.getFullYear() - 1;
 
-	if(event > bday){
+	if (event > bday){
 		difference++;
 	}
 
@@ -56,7 +51,6 @@ function updateAge() {
 	difference = difference > 110 ? "Yikes!" : difference;
 
 	$("#Camper_Age").val(difference);
-	$("#Camper_Age").focus();$("#Camper_Age").blur();
 }
 
 function updateTotal(){

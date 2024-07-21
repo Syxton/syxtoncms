@@ -53,11 +53,12 @@ global $CFG, $USER, $ROLES, $PAGE, $STYLES;
         "roleonpage" => get_css_box($title, $rolename, $button_layout, NULL, 'pagename'),
         "pagelistblock" => get_css_box('<span class="box_title_text">My Page List</span>', $pagelist, $buttons, null, "pagelist", null, false, $preview),
     ];
+
     return fill_template("tmp/page.template", "role_on_pagelist_template", false, $params);
 }
 
-    function get_pagelist($userid) {
-    global $CFG, $ROLES, $USER;
+function get_pagelist($userid) {
+global $CFG, $ROLES, $USER;
     $roleid = user_role($userid, $CFG->SITEID);
     $returnme = "";
     $SQL = fetch_template("dbsql/pages.sql", "my_pagelist");
@@ -69,15 +70,15 @@ global $CFG, $USER, $ROLES, $PAGE, $STYLES;
 
 function format_pagelist($pageresults) {
 global $CFG, $USER, $PAGE;
-  $returnme = "";
-  if (!empty($pageresults)) {
-		while ($row = fetch_row($pageresults)) {
-      $selected = $PAGE->id == $row['pageid'] ? "selected" : ""; // Preselect page if you are there
-			$options .= fill_template("tmp/page.template", "select_options_template", false, ["value" => $row['pageid'], "display" => $row['name'], "selected" => $selected]);
-		}
-		$returnme = fill_template("tmp/page.template", "format_pagelist_select", false, ["options" => $options]);
-  }
-  return $returnme;
+    $returnme = "";
+    if (!empty($pageresults)) {
+        while ($row = fetch_row($pageresults)) {
+            $selected = $PAGE->id == $row['pageid'] ? "selected" : ""; // Preselect page if you are there
+            $options .= fill_template("tmp/page.template", "select_options_template", false, ["value" => $row['pageid'], "display" => $row['name'], "selected" => $selected]);
+        }
+        $returnme = fill_template("tmp/page.template", "format_pagelist_select", false, ["options" => $options]);
+    }
+    return $returnme;
 }
 
 function get_page_links($pageid, $userid = false) {
