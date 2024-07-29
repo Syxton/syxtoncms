@@ -1,0 +1,83 @@
+news_form||
+    <form id="news_||featureid||_form">
+        <table style="width:100%">
+            <tr>
+                <td style="text-align:right;font-size: 12px;">
+                    News Title:
+                </td>
+                <td style="text-align:left; width:86%;">
+                    <input type="text" id="news_title" size="60" maxlength="60" value="||*title||"/>
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align:right; vertical-align:top;font-size: 12px;">
+                    Summary:
+                </td>
+                <td style="text-align:left; width:86%;">
+                    <textarea id="news_summary" cols="60" rows="2" >||*summary||</textarea>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" style="text-align: center;">
+                    ||editor||
+                    <br />
+                    <input id="" type="submit" value="Save" />
+                </td>
+            </tr>
+        </table>
+    </form>
+||news_form
+
+news_table||
+    <div class="newstable">
+        ||graphic||
+        <div class="article">
+            <div class="title">
+                <strong>
+                    ||title||
+                </strong>
+            </div>
+            <span class="summary">
+                ||summary||
+            </span>
+            <div class="container_head">
+                ||readmore||
+                <div style="float:right">
+                    ||buttons||
+                </div>
+            </div>
+            <div class="news_author">
+                Submitted: ||ago|| by ||author||
+            </div>
+        </div>
+    </div>
+||news_table
+
+news_archive_template||
+    <div class="news_archive_wrapper">
+        <div class="news_archive_label">
+            <strong><span>Archive</span></strong>
+        </div>
+        <div class="field_title">
+            Year:
+            <span style="margin: 0 5px" id="year_span_||featureid||_archive">
+                ||yearselector||
+            </span>
+        </div>
+        <div class="field_title">
+            Month:
+            <span style="margin: 0 5px" id="month_span_||featureid||_archive">
+                ||monthselector||
+            </span>
+        </div>
+        <div class="field_title">
+            Article:
+            <span style="margin: 0 5px" id="article_span_||featureid||_archive">
+                ||articleselector||
+            </span>
+        </div>
+        <div class="field_title">
+            ||showarticle||
+        </div>
+    </div>
+||news_archive_template

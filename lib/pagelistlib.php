@@ -97,6 +97,30 @@ global $CFG, $ROLES, $USER;
 	}
 
 	if ($result = get_db_result($SQL, $params)) {
+            ajaxapi([
+                "id" => "refresh_page_links",
+                "url" => "/ajax/page_ajax.php",
+                "data" => [
+                    "action" => "refresh_page_links",
+                    "pageid" => $pageid,
+                ],
+                "display" => "page_links_div",
+                "event" => "none",
+            ]);
+
+            ajaxapi([
+                "id" => "unlink_page",
+                "paramlist" => "linkpageid",
+                "if" => "confirm('Are you sure you want to unlink this page?')",
+                "url" => "/ajax/page_ajax.php",
+                "data" => [
+                    "action" => "unlink_page",
+                    "linkpageid" => "js||linkpageid||js",
+                    "pageid" => $pageid,
+                ],
+                "event" => "none",
+                "ondone" => "refresh_page_links();",
+            ]);
 		$params = ["wwwroot" => $CFG->wwwroot, "pageid" => $pageid];
 		while ($page = fetch_row($result)) {
 			$params["page"] = $page;

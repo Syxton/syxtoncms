@@ -128,7 +128,8 @@ global $CFG;
             "width" => "600",
             "height" => "650",
         ];
-        $menuitem = '<li>' . make_modal_links($p) . '</li>';
+        $menuitem = fill_template("tmp/page.template", "get_ul_item", false, ["item" =>  make_modal_links($p)]);
+        $menuitem = str_replace(array("\r", "\n"), '', $menuitem);
         $returnme .= js_code_wrap('var item = "' . addslashes($menuitem) . '"; $("#pagenav").append(item);', 'defer', true);
     }
 

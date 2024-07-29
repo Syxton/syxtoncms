@@ -330,7 +330,7 @@ global $CFG, $LOADAJAX;
             if (empty($ondone)) {
                 $ondone = "jq_display($display, data);"; // ondone becomes simple display.
             } else {
-                $ondone = "jq_display($display, data); $ondone";  // prepend display.
+                $ondone = "$.when(jq_display($display, data)).then(function() { $ondone });";  // Prepend display and perform ondone afterwards.
             }
         }
 
@@ -1071,7 +1071,7 @@ global $CFG, $USER, $PAGE;
             "height" => "623",
             "confirmexit" => "true",
         ]);
-        $items .= fill_template("tmp/page.template", "get_members_item", false, ["members_modal" => $members_modal]);
+        $items .= fill_template("tmp/page.template", "get_ul_item", false, ["item" => $members_modal]);
     }
 
     if (!empty($items)) {
@@ -1182,6 +1182,24 @@ global $CFG, $PAGE, $STYLES;
     return $returnme;
 }
 
+function search_template($templateparams) {
+    ajaxapi([
+        "id" => "search_navigate",
+        "paramlist" => "pagenum",
+        "url" => "/ajax/page_ajax.php",
+        "data" => [
+            "action" => $templateparams["searchtype"],
+            "searchwords" => "js||encodeURIComponent('" . $templateparams["searchwords"] . "')||js",
+            "pagenum" => "js||pagenum||js",
+        ],
+        "display" => "searchcontainer_" . $templateparams["searchtype"],
+        "loading" => "loading_overlay_" . $templateparams["searchtype"],
+        "event" => "none",
+    ]);
+
+    return fill_template("tmp/page_ajax.template", "search_template", false, $templateparams);
+}
+
 /**
  * Create a select from an array of objects or database results
  *
@@ -1209,7 +1227,7 @@ function make_select($params) {
         }
 
         if (is_array($params["values"])) {
-            // Standard object.
+            // Array.
             foreach ($params["values"] as $value) {
                 $options = [
                     "value" => $value[$valuename],
@@ -1242,6 +1260,7 @@ function make_select($params) {
                 "selected" => $params["selected"] ?? null,
                 "exclude" => $params["exclude"] ?? null,
                 ];
+
                 $optionsstring .= make_options($options);
             }
         }
@@ -1269,6 +1288,7 @@ function make_options($params) {
     if (isset($params["exclude"])) { // exclude value
         switch (gettype($params["exclude"])) {
             case "string":
+            case "integer":
                 $exclude = $params["exclude"] == $params["value"] ? true : false;
                 break;
             case "array":

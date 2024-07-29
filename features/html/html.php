@@ -131,8 +131,9 @@ function can_edit_comment($comment) {
 
 function commentform() {
     global $CFG, $MYVARS, $USER, $PAGE;
-    $commentid = $MYVARS->GET['commentid'] ?? false;
-    $replytoid = $MYVARS->GET['replytoid'] ?? false;
+    $commentid = clean_myvar_opt('commentid', 'int', false);
+    $replytoid = clean_myvar_opt('replytoid', 'int', false);
+    $htmlid = clean_myvar_opt('htmlid', 'int', false);
 
     $id = false;
     if ($replytoid) {
@@ -141,15 +142,17 @@ function commentform() {
         $id = dbescape($commentid);
     }
 
+    $return = "";
     // An edit or reply.
     if ($id) {
         if ($comment = get_db_row(fetch_template('dbsql/html.sql', 'get_comment_info', 'html'), ['commentid' => $id])) {
+            $pageid = $comment['pageid'];
             $params = [
-                'pageid'    => $comment['pageid'],
+                'pageid'    => $pageid,
                 'comment'   => '',
                 'commentid' => false,
                 'replytoid' => false,
-                'htmlid'    => false,
+                'htmlid'    => $htmlid,
             ];
 
             if ($replytoid) {
@@ -158,8 +161,8 @@ function commentform() {
                     'replytocomment' => htmlentities($comment['comment']),
                     'replytoid'      => $comment['commentid'],
                 ]);
-                if (user_is_able($USER->userid, 'makereplies', $comment['pageid'])) {
-                    echo fill_template('tmp/html.template', 'comment_form_template', 'html', $params);
+                if (user_is_able($USER->userid, 'makereplies', $pageid)) {
+                    $return = fill_template('tmp/html.template', 'comment_form_template', 'html', $params);
                 } else {
                     trigger_error(error_string('no_permission', ['makecomments']), E_USER_WARNING);
                 }
@@ -171,29 +174,27 @@ function commentform() {
                 ]);
                 if (!can_edit_comment($comment)) {
                     trigger_error(error_string('no_permission', ['editing']), E_USER_WARNING);
-
                     return;
                 }
-                echo fill_template('tmp/html.template', 'comment_form_template', 'html', $params);
+                $return = fill_template('tmp/html.template', 'comment_form_template', 'html', $params);
             }
         } else {
             trigger_error(error_string('no_data', ['commentid']), E_USER_WARNING);
-
             return;
         }
     } else { // New Comment.
-        $htmlid = $MYVARS->GET['htmlid'] ?? false;
+        $pageid = $PAGE->id;
         if ($htmlid) {
-            if (user_is_able($USER->userid, 'makecomments', $PAGE->id, 'html', $htmlid)) {
+            if (user_is_able($USER->userid, 'makecomments', $pageid, 'html', $htmlid)) {
                 $params = [
-                    'pageid'    => $PAGE->id,
+                    'pageid'    => $pageid,
                     'comment'   => '',
                     'htmlid'    => $htmlid,
                     'commentid' => false,
                     'replytoid' => false,
                     'title'     => 'Make Comment',
                 ];
-                echo fill_template('tmp/html.template', 'comment_form_template', 'html', $params);
+                $return = fill_template('tmp/html.template', 'comment_form_template', 'html', $params);
             } else {
                 trigger_error(error_string('no_permission', ['makecomments']), E_USER_WARNING);
             }
@@ -201,6 +202,25 @@ function commentform() {
             trigger_error(error_string('no_data', ['htmlid']), E_USER_WARNING);
         }
     }
+
+    ajaxapi([
+        "id" => "comment_form_$htmlid",
+        "if" => "$('#comment').val().length > 0",
+        "url" => "/features/html/html_ajax.php",
+        "data" => [
+            "action" => "comment",
+            "htmlid" => $htmlid,
+            "comment" => "js||encodeURIComponent($('#comment').val())||js",
+            "commentid" => $commentid,
+            "replytoid" => $replytoid,
+            "pageid" => $pageid,
+        ],
+        "event" => "submit",
+        "display" => "comment_area_$htmlid",
+        "ondone" => "close_modal(); if (data.message.length > 0) { $('#html_comment_button_box_$htmlid').show(); } else { $('#html_comment_button_box_$htmlid').hide(); }",
+    ]);
+
+    echo $return;
 }
 
 function viewhtml() {

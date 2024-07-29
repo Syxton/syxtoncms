@@ -120,8 +120,10 @@ global $CFG;
     $buttons = $standalone ? '' : get_button_layout("news", $pagenews->newsid, $pagenews->pageid);
     $user = get_db_row("SELECT * FROM users where userid = " . $pagenews->userid);
     $link = make_modal_links([
+        "text" => "Read Article",
+        "button" => true,
         "title"=> stripslashes(htmlentities($pagenews->title)),
-        "icon" => icon("book-open-reader"),
+        "icon" => icon("book-open-reader", 2),
         "path" => action_path("news") . "viewnews&newsonly=1&pageid=$pageid&newsid=$pagenews->newsid",
         "width" => "98%",
         "height" => "95%",
@@ -138,31 +140,16 @@ global $CFG;
         $graphicdate = $daygraphic;
     }
 
-    $returnme = '
-        <div class="newstable">
-            ' . $graphicdate . '
-            <div class="article">
-                <div class="title">
-                    <strong>
-                    ' . stripslashes($pagenews->title) . '
-                    </strong>
-                </div>
-                <span class="summary">
-                    ' . truncate($pagenews->caption, $captionlength) . '
-                </span>
-                ' . $readmore . '
-                <div class="container_head">
-                    <span>
-                        Submitted: ' . ago($pagenews->submitted) . ' by ' . stripslashes($user['fname']) . ' ' . stripslashes($user['lname']) . '
-                    </span>
-                    <div style="float:right">
-                        ' . $buttons . '
-                    </div>
-                </div>
-            </div>
-        </div>';
-
-    return $returnme;
+    $params = [
+        "graphic" => $graphicdate,
+        "title" => $pagenews->title,
+        "summary" => truncate($pagenews->content, $captionlength),
+        "readmore" => $readmore,
+        "buttons" => $buttons,
+        "ago" => ago($pagenews->submitted),
+        "author" => $user['fname'] . ' ' . $user['lname'],
+    ];
+    return fill_template("tmp/news.template", "news_table", "news", $params);
 }
 
 function get_users_news_pages($userid, $limit="", $site=true) {
@@ -188,52 +175,71 @@ global $CFG;
 
 function get_section_archives($pageid, $featureid, $userid = false, $area = "middle") {
 global $CFG;
-    $lastyear = date('Y', get_timestamp());
     $zero = 0;
-    $returnme = '';
 
     if ($pagenews = get_all_news($userid, $pageid, $featureid)) {
+        // Gather all the data.
         $years = years_with_news($userid, $pagenews);
-        $params = [
+        $months = months_with_news($userid, $years->$zero->year, $pagenews);
+        $lastrow = get_array_count($months) - 1;
+
+        // Update month drop down list on year change.
+        ajaxapi([
+            "id" => "news_" . $featureid . "_archive_year",
+            "url" => "/features/news/news_ajax.php",
+            "data" => [
+                "action" => "update_archive_months",
+                "featureid" => $featureid,
+                "pageid" => $pageid,
+                "year" => "js||$('#news_" . $featureid . "_archive_year').val()||js",
+            ],
+            "event" => "change",
+            "display" => "month_span_" . $featureid . "_archive",
+            "ondone" => "$('#news_" . $featureid . "_archive_month').trigger('change');",
+        ]);
+
+        // Update article drop down list on month change.
+        ajaxapi([
+            "id" => "news_" . $featureid . "_archive_month",
+            "url" => "/features/news/news_ajax.php",
+            "data" => [
+                "action" => "update_archive_articles",
+                "featureid" => $featureid,
+                "pageid" => $pageid,
+                "year" => "js||$('#news_" . $featureid . "_archive_year').val()||js",
+                "month" => "js||$('#news_" . $featureid . "_archive_month').val()||js",
+            ],
+            "event" => "change",
+            "display" => "article_span_" . $featureid . "_archive",
+        ]);
+
+        // Create year drop down.
+        $yearselector = make_select([
             "properties" => [
                 "name" => "news_" . $featureid . "_archive_year",
                 "id" => "news_" . $featureid . "_archive_year",
-                "onchange" => 'ajaxapi_old(\'/features/news/news_ajax.php\',
-                                        \'update_archive_months\',
-                                        \'&year=\' + this.value + \'&pageid=' . $pageid . '&featureid=' . $featureid . '\',
-                                        function() { simple_display(\'month_span_' . $featureid . '_archive\');});
-                                ajaxapi_old(\'/features/news/news_ajax.php\',
-                                        \'update_archive_articles\',
-                                        \'&year=\' + $(\'#news_' . $featureid . '_archive_year\').val() + \'&month=\' + $(\'#news_' . $featureid . '_archive_month\').val() + \'&pageid=' . $pageid . '&featureid=' . $featureid . '\',
-                                        function() { simple_display(\'article_span_' . $featureid . '_archive\'); });',
                 "style" => "font-size:.8em;",
             ],
             "values" => $years,
             "valuename" => "year",
-            "selected" => $lastyear,
-        ];
-        $yearselector = make_select($params);
+            "selected" => date('Y', get_timestamp()),
+        ]);
 
-        $months = months_with_news($userid, $years->$zero->year, $pagenews);
-        $lastrow = get_array_count($months) - 1;
-        $params = [
+        // Create month drop down.
+        $monthselector = make_select([
             "properties" => [
                 "name" => "news_" . $featureid . "_archive_month",
                 "id" => "news_" . $featureid . "_archive_month",
-                "onchange" => 'ajaxapi_old(\'/features/news/news_ajax.php\',
-                                        \'update_archive_articles\',
-                                        \'&year=\' + $(\'#news_' . $featureid . '_archive_year\').val() + \'&month=\' + this.value + \'&pageid=' . $pageid . '&featureid=' . $featureid . '\',
-                                        function() { simple_display(\'article_span_' . $featureid . '_archive\'); });',
                 "style" => "font-size:.8em;",
             ],
             "values" => $months,
             "valuename" => "month",
             "displayname" => "monthname",
             "selected" => $months->$lastrow->month,
-        ];
-        $monthselector = make_select($params);
+        ]);
 
-        $params = [
+        // Create article drop down.
+        $articleselector = make_select([
             "properties" => [
                 "name" => "news_" . $featureid . "_archive_news",
                 "id" => "news_" . $featureid . "_archive_news",
@@ -242,9 +248,9 @@ global $CFG;
             "values" => get_month_news($userid, $years->$zero->year, $months->$lastrow->month, $pagenews),
             "valuename" => "newsid",
             "displayname" => "title",
-        ];
-        $articleselector = make_select($params);
+        ]);
 
+        // Create article button.
         $showarticle = make_modal_links([
             "title" => "Get News",
             "text" => "Get News",
@@ -252,34 +258,19 @@ global $CFG;
             "button" => true,
             "path" => action_path("news") . "viewnews&newsonly=1&pageid=$pageid&newsid=' + $('#news_" . $featureid . "_archive_news').val() + '&featureid=$featureid",
             "width" => "98%",
-            "image" => $CFG->wwwroot . "/images/magnifying_glass.png",
+            "icon" => icon("newspaper"),
         ]);
 
-        $returnme .= '
-            <div class="news_archive_wrapper">
-                <div class="news_archive_label">
-                    <strong><span>Archive</span></strong>
-                </div>
-                <div class="field_title">
-                    Year:
-                    <span style="margin: 0 5px" id="year_span_' . $featureid . '_archive">' . $yearselector . '</span>
-                </div>
-                <div class="field_title">
-                    Month:
-                    <span style="margin: 0 5px" id="month_span_' . $featureid . '_archive">' . $monthselector . '</span>
-                </div>
-                <div class="field_title">
-                    Article:
-                    <span style="margin: 0 5px" id="article_span_' . $featureid . '_archive">' . $articleselector . '</span>
-                </div>
-                <div class="field_title">
-                    ' . $showarticle . '
-                </div>
-            </div>';
-        return $returnme;
-    } else {
-        return "";
+        $params = [
+            "featureid" => $featureid,
+            "yearselector" => $yearselector,
+            "monthselector" => $monthselector,
+            "articleselector" => $articleselector,
+            "showarticle" => $showarticle,
+        ];
+        return fill_template("tmp/news.template", "news_archive_template", "news", $params);
     }
+    return "";
 }
 
 function get_array_count($array, $i = 0) {
@@ -584,7 +575,7 @@ function news_delete($pageid, $featureid = false, $newsid = false) {
 function news_rss($feed, $userid, $userkey) {
 global $CFG;
     $feeds = "";
-    if ($feed["pageid"] == $CFG->SITEID && $userid) { //T his is the site page for people who are members
+    if ($feed["pageid"] == $CFG->SITEID && $userid) { //This is the site page for people who are members
         if ($pages = get_users_news_pages($userid, "LIMIT 50")) {
             if ($pagenews = get_pages_news($pages, "LIMIT 50")) {
                 foreach ($pagenews as $news) {
@@ -633,14 +624,43 @@ function insert_blank_news($pageid) {
 
 function news_buttons($pageid, $featuretype, $featureid) {
 global $CFG, $USER;
-    $returnme = "";
+$return = "";
     if (strstr($featuretype, "_features")) { // Overall news feature.
-        $returnme .= user_is_able($USER->userid, "addnews", $pageid) ? make_modal_links(["title"=> "Add News Item", "path" => action_path("news") . "addeditnews&pageid=$pageid&featureid=$featureid", "iframe" => true, "refresh" => "true", "width" => "850", "height" => "600", "icon" => icon("plus"), "class" => "slide_menu_button"]) : '';
+        $return .= user_is_able($USER->userid, "addnews", $pageid) ? make_modal_links(["title"=> "Add News Item", "path" => action_path("news") . "addeditnews&pageid=$pageid&featureid=$featureid", "iframe" => true, "refresh" => "true", "width" => "850", "height" => "600", "icon" => icon("plus"), "class" => "slide_menu_button"]) : '';
     } else { // Individual news item.
-        $returnme .= user_is_able($USER->userid, "editnews", $pageid) ? make_modal_links(["title"=> "Edit News Item", "path" => action_path("news") . "addeditnews&pageid=$pageid&newsid=$featureid", "iframe" => true, "refresh" => "true", "width" => "850", "height" => "600", "icon" => icon("pencil"), "class" => "slide_menu_button"]) : '';
-        $returnme .= user_is_able($USER->userid, "deletenews", $pageid) ? '<button class="slide_menu_button alike" title="Delete News Item" onclick="if (confirm(\'Are you sure you want to delete this?\')) { ajaxapi_old(\'/ajax/site_ajax.php\',\'delete_feature\',\'&pageid=' . $pageid . '&featuretype=' . $featuretype . '&subid=' . $featureid . '\',function() { go_to_page(' . $pageid . ');});}">' . icon("trash") . '</button>' : '';
+        if (user_is_able($USER->userid, "editnews", $pageid)) {
+            $return .= make_modal_links([
+                "title"=> "Edit News Item",
+                "path" => action_path("news") . "addeditnews&pageid=$pageid&newsid=$featureid",
+                "iframe" => true,
+                "refresh" => "true",
+                "width" => "850",
+                "height" => "600",
+                "icon" => icon("pencil"), "class" => "slide_menu_button",
+            ]);
+        }
+
+        if (user_is_able($USER->userid, "deletenews", $pageid)) {
+            ajaxapi([
+                "id" => "delete_news_" . $featureid . "_article",
+                "if" => "confirm('Are you sure you want to delete this?')",
+                "url" => "/ajax/site_ajax.php",
+                "data" => [
+                    "action" => "delete_feature",
+                    "subid" => $featureid,
+                    "pageid" => $pageid,
+                    "featuretype" => $featuretype,
+                    "month" => "js||$('#news_" . $featureid . "_archive_month').val()||js",
+                ],
+                "ondone" => "go_to_page(' . $pageid . ');",
+            ]);
+            $return .= '
+                <button id="delete_news_' . $featureid . '_article" class="slide_menu_button alike" title="Delete News Item">
+                    ' . icon("trash") . '
+                </button>';
+        }
     }
-    return $returnme;
+    return $return;
 }
 
 function news_default_settings($type, $pageid, $featureid) {

@@ -1,0 +1,49 @@
+add_pics_form||
+    <form id="pics_form" method="post" action="||wwwroot||/features/pics/pics_ajax.php" enctype="multipart/form-data">
+        <input type="hidden" name="action" value="pics_upload" />
+        <input type="hidden" name="featureid" value="||featureid||" />
+        <input type="hidden" name="pageid" value="||pageid||" />
+        <p>
+            Click the browse button to choose the images you would like to upload.  You can add as many as you would like.  The images will not be uploaded to the server until you click the Upload File button.
+        </p>
+        <table class="dotted" style="width:100%;>
+            <tr>
+                <td>
+                    <strong>Gallery</strong><br /><br />
+                    <table style="width:100%;">
+                        <tr style="' . $hide_select . '">
+                            <td class="field_title">
+                                New Gallery:
+                            </td>
+                            <td class="field_input">
+                                <select id="new_gallery" name="new_gallery">
+                                    <option value="1">Yes</option>
+                                    <option value="0">No</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="field_title">
+                                Gallery Name:
+                            </td>
+                            <td class="field_input">
+                                <span id="gallery_name_div">
+                                <input name="gallery_name" id="gallery_name" type="text" size="32" onkeypress="return handleEnter(this, event)"/>
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="field_title">
+                                File Uploads:
+                            </td>
+                            <td class="field_input">
+                                <input type="file" class="multi" multiple="multiple" accept="gif|jpg|jpeg|png|bmp" id="pics_files" name="files[]" onkeypress="return handleEnter(this, event)"/>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        <input style="position: absolute;margin: 10px;bottom: 0px;right: 0px;" type="button" name="upload_form" value="Submit Gallery" onclick="update_picslist();">
+    </form>
+||add_pics_form

@@ -1,85 +1,73 @@
 polls_edit_form||
-	<h3>Edit Poll</h3>
-		<input id="savedstartdate" type="hidden" value="||savedstart||" />
-		<input id="savedstopdate" type="hidden" value="||savedstop||" />
-		<input id="lasthint" type="hidden" />
-		<div id="edit_html_div">
-			<form action="javascript: if (valid_poll_fields()) {
-													let startdateenabled = !$('#startdateenabled').is(':checked') ? '&startdateenabled=0&astartdate=' + $('#savedstartdate').val() : '&startdateenabled=1&startdate=' + $('#startdate').val();
-													let stopdateenabled = !$('#stopdateenabled').is(':checked') ? '&stopdateenabled=0&stopdate=' + $('#savedstopdate').val() : '&stopdateenabled=1&stopdate=' + $('#stopdate').val();
-													ajaxapi_old('/features/polls/polls_ajax.php',
-															  'poll_submit',
-															  startdateenabled + stopdateenabled +
-															  '&question=' + $('#polls_question').val() +
-															  '&answers=' + $('#polls_answers').val() +
-															  '&pollid=||pollid||',
-													function() {
-														close_modal();
-													});
-												}">
-				<table style="width:100%">
-					<tr>
-						<td class="field_title" style="width:150px;">
-							Poll Question:
-						</td>
-						<td class="field_input">
-							<input type="text" id="polls_question" size="30" value="||question||"/>
-							<span class="hint">This is the question of your poll ex. (What is your favorite fruit?)
-						</td>
-					</tr><tr><td></td><td class="field_input"><span id="question_error" class="error_text"></span></td></tr>
-					<tr>
-						<td class="field_title" style="width:150px;">
-							Poll Answers:
-						</td>
-						<td class="field_input">
-							<input type="text" id="polls_answers" size="30" value="||answers||"/>
-							<span class="hint">These are the answers to your poll, comma delimited. <br /> ex. (Apples,Oranges,Pears)
-						</td>
-					</tr><tr><td></td><td class="field_input"><span id="answers_error" class="error_text"></span></td></tr>
-				</table>
-				<table>
-					<tr>
-						<td class="field_title" style="width:150px;">
-							Start Date:
-						</td>
-						<td class="field_input">
-							<input type="checkbox" id="startdateenabled" onclick="hide_show_span('startdatespan')" /> (optional) ||startdate||
-						</td>
-					</tr>
-					<tr>
-					<tr>
-						<td class="field_title" style="width:150px;">
-						</td>
-						<td class="field_input">
-							<div id="startdatespan" style="display:none;">
-								<input type="date" id="startdate" name="startdate" value="||savedstart||">
-							</div>
-						</td>
-					</tr><tr><td></td><td class="field_input"><div id="startdate_error" class="error_text"></div></td></tr>
-					<tr>
-						<td class="field_title" style="width:150px;">
-							Stop Date:
-						</td>
-						<td class="field_input">
-							<input type="checkbox" id="stopdateenabled" onclick="hide_show_span('stopdatespan')" /> (optional) ||stopdate||
-						</td>
-					</tr>
-					<tr>
-						<td class="field_title" style="width:150px;">
-						</td>
-						<td class="field_input">
-							<div id="stopdatespan" style="display:none;">
-								<input type="date" id="stopdate" name="stopdate" value="||savedstop||">
-							</div>
-						</td>
-					</tr><tr><td></td><td class="field_input"><div id="stopdate_error" class="error_text"></div></td></tr>
-					<tr>
-						<td></td>
-						<td style="text-align:left;">
-							<input type="submit" value="Save" />
-						</td>
-					</tr>
-				</table>
-			</form>
-		</div>
-	||polls_edit_form
+    <h3>Edit Poll</h3>
+    <input id="savedstartdate" type="hidden" value="||savedstart||" />
+    <input id="savedstopdate" type="hidden" value="||savedstop||" />
+    <input id="lasthint" type="hidden" />
+    <div id="edit_html_div">
+        <form id="polls_edit_form">
+            <table style="width:100%">
+                <tr>
+                    <td class="field_title" style="width:150px;">
+                        Poll Question:
+                    </td>
+                    <td class="field_input">
+                        <input type="text" id="polls_question" size="30" value="||question||"/>
+                        <span class="hint">This is the question of your poll ex. (What is your favorite fruit?)
+                    </td>
+                </tr><tr><td></td><td class="field_input"><span id="question_error" class="error_text"></span></td></tr>
+                <tr>
+                    <td class="field_title" style="width:150px;">
+                        Poll Answers:
+                    </td>
+                    <td class="field_input">
+                        <input type="text" id="polls_answers" size="30" value="||answers||"/>
+                        <span class="hint">These are the answers to your poll, comma delimited. <br /> ex. (Apples,Oranges,Pears)
+                    </td>
+                </tr><tr><td></td><td class="field_input"><span id="answers_error" class="error_text"></span></td></tr>
+            </table>
+            <table>
+                <tr>
+                    <td class="field_title" style="width:150px;">
+                        Start Date:
+                    </td>
+                    <td class="field_input">
+                        <input type="checkbox" id="startdateenabled" onclick="hide_show_span('startdatespan')" /> (optional) ||startdate||
+                    </td>
+                </tr>
+                <tr>
+                <tr>
+                    <td class="field_title" style="width:150px;">
+                    </td>
+                    <td class="field_input">
+                        <div id="startdatespan" style="display:none;">
+                            <input type="date" id="startdate" name="startdate" value="||savedstart||">
+                        </div>
+                    </td>
+                </tr><tr><td></td><td class="field_input"><div id="startdate_error" class="error_text"></div></td></tr>
+                <tr>
+                    <td class="field_title" style="width:150px;">
+                        Stop Date:
+                    </td>
+                    <td class="field_input">
+                        <input type="checkbox" id="stopdateenabled" onclick="hide_show_span('stopdatespan')" /> (optional) ||stopdate||
+                    </td>
+                </tr>
+                <tr>
+                    <td class="field_title" style="width:150px;">
+                    </td>
+                    <td class="field_input">
+                        <div id="stopdatespan" style="display:none;">
+                            <input type="date" id="stopdate" name="stopdate" value="||savedstop||">
+                        </div>
+                    </td>
+                </tr><tr><td></td><td class="field_input"><div id="stopdate_error" class="error_text"></div></td></tr>
+                <tr>
+                    <td></td>
+                    <td style="text-align:left;">
+                        <input type="submit" value="Save" />
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+||polls_edit_form

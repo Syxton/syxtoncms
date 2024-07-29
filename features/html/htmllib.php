@@ -44,32 +44,20 @@ global $CFG, $USER;
             if ($settings->html->$featureid->allowcomments->setting) {
                 $hidebuttons = $htmlonly ? true : false;
                 if (user_is_able($USER->userid, "viewcomments", $pageid, "html", $row['htmlid'])) {
-                    $comments = get_html_comments($row['htmlid'], $pageid, $hidebuttons, $limit);
-                    $comments = '
-                        <div class="html_comment_button_box">
-                            <button id="html_' . $featureid . '_comments_button" title="Show Comments" onclick="$(\'#comment_area_' . $featureid . ', #html_' . $featureid . '_comments_button, #html_' . $featureid . '_hide_button\').toggle();" class="alike html_comment_button">
-                                ' . icon([
-                                    ["icon" => "comment", "stacksize" => 2, "color" => "#7676cf"],
-                                    ["icon" => "eye", "color" => "white", "transform" => "shrink-8.5 left-1 up-.5"],
-                                ]) . '
-                            </button>
-                            <button id="html_' . $featureid . '_hide_button" title="Hide Comments" onclick="$(\'#comment_area_' . $featureid . ', #html_' . $featureid . '_comments_button, #html_' . $featureid . '_hide_button\').toggle();" class="alike html_comment_button" style="display:none;">
-                                ' . icon([
-                                    ["icon" => "comment", "stacksize" => 2, "color" => "#7676cf"],
-                                    ["icon" => "eye-slash", "color" => "white", "transform" => "shrink-8.5 left-2 up-.5"],
-                                ]) . '
-                            </button>
-                        </div>
-                        <div id="comment_area_' . $featureid . '" class="html_comments_area" style="display:none;">
-                            ' . $comments . '
-                        </div>';
+                    $listcomments = get_html_comments($row['htmlid'], $pageid, $hidebuttons, $limit);
+                    $hide = empty($listcomments) ? "display:none;" : "";
+
+                    $params = [
+                        "featureid" => $featureid,
+                        "comments" => $listcomments,
+                    ];
+                    $comments = fill_template("tmp/html.template", "comment_area", "html", $params);
                 }
 
                 if (user_is_able($USER->userid, "makecomments", $pageid, "html", $row['htmlid'])) {
                     $params = [
                         "title" => "Make Comment",
                         "path" => action_path("html") . "commentform&htmlid=" . $row['htmlid'],
-                        "refresh" => "true",
                         "icon" => icon("comment-medical", 2),
                     ];
                     $makecomment = '
@@ -123,13 +111,13 @@ global $CFG, $USER;
                 }
 
                 ajaxapi([
-                    'id'   => 'html_' . $featureid . '_stopped_editing',
-                    'url'  => '/features/html/html_ajax.php',
-                    'data' => [
-                        'action' => 'stopped_editing',
-                        'htmlid' => $featureid,
+                    "id" => "html_" . $featureid . "_stopped_editing",
+                    "url" => "/features/html/html_ajax.php",
+                    "data" => [
+                        "action" => "stopped_editing",
+                        "htmlid" => $featureid,
                     ],
-                    'event' => 'none',
+                    "event" => "none",
                 ]);
                 $buttons = get_button_layout("html", $row['htmlid'], $pageid);
                 $title = $settings->html->$featureid->feature_title->setting;
@@ -169,14 +157,15 @@ global $CFG;
 function fullscreen_toggle($html, $featureid, $settings) {
 global $CFG;
     if (isset($settings->html->$featureid->allowfullscreen->setting) && $settings->html->$featureid->allowfullscreen->setting == 1) { // Allow fullscreen toggle.
-        $html = '<div class="html_notfullscreen">
-                    <a title="View Full Screen" href="javascript: void(0);" onclick="$(\'.html_notfullscreen div\').toggleClass(\'fs_icon_on\'); $(this).closest(\'.htmlblock\').toggleClass(\'html_fullscreen\');">
-                        <div class="fs_icon"></div>
-                    </a>
-                </div>
-                <div class="html_text">
+        $html = '
+            <div class="html_notfullscreen">
+                <a title="View Full Screen" href="javascript: void(0);" onclick="$(\'.html_notfullscreen div\').toggleClass(\'fs_icon_on\'); $(this).closest(\'.htmlblock\').toggleClass(\'html_fullscreen\');">
+                    <div class="fs_icon"></div>
+                </a>
+            </div>
+            <div class="html_text">
                 ' . $html . '
-                </div>';
+            </div>';
     }
     return $html;
 }
@@ -188,7 +177,6 @@ global $CFG;
         if (preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) {
             foreach ($matches as $match) {
                 if (!strstr($match[0], 'javascript:')) { // not a javascript link.
-                    $icon = "save.png";
                     $filetypes = '/([\.[pP][dD][fF]|\.[dD][oO][cC]|\.[rR][tT][fF]|\.[pP][sS]|\.[pP][pP][tT]|\.[pP][pP][sS]|\.[tT][xX][tT]|\.[sS][xX][cC]|\.[oO][dD][sS]|\.[xX][lL][sS]|\.[oO][dD][tT]|\.[sS][xX][wW]|\.[oO][dD][pP]|\.[sS][xX][iI]])/';
                     if (preg_match($filetypes, $match[2])) {
                         if (strstr($match[2], $CFG->directory . '/userfiles') || strstr($match[2], $CFG->wwwroot)) { // internal link.
@@ -238,7 +226,7 @@ global $CFG;
                             $title = $url;
                             $link = $CFG->wwwroot . '/scripts/download.php?file=' . $url;
                         }
-                        $html = str_replace($match[0], '<a title="' . $title . '" href="' . $link . '" onclick="blur();"><img src="' . $CFG->wwwroot . '/images/' . $icon . '" alt="Save" /></a>&nbsp;' . make_modal_links(["text" => $text, "title" => $title, "path" => $CFG->wwwroot . "/pages/ipaper.php?action=view_ipaper&doc_url=" . base64_encode($url),"height" => "80%", "width" => "80%"]), $html);
+                        $html = str_replace($match[0], '<a title="' . $title . '" href="' . $link . '" onclick="blur();">' . icon("floppy-disk") . '</a>&nbsp;' . make_modal_links(["text" => $text, "title" => $title, "path" => $CFG->wwwroot . "/pages/ipaper.php?action=view_ipaper&doc_url=" . base64_encode($url),"height" => "80%", "width" => "80%"]), $html);
                     }
                 }
             }
@@ -512,6 +500,28 @@ function gather_comments($htmlid, $pagenum, $perpage, $collection = [], $totalco
     return ["collection" => $collection, "totalcount" => $totalcount];
 }
 
+function get_info_from_commentid($commentid) {
+    $comment = get_db_row("SELECT * FROM html_comments WHERE commentid = ||commentid||", ["commentid" => $commentid]);
+    $htmlid = $comment["htmlid"];
+    $pageid = get_db_field("pageid", "html", "htmlid = ||htmlid||", ["htmlid" => $htmlid]);
+    $area = get_feature_area("html", $htmlid);
+
+    if (!$settings = fetch_settings("html", $htmlid, $pageid)) {
+        save_batch_settings(default_settings("html", $pageid, $htmlid));
+        $settings = fetch_settings("html", $htmlid, $pageid);
+    }
+
+    $perpage = $area == "side" ? $settings->html->$htmlid->sidecommentlimit->setting : $settings->html->$htmlid->middlecommentlimit->setting;
+
+    return [
+        "area" => $area,
+        "pageid" => $pageid,
+        "htmlid" => $htmlid,
+        "perpage" => $perpage,
+        "comment" => $comment,
+    ];
+}
+
 function get_html_comments($htmlid, $pageid, $hidebuttons = false, $perpage = false, $pagenum = false, $hide = true) {
 global $CFG, $USER;
     $returnme = $commenttext = $prev = $info = $next = $header = $pagenav = $limit = "";
@@ -629,11 +639,12 @@ global $CFG, $USER;
 function get_comment_buttons($params) {
 global $CFG, $USER, $PAGE;
     $pageid = $params["pageid"] ?? $PAGE->id;
-
+    $htmlid = $params["comment"]['htmlid'];
     $caneditowncomment = ($USER->userid == $params["comment"]["userid"] && user_is_able($USER->userid, "makecomments", $pageid));
     $deletecomment = $editcomment = $makereply = false;
     // DELETE BUTTON.
     if ($caneditowncomment || user_is_able($USER->userid, "deletecomments", $pageid)) {
+
         ajaxapi([
             "id" => "delete_comment_" . $params["comment"]['commentid'],
             "if" => "confirm('Are you sure you want to delete this comment?')",
@@ -643,18 +654,18 @@ global $CFG, $USER, $PAGE;
                 "commentid" => $params["comment"]['commentid'],
                 "pageid" => $pageid,
             ],
-            "display" => "comment_area",
+            "display" => "comment_area_$htmlid",
+            "ondone" => "if (data.message.length > 0) { $('#html_comment_button_box_$htmlid').show(); } else { $('#html_comment_button_box_$htmlid').hide(); }",
         ]);
 
-        $deletecomment = '<button id="delete_comment_' . $params["comment"]['commentid'] . '" class="alike">' . icon("trash") . '</button>';
+        $deletecomment = '<button title="Delete Comment" id="delete_comment_' . $params["comment"]['commentid'] . '" class="alike">' . icon("trash") . '</button>';
     }
 
     // EDIT BUTTON.
     if ($caneditowncomment || user_is_able($USER->userid, "editanycomment", $pageid)) {
         $editcomment = make_modal_links([
             "title" => "Edit Comment",
-            "path" => action_path("html") . "commentform&commentid=" . $params["comment"]['commentid'],
-            "refresh" => "true",
+            "path" => action_path("html") . "commentform&commentid=" . $params["comment"]['commentid'] . "&htmlid=$htmlid",
             "icon" => icon("pencil"),
         ]);
     }
@@ -662,10 +673,9 @@ global $CFG, $USER, $PAGE;
     // REPLY BUTTON.
     if (user_is_able($USER->userid, "makereplies", $pageid)) {
         $makereply = make_modal_links([
-            "title" => "Reply",
-            "path" => action_path("html") . "commentform&replytoid=" . $params["comment"]['commentid'],
-            "refresh" => "true",
-            "image" => $CFG->wwwroot . "/images/undo.png",
+            "title" => "Reply to Comment",
+            "path" => action_path("html") . "commentform&replytoid=" . $params["comment"]['commentid'] . "&htmlid=$htmlid",
+            "icon" => icon("reply"),
         ]);
     }
 

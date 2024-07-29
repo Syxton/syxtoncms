@@ -583,11 +583,6 @@ div.full_news_link a:hover {
     text-decoration: none
 }
 
-.newstable {
-    width: 100%;
-    padding-bottom: 0px
-}
-
 img.sitenews {
     width: 22em
 }
@@ -1473,6 +1468,61 @@ tr.pics_title td:hover {
     background-color: #ffc
 }
 
+.pics_gallery_middle img {
+    width: 100%;
+    height: auto;
+}
+
+#pics_manager {
+    width: 500px;
+}
+
+.pics_manager_siteviewable,
+.pics_manager_movepics {
+    font-size: .85em;
+    padding: 5px 0;
+}
+
+.pics_manager_caption {
+    display: flex;
+    justify-content: space-evenly;
+    margin: 5px 0;
+    font-size: .85em;
+}
+
+.pics_manager_siteviewable,
+.pics_manager_movepics {
+    display: inline-block;
+    padding: 5px;
+}
+
+.pics_manager_pic {
+    width:165px;
+    overflow: hidden;
+    display: inline-block;
+    text-align: center;
+}
+
+.pics_manager_piccaption {
+    font-size: 11px;
+    margin: 0;
+    padding: 3px;
+    height: 120px;
+    width: calc(100% - 50px);
+    vertical-align: middle;
+}
+
+.pics_active {
+    background-color:#FFFF66;
+}
+
+.pics_activation_status {
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
 .shadetabs {
     padding: 3px 0;
     margin-left: 0;
@@ -1561,10 +1611,6 @@ tr.pics_title td:hover {
     text-shadow: 2px 3px 5px #000
 }
 
-.logo_nav .navtabs li:hover {
-    background-color: #2f4f4f
-}
-
 .logo_nav #carousel {
     clear: both;
     border: 2px solid #000;
@@ -1615,13 +1661,14 @@ tr.pics_title td:hover {
 
 .logo_nav .navtabs li {
     display: initial;
-    margin-bottom: initial
+    margin-bottom: initial;
+    margin-right: 5px;
+    padding: 0;
 }
 
 .logo_nav #menu-icon {
     width: 40px;
     height: 40px;
-    background: center/contain url('../images/menu-icon.png') no-repeat;
     display: none
 }
 
@@ -1632,8 +1679,19 @@ tr.pics_title td:hover {
 
 .logo_nav li {
     float: left;
+    padding: 5px;
+}
+
+.logo_nav .navtabs li div:hover {
+    background-color: #2f4f4f
+}
+
+.logo_nav li div {
     background-color: grey;
-    margin: 0 1px
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
 }
 
 .logo_nav ul {
@@ -1653,7 +1711,7 @@ tr.pics_title td:hover {
 }
 
 .logo_nav .dropdown {
-    z-index: 99999
+    z-index: 100;
 }
 
 .logo_nav li a {
@@ -1672,11 +1730,16 @@ tr.pics_title td:hover {
 .logo_nav ul li ul {
     visibility: hidden;
     opacity: 0;
-    position: absolute;
     transition: all .5s ease;
-    left: 10%;
     display: none;
-    white-space: nowrap
+    white-space: nowrap;
+    width: 100%;
+}
+
+.logo_nav ul li ul:hover {
+    visibility: visible;
+    opacity: 1;
+    display: block
 }
 
 .logo_nav ul li.sfhover>ul {
@@ -1685,17 +1748,51 @@ tr.pics_title td:hover {
     display: block
 }
 
+.logo_nav ul li.sfclick > div {
+    background-color: rgb(163, 0, 0);
+}
+
+.logo_nav ul li.sfclick > div:hover {
+    background-color: rgb(102, 2, 2);
+}
+
+.logo_nav ul li.sfclick ul {
+    visibility: visible;
+    opacity: 1;
+    display: block;
+}
+
 .logo_nav ul li ul li {
     clear: both;
     width: 100%
 }
 
 .navtabs a {
-    display: block;
-    padding: 10px;
+    padding: 0;
     color: #fff;
-    border-top: 5px solid grey;
-    border-bottom: 1px solid silver
+}
+
+.navtabs a.parent {
+    display: inline-block;
+}
+
+.navtabs a.parentarrow {
+    display: inline-block;
+    width: 40px;
+}
+
+ul#pagenavchild  {
+    position: absolute;
+}
+
+#pagenavchild li {
+    margin: 0;
+    padding: 0;
+    padding-top: 2px;
+}
+
+#pagenavchild li div {
+    filter: brightness(125%);
 }
 
 .navtabs a.selected {
@@ -2012,10 +2109,6 @@ tr.pics_title td:hover {
     background: #8f8f8f
 }
 
-.newstable {
-    margin-bottom: 8px
-}
-
 .newstable .container_head {
     display: flex;
     justify-content: space-between;
@@ -2024,8 +2117,13 @@ tr.pics_title td:hover {
 }
 
 .newstable .dategraphic {
+    vertical-align: top;
     display: inline-block;
     width: 110px;
+}
+
+.newstable .dategraphic span:first-child {
+    vertical-align: top;
 }
 
 .area_middle .newstable .article {
@@ -2051,14 +2149,20 @@ tr.pics_title td:hover {
 }
 
 .news_archive_wrapper {
-    background-color:#FCD163;
     display: flex;
     justify-content: space-evenly;
     align-items: center;
-    border:1px solid slategray;
-    width:100%;
-    text-align:center;
+    border-top: 2px solid slategray;
+    width: 100%;
+    text-align: center;
+    margin-top: 15px;
     font-size: 1.3em;
+}
+
+.news_author {
+    text-align: right;
+    font-size: .9em;
+    color: rgb(92, 92, 92);
 }
 
 .area_side .news_archive_wrapper {
@@ -2246,6 +2350,10 @@ input[type=image] {
         max-width: 40px;
         max-height: 40px;
         width: 8%
+    }
+
+    .logo_nav #menu-icon:hover {
+        cursor: pointer;
     }
 
     #logosmall+#logo {

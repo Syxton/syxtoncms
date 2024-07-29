@@ -72,7 +72,6 @@ $(window).advModalResizer(function() {
     if (typeof getRoot("#cboxLoadedContent")[0] !== 'undefined') {
         setTimeout(function () {
             // Get widths and heights
-            var width = getRoot("#colorbox").width() > getRoot().width() ? getRoot().width() : getRoot("#colorbox").width();
             var topheight = getRoot().height();
             var topwidth = getRoot().width();
 
@@ -86,11 +85,16 @@ $(window).advModalResizer(function() {
             };
 
             // Get content height.
-            if (typeof getRoot("iframe[class=cboxIframe]") == 'undefined' || getRoot("iframe[class=cboxIframe]").length == 0) {
-                var contentheight = parseInt($("#cboxLoadedContent").innerHeight());
+            if (typeof getRoot("iframe[class=cboxIframe]") === 'undefined' || getRoot("iframe[class=cboxIframe]").length === 0) {
+                $("#cboxLoadedContent").width("auto");
+                $("#cboxContent").width("auto");
+                var width = parseInt($("#cboxLoadedContent")[0].scrollWidth) > getRoot().width() ? getRoot().width() : parseInt($("#cboxLoadedContent")[0].scrollWidth) + 60;
+
+                var contentheight = parseInt($("#cboxLoadedContent")[0].scrollHeight);
                 debug.area = "root";
                 debug.contentheight = contentheight;
             } else { // iframe inside modal.
+                var width = parseInt($("#colorbox").width()) > getRoot().width() ? getRoot().width() : parseInt($("#colorbox").width());
                 var contentheight = parseInt(getRoot("iframe[class=cboxIframe]").attr("height"));
                 debug.area = "iframe";
                 debug.contentheight = contentheight;

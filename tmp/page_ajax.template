@@ -1,57 +1,35 @@
 search_template||
-  <input type="hidden" id="searchwords" value="||searchwords||" />
-  ||resultsfound{{
-    <table style="width:100%;">
-        <tr>
-        <td style="width:25%;text-align:left;">
-            ||isprev{{
-            <a href="javascript: void(0);" onclick="$('#loading_overlay_||searchtype||').show();
-                                                    ajaxapi_old('/ajax/page_ajax.php',
-                                                            '||searchtype||',
-                                                            '&pagenum=||prev_pagenum||' +
-                                                            '&searchwords=' + encodeURIComponent('||searchwords||'),
-                                                            function() {
-                                                                if (xmlHttp.readyState == 4) {
-                                                                simple_display('searchcontainer_||searchtype||');
-                                                                $('#loading_overlay_||searchtype||').hide();
-                                                                }
-                                                            },
-                                                            true);" onmouseup="this.blur();">
-                <img src="||wwwroot||/images/prev.png" title="Previous Page" alt="Previous Page" />
-            </a>
-            }}isprev||
-        </td>
-        <td style="width:50%;text-align:center;font-size:.75em;color:green;">
-            Viewing ||viewing|| through ||amountshown|| out of ||total||
-        </td>
-        <td style="width:25%;text-align:right;">
-            ||isnext{{
-            <a href="javascript: void(0);" onclick="$('#loading_overlay_||searchtype||').show();
-                                                    ajaxapi_old('/ajax/page_ajax.php',
-                                                            '||searchtype||',
-                                                            '&pagenum=||next_pagenum||' +
-                                                            '&searchwords=' + encodeURIComponent('||searchwords||'),
-                                                            function() {
-                                                                if (xmlHttp.readyState == 4) {
-                                                                simple_display('searchcontainer_||searchtype||');
-                                                                $('#loading_overlay_||searchtype||').hide();
-                                                                }
-                                                            },
-                                                            true);" onmouseup="this.blur();">
-                <img src="||wwwroot||/images/next.png" title="Next Page" alt="Next Page" />
-            </a>
-            }}isnext||
-        </td>
-        </tr>
-    </table>
-    <br />
-    <br />
-    <table class="searchresults">
-        ||searchresults||
-    </table>
-    //OR//
-    <span class="error_text" class="centered_span">No matches found.</span>
-  }}resultsfound||
+    <input type="hidden" id="searchwords" value="||searchwords||" />
+    ||resultsfound{{
+        <table style="width:100%;">
+            <tr>
+            <td style="width:25%;text-align:left;">
+                ||isprev{{
+                <a href="javascript: void(0);" onclick="search_navigate(||prev_pagenum||)">
+                    <img src="||wwwroot||/images/prev.png" title="Previous Page" alt="Previous Page" />
+                </a>
+                }}isprev||
+            </td>
+            <td style="width:50%;text-align:center;font-size:.75em;color:green;">
+                Viewing ||viewing|| through ||amountshown|| out of ||total||
+            </td>
+            <td style="width:25%;text-align:right;">
+                ||isnext{{
+                <a href="javascript: void(0);" onclick="search_navigate(||next_pagenum||)">
+                    <img src="||wwwroot||/images/next.png" title="Next Page" alt="Next Page" />
+                </a>
+                }}isnext||
+            </td>
+            </tr>
+        </table>
+        <br />
+        <br />
+        <table class="searchresults">
+            ||searchresults||
+        </table>
+        //OR//
+        <span class="error_text" class="centered_span">No matches found.</span>
+    }}resultsfound||
 ||search_template
 
 search_row_template||
@@ -214,41 +192,11 @@ new_link_form_template||
 search_linkpagesearch_buttons_template||
   <span id="addremove_||pageid||">
   ||alreadylinked{{
-    <button class="alike" title="Add Page Link" onclick="||confirmopen{{ if (confirm('This linked page is not viewable to everyone and will only show up for people who have viewing rights.')) { }}confirmopen||
-                                                                ajaxapi_old('/ajax/page_ajax.php',
-                                                                        'make_page_link',
-                                                                        '&pageid=||pageid||' +
-                                                                        '&linkpageid=||linkpageid||',
-                                                                        function() {
-                                                                        simple_display('addremove_||pageid||');
-                                                                        });
-                                                                ajaxapi_old('/ajax/page_ajax.php',
-                                                                        'linkpagesearch',
-                                                                        '&pageid=||pageid||' +
-                                                                        '&pagenum=||pagenum||' +
-                                                                        '&searchwords=' + encodeURIComponent('||searchwords||'),
-                                                                        function() {
-                                                                        simple_display('page_search_span');
-                                                                        });
-                                             ||confirmopen{{ } }}confirmopen||" onmouseup="this.blur()">
+    <button class="alike" title="Add Page Link" onclick="make_page_link(||linkpageid||);">
         ||echo icon("plus");::none||
     </button>
     //OR//
-    <button class="alike" title="Remove Page Link" onclick="ajaxapi_old('/ajax/page_ajax.php',
-                                                    'unlink_page',
-                                                    '&pageid=||pageid||' +
-                                                    '&linkpageid=||linkpageid||',
-                                                    function() {
-                                                        simple_display('addremove_||pageid||');
-                                                    });
-                                            ajaxapi_old('/ajax/page_ajax.php',
-                                                     'linkpagesearch',
-                                                     '&pageid=||pageid||' +
-                                                     '&pagenum=||pagenum||' +
-                                                     '&searchwords=' + encodeURIComponent('||searchwords||'),
-                                                     function() {
-                                                     simple_display('page_search_span');
-                                                     });" onmouseup="this.blur();">
+    <button class="alike" title="Remove Page Link" onclick="onclick="make_page_link(||linkpageid||);"">
         ||echo icon("trash");::none||
     </button>
   }}alreadylinked||

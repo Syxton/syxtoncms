@@ -189,21 +189,22 @@ create_edit_group_form_template||
     </tr>
     <tr>
         <td colspan="2" style="text-align:right;">
-        <a class="imgandlink" href="javascript: void(0);" onclick="if (trim($('#per_group_name').val()).length > 0) {
-                                                                                            ajaxapi_old('/ajax/roles_ajax.php',
-                                                                                                    'save_group',
-                                                                                                    '&name=' + $('#per_group_name').val() +
-                                                                                                    '&parent=' + $('#per_group_edit_group_select').val() +
-                                                                                                    ||groupid{{'&groupid=||groupid||' +}}groupid||
-                                                                                                    '&pageid=||pageid||',
-                                                                                                    function() {
-                                                                                                        simple_display('per_group_whole_page');
-                                                                                                    });
-                                                                                        } else {
-                                                                                            alert('Name is required.');
-                                                                                        }">
-            <img src="||wwwroot||/images/save.png" /> Save Group
-        </a>
+        <button class="imgandlink alike" onclick="if (trim($('#per_group_name').val()).length > 0) {
+                                                        ajaxapi_old('/ajax/roles_ajax.php',
+                                                                    'save_group',
+                                                                    '&name=' + $('#per_group_name').val() +
+                                                                    '&parent=' + $('#per_group_edit_group_select').val() +
+                                                                    ||groupid{{'&groupid=||groupid||' +}}groupid||
+                                                                    '&pageid=||pageid||',
+                                                                    function() {
+                                                                        simple_display('per_group_whole_page');
+                                                                    });
+                                                    } else {
+                                                        alert('Name is required.');
+                                                    }">
+            ||echo icon("floppy-disk");::none||
+            <span>Save Group</span>
+        </button>
         </td>
     </tr>
   </table>

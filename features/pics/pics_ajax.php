@@ -21,115 +21,192 @@ callfunction();
 
 function pics_pageturn() {
 global $CFG, $MYVARS;
-	$galleryid = !isset($MYVARS->GET["galleryid"]) ? NULL : $MYVARS->GET["galleryid"];
-	$pagenum = !isset($MYVARS->GET["pagenum"]) ? NULL : $MYVARS->GET["pagenum"];
-	$editable = !isset($MYVARS->GET["editable"]) ? 'false' : $MYVARS->GET["editable"];
-	$perpage = !isset($MYVARS->GET["perpage"]) ? NULL : $MYVARS->GET["perpage"];
-	$order = !isset($MYVARS->GET["order"]) ? NULL : urldecode($MYVARS->GET["order"]);
-	
-	echo get_pics($MYVARS->GET["pageid"], $MYVARS->GET["featureid"], $galleryid, $pagenum, $editable, $perpage);
+    $featureid = clean_myvar_req("featureid", "int", false);
+    $galleryid = clean_myvar_opt("galleryid", "int", 0);
+    $pagenum = clean_myvar_opt("pagenum", "int", 0);
+    $order = clean_myvar_opt("order", "string", false);
+
+	ajax_return(get_pics($featureid, $galleryid, $pagenum, $order));
 }
 
 function new_gallery() {
-global $CFG, $MYVARS;
 	$newgallery = clean_myvar_req("param", "bool");
 	$pageid = clean_myvar_req("pageid", "int");
-	if ($newgallery) {
-		echo '<input name="gallery_name" id="gallery_name" type="text" size="32" onkeypress="return handleEnter(this, event);" />';
-	} else {
-        $p = [
-            "properties" => [
-                "name" => "galleryid",
-                "id" => "galleryid",
-            ],
-            "values" => get_db_result(fetch_template("dbsql/pics.sql", "get_page_galleries", "pics"), ["pageid" => $pageid]),
-            "valuename" => "galleryid",
-            "displayname" => "name",
-            "firstoption" => "None selected",
-        ];
-		echo make_select($p);
-	}
+
+    $return = $error = "";
+    try {
+        if ($newgallery) {
+            $return = '<input name="gallery_name" id="gallery_name" type="text" size="32" onkeypress="return handleEnter(this, event);" />';
+        } else {
+            $p = [
+                "properties" => [
+                    "name" => "galleryid",
+                    "id" => "galleryid",
+                ],
+                "values" => get_db_result(fetch_template("dbsql/pics.sql", "get_page_galleries", "pics"), ["pageid" => $pageid]),
+                "valuename" => "galleryid",
+                "displayname" => "name",
+                "firstoption" => "None selected",
+            ];
+            $return = make_select($p);
+        }
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+    }
+
+	ajax_return($return, $error);
 }
 
-function move_pic() {
-global $CFG, $MYVARS;
-	$picsid = $MYVARS->GET['picsid']; $galleryid = $MYVARS->GET['galleryid'];
-	execute_db_sql("UPDATE pics SET galleryid='$galleryid' WHERE picsid='$picsid'");
-	echo 'Done';
+function altergallery() {
+global $CFG;
+    $picsid = clean_myvar_req("picsid", "int");
+    $galleryid = clean_myvar_req("galleryid", "int");
+    $pageid = get_pageid();
+
+    $return = $error = "";
+    try {
+        $pic = get_db_row("SELECT * FROM pics WHERE picsid = ||picsid||", ["picsid" => $picsid]);
+        if ($pageid !== $pic["pageid"]) { // Pic is from a different course and needs to be copied to this course.
+            $featureid = get_db_field("featureid", "pics_galleries", "galleryid = ||galleryid||", ["galleryid" => $galleryid]);
+            $old = $CFG->dirroot . '/features/pics/files/' . $pic["pageid"] . "/" . $pic["featureid"]. "/" . $pic["imagename"];
+            $new = $CFG->dirroot . '/features/pics/files/' . $pageid . "/" . $featureid . "/" . $pic["imagename"];
+            if (!copy_file($old, $new)) {
+                throw new Exception("Could not copy file.");
+            }
+            if (!copy_db_row($pic, "pics", [["picsid" => NULL, "siteviewable" => 0, "featureid" => $featureid, "galleryid" => $galleryid, "pageid" => $pageid]])) {
+                throw new Exception("Could not change pics gallery.");
+            }
+        } else {
+            $params = [
+                "pageid" => $pageid,
+                "picsid" => $picsid,
+                "galleryid" => $galleryid,
+            ];
+            if (!execute_db_sql("UPDATE pics SET galleryid = ||galleryid||, pageid = ||pageid|| WHERE picsid = ||picsid||", $params)) {
+                throw new Exception("Could not change pics gallery");
+            }
+        }
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+    }
+
+	ajax_return($return, $error);
 }
 
 function save_caption() {
-global $CFG, $MYVARS;
-	$picsid = $MYVARS->GET['picsid']; $caption = addslashes(urldecode($MYVARS->GET['caption']));
-	execute_db_sql("UPDATE pics SET caption='$caption' WHERE picsid='$picsid'");
-	echo 'Saved';
+    $picsid = clean_myvar_req("picsid", "int");
+    $caption = clean_myvar_req("caption", "html");
+
+    $return = $error = "";
+    try {
+        if (!execute_db_sql("UPDATE pics SET caption = ||caption|| WHERE picsid = ||picsid||", ["picsid" => $picsid, "caption" => $caption])) {
+            throw new Exception("Could not add caption");
+        }
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+    }
+
+	ajax_return($return, $error);
 }
 
 function save_viewability() {
-global $CFG, $MYVARS;
-	$picsid = $MYVARS->GET['picsid']; $siteviewable = $MYVARS->GET['siteviewable'] == "true" ? 1 : 0;
-	execute_db_sql("UPDATE pics SET siteviewable='$siteviewable' WHERE picsid='$picsid'");
-	echo 'Saved';
+    $picsid = clean_myvar_req("picsid", "int");
+    $siteviewable = clean_myvar_opt("siteviewable", "bool", 0);
+    $siteviewable = $siteviewable ? 1 : 0; // make into integer because checklists come across as bool.
+
+    $return = $error = "";
+    try {
+        if (!execute_db_sql("UPDATE pics SET siteviewable = ||siteviewable|| WHERE picsid =||picsid||", ["picsid" => $picsid, "siteviewable" => $siteviewable])) {
+            throw new Exception("Could not save viewability.");
+        }
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+    }
+
+	ajax_return($return, $error);
 }
 
 function delete_pic() {
-global $CFG, $MYVARS;
-    $picsid = $MYVARS->GET['picsid'];
-    $row = get_db_row("SELECT * FROM pics WHERE picsid='$picsid'");
-    delete_file($CFG->dirroot . '/features/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row["imagename"]);
-    execute_db_sql("DELETE FROM pics WHERE picsid='$picsid'");
-    echo '<font style="font-color:gray">Picture Deleted</font>';
+global $CFG;
+    $picsid = clean_myvar_req("picsid", "int");
+
+    $return = $error = "";
+    try {
+        $row = get_db_row("SELECT * FROM pics WHERE picsid = ||picsid||", ["picsid" => $picsid]);
+        if (!delete_file($CFG->dirroot . '/features/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row["imagename"])) {
+            throw new Exception("Could not delete files.");
+        }
+
+        if (!execute_db_sql("DELETE FROM pics WHERE picsid = ||picsid||", ["picsid" => $picsid])) {
+            throw new Exception("Could not save viewability.");
+        }
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+    }
+
+	ajax_return($return, $error);
 }
 
 function delete_gallery() {
 global $CFG, $MYVARS;
-    $galleryid = $MYVARS->GET['galleryid'];
     $pageid = clean_myvar_req("pageid", "int");
     $featureid = clean_myvar_req("featureid", "int");
+    $galleryid = clean_myvar_opt("galleryid", "int", 0);
 
-    $delete = $copy = false;
-    if (!empty($galleryid) && !empty($pageid) && !empty($featureid)) {
-        if ($result = get_db_result("SELECT * FROM pics WHERE galleryid='$galleryid'")) {
-            while ($row = fetch_row($result)) {
-                if ($pageid != $CFG->SITEID && !empty($row["siteviewable"])) { //siteviewable images from a page other than SITE.  Move them to site
-                    $copy = true;
-                    $site_featureid = get_db_field("featureid", "pages_features", "feature='pics' AND pageid='" . $CFG->SITEID."'");
-                    $old = $CFG->dirroot . '/features/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row["imagename"];
-                    $new = $CFG->dirroot . '/features/pics/files/' . $CFG->SITEID. "/" . $site_featureid. "/" . $row["imagename"];
-                    copy_file($old, $new);
-                    delete_file($old);
-                } elseif ($pageid == $CFG->SITEID && $pageid != $row["pageid"]) {  //SITE is dealing with images from another page
-                    execute_db_sql("UPDATE pics SET siteviewable=0 WHERE galleryid='$galleryid'");
-                } else { //nobody is using it, so delete it
-                    $delete = true;
-                    delete_file($CFG->dirroot . '/features/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row["imagename"]);
-                    execute_db_sql("DELETE FROM pics WHERE picsid='" . $row["picsid"] . "'");    
+    try {
+        $delete = $copy = false;
+        if (!empty($galleryid) && !empty($pageid) && !empty($featureid)) {
+            if ($result = get_db_result("SELECT * FROM pics WHERE galleryid='$galleryid'")) {
+                while ($row = fetch_row($result)) {
+                    if ($pageid !== $CFG->SITEID && !empty($row["siteviewable"])) { //siteviewable images from a page other than SITE.  Move them to site
+                        $copy = true;
+                        $site_featureid = get_db_field("featureid", "pages_features", "feature='pics' AND pageid=||pageid||", ["pageid" => $CFG->SITEID]);
+                        $old = $CFG->dirroot . '/features/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row["imagename"];
+                        $new = $CFG->dirroot . '/features/pics/files/' . $CFG->SITEID. "/" . $site_featureid. "/" . $row["imagename"];
+                        if (!copy_file($old, $new)) {
+                            throw new Exception("Could not copy file.");
+                        }
+
+                        if (!delete_file($old)) {
+                            throw new Exception("Could not delete file.");
+                        }
+                    } elseif ($pageid == $CFG->SITEID && $pageid != $row["pageid"]) {  //SITE is dealing with images from another page
+                        execute_db_sql("UPDATE pics SET siteviewable = 0 WHERE galleryid = ||galleryid||", ["galleryid" => $galleryid]);
+                    } else { //nobody is using it, so delete it
+                        $delete = true;
+                        if (!delete_file($CFG->dirroot . '/features/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row["imagename"])) {
+                            throw new Exception("Could not delete file.");
+                        }
+                        execute_db_sql("DELETE FROM pics WHERE picsid='" . $row["picsid"] . "'");
+                    }
                 }
             }
+
+            if ($copy) {
+                $SQL = "UPDATE pics SET pageid = ||pageid||, featureid = ||featureid|| WHERE galleryid = ||galleryid||";
+                execute_db_sql($SQL, ["pageid" => $CFG->SITEID, "featureid" => $site_featureid, "galleryid" => $galleryid]);
+                $SQL = "UPDATE pics_galleries SET pageid = ||pageid||, featureid = ||featureid|| WHERE galleryid = ||galleryid||";
+                execute_db_sql($SQL, ["galleryid" => $galleryid]);
+            }
+
+            if ($delete) {
+                execute_db_sql("DELETE FROM pics_galleries WHERE galleryid = ||galleryid||", ["galleryid" => $galleryid]);
+            }
         }
-        
-        if ($copy) {
-            $SQL = "UPDATE pics SET pageid='$CFG->SITEID',featureid='$site_featureid' WHERE galleryid='$galleryid'";
-            execute_db_sql($SQL);
-            $SQL = "UPDATE pics_galleries SET pageid='$CFG->SITEID',featureid='$site_featureid' WHERE galleryid='$galleryid'";
-            execute_db_sql($SQL);
-        }
-        
-        if ($delete) {
-            execute_db_sql("DELETE FROM pics_galleries WHERE galleryid='$galleryid'");
-        }         
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
     }
-    
-    echo get_pics_manager($pageid, $featureid);
+    $return = get_pics_manager($pageid, $featureid);
+    ajax_return($return, $error);
 }
 
 function pics_upload() {
-global $CFG, $MYVARS;
+global $CFG;
     $newgallery = clean_myvar_opt("new_gallery", "bool", false);
     $pageid = clean_myvar_req("pageid", "int");
     $featureid = clean_myvar_req("featureid", "int");
 
-    //upload directory.
+    // upload directory.
     $upload_dir = 'files/' . "$pageid/$featureid/";
 
     try {
@@ -138,34 +215,31 @@ global $CFG, $MYVARS;
         if (!empty($featureid) && !empty($pageid)) {
             //Make sure that upload directory exists
             recursive_mkdir($upload_dir);
-            
+
             //the file size in bytes.
             $max_upload_bytes = return_bytes(ini_get('upload_max_filesize')); //Gets max upload filesize from server.
             $max_post_bytes = return_bytes(ini_get('upload_max_filesize')); //Gets max post from server.
             $size_bytes = $max_upload_bytes < $max_post_bytes ? $max_upload_bytes : $max_post_bytes; //use the smaller of the two
-            
+
             //Extensions you want files uploaded limited to.
             $limitedext = [".gif", ".jpg", ".jpeg", ".png", ".bmp"];
-            
+
             //check if the directory exists or not.
             if (!is_dir("$upload_dir")) {
-                die ("Error: The directory <strong>($upload_dir)</strong> doesn't exist");
+                throw new \Exception("Error: The directory <strong>($upload_dir)</strong> doesn't exist");
             }
             //check if the directory is writable.
             if (!is_writeable("$upload_dir")) {
-                die("Error: The directory <strong>($upload_dir)</strong> is NOT writable, Please CHMOD (777)");
+                throw new \Exception("Error: The directory <strong>($upload_dir)</strong> is NOT writable, Please CHMOD (777)");
             }
-            
-            //if the form has been submitted, then do the upload process
-            $filenames = explode("**", clean_myvar_req("filenames", "string"));
-            $file_count = count($filenames);
-            
+
             //do a loop for uploading files based on ($file_count) number of files.
             $i = $success = 0;
             $galleryid = clean_myvar_opt("galleryid", "int", false);
             $files = $_FILES["files"];
+            $file_count = count($files["name"]);
 
-            while (isset($filenames[$i]) && isset($files["name"][$i])) {
+            while (isset($files["name"][$i])) {
                 $file_name = $files["name"][$i];
                 //to remove spaces from file name we have to replace it with "_".
                 $file_name = str_replace(' ', '_', $file_name);
@@ -243,7 +317,7 @@ global $CFG, $MYVARS;
             } else {
                 commit_db_transaction();
                 die("<strong>$success file[s] uploaded.</strong>");
-            }       
+            }
         }
     } catch (\Throwable $e) {
         rollback_db_transaction($e->getMessage());
@@ -261,22 +335,30 @@ function toggle_activate() {
 global $CFG;
 	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	$picsid = clean_myvar_req("picsid", "int");
-	$row = get_db_row("SELECT * FROM pics WHERE picsid = ||picsid||", ["picsid" => $picsid]);
 
-	$sitehidden = $row["sitehidden"];
-	$pagehidden = $row["pagehidden"];
+    $return = $error = "";
+    try {
+        start_db_transaction();
+        $pics = get_db_row("SELECT * FROM pics WHERE picsid = ||picsid||", ["picsid" => $picsid]);
 
-	$sitehidden = $sitehidden == 0 ? 1 : 0;
-	$pagehidden = $pagehidden == 0 ? 1 : 0;
+        $sitehidden = $pics["sitehidden"];
+        $pagehidden = $pics["pagehidden"];
 
-	if ($pageid === $CFG->SITEID) { // SITE IMAGE
-		$activated = $sitehidden == 0 ? 'background-color:#FFFF66;' : '';
-		execute_db_sql("UPDATE pics SET sitehidden = ||sitehidden|| WHERE picsid = ||picsid||", ["sitehidden" => $sitehidden, "picsid" => $picsid]);
-	} else {
-		$activated = $pagehidden == 0 ? 'background-color:#FFFF66;' : '';
-		execute_db_sql("UPDATE pics SET pagehidden = ||pagehidden|| WHERE picsid = ||picsid||", ["pagehidden" => $pagehidden, "picsid" => $picsid]);
-	}
-    
-    echo '<div style="text-align:center;width:171px;font-size:.85em;' . $activated . '">' . $row["imagename"] . '</div>';
+        $sitehidden = $sitehidden == 0 ? 1 : 0;
+        $pagehidden = $pagehidden == 0 ? 1 : 0;
+
+        if ($pageid === $CFG->SITEID) { // SITE IMAGE
+            execute_db_sql("UPDATE pics SET sitehidden = ||sitehidden|| WHERE picsid = ||picsid||", ["sitehidden" => $sitehidden, "picsid" => $picsid]);
+        } else {
+            execute_db_sql("UPDATE pics SET pagehidden = ||pagehidden|| WHERE picsid = ||picsid||", ["pagehidden" => $pagehidden, "picsid" => $picsid]);
+        }
+
+        commit_db_transaction();
+    } catch (\Throwable $e) {
+        rollback_db_transaction($e->getMessage());
+        $error = $e->getMessage();
+    }
+
+    ajax_return($return, $error);
 }
 ?>

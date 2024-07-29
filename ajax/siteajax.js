@@ -639,7 +639,7 @@ function update_alerts(addalert = 0) {
 
 function adjustStyle(width) {
     width = parseInt(width);
-    if (width < 720) {
+    if (width < 1100) {
         $(".rightmenu .col1").css("width", "100%");
         $(".rightmenu .col2").css("width", "100%");
         $(".rightmenu .colleft").css("right", "24.5%");
@@ -825,14 +825,6 @@ function removeEditor(name) {
 function preloadImg(image) {
     var img = new Image();
     img.src = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/" + image;
-}
-
-function getSession(cname) {
-    ajaxapi_old('/ajax/site_ajax.php', 'get_cookie', '&cname=' + cname, function() {
-        if (xmlHttp.readyState == 4) {
-            return xmlHttp.responseText;
-        }
-    }, true);
 }
 
 function getCookie(cname) {
