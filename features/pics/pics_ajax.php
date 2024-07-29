@@ -172,12 +172,12 @@ global $CFG, $MYVARS;
             $galleryid = clean_myvar_opt("galleryid", "int", false);
             $files = $_FILES["files"];
 
-            foreach ($files as $file) {
-                $file_name = $file["name"];
+            while (isset($filenames[$i]) && isset($files["name"][$i])) {
+                $file_name = $files["name"][$i];
                 //to remove spaces from file name we have to replace it with "_".
                 $file_name = str_replace(' ', '_', $file_name);
-                $file_tmp = $file['tmp_name'];
-                $file_size = $file['size'];
+                $file_tmp = $files['tmp_name'][$i];
+                $file_size = $files['size'][$i];
                 #-----------------------------------------------------------#
                 # this code will check if the files were selected or not.    #
                 #-----------------------------------------------------------#
@@ -207,7 +207,7 @@ global $CFG, $MYVARS;
                                 $n++;
                                 $file_name = str_replace($ext, "", $original_filename) . " ($n)" . $ext;
                             }
-                            $file["name"] = $file_name;
+                            $files["name"][$i] = $file_name;
 
                             #-----------------------------------------------------------#
                             # this function will upload the files.  :) ;) cool          #
@@ -242,7 +242,8 @@ global $CFG, $MYVARS;
                         } // end of (file_size).
                     } // end of (limitedext).
                 } // end of (!is_uploaded_file).
-            }
+                $i++;
+            } // end of (while loop).
 
             if (empty($success)) {
                 throw new \Exception("Error: No file was uploaded.");
