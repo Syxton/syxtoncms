@@ -48,49 +48,55 @@ global $CFG, $MYVARS, $USER;
 
     $title = $caption = $content = "";
     if ($newsid) {
-        if (!user_is_able($USER->userid, "editnews", $pageid,"news", $featureid)) { trigger_error(error_string("no_permission", ["editnews"]), E_USER_WARNING); return; }
+        if (!user_is_able($USER->userid, "editnews", $pageid,"news", $featureid)) {
+			trigger_error(error_string("no_permission", ["editnews"]), E_USER_WARNING);
+			return;
+		}
+
         $row = get_db_row("SELECT * FROM news WHERE newsid='$newsid'");
-        $title = stripslashes(htmlentities($row["title"]));
-        $caption = stripslashes(htmlentities($row["caption"]));
-        $content = stripslashes($row["content"]);
-        $button = '<input type="button" value="Save" onclick="ajaxapi_old(\'/features/news/news_ajax.php\',\'edit_news\',\'&amp;title=\'+encodeURIComponent($(\'#news_title\').val())+\'&amp;summary=\' + encodeURIComponent($(\'#news_summary\').val()) + \'&amp;pageid=' . $pageid . '&amp;html=\'+encodeURIComponent(' . get_editor_value_javascript() . ')+\'&amp;newsid=' . $newsid . '\',function() { close_modal(); });" />';
+        $title = $row["title"];
+        $summary = $row["caption"];
+        $content = $row["content"];
+
+		ajaxapi([
+			"id" => "news_" . $featureid . "_form",
+			"url" => "/features/news/news_ajax.php",
+			"data" => [
+				"action" => "edit_news",
+				"newsid" => $newsid,
+				"pageid" => $pageid,
+				"html" => "js||encodeURIComponent(" . get_editor_value_javascript() . ")||js",
+				"summary" => "js||encodeURIComponent($('#news_summary').val())||js",
+				"title" => "js||encodeURIComponent($('#news_title').val())||js",
+			],
+			"event" => "submit",
+			"ondone" => "close_modal();",
+		]);
     } else {
-        if (!user_is_able($USER->userid, "addnews", $pageid,"news", $featureid)) { trigger_error(error_string("no_permission", ["addnews"]), E_USER_WARNING); return; }
-        $button = '<input type="button" value="Save" onclick="ajaxapi_old(\'/features/news/news_ajax.php\',\'add_news\',\'&amp;title=\'+encodeURIComponent($(\'#news_title\').val())+\'&amp;summary=\' + encodeURIComponent($(\'#news_summary\').val()) + \'&amp;pageid=' . $pageid . '&amp;html=\'+encodeURIComponent(' . get_editor_value_javascript() . ')+\'&amp;featureid=' . $featureid . '\',function() { close_modal(); });" />';
+        if (!user_is_able($USER->userid, "addnews", $pageid,"news", $featureid)) {
+			trigger_error(error_string("no_permission", ["addnews"]), E_USER_WARNING);
+			return;
+		}
+
+		$title = $summary = $content = "";
+		ajaxapi([
+			"id" => "news_" . $featureid . "_form",
+			"url" => "/features/news/news_ajax.php",
+			"data" => [
+				"action" => "add_news",
+				"featureid" => $featureid,
+				"pageid" => $pageid,
+				"html" => "js||encodeURIComponent(" . get_editor_value_javascript() . ")||js",
+				"summary" => "js||encodeURIComponent($('#news_summary').val())||js",
+				"title" => "js||encodeURIComponent($('#news_title').val())||js",
+			],
+			"event" => "submit",
+			"ondone" => "close_modal();",
+		]);
     }
 
-	echo '
-		<div id="edit_news_div">
-				<table style="width:100%">
-					<tr>
-						<td style="text-align:right;font-size: 12px;">
-							News Title:
-						</td>
-						<td style="text-align:left; width:86%;">
-							<input type="text" id="news_title" size="60" maxlength="60" value="' . $title . '"/>
-						</td>
-					</tr>
-					<tr>
-						<td style="text-align:right; vertical-align:top;font-size: 12px;">
-							Summary:
-						</td>
-						<td style="text-align:left; width:86%;">
-							<textarea id="news_summary" cols="60" rows="2" >' . $caption . '</textarea>
-						</td>
-					</tr>
-					<tr>
-						<td colspan="2">
-							<hl />
-						</td>
-					</tr>
-					<tr>
-						<td colspan="2">';
-                            echo get_editor_box(["initialvalue" => $content, "type" => "News", "height" => "230"]);
-							echo '<br />' . $button . '
-						</td>
-					</tr>
-				</table>
-		</div>';
+	$editor = get_editor_box(["initialvalue" => $content, "type" => "News", "height" => "230"]);
+	echo fill_template("tmp/news.template", "news_form", "news", ["featureid" => $featureid, "title" => $title, "summary" => $summary, "editor" => $editor]);
 }
 
 function viewnews() {

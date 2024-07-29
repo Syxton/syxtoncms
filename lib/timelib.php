@@ -129,14 +129,15 @@ global $CFG;
 
 function get_date_graphic($timestamp = false, $newday = false, $alter = false, $small = false, $inactive = false) {
 global $CFG;
+	$uniqueid = uniqid("graphic_");
 	$gradients = '
 	<!-- Define svg gradients -->
     <svg width="0" height="0">
-		<linearGradient id="gradient_active" x1="100%" y1="100%" x2="0%" y2="0%">
+		<linearGradient id="' . $uniqueid . 'gradient_active" x1="100%" y1="100%" x2="0%" y2="0%">
 			<stop offset="0%" style="stop-color: rgb(186 241 58);stop-opacity:1"></stop>
 			<stop offset="100%" style="stop-color: rgb(255 255 255);stop-opacity:1"></stop>
 		</linearGradient>
-		<linearGradient id="gradient_inactive" x1="100%" y1="100%" x2="0%" y2="0%" >
+		<linearGradient id="' . $uniqueid . 'gradient_inactive" x1="100%" y1="100%" x2="0%" y2="0%" >
 			<stop offset="0%" style="stop-color: rgb(151 151 151);stop-opacity:1"></stop>
 			<stop offset="100%" style="stop-color: rgb(255 255 255);stop-opacity:1"></stop>
 		</linearGradient>
@@ -154,14 +155,14 @@ global $CFG;
 	$icon = icon([
 		["icon" => "square", "class" => "dropshadow"],
 		["content" => date('F', $timestamp), "style" => "top: 20%;font-weight: bold;", "transform" => "shrink-14"],
-		["content" => date('jS', $timestamp), "style" => "top: 45%;font-weight: bold;", "transform" => "shrink-10"],
+		["content" => date('jS', $timestamp), "style" => "top: 45%;font-weight: bold;", "transform" => "shrink-11"],
 		["content" => date('Y', $timestamp), "style" => "top: 80%;left: 66%;font-weight: bold;", "transform" => "shrink-14"],
 	]);
 
 	$status = $inactive ? "inactive" : "active";
 	$dategraphic = '
-		<style> .dategraphic svg:first-child * { fill: url(#gradient_' . $status . '); } </style>
-		<div class="dategraphic ' . $size . '">' . $icon . '</div>' . $gradients;
+		<style> .' . $uniqueid . 'dategraphic svg:first-child * { fill: url(#' . $uniqueid . 'gradient_' . $status . '); } </style>
+		<div class="' . $uniqueid . 'dategraphic dategraphic ' . $size . '">' . $icon . '</div>' . $gradients;
 
 	return $dategraphic;
 }

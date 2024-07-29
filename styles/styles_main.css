@@ -583,11 +583,6 @@ div.full_news_link a:hover {
     text-decoration: none
 }
 
-.newstable {
-    width: 100%;
-    padding-bottom: 0px
-}
-
 img.sitenews {
     width: 22em
 }
@@ -2012,10 +2007,6 @@ tr.pics_title td:hover {
     background: #8f8f8f
 }
 
-.newstable {
-    margin-bottom: 8px
-}
-
 .newstable .container_head {
     display: flex;
     justify-content: space-between;
@@ -2024,8 +2015,13 @@ tr.pics_title td:hover {
 }
 
 .newstable .dategraphic {
+    vertical-align: top;
     display: inline-block;
     width: 110px;
+}
+
+.newstable .dategraphic span:first-child {
+    vertical-align: top;
 }
 
 .area_middle .newstable .article {
@@ -2051,13 +2047,13 @@ tr.pics_title td:hover {
 }
 
 .news_archive_wrapper {
-    background-color:#FCD163;
     display: flex;
     justify-content: space-evenly;
     align-items: center;
-    border:1px solid slategray;
-    width:100%;
-    text-align:center;
+    border-top: 2px solid slategray;
+    width: 100%;
+    text-align: center;
+    margin-top: 15px;
     font-size: 1.3em;
 }
 

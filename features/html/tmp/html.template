@@ -14,7 +14,7 @@ comment_template||
 ||comment_template
 
 comment_form_template||
-    <div class="html_comment_form">
+    <form class="html_comment_form" id="comment_form_||htmlid||">
         <div class="title">
             <strong>||title||</strong>
         </div>
@@ -27,19 +27,9 @@ comment_form_template||
             <textarea id="comment" cols="100" rows="8">||comment||</textarea>
         </div>
         <div class="centered">
-            <input type="button" value="||title||"
-                    onclick="if (document.getElementById('comment').value.length > 0) {
-                                ajaxapi_old('/features/html/html_ajax.php',
-                                        'comment',
-                                        '||commentid{{&commentid=||commentid||}}commentid||||replytoid{{&replytoid=||replytoid||}}replytoid||||htmlid{{&htmlid=||htmlid||}}htmlid||&pageid=||pageid||&comment=' + encodeURIComponent(document.getElementById('comment').value),
-                                        function() {
-                                            if (xmlHttp.readyState == 4) {
-                                                close_modal();
-                                            }
-                                        });
-                            }" />
+            <input type="submit" value="||title||" />
         </div>
-    </div>
+    </form>
 ||comment_form_template
 
 edit_form||
@@ -50,3 +40,17 @@ edit_form||
 		</div>
 	</form>
 ||edit_form
+
+comment_area||
+    <div id="html_comment_button_box_||featureid||" class="html_comment_button_box" style="||comments{{//OR//display:none;}}comments||">
+        <button id="html_||featureid||_comments_button" title="Show Comments" onclick="$('#comment_area_||featureid||, #html_||featureid||_comments_button, #html_||featureid||_hide_button').toggle();" class="alike html_comment_button">
+            ||echo icon([["icon" => "comment", "stacksize" => 2, "color" => "#7676cf"],["icon" => "eye", "color" => "white", "transform" => "shrink-8.5 left-1 up-.5"]]);::none||
+        </button>
+        <button id="html_||featureid||_hide_button" title="Hide Comments" onclick="$('#comment_area_||featureid||, #html_||featureid||_comments_button, #html_||featureid||_hide_button').toggle();" class="alike html_comment_button" style="display:none;">
+            ||echo icon([["icon" => "comment", "stacksize" => 2, "color" => "#7676cf"],["icon" => "eye-slash", "color" => "white", "transform" => "shrink-8.5 left-2 up-.5"]]);::none||
+        </button>
+    </div>
+    <div id="comment_area_||featureid||" class="html_comments_area" style="display:none;">
+        ||comments||
+    </div>
+||comment_area

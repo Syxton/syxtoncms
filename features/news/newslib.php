@@ -120,8 +120,10 @@ global $CFG;
     $buttons = $standalone ? '' : get_button_layout("news", $pagenews->newsid, $pagenews->pageid);
     $user = get_db_row("SELECT * FROM users where userid = " . $pagenews->userid);
     $link = make_modal_links([
+        "text" => "Read Article",
+        "button" => true,
         "title"=> stripslashes(htmlentities($pagenews->title)),
-        "icon" => icon("book-open-reader"),
+        "icon" => icon("book-open-reader", 2),
         "path" => action_path("news") . "viewnews&newsonly=1&pageid=$pageid&newsid=$pagenews->newsid",
         "width" => "98%",
         "height" => "95%",
@@ -138,31 +140,16 @@ global $CFG;
         $graphicdate = $daygraphic;
     }
 
-    $returnme = '
-        <div class="newstable">
-            ' . $graphicdate . '
-            <div class="article">
-                <div class="title">
-                    <strong>
-                    ' . stripslashes($pagenews->title) . '
-                    </strong>
-                </div>
-                <span class="summary">
-                    ' . truncate($pagenews->caption, $captionlength) . '
-                </span>
-                ' . $readmore . '
-                <div class="container_head">
-                    <span>
-                        Submitted: ' . ago($pagenews->submitted) . ' by ' . stripslashes($user['fname']) . ' ' . stripslashes($user['lname']) . '
-                    </span>
-                    <div style="float:right">
-                        ' . $buttons . '
-                    </div>
-                </div>
-            </div>
-        </div>';
-
-    return $returnme;
+    $params = [
+        "graphic" => $graphicdate,
+        "title" => $pagenews->title,
+        "summary" => truncate($pagenews->content, $captionlength),
+        "readmore" => $readmore,
+        "buttons" => $buttons,
+        "ago" => ago($pagenews->submitted),
+        "author" => $user['fname'] . ' ' . $user['lname'],
+    ];
+    return fill_template("tmp/news.template", "news_table", "news", $params);
 }
 
 function get_users_news_pages($userid, $limit="", $site=true) {
@@ -584,7 +571,7 @@ function news_delete($pageid, $featureid = false, $newsid = false) {
 function news_rss($feed, $userid, $userkey) {
 global $CFG;
     $feeds = "";
-    if ($feed["pageid"] == $CFG->SITEID && $userid) { //T his is the site page for people who are members
+    if ($feed["pageid"] == $CFG->SITEID && $userid) { //This is the site page for people who are members
         if ($pages = get_users_news_pages($userid, "LIMIT 50")) {
             if ($pagenews = get_pages_news($pages, "LIMIT 50")) {
                 foreach ($pagenews as $news) {

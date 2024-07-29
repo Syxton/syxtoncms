@@ -142,17 +142,7 @@ global $CFG, $MYVARS;
 
 function deletecomment() {
     $commentid = clean_myvar_req("commentid", "int");
-    $comment = get_db_row("SELECT * FROM html_comments WHERE commentid = ||commentid||", ["commentid" => $commentid]);
-    $htmlid = $comment["htmlid"];
-    $pageid = get_db_field("pageid", "html", "htmlid = ||htmlid||", ["htmlid" => $htmlid]);
-    $area = get_feature_area("html", $htmlid);
-
-    if (!$settings = fetch_settings("html", $htmlid, $pageid)) {
-        save_batch_settings(default_settings("html", $pageid, $htmlid));
-        $settings = fetch_settings("html", $htmlid, $pageid);
-    }
-
-    $perpage = $area == "side" ? $settings->html->$htmlid->sidecommentlimit->setting : $settings->html->$htmlid->middlecommentlimit->setting;
+    $info = get_info_from_commentid($commentid);
 
     // Has replies, so don't delete it, just remove data.
     if (get_db_result("SELECT * FROM html_comments WHERE parentid = ||parentid||", ["parentid" => $commentid])) {
@@ -167,45 +157,45 @@ function deletecomment() {
     log_entry("html", $commentid, "Delete Comment");
 
 
-    $return = get_html_comments($htmlid, $pageid, false, $perpage, 0, false);
+    $return = get_html_comments($info["htmlid"], $info["pageid"], false, $info["perpage"], 0, false);
 
     ajax_return($return);
 }
 
 function comment() {
-global $CFG, $MYVARS, $USER;
+global $CFG, $PAGE, $USER;
     $comment = clean_myvar_req("comment", "html");
     $commentid = clean_myvar_opt("commentid", "int", false);
     $replytoid = clean_myvar_opt("replytoid", "int", false);
     $htmlid = clean_myvar_opt("htmlid", "int", false);
 
-    $time = get_timestamp();
-    if ($commentid) {
-        $SQL = fetch_template("dbsql/html.sql", "update_comment", "html");
-        if (execute_db_sql($SQL, ["comment" => $comment, "commentid" => $commentid, "modified" => $time])) {
-            log_entry("html", $commentid, "Blog Comment Edited");
-            echo "Blog comment edited successfully";
+    $return = $error = "";
+    try {
+        $time = get_timestamp();
+        if ($commentid) {
+            $SQL = fetch_template("dbsql/html.sql", "update_comment", "html");
+            if (execute_db_sql($SQL, ["comment" => $comment, "commentid" => $commentid, "modified" => $time])) {
+                log_entry("html", $commentid, "Blog Comment Edited");
+            }
+        } elseif ($replytoid) {
+            $htmlid = get_db_field("htmlid", "html_comments", "commentid = '$replytoid'");
+            $SQL = fetch_template("dbsql/html.sql", "insert_reply", "html");
+            if ($commentid = execute_db_sql($SQL, ["parentid" => $replytoid, "comment" => $comment, "userid" => $USER->userid, "htmlid" => $htmlid, "created" => $time, "modified" => $time])) {
+                log_entry("html", $commentid, "Blog Reply");
+            }
+        } elseif ($htmlid) {
+            $SQL = fetch_template("dbsql/html.sql", "insert_comment", "html");
+            if ($commentid = execute_db_sql($SQL, ["comment" => $comment, "userid" => $USER->userid, "htmlid" => $htmlid, "created" => $time, "modified" => $time])) {
+                log_entry("html", $commentid, "Blog Comment");
+            }
         }
-        return;
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
     }
 
-    if ($replytoid) {
-        $htmlid = get_db_field("htmlid", "html_comments", "commentid = '$replytoid'");
-        $SQL = fetch_template("dbsql/html.sql", "insert_reply", "html");
-        if ($commentid = execute_db_sql($SQL, ["parentid" => $replytoid, "comment" => $comment, "userid" => $USER->userid, "htmlid" => $htmlid, "created" => $time, "modified" => $time])) {
-            log_entry("html", $commentid, "Blog Reply");
-            echo "Blog reply made successfully";
-        }
-        return;
-    }
+    $info = get_info_from_commentid($commentid);
+    $return = get_html_comments($info["htmlid"], $info["pageid"], false, $info["perpage"], 0, false);
 
-    // New
-    if ($htmlid) {
-        $SQL = fetch_template("dbsql/html.sql", "insert_comment", "html");
-        if ($commentid = execute_db_sql($SQL, ["comment" => $comment, "userid" => $USER->userid, "htmlid" => $htmlid, "created" => $time, "modified" => $time])) {
-            log_entry("html", $commentid, "Blog Comment");
-            echo "Blog comment made successfully";
-        }
-    }
+    ajax_return($return, $error);
 }
 ?>
