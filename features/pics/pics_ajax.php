@@ -26,29 +26,36 @@ global $CFG, $MYVARS;
 	$editable = !isset($MYVARS->GET["editable"]) ? 'false' : $MYVARS->GET["editable"];
 	$perpage = !isset($MYVARS->GET["perpage"]) ? NULL : $MYVARS->GET["perpage"];
 	$order = !isset($MYVARS->GET["order"]) ? NULL : urldecode($MYVARS->GET["order"]);
-	
+
 	echo get_pics($MYVARS->GET["pageid"], $MYVARS->GET["featureid"], $galleryid, $pagenum, $editable, $perpage);
 }
 
 function new_gallery() {
-global $CFG, $MYVARS;
 	$newgallery = clean_myvar_req("param", "bool");
 	$pageid = clean_myvar_req("pageid", "int");
-	if ($newgallery) {
-		echo '<input name="gallery_name" id="gallery_name" type="text" size="32" onkeypress="return handleEnter(this, event);" />';
-	} else {
-        $p = [
-            "properties" => [
-                "name" => "galleryid",
-                "id" => "galleryid",
-            ],
-            "values" => get_db_result(fetch_template("dbsql/pics.sql", "get_page_galleries", "pics"), ["pageid" => $pageid]),
-            "valuename" => "galleryid",
-            "displayname" => "name",
-            "firstoption" => "None selected",
-        ];
-		echo make_select($p);
-	}
+
+    $return = $error = "";
+    try {
+        if ($newgallery) {
+            $return = '<input name="gallery_name" id="gallery_name" type="text" size="32" onkeypress="return handleEnter(this, event);" />';
+        } else {
+            $p = [
+                "properties" => [
+                    "name" => "galleryid",
+                    "id" => "galleryid",
+                ],
+                "values" => get_db_result(fetch_template("dbsql/pics.sql", "get_page_galleries", "pics"), ["pageid" => $pageid]),
+                "valuename" => "galleryid",
+                "displayname" => "name",
+                "firstoption" => "None selected",
+            ];
+            $return = make_select($p);
+        }
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+    }
+
+	ajax_return($return, $error);
 }
 
 function move_pic() {
@@ -103,23 +110,23 @@ global $CFG, $MYVARS;
                 } else { //nobody is using it, so delete it
                     $delete = true;
                     delete_file($CFG->dirroot . '/features/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row["imagename"]);
-                    execute_db_sql("DELETE FROM pics WHERE picsid='" . $row["picsid"] . "'");    
+                    execute_db_sql("DELETE FROM pics WHERE picsid='" . $row["picsid"] . "'");
                 }
             }
         }
-        
+
         if ($copy) {
             $SQL = "UPDATE pics SET pageid='$CFG->SITEID',featureid='$site_featureid' WHERE galleryid='$galleryid'";
             execute_db_sql($SQL);
             $SQL = "UPDATE pics_galleries SET pageid='$CFG->SITEID',featureid='$site_featureid' WHERE galleryid='$galleryid'";
             execute_db_sql($SQL);
         }
-        
+
         if ($delete) {
             execute_db_sql("DELETE FROM pics_galleries WHERE galleryid='$galleryid'");
-        }         
+        }
     }
-    
+
     echo get_pics_manager($pageid, $featureid);
 }
 
@@ -138,39 +145,39 @@ global $CFG, $MYVARS;
         if (!empty($featureid) && !empty($pageid)) {
             //Make sure that upload directory exists
             recursive_mkdir($upload_dir);
-            
+
             //the file size in bytes.
             $max_upload_bytes = return_bytes(ini_get('upload_max_filesize')); //Gets max upload filesize from server.
             $max_post_bytes = return_bytes(ini_get('upload_max_filesize')); //Gets max post from server.
             $size_bytes = $max_upload_bytes < $max_post_bytes ? $max_upload_bytes : $max_post_bytes; //use the smaller of the two
-            
+
             //Extensions you want files uploaded limited to.
             $limitedext = [".gif", ".jpg", ".jpeg", ".png", ".bmp"];
-            
+
             //check if the directory exists or not.
             if (!is_dir("$upload_dir")) {
-                die ("Error: The directory <strong>($upload_dir)</strong> doesn't exist");
+                throw new \Exception("Error: The directory <strong>($upload_dir)</strong> doesn't exist");
             }
             //check if the directory is writable.
             if (!is_writeable("$upload_dir")) {
-                die("Error: The directory <strong>($upload_dir)</strong> is NOT writable, Please CHMOD (777)");
+                throw new \Exception("Error: The directory <strong>($upload_dir)</strong> is NOT writable, Please CHMOD (777)");
             }
-            
-            //if the form has been submitted, then do the upload process
-            $filenames = explode("**", clean_myvar_req("filenames", "string"));
-            $file_count = count($filenames);
-            
+
+            // if the form has been submitted, then do the upload process
+            $allfiles = $_FILES["files"];
+            $file_count = count($allfiles);
+
             //do a loop for uploading files based on ($file_count) number of files.
             $i = $success = 0;
             $galleryid = clean_myvar_opt("galleryid", "int", false);
             $files = $_FILES["files"];
 
-            while (isset($filenames[$i]) && isset($files["name"][$i])) {
-                $file_name = $files["name"][$i];
+            foreach ($files as $file) {
+                $file_name = $file["name"];
                 //to remove spaces from file name we have to replace it with "_".
                 $file_name = str_replace(' ', '_', $file_name);
-                $file_tmp = $files['tmp_name'][$i];
-                $file_size = $files['size'][$i];
+                $file_tmp = $file['tmp_name'];
+                $file_size = $file['size'];
                 #-----------------------------------------------------------#
                 # this code will check if the files were selected or not.    #
                 #-----------------------------------------------------------#
@@ -200,7 +207,7 @@ global $CFG, $MYVARS;
                                 $n++;
                                 $file_name = str_replace($ext, "", $original_filename) . " ($n)" . $ext;
                             }
-                            $files["name"][$i] = $file_name;
+                            $file["name"] = $file_name;
 
                             #-----------------------------------------------------------#
                             # this function will upload the files.  :) ;) cool          #
@@ -235,15 +242,14 @@ global $CFG, $MYVARS;
                         } // end of (file_size).
                     } // end of (limitedext).
                 } // end of (!is_uploaded_file).
-                $i++;
-            } // end of (while loop).
+            }
 
             if (empty($success)) {
                 throw new \Exception("Error: No file was uploaded.");
             } else {
                 commit_db_transaction();
                 die("<strong>$success file[s] uploaded.</strong>");
-            }       
+            }
         }
     } catch (\Throwable $e) {
         rollback_db_transaction($e->getMessage());
@@ -276,7 +282,7 @@ global $CFG;
 		$activated = $pagehidden == 0 ? 'background-color:#FFFF66;' : '';
 		execute_db_sql("UPDATE pics SET pagehidden = ||pagehidden|| WHERE picsid = ||picsid||", ["pagehidden" => $pagehidden, "picsid" => $picsid]);
 	}
-    
+
     echo '<div style="text-align:center;width:171px;font-size:.85em;' . $activated . '">' . $row["imagename"] . '</div>';
 }
 ?>

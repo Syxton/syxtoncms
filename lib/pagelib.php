@@ -330,7 +330,7 @@ global $CFG, $LOADAJAX;
             if (empty($ondone)) {
                 $ondone = "jq_display($display, data);"; // ondone becomes simple display.
             } else {
-                $ondone = "jq_display($display, data); $ondone";  // prepend display.
+                $ondone = "$.when(jq_display($display, data)).then(function() { $ondone });";  // Prepend display and perform ondone afterwards.
             }
         }
 

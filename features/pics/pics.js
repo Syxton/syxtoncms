@@ -11,38 +11,12 @@ function handleEnter (field, event) {
 	}
 	return true;
 }
-		    
+
 function update_picslist(){
-    var cansubmit = true;
-	var reqStr = get_file_names($("#pics_form"));
-
-	$("#filenames").val(reqStr);
-	if($("#gallery_name").val().length == 0){ cansubmit = false; }
-	if($("#filenames").val().length == 0){ cansubmit = false; }
-	if(cansubmit){
-		 $('#pics_form').submit();   
-	}else{
-		 alert('A gallery must be selected or created and files must be attached.');
-	} 
-}
-
-function get_file_names(theForm){
-    var reqStr = "";
-    $('.MultiFile-title').each(function(){
-        reqStr += reqStr == "" ? $(this).html() : "**" + $(this).html();    
-    });
-    return reqStr;
-    
-	var reqStr = "";
-	for(i=0; i < theForm.elements.length; i++){
-		switch (theForm.elements[i].tagName){
-			case "INPUT":
-			switch (theForm.elements[i].type){
-                case "file":
-                reqStr += reqStr == "" ? theForm.elements[i].name : "**" + theForm.elements[i].name;
-                break;
-			}
-		}
+	if ($("#gallery_name").val().length && $('#pics_files')[0].files.length) {
+		$('#pics_form').submit();
+		return false;
 	}
-	return reqStr;
-} 
+
+	alert('A gallery must be selected or created and files must be attached.');
+}

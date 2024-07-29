@@ -95,12 +95,13 @@ global $CFG, $USER, $MYVARS;
             "action" => "update_archive_articles",
             "featureid" => $featureid,
             "pageid" => $pageid,
-            "year" => "js||$('#news_' . $featureid . '_archive_year').val()||js",
-            "month" => "js||$('#news_' . $featureid . '_archive_month').val()||js",
+            "year" => "js||$('#news_" . $featureid . "_archive_year').val()||js",
+            "month" => "js||$('#news_" . $featureid . "_archive_month').val()||js",
         ],
         "event" => "change",
-        "display" => "article_span_' . $featureid . '_archive",
+        "display" => "article_span_" . $featureid . "_archive",
     ]);
+
     $params = [
         "properties" => [
             "name" => "news_" . $featureid . "_archive_month",
@@ -112,7 +113,7 @@ global $CFG, $USER, $MYVARS;
         "displayname" => "monthname",
         "selected" => $months->$lastrow->month,
     ];
-    echo make_select($params);
+    ajax_return(make_select($params));
 }
 
 function update_archive_articles() {

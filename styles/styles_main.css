@@ -2057,6 +2057,12 @@ tr.pics_title td:hover {
     font-size: 1.3em;
 }
 
+.news_author {
+    text-align: right;
+    font-size: .9em;
+    color: rgb(92, 92, 92);
+}
+
 .area_side .news_archive_wrapper {
     text-align:left;
 }
