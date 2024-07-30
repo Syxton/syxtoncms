@@ -90,26 +90,47 @@ function save_caption() {
 }
 
 function save_viewability() {
-global $CFG, $MYVARS;
-	$picsid = $MYVARS->GET['picsid']; $siteviewable = $MYVARS->GET['siteviewable'] == "true" ? 1 : 0;
-	execute_db_sql("UPDATE pics SET siteviewable='$siteviewable' WHERE picsid='$picsid'");
-	echo 'Saved';
+    $picsid = clean_myvar_req("picsid", "int");
+    $siteviewable = clean_myvar_req("siteviewable", "int", 0);
+
+    $return = $error = "";
+    try {
+        if (!execute_db_sql("UPDATE pics SET siteviewable = ||siteviewable|| WHERE picsid =||picsid||", ["picsid" => $picsid, "siteviewable" => $siteviewable])) {
+            throw new Exception("Could not save viewability.");
+        }
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+    }
+
+	ajax_return($return, $error);
 }
 
 function delete_pic() {
-global $CFG, $MYVARS;
-    $picsid = $MYVARS->GET['picsid'];
-    $row = get_db_row("SELECT * FROM pics WHERE picsid='$picsid'");
-    delete_file($CFG->dirroot . '/features/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row["imagename"]);
-    execute_db_sql("DELETE FROM pics WHERE picsid='$picsid'");
-    echo '<font style="font-color:gray">Picture Deleted</font>';
+global $CFG;
+    $picsid = clean_myvar_req("picsid", "int");
+
+    $return = $error = "";
+    try {
+        $row = get_db_row("SELECT * FROM pics WHERE picsid = ||picsid||", ["picsid" => $picsid]);
+        if (!delete_file($CFG->dirroot . '/features/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row["imagename"])) {
+            throw new Exception("Could not delete files.");
+        }
+
+        if (!execute_db_sql("DELETE FROM pics WHERE picsid = ||picsid||", ["picsid" => $picsid])) {
+            throw new Exception("Could not save viewability.");
+        }
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+    }
+
+	ajax_return($return, $error);
 }
 
 function delete_gallery() {
 global $CFG, $MYVARS;
-    $galleryid = $MYVARS->GET['galleryid'];
     $pageid = clean_myvar_req("pageid", "int");
     $featureid = clean_myvar_req("featureid", "int");
+    $galleryid = clean_myvar_opt("galleryid", "int", 0);
 
     $delete = $copy = false;
     if (!empty($galleryid) && !empty($pageid) && !empty($featureid)) {

@@ -51,7 +51,10 @@ global $CFG;
 function delete_file($filepath) {
     if (file_exists($filepath)) {
         unlink($filepath);
+        return file_exists($filepath);
     }
+
+    return true; // File doesn't exist.
 }
 
 function recursive_mkdir($path) {

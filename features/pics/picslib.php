@@ -66,22 +66,6 @@ global $CFG, $MYVARS, $USER;
 
     $SQL = fetch_template("dbsql/pics.sql", "get_galleries", "pics", ["siteviewable" => ($pageid == $CFG->SITEID ? true : false)]);
     if ($allgalleries = get_db_result($SQL, ["pageid" => $pageid, "featureid" => $featureid])) {
-        $g = 0;
-        $gallerylist = (object) [
-            $g => (object) [
-                "name" => "All",
-                "value" => "all",
-            ],
-        ];
-        $g++;
-        while ($galleries = fetch_row($allgalleries)) {
-            $gallerylist->$g = (object) [
-                "name" => $galleries["gallery_title"],
-                "value" => $galleries["galleryid"],
-            ];
-            $g++;
-        }
-
         // Pics manager page turn.
         ajaxapi([
             "id" => "pics_pageturn",
@@ -104,16 +88,33 @@ global $CFG, $MYVARS, $USER;
                 "id" => "gallery",
                 "onchange" => "pics_pageturn();",
             ],
-            "values" => $gallerylist,
-            "valuename" => "value",
-            "displayname" => "name",
+            "firstoption" => "All Galleries",
+            "values" => $allgalleries,
+            "valuename" => "galleryid",
+            "displayname" => "gallery_title",
         ]);
 
+        // Pics manager page turn.
+        ajaxapi([
+            "id" => "delete_gallery",
+            "if" => "$('#gallery').val() && confirm('Are you sure you want to delete this gallery?')",
+            "else" => "if(!$('#gallery').val()) { alert('Cannot delete all galleries at once.'); }",
+            "paramlist" => "pagenum=0",
+            "url" => "/features/pics/pics_ajax.php",
+            "data" => [
+                "action" => "delete_gallery",
+                "pageid" => $pageid,
+                "featureid" => $featureid,
+                "galleryid" => "js||$('#gallery').val()||js",
+            ],
+            "display" => "pics_manager",
+            "loading" => "loading_overlay",
+        ]);
         $return = '
             Select which gallery you wish to view.
             ' . $gallery_select . '
             Click on a picture to activate or deactivate it.
-            <button title="Delete Gallery" style="float:right;padding:2px;" class="alike" onclick="if ($(\'#gallery\').val() != \'all\') { ajaxapi_old(\'/features/pics/pics_ajax.php\',\'delete_gallery\',\'&pageid=' . $pageid . '&featureid=' . $featureid . '&galleryid=\'+$(\'#gallery\').val(),function() { if (xmlHttp.readyState == 4) { simple_display(\'pics_manager\'); }}, true); } else { alert(\'Cannot delete all galleries at once.\') }">
+            <button id="delete_gallery" title="Delete Gallery" style="float:right;padding:2px;" class="alike">
                 ' . icon("trash", 2) . '<span>Delete Gallery</span>
             </button>
             ' . get_searchcontainer(get_pics($featureid));
@@ -184,11 +185,12 @@ global $CFG, $USER;
 
     $canedit = user_is_able($USER->userid, "editpics", $pageid, "pics", $featureid);
     $candelete = user_is_able($USER->userid, "deletepics", $pageid, "pics", $featureid);
+    $issite = $pageid === $CFG->SITEID;
 
     $sitehidden = $canedit ? "" : " AND sitehidden = 0";
     $pagehidden = $canedit ? "" : " AND pagehidden = 0";
 
-    if ($pageid == $CFG->SITEID) {
+    if ($issite) {
         $SQL = 'SELECT * FROM pics WHERE (featureid = ||featureid|| OR siteviewable = 1)' . $whichgallery . $sitehidden . ' ORDER BY' . $full_order;
     } else {
         $SQL = 'SELECT *
@@ -211,7 +213,7 @@ global $CFG, $USER;
                 "id" => "delete_pic",
                 "if" => "confirm('Do you want to delete this image?')",
                 "paramlist" => "picsid",
-                "url" => "/features/html/html_ajax.php",
+                "url" => "/features/pics/pics_ajax.php",
                 "data" => [
                     "action" => "delete_pic",
                     "picsid" => "js||picsid||js",
@@ -251,6 +253,24 @@ global $CFG, $USER;
                 "ondone" => "pics_pageturn($pagenum);",
                 "event" => "none",
             ]);
+
+            if (!$issite) {
+                // Image add/edit caption ajax code.
+                ajaxapi([
+                    "id" => "save_viewability",
+                    "if" => "confirm('Do you want to change the site viewability of this image?')",
+                    "else" => "if ($('#siteviewable_' + picsid).prop('checked')) { $('#siteviewable_' + picsid).prop('checked', false); } else { $('#siteviewable_' + picsid).prop('checked', true); }",
+                    "paramlist" => "picsid",
+                    "url" => "/features/pics/pics_ajax.php",
+                    "data" => [
+                        "action" => "save_viewability",
+                        "picsid" => "js||picsid||js",
+                        "siteviewable" => "js||$('#siteviewable_' + picsid).prop('checked')||js",
+                    ],
+                    "ondone" => "pics_pageturn($pagenum);",
+                    "event" => "none",
+                ]);
+            }
         }
 
         $returnme = '';
@@ -273,70 +293,32 @@ global $CFG, $USER;
                         </button>';
                 }
 
-                if (($pageid === $CFG->SITEID && $row["sitehidden"] === 1) || ($pageid !== $CFG->SITEID && $row["pagehidden"] === 1)) {
+                if (($issite && $row["sitehidden"] === 1) || (!$issite && $row["pagehidden"] === 1)) {
                     $activated = '';
                 } else { //image is activated
                     $activated = 'pics_active';
                 }
             }
 
-            $disabled = $pageid == $CFG->SITEID && $row["pageid"] == $pageid ? "DISABLED" : "";
+            $disabled = $issite && $row["pageid"] == $pageid ? "DISABLED" : "";
             $checked = $row["siteviewable"] == 1 ? " checked=checked" : "";
-
-            if ($pageid === $CFG->SITEID && $row["pageid"] !== $pageid) {
-                $reloadpage = true;
-                $alreadysite1 = 'do_nothing();';
-                $alreadysite2 = 'ajaxapi_old(\'/features/pics/pics_ajax.php\',
-                                         \'pics_pageturn\',
-                                         \'&pageid=' . $pageid . '&featureid=' . $featureid . '&galleryid=' . $galleryid . '&order=' . urlencode($order) . '&pagenum=' . ($pagenum) . '\',
-                                         function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); $(\'#loading_overlay\').hide(); }}, true);';
-            } else { // Not on site and image is not from this page.
-                $alreadysite1 = 'simple_display(\'picsid_' . $row["picsid"] . '\');
-                                 setTimeout(function() { $(\'#picsid_' . $row["picsid"] . '\').hide(); }, 3000);';
-                $alreadysite2 = '';
-            }
 
             if ($canedit) {
                 $caption = '
-                    <div class="pics_manager_caption">
-                        <textarea id="caption_' . $row["picsid"] . '" class="pics_manager_piccaption" onkeyup="pics_track_change(' . $row["picsid"] . ');">' . $row["caption"] . '</textarea>
-                        <button class="alike" onclick="save_caption(' . $row["picsid"] . ');">
-                            ' . icon("floppy-disk") . '
-                        </button>
-                    </div>';
+                    <textarea id="caption_' . $row["picsid"] . '" class="pics_manager_piccaption" onkeyup="pics_track_change(' . $row["picsid"] . ');">' . $row["caption"] . '</textarea>
+                    <button class="alike" onclick="save_caption(' . $row["picsid"] . ');">
+                        ' . icon("floppy-disk", 2) . '
+                    </button>';
 
-                if ($pageid !== $CFG->SITEID) {
+                if (!$issite) {
                     $siteviewable = '
-                        <div class="pics_manager_siteviewable">
-                            <input type="checkbox" style="vertical-align:middle" id="siteviewable_' . $row["picsid"] . '"
-                                ' . $disabled . '
-                                 onchange="if (confirm(\'Do you want to change the site viewability of this image?\')) {
-                                                $(\'#picsid_' . $row["picsid"] . '\').show();
-                                                ajaxapi_old(\'/features/pics/pics_ajax.php\',
-                                                \'save_viewability\',
-                                                \'&picsid=' . $row["picsid"] . '&siteviewable=\' + $(\'#siteviewable_' . $row["picsid"] . '\').prop(\'checked\'),
-                                                function() { ' . $alreadysite1 . ' });
-                                                ' . $alreadysite2 . '
-                                             } else {
-                                                if ($(\'#siteviewable_' . $row["picsid"] . '\').prop(\'checked\')) {
-                                                    $(\'#siteviewable_' . $row["picsid"] . '\').prop(\'checked\', false);
-                                                } else {
-                                                    $(\'#siteviewable_' . $row["picsid"] . '\').prop(\'checked\', true);
-                                                }
-                                            }
-                                            blur();"' . $checked . ' />
-                            <span>
-                                Site Viewable
-                            </span>
-                        </div>';
+                        <input type="checkbox" style="vertical-align:middle" id="siteviewable_' . $row["picsid"] . '" onchange="save_viewability(' . $row["picsid"] . ');"' . $checked . ' ' . $disabled . ' />
+                        <span>
+                            Site Viewable
+                        </span>';
                 }
             } else {
-                $caption = '
-                    <div class="pics_manager_caption">
-                        <div style="font-size:.85em;' . $captionsize . '">
-                            ' . stripslashes($row["caption"]) . '
-                        </div>
-                    </div>';
+                $caption = $row["caption"];
             }
 
             if ($row["pageid"] !== $pageid) { //this image is from another page and must be copied rather than moved.
@@ -367,7 +349,7 @@ global $CFG, $USER;
                                                 \'pics_pageturn\',
                                                 \'&pageid=' . $pageid . '&featureid=' . $featureid . '&galleryid=' . $galleryid . '&order=' . urlencode($order) . '&pagenum=' . ($pagenum) . '\',
                                                 function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); $(\'#loading_overlay\').hide(); }}, true); } else { change_selection(\'movepics_' . $row["picsid"] . '\', \'\'); blur(); }',
-                        "style" => "font-size:1em;width:100%;",
+                        "style" => "font-size:1em;",
                     ],
                     "values" => get_db_result("SELECT * FROM pics_galleries WHERE pageid = '$pageid'"),
                     "valuename" => "galleryid",
@@ -378,10 +360,7 @@ global $CFG, $USER;
             }
 
             if ($canedit) {
-                $movepics = '
-                    <div class="pics_manager_movepics">
-                        ' . make_select($galleryselect) . '
-                    </div>';
+                $movepics = make_select($galleryselect);
             }
 
             $returnme .= '
@@ -389,14 +368,31 @@ global $CFG, $USER;
                     <div id="activated_picsid_' . $row["picsid"] . '" class="pics_activation_status ' . $activated . '">
                         ' . $row["imagename"] . $deletepic . '
                     </div>
-                    <div style="width:165px;overflow:hidden;text-align:center;">
-                        <a href="javascript: void(0);" onclick="ajaxapi_old(\'/features/pics/pics_ajax.php\',\'toggle_activate\',\'&pageid=' . $pageid . '&picsid=' . $row["picsid"] . '\',function() { $(\'#activated_picsid_' . $row["picsid"] . '\').toggleClass(\'pics_active\');}); blur();">
-                            <img src="' . $webpath . '"' . imgResize($mypicture[0], $mypicture[1], 165) . ' />
-                        </a>
-                    </div>
-                    ' . $caption . '
-                    ' . $siteviewable . '
-                    ' . $movepics . '
+                    <table style="width:100%;">
+                        <tr>
+                            <td style="width: 170px;vertical-align:top">
+                                <div class="pics_manager_pic">
+                                    <button class="alike" onclick="ajaxapi_old(\'/features/pics/pics_ajax.php\',\'toggle_activate\',\'&pageid=' . $pageid . '&picsid=' . $row["picsid"] . '\',function() { $(\'#activated_picsid_' . $row["picsid"] . '\').toggleClass(\'pics_active\');}); blur();">
+                                        <img src="' . $webpath . '"' . imgResize($mypicture[0], $mypicture[1], 165) . ' />
+                                    </button>
+                                </div>
+                            </td>
+                            <td style="vertical-align:top">
+                                <div class="pics_manager_caption">
+                                    ' . $caption . '
+                                </div>
+                                <div style="display: flex;justify-content: space-around;">
+                                    <div class="pics_manager_siteviewable">
+                                    ' . $siteviewable . '
+                                    </div>
+                                    <div class="pics_manager_movepics">
+                                        ' . $movepics . '
+                                    </div>
+                                </div>
+
+                            </td>
+                        </tr>
+                    </table>
                 </div>';
         }
 
@@ -431,7 +427,7 @@ global $CFG, $USER;
                     </td>
                 </tr>
             </table>
-            <div style="display: flex;flex-wrap: wrap;justify-content: space-evenly;">
+            <div style="display: flex-direction: column-reverse;">
                 ' . $returnme . '
             </div>';
     } else {
@@ -452,12 +448,13 @@ global $CFG;
 
         try {
             start_db_transaction();
-            $sql = [];
-            $sql[] = ["file" => "dbsql/features.sql", "subsection" => "delete_feature"];
-            $sql[] = ["file" => "dbsql/features.sql", "subsection" => "delete_feature_settings"];
-            $sql[] = ["file" => "dbsql/pics.sql", "feature" => "pics", "subsection" => "delete_galleries"];
-            $sql[] = ["file" => "dbsql/pics.sql", "feature" => "pics", "subsection" => "delete_pics_features"];
-            $sql[] = ["file" => "dbsql/pics.sql", "feature" => "pics", "subsection" => "delete_pics"];
+            $sql = [
+                ["file" => "dbsql/features.sql", "subsection" => "delete_feature"],
+                ["file" => "dbsql/features.sql", "subsection" => "delete_feature_settings"],
+                ["file" => "dbsql/pics.sql", "feature" => "pics", "subsection" => "delete_galleries"],
+                ["file" => "dbsql/pics.sql", "feature" => "pics", "subsection" => "delete_pics_features"],
+                ["file" => "dbsql/pics.sql", "feature" => "pics", "subsection" => "delete_pics"],
+            ];
 
             // Delete feature
             execute_db_sqls(fetch_template_set($sql), $params);
@@ -490,13 +487,13 @@ function imgResize($width, $height, $target) {
 function resizeImage($name, $filename, $new_w, $new_h) {
     $system = explode(".", $name);
     if (preg_match("/jpg|jpeg/", strtolower($system[1]))) {
-        $src_img = imagecreatefromjpeg($name);
+        $src_img = \imagecreatefromjpeg($name);
     }
     if (preg_match("/gif/", strtolower($system[1]))) {
-        $src_img = imagecreatefromgif($name);
+        $src_img = \imagecreatefromgif($name);
     }
     if (preg_match("/png/", strtolower($system[1]))) {
-        $src_img = imagecreatefrompng($name);
+        $src_img = \imagecreatefrompng($name);
     }
     if (isset($src_img)) {
         $old_x = imageSX($src_img);
@@ -572,15 +569,15 @@ global $CFG, $USER;
 
         if (!empty($pics_abilities->addpics->allow)) {
             $returnme .= make_modal_links([
-                            "title" => "Add Images",
-                            "path" => action_path("pics") . "add_pics&pageid=$pageid&featureid=$featureid",
-                            "iframe" => true,
-                            "refresh" => "true",
-                            "width" => "640",
-                            "height" => "500",
-                            "icon" => icon("plus"),
-                            "class" => "slide_menu_button",
-                        ]);
+                "title" => "Add Images",
+                "path" => action_path("pics") . "add_pics&pageid=$pageid&featureid=$featureid",
+                "iframe" => true,
+                "refresh" => "true",
+                "width" => "640",
+                "height" => "500",
+                "icon" => icon("plus"),
+                "class" => "slide_menu_button",
+            ]);
         }
     }
     return $returnme;

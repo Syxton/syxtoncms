@@ -1469,19 +1469,37 @@ tr.pics_title td:hover {
 }
 
 .pics_manager_siteviewable,
-.pics_manager_caption,
 .pics_manager_movepics {
     font-size: .85em;
-    padding: 3px;
+    padding: 5px 0;
+}
+
+.pics_manager_caption {
+    display: flex;
+    justify-content: space-evenly;
+    margin: 5px 0;
+    font-size: .85em;
+}
+
+.pics_manager_siteviewable,
+.pics_manager_movepics {
+    display: inline-block;
+    padding: 5px;
+}
+
+.pics_manager_pic {
+    width:165px;
+    overflow: hidden;
+    display: inline-block;
+    text-align: center;
 }
 
 .pics_manager_piccaption {
     font-size: 11px;
     margin: 0;
     padding: 3px;
-    /* font-size: 1em; */
-    height: 60px;
-    width: calc(100% - 15px);
+    height: 120px;
+    width: calc(100% - 50px);
     vertical-align: middle;
 }
 
