@@ -21,13 +21,12 @@ callfunction();
 
 function pics_pageturn() {
 global $CFG, $MYVARS;
-	$galleryid = !isset($MYVARS->GET["galleryid"]) ? NULL : $MYVARS->GET["galleryid"];
-	$pagenum = !isset($MYVARS->GET["pagenum"]) ? NULL : $MYVARS->GET["pagenum"];
-	$editable = !isset($MYVARS->GET["editable"]) ? 'false' : $MYVARS->GET["editable"];
-	$perpage = !isset($MYVARS->GET["perpage"]) ? NULL : $MYVARS->GET["perpage"];
-	$order = !isset($MYVARS->GET["order"]) ? NULL : urldecode($MYVARS->GET["order"]);
+    $featureid = clean_myvar_req("featureid", "int", false);
+    $galleryid = clean_myvar_opt("galleryid", "int", 0);
+    $pagenum = clean_myvar_opt("pagenum", "int", 0);
+    $order = clean_myvar_opt("order", "string", false);
 
-	echo get_pics($MYVARS->GET["pageid"], $MYVARS->GET["featureid"], $galleryid, $pagenum, $editable, $perpage);
+	ajax_return(get_pics($featureid, $galleryid, $pagenum, $order));
 }
 
 function new_gallery() {
@@ -59,17 +58,35 @@ function new_gallery() {
 }
 
 function move_pic() {
-global $CFG, $MYVARS;
-	$picsid = $MYVARS->GET['picsid']; $galleryid = $MYVARS->GET['galleryid'];
-	execute_db_sql("UPDATE pics SET galleryid='$galleryid' WHERE picsid='$picsid'");
-	echo 'Done';
+    $picsid = clean_myvar_req("picsid", "int");
+    $galleryid = clean_myvar_req("galleryid", "int");
+
+    $return = $error = "";
+    try {
+        if (!execute_db_sql("UPDATE pics SET galleryid = ||galleryid|| WHERE picsid = ||picsid||", ["picsid" => $picsid, "galleryid" => $galleryid])) {
+            throw new Exception("Could not move pic");
+        }
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+    }
+
+	ajax_return($return, $error);
 }
 
 function save_caption() {
-global $CFG, $MYVARS;
-	$picsid = $MYVARS->GET['picsid']; $caption = addslashes(urldecode($MYVARS->GET['caption']));
-	execute_db_sql("UPDATE pics SET caption='$caption' WHERE picsid='$picsid'");
-	echo 'Saved';
+    $picsid = clean_myvar_req("picsid", "int");
+    $caption = clean_myvar_req("caption", "html");
+
+    $return = $error = "";
+    try {
+        if (!execute_db_sql("UPDATE pics SET caption = ||caption|| WHERE picsid = ||picsid||", ["picsid" => $picsid, "caption" => $caption])) {
+            throw new Exception("Could not add caption");
+        }
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+    }
+
+	ajax_return($return, $error);
 }
 
 function save_viewability() {
@@ -136,7 +153,7 @@ global $CFG, $MYVARS;
     $pageid = clean_myvar_req("pageid", "int");
     $featureid = clean_myvar_req("featureid", "int");
 
-    //upload directory.
+    // upload directory.
     $upload_dir = 'files/' . "$pageid/$featureid/";
 
     try {
@@ -163,16 +180,13 @@ global $CFG, $MYVARS;
                 throw new \Exception("Error: The directory <strong>($upload_dir)</strong> is NOT writable, Please CHMOD (777)");
             }
 
-            // if the form has been submitted, then do the upload process
-            $allfiles = $_FILES["files"];
-            $file_count = count($allfiles);
-
             //do a loop for uploading files based on ($file_count) number of files.
             $i = $success = 0;
             $galleryid = clean_myvar_opt("galleryid", "int", false);
             $files = $_FILES["files"];
+            $file_count = count($files["name"]);
 
-            while (isset($filenames[$i]) && isset($files["name"][$i])) {
+            while (isset($files["name"][$i])) {
                 $file_name = $files["name"][$i];
                 //to remove spaces from file name we have to replace it with "_".
                 $file_name = str_replace(' ', '_', $file_name);

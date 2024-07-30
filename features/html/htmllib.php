@@ -111,13 +111,13 @@ global $CFG, $USER;
                 }
 
                 ajaxapi([
-                    'id'   => 'html_' . $featureid . '_stopped_editing',
-                    'url'  => '/features/html/html_ajax.php',
-                    'data' => [
-                        'action' => 'stopped_editing',
-                        'htmlid' => $featureid,
+                    "id" => "html_" . $featureid . "_stopped_editing",
+                    "url" => "/features/html/html_ajax.php",
+                    "data" => [
+                        "action" => "stopped_editing",
+                        "htmlid" => $featureid,
                     ],
-                    'event' => 'none',
+                    "event" => "none",
                 ]);
                 $buttons = get_button_layout("html", $row['htmlid'], $pageid);
                 $title = $settings->html->$featureid->feature_title->setting;
@@ -157,14 +157,15 @@ global $CFG;
 function fullscreen_toggle($html, $featureid, $settings) {
 global $CFG;
     if (isset($settings->html->$featureid->allowfullscreen->setting) && $settings->html->$featureid->allowfullscreen->setting == 1) { // Allow fullscreen toggle.
-        $html = '<div class="html_notfullscreen">
-                    <a title="View Full Screen" href="javascript: void(0);" onclick="$(\'.html_notfullscreen div\').toggleClass(\'fs_icon_on\'); $(this).closest(\'.htmlblock\').toggleClass(\'html_fullscreen\');">
-                        <div class="fs_icon"></div>
-                    </a>
-                </div>
-                <div class="html_text">
+        $html = '
+            <div class="html_notfullscreen">
+                <a title="View Full Screen" href="javascript: void(0);" onclick="$(\'.html_notfullscreen div\').toggleClass(\'fs_icon_on\'); $(this).closest(\'.htmlblock\').toggleClass(\'html_fullscreen\');">
+                    <div class="fs_icon"></div>
+                </a>
+            </div>
+            <div class="html_text">
                 ' . $html . '
-                </div>';
+            </div>';
     }
     return $html;
 }
@@ -176,7 +177,6 @@ global $CFG;
         if (preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) {
             foreach ($matches as $match) {
                 if (!strstr($match[0], 'javascript:')) { // not a javascript link.
-                    $icon = "save.png";
                     $filetypes = '/([\.[pP][dD][fF]|\.[dD][oO][cC]|\.[rR][tT][fF]|\.[pP][sS]|\.[pP][pP][tT]|\.[pP][pP][sS]|\.[tT][xX][tT]|\.[sS][xX][cC]|\.[oO][dD][sS]|\.[xX][lL][sS]|\.[oO][dD][tT]|\.[sS][xX][wW]|\.[oO][dD][pP]|\.[sS][xX][iI]])/';
                     if (preg_match($filetypes, $match[2])) {
                         if (strstr($match[2], $CFG->directory . '/userfiles') || strstr($match[2], $CFG->wwwroot)) { // internal link.
@@ -226,7 +226,7 @@ global $CFG;
                             $title = $url;
                             $link = $CFG->wwwroot . '/scripts/download.php?file=' . $url;
                         }
-                        $html = str_replace($match[0], '<a title="' . $title . '" href="' . $link . '" onclick="blur();"><img src="' . $CFG->wwwroot . '/images/' . $icon . '" alt="Save" /></a>&nbsp;' . make_modal_links(["text" => $text, "title" => $title, "path" => $CFG->wwwroot . "/pages/ipaper.php?action=view_ipaper&doc_url=" . base64_encode($url),"height" => "80%", "width" => "80%"]), $html);
+                        $html = str_replace($match[0], '<a title="' . $title . '" href="' . $link . '" onclick="blur();">' . icon("floppy-disk") . '</a>&nbsp;' . make_modal_links(["text" => $text, "title" => $title, "path" => $CFG->wwwroot . "/pages/ipaper.php?action=view_ipaper&doc_url=" . base64_encode($url),"height" => "80%", "width" => "80%"]), $html);
                     }
                 }
             }
