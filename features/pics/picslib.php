@@ -24,37 +24,20 @@ global $CFG, $USER, $ROLES;
     }
 
     $title = $settings->pics->$featureid->feature_title->setting;
+    $title = '<span class="box_title_text">' . $title . '</span>';
 
-    if (is_logged_in()) {
-        $title = '<span class="box_title_text">' . $title . '</span>';
-        if (user_is_able($USER->userid, "viewpics", $pageid,"pics", $featureid)) {
-            if ($pageid ==$CFG->SITEID) {
-                $SQL = "SELECT * FROM pics_features WHERE pageid='$pageid' LIMIT 1";
-                if ($sections = get_db_result($SQL)) {
-                    while ($row = fetch_row($sections)) {
-                        $content = get_gallery_links($pageid, $featureid, true);
-                        $buttons = get_button_layout("pics_features", $row['featureid'], $pageid);
-                        return get_css_box($title, $content, $buttons,NULL,"pics", $featureid);
-                    }
-                }
-            } else {
-                $SQL = "SELECT * FROM pics_features WHERE featureid='$featureid'";
-                if ($sections = get_db_result($SQL)) {
-                    while ($row = fetch_row($sections)) {
-                        $content = get_gallery_links($pageid, $featureid);
-                        $buttons = get_button_layout("pics_features", $featureid, $pageid);
-                        return get_css_box($title, $content, $buttons,NULL,"pics", $featureid);
-                    }
-                }
-            }
-        }
-    } else {
-        if (role_is_able($ROLES->visitor,"viewpics", $pageid)) {
-            $title = get_db_field("setting", "settings", "type='pics' AND pageid=$pageid AND featureid=$featureid");
-            $content = get_gallery_links($pageid, $featureid, true);
-            $title = '<span class="box_title_text">' . $title . '</span>';
-            return get_css_box($title, $content,NULL,NULL,"pics", $featureid);
-        }
+    $canview = false;
+    if (is_logged_in() && user_is_able($USER->userid, "viewpics", $pageid, "pics", $featureid)) {
+        $canview = true;
+        $buttons = get_button_layout("pics_features", $featureid, $pageid);
+    } elseif (role_is_able($ROLES->visitor, "viewpics", $pageid)) {
+        $canview = true;
+        $buttons = NULL;
+    }
+
+    if ($canview) {
+        $content = get_gallery_links($pageid, $featureid);
+        return get_css_box($title, $content, $buttons, NULL, "pics", $featureid);
     }
 }
 
@@ -64,7 +47,7 @@ global $CFG, $MYVARS, $USER;
         return trigger_error(error_string("no_permission", ["managepics"]));
     }
 
-    $SQL = fetch_template("dbsql/pics.sql", "get_galleries", "pics", ["siteviewable" => ($pageid == $CFG->SITEID ? true : false)]);
+    $SQL = fetch_template("dbsql/pics.sql", "get_galleries", "pics", ["siteviewable" => false]);
     if ($allgalleries = get_db_result($SQL, ["pageid" => $pageid, "featureid" => $featureid])) {
         // Pics manager page turn.
         ajaxapi([
@@ -91,7 +74,7 @@ global $CFG, $MYVARS, $USER;
             "firstoption" => "All Galleries",
             "values" => $allgalleries,
             "valuename" => "galleryid",
-            "displayname" => "gallery_title",
+            "displayname" => "name",
         ]);
 
         // Pics manager page turn.
@@ -112,11 +95,15 @@ global $CFG, $MYVARS, $USER;
         ]);
         $return = '
             Select which gallery you wish to view.
-            ' . $gallery_select . '
-            Click on a picture to activate or deactivate it.
             <button id="delete_gallery" title="Delete Gallery" style="float:right;padding:2px;" class="alike">
                 ' . icon("trash", 2) . '<span>Delete Gallery</span>
             </button>
+            <br />
+            ' . $gallery_select . '
+
+            <br />
+            Click on a picture to activate or deactivate it.
+            <br />
             ' . get_searchcontainer(get_pics($featureid));
     } else {
         $return = '<br /><br /><div style="text-align:center">No images have been added.</div>';
@@ -125,38 +112,57 @@ global $CFG, $MYVARS, $USER;
     return $return;
 }
 
-function get_gallery_links($pageid, $featureid, $allsections = false) {
+function get_gallery_links($pageid, $featureid, $allsections = true) {
 global $CFG;
     $path = $CFG->wwwroot . '/features/pics/files/';
-    $section = $allsections ? "" : "AND p.featureid=$featureid";
-    if ($pageid == $CFG->SITEID) {
+
+    if ($pageid === $CFG->SITEID) {
+        $section = $allsections ? "" : "AND p.featureid=$featureid";
         $SQL = "SELECT * FROM pics p LEFT JOIN pics_galleries pg ON pg.galleryid = p.galleryid WHERE (p.pageid='$pageid' $section AND p.sitehidden=0) OR (p.siteviewable=1 and p.sitehidden=0) ORDER BY p.galleryid DESC,p.dateadded ASC";
   } else {
-        $SQL = "SELECT * FROM pics p LEFT JOIN pics_galleries pg ON pg.galleryid = p.galleryid WHERE p.pageid='$pageid' $section AND p.pagehidden=0 ORDER BY p.galleryid DESC,p.dateadded ASC";
+        $SQL = "SELECT * FROM pics p LEFT JOIN pics_galleries pg ON pg.galleryid = p.galleryid WHERE p.pageid='$pageid' AND p.featureid='$featureid' AND p.pagehidden=0 ORDER BY p.galleryid DESC,p.dateadded ASC";
     }
+
+    $area = get_feature_area("pics", $featureid);
 
     $returnme = $group = ""; $display = true;
     if ($result = get_db_result($SQL)) {
-        $gallery = "";
+        $gallery = $links = "";
         while ($row = fetch_row($result)) {
-            $display = $gallery == "" || $gallery != $row['galleryid'] ? true : false;
+            $display = empty($gallery) || $gallery !== $row['galleryid'] ? true : false;
             $display = $display ? '' : 'display:none;';
+            $title = empty($row['caption']) ? $row['gallery_title'] : $row['caption'];
+            $imgpath = $path . $row['pageid'] . "/" . $row['featureid'] . "/" . $row['imagename'];
             if (empty($display)) {
-                $returnme .= make_modal_links([
-                                "id" => "pic_" . $row["picsid"],
-                                "title" => stripslashes($row['caption']),
-                                "text" => $row['name'],
-                                "gallery" => "pics_gallery_" . $row['galleryid'],
-                                "path" => $path . $row['pageid'] . "/" . $row['featureid'] . "/" . $row['imagename'],
-                                "styles" => $display,
-                            ]);
+                if ($area == "middle") {
+                    $links .= make_modal_links([
+                        "id" => "pic_" . $row["picsid"],
+                        "title" => $title,
+                        "image" => $imgpath,
+                        "gallery" => "pics_gallery_" . $row['galleryid'],
+                        "path" => $imgpath,
+                        "class" => "pics_gallery_middle",
+                        "styles" => "display: inline-block;min-width: 250px;max-width: 30%;",
+                    ]);
+                } else {
+                    $links .= make_modal_links([
+                        "id" => "pic_" . $row["picsid"],
+                        "title" => $title,
+                        "text" => $row['name'],
+                        "gallery" => "pics_gallery_" . $row['galleryid'],
+                        "path" => $imgpath,
+                    ]);
+                }
             } else {
-                $returnme .= '<a href="' . $path . $row['pageid'] . "/" . $row['featureid'] . "/" . $row['imagename'] . '" title="' . stripslashes($row['caption']) . '" data-rel="pics_gallery_'  .$row['galleryid'] . '" style="' . $display . '"></a>';
+                $links .= '<a href="' . $imgpath . '" title="' . $title . '" data-rel="pics_gallery_'  .$row['galleryid'] . '" style="' . $display . '"></a>';
             }
-            $returnme .= $display == "" ? '<br />' : '';
+
             $gallery = $row["galleryid"];
         }
-    } else { $returnme = '<div style="text-align:center;padding:7px">No images have been added.</div>';}
+        $returnme = '<div style="display: flex;column-gap: 20px;row-gap: 20px;flex-wrap: wrap;justify-content: space-around;">' . $links . "</div>";
+    } else {
+        $returnme = '<div style="text-align:center;padding:7px">No images have been added.</div>';
+    }
     return $returnme;
 }
 
@@ -199,6 +205,7 @@ global $CFG, $USER;
                 ' . $whichgallery . '
                 ' . $pagehidden . '
                 ORDER BY ' . $full_order;
+        error_log($SQL);
     }
 
     $total = get_db_count($SQL, ["featureid" => $featureid]); // get the total for all pages returned.
@@ -224,18 +231,16 @@ global $CFG, $USER;
         }
 
         if ($canedit) {
-            // Image move ajax code.
+            // Image add/edit caption ajax code.
             ajaxapi([
-                "id" => "move_pic",
-                "if" => "confirm('Do you want to move this image?')",
+                "id" => "toggle_activate",
                 "paramlist" => "picsid",
                 "url" => "/features/pics/pics_ajax.php",
                 "data" => [
-                    "action" => "move_pic",
+                    "action" => "toggle_activate",
                     "picsid" => "js||picsid||js",
-                    "galleryid" => "js||$('#movepics_' + picsid).val()||js",
                 ],
-                "ondone" => "pics_pageturn($pagenum);",
+                "ondone" => "$('#activated_picsid_' + picsid).toggleClass('pics_active');",
                 "event" => "none",
             ]);
 
@@ -271,6 +276,23 @@ global $CFG, $USER;
                     "event" => "none",
                 ]);
             }
+
+            // Image move/copy ajax code.
+            ajaxapi([
+                "id" => "altergallery",
+                "if" => "$('#altergallery_' + picsid).val() && confirm('Do you want to move this image to another gallery?')",
+                "else" => "$('#altergallery_' + picsid + ' option[value=\"\"]').prop('selected', true);",
+                "paramlist" => "picsid",
+                "url" => "/features/pics/pics_ajax.php",
+                "data" => [
+                    "action" => "altergallery",
+                    "picsid" => "js||picsid||js",
+                    "galleryid" => "js||$('#altergallery_' + picsid).val()||js",
+                ],
+                "loading" => "loading_overlay",
+                "ondone" => "pics_pageturn($pagenum);",
+                "event" => "none",
+            ]);
         }
 
         $returnme = '';
@@ -289,7 +311,7 @@ global $CFG, $USER;
                 if ($candelete) {
                     $deletepic = '
                         <button class="alike" style="float:right;" title="Delete" onclick="delete_pic(' . $row['picsid'] . ');">
-                            <span>' . icon("trash") . '</span>
+                            <span>' . icon("trash", 2) . '</span>
                         </button>';
                 }
 
@@ -317,50 +339,30 @@ global $CFG, $USER;
                             Site Viewable
                         </span>';
                 }
+
+                $SQL = fetch_template("dbsql/pics.sql", "get_page_galleries", "pics");
+                $galleryselect = [
+                    "properties" => [
+                        "name" => 'altergallery_' . $row["picsid"],
+                        "id" => 'altergallery_' . $row["picsid"],
+                        "style" => "font-size:1em;",
+                        "onchange" => 'altergallery(' . $row["picsid"] . ');',
+                    ],
+                    "values" => get_db_result($SQL, ["pageid" => $pageid]),
+                    "valuename" => "galleryid",
+                    "displayname" => "name",
+                    "exclude" => $row["galleryid"],
+                ];
+
+                if ($row["pageid"] !== $pageid) { //this image is from another page and must be copied rather than moved.
+                    $galleryselect["firstoption"] = "Copy shared image to local gallery";
+                } else {
+                    $galleryselect["firstoption"] = "Move to Gallery...";
+                }
+
+                $movepics = make_select($galleryselect);
             } else {
                 $caption = $row["caption"];
-            }
-
-            if ($row["pageid"] !== $pageid) { //this image is from another page and must be copied rather than moved.
-                $galleryselect = [
-                    "properties" => [
-                        "name" => "movepics",
-                        "id" => "movepics",
-                        "style" => "font-size:.85em;width:170px;",
-                    ],
-                    "values" => get_db_result("SELECT * FROM pics_galleries WHERE pageid = '$pageid'"),
-                    "valuename" => "galleryid",
-                    "firstoption" => "Copy to Gallery...not working",
-                    "displayname" => "name",
-                    "exclude" => $row["galleryid"],
-                ];
-            } else {
-                $galleryselect = [
-                    "properties" => [
-                        "name" => 'movepics_' . $row["picsid"],
-                        "id" => 'movepics_' . $row["picsid"],
-                        "onchange" => 'if ($(\'#movepics_' . $row["picsid"] . '\').val() != \'\' && confirm(\'Do you want to move this image to another gallery?\')) {
-                                        $(\'#loading_overlay\').show();
-                                        ajaxapi_old(\'/features/pics/pics_ajax.php\',
-                                                \'move_pic\',
-                                                \'&picsid=' . $row["picsid"] . '&galleryid=\'+$(\'#movepics_' . $row["picsid"] . '\').val(),
-                                                function() { do_nothing(); });
-                                        ajaxapi_old(\'/features/pics/pics_ajax.php\',
-                                                \'pics_pageturn\',
-                                                \'&pageid=' . $pageid . '&featureid=' . $featureid . '&galleryid=' . $galleryid . '&order=' . urlencode($order) . '&pagenum=' . ($pagenum) . '\',
-                                                function() { if (xmlHttp.readyState == 4) { simple_display(\'searchcontainer\'); $(\'#loading_overlay\').hide(); }}, true); } else { change_selection(\'movepics_' . $row["picsid"] . '\', \'\'); blur(); }',
-                        "style" => "font-size:1em;",
-                    ],
-                    "values" => get_db_result("SELECT * FROM pics_galleries WHERE pageid = '$pageid'"),
-                    "valuename" => "galleryid",
-                    "firstoption" => "Move to Gallery...",
-                    "displayname" => "name",
-                    "exclude" => $row["galleryid"],
-                ];
-            }
-
-            if ($canedit) {
-                $movepics = make_select($galleryselect);
             }
 
             $returnme .= '
@@ -372,7 +374,7 @@ global $CFG, $USER;
                         <tr>
                             <td style="width: 170px;vertical-align:top">
                                 <div class="pics_manager_pic">
-                                    <button class="alike" onclick="ajaxapi_old(\'/features/pics/pics_ajax.php\',\'toggle_activate\',\'&pageid=' . $pageid . '&picsid=' . $row["picsid"] . '\',function() { $(\'#activated_picsid_' . $row["picsid"] . '\').toggleClass(\'pics_active\');}); blur();">
+                                    <button class="alike" onclick="toggle_activate(' . $row["picsid"] . ');">
                                         <img src="' . $webpath . '"' . imgResize($mypicture[0], $mypicture[1], 165) . ' />
                                     </button>
                                 </div>
@@ -383,7 +385,7 @@ global $CFG, $USER;
                                 </div>
                                 <div style="display: flex;justify-content: space-around;">
                                     <div class="pics_manager_siteviewable">
-                                    ' . $siteviewable . '
+                                        ' . $siteviewable . '
                                     </div>
                                     <div class="pics_manager_movepics">
                                         ' . $movepics . '
@@ -487,13 +489,13 @@ function imgResize($width, $height, $target) {
 function resizeImage($name, $filename, $new_w, $new_h) {
     $system = explode(".", $name);
     if (preg_match("/jpg|jpeg/", strtolower($system[1]))) {
-        $src_img = \imagecreatefromjpeg($name);
+        $src_img = @imagecreatefromjpeg($name);
     }
     if (preg_match("/gif/", strtolower($system[1]))) {
-        $src_img = \imagecreatefromgif($name);
+        $src_img = @imagecreatefromgif($name);
     }
     if (preg_match("/png/", strtolower($system[1]))) {
-        $src_img = \imagecreatefrompng($name);
+        $src_img = @imagecreatefrompng($name);
     }
     if (isset($src_img)) {
         $old_x = imageSX($src_img);

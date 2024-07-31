@@ -639,7 +639,7 @@ function update_alerts(addalert = 0) {
 
 function adjustStyle(width) {
     width = parseInt(width);
-    if (width < 720) {
+    if (width < 1100) {
         $(".rightmenu .col1").css("width", "100%");
         $(".rightmenu .col2").css("width", "100%");
         $(".rightmenu .colleft").css("right", "24.5%");

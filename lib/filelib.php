@@ -50,8 +50,7 @@ global $CFG;
 
 function delete_file($filepath) {
     if (file_exists($filepath)) {
-        unlink($filepath);
-        return file_exists($filepath);
+        return unlink($filepath);
     }
 
     return true; // File doesn't exist.
@@ -81,8 +80,9 @@ function recursive_delete($folderPath) {
 
 function copy_file($old, $new) {
     if (file_exists($old)) {
-        copy($old, $new) or die("Unable to copy $old to $new.");
+        return copy($old, $new) or die("Unable to copy $old to $new.");
     }
+    return false;
 }
 
 function make_csv($filename, $contents) {

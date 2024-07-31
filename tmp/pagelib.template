@@ -39,7 +39,7 @@ page_masthead_template||
         </a>
     </div>
     <div class="nav">
-        <div id="menu-icon"></div>
+        <div id="menu-icon">||echo icon("bars", 3);::none||</div>
         ||header_only||
     </div>
 </div>||quote||

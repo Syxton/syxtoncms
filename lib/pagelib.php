@@ -1071,7 +1071,7 @@ global $CFG, $USER, $PAGE;
             "height" => "623",
             "confirmexit" => "true",
         ]);
-        $items .= fill_template("tmp/page.template", "get_members_item", false, ["members_modal" => $members_modal]);
+        $items .= fill_template("tmp/page.template", "get_ul_item", false, ["item" => $members_modal]);
     }
 
     if (!empty($items)) {
@@ -1209,7 +1209,7 @@ function make_select($params) {
         }
 
         if (is_array($params["values"])) {
-            // Standard object.
+            // Array.
             foreach ($params["values"] as $value) {
                 $options = [
                     "value" => $value[$valuename],
@@ -1242,6 +1242,7 @@ function make_select($params) {
                 "selected" => $params["selected"] ?? null,
                 "exclude" => $params["exclude"] ?? null,
                 ];
+
                 $optionsstring .= make_options($options);
             }
         }
@@ -1269,6 +1270,7 @@ function make_options($params) {
     if (isset($params["exclude"])) { // exclude value
         switch (gettype($params["exclude"])) {
             case "string":
+            case "integer":
                 $exclude = $params["exclude"] == $params["value"] ? true : false;
                 break;
             case "array":

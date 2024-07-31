@@ -41,7 +41,7 @@ global $CFG, $MYVARS, $USER;
 }
 
 function add_pics() {
-global $CFG, $MYVARS, $USER;
+global $CFG, $USER;
 	$featureid = clean_myvar_opt("featureid", "int", false);
 	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
 	if (!user_is_able($USER->userid, "addpics", $pageid)) { trigger_error(error_string("no_permission", ["addpics"]), E_USER_WARNING); return; }
@@ -71,24 +71,12 @@ global $CFG, $MYVARS, $USER;
 }
 
 function manage_pics() {
-global $CFG, $MYVARS, $USER;
 	$featureid = clean_myvar_opt("featureid", "int", false);
 	$pageid = clean_myvar_opt("pageid", "int", get_pageid());
 
-    echo '<div id="pics_manager">';
-    echo get_pics_manager($pageid, $featureid);
-    echo '</div>';
-}
-
-function get_galleries($pageid, $featureid) {
-	if ($results = get_db_result("SELECT picsid, gallery_title FROM pics WHERE pageid='$pageid' AND featureid='$featureid' GROUP BY gallery_title ORDER BY dateadded DESC")) {
-		$returnme = '<select id="galleries" width="205" style="width: 205">';
-		while ($row = fetch_row($results)) {
-			$returnme .= '<option value="' . $row['picsid'] . '">' . $row['gallery_title'] . '</option>';
-		}
-        $returnme .= '</select>&nbsp;<input type="button" value="Select" onclick="ajaxapi_old(\'/features/pics/pics_ajax.php\',\'get_gallery_pics\',\'&amp;pageid=' . $pageid . '&amp;featureid=' . $featureid . '&amp;galleryid=\'document.getElementById(\'galleries\').value\',function() { simple_display(\'pics_list\');});" />';
-        return $returnme;
-	}
-    return false;
+    echo '
+		<div id="pics_manager">
+		' . get_pics_manager($pageid, $featureid) . '
+    	</div>';
 }
 ?>

@@ -28,6 +28,7 @@ global $CFG;
 	$menu_page = clean_myvar_opt("menu_page", "int", 0);
 	$hidefromvisitors = clean_myvar_opt("hidefromvisitors", "int", 0);
 
+	$error = "";
 	try {
 		start_db_transaction();
 		if ($pageid) {
@@ -40,6 +41,7 @@ global $CFG;
 				"siteviewable" => $siteviewable,
 				"default_role" => $defaultrole,
 				"opendoorpolicy" => $opendoor,
+				"link" => $pageid,
 				"menu_page" => $menu_page,
 				"hidefromvisitors" => $hidefromvisitors,
 			];
@@ -49,17 +51,22 @@ global $CFG;
 				modify_menu_page($params);
 			} else {
 				// If not a menu, delete from menu table.
-				execute_db_sql(fetch_template("dbsql/pages.sql", "delete_page_menus"), ["pageid" => $pageid]);
+				if (!execute_db_sql(fetch_template("dbsql/pages.sql", "delete_page_menus"), ["pageid" => $pageid])) {
+					throw new Exception("Could not remove from menu");
+				}
 			}
 
-			if (execute_db_sql(fetch_template("dbsql/pages.sql", "edit_page"), $params)) {
-				echo "Page edited successfully";
+			if (!execute_db_sql(fetch_template("dbsql/pages.sql", "edit_page"), $params)) {
+				throw new Exception("Settings could not be saved");
 			}
 		}
 		commit_db_transaction();
 	} catch (\Throwable $e) {
 		rollback_db_transaction($e->getMessage());
+		$error = $e->getMessage();
 	}
+
+	ajax_return("", $error);
 }
 
 function create_page() {

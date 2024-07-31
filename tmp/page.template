@@ -6,20 +6,25 @@ make_ul||
 
 get_nav_item||
   <li>
-	<a onmouseup="this.blur()" onfocus="this.blur()" href="||link||" ||is_selected{{ class="selected" }}is_selected||>
-		<span>
-		||text|| ||is_parent{{&#9660;}}is_parent||
-		</span>
-	</a>
+	<div>
+		<a ||is_parent{{ class="parent" }}is_parent|| onmouseup="this.blur()" onfocus="this.blur()" href="||link||" ||is_selected{{ class="selected" }}is_selected||>
+			<span>
+				||text||
+			</span>
+		</a>
+		||is_parent{{<a class="parentarrow">||echo icon("chevron-down", 1, false, "white");::none||</a>}}is_parent||
+	</div>
 	||menu_children||
   </li>
 ||get_nav_item
 
-get_members_item||
+get_ul_item||
   <li>
-	||members_modal||
+	<div>
+		||item||
+	</div>
   </li>
-||get_members_item
+||get_ul_item
 
 page_js_css||
   ||echo js_code_wrap('var dirfromroot = "' . dirroot . '";');::dirroot||
