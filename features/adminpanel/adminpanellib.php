@@ -131,14 +131,15 @@ function get_adminpanel_alerts($userid, $countonly = true) {
                             </button>';
                         $alerts_rows .= fill_template("tmp/pagelib.template", "user_alerts_row", false, ["question" => $question, "buttons" => $buttons]);
                     }
-                    $params = [
-                        "title" => "Page permission requests",
-                        "alerts_rows" => $alerts_rows,
-                    ];
-                    $display_alerts .= fill_template("tmp/pagelib.template", "user_alerts_group", false, $params);
                 }
             }
         }
+
+        $params = [
+            "title" => "Page permission requests",
+            "alerts_rows" => $alerts_rows,
+        ];
+        $display_alerts .= fill_template("tmp/pagelib.template", "user_alerts_group", false, $params);
     }
 
     // This section creates alerts for invites that have been recieved by the user.
@@ -198,6 +199,7 @@ function get_adminpanel_alerts($userid, $countonly = true) {
                 "approve" => "js||approve||js",
             ],
             "ondone" => "if (istrue(data)) { refresh_user_alerts(); }",
+            "event" => "none",
         ]);
     }
 

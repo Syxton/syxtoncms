@@ -57,87 +57,37 @@ browse_usersearch_template||
 ||browse_usersearch_template
 
 browse_search_template||
-<form onsubmit="$('#loading_overlay_pagesearch').show();
-                ajaxapi_old('/ajax/page_ajax.php',
-                        'pagesearch',
-                        '&searchwords='+encodeURIComponent(document.getElementById('searchbox').value),
-                        function() {
-                            if (xmlHttp.readyState == 4) {
-                            simple_display('searchcontainer_pagesearch');
-                            $('#loading_overlay_pagesearch').hide();
-                            }
-                        },
-                        true);
-                return false;">
-    <div>
+    <form id="pagesearch">
+        <div>
+            <div style="line-height: 20px;">
+                Search for pages by either their name, thier keywords, or their description.<br />
+                Add or Remove from your personal pagelist with ||echo icon("plus");::none|| / ||echo icon("subtract");::none|| buttons.<br />
+                Request access to a private page with the ||echo icon("envelope");::none|| button.
+            </div>
+            <br />
+            <div style="text-align: center">
+                Search <input type="text" id="searchbox" name="searchbox" />&nbsp;<input type="submit" value="Search" />
+            </div>
+        </div>
+        <br />
+    </form>
+    ||search_results_box||
+||browse_search_template
+
+browse_user_template||
+    <form id="usersearch">
         <div style="line-height: 20px;">
-            Search for pages by either their name, thier keywords, or their description.<br />
-            Add or Remove from your personal pagelist with ||echo icon("plus");::none|| / ||echo icon("subtract");::none|| buttons.<br />
-            Request access to a private page with the ||echo icon("envelope");::none|| button.
+            Search for users by either their name or thier email address.<br />
+            Invite a user to a private page with the ||echo icon("envelope");::none|| button, then select the page you would like to invite them to.
         </div>
         <br />
         <div style="text-align: center">
             Search <input type="text" id="searchbox" name="searchbox" />&nbsp;<input type="submit" value="Search" />
         </div>
-    </div>
-    <br />
-</form>||search_results_box||
-||browse_search_template
-
-browse_user_template||
-    <form onsubmit="$('#loading_overlay_usersearch').show();
-                        ajaxapi_old('/ajax/page_ajax.php',
-                                    'usersearch',
-                                    '&searchwords='+encodeURIComponent(document.getElementById('searchbox').value),
-                                    function() {
-                                        if (xmlHttp.readyState == 4) {
-                                            simple_display('searchcontainer_usersearch');
-                                            $('#loading_overlay_usersearch').hide();
-                                        }
-                                    },
-                                    true); return false;">
-    <div style="line-height: 20px;">
-        Search for users by either their name or thier email address.<br />
-        Invite a user to a private page with the ||echo icon("envelope");::none|| button, then select the page you would like to invite them to.
-    </div>
-    <br />
-    <div style="text-align: center">
-        Search <input type="text" id="searchbox" name="searchbox" />&nbsp;<input type="submit" value="Search" />
-    </div>
-    <br />
-</form>||search_results_box||
+        <br />
+    </form>
+    ||search_results_box||
 ||browse_user_template
-
-create_page_validation||
-    ajaxapi_old('/ajax/page_ajax.php',
-            'create_page',
-            '&name=' + encodeURIComponent(document.getElementById('name').value) +
-            '&description=' + encodeURIComponent(document.getElementById('summary').value) +
-            '&keywords=' + encodeURIComponent(document.getElementById('keywords').value) +
-            '&defaultrole=' + document.getElementById('role_select').value +
-            '&opendoor=' + document.getElementById('opendoor').value +
-            '&siteviewable=' + document.getElementById('siteviewable').value +
-            '&menu_page=' + document.getElementById('menu_page').value +
-            '&hidefromvisitors=' + document.getElementById('hidefromvisitors').value,
-            function() { create_page_display(); }
-    );
-||create_page_validation
-
-edit_page_validation||
-    ajaxapi_old('/ajax/page_ajax.php',
-            'edit_page',
-            '&name=' + encodeURIComponent(document.getElementById('name').value) +
-            '&description=' + encodeURIComponent(document.getElementById('summary').value) +
-            '&keywords=' + encodeURIComponent(document.getElementById('keywords').value) +
-            '&defaultrole=' + document.getElementById('role_select').value +
-            '&opendoor=' + document.getElementById('opendoor').value +
-            '&siteviewable=' + document.getElementById('siteviewable').value +
-            '&menu_page=' + document.getElementById('menu_page').value +
-            '&hidefromvisitors=' + document.getElementById('hidefromvisitors').value +
-            '&pageid=||pageid||',
-            function() { close_modal(); }
-    );
-||edit_page_validation
 
 create_edit_page_template||
     <div class="formDiv" id="create_page_div">
@@ -216,46 +166,36 @@ create_edit_page_template||
 
 create_edit_links_template||
     <div id="links_editor" style="padding: 10px 0px 10px 0px;">
-        <table>
-        <tr>
-            <td>
-                <b>Links Editor Mode</b>
-                &nbsp;&nbsp;
-                <input type="button" value="Add/Remove Links" onclick="ajaxapi_old('/ajax/page_ajax.php','get_new_link_form','&pageid=||pageid||',function() { simple_display('links_mode_span');});">
-                &nbsp;
-                <input type="button" value="Sort Links" onclick="ajaxapi_old('/ajax/page_ajax.php','get_link_manager','&pageid=||pageid||&linkid=||pageid||',function() { simple_display('links_mode_span');  });">
-            </td>
-        </tr>
-        </table>
+        <strong>Links Editor Mode</strong>
+        &nbsp;&nbsp;
+        <button id="addremovelinks">
+            Add/Remove Links
+        </button>
+        &nbsp;
+        <button id="sortlinks">
+            Sort Pagelist Links
+        </button>
         <br />
         <span id="links_mode_span"></span>
     </div>
 ||create_edit_links_template
 
 display_addfeature_template||
-  <table style="width:100%">
-    <tr>
-        <td style="vertical-align:top; text-align:right; width:90%;">
-        <select id="addfeaturelist" style="width:100%">
-            <option value="" selected>Add Feature...</option>
-            ||options||
-        </select>
-        </td>
-        <td style="vertical-align:top; text-align:left;">
-        <input type="button" value="Add" onclick="if ($('#addfeaturelist').val() != '') {
-                                                    ajaxapi_old('/ajax/site_ajax.php',
-                                                            'addfeature',
-                                                            '&feature=' + $('#addfeaturelist').val() +
-                                                            '&pageid=||pageid||',
-                                                            function() {
-                                                                if (xmlHttp.readyState == 4) {
-                                                                go_to_page(||pageid||);
-                                                                }
-                                                            },
-                                                            true);}" />
-        </td>
-    </tr>
-  </table>
+    <table style="width:100%">
+        <tr>
+            <td style="vertical-align:top; text-align:right; width:90%;">
+            <select id="addfeaturelist" style="width:100%" onchange="$('#addfeature_button').hide(); if ($(this).val().length) { $('#addfeature_button').show(); }">
+                <option value="" selected>Add Feature...</option>
+                ||options||
+            </select>
+            </td>
+            <td style="vertical-align:top; text-align:left;">
+                <button id="addfeature_button" style="display:none">
+                    ||echo icon("plus");::none||&nbsp;Add
+                </button>
+            </td>
+        </tr>
+    </table>
 ||display_addfeature_template
 
 account_activation_email||

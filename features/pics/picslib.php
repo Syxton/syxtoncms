@@ -205,7 +205,6 @@ global $CFG, $USER;
                 ' . $whichgallery . '
                 ' . $pagehidden . '
                 ORDER BY ' . $full_order;
-        error_log($SQL);
     }
 
     $total = get_db_count($SQL, ["featureid" => $featureid]); // get the total for all pages returned.

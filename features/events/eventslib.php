@@ -1487,7 +1487,7 @@ function get_possible_times($formid, $selected_time = false, $start_time = false
                 $returnme .= '<option value="' . $time[0] . '">' . $time[1] . '</option>';
             }
         }
-        error_log($time[0] . " " . $start_time);
+
         $from = strstr($time[0], $start_time) ? true : $from;
         $i++;
     }
@@ -2124,106 +2124,110 @@ global $USER, $CFG, $MYVARS;
 }
 
 function get_hint_box($hintstring) {
-    return '<span class="hint">
-                <span class="hint-pointer">&nbsp;</span>
-                ' . get_help($hintstring) . '
-            </span>';
+    return '
+        <span class="hint">
+            <span class="hint-pointer">&nbsp;</span>
+            ' . get_help($hintstring) . '
+        </span>';
 }
 
 function new_location_form($eventid) {
-    echo '
-    <table>
-        <tr>
-            <td class="field_title">
-                Name:
-            </td>
-            <td class="field_input">
-                <input type="text" id="location_name" />
-                ' . get_hint_box("input_location_name:events") . '
-            </td>
-        </tr><tr><td></td><td class="field_input"><span id="location_name_error" class="error_text"></span></td></tr>
-        <tr>
-            <td class="field_title">
-                Address:
-            </td>
-            <td class="field_input">
-                <input type="text" id="location_address_1" />
-                ' . get_hint_box("input_location_add1:events") . '
-            </td>
-        </tr><tr><td></td><td class="field_input"><span id="location_address_1_error" class="error_text"></span></td></tr>
-        <tr>
-            <td></td>
-            <td class="field_input">
-                <input type="text" id="location_address_2" />
-                ' . get_hint_box("input_location_add2:events") . '
-            </td>
-        </tr><tr><td></td><td class="field_input"><span id="location_address_2_error" class="error_text"></span></td></tr>
-        <tr>
-            <td class="field_title">
-                Zipcode:
-            </td>
-            <td class="field_input">
-                <input type="text" id="zip" size="7" maxlength="5" />
-                ' . get_hint_box("input_location_zip:events") . '
-            </td>
-        </tr><tr><td></td><td class="field_input"><span id="zip_error" class="error_text"></span></td></tr>
-        <tr>
-            <td class="field_title">
-                Share Location:
-            </td>
-            <td class="field_input">
-                <input type="checkbox" id="shared" />
-                ' . get_hint_box("input_location_share:events") . '
-            </td>
-        </tr>
-        <tr>
-            <td class="field_title">
-                <span style="font-size:1.2em; color:blue;">(optional)</span> Phone:
-            </td>
-            <td class="field_input">
-                <input type="hidden" id="opt_location_phone" value="1" /><input type="text" class="phone1" id="location_phone_1" size="1" maxlength="3" onkeyup="movetonextbox(event);" />-<input class="phone2" type="text" id="location_phone_2" size="1" maxlength="3" onkeyup="movetonextbox(event);" />-<input class="phone3" type="text" id="location_phone_3" size="2" maxlength="4" />
-            </td>
-        </tr><tr><td></td><td class="field_input"><span id="location_phone_error" class="error_text"></span></td></tr>
-        <tr>
-            <td class="field_title"></td>
-            <td class="field_input">
-                <input type="button" value="Submit" onclick="add_new_location(\'' . $eventid . '\');" />
-            </td>
-        </tr>
-    </table>
-';
+    return '
+    <div id="new_event_location_form">
+        <table>
+            <tr>
+                <td class="field_title">
+                    Name:
+                </td>
+                <td class="field_input">
+                    <input type="text" id="location_name" name="name" />
+                    ' . get_hint_box("input_location_name:events") . '
+                </td>
+            </tr><tr><td></td><td class="field_input"><span id="location_name_error" class="error_text"></span></td></tr>
+            <tr>
+                <td class="field_title">
+                    Address:
+                </td>
+                <td class="field_input">
+                    <input type="text" id="location_address_1" name="add1" />
+                    ' . get_hint_box("input_location_add1:events") . '
+                </td>
+            </tr><tr><td></td><td class="field_input"><span id="location_address_1_error" class="error_text"></span></td></tr>
+            <tr>
+                <td class="field_title">
+                    City, State
+                </td>
+                <td class="field_input">
+                    <input type="text" id="location_address_2" name="add2" />
+                    ' . get_hint_box("input_location_add2:events") . '
+                </td>
+            </tr><tr><td></td><td class="field_input"><span id="location_address_2_error" class="error_text"></span></td></tr>
+            <tr>
+                <td class="field_title">
+                    Zipcode:
+                </td>
+                <td class="field_input">
+                    <input type="text" id="zip" name="zip" size="7" maxlength="5" />
+                    ' . get_hint_box("input_location_zip:events") . '
+                </td>
+            </tr><tr><td></td><td class="field_input"><span id="zip_error" class="error_text"></span></td></tr>
+            <tr>
+                <td class="field_title">
+                    Share Location:
+                </td>
+                <td class="field_input">
+                    <input type="checkbox" id="shared" name="shared" />
+                    ' . get_hint_box("input_location_share:events") . '
+                </td>
+            </tr>
+            <tr>
+                <td class="field_title">
+                    <span style="font-size:1.2em; color:blue;">(optional)</span> Phone:
+                </td>
+                <td class="field_input">
+                    <input type="hidden" id="opt_location_phone" value="1" /><input type="text" class="phone1" id="location_phone_1" name="phone1" size="1" maxlength="3" onkeyup="movetonextbox(event);" />-<input class="phone2" type="text" id="location_phone_2" name="phone2" size="1" maxlength="3" onkeyup="movetonextbox(event);" />-<input class="phone3" name="phone3" type="text" id="location_phone_3" size="2" maxlength="4" />
+                </td>
+            </tr><tr><td></td><td class="field_input"><span id="location_phone_error" class="error_text"></span></td></tr>
+            <tr>
+                <td class="field_title"></td>
+                <td class="field_input">
+                    <button id="new_event_location_submit">
+                        Submit
+                    </button>
+                </td>
+            </tr>
+        </table>
+    </div>';
 }
 
 function location_list_form($eventid) {
-global $USER, $CFG;
+global $USER;
     $locations = get_db_result("SELECT *
                                 FROM events_locations
                                 WHERE shared = 1
                                 AND userid NOT LIKE '%," . $USER->userid . ",%' ORDER BY location");
-    $listyes = true;
-    $returnme = '';
-    if ($locations) {
-        while ($location = fetch_row($locations)) {
-            $listyes = false;
-            $returnme .= $returnme == "" ? '<table><tr><td style="vertical-align:top; width: 250px;"><select width="200" style="width: 200px" id="add_location" onchange="get_location_details(this.value);"><option value="false"></option>' : "";
-            $selectme = $selected && ($location['id'] == $selected) ? ' selected' : '';
-            $returnme .= '<option value="' . $location['id'] . '"' . $selectme . '>' . $location['location'] . '</option>';
-        }
-        $returnme .= '  </select>
-                        <button class="alike" title="Add Location" onclick="copy_location(document.getElementById(\'add_location\').value,\'' . $eventid . '\');">' . icon("plus") . '</button>
-                    </td>
-                    <td style="vertical-align:top">
-                        <span id="location_details_div" style="vertical-align:top"></span>
-                    </td>
-                </tr>
-            </table>';
+    $locationsexist = false;
+
+    if (!$locations) {
+        return "No other addable locations.";
     }
 
-    if (!$listyes) {
-        return $returnme;
+    $options = '<option value="false">Select a shared location</option>';
+    while ($location = fetch_row($locations)) {
+        $options .= '<option value="' . $location['id'] . '">' . $location['location'] . '</option>';
     }
+    $returnme = '
+        <div style="display: inline-flex;align-items: center;">
+            <select style="margin: 10px;" id="add_location" onchange="get_location_details(this.value);">
+                ' . $options . '
+            </select>
+            <button class="alike" title="Add Location" onclick="copy_location(document.getElementById(\'add_location\').value,\'' . $eventid . '\');">
+                ' . icon("plus", 2) . '
+            </button>
+        </div>
+        <div id="location_details_div" style="vertical-align:top"></div>';
 
-    return "No other addable locations.";
+    return $returnme;
 }
 
 function events_delete($pageid, $featureid) {

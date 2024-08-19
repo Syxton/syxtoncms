@@ -291,6 +291,8 @@ global $CFG, $LOADAJAX;
         $datatype = $params["datatype"] ?? "json"; // The data type of the response.
         $contenttype = $params["contenttype"] ?? "application/x-www-form-urlencoded; charset=UTF-8"; // The content type of the request.
         $callback = $params["callback"] ?? ""; // The code to execute after the request is successful.
+        $async = $params["async"] ?? "true"; // The code to execute after the request is successful.
+
 
         $method = $params["method"] ?? "POST";
         $event = $params["event"] ?? "click";
@@ -342,7 +344,7 @@ global $CFG, $LOADAJAX;
             $hideloading = "$('#$loading').hide();";
         }
 
-        $always = ".always(function(data) { $always $(this).blur();})";
+        $always = ".always(function(data) { $always $(this).blur(); })";
 
         // if and else setup.
         $if = $params["if"] ?? false; // The condition to check before sending the request.
@@ -390,6 +392,7 @@ global $CFG, $LOADAJAX;
                 $.ajax({
                     url: `$url`,
                     type: `$method`,
+                    async: $async,
                     $callback
                     contentType: '$contenttype',
                     data: $data,
@@ -702,6 +705,7 @@ global $CFG;
     $v["class"]       ??= "";
     $v["confirmexit"] ??= "";
     $v["onclick"]     ??= "";
+    $v["oncomplete"]  ??= "";
     $v["imagestyles"] ??= "";
     $v["id"]          ??= "";
     $v["type"]        = empty($v["type"]) ? "" : 'type="' . $v["type"] . '"';
@@ -721,14 +725,15 @@ global $CFG;
     $v["text"]        = empty($v["text"]) ? (empty($v["image"]) ? (empty($v["title"]) ? "" : $v["title"]) : $v["image"]) : (empty($v["image"]) ? $v["text"] :  $v["image"] . ' <span style="vertical-align: middle;">' . $v["text"] . "</span>");
     $v["styles"] ??= false;
 
-    $iframe      = empty($v["iframe"]) ? "" : ",fastIframe:true,iframe:true";
+    $iframe      = empty($v["iframe"]) ? "" : ",fastIframe:false,iframe:true";
     $i           = empty($v["iframe"]) ? "" : "&i=!";
 
     $v["refresh"] ??= false;
     $v["reuse"] ??= false;
     $v["onExit"] ??= false;
 
-    $modal = $onOpen = $onComplete = $valid = '';
+    $onComplete = $v["oncomplete"];
+    $modal = $onOpen = $valid = '';
     $unq = uniqid();
     $modal = 'var cb = getColorbox(\'' . $gallery . '\');';
     if (!empty($v["validate"]) && empty($v["iframe"])) { // load validation javascript
@@ -749,7 +754,6 @@ global $CFG;
                    let fn = getGlobals().$unq;";
         $modal .= !empty($v["confirmexit"]) ? "if (confirm('Are you sure you wish to close this window?')) {" : "";
         $modal .= !empty($v["onExit"]) ? $v["onExit"] : "";
-        //$modal .= "killInterval('colorbox');";
         $modal .= "fn.apply(fn);
                    cb.close = getGlobals().$unq;
                    delete getGlobals().$unq;";
@@ -1400,20 +1404,29 @@ function delete_page($pageid) {
     return true;
 }
 
-function subscribe_to_page($pageid, $userid = false, $addorremove = false) {
+/**
+ * Subscribe a user to a page.
+ *
+ * @param int $pageid The id of the page to subscribe to.
+ * @param int $userid The id of the user to subscribe. Defaults to the current user.
+ * @param bool $removeifexists If true, will remove the subscription if it already exists.
+ *
+ * @return boolean True if the subscription was successful, false otherwise.
+ */
+function change_page_subscription($pageid, $userid = false, $removeifexists = false) {
 global $USER;
     $userid = $userid ? $userid : $USER->userid;
     $defaultrole = get_default_role($pageid);
-    if (!$addorremove) {
+
+    $SQL = fetch_template("dbsql/roles.sql", "get_role_assignment");
+    // Subscribe if role doesn't exist.
+    if (!$roleExists = get_db_count($SQL, ["userid" => $userid, "pageid" => $pageid, "confirm" => 0])) {
         $SQL = fetch_template("dbsql/roles.sql", "insert_role_assignment");
         $role_assignment = execute_db_sql($SQL, ["userid" => $userid, "roleid" => $defaultrole, "pageid" => $pageid, "confirm" => 0]);
     } else {
-        $SQL = fetch_template("dbsql/roles.sql", "get_role_assignment");
-        if (get_db_count($SQL, ["userid" => $userid, "pageid" => $pageid, "confirm" => 0])) { // role already exists
+        // Unsubscribe if role exists and removeifexists is true.
+        if ($removeifexists && $roleExists) {
             $role_assignment = execute_db_sql(fetch_template("dbsql/roles.sql", "remove_user_role_assignment"), ["userid" => $userid, "pageid" => $pageid]);
-        } else {
-            $SQL = fetch_template("dbsql/roles.sql", "insert_role_assignment");
-            $role_assignment = execute_db_sql($SQL, ["userid" => $userid, "roleid" => $defaultrole, "pageid" => $pageid, "confirm" => 0]);
         }
     }
 

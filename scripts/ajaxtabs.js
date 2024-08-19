@@ -1,9 +1,9 @@
-//** Ajax Tabs Content script v2.0- © Dynamic Drive DHTML code library (http://www.dynamicdrive.com)
+//** Ajax Tabs Content script v2.0- ï¿½ Dynamic Drive DHTML code library (http://www.dynamicdrive.com)
 //** Updated Oct 21st, 07 to version 2.0. Contains numerous improvements
 
 var ddajaxtabssettings={}
 ddajaxtabssettings.bustcachevar=1  //bust potential caching of external pages after initial request? (1=yes, 0=no)
-ddajaxtabssettings.loadstatustext="<img src='../images/loading.gif' /> Requesting content..." 
+ddajaxtabssettings.loadstatustext="<img src='../images/loading.gif' /> Requesting content..."
 
 
 ////NO NEED TO EDIT BELOW////////////////////////
@@ -29,7 +29,7 @@ ddajaxtabs.connect=function(pageurl, tabinstance){
 	else if (window.ActiveXObject){ // if IE6 or below
 		try {
 		page_request = new ActiveXObject("Msxml2.XMLHTTP")
-		} 
+		}
 		catch (e){
 			try{
 			page_request = new ActiveXObject("Microsoft.XMLHTTP")
@@ -39,7 +39,7 @@ ddajaxtabs.connect=function(pageurl, tabinstance){
 	}
 	else
 		return false
-	var ajaxfriendlyurl=pageurl.replace(/^http:\/\/[^\/]+\//i, "//"+window.location.hostname+"/") 
+	var ajaxfriendlyurl=pageurl.replace(/^http:\/\/[^\/]+\//i, "//"+window.location.hostname+"/")
 	page_request.onreadystatechange=function(){ddajaxtabs.loadpage(page_request, pageurl, tabinstance)}
 	if (ddajaxtabssettings.bustcachevar) //if bust caching of external page
 		bustcacheparameter=(ajaxfriendlyurl.indexOf("?")!=-1)? "&date="+new Date().getTime() : "?date="+new Date().getTime()
@@ -60,7 +60,7 @@ ddajaxtabs.ajaxpageloadaction=function(pageurl, tabinstance){
 	tabinstance.onajaxpageload(pageurl) //call user customized onajaxpageload() function when an ajax page is fetched/ loaded
 }
 
-ddajaxtabs.getCookie=function(Name){ 
+ddajaxtabs.getCookie=function(Name){
 	var re=new RegExp(Name+"=[^;]+", "i"); //construct RE to search for target name/value pair
 	if (document.cookie.match(re)) //if cookie found
 		return document.cookie.match(re)[0].split("=")[1] //return its value
@@ -108,7 +108,7 @@ ddajaxtabs.prototype={
 	},
 
 	onajaxpageload:function(pageurl){ //PUBLIC Event handler that can invoke custom code whenever an Ajax page has been fetched and displayed
-		//do nothing by default
+		activatejs(); // Activates any ajax js that has not been loaded.
 	},
 
 	expandtab:function(tabref){

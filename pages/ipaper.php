@@ -15,7 +15,7 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
 	include($sub . 'lib/header.php');
 }
 
-echo fill_template("tmp/roles.template", "roles_header_script");
+echo fill_template("tmp/page.template", "start_of_page_template");
 
 callfunction();
 

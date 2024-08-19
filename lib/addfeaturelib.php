@@ -27,6 +27,20 @@ function display_addfeature($pageid, $area) {
 					$options .= fill_template("tmp/page.template", "select_options_template", false, ["value" => $row['feature'], "display" => $row['feature_title']]);
 				}
 			}
+
+			ajaxapi([
+				"id" => "addfeature_button",
+				"if" => "$('#addfeaturelist').val() != ''",
+				"url" => "/ajax/site_ajax.php",
+				"paramlist" => "linkid, direction",
+				"data" => [
+					"action" => "addfeature",
+					"pageid" => $pageid,
+					"feature" => "js||$('#addfeaturelist').val()||js",
+				],
+				"ondone" => "go_to_page($pageid);",
+			]);
+
 			$content = fill_template("tmp/page.template", "display_addfeature_template", false, ["pageid" => $pageid, "options" => $options]);
 			$title = "Add Features";
 			$title = '<span class="box_title_text">' . $title . '</span>';

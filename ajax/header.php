@@ -15,7 +15,7 @@ if (!isset($CFG)) {
     while (!file_exists($sub . 'config.php')) {
         $sub .= '../';
     }
-    include_once($sub . 'config.php'); 
+    include_once($sub . 'config.php');
 }
 
 $libs = ['ERRORSLIB', 'DBLIB', 'FILELIB', 'PAGELIB', 'SETTINGSLIB', 'COMLIB', 'ROLESLIB', 'RSSLIB', 'USERLIB', 'TIMELIB', 'STYLESLIB', 'HELPLIB'];
@@ -25,8 +25,8 @@ foreach ($libs as $lib) {
     }
 }
 
-if (!isset($USER)) { $USER = new stdClass(); }
-if (!isset($MYVARS)) { $MYVARS = new stdClass(); }
+if (!isset($USER)) { $USER = (object)[]; }
+if (!isset($MYVARS)) { $MYVARS = (object)[]; }
 if (!isset($ROLES)) { $ROLES = load_roles(); }
 
 collect_vars();

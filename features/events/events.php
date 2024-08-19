@@ -405,6 +405,20 @@ global $CFG, $USER;
         $auto_allowinpage_display = "none";
     }
 
+    ajaxapi([
+        "id" => "add_location_form",
+        "paramlist" => "formtype",
+        "url" => "/features/events/events_ajax.php",
+        "data" => [
+            "action" => "add_location_form",
+            "formtype" => "js||formtype||js",
+            "eventid" => $eventid,
+        ],
+        "display" => "location_menu",
+        "ondone" => "prepareInputsForHints();",
+        "event" => "none",
+    ]);
+
     echo '
     <h3>' . $heading . '</h3>
      <div id="add_event_div">
@@ -502,80 +516,47 @@ global $CFG, $USER;
                 </table>
                 <br />
                 <div class="dotted">
-                     <table style="width:100%;">
-                          <tr>
-                              <td class="field_title" style="width:115px;">
-                                  Location:
-                              </td>
-                              <td class="field_input">
-                                  <span id="select_location">
-                                ' . $mylocations . '
-                                ' . get_hint_box("input_event_location:events") . '
-                            </span>
-                                  <button id="addtolist" type="button" style="display:inline;float:right;"
-                                    onclick="hide_show_buttons(\'addtolist\');
-                                             hide_show_buttons(\'hide_menu\');
-                                             hide_show_buttons(\'add_location_div\', true);">
+                    <div style="display: inline-flex;align-items: center;">
+                        <span>
+                            Location:
+                        </span>
+                        <span id="select_location" style="padding: 10px;">
+                            ' . $mylocations . '
+                            ' . get_hint_box("input_event_location:events") . '
+                        </span>
+                        <span>
+                            <button id="addtolist" type="button" onclick="$(\'#addtolist, #hide_menu\').toggleClass(\'hidden\');$(\'#add_location_div\').toggle(true);">
                                 Add to list
                             </button>
-                                  <button id="hide_menu" type="button" style="display:none;float:right;"
-                                    onclick="hide_show_buttons(\'hide_menu\');
-                                             hide_show_buttons(\'addtolist\');
-                                             hide_show_buttons(\'add_location_div\', true);">
+                            <button id="hide_menu" type="button" class="hidden" onclick="$(\'#addtolist, #hide_menu\').toggleClass(\'hidden\');$(\'#add_location_div\').toggle(false);">
                                 Hide Menu
                             </button>
-                              </td>
-                          </tr><tr><td></td><td class="field_input"><span id="location_error" class="error_text"></span></td></tr>
-                     </table>
-                     <table>
-                          <tr>
-                                <td colspan="2">
-                                     <span id="add_location_div" style="display:none">
-                                         <table>
-                                             <tr>
-                                                 <td style="width:115px;"></td>
-                                                 <td class="sub_field_title" style="width:400px;padding: 10px;">
-                                                     <button type="button" id="new_button" style="margin-right: 10px;margin-left: 0px;display:inline;float:left"
-                                                    onclick="hide_show_buttons(\'browse_button\');
-                                                             hide_show_buttons(\'or\');
-                                                             hide_show_buttons(\'location_menu\', true);
-                                                             add_location_form(\'new\', \'' . $eventid . '\');">
-                                                <span>
-                                                    ' . icon("plus") . '
-                                                    <span> Toggle Add Form</span>
-                                                </span>
-
-                                            </button>
-                                                     <span id="or" style="display:inline">&nbsp; or &nbsp;</span>
-                                                     <button type="button" id="browse_button" style="margin-right: 0px;margin-left: 10px;display:inline"
-                                                    onclick="hide_show_buttons(\'new_button\');
-                                                             hide_show_buttons(\'or\');
-                                                             hide_show_buttons(\'location_menu\', true);
-                                                             add_location_form(\'existing\', \'' . $eventid . '\');">
-                                                <span>
-                                                    <img src="' . $CFG->wwwroot . '/images/folder.png" title="Add Location" alt="Add Location">
-                                                    <span> Toggle Existing List</span>
-                                                </span>
-                                            </button>
-                                                 </td>
-                                             </tr>
-                                             <tr>
-                                                 <td></td>
-                                                 <td>
-                                                     <div id="location_menu" style="display:none;text-align:center"></div>
-                                                 </td>
-                                             </tr>
-                                         </table>
-                                     </span>
-                               </td>
-                          </tr>
-                          <tr>
-                                <td></td>
-                                <td>
-                                     <span id="location_status" style="display:inline"></span>
-                                </td>
-                          </tr>
-                     </table>
+                        </span>
+                    </div>
+                    <div id="location_error" class="error_text"></div>
+                    <div id="locations_wrap">
+                        <div id="add_location_div" style="display:none;width: 50vw;">
+                            <div class="sub_field_title" style="display: flex;align-items: center;justify-content: space-between;padding: 10px;">
+                                <button type="button" id="new_button" style="margin-right: 10px;margin-left: 0px;display:inline;float:left"
+                                            onclick="$(\'#location_menu\').html(\'\'); $(\'#location_menu\').toggleClass(\'hidden\');$(\'#browse_button, #or\').toggleClass(\'invisible\'); if($(\'#browse_button\').hasClass(\'invisible\')) { add_location_form(\'new\'); }">
+                                    <span>
+                                        ' . icon("plus") . '
+                                        <span> Toggle Add Form</span>
+                                    </span>
+                                </button>
+                                <span id="or">&nbsp; or &nbsp;</span>
+                                <button type="button" id="browse_button" style="margin-right: 0px;margin-left: 10px;display:inline"
+                                        onclick="$(\'#location_menu\').html(\'\'); $(\'#location_menu\').toggleClass(\'hidden\');$(\'#new_button, #or\').toggleClass(\'invisible\'); if($(\'#new_button\').hasClass(\'invisible\')) { add_location_form(\'existing\'); }">
+                                    <span>
+                                        ' . icon("location-dot") . '
+                                        <span> Toggle Existing List</span>
+                                    </span>
+                                </button>
+                            </div>
+                            <div id="location_menu" class="hidden" style="text-align:center"></div>
+                            <span id="location_status"></span>
+                        </div>
+                    </div>
                 </div>
                 <br />
                 <div class="dotted">

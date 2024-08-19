@@ -171,19 +171,6 @@ function delete_limit(limit_type, limit_num) {
     simple_display("custom_limits");
 }
 
-function add_location_form(formtype, eventid) {
-    if (document.getElementById("location_menu").style.display !== "none") {
-        var d = new Date();
-        var parameters = "action=add_location_form&formtype=" + formtype + "&eventid=" + eventid + "&currTime=" + d.toUTCString();
-        // Build the URL to connect to
-        var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
-        // Open a connection to the server\
-        ajaxpost(url, parameters);
-        simple_display("location_menu");
-        prepareInputsForHints();
-    }
-}
-
 function copy_location(location, eventid) {
     if (location != "false") {
         var d = new Date();
@@ -224,32 +211,25 @@ function valid_new_location() {
         $("#location_name_error").html("This is a required field.");
         valid = false;
     } else {
-        // Build the URL to connect to
-        var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php?action=unique_relay&table=events_locations&key=location&value=" + $('#location_name').val();
-        // Open a connection to the server\
-        var d = new Date();
-        xmlHttp.open("GET", url + "&currTime=" + d.toUTCString(), false);
-        // Send the request
-        xmlHttp.send(null);
-        if (!istrue()) {
-            $("#location_name_error").html("This value already exists in our database.");
-            valid = false;
-        } else {
-            $("#location_name_error").html("");
-        }
+        var returnme = { val: false }; // Objects pass by reference to synchronous ajax function.
+        is_unique_location_name(returnme);
+        valid = returnme.val;
     }
+
     if (!$('#location_address_1').val().length > 0) {
         $("#location_address_1_error").html("This is a required field.");
         valid = false;
     } else {
         $("#location_address_1_error").html("");
     }
+
     if (!$('#location_address_2').val().length > 0) {
         $("#location_address_2_error").html("This is a required field.");
         valid = false;
     } else {
         $("#location_address_2_error").html("");
     }
+
     if (!$("#zip").val().length > 0) {
         $("#zip_error").html("This is a required field.");
         valid = false;
@@ -262,6 +242,7 @@ function valid_new_location() {
     } else {
         $("#zip_error").html("");
     }
+
     if ($("#opt_location_phone").val() == 0 || ($("#opt_location_phone").val() != 0 && ($('#location_phone_1').val().length > 0 || $('#location_phone_2').val().length > 0 || $('#location_phone_3').val().length > 0))) {
         //Phone # validity test
         if ($('#location_phone_1').val().length == 3 && $('#location_phone_2').val().length == 3 && $('#location_phone_3').val().length == 4) {
@@ -525,33 +506,6 @@ function new_event_submit(pageid) {
         close_modal();
     }
     return false;
-}
-
-function add_new_location(eventid) {
-    if (valid_new_location()) {
-        var d = new Date();
-        var name = "&name=" + encodeURIComponent($('#location_name').val());
-        var add1 = "&add1=" + encodeURIComponent($('#location_address_1').val());
-        var add2 = "&add2=" + encodeURIComponent($('#location_address_2').val());
-        var zip = "&zip=" + document.getElementById("zip").value;
-        var eventid = "&eventid=" + eventid;
-        var share = document.getElementById("shared").checked == true ? "&shared=1" : "";
-        var phone = $('#location_phone_1').val() != "" ? "&phone=" + $('#location_phone_1').val() + "-" + $('#location_phone_2').val() + "-" + $('#location_phone_3').val() : "";
-        var parameters = "action=add_new_location" + name + add1 + add2 + zip + share + phone + eventid + "&currTime=" + d.toUTCString();
-        // Build the URL to connect to
-        var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
-        // Open a connection to the server\
-        ajaxpost(url, parameters);
-        simple_display("select_location");
-        $('#location_status').html("Location Added");
-        hide_show_buttons("addtolist");
-        hide_show_buttons("hide_menu");
-        hide_show_buttons("new_button");
-        hide_show_buttons("or");
-        hide_show_buttons("location_menu");
-        hide_show_buttons("add_location_div");
-        setTimeout("clear_display(\'location_status\')", 2000);
-    }
 }
 
 function clear_display(divname) {

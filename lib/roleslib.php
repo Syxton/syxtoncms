@@ -47,32 +47,34 @@ function remove_all_roles($userid) {
 }
 
 // Add an ability and assign a role it's value
-function add_role_ability($section, $ability, $displayname, $power, $desc, $creator='0', $editor='0', $guest='0', $visitor='0') {
+function add_role_ability($section, $ability, $section_display, $power, $ability_display, $creator='0', $editor='0', $guest='0', $visitor='0') {
     try {
         start_db_transaction();
         $SQL = "SELECT ability
                 FROM abilities
                 WHERE section = ||section||
-                AND section_display = ||displayname||";
-        if (!get_db_row($SQL, ["section" => $section, "displayname" => $displayname])) {
-            $templates = $params = [];
-            $templates[] = ["file" => "dbsql/roles.sql", "subsection" => ["insert_abilities", "insert_roles_ability"]];
-            $params[] = [ // vars for insert_abilities
+                AND ability = ||ability||";
+
+        // Make sure ability doesn't already exist.
+        if (!get_db_row($SQL, ["section" => $section, "ability" => $ability])) {
+            $templates = [["file" => "dbsql/roles.sql", "subsection" => ["insert_abilities", "insert_roles_ability"]]];
+            $template_set = fetch_template_set($templates);
+
+            $params = [[ // vars for insert_abilities
                 "section" => $section,
-                "displayname" => $displayname,
+                "section_display" => $section_display,
                 "ability" => $ability,
-                "desc" => $desc,
+                "ability_display" => $ability_display,
                 "power" => $power,
-            ];
-            $params[] = [ // vars for insert_roles_ability
+            ], [ // vars for insert_roles_ability
                 "section" => $section,
                 "ability" => $ability,
                 "creator" => $creator,
                 "editor" => $editor,
                 "guest" => $guest,
                 "visitor" => $visitor,
-            ];
-            execute_db_sqls(fetch_template_set($templates), $params);
+            ],];
+            execute_db_sqls($template_set, $params);
             commit_db_transaction();
         }
     } catch (\Throwable $e) {
@@ -398,10 +400,41 @@ global $CFG, $USER;
         "groups_list" => groups_list($pageid, $feature, $featureid),
         "canmanagegroups" => user_is_able($USER->userid, "manage_groups", $pageid),
     ];
+
+    $type = "per_group";
+    ajaxapi([
+        "id" => "create_new_group",
+        "if" => "$('#" . $type . "_user_select').val() > 0",
+        "url" => "/ajax/roles_ajax.php",
+        "data" => [
+            "action" => "refresh_user_abilities",
+            "pageid" => $pageid,
+            "feature" => $feature,
+            "featureid" => $featureid,
+            "userid" => "js||$('#" . $type . "_user_select').val()||js",
+        ],
+        "display" => $type . "_abilities_div",
+    ]);
+
+    ajaxapi([
+        "id" => "create_edit_group_form",
+        "url" => "/ajax/roles_ajax.php",
+        "paramlist" => "groupid = 0",
+        "data" => [
+            "action" => "create_edit_group_form",
+            "pageid" => $pageid,
+            "groupid" => "js||groupid||js",
+            "feature" => $feature,
+            "featureid" => $featureid,
+        ],
+        "display" => "per_group_display_div",
+        "event" => "none",
+    ]);
+
     return fill_template("tmp/roles.template", "group_page_template", false, $params);
 }
 
-function groups_list($pageid, $feature = false, $featureid = false, $action = true, $selectid = 0, $excludeid = 0, $excludechildrenofid = 0, $width = "100%", $id = "group_select", $name = "groupid") {
+function groups_list($pageid, $feature = false, $featureid = false, $action = true, $selectid = 0, $excludeid = 0, $excludechildrenofid = 0, $width = "100%", $id = "per_group_group_select", $name = "groupid") {
     $params = [
         "name" => $name,
         "pageid" => $pageid,
@@ -412,6 +445,40 @@ function groups_list($pageid, $feature = false, $featureid = false, $action = tr
         "enableaction" => $action,
         "groups" => sub_groups_list($pageid, false, "", $selectid, $excludeid, $excludechildrenofid),
     ];
+
+    if ($action) {
+        ajaxapi([
+            "id" => $id,
+            "if" => "$('#$id').val() > 0",
+            "else" => "clear_display('per_group_display_div'); clear_display('per_group_abilities_div');",
+            "url" => "/ajax/roles_ajax.php",
+            "data" => [
+                "action" => "refresh_group_users",
+                "pageid" => $pageid,
+                "groupid" => "js||$('#$id').val()||js",
+                "feature" => $feature,
+                "featureid" => $featureid,
+            ],
+            "event" => "change",
+            "display" => "per_group_display_div",
+            "ondone" => "refresh_group_abilities();",
+        ]);
+        ajaxapi([
+            "id" => "refresh_group_abilities",
+            "url" => "/ajax/roles_ajax.php",
+            "paramlist" => "groupid = 0",
+            "data" => [
+                "action" => "refresh_group_abilities",
+                "pageid" => $pageid,
+                "groupid" => "js||$('#$id').val()||js",
+                "feature" => $feature,
+                "featureid" => $featureid,
+            ],
+            "display" => "per_group_abilities_div",
+            "event" => "none",
+        ]);
+    }
+
     return fill_template("tmp/roles.template", "groups_list_template", false, $params);
 }
 
@@ -435,7 +502,7 @@ function sub_groups_list($pageid, $parent = false, $level = "", $selectid = 0, $
     return $options;
 }
 
-function print_abilities($pageid, $type = "per_role_", $roleid = false, $userid = false, $feature = false, $featureid = false, $groupid = false) {
+function print_abilities($pageid, $type = "per_role", $roleid = false, $userid = false, $feature = false, $featureid = false, $groupid = false) {
 global $CFG;
     $rightslist = $currentstyle = $section = $notsettitle = $notsettoggle = $save_button = "";
     $default_toggle = false;
@@ -458,6 +525,39 @@ global $CFG;
             $refresh_function = 'refresh_user_abilities';
             $swap_function = "swap_highlights";
         }
+
+        ajaxapi([
+            "id" => $type . "_roles_form",
+            "url" => "/ajax/roles_ajax.php",
+            "reqstring" => $type . "_roles_form",
+            "data" => [
+                "action" => $save_function,
+                "userid" => $userid,
+                "pageid" => $pageid,
+                "groupid" => $groupid,
+                "feature" => $feature,
+                "featureid" => $featureid,
+            ],
+            "ondone" => "jq_display('" . $type . "_saved_div1', data); jq_display('" . $type . "_saved_div2', data); setTimeout(function() { clear_display('" . $type . "_saved_div1'); clear_display('" . $type . "saved_div2'); }, 5000); $refresh_function();",
+            "event" => "submit",
+        ]);
+
+        ajaxapi([
+            "id" => $refresh_function,
+            "url" => "/ajax/roles_ajax.php",
+            "data" => [
+                "action" => $refresh_function,
+                "pageid" => $pageid,
+                "feature" => $feature,
+                "featureid" => $featureid,
+                "groupid" => $groupid ? "js||$('#" . $type . "_group_select').val()||js" : "",
+                "roleid" => $roleid ? "js||$('#" . $type . "_role_select').val()||js" : "",
+                "userid" => $userid ? "js||$('#" . $type . "_user_select').val()||js" : "",
+            ],
+            "display" => $type . "_abilities_div",
+            "event" => "none",
+        ]);
+
         $params = [
             "pageid" => $pageid,
             "type" => $type,
@@ -480,7 +580,6 @@ global $CFG;
         while ($row = fetch_row($allabilities)) {
             $currentstyle = $currentstyle == $style_row1 ? $style_row2 : $style_row1;
             $currentstyle = $section == $row['section'] ? $currentstyle : $style_row1;
-
             if ($roleid && empty($userid)) { // Role based only
                 $rights = role_is_able($roleid, $row['ability'], $pageid, $feature, $featureid) ? true : false;
                 $SQL = fetch_template("dbsql/roles.sql", "get_page_role_override");
@@ -493,9 +592,9 @@ global $CFG;
                 } else {
                     $rights = get_db_row(fetch_template("dbsql/roles.sql", "get_page_group_override"), $params);
                 }
-                $rights = $rights && $rights["allow"] == "0" ? false : ($rights && $rights["allow"] == "1" ? true : false);
-                $notify = $rights !== false ? true : false;
-                $default_checked = $rights === false ? true : false;
+                $default_checked = gettype($rights) === "boolean" ? true : false;
+                $rights = $rights && $rights["allow"] === 0 ? false : ($rights && $rights["allow"] == "1" ? true : false);
+                $notify = !$default_checked ? true : false;
             } elseif ($userid) { // User based
                 $params = ["ability" => $row['ability'], "pageid" => $pageid, "feature" => $feature, "featureid" => $featureid, "userid" => $userid];
                 if ($feature && $featureid) { // Feature user override
@@ -510,10 +609,12 @@ global $CFG;
             }
 
             $notify1 = $notify2 = false; // not set
-            if ($rights === true) { // set to allow
+            if ($default_toggle && $default_checked) {
+                $notify1 = $notify2 = false; // not set
+            } elseif ($rights) { // set to allow
                 $notify1 = true;
                 $notify2 = false;
-            } else if ($rights === false) { // set to disallow
+            } elseif (!$rights) { // set to disallow
                 $notify1 = false;
                 $notify2 = true;
             }

@@ -1,343 +1,242 @@
 group_page_template||
-  <table style="font-size:1em;width:100%">
-	<tr>
-		<td style="width:40%;text-align:center;vertical-align:top;">
-		<strong>Groups:</strong>
-		<div id="group_list_div">
-			||groups_list||
-		</div>
-		||canmanagegroups{{
-			<a class="imgandlink" href="javascript: void(0);" onclick="ajaxapi_old('/ajax/roles_ajax.php',
-																			 'create_edit_group_form',
-																			 '&feature=||feature||' +
-																			 '&featureid=||featureid||' +
-																			 '&pageid=||pageid||',
-																			 function() {
-																				 simple_display('per_group_display_div');
-																			 });">
-			||echo icon("plus");::none|| Create New Group
-			</a>
-		}}canmanagegroups||
-		<br />
-		</td>
-		<td style="width:5px"></td>
-		<td><div id="per_group_display_div"></div></td>
-	</tr>
-  </table>
-  <hr />
-  <div id="per_group_saved_div1" style="width:100%;text-align:center;height: 2px;padding-bottom: 18px;padding-top: 10px;"></div>
-  <div id="per_group_abilities_div" style="width:100%;"></div>
-  <div id="per_group_saved_div2" style="width:100%;text-align:center;height: 2px;padding-bottom: 10px;padding-top: 10px;"></div>
+    <div style="display:flex;align-items:center;">
+        <strong>Groups:</strong>
+        <div id="group_list_div" style="padding: 0 10px">
+            ||groups_list||
+        </div>
+        ||canmanagegroups{{
+            <button onclick="create_edit_group_form()" style="margin: 5px">
+                ||echo icon("plus");::none||&nbsp;Create New Group
+            </button>
+        }}canmanagegroups||
+    </div>
+    <br />
+    <div id="per_group_display_div"></div>
+    <div id="per_group_saved_div1" style="width:100%;text-align:center;height: 2px;padding-bottom: 18px;padding-top: 10px;"></div>
+    <div id="per_group_abilities_div" style="width:100%;"></div>
+    <div id="per_group_saved_div2" style="width:100%;text-align:center;height: 2px;padding-bottom: 10px;padding-top: 10px;"></div>
 ||group_page_template
 
 groups_list_template||
-  <select style="font-size:.85em;width:||width||;" name="||name||" id="||id||" ||enableaction{{ onchange="if ($('#group_select').val() > 0) {
-																											ajaxapi_old('/ajax/roles_ajax.php',
-																													'refresh_group_users',
-																													'&pageid=||pageid||' +
-																													'&feature=||feature||' +
-																													'&featureid=||featureid||' +
-																													'&groupid=' + $('#group_select').val(),
-																													function() {
-																														simple_display('per_group_display_div');
-																													});
-																											ajaxapi_old('/ajax/roles_ajax.php',
-																													'refresh_group_abilities',
-																													'&pageid=||pageid||' +
-																													'&feature=||feature||' +
-																													'&featureid=||featureid||' +
-																													'&groupid=' + $('#group_select').val(),
-																													function() {
-																														simple_display('per_group_abilities_div');
-																													});
-																											} else {
-																											clear_display('per_group_display_div');
-																											clear_display('per_group_abilities_div');
-																											}"
-																				 }}enableaction|| >
-	<option value="0">No group selected</option>
-	||groups||
+  <select style="width:||width||;" name="||name||" id="||id||">
+    <option value="0">No group selected</option>
+    ||groups||
   </select>
 ||groups_list_template
 
 roles_header_script||
-  ||echo js_code_wrap('
-	function swap_highlights(option1,option2) {
-		option1 = "#"+option1;
-		option2 = "#"+option2;
-		if ($(option1).emptybg() && $(option2).emptybg()) {
-			$(option1).css("background-color","yellow");
-		} else if ($(option1).emptybg()) {
-			$(option1).css("background-color","inherit");
-			$(option2).css("background-color","inherit");
-		}
-		blur();
-	}
+    ||echo js_code_wrap('
+        function swap_highlights(option1,option2) {
+            option1 = "#"+option1;
+            option2 = "#"+option2;
+            if ($(option1).emptybg() && $(option2).emptybg()) {
+                $(option1).css("background-color","yellow");
+            } else if ($(option1).emptybg()) {
+                $(option1).css("background-color","inherit");
+                $(option2).css("background-color","inherit");
+            }
+            blur();
+        }
 
-	function swap_highlights2(option1,option2) {
-		option1 = "#"+option1;
-		option2 = "#"+option2;
-		if ($(option1).emptybg() && $(option2).emptybg()) {
-			$(option1).css("background-color","yellow");
-		} else {
-			$(option1).css("background-color","yellow");
-			$(option2).css("background-color","inherit");
-		}
-		blur();
-	}
+        function swap_highlights2(option1,option2) {
+            option1 = "#"+option1;
+            option2 = "#"+option2;
+            if ($(option1).emptybg() && $(option2).emptybg()) {
+                $(option1).css("background-color","yellow");
+            } else {
+                $(option1).css("background-color","yellow");
+                $(option2).css("background-color","inherit");
+            }
+            blur();
+        }
 
-	function clear_highlights(option1, option2) {
-		option1 = "#"+option1;
-		option2 = "#"+option2;
-		$(option1).css("background-color", "inherit");
-		$(option2).css("background-color", "inherit");
-		blur();
-	}
-  ');::none||
+        function clear_highlights(option1, option2) {
+            option1 = "#"+option1;
+            option2 = "#"+option2;
+            $(option1).css("background-color", "inherit");
+            $(option2).css("background-color", "inherit");
+            blur();
+        }
+    ');::none||
 ||roles_header_script
 
 assign_roles_template||
-  <form onsubmit="clear_display('per_page_roles_div');
-					ajaxapi_old('/ajax/roles_ajax.php',
-							'name_search',
-							'&pageid=||pageid||' +
-							'&type=per_page_' +
-							'&refreshroles=refreshroles' +
-							'&searchstring=' + trim(document.getElementById('per_page_search').value),
-							function() {
-							simple_display('per_page_users_display_div');
-							}
-					); return false;">
-					User Search: <input type="text" id="per_page_search" size="18" />&nbsp;<input type="submit" value="Search" />
-  </form>
-  Users:
-  <br />
-  <div style="width:100%; text-align:center; vertical-align:top;" id="per_page_users_display_div">
-		<select size="10" style="width: 100%; font-size:.85em;" name="userid" id="per_page_user_select" onclick="if (document.getElementById('per_page_user_select').value > 0) {
-																													ajaxapi_old('/ajax/roles_ajax.php',
-																															'refresh_user_roles',
-																															'&pageid=||pageid||' +
-																															'&userid=' + document.getElementById('per_page_user_select').value,
-																															function() {
-																																simple_display('per_page_roles_div');
-																															});}">
-				||issiteid{{
-				<option value="0">Search results will be shown here.</option>
-				}}issiteid||
-				||options||
-		</select>
-	</div>
-	<div id="per_page_roles_div" style="width:100%;"></div>
+    <form id="per_page_name_search">
+        User Search: <input type="text" id="per_page_search" size="18" />&nbsp;<input type="submit" value="Search" />
+    </form>
+    Users:
+    <br />
+    <div style="width:100%; text-align:center; vertical-align:top;" id="per_page_users_display_div">
+        <select size="10" style="width: 100%; font-size:.85em;" name="userid" id="per_page_user_select">
+            ||issiteid{{
+                <option value="0">Search results will be shown here.</option>
+            }}issiteid||
+            ||options||
+        </select>
+    </div>
+    <div id="per_page_roles_div" style="width:100%;"></div>
 ||assign_roles_template
 
 assign_roles_options_template||
-	<option value="||user[userid]||">||user[fname]|| ||user[lname]|| (||user[email]||)</option>
+    <option value="||user[userid]||">||user[fname]|| ||user[lname]|| (||user[email]||)</option>
 ||assign_roles_options_template
 
 role_specific_template||
-  <form id="per_role_roles_form">
-	<div style="width:100%; text-align:center">
-		<select name="per_role_roleid" id="per_role_role_select" onchange="ajaxapi_old('/ajax/roles_ajax.php',
-																				 'refresh_edit_roles',
-																				 '&pageid=||pageid||' +
-																				 '&feature=||feature||' +
-																				 '&featureid=||featureid||' +
-																				 '&roleid=' + this.value,
-																				 function() {
-																					 simple_display('per_role_abilities_div');
-																				 });">
-			||options||
-		</select>
-		<div id="per_role_saved_div1" style="width:100%;text-align:center;height: 2px;padding-bottom: 20px;padding-top: 20px;"></div>
-		<div id="per_role_abilities_div" style="width:100%;">||abilities||</div>
-		<div id="per_role_saved_div2" style="width:100%;text-align:center;height: 2px;padding-bottom: 10px;padding-top: 10px;"></div>
-	</div>
-  </form>
+    <form id="per_role_roles_form">
+        <div style="width:100%; text-align:center">
+            <select name="per_role_roleid" id="per_role_role_select">
+                ||options||
+            </select>
+            <div id="per_role_saved_div1" style="width:100%;text-align:center;height: 2px;padding-bottom: 20px;padding-top: 20px;"></div>
+            <div id="per_role_abilities_div" style="width:100%;">||abilities||</div>
+            <div id="per_role_saved_div2" style="width:100%;text-align:center;height: 2px;padding-bottom: 10px;padding-top: 10px;"></div>
+        </div>
+    </form>
 ||role_specific_template
 
 role_specific_options_template||
-  <option value="||roles[roleid]||">||roles[display_name]||</option>
+    <option value="||roles[roleid]||">||roles[display_name]||</option>
 ||role_specific_options_template
 
 user_specific_template||
-  <form onsubmit="clear_display('per_user_abilities_div');
-					ajaxapi_old('/ajax/roles_ajax.php',
-							'name_search',
-							'&type=per_user_' +
-							||pageid{{ '&pageid=||pageid||' + }}pageid||
-							||feature{{ '&feature=||feature||' + }}feature||
-							||featureid{{ '&featureid=||featureid||' + }}featureid||
-							'&refreshroles=' +
-							'&searchstring='+trim(document.getElementById('per_user_search').value),
-							function() {
-							simple_display('per_user_users_display_div');
-							});
-					return false;">
-	User Search: <input type="text" id="per_user_search" size="18" />&nbsp;<input type="submit" value="Search" />
-  </form>
-  <form id="per_user_roles_form">
-	Users:
-	<br />
-	<div style="width:100%; text-align:center; vertical-align:top;" id="per_user_users_display_div">
-		<select size="10" width="100%" style="width: 100%; font-size:.85em;" name="userid" id="per_user_user_select" onclick="if($('#per_user_user_select').val() > 0) {
-																																ajaxapi_old('/ajax/roles_ajax.php',
-																																		'refresh_user_abilities',
-																																		||pageid{{ '&pageid=||pageid||' + }}pageid||
-																																		||feature{{ '&feature=||feature||' + }}feature||
-																																		||featureid{{ '&featureid=||featureid||' + }}featureid||
-																																		'&userid=' + $('#per_user_user_select').val(),
-																																		function() {
-																																		simple_display('per_user_abilities_div');
-																																		});}">
-		||issiteid{{<option value="0">Search results will be shown here.</option>}}issiteid||
-		||options||
-		</select>
-	</div>
-	<div id="per_user_saved_div1" style="width:100%;text-align:center;height: 2px;padding-bottom: 18px;padding-top: 10px;"></div>
-	<div id="per_user_abilities_div" style="width:100%;"></div>
-	<div id="per_user_saved_div2" style="width:100%;text-align:center;height: 2px;padding-bottom: 10px;padding-top: 10px;"></div>
-  </form>
+    <form id="per_user_name_search">
+        User Search: <input type="text" id="per_user_search" size="18" />&nbsp;<input type="submit" value="Search" />
+    </form>
+    <form id="per_user_roles_form">
+        Users:
+        <br />
+        <div style="width:100%; text-align:center; vertical-align:top;" id="per_user_users_display_div">
+            <select size="10" width="100%" style="width: 100%; font-size:.85em;" name="userid" id="per_user_user_select">
+                ||issiteid{{<option value="0">Search results will be shown here.</option>}}issiteid||
+                ||options||
+            </select>
+        </div>
+        <div id="per_user_saved_div1" style="width:100%;text-align:center;height: 2px;padding-bottom: 18px;padding-top: 10px;"></div>
+        <div id="per_user_abilities_div" style="width:100%;"></div>
+        <div id="per_user_saved_div2" style="width:100%;text-align:center;height: 2px;padding-bottom: 10px;padding-top: 10px;"></div>
+    </form>
 ||user_specific_template
 
 user_specific_options_template||
-  <option value="||user[userid]||">||user[fname]|| ||user["lname"]|| (||user["email"]||)</option>
+    <option value="||user[userid]||">
+        ||user[fname]|| ||user["lname"]|| (||user["email"]||)
+    </option>
 ||user_specific_options_template
 
 group_specific_template||
-  <div id="per_group_whole_page" style="width:100%;">
-	||grouppage||
-  </div>
+    <div id="per_group_whole_page" style="width:100%;">
+        ||grouppage||
+    </div>
 ||group_specific_template
 
 roles_manager_template||
-  ||echo get_js_tags(["ui"]);::none||
-  ||echo get_css_tags(["ui"]);::none||
-  ||echo js_code_wrap('
-	$("#tabs").tabs({
-		beforeLoad: function( event, ui ) {
-					var d = new Date();
-					ui.ajaxSettings.url += "&currTime=" + d.toUTCString();
-					ui.jqXHR.fail(function() {
-					ui.panel.html("Couldn\'t load this tab. We\'ll try to fix this as soon as possible.");
-					});
-				}
-	}); ', 'defer', true);::none||
+    ||echo get_js_tags(["ui"]);::none||
+    ||echo get_css_tags(["ui"]);::none||
+    ||echo js_code_wrap('
+        $("#tabs").tabs({
+            beforeLoad: function(event, ui) {
+                var d = new Date();
+                ui.ajaxSettings.url += "&currTime=" + d.toUTCString();
+                ui.jqXHR.fail(function() {
+                ui.panel.html("Couldn\'t load this tab. We\'ll try to fix this as soon as possible.");
+                });
+            },
+            load: function(event, ui) { activatejs(); }
+        }); ', 'defer', true);::none||
 
-  <div id="context" style="font-size:.85em;background-color:lightGrey;margin:3px;padding:3px;height:30px;">
-		<span style="display:inline-block;float:left;">
-		<strong>
-			Page:
-		</strong>&nbsp;
-		<em>
-			||pagename||
-		</em>
-		||featurecontext{{&nbsp;&nbsp;<strong>Specific for the ||feature|| feature:</strong> <em>||setting||</em>}}featurecontext||
-		</span>
-		||warning{{ <span style="background-color:red;padding:3px;float:right;border:5px solid black;">WARNING: Changes affect all pages.</span>}}warning||
-  </div>
-  <div id="tabs" style="font-size:.9em">
-	<ul style="height:30px">
-		||tab_assign_roles{{<li><a href="roles.php?action=assign_roles&pageid=||pageid||">Assign Roles</a></li>}}tab_assign_roles||
-		||tab_modify_roles{{<li><a href="roles.php?action=role_specific&feature=||feature||&featureid=||featureid||&pageid=||pageid||">Modify Roles</a></li>}}tab_modify_roles||
-		||tab_groups{{<li><a href="roles.php?action=group_specific&feature=||feature||&featureid=||featureid||&pageid=||pageid||">Group Abilities</a></li>}}tab_groups||
-		||tab_user{{<li><a href="roles.php?action=user_specific&feature=||feature||&featureid=||featureid||&pageid=||pageid||">User Abilities</a></li>}}tab_user||
-	</ul>
-  </div>
+    <div id="context" style="font-size:.85em;background-color:lightGrey;margin:3px;padding:3px;height:30px;">
+            <span style="display:inline-block;float:left;">
+            <strong>
+                Page:
+            </strong>&nbsp;
+            <em>
+                ||pagename||
+            </em>
+            ||featurecontext{{&nbsp;&nbsp;<strong>Specific for the ||feature|| feature:</strong> <em>||setting||</em>}}featurecontext||
+            </span>
+            ||warning{{ <span style="background-color:red;padding:3px;float:right;border:5px solid black;">WARNING: Changes affect all pages.</span>}}warning||
+    </div>
+    <div id="tabs" style="font-size:.9em">
+        <ul style="height:30px">
+            ||tab_assign_roles{{<li><a href="roles.php?action=assign_roles&pageid=||pageid||">Assign Roles</a></li>}}tab_assign_roles||
+            ||tab_modify_roles{{<li><a href="roles.php?action=role_specific&feature=||feature||&featureid=||featureid||&pageid=||pageid||">Modify Roles</a></li>}}tab_modify_roles||
+            ||tab_groups{{<li><a href="roles.php?action=group_specific&feature=||feature||&featureid=||featureid||&pageid=||pageid||">Group Abilities</a></li>}}tab_groups||
+            ||tab_user{{<li><a href="roles.php?action=user_specific&feature=||feature||&featureid=||featureid||&pageid=||pageid||">User Abilities</a></li>}}tab_user||
+        </ul>
+    </div>
 ||roles_manager_template
 
 print_abilities_save_button||
-  <div style="width:100%; text-align:center">
-	<input type="button" value="Save" onclick="ajaxapi_old('/ajax/roles_ajax.php',
-														 '||save_function||',
-														||pageid{{ '&pageid=||pageid||' + }}pageid||
-														||feature{{ '&feature=||feature||' + }}feature||
-														||featureid{{ '&featureid=||featureid||' + }}featureid||
-														||groupid{{ '&groupid=||groupid||' + }}groupid||
-														||userid{{ '&userid=||userid||' + }}userid||
-														create_request_string('||type||roles_form'),
-														function() {
-															simple_display('||type||saved_div1');
-															simple_display('||type||saved_div2');
-															setTimeout(function() {
-															clear_display('||type||saved_div1');
-															clear_display('||type||saved_div2');
-															}, 5000);
-														});
-												 ajaxapi_old('/ajax/roles_ajax.php',
-														 '||refresh_function||',
-														||pageid{{ '&pageid=||pageid||' + }}pageid||
-														||feature{{ '&feature=||feature||' + }}feature||
-														||featureid{{ '&featureid=||featureid||' + }}featureid||
-														||roleid{{ '&roleid=' + $('#||type||role_select').val() }}roleid||
-														||groupid{{ '&groupid=' + $('#||type||group_select').val() }}groupid||
-														||userid{{ '&userid=' + $('#||type||user_select').val() }}userid||,
-														function() {
-															simple_display('||type||abilities_div');
-														});" />
-  </div>
+    <div style="width:100%; text-align:center">
+        <button type="submit" id="||type||_save_abilities_button">
+            Save
+        </button>
+    </div>
 ||print_abilities_save_button
 
 print_abilities||
-  <div style="width:100%; text-align:center">
-	||save||
-  </div>
-  <table class="roles_table">
-	<tr>
-		<td rowspan="2">
-		<strong>Abilities</strong>
-		</td>
-		<td style="width: 75px;text-align:center;" rowspan="2">
-		<strong>Allow</strong>
-		</td>
-		<td style="width: 75px;text-align:center;" rowspan="2">
-		<strong>||default||</strong>
-		</td>
-		<td style="width: 75px;text-align:center;" rowspan="2">
-		<strong>Deny</strong>
-		</td>
-	</tr>
-	||abilities||
-  </table>
-  <input type="hidden" name="||type||rightslist" value="||rightslist||" />
-  <div style="width:100%; text-align:center">
-	<br />
-	||save||
-  </div>
+    <div style="width:100%; text-align:center">
+        ||save||
+    </div>
+    <table class="roles_table">
+        <tr>
+            <td rowspan="2" style="text-align:left">
+                <strong>Abilities</strong>
+            </td>
+            <td style="width: 75px;text-align:center;" rowspan="2">
+                <strong>Allow</strong>
+            </td>
+            <td style="width: 75px;text-align:center;" rowspan="2">
+                <strong>||default||</strong>
+            </td>
+            <td style="width: 75px;text-align:center;" rowspan="2">
+                <strong>Deny</strong>
+            </td>
+        </tr>
+        ||abilities||
+    </table>
+    <input type="hidden" name="||type||_rightslist" value="||rightslist||" />
+    <div style="width:100%; text-align:center">
+        <br />
+        ||save||
+    </div>
 ||print_abilities
 
 print_abilities_ability||
   ||thissection{{
-	<tr>
-		<td colspan="4"><br /></td>
-	</tr>
-	<tr class="roles_header">
-		<td colspan="4">
-		<strong>
-			||ability[section_display]||
-		</strong>
-		</td>
-	</tr>
+    <tr>
+        <td colspan="4">
+            <br />
+        </td>
+    </tr>
+    <tr class="roles_header">
+        <td colspan="4" style="text-align:left">
+            <strong>
+                ||ability[section_display]||
+            </strong>
+        </td>
+    </tr>
   }}thissection||
-	<tr ||currentstyle||>
-		<td>
-		||ability[ability_display]||
-		</td>
-		<td>
-		<div style="width:75px;text-align:center;||notify1{{ ||notify{{ background-color:yellow; }}notify|| }}notify1||" id="||type||abilty_||ability[abilityid]||_yes">
-			<input style="margin-right:0" onclick="||swap_function||('||type||abilty_||ability[abilityid]||_yes','||type||abilty_||ability[abilityid]||_no');" type="radio" name="||ability[ability]||" value="1" ||notify1{{ checked }}notify1|| />
-		</div>
-		</td>
-		<td>
-		<div style="width:75px;text-align:center;">
-			||default_toggle{{
-			<input onclick="clear_highlights('||type||abilty_||ability[abilityid]||_no','||type||abilty_||ability[abilityid]||_yes');" type="radio" name="||ability[ability]||" style="margin-right: 0;" value="" ||default_checked{{ checked }}default_checked|| />
-			}}default_toggle||
-		</div>
-		</td>
-		<td>
-		<div style="width:75px;text-align:center;||notify2{{ ||notify{{ background-color:yellow; }}notify|| }}notify2||" id="||type||abilty_||ability[abilityid]||_no">
-			<input style="margin-right:0"  onclick="||swap_function||('||type||abilty_||ability[abilityid]||_no','||type||abilty_||ability[abilityid]||_yes');" type="radio" name="||ability[ability]||" value="0" ||notify2{{ checked }}notify2|| />
-		</div>
-		</td>
-	</tr>
+    <tr ||currentstyle||>
+        <td style="text-align:left">
+            ||ability[ability_display]||
+        </td>
+        <td>
+            <div style="width:75px;text-align:center;||notify1{{ ||notify{{ background-color:yellow; }}notify|| }}notify1||" id="||type||abilty_||ability[abilityid]||_yes">
+                <input style="margin-right:0" onclick="||swap_function||('||type||abilty_||ability[abilityid]||_yes','||type||abilty_||ability[abilityid]||_no');" type="radio" name="||ability[ability]||" value="1" ||notify1{{ checked }}notify1|| />
+            </div>
+        </td>
+        <td>
+            <div style="width:75px;text-align:center;">
+                ||default_toggle{{
+                <input onclick="clear_highlights('||type||abilty_||ability[abilityid]||_no','||type||abilty_||ability[abilityid]||_yes');" type="radio" name="||ability[ability]||" style="margin-right: 0;" value="" ||default_checked{{ checked }}default_checked|| />
+                }}default_toggle||
+            </div>
+        </td>
+        <td>
+            <div style="width:75px;text-align:center;||notify2{{ ||notify{{ background-color:yellow; }}notify|| }}notify2||" id="||type||abilty_||ability[abilityid]||_no">
+                <input style="margin-right:0"  onclick="||swap_function||('||type||abilty_||ability[abilityid]||_no','||type||abilty_||ability[abilityid]||_yes');" type="radio" name="||ability[ability]||" value="0" ||notify2{{ checked }}notify2|| />
+            </div>
+        </td>
+    </tr>
 ||print_abilities_ability

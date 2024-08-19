@@ -819,18 +819,6 @@ div.html_template {
     justify-content: space-between;
 }
 
-.comment_deletelink {
-
-}
-
-.comment_editlink {
-
-}
-
-.comment_replylink {
-
-}
-
 .comment_editlink a, .comment_replylink a, .comment_deletelink a {
     text-decoration: none
 }
@@ -841,7 +829,6 @@ table.roles_table {
     border-spacing: 0px;
     border-style: none;
     border-collapse: collapse;
-    font-size: .75em
 }
 
 tr.roles_header {
@@ -879,7 +866,7 @@ td.field_title {
     vertical-align: middle;
 }
 
-td.sub_field_title {
+.sub_field_title {
     font-size: .95em;
     text-align: right;
     vertical-align: middle;
@@ -925,6 +912,23 @@ div.pagelinklist div:nth-child(even) {
 
 div.pagelinklist div:nth-child(odd) {
     background-color: #e0e0e0;
+}
+
+div.pagelinklist div.sortpagelinkitem {
+    padding: 10px 1%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+div.sortpagelinkitem span.pagelink_count {
+    color: #fff;
+    width: 15px;
+    background-color: gray;
+    padding: 5px;
+    display: inline-block;
+    text-align: center;
+    border-radius: 5px;
 }
 
 div.pagelinklist div:nth-child(even):hover,
@@ -2506,4 +2510,12 @@ input[type=image] {
     border-color: buttonface;
     border-style: dotted;
     padding: 10px;
+}
+
+.invisible {
+    visibility: hidden;
+}
+
+.hidden {
+    display: none;
 }

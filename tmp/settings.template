@@ -1,78 +1,61 @@
 make_settings_page_template||
-  <div id="settings_div" class="dotted">
-	<h3>
-		||title||
-	</h3>
-	<br />
-	<br />
-	||settingslist||
-	<br />
-  </div>
+    <div id="settings_div" class="dotted">
+        <h3>
+            ||title||
+        </h3>
+        <br />
+        <br />
+        ||settingslist||
+        <br />
+    </div>
 ||make_settings_page_template
 
 make_setting_input_template||
-  <div style="margin:10px 0;">
-	<div style="display:inline-block;width:20%;padding:0 10px;font-size:.9em;vertical-align:||valign||;">
-		||title||
-	</div>
-	<div style="display:inline-block;width:70%">
-		||istext{{
-			<input style="width: calc(100% - 150px);" type="text" id="||name||" name="||name||" value="||setting||" />
-		}}istext||
+    <div style="display: flex;padding: 5px;align-items: center;">
+        <div style="display:inline-block;width:30%;padding:0 10px;font-size:.9em;vertical-align:||valign||;">
+            ||title||
+        </div>
+        <div style="display:inline-block;width:70%;padding:5px;">
+            ||istext{{
+                <input style="width: 100%" type="text" id="||name||" name="||name||" value="||setting||" />
+            }}istext||
 
-		||isyesno{{
-			<select style="width: calc(100% - 150px);" name="||name||" id="||name||">
-				<option value="1" ||yes||>Yes</option>
-				<option value="0" ||no||>No</option>
-			</select>
-		}}isyesno||
+            ||isyesno{{
+                <select style="width: 100%" name="||name||" id="||name||">
+                    <option value="1" ||yes||>Yes</option>
+                    <option value="0" ||no||>No</option>
+                </select>
+            }}isyesno||
 
-		||isnoyes{{
-			<select style="width: calc(100% - 150px);" name="||name||" id="||name||">
-				<option value="0" ||no||>No</option>
-				<option value="1" ||yes||>Yes</option>
-			</select>
-		}}isnoyes||
+            ||isnoyes{{
+                <select style="width: 100%" name="||name||" id="||name||">
+                    <option value="0" ||no||>No</option>
+                    <option value="1" ||yes||>Yes</option>
+                </select>
+            }}isnoyes||
 
-		||isselect{{
-			<select style="width: calc(100% - 150px);" name="||name||" id="||name||">
-				||options||
-			</select>
-		}}isselect||
+            ||isselect{{
+                <select style="width: 100%" name="||name||" id="||name||">
+                    ||options||
+                </select>
+            }}isselect||
 
-		||istextarea{{
-			<textarea style="width: calc(100% - 150px);" id="||name||" wrap="off" rows="||extraforminfo||" >||setting||</textarea>
-		}}istextarea||
-
-		||savebutton{{
-		<input style="float:right" type="button" value="Save" onclick="||ifnumeric{{
-																		 if (!IsNumeric($('#||name||').val())) {
-																			 alert('Must be numeric!');
-																		 } else {
-																		 }}ifnumeric||
-																			||ifvalidation{{
-																				if ($('#||name||').val() ||validation||) {
-																				alert('||warning||');
-																				} else {
-																			}}ifvalidation||
-																				ajaxapi_old('/ajax/site_ajax.php',
-																						'save_settings',
-																						'&settingid=||settingid||' +
-																						'&setting=' + encodeURIComponent($('#||name||').val()),
-																						function() {
-																						simple_display('||name||_results');
-																						setTimeout(function() {
-																							clear_display('||name||_results');
-																						}, 3000);
-																						});
-																			||ifvalidation{{
-																				}
-																			}}ifvalidation||
-																		 ||ifnumeric{{
-																		 }
-																		 }}ifnumeric||" />
-		}}savebutton||
-	</div>
-	<span style="max-width:50px" id="||name||_results" class="notification"></span>
-  </div>
+            ||istextarea{{
+                <textarea style="width: 100%" id="||name||" wrap="off" rows="||extraforminfo||" >||setting||</textarea>
+            }}istextarea||
+        </div>
+        ||savebutton{{
+            <button onclick="||ifnumeric{{if (!IsNumeric($('#||name||').val())) {alert('Must be numeric!');} else { }}ifnumeric||
+                                ||ifvalidation{{if ($('#||name||').val() ||validation||) { alert('||warning||');} else { }}ifvalidation||
+                                save_single_setting('||name||', ||settingid||);
+                            ||ifvalidation{{ } }}ifvalidation||
+                            ||ifnumeric{{ } }}ifnumeric||">
+                ||echo icon("floppy-disk");::none||
+                <span>
+                    Save
+                </span>
+            </button>
+        }}savebutton||
+        <div style="width:50px;text-align:center;" id="||name||_results" class="notification"></div>
+    </div>
 ||make_setting_input_template

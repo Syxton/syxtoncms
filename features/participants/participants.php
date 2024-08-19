@@ -40,18 +40,31 @@ global $MYVARS, $CFG, $USER;
 
     if (!user_is_able($USER->userid, "viewparticipants", $pageid)) { trigger_error(error_string("no_permission", ["viewparticipants"]), E_USER_WARNING); return; }
 
-    $SQL = "SELECT * FROM roles_assignment ra JOIN users u ON u.userid=ra.userid JOIN roles r ON r.roleid = ra.roleid WHERE ra.pageid='$pageid' AND ra.confirm=0 ORDER BY r.display_name,u.lname";
+    $SQL = "SELECT fname, lname, display_name FROM roles_assignment ra JOIN users u ON u.userid=ra.userid JOIN roles r ON r.roleid = ra.roleid WHERE ra.pageid='$pageid' AND ra.confirm=0 ORDER BY r.display_name,u.lname";
 	if ($results = get_db_result($SQL . " LIMIT $limit")) {
-        if ($show_total) { $total = get_db_count($SQL); echo "<div style='text-align:center;'><strong>Total:</strong> $total</div>";}
-		echo '<table style="border:1px solid silver;border-collapse:collapse;margin:5px;width:98%">';
-		echo '<tr><td style="width:50%;padding:2px 5px;white-space:nowrap"><img src="' . $CFG->wwwroot . '/images/user.png" style="vertical-align:bottom;" /><strong>Name</strong></td><td style="width:5%;"></td><td style="width:45%;text-align:center;white-space:nowrap;padding:2px 5px;"><img src="' . $CFG->wwwroot . '/images/key.png" style="vertical-align:bottom;" /> <strong>Page Role</strong></td></tr>';
+        if ($show_total) {
+			$total = get_db_count($SQL);
+			echo "<div style='text-align:center;'><strong>Total:</strong> $total</div>";
+		}
+		echo '
+			<table style="border-collapse:collapse;width:100%">
+				<tr>
+					<td style="width:50%;padding:5px;white-space:nowrap">
+						' . icon("user") . ' <strong>Name</strong>
+					</td>
+					<td style="width:5%;">
+					</td>
+					<td style="width:45%;text-align:center;white-space:nowrap;padding:5px;">
+						' . icon("key") . ' <strong>Page Role</strong>
+					</td>
+				</tr>';
 
 		$toggle=true;
 		while ($row = fetch_row($results)) {
 			$color = $toggle ? "#FAFAFA" : "#F2F2F2";
 			$toggle = $toggle ? false : true;
 
-			echo '<tr style="background-color:' . $color . '"><td style="width:50%;padding:2px 5px;white-space:nowrap">' . $row["fname"] . ' ' . $row["lname"] . '</td><td style="float:left;width:5%;"></td><td style="width:45%;text-align:center;white-space:nowrap;padding:2px 5px;">' . $row["display_name"] . '</td></tr>';
+			echo '<tr style="background-color:' . $color . '"><td style="width:50%;padding:5px;white-space:nowrap">' . $row["fname"] . ' ' . $row["lname"] . '</td><td style="float:left;width:5%;"></td><td style="width:45%;text-align:center;white-space:nowrap;padding:5px;">' . $row["display_name"] . '</td></tr>';
 		}
 		echo '</table>';
 	}

@@ -159,7 +159,7 @@ function simple_display(container) {
             });
         });
     } else if (getRoot()[0].$("#" + container).length) { // might be in an iframe and wanting to populate a parent container.
-        getRoot()[0].simple_display(container, data);
+        getRoot()[0].simple_display(container);
     }
 }
 
@@ -229,7 +229,7 @@ function istrue_old() {
 }
 
 function istrue(data = false) {
-    if (!data) {
+    if (data === false) {
         return istrue_old();
     }
     return data.message == "false" ? false : true;
@@ -790,11 +790,10 @@ function page_display() {
 }
 
 //print function
-function create_page_display() {
-    var text = JSON.parse(xmlHttp.responseText);
-    $("#create_page_div").html(text[2]);
-    if (text[0] == "true") {
-        self.parent.go_to_page(text[1]);
+function create_page_display(data) {
+    var pageid = parseInt(data.message) || 0;
+    if (pageid !== 0) {
+        self.parent.go_to_page(pageid);
     }
 }
 

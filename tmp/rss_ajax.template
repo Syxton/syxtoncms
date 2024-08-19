@@ -1,10 +1,14 @@
 add_feed_template||
-  <div style="width:100%;text-align:center;">
-	You have created an RSS feed.  Please click the 'Subscribe' link to add the feed to your RSS reader.
-	<br />
-	<br />
-	<a href="||wwwroot||/scripts/rss/rss.php?rssid=||rssid||&key=||userkey||">
-		<img src="||wwwroot||/images/small_rss.png" alt="RSS Feed" /> Subscribe
-	</a>
-  </div>
+    <div style="width:100%;text-align:center;">
+        <h3>You have created an RSS feed.</h3>
+        Please click the 'Subscribe' link to add the feed to your RSS reader.
+        <br />
+        <br />
+        <a target="_blank" rel="noopener noreferrer" type="application/atom+xml" style="display:inline-flex;align-items: center;" href="||wwwroot||/scripts/rss/rss.php?rssid=||rssid||&key=||userkey||">
+            ||echo icon([["icon" => "square", "stacksize" => 2, "color" => "white"], ["icon" => "square-rss"],]);::none||
+            <span>
+                Subscribe
+            </span>
+        </a>
+    </div>
 ||add_feed_template

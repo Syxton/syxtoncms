@@ -736,7 +736,6 @@ global $CFG;
         $disabled = "disabled";
 
         if ($pagenum !== false && $pagenum !== $lastpage) {
-            error_log($pagenum . " - " . $lastpage);
             ajaxapi([
                 "id" => "get_forum_posts_next_$forumid",
                 "url" => "/features/forum/forum_ajax.php",

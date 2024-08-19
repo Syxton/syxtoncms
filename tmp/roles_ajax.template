@@ -1,213 +1,94 @@
 name_search_template||
-  ||refreshroles{{
-        <div style="width:100%; text-align:center;">
-            <select size="10" width="100%" style="width: 100%; font-size:.85em;" name="userid" id="||type||user_select" onclick="if($('#||type||user_select').val() > 0) {
-                                                                                                                                    ajaxapi_old('/ajax/roles_ajax.php',
-                                                                                                                                            'refresh_user_roles',
-                                                                                                                                            '&pageid=||pageid||' +
-                                                                                                                                            '&userid=' + $('#||type||user_select').val(),
-                                                                                                                                            function() {
-                                                                                                                                            simple_display('||type||roles_div');
-                                                                                                                                            });
-                                                                                                                                 }">
-        //OR//
-        <div style="width:100%; text-align:center;">
-            <select size="10" width="100%" style="width: 100%; font-size:.85em;" name="userid" id="||type||user_select" onclick="if($('#||type||user_select').val() > 0) {
-                                                                                                                                    ajaxapi_old('/ajax/roles_ajax.php',
-                                                                                                                                            'refresh_user_abilities',
-                                                                                                                                            '&pageid=||pageid||' +
-                                                                                                                                            '&feature=||feature||' +
-                                                                                                                                            '&featureid=||featureid||' +
-                                                                                                                                            '&userid=' + $('#||type||user_select').val(),
-                                                                                                                                            function() {
-                                                                                                                                            simple_display('||type||abilities_div');
-                                                                                                                                            });
-                                                                                                                                 }">
-  }}refreshroles||
+    <div style="width:100%; text-align:center;">
+        <select size="10" width="100%" style="width: 100%; font-size:.85em;" name="userid" id="||type||_user_select">
             ||options||
-            </select>
-        </div>
+        </select>
+    </div>
 ||name_search_template
 
 add_to_group_search_template||
-  <select size="5" width="100%" style="width: 100%; font-size:.85em;" name="userid" id="add_user_select">
-    ||options||
-  </select>
+    <select size="5" width="100%" style="width: 100%; font-size:.85em;" name="userid" id="add_user_select">
+        ||options||
+    </select>
 ||add_to_group_search_template
 
 refresh_group_users_template||
-  <strong>Group: ||groupname||</strong>
-  <span style="float:right">
-    ||canmanage{{
-        <button class="alike" onclick="ajaxapi_old('/ajax/roles_ajax.php',
-                                                'create_edit_group_form',
-                                                '&pageid=||pageid||' +
-                                                '&groupid=||groupid||' +
-                                                '&feature=||feature||' +
-                                                '&featureid=||featureid||',
-                                                function() {
-                                                    simple_display('per_group_display_div');
-                                                });">
-            || echo icon("pencil");::none||
-        </button>
-        &nbsp;
-        <button class="alike" onclick="if (confirm('Are you sure you wish to delete this group?')) {
-                                            ajaxapi_old('/ajax/roles_ajax.php',
-                                                    'delete_group',
-                                                    '&pageid=||pageid||' +
-                                                    '&groupid=||groupid||' +
-                                                    '&feature=||feature||' +
-                                                    '&featureid=||featureid||',
-                                                    function() {
-                                                        simple_display('per_group_whole_page');
-                                                    });
-                                            }">
-            || echo icon("trash");::none||
-        </button>
-    }}canmanage||
-  </span>
-  <div style="width:100%; text-align:center;">
-    <select size="5" width="100%" style="width: 100%; font-size:.85em;" name="per_group_userid" id="per_group_user_select">
-        ||options||
-    </select>
-    ||canmanage{{
-        <a href="javascript: void(0);" onclick="ajaxapi_old('/ajax/roles_ajax.php',
-                                                        'manage_group_users_form',
-                                                        '&pageid=||pageid||' +
-                                                        '&groupid=||groupid||' +
-                                                        '&feature=||feature||' +
-                                                        '&featureid=||featureid||',
-                                                        function() {
-                                                        simple_display('per_group_display_div');
-                                                        });">
-        <img src="||wwwroot||/images/user_role.png" /> Manage Users
-        </a>
-    }}canmanage||
-  </div>
+    <strong>Group: ||groupname||</strong>
+    <div style="width:100%; text-align:center;">
+        <select size="5" width="100%" style="width: 100%;" name="per_group_userid" id="per_group_user_select">
+            ||options||
+        </select>
+        ||canmanage{{
+            <button style="margin: 5px" id="manage_group_users_form">
+                ||echo icon('user');::none||&nbsp;Manage Users
+            </button>
+            &nbsp;
+            <button onclick="create_edit_group_form(||groupid||)">
+                || echo icon("pencil");::none||
+                <span>Edit</span>
+            </button>
+            &nbsp;
+            <button id="delete_group">
+                || echo icon("trash");::none||
+                <span>Delete</span>
+            </button>
+        }}canmanage||
+    </div>
 ||refresh_group_users_template
 
 refresh_manage_groups_template||
     <strong>Group: ||groupname||</strong>
-    <form onsubmit="ajaxapi_old('/ajax/roles_ajax.php',
-                            'add_to_group_search',
-                            '&pageid=||pageid||' +
-                            '&groupid=||groupid||' +
-                            '&feature=||feature||' +
-                            '&featureid=||featureid||' +
-                            '&searchstring=' + trim($('#per_group_search_text').val()),
-                            function(){
-                                simple_display('per_group_users_display_div');
-                            }); return false;">
-        User Search: <input type="text" id="per_group_search_text" size="18" />
-        <input type="submit" value="Search" style="margin:0;" />
+    <form onsubmit="add_to_group_search()">
+        User Search: <input type="text" id="per_group_search_text" size="18" value="||*searchstring||" />
+        <button type="submit">
+            Search
+        </button>
     </form>
     Add Users:
     <br />
-        <div style="width:100%; text-align:center; vertical-align:top;" id="per_group_users_display_div">
-            <select size="5" width="100%" style="width: 100%; font-size:.85em;" name="userid" id="add_user_select">
-        ||options1||
+    <div id="per_group_users_display_div" style="width:100%;display:flex;">
+        <select size="5" style="width: 100%;" name="userid" id="add_user_select">
+            ||options1||
         </select>
+        <button style="margin: 5px;float:right;" id="add_user_to_group" class="alike">
+            ||echo icon("user-plus", 2, "", "green");::none||
+        </button>
     </div>
-    <a style="float:right;" class="imgandlink" href="javascript: void(0);" onclick="if ($('#add_user_select').val() > 0) {
-                                                                                        ajaxapi_old('/ajax/roles_ajax.php',
-                                                                                                'add_group_user',
-                                                                                                '&userid=' + $('#add_user_select').val() +
-                                                                                                '&pageid=||pageid||' +
-                                                                                                '&groupid=||groupid||' +
-                                                                                                '&feature=||feature||' +
-                                                                                                '&featureid=||featureid||',
-                                                                                                function() {
-                                                                                                simple_display('per_group_display_div');
-                                                                                                });
-                                                                                        ajaxapi_old('/ajax/roles_ajax.php',
-                                                                                                'refresh_groups_list',
-                                                                                                '&pageid=||pageid||' +
-                                                                                                '&groupid=||groupid||' +
-                                                                                                '&feature=||feature||' +
-                                                                                                '&featureid=||featureid||',
-                                                                                                function() {
-                                                                                                simple_display('group_list_div');
-                                                                                                });
-                                                                                    }">
-        ||echo icon("plus");::none|| Add User
-    </a>
     <br />
     Remove Users:
     <br />
-        <div style="width:100%; text-align:center; vertical-align:top;" id="per_group_users_display_div2">
-            <select size="5" width="100%" style="width: 100%; font-size:.85em;" id="remove_user_select">
-        ||options2||
+    <div id="per_group_users_display_div2" style="width:100%;display:flex;">
+        <select size="5" style="width: 100%;" id="remove_user_select">
+            ||options2||
         </select>
+        <button id="remove_user_from_group" style="margin: 5px;float:right;" class="alike">
+            ||echo icon("user-minus", 2, "", "red");::none||
+        </button>
     </div>
-    <a style="float:right;" class="imgandlink" href="javascript: void(0);" onclick="if ($('#remove_user_select').val() > 0) {
-                                                                                        ajaxapi_old('/ajax/roles_ajax.php',
-                                                                                                'remove_group_user',
-                                                                                                '&userid=' + $('#remove_user_select').val() +
-                                                                                                '&pageid=||pageid||' +
-                                                                                                '&groupid=||groupid||' +
-                                                                                                '&feature=||feature||' +
-                                                                                                '&featureid=||featureid||',
-                                                                                                function() {
-                                                                                                simple_display('per_group_display_div');
-                                                                                                });
-                                                                                        ajaxapi_old('/ajax/roles_ajax.php',
-                                                                                                'refresh_groups_list',
-                                                                                                '&pageid=||pageid||' +
-                                                                                                '&groupid=||groupid||' +
-                                                                                                '&feature=||feature||' +
-                                                                                                '&featureid=||featureid||',
-                                                                                                function() {
-                                                                                                simple_display('group_list_div');
-                                                                                                });
-                                                                                    }">
-        <img src="||wwwroot||/images/subtract.png" /> Remove User
-    </a>
+
 ||refresh_manage_groups_template
 
 create_edit_group_form_template||
-  <table style="width:100%;font-size:.85em;">
-    <tr>
-        <td colspan="2">
+    <div>
         <strong>||groupid{{ Edit Group //OR// Create Group }}groupid||</strong>
-        </td>
-    </tr>
-    <tr>
-        <td>
-        Name:
-        </td>
-        <td>
-        <input size="45" type="text" id="per_group_name" name="per_group_name" value="||name||" />
-        </td>
-    </tr>
-    <tr>
-        <td>
-        Parent:
-        </td>
-        <td>
+    </div>
+    <div style="display:flex;align-items: center;padding: 5px 0;">
+        <label for="per_group_name" style="width: 10%;padding: 5px;">
+            Name:
+        </label>
+        <input style="width: 100%" type="text" id="per_group_name" name="per_group_name" value="||name||" />
+    </div>
+    <div style="display:flex;align-items: center;;padding: 5px 0;">
+        <label for="per_group_edit_group_select" style="width: 10%;padding: 5px">
+            Parent:
+        </label>
         ||parents||
-        </td>
-    </tr>
-    <tr>
-        <td colspan="2" style="text-align:right;">
-        <button class="imgandlink alike" onclick="if (trim($('#per_group_name').val()).length > 0) {
-                                                        ajaxapi_old('/ajax/roles_ajax.php',
-                                                                    'save_group',
-                                                                    '&name=' + $('#per_group_name').val() +
-                                                                    '&parent=' + $('#per_group_edit_group_select').val() +
-                                                                    ||groupid{{'&groupid=||groupid||' +}}groupid||
-                                                                    '&pageid=||pageid||',
-                                                                    function() {
-                                                                        simple_display('per_group_whole_page');
-                                                                    });
-                                                    } else {
-                                                        alert('Name is required.');
-                                                    }">
-            ||echo icon("floppy-disk");::none||
-            <span>Save Group</span>
-        </button>
-        </td>
-    </tr>
-  </table>
+    </div>
+    <button id="save_group" style="float: right;margin: 5px;">
+        ||echo icon("floppy-disk");::none||
+        <span>Save Group</span>
+    </button>
+    <br /><br />
 ||create_edit_group_form_template
 
 refresh_user_roles_template||
@@ -223,26 +104,9 @@ refresh_user_roles_template||
         ||options||
         </select>
         &nbsp;
-        <input type="button" value="Assign" onclick="ajaxapi_old('/ajax/roles_ajax.php',
-                                                             'assign_role',
-                                                             '&pageid=||pageid||' +
-                                                             '&userid=||userid||' +
-                                                             '&roleid=' + $('#role_select').val(),
-                                                             function() {
-                                                            simple_display('per_page_saved_div1');
-                                                            simple_display('per_page_saved_div2');
-                                                            ajaxapi_old('/ajax/roles_ajax.php',
-                                                                    'refresh_user_roles',
-                                                                    '&pageid=||pageid||' +
-                                                                    '&userid=' + $('#per_page_user_select').val(),
-                                                                    function() {
-                                                                        simple_display('per_page_roles_div');
-                                                                    });
-                                                            setTimeout(function() {
-                                                                        clear_display('per_page_saved_div1');
-                                                                        clear_display('per_page_saved_div2');
-                                                                         }, 5000);
-                                                            });" />
+        <button id="assign_role_button">
+            Assign
+        </button>
         <div id="per_page_saved_div1" style="height: 2px; padding-top: 10px;">
         </div>
     </div>

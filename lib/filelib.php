@@ -176,7 +176,7 @@ function fetch_template($file, $subsection, $feature = false, $params = []) {
             if (!empty($subsection)) {
                 $contents = template_subsection($contents, $subsection);
                 if ($contents === false) {
-                    throw new Exception("Fetching template $file:$subsection failed.");
+                    throw new Exception("Fetching template subsection $file:$subsection failed.");
                 }
             }
 
@@ -266,7 +266,8 @@ function fill_template($file, $subsection, $feature = false, $params = [], $allo
             }
         } else {
             // Fetch the template and check if it was found.
-            if (!$temp = fetch_template($file, $subsection, $feature, $params)) {
+            $temp = fetch_template($file, $subsection, $feature, $params);
+            if ($temp === false) {
                 trigger_error("Fetching template $file:$subsection failed.", E_USER_ERROR);
                 throw new \Exception("Fetching template $file:$subsection failed.");
             }
@@ -473,7 +474,7 @@ function templates_replace_qualifiers($var, $fullcode, $innercode, $params, $con
     }
 
     if (isset($params[$var])) {
-        if (!$params[$var]) { // If $var variable evaluates to false, replace with the 2nd part of the OR
+        if (!$params[$var]) { // If $var variable evaluates to false, replace with the 2nd part of the OR or nothing.
             $contents = str_replace($fullcode, $replacewith[1], $contents);
         } elseif ($params[$var]) { // If eval variable evaluates to true, replace with the 1st part of the OR
             $contents = str_replace($fullcode, $replacewith[0], $contents);

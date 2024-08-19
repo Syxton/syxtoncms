@@ -139,7 +139,7 @@ function register() {
 
             if ($event['allowinpage'] !== 0) {
                 if (is_logged_in() && $event['pageid'] != $CFG->SITEID) {
-                    subscribe_to_page($event['pageid'], $USER->userid);
+                    change_page_subscription($event['pageid'], $USER->userid);
                     $return .= '
                         <br />
                         You have been automatically allowed into this events\' web page.  This page contain specific information about this event.

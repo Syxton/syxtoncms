@@ -1552,7 +1552,7 @@ global $CFG, $MYVARS, $USER, $error;
 
         if ($event['allowinpage'] != 0) {
             if (is_logged_in() && $event['pageid'] != $CFG->SITEID) {
-                subscribe_to_page($event['pageid'], $USER->userid);
+                change_page_subscription($event['pageid'], $USER->userid);
                 echo 'You have been automatically allowed into this events web page.  This page contain specific information about this event . ';
             }
 
@@ -1823,7 +1823,12 @@ global $USER;
     $add1 = clean_myvar_req("add1", "string");
     $add2 = clean_myvar_req("add2", "string");
     $zip = clean_myvar_req("zip", "string");
-    $phone = clean_myvar_opt("phone", "string", "");
+    $phone1 = clean_myvar_opt("phone1", "string", "");
+    $phone2 = clean_myvar_opt("phone2", "string", "");
+    $phone3 = clean_myvar_opt("phone3", "string", "");
+    $phone = $phone1 . "-" . $phone2 . "-" . $phone3;
+    $phone = str_replace("---", "", $phone);
+
     $shared = clean_myvar_opt("shared", "int", 0);
 
     $SQL = "INSERT INTO events_locations (location, address_1, address_2, zip, phone, userid, shared)
@@ -1835,13 +1840,14 @@ global $USER;
         "address_2" => $add2,
         "zip" => $zip,
         "phone" => $phone,
-        "userid" => $USER->userid,
+        "userid" => "," . $USER->userid . ",",
         "shared" => $shared,
     ];
     $id = execute_db_sql($SQL, $params);
 
     log_entry("events", $name, "Added Location");
-    echo get_my_locations($USER->userid, $id, $eventid);
+    $return = get_my_locations($USER->userid, $id, $eventid);
+    ajax_return($return);
 }
 
 function submit_new_event($request=false) {
@@ -2045,37 +2051,70 @@ function unique() {
     $elementid = clean_myvar_req("elementid", "int");
     $value = clean_myvar_req("value", "string");
 
+    $return = "true";
     if (is_unique("events_registrations_values", "elementid='$elementid' AND eventid='$eventid' AND value='$value'")) {
-        echo "false";
+        $return = "false";
     }
-    echo "true";
+
+    ajax_return($return);
 }
 
 function unique_relay() {
-global $CFG, $MYVARS;
     $table = clean_myvar_req("table", "string");
     $key = clean_myvar_req("key", "string");
     $value = clean_myvar_req("value", "string");
 
+    $return = "true";
     if (is_unique($table, "$key='$value'")) {
-        echo "false";
+        $return = "false";
     }
-    echo "true";
+
+    ajax_return($return);
 }
 
 function add_location_form() {
-global $USER, $CFG, $MYVARS;
-    $eventid = clean_myvar_req("eventid", "int");
+    $eventid = clean_myvar_opt("eventid", "int", false);
     $formtype = clean_myvar_req("formtype", "string");
 
     switch($formtype) {
         case "new":
-            echo new_location_form($eventid);
+            ajaxapi([
+                "id" => "new_event_location_submit",
+                "if" => "valid_new_location()",
+                "reqstring" => "new_event_location_form",
+                "url" => "/features/events/events_ajax.php",
+                "data" => [
+                    "action" => "add_new_location",
+                    "eventid" => "js||$('#eventid').length ? $('#eventid').val() : 0||js",
+                ],
+                "display" => "select_location",
+                "ondone" => "$('#location_status').html('Location Added');$('#addtolist').removeClass('hidden');$('#location_menu,#add_location_div, #hide_menu').addClass('hidden');$('#new_button, #or, #browse_button').removeClass('invisible');setTimeout('clear_display(\'location_status\')', 5000);",
+                "event" => "click",
+            ]);
+
+            ajaxapi([
+                "id" => "is_unique_location_name",
+                "paramlist" => "returnme",
+                "url" => "/features/events/events_ajax.php",
+                "async" => "false",
+                "data" => [
+                    "action" => "unique_relay",
+                    "table" => "events_locations",
+                    "key" => "location",
+                    "value" => "js||$('#location_name').val()||js",
+                ],
+                "ondone" => "if (!istrue(data)) { $('#location_name_error').html('This value already exists in our database.'); retunme.val = false; } else { $('#location_name_error').html(''); returnme.val = true; }",
+                "event" => "none",
+            ]);
+
+            $return = new_location_form($eventid);
             break;
         case "existing":
-            echo location_list_form($eventid);
+            $return = location_list_form($eventid);
             break;
     }
+
+    ajax_return($return);
 }
 
 function copy_location() {

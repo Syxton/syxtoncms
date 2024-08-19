@@ -242,6 +242,12 @@ update_pagelink_name||
 	WHERE linkid = ||linkid||
 ||update_pagelink_name
 
+update_pagelink_sort_and_name||
+	UPDATE pages_links
+	SET sort = ||sort||, linkdisplay = ||linkdisplay||
+	WHERE linkid = ||linkid||
+||update_pagelink_sort_and_name
+
 get_page_menu||
 	SELECT *
 	FROM menus

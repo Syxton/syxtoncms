@@ -69,8 +69,8 @@ global $CFG, $ROLES, $USER;
 }
 
 function format_pagelist($pageresults) {
-global $CFG, $USER, $PAGE;
-    $returnme = "";
+global $PAGE;
+    $returnme = $options = "";
     if (!empty($pageresults)) {
         while ($row = fetch_row($pageresults)) {
             $selected = $PAGE->id == $row['pageid'] ? "selected" : ""; // Preselect page if you are there
