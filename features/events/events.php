@@ -189,6 +189,17 @@ global $CFG;
         echo main_body(true) . '<br /><br />';
     }
 
+    ajaxapi([
+        "id" => "lookup_reg",
+        "url" => "/features/events/events_ajax.php",
+        "data" => [
+            "action" => "lookup_reg",
+            "code" => "js||$('#code').val()||js",
+        ],
+        "display" => "payarea",
+        "event" => "none",
+    ]);
+
     echo js_code_wrap('window.onload = function () { if ($("#code").val() != "") { lookup_reg($("#code").val()); } }', "", true);
     echo '
         <div style="text-align:center;padding:15px;">
