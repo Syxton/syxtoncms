@@ -1252,6 +1252,7 @@ function confirm_or_deny_event($eventid = false, $confirm = false) {
 global $CFG, $USER;
     date_default_timezone_set("UTC");
     $event = get_event($eventid);
+    $confirm = $confirm ? 1 : 0;
 
     $status = execute_db_sql("UPDATE events SET confirmed = ||confirmed|| WHERE eventid = ||eventid||", ["confirmed" => $confirm, "eventid" => $eventid]);
 
@@ -1260,7 +1261,7 @@ global $CFG, $USER;
     }
 
     // Make Calendar event
-    if (!empty($confirm)) {
+    if ($confirm) {
         //Set events to confirm then refresh
         refresh_calendar_events($eventid);
         log_entry("events", $event["name"], "Confirmed Event's Visibility");
@@ -1466,9 +1467,9 @@ function get_possible_times($formid, $selected_time = false, $start_time = false
     $start_time ??= false;
 
     $times = ["00:00*12:00 am", "00:30*12:30 am", "01:00*01:00 am", "01:30*01:30 am", "02:00*02:00 am", "02:30*02:30 am", "03:00*03:00 am", "03:30*03:30 am", "04:00*04:00 am", "04:30*04:30 am", "05:00*05:00 am", "05:30*05:30 am", "06:00*06:00 am", "06:30*06:30 am", "07:00*07:00 am", "07:30*07:30 am", "08:00*08:00 am", "08:30*08:30 am", "09:00*09:00 am", "09:30*09:30 am", "10:00*10:00 am", "10:30*10:30 am", "11:00*11:00 am", "11:30*11:30 am", "12:00*12:00 pm", "12:30*12:30 pm", "13:00*01:00 pm", "13:30*01:30 pm", "14:00*02:00 pm", "14:30*02:30 pm", "15:00*03:00 pm", "15:30*03:30 pm", "16:00*04:00 pm", "16:30*04:30 pm", "17:00*05:00 pm", "17:30*05:30 pm", "18:00*06:00 pm", "18:30*06:30 pm", "19:00*07:00 pm", "19:30*07:30 pm", "20:00*08:00 pm", "20:30*08:30 pm", "21:00*09:00 pm", "21:30*09:30 pm", "22:00*10:00 pm", "22:30*10:30 pm", "23:00*11:00 pm", "23:30*11:30 pm"];
-    $onchange = $formid == 'begin_time' ? 'onchange="get_end_time(this.value);"' : '';
+    $onchange = $formid == 'begin_time' ? 'onchange="get_end_time();"' : '';
     $to = $formid == 'begin_time' ? '<div style="font-size:.75em; color:green;">From </div>' : '<div style="font-size:.75em; color:green;">&nbsp; To </div>';
-    $returnme = $to . '<select id="' . $formid . '" ' . $onchange . '><option></option>';
+    $returnme = $to . '<select id="' . $formid . '" name="' . $formid . '" ' . $onchange . '><option></option>';
     $i = 0;
     $from = false;
     while (isset($times[$i])) {
@@ -1495,14 +1496,14 @@ function get_possible_times($formid, $selected_time = false, $start_time = false
     return $returnme;
 }
 
-function get_my_locations($userid, $selected = false, $eventid=false) {
+function get_my_locations($userid, $selected = false, $eventid = false) {
     $returnme = "";
     $union_statement = $eventid ? " UNION SELECT * FROM events_locations WHERE id IN (SELECT location FROM events WHERE eventid=$eventid)" : "";
     $SQL = "SELECT * FROM events_locations WHERE userid LIKE '%,$userid,%' $union_statement GROUP BY id ORDER BY location";
 
     if ($locations = get_db_result($SQL)) {
         while ($location = fetch_row($locations)) {
-            $returnme .= $returnme == "" ? '<select id="location">' : '';
+            $returnme .= $returnme == "" ? '<select id="location" name="location">' : '';
             $selectme = $selected && ($location['id'] == $selected) ? ' selected' : '';
             $returnme .= '<option value="' . $location['id'] . '"' . $selectme . '>' . stripslashes($location['location']) . '</option>';
         }
@@ -1547,18 +1548,19 @@ function get_my_hidden_limits($templateid, $hard_limits, $soft_limits) {
             $i++;
         }
     }
-    return $returnme . '<input type="hidden" id="hard_limits" value="' . $hidden_variable1 . '" /><input type="hidden" id="soft_limits" value="' . $hidden_variable2 . '" />';
+    return $returnme . '<input type="hidden" id="hard_limits" name="hard_limits" value="' . $hidden_variable1 . '" /><input type="hidden" id="soft_limits" name="soft_limits" value="' . $hidden_variable2 . '" />';
 }
 
 function get_my_category($selected = false) {
     $returnme = "";
     if ($categories = get_db_result("SELECT * FROM calendar_cat ORDER BY cat_id")) {
         while ($category = fetch_row($categories)) {
-            $returnme .= $returnme == "" ? '<select id="category">' : '';
+            $returnme .= $returnme == "" ? '<select id="category" name="category">' : '';
             $selectme = $selected && ($category['cat_id'] == $selected) ? ' selected' : '';
-            $returnme .= '<option value="' . $category['cat_id'] . '"' . $selectme . '>' .
-                            stripslashes($category['cat_name']) .
-                         '</option>';
+            $returnme .= '
+                <option value="' . $category['cat_id'] . '"' . $selectme . '>' .
+                    stripslashes($category['cat_name']) .
+                '</option>';
         }
     }
     $returnme .= $returnme == "" ? "No categories exist." : "</select>";
@@ -2185,7 +2187,7 @@ function new_location_form($eventid) {
                     <span style="font-size:1.2em; color:blue;">(optional)</span> Phone:
                 </td>
                 <td class="field_input">
-                    <input type="hidden" id="opt_location_phone" value="1" /><input type="text" class="phone1" id="location_phone_1" name="phone1" size="1" maxlength="3" onkeyup="movetonextbox(event);" />-<input class="phone2" type="text" id="location_phone_2" name="phone2" size="1" maxlength="3" onkeyup="movetonextbox(event);" />-<input class="phone3" name="phone3" type="text" id="location_phone_3" size="2" maxlength="4" />
+                    ' . create_form_element("phone", "location_phone", "1") . '
                 </td>
             </tr><tr><td></td><td class="field_input"><span id="location_phone_error" class="error_text"></span></td></tr>
             <tr>
@@ -2212,16 +2214,16 @@ global $USER;
         return "No other addable locations.";
     }
 
-    $options = '<option value="false">Select a shared location</option>';
+    $options = '<option value="0">Select a shared location</option>';
     while ($location = fetch_row($locations)) {
         $options .= '<option value="' . $location['id'] . '">' . $location['location'] . '</option>';
     }
     $returnme = '
         <div style="display: inline-flex;align-items: center;">
-            <select style="margin: 10px;" id="add_location" onchange="get_location_details(this.value);">
+            <select id="add_location" onchange="get_location_details()" style="margin: 10px;">
                 ' . $options . '
             </select>
-            <button class="alike" title="Add Location" onclick="copy_location(document.getElementById(\'add_location\').value,\'' . $eventid . '\');">
+            <button class="alike" title="Add Location" onclick="copy_location($(\'#add_location\').val(), \'' . $eventid . '\');">
                 ' . icon("plus", 2) . '
             </button>
         </div>
@@ -2254,22 +2256,32 @@ function events_delete($pageid, $featureid) {
     }
 }
 
-function create_form_element($type, $id, $optional, $length, $list = false) {
+function create_form_element($type, $id, $value, $length = 0) {
     switch ($type) {
         case "text":
             $maxlength = $length > 0 ? ' maxlength="' . $length . '"': "";
-            $returnme = '<input type="hidden" id="opt_' . $id . '" value="' . $optional . '" /><input size="25" type="text" id="' . $id . '"' . $maxlength . ' />';
+            $returnme = '<input type="hidden" id="opt_' . $id . '" name="opt_' . $id . '" value="' . $value . '" /><input size="25" type="text" id="' . $id . '" name="' . $id . '" ' . $maxlength . ' />';
             break;
         case "email":
             $maxlength = $length > 0 ? ' maxlength="' . $length . '"': "";
-            $returnme = '<input type="hidden" id="opt_' . $id . '" value="' . $optional . '" /><input size="25" type="text" id="' . $id . '"' . $maxlength . ' />';
+            $returnme = '<input type="hidden" id="opt_' . $id . '" name="opt_' . $id . '" value="' . $value . '" /><input size="25" type="text" id="' . $id . '" name="' . $id . '" ' . $maxlength . ' />';
             break;
         case "contact":
             $maxlength = $length > 0 ? ' maxlength="' . $length . '"': "";
-            $returnme = '<input type="hidden" id="opt_' . $id . '" value="0" /><input size="25" type="text" id="' . $id . '"' . $maxlength . ' />';
+            $returnme = '<input type="hidden" id="opt_' . $id . '" name="opt_' . $id . '" value="0" /><input size="25" type="text" id="' . $id . '" name="' . $id . '" ' . $maxlength . ' />';
             break;
         case "phone":
-            $returnme = '<input type="hidden" id="opt_' . $id . '" value="' . $optional . '" /><input type="text" id="' . $id . '_1" maxlength="3" size="1" onkeyup="movetonextbox(event);" />-<input type="text" id="' . $id . '_2" size="1" maxlength="3" onkeyup="movetonextbox(event);" />-<input type="text" id="' . $id . '_3" size="2" maxlength="4" />';
+            $value = is_array($value) ? $value : explode("-", $value);
+            if (count($value) < 3) {
+                $value = [0, 0, 0];
+            }
+
+            $returnme = '
+                <input class="phone1" type="text" id="' . $id . '_1" name="' . $id . '_1" value="' . $value[0] . '" maxlength="3" size="1" onkeyup="movetonextbox(event);" />
+                -
+                <input class="phone2" type="text" id="' . $id . '_2" name="' . $id . '_2" value="' . $value[1] . '" size="1" maxlength="3" onkeyup="movetonextbox(event);" />
+                -
+                <input class="phone3" type="text" id="' . $id . '_3" name="' . $id . '_3" value="' . $value[2] . '" size="2" maxlength="4" />';
             break;
         case "select":
             echo "i equals 2";

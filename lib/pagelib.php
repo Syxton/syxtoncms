@@ -278,9 +278,6 @@ global $CFG, $LOADAJAX;
     // Build the URL based on whether it is external or not.
     $url = $external ? clean_var_req($params["url"], "string") : $CFG->wwwroot . clean_var_req($params["url"], "string");
 
-    // Add return false only if it is inside a function or event.
-    $falsereturn = $forcereturn && $forcereturn !== "function" ? "" : "return false;";
-
     try {
         // Get the parameters for the AJAX request.
         $id = $params["id"] ?? false; // The ID of the element to update. Also used as the name of function if event is "none".
@@ -301,6 +298,9 @@ global $CFG, $LOADAJAX;
         // Add the show/hide loading overlay functions.
         $loading = $params["loading"] ?? "";
 
+        // Add return false only if it is inside a function or event.
+        $falsereturn = $forcereturn && $forcereturn !== "function" ? "" : ($async !== "true" ? "return return_data;" : "return false;");
+
         // Should function be added to the myIntervals[] array?
         $intervalid = $params["intervalid"] ?? false;
         $interval = $params["interval"] ?? 60000;
@@ -308,7 +308,7 @@ global $CFG, $LOADAJAX;
         $ondone = $params["ondone"] ?? ""; // Function run on success.
         $onerror = $params["onerror"] ?? ""; // Function run on server error.
         $always = $params["always"] ?? ""; // Function run after success or error.
-        $beforeajax = $params["beforeajax"] ?? ""; // Function run before ajax call.
+        $before = $params["before"] ?? ""; // Function run before ajax call.
 
         if ($display) {
             if (strpos($display, "js||") === false) { // no embedded js code.
@@ -344,7 +344,7 @@ global $CFG, $LOADAJAX;
             $hideloading = "$('#$loading').hide();";
         }
 
-        $always = ".always(function(data) { $always $(this).blur(); })";
+        $always = ".always(function(data) { $always return_data = data;$(this).blur(); })";
 
         // if and else setup.
         $if = $params["if"] ?? false; // The condition to check before sending the request.
@@ -378,6 +378,7 @@ global $CFG, $LOADAJAX;
         }
 
         $script = "
+            var return_data = {};
             ajax: {
                 if (typeof event !== 'undefined') {
                     event.preventDefault();
@@ -388,7 +389,7 @@ global $CFG, $LOADAJAX;
                 $reqstring
                 $if
                 $showloading
-                $beforeajax
+                $before
                 $.ajax({
                     url: `$url`,
                     type: `$method`,

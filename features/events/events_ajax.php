@@ -1679,7 +1679,7 @@ function add_custom_limit() {
     $soft_limits = clean_myvar_opt("soft_limits", "string", false);
     $hidden_variable1 = $hidden_variable2 = "";
 
-    $returnme = "";
+    $return = "";
     if (!$template_id) { emptyreturn(); }
 
     $template = get_event_template($template_id);
@@ -1687,7 +1687,7 @@ function add_custom_limit() {
     if ($hard_limits) { // There are some hard limits
         $limits_array = explode("*", $hard_limits);
         $i = 0;
-        $returnme .= "<br /><b>Hard Limits</b> <br />";
+        $return .= "<br /><b>Hard Limits</b> <br />";
         while (isset($limits_array[$i])) {
             $limit = explode(":", $limits_array[$i]);
             if (isset($limit[3])) {
@@ -1697,7 +1697,7 @@ function add_custom_limit() {
                     $displayname = $limit[0];
                 }
 
-                $returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <a href="javascript:void(0);" onclick="delete_limit(\'hard_limits\',\'' . $i . '\');">Delete</a><br />';
+                $return .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <a href="javascript:void(0);" onclick="delete_limit(\'hard_limits\',\'' . $i . '\');">Delete</a><br />';
                 $hidden_variable1 .= $hidden_variable1 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
             }
             $i++;
@@ -1707,7 +1707,7 @@ function add_custom_limit() {
     if ($soft_limits) { // There are some soft limits
         $limits_array = explode("*", $soft_limits);
         $i = 0;
-        $returnme .= "<br /><b>Soft Limits</b> <br />";
+        $return .= "<br /><b>Soft Limits</b> <br />";
         while (isset($limits_array[$i])) {
             $limit = explode(":", $limits_array[$i]);
 
@@ -1717,13 +1717,15 @@ function add_custom_limit() {
                 $displayname = $limit[0];
             }
 
-            $returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <a href="javascript:void(0);" onclick="delete_limit(\'soft_limits\',\'' . $i . '\');">Delete</a><br />';
+            $return .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <a href="javascript:void(0);" onclick="delete_limit(\'soft_limits\',\'' . $i . '\');">Delete</a><br />';
             $hidden_variable2 .= $hidden_variable2 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
             $i++;
         }
     }
 
-    echo $returnme . '<input type="hidden" id="hard_limits" value="' . $hidden_variable1 . '" /><input type="hidden" id="soft_limits" value="' . $hidden_variable2 . '" />';
+    $return .= '<input type="hidden" id="hard_limits" name="hard_limits" value="' . $hidden_variable1 . '" /><input type="hidden" id="soft_limits" name="soft_limits" value="' . $hidden_variable2 . '" />';
+
+    ajax_return($return);
 }
 
 function get_limit_form() {
@@ -1861,12 +1863,17 @@ global $CFG, $MYVARS;
     $name = clean_myvar_req("event_name", "string");
     $contact = clean_myvar_req("contact", "string");
     $email = clean_myvar_req("email", "string");
-    $phone = clean_myvar_req("phone", "string");
+
+    $phone1 = clean_myvar_req("phone_1", "int");
+    $phone2 = clean_myvar_req("phone_2", "int");
+    $phone3 = clean_myvar_req("phone_3", "int");
+    $phone = $phone1 . "-" . $phone2 . "-" . $phone3;
+
     $location = clean_myvar_req("location", "string");
     $category = clean_myvar_req("category", "int");
     $siteviewable = clean_myvar_opt("siteviewable", "int", 0);
     $byline = clean_myvar_req("byline", "string");
-    $description = clean_myvar_opt("description", "html", "");
+    $description = clean_myvar_opt("editor1", "html", "");
     $multiday = clean_myvar_opt("multiday", "bool", false);
     $workers = clean_myvar_opt("workers", "int", 0);
 
@@ -1943,6 +1950,7 @@ global $CFG, $MYVARS;
     $confirmed = 3;
     $caleventid = 0;
 
+    $return = $error = "";
     if (!$eventid) { // New Event
         try {
             start_db_transaction();
@@ -1963,7 +1971,7 @@ global $CFG, $MYVARS;
                 if ($request) { return $eventid; }
 
                 log_entry("events", $eventid, "Event Added");
-                if (!$request) { echo "Event Added"; }
+                if (!$request) { $return = "Event Added"; }
             } else {
                 if (!$request) {
                     // Log event error
@@ -2008,11 +2016,11 @@ global $CFG, $MYVARS;
                 save_template_settings($template_id, $MYVARS->GET);
 
                 log_entry("events", $eventid, "Event Edited");
-                if (!$request) { echo "Event Edited"; }
+                if (!$request) { $return = "Event Edited"; }
             } else {
                 if (!$request) {
                     log_entry("events", $eventid, "Event could NOT be edited");
-                    echo "Event could NOT be Edited";
+                    $return = "Event could NOT be Edited";
                 }
             }
 
@@ -2023,9 +2031,11 @@ global $CFG, $MYVARS;
             }
             commit_db_transaction();
         } catch (\Throwable $e) {
-            rollback_db_transaction($e->getMessage());
+            $error = $e->getMessage();
+            rollback_db_transaction($error);
         }
     }
+    ajax_return($return, $error);
 }
 
 function get_end_time() {
@@ -2036,14 +2046,15 @@ function get_end_time() {
 
     // event is not a multi day event and endtime is already set
     if ($limit === 1 && $endtime) {
-        echo get_possible_times("end_time", $endtime, $starttime);
+        $return = get_possible_times("end_time", $endtime, $starttime);
     } elseif ($limit === 1) {
-        echo get_possible_times("end_time", false, $starttime);
+        $return = get_possible_times("end_time", false, $starttime);
     } elseif ($limit === 0 && $endtime) {
-        echo get_possible_times("end_time", $endtime);
+        $return = get_possible_times("end_time", $endtime);
     } elseif ($limit === 0) {
-        echo get_possible_times("end_time");
+        $return = get_possible_times("end_time");
     }
+    ajax_return($return);
 }
 
 function unique() {
@@ -2088,13 +2099,12 @@ function add_location_form() {
                     "eventid" => "js||$('#eventid').length ? $('#eventid').val() : 0||js",
                 ],
                 "display" => "select_location",
-                "ondone" => "$('#location_status').html('Location Added');$('#addtolist').removeClass('hidden');$('#location_menu,#add_location_div, #hide_menu').addClass('hidden');$('#new_button, #or, #browse_button').removeClass('invisible');setTimeout('clear_display(\'location_status\')', 5000);",
+                "ondone" => "$('#location_status').html('Location Added'); reset_location_menu(); setTimeout('clear_display(\'location_status\')', 5000);",
                 "event" => "click",
             ]);
 
             ajaxapi([
                 "id" => "is_unique_location_name",
-                "paramlist" => "returnme",
                 "url" => "/features/events/events_ajax.php",
                 "async" => "false",
                 "data" => [
@@ -2103,7 +2113,6 @@ function add_location_form() {
                     "key" => "location",
                     "value" => "js||$('#location_name').val()||js",
                 ],
-                "ondone" => "if (!istrue(data)) { $('#location_name_error').html('This value already exists in our database.'); retunme.val = false; } else { $('#location_name_error').html(''); returnme.val = true; }",
                 "event" => "none",
             ]);
 
@@ -2119,24 +2128,27 @@ function add_location_form() {
 
 function copy_location() {
 global $USER;
-    $eventid = clean_myvar_req("eventid", "int");
+    $eventid = clean_myvar_opt("eventid", "int", false);
     $location = clean_myvar_req("location", "int");
     execute_db_sql("UPDATE events_locations
                     SET userid = CONCAT(userid,||userid||)
                     WHERE id = ||id||", ["id" => $location, "userid" => $USER->userid . ","]);
-    echo get_my_locations($USER->userid, $location, $eventid);
+    $return = get_my_locations($USER->userid, $location, $eventid);
+
+    ajax_return($return);
 }
 
 function get_location_details() {
     $location = clean_myvar_req("location", "int");
     $row = get_db_row("SELECT * FROM events_locations WHERE id = ||id||", ["id" => $location]);
 
-    $returnme = '
-    <b>' . $row['location'] . '</b><br />
-    ' . $row['address_1'] . '<br />
-    ' . $row['address_2'] . '  ' . $row['zip'] . '<br />
-    ' . $row['phone'];
-    echo $returnme;
+    $return = '
+        <strong>' . $row['location'] . '</strong>
+        <br />
+        ' . $row['address_1'] . '<br />
+        ' . $row['address_2'] . '  ' . $row['zip'] . '<br />
+        ' . $row['phone'];
+    ajax_return($return);
 }
 
 function export_registrations() {

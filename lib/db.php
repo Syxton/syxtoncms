@@ -10,7 +10,6 @@
 function site_upgrade() {
 global $CFG;
     $version = get_db_field("setting", "settings", "setting_name = 'version' AND type = 'site'");
-    error_log("beginning version: " . $version);
     $thisversion = 1; //Version number 1
     if ($version < $thisversion) {
         $SQL = "ALTER TABLE `features` ADD `version` INT NOT NULL";

@@ -54,7 +54,7 @@ global $CFG, $MYVARS;
                             ' . $opt . $element['display'] . ':
                         </td>
                         <td class="field_input" style="width:70%">
-                            ' . create_form_element($element['type'], $element['elementid'], $element['optional'], $element['length'], false) . '
+                            ' . create_form_element($element['type'], $element['elementid'], $element['optional'], $element['length']) . '
                         </td>
                     </tr>
                     <tr>
@@ -94,7 +94,7 @@ global $CFG, $MYVARS;
                             ' . $opt . $element['display'] . ':
                         </td>
                         <td class="field_input" style="width:70%">
-                            ' . create_form_element($element['type'], $element['elementid'], $element['optional'], $element['length'], false) . '
+                            ' . create_form_element($element['type'], $element['elementid'], $element['optional'], $element['length']) . '
                             <span class="hint">
                                 ' . $element['hint'] . '
                             </span>

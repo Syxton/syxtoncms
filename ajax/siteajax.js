@@ -486,27 +486,28 @@ function create_request_string(container) {
                 case "INPUT":
                     switch (this.type) {
                         case "text":
+                        case "date":
                         case "hidden":
-                            reqStr += "&" + this.name + "=" + encodeURIComponent(this.value);
+                            reqStr += "&" + this.name + "=" + encodeURIComponent($(this).val());
                             break;
                         case "checkbox":
                             if (this.checked) {
-                                reqStr += "&" + this.name + "=" + this.value;
+                                reqStr += "&" + this.name + "=" + $(this).val();
                             } else {
                                 reqStr += "&" + this.name + "=";
                             }
                             break;
                         case "radio":
                             if (this.checked) {
-                                reqStr += "&" + this.name + "=" + this.value;
+                                reqStr += "&" + this.name + "=" + $(this).val();
                             }
                     }
                     break;
                 case "TEXTAREA":
-                    reqStr += "&" + this.name + "=" + encodeURIComponent(this.value);
+                    reqStr += "&" + this.name + "=" + encodeURIComponent($(this).val());
                     break;
                 case "SELECT":
-                    reqStr += "&" + this.name + "=" + this.options[this.selectedIndex].value;
+                    reqStr += "&" + this.name + "=" + $(this).val();
                     break;
             }
         }
