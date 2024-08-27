@@ -54,15 +54,22 @@ function updateAge() {
 }
 
 function updateTotal(){
-    var total = parseFloat($("#payment_amount").val());
-    if($("#Camper_Picture")){
+    var today = parseFloat($("#payment_amount").val());
+    var total = parseFloat($("#payment_amount option:last-child").val());
+    if ($("#Camper_Picture")) {
+        today += parseFloat($("#Camper_Picture").val());
         total += parseFloat($("#Camper_Picture").val());
     }
 
-    if($("#Camper_Shirt_Size")){
-        if($("#Camper_Shirt_Price").val() != "0"){ total += parseFloat($("#Camper_Shirt_Price").val()); }
+    if ($("#Camper_Shirt_Size")) {
+        if ($("#Camper_Shirt_Size").val() !== "0") {
+            today += parseFloat($("#Camper_Shirt_Price").val());
+            total += parseFloat($("#Camper_Shirt_Price").val());
+        }
     }
-    $("#owed").val(total);
+
+    $("#full_payment_amount").html(total);
+    $("#owed").val(today);
 }
 
 function final_form_prep(){

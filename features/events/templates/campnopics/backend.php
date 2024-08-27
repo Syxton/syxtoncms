@@ -87,8 +87,8 @@ if (!defined('COMLIB')) include_once($CFG->dirroot . '/lib/comlib.php');
 			if ($MYVARS->GET['payment_method'] == "PayPal")
 			{
 				echo '<br />
-				To register a <b>different</b> child:  Select the week ' . common_weeks($event, true, "week1", $regid) . '.<br />
-				To register the <b>same child</b> for a <b>different week</b>:  Select the week ' . common_weeks($event, false, "week2", $regid) . '.<br />
+				To register a <strong>different</strong> child:  Select the week ' . common_weeks($event, true, "week1", $regid) . '.<br />
+				To register the <strong>same child</strong> for a <strong>different week</strong>:  Select the week ' . common_weeks($event, false, "week2", $regid) . '.<br />
 				<br />
 				If you would like to pay the <span style="color:blue;font-size:1.25em;">$' . $MYVARS->GET["cart_total"] . '</span> fee now, click the Paypal button below.
 				<center>
@@ -100,11 +100,11 @@ if (!defined('COMLIB')) include_once($CFG->dirroot . '/lib/comlib.php');
 			else
 			{
 				echo '<br />
-				To register a <b>different</b> child:  Select the week ' . common_weeks($event, true, "week1", $regid) . '.<br />
-				To register the <b>same child</b> for a <b>different week</b>:  Select the week ' . common_weeks($event, false, "week2", $regid) . '.<br />
+				To register a <strong>different</strong> child:  Select the week ' . common_weeks($event, true, "week1", $regid) . '.<br />
+				To register the <strong>same child</strong> for a <strong>different week</strong>:  Select the week ' . common_weeks($event, false, "week2", $regid) . '.<br />
 				<br />
 				If you are done with the registration process, please make out your <br />
-				check or money order in the amount of <span style="color:blue;font-size:1.25em;">$' . $MYVARS->GET["cart_total"] . '</span> payable to <b>' . $event["payableto"] . '</b> and send it to <br /><br />
+				check or money order in the amount of <span style="color:blue;font-size:1.25em;">$' . $MYVARS->GET["cart_total"] . '</span> payable to <strong>' . $event["payableto"] . '</strong> and send it to <br /><br />
 				<center>
 				' . $event['checksaddress'] . '.
 				</center>
@@ -171,7 +171,7 @@ if (!defined('COMLIB')) include_once($CFG->dirroot . '/lib/comlib.php');
 					To register a child:  Select the week ' . common_weeks($event, true, "week1", $regid) . '.<br />
 					<br />
 					If you are done with the registration process, please make out your <br />
-					check or money order in the amount of <span style="color:blue;font-size:1.25em;">$' . $MYVARS->GET["cart_total"] . '</span> payable to <b>' . $event["payableto"] . '</b> and send it to <br /><br />
+					check or money order in the amount of <span style="color:blue;font-size:1.25em;">$' . $MYVARS->GET["cart_total"] . '</span> payable to <strong>' . $event["payableto"] . '</strong> and send it to <br /><br />
 					<center>
 					' . $event['checksaddress'] . '.
 					</center>
@@ -199,7 +199,7 @@ function common_weeks($event, $included = true, $id = "", $regid = "") {
 		$returnme .= !$included && $evnt['eventid'] == $event['eventid'] ? "" : '<option value="' . $evnt['eventid'] . '">' . $evnt['name'] . '</option>';
 	}
 
-	$returnme = $returnme == '<select id="' . $id . '">' ? '<span style="color:red;"> There are no weeks available. </span>' : $returnme . '</select> and click <a href="javascript:onclick=show_form_again(document.getElementById(\'' . $id . '\').value,\'' . $regid . '\', 0);"><b>Continue</b></a>';
+	$returnme = $returnme == '<select id="' . $id . '">' ? '<span style="color:red;"> There are no weeks available. </span>' : $returnme . '</select> and click <a href="javascript:onclick=show_form_again(document.getElementById(\'' . $id . '\').value,\'' . $regid . '\', 0);"><strong>Continue</strong></a>';
 	return $returnme;
 }
 

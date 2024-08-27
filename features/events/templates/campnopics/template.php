@@ -86,9 +86,9 @@ echo '
 				</p>
 			</td>
 		</tr>';
-  
+
 if ($autofill) {
- echo '  <tr> 
+ echo '  <tr>
             <td>
           		Camper: ' . $Camper_Name . '
 					<input type="hidden" name="Camper_Name" value="' . $Camper_Name . '" />
@@ -126,7 +126,7 @@ if ($autofill) {
 }
 else
 {
- echo '  
+ echo '
 		<tr>
 			<td class="field_title" align="right" style="width:115px;">
 			<strong><font size="2">Contact Email&nbsp;*&nbsp;</font></strong>
@@ -135,23 +135,23 @@ else
 			<input type="text" id="email" name="email" size="40" value="' . $email . '"/>
 			</td>
 		</tr><tr><td></td><td class="field_input"><span id="email_error" class="error_text"></span></td></tr>
- 		<tr> 
+ 		<tr>
             <td align="right"><strong><font size="2">Camper&nbsp;Name&nbsp;<strong>(Last,&nbsp;First&nbsp;Middle)</strong>&nbsp;*&nbsp;</font></strong></td>
             <td align="left"><input name="Camper_Name" size="40" type="text" /></td>
           </tr>
-          <tr> 
+          <tr>
             <td align="right"><strong><font size="2">Date&nbsp;of&nbsp;Birth&nbsp;*&nbsp;</font></strong></td>
             <td align="left"><input name="Camper_Birth_Date" size="10" maxlength="10" value="mm/dd/yy" type="text" /></td>
           </tr>
-          <tr> 
+          <tr>
             <td align="right"><strong><font size="2">Age&nbsp;*&nbsp;</font></strong></td>
             <td align="left"><input name="Camper_Age" size="2" maxlength="2" type="text" /></td>
           </tr>
-          <tr> 
+          <tr>
             <td align="right"><strong><font size="2">Last&nbsp;Grade&nbsp;Completed&nbsp;*&nbsp;</font></strong></td>
             <td align="left"><input name="Camper_Grade" size="2" maxlength="2" type="text" /></td>
           </tr>
-          <tr> 
+          <tr>
             <td align="right"><strong><font size="2">Gender&nbsp;*&nbsp;</font></strong></td>
             <td align="left"><select name="Camper_Gender">
                 <option value="">Select One...</option>
@@ -159,7 +159,7 @@ else
                 <option value="Female">Female</option>
               </select></td>
           </tr>
-          <tr> 
+          <tr>
             <td align="right"><font size="2">Home&nbsp;Congregation&nbsp;</font></td>
             <td align="left"><input name="Camper_Home_Congregation" size="40" type="text"></td>
           </tr>
@@ -209,35 +209,35 @@ else
             <td align="left"><input name="Parent_Phone4" size="13" maxlength="13" type="text"></td>
           </tr>
           <tr><td colspan="2"><hr></td></tr>
-        <tr> 
+        <tr>
           <td colspan="2" align="center">
-            <font size="5"> 
-              <b>CONSENT FOR MEDICAL TREATMENT OF A MINOR CHILD</b><br>
+            <font size="5">
+              <strong>CONSENT FOR MEDICAL TREATMENT OF A MINOR CHILD</strong><br>
               </font>
-            <font size="2"> 
-            <p align="left"> I herewith authorize Camp Wabashi staff at the Wabash 
-              Valley Christian Youth Camp to request and consent in writing or 
-              otherwise as requested by Union Hospital, Inc. and/or any other 
-              medical facility to any and all examinations, medical treatment 
-              and/or procedures to or for the above named minor, either on or 
-              off the premises of medical facility, as deemed advisable or appropriate 
-              by any physician or surgeon licensed to practice medicine in the 
+            <font size="2">
+            <p align="left"> I herewith authorize Camp Wabashi staff at the Wabash
+              Valley Christian Youth Camp to request and consent in writing or
+              otherwise as requested by Union Hospital, Inc. and/or any other
+              medical facility to any and all examinations, medical treatment
+              and/or procedures to or for the above named minor, either on or
+              off the premises of medical facility, as deemed advisable or appropriate
+              by any physician or surgeon licensed to practice medicine in the
               State of Indiana. I understand that verbal concent will be sought using
               the phone numbers listed in this application.<br>
               <br>
-              In consideration of the acceptance of the above named camper, I 
-              covenant and agree with Wabash Valley Christian Youth Camp, that 
-              I will at all times hereafter indemnify, and save harmless the said 
-              Wabash Valley Christian Youth Camp from all actions, proceedings, 
-              claims, demands, costs, damages and expenses which may be brought 
-              against, or claimed from Wabash Valley Christian Youth Camp, or 
-              which it may pay, sustain, or incur as a result of illness, accident, 
-              or misadventure to the above named camper during the period said 
+              In consideration of the acceptance of the above named camper, I
+              covenant and agree with Wabash Valley Christian Youth Camp, that
+              I will at all times hereafter indemnify, and save harmless the said
+              Wabash Valley Christian Youth Camp from all actions, proceedings,
+              claims, demands, costs, damages and expenses which may be brought
+              against, or claimed from Wabash Valley Christian Youth Camp, or
+              which it may pay, sustain, or incur as a result of illness, accident,
+              or misadventure to the above named camper during the period said
               camper is a participant in the Wabash Valley Christian Youth Camp.<br>
               <br>
-              This authorization constitutes a Power of Attorney and waiver of 
-              liability appointing the above named adult or staff of Wabash Valley 
-              Christian Youth Camp as Attorney-In-Fact to sign said requests and 
+              This authorization constitutes a Power of Attorney and waiver of
+              liability appointing the above named adult or staff of Wabash Valley
+              Christian Youth Camp as Attorney-In-Fact to sign said requests and
               as fully thought I, myself, did so. </p>
             </font></td></tr>
           <tr>
@@ -301,7 +301,7 @@ echo '<tr><td colspan="2"><hr></td></tr>
       <td align="right"><strong><font size="2">Pay With Application</font></strong></td>
       <td>' . make_fee_options($event['fee_min'], $event['fee_full'], "payment_amount",'onchange="updateTotal();" onclick="updateTotal();"', $event['sale_end'], $event['sale_fee']) . '</td>
     </tr>';
-    
+
 if ($picturecost) {
 echo '<tr>
       <td align="right"><strong><font size="2">Camp&nbsp;Picture:&nbsp;</font></strong></td>
@@ -337,12 +337,12 @@ Do you have a question for the director?
 else
 {
 	echo '<tr><td></td><td><input type="hidden" name="payment_method" value="' . $payment_method . '" /></td></tr>';
-} 
-   
-echo '<tr> 
+}
+
+echo '<tr>
           <td colspan="2" align="center">
             <input name="print" value="Print Application" onclick="window.print()" type="button" ' . $disable . '/>
-            &nbsp;<input onclick="campnopics_submit_registration();" value="Send Application" type="button" ' . $disable . ' /> 
+            &nbsp;<input onclick="campnopics_submit_registration();" value="Send Application" type="button" ' . $disable . ' />
             &nbsp;<input name="reset" type="reset" ' . $disable . '/> </td>
         </tr>
       </table>';

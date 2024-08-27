@@ -200,12 +200,20 @@ global $CFG;
         "event" => "none",
     ]);
 
-    echo js_code_wrap('window.onload = function () { if ($("#code").val() != "") { lookup_reg($("#code").val()); } }', "", true);
+    echo js_code_wrap('window.onload = function () { if ($("#code").val() !== "") { lookup_reg($("#code").val()); } }', "", true);
     echo '
         <div style="text-align:center;padding:15px;">
             <h3>' . $CFG->sitename . ' Registration Lookup</h3><br />
             <form id="payarea_form" onsubmit="lookup_reg($(\'#code\').val()); return false;">
-            Enter your Registration ID: <input type="text" id="code" size="35" value="' . $regcode . '" /> <input type="submit" value="Submit" />
+                <div style="display: inline-flex;align-items: center;">
+                    <span>
+                        Enter your Registration ID:
+                    </span>
+                    <input type="text" id="code" size="35" style="margin: 0 10px;" value="' . $regcode . '" />
+                    <button type="submit">
+                        Submit
+                    </button>
+                </div>
             </form>
         </div>
         <div id="payarea" style="padding:15px;"></div>
@@ -483,6 +491,34 @@ global $CFG, $USER;
         "display" => "add_event_div",
         "ondone" => "close_modal();",
         "event" => "submit",
+    ]);
+
+    ajaxapi([
+        "id" => "custom_limit_form",
+        "if" => "$('#template').val()",
+        "else" => "alert('Please select a template first.')",
+        "url" => "/features/events/events_ajax.php",
+        "data" => [
+            "action" => "get_limit_form",
+            "template_id" => "js||$('#template').val()||js",
+        ],
+        "display" => "limit_form",
+    ]);
+
+    ajaxapi([
+        "id" => "delete_limit",
+        "paramlist" => "limit_type, limit_num",
+        "url" => "/features/events/events_ajax.php",
+        "data" => [
+            "action" => "delete_limit",
+            "limit_type" => "js||limit_type||js",
+            "limit_num" => "js||limit_num||js",
+            "hard_limits" => "js||$('#hard_limits').val()||js",
+            "soft_limits" => "js||$('#soft_limits').val()||js",
+            "template_id" => "js||$('#template').val()||js",
+        ],
+        "display" => "custom_limits",
+        "event" => "none",
     ]);
 
     echo '
@@ -849,8 +885,10 @@ global $CFG, $USER;
                                                                     Custom Limits:
                                                                 </td>
                                                                 <td class="field_input">
-                                                                    <input type="button" value="Custom Limit Form"
-                                                                        onclick="if (document.getElementById(\'template\').value) { get_limit_form(document.getElementById(\'template\').value); }else{ alert(\'Please select a template first.\'); } " />
+                                                                    <button id="custom_limit_form" type="button"
+                                                                        onclick="">
+                                                                        Custom Limit Form
+                                                                    </button>
                                                                     <br />
                                                                     <div id="limit_form"></div>
                                                                     <div id="custom_limits">
@@ -1002,296 +1040,391 @@ global $CFG, $USER;
 
     $event = get_event($eventid);
     $template = get_event_template($event['template_id']);
-    $formlist = $form = "";
-
-    $returnme = '<div id="registration_div">
-                            <table class="registration">
-                                <tr>
-                                    <td>
-                                    ' . $template['intro'] . '
-                                    </td>
-                                </tr>
-                            </table>';
 
     if ($template['folder'] != "none") { //registration template refers to a file
         ob_start();
         include($CFG->dirroot . '/features/events/templates/' . $template['folder'] . '/template.php');
-        $returnme .= ob_get_clean();
+        $form = ob_get_clean();
     } else { //registration template refers to a database style template
-        $form = '<table style="width:100%">';
+        $formlist = $formrows = "";
         $templateform = get_db_result("SELECT * FROM events_templates_forms WHERE template_id='" . $template['template_id'] . "' ORDER BY sort");
         while ($element = fetch_row($templateform)) {
             $opt = $element['optional'] ? '<font size="1.2em" color="blue">(optional)</font> ' : '';
             $formlist .= $formlist == "" ? $element['type'] . ":" . $element['elementid'] . ":" . $element['optional'] . ":" . $element['allowduplicates'] . ":" . $element['list'] : "*" . $element['type'] . ":" . $element['elementid'] . ":" . $element['optional'] . ":" . $element['allowduplicates'] . ":" . $element['list'];
-            if ($element['type'] == 'select') {
-            } elseif ($element['type'] == 'phone') {
-                $form .= '<tr><td class="field_title">' . $opt . $element['display'] . ': </td><td class="field_input" style="width:70%">' . create_form_element($element['type'], $element['elementid'], $element['optional'], $element['length']) . '</td></tr>';
-                $form .= '<tr><td></td><td class="field_input"><span id="' . $element['elementid'] . '_error" class="error_text"></span></td></tr>';
-            } elseif ($element['type'] == 'payment') {
-                if ($event["fee_full"] != "0") {
-                $form .= '
-                      <tr>
-                          <td class="field_title">Payment Amount:</td>
-                          <td class="field_input">' . make_fee_options($event['fee_min'], $event['fee_full'], 'payment_amount', '', $event['sale_end'], $event['sale_fee']) . '</td>
-                      </tr>
-                      <tr>
-                          <td class="field_title">Method of Payment:</td>
-                          <td class="field_input">
-                              <select id="payment_method" name="payment_method" size="1" >
-                                  <option value="">Choose One</option>
-                                  <option value="PayPal">Pay online using Credit Card/PayPal</option>
-                                  <option value="Check/Money Order">Check or Money Order</option>
-                              </select>
-                          </td>
-                      </tr>
-                      <tr><td></td><td class="field_input"><span id="payment_method_error" class="error_text"></span></td></tr>';
-                }
-            } elseif ($element['type'] == 'contact') {
-                $form .= '<tr><td class="field_title">' . $opt . $element['display'] . ': </td><td class="field_input" style="width:70%">' . create_form_element($element['type'], $element['elementid'], $element['optional'], $element['length']) . '' . get_hint_box("input_event_email:events") . '</td></tr>';
-                $form .= '<tr><td></td><td class="field_input"><span id="' . $element['elementid'] . '_error" class="error_text"></span></td></tr>';
-            } else {
-                $form .= '<tr><td class="field_title">' . $opt . $element['display'] . ': </td><td class="field_input" style="width:70%">' . create_form_element($element['type'], $element['elementid'], $element['optional'], $element['length']) . '<span class="hint">' . $element['hint'] . '</td></tr>';
-                $form .= '<tr><td></td><td class="field_input"><span id="' . $element['elementid'] . '_error" class="error_text"></span></td></tr>';
+
+            $display1 = $display2 = $form_element1 = $form_element2 = $error_tag = "";
+            switch ($element['type']) {
+                case "select":
+                    goto skipped;
+                case "phone":
+                    $display1 = $opt . $element['display'];
+                    $form_element1 = create_form_element($element['type'], $element['elementid'], $element['optional'], $element['length']);
+                    $error_tag = $element['elementid'];
+                    break;
+                case "contact":
+                    $display1 = $opt . $element['display'];
+                    $form_element1 = create_form_element($element['type'], $element['elementid'], $element['optional'], $element['length']) . get_hint_box("input_event_email:events");
+                    $error_tag = $element['elementid'];
+                    break;
+                case "payment":
+                    if ($event["fee_full"] == "0") {
+                        goto skipped;
+                    }
+                    $display1 = "Payment Amount: ";
+                    $form_element1 = make_fee_options($event['fee_min'], $event['fee_full'], 'payment_amount', '', $event['sale_end'], $event['sale_fee']);
+                    $display2 = "Method of Payment: ";
+                    $form_element2 = '
+                        <select id="payment_method" name="payment_method" size="1" >
+                            <option value="">Choose One</option>
+                            <option value="PayPal">Pay online using Credit Card/PayPal</option>
+                            <option value="Check/Money Order">Check or Money Order</option>
+                        </select>';
+                    $error_tag = "payment_method";
+                    break;
+                default:
+                    $display1 = $opt . $element['display'];
+                    $form_element1 = create_form_element($element['type'], $element['elementid'], $element['optional'], $element['length']) . '<span class="hint">' . $element['hint'] . '</span>';
+                    $error_tag = $element['elementid'];
             }
+
+            $optrow = "";
+            if ($display2 !== "" || $form_element2 !== "") {
+                $optrow = '
+                    <tr>
+                        <td class="field_title">
+                            ' . $display2 . '
+                        </td>
+                        <td class="field_input">
+                            ' . $form_element2 . '
+                        </td>
+                    </tr>';
+            }
+
+            $formrows .= '
+                <tr>
+                    <td class="field_title">
+                        ' . $display1 . '
+                    </td>
+                    <td class="field_input">
+                        ' . $form_element1 . '
+                    </td>
+                </tr>
+                ' . $optrow . '
+                <tr>
+                    <td></td>
+                    <td class="field_input">
+                        <span id="' . $error_tag . '_error" class="error_text"></span>
+                    </td>
+                </tr>';
+            skipped:
         }
-        $form .= '<tr><td></td><td><input type="button" value="Submit" onclick="submit_registration(\'' . $eventid . '\',\'' . $formlist . '\');" /></td></tr></table>';
-        $returnme .= create_validation_javascript($formlist, $eventid) . $form . '</div>' . js_code_wrap('prepareInputsForHints();');
+
+        $form = create_validation_javascript($formlist, $eventid) . '
+            <table style="width:100%">
+                ' . $formrows . '
+                <tr>
+                    <td></td>
+                    <td>
+                        <input type="button" value="Submit" onclick="submit_registration(\'' . $eventid . '\',\'' . $formlist . '\');" />
+                    </td>
+                </tr>
+            </table>' .
+            js_code_wrap('prepareInputsForHints();');
     }
 
-    $returnme .= '</div>'; //end registration div
+    $code = `
+        $(document).keydown(function(e) {
+            var nodeName = e.target.nodeName.toLowerCase();
+            if (e.which === 8) {
+                if ((nodeName === "input" && e.target.type === "text") || nodeName === "textarea") {
+                    // do nothing
+                } else {
+                    e.preventDefault();
+                }
+            }
+        });`;
 
-    $code = '$(document).keydown(function(e) {
-                    var nodeName = e.target.nodeName.toLowerCase();
-
-                    if (e.which === 8) {
-                        if ((nodeName === "input" && e.target.type === "text") || nodeName === "textarea") {
-                            // do nothing
-                        } else {
-                            e.preventDefault();
-                        }
-                    }
-                });';
-    $returnme .= js_code_wrap($code, "defer", true);
-    echo $returnme;
+    echo '
+        <div id="registration_div">
+            <table class="registration">
+                <tr>
+                    <td>
+                        ' . $template['intro'] . '
+                    </td>
+                </tr>
+            </table>
+            ' . $form . '
+        </div>' . js_code_wrap($code, "defer", true);;
 }
 
 function create_validation_javascript($formlist, $eventid) {
 global $CFG;
-     $validation_script = 'function validate_fields() {	var valid = true;';
-     date_default_timezone_set(date_default_timezone_get());
-     $element = explode("*", $formlist);
-     $i = 0;
-     while (isset($element[$i])) {
-          $attribute = explode(":", $element[$i]);
-          switch ($attribute[0]) {
-          case "text":
-              $validation_script .= '
-              if (document.getElementById(\'opt_' . $attribute[1] . '\').value == 0 || (document.getElementById("opt_' . $attribute[1] . '").value != 0 && document.getElementById("' . $attribute[1] . '").value.length > 0)) {
-                  if (!document.getElementById("' . $attribute[1] . '").value.length > 0) {
-                          document.getElementById("' . $attribute[1] . '_error").innerHTML = "This is a required field.";
-                          valid = false;
-                      } else { document.getElementById("' . $attribute[1] . '_error").innerHTML = ""; }
-                     if (' . $attribute[3] . ' == 0) {
-                        // Build the URL to connect to
-                            var url = "' . $CFG->wwwroot . '/features/events/events_ajax.php?action=unique&elementid=' . $attribute[1] . '&value="+document.getElementById("' . $attribute[1] . '").value + "&eventid=" + ' . $eventid . ';
-                        // Open a connection to the server\
+    $validation_script = 'function validate_fields() {	var valid = true;';
+    date_default_timezone_set(date_default_timezone_get());
+    $element = explode("*", $formlist);
+    $i = 0;
+    while (isset($element[$i])) {
+        $attribute = explode(":", $element[$i]);
+        switch ($attribute[0]) {
+            case "text":
+                $validation_script .= '
+                    if ($("#opt_' . $attribute[1] . '").val() == 0 || ($("#opt_' . $attribute[1] . '").val() != 0 && $("#' . $attribute[1] . '").val().length > 0)) {
+                        if (!$("#' . $attribute[1] . '").val().length > 0) {
+                            $("#' . $attribute[1] . '_error").html("This is a required field.");
+                            valid = false;
+                        } else {
+                            $("#' . $attribute[1] . '_error").html("");
+                        }
+                        if (' . $attribute[3] . ' == 0) {
+                            // Build the URL to connect to
+                            var url = "' . $CFG->wwwroot . '/features/events/events_ajax.php?action=unique&elementid=' . $attribute[1] . '&value=" + $("#' . $attribute[1] . '").val() + "&eventid=" + ' . $eventid . ';
+                            // Open a connection to the server\
                             var d = new Date();
                             xmlHttp.open("GET", url + "&currTime=" + d.toUTCString(), false);
                             // Send the request
-                        xmlHttp.send(null);
-                      if (!istrue()) {
-                          document.getElementById("' . $attribute[1] . '_error").innerHTML = "This value already exists in our database.";
-                          valid = false;
-                      } else { document.getElementById("' . $attribute[1] . '_error").innerHTML = ""; }
-                  }
-              }';
+                            xmlHttp.send(null);
+                            if (!istrue()) {
+                                $("#' . $attribute[1] . '_error").html("This value already exists in our database.");
+                                valid = false;
+                            } else {
+                                $("#' . $attribute[1] . '_error").html("");
+                            }
+                        }
+                    }';
                 break;
-          case "email":
-              $validation_script .= '
-              if (document.getElementById("opt_' . $attribute[1] . '").value == 0 || (document.getElementById("opt_' . $attribute[1] . '").value != 0 && document.getElementById("' . $attribute[1] . '").value.length > 0)) {
-                  //Email address validity test
-                  if (document.getElementById("' . $attribute[1] . '").value.length > 0) {
-                      if (echeck(document.getElementById("' . $attribute[1] . '").value)) {
-                          if (' . $attribute[3] . ' == 0) {
-                                // Build the URL to connect to
-                                    var url = "' . $CFG->wwwroot . '/features/events/events_ajax.php?action=unique&elementid=' . $attribute[1] . '&value="+document.getElementById("' . $attribute[1] . '").value + "&eventid=" + ' . $eventid . ';
-                                // Open a connection to the server\
+            case "email":
+                $validation_script .= '
+                    if ($("#opt_' . $attribute[1] . '").val() == 0 || ($("#opt_' . $attribute[1] . '").val() != 0 && $("#' . $attribute[1] . '").val().length > 0)) {
+                        //Email address validity test
+                        if ($("#' . $attribute[1] . '").val().length > 0) {
+                            if (echeck($("#' . $attribute[1] . '").val())) {
+                                if (' . $attribute[3] . ' == 0) {
+                                    // Build the URL to connect to
+                                    var url = "' . $CFG->wwwroot . '/features/events/events_ajax.php?action=unique&elementid=' . $attribute[1] . '&value=" + $("#' . $attribute[1] . '").val() + "&eventid=" + ' . $eventid . ';
+                                    // Open a connection to the server\
                                     var d = new Date();
                                     xmlHttp.open("GET", url + "&currTime=" + d.toUTCString(), false);
                                     // Send the request
-                                xmlHttp.send(null);
-                              if (!istrue()) {
-                                  document.getElementById("' . $attribute[1] . '_error").innerHTML = "This email address has already been registered with.";
-                                  valid = false;
-                              } else {	document.getElementById("' . $attribute[1] . '_error").innerHTML = ""; }
-                          }
-                          } else {
-                          document.getElementById("' . $attribute[1] . '_error").innerHTML = "Email address is not valid.";
-                          valid = false;
-                      }
-                  } else {
-                          document.getElementById("' . $attribute[1] . '_error").innerHTML = "Email address is required.";
-                          valid = false;
-                      }
-              }';
-              break;
-          case "contact":
-              $validation_script .= '
-                  if (document.getElementById("' . $attribute[1] . '").value.length > 0) {
-                      if (echeck(document.getElementById("' . $attribute[1] . '").value)) {
-                          document.getElementById("' . $attribute[1] . '_error").innerHTML = "";
-                          } else {
-                          document.getElementById("' . $attribute[1] . '_error").innerHTML = "Email address is not valid.";
-                          valid = false;
-                      }
-                  } else {
-                          document.getElementById("' . $attribute[1] . '_error").innerHTML = "Email address is required.";
-                          valid = false;
-                      }
-                      ';
-              break;
-          case "phone":
-              $validation_script .= '
-              if (document.getElementById("opt_' . $attribute[1] . '").value == 0 || (document.getElementById("opt_' . $attribute[1] . '").value != 0 && (document.getElementById("' . $attribute[1] . '_1").value.length > 0 || document.getElementById("' . $attribute[1] . '_2").value.length > 0 || document.getElementById("' . $attribute[1] . '_3").value.length > 0))) {
-                  //Phone # validity test
-                  if (document.getElementById("' . $attribute[1] . '_1").value.length == 3 && document.getElementById("' . $attribute[1] . '_2").value.length == 3 && document.getElementById("' . $attribute[1] . '_3").value.length == 4) {
-                      if (!(IsNumeric(document.getElementById("' . $attribute[1] . '_1").value) && IsNumeric(document.getElementById("' . $attribute[1] . '_2").value) && IsNumeric(document.getElementById("' . $attribute[1] . '_3").value))) {
-                          document.getElementById("' . $attribute[1] . '_error").innerHTML = "Not a valid phone #";
-                              valid = false;
-                      } else { document.getElementById("' . $attribute[1] . '_error").innerHTML = ""; }
-                  } else {
-                          document.getElementById("' . $attribute[1] . '_error").innerHTML = "Phone # is not complete.";
-                          valid = false;
-                      }
-              }
-              ';
-              break;
-          case "select":
+                                    xmlHttp.send(null);
+                                    if (!istrue()) {
+                                        $("#' . $attribute[1] . '_error").html("This email address has already been registered with.");
+                                        valid = false;
+                                    } else {
+                                        $("#' . $attribute[1] . '_error").html("");
+                                    }
+                                }
+                            } else {
+                                $("#' . $attribute[1] . '_error").html("Email address is not valid.");
+                                valid = false;
+                            }
+                        } else {
+                            $("#' . $attribute[1] . '_error").html("Email address is required.");
+                            valid = false;
+                        }
+                    }';
                 break;
-          case "payment":
-              $validation_script .= '
-              if (document.getElementById(\'payment_method\')) {
-                  if (document.getElementById(\'payment_method\').value == "") {
-                          document.getElementById("payment_method_error").innerHTML = "This is a required field.";
-                          valid = false;
-                  } else { document.getElementById("payment_method_error").innerHTML = ""; }
-              }
-              ';
-          break;
-          case "password":
-          //Password validity test
-          $validation_script .= '
-             if (!document.getElementById("' . $attribute[1] . '").value.length > 4) {
-                  if (document.getElementById("' . $attribute[1] . '").value.length > 0) {
-                  document.getElementById("' . $attribute[1] . '_error").innerHTML = "Password must be between 5-20 characters long.";
-                      valid = false;
-                  }else if (!document.getElementById("' . $attribute[1] . '").value.length > 0) {
-                      document.getElementById("' . $attribute[1] . '_error").innerHTML = "Password is required.";
-                      valid = false;
-                  }
-          } else {
-                 if (!checkPassword(document.getElementById("' . $attribute[1] . '"),document.getElementById("verify_' . $attribute[1] . '"),document.getElementById("' . $attribute[1] . '"), true)) {
-                     document.getElementById("' . $attribute[1] . '_error").innerHTML = "Password and Verify fields must match."
-                     valid = false;
-                 } else { document.getElementById("' . $attribute[1] . '_error").innerHTML = ""; }
+            case "contact":
+                $validation_script .= '
+                    if ($("#' . $attribute[1] . '").val().length > 0) {
+                        if (echeck($("#' . $attribute[1] . '").val())) {
+                            $("#' . $attribute[1] . '_error").html("");
+                        } else {
+                            $("#' . $attribute[1] . '_error").html("Email address is not valid.");
+                            valid = false;
+                        }
+                    } else {
+                        $("#' . $attribute[1] . '_error").html("Email address is required.");
+                        valid = false;
+                    }';
+                break;
+            case "phone":
+                $validation_script .= '
+                    if ($("#opt_' . $attribute[1] . '").val() == 0 || ($("#opt_' . $attribute[1] . '").val() != 0 && ($("#' . $attribute[1] . '_1").val().length > 0 || $("#' . $attribute[1] . '_2").val().length > 0 || $("#' . $attribute[1] . '_3").val().length > 0))) {
+                        //Phone # validity test
+                        if ($("#' . $attribute[1] . '_1").val().length == 3 && $("#' . $attribute[1] . '_2").val().length == 3 && $("#' . $attribute[1] . '_3").val().length == 4) {
+                            if (!(IsNumeric($("#' . $attribute[1] . '_1").val()) && IsNumeric($("#' . $attribute[1] . '_2").val()) && IsNumeric($("#' . $attribute[1] . '_3").val()))) {
+                                $("#' . $attribute[1] . '_error").html("Not a valid phone #");
+                                valid = false;
+                            } else {
+                                $("#' . $attribute[1] . '_error").html("");
+                            }
+                        } else {
+                            $("#' . $attribute[1] . '_error").html("Phone # is not complete.");
+                            valid = false;
+                        }
+                    }';
+                break;
+            case "select":
+                break;
+            case "payment":
+                $validation_script .= '
+                    if ($("#payment_method").length) {
+                        if ($("#payment_method").val() == "") {
+                            $("#payment_method_error").html("This is a required field.");
+                            valid = false;
+                        } else {
+                            $("#payment_method_error").html("");
+                        }
+                    }';
+                break;
+            case "password":
+                //Password validity test
+                $validation_script .= '
+                    if (!$("#' . $attribute[1] . '").val().length > 4) {
+                        if ($("#' . $attribute[1] . '").val().length > 0) {
+                            $("#' . $attribute[1] . '_error").html("Password must be between 5-20 characters long.");
+                            valid = false;
+                        } else if (!$("#' . $attribute[1] . '").val().length > 0) {
+                            $("#' . $attribute[1] . '_error").html("Password is required.");
+                            valid = false;
+                        }
+                    } else {
+                        if (!checkPassword($("#' . $attribute[1] . '")[0], $("#verify_' . $attribute[1] . '")[0], $("#' . $attribute[1] . '")[0], true)) {
+                            $("#' . $attribute[1] . '_error").html("Password and Verify fields must match.");
+                            valid = false;
+                        } else {
+                            $("#' . $attribute[1] . '_error").html("");
+                        }
 
-                if (' . $attribute[3] . ' == 0) {
-                    // Build the URL to connect to
-                        var url = "' . $CFG->wwwroot . '/features/events/events_ajax.php?action=unique&elementid=' . $attribute[1] . '&value="+document.getElementById("' . $attribute[1] . '").value + "&eventid=" + ' . $eventid . ';
-                    // Open a connection to the server\
-                        var d = new Date();
-                        xmlHttp.open("GET", url + "&currTime=" + d.toUTCString(), false);
-                        // Send the request
-                    xmlHttp.send(null);
-                  if (!istrue()) {
-                      document.getElementById("' . $attribute[1] . '_error").innerHTML = "This value already exists in our database.";
-                      valid = false;
-                  } else { document.getElementById("' . $attribute[1] . '_error").innerHTML = ""; }
-              }
-             }';
+                        if (' . $attribute[3] . ' == 0) {
+                            // Build the URL to connect to
+                            var url = "' . $CFG->wwwroot . '/features/events/events_ajax.php?action=unique&elementid=' . $attribute[1] . '&value=" + $("#' . $attribute[1] . '").val() + "&eventid=" + ' . $eventid . ';
+                            // Open a connection to the server\
+                            var d = new Date();
+                            xmlHttp.open("GET", url + "&currTime=" + d.toUTCString(), false);
+                            // Send the request
+                            xmlHttp.send(null);
+                            if (!istrue()) {
+                                $("#' . $attribute[1] . '_error").html("This value already exists in our database.");
+                                valid = false;
+                            } else {
+                                $("#' . $attribute[1] . '_error").html("");
+                            }
+                        }
+                    }';
                 break;
-          }
-          $i++;
+        }
+        $i++;
      }
-     $validation_script .= 'return valid; }';
+    $validation_script .= 'return valid; }';
     return js_code_wrap($validation_script, "defer", true);
 }
 
 function showcart() {
 global $CFG;
-     if (!defined('EVENTSLIB')) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
+    if (!defined('EVENTSLIB')) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 
     $redirect = js_code_wrap('window.location = "' . $CFG->wwwroot . '";');
-     echo main_body(true);
+    echo main_body(true);
 
-     $auth_token = $CFG->paypal_auth;
+    $auth_token = $CFG->paypal_auth;
 
-     $pp_hostname = $CFG->paypal ? 'ipnpb.paypal.com' : 'ipnpb.sandbox.paypal.com';
+    $pp_hostname = $CFG->paypal ? 'ipnpb.paypal.com' : 'ipnpb.sandbox.paypal.com';
 
-     // read the post from PayPal system and add 'cmd'
-     $req = 'cmd=_notify-synch';
+    // read the post from PayPal system and add 'cmd'
+    $req = 'cmd=_notify-synch';
 
-     $tx_token = $_GET['tx'];
-     $req .= "&tx=$tx_token&at=$auth_token";
+    $tx_token = $_GET['tx'];
+    $req .= "&tx=$tx_token&at=$auth_token";
 
-     $ch = curl_init();
-     curl_setopt($ch, CURLOPT_URL, "https://$pp_hostname/cgi-bin/webscr");
-     curl_setopt($ch, CURLOPT_POST, 1);
-     curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
-     curl_setopt($ch, CURLOPT_POSTFIELDS, $req);
-     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 1);
-     curl_setopt($ch, CURLOPT_CAINFO, dirname(__FILE__) . '/cacert.pem');
-     //set cacert.pem verisign certificate path in curl using 'CURLOPT_CAINFO' field here,
-     //if your server does not bundled with default verisign certificates.
-     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
-     curl_setopt($ch, CURLOPT_HTTPHEADER, ["Host: $pp_hostname"]);
-     $res = curl_exec($ch);
-     curl_close($ch);
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, "https://$pp_hostname/cgi-bin/webscr");
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $req);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 1);
+    curl_setopt($ch, CURLOPT_CAINFO, dirname(__FILE__) . '/cacert.pem');
+    //set cacert.pem verisign certificate path in curl using 'CURLOPT_CAINFO' field here,
+    //if your server does not bundled with default verisign certificates.
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ["Host: $pp_hostname"]);
+    $res = curl_exec($ch);
+    curl_close($ch);
 
-     if (!$res) {
-          //HTTP ERROR
-          echo $redirect;
-     } else {
-            // parse the data
-          $lines = explode("\n", trim($res));
-          $keyarray = [];
-          if (strcmp ($lines[0], "SUCCESS") == 0) {
-                for ($i = 1; $i < count($lines); $i++) {
-                     $temp = explode("=", $lines[$i],2);
-                     $keyarray[urldecode($temp[0])] = urldecode($temp[1]);
-                }
-                // check the payment_status is Completed
-                // check that txn_id has not been previously processed
-                // check that receiver_email is your Primary PayPal email
-                // check that payment_amount/payment_currency are correct
-                // process payment
-                echo '
+    if (!$res) {
+        //HTTP ERROR
+        echo $redirect;
+    } else {
+        // parse the data
+        $lines = explode("\n", trim($res));
+        $keyarray = [];
+        if (strcmp ($lines[0], "SUCCESS") == 0) {
+            for ($i = 1; $i < count($lines); $i++) {
+                $temp = explode("=", $lines[$i],2);
+                $keyarray[urldecode($temp[0])] = urldecode($temp[1]);
+            }
+            // check the payment_status is Completed
+            // check that txn_id has not been previously processed
+            // check that receiver_email is your Primary PayPal email
+            // check that payment_amount/payment_currency are correct
+            // process payment
+            echo '
                 <div style="width: 640px;text-align:center;margin:auto">
-                <h1>Thank You!</h1>
-                     Your transaction has been completed, and a receipt for your purchase has been emailed to you.
-                     <br />You may log into your account at <a href="https://www.paypal.com">www.paypal.com</a> to view details of this transaction.
+                    <h1>Thank You!</h1>
+                    Your transaction has been completed, and a receipt for your purchase has been emailed to you.
+                    <br />You may log into your account at <a href="https://www.paypal.com">www.paypal.com</a> to view details of this transaction.
                 </div>
                 <br />';
-                echo print_cart($keyarray);
-          }
-          else if (strcmp ($lines[0], "FAIL") == 0) {
-                // log for manual investigation
-                echo $redirect;
-          } else {
-                echo $redirect;
-          }
-     }
+            echo print_cart($keyarray);
+        }
+        else if (strcmp ($lines[0], "FAIL") == 0) {
+            // log for manual investigation
+            echo $redirect;
+        } else {
+            echo $redirect;
+        }
+    }
 }
 
 function print_cart($items) {
 global $CFG;
-     $returnme = '<a href="' . $CFG->wwwroot . '">Go back to ' . $CFG->sitename . '</a><br /><br /><table style="border-collapse:collapse;width:60%; margin-right:auto; margin-left:auto;"><tr><td colspan=2><b>What you have paid for:</b></td></tr>';
+    $rows = '';
     $i = 0;
     while ($i < $items["num_cart_items"]) {
-        $returnme .= '<tr style="background-color:#FFF1FF;"><td style="text-align:left; font-size:.8em;">' . $items["item_name" . ($i + 1)] . '</td><td style="text-align:left; padding:10px; font-size:.8em;">$' . $items["mc_gross_" . ($i + 1)] . '</td></tr><td colspan="2"></td></tr>';
+        $rows .= '
+            <tr style="background-color:#FFF1FF;">
+                <td style="text-align:left; font-size:.8em;">
+                    ' . $items["item_name" . ($i + 1)] . '
+                </td>
+                <td style="text-align:left; padding:10px; font-size:.8em;">
+                    $' . $items["mc_gross_" . ($i + 1)] . '
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2"></td>
+            </tr>';
         $i++;
     }
-    $returnme .= '<tr><td style="text-align:right;"><b>Total</b></td><td style="border-top: 1px solid gray;text-align:left;padding:10px; font-size:.8em;">$' . $items["mc_gross"] . '</td></tr><td style="text-align:right;"><b>Paid</b></td><td style="text-align:left;padding:10px; font-size:.8em;">$' . $items["payment_gross"] . '</td></tr></table>';
+
+    $returnme .= '
+        <a href="' . $CFG->wwwroot . '">
+            Go back to ' . $CFG->sitename . '
+        </a>
+        <br /><br />
+        <table style="border-collapse:collapse;width:60%; margin-right:auto; margin-left:auto;">
+            <tr>
+                <td colspan="2">
+                    <strong>What you have paid for:</strong>
+                </td>
+            </tr>
+            ' . $rows . '
+            <tr>
+                <td style="text-align:right;">
+                    <strong>Total</strong>
+                </td>
+                <td style="border-top: 1px solid gray;text-align:left;padding:10px; font-size:.8em;">
+                    $' . $items["mc_gross"] . '
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align:right;">
+                    <strong>Paid</strong>
+                </td>
+                <td style="text-align:left;padding:10px; font-size:.8em;">
+                    $' . $items["payment_gross"] . '
+                </td>
+            </tr>
+        </table>';
     return $returnme;
 }
 ?>

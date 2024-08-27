@@ -1489,46 +1489,65 @@ function lookup_reg() {
 global $CFG, $MYVARS, $USER;
     $code = clean_myvar_opt("code", "string", "");
 
-    $SQL = "SELECT * FROM events_registrations WHERE code = '$code'";
-
-    if (strlen($code) > 5 && $registration = get_db_row($SQL)) {
-        if ($event = get_db_row("SELECT * FROM events
-                                    WHERE eventid=" . $registration["eventid"] . "
-                                        AND fee_full != 0")) {
-            echo "<h3>Registration Found</h3> ";
-            $registrant_name = get_registrant_name($registration["regid"]);
-            echo "<b>Event: " . $event["name"] . " - $registrant_name's Registration</b>";
-            $total_owed = get_db_field("value", "events_registrations_values", "regid=" . $registration["regid"] . " AND elementname='total_owed'");
-            if (empty($total_owed)) {
-                $total_owed = $registration["date"] < $event["sale_end"] ? $event["sale_fee"] : $event["fee_full"];
-            }
-            $paid = get_db_field("value", "events_registrations_values", "regid=" . $registration["regid"] . " AND elementname='paid'");
-            $paid = empty($paid) ? "0.00" : $paid;
-            $remaining = $total_owed - $paid;
-            $registrant_name = get_registrant_name($registration["regid"]);
-
-            echo "<br /><br />Total Owed:  $" . number_format($total_owed,2) . "<br />";
-            echo "Amount Paid:  $" . number_format($paid,2) . "<br />";
-            echo "<b>Remaining Balance:  $" . number_format($remaining,2) . "</b><br />";
-
-            if ($remaining > 0) {
-                $item[0] = new \stdClass;
-                $item[0]->description = "Event: " . $event["name"] . " - $registrant_name's Registration - Remaining Balance Payment";
-                $item[0]->cost = $remaining;
-                $item[0]->regid = $registration["regid"];
-                echo '<br />' . make_paypal_button($item, $event["paypal"]);
-            }
-        } else {
-            echo "<center><h3>We are unable to provide payment options for this registration id.</h3></center>";
+    $return = $error = "";
+    try {
+        $SQL = "SELECT * FROM events_registrations WHERE code = ||code||";
+        if (strlen($code) <= 5 || !$registration = get_db_row($SQL, ["code" => $code])) {
+            $return = '
+                <div style="text-align:center;padding: 20px">
+                    <strong>No registration found.</strong>
+                </div>';
+            goto instant_end;
         }
-    } else {
-        echo '<div style="text-align:center;"><br /><br /><strong>No registration found.</strong></div>';
+
+        $SQL = "SELECT * FROM events WHERE eventid = ||eventid|| AND fee_full != 0";
+        if (!$event = get_db_row($SQL, ["eventid" => $registration["eventid"]])) {
+            $return = '
+                <div style="text-align:center;padding: 20px">
+                    <strong>We are unable to provide payment options for this registration id.</strong>
+                </div>';
+            goto instant_end;
+        }
+
+        $total_owed = get_db_field("value", "events_registrations_values", "regid=" . $registration["regid"] . " AND elementname='total_owed'");
+        if (empty($total_owed)) {
+            $total_owed = $registration["date"] < $event["sale_end"] ? $event["sale_fee"] : $event["fee_full"];
+        }
+        $paid = get_db_field("value", "events_registrations_values", "regid=" . $registration["regid"] . " AND elementname='paid'");
+        $paid = empty($paid) ? "0.00" : $paid;
+        $remaining = $total_owed - $paid;
+        $registrant_name = get_registrant_name($registration["regid"]);
+
+        $return = '
+            <h3>Registration Found</h3>
+            <strong>Event: ' . $event["name"] . ' - ' . $registrant_name . '\'s Registration</strong>
+            <br /><br />
+            Total Owed:  $' . number_format($total_owed, 2) .
+            '<br />Amount Paid:  $' . number_format($paid, 2) .
+            '<br />
+            <strong>Remaining Balance:  $' . number_format($remaining, 2) . '</strong>
+            <br />';
+
+        if ($remaining > 0) {
+            $item[0] = new \stdClass;
+            $item[0]->description = "Event: " . $event["name"] . " - $registrant_name's Registration - Remaining Balance Payment";
+            $item[0]->cost = $remaining;
+            $item[0]->regid = $registration["regid"];
+            $return .= '<br />' . make_paypal_button($item, $event["paypal"]);
+        }
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
     }
+
+    instant_end:
+    ajax_return($return, $error);
+
 }
 
 function pick_registration() {
 global $CFG, $MYVARS, $USER, $error;
     if (!defined('COMLIB')) { include_once($CFG->dirroot . '/lib/comlib.php'); }
+
     $reginfo = $MYVARS->GET;
     $eventid = clean_myvar_req("eventid", "int", false);
     $payment_amount = clean_myvar_opt("payment_amount", "string", false);
@@ -1537,66 +1556,97 @@ global $CFG, $MYVARS, $USER, $error;
     $payment_method = clean_myvar_opt("payment_method", "string", false);
     $items = clean_myvar_opt("items", "string", false);
 
-    $event = get_event($eventid);
-    if ($event['fee_full'] !== 0 && $payment_amount) {
-        $cart_total = !empty($total_owed) ? $total_owed + $payment_amount : $payment_amount;
-        $reginfo["cart_total"] = $cart_total;
-        $reginfo["total_owed"] = get_timestamp() < $event["sale_end"] ? $event["sale_fee"] : $event["fee_full"];
-    }
+    $return = $error = "";
+    try {
+        start_db_transaction();
 
-    $error = "";
-    if ($regid = enter_registration($event['eventid'], $reginfo, $email)) { //successful registration
-        echo '<center><div style="width:70%">You have successfully registered for ' . $event['name'] . '.<br />';
+        // Get event info.
+        $event = get_event($eventid);
 
-        if ($error != "") { echo $error . "<br />";}
+        // Prepare fee and payment info.
+        if ($event['fee_full'] !== 0 && $payment_amount) {
+            $cart_total = !empty($total_owed) ? $total_owed + $payment_amount : $payment_amount;
+            $reginfo["cart_total"] = $cart_total;
+            $reginfo["total_owed"] = get_timestamp() < $event["sale_end"] ? $event["sale_fee"] : $event["fee_full"];
+        }
 
+        if (!$regid = enter_registration($event['eventid'], $reginfo, $email)) {
+            log_entry("events", $eventid, "Failed Event Registration"); // Log
+            $return = '
+                <center>
+                    <div style="width:60%">
+                        <span class="error_text">
+                            Your registration for ' . $event['name'] . ' has failed.
+                        </span>
+                        <br />
+                        ' . $error . '
+                    </div>
+                </center>';
+            throw new \Exception($error);
+        }
+
+        $allowedinpage = "";
         if ($event['allowinpage'] != 0) {
             if (is_logged_in() && $event['pageid'] != $CFG->SITEID) {
                 change_page_subscription($event['pageid'], $USER->userid);
-                echo 'You have been automatically allowed into this events web page.  This page contain specific information about this event . ';
+                $allowedinpage .= 'You have been automatically allowed into this events web page.  This page contain specific information about this event . ';
+            }
+        }
+
+        $paymentinfo = "";
+        if ($event['fee_full'] != 0) {
+            $registrant_name = get_registrant_name($regid);
+            $items = $items ? "$items**$regid::Event: " . $event["name"] . " - $registrant_name's Registration::$payment_amount" : $regid . "::Event: " . $event["name"] . " - $registrant_name's Registration::$payment_amount";
+            $paymentinfo .= '
+                <div id="backup"><input type="hidden" name="total_owed" id="total_owed" value="' . $cart_total . '" />
+                <input type="hidden" name="items" id="items" value="' . $items . '" /></div>';
+
+            $items = explode("**", $items);
+            $i = 0;
+            while (isset($items[$i])) {
+                $itm = explode("::", $items[$i]);
+                $cart_items = [];
+                $cart_items[$i] = (object)[
+                    "regid" => $itm[0],
+                    "description" => $itm[1],
+                    "cost" => $itm[2],
+                ];
+                $i++;
             }
 
-            if ($event['fee_full'] != 0) {
-                $registrant_name = get_registrant_name($regid);
-                $items = $items ? "$items**$regid::Event: " . $event["name"] . " - $registrant_name's Registration::$payment_amount" : $regid . "::Event: " . $event["name"] . " - $registrant_name's Registration::$payment_amount";
-                echo '<div id="backup"><input type="hidden" name="total_owed" id="total_owed" value="' . $cart_total . '" />
-                     <input type="hidden" name="items" id="items" value="' . $items . '" /></div>';
-
-                $items = explode("**", $items);
-                $i = 0;
-                while (isset($items[$i])) {
-                    $itm = explode("::", $items[$i]);
-                    $cart_items = [];
-                    $cart_items[$i] = (object)[
-                        "regid" => $itm[0],
-                        "description" => $itm[1],
-                        "cost" => $itm[2],
-                    ];
-                    $i++;
-                }
-
-                if ($payment_method == "PayPal") {
-                    echo '<br />
+            if ($payment_method == "PayPal") {
+                $paymentinfo .= '
+                    <br />
                     If you would like to pay the <span style="color:blue;font-size:1.25em;">$' . $cart_total . '</span> fee now, click the Paypal button below.
                     <center>
                     ' . make_paypal_button($cart_items, $event['paypal']) . '
                     </center>
                     <br /><br />
-                    Your registration will be complete upon payment. ';
-                } else {
-                    echo '<br />
+                    Your registration will be complete upon payment.';
+            } else {
+                $paymentinfo .= '
+                    <br />
                     If you are done with the registration process, please make out your <br />
-                    check or money order in the amount of <span style="color:blue;font-size:1.25em;">$' . $cart_total . '</span> payable to <b>' . $event["payableto"] . '</b> and send it to <br /><br />
+                    check or money order in the amount of <span style="color:blue;font-size:1.25em;">$' . $cart_total . '</span> payable to <strong>' . $event["payableto"] . '</strong> and send it to <br /><br />
                     <center>
                     ' . $event['checksaddress'] . '.
                     </center>
                     <br /><br />
-                    Thank you for registering for this event.
-                    ';
-                }
-                echo '</div></center>';
+                    Thank you for registering for this event.';
             }
         }
+
+        $return .= '
+            <center>
+                <div style="width:70%">
+                    You have successfully registered for ' . $event['name'] . '
+                    <br />
+                    ' . $allowedinpage . '
+                    ' . $paymentinfo . '
+                </div>
+            </center>';
+
+        commit_db_transaction();
 
         $touser = (object)[
             'email' => get_db_field("email", "events_registrations", "regid='$regid'"),
@@ -1612,12 +1662,13 @@ global $CFG, $MYVARS, $USER, $error;
 
         $message = registration_email($regid, $touser);
         send_email($touser, $fromuser, $event["name"] . " Registration", $message);
-
         log_entry("events", $eventid, "Registered for Event"); // Log
-    } else { //failed registration
-        log_entry("events", $eventid, "Failed Event Registration"); // Log
-        echo '<center><div style="width:60%"><span class="error_text">Your registration for ' . $event['name'] . ' has failed. </span><br /> ' . $error . '</div>';
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+        rollback_db_transaction($error);
     }
+
+    ajax_return($return, $error);
 }
 
 function delete_limit() {
@@ -1629,48 +1680,57 @@ global $CFG, $MYVARS;
     $soft_limits = clean_myvar_opt("soft_limits", "string", false);
     $hidden_variable1 = $hidden_variable2 = "";
 
-    $returnme = "";
-    if (!$template_id) { echo $returnme;}
-
-    $template = get_event_template($template_id);
-
-    if ($hard_limits) { // There are some hard limits
-        $limits_array = explode("*", $hard_limits);
-        $i = 0;
-        $returnme .= "<br /><b>Hard Limits</b> <br />";
-        $alter = 0;
-        while (isset($limits_array[$i])) {
-            if (!($limit_type == "hard_limits" && $limit_num == $i)) {
-                $limit = explode(":", $limits_array[$i]);
-                $displayname = get_template_field_displayname($template["template_id"], $limit[0]);
-                $returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <a href="javascript:void(0);" onclick="delete_limit(\'hard_limits\',\'' . ($i - $alter) . '\');">Delete</a><br />';
-                $hidden_variable1 .= $hidden_variable1 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
-            } else {  $alter++; }
-            $i++;
+    $return = $error = "";
+    try {
+        if (!$template_id) {
+            throw new Exception("No Template ID");
         }
+
+        $template = get_event_template($template_id);
+
+        $hard = "";
+        if ($hard_limits) { // There are some hard limits
+            $limits_array = explode("*", $hard_limits);
+            $i = 0;
+            $hard .= "<br /><strong>Hard Limits</strong> <br />";
+            $alter = 0;
+            while (isset($limits_array[$i])) {
+                if (!($limit_type == "hard_limits" && $limit_num == $i)) {
+                    $limit = explode(":", $limits_array[$i]);
+                    $displayname = get_template_field_displayname($template["template_id"], $limit[0]);
+                    $hard .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <button class="alike" onclick="delete_limit(\'hard_limits\',\'' . ($i - $alter) . '\');">Delete</button><br />';
+                    $hidden_variable1 .= $hidden_variable1 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
+                } else { $alter++; }
+                $i++;
+            }
+        }
+        if ($hidden_variable1 == "") { $hard = ""; }
+
+        $soft = "";
+        if ($soft_limits) { // There are some soft limits
+            $limits_array = explode("*", $soft_limits);
+            $i = 0;
+            $soft .= "<br /><strong>Soft Limits</strong> <br />";
+            $alter = 0;
+            while (isset($limits_array[$i])) {
+                if (!($limit_type == "soft_limits" && $limit_num == $i)) {
+                    $limit = explode(":", $limits_array[$i]);
+                    $displayname = get_template_field_displayname($template["template_id"], $limit[0]);
+                    $soft .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <button class="alike" onclick="delete_limit(\'soft_limits\',\'' . ($i - $alter) . '\');">Delete</button><br />';
+                    $hidden_variable2 .= $hidden_variable2 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
+                } else { $alter++; }
+                $i++;
+            }
+        }
+
+        if ($hidden_variable2 == "") { $soft = ""; }
+
+        $return = $hard . $soft . '<input type="hidden" id="hard_limits" value="' . $hidden_variable1 . '" /><input type="hidden" id="soft_limits" value="' . $hidden_variable2 . '" />';
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
     }
 
-    if ($hidden_variable1 == "") { $returnme = ""; }
-    $returnme2 = "";
-    if ($soft_limits) { // There are some soft limits
-        $limits_array = explode("*", $soft_limits);
-        $i = 0;
-        $returnme2 .= "<br /><b>Soft Limits</b> <br />";
-        $alter = 0;
-        while (isset($limits_array[$i])) {
-            if (!($limit_type == "soft_limits" && $limit_num == $i)) {
-                $limit = explode(":", $limits_array[$i]);
-                $displayname = get_template_field_displayname($template["template_id"], $limit[0]);
-                $returnme2 .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <a href="javascript:void(0);" onclick="delete_limit(\'soft_limits\',\'' . ($i - $alter) . '\');">Delete</a><br />';
-                $hidden_variable2 .= $hidden_variable2 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
-            } else { $alter++; }
-            $i++;
-        }
-    }
-
-    if ($hidden_variable2 == "") { $returnme2 = ""; }
-
-    echo $returnme . $returnme2 . '<input type="hidden" id="hard_limits" value="' . $hidden_variable1 . '" /><input type="hidden" id="soft_limits" value="' . $hidden_variable2 . '" />';
+    ajax_return($return, $error);
 }
 
 function add_custom_limit() {
@@ -1687,7 +1747,7 @@ function add_custom_limit() {
     if ($hard_limits) { // There are some hard limits
         $limits_array = explode("*", $hard_limits);
         $i = 0;
-        $return .= "<br /><b>Hard Limits</b> <br />";
+        $return .= "<br /><strong>Hard Limits</strong> <br />";
         while (isset($limits_array[$i])) {
             $limit = explode(":", $limits_array[$i]);
             if (isset($limit[3])) {
@@ -1697,7 +1757,7 @@ function add_custom_limit() {
                     $displayname = $limit[0];
                 }
 
-                $return .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <a href="javascript:void(0);" onclick="delete_limit(\'hard_limits\',\'' . $i . '\');">Delete</a><br />';
+                $return .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <button class="alike" onclick="delete_limit(\'hard_limits\',\'' . $i . '\');">Delete</button><br />';
                 $hidden_variable1 .= $hidden_variable1 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
             }
             $i++;
@@ -1707,7 +1767,7 @@ function add_custom_limit() {
     if ($soft_limits) { // There are some soft limits
         $limits_array = explode("*", $soft_limits);
         $i = 0;
-        $return .= "<br /><b>Soft Limits</b> <br />";
+        $return .= "<br /><strong>Soft Limits</strong> <br />";
         while (isset($limits_array[$i])) {
             $limit = explode(":", $limits_array[$i]);
 
@@ -1717,7 +1777,7 @@ function add_custom_limit() {
                 $displayname = $limit[0];
             }
 
-            $return .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <a href="javascript:void(0);" onclick="delete_limit(\'soft_limits\',\'' . $i . '\');">Delete</a><br />';
+            $return .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <button class="alike" onclick="delete_limit(\'soft_limits\',\'' . $i . '\');">Delete</button><br />';
             $hidden_variable2 .= $hidden_variable2 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
             $i++;
         }
@@ -1788,7 +1848,7 @@ function get_limit_form() {
     ];
     $operators = make_select($params);
 
-    echo '
+    $return = '
     <br />
     <table style="margin:0px 0px 0px 50px;">
         <tr>
@@ -1816,6 +1876,8 @@ function get_limit_form() {
         <input type="button" value="Add" onclick="add_custom_limit();" />
     </div>
     ' . js_code_wrap('prepareInputsForHints();');
+
+    ajax_return($return);
 }
 
 function add_new_location() {

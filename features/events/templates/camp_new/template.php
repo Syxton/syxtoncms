@@ -396,7 +396,7 @@ if ($pictures) {
                     <option value="0" selected>No</option>
                     <option value="' . $pictures_price . '">Yes</option>
                 </select>
-                <div class="tooltipContainer info">' . get_help("help_pictures:events:templates/camp_new") . ' ($' . $pictures_price . '.00 for 8x10 color picture of all campers and staff)</div>
+                <div class="tooltipContainer info">' . get_help("help_pictures:events:templates/camp_new") . ' ($' . $pictures_price . '.00 for 8x10 group photo)</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>';
     } else {
@@ -448,7 +448,7 @@ if ($event['fee_full'] > 0) {
     if (empty($payment_method) || $payment_method == "Paypal") { // Don't show for camperships or check/money order payments.
         echo '
         <div class="rowContainer costinfo paywithapp">
-            <label class="rowTitle" for="Camp_Fee">Pay With Application</label>
+            <label class="rowTitle" for="Camp_Fee">Amout Paying Today</label>
             ' . make_fee_options($event['fee_min'], $event['fee_full'], "payment_amount", 'onchange="updateTotal();" onclick="updateTotal();"', $event['sale_end'], $event['sale_fee']) . '
             <div class="tooltipContainer info">' . get_help("help_paywithapp:events:templates/camp_new") . '</div>
             <div class="spacer" style="clear: both;"></div>
@@ -458,8 +458,13 @@ if ($event['fee_full'] > 0) {
     if ($payment_method !== "Campership") { // Don't show for camperships.
         echo '
         <div class="rowContainer costinfo">
-            <label class="rowTitle" for="owed">Total:</label>
-            <span style="display:inline-block;width:12px;">$</span><input style="float:none;width:100px;border:none;" name="owed" id="owed" size="5" value="' . $event['fee_min'] . '" type="text" readonly />
+            <label class="rowTitle" for="owed">Total Paying Today:</label>
+            <span style="display:inline-block;width:12px;float: left;">$</span><input style="float:none;width:100px;border:none;" name="owed" id="owed" size="5" value="' . $event['fee_min'] . '" type="text" readonly />
+            <div class="spacer" style="clear: both;"></div>
+        </div>
+        <div class="rowContainer costinfo">
+            <label class="rowTitle" for="owed">Full Amount:</label>
+            <span style="display:inline-block;width:12px;float: left;">$</span><span id="full_payment_amount">' . get_todays_fee($event['fee_full'], $event['sale_fee'], $event['sale_end']) . '</span>
             <div class="spacer" style="clear: both;"></div>
         </div>';
     }

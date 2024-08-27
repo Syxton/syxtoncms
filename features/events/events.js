@@ -33,8 +33,10 @@ function movetonextbox(e) {
 
 function submit_registration(eventid, formlist) {
     if (validate_fields()) {
+        // Build the URL to connect to
+        var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
         var d = new Date();
-        var parameters = "action=pick_registration&eventid=" + eventid + "&currTime=" + d.toUTCString();
+        var parameters = "action=pick_registration&eventid=" + eventid + "&ajaxapi=true&currTime=" + d.toUTCString();
         var elements = formlist.split("*");
         var i = 0;
         while (elements[i]) {
@@ -63,28 +65,22 @@ function submit_registration(eventid, formlist) {
             }
             i++;
         }
-        // Build the URL to connect to
-        var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
-        // Open a connection to the server\
-        ajaxpost(url, parameters);
-        // Setup a function for the server to run when it's done
-        simple_display("registration_div");
+
+        $.ajax({
+            async: false,
+            type: 'post',
+            url: url,
+            dataType: 'json',
+            data: parameters,
+        }).done(function(data) {
+            jq_display("registration_div", data);
+        })
     }
 }
 
 function clear_limits() {
     $("#limit_form").html("");
     $("#custom_limits").html('<input type="hidden" id="hard_limits" name="hard_limits" value="" /><input type="hidden" id="soft_limits" name="soft_limits" value="" />');
-}
-
-function get_limit_form(template_id) {
-    var d = new Date();
-    var parameters = "action=get_limit_form&template_id=" + template_id + "&currTime=" + d.toUTCString();
-    // Build the URL to connect to
-    var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
-    // Open a connection to the server\
-    ajaxpost(url, parameters);
-    simple_display("limit_form");
 }
 
 function validate_limit() {
@@ -131,21 +127,6 @@ function add_custom_limit() {
         simple_display("custom_limits");
         document.getElementById("limit_form").innerHTML = "";
     }
-}
-
-function delete_limit(limit_type, limit_num) {
-    var hard_limits = "&hard_limits=" + $("#hard_limits").val();
-    var soft_limits = "&soft_limits=" + $("#soft_limits").val();
-    var template_id = "&template_id=" + $("#template").val();
-    var limit_type = "&limit_type=" + limit_type;
-    var limit_num = "&limit_num=" + limit_num;
-    var d = new Date();
-    var parameters = "action=delete_limit" + hard_limits + soft_limits + template_id + limit_type + limit_num + "&currTime=" + d.toUTCString();
-    // Build the URL to connect to
-    var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
-    // Open a connection to the server\
-    ajaxpost(url, parameters);
-    simple_display("custom_limits");
 }
 
 function reset_location_menu() {

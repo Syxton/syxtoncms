@@ -1821,8 +1821,8 @@ function truncate($string, $length) {
     // Replace specific HTML tags with newline characters
     $string = preg_replace('/<ul>|<li>|<div>|<\/ul>|<\/li>|<\/div>/', "\n", $string);
 
-    // Strip all HTML tags except for <b>, <i>, <strong>, and <em>
-    $allowed_tags = '<b><i><strong><em>';
+    // Strip all HTML tags except for <strong>, <i>, <strong>, and <em>
+    $allowed_tags = '<strong><i><strong><em>';
     $string = strip_tags($string, $allowed_tags);
 
     // Normalize multiple newlines to a single newline

@@ -10,17 +10,17 @@
 
 <blockquote>
 
-The requested object or URL, &nbsp; <b><!--#echo var="REDIRECT_URL"--></b>   
+The requested object or URL, &nbsp; <strong><!--#echo var="REDIRECT_URL"--></strong>
 was not found on this server.<P>
 
 The link you followed is either outdated, inaccurate, or the server has been
 instructed not to let you have it.<P>
 
-Please inform the administrator of the referring page, 
+Please inform the administrator of the referring page,
 <a href="<!--#echo var="HTTP_REFERER"-->"><!--#echo var="HTTP_REFERER"--></a>.
 
 </blockquote>
 
-                                                                 
+
 </body>
-</html> 
+</html>

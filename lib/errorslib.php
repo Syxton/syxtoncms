@@ -151,14 +151,14 @@ global $CFG;
 
 	switch ($errno) {
 		case E_USER_ERROR:
-			$message = "<b>ERROR</b> [$errno] $errstr\nFatal error on line $errline in file $errfile\n";
+			$message = "<strong>ERROR</strong> [$errno] $errstr\nFatal error on line $errline in file $errfile\n";
 			debugging($message);
 			break;
 		case E_USER_WARNING:
-			debugging("<b>WARNING</b> [$errno] $errstr\n");
+			debugging("<strong>WARNING</strong> [$errno] $errstr\n");
 			break;
 		case E_USER_NOTICE:
-			debugging("<b>NOTICE</b> [$errno] $errstr\n");
+			debugging("<strong>NOTICE</strong> [$errno] $errstr\n");
 			break;
 		case "HIDEALL":
 			break;

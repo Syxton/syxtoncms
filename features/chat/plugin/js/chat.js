@@ -2390,7 +2390,7 @@ var ajaxChat = {
 		var listChannels = [];
 		var channelName;
 		for(var i=0; i<channels.length; i++) {
-			channelName = (channels[i] === this.channelName) ? '<b>'+channels[i]+'</b>' : channels[i];
+			channelName = (channels[i] === this.channelName) ? '<strong>'+channels[i]+'</strong>' : channels[i];
 			listChannels.push(
 				'<a href="javascript:ajaxChat.sendMessageWrapper(\'/join '
 				+ this.scriptLinkEncode(channels[i])
@@ -2503,7 +2503,7 @@ var ajaxChat = {
 					+ '" dir="'
 					+ this.baseDirection
 					+ '">'
-					+ ((users[i] === this.userName) ? '<b>'+users[i]+'</b>' : users[i])
+					+ ((users[i] === this.userName) ? '<strong>'+users[i]+'</strong>' : users[i])
 					+ '</a>'
 					+ '<ul class="inlineUserMenu" id="'
 					+ this.getInlineUserMenuDocumentID(this.userMenuCounter, i)

@@ -82,8 +82,8 @@ global $CFG, $MYVARS, $USER, $error;
 
 			if ($MYVARS->GET['payment_method'] == "PayPal") {
   				echo '<br />
-				To register a <b>different</b> child:  Select the week ' . common_weeks($event, true, "week1", $regid) . '.<br />
-				To register the <b>same child</b> for a <b>different week</b>:  Select the week ' . common_weeks($event, false, "week2", $regid, 1) . '.<br />
+				To register a <strong>different</strong> child:  Select the week ' . common_weeks($event, true, "week1", $regid) . '.<br />
+				To register the <strong>same child</strong> for a <strong>different week</strong>:  Select the week ' . common_weeks($event, false, "week2", $regid, 1) . '.<br />
 				<br />
 				If you would like to pay the <span style="color:blue;font-size:1.25em;">$' . $MYVARS->GET["cart_total"] . '</span> fee now, click the Paypal button below.
 				<center>
@@ -93,11 +93,11 @@ global $CFG, $MYVARS, $USER, $error;
 				Thank you for registering for this event. ';
 			} else {
 				echo '<br />
-				To register a <b>different</b> child:  Select the week ' . common_weeks($event, true, "week1", $regid) . '.<br />
-				To register the <b>same child</b> for a <b>different week</b>:  Select the week ' . common_weeks($event, false, "week2", $regid, 1) . '.<br />
+				To register a <strong>different</strong> child:  Select the week ' . common_weeks($event, true, "week1", $regid) . '.<br />
+				To register the <strong>same child</strong> for a <strong>different week</strong>:  Select the week ' . common_weeks($event, false, "week2", $regid, 1) . '.<br />
 				<br />
 				If you are done with the registration process, please make out your <br />
-				check or money order in the amount of <span style="color:blue;font-size:1.25em;">$' . $MYVARS->GET["cart_total"] . '</span> payable to <b>' . $event["payableto"] . '</b> and send it to <br /><br />
+				check or money order in the amount of <span style="color:blue;font-size:1.25em;">$' . $MYVARS->GET["cart_total"] . '</span> payable to <strong>' . $event["payableto"] . '</strong> and send it to <br /><br />
 				<center>
 				' . $event['checksaddress'] . '.
 				</center>
@@ -155,7 +155,7 @@ global $CFG, $MYVARS, $USER, $error;
 					To register a child:  Select the week ' . common_weeks($event, true, "week1", $regid) . '.<br />
 					<br />
 					If you are done with the registration process, please make out your <br />
-					check or money order in the amount of <span style="color:blue;font-size:1.25em;">$' . $MYVARS->GET["cart_total"] . '</span> payable to <b>' . $event["payableto"] . '</b> and send it to <br /><br />
+					check or money order in the amount of <span style="color:blue;font-size:1.25em;">$' . $MYVARS->GET["cart_total"] . '</span> payable to <strong>' . $event["payableto"] . '</strong> and send it to <br /><br />
 					<center>
 					' . $event['checksaddress'] . '.
 					</center>
@@ -182,7 +182,7 @@ global $CFG, $USER, $PAGE;
 			$selected = $event["eventid"] == $evnt["eventid"] ? " SELECTED " : "";
 			$returnme .= '<option value="' . $evnt['eventid'] . '" ' . $selected . '>' . $evnt['name'] . '</option>';
 		}
-		$returnme .= '</select> and click <a href="javascript:show_form_again(document.getElementById(\'' . $id . '\').value,\'' . $regid . '\', ' . $autofill . ');"><b>Continue</b></a>';
+		$returnme .= '</select> and click <a href="javascript:show_form_again(document.getElementById(\'' . $id . '\').value,\'' . $regid . '\', ' . $autofill . ');"><strong>Continue</strong></a>';
 	} else { $returnme = '&nbsp;<span style="color:red;">There are no other weeks available. </span>'; }
 	return $returnme;
 }

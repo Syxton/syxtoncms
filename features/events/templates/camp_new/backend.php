@@ -283,7 +283,7 @@ global $CFG, $MYVARS, $USER, $error;
                                 To register a child:  Select the week ' . common_weeks($event, true, "week1", $regid) . '.
                                 <br /><br />
                                 If you are done with the registration process, please make out your <br />
-                                check or money order in the amount of <span style="color:blue;font-size:1.25em;">$' . $cart_total . '</span> payable to <b>' . $event["payableto"] . '</b> and send it to
+                                check or money order in the amount of <span style="color:blue;font-size:1.25em;">$' . $cart_total . '</span> payable to <strong>' . $event["payableto"] . '</strong> and send it to
                                 <br /><br /><br />
                                 <div style="text-align:center;">
                                     ' . $event['checksaddress'] . '.

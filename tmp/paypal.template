@@ -13,7 +13,7 @@ print_cart_template||
 	<br />
 	<table style="border-collapse:collapse;width:60%; margin-right:auto; margin-left:auto;">
 		<tr>
-			<td colspan=2>
+			<td colspan="2">
 				<strong>
 					What you have ||type||?:
 				</strong>
@@ -27,7 +27,7 @@ print_cart_template||
 				</strong>
 			</td>
 			<td style="border-top: 1px solid gray;text-align:left;padding:10px; font-size:.8em;">
-				
+
 			</td>
 		</tr>
 		<tr>

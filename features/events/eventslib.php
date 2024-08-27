@@ -805,8 +805,18 @@ function get_event_pay_link($event, $pageid) {
     ]);
 }
 
+function get_todays_fee($fullfee, $salefee, $sale_end) {
+    if (!$sale_end || !$sale || get_timestamp() > $sale_end) {
+        return $fullfee;
+    }
+
+    return $salefee;
+
+}
+
 function make_fee_options($min, $full, $name, $options = "", $sale_end = "", $sale = false) {
-    if ($sale_end != "" && $sale && get_timestamp() < $sale_end) { $full = $sale;}
+    // Get full price factoring in possible sale price.
+    $full = get_todays_fee($full, $sale, $sale_end);
 
     $returnme = '<select id="' . $name . '" name="' . $name . '" ' . $options . ' >';
     $select = "selected";
@@ -1526,7 +1536,7 @@ function get_my_hidden_limits($templateid, $hard_limits, $soft_limits) {
             $limit = explode(":", $limits_array[$i]);
             if (!empty($limit)) {
                 $displayname = get_template_field_displayname($templateid, $limit[0]);
-                $returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . '&nbsp;-&nbsp;<a href="javascript:void(0);" onclick="delete_limit(\'hard_limits\',\'' . $i . '\');">Delete</a><br />';
+                $returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . '&nbsp;-&nbsp;<button class="alike" onclick="delete_limit(\'hard_limits\',\'' . $i . '\');">Delete</button><br />';
                 $hidden_variable1 .= $hidden_variable1 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
             }
             $i++;
@@ -1542,7 +1552,7 @@ function get_my_hidden_limits($templateid, $hard_limits, $soft_limits) {
             $limit = explode(":", $limits_array[$i]);
             if (!empty($limit)) {
                 $displayname = get_template_field_displayname($templateid, $limit[0]);
-                $returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . '&nbsp;-&nbsp;<a href="javascript:void(0);" onclick="delete_limit(\'soft_limits\',\'' . $i . '\');">Delete</a><br />';
+                $returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . '&nbsp;-&nbsp;<button class="alike" onclick="delete_limit(\'soft_limits\',\'' . $i . '\');">Delete</button><br />';
                 $hidden_variable2 .= $hidden_variable2 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
             }
             $i++;

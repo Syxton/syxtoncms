@@ -28,11 +28,11 @@ global $CFG;
 	if ($CFG->dbtype == "mysqli" && function_exists('mysqli_connect')) { // mysqli is installed
 		set_db_report_level();
 		$conn = mysqli_connect($CFG->dbhost, $CFG->dbuser, $CFG->dbpass) or trigger_error("Could not connect to database");
-		mysqli_select_db($conn, $CFG->dbname) or trigger_error("<b>A fatal MySQL error occured</b>.\n<br />\nError: (" . get_db_errorno() . ") " . get_db_error());
+		mysqli_select_db($conn, $CFG->dbname) or trigger_error("<strong>A fatal MySQL error occured</strong>.\n<br />\nError: (" . get_db_errorno() . ") " . get_db_error());
 	} elseif ($CFG->dbtype == "mysql" && function_exists('mysql_connect')) {
 		set_db_report_level();
 		$conn = mysql_connect($CFG->dbhost, $CFG->dbuser, $CFG->dbpass) or trigger_error("Could not connect to database");
-		mysql_select_db($CFG->dbname) or trigger_error("<b>A fatal MySQL error occured</b>.\n<br />\nError: (" . get_db_errorno() . ") " . get_db_error());
+		mysql_select_db($CFG->dbname) or trigger_error("<strong>A fatal MySQL error occured</strong>.\n<br />\nError: (" . get_db_errorno() . ") " . get_db_error());
 	}
 	return $conn;
 }

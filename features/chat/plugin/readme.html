@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<title>AJAX Chat Readme</title>
-	
+
 	<style type="text/css">
 	body,td,th { font-family: Arial, Helvetica, sans-serif; line-height:1.6em; color:#000; font-size: inherit; }
 	body{background:#FFFFFF;margin:0;font-size: 0.8em;}
@@ -112,11 +112,11 @@
 
     <section class="note">
 		<h3>Use a Proper Text Editor!</h3>
-		In order to edit PHP files you will need a good text editor. <strong>You should not use Windows notepad, wordpad, or Microsoft Word to edit PHP files.</strong> These programs will add something called a byte-order-mark (BOM) to the files and this may prevent chat from functioning properly. 
+		In order to edit PHP files you will need a good text editor. <strong>You should not use Windows notepad, wordpad, or Microsoft Word to edit PHP files.</strong> These programs will add something called a byte-order-mark (BOM) to the files and this may prevent chat from functioning properly.
 		We recommend using Notepad ++ ( <a href="http://notepad-plus-plus.org/">http://notepad-plus-plus.org</a> ) for editing all files. It also has the benefit of color-coding your files so you can edit them more easily.<br>
 		If you get an error message like &quot;<strong>Cannot modify header information - headers already sent</strong>&quot; it is likely because you have used one of the above programs to edit files.
     </section>
-	
+
     <h3>Configure Database Settings</h3>
     <div class="subsection">
 		<p>
@@ -147,7 +147,7 @@
 			If this is set to null, a new database connection is created.
 		</p>
     </div>
-	
+
 	<h3>Choose Your Channel Settings</h3>
 	<div class="subsection">
 	  <p>Edit the file <span class="filename">lib/data/channels.php.</span><br>
@@ -181,7 +181,7 @@
 			Whitespace in the user names will be converted to the underscore &quot;_&quot;.
 		</p>
     </div>
-	
+
     <h3>Upload to Your Server</h3>
     <div class="subsection">
       <p>Upload the chat folder to your server somewhere under your document root:<br>
@@ -193,8 +193,8 @@
       <ol>
         <li>
 			To use the installation script, visit the following URL in your browser:<br>
-			<span class="filename">http://example.org/path/to/chat/install.php</span><br> 
-			Where 
+			<span class="filename">http://example.org/path/to/chat/install.php</span><br>
+			Where
 			&quot;http://example.org/path/to/chat/&quot; is the real URL to your chat directory.<br>
 			Be sure to delete the install.php file after you have completed this step!
 		</li>
@@ -202,12 +202,12 @@
       </ol>
       <p>Either of these methods will create the tables your database needs to store chat messages and other information.</p>
     </div>
-	
+
     <h3>Delete the Installation Script</h3>
     <div class="subsection">
       <p>Delete the file <span class="filename">install.php</span> from the chat directory on your server. You may also delete the file <span class="filename">chat.sql</span>.</p>
     </div>
-	
+
     <h3>Congradulation! You Are Winner!</h3>
     <div class="subsection">
       <p>Yay! You're done! To test your chat, navigate to your chat URL in a browser: <span class="filename">http://example.org/path/to/chat/index.php<br>
@@ -226,7 +226,7 @@
     </ol>
     <p>Both of these files are well commented with information on what the settings mean.</p>
   </div>
-  
+
   <h3>Customizing the Layout </h3>
   <div class="subsection">
     <p>The layout of AJAX Chat is fully customizable by using CSS (Cascaded Style Sheets).<br>
@@ -248,7 +248,7 @@
       Just edit lib/config.php and set the following option:</p>
     <p><code>$config['contentType'] = 'text/html';</code></p>
   </div>
-  
+
   <h3>Adjusting the Language Settings</h3>
   <div class="subsection">
     <p>AJAX Chat comes with two language file directories:</p>
@@ -274,16 +274,16 @@
       <li>Don't remove any &quot;%s&quot; inside the JavaScript language files - these are filled with dynamic data.  </li>
     </ol>
   </div>
-  
+
   <h3>Adding Features</h3>
   <div class="subsection">
     <p>AJAX Chat is designed with numerous hooks and overrides available to improve core functionality without requiring you to edit the core files.
 	With an intermediate understading of PHP and javascript you can modify your chat to suit your needs.</p>
-	<p>Have a look through a few examples available on the wiki: 
+	<p>Have a look through a few examples available on the wiki:
 	<a href="https://github.com/Frug/AJAX-Chat/wiki/General-modifications">https://github.com/Frug/AJAX-Chat/wiki/General-modifications</a>
 	</p>
   </div>
-  
+
 </div>
 
 <h2 id="logs">4. Logs</h2>
@@ -333,13 +333,13 @@ if(!defined('AJAX_CHAT_PATH')) {
 
 // Validate the path to the chat:
 if(@is_file(AJAX_CHAT_PATH.'lib/classes.php')) {
-	
+
 	// Include Class libraries:
 	require_once(AJAX_CHAT_PATH.'lib/classes.php');
-	
+
 	// Initialize the shoutbox:
 	$ajaxChat = new CustomAJAXChatShoutBox();
-	
+
 	// Parse and return the shoutbox template content:
 	return $ajaxChat-&gt;getShoutBoxContent();
 }
@@ -363,7 +363,7 @@ return null;
 <div class="subsection">
 	<p class="note">
 		This part of the setup is OPTIONAL and meant for experienced users only.<br>
-		The Socket Server is no longer actively supported and may not function correctly out of the box. 
+		The Socket Server is no longer actively supported and may not function correctly out of the box.
 		Later versions of AJAX Chat may have this socket server implementation replaced with something else.<br>
 		Please do not report bugs regarding the socket server - you're on your own with this one!
 	</p>
@@ -435,7 +435,7 @@ return null;
 <h2 id="support">7. Support</h2>
 <div class="subsection">
 	<p>
-		<b>Please do not email the devs with support questions.</b><br>
+		<strong>Please do not email the devs with support questions.</strong><br>
 		For further documentation and some examples, check out our <a href="https://github.com/Frug/AJAX-Chat/wiki">github wiki</a>.<br>
 		For general support questions use <a href="https://groups.google.com/forum/?#!forum/ajax-chat">our google group</a>.<br>
 		For specific bug reports and a list of pending issues view <a href="https://github.com/Frug/AJAX-Chat">our github project</a>.<br>
