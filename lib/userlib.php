@@ -181,17 +181,17 @@ global $CFG, $USER;
 
             if (@send_email($USER, $FROMUSER, $subject, $message)) {
                 @send_email($FROMUSER, $FROMUSER, $subject, $message);
-                return "true**" . new_user_confirmation($user);
+                return new_user_confirmation($user);
             }
         }
     } catch (\Throwable $e) {
         if ($created) {
-            return "false**" . error_string("user_not_emailed");
+            return error_string("user_not_emailed");
         } else {
             rollback_db_transaction($e->getMessage());
         }
     }
-    return "false**" . error_string("user_not_added");
+    return error_string("user_not_added");
 }
 
 function create_random_password() {
@@ -207,6 +207,7 @@ function create_random_password() {
 
 function new_user_confirmation($user) {
 global $CFG;
+    $user = gettype($user) == 'object' ? $user : (object) $user;
     return '
           <p><font size="3" face="Tahoma"><strong>' . ucfirst($user->fname) . ' ' . ucfirst($user->lname) . '\'s</strong> account was created </font><font size="3" face="Tahoma" color="#999999">successfully!</font></p>
           <p><font face="Tahoma">An email has been sent to your email </font><font face="Tahoma" color="#3366ff">(<strong><em>' . $user->email . '</em></strong>) </font><font face="Tahoma">account to verify your ability to check this account.&nbsp; </font></p>

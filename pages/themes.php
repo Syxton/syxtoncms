@@ -57,6 +57,30 @@ global $CFG, $PAGE;
         "event" => "none",
     ]);
 
+	ajaxapi([
+        "id" => "show_themes_selector",
+        "url" => "/ajax/themes_ajax.php",
+        "data" => [
+            "action" => "show_themes",
+            "pageid" => $pageid,
+            "feature" => $feature,
+        ],
+        "display" => "themes_page",
+		"event" => "none",
+    ]);
+
+    ajaxapi([
+        "id" => "show_custom_styles",
+        "url" => "/ajax/themes_ajax.php",
+        "data" => [
+            "action" => "show_styles",
+            "pageid" => $pageid,
+            "feature" => $feature,
+        ],
+        "display" => "themes_page",
+		"event" => "none",
+    ]);
+
 	echo fill_template("tmp/themes.template", "change_theme_template", false, $params);
 }
 ?>

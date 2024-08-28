@@ -2231,6 +2231,22 @@ div.button {
     transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s
 }
 
+input[type="color"] {
+    border-radius: 5px;
+    padding: 0;
+    border: 5px solid #DDD;
+}
+
+input[type="color"]::-moz-color-swatch,
+input[type="color"]::-webkit-color-swatch {
+    border: none;
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+    border-radius: 0;
+}
+
 button.alike *:not(svg):nth-child(2),
 a *:not(svg):nth-child(2),
 button svg + * {

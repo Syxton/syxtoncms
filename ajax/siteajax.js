@@ -8,8 +8,6 @@ var myGlobals = {
     "exitEvent": false, // This is a global that could be used during live events (jquery on(click), on(submit), etc) to exit the event.
 };
 
-var xmlHttp = createXMLHttpRequest(); // OLD XMLHTTP OBJECT THAT I'M TRYING NOT TO USE ANYMORE.
-
 if (document.layers) {
     document.captureEvents(Event.MOUSEOVER | Event.MOUSEOUT)
 } // Not sure why I need this.
@@ -58,79 +56,6 @@ function killInterval(identifier) {
     }
 }
 
-//AJAX API
-/* Create a new XMLHttpRequest object to talk to the Web server */
-function createXMLHttpRequest() {
-    xmlHttp = null;
-    if (typeof XMLHttpRequest != "undefined") {
-        xmlHttp = new XMLHttpRequest();
-    } else if (typeof window.ActiveXObject != "undefined") {
-        try {
-            xmlHttp = new ActiveXObject("Msxml2.XMLHTTP.4.0");
-        } catch (e) {
-            try {
-                xmlHttp = new ActiveXObject("MSXML2.XMLHTTP");
-            } catch (e) {
-                try {
-                    xmlHttp = new ActiveXObject("Microsoft.XMLHTTP");
-                } catch (e) {
-                    xmlHttp = null;
-                }
-            }
-        }
-    }
-    return xmlHttp;
-}
-
-function ajaxapi_old(script, action, param, display, async) {
-    if (!ajaxready(script, action, param, display, async)) {
-        return false;
-    };
-
-    //Build the URL to connect to
-    var myurl = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + script;
-    var d = new Date();
-    var parameters = "action=" + action + param.entityify() + "&currTime=" + d.toUTCString();
-
-    if (async != true) {
-        ajaxpost(myurl, parameters, false, false);
-        display();
-    } else {
-        ajaxpost(myurl, parameters, true, display);
-    }
-    setTimeout(function() {
-        activatejs();
-    }, 500);
-}
-
-function ajaxpost(url, parameters, async, display) {
-    if (async == true) {
-        xmlHttp.open('POST', url, true);
-        xmlHttp.onreadystatechange = display;
-        xmlHttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        xmlHttp.send(parameters);
-    } else {
-        xmlHttp.open('POST', url, false);
-        xmlHttp.onreadystatechange = function() {};
-        xmlHttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        xmlHttp.send(parameters);
-    }
-}
-
-function ajaxready(script, action, param, display, async) {
-    if (xmlHttp.readyState != 0) {
-        if (xmlHttp.readyState == 4) {
-            xmlHttp = createXMLHttpRequest();
-            return true;
-        }
-        setTimeout(function() {
-            ajaxapi_old(script, action, param, display, async);
-        }, 500); // if there is an ajax conflict.  Wait 1 second before trying again.
-        return false;
-    }
-    return true;
-}
-
 String.prototype.entityify = function() {
     return this.replace(/&amp;/g, "&");
 };
@@ -142,24 +67,6 @@ String.prototype.singleline = function() {
 function save_action(objecta, objectb) {
     if ($(objecta).click != undefined) {
         $(objectb).val($(objecta).attr("onclick").singleline());
-    }
-}
-
-//Display or Return Functions
-function simple_display(container) {
-    if ($("#" + container).length) {
-        // plant flag that container will soon be updated.
-        plant_update_flag($("#" + container));
-        $().waitTillExists($("#" + container), '#updating_' + container, function () {
-            // update dom container.
-            $("#" + container).html(xmlHttp.responseText);
-            // make sure updating flag is gone, signifying dom is updated.
-            $().waitTillGone($("#" + container), '#updating_' + container, function () {
-                resize_modal();
-            });
-        });
-    } else if (getRoot()[0].$("#" + container).length) { // might be in an iframe and wanting to populate a parent container.
-        getRoot()[0].simple_display(container);
     }
 }
 
@@ -194,7 +101,7 @@ function ajaxerror(data) {
 }
 
 function jq_display(container, data) {
-    if ($("#" + container).length > 0) {
+    if ($("#" + container).not("script").length > 0) {
         // plant flag that container will soon be updated.
         plant_update_flag($("#" + container));
         $().waitTillExists($("#" + container), '#updating_' + container, function () {
@@ -211,40 +118,16 @@ function jq_display(container, data) {
 }
 
 function clear_display(divname) {
-    if (document.getElementById(divname)) {
-        document.getElementById(divname).innerHTML = '';
-    }
-}
-
-function display_backup(divname, backupdiv) {
-    document.getElementById(divname).innerHTML = document.getElementById(backupdiv).innerHTML + xmlHttp.responseText;
-}
-
-function istrue_old() {
-    if (trim(xmlHttp.responseText) == "false") {
-        return false;
-    } else {
-        return true;
+    if ($("#" + divname).length) {
+        $("#" + divname).html("");
     }
 }
 
 function istrue(data = false) {
-    if (data === false) {
-        return istrue_old();
-    }
     return data.message == "false" ? false : true;
 }
 
 function do_nothing() {}
-
-function option_display(pageid, resultsdiv) {
-    var returned = trim(xmlHttp.responseText).split("**");
-    if (returned[0] == "true") {
-        go_to_page(pageid);
-    } else {
-        document.getElementById(resultsdiv).innerHTML = returned[1];
-    }
-}
 
 function countdown(section, timer, dothis) {
     $('#' + section).html(timer);
@@ -486,8 +369,16 @@ function create_request_string(container) {
                 case "INPUT":
                     switch (this.type) {
                         case "text":
+                        case "password":
+                        case "number":
+                        case "email":
+                        case "search":
+                        case "url":
+                        case "tel":
+                        case "range":
                         case "date":
                         case "hidden":
+                        case "color":
                             reqStr += "&" + this.name + "=" + encodeURIComponent($(this).val());
                             break;
                         case "checkbox":
@@ -515,18 +406,6 @@ function create_request_string(container) {
     return reqStr;
 }
 
-function get_values_from_multiselect(label) {
-    var returnme = "";
-    var i = 0;
-    while (document.getElementById(label + i)) {
-        if (document.getElementById(label + i).checked) {
-            returnme += returnme === "" ? document.getElementById(label + i).value : "," + document.getElementById(label + i).value;
-        }
-        i++;
-    }
-    return returnme;
-}
-
 function getRadioValue(idOrName) {
     var value = null;
     var element = document.getElementById(idOrName);
@@ -550,30 +429,14 @@ function getRadioValue(idOrName) {
     return value;
 }
 
-function change_selection(selectid, value) {
-    eval('SelectObject = document.getElementById("' + selectid + '");');
-    for (index = 0; index < SelectObject.length; index++) {
-        if (SelectObject[index].value == value) {
-            SelectObject.selectedIndex = index;
-        }
-    }
-}
-
 //Validation functions
-function echeck(str) {
-    var at = "@";
-    var dot = ".";
-    var lat = str.indexOf(at);
-    var lstr = str.length;
-    var ldot = str.indexOf(dot);
-    if (str.indexOf(at) == -1) return false;
-    if (str.indexOf(at) == -1 || str.indexOf(at) == 0 || str.indexOf(at) == lstr) return false;
-    if (str.indexOf(dot) == -1 || str.indexOf(dot) == 0 || str.indexOf(dot) == lstr) return false;
-    if (str.indexOf(at, (lat + 1)) != -1) return false;
-    if (str.substring(lat - 1, lat) == dot || str.substring(lat + 1, lat + 2) == dot) return false;
-    if (str.indexOf(dot, (lat + 2)) == -1) return false;
-    if (str.indexOf(" ") != -1) return false;
-    return true
+function isValidEmail(emailaddress) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (emailRegex.test(emailaddress)) {
+        return true;
+    }
+
+    return false;
 }
 
 function IsNumeric(sText) {
@@ -639,6 +502,12 @@ function update_alerts(addalert = 0) {
 }
 
 function get_contrast_color(hexcolor){
+    if (hexcolor.charAt(0) == '#') { hexcolor = hexcolor.substr(1); }
+    if (hexcolor.search("rgb") !== -1) {
+        const rgb2hex = (rgb) => `#${rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/).slice(1).map(n => parseInt(n, 10).toString(16).padStart(2, '0')).join('')}`;
+        hexcolor = rgb2hex(hexcolor);
+    }
+
     var r = parseInt(hexcolor.substring(1,3),16);
     var g = parseInt(hexcolor.substring(3,5),16);
     var b = parseInt(hexcolor.substring(5,7),16);
@@ -663,90 +532,6 @@ function adjustStyle(width) {
         $("#headerlogo").css("width", "70%");
         $("#headerquotebox").css("width", "29%");
     }
-}
-
-function findPosX(obj) {
-    var curleft = 0;
-    if (obj.offsetParent) {
-        while (1) {
-            curleft += obj.offsetLeft;
-            if (!obj.offsetParent) {
-                break;
-            }
-            obj = obj.offsetParent;
-        }
-    } else if (obj.x) {
-        curleft += obj.x;
-    }
-    return curleft;
-}
-
-function findPosY(obj) {
-    var curtop = 0;
-    if (obj.offsetParent) {
-        while (1) {
-            curtop += obj.offsetTop;
-            if (!obj.offsetParent) {
-                break;
-            }
-            obj = obj.offsetParent;
-        }
-    } else if (obj.y) {
-        curtop += obj.y;
-    }
-    return curtop;
-}
-
-function getScrollY() {
-    var scrOfY = 0;
-    if (typeof(window.pageYOffset) == 'number') {
-        scrOfY = window.pageYOffset; //Netscape compliant
-    } else if (document.body && (document.body.scrollLeft || document.body.scrollTop)) {
-        scrOfY = document.body.scrollTop; //DOM compliant
-    } else if (document.documentElement && (document.documentElement.scrollLeft || document.documentElement.scrollTop)) {
-        scrOfY = document.documentElement.scrollTop; //IE6 standards compliant mode
-    }
-    return scrOfY;
-}
-
-function scrollto(target_id, speed) {
-    if (target_id == '') {
-        return;
-    }
-    if (!document.getElementById(target_id)) {
-        return;
-    }
-    var currentypos = getScrollY();
-    targetdiv = document.getElementById(target_id);
-    var desty = targetdiv.offsetTop;
-    var thisNode = targetdiv;
-    while (thisNode.offsetParent && (thisNode.offsetParent != document.body)) {
-        thisNode = thisNode.offsetParent;
-        desty += thisNode.offsetTop;
-    }
-
-    desty -= 12; // bring you to just above
-    if (desty < currentypos) {
-        for (I = currentypos; I > desty; I -= speed) {
-            parent.scroll(1, I);
-        }
-    } else {
-        for (I = currentypos; I < desty; I += speed) {
-            parent.scroll(1, I);
-        }
-    }
-}
-
-function getQueryVariable(variable) {
-    var query = window.location.search.substring(1);
-    var vars = query.split("&");
-    for (var i = 0; i < vars.length; i++) {
-        var pair = vars[i].split("=");
-        if (pair[0] == variable) {
-            return pair[1];
-        }
-    }
-    return false;
 }
 
 function verify_login(data) {
@@ -777,32 +562,6 @@ function login_check_response(data) {
     let message = JSON.parse(data.message);
     if (message.status !== "active" && $("#loggedin").length) {
         go_to_page(message.pageid);
-    }
-}
-
-//OLD FUNCTIONS THAT MIGHT NOT BE IN USE ANYMORE
-function clear_window(pageid) {
-    go_to_page(pageid);
-} //Might be useless now\
-
-function page_display() {
-    var sections = trim(xmlHttp.responseText).split("%%");
-    var content;
-    var i = 0;
-    while (sections[i]) {
-        content = sections[i].split("**");
-        var filldiv = content[0];
-        var divname = content[1];
-        $("#" + divname).html(filldiv);
-        i++;
-    }
-}
-
-//print function
-function create_page_display(data) {
-    var pageid = parseInt(data.message) || 0;
-    if (pageid !== 0) {
-        self.parent.go_to_page(pageid);
     }
 }
 

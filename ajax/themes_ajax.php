@@ -28,46 +28,47 @@ global $CFG, $MYVARS, $USER, $PAGE;
 }
 
 function show_themes() {
-global $CFG, $MYVARS, $USER, $PAGE;
+global $PAGE;
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     $themeid = get_page_themeid($pageid);
     $themeid = $themeid !== false ? $themeid : $PAGE->thememid;
 
-    echo theme_selector($pageid, $themeid);
+    $return = theme_selector($pageid, $themeid);
+    ajax_return($return);
 }
 
 function save_custom_theme() {
-global $CFG, $MYVARS, $USER;
-    $featureid = clean_myvar_opt("featureid", "int", 0);
+global $CFG;
     $feature = clean_myvar_req("feature", "string");
+    $featureid = clean_myvar_opt("featureid", "int", 0);
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 
     $pageid = $pageid == $CFG->SITEID ? 0 : $pageid;
     $styles = [];
-    if ($feature == "page") {
+    if ($feature === "page") {
         $default_list = get_custom_styles($pageid, $feature);
         foreach ($default_list as $style) {
-            $style = clean_myvar_opt($style[1], "string", "");
+            $value = clean_myvar_opt($style[1], "string", "");
             $styles[] = [
                 "pageid" => $pageid,
                 "attribute" => $style[1],
-                "value" => urldecode($style),
+                "value" => $value,
                 "themeid" => '0',
-                "forced" =>'0',
+                "forced" => '0',
             ];
         }
     } else {
         $default_list = get_custom_styles($pageid, $feature, $featureid);
         foreach ($default_list as $style) {
-            $style = clean_myvar_opt($style[1], "string", "");
+            $value = clean_myvar_opt($style[1], "string", "");
             $styles[] = [
                 "feature" => $feature,
                 "pageid" => $pageid,
                 "featureid" => $featureid,
                 "attribute" => $style[1],
-                "value" => urldecode($style),
+                "value" => $value,
                 "themeid" => '0',
-                "forced" =>'0',
+                "forced" => '0',
             ];
         }
     }
@@ -125,10 +126,11 @@ global $CFG, $MYVARS, $USER, $STYLES;
 }
 
 function show_styles() {
-global $CFG, $MYVARS, $USER;
+global $CFG, $USER;
     $feature = clean_myvar_req("feature", "string");
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 
+    $return = "";
     if ($feature == "page") {
         $pagename = get_db_field("name", "pages", "pageid = '$pageid'");
         $rolename = get_db_field("display_name", "roles", "roleid = " . user_role($USER->userid, $pageid));
@@ -140,7 +142,7 @@ global $CFG, $MYVARS, $USER;
             "left" => custom_styles_selector($pageid, $feature),
             "right" => fill_template("tmp/themes.template", "theme_selector_right_template", false, $params),
         ];
-        echo fill_template("tmp/themes.template", "make_template_selector_panes_template", false, $p);
+        $return = fill_template("tmp/themes.template", "make_template_selector_panes_template", false, $p);
     } else {
           include_once($CFG->dirroot . '/features/' . $feature . '/' . $feature . 'lib.php');
           $function = "display_$feature";
@@ -148,23 +150,27 @@ global $CFG, $MYVARS, $USER;
             "left" => custom_styles_selector($pageid, $feature, $featureid),
             "right" => $function($pageid, "side", $featureid),
         ];
-        echo fill_template("tmp/themes.template", "make_template_selector_panes_template", false, $p);
+        $return = fill_template("tmp/themes.template", "make_template_selector_panes_template", false, $p);
     }
+
+    ajax_return($return);
 }
 
 function change_theme_save() {
-global $CFG, $MYVARS, $USER;
+global $CFG;
     $themeid = clean_myvar_opt("themeid", "int", 0);
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 
     //Save selected Theme
     if (!$themeid && $pageid !== $CFG->SITEID) {
-        execute_db_sql("DELETE FROM settings WHERE pageid='$pageid' AND setting_name='themeid'");
+        execute_db_sql("DELETE FROM settings WHERE pageid = ||pageid|| AND setting_name = 'themeid'", ["pageid" => $pageid]);
     } else {
         save_setting(false, ["type" => "page", "pageid" => $pageid, "setting_name" => "themeid"], $themeid);
     }
 
     //Page has theme selected show themes
-    echo theme_selector($pageid, $themeid);
+    $return = theme_selector($pageid, $themeid);
+
+    ajax_return($return);
 }
 ?>

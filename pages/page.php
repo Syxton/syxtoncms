@@ -169,7 +169,7 @@ global $CFG, $MYVARS, $ROLES, $USER;
                 "menu_page" => "js||encodeURIComponent($('#menu_page').val())||js",
                 "hidefromvisitors" => "js||encodeURIComponent($('#hidefromvisitors').val())||js",
             ],
-            "ondone" => "create_page_display(data);",
+            "ondone" => "var pageid = parseInt(data.message) || 0; if (pageid !== 0) { self.parent.go_to_page(pageid); }",
             "event" => "none",
         ]);
         $content .= create_validation_script("create_page_form", "valid_create_page_form();");

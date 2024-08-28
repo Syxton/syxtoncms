@@ -202,7 +202,7 @@ function valid_new_event() {
     }
     //contact email
     if ($("#email").val().length > 0) {
-        if (echeck($("#email").val())) {
+        if (isValidEmail($("#email").val())) {
             $("#email_error").html("");
         } else {
             $("#email_error").html("Email address is not valid.");
@@ -276,7 +276,7 @@ function valid_new_event() {
             $("#event_checksaddress_error").html("");
         }
         //paypal
-        if ($("#paypal").val() != "" && !echeck($("#paypal").val())) {
+        if ($("#paypal").val() != "" && !isValidEmail($("#paypal").val())) {
             $("#event_paypal_error").html("This is not a valid email address.");
             valid = false;
         } else {

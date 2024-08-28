@@ -1164,6 +1164,23 @@ global $CFG;
     $i = 0;
     while (isset($element[$i])) {
         $attribute = explode(":", $element[$i]);
+
+        $ajaxcall = `
+            var d = new Date();
+            $.ajax({
+                async: false,
+                type: \'post\',
+                url: ' . $CFG->wwwroot . '/features/events/events_ajax.php",
+                dataType: \'json\',
+                data: "action=unique&elementid=' . $attribute[1] . '&value=" + $("#' . $attribute[1] . '").val() + "&eventid=' . $eventid . '&currTime=" + d.toUTCString(),
+            }).done(function (data) {
+                $("#' . $attribute[1] . '_error").html("");
+                if (!istrue(data)) {
+                    $("#' . $attribute[1] . '_error").html(exists_error);
+                    valid = false;
+                }
+            });
+        `;
         switch ($attribute[0]) {
             case "text":
                 $validation_script .= '
@@ -1175,19 +1192,8 @@ global $CFG;
                             $("#' . $attribute[1] . '_error").html("");
                         }
                         if (' . $attribute[3] . ' == 0) {
-                            // Build the URL to connect to
-                            var url = "' . $CFG->wwwroot . '/features/events/events_ajax.php?action=unique&elementid=' . $attribute[1] . '&value=" + $("#' . $attribute[1] . '").val() + "&eventid=" + ' . $eventid . ';
-                            // Open a connection to the server\
-                            var d = new Date();
-                            xmlHttp.open("GET", url + "&currTime=" + d.toUTCString(), false);
-                            // Send the request
-                            xmlHttp.send(null);
-                            if (!istrue()) {
-                                $("#' . $attribute[1] . '_error").html("This value already exists in our database.");
-                                valid = false;
-                            } else {
-                                $("#' . $attribute[1] . '_error").html("");
-                            }
+                            var exists_error = "This value already exists in our database.";
+                            ' . $ajaxcall . '
                         }
                     }';
                 break;
@@ -1196,21 +1202,10 @@ global $CFG;
                     if ($("#opt_' . $attribute[1] . '").val() == 0 || ($("#opt_' . $attribute[1] . '").val() != 0 && $("#' . $attribute[1] . '").val().length > 0)) {
                         //Email address validity test
                         if ($("#' . $attribute[1] . '").val().length > 0) {
-                            if (echeck($("#' . $attribute[1] . '").val())) {
+                            if (isValidEmail($("#' . $attribute[1] . '").val())) {
                                 if (' . $attribute[3] . ' == 0) {
-                                    // Build the URL to connect to
-                                    var url = "' . $CFG->wwwroot . '/features/events/events_ajax.php?action=unique&elementid=' . $attribute[1] . '&value=" + $("#' . $attribute[1] . '").val() + "&eventid=" + ' . $eventid . ';
-                                    // Open a connection to the server\
-                                    var d = new Date();
-                                    xmlHttp.open("GET", url + "&currTime=" + d.toUTCString(), false);
-                                    // Send the request
-                                    xmlHttp.send(null);
-                                    if (!istrue()) {
-                                        $("#' . $attribute[1] . '_error").html("This email address has already been registered with.");
-                                        valid = false;
-                                    } else {
-                                        $("#' . $attribute[1] . '_error").html("");
-                                    }
+                                    var exists_error = "This email address has already been registered with.";
+                                    ' . $ajaxcall . '
                                 }
                             } else {
                                 $("#' . $attribute[1] . '_error").html("Email address is not valid.");
@@ -1225,7 +1220,7 @@ global $CFG;
             case "contact":
                 $validation_script .= '
                     if ($("#' . $attribute[1] . '").val().length > 0) {
-                        if (echeck($("#' . $attribute[1] . '").val())) {
+                        if (isValidEmail($("#' . $attribute[1] . '").val())) {
                             $("#' . $attribute[1] . '_error").html("");
                         } else {
                             $("#' . $attribute[1] . '_error").html("Email address is not valid.");
@@ -1286,19 +1281,8 @@ global $CFG;
                         }
 
                         if (' . $attribute[3] . ' == 0) {
-                            // Build the URL to connect to
-                            var url = "' . $CFG->wwwroot . '/features/events/events_ajax.php?action=unique&elementid=' . $attribute[1] . '&value=" + $("#' . $attribute[1] . '").val() + "&eventid=" + ' . $eventid . ';
-                            // Open a connection to the server\
-                            var d = new Date();
-                            xmlHttp.open("GET", url + "&currTime=" + d.toUTCString(), false);
-                            // Send the request
-                            xmlHttp.send(null);
-                            if (!istrue()) {
-                                $("#' . $attribute[1] . '_error").html("This value already exists in our database.");
-                                valid = false;
-                            } else {
-                                $("#' . $attribute[1] . '_error").html("");
-                            }
+                            var exists_error = "This value already exists in our database.";
+                            ' . $ajaxcall . '
                         }
                     }';
                 break;

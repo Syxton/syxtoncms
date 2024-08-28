@@ -821,9 +821,6 @@ function build_from_js_library($params) {
         add_js_to_array("scripts", "jqvalidate.js", $javascript);
         add_js_to_array("scripts", "jqvalidate_addon.js", $javascript);
     }
-    if (array_search("picker", $params) !== false) { // Color picker.
-        add_js_to_array("scripts/picker", "picker.js", $javascript);
-    }
     if (array_search("flickity", $params) !== false) { // Image carolsel.
         add_js_to_array("scripts", "flickity.js", $javascript);
     }

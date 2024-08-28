@@ -40,9 +40,9 @@ function unique_email() {
     $email = clean_myvar_req("email", "string");
 
     if (get_db_row(fetch_template("dbsql/users.sql", "get_user_by_email"), ["email" => $email])) {
-        echo "false";
+        ajax_return("false");
     } else {
-        echo "true";
+        ajax_return("true");
     }
 }
 
@@ -57,7 +57,9 @@ function reset_password() {
         log_entry("user", null, "Password change failed"); // Log
     }
 
-    echo fill_template("tmp/site_ajax.template", "reset_password_passfail_template", false, ["success" => $success]);
+    $return = fill_template("tmp/site_ajax.template", "reset_password_passfail_template", false, ["success" => $success]);
+
+    ajax_return($return);
 }
 
 function change_profile() {
@@ -73,8 +75,8 @@ function change_profile() {
     if (!get_db_row(fetch_template("dbsql/users.sql", "used_email"), ["email" => $email, "userid" => $userid])) { // email address isn't being used by another user
         $passwordsql = $password ? ", alternate = '', password = ||password||" : "";
         $SQL = "UPDATE users
-                    SET fname = ||fname||, lname = ||lname||, email = ||email||$passwordsql
-                    WHERE userid = ||userid||";
+                SET fname = ||fname||, lname = ||lname||, email = ||email||$passwordsql
+                WHERE userid = ||userid||";
         $notused = true;
         if ($success = execute_db_sql($SQL, ["email" => $email, "fname" => $fname, "lname" => $lname, "userid" => $userid, "password" =>  md5($password)])) {
             log_entry("user", null, "Profile changed"); // Log
@@ -82,7 +84,9 @@ function change_profile() {
             log_entry("user", null, "Profile change failed"); // Log
         }
     }
-    echo fill_template("tmp/site_ajax.template", "change_profile_success_template", false, ["success" => $success, "notused" => $notused]);
+    $return = fill_template("tmp/site_ajax.template", "change_profile_success_template", false, ["success" => $success, "notused" => $notused]);
+
+    ajax_return($return);
 }
 
 /**
@@ -244,6 +248,7 @@ function add_new_user() {
  * @global \stdClass $USER The global USER object. Contains user information.
  */
 function delete_user() {
+global $USER;
     $userid = clean_myvar_opt("userid", "int", false);
     $user = false;
 

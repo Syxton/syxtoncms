@@ -257,7 +257,6 @@ global $CFG;
             "id" => "fetch_" . $featureid . "_button",
             "button" => true,
             "path" => action_path("news") . "viewnews&newsonly=1&pageid=$pageid&newsid=' + $('#news_" . $featureid . "_archive_news').val() + '&featureid=$featureid",
-            "width" => "98%",
             "icon" => icon("newspaper"),
         ]);
 

@@ -41,6 +41,24 @@ function campnopics_submit_registration() {
     }
 }
 
+//Display or Return Functions
+function simple_display(container) {
+    if ($("#" + container).length) {
+        // plant flag that container will soon be updated.
+        plant_update_flag($("#" + container));
+        $().waitTillExists($("#" + container), '#updating_' + container, function () {
+            // update dom container.
+            $("#" + container).html(xmlHttp.responseText);
+            // make sure updating flag is gone, signifying dom is updated.
+            $().waitTillGone($("#" + container), '#updating_' + container, function () {
+                resize_modal();
+            });
+        });
+    } else if (getRoot()[0].$("#" + container).length) { // might be in an iframe and wanting to populate a parent container.
+        getRoot()[0].simple_display(container);
+    }
+}
+
 function show_form_again(eventid, regid, autofill) {
     // Build the URL to connect to
     var url = WWW_ROOT + dirfromroot + "/features/events/templates/" + folder + "/backend.php";
@@ -56,6 +74,10 @@ function show_form_again(eventid, regid, autofill) {
     // Setup a function for the server to run when it's done
     display_backup("camp", "backup");
     document.getElementById("registration_div").innerHTML = "";
+}
+
+function display_backup(divname, backupdiv) {
+    document.getElementById(divname).innerHTML = document.getElementById(backupdiv).innerHTML + xmlHttp.responseText;
 }
 
 function updateMessage() {

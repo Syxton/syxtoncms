@@ -110,13 +110,13 @@ remove_user_roles_assignment||
     DELETE
     FROM roles_assignment
     WHERE userid = ||userid||
-remove_user_roles_assignment||
+||remove_user_roles_assignment
 
 remove_user_roles_ability_peruser||
     DELETE
     FROM roles_ability_peruser
     WHERE userid = ||userid||
-remove_user_roles_ability_peruser||
+||remove_user_roles_ability_peruser
 
 remove_user_roles_ability_perfeature_peruser||
     DELETE
