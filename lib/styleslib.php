@@ -72,14 +72,25 @@ global $CFG, $MYVARS, $USER;
 		"feature" => $feature,
 		"checked1" => $checked1,
 		"checked2" => $checked2,
-		"iscustom" => ($themeid === '0' ),
+		"iscustom" => empty($themeid),
 	];
+
+	ajaxapi([
+        "id" => "themes",
+        "url" => "/ajax/themes_ajax.php",
+        "data" => [
+            "action" => "theme_change",
+            "pageid" => $pageid,
+			"themeid" => "js||encodeURIComponent($('#themes').val())||js",
+        ],
+        "display" => "color_preview",
+		"event" => "change",
+    ]);
 
 	$themeselector = [
 		"properties" => [
 			"name" => "themes",
 			"id" => "themes",
-			"onchange" => fill_template("tmp/themes.template", "theme_selector_menu_action_template", false, $params),
 			"style" => "width:225px;",
 		],
 		"values" => get_db_result(fetch_template("dbsql/styles.sql", "theme_selector_sql", false, ["notsite" => ($pageid != $CFG->SITEID)])),

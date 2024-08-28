@@ -1522,6 +1522,13 @@ function get_my_locations($userid, $selected = false, $eventid = false) {
     return $returnme;
 }
 
+function delete_limit_button($type, $num) {
+    return '
+        <button style="padding: 0 5px;" class="alike" onclick="delete_limit(\'' . $type . '\', ' . $num . ');">
+            ' . icon("trash") . '
+        </button>';
+}
+
 function get_my_hidden_limits($templateid, $hard_limits, $soft_limits) {
     $returnme = "";
     if (empty($templateid)) { return $returnme; }
@@ -1536,7 +1543,7 @@ function get_my_hidden_limits($templateid, $hard_limits, $soft_limits) {
             $limit = explode(":", $limits_array[$i]);
             if (!empty($limit)) {
                 $displayname = get_template_field_displayname($templateid, $limit[0]);
-                $returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . '&nbsp;-&nbsp;<button class="alike" onclick="delete_limit(\'hard_limits\',\'' . $i . '\');">Delete</button><br />';
+                $returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . delete_limit_button("hard_limits", $i) . '<br />';
                 $hidden_variable1 .= $hidden_variable1 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
             }
             $i++;
@@ -1552,7 +1559,7 @@ function get_my_hidden_limits($templateid, $hard_limits, $soft_limits) {
             $limit = explode(":", $limits_array[$i]);
             if (!empty($limit)) {
                 $displayname = get_template_field_displayname($templateid, $limit[0]);
-                $returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . '&nbsp;-&nbsp;<button class="alike" onclick="delete_limit(\'soft_limits\',\'' . $i . '\');">Delete</button><br />';
+                $returnme .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . delete_limit_button("soft_limits", $i) . '<br />';
                 $hidden_variable2 .= $hidden_variable2 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
             }
             $i++;

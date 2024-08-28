@@ -1,21 +1,4 @@
 var WWW_ROOT = location.protocol + '//' + location.host;
-/* Create a new XMLHttpRequest object to talk to the Web server */
-var xmlHttp = false;
-/*@cc_on @*/
-/*@if (@_jscript_version >= 5)
-try {
-  xmlHttp = new ActiveXObject("Msxml2.XMLHTTP");
-} catch (e) {
-  try {
-     xmlHttp = new ActiveXObject("Microsoft.XMLHTTP");
-  } catch (e2) {
-     xmlHttp = false;
-  }
-}
-@end @*/
-if (!xmlHttp && typeof XMLHttpRequest != 'undefined') {
-    xmlHttp = new XMLHttpRequest();
-}
 
 function movetonextbox(e) {
     var unicode = e.keyCode ? e.keyCode : e.charCode;
@@ -34,7 +17,6 @@ function movetonextbox(e) {
 function submit_registration(eventid, formlist) {
     if (validate_fields()) {
         // Build the URL to connect to
-        var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
         var d = new Date();
         var parameters = "action=pick_registration&eventid=" + eventid + "&ajaxapi=true&currTime=" + d.toUTCString();
         var elements = formlist.split("*");
@@ -69,12 +51,12 @@ function submit_registration(eventid, formlist) {
         $.ajax({
             async: false,
             type: 'post',
-            url: url,
+            url: WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php",
             dataType: 'json',
             data: parameters,
-        }).done(function(data) {
+        }).done(function (data) {
             jq_display("registration_div", data);
-        })
+        });
     }
 }
 
@@ -109,23 +91,29 @@ function validate_limit() {
 
 function add_custom_limit() {
     if (validate_limit()) {
-        var d = new Date();
-        if ($("#custom_limit_sorh").val() == 0) {
-            var hard = $("#hard_limits").length && $("#hard_limits").val() == "" ? $("#custom_limit_fields").val() + ":" + $("#operators").val() + ":" + $("#custom_limit_value").val() + ":" + $("#custom_limit_num").val() : $("#hard_limits").val() + "*" + $("#custom_limit_fields").val() + ":" + $("#operators").val() + ":" + $("#custom_limit_value").val() + ":" + $("#custom_limit_num").val();
-            var soft = $("#soft_limits").length ? $("#soft_limits").val() : "";
+        let d = new Date();
+        if (!$("#custom_limit_sorh").val()) {
+            let hard = $("#hard_limits").length && $("#hard_limits").val() == "" ? $("#custom_limit_fields").val() + ":" + $("#operators").val() + ":" + $("#custom_limit_value").val() + ":" + $("#custom_limit_num").val() : $("#hard_limits").val() + "*" + $("#custom_limit_fields").val() + ":" + $("#operators").val() + ":" + $("#custom_limit_value").val() + ":" + $("#custom_limit_num").val();
+            let soft = $("#soft_limits").length ? $("#soft_limits").val() : "";
         } else {
-            var soft = $("#soft_limits").length && $("#soft_limits").val() == "" ? $("#custom_limit_fields").val() + ":" + $("#operators").val() + ":" + $("#custom_limit_value").val() + ":" + $("#custom_limit_num").val() : $("#soft_limits").val() + "*" + $("#custom_limit_fields").val() + ":" + $("#operators").val() + ":" + $("#custom_limit_value").val() + ":" + $("#custom_limit_num").val();
-            var hard = $("#hard_limits").length ? $("#hard_limits").val() : "";
+            let soft = $("#soft_limits").length && $("#soft_limits").val() == "" ? $("#custom_limit_fields").val() + ":" + $("#operators").val() + ":" + $("#custom_limit_value").val() + ":" + $("#custom_limit_num").val() : $("#soft_limits").val() + "*" + $("#custom_limit_fields").val() + ":" + $("#operators").val() + ":" + $("#custom_limit_value").val() + ":" + $("#custom_limit_num").val();
+            let hard = $("#hard_limits").length ? $("#hard_limits").val() : "";
         }
-        var template_id = "&template_id=" + $("#template").val();
-        var hard_limits = "&hard_limits=" + hard;
-        var soft_limits = "&soft_limits=" + soft;
-        var parameters = "action=add_custom_limit" + hard_limits + soft_limits + template_id + "&currTime=" + d.toUTCString();
-        // Build the URL to connect to
-        var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php";
-        ajaxpost(url, parameters);
-        simple_display("custom_limits");
-        document.getElementById("limit_form").innerHTML = "";
+        let template_id = "&template_id=" + $("#template").val();
+        let hard_limits = "&hard_limits=" + hard;
+        let soft_limits = "&soft_limits=" + soft;
+
+        $.ajax({
+            async: false,
+            type: 'post',
+            url: WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events_ajax.php",
+            dataType: 'json',
+            data: "action=add_custom_limit" + hard_limits + soft_limits + template_id + "&ajaxapi=true&currTime=" + d.toUTCString(),
+        }).done(function (data) {
+            jq_display("custom_limits", data);
+        });
+
+        $("#limit_form").html("");
     }
 }
 

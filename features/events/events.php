@@ -364,7 +364,7 @@ global $CFG, $USER;
         $global_display = $event['pageid'] == $CFG->SITEID ? 'none' : 'inline';
         $start_reg = isset($event['start_reg']) ? date('Y-m-d', $event['start_reg']) : $today;
         $stop_reg = isset($event['stop_reg']) ? date('Y-m-d', $event['stop_reg']) : $today;
-        $sale_end = $event['sale_end'] != "" ? date('Y-m-d', $event['sale_end']) : $today;
+        $sale_end = !empty($event['sale_end']) ? date('Y-m-d', $event['sale_end']) : $today;
         $template = isset($event['template_id']) ? $event['template_id'] : false;
         $template_settings_form = get_template_settings_form($template, $eventid);
         $event_begin_date = isset($event['event_begin_date']) ? date('Y-m-d', $event['event_begin_date']) : $today;
@@ -885,9 +885,8 @@ global $CFG, $USER;
                                                                     Custom Limits:
                                                                 </td>
                                                                 <td class="field_input">
-                                                                    <button id="custom_limit_form" type="button"
-                                                                        onclick="">
-                                                                        Custom Limit Form
+                                                                    <button id="custom_limit_form">
+                                                                        Add Custom Limit
                                                                     </button>
                                                                     <br />
                                                                     <div id="limit_form"></div>

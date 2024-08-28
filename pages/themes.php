@@ -23,11 +23,11 @@ global $CFG, $PAGE;
 	$feature = clean_myvar_opt("feature", "string", false);
 	$featureid = clean_myvar_opt("featureid", "int", false);
 
-	$PAGE = new \stdClass;
+	$PAGE = (object)[];
 	$PAGE->id = $pageid;
 	$PAGE->themeid = get_page_themeid($PAGE->id);
 
-	$variables = new \stdClass();
+	$variables = (object)[];
 	$variables->pageid = $pageid;
 	$variables->feature = $feature;
 	$variables->featureid = $featureid;
@@ -42,6 +42,20 @@ global $CFG, $PAGE;
 		$p = ["left" => custom_styles_selector($pageid, $feature, $featureid), "right" => $function($pageid, "side", $featureid)];
 		$params["pane"] = fill_template("tmp/themes.template", "make_template_selector_panes_template", false, $p);
 	}
+
+	ajaxapi([
+        "id" => "update_theme_preview",
+        "url" => "/ajax/themes_ajax.php",
+		"reqstring" => "colors",
+        "data" => [
+            "action" => "preview",
+            "pageid" => $pageid,
+            "feature" => $feature,
+            "featureid" => $featureid,
+        ],
+        "display" => "color_preview",
+        "event" => "none",
+    ]);
 
 	echo fill_template("tmp/themes.template", "change_theme_template", false, $params);
 }

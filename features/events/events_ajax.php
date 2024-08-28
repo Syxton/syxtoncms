@@ -1672,7 +1672,6 @@ global $CFG, $MYVARS, $USER, $error;
 }
 
 function delete_limit() {
-global $CFG, $MYVARS;
     $template_id = clean_myvar_opt("template_id", "int", false);
     $limit_type = clean_myvar_opt("limit_type", "string", false);
     $limit_num = clean_myvar_opt("limit_num", "int", 0);
@@ -1698,7 +1697,7 @@ global $CFG, $MYVARS;
                 if (!($limit_type == "hard_limits" && $limit_num == $i)) {
                     $limit = explode(":", $limits_array[$i]);
                     $displayname = get_template_field_displayname($template["template_id"], $limit[0]);
-                    $hard .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <button class="alike" onclick="delete_limit(\'hard_limits\',\'' . ($i - $alter) . '\');">Delete</button><br />';
+                    $hard .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false)  . delete_limit_button("hard_limits", $i - $alter) . '<br />';
                     $hidden_variable1 .= $hidden_variable1 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
                 } else { $alter++; }
                 $i++;
@@ -1716,7 +1715,7 @@ global $CFG, $MYVARS;
                 if (!($limit_type == "soft_limits" && $limit_num == $i)) {
                     $limit = explode(":", $limits_array[$i]);
                     $displayname = get_template_field_displayname($template["template_id"], $limit[0]);
-                    $soft .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <button class="alike" onclick="delete_limit(\'soft_limits\',\'' . ($i - $alter) . '\');">Delete</button><br />';
+                    $soft .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . delete_limit_button("soft_limits", $i - $alter) . '<br />';
                     $hidden_variable2 .= $hidden_variable2 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
                 } else { $alter++; }
                 $i++;
@@ -1725,7 +1724,7 @@ global $CFG, $MYVARS;
 
         if ($hidden_variable2 == "") { $soft = ""; }
 
-        $return = $hard . $soft . '<input type="hidden" id="hard_limits" value="' . $hidden_variable1 . '" /><input type="hidden" id="soft_limits" value="' . $hidden_variable2 . '" />';
+        $return = $hard . $soft . '<input type="hidden" id="hard_limits" name="hard_limits" value="' . $hidden_variable1 . '" /><input type="hidden" id="soft_limits" name="soft_limits" value="' . $hidden_variable2 . '" />';
     } catch (\Throwable $e) {
         $error = $e->getMessage();
     }
@@ -1757,7 +1756,7 @@ function add_custom_limit() {
                     $displayname = $limit[0];
                 }
 
-                $return .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <button class="alike" onclick="delete_limit(\'hard_limits\',\'' . $i . '\');">Delete</button><br />';
+                $return .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . delete_limit_button("hard_limits", $i) . '<br />';
                 $hidden_variable1 .= $hidden_variable1 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
             }
             $i++;
@@ -1777,7 +1776,7 @@ function add_custom_limit() {
                 $displayname = $limit[0];
             }
 
-            $return .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . ' <button class="alike" onclick="delete_limit(\'soft_limits\',\'' . $i . '\');">Delete</button><br />';
+            $return .= $limit[3] . " Record(s) where $displayname " . make_limit_statement($limit[1], $limit[2], false) . delete_limit_button("soft_limits", $i) . '<br />';
             $hidden_variable2 .= $hidden_variable2 == "" ? $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3] : "*" . $limit[0] . ":" . $limit[1] . ":" . $limit[2] . ":" . $limit[3];
             $i++;
         }
@@ -1850,21 +1849,32 @@ function get_limit_form() {
 
     $return = '
     <br />
-    <table style="margin:0px 0px 0px 50px;">
+    <table>
         <tr>
-            <td class="field_input" colspan="2">
-                Place a limit of <input id="custom_limit_num" type="text" size="3" style="margin: 0px" /> registrations
-                <br />where ' . $fields . ' is ' . $operators . ' <input id="custom_limit_value" type="text" />
-                <br /><br />
+            <td class="field_input" colspan="2" style="padding: 5px;">
+                <strong>Limit of <input id="custom_limit_num" type="text" size="3" style="margin: 0px" /> registrations</strong>
             </td>
         </tr>
         <tr>
-            <td class="sub_field_title" style="width: 75px;">
+            <td class="field_input" colspan="2" style="padding: 5px;">
+                <strong>where ' . $fields . '</strong>
+            </td>
+        </tr>
+        <tr>
+            <td class="field_input" colspan="2" style="padding: 5px;">
+                <strong>is ' . $operators . ' <input id="custom_limit_value" type="text" /></strong>
+            </td>
+        </tr>
+        <tr>
+            <td class="sub_field_title" style="padding: 5px;width: 75px;text-align:center">
                 Soft Limit:
             </td>
             <td class="field_input">
-            <select id="custom_limit_sorh"><option value="0">No</option><option value="1">Yes</option></select>
-            ' . get_hint_box("input_event_custom_limit_sorh:events") . '
+                <select id="custom_limit_sorh">
+                    <option value="0">No</option>
+                    <option value="1">Yes</option>
+                </select>
+                ' . get_hint_box("input_event_custom_limit_sorh:events") . '
             </td>
         </tr>
     </table>
@@ -1873,7 +1883,9 @@ function get_limit_form() {
         <span style="display:inline-block;" id="custom_limit_value_error" class="error_text"></span>
         <span style="display:inline-block;" id="custom_limit_num_error" class="error_text"></span>
         <span style="display:inline-block;" id="custom_limit_sorh_error" class="error_text"></span><br />
-        <input type="button" value="Add" onclick="add_custom_limit();" />
+        <button id="add_custom_limit">
+            Add Custom Limit
+        </button>
     </div>
     ' . js_code_wrap('prepareInputsForHints();');
 
