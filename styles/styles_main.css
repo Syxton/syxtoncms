@@ -1800,8 +1800,7 @@ ul#pagenavchild  {
 }
 
 .navtabs a.selected {
-    border-top: 5px solid #dcdcdc;
-    background-color: #a9a9a9
+    border-top: 5px solid #ffffff4f;
 }
 
 .forum_breadcrumb {
@@ -2359,6 +2358,13 @@ input[type=checkbox]:checked:after {
 
 input[type=image] {
     box-shadow: none
+}
+
+@media only screen and (max-width :1550px) {
+    .area_middle .html_comments_area {
+        float: unset;
+        width: 100%;
+    }
 }
 
 @media only screen and (max-width :640px) {
