@@ -218,15 +218,16 @@ global $CFG;
                         if (strstr($url, $CFG->directory . '/userfiles') &&
                             strstr($url, $CFG->wwwroot) &&
                             !file_exists($CFG->docroot . strstr($url, '/userfiles/'))) { // internal link check.
-                            $icon = "deny.png";
+                            $icon = icon("ban");
                             $link = 'javascript: void(0);';
                             $title = "File Not Found: $url";
                             $url = "";
                         } else {
+                            $icon = icon("floppy-disk");
                             $title = $url;
                             $link = $CFG->wwwroot . '/scripts/download.php?file=' . $url;
                         }
-                        $html = str_replace($match[0], '<a title="' . $title . '" href="' . $link . '" onclick="blur();">' . icon("floppy-disk") . '</a>&nbsp;' . make_modal_links(["text" => $text, "title" => $title, "path" => $CFG->wwwroot . "/pages/ipaper.php?action=view_ipaper&doc_url=" . base64_encode($url),"height" => "80%", "width" => "80%"]), $html);
+                        $html = str_replace($match[0], '<a title="' . $title . '" href="' . $link . '" onclick="blur();">' . $icon . '</a>&nbsp;' . make_modal_links(["text" => $text, "title" => $title, "path" => $CFG->wwwroot . "/pages/ipaper.php?action=view_ipaper&doc_url=" . base64_encode($url),"height" => "80%", "width" => "80%"]), $html);
                     }
                 }
             }
@@ -387,7 +388,7 @@ global $CFG;
                                         $fileurl = $url . '/' . $file; // Use web url instead of local link.
                                         $caption = $captions[$file] ?? $file; // Either a caption or the filename
                                         $display = empty($gallery) ? "" : "display:none;";
-                                        $name = empty($display) ? '<img style="width:17px;height:17px;vertical-align: middle;" src="' . $CFG->wwwroot . '/images/gallery.png" /> ' . $match[4] : $match[4]; // Use text inside original hyperlink.
+                                        $name = empty($display) ? icon("images") . $match[4] : $match[4]; // Use text inside original hyperlink.
                                         $modalsettings = ["id" => "autogallery_$i", "title" => $caption, "text" => $name, "gallery" => $galleryid, "path" => $fileurl, "styles" => $display];
                                         $gallery .= empty($display) ? make_modal_links($modalsettings) : '<a href="' . $fileurl . '" title="' . $caption . '" data-rel="' . $galleryid . '" style="' . $display . '"></a>';
                                     }
@@ -402,7 +403,7 @@ global $CFG;
                     $captions = get_file_captions(str_replace($file, "", $localdirectory)); // get the caption from the image directory if possible
                     $fileurl = $url; // Use web url instead of local link.
                     $caption = $captions[$file] ?? $file; // Either a caption or the filename
-                    $name = '<img style="width:15px;height:15px;vertical-align: middle;" src="' . $CFG->wwwroot . '/images/image.png" /> ' . $match[4]; // Use text inside original hyperlink.
+                    $name = icon("image") . $match[4]; // Use text inside original hyperlink.
                     $modalsettings = ["id" => "autogallery_$i", "title" => $caption, "text" => $name, "gallery" => $galleryid, "path" => $fileurl];
                     $gallery = make_modal_links($modalsettings);
                 }

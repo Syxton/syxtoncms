@@ -1695,7 +1695,7 @@ tr.pics_title td:hover {
     padding: 10px;
     display: flex;
     align-items: center;
-    justify-content: space-evenly;
+    justify-content: center;
 }
 
 .logo_nav ul {
@@ -1778,11 +1778,14 @@ tr.pics_title td:hover {
 
 .navtabs a.parent {
     display: inline-block;
+    white-space: nowrap;
 }
 
 .navtabs a.parentarrow {
     display: inline-block;
-    width: 40px;
+    max-width: 40px;
+    padding: 0 5px;
+    width: 10%;
 }
 
 ul#pagenavchild  {

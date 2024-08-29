@@ -634,7 +634,7 @@ global $USER, $CFG;
     $discussionbutton = make_modal_links([
         "button" => true,
         "title" => "New Discussion",
-        "text" => '<img src="' . $CFG->wwwroot . '/images/discussion.gif" alt=""> New Discussion',
+        "text" => icon("comments") . ' New Discussion',
         "path" => action_path("forum") . "create_discussion_form&catid=$catid",
         "width" => "750",
         "iframe" => true,

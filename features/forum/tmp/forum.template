@@ -1,5 +1,4 @@
 discussion_form||
-    <img src="||wwwroot||/images/edit_area.gif" alt="This is the discussion creation and editing form" />
     <form id="||formid||">
         <div class="centered">
             <div style="padding:10px;text-align:left;">

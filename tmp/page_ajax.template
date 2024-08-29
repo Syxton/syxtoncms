@@ -5,9 +5,9 @@ search_template||
             <tr>
             <td style="width:25%;text-align:left;">
                 ||isprev{{
-                <a href="javascript: void(0);" onclick="search_navigate(||prev_pagenum||)">
-                    <img src="||wwwroot||/images/prev.png" title="Previous Page" alt="Previous Page" />
-                </a>
+                <button title="Previous Page" class="alike" onclick="search_navigate(||prev_pagenum||)">
+                    ||echo icon("circle-chevron-left", 2);::none||
+                </button>
                 }}isprev||
             </td>
             <td style="width:50%;text-align:center;font-size:.75em;color:green;">
@@ -15,9 +15,9 @@ search_template||
             </td>
             <td style="width:25%;text-align:right;">
                 ||isnext{{
-                <a href="javascript: void(0);" onclick="search_navigate(||next_pagenum||)">
-                    <img src="||wwwroot||/images/next.png" title="Next Page" alt="Next Page" />
-                </a>
+                <button title="Next Page" class="alike" onclick="search_navigate(||next_pagenum||)">
+                    ||echo icon("circle-chevron-right", 2);::none||
+                </button>
                 }}isnext||
             </td>
             </tr>

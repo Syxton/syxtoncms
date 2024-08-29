@@ -60,7 +60,7 @@ global $CFG, $MYVARS;
                 "width" => "700",
                 "height" => "650",
                 "styles" => "float:left;padding:2px;",
-                "image" => $CFG->wwwroot . '/images/info.gif',
+                "icon" => icon("circle-info"),
                 'styles' => 'vertical-align:top;',
             ];
             $eventlist .= '<div class="popupEventTitle">' .

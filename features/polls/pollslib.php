@@ -129,7 +129,7 @@ global $CFG;
     $script = get_js_tags(["scripts/frame_resize.js"]);
     $poll = get_db_row(fetch_template("dbsql/polls.sql", "get_poll", "polls"), ["pollid" => $pollid]);
     if (!get_db_row(fetch_template("dbsql/polls.sql", "get_answers", "polls"), ["pollid" => $pollid])) {
-        $chart = "<br />This poll is not setup yet.<br /><br />";
+        $chart = '<div style="padding: 5px;text-align:center;">This poll is not configured.</div>';
     } elseif (get_db_row(fetch_template("dbsql/polls.sql", "get_responses", "polls"), ["pollid" => $pollid])) {
         $total = get_db_count(fetch_template("dbsql/polls.sql", "get_responses", "polls"), ["pollid" => $pollid]);
         $settings = fetch_settings("polls", $pollid, $poll["pageid"]);
@@ -141,16 +141,17 @@ global $CFG;
             "iframe" => true,
             "width"=> "95%",
             "height"=> "95%",
-            "image" => $CFG->wwwroot . "/images/graph.png",
+            "icon" => icon("up-right-and-down-left-from-center"),
             "class" => "",
         ];
         $popup = '<div style="padding: 5px;text-align:center;margin: 10px">' . make_modal_links($p) . '</div>';
         $chart = '<div style="padding: 5px;text-align:center;">' . $total . ' Total Votes</div>';
+        $chart .= '<iframe id="pollresults_' . $pollid . '" onload="resizeCaller(this.id);" src="' . $CFG->wwwroot . '/features/polls/polls_graph.php?pollid=' . $pollid . '" width="100%" frameborder="0"></iframe>' . $popup;
     } else {
         $chart = '<div style="padding: 5px;text-align:center;">No responses yet.</div>';
     }
 
-    return $script . $chart . '<iframe id="pollresults_' . $pollid . '" onload="resizeCaller(this.id);" src="' . $CFG->wwwroot . '/features/polls/polls_graph.php?pollid=' . $pollid . '" width="100%" frameborder="0"></iframe>' . $popup;
+    return $script . $chart;
 }
 
 function take_poll_form($pageid, $pollid, $area) {

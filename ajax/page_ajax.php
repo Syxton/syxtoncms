@@ -10,8 +10,7 @@
 include ('header.php');
 update_user_cookie();
 
-$CFG->sitesearch = (object)[];
-$CFG->sitesearch->perpage = 8;
+if (!defined('SEARCH_PERPAGE')) { define('SEARCH_PERPAGE', 8); }
 
 callfunction();
 
@@ -167,11 +166,11 @@ global $CFG, $USER;
     $total = get_db_count($SQL, $searchparams);
 
     //Create the page limiter
-    $firstonpage = $CFG->sitesearch->perpage * $pagenum;
-    $SQL .= " LIMIT $firstonpage," . $CFG->sitesearch->perpage; // only return a single page worth of results.
+    $firstonpage = SEARCH_PERPAGE * $pagenum;
+    $SQL .= " LIMIT $firstonpage," . SEARCH_PERPAGE; // only return a single page worth of results.
 
-    $count = $total > (($pagenum + 1) * $CFG->sitesearch->perpage) ? $CFG->sitesearch->perpage : $total - (($pagenum) * $CFG->sitesearch->perpage); //get the amount returned...is it a full page of results?
-    $amountshown = $firstonpage + $CFG->sitesearch->perpage < $total ? $firstonpage + $CFG->sitesearch->perpage : $total;
+    $count = $total > (($pagenum + 1) * SEARCH_PERPAGE) ? SEARCH_PERPAGE : $total - (($pagenum) * SEARCH_PERPAGE); //get the amount returned...is it a full page of results?
+    $amountshown = $firstonpage + SEARCH_PERPAGE < $total ? $firstonpage + SEARCH_PERPAGE : $total;
 
     $resultsparams = [
         "resultsfound" => ($count > 0),
@@ -179,7 +178,7 @@ global $CFG, $USER;
         "searchwords" => $searchwords,
         "searchtype" => "pagesearch",
         "isprev" => ($pagenum > 0),
-        "isnext" => ($firstonpage + $CFG->sitesearch->perpage < $total),
+        "isnext" => ($firstonpage + SEARCH_PERPAGE < $total),
         "wwwroot" => $CFG->wwwroot,
         "prev_pagenum" => ($pagenum - 1),
         "next_pagenum" => ($pagenum + 1),
@@ -340,8 +339,8 @@ global $CFG, $USER, $PAGE;
         $admin = is_siteadmin($userid) ? true : false;
 
         //Create the page limiter
-        $firstonpage = $CFG->sitesearch->perpage * $pagenum;
-        $limit = " LIMIT $firstonpage," . $CFG->sitesearch->perpage;
+        $firstonpage = SEARCH_PERPAGE * $pagenum;
+        $limit = " LIMIT $firstonpage," . SEARCH_PERPAGE;
         $words = explode(" ", $dbsearchwords);
 
         $i = 0; $searchstring = "";
@@ -359,8 +358,8 @@ global $CFG, $USER, $PAGE;
         $total = get_db_count($SQL); //get the total for all pages returned.
         $SQL .= $limit; //Limit to one page of return.
         $users = get_db_result($SQL);
-        $count = $total > (($pagenum + 1) * $CFG->sitesearch->perpage) ? $CFG->sitesearch->perpage : $total - (($pagenum) * $CFG->sitesearch->perpage); //get the amount returned...is it a full page of results?
-        $amountshown = $firstonpage + $CFG->sitesearch->perpage < $total ? $firstonpage + $CFG->sitesearch->perpage : $total;
+        $count = $total > (($pagenum + 1) * SEARCH_PERPAGE) ? SEARCH_PERPAGE : $total - (($pagenum) * SEARCH_PERPAGE); //get the amount returned...is it a full page of results?
+        $amountshown = $firstonpage + SEARCH_PERPAGE < $total ? $firstonpage + SEARCH_PERPAGE : $total;
 
         $params = [
             "resultsfound" => ($count > 0),
@@ -368,7 +367,7 @@ global $CFG, $USER, $PAGE;
             "searchwords" => $searchwords,
             "searchtype" => "usersearch",
             "isprev" => ($pagenum > 0),
-            "isnext" => ($firstonpage + $CFG->sitesearch->perpage < $total),
+            "isnext" => ($firstonpage + SEARCH_PERPAGE < $total),
             "wwwroot" => $CFG->wwwroot,
             "prev_pagenum" => ($pagenum - 1),
             "next_pagenum" => ($pagenum + 1),
@@ -546,7 +545,7 @@ global $CFG, $USER;
     $opendoorpolicy = $admin ? "" : " AND (p.opendoorpolicy=1 OR p.siteviewable=1)";
 
     //Create the page limiter
-    $firstonpage = $CFG->sitesearch->perpage * $pagenum;
+    $firstonpage = SEARCH_PERPAGE * $pagenum;
     $limit = " LIMIT ||first||, ||perpage||";
     $words = explode(" ", $dbsearchwords);
 
@@ -572,10 +571,10 @@ global $CFG, $USER;
 
     $total = get_db_count($SQL, ["pageid" => $pageid, "siteid" => $CFG->SITEID]); //get the total for all pages returned.
     $SQL .= $limit; //Limit to one page of return.
-    $pages = get_db_result($SQL, ["pageid" => $pageid, "siteid" => $CFG->SITEID, "first" => $firstonpage, "perpage" => $CFG->sitesearch->perpage]);
+    $pages = get_db_result($SQL, ["pageid" => $pageid, "siteid" => $CFG->SITEID, "first" => $firstonpage, "perpage" => SEARCH_PERPAGE]);
 
-    $count = $total > (($pagenum + 1) * $CFG->sitesearch->perpage) ? $CFG->sitesearch->perpage : $total - (($pagenum) * $CFG->sitesearch->perpage); //get the amount returned...is it a full page of results?
-    $amountshown = $firstonpage + $CFG->sitesearch->perpage < $total ? $firstonpage + $CFG->sitesearch->perpage : $total;
+    $count = $total > (($pagenum + 1) * SEARCH_PERPAGE) ? SEARCH_PERPAGE : $total - (($pagenum) * SEARCH_PERPAGE); //get the amount returned...is it a full page of results?
+    $amountshown = $firstonpage + SEARCH_PERPAGE < $total ? $firstonpage + SEARCH_PERPAGE : $total;
 
     $params = [
         "resultsfound" => ($count > 0),
@@ -583,7 +582,7 @@ global $CFG, $USER;
         "searchwords" => $searchwords,
         "searchtype" => "linkpagesearch",
         "isprev" => ($pagenum > 0),
-        "isnext" => ($firstonpage + $CFG->sitesearch->perpage < $total),
+        "isnext" => ($firstonpage + SEARCH_PERPAGE < $total),
         "wwwroot" => $CFG->wwwroot,
         "prev_pagenum" => ($pagenum - 1),
         "next_pagenum" => ($pagenum + 1),
