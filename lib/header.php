@@ -8,14 +8,14 @@
 ***************************************************************************/
 
 define('LIBHEADER', true);
-if (session_status() === PHP_SESSION_NONE) { session_start(); }
+if (session_status() === PHP_SESSION_NONE && !headers_sent()) { session_start(); }
 
 if (!isset($CFG)) {
     $sub = '';
     while (!file_exists($sub . 'config.php')) {
         $sub .= '../';
     }
-    require_once($sub . 'config.php'); 
+    require_once($sub . 'config.php');
 }
 
 $libs = ['ERRORSLIB', 'DBLIB', 'FILELIB', 'PAGELIB', 'SETTINGSLIB', 'COMLIB', 'ROLESLIB', 'RSSLIB', 'USERLIB', 'TIMELIB', 'STYLESLIB', 'HELPLIB'];

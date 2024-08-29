@@ -7,14 +7,14 @@
 * Revision: 0.1.1
 ***************************************************************************/
 define('LIBHEADER', true);
-if (session_status() === PHP_SESSION_NONE) { session_start(); }
+if (session_status() === PHP_SESSION_NONE && !headers_sent()) { session_start(); }
 
 if (!isset($CFG)) {
     $sub = '../';
     while (!file_exists($sub . 'config.php')) {
         $sub .= '../';
     }
-    include_once($sub . 'config.php'); 
+    include_once($sub . 'config.php');
 }
 
 $libs = ['ERRORSLIB', 'DBLIB', 'FILELIB', 'PAGELIB', 'SETTINGSLIB', 'COMLIB', 'ROLESLIB', 'RSSLIB', 'USERLIB', 'TIMELIB', 'STYLESLIB', 'HELPLIB'];
