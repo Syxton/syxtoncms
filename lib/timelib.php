@@ -33,7 +33,6 @@ global $CFG;
 }
 
 function ago($timestamp, $shorten = false) {
-global $CFG;
     if (!$timestamp) { return "Never"; };
 	$minutes = ""; $seconds = "";
 	$difference = (get_timestamp()) - $timestamp;
@@ -128,7 +127,6 @@ global $CFG;
 }
 
 function get_date_graphic($timestamp = false, $newday = false, $alter = false, $small = false, $inactive = false) {
-global $CFG;
 	$uniqueid = uniqid("graphic_");
 	$gradients = '
 	<!-- Define svg gradients -->

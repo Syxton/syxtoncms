@@ -16,7 +16,6 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
 define('USERLIB', true);
 
 function random_quote() {
-global $CFG;
     $returnme = '<div id="carousel"  data-flickity=\'{ "autoPlay": 10000, "pageDots": false, "imagesLoaded": true, "percentPosition": false, "wrapAround": true }\'>';
 
     if (!$img = randomimages("images/carousel/")) { return ''; } // No carousel if no images are found.
@@ -121,19 +120,17 @@ global $CFG, $USER;
 function update_user_cookie() {
 global $CFG, $USER;
     $time = get_timestamp();
-    if (!is_logged_in()) { //check to see if $USER global is set
-        load_user_cookie(); //if $USER global isn't set, see if there is an existing cookie and have it loaded into $USER
-        if (is_logged_in()) { //check if $USER global is set now.
-            $_SESSION['userid'] = $USER->userid;
-            execute_db_sql("UPDATE users SET last_activity='$time' WHERE userid='" . $USER->userid."'"); //update last active timestamp
-        } else { //not currently logged in
-            $temp = new \stdClass;
-            $temp->userid = 0;
-            $USER = $temp;
-        }
-    } else { //User is logged in
+    if (!is_logged_in()) { // check to see if $USER global is set
+        // if $USER global isn't set, see if there is an existing cookie and have it loaded into $USER
+        load_user_cookie();
+    }
+
+    if (is_logged_in()) { // check if $USER global is set now.
         $_SESSION['userid'] = $USER->userid;
-        execute_db_sql("UPDATE users SET last_activity='$time' WHERE userid='" . $USER->userid."'"); //update last active timestamp
+        // Update last active timestamp
+        execute_db_sql("UPDATE users SET last_activity = ||time|| WHERE userid = ||userid||", ["time" => $time, "userid" => $USER->userid]);
+    } else { // Still not logged in. Set $USER global to 0
+        $USER = (object) ["userid" => 0];
     }
 }
 
@@ -165,14 +162,8 @@ global $CFG, $USER;
 
         if ($userid && $role_assignment) {
             $created = true;
-            $USER->userid = $userid;
-            $USER->fname = $user['fname'];
-            $USER->lname = $user['lname'];
-            $USER->email = $user['email'];
-            $FROMUSER = new \stdClass;
-            $FROMUSER->fname = $CFG->sitename;
-            $FROMUSER->lname = '';
-            $FROMUSER->email = $CFG->siteemail;
+            $USER = (object) ['userid' => $userid, 'fname' => $user['fname'], 'lname' => $user['lname'], 'email' => $user['email']];
+            $FROMUSER = (object) ['fname' => $CFG->sitename, 'lname' => '', 'email' => $CFG->siteemail];
 
             // Send confirmation email
             if (!defined('COMLIB')) { include_once($CFG->dirroot . '/lib/comlib.php'); }
@@ -195,12 +186,18 @@ global $CFG, $USER;
 }
 
 function create_random_password() {
-    //Make random password and activation code
-    $pass1 = ["little", "big", "loud", "quiet", "short", "tall", "tiny", "huge", "old", "young", "nice", "mean", "scary", "sneaky", "snooty", "pretty", "happy", "sneezy", "itchy"];
+    // Make random password and activation code
+    $pass1 = [
+        "little", "big", "loud", "quiet", "short", "tall", "tiny", "huge", "old", "young", "nice", "mean", "scary",
+        "sneaky", "snooty", "pretty", "happy", "sneezy", "itchy", "giant", "feeble", "silly", "cute", "adorable",
+        "boring", "funny", "mysterious", "witty", "angry", "beautiful", "amazing", "minimal", "crazy", "wonderful",];
     $rnd1 = array_rand($pass1);
     srand ((float) microtime( )*1000000);
     $pass2 = rand(1, 9);
-    $pass3 = ["cat", "dog", "chicken", "mouse", "deer", "snake", "fawn", "rat", "lion", "tiger", "chipmunk", "owl", "bear", "rooster", "whale", "fish", "puma", "panther", "horse"];
+    $pass3 = [
+        "cat", "dog", "chicken", "mouse", "deer", "snake", "fawn", "rat", "lion", "tiger", "chipmunk", "owl", "bear",
+        "rooster", "whale", "fish", "puma", "panther", "horse", "clown", "piggy", "kitten", "puppy", "kangaroo", "seal",
+        "tortoise", "squirrel", "sloth", "singer", "doggy", "butterfly", "grasshopper", "shark", "dolphin", "antelope",];
     $rnd3 = array_rand($pass3);
     return $pass1[$rnd1] . $pass2 . $pass3[$rnd3];
 }
@@ -267,47 +264,47 @@ function nameize($str, $a_char = ["'", "-", " ", '"', '.']) {
             $output .= nameize($np) . " ";
         }
         return trim($output);
-    } else {
-        //the tricky part is finding names like DeMarco: 2 capitals
-          for ($i=0;$i<strlen($str);$i++) {
-              if ($i > 0 && ctype_lower($str[($i - 1)]) && ctype_upper($str[$i]) && isset($str[($i + 1)]) && ctype_lower($str[($i + 1)])) {
-                  $temp = $str;
-                  $str = substr($temp, 0, ($i)) . "+ " . substr($temp, ($i), (strlen($str)-($i)));
-                  $i++; $i++;
-              }
-          }
-
-          //$str contains the complete raw name string
-        //$a_char is an array containing the characters we use as separators for capitalization. If you don't pass anything, there are three in there as default.
-          $string = strtolower($str);
-        foreach ($a_char as $temp) {
-            $pos = strpos($string, $temp);
-            if ($pos !== -1) {
-                //we are in the loop because we found one of the special characters in the array, so lets split it up into chunks and capitalize each one.
-                $mend = '';
-                $a_split = explode($temp, $string);
-                foreach ($a_split as $temp2) {
-                    //capitalize each portion of the string which was separated at a special character
-                    $mend .= ucfirst($temp2).$temp;
-                }
-                $string = substr($mend, 0, -1);
-            }
-        }
-
-        $str = "";
-             for ($i=0;$i<strlen($string);$i++) {
-              if (array_search($string[$i], $a_char)) {
-                if ($string[$i] !== $string[(strlen($string)-$i - 1)]) {
-                    $str .= $string[$i];
-                }
-              } else {
-                $str .= $string[$i];
-              }
-          }
-        $str = str_replace("+ ", "", $str);
-        $str = str_replace("+", "", $str);
-        $str = str_replace('""', '"', $str);
-        return trim(ucfirst($str));
     }
+
+    // the tricky part is finding names like DeMarco: 2 capitals
+    for ($i=0;$i<strlen($str);$i++) {
+        if ($i > 0 && ctype_lower($str[($i - 1)]) && ctype_upper($str[$i]) && isset($str[($i + 1)]) && ctype_lower($str[($i + 1)])) {
+            $temp = $str;
+            $str = substr($temp, 0, ($i)) . "+ " . substr($temp, ($i), (strlen($str)-($i)));
+            $i++; $i++;
+        }
+    }
+
+    // $str contains the complete raw name string
+    // $a_char is an array containing the characters we use as separators for capitalization. If you don't pass anything, there are three in there as default.
+    $string = strtolower($str);
+    foreach ($a_char as $temp) {
+        $pos = strpos($string, $temp);
+        if ($pos !== -1) {
+            //we are in the loop because we found one of the special characters in the array, so lets split it up into chunks and capitalize each one.
+            $mend = '';
+            $a_split = explode($temp, $string);
+            foreach ($a_split as $temp2) {
+                //capitalize each portion of the string which was separated at a special character
+                $mend .= ucfirst($temp2).$temp;
+            }
+            $string = substr($mend, 0, -1);
+        }
+    }
+
+    $str = "";
+        for ($i=0;$i<strlen($string);$i++) {
+        if (array_search($string[$i], $a_char)) {
+            if ($string[$i] !== $string[(strlen($string)-$i - 1)]) {
+                $str .= $string[$i];
+            }
+        } else {
+            $str .= $string[$i];
+        }
+    }
+    $str = str_replace("+ ", "", $str);
+    $str = str_replace("+", "", $str);
+    $str = str_replace('""', '"', $str);
+    return trim(ucfirst($str));
 }
 ?>
