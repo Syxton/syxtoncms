@@ -1305,8 +1305,8 @@ function get_back_to_registrations_link($eventid) {
     $eventname = $event["name"];
 
     return '
-    <button class="dontprint alike" onclick="show_registrations(' . $eventid . ');" title="Back to ' . $eventname . ' registrantions.">
-        Back to ' . $eventname . ' registrantions.
+    <button class="dontprint alike" onclick="show_registrations(' . $eventid . ');" title="Back to ' . $eventname . ' registrations.">
+        Back to ' . $eventname . ' registrations.
     </button>
     <div class="dontprint" style="padding: 10px"></div>';
 }

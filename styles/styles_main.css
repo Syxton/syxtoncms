@@ -73,8 +73,6 @@ fieldset {
 
 html,
 body {
-    display: inline-block;
-    width: 100%;
 }
 
 body {
@@ -1665,8 +1663,7 @@ tr.pics_title td:hover {
 
 .logo_nav .navtabs li {
     display: initial;
-    margin-bottom: initial;
-    margin-right: 5px;
+    margin: 4px 2px 0px 2px;
     padding: 0;
 }
 

@@ -605,6 +605,17 @@ function getCookie(cname) {
     return "";
 }
 
+function printArea(divId) {
+    var printContents = $("#" + divId).html();
+    var originalContents = $("body").html();
+
+    $("body").html(printContents);
+
+    window.print();
+
+    $("body").html(originalContents);
+}
+
 $(function() { // At the end of the document load.  do these things.
     activatejs(); // Check for inactive ajax javascript and attempt to activate it.
 });

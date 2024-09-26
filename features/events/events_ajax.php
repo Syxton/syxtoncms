@@ -732,8 +732,8 @@ global $CFG;
     $template_id = $event["template_id"];
     $eventname = $event["name"];
 
-    $printarea = "";
-    $returnme = '<link rel="stylesheet" type="text/css" href="' . $CFG->wwwroot . '/styles/print.css">';
+    $printarea = '<link rel="stylesheet" type="text/css" media="print" href="' . $CFG->wwwroot . '/styles/print.css">';
+    $returnme = '';
     $returnme .= get_back_to_registrations_link($eventid);
 
     if ($regid) { //Print form for 1 registration
@@ -741,17 +741,20 @@ global $CFG;
     } else { //Batch print all registrations
         if ($registrations = get_db_result(get_registration_sort_sql($eventid, $online_only))) {
             while ($registration = fetch_row($registrations)) {
-                $printarea .= $printarea == '' ? '<p style="font-size:.95em;" class="print">' : '<p style="font-size:.95em;" class="pagestart print">';
+                $printarea .= '<div class="pagestart print">';
                 $printarea .= printable_registration($registration["regid"], $eventid, $template_id);
-                $printarea .= "</p>";
+                $printarea .= '</div>';
             }
         }
     }
 
-    $returnme .= '<form>
-                      <input class="dontprint" type="button" value="Print" onclick="window.print();return false;" />
-                      ' . $printarea . '
-                  </form>';
+    $returnme .= '
+        <form>
+            <button class="dontprint" onclick="window.print();return false;">
+                Print
+            </button>
+            ' . $printarea . '
+        </form>';
     ajax_return($returnme);
 }
 
@@ -2785,7 +2788,7 @@ global $CFG, $USER;
     ]);
 
     $returnme = '
-        <link rel="stylesheet" type="text/css" href="' . $CFG->wwwroot . '/styles/print.css">
+        <link rel="stylesheet" media="print" type="text/css" href="' . $CFG->wwwroot . '/styles/print.css">
         <button onclick="perform_appsearch(' . $pagenum . ');" class="alike dontprint" title="Return to Staff Applications">
             Return to Staff Applications
         </button>';
