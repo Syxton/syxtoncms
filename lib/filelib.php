@@ -57,7 +57,7 @@ function delete_file($filepath) {
 }
 
 function recursive_mkdir($path) {
-    return file_exists($path) || mkdir($path, 0o777, true);
+    return file_exists($path) || mkdir($path, 0777, true);
 }
 
 function recursive_delete($folderPath) {

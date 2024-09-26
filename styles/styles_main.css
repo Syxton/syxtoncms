@@ -215,7 +215,7 @@ table.searchresults tr:hover {
 }
 
 .html_notfullscreen {
-    float: right
+    text-align: right
 }
 
 .html_fullscreen {
@@ -246,7 +246,7 @@ table.searchresults tr:hover {
 }
 
 .html_makecomment {
-    float: right;
+    float: left;
 }
 
 .html_comment_form {
@@ -750,11 +750,11 @@ div.html_template {
 }
 
 .html_text {
-    padding: 20px;
+    padding: 0;
 }
 
 .area_middle .htmlblock {
-    display: inline-block;
+    display: inline;
 }
 
 .area_middle .html_comment_button_box {
@@ -766,7 +766,7 @@ div.html_template {
 }
 
 .area_middle .html_comments_area {
-    float: left;
+    margin: auto;
     width: 40%;
 }
 
@@ -1737,7 +1737,6 @@ tr.pics_title td:hover {
     transition: all .5s ease;
     display: none;
     white-space: nowrap;
-    width: 100%;
 }
 
 .logo_nav ul li ul:hover {

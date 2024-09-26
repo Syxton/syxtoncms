@@ -723,7 +723,19 @@ global $CFG;
     $v["path"]        ??= "";
 
     $path             = $v["path"] && $v["gallery"] ? $v["path"] : "javascript: void(0);";
-    $v["text"]        = empty($v["text"]) ? (empty($v["image"]) ? (empty($v["title"]) ? "" : $v["title"]) : $v["image"]) : (empty($v["image"]) ? $v["text"] :  $v["image"] . ' <span style="vertical-align: middle;">' . $v["text"] . "</span>");
+
+    if (!empty($v["text"])) { // Text was given.
+        $v["text"] = '<span style="vertical-align: middle;">' . $v["text"] . '</span>';
+    }
+
+    if (!empty($v["image"])) { // Image was given.
+        $v["text"] = $v["image"] . $v["text"];
+    } else {
+        if (empty($v["text"]) && !empty($v["title"])) { // Both image and text are empty but a title was given.
+            $v["text"] = '<span style="vertical-align: middle;">' . $v["title"] . '</span>';
+        }
+    }
+
     $v["styles"] ??= false;
 
     $iframe      = empty($v["iframe"]) ? "" : ",fastIframe:false,iframe:true";

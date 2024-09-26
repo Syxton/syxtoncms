@@ -69,7 +69,7 @@ global $CFG, $USER;
 
             $nomargin = 'style="margin: 12px;"';
             if (isset($settings->html->$featureid->allowfullscreen->setting) && $settings->html->$featureid->allowfullscreen->setting == 1) { // if fullscreen option is on, remove margin.
-                $nomargin = 'style="margin:-8px;"';
+                $nomargin = '';
             }
 
             $html = '
@@ -159,9 +159,9 @@ global $CFG;
     if (isset($settings->html->$featureid->allowfullscreen->setting) && $settings->html->$featureid->allowfullscreen->setting == 1) { // Allow fullscreen toggle.
         $html = '
             <div class="html_notfullscreen">
-                <a title="View Full Screen" href="javascript: void(0);" onclick="$(\'.html_notfullscreen div\').toggleClass(\'fs_icon_on\'); $(this).closest(\'.htmlblock\').toggleClass(\'html_fullscreen\');">
-                    <div class="fs_icon"></div>
-                </a>
+                <button class="alike" title="View Full Screen" href="javascript: void(0);" onclick="$(\'.html_notfullscreen div\').toggleClass(\'fs_icon_on\'); $(this).closest(\'.htmlblock\').toggleClass(\'html_fullscreen\');">
+                    ' . icon("expand", 2) . '
+                </button>
             </div>
             <div class="html_text">
                 ' . $html . '
@@ -388,8 +388,7 @@ global $CFG;
                                         $fileurl = $url . '/' . $file; // Use web url instead of local link.
                                         $caption = $captions[$file] ?? $file; // Either a caption or the filename
                                         $display = empty($gallery) ? "" : "display:none;";
-                                        $name = empty($display) ? icon("images") . $match[4] : $match[4]; // Use text inside original hyperlink.
-                                        $modalsettings = ["id" => "autogallery_$i", "title" => $caption, "text" => $name, "gallery" => $galleryid, "path" => $fileurl, "styles" => $display];
+                                        $modalsettings = ["icon" => icon("images"), "id" => "autogallery_$i", "title" => $caption, "text" => $match[4], "gallery" => $galleryid, "path" => $fileurl, "styles" => $display];
                                         $gallery .= empty($display) ? make_modal_links($modalsettings) : '<a href="' . $fileurl . '" title="' . $caption . '" data-rel="' . $galleryid . '" style="' . $display . '"></a>';
                                     }
                                 }
@@ -403,8 +402,8 @@ global $CFG;
                     $captions = get_file_captions(str_replace($file, "", $localdirectory)); // get the caption from the image directory if possible
                     $fileurl = $url; // Use web url instead of local link.
                     $caption = $captions[$file] ?? $file; // Either a caption or the filename
-                    $name = icon("image") . $match[4]; // Use text inside original hyperlink.
-                    $modalsettings = ["id" => "autogallery_$i", "title" => $caption, "text" => $name, "gallery" => $galleryid, "path" => $fileurl];
+                    $name = $match[4]; // Use text inside original hyperlink.
+                    $modalsettings = ["icon" => icon("image"), "id" => "autogallery_$i", "title" => $caption, "text" => $name, "gallery" => $galleryid, "path" => $fileurl];
                     $gallery = make_modal_links($modalsettings);
                 }
 
