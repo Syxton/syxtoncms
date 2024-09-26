@@ -2595,16 +2595,6 @@ global $CFG, $USER;
             "lname" => "",
         ];
 
-        $m2 = "<br />I hope this email finds you well.<br />
-        <p><strong>If you are receiving this, it is because we have been notified that you have been selected to be on staff this year.</strong>&nbsp; <strong>Please do the following ASAP.&nbsp;&nbsp; You must complete this staff application to be a " . date("Y") . " staff member. </strong></p>
-        <ul>
-        <li>Go to <a href='" . $protocol.$CFG->wwwroot . "'>$CFG->sitename</a> and sign in or signup for an account and login.&nbsp; It's easy and free.&nbsp;&nbsp;<strong> <br />Do not log in as someone else and fill out the application. </strong></li>
-        <li>Once you are logged into the site, you will find a button labeled <strong>Staff Apply</strong>.&nbsp; Fill out the staff application and submit.</li>
-        <li>If you have previously applied, the information from your previous application should already be filled in. Please update any information as needed.</li>
-        <li>If you are 18 years of age or older, once you complete your staff application you will be given an opportunity to follow a link to complete the Background Authorization Form. This background check will be valid for the next 5 years and will not need to be done every year.</li>
-        <li>If you have completed a background check previously you can also send an email to " . $CFG->siteemail . " giving permission to renew your background check.</li>
-        </ul><br /><br />";
-
         foreach ($stafflist as $email) {
             $name = "";
             $email = trim($email);
@@ -2618,14 +2608,29 @@ global $CFG, $USER;
                 ];
 
                 if ($user) {
-                    $name = $user["fname"] . " " . $user["lname"] . " ";
-                    $m1 = "Hello $name!,";
+                    $name = $user["fname"] . " " . $user["lname"];
+                    $m1 = "Hello " . trim($name) . "!,";
                     $archive = get_db_row("SELECT * FROM events_staff WHERE userid = ||userid|| LIMIT 1", ["userid" => $user["userid"]]);
                     $status = staff_status($archive);
+                    $action1 = "login.";
+                    $action2 = "<li>If you have previously applied, the information from your previous application should already be filled in. Please update any information as needed.</li>";
+                    $action3 = "<li>If you have completed a background check previously you can also send an email to " . $CFG->siteemail . " giving us permission to renew your background check.</li>";
                 } else {
-                    $m1 = "Hello future team member!,";
+                    $m1 = "Hello future staff member!,";
                     $status = staff_status(false, false);
+                    $action1 = "sign up for an account.&nbsp; It's easy and free.&nbsp; Once you have created an account, please login.";
+                    $action2 = $action3 = "";
                 }
+
+                $m2 = "<br />I hope this email finds you well.<br />
+                <p><strong>If you are receiving this, it is because you have been selected to be on staff for an event this year.</strong>&nbsp; <strong>Please do the following ASAP.&nbsp;&nbsp; You must complete this staff application to be a " . date("Y") . " staff member. </strong></p>
+                <ul>
+                <li>Go to <a href='" . $protocol.$CFG->wwwroot . "'>$CFG->sitename</a> and $action1 &nbsp;<strong> <br />Only log in with your own account to fill out the application. </strong></li>
+                <li>Once you are logged into the site, you will find a button labeled <strong>Staff Apply</strong>.&nbsp; Fill out the staff application and submit.</li>
+                $action2
+                <li>If you are 18 years of age or older, once you complete your staff application you will be given an opportunity to follow a link to complete the Background Authorization Form. This background check will be valid for the next 5 years and will not need to be done every year.</li>
+                $action3
+                </ul><br />";
 
                 if (!empty($status)) {
                     $m3 = "<strong>Current Status:</strong><br />" . print_status($status);
