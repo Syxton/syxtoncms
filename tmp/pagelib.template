@@ -27,10 +27,10 @@ page_masthead_template||
     <div id="logo_div">
         <a href="||wwwroot||">
             ||hasmobilelogo{{
-                <img id="logosmall" src="||wwwroot||/branding/logos/||mobilelogofile||" alt="||sitename|| Logo" />
+                <img id="logosmall" loading="lazy" src="||wwwroot||/branding/logos/||mobilelogofile||" alt="||sitename|| Logo" />
             }}hasmobilelogo||
             ||haslogo{{
-                <img id="logo" src="||wwwroot||/branding/logos/||logofile||" alt="||sitename|| Logo" />
+                <img id="logo" loading="lazy" src="||wwwroot||/branding/logos/||logofile||" alt="||sitename|| Logo" />
                 //OR//
                 <div id="logo">
                 ||sitename||

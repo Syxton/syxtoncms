@@ -85,6 +85,21 @@
                     }, 500);
                 EOT;
                 echo js_code_wrap($code, "defer", true);
+
+                // Google Analytics
+                if (isset($CFG->analytics) && !empty($CFG->analytics)) {
+                    echo '
+                        <!-- Global site tag (gtag.js) - Google Analytics -->
+                        <script async src="https://www.googletagmanager.com/gtag/js?id=' .$CFG->analytics . '"></script>
+                        <script async>
+                            window.dataLayer = window.dataLayer || [];
+                            function gtag(){dataLayer.push(arguments);}
+                            gtag("js", new Date());
+                            gtag("config", "' . $CFG->analytics . '");
+                        </script>
+                        <!-- End Google Analytics -->
+                    ';
+                }
             ?>
         </div>
     </body>

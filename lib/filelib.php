@@ -899,9 +899,6 @@ function build_from_css_library($params) {
     if (array_search("ui", $params) !== false) {
         add_css_to_array("styles/jqueryui", "jquery-ui.css", $css); // jQueryUI
     }
-    if (array_search("jtip", $params) !== false) {
-        add_css_to_array("styles", "jtip.css", $css); // jTip
-    }
     if (array_search("print", $params) !== false) {
         add_css_to_array("styles", "print.css", $css); // jTip
     }

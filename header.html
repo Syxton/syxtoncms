@@ -27,21 +27,6 @@
         if(isset($USER->userkey) && !empty($USER->userkey)) {
             echo '<link href="' . $CFG->wwwroot . '/scripts/rss/rss.php?pageid=' . $PAGE->id . '&key=' . $USER->userkey . '" title="' . $CFG->sitename . ' [RSS]" type="application/rss+xml" rel="alternate"/>';
         }
-
-        // Google Analytics
-        if (isset($CFG->analytics) && !empty($CFG->analytics)) {
-            echo '
-                <!-- Global site tag (gtag.js) - Google Analytics -->
-                <script async src="https://www.googletagmanager.com/gtag/js?id=' .$CFG->analytics . '"></script>
-                <script>
-                    window.dataLayer = window.dataLayer || [];
-                    function gtag(){dataLayer.push(arguments);}
-                    gtag("js", new Date());
-                    gtag("config", "' . $CFG->analytics . '");
-                </script>
-                <!-- End Google Analytics -->
-            ';
-        }
     ?>
 
     </head>

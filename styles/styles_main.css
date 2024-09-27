@@ -451,7 +451,7 @@ label.errorshort {
     line-height: 1.5em;
     height: 16px;
     float: left;
-    background: url('../images/error.png') no-repeat;
+    background: url('../styles/images/error.png') no-repeat;
     padding-left: 20px;
     margin-left: 4px;
     white-space: nowrap;
@@ -460,7 +460,7 @@ label.errorshort {
 
 label.valid {
     float: left;
-    background: url('../images/checked.gif') no-repeat;
+    background: url('../styles/images/checked.png') no-repeat;
     display: block;
     margin-top: 3px;
     width: 16px;
@@ -483,7 +483,7 @@ label.valid {
 
 .info {
     float: left;
-    background-image: url('../images/info.gif');
+    background-image: url('../styles/images/info.png');
     margin: 2px 4px;
     padding-left: 20px;
     width: initial
@@ -491,7 +491,7 @@ label.valid {
 
 .infoshort {
     float: left;
-    background-image: url('../images/info.gif');
+    background-image: url('../styles/images/info.png');
     margin-left: 4px;
     padding-left: 20px;
     width: 140px
@@ -1408,19 +1408,27 @@ button svg:hover {
     font-size: .8em;
     margin-top: 0px;
     margin-left: 10px;
-    border: 1px solid #c93;
+    border: 1px solid #ccc;
     padding: 8px;
     white-space: normal;
-    background-color: #ffc
+    background-color: #eee;
+}
+
+.hint .hint-pointer:before {
+    display: none;
+    content: '\f053';
+    font: var(--fa-font-solid);
 }
 
 .hint .hint-pointer {
     position: absolute;
-    left: -10px;
-    top: 5px;
-    width: 10px;
-    height: 19px;
-    background: url(../images/pointer.gif) left top no-repeat
+    left: -8px;
+    top: 7px;
+}
+
+.hint .hint-pointer svg {
+    font-size: 14px;
+    color: #ccc;
 }
 
 table.pics {
@@ -1569,7 +1577,6 @@ tr.pics_title td:hover {
 .shadetabs li a.notselected {
     position: relative;
     top: 5px;
-    background-image: url(../images/shadeactive.gif);
     border-bottom: 1px solid #778;
     padding-bottom: 0px
 }
