@@ -216,6 +216,5 @@ config.php
 features/pics/files
 httpd.conf
 /userfiles
-images/logo.png
-/images/carousel
+/branding/carousel
 /.vscode

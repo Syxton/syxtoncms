@@ -1,3 +1,6 @@
+// Font Awesome config.
+FontAwesome.config.searchPseudoElements = true;
+
 // As soon as possible, do these things.
 // Set root directory
 var WWW_ROOT = location.protocol + '//' + location.host;

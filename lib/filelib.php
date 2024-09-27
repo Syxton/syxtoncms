@@ -793,11 +793,11 @@ function build_from_js_library($params) {
     if (array_search("siteajax", $params) !== false) { // Site javascript.
         add_js_to_array("scripts", "jquery.min.js", $javascript);
         add_js_to_array("scripts", "jquery.extend.js", $javascript);
-        add_js_to_array("ajax", "siteajax.js", $javascript);
         add_js_to_array("scripts/fontawesome", "fontawesome.min.js", $javascript);
         add_js_to_array("scripts/fontawesome", "solid.min.js", $javascript);
-        add_js_to_array("scripts/fontawesome", "regular.min.js", $javascript);
-        add_js_to_array("scripts/fontawesome", "brands.min.js", $javascript);
+        //add_js_to_array("scripts/fontawesome", "regular.min.js", $javascript);
+        //add_js_to_array("scripts/fontawesome", "brands.min.js", $javascript);
+        add_js_to_array("ajax", "siteajax.js", $javascript);
     }
     if (array_search("jquery", $params) !== false) { // jQuery.
         add_js_to_array("scripts", "jquery.min.js", $javascript);

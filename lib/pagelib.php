@@ -724,9 +724,7 @@ global $CFG;
 
     $path             = $v["path"] && $v["gallery"] ? $v["path"] : "javascript: void(0);";
 
-    if (!empty($v["text"])) { // Text was given.
-        $v["text"] = '<span style="vertical-align: middle;">' . $v["text"] . '</span>';
-    }
+    $v["text"] = empty($v["text"]) ? "" : '<span style="vertical-align: middle;">' . $v["text"] . '</span>';
 
     if (!empty($v["image"])) { // Image was given.
         $v["text"] = $v["image"] . $v["text"];

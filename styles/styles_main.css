@@ -2540,3 +2540,32 @@ input[type=image] {
 .hidden {
     display: none;
 }
+
+@keyframes spinner {
+    to { transform: rotate(360deg); }
+}
+
+#cboxLoadingGraphic:before,
+.ajaxtabloading:before {
+    display: none;
+    font: var(--fa-font-solid);
+    content: '\f110'; /* fa-spinner */
+}
+
+#cboxLoadingGraphic {
+    background: none !important;
+    background: radial-gradient(circle at 50%, #00000010, 1%, #FFF) !important;
+}
+#cboxLoadingOverlay {
+    background: #00000025 !important;
+}
+
+#cboxLoadingGraphic .fa-spinner,
+.ajaxtabloading .fa-spinner {
+    animation: spinner 2s linear infinite;
+    font-size: 10em;
+    position: absolute;
+    left: calc(50% - .5em);
+    top: calc(50% - .5em);
+    color: #00000050;
+}

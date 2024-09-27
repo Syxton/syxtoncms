@@ -18,7 +18,7 @@ define('USERLIB', true);
 function random_quote() {
     $returnme = '<div id="carousel"  data-flickity=\'{ "autoPlay": 10000, "pageDots": false, "imagesLoaded": true, "percentPosition": false, "wrapAround": true }\'>';
 
-    if (!$img = randomimages("images/carousel/")) { return ''; } // No carousel if no images are found.
+    if (!$img = randomimages("branding/carousel/")) { return ''; } // No carousel if no images are found.
 
     $count = count($img) >= 5 ? 5 : count($img); // Images found, find out how many.
     $loading = "";
