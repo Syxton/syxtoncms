@@ -40,7 +40,9 @@ $CFG->docroot   = dirname(__FILE__);
 $CFG->dirroot   = $CFG->docroot;
 
 //Userfile path
-$CFG->userfilespath = substr($CFG->docroot,0,strrpos($CFG->docroot,'/'));
+$CFG->userfilesfolder = 'userfiles';
+$CFG->userfilespath = $CFG->docroot . '\\' . $CFG->userfilesfolder;
+$CFG->userfilesurl = $CFG->wwwroot . '/' . $CFG->userfilesfolder;
 
 //Home site id
 $CFG->SITEID = 1;

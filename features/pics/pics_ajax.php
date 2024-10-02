@@ -68,8 +68,8 @@ global $CFG;
         $pic = get_db_row("SELECT * FROM pics WHERE picsid = ||picsid||", ["picsid" => $picsid]);
         if ($pageid !== $pic["pageid"]) { // Pic is from a different course and needs to be copied to this course.
             $featureid = get_db_field("featureid", "pics_galleries", "galleryid = ||galleryid||", ["galleryid" => $galleryid]);
-            $old = $CFG->dirroot . '/features/pics/files/' . $pic["pageid"] . "/" . $pic["featureid"]. "/" . $pic["imagename"];
-            $new = $CFG->dirroot . '/features/pics/files/' . $pageid . "/" . $featureid . "/" . $pic["imagename"];
+            $old = $CFG->userfilespath . '/pics/files/' . $pic["pageid"] . "/" . $pic["featureid"]. "/" . $pic["imagename"];
+            $new = $CFG->userfilespath . '/pics/files/' . $pageid . "/" . $featureid . "/" . $pic["imagename"];
             if (!copy_file($old, $new)) {
                 throw new Exception("Could not copy file.");
             }
@@ -133,7 +133,7 @@ global $CFG;
     $return = $error = "";
     try {
         $row = get_db_row("SELECT * FROM pics WHERE picsid = ||picsid||", ["picsid" => $picsid]);
-        if (!delete_file($CFG->dirroot . '/features/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row["imagename"])) {
+        if (!delete_file($CFG->userfilespath . '/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row["imagename"])) {
             throw new Exception("Could not delete files.");
         }
 
@@ -161,8 +161,8 @@ global $CFG, $MYVARS;
                     if ($pageid !== $CFG->SITEID && !empty($row["siteviewable"])) { //siteviewable images from a page other than SITE.  Move them to site
                         $copy = true;
                         $site_featureid = get_db_field("featureid", "pages_features", "feature='pics' AND pageid=||pageid||", ["pageid" => $CFG->SITEID]);
-                        $old = $CFG->dirroot . '/features/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row["imagename"];
-                        $new = $CFG->dirroot . '/features/pics/files/' . $CFG->SITEID. "/" . $site_featureid. "/" . $row["imagename"];
+                        $old = $CFG->userfilespath . '/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row["imagename"];
+                        $new = $CFG->userfilespath . '/pics/files/' . $CFG->SITEID. "/" . $site_featureid. "/" . $row["imagename"];
                         if (!copy_file($old, $new)) {
                             throw new Exception("Could not copy file.");
                         }
@@ -174,7 +174,7 @@ global $CFG, $MYVARS;
                         execute_db_sql("UPDATE pics SET siteviewable = 0 WHERE galleryid = ||galleryid||", ["galleryid" => $galleryid]);
                     } else { //nobody is using it, so delete it
                         $delete = true;
-                        if (!delete_file($CFG->dirroot . '/features/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row["imagename"])) {
+                        if (!delete_file($CFG->userfilespath . '/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row["imagename"])) {
                             throw new Exception("Could not delete file.");
                         }
                         execute_db_sql("DELETE FROM pics WHERE picsid='" . $row["picsid"] . "'");
@@ -207,7 +207,7 @@ global $CFG;
     $featureid = clean_myvar_req("featureid", "int");
 
     // upload directory.
-    $upload_dir = 'files/' . "$pageid/$featureid/";
+    $upload_dir = $CFG->userfilespath . "/pics/files/$pageid/$featureid/";
 
     try {
         start_db_transaction();

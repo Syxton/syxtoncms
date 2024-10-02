@@ -179,8 +179,8 @@ global $CFG;
                 if (!strstr($match[0], 'javascript:')) { // not a javascript link.
                     $filetypes = '/([\.[pP][dD][fF]|\.[dD][oO][cC]|\.[rR][tT][fF]|\.[pP][sS]|\.[pP][pP][tT]|\.[pP][pP][sS]|\.[tT][xX][tT]|\.[sS][xX][cC]|\.[oO][dD][sS]|\.[xX][lL][sS]|\.[oO][dD][tT]|\.[sS][xX][wW]|\.[oO][dD][pP]|\.[sS][xX][iI]])/';
                     if (preg_match($filetypes, $match[2])) {
-                        if (strstr($match[2], $CFG->directory . '/userfiles') || strstr($match[2], $CFG->wwwroot)) { // internal link.
-                            $url = $CFG->wwwroot . strstr($match[2], '/userfiles/');
+                        if (strstr($match[2], $CFG->userfilesurl) || strstr($match[2], $CFG->wwwroot)) { // internal link.
+                            $url = $CFG->wwwroot . strstr($match[2], '/' . $CFG->userfilesfolder . '/');
                         } else { // external link.
                             $url = $match[2];
                         }
@@ -215,9 +215,9 @@ global $CFG;
 
                         $link = "";
                         $text = $match[4].$match[5];
-                        if (strstr($url, $CFG->directory . '/userfiles') &&
+                        if (strstr($url, $CFG->userfilespath) &&
                             strstr($url, $CFG->wwwroot) &&
-                            !file_exists($CFG->docroot . strstr($url, '/userfiles/'))) { // internal link check.
+                            !file_exists($CFG->docroot . strstr($url, '/' . $CFG->userfilesfolder . '/'))) { // internal link check.
                             $icon = icon("ban");
                             $link = 'javascript: void(0);';
                             $title = "File Not Found: $url";
@@ -247,7 +247,7 @@ global $CFG;
                 $filetypes = '/([\.[aA][aA][cC]|\.[mM][4][aA])/';
                 if (preg_match($filetypes, $match[2])) {
                     //make internal links full paths
-                    $url = strstr($match[2], $CFG->directory . '/userfiles') && !strstr($match[2], $CFG->wwwroot) ? str_replace($CFG->directory . '/userfiles', $CFG->wwwroot . '/userfiles', $match[2]) : $match[2];
+                    $url = strstr($match[2], $CFG->userfilespath) && !strstr($match[2], $CFG->wwwroot) ? str_replace($CFG->userfilespath, $CFG->userfilesurl, $match[2]) : $match[2];
                     //remove target from urls
                     if (preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/', $url, $target, PREG_OFFSET_CAPTURE)) { $url = str_replace($target[0], "", $url);}
                     $url = preg_replace('/([\'|\"])/', '', $url);
@@ -273,7 +273,7 @@ global $CFG;
 
                     $found = true;
                     //make internal links full paths
-                    $url = strstr($match[2], $CFG->directory . '/userfiles') && !strstr($match[2], $CFG->wwwroot) ? str_replace($CFG->directory . '/userfiles', $CFG->wwwroot . '/userfiles', $match[2]) : $match[2];
+                    $url = strstr($match[2], $CFG->userfilespath) && !strstr($match[2], $CFG->wwwroot) ? str_replace($CFG->userfilespath, $CFG->userfilesurl, $match[2]) : $match[2];
                     //remove target from urls
                     if (preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/', $url, $target, PREG_OFFSET_CAPTURE)) { $url = str_replace($target[0], "", $url);}
                     $url = preg_replace('/([\'|\"])/', '', $url);
@@ -304,7 +304,7 @@ global $CFG;
                 $filetypes = '/([\.[fF][lL][vV]|\.[mM][pP][4])/';
                 if (preg_match($filetypes, $match[2])) {
                     //make internal links full paths
-                    $url = strstr($match[2], $CFG->directory . '/userfiles') && !strstr($match[2], $CFG->wwwroot) ? str_replace($CFG->directory . '/userfiles', $CFG->wwwroot . '/userfiles', $match[2]) : $match[2];
+                    $url = strstr($match[2], $CFG->userfilespath) && !strstr($match[2], $CFG->wwwroot) ? str_replace($CFG->userfilespath, $CFG->userfilesurl, $match[2]) : $match[2];
                     //remove target from urls
                     if (preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/', $url, $target, PREG_OFFSET_CAPTURE)) { $url = str_replace($target[0], "", $url);}
                     $url = preg_replace('/([\'|\"])/', '', $url);
@@ -369,12 +369,12 @@ global $CFG;
         foreach ($matches as $match) {
             $url = $match[2];
             //make internal links full paths
-            $localdirectory = $CFG->dirroot . "/" . substr($url, strpos($url, "userfiles"));
+            $localdirectory = $CFG->dirroot . "/" . substr($url, strpos($url, $CFG->userfilesfolder));
             if (substr($localdirectory, -1) == '/') {
                 $localdirectory = substr($localdirectory, 0, -1);
             }
 
-            if (is_readable($localdirectory) && strpos($url, 'userfiles') !== false) {
+            if (is_readable($localdirectory) && strpos($url, $CFG->userfilesfolder) !== false) {
                 $gallery = ""; $galleryid = uniqid("autogallery");
                 if (is_dir($localdirectory)) { // directory
                     $captions = get_file_captions($localdirectory); // get the captions if they exist.

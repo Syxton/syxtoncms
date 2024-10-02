@@ -7,11 +7,11 @@
  * $Revision: .9
  ***************************************************************************/
 if (!isset($CFG) || !defined('LIBHEADER')) {
-	$sub = '';
-	while (!file_exists($sub . 'lib/header.php')) {
-		$sub = $sub == '' ? '../' : $sub . '../';
-	}
-	include($sub . 'lib/header.php');
+    $sub = '';
+    while (!file_exists($sub . 'lib/header.php')) {
+        $sub = $sub == '' ? '../' : $sub . '../';
+    }
+    include($sub . 'lib/header.php');
 }
 
 //Retrieve from Javascript
@@ -27,21 +27,21 @@ $email = $payment_method = $disable = "";
 
 // Preview of template.
 if (isset($preview)) {
-	$disable = 'disabled="disabled"';
-	$event = [
-		"name" => "Preview Event",
-		"event_begin_date" => date("j"),
-		"event_end_date" => date("j"),
-		"fee_full" => 0,
-		"fee_min" => 0,
-		"sale_fee" => 0,
-		"sale_end" => 0,
-	];
+    $disable = 'disabled="disabled"';
+    $event = [
+        "name" => "Preview Event",
+        "event_begin_date" => date("j"),
+        "event_end_date" => date("j"),
+        "fee_full" => 0,
+        "fee_min" => 0,
+        "sale_fee" => 0,
+        "sale_end" => 0,
+    ];
 }
 
 // Get full event info
 if ($eventid) {
-	$event = get_event($eventid);
+    $event = get_event($eventid);
 }
 
 //output any passed on hidden info from previous registrations
@@ -51,15 +51,15 @@ $items = clean_myvar_opt("items", "string", "");
 $picturecost = 5; //if no picture is needed, set to false
 
 if ($show_again) { //This is not the first time through
-	if ($autofill) { //Same person..so auto fill all items
-		$last_reg = get_db_result("SELECT * FROM events_registrations_values WHERE regid='$regid'");
-		while ($reginfo = fetch_row($last_reg)) {
-			${$reginfo["elementname"]} = $reginfo["value"];
-		}
-		$email = get_db_field("email", "events_registrations", "regid=$regid");
-	} else { //Different person...but auto fill the payment method and hide it.
-		$payment_method = get_db_field("value", "events_registrations_values", "elementname='payment_method' AND regid=$regid");
-	}
+    if ($autofill) { //Same person..so auto fill all items
+        $last_reg = get_db_result("SELECT * FROM events_registrations_values WHERE regid='$regid'");
+        while ($reginfo = fetch_row($last_reg)) {
+            ${$reginfo["elementname"]} = $reginfo["value"];
+        }
+        $email = get_db_field("email", "events_registrations", "regid=$regid");
+    } else { //Different person...but auto fill the payment method and hide it.
+        $payment_method = get_db_field("value", "events_registrations_values", "elementname='payment_method' AND regid=$regid");
+    }
 }
 
 if (!$show_again) {
@@ -79,56 +79,56 @@ echo '
     </td>
   </tr>
   <tr><td colspan="2"><p>
-    <a target="policy" href="' . $CFG->wwwroot . '/userfiles/1/file/regpolicy.html">Registration Policy</a>
+    <a target="policy" href="' . $CFG->userfilesurl . '/1/file/regpolicy.html">Registration Policy</a>
   </p></td></tr>';
 
 if ($autofill) {
  echo '  <tr>
             <td>
-          		Camper: ' . $Camper_Name . '
-			<input type="hidden" name="Camper_Name" value="' . $Camper_Name . '" />
-			<input type="hidden" name="email" value="' . $email . '" />
-			<input type="hidden" name="Camper_Birth_Date" value="' . $Camper_Birth_Date . '" />
-			<input type="hidden" name="Camper_Age" value="' . $Camper_Age . '" />
-			<input type="hidden" name="Camper_Grade" value="' . $Camper_Grade . '" />
-			<input type="hidden" name="Camper_Gender" value="' . $Camper_Gender . '" />
-			<input type="hidden" name="Camper_Home_Congregation" value="' . $Camper_Home_Congregation . '" />
-			<input type="hidden" name="Parent_Address_Line1" value="' . $Parent_Address_Line1 . '" />
-			<input type="hidden" name="Parent_Address_Line2" value="' . $Parent_Address_Line2 . '" />
-			<input type="hidden" name="Parent_Address_City" value="' . $Parent_Address_City . '" />
-			<input type="hidden" name="Parent_Address_State" value="' . $Parent_Address_State . '" />
-			<input type="hidden" name="Parent_Address_Zipcode" value="' . $Parent_Address_Zipcode . '" />
-			<input type="hidden" name="Parent_Phone1" value="' . $Parent_Phone1 . '" />
-			<input type="hidden" name="Parent_Phone2" value="' . $Parent_Phone2 . '" />
-			<input type="hidden" name="Parent_Phone3" value="' . $Parent_Phone3 . '" />
-			<input type="hidden" name="Parent_Phone4" value="' . $Parent_Phone4 . '" />
-			<input type="hidden" name="HealthConsentFrom" value="' . $HealthConsentFrom . '" />
-			<input type="hidden" name="HealthConsentTo" value="' . $HealthConsentTo . '" />
-			<input type="hidden" name="HealthMemberName" value="' . $HealthMemberName . '" />
-			<input type="hidden" name="HealthRelationship" value="' . $HealthRelationship . '" />
-			<input type="hidden" name="HealthInsurance" value="' . $HealthInsurance . '" />
-			<input type="hidden" name="HealthIdentification" value="' . $HealthIdentification . '" />
-			<input type="hidden" name="HealthBenefitCode" value="' . $HealthBenefitCode . '" />
-			<input type="hidden" name="HealthAccount" value="' . $HealthAccount . '" />
-			<input type="hidden" name="HealthExpirationDate" value="' . $HealthExpirationDate . '" />
-			<input type="hidden" name="HealthHistory" value="' . $HealthHistory . '" />
-			<input type="hidden" name="HealthAllergies" value="' . $HealthAllergies . '" />
-			<input type="hidden" name="HealthExisting" value="' . $HealthExisting . '" />
-			<input type="hidden" name="HealthMedicines" value="' . $HealthMedicines . '" />
-			<input type="hidden" name="HealthTetanusDate" value="' . $HealthTetanusDate . '" />
-		</td>
+                  Camper: ' . $Camper_Name . '
+            <input type="hidden" name="Camper_Name" value="' . $Camper_Name . '" />
+            <input type="hidden" name="email" value="' . $email . '" />
+            <input type="hidden" name="Camper_Birth_Date" value="' . $Camper_Birth_Date . '" />
+            <input type="hidden" name="Camper_Age" value="' . $Camper_Age . '" />
+            <input type="hidden" name="Camper_Grade" value="' . $Camper_Grade . '" />
+            <input type="hidden" name="Camper_Gender" value="' . $Camper_Gender . '" />
+            <input type="hidden" name="Camper_Home_Congregation" value="' . $Camper_Home_Congregation . '" />
+            <input type="hidden" name="Parent_Address_Line1" value="' . $Parent_Address_Line1 . '" />
+            <input type="hidden" name="Parent_Address_Line2" value="' . $Parent_Address_Line2 . '" />
+            <input type="hidden" name="Parent_Address_City" value="' . $Parent_Address_City . '" />
+            <input type="hidden" name="Parent_Address_State" value="' . $Parent_Address_State . '" />
+            <input type="hidden" name="Parent_Address_Zipcode" value="' . $Parent_Address_Zipcode . '" />
+            <input type="hidden" name="Parent_Phone1" value="' . $Parent_Phone1 . '" />
+            <input type="hidden" name="Parent_Phone2" value="' . $Parent_Phone2 . '" />
+            <input type="hidden" name="Parent_Phone3" value="' . $Parent_Phone3 . '" />
+            <input type="hidden" name="Parent_Phone4" value="' . $Parent_Phone4 . '" />
+            <input type="hidden" name="HealthConsentFrom" value="' . $HealthConsentFrom . '" />
+            <input type="hidden" name="HealthConsentTo" value="' . $HealthConsentTo . '" />
+            <input type="hidden" name="HealthMemberName" value="' . $HealthMemberName . '" />
+            <input type="hidden" name="HealthRelationship" value="' . $HealthRelationship . '" />
+            <input type="hidden" name="HealthInsurance" value="' . $HealthInsurance . '" />
+            <input type="hidden" name="HealthIdentification" value="' . $HealthIdentification . '" />
+            <input type="hidden" name="HealthBenefitCode" value="' . $HealthBenefitCode . '" />
+            <input type="hidden" name="HealthAccount" value="' . $HealthAccount . '" />
+            <input type="hidden" name="HealthExpirationDate" value="' . $HealthExpirationDate . '" />
+            <input type="hidden" name="HealthHistory" value="' . $HealthHistory . '" />
+            <input type="hidden" name="HealthAllergies" value="' . $HealthAllergies . '" />
+            <input type="hidden" name="HealthExisting" value="' . $HealthExisting . '" />
+            <input type="hidden" name="HealthMedicines" value="' . $HealthMedicines . '" />
+            <input type="hidden" name="HealthTetanusDate" value="' . $HealthTetanusDate . '" />
+        </td>
      </tr>';
 } else {
  echo '
-		<tr>
-			<td class="field_title" align="right" style="width:115px;">
-			<strong><font size="2">Contact Email&nbsp;*&nbsp;</font></strong>
-			</td>
-			<td class="field_input" align="left">
-			<input type="text" id="email" name="email" size="40" value="' . $email . '"/>
-			</td>
-		</tr><tr><td></td><td class="field_input"><span id="email_error" class="error_text"></span></td></tr>
- 		<tr>
+        <tr>
+            <td class="field_title" align="right" style="width:115px;">
+            <strong><font size="2">Contact Email&nbsp;*&nbsp;</font></strong>
+            </td>
+            <td class="field_input" align="left">
+            <input type="text" id="email" name="email" size="40" value="' . $email . '"/>
+            </td>
+        </tr><tr><td></td><td class="field_input"><span id="email_error" class="error_text"></span></td></tr>
+         <tr>
             <td align="right"><strong><font size="2">Camper&nbsp;Name&nbsp;<strong>(Last,&nbsp;First&nbsp;Middle)</strong>&nbsp;*&nbsp;</font></strong></td>
             <td align="left"><input name="Camper_Name" size="40" type="text" /></td>
           </tr>
@@ -327,7 +327,7 @@ if (!$show_again) {
       </textarea></td>
     </tr>';
 } else {
-	echo '<tr><td></td><td><input type="hidden" name="payment_method" value="' . $payment_method . '" /></td></tr>';
+    echo '<tr><td></td><td><input type="hidden" name="payment_method" value="' . $payment_method . '" /></td></tr>';
 }
 
 echo '<tr>
@@ -339,7 +339,7 @@ echo '<tr>
       </table>';
 
 if (!$show_again) {
-	echo '</div></form>';
+    echo '</div></form>';
 }
 
 echo js_code_wrap('prepareInputsForHints();');

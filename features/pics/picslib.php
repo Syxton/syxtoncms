@@ -114,12 +114,11 @@ global $CFG, $MYVARS, $USER;
 
 function get_gallery_links($pageid, $featureid, $allsections = true) {
 global $CFG;
-    $path = $CFG->wwwroot . '/features/pics/files/';
-
+    $path = $CFG->userfilesurl . '/pics/files/';
     if ($pageid === $CFG->SITEID) {
         $section = $allsections ? "" : "AND p.featureid=$featureid";
         $SQL = "SELECT * FROM pics p LEFT JOIN pics_galleries pg ON pg.galleryid = p.galleryid WHERE (p.pageid='$pageid' $section AND p.sitehidden=0) OR (p.siteviewable=1 and p.sitehidden=0) ORDER BY p.galleryid DESC,p.dateadded ASC";
-  } else {
+    } else {
         $SQL = "SELECT * FROM pics p LEFT JOIN pics_galleries pg ON pg.galleryid = p.galleryid WHERE p.pageid='$pageid' AND p.featureid='$featureid' AND p.pagehidden=0 ORDER BY p.galleryid DESC,p.dateadded ASC";
     }
 
@@ -296,9 +295,9 @@ global $CFG, $USER;
 
         $returnme = '';
         while ($row = fetch_row($pages)) {
-            if (file_exists($CFG->dirroot . '/features/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row['imagename'])) {
-                $filepath = $CFG->dirroot . '/features/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row['imagename'];
-                $webpath = $CFG->wwwroot . '/features/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row['imagename'];
+            if (file_exists($CFG->userfilespath . '/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row['imagename'])) {
+                $filepath = $CFG->userfilespath . '/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row['imagename'];
+                $webpath = $CFG->userfilesurl . '/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row['imagename'];
                 $mypicture = getimagesize($filepath);
             } else {
                 $filepath = $CFG->dirroot . "/images/not_found.png";
@@ -439,7 +438,7 @@ global $CFG, $USER;
 function pics_delete($pageid, $featureid) {
 global $CFG;
     if (isset($featureid)) { //Pics section delete
-        recursive_delete($CFG->dirroot . '/features/pics/files/' . $pageid . "/" . $featureid);
+        recursive_delete($CFG->userfilespath . '/pics/files/' . $pageid . "/" . $featureid);
 
         $params = [
             "pageid" => $pageid,

@@ -1,4 +1,13 @@
 <?php
+
+if (!isset($CFG) || !defined('LIBHEADER')) {
+    $sub = '';
+    while (!file_exists($sub . 'lib/header.php')) {
+        $sub = $sub == '' ? '../' : $sub . '../';
+    }
+    include($sub . 'lib/header.php');
+}
+
 $version = "9.14.0";
 if (session_id() == '') {
 	session_start();
@@ -78,7 +87,7 @@ $config = [
 	| with start and final /
 	|
 	*/
-	'upload_dir' => $directory.'/userfiles/',
+	'upload_dir' => $directory . '/' . $CFG->userfilesfolder . '/',
 	/*
 	|--------------------------------------------------------------------------
 	| relative path from filemanager folder to upload folder
@@ -87,7 +96,7 @@ $config = [
 	| with final /
 	|
 	*/
-	'current_path' => '../../../../userfiles/',
+	'current_path' => '../../../../' . $CFG->userfilesfolder . '/',
 
 	/*
 	|--------------------------------------------------------------------------
@@ -98,7 +107,7 @@ $config = [
 	| DO NOT put inside upload folder
 	|
 	*/
-	'thumbs_base_path' => '../../../../userfiles/thumbs/',
+	'thumbs_base_path' => '../../../../' . $CFG->userfilesfolder . '/thumbs/',
 
 	/*
 	|--------------------------------------------------------------------------
@@ -570,9 +579,9 @@ return array_merge(
 		'tui_defaults_config' => [
 			//'common.bi.image'                   => $config['common.bi.image'],
 			//'common.bisize.width'               => $config['common.bisize.width'],
-			//'common.bisize.height'              => $config['common.bisize.height'], 
+			//'common.bisize.height'              => $config['common.bisize.height'],
 			'common.backgroundImage'            => $config['common.backgroundImage'],
-			'common.backgroundColor'            => $config['common.backgroundColor'], 
+			'common.backgroundColor'            => $config['common.backgroundColor'],
 			'common.border'                     => $config['common.border'],
 			'header.backgroundImage'            => $config['header.backgroundImage'],
 			'header.backgroundColor'            => $config['header.backgroundColor'],
