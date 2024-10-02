@@ -25,12 +25,12 @@ main_body_template||
 page_masthead_template||
 <div class="nav_header">
     <div id="logo_div">
-        <a href="||wwwroot||">
+        <a href="||brandingpath||">
             ||hasmobilelogo{{
-                <img id="logosmall" loading="lazy" src="||wwwroot||/branding/logos/||mobilelogofile||" alt="||sitename|| Logo" />
+                <img id="logosmall" loading="lazy" src="||brandingpath||/branding/logos/||mobilelogofile||" alt="||sitename|| Logo" />
             }}hasmobilelogo||
             ||haslogo{{
-                <img id="logo" loading="lazy" src="||wwwroot||/branding/logos/||logofile||" alt="||sitename|| Logo" />
+                <img id="logo" loading="lazy" src="||brandingpath||/branding/logos/||logofile||" alt="||sitename|| Logo" />
                 //OR//
                 <div id="logo">
                 ||sitename||

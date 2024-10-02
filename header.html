@@ -1,11 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <?php
+        // Google Analytics
+        if (isset($CFG->analytics) && !empty($CFG->analytics)) {
+            echo '
+                <!-- Global site tag (gtag.js) - Google Analytics -->
+                <script async src="https://www.googletagmanager.com/gtag/js?id=' .$CFG->analytics . '"></script>
+                <script async>
+                    window.dataLayer = window.dataLayer || [];
+                    function gtag(){dataLayer.push(arguments);}
+                    gtag("js", new Date());
+                    gtag("config", "' . $CFG->analytics . '");
+                </script>
+                <!-- End Google Analytics -->
+            ';
+        }
+    ?>
     <title><?php echo $PAGE->title ?></title>
     <meta name="description" content="<?php echo $PAGE->description ?>"/>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="shortcut icon" href="<?php echo $CFG->wwwroot ?>/branding/logos/favicon.ico" />
+    <link rel="shortcut icon" href="<?php echo $CFG->userfilesurl ?>/branding/logos/favicon.ico" />
 
     <!--[if lt IE 7]>
     <style type="text/css">

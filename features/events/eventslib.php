@@ -996,7 +996,7 @@ global $CFG;
     $protocol = get_protocol();
 
     if (!empty($CFG->logofile)) {
-        $email = '<img src="' . $protocol.$CFG->wwwroot . '/branding/logos/' . $CFG->logofile . '" style="max-width: 80%;" /><br />';
+        $email = '<img src="' . $protocol.$CFG->userfilesurl . '/branding/logos/' . $CFG->logofile . '" style="max-width: 80%;" /><br />';
     } else {
         $email = '<h1>' . $CFG->sitename . '</h1>';
     }

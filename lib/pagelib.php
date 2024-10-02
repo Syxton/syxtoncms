@@ -230,7 +230,7 @@ global $CFG, $USER, $PAGE;
         $header_text = $styles['pagenamefontcolor'] ?? "";
 
         $params = [
-            "wwwroot" => $CFG->wwwroot,
+            "brandingpath" => $CFG->userfilesurl,
             "haslogo" => isset($CFG->logofile),
             "logofile" => $CFG->logofile,
             "hasmobilelogo" => !empty($CFG->mobilelogofile),
