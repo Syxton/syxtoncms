@@ -1332,8 +1332,8 @@ function get_event_length($event) {
 
     if (empty($event['allday'])) {
         $length .= "<br />from ";
-        $start = convert_time($event['event_begin_time']);
-        $finish = convert_time($event['event_end_time']);
+        $start = twelvehourtime($event['event_begin_time']);
+        $finish = twelvehourtime($event['event_end_time']);
         $length .= $start . " to " . $finish;
     }
     return $length;

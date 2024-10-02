@@ -73,8 +73,8 @@ global $CFG, $MYVARS;
 
             $eventlist .= '<div class="popupEventDescription">';
             if ($event["starttime"] != "" && $event["starttime"] != "NULL") {
-                $eventlist .= 'Time: ' . convert_time($event["starttime"]) . ' - ' .
-                convert_time($event["endtime"]) . "<br />";
+                $eventlist .= 'Time: ' . twelvehourtime($event["starttime"]) . ' - ' .
+                twelvehourtime($event["endtime"]) . "<br />";
             }
             $location = get_db_field("location", "events_locations", "id='" . $event["location"] . "'");
             $eventlist .= '<strong>Location:</strong> ' . $location;

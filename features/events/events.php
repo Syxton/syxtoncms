@@ -294,37 +294,78 @@ global $CFG, $USER;
 
 function info() {
 global $CFG;
-     $eventid = clean_myvar_opt("eventid", "int", false);
+    $eventid = clean_myvar_opt("eventid", "int", false);
+    $end = $allday = "";
 
-     if ($eventid && $event = get_event($eventid)) {
-          $location = get_db_row("SELECT * FROM events_locations WHERE id='" . $event["location"] . "'");
-          date_default_timezone_set("UTC");
+    if ($eventid && $event = get_event($eventid)) {
+        $location = get_db_row("SELECT * FROM events_locations WHERE id = ||id||", ["id" => $event["location"]]);
+        date_default_timezone_set("UTC");
 
-          echo '<div style="text-align:center"><h1>' . $event["name"] . '</h1>' . $event["byline"] . '</div>';
-          echo '<div>' . $event["description"]. '</div><br /><center>';
+        if ($event['event_begin_date'] != $event['event_end_date']) { // Multi day event
+            $end = ' to ' . date('F \t\h\e jS, Y', $event["event_end_date"]);
+        }
 
-          if ($event['event_begin_date'] != $event['event_end_date']) { //Multi day event
-                echo 'When: ' . date('F \t\h\e jS, Y', $event["event_begin_date"]) . ' to ' . date('F \t\h\e jS, Y', $event["event_end_date"]) . '<br />';
-          } else {
-                echo 'When: ' . date('F \t\h\e jS, Y', $event["event_begin_date"]) . '<br />';
-          }
+        if ($event['allday'] != 1) { // All day event
+            $allday = '
+                <tr>
+                    <td style="vertical-align: top;padding:5px;">
+                        <strong>Times:</strong>
+                    </td>
+                    <td style="vertical-align: top;padding:5px;">
+                    From ' . twelvehourtime($event['event_begin_time']) . ' until ' . twelvehourtime($event['event_end_time']) . '
+                    </td>
+                </tr>';
+        }
 
-          echo '<br /><table style="font-size:1em"><tr><td>Where: </td><td>' . $location["location"] . '</td></tr>
-          <tr><td></td><td>' . $location["address_1"] . '<br />' . $location["address_2"] . '&nbsp;' . $location["zip"] . '</td></tr></table>
-          <span class="centered_span"><a title="Get Directions" href="' . $CFG->wwwroot . '/features/events/googlemaps.php?address_1=' . $location["address_1"] . '&address_2=' . $location["address_2"] . '">Get Directions</a></span><br />';
+        $return = '
+            <div style="text-align:center;padding: 10px;">
+                <h1>' . $event["name"] . '</h1>' . $event["byline"] . '
+            </div>
+            <div style="text-align:center;padding: 10px;">
+                <div style="display: inline-block; vertical-align: top; text-align:left">
+                    ' . $event["description"]. '
+                </div>
+            </div>
+            <div style="text-align:center;padding: 10px;">
+                <table style="display: inline-block;text-align: left;">
+                    <tr>
+                        <td style="vertical-align: top;padding:5px;">
+                            <strong>When:</strong>
+                        </td>
+                        <td style="vertical-align: top;padding:5px;">
+                            ' . date('F \t\h\e jS, Y', $event["event_begin_date"]) . $end . '
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;padding:5px;">
+                            <strong>Where:</strong>
+                        </td>
+                        <td style="vertical-align: top;padding:5px;">
+                            ' . $location["location"] . '<br />
+                            ' . $location["address_1"] . '<br />
+                            ' . $location["address_2"] . '&nbsp;' . $location["zip"] . '<br />
+                            <a title="Get Directions" href="' . $CFG->wwwroot . '/features/events/googlemaps.php?address_1=' . $location["address_1"] . '&address_2=' . $location["address_2"] . '">
+                                Get Directions
+                            </a>
+                        </td>
+                    </tr>
+                    ' . $allday . '
+                </table>
+                <br />
+                For more information about this event
+                <br />
+                contact ' . $event["contact"] . ' at ' . $event["email"] . '
+                <br />
+                or call ' . $event["phone"] . '.
+            </div>';
 
-          if ($event['allday'] != 1) { //All day event
-              echo 'Times: ' . convert_time($event['event_begin_time']) . ' to ' . convert_time($event['event_end_time']) . '. <br />';
-          }
-
-          echo '<br />For more information about this event<br /> contact ' . $event["contact"] . ' at ' . $event["email"] . '<br />or call ' . $event["phone"] . '.</center><br />';
-
-          // Log
-          log_entry("events", $eventid, "View Event Info");
-     } else {
-          // Log
-          log_entry("events", "-", "Variable manipulation");
-     }
+        echo $return;
+        // Log
+        log_entry("events", $eventid, "View Event Info");
+    } else {
+        // Log
+        log_entry("events", "-", "Variable manipulation");
+    }
 
 }
 
