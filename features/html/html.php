@@ -100,13 +100,12 @@ function edithtml() {
             ], "script");
         } else {
             $returnme .= '
-                <div style="width:100%;text-align:center;">
-                    ' . icon("person-digging", 4) . '
-                </div>
-                <div style="width:100%;text-align:center;">
-                    This area is currently being edited by: ' . get_user_name($row['edit_user']) . '
-                </div>
-                ';
+                <div style="padding: 10px">
+                    <div style="padding: 5px;text-align:center;">' . icon("person-digging", 10) . '</div>
+                    <div style="padding: 25px;text-align:center;">
+                        This area is currently being edited by: ' . get_user_name($row['edit_user']) . '
+                    </div>
+                </div>';
         }
     } catch (\Throwable $e) {
         $error = $e->getMessage();
