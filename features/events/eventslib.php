@@ -2554,7 +2554,10 @@ global $CFG;
             'scope' => 'publish_stream',
             'redirect_uri' => $CFG->wwwroot . '/features/events/events_ajax.php?action=send_facebook_message&info=' . base64_encode(serialize([$event["eventid"], $name, $config])),
         ]);
-        return '<a title="Tell your friends about ' . $name . '\'s registration for ' . $event["name"] . '!" href="' . $login_url . '" target="_blank"><img src="' . $CFG->wwwroot . '/images/facebook_button.png" /></a>';
+        return '
+            <a title="Tell your friends about ' . $name . '\'s registration for ' . $event["name"] . '!" href="' . $login_url . '" target="_blank">
+                <img src="' . $CFG->wwwroot . '/features/events/images/facebook_button.png" />
+            </a>';
     }
     return "";
 }

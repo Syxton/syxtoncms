@@ -101,7 +101,7 @@ function edithtml() {
         } else {
             $returnme .= '
                 <div style="width:100%;text-align:center;">
-                    <img src="' . $CFG->wwwroot . '/images/underconstruction.png" />
+                    ' . icon("person-digging", 4) . '
                 </div>
                 <div style="width:100%;text-align:center;">
                     This area is currently being edited by: ' . get_user_name($row['edit_user']) . '

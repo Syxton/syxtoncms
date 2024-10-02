@@ -300,8 +300,8 @@ global $CFG, $USER;
                 $webpath = $CFG->userfilesurl . '/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row['imagename'];
                 $mypicture = getimagesize($filepath);
             } else {
-                $filepath = $CFG->dirroot . "/images/not_found.png";
-                $webpath = $CFG->wwwroot . "/images/not_found.png";
+                $filepath = $CFG->dirroot . "/features/pics/images/not_found.png";
+                $webpath = $CFG->wwwroot . "/features/pics/images/not_found.png";
                 $mypicture = getimagesize($filepath);
             }
 
