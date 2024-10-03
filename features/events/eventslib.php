@@ -321,13 +321,7 @@ global $CFG, $USER;
                             <td>
                                 <div class="event_title" style="color:gray;">
                                     ' . $confirmed . '
-                                    ' . make_modal_links([
-                                            "title" => $event["name"],
-                                            "path" => action_path("events") . "info&pageid=$pageid&eventid=" . $event['eventid'],
-                                            "iframe" => true,
-                                            "width" => "700",
-                                            "height" => "650",
-                                        ]) . '
+                                    ' . get_event_info_link($event, $pageid) . '
                                 </div>
                                 <span style="font-size:.85em;padding-left:5px;">
                                     ' . stripslashes(strip_tags($event["byline"], '<a>')) . '
@@ -764,7 +758,7 @@ function get_event_info_link($event, $pageid) {
         "title" => $event['name'],
         "path" => action_path("events") . "info&pageid=$pageid&eventid=" . $event['eventid'],
         "iframe" => true,
-        "width" => "700",
+        "width" => "800",
     ]);
 }
 

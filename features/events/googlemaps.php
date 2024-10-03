@@ -6,13 +6,13 @@
  * $Date: 2/18/08
  * $Revision: .12
  ***************************************************************************/
- 
+
  if (!isset($CFG)) {
-	$sub = '';
-	while (!file_exists($sub . 'header.php')) {
-		$sub = $sub == '' ? '../' : $sub . '../';
-	}
-	include($sub . 'header.php');
+    $sub = '';
+    while (!file_exists($sub . 'header.php')) {
+        $sub = $sub == '' ? '../' : $sub . '../';
+    }
+    include($sub . 'header.php');
 }
 
 callfunction("google_maps");
@@ -22,105 +22,127 @@ global $CFG, $MYVARS;
     $address_1 = clean_myvar_opt("from", "string", clean_myvar_opt("address_1", "string", ""));
     $address_2 = clean_myvar_opt("to", "string", clean_myvar_opt("address_2", "string", ""));
     echo '
-    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
     <html xmlns="http://www.w3.org/1999/xhtml"  xmlns:v="urn:schemas-microsoft-com:vml">
-    <head>
-        <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-        <title>Directions</title>
-        <script src="//maps.googleapis.com/maps/api/js?v=3&key=' . $CFG->googleapikey . '" type="text/javascript"></script>
-        <style type="text/css">
-        body {
-            font-family: Verdana, Arial, sans serif;
-            font-size: 11px;
-            margin: 2px;
-        }
-        table.directions th {
-        background-color:#EEEEEE;
-        }
-            
-        img {
-            color: #000000;
-        }
-        </style>
-        <script type="text/javascript">
-        function initialize() {
-            var directionsService = new google.maps.DirectionsService();
-            var directionsRenderer = new google.maps.DirectionsRenderer();
-            var chicago = new google.maps.LatLng(41.850033, -87.6500523);
-            var mapOptions = {
-              zoom:7,
-              center: chicago
-            }
-            var map = new google.maps.Map(document.getElementById(\'map_canvas\'), mapOptions);
-            directionsRenderer.setMap(map);
-            directionsRenderer.setPanel(document.getElementById(\'directions\'));
-          }
-          
-          function calcRoute() {
-            var start = document.getElementById(\'toAddress\').value;
-            var end = document.getElementById(\'fromAddress\').value;
-            var request = {
-              origin:start,
-              destination:end,
-              travelMode: \'DRIVING\'
-            };
-            directionsService.route(request, function(response, status) {
-              if (status == \'OK\') {
-                directionsRenderer.setDirections(response);
-              }
-            });
-          }
-        </script>
-    </head>
-    <body onload="initialize()" onunload="GUnload()">
-    
-    <h2>Directions to Location</h2>
-    <form action="#" onsubmit="initialize(); return false">
+        <head>
+            <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+            <title>Directions</title>
+            <script>
+                let map, infoWindow, geocoder;
+                var current = { lat: 0, lng: 0 };
 
-    <table>
-    <tr><th align="right">From:&nbsp;</th>
+                function initMap() {
+                    const directionsService = new google.maps.DirectionsService();
+                    const directionsRenderer = new google.maps.DirectionsRenderer();
+                    directionsRenderer.setPanel(document.getElementById("sidebar"));
+                    map = new google.maps.Map(document.getElementById("map"), {
+                        center: current,
+                        zoom: 6,
+                    });
+                    geocoder = new google.maps.Geocoder();
 
-    <td><input type="text" size="25" id="fromAddress" name="from"
-        value="' . $CFG->defaultaddress . '"/></td>
-    <th align="right">&nbsp;&nbsp;To:&nbsp;</th>
-    <td align="right"><input type="text" size="25" id="toAddress" name="to"
-        value="' . $address_1 . ' ' . $address_2 . '" /></td></tr>
+                    directionsRenderer.setMap(map);
+                    infoWindow = new google.maps.InfoWindow();
 
-    <tr><th></th>
-    <td colspan="3"><select id="locale" name="locale" style="display:none;">
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                            (position) => {
+                                const pos = {
+                                    lat: position.coords.latitude,
+                                    lng: position.coords.longitude,
+                                };
 
-        <option value="en" selected>English</option>
+                                current = pos;
+                                map.setCenter(pos);
+                            },
+                            () => {
+                                handleLocationError(true, infoWindow, map.getCenter());
+                            },
+                        );
+                    } else {
+                        // Browser does not support Geolocation
+                        handleLocationError(false, infoWindow, map.getCenter());
+                        map.setCenter(current);
+                    }
 
-        <option value="fr">French</option>
+                    calculateAndDisplayRoute(directionsService, directionsRenderer);
+                }
 
-        <option value="de">German</option>
-        <option value="ja">Japanese</option>
-        <option value="es">Spanish</option>
-        </select>
+                function myaddress() {
+                    geocoder.geocode({ address: document.getElementById("myaddress").value, })
+                        .then((result) => {
+                            const { results } = result;
+                            current = results[0].geometry.location;
+                        })
+                        .catch((e) => {
+                            alert("Geocode was not successful for the following reason: " + e);
+                        });
+                    document.getElementById("sidebar").innerHTML = "";
+                    initMap();
+                }
 
-        <input name="submit" type="submit" value="Get Directions!" />&nbsp;<input name="print" type="button" value="Print Directions" onclick="window.print();" />
+                function calculateAndDisplayRoute(directionsService, directionsRenderer) {
+                    geocoder.geocode({ address: "' . $address_1 . " " . $address_2 . '", })
+                        .then((result) => {
+                            const { results } = result;
+                            destination = results[0].geometry.location;
 
-    </td></tr>
-    </table>
+                            directionsService.route({
+                                origin: current,
+                                destination: destination,
+                                travelMode: google.maps.TravelMode.DRIVING,
+                            }).then((response) => {
+                                directionsRenderer.setDirections(response);
+                            }).catch((e) => window.alert("Directions request failed due to " + status));
+                        })
+                        .catch((e) => {
+                            alert("Geocode was not successful for the following reason: " + e);
+                        });
+                }
 
-        
-    </form>
+                function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+                    infoWindow.setPosition(pos);
+                    infoWindow.setContent(
+                        browserHasGeolocation
+                        ? "Error: The Geolocation service failed."
+                        : "Error: Your browser does not support geolocation.",
+                    );
+                    infoWindow.open(map);
+                }
 
-        <br/>
-        <table class="directions">
-        <tr><th>Formatted Directions</th><th>Map</th></tr>
-
-        <tr>
-        <td valign="top"><div id="directions" style="width: 275px"></div></td>
-        <td valign="top"><div id="map_canvas" style="width: 310px; height: 400px"></div></td>
-
-        </tr>
-        </table> 
-    </body>
-    </html>
-
-    ';
+                window.initMap = initMap;
+            </script>
+        </head>
+        <body>
+            <script
+            src="https://maps.googleapis.com/maps/api/js?key=' . $CFG->googleapikey . '&callback=initMap&v=weekly"
+            defer
+            ></script>
+            <h2>Directions to Event</h2>
+            <table class="directions" style="width: 100%">
+                <tr>
+                    <td colspan="2">
+                        My Location: <input type="text" id="myaddress" value="My Location" />
+                        <button onclick="myaddress()">
+                            Get Directions
+                        </button>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Formatted Directions</th>
+                    <th>Map</th>
+                </tr>
+                <tr>
+                    <td valign="top" style="width: 50%">
+                        <div id="sidebar"></div>
+                    </td>
+                    <td valign="top" style="width: 50%">
+                        <div id="map" style="height: 800px"></div>
+                    </td>
+                </tr>
+            </table>
+        </body>
+    </html>';
 }
 
 ?>
