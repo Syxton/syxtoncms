@@ -71,10 +71,6 @@ fieldset {
     border: 0
 }
 
-html,
-body {
-}
-
 body {
     font-family: Geneva, Verdana, Arial, Helvetica, sans-serif;
     font-size: .8em;
@@ -212,8 +208,41 @@ table.searchresults tr:hover {
     align-items: center;
 }
 
-.html_notfullscreen {
-    text-align: right
+.area_side .html_grid {
+    flex-direction: column;
+}
+
+.html_fullscreen_button {
+    text-align: right;
+    font-size: 2em;
+    line-height: 0;
+}
+
+.htmlblock .fullscreenbutton:before {
+    content: "\f065";
+    display: none;
+    font: var(--fa-font-solid);
+}
+
+.html_fullscreen .fullscreenbutton:before {
+    content: "\f78c";
+    display: none;
+    font: var(--fa-font-solid);
+}
+
+.html_grid {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+}
+
+.area_middle .html_comments_grid {
+    min-width: 50px;
+    max-width: 40%;
+}
+
+.area_side .html_comments_grid {
+    min-width: 50px;
 }
 
 .html_fullscreen {
@@ -224,6 +253,7 @@ table.searchresults tr:hover {
     right: 0;
     bottom: 0;
     height: 100vmax;
+    width: calc(100% - 40px) !important;
     z-index: 100;
     margin: 0;
     padding: 20px;
@@ -244,7 +274,7 @@ table.searchresults tr:hover {
 }
 
 .html_makecomment {
-    float: left;
+    float: right;
 }
 
 .html_comment_form {
@@ -290,16 +320,6 @@ table.searchresults tr:hover {
 
 .donation_table tr:nth-child(odd) {
     background-color: #fff;
-}
-
-.fs_icon {
-    background: url('../images/fullscreen.png');
-    height: 20px;
-    width: 20px
-}
-
-.fs_icon_on {
-    background: url('../images/fullscreen_off.png')
 }
 
 .themeinput {
@@ -752,7 +772,7 @@ div.html_template {
 }
 
 .area_middle .htmlblock {
-    display: inline;
+    width: 100%;
 }
 
 .area_middle .html_comment_button_box {
@@ -765,7 +785,6 @@ div.html_template {
 
 .area_middle .html_comments_area {
     margin: auto;
-    width: 40%;
 }
 
 .area_middle .html_comment_button {
@@ -778,7 +797,7 @@ div.html_template {
 }
 
 .html_comments {
-    width: 100%;
+    width: 95%;
     max-width: 600px;
     margin-left: auto;
     margin-right: auto;
@@ -1400,6 +1419,12 @@ button svg:hover {
     border: 2px dotted #00f;
     height: 100px !important;
     width: 100px !important;
+}
+
+.portable_box svg {
+    color: orange;
+    -webkit-filter: drop-shadow(5px 10px 8px rgba(0, 0, 0, .75));
+    filter: drop-shadow(5px 10px 8px rgba(0, 0, 0, .75));
 }
 
 .hint {
@@ -2367,9 +2392,11 @@ input[type=image] {
 }
 
 @media only screen and (max-width :1550px) {
-    .area_middle .html_comments_area {
-        float: unset;
-        width: 100%;
+    .area_middle .html_comments_grid {
+        max-width: unset;
+    }
+    .area_middle .html_grid {
+        flex-direction: column;
     }
 }
 

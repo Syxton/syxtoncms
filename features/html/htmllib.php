@@ -35,24 +35,14 @@ function get_html($htmlid) {
 
 function get_html_feature($pageid, $featureid, $settings, $abilities, $area = false, $htmlonly = false) {
 global $CFG, $USER;
-    $SQL = "SELECT * FROM html WHERE htmlid='$featureid'";
+    $SQL = "SELECT * FROM html WHERE htmlid = ||htmlid||";
     $returnme = $makecomment = $comments = $rss = "";
 
-    if ($result = get_db_result($SQL)) {
+    if ($result = get_db_result($SQL, ['htmlid' => $featureid])) {
         while ($row = fetch_row($result)) {
             $limit = $area == "side" ? $settings->html->$featureid->sidecommentlimit->setting : $settings->html->$featureid->middlecommentlimit->setting;
             if ($settings->html->$featureid->allowcomments->setting) {
                 $hidebuttons = $htmlonly ? true : false;
-                if (user_is_able($USER->userid, "viewcomments", $pageid, "html", $row['htmlid'])) {
-                    $listcomments = get_html_comments($row['htmlid'], $pageid, $hidebuttons, $limit);
-                    $hide = empty($listcomments) ? "display:none;" : "";
-
-                    $params = [
-                        "featureid" => $featureid,
-                        "comments" => $listcomments,
-                    ];
-                    $comments = fill_template("tmp/html.template", "comment_area", "html", $params);
-                }
 
                 if (user_is_able($USER->userid, "makecomments", $pageid, "html", $row['htmlid'])) {
                     $params = [
@@ -65,28 +55,38 @@ global $CFG, $USER;
                             ' . make_modal_links($params) . '
                         </div>';
                 }
+
+                if (user_is_able($USER->userid, "viewcomments", $pageid, "html", $row['htmlid'])) {
+                    $listcomments = get_html_comments($row['htmlid'], $pageid, $hidebuttons, $limit);
+                    $hide = empty($listcomments) ? "display:none;" : "";
+
+                    $params = [
+                        "makecomment" => $makecomment,
+                        "featureid" => $featureid,
+                        "comments" => $listcomments,
+                    ];
+                    $comments = fill_template("tmp/html.template", "comment_area", "html", $params);
+                }
+
+                $comments = '<div class="html_comments_grid">' . $comments . '</div>';
             }
 
-            $nomargin = 'style="margin: 12px;"';
-            if (isset($settings->html->$featureid->allowfullscreen->setting) && $settings->html->$featureid->allowfullscreen->setting == 1) { // if fullscreen option is on, remove margin.
-                $nomargin = '';
-            }
-
-            $html = '
-                <div class="htmlblock" ' . $nomargin . '>
-                    ' . fullscreen_toggle(filter($row['html'], $featureid, $settings, $area), $featureid, $settings) . '
+            $content = '
+                <div class="htmlblock">
+                    ' . fullscreen_toggle(process_html_filters($row['html'], $featureid, $settings, $area), $featureid, $settings) . '
                 </div>';
 
-                // If viewing from rss feed
+            // If viewing from rss feed
             if ($htmlonly) {
-                $middlecontents = '<div class="html_mini">
-                                                <div class="html_title">
-                                                ' . $settings->html->$featureid->feature_title->setting . '
-                                                </div>
-                                                <div class="html_text">
-                                                ' . $html . '
-                                                </div>
-                                        </div>';
+                $middlecontents = '
+                    <div class="html_mini">
+                        <div class="html_title">
+                            ' . $settings->html->$featureid->feature_title->setting . '
+                        </div>
+                        <div class="html_text">
+                            ' . $content . '
+                        </div>
+                    </div>';
                 $returnme .= fill_template("tmp/index.template", "simplelayout_template", false, ["mainmast" => page_masthead(true, true), "middlecontents" => $middlecontents]);
 
             } else { // Regular html feature viewing
@@ -122,32 +122,67 @@ global $CFG, $USER;
                 $buttons = get_button_layout("html", $row['htmlid'], $pageid);
                 $title = $settings->html->$featureid->feature_title->setting;
                 $title = '<span class="box_title_text">' . $title . '</span>';
-                $returnme .= get_css_box($rss . $title, $makecomment . $html . $comments, $buttons, null, 'html', $featureid, false, false, false, false, false, false);
+                $html_grid = '<div class="html_grid">' . $content . $comments . '</div>';
+                $returnme .= get_css_box($rss . $title, $html_grid, $buttons, null, 'html', $featureid, false, false, false, false, false, false);
             }
         }
     }
     return $returnme;
 }
 
-function filter($html, $featureid, $settings, $area = "middle") {
+/**
+ * Process all the filters for a given html feature.
+ *
+ * @param string $html
+ * @param int $featureid
+ * @param array $settings
+ * @param string $area
+ * @return string
+ */
+function process_html_filters($html, $featureid, $settings, $area = "middle") {
 global $CFG;
-    if (isset($settings->html->$featureid->documentviewer->setting) && $settings->html->$featureid->documentviewer->setting == 1) { // Document Viewer Filter
+    /**
+     * Document Viewer Filter
+     *
+     * @see filter_docviewer()
+     */
+    if (isset($settings->html->$featureid->documentviewer->setting) && $settings->html->$featureid->documentviewer->setting == 1) {
         $html = filter_docviewer($html);
     }
 
-    if (isset($settings->html->$featureid->embedaudio->setting) && $settings->html->$featureid->embedaudio->setting == 1) { // Embed audio player
+    /**
+     * Embed audio player
+     *
+     * @see filter_embedaudio()
+     */
+    if (isset($settings->html->$featureid->embedaudio->setting) && $settings->html->$featureid->embedaudio->setting == 1) {
         $html = filter_embedaudio($html);
     }
 
-    if (isset($settings->html->$featureid->embedvideo->setting) && $settings->html->$featureid->embedvideo->setting == 1) { // Embed Video Player
+    /**
+     * Embed Video Player
+     *
+     * @see filter_embedvideo()
+     */
+    if (isset($settings->html->$featureid->embedvideo->setting) && $settings->html->$featureid->embedvideo->setting == 1) {
         $html = filter_embedvideo($html);
     }
 
-    if (isset($settings->html->$featureid->embedyoutube->setting) && $settings->html->$featureid->embedyoutube->setting == 1) { // Embed Youtube video player
+    /**
+     * Embed Youtube video player
+     *
+     * @see filter_youtube()
+     */
+    if (isset($settings->html->$featureid->embedyoutube->setting) && $settings->html->$featureid->embedyoutube->setting == 1) {
         $html = filter_youtube($html);
     }
 
-    if (isset($settings->html->$featureid->photogallery->setting) && $settings->html->$featureid->photogallery->setting == 1) { // Photo Gallery Filter
+    /**
+     * Photo Gallery Filter
+     *
+     * @see filter_photogallery()
+     */
+    if (isset($settings->html->$featureid->photogallery->setting) && $settings->html->$featureid->photogallery->setting == 1) {
         $html = filter_photogallery($html);
     }
 
@@ -158,9 +193,8 @@ function fullscreen_toggle($html, $featureid, $settings) {
 global $CFG;
     if (isset($settings->html->$featureid->allowfullscreen->setting) && $settings->html->$featureid->allowfullscreen->setting == 1) { // Allow fullscreen toggle.
         $html = '
-            <div class="html_notfullscreen">
-                <button class="alike" title="View Full Screen" href="javascript: void(0);" onclick="$(\'.html_notfullscreen div\').toggleClass(\'fs_icon_on\'); $(this).closest(\'.htmlblock\').toggleClass(\'html_fullscreen\');">
-                    ' . icon("expand", 2) . '
+            <div class="html_fullscreen_button">
+                <button class="alike fullscreenbutton" title="View Full Screen" onclick="$(\'.html_notfullscreen div\').toggleClass(\'fs_icon_on\'); $(this).closest(\'.htmlblock\').toggleClass(\'html_fullscreen\');">
                 </button>
             </div>
             <div class="html_text">

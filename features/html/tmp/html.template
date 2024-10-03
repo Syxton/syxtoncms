@@ -43,14 +43,15 @@ edit_form||
 
 comment_area||
     <div id="html_comment_button_box_||featureid||" class="html_comment_button_box" style="||comments{{//OR//display:none;}}comments||">
-        <button id="html_||featureid||_comments_button" title="Show Comments" onclick="$('#comment_area_||featureid||, #html_||featureid||_comments_button, #html_||featureid||_hide_button').toggle();" class="alike html_comment_button">
+        <button id="html_||featureid||_comments_button" title="Show Comments" onclick="$('#html_||featureid|| .html_comments_grid').css('width', '100%'); $('#comment_area_||featureid||, #html_||featureid||_comments_button, #html_||featureid||_hide_button').toggle();" class="alike html_comment_button">
             ||echo icon([["icon" => "comment", "stacksize" => 2, "color" => "#7676cf"],["icon" => "eye", "color" => "white", "transform" => "shrink-8.5 left-1 up-.5"]]);::none||
         </button>
-        <button id="html_||featureid||_hide_button" title="Hide Comments" onclick="$('#comment_area_||featureid||, #html_||featureid||_comments_button, #html_||featureid||_hide_button').toggle();" class="alike html_comment_button" style="display:none;">
+        <button id="html_||featureid||_hide_button" title="Hide Comments" onclick="$('#html_||featureid|| .html_comments_grid').css('width', 'auto'); $('#comment_area_||featureid||, #html_||featureid||_comments_button, #html_||featureid||_hide_button').toggle();" class="alike html_comment_button" style="display:none;">
             ||echo icon([["icon" => "comment", "stacksize" => 2, "color" => "#7676cf"],["icon" => "eye-slash", "color" => "white", "transform" => "shrink-8.5 left-2 up-.5"]]);::none||
         </button>
     </div>
     <div id="comment_area_||featureid||" class="html_comments_area" style="display:none;">
+        ||makecomment||
         ||comments||
     </div>
 ||comment_area
