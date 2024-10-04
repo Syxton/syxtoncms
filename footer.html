@@ -55,20 +55,6 @@
 
                         }
                     });
-                    if ($("#pagenav").length) {
-                        $("#menu-icon").on("click", function() {
-                            $("#pagenav").toggle();
-                        });
-                    } else {
-                        $("#menu-icon").remove();
-                    }
-                    $('#pagenav li a.parentarrow').hover(
-                        function(){ $(this).closest('#pagenav li').addClass('sfhover') },
-                        function(){ setTimeout(function() { $('#pagenav li').removeClass('sfhover'); }, 1000); }
-                    );
-                    $('#pagenav li a.parentarrow').click(function(){
-                        $(this).closest('#pagenav li').toggleClass('sfclick');
-                    });
                     $(window).resize(function() {
                         setTimeout(function() {
                             adjustStyle($(window).width());

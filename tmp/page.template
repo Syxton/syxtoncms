@@ -1,36 +1,61 @@
 make_ul||
-  <ul id="||id||" class="||class||">
-    ||items||
-  </ul>
+    <ul id="||id||" class="||class||">
+        ||items||
+    </ul>
 ||make_ul
 
+get_ul_item||
+    <li>
+        <div>
+            ||item||
+        </div>
+    </li>
+||get_ul_item
+
+make_main_nav||
+    <a href="javascript:void(0);" class="icon mobile_menu" onclick="toggle_nav_menu()">&#9776;</a>
+    <div id="||id||" class="||class||">
+        ||items||
+    </div>
+||make_main_nav
+
+make_sub_nav||
+    <div class="||class||">
+        ||items||
+    </div>
+||make_sub_nav
+
 get_nav_item||
-  <li>
-    <div>
-        <a ||is_parent{{ class="parent" }}is_parent|| onmouseup="this.blur()" onfocus="this.blur()" href="||link||" ||is_selected{{ class="selected" }}is_selected||>
-            <span>
+    ||is_parent{{
+        <div class="dropdown">
+            <div class="dropwrapper">
+                <a href="||link||" ||is_active{{ class="active" }}is_active||>
+                    <span>
+                        ||text||
+                    </span>
+                </a>
+                <button class="dropbtn">
+                    <i class="fa fa-caret-down"></i>
+                </button>
+            </div>
+            <div class="dropdown-content">
+                ||menu_children||
+            </div>
+        </div>
+    //OR//
+        <a href="||link||" ||is_active{{ class="active" }}is_active||>
+           <span>
                 ||text||
             </span>
         </a>
-        ||is_parent{{<a class="parentarrow">||echo icon("chevron-down", 1, false, "white");::none||</a>}}is_parent||
-    </div>
-    ||menu_children||
-  </li>
+    }}is_parent||
 ||get_nav_item
 
-get_ul_item||
-  <li>
-    <div>
-        ||item||
-    </div>
-  </li>
-||get_ul_item
-
 page_js_css||
-  ||echo js_code_wrap('var dirfromroot = "' . dirroot . '";');::dirroot||
-  ||echo get_js_set("basics");::none||
-  ||echo get_css_set("main");::none||
-  <input id="lasthint" type="hidden" />
+    ||echo js_code_wrap('var dirfromroot = "' . dirroot . '";');::dirroot||
+    ||echo get_js_set("basics");::none||
+    ||echo get_css_set("main");::none||
+    <input id="lasthint" type="hidden" />
 ||page_js_css
 
 browse_template||
@@ -49,11 +74,11 @@ browse_template||
 ||browse_template
 
 browse_usersearch_template||
-<li>
-  <a class="||usersearchselected||" href="page.php?action=browse_users" style="text-decoration: none;position: relative;top: 3px;z-index: 1;padding-top: 3px; padding-right: 7px; padding-left: 7px;margin-right: 3px;border-top: 1px solid #778;border-right: 1px solid #778;border-left: 1px solid #778;color: #2d2b2b;" rel="contentscontainer" onmouseup="this.blur()">
-    Search Members
-  </a>
-</li>
+    <li>
+        <a class="||usersearchselected||" href="page.php?action=browse_users" style="text-decoration: none;position: relative;top: 3px;z-index: 1;padding-top: 3px; padding-right: 7px; padding-left: 7px;margin-right: 3px;border-top: 1px solid #778;border-right: 1px solid #778;border-left: 1px solid #778;color: #2d2b2b;" rel="contentscontainer" onmouseup="this.blur()">
+            Search Members
+        </a>
+    </li>
 ||browse_usersearch_template
 
 browse_search_template||
@@ -199,71 +224,71 @@ display_addfeature_template||
 ||display_addfeature_template
 
 account_activation_email||
-  <p>
-    <font face="Tahoma" size="3" color="#993366">
-        Dear <strong>||user[fname]|| ||user[lname]||</strong>,
-        <br />
-    </font>
-  </p>
-  <blockquote>
     <p>
-        <font size="3" face="Tahoma">
-        <strong>||sitename||</strong> has recieved notification that you have activated your account.&nbsp; The temporary password you used to log in has now been replaced with the original password you used when you signed up.
+        <font face="Tahoma" size="3" color="#993366">
+            Dear <strong>||user[fname]|| ||user[lname]||</strong>,
+            <br />
         </font>
     </p>
-  </blockquote>
-  <p>&nbsp;</p>
-  <p>
-    <font face="Tahoma" size="3" color="#666699">
-        <strong>Enjoy the site,</strong>
-    </font>
-  </p>
-  <p>
-    <font size="3" face="Tahoma">
-        <em>||siteowner|| </em>
-    </font>
-    <font size="3" face="Tahoma" color="#ff0000">
-        &lt;||siteemail||
-    </font>
-    <font face="Tahoma" size="3" color="#ff0000">
-        &gt;
-    </font>
-  </p>
-  <p>&nbsp;</p>
+    <blockquote>
+        <p>
+            <font size="3" face="Tahoma">
+            <strong>||sitename||</strong> has recieved notification that you have activated your account.&nbsp; The temporary password you used to log in has now been replaced with the original password you used when you signed up.
+            </font>
+        </p>
+    </blockquote>
+    <p>&nbsp;</p>
+    <p>
+        <font face="Tahoma" size="3" color="#666699">
+            <strong>Enjoy the site,</strong>
+        </font>
+    </p>
+    <p>
+        <font size="3" face="Tahoma">
+            <em>||siteowner|| </em>
+        </font>
+        <font size="3" face="Tahoma" color="#ff0000">
+            &lt;||siteemail||
+        </font>
+        <font face="Tahoma" size="3" color="#ff0000">
+            &gt;
+        </font>
+    </p>
+    <p>&nbsp;</p>
 ||account_activation_email
 
 pagelist_template||
-  ||pagelist||
-  <span class="centered_span">
-    ||browse||
-  </span>
-  ||pagelinks||
+    ||pagelist||
+        <span class="centered_span">
+            ||browse||
+        </span>
+    ||pagelinks||
 ||pagelist_template
 
 role_on_pagelist_template||
-  ||roleonpage||
-  <div class="block_divider"></div>
-  ||pagelistblock||
+    ||roleonpage||
+        <div class="block_divider"></div>
+    ||pagelistblock||
 ||role_on_pagelist_template
 
 format_pagelist_select||
-  <select id="select_page" style="width:100%" onchange="go_to_page($(this).val());">
-    ||options||
-  </select>
+    <select id="select_page" style="width:100%" onchange="go_to_page($(this).val());">
+        ||options||
+    </select>
 ||format_pagelist_select
 
 pagelinks_template||
-  <div id="page_links_div">
-    <br />
-    <div style="border: 1px solid gray; background-color:#EFEFEF;">
-        <div style="padding:5px;background-color:grey;color:white;">
-            <strong>Page Links</strong>
-        </div>
-        <div class="pagelinklist">
-        ||links||
+    <div id="page_links_div">
+        <br />
+        <div style="border: 1px solid gray; background-color:#EFEFEF;">
+            <div style="padding:5px;background-color:grey;color:white;">
+                <strong>Page Links</strong>
+            </div>
+            <div class="pagelinklist">
+            ||links||
+            </div>
         </div>
     </div>
-  </div>
 ||pagelinks_template
 
 pagelinks_links_template||

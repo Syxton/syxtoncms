@@ -1056,18 +1056,18 @@ global $CFG, $USER, $PAGE;
         $SQL = fetch_template("dbsql/pages.sql", "get_menu_for_visitors");
     }
 
-    $selected = $pageid == $CFG->SITEID ? true : false;
+    $active = $pageid == $CFG->SITEID ? true : false;
     $items = '';
     //Query the database
     if ($result = get_db_result($SQL)) {
         while ($row = fetch_row($result)) {
             $menu_children = get_menu_children($row["id"], $pageid);
             $parent = empty($menu_children) ? false : true;
-            $selected = $pageid == $row['pageid'] ? true : false;
+            $active = $pageid == $row['pageid'] ? true : false;
             $link = empty($row["link"]) ? "#" : $CFG->wwwroot . "/index.php?pageid=" . $row['link'];
             $text = $row['text'] . ' ' . $parent;
             $params = [
-                "is_selected" => $selected,
+                "is_active" => $active,
                 "menu_children" => $menu_children,
                 "text" => $row['text'],
                 "is_parent" => $parent,
@@ -1078,7 +1078,7 @@ global $CFG, $USER, $PAGE;
     }
 
     if (is_logged_in() && is_siteadmin($USER->userid)) { // Members list visible only if logged in admin
-        $members_modal = make_modal_links([
+        $items .= make_modal_links([
             "title" => "Members List",
             "path" => $CFG->wwwroot . "/pages/page.php?action=browse&section=users&userid=" . $USER->userid,
             "iframe" => true,
@@ -1086,11 +1086,10 @@ global $CFG, $USER, $PAGE;
             "height" => "623",
             "confirmexit" => "true",
         ]);
-        $items .= fill_template("tmp/page.template", "get_ul_item", false, ["item" => $members_modal]);
     }
 
     if (!empty($items)) {
-        return fill_template("tmp/page.template", "make_ul", false, ["id" => "pagenav", "class" => "navtabs", "items" => $items]);
+        return fill_template("tmp/page.template", "make_main_nav", false, ["id" => "myTopnav", "class" => "topnav", "items" => $items]);
     }
     return "";
 }
@@ -1102,11 +1101,11 @@ global $CFG;
         while ($row = fetch_row($result)) {
             $menu_children = get_menu_children($row["id"], $pageid);
             $parent = empty($menu_children) ? false : true;
-            $selected = $pageid == $row['pageid'] ? true : false;
+            $active = $pageid == $row['pageid'] ? true : false;
             $link = empty($row["link"]) ? "#" : $CFG->wwwroot . "/index.php?pageid=" . $row['link'];
             $text = stripslashes($row['text']) . ' ' . $parent;
             $params = [
-                "is_selected" => $selected,
+                "is_active" => $active,
                 "menu_children" => $menu_children,
                 "text" => stripslashes($row['text']),
                 "is_parent" => $parent,
@@ -1114,7 +1113,7 @@ global $CFG;
             ];
             $items .= fill_template("tmp/page.template", "get_nav_item", false, $params);
         }
-        return fill_template("tmp/page.template", "make_ul", false, ["id" => "pagenavchild", "class" => "dropdown", "items" => $items]);
+        return $items;
     }
     return "";
 }

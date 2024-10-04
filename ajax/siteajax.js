@@ -619,6 +619,15 @@ function printArea(divId) {
     $("body").html(originalContents);
 }
 
+function toggle_nav_menu() {
+    var x = document.getElementById("myTopnav");
+    if (x.className === "topnav") {
+        x.className += " responsive";
+    } else {
+        x.className = "topnav";
+    }
+}
+
 $(function() { // At the end of the document load.  do these things.
     activatejs(); // Check for inactive ajax javascript and attempt to activate it.
 });

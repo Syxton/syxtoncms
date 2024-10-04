@@ -1696,153 +1696,237 @@ tr.pics_title td:hover {
     max-height: 200px
 }
 
-.logo_nav .nav {
-    font-weight: 700;
-    margin: 5px 0;
-    text-align: center;
-    text-transform: uppercase;
-    display: inline-block
+.nav {
+    margin: 10px;
 }
 
-.logo_nav .navtabs li {
-    display: initial;
-    margin: 4px 2px 0px 2px;
-    padding: 0;
-}
-
-.logo_nav #menu-icon {
-    width: 40px;
-    height: 40px;
-    display: none
-}
-
-.logo_nav ul {
-    list-style: none;
-    margin: 0
-}
-
-.logo_nav li {
-    float: left;
-    padding: 5px;
-}
-
-.logo_nav .navtabs li div:hover {
-    background-color: #2f4f4f
-}
-
-.logo_nav li div {
-    background-color: grey;
-    padding: 10px;
+/* Add a black background color to the top navigation */
+.topnav {
     display: flex;
-    align-items: center;
+    column-gap: 5px;
+    row-gap: 5px;
+    background-color: white;
+    flex-wrap: wrap;
     justify-content: center;
+    width: 100%;
 }
 
-.logo_nav ul {
-    list-style: none;
-    margin: 0;
-    padding-left: 0
-}
-
-.logo_nav li {
-    color: #fff;
+/* Style the links inside the navigation bar */
+.topnav > a, .topnav > div {
     display: block;
-    min-width: 8rem;
-    float: left;
+}
+
+.topnav > a,
+div.dropwrapper,
+div.dropdown-content > a {
     position: relative;
+    text-align: center;
     text-decoration: none;
-    transition-duration: .5s
+    transition-duration: .5s;
+    white-space: nowrap;
+    min-width: 110px;
+    max-width: 300px;
 }
 
-.logo_nav .dropdown {
-    z-index: 100;
+.dropwrapper {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: center;
+    align-items: center;
 }
 
-.logo_nav li a {
-    color: #fff
+.topnav div.dropwrapper > a{
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 
-.logo_nav li:focus-within,
-.logo_nav li:hover {
-    cursor: pointer
+.topnav > a,
+div.dropdown-content > a {
+    padding: 14px 16px;
+    box-sizing: border-box;
+    width: 100%;
 }
 
-.logo_nav li:focus-within a {
-    outline: 0
+div.dropwrapper > a {
+    padding: 14px 0 14px 16px !important;
+    box-sizing: border-box;
+    width: 100%;
 }
 
-.logo_nav ul li ul {
-    visibility: hidden;
-    opacity: 0;
-    transition: all .5s ease;
+div.dropwrapper > button {
+    padding: 14px 16px !important;
+    margin-left: 10px !important;
+    box-sizing: border-box;
+}
+
+.topnav a {
+    color: #f2f2f2;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.topnav a span {
+    vertical-align: unset !important;
+}
+
+/* Add an active class to highlight the current page */
+.active, .dropwrapper:has(a.active) {
+    background-color: #04AA6D !important;
+    color: white;
+}
+
+/* Hide the link that should open and close the topnav on small screens */
+a.icon.mobile_menu {
     display: none;
-    white-space: nowrap;
 }
 
-.logo_nav ul li ul:hover {
-    visibility: visible;
-    opacity: 1;
-    display: block
-}
-
-.logo_nav ul li.sfhover>ul {
-    visibility: visible;
-    opacity: 1;
-    display: block
-}
-
-.logo_nav ul li.sfclick > div {
-    background-color: rgb(163, 0, 0);
-}
-
-.logo_nav ul li.sfclick > div:hover {
-    background-color: rgb(102, 2, 2);
-}
-
-.logo_nav ul li.sfclick ul {
-    visibility: visible;
-    opacity: 1;
-    display: block;
-}
-
-.logo_nav ul li ul li {
-    clear: both;
-    width: 100%
-}
-
-.navtabs a {
-    padding: 0;
-    color: #fff;
-}
-
-.navtabs a.parent {
+/* Style the dropdown button to fit inside the topnav */
+.dropdown .dropbtn {
+    height: 100%;
     display: inline-block;
-    white-space: nowrap;
-}
-
-.navtabs a.parentarrow {
-    display: inline-block;
-    max-width: 40px;
-    padding: 0 5px;
-    width: 10%;
-}
-
-ul#pagenavchild  {
-    position: absolute;
-}
-
-#pagenavchild li {
+    background: inherit;
+    border: none;
+    outline: none;
     margin: 0;
-    padding: 0;
-    padding-top: 2px;
+    padding: 0 10px;
+    background: inherit;
+    border-radius: 0
 }
 
-#pagenavchild li div {
-    filter: brightness(125%);
+/* Style the dropdown content (hidden by default) */
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 9999999;
+    width: 300px;
 }
 
-.navtabs a.selected {
-    border-top: 5px solid #ffffff4f;
+/* Style the links inside the dropdown */
+.dropdown-content > a {
+    float: left;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    text-align: left;
+    width: calc(100% - 32px);
+}
+
+/* Add a dark background on topnav links and the dropdown button on hover */
+.topnav > a, .dropwrapper, .dropdown-content > a {
+    background-color: grey;
+    color: white;
+}
+
+/* Add a dark background on topnav links and the dropdown button on hover */
+.topnav > a:hover,
+.dropwrapper:hover {
+    background-color: #555;
+    color: white;
+}
+
+div.dropwrapper button:hover {
+    background-color: #818181;
+    color: black;
+}
+
+/* Add a grey background to dropdown links on hover */
+.dropdown-content > a:hover {
+    background-color: #ddd;
+    color: black;
+}
+
+/* Show the dropdown menu when the user moves the mouse over the dropdown button */
+.topnav .dropdown:hover > .dropdown-content {
+    display: block;
+    filter: brightness(.9);
+    transition-duration: .5s;
+}
+
+/* When the screen is less than 700 pixels wide, hide all links, except for the first one ("Home"). Show the link that contains should open and close the topnav (.icon) */
+@media screen and (max-width: 700px) {
+    .topnav {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .topnav.responsive > a, .topnav.responsive > div.dropdown {
+        display: flex;
+    }
+
+    .topnav > a, .topnav > div.dropdown {
+        display: none;
+    }
+
+    a.icon.mobile_menu {
+        display: inline-block;
+        padding: 10px;
+        top: 0;
+        right: 0;
+        font-size: 2em;
+        position: fixed;
+        z-index: 10000;
+    }
+
+    /* Show the dropdown menu when the user moves the mouse over the dropdown button */
+    .topnav .dropdown:hover > .dropdown-content {
+        display: flex;
+        transition-duration: .5s;
+    }
+
+    .dropdown-content {
+        width: 100%;
+    }
+
+    .topnav.responsive {
+        position: relative;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        row-gap: 1px;
+    }
+
+    .topnav > a, div.dropwrapper, div.dropdown-content > a {
+        width: 100%;
+        float: none;
+    }
+
+    .topnav.responsive .dropdown-content {
+        position: relative;
+        justify-content: center;
+        background-color: unset;
+        box-shadow: none;
+    }
+
+    .topnav.responsive a {
+        width: 100%;
+        text-align: center;
+    }
+
+    .topnav.responsive > a,
+    .topnav.responsive div.dropdown-content > a,
+    .topnav.responsive .dropdown {
+        min-width: unset;
+        max-width: unset;
+        width: 100%;
+        text-align: center;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .topnav.responsive > a,
+    .topnav.responsive div.dropwrapper,
+    .topnav.responsive div.dropdown-content>a {
+        min-width: unset;
+        max-width: unset;
+    }
+
+    .dropwrapper {
+        flex-direction: row;
+    }
 }
 
 .forum_breadcrumb {
@@ -2412,20 +2496,6 @@ input[type=image] {
 }
 
 @media only screen and (max-width :640px) {
-    .logo_nav #menu-icon {
-        display: inline-block !important;
-        position: absolute;
-        right: 0;
-        top: 0;
-        max-width: 40px;
-        max-height: 40px;
-        width: 8%
-    }
-
-    .logo_nav #menu-icon:hover {
-        cursor: pointer;
-    }
-
     #logosmall+#logo {
         display: none
     }
@@ -2440,38 +2510,6 @@ input[type=image] {
 
     .logo_nav #logo_div {
         padding-bottom: 0px !important
-    }
-
-    .nav ul,
-    .nav:active ul {
-        display: none;
-        margin: 0 !important;
-        padding: 0 !important;
-        background: #fff !important;
-        right: 0 !important;
-        top: 100px !important;
-        width: 100% !important;
-        z-index: 99999
-    }
-
-    .logo_nav .nav {
-        float: none !important
-    }
-
-    .nav li {
-        text-align: center;
-        width: 100%;
-        font-weight: bolder;
-        font-size: 1.5em
-    }
-
-    .nav:hover ul li ul {
-        left: initial;
-        position: relative !important;
-        top: 0 !important;
-        font-size: .6rem;
-        border: none !important;
-        font-weight: initial
     }
 }
 

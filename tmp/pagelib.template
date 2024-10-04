@@ -23,31 +23,30 @@ main_body_template||
 ||main_body_template
 
 page_masthead_template||
-<div class="nav_header">
-    <div id="logo_div">
-        <a href="||brandingpath||">
-            ||hasmobilelogo{{
-                <img id="logosmall" loading="lazy" src="||brandingpath||/branding/logos/||mobilelogofile||" alt="||sitename|| Logo" />
-            }}hasmobilelogo||
-            ||haslogo{{
-                <img id="logo" loading="lazy" src="||brandingpath||/branding/logos/||logofile||" alt="||sitename|| Logo" />
+    <div class="nav_header">
+        <div id="logo_div">
+            <a href="||brandingpath||">
+                ||hasmobilelogo{{
+                    <img id="logosmall" loading="lazy" src="||brandingpath||/branding/logos/||mobilelogofile||" alt="||sitename|| Logo" />
+                }}hasmobilelogo||
+                ||haslogo{{
+                    <img id="logo" loading="lazy" src="||brandingpath||/branding/logos/||logofile||" alt="||sitename|| Logo" />
                 //OR//
-                <div id="logo">
-                ||sitename||
-                </div>
-            }}haslogo||
-        </a>
+                    <div id="logo">
+                        ||sitename||
+                    </div>
+                }}haslogo||
+            </a>
+        </div>
+        <div class="nav">
+            ||header_only||
+        </div>
+    </div>||quote||
+    <div style="background: linear-gradient(to right, rgba(0, 0, 0, 0), ||header_color||, rgba(0, 0, 0, 0));">
+        <div style="padding: 2px;text-align: center;justify-content: center;display: flex;align-items: center;height: 30px;">
+            <span style="font-size: 2em;position: relative;height: 24px;top: -6px;font-weight: bold;color: ||header_text||;">||pagename||</span>
+        </div>
     </div>
-    <div class="nav">
-        <div id="menu-icon">||echo icon("bars", 3);::none||</div>
-        ||header_only||
-    </div>
-</div>||quote||
-<div style="background: linear-gradient(to right, rgba(0, 0, 0, 0), ||header_color||, rgba(0, 0, 0, 0));">
-    <div style="padding: 2px;text-align: center;justify-content: center;display: flex;align-items: center;height: 30px;">
-        <span style="font-size: 2em;position: relative;height: 24px;top: -6px;font-weight: bold;color: ||header_text||;">||pagename||</span>
-    </div>
-</div>
 ||page_masthead_template
 
 editor_box_template||
