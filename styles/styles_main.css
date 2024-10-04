@@ -120,6 +120,10 @@ p {
     padding: 0 5px;
 }
 
+.block_divider {
+    padding: 5px 0px;
+}
+
 div.searchresultsnav {
     display: flex;
     justify-content: space-between;
@@ -971,6 +975,10 @@ a.header_links:hover {
     width: 525px
 }
 
+#main-content {
+    padding: 0 0.5em;
+}
+
 .mainTable {
     background-color: #e1e1e1;
     border: 1px solid #999;
@@ -1195,10 +1203,8 @@ div.footer-text {
 .colmask {
     clear: both;
     float: left;
-    overflow: hidden;
     position: relative;
     width: 100%;
-    margin-top: 5px
 }
 
 .colleft,
@@ -1213,7 +1219,7 @@ div.footer-text {
 .col2,
 .col3 {
     float: right;
-    padding: 0 2px 0;
+    padding: 0 .1em;
     position: relative
 }
 
@@ -1253,6 +1259,9 @@ div.box_title {
 
 span.box_title_text {
     padding-left: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     display: inline-block;
 }
 
@@ -1648,6 +1657,8 @@ tr.pics_title td:hover {
 .logo_nav #carousel {
     clear: both;
     border: 2px solid #000;
+    border-left: none;
+    border-right: none;
     max-height: 400px;
     overflow: hidden
 }

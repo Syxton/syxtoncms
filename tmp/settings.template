@@ -1,5 +1,5 @@
 make_settings_page_template||
-    <div id="settings_div" class="dotted">
+    <div id="settings_div">
         <h3>
             ||title||
         </h3>

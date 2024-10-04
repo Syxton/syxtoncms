@@ -242,7 +242,7 @@ pagelist_template||
 
 role_on_pagelist_template||
   ||roleonpage||
-  <div style="padding:3px;"></div>
+  <div class="block_divider"></div>
   ||pagelistblock||
 ||role_on_pagelist_template
 

@@ -155,7 +155,7 @@ get_css_box_template2||
         ||content||
         ||bottom||
     </div>
-    <div style="padding:3px;"></div>
+    <div class="block_divider"></div>
 </div>
 ||get_css_box_template2
 
