@@ -1875,6 +1875,7 @@ div.dropwrapper button:hover {
     .topnav .dropdown:hover > .dropdown-content {
         display: flex;
         transition-duration: .5s;
+        flex-wrap: wrap;
     }
 
     .dropdown-content {
