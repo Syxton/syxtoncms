@@ -25,7 +25,7 @@ main_body_template||
 page_masthead_template||
     <div class="nav_header">
         <div id="logo_div">
-            <a href="||brandingpath||">
+            <a href="||wwwroot||">
                 ||hasmobilelogo{{
                     <img id="logosmall" loading="lazy" src="||brandingpath||/branding/logos/||mobilelogofile||" alt="||sitename|| Logo" />
                 }}hasmobilelogo||

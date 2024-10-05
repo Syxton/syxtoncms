@@ -1630,6 +1630,7 @@ tr.pics_title td:hover {
 .carousel-cell {
     width: 100%;
     height: 400px;
+    max-height: 50vh;
     background: transparent;
     display: flex;
     align-items: center;
