@@ -48,16 +48,14 @@ create_user||
 ||create_user
 
 lookup_user_rss||
-	SELECT *
-	FROM rss_feeds
-	WHERE pageid = ||pageid||
-	AND type = ||type||
-	AND featureid = ||featureid||
-	AND rssid IN (
-						SELECT rssid
-						FROM rss
-						WHERE userid = ||userid||
-	)
+	SELECT f.*
+	FROM rss_feeds f
+	JOIN rss r
+		ON f.rssid = r.rssid
+	WHERE f.pageid = ||pageid||
+	AND f.type = ||type||
+	AND f.featureid = ||featureid||
+	AND r.userid = ||userid||
 ||lookup_user_rss
 
 get_rss||

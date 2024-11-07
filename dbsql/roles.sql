@@ -677,26 +677,24 @@ users_that_have_ability_in_page||
 ||users_that_have_ability_in_page
 
 get_groups_hierarchy||
-    SELECT *
-    FROM groups g
+    SELECT g.*
+    FROM `groups` g
+    JOIN groups_users u
+        ON g.groupid = u.groupid
     WHERE g.parent = ||parent||
-    AND g.groupid IN (
-                            SELECT u.groupid
-                            FROM groups_users u
-                            WHERE u.pageid = ||pageid||
-                            AND u.userid = ||userid||
-                        )
+    AND u.pageid = ||pageid||
+    AND u.userid = ||userid||
 ||get_groups_hierarchy
 
 get_group||
     SELECT *
-      FROM groups
+      FROM `groups`
      WHERE groupid = ||groupid||
 ||get_group
 
 get_subgroups||
     SELECT *
-    FROM groups
+    FROM `groups`
     WHERE pageid = ||pageid||
     AND parent = ||parent||
     ORDER BY name
@@ -710,38 +708,33 @@ get_group_users||
 
 save_group||
   ||is_editing{{
-    UPDATE groups
+    UPDATE `groups`
        SET name = ||name||, parent = ||parent||
      WHERE groupid = ||groupid||
        AND pageid = ||pageid||
 
     //OR//
 
-    INSERT INTO groups (name, parent, pageid)
+    INSERT INTO `groups` (name, parent, pageid)
          VALUES(||name||, ||parent||, ||pageid||)
   }}is_editing||
 ||save_group
 
 print_abilities_sql||
     SELECT *
-      FROM abilities
-  ||is_feature{{
-     WHERE section = ||feature||
-        OR (
-            ability = 'editfeaturesettings'
-            OR
-            ability = 'removefeatures'
-            OR
-            ability = 'movefeatures'
-            OR
-            ability = 'edit_feature_abilities'
-            OR
-            ability = 'edit_feature_group_abilities'
-            OR
-            ability = 'edit_feature_user_abilities'
-          )
-  }}is_feature||
-  ORDER BY section, ability
+    FROM abilities
+    ||is_feature{{
+        WHERE section = ||feature||
+        OR ability IN (
+            'editfeaturesettings', 
+            'removefeatures', 
+            'movefeatures', 
+            'edit_feature_abilities', 
+            'edit_feature_group_abilities', 
+            'edit_feature_user_abilities'
+        )
+    }}is_feature||
+    ORDER BY section, ability
 ||print_abilities_sql
 
 remove_role_override||

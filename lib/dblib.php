@@ -250,7 +250,7 @@ function find_var_type($var) {
 }
 
 function get_db_field($field, $from, $where, $vars = []) {
-	$SQL = "SELECT $field FROM $from WHERE $where";
+	$SQL = "SELECT $field FROM `$from` WHERE $where";
     $SQL = place_sql_limit($SQL, 1);
 	if ($result = get_db_result($SQL, $vars)) {
         if ($result->num_rows > 1) {
