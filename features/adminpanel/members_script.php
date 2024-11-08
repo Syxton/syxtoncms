@@ -178,12 +178,21 @@ global $CFG, $MYVARS, $USER;
             "event" => "none",
         ]);
 
+        A few sample requests with your API Key:
+
+https://extreme-ip-lookup.com/json/?key=sUES89cry6al6TliknTo
+https://extreme-ip-lookup.com/json/63.70.164.200?key=sUES89cry6al6TliknTo
+https://extreme-ip-lookup.com/json/?callback=getIP&key=sUES89cry6al6TliknTo
+https://extreme-ip-lookup.com/json/63.70.164.200?callback=getIP&key=sUES89cry6al6TliknTo
+https://extreme-ip-lookup.com/csv/?key=sUES89cry6al6TliknTo
+https://extreme-ip-lookup.com/csv/63.70.164.200?key=sUES89cry6al6TliknTo
+
         ajaxapi([
             "id" => "members_get_geodata",
             "external" => true,
             "datatype" => "jsonp",
             "callback" => "jsonpCallback: 'jsonCallback',",
-            "url" => '//extreme-ip-lookup.com/json/${ip}',
+            "url" => 'https://extreme-ip-lookup.com/json/${ip}',
             "data" => ["key" => $CFG->geolocationkey],
             "paramlist" => "ip, display",
             "ondone" => "if (data.status !== 'success') {
