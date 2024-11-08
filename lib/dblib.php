@@ -268,10 +268,7 @@ function get_db_field($field, $from, $where, $vars = []) {
 }
 
 function get_db_row($SQL, $vars = [], $type = false) {
-	$SQL = place_sql_limit2($SQL, 1);
-	error_log("SQL: $SQL");
     $SQL = place_sql_limit($SQL, 1);
-	error_log("SQL: $SQL");
     if ($result = get_db_result($SQL, $vars)) {
         if (is_select($SQL) && $result->num_rows > 1) {
             trigger_error("get_db_row: $SQL returned $result->num_rows results. Expected 1", E_USER_NOTICE);
@@ -279,21 +276,6 @@ function get_db_row($SQL, $vars = [], $type = false) {
         return fetch_row($result, get_mysql_array_type($type));
     }
     return false;
-}
-
-function place_sql_limit2($SQL, $limit) {
-    if (!is_select($SQL)) { return $SQL; }
-    $p = strrpos(strtoupper($SQL), "LIMIT"); // last "LIMIT" found in SQL.
-    if ($p !== false) { // "LIMIT" was found in SQL;
-        $q = strpos($SQL, ")", $p); // ")" found after "LIMIT" denoting a subquery clause.
-        $r = strpos($SQL, "'", $p); // "'" found after "LIMIT" denoting a string and not clause.
-        $s = strpos($SQL, "\"", $p); // '"' found after "LIMIT" denoting a string and not clause.
-        if ($q === false && $r === false && $s === false) {
-            $SQL = substr($SQL, 0, $p); // Remove LIMIT clause from SQL.
-        }
-    }
-
-    return $SQL . " LIMIT $limit";
 }
 
 function place_sql_limit($SQL, $limit) {
@@ -304,7 +286,7 @@ function place_sql_limit($SQL, $limit) {
 
     // Regular expression to find the LIMIT clause and check if it's not inside subqueries or strings
     $pattern = '/\sLIMIT\s+\d+/i'; // Pattern to match "LIMIT" followed by a number
-    
+
     // If a LIMIT clause is already present, remove it
     if (preg_match($pattern, $SQL)) {
         $SQL = preg_replace($pattern, '', $SQL); // Remove the LIMIT clause if found

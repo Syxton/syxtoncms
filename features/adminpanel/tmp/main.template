@@ -182,7 +182,7 @@ members_search_page||
                     Last Accessed
                 </button>
                 <br />
-                <input type="text" id="searchbox" size="50" onkeypress="if (event.keyCode !== 13 && event.which !== 13) { $('.members_searchbutton').click(); }" />
+                <input type="text" id="searchbox" size="50" onkeypress="if (event.which == 13) { $('.members_searchbutton').click(); }" />
                 &nbsp;
                 <button class="members_searchbutton" onclick="members_search($('#searchbox').val())">
                     Search
