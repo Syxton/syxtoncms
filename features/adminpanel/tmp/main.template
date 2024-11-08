@@ -205,9 +205,8 @@ site_administration||
                 <li>
                     <a href="#" class="active">Admin Features</a>
                     <ul class="acitem">
-                        <li><a id="user_admin">User Admin</a></li>
-                        <li><a id="camper_list">Camper Lists</a></li>
-                        <li><a id="site_versions">Version Checker</a></li>
+                        <li><a class="alike" id="user_admin">User Admin</a></li>
+                        <li><a class="alike" id="camper_list">Camper Lists</a></li>
                     </ul>
                 </li>
                 <li>
@@ -215,6 +214,8 @@ site_administration||
                     <ul class="acitem">
                         <li><a class="alike" id="get_phpinfo">PHP Info</a></li>
                         <li><a class="alike" id="admin_email_tester">Email Tester</a></li>
+                        <li><a class="alike" id="site_versions">Version Checker</a></li>
+                        <li><a class="alike" id="unit_tests">Unit Tests</a></li>
                     </ul>
                 </li>
             </ul>
@@ -234,7 +235,7 @@ site_administration||
 ||site_administration
 
 admin_iframe||
-    <iframe id="||id||" onload="resizeCaller(this.id);" style="width:100%;height: 100vh;border:none;" src="||src||"></iframe>
+    <iframe id="||id||" onload="resizeCaller(this.id);" style="width:100%;height: 99vh;border:none;" src="||src||"></iframe>
 ||admin_iframe
 
 admin_versions||

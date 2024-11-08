@@ -46,7 +46,7 @@ global $CFG, $MYVARS;
 function icon(...$icons) {
     $return = '';
 
-    if (!ismultiarray($icons)) { // Simple icon.
+    if (!isMultiArray($icons)) { // Simple icon.
         // rotate is rotate-90, rotate-180, rotate-270 classes.
         $icon = (isset($icons["icon"]) ? $icons["icon"] : (isset($icons[0]) ? $icons[0] : $icons));
         $icons = [

@@ -26,21 +26,6 @@ if (empty($_POST["aslib"])) {
     echo fill_template("tmp/page.template", "end_of_page_template");
 }
 
-
-//An area that links to all functions
-//		<li>
-//			<a href="#">Framework Checks</a>
-//			<div class="acitem panel">
-//			<p>This contains stuff</p>
-//			<p>There can be <a href="//www.i-marco.nl/">links</a> too</p>
-//			<ul>
-//				<li>blerk</li>
-//				<li>wonk</li>
-//				<li><a href="#">meh</a></li>
-//			</ul>
-//			</div>
-//		</li>
-
 function site_administration() {
     site_admin_javascript();
     echo fill_template("tmp/main.template", "site_administration", "adminpanel");
@@ -68,6 +53,14 @@ function site_admin_javascript() {
         "url" => "/features/adminpanel/adminpanel_ajax.php",
         "data" => [
             "action" => "site_versions",
+        ],
+        "display" => "display",
+    ]);
+    ajaxapi([
+        "id" => "unit_tests",
+        "url" => "/features/adminpanel/adminpanel_ajax.php",
+        "data" => [
+            "action" => "unit_tests",
         ],
         "display" => "display",
     ]);

@@ -69,6 +69,16 @@ global $CFG;
     ajax_return(fill_template("tmp/main.template", "admin_iframe", "adminpanel", $params));
 }
 
+
+function unit_tests() {
+global $CFG;
+    $params = [
+        "id" => "unit_tests",
+        "src" => $CFG->wwwroot . "/features/adminpanel/tests/unit_tests.php",
+    ];
+    ajax_return(fill_template("tmp/main.template", "admin_iframe", "adminpanel", $params));
+}
+
 function admin_email_test() {
 global $CFG;
     $error = "";

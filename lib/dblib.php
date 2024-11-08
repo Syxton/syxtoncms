@@ -156,7 +156,7 @@ global $conn;
         if (!empty($vars)) {
             // If an array of arrays is passed, use each array as a variable set for each SQL independantly.
             // Otherwise, use all the variables passed for each SQL.
-            $v = ismultiarray($vars) ? array_slice($vars, $i, 1)[0] : $vars;
+            $v = isMultiArray($vars) ? array_slice($vars, $i, 1)[0] : $vars;
             $v = insert_result_data_as_var($v, $result);
         } else {
             $SQL = insert_result_data_as_template($SQL, $result);
@@ -200,16 +200,29 @@ function insert_result_data_as_template($SQL, $result) {
     return $SQL;
 }
 
-function ismultiarray($a) {
-    if (is_array($a) && !empty($a)) {
-        foreach ($a as $v) {
-            if (!is_array($v)) {
+
+/**
+ * Checks if a given array is a multi-dimensional array.
+ *
+ * A multi-dimensional array is defined as an array where all elements are also arrays.
+ *
+ * @param array $a Array to check.
+ *
+ * @return bool True if the array is multi-dimensional, otherwise false.
+ */
+function isMultiArray($a) {
+    // Check if $a is an array and has elements
+    if (is_array($a) && count($a) > 0) {
+        // Iterate over each element in the array
+        foreach ($a as $value) {
+            // If any element is not an array, return false
+            if (!is_array($value)) {
                 return false;
             }
         }
-        return true;
+        return true;  // All elements are arrays
     }
-    return false;
+    return false;  // $a is either not an array or is empty
 }
 
 function build_prepared_variables($SQL, $vars, $pattern) {
@@ -233,20 +246,12 @@ function build_prepared_variables($SQL, $vars, $pattern) {
 }
 
 function find_var_type($var) {
-    switch(gettype($var)) {
-        case "string":
-            return "s";
-            break;
-        case "integer":
-            return "i";
-            break;
-        case "double":
-            return "d";
-            break;
-        default:
-            return "b";
-            break;
-    }
+    return match (gettype($var)) {
+        'string' => 's',
+        'integer' => 'i',
+        'double' => 'd',
+        default => 'b',  // Fallback for other types (e.g., boolean, array, object, etc.)
+    };
 }
 
 function get_db_field($field, $from, $where, $vars = []) {
@@ -263,7 +268,10 @@ function get_db_field($field, $from, $where, $vars = []) {
 }
 
 function get_db_row($SQL, $vars = [], $type = false) {
+	$SQL = place_sql_limit2($SQL, 1);
+	error_log("SQL: $SQL");
     $SQL = place_sql_limit($SQL, 1);
+	error_log("SQL: $SQL");
     if ($result = get_db_result($SQL, $vars)) {
         if (is_select($SQL) && $result->num_rows > 1) {
             trigger_error("get_db_row: $SQL returned $result->num_rows results. Expected 1", E_USER_NOTICE);
@@ -273,7 +281,7 @@ function get_db_row($SQL, $vars = [], $type = false) {
     return false;
 }
 
-function place_sql_limit($SQL, $limit) {
+function place_sql_limit2($SQL, $limit) {
     if (!is_select($SQL)) { return $SQL; }
     $p = strrpos(strtoupper($SQL), "LIMIT"); // last "LIMIT" found in SQL.
     if ($p !== false) { // "LIMIT" was found in SQL;
@@ -285,6 +293,24 @@ function place_sql_limit($SQL, $limit) {
         }
     }
 
+    return $SQL . " LIMIT $limit";
+}
+
+function place_sql_limit($SQL, $limit) {
+    // Check if the SQL query is a SELECT query
+    if (!is_select($SQL)) {
+        return $SQL; // Return as is if not a SELECT query
+    }
+
+    // Regular expression to find the LIMIT clause and check if it's not inside subqueries or strings
+    $pattern = '/\sLIMIT\s+\d+/i'; // Pattern to match "LIMIT" followed by a number
+    
+    // If a LIMIT clause is already present, remove it
+    if (preg_match($pattern, $SQL)) {
+        $SQL = preg_replace($pattern, '', $SQL); // Remove the LIMIT clause if found
+    }
+
+    // Append the new LIMIT clause to the SQL query
     return $SQL . " LIMIT $limit";
 }
 
@@ -375,7 +401,7 @@ global $CFG, $USER;
 function copy_db_row($row, $table, $copychanges) {
     // Check if first variable is an array (denotes multiple copies).
     // If not, make it an array of a single array for consistency.
-    if (!ismultiarray($copychanges)) {
+    if (!isMultiArray($copychanges)) {
         $copychanges = [$copychanges];
     }
 

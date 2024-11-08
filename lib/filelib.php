@@ -260,7 +260,7 @@ function fill_template($file, $subsection, $feature = false, $params = [], $allo
             $contents = [];
             $i = 0;
             foreach($subsection as $sub) {
-                $p = ismultiarray($params) ? array_slice($params, $i, 1)[0] : $params;
+                $p = isMultiArray($params) ? array_slice($params, $i, 1)[0] : $params;
                 $contents[] = fill_template($file, $sub, $feature, $p);
                 $i++;
             }
@@ -341,11 +341,11 @@ function fill_template_set($templates, $params = []) {
             if ($file && $subsection) {
                 if (is_array($subsection)) {
                     $sliceoff = count($subsection); // If subsection is an array, slice off the count of subsections.
-                    $p = ismultiarray($params) ? array_slice($params, $i, $sliceoff) : $params; // Get the params for the template.
+                    $p = isMultiArray($params) ? array_slice($params, $i, $sliceoff) : $params; // Get the params for the template.
                     $contents = array_merge($contents, fill_template($file, $subsection, $feature, $p)); // Fill the template and merge with contents.
                 } else {
                     // If a single subsection, but multiarray, slicing 1 off, and only send a simple array. array()[0]
-                    $p = ismultiarray($params) ? array_slice($params, $i, 1)[0] : $params; // Get the params for the template.
+                    $p = isMultiArray($params) ? array_slice($params, $i, 1)[0] : $params; // Get the params for the template.
 
                     $contents[] = fill_template($file, $subsection, $feature, $p); // Fill the template and add to contents.
                 }

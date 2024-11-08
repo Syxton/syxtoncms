@@ -185,55 +185,62 @@ global $CFG;
  *
  * @return string HTML to display on the page if level is 2 or above
  */
+
 function debugging($message = '', $level = 1, $forced = false) {
-	global $CFG, $USER;
+    global $CFG, $USER;
 
-	$display = "";
-	$default = $CFG->debug ?? $level;
-	$default = $level > $default ? $level : $default;
-	$level = $forced ? $level : $default;
+    // Set debug level based on forced parameter or default
+    $level = $forced ? $level : $CFG->debug;
+    
+    // Return early if no debug level is set
+    if (!$level) {
+        return '';
+    }
 
-	if (!$level) {
-		return $display;
-	}
+    // If a message is provided, process it
+    if ($message) {
+        // Initialize variables
+        $from = '';
+        $from_printable = '';
 
-	if ($message) {
-		$from = ""; $from_printable = "";
+        // If level > 2, include backtrace information
+        if ($level > 2) {
+            $backtrace = debug_backtrace();
+            $from = format_backtrace($backtrace, true);
+            $from_printable = format_backtrace($backtrace, false);
+        }
 
-		if ($level > 2) {
-			// Include backtrace if level is 2 or above or $backtrace is true
-			$backtrace = debug_backtrace();
-			$from = format_backtrace($backtrace, true);
-			$from_printable = format_backtrace($backtrace, false);
-		}
+        // Log the debug message with optional backtrace
+        error_log('Debugging (Level ' . $level . '): ' . $message . $from);
 
-		// Log any level above 0
-		error_log('Debugging (Level ' . $level . '): ' . $message . $from);
+        // Prepare the display content
+        $display = '<div class="debugging">' . $message . $from_printable . '</div>';
 
-		$display = '<div class="debugging">
-					' . $message . $from_printable . '
-					</div>';
+        // Prepare the final print content based on debug level
+        $print = '';
+        
+        // If level >= 2, display backtrace and message in <pre> format
+        if ($level >= 2) {
+            $print .= '<pre>' . $display . '</pre>';
+        }
 
-		$print = "";
-		// Display on page if level is 2 or above
-		if ($level >= 2) {
-			$print .= '<pre>' . $display . '</pre>';
-		}
+        // If level == 1, display a generic error message
+        if ($level == 1) {
+            $print .= '
+                <div class="error_text" style="font-size: 3vw;padding: 6%;">
+                    <h3>Site Error</h3>
+                    <br />
+                    <p>' . error_string("generic_error") . '</p>
+                </div>';
+        }
 
-		if ($level < 2) {
-			$print .= '
-				<div class="error_text" style="font-size: 3vw;padding: 6%;">
-					<h3>Site Error</h3>
-					<br />
-					<p>' . error_string("generic_error") . '</p>
-				</div>';
-		}
+        // If there's any content to display, return via ajax
+        if (!empty($print)) {
+            ajax_return("", $print);
+        }
+    }
 
-		if (!empty($print)) {
-			ajax_return("", $print);
-		}
-	}
-	return $display;
+    return $display;
 }
 
 function format_backtrace($callers, $plaintext = false) {
@@ -273,5 +280,18 @@ function format_backtrace($callers, $plaintext = false) {
 	$from .= $plaintext ? '' : '</ul>';
 
 	return $from;
+}
+
+function testCheck($description, $result, &$passCounter, &$totalCounter) {
+    // Increment the total counter every time the test is run
+    $totalCounter++;
+
+    // If the test passed, increment the pass counter
+    if ($result === "PASS") {
+        $passCounter++;
+    }
+
+    // Return the test description with the result
+    return "<p>$totalCounter.) $description: $result</p>";
 }
 ?>
