@@ -19,76 +19,74 @@ $CFG->debugoverride = true;
 $CFG->debug = 3;
 
 if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',' . get_ip_address() . ',')) {
-	include($CFG->dirroot . $CFG->alternatepage);
+    include($CFG->dirroot . $CFG->alternatepage);
 } else {
-	///////////////////////////////////////////// TESTING SETUP /////////////////////////////////////////////
-	echo get_css_set("main");
-	echo get_js_set("main");
+    ///////////////////////////////////////////// TESTING SETUP /////////////////////////////////////////////
+    echo get_css_set("main");
+    echo get_js_set("main");
 
-	echo "<style>
-		.unit_test_menu li {
-			cursor: pointer;
-		}
-		.unit_test_menu li .title {
-			padding: 5px;
-		}
-		.unit_test_menu li.open .title {
-			font-weight: bold;
-		}
-		.unit_test_menu li.open .title:hover {
-			background-color: #D3D3D3;
-		}
-		.unit_test_menu li .title:hover {
-			background-color: #D3D3D3;
-		}
-		.unit_test_menu li div {
-			font-weight: initial;
-			padding: 2px 10px;
-		}
-		.unit_test_menu li.open div {
-			
-		}
-		.unit_test_menu li:not(.open) div {
-			display: none;
-		}
-		.unit_test_menu li .title:hover {
-			background-color: #D3D3D3;
-		}
-		.unit_test_menu {
-			list-style-type: none;
-			margin: 0;
-    		padding: 0;	
-		}
-		</style>";
+    echo "<style>
+        .unit_test_menu li {
+            cursor: pointer;
+        }
+        .unit_test_menu li .title {
+            padding: 5px;
+        }
+        .unit_test_menu li .title:hover {
+            background-color: #D3D3D3;
+        }
+        .unit_test_menu li div {
+            font-weight: initial;
+            padding: 2px 10px;
+        }
+        .unit_test_menu li .title:hover {
+            background-color: #D3D3D3;
+        }
+        .unit_test_menu li.open .title {
+            background-color: silver;
+        }
+        .unit_test_menu {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+        </style>";
 
-	echo '<div style="padding: 0px 20px;">';
+    echo '<div style="padding: 0px 20px;">';
 
-	if (!is_siteadmin($USER->userid)) {
-		trigger_error(error_string("no_permission", ["administrative"]), E_USER_WARNING);
-		return;
-	}
+    if (!is_siteadmin($USER->userid)) {
+        trigger_error(error_string("no_permission", ["administrative"]), E_USER_WARNING);
+        return;
+    }
 
-	echo '
-		<ul class="unit_test_menu">';
+    echo '
+        <ul class="unit_test_menu">';
 
-	///////////////////////////////////////////// Variable TESTS /////////////////////////////////////////////
-	include ('test_vars.php');
+    ///////////////////////////////////////////// Variable TESTS /////////////////////////////////////////////
+    include ('test_vars.php');
 
-	///////////////////////////////////////////// TEMPLATE TESTS /////////////////////////////////////////////
-	include ('test_templates.php');
+    ///////////////////////////////////////////// TEMPLATE TESTS /////////////////////////////////////////////
+    include ('test_templates.php');
 
-	///////////////////////////////////////////// DATABASE TESTS /////////////////////////////////////////////
-	include ('test_database.php');
-	
-	echo "</ul>";
+    ///////////////////////////////////////////// DATABASE TESTS /////////////////////////////////////////////
+    include ('test_database.php');
 
-	echo '
-	<script type="text/javascript">
+    echo "</ul>";
+
+    echo '
+    <script type="text/javascript">
         $(window).on("load", function() {
+            $(".unit_test_menu li div").hide();
             $(".unit_test_menu li").on("click", function() {
-				$(".unit_test_menu li div").hide("slow");
-				$(this).find("div").show("slow");
-			});
+                $(".unit_test_menu li div").hide("slow");
+                if ($(this).hasClass("open")) {
+                    $(this).removeClass("open");
+                } else {
+                    $(".unit_test_menu li").removeClass("open");
+                    $(this).addClass("open");
+                    $(this).find("div").show("slow");
+                }
+            });
         });
     </script>';
 }
