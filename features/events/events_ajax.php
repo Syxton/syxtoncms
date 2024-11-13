@@ -1949,7 +1949,7 @@ global $CFG, $MYVARS;
     $location = clean_myvar_req("location", "string");
     $category = clean_myvar_req("category", "int");
     $siteviewable = clean_myvar_opt("siteviewable", "int", 0);
-    $byline = clean_myvar_req("byline", "string");
+    $byline = clean_myvar_opt("byline", "string", "");
     $description = clean_myvar_opt("editor1", "html", "");
     $multiday = clean_myvar_opt("multiday", "bool", false);
     $workers = clean_myvar_opt("workers", "int", 0);
