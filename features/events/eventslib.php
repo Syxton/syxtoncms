@@ -2535,7 +2535,7 @@ global $CFG;
     $facebookappid = $global_settings->events_template_global->$templateid->facebookappid->setting;
     $facebooksecret = $global_settings->events_template_global->$templateid->facebooksecret->setting;
 
-    if (!empty($facebookappid) && !empty(facebooksecret)) {
+    if (!empty($facebookappid) && !empty($facebooksecret)) {
         // Load facebook library.
         require_once ($CFG->dirroot . '/features/events/facebook/facebook.php');
         $config = [
