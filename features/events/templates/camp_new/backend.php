@@ -169,7 +169,7 @@ global $CFG, $MYVARS, $USER, $error;
                         </div>';
                 } else if ($payment_method == "Campership") { // Campership selected.
                     $waivefee = true; // Campership is a free registration.
-                    $campershipreq = "CAMPERSHIP REQUEST (" . $MYVARS->GET['campership'] . "): ";
+                    $campershipreq = "CAMPERSHIP REQUEST (" . $campership . "): ";
                     $regmessage = '
                         <br />
                         You have requested to pay by Campership.
