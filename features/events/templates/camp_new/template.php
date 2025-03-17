@@ -476,20 +476,23 @@ if ($event['fee_full'] > 0) {
             <select tabindex="31" id="payment_method" name="payment_method" size="1" onchange="updateMessage();" onclick="updateMessage();" data-rule-required="true">
                 <option value="">Choose One</option>
                 <option value="PayPal">PayPal</option>
-                <option value="Check/Money Order">Check or Money Order</option>
-                <option value="Campership">Campership</option>
+                <option value="Pay Later">Pay Later</option>
             </select>
             <div class="spacer" style="clear: both;"></div>
         </div>
-        <div class="rowContainer" id="campershiprow" style="display: none">
-            <label class="rowTitle" for="campership">Campership Info *</label>
-            <input tabindex="32" type="text" id="campership" name="campership" /><div class="tooltipContainer info">' . get_help("help_campership:events:templates/camp_new") . '</div>
+        <div class="rowContainer" id="campershiprow">
+            <label class="rowTitle" for="campership">Apply Campership</label>
+            <input id="campershipcode" type="text" name="campershipcode" style="display: inline-block" /> <button id="applycampership" type="button">Apply</button>
+            <div id="campershipresult" style="padding: 2px;text-align: center;"></div>
+            <input tabindex="32" type="hidden" id="campership" name="campership" />
+            <div class="tooltipContainer info">' . get_help("help_campership:events:templates/camp_new") . '</div>
             <div class="spacer" style="clear: both;"></div>
         </div>
         <div class="rowContainer" style="height: auto;">
             <label class="rowTitle" for="payment_note">Notes:</label>
-            <textarea name="payment_note" id="payment_note" rows="8" cols="60">After you select a payment method, you can put a message here.'."\n\n" . 'Do you have a cabin preference or cabin-mates?'."\n" . 'Do you have a question for the director?
-            </textarea>
+            <div name="payment_note" id="payment_note">
+            Please select a payment method.  If you have a campership code, enter it and click Apply.
+            </div>
             <div class="spacer" style="clear: both;"></div>
         </div>';
     } else {
@@ -501,8 +504,7 @@ if ($event['fee_full'] > 0) {
         <input type="hidden" id="campership" name="campership" value=""/>
         <input type="hidden" id="owed" name="owed" value="0"/>
         <input type="hidden" name="payment_method" id="payment_method" value="" />
-        <input type="hidden" id="payment_amount" name="payment_amount" value="0"/>
-        <input type="hidden" id="payment_note" name="payment_note" value=""/>';
+        <input type="hidden" id="payment_amount" name="payment_amount" value="0"/>';
 }
 
 // Submit Print and Reset buttons
