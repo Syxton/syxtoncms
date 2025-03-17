@@ -51,8 +51,10 @@ global $CFG, $MYVARS, $USER, $error;
         $campership = clean_myvar_opt("campership", "string", false);
         $cart_total = $total_owed ? $total_owed + $owed : $owed;
         $total_owed = get_timestamp() < $event["sale_end"] ? $event["sale_fee"] + $picture_cost + $shirt_cost : $event["fee_full"] + $picture_cost + $shirt_cost;
-        $campership = $payment_method == "Campership" && empty($campership) ? "David Grubb Campership Fund" : $campership;
 
+        // Check for complete campership data.
+        $payment_method = $payment_method == "Campership" && empty($campership) ? "Pay Later" : $payment_method;
+        $campership = $payment_method == "Campership" && empty($campership) ? "" : $campership;
         $pending = $payment_method == "Campership" ? false : true;
 
         // Prepare names
@@ -173,11 +175,17 @@ global $CFG, $MYVARS, $USER, $error;
                         You have requested to pay by Campership.
                         <br />
                         We will review your application. If we find that you are not elegible for a campership, we will notifiy you before your event date. Thank you! You are now registered for camp.';
-                } else { // Check or Money Order required.
+                } else { // Pay Later.
                     $regmessage = '
                         Your registration is pending. To finalize your registrations:
                         <br />
-                        Please send a check or money order in the amount of <span style="color:blue;font-size:1.25em;">$' . number_format($cart_total, 2) . '</span> payable to <strong>' . $event["payableto"] . '</strong> and send it to
+                        You have chosen to pay at a later date.  There are multiple ways you may do this.
+                        <br />
+                        Payment can be made via the pay link that you will recieve in your registration email, or
+                        <br />
+                        you may pay in-person at check-in for the event (additional fees may apply).
+                        <br /><br />
+                        You may also send a check or money order in the amount of <span style="color:blue;font-size:1.25em;">$' . number_format($cart_total, 2) . '</span> payable to <strong>' . $event["payableto"] . '</strong> and send it to
                         <br />
                         <div style="text-align:center;">
                             <strong>' . $event['checksaddress'] . '</strong>
@@ -282,8 +290,11 @@ global $CFG, $MYVARS, $USER, $error;
                                 <br />
                                 To register a child:  Select the week ' . common_weeks($event, true, "week1", $regid) . '.
                                 <br /><br />
-                                If you are done with the registration process, please make out your <br />
-                                check or money order in the amount of <span style="color:blue;font-size:1.25em;">$' . $cart_total . '</span> payable to <strong>' . $event["payableto"] . '</strong> and send it to
+                                If you are done with the registration process, you have multiple ways to pay <br />
+                                You can make an online payment through the payment link in the email you will receive <br />
+                                You can also pay at the time of the event (although additional fees could apply) <br />
+                                or if you are planning to pay by check or money order, make it <br />
+                                in the amount of <span style="color:blue;font-size:1.25em;">$' . $cart_total . '</span> payable to <strong>' . $event["payableto"] . '</strong> and send it to
                                 <br /><br /><br />
                                 <div style="text-align:center;">
                                     ' . $event['checksaddress'] . '.
