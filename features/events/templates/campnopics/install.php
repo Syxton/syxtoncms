@@ -6,6 +6,7 @@
  * $Date: 4/21/08
  * $Revision: .12
  ***************************************************************************/
+
 //Form name:Section:Title
 $thisversion = 2018062700;
 $templatename = 'Camp Wabashi Week (no pics)';
@@ -47,30 +48,67 @@ HealthMemberName:Health:Member Name;
 HealthRelationship:Health:Relationship;
 HealthTetanusDate:Health:Tetanus Date;';
 
-$settings = [];
+// Format it for db;
+$formlist = str_replace(["\r", "\n", "\t"], '', $formlist);
 
+$settings = [];
 $settings = dbescape(serialize($settings));
 
 //If it is already installed, don't install it again.
-if (!$template = get_db_row("SELECT * FROM events_templates WHERE name = ||name||", ["name" => $templatename])) {
-	$SQL = "INSERT INTO events_templates (name, folder, formlist, registrant_name, orderbyfield, settings)
-            VALUES ('$templatename', '$templatefolder','" . str_replace(["\r", "\n", "\t"], '', $formlist) . "', '$registrant_name', '$orderbyfield', '$settings')";
+if (!$template = get_event_template_by_name($templatename)) {
+    // Install new registration template.
+    $templateid = execute_db_sql(
+        fetch_template("dbsql/events.sql", "insert_events_template", "events"),
+        [
+            "name" => $templatename,
+            "folder" => $templatefolder,
+            "formlist" => $formlist,
+            "registrant_name" => $registrant_name,
+            "orderbyfield" => $orderbyfield,
+            "settings" => $settings,
+        ]
+    );
 
-    $templateid = execute_db_sql($SQL);
-    execute_db_sql("INSERT INTO settings (type, pageid, featureid, setting_name, setting,extra) VALUES('events_template', 0, 0, 'version', '$thisversion', '$templatefolder')");
+    execute_db_sql(
+        fetch_template("dbsql/settings.sql", "insert_setting"),
+        [
+            "type" => "events_template",
+            "pageid" => 0,
+            "featureid" => 0,
+            "setting_name" => "version",
+            "setting" => $thisversion,
+            "extra" => $templatefolder,
+        ]
+    );
 } else { // Update formslist, settings, and orderbyfield in case they have changed.
     $templateid = $template["template_id"];
     $version = get_db_field("setting", "settings", "setting_name='version' AND type='events_template' AND extra='$templatefolder'");
 
-	$thisversion = 2018062700;
+    $thisversion = 2018062700;
     if (!$version || $version < $thisversion) {
-        execute_db_sql("UPDATE settings SET setting = '$thisversion' WHERE setting_name = 'version' AND type = 'events_template' AND extra = '$templatefolder'");
-	}
+        execute_db_sql(
+            fetch_template("dbsql/settings.sql", "update_setting_by_extra"),
+            [
+                "setting" => $thisversion,
+                "setting_name" => "version",
+                "type" => "events_template",
+                "extra" => $templatefolder,
+            ]
+        );
+    }
 
-	//$thisversion = ;
-	//if ($version < $thisversion) {
-    //    execute_db_sql("UPDATE settings SET setting = '$thisversion' WHERE setting_name = 'version' AND type = 'events_template' AND extra = '$templatefolder'");
-	//}
+    //$thisversion = ;
+    //if ($version < $thisversion) {
+        // execute_db_sql(
+        //     fetch_template("dbsql/settings.sql", "update_setting_by_extra"),
+        //     [
+        //         "setting" => $thisversion,
+        //         "setting_name" => "version",
+        //         "type" => "events_template",
+        //         "extra" => $templatefolder,
+        //     ]
+        // );
+    //}
 }
 
 $globalsettings = [];

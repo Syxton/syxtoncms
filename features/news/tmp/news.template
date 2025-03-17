@@ -54,7 +54,7 @@ news_table||
 ||news_table
 
 news_archive_template||
-    <div class="news_archive_wrapper">
+    <div class="news_archive_wrapper" style="font-size: calc(.3vw  +  10px);">
         <div class="news_archive_label">
             <strong><span>Archive</span></strong>
         </div>

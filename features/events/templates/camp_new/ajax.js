@@ -46,18 +46,27 @@ function updateMessage(){
 }
 
 function updateAge() {
+    // Get the camper's birth date and the event date
     var bday = datetype("Camper_Birth_Date");
     var event = datetype("event_begin_date");
-    difference = event.getFullYear() - bday.getFullYear() - 1;
 
-    if (event > bday){
-        difference++;
+    var diffInMilliseconds = event.getTime() - bday.getTime();
+    const millisecondsInYear = 1000 * 60 * 60 * 24 * 365.25; // Account for leap years
+
+    if (isNaN(diffInMilliseconds) || diffInMilliseconds < 0) {
+        bday = lastvaliddate;
+        $("#Camper_Birth_Date").val(lastvaliddate.toISOString().substring(0, 10));
+        updateAge();
+        return false;
     }
 
-    difference = difference > 0 ? difference : 0;
-    difference = difference > 110 ? "Yikes!" : difference;
+    // Update the last valid date to the currently selected date.
+    lastvaliddate = bday;
 
-    $("#Camper_Age").val(difference);
+    // Update the age field, rounding up to nearest full year.
+    let age = Math.round(diffInMilliseconds / millisecondsInYear);
+
+    $("#Camper_Age").val(age);
 }
 
 function updateTotal(){
@@ -90,6 +99,9 @@ function final_form_prep(){
 }
 
 $(function () {
+    // Create lastvaliddate to prevent invalid dates in the Camper_Birth_Date field
+    window.lastvaliddate = datetype("Camper_Birth_Date");
+
     $("#applycampership").on("click", async function (e) {
         e.preventDefault();
 

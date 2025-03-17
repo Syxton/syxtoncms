@@ -91,15 +91,23 @@ global $CFG;
             $var = filter_var($var, FILTER_VALIDATE_INT, FILTER_NULL_ON_FAILURE) ?? $default;
             break;
         case "float":
-            if ($var !== "" &&(float) $var === 0.0) { return 0.0; }
+            if ($var !== "" && (float) $var === 0.0) { return 0.0; }
             $var = ltrim($var, "0"); // leading zeros should be removed.
             $var = filter_var($var, FILTER_VALIDATE_FLOAT, FILTER_NULL_ON_FAILURE) ?? $default;
             break;
         case "string":
-            $var = !strlen((string)$var) ? $default : urldecode((string)$var);
+            $var = !strlen((string) $var) ? $default : urldecode((string) $var);
             break;
         case "array":
-            $var = empty($var) ? $default : (array)$var;
+            $var = empty($var) ? $default : (array) $var;
+            break;
+        case "object":
+            if (empty($var)) {
+                $var = $default;
+                break;
+            }
+
+            $var = (object) $var;
             break;
         case "json":
             if (empty($var)) {
@@ -126,7 +134,7 @@ global $CFG;
                     'valid_xhtml' => 1,
                     'balance' => 1,
             ];
-            $var = empty($var) ? $default : urldecode(htmLawed((string)$var, $params));
+            $var = empty($var) ? $default : urldecode(htmLawed((string) $var, $params));
             break;
         case "bool":
             $var = filter_var($var, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE) ?? $default;

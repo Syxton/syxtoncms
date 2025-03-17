@@ -760,111 +760,89 @@ global $CFG;
 
 function get_registration_sort_sql($eventid, $online_only=false) {
     if ($online_only) { $online_only = "AND e.manual = 0"; }
-    $SQL = "SELECT e.*"; $orderby = "";
+    $sortSQL = "SELECT e.*"; $orderby = "";
 
-    $sort_info = get_db_row("SELECT e.eventid,b.orderbyfield,b.folder FROM events as e
-                                JOIN events_templates as b ON b.template_id=e.template_id
-                                WHERE eventid='$eventid'");
+    $SQL = fetch_template("dbsql/events.sql", "get_events_with_same_template", "events");
+    $sort_info = get_db_row($SQL, ["eventid" => $eventid]);
 
-         if ($sort_info["folder"] == "none") { //form template
+    if ($sort_info["folder"] == "none") { //form template
         $sort_elements=explode(",", $sort_info["orderbyfield"]);$i=0;
         while (isset($sort_elements[$i])) {
-            $SQL .= ",(SELECT value FROM events_registrations_values
+            $sortSQL .= ",(SELECT value FROM events_registrations_values
                             WHERE elementid='$sort_elements[$i]' AND regid=v.regid) as val$i";
             $orderby .= $orderby == "" ? "val$i" : ",val$i";
             $i++;
         }
-        $SQL .= " FROM events_registrations as e
+        $sortSQL .= " FROM events_registrations as e
                     JOIN events_registrations_values as v ON (e.regid=v.regid)
                     WHERE e.eventid='$eventid' $online_only
                     GROUP BY regid
                     ORDER BY val0 LIKE '%Reserved%' DESC, $orderby";
-         } else { //custom template
+    } else { //custom template
         $sort_elements=explode(",", $sort_info["orderbyfield"]);$i=0;
         while (isset($sort_elements[$i])) {
-            $SQL .= ",(SELECT value FROM events_registrations_values
+            $sortSQL .= ",(SELECT value FROM events_registrations_values
                             WHERE elementname='$sort_elements[$i]' AND regid=v.regid) as val$i";
             $orderby .= $orderby == "" ? "val$i" : ",val$i";
             $i++;
         }
-        $SQL .= " FROM events_registrations as e
+        $sortSQL .= " FROM events_registrations as e
                     JOIN events_registrations_values as v ON (e.regid=v.regid)
                     WHERE e.eventid='$eventid' $online_only
                     GROUP BY regid
                     ORDER BY val0 LIKE '%Reserved%' DESC, $orderby";
-         }
+    }
 
-return $SQL;
+return $sortSQL;
 }
 
 function printable_registration($regid, $eventid, $template_id) {
+    global $CFG;
     $returnme = '<div>';
+
+    if (!defined('FORMLIB')) { include_once($CFG->dirroot . '/lib/formlib.php'); }
     $template = get_event_template($template_id);
+    $template_forms = get_template_formlist($template_id);
+
     if ($template["folder"] == "none") {
-        if ($template_forms = get_db_result("SELECT * FROM events_templates_forms
-                                                WHERE template_id='$template_id'
-                                                ORDER BY sort")) {
-              while ($form_element = fetch_row($template_forms)) {
-                  if ($form_element["type"] == "payment") {
-                      if ($values = get_db_result("SELECT * FROM events_registrations_values
-                                                    WHERE regid='$regid' AND elementid='" . $form_element["elementid"] . "'
-                                                    ORDER BY entryid")) {
-                          $i = 0; $values_display = explode(",", $form_element["display"]);
-                          while ($value = fetch_row($values)) {
-                                $returnme .= '<br />
-                                            <div style="display:inline-block;width:150px;vertical-align: top;">
-                                                <strong>' . $values_display[$i] . '</strong>
-                                            </div>
-                                            <div style="display:inline-block;max-width: 400px;padding-left:5px;">
-                                                ' . stripslashes($value["value"]) . '
-                                            </div>';
-                              $i++;
+        if ($template_forms) {
+            while ($form_element = fetch_row($template_forms)) {
+                $SQL = fetch_template("dbsql/events.sql", "get_registration_value_by_id", "events");
+                if ($form_element["type"] == "payment") {
+                    $elements = get_db_result($SQL, ["regid" => $regid, "elementid" => $form_element["elementid"]]);
+                    if ($elements) {
+                        $i = 0; $values_display = explode(",", $form_element["display"]);
+                        while ($element = fetch_row($elements)) {
+                            $returnme .= get_printable_registration_row($values_display[$i], $element["value"]);
+                            $i++;
                         }
                     }
                 } else {
-                        $value = get_db_row("SELECT * FROM events_registrations_values
-                                            WHERE regid='$regid'
-                                                AND elementid='" . $form_element["elementid"] . "'");
-                        $returnme .= '<br />
-                                    <div style="display:inline-block;width:150px;vertical-align: top;">
-                                        <strong>' . $form_element["display"] . '</strong>
-                                    </div>
-                                    <div style="display:inline-block;max-width: 400px;padding-left:5px;">
-                                        ' . stripslashes($value["value"]) . '
-                                    </div>';
+                    $element = get_db_row($SQL, ["regid" => $regid, "elementid" => $form_element["elementid"]]);
+                    $returnme .= get_printable_registration_row($form_element["display"], $element["value"]);
                 }
             }
         }
     } else {
-        $template_forms = explode(";", $template["formlist"]);
         $i=0;
-        while (!empty($template_forms[$i])) {
-              $form = explode(":", $template_forms[$i]);
-              $value = get_db_row("SELECT * FROM events_registrations_values
-                                    WHERE regid='$regid'
-                                        AND elementname='" . $form[0]."'");
-              $returnme .=   '<br />
-                            <div style="display:inline-block;width:150px;vertical-align: top;">
-                                <strong>' . $form[2] . '</strong>
-                            </div>
-                            <div style="display:inline-block;max-width: 400px;padding-left:5px;">
-                                ' . stripslashes($value["value"]) . '
-                            </div>';
-              $i++;
+        foreach($template_forms as $form) {
+            $field = get_template_formlist_element_array($template, $form);
+            if (isset($field["displayonly"])) {
+                continue;
+            }
+
+            $SQL = fetch_template("dbsql/events.sql", "get_registration_value", "events");
+            $value = get_db_row($SQL, ["regid" => $regid, "elementname" => strtolower($field["name"])]);
+            $returnme .= get_printable_registration_row($field["title"], $value["value"]);
         }
     }
 
     // Payment info
-    if ($values = get_db_result("SELECT * FROM events_registrations_values WHERE regid='$regid' AND elementname='tx' ORDER BY entryid")) {
+    $SQL = fetch_template("dbsql/events.sql", "get_registration_value", "events");
+    if ($values = get_db_result($SQL, ["regid" => $regid, "elementname" => 'tx'])) {
         while ($value = fetch_row($values)) {
             $params = unserialize($value["value"]);
-            $returnme .= '<br />
-                            <div style="display:inline-block;width:150px;vertical-align: top;">
-                                <strong>Paypal TX</strong>
-                            </div>
-                            <div style="display:inline-block;max-width: 400px;padding-left:5px;">
-                                &nbsp;$' . stripslashes($params["amount"] . " on " . date("m/d/Y", $params["date"]) . " - " . $params["txid"]) . '
-                            </div>';
+            $returnme .= get_printable_registration_row("Paypal TX", "$" . $params["amount"] . " on " . date("m/d/Y", $params["date"]) . " - " . $params["txid"]);
             $i++;
         }
     }
@@ -874,11 +852,24 @@ function printable_registration($regid, $eventid, $template_id) {
     return $returnme;
 }
 
+function get_printable_registration_row($title, $value) {
+    return '
+        <br />
+        <div style="line-height: 1.5em;display:inline-block;width:200px;margin-left: 50px;vertical-align: top;">
+            <strong>' . $title . '</strong>
+        </div>
+        <div style="display:inline-block;padding-left:5px;line-height: 1.5em;">
+            ' . stripslashes($value) . '
+        </div>';
+}
+
 function save_reg_changes() {
 global $CFG, $MYVARS, $USER;
     $eventid = clean_myvar_opt("eventid", "int", false);
     $regid = clean_myvar_opt("regid", "int", false);
     $reg_eventid = clean_myvar_opt("reg_eventid", "int", false);
+
+    $sendemail = false;
 
     $error = "";
     try {
@@ -931,9 +922,7 @@ global $CFG, $MYVARS, $USER;
                                 ];
 
                                 $message = registration_email($regid, $touser);
-                                if (send_email($touser, $fromuser, $CFG->sitename . " Registration", $message)) {
-                                    send_email($fromuser, $fromuser, $CFG->sitename . " Registration", $message);
-                                }
+                                $sendemail = true;
                             }
                         } else {
                             if ($payment_method = "Campership") {
@@ -951,6 +940,13 @@ global $CFG, $MYVARS, $USER;
         $error = $e->getMessage();
         rollback_db_transaction($error);
     }
+
+    if ($sendemail && isset($touser) && isset($fromuser) && isset($message)) {
+        if (@send_email($touser, $fromuser, $CFG->sitename . " Registration", $message)) {
+            @send_email($fromuser, $fromuser, $CFG->sitename . " Registration", $message);
+        }
+    }
+
     ajax_return("", $error);
 }
 
@@ -1014,7 +1010,7 @@ global $CFG;
 }
 
 function get_registration_info() {
-global $CFG, $MYVARS, $USER;
+    global $CFG, $MYVARS, $USER;
     $eventid = clean_myvar_req("eventid", "int");
     $regid = clean_myvar_opt("regid", "int", false);
 
@@ -1028,18 +1024,16 @@ global $CFG, $MYVARS, $USER;
         $return = get_back_to_registrations_link($eventid);
 
         // Get all events beginning 3 months in the past, to a year in the future.
-        $today = get_timestamp();
-
-        $events = get_db_result("SELECT eventid, (CONCAT(FROM_UNIXTIME(e.event_begin_date , '%Y'), ' ', e.name)) AS name
-                                   FROM events e
-                                  WHERE e.confirmed = 1
-                                    AND e.template_id = '$template_id'
-                                    AND e.start_reg > 0
-                                    AND ((e.event_begin_date - $today) < 31560000 && (e.event_begin_date - $today) > -7776000)");
-
+        $events = get_db_result(
+            fetch_template("dbsql/events.sql", "get_current_events_with_same_template", "events"),
+            [
+                "template_id" => $template_id,
+                "today" => get_timestamp(),
+            ]
+        );
 
         // If similar events exist, display the copy registration form.
-        if (!empty((array) $events)) {
+        if (!$events) {
             ajaxapi([
                 "id" => "copy_registration",
                 "url" => "/features/events/events_ajax.php",
@@ -1058,7 +1052,7 @@ global $CFG, $MYVARS, $USER;
                 "properties" => [
                     "name" => "copy_reg_to",
                     "id" => "copy_reg_to",
-                    "style" => "width:300px;",
+                    "style" => "width:100%",
                 ],
                 "values" => $events,
                 "valuename" => "eventid",
@@ -1102,7 +1096,7 @@ global $CFG, $MYVARS, $USER;
                 "properties" => [
                     "name" => "reg_eventid",
                     "id" => "reg_eventid",
-                    "style" => "width:420px;",
+                    "style" => "width:100%;",
                 ],
                 "values" => $events,
                 "valuename" => "eventid",
@@ -1117,11 +1111,12 @@ global $CFG, $MYVARS, $USER;
         $event_reg = get_db_row("SELECT * FROM events_registrations WHERE regid='$regid'");
 
         $rows = "";
+        if (!defined('FORMLIB')) { include_once($CFG->dirroot . '/lib/formlib.php'); }
         $template = get_event_template($template_id);
+        $template_forms = get_template_formlist($template_id);
+
         if ($template["folder"] == "none") {
-            if ($template_forms = get_db_result("SELECT * FROM events_templates_forms
-                                                    WHERE template_id='$template_id'
-                                                    ORDER BY sort")) {
+            if ($template_forms) {
                 while ($form_element = fetch_row($template_forms)) {
                     if ($form_element["type"] == "payment") {
                         if ($values = get_db_result("SELECT * FROM events_registrations_values
@@ -1132,11 +1127,11 @@ global $CFG, $MYVARS, $USER;
                             while ($value = fetch_row($values)) {
                                 $rows .= '
                                     <tr>
-                                        <td>
+                                        <td class="registration_info_title">
                                             ' . $values_display[$i] . '
                                         </td>
                                         <td>
-                                            <input id="' . $value["entryid"] . '" name="' . $value["entryid"] . '" type="text" size="45" value="' . stripslashes($value["value"]) . '" />
+                                            <input id="' . $value["entryid"] . '" name="' . $value["entryid"] . '" type="text" style="width:100%;" value="' . stripslashes($value["value"]) . '" />
                                         </td>
                                     </tr>';
                                 $i++;
@@ -1148,47 +1143,50 @@ global $CFG, $MYVARS, $USER;
                                                 AND elementid='" . $form_element["elementid"] . "'");
                         $rows .= '
                             <tr>
-                                <td>
+                                <td class="registration_info_title">
                                     ' . $form_element["display"] . '
                                 </td>
                                 <td>
-                                    <input id="' . $value["entryid"] . '" name="' . $value["entryid"] . '" type="text" size="45" value="' . stripslashes($value["value"]) . '" />
+                                    <input id="' . $value["entryid"] . '" name="' . $value["entryid"] . '" type="text" style="width:100%;" value="' . stripslashes($value["value"]) . '" />
                                 </td>
                             </tr>';
                     }
                 }
             }
         } else {
-            $template_forms = explode(";", trim($template["formlist"], ';'));
-            $i = 0;
-            while (isset($template_forms[$i])) {
-                $form = explode(":", $template_forms[$i]);
+            $template_forms = get_template_formlist($template_id);
+            foreach ($template_forms as $form) {
+                $field = get_template_formlist_element_array($template, $form);
 
-                $value = get_db_row("SELECT * FROM events_registrations_values WHERE regid = '$regid' AND elementname = '" . $form[0] . "'");
+                if (isset($field["displayonly"])) {
+                    continue;
+                }
+
+                $SQL = fetch_template("dbsql/events.sql", "get_registration_value", "events");
+                $value = get_db_row($SQL, ["regid" => $regid, "elementname" => strtolower($field["name"])]);
 
                 $val = $entryid = "";
                 if (!$value) { // No value so we create a blank.
                     $SQL = "INSERT INTO events_registrations_values
                                         (regid, value, eventid, elementname)
-                                 VALUES ('$regid', '', '$eventid', '" . $form[0] . "')";
+                                 VALUES ('$regid', '', '$eventid', '" . $field["name"] . "')";
                     $entryid = execute_db_sql($SQL);
                   } else {
                     $val = stripslashes($value["value"]);
                     $entryid = $value["entryid"];
                 }
 
-                $formfield = '<input id="' . $entryid . '" name="' . $entryid . '" type="text" size="45" value="' . $val . '" />';
+                $formfield = '<input id="' . $entryid . '" name="' . $entryid . '" type="text" style="width: 100%" value="' . $val . '" />';
 
                 $rows .= '
                     <tr>
-                        <td>' .
-                            $form[2] . '
+                        <td class="registration_info_title">' .
+                            $field["title"] . '
                         </td>
                         <td>
                             ' . $formfield . '
                         </td>
                     </tr>';
-                  $i++;
             }
         }
 
@@ -1375,12 +1373,13 @@ function load_registrations_menu_javascript($eventid) {
     ]);
 }
 
-function eventsearch() {
+function registrationsearch() {
 global $CFG, $USER;
     if (!defined('SEARCH_PERPAGE')) { define('SEARCH_PERPAGE', 8); }
 
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     $searchwords = trim(clean_myvar_opt("searchwords", "string", ""));
+    $searchtype = clean_myvar_opt("searchtype", "string", "events");
     $pagenum = clean_myvar_opt("pagenum", "int", 0);
 
     $pageparams = [];
@@ -1399,18 +1398,34 @@ global $CFG, $USER;
         $i = 0; $searchstring = "";
         $searchparams = ["pageid" => $pageid];
         $words = explode(" ", $dbsearchwords);
-        while (isset($words[$i])) {
-            $searchparams["words$i"] = "%" . $words[$i] . "%";
-            $searchpart = "(name LIKE ||words$i||)";
-            $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
-            $i++;
-        }
 
-        $sqlparams = [
-            "issite" => ($pageid == $CFG->SITEID),
-            "searchstring" => $searchstring,
-        ];
-        $SQL = fill_template("dbsql/events.sql", "events_search", "events", $sqlparams, true);
+        if ($searchtype == "events") {
+            while (isset($words[$i])) {
+                $searchparams["words$i"] = "%" . $words[$i] . "%";
+                $searchpart = "(name LIKE ||words$i||)";
+                $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
+                $i++;
+            }
+
+            $sqlparams = [
+                "issite" => ($pageid == $CFG->SITEID),
+                "searchstring" => $searchstring,
+            ];
+            $SQL = fill_template("dbsql/events.sql", "events_search", "events", $sqlparams, true);
+        } else {
+            while (isset($words[$i])) {
+                $searchparams["words$i"] = "%" . $words[$i] . "%";
+                $searchpart = "(LOWER(elementname) LIKE '%name%' AND value LIKE ||words$i||)";
+                $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
+                $i++;
+            }
+
+            $sqlparams = [
+                "issite" => ($pageid == $CFG->SITEID),
+                "searchstring" => $searchstring,
+            ];
+            $SQL = fill_template("dbsql/events.sql", "registration_search", "events", $sqlparams, true);
+        }
 
         // Get the total for all pages returned.
         $pageparams["total"] = get_db_count($SQL, $searchparams);
@@ -1427,53 +1442,73 @@ global $CFG, $USER;
                 throw new \Exception(error_string("generic_db_error"));
             }
 
-            ajaxapi([
-                "id" => "export_event_registrations" ,
-                "paramlist" => "eventid, pageid",
-                "url" => "/features/events/events_ajax.php",
-                "data" => [
-                    "action" => "export_registrations",
-                    "pagieid" => "js||pageid||js",
-                    "eventid" => "js||eventid||js",
-                ],
-                "display" => "downloadframe",
-                "event" => "none",
-            ]);
-
-            $rows = "";
-            while ($event = fetch_row($results)) {
-                $export = "";
-                $limit = "&#8734;"; // infinity symbol
-                if ($event["start_reg"] > 0) {
-                    $regcount = get_db_count("SELECT * FROM events_registrations WHERE eventid='" . $event['eventid'] . "'");
-                    $limit = $event['max_users'] == "0" ? $limit : $event['max_users'];
-
-                    // GET EXPORT CSV BUTTON
-                    $canexport = false;
-                    if (user_is_able($USER->userid, "exportcsv", $event["pageid"])) {
-                        $canexport = true;
-                    }
-                }
-
-                $rowparams = [
-                    "event" => $event,
-                    "begindate" => date("m/d/Y", $event["event_begin_date"]),
-                    "canexport" => $canexport,
-                    "regcount" => $regcount,
-                    "limit" => $limit,
-                ];
-                $rows .= fill_template("tmp/events.template", "eventsearchrows", "events", $rowparams);
-            }
 
             $navparams = get_nav_params($pageparams);
-            $navparams["prev_action"] = "perform_eventsearch(" . ($pagenum - 1) . ", '$searchwords');";
-            $navparams["next_action"] = "perform_eventsearch(" . ($pagenum + 1) . ", '$searchwords');";
+            $navparams["prev_action"] = "perform_registrationsearch(" . ($pagenum - 1) . ", '$searchwords');";
+            $navparams["next_action"] = "perform_registrationsearch(" . ($pagenum + 1) . ", '$searchwords');";
 
-            $params = [
-                "searchnav" => fill_template("tmp/events.template", "searchnav", "events", $navparams),
-                "rows" => $rows,
-            ];
-            $return = fill_template("tmp/events.template", "eventsearchresults", "events", $params);
+            $rows = "";
+            if ($searchtype == "events") {
+                ajaxapi([
+                    "id" => "export_event_registrations" ,
+                    "paramlist" => "eventid, pageid",
+                    "url" => "/features/events/events_ajax.php",
+                    "data" => [
+                        "action" => "export_registrations",
+                        "pagieid" => "js||pageid||js",
+                        "eventid" => "js||eventid||js",
+                    ],
+                    "display" => "downloadframe",
+                    "event" => "none",
+                ]);
+
+                while ($event = fetch_row($results)) {
+                    $export = "";
+                    $limit = "&#8734;"; // infinity symbol
+                    if ($event["start_reg"] > 0) {
+                        $regcount = get_db_count("SELECT * FROM events_registrations WHERE eventid='" . $event['eventid'] . "'");
+                        $limit = $event['max_users'] == "0" ? $limit : $event['max_users'];
+
+                        // GET EXPORT CSV BUTTON
+                        $canexport = false;
+                        if (user_is_able($USER->userid, "exportcsv", $event["pageid"])) {
+                            $canexport = true;
+                        }
+                    }
+
+                    $rowparams = [
+                        "event" => $event,
+                        "begindate" => date("m/d/Y", $event["event_begin_date"]),
+                        "canexport" => $canexport,
+                        "regcount" => $regcount,
+                        "limit" => $limit,
+                    ];
+                    $rows .= fill_template("tmp/events.template", "eventsearchrows", "events", $rowparams);
+                }
+
+                $params = [
+                    "searchnav" => fill_template("tmp/events.template", "searchnav", "events", $navparams),
+                    "rows" => $rows,
+                ];
+                $return = fill_template("tmp/events.template", "eventsearchresults", "events", $params);
+            } else {
+                while ($reg = fetch_row($results)) {
+                    $rowparams = [
+                        "reg" => $reg,
+                        "regdate" => date("m/d/Y", $reg["date"]),
+                        "actions" => get_reg_actions($reg),
+                    ];
+                    $rows .= fill_template("tmp/events.template", "regsearchrows", "events", $rowparams);
+                }
+
+                $params = [
+                    "searchnav" => fill_template("tmp/events.template", "searchnav", "events", $navparams),
+                    "rows" => $rows,
+                ];
+                $return = fill_template("tmp/events.template", "regsearchresults", "events", $params);
+            }
+
+
         } else {
             $return = '
                 <div class="error_text" class="centered_span">
@@ -1486,6 +1521,21 @@ global $CFG, $USER;
 
     $return .= '<input type="hidden" id="searchwords" value="' . $searchwords . '" />';
     ajax_return($return, $error);
+}
+
+function get_reg_actions($reg) {
+    global $CFG;
+    $actions = "";
+
+    // Go to pay link
+    $actions .= '
+        <a
+            title="Pay"
+            target="_blank"
+            href="' . $CFG->wwwroot . '/features/events/events.php?action=pay&i=!&regcode=' . $reg["code"] . '">
+            ' . icon("credit-card") . '
+        </a>';
+    return $actions;
 }
 
 function lookup_reg() {
@@ -1803,9 +1853,9 @@ function get_limit_form() {
             $values = get_db_result($SQL, ["template_id" => $template_id]);
         } else {
             $values = [];
-            $formlist = explode(";", $template['formlist']);
+            $formlist = get_template_formlist($template_id);
             foreach ($formlist as $f) {
-                $el = explode(":", $f);
+                $el = get_template_formlist_element_array($template, $f);
                 if (isset($el[2]) && $el[1] != "Pay") {
                     $values[] = [
                         "elementid" => $el[0],
@@ -2237,25 +2287,25 @@ global $CFG, $USER;
     $template = get_event_template($event['template_id']);
 
     if ($template['folder'] != "none") {
-        $formlist = explode(";", $template['formlist']);
-        $sortby = "elementname";
-        $i = 0;
-        while (isset($formlist[$i])) {
-            $element = explode(":", $formlist[$i]);
-            $CSV .= "," . $element[2];
-            $i++;
+        $fields = get_template_formlist($event['template_id']);
+        foreach ($fields as $f) {
+            $field = get_template_formlist_element_array($template, $f);
+            if (isset($field["displayonly"])) {
+                continue;
+            }
+            $CSV .= "," . $field["title"];
         }
-        $CSV .= "\n";
+        $sortby = "elementname";
     } else {
         $formlist = get_db_result("SELECT * FROM events_templates_forms
                                         WHERE template_id='" . $event['template_id'] . "'
                                         ORDER BY sort");
-        $sortby = "elementid";
         while ($form = fetch_row($formlist)) {
             $CSV .= "," . $form["display"];
         }
-        $CSV .= "\n";
+        $sortby = "elementid";
     }
+    $CSV .= "\n";
 
     if ($registrations = get_db_result("SELECT * FROM events_registrations
                                             WHERE eventid='$eventid'
@@ -2271,12 +2321,14 @@ global $CFG, $USER;
                 $reorder[$value[$sortby]] = $value;
             }
             if ($template['folder'] != "none") {
-                $i=0;$formlist = explode(";", $template['formlist']);
-                    while (isset($formlist[$i])) {
-                      $element = explode(":", $formlist[$i]);
-                    $row .= ',"' . $reorder[$element[0]]["value"] . '"';
-                      $i++;
-                  }
+                $fields = get_template_formlist($event['template_id']);
+                foreach ($fields as $f) {
+                    $field = get_template_formlist_element_array($template, $f);
+                    if (isset($field["displayonly"])) {
+                        continue;
+                    }
+                    $row .= ',"' . $reorder[$field["name"]]["value"] . '"';
+                }
             } else {
                     $formlist = get_db_result("SELECT * FROM events_templates_forms
                                                 WHERE template_id='" . $event['template_id'] . "'
@@ -2307,21 +2359,23 @@ global $CFG, $USER;
                 $reorder[$value[$sortby]] = $value;
             }
             if ($template['folder'] != "none") {
-                $i=0;$formlist = explode(";", $template['formlist']);
-                    while (isset($formlist[$i])) {
-                      $element = explode(":", $formlist[$i]);
-                    $row .= ',"' . $reorder[$element[0]]["value"] . '"';
-                      $i++;
-                  }
+                $fields = get_template_formlist($event['template_id']);
+                foreach ($fields as $f) {
+                    $field = get_template_formlist_element_array($template, $f);
+                    if (isset($field["displayonly"])) {
+                        continue;
+                    }
+                    $row .= ',"' . $reorder[$field["name"]]["value"] . '"';
+                }
             } else {
-                    $formlist = get_db_result("SELECT *
-                                               FROM events_templates_forms
-                                               WHERE template_id = ||template_id||
-                                               ORDER BY sort", ["template_id" => $event['template_id']]);
+                $formlist = get_db_result("SELECT *
+                                           FROM events_templates_forms
+                                           WHERE template_id = ||template_id||
+                                           ORDER BY sort", ["template_id" => $event['template_id']]);
                 $sortby = "elementid";
-                  while ($form = fetch_row($formlist)) {
+                while ($form = fetch_row($formlist)) {
                     $row .= ',"' . $reorder[$form[$sortby]]["value"] . '"';
-                  }
+                }
             }
             $CSV .= $row . "\n";
         }
@@ -2343,12 +2397,14 @@ global $CFG, $USER;
                 $reorder[$value[$sortby]] = $value;
             }
             if ($template['folder'] != "none") {
-                $i=0;$formlist = explode(";", $template['formlist']);
-                    while (isset($formlist[$i])) {
-                      $element = explode(":", $formlist[$i]);
-                    $row .= ',"' . $reorder[$element[0]]["value"] . '"';
-                      $i++;
-                  }
+                $fields = get_template_formlist($event['template_id']);
+                foreach ($fields as $f) {
+                    $field = get_template_formlist_element_array($template, $f);
+                    if (isset($field["displayonly"])) {
+                        continue;
+                    }
+                    $row .= ',"' . $reorder[$field["name"]]["value"] . '"';
+                }
             } else {
                     $formlist = get_db_result("SELECT *
                                                FROM events_templates_forms
@@ -3061,4 +3117,369 @@ global $MYVARS, $CFG, $USER;
 
     ajax_return('<iframe src="' . $CFG->wwwroot . '/scripts/download.php?file=' . create_file("staffapps($year).csv", $CSV) . '"></iframe>');
 }
+
+function get_promocode_manager_ajax() {
+    global $PAGE;
+    $setid = clean_myvar_opt("setid", "int", false);
+    $pageid = clean_myvar_opt("pageid", "int", false);
+
+    if (!$pageid) {
+        if ($setid) {
+            $set = get_promocode_set($setid);
+            $pageid = $set["pageid"];
+        } else {
+            $pageid = $PAGE->id;
+        }
+    }
+
+    ajax_return(get_promocode_manager($pageid));
+}
+
+function edit_promocode_set() {
+    $setid = clean_myvar_req("setid", "int");
+
+    $display_codes = ""; $setname = "";
+    if (!empty($codes = get_promocode_set_array($setid))) {
+        $set = get_promocode_set($setid);
+        $setname = $set["setname"];
+        ajaxapi([
+            "id" => "save_promocode",
+            "paramlist" => "codeid",
+            "url" => "/features/events/events_ajax.php",
+            "data" => [
+                "action" => "save_promocode",
+                "codeid" => "js||codeid||js",
+                "setid" => $setid,
+                "pageid" => $set["pageid"],
+            ],
+            "reqstring" => "codejs||codeid||js",
+            "display" => "promocodemanager",
+            "loading" => "loading_overlay",
+            "event" => "none",
+        ]);
+
+        ajaxapi([
+            "id" => "delete_promocode",
+            "if" => "confirm('Are you sure you want to delete this code?')",
+            "paramlist" => "codeid",
+            "url" => "/features/events/events_ajax.php",
+            "data" => [
+                "action" => "delete_promocode",
+                "codeid" => "js||codeid||js",
+                "setid" => $setid,
+                "pageid" => $set["pageid"],
+            ],
+            "display" => "promocodemanager",
+            "loading" => "loading_overlay",
+            "event" => "none",
+        ]);
+
+        foreach ($codes as $code) {
+            $code["dollartype"] = strstr($code["reduction"], "%") ? "" : "selected";
+            $code["percenttype"] = strstr($code["reduction"], "%") ? "selected" : "";
+            $code["reduction"] = str_replace("%", "", $code["reduction"]);
+            $display_codes .= fill_template("tmp/events.template", "promocode_code", "events", ["code" => $code]);
+        }
+    }
+
+    ajaxapi([
+        "id" => "get_promocode_manager_ajax",
+        "url" => "/features/events/events_ajax.php",
+        "data" => [
+            "action" => "get_promocode_manager_ajax",
+            "setid" => $setid,
+        ],
+        "display" => "promocodemanager",
+        "loading" => "loading_overlay",
+    ]);
+
+    ajaxapi([
+        "id" => "add_promocode_form",
+        "url" => "/features/events/events_ajax.php",
+        "data" => [
+            "action" => "add_promocode_form",
+            "setid" => $setid,
+        ],
+        "display" => "promocodemanager",
+        "loading" => "loading_overlay",
+    ]);
+
+    $manager = fill_template("tmp/events.template", "promocodes_manager_code_editor", "events", ["setname" => $setname, "setid" => $setid, "codes" => $display_codes]);
+    ajax_return($manager);
+}
+
+function add_promoset_form() {
+    $pageid = clean_myvar_req("pageid", "int");
+
+    // Back button.
+    ajaxapi([
+        "id" => "back_to_promo_sets",
+        "url" => "/features/events/events_ajax.php",
+        "data" => [
+            "action" => "get_promocode_manager_ajax",
+            "pageid" => $pageid,
+        ],
+        "display" => "promocodemanager",
+        "loading" => "loading_overlay",
+    ]);
+
+    // Save button.
+    ajaxapi([
+        "id" => "add_promoset",
+        "url" => "/features/events/events_ajax.php",
+        "data" => [
+            "action" => "add_promoset",
+            "pageid" => $pageid,
+        ],
+        "reqstring" => "new_promo_set",
+        "display" => "promocodemanager",
+        "loading" => "loading_overlay",
+    ]);
+
+    $return = fill_template("tmp/events.template", "add_promoset_form", "events");
+    ajax_return($return);
+}
+
+function edit_promoset_form() {
+    $pageid = clean_myvar_req("pageid", "int");
+    $setid = clean_myvar_req("setid", "int");
+    $set = get_promocode_set($setid);
+    $setname = $set["setname"];
+
+    // Back button.
+    ajaxapi([
+        "id" => "back_to_promo_sets",
+        "url" => "/features/events/events_ajax.php",
+        "data" => [
+            "action" => "get_promocode_manager_ajax",
+            "pageid" => $pageid,
+        ],
+        "display" => "promocodemanager",
+        "loading" => "loading_overlay",
+    ]);
+
+    // Save button.
+    ajaxapi([
+        "id" => "edit_promoset",
+        "url" => "/features/events/events_ajax.php",
+        "data" => [
+            "action" => "edit_promoset",
+            "setid" => $setid,
+        ],
+        "reqstring" => "edit_promo_set",
+        "display" => "promocodemanager",
+        "loading" => "loading_overlay",
+    ]);
+
+    $return = fill_template("tmp/events.template", "edit_promoset_form", "events", ["setname" => $setname]);
+    ajax_return($return);
+}
+
+function edit_promoset() {
+    $name = clean_myvar_req("setname", "string");
+    $setid = clean_myvar_req("setid", "int");
+    $set = get_promocode_set($setid);
+
+    try {
+        start_db_transaction();
+
+        $SQL = fetch_template("dbsql/events.sql", "update_promocode_set", "events");
+        execute_db_sql($SQL, [
+            "setid" => $setid,
+            "setname" => $name,
+        ]);
+
+        log_entry("events", $set["pageid"], "Promocode Set edited");
+        commit_db_transaction();
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+        rollback_db_transaction($error);
+    }
+
+    ajax_return(get_promocode_manager($set["pageid"]));
+}
+
+function delete_promoset() {
+    $setid = clean_myvar_req("setid", "int");
+    $set = get_promocode_set($setid);
+    $pageid = $set["pageid"];
+
+    try {
+        start_db_transaction();
+
+        $templates = [
+            [
+                "file" => "dbsql/events.sql",
+                "feature" => "events",
+                "subsection" => [
+                    "delete_promocode_set",
+                    "delete_promocode_set_codes",
+                ],
+            ]
+        ];
+		execute_db_sqls(fetch_template_set($templates), ["setid" => $setid]);
+
+        log_entry("events", $pageid, "Promocode Set deleted");
+        commit_db_transaction();
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+        rollback_db_transaction($error);
+    }
+
+    ajax_return(get_promocode_manager($pageid));
+}
+
+function add_promoset() {
+    $pageid = clean_myvar_req("pageid", "int");
+    $name = clean_myvar_req("setname", "string");
+
+    try {
+        start_db_transaction();
+
+        $SQL = fetch_template("dbsql/events.sql", "insert_promocode_set", "events");
+        execute_db_sql($SQL, [
+            "pageid" => $pageid,
+            "setname" => $name,
+            "created" => get_timestamp(),
+        ]);
+
+        log_entry("events", $pageid, "Promocode Set created");
+        commit_db_transaction();
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+        rollback_db_transaction($error);
+    }
+
+    ajax_return(get_promocode_manager($pageid));
+}
+
+function add_promocode_form() {
+    $setid = clean_myvar_req("setid", "int");
+    $set = get_promocode_set($setid);
+
+    // Back button.
+    ajaxapi([
+        "id" => "back_to_promo_set",
+        "url" => "/features/events/events_ajax.php",
+        "data" => [
+            "action" => "edit_promocode_set",
+            "setid" => $setid,
+        ],
+        "display" => "promocodemanager",
+        "loading" => "loading_overlay",
+    ]);
+
+    // Save button.
+    ajaxapi([
+        "id" => "add_promocode",
+        "url" => "/features/events/events_ajax.php",
+        "data" => [
+            "action" => "add_promocode",
+            "setid" => $setid,
+            "pageid" => $set["pageid"],
+        ],
+        "reqstring" => "new_promo_code",
+        "display" => "promocodemanager",
+        "loading" => "loading_overlay",
+    ]);
+
+    $return = fill_template("tmp/events.template", "add_promocode_form", "events");
+    ajax_return($return);
+}
+
+function add_promocode() {
+    $setid = clean_myvar_req("setid", "int");
+    $set = get_promocode_set($setid);
+
+    $name = clean_myvar_req("promoname", "string");
+    $code = clean_myvar_req("promocode", "string");
+    $reduction = clean_myvar_req("promoreduction", "float");
+    $type = clean_myvar_req("promotype", "string");
+
+    if ($type === "percent") {
+        $reduction = $reduction . "%";
+    }
+
+    try {
+        start_db_transaction();
+
+        $SQL = fetch_template("dbsql/events.sql", "insert_promocode", "events");
+        execute_db_sql($SQL, [
+            "setid" => $setid,
+            "codename" => $name,
+            "code" => preg_replace('/\s+/', '', strtolower($code)),
+            "reduction" => $reduction,
+            "created" => get_timestamp(),
+        ]);
+
+        log_entry("events", $set["pageid"], "Promocode created");
+        commit_db_transaction();
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+        rollback_db_transaction($error);
+    }
+
+    edit_promocode_set();
+}
+
+function delete_promocode() {
+    global $PAGE;
+    $codeid = clean_myvar_req("codeid", "int");
+    $setid = clean_myvar_req("setid", "int");
+    $pageid = clean_myvar_opt("pageid", "int", $PAGE->id);
+
+    // delete promocode
+    try {
+        start_db_transaction();
+
+        $SQL = fetch_template("dbsql/events.sql", "delete_promocode", "events");
+        execute_db_sql($SQL, [
+            "codeid" => $codeid,
+        ]);
+        log_entry("events", $pageid, "Promocode deleted");
+        commit_db_transaction();
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+        rollback_db_transaction($error);
+    }
+
+    edit_promocode_set();
+}
+
+function save_promocode() {
+    global $PAGE;
+    $codeid = clean_myvar_req("codeid", "int");
+    $setid = clean_myvar_req("setid", "int");
+    $pageid = clean_myvar_opt("pageid", "int", $PAGE->id);
+
+    // save promocode
+    $name = clean_myvar_req("promoname", "string");
+    $code = clean_myvar_req("promocode", "string");
+    $reduction = clean_myvar_req("promoreduction", "float");
+    $type = clean_myvar_req("promotype", "string");
+
+    if ($type === "percent") {
+        $reduction = $reduction . "%";
+    }
+
+    try {
+        start_db_transaction();
+
+        $SQL = fetch_template("dbsql/events.sql", "update_promocode", "events");
+        execute_db_sql($SQL, [
+            "codeid" => $codeid,
+            "code" => preg_replace('/\s+/', '', strtolower($code)),
+            "codename" => $name,
+            "reduction" => $reduction,
+        ]);
+        log_entry("events", $pageid, "Promocode added");
+        commit_db_transaction();
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+        rollback_db_transaction($error);
+    }
+
+    edit_promocode_set();
+}
+
 ?>

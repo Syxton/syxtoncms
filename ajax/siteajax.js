@@ -212,7 +212,7 @@ function resize_colorbox(container) {
     setTimeout(function () {
         getRoot()[0].resizeAll();
         getRoot().trigger("resize");
-    }, 50);
+    }, 100);
 }
 
 function initialize_colorbox_iframes() {

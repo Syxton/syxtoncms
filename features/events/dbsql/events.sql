@@ -4,6 +4,22 @@ get_event||
     WHERE eventid = ||eventid||
 ||get_event
 
+get_templates_event_registrations_by_email||
+    SELECT *
+    FROM events_registrations
+    WHERE email = ||email||
+    AND eventid IN (
+        SELECT eventid
+        FROM events
+        WHERE template_id IN (
+            SELECT template_id
+            FROM events_templates
+            ||*templates||
+        )
+    )
+    ORDER BY regid DESC
+||get_templates_event_registrations_by_email
+
 get_verified_event_registrations||
     SELECT *
     FROM events_registrations
@@ -42,6 +58,47 @@ update_event||
     WHERE eventid = ||eventid||
 ||update_event
 
+get_events_with_same_template||
+    SELECT e.eventid, b.orderbyfield, b.folder
+    FROM events as e
+    JOIN events_templates as b ON b.template_id=e.template_id
+    WHERE eventid=||eventid||
+||get_events_with_same_template
+
+get_events_templates_by_regid||
+    SELECT *
+    FROM events_templates
+    WHERE template_id IN (
+        SELECT template_id
+        FROM events
+        WHERE eventid IN (
+            SELECT eventid
+            FROM events_registrations
+            WHERE regid=||regid||
+        )
+    )
+||get_events_templates_by_regid
+
+get_events_templates_form_names||
+    SELECT *
+    FROM events_templates_forms
+    WHERE template_id=||template_id||
+    AND nameforemail=1
+||get_events_templates_form_names
+
+get_current_events_with_same_template||
+    SELECT eventid, (CONCAT(FROM_UNIXTIME(e.event_begin_date , '%Y'), ' ', e.name)) AS name
+    FROM events e
+    WHERE e.confirmed = 1
+    AND e.template_id = ||template_id||
+    AND e.start_reg > 0
+    AND (
+        (e.event_begin_date - ||today||) < 31560000
+        &&
+        (e.event_begin_date - ||today||) > -7776000
+    )
+||get_current_events_with_same_template
+
 delete_event||
     DELETE
     FROM events
@@ -60,6 +117,20 @@ delete_event_registrations||
     FROM events_registrations
     WHERE eventid = ||eventid||
 ||delete_event_registrations
+
+get_registration_value||
+    SELECT *
+    FROM events_registrations_values
+    WHERE regid = ||regid||
+    AND LOWER(elementname) = ||elementname||
+||get_registration_value
+
+get_registration_value_by_id||
+    SELECT *
+    FROM events_registrations_values
+    WHERE regid = ||regid||
+    AND elementid = ||elementid||
+||get_registration_value_by_id
 
 get_registration_values||
     SELECT *
@@ -88,11 +159,30 @@ get_events_having_same_template||
     ORDER BY regid DESC
 ||get_events_having_same_template
 
+get_events_template_forms||
+    SELECT *
+    FROM events_templates_forms
+    WHERE template_id = ||template_id||
+    ORDER BY sort
+||get_events_template_forms
+
 update_template_status||
     UPDATE events_templates
     SET activated = ||activated||
     WHERE template_id = ||template_id||
 ||update_template_status
+
+insert_events_template||
+    INSERT INTO events_templates
+    (name, folder, formlist, registrant_name, orderbyfield, settings)
+    VALUES (||name||, ||folder||, ||formlist||, ||registrant_name||, ||orderbyfield||, ||settings||)
+||insert_events_template
+
+update_events_template||
+    UPDATE events_templates
+    SET formlist = ||formlist||, registrant_name = ||registrant_name||, orderbyfield = ||orderbyfield||, settings = ||settings||
+    WHERE template_id = ||template_id||
+||update_events_template
 
 delete_events_requests||
     DELETE
@@ -222,6 +312,16 @@ insert_registration_values||
     VALUES(||regid||, ||value||, ||eventid||, ||elementname||)
 ||insert_registration_values
 
+get_event_from_regid||
+    SELECT *
+    FROM events
+    WHERE eventid IN (
+        SELECT eventid
+        FROM events_registrations
+        WHERE regid = ||regid||
+    )
+||get_event_from_regid
+
 delete_registration||
     DELETE FROM events_registrations
     WHERE regid = ||regid||
@@ -304,13 +404,13 @@ get_all_staff_by_year||
     ORDER BY name
 ||get_all_staff_by_year
 
-get_all_staff_by_page||
-    SELECT *
+get_all_years_with_staff||
+    SELECT year
     FROM events_staff_archive
     WHERE pageid = ||pageid||
     GROUP BY year
     ORDER BY year
-||get_all_staff_by_page
+||get_all_years_with_staff
 
 events_search||
     SELECT *
@@ -328,6 +428,25 @@ events_search||
     )
     ORDER BY event_begin_date DESC
 ||events_search
+
+registration_search||
+    SELECT e.name, e.eventid, e.pageid, v.value, r.regid, r.email, r.date, r.code
+    FROM events_registrations_values v
+    JOIN events e ON e.eventid = v.eventid
+    JOIN events_registrations r ON r.regid = v.regid
+    WHERE ||searchstring||
+    AND v.elementname IN (SELECT registrant_name FROM events_templates)
+    AND (
+        e.pageid = ||pageid||
+        ||issite{{
+        OR (
+            e.siteviewable = 1
+            AND e.confirmed = 1
+        )
+        }}issite||
+    )
+    ORDER BY r.date DESC
+||registration_search
 
 confirmable_events||
     SELECT *
@@ -410,3 +529,65 @@ templates_search||
     WHERE (||searchstring||)
     ORDER BY name
 ||templates_search
+
+get_promocode_sets||
+    SELECT *
+    FROM events_promo_set
+    WHERE pageid = ||pageid||
+    ORDER BY created
+||get_promocode_sets
+
+get_promocode_set||
+    SELECT *
+    FROM events_promo_set
+    WHERE setid = ||setid||
+    ORDER BY created
+||get_promocode_set
+
+update_promocode_set||
+    UPDATE events_promo_set
+    SET setname = ||setname||
+    WHERE setid = ||setid||
+||update_promocode_set
+
+insert_promocode_set||
+    INSERT INTO events_promo_set
+    (pageid, setname, created)
+    VALUES
+    (||pageid||, ||setname||, ||created||)
+||insert_promocode_set
+
+delete_promocode_set||
+    DELETE FROM events_promo_set
+    WHERE setid = ||setid||
+||delete_promocode_set
+
+delete_promocode_set_codes||
+    DELETE FROM events_promo_set_codes
+    WHERE setid = ||setid||
+||delete_promocode_set_codes
+
+get_promocode_set_codes||
+    SELECT *
+    FROM events_promo_set_codes
+    WHERE setid = ||setid||
+    ORDER BY created
+||get_promocode_set_codes
+
+update_promocode||
+    UPDATE events_promo_set_codes
+    SET code = ||code||, codename = ||codename||, reduction = ||reduction||
+    WHERE codeid = ||codeid||
+||update_promocode
+
+insert_promocode||
+    INSERT INTO events_promo_set_codes
+    (setid, code, codename, reduction, created)
+    VALUES
+    (||setid||,||code||, ||codename||, ||reduction||, ||created||)
+||insert_promocode
+
+delete_promocode||
+    DELETE FROM events_promo_set_codes
+    WHERE codeid = ||codeid||
+||delete_promocode

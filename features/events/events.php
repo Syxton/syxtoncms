@@ -24,12 +24,11 @@ if (empty($_POST["aslib"])) {
     callfunction();
 
     echo fill_template("tmp/page.template", "end_of_page_template");
-
 }
 
 function events_settings() {
-     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
-     $featureid = clean_myvar_req("featureid", "int");
+    $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+    $featureid = clean_myvar_req("featureid", "int");
     $feature = "events";
 
     //Default Settings
@@ -43,18 +42,31 @@ function events_settings() {
     }
 }
 
-function event_manager() {
-global $CFG;
+function manage_promocodes() {
+    global $CFG;
+    $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+
+    echo '
+    <h2>Promo Code Manager</h2>
+    <br />
+    <div id="promocodemanager">
+    ' . get_promocode_manager($pageid) . '
+    </div>';
+}
+
+function registration_manager() {
+    global $CFG;
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 
     ajaxapi([
-        "id" => "perform_eventsearch",
+        "id" => "perform_registrationsearch",
         "paramlist" => "pagenum = 0, searchwords = false",
         "before" => "var searchwords = searchwords ? searchwords : $('#searchbox').val();",
         "url" => "/features/events/events_ajax.php",
         "data" => [
-            "action" => "eventsearch",
+            "action" => "registrationsearch",
             "pagenum" => "js||pagenum||js",
+            "searchtype" => "js||$('#searchtype').val()||js",
             "searchwords" => "js||encodeURIComponent(searchwords)||js"],
         "display" => "searchcontainer",
         "ondone" => "init_event_menu();",
@@ -76,7 +88,7 @@ global $CFG;
         "event" => "none",
     ]);
 
-    echo fill_template("tmp/events.template", "eventsearchform", "events", ["searchcontainer" => get_searchcontainer()]);
+    echo fill_template("tmp/events.template", "regmanagersearchform", "events", ["searchcontainer" => get_searchcontainer()]);
 }
 
 function template_manager() {
@@ -106,7 +118,7 @@ function application_manager() {
 global $CFG;
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     $canexport = $exportselect = false;
-    if ($archive = get_db_result(fetch_template("dbsql/events.sql", "get_all_staff_by_page", "events"), ["pageid" => $pageid])) {
+    if ($archive = get_db_result(fetch_template("dbsql/events.sql", "get_all_years_with_staff", "events"), ["pageid" => $pageid])) {
         $values = [];
         while ($vals = fetch_row($archive)) {
             $values[] = ["year" => $vals["year"]];

@@ -71,6 +71,10 @@ fieldset {
     border: 0
 }
 
+html {
+    scrollbar-gutter: stable;
+}
+
 body {
     font-family: Geneva, Verdana, Arial, Helvetica, sans-serif;
     font-size: .8em;
@@ -128,11 +132,20 @@ div.searchresultsnav {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */
+    padding: 10px;
 }
 
 div.searchresultsnav span {
     text-align: center;
     color: green;
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */
 }
 
 table.searchresultsnav {
@@ -620,6 +633,154 @@ img.sitenews {
     flex-wrap: wrap;
 }
 
+.registration_cart_submission_area {
+    background-color: #ddf0ff;
+    border-radius: 15px;
+    padding: 15px 5px;
+}
+
+.registration_info_title {
+    width: 35%;
+}
+
+#registration_div {
+    height: 100vh;
+    padding: 10px;
+}
+
+.autofilloptions button{
+    margin: 5px;
+    font-size: .9em;
+}
+
+div.registration_cart {
+    border: 4px solid silver;
+    background: #ffffff;
+    box-shadow: #00000094 -2px 2px 3px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+div.registration_cart_bottom {
+    background: silver;
+    padding: 10px;
+    text-align: center;
+}
+
+form button.registration_cart_menu {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: .7em;
+    z-index: 10;
+}
+
+div.registration_cart_title {
+    background: lightgrey;
+    padding: 10px;
+    font-weight: bold;
+    font-size: 1.2em;
+    border-bottom: 1px solid gainsboro;
+}
+
+form button.registration_cart_menu + #refreshableregcart .registration_cart {
+    display: none;
+    position: absolute;
+    top: 0;
+    right: 0px;
+    z-index: 2;
+}
+
+.registration_cart_item_name {
+    width: 100%;
+    padding: 0px 15px;
+    font-size: .95em;
+}
+
+.registration_cart_item_price {
+    text-align: right;
+    padding: 10px 0px 10px 10px;
+}
+
+.registration_cart_item, .registration_cart_total {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.registration_cart_item {
+    padding: 10px;
+    background: #b3fff9;
+    border-bottom: 1px solid grey;
+}
+
+.registration_cart_total {
+    padding: 10px;
+    background: lightgrey;
+    font-weight: bold;
+}
+
+.registration_cart_item_promo_code {
+    display: flex;
+    width: 145px;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    padding-top: 5px;
+    justify-content: flex-end;
+}
+
+.promo_sets_container {
+    max-width: 800px;
+    width: 100%;
+    margin: auto;
+}
+
+.promo_sets_container .promo_set_row{
+    background: #f5f5f5;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.edit_promocode_form {
+    padding: 5px;
+    margin: 5px 5px 10px 5px;
+    border-radius: 5px;
+    background: gainsboro;
+    font-size: .9em;
+    font-weight: bold;
+}
+
+.registration_cart_item_extra {
+    font-size: .8em;
+}
+
+.registration_payment_area {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+}
+
+.registration_allowed_in_page {
+    zoom: 0.8;
+    color: green;
+    margin-top: 10px;
+}
+
+div.registration_cart_checkout {
+    padding: 30px 10px;
+}
+
+div.registration_cart_checkout_title {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
 .events_alert {
     font-weight: bolder;
     font-size: 1.2em;
@@ -634,7 +795,6 @@ img.sitenews {
 
 .event_title {
     font-size: .95em;
-    float: left;
     padding-right: 10px
 }
 
@@ -645,10 +805,11 @@ img.sitenews {
 
 .event_info {
     font-size: .85em;
-    display: inline-flex;
+    display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
+    justify-content: space-between;
 }
 
 .large_event_button span {
@@ -854,6 +1015,16 @@ table.roles_table {
     border-spacing: 0px;
     border-style: none;
     border-collapse: collapse;
+}
+
+.permissions_context {
+    background-color: lightGrey;
+    margin: 5px 0px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 5px;
 }
 
 tr.roles_header {
@@ -2337,13 +2508,15 @@ iframe {
 
 .news_archive_wrapper {
     display: flex;
-    justify-content: space-evenly;
+    justify-content: center;
     align-items: center;
     border-top: 2px solid slategray;
     width: 100%;
     text-align: center;
     margin-top: 15px;
-    font-size: 1.3em;
+    line-height: 30px;
+    flex-direction: row;
+    flex-wrap: wrap;
 }
 
 .news_author {
@@ -2709,4 +2882,41 @@ input[type=image] {
     left: calc(50% - .5em);
     top: calc(50% - .5em);
     color: #00000050;
+}
+
+.formSection {
+    display: none;
+}
+
+.formSection.selectedSection {
+    display: initial;
+}
+
+.formNavigation {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+}
+
+.formSectionTitle {
+    font-weight: bold;
+    text-align: center;
+    font-size: 1.2em;
+    margin-top: 10px;
+}
+
+.formMenu {
+    text-align: center;
+}
+
+.formMoneySymbol {
+    width: 15px;
+    float: left;
+    line-height: 1.5em;
+    font-size: 1.25em;
+}
+
+.formMoneyDisplay {
+    line-height: 1.5em;
+    font-size: 1.25em;
 }

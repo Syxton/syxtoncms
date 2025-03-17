@@ -1,0 +1,73 @@
+form_section_js||
+    <script type="text/javascript">
+        function updateFormMenu() {
+            let sectioncount = $(".formSection").length;
+            let firstSection = $(".formSection").first().index();
+            let currentSection = $(".selectedSection").index() - firstSection + 1;
+
+            $(".formMenu").html("Section " + currentSection + " of " + sectioncount);
+
+            let i = 0; let markers = "";
+            while (i < sectioncount) {
+                var title = $(".formSection:nth(" + i + ")").find(".formSectionTitle").html();
+                if (i + 1 === currentSection) {
+                    markers += `
+                        <button
+                            title="` + title + `"
+                            type="button"
+                            class="alike">
+                                <i class="fa-solid fa-circle" style="color: navy"></i>
+                        </button>`;
+                } else {
+                    markers += `
+                        <button
+                            title="` + title + `"
+                            onclick="gotoSection(` + i + `);"
+                            type="button"
+                            class="alike">
+                                <i class="fa-solid fa-circle" style="color: silver"></i>
+                        </button>`;
+                }
+                i++;
+            }
+            $(".formMenu").html(markers);
+            $(".displayOnFinalSection").hide();
+            if (currentSection === sectioncount) {
+                $(".displayOnFinalSection").show();
+            }
+        }
+
+        function gotoSection(section) {
+            $(".formSection").removeClass("selectedSection");
+            $(".formSection:nth(" + section + ")").addClass("selectedSection");
+            window.scrollTo(0, 0);
+            updateFormMenu();
+            resize_modal();
+        }
+
+        $(document).ready(function() {
+            updateFormMenu();
+            $(".firstSection .formNavigationPrevious button").remove();
+            $(".formSection").last().find(".formNavigationNext button").remove();
+            $("input:not([type=hidden]).error, textarea.error, select.error", ".selectedSection").first().focus();
+
+            $(".formNavigationPrevious").click(function() {
+                $(this).parents(".formSection").prev().addClass("selectedSection").siblings().removeClass("selectedSection");
+                $(this).parents(".formSection").removeClass("selectedSection");
+                $("input:not([type=hidden]).error, textarea.error, select.error", ".selectedSection").first().focus();
+                window.scrollTo(0, 0);
+                updateFormMenu();
+                resize_modal();
+            });
+
+            $(".formNavigationNext").click(function() {
+                $(this).parents(".formSection").next().addClass("selectedSection").siblings().removeClass("selectedSection");
+                $(this).parents(".formSection").removeClass("selectedSection");
+                $("input:not([type=hidden]).error, textarea.error, select.error", ".selectedSection").first().focus();
+                window.scrollTo(0, 0);
+                updateFormMenu();
+                resize_modal();
+            });
+        });
+    </script>
+||form_section_js

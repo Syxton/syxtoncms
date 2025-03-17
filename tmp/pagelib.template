@@ -267,12 +267,28 @@ validation_tooltip_actions||
 		submitHandler: function() {
 		    ||code||
 		},
+        invalidHandler: function() {
+            setTimeout(function() {
+                if ($(".formSection").length !== 0) {
+                    var index = 0;
+                    $(".formSection").each(function() {
+                        let errors = $(this).find("input:not([type=hidden]).error, textarea.error, select.error");
+                        if ($(errors).length > 0) {
+                            gotoSection(index);
+                            $(this).find("input:not([type=hidden]).error, textarea.error, select.error").first().focus();
+                            return false;
+                        }
+                        index++;
+                    });
+                }
+            }, 500);
+        },
 		ignore: '.calendarDateInput'
 	});
 
-    $('.formContainer textarea, .formContainer select, .formContainer input[type=text],[type=email],[type=password],[type=search],[type=url],[type=checkbox]').focus(function() {
+    $("input:not([type=hidden]), textarea, select", ".formContainer").focus(function() {
         $(this).parent().find('label.error').css('visibility', 'visible');
-        $(this).parent().find('.info').css('visibility', 'visible')
+        $(this).parent().find('.info').css('visibility', 'visible');
     }).blur(function() {
         $(this).parent().find('.info').css('visibility', 'hidden');
     });

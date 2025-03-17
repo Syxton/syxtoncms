@@ -10,7 +10,7 @@ search_template||
                 </button>
                 }}isprev||
             </td>
-            <td style="width:50%;text-align:center;font-size:.75em;color:green;">
+            <td style="width:50%;text-align:center;color:green;">
                 Viewing ||viewing|| through ||amountshown|| out of ||total||
             </td>
             <td style="width:25%;text-align:right;">
@@ -22,7 +22,6 @@ search_template||
             </td>
             </tr>
         </table>
-        <br />
         <br />
         <table class="searchresults">
             ||searchresults||

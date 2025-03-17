@@ -364,9 +364,27 @@ global $CFG, $LOADAJAX;
 
         // if entire form data is needed, merge it with the original request data.
         if (!empty($reqstring)) {
+            if (strpos($reqstring, "js||") === false) { // no embedded js code.
+                $reqstring = "'$reqstring'"; // container id is a string and should be in quotes.
+            } else {
+                // Define the pattern to match the qualifiers.
+                $pattern = '/((?<intro>.*)js\|\|(?<var>.*)\|\|js(?<outro>.*))/i';
+
+                // Find all the qualifiers in the content.
+                preg_match_all($pattern, $reqstring, $matches);
+
+                // Check if qualifiers were found.
+                if (!empty($matches[0])) {
+                    $temp = $matches['var'][0]; // ex. id
+                    $temp = !empty($matches['intro'][0]) ? "'" . $matches['intro'][0] . "' + $temp" : $temp; // ex. 'unique_' + id
+                    $temp = !empty($matches['outro'][0]) ? "$temp + '" . $matches['outro'][0] . "'" : $temp; // ex. 'unique_' + id + '_identifier'
+                }
+                $reqstring = $temp;
+            }
+
             $reqstring = '
                 let orgjson = ' . $data . ';
-                var reqdata = mergeJSON(create_request_json("' . $reqstring . '"), JSON.stringify(orgjson));
+                var reqdata = mergeJSON(create_request_json(' . $reqstring . '), JSON.stringify(orgjson));
             ';
             $data = "{}";
             if ($method === 'POST') {

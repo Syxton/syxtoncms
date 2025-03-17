@@ -150,21 +150,29 @@ staffsearchrow||
     </tr>
 ||staffsearchrow
 
-eventsearchform||
+regmanagersearchform||
     <div class="dontprint">
         <div style="text-align:center">
-            <h3>Search for events by their name.</h3>
+            <h3>Search for events or registrations by name.</h3>
+            <br />
         </div>
-        <form onclick="perform_eventsearch();">
-            <div style="text-align:center;">
+        <div style="text-align:center;">
+            <form onsubmit="perform_registrationsearch();">
+                Type:
+                    <select id="searchtype" name="searchtype">
+                        <option value="events">Events</option>
+                        <option value="registrations">Registrations</option>
+                    </select>
                 <input type="text" id="searchbox" name="searchbox" />
-                <input type="submit" value="Search" style="margin-left: 5px;" />
-            </div>
-        </form>
+                <button style="margin-left: 5px;">
+                    Search
+                </button>
+            </form>
+        </div>
         <br />
     </div>
     ||searchcontainer||
-||eventsearchform
+||regmanagersearchform
 
 eventsearchresults||
     ||searchnav||
@@ -209,10 +217,51 @@ eventsearchrows||
     </tr>
 ||eventsearchrows
 
+regsearchresults||
+    ||searchnav||
+    <table class="searchresults">
+        <tr>
+            <th style="text-align:left;">
+                Name
+            </th>
+            <th>
+                Event
+            </th>
+            <th style="text-align:center;width:75px;">
+                Date
+            </th>
+            <th style="text-align:center;width:60px;">
+                Actions
+            </th>
+        </tr>
+        ||rows||
+    </table>
+||regsearchresults
+
+regsearchrows||
+    <tr>
+        <td style="width:40%;">
+            ||reg[value]||
+        </td>
+        <td style="text-align:center;">
+            <button class="alike" onclick="show_registrations(||reg[eventid]||);">
+                ||reg[name]||
+            </button>
+        </td>
+        <td style="text-align:center;">
+            ||regdate||
+        </td>
+        <td style="text-align:center;">
+            ||actions||
+        </td>
+    </tr>
+||regsearchrows
+
 templatesearchform||
     <div class="dontprint">
         <div style="text-align:center">
             <h3>Search for templates by their name.</h3>
+            <br />
         </div>
         <form onclick="perform_templatesearch();">
             <div style="text-align:center;">
@@ -306,14 +355,14 @@ searchnav||
 registration_info_form||
     <h3>Edit Registration Values</h3>
     <form name="reg_form" id="save_reg_changes">
-        <table style="border-top: 1px solid grey;">
+        <table style="border-top: 1px solid grey;width:100%">
             <tr>
                 <td colspan="2" style="text-align: center">
                     <input type="submit" value="Save Changes" />
                 </td>
             </tr>
             <tr>
-                <td>
+                <td class="registration_info_title">
                     Event
                 </td>
                 <td>
@@ -321,19 +370,19 @@ registration_info_form||
                 </td>
             </tr>
             <tr>
-                <td>
+                <td class="registration_info_title">
                     Email
                 </td>
                 <td>
-                    <input id="reg_email" name="reg_email" type="text" size="45" value="||email||" />
+                    <input id="reg_email" name="reg_email" type="text" style="width: 100%" value="||email||" />
                 </td>
             </tr>
             <tr>
-                <td>
+                <td class="registration_info_title">
                     Pay Code
                 </td>
                 <td>
-                    <input id="reg_code" name="reg_code" type="text" size="45" value="||code||" />
+                    <input id="reg_code" name="reg_code" type="text" style="width: 100%" value="||code||" />
                 </td>
             </tr>
             ||rows||
@@ -349,9 +398,9 @@ registration_info_form||
 copy_registration_info_form||
     <h3>Copy Registration</h3>
     <form name="copy_form" id="copy_registration">
-        <table style="border-top: 1px solid grey;">
+        <table style="border-top: 1px solid grey;width:100%">
             <tr>
-                <td style="width: 125px;">
+                <td class="registration_info_title">
                     Copy To
                 </td>
                 <td>
@@ -461,3 +510,201 @@ eventtype||
         </div>
     </div>
 ||eventtype
+
+promocodes_manager||
+    <div class="centered">
+        <button type="button" id="add_promoset_form">
+            ||echo icon("add");::none||
+            <span>Add Set</span>
+        </button>
+    </div>
+    <br /><br />
+    <div class="promo_sets_container">
+        ||sets||
+    </div>
+||promocodes_manager
+
+promocodes_manager_code_editor||
+    <h3 class="centered">Editing ||setname||</h3>
+    <br />
+    <div>
+        <button type="button" id="get_promocode_manager_ajax">
+            ||echo icon("arrow-left");::none||
+            <span>Back</span>
+        </button>
+    </div>
+    <div class="centered">
+        <button type="button" id="add_promocode_form">
+            ||echo icon("add");::none||
+            <span>Add Code</span>
+        </button>
+    </div>
+    <br /><br />
+    <div class="promo_sets_container">
+        ||codes||
+    </div>
+||promocodes_manager_code_editor
+
+promocode_set||
+    <div class="promo_set_row">
+        <div style="width: 50%;min-width:300px;display: flex;align-items: center;justify-content: flex-start;">
+            <span style="padding-right: 10px;">
+                ||set[setname]||
+            </span>
+            <button title="Edit Set Name" class="alike" type="button" onclick="edit_promoset_form(||set[setid]||)">
+                ||echo icon("edit");::none||
+            </button>
+        </div>
+        <div>
+            <button title="Edit Set" type="button" onclick="edit_promocode_set(||set[setid]||)">
+                ||echo icon("edit");::none||
+            </button>
+            <button title="Delete Set" type="button" onclick="delete_promocode_set(||set[setid]||)">
+                ||echo icon("trash", 1, "", "red");::none||
+            </button>
+        </div>
+    </div>
+||promocode_set
+
+promocode_code||
+    <form id="code||code[codeid]||" class="edit_promocode_form">
+        <div class="promo_set_row">
+            <div style="width: 60%;">
+                Promo Name<br />
+                <input style="width: 95%;" id="promoname" name="promoname" type="text" value="||code[name]||" />
+            </div>
+            <div style="width: 20%;min-width:50px;">
+                Reduce By<br />
+                <input style="width: 70px;" id="promoreduction" name="promoreduction" type="number" value="||code[reduction]||" />
+            </div>
+            <div class="centered" style="width: 20%;min-width:40px;">
+                Save<br />
+                <button onclick="save_promocode(||code[codeid]||)">
+                    ||echo icon("floppy-disk");::none||
+                </button>
+            </div>
+        </div>
+        <div class="promo_set_row">
+            <div style="width: 60%;">
+                Code<br />
+                <input style="width: 95%;" id="promocode" name="promocode" type="text" value="||code[code]||" />
+            </div>
+            <div style="width: 20%;">
+                Type<br />
+                <select id="promotype" name="promotype">
+                    <option value="dollar" ||code[dollartype]||>$</option>
+                    <option value="percent" ||code[percenttype]||>%</option>
+                </select>
+            </div>
+            <div class="centered" style="width: 20%;min-width:40px;">
+                Delete<br />
+                <button onclick="delete_promocode(||code[codeid]||)">
+                    ||echo icon("trash", 1, "", "red");::none||
+                </button>
+            </div>
+        </div>
+    </form>
+||promocode_code
+
+add_promocode_form||
+    <h3 class="centered">New Code</h3>
+    <br />
+    <div>
+        <button type="button" id="back_to_promo_set">
+            ||echo icon("arrow-left");::none||
+            <span>Back</span>
+        </button>
+    </div>
+    <br /><br />
+    <div class="promo_sets_container">
+        <form id="new_promo_code" class="edit_promocode_form">
+            <div class="promo_set_row">
+                <div style="width: 60%;">
+                    Promo Name<br />
+                    <input style="width: 95%;" id="promoname" name="promoname" type="text" />
+                </div>
+                <div style="width: 20%;min-width:50px;">
+                    Reduce By<br />
+                    <input style="width: 70px;" id="promoreduction" name="promoreduction" type="number" />
+                </div>
+                <div class="centered" style="width: 20%;min-width:40px;">
+                </div>
+            </div>
+            <div class="promo_set_row">
+                <div style="width: 60%;">
+                    Code<br />
+                    <input style="width: 95%;" id="promocode" name="promocode" type="text" />
+                </div>
+                <div style="width: 20%;">
+                    Type<br />
+                    <select id="promotype" name="promotype">
+                        <option value="dollar">$</option>
+                        <option value="percent">%</option>
+                    </select>
+                </div>
+                <div class="centered" style="width: 20%;min-width:40px;">
+                    Add<br />
+                    <button id="add_promocode">
+                        ||echo icon("floppy-disk");::none||
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+||add_promocode_form
+
+add_promoset_form||
+    <h3 class="centered">New Promo Code Set</h3>
+    <br />
+    <div>
+        <button type="button" id="back_to_promo_sets">
+            ||echo icon("arrow-left");::none||
+            <span>Back</span>
+        </button>
+    </div>
+    <br /><br />
+    <div class="promo_sets_container">
+        <form id="new_promo_set" class="edit_promocode_form">
+            <div class="promo_set_row">
+                <div style="width: 80%;">
+                    Promo Set Name<br />
+                    <input style="width: 95%;" id="setname" name="setname" type="text" />
+                </div>
+                <div class="centered" style="width: 20%;min-width:40px;">
+                    Add<br />
+                    <button id="add_promoset">
+                        ||echo icon("floppy-disk");::none||
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+||add_promoset_form
+
+edit_promoset_form||
+    <h3 class="centered">Edit Promo Code Set</h3>
+    <br />
+    <div>
+        <button type="button" id="back_to_promo_sets">
+            ||echo icon("arrow-left");::none||
+            <span>Back</span>
+        </button>
+    </div>
+    <br /><br />
+    <div class="promo_sets_container">
+        <form id="edit_promo_set" class="edit_promocode_form">
+            <div class="promo_set_row">
+                <div style="width: 80%;">
+                    Promo Set Name<br />
+                    <input style="width: 95%;" id="setname" name="setname" type="text" value="||setname||" />
+                </div>
+                <div class="centered" style="width: 20%;min-width:40px;">
+                    Save<br />
+                    <button id="edit_promoset">
+                        ||echo icon("floppy-disk");::none||
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+||edit_promoset_form

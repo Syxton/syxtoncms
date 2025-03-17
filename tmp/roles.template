@@ -141,10 +141,10 @@ roles_manager_template||
                 ui.panel.html("Couldn\'t load this tab. We\'ll try to fix this as soon as possible.");
                 });
             },
-            load: function(event, ui) { activatejs(); }
+            load: function(event, ui) { activatejs(); resize_modal(); }
         }); ', 'defer', true);::none||
 
-    <div id="context" style="font-size:.85em;background-color:lightGrey;margin:3px;padding:3px;height:30px;">
+    <div id="context" class="permissions_context">
             <span style="display:inline-block;float:left;">
             <strong>
                 Page:

@@ -340,7 +340,7 @@ global $CFG, $MYVARS, $USER;
                     <td style="width:25%;text-align:left;">
                         ' . $prev . '
                     </td>
-                    <td style="width:50%;text-align:center;font-size:.75em;color:green;">
+                    <td style="width:50%;text-align:center;color:green;">
                         ' . $info . '
                     </td>
                     <td style="width:25%;text-align:right;">

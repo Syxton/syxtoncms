@@ -16,17 +16,17 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
 define('SETTINGSLIB', true);
 
 function fetch_settings($type, &$featureid, $pageid = false) {
-global $CFG;
+    global $CFG;
 
     if (empty($featureid)) { // Non Feature settings ex. Site or page
         $pageid = $pageid ?: "0"; // Set to 0 if page not set.
         $SQL = "SELECT * FROM settings WHERE type='$type' AND pageid='$pageid'";
         if ($results = get_db_result($SQL)) {
-                $settings = new \stdClass;
-                $settings->$type = new \stdClass;
+            $settings = new \stdClass;
+            $settings->$type = new \stdClass;
             while ($row = fetch_row($results)) {
-                  $setting_name = $row["setting_name"];
-                  if (empty($settings->$type->$setting_name)) { $settings->$type->$setting_name = new \stdClass; }
+                $setting_name = $row["setting_name"];
+                if (empty($settings->$type->$setting_name)) { $settings->$type->$setting_name = new \stdClass; }
                 if (isset($row["settingid"])) { $settings->$type->$setting_name->settingid = $row["settingid"]; }
                 if (isset($row["setting"])) { $settings->$type->$setting_name->setting = stripslashes($row["setting"]); }
                 if (isset($row["extra"])) { $settings->$type->$setting_name->extra = stripslashes($row["extra"]); }
@@ -37,21 +37,21 @@ global $CFG;
         }
         return false;
     } else { // Feature settings
-          if ($featureid == "*") { // Find the featureid: Only valid on features that cannot have duplicates on a page
-                $featureid = get_db_field("featureid", "pages_features", "feature='$type' AND pageid='$pageid'");
-                if (empty($featureid)) {
-                  return false;
-                }
-          }
+        if ($featureid == "*") { // Find the featureid: Only valid on features that cannot have duplicates on a page
+            $featureid = get_db_field("featureid", "pages_features", "feature='$type' AND pageid='$pageid'");
+            if (empty($featureid)) {
+                return false;
+            }
+        }
 
         $settings = new \stdClass;
         $SQL = "SELECT * FROM settings WHERE type='$type' AND featureid='$featureid'";
         if ($results = get_db_result($SQL)) {
-                $settings->$type = new \stdClass;
-                $settings->$type->$featureid = new \stdClass;
+            $settings->$type = new \stdClass;
+            $settings->$type->$featureid = new \stdClass;
             while ($row = fetch_row($results)) {
-                  $setting_name = $row["setting_name"];
-                  if (empty($settings->$type->$featureid->$setting_name)) { $settings->$type->$featureid->$setting_name = new \stdClass; }
+                $setting_name = $row["setting_name"];
+                if (empty($settings->$type->$featureid->$setting_name)) { $settings->$type->$featureid->$setting_name = new \stdClass; }
                 if (isset($row["settingid"])) { $settings->$type->$featureid->$setting_name->settingid = $row["settingid"];}
                 if (isset($row["setting"])) { $settings->$type->$featureid->$setting_name->setting = stripslashes($row["setting"]);}
                 if (isset($row["extra"])) { $settings->$type->$featureid->$setting_name->extra = stripslashes($row["extra"]);}
@@ -75,26 +75,26 @@ global $CFG;
 }
 
 function get_setting_names($settings_list) {
-  $setting_names = [];
-  foreach ($settings_list as $setting) {
-    $setting_names[] .= $setting["setting_name"];
-  }
-  return $setting_names;
+    $setting_names = [];
+    foreach ($settings_list as $setting) {
+        $setting_names[] .= $setting["setting_name"];
+    }
+    return $setting_names;
 }
 
 function make_settings_page($settings, $settinginfo, $title = "Feature Settings") {
-global $CFG, $USER, $PAGE;
+    global $CFG, $USER, $PAGE;
     //Check if user has permission to be here
     if (!user_is_able($USER->userid, "editfeaturesettings", $PAGE->id)) {
         echo error_string("generic_permissions");
         return;
     }
 
-        $settingslist = "";
+    $settingslist = "";
     foreach ($settinginfo as $info) {
         $type = $info["type"];
         $featureid = $info["featureid"];
-            $name = $info["setting_name"];
+        $name = $info["setting_name"];
         if (!isset($settings->$type->$featureid->$name)) { // Setting has never been saved for this type instance.
             save_setting(false, $info, $info["defaultsetting"], false, $settings);
         }
@@ -106,7 +106,7 @@ global $CFG, $USER, $PAGE;
 }
 
 function make_setting_input($info, $settingid = false, $value = "", $savebutton = true) {
-global $CFG;
+    global $CFG, $PAGE;
     $valign = $info["inputtype"] == "textarea" ? "top" : "middle";
     $params = [
         "valign" => $valign,
@@ -128,61 +128,73 @@ global $CFG;
     ];
 
     switch ($info["inputtype"]) {
-        case "text":
-            $params["istext"] = true;
-            $params["ifnumeric"] = $info["numeric"] ?? false;
-            $params["ifvalidation"] = $info["validation"] ?? false;
-              break;
-        case "yes/no":
-            $params["isyesno"] = true;
-            $params["yes"] = (string) $value == "1" ? "selected" : "";
-            $params["no"] = (string) $value != "1" ? "selected" : "";
+    case "text":
+        $params["istext"] = true;
+        $params["ifnumeric"] = $info["numeric"] ?? false;
+        $params["ifvalidation"] = $info["validation"] ?? false;
             break;
-        case "no/yes":
-            $params["isnoyes"] = true;
-            $params["yes"] = (string) $value == "1" ? "selected" : "";
-            $params["no"] = (string) $value != "1" ? "selected" : "";
-            break;
-            case "select": //extra will look like 'SELECT id as selectvalue,text as selectname from table'  the value and name must be labeled as selectvalue and selectname
-            $params["isselect"] = true;
-            $selected = $value != 0 ? "" : "selected";
-            $params["options"] = fill_template("tmp/page.template", "select_options_template", false, ["selected" => $selected, "value" => "0", "display" => "No"]);
+    case "yes/no":
+        $params["isyesno"] = true;
+        $params["yes"] = (string) $value == "1" ? "selected" : "";
+        $params["no"] = (string) $value != "1" ? "selected" : "";
+        break;
+    case "no/yes":
+        $params["isnoyes"] = true;
+        $params["yes"] = (string) $value == "1" ? "selected" : "";
+        $params["no"] = (string) $value != "1" ? "selected" : "";
+        break;
+    case "select": //extra will look like 'SELECT id as selectvalue,text as selectname from table'  the value and name must be labeled as selectvalue and selectname
+        $params["isselect"] = true;
+        $selected = $value != 0 ? "" : "selected";
+        $params["options"] = fill_template("tmp/page.template", "select_options_template", false, ["selected" => $selected, "value" => "0", "display" => "No"]);
 
-            if (isset($info["extraforminfo"]))	{
-                if ($data = get_db_result($info["extraforminfo"])) {
-                    while ($row = fetch_row($data)) {
-                        $selected = $value == $row["selectvalue"] ? "selected" : "";
-                        $p = [
-                            "selected" => $selected,
-                            "value" => $row["selectvalue"],
-                            "display" => stripslashes($row["selectname"]),
-                        ];
-                        $params["options"] .= fill_template("tmp/page.template", "select_options_template", false, $p);
+        if (isset($info["extraforminfo"])) {
+            $p = []; // PHP variable name was sent.
+            if (isset($info["extraforminfoparams"]) && is_array($info["extraforminfoparams"])) {
+                foreach ($info["extraforminfoparams"] as $key => $val) {
+                    if (strstr($val, "$")) {
+                        $val = str_replace("$", "", $val);
+                        $p[$key] = eval('return $'. $val . ';');
+                    } else {
+                        $p[$key] = $val;
                     }
                 }
             }
-            break;
-            case "select_array": // extraforminfo will be an array of arrays. The value and name must be labeled as selectvalue and selectname
-            $params["isselect"] = true;
-            $params["options"] = "";
-            if (isset($info["extraforminfo"]))	{
-                foreach ($info["extraforminfo"] as $e) {
-                    $selected = $value == $e["selectvalue"] ? "selected" : "";
+
+            if ($data = get_db_result($info["extraforminfo"], $p)) {
+                while ($row = fetch_row($data)) {
+                    $selected = $value == $row["selectvalue"] ? "selected" : "";
                     $p = [
                         "selected" => $selected,
-                        "value" => $e["selectvalue"],
-                        "display" => stripslashes($e["selectname"]),
+                        "value" => $row["selectvalue"],
+                        "display" => stripslashes($row["selectname"]),
                     ];
                     $params["options"] .= fill_template("tmp/page.template", "select_options_template", false, $p);
                 }
             }
-            break;
-        case "textarea":
-            $params["istextarea"] = true;
-            $params["extraforminfo"] = $info["extraforminfo"] ?? false;
-            $params["ifnumeric"] = $info["numeric"] ?? false;
-            $params["ifvalidation"] = $info["validation"] ?? false;
-                  break;
+        }
+        break;
+    case "select_array": // extraforminfo will be an array of arrays. The value and name must be labeled as selectvalue and selectname
+        $params["isselect"] = true;
+        $params["options"] = "";
+        if (isset($info["extraforminfo"])) {
+            foreach ($info["extraforminfo"] as $e) {
+                $selected = $value == $e["selectvalue"] ? "selected" : "";
+                $p = [
+                    "selected" => $selected,
+                    "value" => $e["selectvalue"],
+                    "display" => stripslashes($e["selectname"]),
+                ];
+                $params["options"] .= fill_template("tmp/page.template", "select_options_template", false, $p);
+            }
+        }
+        break;
+    case "textarea":
+        $params["istextarea"] = true;
+        $params["extraforminfo"] = $info["extraforminfo"] ?? false;
+        $params["ifnumeric"] = $info["numeric"] ?? false;
+        $params["ifvalidation"] = $info["validation"] ?? false;
+        break;
     }
 
     if ($params["ifnumeric"]) {
