@@ -12,10 +12,24 @@ update_user_cookie();
 
 callfunction();
 
+/**
+ * all_campers_list()
+ *
+ * This function creates a CSV file containing the name, gender, birthday, current age, address, email, payment method and sponsor for all campers that have registered for an event based on the filter parameters.
+ *
+ * @param string $filename         The filename to use when saving the CSV
+ * @param int    $year             The year to filter the results by
+ * @param bool   $removeduplicates If true, removes duplicate camper names from the list
+ * @param int    $minage           The minimum age to include in the list
+ * @param int    $maxage           The maximum age to include in the list
+ *
+ * @return string The HTML code to download the generated CSV file
+ */
 function all_campers_list($filename = "camperlist", $year = false, $removeduplicates = false, $minage = 0, $maxage = 100) {
     global $CFG, $MYVARS, $USER;
     $return = $error = "";
     try {
+        // Clean the input parameters
         $filename = clean_myvar_opt("filename", "string", "camperlist");
         $year = clean_myvar_opt("year", "int", false);
         $year = $year === 0 ? false : $year;
@@ -24,6 +38,7 @@ function all_campers_list($filename = "camperlist", $year = false, $removeduplic
         $minage = clean_myvar_opt("minage", "int", 0);
         $maxage = clean_myvar_opt("maxage", "int", 100);
 
+        // Get the events that use the same template as the currently selected event
         $params = [
             "templateid" => 10,
             "fromdate" => $year ? mktime(0, 0, 0, 0, 0, $year) : "",
@@ -32,16 +47,24 @@ function all_campers_list($filename = "camperlist", $year = false, $removeduplic
         $SQL = fetch_template("dbsql/events.sql", "get_events_having_same_template", "events", ["year" => $year]);
 
         if ($registrations = get_db_result($SQL, $params)) {
+            // Initialize the array to store the camper list
             $camperlist[] = ["REGID", "Event", "Name", "Gender", "Birthday", "Current Age", "Address1", "Address2", "City", "State", "Zip", "Email", "Payment Method", "Sponsor",];
+
+            // Loop through the registrations and fetch the camper list
             while ($reg = fetch_row($registrations)) {
                 $event = get_db_row(fetch_template("dbsql/events.sql", "get_event", "events"), ["eventid" => $reg["eventid"]]);
+
+                // Get the registration values for the current registration
                 $SQL = fetch_template("dbsql/events.sql", "get_registration_values", "events");
                 $temp = $age = $bday = false;
                 if ($entries = get_db_result($SQL, ["regid" => $reg["regid"]])) {
+                    // Initialize the temporary array to store the registration values
                     unset($temp); unset($bday); unset($age);
                     while ($entry = fetch_row($entries)) {
                         $temp[$entry["elementname"]] = $entry["value"];
                     }
+
+                    // Determine the camper's birthday
                     if (strstr($temp["Camper_Birth_Date"], '-')) {
                         $bday = date("m/d/Y",strtotime(str_replace("-", "/", $temp["Camper_Birth_Date"])));
                     } elseif (!strstr($temp["Camper_Birth_Date"], '/') && !strstr($temp["Camper_Birth_Date"], '-')) {
@@ -62,10 +85,11 @@ function all_campers_list($filename = "camperlist", $year = false, $removeduplic
                         }
                     } else { $bday = date("m/d/Y", strtotime($temp["Camper_Birth_Date"])); };
 
+                    // Clean the camper's gender
                     $temp["Camper_Gender"] = $temp["Camper_Gender"] == "F" ? "Female" : $temp["Camper_Gender"];
                     $temp["Camper_Gender"] = $temp["Camper_Gender"] == "M" ? "Male" : $temp["Camper_Gender"];
 
-                    // Assume June 1st unless past June 1st, then use current date.
+                    // Calculate the camper's age
                     $today = time();
                     $june = strtotime("June 1"); // Gets closest June 1st
                     $cutoff = $june > $today ? $june : $today;
@@ -73,6 +97,7 @@ function all_campers_list($filename = "camperlist", $year = false, $removeduplic
                     $age = round(($cutoff - strtotime($bday)) / (60*60*24*365));
                     $age = $bday != "Unknown" ? $age : "0";
                     if ($bday != "Unknown" && $age > $minage && $age < $maxage) {
+                        // Add the camper to the list
                         $camperlist[] = [
                             $reg['regid'],
                             $event["name"],
@@ -93,9 +118,13 @@ function all_campers_list($filename = "camperlist", $year = false, $removeduplic
                 }
             }
 
+            // If requested, remove duplicate camper names from the list
             if ($removeduplicates) {
-                $camperlist = array_distinct($camperlist, [1, 3], "80"); // Removes duplicate Camper_Name's'
+                // Removes duplicate based on name, birthdate at 80% tolerance..
+                $camperlist = array_distinct($camperlist, [2, 4], "80");
             }
+
+            // Create the CSV file and return the HTML to download it
             $return = '<iframe src="' . $CFG->wwwroot . '/scripts/download.php?file=' . create_file("$filename.csv", $camperlist, true) . '"></iframe>';
         }
     } catch (\Throwable $e) {

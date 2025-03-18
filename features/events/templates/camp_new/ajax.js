@@ -126,6 +126,10 @@ $(function () {
             {
                 name: "Mt. Carmel Church of Christ Campership", // mt25carmel
                 code: "47d7cb5641702117c08091842ab5b18f764519e3b427a048ff26e0314fda53e8"
+            },
+            {
+                name: "Prairie Creek Church of Christ Campership", // prairie25creek
+                code: "e6a8dbae96457c62b4388c73b3fc4e128d2b422e100f72c96ad44c2ecce3b93f"
             }
         ];
 
