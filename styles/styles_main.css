@@ -777,6 +777,7 @@ div.html_template {
 
 .area_middle .htmlblock {
     width: 100%;
+    line-height: 2em;
 }
 
 .area_middle .html_comment_button_box {
