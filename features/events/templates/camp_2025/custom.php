@@ -118,7 +118,7 @@ function customoptions_shirt($data = []) {
     return $shirt_sizes;
 }
 
-function customoptions_pictures($data = []) {
+function customoptions_picture($data = []) {
     if (!isset($data["eventid"])) {
         return 0;
     }
@@ -153,4 +153,31 @@ function customoptions_pictures($data = []) {
     }
 
     return 1;
+}
+
+function customtype_campershipsearch($element, $data = []) {
+    return '
+        <div class="rowContainer" id="campershiprow">
+            <label class="rowTitle" for="' . $element['name'] . '">
+                ' . $element['title'] . '
+            </label>
+            <input id="campershipcode" type="text" name="campershipcode" style="display: inline-block" />
+            <button id="applycampership" type="button">
+                Apply
+            </button>
+            <div id="campershipresult" style="padding: 2px;text-align: center;"></div>
+            <div class="tooltipContainer info">' . get_help("help_campership:events:templates/camp_2025") . '</div>
+            <div class="spacer" style="clear: both;"></div>
+        </div>';
+}
+
+function customtype_paymentnote($element, $data = []) {
+    return '
+        <div class="rowContainer" style="height: auto;">
+            <label class="rowTitle" for="payment_note">Notes:</label>
+            <div name="payment_note" id="payment_note">
+            Please select a payment method.  If you have a campership code, enter it and click Apply.
+            </div>
+            <div class="spacer" style="clear: both;"></div>
+        </div>';
 }
