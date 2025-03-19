@@ -59,6 +59,8 @@ $ERRORS->search_nosearchwords = "No search words given.";
 // Validation Errors *********************************************************
 //generic
 $ERRORS->valid_req = "This field is required.";
+$ERRORS->valid_date_invalid = "Please enter a valid date.";
+$ERRORS->valid_phone_invalid = "Please enter a valid phone number.";
 
 //username
 $ERRORS->valid_req_username = "Please enter your username.";
