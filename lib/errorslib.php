@@ -57,6 +57,8 @@ set_error_handler("myErrorHandler", $reportlevel);
 // Validation Errors *********************************************************
 	//generic
 	$ERRORS->valid_req = "This field is required.";
+	$ERRORS->valid_date_invalid = "Please enter a valid date.";
+	$ERRORS->valid_phone_invalid = "Please enter a valid phone number.";
 
 	//username
 	$ERRORS->valid_req_username = "Please enter your username.";
@@ -191,7 +193,7 @@ function debugging($message = '', $level = 1, $forced = false) {
 
     // Set debug level based on forced parameter or default
     $level = $forced ? $level : $CFG->debug;
-    
+
     // Return early if no debug level is set
     if (!$level) {
         return '';
@@ -218,7 +220,7 @@ function debugging($message = '', $level = 1, $forced = false) {
 
         // Prepare the final print content based on debug level
         $print = '';
-        
+
         // If level >= 2, display backtrace and message in <pre> format
         if ($level >= 2) {
             $print .= '<pre>' . $display . '</pre>';

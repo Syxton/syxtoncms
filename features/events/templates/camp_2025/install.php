@@ -13,6 +13,8 @@ $templatefolder = 'camp_2025';
 $registrant_name = 'camper_name';
 $orderbyfield = 'camper_name';
 
+if (!defined('FORMLIB')) { include_once($CFG->dirroot . '/lib/formlib.php'); }
+
 // formlist array[];
 $formlist = [
     [
@@ -50,7 +52,7 @@ $formlist = [
         'title' => 'Middle Initial',
         'type' => 'text',
         'required' => true,
-        'max_length' => 1,
+        'maxlength' => 1,
         'lettersonly' => true,
     ],
     [
@@ -303,6 +305,45 @@ $formlist = [
         'required' => false,
     ],
     [
+        'name' => 'payment_method',
+        'section' => 'Pay',
+        'title' => 'Payment Method',
+        'type' => 'select',
+        'options' => [
+            "" => "Choose One",
+            "PayPal" => "PayPal",
+            "Pay Later" => "Pay Later",
+        ],
+        'required' => true,
+    ],
+    [
+        'name' => 'campership',
+        'section' => 'Pay',
+        'title' => 'Campership',
+        'type' => 'hidden',
+        'required' => false,
+    ],
+    [
+        'name' => 'campershipcode',
+        'section' => 'Pay',
+        'title' => 'Apply Campership',
+        'type' => 'custom',
+        'customtype' => [
+            'campershipsearch' => '/features/events/templates/camp_2025/custom.php',
+        ],
+        'required' => false,
+    ],
+    [
+        'name' => 'payment_note',
+        'section' => 'Pay',
+        'title' => 'Notes',
+        'type' => 'custom',
+        'customtype' => [
+            'paymentnote' => '/features/events/templates/camp_2025/custom.php',
+        ],
+        'required' => false,
+    ],
+    [
         'name' => 'total_owed',
         'section' => 'Pay',
         'title' => 'Amount Owed',
@@ -314,20 +355,6 @@ $formlist = [
         'section' => 'Pay',
         'title' => 'Amount Paid',
         'type' => 'hidden',
-        'required' => false,
-    ],
-    [
-        'name' => 'payment_method',
-        'section' => 'Pay',
-        'title' => 'Payment Method',
-        'type' => 'select',
-        'required' => false,
-    ],
-    [
-        'name' => 'campership',
-        'section' => 'Pay',
-        'title' => 'Campership',
-        'type' => 'text',
         'required' => false,
     ],
 ];
@@ -384,8 +411,8 @@ $settings = [
     ],
 ];
 
-$formlist = dbescape(serialize($formlist));
-$settings = dbescape(serialize($settings));
+$formlist = serialize($formlist);
+$settings = serialize($settings);
 
 // If it is already installed, don't install it again.
 if (!$template = get_db_row("SELECT * FROM events_templates WHERE name = ||name||", ["name" => $templatename])) {

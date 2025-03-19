@@ -16,14 +16,15 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
 define('FORMLIB', true);
 
 function make_form_elements($elements, $data = []) {
+    global $CFG;
     $output = '';
     $tabindex = 1;
     foreach ($elements as $element) {
         $rules = get_form_element_data_rules($element, $data);
         $help = get_form_element_help($element);
-        $req = $element['required'] ? ' * ' : '';
+        $req = isset($element['required']) && $element['required'] ? ' * ' : '';
         $element['rules'] = $rules;
-        $element['tabindex'] = $i;
+        $element['tabindex'] = $tabindex;
         switch ($element['type']) {
         case 'text':
         case 'select':
@@ -51,6 +52,15 @@ function make_form_elements($elements, $data = []) {
         case 'hidden':
             $output .= make_form_hidden($element, $data);
             break;
+        case 'custom':
+            if (isset($element['customtype'])) {
+                foreach ($element['customtype'] as $func => $path) {
+                    include_once($CFG->dirroot . $path);
+                    $type_function = "customtype_" . $func;
+                    $output .= $type_function($element, $data);
+                }
+            }
+            break;
         }
         $tabindex++;
     }
@@ -62,6 +72,7 @@ function get_form_element_help($element) {
 }
 
 function get_form_element_data_rules($element, $data = []) {
+    global $CFG;
     $rules = '';
     if (isset($element['required']) && $element['required'] == true) {
         $rules .= ' data-rule-required="true"';
@@ -127,11 +138,12 @@ function get_form_element_data_rules($element, $data = []) {
 
     if (isset($element['customrules'])) {
         foreach ($element['customrules'] as $rule => $path) {
-            include_once($CFG->dataroot . $path);
+            include_once($CFG->dirroot . $path);
             $rule_function = "customrule_" . $rule;
             $rules .= $rule_function($data);
         }
     }
+    return $rules;
 }
 
 function get_form_gender_options() {
@@ -234,7 +246,7 @@ function make_form_hidden($element, $data = []) {
         $value = "";
         if (isset($element['dynamicvalue'])) {
             foreach ($element['dynamicvalue'] as $func => $path) {
-                include_once($CFG->dataroot . $path);
+                include_once($CFG->dirroot . $path);
                 $value_function = "customvalue_" . $func;
                 $value = $value_function($data);
             }
@@ -282,7 +294,7 @@ function make_form_select($element, $data = []) {
         // If the dynamic options exist, retrieve them.
         if (isset($element['dynamicoptions'])) {
             foreach ($element['dynamicoptions'] as $func => $path) {
-                include_once($CFG->dataroot . $path);
+                include_once($CFG->dirroot . $path);
                 $options_function = "customoptions_" . $func;
                 $options = $options_function($data);
             }
@@ -303,7 +315,8 @@ function make_form_select($element, $data = []) {
         $output .= '<option value="' . $value . '"';
 
         // Check for selected option.
-        if ($value == $element['selected']) {
+        $selected = isset($element['selected']) ? $element['selected'] : '';
+        if ($value == $selected) {
             $output .= ' selected="selected"';
         }
         $output .= '>' . $option . '</option>';
