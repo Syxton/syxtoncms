@@ -15,12 +15,11 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
 }
 define('FORMLIB', true);
 
-
-function make_form_table($elements) {
+function make_form_elements($elements, $data = []) {
     $output = '';
     $tabindex = 1;
     foreach ($elements as $element) {
-        $rules = get_form_element_data_rules($element);
+        $rules = get_form_element_data_rules($element, $data);
         $help = get_form_element_help($element);
         $req = $element['required'] ? ' * ' : '';
         $element['rules'] = $rules;
@@ -30,20 +29,27 @@ function make_form_table($elements) {
         case 'select':
         case 'textarea':
         case 'date':
-            $make_form = 'make_form_' . $element['type'];
-            $output .= '<div class="rowContainer">
-                            <label class="rowTitle" for="' . $element['name'] . '">
-                                ' . $element['title'] . $req . '
-                            </label>
-                            ' . $make_form($element) . '
-                            <div class="tooltipContainer info">
-                                ' . $help . '
-                            </div>
-                            <div class="spacer" style="clear: both;"></div>
-                        </div>';
+            $make_form_element = 'make_form_' . $element['type'];
+            $form_element = $make_form_element($element, $data);
+
+            if (strstr($form_element, 'type="hidden"')) {
+                $output .= $form_element;
+            } else {
+                $output .= '
+                <div class="rowContainer">
+                    <label class="rowTitle" for="' . $element['name'] . '">
+                        ' . $element['title'] . $req . '
+                    </label>
+                    ' . $form_element . '
+                    <div class="tooltipContainer info">
+                        ' . $help . '
+                    </div>
+                    <div class="spacer" style="clear: both;"></div>
+                </div>';
+            }
             break;
         case 'hidden':
-            $output .= make_form_hidden($element);
+            $output .= make_form_hidden($element, $data);
             break;
         }
         $tabindex++;
@@ -55,7 +61,7 @@ function get_form_element_help($element) {
     return isset($element['help']) ? get_help($element['help']) : get_help('input_default_' . $element['type']);
 }
 
-function get_form_element_data_rules($element) {
+function get_form_element_data_rules($element, $data = []) {
     $rules = '';
     if (isset($element['required']) && $element['required'] == true) {
         $rules .= ' data-rule-required="true"';
@@ -103,12 +109,12 @@ function get_form_element_data_rules($element) {
         $rules .= ' data-msg-url="' . error_string($msg) . '"';
     }
 
-    if (isset($element['max_length'])) {
-        $rules .= ' maxlength="' . $element['max_length'] . '" data-rule-maxlength="' . $element['max_length'] . '"';
+    if (isset($element['maxlength'])) {
+        $rules .= ' maxlength="' . $element['maxlength'] . '" data-rule-maxlength="' . $element['maxlength'] . '"';
     }
 
-    if (isset($element['min_length'])) {
-        $rules .= ' data-rule-minlength="' . $element['min_length'] . '"';
+    if (isset($element['minlength'])) {
+        $rules .= ' data-rule-minlength="' . $element['minlength'] . '"';
     }
 
     if (isset($element['max'])) {
@@ -118,6 +124,22 @@ function get_form_element_data_rules($element) {
     if (isset($element['min'])) {
         $rules .= ' data-rule-min="' . $element['min'] . '"';
     }
+
+    if (isset($element['customrules'])) {
+        foreach ($element['customrules'] as $rule => $path) {
+            include_once($CFG->dataroot . $path);
+            $rule_function = "customrule_" . $rule;
+            $rules .= $rule_function($data);
+        }
+    }
+}
+
+function get_form_gender_options() {
+    return [
+        '' => 'Select One...',
+        'Male' => 'Male',
+        'Female' => 'Female',
+    ];
 }
 
 function get_form_USSTATES_options() {
@@ -186,7 +208,7 @@ function get_form_USSTATES_options() {
 //     'type' => 'text',
 //     'required' => false,
 // ]
-function make_form_text($element) {
+function make_form_text($element, $data = []) {
     $value = isset($element['value']) ? $element['value'] : "";
     $style = isset($element['style']) ? $element['style'] : "";
     $output = '<input type="text" tabindex="' . $element['tabindex'] . '"
@@ -196,7 +218,7 @@ function make_form_text($element) {
     return $output;
 }
 
-function make_form_textarea($element) {
+function make_form_textarea($element, $data = []) {
     $value = isset($element['value']) ? $element['value'] : "";
     $output = '<textarea tabindex="' . $element['tabindex'] . '"
                 id="' . $element['name'] . '" name="' . $element['name'] . '"
@@ -204,15 +226,28 @@ function make_form_textarea($element) {
     return $output;
 }
 
-function make_form_hidden($element) {
-    $value = isset($element['value']) ? $element['value'] : "";
+function make_form_hidden($element, $data = []) {
+    global $CFG;
+    $value = isset($element['value']) ? $element['value'] : "checkdynamicvalue";
+
+    if ($value === "checkdynamicvalue") {
+        $value = "";
+        if (isset($element['dynamicvalue'])) {
+            foreach ($element['dynamicvalue'] as $func => $path) {
+                include_once($CFG->dataroot . $path);
+                $value_function = "customvalue_" . $func;
+                $value = $value_function($data);
+            }
+        }
+    }
+
     $output = '<input type="hidden"
                 id="' . $element['name'] . '" name="' . $element['name'] . '"
                 value="' . $value . '" ' . $element['rules'] . ' />';
     return $output;
 }
 
-function make_form_date($element) {
+function make_form_date($element, $data = []) {
     $value = isset($element['value']) ? date("Y-m-d", $element['value']) : date("Y-m-d");
     $output = '<input type="date" tabindex="' . $element['tabindex'] . '"
                 id="' . $element['name'] . '" name="' . $element['name'] . '"
@@ -220,7 +255,7 @@ function make_form_date($element) {
     return $output;
 }
 
-function make_form_tel($element) {
+function make_form_tel($element, $data = []) {
     $value = isset($element['value']) ? $element['value'] : "";
     $output = '<input type="tel" tabindex="' . $element['tabindex'] . '"
                 id="' . $element['name'] . '" name="' . $element['name'] . '"
@@ -228,11 +263,52 @@ function make_form_tel($element) {
     return $output;
 }
 
-function make_form_email($element) {
+function make_form_email($element, $data = []) {
     $value = isset($element['value']) ? $element['value'] : "";
     $output = '<input type="email" tabindex="' . $element['tabindex'] . '"
                 id="' . $element['name'] . '" name="' . $element['name'] . '"
                 value="' . $value . '" ' . $element['rules'] . ' />';
+    return $output;
+}
+
+function make_form_select($element, $data = []) {
+    global $CFG;
+
+    // Get the options if they exist.
+    $options = isset($element['options']) ? $element['options'] : 0;
+
+    // If the options are not an array, check for dynamic options.
+    if (!is_array($options)) {
+        // If the dynamic options exist, retrieve them.
+        if (isset($element['dynamicoptions'])) {
+            foreach ($element['dynamicoptions'] as $func => $path) {
+                include_once($CFG->dataroot . $path);
+                $options_function = "customoptions_" . $func;
+                $options = $options_function($data);
+            }
+        }
+
+        // If the options are still not an array, convert to a hidden input.
+        if (!is_array($options)) {
+            $element['value'] = $options;
+            return make_form_hidden($element, $data = []);
+        }
+    }
+
+    // Array of options are available.
+    $output = '<select tabindex="' . $element['tabindex'] . '"
+                id="' . $element['name'] . '" name="' . $element['name'] . '"
+                ' . $element['rules'] . '>';
+    foreach ($options as $value => $option) {
+        $output .= '<option value="' . $value . '"';
+
+        // Check for selected option.
+        if ($value == $element['selected']) {
+            $output .= ' selected="selected"';
+        }
+        $output .= '>' . $option . '</option>';
+    }
+    $output .= '</select>';
     return $output;
 }
 ?>
