@@ -21,12 +21,20 @@ if (!defined('FORMLIB')) { include_once($CFG->dirroot . '/lib/formlib.php'); }
 global $MYVARS;
 collect_vars();
 
-$eventid = clean_myvar_opt("eventid", "int", false);
-$regid = clean_myvar_opt("regid", "int", false);
+$email = $payment_method = $disable = "";
+
 $show_again = clean_myvar_opt("show_again", "bool", false);
 $autofill = clean_myvar_opt("autofill", "bool", false);
+$data = ["show_again" => $show_again, "autofill" => $autofill];
 
-$email = $payment_method = $disable = "";
+// Get full event info
+$eventid = clean_myvar_opt("eventid", "int", false);
+if ($eventid) {
+    $event = get_event($eventid);
+    $template_id = $event['template_id'];
+} else {
+    $template_id = clean_myvar_opt("template_id", "int", false);
+}
 
 // Preview of template.
 if (isset($preview)) {
@@ -42,9 +50,12 @@ if (isset($preview)) {
     ];
 }
 
-// Get full event info
-if ($eventid) {
-    $event = get_event($eventid);
+$data["event"] = $event;
+
+$regid = clean_myvar_opt("regid", "int", false);
+if ($regid) {
+    $reg = get_reg($regid);
+    $data["reg"] = $reg;
 }
 
 //output any passed on hidden info from previous registrations
@@ -64,9 +75,9 @@ if ($show_again) { // This is not the first time through
     }
 }
 
-$formlist = get_db_field("formlist", "events_templates", "template_id = ||template_id||", ["template_id" => $event['template_id']]);
+$formlist = get_db_field("formlist", "events_templates", "template_id = ||template_id||", ["template_id" => $template_id]);
 $elements = unserialize($formlist);
-$form_elements = make_form_elements($elements, ["event" => $event, "regid" => $regid, "show_again" => $show_again, "autofill" => $autofill]);
+$form_elements = make_form_elements($elements, $data);
 
 // Beginning of form document.
 echo '
