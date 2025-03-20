@@ -46,7 +46,7 @@ function updateMessage(){
 }
 
 function updateAge() {
-    var bday = datetype("Camper_Birth_Date");
+    var bday = datetype("camper_birth_date");
     var event = datetype("event_begin_date");
     difference = event.getFullYear() - bday.getFullYear() - 1;
 
@@ -57,7 +57,7 @@ function updateAge() {
     difference = difference > 0 ? difference : 0;
     difference = difference > 110 ? "Yikes!" : difference;
 
-    $("#Camper_Age").val(difference);
+    $("#camper_age").val(difference);
 }
 
 function updateTotal(){
@@ -79,20 +79,21 @@ function updateTotal(){
     $("#owed").val(today);
 }
 
-function final_form_prep(){
-    $("select[id^='Camper_Birth_Date']").change(function(){ updateAge(); });
-    $("select[id^='Camper_Birth_Date']").attr("onKeyUp","updateAge()");
-    $("input[id^='Camper_Birth_Date']").change(function(){ updateAge(); });
-    $("#Camper_Birth_Date").change(function(){ updateAge(); });
-    $("#Camper_Birth_Date").attr("onChange","updateAge()");
-    $("input,select,textarea").bind("focus",function(){ $(this).closest(".rowContainer").css("background-color","whitesmoke"); });
-    $("input,select,textarea").bind("blur",function(){ $(this).closest(".rowContainer").css("background-color","initial"); });
+function final_form_prep() {
+    $("#camper_birth_date").on("change", function () { updateAge(); });
+
+    $(":input:not(:hidden)", ".formSection").bind("focus", function () {
+        $(this).closest(".rowContainer").css("background-color", "whitesmoke");
+    });
+    $(":input:not(:hidden)", ".formSection").bind("blur", function () {
+        $(this).closest(".rowContainer").css("background-color", "white");
+    });
 }
 
 $(function () {
-    console.log($("#payment_method"));
     $("#payment_method").on("change", function () { updateMessage(); });
     $("#payment_method").on("click", function () { updateMessage(); });
+    final_form_prep();
 
     $("#applycampership").on("click", async function (e) {
         e.preventDefault();

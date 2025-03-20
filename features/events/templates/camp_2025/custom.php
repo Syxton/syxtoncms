@@ -8,13 +8,13 @@
  ***************************************************************************/
 
 function customrule_min_age($data = []) {
-    if (!isset($data["eventid"])) {
-        return "";
+    if (!isset($data["event"])) {
+        return 0;
     }
 
-    $eventid = $data["eventid"];
+    $event = $data["event"];
     $params = [
-        "extra" => $eventid,
+        "extra" => $event["eventid"],
         "type" => "events_template",
         "setting_name" => "template_setting_min_age",
     ];
@@ -24,13 +24,13 @@ function customrule_min_age($data = []) {
 }
 
 function customrule_max_age($data = []) {
-    if (!isset($data["eventid"])) {
-        return "";
+    if (!isset($data["event"])) {
+        return 0;
     }
 
-    $eventid = $data["eventid"];
+    $event = $data["event"];
     $params = [
-        "extra" => $eventid,
+        "extra" => $event["eventid"],
         "type" => "events_template",
         "setting_name" => "template_setting_max_age",
     ];
@@ -40,13 +40,14 @@ function customrule_max_age($data = []) {
 }
 
 function customvalue_shirt($data = []) {
-    if (!isset($data["eventid"])) {
+    if (!isset($data["event"])) {
         return 0;
     }
 
-    $eventid = $data["eventid"];
+    $event = $data["event"];
+
     $params = [
-        "extra" => $eventid,
+        "extra" => $event["eventid"],
         "type" => "events_template",
         "setting_name" => "template_setting_shirt",
     ];
@@ -55,15 +56,14 @@ function customvalue_shirt($data = []) {
 }
 
 function customvalue_shirt_price($data = []) {
-    if (!isset($data["eventid"])) {
+    if (!isset($data["event"])) {
         return 0;
     }
 
-    $eventid = $data["eventid"];
-    $event = get_event($eventid);
+    $event = $data["event"];
 
     $params = [
-        "extra" => $eventid,
+        "extra" => $event["eventid"],
         "type" => "events_template",
         "setting_name" => "template_setting_shirt",
     ];
@@ -73,26 +73,22 @@ function customvalue_shirt_price($data = []) {
         return 0;
     }
 
-    $params = [
-        "extra" => $eventid,
-        "type" => "events_template",
-        "setting_name" => "template_setting_shirt_price",
-    ];
+    $params["setting_name"] = "template_setting_shirt_price";
     $shirt_price = get_db_field("setting", "settings", "type = ||type|| AND extra = ||extra|| AND setting_name = ||setting_name||", $params);
 
     return empty($shirt_price) ? "0" : $shirt_price;
 }
 
 function customoptions_shirt($data = []) {
-    if (!isset($data["eventid"])) {
+    if (!isset($data["event"])) {
         return 0;
     }
 
-    $eventid = $data["eventid"];
-    $event = get_event($eventid);
+    $event = $data["event"];
+    $eventid = $event["eventid"];
 
     $params = [
-        "extra" => $eventid,
+        "extra" => $event["eventid"],
         "type" => "events_template",
         "setting_name" => "template_setting_shirt",
     ];
@@ -102,11 +98,7 @@ function customoptions_shirt($data = []) {
         return 0;
     }
 
-    $params = [
-        "extra" => $eventid,
-        "type" => "events_template",
-        "setting_name" => "template_setting_shirt_price",
-    ];
+    $params["setting_name"] = "template_setting_shirt_price";
     $shirt_price = get_db_field("setting", "settings", "type = ||type|| AND extra = ||extra|| AND setting_name = ||setting_name||", $params);
     $shirt_price = empty($shirt_price) ? "0" : $shirt_price;
 
@@ -119,12 +111,12 @@ function customoptions_shirt($data = []) {
 }
 
 function customoptions_picture($data = []) {
-    if (!isset($data["eventid"])) {
+    if (!isset($data["event"])) {
         return 0;
     }
 
-    $eventid = $data["eventid"];
-    $event = get_event($eventid);
+    $event = $data["event"];
+    $eventid = $event["eventid"];
 
     $params = [
         "extra" => $eventid,
@@ -137,11 +129,7 @@ function customoptions_picture($data = []) {
         return 0;
     }
 
-    $params = [
-        "extra" => $eventid,
-        "type" => "events_template",
-        "setting_name" => "template_setting_pictures_price",
-    ];
+    $params["setting_name"] = "template_setting_pictures_price";
     $pictures_price = get_db_field("setting", "settings", "type = ||type|| AND extra = ||extra|| AND setting_name = ||setting_name||", $params);
     $pictures_price = empty($pictures_price) ? "0" : $pictures_price;
 

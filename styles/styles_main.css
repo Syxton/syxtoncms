@@ -2710,3 +2710,26 @@ input[type=image] {
     top: calc(50% - .5em);
     color: #00000050;
 }
+
+.formSection {
+    display: none;
+}
+
+.formSection.selectedSection {
+    display: initial;
+}
+
+.formNavigation {
+    display: flex;
+    justify-content: space-between;
+}
+
+.formSectionTitle {
+    font-weight: bold;
+    text-align: center;
+    font-size: 1.2em;
+}
+
+.formMenu {
+    text-align: center;
+}
