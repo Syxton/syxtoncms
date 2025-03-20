@@ -48,6 +48,13 @@ delete_event||
     WHERE eventid = ||eventid||
 ||delete_event
 
+delete_event_settings||
+    DELETE
+    FROM settings
+    WHERE type = ||type||
+    AND extra = ||extra||
+||delete_event_settings
+
 delete_event_registrations||
     DELETE
     FROM events_registrations
@@ -155,7 +162,7 @@ get_contacts_list||
     SELECT DISTINCT CONCAT(contact, ': ', email, ': ', phone) as admin_contact
     FROM events
     WHERE confirmed = 1
-    ORDER BY contact, eventid DESC
+    ORDER BY admin_contact DESC
 ||get_contacts_list
 
 get_payable_list||

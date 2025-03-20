@@ -2084,11 +2084,10 @@ global $CFG, $MYVARS;
             if (execute_db_sql($SQL, $params)) {
                 refresh_calendar_events($eventid);
 
-                //Delete old template settings info just in case things have changed
-                execute_db_sql("DELETE
-                                FROM settings
-                                WHERE type = 'events_template'
-                                AND extra = ||extra||", ["extra" => $eventid]);
+                $SQL = fetch_template("dbsql/events.sql", "delete_event_settings", "events");
+
+                // Delete old template settings info just in case things have changed
+                execute_db_sql($SQL, ["type" => "events_template", "extra" => (string) $eventid]);
 
                 save_template_settings($template_id, $MYVARS->GET);
 

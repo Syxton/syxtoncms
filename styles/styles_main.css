@@ -618,11 +618,7 @@ img.sitenews {
     display: inline-flex;
     justify-content: space-between;
     align-items: center;
-    margin: 5px;
-}
-
-.events_reginfoblock.event_buttons {
-    width: 50px;
+    flex-wrap: wrap;
 }
 
 .events_alert {
@@ -650,7 +646,15 @@ img.sitenews {
 
 .event_info {
     font-size: .85em;
-    display: inline-block;
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.large_event_button span {
+    font-weight: bold;
+    font-size: 1.2em;
 }
 
 #event_menu {

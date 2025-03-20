@@ -128,19 +128,20 @@ global $CFG;
             "width" => "600",
             "height" => "650",
         ];
-        $menuitem = fill_template("tmp/page.template", "get_ul_item", false, ["item" =>  make_modal_links($p)]);
-        $menuitem = str_replace(array("\r", "\n"), '', $menuitem);
-        $returnme .= js_code_wrap('var item = "' . addslashes($menuitem) . '"; $("#pagenav").append(item);', 'defer', true);
+        $menuitem = make_modal_links($p);
+        $menuitem = str_replace(["\r", "\n"], '', $menuitem);
+        $returnme .= js_code_wrap('var item = "' . addslashes($menuitem) . '"; $("#myTopnav").append(item);', 'defer', true);
     }
 
     $p = [
         "title" => "Staff Application/Renewal Form",
         "text" => "Staff Apply",
+        "button" => true,
         "path" => action_path("events") . "staff_application",
         "validate" => "true",
         "width" => "600",
         "height" => "650",
-        "icon" => icon("clipboard-user"),
+        "icon" => icon("clipboard-user", 1, "", "green"),
         "styles" => "font-size: 1.5em;font-weight: bold;",
         "confirmexit" => "true",
     ];
@@ -260,12 +261,12 @@ global $CFG, $USER;
 
                 // Can you sign up for this event.
                 if (user_is_able($USER->userid, "signupforevents", $pageid, "events", $featureid)) {
-                    $eventbuttons .= get_event_register_link($event, $pageid);
+                    $eventbuttons .= get_event_register_link($event, $pageid, "for " . $event["name"], true);
                 }
 
                 // Can you pay for this event.
                 if ($event["paypal"] != "") {
-                    $eventbuttons .= get_event_pay_link($event, $pageid);
+                    $eventbuttons .= get_event_pay_link($event, $pageid, true);
                 }
             } else {
                 $alert = '<span class="events_limit_alert">No spots available.</span>';
@@ -291,8 +292,9 @@ global $CFG, $USER;
                 "event" => "none",
             ]);
             $export = '
-                <button onclick="export_event_registrations(' . $event['eventid'] . ', ' . $pageid . ');" title="Export ' . $regcount . '/' . $limit . ' Registrations" class="alike">
-                    ' . icon([["icon" => "file-csv", "style" => "font-size: 1.3em"]]) . '
+                <button class="smallbutton large_event_button" onclick="export_event_registrations(' . $event['eventid'] . ', ' . $pageid . ');" title="Export ' . $regcount . '/' . $limit . ' Registrations">
+                    ' . icon([["icon" => "file-csv", "size" => 2]]) . '
+                    <span>Export</span>
                 </button>';
         }
     }
@@ -303,8 +305,8 @@ global $CFG, $USER;
     }
 
     $registration_info = '<div role="export_button" class="events_reginfoblock">' . $export . '</div>' .
-                         '<div role="event_info" class="events_reginfoblock">' . $info . '</div>' .
                          '<div role="event_buttons" class="events_reginfoblock event_buttons">' . $eventbuttons . '</div>' .
+                         '<div role="event_info" class="events_reginfoblock">' . $info . '</div>' .
                          '<div role="alert" class="events_reginfoblock">' . $alert . '</div>';
 
     $confirmed = $needsconfirmed ? "Unconfirmed:" : "";
@@ -602,7 +604,7 @@ global $CFG, $USER;
             $regpending = get_db_count($SQL, ["eventid" => $event['eventid']]);
 
             // Export registrations
-            if (user_is_able($USER->userid, "exportcsv", $pageid,"events", $featureid)) {
+            if (user_is_able($USER->userid, "exportcsv", $pageid, "events", $featureid)) {
                 $buttons[] = '
                     <button title="Export ' . $regcurrent . ' Verified Registrations and ' . $regpending . ' Pending Registrations" onclick="export_registrations(' . $event['eventid'] . ',' . $pageid . ');" class="alike slide_menu_button">
                         ' . icon([["icon" => "file-csv", "style" => "font-size: 1.3em"]]) . '
@@ -774,29 +776,41 @@ function get_event_edit_link($event, $pageid) {
     ]);
 }
 
-function get_event_register_link($event, $pageid, $titleinfo = "") {
-    return make_modal_links([
+function get_event_register_link($event, $pageid, $titleinfo = "", $large = false) {
+    $params = [
         "title" => "Register $titleinfo",
+        "text" => ($large ? "Register" : false),
         "path" => action_path("events") . "show_registration&pageid=$pageid&eventid=" . $event['eventid'],
         "iframe" => true,
         "validate" => "true",
         "width" => "630",
         "height" => "95%",
         "confirmexit" => "true",
-        "icon" => icon([["icon" => "clipboard-check", "color" => "green"],]),
-        "class" => "slide_menu_button",
-    ]);
+        "button" => ($large ? true : false),
+        "icon" => icon([
+            [
+                "icon" => "clipboard-check",
+                "color" => "green",
+                "size" => ($large ? 2 : 1),
+            ],
+        ]),
+        "class" => ($large ? "large_event_button" : "slide_menu_button"),
+    ];
+    return make_modal_links($params);
 }
 
-function get_event_pay_link($event, $pageid) {
-    return make_modal_links([
+function get_event_pay_link($event, $pageid, $large = false) {
+    $params = [
         "title" => "Make Payment",
+        "text" => ($large ? "Make Payment" : false),
         "path" => action_path("events") . "pay&modal=1&pageid=$pageid&eventid=" . $event['eventid'],
         "width" => "95%",
         "height" => "95%",
-        "icon" => icon("credit-card"),
-        "class" => "slide_menu_button",
-    ]);
+        "button" => ($large ? true : false),
+        "icon" => icon("credit-card", ($large ? 2 : 1)),
+        "class" => ($large ? "large_event_button" : "slide_menu_button"),
+    ];
+    return make_modal_links($params);
 }
 
 function get_todays_fee($fullfee, $salefee, $sale_end) {
@@ -805,7 +819,6 @@ function get_todays_fee($fullfee, $salefee, $sale_end) {
     }
 
     return $salefee;
-
 }
 
 function make_fee_options($min, $full, $name, $options = "", $sale_end = "", $sale = false) {
