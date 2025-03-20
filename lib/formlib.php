@@ -15,13 +15,115 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
 }
 define('FORMLIB', true);
 
+function get_form_section($element, $section = false) {
+    if (isset($element['section'])) {
+        if ($section === false) { // No section started.
+            return $element['section'];
+        }
+
+        // Get last element of array $section and compare.
+        if ($section !== $element['section']) { // New section.
+            return $element['section'];
+        }
+    }
+    return $section;
+}
+
+function get_form_section_js() {
+    return '
+        <script type="text/javascript">
+            function updateFormMenu() {
+                let sectioncount = $(".formSection").length;
+                let firstSection = $(".formSection").first().index();
+                let currentSection = $(".selectedSection").index() - firstSection + 1;
+
+                $(".formMenu").html("Section " + currentSection + " of " + sectioncount);
+                $(".displayOnFinalSection").hide();
+                if (currentSection === sectioncount) {
+                    $(".displayOnFinalSection").show();
+                }
+            }
+
+            $(document).ready(function() {
+                updateFormMenu();
+                $(".firstSection .formNavigationPrevious button").remove();
+                $(".formSection").last().find(".formNavigationNext button").remove();
+                $(":input:not(:hidden)", ".selectedSection").first().focus();
+
+                $(".formNavigationPrevious").click(function() {
+                    $(this).parents(".formSection").prev().addClass("selectedSection").siblings().removeClass("selectedSection");
+                    $(this).parents(".formSection").removeClass("selectedSection");
+                    $(":input:not(:hidden)", ".selectedSection").first().focus();
+                    window.scrollTo(0, 0);
+                    updateFormMenu();
+                });
+
+                $(".formNavigationNext").click(function() {
+                    $(this).parents(".formSection").next().addClass("selectedSection").siblings().removeClass("selectedSection");
+                    $(this).parents(".formSection").removeClass("selectedSection");
+                    $(":input:not(:hidden)", ".selectedSection").first().focus();
+                    window.scrollTo(0, 0);
+                    updateFormMenu();
+                });
+            });
+        </script>';
+}
+
+function get_form_section_opening($lastsection, $section) {
+    if ($section === false || $section === $lastsection) {
+        return '';
+    }
+
+    if ($lastsection === false) {
+        $output = get_form_section_js();
+        $output .= '<div class="formMenu"></div>';
+        $output .= '<div class="formSection firstSection selectedSection">';
+    }
+
+    if ($lastsection !== false && $lastsection !== $section) {
+        $output = get_form_section_closing($section);
+        $output .= '<div class="formSection">';
+    }
+
+    $output .= get_form_navigation_buttons();
+    $output .= '<div class="formSectionTitle">Section: ' . $section . '</div>';
+
+    return $output;
+}
+
+function get_form_navigation_buttons() {
+    return '
+    <div class="formNavigation">
+        <div class="formNavigationPrevious">
+            <button type="button">
+                Previous Section
+            </button>
+        </div>
+        <div class="formNavigationNext">
+            <button type="button">
+                Next Section
+            </button>
+        </div>
+    </div>';
+}
+function get_form_section_closing($section = false) {
+    $output = "";
+    if ($section !== false) {
+        $output = '</div>';
+    }
+    return $output;
+}
+
 function make_form_elements($elements, $data = []) {
     global $CFG;
     $output = '';
     $tabindex = 1;
+    $lastsection = false;
     foreach ($elements as $element) {
+        $section = get_form_section($element, $lastsection);
+        $output .= get_form_section_opening($lastsection, $section);
         $rules = get_form_element_data_rules($element, $data);
-        $help = get_form_element_help($element);
+        $help = get_form_element_help($element, $data);
         $req = isset($element['required']) && $element['required'] ? ' * ' : '';
         $element['rules'] = $rules;
         $element['tabindex'] = $tabindex;
@@ -30,6 +132,9 @@ function make_form_elements($elements, $data = []) {
         case 'select':
         case 'textarea':
         case 'date':
+        case 'tel':
+        case 'email':
+        case 'password':
             $make_form_element = 'make_form_' . $element['type'];
             $form_element = $make_form_element($element, $data);
 
@@ -62,8 +167,10 @@ function make_form_elements($elements, $data = []) {
             }
             break;
         }
+        $lastsection = $section;
         $tabindex++;
     }
+    $output .= get_form_section_closing($section);
     return $output;
 }
 
@@ -223,7 +330,8 @@ function get_form_USSTATES_options() {
 function make_form_text($element, $data = []) {
     $value = isset($element['value']) ? $element['value'] : "";
     $style = isset($element['style']) ? $element['style'] : "";
-    $output = '<input type="text" tabindex="' . $element['tabindex'] . '"
+    $readonly = isset($element['readonly']) ? " readonly " : "";
+    $output = '<input ' . $readonly . ' type="text" tabindex="' . $element['tabindex'] . '"
                 id="' . $element['name'] . '" name="' . $element['name'] . '"
                 value="' . $value . '" ' . $element['rules'] . '
                 style="' . $style . '" />';
