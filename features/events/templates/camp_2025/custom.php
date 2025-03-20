@@ -8,7 +8,7 @@
  ***************************************************************************/
 
 function customrule_min_age($data = []) {
-    if (!isset($data["event"])) {
+    if (!isset($data["event"]) || !isset($data["event"]["eventid"])) {
         return 0;
     }
 
@@ -24,7 +24,7 @@ function customrule_min_age($data = []) {
 }
 
 function customrule_max_age($data = []) {
-    if (!isset($data["event"])) {
+    if (!isset($data["event"]) || !isset($data["event"]["eventid"])) {
         return 0;
     }
 
@@ -40,7 +40,7 @@ function customrule_max_age($data = []) {
 }
 
 function customvalue_shirt($data = []) {
-    if (!isset($data["event"])) {
+    if (!isset($data["event"]) || !isset($data["event"]["eventid"])) {
         return 0;
     }
 
@@ -56,7 +56,7 @@ function customvalue_shirt($data = []) {
 }
 
 function customvalue_shirt_price($data = []) {
-    if (!isset($data["event"])) {
+    if (!isset($data["event"]) || !isset($data["event"]["eventid"])) {
         return 0;
     }
 
@@ -80,7 +80,7 @@ function customvalue_shirt_price($data = []) {
 }
 
 function customoptions_shirt($data = []) {
-    if (!isset($data["event"])) {
+    if (!isset($data["event"]) || !isset($data["event"]["eventid"])) {
         return 0;
     }
 
@@ -111,7 +111,7 @@ function customoptions_shirt($data = []) {
 }
 
 function customoptions_picture($data = []) {
-    if (!isset($data["event"])) {
+    if (!isset($data["event"]) || !isset($data["event"]["eventid"])) {
         return 0;
     }
 
