@@ -56,6 +56,13 @@ $formlist = [
         'lettersonly' => true,
     ],
     [
+        'name' => 'camper_birth_date',
+        'section' => 'Camper',
+        'title' => 'Birthday',
+        'type' => 'date',
+        'required' => true,
+    ],
+    [
         'name' => 'camper_age',
         'section' => 'Camper',
         'title' => 'Age',
@@ -63,17 +70,11 @@ $formlist = [
         'required' => true,
         'number' => true,
         'readonly' => true,
+        'style' => 'background-color: lightgray;border: 1px solid grey; width:50px;',
         'customrules' => [
             'min_age' => '/features/events/templates/camp_2025/custom.php',
             'max_age' => '/features/events/templates/camp_2025/custom.php',
         ],
-    ],
-    [
-        'name' => 'camper_birth_date',
-        'section' => 'Camper',
-        'title' => 'Birthday',
-        'type' => 'date',
-        'required' => true,
     ],
     [
         'name' => 'camper_grade',
@@ -224,7 +225,7 @@ $formlist = [
     [
         'name' => 'health_expiration',
         'section' => 'Health',
-        'title' => 'Tetanus Date',
+        'title' => 'Insurance Expiration',
         'type' => 'date',
         'required' => false,
     ],

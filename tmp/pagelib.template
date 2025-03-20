@@ -267,12 +267,30 @@ validation_tooltip_actions||
 		submitHandler: function() {
 		    ||code||
 		},
+        invalidHandler: function() {
+            setTimeout(function() {
+                if ($(".formSection").length !== 0) {
+                    $(":input:not([type=hidden]).error", ".formSection").first().parents(".formSection").addClass("selectedSection").siblings().removeClass("selectedSection");
+                    let sectioncount = $(".formSection").length;
+                    let firstSection = $(".formSection").first().index();
+                    let currentSection = $(".selectedSection").index() - firstSection + 1;
+
+                    $(".formMenu").html("Section " + currentSection + " of " + sectioncount);
+                    $(".displayOnFinalSection").hide();
+                    if (currentSection === sectioncount) {
+                        $(".displayOnFinalSection").show();
+                    }
+                    $(":input:not([type=hidden]).error", ".formSection").first().focus();
+                }
+            }, 500);
+
+        },
 		ignore: '.calendarDateInput'
 	});
 
-    $('.formContainer textarea, .formContainer select, .formContainer input[type=text],[type=email],[type=password],[type=search],[type=url],[type=checkbox]').focus(function() {
+    $(":input:not([type=hidden])", ".formContainer").focus(function() {
         $(this).parent().find('label.error').css('visibility', 'visible');
-        $(this).parent().find('.info').css('visibility', 'visible')
+        $(this).parent().find('.info').css('visibility', 'visible');
     }).blur(function() {
         $(this).parent().find('.info').css('visibility', 'hidden');
     });
