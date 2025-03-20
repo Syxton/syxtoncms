@@ -463,7 +463,7 @@ label.error {
     line-height: 1.5em;
     height: 16px;
     float: left;
-    background: url('../images/error.png') no-repeat;
+    background: url('../styles/images/error.png') no-repeat;
     padding-left: 20px;
     margin: 2px 4px;
     white-space: nowrap;
