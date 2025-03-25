@@ -27,11 +27,9 @@ simplelayout_template||
 	</div>
 	<div class="block_divider"></div>
 	<div class="colmask rightmenu">
-	<div>
-		<div>
+		<div style="margin: 5px auto;max-width: 800px;">
 			<span id="column_width" style="width:100%;"></span>
 			||middlecontents||
 		</div>
-	</div>
 	</div>
 ||simplelayout_template

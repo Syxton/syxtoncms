@@ -98,7 +98,7 @@ global $PAGE, $CFG;
         $middle_contents .= create_validation_script("password_reset_form", "reset_password()");
 
         // Main Layout
-        echo fill_template("tmp/index.template", "mainlayout_template", false, ["mainmast" => page_masthead(true), "middlecontents" => $middle_contents]);
+        echo fill_template("tmp/index.template", "simplelayout_template", false, ["mainmast" => page_masthead(true), "middlecontents" => $middle_contents]);
 
         // End Page
         include('../footer.html');
