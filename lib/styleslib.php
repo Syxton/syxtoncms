@@ -174,7 +174,7 @@ function custom_styles_selector($pageid, $feature, $featureid=false) {
                 "feature" => $feature,
                 "featureid" => $featureid,
             ],
-            "done" => "location.reload(true);",
+            "ondone" => "location.reload(true);",
         ]);
 
         $params["style_inputs"] = $style_inputs;

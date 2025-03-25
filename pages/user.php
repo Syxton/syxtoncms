@@ -56,13 +56,17 @@ function reset_password() {
 global $PAGE, $CFG;
     //Not an ajax call so full start of new page is needed.  This is pretty rare.
     $PAGE->title = "Reset Password";
+    $PAGE->name = $PAGE->title;
+    $PAGE->description = "Password reset page"; // Description of page
+    $PAGE->themeid = get_page_themeid($CFG->SITEID);
+
     include($CFG->dirroot . '/header.html');
 
     echo get_js_tags(["validate"]);
     $userid = clean_myvar_req("userid", "int");
     $password = clean_myvar_req("alternate", "string");
 
-    $alternate = get_db_row(fetch_template("dbsql/db.sql", "authenticate_alt_userid"), ["userid" => $userid, "alternate" => $password]) ? true : false;
+    $alternate = get_db_row(fetch_template("dbsql/db.sql", "authenticate_alt_userid"), ["userid" => $userid, "password" => $password]) ? true : false;
     if ($alternate) {
         if (!defined('VALIDATELIB')) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
         $params = [];
@@ -86,7 +90,7 @@ global $PAGE, $CFG;
                 "userid" => $userid,
                 "password" => "js||encodeURIComponent($('#mypassword').val())||js",
             ],
-            "done" => "go_to_page(" . $CFG->SITEID . ");",
+            "ondone" => "go_to_page(" . $CFG->SITEID . ");",
             "event" => "none",
         ]);
 

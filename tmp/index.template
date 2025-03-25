@@ -10,8 +10,8 @@ mainlayout_template||
 	<div class="colmask rightmenu">
 		<div class="colleft">
 			<div class="col2 pagesort2 connectedSortable">
-				||sidemast||
-				||sidecontents||
+				||*sidemast||
+				||*sidecontents||
 			</div>
 			<div class="col1 pagesort1 connectedSortable">
 				<span id="column_width" style="width:100%;"></span>
