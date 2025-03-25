@@ -42,6 +42,26 @@ update_event||
     WHERE eventid = ||eventid||
 ||update_event
 
+get_events_with_same_template||
+    SELECT e.eventid, b.orderbyfield, b.folder
+    FROM events as e
+    JOIN events_templates as b ON b.template_id=e.template_id
+    WHERE eventid=||eventid||
+||get_events_with_same_template
+
+get_current_events_with_same_template||
+    SELECT eventid, (CONCAT(FROM_UNIXTIME(e.event_begin_date , '%Y'), ' ', e.name)) AS name
+    FROM events e
+    WHERE e.confirmed = 1
+    AND e.template_id = ||template_id||
+    AND e.start_reg > 0
+    AND (
+        (e.event_begin_date - ||today||) < 31560000
+        &&
+        (e.event_begin_date - ||today||) > -7776000
+    )
+||get_current_events_with_same_template
+
 delete_event||
     DELETE
     FROM events
@@ -60,6 +80,20 @@ delete_event_registrations||
     FROM events_registrations
     WHERE eventid = ||eventid||
 ||delete_event_registrations
+
+get_registration_value||
+    SELECT *
+    FROM events_registrations_values
+    WHERE regid = ||regid||
+    AND LOWER(elementname) = ||elementname||
+||get_registration_value
+
+get_registration_value_by_id||
+    SELECT *
+    FROM events_registrations_values
+    WHERE regid = ||regid||
+    AND elementid = ||elementid||
+||get_registration_value_by_id
 
 get_registration_values||
     SELECT *
@@ -87,6 +121,13 @@ get_events_having_same_template||
     }}year||
     ORDER BY regid DESC
 ||get_events_having_same_template
+
+get_events_template_forms||
+    SELECT *
+    FROM events_templates_forms
+    WHERE template_id = ||template_id||
+    ORDER BY sort
+||get_events_template_forms
 
 update_template_status||
     UPDATE events_templates

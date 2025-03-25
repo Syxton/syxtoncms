@@ -306,14 +306,14 @@ searchnav||
 registration_info_form||
     <h3>Edit Registration Values</h3>
     <form name="reg_form" id="save_reg_changes">
-        <table style="border-top: 1px solid grey;">
+        <table style="border-top: 1px solid grey;width:100%">
             <tr>
                 <td colspan="2" style="text-align: center">
                     <input type="submit" value="Save Changes" />
                 </td>
             </tr>
             <tr>
-                <td>
+                <td class="registration_info_title">
                     Event
                 </td>
                 <td>
@@ -321,19 +321,19 @@ registration_info_form||
                 </td>
             </tr>
             <tr>
-                <td>
+                <td class="registration_info_title">
                     Email
                 </td>
                 <td>
-                    <input id="reg_email" name="reg_email" type="text" size="45" value="||email||" />
+                    <input id="reg_email" name="reg_email" type="text" style="width: 100%" value="||email||" />
                 </td>
             </tr>
             <tr>
-                <td>
+                <td class="registration_info_title">
                     Pay Code
                 </td>
                 <td>
-                    <input id="reg_code" name="reg_code" type="text" size="45" value="||code||" />
+                    <input id="reg_code" name="reg_code" type="text" style="width: 100%" value="||code||" />
                 </td>
             </tr>
             ||rows||
@@ -349,9 +349,9 @@ registration_info_form||
 copy_registration_info_form||
     <h3>Copy Registration</h3>
     <form name="copy_form" id="copy_registration">
-        <table style="border-top: 1px solid grey;">
+        <table style="border-top: 1px solid grey;width:100%">
             <tr>
-                <td style="width: 125px;">
+                <td class="registration_info_title">
                     Copy To
                 </td>
                 <td>

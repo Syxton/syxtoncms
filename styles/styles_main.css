@@ -620,6 +620,10 @@ img.sitenews {
     flex-wrap: wrap;
 }
 
+.registration_info_title {
+    width: 35%;
+}
+
 .events_alert {
     font-weight: bolder;
     font-size: 1.2em;
