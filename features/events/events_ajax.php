@@ -760,111 +760,87 @@ global $CFG;
 
 function get_registration_sort_sql($eventid, $online_only=false) {
     if ($online_only) { $online_only = "AND e.manual = 0"; }
-    $SQL = "SELECT e.*"; $orderby = "";
+    $sortSQL = "SELECT e.*"; $orderby = "";
 
-    $sort_info = get_db_row("SELECT e.eventid,b.orderbyfield,b.folder FROM events as e
-                                JOIN events_templates as b ON b.template_id=e.template_id
-                                WHERE eventid='$eventid'");
+    $SQL = fetch_template("dbsql/events.sql", "get_events_with_same_template", "events");
+    $sort_info = get_db_row($SQL, ["eventid" => $eventid]);
 
-         if ($sort_info["folder"] == "none") { //form template
+    if ($sort_info["folder"] == "none") { //form template
         $sort_elements=explode(",", $sort_info["orderbyfield"]);$i=0;
         while (isset($sort_elements[$i])) {
-            $SQL .= ",(SELECT value FROM events_registrations_values
+            $sortSQL .= ",(SELECT value FROM events_registrations_values
                             WHERE elementid='$sort_elements[$i]' AND regid=v.regid) as val$i";
             $orderby .= $orderby == "" ? "val$i" : ",val$i";
             $i++;
         }
-        $SQL .= " FROM events_registrations as e
+        $sortSQL .= " FROM events_registrations as e
                     JOIN events_registrations_values as v ON (e.regid=v.regid)
                     WHERE e.eventid='$eventid' $online_only
                     GROUP BY regid
                     ORDER BY val0 LIKE '%Reserved%' DESC, $orderby";
-         } else { //custom template
+    } else { //custom template
         $sort_elements=explode(",", $sort_info["orderbyfield"]);$i=0;
         while (isset($sort_elements[$i])) {
-            $SQL .= ",(SELECT value FROM events_registrations_values
+            $sortSQL .= ",(SELECT value FROM events_registrations_values
                             WHERE elementname='$sort_elements[$i]' AND regid=v.regid) as val$i";
             $orderby .= $orderby == "" ? "val$i" : ",val$i";
             $i++;
         }
-        $SQL .= " FROM events_registrations as e
+        $sortSQL .= " FROM events_registrations as e
                     JOIN events_registrations_values as v ON (e.regid=v.regid)
                     WHERE e.eventid='$eventid' $online_only
                     GROUP BY regid
                     ORDER BY val0 LIKE '%Reserved%' DESC, $orderby";
-         }
+    }
 
-return $SQL;
+return $sortSQL;
 }
 
 function printable_registration($regid, $eventid, $template_id) {
+    global $CFG;
     $returnme = '<div>';
+
+    if (!defined('FORMLIB')) { include_once($CFG->dirroot . '/lib/formlib.php'); }
     $template = get_event_template($template_id);
+    $template_forms = get_template_formlist($template_id);
+
     if ($template["folder"] == "none") {
-        if ($template_forms = get_db_result("SELECT * FROM events_templates_forms
-                                                WHERE template_id='$template_id'
-                                                ORDER BY sort")) {
-              while ($form_element = fetch_row($template_forms)) {
-                  if ($form_element["type"] == "payment") {
-                      if ($values = get_db_result("SELECT * FROM events_registrations_values
-                                                    WHERE regid='$regid' AND elementid='" . $form_element["elementid"] . "'
-                                                    ORDER BY entryid")) {
-                          $i = 0; $values_display = explode(",", $form_element["display"]);
-                          while ($value = fetch_row($values)) {
-                                $returnme .= '<br />
-                                            <div style="display:inline-block;width:150px;vertical-align: top;">
-                                                <strong>' . $values_display[$i] . '</strong>
-                                            </div>
-                                            <div style="display:inline-block;max-width: 400px;padding-left:5px;">
-                                                ' . stripslashes($value["value"]) . '
-                                            </div>';
-                              $i++;
+        if ($template_forms) {
+            while ($form_element = fetch_row($template_forms)) {
+                $SQL = fetch_template("dbsql/events.sql", "get_registration_value_by_id", "events");
+                if ($form_element["type"] == "payment") {
+                    $elements = get_db_result($SQL, ["regid" => $regid, "elementid" => $form_element["elementid"]]);
+                    if ($elements) {
+                        $i = 0; $values_display = explode(",", $form_element["display"]);
+                        while ($element = fetch_row($elements)) {
+                            $returnme .= get_printable_registration_row($values_display[$i], $element["value"]);
+                            $i++;
                         }
                     }
                 } else {
-                        $value = get_db_row("SELECT * FROM events_registrations_values
-                                            WHERE regid='$regid'
-                                                AND elementid='" . $form_element["elementid"] . "'");
-                        $returnme .= '<br />
-                                    <div style="display:inline-block;width:150px;vertical-align: top;">
-                                        <strong>' . $form_element["display"] . '</strong>
-                                    </div>
-                                    <div style="display:inline-block;max-width: 400px;padding-left:5px;">
-                                        ' . stripslashes($value["value"]) . '
-                                    </div>';
+                    $element = get_db_row($SQL, ["regid" => $regid, "elementid" => $form_element["elementid"]]);
+                    $returnme .= get_printable_registration_row($form_element["display"], $element["value"]);
                 }
             }
         }
     } else {
-        $template_forms = explode(";", $template["formlist"]);
         $i=0;
         while (!empty($template_forms[$i])) {
-              $form = explode(":", $template_forms[$i]);
-              $value = get_db_row("SELECT * FROM events_registrations_values
-                                    WHERE regid='$regid'
-                                        AND elementname='" . $form[0]."'");
-              $returnme .=   '<br />
-                            <div style="display:inline-block;width:150px;vertical-align: top;">
-                                <strong>' . $form[2] . '</strong>
-                            </div>
-                            <div style="display:inline-block;max-width: 400px;padding-left:5px;">
-                                ' . stripslashes($value["value"]) . '
-                            </div>';
-              $i++;
+            $form = get_template_formlist_element_array($template, $template_forms[$i]);
+            if (isset($form["displayonly"]) && $form["displayonly"]) { $i++; continue; }
+            $SQL = fetch_template("dbsql/events.sql", "get_registration_value", "events");
+            $value = get_db_row($SQL, ["regid" => $regid, "elementname" => strtolower($form["name"])]);
+            $returnme .= get_printable_registration_row($form["title"], $value["value"]);
+            $i++;
         }
     }
 
     // Payment info
-    if ($values = get_db_result("SELECT * FROM events_registrations_values WHERE regid='$regid' AND elementname='tx' ORDER BY entryid")) {
+    $SQL = fetch_template("dbsql/events.sql", "get_registration_value", "events");
+    if ($values = get_db_result($SQL, ["regid" => $regid, "elementname" => 'tx'])) {
         while ($value = fetch_row($values)) {
             $params = unserialize($value["value"]);
-            $returnme .= '<br />
-                            <div style="display:inline-block;width:150px;vertical-align: top;">
-                                <strong>Paypal TX</strong>
-                            </div>
-                            <div style="display:inline-block;max-width: 400px;padding-left:5px;">
-                                &nbsp;$' . stripslashes($params["amount"] . " on " . date("m/d/Y", $params["date"]) . " - " . $params["txid"]) . '
-                            </div>';
+            $returnme .= get_printable_registration_row("Paypal TX", "$" . $params["amount"] . " on " . date("m/d/Y", $params["date"]) . " - " . $params["txid"]);
             $i++;
         }
     }
@@ -872,6 +848,17 @@ function printable_registration($regid, $eventid, $template_id) {
     $returnme .= "</div>";
 
     return $returnme;
+}
+
+function get_printable_registration_row($title, $value) {
+    return '
+        <br />
+        <div style="line-height: 1.5em;display:inline-block;width:200px;margin-left: 50px;vertical-align: top;">
+            <strong>' . $title . '</strong>
+        </div>
+        <div style="display:inline-block;padding-left:5px;line-height: 1.5em;">
+            ' . stripslashes($value) . '
+        </div>';
 }
 
 function save_reg_changes() {
@@ -1028,18 +1015,13 @@ global $CFG, $MYVARS, $USER;
         $return = get_back_to_registrations_link($eventid);
 
         // Get all events beginning 3 months in the past, to a year in the future.
-        $today = get_timestamp();
-
-        $events = get_db_result("SELECT eventid, (CONCAT(FROM_UNIXTIME(e.event_begin_date , '%Y'), ' ', e.name)) AS name
-                                   FROM events e
-                                  WHERE e.confirmed = 1
-                                    AND e.template_id = '$template_id'
-                                    AND e.start_reg > 0
-                                    AND ((e.event_begin_date - $today) < 31560000 && (e.event_begin_date - $today) > -7776000)");
+        $SQL = fetch_template("dbsql/events.sql", "get_current_events_with_same_template", "events");
+        $events = get_db_result($SQL, ["template_id" => $template_id, "today" => get_timestamp()]);
 
 
         // If similar events exist, display the copy registration form.
-        if (!empty((array) $events)) {
+        // BEGIN WORKING AGAIN HERE!!!!!
+        if (!$events) {
             ajaxapi([
                 "id" => "copy_registration",
                 "url" => "/features/events/events_ajax.php",
@@ -1058,7 +1040,7 @@ global $CFG, $MYVARS, $USER;
                 "properties" => [
                     "name" => "copy_reg_to",
                     "id" => "copy_reg_to",
-                    "style" => "width:300px;",
+                    "style" => "width:100%",
                 ],
                 "values" => $events,
                 "valuename" => "eventid",
@@ -1102,7 +1084,7 @@ global $CFG, $MYVARS, $USER;
                 "properties" => [
                     "name" => "reg_eventid",
                     "id" => "reg_eventid",
-                    "style" => "width:420px;",
+                    "style" => "width:100%;",
                 ],
                 "values" => $events,
                 "valuename" => "eventid",
@@ -1117,11 +1099,12 @@ global $CFG, $MYVARS, $USER;
         $event_reg = get_db_row("SELECT * FROM events_registrations WHERE regid='$regid'");
 
         $rows = "";
+        if (!defined('FORMLIB')) { include_once($CFG->dirroot . '/lib/formlib.php'); }
         $template = get_event_template($template_id);
+        $template_forms = get_template_formlist($template_id);
+
         if ($template["folder"] == "none") {
-            if ($template_forms = get_db_result("SELECT * FROM events_templates_forms
-                                                    WHERE template_id='$template_id'
-                                                    ORDER BY sort")) {
+            if ($template_forms) {
                 while ($form_element = fetch_row($template_forms)) {
                     if ($form_element["type"] == "payment") {
                         if ($values = get_db_result("SELECT * FROM events_registrations_values
@@ -1132,11 +1115,11 @@ global $CFG, $MYVARS, $USER;
                             while ($value = fetch_row($values)) {
                                 $rows .= '
                                     <tr>
-                                        <td>
+                                        <td class="registration_info_title">
                                             ' . $values_display[$i] . '
                                         </td>
                                         <td>
-                                            <input id="' . $value["entryid"] . '" name="' . $value["entryid"] . '" type="text" size="45" value="' . stripslashes($value["value"]) . '" />
+                                            <input id="' . $value["entryid"] . '" name="' . $value["entryid"] . '" type="text" style="width:100%;" value="' . stripslashes($value["value"]) . '" />
                                         </td>
                                     </tr>';
                                 $i++;
@@ -1148,41 +1131,45 @@ global $CFG, $MYVARS, $USER;
                                                 AND elementid='" . $form_element["elementid"] . "'");
                         $rows .= '
                             <tr>
-                                <td>
+                                <td class="registration_info_title">
                                     ' . $form_element["display"] . '
                                 </td>
                                 <td>
-                                    <input id="' . $value["entryid"] . '" name="' . $value["entryid"] . '" type="text" size="45" value="' . stripslashes($value["value"]) . '" />
+                                    <input id="' . $value["entryid"] . '" name="' . $value["entryid"] . '" type="text" style="width:100%;" value="' . stripslashes($value["value"]) . '" />
                                 </td>
                             </tr>';
                     }
                 }
             }
         } else {
-            $template_forms = explode(";", trim($template["formlist"], ';'));
+            $template_forms = get_template_formlist($template_id);
             $i = 0;
-            while (isset($template_forms[$i])) {
-                $form = explode(":", $template_forms[$i]);
+            while (!empty($template_forms[$i])) {
+                $form = get_template_formlist_element_array($template, $template_forms[$i]);
 
-                $value = get_db_row("SELECT * FROM events_registrations_values WHERE regid = '$regid' AND elementname = '" . $form[0] . "'");
+                // Skip display only fields.
+                if (isset($form["displayonly"]) && $form["displayonly"]) { $i++; continue; }
+
+                $SQL = fetch_template("dbsql/events.sql", "get_registration_value", "events");
+                $value = get_db_row($SQL, ["regid" => $regid, "elementname" => strtolower($form["name"])]);
 
                 $val = $entryid = "";
                 if (!$value) { // No value so we create a blank.
                     $SQL = "INSERT INTO events_registrations_values
                                         (regid, value, eventid, elementname)
-                                 VALUES ('$regid', '', '$eventid', '" . $form[0] . "')";
+                                 VALUES ('$regid', '', '$eventid', '" . $form["name"] . "')";
                     $entryid = execute_db_sql($SQL);
                   } else {
                     $val = stripslashes($value["value"]);
                     $entryid = $value["entryid"];
                 }
 
-                $formfield = '<input id="' . $entryid . '" name="' . $entryid . '" type="text" size="45" value="' . $val . '" />';
+                $formfield = '<input id="' . $entryid . '" name="' . $entryid . '" type="text" style="width: 100%" value="' . $val . '" />';
 
                 $rows .= '
                     <tr>
-                        <td>' .
-                            $form[2] . '
+                        <td class="registration_info_title">' .
+                            $form["title"] . '
                         </td>
                         <td>
                             ' . $formfield . '
@@ -1803,9 +1790,9 @@ function get_limit_form() {
             $values = get_db_result($SQL, ["template_id" => $template_id]);
         } else {
             $values = [];
-            $formlist = explode(";", $template['formlist']);
+            $formlist = get_template_formlist($template_id);
             foreach ($formlist as $f) {
-                $el = explode(":", $f);
+                $el = get_template_formlist_element_array($template, $f);
                 if (isset($el[2]) && $el[1] != "Pay") {
                     $values[] = [
                         "elementid" => $el[0],

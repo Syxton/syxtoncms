@@ -888,16 +888,18 @@ global $CFG;
     if ($template["folder"] == "none") {
         if ($name_fields = get_db_result("SELECT * FROM events_templates_forms WHERE template_id=" . $template["template_id"] . " AND nameforemail=1")) {
             while ($name_field = fetch_row($name_fields)) {
-                $value = stripslashes(get_db_field("value", "events_registrations_values", "regid='$regid' AND elementid='" . $name_field["elementid"] . "'"));
-                $name .= $name == "" ? $value : " " . $value;
+                $SQL = fetch_template("dbsql/events.sql", "get_registration_value_by_id", "events");
+                $element = get_db_row($SQL, ["regid" => $regid, "elementid" => $name_field["elementid"]]);
+                $name .= $name == "" ? $element["value"] : " " . $element["value"];
             }
         }
     } else {
         $name_fields = explode(",", $template["registrant_name"]);
         $i = 0;
         while (isset($name_fields[$i])) {
-            $value = stripslashes(get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='" . $name_fields[$i] . "'"));
-            $name .= $name == "" ? $value : " " . $value;
+            $SQL = fetch_template("dbsql/events.sql", "get_registration_value", "events");
+            $element = get_db_row($SQL, ["regid" => $regid, "elementname" => strtolower($name_fields[$i])]);
+            $name .= $name == "" ? stripslashes($element["value"]) : " " . stripslashes($element["value"]);
             $i++;
         }
     }
@@ -1077,20 +1079,54 @@ global $CFG;
     return $email;
 }
 
-function get_template_field_displayname($templateid, $fieldname) {
+function get_template_field_displayname($templateid, $fieldidentifier) {
     $template = get_event_template($templateid);
     if ($template["folder"] == "none") {
-        return get_db_field("display", "events_templates_forms", "elementid='$fieldname'");
+        return get_db_field("display", "events_templates_forms", "elementid='$fieldidentifier'");
     } else {
-        $fields = explode(";", $template["formlist"]);
+        $fields = get_template_formlist($templateid);
         foreach ($fields as $f) {
-            $field = explode(":", $f);
-            if ($field[0] == $fieldname) {
+            $field = get_template_formlist_element_array($template, $f);
+            if ($field["name"] == $fieldidentifier) {
                 return $field[2];
             }
         }
     }
-    return $fieldname;
+    return $fieldidentifier;
+}
+
+function get_template_formlist_element_array($template, $element) {
+    // formlist is stored in a php file as an array already.
+    if (strpos($template["formlist"], ".php") !== false) {
+        return $element;
+    }
+
+    // formlist is stored in database as string, explode into array.
+    $element = explode(":", $element);
+    return [
+        "name" => $element[0],
+        "section" => $element[1],
+        "title" => $element[2],
+    ];
+}
+
+function get_template_formlist($templateid) {
+    global $CFG;
+    $template = get_event_template($templateid);
+    if ($template["folder"] == "none") {
+        $SQL = fetch_template("dbsql/events.sql", "get_events_template_forms", "events");
+        $template_forms = get_db_result($SQL, ["template_id" => $templateid]);
+    } else {
+        // Does $template["formlist"] contain a semicolon-separated list of form elements?
+        if (strpos($template["formlist"], ";") === false) {
+            // Formlist is contained in a file.
+            $template_forms = include($CFG->dirroot . "/features/events/templates/" . $template["folder"] . "/" . $template["formlist"]);
+        } else {
+            $template_forms = explode(";", trim($template["formlist"], ';'));
+        }
+    }
+
+    return $template_forms;
 }
 
 function hard_limits($regid, $event, $template) {
@@ -2616,6 +2652,7 @@ global $CFG, $USER;
 }
 
 function add_blank_registration($eventid, $reserveamount = 1) {
+global $CFG;
     $event = get_event($eventid);
     $template_id = $event["template_id"];
     $eventname = $event["name"];
@@ -2624,48 +2661,48 @@ function add_blank_registration($eventid, $reserveamount = 1) {
     $reserved = 0;
     $return = [];
     while ($reserved < $reserveamount) {
-        $SQL = "";$SQL2 = "";
+        $SQL = $SQL2 = "";
         if ($regid = execute_db_sql("INSERT INTO events_registrations
                                     (eventid,date,code,manual)
                                     VALUES('$eventid','" . get_timestamp() . "','" . uniqid("", true) . "',1)")) {
+            if (!defined('FORMLIB')) { include_once($CFG->dirroot . '/lib/formlib.php'); }
             $template = get_event_template($template_id);
+            $template_forms = get_template_formlist($template_id);
             if ($template["folder"] == "none") {
-                if ($template_forms = get_db_result("SELECT * FROM events_templates_forms
-                                                        WHERE template_id='$template_id'
-                                                        ORDER BY sort")) {
-                        while ($form_element = fetch_row($template_forms)) {
-                            if ($form_element["type"] == "payment") {
-                                $SQL2 .= $SQL2 == "" ? "" : ",";
-                                $SQL2 .= "('$regid','" . $form_element["elementid"] . "', '','$eventid','total_owed'),('$regid'," . $form_element["elementid"] . ", '','$eventid','paid'),('$regid','" . $form_element["elementid"] . "', '','$eventid','payment_method')";
+                if ($template_forms) {
+                    while ($form_element = fetch_row($template_forms)) {
+                        if ($form_element["type"] == "payment") {
+                            $SQL2 .= $SQL2 == "" ? "" : ",";
+                            $SQL2 .= "('$regid','" . $form_element["elementid"] . "', '','$eventid','total_owed'),('$regid'," . $form_element["elementid"] . ", '','$eventid','paid'),('$regid','" . $form_element["elementid"] . "', '','$eventid','payment_method')";
                         } else {
-                                $SQL2 .= $SQL2 == "" ? "" : ",";
-                                $value = $form_element["nameforemail"] == 1 ? "Reserved" : "";
-                                $SQL2 .= "('$regid'," . $form_element["elementid"] . ",'$value','$eventid','" . $form_element["elementname"] . "')";
-                            }
+                            $SQL2 .= $SQL2 == "" ? "" : ",";
+                            $value = $form_element["nameforemail"] == 1 ? "Reserved" : "";
+                            $SQL2 .= "('$regid'," . $form_element["elementid"] . ",'$value','$eventid','" . $form_element["elementname"] . "')";
+                        }
                     }
                   }
                   $SQL2 = "INSERT INTO events_registrations_values
                             (regid,elementid,value,eventid,elementname)
                             VALUES" . $SQL2;
-              } else {
-                  $template_forms = explode(";", trim($template["formlist"], ';'));
-                foreach ($template_forms as $formset) {
-                    $form = explode(":", $formset);
-                        $value = strstr($template["registrant_name"], $form[0]) ? "Reserved" : "";
-                    $SQL2 .= $SQL2 == "" ? "" : ",";
-                    $SQL2 .= "('$regid','$value','$eventid','" . $form[0]."')";
+            } else {
+                if ($template_forms) {
+                    foreach ($template_forms as $formset) {
+                        $form = get_template_formlist_element_array($template, $formset);
+                        $value = strstr($template["registrant_name"], $form["name"]) ? "Reserved" : "";
+                        $SQL2 .= $SQL2 == "" ? "" : ",";
+                        $SQL2 .= "('$regid', '$value', '$eventid', '" . $form["name"] ."')";
+                    }
+                    $SQL2 = "INSERT INTO events_registrations_values
+                                (regid,value,eventid,elementname)
+                                VALUES" . $SQL2;
                 }
+            }
 
-                $SQL2 = "INSERT INTO events_registrations_values
-                            (regid,value,eventid,elementname)
-                            VALUES" . $SQL2;
-              }
-
-              if (execute_db_sql($SQL2)) {
+            if (execute_db_sql($SQL2)) {
                 $return[$reserved] = $regid;
-              } else {
-                execute_db_sql("DELETE FROM events_registrations
-                                    WHERE regid='$regid'");
+            } else {
+                $SQL = fetch_template("dbsql/events.sql", "delete_event_registrations", "events");
+                execute_db_sql($SQL, ["regid" => $regid]);
                 $return[$reserved] = false;
             }
         } else { $return[$reserved] = false; }
