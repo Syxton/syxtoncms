@@ -140,7 +140,7 @@ global $CFG, $USER;
     $created = false;
 
     try {
-      start_db_transaction();
+        start_db_transaction();
         $temp = create_random_password();
         $key = md5($user['email']) . md5(time());
         $time = get_timestamp();
@@ -150,8 +150,8 @@ global $CFG, $USER;
             'fname' => $user['fname'],
             'lname' => $user['lname'],
             'email' => $user['email'],
-            'temp' => $temp,
-            'password' => $temp,
+            'password' => (string) md5($temp), // Reversed until confirmed.
+            'temp' => (string) md5($user['password']), // Reversed until confirmed.
             'userkey' => $key,
             'time' => $time,
         ];

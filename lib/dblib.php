@@ -401,12 +401,26 @@ function handleSuccessfulLogin(array $user, bool $isFirstLogin, bool $clearAltPa
     return $user;
 }
 
+/**
+ * Activate a user account.
+ *
+ * This function is called immediately after a user has successfully logged in for the first time.
+ * It swaps the temporary password with the actual password and clears the temporary password field.
+ * It also sends an email to the user and the site owner to confirm that the account has been activated.
+ *
+ * @param array $user The user object containing user data.
+ * @return void
+ */
 function activateAccount(array $user) {
     global $CFG;
 
     // Activate account by swapping temporary password with actual password and clearing temp.
     $SQL = fetch_template("dbsql/db.sql", "activate_account");
-    execute_db_sql($SQL, ["user" => $user]);
+    $params = [
+        "temp" => $user['temp'],
+        "userid" => $user['userid'],
+    ];
+    execute_db_sql($SQL, $params);
 
     // Prepare and send account activation email
     $FROMUSER = (object)[
@@ -425,6 +439,7 @@ function activateAccount(array $user) {
     $message = fill_template("tmp/page.template", "account_activation_email", false, $params);
     $subject = $CFG->sitename . ' Account Activation';
 
+    // Send email to the user and the site owner.
     send_email($user, $FROMUSER, $subject, $message);
     send_email($FROMUSER, $FROMUSER, $subject, $message);
 }

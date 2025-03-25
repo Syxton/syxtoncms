@@ -886,6 +886,10 @@ div.login_box {
     text-align: center;
 }
 
+div#login_box_error {
+    margin-top: 10px;
+}
+
 td.field_title {
     font-size: .95em;
     text-align: right;

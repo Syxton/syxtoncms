@@ -40,8 +40,8 @@ update_last_activity||
 
 activate_account||
 	UPDATE users
-	SET password = ||user[temp]||, temp = ""
-	WHERE userid = ||user[userid]||
+	SET password = ||temp||, temp = ""
+	WHERE userid = ||userid||
 ||activate_account
 
 logsql||
