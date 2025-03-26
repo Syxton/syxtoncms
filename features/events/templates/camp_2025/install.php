@@ -25,13 +25,11 @@ $formlist = serialize($formlist);
 $settings = serialize($settings);
 
 // If it is already installed, don't install it again.
-if (!$template = get_db_row("SELECT * FROM events_templates WHERE name = ||name||", ["name" => $templatename])) {
+if (!$template = get_event_template_by_name($templatename)) {
     // Install new registration template.
-    $SQL = "INSERT INTO events_templates (name, folder, formlist, registrant_name, orderbyfield, settings)
-                 VALUES (||name||, ||folder||, ||formlist||, ||registrant_name||, ||orderbyfield||, ||settings||)";
-
     $templateid = execute_db_sql(
-        $SQL, [
+        fetch_template("dbsql/events.sql", "insert_events_template", "events"),
+        [
             "name" => $templatename,
             "folder" => $templatefolder,
             "formlist" => "formlist.php",
@@ -42,10 +40,9 @@ if (!$template = get_db_row("SELECT * FROM events_templates WHERE name = ||name|
     );
 
     // Save the version number of the new template.
-    $SQL = "INSERT INTO settings (type, pageid, featureid, setting_name, setting, extra)
-                 VALUES (||type||, ||pageid||, ||featureid||, ||setting_name||, ||setting||, ||extra||)";
     execute_db_sql(
-        $SQL, [
+        fetch_template("dbsql/settings.sql", "insert_setting"),
+        [
             "type" => "events_template",
             "pageid" => 0,
             "featureid" => 0,
@@ -62,15 +59,13 @@ if (!$template = get_db_row("SELECT * FROM events_templates WHERE name = ||name|
 
     // If there is no version number, insert one.
     if (!$version) {
-        $SQL = "INSERT INTO settings (type, pageid, featureid, setting_name, setting, extra)
-                 VALUES (||type||, ||pageid||, ||featureid||, ||setting_name||, ||setting||, ||extra||)";
         execute_db_sql(
-            $SQL, [
+            fetch_template("dbsql/settings.sql", "insert_setting"),
+            [
                 "type" => "events_template",
                 "pageid" => 0,
                 "featureid" => 0,
-                "setting_name" =>
-                "version",
+                "setting_name" => "version",
                 "setting" => $thisversion,
                 "extra" => $templatefolder,
             ]
@@ -79,19 +74,15 @@ if (!$template = get_db_row("SELECT * FROM events_templates WHERE name = ||name|
 
     // $thisversion = 2024072500;
     // if ($version < $thisversion) {
-    //     $SQL = "UPDATE settings
-    //                SET setting = ||setting||
-    //              WHERE setting_name = ||setting_name||
-    //                AND type = ||type||
-    //                AND extra = ||extra||";
-    //     execute_db_sql(
-    //          $SQL, [
-    //              "setting" => $thisversion,
-    //              "setting_name" => "version",
-    //              "type" => "events_template",
-    //              "extra" => $templatefolder,
-    //          ]
-    //     );
+        // execute_db_sql(
+        //     fetch_template("dbsql/settings.sql", "update_setting_by_extra"),
+        //     [
+        //         "setting" => $thisversion,
+        //         "setting_name" => "version",
+        //         "type" => "events_template",
+        //         "extra" => $templatefolder,
+        //     ]
+        // );
     // }
 }
 

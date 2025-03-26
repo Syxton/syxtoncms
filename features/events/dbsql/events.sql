@@ -135,6 +135,12 @@ update_template_status||
     WHERE template_id = ||template_id||
 ||update_template_status
 
+insert_events_template||
+    INSERT INTO events_templates
+    (name, folder, formlist, registrant_name, orderbyfield, settings)
+    VALUES (||name||, ||folder||, ||formlist||, ||registrant_name||, ||orderbyfield||, ||settings||)
+||insert_events_template
+
 delete_events_requests||
     DELETE
     FROM events_requests

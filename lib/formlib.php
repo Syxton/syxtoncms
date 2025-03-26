@@ -56,6 +56,7 @@ function get_form_section_js() {
                     $(":input:not(:hidden)", ".selectedSection").first().focus();
                     window.scrollTo(0, 0);
                     updateFormMenu();
+                    resize_modal();
                 });
 
                 $(".formNavigationNext").click(function() {
@@ -64,6 +65,7 @@ function get_form_section_js() {
                     $(":input:not(:hidden)", ".selectedSection").first().focus();
                     window.scrollTo(0, 0);
                     updateFormMenu();
+                    resize_modal();
                 });
             });
         </script>';
@@ -159,6 +161,8 @@ function make_form_elements($elements, $data = []) {
             break;
         case 'custom':
             if (isset($element['customtype'])) {
+                $element["help"] = $help;
+                $element["rules"] = $rules;
                 foreach ($element['customtype'] as $func => $path) {
                     include_once($CFG->dirroot . $path);
                     $type_function = "customtype_" . $func;
@@ -174,8 +178,25 @@ function make_form_elements($elements, $data = []) {
     return $output;
 }
 
-function get_form_element_help($element) {
-    return isset($element['help']) ? get_help($element['help']) : get_help('input_default_' . $element['type']);
+function get_form_element_help($element, $data = []) {
+    global $CFG;
+    if (!isset($element['help']) && !isset($element['dynamichelp'])) {
+        return get_help('input_default_' . $element['type']);
+    }
+
+    if (isset($element['dynamichelp'])) {
+        foreach ($element['dynamichelp'] as $func => $path) {
+            include_once($CFG->dirroot . $path);
+            $help_function = "customhelp_" . $func;
+            return $help_function($data);
+        }
+    }
+
+    if (isset($element['help'])) {
+        return $element['help'];
+    }
+
+    return "";
 }
 
 function get_form_element_data_rules($element, $data = []) {
@@ -183,8 +204,8 @@ function get_form_element_data_rules($element, $data = []) {
     $rules = '';
     if (isset($element['required']) && $element['required'] == true) {
         $rules .= ' data-rule-required="true"';
-        $msg = isset($element['required_msg']) ? $element['required_msg'] : 'valid_req';
-        $rules .= ' data-msg-required="' . error_string($msg) . '"';
+        $msg = isset($element['required_msg']) ? $element['required_msg'] : error_string('valid_req');
+        $rules .= ' data-msg-required="' . $msg . '"';
     }
 
     if (isset($element['readonly']) && $element['readonly'] == true) {
@@ -205,26 +226,26 @@ function get_form_element_data_rules($element, $data = []) {
 
     if ($element['type'] == 'email') {
         $rules .= ' data-rule-email="true"';
-        $msg = isset($element['email_msg']) ? $element['email_msg'] : 'valid_email_invalid';
-        $rules .= ' data-msg-email="' . error_string($msg) . '"';
+        $msg = isset($element['email_msg']) ? $element['email_msg'] : error_string('valid_email_invalid');
+        $rules .= ' data-msg-email="' . $msg . '"';
     }
 
     if ($element['type'] == 'tel') {
         $rules .= ' data-rule-phone="true"';
-        $msg = isset($element['phone_msg']) ? $element['phone_msg'] : 'valid_phone_invalid';
-        $rules .= ' data-msg-phone="' . error_string($msg) . '"';
+        $msg = isset($element['phone_msg']) ? $element['phone_msg'] : error_string('valid_phone_invalid');
+        $rules .= ' data-msg-phone="' . $msg . '"';
     }
 
     if ($element['type'] == 'date') {
         $rules .= ' data-rule-date="true"';
-        $msg = isset($element['date_msg']) ? $element['date_msg'] : 'valid_date_invalid';
-        $rules .= ' data-msg-date="' . error_string($msg) . '"';
+        $msg = isset($element['date_msg']) ? $element['date_msg'] : error_string('valid_date_invalid');
+        $rules .= ' data-msg-date="' . $msg . '"';
     }
 
     if ($element['type'] == 'url') {
         $rules .= ' data-rule-url="true"';
-        $msg = isset($element['url_msg']) ? $element['url_msg'] : 'valid_url_invalid';
-        $rules .= ' data-msg-url="' . error_string($msg) . '"';
+        $msg = isset($element['url_msg']) ? $element['url_msg'] : error_string('valid_url_invalid');
+        $rules .= ' data-msg-url="' . $msg . '"';
     }
 
     if (isset($element['maxlength'])) {
@@ -241,6 +262,10 @@ function get_form_element_data_rules($element, $data = []) {
 
     if (isset($element['min'])) {
         $rules .= ' data-rule-min="' . $element['min'] . '"';
+    }
+
+    if (isset($element['autocapitalize'])) {
+        $rules .= ' autocapitalize="' . $element['autocapitalize'] . '"';
     }
 
     if (isset($element['customrules'])) {
@@ -328,38 +353,33 @@ function get_form_USSTATES_options() {
 //     'required' => false,
 // ]
 function make_form_text($element, $data = []) {
-    $value = isset($element['value']) ? $element['value'] : "";
+    $value = get_element_value($element, $data);
     $style = isset($element['style']) ? $element['style'] : "";
+    $money = isset($element['money']) ? '<span class="formMoneySymbol">$</span>' : "";
     $readonly = isset($element['readonly']) ? " readonly " : "";
+
     $output = '<input ' . $readonly . ' type="text" tabindex="' . $element['tabindex'] . '"
                 id="' . $element['name'] . '" name="' . $element['name'] . '"
                 value="' . $value . '" ' . $element['rules'] . '
                 style="' . $style . '" />';
-    return $output;
+    return $money . $output;
 }
 
 function make_form_textarea($element, $data = []) {
-    $value = isset($element['value']) ? $element['value'] : "";
-    $output = '<textarea tabindex="' . $element['tabindex'] . '"
-                id="' . $element['name'] . '" name="' . $element['name'] . '"
-                ' . $element['rules'] . '>' . $value . '</textarea>';
+    $value = get_element_value($element, $data);
+    $style = isset($element['style']) ? $element['style'] : "";
+
+    $output = '
+        <textarea tabindex="' . $element['tabindex'] . '"
+            id="' . $element['name'] . '" name="' . $element['name'] . '"
+            ' . $element['rules'] . ' style="' . $style . '">
+            ' . $value . '
+        </textarea>';
     return $output;
 }
 
 function make_form_hidden($element, $data = []) {
-    global $CFG;
-    $value = isset($element['value']) ? $element['value'] : "checkdynamicvalue";
-
-    if ($value === "checkdynamicvalue") {
-        $value = "";
-        if (isset($element['dynamicvalue'])) {
-            foreach ($element['dynamicvalue'] as $func => $path) {
-                include_once($CFG->dirroot . $path);
-                $value_function = "customvalue_" . $func;
-                $value = $value_function($data);
-            }
-        }
-    }
+    $value = get_element_value($element, $data);
 
     $output = '<input type="hidden"
                 id="' . $element['name'] . '" name="' . $element['name'] . '"
@@ -376,7 +396,7 @@ function make_form_date($element, $data = []) {
 }
 
 function make_form_tel($element, $data = []) {
-    $value = isset($element['value']) ? $element['value'] : "";
+    $value = get_element_value($element, $data);
     $output = '<input type="tel" tabindex="' . $element['tabindex'] . '"
                 id="' . $element['name'] . '" name="' . $element['name'] . '"
                 value="' . $value . '" ' . $element['rules'] . ' />';
@@ -384,7 +404,7 @@ function make_form_tel($element, $data = []) {
 }
 
 function make_form_email($element, $data = []) {
-    $value = isset($element['value']) ? $element['value'] : "";
+    $value = get_element_value($element, $data);
     $output = '<input type="email" tabindex="' . $element['tabindex'] . '"
                 id="' . $element['name'] . '" name="' . $element['name'] . '"
                 value="' . $value . '" ' . $element['rules'] . ' />';
@@ -431,5 +451,24 @@ function make_form_select($element, $data = []) {
     }
     $output .= '</select>';
     return $output;
+}
+
+function get_element_value($element, $data = []) {
+    global $CFG;
+    if (isset($element['value'])) {
+        return $element['value'];
+    }
+
+    if (isset($element['dynamicvalue'])) {
+        if (isset($element['dynamicvalue'])) {
+            foreach ($element['dynamicvalue'] as $func => $path) {
+                include_once($CFG->dirroot . $path);
+                $value_function = "customvalue_" . $func;
+                return $value_function($data);
+            }
+        }
+    }
+
+    return "";
 }
 ?>

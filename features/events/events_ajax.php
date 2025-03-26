@@ -1001,7 +1001,7 @@ global $CFG;
 }
 
 function get_registration_info() {
-global $CFG, $MYVARS, $USER;
+    global $CFG, $MYVARS, $USER;
     $eventid = clean_myvar_req("eventid", "int");
     $regid = clean_myvar_opt("regid", "int", false);
 
@@ -1015,12 +1015,15 @@ global $CFG, $MYVARS, $USER;
         $return = get_back_to_registrations_link($eventid);
 
         // Get all events beginning 3 months in the past, to a year in the future.
-        $SQL = fetch_template("dbsql/events.sql", "get_current_events_with_same_template", "events");
-        $events = get_db_result($SQL, ["template_id" => $template_id, "today" => get_timestamp()]);
-
+        $events = get_db_result(
+            fetch_template("dbsql/events.sql", "get_current_events_with_same_template", "events"),
+            [
+                "template_id" => $template_id,
+                "today" => get_timestamp(),
+            ]
+        );
 
         // If similar events exist, display the copy registration form.
-        // BEGIN WORKING AGAIN HERE!!!!!
         if (!$events) {
             ajaxapi([
                 "id" => "copy_registration",

@@ -17,27 +17,42 @@ if (!defined('EVENTSLIB')) { include_once($CFG->dirroot . '/features/events/even
 if (!defined('VALIDATELIB')) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
 if (!defined('FORMLIB')) { include_once($CFG->dirroot . '/lib/formlib.php'); }
 
-//Retrieve from Javascript
+// Retrieve from Javascript
 global $MYVARS;
 collect_vars();
 
 $email = $payment_method = $disable = "";
 
-$show_again = clean_myvar_opt("show_again", "bool", false);
-$autofill = clean_myvar_opt("autofill", "bool", false);
-$data = ["show_again" => $show_again, "autofill" => $autofill];
+// Create general data array for passing to templates and form variables.
+$data = [];
 
 // Get full event info
 $eventid = clean_myvar_opt("eventid", "int", false);
 if ($eventid) {
     $event = get_event($eventid);
+    $data["event"] = $event;
     $template_id = $event['template_id'];
 } else {
     $template_id = clean_myvar_opt("template_id", "int", false);
 }
 
+$regid = clean_myvar_opt("regid", "int", false);
+if ($regid) {
+    $reg = get_reg($regid);
+    $data["reg"] = $reg;
+}
+
+// show_again false -> first time through
+// show_again true AND autofill true -> same person, so autofill all items
+// show_again true AND autofill false -> different person, so autofill payment method
+$show_again = clean_myvar_opt("show_again", "bool", false);
+$autofill = clean_myvar_opt("autofill", "bool", false);
+$data["show_again"] = $show_again;
+$data["autofill"] = $autofill;
+
 // Preview of template.
 if (isset($preview)) {
+    $data["preview"] = true;
     $disable = 'disabled="disabled"';
     $event = [
         "name" => "Preview Event",
@@ -50,21 +65,13 @@ if (isset($preview)) {
     ];
 }
 
-$data["event"] = $event;
-
-$regid = clean_myvar_opt("regid", "int", false);
-if ($regid) {
-    $reg = get_reg($regid);
-    $data["reg"] = $reg;
-}
-
 //output any passed on hidden info from previous registrations
 $total_owed = clean_myvar_opt("total_owed", "float", 0);
 $items = clean_myvar_opt("items", "string", "");
 
 if ($show_again) { // This is not the first time through
     if ($autofill) { // Same person..so auto fill all items
-        $last_reg = get_db_result("SELECT * FROM events_registrations_values WHERE regid='$regid'");
+        $last_reg = get_db_result(fetch_template("dbsql/events.sql", "get_registration_values", "events"), ["regid" => $regid]);
         while ($reginfo = fetch_row($last_reg)) {
             ${$reginfo["elementname"]} = $reginfo["value"];
         }
@@ -75,8 +82,8 @@ if ($show_again) { // This is not the first time through
     }
 }
 
-$formlist = get_db_field("formlist", "events_templates", "template_id = ||template_id||", ["template_id" => $template_id]);
-$elements = unserialize($formlist);
+$template = get_event_template($template_id);
+$elements = get_template_formlist($template_id);
 $form_elements = make_form_elements($elements, $data);
 
 // Beginning of form document.

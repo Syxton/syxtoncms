@@ -1361,6 +1361,10 @@ function get_event_template($id) {
     return get_db_row("SELECT * FROM events_templates WHERE template_id = ||template_id||", ["template_id" => $id]);
 }
 
+function get_event_template_by_name($name) {
+    return get_db_row("SELECT * FROM events_templates WHERE name = ||name||", ["name" => $name]);
+}
+
 function get_event_length($event) {
     if (!empty($event['allday'])) {
         return "All day";
