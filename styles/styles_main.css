@@ -624,6 +624,10 @@ img.sitenews {
     width: 35%;
 }
 
+#registration_div {
+    height: 100vh;
+}
+
 .events_alert {
     font-weight: bolder;
     font-size: 1.2em;
@@ -2732,8 +2736,21 @@ input[type=image] {
     font-weight: bold;
     text-align: center;
     font-size: 1.2em;
+    margin-top: 10px;
 }
 
 .formMenu {
     text-align: center;
+}
+
+.formMoneySymbol {
+    width: 15px;
+    float: left;
+    line-height: 1.5em;
+    font-size: 1.25em;
+}
+
+.formMoneyDisplay {
+    line-height: 1.5em;
+    font-size: 1.25em;
 }

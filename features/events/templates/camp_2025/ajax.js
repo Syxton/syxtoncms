@@ -1,4 +1,4 @@
-var folder = "camp_new";
+var folder = "camp_2025";
 
 function show_form_again(eventid, regid, autofill){
     var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events.php?action=show_registration&i=!&v=!&total_owed="+$("#total_owed").val()+"&items="+$("#items").val()+"&eventid=" + eventid + "&regid=" + regid + "&show_again=1&autofill=" + autofill;
@@ -63,15 +63,16 @@ function updateAge() {
 function updateTotal(){
     var today = parseFloat($("#payment_amount").val());
     var total = parseFloat($("#payment_amount option:last-child").val());
-    if ($("#Camper_Picture")) {
-        today += parseFloat($("#Camper_Picture").val());
-        total += parseFloat($("#Camper_Picture").val());
+
+    if ($("#camper_picture")) {
+        today += parseFloat($("#camper_picture").val());
+        total += parseFloat($("#camper_picture").val());
     }
 
-    if ($("#Camper_Shirt_Size")) {
-        if ($("#Camper_Shirt_Size").val() !== "0") {
-            today += parseFloat($("#Camper_Shirt_Price").val());
-            total += parseFloat($("#Camper_Shirt_Price").val());
+    if ($("#camper_shirt_size")) {
+        if ($("#camper_shirt_size").val() !== "0") {
+            today += parseFloat($("#camper_shirt_price").val());
+            total += parseFloat($("#camper_shirt_price").val());
         }
     }
 
@@ -93,6 +94,8 @@ function final_form_prep() {
 $(function () {
     $("#payment_method").on("change", function () { updateMessage(); });
     $("#payment_method").on("click", function () { updateMessage(); });
+    $("#payment_amount, #camper_picture, #camper_shirt_size").on("change", function () { updateTotal(); });
+
     final_form_prep();
 
     $("#applycampership").on("click", async function (e) {

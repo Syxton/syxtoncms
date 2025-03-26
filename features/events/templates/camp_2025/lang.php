@@ -6,11 +6,11 @@
 * Date: 5/14/2024
 * Revision: 0.0.3
 ***************************************************************************/
- 
+
 unset($HELP);
 unset($ERRORS);
 
-//REGISTRATION 
+//REGISTRATION
 //HELP LANG
 $HELP = new \stdClass;
 $HELP->help_email = "Please enter a valid email address to send your registration information.";
@@ -36,7 +36,7 @@ $HELP->help_membercode = "Please enter your benefit code.";
 $HELP->help_memberaccount = "Please enter the account # of your insurance.";
 $HELP->help_healthto = "Please enter the expiration date of your insurance.";
 $HELP->help_history = "Please enter any of the camper's important medical history.";
-$HELP->help_alergies = "Please enter any of the camper's alergies.";
+$HELP->help_allergies = "Please enter any of the camper's allergies.";
 $HELP->help_existing = "Please enter any of the camper's existing medical issues.";
 $HELP->help_meds = "Please enter any medications the camper is currently taking.";
 $HELP->help_tetanus = "Please enter the date of the camper's last tetanus shot.";
