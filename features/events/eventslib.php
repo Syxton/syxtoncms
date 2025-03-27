@@ -881,12 +881,18 @@ global $CFG;
 }
 
 function get_registrant_name($regid) {
-global $CFG;
-    $SQL = "SELECT * FROM events_templates WHERE template_id IN (SELECT template_id FROM events WHERE eventid IN (SELECT eventid FROM events_registrations WHERE regid='$regid'))";
-    $template = get_db_row($SQL);
+    global $CFG;
+    $template = get_db_row(
+        fetch_template("dbsql/events.sql", "get_events_templates_by_regid", "events"),
+        ["regid" => $regid]
+    );
     $name = "";
     if ($template["folder"] == "none") {
-        if ($name_fields = get_db_result("SELECT * FROM events_templates_forms WHERE template_id=" . $template["template_id"] . " AND nameforemail=1")) {
+        $name_fields = get_db_result(
+            fetch_template("dbsql/events.sql", "get_events_templates_form_names", "events"),
+            ["template_id" => $template["template_id"]]
+        );
+        if ($name_fields) {
             while ($name_field = fetch_row($name_fields)) {
                 $SQL = fetch_template("dbsql/events.sql", "get_registration_value_by_id", "events");
                 $element = get_db_row($SQL, ["regid" => $regid, "elementid" => $name_field["elementid"]]);
@@ -2667,7 +2673,7 @@ global $CFG;
     while ($reserved < $reserveamount) {
         $SQL = $SQL2 = "";
         if ($regid = execute_db_sql("INSERT INTO events_registrations
-                                    (eventid,date,code,manual)
+                                    (eventid, date, code, manual)
                                     VALUES('$eventid','" . get_timestamp() . "','" . uniqid("", true) . "',1)")) {
             if (!defined('FORMLIB')) { include_once($CFG->dirroot . '/lib/formlib.php'); }
             $template = get_event_template($template_id);
@@ -2686,7 +2692,7 @@ global $CFG;
                     }
                   }
                   $SQL2 = "INSERT INTO events_registrations_values
-                            (regid,elementid,value,eventid,elementname)
+                            (regid, elementid, value, eventid, elementname)
                             VALUES" . $SQL2;
             } else {
                 if ($template_forms) {
@@ -2697,7 +2703,7 @@ global $CFG;
                         $SQL2 .= "('$regid', '$value', '$eventid', '" . $form["name"] ."')";
                     }
                     $SQL2 = "INSERT INTO events_registrations_values
-                                (regid,value,eventid,elementname)
+                                (regid, value, eventid, elementname)
                                 VALUES" . $SQL2;
                 }
             }
@@ -2705,8 +2711,10 @@ global $CFG;
             if (execute_db_sql($SQL2)) {
                 $return[$reserved] = $regid;
             } else {
-                $SQL = fetch_template("dbsql/events.sql", "delete_event_registrations", "events");
-                execute_db_sql($SQL, ["regid" => $regid]);
+                execute_db_sql(
+                    fetch_template("dbsql/events.sql", "delete_event_registrations", "events"),
+                    ["regid" => $regid]
+                );
                 $return[$reserved] = false;
             }
         } else { $return[$reserved] = false; }

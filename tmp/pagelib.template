@@ -270,25 +270,28 @@ validation_tooltip_actions||
         invalidHandler: function() {
             setTimeout(function() {
                 if ($(".formSection").length !== 0) {
-                    $(":input:not([type=hidden]).error", ".formSection").first().parents(".formSection").addClass("selectedSection").siblings().removeClass("selectedSection");
-                    let sectioncount = $(".formSection").length;
-                    let firstSection = $(".formSection").first().index();
-                    let currentSection = $(".selectedSection").index() - firstSection + 1;
+                    let errors = $("input:not([type=hidden]).error, textarea.error, select.error", ".formSection");
+                    if ($(errors).length > 0) {
+                        let section = $(errors).first().parents(".formSection").first();
+                        $(section).addClass("selectedSection").siblings().removeClass("selectedSection");
+                        let sectioncount = $(".formSection").length;
+                        let firstSection = $(".formSection").first().index();
+                        let currentSection = $(".selectedSection").index() - firstSection + 1;
 
-                    $(".formMenu").html("Section " + currentSection + " of " + sectioncount);
-                    $(".displayOnFinalSection").hide();
-                    if (currentSection === sectioncount) {
-                        $(".displayOnFinalSection").show();
+                        $(".formMenu").html("Section " + currentSection + " of " + sectioncount);
+                        $(".displayOnFinalSection").hide();
+                        if (currentSection === sectioncount) {
+                            $(".displayOnFinalSection").show();
+                        }
+                        $("input:not([type=hidden]).error, textarea.error, select.error", ".formSection").focus();
                     }
-                    $(":input:not([type=hidden]).error", ".formSection").first().focus();
                 }
             }, 500);
-
         },
 		ignore: '.calendarDateInput'
 	});
 
-    $(":input:not([type=hidden])", ".formContainer").focus(function() {
+    $("input:not([type=hidden]), textarea, select", ".formContainer").focus(function() {
         $(this).parent().find('label.error').css('visibility', 'visible');
         $(this).parent().find('.info').css('visibility', 'visible');
     }).blur(function() {

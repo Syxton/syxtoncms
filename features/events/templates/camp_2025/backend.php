@@ -21,8 +21,248 @@ callfunction();
 
 update_user_cookie();
 
+function save_registration() {
+    global $_SESSION, $MYVARS, $error;
+
+    if (!isset($_SESSION['registrations'])) {
+        $_SESSION['registrations'] = [];
+    }
+
+    // Save everything from this registration.
+    $_SESSION['registrations'][] = $MYVARS;
+
+    $return = print_registration_cart();
+
+    ajaxapi([
+        "id" => "submit_camp_2025_registration",
+        "url" => "/features/events/templates/camp_2025/backend.php",
+        "data" => [
+            "action" => "register",
+        ],
+        "reqstring" => "form1",
+        "display" => "registration_div",
+        "event" => "none",
+    ]);
+
+    ajaxapi([
+        "id" => "remove_camp_2025_registration",
+        "if" => "(confirm('Are you sure you want to delete this registration?'))",
+        "paramlist" => "hash",
+        "url" => "/features/events/templates/camp_2025/backend.php",
+        "data" => [
+            "action" => "remove_registration",
+            "hash" => "js||hash||js",
+        ],
+        "reqstring" => "form1",
+        "display" => "registration_div",
+        "event" => "none",
+    ]);
+
+    ajax_return($return, $error);
+}
+
+function remove_registration() {
+    global $_SESSION, $MYVARS, $error;
+
+    $hash = clean_myvar_opt("hash", "string", false);
+
+    if (isset($_SESSION['registrations'])) {
+        foreach ($_SESSION['registrations'] as $i => $reg) {
+            if ($reg->hash == $hash) {
+                unset($_SESSION['registrations'][$i]);
+            }
+        }
+    }
+    $return = print_registration_cart();
+
+    ajaxapi([
+        "id" => "submit_camp_2025_registration",
+        "url" => "/features/events/templates/camp_2025/backend.php",
+        "data" => [
+            "action" => "register",
+        ],
+        "reqstring" => "form1",
+        "display" => "registration_div",
+        "event" => "none",
+    ]);
+
+    ajaxapi([
+        "id" => "remove_camp_2025_registration",
+        "if" => "(confirm('Are you sure you want to delete this registration?'))",
+        "paramlist" => "hash",
+        "url" => "/features/events/templates/camp_2025/backend.php",
+        "data" => [
+            "action" => "remove_registration",
+            "hash" => "js||hash||js",
+        ],
+        "reqstring" => "form1",
+        "display" => "registration_div",
+        "event" => "none",
+    ]);
+
+    ajax_return($return, $error);
+}
+
+function print_registration_cart() {
+    global $_SESSION;
+
+    if (!isset($_SESSION['registrations']) || count($_SESSION['registrations']) == 0) {
+        return print_registration_cart_items_html([
+            (object) [
+                "item" => [
+                    "name" => "No registration is in the cart",
+                    "price" => "--",
+                ],
+            ]
+        ]);
+    }
+
+    $items = [];
+    $clean_registrations = [];
+    $cart_items = "";
+    foreach ($_SESSION['registrations'] as $key => $reg) {
+        $reg = $reg->GET;
+
+        // Get event info
+        $eventid = clean_param_req($reg, "eventid", "int");
+        $event = get_event($eventid);
+        $templateid = $event['template_id'];
+        $template = get_event_template($templateid);
+
+        // Build item name and create unique hash.
+        $camper_names = get_camper_names($reg);
+        $item_name = $camper_names["full"] . " - " . $event['name'] . " Registration";
+        $hash = md5($item_name);
+
+        // New entry, save unique hash.
+        $_SESSION['registrations'][$key]->hash = md5($item_name);
+
+        // Get registration info for pictures.
+        $picture_cost = get_db_field("setting", "settings", "type='events_template' AND extra = ||extra|| AND setting_name='template_setting_pictures_price'", ["extra" => $eventid]);
+        $camper_picture = clean_param_opt($reg, "camper_picture", "bool", false);
+        $picture_cost = $camper_picture ? $picture_cost : 0;
+
+        // Get registration info for shirts.
+        $shirt_cost = get_db_field("setting", "settings", "type='events_template' AND extra = ||extra|| AND setting_name='template_setting_shirt_price'", ["extra" => $eventid]);
+        $camper_shirt = clean_param_opt($reg, "camper_shirt", "bool", false);
+        $shirt_cost = $camper_shirt ? $shirt_cost : 0;
+
+        // Total up the registration bill
+        $reg_total = get_timestamp() < $event["sale_end"] ? $event["sale_fee"] + $picture_cost + $shirt_cost : $event["fee_full"] + $picture_cost + $shirt_cost;
+
+        if ($picture_cost) {
+            $item_name .= " + Picture";
+        }
+        if ($camper_shirt) {
+            $item_name .= " + Shirt";
+        }
+
+        $item = [
+            "name" => $item_name,
+            "price" => $reg_total,
+        ];
+
+        $_SESSION['registrations'][$key]->item = $item;
+    }
+
+    $clean_registrations = remove_duplicate_registrations($_SESSION['registrations']);
+    $_SESSION['registrations'] = $clean_registrations;
+
+    return '
+        <div class="registration_cart">
+        ' . print_registration_cart_items_html($_SESSION['registrations'])
+         . print_registration_cart_total_html($_SESSION['registrations']) . '
+        </div>';
+}
+
+function remove_duplicate_registrations($registrations) {
+    $reversed = array_reverse($registrations);
+    $clean_registrations = [];
+    foreach ($reversed as $key => $reg) {
+        $hash = $reg->hash;
+        if (!found_registration_hash($clean_registrations, $hash)) {
+            $clean_registrations[] = (object) [
+                "hash" => $hash,
+                "item" => $reg->item,
+                "GET" => $reg->GET,
+            ];
+        }
+    }
+    return array_reverse($clean_registrations);
+}
+
+function found_registration_hash($array, $hash) {
+    foreach ($array as $reg) {
+        if ($reg->hash == $hash) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function print_registration_cart_items_html($registrations) {
+    $return = "";
+    foreach ($registrations as $reg) {
+        if (isset($reg->item) && isset($reg->hash)) {
+            $item = $reg->item;
+            $item_price = clean_param_opt($item, "price", "float", false);
+            $item_price = $item_price ? '$' . number_format($item['price'], 2, ".", "") : $item['price'];
+            $return .= '
+            <div id="registration_cart_item">
+                <div class="registration_cart_item_name">
+                    ' . $item['name'] . '
+                </div>
+                <div class="registration_cart_item_price">
+                    ' . $item_price . '
+                </div>
+                <div>
+                    <button type="button" class="registration_cart_item_remove" onclick="remove_camp_2025_registration(\'' . $reg->hash . '\');">
+                        ' . icon("trash") . '
+                    </button>
+                </div>
+            </div>
+            ';
+            }
+    }
+
+    return $return;
+}
+
+function print_registration_cart_total_html($registrations) {
+    $total = 0;
+    foreach ($registrations as $reg) {
+        $item = $reg->item;
+        $item_price = clean_param_opt($item, "price", "float", false);
+        if ($item_price !== false) {
+            $total += $item['price'];
+        }
+    }
+
+    return '
+    <div id="registration_cart_total">
+        <div class="registration_cart_item_name">
+            Registration Total
+        </div>
+        <div class="registration_cart_item_price">
+            $' . number_format($total, 2, ".", "") . '
+        </div>
+    </div>
+    ';
+}
+
+function get_camper_names($reg) {
+    // Prepare names
+    $names = [];
+    $camper_name_middle = clean_param_opt($reg, "camper_name_middle", "string", "");
+    $names["middle"] = empty($camper_name_middle) ? '' : " " . nameize($camper_name_middle) . ".";
+    $names["first"] = nameize(clean_param_opt($reg, "camper_name_first", "string", ""));
+    $names["last"] = nameize(clean_param_opt($reg, "camper_name_last", "string", ""));
+    $names["full"] = $names["last"] . ", " . $names["first"] . " " . $names["middle"];
+    return $names;
+}
+
 function register() {
-global $CFG, $MYVARS, $USER, $error;
+global $CFG, $MYVARS, $USER, $error, $_SESSION;
 
     $return = "";
     try {

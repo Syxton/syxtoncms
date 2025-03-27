@@ -48,12 +48,12 @@ function get_form_section_js() {
                 updateFormMenu();
                 $(".firstSection .formNavigationPrevious button").remove();
                 $(".formSection").last().find(".formNavigationNext button").remove();
-                $(":input:not(:hidden)", ".selectedSection").first().focus();
+                $("input:not([type=hidden]).error, textarea.error, select.error", ".selectedSection").first().focus();
 
                 $(".formNavigationPrevious").click(function() {
                     $(this).parents(".formSection").prev().addClass("selectedSection").siblings().removeClass("selectedSection");
                     $(this).parents(".formSection").removeClass("selectedSection");
-                    $(":input:not(:hidden)", ".selectedSection").first().focus();
+                    $("input:not([type=hidden]).error, textarea.error, select.error", ".selectedSection").first().focus();
                     window.scrollTo(0, 0);
                     updateFormMenu();
                     resize_modal();
@@ -62,7 +62,7 @@ function get_form_section_js() {
                 $(".formNavigationNext").click(function() {
                     $(this).parents(".formSection").next().addClass("selectedSection").siblings().removeClass("selectedSection");
                     $(this).parents(".formSection").removeClass("selectedSection");
-                    $(":input:not(:hidden)", ".selectedSection").first().focus();
+                    $("input:not([type=hidden]).error, textarea.error, select.error", ".selectedSection").first().focus();
                     window.scrollTo(0, 0);
                     updateFormMenu();
                     resize_modal();

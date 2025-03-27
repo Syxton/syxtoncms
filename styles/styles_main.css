@@ -629,6 +629,38 @@ img.sitenews {
     height: 100vh;
 }
 
+div.registration_cart {
+    border: 2px solid gainsboro;
+}
+
+.registration_cart_item_name {
+    width: 100%;
+}
+
+.registration_cart_item_price {
+    width: 80px;
+    text-align: right;
+    padding: 10px;
+}
+
+#registration_cart_item, #registration_cart_total {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+#registration_cart_item {
+    padding: 10px;
+    background: #b3fff9;
+    border-bottom: 1px solid grey;
+}
+
+#registration_cart_total {
+    padding: 10px;
+    background: lightgrey;
+    font-weight: bold;
+}
+
 .events_alert {
     font-weight: bolder;
     font-size: 1.2em;

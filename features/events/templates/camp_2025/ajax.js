@@ -80,13 +80,33 @@ function updateTotal(){
     $("#owed").val(today);
 }
 
+function resetRegistration() {
+    if (confirm('Are you sure you want to reset the application?')) {
+        if ($(".formSection").length !== 0) {
+            $("input:not([type=hidden]).error, textarea.error, select.error", ".formSection").first().parents(".formSection").addClass("selectedSection").siblings().removeClass("selectedSection");
+            let sectioncount = $(".formSection").length;
+            let firstSection = $(".formSection").first().index();
+            let currentSection = $(".selectedSection").index() - firstSection + 1;
+
+            $(".formMenu").html("Section " + currentSection + " of " + sectioncount);
+            $(".displayOnFinalSection").hide();
+            if (currentSection === sectioncount) {
+                $(".displayOnFinalSection").show();
+            }
+            $("input:not([type=hidden]).error, textarea.error, select.error", ".formSection").first().focus();
+        }
+        return true;
+    }
+
+    return false;
+}
 function final_form_prep() {
     $("#camper_birth_date").on("change", function () { updateAge(); });
 
-    $(":input:not(:hidden)", ".formSection").bind("focus", function () {
+    $("input:not([type=hidden]).error, textarea.error, select.error", ".formSection").bind("focus", function () {
         $(this).closest(".rowContainer").css("background-color", "whitesmoke");
     });
-    $(":input:not(:hidden)", ".formSection").bind("blur", function () {
+    $("input:not([type=hidden]).error, textarea.error, select.error", ".formSection").bind("blur", function () {
         $(this).closest(".rowContainer").css("background-color", "white");
     });
 }
