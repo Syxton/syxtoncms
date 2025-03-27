@@ -166,7 +166,7 @@ function customoptions_picture($data = []) {
     if ($event['fee_full'] > 0 && $pictures_price > 0) {
         return [
             '0' => 'No',
-            $pictures_price => 'Yes',
+            '1' => 'Yes',
         ];
     }
 

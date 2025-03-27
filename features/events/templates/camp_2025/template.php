@@ -118,15 +118,15 @@ echo '
                         ' . $form_elements . '
                         <input tabindex="1000" name="print" value="Print" onclick="window.print()" style="position: fixed;top: 10px;right: 10px;font-size: .7em;" type="button" ' . $disable . '/><br /><br />
                         <input tabindex="1001" class="displayOnFinalSection submit" name="submit" type="submit" value="Send Application" style="background: green;color: white;" ' . $disable . ' />
-                        <input tabindex="1002" class="displayOnFinalSection"name="reset" type="reset" onclick="return confirm(\'Are you sure you want to reset the application?\');" style="cursor:pointer;background: red;color: white;float:right;" ' . $disable . '/>
+                        <input tabindex="1002" class="displayOnFinalSection"name="reset" type="reset" onclick="resetRegistration();" style="cursor:pointer;background: red;color: white;float:right;" ' . $disable . '/>
                     </fieldset>
                 </form>' . keepalive();
 
 ajaxapi([
-    "id" => "submit_camp_2025_registration",
+    "id" => "save_camp_2025_registration",
     "url" => "/features/events/templates/camp_2025/backend.php",
     "data" => [
-        "action" => "register",
+        "action" => "save_registration",
     ],
     "reqstring" => "form1",
     "display" => "registration_div",
@@ -134,5 +134,5 @@ ajaxapi([
 ]);
 
 //Finalize and activate validation code
-echo create_validation_script("form1", "submit_camp_2025_registration();");
+echo create_validation_script("form1", "save_camp_2025_registration();");
 ?>

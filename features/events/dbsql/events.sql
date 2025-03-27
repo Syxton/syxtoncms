@@ -49,6 +49,27 @@ get_events_with_same_template||
     WHERE eventid=||eventid||
 ||get_events_with_same_template
 
+get_events_templates_by_regid||
+    SELECT *
+    FROM events_templates
+    WHERE template_id IN (
+        SELECT template_id
+        FROM events
+        WHERE eventid IN (
+            SELECT eventid
+            FROM events_registrations
+            WHERE regid=||regid||
+        )
+    )
+||get_events_templates_by_regid
+
+get_events_templates_form_names||
+    SELECT *
+    FROM events_templates_forms
+    WHERE template_id=||template_id||
+    AND nameforemail=1
+||get_events_templates_form_names
+
 get_current_events_with_same_template||
     SELECT eventid, (CONCAT(FROM_UNIXTIME(e.event_begin_date , '%Y'), ' ', e.name)) AS name
     FROM events e
