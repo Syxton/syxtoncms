@@ -122,6 +122,10 @@ function make_form_elements($elements, $data = []) {
     $tabindex = 1;
     $lastsection = false;
     foreach ($elements as $element) {
+        // Skip fields that are only shown at checkout.
+        if (isset($element['checkout']) && $element['checkout'] === true) {
+            continue;
+        }
         $section = get_form_section($element, $lastsection);
         $output .= get_form_section_opening($lastsection, $section);
         $rules = get_form_element_data_rules($element, $data);

@@ -3,8 +3,8 @@
  * template.php - Camp Wabashi Template page
  * -------------------------------------------------------------------------
  * $Author: Matthew Davidson
- * Date: 5/14/2024
- * $Revision: 2.1.2
+ * $Date: 03/28/2025
+ * $Revision: 0.0.1
  ***************************************************************************/
 if (!isset($CFG) || !defined('LIBHEADER')) {
     $sub = '';
@@ -17,8 +17,11 @@ if (!defined('EVENTSLIB')) { include_once($CFG->dirroot . '/features/events/even
 if (!defined('VALIDATELIB')) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
 if (!defined('FORMLIB')) { include_once($CFG->dirroot . '/lib/formlib.php'); }
 
+// Include template specific functions.
+include_once($CFG->dirroot . "/features/events/templates/camp_2025/lib.php");
+
 // Retrieve from Javascript
-global $MYVARS;
+global $MYVARS, $_SESSION;
 collect_vars();
 
 $email = $payment_method = $disable = "";
@@ -116,17 +119,55 @@ echo '
                             </a>
                         </p>
                         ' . $form_elements . '
-                        <input tabindex="1000" name="print" value="Print" onclick="window.print()" style="position: fixed;top: 10px;right: 10px;font-size: .7em;" type="button" ' . $disable . '/><br /><br />
+                        <input type="hidden" id="count_in_cart" value="' . count($_SESSION['registrations']) . '" />
+                        <button type="button" class="registration_cart_menu alike">
+                            ' . icon([
+                                    ["icon" => "cart-shopping", "stacksize" => 3, "color" => "green"],
+                                    ["content" => count($_SESSION['registrations']), "style" => "font-size: .4em;top: 7px;width: 100%;text-align: center;color: white;"],
+                                ]) . '
+                        </button>
+                        <div id="refreshableregcart">
+                            ' . print_registration_cart(true) . '
+                        </div>
                         <input tabindex="1001" class="displayOnFinalSection submit" name="submit" type="submit" value="Send Application" style="background: green;color: white;" ' . $disable . ' />
                         <input tabindex="1002" class="displayOnFinalSection"name="reset" type="reset" onclick="resetRegistration();" style="cursor:pointer;background: red;color: white;float:right;" ' . $disable . '/>
                     </fieldset>
                 </form>' . keepalive();
 
+$total_in_cart = get_total_in_cart($_SESSION['registrations']);
+if ($total_in_cart > 0) {
+    ajaxapi([
+        "id" => "registration_cart_checkout",
+        "url" => "/features/events/templates/camp_2025/backend.php",
+        "data" => [
+            "action" => "add_registration_to_cart",
+            "checkout" => true,
+        ],
+        "display" => "registration_div",
+        "event" => "click",
+    ]);
+}
+
 ajaxapi([
-    "id" => "save_camp_2025_registration",
+    "id" => "remove_camp_2025_registration",
+    "if" => "($('#count_in_cart').val() > 0) && confirm('Are you sure you want to delete this registration?')",
+    "paramlist" => "hash",
     "url" => "/features/events/templates/camp_2025/backend.php",
     "data" => [
-        "action" => "save_registration",
+        "action" => "remove_registration",
+        "hash" => "js||hash||js",
+        "checkout" => true,
+    ],
+    "ondone" => "$('#count_in_cart').val(parseInt($('#count_in_cart').val())-1); $('.registration_cart_menu span.fa-layers-text').text(parseInt($('#count_in_cart').val()));",
+    "display" => "refreshableregcart",
+    "event" => "none",
+]);
+
+ajaxapi([
+    "id" => "camp_2025_add_registration_to_cart",
+    "url" => "/features/events/templates/camp_2025/backend.php",
+    "data" => [
+        "action" => "add_registration_to_cart",
     ],
     "reqstring" => "form1",
     "display" => "registration_div",
@@ -134,5 +175,5 @@ ajaxapi([
 ]);
 
 //Finalize and activate validation code
-echo create_validation_script("form1", "save_camp_2025_registration();");
+echo create_validation_script("form1", "camp_2025_add_registration_to_cart();");
 ?>
