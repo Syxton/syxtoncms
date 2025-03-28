@@ -88,6 +88,7 @@ if ($show_again) { // This is not the first time through
 $template = get_event_template($template_id);
 $elements = get_template_formlist($template_id);
 $form_elements = make_form_elements($elements, $data);
+$count_in_cart = isset($_SESSION['registrations']) ? count($_SESSION['registrations']) : 0;
 
 // Beginning of form document.
 echo '
@@ -119,11 +120,11 @@ echo '
                             </a>
                         </p>
                         ' . $form_elements . '
-                        <input type="hidden" id="count_in_cart" value="' . count($_SESSION['registrations']) . '" />
+                        <input type="hidden" id="count_in_cart" value="' . $count_in_cart . '" />
                         <button type="button" class="registration_cart_menu alike">
                             ' . icon([
                                     ["icon" => "cart-shopping", "stacksize" => 3, "color" => "green"],
-                                    ["content" => count($_SESSION['registrations']), "style" => "font-size: .4em;top: 7px;width: 100%;text-align: center;color: white;"],
+                                    ["content" => $count_in_cart, "style" => "font-size: .4em;top: 7px;width: 100%;text-align: center;color: white;"],
                                 ]) . '
                         </button>
                         <div id="refreshableregcart">
@@ -134,7 +135,7 @@ echo '
                     </fieldset>
                 </form>' . keepalive();
 
-$total_in_cart = get_total_in_cart($_SESSION['registrations']);
+$total_in_cart = $count_in_cart > 0 ? get_total_in_cart($_SESSION['registrations']) : 0;
 if ($total_in_cart > 0) {
     ajaxapi([
         "id" => "registration_cart_checkout",

@@ -45,7 +45,7 @@ function add_registration_to_cart() {
         Review Order
     </h1>
     <div id="refreshableregcart">
-        ' . print_registration_cart($checkout) . '
+        ' . print_registration_cart() . '
         ' . print_checkout_forms($_SESSION['registrations']) . '
     </div>';
 
