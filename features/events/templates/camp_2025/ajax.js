@@ -115,6 +115,13 @@ $(function () {
     $("#payment_method").on("change", function () { updateMessage(); });
     $("#payment_method").on("click", function () { updateMessage(); });
     $("#payment_amount, #camper_picture, #camper_shirt_size").on("change", function () { updateTotal(); });
+    $(".registration_cart_menu").on("click", function () {
+        if ($('#count_in_cart').val() > 0) {
+            $(".registration_cart").toggle();
+            return;
+        }
+        $(".registration_cart").hide();
+     });
 
     final_form_prep();
 

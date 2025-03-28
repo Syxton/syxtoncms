@@ -289,7 +289,7 @@ return [
     ],
     [
         'name' => 'camper_picture',
-        'section' => 'Pay',
+        'section' => 'Extras',
         'title' => 'Camper Picture',
         'type' => 'select',
         'selected' => '0',
@@ -303,7 +303,7 @@ return [
     ],
     [
         'name' => 'camper_shirt',
-        'section' => 'Pay',
+        'section' => 'Extras',
         'title' => 'Shirt',
         'type' => 'hidden',
         'dynamicvalue' => [
@@ -313,7 +313,7 @@ return [
     ],
     [
         'name' => 'camper_shirt_size',
-        'section' => 'Pay',
+        'section' => 'Extras',
         'title' => 'Shirt Size',
         'type' => 'select',
         'dynamicoptions' => [
@@ -326,7 +326,7 @@ return [
     ],
     [
         'name' => 'camper_shirt_price',
-        'section' => 'Pay',
+        'section' => 'Extras',
         'title' => 'Shirt Price',
         'type' => 'hidden',
         'dynamicvalue' => [
@@ -336,7 +336,8 @@ return [
     ],
     [
         'name' => 'payment_method',
-        'section' => 'Pay',
+        'section' => 'Checkout',
+        'checkout' => true,
         'title' => 'Payment Method',
         'type' => 'select',
         'options' => [
@@ -348,7 +349,8 @@ return [
     ],
     [
         'name' => 'cost',
-        'section' => 'Pay',
+        'section' => 'Checkout',
+        'checkout' => true,
         'title' => 'Partial Registration Fee to Pay',
         'type' => 'custom',
         'customtype' => [
@@ -357,7 +359,8 @@ return [
     ],
     [
         'name' => 'payment_amount',
-        'section' => 'Pay',
+        'section' => 'Checkout',
+        'checkout' => true,
         'title' => 'Amount Paying Today',
         'type' => 'custom',
         'customtype' => [
@@ -366,14 +369,16 @@ return [
     ],
     [
         'name' => 'campership',
-        'section' => 'Pay',
+        'section' => 'Checkout',
+        'checkout' => true,
         'title' => 'Campership',
         'type' => 'hidden',
         'required' => false,
     ],
     [
         'name' => 'campershipcode',
-        'section' => 'Pay',
+        'section' => 'Checkout',
+        'checkout' => true,
         'title' => 'Apply Campership',
         'type' => 'custom',
         'customtype' => [
@@ -384,7 +389,8 @@ return [
     ],
     [
         'name' => 'payment_note',
-        'section' => 'Pay',
+        'section' => 'Checkout',
+        'checkout' => true,
         'title' => 'Notes',
         'type' => 'custom',
         'customtype' => [
@@ -395,14 +401,16 @@ return [
     ],
     [
         'name' => 'total_owed',
-        'section' => 'Pay',
+        'section' => 'Checkout',
+        'checkout' => true,
         'title' => 'Amount Owed',
         'type' => 'hidden',
         'required' => false,
     ],
     [
         'name' => 'paid',
-        'section' => 'Pay',
+        'section' => 'Checkout',
+        'checkout' => true,
         'title' => 'Amount Paid',
         'type' => 'hidden',
         'required' => false,
