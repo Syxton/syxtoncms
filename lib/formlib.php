@@ -87,15 +87,15 @@ function get_form_section_opening($lastsection, $section) {
         $output .= '<div class="formSection">';
     }
 
-    $output .= get_form_navigation_buttons();
+    $output .= get_form_navigation_buttons('topButtons');
     $output .= '<div class="formSectionTitle">Section: ' . $section . '</div>';
 
     return $output;
 }
 
-function get_form_navigation_buttons() {
+function get_form_navigation_buttons($extraclass = "") {
     return '
-    <div class="formNavigation">
+    <div class="formNavigation ' . $extraclass . '">
         <div class="formNavigationPrevious">
             <button type="button">
                 Previous Section
@@ -111,7 +111,8 @@ function get_form_navigation_buttons() {
 function get_form_section_closing($section = false) {
     $output = "";
     if ($section !== false) {
-        $output = '</div>';
+        $output .= get_form_navigation_buttons('bottomButtons');
+        $output .= '</div>';
     }
     return $output;
 }
