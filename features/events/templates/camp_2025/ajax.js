@@ -16,7 +16,7 @@ function updateMessage(){
             <p>Your credit card or bank account information is not transmitted to us.<br />
             You do not need a PayPal account to make payment using most major credit cards, <br />
             however we do encourage you to become a verified member.</p>
-            <p>A PayPal payment button will be displayed after you click on the Send Application button.<br />
+            <p>A PayPal payment button will be displayed after you Submit your application.<br />
             PayPal timeout issues can be avoided by clearing your temporary internet files and cookies
              and adding <a href="https://www.paypal.com/" target="_blank">https://www.paypal.com/</a> to your list of trusted sites.</p>
         `;

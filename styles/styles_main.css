@@ -2795,6 +2795,7 @@ input[type=image] {
 .formNavigation {
     display: flex;
     justify-content: space-between;
+    padding: 5px 0;
 }
 
 .formSectionTitle {

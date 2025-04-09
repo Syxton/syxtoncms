@@ -100,6 +100,18 @@ echo '
             </head>
             <body>
                 <form class="event_template_form" name="form1" id="form1">
+                    <div>
+                        <input type="hidden" id="count_in_cart" value="' . $count_in_cart . '" />
+                        <button type="button" class="registration_cart_menu alike">
+                            ' . icon([
+                                    ["icon" => "cart-shopping", "stacksize" => 3, "color" => "green"],
+                                    ["content" => $count_in_cart, "style" => "font-size: .4em;top: 7px;width: 100%;text-align: center;color: white;"],
+                                ]) . '
+                        </button>
+                        <div id="refreshableregcart">
+                            ' . print_registration_cart(true) . '
+                        </div>
+                    </div>
                     <fieldset class="formContainer">
                         <input type="hidden" name="eventid" value="' . $eventid . '" />
                         <input type="hidden" id="event_begin_date" value="' . date("Y-m-d", $event["event_begin_date"]) . '" />
@@ -120,18 +132,8 @@ echo '
                             </a>
                         </p>
                         ' . $form_elements . '
-                        <input type="hidden" id="count_in_cart" value="' . $count_in_cart . '" />
-                        <button type="button" class="registration_cart_menu alike">
-                            ' . icon([
-                                    ["icon" => "cart-shopping", "stacksize" => 3, "color" => "green"],
-                                    ["content" => $count_in_cart, "style" => "font-size: .4em;top: 7px;width: 100%;text-align: center;color: white;"],
-                                ]) . '
-                        </button>
-                        <div id="refreshableregcart">
-                            ' . print_registration_cart(true) . '
-                        </div>
-                        <input tabindex="1001" class="displayOnFinalSection submit" name="submit" type="submit" value="Send Application" style="background: green;color: white;" ' . $disable . ' />
-                        <input tabindex="1002" class="displayOnFinalSection"name="reset" type="reset" onclick="resetRegistration();" style="cursor:pointer;background: red;color: white;float:right;" ' . $disable . '/>
+                        <input class="displayOnFinalSection submit" name="submit" type="submit" value="Submit Application" style="display: block; margin: auto;background: green;color: white;" ' . $disable . ' />
+                        <input class="displayOnFinalSection" name="reset" type="reset" onclick="resetRegistration();" style="display: block; margin: auto;cursor:pointer;background: red;color: white;float:right;" ' . $disable . '/>
                     </fieldset>
                 </form>' . keepalive();
 
