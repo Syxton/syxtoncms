@@ -39,6 +39,15 @@ function customrule_max_age($data = []) {
     return empty($max_age) ? "" : " data-rule-max=\"$max_age\"";
 }
 
+function customvalue_email($data = []) {
+    global $USER;
+    if (isset($USER->email)) {
+        return $USER->email;
+    }
+
+    return "";
+}
+
 function customvalue_owed($data = []) {
     if (!isset($data["event"]) || !isset($data["event"]["fee_min"])) {
         error_log("No fee_min found");
