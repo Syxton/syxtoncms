@@ -16,7 +16,7 @@ function print_registration_cart($checkout = false) {
                 (object) [
                     "item" => [
                         "name" => "There are no registrations in your cart.",
-                        "price" => "--",
+                        "price" => NULL,
                     ],
                 ]
             ]
@@ -77,8 +77,10 @@ function print_registration_cart($checkout = false) {
     return registration_cart_wrapper($_SESSION['registrations'], $checkout);
 }
 
-function print_checkout_forms($registrations) {
-
+function print_checkout_form($registrations) {
+    // Every registration has a list of items and cost.
+    // Every registration also has a single selected method of payment.
+    // Every registration has a minimum and maximum allowed payment.
 }
 
 function registration_cart_wrapper($registrations, $checkout = false) {
@@ -110,6 +112,111 @@ function get_registration_checkout_button() {
     </div>';
 }
 
+function get_promo_code_form($event, $hash) {
+    $event["promocode_set"] = "id of promocode set";
+    $promo_code_set = get_promo_code_set($event["promocode_set"]);
+    $return = promo_code_js($promo_code_set, $hash) . '
+        <input id="campershipcode'  . $hash . '" type="text" name="campershipcode'  . $hash . '" style="display: inline-block" />
+        <button id="applycampership" type="button">
+            Apply
+        </button>
+        <div id="campershipresult'  . $hash . '" style="padding: 2px;text-align: center;"></div>
+    ';
+
+    return $return;
+}
+
+function get_promo_code_set($promo_code_set) {
+    // TODO: This is a placeholder.
+    // this will be replaced with a db call once that feature is implemented.
+    return [
+        [
+            "name" => "David Grubb Campership", // myfirstcamp
+            "code" => "c84cfb574f577b90aaa17db7f07e46dbe1ff8aedf5aa2bd00e5fc06f649c3950"
+        ],
+        [
+            "name" => "Eastside Church of Christ Campership", // east25side
+            "code" => "2d4c5f274270d10e755c68721548101342e8d1ffae3f1f16b698a181a39771e7"
+        ],
+        [
+            "name" => "Southside Church of Christ Campership", // south25side
+            "code" => "ebc3cb388af30b668dfcbda70155f22068eaaca6ae74414493e5a9b51491af49"
+        ],
+        [
+            "name" => "Northside Church of Christ Campership", // north25side
+            "code" => "e49bcb9d50fc8ea2f015f2c33825c1f73907809e0580f118f2ca4a658f1a0047"
+        ],
+        [
+            "name" => "Marshall Church of Christ Campership", // marshall25camp
+            "code" => "e97000997a3eb6b5b92bb5c2709422346c703f581c812f5b86468dbbb21a64eb"
+        ],
+        [
+            "name" => "North Meridian Church of Christ Campership", // north25meridian
+            "code" => "e4021044c2facf523a01ca8809fd86e01c9f0df8944460d77d8bcd10d7a52dbd"
+        ],
+        [
+            "name" => "Clay City Church of Christ Campership", // clay25city
+            "code" => "34f5013b8ea8821633e346799b525c9c5f1e4627634472b5c0e7cdc8f7385ed3"
+        ],
+        [
+            "name" => "Mt. Carmel Church of Christ Campership", // mt25carmel
+            "code" => "47d7cb5641702117c08091842ab5b18f764519e3b427a048ff26e0314fda53e8"
+        ],
+        [
+            "name" => "Prairie Creek Church of Christ Campership", // prairie25creek
+            "code" => "e6a8dbae96457c62b4388c73b3fc4e128d2b422e100f72c96ad44c2ecce3b93f"
+        ]
+    ];
+}
+
+function promo_code_js($promo_code_set, $hash) {
+
+    $codes = '[';
+    foreach ($promo_code_set as $code) {
+        $codes .= '{
+            name: "' . $code["name"] . '",
+            code: "' . $code["code"] . '"
+        },
+        ';
+    }
+    $codes = "[$codes];";
+
+    $return = '
+        <script>
+            $(function () {
+                $(".applycampershipbutton").on("click", async function (e) {
+                    e.preventDefault();
+
+                    // Create an array of valid codes.
+                    var camperships'  . $hash . ' = ' . $codes . ';
+
+                    const code = await sha256($(#campershipcode'  . $hash . ').val());
+                    var valid = false;
+                    // Find code in camperships array.
+                    for (var i = 0; i < camperships'  . $hash . '.length; i++) {
+                        if (code == camperships'  . $hash . '[i]["code"]) {
+                            // Found the code, add the name to the form.
+                            valid = camperships'  . $hash . '[i]["name"];
+                            break;
+                        }
+                    }
+
+                    // Add option to payment_method select and set it as selected.
+                    if (valid) {
+                        $("#campership").val(valid);
+                        $("#campershipresult'  . $hash . '").html("Successfully Applied Campership.");
+                    }
+
+                    // Remove Campership option if it exists and give message in campershipresult
+                    if (!valid) {
+                        $("#campershipresult'  . $hash . '").html("Invalid Campership Code.");
+                    }
+                });
+            });
+        </script>
+    ';
+}
+
 function remove_duplicate_registrations($registrations) {
     $reversed = array_reverse($registrations);
     $clean_registrations = [];
@@ -137,18 +244,34 @@ function found_registration_hash($array, $hash) {
 
 function print_registration_cart_items_html($registrations) {
     $return = "";
+
     foreach ($registrations as $reg) {
-        $delete = "";
+        $delete = ""; $promo_code_form = "";
         if (isset($reg->item) && isset($reg->hash)) {
             $delete = '
             <button type="button" class="registration_cart_item_remove" onclick="remove_camp_2025_registration(\'' . $reg->hash . '\');">
                 ' . icon("trash") . '
             </button>
             ';
+
+            if (isset($reg->GET) && isset($reg->GET["eventid"])) {
+                $event = get_event($reg->GET["eventid"]);
+                if ($event["promocode_set"] > 0) { // A promocode set is selected for this event.
+                    $promo_code_form = '
+                    <div class="registration_cart_item_promo_code">
+                        ' . get_promo_code_form($event, $reg->hash) . '
+                    </div>
+                    ';
+                }
+            }
         }
+
         $item = $reg->item;
-        $item_price = clean_param_opt($item, "price", "float", false);
-        $item_price = $item_price ? '$' . number_format($item['price'], 2, ".", "") : $item['price'];
+        $item_price = clean_param_opt($item, "price", "float", "--");
+        if ($item_price !== "--") {
+            $item_price = '$' . number_format($item_price, 2, ".", "");
+        }
+
         $return .= '
         <div id="registration_cart_item">
             <div>
@@ -160,6 +283,7 @@ function print_registration_cart_items_html($registrations) {
             <div class="registration_cart_item_price">
                 ' . $item_price . '
             </div>
+            ' . $promo_code_form . '
         </div>
         ';
     }
