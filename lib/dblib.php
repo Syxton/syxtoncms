@@ -91,7 +91,7 @@ global $CFG;
             $var = filter_var($var, FILTER_VALIDATE_INT, FILTER_NULL_ON_FAILURE) ?? $default;
             break;
         case "float":
-            if ($var !== "" &&(float) $var === 0.0) { return 0.0; }
+            if ($var !== "" && (float) $var === 0.0) { return 0.0; }
             $var = ltrim($var, "0"); // leading zeros should be removed.
             $var = filter_var($var, FILTER_VALIDATE_FLOAT, FILTER_NULL_ON_FAILURE) ?? $default;
             break;

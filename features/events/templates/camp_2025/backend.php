@@ -46,7 +46,7 @@ function add_registration_to_cart() {
     </h1>
     <div id="refreshableregcart">
         ' . print_registration_cart() . '
-        ' . print_checkout_forms($_SESSION['registrations']) . '
+        ' . print_checkout_form($_SESSION['registrations']) . '
     </div>';
 
     ajaxapi([
