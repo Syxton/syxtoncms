@@ -124,78 +124,6 @@ $(function () {
      });
 
     final_form_prep();
-
-    $("#applycampership").on("click", async function (e) {
-        e.preventDefault();
-
-        // Create an array of valid codes.
-        var camperships = [
-            {
-                name: "David Grubb Campership", // myfirstcamp
-                code: "c84cfb574f577b90aaa17db7f07e46dbe1ff8aedf5aa2bd00e5fc06f649c3950"
-            },
-            {
-                name: "Eastside Church of Christ Campership", // east25side
-                code: "2d4c5f274270d10e755c68721548101342e8d1ffae3f1f16b698a181a39771e7"
-            },
-            {
-                name: "Southside Church of Christ Campership", // south25side
-                code: "ebc3cb388af30b668dfcbda70155f22068eaaca6ae74414493e5a9b51491af49"
-            },
-            {
-                name: "Northside Church of Christ Campership", // north25side
-                code: "e49bcb9d50fc8ea2f015f2c33825c1f73907809e0580f118f2ca4a658f1a0047"
-            },
-            {
-                name: "Marshall Church of Christ Campership", // marshall25camp
-                code: "e97000997a3eb6b5b92bb5c2709422346c703f581c812f5b86468dbbb21a64eb"
-            },
-            {
-                name: "North Meridian Church of Christ Campership", // north25meridian
-                code: "e4021044c2facf523a01ca8809fd86e01c9f0df8944460d77d8bcd10d7a52dbd"
-            },
-            {
-                name: "Clay City Church of Christ Campership", // clay25city
-                code: "34f5013b8ea8821633e346799b525c9c5f1e4627634472b5c0e7cdc8f7385ed3"
-            },
-            {
-                name: "Mt. Carmel Church of Christ Campership", // mt25carmel
-                code: "47d7cb5641702117c08091842ab5b18f764519e3b427a048ff26e0314fda53e8"
-            },
-            {
-                name: "Prairie Creek Church of Christ Campership", // prairie25creek
-                code: "e6a8dbae96457c62b4388c73b3fc4e128d2b422e100f72c96ad44c2ecce3b93f"
-            }
-        ];
-
-        const code = await sha256($("#campershipcode").val());
-        var valid = false;
-        // Find code in camperships array.
-        for (var i = 0; i < camperships.length; i++) {
-            if (code == camperships[i]["code"]) {
-                // Found the code, add the name to the form.
-                valid = camperships[i]["name"];
-                break;
-            }
-        }
-
-        // Add option to payment_method select and set it as selected.
-        if (valid) {
-            $("#payment_method option[value='Campership']").remove(); // Remove if it already exists.
-            $("#payment_method").append('<option value="Campership">' + valid + '</option>');
-            $("#payment_method").val("Campership");
-            $("#campership").val(valid);
-            $("#campershipresult").html("Successfully Applied Campership.");
-        }
-
-        // Remove Campership option if it exists and give message in campershipresult
-        if (!valid) {
-            $("#payment_method option[value='Campership']").remove();
-            console.log("Invalid Campership Code.");
-            $("#campershipresult").html("Invalid Campership Code.");
-        }
-        updateMessage();
-    });
 });
 
 async function sha256(message) {
@@ -204,4 +132,14 @@ async function sha256(message) {
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     return hashHex;
+}
+
+function calculate_payment_amount() {
+    var amount = 0;
+
+    $(".payment_amounts").each(function () {
+        amount += parseFloat($(this).val());
+    });
+    console.log(amount);
+    $("#payment_amount").val(amount.toFixed(2));
 }

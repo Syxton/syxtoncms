@@ -100,18 +100,6 @@ echo '
             </head>
             <body>
                 <form class="event_template_form" name="form1" id="form1">
-                    <div>
-                        <input type="hidden" id="count_in_cart" value="' . $count_in_cart . '" />
-                        <button type="button" class="registration_cart_menu alike">
-                            ' . icon([
-                                    ["icon" => "cart-shopping", "stacksize" => 3, "color" => "green"],
-                                    ["content" => $count_in_cart, "style" => "font-size: .4em;top: 7px;width: 100%;text-align: center;color: white;"],
-                                ]) . '
-                        </button>
-                        <div id="refreshableregcart">
-                            ' . print_registration_cart(true) . '
-                        </div>
-                    </div>
                     <fieldset class="formContainer">
                         <input type="hidden" name="eventid" value="' . $eventid . '" />
                         <input type="hidden" id="event_begin_date" value="' . date("Y-m-d", $event["event_begin_date"]) . '" />
@@ -120,11 +108,25 @@ echo '
                         <input type="hidden" name="paid" value="0" />
                         <input type="hidden" name="total_owed" id="total_owed" value="' . $total_owed . '" />
                         <input type="hidden" name="items" id="items" value="' . $items . '" />
-                        <div style="font-size:15px;text-align:center;font-weight:bold">
-                            Camp Wabashi Online Pre-Registration
-                        </div>
-                        <div style="font-size:13px;text-align:center;font-weight:bold">
-                            ' . $event["name"] . '
+                        <div style="display: flex;justify-content: center;">
+                            <div style="font-size:15px;text-align:center;font-weight:bold">
+                                Camp Wabashi Online Pre-Registration
+                                <div style="font-size:13px;text-align:center;font-weight:bold">
+                                ' . $event["name"] . '
+                                </div>
+                            </div>
+                            <div style="width: 50px;">
+                                <input type="hidden" id="count_in_cart" value="' . $count_in_cart . '" />
+                                <button type="button" class="registration_cart_menu alike">
+                                    ' . icon([
+                                            ["icon" => "cart-shopping", "stacksize" => 3, "color" => "green"],
+                                            ["content" => $count_in_cart, "style" => "font-size: .4em;top: 7px;width: 100%;text-align: center;color: white;"],
+                                        ]) . '
+                                </button>
+                                <div id="refreshableregcart">
+                                    ' . print_registration_cart(false) . '
+                                </div>
+                            </div>
                         </div>
                         <p>
                             <a target="policy" href="' . $CFG->wwwroot . '/features/events/templates/camp_2025/regpolicy.html">
@@ -137,19 +139,7 @@ echo '
                     </fieldset>
                 </form>' . keepalive();
 
-$total_in_cart = $count_in_cart > 0 ? get_total_in_cart($_SESSION['registrations']) : 0;
-if ($total_in_cart > 0) {
-    ajaxapi([
-        "id" => "registration_cart_checkout",
-        "url" => "/features/events/templates/camp_2025/backend.php",
-        "data" => [
-            "action" => "add_registration_to_cart",
-            "checkout" => true,
-        ],
-        "display" => "registration_div",
-        "event" => "click",
-    ]);
-}
+$value_in_cart = $count_in_cart > 0 ? get_value_in_cart($_SESSION['registrations']) : 0;
 
 ajaxapi([
     "id" => "remove_camp_2025_registration",
@@ -159,7 +149,7 @@ ajaxapi([
     "data" => [
         "action" => "remove_registration",
         "hash" => "js||hash||js",
-        "checkout" => true,
+        "checkout" => false,
     ],
     "ondone" => "$('#count_in_cart').val(parseInt($('#count_in_cart').val())-1); $('.registration_cart_menu span.fa-layers-text').text(parseInt($('#count_in_cart').val()));",
     "display" => "refreshableregcart",

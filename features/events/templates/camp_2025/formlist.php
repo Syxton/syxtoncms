@@ -3,6 +3,16 @@
 // formlist array[];
 return [
     [
+        'name' => 'reglookup',
+        'section' => 'Basic Camper Information',
+        'title' => 'Prior Registrations',
+        'type' => 'custom',
+        'displayonly' => true,
+        'customtype' => [
+            'reglookup' => '/features/events/templates/camp_2025/custom.php',
+        ],
+    ],
+    [
         'name' => 'email',
         'section' => 'Basic Camper Information',
         'title' => 'Email',
@@ -56,6 +66,17 @@ return [
         'help' => get_help("input_fname"),
     ],
     [
+        'name' => 'camper_name_middle',
+        'section' => 'Basic Camper Information',
+        'title' => 'Middle Initial',
+        'type' => 'text',
+        'required' => true,
+        'maxlength' => 1,
+        'lettersonly' => true,
+        'autocapitalize' => 'words',
+        'help' => get_help("help_middlei:events:templates/camp_2025"),
+    ],
+    [
         'name' => 'camper_name_last',
         'section' => 'Basic Camper Information',
         'title' => 'Last Name',
@@ -66,17 +87,6 @@ return [
         'autocapitalize' => 'words',
         'minlength' => 2,
         'help' => get_help("input_lname"),
-    ],
-    [
-        'name' => 'camper_name_middle',
-        'section' => 'Basic Camper Information',
-        'title' => 'Middle Initial',
-        'type' => 'text',
-        'required' => true,
-        'maxlength' => 1,
-        'lettersonly' => true,
-        'autocapitalize' => 'words',
-        'help' => get_help("help_middlei:events:templates/camp_2025"),
     ],
     [
         'name' => 'camper_grade',

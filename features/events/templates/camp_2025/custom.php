@@ -48,6 +48,21 @@ function customvalue_email($data = []) {
     return "";
 }
 
+function customtype_reglookup($element, $data = []) {
+    global $USER;
+    if (isset($USER->email)) {
+        return '
+            <div class="rowContainer costinfo paywithapp">
+                <label class="rowTitle" for="payment_amount">' . $element['title'] . '</label>
+                REGISTRATIONS FOUND: AUTOFILL?
+                <div class="tooltipContainer info">' . $element['help'] . '</div>
+                <div class="spacer" style="clear: both;"></div>
+            </div>';
+    }
+
+    return "";
+}
+
 function customvalue_owed($data = []) {
     if (!isset($data["event"]) || !isset($data["event"]["fee_min"])) {
         error_log("No fee_min found");
@@ -199,22 +214,6 @@ function customhelp_picture($data = []) {
     $pictures_price = empty($pictures_price) ? "0" : $pictures_price;
 
     return get_help("help_pictures:events:templates/camp_new") . ' ($' . $pictures_price . '.00 for 8x10 group photo)';
-}
-
-function customtype_campershipsearch($element, $data = []) {
-    return '
-        <div class="rowContainer" id="campershiprow">
-            <label class="rowTitle" for="' . $element['name'] . '">
-                ' . $element['title'] . '
-            </label>
-            <input id="campershipcode" type="text" name="campershipcode" style="display: inline-block" />
-            <button id="applycampership" type="button">
-                Apply
-            </button>
-            <div id="campershipresult" style="padding: 2px;text-align: center;"></div>
-            <div class="tooltipContainer info">' . get_help("help_campership:events:templates/camp_2025") . '</div>
-            <div class="spacer" style="clear: both;"></div>
-        </div>';
 }
 
 function customtype_paymentnote($element, $data = []) {

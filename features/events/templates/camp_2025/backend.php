@@ -33,11 +33,17 @@ function add_registration_to_cart() {
         $_SESSION['registrations'] = [];
     }
 
-    // If checkout button was pressed we won't add a registration to the cart, just show the cart and proceed.
+    // There are two reasons to be here, 1. a registration was added. 2. the checkout button was pressed.
     $checkout = clean_myvar_opt("checkout", "bool", false);
+
+    // Checkout button was not pressed, so save registration.
     if (!$checkout) {
         // Save everything from this registration.
         $_SESSION['registrations'][] = $MYVARS;
+
+        // Now set checkout to true.
+        $MYVARS->GET["checkout"] = true;
+        $checkout = true;
     }
 
     $return .= '
@@ -45,8 +51,7 @@ function add_registration_to_cart() {
         Review Order
     </h1>
     <div id="refreshableregcart">
-        ' . print_registration_cart() . '
-        ' . print_checkout_form($_SESSION['registrations']) . '
+        ' . print_registration_cart($checkout) . '
     </div>';
 
     ajaxapi([
@@ -67,6 +72,7 @@ function add_registration_to_cart() {
         "url" => "/features/events/templates/camp_2025/backend.php",
         "data" => [
             "action" => "remove_registration",
+            "checkout" => $checkout,
             "hash" => "js||hash||js",
         ],
         "reqstring" => "form1",
@@ -110,12 +116,47 @@ function remove_registration() {
         "url" => "/features/events/templates/camp_2025/backend.php",
         "data" => [
             "action" => "remove_registration",
+            "checkout" => $checkout,
             "hash" => "js||hash||js",
         ],
         "display" => "refreshableregcart",
         "event" => "none",
     ]);
 
+    ajax_return($return, $error);
+}
+
+function applycampership() {
+    global $_SESSION;
+    $eventid = clean_myvar_req("eventid", "int");
+    $checkout = clean_myvar_opt("checkout", "bool", false);
+    $hash = clean_myvar_opt("hash", "string", false);
+    $code = clean_myvar_opt("code", "string", false);
+
+    if ($promo = get_promo_code_match($eventid, $code)) {
+        if (isset($_SESSION['registrations'])) {
+            foreach ($_SESSION['registrations'] as $i => $reg) {
+                if ($reg->hash == $hash) {
+                    $_SESSION['registrations'][$i]->item["promocode"] =$code;
+                    $_SESSION['registrations'][$i]->item["promoname"] = $promo['name'];
+                }
+            }
+        }
+    } else {
+        // Make sure that the price is set back to the original prices
+        if (isset($_SESSION['registrations'])) {
+            foreach ($_SESSION['registrations'] as $i => $reg) {
+                if ($reg->hash == $hash) {
+                    unset($_SESSION['registrations'][$i]->item["promocode"]);
+                    unset($_SESSION['registrations'][$i]->item["promoname"]);
+                }
+            }
+        }
+    }
+
+    $return = print_registration_cart($checkout);
+
+    $error = "";
     ajax_return($return, $error);
 }
 

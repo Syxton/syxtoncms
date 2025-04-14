@@ -831,11 +831,11 @@ function make_fee_options($min, $full, $name, $options = "", $sale_end = "", $sa
     if ($min == $full) { return '<span style="float:left;margin:4px;">$</span><input id="' . $name . '" name="' . $name . '" type="text" READONLY value="' . $full . '.00"/>';}
 
     while ($min < $full) {
-        $returnme .= '<option value="' . $min . '" ' . $select . '>$' . $min . '</option>';
+        $returnme .= '<option value="' . number_format($min, 2, ".", "") . '" ' . $select . '>$' . number_format($min, 2, ".", "") . '</option>';
         $min = ($full - $min) > 10 ? $min + 10 : $full;
         $select = "";
     }
-    $returnme .= '<option value="' . $min . '">$' . $min . '</option></select>';
+    $returnme .= '<option value="' . number_format($min, 2, ".", "") . '">$' . number_format($min, 2, ".", "") . '</option></select>';
     return $returnme;
 }
 

@@ -175,6 +175,9 @@ function make_form_elements($elements, $data = []) {
                 }
             }
             break;
+        case 'html':
+            $output .= file_get_contents($CFG->dirroot . $element['file']);
+            break;
         }
         $lastsection = $section;
         $tabindex++;
