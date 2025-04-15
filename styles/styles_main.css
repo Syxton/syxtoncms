@@ -710,7 +710,7 @@ form button.registration_cart_menu + #refreshableregcart .registration_cart {
     flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 0px;
+    padding: 10px;
 }
 
 .registration_allowed_in_page {
