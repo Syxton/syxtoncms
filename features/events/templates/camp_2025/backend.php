@@ -135,20 +135,20 @@ function applycampership() {
 
     if ($promo = get_promo_code_match($eventid, $code)) {
         if (isset($_SESSION['registrations'])) {
-            foreach ($_SESSION['registrations'] as $i => $reg) {
+            foreach ($_SESSION['registrations'] as $key => $reg) {
                 if ($reg->hash == $hash) {
-                    $_SESSION['registrations'][$i]->item["promocode"] =$code;
-                    $_SESSION['registrations'][$i]->item["promoname"] = $promo['name'];
+                    $_SESSION['registrations'][$key]->item["promocode"] = $code;
+                    $_SESSION['registrations'][$key]->item["promoname"] = $promo['name'];
                 }
             }
         }
     } else {
         // Make sure that the price is set back to the original prices
         if (isset($_SESSION['registrations'])) {
-            foreach ($_SESSION['registrations'] as $i => $reg) {
+            foreach ($_SESSION['registrations'] as $key => $reg) {
                 if ($reg->hash == $hash) {
-                    unset($_SESSION['registrations'][$i]->item["promocode"]);
-                    unset($_SESSION['registrations'][$i]->item["promoname"]);
+                    unset($_SESSION['registrations'][$key]->item["promocode"]);
+                    unset($_SESSION['registrations'][$key]->item["promoname"]);
                 }
             }
         }
@@ -161,6 +161,89 @@ function applycampership() {
 }
 
 function register() {
+    global $CFG, $USER, $error, $_SESSION;
+
+    if (!defined('COMLIB')) { include_once($CFG->dirroot . '/lib/comlib.php'); }
+    if (!defined('FORMLIB')) { include_once($CFG->dirroot . '/lib/formlib.php'); }
+
+    $return = ""; $error = "";
+    try {
+        $_SESSION["payment_cart"] = [];
+        foreach ($_SESSION['registrations'] as $key => $reg) {
+            $newreg = [];
+            if (!isset($reg->GET)) {
+                throw new Exception("Could not find registration");
+            }
+
+            $eventid = clean_param_req($reg->GET, "eventid", "int");
+            $event = get_event($eventid);
+            $templateid = $event['template_id'];
+            $elements = get_template_formlist($templateid);
+
+            // Get only elements that are to be saved in the form.
+            $newreg = create_registration_array($elements, $reg->GET);
+
+            // Attach payment info
+            $newreg = attach_registration_payment_info($newreg, $reg->item);
+
+            // Attach event info
+            $newreg["eventid"] = $eventid;
+
+            // Registration is Pending full payment.
+            $pending = $newreg["total_owed"] > 0 ? true : false;
+
+            // Save registration
+            if ($regid = enter_registration($eventid, $newreg, $newreg["email"], $pending)) {
+                // Success
+                $_SESSION["completed_registrations"][$regid] = $newreg;
+
+                // Save regid to payment cart.
+                $_SESSION["payment_cart"][] = (object) [
+                    "regid" => $regid,
+                    "description" => $reg->item["name"],
+                    "cost" => clean_myvar_opt("payment_amount_" . $reg->hash, "float", "0"),
+                ];
+
+                // Send registration emails.
+                // Make registration email user objects.
+                $touser = (object)["fname" => $newreg["camper_name_first"], "lname" => $newreg["camper_name_last"], "email" => $newreg["email"]];
+                $fromuser = (object)["fname" => $CFG->sitename, "lname" => "", "email" => $CFG->siteemail];
+
+                $fullypaid = $newreg["total_owed"] > 0 ? false : true;
+                $message = registration_email($regid, $touser, $pending, $fullypaid);
+
+                $emailsubject = "Camp Wabashi Registration";
+                $usingcampership = empty($newreg["campership"]) ? "" : " (Campership: " . $newreg["campership"] . ")";
+                try {
+                    if (\send_email($touser, $fromuser, $emailsubject, $message)) {
+                        send_email($fromuser, $fromuser, $emailsubject . $usingcampership, $message);
+                    }
+                } catch (\Throwable $e) {
+                    $error = $e->getMessage();
+                }
+            } else {
+                // Failed
+                unset($_SESSION["payment_cart"]);
+                unset($_SESSION["completed_registrations"]);
+                throw new Exception("Could not save registration");
+            }
+        }
+
+        $return = show_post_registration_page();
+
+        throw new Exception("Not really an error, but I don't want to save changes yet.");
+        //unset($_SESSION["registrations"]); don't clear it yet.
+    } catch (\Throwable $e) {
+        rollback_db_transaction($e->getMessage());
+        unset($_SESSION["payment_cart"]);
+        unset($_SESSION["completed_registrations"]);
+        $error .= $e->getMessage();
+    }
+
+    ajax_return($return, $error);
+}
+
+function register_old() {
 global $CFG, $MYVARS, $USER, $error, $_SESSION;
 
     $return = "";

@@ -930,12 +930,15 @@ global $CFG, $why, $error;
         $regid = execute_db_sql($SQL, $params);
         if ($template['folder'] != "none") { // custom file style
             if ($regid) {
-                $formlist = explode(";", get_db_field("formlist", "events_templates", "folder = '" . $template['folder'] . "'"));
                 $sql_values = "";
                 $SQL = fetch_template("dbsql/events.sql", "insert_registration_values", "events");
-                foreach ($formlist as $list) {
-                    $element = explode(":", $list);
-                    execute_db_sql($SQL, ["regid" => $regid, "value" => $reg[$element[0]], "eventid" => $eventid, "elementname" => $element[0]]);
+                $fields = get_template_formlist($event['template_id']);
+                foreach ($fields as $f) {
+                    $field = get_template_formlist_element_array($template, $f);
+                    if (isset($field["displayonly"])) {
+                        continue;
+                    }
+                    execute_db_sql($SQL, ["regid" => $regid, "value" => $reg[$field["name"]], "eventid" => $eventid, "elementname" => $field["name"]]);
                 }
 
                 if ($nolimit = hard_limits($regid, $event, $template)) {
@@ -943,7 +946,6 @@ global $CFG, $why, $error;
                         $error = "Because this event has $why, you have been placed in the waiting line for this event.";
                         execute_db_sql("UPDATE events_registrations SET queue = 1 WHERE regid = ||regid||", ["regid" => $regid]);
                     }
-                    return $regid; // Success
                 } else {
                     if (!$nolimit) {
                         $error = "We are sorry, because this event has $why, you are unable to register for this event.";
@@ -981,7 +983,6 @@ global $CFG, $why, $error;
                     $error = "Because this event has $why, you have been placed in the waiting line for this event.";
                     execute_db_sql("UPDATE events_registrations SET queue=1 WHERE regid=" . $regid);
                 }
-                return $regid; //Success
             } else {
                 if (!$nolimit) {
                     $error = "We are sorry, because this event has $why, you are unable to register for this event.";
@@ -994,15 +995,17 @@ global $CFG, $why, $error;
                 return false;
             }
         }
+        log_entry("event", $event["name"], "Event Registration", $error);
         commit_db_transaction();
+        return $regid; // Success
     } catch (\Throwable $e) {
         rollback_db_transaction($e->getMessage());
         trigger_error($e->getMessage(), E_USER_WARNING);
+        return false;
     }
-
 }
 
-function registration_email($regid, $touser, $pending=false, $waivefee=false) {
+function registration_email($regid, $touser, $pending=false, $fullypaid=false) {
 global $CFG;
     $reg = get_db_row("SELECT * FROM events_registrations WHERE regid='$regid'");
     $event = get_event($reg["eventid"]);
@@ -1016,69 +1019,70 @@ global $CFG;
         $email = '<h1>' . $CFG->sitename . '</h1>';
     }
 
+    // Get cost / owed information.
+    $total_owed = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='total_owed'");
+
+    if (empty($total_owed) && !$fullypaid) {
+        // total_owed is empty but we didn't mark this as fully paid so find the owed amount.
+        $total_owed = $reg["date"] < $event["sale_end"] ? $event["sale_fee"] : $event["fee_full"];
+    }
+
+    $paid = get_db_field("value", "events_registrations_values", "regid='$regid' AND (elementname='paid' OR elementname='total_paid')");
+    $paid = empty($paid) ? 0 : $paid;
+    $remaining = $total_owed - $paid;
+
+    // Instruction parts.
+    $greetings = '
+    <h2>Thank you for registering ' . $touser->fname . " " . $touser->lname . ' to attend ' . $event["name"] . '.</h2>';
+
+    $registration_information = '
+        <strong>Please keep this email for your records.  It contains a registration ID that can allow you to make payments on your registration.</strong>
+        <br /><br />
+        <h3>Total Paid: $' . number_format($paid, 2) . '</h3>
+        <h3>Remaining Balance: $' . number_format($remaining, 2) . '</h3>
+        <strong>Registration ID:</strong><span style="color:#993300;"><strong> ' . $reg["code"] . '</strong></span>
+        <br /><br />
+        <em>Note:This event requires payment in full to complete the registration process.  The above balances may not reflect recent changes.</em>
+        ';
+
+    $payment_instructions = '
+        <br /><br />
+        <strong>Make in-person payments at the time of the event.</strong><br />
+        We accept all major credit / bank cards as well as most mobile pay methods.
+        <br /><br />
+        <strong>Make payment by check or money order: </strong><br />
+        Payable to: ' . stripslashes($event['payableto']) . '<br />
+        ' . stripslashes($event['checksaddress']) . '<br />
+        On the memo line be sure to write "' . $touser->fname . " " . $touser->lname . ' - ' . $event["name"] . '"
+        ' . (!empty($event["paypal"]) ? '<br /><br /><strong>Make payment online:</strong> <a href="' . $protocol.$CFG->wwwroot . '/features/events/events.php?action=pay&i=!&regcode=' . $reg["code"] . '">Make Payment</a>' : '');
+
+    $email_contacts = '
+    <br /><br />
+    If you have any questions about this event, contact ' . $event["contact"] . ' at <a href="mailto:' . $event["email"] . '">' . $event["email"] . '</a>.<br />
+    We hope that you have enjoyed your time on the <strong>' . $CFG->sitename . ' </strong>website.';
+
     if ($pending) {
         if (!empty($event["fee_full"])) { // This event requires payment to attend
-            $total_owed = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='total_owed'");
-
-            if (empty($total_owed)) {
-                $total_owed = $reg["date"] < $event["sale_end"] ? $event["sale_fee"] : $event["fee_full"];
-            }
-
-            $total_owed = empty($total_owed) ? $event["fee_full"] : $total_owed;
-            $paid = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='paid'");
-            $paid = empty($paid) ? 0 : $paid;
-              $remaining = $total_owed - $paid;
-
             $email .= '
                 <h2>We show a PENDING registration for ' . $touser->fname . " " . $touser->lname . ' to attend ' . $event["name"] . '.</h2>
                 <h2 style="color:red">This registration is NOT COMPLETED until a payment is received.</h2>
-                <strong>Please keep this email for your records.  It contains a registration ID that can allow you to make payments on your registration.</strong>
-                <br /><br /><h3>Total Paid: $' . number_format($paid,2) . '</h3><h3>Remaining Balance: $' . number_format($remaining,2) . '</h3><br /><em>Note:This event requires payment in full to complete the registration process.  The above balances may not reflect recent changes.</em>
-                <br /><br /><strong>Registration ID:</strong><span style="color:#993300;"><strong> ' . $reg["code"] . '</strong></span>
-                ' . (!empty($event["paypal"]) ? '<br /><br /><strong>Make payment online:</strong> <a href="' . $protocol.$CFG->wwwroot . '/features/events/events.php?action=pay&i=!&regcode=' . $reg["code"] . '">Make Payment</a>' : '') . '
-                <br /><br /><strong>Make payment by check or money order: </strong><br />Payable to: ' . stripslashes($event['payableto']) . '<br />' . stripslashes($event['checksaddress']) . '<br />On the memo line be sure to write "' . $touser->fname . " " . $touser->lname . ' - ' . $event["name"] . '".
-                <br /><br />
-                If you have any questions about this event, contact ' . $event["contact"] . ' at <a href="mailto:' . $event["email"] . '">' . $event["email"] . '</a>.
-                <br />
-                We hope that you have enjoyed your time on the <strong>' . $CFG->sitename . ' </strong>website.
-            ';
+                ' . $registration_information . '
+                ' . $payment_instructions . '
+                ' . $email_contacts;
         }
     } else {
-        if (!empty($event["fee_full"]) && !$waivefee) { // This event requires payment to attend
-            $total_owed = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='total_owed'");
-
-            if (empty($total_owed)) {
-                $total_owed = $reg["date"] < $event["sale_end"] ? $event["sale_fee"] : $event["fee_full"];
-            }
-
-            $total_owed = empty($total_owed) ? $event["fee_full"] : $total_owed;
-            $paid = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='paid'");
-            $paid = empty($paid) ? 0 : $paid;
-              $remaining = $total_owed - $paid;
-
+        // This event requires payment to attend
+        if (!empty($event["fee_full"]) && !$fullypaid) {
             $email .= '
-                <h2>Thank you for registering ' . $touser->fname . " " . $touser->lname . ' to attend ' . $event["name"] . '.</h2>
-                <strong>Please keep this email for your records.  It contains a registration ID that can allow you to make payments on your registration.</strong>
-                <br /><br /><h3>Total Paid: $' . number_format($paid,2) . '</h3><h3>Remaining Balance: $' . number_format($remaining,2) . '</h3><br /><em>Note:This event requires payment in full to complete the registration process.  The above balances may not reflect recent changes.</em>
-                <br /><br /><strong>Registration ID:</strong><span style="color:#993300;"><strong> ' . $reg["code"] . '</strong></span>
-                ' . (!empty($event["paypal"]) ? '<br /><br /><strong>Make payment online:</strong> <a href="' . $protocol.$CFG->wwwroot . '/features/events/events.php?action=pay&i=!&regcode=' . $reg["code"] . '">Make Payment</a>' : '') . '
-                <br /><br /><strong>Make payment by check or money order: </strong><br />Payable to: ' . stripslashes($event['payableto']) . '<br />' . stripslashes($event['checksaddress']) . '<br />On the memo line be sure to write "' . $touser->fname . " " . $touser->lname . ' - ' . $event["name"] . '".
-                <br /><br />
-                If you have any questions about this event, contact ' . $event["contact"] . ' at <a href="mailto:' . $event["email"] . '">' . $event["email"] . '</a>.
-                <br />
-                We hope that you have enjoyed your time on the <strong>' . $CFG->sitename . ' </strong>website.
-            ';
+                ' . $greetings . '
+                ' . $registration_information . '
+                ' . $payment_instructions . '
+                ' . $email_contacts;
         } else { // This event does NOT require payment
             $email .= '
-                <h2>Thank you for registering ' . $touser->fname . " " . $touser->lname . ' to attend ' . $event["name"] . '.</h2>
-                <strong>Please keep this email for your records.  It contains a registration ID as proof of your registration.</strong>
-                <br /><br />
-                <strong>Registration ID:</strong><span style="color:#993300;"><strong> ' . $reg["code"] . '</strong></span>
-                <br /><br />
-                If you have any questions about this event, contact ' . $event["contact"] . ' at <a href="mailto:' . $event["email"] . '">' . $event["email"] . '</a>.
-                <br />
-                We hope that you have enjoyed your time on the <strong>' . $CFG->sitename . ' </strong>website.
-            ';
+                ' . $greetings . '
+                ' . $registration_information . '
+                ' . $email_contacts;
         }
     }
 
@@ -1094,7 +1098,7 @@ function get_template_field_displayname($templateid, $fieldidentifier) {
         foreach ($fields as $f) {
             $field = get_template_formlist_element_array($template, $f);
             if ($field["name"] == $fieldidentifier) {
-                return $field[2];
+                return $field["title"];
             }
         }
     }
@@ -2696,11 +2700,14 @@ global $CFG;
                             VALUES" . $SQL2;
             } else {
                 if ($template_forms) {
-                    foreach ($template_forms as $formset) {
-                        $form = get_template_formlist_element_array($template, $formset);
-                        $value = strstr($template["registrant_name"], $form["name"]) ? "Reserved" : "";
+                    foreach ($template_forms as $form) {
+                        $field = get_template_formlist_element_array($template, $form);
+                        if (isset($field["displayonly"])) {
+                            continue;
+                        }
+                        $value = strstr($template["registrant_name"], $field["name"]) ? "Reserved" : "";
                         $SQL2 .= $SQL2 == "" ? "" : ",";
-                        $SQL2 .= "('$regid', '$value', '$eventid', '" . $form["name"] ."')";
+                        $SQL2 .= "('$regid', '$value', '$eventid', '" . $field["name"] ."')";
                     }
                     $SQL2 = "INSERT INTO events_registrations_values
                                 (regid, value, eventid, elementname)

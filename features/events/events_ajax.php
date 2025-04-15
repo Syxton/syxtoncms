@@ -825,13 +825,15 @@ function printable_registration($regid, $eventid, $template_id) {
         }
     } else {
         $i=0;
-        while (!empty($template_forms[$i])) {
-            $form = get_template_formlist_element_array($template, $template_forms[$i]);
-            if (isset($form["displayonly"]) && $form["displayonly"]) { $i++; continue; }
+        foreach($template_forms as $form) {
+            $field = get_template_formlist_element_array($template, $form);
+            if (isset($field["displayonly"])) {
+                continue;
+            }
+
             $SQL = fetch_template("dbsql/events.sql", "get_registration_value", "events");
-            $value = get_db_row($SQL, ["regid" => $regid, "elementname" => strtolower($form["name"])]);
-            $returnme .= get_printable_registration_row($form["title"], $value["value"]);
-            $i++;
+            $value = get_db_row($SQL, ["regid" => $regid, "elementname" => strtolower($field["name"])]);
+            $returnme .= get_printable_registration_row($field["title"], $value["value"]);
         }
     }
 
@@ -1146,21 +1148,21 @@ function get_registration_info() {
             }
         } else {
             $template_forms = get_template_formlist($template_id);
-            $i = 0;
-            while (!empty($template_forms[$i])) {
-                $form = get_template_formlist_element_array($template, $template_forms[$i]);
+            foreach ($template_forms as $form) {
+                $field = get_template_formlist_element_array($template, $form);
 
-                // Skip display only fields.
-                if (isset($form["displayonly"]) && $form["displayonly"]) { $i++; continue; }
+                if (isset($field["displayonly"])) {
+                    continue;
+                }
 
                 $SQL = fetch_template("dbsql/events.sql", "get_registration_value", "events");
-                $value = get_db_row($SQL, ["regid" => $regid, "elementname" => strtolower($form["name"])]);
+                $value = get_db_row($SQL, ["regid" => $regid, "elementname" => strtolower($field["name"])]);
 
                 $val = $entryid = "";
                 if (!$value) { // No value so we create a blank.
                     $SQL = "INSERT INTO events_registrations_values
                                         (regid, value, eventid, elementname)
-                                 VALUES ('$regid', '', '$eventid', '" . $form["name"] . "')";
+                                 VALUES ('$regid', '', '$eventid', '" . $field["name"] . "')";
                     $entryid = execute_db_sql($SQL);
                   } else {
                     $val = stripslashes($value["value"]);
@@ -1172,13 +1174,12 @@ function get_registration_info() {
                 $rows .= '
                     <tr>
                         <td class="registration_info_title">' .
-                            $form["title"] . '
+                            $field["title"] . '
                         </td>
                         <td>
                             ' . $formfield . '
                         </td>
                     </tr>';
-                  $i++;
             }
         }
 
@@ -2227,25 +2228,25 @@ global $CFG, $USER;
     $template = get_event_template($event['template_id']);
 
     if ($template['folder'] != "none") {
-        $formlist = explode(";", $template['formlist']);
-        $sortby = "elementname";
-        $i = 0;
-        while (isset($formlist[$i])) {
-            $element = explode(":", $formlist[$i]);
-            $CSV .= "," . $element[2];
-            $i++;
+        $fields = get_template_formlist($event['template_id']);
+        foreach ($fields as $f) {
+            $field = get_template_formlist_element_array($template, $f);
+            if (isset($field["displayonly"])) {
+                continue;
+            }
+            $CSV .= "," . $field["title"];
         }
-        $CSV .= "\n";
+        $sortby = "elementname";
     } else {
         $formlist = get_db_result("SELECT * FROM events_templates_forms
                                         WHERE template_id='" . $event['template_id'] . "'
                                         ORDER BY sort");
-        $sortby = "elementid";
         while ($form = fetch_row($formlist)) {
             $CSV .= "," . $form["display"];
         }
-        $CSV .= "\n";
+        $sortby = "elementid";
     }
+    $CSV .= "\n";
 
     if ($registrations = get_db_result("SELECT * FROM events_registrations
                                             WHERE eventid='$eventid'
@@ -2261,12 +2262,14 @@ global $CFG, $USER;
                 $reorder[$value[$sortby]] = $value;
             }
             if ($template['folder'] != "none") {
-                $i=0;$formlist = explode(";", $template['formlist']);
-                    while (isset($formlist[$i])) {
-                      $element = explode(":", $formlist[$i]);
-                    $row .= ',"' . $reorder[$element[0]]["value"] . '"';
-                      $i++;
-                  }
+                $fields = get_template_formlist($event['template_id']);
+                foreach ($fields as $f) {
+                    $field = get_template_formlist_element_array($template, $f);
+                    if (isset($field["displayonly"])) {
+                        continue;
+                    }
+                    $row .= ',"' . $reorder[$field["name"]]["value"] . '"';
+                }
             } else {
                     $formlist = get_db_result("SELECT * FROM events_templates_forms
                                                 WHERE template_id='" . $event['template_id'] . "'
@@ -2297,21 +2300,23 @@ global $CFG, $USER;
                 $reorder[$value[$sortby]] = $value;
             }
             if ($template['folder'] != "none") {
-                $i=0;$formlist = explode(";", $template['formlist']);
-                    while (isset($formlist[$i])) {
-                      $element = explode(":", $formlist[$i]);
-                    $row .= ',"' . $reorder[$element[0]]["value"] . '"';
-                      $i++;
-                  }
+                $fields = get_template_formlist($event['template_id']);
+                foreach ($fields as $f) {
+                    $field = get_template_formlist_element_array($template, $f);
+                    if (isset($field["displayonly"])) {
+                        continue;
+                    }
+                    $row .= ',"' . $reorder[$field["name"]]["value"] . '"';
+                }
             } else {
-                    $formlist = get_db_result("SELECT *
-                                               FROM events_templates_forms
-                                               WHERE template_id = ||template_id||
-                                               ORDER BY sort", ["template_id" => $event['template_id']]);
+                $formlist = get_db_result("SELECT *
+                                           FROM events_templates_forms
+                                           WHERE template_id = ||template_id||
+                                           ORDER BY sort", ["template_id" => $event['template_id']]);
                 $sortby = "elementid";
-                  while ($form = fetch_row($formlist)) {
+                while ($form = fetch_row($formlist)) {
                     $row .= ',"' . $reorder[$form[$sortby]]["value"] . '"';
-                  }
+                }
             }
             $CSV .= $row . "\n";
         }
@@ -2333,12 +2338,14 @@ global $CFG, $USER;
                 $reorder[$value[$sortby]] = $value;
             }
             if ($template['folder'] != "none") {
-                $i=0;$formlist = explode(";", $template['formlist']);
-                    while (isset($formlist[$i])) {
-                      $element = explode(":", $formlist[$i]);
-                    $row .= ',"' . $reorder[$element[0]]["value"] . '"';
-                      $i++;
-                  }
+                $fields = get_template_formlist($event['template_id']);
+                foreach ($fields as $f) {
+                    $field = get_template_formlist_element_array($template, $f);
+                    if (isset($field["displayonly"])) {
+                        continue;
+                    }
+                    $row .= ',"' . $reorder[$field["name"]]["value"] . '"';
+                }
             } else {
                     $formlist = get_db_result("SELECT *
                                                FROM events_templates_forms

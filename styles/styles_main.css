@@ -677,19 +677,19 @@ form button.registration_cart_menu + #refreshableregcart .registration_cart {
     padding: 10px 0px 10px 10px;
 }
 
-#registration_cart_item, #registration_cart_total {
+.registration_cart_item, .registration_cart_total {
     display: flex;
     justify-content: flex-start;
     align-items: center;
 }
 
-#registration_cart_item {
+.registration_cart_item {
     padding: 10px;
     background: #b3fff9;
     border-bottom: 1px solid grey;
 }
 
-#registration_cart_total {
+.registration_cart_total {
     padding: 10px;
     background: lightgrey;
     font-weight: bold;
@@ -702,6 +702,21 @@ form button.registration_cart_menu + #refreshableregcart .registration_cart {
     flex-direction: row;
     padding-top: 5px;
     justify-content: flex-end;
+}
+
+.registration_payment_area {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0px;
+}
+
+.registration_allowed_in_page {
+    zoom: 0.8;
+    color: green;
+    margin-top: 10px;
 }
 
 div.registration_cart_checkout {

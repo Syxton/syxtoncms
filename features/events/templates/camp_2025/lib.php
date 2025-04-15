@@ -7,6 +7,10 @@
  * $Revision: 0.0.1
  ***************************************************************************/
 
+define("TEMP_PROPS", [
+    "SHIRTSIZES" => ["Youth XS", "Youth S", "Youth M", "Youth L", "Youth XL", "Adult S", "Adult M", "Adult L", "Adult XL", "Adult XXL"],
+]);
+
 function print_registration_cart($checkout = false) {
     global $_SESSION;
 
@@ -93,10 +97,25 @@ function print_checkout_form($registrations) {
     // Every registration also has a single selected method of payment.
     // Every registration has a minimum and maximum allowed payment.
 
+    ajaxapi([
+        "id" => "cart_register_button",
+        "if" => "(confirm('Are you sure you want to complete this registration?'))",
+        "url" => "/features/events/templates/camp_2025/backend.php",
+        "data" => [
+            "action" => "register",
+        ],
+        "reqstring" => "cart1",
+        "display" => "registration_div",
+        "event" => "click",
+    ]);
+
     return '
     <div class="registration_cart_checkout">
         <div class="registration_cart_checkout_title">
             Pay Now Amount: $ <input type="text" id="payment_amount" value="0" disabled />
+        </div>
+        <div class="registration_cart_checkout_title">
+            <button id="cart_register_button">Register</button>
         </div>
     </div>';
 }
@@ -360,7 +379,7 @@ function print_registration_cart_items_html($registrations) {
         }
 
         $return .= '
-        <div id="registration_cart_item">
+        <div class="registration_cart_item">
             <div>
                 ' . $delete . '
             </div>
@@ -376,7 +395,7 @@ function print_registration_cart_items_html($registrations) {
         ';
     }
 
-    return $return;
+    return '<form id="cart1" name="cart1">' . $return . '</form>';
 }
 
 function get_value_in_cart($registrations) {
@@ -417,7 +436,7 @@ function print_registration_cart_total_html($registrations) {
     $total = get_total_in_cart($registrations);
 
     return '
-    <div id="registration_cart_total">
+    <div class="registration_cart_total">
         <div class="registration_cart_item_name">
             Registration Total
         </div>
@@ -437,4 +456,193 @@ function get_camper_names($reg) {
     $names["last"] = nameize(clean_param_opt($reg, "camper_name_last", "string", ""));
     $names["full"] = $names["last"] . ", " . $names["first"] . " " . $names["middle"];
     return $names;
+}
+
+function create_registration_array($elements, $post) {
+    $regarray = [];
+    foreach ($elements as $element) {
+        if (isset($element["displayonly"])) {
+            continue;
+        }
+
+        $name = $element["name"];
+        $regarray[$name] = "";
+        if (isset($post[$name])) {
+            $regarray[$name] = urldecode($post[$name]);
+        }
+    }
+
+    // Array cleanup
+    $regarray = cleanup_registration_array($regarray);
+
+    return $regarray;
+}
+
+function cleanup_registration_array($regarray) {
+    // First phase is cleanup input.
+    foreach ($regarray as $key => $value) {
+        switch ($key) {
+            case "camper_name_first":
+            case "camper_name_last":
+            case "camper_name_middle":
+                $value = clean_param_opt($regarray, $key, "string", "");
+                $regarray[$key] = nameize($value);
+                break;
+            case "parent_phone1":
+            case "parent_phone2":
+            case "parent_phone3":
+            case "parent_phone4":
+                $value = clean_param_opt($regarray, $key, "string", "");
+                $regarray[$key] = preg_replace('/\d{3}/', '$0-', trim(preg_replace("/\D/", "", $value)), 2);
+                break;
+            default:
+                $regarray[$key] = trim($value);
+        }
+    }
+
+    // Second phase is using cleaned values to generate some special fields.
+    $regarray["camper_name"] = $regarray["camper_name_last"] . ", " . $regarray["camper_name_first"] . " " . $regarray["camper_name_middle"];
+
+    // Turn shirt size index into value.
+    if ($regarray["camper_shirt"] > 0) {
+        $sizes = TEMP_PROPS["SHIRTSIZES"];
+        $regarray["camper_shirt_size"] = $sizes[$regarray["camper_shirt_size"]];
+    }
+
+    return $regarray;
+}
+
+function attach_registration_payment_info($regarray, $paymentinfo) {
+    $regarray["total_value"] = $paymentinfo["original_price"];
+    $regarray["total_owed"] = $paymentinfo["price"];
+    $regarray["total_paid"] = 0;
+    $regarray["campership"] = "";
+
+    if (isset($paymentinfo["promoname"])) {
+        $regarray["campership"] = $paymentinfo["promoname"];
+    }
+
+    return $regarray;
+}
+
+function get_total_cart_cost() {
+    global $_SESSION;
+    $cost = 0;
+
+    foreach ($_SESSION["payment_cart"] as $item) {
+        $cost += $item->cost;
+    }
+
+    return $cost;
+}
+
+function get_total_cart_owed() {
+    global $_SESSION;
+    $owed = 0;
+
+    foreach ($_SESSION["completed_registrations"] as $reg) {
+        $owed += $reg["total_owed"];
+    }
+
+    return $owed;
+}
+
+function show_post_registration_page() {
+    global $_SESSION;
+
+    $return = "";
+
+    // Show a registration Status page.
+    $cart = get_post_registration_cart_status();
+
+    // Money is owed on at least 1 cart item.
+    if ($total_cart_owed = get_total_cart_owed()) {
+        // Do we plan to pay now?
+        if ($total_pay_now = get_total_cart_cost()) {
+            // Choose a method to pay.
+            $return .= '
+                <h2>Make Payment Now</h2>
+                Your registrations are complete pending payment.
+                <br />
+                Click a Payment method below to pay for your registration fees.
+                <br /><br />
+                <div style="text-align:center;">
+                    ' . make_paypal_button($_SESSION["payment_cart"], get_event_paypal_info()) . '
+                </div>';
+        } else {
+            $return .= '
+            <h2>Registration Complete</h2>
+            Your registrations are complete pending payment.
+            <br />
+            You have not chosen to pay anything at this time.
+            We have sent out payment information emails to your address.  Please refer to this information in order to make payments.
+            ';
+        }
+    }
+
+    return $cart . '
+    <div class="registration_payment_area">
+    ' . $return . '
+    </div>';
+}
+
+function get_post_registration_cart_status() {
+    global $_SESSION, $CFG, $USER;
+
+    $cartitems = "";
+    foreach ($_SESSION["payment_cart"] as $item) {
+        $reg = $_SESSION["completed_registrations"][$item->regid];
+        $status = $reg["total_owed"] > 0 ? "Pending Payment" : "Complete";
+        $allowed_in_page = "";
+        $event = get_event($reg["eventid"]);
+        if ($event['allowinpage'] !== 0) {
+            if (is_logged_in() && $event['pageid'] != $CFG->SITEID) {
+                change_page_subscription($event['pageid'], $USER->userid);
+                $allowed_in_page = '
+                    <div class="registration_allowed_in_page">
+                        This registration has granted you access into a private event page.
+                        This area contains specific information about the event.<br />
+                        <a href="/page/' . $event['pageid'] . '">Go to Event Page</a>
+                    </div>';
+            }
+        }
+
+        try {
+            $facebookbuttons = \facebook_share_button($event, $reg["camper_name_first"]);
+        } catch (\Throwable $e) {
+            $error = $e->getMessage();
+            $facebookbuttons = "";
+        }
+
+        $cartitems .= '
+        <div class="registration_cart_item">
+            <div class="registration_cart_item_name">' . $facebookbuttons . $item->description . $allowed_in_page .'</div>
+            <div class="registration_cart_item_price">' . $status . '</div>
+        </div>';
+    }
+
+    $return = '
+    <div class="registration_cart">
+        <div class="registration_cart_title">
+            Registration Review
+        </div>
+        ' . $cartitems . '
+    </div>';
+
+    return $return;
+}
+
+function get_event_paypal_info() {
+    global $_SESSION;
+
+    $cartitems = "";
+    foreach ($_SESSION["payment_cart"] as $item) {
+        $reg = $_SESSION["completed_registrations"][$item->regid];
+        $event = get_event($reg["eventid"]);
+        if (isset($event["paypal"])) {
+            return $event["paypal"];
+        }
+    }
+
+    return "";
 }

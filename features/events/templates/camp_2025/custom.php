@@ -7,6 +7,9 @@
  * $Revision: 0.0.1
  ***************************************************************************/
 
+ // Include template specific functions.
+include_once($CFG->dirroot . "/features/events/templates/camp_2025/lib.php");
+
 function customrule_min_age($data = []) {
     if (!isset($data["event"]) || !isset($data["event"]["eventid"])) {
         return 0;
@@ -136,7 +139,7 @@ function customoptions_shirt($data = []) {
     $shirt_price = get_db_field("setting", "settings", "type = ||type|| AND extra = ||extra|| AND setting_name = ||setting_name||", $params);
     $shirt_price = empty($shirt_price) ? "0" : $shirt_price;
 
-    $shirt_sizes = ["Youth XS", "Youth S", "Youth M", "Youth L", "Youth XL", "Adult S", "Adult M", "Adult L", "Adult XL", "Adult XXL"];
+    $shirt_sizes = TEMP_PROPS["SHIRTSIZES"];
     if ($event['fee_full'] > 0 && $shirt_price > 0) {
         array_unshift($shirt_sizes, "No");
     }
@@ -214,76 +217,4 @@ function customhelp_picture($data = []) {
     $pictures_price = empty($pictures_price) ? "0" : $pictures_price;
 
     return get_help("help_pictures:events:templates/camp_new") . ' ($' . $pictures_price . '.00 for 8x10 group photo)';
-}
-
-function customtype_paymentnote($element, $data = []) {
-    return '
-        <div class="rowContainer" style="height: auto;">
-            <label class="rowTitle" for="payment_note">Notes:</label>
-            <div name="payment_note" id="payment_note">
-            Please select a payment method.  If you have a campership code, enter it and click Apply.
-            </div>
-            <div class="spacer" style="clear: both;"></div>
-        </div>';
-}
-
-function customtype_cost($element, $data = []) {
-    if (!isset($data["event"]) || !isset($data["event"]["eventid"])) {
-        return "";
-    }
-
-    $event = $data["event"];
-    $eventid = $event["eventid"];
-
-    $payment_method = false;
-    if (isset($data["showagain"]) && $data["showagain"]) {
-        $payment_method = $data["payment_method"];
-    }
-
-    if ($event['fee_full'] > 0) {
-        if (empty($payment_method) || $payment_method == "Paypal") { // Don't show for camperships or check/money order payments.
-            return '
-            <div class="rowContainer costinfo paywithapp">
-                <label class="rowTitle" for="payment_amount">' . $element['title'] . '</label>
-                ' . make_fee_options($event['fee_min'], $event['fee_full'], "payment_amount", '', $event['sale_end'], $event['sale_fee']) . '
-                <div class="tooltipContainer info">' . $element['help'] . '</div>
-                <div class="spacer" style="clear: both;"></div>
-            </div>';
-        }
-    }
-}
-
-function customtype_payingtoday($element, $data = []) {
-    if (!isset($data["event"]) || !isset($data["event"]["eventid"])) {
-        return "";
-    }
-
-    $event = $data["event"];
-    $eventid = $event["eventid"];
-
-    $payment_method = false;
-    if (isset($data["showagain"]) && $data["showagain"]) {
-        $payment_method = $data["payment_method"];
-    }
-
-    if ($event['fee_full'] > 0) {
-        // This is only shown for non-campership payments.
-        if ($payment_method !== "Campership") {
-            return '
-            <div class="rowContainer costinfo">
-                <label class="rowTitle" for="owed">' . $element['title'] . '</label>
-                <span class="formMoneySymbol">$</span>
-                <input style="float:none;width:100px;border:none;" name="owed" id="owed" size="5" value="' . $event['fee_min'] . '" type="text" readonly />
-                <div class="spacer" style="clear: both;"></div>
-            </div>
-            <div class="rowContainer costinfo">
-                <label class="rowTitle" for="full_payment_amount">Expected Full Amount Owed</label>
-                <span class="formMoneySymbol">$</span>
-                <span class="formMoneyDisplay" id="full_payment_amount">
-                    ' . get_todays_fee($event['fee_full'], $event['sale_fee'], $event['sale_end']) . '
-                </span>
-                <div class="spacer" style="clear: both;"></div>
-            </div>';
-        }
-    }
 }
