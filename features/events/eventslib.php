@@ -538,14 +538,19 @@ global $CFG, $USER;
     return false;
 }
 
-// Gathers the events that are currently available for enrollment
-function get_open_enrollment_events($pageid) {
-global $CFG, $USER;
+function get_currently_registerable_events($pageid) {
+    global $CFG;
     $time = get_timestamp();
     date_default_timezone_set("UTC");
     $siteviewable = $pageid == $CFG->SITEID ? " OR (siteviewable = 1 AND confirmed = 1)" : "";
     $SQL = fill_template("dbsql/events.sql", "open_enrollable_events", "events", ["siteviewable" => $siteviewable, "time" => $time], true);
-    if ($events = get_db_result($SQL, ["pageid" => $pageid])) {
+    return get_db_result($SQL, ["pageid" => $pageid]);
+}
+
+// Gathers the events that are currently available for enrollment
+function get_open_enrollment_events($pageid) {
+global $CFG, $USER;
+    if ($events = get_currently_registerable_events($pageid)) {
         ajaxapi([
             "id" => "delete_event",
             "paramlist" => "eventid",
@@ -925,11 +930,10 @@ global $CFG, $why, $error;
         $time = get_timestamp();
         $pending = $pending ? 0 : 1;
 
-        $SQL = fetch_template("dbsql/events.sql", "insert_registration", "events");
-        $params = ["eventid" => $eventid, "date" => $time, "email" => $contactemail, "code" => md5($time . $contactemail), "verified" => $pending];
-        $regid = execute_db_sql($SQL, $params);
         if ($template['folder'] != "none") { // custom file style
-            if ($regid) {
+            $SQL = fetch_template("dbsql/events.sql", "insert_registration", "events");
+            $params = ["eventid" => $eventid, "date" => $time, "email" => $contactemail, "code" => md5($time . $contactemail), "verified" => $pending];
+            if ($regid = execute_db_sql($SQL, $params)) {
                 $sql_values = "";
                 $SQL = fetch_template("dbsql/events.sql", "insert_registration_values", "events");
                 $fields = get_template_formlist($event['template_id']);

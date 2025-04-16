@@ -43,11 +43,10 @@ function print_registration_cart($checkout = false) {
 
         // Build item name and create unique hash.
         $camper_names = get_camper_names($reg);
-        $item_name = '<div>' . $camper_names["full"] . " - " . $event['name'] . " Registration</div>";
-        $hash = md5($item_name);
+        $item_name = '<div class="registration_cart_item_info">' . $camper_names["full"] . " - " . $event['name'] . " Registration</div>";
 
         // New entry, save unique hash.
-        $_SESSION['registrations'][$key]->hash = md5($item_name);
+        $_SESSION['registrations'][$key]->hash = hash("sha256", $camper_names["full"] . $event["eventid"]);
 
         // Get registration info for pictures.
         $picture_cost = get_db_field("setting", "settings", "type='events_template' AND extra = ||extra|| AND setting_name='template_setting_pictures_price'", ["extra" => $eventid]);
@@ -75,10 +74,10 @@ function print_registration_cart($checkout = false) {
         $item['original_price'] = $original_price;
 
         if ($picture_cost) {
-            $item_name .= " + Picture";
+            $item_name .= '<div class="registration_cart_item_extra">' . icon("camera") . ' Picture</div>';
         }
         if ($camper_shirt) {
-            $item_name .= " + Shirt";
+            $item_name .= '<div class="registration_cart_item_extra">' . icon("shirt") . ' Shirt</div>';
         }
 
         $item['name'] = $item_name;
@@ -90,6 +89,27 @@ function print_registration_cart($checkout = false) {
     $_SESSION['registrations'] = $clean_registrations;
 
     return registration_cart_wrapper($_SESSION['registrations'], $checkout);
+}
+
+function already_registered($eventid, $name, $birthdate) {
+    $SQL = '
+        SELECT *
+        FROM events_registrations
+        WHERE regid IN (
+                        SELECT regid
+                        FROM events_registrations_values
+                        WHERE elementname="camper_name"
+                        AND value=||name||
+                        )
+        AND regid IN (
+                        SELECT regid
+                        FROM events_registrations_values
+                        WHERE elementname="camper_birth_date"
+                        AND value=||birthdate||
+                    )
+        AND eventid=||eventid||';
+    $already_registered = get_db_count($SQL, ["eventid" => $eventid, "name" => $name, "birthdate" => $birthdate]);
+    return $already_registered > 0;
 }
 
 function print_checkout_form($registrations) {
@@ -109,15 +129,92 @@ function print_checkout_form($registrations) {
         "event" => "click",
     ]);
 
+
     return '
     <div class="registration_cart_checkout">
+        <h2>All Done?</h2>
+        Finalize your registration by clicking the button below.
         <div class="registration_cart_checkout_title">
-            Pay Now Amount: $ <input type="text" id="payment_amount" value="0" disabled />
+            <strong>Pay Now Amount: $ </strong><input type="text" id="payment_amount" value="0" disabled style="margin-left: 2px;" />
         </div>
         <div class="registration_cart_checkout_title">
-            <button id="cart_register_button">Register</button>
+            <button id="cart_register_button" style="display: block; margin: auto; background: green; color: white;">
+                Finalize Registration
+            </button>
+        </div>
+        <h2>More Registrations Needed?</h2>
+        You might be able to quickly add registrations with the buttons below.
+        <div class="registration_cart_checkout_title">
+            To Register another person for this event:
+                <button id="add_new_button">
+                    Add New Registration
+                </button>
+            <br />
+            To Register the same person for a different event:  Select the week and click the button below.<br />
+            ' . registration_copy_options($registrations) . ' <button id="copy_registration">Copy Registration</button>
         </div>
     </div>';
+}
+
+function registration_copy_options($registrations) {
+    global $PAGE;
+
+    $options = "";
+
+    // Get all events that are registerable.
+    $registerable_events = get_registerable_events($PAGE->id);
+
+    // Loop through current registrations in cart to make a list of events/users already in cart.
+    $cart_events = [];
+    foreach ($registrations as $registration) {
+        $reg = $registration->GET;
+        $name = get_camper_names($reg);
+
+        foreach ($registerable_events as $event) {
+            if ($event["id"] == $reg["eventid"]) {
+                continue;
+            }
+
+            // Already registered.
+            if (already_registered($event["id"], $name["full"], $reg["camper_birth_date"])) {
+                continue;
+            }
+
+            $options .= '
+                    <option value="' . $event["id"] . '|' . $registration->hash . '">
+                        ' . $name["full"] . ' -> ' . $event["title"] . '
+                    </option>';
+        }
+
+        $cart_events[] = [
+            "eventid" => $reg["eventid"],
+            "camper_name" => $name["full"],
+            "camper_birth_date" => $reg["camper_birth_date"],
+        ];
+    }
+
+
+    foreach ($registerable_events as $event) {
+        foreach ($cart_events as $cart_event) {
+            // Check if already registered.
+            if (already_registered($event["id"], $cart_event["camper_name"], $cart_event["camper_birth_date"])) {
+                continue;
+            }
+
+            $options .= '
+                <option value="' . $event["id"] . '">
+                ' . $event["title"] . '
+                </option>';
+        }
+    }
+
+    // Make options for each set of current registration user -> event.
+
+    return '
+        <select id="copy_event">
+            <option value="0">Select an event</option>
+            ' . $options . '
+        </select>';
 }
 
 function registration_cart_wrapper($registrations, $checkout = false) {
@@ -345,6 +442,7 @@ function print_registration_cart_items_html($registrations) {
 
                 if ($checkout && $item_price > 0) {
                     $pay_on_item = '
+                    <br />
                     <div style="zoom: .8">
                         <strong>Pay Now: </strong>' .
                         make_fee_options(
@@ -387,9 +485,9 @@ function print_registration_cart_items_html($registrations) {
                 ' . $item['name'] . '
             </div>
             <div class="registration_cart_item_price">
-                ' . $item_price . '
-                ' . $pay_on_item . '
+                <strong>Price: ' . $item_price . '</strong>
                 ' . $promo_code_form . '
+                ' . $pay_on_item . '
             </div>
         </div>
         ';

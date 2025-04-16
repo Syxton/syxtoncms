@@ -533,8 +533,9 @@ function common_weeks($event, $included = true, $id = "", $regid = "", $autofill
 global $CFG, $USER, $PAGE;
     $returnme = "";
     $time = get_timestamp();
-    $camper_age = $autofill == 0 ? false : get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname='Camper_Age'", ["regid" => $regid]);
-    $camper_name = $autofill == 0 ? false : get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname='Camper_Name'", ["regid" => $regid]);
+    $camper_age = $autofill == 0 ? false : get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname='camper_age'", ["regid" => $regid]);
+    $camper_birth_date = $autofill == 0 ? false : get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname='camper_birth_date'", ["regid" => $regid]);
+    $camper_name = $autofill == 0 ? false : get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname='camper_name'", ["regid" => $regid]);
     $siteviewable = $event["pageid"] == $CFG->SITEID || ($event["siteviewable"] == 1 && $event["confirmed"] == 1) ? " OR (siteviewable = '1' AND confirmed = '1')" : "";
     $includelastevent = $included ? "" : "e.eventid != " . $event["eventid"]. " AND ";
     $SQL = "SELECT e.* FROM events e WHERE $includelastevent (e.template_id=" . $event["template_id"] . " AND (e.pageid='" . $event["pageid"] . "' $siteviewable)) AND (e.start_reg < $time AND e.stop_reg > ($time - 86400)) AND (e.max_users=0 OR (e.max_users != 0 AND e.max_users > (SELECT COUNT(*) FROM events_registrations er WHERE er.eventid=e.eventid AND verified='1')))";
@@ -544,14 +545,14 @@ global $CFG, $USER, $PAGE;
             $selected = $event["eventid"] == $evnt["eventid"] ? " SELECTED " : "";
                 $min_age = get_db_field("setting", "settings", "type='events_template' AND extra = '" . $evnt["eventid"] . "' AND setting_name='template_setting_min_age'");
                 $max_age = get_db_field("setting", "settings", "type='events_template' AND extra = '" . $evnt["eventid"] . "' AND setting_name='template_setting_max_age'");
-                $already_registered = get_db_count("SELECT * FROM events_registrations WHERE regid IN (SELECT regid FROM events_registrations_values WHERE elementname='Camper_Name' AND value='$camper_name') AND regid IN (SELECT regid FROM events_registrations_values WHERE elementname='Camper_Age' AND value='$camper_age') AND eventid='" . $evnt["eventid"] . "'");
+
                 // Meets minimum age and maximum age requirements if set
                 if (!$camper_age || ((!$min_age && !$max_age) ||
                     ($min_age && $camper_age >= $min_age && $max_age && $camper_age <= $max_age) ||
                     (!$max_age && ($min_age && $camper_age >= $min_age)) ||
                     (!$min_age && ($max_age && $camper_age >= $max_age)))
                 ) {
-                    if (!$already_registered) {
+                    if (!already_registered($evnt["eventid"], $camper_name, $camper_birth_date)) {
                         $common[] = ['eventid' => $evnt['eventid'], 'selected' => $selected,'name' => $evnt['name']];
                     }
                 }

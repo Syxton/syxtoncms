@@ -704,6 +704,10 @@ form button.registration_cart_menu + #refreshableregcart .registration_cart {
     justify-content: flex-end;
 }
 
+.registration_cart_item_extra {
+    font-size: .8em;
+}
+
 .registration_payment_area {
     display: flex;
     flex-direction: row;
