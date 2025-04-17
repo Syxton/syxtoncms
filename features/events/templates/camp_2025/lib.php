@@ -25,7 +25,7 @@ function print_registration_cart($checkout = false) {
                     ],
                 ]
             ]
-        , true);
+        , true, true);
     }
 
     $items = [];
@@ -217,17 +217,19 @@ function registration_copy_options($registrations) {
         </select>';
 }
 
-function registration_cart_wrapper($registrations, $checkout = false) {
+function registration_cart_wrapper($registrations, $checkout = false, $empty = false) {
     global $_SESSION;
 
     $cartinfo = print_registration_cart_items_html($registrations);
     $cartinfo .= print_registration_cart_total_html($registrations);
 
     $checkout_button = ""; $checkout_form = "";
-    if (!$checkout) {
-        $checkout_button = get_registration_checkout_button();
-    } else {
-        $checkout_form = print_checkout_form($_SESSION['registrations']);
+    if (!$empty) {
+        if (!$checkout) {
+            $checkout_button = get_registration_checkout_button();
+        } else {
+            $checkout_form = print_checkout_form($registrations);
+        }
     }
 
     return '
