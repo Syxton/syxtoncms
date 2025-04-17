@@ -199,7 +199,7 @@ members_search_page||
 ||members_search_page
 
 site_administration||
-    <div style="display: flex;">
+    <div class="adminpaneldiv" style="display: flex;">
         <div style="min-height:300px;display:inline-block;vertical-align:top;border:2px solid silver;background-color:DarkSlateGray;">
             <ul class="vertmenu">
                 <li>
