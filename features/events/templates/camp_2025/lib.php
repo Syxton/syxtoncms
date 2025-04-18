@@ -142,15 +142,18 @@ function print_checkout_form($registrations) {
                 Finalize Registration
             </button>
         </div>
+        <br /><br />
         <h2>More Registrations Needed?</h2>
         You might be able to quickly add registrations with the buttons below.
-        <div class="registration_cart_checkout_title">
+        <div>
             To Register another person for this event:
                 <button id="add_new_button">
                     Add New Registration
                 </button>
-            <br />
-            To Register the same person for a different event:  Select the week and click the button below.<br />
+        </div>
+        <br />
+        <div>
+            To Register the same person for a different event:  Select the event and click the button below.<br /><br />
             ' . registration_copy_options($registrations) . ' <button id="copy_registration">Copy Registration</button>
         </div>
     </div>';
@@ -159,10 +162,7 @@ function print_checkout_form($registrations) {
 function registration_copy_options($registrations) {
     global $PAGE;
 
-    $options = "";
-
-    // Get all events that are registerable.
-    $registerable_events = get_registerable_events($PAGE->id);
+    $optionsArray = [];
 
     // Loop through current registrations in cart to make a list of events/users already in cart.
     $cart_events = [];
@@ -170,45 +170,40 @@ function registration_copy_options($registrations) {
         $reg = $registration->GET;
         $name = get_camper_names($reg);
 
-        foreach ($registerable_events as $event) {
-            if ($event["id"] == $reg["eventid"]) {
+        // Get all events that are registerable.
+        $registerable_events = get_currently_registerable_events($PAGE->id);
+        while ($event = fetch_row($registerable_events)) {
+            // Skip event that this user already has in the cart.
+            if ($event["eventid"] == $reg["eventid"]) {
                 continue;
             }
 
-            // Already registered.
-            if (already_registered($event["id"], $name["full"], $reg["camper_birth_date"])) {
+            // Skip event that this user is already registered for.
+            if (already_registered($event["eventid"], $name["full"], $reg["camper_birth_date"])) {
                 continue;
             }
 
-            $options .= '
-                    <option value="' . $event["id"] . '|' . $registration->hash . '">
-                        ' . $name["full"] . ' -> ' . $event["title"] . '
-                    </option>';
-        }
-
-        $cart_events[] = [
-            "eventid" => $reg["eventid"],
-            "camper_name" => $name["full"],
-            "camper_birth_date" => $reg["camper_birth_date"],
-        ];
-    }
-
-
-    foreach ($registerable_events as $event) {
-        foreach ($cart_events as $cart_event) {
-            // Check if already registered.
-            if (already_registered($event["id"], $cart_event["camper_name"], $cart_event["camper_birth_date"])) {
+            // Skip if this event/user combo is already an option.
+            if (isset($optionsArray[$registration->hash])) {
                 continue;
             }
 
-            $options .= '
-                <option value="' . $event["id"] . '">
-                ' . $event["title"] . '
-                </option>';
+            $optionsArray[$registration->hash] = [
+                "event" => $event,
+                "name" => $name,
+            ];
         }
     }
 
     // Make options for each set of current registration user -> event.
+    // process options array.
+    $options = "";
+    foreach ($optionsArray as $key => $option) {
+        $options .= '
+            <option value="' . $option["event"]["eventid"] . '|' . $key . '">
+                ' . $option["name"]["full"] . ' -> ' . $option["event"]["name"] . '
+            </option>';
+    }
 
     return '
         <select id="copy_event">
