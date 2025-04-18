@@ -33,7 +33,7 @@ comment_form_template||
 ||comment_form_template
 
 edit_form||
-	<form id="||formid||">
+	<form id="||formid||" style="margin-top: 40px;">
 		<div class="centered">
 			||editor||
 			<input type="submit" class="html_editor_save" value="Save" />

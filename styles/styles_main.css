@@ -268,7 +268,6 @@ table.searchresults tr:hover {
 
 .html_editor_save {
     position: absolute;
-    z-index: 99999;
     right: 10px;
     top: 5px;
 }
@@ -1856,6 +1855,10 @@ div.dropwrapper button:hover {
     transition-duration: .5s;
 }
 
+iframe {
+    box-sizing: border-box;
+}
+
 /* When the screen is less than 700 pixels wide, hide all links, except for the first one ("Home"). Show the link that contains should open and close the topnav (.icon) */
 @media screen and (max-width: 700px) {
     .topnav {
@@ -1871,14 +1874,34 @@ div.dropwrapper button:hover {
         display: none;
     }
 
+    #cboxTopLeft, #cboxTopRight, #cboxBottomLeft, #cboxBottomRight, #cboxMiddleLeft, #cboxMiddleRight, #cboxTopCenter, #cboxBottomCenter {
+        width:0 !important;
+        height:0 !important;
+    }
+
+    #colorbox {
+        width: 100vw !important;
+        height: 100vh !important;
+        top: 0 !important;
+    }
+
+    #cboxContent, #cboxWrapper {
+        height: 100vh !important;
+    }
+
     a.icon.mobile_menu {
-        display: inline-block;
-        padding: 10px;
-        top: 0;
-        right: 0;
+        display: initial !important;
+        background-color: whitesmoke;
+        position: absolute;
+        z-index: 9999;
+        top: 5px;
+        right: 5px;
         font-size: 2em;
-        position: fixed;
-        z-index: 10000;
+        line-height: 100%;
+        border: 1px solid silver;
+        border-radius: 5px;
+        padding: 4px 5px;
+        height: 30px;
     }
 
     /* Show the dropdown menu when the user moves the mouse over the dropdown button */

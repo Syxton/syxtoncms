@@ -220,7 +220,7 @@ site_administration||
                 </li>
             </ul>
         </div>
-        <div id="display" style="width: 100%;height: 100%;padding: 0 15px;">
+        <div id="display" style="width: 100%;height: 100%;">
             <div style="font-size:.8em;width:98%;padding:10px;text-align:center;">
                 <h2>Site Administration Area</h2>
                 All administration features are displayed in this area.  Click the links to the left to display the various administration features.
@@ -235,7 +235,7 @@ site_administration||
 ||site_administration
 
 admin_iframe||
-    <iframe id="||id||" onload="resizeCaller(this.id);" style="width:100%;height: 99vh;border:none;" src="||src||"></iframe>
+    <iframe id="||id||" onload="resizeCaller(this.id);" style="width:100%;height: 99vh;border:none;padding: 15px;" src="||src||"></iframe>
 ||admin_iframe
 
 admin_versions||
