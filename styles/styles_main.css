@@ -1951,8 +1951,8 @@ div.dropwrapper button:hover {
         width: 100% !important;
     }
 
-    ul.vertmenu li{
-        display: inline-flex !important;
+    ul.vertmenu, ul.vertmenu ul {
+        width: 100% !important;
     }
 
     ul.vertmenu > ul.acitem{
