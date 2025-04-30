@@ -216,7 +216,7 @@ function register() {
 
                 // Save regid to payment cart.
                 $_SESSION["payment_cart"][] = (object) [
-                    "regid" => $regid,
+                    "id" => $regid,
                     "description" => $newreg["camper_name"] . " - " . $event["name"] . " Registration",
                     "cost" => clean_myvar_opt("payment_amount_" . $reg->hash, "float", "0"),
                 ];
@@ -250,7 +250,7 @@ function register() {
         $return = show_post_registration_page();
 
         // Cart has been processed, so we can empty it.
-        unset($_SESSION["registrations"]);
+        //unset($_SESSION["registrations"]);
     } catch (\Throwable $e) {
         rollback_db_transaction($e->getMessage());
         unset($_SESSION["payment_cart"]);

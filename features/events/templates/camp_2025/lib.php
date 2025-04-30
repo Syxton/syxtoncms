@@ -792,48 +792,6 @@ function get_like_event_autofill_registrations($data = []) {
 }
 
 /**
- * Calculate the total cost of items in the payment cart.
- *
- * This function iterates through each item in the payment cart stored
- * in the session and accumulates the total cost of all items.
- *
- * @return float The total cost of all items in the payment cart.
- */
-function get_total_to_be_paid() {
-    global $_SESSION;
-    $cost = 0;
-
-    // Check if the payment cart is set in the session
-    if (isset($_SESSION["payment_cart"])) {
-        // Iterate through each item in the payment cart session.
-        foreach ($_SESSION["payment_cart"] as $item) {
-            // Accumulate the cost of each item.
-            $cost += $item->cost;
-        }
-    }
-
-    return $cost;
-}
-
-/**
- * Calculate the total amount of money owed on all registrations in the payment cart.
- *
- * @return float The total amount of money owed.
- */
-function get_total_cart_owed() {
-    global $_SESSION;
-    $owed = 0;
-
-    // Iterate through each registration in the payment cart.
-    foreach ($_SESSION["completed_registrations"] as $reg) {
-        // Accumulate the amount of money owed for each registration.
-        $owed += $reg["total_owed"];
-    }
-
-    return $owed;
-}
-
-/**
  * Show a registration status page.
  *
  * This function displays a page that presents the status of each registration in the cart.
@@ -863,7 +821,7 @@ function show_post_registration_page() {
                 <div class="centered">
                     Click a Payment method below to pay for your registration fees.
                     <br />
-                    ' . get_payment_buttons() . '
+                    ' . get_payment_form() . '
                 </div>';
         } else {
             // No payment chosen to be made at this time.
@@ -906,8 +864,10 @@ function show_post_registration_page() {
  *
  * @return string The HTML for the payment buttons.
  */
-function get_payment_buttons() {
+function get_payment_form() {
     global $_SESSION;
+
+    return new_payment_form($_SESSION["payment_cart"]);
 
     // Render the PayPal button based on the items in the payment cart.
     return make_paypal_button($_SESSION["payment_cart"], get_event_paypal_info());
@@ -918,7 +878,7 @@ function get_post_registration_cart_status() {
 
     $cartitems = "";
     foreach ($_SESSION["payment_cart"] as $item) {
-        $reg = $_SESSION["completed_registrations"][$item->regid];
+        $reg = $_SESSION["completed_registrations"][$item->id];
         $status = $reg["total_owed"] > 0 ? "Pending Payment" : "Complete";
         $allowed_in_page = "";
         $event = get_event($reg["eventid"]);
@@ -964,7 +924,7 @@ function get_event_paypal_info() {
 
     $cartitems = "";
     foreach ($_SESSION["payment_cart"] as $item) {
-        $reg = $_SESSION["completed_registrations"][$item->regid];
+        $reg = $_SESSION["completed_registrations"][$item->id];
         $event = get_event($reg["eventid"]);
         if (isset($event["paypal"])) {
             return $event["paypal"];

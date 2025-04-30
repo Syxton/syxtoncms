@@ -854,6 +854,113 @@ function make_fee_options($min, $full, $name, $options = "", $sale_end = "", $sa
     return $returnme;
 }
 
+function new_payment_form($items) {
+    global $CFG;
+    return '<iframe id="payment_frame" onload="resizeCaller(this.id);" src="' . $CFG->wwwroot . '/scripts/payments/frontend.php" style="width: 99%;border: 0;"></iframe>';
+}
+
+function events_approved_payment($cart, $tx) {
+    global $CFG;
+    if (strcmp($tx->status, "COMPLETED") == 0) {
+        if (!empty($tx->id) && !get_db_row("SELECT * FROM logfile WHERE feature='events' AND info='$tx->id'")) {
+            foreach ($cart as $item) {
+                $regid = $item->i;
+                $add = $item->v;
+                $paid = get_db_field("value", "events_registrations_values", "elementname='paid' AND regid='$regid'");
+                $SQL = "UPDATE events_registrations_values SET value='" . ((float) $paid + (float) $add) . "' WHERE elementname='paid' AND regid='$regid'";
+                execute_db_sql($SQL);
+
+                // If payment is made, it is no longer in queue.
+                $SQL = "UPDATE events_registrations SET verified='1' WHERE regid='$regid'";
+                execute_db_sql($SQL);
+
+                // Make an entry for this transaction that links it to this registration.
+                $event = get_event_from_regid($regid);
+
+                $params = [
+                    "eventid" => $event["eventid"],
+                    "elementname" => "tx",
+                    "regid" => $regid,
+                    "logparams" => serialize([
+                        "date" => get_timestamp(),
+                        "amount" => $add,
+                        "txid" => $tx->id,
+                    ]),
+                ];
+                $SQL = "INSERT INTO events_registrations_values (eventid, elementname, regid, value) VALUES(||eventid||, ||elementname||, ||regid||, ||logparams||)";
+                execute_db_sql($SQL, $params);
+
+                $touser = (object) [
+                    "fname" => get_db_field("value", "events_registrations_values", "regid='$regid' AND LOWER(elementname) LIKE '%fname%' OR LOWER(elementname) LIKE '%first%'"),
+                    "lname" => get_db_field("value", "events_registrations_values", "regid='$regid' AND LOWER(elementname) LIKE '%lname%' OR LOWER(elementname) LIKE '%last%'"),
+                    "email" => get_db_field("email", "events_registrations", "regid='$regid'"),
+                ];
+
+                $fromuser = (object) [
+                    "email" => $CFG->siteemail,
+                    "fname" => $CFG->sitename,
+                    "lname" => "",
+                ];
+
+                if (!empty($touser->email)) {
+                    $message = registration_email($regid, $touser);
+                    send_email($fromuser, $fromuser, $CFG->sitename . " Registration", $message);
+                    send_email($touser, $fromuser, $CFG->sitename . " Registration", $message);
+                }
+            }
+            log_entry('events', $tx->id, "Transaction"); // Log
+        } else {
+            echo "Old transaction";
+        }
+    } else if (strcmp ($res, "INVALID") == 0) {
+        log_entry('events', $res, "Transaction (failed)"); // Log
+    } else {
+        log_entry('events', $res, "Paypal (none)"); // Log
+    }
+}
+
+/**
+ * Calculate the total cost of items in the payment cart.
+ *
+ * This function iterates through each item in the payment cart stored
+ * in the session and accumulates the total cost of all items.
+ *
+ * @return float The total cost of all items in the payment cart.
+ */
+function get_total_to_be_paid() {
+    global $_SESSION;
+    $cost = 0;
+
+    // Check if the payment cart is set in the session
+    if (isset($_SESSION["payment_cart"])) {
+        // Iterate through each item in the payment cart session.
+        foreach ($_SESSION["payment_cart"] as $item) {
+            // Accumulate the cost of each item.
+            $cost += $item->cost;
+        }
+    }
+
+    return $cost;
+}
+
+/**
+ * Calculate the total amount of money owed on all registrations in the payment cart.
+ *
+ * @return float The total amount of money owed.
+ */
+function get_total_cart_owed() {
+    global $_SESSION;
+    $owed = 0;
+
+    // Iterate through each registration in the payment cart.
+    foreach ($_SESSION["completed_registrations"] as $reg) {
+        // Accumulate the amount of money owed for each registration.
+        $owed += $reg["total_owed"];
+    }
+
+    return $owed;
+}
+
 function make_paypal_button($items, $sellersemail) {
 global $CFG;
     $regids = "";
