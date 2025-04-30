@@ -3,8 +3,8 @@
  * backend.php - Backend ajax script
  * -------------------------------------------------------------------------
  * $Author: Matthew Davidson
- * $Date: 03/28/2025
- * $Revision: 0.0.1
+ * Date: 5/02/2025
+ * $Revision: 0.2.1
  ***************************************************************************/
 if (!isset($CFG)) {
     $sub = '';
@@ -216,7 +216,7 @@ function register() {
 
                 // Save regid to payment cart.
                 $_SESSION["payment_cart"][] = (object) [
-                    "regid" => $regid,
+                    "id" => $regid,
                     "description" => $newreg["camper_name"] . " - " . $event["name"] . " Registration",
                     "cost" => clean_myvar_opt("payment_amount_" . $reg->hash, "float", "0"),
                 ];

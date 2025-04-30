@@ -1,0 +1,7 @@
+{
+    "description": "PayPal JS SDK Expanded Integration - Checkout Flow",
+    "license": "MIT",
+    "require": {
+		"paypal/paypal-server-sdk": "1.0.0"
+	}
+}

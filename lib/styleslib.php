@@ -287,7 +287,6 @@ function make_or_update_styles($params = []) {
         $SQL = "INSERT INTO styles($sqlfields) VALUES($sqlvalues)";
     }
 
-    error_log("SQL: " . $SQL);
     // Whether insert or update statement succeeded we will get the settingid.
     return execute_db_sql($SQL);
 }

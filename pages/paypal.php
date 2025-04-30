@@ -85,8 +85,8 @@ if (!$fp) {
 				$regids = explode(":", $regids);
 				$i = 0;
 				while (isset($regids[$i])) {
-          		$rid = $regids[$i];
-					$paid = get_db_field("value", "events_registrations_values", "elementname = 'paid' AND regid = |||regid||", ["regid" => $rid]);
+          			$rid = $regids[$i];
+					$paid = (float) get_reg_paid($rid);
 					$params = [
 						"regid" => $rid,
 						"value" => $paid + $keyarray["mc_gross_" . ($i + 1)],

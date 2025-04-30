@@ -235,7 +235,7 @@ function debugging($message = '', $level = 1, $forced = false) {
         // If level == 1, display a generic error message
         if ($level == 1) {
             $print .= '
-                <div class="error_text" style="font-size: 3vw;padding: 6%;">
+                <div class="error_text" style="font-size: calc(10px + .5vw);padding: 6%;">
                     <h3>Site Error</h3>
                     <br />
                     <p>' . error_string("generic_error") . '</p>

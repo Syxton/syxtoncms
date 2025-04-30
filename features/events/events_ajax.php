@@ -3,7 +3,7 @@
 * events_ajax.php - Events backend ajax script
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 5/14/2024
+* Date: 5/02/2025
 * Revision: 2.2.2
 ***************************************************************************/
 
@@ -900,8 +900,9 @@ global $CFG, $MYVARS, $USER;
                 if (execute_db_sql($SQL, $params)) {
                     if (execute_db_sql(fetch_template("dbsql/events.sql", "reg_update_from_temptable", "events"), ["regid" => $regid])) {
                         // check paid status
-                        $paid = get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname = 'paid'", ["regid" => $regid]);
-                        $payment_method = get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname = 'payment_method'", ["regid" => $regid]);
+                        $paid = (float) get_reg_paid($regid);
+                        $payment_method = get_reg_paymethod($regid);
+
                         $minimum = get_db_field("fee_min", "events", "eventid = ||eventid||", ["eventid" => $eventid]);
                         $verified = get_db_field("verified", "events_registrations", "regid = ||regid||", ["regid" => $regid]);
                         if ($paid >= $minimum) {
@@ -978,13 +979,13 @@ global $CFG;
         $event = get_event($eventid);
 
         $touser = (object)[
-            'email' => get_db_field("email", "events_registrations", "regid='$regid'"),
-            'fname' => $registrant_name = get_registrant_name($regid),
+            'email' => get_db_field("email", "events_registrations", "regid=||regid||", ["regid" => $regid]),
+            'fname' => get_registrant_name($regid),
             'lname' => "",
         ];
 
         $fromuser = (object)[
-            'email' => $event['email'],
+            'email' => $CFG->siteemail,
             'fname' => $CFG->sitename,
             'lname' => "",
         ];
@@ -1303,13 +1304,14 @@ global $CFG, $MYVARS, $USER;
 
         $templateParams = [
             "wwwroot" => $CFG->wwwroot,
+            "eventid" => $eventid,
             "display" => $display,
             "menu" => make_select($menuParams),
         ];
         $registrationlist = fill_template("tmp/events.template", "show_registrations_menu_tools", "events", $templateParams);
 
         // Load javascript needed for the registration menu and tools.
-        load_registrations_menu_javascript($eventid);
+        load_registrations_menu_javascript("show_registrations($eventid)");
     }
 
     // Load javascript needed for the print and quick reserve areas.
@@ -1344,32 +1346,38 @@ function load_show_registrations_javascript($eventid) {
     ]);
 }
 
-function load_registrations_menu_javascript($eventid) {
+function load_registrations_menu_javascript($callback) {
     ajaxapi([ // Delete Registration.  Sends to showregistrationpage callback.
         "id" => "delete_registration",
-        "if" => "$('#registrants').val() != '' && confirm('Do you want to delete this registration?')",
+        "paramlist" => "eventid, regid",
+        "if" => "regid != '' && confirm('Do you want to delete this registration?')",
         "url" => "/features/events/events_ajax.php",
-        "data" => ["action" => "delete_registration_info", "regid" => "js|| $('#registrants').val() ||js"],
-        "ondone" => "show_registrations($eventid);",
+        "data" => ["action" => "delete_registration_info", "regid" => "js|| regid ||js"],
+        "ondone" => "$callback;",
         "loading" => "loading_overlay",
+        "event" => "none",
     ]);
 
     ajaxapi([ // Go to Edit Registration Page.
-        "if" => "$('#registrants').val() != ''",
+        "if" => "regid != ''",
         "id" => "edit_registration",
+        "paramlist" => "eventid, regid",
         "url" => "/features/events/events_ajax.php",
-        "data" => ["action" => "get_registration_info", "regid" => "js|| $('#registrants').val() ||js", "eventid" => $eventid],
+        "data" => ["action" => "get_registration_info", "regid" => "js|| regid ||js", "eventid" => "js|| eventid ||js"],
         "display" => "searchcontainer",
         "loading" => "loading_overlay",
+        "event" => "none",
     ]);
 
     ajaxapi([ // Resend Registration Email.
-        "if" => "$('#registrants').val() != ''",
+        "if" => "regid != ''",
         "id" => "email_registration",
+        "paramlist" => "eventid, regid",
         "url" => "/features/events/events_ajax.php",
-        "data" => ["action" => "resend_registration_email", "regid" => "js|| $('#registrants').val() ||js", "eventid" => $eventid],
+        "data" => ["action" => "resend_registration_email", "regid" => "js|| regid ||js", "eventid" => "js|| eventid ||js"],
         "display" => "searchcontainer",
         "loading" => "loading_overlay",
+        "event" => "none",
     ]);
 }
 
@@ -1492,6 +1500,9 @@ global $CFG, $USER;
                 ];
                 $return = fill_template("tmp/events.template", "eventsearchresults", "events", $params);
             } else {
+
+                load_registrations_menu_javascript("perform_registrationsearch()");
+
                 while ($reg = fetch_row($results)) {
                     $rowparams = [
                         "reg" => $reg,
@@ -1529,12 +1540,36 @@ function get_reg_actions($reg) {
 
     // Go to pay link
     $actions .= '
-        <a
-            title="Pay"
-            target="_blank"
-            href="' . $CFG->wwwroot . '/features/events/events.php?action=pay&i=!&regcode=' . $reg["code"] . '">
-            ' . icon("credit-card") . '
-        </a>';
+        <div class="dropdowncreator">
+            <button class="dropbtn">' . icon("gear") . '</button>
+            <div class="dropcontent">
+                <a
+                    href="javascript:void(0)"
+                    title="Edit Registration"
+                    onclick="edit_registration('. $reg["eventid"] . ',' . $reg["regid"] . ')">
+                    ' . icon("pencil") . ' Edit Registration
+                </a>
+                <a
+                    href="javascript:void(0)"
+                    title="Resend Registration Email"
+                    onclick="email_registration('. $reg["eventid"] . ',' . $reg["regid"] . ')">
+                    ' . icon("envelope") . ' Resend Registration Email
+                </a>
+                <a
+                    title="Pay"
+                    target="_blank"
+                    href="' . $CFG->wwwroot . '/features/events/events.php?action=pay&i=!&regcode=' . $reg["code"] . '">
+                    ' . icon("credit-card") . ' Make Payment
+                </a>
+                <a
+                    href="javascript:void(0)"
+                    title="Delete Registration"
+                    onclick="delete_registration('. $reg["eventid"] . ',' . $reg["regid"] . ')">
+                    ' . icon("trash") . ' Delete Registration
+                </a>
+            </div>
+        </div>
+    ';
     return $actions;
 }
 
@@ -1562,11 +1597,12 @@ global $CFG, $MYVARS, $USER;
             goto instant_end;
         }
 
-        $total_owed = get_db_field("value", "events_registrations_values", "regid=" . $registration["regid"] . " AND elementname='total_owed'");
+        $total_owed = (float) get_reg_owed($registration["regid"]);
         if (empty($total_owed)) {
             $total_owed = $registration["date"] < $event["sale_end"] ? $event["sale_fee"] : $event["fee_full"];
         }
-        $paid = get_db_field("value", "events_registrations_values", "regid=" . $registration["regid"] . " AND elementname='paid'");
+
+        $paid = (float) get_reg_paid($registration["regid"]);
         $paid = empty($paid) ? "0.00" : $paid;
         $remaining = $total_owed - $paid;
         $registrant_name = get_registrant_name($registration["regid"]);
@@ -1579,14 +1615,19 @@ global $CFG, $MYVARS, $USER;
             '<br />Amount Paid:  $' . number_format($paid, 2) .
             '<br />
             <strong>Remaining Balance:  $' . number_format($remaining, 2) . '</strong>
-            <br />';
+            <br /><br />';
 
         if ($remaining > 0) {
             $item[0] = new \stdClass;
             $item[0]->description = "Event: " . $event["name"] . " - $registrant_name's Registration - Remaining Balance Payment";
             $item[0]->cost = $remaining;
             $item[0]->regid = $registration["regid"];
-            $return .= '<br />' . make_paypal_button($item, $event["paypal"]);
+
+            // Create payment cart session.
+            make_payment_cart_session($item);
+
+            // Get payment form.
+            $return .= get_payment_form();
         }
     } catch (\Throwable $e) {
         $error = $e->getMessage();

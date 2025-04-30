@@ -34,21 +34,23 @@ div#ajax_error_display.visible {
 }
 
 div#ajax_error_display {
-    display: none;
+    display: none; */
     position: fixed;
     z-index: 999999;
-    width: 34%;
-    margin: 0 31% 0;
+    min-width: 36%;
+    max-width: 500px;
+    left: 50%;
+    transform: translate(-50%, 0);
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
     background: red;
     font-weight: 700;
-    color: white;
-    text-align: center;
     justify-content: center;
     border-radius: 0 0 15px 15px;
     align-content: center;
     flex-direction: column;
     border-bottom: 3px solid black;
-    text-shadow: 1px -1px 4px #4a4a4a;
     padding: 1%;
 }
 
@@ -386,8 +388,8 @@ table.searchresults tr:hover {
 }
 
 .error_text {
-    font-size: .95em;
-    color: darkred;
+    font-size: calc(10px + .5vw);
+    color: white;
     text-align: center;
     vertical-align: bottom
 }
@@ -646,6 +648,21 @@ img.sitenews {
 #registration_div {
     height: 100vh;
     padding: 10px;
+}
+
+.payment_cart_header {
+    display: flex;
+    background: lightgrey;
+    padding: 10px;
+    font-weight: bold;
+    font-size: 1.2em;
+    border-bottom: 1px solid gainsboro;
+}
+
+.payment_cart_row {
+    display: flex;
+    padding: 10px;
+    border-bottom: 1px solid gainsboro;
 }
 
 .autofilloptions button{
@@ -2919,4 +2936,49 @@ input[type=image] {
 .formMoneyDisplay {
     line-height: 1.5em;
     font-size: 1.25em;
+}
+
+.dropdowncreator {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdowncreator .dropbtn {
+    color: white;
+    padding: 4px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+}
+
+.dropdowncreator .dropcontent {
+    display: none;
+    position: absolute;
+    text-align: left;
+    background-color: #f9f9f9;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+  }
+
+/* Links inside the dropdown */
+.dropdowncreator .dropcontent a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    white-space: nowrap;
+}
+
+/* Change color of dropdown links on hover */
+.dropdowncreator .dropcontent a:hover {
+    background-color: #f1f1f1
+}
+
+/* Show the dropdown menu on hover */
+.dropdowncreator:hover .dropcontent {
+    display: block;
+}
+
+/* Change the background color of the dropdown button when the dropdown content is shown */
+.dropdowncreator:hover .dropbtn {
 }

@@ -3,8 +3,8 @@
 * eventslib.php - Events function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 5/14/2024
-* Revision: 2.8.7
+* Date: 5/02/2025
+* Revision: 3.0.1
 ***************************************************************************/
 if (!isset($CFG) || !defined('LIBHEADER')) {
     $sub = '';
@@ -499,7 +499,8 @@ global $CFG, $USER;
 
 // Gathers the events that can be edited
 function get_editable_events($pageid) {
-global $CFG, $USER;
+    global $CFG, $USER;
+
     $time = get_timestamp();
     date_default_timezone_set("UTC");
     $siteviewable = $pageid == $CFG->SITEID ? " OR (siteviewable = 1 AND confirmed = 1)" : "";
@@ -550,6 +551,7 @@ global $CFG, $USER;
 
 function get_currently_registerable_events($pageid) {
     global $CFG;
+
     $time = get_timestamp();
     date_default_timezone_set("UTC");
     $siteviewable = $pageid == $CFG->SITEID ? " OR (siteviewable = 1 AND confirmed = 1)" : "";
@@ -559,7 +561,8 @@ function get_currently_registerable_events($pageid) {
 
 // Gathers the events that are currently available for enrollment
 function get_open_enrollment_events($pageid) {
-global $CFG, $USER;
+    global $CFG, $USER;
+
     if ($events = get_currently_registerable_events($pageid)) {
         ajaxapi([
             "id" => "delete_event",
@@ -650,7 +653,8 @@ global $CFG, $USER;
 
 // Gathers the events that are happening in the next (SETTINGS: upcomingdays) days
 function get_upcoming_events($pageid, $upcomingdays) {
-global $CFG;
+    global $CFG;
+
     $returnme = "";
     $time = get_timestamp();
     date_default_timezone_set("UTC");
@@ -681,7 +685,8 @@ global $CFG;
 
 // Gathers the events that are happening right now
 function get_current_events($pageid) {
-global $CFG, $USER;
+    global $CFG, $USER;
+
     $time = get_timestamp();
     date_default_timezone_set("UTC");
     $siteviewable = $pageid == $CFG->SITEID ? " OR (siteviewable = 1 AND confirmed = 1)" : "";
@@ -725,7 +730,8 @@ global $CFG, $USER;
 
 // Gathers the events that are happening right now
 function get_recent_events($pageid, $recentdays, $archivedays) {
-global $CFG, $USER;
+    global $CFG, $USER;
+
     $time = get_timestamp();
     date_default_timezone_set("UTC");
 
@@ -854,6 +860,187 @@ function make_fee_options($min, $full, $name, $options = "", $sale_end = "", $sa
     return $returnme;
 }
 
+function events_registration_confirmation($paid, $tx, $success) {
+    global $CFG;
+
+    if (!$success) {
+        if ($tx->status == "COMPLETED") {
+            return fill_template("tmp/events.template", "payment_process_issues", "events");
+        }
+        return fill_template("tmp/events.template", "payment_proccess_failure", "events");
+    }
+
+    update_total_cart_paid($paid);
+
+    $params = [
+        "cart" => get_printable_payment_cart($paid),
+        "message" => "Thank you for registering for this event. Please check your email for more information.",
+    ];
+
+    unset($_SESSION["payment_cart"]);
+    unset($_SESSION["completed_registrations"]);
+
+    return fill_template("tmp/events.template", "payment_process_success", "events", $params);
+}
+
+function get_printable_payment_cart($paid) {
+    global $_SESSION;
+
+    $p = [
+        "desc" => "Description",
+        "val1" => "Paid",
+        "val2" => "Owed",
+        "class" => "payment_cart_header",
+    ];
+    $return = fill_template("tmp/events.template", "payment_cart_row", "events", $p);
+
+    foreach($_SESSION["payment_cart"] as $item) {
+        $paid = (float) get_reg_paid($item->id);
+        $owed = (float) get_reg_owed($item->id);
+
+        $still_owed = $owed - $paid;
+        $still_owed = $still_owed < 0 ? 0 : $still_owed;
+
+        $p = [
+            "desc" => $item->description,
+            "val1" => '$' . number_format($paid, 2, '.', ''),
+            "val2" => '$' . number_format($still_owed, 2, '.', ''),
+            "class" => "payment_cart_row",
+        ];
+        $return .= fill_template("tmp/events.template", "payment_cart_row", "events", $p);
+    }
+
+    return '
+        <section>
+            ' . $return . '
+        </section>';
+}
+
+function events_approved_payment($cart, $tx) {
+    global $CFG;
+
+    try {
+        start_db_transaction();
+        if (strcmp($tx->status, "COMPLETED") == 0) {
+            $method = "unknown";
+            $method = isset($tx->payment_source->card) ? "card" : $method;
+            $method = isset($tx->payment_source->paypal) ? "paypal" : $method;
+            $method = isset($tx->payment_source->venmo) ? "venmo" : $method;
+
+            if (!empty($tx->id) &&
+                !get_db_row("SELECT * FROM logfile WHERE feature=||feature|| AND info=||info||", ["feature" => "events", "info" => $tx->id])) {
+
+                foreach ($cart as $item) {
+                    $regid = $item->i;
+                    $add = $item->v;
+
+                    $paid = (float) get_reg_paid($regid);
+
+                    // Update total paid for this registration.
+                    $SQL = "UPDATE events_registrations_values SET value=||paid|| WHERE elementname LIKE '%paid%' AND regid=||regid||";
+                    execute_db_sql($SQL, ["paid" => ((float) $paid + (float) $add), "regid" => $regid]);
+
+                    // Update payment method for this registration.
+                    $currentmethod = get_db_field("value", "events_registrations_values", "elementname LIKE '%method%' AND regid=||regid||", ["regid" => $regid]);
+
+                    if (empty($currentmethod)) {
+                        $SQL = "UPDATE events_registrations_values SET value=||method|| WHERE elementname LIKE '%method%' AND regid=||regid||";
+                        execute_db_sql($SQL, ["method" => $method, "regid" => $regid]);
+                    }
+
+                    // If payment is made, it is now verified.
+                    $SQL = "UPDATE events_registrations SET verified=||verified|| WHERE regid=||regid||";
+                    execute_db_sql($SQL, ["regid" => $regid, "verified" => "1"]);
+
+                    // Make an entry for this transaction that links it to this registration.
+                    $event = get_event_from_regid($regid);
+
+                    // Insert a transaction registration value.
+                    $params = [
+                        "eventid" => $event["eventid"],
+                        "elementname" => "tx",
+                        "regid" => $regid,
+                        "logparams" => serialize([
+                            "date" => get_timestamp(),
+                            "amount" => $add,
+                            "method" => $method,
+                            "txid" => $tx->id,
+                        ]),
+                    ];
+                    $SQL = "INSERT INTO events_registrations_values (eventid, elementname, regid, value) VALUES(||eventid||, ||elementname||, ||regid||, ||logparams||)";
+                    execute_db_sql($SQL, $params);
+
+                    // Send an updated email to the registration owner.
+                    $touser = (object)[
+                        'email' => get_db_field("email", "events_registrations", "regid=||regid||", ["regid" => $regid]),
+                        'fname' => get_registrant_name($regid),
+                        'lname' => "",
+                    ];
+
+                    $fromuser = (object) [
+                        "email" => $CFG->siteemail,
+                        "fname" => $CFG->sitename,
+                        "lname" => "",
+                    ];
+
+                    if (!empty($touser->email)) {
+                        $message = registration_email($regid, $touser);
+                        send_email($fromuser, $fromuser, $CFG->sitename . " Registration", $message);
+                        send_email($touser, $fromuser, $CFG->sitename . " Registration", $message);
+                    }
+                }
+                log_entry('events', $tx->id, "Transaction"); // Log
+            }
+        }
+        commit_db_transaction();
+        return true;
+    } catch (\Throwable $e) {
+        rollback_db_transaction($e->getMessage() . $e->getTrace());
+    }
+    return false;
+}
+
+/**
+ * Calculate the total amount of money owed on all registrations in the payment cart.
+ *
+ * @return float The total amount of money owed.
+ */
+function get_total_cart_owed() {
+    global $_SESSION;
+    $owed = 0;
+
+    // Iterate through each registration in the payment cart.
+    foreach ($_SESSION["completed_registrations"] as $reg) {
+        // Accumulate the amount of money owed for each registration.
+        $owed += $reg["total_owed"];
+    }
+
+    return $owed;
+}
+
+function get_reg_owed($regid) {
+    return get_db_field("value", "events_registrations_values", "regid=||regid|| AND elementname LIKE '%owed%'", ["regid" => $regid]);
+}
+
+function get_reg_paid($regid) {
+    return get_db_field("value", "events_registrations_values", "regid=||regid|| AND elementname LIKE '%paid%'", ["regid" => $regid]);
+}
+
+function get_reg_paymethod($regid) {
+    return get_db_field("value", "events_registrations_values", "regid=||regid|| AND elementname LIKE '%method%'", ["regid" => $regid]);
+}
+
+function update_total_cart_paid($paidcart) {
+    global $_SESSION;
+
+    foreach ($paidcart as $item) {
+        if (isset($_SESSION["completed_registrations"][$item->i])) {
+            $_SESSION["completed_registrations"][$item->i]["total_paid"] = $item->v;
+        }
+    }
+
+}
+
 function make_paypal_button($items, $sellersemail) {
 global $CFG;
     $regids = "";
@@ -942,7 +1129,7 @@ global $CFG, $why, $error;
 
         if ($template['folder'] != "none") { // custom file style
             $SQL = fetch_template("dbsql/events.sql", "insert_registration", "events");
-            $params = ["eventid" => $eventid, "date" => $time, "email" => $contactemail, "code" => md5($time . $contactemail), "verified" => $pending];
+            $params = ["eventid" => $eventid, "date" => $time, "email" => $contactemail, "code" => md5(uniqid(rand(), true)), "verified" => $pending];
             if ($regid = execute_db_sql($SQL, $params)) {
                 $sql_values = "";
                 $SQL = fetch_template("dbsql/events.sql", "insert_registration_values", "events");
@@ -991,7 +1178,7 @@ global $CFG, $why, $error;
                     }
                   }
             }
-            $SQL = "INSERT INTO events_registrations_values (eventid,regid,elementid,value,elementname) VALUES" . $sql_values;
+            $SQL = "INSERT INTO events_registrations_values (eventid, regid, elementid, value, elementname) VALUES" . $sql_values;
             if ($entries = execute_db_sql($SQL) && $nolimit = hard_limits($regid, $event, $template)) {
                 if (!$nolimit = soft_limits($regid, $event, $template)) {
                     $error = "Because this event has $why, you have been placed in the waiting line for this event.";
@@ -1034,14 +1221,14 @@ global $CFG;
     }
 
     // Get cost / owed information.
-    $total_owed = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='total_owed'");
+    $total_owed = (float) get_reg_owed($regid);
 
     if (empty($total_owed) && !$fullypaid) {
         // total_owed is empty but we didn't mark this as fully paid so find the owed amount.
         $total_owed = $reg["date"] < $event["sale_end"] ? $event["sale_fee"] : $event["fee_full"];
     }
 
-    $paid = get_db_field("value", "events_registrations_values", "regid='$regid' AND (elementname='paid' OR elementname='total_paid')");
+    $paid = (float) get_reg_paid($regid);
     $paid = empty($paid) ? 0 : $paid;
     $remaining = $total_owed - $paid;
 
@@ -1070,6 +1257,8 @@ global $CFG;
         On the memo line be sure to write "' . $touser->fname . " " . $touser->lname . ' - ' . $event["name"] . '"
         ' . (!empty($event["paypal"]) ? '<br /><br /><strong>Make payment online:</strong> <a href="' . $protocol.$CFG->wwwroot . '/features/events/events.php?action=pay&i=!&regcode=' . $reg["code"] . '">Make Payment</a>' : '');
 
+    $payment_instructions = $remaining > 0 ? $payment_instructions : '';
+
     $email_contacts = '
     <br /><br />
     If you have any questions about this event, contact ' . $event["contact"] . ' at <a href="mailto:' . $event["email"] . '">' . $event["email"] . '</a>.<br />
@@ -1090,7 +1279,7 @@ global $CFG;
             $email .= '
                 ' . $greetings . '
                 ' . $registration_information . '
-                ' . $payment_instructions . '
+                ' . ($remaining > 0 ? $payment_instructions : '<br /><br /><strong>This registration is fully paid. Thank You!</strong>') . '
                 ' . $email_contacts;
         } else { // This event does NOT require payment
             $email .= '
@@ -2339,9 +2528,10 @@ function events_delete($pageid, $featureid) {
 
     try {
         start_db_transaction();
-        $sql = [];
-        $sql[] = ["file" => "dbsql/features.sql", "subsection" => "delete_feature"];
-        $sql[] = ["file" => "dbsql/features.sql", "subsection" => "delete_feature_settings"];
+        $sql = [
+            ["file" => "dbsql/features.sql", "subsection" => "delete_feature"],
+            ["file" => "dbsql/features.sql", "subsection" => "delete_feature_settings"],
+        ];
 
         // Delete feature
         execute_db_sqls(fetch_template_set($sql), $params);
@@ -2758,48 +2948,62 @@ global $CFG;
 }
 
 function events_adminpanel($pageid) {
-global $CFG, $USER;
+    global $CFG, $USER;
+
     $content = "";
-    //Event Template Manager
-    $content .= user_is_able($USER->userid, "manageeventtemplates", $pageid) ? make_modal_links([
-                                                                                            "title"  => "Event Templates",
-                                                                                            "text"   => "Event Templates",
-                                                                                            "path"   => action_path("events") . "template_manager&pageid=$pageid",
-                                                                                            "iframe" => true,
-                                                                                            "width"  => "640",
-                                                                                            "icon"  => icon("table-list"),
-                                                                                            "class" => "adminpanel_links",
-                                                                                            ]) : "";
-    //Course Event Manager
-    $content .= user_is_able($USER->userid, "manageevents", $pageid) ? make_modal_links([
-                                                                                    "title"  => "Event Registrations",
-                                                                                    "text"   => "Event Registrations",
-                                                                                    "path"   => action_path("events") . "registration_manager&pageid=$pageid",
-                                                                                    "iframe" => true,
-                                                                                    "width"  => "640",
-                                                                                    "icon"  => icon("list-check"),
-                                                                                    "class" => "adminpanel_links",
-                                                                                    ]) : "";
-    //Application Manager
-    $content .= user_is_able($USER->userid, "manageapplications", $pageid) ? make_modal_links([
-                                                                                            "title"  => "Staff Applications",
-                                                                                            "text"   => "Staff Applications",
-                                                                                            "path"   => action_path("events") . "application_manager&pageid=$pageid",
-                                                                                            "iframe" => true,
-                                                                                            "width"  => "640",
-                                                                                            "icon"  => icon("clipboard-user"),
-                                                                                            "class" => "adminpanel_links",
-                                                                                        ]) : "";
-    //Staff Notifications
-    $content .= user_is_able($USER->userid, "manageapplications", $pageid) ? make_modal_links([
-                                                                                            "title"  => "Staff Process Email",
-                                                                                            "text"   => "Staff Process Email",
-                                                                                            "path"   => action_path("events") . "staff_emailer&pageid=$pageid",
-                                                                                            "iframe" => true,
-                                                                                            "width"  => "640",
-                                                                                            "icon"  => icon("envelopes-bulk"),
-                                                                                            "class" => "adminpanel_links",
-                                                                                        ]) : "";
+
+    // Event Template Manager
+    if (user_is_able($USER->userid, "manageeventtemplates", $pageid)) {
+        $content .= make_modal_links([
+            "title"  => "Event Templates",
+            "text"   => "Event Templates",
+            "path"   => action_path("events") . "template_manager&pageid=$pageid",
+            "iframe" => true,
+            "width"  => "640",
+            "icon"  => icon("table-list"),
+            "class" => "adminpanel_links",
+        ]);
+    }
+
+    // Course Event Manager
+    if (user_is_able($USER->userid, "manageevents", $pageid)) {
+        $content .= make_modal_links([
+            "title"  => "Event Registrations",
+            "text"   => "Event Registrations",
+            "path"   => action_path("events") . "registration_manager&pageid=$pageid",
+            "iframe" => true,
+            "width"  => "640",
+            "icon"  => icon("list-check"),
+            "class" => "adminpanel_links",
+        ]);
+    }
+
+    // Application Manager
+    if (user_is_able($USER->userid, "manageapplications", $pageid)) {
+        $content .= make_modal_links([
+            "title"  => "Staff Applications",
+            "text"   => "Staff Applications",
+            "path"   => action_path("events") . "application_manager&pageid=$pageid",
+            "iframe" => true,
+            "width"  => "640",
+            "icon"  => icon("clipboard-user"),
+            "class" => "adminpanel_links",
+        ]);
+    }
+
+    // Staff Notifications
+    if (user_is_able($USER->userid, "manageapplications", $pageid)) {
+        $content .= make_modal_links([
+            "title"  => "Staff Process Email",
+            "text"   => "Staff Process Email",
+            "path"   => action_path("events") . "staff_emailer&pageid=$pageid",
+            "iframe" => true,
+            "width"  => "640",
+            "icon"  => icon("envelopes-bulk"),
+            "class" => "adminpanel_links",
+        ]);
+    }
+
     return $content;
 }
 
@@ -2816,7 +3020,7 @@ global $CFG;
         $SQL = $SQL2 = "";
         if ($regid = execute_db_sql("INSERT INTO events_registrations
                                     (eventid, date, code, manual)
-                                    VALUES('$eventid','" . get_timestamp() . "','" . uniqid("", true) . "',1)")) {
+                                    VALUES('$eventid','" . get_timestamp() . "','" . md5(uniqid(rand(), true)) . "',1)")) {
             if (!defined('FORMLIB')) { include_once($CFG->dirroot . '/lib/formlib.php'); }
             $template = get_event_template($template_id);
             $template_forms = get_template_formlist($template_id);

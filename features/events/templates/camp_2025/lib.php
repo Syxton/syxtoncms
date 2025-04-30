@@ -2,9 +2,9 @@
 /***************************************************************************
  * lib.php - library for template functions
  * -------------------------------------------------------------------------
- * $Author: Matthew Davidson
- * $Date: 03/28/2025
- * $Revision: 0.0.1
+ * Author: Matthew Davidson
+ * Date: 5/02/2025
+ * Revision: 2.0.1
  ***************************************************************************/
 
 define("TEMP_PROPS", [
@@ -229,17 +229,26 @@ function print_checkout_form($registrations) {
             <div class="centered">
                 <strong>Finalize your registration</strong>
                 <br /><br />
-                <div class="registration_cart_checkout_title">
-                    <strong>Pay Now Amount: $ </strong><input type="text" id="payment_amount" value="0" disabled style="margin-left: 2px;background-color: white;" />
+                <div>
+                    <strong>Pay Now Amount
+                    <br />
+                    $ <input type="text" id="payment_amount" value="0" disabled style="margin-left: 2px;background-color: white;" />
+                    </strong>
                 </div>
                 <br />
                 <button id="cart_register_button" style="display: block; margin: auto; background: green; color: white;">
-                    Submit Registrations
+                    ' . icon("cart-shopping", 1, "", "white") . '
+                    <span>Checkout</span>
                 </button>
             </div>
         </div>
-        ' . registration_add_options($registrations) . '
-        ' . registration_copy_options($registrations) . '
+        <br />
+        <div class="registration_cart_checkout" style="background: lightskyblue;border-radius: 10px;">
+            <h2 class="centered">Not Finished?</h2>
+            ' . registration_add_options($registrations) . '
+            <br />
+            ' . registration_copy_options($registrations) . '
+        </div>
     </div>';
 }
 
@@ -266,7 +275,7 @@ function registration_add_options($registrations) {
 
             $add_options .= '
                 <button id="add_new_button" onclick="show_form_again(' . $event["eventid"] . ', false);">
-                    ' . icon("plus") . ' <span>Add registration for ' . $event["name"] . '</span>
+                    ' . icon("plus") . ' <span>Register for ' . $event["name"] . '</span>
                 </button><br /><br />';
 
             // Remember that we have done this event.
@@ -276,8 +285,6 @@ function registration_add_options($registrations) {
 
     if (!empty($add_options)) {
         return '
-        <br /><br />
-        <h2>Add Registrations</h2>
         <br />
         <div class="centered">
             <strong>Add another registration</strong>
@@ -342,17 +349,15 @@ function registration_copy_options($registrations) {
 
     if (!empty($options)) {
         return '
-        <br /><br />
-        <h2>Copy Registration</h2>
         <br />
         <div class="centered">
-            <strong>Add a copy of an existing registration to a different event.</strong>
+            <strong>Copy an existing registration to another event.</strong>
             <br /><br />
             <select id="copy_event_to_form">
                 <option value="0">Select an event</option>
                 ' . $options . '
             </select>
-            <button id="copy_registration" style="display: inline-block" onclick="copy_to_form();">
+            <button id="copy_registration" style="margin: 5px;" onclick="copy_to_form();">
                 ' . icon("copy") . '
                 <span>Copy Registration</span>
             </button>
@@ -384,8 +389,8 @@ function registration_cart_wrapper($registrations, $checkout = false, $empty = f
         </div>
             ' . $cartinfo . '
             ' . $checkout_button . '
-            ' . $checkout_form . '
-    </div>';
+    </div>
+    ' . $checkout_form;
 }
 
 function get_registration_checkout_button() {
@@ -402,8 +407,9 @@ function get_registration_checkout_button() {
 
     return '
     <div class="registration_cart_bottom">
-        <button type="button" id="registration_cart_checkout">
-            Checkout
+        <button type="button" id="registration_cart_checkout" style="background: navy;color: white;">
+            ' . icon("person-walking-arrow-right", 1, "", "white") . '
+            <span>Go to Checkout</span>
         </button>
     </div>';
 }
@@ -772,6 +778,8 @@ function get_registration_for_autofill($regid) {
 
 function get_like_event_autofill_registrations($data = []) {
     global $USER;
+    $dbreg = [];
+
     $event = clean_param_req($data, "event", "array");
 
     $templates = "WHERE folder = 'camp_new' OR folder = 'camp_2025'";
@@ -789,48 +797,6 @@ function get_like_event_autofill_registrations($data = []) {
     }
 
     return $dbreg;
-}
-
-/**
- * Calculate the total cost of items in the payment cart.
- *
- * This function iterates through each item in the payment cart stored
- * in the session and accumulates the total cost of all items.
- *
- * @return float The total cost of all items in the payment cart.
- */
-function get_total_to_be_paid() {
-    global $_SESSION;
-    $cost = 0;
-
-    // Check if the payment cart is set in the session
-    if (isset($_SESSION["payment_cart"])) {
-        // Iterate through each item in the payment cart session.
-        foreach ($_SESSION["payment_cart"] as $item) {
-            // Accumulate the cost of each item.
-            $cost += $item->cost;
-        }
-    }
-
-    return $cost;
-}
-
-/**
- * Calculate the total amount of money owed on all registrations in the payment cart.
- *
- * @return float The total amount of money owed.
- */
-function get_total_cart_owed() {
-    global $_SESSION;
-    $owed = 0;
-
-    // Iterate through each registration in the payment cart.
-    foreach ($_SESSION["completed_registrations"] as $reg) {
-        // Accumulate the amount of money owed for each registration.
-        $owed += $reg["total_owed"];
-    }
-
-    return $owed;
 }
 
 /**
@@ -863,12 +829,12 @@ function show_post_registration_page() {
                 <div class="centered">
                     Click a Payment method below to pay for your registration fees.
                     <br />
-                    ' . get_payment_buttons() . '
+                    ' . get_payment_form() . '
                 </div>';
         } else {
             // No payment chosen to be made at this time.
             $message = 'At this time you have chosen not to make a payment. <br />
-            Please be advised that we have sent payment instruction emails to the email address you provided.
+            Please be advised that we have sent payment instruction emails to the address you provided.
             We kindly ask that you review this information carefully in order to proceed with the payment process.';
         }
     } else {
@@ -898,27 +864,12 @@ function show_post_registration_page() {
     </div>';
 }
 
-/**
- * Return the HTML for the payment buttons.
- *
- * This function creates the HTML for the payment buttons (PayPal) based on the items in the payment cart.
- * The PayPal button is rendered using the make_paypal_button() function.
- *
- * @return string The HTML for the payment buttons.
- */
-function get_payment_buttons() {
-    global $_SESSION;
-
-    // Render the PayPal button based on the items in the payment cart.
-    return make_paypal_button($_SESSION["payment_cart"], get_event_paypal_info());
-}
-
 function get_post_registration_cart_status() {
     global $_SESSION, $CFG, $USER;
 
     $cartitems = "";
     foreach ($_SESSION["payment_cart"] as $item) {
-        $reg = $_SESSION["completed_registrations"][$item->regid];
+        $reg = $_SESSION["completed_registrations"][$item->id];
         $status = $reg["total_owed"] > 0 ? "Pending Payment" : "Complete";
         $allowed_in_page = "";
         $event = get_event($reg["eventid"]);
@@ -964,7 +915,7 @@ function get_event_paypal_info() {
 
     $cartitems = "";
     foreach ($_SESSION["payment_cart"] as $item) {
-        $reg = $_SESSION["completed_registrations"][$item->regid];
+        $reg = $_SESSION["completed_registrations"][$item->id];
         $event = get_event($reg["eventid"]);
         if (isset($event["paypal"])) {
             return $event["paypal"];
