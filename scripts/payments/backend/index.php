@@ -169,7 +169,6 @@ if (strstr($endpoint, "action=capture")) {
     header("Content-Type: application/json");
     try {
         $captureResponse = captureOrder($orderID);
-        error_log(json_encode($captureResponse));
         echo json_encode($captureResponse["jsonResponse"]);
     } catch (Exception $e) {
         echo json_encode(["error" => $e->getMessage()]);

@@ -648,6 +648,21 @@ img.sitenews {
     padding: 10px;
 }
 
+.payment_cart_header {
+    display: flex;
+    background: lightgrey;
+    padding: 10px;
+    font-weight: bold;
+    font-size: 1.2em;
+    border-bottom: 1px solid gainsboro;
+}
+
+.payment_cart_row {
+    display: flex;
+    padding: 10px;
+    border-bottom: 1px solid gainsboro;
+}
+
 .autofilloptions button{
     margin: 5px;
     font-size: .9em;

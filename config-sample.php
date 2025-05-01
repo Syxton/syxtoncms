@@ -8,6 +8,12 @@ unset($USER);
 $CFG = new \stdClass;
 
 /**
+ * Miscellaneous Configuration
+ * @var int $SITEID Home site ID
+ */
+$CFG->SITEID = 1;
+
+/**
  * Downtime Configuration
  * @var bool $downtime Indicates if the site is in downtime
  * @var string $alternatepage Path to the alternate page during downtime
@@ -18,18 +24,22 @@ $CFG->alternatepage = 'down.html';
 $CFG->safeip = ',192.168.0.1,192.186.0.2,'; // Must have a comma on both sides of IP address
 
 /**
- * Website Information
- * @var string $sitename Name of the site
- * @var string $siteowner Owner of the site
- * @var string $siteemail Contact email of the site
- * @var string $sitefooter Footer text of the site
- * @var string $logofile Path to the site logo inside {userfilesfolder}/branding/logos/
- * @var string $mobilelogofile Path to the mobile site logo inside {userfilesfolder}/branding/logos/
+ * Website Configuration
+ * @var string $sitename Website name
+ * @var string $siteowner Website owner
+ * @var string $siteemail Website email
+ * @var string $timezone Time zone
+ * @var string $defaultaddress Default address
+ * @var string $sitefooter Website footer
+ * @var string $logofile Path to the website logo
+ * @var string $mobilelogofile Path to the mobile website logo
  */
 $CFG->sitename = 'Website Name';
 $CFG->siteowner = 'Your Name';
 $CFG->siteemail = 'test@email.com';
-$CFG->sitefooter = '1234 My Address';
+$CFG->timezone = "America/Indiana/Indianapolis";
+$CFG->defaultaddress = "";
+$CFG->sitefooter = 'SyxtonCMS';
 $CFG->logofile = 'logo.png';
 $CFG->mobilelogofile = 'mobilelogo.png';
 
@@ -85,29 +95,42 @@ $CFG->userfilespath = $CFG->docroot . '\\' . $CFG->userfilesfolder;
 $CFG->userfilesurl = $CFG->wwwroot . '/' . $CFG->userfilesfolder;
 
 /**
- * Miscellaneous Configuration
- * @var int $SITEID Home site ID
- * @var bool $paypal Enable or disable PayPal
+ * PayPal Configuration
+ * @var bool $paypal Live mode (true ON, false Sandbox)
  * @var string $paypal_merchant_account PayPal merchant account email
- * @var string $paypal_auth PayPal authentication token
- * @var int $cookietimeout Cookie timeout in seconds
- * @var string $timezone Default timezone
- * @var string $defaultaddress Default address
- * @var string $googleapikey Google Maps API site key
- * @var string $geolocationkey Geolocation API key
- * @var string $analytics Google Analytics ID
- * @var int $debug Debug level (0 no errors, 1 log errors, 2 log and print, 3 log and print with extra debug)
+ * @var string $paypal_auth PayPal authentication token (old integration)
+ * @var string $paypal_client_id PayPal client ID (v2 integration)
+ * @var string $paypal_client_secret PayPal client secret (v2 integration)
  */
-$CFG->SITEID = 1;
 $CFG->paypal = true;
 $CFG->paypal_merchant_account = 'test@email.com';
 $CFG->paypal_auth = '';
-$CFG->cookietimeout = 600;
-$CFG->timezone = "America/Indiana/Indianapolis";
-$CFG->defaultaddress = "My City, IL";
+$CFG->paypal_client_id = '';
+$CFG->paypal_client_secret = '';
+
+/**
+ * Google Maps API site key
+ * @var string $googleapikey
+ */
 $CFG->googleapikey = "";
-$CFG->geolocationkey = "";
+
+/**
+ * Google Analytics ID
+ * @var string $analytics
+ */
 $CFG->analytics = '';
+
+/**
+ * Geolocation API key (https://extreme-ip-lookup.com/)
+ * @var string $geolocationkey
+ */
+$CFG->geolocationkey = "";
+
+/**
+ * Miscellaneous Configuration
+ * @var int $cookietimeout Cookie timeout in seconds
+ * @var int $debug Debug level (0 no errors, 1 log errors, 2 log and print, 3 log and print with extra debug)
+ */
+$CFG->cookietimeout = 600;
 $CFG->debug = 0;
 ?>
-

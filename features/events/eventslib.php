@@ -854,71 +854,177 @@ function make_fee_options($min, $full, $name, $options = "", $sale_end = "", $sa
     return $returnme;
 }
 
-function new_payment_form($items) {
+function get_payment_form() {
     global $CFG;
-    return '<iframe id="payment_frame" onload="resizeCaller(this.id);" src="' . $CFG->wwwroot . '/scripts/payments/frontend.php" style="width: 99%;border: 0;"></iframe>';
+
+    // Sum of Session variable "payment_cart"
+    $total = get_total_to_be_paid();
+
+    return '<iframe id="payment_frame" onload="resizeCaller(this.id);" src="' . $CFG->wwwroot . '/scripts/payments/frontend.php?total=' . $total . '" style="width: 99%;border: 0;"></iframe>';
+}
+
+function events_registration_confirmation($paid, $tx, $success) {
+    global $CFG;
+
+    if (!$success) {
+        if ($tx->status == "COMPLETED") {
+            return fill_template("tmp/events.template", "payment_process_issues", "events");
+        }
+        return fill_template("tmp/events.template", "payment_proccess_failure", "events");
+    }
+
+    update_total_cart_paid($paid);
+
+    $params = [
+        "cart" => get_printable_payment_cart($paid),
+        "message" => "Thank you for registering for this event. Please check your email for more information.",
+    ];
+
+    unset($_SESSION["payment_cart"]);
+    unset($_SESSION["completed_registrations"]);
+
+    return fill_template("tmp/events.template", "payment_process_success", "events", $params);
+}
+
+function get_printable_payment_cart($paid) {
+    global $_SESSION;
+
+    $p = [
+        "desc" => "Description",
+        "val1" => "Paid",
+        "val2" => "Owed",
+        "class" => "payment_cart_header",
+    ];
+    $return = fill_template("tmp/events.template", "payment_cart_row", "events", $p);
+
+    foreach($_SESSION["payment_cart"] as $item) {
+        $paid = (float) get_reg_paid($item->id);
+        $owed = (float) get_reg_owed($item->id);
+
+        $still_owed = $owed - $paid;
+        $still_owed = $still_owed < 0 ? 0 : $still_owed;
+
+        $p = [
+            "desc" => $item->description,
+            "val1" => '$' . number_format($paid, 2, '.', ''),
+            "val2" => '$' . number_format($still_owed, 2, '.', ''),
+            "class" => "payment_cart_row",
+        ];
+        $return .= fill_template("tmp/events.template", "payment_cart_row", "events", $p);
+    }
+
+    return '
+        <section>
+            ' . $return . '
+        </table>';
+}
+
+function search_paid_cart_for_payment($regid, $paid) {
+    foreach ($paid as $item) {
+        if ($item->i == $regid) {
+            return $item->v;
+        }
+    }
+    return 0;
 }
 
 function events_approved_payment($cart, $tx) {
     global $CFG;
-    if (strcmp($tx->status, "COMPLETED") == 0) {
-        if (!empty($tx->id) && !get_db_row("SELECT * FROM logfile WHERE feature='events' AND info='$tx->id'")) {
-            foreach ($cart as $item) {
-                $regid = $item->i;
-                $add = $item->v;
-                $paid = get_db_field("value", "events_registrations_values", "elementname='paid' AND regid='$regid'");
-                $SQL = "UPDATE events_registrations_values SET value='" . ((float) $paid + (float) $add) . "' WHERE elementname='paid' AND regid='$regid'";
-                execute_db_sql($SQL);
 
-                // If payment is made, it is no longer in queue.
-                $SQL = "UPDATE events_registrations SET verified='1' WHERE regid='$regid'";
-                execute_db_sql($SQL);
+    try {
+        start_db_transaction();
+        if (strcmp($tx->status, "COMPLETED") == 0) {
+            $method = "unknown";
+            $method = isset($tx->payment_source->card) ? "card" : $method;
+            $method = isset($tx->payment_source->paypal) ? "paypal" : $method;
+            $method = isset($tx->payment_source->venmo) ? "venmo" : $method;
 
-                // Make an entry for this transaction that links it to this registration.
-                $event = get_event_from_regid($regid);
+            if (!empty($tx->id) &&
+                !get_db_row("SELECT * FROM logfile WHERE feature=||feature|| AND info=||info||", ["feature" => "events", "info" => $tx->id])) {
 
-                $params = [
-                    "eventid" => $event["eventid"],
-                    "elementname" => "tx",
-                    "regid" => $regid,
-                    "logparams" => serialize([
-                        "date" => get_timestamp(),
-                        "amount" => $add,
-                        "txid" => $tx->id,
-                    ]),
-                ];
-                $SQL = "INSERT INTO events_registrations_values (eventid, elementname, regid, value) VALUES(||eventid||, ||elementname||, ||regid||, ||logparams||)";
-                execute_db_sql($SQL, $params);
+                foreach ($cart as $item) {
+                    $regid = $item->i;
+                    $add = $item->v;
 
-                $touser = (object) [
-                    "fname" => get_db_field("value", "events_registrations_values", "regid='$regid' AND LOWER(elementname) LIKE '%fname%' OR LOWER(elementname) LIKE '%first%'"),
-                    "lname" => get_db_field("value", "events_registrations_values", "regid='$regid' AND LOWER(elementname) LIKE '%lname%' OR LOWER(elementname) LIKE '%last%'"),
-                    "email" => get_db_field("email", "events_registrations", "regid='$regid'"),
-                ];
+                    $paid = (float) get_reg_paid($regid);
 
-                $fromuser = (object) [
-                    "email" => $CFG->siteemail,
-                    "fname" => $CFG->sitename,
-                    "lname" => "",
-                ];
+                    // Update total paid for this registration.
+                    $SQL = "UPDATE events_registrations_values SET value=||paid|| WHERE elementname LIKE '%paid%' AND regid=||regid||";
+                    execute_db_sql($SQL, ["paid" => ((float) $paid + (float) $add), "regid" => $regid]);
 
-                if (!empty($touser->email)) {
-                    $message = registration_email($regid, $touser);
-                    send_email($fromuser, $fromuser, $CFG->sitename . " Registration", $message);
-                    send_email($touser, $fromuser, $CFG->sitename . " Registration", $message);
+                    // Update payment method for this registration.
+                    $currentmethod = get_db_field("value", "events_registrations_values", "elementname LIKE '%method%' AND regid=||regid||", ["regid" => $regid]);
+                    error_log("currentmethod: " . $currentmethod . " method: " . $method);
+                    if (empty($currentmethod)) {
+                        $SQL = "UPDATE events_registrations_values SET value=||method|| WHERE elementname LIKE '%method%' AND regid=||regid||";
+                        execute_db_sql($SQL, ["method" => $method, "regid" => $regid]);
+                    }
+
+                    // If payment is made, it is now verified.
+                    $SQL = "UPDATE events_registrations SET verified=||verified|| WHERE regid=||regid||";
+                    execute_db_sql($SQL, ["regid" => $regid, "verified" => "1"]);
+
+                    // Make an entry for this transaction that links it to this registration.
+                    $event = get_event_from_regid($regid);
+
+                    // Insert a transaction registration value.
+                    $params = [
+                        "eventid" => $event["eventid"],
+                        "elementname" => "tx",
+                        "regid" => $regid,
+                        "logparams" => serialize([
+                            "date" => get_timestamp(),
+                            "amount" => $add,
+                            "method" => $method,
+                            "txid" => $tx->id,
+                        ]),
+                    ];
+                    $SQL = "INSERT INTO events_registrations_values (eventid, elementname, regid, value) VALUES(||eventid||, ||elementname||, ||regid||, ||logparams||)";
+                    execute_db_sql($SQL, $params);
+
+                    // Send an updated email to the registration owner.
+                    $touser = (object)[
+                        'email' => get_db_field("email", "events_registrations", "regid=||regid||", ["regid" => $regid]),
+                        'fname' => get_registrant_name($regid),
+                        'lname' => "",
+                    ];
+
+                    $fromuser = (object) [
+                        "email" => $CFG->siteemail,
+                        "fname" => $CFG->sitename,
+                        "lname" => "",
+                    ];
+
+                    if (!empty($touser->email)) {
+                        $message = registration_email($regid, $touser);
+                        send_email($fromuser, $fromuser, $CFG->sitename . " Registration", $message);
+                        send_email($touser, $fromuser, $CFG->sitename . " Registration", $message);
+                    }
                 }
+                log_entry('events', $tx->id, "Transaction"); // Log
             }
-            log_entry('events', $tx->id, "Transaction"); // Log
-        } else {
-            echo "Old transaction";
         }
-    } else if (strcmp ($res, "INVALID") == 0) {
-        log_entry('events', $res, "Transaction (failed)"); // Log
-    } else {
-        log_entry('events', $res, "Paypal (none)"); // Log
+        commit_db_transaction();
+        return true;
+    } catch (\Throwable $e) {
+        rollback_db_transaction($e->getMessage() . $e->getTrace());
     }
+    return false;
 }
 
+function make_payment_cart_session($item) {
+    global $_SESSION;
+
+    unset($_SESSION["payment_cart"]);
+
+    $_SESSION["payment_cart"] = [
+        (object) [
+            "id" => $item[0]->regid,
+            "description" => $item[0]->description,
+            "cost" => $item[0]->cost,
+        ],
+    ];
+}
 /**
  * Calculate the total cost of items in the payment cart.
  *
@@ -959,6 +1065,29 @@ function get_total_cart_owed() {
     }
 
     return $owed;
+}
+
+function get_reg_owed($regid) {
+    return get_db_field("value", "events_registrations_values", "regid=||regid|| AND elementname LIKE '%owed%'", ["regid" => $regid]);
+}
+
+function get_reg_paid($regid) {
+    return get_db_field("value", "events_registrations_values", "regid=||regid|| AND elementname LIKE '%paid%'", ["regid" => $regid]);
+}
+
+function get_reg_paymethod($regid) {
+    return get_db_field("value", "events_registrations_values", "regid=||regid|| AND elementname LIKE '%method%'", ["regid" => $regid]);
+}
+
+function update_total_cart_paid($paidcart) {
+    global $_SESSION;
+
+    foreach ($paidcart as $item) {
+        if (isset($_SESSION["completed_registrations"][$item->i])) {
+            $_SESSION["completed_registrations"][$item->i]["total_paid"] = $item->v;
+        }
+    }
+
 }
 
 function make_paypal_button($items, $sellersemail) {
@@ -1049,7 +1178,7 @@ global $CFG, $why, $error;
 
         if ($template['folder'] != "none") { // custom file style
             $SQL = fetch_template("dbsql/events.sql", "insert_registration", "events");
-            $params = ["eventid" => $eventid, "date" => $time, "email" => $contactemail, "code" => md5($time . $contactemail), "verified" => $pending];
+            $params = ["eventid" => $eventid, "date" => $time, "email" => $contactemail, "code" => md5(uniqid(rand(), true)), "verified" => $pending];
             if ($regid = execute_db_sql($SQL, $params)) {
                 $sql_values = "";
                 $SQL = fetch_template("dbsql/events.sql", "insert_registration_values", "events");
@@ -1098,7 +1227,7 @@ global $CFG, $why, $error;
                     }
                   }
             }
-            $SQL = "INSERT INTO events_registrations_values (eventid,regid,elementid,value,elementname) VALUES" . $sql_values;
+            $SQL = "INSERT INTO events_registrations_values (eventid, regid, elementid, value, elementname) VALUES" . $sql_values;
             if ($entries = execute_db_sql($SQL) && $nolimit = hard_limits($regid, $event, $template)) {
                 if (!$nolimit = soft_limits($regid, $event, $template)) {
                     $error = "Because this event has $why, you have been placed in the waiting line for this event.";
@@ -1141,14 +1270,14 @@ global $CFG;
     }
 
     // Get cost / owed information.
-    $total_owed = get_db_field("value", "events_registrations_values", "regid='$regid' AND elementname='total_owed'");
+    $total_owed = (float) get_reg_owed($regid);
 
     if (empty($total_owed) && !$fullypaid) {
         // total_owed is empty but we didn't mark this as fully paid so find the owed amount.
         $total_owed = $reg["date"] < $event["sale_end"] ? $event["sale_fee"] : $event["fee_full"];
     }
 
-    $paid = get_db_field("value", "events_registrations_values", "regid='$regid' AND (elementname='paid' OR elementname='total_paid')");
+    $paid = (float) get_reg_paid($regid);
     $paid = empty($paid) ? 0 : $paid;
     $remaining = $total_owed - $paid;
 
@@ -1177,6 +1306,8 @@ global $CFG;
         On the memo line be sure to write "' . $touser->fname . " " . $touser->lname . ' - ' . $event["name"] . '"
         ' . (!empty($event["paypal"]) ? '<br /><br /><strong>Make payment online:</strong> <a href="' . $protocol.$CFG->wwwroot . '/features/events/events.php?action=pay&i=!&regcode=' . $reg["code"] . '">Make Payment</a>' : '');
 
+    $payment_instructions = $remaining > 0 ? $payment_instructions : '';
+
     $email_contacts = '
     <br /><br />
     If you have any questions about this event, contact ' . $event["contact"] . ' at <a href="mailto:' . $event["email"] . '">' . $event["email"] . '</a>.<br />
@@ -1197,7 +1328,7 @@ global $CFG;
             $email .= '
                 ' . $greetings . '
                 ' . $registration_information . '
-                ' . $payment_instructions . '
+                ' . ($remaining > 0 ? $payment_instructions : '<br /><br /><strong>This registration is fully paid. Thank You!</strong>') . '
                 ' . $email_contacts;
         } else { // This event does NOT require payment
             $email .= '
@@ -2923,7 +3054,7 @@ global $CFG;
         $SQL = $SQL2 = "";
         if ($regid = execute_db_sql("INSERT INTO events_registrations
                                     (eventid, date, code, manual)
-                                    VALUES('$eventid','" . get_timestamp() . "','" . uniqid("", true) . "',1)")) {
+                                    VALUES('$eventid','" . get_timestamp() . "','" . md5(uniqid(rand(), true)) . "',1)")) {
             if (!defined('FORMLIB')) { include_once($CFG->dirroot . '/lib/formlib.php'); }
             $template = get_event_template($template_id);
             $template_forms = get_template_formlist($template_id);

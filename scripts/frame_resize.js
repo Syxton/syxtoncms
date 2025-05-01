@@ -2,7 +2,7 @@ var iframeids = [];
 
 //Should script hide iframe from browsers that don't support this script (non IE5+/NS6+ browsers. Recommended):
 var iframehide = "yes";
-var cushion = 10;
+var cushion = 50;
 
 function resizeCaller(id) {
 	iframeids.push(id);

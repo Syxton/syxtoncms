@@ -33,7 +33,11 @@ $cart = $reference->c;
 switch ($type) {
     case 'events':
         if (!defined('EVENTSLIB')) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
-        events_approved_payment($cart, $data);
+        // Process payment and send emails.
+        $success = events_approved_payment($cart, $data);
+
+        // Output confirmation page.
+        echo events_registration_confirmation($cart, $data, $success);
         break;
     case 'donate':
         if (!defined('EVENTSLIB')) { include_once($CFG->dirroot . '/features/donate/donatelib.php'); }

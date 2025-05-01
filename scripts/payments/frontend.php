@@ -8,6 +8,8 @@
     }
     include_once($CFG->dirroot . '/lib/header.php');
     if (!defined('EVENTSLIB')) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
+
+    $total = clean_param_opt($_GET, "total", "float",0);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -25,18 +27,24 @@
             data-sdk-integration-source="developer-studio"
         ></script>
     </head>
-    <body style="padding: 25px;">
-        <div id="paypal-button-container" class="paypal-button-container" style="width: 90%"></div>
+    <body style="padding: 0 25px;text-align: center;font-family: PayPalOpen-Regular, Helvetica, Arial, 'Liberation Sans', sans-serif;">
+        <input type="hidden" id="total" value="<?php echo $total; ?>">
+        <div id="paypal-button-container" class="paypal-button-container" style="width: 90%;padding: 5px;box-sizing: border-box;"></div>
         <!-- Containers for Card Fields hosted by PayPal -->
-        <div id="card-form" class="card_container" style="padding: 0">
+        <br />
+        <label for="card-form" style="font-weight: bold;">
+            Pay by Credit or Debit Card
+        </label>
+        <div id="card-form" class="card_container" style="padding: 0; text-align: center;">
             <div id="card-name-field-container"></div>
             <div id="card-number-field-container"></div>
             <div id="card-expiry-field-container"></div>
             <div id="card-cvv-field-container"></div>
-
-
+            <br />
             <div>
-                <label for="card-billing-address-line-1">Billing Address</label>
+                <label for="card-billing-address-line-1" style="font-weight: bold;">
+                    Billing Address
+                </label>
                 <input
                     type="text"
                     id="card-billing-address-line-1"
@@ -56,7 +64,7 @@
             </div>
             <div>
                 <input
-                    type="text"
+                    type="hidden"
                     id="card-billing-address-admin-area-line-1"
                     name="card-billing-address-admin-area-line-1"
                     autocomplete="off"
@@ -65,7 +73,7 @@
             </div>
             <div>
                 <input
-                    type="text"
+                    type="hidden"
                     id="card-billing-address-admin-area-line-2"
                     name="card-billing-address-admin-area-line-2"
                     autocomplete="off"
@@ -74,11 +82,12 @@
             </div>
             <div>
                 <input
-                    type="text"
+                    type="hidden"
                     id="card-billing-address-country-code"
                     name="card-billing-address-country-code"
                     autocomplete="off"
                     placeholder="Country code"
+                    value="US"
                 />
             </div>
             <div>
@@ -90,13 +99,13 @@
                     placeholder="Postal/zip code"
                 />
             </div>
-
-            <br /><br />
+            <br />
             <button id="card-field-submit-button" type="button">
                 Pay now with Card
             </button>
         </div>
-        <p id="result-message"></p>
+        <br />
+        <p id="result-message" style="margin: 0;padding: 5px;box-sizing: border-box;text-align: center;"></p>
         <script src="app.js"></script>
     </body>
 </html>

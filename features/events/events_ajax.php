@@ -900,8 +900,9 @@ global $CFG, $MYVARS, $USER;
                 if (execute_db_sql($SQL, $params)) {
                     if (execute_db_sql(fetch_template("dbsql/events.sql", "reg_update_from_temptable", "events"), ["regid" => $regid])) {
                         // check paid status
-                        $paid = get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname = 'paid'", ["regid" => $regid]);
-                        $payment_method = get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname = 'payment_method'", ["regid" => $regid]);
+                        $paid = (float) get_reg_paid($regid);
+                        $payment_method = get_reg_paymethod($regid);
+
                         $minimum = get_db_field("fee_min", "events", "eventid = ||eventid||", ["eventid" => $eventid]);
                         $verified = get_db_field("verified", "events_registrations", "regid = ||regid||", ["regid" => $regid]);
                         if ($paid >= $minimum) {
@@ -978,13 +979,13 @@ global $CFG;
         $event = get_event($eventid);
 
         $touser = (object)[
-            'email' => get_db_field("email", "events_registrations", "regid='$regid'"),
-            'fname' => $registrant_name = get_registrant_name($regid),
+            'email' => get_db_field("email", "events_registrations", "regid=||regid||", ["regid" => $regid]),
+            'fname' => get_registrant_name($regid),
             'lname' => "",
         ];
 
         $fromuser = (object)[
-            'email' => $event['email'],
+            'email' => $CFG->siteemail,
             'fname' => $CFG->sitename,
             'lname' => "",
         ];
@@ -1562,11 +1563,12 @@ global $CFG, $MYVARS, $USER;
             goto instant_end;
         }
 
-        $total_owed = get_db_field("value", "events_registrations_values", "regid=" . $registration["regid"] . " AND elementname='total_owed'");
+        $total_owed = (float) get_reg_owed($registration["regid"]);
         if (empty($total_owed)) {
             $total_owed = $registration["date"] < $event["sale_end"] ? $event["sale_fee"] : $event["fee_full"];
         }
-        $paid = get_db_field("value", "events_registrations_values", "regid=" . $registration["regid"] . " AND elementname='paid'");
+
+        $paid = (float) get_reg_paid($registration["regid"]);
         $paid = empty($paid) ? "0.00" : $paid;
         $remaining = $total_owed - $paid;
         $registrant_name = get_registrant_name($registration["regid"]);
@@ -1579,14 +1581,19 @@ global $CFG, $MYVARS, $USER;
             '<br />Amount Paid:  $' . number_format($paid, 2) .
             '<br />
             <strong>Remaining Balance:  $' . number_format($remaining, 2) . '</strong>
-            <br />';
+            <br /><br />';
 
         if ($remaining > 0) {
             $item[0] = new \stdClass;
             $item[0]->description = "Event: " . $event["name"] . " - $registrant_name's Registration - Remaining Balance Payment";
             $item[0]->cost = $remaining;
             $item[0]->regid = $registration["regid"];
-            $return .= '<br />' . make_paypal_button($item, $event["paypal"]);
+
+            // Create payment cart session.
+            make_payment_cart_session($item);
+
+            // Get payment form.
+            $return .= get_payment_form();
         }
     } catch (\Throwable $e) {
         $error = $e->getMessage();

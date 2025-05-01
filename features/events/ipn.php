@@ -81,7 +81,8 @@ if (strcmp ($res, "VERIFIED") == 0) {
         while (isset($regids[$i])) {
             $regid = dbescape($regids[$i]);
             $add = $keyarray["mc_gross_" . ($i + 1)];
-            $paid = get_db_field("value", "events_registrations_values", "elementname='paid' AND regid='$regid'");
+
+            $paid = (float) get_reg_paid($regid);
             $SQL = "UPDATE events_registrations_values SET value='" . ((float) $paid + (float) $add) . "' WHERE elementname='paid' AND regid='$regid'";
             execute_db_sql($SQL);
 

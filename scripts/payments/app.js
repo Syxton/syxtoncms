@@ -15,7 +15,7 @@ paypal
             label: "paypal",
         },
        message: {
-            amount: 100,
+            amount: document.getElementById("total").value,
         },
     })
     .render("#paypal-button-container");
@@ -179,7 +179,24 @@ async function onApproveCallback(data, actions) {
 
             // check if iframe is null
             if (iframe == null) { // redirect to approved.php
-                top.window.location.href = goToUrlWithJson(url, orderData);
+                // check for colorbox in parent window.
+                if (typeof top.window.cboxLoadedContent !== 'undefined') {
+                    const newframe = document.createElement('iframe');
+
+                    // Set attributes (optional)
+                    newframe.src = goToUrlWithJson(url, orderData);
+                    newframe.width = '100%';
+                    newframe.height = '98%';
+                    newframe.title = 'Payment Confirmation';
+                    newframe.id = 'payment_confirmation_iframe';
+                    newframe.style = 'border: none;';
+
+                    // Append to the DOM
+                    top.window.cboxLoadedContent.innerHTML = newframe.outerHTML;
+                } else {
+                    // Redirect main window.
+                    top.window.location.href = goToUrlWithJson(url, orderData);
+                }
             } else {
                 iframe.contentWindow.location.href = goToUrlWithJson(url, orderData);
             }

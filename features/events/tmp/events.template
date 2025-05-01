@@ -708,3 +708,46 @@ edit_promoset_form||
         </form>
     </div>
 ||edit_promoset_form
+
+payment_process_issues||
+    <div class="centered">
+        <h1>||echo icon("triangle-exclamation", 1, "", "orange");::none|| Payment Received, But There Was an Issue</h1>
+        <br />
+        <p>Thank you for your payment. The transaction was successful, but we encountered an issue while processing your payment.</p>
+        <p>Please reach out to the site administrators so we can assist you further.</p>
+        <div class="contact-info">
+            Contact: <a href="mailto:||echo $CFG->siteemail::none||">||echo $CFG->siteemail::none||</a>
+        </div>
+    </div>
+||payment_process_issues
+
+payment_process_success||
+    <div class="centered">
+        <h1>||echo icon("check", 1, "", "green");::none|| Payment Recieved</h1>
+        <br />
+        <p>Your payment was successfully processed.</p>
+        <p>||cart||</p>
+        <p>||message||</p>
+    </div>
+||payment_process_success
+
+payment_proccess_failure||
+    <div class="centered>
+        <h1>||echo icon("circle-exclamation", 1, "", "red");::none|| Payment Failed</h1>
+        <br />
+        <p>Unfortunately, there was an issue processing your payment.</p>
+        <p>No charges were completed.</p>
+        <p>Please contact the site administrators for further assistance.</p>
+        <div class="contact-info">
+        Contact: <a href="mailto:||echo $CFG->siteemail::none||">||echo $CFG->siteemail::none||</a>
+        </div>
+    </div>
+||payment_process_failure
+
+payment_cart_row||
+    <div class="||class||">
+        <div style="flex: 3;text-align: left;">||desc||</div>
+        <div style="flex: 1;">||val1||</div>
+        <div style="flex: 1;">||val2||</div>
+    </div>
+||payment_cart_row

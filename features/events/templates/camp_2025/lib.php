@@ -772,6 +772,8 @@ function get_registration_for_autofill($regid) {
 
 function get_like_event_autofill_registrations($data = []) {
     global $USER;
+    $dbreg = [];
+
     $event = clean_param_req($data, "event", "array");
 
     $templates = "WHERE folder = 'camp_new' OR folder = 'camp_2025'";
@@ -854,23 +856,6 @@ function show_post_registration_page() {
         <br /><br />
         ' . $message . '
     </div>';
-}
-
-/**
- * Return the HTML for the payment buttons.
- *
- * This function creates the HTML for the payment buttons (PayPal) based on the items in the payment cart.
- * The PayPal button is rendered using the make_paypal_button() function.
- *
- * @return string The HTML for the payment buttons.
- */
-function get_payment_form() {
-    global $_SESSION;
-
-    return new_payment_form($_SESSION["payment_cart"]);
-
-    // Render the PayPal button based on the items in the payment cart.
-    return make_paypal_button($_SESSION["payment_cart"], get_event_paypal_info());
 }
 
 function get_post_registration_cart_status() {
