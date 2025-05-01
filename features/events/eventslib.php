@@ -916,7 +916,7 @@ function get_printable_payment_cart($paid) {
     return '
         <section>
             ' . $return . '
-        </table>';
+        </section>';
 }
 
 function search_paid_cart_for_payment($regid, $paid) {

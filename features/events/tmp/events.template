@@ -38,19 +38,19 @@ show_registrations_menu_tools||
             </button>
             <ul id="event_menu" style="||display||">
                 <li>
-                    <button id="edit_registration" title="Edit Registration" class="alike">
+                    <button id="edit_registration" onclick="edit_registration(||eventid||, $('#reserveamount').val())" title="Edit Registration" class="alike">
                         ||echo icon("pencil");::none||
                         <span> Edit Registration</span>
                     </button>
                 </li>
                 <li>
-                    <button id="delete_registration" title="Delete Registration" class="alike">
+                    <button id="delete_registration" onclick="delete_registration(||eventid||, $('#reserveamount').val())" title="Delete Registration" class="alike">
                         ||echo icon("trash");::none||
                         <span>Delete Registration</span>
                     </button>
                 </li>
                 <li>
-                    <button id="email_registration" title="Send Registration Email" class="alike">
+                    <button id="email_registration" onclick="email_registration(||eventid||, $('#reserveamount').val())" title="Send Registration Email" class="alike">
                         ||echo icon("envelope");::none||
                         <span> Send Registration Email</span>
                     </button>
@@ -221,17 +221,16 @@ regsearchresults||
     ||searchnav||
     <table class="searchresults">
         <tr>
+            <th style="text-align:center;">
+            </th>
             <th style="text-align:left;">
                 Name
-            </th>
-            <th>
-                Event
             </th>
             <th style="text-align:center;width:75px;">
                 Date
             </th>
-            <th style="text-align:center;width:60px;">
-                Actions
+            <th>
+                Event
             </th>
         </tr>
         ||rows||
@@ -240,19 +239,19 @@ regsearchresults||
 
 regsearchrows||
     <tr>
-        <td style="width:40%;">
-            ||reg[value]||
-        </td>
         <td style="text-align:center;">
-            <button class="alike" onclick="show_registrations(||reg[eventid]||);">
-                ||reg[name]||
-            </button>
+            ||actions||
+        </td>
+        <td style="max-width: 200px">
+            ||reg[value]||
         </td>
         <td style="text-align:center;">
             ||regdate||
         </td>
         <td style="text-align:center;">
-            ||actions||
+            <button class="alike" onclick="show_registrations(||reg[eventid]||);">
+                ||reg[name]||
+            </button>
         </td>
     </tr>
 ||regsearchrows

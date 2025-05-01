@@ -1304,13 +1304,14 @@ global $CFG, $MYVARS, $USER;
 
         $templateParams = [
             "wwwroot" => $CFG->wwwroot,
+            "eventid" => $eventid,
             "display" => $display,
             "menu" => make_select($menuParams),
         ];
         $registrationlist = fill_template("tmp/events.template", "show_registrations_menu_tools", "events", $templateParams);
 
         // Load javascript needed for the registration menu and tools.
-        load_registrations_menu_javascript($eventid);
+        load_registrations_menu_javascript("show_registrations($eventid)");
     }
 
     // Load javascript needed for the print and quick reserve areas.
@@ -1345,32 +1346,38 @@ function load_show_registrations_javascript($eventid) {
     ]);
 }
 
-function load_registrations_menu_javascript($eventid) {
+function load_registrations_menu_javascript($callback) {
     ajaxapi([ // Delete Registration.  Sends to showregistrationpage callback.
         "id" => "delete_registration",
-        "if" => "$('#registrants').val() != '' && confirm('Do you want to delete this registration?')",
+        "paramlist" => "eventid, regid",
+        "if" => "regid != '' && confirm('Do you want to delete this registration?')",
         "url" => "/features/events/events_ajax.php",
-        "data" => ["action" => "delete_registration_info", "regid" => "js|| $('#registrants').val() ||js"],
-        "ondone" => "show_registrations($eventid);",
+        "data" => ["action" => "delete_registration_info", "regid" => "js|| regid ||js"],
+        "ondone" => "$callback;",
         "loading" => "loading_overlay",
+        "event" => "none",
     ]);
 
     ajaxapi([ // Go to Edit Registration Page.
-        "if" => "$('#registrants').val() != ''",
+        "if" => "regid != ''",
         "id" => "edit_registration",
+        "paramlist" => "eventid, regid",
         "url" => "/features/events/events_ajax.php",
-        "data" => ["action" => "get_registration_info", "regid" => "js|| $('#registrants').val() ||js", "eventid" => $eventid],
+        "data" => ["action" => "get_registration_info", "regid" => "js|| regid ||js", "eventid" => "js|| eventid ||js"],
         "display" => "searchcontainer",
         "loading" => "loading_overlay",
+        "event" => "none",
     ]);
 
     ajaxapi([ // Resend Registration Email.
-        "if" => "$('#registrants').val() != ''",
+        "if" => "regid != ''",
         "id" => "email_registration",
+        "paramlist" => "eventid, regid",
         "url" => "/features/events/events_ajax.php",
-        "data" => ["action" => "resend_registration_email", "regid" => "js|| $('#registrants').val() ||js", "eventid" => $eventid],
+        "data" => ["action" => "resend_registration_email", "regid" => "js|| regid ||js", "eventid" => "js|| eventid ||js"],
         "display" => "searchcontainer",
         "loading" => "loading_overlay",
+        "event" => "none",
     ]);
 }
 
@@ -1493,6 +1500,9 @@ global $CFG, $USER;
                 ];
                 $return = fill_template("tmp/events.template", "eventsearchresults", "events", $params);
             } else {
+
+                load_registrations_menu_javascript("perform_registrationsearch()");
+
                 while ($reg = fetch_row($results)) {
                     $rowparams = [
                         "reg" => $reg,
@@ -1530,12 +1540,36 @@ function get_reg_actions($reg) {
 
     // Go to pay link
     $actions .= '
-        <a
-            title="Pay"
-            target="_blank"
-            href="' . $CFG->wwwroot . '/features/events/events.php?action=pay&i=!&regcode=' . $reg["code"] . '">
-            ' . icon("credit-card") . '
-        </a>';
+        <div class="dropdowncreator">
+            <button class="dropbtn">' . icon("gear") . '</button>
+            <div class="dropcontent">
+                <a
+                    href="javascript:void(0)"
+                    title="Edit Registration"
+                    onclick="edit_registration('. $reg["eventid"] . ',' . $reg["regid"] . ')">
+                    ' . icon("pencil") . ' Edit Registration
+                </a>
+                <a
+                    href="javascript:void(0)"
+                    title="Resend Registration Email"
+                    onclick="email_registration('. $reg["eventid"] . ',' . $reg["regid"] . ')">
+                    ' . icon("envelope") . ' Resend Registration Email
+                </a>
+                <a
+                    title="Pay"
+                    target="_blank"
+                    href="' . $CFG->wwwroot . '/features/events/events.php?action=pay&i=!&regcode=' . $reg["code"] . '">
+                    ' . icon("credit-card") . ' Make Payment
+                </a>
+                <a
+                    href="javascript:void(0)"
+                    title="Delete Registration"
+                    onclick="delete_registration('. $reg["eventid"] . ',' . $reg["regid"] . ')">
+                    ' . icon("trash") . ' Delete Registration
+                </a>
+            </div>
+        </div>
+    ';
     return $actions;
 }
 
