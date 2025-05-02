@@ -8,11 +8,11 @@ paypal
             // Do something with the error from the SDK
         },
 
-       style: {
-            shape: "rect",
+        style: {
+            shape: "pill",
             layout: "vertical",
-            color: "gold",
-            label: "paypal",
+            color: "white",
+            label: "pay",
         },
        message: {
             amount: document.getElementById("total").value,

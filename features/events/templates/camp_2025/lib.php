@@ -2,9 +2,9 @@
 /***************************************************************************
  * lib.php - library for template functions
  * -------------------------------------------------------------------------
- * $Author: Matthew Davidson
- * $Date: 03/28/2025
- * $Revision: 0.0.1
+ * Author: Matthew Davidson
+ * Date: 5/02/2025
+ * Revision: 2.0.1
  ***************************************************************************/
 
 define("TEMP_PROPS", [
@@ -229,17 +229,26 @@ function print_checkout_form($registrations) {
             <div class="centered">
                 <strong>Finalize your registration</strong>
                 <br /><br />
-                <div class="registration_cart_checkout_title">
-                    <strong>Pay Now Amount: $ </strong><input type="text" id="payment_amount" value="0" disabled style="margin-left: 2px;background-color: white;" />
+                <div>
+                    <strong>Pay Now Amount
+                    <br />
+                    $ <input type="text" id="payment_amount" value="0" disabled style="margin-left: 2px;background-color: white;" />
+                    </strong>
                 </div>
                 <br />
                 <button id="cart_register_button" style="display: block; margin: auto; background: green; color: white;">
-                    Submit Registrations
+                    ' . icon("cart-shopping", 1, "", "white") . '
+                    <span>Checkout</span>
                 </button>
             </div>
         </div>
-        ' . registration_add_options($registrations) . '
-        ' . registration_copy_options($registrations) . '
+        <br />
+        <div class="registration_cart_checkout" style="background: lightskyblue;border-radius: 10px;">
+            <h2 class="centered">Not Finished?</h2>
+            ' . registration_add_options($registrations) . '
+            <br />
+            ' . registration_copy_options($registrations) . '
+        </div>
     </div>';
 }
 
@@ -266,7 +275,7 @@ function registration_add_options($registrations) {
 
             $add_options .= '
                 <button id="add_new_button" onclick="show_form_again(' . $event["eventid"] . ', false);">
-                    ' . icon("plus") . ' <span>Add registration for ' . $event["name"] . '</span>
+                    ' . icon("plus") . ' <span>Register for ' . $event["name"] . '</span>
                 </button><br /><br />';
 
             // Remember that we have done this event.
@@ -276,8 +285,6 @@ function registration_add_options($registrations) {
 
     if (!empty($add_options)) {
         return '
-        <br /><br />
-        <h2>Add Registrations</h2>
         <br />
         <div class="centered">
             <strong>Add another registration</strong>
@@ -342,17 +349,15 @@ function registration_copy_options($registrations) {
 
     if (!empty($options)) {
         return '
-        <br /><br />
-        <h2>Copy Registration</h2>
         <br />
         <div class="centered">
-            <strong>Add a copy of an existing registration to a different event.</strong>
+            <strong>Copy an existing registration to another event.</strong>
             <br /><br />
             <select id="copy_event_to_form">
                 <option value="0">Select an event</option>
                 ' . $options . '
             </select>
-            <button id="copy_registration" style="display: inline-block" onclick="copy_to_form();">
+            <button id="copy_registration" style="margin: 5px;" onclick="copy_to_form();">
                 ' . icon("copy") . '
                 <span>Copy Registration</span>
             </button>
@@ -384,8 +389,8 @@ function registration_cart_wrapper($registrations, $checkout = false, $empty = f
         </div>
             ' . $cartinfo . '
             ' . $checkout_button . '
-            ' . $checkout_form . '
-    </div>';
+    </div>
+    ' . $checkout_form;
 }
 
 function get_registration_checkout_button() {
@@ -402,8 +407,9 @@ function get_registration_checkout_button() {
 
     return '
     <div class="registration_cart_bottom">
-        <button type="button" id="registration_cart_checkout">
-            Checkout
+        <button type="button" id="registration_cart_checkout" style="background: navy;color: white;">
+            ' . icon("person-walking-arrow-right", 1, "", "white") . '
+            <span>Go to Checkout</span>
         </button>
     </div>';
 }
@@ -828,7 +834,7 @@ function show_post_registration_page() {
         } else {
             // No payment chosen to be made at this time.
             $message = 'At this time you have chosen not to make a payment. <br />
-            Please be advised that we have sent payment instruction emails to the email address you provided.
+            Please be advised that we have sent payment instruction emails to the address you provided.
             We kindly ask that you review this information carefully in order to proceed with the payment process.';
         }
     } else {

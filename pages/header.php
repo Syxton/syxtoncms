@@ -1,31 +1,31 @@
 <?php
 /***************************************************************************
-* header.php - Page header
+* header.php - Includes all important lib files and collects variables
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 5/14/2024
-* Revision: 0.1.1
+* Date: 05/02/2025
+* Revision: 0.2.5
 ***************************************************************************/
 define('LIBHEADER', true);
 if (session_status() === PHP_SESSION_NONE && !headers_sent()) { session_start(); }
 
 if (!isset($CFG)) {
-    $sub = '../';
+    $sub = '';
     while (!file_exists($sub . 'config.php')) {
         $sub .= '../';
     }
-    include_once($sub . 'config.php');
+    require_once($sub . 'config.php');
 }
 
-$libs = ['ERRORSLIB', 'DBLIB', 'FILELIB', 'PAGELIB', 'SETTINGSLIB', 'COMLIB', 'ROLESLIB', 'RSSLIB', 'USERLIB', 'TIMELIB', 'STYLESLIB', 'HELPLIB'];
+$libs = ['ERRORSLIB', 'DBLIB', 'FILELIB', 'PAGELIB', 'SETTINGSLIB', 'COMLIB', 'ROLESLIB', 'RSSLIB', 'USERLIB', 'TIMELIB', 'STYLESLIB', 'HELPLIB', 'PAYLIB'];
 foreach ($libs as $lib) {
     if (!defined($lib)) {
-        include_once($CFG->dirroot . '/lib/' . strtolower($lib) . '.php');
+        require_once($CFG->dirroot . '/lib/' . strtolower($lib) . '.php');
     }
 }
 
-if (!isset($USER)) { $USER = new stdClass(); }
-if (!isset($MYVARS)) { $MYVARS = new stdClass(); }
+if (!isset($USER)) { $USER = (object)[]; }
+if (!isset($MYVARS)) { $MYVARS = (object)[]; }
 if (!isset($ROLES)) { $ROLES = load_roles(); }
 
 collect_vars();

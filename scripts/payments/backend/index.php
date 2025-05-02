@@ -1,16 +1,23 @@
 <?php
-    if (!isset($CFG)) {
-        $sub = '../';
-        while (!file_exists($sub . 'config.php')) {
-            $sub .= '../';
-        }
-        include($sub . 'config.php');
+/***************************************************************************
+* index.php - Payment backend script
+* -------------------------------------------------------------------------
+* Author: Matthew Davidson
+* Date: 5/02/20245
+* Revision: 0.0.1
+***************************************************************************/
+
+// Include config and main libraries.
+if (!isset($CFG)) {
+    $sub = '../';
+    while (!file_exists($sub . 'config.php')) {
+        $sub .= '../';
     }
-    include_once($CFG->dirroot . '/lib/header.php');
-    if (!defined('EVENTSLIB')) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
+    include($sub . 'config.php');
+}
+include_once($CFG->dirroot . '/lib/header.php');
 
 require $CFG->dirroot . "/scripts/payments/vendor/autoload.php";
-
 use PaypalServerSdkLib\PaypalServerSdkClientBuilder;
 use PaypalServerSdkLib\Authentication\ClientCredentialsAuthCredentialsBuilder;
 use PaypalServerSdkLib\Logging\LoggingConfigurationBuilder;
@@ -40,6 +47,9 @@ use PaypalServerSdkLib\Models\ShippingPreference;
 use PaypalServerSdkLib\Models\PaypalExperienceLandingPage;
 use PaypalServerSdkLib\Models\PaypalExperienceUserAction;
 
+
+// Currently only a single client / password is used.
+// In the future, each event or donation could potentially use a different client / password.
 $PAYPAL_CLIENT_ID = $CFG->paypal_client_id;
 $PAYPAL_CLIENT_SECRET = $CFG->paypal_client_secret;
 

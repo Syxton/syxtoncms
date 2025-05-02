@@ -3,8 +3,8 @@
 * eventslib.php - Events function library
 * -------------------------------------------------------------------------
 * Author: Matthew Davidson
-* Date: 5/14/2024
-* Revision: 2.8.7
+* Date: 5/02/2025
+* Revision: 3.0.1
 ***************************************************************************/
 if (!isset($CFG) || !defined('LIBHEADER')) {
     $sub = '';
@@ -499,7 +499,8 @@ global $CFG, $USER;
 
 // Gathers the events that can be edited
 function get_editable_events($pageid) {
-global $CFG, $USER;
+    global $CFG, $USER;
+
     $time = get_timestamp();
     date_default_timezone_set("UTC");
     $siteviewable = $pageid == $CFG->SITEID ? " OR (siteviewable = 1 AND confirmed = 1)" : "";
@@ -550,6 +551,7 @@ global $CFG, $USER;
 
 function get_currently_registerable_events($pageid) {
     global $CFG;
+
     $time = get_timestamp();
     date_default_timezone_set("UTC");
     $siteviewable = $pageid == $CFG->SITEID ? " OR (siteviewable = 1 AND confirmed = 1)" : "";
@@ -559,7 +561,8 @@ function get_currently_registerable_events($pageid) {
 
 // Gathers the events that are currently available for enrollment
 function get_open_enrollment_events($pageid) {
-global $CFG, $USER;
+    global $CFG, $USER;
+
     if ($events = get_currently_registerable_events($pageid)) {
         ajaxapi([
             "id" => "delete_event",
@@ -650,7 +653,8 @@ global $CFG, $USER;
 
 // Gathers the events that are happening in the next (SETTINGS: upcomingdays) days
 function get_upcoming_events($pageid, $upcomingdays) {
-global $CFG;
+    global $CFG;
+
     $returnme = "";
     $time = get_timestamp();
     date_default_timezone_set("UTC");
@@ -681,7 +685,8 @@ global $CFG;
 
 // Gathers the events that are happening right now
 function get_current_events($pageid) {
-global $CFG, $USER;
+    global $CFG, $USER;
+
     $time = get_timestamp();
     date_default_timezone_set("UTC");
     $siteviewable = $pageid == $CFG->SITEID ? " OR (siteviewable = 1 AND confirmed = 1)" : "";
@@ -725,7 +730,8 @@ global $CFG, $USER;
 
 // Gathers the events that are happening right now
 function get_recent_events($pageid, $recentdays, $archivedays) {
-global $CFG, $USER;
+    global $CFG, $USER;
+
     $time = get_timestamp();
     date_default_timezone_set("UTC");
 
@@ -854,15 +860,6 @@ function make_fee_options($min, $full, $name, $options = "", $sale_end = "", $sa
     return $returnme;
 }
 
-function get_payment_form() {
-    global $CFG;
-
-    // Sum of Session variable "payment_cart"
-    $total = get_total_to_be_paid();
-
-    return '<iframe id="payment_frame" onload="resizeCaller(this.id);" src="' . $CFG->wwwroot . '/scripts/payments/frontend.php?total=' . $total . '" style="width: 99%;border: 0;"></iframe>';
-}
-
 function events_registration_confirmation($paid, $tx, $success) {
     global $CFG;
 
@@ -919,15 +916,6 @@ function get_printable_payment_cart($paid) {
         </section>';
 }
 
-function search_paid_cart_for_payment($regid, $paid) {
-    foreach ($paid as $item) {
-        if ($item->i == $regid) {
-            return $item->v;
-        }
-    }
-    return 0;
-}
-
 function events_approved_payment($cart, $tx) {
     global $CFG;
 
@@ -954,7 +942,7 @@ function events_approved_payment($cart, $tx) {
 
                     // Update payment method for this registration.
                     $currentmethod = get_db_field("value", "events_registrations_values", "elementname LIKE '%method%' AND regid=||regid||", ["regid" => $regid]);
-                    error_log("currentmethod: " . $currentmethod . " method: " . $method);
+
                     if (empty($currentmethod)) {
                         $SQL = "UPDATE events_registrations_values SET value=||method|| WHERE elementname LIKE '%method%' AND regid=||regid||";
                         execute_db_sql($SQL, ["method" => $method, "regid" => $regid]);
@@ -1010,43 +998,6 @@ function events_approved_payment($cart, $tx) {
         rollback_db_transaction($e->getMessage() . $e->getTrace());
     }
     return false;
-}
-
-function make_payment_cart_session($item) {
-    global $_SESSION;
-
-    unset($_SESSION["payment_cart"]);
-
-    $_SESSION["payment_cart"] = [
-        (object) [
-            "id" => $item[0]->regid,
-            "description" => $item[0]->description,
-            "cost" => $item[0]->cost,
-        ],
-    ];
-}
-/**
- * Calculate the total cost of items in the payment cart.
- *
- * This function iterates through each item in the payment cart stored
- * in the session and accumulates the total cost of all items.
- *
- * @return float The total cost of all items in the payment cart.
- */
-function get_total_to_be_paid() {
-    global $_SESSION;
-    $cost = 0;
-
-    // Check if the payment cart is set in the session
-    if (isset($_SESSION["payment_cart"])) {
-        // Iterate through each item in the payment cart session.
-        foreach ($_SESSION["payment_cart"] as $item) {
-            // Accumulate the cost of each item.
-            $cost += $item->cost;
-        }
-    }
-
-    return $cost;
 }
 
 /**
@@ -2577,9 +2528,10 @@ function events_delete($pageid, $featureid) {
 
     try {
         start_db_transaction();
-        $sql = [];
-        $sql[] = ["file" => "dbsql/features.sql", "subsection" => "delete_feature"];
-        $sql[] = ["file" => "dbsql/features.sql", "subsection" => "delete_feature_settings"];
+        $sql = [
+            ["file" => "dbsql/features.sql", "subsection" => "delete_feature"],
+            ["file" => "dbsql/features.sql", "subsection" => "delete_feature_settings"],
+        ];
 
         // Delete feature
         execute_db_sqls(fetch_template_set($sql), $params);
@@ -2996,48 +2948,62 @@ global $CFG;
 }
 
 function events_adminpanel($pageid) {
-global $CFG, $USER;
+    global $CFG, $USER;
+
     $content = "";
-    //Event Template Manager
-    $content .= user_is_able($USER->userid, "manageeventtemplates", $pageid) ? make_modal_links([
-                                                                                            "title"  => "Event Templates",
-                                                                                            "text"   => "Event Templates",
-                                                                                            "path"   => action_path("events") . "template_manager&pageid=$pageid",
-                                                                                            "iframe" => true,
-                                                                                            "width"  => "640",
-                                                                                            "icon"  => icon("table-list"),
-                                                                                            "class" => "adminpanel_links",
-                                                                                            ]) : "";
-    //Course Event Manager
-    $content .= user_is_able($USER->userid, "manageevents", $pageid) ? make_modal_links([
-                                                                                    "title"  => "Event Registrations",
-                                                                                    "text"   => "Event Registrations",
-                                                                                    "path"   => action_path("events") . "registration_manager&pageid=$pageid",
-                                                                                    "iframe" => true,
-                                                                                    "width"  => "640",
-                                                                                    "icon"  => icon("list-check"),
-                                                                                    "class" => "adminpanel_links",
-                                                                                    ]) : "";
-    //Application Manager
-    $content .= user_is_able($USER->userid, "manageapplications", $pageid) ? make_modal_links([
-                                                                                            "title"  => "Staff Applications",
-                                                                                            "text"   => "Staff Applications",
-                                                                                            "path"   => action_path("events") . "application_manager&pageid=$pageid",
-                                                                                            "iframe" => true,
-                                                                                            "width"  => "640",
-                                                                                            "icon"  => icon("clipboard-user"),
-                                                                                            "class" => "adminpanel_links",
-                                                                                        ]) : "";
-    //Staff Notifications
-    $content .= user_is_able($USER->userid, "manageapplications", $pageid) ? make_modal_links([
-                                                                                            "title"  => "Staff Process Email",
-                                                                                            "text"   => "Staff Process Email",
-                                                                                            "path"   => action_path("events") . "staff_emailer&pageid=$pageid",
-                                                                                            "iframe" => true,
-                                                                                            "width"  => "640",
-                                                                                            "icon"  => icon("envelopes-bulk"),
-                                                                                            "class" => "adminpanel_links",
-                                                                                        ]) : "";
+
+    // Event Template Manager
+    if (user_is_able($USER->userid, "manageeventtemplates", $pageid)) {
+        $content .= make_modal_links([
+            "title"  => "Event Templates",
+            "text"   => "Event Templates",
+            "path"   => action_path("events") . "template_manager&pageid=$pageid",
+            "iframe" => true,
+            "width"  => "640",
+            "icon"  => icon("table-list"),
+            "class" => "adminpanel_links",
+        ]);
+    }
+
+    // Course Event Manager
+    if (user_is_able($USER->userid, "manageevents", $pageid)) {
+        $content .= make_modal_links([
+            "title"  => "Event Registrations",
+            "text"   => "Event Registrations",
+            "path"   => action_path("events") . "registration_manager&pageid=$pageid",
+            "iframe" => true,
+            "width"  => "640",
+            "icon"  => icon("list-check"),
+            "class" => "adminpanel_links",
+        ]);
+    }
+
+    // Application Manager
+    if (user_is_able($USER->userid, "manageapplications", $pageid)) {
+        $content .= make_modal_links([
+            "title"  => "Staff Applications",
+            "text"   => "Staff Applications",
+            "path"   => action_path("events") . "application_manager&pageid=$pageid",
+            "iframe" => true,
+            "width"  => "640",
+            "icon"  => icon("clipboard-user"),
+            "class" => "adminpanel_links",
+        ]);
+    }
+
+    // Staff Notifications
+    if (user_is_able($USER->userid, "manageapplications", $pageid)) {
+        $content .= make_modal_links([
+            "title"  => "Staff Process Email",
+            "text"   => "Staff Process Email",
+            "path"   => action_path("events") . "staff_emailer&pageid=$pageid",
+            "iframe" => true,
+            "width"  => "640",
+            "icon"  => icon("envelopes-bulk"),
+            "class" => "adminpanel_links",
+        ]);
+    }
+
     return $content;
 }
 

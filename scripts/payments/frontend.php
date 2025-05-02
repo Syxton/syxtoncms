@@ -24,14 +24,45 @@
         <title>PayPal Advanced Integration</title>
         <script
             src="https://www.paypal.com/sdk/js?client-id=<?php echo $CFG->paypal_client_id; ?>&buyer-country=US&currency=USD&components=buttons,card-fields&enable-funding=venmo"
-            data-sdk-integration-source="developer-studio"
-        ></script>
+            data-sdk-integration-source="developer-studio">
+        </script>
+        <style>
+            .or-divider{
+                align-items: center;
+                display: flex;
+                padding: 30px 0;
+                text-align: center;
+            }
+
+            .or-divider span{
+                color: #666;
+                font-size: .825rem;
+            }
+
+            .or-divider:before, .or-divider:after {
+                background-color: #ddd;
+                content: "";
+                flex: 1;
+                height: 1px;
+                margin: 0 .675rem;
+            }
+
+            #card-field-submit-button {
+                color: white;
+                background: navy;
+                border-color: navy;
+                border-radius: 40px;
+                width: auto;
+            }
+        </style>
     </head>
     <body style="padding: 0 25px;text-align: center;font-family: PayPalOpen-Regular, Helvetica, Arial, 'Liberation Sans', sans-serif;">
         <input type="hidden" id="total" value="<?php echo $total; ?>">
         <div id="paypal-button-container" class="paypal-button-container" style="width: 90%;padding: 5px;box-sizing: border-box;"></div>
         <!-- Containers for Card Fields hosted by PayPal -->
-        <br />
+        <div class="or-divider">
+            <span>OR</span>
+        </div>
         <label for="card-form" style="font-weight: bold;">
             Pay by Credit or Debit Card
         </label>
@@ -101,7 +132,7 @@
             </div>
             <br />
             <button id="card-field-submit-button" type="button">
-                Pay now with Card
+                Pay with Card
             </button>
         </div>
         <br />
