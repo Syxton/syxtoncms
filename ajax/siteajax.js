@@ -777,7 +777,7 @@ function IsNumeric(sText) {
 }
 
 function datetype(element) {
-    let datetype = new Date(document.getElementById(element).value + " ");
+    let datetype = new Date(document.getElementById(element).value);
     datetype.setHours(0, 0, 0, 0);
     return datetype;
 }
