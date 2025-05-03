@@ -2335,7 +2335,7 @@ iframe {
     font-weight: initial;
 }
 
-.forum_postscol {
+.forum_postscol, .forum_disccol {
     background-color: #dee3e7;
     color: #000;
     text-align: center;
@@ -2348,7 +2348,7 @@ iframe {
     text-align: center;
 }
 
-.forum_viewscol {
+.forum_viewscol, .forum_dispostscol {
     background-color: #d1d7dc;
     color: #000;
     text-align: center;

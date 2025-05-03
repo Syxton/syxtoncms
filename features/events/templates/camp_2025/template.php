@@ -122,7 +122,8 @@ echo '
                         ' . $form_elements . '
                         <br /><br />
                         <input class="displayOnFinalSection submit" name="submit" type="submit" value="Add Application to Cart" style="display: block; margin: auto;background: green;color: white;" ' . $disable . ' />
-                        <input class="displayOnFinalSection" name="reset" type="reset" onclick="resetRegistration();" style="display: block; margin: auto;cursor:pointer;background: red;color: white;float:right;" ' . $disable . '/>
+                        <br />
+                        <input class="displayOnFinalSection" name="reset" type="reset" onclick="resetRegistration();" style="display: block; margin: auto;cursor:pointer;background: red;color: white;" ' . $disable . '/>
                     </fieldset>
                 </form>' . keepalive();
 

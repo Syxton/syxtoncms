@@ -479,47 +479,17 @@ global $CFG, $USER;
 
 function get_forum_categories($forumid) {
 global $USER, $CFG;
-    $returnme = '<table class="forum_category">
-                    <tr>
-                        <th class="forum_headers">
-                            Category Name
-                        </th>
-                        <th class="forum_headers" style="width:70px;">
-                            Discussions
-                        </th>
-                        <th  class="forum_headers" style="width:70px;">
-                            Posts
-                        </th>
-                    </tr>';
     $content = "";
     if ($categories = get_db_result(fetch_template("dbsql/forum.sql", "get_forum_categories", "forum"), ["forumid" => $forumid])) {
         while ($category = fetch_row($categories)) {
             $notviewed = true;
+
             //Find if new posts are available
             if (is_logged_in()) {
-                $SQL = 'SELECT *
-                        FROM forum_posts f
-                        WHERE f.catid = "' . $category["catid"] . '"
-                        AND (
-                            discussionid IN (
-                                SELECT a.discussionid
-                                FROM forum_discussions a
-                                INNER JOIN forum_views b ON a.discussionid = b.discussionid
-                                WHERE b.userid = "' . $USER->userid . '"
-                                AND a.lastpost > b.lastviewed
-                            )
-                            OR discussionid NOT IN (
-                                SELECT discussionid
-                                FROM forum_views
-                                WHERE catid = "' . $category["catid"] . '"
-                                AND userid = "' . $USER->userid . '"
-                            )
-                        )';
-                $notviewed = $newposts = get_db_result($SQL) ? true : false;
+                $SQL = fetch_template("dbsql/forum.sql", "get_new_posts_for_user", "forum");
+                $notviewed = $newposts = get_db_result($SQL, ["userid" => $USER->userid, "catid" => $category["catid"]]) ? true : false;
             }
-            $discussion_count = get_db_count("SELECT * FROM forum_discussions WHERE catid=" . $category["catid"] . " AND shoutbox=0");
-            $posts_count = get_db_count("SELECT * FROM forum_posts WHERE catid=" . $category["catid"]);
-            $viewclass = $notviewed ? 'forum_col1' : 'forum_col1_viewed';
+
             ajaxapi([
                 "id" => "get_forum_discussions_" . $category['catid'],
                 "url" => "/features/forum/forum_ajax.php",
@@ -528,16 +498,9 @@ global $USER, $CFG;
                 "intervalid" => "forum_$forumid",
                 "interval" => FORUM_REFRESH,
             ]);
-            $content .= '
-                <tr>
-                    <td class="' . $viewclass . '">
-                        <button id="get_forum_discussions_' . $category['catid'] . '" class="alike" title="Get Forum Discussions">
-                            ' . $category["title"] . '
-                        </button>';
-            $edit = user_is_able($USER->userid, "editforumcategory", $category['pageid']);
-            $content .= '<span class="forum_inline_buttons">';
 
-            if ($edit) {
+            $buttons = "";
+            if ($edit = user_is_able($USER->userid, "editforumcategory", $category['pageid'])) {
                 if ($category["sort"] > 1) {
                     ajaxapi([
                         "id" => "move_category_up_" . $category['catid'],
@@ -545,7 +508,7 @@ global $USER, $CFG;
                         "data" => ["action" => "move_category", "catid" => $category['catid'], "direction" => "up"],
                         "display" => "forum_div_$forumid",
                     ]);
-                    $content .= '
+                    $buttons .= '
                         <button id="move_category_up_' . $category['catid'] . '" class="alike" title="Move Up">
                             ' . icon("arrow-up") . '
                         </button>';
@@ -557,7 +520,7 @@ global $USER, $CFG;
                         "data" => ["action" => "move_category", "catid" => $category['catid'], "direction" => "down"],
                         "display" => "forum_div_$forumid",
                     ]);
-                    $content .= '
+                    $buttons .= '
                         <button id="move_category_down_' . $category['catid'] . '" class="alike" title="Move Down">
                             ' . icon("arrow-down") . '
                         </button>';
@@ -572,7 +535,7 @@ global $USER, $CFG;
                     "data" => ["action" => "delete_category", "catid" => $category['catid']],
                     "display" => "forum_div_$forumid",
                 ]);
-                $content .= '
+                $buttons .= '
                     <button id="delete_category_' . $category['catid'] . '" class="alike" title="Delete Category">
                         ' . icon("trash") . '
                     </button>';
@@ -587,42 +550,50 @@ global $USER, $CFG;
                     "validate" => "true",
                     "icon" => icon("pencil"),
                 ];
-                $content .= make_modal_links($params);
+                $buttons .= make_modal_links($params);
             }
 
-            $content .= '</span>
-                    </td>
-                    <td class="forum_postscol">
-                    ' . $discussion_count . '
-                    </td>
-                    <td class="forum_viewscol">
-                    ' . ($posts_count-$discussion_count) . '
-                    </td>
-                </tr>';
+            $discussion_count = get_db_count("SELECT * FROM forum_discussions WHERE catid=||catid|| AND shoutbox=0", ["catid" => $category["catid"]]);
+            $posts_count = get_db_count("SELECT * FROM forum_posts WHERE catid=||catid||", ["catid" => $category["catid"]]);
+
+            $content .= fill_template("tmp/forum.template", "category_row_template", "forum", [
+                "viewclass" => ($notviewed ? 'forum_col1' : 'forum_col1_viewed'),
+                "category" => $category,
+                "buttons" => $buttons,
+                "count" => $discussion_count,
+                "posts" => ($posts_count - $discussion_count),
+            ]);
         }
     }
-    $returnme .= $content == "" ? '<tr><td colspan="3" class="forum_col1">No Categories Created.</td></tr>' : $content;
-    $returnme .= "</table>";
-    return $returnme;
+
+    $content .= empty($content) ? '<tr><td colspan="3" class="forum_col1">No Categories Created.</td></tr>' : $content;
+
+    return fill_template("tmp/forum.template", "category_template", "forum", ["content" => $content]);
 }
 
-function update_user_views($catid, $discussionid, $userid) {
-global $CFG;
-    $time = get_timestamp();
-    if (!get_db_row("SELECT * FROM forum_views WHERE userid='$userid' AND discussionid='$discussionid'")) {
-         execute_db_sql("INSERT INTO forum_views (userid,catid,discussionid,lastviewed) VALUES('$userid','$catid','$discussionid','$time')");
+function update_user_views($catid, $did, $userid) {
+    if (!get_db_row(fetch_template("dbsql/forum.sql", "get_forum_views", "forum"), ["userid" => $userid, "discussionid" => $did])) {
+        execute_db_sql(fetch_template("dbsql/forum.sql", "insert_forum_views", "forum"), [
+            "userid" => $userid,
+            "catid" => $catid,
+            "discussionid" => $did,
+            "lastviewed" => get_timestamp(),
+        ]);
     } else {
-         execute_db_sql("UPDATE forum_views SET lastviewed='$time' WHERE userid='$userid' AND discussionid='$discussionid'");
+        execute_db_sql(fetch_template("dbsql/forum.sql", "update_forum_views", "forum"), [
+            "userid" => $userid,
+            "discussionid" => $did,
+            "lastviewed" => get_timestamp(),
+        ]);
     }
 }
 
 function update_discussion_lastpost($discussionid) {
     // Update Discussion.update_discussion_lastpost.
-    $params = [
+    execute_db_sql(fetch_template("dbsql/forum.sql", "update_discussion_lastpost", "forum"), [
         "discussionid" => $discussionid,
         "lastpost" => get_timestamp(),
-    ];
-    execute_db_sql(fetch_template("dbsql/forum.sql", "update_discussion_lastpost", "forum"), $params);
+    ]);
 }
 
 function make_discussion_link($pageid, $forumid, $catid) {

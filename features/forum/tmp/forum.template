@@ -211,3 +211,39 @@ forum_template||
         </tr>
     </table>
 ||forum_template
+
+category_template||
+    <table class="forum_category">
+        <tr>
+            <th class="forum_headers">
+                Category Name
+            </th>
+            <th class="forum_headers" style="width:70px;">
+                Discussions
+            </th>
+            <th  class="forum_headers" style="width:70px;">
+                Posts
+            </th>
+        </tr>
+        ||content||
+    </table>
+||category_template
+
+category_row_template||
+    <tr>
+        <td class="||viewclass||">
+            <button id="get_forum_discussions_||category[catid]||" class="alike" title="Get Forum Discussions">
+                ||category[title]||
+            </button>
+            <span class="forum_inline_buttons">
+                ||buttons||
+            </span>
+        </td>
+        <td class="forum_disccol">
+            ||count||
+        </td>
+        <td class="forum_dispostscol">
+            ||posts||
+        </td>
+    </tr>
+||category_row_template
