@@ -92,6 +92,11 @@ function customtype_reglookup($element, $data = []) {
             // Prepare names.
             $camper_names = get_camper_names($reg->GET);
 
+            // Birthday required to find unique registrations
+            if (!isset($reg->GET["camper_birth_date"])) {
+                continue;
+            }
+
             // Check for unique hash.
             $hash = create_unique_registration_hash(1, $camper_names["full"], $reg->GET["camper_birth_date"]);
             if (isset($alreadyadded[$hash])) {
