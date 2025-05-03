@@ -472,6 +472,20 @@ h1 {
     width: 10px
 }
 
+@media screen and (max-width: 700px) {
+    .rowContainer {
+        font-size: 1em;
+    }
+
+    .rowContainer input,
+    .rowContainer select,
+    .rowContainer textarea {
+        width: 100%;
+        padding: 10px;
+        font-size: 1.5em;
+    }
+}
+
 input.error {
     border: 1px solid red
 }
@@ -2051,11 +2065,19 @@ iframe {
     box-sizing: border-box;
 }
 
+.popup_template {
+    box-sizing: border-box;
+}
+
 /* When the screen is less than 700 pixels wide, hide all links, except for the first one ("Home"). Show the link that contains should open and close the topnav (.icon) */
 @media screen and (max-width: 700px) {
     .topnav {
         justify-content: center;
         width: 100%;
+    }
+
+    .popup_template {
+        width: 100vw;
     }
 
     .topnav.responsive > a, .topnav.responsive > div.dropdown {
@@ -2071,6 +2093,12 @@ iframe {
         height:0 !important;
     }
 
+    #cboxClose {
+        bottom: 10px !important;
+        right: 10px !important;
+        zoom: 1.5 !important;
+    }
+
     #colorbox {
         width: 100vw !important;
         height: 100vh !important;
@@ -2079,6 +2107,10 @@ iframe {
 
     #cboxContent, #cboxWrapper {
         height: 100vh !important;
+    }
+
+    #cboxContent {
+        width: 100vw !important;
     }
 
     a.icon.mobile_menu {

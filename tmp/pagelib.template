@@ -223,7 +223,7 @@ make_search_box_template||
 
 format_popup_template||
     ||*before||
-    <div style="padding:||padding||;height:||*height||;">
+    <div class="popup_template" style="padding:||padding||;height:||*height||;">
         <h2 style="text-align:center">||title||</h2>
         <br />
         ||content||
