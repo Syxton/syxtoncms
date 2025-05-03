@@ -388,10 +388,14 @@ table.searchresults tr:hover {
 }
 
 .error_text {
-    font-size: calc(10px + .5vw);
-    color: white;
+    color: red;
     text-align: center;
     vertical-align: bottom
+}
+
+.ajax_error_display .error_text {
+    font-size: 12px;
+    color: white;
 }
 
 .debugging {

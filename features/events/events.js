@@ -185,10 +185,12 @@ function valid_new_event() {
     var valid = true;
     var Today = new Date();
     Today.setHours(0, 0, 0, 0);
+    Today = Today.getTime();
 
     //event name
     if (!$('#event_name').val().length > 0) {
         $("#event_name_error").html("This is a required field.");
+        console.log("Failed on: event_name");
         valid = false;
     } else {
         $("#event_name_error").html("");
@@ -196,6 +198,7 @@ function valid_new_event() {
     //contact name
     if (!$("#contact").val().length > 0) {
         $("#contact_error").html("This is a required field.");
+        console.log("Failed on: coontact");
         valid = false;
     } else {
         $("#contact_error").html("");
@@ -206,31 +209,37 @@ function valid_new_event() {
             $("#email_error").html("");
         } else {
             $("#email_error").html("Email address is not valid.");
+            console.log("Failed on: email no valid");
             valid = false;
         }
     } else {
         $("#email_error").html("Email address is required.");
+        console.log("Failed on: email required");
         valid = false;
     }
     //contact phone #
     if ($("#phone_1").val().length == 3 && $("#phone_2").val().length == 3 && $("#phone_3").val().length == 4) {
         if (!(IsNumeric($("#phone_1").val()) && IsNumeric($("#phone_2").val()) && IsNumeric($("#phone_3").val()))) {
             $("#phone_error").html("Not a valid phone #");
+            console.log("Failed on: phone not valid");
             valid = false;
         } else {
             $("#phone_error").html("");
         }
     } else {
         $("#phone_error").html("Phone # is not complete.");
+        console.log("Failed on: phone required");
         valid = false;
     }
     if ($("#fee").val() == "1") { //Fee = YES
         //min fee
         if (!(IsNumeric($("#min_fee").val()))) {
             $("#event_min_fee_error").html("Must be a numeric value.");
+            console.log("Failed on: min fee not numeric");
             valid = false;
         } else if (parseInt($("#min_fee").val()) > parseInt($("#full_fee").val())) {
             $("#event_min_fee_error").html("Cannot be greater than full fee.");
+            console.log("Failed on: min fee cannot be greater than full fee");
             valid = false;
         } else {
             $("#event_min_fee_error").html("");
@@ -238,24 +247,28 @@ function valid_new_event() {
         //full fee
         if (!(IsNumeric($("#full_fee").val()))) {
             $("#event_full_fee_error").html("Must be a numeric value.");
+            console.log("Failed on: full fee not numeric");
             valid = false;
         } else if ($("#full_fee").val() == "0") {
             $("#event_full_fee_error").html("Must be greater than 0.");
+            console.log("Failed on: full fee cannot be greater than 0");
             valid = false;
         } else {
             $("#event_full_fee_error").html("");
         }
         //sale fee
-        if (parseInt($("#sale_fee").val()) != 0) {
+        if (IsNumeric($("#sale_fee").val()) && parseInt($("#sale_fee").val()) != 0) {
             if (!(IsNumeric($("#sale_fee").val()))) {
                 $("#event_sale_fee_error").html("Must be a numeric value.");
+                console.log("Failed on: sale fee not numeric");
                 valid = false;
             } else {
                 $("#event_sale_fee_error").html("");
             }
-            let Compare = datetype("start_reg");
+            let Compare = datetype("start_reg").getTime();
             if (Compare < Today) {
                 $("#sale_end_error").html('Cannot select a date in the past.');
+                console.log("Failed on: sale date in the past");
                 valid = false;
             } else {
                 $("#sale_end_error").html("");
@@ -264,6 +277,7 @@ function valid_new_event() {
         //payable to
         if ($("#payableto").val() == "") {
             $("#event_payableto_error").html("This is a required field.");
+            console.log("Failed on: payable to is required");
             valid = false;
         } else {
             $("#event_payableto_error").html("");
@@ -271,6 +285,7 @@ function valid_new_event() {
         //checksaddress to
         if ($("#checksaddress").val() == "") {
             $("#event_checksaddress_error").html("This is a required field.");
+            console.log("Failed on: check address is required");
             valid = false;
         } else {
             $("#event_checksaddress_error").html("");
@@ -278,6 +293,7 @@ function valid_new_event() {
         //paypal
         if ($("#paypal").val() != "" && !isValidEmail($("#paypal").val())) {
             $("#event_paypal_error").html("This is not a valid email address.");
+            console.log("Failed on: paypal email invalid");
             valid = false;
         } else {
             $("#event_paypal_error").html("");
@@ -288,26 +304,31 @@ function valid_new_event() {
         $("#location_error").html("");
     } else {
         $("#location_error").html("Add a location for your event.");
+        console.log("Failed on: location required");
         valid = false;
     }
     //multiday event
     //event_begin_date
-    let Compare = datetype("event_begin_date");
+    let Compare = datetype("event_begin_date").getTime();
     if (Compare < Today) {
         $("#event_begin_date_error").html('Cannot select a date in the past.');
+        console.log("Failed on: event begin cannot be in past");
+        console.log("Today: " + Today + " Begins Date:" + Compare);
         valid = false;
     } else {
         $("#event_begin_date_error").html("");
     }
     if ($("#multiday").val() == "1") { //Multi day = YES
         //event_end_date
-        let Compare1 = datetype("event_end_date");
-        let Compare2 = datetype("event_begin_date");
+        let Compare1 = datetype("event_end_date").getTime();
+        let Compare2 = datetype("event_begin_date").getTime();
         if (Compare1 <= Compare2) {
             $("#event_end_date_error").html('Must select a date after the event start date');
+            console.log("Failed on: end date must be after start date");
             valid = false;
         } else if (Compare1 < Today) {
             $("#event_end_date_error").html('Cannot select a date in the past.');
+            console.log("Failed on: end date cannot be in past");
             valid = false;
         } else {
             $("#event_end_date_error").html("");
@@ -317,9 +338,11 @@ function valid_new_event() {
         //begin time
         if ($("#begin_time").val() == "") {
             $("#time_error").html("You must select a start time.");
+            console.log("Failed on: start time not selected");
             valid = false;
         } else if ($("#end_time").val() == "") {
             $("#time_error").html("You must select an end time.");
+            console.log("Failed on: end time required");
             valid = false;
         } else {
             $("#time_error").html("");
@@ -328,6 +351,7 @@ function valid_new_event() {
     if ($("#reg").val() == "1") { //Registration = YES
         if ($("#template").val() < 1) {
             $("#template_error").html("Template must be selected.");
+            console.log("Failed on: template not selected");
             valid = false;
         }
         if ($("#max").val() == "") {
@@ -337,6 +361,7 @@ function valid_new_event() {
             //max reg
             if (!IsNumeric($("#max").val())) {
                 $("#max_error").html("Must be a numeric value.");
+                console.log("Failed on: max must be numeric");
                 valid = false;
             } else {
                 $("#max_error").html("");
@@ -344,14 +369,16 @@ function valid_new_event() {
         }
         //registration dates
         //start_reg
-        let Compare1 = datetype("start_reg");
-        let Compare2 = datetype("event_begin_date");
-        let Compare3 = datetype("stop_reg");
+        let Compare1 = datetype("start_reg").getTime();
+        let Compare2 = datetype("event_begin_date").getTime();
+        let Compare3 = datetype("stop_reg").getTime();
         if (Compare1 < Today && !$("#eventid").length) {
             $("#start_reg_error").html('Cannot select a date in the past.');
+            console.log("Failed on: start reg cannot be in past");
             valid = false;
         } else if (Compare1 >= Compare2) {
             $("#start_reg_error").html('Registration must start and end before event starts.');
+            console.log("Failed on: start reg cannot occur during or after event");
             valid = false
         } else {
             $("#start_reg_error").html("");
@@ -359,12 +386,15 @@ function valid_new_event() {
         //stop_reg
         if (Compare3 < Today && !$("#eventid").length) {
             $("#stop_reg_error").html('Cannot select a date in the past.');
+            console.log("Failed on: stop reg cannot be in past");
             valid = false;
         } else if (Compare3 <= Compare1) {
             $("#stop_reg_error").html('Must be a date after registration start.');
+            console.log("Failed on: stop reg must be after start reg");
             valid = false
         } else if (Compare3 > Compare2) {
             $("#stop_reg_error").html('Registration must start and end before event starts.');
+            console.log("Failed on: stop reg must start and end before event starts");
             valid = false
         } else {
             $("#stop_reg_error").html("");
