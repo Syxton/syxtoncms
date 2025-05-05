@@ -56,12 +56,14 @@ function get_form_navigation_buttons($extraclass = "") {
     <div class="formNavigation ' . $extraclass . '">
         <div class="formNavigationPrevious">
             <button type="button">
-                Previous Section
+                ' . icon('arrow-left') . '
+                <span>Previous Section</span>
             </button>
         </div>
         <div class="formNavigationNext">
             <button type="button">
-                Next Section
+                <span>Next Section</span>
+                ' . icon('arrow-right') . '
             </button>
         </div>
     </div>';

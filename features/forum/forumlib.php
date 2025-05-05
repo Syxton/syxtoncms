@@ -185,7 +185,8 @@ function get_discussions_list($discussions, $title = "Discussion", $classprefix 
                         <div class="' . $viewclass . '">
                             ' . $lock . '
                             <button id="get_discussion_posts_' . $discussion['discussionid'] . '" class="alike">
-                            ' . $discussion["title"] . '
+                                ' . icon("comments") . '
+                                <span>' . $discussion["title"] . '</span>
                             </button>
                         </div>
                         ' . get_discussion_buttons($discussion) . '

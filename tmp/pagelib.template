@@ -1,25 +1,25 @@
 main_js_css||
-  ||echo js_code_wrap('var dirfromroot = "' . directory . '";');::directory||
-  ||echo js_code_wrap(fill_template("tmp/pagelib.template", "defer_script"));::none||
-  ||echo get_js_set("main");::none||
-  ||echo get_css_tags(["main"]);::none||
+    ||echo js_code_wrap('var dirfromroot = "' . directory . '";');::directory||
+    ||echo js_code_wrap(fill_template("tmp/pagelib.template", "defer_script"));::none||
+    ||echo get_js_set("main");::none||
+    ||echo get_css_tags(["main"]);::none||
 ||main_js_css
 
 main_body_template||
-<div id="wholepage">
-    <div class="logo_nav">||page_masthead_1||</div>
-    <div class="colmask rightmenu">
-        <div class="colleft">
-            <div class="col2 pagesort2 connectedSortable">
-                ||page_masthead_2||
-            </div>
-            <div class="col1 pagesort1 connectedSortable">
-                <span id="column_width" style="width:100%;"></span>
+    <div id="wholepage">
+        <div class="logo_nav">||page_masthead_1||</div>
+        <div class="colmask rightmenu">
+            <div class="colleft">
+                <div class="col2 pagesort2 connectedSortable">
+                    ||page_masthead_2||
+                </div>
+                <div class="col1 pagesort1 connectedSortable">
+                    <span id="column_width" style="width:100%;"></span>
+                </div>
             </div>
         </div>
-     </div>
-</div>
-<div style="clear:both;"></div>
+    </div>
+    <div style="clear:both;"></div>
 ||main_body_template
 
 page_masthead_template||
@@ -101,13 +101,13 @@ editor_box_template||
 ||editor_box_template
 
 defer_script||
-  function defer(method) {
-    if (window.jQuery) {
-        method();
-    } else {
-        setTimeout(function() { defer(method) }, 10);
+    function defer(method) {
+        if (window.jQuery) {
+            method();
+        } else {
+            setTimeout(function() { defer(method) }, 10);
+        }
     }
-  }
 ||defer_script
 
 print_logout_button_switchback_template||
@@ -118,17 +118,17 @@ print_logout_button_switchback_template||
 ||print_logout_button_switchback_template
 
 print_logout_button_template||
-<div id="login_box" class="login_box logout" style="padding: 2px 5px 8px;">
-    ||logoutas||
-    <span class="logout_buttons">
-        <span class="pagerole">
-            ||role||
+    <div id="login_box" class="login_box logout" style="padding: 2px 5px 8px;">
+        ||logoutas||
+        <span class="logout_buttons">
+            <span class="pagerole">
+                ||role||
+            </span>
+            ||profile||
+            <button id="logout" class="alike" title="Log Out">||echo icon("right-from-bracket", 2);::none||</button>
         </span>
-        ||profile||
-        <button id="logout" class="alike" title="Log Out">||echo icon("right-from-bracket", 2);::none||</button>
-    </span>
-</div>
-||userlinks||
+    </div>
+    ||userlinks||
 ||print_logout_button_template
 
 get_css_box_template1||
@@ -143,61 +143,64 @@ get_css_box_template1||
 ||get_css_box_template1
 
 get_css_box_template2||
-<div ||opendiv||>
-    <div class="box_header"  style="border: 2px solid ||bordercolor||;background-color:||titlebgcolor||;">
-        <div class="box_title" style="color:||titlefontcolor||;">
-            ||title||
+    <div ||opendiv||>
+        <div class="box_header"  style="border: 2px solid ||bordercolor||;background-color:||titlebgcolor||;">
+            <div class="box_title" style="color:||titlefontcolor||;">
+                ||title||
+            </div>
+            ||*buttons||
         </div>
-        ||*buttons||
+        <div class="box_content ||class||" style="border: 2px solid ||bordercolor||;border-top: none;background-color:||contentbgcolor||;||padding||">
+            ||content||
+            ||bottom||
+        </div>
+        <div class="block_divider"></div>
     </div>
-    <div class="box_content ||class||" style="border: 2px solid ||bordercolor||;border-top: none;background-color:||contentbgcolor||;||padding||">
-        ||content||
-        ||bottom||
-    </div>
-    <div class="block_divider"></div>
-</div>
 ||get_css_box_template2
 
 get_css_box_bottom_template||
-<div style="display:table;width:100%;background-color:||contentbgcolor||">
-  <div style="float:left;padding-left:2px;">
-    ||bottom_left||
-  </div>
-  <div style="text-align:center;position:relative;float:left;left:18%;width:60%">
-    ||bottom_center||
-  </div>
-  <div style="float:right;padding-right:2px;">
-    ||bottom_right||
-  </div>
-</div>
+    <div style="display:table;width:100%;background-color:||contentbgcolor||">
+        <div style="float:left;padding-left:2px;">
+            ||bottom_left||
+        </div>
+        <div style="text-align:center;position:relative;float:left;left:18%;width:60%">
+            ||bottom_center||
+        </div>
+        <div style="float:right;padding-right:2px;">
+            ||bottom_right||
+        </div>
+    </div>
 ||get_css_box_bottom_template
 
 get_login_form_template||
-||echo get_js_tags(["validate"]);::none||
-||validation_script||
-<form id="login_form">
-    <fieldset>
-             <div class="rowContainer">
-                 <label class="rowTitle" for="username">Username</label>
-                 <input tabindex=1 style="margin-right:0px;width:80%" type="email" id="username" name="username" autocomplete="username" data-rule-required="true" data-msg-required="||valid_req_username||" />
-                 <div class="tooltipContainer info">||input_username||</div>
-                 <div class="spacer" style="clear: both;"></div>
-             </div>
-             <div class="rowContainer">
-                 <label class="rowTitle" for="password">Password</label>
-                 <input tabindex=2 style="margin-right:0px;width:80%" type="password" id="password" name="password" autocomplete="current-password" data-rule-required="true" data-msg-required="||valid_req_password||" />
-                 <div class="tooltipContainer info">||input_password2||</div>
-                 <div class="spacer" style="clear: both;"></div>
-             </div>
-   </fieldset>
-   <input name="submit" type="submit" value="Sign In" style="margin-left:5px;" />
-   <span style="float:right;font-size:.9em">
-     ||newuserlink||
-     <br />
-     ||forgotpasswordlink||
-   </span>
-</form>
-<div id="login_box_error" class="error_text"></div>
+    ||echo get_js_tags(["validate"]);::none||
+    ||validation_script||
+    <form id="login_form">
+        <fieldset class="formContainer">
+            <div class="rowContainer">
+                <label class="rowTitle" for="username">Username</label>
+                <input tabindex=1 style="margin-right:0px;width:80%" type="email" id="username" name="username" autocomplete="username" data-rule-required="true" data-msg-required="||valid_req_username||" />
+                <div class="tooltipContainer info">||input_username||</div>
+                <div class="spacer" style="clear: both;"></div>
+            </div>
+            <div class="rowContainer">
+                <label class="rowTitle" for="password">Password</label>
+                <input tabindex=2 style="margin-right:0px;width:80%" type="password" id="password" name="password" autocomplete="current-password" data-rule-required="true" data-msg-required="||valid_req_password||" />
+                <div class="tooltipContainer info">||input_password2||</div>
+                <div class="spacer" style="clear: both;"></div>
+            </div>
+        </fieldset>
+        <button name="submit" type="submit" style="margin-left:5px;">
+            ||echo icon("passport");::none||
+            <span>Sign In</span>
+        </button>
+        <span style="float:right;font-size:.9em">
+            ||newuserlink||
+            <br />
+            ||forgotpasswordlink||
+        </span>
+    </form>
+    <div id="login_box_error" class="error_text"></div>
 ||get_login_form_template
 
 get_button_layout_template||

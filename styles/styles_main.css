@@ -2104,10 +2104,19 @@ iframe {
         width: 100vw !important;
         height: 100vh !important;
         top: 0 !important;
+        left: 0 !important;
     }
 
     #cboxContent, #cboxWrapper {
         height: 100vh !important;
+        width: 100vw !important;
+    }
+
+    img.cboxPhoto {
+        height: auto !important;
+        width: 100% !important;
+        float: none !important;
+        max-width: 90vw;
     }
 
     #cboxContent {
@@ -2116,6 +2125,7 @@ iframe {
 
     #cboxLoadedContent {
         height: calc(100vh - 55px) !important;
+        width: 100vw !important;
     }
 
     a.icon.mobile_menu {
@@ -2376,6 +2386,11 @@ iframe {
 
 .forum_page_links button.pagelistbutton {
     padding: 0px 2px;
+}
+
+.pagelistbutton svg {
+    position: relative;
+    top: 2px;
 }
 
 .forum_posts_lastrow {
@@ -2661,6 +2676,12 @@ input[type="color"]::-webkit-color-swatch-wrapper {
     border-radius: 0;
 }
 
+button.alike span:has(+svg),
+a span:has(+svg),
+button span:has(+svg) {
+    padding-right: 3px;
+}
+
 button.alike *:not(svg):nth-child(2),
 a *:not(svg):nth-child(2),
 button svg + * {
@@ -2679,7 +2700,7 @@ input[type=button]:hover,
 button:hover,
 .button:hover {
     cursor: pointer;
-    background: rgb(0 0 0 / 10%);
+    filter: brightness(95%);
 }
 
 input[type=submit]:active,
@@ -2688,7 +2709,7 @@ input[type=button]:active,
 button:active,
 .button:active {
     cursor: pointer;
-    background: rgb(0 0 0 / 15%);
+    filter: brightness(80%);
 }
 
 .smallbutton {

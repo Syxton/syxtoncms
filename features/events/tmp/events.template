@@ -417,7 +417,7 @@ copy_registration_info_form||
 ||copy_registration_info_form
 
 event_request_form||
-    <div class="formDiv" id="request_form_div">
+    <div class="formDiv" id="request_form_div" style="padding: 10px">
         <p align="center">
             <strong><font size="+1">Event Request Form</font></strong>
         </p>

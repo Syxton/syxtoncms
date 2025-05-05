@@ -120,11 +120,17 @@ echo '
                             </a>
                         </p>
                         ' . $form_elements . '
-                        <div class="displayOnFinalSection">
-                            <br /><br />
-                            <input class="submit" name="submit" type="submit" value="Add Application to Cart" style="display: block; margin: auto;background: green;color: white;" ' . $disable . ' />
+                        <div class="displayOnFinalSection centered">
                             <br />
-                            <input name="reset" type="reset" onclick="resetRegistration();" style="display: block; margin: auto;cursor:pointer;background: red;color: white;" ' . $disable . '/>
+                            <button type="submit" name="submit" style="font-size: 1.25em;background-color: green;color: white;" ' . $disable . '>
+                                ' . icon("cart-plus", 1, "", "white") . '
+                                <span>Add to Cart</span>
+                            </button>
+                            <br /><br />
+                            <button type="button" name="reset" onclick="resetRegistration();" style="font-size: 1.25em;background-color: red;color: white;" ' . $disable . '>
+                                ' . icon("power-off", 1, "", "white") . '
+                                <span>Reset</span>
+                            </button>
                         </div>
 
                     </fieldset>

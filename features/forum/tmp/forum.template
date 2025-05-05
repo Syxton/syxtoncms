@@ -233,7 +233,8 @@ category_row_template||
     <tr>
         <td class="||viewclass||">
             <button id="get_forum_discussions_||category[catid]||" class="alike" title="Get Forum Discussions">
-                ||category[title]||
+                ||echo icon("layer-group");::none||
+                <span>||category[title]||</span>
             </button>
             <span class="forum_inline_buttons">
                 ||buttons||

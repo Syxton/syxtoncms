@@ -137,6 +137,7 @@ global $CFG;
                     $links .= make_modal_links([
                         "id" => "pic_" . $row["picsid"],
                         "title" => $title,
+                        "text" => icon("images") . ' ' . $title,
                         "image" => $imgpath,
                         "gallery" => "pics_gallery_" . $row['galleryid'],
                         "path" => $imgpath,
@@ -147,7 +148,7 @@ global $CFG;
                     $links .= make_modal_links([
                         "id" => "pic_" . $row["picsid"],
                         "title" => $title,
-                        "text" => $row['name'],
+                        "text" => icon("images") . ' ' . $row['name'],
                         "gallery" => "pics_gallery_" . $row['galleryid'],
                         "path" => $imgpath,
                     ]);
