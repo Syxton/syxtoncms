@@ -666,6 +666,7 @@ img.sitenews {
 #registration_div {
     height: 100vh;
     padding: 10px;
+    box-sizing: border-box;
 }
 
 .payment_cart_header {
@@ -2095,8 +2096,8 @@ iframe {
 
     #cboxClose {
         bottom: 10px !important;
-        right: 10px !important;
-        zoom: 1.5 !important;
+        right: 15px !important;
+        zoom: 1.25 !important;
     }
 
     #colorbox {
@@ -2111,6 +2112,10 @@ iframe {
 
     #cboxContent {
         width: 100vw !important;
+    }
+
+    #cboxLoadedContent {
+        height: calc(100vh - 55px) !important;
     }
 
     a.icon.mobile_menu {

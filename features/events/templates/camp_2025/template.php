@@ -120,10 +120,13 @@ echo '
                             </a>
                         </p>
                         ' . $form_elements . '
-                        <br /><br />
-                        <input class="displayOnFinalSection submit" name="submit" type="submit" value="Add Application to Cart" style="display: block; margin: auto;background: green;color: white;" ' . $disable . ' />
-                        <br />
-                        <input class="displayOnFinalSection" name="reset" type="reset" onclick="resetRegistration();" style="display: block; margin: auto;cursor:pointer;background: red;color: white;" ' . $disable . '/>
+                        <div class="displayOnFinalSection">
+                            <br /><br />
+                            <input class="submit" name="submit" type="submit" value="Add Application to Cart" style="display: block; margin: auto;background: green;color: white;" ' . $disable . ' />
+                            <br />
+                            <input name="reset" type="reset" onclick="resetRegistration();" style="display: block; margin: auto;cursor:pointer;background: red;color: white;" ' . $disable . '/>
+                        </div>
+
                     </fieldset>
                 </form>' . keepalive();
 
