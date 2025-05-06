@@ -1607,28 +1607,54 @@ global $CFG, $MYVARS, $USER;
         $remaining = $total_owed - $paid;
         $registrant_name = get_registrant_name($registration["regid"]);
 
-        $return = '
-            <h3>Registration Found</h3>
-            <strong>Event: ' . $event["name"] . ' - ' . $registrant_name . '\'s Registration</strong>
-            <br /><br />
-            Total Owed:  $' . number_format($total_owed, 2) .
-            '<br />Amount Paid:  $' . number_format($paid, 2) .
-            '<br />
-            <strong>Remaining Balance:  $' . number_format($remaining, 2) . '</strong>
-            <br /><br />';
-
+        $payarea = "";
         if ($remaining > 0) {
-            $item[0] = new \stdClass;
-            $item[0]->description = "Event: " . $event["name"] . " - $registrant_name's Registration - Remaining Balance Payment";
-            $item[0]->cost = $remaining;
-            $item[0]->regid = $registration["regid"];
+            ajaxapi([
+                "id" => "makepayment",
+                "if" => "$('#payment_amount').val() > 0",
+                "url" => "/features/events/events_ajax.php",
+                "data" => [
+                    "action" => "makepayment",
+                    "regid" => $registration["regid"],
+                    "amount" => "js||$('#payment_amount').val()||js",
+                ],
+                "display" => "paymentarea",
+            ]);
 
-            // Create payment cart session.
-            make_payment_cart_session($item);
-
-            // Get payment form.
-            $return .= get_payment_form();
+            $payarea = '
+                <br /><br />
+                    <h3>Make Payment</h3>
+                    <br />
+                    ' . make_fee_options(
+                        0,
+                        $remaining,
+                        "payment_amount",
+                        'class="payment_amounts" style="width:100px"',
+                        $event['sale_end'],
+                        $event['sale_fee']
+                    ) . '
+                    <button id="makepayment">
+                        Pay Now
+                    </button>
+                </div>
+                <div id="paymentarea"></div>';
         }
+
+        $return = '
+            <div class="centered">
+                <h3>Registration Found</h3>
+                <strong>Event: ' . $event["name"] . ' - ' . $registrant_name . '\'s Registration</strong>
+                <br /><br />
+                <span style="display: inline-block;text-align: right;">
+                    Total Owed:  $' . number_format($total_owed, 2) . '
+                    <br />
+                    Amount Paid:  $' . number_format($paid, 2) . '
+                    <br />
+                    <strong>
+                    Remaining Balance:  $' . number_format($remaining, 2) . '
+                    </strong>
+                </span>
+                ' . $payarea;
     } catch (\Throwable $e) {
         $error = $e->getMessage();
     }
@@ -1636,6 +1662,36 @@ global $CFG, $MYVARS, $USER;
     instant_end:
     ajax_return($return, $error);
 
+}
+
+function makepayment() {
+    $return = "";
+    $error = "";
+    try {
+        $regid = clean_myvar_req("regid", "int");
+        $payment_amount = clean_myvar_req("amount", "float");
+
+        $event = get_event_from_regid($regid);
+        $registrant_name = get_registrant_name($regid);
+
+        $return .= "HERE1 . $payment_amount";
+        if ($payment_amount > 0) {
+            $return .= "HERE2";
+            $item[0] = new \stdClass;
+            $item[0]->description = "Event: " . $event["name"] . " - $registrant_name's Registration - Remaining Balance Payment";
+            $item[0]->cost = $payment_amount;
+            $item[0]->regid = $regid;
+
+            // Create payment cart session.
+            make_payment_cart_session($item);
+
+            // Get payment form.
+            $return = get_payment_form();
+        }
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+    }
+    ajax_return($return, $error);
 }
 
 function pick_registration() {

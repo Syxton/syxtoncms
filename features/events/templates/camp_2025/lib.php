@@ -216,40 +216,10 @@ function print_checkout_form($registrations) {
         "event" => "click",
     ]);
 
-    return '
-    <script>
-        $(function () {
-            calculate_payment_amount();
-        });
-    </script>
-    <div class="registration_cart_checkout">
-        <div class="registration_cart_submission_area">
-            <h2 class="centered">Ready to Checkout</h2>
-            <br />
-            <div class="centered">
-                <strong>Finalize your registration</strong>
-                <br /><br />
-                <div>
-                    <strong>Pay Now Amount
-                    <br />
-                    $ <input type="text" id="payment_amount" value="0" disabled style="margin-left: 2px;background-color: white;" />
-                    </strong>
-                </div>
-                <br />
-                <button id="cart_register_button" style="display: block; margin: auto; background: green; color: white;">
-                    ' . icon("cart-shopping", 1, "", "white") . '
-                    <span>Checkout</span>
-                </button>
-            </div>
-        </div>
-        <br />
-        <div class="registration_cart_checkout" style="background: lightskyblue;border-radius: 10px;">
-            <h2 class="centered">Not Finished?</h2>
-            ' . registration_add_options($registrations) . '
-            <br />
-            ' . registration_copy_options($registrations) . '
-        </div>
-    </div>';
+    return fill_template("templates/camp_2025/tmp/camp2025.template", "checkout_form", "events", [
+        "add_options" => registration_add_options($registrations),
+        "copy_options" => registration_copy_options($registrations),
+    ]);
 }
 
 function registration_add_options($registrations) {
@@ -260,6 +230,7 @@ function registration_add_options($registrations) {
     foreach ($registrations as $registration) {
         $reg = $registration->GET;
         $reg["event"] = get_event($reg["eventid"]);
+
         // Get all events that are registerable.
         $registerable_events = get_currently_registerable_events($PAGE->id);
         while ($event = fetch_row($registerable_events)) {
@@ -348,20 +319,9 @@ function registration_copy_options($registrations) {
     }
 
     if (!empty($options)) {
-        return '
-        <br />
-        <div class="centered">
-            <strong>Copy an existing registration to another event.</strong>
-            <br /><br />
-            <select id="copy_event_to_form">
-                <option value="0">Select an event</option>
-                ' . $options . '
-            </select>
-            <button id="copy_registration" style="margin: 5px;" onclick="copy_to_form();">
-                ' . icon("copy") . '
-                <span>Copy Registration</span>
-            </button>
-        </div>';
+        return fill_template("templates/camp_2025/tmp/camp2025.template", "copy_options", "events", [
+            "options" => $options,
+        ]);
     }
 
     return "";
@@ -405,13 +365,7 @@ function get_registration_checkout_button() {
         "event" => "click",
     ]);
 
-    return '
-    <div class="registration_cart_bottom">
-        <button type="button" id="registration_cart_checkout" style="background: navy;color: white;">
-            ' . icon("person-walking-arrow-right", 1, "", "white") . '
-            <span>Go to Checkout</span>
-        </button>
-    </div>';
+    return fill_template("templates/camp_2025/tmp/camp2025.template", "go_to_checkout", "events", []);
 }
 
 function get_promo_code_form($event, $hash) {
@@ -419,11 +373,11 @@ function get_promo_code_form($event, $hash) {
 
     $checkout = clean_myvar_opt("checkout", "bool", false);
     ajaxapi([
-        "id" => "applycampership_" . $hash,
+        "id" => "applypromo_" . $hash,
         "url" => "/features/events/templates/camp_2025/backend.php",
         "data" => [
-            "action" => "applycampership",
-            "code" => "js||$('#campershipcode_" . $hash . "').val()||js", // Code to send.
+            "action" => "applypromo",
+            "code" => "js||$('#promo_code_" . $hash . "').val()||js", // Code to send.
             "hash" => $hash, // The registration hash.
             "checkout" => $checkout,
         ],
@@ -444,26 +398,11 @@ function get_promo_code_form($event, $hash) {
         }
     }
 
-    $return = '
-        <div>
-            <input id="campershipcode_'  . $hash . '"
-                type="text"
-                name="campershipcode_'  . $hash . '"
-                placeholder="Promo Code"
-                value="'  . $promocode . '"
-                style="display: inline-block;zoom:.8;width: 110px;" />
-            <button id="applycampership_'  . $hash . '"
-                type="button"
-                style="display: inline-block;zoom:.8;">
-                Apply
-            </button>
-            <div id="campershipresult_'  . $hash . '" style="zoom: .8;color: green;padding: 2px;text-align: center;">
-                ' . $promoname . '
-            </div>
-        </div>
-    ';
-
-    return $return;
+    return fill_template("templates/camp_2025/tmp/camp2025.template", "promo_form", "events", [
+        "hash" => $hash,
+        "promocode" => $promocode,
+        "promoname" => $promoname,
+    ]);
 }
 
 function get_promo_code_match($eventid, $code) {
@@ -561,16 +500,16 @@ function print_registration_cart_items_html($registrations) {
         $checkout = clean_myvar_opt("checkout", "bool", false);
         $item_price = clean_param_opt($item, "price", "float", "--");
         if ($item_price !== "--") {
-            if (isset($reg->item) && isset($reg->hash) && isset($reg->GET) && isset($reg->GET["eventid"])) {
+            if (isset($reg->item) &&
+                isset($reg->hash) &&
+                isset($reg->GET) &&
+                isset($reg->GET["eventid"])) {
                 $event = get_event($reg->GET["eventid"]);
 
                 if ($checkout && $item_price > 0) {
                     $minimumpayment = empty($event["fee_min"]) ? 0 : $event["fee_min"];
-                    $pay_on_item = '
-                    <br />
-                    <div style="zoom: .8">
-                        <strong>Pay Now: </strong>' .
-                        make_fee_options(
+                    $pay_on_item = fill_template("templates/camp_2025/tmp/camp2025.template", "pay_on_item", "events", [
+                        "pay_options" => make_fee_options(
                             $minimumpayment,
                             $item_price,
                             "payment_amount_" . $reg->hash,
@@ -578,8 +517,8 @@ function print_registration_cart_items_html($registrations) {
                             onchange="calculate_payment_amount();"',
                             $event['sale_end'],
                             $event['sale_fee']
-                        ) . '
-                    </div>';
+                        ),
+                    ]);
                 }
 
                 $delete = '
@@ -588,7 +527,7 @@ function print_registration_cart_items_html($registrations) {
                 </button>
                 ';
 
-    $event["promocode_set"] = 1; // Remove this once implemented
+                $event["promocode_set"] = 1; // Remove this once implemented
                 if ($event["promocode_set"] > 0) { // A promocode set is selected for this event.
                     $promo_code_form = '
                     <div class="registration_cart_item_promo_code">
@@ -601,21 +540,13 @@ function print_registration_cart_items_html($registrations) {
             $item_price = '$' . number_format($item_price, 2, ".", "");
         }
 
-        $return .= '
-        <div class="registration_cart_item">
-            <div>
-                ' . $delete . '
-            </div>
-            <div class="registration_cart_item_name">
-                ' . $item['name'] . '
-            </div>
-            <div class="registration_cart_item_price">
-                <strong>Price: ' . $item_price . '</strong>
-                ' . $promo_code_form . '
-                ' . $pay_on_item . '
-            </div>
-        </div>
-        ';
+        $return .= fill_template("templates/camp_2025/tmp/camp2025.template", "cart_item", "events", [
+            "delete" => $delete,
+            "name" => $item['name'],
+            "price" => $item_price,
+            "promo_form" => $promo_code_form,
+            "pay_on" => $pay_on_item,
+        ]);
     }
 
     return '<form id="cart1" name="cart1">' . $return . '</form>';
@@ -658,16 +589,9 @@ function get_total_in_cart($registrations) {
 function print_registration_cart_total_html($registrations) {
     $total = get_total_in_cart($registrations);
 
-    return '
-    <div class="registration_cart_total">
-        <div class="registration_cart_item_name">
-            Registration Total
-        </div>
-        <div class="registration_cart_item_price">
-            $' . number_format($total, 2, ".", "") . '
-        </div>
-    </div>
-    ';
+    return fill_template("templates/camp_2025/tmp/camp2025.template", "registration_cart_total", "events", [
+        "total" => number_format($total, 2, ".", ""),
+    ]);
 }
 
 function get_camper_names($reg) {
@@ -849,19 +773,11 @@ function show_post_registration_page() {
     }
 
     // Return the combined HTML content for the registration status page.
-    return $cart . '
-    <div>
-        <br /><br />
-        <h2 class="centered">' . $title . '</h2>
-        <br />
-        <div class="centered">
-            <strong>
-            ' . $subtitle . '
-            </strong>
-        </div>
-        <br /><br />
-        ' . $message . '
-    </div>';
+    return $cart . fill_template("templates/camp_2025/tmp/camp2025.template", "show_post_registration_page", "events", [
+        "title" => $title,
+        "subtitle" => $subtitle,
+        "message" => $message,
+    ]);
 }
 
 function get_post_registration_cart_status() {

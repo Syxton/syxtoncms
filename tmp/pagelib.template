@@ -6,6 +6,9 @@ main_js_css||
 ||main_js_css
 
 main_body_template||
+    <div id="ajax_errors">
+        <div id="ajax_error_display" style="display: none;"></div>
+    </div>
     <div id="wholepage">
         <div class="logo_nav">||page_masthead_1||</div>
         <div class="colmask rightmenu">
@@ -276,7 +279,7 @@ validation_tooltip_actions||
                     var index = 0;
                     $(".formSection").each(function() {
                         let errors = $(this).find("input:not([type=hidden]).error, textarea.error, select.error");
-                        if ($(errors).length > 0) {
+                        if ($(errors).length) {
                             gotoSection(index);
                             $(this).find("input:not([type=hidden]).error, textarea.error, select.error").first().focus();
                             return false;

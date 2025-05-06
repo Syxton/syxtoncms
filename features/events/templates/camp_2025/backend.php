@@ -137,7 +137,7 @@ function get_eventid_from_hash($hash) {
     return false;
 }
 
-function applycampership() {
+function applypromo() {
     global $_SESSION;
     $checkout = clean_myvar_opt("checkout", "bool", false);
     $hash = clean_myvar_opt("hash", "string", false);
@@ -230,10 +230,10 @@ function register() {
                 $message = registration_email($regid, $touser, $pending, $fullypaid);
 
                 $emailsubject = "Camp Wabashi Registration";
-                $usingcampership = empty($newreg["campership"]) ? "" : " (Campership: " . $newreg["campership"] . ")";
+                $usingpromo = empty($newreg["campership"]) ? "" : " (Campership: " . $newreg["campership"] . ")";
                 try {
                     if (\send_email($touser, $fromuser, $emailsubject, $message)) {
-                        \send_email($fromuser, $fromuser, $emailsubject . $usingcampership, $message);
+                        \send_email($fromuser, $fromuser, $emailsubject . $usingpromo, $message);
                     }
                 } catch (\Throwable $e) {
                     $error = $e->getMessage();

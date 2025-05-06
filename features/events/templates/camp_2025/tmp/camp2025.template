@@ -1,0 +1,180 @@
+template_form||
+    <!DOCTYPE HTML>
+        <html>
+            <head>
+                ||javascript||
+            </head>
+            <body>
+                <form class="event_template_form" name="form1" id="form1">
+                    <fieldset class="formContainer">
+                        <input type="hidden" name="eventid" id="eventid" value="||event[eventid]||" />
+                        <input type="hidden" id="event_begin_date" value="||event_begin_date||" />
+                        <div style="display: flex;justify-content: center;">
+                            <div style="font-size:15px;text-align:center;font-weight:bold">
+                                Camp Wabashi Online Pre-Registration
+                                <div style="font-size:13px;text-align:center;font-weight:bold">
+                                    ||event[name]||
+                                </div>
+                            </div>
+                            <div style="width: 50px;">
+                                <input type="hidden" id="count_in_cart" value="||count_in_cart||" />
+                                <button type="button" class="registration_cart_menu alike">
+                                    ||carticon||
+                                </button>
+                                <div id="refreshableregcart">
+                                    ||registrations||
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <a target="policy" href="||echo $CFG->wwwroot;::none||/features/events/templates/camp_2025/regpolicy.html">
+                                Registration Policy
+                            </a>
+                        </div>
+                        ||form_elements||
+                        <div class="displayOnFinalSection centered">
+                            <br />
+                            <button type="submit" name="submit" style="font-size: 1.25em;background-color: green;color: white;" ||disable||>
+                                ||echo icon("cart-plus", 1, "", "white");::none||
+                                <span>Add to Cart</span>
+                            </button>
+                            <br />
+                            <br />
+                            <button type="button" name="reset" onclick="resetRegistration();" style="font-size: 1.25em;background-color: red;color: white;" ||disable||>
+                                ||echo icon("power-off", 1, "", "white");::none||
+                                <span>Reset</span>
+                            </button>
+                        </div>
+                    </fieldset>
+                </form>
+||template_form
+
+registration_cart_total||
+    <div class="registration_cart_total">
+        <div class="registration_cart_item_name">
+            Registration Total
+        </div>
+        <div class="registration_cart_item_price">
+            $||total||
+        </div>
+    </div>
+||registration_cart_total
+
+show_post_registration_page||
+    <div>
+        <br /><br />
+        <h2 class="centered">||title||</h2>
+        <br />
+        <div class="centered">
+            <strong>
+            ||subtitle||
+            </strong>
+        </div>
+        <br /><br />
+        ||message||
+    </div>
+||show_post_registration_page
+
+copy_options||
+    <br />
+    <div class="centered">
+        <strong>Copy an existing registration to another event.</strong>
+        <br /><br />
+        <select id="copy_event_to_form">
+            <option value="0">Select an event</option>
+            ||options||
+        </select>
+        <button id="copy_registration" style="margin: 5px;" onclick="copy_to_form();">
+            ||echo icon("copy");::none||
+            <span>Copy Registration</span>
+        </button>
+    </div>
+||copy_options
+
+checkout_form||
+    <script>
+        $(function () {
+            calculate_payment_amount();
+        });
+    </script>
+    <div class="registration_cart_checkout">
+        <div class="registration_cart_submission_area">
+            <h2 class="centered">Ready to Checkout</h2>
+            <br />
+            <div class="centered">
+                <strong>Finalize your registration</strong>
+                <br /><br />
+                <div>
+                    <strong>Pay Now Amount
+                    <br />
+                    $ <input type="text" id="payment_amount" value="0" disabled style="margin-left: 2px;background-color: white;" />
+                    </strong>
+                </div>
+                <br />
+                <button id="cart_register_button" style="display: block; margin: auto; background: green; color: white;">
+                    ||echo icon("cart-shopping", 1, "", "white");::none||
+                    <span>Checkout</span>
+                </button>
+            </div>
+        </div>
+        <br />
+        <div class="registration_cart_checkout" style="background: lightskyblue;border-radius: 10px;">
+            <h2 class="centered">Not Finished?</h2>
+            ||add_options||
+            <br />
+            ||copy_options||
+        </div>
+    </div>
+||checkout_form
+
+go_to_checkout||
+    <div class="registration_cart_bottom">
+        <button type="button" id="registration_cart_checkout" style="background: navy;color: white;">
+            ||echo icon("person-walking-arrow-right", 1, "", "white");::none||
+            <span>Go to Checkout</span>
+        </button>
+    </div>
+||go_to_checkout
+
+promo_form||
+    <div>
+        <input id="promo_code_||hash||"
+            type="text"
+            name="promo_code_||hash||"
+            placeholder="Promo Code"
+            value="||promocode||"
+            style="display: inline-block;zoom:.8;width: 110px;" />
+        <button id="applypromo_||hash||"
+            type="button"
+            style="display: inline-block;zoom:.8;">
+            Apply
+        </button>
+        <div id="promoresult_||hash||" style="zoom: .8;color: green;padding: 2px;text-align: center;">
+            ||promoname||
+        </div>
+    </div>
+||promo_form
+
+cart_item||
+    <div class="registration_cart_item">
+        <div>
+            ||delete||
+        </div>
+        <div class="registration_cart_item_name">
+            ||name||
+        </div>
+        <div class="registration_cart_item_price">
+            <strong>Price: ||price||</strong>
+            ||promo_form||
+            ||pay_on||
+        </div>
+    </div>
+||cart_item
+
+pay_on_item||
+    <br />
+    <div style="zoom: .8">
+        <strong>Pay Now: </strong>
+        ||pay_options||
+    </div>
+||pay_on_item

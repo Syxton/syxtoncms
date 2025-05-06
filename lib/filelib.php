@@ -146,7 +146,7 @@ global $CFG;
  * @throws Exception If the template or subsection is not found.
  */
 function fetch_template($file, $subsection, $feature = false, $params = []) {
-    global $CFG;
+    global $CFG, $PAGE;
     try {
         // If $subsection is an array, fetch each subsection, store the results in $contents.
         if (is_array($subsection)) {
@@ -251,6 +251,7 @@ function fetch_template_set($templates) {
  * @throws Exception If the template or subsection is not found.
  */
 function fill_template($file, $subsection, $feature = false, $params = [], $allowpartial = false) {
+    global $CFG, $PAGE;
     $v = $params;
     $contents = "";
 

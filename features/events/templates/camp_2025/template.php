@@ -82,59 +82,21 @@ $form_elements = make_form_elements($elements, $data);
 $count_in_cart = isset($_SESSION['registrations']) ? count($_SESSION['registrations']) : 0;
 
 // Beginning of form document.
-echo '
-    <!DOCTYPE HTML>
-        <html>
-            <head>
-            ' . get_js_tags(["jquery", "validate"]) . '
-            ' . get_js_tags(["features/events/templates/camp_2025/ajax.js"]) . '
-            </head>
-            <body>
-                <form class="event_template_form" name="form1" id="form1">
-                    <fieldset class="formContainer">
-                        <input type="hidden" name="eventid" id="eventid" value="' . $eventid . '" />
-                        <input type="hidden" id="event_begin_date" value="' . date("Y-m-d", $event["event_begin_date"]) . '" />
-                        <div style="display: flex;justify-content: center;">
-                            <div style="font-size:15px;text-align:center;font-weight:bold">
-                                Camp Wabashi Online Pre-Registration
-                                <div style="font-size:13px;text-align:center;font-weight:bold">
-                                ' . $event["name"] . '
-                                </div>
-                            </div>
-                            <div style="width: 50px;">
-                                <input type="hidden" id="count_in_cart" value="' . $count_in_cart . '" />
-                                <button type="button" class="registration_cart_menu alike">
-                                    ' . icon([
-                                            ["icon" => "cart-shopping", "stacksize" => 3, "color" => "green"],
-                                            ["content" => $count_in_cart, "style" => "font-size: .4em;top: 7px;width: 100%;text-align: center;color: white;"],
-                                        ]) . '
-                                </button>
-                                <div id="refreshableregcart">
-                                    ' . print_registration_cart(false) . '
-                                </div>
-                            </div>
-                        </div>
-                        <p>
-                            <a target="policy" href="' . $CFG->wwwroot . '/features/events/templates/camp_2025/regpolicy.html">
-                                Registration Policy
-                            </a>
-                        </p>
-                        ' . $form_elements . '
-                        <div class="displayOnFinalSection centered">
-                            <br />
-                            <button type="submit" name="submit" style="font-size: 1.25em;background-color: green;color: white;" ' . $disable . '>
-                                ' . icon("cart-plus", 1, "", "white") . '
-                                <span>Add to Cart</span>
-                            </button>
-                            <br /><br />
-                            <button type="button" name="reset" onclick="resetRegistration();" style="font-size: 1.25em;background-color: red;color: white;" ' . $disable . '>
-                                ' . icon("power-off", 1, "", "white") . '
-                                <span>Reset</span>
-                            </button>
-                        </div>
+echo fill_template("templates/camp_2025/tmp/camp2025.template", "template_form", "events", [
+    "javascript" => get_js_tags(["jquery", "validate"]) . get_js_tags(["features/events/templates/camp_2025/ajax.js"]),
+    "event" => $event,
+    "event_begin_date" => date("Y-m-d", $event["event_begin_date"]),
+    "count_in_cart" => $count_in_cart,
+    "form_elements" => $form_elements,
+    "disable" => $disable,
+    "carticon" => icon([
+        ["icon" => "cart-shopping", "stacksize" => 3, "color" => "green"],
+        ["content" => $count_in_cart, "style" => "font-size: .4em;top: 7px;width: 100%;text-align: center;color: white;"],
+    ]),
+    "registrations" => print_registration_cart(false),
+]);
 
-                    </fieldset>
-                </form>' . keepalive();
+echo keepalive();
 
 $value_in_cart = $count_in_cart > 0 ? get_value_in_cart($_SESSION['registrations']) : 0;
 

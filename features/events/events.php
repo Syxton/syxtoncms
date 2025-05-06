@@ -198,7 +198,7 @@ global $CFG;
 
     if (!$modal) {
         echo get_js_tags(["jquery"]);
-        echo main_body(true) . '<br /><br />';
+        echo main_body(true);
     }
 
     ajaxapi([
@@ -213,23 +213,10 @@ global $CFG;
     ]);
 
     echo js_code_wrap('window.onload = function () { if ($("#code").val() !== "") { lookup_reg($("#code").val()); } }', "", true);
-    echo '
-        <div style="text-align:center;padding:15px;">
-            <h3>' . $CFG->sitename . ' Registration Lookup</h3><br />
-            <form id="payarea_form" onsubmit="lookup_reg($(\'#code\').val()); return false;">
-                <div style="display: inline-flex;align-items: center;">
-                    <span>
-                        Enter your Registration ID:
-                    </span>
-                    <input type="text" id="code" size="35" style="margin: 0 10px;" value="' . $regcode . '" />
-                    <button type="submit">
-                        Submit
-                    </button>
-                </div>
-            </form>
-        </div>
-        <div id="payarea" style="padding:15px;"></div>
-    ';
+    echo fill_template("tmp/events.template", "payment_page", "events", [
+        "regcode" => $regcode,
+        "sitename" => $CFG->sitename,
+    ]);
 }
 
 function event_request_form() {

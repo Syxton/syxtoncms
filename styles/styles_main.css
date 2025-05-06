@@ -28,6 +28,13 @@ svg.dropshadow {
     filter: drop-shadow(1px 2px 2px black);
 }
 
+div#ajax_errors {
+    display: flex;
+    position: absolute;
+    width: 100vw;
+    justify-content: center;
+}
+
 div#ajax_error_display.visible {
     display: flex;
     position: fixed;
@@ -39,17 +46,10 @@ div#ajax_error_display {
     z-index: 999999;
     min-width: 36%;
     max-width: 500px;
-    left: 50%;
-    transform: translate(-50%, 0);
-    width: 100%;
-    margin-left: auto;
-    margin-right: auto;
     background: red;
+    color: white;
     font-weight: 700;
-    justify-content: center;
     border-radius: 0 0 15px 15px;
-    align-content: center;
-    flex-direction: column;
     border-bottom: 3px solid black;
     padding: 1%;
 }
@@ -667,6 +667,9 @@ img.sitenews {
     height: 100vh;
     padding: 10px;
     box-sizing: border-box;
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none; /* Standard syntax */
 }
 
 .payment_cart_header {
