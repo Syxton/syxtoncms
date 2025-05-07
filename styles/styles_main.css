@@ -805,7 +805,6 @@ form button.registration_cart_menu + #refreshableregcart .registration_cart {
 }
 
 .registration_allowed_in_page {
-    zoom: 0.8;
     color: green;
     margin-top: 10px;
 }

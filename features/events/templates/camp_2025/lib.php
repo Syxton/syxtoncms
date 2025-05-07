@@ -796,7 +796,9 @@ function get_post_registration_cart_status() {
                     <div class="registration_allowed_in_page">
                         This registration has granted you access into a private event page.
                         This area contains specific information about the event.<br />
-                        <a href="/page/' . $event['pageid'] . '">Go to Event Page</a>
+                        <a title="Open Event Page" target="_blank" href="' . $CFG->wwwroot . '/index.php?pageid=' . $event['pageid'] . '">
+                            Open Event Page
+                        </a>
                     </div>';
             }
         }
@@ -810,8 +812,16 @@ function get_post_registration_cart_status() {
 
         $cartitems .= '
         <div class="registration_cart_item">
-            <div class="registration_cart_item_name">' . $facebookbuttons . $item->description . $allowed_in_page .'</div>
-            <div class="registration_cart_item_price">' . $status . '</div>
+            <div class="registration_cart_item_name">
+                <div style="display: flex;align-items: center;">
+                    <span style="padding-right: 10px;">' . $facebookbuttons . '</span>' .
+                    '<span>' . $item->description . '</span>
+                </div>
+                ' . $allowed_in_page . '
+            </div>
+            <div class="registration_cart_item_price" style="text-align: center;">
+            ' . $status . '
+            </div>
         </div>';
     }
 
