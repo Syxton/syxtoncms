@@ -50,10 +50,7 @@ function remove_all_roles($userid) {
 function add_role_ability($section, $ability, $section_display, $power, $ability_display, $creator='0', $editor='0', $guest='0', $visitor='0') {
     try {
         start_db_transaction();
-        $SQL = "SELECT ability
-                FROM abilities
-                WHERE section = ||section||
-                AND ability = ||ability||";
+        $SQL = fetch_template("dbsql/roles.sql", "get_ability");
 
         // Make sure ability doesn't already exist.
         if (!get_db_row($SQL, ["section" => $section, "ability" => $ability])) {

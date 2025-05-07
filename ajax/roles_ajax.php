@@ -38,51 +38,32 @@ global $CFG, $USER, $MYVARS;
         $i++;
     }
 
-    $fields = "u.userid, u.fname, u.lname, u.email";
+    $params = [];
     if ($pageid == $CFG->SITEID && is_siteadmin($USER->userid)) {
         // If admin on site, search all users
-        $SQL = "SELECT $fields
-                FROM users u
-                WHERE $searchstring
-                ORDER BY u.lname";
+        $SQL = fill_template("dbsql/roles.sql", "user_search_all", false, ["search" => $searchstring]);
     } else {
-        // Get the user's role on the page
-        $myroleid = user_role($USER->userid, $pageid);
-
         // Feature specific role assignment search. (only searches people that already have page privs)
         if ($type !== "per_page") {
             // Search for users with a higher role on the page
-            $SQL = "SELECT $fields
-                    FROM users u
-                    WHERE $searchstring
-                    AND u.userid IN (
-                                    SELECT ra.userid
-                                    FROM roles_assignment ra
-                                    WHERE ra.pageid = '$pageid'
-                                    AND ra.roleid > '$myroleid'
-                                    )
-                    ORDER BY u.lname";
+            $SQL = fill_template("dbsql/roles.sql", "user_search_higher_role", false, ["searchstring" => $searchstring]);
         } else {  // Page role assignment search.
             // Search for users with a role lower than the user's on the page
-            $SQL = "SELECT $fields
-                    FROM users u
-                    WHERE $searchstring
-                    AND u.userid NOT IN (
-                                        SELECT ra.userid
-                                        FROM roles_assignment ra
-                                        WHERE ra.pageid = '$pageid'
-                                        AND ra.roleid <= '$myroleid'
-                                        )
-                    ORDER BY u.lname";
+            $SQL = fill_template("dbsql/roles.sql", "user_search_lower_role", false, ["searchstring" => $searchstring]);
         }
+
+        // Get the user's role on the page
+        $params["myroleid"] = user_role($USER->userid, $pageid);
+        $params["pageid"] = $pageid;
     }
 
     $options = "";
-    if ($users = get_db_result($SQL)) {
+    if ($users = get_db_result($SQL, $params)) {
         while ($row = fetch_row($users)) {
-            $vars = [ "selected" => "",
-                            "value" => $row['userid'],
-                            "display" => fill_string("{fname} {lname} ({email})", $row),
+            $vars = [
+                "selected" => "",
+                "value" => $row['userid'],
+                "display" => fill_string("{fname} {lname} ({email})", $row),
             ];
             $options .= fill_template("tmp/page.template", "select_options_template", false, $vars);
         }
@@ -142,34 +123,10 @@ global $CFG, $MYVARS, $USER;
     $sqlparams["pageid"] = $pageid;
     $sqlparams["groupid"] = $groupid;
     if ($pageid == $CFG->SITEID && is_siteadmin($USER->userid)) {
-        $SQL = "SELECT u.*
-                FROM users u
-                WHERE u.userid IN (
-                                    SELECT userid
-                                    FROM groups_users
-                                    WHERE pageid = ||pageid||
-                                    AND groupid = ||groupid||
-                                    )
-                ORDER BY u.lname";
+        $SQL = fetch_template("dbsql/roles.sql", "get_users_in_group");
     } else {
         $sqlparams["siteid"] = $CFG->SITEID;
-        $SQL = "SELECT u.*
-                FROM users u
-                WHERE (
-                        ||pageid|| = ||siteid||
-                        OR u.userid IN (
-                                        SELECT ra.userid
-                                        FROM roles_assignment ra
-                                        WHERE ra.pageid = ||pageid||
-                                        )
-                        )
-                AND u.userid IN (
-                                SELECT userid
-                                FROM groups_users
-                                WHERE pageid = ||pageid||
-                                AND groupid = ||groupid||
-                                )
-                ORDER BY u.lname";
+        $SQL = fetch_template("dbsql/roles.sql", "get_page_users_in_groups");
     }
 
     $options = '';

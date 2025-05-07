@@ -34,15 +34,13 @@ function get_form_section_opening($lastsection, $section) {
         return '';
     }
 
-    if ($lastsection === false) {
+    if ($lastsection === false) { // Very first section.
         $output = fetch_template('tmp/forms.template', 'form_section_js');
         $output .= '<div class="formMenu"></div>';
-        $output .= '<div class="formSection firstSection selectedSection">';
-    }
-
-    if ($lastsection !== false && $lastsection !== $section) {
-        $output = get_form_section_closing($section);
-        $output .= '<div class="formSection">';
+        $output .= '<div class="formSection firstSection selectedSection">'; // Opening very first section.
+    } elseif ($lastsection !== $section) { // This section is not part of the opened section.
+        $output = get_form_section_closing($section); // Closing open section section.
+        $output .= '<div class="formSection">'; // Opening new section.
     }
 
     $output .= get_form_navigation_buttons('topButtons');
@@ -52,22 +50,11 @@ function get_form_section_opening($lastsection, $section) {
 }
 
 function get_form_navigation_buttons($extraclass = "") {
-    return '
-    <div class="formNavigation ' . $extraclass . '">
-        <div class="formNavigationPrevious">
-            <button type="button">
-                ' . icon('arrow-left') . '
-                <span>Previous Section</span>
-            </button>
-        </div>
-        <div class="formNavigationNext">
-            <button type="button">
-                <span>Next Section</span>
-                ' . icon('arrow-right') . '
-            </button>
-        </div>
-    </div>';
+    return fill_template("tmp/forms.template", "form_navigation_buttons", false, [
+        "classes" => $extraclass,
+    ]);
 }
+
 function get_form_section_closing($section = false) {
     $output = "";
     if ($section !== false) {
@@ -139,8 +126,6 @@ function make_form_elements($elements, $data = []) {
             $elementHTML = file_get_contents($CFG->dirroot . $element['file']);
             break;
         }
-
-
 
         // If the element is not hidden, we might need to open a new section
         if ($element['type'] !== 'hidden' && !strstr($elementHTML, 'type="hidden"')) {

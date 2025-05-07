@@ -1508,16 +1508,16 @@ global $CFG;
     }
 
     $newuserlink = $newuser ? make_modal_links([
-                                "title" => "New User",
-                                "path" => $CFG->wwwroot . "/pages/user.php?action=new_user",
-                                "width" => "500",
-                            ]) : '';
+        "title" => "New User",
+        "path" => $CFG->wwwroot . "/pages/user.php?action=new_user",
+        "width" => "500",
+    ]) : '';
 
     $forgotpasswordlink = make_modal_links([
-                            "title" => "Forgot password?",
-                            "path" => $CFG->wwwroot . "/pages/user.php?action=forgot_password_form",
-                            "width" => "500",
-                        ]);
+        "title" => "Forgot password?",
+        "path" => $CFG->wwwroot . "/pages/user.php?action=forgot_password_form",
+        "width" => "500",
+    ]);
 
     ajaxapi([
         'id' => "jq_login",

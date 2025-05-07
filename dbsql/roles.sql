@@ -13,6 +13,13 @@ get_roles||
     ORDER BY roleid
 ||get_roles
 
+get_ability||
+    SELECT ability
+    FROM abilities
+    WHERE section = ||section||
+    AND ability = ||ability||
+||get_ability
+
 get_page_role_requests||
     SELECT *
     FROM roles_assignment
@@ -703,8 +710,40 @@ get_subgroups||
 get_group_users||
     SELECT *
       FROM `groups_users`
-     WHERE groupid ='||groupid||'
+     WHERE groupid = ||groupid||
 ||get_group_users
+
+get_users_in_group||
+    SELECT u.*
+    FROM users u
+    WHERE u.userid IN (
+        SELECT userid
+        FROM groups_users
+        WHERE pageid = ||pageid||
+        AND groupid = ||groupid||
+    )
+    ORDER BY u.lname
+||get_users_in_group
+
+get_page_users_in_groups||
+    SELECT u.*
+    FROM users u
+    WHERE (
+        ||pageid|| = ||siteid||
+        OR u.userid IN (
+            SELECT ra.userid
+            FROM roles_assignment ra
+            WHERE ra.pageid = ||pageid||
+        )
+    )
+    AND u.userid IN (
+        SELECT userid
+        FROM groups_users
+        WHERE pageid = ||pageid||
+        AND groupid = ||groupid||
+    )
+    ORDER BY u.lname
+||get_page_users_in_groups
 
 save_group||
   ||is_editing{{
@@ -726,11 +765,11 @@ print_abilities_sql||
     ||is_feature{{
         WHERE section = ||feature||
         OR ability IN (
-            'editfeaturesettings', 
-            'removefeatures', 
-            'movefeatures', 
-            'edit_feature_abilities', 
-            'edit_feature_group_abilities', 
+            'editfeaturesettings',
+            'removefeatures',
+            'movefeatures',
+            'edit_feature_abilities',
+            'edit_feature_group_abilities',
             'edit_feature_user_abilities'
         )
     }}is_feature||
@@ -876,3 +915,36 @@ insert_page_role_feature_override||
     INSERT INTO roles_ability_perfeature (feature, featureid, pageid, roleid, ability, allow)
     VALUES (||feature||, ||featureid||, ||pageid||, ||roleid||, ||ability||, ||setting||)
 ||insert_page_role_feature_override
+
+user_search_all||
+    SELECT u.userid, u.fname, u.lname, u.email
+    FROM users u
+    WHERE ||search||
+    ORDER BY u.lname
+||user_search_all
+
+user_search_higher_role||
+    SELECT u.userid, u.fname, u.lname, u.email
+    FROM users u
+    WHERE ||searchstring||
+    AND u.userid IN (
+        SELECT ra.userid
+        FROM roles_assignment ra
+        WHERE ra.pageid = ||pageid||
+        AND ra.roleid > ||myroleid||
+    )
+    ORDER BY u.lname
+||user_search_higher_role
+
+user_search_lower_role||
+    SELECT u.userid, u.fname, u.lname, u.email
+    FROM users u
+    WHERE ||searchstring||
+    AND u.userid IN (
+        SELECT ra.userid
+        FROM roles_assignment ra
+        WHERE ra.pageid = ||pageid||
+        AND ra.roleid <= ||myroleid||
+    )
+    ORDER BY u.lname
+||user_search_lower_role
