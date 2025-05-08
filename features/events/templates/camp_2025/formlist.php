@@ -3,6 +3,8 @@
 // Include template specific functions.
 include_once($CFG->dirroot . "/features/events/templates/camp_2025/lib.php");
 
+$path = "/features/events/templates/camp_2025";
+
 // formlist array[];
 return [
     [
@@ -12,7 +14,7 @@ return [
         'type' => 'custom',
         'displayonly' => true,
         'customtype' => [
-            'reglookup' => '/features/events/templates/camp_2025/custom.php',
+            'reglookup' => $path . '/custom.php',
         ],
     ],
     [
@@ -22,9 +24,9 @@ return [
         'type' => 'email',
         'required' => true,
         'required_msg' => error_string('valid_req_email'),
-        'help' => get_help("help_email:events:templates/camp_2025"),
+        'help' => getlang("help_email", $path),
         'dynamicvalue' => [
-            'email' => '/features/events/templates/camp_2025/custom.php',
+            'email' => $path . '/custom.php',
         ],
     ],
     [
@@ -33,7 +35,7 @@ return [
         'title' => 'Birthday',
         'type' => 'date',
         'required' => true,
-        'help' => get_help("help_bday:events:templates/camp_2025"),
+        'help' => getlang("help_bday", $path),
     ],
     [
         'name' => 'camper_age',
@@ -45,10 +47,10 @@ return [
         'readonly' => true,
         'style' => 'background-color: lightgray;border: 1px solid grey; width:50px;',
         'customrules' => [
-            'min_age' => '/features/events/templates/camp_2025/custom.php',
-            'max_age' => '/features/events/templates/camp_2025/custom.php',
+            'min_age' => $path . '/custom.php',
+            'max_age' => $path . '/custom.php',
         ],
-        'help' => get_help("help_age:events:templates/camp_2025"),
+        'help' => getlang("help_age", $path),
     ],
     [
         'name' => 'camper_name',
@@ -77,7 +79,7 @@ return [
         'maxlength' => 1,
         'lettersonly' => true,
         'autocapitalize' => 'words',
-        'help' => get_help("help_middlei:events:templates/camp_2025"),
+        'help' => getlang("help_middlei", $path),
     ],
     [
         'name' => 'camper_name_last',
@@ -100,7 +102,7 @@ return [
         'number' => true,
         'max' => 12,
         'min' => 1,
-        'help' => get_help("help_grade:events:templates/camp_2025"),
+        'help' => getlang("help_grade", $path),
     ],
     [
         'name' => 'camper_gender',
@@ -109,7 +111,7 @@ return [
         'type' => 'select',
         'options' => TEMP_PROPS["GENDERS"],
         'required' => true,
-        'help' => get_help("help_gender:events:templates/camp_2025"),
+        'help' => getlang("help_gender", $path),
     ],
     [
         'name' => 'camper_home_congregation',
@@ -118,7 +120,7 @@ return [
         'type' => 'text',
         'required' => false,
         'nonumbers' => true,
-        'help' => get_help("help_congregation:events:templates/camp_2025"),
+        'help' => getlang("help_congregation", $path),
     ],
     [
         'name' => 'parent_name1',
@@ -127,7 +129,7 @@ return [
         'type' => 'text',
         'required' => true,
         'nonumbers' => true,
-        'help' => get_help("help_parent:events:templates/camp_2025"),
+        'help' => getlang("help_parent", $path),
     ],
     [
         'name' => 'parent_address_line1',
@@ -135,7 +137,7 @@ return [
         'title' => 'Address 1',
         'type' => 'text',
         'required' => true,
-        'help' => get_help("help_address:events:templates/camp_2025"),
+        'help' => getlang("help_address", $path),
     ],
     [
         'name' => 'parent_address_line2',
@@ -143,7 +145,7 @@ return [
         'title' => 'Address 2',
         'type' => 'text',
         'required' => false,
-        'help' => get_help("help_address:events:templates/camp_2025"),
+        'help' => getlang("help_address", $path),
     ],
     [
         'name' => 'parent_address_city',
@@ -152,7 +154,7 @@ return [
         'type' => 'text',
         'required' => true,
         'nonumbers' => true,
-        'help' => get_help("help_city:events:templates/camp_2025"),
+        'help' => getlang("help_city", $path),
     ],
     [
         'name' => 'parent_address_state',
@@ -161,7 +163,7 @@ return [
         'type' => 'select',
         'options' => TEMP_PROPS["STATES"],
         'required' => true,
-        'help' => get_help("help_state:events:templates/camp_2025"),
+        'help' => getlang("help_state", $path),
     ],
     [
         'name' => 'parent_address_zipcode',
@@ -171,6 +173,7 @@ return [
         'required' => true,
         'number' => true,
         'minlength' => 5,
+        'help' => getlang("help_state", $path),
         'help' => get_help("help_zip:events:templates/camp_2025"),
     ],
     [
@@ -179,7 +182,7 @@ return [
         'title' => 'Phone 1',
         'type' => 'tel',
         'required' => true,
-        'help' => get_help("help_phone:events:templates/camp_2025"),
+        'help' => getlang("help_phone", $path),
     ],
     [
         'name' => 'parent_phone2',
@@ -187,7 +190,7 @@ return [
         'title' => 'Phone 2',
         'type' => 'tel',
         'required' => true,
-        'help' => get_help("help_phone:events:templates/camp_2025"),
+        'help' => getlang("help_phone", $path),
     ],
     [
         'name' => 'parent_phone3',
@@ -195,7 +198,7 @@ return [
         'title' => 'Phone 3',
         'type' => 'tel',
         'required' => false,
-        'help' => get_help("help_phone:events:templates/camp_2025"),
+        'help' => getlang("help_phone", $path),
     ],
     [
         'name' => 'parent_phone4',
@@ -203,7 +206,7 @@ return [
         'title' => 'Phone 4',
         'type' => 'tel',
         'required' => false,
-        'help' => get_help("help_phone:events:templates/camp_2025"),
+        'help' => getlang("help_phone", $path),
     ],
     [
         'name' => 'consent',
@@ -211,7 +214,7 @@ return [
         'title' => 'CONSENT FOR MEDICAL TREATMENT OF A MINOR CHILD',
         'type' => 'html',
         'displayonly' => true,
-        'file' => '/features/events/templates/camp_2025/consent.html',
+        'file' => $path . '/consent.html',
     ],
     [
         'name' => 'health_member_name',
@@ -220,7 +223,7 @@ return [
         'type' => 'text',
         'required' => true,
         'nonumbers' => true,
-        'help' => get_help("help_membername:events:templates/camp_2025"),
+        'help' => getlang("help_membername", $path),
     ],
     [
         'name' => 'health_relationship',
@@ -229,7 +232,7 @@ return [
         'type' => 'text',
         'required' => true,
         'nonumbers' => true,
-        'help' => get_help("help_relationship:events:templates/camp_2025"),
+        'help' => getlang("help_relationship", $path),
     ],
     [
         'name' => 'health_insurance',
@@ -237,7 +240,7 @@ return [
         'title' => 'Medical Insurance Carrier',
         'type' => 'text',
         'required' => true,
-        'help' => get_help("help_carrier:events:templates/camp_2025"),
+        'help' => getlang("help_carrier", $path),
     ],
     [
         'name' => 'health_account',
@@ -245,7 +248,7 @@ return [
         'title' => 'Account Number',
         'type' => 'text',
         'required' => true,
-        'help' => get_help("help_memberid:events:templates/camp_2025"),
+        'help' => getlang("help_memberid", $path),
     ],
     [
         'name' => 'health_expiration',
@@ -253,7 +256,7 @@ return [
         'title' => 'Insurance Expiration',
         'type' => 'date',
         'required' => true,
-        'help' => get_help("help_healthto:events:templates/camp_2025"),
+        'help' => getlang("help_healthto", $path),
     ],
     [
         'name' => 'health_benefit_code',
@@ -261,7 +264,7 @@ return [
         'title' => 'Benefit Code',
         'type' => 'text',
         'required' => false,
-        'help' => get_help("help_membercode:events:templates/camp_2025"),
+        'help' => getlang("help_membercode", $path),
     ],
     [
         'name' => 'health_history',
@@ -269,7 +272,7 @@ return [
         'title' => 'Medical History',
         'type' => 'textarea',
         'required' => false,
-        'help' => get_help("help_history:events:templates/camp_2025"),
+        'help' => getlang("help_history", $path),
     ],
     [
         'name' => 'health_allergies',
@@ -277,7 +280,7 @@ return [
         'title' => 'Allergies',
         'type' => 'textarea',
         'required' => false,
-        'help' => get_help("help_allergies:events:templates/camp_2025"),
+        'help' => getlang("help_allergies", $path),
     ],
     [
         'name' => 'health_existing',
@@ -285,7 +288,7 @@ return [
         'title' => 'Existing Conditions / Medical Issues',
         'type' => 'textarea',
         'required' => false,
-        'help' => get_help("help_existing:events:templates/camp_2025"),
+        'help' => getlang("help_existing", $path),
     ],
     [
         'name' => 'health_medicines',
@@ -293,7 +296,7 @@ return [
         'title' => 'Medicines',
         'type' => 'textarea',
         'required' => false,
-        'help' => get_help("help_meds:events:templates/camp_2025"),
+        'help' => getlang("help_meds", $path),
     ],
     [
         'name' => 'health_tetanus_date',
@@ -301,7 +304,7 @@ return [
         'title' => 'Last Tetanus Injection',
         'type' => 'date',
         'required' => false,
-        'help' => get_help("help_tetanus:events:templates/camp_2025"),
+        'help' => getlang("help_tetanus", $path),
     ],
     [
         'name' => 'health_consent_from',
@@ -309,7 +312,7 @@ return [
         'title' => 'Health Conset Begins',
         'type' => 'hidden',
         'dynamicvalue' => [
-            'health_consent_from' => '/features/events/templates/camp_2025/custom.php',
+            'health_consent_from' => $path . '/custom.php',
         ],
         'required' => false,
     ],
@@ -319,7 +322,7 @@ return [
         'title' => 'Health Conset Ends',
         'type' => 'hidden',
         'dynamicvalue' => [
-            'health_consent_to' => '/features/events/templates/camp_2025/custom.php',
+            'health_consent_to' => $path . '/custom.php',
         ],
         'required' => false,
     ],
@@ -330,11 +333,11 @@ return [
         'type' => 'select',
         'selected' => '0',
         'dynamicoptions' => [
-            'picture' => '/features/events/templates/camp_2025/custom.php',
+            'picture' => $path . '/custom.php',
         ],
         'required' => false,
         'dynamichelp' => [
-            'picture' => '/features/events/templates/camp_2025/custom.php',
+            'picture' => $path . '/custom.php',
         ],
     ],
     [
@@ -343,7 +346,7 @@ return [
         'title' => 'Shirt',
         'type' => 'hidden',
         'dynamicvalue' => [
-            'shirt' => '/features/events/templates/camp_2025/custom.php',
+            'shirt' => $path . '/custom.php',
         ],
         'required' => false,
     ],
@@ -353,11 +356,11 @@ return [
         'title' => 'Shirt Size',
         'type' => 'select',
         'dynamicoptions' => [
-            'shirt' => '/features/events/templates/camp_2025/custom.php',
+            'shirt' => $path . '/custom.php',
         ],
         'required' => true,
         'dynamichelp' => [
-            'shirt_size' => '/features/events/templates/camp_2025/custom.php',
+            'shirt_size' => $path . '/custom.php',
         ],
     ],
     [
@@ -366,7 +369,7 @@ return [
         'title' => 'Shirt Price',
         'type' => 'hidden',
         'dynamicvalue' => [
-            'shirt_price' => '/features/events/templates/camp_2025/custom.php',
+            'shirt_price' => $path . '/custom.php',
         ],
         'required' => false,
     ],
@@ -376,7 +379,7 @@ return [
         'title' => 'Shirt Price',
         'type' => 'hidden',
         'dynamicvalue' => [
-            'shirt_price' => '/features/events/templates/camp_2025/custom.php',
+            'shirt_price' => $path . '/custom.php',
         ],
         'required' => false,
     ],

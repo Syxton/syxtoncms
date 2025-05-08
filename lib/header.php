@@ -17,7 +17,7 @@ if (!isset($CFG)) {
     require_once($sub . 'config.php');
 }
 
-$libs = ['ERRORSLIB', 'DBLIB', 'FILELIB', 'PAGELIB', 'SETTINGSLIB', 'COMLIB', 'ROLESLIB', 'RSSLIB', 'USERLIB', 'TIMELIB', 'STYLESLIB', 'HELPLIB', 'PAYLIB'];
+$libs = ['ERRORSLIB', 'DBLIB', 'FILELIB', 'PAGELIB', 'SETTINGSLIB', 'COMLIB', 'ROLESLIB', 'RSSLIB', 'USERLIB', 'TIMELIB', 'STYLESLIB', 'HELPLIB', 'LANGLIB', 'PAYLIB'];
 foreach ($libs as $lib) {
     if (!defined($lib)) {
         require_once($CFG->dirroot . '/lib/' . strtolower($lib) . '.php');

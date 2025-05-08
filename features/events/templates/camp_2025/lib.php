@@ -179,23 +179,12 @@ function print_registration_cart($checkout = false) {
 }
 
 function already_registered($eventid, $name, $birthdate) {
-    $SQL = '
-        SELECT *
-        FROM events_registrations
-        WHERE regid IN (
-                        SELECT regid
-                        FROM events_registrations_values
-                        WHERE elementname="camper_name"
-                        AND value=||name||
-                        )
-        AND regid IN (
-                        SELECT regid
-                        FROM events_registrations_values
-                        WHERE elementname="camper_birth_date"
-                        AND value=||birthdate||
-                    )
-        AND eventid=||eventid||';
-    $already_registered = get_db_count($SQL, ["eventid" => $eventid, "name" => $name, "birthdate" => $birthdate]);
+    $SQL = fetch_template("templates/camp_2025/dbsql/camp2025.sql", "alreadyregistered", "events");
+    $already_registered = get_db_count($SQL, [
+        "eventid" => $eventid,
+        "name" => $name,
+        "birthdate" => $birthdate,
+    ]);
     return $already_registered > 0;
 }
 
@@ -493,7 +482,9 @@ function print_registration_cart_items_html($registrations) {
     $return = "";
 
     foreach ($registrations as $reg) {
-        $delete = ""; $promo_code_form = "";
+        $delete = false;
+        $promo_code_form = false;
+        $hash = false;
         $pay_on_item = "";
         $item = $reg->item;
 
@@ -521,19 +512,13 @@ function print_registration_cart_items_html($registrations) {
                     ]);
                 }
 
-                $delete = '
-                <button type="button" class="registration_cart_item_remove" onclick="remove_camp_2025_registration(\'' . $reg->hash . '\');">
-                    ' . icon("trash") . '
-                </button>
-                ';
+                // Create delete button.
+                $delete = true;
+                $hash = $reg->hash;
 
-                $event["promocode_set"] = 1; // Remove this once implemented
-                if ($event["promocode_set"] > 0) { // A promocode set is selected for this event.
-                    $promo_code_form = '
-                    <div class="registration_cart_item_promo_code">
-                        ' . get_promo_code_form($event, $reg->hash) . '
-                    </div>
-                    ';
+                $setid = get_db_field("setting", "settings", "type='events_template' AND extra = ||extra|| AND setting_name='template_setting_promocode_set'", ["extra" => $event["eventid"]]);
+                if ($setid > 0) { // A promocode set is selected for this event.
+                    $promo_code_form = get_promo_code_form($event, $reg->hash);
                 }
             }
 
@@ -542,6 +527,7 @@ function print_registration_cart_items_html($registrations) {
 
         $return .= fill_template("templates/camp_2025/tmp/camp2025.template", "cart_item", "events", [
             "delete" => $delete,
+            "hash" => $hash,
             "name" => $item['name'],
             "price" => $item_price,
             "promo_form" => $promo_code_form,
@@ -742,34 +728,24 @@ function show_post_registration_page() {
 
     // Check if money is owed on at least one cart item.
     if ($total_cart_owed > 0) {
-        $title = 'Registration Complete Pending Payment';
-        $subtitle = 'Some payments may be required to complete your registrations.<br />Please see the instructions below.';
+        $title = getlang("title_pending", "/features/events/templates/camp_2025");
+        $subtitle = getlang("subtitle_pending", "/features/events/templates/camp_2025");
 
         // Check if any payment is chosen to be made now.
         if ($total_pay_now > 0) {
-            $message = '
-                At this time you have chosen to pay <strong>$' . number_format($total_pay_now, 2) . '</strong> toward the cost of your registration(s).
-                <br /><br />
-                <div class="centered">
-                    Click a Payment method below to pay for your registration fees.
-                    <br />
-                    ' . get_payment_form() . '
-                </div>';
+            $message = fill_string(getlang("message_paynow", "/features/events/templates/camp_2025"), [
+                "paynow" => number_format($total_pay_now, 2),
+                "form" => get_payment_form(),
+            ]);
         } else {
             // No payment chosen to be made at this time.
-            $message = 'At this time you have chosen not to make a payment. <br />
-            Please be advised that we have sent payment instruction emails to the address you provided.
-            We kindly ask that you review this information carefully in order to proceed with the payment process.';
+            $message = getlang("message_paylater", "/features/events/templates/camp_2025");
         }
     } else {
         // No outstanding payments required.
-        $title = 'Registration Complete';
-        $subtitle = 'Your registrations are complete.';
-        $message = 'Thank you for registering! We\'re excited to have you join us. Your registration is now complete, and there are no outstanding payments required.
-        You\'re all set! <br />
-        <div class="centered">
-            We look forward to seeing you at the event.
-        </div>';
+        $title = getlang("title_complete", "/features/events/templates/camp_2025");
+        $subtitle = getlang("subtitle_complete", "/features/events/templates/camp_2025");
+        $message_nopay = getlang("message_nopay", "/features/events/templates/camp_2025");
     }
 
     // Return the combined HTML content for the registration status page.
@@ -792,14 +768,10 @@ function get_post_registration_cart_status() {
         if ($event['allowinpage'] !== 0) {
             if (is_logged_in() && $event['pageid'] != $CFG->SITEID) {
                 change_page_subscription($event['pageid'], $USER->userid);
-                $allowed_in_page = '
-                    <div class="registration_allowed_in_page">
-                        This registration has granted you access into a private event page.
-                        This area contains specific information about the event.<br />
-                        <a title="Open Event Page" target="_blank" href="' . $CFG->wwwroot . '/index.php?pageid=' . $event['pageid'] . '">
-                            Open Event Page
-                        </a>
-                    </div>';
+                $allowed_in_page = fill_template("templates/camp_2025/tmp/camp2025.template", "message_allowedin", "events", [
+                    "www" => $CFG->wwwroot,
+                    "pageid" => $event['pageid'],
+                ]);
             }
         }
 
@@ -810,30 +782,17 @@ function get_post_registration_cart_status() {
             $facebookbuttons = "";
         }
 
-        $cartitems .= '
-        <div class="registration_cart_item">
-            <div class="registration_cart_item_name">
-                <div style="display: flex;align-items: center;">
-                    <span style="padding-right: 10px;">' . $facebookbuttons . '</span>' .
-                    '<span>' . $item->description . '</span>
-                </div>
-                ' . $allowed_in_page . '
-            </div>
-            <div class="registration_cart_item_price" style="text-align: center;">
-            ' . $status . '
-            </div>
-        </div>';
+        $cartitems .= fill_template("templates/camp_2025/tmp/camp2025.template", "post_cart_item", "events", [
+            "facebook" => $facebookbuttons,
+            "description" => $item->description,
+            "allowedin" => $allowed_in_page,
+            "status" => $status,
+        ]);
     }
 
-    $return = '
-    <div class="registration_cart">
-        <div class="registration_cart_title">
-            Registration Review
-        </div>
-        ' . $cartitems . '
-    </div>';
-
-    return $return;
+    return fill_template("templates/camp_2025/tmp/camp2025.template", "post_cart", "events", [
+        "cartitems" => $cartitems,
+    ]);
 }
 
 function get_event_paypal_info() {

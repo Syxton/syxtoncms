@@ -22,8 +22,8 @@ function customrule_min_age($data = []) {
         "setting_name" => "template_setting_min_age",
     ];
     $min_age = get_db_field("setting", "settings", "type = ||type|| AND extra = ||extra|| AND setting_name = ||setting_name||", $params);
-    $min_age_error = empty($min_age) ? "" : ' data-msg-min="' . error_string('error_age_min:events:templates/camp_2025') . '"';
-    return empty($min_age) ? "" : " data-rule-min=\"$min_age\"";
+    $min_age_error = empty($min_age) ? "" : ' data-msg-min="' . fill_string(getlang("error_age_min", "/features/events/templates/camp_2025"), $min_age) . '"';
+    return empty($min_age) ? "" : " $min_age_error data-rule-min=\"$min_age\"";
 }
 
 function customrule_max_age($data = []) {
@@ -38,8 +38,8 @@ function customrule_max_age($data = []) {
         "setting_name" => "template_setting_max_age",
     ];
     $max_age = get_db_field("setting", "settings", "type = ||type|| AND extra = ||extra|| AND setting_name = ||setting_name||", $params);
-    $max_age_error = empty($max_age) ? "" : ' data-msg-max="' . error_string('error_age_max:events:templates/camp_2025') . '"';
-    return empty($max_age) ? "" : " data-rule-max=\"$max_age\"";
+    $max_age_error = empty($max_age) ? "" : ' data-msg-max="' . fill_string(getlang("error_age_max", "/features/events/templates/camp_2025"), $min_age) . '"';
+    return empty($max_age) ? "" : " $max_age_error data-rule-max=\"$max_age\"";
 }
 
 function customvalue_email($data = []) {

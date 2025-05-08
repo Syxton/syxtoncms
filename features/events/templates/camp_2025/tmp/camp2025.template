@@ -158,18 +158,50 @@ promo_form||
 cart_item||
     <div class="registration_cart_item">
         <div>
-            ||delete||
+            ||delete{{
+                <button type="button" class="registration_cart_item_remove" onclick="remove_camp_2025_registration('||hash||');">
+                    ||echo icon("trash");::none||
+                </button>
+            }}delete||
         </div>
         <div class="registration_cart_item_name">
             ||name||
         </div>
         <div class="registration_cart_item_price">
             <strong>Price: ||price||</strong>
-            ||promo_form||
+            ||promo_form{{
+                <div class="registration_cart_item_promo_code">
+                    ||promo_form||
+                </div>
+            }}promo_form||
             ||pay_on||
         </div>
     </div>
 ||cart_item
+
+post_cart_item||
+    <div class="registration_cart_item">
+        <div class="registration_cart_item_name">
+            <div style="display: flex;align-items: center;">
+                <span style="padding-right: 10px;">||facebook||</span>
+                <span>||description||</span>
+            </div>
+            ||*allowedin||
+        </div>
+        <div class="registration_cart_item_price" style="text-align: center;">
+        ||status||
+        </div>
+    </div>
+||post_cart_item
+
+post_cart||
+    <div class="registration_cart">
+        <div class="registration_cart_title">
+            Registration Review
+        </div>
+        ||cartitems||
+    </div>
+||post_cart
 
 pay_on_item||
     <br />
@@ -178,3 +210,13 @@ pay_on_item||
         ||pay_options||
     </div>
 ||pay_on_item
+
+message_allowedin||
+    <div class="registration_allowed_in_page">
+        This registration has granted you access into a private event page.
+        This area contains specific information about the event.<br />
+        <a title="Open Event Page" target="_blank" href="||wwwroot||/index.php?pageid=||pageid||">
+            Open Event Page
+        </a>
+    </div>
+||message_allowedin

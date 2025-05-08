@@ -1814,25 +1814,6 @@ function emptyreturn() {
     echo "";
 }
 
-/**
- * Replaces placeholders in a string with the given values.
- *
- * @param string $string The string with placeholders.
- * @param array $vars The key-value pairs used for replacement.
- * @return string The modified string.
- */
-function fill_string(string $string, array $vars) {
-    /* Iterate over the given key-value pairs and replace their
-        placeholders in the given string. */
-    foreach ($vars as $key => $value) {
-        /* Replace the placeholder "{key}" with the value. */
-        $string = str_replace("{" . $key . "}", $value, $string);
-    }
-
-    /* Return the modified string. */
-    return $string;
-}
-
 function old_truncate($string, $length = 100, $append = "&hellip;") {
     $string = trim($string);
 

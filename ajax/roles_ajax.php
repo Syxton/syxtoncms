@@ -63,7 +63,7 @@ global $CFG, $USER, $MYVARS;
             $vars = [
                 "selected" => "",
                 "value" => $row['userid'],
-                "display" => fill_string("{fname} {lname} ({email})", $row),
+                "display" => fill_string(getlang("firstlastemail"), $row),
             ];
             $options .= fill_template("tmp/page.template", "select_options_template", false, $vars);
         }
@@ -134,7 +134,7 @@ global $CFG, $MYVARS, $USER;
         while ($row = fetch_row($users)) {
             $p = [
                 "value" => $row['userid'],
-                "display" => fill_string("{fname} {lname} ({email})", $row),
+                "display" => fill_string(getlang("firstlastemail"), $row),
             ];
             $options .= fill_template("tmp/page.template", "select_options_template", false, $p);
         }
@@ -311,7 +311,7 @@ global $CFG, $ROLES, $USER;
                 $params = [
                     "selected" => "",
                     "value" => $row['userid'],
-                    "display" => fill_string("{fname} {lname} ({email})", $row) . $mygroups,
+                    "display" => fill_string(getlang("firstlastemail"), $row) . $mygroups,
                 ];
                 $options .= fill_template("tmp/page.template", "select_options_template", false, $params);
             }
@@ -356,7 +356,7 @@ function get_group_members_select($pageid, $roleid, $groupid) {
             $p = [
                 "selected" => "",
                 "value" => $row['userid'],
-                "display" => fill_string("{fname} {lname} ({email})", $row) . $mygroups,
+                "display" => fill_string(getlang("firstlastemail"), $row) . $mygroups,
             ];
             $options .= fill_template("tmp/page.template", "select_options_template", false, $p);
         }

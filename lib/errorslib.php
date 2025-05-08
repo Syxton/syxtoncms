@@ -35,7 +35,7 @@ $ERRORS->no_login = "Username or password was incorrect.<br />Please try again."
 $ERRORS->no_html_permissions = "You do not have the correct permissions to view this HTML content.";
 $ERRORS->no_buttons = "You have rights to 0 buttons";
 $ERRORS->generic_permissions = "You do not have the correct permissions to do this.";
-$ERRORS->no_permission = "You do not have the <strong>[0]</strong> permission.";
+$ERRORS->no_permission = "You do not have the <strong>{0}</strong> permission.";
 $ERRORS->generic_error = "Congratulations, you found a bug.  Please inform the site admin. " . $CFG->siteemail;
 $ERRORS->generic_db_error = "Database Error. Please inform the site admin. " . $CFG->siteemail;
 
@@ -46,8 +46,8 @@ $ERRORS->user_not_emailed = "The user account has been created, but the confirma
 //Page Errors *********************************************************
 $ERRORS->could_not_subscribe = "You did NOT add this page successfully.";
 $ERRORS->page_not_created = "Your page was NOT created successfully.";
-$ERRORS->no_function = "The function: <strong>[0]</strong> could not be found.";
-$ERRORS->no_data = "The expected data of [0] could not be found.";
+$ERRORS->no_function = "The function: <strong>{0}</strong> could not be found.";
+$ERRORS->no_data = "The expected data of {0} could not be found.";
 $ERRORS->pagenotfound = "Page not found.";
 
 //Polls *********************************************************
@@ -95,34 +95,15 @@ global $CFG, $ERRORS;
     } elseif (isset($lang[1])) {
         include($CFG->dirroot . '/features/' . $lang[1] . "/lang.php");
         if ($vars) {
-            return fill_error_string_blanks($ERRORS->$string, $vars);
+            return fill_string($ERRORS->$string, $vars);
         }
         return $ERRORS->$string;
     } else {
         if ($vars) {
-            return fill_error_string_blanks($ERRORS->$error, $vars);
+            return fill_string($ERRORS->$error, $vars);
         }
         return $ERRORS->$error;
     }
-}
-
-function fill_error_string_blanks($string, $vars) {
-    $vars = is_array($vars) ? $vars : [$vars];
-    $i = 0;
-    foreach ($vars as $var) {
-        // Check if $var is array.
-        if (is_array($var)) {
-            $allvars = "";
-            foreach ($var as $v) {
-                $allvars .= $v . " ";
-            }
-            $string = str_replace("[$i]", $allvars, $string);
-        } else {
-            $string = str_replace("[$i]", $var, $string);
-        }
-        $i++;
-    }
-    return $string;
 }
 
 function myExceptionHandler(Throwable $e) {
