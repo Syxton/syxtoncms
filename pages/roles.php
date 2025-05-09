@@ -27,7 +27,7 @@ global $CFG, $MYVARS, $USER, $ROLES;
     $pageid = !empty($MYVARS->GET['pageid']) ? $MYVARS->GET['pageid'] : $CFG->SITEID; // Should always be passed
 
     if (!user_is_able($USER->userid, "assign_roles", $pageid)) {
-        trigger_error(error_string("no_function", ["assign_roles"]), E_USER_WARNING);
+        trigger_error(getlang("no_function", false, ["assign_roles"]), E_USER_WARNING);
         return;
   }
 
@@ -93,7 +93,7 @@ global $CFG, $USER, $MYVARS, $ROLES;
         $roleid = false; $options = "";
 
     if (!((!$featureid && $abilities->edit_roles->allow) || (($featureid && $abilities->edit_feature_abilities->allow)))) {
-        echo error_string("generic_permissions");
+        echo getlang("generic_permissions");
         return;
     }
 
@@ -135,7 +135,7 @@ global $CFG, $USER, $MYVARS, $ROLES;
     $abilities = user_abilities($USER->userid, $pageid, "roles", $feature, $featureid);
 
     if (!((!$featureid && $abilities->edit_user_abilities->allow) || ($featureid && $abilities->edit_feature_user_abilities->allow))) {
-        echo error_string("generic_permissions");
+        echo getlang("generic_permissions");
         return;
     }
 
@@ -204,13 +204,13 @@ global $CFG, $USER, $MYVARS, $ROLES;
 
     if (!$featureid) {
         if (!user_is_able($USER->userid, "edit_group_abilities", $pageid)) {
-                    echo error_string("generic_permissions");
+                    echo getlang("generic_permissions");
                     return;
                 }
     }
 
     if (!user_is_able($USER->userid, "edit_feature_group_abilities", $pageid, $feature, $featureid)) {
-        echo error_string("generic_permissions");
+        echo getlang("generic_permissions");
         return;
     }
 

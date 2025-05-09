@@ -178,12 +178,12 @@ global $CFG, $USER;
         }
     } catch (\Throwable $e) {
         if ($created) {
-            return error_string("user_not_emailed");
+            return getlang("user_not_emailed");
         } else {
             rollback_db_transaction($e->getMessage());
         }
     }
-    return error_string("user_not_added");
+    return getlang("user_not_added");
 }
 
 function create_random_password() {

@@ -2019,8 +2019,8 @@ global $USER, $CFG, $MYVARS;
                           <label class="rowTitle" for="name">Name</label>
                         <input disabled="disabled" type="text" id="name" name="name" value="' . $v["name"] . '"
                             data-rule-required="true"
-                            data-msg-required="' . error_string('valid_staff_name:events') . '"
-                        /><div class="tooltipContainer info">' . get_help("input_staff_name:events") . '</div>
+                            data-msg-required="' . getlang("input_required") . '"
+                        /><div class="tooltipContainer info">' . getlang("input_full_name") . '</div>
                             <div class="spacer" style="clear: both;"></div>
                     </div>
                     <div class="rowContainer">
@@ -2032,7 +2032,7 @@ global $USER, $CFG, $MYVARS;
                             value="' . $v["dateofbirth"] . '"
                             data-rule-required="true"
                             data-rule-custom="^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$"
-                            data-msg-custom="' . error_string('valid_staff_dateformat:events') . '"
+                            data-msg-custom="' . getlang("input_default_date_slashes") . '"
                             data-rule-date="true"
                             onblur="
                                 var d = new Date($(this).val()).getTime() / 1000;
@@ -2045,7 +2045,7 @@ global $USER, $CFG, $MYVARS;
                                 }
                                 $(\'#agerange\').change();
                             "
-                        /><div class="tooltipContainer info">' . get_help("input_staff_dob:events") . '</div>
+                        /><div class="tooltipContainer info">' . getlang("input_staff_dob", "/features/events") . '</div>
                             <div class="spacer" style="clear: both;"></div>
                       </div>
                     <div class="rowContainer">
@@ -2054,10 +2054,10 @@ global $USER, $CFG, $MYVARS;
                             type="text" id="phone" name="phone" value="' . $v["phone"] . '"
                             data-rule-required="true"
                             data-rule-phone="true"
-                            data-msg-required="' . error_string('valid_staff_phone:events') . '"
-                            data-msg-phone="' . error_string('valid_staff_phone_invalid:events') . '"
+                            data-msg-required="' . getlang("input_required") . '"
+                            data-msg-phone="' . getlang("invalid_phone") . '"
                         />
-                        <div class="tooltipContainer info">' . get_help("input_staff_phone:events") . '</div>
+                        <div class="tooltipContainer info">' . getlang("input_default_phone") . '</div>
                             <div class="spacer" style="clear: both;"></div>
                     </div>
                     <div class="rowContainer">
@@ -2066,7 +2066,7 @@ global $USER, $CFG, $MYVARS;
                             rows="3" id="address" name="address"
                             data-rule-required="true"
                         >' . $v["address"] . '</textarea>
-                        <div class="tooltipContainer info">' . get_help("input_staff_address:events") . '</div>
+                        <div class="tooltipContainer info">' . getlang("input_address") . '</div>
                             <div class="spacer" style="clear: both;"></div>
                           </div>
                     <div class="rowContainer">
@@ -2094,7 +2094,7 @@ global $USER, $CFG, $MYVARS;
                             <option value="0" ' . $v["ar1selected"] . '>younger than 18</option>
                             <option value="1" ' . $v["ar2selected"] . '>18-25</option>
                             <option value="2" ' . $v["ar3selected"] . '>26 or older</option>
-                        </select><div class="tooltipContainer info">' . get_help("input_staff_agerange:events") . '</div><br />
+                        </select><div class="tooltipContainer info">' . getlang("input_staff_agerange", "/features/events") . '</div><br />
                             <div class="spacer" style="clear: both;"></div>
                           </div>
                     <div class="rowContainer">
@@ -2105,7 +2105,7 @@ global $USER, $CFG, $MYVARS;
                             <option value="0" ' . $v["cocmembernoselected"] . '>No</option>
                             <option value="1" ' . $v["cocmemberyesselected"] . '>Yes</option>
                         </select>
-                        <div class="tooltipContainer info">' . get_help("input_staff_cocmember:events") . '</div>
+                        <div class="tooltipContainer info">' . getlang("select_yesno") . '</div>
                             <div class="spacer" style="clear: both;"></div>
                           </div>
                     <div class="rowContainer">
@@ -2113,7 +2113,7 @@ global $USER, $CFG, $MYVARS;
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . ' type="text" id="congregation" name="congregation" value="' . $v["congregation"] . '"
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">' . get_help("input_staff_congregation:events") . '</div>
+                        <div class="tooltipContainer info">' . getlang("input_staff_congregation", "/features/events") . '</div>
                             <div class="spacer" style="clear: both;"></div>
                           </div>
                     <div class="rowContainer">
@@ -2124,7 +2124,7 @@ global $USER, $CFG, $MYVARS;
                             <option value="0" ' . $v["priorworknoselected"] . '>No</option>
                             <option value="1" ' . $v["priorworkyesselected"] . '>Yes</option>
                         </select>
-                        <div class="tooltipContainer info">' . get_help("input_staff_priorwork:events") . '</div>
+                        <div class="tooltipContainer info">' . getlang("select_yesno") . '</div>
                             <div class="spacer" style="clear: both;"></div>
                           </div>
                     <br /><hr><br />
@@ -2145,7 +2145,7 @@ global $USER, $CFG, $MYVARS;
                             <option value="0" ' . $v["q1_1noselected"] . '>No</option>
                             <option value="1" ' . $v["q1_1yesselected"] . '>Yes</option>
                         </select>
-                        <div class="tooltipContainer info">' . get_help("input_staff_q1_1:events") . '</div>
+                        <div class="tooltipContainer info">' . getlang("select_yesno") . '</div>
                             <div class="spacer" style="clear: both;"></div>
                           </div>
                     <div class="rowContainer">
@@ -2164,7 +2164,7 @@ global $USER, $CFG, $MYVARS;
                             <option value="0" ' . $v["q1_2noselected"] . '>No</option>
                             <option value="1" ' . $v["q1_2yesselected"] . '>Yes</option>
                         </select>
-                        <div class="tooltipContainer info">' . get_help("input_staff_q1_2:events") . '</div>
+                        <div class="tooltipContainer info">' . getlang("select_yesno") . '</div>
                             <div class="spacer" style="clear: both;"></div>
                           </div>
                     <div class="rowContainer">
@@ -2182,7 +2182,7 @@ global $USER, $CFG, $MYVARS;
                             <option value="0" ' . $v["q1_3noselected"] . '>No</option>
                             <option value="1" ' . $v["q1_3yesselected"] . '>Yes</option>
                         </select>
-                        <div class="tooltipContainer info">' . get_help("input_staff_q1_3:events") . '</div>
+                        <div class="tooltipContainer info">' . getlang("select_yesno") . '</div>
                             <div class="spacer" style="clear: both;"></div>
                           </div>
                     <br /><hr><br />
@@ -2203,7 +2203,7 @@ global $USER, $CFG, $MYVARS;
                             <option value="0" ' . $v["q2_1noselected"] . '>No</option>
                             <option value="1" ' . $v["q2_1yesselected"] . '>Yes</option>
                         </select>
-                        <div class="tooltipContainer info">' . get_help("input_staff_q2_1:events") . '</div>
+                        <div class="tooltipContainer info">' . getlang("select_yesno") . '</div>
                             <div class="spacer" style="clear: both;"></div>
                           </div>
                     <div class="rowContainer">
@@ -2222,7 +2222,7 @@ global $USER, $CFG, $MYVARS;
                             <option value="0" ' . $v["q2_2noselected"] . '>No</option>
                             <option value="1" ' . $v["q2_2yesselected"] . '>Yes</option>
                         </select>
-                        <div class="tooltipContainer info">' . get_help("input_staff_q2_2:events") . '</div>
+                        <div class="tooltipContainer info">' . getlang("select_yesno") . '</div>
                             <div class="spacer" style="clear: both;"></div>
                           </div>
                     <div class="rowContainer">
@@ -2231,7 +2231,7 @@ global $USER, $CFG, $MYVARS;
                                 rows="3" id="q2_3" name="q2_3"
                                 ' . (empty($v["yestotal"]) ? '' : 'data-rule-required="true"') . '
                             >' . $v["q2_3"] . '</textarea>
-                            <div class="tooltipContainer info">' . get_help("input_staff_q1_3:events") . '</div>
+                            <div class="tooltipContainer info">' . getlang("input_explain", "/features/events") . '</div>
                             <div class="spacer" style="clear: both;"></div>
                           </div>
                     ' . ($viewonly ? '<div style="text-align:center"><h2>' . $v["name"] . ' References</h2></div>' : '<br /><hr><br />') . '
@@ -2243,7 +2243,7 @@ global $USER, $CFG, $MYVARS;
                             type="text" id="ref1name" name="ref1name" value="' . $v["ref1name"] . '"
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">' . get_help("input_staff_refname:events") . '</div>
+                        <div class="tooltipContainer info">' . getlang("input_staff_refname", "/features/events") . '</div>
                             <div class="spacer" style="clear: both;"></div>
                       </div>
                     <div class="rowContainer">
@@ -2252,7 +2252,7 @@ global $USER, $CFG, $MYVARS;
                             type="text" id="ref1relationship" name="ref1relationship" value="' . $v["ref1relationship"] . '"
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">' . get_help("input_staff_refrelationship:events") . '</div>
+                        <div class="tooltipContainer info">' . getlang("input_staff_refrelationship", "/features/events") . '</div>
                             <div class="spacer" style="clear: both;"></div>
                       </div>
                     <div class="rowContainer">
@@ -2261,10 +2261,10 @@ global $USER, $CFG, $MYVARS;
                             type="text" id="ref1phone" name="ref1phone" value="' . $v["ref1phone"] . '"
                             data-rule-required="true"
                             data-rule-phone="true"
-                            data-msg-required="' . error_string('valid_staff_phone:events') . '"
-                            data-msg-phone="' . error_string('valid_staff_phone_invalid:events') . '"
+                            data-msg-required="' . getlang("input_required") . '"
+                            data-msg-phone="' . getlang("invalid_phone") . '"
                         />
-                        <div class="tooltipContainer info">' . get_help("input_staff_phone:events") . '</div>
+                        <div class="tooltipContainer info">' . getlang("input_default_phone") . '</div>
                             <div class="spacer" style="clear: both;"></div>
                     </div>
                     <br /><hr><br />
@@ -2275,7 +2275,7 @@ global $USER, $CFG, $MYVARS;
                             type="text" id="ref2name" name="ref2name" value="' . $v["ref2name"] . '"
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">' . get_help("input_staff_refname:events") . '</div>
+                        <div class="tooltipContainer info">' . getlang("input_staff_refname", "/features/events") . '</div>
                             <div class="spacer" style="clear: both;"></div>
                       </div>
                     <div class="rowContainer">
@@ -2284,7 +2284,7 @@ global $USER, $CFG, $MYVARS;
                             type="text" id="ref2relationship" name="ref2relationship" value="' . $v["ref2relationship"] . '"
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">' . get_help("input_staff_refrelationship:events") . '</div>
+                        <div class="tooltipContainer info">' . getlang("input_staff_refrelationship", "/features/events") . '</div>
                             <div class="spacer" style="clear: both;"></div>
                       </div>
                     <div class="rowContainer">
@@ -2293,10 +2293,10 @@ global $USER, $CFG, $MYVARS;
                             type="text" id="ref2phone" name="ref2phone" value="' . $v["ref2phone"] . '"
                             data-rule-required="true"
                             data-rule-phone="true"
-                            data-msg-required="' . error_string('valid_staff_phone:events') . '"
-                            data-msg-phone="' . error_string('valid_staff_phone_invalid:events') . '"
+                            data-msg-required="' . getlang("input_required") . '"
+                            data-msg-phone="' . getlang("invalid_phone") . '"
                         />
-                        <div class="tooltipContainer info">' . get_help("input_staff_phone:events") . '</div>
+                        <div class="tooltipContainer info">' . getlang("input_default_phone") . '</div>
                             <div class="spacer" style="clear: both;"></div>
                     </div>
                     <br /><hr><br />
@@ -2307,7 +2307,7 @@ global $USER, $CFG, $MYVARS;
                             type="text" id="ref3name" name="ref3name" value="' . $v["ref3name"] . '"
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">' . get_help("input_staff_refname:events") . '</div>
+                        <div class="tooltipContainer info">' . getlang("input_staff_refname", "/features/events") . '</div>
                             <div class="spacer" style="clear: both;"></div>
                       </div>
                     <div class="rowContainer">
@@ -2316,7 +2316,7 @@ global $USER, $CFG, $MYVARS;
                             type="text" id="ref3relationship" name="ref3relationship" value="' . $v["ref3relationship"] . '"
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">' . get_help("input_staff_refrelationship:events") . '</div>
+                        <div class="tooltipContainer info">' . getlang("input_staff_refrelationship", "/features/events") . '</div>
                             <div class="spacer" style="clear: both;"></div>
                       </div>
                     <div class="rowContainer">
@@ -2325,10 +2325,10 @@ global $USER, $CFG, $MYVARS;
                             type="text" id="ref3phone" name="ref3phone" value="' . $v["ref3phone"] . '"
                             data-rule-required="true"
                             data-rule-phone="true"
-                            data-msg-required="' . error_string('valid_staff_phone:events') . '"
-                            data-msg-phone="' . error_string('valid_staff_phone_invalid:events') . '"
+                            data-msg-required="' . getlang("input_required") . '"
+                            data-msg-phone="' . getlang("invalid_phone") . '"
                         />
-                        <div class="tooltipContainer info">' . get_help("input_staff_phone:events") . '</div>
+                        <div class="tooltipContainer info">' . getlang("input_default_phone") . '</div>
                             <div class="spacer" style="clear: both;"></div>
                     </div>
                     <br /><hr><br />
@@ -2346,7 +2346,7 @@ global $USER, $CFG, $MYVARS;
                             type="text" id="workerconsent" name="workerconsent" value="' . $v["workerconsent"] . '"
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">' . get_help("input_staff_workerconsent:events") . '</div>
+                        <div class="tooltipContainer info">' . getlang("input_staff_workerconsent", "/features/events") . '</div>
                             <div class="spacer" style="clear: both;"></div>
                       </div>
                     <div class="rowContainer">
@@ -2355,11 +2355,11 @@ global $USER, $CFG, $MYVARS;
                             type="text" id="workerconsentdate" name="workerconsentdate" value="' . $v["workerconsentdate"] . '"
                             data-rule-required="true"
                             data-rule-custom="^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$"
-                            data-msg-custom="' . error_string('valid_staff_dateformat:events') . '"
+                            data-msg-custom="' . getlang("input_default_date_slashes") . '"
                             data-rule-date="true"
                             disabled="disabled"
                         />
-                        <div class="tooltipContainer info">' . get_help("input_staff_workerconsentdate:events") . '</div>
+                        <div class="tooltipContainer info">' . getlang("input_staff_workerconsentdate", "/features/events") . '</div>
                             <div class="spacer" style="clear: both;"></div>
                       </div>
                     <div>
@@ -2372,7 +2372,7 @@ global $USER, $CFG, $MYVARS;
                             type="checkbox" id="workerconsentsig" name="workerconsentsig" ' . $v["workerconsentsig"] . '
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">' . get_help("input_staff_workerconsentsig:events") . '</div>
+                        <div class="tooltipContainer info">' . getlang("input_staff_workerconsentsig", "/features/events") . '</div>
                             <div class="spacer" style="clear: both;"></div>
                       </div>
                     <div id="sub18" style="' . $v["sub18display"] . '">
@@ -2387,7 +2387,7 @@ global $USER, $CFG, $MYVARS;
                                     type="text" id="parentalconsent" name="parentalconsent" value="' . $v["parentalconsent"] . '"
                                     ' . (empty($v["ar1selected"]) ? '' : 'data-rule-required="true"') . '
                                 />
-                                <div class="tooltipContainer info">' . get_help("input_staff_parentalconsent:events") . '</div>
+                                <div class="tooltipContainer info">' . getlang("input_staff_parentalconsent", "/features/events") . '</div>
                               </div>
                             <div>
                                 <strong>You should understand that the name field and signature field have the same legal effect and can be enforced in the same way as a written signature.</strong>
@@ -2400,7 +2400,7 @@ global $USER, $CFG, $MYVARS;
                                     ' . $v["parentalconsentsig"] . '
                                     ' . (empty($v["ar1selected"]) ? '' : 'data-rule-required="true"') . '
                                 />
-                                <div class="tooltipContainer info">' . get_help("input_staff_parentalconsentsig:events") . '</div>
+                                <div class="tooltipContainer info">' . getlang("input_staff_parentalconsentsig", "/features/events") . '</div>
                                     <div class="spacer" style="clear: both;"></div>
                               </div>
                         </div>
@@ -2412,11 +2412,11 @@ global $USER, $CFG, $MYVARS;
           </div>';
 }
 
-function get_hint_box($hintstring) {
+function get_hint_box($string) {
     return '
         <span class="hint">
             <span class="hint-pointer">&nbsp;</span>
-            ' . get_help($hintstring) . '
+            ' . getlang($string, "/features/events") . '
         </span>';
 }
 
@@ -2430,7 +2430,7 @@ function new_location_form($eventid) {
                 </td>
                 <td class="field_input">
                     <input type="text" id="location_name" name="name" />
-                    ' . get_hint_box("input_location_name:events") . '
+                    ' . get_hint_box("input_location_name") . '
                 </td>
             </tr><tr><td></td><td class="field_input"><span id="location_name_error" class="error_text"></span></td></tr>
             <tr>
@@ -2439,7 +2439,7 @@ function new_location_form($eventid) {
                 </td>
                 <td class="field_input">
                     <input type="text" id="location_address_1" name="add1" />
-                    ' . get_hint_box("input_location_add1:events") . '
+                    ' . get_hint_box("input_location_add1") . '
                 </td>
             </tr><tr><td></td><td class="field_input"><span id="location_address_1_error" class="error_text"></span></td></tr>
             <tr>
@@ -2448,7 +2448,7 @@ function new_location_form($eventid) {
                 </td>
                 <td class="field_input">
                     <input type="text" id="location_address_2" name="add2" />
-                    ' . get_hint_box("input_location_add2:events") . '
+                    ' . get_hint_box("input_location_add2") . '
                 </td>
             </tr><tr><td></td><td class="field_input"><span id="location_address_2_error" class="error_text"></span></td></tr>
             <tr>
@@ -2457,7 +2457,7 @@ function new_location_form($eventid) {
                 </td>
                 <td class="field_input">
                     <input type="text" id="zip" name="zip" size="7" maxlength="5" />
-                    ' . get_hint_box("input_location_zip:events") . '
+                    ' . get_hint_box("input_location_zip") . '
                 </td>
             </tr><tr><td></td><td class="field_input"><span id="zip_error" class="error_text"></span></td></tr>
             <tr>
@@ -2466,7 +2466,7 @@ function new_location_form($eventid) {
                 </td>
                 <td class="field_input">
                     <input type="checkbox" id="shared" name="shared" />
-                    ' . get_hint_box("input_location_share:events") . '
+                    ' . get_hint_box("input_location_share") . '
                 </td>
             </tr>
             <tr>

@@ -74,7 +74,7 @@ global $CFG, $USER, $ROLES;
         } else { //Poll is closed so show results
             return get_css_box($title, get_poll_results($featureid, $area), $buttons, '0px', "polls", $featureid);
         }
-    } else { return error_string("no_poll_permissions"); }
+    } else { return getlang("no_poll_permissions", false); }
 }
 
 function already_taken_poll($pollid) {

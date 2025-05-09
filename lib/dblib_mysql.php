@@ -84,7 +84,7 @@ global $conn;
 		}
 		return $result;
 	} catch (\Throwable $e) {
-		trigger_error(error_string("generic_db_error") . "\n\n" . get_db_error(), E_USER_ERROR);
+		trigger_error(getlang("generic_error") . "\n\n" . get_db_error(), E_USER_ERROR);
 		throw $e;
 	}
 	return false;
@@ -125,7 +125,7 @@ global $conn;
 			return $id;
 		}
 	} catch (\Throwable $e) {
-		trigger_error(error_string("generic_db_error") . "\n\n" . get_db_error(), E_USER_ERROR);
+		trigger_error(getlang("generic_error") . "\n\n" . get_db_error(), E_USER_ERROR);
 		throw $e;
 	}
 

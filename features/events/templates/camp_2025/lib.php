@@ -733,7 +733,7 @@ function show_post_registration_page() {
 
         // Check if any payment is chosen to be made now.
         if ($total_pay_now > 0) {
-            $message = fill_string(getlang("message_paynow", "/features/events/templates/camp_2025"), [
+            $message = getlang("message_paynow", "/features/events/templates/camp_2025", [
                 "paynow" => number_format($total_pay_now, 2),
                 "form" => get_payment_form(),
             ]);

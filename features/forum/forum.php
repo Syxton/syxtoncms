@@ -50,11 +50,11 @@ global $CFG, $USER;
 	try {
 		if ($forumid && $pageid) {
 			if (!user_is_able($USER->userid, "createforumcategory", $pageid)) {
-				trigger_error(error_string("no_permission", ["createforumcategory"]), E_USER_WARNING);
+				trigger_error(getlang("generic_permissions", false, ["createforumcategory"]), E_USER_WARNING);
 				return;
 			}
 			if (!user_is_able($USER->userid, "createforumcategory", $pageid)) {
-				trigger_error(error_string("generic_permissions"), E_USER_WARNING);
+				trigger_error(getlang("generic_permissions"), E_USER_WARNING);
 				return;
 			}
 			$script = ajaxapi([
@@ -67,7 +67,7 @@ global $CFG, $USER;
 			$params = [
 				"formid" => "new_category_form",
 				"forumid" => $forumid,
-				"help" => get_help("new_category"),
+				"help" => getlang("new_category"),
 			];
 			$returnme .= '<h3>Create Category</h3>';
 			$returnme .= fill_template("tmp/forum.template", "category_form", "forum", $params);
@@ -92,7 +92,7 @@ global $CFG, $USER;
 		$returnme = $error = "";
 
 		if (!user_is_able($USER->userid, "editforumcategory", $pageid)) {
-			trigger_error(error_string("no_permission", ["editforumcategory"]), E_USER_WARNING);
+			trigger_error(getlang("generic_permissions", false, ["editforumcategory"]), E_USER_WARNING);
 			return;
 		}
 
@@ -107,7 +107,7 @@ global $CFG, $USER;
 			"formid" => "edit_category_form",
 			"forumid" => $forumid,
 			"title" => $category["title"],
-			"help" => get_help("new_category"),
+			"help" => getlang("new_category"),
 		];
 		$returnme .= '<h3>Edit Category</h3>';
 		$returnme .= fill_template("tmp/forum.template", "category_form", "forum", $params);

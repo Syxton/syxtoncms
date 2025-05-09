@@ -51,7 +51,7 @@
         <div style="font-size:' . $titlesize . 'px;font-weight:bold;text-align:center;padding: 10px;">' . $poll["question"] . '</div>
         <div id="chart_div" style="display: flex;justify-content: center;width: 100%;height:' . $height . '"></div>';
     } else {
-        trigger_error(error_string("no_data", [["Userid: $userid", "Year: $year", "Month: $month"]]), E_USER_WARNING);
+        trigger_error(getlang("no_data", false, [["Userid: $userid", "Year: $year", "Month: $month"]]), E_USER_WARNING);
     }
     ?>
     </body>

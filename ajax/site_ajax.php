@@ -31,7 +31,7 @@ function login() {
     } else {
         ajax_return(json_encode([
             'status' => 'failed',
-            'content' => error_string("no_login"),
+            'content' => getlang("invalid_login"),
         ]));
     }
 }

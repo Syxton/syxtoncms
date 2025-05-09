@@ -20,6 +20,8 @@ if (!defined('VALIDATELIB')) { include_once($CFG->dirroot . '/lib/validatelib.ph
 global $MYVARS;
 collect_vars();
 
+$path = "/features/events/templates/simple_contact_form";
+
 $eventid = clean_myvar_opt("eventid", "int", false);
 $regid = clean_myvar_opt("regid", "int", false);
 $show_again = clean_myvar_opt("show_again", "bool", false);
@@ -103,27 +105,27 @@ if ($autofill) {
 
             <input type="hidden" name="Name" />
 			<div class="rowContainer">
-				<label class="rowTitle" for="email">Email Address *</label><input tabindex="1" type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-msg-required="' . error_string('valid_req_email') . '" data-msg-email="' . error_string('valid_email_invalid') . '" /><div class="tooltipContainer info">' . get_help("help_email:events:templates/simple_contact_form") . '</div>
+				<label class="rowTitle" for="email">Email Address *</label><input tabindex="1" type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-msg-required="' . getlang("input_required") . '" data-msg-email="' . getlang("invalid_email") . '" /><div class="tooltipContainer info">' . getlang("input_email") . '</div>
 				  <div class="spacer" style="clear: both;"></div>
             </div>
 			<div class="rowContainer">
-				<label class="rowTitle" for="Name_First">First Name *</label><input tabindex="2" type="text" id="Name_First" name="Name_First" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="' . error_string('valid_req_fname') . '" /><div class="tooltipContainer info">' . get_help("input_fname") . '</div>
+				<label class="rowTitle" for="Name_First">First Name *</label><input tabindex="2" type="text" id="Name_First" name="Name_First" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="' . getlang("input_required") . '" /><div class="tooltipContainer info">' . getlang("input_fname") . '</div>
 				  <div class="spacer" style="clear: both;"></div>
             </div>
 			<div class="rowContainer">
-				<label class="rowTitle" for="Name_Last">Last Name *</label><input tabindex="3" type="text" id="Name_Last" name="Name_Last" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="' . error_string('valid_req_lname') . '" /><div class="tooltipContainer info">' . get_help("input_lname") . '</div>
+				<label class="rowTitle" for="Name_Last">Last Name *</label><input tabindex="3" type="text" id="Name_Last" name="Name_Last" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="' . getlang("input_required") . '" /><div class="tooltipContainer info">' . getlang("input_lname") . '</div>
 					  <div class="spacer" style="clear: both;"></div>
             </div>
 			<div class="rowContainer">
-				<label class="rowTitle" for="Address_Line1">Mailing Address Line One *</label><input tabindex="9" type="text" id="Address_Line1" name="Address_Line1" data-rule-required="true" /><div class="tooltipContainer info">' . get_help("help_address:events:templates/simple_contact_form") . '</div>
+				<label class="rowTitle" for="Address_Line1">Mailing Address Line One *</label><input tabindex="9" type="text" id="Address_Line1" name="Address_Line1" data-rule-required="true" /><div class="tooltipContainer info">' . getlang("input_address1") . '</div>
                 <div class="spacer" style="clear: both;"></div>
 			</div>
 			<div class="rowContainer">
-				<label class="rowTitle" for="Address_Line2">Mailing Address Line Two</label><input tabindex="10" type="text" id="Address_Line2" name="Address_Line2" /><div class="tooltipContainer info">' . get_help("help_address:events:templates/simple_contact_form") . '</div>
+				<label class="rowTitle" for="Address_Line2">Mailing Address Line Two</label><input tabindex="10" type="text" id="Address_Line2" name="Address_Line2" /><div class="tooltipContainer info">' . getlang("input_address2") . '</div>
                 <div class="spacer" style="clear: both;"></div>
 			</div>
 			<div class="rowContainer">
-				<label class="rowTitle" for="Address_City">City *</label><input tabindex="11" type="text" id="Address_City" name="Address_City" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">' . get_help("help_city:events:templates/simple_contact_form") . '</div>
+				<label class="rowTitle" for="Address_City">City *</label><input tabindex="11" type="text" id="Address_City" name="Address_City" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">' . getlang("input_city") . '</div>
                 <div class="spacer" style="clear: both;"></div>
 			</div>
 			<div class="rowContainer">
@@ -181,15 +183,15 @@ if ($autofill) {
                     <option value="WI">Wisconsin
                     <option value="WY">Wyoming
                 </select>
-                <div class="tooltipContainer info">' . get_help("help_state:events:templates/simple_contact_form") . '</div>
+                <div class="tooltipContainer info">' . getlang("select_state") . '</div>
                 <div class="spacer" style="clear: both;"></div>
 			</div>
             <div class="rowContainer">
-                <label class="rowTitle" for="Address_Zipcode">Zipcode *</label><input tabindex="13" type="text" size="5" maxlength="5" id="Address_Zipcode" name="Address_Zipcode" data-rule-required="true" data-rule-number="true" data-rule-minlength="5" /><div class="tooltipContainer info">' . get_help("help_zip:events:templates/simple_contact_form") . '</div>
+                <label class="rowTitle" for="Address_Zipcode">Zipcode *</label><input tabindex="13" type="text" size="5" maxlength="5" id="Address_Zipcode" name="Address_Zipcode" data-rule-required="true" data-rule-number="true" data-rule-minlength="5" /><div class="tooltipContainer info">' . getlang("input_zip") . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
-                <label class="rowTitle" for="Phone">Phone *</label><input tabindex="14" type="text" maxlength="22" id="Phone" name="Phone" data-rule-phone="true" data-rule-required="true" /><div class="tooltipContainer info">' . get_help("help_phone:events:templates/simple_contact_form") . '</div>
+                <label class="rowTitle" for="Phone">Phone *</label><input tabindex="14" type="text" maxlength="22" id="Phone" name="Phone" data-rule-phone="true" data-rule-required="true" /><div class="tooltipContainer info">' . getlang("input_default_phone") . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>';
 
@@ -207,7 +209,7 @@ if ($autofill) {
                         <option value="Yes">Yes</option>
                         <option value="No">No</option>
                     </select>
-                    <div class="tooltipContainer info">' . get_help("help_overnight:events:templates/simple_contact_form") . '</div>
+                    <div class="tooltipContainer info">' . getlang("help_overnight", $path) . '</div>
                     <div class="spacer" style="clear: both;"></div>
                 </div>
                 <div class="rowContainer">
@@ -217,7 +219,7 @@ if ($autofill) {
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
                     </select>
-                    <div class="tooltipContainer info">' . get_help("help_gender:events:templates/simple_contact_form") . '</div>
+                    <div class="tooltipContainer info">' . getlang("select_gender") . '</div>
                     <div class="spacer" style="clear: both;"></div>
                 </div>';
             }
@@ -228,7 +230,7 @@ if ($event['fee_full']) {
         <div class="rowContainer">
             <label class="rowTitle" for="Camp_Fee">Pay With Application</label>
             ' . make_fee_options($event['fee_min'], $event['fee_full'], "payment_amount",'onchange="updateTotal();" onclick="updateTotal();"', $event['sale_end'], $event['sale_fee']) . '
-            <div class="tooltipContainer info">' . get_help("help_paywithapp:events:templates/simple_contact_form") . '</div>
+            <div class="tooltipContainer info">' . getlang("help_paywithapp", $path) . '</div>
             <div class="spacer" style="clear: both;"></div>
         </div>
 

@@ -40,13 +40,10 @@ global $MYVARS, $CFG;
     ]);
 
     $params = [
-        "email_req" => error_string('valid_req_email'), "email_valid" => error_string('valid_email_invalid'),
-        "email_unique" => error_string('valid_email_unique'), "email_help" => get_help("input_email"),
-        "fname_req" => error_string('valid_req_fname'), "fname_help" => get_help("input_fname"),
-        "lname_req" => error_string('valid_req_lname'), "lname_help" => get_help("input_lname"),
-        "password_req" => error_string('valid_req_password'), "password_length" => error_string('valid_password_length'),
-        "password_help" => get_help("input_password"), "vpassword_req" => error_string('valid_req_vpassword'),
-        "vpassword_match" => error_string('valid_vpassword_match'), "vpassword_help" => get_help("input_vpassword"),
+        "email_valid" => getlang("invalid_email"), "email_unique" => getlang("invalid_email_unique"),
+        "email_help" => getlang("input_email"), "fname_help" => getlang("input_fname"), "lname_help" => getlang("input_lname"),
+        "password_length" => getlang("invalid_length", false, ["6"]), "password_help" => getlang("input_password"),
+        "vpassword_match" => getlang("invalid_password_match"), "vpassword_help" => getlang("input_vpassword"),
     ];
     echo create_validation_script("signup_form", "add_new_user()");
     echo format_popup(fill_template("tmp/user.template", "new_user_template", false, $params), $CFG->sitename . ' Signup');
@@ -75,12 +72,10 @@ global $PAGE, $CFG;
         $params["wwwroot"] = $CFG->wwwroot;
         $params["directory"] = (empty($CFG->directory) ? '' : $CFG->directory . '/');
         $params["alternate"] = $alternate;
-        $params["password_req"] = error_string('valid_req_password');
-        $params["password_length"] = error_string('valid_password_length');
-        $params["password_help"] = get_help("input_password");
-        $params["vpassword_req"] = error_string('valid_req_password');
-        $params["vpassword_match"] = error_string('valid_vpassword_match');
-        $params["vpassword_help"] = get_help("input_vpassword");
+        $params["password_length"] = getlang("invalid_length", false, ["6"]);
+        $params["password_help"] = getlang("input_password");
+        $params["vpassword_match"] = getlang("invalid_password_match");
+        $params["vpassword_help"] = getlang("input_vpassword");
 
         ajaxapi([
             "id" => "reset_password",
@@ -116,16 +111,15 @@ global $CFG, $USER;
     if (!empty($USER->userid)) {
         if (!defined('VALIDATELIB')) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
 
-        $params["fname_help"] = get_help("input_fname");
-        $params["lname_help"] = get_help("input_lname");
-        $params["email_req"] = error_string('valid_req_email');
-        $params["email_valid"] = error_string('valid_email_invalid');
-        $params["email_unique"] = error_string('valid_email_unique');
-        $params["email_help"] = get_help("input_email");
-        $params["password_length"] = error_string('valid_password_length');
-        $params["password_help"] = get_help("input_password");
-        $params["vpassword_match"] = error_string('valid_vpassword_match');
-        $params["vpassword_help"] = get_help("input_vpassword");
+        $params["fname_help"] = getlang("input_fname");
+        $params["lname_help"] = getlang("input_lname");
+        $params["email_valid"] = getlang("invalid_email");
+        $params["email_unique"] = getlang("invalid_email_unique");
+        $params["email_help"] = getlang("input_email");
+        $params["password_length"] = getlang("invalid_length", false, ["6"]);
+        $params["password_help"] = getlang("input_password");
+        $params["vpassword_match"] = getlang("invalid_password_match");
+        $params["vpassword_help"] = getlang("input_vpassword");
 
         ajaxapi([
             "id" => "change_profile_submit",
@@ -164,10 +158,9 @@ global $CFG;
     ]);
 
     $params = [
-        "email_req" => error_string('valid_req_email'),
-        "email_valid" => error_string('valid_email_invalid'),
-        "email_used" => error_string('valid_email_used'),
-        "email_help" => get_help("input_email"),
+        "email_valid" => getlang("invalid_email"),
+        "email_used" => getlang("invalid_email_notfound"),
+        "email_help" => getlang("input_email"),
     ];
 
     echo create_validation_script("password_request_form", "forgot_password_submit()");

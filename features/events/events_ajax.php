@@ -221,15 +221,15 @@ global $CFG, $PAGE;
 
     // Make sure request exists and get the featureid
     if (!$featureid = get_db_field("featureid", "events_requests", "reqid = ||reqid||", ["reqid" => $reqid])) {
-        throw new Exception(error_string("invalid_old_request:events"));
+        throw new Exception(getlang("old_request", "/features/events"));
     }
 
     if (!$pageid = get_db_field("pageid", "pages_features", "feature = 'events' AND featureid = ||featureid||", ["featureid" => $featureid])) {
-        throw new Exception(error_string("invalid_old_request:events"));
+        throw new Exception(getlang("old_request", "/features/events"));
     }
 
     if (!valid_voter($pageid, $featureid, $voteid)) {
-        throw new Exception(error_string("generic_permissions"));
+        throw new Exception(getlang("generic_permissions"));
     }
 
     $PAGE->title = $CFG->sitename . " - Event Request"; // Title of page
@@ -256,7 +256,7 @@ global $CFG, $MYVARS;
 
     // Make sure request exists and get the featureid
     if (!$featureid = get_db_field("featureid", "events_requests", "reqid = ||reqid||", ["reqid" => $reqid])) {
-        throw new Exception(error_string("invalid_old_request:events"));
+        throw new Exception(getlang("old_request", "/features/events"));
     }
 
     // Get feature request settings
@@ -269,17 +269,17 @@ global $CFG, $MYVARS;
     $emaillist = prepare_email_list($settings->events->$featureid->emaillistconfirm->setting);
 
     if (!valid_voter($pageid, $featureid, $voteid)) {
-        throw new Exception(error_string("generic_permissions"));
+        throw new Exception(getlang("generic_permissions"));
     }
 
     // Allowed to ask questions
     $SQL = fetch_template("dbsql/events.sql", "insert_events_requests_questions", "events");
     if (!$qid = execute_db_sql($SQL, ["reqid" => $reqid, "question" => $question, "qtime" => get_timestamp()])) {
-        throw new Exception(error_string("generic_error"));
+        throw new Exception(getlang("generic_error"));
     }
 
     if (!$request = get_db_row("SELECT * FROM events_requests WHERE reqid = ||reqid||", ["reqid" => $reqid])) {
-        throw new Exception(error_string("invalid_old_request:events"));
+        throw new Exception(getlang("old_request", "/features/events"));
     }
 
     $protocol = get_protocol();
@@ -354,11 +354,11 @@ global $CFG, $PAGE;
 
     // Make sure request exists and get the featureid
     if (!$featureid = get_db_field("featureid", "events_requests", "reqid = ||reqid||", ["reqid" => $reqid])) {
-        throw new Exception(error_string("invalid_old_request:events"));
+        throw new Exception(getlang("old_request", "/features/events"));
     }
 
     if (!$pageid = get_db_field("pageid", "pages_features", "feature = 'events' AND featureid = ||featureid||", ["featureid" => $featureid])) {
-        throw new Exception(error_string("invalid_old_request:events"));
+        throw new Exception(getlang("old_request", "/features/events"));
     }
 
     $PAGE->title = $CFG->sitename . " - Event Request"; // Title of page
@@ -385,11 +385,11 @@ global $CFG;
 
     // Make sure request exists and get the featureid
     if (!$featureid = get_db_field("featureid", "events_requests", "reqid = ||reqid||", ["reqid" => $reqid])) {
-        throw new Exception(error_string("invalid_old_request:events"));
+        throw new Exception(getlang("old_request", "/features/events"));
     }
 
     if (!$pageid = get_db_field("pageid", "pages_features", "feature = 'events' AND featureid = ||featureid||", ["featureid" => $featureid])) {
-        throw new Exception(error_string("invalid_old_request:events"));
+        throw new Exception(getlang("old_request", "/features/events"));
     }
 
     if (!$settings = fetch_settings("events", $featureid, $pageid)) {
@@ -400,7 +400,7 @@ global $CFG;
 
     $SQL = "UPDATE events_requests_questions set answer = ||answer||, answer_time = ||answer_time|| WHERE id = ||id||";
     if (!execute_db_sql($SQL, ["answer" => $answer, "answer_time" => get_timestamp(), "id" => $qid])) {
-        throw new Exception(error_string("generic_db_error"));
+        throw new Exception(getlang("generic_error"));
     }
 
     $protocol = get_protocol();
@@ -461,7 +461,7 @@ function confirm_event_relay() {
     $confirm = clean_myvar_req("confirm", "int");
     $error = "";
     if (!confirm_or_deny_event($eventid, $confirm)) {
-        $error = error_string("failed_confirm:events");
+        $error = getlang("failed_confirm", "/features/events");
     }
     ajax_return("", $error);
 }
@@ -492,11 +492,11 @@ global $CFG, $PAGE, $MYVARS;
 
         // Make sure request exists and get the featureid
         if (!$featureid = get_db_field("featureid", "events_requests", "reqid = ||reqid||", ["reqid" => $reqid])) {
-            throw new Exception(error_string("invalid_old_request:events"));
+            throw new Exception(getlang("old_request", "/features/events"));
         }
 
         if (!$pageid = get_db_field("pageid", "pages_features", "feature = 'events' AND featureid = ||featureid||", ["featureid" => $featureid])) {
-            throw new Exception(error_string("invalid_old_request:events"));
+            throw new Exception(getlang("old_request", "/features/events"));
         }
 
         $PAGE->title = $CFG->sitename . " - Event Request has been voted on"; // Title of page
@@ -517,7 +517,7 @@ global $CFG, $PAGE, $MYVARS;
         $emaillist = prepare_email_list($settings->events->$featureid->emaillistconfirm->setting);
 
         if (!valid_voter($pageid, $featureid, $voteid)) {
-            throw new Exception(error_string("generic_permissions"));
+            throw new Exception(getlang("generic_permissions"));
         }
 
         // See if the person has already voted
@@ -561,7 +561,7 @@ global $CFG, $PAGE, $MYVARS;
 
         // See if the voting on this request is finished
         if (!$request = get_db_row(fetch_template("dbsql/events.sql", "get_events_requests", "events"), ["reqid" => $reqid])) {
-            throw new Exception(error_string("invalid_old_request:events"));
+            throw new Exception(getlang("old_request", "/features/events"));
         }
 
         $votes_for = clean_param_opt($request, "votes_for", "int", 0);
@@ -596,13 +596,13 @@ global $CFG, $PAGE, $MYVARS;
         if ($votes_for == $approveneeded && $votes_against < $denyneeded) {
             // Make event
             if (!$eventid = convert_to_event($request, $locationid, $pageid, $featureid)) {
-                throw new Exception(error_string("invalid_event:events"));
+                throw new Exception(getlang("invalid_event_conversion", "/features/events"));
             }
 
             // Confirm event
             $siteviewable = $pageid == $CFG->SITEID ? true : false; //if feature is on site, then yes...otherwise no.
             if (!confirm_or_deny_event($eventid, $siteviewable)) {
-                throw new Exception(error_string("failed_confirm:events"));
+                throw new Exception(getlang("failed_confirm", "/features/events"));
             }
 
             // Delete event request
@@ -1447,7 +1447,7 @@ global $CFG, $USER;
 
             // Count was > 0, so this shouldn't be empty.
             if (!$results = get_db_result($SQL, $searchparams)) {
-                throw new \Exception(error_string("generic_db_error"));
+                throw new \Exception(getlang("generic_error"));
             }
 
 
@@ -1953,11 +1953,10 @@ function get_limit_form() {
             $formlist = get_template_formlist($template_id);
             foreach ($formlist as $f) {
                 $el = get_template_formlist_element_array($template, $f);
-                if (isset($el[2]) && $el[1] != "Pay") {
+                if (!isset($el["displayonly"]) || !$el["displayonly"]) {
                     $values[] = [
-                        "elementid" => $el[0],
-                        "type" => $el[1],
-                        "display" => $el[2],
+                        "elementid" => $el["name"],
+                        "display" => $el["title"],
                     ];
                 }
             }
@@ -2001,21 +2000,6 @@ function get_limit_form() {
     <br />
     <table>
         <tr>
-            <td class="field_input" colspan="2" style="padding: 5px;">
-                <strong>Limit of <input id="custom_limit_num" type="text" size="3" style="margin: 0px" /> registrations</strong>
-            </td>
-        </tr>
-        <tr>
-            <td class="field_input" colspan="2" style="padding: 5px;">
-                <strong>where ' . $fields . '</strong>
-            </td>
-        </tr>
-        <tr>
-            <td class="field_input" colspan="2" style="padding: 5px;">
-                <strong>is ' . $operators . ' <input id="custom_limit_value" type="text" /></strong>
-            </td>
-        </tr>
-        <tr>
             <td class="sub_field_title" style="padding: 5px;width: 75px;text-align:center">
                 Soft Limit:
             </td>
@@ -2024,7 +2008,28 @@ function get_limit_form() {
                     <option value="0">No</option>
                     <option value="1">Yes</option>
                 </select>
-                ' . get_hint_box("input_event_custom_limit_sorh:events") . '
+                ' . get_hint_box("input_event_custom_limit_explanation") . '
+            </td>
+        </tr>
+        <tr>
+            <td class="field_input" colspan="2" style="padding: 5px;">
+                <input id="custom_limit_num" type="text" size="3" style="margin: 0px" />
+                ' . get_hint_box("input_event_custom_limit_num") . '
+                <strong> registrations allowed</strong>
+            </td>
+        </tr>
+        <tr>
+            <td class="field_input" colspan="2" style="padding: 5px;">
+                <strong>where </strong>
+                ' . $fields . '
+                ' . get_hint_box("input_event_custom_limit_fields") . '
+            </td>
+        </tr>
+        <tr>
+            <td class="field_input" colspan="2" style="padding: 5px;">
+                <strong>is </strong>
+                ' . $operators . ' <input id="custom_limit_value" type="text" />
+                ' . get_hint_box("input_event_custom_limiter") . '
             </td>
         </tr>
     </table>
@@ -2033,7 +2038,7 @@ function get_limit_form() {
         <span style="display:inline-block;" id="custom_limit_value_error" class="error_text"></span>
         <span style="display:inline-block;" id="custom_limit_num_error" class="error_text"></span>
         <span style="display:inline-block;" id="custom_limit_sorh_error" class="error_text"></span><br />
-        <button id="add_custom_limit">
+        <button id="add_custom_limit" type="button">
             Add Custom Limit
         </button>
     </div>
@@ -2207,7 +2212,7 @@ global $CFG, $MYVARS;
 
             if ($pageid == $CFG->SITEID && $eventid) {
                 if (!confirm_or_deny_event($eventid, true)) {
-                    throw new Exception(error_string("failed_confirm:events"));
+                    throw new Exception(getlang("failed_confirm", "/features/events"));
                 }
             }
 
@@ -2249,7 +2254,7 @@ global $CFG, $MYVARS;
 
             if ($pageid == $CFG->SITEID && $eventid) {
                 if (!confirm_or_deny_event($eventid, true)) {
-                    throw new Exception(error_string("failed_confirm:events"));
+                    throw new Exception(getlang("failed_confirm", "/features/events"));
                 }
             }
             commit_db_transaction();
@@ -2503,10 +2508,10 @@ global $CFG, $USER;
                     $row .= ',"' . $reorder[$field["name"]]["value"] . '"';
                 }
             } else {
-                    $formlist = get_db_result("SELECT *
-                                               FROM events_templates_forms
-                                               WHERE template_id = ||template_id||
-                                               ORDER BY sort", ["template_id" => $event['template_id']]);
+                $formlist = get_db_result("SELECT *
+                                            FROM events_templates_forms
+                                            WHERE template_id = ||template_id||
+                                            ORDER BY sort", ["template_id" => $event['template_id']]);
                 $sortby = "elementid";
                   while ($form = fetch_row($formlist)) {
                     $row .= ',"' . $reorder[$form[$sortby]]["value"] . '"';
@@ -2626,7 +2631,7 @@ global $CFG, $USER;
 
             // Count was > 0, so this shouldn't be empty.
             if (!$results = get_db_result($SQL, $searchparams)) {
-                throw new \Exception(error_string("generic_db_error"));
+                throw new \Exception(getlang("generic_error"));
             }
 
             // Change template status.
@@ -2853,7 +2858,7 @@ global $CFG, $USER;
 
             // Count was > 0, so this shouldn't be empty.
             if (!$results = get_db_result($SQL, $searchparams)) {
-                throw new \Exception(error_string("generic_db_error"));
+                throw new \Exception(getlang("generic_error"));
             }
 
             // save bgcheck date

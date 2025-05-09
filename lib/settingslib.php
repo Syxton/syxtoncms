@@ -86,7 +86,7 @@ function make_settings_page($settings, $settinginfo, $title = "Feature Settings"
     global $CFG, $USER, $PAGE;
     //Check if user has permission to be here
     if (!user_is_able($USER->userid, "editfeaturesettings", $PAGE->id)) {
-        echo error_string("generic_permissions");
+        echo getlang("generic_permissions");
         return;
     }
 

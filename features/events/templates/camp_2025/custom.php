@@ -22,7 +22,7 @@ function customrule_min_age($data = []) {
         "setting_name" => "template_setting_min_age",
     ];
     $min_age = get_db_field("setting", "settings", "type = ||type|| AND extra = ||extra|| AND setting_name = ||setting_name||", $params);
-    $min_age_error = empty($min_age) ? "" : ' data-msg-min="' . fill_string(getlang("error_age_min", "/features/events/templates/camp_2025"), $min_age) . '"';
+    $min_age_error = empty($min_age) ? "" : ' data-msg-min="' . getlang("error_age_min", "/features/events/templates/camp_2025", $min_age) . '"';
     return empty($min_age) ? "" : " $min_age_error data-rule-min=\"$min_age\"";
 }
 
@@ -38,7 +38,7 @@ function customrule_max_age($data = []) {
         "setting_name" => "template_setting_max_age",
     ];
     $max_age = get_db_field("setting", "settings", "type = ||type|| AND extra = ||extra|| AND setting_name = ||setting_name||", $params);
-    $max_age_error = empty($max_age) ? "" : ' data-msg-max="' . fill_string(getlang("error_age_max", "/features/events/templates/camp_2025"), $min_age) . '"';
+    $max_age_error = empty($max_age) ? "" : ' data-msg-max="' . getlang("error_age_max", "/features/events/templates/camp_2025", $min_age) . '"';
     return empty($max_age) ? "" : " $max_age_error data-rule-max=\"$max_age\"";
 }
 
@@ -259,7 +259,7 @@ function customhelp_shirt_size($data = []) {
     $shirt_price = get_db_field("setting", "settings", "type = ||type|| AND extra = ||extra|| AND setting_name = ||setting_name||", $params);
     $shirt_price = empty($shirt_price) ? "no extra charge" : '+ $' . $shirt_price . '.00';
 
-    return get_help("help_shirt_size:events:templates/camp_new") . " ($shirt_price)";
+    return getlang("help_shirt_size", "/features/events/templates/camp_2025") . " ($shirt_price)";
 }
 
 function customoptions_picture($data = []) {
@@ -311,5 +311,5 @@ function customhelp_picture($data = []) {
     $pictures_price = get_db_field("setting", "settings", "type = ||type|| AND extra = ||extra|| AND setting_name = ||setting_name||", $params);
     $pictures_price = empty($pictures_price) ? "0" : $pictures_price;
 
-    return get_help("help_pictures:events:templates/camp_new") . ' ($' . $pictures_price . '.00 for 8x10 group photo)';
+    return getlang("help_pictures", "/features/events/templates/camp_2025") . ' ($' . $pictures_price . '.00 for 8x10 group photo)';
 }

@@ -7,7 +7,7 @@ new_user_template||
             <label class="rowTitle" for="email">
             Email Address
             </label>
-            <input type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-rule-ajax1="ajax/site_ajax.php::unique_email::&email=::true" data-msg-required="||email_req||" data-msg-email="||email_valid||" data-msg-ajax1="||email_unique||" />
+            <input type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-rule-ajax1="ajax/site_ajax.php::unique_email::&email=::true" data-msg-required="||echo getlang("input_required");::none||" data-msg-email="||email_valid||" data-msg-ajax1="||email_unique||" />
             <div class="tooltipContainer info">
             ||email_help||
             </div>
@@ -17,7 +17,7 @@ new_user_template||
             <label class="rowTitle" for="fname">
             First Name
             </label>
-            <input type="text" id="fname" name="fname" data-rule-required="true" data-msg-required="||fname_req||" />
+            <input type="text" id="fname" name="fname" data-rule-required="true" data-msg-required="||echo getlang("input_required");::none||" />
             <div class="tooltipContainer info">
             ||fname_help||
             </div>
@@ -27,7 +27,7 @@ new_user_template||
             <label class="rowTitle" for="lname">
             Last Name
             </label>
-            <input type="text" id="lname" name="lname" data-rule-required="true" data-msg-required="||lname_req||" />
+            <input type="text" id="lname" name="lname" data-rule-required="true" data-msg-required="||echo getlang("input_required");::none||" />
             <div class="tooltipContainer info">
             ||lname_help||
             </div>
@@ -37,7 +37,7 @@ new_user_template||
             <label class="rowTitle" for="mypassword">
             Password
             </label>
-            <input type="password" id="mypassword" name="mypassword" data-rule-required="true" data-rule-minlength="6" data-msg-required="||password_req||" data-msg-minlength="||password_length||" />
+            <input type="password" id="mypassword" name="mypassword" data-rule-required="true" data-rule-minlength="6" data-msg-required="||echo getlang("input_required");::none||" data-msg-minlength="||password_length||" />
             <div class="tooltipContainer info">
             ||password_help||
             </div>
@@ -47,7 +47,7 @@ new_user_template||
             <label class="rowTitle" for="vpassword">
             Verify Password
             </label>
-            <input type="password" id="vpassword" name="vpassword" data-rule-required="true" data-rule-equalTo="#mypassword" data-msg-required="||vpassword_req||" data-msg-equalTo="||vpassword_match||" /><div class="tooltipContainer info">||vpassword_help||</div><br/>
+            <input type="password" id="vpassword" name="vpassword" data-rule-required="true" data-rule-equalTo="#mypassword" data-msg-required="||echo getlang("input_required");::none||" data-msg-equalTo="||vpassword_match||" /><div class="tooltipContainer info">||vpassword_help||</div><br/>
             <div class="spacer" style="clear: both;"></div>
         </div>
         <input class="submit" name="submit" type="submit" value="Sign Up" style="margin: auto;width: 80px;display: block;" />
@@ -72,7 +72,7 @@ reset_password_template||
                 <label class="rowTitle" for="mypassword">
                 New Password
                 </label>
-                <input value="" type="password" id="mypassword" name="mypassword" data-rule-required="true" data-rule-minlength="6" data-msg-required="||password_req||" data-msg-minlength="||password_length||" />
+                <input value="" type="password" id="mypassword" name="mypassword" data-rule-required="true" data-rule-minlength="6" data-msg-required="||echo getlang("input_required");::none||" data-msg-minlength="||password_length||" />
                 <div class="tooltipContainer info">
                 ||password_help||
                 </div>
@@ -82,7 +82,7 @@ reset_password_template||
                 <label class="rowTitle" for="vpassword">
                 Verify Password
                 </label>
-                <input value="" type="password" id="vpassword" name="vpassword" data-rule-required="true" data-rule-equalTo="#mypassword" data-msg-required="||vpassword_req||" data-msg-equalTo="||vpassword_match||" />
+                <input value="" type="password" id="vpassword" name="vpassword" data-rule-required="true" data-rule-equalTo="#mypassword" data-msg-required="||echo getlang("input_required");::none||" data-msg-equalTo="||vpassword_match||" />
                 <div class="tooltipContainer info">
                 ||vpassword_help||
                 </div>
@@ -131,7 +131,7 @@ change_profile_template||
             </label>
             <input value="||user->lname||" type="text" id="mylname" name="mylname" data-rule-required="true" />
             <div class="tooltipContainer info">
-                ||fname_help||
+                ||lname_help||
             </div>
             <div class="spacer" style="clear: both;"></div>
             </div>
@@ -139,7 +139,7 @@ change_profile_template||
             <label class="rowTitle" for="email">
                 Email Address
             </label>
-            <input type="text" value="||user->email||" id="email" name="email" data-rule-required="true" data-rule-email="true" data-rule-ajax1="ajax/site_ajax.php::unique_email::&email=::true::||user->email||" data-msg-required="||email_req||" data-msg-email="||email_valid||" data-msg-ajax1="||email_unique||" />
+            <input type="text" value="||user->email||" id="email" name="email" data-rule-required="true" data-rule-email="true" data-rule-ajax1="ajax/site_ajax.php::unique_email::&email=::true::||user->email||" data-msg-required="||echo getlang("input_required");::none||" data-msg-email="||email_valid||" data-msg-ajax1="||email_unique||" />
             <div class="tooltipContainer info">
                 ||email_help||
             </div>
@@ -189,7 +189,7 @@ forgot_password_form_template||
             <label class="rowTitle" for="email">
             Email Address
             </label>
-            <input type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-rule-ajax1="ajax/site_ajax.php::unique_email::&email=::false" data-msg-required="||email_req||" data-msg-email="||email_valid||" data-msg-ajax1="||email_used||" />
+            <input type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-rule-ajax1="ajax/site_ajax.php::unique_email::&email=::false" data-msg-required="||echo getlang("input_required");::none||" data-msg-email="||email_valid||" data-msg-ajax1="||email_used||" />
             <div class="tooltipContainer info">
             ||email_help||
             </div>

@@ -38,7 +38,7 @@ global $CFG, $MYVARS;
         if (function_exists($action)) {
             $action();
         } else {
-            trigger_error(error_string("no_function", [$action]), E_USER_WARNING);
+            trigger_error(getlang("no_function", false, [$action]), E_USER_WARNING);
         }
     }
 }
@@ -1533,10 +1533,10 @@ global $CFG;
 
     $params = [
         "validation_script" => create_validation_script("login_form", "jq_login();"),
-        "valid_req_username" => error_string('valid_req_username'),
-        "input_username" => get_help("input_username"),
-        "valid_req_password" => error_string('valid_req_password'),
-        "input_password2" => get_help("input_password2"),
+        "valid_req_username" => getlang("input_username"),
+        "input_username" => getlang("input_username"),
+        "valid_req_password" => getlang("input_required"),
+        "input_password2" => getlang("input_default_password"),
         "newuserlink" => $newuserlink,
         "forgotpasswordlink" => $forgotpasswordlink,
     ];

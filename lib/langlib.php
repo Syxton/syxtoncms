@@ -15,13 +15,6 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
 }
 define("LANGLIB", true);
 
-$LANG = new \stdClass;
-
-// Common strings
-$LANG->yes = "Yes";
-$LANG->no = "No";
-$LANG->firstlastemail = "{fname} {lname} ({email})";
-
 /**
  * Gets a language string.
  *
@@ -30,13 +23,11 @@ $LANG->firstlastemail = "{fname} {lname} ({email})";
  *
  * @return string The translated string.
  */
-function getlang($langString, $path = false) {
-    global $CFG, $LANG;
+function getlang($langString, $path = false, $vars = false) {
+    global $CFG;
 
-    // Chedk if string is in the common strings.
-    if (!$path && isset($LANG->$langString)) {
-        // Return the translated string
-        return $LANG->$langString;
+    if (!$path) {
+        $path = "/lib";
     }
 
     // Create the path to the language file
@@ -50,6 +41,9 @@ function getlang($langString, $path = false) {
         // Return the translated string
         if (isset($strings->$langString)) {
             // Return the translated string
+            if ($vars) {
+                return fill_string($strings->$langString, $vars);
+            }
             return $strings->$langString;
         }
     }

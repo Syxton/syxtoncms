@@ -738,6 +738,7 @@ form button.registration_cart_menu + #refreshableregcart .registration_cart {
 
 .registration_cart_item_price {
     text-align: right;
+    min-width: 150px;
     padding: 10px 0px 10px 10px;
 }
 

@@ -32,7 +32,7 @@ global $USER;
     if ($area == "middle") { //This is a FORUM
         $content = '<div id="forum_div_' . $forumid . '">';
         if (!user_is_able($USER->userid, "viewforums", $pageid)) {
-            $content .= '<span class="centered_span">' . error_string("generic_permissions") . '</span>';
+            $content .= '<span class="centered_span">' . getlang("generic_permissions") . '</span>';
         } else {
             $content .= get_forum_categories($forumid);
             $scriptid = "get_categories_$forumid";
@@ -53,7 +53,7 @@ global $USER;
     } else { //This is a SHOUTBOX
         $content = '<div id="forum_div_' . $forumid . '">';
         if (!user_is_able($USER->userid, "viewshoutbox", $pageid)) {
-            $content .= '<span class="centered_span">' . error_string("generic_permissions") . '</span>';
+            $content .= '<span class="centered_span">' . getlang("generic_permissions") . '</span>';
         } else {
             $content .= get_shoutbox($forumid);
             $scriptid = "get_shoutbox_$forumid";

@@ -100,7 +100,7 @@ global $CFG, $MYVARS, $ROLES, $USER;
     $pageid = clean_myvar_opt("pageid", "int", false);
     if ($pageid) {
         if (!user_is_able($USER->userid, "editpage", $pageid)) {
-            $content .= error_string("generic_permissions");
+            $content .= getlang("generic_permissions");
             return;
         }
         $page = get_db_row("SELECT * FROM pages WHERE pageid = ||pageid||", ["pageid" => $pageid]);
@@ -123,7 +123,7 @@ global $CFG, $MYVARS, $ROLES, $USER;
         }
     } else {
         if (!user_is_able($USER->userid, "createpage", $CFG->SITEID)) {
-            $content .= error_string("generic_permissions");
+            $content .= getlang("generic_permissions");
             return;
         }
 
@@ -188,26 +188,26 @@ global $CFG, $MYVARS, $ROLES, $USER;
     ];
     $params = [
         "name" => $name,
-        "input_name_help" => get_help("input_page_name"),
+        "input_name_help" => getlang("input_page_name"),
         "keywords" => $keywords,
-        "input_page_tags" => get_help("input_page_tags"),
+        "input_page_tags" => getlang("input_page_tags"),
         "description" => stripslashes($description),
-        "input_page_summary" => get_help("input_page_summary"),
+        "input_page_summary" => getlang("input_page_summary"),
         "roleselector" => make_select($roleselector),
-        "input_page_default_role" => get_help("input_page_default_role"),
+        "input_page_default_role" => getlang("input_page_default_role"),
         "openno" => $open_no,
         "openyes" => $open_yes,
-        "input_page_opendoor" => get_help("input_page_opendoor"),
+        "input_page_opendoor" => getlang("input_page_opendoor"),
         "globalno" => $global_no,
         "globalyes" => $global_yes,
-        "input_page_siteviewable" => get_help("input_page_siteviewable"),
+        "input_page_siteviewable" => getlang("input_page_siteviewable"),
         "admin" => $admin,
         "menuno" => $menu_no,
         "menuyes" => $menu_yes,
-        "input_page_menulink" => get_help("input_page_menulink"),
+        "input_page_menulink" => getlang("input_page_menulink"),
         "hideno" => $hide_no,
         "hideyes" => $hide_yes,
-        "input_page_menulink" => get_help("input_page_menulink"),
+        "input_page_menulink" => getlang("input_page_menulink"),
         "menupage" => $menu_page,
         "hidefromvisitors" => $hidefromvisitors ?? false,
         "buttonname" => $pageid ? "Submit Changes" : "Create Page",
@@ -223,7 +223,7 @@ global $USER;
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 
     if (!user_is_able($USER->userid, "editpage", $pageid)) {
-        $content .= error_string("generic_permissions");
+        $content .= getlang("generic_permissions");
         return;
     }
 

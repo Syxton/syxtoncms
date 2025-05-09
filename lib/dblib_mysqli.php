@@ -58,7 +58,7 @@ function get_prepared_result($statement, $select = false) {
 		}
 	} catch (\Throwable $e) {
 		debugging($e->getMessage());
-		throw new Exception(error_string("generic_db_error") . "\n\n" . get_db_error());
+		throw new Exception(getlang("generic_error") . "\n\n" . get_db_error());
 	}
 
 	return false;
@@ -86,7 +86,7 @@ global $conn;
 		return $result;
 	} catch (\Throwable $e) {
 		debugging($e->getMessage());
-		throw new Exception(error_string("generic_db_error") . "\n\n" . get_db_error());
+		throw new Exception(getlang("generic_error") . "\n\n" . get_db_error());
 	}
 	return false;
 }
@@ -127,7 +127,7 @@ global $conn;
 		}
 	} catch (\Throwable $e) {
 		debugging($e->getMessage());
-		throw new Exception(error_string("generic_db_error") . "\n\n" . get_db_error());
+		throw new Exception(getlang("generic_error") . "\n\n" . get_db_error());
 	}
 
 	return false;

@@ -38,7 +38,7 @@ global $MYVARS, $CFG, $USER;
 	$limit = $settings->$feature->$featureid->viewable_limit->setting;
     $show_total = $settings->$feature->$featureid->show_total->setting;
 
-    if (!user_is_able($USER->userid, "viewparticipants", $pageid)) { trigger_error(error_string("no_permission", ["viewparticipants"]), E_USER_WARNING); return; }
+    if (!user_is_able($USER->userid, "viewparticipants", $pageid)) { trigger_error(getlang("generic_permissions", false, ["viewparticipants"]), E_USER_WARNING); return; }
 
     $SQL = "SELECT fname, lname, display_name FROM roles_assignment ra JOIN users u ON u.userid=ra.userid JOIN roles r ON r.roleid = ra.roleid WHERE ra.pageid='$pageid' AND ra.confirm=0 ORDER BY r.display_name,u.lname";
 	if ($results = get_db_result($SQL . " LIMIT $limit")) {

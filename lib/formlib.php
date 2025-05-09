@@ -153,7 +153,7 @@ function make_form_elements($elements, $data = []) {
 function get_form_element_help($element, $data = []) {
     global $CFG;
     if (!isset($element['help']) && !isset($element['dynamichelp'])) {
-        return get_help('input_default_' . $element['type']);
+        return getlang("input_default_" . $element['type']);
     }
 
     if (isset($element['dynamichelp'])) {
@@ -176,7 +176,7 @@ function get_form_element_data_rules($element, $data = []) {
     $rules = '';
     if (isset($element['required']) && $element['required'] == true) {
         $rules .= ' data-rule-required="true"';
-        $msg = isset($element['required_msg']) ? $element['required_msg'] : error_string('valid_req');
+        $msg = isset($element['required_msg']) ? $element['required_msg'] : getlang("input_required");
         $rules .= ' data-msg-required="' . $msg . '"';
     }
 
@@ -198,25 +198,25 @@ function get_form_element_data_rules($element, $data = []) {
 
     if ($element['type'] == 'email') {
         $rules .= ' data-rule-email="true"';
-        $msg = isset($element['email_msg']) ? $element['email_msg'] : error_string('valid_email_invalid');
+        $msg = isset($element['email_msg']) ? $element['email_msg'] : getlang("invalid_email");
         $rules .= ' data-msg-email="' . $msg . '"';
     }
 
     if ($element['type'] == 'tel') {
         $rules .= ' data-rule-phone="true"';
-        $msg = isset($element['phone_msg']) ? $element['phone_msg'] : error_string('valid_phone_invalid');
+        $msg = isset($element['phone_msg']) ? $element['phone_msg'] : getlang("invalid_phone");
         $rules .= ' data-msg-phone="' . $msg . '"';
     }
 
     if ($element['type'] == 'date') {
         $rules .= ' data-rule-date="true"';
-        $msg = isset($element['date_msg']) ? $element['date_msg'] : error_string('valid_date_invalid');
+        $msg = isset($element['date_msg']) ? $element['date_msg'] : getlang("invalid_date");
         $rules .= ' data-msg-date="' . $msg . '"';
     }
 
     if ($element['type'] == 'url') {
         $rules .= ' data-rule-url="true"';
-        $msg = isset($element['url_msg']) ? $element['url_msg'] : error_string('valid_url_invalid');
+        $msg = isset($element['url_msg']) ? $element['url_msg'] : getlang("invalid_url");
         $rules .= ' data-msg-url="' . $msg . '"';
     }
 

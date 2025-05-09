@@ -13,7 +13,6 @@ return (object) [
     "help_campership" => "Please enter the church/organization sponsering your campership.",
     "help_city" => "Please enter the home city of the camper.",
     "help_state" => "Please select the home state of the camper.",
-    "help_zip" => "Please enter the zipcode of the camper.",
     "help_membername" => "Please enter the name associated with your insurance.",
     "help_relationship" => "Please enter the relationship between the member and the camper.",
     "help_carrier" => "Please enter the name of your insurance.",

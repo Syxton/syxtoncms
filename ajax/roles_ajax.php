@@ -63,7 +63,7 @@ global $CFG, $USER, $MYVARS;
             $vars = [
                 "selected" => "",
                 "value" => $row['userid'],
-                "display" => fill_string(getlang("firstlastemail"), $row),
+                "display" => getlang("firstlastemail", false, $row),
             ];
             $options .= fill_template("tmp/page.template", "select_options_template", false, $vars);
         }
@@ -134,7 +134,7 @@ global $CFG, $MYVARS, $USER;
         while ($row = fetch_row($users)) {
             $p = [
                 "value" => $row['userid'],
-                "display" => fill_string(getlang("firstlastemail"), $row),
+                "display" => getlang("firstlastemail", false, $row),
             ];
             $options .= fill_template("tmp/page.template", "select_options_template", false, $p);
         }
@@ -311,7 +311,7 @@ global $CFG, $ROLES, $USER;
                 $params = [
                     "selected" => "",
                     "value" => $row['userid'],
-                    "display" => fill_string(getlang("firstlastemail"), $row) . $mygroups,
+                    "display" => getlang("firstlastemail", false, $row) . $mygroups,
                 ];
                 $options .= fill_template("tmp/page.template", "select_options_template", false, $params);
             }
@@ -356,7 +356,7 @@ function get_group_members_select($pageid, $roleid, $groupid) {
             $p = [
                 "selected" => "",
                 "value" => $row['userid'],
-                "display" => fill_string(getlang("firstlastemail"), $row) . $mygroups,
+                "display" => getlang("firstlastemail", false, $row) . $mygroups,
             ];
             $options .= fill_template("tmp/page.template", "select_options_template", false, $p);
         }
@@ -572,7 +572,7 @@ function refresh_edit_roles() {
     $return = $error = "";
     try {
         if (!$pageid || !$roleid) {
-            throw new \Throwable(error_string("generic_error"));
+            throw new \Throwable(getlang("generic_error"));
         }
 
         $return = print_abilities($pageid, "per_role", $roleid, false, $feature, $featureid);
@@ -594,7 +594,7 @@ function refresh_user_abilities() {
     $return = $error = "";
     try {
         if (!$pageid || !$userid) {
-            throw new \Throwable(error_string("generic_error"));
+            throw new \Throwable(getlang("generic_error"));
         }
 
         $return = print_abilities($pageid, "per_user", false, $userid, $feature, $featureid);
@@ -615,7 +615,7 @@ function refresh_group_abilities() {
     $return = $error = "";
     try {
         if (!$pageid || !$groupid) {
-            throw new \Throwable(error_string("generic_error"));
+            throw new \Throwable(getlang("generic_error"));
         }
         $return =
             '<form id="per_group_roles_form">' .

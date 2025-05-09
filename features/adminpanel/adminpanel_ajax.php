@@ -19,12 +19,12 @@ update_user_cookie();
 
 if (!empty($_SESSION["lia_original"])) {
     if (!is_siteadmin($_SESSION["lia_original"])) {
-        trigger_error(error_string("no_permission", ["administrative"]), E_USER_WARNING);
+        trigger_error(getlang("generic_permissions", false, ["administrative"]), E_USER_WARNING);
         return;
     }
 } else {
     if (!is_siteadmin($USER->userid)) {
-        trigger_error(error_string("no_permission", ["administrative"]), E_USER_WARNING);
+        trigger_error(getlang("generic_permissions", false, ["administrative"]), E_USER_WARNING);
         return;
     }
 }

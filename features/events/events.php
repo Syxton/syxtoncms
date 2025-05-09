@@ -386,7 +386,7 @@ global $CFG, $USER;
     if ($eventid) { // Update existing event
         $heading = "Edit Event";
         if (!user_is_able($USER->userid, "editevents", $pageid)) {
-            trigger_error(error_string("no_permission", ["editevents"]), E_USER_WARNING);
+            trigger_error(getlang("generic_permissions", false, ["editevents"]), E_USER_WARNING);
             return;
         }
 
@@ -445,7 +445,7 @@ global $CFG, $USER;
     } else { // New event form
         $heading = "Add Event";
         if (!user_is_able($USER->userid, "addevents", $pageid)) {
-            trigger_error(error_string("no_permission", ["addevents"]), E_USER_WARNING);
+            trigger_error(getlang("generic_permissions", false, ["addevents"]), E_USER_WARNING);
             return;
         }
         $eventid = $template = false;
@@ -542,6 +542,7 @@ global $CFG, $USER;
             "action" => "get_limit_form",
             "template_id" => "js||$('#template').val()||js",
         ],
+        "ondone" => "prepareInputsForHints();",
         "display" => "limit_form",
     ]);
 
@@ -574,7 +575,7 @@ global $CFG, $USER;
                         </td>
                         <td class="field_input">
                             <input type="text" id="event_name" name="event_name" size="30" value="' . $name . '"/>
-                                ' . get_hint_box("input_event_name:events") . '
+                                ' . get_hint_box("input_event_name") . '
                         </td>
                     </tr><tr><td></td><td class="field_input"><span id="event_name_error" class="error_text"></span></td></tr>
                 </table>
@@ -584,7 +585,7 @@ global $CFG, $USER;
                             Category:
                         </td>
                         <td class="field_input">
-                            <span id="select_category">' . $mycategories . '' . get_hint_box("input_event_category:events") . '</span>
+                            <span id="select_category">' . $mycategories . '' . get_hint_box("input_event_category") . '</span>
                         </td>
                     </tr><tr><td></td><td class="field_input"><span id="category_error" class="error_text"></span></td></tr>
                 </table>
@@ -595,7 +596,7 @@ global $CFG, $USER;
                         </td>
                         <td class="field_input">
                             <textarea id="byline" name="byline" cols="40" rows="5">' . $byline . '</textarea>
-                            ' . get_hint_box("input_byline:events") . '
+                            ' . get_hint_box("input_byline") . '
                         </td>
                     </tr><tr><td></td><td class="field_input"><span id="event_name_error" class="error_text"></span></td></tr>
                 </table>
@@ -606,7 +607,7 @@ global $CFG, $USER;
                         </td>
                         <td class="field_input">
                             ' . get_editor_box(["initialvalue" => $description, "height" => "300"]) . '
-                            ' . get_hint_box("input_description:events") . '
+                            ' . get_hint_box("input_event_description") . '
                         </td>
                     </tr><tr><td></td><td class="field_input"><span id="event_name_error" class="error_text"></span></td></tr>
                 </table>
@@ -618,7 +619,7 @@ global $CFG, $USER;
                         </td>
                         <td class="field_input">
                             <input type="text" id="contact" name="contact" size="30" value="' . $contact . '"/>
-                            ' . get_hint_box("input_contact:events") . '
+                            ' . get_hint_box("input_contact") . '
                         </td>
                     </tr><tr><td></td><td class="field_input"><span id="contact_error" class="error_text"></span></td></tr>
                 </table>
@@ -629,7 +630,7 @@ global $CFG, $USER;
                         </td>
                         <td class="field_input">
                             <input type="text" id="email" name="email" size="30" value="' . $email . '"/>
-                            ' . get_hint_box("input_event_email:events") . '
+                            ' . get_hint_box("input_contact_email") . '
                         </td>
                     </tr><tr><td></td><td class="field_input"><span id="email_error" class="error_text"></span></td></tr>
                 </table>
@@ -650,7 +651,7 @@ global $CFG, $USER;
                         </td>
                         <td class="field_input">
                             <select id="siteviewable" name="siteviewable" onchange="if (this.value==0) { hide_section(\'auto_allowinpage\'); document.getElementById(\'allowinpage\').value=0; } else { show_section(\'auto_allowinpage\'); }" ><option value="0" ' . $siteviewable_no . '>No</option><option value="1" ' . $siteviewable_yes . '>Yes</option></select>
-                            ' . get_hint_box("input_event_siteviewable:events") . '
+                            ' . get_hint_box("input_event_siteviewable") . '
                         </td>
                     </tr><tr><td></td><td class="field_input"><span id="event_name_error" class="error_text"></span></td></tr>
                 </table>
@@ -662,7 +663,7 @@ global $CFG, $USER;
                         </span>
                         <span id="select_location" style="padding: 10px;">
                             ' . $mylocations . '
-                            ' . get_hint_box("input_event_location:events") . '
+                            ' . get_hint_box("input_event_location") . '
                         </span>
                         <span>
                             <button id="addtolist" type="button" onclick="$(\'#addtolist\').addClass(\'hidden\');$(\'#add_location_div, #hide_menu\').removeClass(\'hidden\');">
@@ -710,7 +711,7 @@ global $CFG, $USER;
                                         </td>
                                         <td class="field_input">
                                             <select id="workers" name="workers"><option value="0" ' . $workers_no . '>No</option><option value="1" ' . $workers_yes . '>Yes</option></select>
-                                            ' . get_hint_box("input_event_workers:events") . '
+                                            ' . get_hint_box("input_event_workers") . '
                                         </td>
                                     </tr><tr><td></td><td class="field_input"><span id="workers_error" class="error_text"></span></td></tr>
                                 </table>
@@ -733,7 +734,7 @@ global $CFG, $USER;
                                                 <option value="0" ' . $multiday_no . '>No</option>
                                                 <option value="1" ' . $multiday_yes . '>Yes</option>
                                             </select>
-                                            ' . get_hint_box("input_event_multiday:events") . '
+                                            ' . get_hint_box("input_event_multiday") . '
                                         </td>
                                     </tr><tr><td></td><td class="field_input"><span id="allowinpage_error" class="error_text"></span></td></tr>
                                 </table>
@@ -746,7 +747,8 @@ global $CFG, $USER;
                                                         Event Start Date:
                                                     </td>
                                                     <td class="field_input">
-                                                        <input type="date" id="event_begin_date" name="event_begin_date" value="' . $event_begin_date . '">
+                                                        <input type="date" id="event_begin_date" name="event_begin_date" value="' . $event_begin_date . '" />
+                                                        ' . get_hint_box("input_event_start") . '
                                                     </td>
                                                 </tr><tr><td></td><td class="field_input"><span id="event_begin_date_error" class="error_text"></span></td></tr>
                                             </table>
@@ -757,7 +759,8 @@ global $CFG, $USER;
                                                             Event Stop Date:
                                                         </td>
                                                         <td class="field_input">
-                                                        <input type="date" id="event_end_date" name="event_end_date" value="' . $event_end_date . '">
+                                                        <input type="date" id="event_end_date" name="event_end_date" value="' . $event_end_date . '" />
+                                                        ' . get_hint_box("input_event_end") . '
                                                     </td>
                                                     </tr><tr><td></td><td class="field_input"><span id="event_end_date_error" class="error_text"></span></td></tr>
                                                 </table>
@@ -781,7 +784,7 @@ global $CFG, $USER;
                                         </td>
                                         <td class="field_input">
                                             <select id="allday" name="allday" onchange="hide_show_buttons(\'event_times_div\');" /><option value="1" ' . $allday_yes . '>Yes</option><option value="0" ' . $allday_no . '>No</option></select>
-                                            ' . get_hint_box("input_event_allday:events") . '
+                                            ' . get_hint_box("input_event_allday") . '
                                         </td>
                                     </tr><tr><td></td><td class="field_input"><span id="allowinpage_error" class="error_text"></span></td></tr>
                                 </table>
@@ -825,7 +828,7 @@ global $CFG, $USER;
                                     <option value="0" ' . $reg_no . '>No</option>
                                     <option value="1" ' . $reg_yes . '>Yes</option>
                                 </select>
-                                ' . get_hint_box("input_event_registration:events") . '
+                                ' . get_hint_box("input_event_registration") . '
                             </td>
                         </tr>
                         <tr>
@@ -842,7 +845,7 @@ global $CFG, $USER;
                                                         <option value="0" ' . $allowinpage_no . '>No</option>
                                                         <option value="1" ' . $allowinpage_yes . '>Yes</option>
                                                     </select>
-                                                    ' . get_hint_box("input_event_allowinpage:events") . '
+                                                    ' . get_hint_box("input_event_allowinpage") . '
                                                 </td>
                                             </tr><tr><td></td><td class="field_input"><span id="allowinpage_error" class="error_text"></span></td></tr>
                                         </table>
@@ -854,6 +857,7 @@ global $CFG, $USER;
                                             </td>
                                             <td class="field_input">
                                                 ' . get_templates($template, $eventid, true) . '
+                                                ' . get_hint_box("input_event_template") . '
                                             </td>
                                         </tr><tr><td></td><td class="field_input"><span id="template_error" class="error_text"></span></td></tr>
                                     </table>
@@ -869,6 +873,7 @@ global $CFG, $USER;
                                             </td>
                                             <td class="field_input">
                                                 <input type="date" id="start_reg" name="start_reg" value="' . $start_reg . '">
+                                                ' . get_hint_box("input_event_start_reg") . '
                                             </td>
                                         </tr><tr><td></td><td class="field_input"><span id="start_reg_error" class="error_text"></span></td></tr>
                                     </table>
@@ -879,6 +884,7 @@ global $CFG, $USER;
                                             </td>
                                             <td class="field_input">
                                                 <input type="date" id="stop_reg" name="stop_reg" value="' . $stop_reg . '">
+                                                ' . get_hint_box("input_event_stop_reg") . '
                                             </td>
                                         </tr><tr><td></td><td class="field_input"><span id="stop_reg_error" class="error_text"></span></td></tr>
                                     </table>
@@ -894,7 +900,7 @@ global $CFG, $USER;
                                                         <option value="0" ' . $limits_no . '>No</option>
                                                         <option value="1" ' . $limits_yes . '>Yes</option>
                                                     </select>
-                                                    ' . get_hint_box("input_event_limits:events") . '
+                                                    ' . get_hint_box("input_event_limits") . '
                                                 </td>
                                             </tr>
                                         </table>
@@ -909,7 +915,7 @@ global $CFG, $USER;
                                                                 </td>
                                                                 <td class="field_input">
                                                                     <input type="text" id="max" name="max" size="4" maxlength="4" value="' . $max_users . '"/>
-                                                                    ' . get_hint_box("input_event_max_users:events") . '
+                                                                    ' . get_hint_box("input_event_max_users") . '
                                                                 </td>
                                                             </tr><tr><td></td><td class="field_input"><span id="max_error" class="error_text"></span></td></tr>
                                                         </table>
@@ -953,7 +959,7 @@ global $CFG, $USER;
                                                         <option value="0" ' . $fee_no . '>No</option>
                                                         <option value="1" ' . $fee_yes . '>Yes</option>
                                                     </select>
-                                                    ' . get_hint_box("input_event_cost:events") . '
+                                                    ' . get_hint_box("input_event_cost") . '
                                                 </td>
                                             </tr>
                                         </table>
@@ -968,7 +974,7 @@ global $CFG, $USER;
                                                                 </td>
                                                                 <td class="field_input">
                                                                     <input type="text" id="min_fee" name="min_fee" size="4" value="' . $fee_min . '"/>
-                                                                    ' . get_hint_box("input_event_min_cost:events") . '
+                                                                    ' . get_hint_box("input_event_min_cost") . '
                                                                 </td>
                                                             </tr>
                                                             <tr>
@@ -983,7 +989,7 @@ global $CFG, $USER;
                                                                 </td>
                                                                 <td class="field_input">
                                                                     <input type="text" id="full_fee" name="full_fee" size="4" value="' . $fee_full . '"/>
-                                                                    ' . get_hint_box("input_event_full_cost:events") . '
+                                                                    ' . get_hint_box("input_event_full_cost") . '
                                                                 </td>
                                                             </tr><tr><td></td><td class="field_input"><span id="event_full_fee_error" class="error_text"></span></td></tr>
                                                         </table>
@@ -994,7 +1000,7 @@ global $CFG, $USER;
                                                                 </td>
                                                                 <td class="field_input">
                                                                     <input type="text" id="sale_fee" name="sale_fee" size="4" value="' . $sale_fee . '"/>
-                                                                    ' . get_hint_box("input_event_sale_fee:events") . '
+                                                                    ' . get_hint_box("input_event_sale_fee") . '
                                                                 </td>
                                                             </tr><tr><td></td><td class="field_input"><span id="event_sale_fee_error" class="error_text"></span></td></tr>
                                                         </table>
@@ -1005,7 +1011,7 @@ global $CFG, $USER;
                                                                 </td>
                                                                 <td class="field_input">
                                                                     <input type="date" id="sale_end" name="sale_end" value="' . $sale_end . '">
-                                                                    ' . get_hint_box("input_event_sale_end:events") . '
+                                                                    ' . get_hint_box("input_event_sale_end") . '
                                                                 </td>
                                                             </tr><tr><td></td><td class="field_input"><span id="sale_end_error" class="error_text"></span></td></tr>
                                                         </table>
@@ -1017,7 +1023,7 @@ global $CFG, $USER;
                                                                 </td>
                                                                 <td class="field_input">
                                                                     <input type="text" id="payableto" name="payableto" size="28" value="' . $payableto . '"/>
-                                                                    ' . get_hint_box("input_event_payableto:events") . '
+                                                                    ' . get_hint_box("input_event_payableto") . '
                                                                 </td>
                                                             </tr><tr><td></td><td class="field_input"><span id="event_payableto_error" class="error_text"></span></td></tr>
                                                         </table>
@@ -1028,7 +1034,7 @@ global $CFG, $USER;
                                                                 </td>
                                                                 <td class="field_input">
                                                                     <textarea id="checksaddress" name="checksaddress" cols="21" rows="3">' . $checksaddress . '</textarea>
-                                                                    ' . get_hint_box("input_event_checksaddress:events") . '
+                                                                    ' . get_hint_box("input_event_checksaddress") . '
                                                                 </td>
                                                             </tr><tr><td></td><td class="field_input"><span id="event_checksaddress_error" class="error_text"></span></td></tr>
                                                         </table>
@@ -1039,7 +1045,7 @@ global $CFG, $USER;
                                                                 </td>
                                                                 <td class="field_input">
                                                                     <input type="text" id="paypal" name="paypal" size="28" value="' . $paypal . '"/>
-                                                                    ' . get_hint_box("input_event_paypal:events") . '
+                                                                    ' . get_hint_box("input_event_paypal") . '
                                                                 </td>
                                                             </tr><tr><td></td><td class="field_input"><span id="event_paypal_error" class="error_text"></span></td></tr>
                                                         </table>
@@ -1075,7 +1081,7 @@ global $CFG, $USER;
     $eventid = clean_myvar_req("eventid", "int");
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 
-    if (!user_is_able($USER->userid, "signupforevents", $pageid)) { trigger_error(error_string("no_permission", ["signupforevents"]), E_USER_WARNING); return; }
+    if (!user_is_able($USER->userid, "signupforevents", $pageid)) { trigger_error(getlang("generic_permissions", false, ["signupforevents"]), E_USER_WARNING); return; }
 
     $event = get_event($eventid);
     $template = get_event_template($event['template_id']);
@@ -1102,7 +1108,7 @@ global $CFG, $USER;
                     break;
                 case "contact":
                     $display1 = $opt . $element['display'];
-                    $form_element1 = create_form_element($element['type'], $element['elementid'], $element['optional'], $element['length']) . get_hint_box("input_event_email:events");
+                    $form_element1 = create_form_element($element['type'], $element['elementid'], $element['optional'], $element['length']) . get_hint_box("input_contact_email");
                     $error_tag = $element['elementid'];
                     break;
                 case "payment":

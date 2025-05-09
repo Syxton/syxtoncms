@@ -18,6 +18,10 @@ if (!defined('VALIDATELIB')) { include_once($CFG->dirroot . '/lib/validatelib.ph
 
 //Retrieve from Javascript
 global $MYVARS;
+
+// Used to shorten language calls
+$path = "/features/events/templates/camp_new";
+
 collect_vars();
 
 $eventid = clean_myvar_opt("eventid", "int", false);
@@ -93,8 +97,8 @@ echo '
 $min_age = get_db_field("setting", "settings", "type='events_template' AND extra='$eventid' AND setting_name='template_setting_min_age'");
 $max_age = get_db_field("setting", "settings", "type='events_template' AND extra='$eventid' AND setting_name='template_setting_max_age'");
 
-$min_age_error = empty($min_age) ? "" : ' data-msg-min="' . error_string('error_age_min:events:templates/camp_new') . '"';
-$max_age_error = empty($max_age) ? "" : ' data-msg-max="' . error_string('error_age_max:events:templates/camp_new') . '"';
+$min_age_error = empty($min_age) ? "" : ' data-msg-min="' . getlang("error_age_min", $path) . '"';
+$max_age_error = empty($max_age) ? "" : ' data-msg-max="' . getlang("error_age_max", $path) . '"';
 $min_age = empty($min_age) ? "" : " data-rule-min=\"$min_age\"";
 $max_age = empty($max_age) ? "" : " data-rule-max=\"$max_age\"";
 
@@ -157,33 +161,33 @@ if ($autofill) {
 
             <input type="hidden" name="Camper_Name" />
             <div class="rowContainer">
-                <label class="rowTitle" for="email">Email Address *</label><input tabindex="1" type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-msg-required="' . error_string('valid_req_email') . '" data-msg-email="' . error_string('valid_email_invalid') . '" /><div class="tooltipContainer info">' . get_help("help_email:events:templates/camp_new") . '</div>
+                <label class="rowTitle" for="email">Email Address *</label><input tabindex="1" type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-msg-required="' . getlang("input_required") . '" data-msg-email="' . getlang("invalid_email") . '" /><div class="tooltipContainer info">' . getlang("help_email", $path) . '</div>
                   <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
-                <label class="rowTitle" for="Camper_Name_First">Camper First Name *</label><input tabindex="2" type="text" id="Camper_Name_First" name="Camper_Name_First" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="' . error_string('valid_req_fname') . '" /><div class="tooltipContainer info">' . get_help("input_fname") . '</div>
+                <label class="rowTitle" for="Camper_Name_First">Camper First Name *</label><input tabindex="2" type="text" id="Camper_Name_First" name="Camper_Name_First" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="' . getlang("input_required") . '" /><div class="tooltipContainer info">' . getlang("input_fname") . '</div>
                   <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
-                <label class="rowTitle" for="Camper_Name_Last">Camper Last Name *</label><input tabindex="3" type="text" id="Camper_Name_Last" name="Camper_Name_Last" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="' . error_string('valid_req_lname') . '" /><div class="tooltipContainer info">' . get_help("input_lname") . '</div>
+                <label class="rowTitle" for="Camper_Name_Last">Camper Last Name *</label><input tabindex="3" type="text" id="Camper_Name_Last" name="Camper_Name_Last" data-rule-required="true" data-rule-nonumbers="true" data-msg-required="' . getlang("input_required") . '" /><div class="tooltipContainer info">' . getlang("input_lname") . '</div>
                       <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
-                <label class="rowTitle" for="Camper_Name_Middle">Camper Middle Initial</label><input tabindex="4" style="width:50px;" maxlength="1" type="text" id="Camper_Name_Middle" name="Camper_Name_Middle" data-rule-maxlength="1" data-rule-letters="true" /><div class="tooltipContainer info">' . get_help("help_middlei:events:templates/camp_new") . '</div>
+                <label class="rowTitle" for="Camper_Name_Middle">Camper Middle Initial</label><input tabindex="4" style="width:50px;" maxlength="1" type="text" id="Camper_Name_Middle" name="Camper_Name_Middle" data-rule-maxlength="1" data-rule-letters="true" /><div class="tooltipContainer info">' . getlang("input_middle_initial") . '</div>
                       <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
                     <label class="rowTitle" for="Camper_Birth_Date">Camper Birthdate *</label>
                     <input type="date" id="Camper_Birth_Date" value="' . date("Y-m-d") . '" name="Camper_Birth_Date">
-                    <div class="tooltipContainer info">' . get_help("help_bday:events:templates/camp_new") . '</div>
+                    <div class="tooltipContainer info">' . getlang("help_bday", $path) . '</div>
                     <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
-                <label class="rowTitle" for="Camper_Age">Age during week</label><input style="background-color: lightgray;border: 1px solid grey; width:50px;" type="text" id="Camper_Age" name="Camper_Age" data-rule-required="true" data-rule-number="true" ' . $min_age.$max_age.$min_age_error.$max_age_error . ' readonly /><div class="tooltipContainer info">' . get_help("help_age:events:templates/camp_new") . '</div>
+                <label class="rowTitle" for="Camper_Age">Age during week</label><input style="background-color: lightgray;border: 1px solid grey; width:50px;" type="text" id="Camper_Age" name="Camper_Age" data-rule-required="true" data-rule-number="true" ' . $min_age.$max_age.$min_age_error.$max_age_error . ' readonly /><div class="tooltipContainer info">' . getlang("help_age", $path) . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
-                <label class="rowTitle" for="Camper_Grade">Last Completed Grade *</label><input tabindex="5" style="width:50px;" type="text" size="2" maxlength="2" id="Camper_Grade" name="Camper_Grade" data-rule-required="true" data-rule-number="true" data-rule-max="12" data-rule-min="0" /><div class="tooltipContainer info">' . get_help("help_grade:events:templates/camp_new") . '</div>
+                <label class="rowTitle" for="Camper_Grade">Last Completed Grade *</label><input tabindex="5" style="width:50px;" type="text" size="2" maxlength="2" id="Camper_Grade" name="Camper_Grade" data-rule-required="true" data-rule-number="true" data-rule-max="12" data-rule-min="0" /><div class="tooltipContainer info">' . getlang("help_grade", $path) . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
@@ -193,27 +197,27 @@ if ($autofill) {
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
                 </select>
-                <div class="tooltipContainer info">' . get_help("help_gender:events:templates/camp_new") . '</div>
+                <div class="tooltipContainer info">' . getlang("help_gender", $path) . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
                 <div class="rowContainer">
-                <label class="rowTitle" for="Camper_Home_Congregation">Home Congregation</label><input tabindex="7" type="text" id="Camper_Home_Congregation" name="Camper_Home_Congregation" data-rule-nonumbers="true" /><div class="tooltipContainer info">' . get_help("help_congregation:events:templates/camp_new") . '</div>
+                <label class="rowTitle" for="Camper_Home_Congregation">Home Congregation</label><input tabindex="7" type="text" id="Camper_Home_Congregation" name="Camper_Home_Congregation" data-rule-nonumbers="true" /><div class="tooltipContainer info">' . getlang("help_congregation", $path) . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
-                <label class="rowTitle" for="Parent_Name">Parent/Guardian *</label><input tabindex="8" type="text" id="Parent_Name" name="Parent_Name" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">' . get_help("help_parent:events:templates/camp_new") . '</div>
+                <label class="rowTitle" for="Parent_Name">Parent/Guardian *</label><input tabindex="8" type="text" id="Parent_Name" name="Parent_Name" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">' . getlang("help_parent", $path) . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
-                <label class="rowTitle" for="Parent_Address_Line1">Mailing Address Line One *</label><input tabindex="9" type="text" id="Parent_Address_Line1" name="Parent_Address_Line1" data-rule-required="true" /><div class="tooltipContainer info">' . get_help("help_address:events:templates/camp_new") . '</div>
+                <label class="rowTitle" for="Parent_Address_Line1">Mailing Address Line One *</label><input tabindex="9" type="text" id="Parent_Address_Line1" name="Parent_Address_Line1" data-rule-required="true" /><div class="tooltipContainer info">' . getlang("input_address1") . '</div>
                   <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
-                <label class="rowTitle" for="Parent_Address_Line2">Mailing Address Line Two</label><input tabindex="10" type="text" id="Parent_Address_Line2" name="Parent_Address_Line2" /><div class="tooltipContainer info">' . get_help("help_address:events:templates/camp_new") . '</div>
+                <label class="rowTitle" for="Parent_Address_Line2">Mailing Address Line Two</label><input tabindex="10" type="text" id="Parent_Address_Line2" name="Parent_Address_Line2" /><div class="tooltipContainer info">' . getlang("input_address2") . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
-                <label class="rowTitle" for="Parent_Address_City">City *</label><input tabindex="11" type="text" id="Parent_Address_City" name="Parent_Address_City" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">' . get_help("help_city:events:templates/camp_new") . '</div>
+                <label class="rowTitle" for="Parent_Address_City">City *</label><input tabindex="11" type="text" id="Parent_Address_City" name="Parent_Address_City" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">' . getlang("input_city") . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
@@ -271,27 +275,27 @@ if ($autofill) {
                     <option value="WI">Wisconsin
                     <option value="WY">Wyoming
                 </select>
-                <div class="tooltipContainer info">' . get_help("help_state:events:templates/camp_new") . '</div>
+                <div class="tooltipContainer info">' . getlang("select_state") . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
-                <label class="rowTitle" for="Parent_Address_Zipcode">Zipcode *</label><input tabindex="13" type="text" size="5" maxlength="5" id="Parent_Address_Zipcode" name="Parent_Address_Zipcode" data-rule-required="true" data-rule-number="true" data-rule-minlength="5" /><div class="tooltipContainer info">' . get_help("help_zip:events:templates/camp_new") . '</div>
+                <label class="rowTitle" for="Parent_Address_Zipcode">Zipcode *</label><input tabindex="13" type="text" size="5" maxlength="5" id="Parent_Address_Zipcode" name="Parent_Address_Zipcode" data-rule-required="true" data-rule-number="true" data-rule-minlength="5" /><div class="tooltipContainer info">' . getlang("input_zip") . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
-                <label class="rowTitle" for="Parent_Phone1">Parent/Guardian Phone 1 *</label><input tabindex="14" type="text" maxlength="22" id="Parent_Phone1" name="Parent_Phone1" data-rule-required="true" data-rule-phone="true" /><div class="tooltipContainer info">' . get_help("help_phone:events:templates/camp_new") . '</div>
+                <label class="rowTitle" for="Parent_Phone1">Parent/Guardian Phone 1 *</label><input tabindex="14" type="text" maxlength="22" id="Parent_Phone1" name="Parent_Phone1" data-rule-required="true" data-rule-phone="true" /><div class="tooltipContainer info">' . getlang("input_default_phone") . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
-                <label class="rowTitle" for="Parent_Phone2">Parent/Guardian Phone 2 *</label><input tabindex="15" type="text" maxlength="22" id="Parent_Phone2" name="Parent_Phone2" data-rule-required="true" data-rule-phone="true" /><div class="tooltipContainer info">' . get_help("help_phone:events:templates/camp_new") . '</div>
+                <label class="rowTitle" for="Parent_Phone2">Parent/Guardian Phone 2 *</label><input tabindex="15" type="text" maxlength="22" id="Parent_Phone2" name="Parent_Phone2" data-rule-required="true" data-rule-phone="true" /><div class="tooltipContainer info">' . getlang("input_default_phone") . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
-                <label class="rowTitle" for="Parent_Phone3">Parent/Guardian Phone 3</label><input tabindex="16" type="text" maxlength="22" id="Parent_Phone3" name="Parent_Phone3" data-rule-phone="true" /><div class="tooltipContainer info">' . get_help("help_phone:events:templates/camp_new") . '</div>
+                <label class="rowTitle" for="Parent_Phone3">Parent/Guardian Phone 3</label><input tabindex="16" type="text" maxlength="22" id="Parent_Phone3" name="Parent_Phone3" data-rule-phone="true" /><div class="tooltipContainer info">' . getlang("input_default_phone") . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
-                <label class="rowTitle" for="Parent_Phone4">Parent/Guardian Phone 4</label><input tabindex="17" type="text" maxlength="22" id="Parent_Phone4" name="Parent_Phone4" data-rule-phone="true" /><div class="tooltipContainer info">' . get_help("help_phone:events:templates/camp_new") . '</div>
+                <label class="rowTitle" for="Parent_Phone4">Parent/Guardian Phone 4</label><input tabindex="17" type="text" maxlength="22" id="Parent_Phone4" name="Parent_Phone4" data-rule-phone="true" /><div class="tooltipContainer info">' . getlang("input_default_phone") . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
             <div style="text-align:left;width:85%;font-size:13px;font-weight:bold">
@@ -326,67 +330,67 @@ if ($autofill) {
               </p>
             </div>
                  <div class="rowContainer">
-                <label class="rowTitle" for="HealthMemberName">Member\'s Name *</label><input tabindex="18" type="text" id="HealthMemberName" name="HealthMemberName" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">' . get_help("help_membername:events:templates/camp_new") . '</div>
+                <label class="rowTitle" for="HealthMemberName">Member\'s Name *</label><input tabindex="18" type="text" id="HealthMemberName" name="HealthMemberName" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">' . getlang("help_membername", $path) . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
                  <div class="rowContainer">
-                <label class="rowTitle" for="HealthRelationship">Relationship *</label><input tabindex="19" type="text" id="HealthRelationship" name="HealthRelationship" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">' . get_help("help_relationship:events:templates/camp_new") . '</div>
+                <label class="rowTitle" for="HealthRelationship">Relationship *</label><input tabindex="19" type="text" id="HealthRelationship" name="HealthRelationship" data-rule-required="true" data-rule-nonumbers="true" /><div class="tooltipContainer info">' . getlang("help_relationship", $path) . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
                  <div class="rowContainer">
-                <label class="rowTitle" for="HealthInsurance">Medical Insurance Carrier *</label><input tabindex="20" type="text" id="HealthInsurance" name="HealthInsurance" data-rule-required="true" /><div class="tooltipContainer info">' . get_help("help_carrier:events:templates/camp_new") . '</div>
+                <label class="rowTitle" for="HealthInsurance">Medical Insurance Carrier *</label><input tabindex="20" type="text" id="HealthInsurance" name="HealthInsurance" data-rule-required="true" /><div class="tooltipContainer info">' . getlang("help_carrier", $path) . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
-                <label class="rowTitle" for="HealthIdentification">Medical Identification Number</label><input tabindex="21" type="text" id="HealthIdentification" name="HealthIdentification" /><div class="tooltipContainer info">' . get_help("help_memberid:events:templates/camp_new") . '</div>
+                <label class="rowTitle" for="HealthIdentification">Medical Identification Number</label><input tabindex="21" type="text" id="HealthIdentification" name="HealthIdentification" /><div class="tooltipContainer info">' . getlang("help_memberid", $path) . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
                 <label class="rowTitle" for="HealthBenefitCode">Benefit Code</label>
                 <input tabindex="22" type="text" id="HealthBenefitCode" name="HealthBenefitCode" />
-                <div class="tooltipContainer info">' . get_help("help_membercode:events:templates/camp_new") . '</div>
+                <div class="tooltipContainer info">' . getlang("help_membercode", $path) . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
                 <label class="rowTitle" for="HealthAccount">Account Number</label>
                 <input tabindex="23" type="text" id="HealthAccount" name="HealthAccount" />
-                <div class="tooltipContainer info">' . get_help("help_memberaccount:events:templates/camp_new") . '</div>
+                <div class="tooltipContainer info">' . getlang("help_memberaccount", $path) . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
                 <label class="rowTitle" for="HealthExpirationDate">Expiration Date</label>
                 <input type="date" id="HealthExpirationDate" name="HealthExpirationDate" value="' . date("Y-m-d") . '">
-                <div class="tooltipContainer info">' . get_help("help_healthto:events:templates/camp_new") . '</div>
+                <div class="tooltipContainer info">' . getlang("help_healthto", $path) . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer" style="height: auto;">
                 <label class="rowTitle" for="HealthHistory">Medical History *</label>
                 <textarea tabindex="24" id="HealthHistory" name="HealthHistory" rows="8" cols="60" data-rule-required="true">-none-</textarea>
-                <div class="tooltipContainer info">' . get_help("help_history:events:templates/camp_new") . '</div>
+                <div class="tooltipContainer info">' . getlang("help_history", $path) . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer" style="height: auto;">
                 <label class="rowTitle" for="HealthAllergies">Allergies *</label>
                 <textarea tabindex="25" id="HealthAllergies" name="HealthAllergies" rows="8" cols="60" data-rule-required="true">-none-</textarea>
-                <div class="tooltipContainer info">' . get_help("help_alergies:events:templates/camp_new") . '</div>
+                <div class="tooltipContainer info">' . getlang("help_alergies", $path) . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer" style="height: auto;">
                 <label class="rowTitle" for="HealthExisting">Chronic/existing diseases/medical issues *</label>
                 <textarea tabindex="26" id="HealthExisting" name="HealthExisting" rows="8" cols="60" data-rule-required="true">-none-</textarea>
-                <div class="tooltipContainer info">' . get_help("help_existing:events:templates/camp_new") . '</div>
+                <div class="tooltipContainer info">' . getlang("help_existing", $path) . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer" style="height: auto;">
                 <label class="rowTitle" for="HealthMedicines">Medicines *</label>
                 <textarea tabindex="27" id="HealthMedicines" name="HealthMedicines" rows="8" cols="60" data-rule-required="true">-none-</textarea>
-                <div class="tooltipContainer info">' . get_help("help_meds:events:templates/camp_new") . '</div>
+                <div class="tooltipContainer info">' . getlang("help_meds", $path) . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
                 <label class="rowTitle" for="HealthTetanusDate">Date of last Tetanus injection/booster *</label>
                 <input type="date" id="HealthTetanusDate" name="HealthTetanusDate" value="' . date("Y-m-d") . '">
-                <div class="tooltipContainer info">' . get_help("help_tetanus:events:templates/camp_new") . '</div>
+                <div class="tooltipContainer info">' . getlang("help_tetanus", $path) . '</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>';
 }
@@ -400,7 +404,7 @@ if ($pictures) {
                     <option value="0" selected>No</option>
                     <option value="' . $pictures_price . '">Yes</option>
                 </select>
-                <div class="tooltipContainer info">' . get_help("help_pictures:events:templates/camp_new") . ' ($' . $pictures_price . '.00 for 8x10 group photo)</div>
+                <div class="tooltipContainer info">' . getlang("help_pictures", $path) . ' ($' . $pictures_price . '.00 for 8x10 group photo)</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>';
     } else {
@@ -423,7 +427,7 @@ if ($shirt) {
                 }
         echo '
             </select>
-            <div class="tooltipContainer info">' . get_help("help_shirt:events:templates/camp_new") . ' ($' . $shirt_price . '.00 for camp shirt)</div>
+            <div class="tooltipContainer info">' . getlang("help_shirt", $path) . ' ($' . $shirt_price . '.00 for camp shirt)</div>
             <div class="spacer" style="clear: both;"></div>
         </div>
         ';
@@ -439,7 +443,7 @@ if ($shirt) {
             }
             echo '
             </select>
-            <div class="tooltipContainer info">' . get_help("help_shirt_size:events:templates/camp_new") . ' (no extra charge)</div>
+            <div class="tooltipContainer info">' . getlang("help_shirt_size", $path) . ' (no extra charge)</div>
             <div class="spacer" style="clear: both;"></div>
         </div>';
     }
@@ -454,7 +458,7 @@ if ($event['fee_full'] > 0) {
         <div class="rowContainer costinfo paywithapp">
             <label class="rowTitle" for="Camp_Fee">Amout Paying Today</label>
             ' . make_fee_options($event['fee_min'], $event['fee_full'], "payment_amount", 'onchange="updateTotal();" onclick="updateTotal();"', $event['sale_end'], $event['sale_fee']) . '
-            <div class="tooltipContainer info">' . get_help("help_paywithapp:events:templates/camp_new") . '</div>
+            <div class="tooltipContainer info">' . getlang("help_paywithapp", $path) . '</div>
             <div class="spacer" style="clear: both;"></div>
         </div>';
     }
@@ -489,7 +493,7 @@ if ($event['fee_full'] > 0) {
             <input id="campershipcode" type="text" name="campershipcode" style="display: inline-block" /> <button id="applycampership" type="button">Apply</button>
             <div id="campershipresult" style="padding: 2px;text-align: center;"></div>
             <input tabindex="32" type="hidden" id="campership" name="campership" />
-            <div class="tooltipContainer info">' . get_help("help_campership:events:templates/camp_new") . '</div>
+            <div class="tooltipContainer info">' . getlang("help_campership", $path) . '</div>
             <div class="spacer" style="clear: both;"></div>
         </div>
         <div class="rowContainer" style="height: auto;">

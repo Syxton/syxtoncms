@@ -23,7 +23,7 @@ return [
         'title' => 'Email',
         'type' => 'email',
         'required' => true,
-        'required_msg' => error_string('valid_req_email'),
+        'required_msg' => getlang("input_required"),
         'help' => getlang("help_email", $path),
         'dynamicvalue' => [
             'email' => $path . '/custom.php',
@@ -64,11 +64,11 @@ return [
         'title' => 'First Name',
         'type' => 'text',
         'required' => true,
-        'required_msg' => error_string('valid_req_fname'),
+        'required_msg' => getlang("input_fname"),
         'nonumbers' => true,
         'autocapitalize' => 'words',
         'minlength' => 2,
-        'help' => get_help("input_fname"),
+        'help' => getlang("input_fname"),
     ],
     [
         'name' => 'camper_name_middle',
@@ -87,11 +87,11 @@ return [
         'title' => 'Last Name',
         'type' => 'text',
         'required' => true,
-        'required_msg' => error_string('valid_req_lname'),
+        'required_msg' => getlang("input_lname"),
         'nonumbers' => true,
         'autocapitalize' => 'words',
         'minlength' => 2,
-        'help' => get_help("input_lname"),
+        'help' => getlang("input_lname"),
     ],
     [
         'name' => 'camper_grade',
@@ -154,7 +154,7 @@ return [
         'type' => 'text',
         'required' => true,
         'nonumbers' => true,
-        'help' => getlang("help_city", $path),
+        'help' => getlang("input_city"),
     ],
     [
         'name' => 'parent_address_state',
@@ -163,7 +163,7 @@ return [
         'type' => 'select',
         'options' => TEMP_PROPS["STATES"],
         'required' => true,
-        'help' => getlang("help_state", $path),
+        'help' => getlang("select_state"),
     ],
     [
         'name' => 'parent_address_zipcode',
@@ -173,8 +173,7 @@ return [
         'required' => true,
         'number' => true,
         'minlength' => 5,
-        'help' => getlang("help_state", $path),
-        'help' => get_help("help_zip:events:templates/camp_2025"),
+        'help' => getlang("input_zip"),
     ],
     [
         'name' => 'parent_phone1',
@@ -182,7 +181,7 @@ return [
         'title' => 'Phone 1',
         'type' => 'tel',
         'required' => true,
-        'help' => getlang("help_phone", $path),
+        'help' => getlang("input_default_phone"),
     ],
     [
         'name' => 'parent_phone2',
@@ -190,7 +189,7 @@ return [
         'title' => 'Phone 2',
         'type' => 'tel',
         'required' => true,
-        'help' => getlang("help_phone", $path),
+        'help' => getlang("input_default_phone"),
     ],
     [
         'name' => 'parent_phone3',
@@ -198,7 +197,7 @@ return [
         'title' => 'Phone 3',
         'type' => 'tel',
         'required' => false,
-        'help' => getlang("help_phone", $path),
+        'help' => getlang("input_default_phone"),
     ],
     [
         'name' => 'parent_phone4',
@@ -206,7 +205,7 @@ return [
         'title' => 'Phone 4',
         'type' => 'tel',
         'required' => false,
-        'help' => getlang("help_phone", $path),
+        'help' => getlang("input_default_phone"),
     ],
     [
         'name' => 'consent',

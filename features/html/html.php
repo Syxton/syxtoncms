@@ -55,11 +55,11 @@ function edithtml() {
                 FROM html
                 WHERE htmlid = ||htmlid||';
         if (!$row = get_db_row($SQL, ['htmlid' => $htmlid])) {
-            throw new Exception(error_string('no_html_found', ['htmlid' => $htmlid]));
+            throw new Exception(getlang('no_html_found', "/features/html", ['htmlid' => $htmlid]));
         }
         $pageid = $row["pageid"];
         if (!user_is_able($USER->userid, 'edithtml', $pageid)) {
-            throw new Exception(error_string('no_permission', ['edithtml']));
+            throw new Exception(getlang("no_permission", false, ['edithtml']));
         }
         $now = get_timestamp();
         if (($now - $row['edit_time']) > 10) {
@@ -163,7 +163,7 @@ function commentform() {
                 if (user_is_able($USER->userid, 'makereplies', $pageid)) {
                     $return = fill_template('tmp/html.template', 'comment_form_template', 'html', $params);
                 } else {
-                    trigger_error(error_string('no_permission', ['makecomments']), E_USER_WARNING);
+                    trigger_error(getlang("no_permission", false, ['makecomments']), E_USER_WARNING);
                 }
             } else {
                 $params = array_merge($params, [
@@ -172,13 +172,13 @@ function commentform() {
                     'comment'   => htmlentities($comment['comment']),
                 ]);
                 if (!can_edit_comment($comment)) {
-                    trigger_error(error_string('no_permission', ['editing']), E_USER_WARNING);
+                    trigger_error(getlang("no_permission", false, ['editing']), E_USER_WARNING);
                     return;
                 }
                 $return = fill_template('tmp/html.template', 'comment_form_template', 'html', $params);
             }
         } else {
-            trigger_error(error_string('no_data', ['commentid']), E_USER_WARNING);
+            trigger_error(getlang("no_data", false, ['commentid']), E_USER_WARNING);
             return;
         }
     } else { // New Comment.
@@ -195,10 +195,10 @@ function commentform() {
                 ];
                 $return = fill_template('tmp/html.template', 'comment_form_template', 'html', $params);
             } else {
-                trigger_error(error_string('no_permission', ['makecomments']), E_USER_WARNING);
+                trigger_error(getlang("no_permission", false, ['makecomments']), E_USER_WARNING);
             }
         } else {
-            trigger_error(error_string('no_data', ['htmlid']), E_USER_WARNING);
+            trigger_error(getlang("no_data", false, ['htmlid']), E_USER_WARNING);
         }
     }
 

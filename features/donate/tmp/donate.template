@@ -4,28 +4,28 @@ add_edit_form||
             <fieldset class="formContainer">
                 <div class="rowContainer">
                     <label class="rowTitle" for="title">Campaign Name</label>
-                    <input type="text" id="title" name="title" value="||title||" data-rule-required="true" data-msg-required="||echo error_string('donate_req_title:donate');::none||" />
-                    <div class="tooltipContainer info">||echo get_help("donate_title:donate");::none||</div><br />
+                    <input type="text" id="title" name="title" value="||title||" data-rule-required="true" data-msg-required="||echo getlang("input_required");::none||" />
+                    <div class="tooltipContainer info">||echo getlang("donate_title", "/features/donate");::none||</div><br />
                 </div>
                 <div class="rowContainer">
                     <label class="rowTitle" for="title">Goal Amount $</label>
-                    <input type="text" id="goal" name="goal" value="||goal||" data-rule-required="true" data-rule-number="true"  data-rule-min="0" data-msg-required="||echo error_string('donate_req_goal:donate');::none||" />
-                    <div class="tooltipContainer info">||echo get_help("donate_goal:donate");::none||</div><br />
+                    <input type="text" id="goal" name="goal" value="||goal||" data-rule-required="true" data-rule-number="true"  data-rule-min="0" data-msg-required="||echo getlang("input_required");::none||" />
+                    <div class="tooltipContainer info">||echo getlang("donate_goal", "/features/donate");::none||</div><br />
                 </div>
                 <div class="rowContainer">
                     <label class="rowTitle" for="description">Goal Description</label>
-                    <textarea type="text" id="description" name="description" data-rule-required="true" data-msg-required="||echo error_string('donate_req_description:donate');::none||">||description||</textarea>
-                    <div class="tooltipContainer info">||echo get_help("donate_description:donate");::none||</div><br />
+                    <textarea type="text" id="description" name="description" data-rule-required="true" data-msg-required="||echo getlang("input_required");::none||">||description||</textarea>
+                    <div class="tooltipContainer info">||echo getlang("donate_description", "/features/donate");::none||</div><br />
                 </div>
                 <div class="rowContainer">
                     <label class="rowTitle" for="email">Paypal Email Address</label>
-                    <input type="text" id="email" name="email" value="||email||" data-rule-required="true" data-rule-email="true" data-msg-required="||echo error_string('valid_req_email');::none||" data-msg-email="||echo error_string('valid_email_invalid');::none||" />
-                    <div class="tooltipContainer info">||echo get_help("donate_paypal_email:donate");::none||</div><br />
+                    <input type="text" id="email" name="email" value="||email||" data-rule-required="true" data-rule-email="true" data-msg-required="||echo getlang("input_required");::none||" data-msg-email="||echo getlang("invalid_email");::none||" />
+                    <div class="tooltipContainer info">||echo getlang("donate_paypal_email", "/features/donate");::none||</div><br />
                 </div>
                 <div class="rowContainer">
                     <label class="rowTitle" for="email">Paypal PDT token</label>
-                    <input type="text" id="token" name="token" value="||token||" data-rule-required="true" data-msg-required="||echo error_string('donate_req_token:donate');::none||" />
-                    <div class="tooltipContainer info">||echo get_help("donate_token:donate");::none||</div><br />
+                    <input type="text" id="token" name="token" value="||token||" data-rule-required="true" data-msg-required="||echo getlang("input_required");::none||" />
+                    <div class="tooltipContainer info">||echo getlang("donate_token", "/features/donate");::none||</div><br />
                 </div>
                 <div class="rowContainer">
                     <label class="rowTitle" for="shared">Share Campaign</label>
@@ -34,7 +34,7 @@ add_edit_form||
                             <option value="0" ||noselected||>Not Shared</option>
                             <option value="1" ||yesselected||>Shared</option>
                     </select>
-                    <div class="tooltipContainer info">||echo get_help("donate_shared:donate");::none||</div><br />
+                    <div class="tooltipContainer info">||echo getlang("donate_shared", "/features/donate");::none||</div><br />
                 </div>
                     <br />
                     <input class="submit" name="submit" type="submit" value="||button|| Campaign" style="margin: auto;display:block;clear:both;" />
@@ -100,16 +100,16 @@ offline_donation_form||
                     <label class="rowTitle" for="amount">
                         Donation Amount $
                     </label>
-                    <input type="text" id="amount" name="amount" value="0.00" data-rule-required="true" data-rule-number="true" data-rule-min="0.01" data-msg-required="||echo error_string('donate_req_amount:donate');::none||" data-msg-min="||echo error_string('donate_req_min:donate');::none||" />
+                    <input type="text" id="amount" name="amount" value="0.00" data-rule-required="true" data-rule-number="true" data-rule-min="0.01" data-msg-required="||echo getlang("input_required");::none||" data-msg-min="||echo getlang("invalid_number");::none||" />
                     <div class="tooltipContainer info">
-                        ||echo get_help("donate_amount:donate");::none||
+                        ||echo getlang("donate_amount", "/features/donate");::none||
                     </div>
                 </div>
                 <div class="rowContainer">
                     <label class="rowTitle" class="rowTitle" for="name">Name</label>
                     <input type="text" id="name" name="name" value="Anonymous" />
                     <div class="tooltipContainer info">
-                        ||echo get_help("donate_name:donate");::none||
+                        ||echo getlang("donate_name", "/features/donate");::none||
                     </div>
                 </div>
                 <br />
@@ -179,7 +179,7 @@ edit_donation_form||
                         ||options||
                     </select>
                     <div class="tooltipContainer info">
-                        ||echo get_help("donate_campaign:donate");::none||
+                        ||echo getlang("donate_campaign", "/features/donate");::none||
                     </div>
                     <br />
                 </div>
@@ -187,9 +187,9 @@ edit_donation_form||
                     <label class="rowTitle" for="amount">
                         Donation Amount $
                     </label>
-                    <input type="text" id="amount" name="amount" value="||amount||" data-rule-required="true" data-rule-number="true" data-rule-min="0.01" data-msg-required="||echo error_string('donate_req_amount:donate');::none||" data-msg-min="||echo error_string('donate_req_min:donate');::none||" />
+                    <input type="text" id="amount" name="amount" value="||amount||" data-rule-required="true" data-rule-number="true" data-rule-min="0.01" data-msg-required="||echo getlang("input_required");::none||" data-msg-min="||echo getlang("invalid_number");::none||" />
                     <div class="tooltipContainer info">
-                        ||echo get_help("donate_amount:donate");::none||
+                        ||echo getlang("donate_amount", "/features/donate");::none||
                     </div>
                     <br />
                 </div>
@@ -199,7 +199,7 @@ edit_donation_form||
                     </label>
                     <input type="text" id="name" name="name" value="||name||" />
                     <div class="tooltipContainer info">
-                        ||echo get_help("donate_name:donate");::none||
+                        ||echo getlang("donate_name", "/features/donate");::none||
                     </div>
                     <br />
                 </div>
@@ -209,7 +209,7 @@ edit_donation_form||
                     </label>
                     <input type="text" id="paypal_TX" paypal_TX="name" value="||tx||" />
                     <div class="tooltipContainer info">
-                        ||echo get_help("donate_paypaltx:donate");::none||
+                        ||echo getlang("donate_paypaltx", "/features/donate");::none||
                     </div>
                     <br />
                 </div>

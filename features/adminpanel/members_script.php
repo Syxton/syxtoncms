@@ -17,7 +17,7 @@ if (!isset($CFG)) {
 
 update_user_cookie();
 
-if (!is_siteadmin($USER->userid)) { trigger_error(error_string("generic_permissions"), E_USER_WARNING); return; }
+if (!is_siteadmin($USER->userid)) { trigger_error(getlang("generic_permissions"), E_USER_WARNING); return; }
 
 callfunction();
 

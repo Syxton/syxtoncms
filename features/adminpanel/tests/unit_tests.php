@@ -55,7 +55,7 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
     echo '<div style="padding: 0px 20px;">';
 
     if (!is_siteadmin($USER->userid)) {
-        trigger_error(error_string("no_permission", ["administrative"]), E_USER_WARNING);
+        trigger_error(getlang("generic_permissions", false, ["administrative"]), E_USER_WARNING);
         return;
     }
 

@@ -28,83 +28,6 @@ ini_set('display_errors', "off");
 set_error_handler("myErrorHandler", $reportlevel);
 set_exception_handler("myExceptionHandler");
 
-// Login Errors *********************************************************
-$ERRORS->no_login = "Username or password was incorrect.<br />Please try again.";
-
-//Permission Errors *********************************************************
-$ERRORS->no_html_permissions = "You do not have the correct permissions to view this HTML content.";
-$ERRORS->no_buttons = "You have rights to 0 buttons";
-$ERRORS->generic_permissions = "You do not have the correct permissions to do this.";
-$ERRORS->no_permission = "You do not have the <strong>{0}</strong> permission.";
-$ERRORS->generic_error = "Congratulations, you found a bug.  Please inform the site admin. " . $CFG->siteemail;
-$ERRORS->generic_db_error = "Database Error. Please inform the site admin. " . $CFG->siteemail;
-
-//User Creation *********************************************************
-$ERRORS->user_not_added = "The user could not be created correctly.";
-$ERRORS->user_not_emailed = "The user account has been created, but the confirmation email has failed to send.  Please inform the site admin. " . $CFG->siteemail;
-
-//Page Errors *********************************************************
-$ERRORS->could_not_subscribe = "You did NOT add this page successfully.";
-$ERRORS->page_not_created = "Your page was NOT created successfully.";
-$ERRORS->no_function = "The function: <strong>{0}</strong> could not be found.";
-$ERRORS->no_data = "The expected data of {0} could not be found.";
-$ERRORS->pagenotfound = "Page not found.";
-
-//Polls *********************************************************
-$ERRORS->no_poll_permissions = "You do not have the correct permissions to view this poll.";
-
-//Search Errors *********************************************************
-$ERRORS->search_nosearchwords = "No search words given.";
-
-// Validation Errors *********************************************************
-//generic
-$ERRORS->valid_req = "This field is required.";
-$ERRORS->valid_date_invalid = "Please enter a valid date.";
-$ERRORS->valid_phone_invalid = "Please enter a valid phone number.";
-
-//username
-$ERRORS->valid_req_username = "Please enter your username.";
-
-//first name
-$ERRORS->valid_req_fname = "Please enter your first name.";
-
-//last name
-$ERRORS->valid_req_lname = "Please enter your last name.";
-
-//email
-$ERRORS->valid_req_email = "Please enter your email address.";
-$ERRORS->valid_email_invalid = "Please enter a valid email address.";
-$ERRORS->valid_email_unique = "This email address is already in use.";
-$ERRORS->valid_email_used = "Could not find a user with that email.";
-
-//password
-$ERRORS->valid_req_password = "Please enter a password.";
-$ERRORS->valid_password_length = "Must be at least 6 characters long.";
-
-//verify password
-$ERRORS->valid_req_vpassword = "Please verify your password.";
-$ERRORS->valid_vpassword_match = "Must match the password field.";
-
-function error_string($error, $vars = false) {
-global $CFG, $ERRORS;
-    $lang = explode(":", $error);
-    $string = $lang[0];
-    if (isset($lang[2])) {
-        include($CFG->dirroot . '/features/' . $lang[1] . "/" . $lang[2] . "/lang.php");
-        return $ERRORS->$string;
-    } elseif (isset($lang[1])) {
-        include($CFG->dirroot . '/features/' . $lang[1] . "/lang.php");
-        if ($vars) {
-            return fill_string($ERRORS->$string, $vars);
-        }
-        return $ERRORS->$string;
-    } else {
-        if ($vars) {
-            return fill_string($ERRORS->$error, $vars);
-        }
-        return $ERRORS->$error;
-    }
-}
 
 function myExceptionHandler(Throwable $e) {
     global $CFG;
@@ -219,7 +142,7 @@ function debugging($message = '', $level = 1, $forced = false) {
                 <div class="error_text" style="font-size: calc(10px + .5vw);padding: 6%;">
                     <h3>Site Error</h3>
                     <br />
-                    <p>' . error_string("generic_error") . '</p>
+                    <p>' . getlang("generic_error") . '</p>
                 </div>';
         }
 
