@@ -480,6 +480,7 @@ h1 {
     .rowContainer input,
     .rowContainer select,
     .rowContainer textarea {
+        background: initial;
         width: 100%;
         padding: 10px;
         font-size: 1.5em;
@@ -2075,6 +2076,7 @@ iframe {
 
 #cboxClose, #cboxPrevious, #cboxNext {
     border-radius: 25px;
+    z-index: 999999999;
 }
 
 /* When the screen is less than 700 pixels wide, hide all links, except for the first one ("Home"). Show the link that contains should open and close the topnav (.icon) */
