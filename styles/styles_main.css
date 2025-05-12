@@ -2258,6 +2258,10 @@ iframe {
     ul.vertmenu > ul.acitem li{
         display: inline !important;
     }
+
+    .registration_cart_menu span.fa-layers-text {
+        top: 8px !important;
+    }
 }
 
 .forum_breadcrumb {
