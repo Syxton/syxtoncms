@@ -208,13 +208,25 @@ global $CFG, $MYVARS;
     $featureid = clean_myvar_opt("featureid", "int", false); //Only passed on feature specific managing
     $feature = clean_myvar_opt("feature", "string", false); //Only passed on feature specific managing
 
-    $SQL = "INSERT INTO groups_users (userid, pageid, groupid)
-                    VALUES('$userid', '$pageid', '$groupid')";
-    execute_db_sql($SQL);
+    $error = "";
+    try {
+        start_db_transaction();
+
+        execute_db_sql(fetch_template("dbsql/roles.sql", "insert_group_user"), [
+            "userid" => $userid,
+            "pageid" => $pageid,
+            "groupid" => $groupid,
+        ]);
+
+        commit_db_transaction();
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+        rollback_db_transaction($error);
+    }
 
     $return = groups_list($pageid, $feature, $featureid, true, $groupid);
 
-    ajax_return($return);
+    ajax_return($return, $error);
 }
 
 function remove_group_user() {
@@ -225,12 +237,21 @@ global $CFG, $MYVARS;
     $featureid = clean_myvar_opt("featureid", "int", false); //Only passed on feature specific managing
     $feature = clean_myvar_opt("feature", "string", false); //Only passed on feature specific managing
 
-    $SQL = "DELETE
-            FROM groups_users
-            WHERE userid = '$userid'
-            AND pageid = '$pageid'
-            AND groupid = '$groupid'";
-    execute_db_sql($SQL);
+    $error = "";
+    try {
+        start_db_transaction();
+
+        execute_db_sql(fetch_template("dbsql/roles.sql", "delete_group_user"), [
+            "userid" => $userid,
+            "pageid" => $pageid,
+            "groupid" => $groupid,
+        ]);
+
+        commit_db_transaction();
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+        rollback_db_transaction($error);
+    }
 
     $return = groups_list($pageid, $feature, $featureid, true, $groupid);
 
@@ -273,36 +294,22 @@ global $CFG, $ROLES, $USER;
             $searchstring .= "(fname LIKE '%$search%' OR lname LIKE '%$search%' OR email LIKE '%$search%')";
             $i++;
         }
-        $SQL = "SELECT u.*
-                FROM users u
-                WHERE $searchstring
-                AND ('$pageid' = '$CFG->SITEID'
-                        OR u.userid IN (SELECT ra.userid
-                                        FROM roles_assignment ra
-                                        WHERE ra.pageid = '$pageid'))
-                        AND u.userid NOT IN (SELECT ra.userid
-                                            FROM roles_assignment ra
-                                            WHERE ra.pageid = '$CFG->SITEID'
-                                            AND ra.roleid = '$ROLES->admin')
-                        AND u.userid NOT IN (SELECT ra.userid
-                                            FROM roles_assignment ra
-                                            WHERE ra.pageid = '$pageid'
-                                            AND ra.roleid <= '$roleid')
-                        AND u.userid != '$USER->userid'
-                        AND u.userid NOT IN (SELECT userid
-                                            FROM groups_users
-                                            WHERE groupid = '$groupid')
-                ORDER BY u.lname";
-        if ($users = get_db_result($SQL)) {
+
+        $SQL = fill_template("dbsql/roles.sql", "get_nongroup_users", false, ["searchstring" => $searchstring]);
+        $params = [
+            "searchstring" => $searchstring,
+            "pageid" => $pageid,
+            "roleid" => $roleid,
+            "groupid" => $groupid,
+            "siteid" => $CFG->SITEID,
+            "userid" => $USER->userid,
+            "adminrole" => $ROLES->admin,
+        ];
+        if ($users = get_db_result($SQL, $params)) {
             while ($row = fetch_row($users)) {
                 $mygroups = "";
-                $SQL = "SELECT *
-                        FROM `groups`
-                        WHERE groupid IN (SELECT groupid
-                                        FROM groups_users
-                                        WHERE userid = '" . $row['userid'] . "'
-                                        AND pageid = '$pageid')";
-                if ($groups = get_db_result($SQL)) {
+                $SQL = fetch_template("dbsql/roles.sql", "get_group_by_member");
+                if ($groups = get_db_result($SQL, ["userid" => $row['userid'], "pageid" => $pageid])) {
                     while ($group_info = fetch_row($groups)) {
                         $mygroups .= fill_string(" {name}", $group_info);
                     }
@@ -322,33 +329,18 @@ global $CFG, $ROLES, $USER;
 
 function get_group_members_select($pageid, $roleid, $groupid) {
     $options = "";
-    $SQL = "SELECT u.*
-            FROM users u
-            WHERE u.userid NOT IN (
-                                SELECT ra.userid
-                                FROM roles_assignment ra
-                                WHERE ra.pageid = '$pageid'
-                                AND ra.roleid <= '$roleid'
-                                )
-            AND u.userid IN (
-                            SELECT userid
-                            FROM groups_users
-                            WHERE groupid = '$groupid'
-                            )
-            ORDER BY u.lname";
 
-    if ($roles = get_db_result($SQL)) {
+    $SQL = fetch_template("dbsql/roles.sql", "get_group_users_by_role");
+    $params = [
+        "pageid" => $pageid,
+        "roleid" => $roleid,
+        "groupid" => $groupid,
+    ];
+    if ($roles = get_db_result($SQL, $params)) {
         while ($row = fetch_row($roles)) {
             $mygroups = "";
-            $SQL = "SELECT *
-                    FROM `groups`
-                    WHERE groupid IN (
-                                    SELECT groupid
-                                    FROM groups_users
-                                    WHERE userid = '" . $row['userid'] . "'
-                                    AND pageid='$pageid'
-                                    )";
-            if ($groups = get_db_result($SQL)) {
+            $SQL = fetch_template("dbsql/roles.sql", "get_group_by_member");
+            if ($groups = get_db_result($SQL, ["userid" => $row['userid'],"pageid" => $pageid])) {
                 while ($group_info = fetch_row($groups)) {
                     $mygroups .= fill_string(" {name}", $group_info);
                 }

@@ -140,7 +140,7 @@ remove_user_role_assignment||
 
 insert_role_assignment||
     INSERT INTO roles_assignment (userid, roleid, pageid, confirm)
-    VALUES(||userid||, ||roleid||, ||pageid||, ||confirm||)
+    VALUES (||userid||, ||roleid||, ||pageid||, ||confirm||)
 ||insert_role_assignment
 
 remove_role_assignment_request||
@@ -160,18 +160,19 @@ get_role_assignment||
 ||get_role_assignment
 
 insert_abilities||
-  INSERT INTO abilities (section, section_display, ability, ability_display, power)
-       VALUES(||section||, ||section_display||, ||ability||, ||ability_display||, ||power||)
+    INSERT INTO abilities (section, section_display, ability, ability_display, power)
+    VALUES(||section||, ||section_display||, ||ability||, ||ability_display||, ||power||)
 ||insert_abilities
 
 insert_roles_ability||
     INSERT INTO roles_ability (roleid, ability, allow, section)
-        VALUES(1, ||ability||, 1, ||section||),
-              (2, ||ability||, ||creator||, ||section||),
-              (3, ||ability||, ||editor||, ||section||),
-              (4, ||ability||, ||guest||, ||section||),
-              (5, ||ability||, ||visitor||, ||section||),
-              (6, ||ability||, 0, ||section||)
+    VALUES
+    (1, ||ability||, 1, ||section||),
+    (2, ||ability||, ||creator||, ||section||),
+    (3, ||ability||, ||editor||, ||section||),
+    (4, ||ability||, ||guest||, ||section||),
+    (5, ||ability||, ||visitor||, ||section||),
+    (6, ||ability||, 0, ||section||)
 ||insert_roles_ability
 
 
@@ -191,82 +192,102 @@ insert_roles_ability||
 //							|
 //							Role specific per SITE LEVEL permissions
 user_has_ability_in_page||
-  SELECT 1 as allowed
+    SELECT 1 as allowed
     FROM roles_ability ra
-   WHERE (1 IN (SELECT allow
-                  FROM roles_ability_perfeature_peruser
-                 WHERE pageid = ||pageid||
-                   AND userid = ||userid||
-                   AND ability = ||ability||
-                   AND feature = ||feature||
-                   AND featureid = ||featureid||
-                   AND allow = 1)
-          OR
-          (1 IN (SELECT allow
-                   FROM roles_ability_peruser
-                  WHERE pageid = ||pageid||
-                    AND userid = ||userid||
-                    AND ability = ||ability||
-                    AND allow = 1)
-           OR
-           ||featuregroupsql[0]|| ||groupsql[0]||
-           (1 IN (SELECT allow
-                    FROM roles_ability_perfeature
-                   WHERE pageid = ||pageid||
-                     AND roleid = ||roleid||
-                     AND ability = ||ability||
-                     AND feature = ||feature||
-                     AND featureid = ||featureid||
-                     AND allow = 1)
-            OR
-            (1 IN (SELECT allow
-                     FROM roles_ability_perpage
-                    WHERE pageid = ||pageid||
-                      AND roleid = ||roleid||
-                      AND ability = ||ability||
-                      AND allow = 1)
-             OR
-             1 IN (SELECT allow
-                     FROM roles_ability
-                    WHERE roleid = ||roleid||
-                      AND ability = ||ability||
-                      AND allow = 1)
-             AND
-             0 NOT IN (SELECT allow
-                         FROM roles_ability_perpage
-                        WHERE pageid = ||pageid||
-                          AND roleid = ||roleid||
-                          AND ability = ||ability||
-                          AND allow = 0)
+    WHERE (
+        1 IN (
+            SELECT allow
+            FROM roles_ability_perfeature_peruser
+            WHERE pageid = ||pageid||
+            AND userid = ||userid||
+            AND ability = ||ability||
+            AND feature = ||feature||
+            AND featureid = ||featureid||
+            AND allow = 1
+        )
+        OR (
+            1 IN (
+                SELECT allow
+                FROM roles_ability_peruser
+                WHERE pageid = ||pageid||
+                AND userid = ||userid||
+                AND ability = ||ability||
+                AND allow = 1
             )
-            AND
-            0 NOT IN (SELECT allow
-                        FROM roles_ability_perfeature
-                       WHERE pageid = ||pageid||
-                         AND roleid = ||roleid||
-                         AND ability = ||ability||
-                         AND feature = ||feature||
-                         AND featureid = ||featureid||
-                         AND allow = 0)
-             ||featuregroupsql[1]|| ||groupsql[1]||
+            OR
+            ||featuregroupsql[0]|| ||groupsql[0]||
+            (
+                1 IN (
+                    SELECT allow
+                    FROM roles_ability_perfeature
+                    WHERE pageid = ||pageid||
+                    AND roleid = ||roleid||
+                    AND ability = ||ability||
+                    AND feature = ||feature||
+                    AND featureid = ||featureid||
+                    AND allow = 1
                 )
-            AND 0 NOT IN (SELECT allow
-                            FROM roles_ability_peruser
-                           WHERE pageid = ||pageid||
-                             AND userid = ||userid||
-                             AND ability = ||ability||
-                             AND allow = 0)
-          )
-          AND 0 NOT IN (SELECT allow
-                          FROM roles_ability_perfeature_peruser
-                         WHERE pageid = ||pageid||
-                           AND userid = ||userid||
-                           AND ability = ||ability||
-                           AND feature = ||feature||
-                           AND featureid = ||featureid||
-                           AND allow = 0)
-         )
-   LIMIT 1
+                OR (
+                    1 IN (
+                        SELECT allow
+                        FROM roles_ability_perpage
+                        WHERE pageid = ||pageid||
+                        AND roleid = ||roleid||
+                        AND ability = ||ability||
+                        AND allow = 1
+                    )
+                    OR
+                    1 IN (
+                        SELECT allow
+                        FROM roles_ability
+                        WHERE roleid = ||roleid||
+                        AND ability = ||ability||
+                        AND allow = 1
+                    )
+                    AND
+                    0 NOT IN (
+                        SELECT allow
+                        FROM roles_ability_perpage
+                        WHERE pageid = ||pageid||
+                        AND roleid = ||roleid||
+                        AND ability = ||ability||
+                        AND allow = 0
+                    )
+                )
+                AND
+                0 NOT IN (
+                    SELECT allow
+                    FROM roles_ability_perfeature
+                    WHERE pageid = ||pageid||
+                    AND roleid = ||roleid||
+                    AND ability = ||ability||
+                    AND feature = ||feature||
+                    AND featureid = ||featureid||
+                    AND allow = 0
+                )
+                ||featuregroupsql[1]|| ||groupsql[1]||
+            )
+            AND 0 NOT IN (
+                SELECT allow
+                FROM roles_ability_peruser
+                WHERE pageid = ||pageid||
+                AND userid = ||userid||
+                AND ability = ||ability||
+                AND allow = 0
+            )
+        )
+        AND 0 NOT IN (
+            SELECT allow
+            FROM roles_ability_perfeature_peruser
+            WHERE pageid = ||pageid||
+            AND userid = ||userid||
+            AND ability = ||ability||
+            AND feature = ||feature||
+            AND featureid = ||featureid||
+            AND allow = 0
+        )
+    )
+    LIMIT 1
 ||user_has_ability_in_page
 
 //	This is a fully implemented roles structure for the system.  The following is the importance structure
@@ -285,176 +306,185 @@ user_has_ability_in_page||
 //							|
 //							Role specific per SITE LEVEL permissions
 get_user_abilities||
-    SELECT a.ability,
-            (
-                SELECT 1 as allowed
-                FROM roles_ability ra
-                WHERE
+    SELECT a.ability, (
+        SELECT 1 as allowed
+        FROM roles_ability ra
+        WHERE (
+            1 IN (
+                SELECT allow
+                FROM roles_ability_perfeature_peruser
+                WHERE pageid = ||pageid||
+                AND userid = ||userid||
+                AND feature = ||feature||
+                AND featureid = ||featureid||
+                AND ability = a.ability
+                AND allow = 1
+            )
+            OR (
+                1 IN (
+                    SELECT allow
+                    FROM roles_ability_peruser
+                    WHERE userid = ||userid||
+                    AND pageid = ||pageid||
+                    AND ability = a.ability
+                    AND allow = 1
+                )
+                OR
+                ||featuregroupsql[0]|| ||groupsql[0]||
                 (
                     1 IN (
+                        SELECT allow
+                        FROM roles_ability_perfeature
+                        WHERE pageid = ||pageid||
+                        AND roleid = ||roleid||
+                        AND feature = ||feature||
+                        AND featureid = ||featureid||
+                        AND ability = a.ability
+                        AND allow = 1
+                    )
+                    OR (
+                        1 IN (
                             SELECT allow
-                            FROM roles_ability_perfeature_peruser
-                            WHERE pageid = ||pageid||
-                            AND userid = ||userid||
-                            AND feature = ||feature||
-                            AND featureid = ||featureid||
+                            FROM roles_ability_perpage
+                            WHERE roleid = ||roleid||
+                            AND pageid = ||pageid||
                             AND ability = a.ability
                             AND allow = 1
-                    )
-                    OR
-                    (
-                        1 IN (
+                        )
+                        OR (
+                            1 IN (
                                 SELECT allow
-                                FROM roles_ability_peruser
-                                WHERE userid = ||userid||
-                                AND pageid = ||pageid||
+                                FROM roles_ability
+                                WHERE roleid = ||roleid||
                                 AND ability = a.ability
                                 AND allow = 1
-                        )
-                  OR
-                  ||featuregroupsql[0]|| ||groupsql[0]||
-                  (
-                            1 IN (
-                                    SELECT allow
-                                    FROM roles_ability_perfeature
-                                    WHERE pageid = ||pageid||
-                                    AND roleid = ||roleid||
-                                    AND feature = ||feature||
-                                    AND featureid = ||featureid||
-                                    AND ability = a.ability
-                                    AND allow = 1
                             )
-                            OR
-                            (
-                                1 IN (
-                                        SELECT allow
-                                        FROM roles_ability_perpage
-                                        WHERE roleid = ||roleid||
-                                        AND pageid = ||pageid||
-                                        AND ability = a.ability
-                                        AND allow = 1
-                                )
-                          OR
-                          (
-                            1 IN (
-                                            SELECT allow
-                                            FROM roles_ability
-                                            WHERE roleid = ||roleid||
-                                            AND ability = a.ability
-                                            AND allow = 1
-                                    )
-                                )
-                          AND 0 NOT IN (
-                                                    SELECT allow
-                                                    FROM roles_ability_perpage
-                                                    WHERE roleid = ||roleid||
-                                                    AND pageid = ||pageid||
-                                                    AND ability = a.ability
-                                                    AND allow = 0
-                                )
-                            )
-                      AND 0 NOT IN (
-                                                SELECT allow
-                                                FROM roles_ability_perfeature
-                                                WHERE pageid = ||pageid||
-                                                AND roleid = ||roleid||
-                                                AND feature = ||feature||
-                                                AND featureid = ||featureid||
-                                                AND ability = a.ability
-                                                AND allow = 0
-                            )
-                      ||groupsql[1]|| ||featuregroupsql[1]||
                         )
                         AND 0 NOT IN (
-                                            SELECT allow
-                                            FROM roles_ability_peruser
-                                            WHERE userid = ||userid||
-                                            AND pageid = ||pageid||
-                                            AND ability = a.ability
-                                            AND allow = 0
+                            SELECT allow
+                            FROM roles_ability_perpage
+                            WHERE roleid = ||roleid||
+                            AND pageid = ||pageid||
+                            AND ability = a.ability
+                            AND allow = 0
                         )
                     )
-                  AND 0 NOT IN (
-                                        SELECT allow
-                                        FROM roles_ability_perfeature_peruser
-                                        WHERE pageid = ||pageid||
-                                        AND userid = ||userid||
-                                        AND feature = ||feature||
-                                        AND featureid = ||featureid||
-                                        AND ability = a.ability
-                                        AND allow = 0
+                    AND 0 NOT IN (
+                        SELECT allow
+                        FROM roles_ability_perfeature
+                        WHERE pageid = ||pageid||
+                        AND roleid = ||roleid||
+                        AND feature = ||feature||
+                        AND featureid = ||featureid||
+                        AND ability = a.ability
+                        AND allow = 0
                     )
+                    ||groupsql[1]|| ||featuregroupsql[1]||
                 )
-        LIMIT 1) as allowed
-        FROM abilities a
+                AND 0 NOT IN (
+                    SELECT allow
+                    FROM roles_ability_peruser
+                    WHERE userid = ||userid||
+                    AND pageid = ||pageid||
+                    AND ability = a.ability
+                    AND allow = 0
+                )
+            )
+            AND 0 NOT IN (
+                SELECT allow
+                FROM roles_ability_perfeature_peruser
+                WHERE pageid = ||pageid||
+                AND userid = ||userid||
+                AND feature = ||feature||
+                AND featureid = ||featureid||
+                AND ability = a.ability
+                AND allow = 0
+            )
+        )
+        LIMIT 1
+    ) as allowed
+    FROM abilities a
     ||issection{{
-      WHERE (||section||)
+    WHERE (||section||)
     }}issection||
-        ORDER BY section
+    ORDER BY section
 ||get_user_abilities
 
 admin_has_ability_in_pages||
-  SELECT p.*
+    SELECT p.*
     FROM pages p
-   WHERE p.pageid > 0
-   ||notsiteviewable{{
-     AND p.pageid NOT IN (SELECT pageid
-                            FROM pages
-                           WHERE siteviewable = 1)
-   }}notsiteviewable||
-   ||notmenuitems{{
-     AND p.pageid NOT IN (SELECT pageid
-                            FROM pages
-                           WHERE menu_page = 1)
-   }}notmenuitems||
+    WHERE p.pageid > 0
+    ||notsiteviewable{{
+    AND p.pageid NOT IN (
+        SELECT pageid
+        FROM pages
+        WHERE siteviewable = 1
+    )
+    }}notsiteviewable||
+    ||notmenuitems{{
+    AND p.pageid NOT IN (
+        SELECT pageid
+        FROM pages
+        WHERE menu_page = 1
+    )
+    }}notmenuitems||
 ||admin_has_ability_in_pages
 
 user_has_ability_in_pages||
-  SELECT a.*, (SELECT name
-                 FROM pages
-                WHERE pageid = a.pageid) as name
-    FROM (SELECT pu.pageid
-            FROM roles_ability_peruser pu
-           WHERE pu.userid = ||userid||
-             AND pu.ability = ||ability||
-             AND pu.allow = 1
-             ||rolesql||) a
-        GROUP BY a.pageid
+    SELECT a.*, (
+        SELECT name
+        FROM pages
+        WHERE pageid = a.pageid
+    ) as name
+    FROM (
+        SELECT pu.pageid
+        FROM roles_ability_peruser pu
+        WHERE pu.userid = ||userid||
+        AND pu.ability = ||ability||
+        AND pu.allow = 1
+        ||rolesql||
+    ) a
+    GROUP BY a.pageid
 ||user_has_ability_in_pages
 
 user_has_ability_in_pages_perrole||
-  UNION ALL SELECT p.pageid
-              FROM pages p
-             WHERE p.pageid IN (
-                               SELECT ra.pageid
-                                 FROM roles_assignment ra
-                                WHERE ra.userid = ||userid||
-                                  AND ra.roleid = ||roleid||
-                                  AND ra.confirm = 0
-                                  AND ra.roleid IN (
-                                                   SELECT rab.roleid
-                                                     FROM roles_ability rab
-                                                    WHERE rab.ability = ||ability||
-                                                      AND rab.allow = 1
-                                                   )
-                               )
-                OR p.pageid IN (
-                               SELECT pp.pageid
-                                 FROM roles_ability_perpage pp
-                                WHERE pp.roleid = ||roleid||
-                                  AND pp.ability = ||ability||
-                                  AND pp.allow = 1
-                               )
-             ||notsiteviewable{{
-               AND p.pageid NOT IN (SELECT pageid
-                                      FROM pages
-                                     WHERE siteviewable = 1)
-             }}notsiteviewable||
-             ||notmenuitems{{
-               AND p.pageid NOT IN (SELECT pageid
-                                      FROM pages
-                                     WHERE menu_page = 1)
-             }}notmenuitems||
+    UNION ALL
+    SELECT p.pageid
+    FROM pages p
+    WHERE p.pageid IN (
+        SELECT ra.pageid
+        FROM roles_assignment ra
+        WHERE ra.userid = ||userid||
+        AND ra.roleid = ||roleid||
+        AND ra.confirm = 0
+        AND ra.roleid IN (
+            SELECT rab.roleid
+            FROM roles_ability rab
+            WHERE rab.ability = ||ability||
+            AND rab.allow = 1
+        )
+    )
+    OR p.pageid IN (
+        SELECT pp.pageid
+        FROM roles_ability_perpage pp
+        WHERE pp.roleid = ||roleid||
+        AND pp.ability = ||ability||
+        AND pp.allow = 1
+    )
+    ||notsiteviewable{{
+    AND p.pageid NOT IN (
+        SELECT pageid
+        FROM pages
+        WHERE siteviewable = 1
+    )
+    }}notsiteviewable||
+    ||notmenuitems{{
+    AND p.pageid NOT IN (
+        SELECT pageid
+        FROM pages
+        WHERE menu_page = 1
+    )
+    }}notmenuitems||
 ||user_has_ability_in_pages_perrole
 
 //	This is a fully implemented roles structure for the system. The following is the importance structure
@@ -465,66 +495,63 @@ user_has_ability_in_pages_perrole||
 //					|
 //					Role specific per SITE LEVEL permissions
 get_role_abilities||
-    SELECT a.ability,
-            (
-            SELECT 1 as allowed
-            FROM roles_ability ra
-            WHERE
-                (
-                    1 IN (
-                            SELECT allow
-                            FROM roles_ability_perfeature
-                            WHERE pageid = ||pageid||
-                            AND roleid = ||roleid||
-                            AND feature = ||feature||
-                            AND featureid = ||featureid||
-                            AND ability = a.ability
-                            AND allow = 1
-                    )
-                    OR
-                    (
-                    1 IN (
-                                SELECT allow
-                                FROM roles_ability_perpage
-                                WHERE roleid = ||roleid||
-                                AND pageid = ||pageid||
-                                AND ability = a.ability
-                                AND allow = 1
-                        )
-                        OR 1 IN (
-                                    SELECT allow
-                                    FROM roles_ability
-                                    WHERE roleid = ||roleid||
-                                    AND ability = a.ability
-                                    AND allow = 1
-                        )
-                        AND 0 NOT IN (
-                                            SELECT allow
-                                            FROM roles_ability_perpage
-                                            WHERE roleid = ||roleid||
-                                            AND pageid = ||pageid||
-                                            AND ability = a.ability
-                                            AND allow = 0
-                        )
-                    )
-                    AND 0 NOT IN (
-                                        SELECT allow
-                                        FROM roles_ability_perfeature
-                                        WHERE pageid = ||pageid||
-                                        AND roleid = ||roleid||
-                                        AND feature = ||feature||
-                                        AND featureid = ||featureid||
-                                        AND ability = a.ability
-                                        AND allow = 0
-                    )
+    SELECT a.ability, (
+        SELECT 1 as allowed
+        FROM roles_ability ra
+        WHERE (
+            1 IN (
+                SELECT allow
+                FROM roles_ability_perfeature
+                WHERE pageid = ||pageid||
+                AND roleid = ||roleid||
+                AND feature = ||feature||
+                AND featureid = ||featureid||
+                AND ability = a.ability
+                AND allow = 1
+            )
+            OR (
+                1 IN (
+                    SELECT allow
+                    FROM roles_ability_perpage
+                    WHERE roleid = ||roleid||
+                    AND pageid = ||pageid||
+                    AND ability = a.ability
+                    AND allow = 1
                 )
-      LIMIT 1
-        ) as allowed
-        FROM abilities a
-||issection{{
-        WHERE (||section||)
-}}issection||
-        ORDER BY section
+                OR 1 IN (
+                    SELECT allow
+                    FROM roles_ability
+                    WHERE roleid = ||roleid||
+                    AND ability = a.ability
+                    AND allow = 1
+                )
+                AND 0 NOT IN (
+                    SELECT allow
+                    FROM roles_ability_perpage
+                    WHERE roleid = ||roleid||
+                    AND pageid = ||pageid||
+                    AND ability = a.ability
+                    AND allow = 0
+                )
+            )
+            AND 0 NOT IN (
+                SELECT allow
+                FROM roles_ability_perfeature
+                WHERE pageid = ||pageid||
+                AND roleid = ||roleid||
+                AND feature = ||feature||
+                AND featureid = ||featureid||
+                AND ability = a.ability
+                AND allow = 0
+            )
+        )
+        LIMIT 1
+    ) as allowed
+    FROM abilities a
+    ||issection{{
+    WHERE (||section||)
+    }}issection||
+    ORDER BY section
 ||get_role_abilities
 
 //	This is a fully implemented roles structure for the system.  The following is the importance structure
@@ -537,62 +564,61 @@ get_role_abilities||
 role_has_ability_in_page||
     SELECT 1 as allowed
     FROM roles_ability ra
-    WHERE
+    WHERE (
+        1 IN (
+            SELECT allow
+            FROM roles_ability_perfeature
+            WHERE pageid = ||pageid||
+            AND roleid = ||roleid||
+            AND feature = ||feature||
+            AND featureid = ||featureid||
+            AND ability = ||ability||
+            AND allow = 1
+        )
+        OR
         (
             1 IN (
-                    SELECT allow
-                    FROM roles_ability_perfeature
-                    WHERE pageid = ||pageid||
-                    AND roleid = ||roleid||
-                    AND feature = ||feature||
-                    AND featureid = ||featureid||
-                    AND ability = ||ability||
-                    AND allow = 1
+                SELECT allow
+                FROM roles_ability_perpage
+                WHERE roleid = ||roleid||
+                AND pageid = ||pageid||
+                AND ability = ||ability||
+                AND allow = 1
             )
             OR
-            (
-                1 IN (
-                        SELECT allow
-                        FROM roles_ability_perpage
-                        WHERE roleid = ||roleid||
-                        AND pageid = ||pageid||
-                        AND ability = ||ability||
-                        AND allow = 1
-                )
-                OR
-                1 IN (
-                        SELECT allow
-                        FROM roles_ability
-                        WHERE roleid = ||roleid||
-                        AND ability = ||ability||
-                        AND allow = 1
-                )
-                AND 0 NOT IN (
-                                    SELECT allow
-                                    FROM roles_ability_perpage
-                                    WHERE roleid = ||roleid||
-                                    AND pageid = ||pageid||
-                                    AND ability = ||ability||
-                                    AND allow = 0
-                )
+            1 IN (
+                SELECT allow
+                FROM roles_ability
+                WHERE roleid = ||roleid||
+                AND ability = ||ability||
+                AND allow = 1
             )
             AND 0 NOT IN (
-                                SELECT allow
-                                FROM roles_ability_perfeature
-                                WHERE pageid = ||pageid||
-                                AND roleid = ||roleid||
-                                AND feature = ||feature||
-                                AND featureid = ||featureid||
-                                AND ability = ||ability||
-                                AND allow = 0
+                SELECT allow
+                FROM roles_ability_perpage
+                WHERE roleid = ||roleid||
+                AND pageid = ||pageid||
+                AND ability = ||ability||
+                AND allow = 0
             )
         )
+        AND 0 NOT IN (
+            SELECT allow
+            FROM roles_ability_perfeature
+            WHERE pageid = ||pageid||
+            AND roleid = ||roleid||
+            AND feature = ||feature||
+            AND featureid = ||featureid||
+            AND ability = ||ability||
+            AND allow = 0
+        )
+    )
     LIMIT 1
 ||role_has_ability_in_page
 
 get_user_role||
     SELECT *
-    FROM roles_assignment
+    FROM `roles_assignment`
     WHERE userid = ||userid||
     AND pageid = ||pageid||
     AND confirm = 0
@@ -601,23 +627,23 @@ get_user_role||
 
 users_that_can_have_abilities_modified||
     SELECT u.*
-    FROM users u
+    FROM `users` u
     WHERE u.userid IN (
-                                SELECT ra.userid
-                                FROM roles_assignment ra
-                                WHERE ra.pageid = ||pageid||
+        SELECT ra.userid
+        FROM `roles_assignment` ra
+        WHERE ra.pageid = ||pageid||
     )
     AND u.userid NOT IN (
-                                SELECT ra.userid
-                                FROM roles_assignment ra
-                                WHERE ra.pageid = ||siteid||
-                                AND ra.roleid = ||adminrole||
+        SELECT ra.userid
+        FROM `roles_assignment` ra
+        WHERE ra.pageid = ||siteid||
+        AND ra.roleid = ||adminrole||
     )
     AND u.userid NOT IN (
-                                SELECT ra.userid
-                                FROM roles_assignment ra
-                                WHERE ra.pageid = ||pageid||
-                                AND ra.roleid <= ||myrole||
+        SELECT ra.userid
+        FROM `roles_assignment` ra
+        WHERE ra.pageid = ||pageid||
+        AND ra.roleid <= ||myrole||
     )
     AND u.userid <> ||userid||
     ORDER BY u.lname
@@ -626,68 +652,64 @@ users_that_can_have_abilities_modified||
 users_that_have_ability_in_page||
     SELECT *
     FROM users u
-    WHERE
-    (
+    WHERE (
         (
             userid NOT IN (
-                                SELECT userid
-                                FROM roles_assignment
-                                WHERE pageid = ||pageid||
-                                AND confirm = 0
-                                AND (
-                                        roleid IN (
-                                                        SELECT roleid
-                                                        FROM roles_ability
-                                                        WHERE ability = ||ability||
-                                                        AND allow = ||siteoropen{{0//OR//1}}siteoropen||
-                                        )
-                                        AND
-                                        roleid NOT IN (
-                                                            SELECT roleid
-                                                            FROM roles_ability_perpage
-                                                            WHERE ability = ||ability||
-                                                            AND pageid = ||pageid||
-                                                            AND allow = ||siteoropen{{1//OR//0}}siteoropen||
-                                        )
-                                )
-                                OR roleid IN (
-                                                    SELECT roleid
-                                                    FROM roles_ability_perpage
-                                                    WHERE ability = ||ability||
-                                                    AND pageid = ||pageid||
-                                                    AND allow = ||siteoropen{{0//OR//1}}siteoropen||
-                                )
+                SELECT userid
+                FROM `roles_assignment`
+                WHERE pageid = ||pageid||
+                AND confirm = 0
+                AND (
+                    roleid IN (
+                        SELECT roleid
+                        FROM `roles_ability`
+                        WHERE ability = ||ability||
+                        AND allow = ||siteoropen{{0//OR//1}}siteoropen||
+                    )
+                    AND roleid NOT IN (
+                        SELECT roleid
+                        FROM `roles_ability_perpage`
+                        WHERE ability = ||ability||
+                        AND pageid = ||pageid||
+                        AND allow = ||siteoropen{{1//OR//0}}siteoropen||
+                    )
+                )
+                OR roleid IN (
+                    SELECT roleid
+                    FROM `roles_ability_perpage`
+                    WHERE ability = ||ability||
+                    AND pageid = ||pageid||
+                    AND allow = ||siteoropen{{0//OR//1}}siteoropen||
+                )
             )
             AND userid NOT IN (
-                                    SELECT pu.userid
-                                    FROM roles_ability_peruser pu
-                                    WHERE pu.pageid = ||pageid||
-                                    AND pu.ability = ||ability||
-                                    AND pu.allow = 0
+                SELECT pu.userid
+                FROM `roles_ability_peruser` pu
+                WHERE pu.pageid = ||pageid||
+                AND pu.ability = ||ability||
+                AND pu.allow = 0
             )
         )
-        OR
-        userid IN (
-                        SELECT pu.userid
-                        FROM roles_ability_peruser pu
-                        WHERE pu.pageid = ||pageid||
-                        AND pu.ability = ||ability||
-                        AND pu.allow = 1
+        OR userid IN (
+            SELECT pu.userid
+            FROM `roles_ability_peruser` pu
+            WHERE pu.pageid = ||pageid||
+            AND pu.ability = ||ability||
+            AND pu.allow = 1
         )
     )
     OR userid IN (
-                        SELECT userid
-                        FROM roles_assignment
-                        WHERE roleid = 1
-                        AND pageid = ||siteid||
+        SELECT userid
+        FROM `roles_assignment`
+        WHERE roleid = 1
+        AND pageid = ||siteid||
     )
 ||users_that_have_ability_in_page
 
 get_groups_hierarchy||
     SELECT g.*
     FROM `groups` g
-    JOIN groups_users u
-        ON g.groupid = u.groupid
+    JOIN `groups_users` u ON g.groupid = u.groupid
     WHERE g.parent = ||parent||
     AND u.pageid = ||pageid||
     AND u.userid = ||userid||
@@ -707,18 +729,91 @@ get_subgroups||
     ORDER BY name
 ||get_subgroups
 
+insert_group_user||
+    INSERT INTO `groups_users` (userid, pageid, groupid)
+    VALUES(||userid||, ||pageid||, ||groupid||)
+||insert_group_user
+
+delete_group_user||
+    DELETE FROM `groups_users`
+    WHERE userid = ||userid||
+    AND pageid = ||pageid||
+    AND groupid = ||groupid||
+||delete_group_user
+
 get_group_users||
     SELECT *
-      FROM `groups_users`
-     WHERE groupid = ||groupid||
+    FROM `groups_users`
+    WHERE groupid = ||groupid||
 ||get_group_users
+
+get_group_users_by_role||
+    SELECT u.*
+    FROM `users` u
+    WHERE u.userid NOT IN (
+        SELECT ra.userid
+        FROM `roles_assignment` ra
+        WHERE ra.pageid = ||pageid||
+        AND ra.roleid <= ||roleid||
+    )
+    AND u.userid IN (
+        SELECT userid
+        FROM `groups_users`
+        WHERE groupid = ||groupid||
+    )
+    ORDER BY u.lname
+||get_group_users_by_role
+
+get_nongroup_users||
+    SELECT u.*
+    FROM `users` u
+    WHERE ||searchstring||
+    AND (
+        ||pageid|| = ||siteid||
+        OR u.userid IN (
+            SELECT ra.userid
+            FROM `roles_assignment` ra
+            WHERE ra.pageid = ||pageid||
+        )
+    )
+    AND u.userid NOT IN (
+        SELECT ra.userid
+        FROM `roles_assignment` ra
+        WHERE ra.pageid = ||siteid||
+        AND ra.roleid = ||adminrole||
+    )
+    AND u.userid NOT IN (
+        SELECT ra.userid
+        FROM `roles_assignment` ra
+        WHERE ra.pageid = ||pageid||
+        AND ra.roleid <= ||roleid||
+    )
+    AND u.userid != ||userid||
+    AND u.userid NOT IN (
+        SELECT userid
+        FROM `groups_users`
+        WHERE groupid = ||groupid||
+    )
+    ORDER BY u.lname
+||get_nongroup_users
+
+get_group_by_member||
+    SELECT *
+    FROM `groups`
+    WHERE groupid IN (
+        SELECT groupid
+        FROM `groups_users`
+        WHERE userid = ||userid||
+        AND pageid = ||pageid||
+    )
+||get_group_by_member
 
 get_users_in_group||
     SELECT u.*
-    FROM users u
+    FROM `users` u
     WHERE u.userid IN (
         SELECT userid
-        FROM groups_users
+        FROM `groups_users`
         WHERE pageid = ||pageid||
         AND groupid = ||groupid||
     )
@@ -727,7 +822,7 @@ get_users_in_group||
 
 get_page_users_in_groups||
     SELECT u.*
-    FROM users u
+    FROM `users` u
     WHERE (
         ||pageid|| = ||siteid||
         OR u.userid IN (
@@ -746,22 +841,22 @@ get_page_users_in_groups||
 ||get_page_users_in_groups
 
 save_group||
-  ||is_editing{{
+    ||is_editing{{
     UPDATE `groups`
-       SET name = ||name||, parent = ||parent||
-     WHERE groupid = ||groupid||
-       AND pageid = ||pageid||
+    SET name = ||name||, parent = ||parent||
+    WHERE groupid = ||groupid||
+    AND pageid = ||pageid||
 
     //OR//
 
     INSERT INTO `groups` (name, parent, pageid)
-         VALUES(||name||, ||parent||, ||pageid||)
-  }}is_editing||
+    VALUES (||name||, ||parent||, ||pageid||)
+    }}is_editing||
 ||save_group
 
 print_abilities_sql||
     SELECT *
-    FROM abilities
+    FROM `abilities`
     ||is_feature{{
         WHERE section = ||feature||
         OR ability IN (
@@ -778,19 +873,19 @@ print_abilities_sql||
 
 remove_role_override||
     DELETE
-    FROM roles_ability
+    FROM `roles_ability`
     WHERE roleid = ||roleid||
     AND ability = ||ability||
 ||remove_role_override
 
 insert_role_override||
-    INSERT INTO roles_ability (roleid, section, ability, allow)
+    INSERT INTO `roles_ability` (roleid, section, ability, allow)
     VALUES (||roleid||, ||section||, ||ability||, ||setting||)
 ||insert_role_override
 
 get_page_role_override||
     SELECT *
-    FROM roles_ability_perpage
+    FROM `roles_ability_perpage`
     WHERE pageid = ||pageid||
     AND roleid = ||roleid||
     AND ability = ||ability||
@@ -798,14 +893,14 @@ get_page_role_override||
 
 remove_page_role_override||
     DELETE
-    FROM roles_ability_perpage
+    FROM `roles_ability_perpage`
     WHERE pageid = ||pageid||
     AND roleid = ||roleid||
     AND ability = ||ability||
 ||remove_page_role_override
 
 update_page_role_override||
-    UPDATE roles_ability_perpage
+    UPDATE `roles_ability_perpage`
     SET allow = ||setting||
     WHERE pageid = ||pageid||
     AND roleid = ||roleid||
@@ -813,13 +908,13 @@ update_page_role_override||
 ||update_page_role_override
 
 insert_page_role_override||
-    INSERT INTO roles_ability_perpage (pageid, roleid, ability, allow)
+    INSERT INTO `roles_ability_perpage` (pageid, roleid, ability, allow)
     VALUES (||pageid||, ||roleid||, ||ability||, ||setting||)
 ||insert_page_role_override
 
 get_page_group_feature_override||
     SELECT *
-    FROM roles_ability_perfeature_pergroup
+    FROM `roles_ability_perfeature_pergroup`
     WHERE pageid = ||pageid||
     AND feature = ||feature||
     AND featureid = ||featureid||
@@ -828,7 +923,7 @@ get_page_group_feature_override||
 ||get_page_group_feature_override
 
 update_page_group_feature_override||
-    UPDATE roles_ability_perfeature_pergroup
+    UPDATE `roles_ability_perfeature_pergroup`
     SET allow = ||allow||
     WHERE pageid = ||pageid||
     AND feature = ||feature||
@@ -838,20 +933,20 @@ update_page_group_feature_override||
 ||update_page_group_feature_override
 
 insert_page_group_feature_override||
-    INSERT INTO roles_ability_perfeature_pergroup (pageid, feature, featureid, groupid, ability, allow)
+    INSERT INTO `roles_ability_perfeature_pergroup` (pageid, feature, featureid, groupid, ability, allow)
     VALUES (||pageid||, ||feature||, ||featureid||, ||groupid||, ||ability||, ||allow||)
 ||insert_page_group_feature_override
 
 get_page_group_override||
     SELECT *
-    FROM roles_ability_pergroup
+    FROM `roles_ability_pergroup`
     WHERE pageid = ||pageid||
     AND groupid = ||groupid||
     AND ability = ||ability||
 ||get_page_group_override
 
 update_page_group_override||
-    UPDATE roles_ability_pergroup
+    UPDATE `roles_ability_pergroup`
     SET allow = ||allow||
     WHERE pageid = ||pageid||
     AND groupid = ||groupid||
@@ -859,13 +954,13 @@ update_page_group_override||
 ||update_page_group_override
 
 insert_page_group_override||
-    INSERT INTO roles_ability_pergroup (pageid, groupid, ability, allow)
+    INSERT INTO `roles_ability_pergroup` (pageid, groupid, ability, allow)
     VALUES (||pageid||, ||groupid||, ||ability||, ||allow||)
 ||insert_page_group_override
 
 get_page_feature_user_override||
     SELECT *
-    FROM roles_ability_perfeature_peruser
+    FROM `roles_ability_perfeature_peruser`
     WHERE pageid = ||pageid||
     AND feature = ||feature||
     AND featureid = ||featureid||
@@ -875,7 +970,7 @@ get_page_feature_user_override||
 
 get_page_user_override||
     SELECT *
-    FROM roles_ability_peruser
+    FROM `roles_ability_peruser`
     WHERE pageid = ||pageid||
     AND userid = ||userid||
     AND ability = ||ability||
@@ -883,7 +978,7 @@ get_page_user_override||
 
 get_page_role_feature_override||
     SELECT *
-    FROM roles_ability_perfeature
+    FROM `roles_ability_perfeature`
     WHERE feature = ||feature||
     AND featureid = ||featureid||
     AND pageid = ||pageid||
@@ -893,7 +988,7 @@ get_page_role_feature_override||
 
 remove_page_role_feature_override||
     DELETE
-    FROM roles_ability_perfeature
+    FROM `roles_ability_perfeature`
     WHERE feature = ||feature||
     AND featureid = ||featureid||
     AND pageid = ||pageid||
@@ -902,7 +997,7 @@ remove_page_role_feature_override||
 ||remove_page_role_feature_override
 
 update_page_role_feature_override||
-    UPDATE roles_ability_perfeature
+    UPDATE `roles_ability_perfeature`
     SET allow = ||setting||
     WHERE feature = ||feature||
     AND featureid = ||featureid||
@@ -912,20 +1007,20 @@ update_page_role_feature_override||
 ||update_page_role_feature_override
 
 insert_page_role_feature_override||
-    INSERT INTO roles_ability_perfeature (feature, featureid, pageid, roleid, ability, allow)
+    INSERT INTO `roles_ability_perfeature` (feature, featureid, pageid, roleid, ability, allow)
     VALUES (||feature||, ||featureid||, ||pageid||, ||roleid||, ||ability||, ||setting||)
 ||insert_page_role_feature_override
 
 user_search_all||
     SELECT u.userid, u.fname, u.lname, u.email
-    FROM users u
+    FROM `users` u
     WHERE ||search||
     ORDER BY u.lname
 ||user_search_all
 
 user_search_higher_role||
     SELECT u.userid, u.fname, u.lname, u.email
-    FROM users u
+    FROM `users` u
     WHERE ||searchstring||
     AND u.userid IN (
         SELECT ra.userid
@@ -938,7 +1033,7 @@ user_search_higher_role||
 
 user_search_lower_role||
     SELECT u.userid, u.fname, u.lname, u.email
-    FROM users u
+    FROM `users` u
     WHERE ||searchstring||
     AND u.userid IN (
         SELECT ra.userid

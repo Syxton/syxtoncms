@@ -453,10 +453,7 @@ global $CFG;
     $i = 0;
     $params = ["pageid" => $pageid, "wwwroot" => $CFG->wwwroot, "haslinks" => false];
 
-    $SQL = "SELECT *
-            FROM pages_links
-            WHERE hostpageid = ||hostpageid||
-            ORDER BY sort";
+    $SQL = fetch_template("dbsql/pages.sql", "get_pagelinks");
     if ($links = get_db_result($SQL, ["hostpageid" => $pageid])) {
         $count = get_db_count($SQL, ["hostpageid" => $pageid]);
         $params["haslinks"] = true;
