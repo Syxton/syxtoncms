@@ -455,6 +455,12 @@ h1 {
     width: 98%;
 }
 
+.rowContainer input:not([type=checkbox]):not([type=radio]),
+.rowContainer select,
+.rowContainer textarea {
+    width: 80%;
+}
+
 .rowContainer input.short {
     width: 100px
 }
@@ -470,21 +476,6 @@ h1 {
 
 .rowContainer input.nowidth {
     width: 10px
-}
-
-@media screen and (max-width: 700px) {
-    .rowContainer {
-        font-size: 1em;
-    }
-
-    .rowContainer input,
-    .rowContainer select,
-    .rowContainer textarea {
-        background: initial;
-        width: 100%;
-        padding: 10px;
-        font-size: 1.5em;
-    }
 }
 
 input.error {
@@ -1249,12 +1240,6 @@ a.header_links:hover {
     font-weight: Bold;
     color: #252216;
     padding: 20px !important;
-}
-
-@media screen and (min-width: 1200px) {
-    .area_middle .calendar_month {
-        font-size: 1.75vw;
-    }
 }
 
 .calendar_month a:hover {
@@ -2079,191 +2064,6 @@ iframe {
     z-index: 999999999;
 }
 
-/* When the screen is less than 700 pixels wide, hide all links, except for the first one ("Home"). Show the link that contains should open and close the topnav (.icon) */
-@media screen and (max-width: 700px) {
-    .topnav {
-        justify-content: center;
-        width: 100%;
-    }
-
-    .popup_template {
-        width: 100%;
-    }
-
-    .topnav.responsive > a, .topnav.responsive > div.dropdown {
-        display: flex;
-    }
-
-    .topnav > a, .topnav > div.dropdown {
-        display: none;
-    }
-
-    #cboxTopLeft, #cboxTopRight, #cboxBottomLeft, #cboxBottomRight, #cboxMiddleLeft, #cboxMiddleRight, #cboxTopCenter, #cboxBottomCenter {
-        width:0 !important;
-        height:0 !important;
-    }
-
-    #colorbox {
-        width: 100vw !important;
-        height: 100vh !important;
-        top: 0 !important;
-        left: 0 !important;
-    }
-
-    #cboxContent, #cboxWrapper {
-        height: 100vh !important;
-        width: 100vw !important;
-    }
-
-    img.cboxPhoto {
-        height: auto !important;
-        width: 100% !important;
-        float: none !important;
-        max-width: 90vw;
-    }
-
-    #cboxContent {
-        width: 100vw !important;
-    }
-
-    #cboxTitle {
-        bottom: 0px;
-    }
-
-    #cboxCurrent, #cboxPrevious, #cboxNext, #cboxClose {
-        zoom: 1.25 !important;
-    }
-
-    #cboxClose, #cboxPrevious, #cboxNext {
-        bottom: 10px !important;
-    }
-
-    #cboxClose {
-        right: 15px !important;
-    }
-
-    #cboxCurrent {
-        bottom: 15px !important;
-        left: 75px !important;
-    }
-
-    #cboxPrevious {
-        left: 15px !important;
-    }
-
-    #cboxNext {
-        left: 45px !important;
-    }
-
-    #cboxLoadedContent {
-        height: calc(100vh - 55px) !important;
-        width: 100vw !important;
-        box-sizing: border-box !important;
-        padding: 10px;
-    }
-
-    a.icon.mobile_menu {
-        display: initial !important;
-        background-color: whitesmoke;
-        position: absolute;
-        z-index: 9999;
-        top: 5px;
-        right: 5px;
-        font-size: 2em;
-        line-height: 100%;
-        border: 1px solid silver;
-        border-radius: 5px;
-        padding: 4px 5px;
-        height: 30px;
-    }
-
-    /* Show the dropdown menu when the user moves the mouse over the dropdown button */
-    .topnav .dropdown:hover > .dropdown-content {
-        display: flex;
-        transition-duration: .5s;
-        flex-wrap: wrap;
-    }
-
-    .dropdown-content {
-        width: 100%;
-    }
-
-    .topnav.responsive {
-        position: relative;
-        flex-direction: column;
-        align-items: center;
-        position: relative;
-        row-gap: 1px;
-    }
-
-    .topnav > a, div.dropwrapper, div.dropdown-content > a {
-        width: 100%;
-        float: none;
-    }
-
-    .topnav.responsive .dropdown-content {
-        position: relative;
-        justify-content: center;
-        background-color: unset;
-        box-shadow: none;
-    }
-
-    .topnav.responsive a {
-        width: 100%;
-        text-align: center;
-    }
-
-    .topnav.responsive > a,
-    .topnav.responsive div.dropdown-content > a,
-    .topnav.responsive .dropdown {
-        min-width: unset;
-        max-width: unset;
-        width: 100%;
-        text-align: center;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .topnav.responsive > a,
-    .topnav.responsive div.dropwrapper,
-    .topnav.responsive div.dropdown-content>a {
-        min-width: unset;
-        max-width: unset;
-    }
-
-    .dropwrapper {
-        flex-direction: row;
-    }
-
-    .adminpaneldiv {
-        flex-direction: column !important;
-    }
-
-    .adminpaneldiv div{
-        min-height: initial !important;
-    }
-
-    ul.vertmenu {
-        width: 100% !important;
-    }
-
-    ul.vertmenu, ul.vertmenu ul {
-        width: 100% !important;
-    }
-
-    ul.vertmenu > ul.acitem{
-        width: initial !important;
-    }
-
-    ul.vertmenu > ul.acitem li{
-        display: inline !important;
-    }
-
-    .registration_cart_menu span.fa-layers-text {
-        top: 8px !important;
-    }
-}
-
 .forum_breadcrumb {
     font-weight: 700;
     color: #069;
@@ -3081,4 +2881,230 @@ input[type=image] {
 
 /* Change the background color of the dropdown button when the dropdown content is shown */
 .dropdowncreator:hover .dropbtn {
+}
+
+
+#mem_resultsdiv .searchresults .iconfield {
+    width: 60px;
+    white-space: nowrap;
+    text-align:center;
+}
+
+#mem_resultsdiv .searchresults .iconfield:hover {
+    cursor: pointer;
+    background-color: #BBD8EC;
+}
+
+/* When the screen is 1200px or less */
+@media screen and (min-width: 1200px) {
+    .area_middle .calendar_month {
+        font-size: 1.75vw;
+    }
+}
+
+/* When the screen is less than 700 pixels wide */
+@media screen and (max-width: 700px) {
+    .rowContainer {
+        font-size: 1em;
+    }
+
+    .rowContainer input:not([type=checkbox]):not([type=radio]),
+    .rowContainer select,
+    .rowContainer textarea {
+        background: initial;
+        width: 100%;
+        padding: 10px;
+        font-size: 1.5em;
+    }
+
+    .topnav {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .popup_template {
+        width: 100%;
+    }
+
+    .topnav.responsive > a, .topnav.responsive > div.dropdown {
+        display: flex;
+    }
+
+    .topnav > a, .topnav > div.dropdown {
+        display: none;
+    }
+
+    #cboxTopLeft, #cboxTopRight, #cboxBottomLeft, #cboxBottomRight, #cboxMiddleLeft, #cboxMiddleRight, #cboxTopCenter, #cboxBottomCenter {
+        width:0 !important;
+        height:0 !important;
+    }
+
+    #colorbox {
+        width: 100vw !important;
+        height: 100vh !important;
+        top: 0 !important;
+        left: 0 !important;
+    }
+
+    #cboxContent, #cboxWrapper {
+        height: 100vh !important;
+        width: 100vw !important;
+    }
+
+    img.cboxPhoto {
+        height: auto !important;
+        width: 100% !important;
+        float: none !important;
+        max-width: 90vw;
+    }
+
+    #cboxContent {
+        width: 100vw !important;
+    }
+
+    #cboxTitle {
+        bottom: 0px;
+    }
+
+    #cboxCurrent, #cboxPrevious, #cboxNext, #cboxClose {
+        zoom: 1.25 !important;
+    }
+
+    #cboxClose, #cboxPrevious, #cboxNext {
+        bottom: 10px !important;
+    }
+
+    #cboxClose {
+        right: 15px !important;
+    }
+
+    #cboxCurrent {
+        bottom: 15px !important;
+        left: 75px !important;
+    }
+
+    #cboxPrevious {
+        left: 15px !important;
+    }
+
+    #cboxNext {
+        left: 45px !important;
+    }
+
+    #cboxLoadedContent {
+        height: calc(100vh - 55px) !important;
+        width: 100vw !important;
+        box-sizing: border-box !important;
+        padding: 10px;
+    }
+
+    /* hide all links, except for the first one ("Home"). Show the link that contains should open and close the topnav (.icon) */
+    a.icon.mobile_menu {
+        display: initial !important;
+        background-color: whitesmoke;
+        position: absolute;
+        z-index: 9999;
+        top: 5px;
+        right: 5px;
+        font-size: 2em;
+        line-height: 100%;
+        border: 1px solid silver;
+        border-radius: 5px;
+        padding: 4px 5px;
+        height: 30px;
+    }
+
+    /* Show the dropdown menu when the user moves the mouse over the dropdown button */
+    .topnav .dropdown:hover > .dropdown-content {
+        display: flex;
+        transition-duration: .5s;
+        flex-wrap: wrap;
+    }
+
+    .dropdown-content {
+        width: 100%;
+    }
+
+    .topnav.responsive {
+        position: relative;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        row-gap: 1px;
+    }
+
+    .topnav > a, div.dropwrapper, div.dropdown-content > a {
+        width: 100%;
+        float: none;
+    }
+
+    .topnav.responsive .dropdown-content {
+        position: relative;
+        justify-content: center;
+        background-color: unset;
+        box-shadow: none;
+    }
+
+    .topnav.responsive a {
+        width: 100%;
+        text-align: center;
+    }
+
+    .topnav.responsive > a,
+    .topnav.responsive div.dropdown-content > a,
+    .topnav.responsive .dropdown {
+        min-width: unset;
+        max-width: unset;
+        width: 100%;
+        text-align: center;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .topnav.responsive > a,
+    .topnav.responsive div.dropwrapper,
+    .topnav.responsive div.dropdown-content>a {
+        min-width: unset;
+        max-width: unset;
+    }
+
+    .dropwrapper {
+        flex-direction: row;
+    }
+
+    .adminpaneldiv {
+        flex-direction: column !important;
+    }
+
+    .adminpaneldiv div{
+        min-height: initial !important;
+    }
+
+    ul.vertmenu {
+        width: 100% !important;
+    }
+
+    ul.vertmenu, ul.vertmenu ul {
+        width: 100% !important;
+    }
+
+    ul.vertmenu > ul.acitem{
+        width: initial !important;
+    }
+
+    ul.vertmenu > ul.acitem li{
+        display: inline !important;
+    }
+
+    .registration_cart_menu span.fa-layers-text {
+        top: 8px !important;
+    }
+
+    #mem_resultsdiv .searchresults button {
+        font-size: .7em;
+    }
+
+    #mem_resultsdiv .searchresults .iconfield {
+        width: 35px;
+    }
 }

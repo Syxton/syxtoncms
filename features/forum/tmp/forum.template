@@ -248,3 +248,54 @@ category_row_template||
         </td>
     </tr>
 ||category_row_template
+
+discussion_template||
+    <table class="||classprefix||_header">
+        <tr>
+            <th class="forum_headers">
+                <strong>||title||</strong>
+            </th>
+            <th class="forum_headers" style="width:50px;">
+                Replies
+            </th>
+            <th class="forum_headers" style="width:50px;">
+                Views
+            </th>
+            <th  class="forum_headers" style="width:150px;">
+                Last Posted
+            </th>
+        </tr>
+        ||content||
+    </table>
+||discussion_template
+
+discussion_row_template||
+    <tr>
+        <td class="col_||classprefix||">
+            <div class="||classprefix||">
+                <div class="||viewclass||">
+                    ||lock||
+                    <button id="get_discussion_posts_||discussion["discussionid"]||" class="alike">
+                        ||echo icon("comments");::none||
+                        <span>
+                        ||discussion["title"]||
+                        </span>
+                    </button>
+                </div>
+                ||buttons||
+            </div>
+            ||post_pages||
+        </td>
+        <td class="forum_postscol col_||classprefix||">
+            ||post_count||
+        </td>
+        <td class="forum_viewscol col_||classprefix||">
+            ||discussion["views"]||
+        </td>
+        <td class="forum_postedcol col_||classprefix||">
+            ||last_post_age||
+            <br />
+            ||last_post_author||
+        </td>
+    </tr>
+||discussion_row_template

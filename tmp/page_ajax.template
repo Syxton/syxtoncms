@@ -33,13 +33,13 @@ search_template||
 
 search_row_template||
     <tr>
-        <td style="width:30%;padding:13px;white-space:nowrap;">
+        <td style="width:40%;padding:10px;">
             ||col1||
         </td>
-        <td style="width:35%;padding:13px;white-space:nowrap;">
+        <td style="padding:10px;">
             ||col2||
         </td>
-        <td style="text-align:right;padding:5px 10px 5px;">
+        <td style="width:50px;text-align:right;padding:10px;">
             <span id="rowactions_||pageid||">
                 ||col3||
             </span>

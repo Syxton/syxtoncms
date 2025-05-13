@@ -47,121 +47,82 @@ global $CFG;
 /**
  * ago
  *
- * @param int $timestamp
- * @param bool $shorten
- * @return string
+ * @param int $timestamp The timestamp to get the time ago for
+ * @param bool $shorten Whether to shorten the output to the highest unit that is not zero
+ * @return string A string describing the time since the given timestamp
  *
- * Returns a string describing the amount of time since the given timestamp.
+ * Returns a string describing the time since the given timestamp.
  * If $shorten is true, the string will be limited to the highest unit that is not zero.
  * Otherwise, the string will be as verbose as possible.
  */
 function ago($timestamp, $shorten = false) {
-    if (!$timestamp) { return "Never"; };
+    if (!$timestamp) {
+        // Return "Never" if the timestamp is empty
+        return "Never";
+    }
 
-    $minutes = "";
-    $seconds = "";
     $difference = (get_timestamp()) - $timestamp;
-    if ($difference == 0) { return "now"; }
-    $ago = $difference >= 0 ? "ago" : "";
-    $difference = abs($difference);
+    if ($difference == 0) {
+        // Return "now" if the difference is zero
+        return "now";
+    }
+    $ago = $difference >= 0 ? "ago" : ""; // Append "ago" to the end of the string if the difference is positive
+    $difference = abs($difference); // Make the difference positive for easier calculations
 
-    // If shortened, return in the highest unit that is not zero
+    // Array of time units and their respective durations in seconds
+    $seconds = [
+        "year" => 31449600,
+        "month" => 2628288,
+        "week" => 604800,
+        "day" => 86400,
+        "hour" => 3600,
+        "minute" => 60,
+        "second" => 1,
+    ];
+
+    // Array of time units and their respective values
+    $agoarray = [
+        "year" => floor($difference / $seconds["year"]),
+        "month" => floor($difference / $seconds["month"]),
+        "week" => floor($difference / $seconds["week"]),
+        "day" => floor($difference / $seconds["day"]),
+        "hour" => floor($difference / $seconds["hour"]),
+        "minute" => floor($difference / $seconds["minute"]),
+        "second" => $difference,
+    ];
+
+    // If shortened, return in the highest unit that is not zero only
     if ($shorten) {
-        // years
-        if (floor($difference / 31449600) > 0) {
-            return floor($difference/31449600) . " years " . $ago;
+        foreach ($agoarray as $key => $value) {
+            if (!empty($value) && $value > 0) {
+                $term = $value > 1 ? "s" : ""; // Append "s" to the end of the unit if the value is greater than one
+                return $value . " " . $key . $term . " " . $ago; // Return the value and unit with the "ago" suffix
+            }
+        }
+    }
+
+    // Otherwise, return in the most verbose format
+    $returnme = "";
+    $count = 0;
+    $previous_term = false;
+    foreach ($agoarray as $key => $value) {
+        if ($count >= 2) {
+            // Stop after the second unit
+            break;
         }
 
-        // months
-        if (floor($difference / 2628288) > 0) {
-            return floor($difference / 2628288) . " months " . $ago;
+        if (!empty($value) && $value > 0) {
+            $value = $previous_term ? floor($difference / $seconds[$key]) : $value;
+            $term = $value > 1 ? "s" : ""; // Append "s" to the end of the unit if the value is greater than one
+            $returnme .= $value . " " . $key . $term . " "; // Append the value and unit to the string
+            $difference -= ($value * $seconds[$key]); // Subtract the value from the difference
+            $count++;
         }
-
-        // weeks
-        if (floor($difference / 604800) > 0) {
-            return floor($difference / 604800) . " weeks " . $ago;
-        }
-
-        // days
-        if (floor($difference / 86400) > 0) {
-            return floor($difference / 86400) . " days " . $ago;
-        }
-
-        // hours
-        if (floor($difference / 3600) > 0) {
-            return floor($difference / 3600) . " hours " . $ago;
-        }
-
-        // minutes
-        if (floor($difference / 60) > 0) {
-            return floor($difference / 60) . " minutes " . $ago;
-        }
-
-        // seconds
-        return floor($difference) . " seconds " . $ago;
+        $previous_term = $key;
     }
 
-    // years
-    if ($difference > 31449600) {
-        $years = floor($difference / 31449600) > 1 ? floor($difference/31449600) . " years" : floor($difference/31449600) . " year";
-        $weeks = "";
-        $difference = $difference - (floor($difference / 31449600) * 31449600);
-    }
-    if ($difference == 31449600) {
-        $years = "1 year";
-        $difference = 0;
-    }
-
-    // weeks
-    if ($difference > 604800) {
-        $weeks = floor($difference / 604800) > 1 ? floor($difference/604800) . " weeks" : floor($difference/604800) . " week";
-        $days = "";
-        $difference = $difference - (floor($difference / 604800) * 604800);
-    }
-    if ($difference == 604800) {
-        $weeks = "1 week";
-        $difference = 0;
-    }
-
-    // days
-    if ($difference > 86400) {
-        $days = floor($difference / 86400) > 1 ? floor($difference/86400) . " days" : floor($difference/86400) . " day";
-        $hours = "";
-        $difference = $difference - (floor($difference / 86400) * 86400);
-    }
-    if ($difference == 86400) {
-        $days = "1 day";
-        $difference = 0;
-    }
-
-    // hours
-    if ($difference > 3600) {
-        $hours = floor($difference / 3600) > 1 ? floor($difference/3600) . " hrs" : floor($difference/3600) . " hr";
-        $minutes = "";
-        $difference = $difference - (floor($difference / 3600) * 3600);
-    }
-    if ($difference == 3600) {
-        $hours = "1 hour";
-        $difference = 0;
-    }
-
-    // minutes
-    if ($difference > 60) {
-        $minutes = floor($difference / 60) > 1 ? floor($difference/60) . " mins" : floor($difference/60) . " min";
-        $seconds = "";
-        $difference = $difference - (floor($difference / 60) * 60);
-    }
-    if ($difference == 60) {
-        $minutes = "1 min";
-    } else { $seconds = floor($difference) > 1 ? $difference . " secs" : $difference . " sec"; }
-
-    if ($difference == 0) { $seconds = ""; }
-
-    if (isset($years)) { return "$years $weeks $ago";
-    } elseif (isset($weeks)) { return "$weeks $days $ago";
-    } elseif (isset($days)) { return "$days $hours $ago";
-    } elseif (isset($hours)) { return "$hours $minutes $ago";
-    } else { return "$minutes $seconds $ago"; }
+    // Return the final string with the "ago" suffix
+    return $returnme . $ago;
 }
 
 function get_date_graphic($timestamp = false, $newday = false, $alter = false, $small = false, $inactive = false) {

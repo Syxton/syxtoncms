@@ -384,11 +384,12 @@ function delete_post() {
 }
 
 function pin_bulletin() {
-    $discussionid = clean_myvar_req("discussionid", "int");
-    execute_db_sql(fetch_template("dbsql/forum.sql", "pin_discussion", "forum"), ["discussionid" => $discussionid]);
-    get_forum_discussions();
     $returnme = $error = "";
     try {
+        $discussionid = clean_myvar_req("discussionid", "int");
+        execute_db_sql(fetch_template("dbsql/forum.sql", "pin_discussion", "forum"), ["discussionid" => $discussionid]);
+        get_forum_discussions();
+
         $discussionid = get_db_field("discussionid", "forum_posts", "postid = ||postid||", ["postid" => $postid]);
         execute_db_sql(fetch_template("dbsql/forum.sql", "delete_post", "forum"), ["postid" => $postid]);
         $returnme = get_posts($discussionid, $pagenum);

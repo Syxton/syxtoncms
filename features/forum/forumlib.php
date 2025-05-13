@@ -130,7 +130,7 @@ global $CFG, $USER;
 
     // GET BULLETIN BOARDS
     if ($bulletins = get_db_result(fetch_template("dbsql/forum.sql", "get_category_discussions", "forum"), ["catid" => $catid, "bulletin" => 1])) {
-        $returnme .= get_discussions_list($bulletins, "Bulletin", "forum_bulletins");
+        $returnme .= get_discussions_list($bulletins, "Bulletins", "forum_bulletins");
     }
 
     // GET DISCUSSIONS
@@ -139,76 +139,53 @@ global $CFG, $USER;
     return $returnme;
 }
 
-function get_discussions_list($discussions, $title = "Discussion", $classprefix = "forum_discussions") {
-    $returnme = '
-        <table class="' . $classprefix . '_header">
-            <tr>
-                <th class="forum_headers">
-                    <strong>' . $title . 's</strong>
-                </th>
-                <th class="forum_headers" style="width:50px;">
-                    Replies
-                </th>
-                <th class="forum_headers" style="width:50px;">
-                    Views
-                </th>
-                <th  class="forum_headers" style="width:150px;">
-                    Last Posted
-                </th>
-            </tr>';
-    if (!$discussions) { return $returnme . '<tr><td colspan="4" class="' . $classprefix . '" style="text-align:center;">No ' . $title . 's</td></tr></table>'; }
+function get_discussions_list($discussions, $title = "Discussions", $classprefix = "forum_discussions") {
+    $content = "";
+    if ($discussions) {
+        $SQL = fetch_template("dbsql/forum.sql", "get_discussion_posts", "forum");
+        while ($discussion = fetch_row($discussions)) {
+            $posts_count = get_db_count($SQL, ["discussionid" => $discussion["discussionid"]]) - 1;
+            $lastpost = get_db_row("$SQL ORDER BY posted DESC LIMIT 1", ["discussionid" => $discussion["discussionid"]]);
+            $notviewed = true;
+            $forumid = $discussion['forumid'];
+            // Find if new posts are available
+            if (is_logged_in()) {
+                if (!$lastviewed = get_db_field("lastviewed", "forum_views", "discussionid = ||discussionid|| ORDER BY lastviewed DESC", ["discussionid" => $discussion["discussionid"]])) { $lastviewed = 0;}
+                $notviewed =  $lastpost["posted"] > $lastviewed ? true : false;
+            }
+            $viewclass = $notviewed ? 'forum_notviewed' : '';
+            $lock = $discussion["locked"] == 1 ? icon('lock') . '&nbsp;&nbsp;' : '';
 
-    while ($discussion = fetch_row($discussions)) {
-        $posts_count = get_db_count("SELECT * FROM forum_posts WHERE discussionid = ||discussionid||", ["discussionid" => $discussion["discussionid"]]) - 1;
-        $lastpost = get_db_row("SELECT * FROM forum_posts WHERE discussionid = ||discussionid|| ORDER BY posted DESC LIMIT 1", ["discussionid" => $discussion["discussionid"]]);
-        $notviewed = true;
-        $forumid = $discussion['forumid'];
-        // Find if new posts are available
-        if (is_logged_in()) {
-            if (!$lastviewed = get_db_field("lastviewed", "forum_views", "discussionid = ||discussionid|| ORDER BY lastviewed DESC", ["discussionid" => $discussion["discussionid"]])) { $lastviewed = 0;}
-            $notviewed =  $lastpost["posted"] > $lastviewed ? true : false;
+            ajaxapi([
+                "id" => "get_discussion_posts_" . $discussion['discussionid'],
+                "url" => "/features/forum/forum_ajax.php",
+                "data" => ["action" => "get_forum_posts", "discussionid" => $discussion['discussionid']],
+                "display" => "forum_div_$forumid",
+                "intervalid" => "forum_$forumid",
+                "interval" => FORUM_REFRESH,
+            ]);
+
+            $content .= fill_template("tmp/forum.template", "discussion_row_template", "forum", [
+                "discussion" => $discussion,
+                "classprefix" => $classprefix,
+                "viewclass" => $viewclass,
+                "lock" => $lock,
+                "buttons" => get_discussion_buttons($discussion),
+                "post_pages" => get_post_pages($forumid, $discussion, false, 10, false),
+                "post_count" => $posts_count,
+                "last_post_age" => ago($lastpost["posted"], true),
+                "last_post_author" => get_user_name($lastpost["userid"]),
+            ]);
         }
-        $viewclass = $notviewed ? 'forum_notviewed' : '';
-        $lock = $discussion["locked"] == 1 ? icon('lock') . '&nbsp;&nbsp;' : '';
-        ajaxapi([
-            "id" => "get_discussion_posts_" . $discussion['discussionid'],
-            "url" => "/features/forum/forum_ajax.php",
-            "data" => ["action" => "get_forum_posts", "discussionid" => $discussion['discussionid']],
-            "display" => "forum_div_$forumid",
-            "intervalid" => "forum_$forumid",
-            "interval" => FORUM_REFRESH,
-        ]);
-        $returnme .= '
-            <tr>
-                <td class="col_' . $classprefix . '">
-                    <div class="' . $classprefix . '">
-                        <div class="' . $viewclass . '">
-                            ' . $lock . '
-                            <button id="get_discussion_posts_' . $discussion['discussionid'] . '" class="alike">
-                                ' . icon("comments") . '
-                                <span>' . $discussion["title"] . '</span>
-                            </button>
-                        </div>
-                        ' . get_discussion_buttons($discussion) . '
-                    </div>
-                    ' . get_post_pages($forumid, $discussion, false, 10, false) . '
-            </td>
-            <td class="forum_postscol col_' . $classprefix . '">
-                ' . $posts_count . '
-            </td>
-            <td class="forum_viewscol col_' . $classprefix . '">
-                ' . $discussion["views"] . '
-            </td>
-            <td class="forum_postedcol col_' . $classprefix . '">
-                ' . ago($lastpost["posted"], true) . '
-                <br />
-                ' . get_user_name($lastpost["userid"]) . '
-            </td>
-        </tr>';
+    } else {
+        $content = '<tr><td colspan="4" class="' . $classprefix . '" style="text-align:center;">No ' . $title . '</td></tr>';
     }
 
-    $returnme .= "</table>";
-    return $returnme;
+    return fill_template("tmp/forum.template", "discussion_template", "forum", [
+        "content" => $content,
+        "classprefix" => $classprefix,
+        "title" => $title,
+    ]);
 }
 
 function get_discussion_buttons($discussion, $pagenum = 0) {
@@ -223,12 +200,17 @@ global $CFG, $USER;
         ajaxapi([
             "id" => "unpin_bulletin_$discussionid",
             "url" => "/features/forum/forum_ajax.php",
-            "data" => ["action" => "pin_bulletin", "discussionid" => $discussionid, "dpagenum" => $pagenum],
+            "data" => [
+                "action" => "pin_bulletin",
+                "discussionid" => $discussionid,
+                "dpagenum" => $pagenum,
+                "catid" => $discussion['catid'],
+            ],
             "display" => "forum_div_$forumid",
         ]);
         $buttons .= '
             <button id="unpin_bulletin_' . $discussionid . '" class="alike" title="Designate as Bulletin">
-                ' . icon("thumbtack") . '
+                ' . icon("thumbtack", 1, "", "navy", "rotate-120") . '
             </button>';
     }
 
@@ -242,7 +224,7 @@ global $CFG, $USER;
         ]);
         $buttons .= '
             <button id="unpin_bulletin_' . $discussionid . '" class="alike" title="Undesignate as Bulletin">
-                ' . icon("thumbtack", 1, "", "", "rotate--180") . '
+                ' . icon("circle-dot", 1, "", "navy") . '
             </button>';
     }
 
@@ -258,7 +240,7 @@ global $CFG, $USER;
             ]);
             $buttons .= '
             <button id="unlock_discussion_' . $discussionid . '" class="alike" title="Unlock Discussion">
-                ' . icon("lock-open") . '
+                ' . icon("lock") . '
             </button>';
         } else {
             ajaxapi([
@@ -270,7 +252,7 @@ global $CFG, $USER;
             ]);
             $buttons .= '
                 <button id="lock_discussion_' . $discussionid . '" class="alike" title="Lock Discussion">
-                    ' . icon("lock") . '
+                    ' . icon("lock-open") . '
                 </button>';
         }
     }
@@ -286,7 +268,7 @@ global $CFG, $USER;
         ]);
         $buttons .= '
             <button id="delete_discussion_' . $discussionid . '" class="alike" title="Delete Discussion">
-                ' . icon("trash-can") . '
+                ' . icon("trash") . '
             </button>';
     }
 
@@ -478,19 +460,25 @@ global $CFG, $USER;
     return fill_template("tmp/forum.template", "forum_template", "forum", $params);
 }
 
+/**
+ * Get all the categories for a given forumid
+ * @param int $forumid
+ * @return string $content
+ */
 function get_forum_categories($forumid) {
 global $USER, $CFG;
     $content = "";
     if ($categories = get_db_result(fetch_template("dbsql/forum.sql", "get_forum_categories", "forum"), ["forumid" => $forumid])) {
         while ($category = fetch_row($categories)) {
+            // Check if user is logged in
             $notviewed = true;
-
-            //Find if new posts are available
+            // Find if new posts are available
             if (is_logged_in()) {
                 $SQL = fetch_template("dbsql/forum.sql", "get_new_posts_for_user", "forum");
                 $notviewed = $newposts = get_db_result($SQL, ["userid" => $USER->userid, "catid" => $category["catid"]]) ? true : false;
             }
 
+            // Create ajax link to get forum discussions
             ajaxapi([
                 "id" => "get_forum_discussions_" . $category['catid'],
                 "url" => "/features/forum/forum_ajax.php",
@@ -500,6 +488,7 @@ global $USER, $CFG;
                 "interval" => FORUM_REFRESH,
             ]);
 
+            // Create edit buttons
             $buttons = "";
             if ($edit = user_is_able($USER->userid, "editforumcategory", $category['pageid'])) {
                 if ($category["sort"] > 1) {
@@ -528,6 +517,7 @@ global $USER, $CFG;
                 }
             }
 
+            // Create delete button
             if (user_is_able($USER->userid, "deleteforumcategory", $category['pageid'])) {
                 ajaxapi([
                     "id" => "delete_category_" . $category['catid'],
@@ -542,6 +532,7 @@ global $USER, $CFG;
                     </button>';
             }
 
+            // Create edit button
             if ($edit) {
                 $params = [
                     "title" => "Edit Category",
@@ -554,9 +545,11 @@ global $USER, $CFG;
                 $buttons .= make_modal_links($params);
             }
 
+            // Get the count of discussions and posts in the category
             $discussion_count = get_db_count("SELECT * FROM forum_discussions WHERE catid=||catid|| AND shoutbox=0", ["catid" => $category["catid"]]);
             $posts_count = get_db_count("SELECT * FROM forum_posts WHERE catid=||catid||", ["catid" => $category["catid"]]);
 
+            // Add the category to the content
             $content .= fill_template("tmp/forum.template", "category_row_template", "forum", [
                 "viewclass" => ($notviewed ? 'forum_col1' : 'forum_col1_viewed'),
                 "category" => $category,
@@ -567,8 +560,10 @@ global $USER, $CFG;
         }
     }
 
-    $content .= empty($content) ? '<tr><td colspan="3" class="forum_col1">No Categories Created.</td></tr>' : $content;
+    // Add a message if there are no categories
+    $content .= empty($content) ?'<tr><td colspan="3" class="forum_col1">No Categories Created.</td></tr>' : '';
 
+    //Return the content as a string
     return fill_template("tmp/forum.template", "category_template", "forum", ["content" => $content]);
 }
 
@@ -626,9 +621,9 @@ global $USER, $CFG;
     $shoutboxlimit = isset($settings->forum->$forumid->shoutboxlimit->setting) ? " LIMIT " . $settings->forum->$forumid->shoutboxlimit->setting : "";
     $userid = is_logged_in() ? $USER->userid : "";
 
-    $shoutboxid = get_db_field("discussionid", "forum_discussions", "forumid=$forumid AND shoutbox=1");
+    $shoutboxid = get_db_field("discussionid", "forum_discussions", "forumid=||forumid|| AND shoutbox=1", ["forumid" => $forumid]);
     $shouts = "";
-    if ($posts = get_db_result("SELECT * FROM forum_posts WHERE discussionid=$shoutboxid ORDER BY posted DESC $shoutboxlimit")) {
+    if ($posts = get_db_result("SELECT * FROM forum_posts WHERE discussionid=||shoutboxid|| ORDER BY posted DESC $shoutboxlimit", ["shoutboxid" => $shoutboxid])) {
         while ($post = fetch_row($posts)) {
             $params = [
                 "message" => strip_tags($post["message"], "<img><a>"),
@@ -641,18 +636,17 @@ global $USER, $CFG;
 
     $params = [
         "tab" => make_modal_links([
-                    "title" => "Shout",
-                    "path" => action_path("forum") . "shoutbox_editor&userid=$userid&forumid=$forumid",
-                    "width" => "600",
-                    "height" => "600",
-                    "iframe" => true,
-                    "onExit" => "getIntervals()['forum_$forumid'].script();",
-                ]),
+            "title" => "Shout",
+            "path" => action_path("forum") . "shoutbox_editor&userid=$userid&forumid=$forumid",
+            "width" => "600",
+            "height" => "600",
+            "iframe" => true,
+            "onExit" => "getIntervals()['forum_$forumid'].script();",
+        ]),
         "shouts" => $shouts,
     ];
-    $returnme = fill_template("tmp/forum.template", "shoutbox", "forum", $params);
 
-    return $returnme;
+    return fill_template("tmp/forum.template", "shoutbox", "forum", $params);
 }
 
 function get_post_pages($forumid, $discussion, $pagenum = false, $beforeskipping = 10, $buttons = true) {
@@ -892,6 +886,8 @@ function resort_categories($forumid) {
 }
 
 function insert_blank_forum($pageid) {
+    global $USER;
+
     $type = "forum";
     try {
         start_db_transaction();
@@ -910,10 +906,16 @@ function insert_blank_forum($pageid) {
             execute_db_sql(fetch_template("dbsql/features.sql", "insert_page_feature"), $params);
 
             // Every forum gets a shoutbox category.
-            $catid = execute_db_sql(fetch_template("dbsql/forum.sql", "insert_category", $type), ["forumid" => $featureid, "pageid" => $pageid, "title" => "Shoutbox", "sort" => 0, "shoutbox" => 1]);
+            $params["shoutbox"] = 1;
+            $params["sort"] = 0;
+            $params["title"] = "Shoutbox";
+            $catid = execute_db_sql(fetch_template("dbsql/forum.sql", "insert_category", $type), $params);
 
+            // Every forum gets a shoutbox discussion.
             $params["catid"] = $catid;
+            $params["userid"] = $USER->userid;
             execute_db_sql(fetch_template("dbsql/forum.sql", "insert_discussion", $type), $params);
+
             commit_db_transaction();
             return $featureid;
         }

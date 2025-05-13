@@ -270,41 +270,17 @@ global $CFG, $MYVARS, $USER;
                         </button>';
                 }
 
-                $searchresult .= '
-                    <tr style="font-size:.85em;">
-                        <td style="vertical-align:middle;overflow:hidden;white-space:nowrap;">
-                            <input type="hidden" class="user_id" id="user_id_' . $row['userid'] . '" value="' . $row['userid'] . '" />
-                            <input type="hidden" class="user_name" value="' . $fullname . '" />
-                            ' . $fullname . '
-                        </td>
-                        <td style="width:60px;white-space:nowrap;text-align:center;" onmouseover="this.style.backgroundColor=\'#BBD8EC\';" onmouseout="this.style.backgroundColor=\'\'">
-                            <span id="loginas_' . $row['userid'] . '">
-                                ' . $loginas . '
-                            </span>
-                        </td>
-                        <td style="width:60px;white-space:nowrap;text-align:center;" onmouseover="this.style.backgroundColor=\'#BBD8EC\';" onmouseout="this.style.backgroundColor=\'\'">
-                            <span id="reset_password_' . $row['userid'] . '">
-                                ' . $reset . '
-                            </span>
-                        </td>
-                        <td style="width:60px;white-space:nowrap;text-align:center;" onmouseover="this.style.backgroundColor=\'#BBD8EC\';" onmouseout="this.style.backgroundColor=\'\'">
-                            ' . $locate . '
-                        </td>
-                        <td style="width:60px;white-space:nowrap;text-align:center;" onmouseover="this.style.backgroundColor=\'#BBD8EC\';" onmouseout="this.style.backgroundColor=\'\'" >
-                            ' . $logs . '
-                        </td>
-                        <td style="text-align:center;white-space:nowrap;padding: 0 10px;">
-                            ' . ago($row['joined']) . '
-                        </td>
-                        <td style="text-align:center;white-space:nowrap;padding: 0 10px;">
-                            <span>
-                                ' . ago($row['last_activity']) . '
-                            </span>
-                        </td>
-                        <td style="text-align:center;min-width:60px;">
-                            ' . $delete . '
-                        </td>
-                    </tr>';
+                $searchresult .= fill_template("tmp/main.template", "members_search_row", "adminpanel", [
+                    "fullname" => $fullname,
+                    "user" => $row,
+                    "loginas" => $loginas,
+                    "reset" => $reset,
+                    "locate" => $locate,
+                    "logs" => $logs,
+                    "joined" => ago($row["joined"], true),
+                    "active" => ago($row["last_activity"], true),
+                    "delete" => $delete,
+                ]);
             }
         }
 
@@ -353,15 +329,15 @@ global $CFG, $MYVARS, $USER;
             <input type="hidden" id="searchwords" value="' . $searchwords . '" />
             <table class="searchresults">
                 <tr>
-                    <th style="text-align:left;width: 100%;">
+                    <th style="text-align:left;">
                         <strong>Name</strong>
                     </th>
-                    <th colspan="4" style="min-width: 150px;">
+                    <th colspan="4">
                     </th>
-                    <th style="text-align:center;min-width: 100px;">
+                    <th style="text-align:center;">
                         <strong>Joined</strong>
                     </th>
-                    <th style="text-align:center;min-width: 100px;">
+                    <th style="text-align:center;">
                         <strong>Last Access</strong>
                     </th>
                     <th style="text-align:center;min-width: 60px;">

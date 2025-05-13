@@ -259,3 +259,39 @@ admin_versions||
         </div>
     </div>
 ||admin_versions
+
+members_search_row||
+    <tr style="font-size:.85em;">
+        <td style="vertical-align:middle;overflow:hidden;">
+            <input type="hidden" class="user_id" id="user_id_||user["userid"]||" value="||user["userid"]||" />
+            <input type="hidden" class="user_name" value="||fullname||" />
+            ||fullname||
+            <div style="font-size: .9em;color:#999">||user["email"]||</div>
+        </td>
+        <td class="iconfield">
+            <span id="loginas_||user["userid"]||">
+                ||loginas||
+            </span>
+        </td>
+        <td class="iconfield">
+            <span id="reset_password_||user["userid"]||">
+                ||reset||
+            </span>
+        </td>
+        <td class="iconfield">
+            ||locate||
+        </td>
+        <td class="iconfield">
+            ||logs||
+        </td>
+        <td style="text-align:center;padding: 0 10px;">
+            ||joined||
+        </td>
+        <td style="text-align:center;padding: 0 10px;">
+            ||active||
+        </td>
+        <td class="iconfield">
+            ||delete||
+        </td>
+    </tr>
+||members_search_row

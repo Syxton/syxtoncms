@@ -12,13 +12,13 @@ delete_forum||
 
 delete_categories||
     DELETE
-    FROM forum_categories
+    FROM `forum_categories`
     WHERE forumid = ||forumid||
 ||delete_categories
 
 get_forum_categories||
     SELECT *
-    FROM forum_categories
+    FROM `forum_categories`
     WHERE forumid = ||forumid||
     AND shoutbox = 0
     ORDER BY sort
@@ -26,49 +26,49 @@ get_forum_categories||
 
 get_shoutbox||
     SELECT *
-    FROM forum_discussions
+    FROM `forum_discussions`
     WHERE forumid = ||forumid||
     AND shoutbox = 1
 ||get_shoutbox
 
 set_category_sort||
-    UPDATE forum_categories
+    UPDATE `forum_categories`
     SET sort = ||sort||
     WHERE catid = ||catid||
 ||set_category_sort
 
 delete_category||
-    DELETE FROM forum_categories
+    DELETE FROM `forum_categories`
     WHERE catid = ||catid||
 ||delete_category
 
 insert_shoutbox||
-    INSERT INTO forum_categories
+    INSERT INTO `forum_categories`
     (forumid, pageid, title, shoutbox)
     VALUES(||forumid||, ||pageid||, 'Shoutbox', 1)
 ||insert_shoutbox
 
 insert_category||
-    INSERT INTO forum_categories
+    INSERT INTO `forum_categories`
     (forumid, pageid, title, sort, shoutbox)
     VALUES(||forumid||, ||pageid||, ||title||, ||sort||, ||shoutbox||)
 ||insert_category
 
 update_category||
-    UPDATE forum_categories
+    UPDATE `forum_categories`
     SET title = ||title||
     WHERE catid = ||catid||
 ||update_category
 
 get_category||
     SELECT *
-    FROM forum_categories
+    FROM `forum_categories`
     WHERE catid = ||catid||
 ||get_category
 
 get_category_discussions||
     SELECT *
-    FROM forum_discussions
+    FROM `forum_discussions`
     WHERE catid = ||catid||
     AND shoutbox = 0
     AND bulletin = ||bulletin||
@@ -77,13 +77,13 @@ get_category_discussions||
 
 delete_category_discussions||
     DELETE
-    FROM forum_discussions
+    FROM `forum_discussions`
     WHERE catid = ||catid||
 ||delete_category_discussions
 
 delete_category_posts||
     DELETE
-    FROM forum_posts
+    FROM `forum_posts`
     WHERE catid = ||catid||
 ||delete_category_posts
 

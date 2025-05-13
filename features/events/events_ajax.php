@@ -2670,7 +2670,7 @@ global $CFG, $USER;
                 $version = empty($template["folder"]) ? "N/A" : get_db_field("setting", "settings", "setting_name='version' AND type='events_template' AND extra = ||folder||", ["folder" => $template["folder"]]);
                 $rowparams = [
                     "name" => $template["name"],
-                    "type" => $template["folder"] == "none" ? "DB" : "FOLDER",
+                    "type" => $template["folder"] == "none" ? icon("database") : icon("folder"),
                     "version" => $version,
                     "issettings" => $issettings,
                     "isactive" => !empty($template["activated"]),
