@@ -318,9 +318,9 @@ members_search_row||
 
 members_search_table||
     <br />
-    <div style="display: flex;justify-content: space-between;">
+    <div style="display: flex;justify-content: space-between;align-items: center;">
         <div>||prev||</div>
-        <div style="width:50%;text-align:center;color:green;">||info||</div>
+        <div style="width:50%;text-align:center;color:green;white-space:nowrap;">||info||</div>
         <div>||next||</div>
     </div>
     <br />
