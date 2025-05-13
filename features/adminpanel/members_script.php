@@ -37,7 +37,6 @@ global $CFG, $MYVARS, $USER;
     $name = false; $NAMESEARCHSQL = ""; $namesearch = [];
     $cfield = false; $FIELDSEARCHSQL = ""; $fieldsearch = [];
     $csort = false; $SORT = "u.lname, u.fname";
-    $easteregg = false;
 
     //split the search words and find out what they mean
     $searcharray = explode('/', $searchwords);
@@ -59,9 +58,6 @@ global $CFG, $MYVARS, $USER;
             case "f":
                 $cfield = true;
                 $fieldsearch[] = substr($term, (strpos($term, " ")));
-                break;
-            case "fail":
-                $easteregg = $term;
                 break;
             default:
                 $name = true;
@@ -147,84 +143,17 @@ global $CFG, $MYVARS, $USER;
     $count = $total > (($pagenum + 1) * $perpage) ? $perpage : $total - (($pagenum) * $perpage); // get the amount returned...is it a full page of results?
     $amountshown = $firstonpage + $perpage < $total ? $firstonpage + $perpage : $total;
 
-    $searchresult = $export = "";
+    $export = false;
+    $searchresult = false;
     if ($count > 0) {
-        ajaxapi([
-            "id" => "members_delete_user",
-            "if" => "confirm('Do you want to delete ' + $('#user_id_' + userid).next('.user_name').val() + '\'s account?')",
-            "url" => "/ajax/site_ajax.php",
-            "paramlist" => "userid",
-            "data" => ["action" => "delete_user", "userid" => "js||userid||js"],
-            "ondone" => "members_search();",
-            "event" => "none",
-        ]);
+        // Mailman output file.
+        $fileoutput = "";
 
-        ajaxapi([
-            "id" => "members_reset_password",
-            "if" => "confirm('Do you want to reset ' + $('#user_id_' + userid).next('.user_name').val() + '\'s password?')",
-            "url" => "/ajax/site_ajax.php",
-            "paramlist" => "userid",
-            "data" => ["action" => "forgot_password", "admin" => "true", "userid" => "js||userid||js"],
-            "ondone" => "jq_display('reset_password_' + userid, data);",
-            "event" => "none",
-        ]);
+        // CSV output file.
+        $fileoutput = [];
 
-        ajaxapi([
-            "id" => "ipmap",
-            "url" => "/features/adminpanel/adminpanel_ajax.php",
-            "data" => ["action" => "ipmap", "geodata" => "js||geodata||js"],
-            "paramlist" => "geodata, display",
-            "display" => "js||display||js",
-            "event" => "none",
-        ]);
+        get_members_search_ajax();
 
-        ajaxapi([
-            "id" => "members_get_geodata",
-            "external" => true,
-            "datatype" => "jsonp",
-            "callback" => "jsonpCallback: 'jsonCallback',",
-            "url" => '//extreme-ip-lookup.com/json/${ip}',
-            "data" => ["key" => $CFG->geolocationkey],
-            "paramlist" => "ip, display",
-            "ondone" => "if (data.status !== 'success') {
-                            alert('Location could not be found.');
-                        } else {
-                            ipmap(JSON.stringify(data), display);
-                        }",
-            "event" => "none",
-        ]);
-
-        ajaxapi([
-            "id" => "loginas",
-            "url" => "/features/adminpanel/adminpanel_ajax.php",
-            "data" => [
-                "action" => "loginas",
-                "userid" => "js||userid||js",
-            ],
-            "paramlist" => "userid",
-            "ondone" => "getRoot()[0].go_to_page(data.message);",
-            "event" => "none",
-        ]);
-
-        ajaxapi([
-            "id" => "view_logfile",
-            "url" => "/features/adminpanel/adminpanel_ajax.php",
-            "data" => [
-                "action" => "view_logfile",
-                "userid" => "js||userid||js",
-            ],
-            "paramlist" => "userid",
-            "display" => "display",
-            "event" => "none",
-        ]);
-
-        if ($mailman) {
-            $fileoutput = "";
-        }
-
-        if ($csv) {
-            $fileoutput = [];
-        }
         // Limit to one page of return.
         if (!$mailman && !$csv) {
             $SQL .= $LIMIT;
@@ -237,118 +166,109 @@ global $CFG, $MYVARS, $USER;
             } elseif ($csv) { // Export to CSV
                 $fileoutput[] = ["fname" => $row["fname"], "lname" => $row["lname"], "email" => $row["email"]];
             } else {
-                $delete = $locate = $logs = $reset = "";
-                if (isset($USER->ip)) {
-                    $locate = '
-                        <button class="alike" title="IP Location" onclick="members_get_geodata(\'' . $USER->ip . '\', \'display\');">
-                            ' . icon("compass", 2) . '
-                        </button>';
-                }
-
-                if (!is_siteadmin($row["userid"])) {
-                    $delete = '
-                        <button class="alike" title="Delete ' . $fullname . '" onclick="members_delete_user(\'' . $row['userid'] . '\');">
-                            ' . icon("trash", 2) . '
-                        </button>';
-                    $reset = '
-                        <button class="alike" title="Reset ' . $fullname . ' Password" onclick="members_reset_password(\'' . $row['userid'] . '\');">
-                            ' . icon("retweet", 2, "", "orange") . '
-                        </button>';
-                }
-
-                $logs = '
-                    <button class="alike" title="View ' . $fullname . ' Logs" onclick="view_logfile(\'' . $row['userid'] . '\');">
-                        ' . icon("chart-simple", 2, "", "green") . '
-                    </button>';
-
-                // Login as another user.
-                $loginas = '';
-                if ($USER->userid !== $row['userid']) {
-                    $loginas = '
-                        <button class="alike" title="Log in as ' . $fullname . '" onclick=loginas(' . $row['userid'] . ')>
-                            ' . icon("user-secret", 2) . '
-                        </button>';
-                }
-
                 $searchresult .= fill_template("tmp/main.template", "members_search_row", "adminpanel", [
                     "fullname" => $fullname,
+                    "notadmin" => !is_siteadmin($row["userid"]),
+                    "hasip" => !empty($row["ip"]),
                     "user" => $row,
-                    "loginas" => $loginas,
-                    "reset" => $reset,
-                    "locate" => $locate,
-                    "logs" => $logs,
+                    "loginas" => ($USER->userid !== $row['userid']),
                     "joined" => ago($row["joined"], true),
                     "active" => ago($row["last_activity"], true),
-                    "delete" => $delete,
                 ]);
             }
         }
-
-        $export = '
-            <div style="font-size:.65em;padding:2px;">
-                <button class="alike" title="Export to CSV" onclick="export_search(`' . $searchwords . '`, 1);" >
-                    ' . icon("file-csv", 2) . '
-                </button>
-                &nbsp;&nbsp;
-                <button class="alike" title="Export to Mailman" onclick="export_search(`' . $searchwords . '`, 0, 1);" >
-                    ' . icon("paper-plane", 2) . '
-                </button>
-            </div>';
     }
 
     if (!$mailman && !$csv) {
-        if (empty($searchresult)) {
-            $searchresult = '
-                <tr>
-                    <td colspan="7" style="font-size:.8em;text-align:center;">
-                        <strong>No matches found.</strong>
-                    </td>
-                </tr>';
-        }
-
         $prev = $pagenum > 0 ? '<button class="alike" title="Previous Page" onclick="members_search(\'' . $searchwords . '\', ' . ($pagenum - 1) . ');">' . icon("circle-chevron-left", 2) . '</button>' : "";
         $next = $firstonpage + $perpage < $total ? '<button class="alike" title="Next Page" onclick="members_search(\'' . $searchwords . '\', ' . ($pagenum + 1) . ');">' . icon("circle-chevron-right", 2) . '</button>' : "";
         $info = 'Viewing ' . ($firstonpage + 1) . " through " . $amountshown . " out of $total";
 
-        $return = '
-            <table style="width:100%;">
-                <tr>
-                    <td style="width:25%;text-align:left;">
-                        ' . $prev . '
-                    </td>
-                    <td style="width:50%;text-align:center;color:green;">
-                        ' . $info . '
-                    </td>
-                    <td style="width:25%;text-align:right;">
-                        ' . $next . '
-                    </td>
-                </tr>
-            </table>
-            <br /><br />
-            ' . $export . '
-            <input type="hidden" id="searchwords" value="' . $searchwords . '" />
-            <table class="searchresults">
-                <tr>
-                    <th style="text-align:left;">
-                        <strong>Name</strong>
-                    </th>
-                    <th colspan="4">
-                    </th>
-                    <th style="text-align:center;">
-                        <strong>Joined</strong>
-                    </th>
-                    <th style="text-align:center;">
-                        <strong>Last Access</strong>
-                    </th>
-                    <th style="text-align:center;min-width: 60px;">
-                    </th>
-                </tr>
-                ' . $searchresult . '
-            </table>';
+        $return = fill_template("tmp/main.template", "members_search_table", "adminpanel", [
+            "prev" => $prev,
+            "next" => $next,
+            "info" => $info,
+            "searchwords" => $searchwords,
+            "results" => $searchresult,
+        ]);
+
         ajax_return($return);
     } else {
         $filename = !empty($mailman) ? "users_export.txt" : "users_export.csv";
         ajax_return('<iframe src="' . $CFG->wwwroot . '/scripts/download.php?file=' . create_file($filename, $fileoutput, empty($mailman)) . '"></iframe>');
     }
+}
+
+function get_members_search_ajax() {
+    global $CFG;
+
+    ajaxapi([
+        "id" => "members_delete_user",
+        "if" => "confirm('Do you want to delete ' + $('#user_id_' + userid).next('.user_name').val() + '\'s account?')",
+        "url" => "/ajax/site_ajax.php",
+        "paramlist" => "userid",
+        "data" => ["action" => "delete_user", "userid" => "js||userid||js"],
+        "ondone" => "members_search();",
+        "event" => "none",
+    ]);
+
+    ajaxapi([
+        "id" => "members_reset_password",
+        "if" => "confirm('Do you want to reset ' + $('#user_id_' + userid).next('.user_name').val() + '\'s password?')",
+        "url" => "/ajax/site_ajax.php",
+        "paramlist" => "userid",
+        "data" => ["action" => "forgot_password", "admin" => "true", "userid" => "js||userid||js"],
+        "ondone" => "jq_display('reset_password_' + userid, data);",
+        "event" => "none",
+    ]);
+
+    ajaxapi([
+        "id" => "ipmap",
+        "url" => "/features/adminpanel/adminpanel_ajax.php",
+        "data" => ["action" => "ipmap", "geodata" => "js||geodata||js"],
+        "paramlist" => "geodata, display",
+        "display" => "js||display||js",
+        "event" => "none",
+    ]);
+
+    ajaxapi([
+        "id" => "members_get_geodata",
+        "external" => true,
+        "datatype" => "jsonp",
+        "callback" => "jsonpCallback: 'jsonCallback',",
+        "url" => '//extreme-ip-lookup.com/json/${ip}',
+        "data" => ["key" => $CFG->geolocationkey],
+        "paramlist" => "ip, display",
+        "ondone" => "if (data.status !== 'success') {
+                        alert('Location could not be found.');
+                    } else {
+                        ipmap(JSON.stringify(data), display);
+                    }",
+        "event" => "none",
+    ]);
+
+    ajaxapi([
+        "id" => "loginas",
+        "url" => "/features/adminpanel/adminpanel_ajax.php",
+        "data" => [
+            "action" => "loginas",
+            "userid" => "js||userid||js",
+        ],
+        "paramlist" => "userid",
+        "ondone" => "getRoot()[0].go_to_page(data.message);",
+        "event" => "none",
+    ]);
+
+    ajaxapi([
+        "id" => "view_logfile",
+        "url" => "/features/adminpanel/adminpanel_ajax.php",
+        "data" => [
+            "action" => "view_logfile",
+            "userid" => "js||userid||js",
+        ],
+        "paramlist" => "userid",
+        "display" => "display",
+        "event" => "none",
+    ]);
 }
 ?>

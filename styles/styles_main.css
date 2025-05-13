@@ -2885,12 +2885,19 @@ input[type=image] {
 
 
 #mem_resultsdiv .searchresults .iconfield {
-    width: 60px;
-    white-space: nowrap;
-    text-align:center;
+    display: flex;
+    justify-content: space-evenly;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
 }
 
-#mem_resultsdiv .searchresults .iconfield:hover {
+#mem_resultsdiv .searchresults .iconfield span {
+    padding: 2px;
+    width: 30px;
+}
+
+#mem_resultsdiv .searchresults .iconfield span:hover {
     cursor: pointer;
     background-color: #BBD8EC;
 }

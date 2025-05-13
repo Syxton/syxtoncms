@@ -268,21 +268,35 @@ members_search_row||
             ||fullname||
             <div style="font-size: .9em;color:#999">||user["email"]||</div>
         </td>
-        <td class="iconfield">
-            <span id="loginas_||user["userid"]||">
-                ||loginas||
-            </span>
-        </td>
-        <td class="iconfield">
-            <span id="reset_password_||user["userid"]||">
-                ||reset||
-            </span>
-        </td>
-        <td class="iconfield">
-            ||locate||
-        </td>
-        <td class="iconfield">
-            ||logs||
+        <td>
+            <div class="iconfield">
+                <span id="loginas_||user["userid"]||">
+                    ||loginas{{
+                        <button class="alike" title="Log in as ||fullname||" onclick=loginas(||user["userid"]||)>
+                            ||echo icon("user-secret", 2);::none||
+                        </button>
+                    }}loginas||
+                </span>
+                <span>
+                    <button class="alike" title="View ||fullname|| Logs" onclick="view_logfile(||user["userid"]||);">
+                        ||echo icon("chart-simple", 2, "", "green");::none||
+                    </button>
+                </span>
+                <span id="reset_password_||user["userid"]||">
+                    ||notadmin{{
+                        <button class="alike" title="Reset ||fullname|| Password" onclick="members_reset_password(||user["userid"]||);">
+                            ||echo icon("retweet", 2, "", "orange");::none||
+                        </button>
+                    }}notadmin||
+                </span>
+                <span>
+                ||hasip{{
+                    <button class="alike" title="IP Location" onclick="members_get_geodata('||user["ip"]||', 'display');">
+                        ||echo icon("compass", 2);::none||
+                    </button>
+                }}hasip||
+                </span>
+            </div>
         </td>
         <td style="text-align:center;padding: 0 10px;">
             ||joined||
@@ -290,8 +304,61 @@ members_search_row||
         <td style="text-align:center;padding: 0 10px;">
             ||active||
         </td>
-        <td class="iconfield">
-            ||delete||
+        <td>
+            <div class="iconfield">
+            ||notadmin{{
+                <button class="alike" title="Delete ||fullname||" onclick="members_delete_user(||user["userid"]||);">
+                    ||echo icon("trash", 2);::none||
+                </button>
+            }}notadmin||
+            </div>
         </td>
     </tr>
 ||members_search_row
+
+members_search_table||
+    <br />
+    <div style="display: flex;justify-content: space-between;">
+        <div>||prev||</div>
+        <div style="width:50%;text-align:center;color:green;">||info||</div>
+        <div>||next||</div>
+    </div>
+    <br />
+    ||results{{
+        <div style="font-size:.65em;padding:2px;">
+            <button class="alike" title="Export to CSV" onclick="export_search(`||searchwords||`, 1);" >
+                ||echo icon("file-csv", 2);::none||
+            </button>
+            <button class="alike" title="Export to Mailman" onclick="export_search(`||searchwords||`, 0, 1);" >
+                ||echo icon("paper-plane", 2);::none||
+            </button>
+        </div>
+    }}results||
+    <input type="hidden" id="searchwords" value="||searchwords||" />
+    <table class="searchresults">
+        <tr>
+            <th style="text-align:left;">
+                <strong>Name</strong>
+            </th>
+            <th>
+            </th>
+            <th style="text-align:center;">
+                <strong>Joined</strong>
+            </th>
+            <th style="text-align:center;">
+                <strong>Last Access</strong>
+            </th>
+            <th style="text-align:center;">
+            </th>
+        </tr>
+        ||results{{
+            ||results||
+            //OR//
+            <tr>
+                <td colspan="5" style="font-size:.8em;text-align:center;">
+                    <strong>No matches found.</strong>
+                </td>
+            </tr>
+        }}results||
+    </table>
+||members_search_table
