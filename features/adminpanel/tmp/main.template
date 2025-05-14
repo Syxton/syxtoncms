@@ -5,11 +5,17 @@ header||
     ||echo get_js_tags(["scripts/frame_resize.js"]);::none||
 ||header
 
-userlog||
-    <div style="display:flex;justify-content: space-between;caret-color: transparent;">
-        ||prev||
-        ||next||
+pagination_bar||
+    <br />
+    <div style="display: flex;justify-content: space-between;align-items: center;">
+        <div>||prev||</div>
+        <div style="width:50%;text-align:center;color:green;white-space:nowrap;">||*info||</div>
+        <div>||next||</div>
     </div>
+    <br />
+||pagination_bar
+
+userlog||
     <iframe id="userlog_graph" onload="resizeCaller(this.id);" src="||url||" style="width:100%;border:none;"></iframe>
     <div id="actions_div">
         ||useractions||
@@ -17,16 +23,6 @@ userlog||
 ||userlog
 
 useractionstable||
-    <table style="font-size:.75em;width: 100%;">
-        <tr>
-            <td style="text-align:left">
-                ||prev||
-            </td>
-            <td style="text-align:right">
-                ||next||
-            </td>
-        </tr>
-    </table>
     <table class="datatable">
         <thead>
             <tr>
@@ -220,7 +216,7 @@ site_administration||
                 </li>
             </ul>
         </div>
-        <div id="display" style="width: 100%;height: 100%;">
+        <div id="display" style="width: 100%;height: 100%;padding: 0 10px;box-sizing: border-box;">
             <div style="font-size:.8em;width:98%;padding:10px;text-align:center;">
                 <h2>Site Administration Area</h2>
                 All administration features are displayed in this area.  Click the links to the left to display the various administration features.
@@ -317,13 +313,6 @@ members_search_row||
 ||members_search_row
 
 members_search_table||
-    <br />
-    <div style="display: flex;justify-content: space-between;align-items: center;">
-        <div>||prev||</div>
-        <div style="width:50%;text-align:center;color:green;white-space:nowrap;">||info||</div>
-        <div>||next||</div>
-    </div>
-    <br />
     ||results{{
         <div style="font-size:.65em;padding:2px;">
             <button class="alike" title="Export to CSV" onclick="export_search(`||searchwords||`, 1);" >

@@ -24,7 +24,7 @@ comment_form_template||
 		  </div>
         }}replytoid||
         <div class="html_commentinput">
-            <textarea id="comment" cols="100" rows="8">||comment||</textarea>
+            <textarea id="comment" style="width: 100%" rows="8">||comment||</textarea>
         </div>
         <div class="centered">
             <input type="submit" value="||title||" />

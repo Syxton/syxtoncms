@@ -90,19 +90,20 @@ appsearchtemplate||
             <h3>Search for applicants by their name.</h3>
         </div>
         <form onsubmit="perform_appsearch();">
-            <div style="text-align:center;">
-                <input type="text" id="searchbox" name="searchbox" />
-                <input type="submit" value="Search" style="margin-left: 5px;" />
-            </div>
-            ||canexport{{
-                <div style="position:absolute;top:0;">
+            <div style="display: flex;align-items: center;justify-content: flex-start;">
+                <div style="width: 25%;display: flex;align-items: center;justify-content: space-evenly;">
+                ||canexport{{
                     ||exportselect||
                     <button class="alike" title="Export" id="export_staffapp_||pageid||">
-                        ||echo icon("file-csv");::none||
+                        ||echo icon("file-csv", 2);::none||
                     </button>
-                    <div></div>
+                }}canexport||
                 </div>
-            }}canexport||
+                <div style="text-align:center;">
+                    <input type="text" id="searchbox" name="searchbox" />
+                    <input type="submit" value="Search" style="margin-left: 5px;" />
+                </div>
+            </div>
         </form>
         <br />
     </div>

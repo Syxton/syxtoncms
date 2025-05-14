@@ -156,8 +156,8 @@ function deletecomment() {
     // Log
     log_entry("html", $commentid, "Delete Comment");
 
-
-    $return = get_html_comments($info["htmlid"], $info["pageid"], false, $info["perpage"], 0, false);
+    $return = make_comment_button($info["htmlid"], $info["pageid"]);
+    $return .= get_html_comments($info["htmlid"], $info["pageid"], false, $info["perpage"], 0, false);
 
     ajax_return($return);
 }
@@ -194,7 +194,9 @@ global $CFG, $PAGE, $USER;
     }
 
     $info = get_info_from_commentid($commentid);
-    $return = get_html_comments($info["htmlid"], $info["pageid"], false, $info["perpage"], 0, false);
+
+    $return = make_comment_button($info["htmlid"], $info["pageid"]);
+    $return .= get_html_comments($info["htmlid"], $info["pageid"], false, $info["perpage"], 0, false);
 
     ajax_return($return, $error);
 }

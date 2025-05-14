@@ -186,13 +186,15 @@ global $USER;
     ]);
     $prev = '<button id="prevmonthlog" onmouseup="this.blur()">View ' . date("F Y",mktime(0,0,0, $prevmonth,1, $prevyear)) . '</button>';
 
-    $params = [
+    $return = fill_template("tmp/main.template", "pagination_bar", "adminpanel", [
         "prev" => $prev,
         "next" => $next,
+    ]);
+    $params = [
         "url" => "members_log_graph.php?rnd=" . time() . "&userid=" . $userid . "&year=" . $year . "&month=" . $month,
         "useractions" => get_user_usage($userid, $pagenum, $year, $month),
     ];
-    $return = fill_template("tmp/main.template", "userlog", "adminpanel", $params);
+    $return .= fill_template("tmp/main.template", "userlog", "adminpanel", $params);
     ajax_return($return);
 }
 
@@ -291,12 +293,16 @@ global $USER;
         $prev = '<button id="prevuseractions">Previous Actions</button>';
     }
 
-    $params = [
-        "actions" => $actions,
+    $return = fill_template("tmp/main.template", "pagination_bar", "adminpanel", [
         "prev" => $prev,
         "next" => $next,
-    ];
-    return fill_template("tmp/main.template", "useractionstable", "adminpanel", $params);
+    ]);
+
+    $return .= fill_template("tmp/main.template", "useractionstable", "adminpanel", [
+        "actions" => $actions,
+    ]);
+
+    return $return;
 }
 
 function ipmap() {

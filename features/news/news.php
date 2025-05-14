@@ -141,7 +141,7 @@ global $CFG;
 	$pagenews->userid = $news['userid'];
 	$display_news = $news['content'] == "" ? stripslashes($news['caption']) : stripslashes($news['content']);
 	if ($newsonly) {
-		return '<div style="height: 90vh;padding:10px;overflow: auto">
+		return '<div style="box-sizing: border-box;padding:10px;overflow: auto">
 					<h1 style="font-size:3em;text-align: center;">' . $pagenews->title . '</h1>
 					<div style="font-size:1.8em;text-align: center;color:grey;">' . $pagenews->caption . '</div>
 					<div style="font-size:1em;text-align:right;padding:10px;">By: ' . get_user_name($pagenews->userid) . '</div>

@@ -47,3 +47,57 @@ add_pics_form||
         <input style="position: absolute;margin: 10px;bottom: 0px;right: 0px;" type="button" name="upload_form" value="Submit Gallery" onclick="update_picslist();">
     </form>
 ||add_pics_form
+
+pics_manager_picture||
+    <div id="picsid_||pic["picsid"]||" style="border:1px solid #96E4D7; margin:3px;">
+        <div id="activated_picsid_||pic["picsid"]||" class="pics_activation_status ||activated||">
+            ||pic["imagename"]||
+            ||canedit{{
+                ||candelete{{
+                    <button class="alike" style="float:right;" title="Delete" onclick="delete_pic(||pic["picsid"]||);">
+                        <span>
+                        ||echo icon("trash", 2);::none||</span>
+                    </button>
+                }}candelete||
+            }}canedit||
+        </div>
+        <table style="width:100%;">
+            <tr>
+                <td style="width: 170px;vertical-align:top">
+                    <div class="pics_manager_pic">
+                        <button class="alike" onclick="toggle_activate(||pic["picsid"]||);">
+                            <img src="||path||" ||image|| />
+                        </button>
+                    </div>
+                </td>
+                <td style="vertical-align:top">
+                    <div class="pics_manager_caption">
+                        ||canedit{{
+                            <textarea id="caption_||pic["picsid"]||" class="pics_manager_piccaption" onkeyup="pics_track_change(||pic["picsid"]||);">||pic["caption"]||</textarea>
+                            <button class="alike" onclick="save_caption(||pic["picsid"]||);">
+                                ||echo icon("floppy-disk", 2);::none||
+                            </button>
+                            //OR//
+                            ||pic["caption"]||
+                        }}canedit||
+                    </div>
+                    <div style="display: flex;justify-content: space-around;">
+                        <div class="pics_manager_siteviewable">
+                            ||issite{{
+                                //OR//
+                                <input type="checkbox" style="vertical-align:middle" id="siteviewable_||pic["picsid"]||" onchange="save_viewability(||pic["picsid"]||);"||checked|| ||disabled|| />
+                                <span>
+                                    Site Viewable
+                                </span>
+                            }}issite||
+                        </div>
+                        <div class="pics_manager_movepics">
+                            ||move||
+                        </div>
+                    </div>
+
+                </td>
+            </tr>
+        </table>
+    </div>
+||pics_manager_picture

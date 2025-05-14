@@ -184,10 +184,13 @@ global $CFG, $MYVARS, $USER;
         $next = $firstonpage + $perpage < $total ? '<button class="alike" title="Next Page" onclick="members_search(\'' . $searchwords . '\', ' . ($pagenum + 1) . ');">' . icon("circle-chevron-right", 2) . '</button>' : "";
         $info = 'Viewing ' . ($firstonpage + 1) . " through " . $amountshown . " out of $total";
 
-        $return = fill_template("tmp/main.template", "members_search_table", "adminpanel", [
+        $return = fill_template("tmp/main.template", "pagination_bar", "adminpanel", [
             "prev" => $prev,
             "next" => $next,
             "info" => $info,
+        ]);
+
+        $return .= fill_template("tmp/main.template", "members_search_table", "adminpanel", [
             "searchwords" => $searchwords,
             "results" => $searchresult,
         ]);

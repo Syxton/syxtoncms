@@ -44,17 +44,7 @@ global $CFG, $USER;
             if ($settings->html->$featureid->allowcomments->setting) {
                 $hidebuttons = $htmlonly ? true : false;
 
-                if (user_is_able($USER->userid, "makecomments", $pageid, "html", $row['htmlid'])) {
-                    $params = [
-                        "title" => "Make Comment",
-                        "path" => action_path("html") . "commentform&htmlid=" . $row['htmlid'],
-                        "icon" => icon("comment-medical", 2),
-                    ];
-                    $makecomment = '
-                        <div class="html_makecomment">
-                            ' . make_modal_links($params) . '
-                        </div>';
-                }
+                $makecomment = make_comment_button($row['htmlid'], $pageid);
 
                 if (user_is_able($USER->userid, "viewcomments", $pageid, "html", $row['htmlid'])) {
                     $listcomments = get_html_comments($row['htmlid'], $pageid, $hidebuttons, $limit);
@@ -503,11 +493,11 @@ global $CFG;
 function gather_comments($htmlid, $pagenum, $perpage, $collection = [], $totalcount = 0, $parentid = 0) {
     $SQL = "SELECT *
             FROM html_comments
-            WHERE htmlid = '$htmlid'
-            AND parentid = '$parentid'
+            WHERE htmlid = ||htmlid||
+            AND parentid = ||parentid||
             ORDER BY created, commentid";
 
-    if ($comments = get_db_result($SQL)) {
+    if ($comments = get_db_result($SQL, ["htmlid" => $htmlid, "parentid" => $parentid])) {
         while ($comment = fetch_row($comments)) {
             // Too far.
             if ($totalcount > (($pagenum + 1) * $perpage)) {
@@ -559,14 +549,15 @@ function get_info_from_commentid($commentid) {
 function get_html_comments($htmlid, $pageid, $hidebuttons = false, $perpage = false, $pagenum = false, $hide = true) {
 global $CFG, $USER;
     $returnme = $commenttext = $prev = $info = $next = $header = $pagenav = $limit = "";
-
-    $pagenum = $pagenum ?: 0;
-    $perpage = $perpage ?: 0;
-
+error_log("Pagenum Original: $pagenum");
     $original = $pagenum ? false : true;
+    $total = get_db_count("SELECT * FROM html_comments WHERE htmlid = ||htmlid||", ["htmlid" => $htmlid]);
+    $perpage = $perpage ?: 0;
+    $pagenum = $pagenum !== false ? $pagenum : floor($total / $perpage);
+error_log("Pagenum: " . $pagenum);
+
     $comments = gather_comments($htmlid, $pagenum, $perpage);
     if ($perpage) {
-        $total = get_db_count("SELECT * FROM html_comments WHERE htmlid = '$htmlid'");
         $searchvars = get_search_page_variables($total, $perpage, $pagenum);
 
         if ($searchvars["prev"]) {
@@ -610,22 +601,13 @@ global $CFG, $USER;
                 </button>';
         }
 
-        $pagenav = '
-            <table style="width:100%;">
-                <tr>
-                    <td style="width:25%;text-align:left;">
-                        ' . $prev . '
-                    </td>
-                    <td style="width:50%;text-align:center;color:green;">
-                        ' . $info . '
-                    </td>
-                    <td style="width:25%;text-align:right;">
-                        ' . $next . '
-                    </td>
-                </tr>
-            </table>
-            <br /><br />';
-        $limit = "LIMIT " .$searchvars["firstonpage"] . "," . $perpage;
+        $pagenav = fill_template("tmp/main.template", "pagination_bar", "adminpanel", [
+            "prev" => $prev,
+            "next" => $next,
+            "info" => $info,
+        ]);
+
+        $limit = "LIMIT " . $searchvars["firstonpage"] . "," . $perpage;
     } else {
         $limit = "LIMIT $perpage";
     }
@@ -765,6 +747,28 @@ function html_delete($pageid, $featureid) {
         rollback_db_transaction($e->getMessage());
         return false;
     }
+}
+
+function make_comment_button($htmlid, $pageid) {
+    global $USER;
+
+    $makecomment = "";
+    if (user_is_able($USER->userid, "makecomments", $pageid, "html", $htmlid)) {
+        $params = [
+            "text" => "Make Comment",
+            "path" => action_path("html") . "commentform&htmlid=" . $htmlid,
+            "icon" => icon("comment-medical", 2, "", "white"),
+            "button" => true,
+            "styles" => "padding: 10px;",
+            "width" => "500",
+            "class" => "html_make_comment_button",
+        ];
+        $makecomment = '
+            <div class="html_makecomment">
+                ' . make_modal_links($params) . '
+            </div>';
+    }
+    return $makecomment;
 }
 
 function html_buttons($pageid, $featuretype, $featureid) {

@@ -101,10 +101,10 @@ function icon_color($icon) {
     // Certain icons have different color than others.
     switch ($icon) {
         case "key":
-            $color = "#d2df22";
+            $color = "#b2bd22";
             break;
         case "sliders":
-            $color = "#2e4c5abd";
+            $color = "#755c91";
             break;
         case "trash":
             $color = "#bb0202";

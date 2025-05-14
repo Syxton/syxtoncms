@@ -95,7 +95,7 @@ global $CFG;
 
 function save_caption() {
     $picsid = clean_myvar_req("picsid", "int");
-    $caption = clean_myvar_req("caption", "html");
+    $caption = clean_myvar_opt("caption", "html", "");
 
     $return = $error = "";
     try {

@@ -54,7 +54,7 @@ global $MYVARS, $CFG, $USER;
 	$comments = $settings->html->$htmlid->allowcomments->setting && user_is_able($USER->userid, "viewcomments", $pageid) ? get_html_comments($row['htmlid'], $pageid, true,10) : '';
 
 	echo '
-	<div style="width:100%;">
+	<div style="width:100%;padding:20px;box-sizing: border-box;">
 		' . $row['html'] . '
 		<div id="comment_area_' . $htmlid . '">
 		' . $comments . '

@@ -289,10 +289,13 @@ table.searchresults tr:hover {
 
 .area_side .html_comments_area {
     font-size: .85em;
+    position: relative;
 }
 
 .html_makecomment {
-    float: right;
+    text-align: center;
+    position: relative;
+    left: -15px;
 }
 
 .html_comment_form {
@@ -977,14 +980,24 @@ div.html_template {
 
 .area_middle .html_comment_button_box {
     float: left;
+    position: relative;
+    z-index: 2;
 }
 
 .area_side .html_comment_button_box {
     text-align: center;
 }
 
+.html_make_comment_button {
+    font-size: 1em;
+    color: white;
+    background-color: navy;
+    border-radius: 10px;
+}
+
 .area_middle .html_comments_area {
     margin: auto;
+    position: relative;
 }
 
 .area_middle .html_comment_button {
@@ -1560,7 +1573,7 @@ button svg:hover {
     position: relative;
     z-index: 2;
     float: right;
-    background-color: #b3b3b3;
+    background-color: #e7e7e7;
     height: 24px;
 }
 
@@ -2787,6 +2800,7 @@ input[type=image] {
     background: none !important;
     background: radial-gradient(circle at 50%, #00000010, 1%, #FFF) !important;
 }
+
 #cboxLoadingOverlay {
     background: #00000025 !important;
 }
@@ -2799,6 +2813,16 @@ input[type=image] {
     left: calc(50% - .5em);
     top: calc(50% - .5em);
     color: #00000050;
+}
+
+#cboxTitle {
+    bottom: 28px !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 50px 10px 32px;
+    box-sizing: border-box;
+    height: initial !important;
 }
 
 .formSection {
@@ -2970,7 +2994,7 @@ input[type=image] {
     }
 
     #cboxTitle {
-        bottom: 0px;
+        bottom: 45px !important;
     }
 
     #cboxCurrent, #cboxPrevious, #cboxNext, #cboxClose {
@@ -2999,10 +3023,11 @@ input[type=image] {
     }
 
     #cboxLoadedContent {
-        height: calc(100vh - 55px) !important;
+        height: calc(100vh - 45px) !important;
         width: 100vw !important;
         box-sizing: border-box !important;
-        padding: 10px;
+        margin: 0;
+        padding: 0;
     }
 
     /* hide all links, except for the first one ("Home"). Show the link that contains should open and close the topnav (.icon) */

@@ -171,7 +171,7 @@ function get_pics($featureid, $galleryid = 0, $pagenum = 0, $order = false) {
 global $CFG, $USER;
     $pageid = get_pageid();
     $order = $order ? $order : " dateadded DESC";
-    $next = $prev = $deletepic = $activated = $siteviewable = $movepics = "";
+    $next = $prev = $deletepic = $activated = $movepics = "";
 
     if (!$settings = fetch_settings("pics", $featureid, $pageid)) {
         save_batch_settings(default_settings("pics", $pageid, $featureid));
@@ -306,39 +306,16 @@ global $CFG, $USER;
                 $mypicture = getimagesize($filepath);
             }
 
-            if ($canedit) {
-                if ($candelete) {
-                    $deletepic = '
-                        <button class="alike" style="float:right;" title="Delete" onclick="delete_pic(' . $row['picsid'] . ');">
-                            <span>' . icon("trash", 2) . '</span>
-                        </button>';
-                }
-
-                if (($issite && $row["sitehidden"] === 1) || (!$issite && $row["pagehidden"] === 1)) {
-                    $activated = '';
-                } else { //image is activated
-                    $activated = 'pics_active';
-                }
+            $activated = '';
+            error_log("picid: " . $row["picsid"] . ", sitehidden: " . $row["sitehidden"] . ", pagehidden: " . $row["pagehidden"] . " issite: " . $issite);
+            if ($canedit && (($issite && $row["sitehidden"] === 0) || (!$issite && $row["pagehidden"] === 0))) { // image is activated
+                $activated = 'pics_active';
             }
 
             $disabled = $issite && $row["pageid"] == $pageid ? "DISABLED" : "";
             $checked = $row["siteviewable"] == 1 ? " checked=checked" : "";
 
             if ($canedit) {
-                $caption = '
-                    <textarea id="caption_' . $row["picsid"] . '" class="pics_manager_piccaption" onkeyup="pics_track_change(' . $row["picsid"] . ');">' . $row["caption"] . '</textarea>
-                    <button class="alike" onclick="save_caption(' . $row["picsid"] . ');">
-                        ' . icon("floppy-disk", 2) . '
-                    </button>';
-
-                if (!$issite) {
-                    $siteviewable = '
-                        <input type="checkbox" style="vertical-align:middle" id="siteviewable_' . $row["picsid"] . '" onchange="save_viewability(' . $row["picsid"] . ');"' . $checked . ' ' . $disabled . ' />
-                        <span>
-                            Site Viewable
-                        </span>';
-                }
-
                 $SQL = fetch_template("dbsql/pics.sql", "get_page_galleries", "pics");
                 $galleryselect = [
                     "properties" => [
@@ -364,37 +341,19 @@ global $CFG, $USER;
                 $caption = $row["caption"];
             }
 
-            $returnme .= '
-                <div id="picsid_' . $row["picsid"] . '" style="border:1px solid #96E4D7; margin:3px;">
-                    <div id="activated_picsid_' . $row["picsid"] . '" class="pics_activation_status ' . $activated . '">
-                        ' . $row["imagename"] . $deletepic . '
-                    </div>
-                    <table style="width:100%;">
-                        <tr>
-                            <td style="width: 170px;vertical-align:top">
-                                <div class="pics_manager_pic">
-                                    <button class="alike" onclick="toggle_activate(' . $row["picsid"] . ');">
-                                        <img src="' . $webpath . '"' . imgResize($mypicture[0], $mypicture[1], 165) . ' />
-                                    </button>
-                                </div>
-                            </td>
-                            <td style="vertical-align:top">
-                                <div class="pics_manager_caption">
-                                    ' . $caption . '
-                                </div>
-                                <div style="display: flex;justify-content: space-around;">
-                                    <div class="pics_manager_siteviewable">
-                                        ' . $siteviewable . '
-                                    </div>
-                                    <div class="pics_manager_movepics">
-                                        ' . $movepics . '
-                                    </div>
-                                </div>
-
-                            </td>
-                        </tr>
-                    </table>
-                </div>';
+            $returnme .= fill_template("tmp/pics.template", "pics_manager_picture", "pics", [
+                "pic" => $row,
+                "canedit" => $canedit,
+                "candelete" => $candelete,
+                "issite" => $issite,
+                "disabled" => $disabled,
+                "checked" => $checked,
+                "move" => $movepics,
+                "delete" => $deletepic,
+                "activated" => $activated,
+                "path" => $webpath,
+                "image" => imgResize($mypicture[0], $mypicture[1], 165),
+            ]);
         }
 
         $count = $total > (($pagenum + 1) * $perpage) ? $perpage : $total - (($pagenum) * $perpage); //get the amount returned...is it a full page of results?
@@ -414,20 +373,13 @@ global $CFG, $USER;
                 </button>';
         }
 
-        return '<br /><br />
-            <table style="width:100%;">
-                <tr style="height:45px;">
-                    <td style="width:25%;text-align:left;">
-                        ' . $prev . '
-                    </td>
-                    <td style="width:50%;text-align:center;color:green;">
-                        Viewing ' . ($firstonpage + 1) . ' through ' . $amountshown . ' out of ' . $total . '
-                    </td>
-                    <td style="width:25%;text-align:right;">
-                        ' . $next . '
-                    </td>
-                </tr>
-            </table>
+        $pagination = fill_template("tmp/main.template", "pagination_bar", "adminpanel", [
+            "prev" => $prev,
+            "next" => $next,
+            "info" => 'Viewing ' . ($firstonpage + 1) . ' through ' . $amountshown . ' out of ' . $total,
+        ]);
+
+        return $pagination . '
             <div style="display: flex-direction: column-reverse;">
                 ' . $returnme . '
             </div>';

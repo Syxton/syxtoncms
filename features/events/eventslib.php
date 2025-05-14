@@ -141,8 +141,10 @@ global $CFG;
         "validate" => "true",
         "width" => "600",
         "height" => "650",
-        "icon" => icon("clipboard-user", 1, "", "green"),
-        "styles" => "font-size: 1.3em;font-weight: bold;",
+        "icon" => icon([
+            ["icon" => "clipboard-user", "color" => "green"],
+        ]),
+        "styles" => "font-size: 1.3em;font-weight: bold;padding: 5px;",
         "confirmexit" => "true",
     ];
     $returnme .= '<div class="staff_application_link">' . make_modal_links($p) . '</div>';
@@ -158,11 +160,11 @@ global $CFG;
         "path" => action_path("events") . "event_request_form&featureid=$featureid",
         "validate" => "true",
         "width" => "600",
+        "button" => true,
         "height" => "650",
-        "styles" => "font-size: 1.3em;font-weight: bold;display: inline-flex;align-items: center;",
+        "styles" => "font-size: 1.3em;font-weight: bold;background-color: #4444af;color: white;padding: 5px;",
         "icon" => icon([
-            ["icon" => "circle", "stacksize" => 2, "color" => "navy"],
-            ["icon" => "bell-concierge", "color" => "yellow", "style" => "font-size: .5em;width: 100%;text-align: center;"],
+            ["icon" => "bell-concierge", "color" => "yellow"],
         ]),
     ];
     return '<div class="request_event_link">' . make_modal_links($p) . '</div>';
