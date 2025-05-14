@@ -224,7 +224,7 @@ make_search_box_template||
     <div id="loading_overlay||name_addition{{_||name_addition||//OR//}}name_addition||" class="loading_overlay dontprint" style="display: none;">
         ||echo icon("spinner fa-spin-pulse");::none||
     </div>
-    <span id="searchcontainer||name_addition{{_||name_addition||//OR//}}name_addition||">||contents||</span>
+    <span style="min-height: 300px;" id="searchcontainer||name_addition{{_||name_addition||//OR//}}name_addition||">||contents||</span>
 ||make_search_box_template
 
 format_popup_template||

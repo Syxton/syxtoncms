@@ -571,12 +571,18 @@ label.valid {
     text-align: center
 }
 
+#loading_overlay svg.fa-spinner,
+.loading_overlay svg.fa-spinner {
+    width: 30%;
+    max-width: 200px;
+    height: 80% !important;
+}
+
 #loading_overlay, .loading_overlay {
     display: flex;
     justify-content: center;
     align-items: center;
     box-sizing: border-box;
-    font-size: 50vh;
     text-align: center;
     position: absolute;
     width: 100%;
@@ -2810,9 +2816,8 @@ input[type=image] {
     animation: spinner 2s linear infinite;
     font-size: 10em;
     position: absolute;
-    left: calc(50% - .5em);
-    top: calc(50% - .5em);
-    color: #00000050;
+    left: calc(50vw - .5em);
+    top: calc(50vh - .5em);
 }
 
 #cboxTitle {

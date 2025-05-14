@@ -121,7 +121,7 @@ new_link_form_template||
         </tr>
         <tr>
             <td colspan="2">
-            <span id="searchcontainer_linkpagesearch"></span>
+            <span style="min-height: 300px;" id="searchcontainer_linkpagesearch"></span>
             </td>
         </tr>
     </table>
