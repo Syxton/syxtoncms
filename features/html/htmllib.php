@@ -549,12 +549,11 @@ function get_info_from_commentid($commentid) {
 function get_html_comments($htmlid, $pageid, $hidebuttons = false, $perpage = false, $pagenum = false, $hide = true) {
 global $CFG, $USER;
     $returnme = $commenttext = $prev = $info = $next = $header = $pagenav = $limit = "";
-error_log("Pagenum Original: $pagenum");
+
     $original = $pagenum ? false : true;
     $total = get_db_count("SELECT * FROM html_comments WHERE htmlid = ||htmlid||", ["htmlid" => $htmlid]);
     $perpage = $perpage ?: 0;
     $pagenum = $pagenum !== false ? $pagenum : floor($total / $perpage);
-error_log("Pagenum: " . $pagenum);
 
     $comments = gather_comments($htmlid, $pagenum, $perpage);
     if ($perpage) {
