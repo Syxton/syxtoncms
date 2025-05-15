@@ -45,25 +45,49 @@ function admin_email_test_form() {
     ]);
 
     return '
-        <strong>Send Test Email</strong>
+        <h1 class="centered">Send Test Email</h1>
         <br /><br />
-        Email Address: <input type="text" id="email" />
-        <input id="emailtester" type="button" value="Send Test" />';
+        <div class="centered">
+            <label for="email">Send to Email</label>
+            <input type="text" id="email" />
+            <input id="emailtester" type="button" value="Send Test" />
+        </div>';
 }
 
 function get_phpinfo() {
 global $CFG;
     $params = [
-        "id" => "phpinfo",
-        "src" => $CFG->wwwroot . "/features/adminpanel/adminpanel_ajax.php?action=phpinfo",
+        "id" => "iframe_phpinfo",
+        "src" => $CFG->wwwroot . "/features/adminpanel/adminpanel_ajax.php?action=showphpinfo",
     ];
     ajax_return(fill_template("tmp/main.template", "admin_iframe", "adminpanel", $params));
+}
+
+function showphpinfo() {
+    ob_start();
+
+    phpinfo();
+
+    $phpinfo = ob_get_contents();
+
+    ob_end_clean();
+
+    echo '
+    <style>
+        .phpinfo table {
+            width: 100% !important;
+        }
+    </style>
+    <div class="phpinfo" style="overflow: hidden;">
+        <h1 class="centered">PHP Info</h1>
+        ' . $phpinfo . '
+    </div>';
 }
 
 function camper_list() {
 global $CFG;
     $params = [
-        "id" => "camperlist",
+        "id" => "iframe_camperlist",
         "src" => $CFG->wwwroot . "/features/adminpanel/camper_list.php",
     ];
     ajax_return(fill_template("tmp/main.template", "admin_iframe", "adminpanel", $params));
@@ -73,7 +97,7 @@ global $CFG;
 function unit_tests() {
 global $CFG;
     $params = [
-        "id" => "unit_tests",
+        "id" => "iframe_unit_tests",
         "src" => $CFG->wwwroot . "/features/adminpanel/tests/unit_tests.php",
     ];
     ajax_return(fill_template("tmp/main.template", "admin_iframe", "adminpanel", $params));

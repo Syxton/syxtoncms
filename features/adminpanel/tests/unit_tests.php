@@ -60,6 +60,8 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
     }
 
     echo '
+        <h1 class="centered">Unit Tests</h1>
+        <br />
         <ul class="unit_test_menu">';
 
     ///////////////////////////////////////////// Variable TESTS /////////////////////////////////////////////

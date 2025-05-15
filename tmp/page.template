@@ -311,9 +311,11 @@ start_of_page_template||
                 ||*head||
             </head>
             <body style="box-sizing: border-box;padding: 10px;">
+                <div>
 ||start_of_page_template
 
 end_of_page_template||
+            </div>
         </body>
     </html>
 ||end_of_page_template

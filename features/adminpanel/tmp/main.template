@@ -216,7 +216,7 @@ site_administration||
                 </li>
             </ul>
         </div>
-        <div id="display" style="width: 100%;height: 100%;padding: 0 10px;box-sizing: border-box;">
+        <div id="display" style="width: 100%;height: 100%;padding: 10px;box-sizing: border-box;">
             <div style="font-size:.8em;width:98%;padding:10px;text-align:center;">
                 <h2>Site Administration Area</h2>
                 All administration features are displayed in this area.  Click the links to the left to display the various administration features.
@@ -231,7 +231,7 @@ site_administration||
 ||site_administration
 
 admin_iframe||
-    <iframe id="||id||" onload="resizeCaller(this.id);" style="width:100%;height: 99vh;border:none;padding: 15px;" src="||src||"></iframe>
+    <iframe id="||id||" onload="resizeCaller(this.id);" style="width:100%;border:none;padding: 15px;" src="||src||"></iframe>
 ||admin_iframe
 
 admin_versions||
@@ -265,33 +265,35 @@ members_search_row||
             <div style="font-size: .9em;color:#999">||user["email"]||</div>
         </td>
         <td>
-            <div class="iconfield">
-                <span id="loginas_||user["userid"]||">
+            <div class="dynamic-dropdown">
+                <div class="iconfield dynamic-dropdown-content">
                     ||loginas{{
-                        <button class="alike" title="Log in as ||fullname||" onclick=loginas(||user["userid"]||)>
-                            ||echo icon("user-secret", 2);::none||
-                        </button>
+                        <span id="loginas_||user["userid"]||">
+                            <button class="alike" title="Log in as ||fullname||" onclick=loginas(||user["userid"]||)>
+                                ||echo icon("user-secret", 2);::none||
+                            </button>
+                        </span>
                     }}loginas||
-                </span>
-                <span>
-                    <button class="alike" title="View ||fullname|| Logs" onclick="view_logfile(||user["userid"]||);">
-                        ||echo icon("chart-simple", 2, "", "green");::none||
-                    </button>
-                </span>
-                <span id="reset_password_||user["userid"]||">
-                    ||notadmin{{
-                        <button class="alike" title="Reset ||fullname|| Password" onclick="members_reset_password(||user["userid"]||);">
-                            ||echo icon("retweet", 2, "", "orange");::none||
+                    <span>
+                        <button class="alike" title="View ||fullname|| Logs" onclick="view_logfile(||user["userid"]||);">
+                            ||echo icon("chart-simple", 2, "", "green");::none||
                         </button>
+                    </span>
+                    ||notadmin{{
+                        <span id="reset_password_||user["userid"]||">
+                            <button class="alike" title="Reset ||fullname|| Password" onclick="members_reset_password(||user["userid"]||);">
+                                ||echo icon("retweet", 2, "", "orange");::none||
+                            </button>
+                        </span>
                     }}notadmin||
-                </span>
-                <span>
-                ||hasip{{
-                    <button class="alike" title="IP Location" onclick="members_get_geodata('||user["ip"]||', 'display');">
-                        ||echo icon("compass", 2);::none||
-                    </button>
-                }}hasip||
-                </span>
+                    ||hasip{{
+                        <span>
+                            <button class="alike" title="IP Location" onclick="members_get_geodata('||user["ip"]||', 'display');">
+                                ||echo icon("compass", 2);::none||
+                            </button>
+                        </span>
+                    }}hasip||
+                </div>
             </div>
         </td>
         <td style="text-align:center;padding: 0 10px;">
@@ -351,3 +353,53 @@ members_search_table||
         }}results||
     </table>
 ||members_search_table
+
+camper_list||
+    <h1 class="centered">Camper Lists</h1>
+    <br />
+    This download contains a list of names, ages, and addresses of all campers from previous seasons and for
+    campers 13+ years old as of June 1st of the current year (or today if past June 1st).
+    <br /><br />
+    <div class="centered">
+        <label for="year">Year: </label>
+        <select id="year">
+            <option value="0">All</option>
+            <option value="||echo date("Y", strtotime("-2 year"));::none||">
+                ||echo date("Y", strtotime("-2 year"));::none||
+            </option>
+            <option value="||echo date("Y", strtotime("-1 year"));::none||">
+                ||echo date("Y", strtotime("-1 year"));::none||
+            </option>
+            <option value="||echo date("Y");::none||">
+                ||echo date("Y");::none||
+            </option>
+        </select>
+    </div>
+    <br />
+    <div class="centered">
+        <label for="remdup">Remove Duplicates: </label>
+        <select id="remdup">
+            <option value="0">No</option>
+            <option value="true">Yes</option>
+        </select>
+    </div>
+    <br />
+    <div class="centered" style="display: flex;flex-direction: column;">
+        <button id="all_campers_list">
+            All Ages
+        </button>
+        <br />
+        <button id="all_over_19_list">
+            Age 19+
+        </button>
+        <br />
+        <button id="all_under_19_list">
+            Age 19 and under
+        </button>
+        <br />
+        <button id="all_13_19_list">
+            Ages 13-19
+        </button>
+    </div>
+    <div id="downloadfile" style="display: none"></div>
+||camper_list
