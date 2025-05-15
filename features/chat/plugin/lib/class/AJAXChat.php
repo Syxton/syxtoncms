@@ -2866,10 +2866,10 @@ class AJAXChat {
 	function ipToStorageFormat($ip) {
 		if (function_exists('inet_pton')) {
 			// ipv4 & ipv6:
-			return @inet_pton($ip);
+			return (int) @inet_pton($ip);
 		}
 		// Only ipv4:
-		return @pack('N',@ip2long($ip));
+		return (int) @pack('N',@ip2long($ip));
 	}
 
 	function ipFromStorageFormat($ip) {
