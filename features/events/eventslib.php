@@ -2016,7 +2016,7 @@ global $USER, $CFG, $MYVARS;
             </div><br />
               <form name="staffapplication_form" id="staffapplication_form">
                 ' . (empty($v["staffid"]) ? '' : '<input type="hidden" id="staffid" name="staffid" value="' . $v["staffid"] . '" />') . '
-                  <fieldset class="formContainer" ' . ($viewonly ? '' : 'style="width: 420px;margin-left: auto;margin-right: auto;"') . '>
+                  <fieldset class="formContainer" ' . ($viewonly ? '' : 'style="max-width: 420px;margin-left: auto;margin-right: auto;"') . '>
                     <div class="rowContainer">
                           <label class="rowTitle" for="name">Name</label>
                         <input disabled="disabled" type="text" id="name" name="name" value="' . $v["name"] . '"

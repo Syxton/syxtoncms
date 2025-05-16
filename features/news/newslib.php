@@ -252,12 +252,13 @@ global $CFG;
 
         // Create article button.
         $showarticle = make_modal_links([
-            "title" => "Get News",
             "text" => "Get News",
             "id" => "fetch_" . $featureid . "_button",
             "button" => true,
             "path" => action_path("news") . "viewnews&newsonly=1&pageid=$pageid&newsid=' + $('#news_" . $featureid . "_archive_news').val() + '&featureid=$featureid",
             "icon" => icon("newspaper"),
+            "width" => "98%",
+            "height" => "95%",
         ]);
 
         $params = [

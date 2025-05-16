@@ -75,7 +75,14 @@ function showphpinfo() {
     echo '
     <style>
         .phpinfo table {
+            table-layout: fixed;
             width: 100% !important;
+        }
+
+        .phpinfo table td,
+        .phpinfo table th {
+            width: auto;
+            word-wrap: break-word;
         }
     </style>
     <div class="phpinfo" style="overflow: hidden;">

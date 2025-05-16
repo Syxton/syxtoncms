@@ -533,7 +533,7 @@ global $CFG;
     $params["initialvalue"] ??= "";
     $params["name"] ??= "editor1";
     $params["vars"]["charlimit"] = $params["charlimit"] ?? 0;
-    $params["vars"]["height"] = $params["height"] ?? "calc(100vh - 70px)";
+    $params["vars"]["height"] = $params["height"] ?? "calc(100dvh - 70px)";
     $params["vars"]["width"] = $params["width"] ?? "100%";
     $params["vars"]["type"] = $params["type"] ?? "HTML";
     $params["vars"]["plugins"] = get_editor_plugins($params["vars"]["type"]);

@@ -310,8 +310,8 @@ start_of_page_template||
                 ||echo get_css_set("main");::none||
                 ||*head||
             </head>
-            <body style="box-sizing: border-box;padding: 10px;">
-                <div>
+            <body>
+                <div style="box-sizing: border-box;padding: 10px;">
 ||start_of_page_template
 
 end_of_page_template||
