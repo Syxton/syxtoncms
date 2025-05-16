@@ -444,28 +444,16 @@ function delete_group() {
         start_db_transaction();
         if ($pageid && $groupid) {
             $params = ["groupid" => $groupid, "pageid" => $pageid];
-            $SQL = "DELETE
-                    FROM `groups`
-                    WHERE groupid = ||groupid||
-                    AND pageid = ||pageid||";
+            $SQL = fetch_template("dbsql/roles.sql", "delete_group", false,  $params);
             execute_db_sql($SQL, $params);
 
-            $SQL = "DELETE
-                    FROM groups_users
-                    WHERE groupid = ||groupid||
-                    AND pageid = ||pageid||";
+            $SQL = fetch_template("dbsql/roles.sql", "delete_group_users", false,  $params);
             execute_db_sql($SQL, $params);
 
-            $SQL = "DELETE
-                    FROM roles_ability_perfeature_pergroup
-                    WHERE groupid = ||groupid||
-                    AND pageid = ||pageid||";
+            $SQL = fetch_template("dbsql/roles.sql", "remove_group_roles_ability_perfeature_pergroup", false,  $params);
             execute_db_sql($SQL, $params);
 
-            $SQL = "DELETE
-                    FROM roles_ability_pergroup
-                    WHERE groupid = ||groupid||
-                    AND pageid = ||pageid||";
+            $SQL = fetch_template("dbsql/roles.sql", "remove_group_roles_ability_pergroup", false,  $params);
             execute_db_sql($SQL, $params);
         }
         commit_db_transaction();
@@ -652,16 +640,16 @@ global $CFG, $MYVARS;
         $i = 0;
         while (isset($abilities[$i])) {
             $ability = $abilities[$i];
-            $setting = clean_myvar_opt($ability, "int", 0) == 1 ? 1 : 0;
+            $allow = clean_myvar_opt($ability, "int", 0) == 1 ? 1 : 0;
 
             // Create the paramaters for the SQL queries
             $params = [
-                    "ability" => $ability,
-                    "pageid" => $pageid,
-                    "roleid" => $roleid,
-                    "setting" => $setting,
-                    "feature" => $feature,
-                    "featureid" => $featureid,
+                "ability" => $ability,
+                "pageid" => $pageid,
+                "roleid" => $roleid,
+                "allow" => $allow,
+                "feature" => $feature,
+                "featureid" => $featureid,
             ];
 
             // If this is a site-wide ability
@@ -671,7 +659,7 @@ global $CFG, $MYVARS;
                 $params["section"] = get_db_field("section", "abilities", "ability = '$ability'");
 
                 // If there is a default, check if the default should be changed
-                if ($default !== false && $default !== $setting) {
+                if ($default !== false && $default !== $allow) {
                     // If the default is being changed, remove the old default
                     execute_db_sql(fetch_template("dbsql/roles.sql", "remove_role_override"), $params) ? true : false;
                 }
@@ -686,24 +674,24 @@ global $CFG, $MYVARS;
                     $alreadyset = get_db_count(fetch_template("dbsql/roles.sql", "get_page_role_feature_override"), $params);
 
                     if ($alreadyset) { // If there is an override, check if it should be changed
-                        if ($setting == $default) { // If the override should be removed
+                        if ($allow == $default) { // If the override should be removed
                             execute_db_sql(fetch_template("dbsql/roles.sql", "remove_page_role_feature_override"), $params) ? true : false;
                         } else { // If the override should be changed
                             execute_db_sql(fetch_template("dbsql/roles.sql", "update_page_role_feature_override"), $params) ? true : false;
                         }
-                    } elseif ($setting != $default && !$alreadyset) { // If the override should be added
+                    } elseif ($allow != $default && !$alreadyset) { // If the override should be added
                         execute_db_sql(fetch_template("dbsql/roles.sql", "insert_page_role_feature_override"), $params) ? true : false;
                     }
                 } else { // If this is a page-specific ability
                     $alreadyset = get_db_count(fetch_template("dbsql/roles.sql", "get_page_role_override"), $params);
 
                     if ($alreadyset) { // If there is an override, check if it should be changed
-                        if ($setting == $default) { // If the override should be removed
+                        if ($allow == $default) { // If the override should be removed
                             execute_db_sql(fetch_template("dbsql/roles.sql", "remove_page_role_override"), $params) ? true : false;
                         } else { // If the override should be changed
                             execute_db_sql(fetch_template("dbsql/roles.sql", "update_page_role_override"), $params) ? true : false;
                         }
-                    } elseif ($setting != $default && !$alreadyset) { // If the override should be added
+                    } elseif ($allow != $default && !$alreadyset) { // If the override should be added
                         execute_db_sql(fetch_template("dbsql/roles.sql", "insert_page_role_override"), $params) ? true : false;
                     }
                 }
@@ -725,93 +713,60 @@ global $CFG, $MYVARS;
 }
 
 function save_user_ability_changes() {
-global $CFG, $MYVARS;
     $abilities = explode("**", clean_myvar_opt("per_user_rightslist", "string", ""));
     $pageid = clean_myvar_opt("pageid", "int", get_pageid()); //Should always be passed
     $userid = clean_myvar_opt("userid", "int", false); //Should always be passed
     $featureid = clean_myvar_opt("featureid", "int", false); //Only passed on feature specific managing
     $feature = clean_myvar_opt("feature", "string", false); //Only passed on feature specific managing
 
-  $i = 0;
+    $i = 0;
     while (isset($abilities[$i])) {
         $ability = $abilities[$i];
-        $setting = clean_myvar_opt($ability, "int", 0) == 1 ? 1 : 0;
+        $allow = clean_myvar_opt($ability, "int", 0) == 1 ? 1 : 0;
         $roleid = user_role($userid, $pageid);
 
-     //$default = $featureid ? (user_is_able($userid, $ability, $pageid, $feature, $featureid) ? "1" : "0") : (user_is_able($roleid, $ability, $pageid, $feature) ? "1" : "0");
-     //figure out the default
-     if ($featureid) { // feature specific ability change
-        $default = user_is_able($userid, $ability, $pageid, $feature, $featureid) ? 1 : 0;
-     } else { // page specific ability change
-        $default = user_is_able($userid, $ability, $pageid) ? 1 : 0;
-     }
+        $params = [
+            "userid" => $userid,
+            "pageid" => $pageid,
+            "ability" => $ability,
+            "allow" => $allow,
+            "feature" => $feature,
+            "featureid" => $featureid,
+        ];
+
+        // figure out the default
+        if ($featureid) { // feature specific ability change
+            $default = user_is_able($userid, $ability, $pageid, $feature, $featureid) ? 1 : 0;
+        } else { // page specific ability change
+            $default = user_is_able($userid, $ability, $pageid) ? 1 : 0;
+        }
 
         if ($feature && $featureid) {
-        $SQL = "SELECT *
-                     FROM roles_ability_perfeature_peruser
-                    WHERE userid = '$userid'
-                      AND pageid = '$pageid'
-                      AND feature = '$feature'
-                      AND featureid = '$featureid'
-                      AND ability = '$ability'";
-        $alreadyset = get_db_count($SQL);
-     } else {
-        $SQL = "SELECT *
-                     FROM roles_ability_peruser
-                    WHERE userid = '$userid'
-                      AND pageid = '$pageid'
-                      AND ability = '$ability'";
-        $alreadyset = get_db_count($SQL);
+            $alreadyset = get_db_count(fetch_template("dbsql/roles.sql", "get_page_feature_user_override"), $params);
+        } else {
+            $alreadyset = get_db_count(fetch_template("dbsql/roles.sql", "get_page_user_override"), $params);
         }
 
         if ($alreadyset) {
-            if ($alreadyset && $setting == $default) {
-          if ($feature && $featureid) {
-             $SQL = "DELETE
-                          FROM roles_ability_perfeature_peruser
-                         WHERE pageid = '$pageid'
-                            AND userid = '$userid'
-                            AND feature = '$feature'
-                            AND featureid = '$featureid'
-                            AND ability = '$ability'";
-             execute_db_sql($SQL);
-          } else {
-             $SQL = "DELETE
-                          FROM roles_ability_peruser
-                         WHERE pageid = '$pageid'
-                            AND userid = '$userid'
-                            AND ability = '$ability'";
-             execute_db_sql($SQL);
-          }
-        } else {
-          if ($feature && $featureid) {
-             $SQL = "UPDATE roles_ability_perfeature_peruser
-                            SET allow = '$setting'
-                         WHERE userid = '$userid'
-                            AND pageid = '$pageid'
-                            AND feature = '$feature'
-                            AND featureid = '$featureid'
-                            AND ability = '$ability'";
-             execute_db_sql($SQL);
-          } else {
-             $SQL = "UPDATE roles_ability_peruser
-                            SET allow = '$setting'
-                         WHERE userid = '$userid'
-                            AND pageid = '$pageid'
-                            AND ability = '$ability'";
-             execute_db_sql($SQL);
-          }
-        }
-        } elseif ($setting != $default && !$alreadyset) {
-        if ($feature && $featureid) {
-          $SQL = "INSERT INTO roles_ability_perfeature_peruser (userid, pageid, feature, featureid, ability, allow)
-                            VALUES('$userid', '$pageid', '$feature', '$featureid', '$ability', '$setting')";
-          execute_db_sql($SQL);
-        } else {
-          $SQL = "INSERT INTO roles_ability_peruser (userid, pageid, ability, allow)
-                            VALUES ('$userid', '$pageid', '$ability', '$setting')";
-          execute_db_sql($SQL);
-          }
+            if ($allow == $default) {
+                if ($feature && $featureid) {
+                    execute_db_sql(fetch_template("dbsql/roles.sql", "remove_roles_ability_perfeature_peruser_override"), $params);
+                } else {
+                    execute_db_sql(fetch_template("dbsql/roles.sql", "remove_roles_ability_peruser_override"), $params);
+                }
+            } else {
+                if ($feature && $featureid) {
+                    execute_db_sql(fetch_template("dbsql/roles.sql", "update_roles_ability_perfeature_peruser_override"), $params);
+                } else {
+                    execute_db_sql(fetch_template("dbsql/roles.sql", "update_roles_ability_peruser_override"), $params);
+                }
+            }
+        } elseif ($allow != $default && !$alreadyset) {
+            if ($feature && $featureid) {
+                execute_db_sql(fetch_template("dbsql/roles.sql", "insert_roles_ability_perfeature_peruser_override"), $params);
+            } else {
+                execute_db_sql(fetch_template("dbsql/roles.sql", "insert_roles_ability_peruser_override"), $params);
+            }
         }
         $i++;
     }

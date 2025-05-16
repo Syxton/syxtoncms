@@ -15,13 +15,12 @@ if (!defined('RSSLIB')) { include_once($CFG->dirroot . '/lib/rsslib.php'); }
 callfunction();
 
 function edit_name() {
-global $MYVARS;
 	$rssname = clean_myvar_req("rssname", "string");
 	$rssid = clean_myvar_req("rssid", "int", false);
 
 	$return = $error = "";
 	try {
-		$SQL = "UPDATE rss SET rssname = ||rssname|| WHERE rssid = ||rssid||";
+		$SQL = fetch_template("dbsql/rss.sql", "update_rss_name");
 		if (!execute_db_sql($SQL, ["rssname" => $rssname, "rssid" => $rssid])) {
 			throw new \Exception("Failed to update rss record.");
 		}
@@ -45,12 +44,12 @@ global $CFG, $USER;
 	try {
 		start_db_transaction();
 
-		$SQL = "INSERT INTO rss (userid, rssname) VALUES (||userid||, ||rssname||)";
+		$SQL = fetch_template("dbsql/rss.sql", "create_rss");
 		if (!$rssid = execute_db_sql($SQL, ["userid" => $USER->userid, "rssname" => $rssname])) {
 			throw new \Exception("Failed to create new rss user record.");
 		}
 
-		$SQL = "INSERT INTO rss_feeds (rssid, type, featureid, pageid) VALUES (||rssid||, ||type||, ||featureid||, ||pageid||)";
+		$SQL = fetch_template("dbsql/rss.sql", "create_feed");
 		if (!execute_db_sql($SQL, ["rssid" => $rssid, "type" => $type, "featureid" => $featureid, "pageid" => $pageid])) {
 			throw new \Exception("Failed to create new rss feed.");
 		}

@@ -1,6 +1,6 @@
 is_siteadmin||
     SELECT *
-    FROM roles_assignment
+    FROM `roles_assignment`
     WHERE roleid = ||adminroleid||
     AND userid = ||userid||
     AND pageid = ||siteid||
@@ -9,71 +9,72 @@ is_siteadmin||
 
 get_roles||
     SELECT *
-    FROM roles
+    FROM `roles`
     ORDER BY roleid
 ||get_roles
 
 get_ability||
     SELECT ability
-    FROM abilities
+    FROM `abilities`
     WHERE section = ||section||
     AND ability = ||ability||
 ||get_ability
 
 get_page_role_requests||
     SELECT *
-    FROM roles_assignment
+    FROM `roles_assignment`
     WHERE pageid = ||pageid||
     AND confirm = 1
 ||get_page_role_requests
 
 get_user_role_requests||
     SELECT *
-    FROM roles_assignment
+    FROM `roles_assignment`
     WHERE userid = ||userid||
     AND confirm = 2
 ||get_user_role_requests
 
 get_lower_roles||
     SELECT *
-    FROM roles
+    FROM `roles`
     WHERE roleid > ||roleid||
     ORDER BY roleid
 ||get_lower_roles
 
 confirm_role_assignment||
-    UPDATE roles_assignment
+    UPDATE `roles_assignment`
     SET confirm = 0
     WHERE assignmentid = ||assignmentid||
 ||confirm_role_assignment
 
 remove_role_assignment||
-    DELETE
-    FROM roles_assignment
+    DELETE FROM `roles_assignment`
     WHERE assignmentid = ||assignmentid||
 ||remove_role_assignment
 
 remove_page_role_assignments||
-    DELETE
-    FROM roles_assignment
+    DELETE FROM `roles_assignment`
     WHERE pageid = ||pageid||
 ||remove_page_role_assignments
 
 remove_page_roles_ability_perfeature||
-    DELETE
-    FROM roles_ability_perfeature
+    DELETE FROM `roles_ability_perfeature`
     WHERE pageid = ||pageid||
 ||remove_page_roles_ability_perfeature
 
+remove_group_roles_ability_perfeature_pergroup||
+    DELETE FROM `roles_ability_perfeature_pergroup`
+    WHERE pageid = ||pageid||
+    AND groupid = ||groupid||
+||remove_group_roles_ability_perfeature_pergroup
+
 remove_page_roles_ability_perfeature_pergroup||
-    DELETE
-    FROM roles_ability_perfeature_pergroup
+    DELETE FROM `roles_ability_perfeature_pergroup`
     WHERE pageid = ||pageid||
 ||remove_page_roles_ability_perfeature_pergroup
 
 remove_roles_ability_perfeature_pergroup_override||
-    DELETE
-    FROM roles_ability_perfeature_pergroup
+    DELETE FROM `roles_ability_perfeature_pergroup`
     WHERE pageid = ||pageid||
     AND groupid = ||groupid||
     AND feature = ||feature||
@@ -82,70 +83,105 @@ remove_roles_ability_perfeature_pergroup_override||
 ||remove_roles_ability_perfeature_pergroup_override
 
 remove_page_roles_ability_perfeature_peruser||
-    DELETE
-    FROM roles_ability_perfeature_peruser
+    DELETE FROM `roles_ability_perfeature_peruser`
     WHERE pageid = ||pageid||
 ||remove_page_roles_ability_perfeature_peruser
 
+remove_roles_ability_perfeature_peruser_override||
+    DELETE FROM `roles_ability_perfeature_peruser`
+    WHERE pageid = ||pageid||
+    AND userid = ||userid||
+    AND feature = ||feature||
+    AND featureid = ||featureid||
+    AND ability = ||ability||
+||remove_roles_ability_perfeature_peruser_override
+
+update_roles_ability_perfeature_peruser_override||
+    UPDATE `roles_ability_perfeature_peruser`
+    SET allow = ||allow||
+    WHERE pageid = ||pageid||
+    AND userid = ||userid||
+    AND feature = ||feature||
+    AND featureid = ||featureid||
+    AND ability = ||ability||
+||update_roles_ability_perfeature_peruser_override
+
+remove_group_roles_ability_pergroup||
+    DELETE FROM `roles_ability_pergroup`
+    WHERE pageid = ||pageid||
+    AND groupid = ||groupid||
+||remove_group_roles_ability_pergroup
+
 remove_page_roles_ability_pergroup||
-    DELETE
-    FROM roles_ability_pergroup
+    DELETE FROM `roles_ability_pergroup`
     WHERE pageid = ||pageid||
 ||remove_page_roles_ability_pergroup
 
 remove_roles_ability_pergroup_override||
-    DELETE
-    FROM roles_ability_pergroup
+    DELETE FROM `roles_ability_pergroup`
     WHERE pageid = ||pageid||
     AND groupid = ||groupid||
     AND ability = ||ability||
 ||remove_roles_ability_pergroup_override
 
 remove_page_roles_ability_perpage||
-    DELETE
-    FROM roles_ability_perpage
+    DELETE FROM `roles_ability_perpage`
     WHERE pageid = ||pageid||
 ||remove_page_roles_ability_perpage
 
+insert_roles_ability_peruser_override||
+    INSERT INTO `roles_ability_peruser` (pageid, userid, ability, allow)
+    VALUES (||pageid||, ||userid||, ||ability||, ||allow||)
+||insert_roles_ability_peruser_override
+
 remove_page_roles_ability_peruser||
-    DELETE
-    FROM roles_ability_peruser
+    DELETE FROM `roles_ability_peruser`
     WHERE pageid = ||pageid||;
 ||remove_page_roles_ability_peruser
 
+remove_roles_ability_peruser_override||
+    DELETE FROM `roles_ability_peruser`
+    WHERE pageid = ||pageid||
+    AND userid = ||userid||
+    AND ability = ||ability||
+||remove_roles_ability_peruser_override
+
+update_roles_ability_peruser_override||
+    UPDATE `roles_ability_peruser`
+    SET allow = ||allow||
+    WHERE pageid = ||pageid||
+    AND userid = ||userid||
+    AND ability = ||ability||
+||update_roles_ability_peruser_override
+
 remove_user_roles_assignment||
-    DELETE
-    FROM roles_assignment
+    DELETE FROM `roles_assignment`
     WHERE userid = ||userid||
 ||remove_user_roles_assignment
 
 remove_user_roles_ability_peruser||
-    DELETE
-    FROM roles_ability_peruser
+    DELETE FROM `roles_ability_peruser`
     WHERE userid = ||userid||
 ||remove_user_roles_ability_peruser
 
 remove_user_roles_ability_perfeature_peruser||
-    DELETE
-    FROM roles_ability_perfeature_peruser
+    DELETE FROM `roles_ability_perfeature_peruser`
     WHERE userid = ||userid||
 ||remove_user_roles_ability_perfeature_peruser
 
 remove_user_role_assignment||
-    DELETE
-    FROM roles_assignment
+    DELETE FROM `roles_assignment`
     WHERE pageid = ||pageid||
     AND userid = ||userid||
 ||remove_user_role_assignment
 
 insert_role_assignment||
-    INSERT INTO roles_assignment (userid, roleid, pageid, confirm)
+    INSERT INTO `roles_assignment` (userid, roleid, pageid, confirm)
     VALUES (||userid||, ||roleid||, ||pageid||, ||confirm||)
 ||insert_role_assignment
 
 remove_role_assignment_request||
-    DELETE
-    FROM roles_assignment
+    DELETE FROM `roles_assignment`
     WHERE pageid = ||pageid||
     AND userid = ||userid||
     AND confirm = ||confirm||
@@ -153,26 +189,25 @@ remove_role_assignment_request||
 
 get_role_assignment||
     SELECT *
-    FROM roles_assignment
+    FROM `roles_assignment`
     WHERE pageid = ||pageid||
     AND userid = ||userid||
     AND confirm = ||confirm||
 ||get_role_assignment
 
 insert_abilities||
-    INSERT INTO abilities (section, section_display, ability, ability_display, power)
-    VALUES(||section||, ||section_display||, ||ability||, ||ability_display||, ||power||)
+    INSERT INTO `abilities` (section, section_display, ability, ability_display, power)
+    VALUES (||section||, ||section_display||, ||ability||, ||ability_display||, ||power||)
 ||insert_abilities
 
 insert_roles_ability||
-    INSERT INTO roles_ability (roleid, ability, allow, section)
-    VALUES
-    (1, ||ability||, 1, ||section||),
-    (2, ||ability||, ||creator||, ||section||),
-    (3, ||ability||, ||editor||, ||section||),
-    (4, ||ability||, ||guest||, ||section||),
-    (5, ||ability||, ||visitor||, ||section||),
-    (6, ||ability||, 0, ||section||)
+    INSERT INTO `roles_ability` (roleid, ability, allow, section)
+    VALUES  (1, ||ability||, 1, ||section||),
+            (2, ||ability||, ||creator||, ||section||),
+            (3, ||ability||, ||editor||, ||section||),
+            (4, ||ability||, ||guest||, ||section||),
+            (5, ||ability||, ||visitor||, ||section||),
+            (6, ||ability||, 0, ||section||)
 ||insert_roles_ability
 
 
@@ -193,11 +228,11 @@ insert_roles_ability||
 //							Role specific per SITE LEVEL permissions
 user_has_ability_in_page||
     SELECT 1 as allowed
-    FROM roles_ability ra
+    FROM `roles_ability` ra
     WHERE (
         1 IN (
             SELECT allow
-            FROM roles_ability_perfeature_peruser
+            FROM `roles_ability_perfeature_peruser`
             WHERE pageid = ||pageid||
             AND userid = ||userid||
             AND ability = ||ability||
@@ -208,7 +243,7 @@ user_has_ability_in_page||
         OR (
             1 IN (
                 SELECT allow
-                FROM roles_ability_peruser
+                FROM `roles_ability_peruser`
                 WHERE pageid = ||pageid||
                 AND userid = ||userid||
                 AND ability = ||ability||
@@ -219,7 +254,7 @@ user_has_ability_in_page||
             (
                 1 IN (
                     SELECT allow
-                    FROM roles_ability_perfeature
+                    FROM `roles_ability_perfeature`
                     WHERE pageid = ||pageid||
                     AND roleid = ||roleid||
                     AND ability = ||ability||
@@ -230,7 +265,7 @@ user_has_ability_in_page||
                 OR (
                     1 IN (
                         SELECT allow
-                        FROM roles_ability_perpage
+                        FROM `roles_ability_perpage`
                         WHERE pageid = ||pageid||
                         AND roleid = ||roleid||
                         AND ability = ||ability||
@@ -239,7 +274,7 @@ user_has_ability_in_page||
                     OR
                     1 IN (
                         SELECT allow
-                        FROM roles_ability
+                        FROM `roles_ability`
                         WHERE roleid = ||roleid||
                         AND ability = ||ability||
                         AND allow = 1
@@ -247,7 +282,7 @@ user_has_ability_in_page||
                     AND
                     0 NOT IN (
                         SELECT allow
-                        FROM roles_ability_perpage
+                        FROM `roles_ability_perpage`
                         WHERE pageid = ||pageid||
                         AND roleid = ||roleid||
                         AND ability = ||ability||
@@ -257,7 +292,7 @@ user_has_ability_in_page||
                 AND
                 0 NOT IN (
                     SELECT allow
-                    FROM roles_ability_perfeature
+                    FROM `roles_ability_perfeature`
                     WHERE pageid = ||pageid||
                     AND roleid = ||roleid||
                     AND ability = ||ability||
@@ -269,7 +304,7 @@ user_has_ability_in_page||
             )
             AND 0 NOT IN (
                 SELECT allow
-                FROM roles_ability_peruser
+                FROM `roles_ability_peruser`
                 WHERE pageid = ||pageid||
                 AND userid = ||userid||
                 AND ability = ||ability||
@@ -278,7 +313,7 @@ user_has_ability_in_page||
         )
         AND 0 NOT IN (
             SELECT allow
-            FROM roles_ability_perfeature_peruser
+            FROM `roles_ability_perfeature_peruser`
             WHERE pageid = ||pageid||
             AND userid = ||userid||
             AND ability = ||ability||
@@ -721,6 +756,12 @@ get_group||
      WHERE groupid = ||groupid||
 ||get_group
 
+delete_group||
+    DELETE FROM `groups`
+    WHERE groupid = ||groupid||
+    AND pageid = ||pageid||
+||delete_group
+
 get_subgroups||
     SELECT *
     FROM `groups`
@@ -733,6 +774,12 @@ insert_group_user||
     INSERT INTO `groups_users` (userid, pageid, groupid)
     VALUES(||userid||, ||pageid||, ||groupid||)
 ||insert_group_user
+
+delete_group_users||
+    DELETE FROM `groups_users`
+    AND pageid = ||pageid||
+    AND groupid = ||groupid||
+||delete_group_users
 
 delete_group_user||
     DELETE FROM `groups_users`
@@ -880,7 +927,7 @@ remove_role_override||
 
 insert_role_override||
     INSERT INTO `roles_ability` (roleid, section, ability, allow)
-    VALUES (||roleid||, ||section||, ||ability||, ||setting||)
+    VALUES (||roleid||, ||section||, ||ability||, ||allow||)
 ||insert_role_override
 
 get_page_role_override||
@@ -901,7 +948,7 @@ remove_page_role_override||
 
 update_page_role_override||
     UPDATE `roles_ability_perpage`
-    SET allow = ||setting||
+    SET allow = ||allow||
     WHERE pageid = ||pageid||
     AND roleid = ||roleid||
     AND ability = ||ability||
@@ -909,7 +956,7 @@ update_page_role_override||
 
 insert_page_role_override||
     INSERT INTO `roles_ability_perpage` (pageid, roleid, ability, allow)
-    VALUES (||pageid||, ||roleid||, ||ability||, ||setting||)
+    VALUES (||pageid||, ||roleid||, ||ability||, ||allow||)
 ||insert_page_role_override
 
 get_page_group_feature_override||
@@ -936,6 +983,11 @@ insert_page_group_feature_override||
     INSERT INTO `roles_ability_perfeature_pergroup` (pageid, feature, featureid, groupid, ability, allow)
     VALUES (||pageid||, ||feature||, ||featureid||, ||groupid||, ||ability||, ||allow||)
 ||insert_page_group_feature_override
+
+insert_roles_ability_perfeature_peruser_override||
+    INSERT INTO `roles_ability_perfeature_peruser` (pageid, feature, featureid, userid, ability, allow)
+    VALUES (||pageid||, ||feature||, ||featureid||, ||userid||, ||ability||, ||allow||)
+||insert_roles_ability_perfeature_peruser_override
 
 get_page_group_override||
     SELECT *
@@ -998,7 +1050,7 @@ remove_page_role_feature_override||
 
 update_page_role_feature_override||
     UPDATE `roles_ability_perfeature`
-    SET allow = ||setting||
+    SET allow = ||allow||
     WHERE feature = ||feature||
     AND featureid = ||featureid||
     AND pageid = ||pageid||
@@ -1008,7 +1060,7 @@ update_page_role_feature_override||
 
 insert_page_role_feature_override||
     INSERT INTO `roles_ability_perfeature` (feature, featureid, pageid, roleid, ability, allow)
-    VALUES (||feature||, ||featureid||, ||pageid||, ||roleid||, ||ability||, ||setting||)
+    VALUES (||feature||, ||featureid||, ||pageid||, ||roleid||, ||ability||, ||allow||)
 ||insert_page_role_feature_override
 
 user_search_all||
