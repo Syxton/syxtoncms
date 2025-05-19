@@ -169,9 +169,6 @@ global $CFG, $USER;
     $firstonpage = SEARCH_PERPAGE * $pagenum;
     $SQL .= " LIMIT $firstonpage," . SEARCH_PERPAGE; // only return a single page worth of results.
 
-    error_log("SQL: " . $SQL);
-    error_log("PARAMS: " . json_encode($sqlparams));
-
     $count = $total > (($pagenum + 1) * SEARCH_PERPAGE) ? SEARCH_PERPAGE : $total - (($pagenum) * SEARCH_PERPAGE); //get the amount returned...is it a full page of results?
     $amountshown = $firstonpage + SEARCH_PERPAGE < $total ? $firstonpage + SEARCH_PERPAGE : $total;
 
