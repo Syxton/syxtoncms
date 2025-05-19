@@ -155,7 +155,7 @@ global $CFG, $USER;
     $viewablepages .= $loggedin ? ($admin ? "" : "")  : " AND p.siteviewable = 1";
 
     $sqlparams = [
-        "admin" => $admin,
+        "notadmin" => !$admin,
         "checkrights" => $checkrights,
         "viewablepages" => $viewablepages,
         "searchstring" => $searchstring,
@@ -168,6 +168,9 @@ global $CFG, $USER;
     //Create the page limiter
     $firstonpage = SEARCH_PERPAGE * $pagenum;
     $SQL .= " LIMIT $firstonpage," . SEARCH_PERPAGE; // only return a single page worth of results.
+
+    error_log("SQL: " . $SQL);
+    error_log("PARAMS: " . json_encode($sqlparams));
 
     $count = $total > (($pagenum + 1) * SEARCH_PERPAGE) ? SEARCH_PERPAGE : $total - (($pagenum) * SEARCH_PERPAGE); //get the amount returned...is it a full page of results?
     $amountshown = $firstonpage + SEARCH_PERPAGE < $total ? $firstonpage + SEARCH_PERPAGE : $total;
@@ -322,14 +325,15 @@ function page_search_actions() {
 }
 
 function usersearch() {
-global $CFG, $USER, $PAGE;
-    $userid = $USER->userid;
-    $pageid = $PAGE->id;
-    $searchwords = trim(clean_myvar_opt("searchwords", "string", ""));
-    $pagenum = clean_myvar_opt("pagenum", "int", 0);
+    global $CFG, $USER, $PAGE;
 
     $return = $error = "";
     try {
+        $userid = $USER->userid;
+        $pageid = $PAGE->id;
+        $searchwords = trim(clean_myvar_opt("searchwords", "string", ""));
+        $pagenum = clean_myvar_opt("pagenum", "int", 0);
+
         // no search words given
         $dbsearchwords = $searchwords == "" ? "%" : $searchwords;
 
@@ -343,21 +347,18 @@ global $CFG, $USER, $PAGE;
         $limit = " LIMIT $firstonpage," . SEARCH_PERPAGE;
         $words = explode(" ", $dbsearchwords);
 
-        $i = 0; $searchstring = "";
-        while (isset($words[$i])) {
-            $searchpart = "(u.fname LIKE '%" . $words[$i] . "%' OR u.lname LIKE '%" . $words[$i] . "%' OR u.email LIKE '%" . $words[$i] . "%')";
-            $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
-            $i++;
+        $searchstring = ""; $params = [];
+        foreach ($words as $key => $word) {
+            $searchpart = fill_template("dbsql/pages.sql", "user_search_part", false, ["part" => "||word_$key||"]);
+            $params["word_$key"] = '%' . $word . '%';
+            $searchstring .= empty($searchstring) ? $searchpart : " OR $searchpart";
         }
 
-        $SQL = "SELECT u.*
-                FROM users u
-                WHERE ($searchstring)
-                ORDER BY u.lname";
+        $SQL = fill_template("dbsql/pages.sql", "user_search", false, ["searchstring" => $searchstring]);
+        $total = get_db_count($SQL, $params); // get the total for all pages returned.
 
-        $total = get_db_count($SQL); //get the total for all pages returned.
-        $SQL .= $limit; //Limit to one page of return.
-        $users = get_db_result($SQL);
+        $SQL .= $limit; // Limit to one page of return.
+        $users = get_db_result($SQL, $params);
         $count = $total > (($pagenum + 1) * SEARCH_PERPAGE) ? SEARCH_PERPAGE : $total - (($pagenum) * SEARCH_PERPAGE); //get the amount returned...is it a full page of results?
         $amountshown = $firstonpage + SEARCH_PERPAGE < $total ? $firstonpage + SEARCH_PERPAGE : $total;
 
@@ -537,38 +538,34 @@ global $CFG, $USER;
     // is a site admin
     $admin = $loggedin && is_siteadmin($userid) ? true : false;
 
-    //restrict possible page listings
-    $siteviewableonly = $loggedin ? "" : " AND p.siteviewable=1";
-    $opendoorpolicy = $admin ? "" : " AND (p.opendoorpolicy=1 OR p.siteviewable=1)";
-
     //Create the page limiter
     $firstonpage = SEARCH_PERPAGE * $pagenum;
     $limit = " LIMIT ||first||, ||perpage||";
+
+    $params = [
+        "pageid" => $pageid,
+        "siteid" => $CFG->SITEID,
+        "first" => $firstonpage,
+        "perpage" => SEARCH_PERPAGE,
+    ];
+
+    $searchstring = "";
     $words = explode(" ", $dbsearchwords);
-
-    $i = 0; $searchstring = "";
-    while (isset($words[$i])) {
-        $searchpart = "(p.name LIKE '%" . $words[$i] . "%' OR p.keywords LIKE '%" . $words[$i] . "%' OR p.description LIKE '%" . $words[$i] . "%')";
-        $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
-        $i++;
+    foreach ($words as $key => $word) {
+        $searchpart = fill_template("dbsql/pages.sql", "link_page_search_part", false, ["part" => "||word_$key||"]);
+        $params["word_$key"] = '%' . $word . '%';
+        $searchstring .= empty($searchstring) ? $searchpart : " OR $searchpart";
     }
 
-    if ($loggedin) {
-        $roleid = user_role($userid, $CFG->SITEID);
-        $SQL = "SELECT p.*, (SELECT pl.linkid
-                                FROM pages_links pl
-                                WHERE pl.linkpageid = p.pageid
-                                AND pl.hostpageid = ||pageid|| LIMIT 1) as alreadylinked
-                    FROM pages p
-                WHERE p.pageid <> ||siteid||
-                    AND ($searchstring)
-                    AND p.pageid <> ||pageid||
-                ORDER BY p.name";
-    }
+    $SQL = fill_template("dbsql/pages.sql", "link_page_search", false, [
+        "searchstring" => $searchstring,
+        "notloggedin" => !$loggedin ? " AND p.siteviewable=1" : "",
+        "notadmin" => !$admin ? " AND (p.opendoorpolicy=1 OR p.siteviewable=1)" : "",
+    ], true);
 
-    $total = get_db_count($SQL, ["pageid" => $pageid, "siteid" => $CFG->SITEID]); //get the total for all pages returned.
+    $total = get_db_count($SQL, $params); //get the total for all pages returned.
     $SQL .= $limit; //Limit to one page of return.
-    $pages = get_db_result($SQL, ["pageid" => $pageid, "siteid" => $CFG->SITEID, "first" => $firstonpage, "perpage" => SEARCH_PERPAGE]);
+    $pages = get_db_result($SQL, $params);
 
     $count = $total > (($pagenum + 1) * SEARCH_PERPAGE) ? SEARCH_PERPAGE : $total - (($pagenum) * SEARCH_PERPAGE); //get the amount returned...is it a full page of results?
     $amountshown = $firstonpage + SEARCH_PERPAGE < $total ? $firstonpage + SEARCH_PERPAGE : $total;

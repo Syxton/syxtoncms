@@ -41,6 +41,13 @@ get_lower_roles||
     ORDER BY roleid
 ||get_lower_roles
 
+get_other_roles||
+    SELECT *
+    FROM `roles`
+    WHERE roleid <> ||roleid||
+    ORDER BY roleid
+||get_other_roles
+
 confirm_role_assignment||
     UPDATE `roles_assignment`
     SET confirm = 0

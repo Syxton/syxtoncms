@@ -713,87 +713,90 @@ global $CFG, $MYVARS;
 }
 
 function save_user_ability_changes() {
-    $abilities = explode("**", clean_myvar_opt("per_user_rightslist", "string", ""));
-    $pageid = clean_myvar_opt("pageid", "int", get_pageid()); //Should always be passed
-    $userid = clean_myvar_opt("userid", "int", false); //Should always be passed
-    $featureid = clean_myvar_opt("featureid", "int", false); //Only passed on feature specific managing
-    $feature = clean_myvar_opt("feature", "string", false); //Only passed on feature specific managing
-
-    $i = 0;
-    while (isset($abilities[$i])) {
-        $ability = $abilities[$i];
-        $allow = clean_myvar_opt($ability, "int", 0) == 1 ? 1 : 0;
-        $roleid = user_role($userid, $pageid);
-
-        $params = [
-            "userid" => $userid,
-            "pageid" => $pageid,
-            "ability" => $ability,
-            "allow" => $allow,
-            "feature" => $feature,
-            "featureid" => $featureid,
-        ];
-
-        // figure out the default
-        if ($featureid) { // feature specific ability change
-            $default = user_is_able($userid, $ability, $pageid, $feature, $featureid) ? 1 : 0;
-        } else { // page specific ability change
-            $default = user_is_able($userid, $ability, $pageid) ? 1 : 0;
-        }
-
-        if ($feature && $featureid) {
-            $alreadyset = get_db_count(fetch_template("dbsql/roles.sql", "get_page_feature_user_override"), $params);
-        } else {
-            $alreadyset = get_db_count(fetch_template("dbsql/roles.sql", "get_page_user_override"), $params);
-        }
-
-        if ($alreadyset) {
-            if ($allow == $default) {
-                if ($feature && $featureid) {
-                    execute_db_sql(fetch_template("dbsql/roles.sql", "remove_roles_ability_perfeature_peruser_override"), $params);
-                } else {
-                    execute_db_sql(fetch_template("dbsql/roles.sql", "remove_roles_ability_peruser_override"), $params);
-                }
-            } else {
-                if ($feature && $featureid) {
-                    execute_db_sql(fetch_template("dbsql/roles.sql", "update_roles_ability_perfeature_peruser_override"), $params);
-                } else {
-                    execute_db_sql(fetch_template("dbsql/roles.sql", "update_roles_ability_peruser_override"), $params);
-                }
-            }
-        } elseif ($allow != $default && !$alreadyset) {
-            if ($feature && $featureid) {
-                execute_db_sql(fetch_template("dbsql/roles.sql", "insert_roles_ability_perfeature_peruser_override"), $params);
-            } else {
-                execute_db_sql(fetch_template("dbsql/roles.sql", "insert_roles_ability_peruser_override"), $params);
-            }
-        }
-        $i++;
-    }
-    echo "Changes Saved";
-}
-
-function save_group_ability_changes() {
-global $CFG, $MYVARS;
-    $abilities = explode("**", clean_myvar_opt("per_group_rightslist", "string", ""));
-    $pageid = clean_myvar_opt("pageid", "int", get_pageid()); //Should always be passed
-    $groupid = clean_myvar_opt("groupid", "int", false); //Should always be passed
-    $featureid = clean_myvar_opt("featureid", "int", false); //Only passed on feature specific managing
-    $feature = clean_myvar_opt("feature", "string", false); //Only passed on feature specific managing
-
-    $return = $error = "";
     try {
         start_db_transaction();
+        $abilities = explode("**", clean_myvar_opt("per_user_rightslist", "string", ""));
+        $pageid = clean_myvar_opt("pageid", "int", get_pageid()); //Should always be passed
+        $userid = clean_myvar_opt("userid", "int", false); //Should always be passed
+        $featureid = clean_myvar_opt("featureid", "int", false); //Only passed on feature specific managing
+        $feature = clean_myvar_opt("feature", "string", false); //Only passed on feature specific managing
+
         $i = 0;
         while (isset($abilities[$i])) {
             $ability = $abilities[$i];
-            $allow = clean_myvar_opt($ability, "int", false);
+            $allow = clean_myvar_opt($ability, "int", 0) == 1 ? 1 : 0;
+            $roleid = user_role($userid, $pageid);
 
-            $allow = false; // If ability is NOT SET default to false
-            if (isset($MYVARS->GET[$ability])) {
-                $allow = $MYVARS->GET[$ability];
-                $allow = $allow == 1 || $allow == 0 ? $allow : false;
+            $params = [
+                "userid" => $userid,
+                "pageid" => $pageid,
+                "ability" => $ability,
+                "allow" => $allow,
+                "feature" => $feature,
+                "featureid" => $featureid,
+            ];
+
+            // figure out the default
+            if ($featureid) { // feature specific ability change
+                $default = user_is_able($userid, $ability, $pageid, $feature, $featureid) ? 1 : 0;
+            } else { // page specific ability change
+                $default = user_is_able($userid, $ability, $pageid) ? 1 : 0;
             }
+
+            if ($feature && $featureid) {
+                $alreadyset = get_db_count(fetch_template("dbsql/roles.sql", "get_page_feature_user_override"), $params);
+            } else {
+                $alreadyset = get_db_count(fetch_template("dbsql/roles.sql", "get_page_user_override"), $params);
+            }
+
+            if ($alreadyset) {
+                if ($allow == $default) {
+                    if ($feature && $featureid) {
+                        execute_db_sql(fetch_template("dbsql/roles.sql", "remove_roles_ability_perfeature_peruser_override"), $params);
+                    } else {
+                        execute_db_sql(fetch_template("dbsql/roles.sql", "remove_roles_ability_peruser_override"), $params);
+                    }
+                } else {
+                    if ($feature && $featureid) {
+                        execute_db_sql(fetch_template("dbsql/roles.sql", "update_roles_ability_perfeature_peruser_override"), $params);
+                    } else {
+                        execute_db_sql(fetch_template("dbsql/roles.sql", "update_roles_ability_peruser_override"), $params);
+                    }
+                }
+            } elseif ($allow != $default && !$alreadyset) {
+                if ($feature && $featureid) {
+                    execute_db_sql(fetch_template("dbsql/roles.sql", "insert_roles_ability_perfeature_peruser_override"), $params);
+                } else {
+                    execute_db_sql(fetch_template("dbsql/roles.sql", "insert_roles_ability_peruser_override"), $params);
+                }
+            }
+            $i++;
+        }
+        commit_db_transaction();
+        $return = "Changes Saved";
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+        rollback_db_transaction($error);
+        $return = "Changes Not Saved";
+    }
+
+    ajax_return($return, $error);
+}
+
+function save_group_ability_changes() {
+    $return = $error = "";
+    try {
+        start_db_transaction();
+
+        $abilities = explode("**", clean_myvar_opt("per_group_rightslist", "string", ""));
+        $pageid = clean_myvar_opt("pageid", "int", get_pageid()); //Should always be passed
+        $groupid = clean_myvar_opt("groupid", "int", false); //Should always be passed
+        $featureid = clean_myvar_opt("featureid", "int", false); //Only passed on feature specific managing
+        $feature = clean_myvar_opt("feature", "string", false); //Only passed on feature specific managing
+
+        foreach ($abilities as $ability) {
+            $allow = clean_myvar_opt($ability, "int", false);
+            $allow = $allow == 1 || $allow == 0 ? $allow : false; // If ability is NOT SET default to false
 
             $params = [
                 "groupid" => $groupid,
@@ -835,7 +838,6 @@ global $CFG, $MYVARS;
                 }
                 execute_db_sql($SQL, $params);
             }
-            $i++;
         }
         commit_db_transaction();
         $return = "Changes Saved";
@@ -848,14 +850,17 @@ global $CFG, $MYVARS;
 }
 
 function refresh_user_roles() {
-global $CFG, $USER, $MYVARS, $ROLES;
-    $pageid = clean_myvar_opt("pageid", "int", get_pageid()); //Should always be passed
-    $userid = clean_myvar_opt("userid", "int", false); //Should always be passed
-    $myroleid = user_role($USER->userid, $pageid);
-    $roleid = user_role($userid, $pageid, true);
+    global $CFG, $USER, $ROLES;
 
     $return = $error = "";
     try {
+        start_db_transaction();
+
+        $pageid = clean_myvar_opt("pageid", "int", get_pageid()); //Should always be passed
+        $userid = clean_myvar_opt("userid", "int", false); //Should always be passed
+        $myroleid = user_role($USER->userid, $pageid);
+        $roleid = user_role($userid, $pageid, true);
+
         if (isset($roleid)) {
             if (is_siteadmin($userid)) {
                 $rolename = "Site Admin";
@@ -867,13 +872,16 @@ global $CFG, $USER, $MYVARS, $ROLES;
             $rolename = "Unassigned";
         }
 
-        $sql_admin = $pageid !== $CFG->SITEID ? " WHERE roleid <> '$ROLES->admin'" : "";
-        $SQL = "SELECT *
-                FROM roles
-                $sql_admin
-                ORDER BY roleid";
+        if ($pageid <> $CFG->SITEID) {
+            $params = ["roleid" => $ROLES->admin];
+            $SQL = fetch_template("dbsql/roles.sql", "get_other_roles");
+        } else {
+            $params = [];
+            $SQL = fetch_template("dbsql/roles.sql", "get_roles");
+        }
+
         $options = '';
-        if ($roles = get_db_result($SQL)) {
+        if ($roles = get_db_result($SQL, $params)) {
             while ($row = fetch_row($roles)) {
                 if ($row['roleid'] != $roleid && $row['roleid'] >= $myroleid) {
                     $p = [
@@ -918,37 +926,53 @@ global $CFG, $USER, $MYVARS, $ROLES;
             "options" => $options,
         ];
         $return = fill_template("tmp/roles_ajax.template", "refresh_user_roles_template", false, $params);
+        commit_db_transaction();
     } catch (\Throwable $e) {
         $error = $e->getMessage();
+        rollback_db_transaction($error);
     }
 
     ajax_return($return, $error);
 }
 
 function assign_role() {
-global $ROLES;
-    $roleid = clean_myvar_opt("roleid", "int", false);
-    $userid = clean_myvar_req("userid", "int");
-    $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+    global $ROLES;
 
     $return = $error = "";
     try {
-        if (execute_db_sql(fetch_template("dbsql/roles.sql", "remove_user_role_assignment"), ["userid" => $userid, "pageid" => $pageid])) {
-            if ($roleid !== $ROLES->none) { // No role besides "No Role" was given
-                $SQL = fetch_template("dbsql/roles.sql", "insert_role_assignment");
-                if (execute_db_sql($SQL, ["userid" => $userid, "pageid" => $pageid, "roleid" => $roleid, "confirm" => 0])) {
-                    $return = "Changes Saved";
-                } else {
-                    $return = "No Role Given";
-                }
-            } else {
-                $return = "Role Removed";
-            }
-        } else {
+        start_db_transaction();
+
+        $roleid = clean_myvar_opt("roleid", "int", false);
+        $userid = clean_myvar_req("userid", "int");
+        $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+
+        $removed_roles = execute_db_sql(fetch_template("dbsql/roles.sql", "remove_user_role_assignment"), [
+            "userid" => $userid,
+            "pageid" => $pageid,
+        ]);
+
+        // Delete returns boolean if no rows were deleted but sql was executed.
+        if (!is_numeric($removed_roles)) {
             $return = "Changes Not Saved";
+            trigger_error(getlang("generic_db_error"), E_USER_WARNING);
         }
+
+        if ($roleid === $ROLES->none) {
+            $return = "Role Removed";
+        } else {
+            $role_assignementid = execute_db_sql(fetch_template("dbsql/roles.sql", "insert_role_assignment"), [
+                "userid" => $userid,
+                "pageid" => $pageid,
+                "roleid" => $roleid,
+                "confirm" => 0,
+            ]);
+            $return = $role_assignementid ? "Changes Saved" : "Changes Not Saved";
+        }
+
+        commit_db_transaction();
     } catch (\Throwable $e) {
         $error = $e->getMessage();
+        rollback_db_transaction($error);
     }
 
     ajax_return($return, $error);
