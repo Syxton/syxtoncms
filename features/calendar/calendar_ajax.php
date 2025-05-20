@@ -28,7 +28,9 @@ function print_calendar() {
     $year = clean_myvar_opt("year", "int", "");
     $extra_row = clean_myvar_opt("extra_row", "int", "");
 
-    $area = get_calendar_area($pageid);
+    $featureid = get_feature_id("calendar", $pageid);
+    $area = get_feature_area("calendar", $featureid);
+
 	$display = get_calendar(["pageid" => $pageid, "userid" => $userid, "month" => $month, "year" => $year, "extra_row" => $extra_row, "area" => $area]);
 	ajax_return($display);
 }
@@ -42,30 +44,42 @@ global $CFG, $MYVARS;
     $tp = clean_myvar_req("tp", "int");
     $list_day = clean_myvar_req("list_day", "int");
 
- 	$whichevents = $show_site_events ? 'AND ((pageid=' . $pageid . ') OR (pageid=' . $CFG->SITEID . ') OR (site_viewable=1))' : 'AND pageid=' . $pageid;
-	$SQL = sprintf("SELECT * FROM `calendar_events` WHERE `date` > '%s' AND `date` < '%s' AND `day` = '%s' $whichevents ORDER BY day;", $tm, $tp, $list_day);
- 	if ($result = get_db_result($SQL)) {
-        $eventlist = '';
+ 	$SQL = fetch_template("dbsql/calendar.sql", "get_calendar_event_data", "calendar", [
+        "show_site_events" => $show_site_events,
+    ]);
+
+    $params = [
+        "pageid" => $pageid,
+        "siteid" => $CFG->SITEID,
+        "from" => $tm,
+        "to" => $tp,
+        "day" => $list_day,
+    ];
+
+    $eventlist = '';
+    if ($result = get_db_result($SQL, $params)) {
         while ($event = fetch_row($result)) {
       		if ($eventlist != "") {
-                $eventlist .= '<br />'; $firstevent = '';
+                $eventlist .= '<br />';
+                $firstevent = '';
             } else {
                 $firstevent = '<span style="text-align:center;float:right;font-size:.9em;color:gray;">hide <span id="cal_countdown"></span></span>';
             }
-            $p = [
-                "title" => "Event Info",
-                "text" => $event["title"],
-                "path" => action_path("events") . "info&pageid=$pageid&eventid=" . $event["eventid"],
-                "iframe" => true,
-                "width" => "700",
-                "height" => "650",
-                "styles" => "float:left;padding:2px;",
-                "icon" => icon("circle-info"),
-                'styles' => 'vertical-align:top;',
-            ];
-            $eventlist .= '<div class="popupEventTitle">' .
-                                make_modal_links($p) . $firstevent .
-                          '</div>';
+
+            $eventlist .= '
+                <div class="popupEventTitle">' .
+                    make_modal_links([
+                    "title" => "Event Info",
+                    "text" => $event["title"],
+                    "path" => action_path("events") . "info&pageid=$pageid&eventid=" . $event["eventid"],
+                    "iframe" => true,
+                    "width" => "700",
+                    "height" => "650",
+                    "styles" => "float:left;padding:2px;",
+                    "icon" => icon("circle-info"),
+                    'styles' => 'vertical-align:top;',
+                ]) . $firstevent .
+                '</div>';
 
 			if ($event['picture_1'] != "") {
                 $eventlist .= '<img style="margin:3px;height:50px;margin-bottom:0px;" src="' . $CFG->wwwroot . '/scripts/calendar/event_images/' . $event['picture_1'] . '" />';

@@ -201,13 +201,21 @@ global $PAGE, $CFG, $MYVARS;
 }
 
 function get_feature_area($feature, $featureid) {
-    $SQL = "SELECT area
-            FROM pages_features
-            WHERE feature = ||feature||
-            AND featureid = ||featureid||";
-    $row = get_db_row($SQL, ["feature" => $feature, "featureid" => $featureid]);
-
+    $SQL = fetch_template("dbsql/features.sql", "get_feature_page_features_by_featureid");
+    $row = get_db_row($SQL, ["featureid" => $featureid, "feature" => $feature]);
     return $row["area"];
+}
+
+function get_feature_id($feature, $pageid) {
+    $SQL = fetch_template("dbsql/features.sql", "get_feature_page_features_by_pageid");
+    $row = get_db_row($SQL, ["pageid" => $pageid, "feature" => $feature]);
+    return $row["featureid"];
+}
+
+function get_feature_pageid($feature, $featureid) {
+    $SQL = fetch_template("dbsql/features.sql", "get_feature_page_features_by_pageid");
+    $row = get_db_row($SQL, ["featureid" => $featureid, "feature" => $feature]);
+    return $row["pageid"];
 }
 
 function get_default_role($pageid) {

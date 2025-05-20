@@ -29,7 +29,7 @@ global $CFG;
     $enddate = clean_myvar_opt("enddate", "string", false);
 
     if ($featureid) {
-        $pageid = get_db_field("pageid", "pages_features", "feature = 'events' AND featureid = ||featureid||", ["featureid" => $featureid]);
+        $pageid = get_feature_pageid("events", $featureid);
 
         //Only site events need to be set to confirm=1
         $confirm = $pageid == $CFG->SITEID ? "confirmed = 1 AND" : "pageid = $pageid AND";
@@ -125,7 +125,7 @@ global $CFG, $MYVARS, $USER;
 
         if (isset($featureid)) {
             //Get feature request settings
-            $pageid = get_db_field("pageid", "pages_features", "feature='events' AND featureid=$featureid");
+            $pageid = get_feature_pageid("events", $featureid);
             if (!$settings = fetch_settings("events", $featureid, $pageid)) {
                         save_batch_settings(default_settings("events", $pageid, $featureid));
                         $settings = fetch_settings("events", $featureid, $pageid);
@@ -224,7 +224,7 @@ global $CFG, $PAGE;
         throw new Exception(getlang("old_request", "/features/events"));
     }
 
-    if (!$pageid = get_db_field("pageid", "pages_features", "feature = 'events' AND featureid = ||featureid||", ["featureid" => $featureid])) {
+    if (!$pageid = get_feature_pageid("events", $featureid)) {
         throw new Exception(getlang("old_request", "/features/events"));
     }
 
@@ -260,7 +260,7 @@ global $CFG, $MYVARS;
     }
 
     // Get feature request settings
-    $pageid = get_db_field("pageid", "pages_features", "feature = 'events' AND featureid = ||featureid||", ["featureid" => $featureid]);
+    $pageid = get_feature_pageid("events", $featureid);
     if (!$settings = fetch_settings("events", $featureid, $pageid)) {
         save_batch_settings(default_settings("events", $pageid, $featureid));
         $settings = fetch_settings("events", $featureid, $pageid);
@@ -357,7 +357,7 @@ global $CFG, $PAGE;
         throw new Exception(getlang("old_request", "/features/events"));
     }
 
-    if (!$pageid = get_db_field("pageid", "pages_features", "feature = 'events' AND featureid = ||featureid||", ["featureid" => $featureid])) {
+    if (!$pageid = get_feature_pageid("events", $featureid)) {
         throw new Exception(getlang("old_request", "/features/events"));
     }
 
@@ -388,7 +388,7 @@ global $CFG;
         throw new Exception(getlang("old_request", "/features/events"));
     }
 
-    if (!$pageid = get_db_field("pageid", "pages_features", "feature = 'events' AND featureid = ||featureid||", ["featureid" => $featureid])) {
+    if (!$pageid = get_feature_pageid("events", $featureid)) {
         throw new Exception(getlang("old_request", "/features/events"));
     }
 
@@ -495,7 +495,7 @@ global $CFG, $PAGE, $MYVARS;
             throw new Exception(getlang("old_request", "/features/events"));
         }
 
-        if (!$pageid = get_db_field("pageid", "pages_features", "feature = 'events' AND featureid = ||featureid||", ["featureid" => $featureid])) {
+        if (!$pageid = get_feature_pageid("events", $featureid)) {
             throw new Exception(getlang("old_request", "/features/events"));
         }
 

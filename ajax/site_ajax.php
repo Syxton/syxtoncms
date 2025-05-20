@@ -17,23 +17,22 @@ function login() {
 
     if ($row = authenticate($username, $password)) {
         $reroute = '';
+        $return = ['status' => 'success'];
         if ($row["alternate"] === $password) {
             $reroute = fill_template("tmp/site_ajax.template", "password_change_reroute_template", false, ["userid" => $row["userid"], "password" => $password]);
-            ajax_return(json_encode([
+            $return = [
                 'status' => 'reroute',
                 'content' => $reroute,
-            ]));
-            exit;
+            ];
         }
-        ajax_return(json_encode([
-            'status' => 'success',
-        ]));
     } else {
-        ajax_return(json_encode([
+        $return = [
             'status' => 'failed',
             'content' => getlang("invalid_login"),
-        ]));
+        ];
     }
+
+    ajax_return(json_encode($return));
 }
 
 function unique_email() {
@@ -47,46 +46,84 @@ function unique_email() {
 }
 
 function reset_password() {
-    $userid = clean_myvar_req("userid", "int");
-    $password = clean_myvar_req("password", "string");
+    $return = $error = "";
+    try {
+        start_db_transaction();
 
-    $success = false;
-    if ($success = execute_db_sql(fetch_template("dbsql/users.sql", "update_password"), ["userid" => $userid, "password" => md5($password)])) {
-        log_entry("user", null, "Password changed"); // Log
-    } else {
-        log_entry("user", null, "Password change failed"); // Log
+        $userid = clean_myvar_req("userid", "int");
+        $password = clean_myvar_req("password", "string");
+
+        $success = false;
+        if ($success = execute_db_sql(fetch_template("dbsql/users.sql", "update_password"), ["userid" => $userid, "password" => md5($password)])) {
+            log_entry("user", null, "Password changed"); // Log
+        } else {
+            log_entry("user", null, "Password change failed"); // Log
+        }
+
+        commit_db_transaction();
+    } catch (\Throwable $e) {
+        $success = false;
+        $error = $e->getMessage();
+        rollback_db_transaction($error);
     }
 
-    $return = fill_template("tmp/site_ajax.template", "reset_password_passfail_template", false, ["success" => $success]);
+    $return = fill_template("tmp/site_ajax.template", "reset_password_passfail_template", false, [
+        "success" => $success,
+    ]);
 
-    ajax_return($return);
+    ajax_return($return, $error);
 }
 
 function change_profile() {
-    $userid = clean_myvar_req("userid", "int");
-    $email = clean_myvar_req("email", "string");
-    $fname = clean_myvar_req("fname", "string");
-    $lname = clean_myvar_req("lname", "string");
-    $password = clean_myvar_opt("password", "string", false);
+    $return = $error = "";
+    try {
+        start_db_transaction();
 
-    $success = false;
-    $notused = false;
+        $userid = clean_myvar_req("userid", "int");
+        $email = clean_myvar_req("email", "string");
+        $fname = clean_myvar_req("fname", "string");
+        $lname = clean_myvar_req("lname", "string");
+        $password = clean_myvar_opt("password", "string", false);
 
-    if (!get_db_row(fetch_template("dbsql/users.sql", "used_email"), ["email" => $email, "userid" => $userid])) { // email address isn't being used by another user
-        $passwordsql = $password ? ", alternate = '', password = ||password||" : "";
-        $SQL = "UPDATE users
-                SET fname = ||fname||, lname = ||lname||, email = ||email||$passwordsql
-                WHERE userid = ||userid||";
-        $notused = true;
-        if ($success = execute_db_sql($SQL, ["email" => $email, "fname" => $fname, "lname" => $lname, "userid" => $userid, "password" =>  md5($password)])) {
+        $success = false;
+        $notused = false;
+
+        if (!get_db_row(fetch_template("dbsql/users.sql", "used_email"), ["email" => $email, "userid" => $userid])) {
+            $notused = true;
+        };
+
+        if ($notused) { // email address isn't being used by another user
+            $SQL = fetch_template("dbsql/users.sql", "update_user", false, [
+                "passwordchange" => $password,
+            ]);
+            $success = execute_db_sql($SQL, [
+                "email" => $email,
+                "fname" => $fname,
+                "lname" => $lname,
+                "userid" => $userid,
+                "password" =>  md5($password),
+            ]);
+        }
+
+        if ($success) {
             log_entry("user", null, "Profile changed"); // Log
         } else {
             log_entry("user", null, "Profile change failed"); // Log
         }
-    }
-    $return = fill_template("tmp/site_ajax.template", "change_profile_success_template", false, ["success" => $success, "notused" => $notused]);
 
-    ajax_return($return);
+        commit_db_transaction();
+    } catch (\Throwable $e) {
+        $success = false;
+        $error = $e->getMessage();
+        rollback_db_transaction($error);
+    }
+
+    $return = fill_template("tmp/site_ajax.template", "change_profile_success_template", false, [
+        "success" => $success,
+        "notused" => $notused,
+    ]);
+
+    ajax_return($return, $error);
 }
 
 /**
@@ -152,19 +189,20 @@ global $CFG;
         // Make sure we have an email address to work with.
         if ($email) {
             // Check to see if email matches an existing user.
-            if ($user = get_db_row("SELECT * FROM users WHERE email = ||email||", ["email" => $email])) {
+            $SQL = fetch_template("dbsql/users.sql", "get_user_by_email");
+            if ($user = get_db_row($SQL, ["email" => $email])) {
                 // Generate a new random password
                 $alternate = create_random_password();
 
                 // Check to see if account is activated. If so, save the new password in the database.
                 // Place new password in password field (if real password is still in temp field)
-                // Plane new password in alternate field (if temp field is empty, meaning real password is in password field)
-                $field = empty(trim($user["temp"])) ? "alternate" : "password";
-                $SQL = "UPDATE users SET $field = ||password|| WHERE email = ||email||";
-                $reset = execute_db_sql($SQL, ["password" => md5($alternate), "email" => $email]);
+                // Place new password in alternate field (if temp field is empty, meaning real password is in password field)
+                $SQL = fetch_template("dbsql/users.sql", "set_temp_password", false, [
+                    "emptytemp" => empty(trim($user["temp"])),
+                ]);
 
-                if (!$reset) {
-                    throw new \Exception("Could not reset password.");
+                if (!execute_db_sql($SQL, ["password" => md5($alternate), "email" => $email])) {
+                    trigger_error("Could not reset password.");
                 }
 
                 // Email new password to the email address.

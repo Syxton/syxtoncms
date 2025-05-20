@@ -490,11 +490,40 @@ open_enrollable_events||
 upcoming_events||
     SELECT *
     FROM events e
-    WHERE (e.pageid = ||pageid|| ||siteviewable||)
+    WHERE (
+        e.pageid = ||pageid||
+        ||issite{{
+            OR (
+                siteviewable = 1
+                AND confirmed = 1
+            )
+        }}issite||
+    )
     AND e.event_begin_date < ||totime||
     AND e.event_begin_date > ||fromtime||
     ORDER BY e.event_begin_date, e.event_begin_time
 ||upcoming_events
+
+events_between_dates||
+    SELECT *
+    FROM events e
+    WHERE (
+        e.pageid = ||pageid||
+        ||issite{{
+            OR
+            (
+                e.pageid != ||pageid||
+                AND siteviewable = 1
+            )
+        }}issite||
+    )
+    AND e.event_begin_date > ||fromtime||
+    AND e.event_begin_date < ||totime||
+    ||showonlyconfirmed{{
+    AND e.confirmed = 1
+    }}showonlyconfirmed||
+    ORDER BY e.event_begin_date, e.event_begin_time
+||events_between_dates
 
 current_events||
     SELECT *

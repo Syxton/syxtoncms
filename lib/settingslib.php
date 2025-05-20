@@ -38,7 +38,7 @@ function fetch_settings($type, &$featureid, $pageid = false) {
         return false;
     } else { // Feature settings
         if ($featureid == "*") { // Find the featureid: Only valid on features that cannot have duplicates on a page
-            $featureid = get_db_field("featureid", "pages_features", "feature='$type' AND pageid='$pageid'");
+            $featureid = get_feature_id($type, $pageid);
             if (empty($featureid)) {
                 return false;
             }
@@ -392,7 +392,7 @@ function get_setting_value($type, $setting_name, $extra = false) {
 function default_settings($feature, $pageid, $featureid) {
     global $CFG;
     if ($featureid == "*") { // Find the featureid: Only valid on features that cannot have duplicates on a page
-            $featureid = get_db_field("featureid", "pages_features", "feature = '$feature' AND pageid = '$pageid'");
+        $featureid = get_feature_id($feature, $pageid);
         if (!empty($featureid)) {
             return false;
         }

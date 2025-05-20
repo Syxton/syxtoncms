@@ -182,8 +182,16 @@ global $CFG, $USER, $ROLES;
     $canconfirm = false;
     $canedit = false;
     $canview = false;
-    $site = $pageid == $CFG->SITEID ? "((e.pageid != $pageid AND siteviewable=1) OR (e.pageid = $pageid))" : "e.pageid = $pageid";
+    $site = ($pageid == $CFG->SITEID);
 
+    $params = [
+        "issite" => ($pageid == $CFG->SITEID),
+        "pageid" => $pageid,
+        "fromtime" => $begincurrentyear,
+        "totime" => $endcurrentyear,
+    ];
+
+    $buttons = null;
     if (is_logged_in()) {
         if (user_is_able($USER->userid, "staffapply", $pageid, "events", $featureid)) {
             $content .= get_staff_application_link($featureid, $pageid);
@@ -192,23 +200,19 @@ global $CFG, $USER, $ROLES;
             $canview = true;
             $canconfirm = user_is_able($USER->userid, "confirmevents", $CFG->SITEID, "events", $featureid) ? true : false;
             $buttons = get_button_layout("events", $featureid, $pageid);
-            if ($canconfirm) {
-                $SQL = "SELECT * FROM events e WHERE $site AND $begincurrentyear < e.event_begin_date AND $endcurrentyear > e.event_begin_date ORDER BY e.event_begin_date, e.event_begin_time";
-            } else {
-                $SQL = "SELECT * FROM events e WHERE $site AND $begincurrentyear < e.event_begin_date AND $endcurrentyear > e.event_begin_date AND e.confirmed=1 ORDER BY e.event_begin_date, e.event_begin_time";
-            }
+
+            $params["showonlyconfirmed"] = !$canconfirm;
+            $SQL = fetch_template("dbsql/events.sql", "events_between_dates", "events", $params);
         }
     } else {
         $canview = role_is_able($ROLES->visitor, "viewevents", $pageid) ? true : false;
-        if ($canview && $pageid == $CFG->SITEID) {
-            $SQL = "SELECT * FROM events e WHERE $site AND $begincurrentyear < e.event_begin_date AND $endcurrentyear > e.event_begin_date AND e.confirmed=1 ORDER BY e.event_begin_date, e.event_begin_time";
-        } elseif ($canview) {
-            $SQL = "SELECT * FROM events e WHERE $site AND $begincurrentyear < e.event_begin_date AND $endcurrentyear > e.event_begin_date AND e.confirmed=1 ORDER BY e.event_begin_date, e.event_begin_time";
+        if ($canview) {
+            $params["showonlyconfirmed"] = !$canconfirm;
+            $SQL = fetch_template("dbsql/events.sql", "events_between_dates", "events", $params);
         }
-        $buttons = null;
-    } // END ABILITIES CHECK
+    }
 
-    if ($canview && $result = get_db_result($SQL)) {
+    if ($canview && $result = get_db_result($SQL, $params)) {
         $lastday = false;
         while ($event = fetch_row($result)) {
             if ($showpastevents || ($event["event_end_date"] >= ($time - 86400))) {
@@ -243,7 +247,7 @@ global $CFG, $USER;
     $registration_info = "";
     $alert = $export = $info = $eventbuttons = "";
 
-    $featureid = get_db_field("featureid", "pages_features", "pageid='$pageid' AND feature='events'");
+    $featureid = get_feature_id("events", $pageid);
     if ($event["start_reg"] > 0) { // Event is a registerable page...at one time.
         $regcount = get_db_count("SELECT * FROM events_registrations WHERE eventid='" . $event['eventid'] . "'");
         $limit = $event['max_users'] == "0" ? "&#8734;" : $event['max_users'];
@@ -471,7 +475,7 @@ global $CFG, $USER;
         while ($event = fetch_row($events)) {
             $buttons = [];
 
-            $featureid = get_db_field("featureid", "pages_features", "pageid='$pageid' AND feature='events'");
+            $featureid = get_feature_id("events", $pageid);
             $buttons[] = user_is_able($USER->userid, "editevents", $pageid, "events", $featureid) ? get_event_edit_link($event, $pageid) : "";
 
             $buttons[] = '
@@ -592,7 +596,7 @@ function get_open_enrollment_events($pageid) {
             "event" => "none",
         ]);
 
-        $featureid = get_db_field("featureid", "pages_features", "pageid='$pageid' AND feature='events'");
+        $featureid = get_feature_id("events", $pageid);
         $eventslist = "";
         while ($event = fetch_row($events)) {
             $buttons = [];
@@ -632,7 +636,7 @@ function get_open_enrollment_events($pageid) {
             }
 
             // Payment Area
-            if ($event["paypal"] != "") {
+            if (!empty($event["paypal"])) {
                 $buttons[] = get_event_pay_link($event, $pageid);
             }
 
@@ -646,7 +650,12 @@ function get_open_enrollment_events($pageid) {
         }
 
         $params  = [
-            "title" => icon([["icon" => "clipboard-check", "color" => "green"],]) . " <span>Registerable Events</span>",
+            "title" => icon([
+                [
+                    "icon" => "clipboard-check",
+                    "color" => "green",
+                ]
+            ]) . " <span>Registerable Events</span>",
             "eventslist" => $eventslist];
         return fill_template("tmp/events.template", "eventtype", "events", $params);
     }
@@ -661,10 +670,15 @@ function get_upcoming_events($pageid, $upcomingdays) {
     $time = get_timestamp();
     date_default_timezone_set("UTC");
 
-    $totime = $time + ($upcomingdays * 86400);
-    $siteviewable = $pageid == $CFG->SITEID ? " OR (siteviewable = 1 AND confirmed = 1)" : "";
-    $SQL = fill_template("dbsql/events.sql", "upcoming_events", "events", ["fromtime" => $time, "totime" => $totime, "siteviewable" => $siteviewable], true);
-    if ($events = get_db_result($SQL, ["pageid" => $pageid])) {
+    $SQL = fetch_template("dbsql/events.sql", "upcoming_events", "events", ["issite" => ($pageid == $CFG->SITEID)]);
+
+    $events = get_db_result($SQL, [
+        "pageid" => $pageid,
+        "fromtime" => $time,
+        "totime" => $time + ($upcomingdays * 86400),
+    ]);
+
+    if ($events) {
         $eventslist = "";
         while ($event = fetch_row($events)) {
             $params = [
@@ -677,7 +691,12 @@ function get_upcoming_events($pageid, $upcomingdays) {
         }
 
         $params  = [
-            "title" => icon([["icon" => "clock", "color" => "#0098b3"],]) . " <span>Upcoming Events</span>",
+            "title" => icon([
+                [
+                    "icon" => "clock",
+                    "color" => "#0098b3",
+                ]
+            ]) . " <span>Upcoming Events</span>",
             "eventslist" => $eventslist];
         return fill_template("tmp/events.template", "eventtype", "events", $params);
     }
@@ -694,7 +713,7 @@ function get_current_events($pageid) {
     $siteviewable = $pageid == $CFG->SITEID ? " OR (siteviewable = 1 AND confirmed = 1)" : "";
     $SQL = fill_template("dbsql/events.sql", "current_events", "events", ["time" => $time, "siteviewable" => $siteviewable], true);
     if ($events = get_db_result($SQL, ["pageid" => $pageid])) {
-        $featureid = get_db_field("featureid", "pages_features", "pageid = ||pageid|| AND feature='events'", ["pageid" => $pageid]);
+        $featureid = get_feature_id("events", $pageid);
         $eventslist = "";
         while ($event = fetch_row($events)) {
             $buttons = [];
@@ -737,7 +756,7 @@ function get_recent_events($pageid, $recentdays, $archivedays) {
     $time = get_timestamp();
     date_default_timezone_set("UTC");
 
-    $featureid = get_db_field("featureid", "pages_features", "pageid = ||pageid|| AND feature='events'", ["pageid" => $pageid]);
+    $featureid = get_feature_id("events", $pageid);
     $dayspan = user_is_able($USER->userid, "exportcsv", $pageid, "events", $featureid) ? $archivedays : $recentdays;
     $to_day = $dayspan * 86400;
     $siteviewable = $pageid == $CFG->SITEID ? " OR (siteviewable = 1 AND confirmed = 1)" : "";

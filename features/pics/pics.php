@@ -46,7 +46,7 @@ function add_pics() {
 global $CFG, $USER;
     $featureid = clean_myvar_opt("featureid", "int", false);
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
-    if (!user_is_able($USER->userid, "addpics", $pageid)) { trigger_error(getlang("generic_permissions", false, ["addpics"]), E_USER_WARNING); return; }
+    if (!user_is_able($USER->userid, "addpics", $pageid)) { trigger_error(getlang("no_permission", false, ["addpics"]), E_USER_WARNING); return; }
 
     $existing_galleries = get_db_result(fetch_template("dbsql/pics.sql", "get_page_galleries", "pics"), ["pageid" => $pageid]);
 

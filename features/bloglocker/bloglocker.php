@@ -45,7 +45,7 @@ global $MYVARS, $CFG, $USER;
 	$htmlid = clean_myvar_req("htmlid", "int");
 	$pageid = clean_myvar_req("pageid", "int");
     if (!user_is_able($USER->userid, "viewbloglocker", $pageid)) {
-        trigger_error(getlang("generic_permissions", false, ["viewbloglocker"]), E_USER_WARNING);
+        trigger_error(getlang("no_permission", false, ["viewbloglocker"]), E_USER_WARNING);
 		return;
 	}
 

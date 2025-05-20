@@ -49,7 +49,7 @@ global $CFG, $MYVARS, $USER;
     $title = $caption = $content = "";
     if ($newsid) {
         if (!user_is_able($USER->userid, "editnews", $pageid,"news", $featureid)) {
-			trigger_error(getlang("generic_permissions", false, ["editnews"]), E_USER_WARNING);
+			trigger_error(getlang("no_permission", false, ["editnews"]), E_USER_WARNING);
 			return;
 		}
 
@@ -74,7 +74,7 @@ global $CFG, $MYVARS, $USER;
 		]);
     } else {
         if (!user_is_able($USER->userid, "addnews", $pageid,"news", $featureid)) {
-			trigger_error(getlang("generic_permissions", false, ["addnews"]), E_USER_WARNING);
+			trigger_error(getlang("no_permission", false, ["addnews"]), E_USER_WARNING);
 			return;
 		}
 
@@ -106,7 +106,7 @@ global $CFG, $MYVARS, $USER, $ROLES;
     $newsonly = isset($MYVARS->GET['newsonly']) ? true : false;
 	if (is_logged_in()) {
 		  if (!user_is_able($USER->userid, "viewnews", $pageid, "news", $newsid)) {
-            trigger_error(getlang("generic_permissions", false, ["viewnews"]), E_USER_WARNING);
+            trigger_error(getlang("no_permission", false, ["viewnews"]), E_USER_WARNING);
 			return;
 		} else {
 			echo news_wrapper($newsid, $pageid, $newsonly);

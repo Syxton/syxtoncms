@@ -629,23 +629,30 @@ global $CFG, $USER;
 }
 
 function make_page_link() {
-    $pageid = clean_myvar_req("pageid", "int");
-    $linkpageid = clean_myvar_req("linkpageid", "int");
-
     $error = "";
     try {
-        $SQL = "SELECT *
-                FROM pages_links
-                WHERE hostpageid = ||pageid||";
-        $sort = get_db_count($SQL, ["pageid" => $pageid]);
-        $sort++;
-        $page_name = get_db_field("name", "pages", "pageid = ||linkpageid||", ["linkpageid" => $linkpageid]);
+        start_db_transaction();
 
-        $SQL = "INSERT INTO pages_links (hostpageid, linkpageid, sort, linkdisplay)
-                VALUES(||pageid||, ||linkpageid||, ||sort||, ||linkdisplay||)";
-        execute_db_sql($SQL, ["pageid" => $pageid, "linkpageid" => $linkpageid, "sort" => $sort, "linkdisplay" => $page_name]);
+        $pageid = clean_myvar_req("pageid", "int");
+        $linkpageid = clean_myvar_req("linkpageid", "int");
+
+        $sort = get_db_count(fetch_template("dbsql/pages.sql", "get_pagelinks"), [
+            "pageid" => $pageid,
+        ]);
+        $sort++;
+
+        execute_db_sql(fetch_template("dbsql/pages.sql", "insert_pagelink"), [
+            "pageid" => $pageid,
+            "linkpageid" => $linkpageid,
+            "sort" => $sort,
+            "linkdisplay" => get_db_field("name", "pages", "pageid = ||linkpageid||", [
+                                "linkpageid" => $linkpageid,
+                            ]),
+        ]);
+        commit_db_transaction();
     } catch (\Throwable $e) {
         $error = $e->getMessage();
+        rollback_db_transaction($error);
     }
 
     ajax_return("", $error);
@@ -658,15 +665,19 @@ function unlink_page() {
 
     $error = "";
     try {
-        $SQL = "DELETE FROM pages_links WHERE hostpageid = ||pageid|| AND linkpageid = ||linkpageid||";
-        execute_db_sql($SQL, ["pageid" => $pageid, "linkpageid" => $linkpageid]);
+        start_db_transaction();
+        execute_db_sql(fetch_template("dbsql/pages.sql", "delete_pagelink"), [
+            "pageid" => $pageid,
+            "linkpageid" => $linkpageid,
+        ]);
         resort_links($pageid);
+        commit_db_transaction();
     } catch (\Throwable $e) {
         $error = $e->getMessage();
+        rollback_db_transaction($error);
     }
 
     ajax_return("", $error);
-
 }
 
 function move_link() {

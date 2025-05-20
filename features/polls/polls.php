@@ -48,7 +48,7 @@ global $USER;
     $pollid = clean_myvar_req("featureid", "int");
 
     if (!user_is_able($USER->userid, "editpolls", $pageid)) {
-        trigger_error(getlang("generic_permissions", false, ["editpolls"]), E_USER_WARNING);
+        trigger_error(getlang("no_permission", false, ["editpolls"]), E_USER_WARNING);
         return;
     }
 

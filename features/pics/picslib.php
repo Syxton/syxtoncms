@@ -44,7 +44,7 @@ global $CFG, $USER, $ROLES;
 function get_pics_manager($pageid, $featureid) {
 global $CFG, $MYVARS, $USER;
     if (!user_is_able($USER->userid, "managepics", $pageid)) {
-        return trigger_error(getlang("generic_permissions", false, ["managepics"]));
+        return trigger_error(getlang("no_permission", false, ["managepics"]));
     }
 
     $SQL = fetch_template("dbsql/pics.sql", "get_galleries", "pics", ["siteviewable" => false]);

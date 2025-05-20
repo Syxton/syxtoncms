@@ -281,7 +281,7 @@ user_pagelinks||
 
 default_pagelinks||
     SELECT pl.*
-    FROM pages_links pl
+    FROM `pages_links` pl
     WHERE pl.linkpageid IN (
         SELECT p.pageid
         FROM pages p
@@ -296,41 +296,52 @@ default_pagelinks||
 
 get_pagelinks||
     SELECT *
-    FROM pages_links
+    FROM `pages_links`
     WHERE hostpageid = ||pageid||
     ORDER BY sort
 ||get_pagelinks
 
 get_pagelink||
     SELECT *
-    FROM pages_links
+    FROM `pages_links`
     WHERE linkid = ||linkid||
 ||get_pagelink
 
 get_pagelink_in_position||
     SELECT *
-    FROM pages_links
+    FROM `pages_links`
     WHERE hostpageid = ||hostpageid||
     AND sort = ||sort||
 ||get_pagelink_in_position
 
 update_pagelink_sort||
-    UPDATE pages_links
+    UPDATE `pages_links`
     SET sort = ||sort||
     WHERE linkid = ||linkid||
 ||update_pagelink_sort
 
 update_pagelink_name||
-    UPDATE pages_links
+    UPDATE `pages_links`
     SET linkdisplay = ||linkdisplay||
     WHERE linkid = ||linkid||
 ||update_pagelink_name
 
 update_pagelink_sort_and_name||
-    UPDATE pages_links
+    UPDATE `pages_links`
     SET sort = ||sort||, linkdisplay = ||linkdisplay||
     WHERE linkid = ||linkid||
 ||update_pagelink_sort_and_name
+
+insert_pagelink||
+    INSERT INTO `pages_links` (hostpageid, linkpageid, sort, linkdisplay)
+    VALUES (||pageid||, ||linkpageid||, ||sort||, ||linkdisplay||)
+||insert_pagelink
+
+delete_pagelink||
+    DELETE FROM `pages_links`
+    WHERE hostpageid = ||pageid||
+    AND linkpageid = ||linkpageid||
+||delete_pagelink
 
 get_page_menu||
     SELECT *

@@ -52,7 +52,7 @@ global $CFG, $USER;
         if ($forumid && $pageid) {
 
             if (!user_is_able($USER->userid, "createforumcategory", $pageid)) {
-                trigger_error(getlang("generic_permissions", false, ["createforumcategory"]), E_USER_WARNING);
+                trigger_error(getlang("no_permission", false, ["createforumcategory"]), E_USER_WARNING);
             }
 
             if (!user_is_able($USER->userid, "createforumcategory", $pageid)) {
@@ -95,7 +95,7 @@ global $CFG, $USER;
         $returnme = $error = "";
 
         if (!user_is_able($USER->userid, "editforumcategory", $pageid)) {
-            trigger_error(getlang("generic_permissions", false, ["editforumcategory"]), E_USER_WARNING);
+            trigger_error(getlang("no_permission", false, ["editforumcategory"]), E_USER_WARNING);
             return;
         }
 

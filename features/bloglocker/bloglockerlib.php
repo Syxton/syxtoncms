@@ -8,11 +8,11 @@
 ***************************************************************************/
 
 if (!LIBHEADER) {
-	$sub = './';
-	while (!file_exists($sub . 'lib/header.php')) {
-		$sub = $sub == './' ? '../' : $sub . '../';
-	}
-	include($sub . 'lib/header.php');
+    $sub = './';
+    while (!file_exists($sub . 'lib/header.php')) {
+        $sub = $sub == './' ? '../' : $sub . '../';
+    }
+    include($sub . 'lib/header.php');
 }
 define('BLOGLOCKERLIB', true);
 
@@ -23,141 +23,149 @@ $CFG->bloglocker->viewable_limit = 20;
 function display_bloglocker($pageid, $area, $featureid) {
 global $CFG, $USER, $ROLES;
 
-	$content="";
+    $content="";
 
-	if (!$settings = fetch_settings("bloglocker", $featureid, $pageid)) {
-		save_batch_settings(default_settings("bloglocker", $pageid, $featureid));
-		$settings = fetch_settings("bloglocker", $featureid, $pageid);
-	}
+    if (!$settings = fetch_settings("bloglocker", $featureid, $pageid)) {
+        save_batch_settings(default_settings("bloglocker", $pageid, $featureid));
+        $settings = fetch_settings("bloglocker", $featureid, $pageid);
+    }
 
-	$title = $settings->bloglocker->$featureid->feature_title->setting;
-	$title = '<span class="box_title_text">' . $title . '</span>';
+    $title = $settings->bloglocker->$featureid->feature_title->setting;
+    $title = '<span class="box_title_text">' . $title . '</span>';
 
-	$viewable_limit = $settings->bloglocker->$featureid->viewable_limit->setting;
+    $viewable_limit = $settings->bloglocker->$featureid->viewable_limit->setting;
 
-	if (get_db_count("SELECT * FROM pages_features pf WHERE pf.pageid='$pageid' AND pf.feature='html' AND pf.area='locker'")) {
-		if (user_is_able($USER->userid, "viewbloglocker", $pageid)) {
-			$lockeritems = get_bloglocker($pageid);
-			$i = 0;
-			foreach ($lockeritems as $lockeritem) {
-				if (++$i > $viewable_limit) { break; }
-				$date = '
-					<span style="color:gray;padding: 3px;">' .
-						date('m/d/Y', $lockeritem->dateposted) . '
-					</span>';
-				$p = [
-					"title" => $lockeritem->title,
-					"path" => action_path("bloglocker") . "view_locker&pageid=$pageid&htmlid=" . $lockeritem->htmlid,
-					"width" => "98%", "height" => "95%",
-				];
-				$title = make_modal_links($p);
+    $SQL = fetch_template("dbsql/bloglocker.sql", "get_bloglocker", "bloglocker", [
+        "getblogs" => false,
+    ]);
 
-				$action = "";
-				if (!$lockeritem->blog && is_logged_in() && user_is_able($USER->userid, "addtolocker", $pageid)) {
-					ajaxapi([
-						"id" => "release_bloglocker",
-						"url" => "/ajax/site_ajax.php",
-						"paramlist" => "pageid, featureid",
-						"data" => [
-							"action" => "change_locker_state",
-							"pageid" => "js||pageid||js",
-							"featuretype" => "html",
-							"featureid" => "js||featureid||js",
-							"direction" => "released",
-						],
-						"event" => "none",
-						"ondone" => "getRoot()[0].go_to_page($pageid);",
-					]);
+    if (!get_db_count($SQL, ["pageid" => $pageid])) {
+        $buttons = get_button_layout("bloglocker", $featureid, $pageid);
+        return get_css_box($title,"The blog locker is empty at this time.", $buttons,NULL,"bloglocker", $featureid);
+    }
 
-					$action = '
-						<button style="float: right;" class="alike" id="release_bloglocker" title="Release from the blog locker" onclick="release_bloglocker(' . $pageid . ', ' . $lockeritem->htmlid . ');">
-							' . icon("box-open") . '
-						</button>';
-				}
+    if (!user_is_able($USER->userid, "viewbloglocker", $pageid)) {
+         $buttons = get_button_layout("bloglocker", $featureid, $pageid);
+        return get_css_box($title, getlang("no_permission", false, ["viewbloglocker"]), $buttons,NULL,"bloglocker", $featureid);
+    }
+    if (user_is_able($USER->userid, "viewbloglocker", $pageid)) {
+        $lockeritems = get_bloglocker($pageid);
+        $i = 0;
+        foreach ($lockeritems as $lockeritem) {
+            if (++$i > $viewable_limit) { break; }
+            $date = '
+                <span style="color:gray;padding: 3px;">' .
+                    date('m/d/Y', $lockeritem->dateposted) . '
+                </span>';
+            $p = [
+                "title" => $lockeritem->title,
+                "path" => action_path("bloglocker") . "view_locker&pageid=$pageid&htmlid=" . $lockeritem->htmlid,
+                "width" => "98%", "height" => "95%",
+            ];
+            $title = make_modal_links($p);
 
-				$content .= "<div>$date $title $action</div>";
-			}
-			$buttons = get_button_layout("bloglocker", $featureid, $pageid);
-			return get_css_box($title, $content, $buttons, NULL, "bloglocker", $featureid);
-		}
-	} else {
-		$buttons = get_button_layout("bloglocker", $featureid, $pageid);
-		return get_css_box($title,"The blog locker is empty at this time.", $buttons,NULL,"bloglocker", $featureid);
-	}
+            $action = "";
+            if (!$lockeritem->blog && is_logged_in() && user_is_able($USER->userid, "addtolocker", $pageid)) {
+                ajaxapi([
+                    "id" => "release_bloglocker",
+                    "url" => "/ajax/site_ajax.php",
+                    "paramlist" => "pageid, featureid",
+                    "data" => [
+                        "action" => "change_locker_state",
+                        "pageid" => "js||pageid||js",
+                        "featuretype" => "html",
+                        "featureid" => "js||featureid||js",
+                        "direction" => "released",
+                    ],
+                    "event" => "none",
+                    "ondone" => "getRoot()[0].go_to_page($pageid);",
+                ]);
+
+                $action = '
+                    <button style="float: right;" class="alike" id="release_bloglocker" title="Release from the blog locker" onclick="release_bloglocker(' . $pageid . ', ' . $lockeritem->htmlid . ');">
+                        ' . icon("box-open") . '
+                    </button>';
+            }
+
+            $content .= "<div>$date $title $action</div>";
+        }
+        $buttons = get_button_layout("bloglocker", $featureid, $pageid);
+        return get_css_box($title, $content, $buttons, NULL, "bloglocker", $featureid);
+    }
 }
 
 function get_bloglocker($pageid) {
-global $CFG;
-	$SQL = "SELECT * FROM pages_features pf INNER JOIN html h ON h.htmlid=pf.featureid WHERE pf.pageid='$pageid' AND pf.feature='html' AND pf.area='locker' ORDER BY h.dateposted DESC";
+    $SQL = fetch_template("dbsql/bloglocker.sql", "get_bloglocker", "bloglocker", [
+        "getblogs" => true,
+    ]);
 
-	$i=0;
-	if ($result = get_db_result($SQL)) {
-        $lockeritems = new \stdClass;
-		while ($row = fetch_row($result)) {
-			$featureid = $row["htmlid"];
+    if ($blogposts = get_db_result($SQL, ["pageid" => $pageid])) {
+        $lockeritems = [];
+        while ($post = fetch_row($blogposts)) {
+            $featureid = $post["htmlid"];
 
-			if (!$settings = fetch_settings("html", $featureid, $pageid)) {
-				save_batch_settings(default_settings("html", $pageid, $featureid));
-				$settings = fetch_settings("html", $featureid, $pageid);
-			}
+            if (!$settings = fetch_settings("html", $featureid, $pageid)) {
+                save_batch_settings(default_settings("html", $pageid, $featureid));
+                $settings = fetch_settings("html", $featureid, $pageid);
+            }
 
-            $lockeritems->$i = new \stdClass;
-			$lockeritems->$i->htmlid = $featureid;
-			$lockeritems->$i->blog = $settings->html->$featureid->blog->setting;
-			$lockeritems->$i->title = $settings->html->$featureid->feature_title->setting;
-			$lockeritems->$i->dateposted = $row["dateposted"];
-			$i++;
-		}
-		return $lockeritems;
-	}
-	return false;
+            $lockeritems[] = (object)[
+                "htmlid" => $featureid,
+                "blog" => $settings->html->$featureid->blog->setting,
+                "title" => $settings->html->$featureid->feature_title->setting,
+                "dateposted" => $post["dateposted"],
+            ];
+        }
+        return (object) $lockeritems;
+    }
+    return false;
 }
 
 function bloglocker_delete($pageid, $featureid) {
-	$params = [
-		"pageid" => $pageid,
-		"featureid" => $featureid,
-		"feature" => "bloglocker",
-	];
+    $params = [
+        "pageid" => $pageid,
+        "featureid" => $featureid,
+        "feature" => "bloglocker",
+    ];
 
-	try {
-		start_db_transaction();
-		execute_db_sql(fetch_template("dbsql/features.sql", "delete_feature"), $params);
-		execute_db_sql(fetch_template("dbsql/features.sql", "delete_feature_settings"), $params);
-		resort_page_features($pageid);
-		commit_db_transaction();
-	} catch (\Throwable $e) {
-		rollback_db_transaction($e->getMessage());
-		return false;
-	}
+    try {
+        start_db_transaction();
+        execute_db_sql(fetch_template("dbsql/features.sql", "delete_feature"), $params);
+        execute_db_sql(fetch_template("dbsql/features.sql", "delete_feature_settings"), $params);
+        resort_page_features($pageid);
+        commit_db_transaction();
+    } catch (\Throwable $e) {
+        rollback_db_transaction($e->getMessage());
+        return false;
+    }
 }
 
 function bloglocker_buttons($pageid, $featuretype, $featureid) {
-	global $CFG, $USER;
-	$returnme = "";
-	return $returnme;
+    global $CFG, $USER;
+    $returnme = "";
+    return $returnme;
 }
 
 function bloglocker_default_settings($type, $pageid, $featureid) {
-	$settings = [
-		[
-			"setting_name" => "feature_title",
-			"defaultsetting" => "Blog Locker",
-			"display" => "Feature Title",
-			"inputtype" => "text",
-		],
+    $settings = [
+        [
+            "setting_name" => "feature_title",
+            "defaultsetting" => "Blog Locker",
+            "display" => "Feature Title",
+            "inputtype" => "text",
+        ],
         [
             "setting_name" => "viewable_limit",
             "defaultsetting" => "20",
             "display" => "Viewable Blog Limit",
             "inputtype" => "text",
-			"numeric" => true,
-			"validation" => "<=0",
-			"warning" => "Must be greater than 0.",
+            "numeric" => true,
+            "validation" => "<=0",
+            "warning" => "Must be greater than 0.",
         ]
-	];
+    ];
 
     $settings = attach_setting_identifiers($settings, $type, $pageid, $featureid);
-	return $settings;
+    return $settings;
 }
 ?>

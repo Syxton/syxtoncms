@@ -42,6 +42,28 @@ update_password||
 	WHERE userid = ||userid||
 ||update_password
 
+set_temp_password||
+	UPDATE users
+	SET ||emptytemp{{
+		alternate = ||password||
+		//OR//
+		password = ||password||
+	}}emptytemp||
+	WHERE email = ||email||
+||set_temp_password
+
+update_user||
+	UPDATE users
+	SET fname = ||fname||,
+		lname = ||lname||,
+		email = ||email||
+		||*passwordchange{{
+			,alternate = ''
+			,password = ||password||
+		}}passwordchange||
+	WHERE userid = ||userid||
+||update_user
+
 create_user||
 	INSERT INTO users (email, fname, lname, temp, password, userkey, joined)
 	VALUES(||email||, ||fname||, ||lname||, ||temp||, ||password||, ||userkey||, ||time||)

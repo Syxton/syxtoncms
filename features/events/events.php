@@ -229,7 +229,7 @@ global $CFG;
             throw new Exception("Missing featureid");
         }
 
-        $pageid = get_db_field("pageid", "pages_features", "featureid=$featureid");
+        $pageid = get_feature_pageid("events", $featureid);
         if (!$settings = fetch_settings("events", $featureid, $pageid)) {
             save_batch_settings(default_settings("events", $pageid, $featureid));
             $settings = fetch_settings("events", $featureid, $pageid);
@@ -386,7 +386,7 @@ global $CFG, $USER;
     if ($eventid) { // Update existing event
         $heading = "Edit Event";
         if (!user_is_able($USER->userid, "editevents", $pageid)) {
-            trigger_error(getlang("generic_permissions", false, ["editevents"]), E_USER_WARNING);
+            trigger_error(getlang("no_permission", false, ["editevents"]), E_USER_WARNING);
             return;
         }
 
@@ -445,7 +445,7 @@ global $CFG, $USER;
     } else { // New event form
         $heading = "Add Event";
         if (!user_is_able($USER->userid, "addevents", $pageid)) {
-            trigger_error(getlang("generic_permissions", false, ["addevents"]), E_USER_WARNING);
+            trigger_error(getlang("no_permission", false, ["addevents"]), E_USER_WARNING);
             return;
         }
         $eventid = $template = false;
@@ -1081,7 +1081,7 @@ global $CFG, $USER;
     $eventid = clean_myvar_req("eventid", "int");
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 
-    if (!user_is_able($USER->userid, "signupforevents", $pageid)) { trigger_error(getlang("generic_permissions", false, ["signupforevents"]), E_USER_WARNING); return; }
+    if (!user_is_able($USER->userid, "signupforevents", $pageid)) { trigger_error(getlang("no_permission", false, ["signupforevents"]), E_USER_WARNING); return; }
 
     $event = get_event($eventid);
     $template = get_event_template($event['template_id']);

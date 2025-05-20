@@ -28,7 +28,7 @@ get_feature||
 
 get_features_by_page_area||
     SELECT *
-    FROM pages_features 
+    FROM pages_features
     WHERE pageid = ||pageid||
     AND area = ||area||
 ||get_features_by_page_area
@@ -77,3 +77,17 @@ insert_page_feature||
     INSERT INTO pages_features (pageid, feature, sort, area, featureid)
     VALUES(||pageid||, ||feature||, ||sort||, ||area||, ||featureid||)
 ||insert_page_feature
+
+get_feature_page_features_by_featureid||
+    SELECT *
+    FROM pages_features
+    WHERE feature = ||feature||
+    AND featureid = ||featureid||
+||get_feature_page_features_by_featureid
+
+get_feature_page_features_by_pageid||
+    SELECT *
+    FROM pages_features
+    WHERE feature = ||feature||
+    AND pageid = ||pageid||
+||get_feature_page_features_by_pageid

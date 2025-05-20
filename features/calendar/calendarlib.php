@@ -56,20 +56,9 @@ global $CFG, $USER, $ROLES;
     }
 }
 
-function get_calendar_area($pageid) {
-    $SQL = "SELECT area
-            FROM pages_features
-            WHERE feature = 'calendar'
-            AND pageid = ||pageid||";
-    $row = get_db_row($SQL, ["pageid" => $pageid]);
-
-    return $row["area"];
-}
-
 function clean_for_overlib($str) {
     return str_replace(chr(13), '<br />', str_replace(chr(10), '<br />', $str));
 }
-
 
 function get_calendar($params) {
 global $CFG;
