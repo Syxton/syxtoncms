@@ -384,8 +384,8 @@ update_staff_app_archive||
 
 insert_staff_app_archive||
     INSERT INTO events_staff_archive
-    (userid, pageid, name, phone, dateofbirth, address, agerange, cocmember, congregation, priorwork, q1_1, q1_2, q1_3, q2_1, q2_2, q2_3, parentalconsent, parentalconsentsig, workerconsent, workerconsentsig, workerconsentdate, ref1name, ref1relationship, ref1phone, ref2name, ref2relationship, ref2phone, ref3name, ref3relationship, ref3phone, bgcheckpass, bgcheckpassdate, year)
-    VALUES(||userid||, ||pageid||, ||name||, ||phone||, ||dateofbirth||, ||address||, ||agerange||, ||cocmember||, ||congregation||, ||priorwork||, ||q1_1||, ||q1_2||, ||q1_3||, ||q2_1||, ||q2_2||, ||q2_3||, ||parentalconsent||, ||parentalconsentsig||, ||workerconsent||, ||workerconsentsig||, ||workerconsentdate||, ||ref1name||,	||ref1relationship||, ||ref1phone||, ||ref2name||, ||ref2relationship||, ||ref2phone||, ||ref3name||, ||ref3relationship||, ||ref3phone||, '', 0, ||year||)
+    (userid, staffid, pageid, name, phone, dateofbirth, address, agerange, cocmember, congregation, priorwork, q1_1, q1_2, q1_3, q2_1, q2_2, q2_3, parentalconsent, parentalconsentsig, workerconsent, workerconsentsig, workerconsentdate, ref1name, ref1relationship, ref1phone, ref2name, ref2relationship, ref2phone, ref3name, ref3relationship, ref3phone, bgcheckpass, bgcheckpassdate, year)
+    VALUES(||userid||, ||staffid||, ||pageid||, ||name||, ||phone||, ||dateofbirth||, ||address||, ||agerange||, ||cocmember||, ||congregation||, ||priorwork||, ||q1_1||, ||q1_2||, ||q1_3||, ||q2_1||, ||q2_2||, ||q2_3||, ||parentalconsent||, ||parentalconsentsig||, ||workerconsent||, ||workerconsentsig||, ||workerconsentdate||, ||ref1name||,	||ref1relationship||, ||ref1phone||, ||ref2name||, ||ref2relationship||, ||ref2phone||, ||ref3name||, ||ref3relationship||, ||ref3phone||, '', 0, ||year||)
 ||insert_staff_app_archive
 
 get_staff_by_year||
