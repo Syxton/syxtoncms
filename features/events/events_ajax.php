@@ -2755,7 +2755,7 @@ global $CFG, $USER;
         foreach ($stafflist as $email) {
             $name = "";
             $email = trim($email);
-            if (filter_var($email, FILTER_VALIDATE_EMAIL)) { // It is an email address, so let's get an email ready.
+            if (strpos($email, '@') !== false) { // It is an email address, so let's get an email ready.
                 $user = get_db_row("SELECT * FROM users WHERE LOWER(email) LIKE LOWER(||email||)", ["email" => "%$email%"]);
 
                 $contact = (object)[
@@ -2789,7 +2789,9 @@ global $CFG, $USER;
                 $action3
                 </ul><br />";
 
-                if (!empty($status)) {
+                // Send email if there are items in the status array.
+                // Do not send an email if the only status is "Flagged".
+                if (!empty($status) && !(count($status) == 1 && $status[0]["tag"] == "Flagged")) {
                     $m3 = "<strong>Current Status:</strong><br />" . print_status($status);
 
                     // Send email to the requester letting them know we received the request.
