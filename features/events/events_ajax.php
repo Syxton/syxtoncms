@@ -2779,30 +2779,33 @@ global $CFG, $USER;
                     $action2 = $action3 = "";
                 }
 
-                $m2 = "<br />I hope this email finds you well.<br />
-                <p><strong>If you are receiving this, it is because you have been selected to be on staff for an event this year.</strong>&nbsp; <strong>Please do the following ASAP.&nbsp;&nbsp; You must complete this staff application to be a " . date("Y") . " staff member. </strong></p>
-                <ul>
-                <li>Go to <a href='" . $protocol.$CFG->wwwroot . "'>$CFG->sitename</a> and $action1 &nbsp;<strong> <br />Only log in with your own account to fill out the application. </strong></li>
-                <li>Once you are logged into the site, you will find a button labeled <strong>Staff Apply</strong>.&nbsp; Fill out the staff application and submit.</li>
-                $action2
-                <li>If you are 18 years of age or older, once you complete your staff application you will be given an opportunity to follow a link to complete the Background Authorization Form. This background check will be valid for the next 5 years and will not need to be done every year.</li>
-                $action3
-                </ul><br />";
-
-                // Send email if there are items in the status array.
-                // Do not send an email if the only status is "Flagged".
-                if (!empty($status) && !(count($status) == 1 && $status[0]["tag"] == "Flagged")) {
-                    $m3 = "<strong>Current Status:</strong><br />" . print_status($status);
-
-                    // Send email to the requester letting them know we received the request.
-                    if (!empty($sendemails)) {
+                if (!empty($sendemails)) {
+                    if (!empty($status) && !(count($status) == 1 && $status[0]["tag"] == "Flagged")) {
+                        $m2 = "<br />I hope this email finds you well.<br />
+                        <p><strong>If you are receiving this, it is because you have been selected to be on staff for an event this year.</strong>&nbsp; <strong>Please do the following ASAP.&nbsp;&nbsp; You must complete this staff application to be a " . date("Y") . " staff member. </strong></p>
+                        <ul>
+                        <li>Go to <a href='" . $protocol.$CFG->wwwroot . "'>$CFG->sitename</a> and $action1 &nbsp;<strong> <br />Only log in with your own account to fill out the application. </strong></li>
+                        <li>Once you are logged into the site, you will find a button labeled <strong>Staff Apply</strong>.&nbsp; Fill out the staff application and submit.</li>
+                        $action2
+                        <li>If you are 18 years of age or older, once you complete your staff application you will be given an opportunity to follow a link to complete the Background Authorization Form. This background check will be valid for the next 5 years and will not need to be done every year.</li>
+                        $action3
+                        </ul><br />";
+                        $m3 = "<strong>Current Status:</strong><br />" . print_status($status);
                         send_email($contact, $emailnotice, $subject, $m1.$m2.$m3);
                         $staffcomstatus[] = "$name($email) contacted.";
                     } else {
-                        $staffcomstatus[] = "$name($email) <strong> Requires: " . implode(", ", array_column($status, 'tag')) . "</strong>";
+                        $staffcomstatus[] = "$name($email) is APPROVED / was NOT contacted.";
                     }
                 } else {
-                    $staffapproved[] = "$name($email) is <strong> APPROVED</strong>";
+                    if (empty($status) || (count($status) == 1 && $status[0]["tag"] == "Flagged")) {
+                        if (!empty($status)) {
+                            $staffapproved[] = "$name($email) is <strong> APPROVED (FLAGGED)</strong>";
+                        } else {
+                            $staffapproved[] = "$name($email) is <strong> APPROVED</strong>";
+                        }
+                    } else {
+                        $staffcomstatus[] = "$name($email) <strong> Requires: " . implode(", ", array_column($status, 'tag')) . "</strong>";
+                    }
                 }
             } else {
                 if (strlen($email) > 4) {
