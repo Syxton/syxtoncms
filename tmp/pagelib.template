@@ -182,13 +182,13 @@ get_login_form_template||
         <fieldset class="formContainer">
             <div class="rowContainer">
                 <label class="rowTitle" for="username">Username</label>
-                <input tabindex=1 style="width:100%" type="email" id="username" name="username" autocomplete="username" data-rule-required="true" data-msg-required="||echo getlang("input_required");::none||" />
+                <input style="width:100%" type="email" id="username" name="username" autocomplete="username" data-rule-required="true" data-msg-required="||echo getlang("input_required");::none||" />
                 <div class="tooltipContainer info">||input_username||</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
                 <label class="rowTitle" for="password">Password</label>
-                <input tabindex=2 style="width:100%" type="password" id="password" name="password" autocomplete="current-password" data-rule-required="true" data-msg-required="||echo getlang("input_required");::none||" />
+                <input style="width:100%" type="password" id="password" name="password" autocomplete="current-password" data-rule-required="true" data-msg-required="||echo getlang("input_required");::none||" />
                 <div class="tooltipContainer info">||input_password2||</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
