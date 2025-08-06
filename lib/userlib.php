@@ -35,7 +35,7 @@ global $CFG;
             $returnme .= '
                 <div class="carousel-cell">
                     <div>
-                        <img ' . $loading . ' class="carouselslides" src="' . $img[$randindex] . ' alt="carousel image with a quote" />
+                        <img ' . $loading . ' class="carouselslides" src="' . $img[$randindex] . '" alt="carousel image with a quote" />
                     </div>
                     <div class="carouselquotes">
                     ' . $quote . $author . '
