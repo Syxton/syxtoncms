@@ -32,13 +32,19 @@ global $CFG;
 
             // Get random image index from $img array.
             $randindex = array_rand($img);
-            $returnme .= "<div class='carousel-cell'>" .
-                            "<div><img $loading class='carouselslides' src='" . $img[$randindex]."' alt='carousel image with a quote' /></div>" .
-                            "<div class='carouselquotes'>" . $quote . $author . "</div>" .
-                         "</div>";
+            $returnme .= '
+                <div class="carousel-cell">
+                    <div>
+                        <img ' . $loading . ' class="carouselslides" src="' . $img[$randindex] . ' alt="carousel image with a quote" />
+                    </div>
+                    <div class="carouselquotes">
+                    ' . $quote . $author . '
+                    </div>
+                </div>';
+
             // Unset the random image so it can't be used twice.
             unset($img[$randindex]);
-            $loading = "loading='lazy'";
+            $loading = 'loading="lazy"';
         }
     }
     return $returnme . '</div>';
