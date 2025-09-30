@@ -19,7 +19,10 @@ if (empty($_POST["aslib"])) {
 
     $head = get_js_tags(["features/events/events.js"]);
 
-    echo fill_template("tmp/page.template", "start_of_page_template", false, ["head" => $head]);
+    echo fill_template("tmp/page.template", "start_of_page_template", false, [
+        "head" => $head,
+        "title" => check_for_title(),
+    ]);
 
     callfunction();
 
@@ -189,6 +192,10 @@ global $CFG;
         "event" => "submit",
     ]);
     echo fill_template("tmp/events.template", "staff_emailer_template", "events", ["searchcontainer" => get_searchcontainer()]);
+}
+
+function pay_title() {
+    return "Event Payments";
 }
 
 function pay() {
