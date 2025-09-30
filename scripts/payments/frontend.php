@@ -23,7 +23,7 @@
         />
         <title>PayPal Advanced Integration</title>
         <script
-            src="https://www.paypal.com/sdk/js?client-id=<?php echo $CFG->paypal_client_id; ?>&buyer-country=US&currency=USD&components=buttons,card-fields&enable-funding=venmo"
+            src="https://www.paypal.com/sdk/js?client-id=<?php echo $CFG->paypal_client_id; ?>&currency=USD&components=buttons,card-fields&enable-funding=venmo"
             data-sdk-integration-source="developer-studio">
         </script>
         <style>

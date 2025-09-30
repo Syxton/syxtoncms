@@ -1194,7 +1194,8 @@ global $CFG, $USER;
                     e.preventDefault();
                 }
             }
-        });`;
+        });
+    `;
 
     echo '
         <div id="registration_div">
@@ -1206,11 +1207,14 @@ global $CFG, $USER;
                 </tr>
             </table>
             ' . $form . '
-        </div>' . js_code_wrap($code, "defer", true);;
+
+        </div>'
+        . js_code_wrap('$(document).ready(function() { updateAge(); });')
+        . js_code_wrap($code, "defer", true);
 }
 
 function create_validation_javascript($formlist, $eventid) {
-global $CFG;
+    global $CFG;
     $validation_script = 'function validate_fields() {	var valid = true;';
     date_default_timezone_set(date_default_timezone_get());
     $element = explode("*", $formlist);

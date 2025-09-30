@@ -1431,6 +1431,7 @@ global $CFG, $USER;
             $sqlparams = [
                 "issite" => ($pageid == $CFG->SITEID),
                 "searchstring" => $searchstring,
+                "fullstring" => $dbsearchwords,
             ];
             $SQL = fill_template("dbsql/events.sql", "registration_search", "events", $sqlparams, true);
         }
