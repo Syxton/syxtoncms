@@ -870,7 +870,10 @@ function make_fee_options($min, $full, $name, $options = "", $sale_end = "", $sa
     $returnme = '<select id="' . $name . '" name="' . $name . '" ' . $options . ' >';
     $select = "selected";
 
-    if ($min == $full) { return '<span style="float:left;margin:4px;">$</span><input id="' . $name . '" name="' . $name . '" type="text" READONLY value="' . $full . '.00"/>';}
+    // If the minimum is the same as the full price, just show the full price.
+    if ($min == $full) {
+        return '<span style="margin:4px;">$' . $full . '.00</span><input id="' . $name . '" name="' . $name . '" ' . $options . ' type="hidden" value="' . $full . '.00"/>';
+    }
 
     while ($min < $full) {
         $returnme .= '<option value="' . number_format($min, 2, ".", "") . '" ' . $select . '>$' . number_format($min, 2, ".", "") . '</option>';
