@@ -408,7 +408,9 @@ global $CFG;
                             if ($file != '.' && $file != '..') {
                                 $path = $localdirectory . '/' . $file;
                                 if (is_readable($path)) {
-                                    if (is_file($path) && in_array(end(explode('.', end(explode('/', $file)))), $exts)) {
+                                    $pathparts = explode('/', $file);
+                                    $pathparts = explode('.', end($pathparts));
+                                    if (is_file($path) && in_array(end($pathparts), $exts)) {
                                         $fileurl = $url . '/' . $file; // Use web url instead of local link.
                                         $caption = $captions[$file] ?? $file; // Either a caption or the filename
                                         $display = empty($gallery) ? "" : "display:none;";
