@@ -1611,6 +1611,7 @@ function get_event_length($event) {
         return "All day";
     }
 
+    $length = "";
     date_default_timezone_set(date_default_timezone_get());
     if ($event['event_begin_date'] == $event['event_end_date']) { //ONE DAY EVENT
         $length = date("n/j/Y", $event['event_begin_date']);
