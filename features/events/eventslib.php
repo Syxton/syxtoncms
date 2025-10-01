@@ -900,11 +900,11 @@ function events_registration_confirmation($paid, $tx, $success) {
         "cart" => get_printable_payment_cart($paid),
         "message" => "Thank you for registering for this event. Please check your email for more information.",
     ];
+    $display = fill_template("tmp/events.template", "payment_process_success", "events", $params);
 
     unset($_SESSION["payment_cart"]);
     unset($_SESSION["completed_registrations"]);
-
-    return fill_template("tmp/events.template", "payment_process_success", "events", $params);
+    return $display;
 }
 
 function get_printable_payment_cart($paid) {
@@ -918,20 +918,22 @@ function get_printable_payment_cart($paid) {
     ];
     $return = fill_template("tmp/events.template", "payment_cart_row", "events", $p);
 
-    foreach($_SESSION["payment_cart"] as $item) {
-        $paid = (float) get_reg_paid($item->id);
-        $owed = (float) get_reg_owed($item->id);
+    if (!empty($_SESSION["payment_cart"])) {
+        foreach($_SESSION["payment_cart"] as $item) {
+            $paid = (float) get_reg_paid($item->id);
+            $owed = (float) get_reg_owed($item->id);
 
-        $still_owed = $owed - $paid;
-        $still_owed = $still_owed < 0 ? 0 : $still_owed;
+            $still_owed = $owed - $paid;
+            $still_owed = $still_owed < 0 ? 0 : $still_owed;
 
-        $p = [
-            "desc" => $item->description,
-            "val1" => '$' . number_format($paid, 2, '.', ''),
-            "val2" => '$' . number_format($still_owed, 2, '.', ''),
-            "class" => "payment_cart_row",
-        ];
-        $return .= fill_template("tmp/events.template", "payment_cart_row", "events", $p);
+            $p = [
+                "desc" => $item->description,
+                "val1" => '$' . number_format($paid, 2, '.', ''),
+                "val2" => '$' . number_format($still_owed, 2, '.', ''),
+                "class" => "payment_cart_row",
+            ];
+            $return .= fill_template("tmp/events.template", "payment_cart_row", "events", $p);
+        }
     }
 
     return '
@@ -3319,5 +3321,12 @@ global $CFG, $USER;
     }
 
     return false;
+}
+
+function events_print_confirmation($cart, $data) {
+    // Process payment and send emails.
+    $status = events_approved_payment($cart, $data);
+
+    return events_registration_confirmation($cart, $data, $status);
 }
 ?>

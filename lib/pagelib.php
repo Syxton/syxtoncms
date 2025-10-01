@@ -243,7 +243,7 @@ function get_default_role($pageid) {
 }
 
 function page_masthead($left = true, $header_only = false) {
-global $CFG, $USER, $PAGE;
+    global $CFG, $USER, $PAGE;
     if ($left) {
         $PAGE = set_pageid();
         $pageid = $PAGE->id;

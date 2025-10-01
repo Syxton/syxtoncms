@@ -15,8 +15,6 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
     include($sub . 'lib/header.php');
 }
 
-echo fill_template("tmp/page.template", "page_js_css", false, ["dirroot" => $CFG->directory]);
-
 if (!isset($_GET['data'])) { exit(); }
 
 $data = json_decode($_GET['data']);
@@ -30,18 +28,37 @@ $reference = json_decode($data->purchase_units[0]->reference_id);
 $type = $reference->t;
 $cart = $reference->c;
 
-switch ($type) {
-    case 'events':
-        if (!defined('EVENTSLIB')) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
-        // Process payment and send emails.
-        $success = events_approved_payment($cart, $data);
+$successfunction = $type . "_print_confirmation";
 
-        // Output confirmation page.
-        echo events_registration_confirmation($cart, $data, $success);
-        break;
-    case 'donate':
-        if (!defined('EVENTSLIB')) { include_once($CFG->dirroot . '/features/donate/donatelib.php'); }
-        break;
+// Include feature specific functions.
+include_once($CFG->dirroot . "/features/$type/$type" . "lib.php");
+
+$display = "";
+if (function_exists($successfunction)) {
+    $display = $successfunction($cart, $data);
+} else {
+    throw new Exception("Failed to find payment confirmation functions.");
 }
+
+// Output confirmation page.
+$PAGE->title        = "Payment Confirmation Page"; // Title of page
+$PAGE->name         = $PAGE->title; // Title of page
+$PAGE->description  = $PAGE->title; // Description of page
+$PAGE->themeid =    get_page_themeid($PAGE->id);
+
+header("Cache-Control: no-cache, no-store, must-revalidate"); // HTTP 1.1.
+header("Pragma: no-cache"); // HTTP 1.0.
+header("Expires: 0");
+
+// Start Page
+include($CFG->dirroot . '/header.html');
+
+echo fill_template("tmp/index.template", "simplelayout_template", false, [
+    "mainmast" => page_masthead(true, true),
+    "middlecontents" => $display,
+]);
+
+// End Page
+include($CFG->dirroot . '/footer.html');
 
 ?>
