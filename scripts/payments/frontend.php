@@ -9,7 +9,7 @@
     include_once($CFG->dirroot . '/lib/header.php');
     if (!defined('EVENTSLIB')) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 
-    $total = clean_param_opt($_GET, "total", "float",0);
+    $total = clean_param_opt($_GET, "total", "float", 0);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -23,7 +23,7 @@
         />
         <title>PayPal Advanced Integration</title>
         <script
-            src="https://www.paypal.com/sdk/js?client-id=<?php echo $CFG->paypal_client_id; ?>&currency=USD&components=buttons,card-fields&enable-funding=venmo"
+            src="https://www.paypal.com/sdk/js?client-id=<?php echo $CFG->paypal_client_id; ?>&components=buttons,card-fields&enable-funding=venmo"
             data-sdk-integration-source="developer-studio">
         </script>
         <style>

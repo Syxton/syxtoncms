@@ -52,6 +52,7 @@ use PaypalServerSdkLib\Models\PaypalExperienceUserAction;
 // In the future, each event or donation could potentially use a different client / password.
 $PAYPAL_CLIENT_ID = $CFG->paypal_client_id;
 $PAYPAL_CLIENT_SECRET = $CFG->paypal_client_secret;
+$PAYPAL_ENVIRONMENT = $CFG->paypal ? Environment::PRODUCTION : Environment::SANDBOX;
 
 $client = PaypalServerSdkClientBuilder::init()
     ->clientCredentialsAuthCredentials(
@@ -60,7 +61,7 @@ $client = PaypalServerSdkClientBuilder::init()
             $PAYPAL_CLIENT_SECRET
         )
     )
-    ->environment(Environment::SANDBOX)
+    ->environment($PAYPAL_ENVIRONMENT)
     ->build();
 
 

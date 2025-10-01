@@ -38,19 +38,19 @@ show_registrations_menu_tools||
             </button>
             <ul id="event_menu" style="||display||">
                 <li>
-                    <button id="edit_registration" onclick="edit_registration(||eventid||, $('#reserveamount').val())" title="Edit Registration" class="alike">
+                    <button id="edit_registration" onclick="edit_registration(||eventid||, $('#registrants').val())" title="Edit Registration" class="alike">
                         ||echo icon("pencil");::none||
                         <span> Edit Registration</span>
                     </button>
                 </li>
                 <li>
-                    <button id="delete_registration" onclick="delete_registration(||eventid||, $('#reserveamount').val())" title="Delete Registration" class="alike">
+                    <button id="delete_registration" onclick="delete_registration(||eventid||, $('#registrants').val())" title="Delete Registration" class="alike">
                         ||echo icon("trash");::none||
                         <span>Delete Registration</span>
                     </button>
                 </li>
                 <li>
-                    <button id="email_registration" onclick="email_registration(||eventid||, $('#reserveamount').val())" title="Send Registration Email" class="alike">
+                    <button id="email_registration" onclick="email_registration(||eventid||, $('#registrants').val())" title="Send Registration Email" class="alike">
                         ||echo icon("envelope");::none||
                         <span> Send Registration Email</span>
                     </button>
