@@ -28,12 +28,12 @@ $reference = json_decode($data->purchase_units[0]->reference_id);
 $type = $reference->t;
 $cart = $reference->c;
 
-$successfunction = $type . "_print_confirmation";
+$confirmation = $type . "_print_confirmation";
 
 // Include feature specific functions.
 include_once($CFG->dirroot . "/features/$type/$type" . "lib.php");
 
-if (!function_exists($successfunction)) {
+if (!function_exists($confirmation)) {
     throw new Exception("Failed to find payment confirmation functions.");
 }
 
@@ -52,7 +52,7 @@ include($CFG->dirroot . '/header.html');
 
 echo fill_template("tmp/index.template", "simplelayout_template", false, [
     "mainmast" => page_masthead(true, true),
-    "middlecontents" => $successfunction($cart, $data),
+    "middlecontents" => $confirmation($cart, $data),
 ]);
 
 // End Page
