@@ -33,10 +33,7 @@ $successfunction = $type . "_print_confirmation";
 // Include feature specific functions.
 include_once($CFG->dirroot . "/features/$type/$type" . "lib.php");
 
-$display = "";
-if (function_exists($successfunction)) {
-    $display = $successfunction($cart, $data);
-} else {
+if (!function_exists($successfunction)) {
     throw new Exception("Failed to find payment confirmation functions.");
 }
 
@@ -55,7 +52,7 @@ include($CFG->dirroot . '/header.html');
 
 echo fill_template("tmp/index.template", "simplelayout_template", false, [
     "mainmast" => page_masthead(true, true),
-    "middlecontents" => $display,
+    "middlecontents" => $successfunction($cart, $data),
 ]);
 
 // End Page
