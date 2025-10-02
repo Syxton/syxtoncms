@@ -16,13 +16,15 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
 define('USERLIB', true);
 
 function random_quote() {
-global $CFG;
-    $returnme = '<div id="carousel"  data-flickity=\'{ "autoPlay": 10000, "pageDots": false, "imagesLoaded": true, "percentPosition": false, "wrapAround": true }\'>';
+    global $CFG;
 
-    if (!$img = randomimages($CFG->userfilesfolder . "/branding/carousel/")) { return ''; } // No carousel if no images are found.
+    // No carousel if no images are found.
+    if (!$img = randomimages($CFG->userfilesfolder . "/branding/carousel/")) {
+        return '';
+    }
 
+    $carousel = "";
     $count = count($img) >= 5 ? 5 : count($img); // Images found, find out how many.
-    $loading = "";
     // Get enough quotes to add to the images.
     if ($result = get_db_result("SELECT quote, author FROM quotes ORDER BY RAND() LIMIT 0, $count")) {
         while ($row = fetch_row($result)) {
@@ -32,10 +34,13 @@ global $CFG;
 
             // Get random image index from $img array.
             $randindex = array_rand($img);
-            $returnme .= '
+            $carousel .= '
                 <div class="carousel-cell">
                     <div>
-                        <img ' . $loading . ' class="carouselslides" src="' . $img[$randindex] . '" alt="carousel image with a quote" />
+                        <img
+                            class="carouselslides carousel-cell-image"
+                            data-flickity-lazyload="' . $img[$randindex] . '"
+                            alt="carousel image with a quote" />
                     </div>
                     <div class="carouselquotes">
                     ' . $quote . $author . '
@@ -44,15 +49,29 @@ global $CFG;
 
             // Unset the random image so it can't be used twice.
             unset($img[$randindex]);
-            $loading = 'loading="lazy"';
         }
     }
-    return $returnme . '</div>';
+
+    return '
+        <div
+            id="carousel"
+            data-flickity=\'{
+                "lazyLoad": 1,
+                "autoPlay": 10000,
+                "pageDots": false,
+                "imagesLoaded": true,
+                "percentPosition": false,
+                "wrapAround": true
+            }\'>
+            ' . $carousel . '
+        </div>';
 }
 
 function randomimages($dir) {
     $images = glob($dir . '*.{jpg,jpeg,png,gif,webp,avif}', GLOB_BRACE);
-    if (empty(count($images))) { return false; }
+    if (empty(count($images))) {
+        return false;
+    }
     return $images;
 }
 
