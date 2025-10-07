@@ -31,6 +31,10 @@ if (!empty($_SESSION["lia_original"])) {
 
 callfunction();
 
+function admin_email_sender() {
+    ajax_return('<iframe id="email_sender" onload="resizeCaller(this.id);" style="width:100%;border:none;" src="/features/adminpanel/email_sender.php"></iframe>');
+}
+
 function admin_email_tester() {
     ajax_return(admin_email_test_form());
 }
@@ -40,7 +44,10 @@ function admin_email_test_form() {
         "id" => "emailtester",
         "if" => "$('#email').val().length > 0",
         "url" => "/features/adminpanel/adminpanel_ajax.php",
-        "data" => ["action" => "admin_email_test", "email" => "js||$('#email').val()||js"],
+        "data" => [
+            "action" => "admin_email_test",
+            "email" => "js||$('#email').val()||js",
+        ],
         "display" => "display",
     ]);
 

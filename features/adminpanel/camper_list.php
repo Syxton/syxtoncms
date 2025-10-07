@@ -7,7 +7,13 @@
 * Revision: 2.0.1
 ***************************************************************************/
 
-include ('../header.php');
+if (!isset($CFG)) {
+	$sub = '';
+	while (!file_exists($sub . 'header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
+	}
+	include($sub . 'header.php');
+}
 
 ajaxapi([
     "id" => "all_campers_list",

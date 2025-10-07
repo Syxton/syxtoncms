@@ -203,6 +203,7 @@ site_administration||
                     <ul class="acitem">
                         <li><a class="alike" id="user_admin">User Admin</a></li>
                         <li><a class="alike" id="camper_list">Camper Lists</a></li>
+                        <li><a class="alike" id="admin_email_sender">Mass Email Sender</a></li>
                     </ul>
                 </li>
                 <li>
