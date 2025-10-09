@@ -201,18 +201,46 @@ site_administration||
                 <li>
                     <a href="#" class="active">Admin Features</a>
                     <ul class="acitem">
-                        <li><a class="alike" id="user_admin">User Admin</a></li>
-                        <li><a class="alike" id="camper_list">Camper Lists</a></li>
-                        <li><a class="alike" id="admin_email_sender">Mass Email Sender</a></li>
+                        <li>
+                            <a class="alike" id="user_admin">
+                                ||echo icon("user");::none|| User Admin
+                            </a>
+                        </li>
+                        <li>
+                            <a class="alike" id="camper_list">
+                                ||echo icon("users-rectangle");::none|| Camper Lists
+                            </a>
+                        </li>
+                        <li>
+                            <a class="alike" id="admin_email_sender">
+                                ||echo icon("envelope-open-text");::none|| Mass Email Sender
+                            </a>
+                        </li>
                     </ul>
                 </li>
                 <li>
                     <a href="#">Framework Checks</a>
                     <ul class="acitem">
-                        <li><a class="alike" id="get_phpinfo">PHP Info</a></li>
-                        <li><a class="alike" id="admin_email_tester">Email Tester</a></li>
-                        <li><a class="alike" id="site_versions">Version Checker</a></li>
-                        <li><a class="alike" id="unit_tests">Unit Tests</a></li>
+                        <li>
+                            <a class="alike" id="get_phpinfo">
+                                ||echo icon("circle-info");::none|| PHP Info
+                            </a>
+                        </li>
+                        <li>
+                            <a class="alike" id="admin_email_tester">
+                                ||echo icon("envelope");::none|| Email Tester
+                            </a>
+                        </li>
+                        <li>
+                            <a class="alike" id="site_versions">
+                                ||echo icon("code-branch");::none|| Version Checker
+                            </a>
+                        </li>
+                        <li>
+                            <a class="alike" id="unit_tests">
+                                ||echo icon("cube");::none|| Unit Tests
+                            </a>
+                        </li>
                     </ul>
                 </li>
             </ul>
