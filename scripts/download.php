@@ -7,7 +7,7 @@ $allowed_ext = [
   'rar' => 'application/zip',
   'ace' => 'application/zip',
   '7z' => 'application/zip',
-    
+
   // documents
   'pdf' => 'application/pdf',
   'txt' => 'application/msword',
@@ -19,7 +19,7 @@ $allowed_ext = [
   'pptx' => 'application/vnd.ms-powerpoint',
   'csv' => 'application/vnd.ms-excel',
   'xml' => 'application/xml',
-  
+
   // executables
   'exe' => 'application/octet-stream',
 
@@ -44,15 +44,15 @@ $allowed_ext = [
 if (!empty($_GET['file'])) {
     $file = $_GET['file'];
     $file = str_replace("\\", "/", $file);
-    
+
     $path_parts = pathinfo($file);
     if (empty($path_parts['filename']) && empty($path_parts['extension'])) { exit; }
     $filename = $path_parts['filename'] . "." . $path_parts['extension'];
 
     if (!array_key_exists($path_parts['extension'], $allowed_ext)) {
-        die("Not allowed file type."); 
+        die("Not allowed file type.");
     }
-  
+
     // get mime type
     if ($allowed_ext[$path_parts['extension']] == '') {
         $mtype = '';
@@ -62,7 +62,7 @@ if (!empty($_GET['file'])) {
         }elseif (function_exists('finfo_file')) {
             $finfo = finfo_open(FILEINFO_MIME); // return mime type
             $mtype = finfo_file($finfo, $file);
-            finfo_close($finfo);  
+            finfo_close($finfo);
         }
         if ($mtype == '') {
             $mtype = "application/octet-stream";
@@ -71,7 +71,7 @@ if (!empty($_GET['file'])) {
       // get mime type defined by admin
       $mtype = $allowed_ext[$path_parts['extension']];
     }
-
+    ob_start();
     header("Pragma: public");
     header("Expires: 0");
     header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
