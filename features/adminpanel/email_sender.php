@@ -28,6 +28,11 @@ $admin = $loggedin && is_siteadmin($userid) ? true : false;
 
 if (!$admin) { trigger_error(getlang("generic_permissions"), E_USER_WARNING); return; }
 
+
+echo fill_template("tmp/page.template", "start_of_page_template", false, [
+    "head" => fill_template("tmp/page.template", "page_js_css", false, ["dirroot" => $CFG->directory]),
+]);
+
 // send email form.
 ajaxapi([
     "id" => "emailsender",
@@ -40,10 +45,6 @@ ajaxapi([
         "message" => 'js||encodeURIComponent(' . get_editor_value_javascript("mass_email") . ')||js',
     ],
     "display" => "display",
-]);
-
-echo fill_template("tmp/page.template", "start_of_page_template", false, [
-    "head" => fill_template("tmp/page.template", "page_js_css", false, ["dirroot" => $CFG->directory]),
 ]);
 
 echo '

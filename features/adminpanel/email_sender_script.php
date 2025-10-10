@@ -43,42 +43,12 @@ function admin_email_send() {
         $subject = clean_myvar_req("subject", "html");
         $emaillist = clean_myvar_req("email", "string");
 
-        $fromuser = (object) [
-            "email" => $CFG->siteemail,
-            "fname" => $CFG->sitename,
-            "lname" => "",
-        ];
-
-        $emaillist = preg_split('/[\n,\r]+/', $emaillist, -1, PREG_SPLIT_NO_EMPTY);
-        foreach ($emaillist as $email) {
-            if (strpos($email, '@') !== false) {
-                $touser = (object) [
-                    "email" => trim($email),
-                ];
-                if (send_email($touser, $fromuser, $subject, $message)) {
-                    $success++;
-                } else {
-                    $failed++;
-                }
-                $randomwait = rand(1, 5);
-                usleep($randomwait * 100000); // waits tenths of a second
-            }
-        }
-
+        $vars = "?message=" . urlencode($message) . "&subject=" . urlencode($subject) . "&emaillist=" . urlencode($emaillist);
         $returnme = '
-            <div>
-                <h3>
-                    Send Status:
-                </h3>
-                <strong>
-                    Success: ' . $success . '
-                </strong>
-                <br />
-                <strong>
-                    Failed: ' . $failed . '
-                </strong>
-            </div>
-        ';
+            <iframe src="/features/adminpanel/email_sender_progress.php' . $vars . '"
+                    style="width:100%;height:250px;border:none;"
+                    frameborder="0">
+            </iframe>';
     } catch (\Throwable $e) {
         $error = $e->getMessage();
     }

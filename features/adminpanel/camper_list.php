@@ -15,6 +15,10 @@ if (!isset($CFG)) {
 	include($sub . 'header.php');
 }
 
+echo fill_template("tmp/page.template", "start_of_page_template", false, [
+    "head" => fill_template("tmp/page.template", "page_js_css", false, ["dirroot" => $CFG->directory]),
+]);
+
 ajaxapi([
     "id" => "all_campers_list",
     "url" => "/features/adminpanel/camper_list_script.php",
@@ -63,9 +67,6 @@ ajaxapi([
     "display" => "downloadfile",
 ]);
 
-echo fill_template("tmp/page.template", "start_of_page_template", false, [
-    "head" => fill_template("tmp/page.template", "page_js_css", false, ["dirroot" => $CFG->directory]),
-]);
 echo fill_template("tmp/main.template", "camper_list", "adminpanel");
 echo fill_template("tmp/page.template", "end_of_page_template");
 ?>
