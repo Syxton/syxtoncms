@@ -346,7 +346,16 @@ global $USER;
 function ipmap() {
 global $CFG;
     $geodata = clean_myvar_req("geodata", "json");
-    $googlemapsiframe = '<iframe id="ip_map" onload="resizeCaller(this.id);" style="width:100%;height: 100vh;border:none;" src="https://www.google.com/maps/embed/v1/place?q=' . $geodata->lat . ',' . $geodata->lon . '&key=' . $CFG->googlemapsembedkey . '"></iframe>';
+    $lat = $geodata->location->latitude;
+    $lon = $geodata->location->longitude;
+
+    $googlemapsiframe = '
+        <iframe
+            id="ip_map"
+            onload="resizeCaller(this.id);"
+            style="width:100%;height:100vh;border:none;"
+            src="https://www.google.com/maps/embed/v1/place?q=' . $lat . ',' . $lon . '&key=' . $CFG->googlemapsembedkey . '">
+        </iframe>';
     ajax_return($googlemapsiframe);
 }
 

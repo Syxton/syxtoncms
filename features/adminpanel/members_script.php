@@ -210,7 +210,10 @@ function get_members_search_ajax() {
         "if" => "confirm('Do you want to delete ' + $('#user_id_' + userid).next('.user_name').val() + '\'s account?')",
         "url" => "/ajax/site_ajax.php",
         "paramlist" => "userid",
-        "data" => ["action" => "delete_user", "userid" => "js||userid||js"],
+        "data" => [
+            "action" => "delete_user",
+            "userid" => "js||userid||js"
+        ],
         "ondone" => "members_search();",
         "event" => "none",
     ]);
@@ -220,7 +223,11 @@ function get_members_search_ajax() {
         "if" => "confirm('Do you want to reset ' + $('#user_id_' + userid).next('.user_name').val() + '\'s password?')",
         "url" => "/ajax/site_ajax.php",
         "paramlist" => "userid",
-        "data" => ["action" => "forgot_password", "admin" => "true", "userid" => "js||userid||js"],
+        "data" => [
+            "action" => "forgot_password",
+            "admin" => "true",
+            "userid" => "js||userid||js"
+        ],
         "ondone" => "jq_display('reset_password_' + userid, data);",
         "event" => "none",
     ]);
@@ -228,7 +235,10 @@ function get_members_search_ajax() {
     ajaxapi([
         "id" => "ipmap",
         "url" => "/features/adminpanel/adminpanel_ajax.php",
-        "data" => ["action" => "ipmap", "geodata" => "js||geodata||js"],
+        "data" => [
+            "action" => "ipmap",
+            "geodata" => "js||geodata||js"
+        ],
         "paramlist" => "geodata, display",
         "display" => "js||display||js",
         "event" => "none",
@@ -237,12 +247,15 @@ function get_members_search_ajax() {
     ajaxapi([
         "id" => "members_get_geodata",
         "external" => true,
-        "datatype" => "jsonp",
-        "callback" => "jsonpCallback: 'jsonCallback',",
-        "url" => '//extreme-ip-lookup.com/json/${ip}',
-        "data" => ["key" => $CFG->geolocationkey],
+        "method" => "GET",
+        "url" => 'https://api.ipgeolocation.io/v2/ipgeo',
+        "data" => [
+            "fields" => "location",
+            "ip" => "js||ip||js",
+            "apiKey" => $CFG->geolocationkey,
+        ],
         "paramlist" => "ip, display",
-        "ondone" => "if (data.status !== 'success') {
+        "ondone" => "if (data.location === undefined) {
                         alert('Location could not be found.');
                     } else {
                         ipmap(JSON.stringify(data), display);

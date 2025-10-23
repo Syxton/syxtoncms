@@ -420,7 +420,7 @@ global $CFG, $LOADAJAX;
             }
         }
 
-        if (empty($reqstring) && $method !== 'POST') {
+        if (empty($data) && empty($reqstring) && $method !== 'POST') {
             $data = '{}';
         }
 

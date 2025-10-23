@@ -79,9 +79,10 @@ function get_ip_address() {
 global $USER;
 
     $serverip = getHostByName(getHostName());
-    $ip = empty($USER->ip) ? "" : $USER->ip;
+    $ip = empty($USER->ip) || $USER->ip == "127.0.0.1" ? "" : $USER->ip;
+
     // already saved? Save some time.
-    if (isset($USER->ip) &&filter_var($USER->ip, FILTER_VALIDATE_IP) && strlen($ip) >= 7 && $ip !== $serverip) {
+    if (isset($USER->ip) && filter_var($USER->ip, FILTER_VALIDATE_IP) && strlen($ip) >= 7 && $ip !== $serverip) {
         return $USER->ip;
     }
 
@@ -114,7 +115,11 @@ global $USER;
         socket_close($sock);
         $ip = $addr;
     }
+
+    $ip = $ip == "127.0.0.1" ? $serverip : $ip;
+
     $USER->ip = $ip;
+
     return $ip;
 }
 
