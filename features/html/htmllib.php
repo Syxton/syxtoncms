@@ -808,7 +808,7 @@ global $CFG, $USER;
             "onExit" => "killInterval('html_$featureid'); html_" . $featureid . "_stopped_editing();",
             "iframe" => true,
             "refresh" => "true",
-            "width" => "$('#html_$featureid').width()",
+            "width" => "$('#html_$featureid').width() + 150",
             "icon" => icon("pencil"),
             "class" => "slide_menu_button",
         ]);
