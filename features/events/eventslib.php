@@ -1671,7 +1671,7 @@ global $CFG;
 
     if ($returnme !== $fallback) { // There are templates.
         $returnme .= '
-            <button class="alike" onclick="if ($(\'#template\').val()) {
+            <button class="alike" type="button"onclick="if ($(\'#template\').val()) {
                     window.open(\'' . $CFG->wwwroot . '/features/events/preview.php?action=preview_template&template_id=\' + $(\'#template\').val(), \'Template\', \'menubar=no,toolbar=no,scrollbars=1,resizable=0,width=800,height=600\');
                 }">
                 Preview
