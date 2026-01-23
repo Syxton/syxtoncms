@@ -53,8 +53,11 @@ function customvalue_email($data = []) {
 
 function customtype_reglookup($element, $data = []) {
     global $USER, $_SESSION;
+    $event = clean_param_opt($data, "event", "array", []);
 
-    $event = clean_param_req($data, "event", "array");
+    if (empty($event)) { // No event data given, can't proceed.
+        return "";
+    }
 
     $returnme = "";
     $autofill = [];

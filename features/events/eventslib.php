@@ -1672,7 +1672,7 @@ global $CFG;
     if ($returnme !== $fallback) { // There are templates.
         $returnme .= '
             <button class="alike" onclick="if ($(\'#template\').val()) {
-                    window.open(\'' . $CFG->wwwroot . '/features/events/preview.php?action=preview_template&template_id=\' + $(\'#template\').val(), \'Template\', \'menubar=yes,toolbar=yes,scrollbars=1,resizable=1,width=600,height=400\');
+                    window.open(\'' . $CFG->wwwroot . '/features/events/preview.php?action=preview_template&template_id=\' + $(\'#template\').val(), \'Template\', \'menubar=no,toolbar=no,scrollbars=1,resizable=0,width=800,height=600\');
                 }">
                 Preview
             </button>';
