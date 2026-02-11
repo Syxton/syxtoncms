@@ -66,6 +66,7 @@ if (isset($preview)) {
     $data["preview"] = true;
     $disable = 'disabled="disabled"';
     $event = [
+        "eventid" => 0,
         "name" => "Preview Event",
         "event_begin_date" => date("j"),
         "event_end_date" => date("j"),
@@ -82,19 +83,33 @@ $form_elements = make_form_elements($elements, $data);
 $count_in_cart = isset($_SESSION['registrations']) ? count($_SESSION['registrations']) : 0;
 
 // Beginning of form document.
-echo fill_template("templates/camp_2025/tmp/camp2025.template", "template_form", "events", [
-    "javascript" => get_js_tags(["jquery", "validate"]) . get_js_tags(["features/events/templates/camp_2025/ajax.js"]),
-    "event" => $event,
-    "event_begin_date" => date("Y-m-d", $event["event_begin_date"]),
-    "count_in_cart" => $count_in_cart,
-    "form_elements" => $form_elements,
-    "disable" => $disable,
-    "carticon" => icon([
-        ["icon" => "cart-shopping", "stacksize" => 3, "color" => "green"],
-        ["content" => $count_in_cart, "style" => "font-size: .4em;top: 7px;width: 100%;text-align: center;color: white;"],
-    ]),
-    "registrations" => print_registration_cart(false),
-]);
+echo fill_template(
+    "templates/camp_2025/tmp/camp2025.template",
+    "template_form",
+    "events",
+    [
+        "javascript" => get_js_tags(["jquery", "validate"]) . get_js_tags(["features/events/templates/camp_2025/ajax.js"]),
+        "event" => $event,
+        "event_begin_date" => date("Y-m-d", $event["event_begin_date"]),
+        "count_in_cart" => $count_in_cart,
+        "form_elements" => $form_elements,
+        "disable" => $disable,
+        "carticon" => icon(
+            [
+                [
+                    "icon" => "cart-shopping",
+                    "stacksize" => 3,
+                    "color" => "green",
+                ],
+                [
+                    "content" => $count_in_cart,
+                    "style" => "font-size: .4em;top: 7px;width: 100%;text-align: center;color: white;",
+                ],
+            ]
+        ),
+        "registrations" => print_registration_cart(false),
+    ]
+);
 
 echo keepalive();
 

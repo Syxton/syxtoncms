@@ -295,6 +295,11 @@ function make_form_hidden($element, $data = []) {
 
 function make_form_date($element, $data = []) {
     $value = get_element_value($element, $data);
+    // Check if $value is m/d/Y and if so convert to Y-m-d.
+    if (strpos($value, "/") !== false) {
+        $value = date("Y-m-d", strtotime($value));
+    }
+
     $value = !empty($value) ? $value : (isset($element['value']) ? date("Y-m-d", $element['value']) : date("Y-m-d"));
     $output = '<input type="date" tabindex="' . $element['tabindex'] . '"
                 id="' . $element['name'] . '" name="' . $element['name'] . '"

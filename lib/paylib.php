@@ -82,7 +82,7 @@ function get_payment_form() {
     // Sum of Session variable "payment_cart"
     $total = get_total_to_be_paid();
 
-    return '<iframe id="payment_frame" onload="resizeCaller(this.id);" src="' . $CFG->wwwroot . '/scripts/payments/frontend.php?total=' . $total . '" style="width: 99%;border: 0;"></iframe>';
+    return '<iframe id="payment_frame" onload="resizeCaller(this.id);" src="' . $CFG->wwwroot . '/scripts/payments/frontend.php?total=' . $total . '" style="width: 99%;border: 0;min-height: 600px;"></iframe>';
 }
 
 /**

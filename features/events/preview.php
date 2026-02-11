@@ -22,7 +22,9 @@ foreach ($libs as $lib) {
     }
 }
 
-if (!defined('EVENTSLIB')) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
+if (!defined('EVENTSLIB')) {
+    include_once($CFG->dirroot . '/features/events/eventslib.php');
+}
 
 callfunction();
 

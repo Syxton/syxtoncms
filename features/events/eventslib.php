@@ -870,7 +870,10 @@ function make_fee_options($min, $full, $name, $options = "", $sale_end = "", $sa
     $returnme = '<select id="' . $name . '" name="' . $name . '" ' . $options . ' >';
     $select = "selected";
 
-    if ($min == $full) { return '<span style="float:left;margin:4px;">$</span><input id="' . $name . '" name="' . $name . '" type="text" READONLY value="' . $full . '.00"/>';}
+    // If the minimum is the same as the full price, just show the full price.
+    if ($min == $full) {
+        return '<span style="margin:4px;">$' . $full . '.00</span><input id="' . $name . '" name="' . $name . '" ' . $options . ' type="hidden" value="' . $full . '.00"/>';
+    }
 
     while ($min < $full) {
         $returnme .= '<option value="' . number_format($min, 2, ".", "") . '" ' . $select . '>$' . number_format($min, 2, ".", "") . '</option>';
@@ -897,11 +900,11 @@ function events_registration_confirmation($paid, $tx, $success) {
         "cart" => get_printable_payment_cart($paid),
         "message" => "Thank you for registering for this event. Please check your email for more information.",
     ];
+    $display = fill_template("tmp/events.template", "payment_process_success", "events", $params);
 
     unset($_SESSION["payment_cart"]);
     unset($_SESSION["completed_registrations"]);
-
-    return fill_template("tmp/events.template", "payment_process_success", "events", $params);
+    return $display;
 }
 
 function get_printable_payment_cart($paid) {
@@ -915,20 +918,22 @@ function get_printable_payment_cart($paid) {
     ];
     $return = fill_template("tmp/events.template", "payment_cart_row", "events", $p);
 
-    foreach($_SESSION["payment_cart"] as $item) {
-        $paid = (float) get_reg_paid($item->id);
-        $owed = (float) get_reg_owed($item->id);
+    if (!empty($_SESSION["payment_cart"])) {
+        foreach($_SESSION["payment_cart"] as $item) {
+            $paid = (float) get_reg_paid($item->id);
+            $owed = (float) get_reg_owed($item->id);
 
-        $still_owed = $owed - $paid;
-        $still_owed = $still_owed < 0 ? 0 : $still_owed;
+            $still_owed = $owed - $paid;
+            $still_owed = $still_owed < 0 ? 0 : $still_owed;
 
-        $p = [
-            "desc" => $item->description,
-            "val1" => '$' . number_format($paid, 2, '.', ''),
-            "val2" => '$' . number_format($still_owed, 2, '.', ''),
-            "class" => "payment_cart_row",
-        ];
-        $return .= fill_template("tmp/events.template", "payment_cart_row", "events", $p);
+            $p = [
+                "desc" => $item->description,
+                "val1" => '$' . number_format($paid, 2, '.', ''),
+                "val2" => '$' . number_format($still_owed, 2, '.', ''),
+                "class" => "payment_cart_row",
+            ];
+            $return .= fill_template("tmp/events.template", "payment_cart_row", "events", $p);
+        }
     }
 
     return '
@@ -1611,6 +1616,7 @@ function get_event_length($event) {
         return "All day";
     }
 
+    $length = "";
     date_default_timezone_set(date_default_timezone_get());
     if ($event['event_begin_date'] == $event['event_end_date']) { //ONE DAY EVENT
         $length = date("n/j/Y", $event['event_begin_date']);
@@ -1665,8 +1671,8 @@ global $CFG;
 
     if ($returnme !== $fallback) { // There are templates.
         $returnme .= '
-            <button class="alike" onclick="if ($(\'#template\').val()) {
-                    window.open(\'' . $CFG->wwwroot . '/features/events/preview.php?action=preview_template&template_id=\' + $(\'#template\').val(), \'Template\', \'menubar=yes,toolbar=yes,scrollbars=1,resizable=1,width=600,height=400\');
+            <button class="alike" type="button" onclick="if ($(\'#template\').val()) {
+                    window.open(\'' . $CFG->wwwroot . '/features/events/preview.php?action=preview_template&template_id=\' + $(\'#template\').val(), \'Template\', \'menubar=no,toolbar=no,scrollbars=1,resizable=0,width=800,height=600\');
                 }">
                 Preview
             </button>';
@@ -3315,5 +3321,12 @@ global $CFG, $USER;
     }
 
     return false;
+}
+
+function events_print_confirmation($cart, $data) {
+    // Process payment and send emails.
+    $status = events_approved_payment($cart, $data);
+
+    return events_registration_confirmation($cart, $data, $status);
 }
 ?>

@@ -31,6 +31,10 @@ if (!empty($_SESSION["lia_original"])) {
 
 callfunction();
 
+function admin_email_sender() {
+    ajax_return('<iframe id="email_sender" onload="resizeCaller(this.id);" style="width:100%;border:none;" src="/features/adminpanel/email_sender.php"></iframe>');
+}
+
 function admin_email_tester() {
     ajax_return(admin_email_test_form());
 }
@@ -40,7 +44,10 @@ function admin_email_test_form() {
         "id" => "emailtester",
         "if" => "$('#email').val().length > 0",
         "url" => "/features/adminpanel/adminpanel_ajax.php",
-        "data" => ["action" => "admin_email_test", "email" => "js||$('#email').val()||js"],
+        "data" => [
+            "action" => "admin_email_test",
+            "email" => "js||$('#email').val()||js",
+        ],
         "display" => "display",
     ]);
 
@@ -339,7 +346,16 @@ global $USER;
 function ipmap() {
 global $CFG;
     $geodata = clean_myvar_req("geodata", "json");
-    $googlemapsiframe = '<iframe id="ip_map" onload="resizeCaller(this.id);" style="width:100%;height: 100vh;border:none;" src="https://www.google.com/maps/embed/v1/place?q=' . $geodata->lat . ',' . $geodata->lon . '&key=' . $CFG->googlemapsembedkey . '"></iframe>';
+    $lat = $geodata->location->latitude;
+    $lon = $geodata->location->longitude;
+
+    $googlemapsiframe = '
+        <iframe
+            id="ip_map"
+            onload="resizeCaller(this.id);"
+            style="width:100%;height:100vh;border:none;"
+            src="https://www.google.com/maps/embed/v1/place?q=' . $lat . ',' . $lon . '&key=' . $CFG->googlemapsembedkey . '">
+        </iframe>';
     ajax_return($googlemapsiframe);
 }
 

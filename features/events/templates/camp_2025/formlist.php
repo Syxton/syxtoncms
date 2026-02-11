@@ -188,7 +188,7 @@ return [
         'section' => 'Contact by Phone',
         'title' => 'Phone 2',
         'type' => 'tel',
-        'required' => true,
+        'required' => false,
         'help' => getlang("input_default_phone"),
     ],
     [

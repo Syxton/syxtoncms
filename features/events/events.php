@@ -19,7 +19,10 @@ if (empty($_POST["aslib"])) {
 
     $head = get_js_tags(["features/events/events.js"]);
 
-    echo fill_template("tmp/page.template", "start_of_page_template", false, ["head" => $head]);
+    echo fill_template("tmp/page.template", "start_of_page_template", false, [
+        "head" => $head,
+        "title" => check_for_title(),
+    ]);
 
     callfunction();
 
@@ -189,6 +192,10 @@ global $CFG;
         "event" => "submit",
     ]);
     echo fill_template("tmp/events.template", "staff_emailer_template", "events", ["searchcontainer" => get_searchcontainer()]);
+}
+
+function pay_title() {
+    return "Event Payments";
 }
 
 function pay() {
@@ -1187,7 +1194,8 @@ global $CFG, $USER;
                     e.preventDefault();
                 }
             }
-        });`;
+        });
+    `;
 
     echo '
         <div id="registration_div">
@@ -1199,11 +1207,14 @@ global $CFG, $USER;
                 </tr>
             </table>
             ' . $form . '
-        </div>' . js_code_wrap($code, "defer", true);;
+
+        </div>'
+        . js_code_wrap('$(document).ready(function() { updateAge(); });')
+        . js_code_wrap($code, "defer", true);
 }
 
 function create_validation_javascript($formlist, $eventid) {
-global $CFG;
+    global $CFG;
     $validation_script = 'function validate_fields() {	var valid = true;';
     date_default_timezone_set(date_default_timezone_get());
     $element = explode("*", $formlist);

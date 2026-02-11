@@ -80,5 +80,13 @@ function site_admin_javascript() {
         ],
         "display" => "display",
     ]);
+    ajaxapi([
+        "id" => "admin_email_sender",
+        "url" => "/features/adminpanel/adminpanel_ajax.php",
+        "data" => [
+            "action" => "admin_email_sender",
+        ],
+        "display" => "display",
+    ]);
 }
 ?>

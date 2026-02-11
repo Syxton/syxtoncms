@@ -435,6 +435,7 @@ registration_search||
     JOIN events e ON e.eventid = v.eventid
     JOIN events_registrations r ON r.regid = v.regid
     WHERE ||searchstring||
+    OR r.email LIKE '%||fullstring||%'
     AND v.elementname IN (SELECT registrant_name FROM events_templates)
     AND (
         e.pageid = ||pageid||

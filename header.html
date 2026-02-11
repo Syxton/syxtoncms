@@ -1,50 +1,49 @@
 <!DOCTYPE html>
-<html>
-<head>
-    <?php
-        // Google Analytics
-        if (isset($CFG->analytics) && !empty($CFG->analytics)) {
-            echo '
-                <!-- Global site tag (gtag.js) - Google Analytics -->
-                <script async src="https://www.googletagmanager.com/gtag/js?id=' .$CFG->analytics . '"></script>
-                <script async>
-                    window.dataLayer = window.dataLayer || [];
-                    function gtag(){dataLayer.push(arguments);}
-                    gtag("js", new Date());
-                    gtag("config", "' . $CFG->analytics . '");
-                </script>
-                <!-- End Google Analytics -->
-            ';
-        }
-    ?>
-    <title><?php echo $PAGE->title ?></title>
-    <meta name="description" content="<?php echo $PAGE->description ?>"/>
-    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="shortcut icon" href="<?php echo $CFG->userfilesurl ?>/branding/logos/favicon.ico" />
+<html lang="en">
+    <head>
+        <?php
+            // Google Analytics
+            if (isset($CFG->analytics) && !empty($CFG->analytics)) {
+                echo '
+                    <!-- Global site tag (gtag.js) - Google Analytics -->
+                    <script async src="https://www.googletagmanager.com/gtag/js?id=' .$CFG->analytics . '"></script>
+                    <script async>
+                        window.dataLayer = window.dataLayer || [];
+                        function gtag(){dataLayer.push(arguments);}
+                        gtag("js", new Date());
+                        gtag("config", "' . $CFG->analytics . '");
+                    </script>
+                    <!-- End Google Analytics -->
+                ';
+            }
+        ?>
+        <title><?php echo $PAGE->title ?></title>
+        <meta name="description" content="<?php echo $PAGE->description ?>"/>
+        <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="shortcut icon" href="<?php echo $CFG->userfilesurl ?>/branding/logos/favicon.ico" />
 
-    <!--[if lt IE 7]>
-    <style type="text/css">
-        .dock img { behavior: url(iepngfix.htc) }
-    </style>
-    <![endif]-->
+        <!--[if lt IE 7]>
+        <style type="text/css">
+            .dock img { behavior: url(iepngfix.htc) }
+        </style>
+        <![endif]-->
 
-    <?php
-        echo js_code_wrap('var dirfromroot = "' . $CFG->directory . '";');
-        echo js_code_wrap(fill_template("tmp/pagelib.template", "defer_script"));
+        <?php
+            echo js_code_wrap('var dirfromroot = "' . $CFG->directory . '";');
+            echo js_code_wrap(fill_template("tmp/pagelib.template", "defer_script"));
 
-        // Load javascript.
-        echo get_js_set("main");
+            // Load javascript.
+            echo get_js_set("main");
 
-        // Load CSS.
-        echo get_css_set("main");
+            // Load CSS.
+            echo get_css_set("main");
 
-        // RSS
-        if(isset($USER->userkey) && !empty($USER->userkey)) {
-            echo '<link href="' . $CFG->wwwroot . '/scripts/rss/rss.php?pageid=' . $PAGE->id . '&key=' . $USER->userkey . '" title="' . $CFG->sitename . ' [RSS]" type="application/rss+xml" rel="alternate"/>';
-        }
-    ?>
-
+            // RSS
+            if(isset($USER->userkey) && !empty($USER->userkey)) {
+                echo '<link href="' . $CFG->wwwroot . '/scripts/rss/rss.php?pageid=' . $PAGE->id . '&key=' . $USER->userkey . '" title="' . $CFG->sitename . ' [RSS]" type="application/rss+xml" rel="alternate"/>';
+            }
+        ?>
     </head>
     <body>
         <div id="ajax_errors">

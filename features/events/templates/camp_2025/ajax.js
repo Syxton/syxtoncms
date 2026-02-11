@@ -14,7 +14,7 @@ function show_form_again(eventid, hash = "false", regid = "false") {
 
     // Build the URL to connect to
     var url = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/features/events/events.php?action=show_registration&i=!&v=!&eventid=" + eventid + hash + regid;
-    window.location=url;
+    window.location = url;
 }
 
 

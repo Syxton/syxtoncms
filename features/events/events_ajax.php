@@ -1331,7 +1331,11 @@ function load_show_registrations_javascript($eventid) {
         "id" => "print_registrations",
         "if" => "$('#print_registrations').val() != ''",
         "url" => "/features/events/events_ajax.php",
-        "data" => ["action" => "print_registration", "eventid" => $eventid, "online_only" => "js|| $('#print_registrations').val() ||js"],
+        "data" => [
+            "action" => "print_registration",
+            "eventid" => $eventid,
+            "online_only" => "js|| $('#print_registrations').val() ||js",
+        ],
         "display" => "searchcontainer",
         "loading" => "loading_overlay",
         "event" => "change",
@@ -1340,7 +1344,11 @@ function load_show_registrations_javascript($eventid) {
     ajaxapi([ // Add Blank Registration.
         "id" => "add_blank_registration",
         "url" => "/features/events/events_ajax.php",
-        "data" => ["action" => "add_blank_registration_ajax", "reserveamount" => "js|| $('#reserveamount').val() ||js", "eventid" => $eventid],
+        "data" => [
+            "action" => "add_blank_registration_ajax",
+            "reserveamount" => "js|| $('#reserveamount').val() ||js",
+            "eventid" => $eventid,
+        ],
         "ondone" => "show_registrations($eventid);",
         "loading" => "loading_overlay",
     ]);
@@ -1431,6 +1439,7 @@ global $CFG, $USER;
             $sqlparams = [
                 "issite" => ($pageid == $CFG->SITEID),
                 "searchstring" => $searchstring,
+                "fullstring" => $dbsearchwords,
             ];
             $SQL = fill_template("dbsql/events.sql", "registration_search", "events", $sqlparams, true);
         }

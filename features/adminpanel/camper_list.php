@@ -7,7 +7,17 @@
 * Revision: 2.0.1
 ***************************************************************************/
 
-include ('../header.php');
+if (!isset($CFG)) {
+	$sub = '';
+	while (!file_exists($sub . 'header.php')) {
+		$sub = $sub == '' ? '../' : $sub . '../';
+	}
+	include($sub . 'header.php');
+}
+
+echo fill_template("tmp/page.template", "start_of_page_template", false, [
+    "head" => fill_template("tmp/page.template", "page_js_css", false, ["dirroot" => $CFG->directory]),
+]);
 
 ajaxapi([
     "id" => "all_campers_list",
@@ -57,9 +67,6 @@ ajaxapi([
     "display" => "downloadfile",
 ]);
 
-echo fill_template("tmp/page.template", "start_of_page_template", false, [
-    "head" => fill_template("tmp/page.template", "page_js_css", false, ["dirroot" => $CFG->directory]),
-]);
 echo fill_template("tmp/main.template", "camper_list", "adminpanel");
 echo fill_template("tmp/page.template", "end_of_page_template");
 ?>

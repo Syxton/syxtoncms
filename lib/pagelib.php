@@ -140,6 +140,26 @@ global $CFG, $MYVARS;
     $MYVARS->GET = !$MYVARS->GET ? $_GET : $MYVARS->GET;
 }
 
+/**
+ * Checks if an action specific title function exists and calls it if so.
+ * Otherwise, returns the site name.
+ *
+ * @return string The title to be used.
+ */
+function check_for_title() {
+    global $CFG, $MYVARS;
+
+    collect_vars();
+
+    if (isset($MYVARS->GET["action"])) {
+        $getactiontitle = $MYVARS->GET["action"] . "_title";
+        if (function_exists($getactiontitle)) {
+            return $getactiontitle();
+        }
+    }
+    return $CFG->sitename;
+}
+
 function get_directory() {
 global $CFG;
     return (empty($CFG->directory) ? '' : trim($CFG->directory, '/\\'));
@@ -223,7 +243,7 @@ function get_default_role($pageid) {
 }
 
 function page_masthead($left = true, $header_only = false) {
-global $CFG, $USER, $PAGE;
+    global $CFG, $USER, $PAGE;
     if ($left) {
         $PAGE = set_pageid();
         $pageid = $PAGE->id;
@@ -400,7 +420,7 @@ global $CFG, $LOADAJAX;
             }
         }
 
-        if (empty($reqstring) && $method !== 'POST') {
+        if (empty($data) && empty($reqstring) && $method !== 'POST') {
             $data = '{}';
         }
 

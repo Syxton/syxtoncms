@@ -588,6 +588,21 @@ function get_camper_names($reg) {
     $names["first"] = nameize(clean_param_opt($reg, "camper_name_first", "string", ""));
     $names["last"] = nameize(clean_param_opt($reg, "camper_name_last", "string", ""));
     $names["full"] = $names["last"] . ", " . trim($names["first"]) . " " . trim($names["middle"]);
+
+    // Check if full name is empty, and if so we will start at name and work backwords to fill the array.
+    if (trim($names["full"]) == ',') {
+        if (!$names["full"] = clean_param_opt($reg, "camper_name", "string", "")) {
+            return "";
+        }
+
+        // Attempt to split "Lastname, Firstname Middle" into parts.
+        $parts = explode(',', $names["full"], 2);
+        $names["last"] = isset($parts[0]) ? trim($parts[0]) : '';
+        $first_middle = isset($parts[1]) ? trim($parts[1]) : '';
+        $first_middle_parts = preg_split('/\s+/', $first_middle, 2);
+        $names["first"] = isset($first_middle_parts[0]) ? $first_middle_parts[0] : '';
+        $names["middle"] = isset($first_middle_parts[1]) ? $first_middle_parts[1] : '';
+    }
     return $names;
 }
 
