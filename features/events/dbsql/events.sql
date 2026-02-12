@@ -446,6 +446,7 @@ registration_search||
         )
         }}issite||
     )
+    GROUP BY regid
     ORDER BY r.date DESC
 ||registration_search
 
