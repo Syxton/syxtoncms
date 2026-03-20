@@ -53,24 +53,39 @@ function add_role_ability($section, $ability, $section_display, $power, $ability
         $SQL = fetch_template("dbsql/roles.sql", "get_ability");
 
         // Make sure ability doesn't already exist.
-        if (!get_db_row($SQL, ["section" => $section, "ability" => $ability])) {
-            $templates = [["file" => "dbsql/roles.sql", "subsection" => ["insert_abilities", "insert_roles_ability"]]];
+        $ability_exists = get_db_row($SQL, ["section" => $section, "ability" => $ability]);
+        if (!$ability_exists) {
+            $templates = [
+                [
+                    "file" => "dbsql/roles.sql",
+                    "subsection" => [
+                        "insert_abilities",
+                        "insert_roles_ability",
+                    ]
+                ]
+            ];
             $template_set = fetch_template_set($templates);
 
-            $params = [[ // vars for insert_abilities
+            $params = [];
+
+            // params for insert_abilities sql
+            $params += [
                 "section" => $section,
                 "section_display" => $section_display,
                 "ability" => $ability,
                 "ability_display" => $ability_display,
                 "power" => $power,
-            ], [ // vars for insert_roles_ability
+            ];
+
+            // params for insert_roles_ability sql
+            $params += [
                 "section" => $section,
                 "ability" => $ability,
                 "creator" => $creator,
                 "editor" => $editor,
                 "guest" => $guest,
                 "visitor" => $visitor,
-            ],];
+            ];
             execute_db_sqls($template_set, $params);
             commit_db_transaction();
         }
