@@ -2767,22 +2767,16 @@ global $CFG, $USER;
             if (strpos($email, '@') !== false) { // It is an email address, so let's get an email ready.
                 $user = get_db_row("SELECT * FROM users WHERE LOWER(email) LIKE LOWER(||email||)", ["email" => "%$email%"]);
 
-                $contact = (object)[
-                    "email" => $email,
-                    "fname" => $user ? $user["fname"] : "",
-                    "lname" => $user ? $user["lname"] : "",
-                ];
-
+                $greeting = "Hello future staff member!,";
                 if ($user) {
                     $name = $user["fname"] . " " . $user["lname"];
-                    $m1 = "Hello " . trim($name) . "!,";
+                    $greeting = "Hello " . trim($name) . "!,";
                     $archive = get_db_row("SELECT * FROM events_staff WHERE userid = ||userid|| LIMIT 1", ["userid" => $user["userid"]]);
                     $status = staff_status($archive);
                     $action1 = "login.";
                     $action2 = "<li>If you have previously applied, the information from your previous application should already be filled in. Please update any information as needed.</li>";
                     $action3 = "<li>If you have completed a background check previously you can also send an email to " . $CFG->siteemail . " giving us permission to renew your background check.</li>";
                 } else {
-                    $m1 = "Hello future staff member!,";
                     $status = staff_status(false, false);
                     $action1 = "sign up for an account.&nbsp; It's easy and free.&nbsp; Once you have created an account, please login.";
                     $action2 = $action3 = "";
@@ -2790,17 +2784,66 @@ global $CFG, $USER;
 
                 if (!empty($sendemails)) {
                     if (!empty($status) && !(count($status) == 1 && $status[0]["tag"] == "Flagged")) {
-                        $m2 = "<br />I hope this email finds you well.<br />
-                        <p><strong>If you are receiving this, it is because you have been selected to be on staff for an event this year.</strong>&nbsp; <strong>Please do the following ASAP.&nbsp;&nbsp; You must complete this staff application to be a " . date("Y") . " staff member. </strong></p>
-                        <ul>
-                        <li>Go to <a href='" . $protocol.$CFG->wwwroot . "'>$CFG->sitename</a> and $action1 &nbsp;<strong> <br />Only log in with your own account to fill out the application. </strong></li>
-                        <li>Once you are logged into the site, you will find a button labeled <strong>Staff Apply</strong>.&nbsp; Fill out the staff application and submit.</li>
-                        $action2
-                        <li>If you are 18 years of age or older, once you complete your staff application you will be given an opportunity to follow a link to complete the Background Authorization Form. This background check will be valid for the next 5 years and will not need to be done every year.</li>
-                        $action3
-                        </ul><br />";
-                        $m3 = "<strong>Current Status:</strong><br />" . print_status($status);
-                        send_email($contact, $emailnotice, $subject, $m1.$m2.$m3);
+                        $bgcheckgood = bgcheck_complete($status);
+                        $appgood = app_complete($status);
+
+                        $actions = "";
+                        if (!$appgood) {
+                            $actions .= '
+                                <li>
+                                    Once you are logged into the site, you will find a button labeled <strong>Staff Apply</strong>.&nbsp; Fill out the staff application and submit.
+                                </li>' . $action2;
+                        } else {
+                            $actions .= '
+                                <li>
+                                    Your staff application is complete and up to date.
+                                </li>';
+                        }
+
+                        if (!$bgcheckgood) {
+                            $actions .= '
+                                <li>
+                                    If you are 18 years of age or older you must have completed a background check in the past 5 years.<br />
+                                    By clicking the "Staff Apply" links and submitting the form, you will be given an opportunity to follow a link to complete the Background Authorization Form.
+                                </li>' . $action3;
+                        } else {
+                            $actions .= '
+                                <li>
+                                    Your background check is already complete and up to date.
+                                </li>';
+                        }
+
+                        $message = '
+                            ' . $greeting . '
+                            <br />
+                            I hope this email finds you well.
+                            <br />
+                            <p>
+                                <strong>
+                                    If you are receiving this, it is because you have been selected to be on staff for an event this year.
+                                </strong>
+                                &nbsp;
+                                <strong>
+                                    Please do the following ASAP.&nbsp;&nbsp;
+                                    You must complete this staff process to be a ' . date("Y") . ' staff member.
+                                </strong>
+                            </p>
+                            <ul>
+                                <li>
+                                    Go to <a href="' . $protocol . $CFG->wwwroot . '">' . $CFG->sitename . '</a> and <strong>' . $action1 . '</strong>
+                                </li>
+                                ' . $actions . '
+                            </ul>
+                            <br />
+                            <strong>Current Status:</strong>
+                            <br />' . print_status($status);
+
+                        $contact = (object)[
+                            "email" => $email,
+                            "fname" => $user ? $user["fname"] : "",
+                            "lname" => $user ? $user["lname"] : "",
+                        ];
+                        send_email($contact, $emailnotice, $subject, $message);
                         $staffcomstatus[] = "$name($email) contacted.";
                     } else {
                         $staffcomstatus[] = "$name($email) is APPROVED / was NOT contacted.";

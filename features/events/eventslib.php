@@ -1945,6 +1945,28 @@ function staff_status($staff, $userid = true) {
     return $status;
 }
 
+function bgcheck_complete($status) {
+    foreach ($status as $s) {
+        if ($s["tag"] == "Background Check") {
+            if ($s["full"] == "Background Check Incomplete" || $s["full"] == "Background Check Out of Date") {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+function app_complete($status) {
+    foreach ($status as $s) {
+        if ($s["tag"] == "Application") {
+            if ($s["full"] == "Application Incomplete" || $s["full"] == "Application Out of Date") {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 function print_status($status) {
 global $CFG;
     $protocol = get_protocol();
