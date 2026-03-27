@@ -69,7 +69,7 @@ staff_emailer_template||
             </div>
             <div style="float:right;line-height:35px;">
                 <label class="rowTitle" for="workerconsentsig">Send Emails</label>
-                    <input id="sendemails" name="sendemails" type="checkbox" />
+                <input id="sendemails" name="sendemails" type="checkbox" />
             </div>
                 <div style="text-align:center;width: 50%;">
                 List of email addresses of staff, one email address per line.
@@ -94,7 +94,7 @@ appsearchtemplate||
                 <div style="width: 25%;display: flex;align-items: center;justify-content: space-evenly;">
                 ||canexport{{
                     ||exportselect||
-                    <button class="alike" title="Export" id="export_staffapp_||pageid||">
+                    <button class="alike" type="button" title="Export" id="export_staffapp_||pageid||">
                         ||echo icon("file-csv", 2);::none||
                     </button>
                 }}canexport||
@@ -160,10 +160,10 @@ regmanagersearchform||
         <div style="text-align:center;">
             <form onsubmit="perform_registrationsearch();">
                 Type:
-                    <select id="searchtype" name="searchtype">
-                        <option value="events">Events</option>
-                        <option value="registrations">Registrations</option>
-                    </select>
+                <select id="searchtype" name="searchtype">
+                    <option value="events">Events</option>
+                    <option value="registrations">Registrations</option>
+                </select>
                 <input type="text" id="searchbox" name="searchbox" />
                 <button style="margin-left: 5px;">
                     Search
@@ -578,7 +578,7 @@ promocode_code||
             </div>
             <div class="centered" style="width: 20%;min-width:40px;">
                 Save<br />
-                <button onclick="save_promocode(||code[codeid]||)">
+                <button type="button" onclick="save_promocode(||code[codeid]||)">
                     ||echo icon("floppy-disk");::none||
                 </button>
             </div>
@@ -597,7 +597,7 @@ promocode_code||
             </div>
             <div class="centered" style="width: 20%;min-width:40px;">
                 Delete<br />
-                <button onclick="delete_promocode(||code[codeid]||)">
+                <button type="button" onclick="delete_promocode(||code[codeid]||)">
                     ||echo icon("trash", 1, "", "red");::none||
                 </button>
             </div>
