@@ -418,6 +418,7 @@ global $CFG, $USER;
         "id" => "create_new_group",
         "if" => "$('#" . $type . "_user_select').val() > 0",
         "url" => "/ajax/roles_ajax.php",
+        "event" => "change",
         "data" => [
             "action" => "refresh_user_abilities",
             "pageid" => $pageid,

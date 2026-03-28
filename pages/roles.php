@@ -167,6 +167,7 @@ global $CFG, $USER, $MYVARS, $ROLES;
         "id" => $type . "_user_select",
         "if" => "$('#" . $type . "_user_select').val() > 0",
         "url" => "/ajax/roles_ajax.php",
+        "event" => "change",
         "data" => [
             "action" => "refresh_user_abilities",
             "pageid" => $pageid,

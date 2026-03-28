@@ -13,6 +13,19 @@ add_to_group_search_template||
 ||add_to_group_search_template
 
 refresh_group_users_template||
+    ||canmanage{{
+        <div style="padding-bottom: 10px;">
+            <button onclick="create_edit_group_form(||groupid||)">
+                || echo icon("pencil");::none||
+                <span>Edit Name</span>
+            </button>
+            &nbsp;
+            <button id="delete_group">
+                || echo icon("trash");::none||
+                <span>Delete Group</span>
+            </button>
+        </div>
+    }}canmanage||
     <strong>Group: ||groupname||</strong>
     <div style="width:100%; text-align:center;">
         <select size="5" width="100%" style="width: 100%;" name="per_group_userid" id="per_group_user_select">
@@ -21,16 +34,6 @@ refresh_group_users_template||
         ||canmanage{{
             <button style="margin: 5px" id="manage_group_users_form">
                 ||echo icon('user');::none||&nbsp;Manage Users
-            </button>
-            &nbsp;
-            <button onclick="create_edit_group_form(||groupid||)">
-                || echo icon("pencil");::none||
-                <span>Edit</span>
-            </button>
-            &nbsp;
-            <button id="delete_group">
-                || echo icon("trash");::none||
-                <span>Delete</span>
             </button>
         }}canmanage||
     </div>
