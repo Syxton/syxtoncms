@@ -15,9 +15,6 @@
                         });
                     });
                     adjustStyle($(window).width());
-                    setTimeout(function() {
-                        $("#carousel").flickity();
-                    }, 500);
                     $(".pagesort1, .pagesort2" ).sortable({
                         connectWith: ".connectedSortable",
                         items: ".box",
@@ -61,11 +58,9 @@
                         }, 100);
                     });
                     $(window).on('focus', function() {
-                        $("#carousel").flickity();
                         window.dispatchEvent(new Event('resize'));
                     });
                     setTimeout(function() {
-                        $("#carousel").flickity();
                         window.dispatchEvent(new Event('resize'));
                         $("#main-content").show();
                     }, 500);

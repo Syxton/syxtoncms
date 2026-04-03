@@ -15,66 +15,6 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
 }
 define('USERLIB', true);
 
-function random_quote() {
-    global $CFG;
-
-    // No carousel if no images are found.
-    if (!$img = randomimages($CFG->userfilesfolder . "/branding/carousel/")) {
-        return '';
-    }
-
-    $carousel = "";
-    $count = count($img) >= 5 ? 5 : count($img); // Images found, find out how many.
-    // Get enough quotes to add to the images.
-    if ($result = get_db_result("SELECT quote, author FROM quotes ORDER BY RAND() LIMIT 0, $count")) {
-        while ($row = fetch_row($result)) {
-            // Set quotes and authors.
-            $quote = empty($row['quote']) ? '' : '<div>' . $row['quote'] . '</div>';
-            $author = empty($row['author']) ? '' : '<br /><div style="float:right;">-- ' . $row['author'] . '</div>';
-
-            // Get random image index from $img array.
-            $randindex = array_rand($img);
-            $carousel .= '
-                <div class="carousel-cell">
-                    <div>
-                        <img
-                            class="carouselslides carousel-cell-image"
-                            data-flickity-lazyload="' . $img[$randindex] . '"
-                            alt="carousel image with a quote" />
-                    </div>
-                    <div class="carouselquotes">
-                    ' . $quote . $author . '
-                    </div>
-                </div>';
-
-            // Unset the random image so it can't be used twice.
-            unset($img[$randindex]);
-        }
-    }
-
-    return '
-        <div
-            id="carousel"
-            data-flickity=\'{
-                "lazyLoad": 1,
-                "autoPlay": 10000,
-                "pageDots": false,
-                "imagesLoaded": true,
-                "percentPosition": false,
-                "wrapAround": true
-            }\'>
-            ' . $carousel . '
-        </div>';
-}
-
-function randomimages($dir) {
-    $images = glob($dir . '*.{jpg,jpeg,png,gif,webp,avif}', GLOB_BRACE);
-    if (empty(count($images))) {
-        return false;
-    }
-    return $images;
-}
-
 function get_ip_address() {
 global $USER;
 

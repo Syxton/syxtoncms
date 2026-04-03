@@ -822,8 +822,8 @@ function build_from_js_library($params) {
         add_js_to_array("scripts", "jqvalidate.js", $javascript);
         add_js_to_array("scripts", "jqvalidate_addon.js", $javascript);
     }
-    if (array_search("flickity", $params) !== false) { // Image carolsel.
-        add_js_to_array("scripts", "flickity.js", $javascript);
+    if (array_search("carousel", $params) !== false) { // Image carousel.
+        add_js_to_array("scripts", "carousel.js", $javascript);
     }
     // Check for module level js.
     foreach ($params as $p) {
@@ -844,7 +844,7 @@ function get_js_set($setname, $loadtype = false) {
     $params = [];
     switch ($setname) {
         case "main":
-            $params = ["siteajax", "colorbox", "ui", "flickity"];
+            $params = ["siteajax", "colorbox", "ui", "carousel"];
             break;
         case "basics":
             $params = ["siteajax"];
@@ -894,8 +894,8 @@ function build_from_css_library($params) {
     if (array_search("colorbox", $params) !== false) { // Modal popups.
         add_css_to_array("styles", "colorbox.css", $css);
     }
-    if (array_search("flickity", $params) !== false) { // Image carolsel.
-        add_css_to_array("styles", "flickity.css", $css);
+    if (array_search("carousel", $params) !== false) { // Image carolsel.
+        add_css_to_array("styles", "carousel.css", $css);
     }
     if (array_search("ui", $params) !== false) {
         add_css_to_array("styles/jqueryui", "jquery-ui.css", $css); // jQueryUI
@@ -923,7 +923,7 @@ function get_css_set($setname) {
     $params = [];
     switch ($setname) {
         case "main":
-            $params = ["main", "colorbox", "flickity"];
+            $params = ["main", "colorbox", "carousel"];
             break;
     }
     return get_css_tags($params);

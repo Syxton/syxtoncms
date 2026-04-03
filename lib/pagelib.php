@@ -266,7 +266,7 @@ function page_masthead($left = true, $header_only = false) {
             "mobilelogofile" => $CFG->mobilelogofile,
             "sitename" => $CFG->sitename,
             "header_only" => ($header_only ? "" : get_nav_items($pageid)),
-            "quote" => random_quote(),
+            "carousel" => get_carousel($CFG->userfilesfolder . "/branding/carousel/", 5),
             "pagename" => $currentpage["name"],
             "header_text" => $header_text,
             "header_color" => $header_color,
@@ -275,6 +275,112 @@ function page_masthead($left = true, $header_only = false) {
     }
 
     return (!$header_only ? (is_logged_in() ? print_logout_button($USER->fname, $USER->lname, $PAGE->id) : get_login_form()) : '');
+}
+
+function random_quotes($count = 5) {
+    global $CFG;
+
+    // Get enough quotes to add to the images.
+    $quotes = [];
+    if ($result = get_db_result("SELECT quote, author FROM quotes ORDER BY RAND() LIMIT 0, ||count||", ["count" => $count])) {
+        while ($row = fetch_row($result)) {
+            // Set quotes and authors.
+            $quote = empty($row['quote']) ? '' : '<div>' . $row['quote'] . '</div>';
+            $author = empty($row['author']) ? '' : '<br /><div style="float:right;">-- ' . $row['author'] . '</div>';
+
+            $quotes[] = '
+                <div class="carouselquotes">
+                ' . $quote . $author . '
+                </div>';
+        }
+    }
+
+    return $quotes;
+}
+
+function get_carousel_images($imageDir, $imageamount = 5) {
+    $extensions = ['jpg', 'jpeg','gif', 'webm', 'webp', 'avif', 'png'];
+    $files = [];
+
+    if (is_dir($imageDir)) {
+        foreach (glob("$imageDir/*.{" . implode(',', $extensions) . "}", GLOB_BRACE) as $file) {
+            $basename = basename($file);
+            // Ignore preload images that start with "preload_".
+            if (strpos($basename, 'preload_') === 0) {
+                continue;
+            }
+            $files[] = $basename;
+        }
+    }
+
+    // Randomly select up to $imageamount images
+    shuffle($files);
+    return array_slice($files, 0, $imageamount);
+}
+
+function get_carousel_preload_image($imageDir, $file) {
+    $baseName = pathinfo($file, PATHINFO_FILENAME);
+    $preloadExts = ['jpg', 'jpeg', 'png'];
+    foreach ($preloadExts as $ext) {
+        $potentialPreload = $imageDir . '/preload_' . $baseName . '.' . $ext;
+        if (file_exists($potentialPreload)) {
+            return 'preload_' . $baseName . '.' . $ext;
+        }
+    }
+    return null;
+}
+
+function get_carousel($imageDir, $imageamount = 5) {
+    $selectedFiles = get_carousel_images($imageDir, $imageamount);
+
+    $quotes = random_quotes(count($selectedFiles));
+
+    $container = '';
+    foreach ($selectedFiles as $index => $file) {
+        $positionStyle = '';
+        $current = '';
+        if ($index === 0) {
+            $current = "true";
+            $positionStyle = 'left: 0;';
+        } elseif ($index === count($selectedFiles) - 1) {
+            $positionStyle = 'left: -100%;';
+        } else {
+            $positionStyle = 'left: 100%;';
+        }
+
+        $image = '';
+        $preloadFile = get_carousel_preload_image($imageDir, $file);
+        if ($preloadFile) {
+            $image .= '<img src="' . $imageDir . '/' . htmlspecialchars($preloadFile) . '" alt="Preload" class="preload-image">';
+        }
+
+        if (pathinfo($file, PATHINFO_EXTENSION) === 'webm') {
+            $image .= '<video autoplay loop muted class="carousel-media" onloadeddata="this.style.display=\'block\'; this.previousElementSibling && (this.previousElementSibling.style.display=\'none\');">';
+            $image .= '<source src="' . $imageDir . '/' . htmlspecialchars($file) . '" type="video/webm">';
+            $image .= '</video>';
+        } else {
+            $image .= '<img src="' . $imageDir . '/' . htmlspecialchars($file) . '" alt="' . htmlspecialchars($file) . '" class="carousel-media" onload="this.style.display=\'block\'; this.previousElementSibling && (this.previousElementSibling.style.display=\'none\');">';
+        }
+
+        $container .= '
+            <div data-container="' . ($index + 1) . '" data-current="' . $current . '" class="carousel-container" style="left: ' . (strpos($positionStyle, '0') !== false ? '0' : (strpos($positionStyle, '-100%') !== false ? '-100%' : '100%')) . ';">
+            ' . $image . '
+            ' . $quotes[$index] . '
+            </div>';
+    }
+
+    return '
+        <div id="carousel" class="carousel">
+            <button class="carousel-arrow left alike">
+            ' . icon([
+                    ["icon" => "circle-left", "size" => 3, "color" => "darkgray"],
+            ]) . '
+            </button>
+            <button class="carousel-arrow right alike">' . icon([
+                    ["icon" => "circle-right", "size" => 3, "color" => "darkgray"],
+            ]) . '</button>
+            ' . $container . '
+        </div>';
 }
 
 /**
