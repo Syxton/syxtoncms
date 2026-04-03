@@ -373,11 +373,11 @@ function get_carousel($imageDir, $imageamount = 5) {
         <div id="carousel" class="carousel">
             <button class="carousel-arrow left alike">
             ' . icon([
-                    ["icon" => "circle-left", "size" => 3, "color" => "darkgray"],
+                    ["icon" => "circle-left", "size" => 3, "color" => "white"],
             ]) . '
             </button>
             <button class="carousel-arrow right alike">' . icon([
-                    ["icon" => "circle-right", "size" => 3, "color" => "darkgray"],
+                    ["icon" => "circle-right", "size" => 3, "color" => "white"],
             ]) . '</button>
             ' . $container . '
         </div>';
