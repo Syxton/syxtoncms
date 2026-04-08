@@ -340,7 +340,7 @@ function get_carousel($imageDir, $imageamount = 5) {
         $image = '';
         $lazy = $current !== "true" ? 'loading="lazy"' : '';
         $fileExt = pathinfo($file, PATHINFO_EXTENSION);
-        if ($fileExt === 'webm' || $fileExt === 'webp' || $fileExt === 'avif') {
+        if ($fileExt === 'webm' || $fileExt === 'webp' || $fileExt === 'mp4') {
             $image .= '
                 <video autoplay loop muted
                     ' . $lazy . '
