@@ -41,10 +41,7 @@
     transition: none !important;
 }
 .carousel-media {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100vw;
+    position: relative;
     object-fit: cover;
     object-position: center;
     min-height: 100%;
