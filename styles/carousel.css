@@ -37,7 +37,7 @@
 .carousel-container.no-transition {
     transition: none !important;
 }
-.preload-image, .carousel-media {
+.carousel-media {
     position: absolute;
     top: 0;
     left: 0;
@@ -47,7 +47,7 @@
     min-height: 100%;
 }
 .carousel-media {
-    display: none;
+    visibility: hidden;
 }
 .carouselquotes {
     width: 90%;

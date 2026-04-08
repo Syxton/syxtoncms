@@ -266,7 +266,7 @@ function page_masthead($left = true, $header_only = false) {
             "mobilelogofile" => $CFG->mobilelogofile,
             "sitename" => $CFG->sitename,
             "header_only" => ($header_only ? "" : get_nav_items($pageid)),
-            "carousel" => get_carousel($CFG->userfilesfolder . "/branding/carousel/", 5),
+            "carousel" => get_carousel($CFG->userfilesfolder . "/branding/carousel", 5),
             "pagename" => $currentpage["name"],
             "header_text" => $header_text,
             "header_color" => $header_color,
@@ -305,10 +305,6 @@ function get_carousel_images($imageDir, $imageamount = 5) {
     if (is_dir($imageDir)) {
         foreach (glob("$imageDir/*.{" . implode(',', $extensions) . "}", GLOB_BRACE) as $file) {
             $basename = basename($file);
-            // Ignore preload images that start with "preload_".
-            if (strpos($basename, 'preload_') === 0) {
-                continue;
-            }
             $files[] = $basename;
         }
     }
@@ -318,19 +314,12 @@ function get_carousel_images($imageDir, $imageamount = 5) {
     return array_slice($files, 0, $imageamount);
 }
 
-function get_carousel_preload_image($imageDir, $file) {
-    $baseName = pathinfo($file, PATHINFO_FILENAME);
-    $preloadExts = ['jpg', 'jpeg', 'png'];
-    foreach ($preloadExts as $ext) {
-        $potentialPreload = $imageDir . '/preload_' . $baseName . '.' . $ext;
-        if (file_exists($potentialPreload)) {
-            return 'preload_' . $baseName . '.' . $ext;
-        }
-    }
-    return null;
-}
-
 function get_carousel($imageDir, $imageamount = 5) {
+    global $CFG;
+
+    // Cleanup '/' or '\' in path.
+    $imageDir = trim($imageDir, '/\\');
+
     $selectedFiles = get_carousel_images($imageDir, $imageamount);
 
     $quotes = random_quotes(count($selectedFiles));
@@ -349,17 +338,26 @@ function get_carousel($imageDir, $imageamount = 5) {
         }
 
         $image = '';
-        $preloadFile = get_carousel_preload_image($imageDir, $file);
-        if ($preloadFile) {
-            $image .= '<img src="' . $imageDir . '/' . htmlspecialchars($preloadFile) . '" alt="Preload" class="preload-image">';
-        }
-
-        if (pathinfo($file, PATHINFO_EXTENSION) === 'webm') {
-            $image .= '<video autoplay loop muted class="carousel-media" onloadeddata="this.style.display=\'block\'; this.previousElementSibling && (this.previousElementSibling.style.display=\'none\');">';
-            $image .= '<source src="' . $imageDir . '/' . htmlspecialchars($file) . '" type="video/webm">';
-            $image .= '</video>';
+        $lazy = $current !== "true" ? 'loading="lazy"' : '';
+        $fileExt = pathinfo($file, PATHINFO_EXTENSION);
+        if ($fileExt === 'webm' || $fileExt === 'webp' || $fileExt === 'avif') {
+            $image .= '
+                <video autoplay loop muted
+                    ' . $lazy . '
+                    preload="metadata"
+                    class="carousel-media"
+                    onloadeddata="this.style.visibility=\'visible\'; this.previousElementSibling && (this.previousElementSibling.style.visibility=\'hidden\');">
+                    <source src="' . $CFG->wwwroot . '/' . $imageDir . '/' . htmlspecialchars($file) . '" type="video/webm">
+                </video>';
         } else {
-            $image .= '<img src="' . $imageDir . '/' . htmlspecialchars($file) . '" alt="' . htmlspecialchars($file) . '" class="carousel-media" onload="this.style.display=\'block\'; this.previousElementSibling && (this.previousElementSibling.style.display=\'none\');">';
+
+            $image .= '
+                <img
+                    ' . $lazy . '
+                    src="' . $CFG->wwwroot . '/' . $imageDir . '/' . htmlspecialchars($file) . '"
+                    alt="' . htmlspecialchars($file) . '"
+                    class="carousel-media"
+                    onload="this.style.visibility=\'visible\'; this.previousElementSibling && (this.previousElementSibling.style.visibility=\'hidden\');">';
         }
 
         $container .= '
