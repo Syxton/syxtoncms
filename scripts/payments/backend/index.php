@@ -146,15 +146,19 @@ function createOrder($cart) {
 }
 
 if (strstr($endpoint, "action=orders")) {
-    $data = json_decode(file_get_contents("php://input"), true);
-    $cart = $data["cart"];
-    header("Content-Type: application/json");
     try {
+        $data = json_decode(file_get_contents("php://input"), true);
+        if (!isset($data["cart"])) {
+            throw new Exception("Cart data is required");
+        }
+
+        $cart = $data["cart"];
+        header("Content-Type: application/json");
         $orderResponse = createOrder($cart);
         echo json_encode($orderResponse["jsonResponse"]);
     } catch (Exception $e) {
-        echo json_encode(["error" => $e->getMessage()]);
         http_response_code(500);
+        echo json_encode(["error" => $e->getMessage()]);
     }
 }
 

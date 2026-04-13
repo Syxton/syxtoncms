@@ -299,14 +299,18 @@ function random_quotes($count = 5) {
 }
 
 function get_carousel_images($imageDir, $imageamount = 5) {
+    global $CFG;
+
     $extensions = ['jpg', 'jpeg','gif', 'webm', 'webp', 'avif', 'png'];
     $files = [];
 
-    if (is_dir($imageDir)) {
-        foreach (glob("$imageDir/*.{" . implode(',', $extensions) . "}", GLOB_BRACE) as $file) {
+    if (is_dir($CFG->docroot . '/' . $imageDir)) {
+        foreach (glob($CFG->docroot . '/' . "$imageDir/*.{" . implode(',', $extensions) . "}", GLOB_BRACE) as $file) {
             $basename = basename($file);
             $files[] = $basename;
         }
+    } else {
+        echo "Directory $imageDir does not exist.";
     }
 
     // Randomly select up to $imageamount images
