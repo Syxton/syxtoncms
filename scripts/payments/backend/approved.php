@@ -15,7 +15,9 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
     include($sub . 'lib/header.php');
 }
 
-if (!isset($_GET['data'])) { exit(); }
+if (!isset($_GET['data'])) {
+    exit();
+}
 
 $data = json_decode($_GET['data']);
 
@@ -25,14 +27,18 @@ if (!isset($data->purchase_units[0]->reference_id)) {
 
 $reference = json_decode($data->purchase_units[0]->reference_id);
 
+// For testing purposes, let's manually fill in the reference variable with test data.
+//$reference = new stdClass();
+//$reference->t = "events";
+//$reference->c = "TESTCART123";
+
 $type = $reference->t;
 $cart = $reference->c;
-
-$confirmation = $type . "_print_confirmation";
 
 // Include feature specific functions.
 include_once($CFG->dirroot . "/features/$type/$type" . "lib.php");
 
+$confirmation = $type . "_print_confirmation";
 if (!function_exists($confirmation)) {
     throw new Exception("Failed to find payment confirmation functions.");
 }
@@ -41,7 +47,7 @@ if (!function_exists($confirmation)) {
 $PAGE->title        = "Payment Confirmation Page"; // Title of page
 $PAGE->name         = $PAGE->title; // Title of page
 $PAGE->description  = $PAGE->title; // Description of page
-$PAGE->themeid =    get_page_themeid($PAGE->id);
+$PAGE->themeid      = get_page_themeid($PAGE->id);
 
 header("Cache-Control: no-cache, no-store, must-revalidate"); // HTTP 1.1.
 header("Pragma: no-cache"); // HTTP 1.0.
@@ -51,7 +57,7 @@ header("Expires: 0");
 include($CFG->dirroot . '/header.html');
 
 echo fill_template("tmp/index.template", "simplelayout_template", false, [
-    "mainmast" => page_masthead(true),
+    "mainmast" => page_masthead(false, false),
     "middlecontents" => $confirmation($cart, $data),
 ]);
 
