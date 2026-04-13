@@ -23,11 +23,11 @@ global $CFG, $PAGE;
 	$feature = clean_myvar_opt("feature", "string", false);
 	$featureid = clean_myvar_opt("featureid", "int", false);
 
-	$PAGE = (object)[];
+	$PAGE = (object) [];
 	$PAGE->id = $pageid;
 	$PAGE->themeid = get_page_themeid($PAGE->id);
 
-	$variables = (object)[];
+	$variables = (object) [];
 	$variables->pageid = $pageid;
 	$variables->feature = $feature;
 	$variables->featureid = $featureid;

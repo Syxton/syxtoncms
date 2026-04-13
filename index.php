@@ -89,8 +89,8 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
 
     // Main Layout
     $params = [
-        "mainmast" => page_masthead(true),
-        "sidemast" => page_masthead(false),
+        "mainmast" => page_masthead(),
+        "sidemast" => login_header(),
         "sidecontents" => get_page_contents($PAGE->id, 'side'),
         "middlecontents" => get_page_contents($PAGE->id, 'middle'),
     ];

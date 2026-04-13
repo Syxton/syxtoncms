@@ -133,7 +133,7 @@ function news_wrapper($newsid, $pageid, $newsonly) {
 global $CFG;
 	$news = get_db_row("SELECT * FROM news WHERE newsid=$newsid");
 	$daygraphic = get_date_graphic($news['submitted'], true, true);
-    $pagenews = new \stdClass;
+    $pagenews = (object) [];
 	$pagenews->newsid = $news['newsid'];
 	$pagenews->title = stripslashes($news['title']);
 	$pagenews->caption = stripslashes($news['caption']);
@@ -155,7 +155,7 @@ global $CFG;
                             ' . make_news_table($pageid, $pagenews, "middle", $daygraphic, true) . '<br />
                             ' . $display_news . '
                             </div>';
-        return get_css_set("main") . fill_template("tmp/index.template", "simplelayout_template", false, ["mainmast" => page_masthead(true, true), "middlecontents" => $middlecontents]);
+        return get_css_set("main") . fill_template("tmp/index.template", "simplelayout_template", false, ["mainmast" => page_masthead(true), "middlecontents" => $middlecontents]);
 	}
 }
 ?>

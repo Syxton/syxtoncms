@@ -51,7 +51,7 @@ header("Expires: 0");
 include($CFG->dirroot . '/header.html');
 
 echo fill_template("tmp/index.template", "simplelayout_template", false, [
-    "mainmast" => page_masthead(true, true),
+    "mainmast" => page_masthead(true),
     "middlecontents" => $confirmation($cart, $data),
 ]);
 

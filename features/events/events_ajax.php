@@ -665,7 +665,7 @@ global $CFG, $PAGE, $MYVARS;
                 <strong>Thank you for your feedback.</strong>
             </div>';
 
-        $return = fill_template("tmp/index.template", "simplelayout_template", false, ["mainmast" => page_masthead(true, true), "middlecontents" => $middlecontents]);
+        $return = fill_template("tmp/index.template", "simplelayout_template", false, ["mainmast" => page_masthead(true), "middlecontents" => $middlecontents]);
     } catch (\Throwable $e) {
         rollback_db_transaction($e->getMessage());
         $return = $e->getMessage();
@@ -1279,9 +1279,9 @@ global $CFG, $MYVARS, $USER;
     $registrationlist = "";
     if ($registrants = get_db_result(get_registration_sort_sql($eventid))) {
         $i = 0;
-        $values = new \stdClass;
+        $values = (object) [];
         while ($registrant = fetch_row($registrants)) {
-            $values->$i = new \stdClass;
+            $values->$i = (object) [];
             $values->$i->name = ($i + 1) . " - " . get_registrant_name($registrant["regid"]);
             $values->$i->name .= !empty($registrant["verified"]) ? '' : ' [PENDING]';
             $values->$i->regid = $registrant["regid"];
@@ -1686,7 +1686,7 @@ function makepayment() {
         $return .= "HERE1 . $payment_amount";
         if ($payment_amount > 0) {
             $return .= "HERE2";
-            $item[0] = new \stdClass;
+            $item[0] = (object) [];
             $item[0]->description = "Event: " . $event["name"] . " - $registrant_name's Registration - Remaining Balance Payment";
             $item[0]->cost = $payment_amount;
             $item[0]->regid = $regid;
@@ -3014,10 +3014,10 @@ global $CFG, $USER;
 
     if ($archive = get_db_result("SELECT * FROM events_staff_archive WHERE staffid = ||staffid|| ORDER BY year", ["staffid" => $staffid])) {
         $i = -1;
-        $values = new \stdClass;
+        $values = (object) [];
         while ($vals = fetch_row($archive)) {
             $i++;
-            $values->$i = new \stdClass;
+            $values->$i = (object) [];
             $values->$i->year = $vals["year"];
         }
         $year = $year ? $year : $values->$i->year; // default to most recent.

@@ -15,7 +15,7 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
 }
 define('STYLESLIB', true);
 
-$STYLES = new \stdClass;
+$STYLES = (object) [];
 
 function get_styles($pageid, $themeid = false, $feature = '', $featureid = '') {
 global $CFG, $MYVARS;

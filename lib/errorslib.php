@@ -15,7 +15,7 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
 }
 define("ERRORSLIB", true);
 
-$ERRORS = new \stdClass;
+$ERRORS = (object) [];
 
 $CFG->debug = $CFG->debug ?? 1;
 $reportlevel = 0;

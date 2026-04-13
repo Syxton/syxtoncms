@@ -205,7 +205,7 @@ global $CFG;
 
     if (!$modal) {
         echo get_js_tags(["jquery"]);
-        echo main_body(true, false);
+        echo simple_page("", false, false);
     }
 
     ajaxapi([
@@ -1355,7 +1355,8 @@ global $CFG;
     if (!defined('EVENTSLIB')) { include_once($CFG->dirroot . '/features/events/eventslib.php'); }
 
     $redirect = js_code_wrap('window.location = "' . $CFG->wwwroot . '";');
-    echo main_body(true);
+    $content = login_header(true);
+    echo simple_page($content, true);
 
     $auth_token = $CFG->paypal_auth;
 

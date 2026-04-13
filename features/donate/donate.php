@@ -62,7 +62,7 @@ function thankyou() {
 global $CFG;
     $redirect = js_code_wrap('window.location = "' . $CFG->wwwroot . '";');
 
-    echo main_body(true);
+    echo simple_page("", false, false);
 
     if (!empty($_GET['cm'])) {
         $c = get_db_row("SELECT * FROM donate_campaign WHERE campaign_id='" . $_GET['cm'] . "'");

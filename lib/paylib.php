@@ -15,7 +15,7 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
 }
 define("PAYLIB", true);
 
-$PAY = (object)[];
+$PAY = (object) [];
 
 /**
  * Initialize the payment cart session with a single item.

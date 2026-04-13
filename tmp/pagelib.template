@@ -5,25 +5,21 @@ main_js_css||
     ||echo get_css_tags(["main"]);::none||
 ||main_js_css
 
-main_body_template||
+simple_page_template||
     <div id="ajax_errors">
         <div id="ajax_error_display" style="display: none;"></div>
     </div>
     <div id="wholepage">
-        <div class="logo_nav">||page_masthead_1||</div>
-        <div class="colmask rightmenu">
-            <div class="colleft">
-                <div class="col2 pagesort2 connectedSortable">
-                    ||page_masthead_2||
-                </div>
-                <div class="col1 pagesort1 connectedSortable">
-                    <span id="column_width" style="width:100%;"></span>
-                </div>
-            </div>
+        <div class="logo_nav">
+            ||masthead||
         </div>
+        <div style="margin: 5px auto;max-width: 800px;">
+			<span id="column_width" style="width:100%;"></span>
+			||content||
+		</div>
     </div>
     <div style="clear:both;"></div>
-||main_body_template
+||simple_page_template
 
 page_masthead_template||
     <div class="nav_header">
@@ -42,13 +38,15 @@ page_masthead_template||
             </a>
         </div>
         <div class="nav">
-            ||header_only||
+            ||nav_menu||
         </div>
     </div>
     ||carousel||
     <div style="background: linear-gradient(to right, rgba(0, 0, 0, 0), ||header_color||, rgba(0, 0, 0, 0));">
         <div style="padding: 2px;text-align: center;justify-content: center;display: flex;align-items: center;height: 30px;">
-            <span style="font-size: 2em;position: relative;height: 24px;top: -6px;font-weight: bold;color: ||header_text||;">||pagename||</span>
+            <span style="font-size: 2em;position: relative;height: 24px;top: -6px;font-weight: bold;color: ||header_text||;">
+                ||pagename||
+            </span>
         </div>
     </div>
 ||page_masthead_template

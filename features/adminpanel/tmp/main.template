@@ -296,13 +296,15 @@ members_search_row||
         <td>
             <div class="dynamic-dropdown">
                 <div class="iconfield dynamic-dropdown-content">
-                    ||loginas{{
-                        <span id="loginas_||user["userid"]||">
-                            <button class="alike" title="Log in as ||fullname||" onclick=loginas(||user["userid"]||)>
-                                ||echo icon("user-secret", 2);::none||
-                            </button>
-                        </span>
-                    }}loginas||
+                    ||notadmin{{
+                        ||loginas{{
+                            <span id="loginas_||user["userid"]||">
+                                <button class="alike" title="Log in as ||fullname||" onclick=loginas(||user["userid"]||)>
+                                    ||echo icon("user-secret", 2);::none||
+                                </button>
+                            </span>
+                        }}loginas||
+                    }}notadmin||
                     <span>
                         <button class="alike" title="View ||fullname|| Logs" onclick="view_logfile(||user["userid"]||);">
                             ||echo icon("chart-simple", 2, "", "green");::none||

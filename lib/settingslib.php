@@ -22,11 +22,11 @@ function fetch_settings($type, &$featureid, $pageid = false) {
         $pageid = $pageid ?: "0"; // Set to 0 if page not set.
         $SQL = "SELECT * FROM settings WHERE type='$type' AND pageid='$pageid'";
         if ($results = get_db_result($SQL)) {
-            $settings = new \stdClass;
-            $settings->$type = new \stdClass;
+            $settings = (object) [];
+            $settings->$type = (object) [];
             while ($row = fetch_row($results)) {
                 $setting_name = $row["setting_name"];
-                if (empty($settings->$type->$setting_name)) { $settings->$type->$setting_name = new \stdClass; }
+                if (empty($settings->$type->$setting_name)) { $settings->$type->$setting_name = (object) []; }
                 if (isset($row["settingid"])) { $settings->$type->$setting_name->settingid = $row["settingid"]; }
                 if (isset($row["setting"])) { $settings->$type->$setting_name->setting = stripslashes($row["setting"]); }
                 if (isset($row["extra"])) { $settings->$type->$setting_name->extra = stripslashes($row["extra"]); }
@@ -44,14 +44,14 @@ function fetch_settings($type, &$featureid, $pageid = false) {
             }
         }
 
-        $settings = new \stdClass;
+        $settings = (object) [];
         $SQL = "SELECT * FROM settings WHERE type='$type' AND featureid='$featureid'";
         if ($results = get_db_result($SQL)) {
-            $settings->$type = new \stdClass;
-            $settings->$type->$featureid = new \stdClass;
+            $settings->$type = (object) [];
+            $settings->$type->$featureid = (object) [];
             while ($row = fetch_row($results)) {
                 $setting_name = $row["setting_name"];
-                if (empty($settings->$type->$featureid->$setting_name)) { $settings->$type->$featureid->$setting_name = new \stdClass; }
+                if (empty($settings->$type->$featureid->$setting_name)) { $settings->$type->$featureid->$setting_name = (object) []; }
                 if (isset($row["settingid"])) { $settings->$type->$featureid->$setting_name->settingid = $row["settingid"];}
                 if (isset($row["setting"])) { $settings->$type->$featureid->$setting_name->setting = stripslashes($row["setting"]);}
                 if (isset($row["extra"])) { $settings->$type->$featureid->$setting_name->extra = stripslashes($row["extra"]);}
@@ -322,9 +322,9 @@ function refresh_settings($params) {
         $featureid = $params["settinginfo"]["featureid"];
         $name = $params["settinginfo"]["setting_name"];
 
-        if (empty($params["settings"]->$type)) { $params["settings"]->$type = new \stdClass; }
-        if (empty($params["settings"]->$type->$featureid)) { $params["settings"]->$type->$featureid = new \stdClass; }
-        if (empty($params["settings"]->$type->$featureid->$name)) { $params["settings"]->$type->$featureid->$name = new \stdClass; }
+        if (empty($params["settings"]->$type)) { $params["settings"]->$type = (object) []; }
+        if (empty($params["settings"]->$type->$featureid)) { $params["settings"]->$type->$featureid = (object) []; }
+        if (empty($params["settings"]->$type->$featureid->$name)) { $params["settings"]->$type->$featureid->$name = (object) []; }
 
         $params["settings"]->$type->$featureid->$name->settingid = $params["settingid"];
 

@@ -15,7 +15,7 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
 }
 define("ROLES", true);
 
-$ABILITIES = new \stdClass;
+$ABILITIES = (object) [];
 
 function is_siteadmin($userid) {
 global $CFG, $ROLES;
@@ -164,13 +164,13 @@ global $CFG, $ROLES, $ABILITIES;
 
         $params = ["pageid" => $pageid, "userid" => $userid, "feature" => $feature, "featureid" => $featureid, "roleid" => $roleid];
         if ($results = get_db_result($SQL, $params)) {
-            $abilities = new \stdClass;
+            $abilities = (object) [];
             while ($row = fetch_row($results)) {
                 $ability = $row["ability"];
                 $allow = $row["allowed"] == 1 ? 1 : 0;
 
                 if (empty($abilities->$ability)) {
-                    $abilities->$ability = new \stdClass;
+                    $abilities->$ability = (object) [];
                 }
                 $abilities->$ability->allow = $allow;
             }
@@ -233,11 +233,11 @@ global $CFG, $ROLES, $ABILITIES;
     $SQL = fill_template("dbsql/roles.sql", "get_role_abilities", false, ["issection" => ($section), "section" => $section_sql], true);
 
     if ($results = get_db_result($SQL, $params)) {
-        $abilities = new \stdClass;
+        $abilities = (object) [];
         while ($row = fetch_row($results)) {
             $ability = $row["ability"];
             $allow = $row["allowed"] == 1 ? 1 : 0;
-            $abilities->$ability = new \stdClass;
+            $abilities->$ability = (object) [];
             $abilities->$ability->allow = $allow;
         }
     } else {
@@ -283,7 +283,7 @@ function role_is_able($roleid, $ability, $pageid, $feature = "", $featureid = 0)
 function load_roles() {
 global $CFG;
     // Store all roles in a global object, keyed by role name
-    $ROLES = new \stdClass;
+    $ROLES = (object) [];
 
     // Get all roles from the database
     if ($allroles = get_db_result(fetch_template("dbsql/roles.sql", "get_roles"))) {

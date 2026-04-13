@@ -16,7 +16,7 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
 define('NEWSLIB', true);
 
 //NEWSLIB Config
-$CFG->news = new \stdClass;
+$CFG->news = (object) [];
 $CFG->news->maxlength = 500;
 $CFG->news->modalheight = 600;
 $CFG->news->modalwidth = 640;
@@ -314,8 +314,8 @@ function get_month_news($userid, $year, $month, $pagenews=false, $pageid =false,
         if ($first !== false) {
             $firststamp = $pagenews->$first->submitted; $laststamp = $pagenews->$last->submitted;
             while ($first <= $last) {
-                if (empty($returnme)) { $returnme = new \stdClass; }
-                $returnme->$y = new \stdClass;
+                if (empty($returnme)) { $returnme = (object) []; }
+                $returnme->$y = (object) [];
                 $returnme->$y->title = $pagenews->$first->title;
                 $returnme->$y->newsid = $pagenews->$first->newsid;
                 $first++; $y++;
@@ -352,8 +352,8 @@ function months_with_news($userid, $year, $pagenews=false, $pageid =false, $feat
                     if ($pagenews->$i->submitted >= $beginmonth && $pagenews->$i->submitted <= $endmonth) {
                         if (date("n", $pagenews->$i->submitted) > $currentmonth) {
                             $currentmonth = date("n", $pagenews->$i->submitted);
-                            if (empty($returnme)) { $returnme = new \stdClass; }
-                            $returnme->$y = new \stdClass;
+                            if (empty($returnme)) { $returnme = (object) []; }
+                            $returnme->$y = (object) [];
                             $returnme->$y->month = $currentmonth;
                             $returnme->$y->monthname = date("F", $pagenews->$i->submitted);
                             break;
@@ -385,8 +385,8 @@ function years_with_news($userid, $pagenews=false, $pageid =false, $featureid=fa
 
             foreach ($pagenews as $news) {
                 if ($news->submitted >= $beginyear && $news->submitted <= $endyear) {
-                    if (empty($returnme)) { $returnme = new \stdClass; }
-                    $returnme->$y = new \stdClass;
+                    if (empty($returnme)) { $returnme = (object) []; }
+                    $returnme->$y = (object) [];
                     $returnme->$y->year = $currentyear;
                     $y++;
                     break;
@@ -404,9 +404,9 @@ global $CFG;
     $SQL = "SELECT * FROM news WHERE featureid='$featureid'	ORDER BY submitted DESC $limit";
     $i=0;
     if ($news_results = get_db_result($SQL)) {
-        $news = new \stdClass;
+        $news = (object) [];
         while ($row = fetch_row($news_results)) {
-            $news->$i = new \stdClass;
+            $news->$i = (object) [];
             $news->$i->newsid = $row['newsid'];
             $news->$i->pageid = $row['pageid'];
             $news->$i->featureid = $row['featureid'];
@@ -489,9 +489,9 @@ global $CFG;
 
         $i=0;
         if ($news_results = get_db_result($SQL)) {
-      $news = new \stdClass;
+      $news = (object) [];
             while ($row = fetch_row($news_results)) {
-        $news->$i = new \stdClass;
+        $news->$i = (object) [];
                 $news->$i->newsid = $row['newsid'];
                 $news->$i->pageid = $row['pageid'];
                 $news->$i->featureid = $row['featureid'];

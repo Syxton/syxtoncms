@@ -103,12 +103,12 @@ if (!$fp) {
 							// If payment is made, it is no longer in queue.
 							execute_db_sql(fetch_template("dbsql/events.sql", "update_reg_status", "events"), ["regid" => $rid, "verified" => 1]);
 
-							$touser = new \stdClass;
+							$touser = (object) [];
 							$touser->fname = get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname='Camper_Name_First'", ["regid" => $rid]);
 							$touser->lname = get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname='Camper_Name_Last'", ["regid" => $rid]);
 							$touser->email = get_db_field("email", "events_registrations", "regid = ||regid||", ["regid" => $rid]);
 
-							$fromuser = new \stdClass;
+							$fromuser = (object) [];
 							$fromuser->email = $CFG->siteemail;
 							$fromuser->fname = $CFG->sitename;
 							$fromuser->lname = "";

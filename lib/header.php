@@ -24,8 +24,8 @@ foreach ($libs as $lib) {
     }
 }
 
-if (!isset($USER)) { $USER = (object)[]; }
-if (!isset($MYVARS)) { $MYVARS = (object)[]; }
+if (!isset($USER)) { $USER = (object) []; }
+if (!isset($MYVARS)) { $MYVARS = (object) []; }
 if (!isset($ROLES)) { $ROLES = load_roles(); }
 
 collect_vars();

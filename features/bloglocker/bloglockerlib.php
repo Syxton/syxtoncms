@@ -17,7 +17,7 @@ if (!LIBHEADER) {
 define('BLOGLOCKERLIB', true);
 
 //BLOGLOCKERLIB Config
-$CFG->bloglocker = new \stdClass;
+$CFG->bloglocker = (object) [];
 $CFG->bloglocker->viewable_limit = 20;
 
 function display_bloglocker($pageid, $area, $featureid) {

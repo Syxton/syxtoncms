@@ -5,7 +5,7 @@ unset($CFG);
 unset($USER);
 
 // Initialize configuration as an empty object
-$CFG = new \stdClass;
+$CFG = (object) [];
 
 /**
  * Miscellaneous Configuration

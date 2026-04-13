@@ -165,18 +165,18 @@ global $CFG;
     return (empty($CFG->directory) ? '' : trim($CFG->directory, '/\\'));
 }
 
-function main_body($header_only = false, $carousel = true) {
+function simple_page($content = "", $nav_menu = true, $carousel = true) {
     $params = [
-        "page_masthead_1" => page_masthead(true, $header_only, $carousel),
-        "page_masthead_2" => page_masthead(false, $header_only, $carousel),
+        "masthead" => page_masthead($nav_menu, $carousel),
+        "content" => $content,
     ];
-    return fill_template("tmp/pagelib.template", "main_body_template", false, $params);
+    return fill_template("tmp/pagelib.template", "simple_page_template", false, $params);
 }
 
 function set_pageid($pageid = NULL) {
 global $PAGE;
     if (empty($PAGE)) {
-        $PAGE = new \stdClass;
+        $PAGE = (object) [];
     }
 
     if (!isset($pageid)) {
@@ -242,39 +242,46 @@ function get_default_role($pageid) {
     return get_db_field("default_role", "pages", "pageid = ||pageid||", ["pageid" => $pageid]);
 }
 
-function page_masthead($left = true, $header_only = false, $carousel = true) {
+function page_masthead($nav_menu = true, $carousel = true) {
     global $CFG, $USER, $PAGE;
-    if ($left) {
-        $PAGE = set_pageid();
-        $pageid = $PAGE->id;
-        $PAGE->themeid ??= get_page_themeid($pageid);
 
-        if (!$currentpage = get_db_row("SELECT * FROM pages WHERE pageid = ||pageid||", ["pageid" => $pageid])) {
-            header('Location: ' . $CFG->wwwroot);
-            die();
-        }
-        $styles = get_styles($pageid, $PAGE->themeid);
-        $header_color = $styles['pagenamebgcolor'] ?? "";
-        $header_text = $styles['pagenamefontcolor'] ?? "";
-        $carousel = $carousel ? get_carousel($CFG->userfilesfolder . "/branding/carousel", 5) : "";
-        $params = [
-            "wwwroot" => $CFG->wwwroot,
-            "brandingpath" => $CFG->userfilesurl,
-            "haslogo" => isset($CFG->logofile),
-            "logofile" => $CFG->logofile,
-            "hasmobilelogo" => !empty($CFG->mobilelogofile),
-            "mobilelogofile" => $CFG->mobilelogofile,
-            "sitename" => $CFG->sitename,
-            "header_only" => ($header_only ? "" : get_nav_items($pageid)),
-            "carousel" => $carousel,
-            "pagename" => $currentpage["name"],
-            "header_text" => $header_text,
-            "header_color" => $header_color,
-        ];
-        return fill_template("tmp/pagelib.template", "page_masthead_template", false, $params);
+    $PAGE = set_pageid();
+    $pageid = $PAGE->id;
+    $PAGE->themeid ??= get_page_themeid($pageid);
+
+    if (!$currentpage = get_db_row("SELECT * FROM pages WHERE pageid = ||pageid||", ["pageid" => $pageid])) {
+        header('Location: ' . $CFG->wwwroot);
+        die();
     }
+    $styles = get_styles($pageid, $PAGE->themeid);
+    $header_color = $styles['pagenamebgcolor'] ?? "";
+    $header_text = $styles['pagenamefontcolor'] ?? "";
+    $carousel = $carousel ? get_carousel($CFG->userfilesfolder . "/branding/carousel", 5) : "";
+    $params = [
+        "wwwroot" => $CFG->wwwroot,
+        "brandingpath" => $CFG->userfilesurl,
+        "haslogo" => isset($CFG->logofile),
+        "logofile" => $CFG->logofile,
+        "hasmobilelogo" => !empty($CFG->mobilelogofile),
+        "mobilelogofile" => $CFG->mobilelogofile,
+        "sitename" => $CFG->sitename,
+        "nav_menu" => ($nav_menu ? get_nav_items($pageid) : ""),
+        "carousel" => $carousel,
+        "pagename" => $currentpage["name"],
+        "header_text" => $header_text,
+        "header_color" => $header_color,
+    ];
+    return fill_template("tmp/pagelib.template", "page_masthead_template", false, $params);
+}
 
-    return (!$header_only ? (is_logged_in() ? print_logout_button($USER->fname, $USER->lname, $PAGE->id) : get_login_form()) : '');
+function login_header($show_form = false) {
+    global $USER, $PAGE;
+
+    if (!$show_form && is_logged_in()) {
+        return print_logout_button($USER->fname, $USER->lname, $PAGE->id);
+    } else {
+        return get_login_form();
+    }
 }
 
 function random_quotes($count = 5) {
