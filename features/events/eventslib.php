@@ -3183,7 +3183,7 @@ function request_questions_form($reqid, $voteid, $featureid, $pageid) {
             ' . $prev_questions . '
         </div>';
     $params = [
-        "mainmast" => page_masthead(true),
+        "mainmast" => page_masthead(false, false),
         "middlecontents" => $middlecontents,
     ];
     return fill_template("tmp/index.template", "simplelayout_template", false, $params);
@@ -3274,7 +3274,7 @@ global $CFG;
             ' . $prev_questions . '
         </div>';
 
-    return fill_template("tmp/index.template", "simplelayout_template", false, ["mainmast" => page_masthead(true), "middlecontents" => $middlecontents]);
+    return fill_template("tmp/index.template", "simplelayout_template", false, ["mainmast" => page_masthead(false, false), "middlecontents" => $middlecontents]);
 }
 
 function request_has_already_voted($reqid, $voteid) {

@@ -77,7 +77,7 @@ global $CFG, $USER;
                             ' . $content . '
                         </div>
                     </div>';
-                $returnme .= fill_template("tmp/index.template", "simplelayout_template", false, ["mainmast" => page_masthead(true), "middlecontents" => $middlecontents]);
+                $returnme .= fill_template("tmp/index.template", "simplelayout_template", false, ["mainmast" => page_masthead(false, false), "middlecontents" => $middlecontents]);
 
             } else { // Regular html feature viewing
                 if (is_logged_in() && $settings->html->$featureid->enablerss->setting) {

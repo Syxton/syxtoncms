@@ -665,7 +665,7 @@ global $CFG, $PAGE, $MYVARS;
                 <strong>Thank you for your feedback.</strong>
             </div>';
 
-        $return = fill_template("tmp/index.template", "simplelayout_template", false, ["mainmast" => page_masthead(true), "middlecontents" => $middlecontents]);
+        $return = fill_template("tmp/index.template", "simplelayout_template", false, ["mainmast" => page_masthead(false, false), "middlecontents" => $middlecontents]);
     } catch (\Throwable $e) {
         rollback_db_transaction($e->getMessage());
         $return = $e->getMessage();
