@@ -51,7 +51,7 @@ function resizeIframe(frameid) {
             const resizeObserver = new ResizeObserver(entries => {
                 // The element we are observing is the first div inside the iframe body.
                 // We add a little extra height to avoid scrollbars.
-                currentfr.height = parseInt($(entries[0].target).height()) + cushion;
+                currentfr.height = doc.body.scrollHeight + cushion;
             });
 
             // Start observing the first div inside the iframe body.

@@ -205,7 +205,7 @@ global $CFG;
 
     if (!$modal) {
         echo get_js_tags(["jquery"]);
-        echo main_body(true);
+        echo main_body(true, false);
     }
 
     ajaxapi([

@@ -165,10 +165,10 @@ global $CFG;
     return (empty($CFG->directory) ? '' : trim($CFG->directory, '/\\'));
 }
 
-function main_body($header_only = false) {
+function main_body($header_only = false, $carousel = true) {
     $params = [
-        "page_masthead_1" => page_masthead(true),
-        "page_masthead_2" => page_masthead(false, $header_only),
+        "page_masthead_1" => page_masthead(true, $header_only, $carousel),
+        "page_masthead_2" => page_masthead(false, $header_only, $carousel),
     ];
     return fill_template("tmp/pagelib.template", "main_body_template", false, $params);
 }
@@ -242,7 +242,7 @@ function get_default_role($pageid) {
     return get_db_field("default_role", "pages", "pageid = ||pageid||", ["pageid" => $pageid]);
 }
 
-function page_masthead($left = true, $header_only = false) {
+function page_masthead($left = true, $header_only = false, $carousel = true) {
     global $CFG, $USER, $PAGE;
     if ($left) {
         $PAGE = set_pageid();
@@ -256,7 +256,7 @@ function page_masthead($left = true, $header_only = false) {
         $styles = get_styles($pageid, $PAGE->themeid);
         $header_color = $styles['pagenamebgcolor'] ?? "";
         $header_text = $styles['pagenamefontcolor'] ?? "";
-
+        $carousel = $carousel ? get_carousel($CFG->userfilesfolder . "/branding/carousel", 5) : "";
         $params = [
             "wwwroot" => $CFG->wwwroot,
             "brandingpath" => $CFG->userfilesurl,
@@ -266,7 +266,7 @@ function page_masthead($left = true, $header_only = false) {
             "mobilelogofile" => $CFG->mobilelogofile,
             "sitename" => $CFG->sitename,
             "header_only" => ($header_only ? "" : get_nav_items($pageid)),
-            "carousel" => get_carousel($CFG->userfilesfolder . "/branding/carousel", 5),
+            "carousel" => $carousel,
             "pagename" => $currentpage["name"],
             "header_text" => $header_text,
             "header_color" => $header_color,
