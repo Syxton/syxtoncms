@@ -98,31 +98,24 @@ global $CFG;
         $nextyear = $year;
     }
 
-    $returnme = '
-        <table class="calendar_table">
-            <tr>
-                <td class="calendar_month" colspan="7">
-                    <div class="calendar_month_flex">
-                        <button class="alike calendar_change_month" style="float:left;" onclick="changemonth(' . $prevmonth . ', ' . $prevyear . ', ' . $pageid . ', ' . $userid . ');">
-                            ' . icon("angles-left") . '
-                        </button>
-                        ' . $monthName . ' ' . $yearName . '
-                        <button class="alike calendar_change_month" style="float:right;" onclick="changemonth(' . $nextmonth . ', ' . $nextyear . ', ' . $pageid . ', ' . $userid . ');">
-                            ' . icon("angles-right") . '
-                        </button>
-                    </div>
-                </td>
-            </tr>
-            <tr class="calendar_day_names">
-                <th>S</th>
-                <th>M</th>
-                <th>T</th>
-                <th>W</th>
-                <th>T</th>
-                <th>F</th>
-                <th>S</th>
-            </tr>
-            <tr class="calendar_week">';
+    $params = [
+        "prev" => button_maker([
+            "title" => "View " . date("F Y", mktime(0, 0, 0, $prevmonth, 1, $prevyear)),
+            "class" => "alike calendar_change_month",
+            "style" => "float:left;",
+            "onclick" => "changemonth($prevmonth, $prevyear, $pageid, $userid);",
+            "content" => icon("angles-left"),
+        ]),
+        "current" => $monthName . ' ' . $yearName,
+        "next" => button_maker([
+            "title" => "View " . date("F Y", mktime(0, 0, 0, $nextmonth, 1, $nextyear)),
+            "class" => "alike calendar_change_month",
+            "style" => "float:right;",
+            "onclick" => "changemonth($nextmonth, $nextyear, $pageid, $userid);",
+            "content" => icon("angles-right"),
+        ]),
+    ];
+    $returnme = fill_template("tmp/calendar.template", "calendar_table_start", "calendar", $params);
 
     for ($i = 0; $i < $theday; $i++) {
         $returnme .= '<td></td>';

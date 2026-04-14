@@ -122,13 +122,17 @@ function get_adminpanel_alerts($userid, $countonly = true) {
                     // Loops through all requests from a page.
                     while ($request = fetch_row($result)) {
                         $question = 'Allow ' . get_user_name($request["userid"]) . " into " . get_db_field("name", "pages", "pageid=" . $request["pageid"]) . '?';
-                        $buttons = '
-                            <button class="alike" onclick="allow_page_request(' . $request["assignmentid"] . ', 1, \'userspan_' . $request["userid"] . '_' . $request["pageid"] . '\');">
-                                ' . icon("thumbs-up", 2) . '
-                            </button>
-                            <button class="alike" onclick="allow_page_request(' . $request["assignmentid"] . ', 0, \'userspan_' . $request["userid"] . '_' . $request["pageid"] . '\');">
-                                ' . icon("thumbs-down", 2) . '
-                            </button>';
+                        $buttons = 
+                        button_maker([
+                            "class" => "alike",
+                            "onclick" => "allow_page_request(" . $request["assignmentid"] . ", 1, 'userspan_" . $request["userid"] . "_" . $request["pageid"] . "');",
+                            "content" => icon("thumbs-up", 2),
+                        ]) .
+                        button_maker([
+                            "class" => "alike",
+                            "onclick" => "allow_page_request(" . $request["assignmentid"] . ", 0, 'userspan_" . $request["userid"] . "_" . $request["pageid"] . "');",
+                            "content" => icon("thumbs-down", 2),
+                        ]);
                         $alerts_rows .= fill_template("tmp/pagelib.template", "user_alerts_row", false, ["question" => $question, "buttons" => $buttons]);
                     }
                 }
@@ -151,13 +155,17 @@ function get_adminpanel_alerts($userid, $countonly = true) {
             // Loops through all requests from a page.
             while ($invite = fetch_row($result)) {
                 $question = 'Allow ' . get_user_name($request["userid"]) . " into " . get_db_field("name", "pages", "pageid=" . $invite["pageid"]) . '?';
-                $buttons = '
-                    <button class="alike" onclick="allow_page_request(' . $invite["assignmentid"] . ', 1, \'pagespan_' . $invite["userid"] . '_' . $invite["pageid"] . '\');">
-                        ' . icon("thumbs-up", 2) . '
-                    </button>
-                    <button class="alike" onclick="allow_page_request(' . $invite["assignmentid"] . ', 0, \'pagespan_' . $invite["userid"] . '_' . $invite["pageid"] . '\');">
-                        ' . icon("thumbs-down", 2) . '
-                    </button>';
+                $buttons = 
+                button_maker([
+                    "class" => "alike",
+                    "onclick" => "allow_page_request(" . $invite["assignmentid"] . ", 1, 'pagespan_" . $invite["userid"] . "_" . $invite["pageid"] . "');",
+                    "content" => icon("thumbs-up", 2),
+                ]) .
+                button_maker([
+                    "class" => "alike",
+                    "onclick" => "allow_page_request(" . $invite["assignmentid"] . ", 0, 'pagespan_" . $invite["userid"] . "_" . $invite["pageid"] . "');",
+                    "content" => icon("thumbs-down", 2),
+                ]);
                 $alerts_rows .= fill_template("tmp/pagelib.template", "user_alerts_row", false, ["question" => $question, "buttons" => $buttons]);
             }
 

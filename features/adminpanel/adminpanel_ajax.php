@@ -213,7 +213,11 @@ global $USER;
             "data" => ["action" => "view_logfile", "year" => $nextyear, "month" => $nextmonth, "userid" => $userid],
             "display" => "display",
         ]);
-        $next = '<button id="nextmonthlog" onmouseup="this.blur()">View ' . date("F Y",mktime(0,0,0, $nextmonth,1, $nextyear)) . '</button>';
+        $next = button_maker([
+            "id" => "nextmonthlog",
+            "title" => "View " . date("F Y", mktime(0, 0, 0, $nextmonth, 1, $nextyear)),
+            "content" => "View " . date("F Y", mktime(0, 0, 0, $nextmonth, 1, $nextyear)),
+        ]);
     }
 
     ajaxapi([
@@ -222,7 +226,11 @@ global $USER;
         "data" => ["action" => "view_logfile", "year" => $prevyear, "month" => $prevmonth, "userid" => $userid],
         "display" => "display",
     ]);
-    $prev = '<button id="prevmonthlog" onmouseup="this.blur()">View ' . date("F Y",mktime(0,0,0, $prevmonth,1, $prevyear)) . '</button>';
+    $prev = button_maker([
+        "id" => "prevmonthlog",
+        "title" => "View " . date("F Y", mktime(0, 0, 0, $prevmonth, 1, $prevyear)),
+        "content" => "View " . date("F Y", mktime(0, 0, 0, $prevmonth, 1, $prevyear)),
+    ]);
 
     $return = fill_template("tmp/main.template", "pagination_bar", "adminpanel", [
         "prev" => $prev,
@@ -312,7 +320,11 @@ global $USER;
             ],
             "display" => "actions_div",
         ]);
-        $next = '<button id="nextuseractions">Later Actions</button>';
+        $next = button_maker([
+            "id" => "nextuseractions",
+            "title" => "Later Actions",
+            "content" => "Later Actions",
+        ]);
     }
 
     if ($firstonpage + $perpage < $total) {
@@ -328,7 +340,11 @@ global $USER;
             ],
             "display" => "actions_div",
         ]);
-        $prev = '<button id="prevuseractions">Previous Actions</button>';
+        $prev = button_maker([
+            "id" => "prevuseractions",
+            "title" => "Previous Actions",
+            "content" => "Previous Actions",
+        ]);
     }
 
     $return = fill_template("tmp/main.template", "pagination_bar", "adminpanel", [

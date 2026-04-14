@@ -414,20 +414,22 @@ global $CFG, $USER;
             "event" => "none",
         ]);
 
+        $return = button_maker([
+            "id" => "manage_donations_form",
+            "style" => "position: absolute;",
+            "title" => "Back",
+            "content" => "Back",
+        ]) . '
+        <div id="donation_script" style="display:none">
+            ' . create_validation_script("donation_form" , "edit_donation_save();", true) . '
+        </div>';
+
         $params = [
             "options" => $options,
             "amount" => number_format($donation["amount"], 2, ".", ""),
             "name" => $donation["name"],
             "tx" => $donation["paypal_TX"],
         ];
-
-        $return = '
-            <button id="manage_donations_form" style="position: absolute;">
-                Back
-            </button>
-            <div id="donation_script" style="display:none">
-                ' . create_validation_script("donation_form" , "edit_donation_save();", true) . '
-            </div>';
         $return .= format_popup(fill_template("tmp/donate.template", "edit_donation_form", "donate", $params), "Edit Donation", "auto", "0");
     } catch (\Throwable $e) {
         $error = $e->getMessage();

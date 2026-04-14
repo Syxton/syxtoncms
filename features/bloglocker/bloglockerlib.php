@@ -81,10 +81,14 @@ global $CFG, $USER, $ROLES;
                     "ondone" => "getRoot()[0].go_to_page($pageid);",
                 ]);
 
-                $action = '
-                    <button style="float: right;" class="alike" id="release_bloglocker" title="Release from the blog locker" onclick="release_bloglocker(' . $pageid . ', ' . $lockeritem->htmlid . ');">
-                        ' . icon("box-open") . '
-                    </button>';
+                $action = button_maker([
+                    "style" => "float: right;",
+                    "class" => "alike",
+                    "id" => "release_bloglocker",
+                    "title" => "Release from the blog locker",
+                    "onclick" => "release_bloglocker($pageid, $lockeritem->htmlid);",
+                    "content" => icon("box-open"),
+                ]);
             }
 
             $content .= "<div>$date $title $action</div>";

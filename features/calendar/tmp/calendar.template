@@ -1,0 +1,22 @@
+calendar_table_start||
+    <table class="calendar_table">
+        <tr>
+            <td class="calendar_month" colspan="7">
+                <div class="calendar_month_flex">
+                    ||prev||
+                    ||current||
+                    ||next||
+                </div>
+            </td>
+        </tr>
+        <tr class="calendar_day_names">
+            <th>S</th>
+            <th>M</th>
+            <th>T</th>
+            <th>W</th>
+            <th>T</th>
+            <th>F</th>
+            <th>S</th>
+        </tr>
+        <tr class="calendar_week">
+||calendar_table_start

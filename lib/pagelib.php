@@ -296,8 +296,10 @@ function random_quotes($count = 5) {
             $author = empty($row['author']) ? '' : '<br /><div style="float:right;">-- ' . $row['author'] . '</div>';
 
             $quotes[] = '
-                <div class="carouselquotes">
-                ' . $quote . $author . '
+                <div class="carouselquotewrapper">
+                    <div class="carouselquote">
+                        ' . $quote . $author . '
+                    </div>
                 </div>';
         }
     }
@@ -379,16 +381,21 @@ function get_carousel($imageDir, $imageamount = 5) {
     }
 
     return '
-        <div id="carousel" class="carousel">
-            <button class="carousel-arrow left alike">
-            ' . icon([
+        <div id="carousel" class="carousel">' . 
+            button_maker([
+                "title" => getlang("previous"),
+                "content" => icon([
                     ["icon" => "circle-left", "size" => 3, "color" => "white"],
-            ]) . '
-            </button>
-            <button class="carousel-arrow right alike">' . icon([
+                ]),
+                "class" => "carousel-arrow left alike",
+            ]) . 
+            button_maker([
+                "title" => getlang("next"),
+                "content" => icon([
                     ["icon" => "circle-right", "size" => 3, "color" => "white"],
-            ]) . '</button>
-            ' . $container . '
+                ]),
+                "class" => "carousel-arrow right alike",
+            ]) . $container . '
         </div>';
 }
 
@@ -859,6 +866,41 @@ function resort_page_features($pageid) {
             $i++;
         }
     }
+}
+
+/**
+ * Returns a string containing a button element with the given parameters.
+ * The parameters are:
+ *  - type: The type attribute of the button element.
+ *  - id: The id attribute of the button element.
+ *  - class: The class attribute of the button element.
+ *  - content: The content of the button element.
+ *  - title: The title attribute of the button element.
+ * If any of the parameters are not given, they will not be included in the returned string.
+ * @param array $v
+ * @return string
+ */
+function button_maker($v) {
+    $v["type"] = empty($v["type"]) ? " type='button'" : ' type="' . $v["type"] . '"';
+    $v["id"] = empty($v["id"]) ? "" : ' id="' . $v["id"] . '"';
+    $v["class"] = empty($v["class"]) ? "" : ' class="' . $v["class"] . '"';
+    $v["style"] = empty($v["style"]) ? "" : ' style="' . $v["style"] . '"';
+    $v["content"] = empty($v["content"]) ? "" : $v["content"];
+    $v["title"] = empty($v["title"]) ? "" : ' title="' . $v["title"] . '"';
+    $v["onclick"] = empty($v["onclick"]) ? "" : ' onclick="' . $v["onclick"] . '"';
+    return '<button' . $v["type"] . $v["id"] . $v["class"] . $v["style"] . $v["title"] . $v["onclick"] . ' onmouseup="this.blur()">' . $v["content"] . '</button>';
+}
+
+function link_maker($v) {
+    $v["type"] = empty($v["type"]) ? " type='button'" : ' type="' . $v["type"] . '"';
+    $v["id"] = empty($v["id"]) ? "" : ' id="' . $v["id"] . '"';
+    $v["class"] = empty($v["class"]) ? "" : ' class="' . $v["class"] . '"';
+    $v["style"] = empty($v["style"]) ? "" : ' style="' . $v["style"] . '"';
+    $v["content"] = empty($v["content"]) ? "" : $v["content"];
+    $v["title"] = empty($v["title"]) ? "" : ' title="' . $v["title"] . '"';
+    $v["onclick"] = empty($v["onclick"]) ? "" : ' onclick="' . $v["onclick"] . '"';
+    $v["href"] = empty($v["href"]) ? ' href="javascript: void(0);"' : ' href="' . $v["href"] . '"';
+    return '<a' . $v["href"] . $v["type"] . $v["id"] . $v["class"] . $v["style"] . $v["title"] . $v["onclick"] . ' onmouseup="this.blur()">' . $v["content"] . '</a>';
 }
 
 function make_modal_links($v) {

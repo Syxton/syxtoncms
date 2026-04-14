@@ -393,56 +393,67 @@ function get_event_edit_buttons($pageid, $event, $canedit, $canconfirm) {
 global $CFG, $USER;
     $returnme = "";
     $is_section = true;
-    if (is_logged_in()) {
-        // Confirm Event Buttons
-        if ($canconfirm && $event["confirmed"] != 1 && $event["siteviewable"] == 1) {
-            ajaxapi([
-                "id" => "confirm_event_" . $event['eventid'],
-                "paramlist" => "confirm = 0",
-                "if" => "(confirm == 1 && confirm('Are you sure you want to confirm this event?')) || (confirm == 0 && confirm('Are you sure you want to deny this event?'))",
-                "url" => "/features/events/events_ajax.php",
-                "data" => [
-                    "action" => "confirm_event_relay",
-                    "confirm" => "js||confirm||js",
-                    "pagieid" => $pageid,
-                    "eventid" => $event['eventid'],
-                ],
-                "display" => "confirm_" . $event['eventid'],
-                "ondone" => "go_to_page('" . $pageid . "');",
-                "event" => "none",
-            ]);
-            $returnme .= '
-                <button title="Confirm Event\'s Global Visibility" onclick="confirm_event_' . $event['eventid'] . '(1);" class="slide_menu_button alike">
-                    ' . icon("thumbs-up") . '
-                </button>
-                <button title="Deny Event\'s Global Visibility" onclick="confirm_event_' . $event['eventid'] . '(0);" class="slide_menu_button alike">
-                    ' . icon("thumbs-down") . '
-                </button>';
-        }
 
-        // Edit && Delete button
-        if ($canedit) {
-            $returnme .= get_event_edit_link($event, $pageid);
+    if (!is_logged_in()) {
+        return "";
+    }
 
-            ajaxapi([
-                "id" => "delete_event_" . $event['eventid'],
-                "paramlist" => "confirm = 0",
-                "if" => "confirm('Are you sure you want to delete this event?')",
-                "url" => "/features/events/events_ajax.php",
-                "data" => [
-                    "action" => "delete_events_relay",
-                    "eventid" => $event['eventid'],
-                ],
-                "ondone" => "go_to_page('" . $pageid . "');",
-            ]);
+    // Confirm Event Buttons
+    if ($canconfirm && $event["confirmed"] != 1 && $event["siteviewable"] == 1) {
+        ajaxapi([
+            "id" => "confirm_event_" . $event['eventid'],
+            "paramlist" => "confirm = 0",
+            "if" => "(confirm == 1 && confirm('Are you sure you want to confirm this event?')) || (confirm == 0 && confirm('Are you sure you want to deny this event?'))",
+            "url" => "/features/events/events_ajax.php",
+            "data" => [
+                "action" => "confirm_event_relay",
+                "confirm" => "js||confirm||js",
+                "pagieid" => $pageid,
+                "eventid" => $event['eventid'],
+            ],
+            "display" => "confirm_" . $event['eventid'],
+            "ondone" => "go_to_page('" . $pageid . "');",
+            "event" => "none",
+        ]);
 
-            // Delete button
-            $returnme .= '
-                <button id="delete_event_' . $event['eventid'] . '" title="Delete Event" class="slide_menu_button alike" >
-                    ' . icon("trash") . '
-                </button>';
-        }
-    } else {  return "";}
+        $returnme .= button_maker([
+            "title" => "Confirm Event\'s Global Visibility",
+            "onclick" => "confirm_event_" . $event['eventid'] . "(1);",
+            "class" => "slide_menu_button alike",
+            "content" => icon("thumbs-up"),
+        ]);
+        $returnme .= button_maker([
+            "title" => "Deny Event\'s Global Visibility",
+            "onclick" => "confirm_event_" . $event['eventid'] . "(0);",
+            "class" => "slide_menu_button alike",
+            "content" => icon("thumbs-down"),
+        ]);
+    }
+
+    // Edit && Delete button
+    if ($canedit) {
+        $returnme .= get_event_edit_link($event, $pageid);
+
+        ajaxapi([
+            "id" => "delete_event_" . $event['eventid'],
+            "paramlist" => "confirm = 0",
+            "if" => "confirm('Are you sure you want to delete this event?')",
+            "url" => "/features/events/events_ajax.php",
+            "data" => [
+                "action" => "delete_events_relay",
+                "eventid" => $event['eventid'],
+            ],
+            "ondone" => "go_to_page('" . $pageid . "');",
+        ]);
+
+        // Delete button
+        $returnme .= button_maker([
+            "id" => "delete_event_" . $event['eventid'],
+            "title" => "Delete Event",
+            "class" => "slide_menu_button alike",
+            "content" => icon("trash"),
+        ]);
+    }
     return $returnme;
 }
 
@@ -2056,24 +2067,31 @@ global $USER, $CFG, $MYVARS;
     $v["ref3relationship"] = empty($row) ? "" : $row["ref3relationship"];
     $v["ref3phone"] = empty($row) ? "" : $row["ref3phone"];
 
-    return '<div class="formDiv" id="staffapplication_form_div">
+    return '
+        <div class="formDiv" id="staffapplication_form_div">
             <div style="text-align:center">
-            <h2>' . (!$viewonly ? 'Staff Application' : $v["name"] . ' Application') . '</h2>
-            <span style="font-weight:bold;font-size:.9em">If you are not ' . $v["name"] . ', please sign into your own account.</span>
-            </div><br />
-              <form name="staffapplication_form" id="staffapplication_form">
+                <h2>' . (!$viewonly ? 'Staff Application' : $v["name"] . ' Application') . '</h2>
+                <span style="font-weight:bold;font-size:.9em">
+                    If you are not ' . $v["name"] . ', please sign into your own account.
+                </span>
+            </div>
+            <br />
+            <form name="staffapplication_form" id="staffapplication_form">
                 ' . (empty($v["staffid"]) ? '' : '<input type="hidden" id="staffid" name="staffid" value="' . $v["staffid"] . '" />') . '
-                  <fieldset class="formContainer" ' . ($viewonly ? '' : 'style="max-width: 420px;margin-left: auto;margin-right: auto;"') . '>
+                <fieldset class="formContainer" ' . ($viewonly ? '' : 'style="max-width: 420px;margin-left: auto;margin-right: auto;"') . '>
                     <div class="rowContainer">
-                          <label class="rowTitle" for="name">Name</label>
+                        <label class="rowTitle" for="name">Name</label>
                         <input disabled="disabled" type="text" id="name" name="name" value="' . $v["name"] . '"
                             data-rule-required="true"
                             data-msg-required="' . getlang("input_required") . '"
-                        /><div class="tooltipContainer info">' . getlang("input_full_name") . '</div>
-                            <div class="spacer" style="clear: both;"></div>
+                        />
+                        <div class="tooltipContainer info">
+                            ' . getlang("input_full_name") . '
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
                     </div>
                     <div class="rowContainer">
-                          <label class="rowTitle" for="dateofbirth">Date of Birth</label>
+                        <label class="rowTitle" for="dateofbirth">Date of Birth</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text"
                             id="dateofbirth"
@@ -2094,11 +2112,14 @@ global $USER, $CFG, $MYVARS;
                                 }
                                 $(\'#agerange\').change();
                             "
-                        /><div class="tooltipContainer info">' . getlang("input_staff_dob", "/features/events") . '</div>
-                            <div class="spacer" style="clear: both;"></div>
-                      </div>
+                        />
+                        <div class="tooltipContainer info">
+                            ' . getlang("input_staff_dob", "/features/events") . '
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
+                    </div>
                     <div class="rowContainer">
-                          <label class="rowTitle" for="phone">Phone</label>
+                        <label class="rowTitle" for="phone">Phone</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text" id="phone" name="phone" value="' . $v["phone"] . '"
                             data-rule-required="true"
@@ -2106,20 +2127,24 @@ global $USER, $CFG, $MYVARS;
                             data-msg-required="' . getlang("input_required") . '"
                             data-msg-phone="' . getlang("invalid_phone") . '"
                         />
-                        <div class="tooltipContainer info">' . getlang("input_default_phone") . '</div>
-                            <div class="spacer" style="clear: both;"></div>
+                        <div class="tooltipContainer info">
+                            ' . getlang("input_default_phone") . '
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
                     </div>
                     <div class="rowContainer">
-                          <label class="rowTitle" for="address">Address</label>
+                        <label class="rowTitle" for="address">Address</label>
                         <textarea ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             rows="3" id="address" name="address"
                             data-rule-required="true"
                         >' . $v["address"] . '</textarea>
-                        <div class="tooltipContainer info">' . getlang("input_address") . '</div>
-                            <div class="spacer" style="clear: both;"></div>
-                          </div>
+                        <div class="tooltipContainer info">
+                            ' . getlang("input_address") . '
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
+                    </div>
                     <div class="rowContainer">
-                          <label class="rowTitle" for="agerange">Age Range</label>
+                        <label class="rowTitle" for="agerange">Age Range</label>
                         <select ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             id="agerange"
                             name="agerange"
@@ -2143,28 +2168,36 @@ global $USER, $CFG, $MYVARS;
                             <option value="0" ' . $v["ar1selected"] . '>younger than 18</option>
                             <option value="1" ' . $v["ar2selected"] . '>18-25</option>
                             <option value="2" ' . $v["ar3selected"] . '>26 or older</option>
-                        </select><div class="tooltipContainer info">' . getlang("input_staff_agerange", "/features/events") . '</div><br />
-                            <div class="spacer" style="clear: both;"></div>
-                          </div>
+                        </select>
+                        <div class="tooltipContainer info">
+                            ' . getlang("input_staff_agerange", "/features/events") . '
+                        </div>
+                        <br />
+                        <div class="spacer" style="clear: both;"></div>
+                    </div>
                     <div class="rowContainer">
-                          <label class="rowTitle" for="cocmember">Are you a member of the church of Christ?</label>
+                        <label class="rowTitle" for="cocmember">Are you a member of the church of Christ?</label>
                         <select ' . ($viewonly ? 'disabled="disabled"' : '') . ' style="width:80px" id="cocmember" name="cocmember"
                             data-rule-required="true"
                         >
                             <option value="0" ' . $v["cocmembernoselected"] . '>No</option>
                             <option value="1" ' . $v["cocmemberyesselected"] . '>Yes</option>
                         </select>
-                        <div class="tooltipContainer info">' . getlang("select_yesno") . '</div>
-                            <div class="spacer" style="clear: both;"></div>
-                          </div>
+                        <div class="tooltipContainer info">
+                            ' . getlang("select_yesno") . '
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
+                    </div>
                     <div class="rowContainer">
                           <label class="rowTitle" for="congregation">Congregation Name</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . ' type="text" id="congregation" name="congregation" value="' . $v["congregation"] . '"
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">' . getlang("input_staff_congregation", "/features/events") . '</div>
-                            <div class="spacer" style="clear: both;"></div>
-                          </div>
+                        <div class="tooltipContainer info">
+                            ' . getlang("input_staff_congregation", "/features/events") . '
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
+                    </div>
                     <div class="rowContainer">
                           <label class="rowTitle" for="priorwork">Have you worked at Camp Wabashi as a staff member before?</label>
                         <select ' . ($viewonly ? 'disabled="disabled"' : '') . ' style="width:80px" id="priorwork" name="priorwork"
@@ -2173,13 +2206,15 @@ global $USER, $CFG, $MYVARS;
                             <option value="0" ' . $v["priorworknoselected"] . '>No</option>
                             <option value="1" ' . $v["priorworkyesselected"] . '>Yes</option>
                         </select>
-                        <div class="tooltipContainer info">' . getlang("select_yesno") . '</div>
-                            <div class="spacer" style="clear: both;"></div>
-                          </div>
+                        <div class="tooltipContainer info">
+                            ' . getlang("select_yesno") . '
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
+                    </div>
                     <br /><hr><br />
                     <h3>Have you at any time ever:</h3>
                     <div class="rowContainer">
-                          <label class="rowTitle" for="q1_1">Been arrested for any reason?</label>
+                        <label class="rowTitle" for="q1_1">Been arrested for any reason?</label>
                         <select ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             onchange="
                                 if (($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0) {
@@ -2194,9 +2229,11 @@ global $USER, $CFG, $MYVARS;
                             <option value="0" ' . $v["q1_1noselected"] . '>No</option>
                             <option value="1" ' . $v["q1_1yesselected"] . '>Yes</option>
                         </select>
-                        <div class="tooltipContainer info">' . getlang("select_yesno") . '</div>
-                            <div class="spacer" style="clear: both;"></div>
-                          </div>
+                        <div class="tooltipContainer info">
+                            ' . getlang("select_yesno") . '
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
+                    </div>
                     <div class="rowContainer">
                           <label class="rowTitle" for="q1_2">Been convicted of, or pleaded guilty or no contest to, any crime?</label>
                         <select ' . ($viewonly ? 'disabled="disabled"' : '') . '
@@ -2213,11 +2250,13 @@ global $USER, $CFG, $MYVARS;
                             <option value="0" ' . $v["q1_2noselected"] . '>No</option>
                             <option value="1" ' . $v["q1_2yesselected"] . '>Yes</option>
                         </select>
-                        <div class="tooltipContainer info">' . getlang("select_yesno") . '</div>
-                            <div class="spacer" style="clear: both;"></div>
-                          </div>
+                        <div class="tooltipContainer info">
+                            ' . getlang("select_yesno") . '
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
+                    </div>
                     <div class="rowContainer">
-                          <label class="rowTitle" for="q1_3">Engaged in, or been accused of, any child molestation, exploitation, or abuse?</label>
+                        <label class="rowTitle" for="q1_3">Engaged in, or been accused of, any child molestation, exploitation, or abuse?</label>
                         <select ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             onchange="
                                 if (($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0) {
@@ -2231,13 +2270,15 @@ global $USER, $CFG, $MYVARS;
                             <option value="0" ' . $v["q1_3noselected"] . '>No</option>
                             <option value="1" ' . $v["q1_3yesselected"] . '>Yes</option>
                         </select>
-                        <div class="tooltipContainer info">' . getlang("select_yesno") . '</div>
-                            <div class="spacer" style="clear: both;"></div>
-                          </div>
+                        <div class="tooltipContainer info">
+                            ' . getlang("select_yesno") . '
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
+                    </div>
                     <br /><hr><br />
                     <h3>Are you aware of:</h3>
                     <div class="rowContainer">
-                          <label class="rowTitle" for="q2_1">Having any traits or tendencies that could pose any threat to children, youth, or others?</label>
+                        <label class="rowTitle" for="q2_1">Having any traits or tendencies that could pose any threat to children, youth, or others?</label>
                         <select ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             onchange="
                                 if (($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0) {
@@ -2252,11 +2293,13 @@ global $USER, $CFG, $MYVARS;
                             <option value="0" ' . $v["q2_1noselected"] . '>No</option>
                             <option value="1" ' . $v["q2_1yesselected"] . '>Yes</option>
                         </select>
-                        <div class="tooltipContainer info">' . getlang("select_yesno") . '</div>
-                            <div class="spacer" style="clear: both;"></div>
-                          </div>
+                        <div class="tooltipContainer info">
+                            ' . getlang("select_yesno") . '
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
+                    </div>
                     <div class="rowContainer">
-                          <label class="rowTitle" for="q2_2">Any reason why you should not work with children, youth, or others?</label>
+                        <label class="rowTitle" for="q2_2">Any reason why you should not work with children, youth, or others?</label>
                         <select ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             onchange="
                                 if (($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0) {
@@ -2271,41 +2314,49 @@ global $USER, $CFG, $MYVARS;
                             <option value="0" ' . $v["q2_2noselected"] . '>No</option>
                             <option value="1" ' . $v["q2_2yesselected"] . '>Yes</option>
                         </select>
-                        <div class="tooltipContainer info">' . getlang("select_yesno") . '</div>
-                            <div class="spacer" style="clear: both;"></div>
-                          </div>
+                        <div class="tooltipContainer info">
+                            ' . getlang("select_yesno") . '
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
+                    </div>
                     <div class="rowContainer">
-                          <label class="rowTitle" for="q2_3">If the answer to any of these questions is "Yes", please explain in detail</label>
-                            <textarea ' . ($viewonly ? 'disabled="disabled"' : '') . '
-                                rows="3" id="q2_3" name="q2_3"
-                                ' . (empty($v["yestotal"]) ? '' : 'data-rule-required="true"') . '
-                            >' . $v["q2_3"] . '</textarea>
-                            <div class="tooltipContainer info">' . getlang("input_explain", "/features/events") . '</div>
-                            <div class="spacer" style="clear: both;"></div>
-                          </div>
+                        <label class="rowTitle" for="q2_3">If the answer to any of these questions is "Yes", please explain in detail</label>
+                        <textarea ' . ($viewonly ? 'disabled="disabled"' : '') . '
+                            rows="3" id="q2_3" name="q2_3"
+                            ' . (empty($v["yestotal"]) ? '' : 'data-rule-required="true"') . '
+                        >' . $v["q2_3"] . '</textarea>
+                        <div class="tooltipContainer info">
+                            ' . getlang("input_explain", "/features/events") . '
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
+                    </div>
                     ' . ($viewonly ? '<div style="text-align:center"><h2>' . $v["name"] . ' References</h2></div>' : '<br /><hr><br />') . '
                     <h3>References #1</h3><br />
                           <br />
                     <div class="rowContainer">
-                          <label class="rowTitle" for="ref1name">Name</label>
+                        <label class="rowTitle" for="ref1name">Name</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text" id="ref1name" name="ref1name" value="' . $v["ref1name"] . '"
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">' . getlang("input_staff_refname", "/features/events") . '</div>
-                            <div class="spacer" style="clear: both;"></div>
+                        <div class="tooltipContainer info">
+                            ' . getlang("input_staff_refname", "/features/events") . '
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
                       </div>
                     <div class="rowContainer">
-                          <label class="rowTitle" for="ref1relationship">Relationship</label>
+                        <label class="rowTitle" for="ref1relationship">Relationship</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text" id="ref1relationship" name="ref1relationship" value="' . $v["ref1relationship"] . '"
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">' . getlang("input_staff_refrelationship", "/features/events") . '</div>
-                            <div class="spacer" style="clear: both;"></div>
+                        <div class="tooltipContainer info">
+                            ' . getlang("input_staff_refrelationship", "/features/events") . '
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
                       </div>
                     <div class="rowContainer">
-                          <label class="rowTitle" for="ref1phone">Phone</label>
+                        <label class="rowTitle" for="ref1phone">Phone</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text" id="ref1phone" name="ref1phone" value="' . $v["ref1phone"] . '"
                             data-rule-required="true"
@@ -2313,31 +2364,37 @@ global $USER, $CFG, $MYVARS;
                             data-msg-required="' . getlang("input_required") . '"
                             data-msg-phone="' . getlang("invalid_phone") . '"
                         />
-                        <div class="tooltipContainer info">' . getlang("input_default_phone") . '</div>
-                            <div class="spacer" style="clear: both;"></div>
+                        <div class="tooltipContainer info">
+                            ' . getlang("input_default_phone") . '
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
                     </div>
                     <br /><hr><br />
                     <h3>References #2</h3><br />
                     <div class="rowContainer">
-                          <label class="rowTitle" for="ref2name">Name</label>
+                        <label class="rowTitle" for="ref2name">Name</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text" id="ref2name" name="ref2name" value="' . $v["ref2name"] . '"
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">' . getlang("input_staff_refname", "/features/events") . '</div>
-                            <div class="spacer" style="clear: both;"></div>
-                      </div>
+                        <div class="tooltipContainer info">
+                            ' . getlang("input_staff_refname", "/features/events") . '
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
+                    </div>
                     <div class="rowContainer">
-                          <label class="rowTitle" for="ref2relationship">Relationship</label>
+                        <label class="rowTitle" for="ref2relationship">Relationship</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text" id="ref2relationship" name="ref2relationship" value="' . $v["ref2relationship"] . '"
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">' . getlang("input_staff_refrelationship", "/features/events") . '</div>
-                            <div class="spacer" style="clear: both;"></div>
-                      </div>
+                        <div class="tooltipContainer info">
+                            ' . getlang("input_staff_refrelationship", "/features/events") . '
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
+                    </div>
                     <div class="rowContainer">
-                          <label class="rowTitle" for="ref2phone">Phone</label>
+                        <label class="rowTitle" for="ref2phone">Phone</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text" id="ref2phone" name="ref2phone" value="' . $v["ref2phone"] . '"
                             data-rule-required="true"
@@ -2345,31 +2402,37 @@ global $USER, $CFG, $MYVARS;
                             data-msg-required="' . getlang("input_required") . '"
                             data-msg-phone="' . getlang("invalid_phone") . '"
                         />
-                        <div class="tooltipContainer info">' . getlang("input_default_phone") . '</div>
-                            <div class="spacer" style="clear: both;"></div>
+                        <div class="tooltipContainer info">
+                            ' . getlang("input_default_phone") . '
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
                     </div>
                     <br /><hr><br />
                     <h3>References #3</h3><br />
                     <div class="rowContainer">
-                          <label class="rowTitle" for="ref3name">Name</label>
+                        <label class="rowTitle" for="ref3name">Name</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text" id="ref3name" name="ref3name" value="' . $v["ref3name"] . '"
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">' . getlang("input_staff_refname", "/features/events") . '</div>
-                            <div class="spacer" style="clear: both;"></div>
-                      </div>
+                        <div class="tooltipContainer info">
+                            ' . getlang("input_staff_refname", "/features/events") . '
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
+                    </div>
                     <div class="rowContainer">
                           <label class="rowTitle" for="ref3relationship">Relationship</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text" id="ref3relationship" name="ref3relationship" value="' . $v["ref3relationship"] . '"
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">' . getlang("input_staff_refrelationship", "/features/events") . '</div>
-                            <div class="spacer" style="clear: both;"></div>
-                      </div>
+                        <div class="tooltipContainer info">
+                            ' . getlang("input_staff_refrelationship", "/features/events") . '
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
+                    </div>
                     <div class="rowContainer">
-                          <label class="rowTitle" for="ref3phone">Phone</label>
+                        <label class="rowTitle" for="ref3phone">Phone</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text" id="ref3phone" name="ref3phone" value="' . $v["ref3phone"] . '"
                             data-rule-required="true"
@@ -2377,8 +2440,10 @@ global $USER, $CFG, $MYVARS;
                             data-msg-required="' . getlang("input_required") . '"
                             data-msg-phone="' . getlang("invalid_phone") . '"
                         />
-                        <div class="tooltipContainer info">' . getlang("input_default_phone") . '</div>
-                            <div class="spacer" style="clear: both;"></div>
+                        <div class="tooltipContainer info">
+                            ' . getlang("input_default_phone") . '
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
                     </div>
                     <br /><hr><br />
                     <h3>Worker Renewal Work Verification and Release</h3><br />
@@ -2388,18 +2453,20 @@ global $USER, $CFG, $MYVARS;
                     <br />
                     I agree to abide by all policies and procedures of the organization and to protect the health and safety of the children or youth assigned to my care or supervision at all times.
                     </em>
-                          <br /><br />
+                    <br /><br />
                     <div class="rowContainer">
-                          <label class="rowTitle" for="workerconsent">Full Name</label>
+                        <label class="rowTitle" for="workerconsent">Full Name</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text" id="workerconsent" name="workerconsent" value="' . $v["workerconsent"] . '"
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">' . getlang("input_staff_workerconsent", "/features/events") . '</div>
-                            <div class="spacer" style="clear: both;"></div>
-                      </div>
+                        <div class="tooltipContainer info">
+                            ' . getlang("input_staff_workerconsent", "/features/events") . '
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
+                    </div>
                     <div class="rowContainer">
-                          <label class="rowTitle" for="workerconsentdate">Date</label>
+                        <label class="rowTitle" for="workerconsentdate">Date</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="text" id="workerconsentdate" name="workerconsentdate" value="' . $v["workerconsentdate"] . '"
                             data-rule-required="true"
@@ -2408,25 +2475,29 @@ global $USER, $CFG, $MYVARS;
                             data-rule-date="true"
                             disabled="disabled"
                         />
-                        <div class="tooltipContainer info">' . getlang("input_staff_workerconsentdate", "/features/events") . '</div>
-                            <div class="spacer" style="clear: both;"></div>
-                      </div>
+                        <div class="tooltipContainer info">
+                            ' . getlang("input_staff_workerconsentdate", "/features/events") . '
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
+                    </div>
                     <div>
                         <strong>You should understand that the name field and signature field have the same legal effect and can be enforced in the same way as a written signature.</strong>
                     </div>
                     <br />
                     <div class="rowContainer">
-                          <label class="rowTitle" for="workerconsentsig">Signature</label>
+                        <label class="rowTitle" for="workerconsentsig">Signature</label>
                         <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                             type="checkbox" id="workerconsentsig" name="workerconsentsig" ' . $v["workerconsentsig"] . '
                             data-rule-required="true"
                         />
-                        <div class="tooltipContainer info">' . getlang("input_staff_workerconsentsig", "/features/events") . '</div>
-                            <div class="spacer" style="clear: both;"></div>
-                      </div>
+                        <div class="tooltipContainer info">
+                            ' . getlang("input_staff_workerconsentsig", "/features/events") . '
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
+                    </div>
                     <div id="sub18" style="' . $v["sub18display"] . '">
                         <br /><hr><br />
-                            <div style="background:#FFED00;padding:5px;">
+                        <div style="background:#FFED00;padding:5px;">
                             <strong>If you are under 18, please have a parent or guardian affirm to the following:</strong><br />
                             <em>I swear and affirm that I am not aware of any traits or tendencies of the applicant that could pose a threat to children, youth or others and that I am not aware of any reasons why the applicant should not work with children, youth, or others.</em>
                                   <br /><br />
@@ -2436,29 +2507,33 @@ global $USER, $CFG, $MYVARS;
                                     type="text" id="parentalconsent" name="parentalconsent" value="' . $v["parentalconsent"] . '"
                                     ' . (empty($v["ar1selected"]) ? '' : 'data-rule-required="true"') . '
                                 />
-                                <div class="tooltipContainer info">' . getlang("input_staff_parentalconsent", "/features/events") . '</div>
-                              </div>
+                                <div class="tooltipContainer info">
+                                    ' . getlang("input_staff_parentalconsent", "/features/events") . '
+                                </div>
+                            </div>
                             <div>
                                 <strong>You should understand that the name field and signature field have the same legal effect and can be enforced in the same way as a written signature.</strong>
                             </div>
                             <br />
                             <div class="rowContainer">
-                                  <label class="rowTitle" for="parentalconsentsig">Parent or Guardian Signature</label>
+                                <label class="rowTitle" for="parentalconsentsig">Parent or Guardian Signature</label>
                                 <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
                                     type="checkbox" id="parentalconsentsig" name="parentalconsentsig"
                                     ' . $v["parentalconsentsig"] . '
                                     ' . (empty($v["ar1selected"]) ? '' : 'data-rule-required="true"') . '
                                 />
-                                <div class="tooltipContainer info">' . getlang("input_staff_parentalconsentsig", "/features/events") . '</div>
-                                    <div class="spacer" style="clear: both;"></div>
-                              </div>
+                                <div class="tooltipContainer info">
+                                    ' . getlang("input_staff_parentalconsentsig", "/features/events") . '
+                                </div>
+                                <div class="spacer" style="clear: both;"></div>
+                            </div>
                         </div>
                     </div>
                     ' . ($viewonly ? '' : '<input class="submit" name="submit" type="submit" onmouseover="this.focus();" value="Submit Application" />') . '
-                  </fieldset>
-              </form>
+                </fieldset>
+            </form>
             ' . keepalive() . '
-          </div>';
+        </div>';
 }
 
 function get_hint_box($string) {

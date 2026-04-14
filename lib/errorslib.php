@@ -21,7 +21,7 @@ $CFG->debug = $CFG->debug ?? 1;
 $reportlevel = 0;
 $reportlevel = $CFG->debug == 1 ? E_USER_ERROR | E_ERROR : $reportlevel;
 $reportlevel = $CFG->debug == 2 ? E_ERROR | E_USER_ERROR | E_WARNING | E_USER_WARNING | E_NOTICE | E_USER_NOTICE | E_PARSE : $reportlevel;
-$reportlevel = $CFG->debug == 3 ? E_ALL | E_STRICT : $reportlevel;
+$reportlevel = $CFG->debug == 3 ? E_ALL : $reportlevel;
 
 // Turn off error reporting
 ini_set('display_errors', "off");

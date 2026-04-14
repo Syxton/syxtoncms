@@ -180,8 +180,24 @@ global $CFG, $MYVARS, $USER;
     }
 
     if (!$mailman && !$csv) {
-        $prev = $pagenum > 0 ? '<button class="alike" title="Previous Page" onclick="members_search(\'' . $searchwords . '\', ' . ($pagenum - 1) . ');">' . icon("circle-chevron-left", 2) . '</button>' : "";
-        $next = $firstonpage + $perpage < $total ? '<button class="alike" title="Next Page" onclick="members_search(\'' . $searchwords . '\', ' . ($pagenum + 1) . ');">' . icon("circle-chevron-right", 2) . '</button>' : "";
+        $prev = $next = "";
+        if ($pagenum > 0) {
+            $prev = button_maker([
+                "id" => "prevpage",
+                "title" => "Previous Page",
+                "onclick" => "members_search('" . $searchwords . "', " . ($pagenum - 1) . ");",
+                "content" => icon("circle-chevron-left", 2),
+            ]);
+        }
+        
+        if ($firstonpage + $perpage < $total) {
+            $next = button_maker([
+                "id" => "nextpage",
+                "title" => "Next Page",
+                "onclick" => "members_search('" . $searchwords . "', " . ($pagenum + 1) . ");",
+                "content" => icon("circle-chevron-right", 2),
+            ]);
+        }
         $info = 'Viewing ' . ($firstonpage + 1) . " through " . $amountshown . " out of $total";
 
         $return = fill_template("tmp/main.template", "pagination_bar", "adminpanel", [

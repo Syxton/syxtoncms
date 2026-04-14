@@ -750,10 +750,12 @@ global $CFG;
 
     $returnme .= '
         <form>
-            <button class="dontprint" onclick="window.print();return false;">
-                Print
-            </button>
-            ' . $printarea . '
+            ' . button_maker([
+                "title" => "Print",
+                "onclick" => "window.print();return false;",
+                "class" => "dontprint",
+                "content" => "Print",
+            ]) . $printarea . '
         </form>';
     ajax_return($returnme);
 }
@@ -1549,33 +1551,33 @@ function get_reg_actions($reg) {
 
     // Go to pay link
     $actions .= '
-        <div class="dropdowncreator">
-            <button class="dropbtn">' . icon("gear") . '</button>
-            <div class="dropcontent">
-                <a
-                    href="javascript:void(0)"
-                    title="Edit Registration"
-                    onclick="edit_registration('. $reg["eventid"] . ',' . $reg["regid"] . ')">
-                    ' . icon("pencil") . ' Edit Registration
-                </a>
-                <a
-                    href="javascript:void(0)"
-                    title="Resend Registration Email"
-                    onclick="email_registration('. $reg["eventid"] . ',' . $reg["regid"] . ')">
-                    ' . icon("envelope") . ' Resend Registration Email
-                </a>
-                <a
-                    title="Pay"
-                    target="_blank"
-                    href="' . $CFG->wwwroot . '/features/events/events.php?action=pay&i=!&regcode=' . $reg["code"] . '">
-                    ' . icon("credit-card") . ' Make Payment
-                </a>
-                <a
-                    href="javascript:void(0)"
-                    title="Delete Registration"
-                    onclick="delete_registration('. $reg["eventid"] . ',' . $reg["regid"] . ')">
-                    ' . icon("trash") . ' Delete Registration
-                </a>
+        <div class="dropdowncreator">' .
+            button_maker([
+                "class" => "dropbtn",
+                "content" => icon("gear")
+            ]) .
+            '<div class="dropcontent">' .
+                link_maker([
+                    "title" => "Edit Registration",
+                    "onclick" => "edit_registration(" . $reg["eventid"] . "," . $reg["regid"] . ")",
+                    "content" => icon("pencil") . " Edit Registration",
+                ]) .
+                link_maker([
+                    "title" => "Resend Registration Email",
+                    "onclick" => "email_registration(" . $reg["eventid"] . "," . $reg["regid"] . ")",
+                    "content" => icon("envelope") . " Resend Registration Email",
+                ]) . 
+                link_maker([
+                    "title" => "Pay",
+                    "target" => "_blank",
+                    "href" => $CFG->wwwroot . "/features/events/events.php?action=pay&i=!&regcode=" . $reg["code"],
+                    "content" => icon("credit-card") . " Make Payment",
+                ]) .
+                link_maker([
+                    "title" => "Delete Registration",
+                    "onclick" => "delete_registration(" . $reg["eventid"] . "," . $reg["regid"] . ")",
+                    "content" => icon("trash") . " Delete Registration",
+                ]) . '
             </div>
         </div>
     ';
@@ -3007,10 +3009,13 @@ global $CFG, $USER;
     ]);
 
     $returnme = '
-        <link rel="stylesheet" media="print" type="text/css" href="' . $CFG->wwwroot . '/styles/print.css">
-        <button onclick="perform_appsearch(' . $pagenum . ');" class="alike dontprint" title="Return to Staff Applications">
-            Return to Staff Applications
-        </button>';
+        <link rel="stylesheet" media="print" type="text/css" href="' . $CFG->wwwroot . '/styles/print.css">' . 
+        button_maker([
+            "text" => "Return to Staff Applications",
+            "onclick" => "perform_appsearch(" . $pagenum . ");",
+            "class" => "alike dontprint",
+            "title" => "Return to Staff Applications",
+        ]);
 
     if ($archive = get_db_result("SELECT * FROM events_staff_archive WHERE staffid = ||staffid|| ORDER BY year", ["staffid" => $staffid])) {
         $i = -1;
