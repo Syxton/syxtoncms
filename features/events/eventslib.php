@@ -73,7 +73,16 @@ global $CFG, $USER, $ROLES;
 
                 // No events
                 if (empty($content)) {
-                    $content = "There are no current or upcoming events.";
+                    $params  = [
+                        "title" => icon([
+                            [
+                                "icon" => "clock",
+                                "color" => "#0098b3",
+                            ]
+                        ]) . " <span>Upcoming Events</span>",
+                        "eventslist" => '<div class="eventtype">There are no current or upcoming events.</div>',
+                    ];
+                    $content = fill_template("tmp/events.template", "eventtype", "events", $params);
                 }
 
                 // Get link for request form
@@ -102,7 +111,18 @@ global $CFG, $USER, $ROLES;
             if ($section = get_open_enrollment_events($pageid)) { $content .= $section . "";}
 
             //No events
-            if ($content == "") { $content .= "There are no current or upcoming events.";}
+            if (empty($content)) {
+                 $params  = [
+                    "title" => icon([
+                        [
+                            "icon" => "clock",
+                            "color" => "#0098b3",
+                        ]
+                    ]) . " <span>Upcoming Events</span>",
+                    "eventslist" => '<div class="eventtype">There are no current or upcoming events.</div>',
+                ];
+                $content = fill_template("tmp/events.template", "eventtype", "events", $params);
+            }
 
             //Get link for request form
             if ($allowrequests) { $content = get_event_request_link($area, $featureid) . $content; }

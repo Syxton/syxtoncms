@@ -768,7 +768,10 @@ div.registration_cart_checkout_title {
 }
 .eventtype_list {
     background-color:#edfafa;
-    white-space:nowrap
+    white-space:nowrap;
+    display: flex;
+    flex-direction: column;
+    padding: 2px 10px;
 }
 .staff_application_link,.request_event_link {
     text-align: right;
