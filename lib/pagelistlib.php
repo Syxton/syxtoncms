@@ -20,6 +20,7 @@ global $MYVARS;
 collect_vars();
 if (!defined('SEARCH_PERPAGE')) { define('SEARCH_PERPAGE', 8); }
 
+
 function display_pagelist($pageid) {
 global $CFG, $USER, $ROLES, $PAGE, $STYLES;
     $preview = isset($STYLES->preview) ? true : false;
@@ -69,14 +70,27 @@ global $CFG, $ROLES, $USER;
 }
 
 function format_pagelist($pageresults) {
-global $PAGE;
-    $returnme = $options = "";
+    global $PAGE;
+    $returnme = "";
+    $selectable = 0;
     if (!empty($pageresults)) {
+        $options = '<option value="0">Select a Page</option>';
         while ($row = fetch_row($pageresults)) {
-            $selected = $PAGE->id == $row['pageid'] ? "selected" : ""; // Preselect page if you are there
+            $selected = "";
+            if ($PAGE->id == $row['pageid']) {
+                // Skip adding the current page to the dropdown since you are already there
+                continue;
+            } else {
+                $selectable++;
+            }
             $options .= fill_template("tmp/page.template", "select_options_template", false, ["value" => $row['pageid'], "display" => $row['name'], "selected" => $selected]);
         }
         $returnme = fill_template("tmp/page.template", "format_pagelist_select", false, ["options" => $options]);
+    }
+
+    if (!$selectable) {
+        // No selectable pages found, so return an empty string.
+        return "";
     }
     return $returnme;
 }

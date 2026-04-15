@@ -234,7 +234,7 @@ function viewhtml() {
 
     if (is_logged_in()) {
         if (user_is_able($USER->userid, 'viewhtml', $pageid, 'html', $htmlid)) {
-            $abilities = user_abilities($USER->userid, $pageid, false, 'html', $htmlid);
+            $abilities = user_abilities($USER->userid, $pageid, 'html', 'html', $htmlid);
             $allowed   = true;
         } else {
             echo fill_template("tmp/pagelib.template", "centered_error", false, [
@@ -243,7 +243,7 @@ function viewhtml() {
         }
     } else {
         if (get_db_field('siteviewable', 'pages', "pageid=$pageid") && role_is_able($ROLES->visitor, 'viewhtml', $pageid)) {
-            $abilities = user_abilities($USER->userid, $pageid, 'html', $htmlid);
+            $abilities = user_abilities($USER->userid, $pageid, 'html','html', $htmlid);
             $allowed   = true;
         } else {
             $url = "/features/html/html.php?action=viewhtml&pageid=$pageid&htmlid=$htmlid";

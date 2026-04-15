@@ -345,10 +345,13 @@ document.onmouseout = hidestatus;
  * @returns {void} - Nothing.
  */
 function go_to_page(pageid) {
-    if (pageid == 1) {
-        location.href = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot);
-    } else {
-        location.href = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/index.php?pageid=" + pageid;
+    pageid = Number(pageid);
+    if (pageid > 0) {
+        if (pageid === 1) {
+            location.href = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot);
+        } else {
+            location.href = WWW_ROOT + (dirfromroot == '' ? '' : '/' + dirfromroot) + "/index.php?pageid=" + pageid;
+        }
     }
 }
 
