@@ -17,6 +17,9 @@ a svg.svg-inline--fa:hover,button svg.svg-inline--fa:hover {
 a svg.svg-inline--fa:active,button svg.svg-inline--fa:active {
     color: #5f5f5f;
 }
+a svg {
+    min-width: 16px;
+}
 svg.dropshadow {
     filter: drop-shadow(1px 2px 2px black);
 }
