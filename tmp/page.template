@@ -176,7 +176,7 @@ create_edit_page_template||
                 <option value="0" ||hideno||>No</option>
                 <option value="1" ||hideyes||>Yes</option>
             </select>
-            <div class="tooltipContainer info">||input_page_menulink||</div>
+            <div class="tooltipContainer info">||input_page_visitors_hide||</div>
             <div class="spacer" style="clear: both;"></div>
             </div>
             //OR//
@@ -287,7 +287,7 @@ pagelinks_template||
 
 pagelinks_links_template||
     <div class="pagelink" id="link_span_||page[linkid]||">
-        <a href="||wwwroot||/index.php?pageid=||page[linkpageid]||">
+        <a href="||echo $CFG->wwwroot;::none||/index.php?pageid=||page[linkpageid]||">
             ||page[linkdisplay]||
         </a>
         ||canedit{{

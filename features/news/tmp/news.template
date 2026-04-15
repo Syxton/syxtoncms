@@ -81,3 +81,19 @@ news_archive_template||
         </div>
     </div>
 ||news_archive_template
+
+news_wrapper||
+    <div style="box-sizing: border-box;padding:10px;overflow: auto">
+        <h1 style="font-size:3em;text-align: center;">
+            ||echo stripslashes(news["title"]);::news||
+        </h1>
+        <div style="font-size:1.8em;text-align: center;color:grey;">
+            ||echo stripslashes(news["caption"]);::news||
+        </div>
+        <div style="font-size:1em;text-align:right;padding:10px;">
+            By: ||echo get_user_name(news["userid"]);::news||
+        </div>
+        <br />
+        ||news[content]||
+    </div>
+||news_wrapper

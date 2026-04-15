@@ -30,6 +30,22 @@ optional||
   ||*one||||*two||||*three||||*four||
 ||optional
 
+globalconfig1||
+	||echo $CFG->wwwroot;::none||
+||globalconfig1
+
+globalconfig2||
+	||echo $CFG->docroot;::none||
+||globalconfig2
+
+globalconfig3||
+	||variable|| ||echo $CFG->wwwroot;::none||
+||globalconfig3
+
+globalconfig4||
+	||variable|| ||echo $CFG->docroot;::none||
+||globalconfig4
+
 sql_template||
 	SELECT * FROM testing_table WHERE test_id = ||id||
 ||sql_template

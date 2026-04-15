@@ -1532,10 +1532,9 @@ global $CFG, $USER;
 
 
         } else {
-            $return = '
-                <div class="error_text" class="centered_span">
-                    No matches found.
-                </div>';
+            $return = fill_template("tmp/pagelib.template", "centered_error", false, [
+                "title" => getlang("no_matches"),
+            ]);
         }
     } catch (\Throwable $e) {
         $error = $e->getMessage();
@@ -1566,7 +1565,7 @@ function get_reg_actions($reg) {
                     "title" => "Resend Registration Email",
                     "onclick" => "email_registration(" . $reg["eventid"] . "," . $reg["regid"] . ")",
                     "content" => icon("envelope") . " Resend Registration Email",
-                ]) . 
+                ]) .
                 link_maker([
                     "title" => "Pay",
                     "target" => "_blank",
@@ -1733,16 +1732,10 @@ global $CFG, $MYVARS, $USER, $error;
 
         if (!$regid = enter_registration($event['eventid'], $reginfo, $email)) {
             log_entry("events", $eventid, "Failed Event Registration"); // Log
-            $return = '
-                <center>
-                    <div style="width:60%">
-                        <span class="error_text">
-                            Your registration for ' . $event['name'] . ' has failed.
-                        </span>
-                        <br />
-                        ' . $error . '
-                    </div>
-                </center>';
+            $return = fill_template("tmp/pagelib.template", "centered_error", false, [
+                "title" => "Your registration for " . $event["name"] . " has failed.",
+                "error" => $error,
+            ]);
             throw new \Exception($error);
         }
 
@@ -2700,10 +2693,9 @@ global $CFG, $USER;
             ];
             $return = fill_template("tmp/events.template", "templatesearchresults", "events", $params);
         } else {
-            $return = '
-                <div class="error_text" class="centered_span">
-                    No matches found.
-                </div>';
+            $return = fill_template("tmp/pagelib.template", "centered_error", false, [
+                "title" => getlang("no_matches"),
+            ]);
         }
     } catch (\Throwable $e) {
         $error = $e->getMessage();
@@ -2911,7 +2903,9 @@ global $CFG, $USER;
         // Get the amount returned...is it a full page of results?
         $pageparams["count"] = get_page_count($pageparams);
 
-        if ($pageparams["count"] > 0) {
+        if (!$pageparams["count"]) { // No results.
+            $return = fill_template("tmp/pagelib.template", "centered_error", false, ["title" => getlang("no_matches")]);
+        } else {
             // Limit to this page.
             $SQL .= " LIMIT " . $pageparams["firstonpage"] . "," . $pageparams["perpage"];
 
@@ -2972,11 +2966,6 @@ global $CFG, $USER;
                 "rows" => $rows,
             ];
             $return = fill_template("tmp/events.template", "staffsearchresults", "events", $params);
-        } else {
-            $return = '
-                <div class="error_text" class="centered_span">
-                    No matches found.
-                </div>';
         }
     } catch (\Throwable $e) {
         $error = $e->getMessage();
@@ -3009,7 +2998,7 @@ global $CFG, $USER;
     ]);
 
     $returnme = '
-        <link rel="stylesheet" media="print" type="text/css" href="' . $CFG->wwwroot . '/styles/print.css">' . 
+        <link rel="stylesheet" media="print" type="text/css" href="' . $CFG->wwwroot . '/styles/print.css">' .
         button_maker([
             "text" => "Return to Staff Applications",
             "onclick" => "perform_appsearch(" . $pagenum . ");",

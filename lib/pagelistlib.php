@@ -7,11 +7,11 @@
 * Revision: 2.3.5
 ***************************************************************************/
 if (!isset($CFG) || !defined('LIBHEADER')) {
-	$sub = '';
-	while (!file_exists($sub . 'lib/header.php')) {
-		$sub = $sub == '' ? '../' : $sub . '../';
-	}
-	include($sub . 'lib/header.php');
+    $sub = '';
+    while (!file_exists($sub . 'lib/header.php')) {
+        $sub = $sub == '' ? '../' : $sub . '../';
+    }
+    include($sub . 'lib/header.php');
 }
 define('PAGELISTLIB', true);
 
@@ -83,54 +83,59 @@ global $PAGE;
 
 function get_page_links($pageid, $userid = false) {
 global $CFG, $ROLES, $USER;
-    $links = "";
-	$params = ["siteid" => $CFG->SITEID, "pageid" => $pageid, "userid" => $userid];
+    $params = [
+        "siteid" => $CFG->SITEID,
+        "pageid" => $pageid,
+        "userid" => $userid,
+    ];
 
-	if ($userid) {
-		if (is_siteadmin($userid)) {
-			$SQL = fetch_template("dbsql/pages.sql", "admin_pagelinks");
-		} else {
-			$SQL = fetch_template("dbsql/pages.sql", "user_pagelinks");
-		}
-	} else {
-		$SQL = fetch_template("dbsql/pages.sql", "default_pagelinks");
-	}
+    if ($userid) {
+        if (is_siteadmin($userid)) {
+            $SQL = fetch_template("dbsql/pages.sql", "admin_pagelinks");
+        } else {
+            $SQL = fetch_template("dbsql/pages.sql", "user_pagelinks");
+        }
+    } else {
+        $SQL = fetch_template("dbsql/pages.sql", "default_pagelinks");
+    }
 
-	if ($result = get_db_result($SQL, $params)) {
-            ajaxapi([
-                "id" => "refresh_page_links",
-                "url" => "/ajax/page_ajax.php",
-                "data" => [
-                    "action" => "refresh_page_links",
-                    "pageid" => $pageid,
-                ],
-                "display" => "page_links_div",
-                "event" => "none",
+    if ($result = get_db_result($SQL, $params)) {
+        ajaxapi([
+            "id" => "refresh_page_links",
+            "url" => "/ajax/page_ajax.php",
+            "data" => [
+                "action" => "refresh_page_links",
+                "pageid" => $pageid,
+            ],
+            "display" => "page_links_div",
+            "event" => "none",
+        ]);
+
+        ajaxapi([
+            "id" => "unlink_page",
+            "paramlist" => "linkpageid",
+            "if" => "confirm('Are you sure you want to unlink this page?')",
+            "url" => "/ajax/page_ajax.php",
+            "data" => [
+                "action" => "unlink_page",
+                "linkpageid" => "js||linkpageid||js",
+                "pageid" => $pageid,
+            ],
+            "event" => "none",
+            "ondone" => "refresh_page_links();",
+        ]);
+
+        $links = "";
+        while ($page = fetch_row($result)) {
+            $links .= fill_template("tmp/page.template", "pagelinks_links_template", false, [
+                "page" =>$page,
+                "canedit" => user_is_able($userid, "editpage", $pageid),
             ]);
+        }
 
-            ajaxapi([
-                "id" => "unlink_page",
-                "paramlist" => "linkpageid",
-                "if" => "confirm('Are you sure you want to unlink this page?')",
-                "url" => "/ajax/page_ajax.php",
-                "data" => [
-                    "action" => "unlink_page",
-                    "linkpageid" => "js||linkpageid||js",
-                    "pageid" => $pageid,
-                ],
-                "event" => "none",
-                "ondone" => "refresh_page_links();",
-            ]);
-		$params = ["wwwroot" => $CFG->wwwroot, "pageid" => $pageid];
-		while ($page = fetch_row($result)) {
-			$params["page"] = $page;
-			$params["canedit"] = user_is_able($userid, "editpage", $pageid);
-			$links .= fill_template("tmp/page.template", "pagelinks_links_template", false, $params);
-		}
-		$params["links"] = $links;
-		return fill_template("tmp/page.template", "pagelinks_template", false, $params);
-	}
-	return "";
+        return fill_template("tmp/page.template", "pagelinks_template", false, ["links" => $links]);
+    }
+    return "";
 }
 
 function pagelist_buttons($pageid, $featuretype, $featureid) {

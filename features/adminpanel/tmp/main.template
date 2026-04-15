@@ -378,7 +378,7 @@ members_search_table||
             //OR//
             <tr>
                 <td colspan="5" style="font-size:.8em;text-align:center;">
-                    <strong>No matches found.</strong>
+                    <strong>||echo getlang("no_matches");::none||</strong>
                 </td>
             </tr>
         }}results||

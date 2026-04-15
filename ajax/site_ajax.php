@@ -16,8 +16,19 @@ function login() {
     $password = md5(clean_myvar_req("password", "string"));
 
     if ($row = authenticate($username, $password)) {
-        $reroute = '';
+        // Login was successful.
         $return = ['status' => 'success'];
+
+        // Check if a reroute URL was given (this would be the case if the user was trying to access a page that required login). If so, include the reroute URL in the return data so that the user can be redirected to that page.
+        $reroute = clean_myvar_opt("reroute", "string", false);
+        if ($reroute) {
+            $return = [
+                'status' => 'reroute',
+                'content' => $reroute,
+            ];
+        }
+
+        // If a temporary password is being used, force the password_change reroute.
         if ($row["alternate"] === $password) {
             $reroute = fill_template("tmp/site_ajax.template", "password_change_reroute_template", false, ["userid" => $row["userid"], "password" => $password]);
             $return = [
@@ -26,6 +37,7 @@ function login() {
             ];
         }
     } else {
+        // Login failed.
         $return = [
             'status' => 'failed',
             'content' => getlang("invalid_login"),

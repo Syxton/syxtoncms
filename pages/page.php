@@ -207,7 +207,7 @@ global $CFG, $MYVARS, $ROLES, $USER;
         "input_page_menulink" => getlang("input_page_menulink"),
         "hideno" => $hide_no,
         "hideyes" => $hide_yes,
-        "input_page_menulink" => getlang("input_page_menulink"),
+        "input_page_visitors_hide" => getlang("input_page_visitors_hide"),
         "menupage" => $menu_page,
         "hidefromvisitors" => $hidefromvisitors ?? false,
         "buttonname" => $pageid ? "Submit Changes" : "Create Page",

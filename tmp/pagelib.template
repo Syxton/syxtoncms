@@ -13,7 +13,7 @@ simple_page_template||
         <div class="logo_nav">
             ||masthead||
         </div>
-        <div style="margin: 5px auto;max-width: 800px;">
+        <div style="margin: 5px auto;max-width: 75vw;">
 			<span id="column_width" style="width:100%;"></span>
 			||content||
 		</div>
@@ -298,3 +298,31 @@ validation_tooltip_actions||
         $(this).parent().find('.info').css('visibility', 'hidden');
     });
 ||validation_tooltip_actions
+
+reroute_after_login||
+    ||echo js_code_wrap('var dirfromroot = "' . $CFG->directory . '";');::none||
+    ||echo js_code_wrap(fill_template("tmp/pagelib.template", "defer_script"));::none||
+    ||echo get_js_set("main");::none||
+    <div id="standalone_div">
+        <input type="hidden" id="reroute" value="||url||" />
+        <div style="width:100%;max-width:600px;text-align:center;margin:auto;">
+            You must login to see this content.
+            <br />
+            <center>
+                ||echo get_login_form(true, false);::none||
+            </center>
+        </div>
+    </div>
+||reroute_after_login
+
+centered_error||
+    <div class="centered">
+        <div style="width:100%;max-width: 600px">
+            <span class="error_text">
+                ||title||
+            </span>
+            <br />
+            ||*error||
+        </div>
+    </div>
+||centered_error

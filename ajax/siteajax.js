@@ -869,7 +869,6 @@ function verify_login(data) {
     }
 
     if (status === "reroute") {
-        $("#login_box_error").html(message.content);
         window.location = WWW_ROOT + $("#reroute").val();
         return;
     }

@@ -55,3 +55,14 @@ comment_area||
         ||comments||
     </div>
 ||comment_area
+
+under_construction||
+    <div style="padding: 10px">
+        <div style="padding: 5px;text-align:center;">
+            ||echo icon("person-digging", 10);::none||
+        </div>
+        <div style="padding: 25px;text-align:center;">
+            This area is currently being edited by: ||by||
+        </div>
+    </div>
+||under_construction

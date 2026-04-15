@@ -239,14 +239,10 @@ global $CFG, $MYVARS, $USER, $error;
             }
         } else { // Failed registration.
             $cart_total = $cart_total - $owed;
-            $return .= '
-                <div style="width:60%;margin:auto;">
-                    <span class="error_text">
-                        Your registration for ' . $event['name'] . ' has failed.
-                    </span>
-                    <br />
-                    ' . $error . '
-                </div>';
+            $return .= fill_template("tmp/pagelib.template", "centered_error", false, [
+                "title" => "Your registration for " . $event["name"] . " has failed.",
+                "error" => $error,
+            ]);
 
             $items = clean_myvar_opt("items", "string", false);
             if ($items) { // Other registrations have already occured

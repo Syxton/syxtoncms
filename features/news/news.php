@@ -115,43 +115,33 @@ global $CFG, $MYVARS, $USER, $ROLES;
         if (get_db_field("siteviewable", "pages", "pageid=$pageid") && role_is_able($ROLES->visitor, 'viewnews', $pageid)) {
             echo news_wrapper($newsid, $pageid, $newsonly);
         } else {
-              echo '	<div id="standalone_div">
-                        <input type="hidden" id="reroute" value="/features/news/news.php:viewnews:&amp;pageid=' . $pageid . '&amp;newsid=' . $newsid . ':standalone_div" />
-                        <div style="width:100%; text-align:center;">
-                            You must login to see this content.
-                            <br />
-                            <center>
-                                ' . get_login_form(true, false) . '
-                            </center>
-                        </div>
-                      </div>';
+            $url = "/features/news/news.php?action=viewnews&pageid=$pageid&newsid=$newsid";
+            $content = fill_template("tmp/pagelib.template", "reroute_after_login", false, ["url" => $url]);
+            echo simple_page($content, false, false);
         }
     }
 }
 
 function news_wrapper($newsid, $pageid, $newsonly) {
 global $CFG;
-    $news = get_db_row("SELECT * FROM news WHERE newsid=$newsid");
-    $pagenews = (object) [];
-    $pagenews->newsid = $news['newsid'];
-    $pagenews->title = stripslashes($news['title']);
-    $pagenews->caption = stripslashes($news['caption']);
-    $pagenews->submitted = $news['submitted'];
-    $pagenews->userid = $news['userid'];
-    $pagenews->content = '
-        <div style="box-sizing: border-box;padding:10px;overflow: auto">
-            <h1 style="font-size:3em;text-align: center;">' . $pagenews->title . '</h1>
-            <div style="font-size:1.8em;text-align: center;color:grey;">' . $pagenews->caption . '</div>
-            <div style="font-size:1em;text-align:right;padding:10px;">By: ' . get_user_name($pagenews->userid) . '</div>
-            <br />
-            ' . $news['content'] . '
-        </div>';
+    $news = get_db_row("SELECT * FROM news WHERE newsid=||newsid||", ["newsid" => $newsid]);
+    if (!$news) {
+        trigger_error("News item not found.", E_USER_WARNING);
+        return;
+    }
+
+    $news["content"] = fill_template("tmp/news.template", "news_wrapper", "news", ["news" => $news]);
+
     if ($newsonly) {
-        return $pagenews->content;
+        return $news["content"];
     } else {
-        $pagename = get_db_field("name", "pages", "pageid = '$pageid'");
-        $middlecontents = $pagenews->content;
-        return get_js_tags(["siteajax"]) . get_css_set("main") . fill_template("tmp/index.template", "simplelayout_template", false, ["mainmast" => page_masthead(false, false), "middlecontents" => $middlecontents]);
+        $params = [
+            "mainmast" => page_masthead(false, false),
+            "middlecontents" => $news["content"],
+        ];
+        return  get_js_tags(["siteajax"]) .
+                get_css_set("main") .
+                fill_template("tmp/index.template", "simplelayout_template", false, $params);
     }
 }
 ?>

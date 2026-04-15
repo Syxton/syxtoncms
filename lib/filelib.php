@@ -252,7 +252,7 @@ function fetch_template_set($templates) {
  */
 function fill_template($file, $subsection, $feature = false, $params = [], $allowpartial = false) {
     global $CFG, $PAGE;
-    $v = $params;
+    $v = $params; // Send all params to a local "global" to be used.
     $contents = "";
 
     try {

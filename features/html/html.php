@@ -99,13 +99,9 @@ function edithtml() {
                 "interval" => 5000,
             ], "script");
         } else {
-            $returnme .= '
-                <div style="padding: 10px">
-                    <div style="padding: 5px;text-align:center;">' . icon("person-digging", 10) . '</div>
-                    <div style="padding: 25px;text-align:center;">
-                        This area is currently being edited by: ' . get_user_name($row['edit_user']) . '
-                    </div>
-                </div>';
+            $returnme .= fill_template("tmp/html.template", "under_construction", "html", [
+                "by" => get_user_name($row['edit_user']),
+            ]);
         }
     } catch (\Throwable $e) {
         $error = $e->getMessage();
@@ -224,7 +220,7 @@ function commentform() {
 
 function viewhtml() {
     global $CFG, $MYVARS, $USER, $ROLES;
-    $key      = $MYVARS->GET['key'];
+    $key      = clean_myvar_opt('key', 'string', null);
     $htmlid   = clean_myvar_req('htmlid', 'int');
     $pageid   = clean_myvar_req('pageid', 'int');
     $pagename = get_db_field('name', 'pages', "pageid = '$pageid'");
@@ -241,23 +237,30 @@ function viewhtml() {
             $abilities = user_abilities($USER->userid, $pageid, false, 'html', $htmlid);
             $allowed   = true;
         } else {
-            echo '<center>You do not have proper permissions to view this item.</center>';
+            echo fill_template("tmp/pagelib.template", "centered_error", false, [
+                "title" => getlang("generic_permissions"),
+            ]);
         }
     } else {
         if (get_db_field('siteviewable', 'pages', "pageid=$pageid") && role_is_able($ROLES->visitor, 'viewhtml', $pageid)) {
             $abilities = user_abilities($USER->userid, $pageid, 'html', $htmlid);
             $allowed   = true;
         } else {
-            echo '<div id="standalone_div"><input type="hidden" id="reroute" value="/features/html/html.php:viewhtml:&amp;pageid=' . $pageid . '&amp;htmlid=' . $htmlid . ':standalone_div" />';
-            echo '<div style="width:100%; text-align:center;">You must login to see this content.<br /><center>' . get_login_form(true, false) . '</center></div></div>';
+            $url = "/features/html/html.php?action=viewhtml&pageid=$pageid&htmlid=$htmlid";
+            $content = fill_template("tmp/pagelib.template", "reroute_after_login", false, ["url" => $url]);
+            echo simple_page($content, false, false);
         }
     }
 
     if ($allowed) {
-        echo get_css_set('main'); // Load CSS.
-
+        echo link_maker([
+            'href' => $CFG->wwwroot . '/index.php?pageid=' . $pageid,
+            "title" => getlang("goto", false, [$pagename]),
+            "class" => "buttonlike",
+            "style" => "margin: 10px",
+            "content" => getlang("goto", false, [$pagename]),
+        ]);
         echo '
-            <a class="buttonlike" style="margin: 10px" href="' . $CFG->wwwroot . '/index.php?pageid=' . $pageid . '">Navigate to ' . $pagename . '</a>
             <div class="html_main">
             ' . get_html_feature($pageid, $htmlid, $settings, $abilities, false, true) . '
             </div>';

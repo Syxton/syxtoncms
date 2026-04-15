@@ -381,14 +381,14 @@ function get_carousel($imageDir, $imageamount = 5) {
     }
 
     return '
-        <div id="carousel" class="carousel">' . 
+        <div id="carousel" class="carousel">' .
             button_maker([
                 "title" => getlang("previous"),
                 "content" => icon([
                     ["icon" => "circle-left", "size" => 3, "color" => "white"],
                 ]),
                 "class" => "carousel-arrow left alike",
-            ]) . 
+            ]) .
             button_maker([
                 "title" => getlang("next"),
                 "content" => icon([
@@ -881,26 +881,28 @@ function resort_page_features($pageid) {
  * @return string
  */
 function button_maker($v) {
-    $v["type"] = empty($v["type"]) ? " type='button'" : ' type="' . $v["type"] . '"';
-    $v["id"] = empty($v["id"]) ? "" : ' id="' . $v["id"] . '"';
-    $v["class"] = empty($v["class"]) ? "" : ' class="' . $v["class"] . '"';
-    $v["style"] = empty($v["style"]) ? "" : ' style="' . $v["style"] . '"';
-    $v["content"] = empty($v["content"]) ? "" : $v["content"];
-    $v["title"] = empty($v["title"]) ? "" : ' title="' . $v["title"] . '"';
-    $v["onclick"] = empty($v["onclick"]) ? "" : ' onclick="' . $v["onclick"] . '"';
-    return '<button' . $v["type"] . $v["id"] . $v["class"] . $v["style"] . $v["title"] . $v["onclick"] . ' onmouseup="this.blur()">' . $v["content"] . '</button>';
+    $attributes = "";
+    foreach ($v as $key => $value) {
+        if ($key !== "content") {
+            if (!empty($value)) {
+                $attributes .= ' ' . $key . '="' . htmlspecialchars($value) . '"';
+            }
+        }
+    }
+
+    return '<button' . $attributes . ' onmouseup="this.blur()">' . $v["content"] . '</button>';
 }
 
 function link_maker($v) {
-    $v["type"] = empty($v["type"]) ? " type='button'" : ' type="' . $v["type"] . '"';
-    $v["id"] = empty($v["id"]) ? "" : ' id="' . $v["id"] . '"';
-    $v["class"] = empty($v["class"]) ? "" : ' class="' . $v["class"] . '"';
-    $v["style"] = empty($v["style"]) ? "" : ' style="' . $v["style"] . '"';
-    $v["content"] = empty($v["content"]) ? "" : $v["content"];
-    $v["title"] = empty($v["title"]) ? "" : ' title="' . $v["title"] . '"';
-    $v["onclick"] = empty($v["onclick"]) ? "" : ' onclick="' . $v["onclick"] . '"';
-    $v["href"] = empty($v["href"]) ? ' href="javascript: void(0);"' : ' href="' . $v["href"] . '"';
-    return '<a' . $v["href"] . $v["type"] . $v["id"] . $v["class"] . $v["style"] . $v["title"] . $v["onclick"] . ' onmouseup="this.blur()">' . $v["content"] . '</a>';
+    $attributes = "";
+    foreach ($v as $key => $value) {
+        if ($key !== "content") {
+            if (!empty($value)) {
+                $attributes .= ' ' . $key . '="' . htmlspecialchars($value) . '"';
+            }
+        }
+    }
+    return '<a' . $attributes . ' onmouseup="this.blur()">' . $v["content"] . '</a>';
 }
 
 function make_modal_links($v) {
@@ -1711,6 +1713,7 @@ global $CFG;
             'action' => "login",
             'username' => "js||encodeURIComponent($('#username').val())||js",
             'password' => "js||$('#password').val()||js",
+            'reroute' => "js||$('#reroute').val()||js",
         ],
         "event" => "none",
         "ondone" => "verify_login(data);",

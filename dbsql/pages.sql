@@ -103,7 +103,7 @@ link_page_search_part||
 ||link_page_search_part
 
 page_search||
-    SELECT p.*||notadmin{{, ||checkrights||}}notadmin||
+    SELECT p.*||notadmin{{||checkrights||}}notadmin||
     FROM pages p
     WHERE p.pageid <> ||siteid||
     AND (
@@ -114,7 +114,7 @@ page_search||
 ||page_search
 
 page_search_checkrights||
-    IF (
+    , IF (
         p.pageid IN (
             SELECT p.pageid
             FROM pages p

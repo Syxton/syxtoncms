@@ -52,6 +52,21 @@ $tests .= testCheck("min function with object variable", trim($result) == trim("
 $result = fill_template("tmp/test.template", "optional", false, ["one" => "1", "two" => "2", "four" => "4"]);
 $tests .= testCheck("fill in with optional variable", trim($result) == trim("124") ? "PASS" : "FAIL", $passCounter, $totalCounter);
 
+// Test 9: Fill-in with global variable
+// This test ensures that global variables can be handled by the template system without breaking the logic.
+$result = fill_template("tmp/test.template", "globalconfig1");
+$tests .= testCheck("fill in with global variable", trim($result) == trim($CFG->wwwroot) ? "PASS" : "FAIL", $passCounter, $totalCounter);
+
+// Test 10: Fill-in with global variable in multiple templates.
+// This test ensures that global variables can be handled by multiple templates and joined parameters without breaking the logic.
+$result = fill_template("tmp/test.template", ["globalconfig1", "globalconfig2"]);
+$tests .= testCheck("fill in with global variable", $result == [$CFG->wwwroot, $CFG->docroot] ? "PASS" : "FAIL", $passCounter, $totalCounter);
+
+// Test 11: Fill-in with global variable in multiple templates with separate parameters.
+// This test ensures that global variables can be handled by multiple templates with separate parameters without breaking the logic.
+$result = fill_template("tmp/test.template", ["globalconfig3", "globalconfig4"], false, [["variable" => "value1"], ["variable" => "value2"]]);
+$tests .= testCheck("fill in with global variable", $result == ["value1 " . $CFG->wwwroot, "value2 " . $CFG->docroot] ? "PASS" : "FAIL", $passCounter, $totalCounter);
+
 // Output the results of the tests in a formatted HTML list
 echo '
     <li>

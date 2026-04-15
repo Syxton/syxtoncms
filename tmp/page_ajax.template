@@ -27,7 +27,7 @@ search_template||
             ||searchresults||
         </table>
         //OR//
-        <span class="error_text" class="centered_span">No matches found.</span>
+        ||echo fill_template("tmp/pagelib.template", "centered_error", false, ["title" => getlang("no_matches")]);::none||
     }}resultsfound||
 ||search_template
 
