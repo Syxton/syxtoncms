@@ -43,16 +43,16 @@ update_reg_event||
 insert_event||
     INSERT INTO events
     (pageid, template_id, name, category, location, allowinpage, start_reg, stop_reg, max_users, event_begin_date, event_begin_time, event_end_date, event_end_time,
-    confirmed, siteviewable, allday, caleventid, byline, description, fee_min, fee_full, payableto, checksaddress, paypal, sale_fee, sale_end, contact, email, phone, hard_limits, soft_limits, workers)
+    confirmed, siteviewable, allday, caleventid, byline, description, fee_min, fee_full, payableto, checksaddress, paypal, sale_fee, sale_end, contact, hard_limits, soft_limits, workers)
     VALUES(||pageid||, ||template_id||, ||name||, ||category||, ||location||, ||allowinpage||, ||start_reg||, ||stop_reg||, ||max_users||, ||event_begin_date||,
     ||event_begin_time||, ||event_end_date||, ||event_end_time||, ||confirmed||, ||siteviewable||, ||allday||, ||caleventid||, ||byline||, ||description||,
-    ||fee_min||, ||fee_full||, ||payableto||, ||checksaddress||, ||paypal||, ||sale_fee||, ||sale_end||, ||contact||, ||email||, ||phone||, ||hard_limits||, ||soft_limits||, ||workers||)
+    ||fee_min||, ||fee_full||, ||payableto||, ||checksaddress||, ||paypal||, ||sale_fee||, ||sale_end||, ||contact||, ||hard_limits||, ||soft_limits||, ||workers||)
 ||insert_event
 
 update_event||
     UPDATE events SET template_id = ||template_id||, name = ||name||, category = ||category||, location = ||location||, allowinpage = ||allowinpage||, start_reg = ||start_reg||,
         stop_reg = ||stop_reg||, max_users = ||max_users||, event_begin_date = ||event_begin_date||, event_begin_time = ||event_begin_time||, event_end_date = ||event_end_date||,
-        event_end_time = ||event_end_time||, sale_fee = ||sale_fee||, sale_end = ||sale_end||, contact = ||contact||, email = ||email||, phone = ||phone||, hard_limits = ||hard_limits||,
+        event_end_time = ||event_end_time||, sale_fee = ||sale_fee||, sale_end = ||sale_end||, contact = ||contact||, hard_limits = ||hard_limits||,
         soft_limits = ||soft_limits||, siteviewable = ||siteviewable||, allday = ||allday||, byline = ||byline||, description = ||description||, paypal = ||paypal||,
         fee_min = ||fee_min||, fee_full = ||fee_full||, payableto = ||payableto||, checksaddress = ||checksaddress||, confirmed = ||confirmed||, workers = ||workers||
     WHERE eventid = ||eventid||
@@ -64,6 +64,18 @@ get_events_with_same_template||
     JOIN events_templates as b ON b.template_id=e.template_id
     WHERE eventid=||eventid||
 ||get_events_with_same_template
+
+registration_sorting||
+    SELECT e.*||select||
+    FROM events_registrations as e
+    JOIN events_registrations_values as v ON (e.regid=v.regid)
+    WHERE e.eventid=||eventid||
+    ||onlineonly{{
+        AND e.`manual` = 0
+    }}onlineonly||
+    GROUP BY regid
+    ORDER BY val0 LIKE '%Reserved%' DESC, ||orderby||
+||registration_sorting
 
 get_events_templates_by_regid||
     SELECT *
@@ -249,10 +261,10 @@ events_requests_recalculate||
 ||events_requests_recalculate
 
 get_contacts_list||
-    SELECT DISTINCT CONCAT(contact, ': ', email, ': ', phone) as admin_contact
-    FROM events
-    WHERE confirmed = 1
-    ORDER BY admin_contact DESC
+    SELECT *, CONCAT(contactid, ":", name, ":", email, ":", phone) as contactdata
+    FROM events_contacts
+    WHERE pageid = ||pageid||
+    ORDER BY name DESC
 ||get_contacts_list
 
 get_payable_list||
@@ -303,12 +315,12 @@ reg_update_from_temptable||
 ||reg_update_from_temptable
 
 insert_registration||
-    INSERT INTO events_registrations (eventid, date, email, code, verified)
+    INSERT INTO events_registrations (`eventid`, `date`, `email`, `code`, `verified`)
     VALUES(||eventid||, ||date||, ||email||, ||code||, ||verified||)
 ||insert_registration
 
 insert_registration_values||
-    INSERT INTO events_registrations_values (regid, value, eventid, elementname)
+    INSERT INTO events_registrations_values (`regid`, `value`, `eventid`, `elementname`)
     VALUES(||regid||, ||value||, ||eventid||, ||elementname||)
 ||insert_registration_values
 
@@ -430,13 +442,18 @@ events_search||
 ||events_search
 
 registration_search||
-    SELECT e.name, e.eventid, e.pageid, v.value, r.regid, r.email, r.date, r.code
-    FROM events_registrations_values v
-    JOIN events e ON e.eventid = v.eventid
-    JOIN events_registrations r ON r.regid = v.regid
-    WHERE ||searchstring||
-    OR r.email LIKE '%||fullstring||%'
-    AND v.elementname IN (SELECT registrant_name FROM events_templates)
+    SELECT e.name, e.eventid, e.pageid, r.regid, r.email, r.date, r.code
+    FROM events_registrations r
+    JOIN events e ON e.eventid = r.eventid
+    WHERE (
+        r.email LIKE '%||fullstring||%'
+        OR r.regid IN (
+            SELECT v.regid
+            FROM events_registrations_values v
+            WHERE (||searchstring||)
+            AND v.elementname IN (SELECT registrant_name FROM events_templates)
+        )
+    )
     AND (
         e.pageid = ||pageid||
         ||issite{{
@@ -446,7 +463,6 @@ registration_search||
         )
         }}issite||
     )
-    GROUP BY regid
     ORDER BY r.date DESC
 ||registration_search
 
@@ -622,3 +638,90 @@ delete_promocode||
     DELETE FROM events_promo_set_codes
     WHERE codeid = ||codeid||
 ||delete_promocode
+
+add_location||
+    INSERT INTO events_locations
+    (location, address_1, address_2, zip, phone, userid, shared)
+    VALUES
+    (||location||, ||address_1||, ||address_2||, ||zip||, ||phone||, ||userid||, ||shared||)
+||add_location
+
+edit_location||
+    UPDATE events_locations
+    SET location = ||location||, address_1 = ||address_1||, address_2 = ||address_2||, zip = ||zip||, phone = ||phone||, shared = ||shared||
+    WHERE id = ||id||
+||edit_location
+
+delete_location||
+    DELETE FROM events_locations
+    WHERE id = ||id||
+||delete_location
+
+reassign_events_location||
+    UPDATE events
+    SET location = ||reassignto||
+    WHERE location = ||locationid||
+||reassign_events_location
+
+get_my_locations||
+    SELECT *
+    FROM events_locations
+    WHERE userid LIKE ||userid||
+    OR shared = 1
+    ORDER BY location
+||get_my_locations
+
+get_location_by_id||
+    SELECT *
+    FROM events_locations
+    WHERE id = ||id||
+||get_location_by_id
+
+get_usage_by_location||
+    SELECT e.eventid, e.name, e.pageid
+    FROM events e
+    WHERE e.location = ||locationid||
+||get_usage_by_location
+
+add_contact||
+    INSERT INTO events_contacts
+    (`pageid`, `name`, `email`, `phone`)
+    VALUES
+    (||pageid||, ||name||, ||email||, ||phone||)
+||add_contact
+
+edit_contact||
+    UPDATE events_contacts
+    SET name = ||name||, email = ||email||, phone = ||phone||
+    WHERE contactid = ||contactid||
+||edit_contact
+
+delete_contact||
+    DELETE FROM events_contacts
+    WHERE contactid = ||contactid||
+||delete_contact
+
+get_my_contacts||
+    SELECT *
+    FROM events_contacts
+    WHERE pageid = ||pageid||
+    ORDER BY name
+||get_my_contacts
+
+get_contact_by_id||
+    SELECT *
+    FROM events_contacts
+    WHERE contactid = ||contactid||
+||get_contact_by_id
+
+get_usage_by_contact||
+    SELECT e.eventid, e.name, e.pageid
+    FROM events e
+    WHERE e.contact = ||contactid||
+||get_usage_by_contact
+
+reassign_events_contact||
+    UPDATE events
+    SET contact = ||reassignto||
+    WHERE contact = ||contactid||
+||reassign_events_contact

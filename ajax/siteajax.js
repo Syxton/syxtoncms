@@ -692,7 +692,7 @@ function create_request_string(container) {
                         case "checkbox":
                             //Check if the checkbox is checked and add the name and value accordingly
                             if (this.checked) {
-                                reqStr += "&" + this.name + "=" + $(this).val();
+                                reqStr += "&" + this.name + "=1";
                             } else {
                                 reqStr += "&" + this.name + "=";
                             }

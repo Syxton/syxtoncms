@@ -82,7 +82,6 @@ global $CFG, $MYVARS, $USER;
             "id" => "delete_gallery",
             "if" => "$('#gallery').val() && confirm('Are you sure you want to delete this gallery?')",
             "else" => "if(!$('#gallery').val()) { alert('Cannot delete all galleries at once.'); }",
-            "paramlist" => "pagenum=0",
             "url" => "/features/pics/pics_ajax.php",
             "data" => [
                 "action" => "delete_gallery",

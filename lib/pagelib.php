@@ -437,22 +437,31 @@ function get_carousel($imageDir, $imageamount = 5) {
 }
 
 /**
- * Sends an AJAX request to a specified URL.
+ * Generates an AJAX request script based on the provided parameters and either returns it or prints it.
  *
  * @param array $params The parameters for the AJAX request.
- *                     - url (string): The URL to send the request to.
- *                     - external (bool): Whether the URL is external or not.
- *                     - id (string): The ID of the element to update.
- *                     - reqstring (string): The request string.
- *                     - data (array): The data to send with the request.
- *                     - if (string): The condition to check before sending the request.
- *                     - else (string): The code to execute if the condition is false.
- *                     - display (string): The code to display the response.
- *                     - classes (string): The classes to add to the AJAX element.
- *                     - datatype (string): The data type of the response.
- *                     - contenttype (string): The content type of the request.
- *                     - callback (string): The code to execute after the request is successful.
- * @param bool $forcereturn Whether to force a return statement or not.
+ *                  - url (string): The URL to send the request to.
+ *                  - id (string): Paired with event, the element to trigger the AJAX call on, or if event is "none", the name of the function to create.
+ *                  - method (string): The HTTP method to use for the request, default to POST.
+ *                  - reqstring (string): Search this element for form data to send with the request. (ie form name or container id)
+ *                  - data (array): The data to send with the request.
+ *                  - if (string): Javascript: The condition to check before sending the request.
+ *                  - else (string): Javascript:The code to execute if the condition is false.
+ *                  - display (string): Javascript (js|| template allowed): The id of the element to update.
+ *                  - classes (string): HTML: The classes to add to the script element.
+ *                  - datatype (string): The data type of the response, default to json.
+ *                  - contenttype (string): The content type of the request, default to application/x-www-form-urlencoded; charset=UTF-8.
+ *                  - always (string): Javascript: The code to execute after every request is successful.
+ *                  - ondone (string): Javascript: The code to execute after a successful request.
+ *                  - onerror (string): Javascript: The code to execute after a failed request.
+ *                  - before (string): Javascript: The code to execute before the AJAX call.
+ *                  - async (bool): Whether the request should be asynchronous or not, default to true.
+ *                  - external (bool): Whether the URL given is an external URL. Defaults to false.
+ *                  - event (string): The event to trigger the AJAX call on, default to click. If set to "none", it will create a function with the name given in id parameter instead of attaching to an event.
+ *                  - paramlist (string): A comma separated list of parameters to pass to the function created if event is "none" or "function". These will be passed as variables to the function in the order given. (ie "id, name, value") The variables will be cleaned as strings by default, but can be set to other types by using js|| qualifier in the list (ie "id, js||value||js").
+ *                  - intervalid (string): If provided, the function will be added to the myIntervals[] array with this name as the key.
+ *                  - interval (int): If intervalid is provided, this sets how often the function in myIntervals[] should be run in milliseconds. Default is 60000 (1 minute).
+ * @param bool $forcereturn Whether to return the generated script instead of printing it. If set to "function", it will return the raw function code without wrapping it in a script tag. Default is false, which will print the script.
  * @return void
  */
 function ajaxapi($params, $forcereturn = false) {
@@ -468,17 +477,14 @@ global $CFG, $LOADAJAX;
 
     try {
         // Get the parameters for the AJAX request.
-        $id = $params["id"] ?? false; // The ID of the element to update. Also used as the name of function if event is "none".
-        $reqstring = $params["reqstring"] ?? ""; // The request string. Used to gather all data in a container. (ie formname)
-        $data = $params["data"] ?? []; // The data to send with the request.
-        $display = $params["display"] ?? false; // The code to display the response.
-        $classes = $params["classes"] ?? "ajaxapi inactive"; // The classes to add to the AJAX element.
-        $datatype = $params["datatype"] ?? "json"; // The data type of the response.
-        $contenttype = $params["contenttype"] ?? "application/x-www-form-urlencoded; charset=UTF-8"; // The content type of the request.
-        $callback = $params["callback"] ?? ""; // The code to execute after the request is successful.
-        $async = $params["async"] ?? "true"; // The code to execute after the request is successful.
-
-
+        $id = $params["id"] ?? false;
+        $reqstring = $params["reqstring"] ?? "";
+        $data = $params["data"] ?? [];
+        $display = $params["display"] ?? false;
+        $classes = $params["classes"] ?? "ajaxapi inactive";
+        $datatype = $params["datatype"] ?? "json";
+        $contenttype = $params["contenttype"] ?? "application/x-www-form-urlencoded; charset=UTF-8";
+        $async = $params["async"] ?? "true";
         $method = $params["method"] ?? "POST";
         $event = $params["event"] ?? "click";
         $paramlist = $params["paramlist"] ?? "";
@@ -487,7 +493,7 @@ global $CFG, $LOADAJAX;
         $loading = $params["loading"] ?? "";
 
         // Add return false only if it is inside a function or event.
-        $falsereturn = $forcereturn && $forcereturn !== "function" ? "" : ($async !== "true" ? "return return_data;" : "return false;");
+        $returnfalse = $forcereturn && $forcereturn !== "function" ? "" : ($async !== "true" ? "return return_data;" : "return false;");
 
         // Should function be added to the myIntervals[] array?
         $intervalid = $params["intervalid"] ?? false;
@@ -600,7 +606,6 @@ global $CFG, $LOADAJAX;
                     url: `$url`,
                     type: `$method`,
                     async: $async,
-                    $callback
                     contentType: '$contenttype',
                     data: $data,
                     dataType: '$datatype',
@@ -626,7 +631,7 @@ global $CFG, $LOADAJAX;
         }
 
         // Add return false; at the end if needed.
-        $script .= $falsereturn;
+        $script .= $returnfalse;
 
         if (!$forcereturn) {
             if (!$id) {
@@ -2015,13 +2020,26 @@ function move_features($params) {
             throw new Exception("Cannot get_feature during move");
         }
 
-        $SQL = fetch_template("dbsql/features.sql", "update_feature_sort");
+        $SQL = fetch_template("dbsql/features.sql", "move_feature_sort");
         execute_db_sql($SQL, [
             "id" => $current["id"],
             "sort" => $i,
             "area" => $params["area"],
         ]);
         $i++;
+    }
+}
+
+function update_feature($version, $feature) {
+    try {
+        start_db_transaction();
+        execute_db_sql("UPDATE features SET version=||version|| WHERE feature=||feature||", [
+            "version" => $version, 
+            "feature" => $feature,
+        ]);
+        commit_db_transaction();
+    } catch (\Throwable $e) {
+        rollback_db_transaction($e->getMessage());
     }
 }
 
@@ -2110,5 +2128,31 @@ function is_javascript($str) {
     }
 
     return false;
+}
+
+/**
+ * Validates and formats a phone number to XXX-XXX-XXXX format.
+ *
+ * Removes non-numeric characters, validates the input contains only digits,
+ * and handles 11-digit numbers with a leading 1. Returns an empty string if invalid.
+ *
+ * @param string $phone The phone number to validate and format
+ * @return string Formatted phone number (XXX-XXX-XXXX format) or empty string if invalid
+ */
+function format_phone($phone) {
+    $phone = trim(str_replace("-", "", $phone));
+
+    // If more than numbers are left, it's not valid.
+    if (!is_numeric($phone)) {
+        return "";
+    }
+
+    if (strlen($phone) > 10) {
+        // Check and remove a leading 1.
+        if ($phone[0] == 1) {
+            $phone = substr($phone, 1);
+        }
+    }
+    return preg_replace('/\d{3}/', '$0-', trim(preg_replace("/\D/", "", $phone)), 2);
 }
 ?>

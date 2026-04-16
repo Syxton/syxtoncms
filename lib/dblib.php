@@ -268,8 +268,14 @@ function get_db_field($field, $from, $where, $vars = []) {
         if ($result->num_rows > 1) {
             trigger_error("get_db_field: $SQL returned $result->num_rows results. Expected 1", E_USER_NOTICE);
         }
-        $row = fetch_row($result);
-        return $row[$field];
+
+        // $field may be a simple field name or an alias like "CONCAT(fname, ' ', lname) as fullname".
+        // In the latter case, we need to extract the alias name to get the correct value from the row.
+        if (stripos($field, " as ") !== false) {
+            $field = trim(substr($field, strripos($field, " as ") + 4)); // Get the alias name after "as"
+        }
+
+        return fetch_row($result)[$field];
     }
     return false;
 }

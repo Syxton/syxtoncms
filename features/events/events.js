@@ -164,15 +164,19 @@ function valid_new_location() {
         $("#zip_error").html("");
     }
 
-    if ($("#opt_location_phone").val() == 0 || ($("#opt_location_phone").val() != 0 && ($('#location_phone_1').val().length > 0 || $('#location_phone_2').val().length > 0 || $('#location_phone_3').val().length > 0))) {
-        //Phone # validity test
-        if ($('#location_phone_1').val().length == 3 && $('#location_phone_2').val().length == 3 && $('#location_phone_3').val().length == 4) {
-            if (!(IsNumeric($('#location_phone_1').val()) && IsNumeric($('#location_phone_2').val()) && IsNumeric($('#location_phone_3').val()))) {
-                $("#location_phone_error").html("Not a valid phone #");
-                valid = false;
-            } else {
-                $("#location_phone_error").html("");
-            }
+    //Phone # validity test
+    if ($('#location_phone_1').val().length == 3 && $('#location_phone_2').val().length == 3 && $('#location_phone_3').val().length == 4) {
+        if (!(IsNumeric($('#location_phone_1').val()) && IsNumeric($('#location_phone_2').val()) && IsNumeric($('#location_phone_3').val()))) {
+            $("#location_phone_error").html("Not a valid phone #");
+            valid = false;
+        } else {
+            $("#location_phone_error").html("");
+        }
+    } else {
+        // Optional field, so only show error if something is entered but not valid. If all fields are blank, don't show error.
+        if ($('#location_phone_1').val().length == 0 && $('#location_phone_2').val().length == 0 && $('#location_phone_3').val().length == 0) {
+            $("#location_phone_error").html("");
+            return valid;
         } else {
             $("#location_phone_error").html("Phone # is not complete.");
             valid = false;

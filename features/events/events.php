@@ -94,6 +94,10 @@ function registration_manager() {
     echo fill_template("tmp/events.template", "regmanagersearchform", "events", ["searchcontainer" => get_searchcontainer()]);
 }
 
+function form_data_manager() {
+    echo data_entry_manager_form();
+}
+
 function template_manager() {
 global $CFG;
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
@@ -107,14 +111,23 @@ global $CFG;
         "data" => [
             "action" => "templatesearch",
             "pagenum" => "js||pagenum||js",
-            "searchwords" => "js||encodeURIComponent(searchwords)||js"],
+            "searchwords" => "js||encodeURIComponent(searchwords)||js",
+        ],
         "display" => "searchcontainer",
         "ondone" => "init_event_menu();",
         "loading" => "loading_overlay",
         "event" => "none",
     ]);
 
-    echo fill_template("tmp/events.template", "templatesearchform", "events", ["searchcontainer" => get_searchcontainer()]);
+    echo fill_template("tmp/events.template", "templatesearchform", "events", [
+        "searchcontainer" => get_searchcontainer(),
+        "data_manager" => link_maker([
+            "title" => "Form Data Manager",
+            "type" => "button",
+            "content" => icon("database") . " <span>Form Data Manager</span>",
+            "onclick" => "data_entry_manager();",
+        ]),
+    ]);
 }
 
 function application_manager() {
@@ -323,6 +336,8 @@ global $CFG;
                 </tr>';
         }
 
+        $contact = get_event_contact($event["contact"]);
+
         $return = '
             <div style="text-align:center;padding: 10px;">
                 <h1>' . $event["name"] . '</h1>' . $event["byline"] . '
@@ -360,9 +375,9 @@ global $CFG;
                 <br />
                 For more information about this event
                 <br />
-                contact ' . $event["contact"] . ' at ' . $event["email"] . '
+                contact ' . $contact["name"] . ' at ' . $contact["email"] . '
                 <br />
-                or call ' . $event["phone"] . '.
+                or call ' . $contact["phone"] . '.
             </div>';
 
         echo $return;
@@ -383,10 +398,10 @@ global $CFG, $USER;
     date_default_timezone_set("UTC");
     $admin_contacts = $admin_payable = "";
 
-     if (is_siteadmin($USER->userid)) { // Get special admin drop down lists for contacts and accounts payable
-          $admin_contacts = get_events_admin_contacts();
-          $admin_payable = get_events_admin_payable();
-     }
+    if (is_siteadmin($USER->userid)) { // Get special admin drop down lists for contacts and accounts payable
+        $admin_contacts = get_events_admin_contacts($eventid);
+        $admin_payable = get_events_admin_payable();
+    }
 
     $today = date('Y-m-d');
 
@@ -399,15 +414,22 @@ global $CFG, $USER;
 
         $event = get_event($eventid);
         $name = $event["name"];
-        $contact = $event['contact'];
-        $email = $event['email'];
+
+        $contactid = $event['contact'];
+        $contactinfo = get_contact($contactid);
+
+        $contact = $contactinfo['name'];
+        $email = $contactinfo['email'];
+        $phone = $contactinfo['phone'];
+        $phone = explode("-", $phone);
+
         $fee_min = $event['fee_min'];
         $fee_full = $event['fee_full'];
         $sale_fee = $event['sale_fee'];
         $payableto = $event['payableto'];
         $checksaddress = $event['checksaddress'];
         $paypal = $event['paypal'];
-        $phone = explode("-", $event['phone']);
+
         $global_display = $event['pageid'] == $CFG->SITEID ? 'none' : 'inline';
         $start_reg = isset($event['start_reg']) ? date('Y-m-d', $event['start_reg']) : $today;
         $stop_reg = isset($event['stop_reg']) ? date('Y-m-d', $event['stop_reg']) : $today;

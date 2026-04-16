@@ -33,11 +33,11 @@ get_features_by_page_area||
     AND area = ||area||
 ||get_features_by_page_area
 
-update_feature_sort||
+move_feature_sort||
     UPDATE pages_features
     SET sort = ||sort||, area = ||area||
     WHERE id = ||id||
-||update_feature_sort
+||move_feature_sort
 
 update_pages_features_by_featureid||
     UPDATE pages_features

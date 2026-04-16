@@ -10,8 +10,6 @@
 function events_upgrade() {
     global $CFG;
     try {
-        start_db_transaction();
-
         $version = get_db_field("version", "features", "feature='events'");
 
         //Events request upgrade ///////////////////////////////////////////////////
@@ -47,7 +45,7 @@ function events_upgrade() {
                 ) ENGINE = InnoDB ;";
 
             if (execute_db_sql($SQL) && execute_db_sql($SQL2)) { //if successful upgrade
-                execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
+                update_feature($thisversion, "events");
             }
         }
 
@@ -56,7 +54,7 @@ function events_upgrade() {
         if ($version < $thisversion) {
             $SQL = "ALTER TABLE events_templates ADD settings TEXT NULL";
             if (execute_db_sql($SQL)) { //if successful upgrade
-                execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
+                update_feature($thisversion, "events");
             }
         }
 
@@ -65,7 +63,7 @@ function events_upgrade() {
         if ($version < $thisversion) {
             $SQL = "ALTER TABLE `events_registrations` ADD  `verified` INT( 1 ) NOT NULL DEFAULT  '1', ADD INDEX (  `verified` )";
             if (execute_db_sql($SQL)) { //if successful upgrade
-                execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
+                update_feature($thisversion, "events");
             }
         }
 
@@ -73,9 +71,9 @@ function events_upgrade() {
         $thisversion = 20150625;
         if ($version < $thisversion) {
             $SQL = "ALTER TABLE `events_registrations` ADD  `manual` INT( 1 ) NOT NULL DEFAULT  '0', ADD INDEX (  `manual` )";
-                $SQL2 = "UPDATE `events_registrations` SET manual = 1 WHERE code = ''";
+                $SQL2 = "UPDATE `events_registrations` SET `manual` = 1 WHERE `code` = ''";
             if (execute_db_sql($SQL) && execute_db_sql($SQL2)) { //if successful upgrade
-                execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
+                update_feature($thisversion, "events");
             }
         }
 
@@ -90,7 +88,7 @@ function events_upgrade() {
                 add_role_ability('events','manageevents','Events','1','Manage Events','1','1');
                 add_role_ability('events','manageapplications','Events','2','Manage worker applications','1','1');
                 add_role_ability('events','manageeventtemplates','Events','2','Manage event templates','1','1');
-                execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
+                update_feature($thisversion, "events");
             }
         }
 
@@ -137,7 +135,7 @@ function events_upgrade() {
                 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;";
             if (execute_db_sql($SQL)) { //if successful upgrade
                 add_role_ability('events','staffapply','Events','1','Apply as staff','1','1','1');
-                execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
+                update_feature($thisversion, "events");
             }
         }
 
@@ -146,7 +144,7 @@ function events_upgrade() {
             $SQL = "ALTER TABLE `events_staff` ADD `pageid` INT( 11 ) NOT NULL DEFAULT '0', ADD INDEX ( `pageid` )";
             execute_db_sql($SQL);
             if (get_db_row("SELECT * FROM events WHERE pageid >= 0")) { //if successful upgrade
-                execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
+                update_feature($thisversion, "events");
             }
         }
 
@@ -197,6 +195,7 @@ function events_upgrade() {
                 KEY `priorwork` (`priorwork`)
                 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;";
             if (execute_db_sql($SQL)) { //if successful upgrade
+                start_db_transaction();
                 if ($result = get_db_result("SELECT * FROM events_staff")) {
                     while ($row = fetch_row($result)) {
                         $SQL = "INSERT INTO events_staff_archive
@@ -209,7 +208,7 @@ function events_upgrade() {
                         execute_db_sql($SQL);
                     }
                 }
-                execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
+                update_feature($thisversion, "events");
             }
         }
 
@@ -219,17 +218,20 @@ function events_upgrade() {
             execute_db_sql($SQL);
             $SQL = "ALTER TABLE `events` CHANGE `extrainfo` `byline` LONGTEXT NULL";
             execute_db_sql($SQL);
+
+            start_db_transaction();
             if (get_db_row("SELECT * FROM events WHERE description != 'xxxxxxxx'")) { //if successful upgrade
-                execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
+                update_feature($thisversion, "events");
             }
         }
 
         $thisversion = 20160516;
         if ($version < $thisversion) {
+            start_db_transaction();
             $SQL1 = "UPDATE `events_staff` SET agerange=1, parentalconsent='', parentalconsentsig='' WHERE agerange=0 AND (UNIX_TIMESTAMP() - dateofbirth) > 567648000";
             $SQL2 = "UPDATE `events_staff_archive` SET agerange=1, parentalconsent='', parentalconsentsig='' WHERE year=2016 AND agerange=0 AND (UNIX_TIMESTAMP() - dateofbirth) > 567648000";
             if (execute_db_sql($SQL1) && execute_db_sql($SQL2)) {
-                execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
+                update_feature($thisversion, "events");
             }
         }
 
@@ -262,223 +264,107 @@ function events_upgrade() {
             add_role_ability('events','managepromocodes','Events','2','Manage Promo Codes','1','1','0','0');
 
             if (execute_db_sql($SQL1) && execute_db_sql($SQL2)) {
-                execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
+                update_feature($thisversion, "events");
             }
         }
-        commit_db_transaction();
+
+        $thisversion = 20260417;
+        if ($version < $thisversion) {
+            // Create separate contacts table and move contact info there for better security and to allow multiple contacts per event.
+            $SQL1 = "CREATE TABLE IF NOT EXISTS `events_contacts` (
+                `contactid` int(11) NOT NULL AUTO_INCREMENT,
+                `name` varchar(200) NOT NULL,
+                `email` varchar(200) NOT NULL,
+                `phone` varchar(20) NOT NULL,
+                `pageid` INT NOT NULL ,
+                PRIMARY KEY `contactid` (`contactid`),
+                KEY `pageid` (`pageid`)
+                ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;";
+
+            execute_db_sql($SQL1);
+
+            start_db_transaction("Moving contact info to new table");
+
+            // Move contact info to new table and link to events.
+            $SQL2 = "SELECT t1.eventid, t1.contact, t1.email, t1.phone, t1.pageid
+                FROM events t1
+                INNER JOIN (
+                    SELECT MAX(eventid) as latestid
+                    FROM events
+                    GROUP BY contact
+                ) t2 ON t1.eventid = t2.latestid;";
+            if ($result = get_db_result($SQL2)) {
+                while ($row = fetch_row($result)) {
+                    $SQL3 = fetch_template("dbsql/events.sql", "add_contact", "events");
+    
+                    if ($contactid = execute_db_sql($SQL3, [
+                        "pageid" => $row["pageid"],
+                        "name" => $row["contact"],
+                        "email" => $row["email"],
+                        "phone" => $row["phone"],
+                    ])) {
+                        execute_db_sql("UPDATE events SET contact = '$contactid' WHERE contact='" . $row["contact"] . "'");
+                    }
+                }
+            }
+
+            // Check and make sure that all events have a contact id that exists in the contacts table. If not, set to 0.
+            $SQL4 = "UPDATE events t1 LEFT JOIN events_contacts t2 ON t1.contact = t2.contactid SET t1.contact = 0 WHERE t2.contactid IS NULL";
+            execute_db_sql($SQL4);
+
+            // Drop old contact fields and convert contact field to int.
+            $SQL5 = "ALTER TABLE `events` DROP `email`, DROP `phone`, MODIFY `contact` int(11) DEFAULT NULL";
+            execute_db_sql($SQL5);
+
+            // Add db manage abilities. (locations, contacts)
+            add_event_abilities();
+
+            update_feature($thisversion, "events");
+        }
+
+        commit_db_transaction("Events updated to version " . $thisversion);
     } catch (\Throwable $e) {
         rollback_db_transaction($e->getMessage());
-        $error = $e->getMessage();
     }
 }
 
 function events_install() {
-    $thisversion = 20151223;
+    $thisversion = 20260417;
     if (!get_db_row("SELECT * FROM features WHERE feature='events'")) {
-      $SQL = "CREATE TABLE IF NOT EXISTS `events` (
-            `eventid` int(11) NOT NULL AUTO_INCREMENT,
-            `pageid` int(11) DEFAULT NULL,
-            `template_id` int(11) DEFAULT NULL,
-            `name` varchar(50) DEFAULT NULL,
-            `extrainfo` longtext,
-            `category` int(11) DEFAULT NULL,
-            `contact` varchar(50) DEFAULT NULL,
-            `email` varchar(100) DEFAULT NULL,
-            `phone` varchar(15) DEFAULT NULL,
-            `location` varchar(50) DEFAULT NULL,
-            `allowinpage` int(11) DEFAULT '0',
-            `workers` tinyint(1) DEFAULT '0',
-            `start_reg` int(11) DEFAULT '0',
-            `stop_reg` int(11) DEFAULT '0',
-            `max_users` int(11) DEFAULT '0',
-            `hard_limits` longtext,
-            `soft_limits` longtext,
-            `allday` tinyint(1) DEFAULT '0',
-            `event_begin_date` int(11) DEFAULT '0',
-            `event_begin_time` varchar(5) DEFAULT NULL,
-            `event_end_date` int(11) DEFAULT '0',
-            `event_end_time` varchar(5) DEFAULT NULL,
-            `caleventid` varchar(30) DEFAULT '0',
-            `siteviewable` tinyint(4) DEFAULT '0',
-            `paypal` varchar(50) DEFAULT '0',
-            `fee_min` int(11) DEFAULT '0',
-            `fee_full` int(11) DEFAULT '0',
-            `sale_fee` int(11) DEFAULT '0',
-            `sale_end` int(11) DEFAULT NULL,
-            `payableto` varchar(100) DEFAULT NULL,
-            `checksaddress` text,
-            `confirmed` tinyint(1) DEFAULT '0',
-            PRIMARY KEY (`eventid`),
-            KEYKEY `workers` (`workers`)
-            ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;";
+        $SQL = fetch_template("dbsql/events.sql", "install", "events");
 
-          $SQL2 = "CREATE TABLE IF NOT EXISTS `events_locations` (
-            `id` int(11) NOT NULL AUTO_INCREMENT,
-            `location` varchar(200) DEFAULT NULL,
-            `address_1` varchar(200) DEFAULT NULL,
-            `address_2` varchar(200) DEFAULT NULL,
-            `zip` varchar(20) DEFAULT NULL,
-            `phone` varchar(20) DEFAULT NULL,
-            `userid` text,
-            `shared` int(1) NOT NULL DEFAULT '0',
-            PRIMARY KEY (`id`)
-          ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;";
+        if (execute_db_sql($SQL)) { // if successful install.
+            try {
+                // Add all current event abilities.
+                add_event_abilities();
+                update_feature($thisversion, "events");  
 
-          $SQL3 = "CREATE TABLE IF NOT EXISTS `events_registrations` (
-            `regid` int(11) NOT NULL AUTO_INCREMENT,
-            `eventid` int(11) DEFAULT NULL,
-            `date` int(11) DEFAULT NULL,
-            `queue` tinyint(1) DEFAULT '0',
-            `email` varchar(100) DEFAULT NULL,
-            `code` varchar(50) DEFAULT NULL,
-            PRIMARY KEY (`regid`),
-            KEY `eventid` (`eventid`),
-            KEY `code` (`code`)
-          ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;";
-
-          $SQL4 = "CREATE TABLE IF NOT EXISTS `events_registrations_values` (
-            `entryid` int(11) NOT NULL AUTO_INCREMENT,
-            `regid` int(11) DEFAULT NULL,
-            `elementid` int(11) DEFAULT NULL,
-            `value` longtext,
-            `eventid` int(11) DEFAULT NULL,
-            `elementname` varchar(50) DEFAULT NULL,
-            PRIMARY KEY (`entryid`),
-            KEY `regid` (`regid`),
-            KEY `elementid` (`elementid`),
-            KEY `eventid` (`eventid`)
-          ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;";
-
-          $SQL5 = "CREATE TABLE IF NOT EXISTS `events_templates` (
-            `template_id` int(11) NOT NULL AUTO_INCREMENT,
-            `name` varchar(50) DEFAULT NULL,
-            `folder` varchar(50) DEFAULT NULL,
-            `formlist` longtext,
-            `intro` longtext,
-            `registrant_name` varchar(100) NOT NULL DEFAULT '',
-            `orderbyfield` varchar(200) NOT NULL,
-            `activated` tinyint(1) NOT NULL DEFAULT '1',
-            PRIMARY KEY `template_id` (`template_id`),
-            KEY `activated` (`activated`),
-          ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;";
-
-          $SQL6 = "CREATE TABLE IF NOT EXISTS `events_templates_forms` (
-            `elementid` int(11) NOT NULL AUTO_INCREMENT,
-            `template_id` int(11) DEFAULT NULL,
-            `type` varchar(50) DEFAULT NULL,
-            `display` varchar(100) DEFAULT NULL,
-            `hint` longtext,
-            `optional` tinyint(1) DEFAULT '0',
-            `list` longtext,
-            `sort` int(11) DEFAULT NULL,
-            `length` int(11) DEFAULT '0',
-            `allowduplicates` int(11) DEFAULT '1',
-            `nameforemail` tinyint(4) DEFAULT '0',
-            PRIMARY KEY (`elementid`),
-            KEY `template_id` (`template_id`)
-          ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;";
-
-          $SQL7 = "CREATE TABLE IF NOT EXISTS `events_staff` (
-            `staffid` int(11) NOT NULL AUTO_INCREMENT,
-            `pageid` int(11) NOT NULL DEFAULT '0',
-            `userid` int(11) NOT NULL,
-            `name` varchar(200) NOT NULL,
-            `dateofbirth` int(11) NOT NULL,
-            `phone` varchar(20) NOT NULL,
-            `address` varchar(200) NOT NULL,
-            `agerange` varchar(2) NOT NULL,
-            `cocmember` varchar(2) NOT NULL,
-            `congregation` varchar(200) NOT NULL,
-            `priorwork` varchar(2) NOT NULL,
-            `q1_1` varchar(2) NOT NULL,
-            `q1_2` varchar(2) NOT NULL,
-            `q1_3` varchar(2) NOT NULL,
-            `q2_1` varchar(2) NOT NULL,
-            `q2_2` varchar(2) NOT NULL,
-            `q2_3` varchar(200) NOT NULL,
-            `parentalconsent` varchar(200) NOT NULL,
-            `parentalconsentsig` varchar(10) NOT NULL,
-            `workerconsent` varchar(200) NOT NULL,
-            `workerconsentsig` varchar(10) NOT NULL,
-            `workerconsentdate` int(11) NOT NULL,
-            `ref1name` varchar(200) NOT NULL,
-            `ref1relationship` varchar(200) NOT NULL,
-            `ref1phone` varchar(20) NOT NULL,
-            `ref2name` varchar(200) NOT NULL,
-            `ref2relationship` varchar(200) NOT NULL,
-            `ref2phone` varchar(20) NOT NULL,
-            `ref3name` varchar(200) NOT NULL,
-            `ref3relationship` varchar(200) NOT NULL,
-            `ref3phone` varchar(20) NOT NULL,
-            `bgcheckpass` varchar(2) NOT NULL,
-            `bgcheckpassdate` int(11) NOT NULL,
-            PRIMARY KEY `staffid` (`staffid`),
-            KEY `userid` (`userid`),
-            KEY `dateofbirth` (`dateofbirth`),
-            KEY `priorwork` (`priorwork`),
-          ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;";
-
-          $SQL8 = "CREATE TABLE IF NOT EXISTS `events_staff_archive` (
-            `archiveid` int(11) NOT NULL AUTO_INCREMENT,
-            `staffid` int(11) NOT NULL,
-            `userid` int(11) NOT NULL,
-            `pageid` int(11) NOT NULL,
-            `year` int(11) NOT NULL,
-            `name` varchar(200) NOT NULL,
-            `dateofbirth` int(11) NOT NULL,
-            `phone` varchar(20) NOT NULL,
-            `address` varchar(200) NOT NULL,
-            `agerange` varchar(2) NOT NULL,
-            `cocmember` varchar(2) NOT NULL,
-            `congregation` varchar(200) NOT NULL,
-            `priorwork` varchar(2) NOT NULL,
-            `q1_1` varchar(2) NOT NULL,
-            `q1_2` varchar(2) NOT NULL,
-            `q1_3` varchar(2) NOT NULL,
-            `q2_1` varchar(2) NOT NULL,
-            `q2_2` varchar(2) NOT NULL,
-            `q2_3` varchar(200) NOT NULL,
-            `parentalconsent` varchar(200) NOT NULL,
-            `parentalconsentsig` varchar(10) NOT NULL,
-            `workerconsent` varchar(200) NOT NULL,
-            `workerconsentsig` varchar(10) NOT NULL,
-            `workerconsentdate` int(11) NOT NULL,
-            `ref1name` varchar(200) NOT NULL,
-            `ref1relationship` varchar(200) NOT NULL,
-            `ref1phone` varchar(20) NOT NULL,
-            `ref2name` varchar(200) NOT NULL,
-            `ref2relationship` varchar(200) NOT NULL,
-            `ref2phone` varchar(20) NOT NULL,
-            `ref3name` varchar(200) NOT NULL,
-            `ref3relationship` varchar(200) NOT NULL,
-            `ref3phone` varchar(20) NOT NULL,
-            `bgcheckpass` varchar(2) NOT NULL,
-            `bgcheckpassdate` int(11) NOT NULL,
-            PRIMARY KEY `archiveid` (`archiveid`),
-            KEY `staffid` (`staffid`),
-            KEY `pageid` (`pageid`),
-            KEY `userid` (`userid`),
-            KEY `dateofbirth` (`dateofbirth`),
-            KEY `priorwork` (`priorwork`)
-          ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;";
-
-        if (execute_db_sql($SQL) && execute_db_sql($SQL2) && execute_db_sql($SQL3) &&
-            execute_db_sql($SQL4) && execute_db_sql($SQL5) && execute_db_sql($SQL6) &&
-            execute_db_sql($SQL7) && execute_db_sql($SQL8)) { //if successful upgrade
-            execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='events'");
-
-            //CREATE ROLE ABILITIES
-            add_role_ability('events','viewevents','Events','1','View Events','1','1','1','1');
-            add_role_ability('events','addevents','Events','2','Create new events','1','0','0','0');
-            add_role_ability('events','editevents','Events','2','Edit events','1','1','0','0');
-            add_role_ability('events','editopenevents','Events','3','Edit completed events','1','0','0','0');
-            add_role_ability('events','signupforevents','Events','1','Signup for events','1','1','1','1');
-            add_role_ability('events','confirmevents','Events','3','Allow site viewability and add to calendar.','1','0','0','0');
-            add_role_ability('events','exportcsv','Events','2','Export registration list to CSV','1','1','0','0');
-            add_role_ability('events','manageevents','Events','1','Manage Events','1','1');
-            add_role_ability('events','manageapplications','Events','2','Manage worker applications','1','1');
-            add_role_ability('events','manageeventtemplates','Events','2','Manage event templates','1','1');
+            } catch (\Throwable $e) {
+                rollback_db_transaction($e->getMessage());
+            }
         }
     }
+}
+
+function add_event_abilities() {
+    // section, ability name, section display, power, ability display, creator, editor, guest, visitor
+    add_role_ability('events','viewevents','Events','1','View Events','1','1','1','1');
+    add_role_ability('events','addevents','Events','2','Create new events','1','0','0','0');
+    add_role_ability('events','editevents','Events','2','Edit events','1','1','0','0');
+    add_role_ability('events','editopenevents','Events','3','Edit completed events','1','0','0','0');
+    add_role_ability('events','signupforevents','Events','1','Signup for events','1','1','1','1');
+    add_role_ability('events','confirmevents','Events','3','Allow site viewability and add to calendar.','1','0','0','0');
+    add_role_ability('events','exportcsv','Events','2','Export registration list to CSV','1','1','0','0');
+    
+    add_role_ability('events','manageevents','Events','1','Manage Events','1','1');
+    add_role_ability('events','manageapplications','Events','2','Manage worker applications','1','1');
+    add_role_ability('events','manageeventtemplates','Events','2','Manage event templates','1','1');
+    
+    add_role_ability('events','staffapply','Events','1','Apply as staff','1','1','1');
+
+    add_role_ability('events','managepromocodes','Events','2','Manage Promo Codes','1','1','0','0');
+    
+    add_role_ability('events','managelocations','Events','2','Manage Locations','1','1','0','0');
+    add_role_ability('events','managecontacts','Events','2','Manage Contacts','1','1','0','0');
 }
 ?>

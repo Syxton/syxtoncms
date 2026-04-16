@@ -15,6 +15,14 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
 }
 define("VALIDATELIB", true);
 
+/**
+ * Creates a validation script from a template with the specified form name and validation code.
+ *
+ * @param string $formname The name of the form to validate
+ * @param string $code The validation code/logic to include
+ * @param bool $ajax Whether to return raw code (true) or wrapped in a deferred script tag (false). Default: false
+ * @return string The generated validation script
+ */
 function create_validation_script($formname, $code, $ajax=false) {
 global $CFG;
     $params = [

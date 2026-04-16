@@ -792,7 +792,7 @@ function invite_user() {
             if ($invite_received || execute_db_sql($SQL, $params)) {
                 $return = "Invite Sent";
             } else {
-                throw new \Throwable("Failed to send invite.");
+                throw new \Exception("Failed to send invite.");
             }
         }
     } catch (\Throwable $e) {

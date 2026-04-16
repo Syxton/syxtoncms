@@ -219,7 +219,6 @@ function select_campaign_forms($featureid, $pageid) {
 
     ajaxapi([
         "id" => "new_campaign_form",
-        "paramlist" => "donationid",
         "url" => "/features/donate/donate_ajax.php",
         "data" => [
             "action" => "new_campaign_form",
@@ -232,7 +231,6 @@ function select_campaign_forms($featureid, $pageid) {
 
     ajaxapi([
         "id" => "join_campaign_form",
-        "paramlist" => "donationid",
         "url" => "/features/donate/donate_ajax.php",
         "data" => [
             "action" => "join_campaign_form",

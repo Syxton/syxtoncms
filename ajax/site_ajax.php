@@ -345,7 +345,7 @@ function allow_page_request() {
     $return = $error = "";
     try {
         if (!$requestid) {
-            throw new \Throwable("Invalid request ID given.");
+            throw new \Exception("Invalid request ID given.");
         }
 
         if ($approve) { // confirmed request
@@ -355,7 +355,7 @@ function allow_page_request() {
         }
 
         if (!execute_db_sql($SQL, ["assignmentid" => $requestid])) {
-            throw new \Throwable("Failed to approve request.");
+            throw new \Exception("Failed to approve request.");
         }
     } catch (\Throwable $e) {
         $error = $e->getMessage();

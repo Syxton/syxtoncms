@@ -53,7 +53,7 @@ function register() {
         $fromuser = (object)["fname" => $CFG->sitename, "lname" => "", "email" => $CFG->siteemail];
 
         //Format phone numbers
-        $Phone = preg_replace('/\d{3}/', '$0-', trim(preg_replace("/\D/", "", clean_myvar_opt("Phone", "string", ""))), 2);
+        $Phone = format_phone(clean_myvar_opt("Phone", "string", ""));
 
         // Go through entire template form list
         $formlist = explode(";", $template['formlist']);

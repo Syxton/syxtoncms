@@ -71,15 +71,10 @@ global $CFG, $MYVARS, $USER, $error;
         $fromuser = (object)["fname" => $CFG->sitename, "lname" => "", "email" => $CFG->siteemail];
 
         // Format phone numbers
-        $Parent_Phone1 = clean_myvar_opt("Parent_Phone1", "string", "");
-        $Parent_Phone2 = clean_myvar_opt("Parent_Phone2", "string", "");
-        $Parent_Phone3 = clean_myvar_opt("Parent_Phone3", "string", "");
-        $Parent_Phone4 = clean_myvar_opt("Parent_Phone4", "string", "");
-
-        $Parent_Phone1 = preg_replace('/\d{3}/', '$0-', trim(preg_replace("/\D/", "", $Parent_Phone1)), 2);
-        $Parent_Phone2 = preg_replace('/\d{3}/', '$0-', trim(preg_replace("/\D/", "", $Parent_Phone2)), 2);
-        $Parent_Phone3 = preg_replace('/\d{3}/', '$0-', trim(preg_replace("/\D/", "", $Parent_Phone3)), 2);
-        $Parent_Phone4 = preg_replace('/\d{3}/', '$0-', trim(preg_replace("/\D/", "", $Parent_Phone4)), 2);
+        $Parent_Phone1 = format_phone(clean_myvar_opt("Parent_Phone1", "string", ""));
+        $Parent_Phone2 = format_phone(clean_myvar_opt("Parent_Phone2", "string", ""));
+        $Parent_Phone3 = format_phone(clean_myvar_opt("Parent_Phone3", "string", ""));
+        $Parent_Phone4 = format_phone(clean_myvar_opt("Parent_Phone4", "string", ""));
 
         // Go through entire template form list
         $formlist = explode(";", $template['formlist']);

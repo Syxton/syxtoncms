@@ -133,19 +133,22 @@ global $conn;
 	return false;
 }
 
-function start_db_transaction() {
+function start_db_transaction($message = false) {
 global $conn;
+	if (!empty($message)) { error_log("BEGIN TRANSACTION: " . $message); }
 	mysqli_begin_transaction($conn);
 }
 
-function commit_db_transaction() {
+function commit_db_transaction($message = false) {
 global $conn;
+	if (empty($message)) { error_log("COMMIT MADE"); }
+	if (!empty($message)) { error_log("COMMIT MADE: " . $message); }
 	mysqli_commit($conn);
 }
 
 function rollback_db_transaction($message = false) {
 global $conn;
-    if (!empty($message)) { error_log("ROLLBACK " . $message); }
+    if (!empty($message)) { error_log("ROLLBACK: " . $message); }
 	mysqli_rollback($conn);
 }
 

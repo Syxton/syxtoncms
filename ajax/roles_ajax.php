@@ -554,7 +554,7 @@ function refresh_edit_roles() {
     $return = $error = "";
     try {
         if (!$pageid || !$roleid) {
-            throw new \Throwable(getlang("generic_error"));
+            throw new \Exception(getlang("generic_error"));
         }
 
         $return = print_abilities($pageid, "per_role", $roleid, false, $feature, $featureid);
@@ -576,7 +576,7 @@ function refresh_user_abilities() {
     $return = $error = "";
     try {
         if (!$pageid || !$userid) {
-            throw new \Throwable(getlang("generic_error"));
+            throw new \Exception(getlang("generic_error"));
         }
 
         $return = print_abilities($pageid, "per_user", false, $userid, $feature, $featureid);
@@ -597,7 +597,7 @@ function refresh_group_abilities() {
     $return = $error = "";
     try {
         if (!$pageid || !$groupid) {
-            throw new \Throwable(getlang("generic_error"));
+            throw new \Exception(getlang("generic_error"));
         }
         $return =
             '<form id="per_group_roles_form">' .
@@ -715,6 +715,7 @@ global $CFG, $MYVARS;
 }
 
 function save_user_ability_changes() {
+    $return = $error = "";
     try {
         start_db_transaction();
         $abilities = explode("**", clean_myvar_opt("per_user_rightslist", "string", ""));

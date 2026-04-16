@@ -213,7 +213,7 @@ eventsearchrows||
             </td>
         }}canexport||
         <td style="text-align:center;">
-            <a href="mailto: ||event[email]||" />||event[contact]||</a>
+            <a href="mailto: ||contact[email]||" />||contact[name]||</a>
         </td>
     </tr>
 ||eventsearchrows
@@ -244,7 +244,7 @@ regsearchrows||
             ||actions||
         </td>
         <td style="max-width: 200px">
-            ||reg[value]||
+            ||name||
         </td>
         <td style="text-align:center;">
             ||regdate||
@@ -257,12 +257,122 @@ regsearchrows||
     </tr>
 ||regsearchrows
 
+dataentrymanager||
+    <div id="datamanagercontainer">
+        <div style="text-align:center">
+            <h3>Manage Data</h3>
+        </div>
+        <div style="display: flex;flex-direction: column;grid-gap: 10px;">
+            ||*location_link||
+            ||*contact_link||
+        </div>
+    </div>
+||dataentrymanager
+
+locationmanagertemplate||
+    <div id="locationmanagercontainer">
+        <div>
+            ||back||
+        </div>
+        <div style="text-align:center">
+            <h3>Select a Location to Manage</h3>
+        </div>
+        <br /><br />
+        <center>||locationselector||</center>
+        <div id="locationeditorcontainer">
+        </div>
+    </div>
+||locationmanagertemplate
+
+locationeditortemplate||
+    <br />
+    <form name="locationeditorform" id="locationeditorform" onsubmit="edit_location();">
+        <div class="flex_field_wrapper">
+            <div class="flex_field">
+                <span>Name:</span>
+                <input type="text" id="location" name="location" value="||echo stripslashes(variable["location"]);::variable||" />
+            </div>
+            <div class="flex_field">
+                <span>Address1:</span>
+                <input type="text" id="add1" name="add1" value="||echo stripslashes(variable["address_1"]);::variable||" />
+            </div>
+            <div class="flex_field">
+                <span>Address2:</span>
+                <input type="text" id="add2" name="add2" value="||echo stripslashes(variable["address_2"]);::variable||" />
+            </div>
+            <div class="flex_field">
+                <span>Zip:</span>
+                <input type="text" id="zip" name="zip" value="||variable["zip"]||" maxlength="5" />
+            </div>
+            <div class="flex_field">
+                <span>Phone:</span>
+                <input type="text" id="phone" name="phone" value="||variable["phone"]||" maxlength="14" />
+            </div>
+            <div class="flex_field">
+                <span>Shared:</span>
+                <input type="checkbox" id="shared" name="shared" ||shared{{ checked }}shared|| />
+            </div>
+            <br />
+            <div class="flex_field">
+                ||save||
+                <div class="centered">
+                    Used in ||usage|| events.
+                </div>
+                ||*delete||
+            </div>
+        </div>
+    </form>
+||locationeditortemplate
+
+contactmanagertemplate||
+    <div id="contactmanagercontainer">
+        <div>
+            ||back||
+        </div>
+        <div style="text-align:center">
+            <h3>Select a Contact to Manage</h3>
+        </div>
+        <br /><br />
+        <center>||contactsselector||</center>
+        <div id="contacteditorcontainer">
+        </div>
+    </div>
+||contactmanagertemplate
+
+contacteditortemplate||
+    <br />
+    <form name="contacteditorform" id="contacteditorform" onsubmit="edit_contact();">
+        <div class="flex_field_wrapper">
+            <div class="flex_field">
+                <span>Name:</span>
+                <input type="text" id="name" name="name" value="||echo stripslashes(variable["name"]);::variable||" />
+            </div>
+            <div class="flex_field">
+                <span>Email:</span>
+                <input type="text" id="email" name="email" value="||echo stripslashes(variable["email"]);::variable||" />
+            </div>
+            <div class="flex_field">
+                <span>Phone:</span>
+                <input type="text" id="phone" name="phone" value="||variable["phone"]||" maxlength="14" />
+            </div>
+            <br />
+            <div class="flex_field">
+                ||save||
+                <div class="centered">
+                    Used in ||usage|| events.
+                </div>
+                ||*delete||
+            </div>
+        </div>
+    </form>
+||contacteditortemplate
+
 templatesearchform||
-    <div class="dontprint">
+    <div id="event_template_div" class="dontprint">
         <div style="text-align:center">
             <h3>Search for templates by their name.</h3>
-            <br />
         </div>
+        <br />
         <form onclick="perform_templatesearch();">
             <div style="text-align:center;">
                 <input type="text" id="searchbox" name="searchbox" />
@@ -270,8 +380,8 @@ templatesearchform||
             </div>
         </form>
         <br />
+        ||searchcontainer||
     </div>
-    ||searchcontainer||
 ||templatesearchform
 
 templatesearchresults||
@@ -770,3 +880,55 @@ payment_page||
     </div>
     <div id="payarea" style="padding:15px;"></div>
 ||payment_page
+
+admin_contacts_dropdown||
+    <table style="width:100%;margin-top:10px;">
+        <tr>
+            <td class="field_title" style="width:115px;">
+                Contacts List:
+            </td>
+            <td class="field_input">
+                ||contact_select||
+            </td>
+        </tr><tr><td></td><td class="field_input"><span id="contact_error" class="error_text"></span></td></tr>
+    </table>
+||admin_contacts_dropdown
+
+admin_contacts_script||
+    function fill_admin_contacts(values) {
+        if (!values) {
+            $("#contact").val("");
+            $("#email").val("");
+            $("#phone_1").val("");
+            $("#phone_2").val("");
+            $("#phone_3").val("");
+            lock_contact_fields(false);
+            return;
+        } else {
+            lock_contact_fields(true);
+        }
+
+        values = values.split(":");
+        document.getElementById("contact").value = values[1];
+        document.getElementById("email").value = values[2];
+        var phone = values[3].split("-");
+        document.getElementById("phone_1").value = phone[0];
+        document.getElementById("phone_2").value = phone[1];
+        document.getElementById("phone_3").value = phone[2];
+    }
+
+    function lock_contact_fields(lock) {
+        $("#contact").attr("readonly", lock ? "readonly" : false);
+        $("#email").attr("readonly", lock ? "readonly" : false);
+        $("#phone_1").attr("readonly", lock ? "readonly" : false);
+        $("#phone_2").attr("readonly", lock ? "readonly" : false);
+        $("#phone_3").attr("readonly", lock ? "readonly" : false);
+    }
+
+    // if contactid is selected on page load, fill in the fields and lock them
+    $(document).ready(function() {
+        if ($("#contactid").val()) {
+            lock_contact_fields(true);
+        }
+    });
+||admin_contacts_script

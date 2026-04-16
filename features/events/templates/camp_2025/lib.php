@@ -645,7 +645,7 @@ function cleanup_registration_array($regarray) {
             case "parent_phone3":
             case "parent_phone4":
                 $value = clean_param_opt($regarray, $key, "string", "");
-                $regarray[$key] = preg_replace('/\d{3}/', '$0-', trim(preg_replace("/\D/", "", $value)), 2);
+                $regarray[$key] = format_phone($value);
                 break;
             default:
                 $value = clean_param_opt($regarray, $key, "string", "");

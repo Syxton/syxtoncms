@@ -687,9 +687,10 @@ global $CFG, $MYVARS;
 
     $MYVARS->GET["event_name"] = $request["event_name"];
     $MYVARS->GET["byline"] = "w/ " . $request["contact_name"];
-    $MYVARS->GET["contact"] = $request["contact_name"];
-    $MYVARS->GET["email"] = $request["contact_email"];
-    $MYVARS->GET["phone"] = $request["contact_phone"];
+
+    // If no contact is found, then it will create a new contact and return that id.
+    $MYVARS->GET["contactid"] = get_contact_id($request["contact_name"], $request["contact_email"], $request["contact_phone"]);
+
     $MYVARS->GET["location"] = $location;
 
     $MYVARS->GET["category"] = "1"; //Placed in general category...can be changed later
@@ -738,8 +739,8 @@ global $CFG;
 
     if ($regid) { //Print form for 1 registration
         $printarea .= printable_registration($regid, $eventid, $template_id);
-    } else { //Batch print all registrations
-        if ($registrations = get_db_result(get_registration_sort_sql($eventid, $online_only))) {
+    } else { // Batch print all registrations
+        if ($registrations = get_db_result(get_all_registrations_of_event($eventid, $online_only))) {
             while ($registration = fetch_row($registrations)) {
                 $printarea .= '<div class="pagestart print">';
                 $printarea .= printable_registration($registration["regid"], $eventid, $template_id);
@@ -758,44 +759,6 @@ global $CFG;
             ]) . $printarea . '
         </form>';
     ajax_return($returnme);
-}
-
-function get_registration_sort_sql($eventid, $online_only=false) {
-    if ($online_only) { $online_only = "AND e.manual = 0"; }
-    $sortSQL = "SELECT e.*"; $orderby = "";
-
-    $SQL = fetch_template("dbsql/events.sql", "get_events_with_same_template", "events");
-    $sort_info = get_db_row($SQL, ["eventid" => $eventid]);
-
-    if ($sort_info["folder"] == "none") { //form template
-        $sort_elements=explode(",", $sort_info["orderbyfield"]);$i=0;
-        while (isset($sort_elements[$i])) {
-            $sortSQL .= ",(SELECT value FROM events_registrations_values
-                            WHERE elementid='$sort_elements[$i]' AND regid=v.regid) as val$i";
-            $orderby .= $orderby == "" ? "val$i" : ",val$i";
-            $i++;
-        }
-        $sortSQL .= " FROM events_registrations as e
-                    JOIN events_registrations_values as v ON (e.regid=v.regid)
-                    WHERE e.eventid='$eventid' $online_only
-                    GROUP BY regid
-                    ORDER BY val0 LIKE '%Reserved%' DESC, $orderby";
-    } else { //custom template
-        $sort_elements=explode(",", $sort_info["orderbyfield"]);$i=0;
-        while (isset($sort_elements[$i])) {
-            $sortSQL .= ",(SELECT value FROM events_registrations_values
-                            WHERE elementname='$sort_elements[$i]' AND regid=v.regid) as val$i";
-            $orderby .= $orderby == "" ? "val$i" : ",val$i";
-            $i++;
-        }
-        $sortSQL .= " FROM events_registrations as e
-                    JOIN events_registrations_values as v ON (e.regid=v.regid)
-                    WHERE e.eventid='$eventid' $online_only
-                    GROUP BY regid
-                    ORDER BY val0 LIKE '%Reserved%' DESC, $orderby";
-    }
-
-return $sortSQL;
 }
 
 function printable_registration($regid, $eventid, $template_id) {
@@ -1036,7 +999,7 @@ function get_registration_info() {
         );
 
         // If similar events exist, display the copy registration form.
-        if (!$events) {
+        if ($events) {
             ajaxapi([
                 "id" => "copy_registration",
                 "url" => "/features/events/events_ajax.php",
@@ -1279,7 +1242,7 @@ global $CFG, $MYVARS, $USER;
     $display = $selected ? "" : "display:none;";
 
     $registrationlist = "";
-    if ($registrants = get_db_result(get_registration_sort_sql($eventid))) {
+    if ($registrants = get_db_result(get_all_registrations_of_event($eventid))) {
         $i = 0;
         $values = (object) [];
         while ($registrant = fetch_row($registrants)) {
@@ -1433,7 +1396,7 @@ global $CFG, $USER;
         } else {
             while (isset($words[$i])) {
                 $searchparams["words$i"] = "%" . $words[$i] . "%";
-                $searchpart = "(LOWER(elementname) LIKE '%name%' AND value LIKE ||words$i||)";
+                $searchpart = "(LOWER(v.elementname) LIKE '%name%' AND value LIKE ||words$i||)";
                 $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
                 $i++;
             }
@@ -1445,6 +1408,9 @@ global $CFG, $USER;
             ];
             $SQL = fill_template("dbsql/events.sql", "registration_search", "events", $sqlparams, true);
         }
+
+        //echo $SQL;
+        //print_r($searchparams);
 
         // Get the total for all pages returned.
         $pageparams["total"] = get_db_count($SQL, $searchparams);
@@ -1495,8 +1461,10 @@ global $CFG, $USER;
                         }
                     }
 
+                    $contact = get_contact($event["contact"]);
                     $rowparams = [
                         "event" => $event,
+                        "contact" => $contact,
                         "begindate" => date("m/d/Y", $event["event_begin_date"]),
                         "canexport" => $canexport,
                         "regcount" => $regcount,
@@ -1517,6 +1485,7 @@ global $CFG, $USER;
                 while ($reg = fetch_row($results)) {
                     $rowparams = [
                         "reg" => $reg,
+                        "name" => get_registrant_name($reg["regid"]),
                         "regdate" => date("m/d/Y", $reg["date"]),
                         "actions" => get_reg_actions($reg),
                     ];
@@ -1529,8 +1498,6 @@ global $CFG, $USER;
                 ];
                 $return = fill_template("tmp/events.template", "regsearchresults", "events", $params);
             }
-
-
         } else {
             $return = fill_template("tmp/pagelib.template", "centered_error", false, [
                 "title" => getlang("no_matches"),
@@ -2051,23 +2018,62 @@ function get_limit_form() {
     ajax_return($return);
 }
 
+function save_location_changes() {
+    global $USER;
+
+    $locationid = clean_myvar_req("locationid", "int");
+    $location = clean_myvar_req("location", "string");
+    $add1 = clean_myvar_req("add1", "string");
+    $add2 = clean_myvar_req("add2", "string");
+    $zip = clean_myvar_req("zip", "string");
+    $phone = clean_myvar_opt("phone", "string", "");
+    $shared = clean_myvar_opt("shared", "int", 0);
+    $phone = str_replace("-", "", $phone);
+
+    $return = $error = "";
+    try {
+        start_db_transaction();
+        $SQL = fetch_template("dbsql/events.sql", "edit_location", "events");
+        $params = [
+            "id" => $locationid,
+            "location" => $location,
+            "address_1" => $add1,
+            "address_2" => $add2,
+            "zip" => $zip,
+            "phone" => $phone,
+            "userid" => "," . $USER->userid . ",",
+            "shared" => $shared,
+        ];
+
+        execute_db_sql($SQL, $params);
+        commit_db_transaction();
+        $return = "Saved";
+
+        log_entry("events", $location, "Edited Location");
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+        rollback_db_transaction($error);
+    }
+
+    ajax_return($return, $error);
+}
+
 function add_new_location() {
-global $USER;
+    global $USER;
+
     $eventid = clean_myvar_opt("eventid", "int", false);
     $name = clean_myvar_req("name", "string");
     $add1 = clean_myvar_req("add1", "string");
     $add2 = clean_myvar_req("add2", "string");
     $zip = clean_myvar_req("zip", "string");
-    $phone1 = clean_myvar_opt("phone1", "string", "");
-    $phone2 = clean_myvar_opt("phone2", "string", "");
-    $phone3 = clean_myvar_opt("phone3", "string", "");
+    $phone1 = clean_myvar_opt("location_phone_1", "string", "");
+    $phone2 = clean_myvar_opt("location_phone_2", "string", "");
+    $phone3 = clean_myvar_opt("location_phone_3", "string", "");
     $phone = $phone1 . "-" . $phone2 . "-" . $phone3;
-    $phone = str_replace("---", "", $phone);
-
+    $phone = str_replace("--", "", $phone); // if the user didn't enter a phone number, this will just be an empty string instead of --.  If they entered only part of the phone number, it will clean up the dashes.
     $shared = clean_myvar_opt("shared", "int", 0);
 
-    $SQL = "INSERT INTO events_locations (location, address_1, address_2, zip, phone, userid, shared)
-    VALUES(||location||, ||address_1||, ||address_2||, ||zip||, ||phone||, ||userid||, ||shared||)";
+    $SQL = fetch_template("dbsql/events.sql", "add_location", "events");
 
     $params = [
         "location" => $name,
@@ -2094,13 +2100,20 @@ global $CFG, $MYVARS;
         $pageid = get_db_field("pageid", "events", "eventid = ||eventid||", ["eventid" => $eventid]);
     }
     $name = clean_myvar_req("event_name", "string");
-    $contact = clean_myvar_req("contact", "string");
-    $email = clean_myvar_req("email", "string");
 
-    $phone1 = clean_myvar_req("phone_1", "int");
-    $phone2 = clean_myvar_req("phone_2", "int");
-    $phone3 = clean_myvar_req("phone_3", "int");
-    $phone = $phone1 . "-" . $phone2 . "-" . $phone3;
+    $contactid = false;
+    $contact = clean_myvar_opt("contactid", "string", false);
+    if ($contact) {
+        $contactinfo = explode(":", $contact);
+        $contactid = $contactinfo[0];
+    }
+
+    if (!$contactid) {
+        $contact = clean_myvar_req("contact", "string");
+        $email = clean_myvar_req("email", "string");
+        $phone = format_phone(clean_myvar_req("phone_1", "int") . clean_myvar_req("phone_2", "int") . clean_myvar_req("phone_3", "int"));
+        $contactid = get_contact_id($contact, $email, $phone);
+    }
 
     $location = clean_myvar_req("location", "string");
     $category = clean_myvar_req("category", "int");
@@ -2194,7 +2207,7 @@ global $CFG, $MYVARS;
                 "event_begin_time" => $event_begin_time, "event_end_date" => $event_end_date, "event_end_time" => $event_end_time, "confirmed" => $confirmed,
                 "siteviewable" => $siteviewable, "allday" => $allday, "caleventid" => $caleventid, "byline" => $byline, "description" => $description, "fee_min" => $fee_min,
                 "fee_full" => $fee_full, "payableto" => $payableto, "checksaddress" => $checksaddress, "paypal" => $paypal, "sale_fee" => $sale_fee, "sale_end" => $sale_end,
-                "contact" => $contact, "email" => $email, "phone" => $phone, "hard_limits" => $hard_limits, "soft_limits" => $soft_limits, "workers" => $workers,
+                "contact" => $contactid, "hard_limits" => $hard_limits, "soft_limits" => $soft_limits, "workers" => $workers,
             ];
             if ($eventid = execute_db_sql($SQL, $params)) {
                 refresh_calendar_events($eventid);
@@ -2234,7 +2247,7 @@ global $CFG, $MYVARS;
                 "event_begin_time" => $event_begin_time, "event_end_date" => $event_end_date, "event_end_time" => $event_end_time, "confirmed" => $confirmed,
                 "siteviewable" => $siteviewable, "allday" => $allday, "byline" => $byline, "description" => $description, "fee_min" => $fee_min,
                 "fee_full" => $fee_full, "payableto" => $payableto, "checksaddress" => $checksaddress, "paypal" => $paypal, "sale_fee" => $sale_fee, "sale_end" => $sale_end,
-                "contact" => $contact, "email" => $email, "phone" => $phone, "hard_limits" => $hard_limits, "soft_limits" => $soft_limits, "workers" => $workers,
+                "contact" => $contactid, "hard_limits" => $hard_limits, "soft_limits" => $soft_limits, "workers" => $workers,
             ];
 
             if (execute_db_sql($SQL, $params)) {
@@ -2355,6 +2368,74 @@ function add_location_form() {
             break;
     }
 
+    ajax_return($return);
+}
+
+function add_contact_form() {
+    $eventid = clean_myvar_opt("eventid", "int", false);
+    $formtype = clean_myvar_req("formtype", "string");
+
+    switch($formtype) {
+        case "new":
+            ajaxapi([
+                "id" => "new_event_contact_submit",
+                "if" => "valid_new_contact()",
+                "reqstring" => "new_event_contact_form",
+                "url" => "/features/events/events_ajax.php",
+                "data" => [
+                    "action" => "add_new_contact",
+                    "eventid" => "js||$('#eventid').length ? $('#eventid').val() : 0||js",
+                ],
+                "display" => "select_contact",
+                "ondone" => "$('#contact_status').html('Contact Added'); reset_contact_menu(); setTimeout('clear_display(\'contact_status\')', 5000);",
+                "event" => "click",
+            ]);
+
+            ajaxapi([
+                "id" => "is_unique_contact_name",
+                "url" => "/features/events/events_ajax.php",
+                "async" => "false",
+                "data" => [
+                    "action" => "unique_relay",
+                    "table" => "events_contacts",
+                    "key" => "name",
+                    "value" => "js||$('#contact_name').val()||js",
+                ],
+                "event" => "none",
+            ]);
+
+            $return = new_contact_form($eventid);
+            break;
+        case "existing":
+            $return = contact_list_form($eventid);
+            break;
+    }
+
+    ajax_return($return);
+}
+
+function copy_contact() {
+global $CFG;
+    $eventid = clean_myvar_opt("eventid", "int", false);
+    $contact = clean_myvar_req("contact", "int");
+    $return = get_my_contacts_select($CFG->SITEID, $contact);
+
+    ajax_return($return);
+}
+
+function get_contact_details() {
+    $contactid = clean_myvar_req("contact", "int");
+    $contactinfo = get_contact($contactid);
+
+    if ($contactinfo) {
+        $return = '
+            <strong>' . stripslashes($contactinfo['name']) . '</strong>
+            <br />
+            ' . stripslashes($contactinfo['email']) . '<br />
+            ' . $contactinfo['phone'];
+    } else {
+        $return = "";
+    }
     ajax_return($return);
 }
 
@@ -2975,6 +3056,12 @@ global $CFG, $USER;
     ajax_return($return, $error);
 }
 
+function data_entry_manager() {
+    $return = data_entry_manager_form();
+
+    ajax_return($return);
+}
+
 function show_staff_app() {
 global $CFG, $USER;
     $staffid = clean_myvar_opt("staffid", "int", false);
@@ -3065,7 +3152,7 @@ global $CFG, $USER;
                 "userid" => $USER->userid,
                 "pageid" => $pageid,
                 "name" => nameize(clean_myvar_req("name", "string")),
-                "phone" => preg_replace('/\d{3}/', '$0-', trim(preg_replace("/\D/", "", clean_myvar_opt("phone", "string", ""))), 2),
+                "phone" => format_phone(clean_myvar_opt("phone", "string", "")),
                 "dateofbirth" => strtotime(clean_myvar_opt("dateofbirth", "string", "")),
                 "address" => clean_myvar_req("address", "string"),
                 "agerange" => clean_myvar_req("agerange", "int"),
@@ -3081,13 +3168,13 @@ global $CFG, $USER;
                 "workerconsentdate" => strtotime(clean_myvar_opt("workerconsentdate", "string", "")),
                 "ref1name" => nameize(clean_myvar_req("ref1name", "string")),
                 "ref1relationship" => clean_myvar_req("ref1relationship", "string"),
-                "ref1phone" => preg_replace('/\d{3}/', '$0-', trim(preg_replace("/\D/", "", clean_myvar_req("ref1phone", "string"))), 2),
+                "ref1phone" => format_phone(clean_myvar_req("ref1phone", "string")),
                 "ref2name" => nameize(clean_myvar_req("ref2name", "string")),
                 "ref2relationship" => clean_myvar_req("ref2relationship", "string"),
-                "ref2phone" => preg_replace('/\d{3}/', '$0-', trim(preg_replace("/\D/", "", clean_myvar_req("ref2phone", "string"))), 2),
+                "ref2phone" => format_phone(clean_myvar_req("ref2phone", "string")),
                 "ref3name" => nameize(clean_myvar_req("ref3name", "string")),
-                "ref3relationship" => clean_myvar_req("ref2relationship", "string"),
-                "ref3phone" => preg_replace('/\d{3}/', '$0-', trim(preg_replace("/\D/", "", clean_myvar_req("ref3phone", "string"))), 2),
+                "ref3relationship" => clean_myvar_req("ref3relationship", "string"),
+                "ref3phone" => format_phone(clean_myvar_req("ref3phone", "string")),
             ];
 
             $newid = false;
@@ -3633,6 +3720,588 @@ function save_promocode() {
     }
 
     edit_promocode_set();
+}
+
+/**
+ * Get all the locations.
+ *
+ * @return string The HTML for the location manager page.
+ */
+function location_manager() {
+    global $USER;
+
+    // Location Editor.
+    ajaxapi([
+        "id" => "show_location_editor",
+        "url" => "/features/events/events_ajax.php",
+        "data" => [
+            "action" => "show_location_editor",
+            "locationid" => "js||$('#locations').val()||js",
+        ],
+        "display" => "locationeditorcontainer",
+        "loading" => "loading_overlay",
+        "event" => "none", // We will reuse this so don't tie it to an singular button click.
+    ]);
+
+    // Get all the locations.
+    $SQL = fetch_template("dbsql/events.sql", "get_my_locations", "events");
+
+    $locationselect = [
+        "properties" => [
+            "name" => 'locations',
+            "id" => 'locations',
+            "onchange" => "if (Number($(this).val()) > 0) { show_location_editor(); } else { $('#locationeditorcontainer').html(''); }",
+        ],
+        "values" => get_db_result($SQL, ["userid" => "%" . $USER->userid . "%"]),
+        "valuename" => "id",
+        "firstoption" => "Select a location",
+        "displayname" => "location",
+    ];
+
+    $params = [
+        "locationselector" => make_select($locationselect),
+        "back" => link_maker([
+            "content" => icon("arrow-left") . " <span>Back</span>",
+            "onclick" => "show_data_entry_manager();",
+            "title" => "Back to Data Manager",
+        ]),
+    ];
+    $return = fill_template("tmp/events.template", "locationmanagertemplate", "events", $params);
+
+    ajax_return($return);
+}
+
+function show_location_editor() {
+    global $USER;
+    $locationid = clean_myvar_req("locationid", "int");
+    $return = "";
+
+    // Save Changes.
+    ajaxapi([
+        "id" => "edit_location",
+        "url" => "/features/events/events_ajax.php",
+        "data" => [
+            "action" => "save_location_changes",
+            "locationid" => "js||$('#locations').val()||js",
+        ],
+        "display" => "locationeditorcontainer",
+        "reqstring" => "locationeditorform",
+        "ondone" => "location_manager();",
+        "loading" => "loading_overlay",
+    ]);
+
+    $SQL = fetch_template("dbsql/events.sql", "get_location_by_id", "events");
+    if ($location = get_db_row($SQL, ["id" => $locationid])) {
+        $usage = get_db_count(fetch_template("dbsql/events.sql", "get_usage_by_location", "events"), ["locationid" => $locationid]);
+
+        // Clean up phone number for display in editor.
+        $location["phone"] = format_phone($location["phone"]);
+
+        $params = [
+            "variable" => $location,
+            "shared" => $location["shared"] == 1 ? true : false,
+            "usage" => $usage,
+            "save" => button_maker([
+                "id" => "edit_location",
+                "content" => icon("save") . " <span>Save Changes</span>",
+                "title" => "Save Changes",
+            ]),
+        ];
+
+        if (empty($usage)) {
+            // Delete Location.
+            ajaxapi([
+                "id" => "delete_location",
+                "url" => "/features/events/events_ajax.php",
+                "if" => "confirm('Are you sure you want to delete this location?')",
+                "data" => [
+                    "action" => "delete_location",
+                    "locationid" => "js||$('#locations').val()||js",
+                ],
+                "display" => "locationeditorcontainer",
+                "ondone" => "location_manager();",
+                "loading" => "loading_overlay",
+            ]);
+            $params["delete"] = button_maker([
+                "content" => icon("trash") . " <span>Delete Location</span>",
+                "id" => "delete_location",
+                "title" => "Delete Location",
+            ]);
+        } else { // Location is in use, give select box to delete and move events to a new location.
+            // Get all the locations.
+            $SQL = fetch_template("dbsql/events.sql", "get_my_locations", "events");
+            $my_locations = get_db_result($SQL, ["userid" => "%" . $USER->userid . "%"]);
+
+            if (count_db_result($my_locations) > 1) {
+                // Reassign and Delete Location.
+                ajaxapi([
+                    "id" => "reassign_delete_location",
+                    "url" => "/features/events/events_ajax.php",
+                    "if" => "Number($('#reassignto').val()) > 0 && confirm('Reassign events and remove this location?')",
+                    "else" => "alert('Please select a location to reassign events to before deleting.');",
+                    "data" => [
+                        "action" => "reassign_delete_location",
+                        "locationid" => "js||$('#locations').val()||js",
+                        "reassignto" => "js||$('#reassignto').val()||js",
+                    ],
+                    "display" => "locationeditorcontainer",
+                    "ondone" => "location_manager();",
+                    "loading" => "loading_overlay",
+                ]);
+
+                // Reassign location.
+                ajaxapi([
+                    "id" => "reassign_location",
+                    "url" => "/features/events/events_ajax.php",
+                    "if" => "Number($('#reassignto').val()) > 0 && confirm('Reassign events to this location?')",
+                    "else" => "alert('Please select a location to reassign events to.');",
+                    "data" => [
+                        "action" => "reassign_location",
+                        "locationid" => "js||$('#locations').val()||js",
+                        "reassignto" => "js||$('#reassignto').val()||js",
+                    ],
+                    "display" => "locationeditorcontainer",
+                    "ondone" => "location_manager();",
+                    "loading" => "loading_overlay",
+                ]);
+
+                $locationselect = [
+                    "properties" => [
+                        "name" => 'reassignto',
+                        "id" => 'reassignto',
+                        "style" => "max-width: 160px;margin-right: 5px;",
+                    ],
+                    "values" => $my_locations,
+                    "valuename" => "id",
+                    "firstoption" => "Reassign Events to...",
+                    "displayname" => "location",
+                    "exclude" => $locationid,
+                ];
+                $params["delete"] = '
+                    <div class="flex_field">
+                    ' . make_select($locationselect) . button_maker([
+                        "id" => "reassign_delete_location",
+                        "content" => " " . icon("trash"),
+                        "title" => "Reassign and Delete Location",
+                        "style" => "margin-right:5px;",
+                    ]) . button_maker([
+                        "id" => "reassign_location",
+                        "content" => " " . icon("exchange-alt"),
+                        "title" => "Reassign Location Events",
+                    ]) . '
+                    </div>';
+            }
+        }
+
+        $return = fill_template("tmp/events.template", "locationeditortemplate", "events", $params);
+    }
+
+    ajax_return($return);
+}
+
+function reassign_delete_location() {
+    $locationid = clean_myvar_req("locationid", "int");
+    $reassignto = clean_myvar_req("reassignto", "int");
+
+    // Reassign events to new location and delete old location.
+    $return = $error = "";
+     try {
+        reassign_location(false); // Reuse the reassign location function to move events to the new location.
+
+        delete_location(false); // Reuse the delete location function to delete the old location.
+
+        $return = "Location reassigned and deleted.";
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+        rollback_db_transaction($error);
+    }
+    ajax_return($return, $error);
+}
+
+function delete_location($ajax = true) {
+    $locationid = clean_myvar_req("locationid", "int");
+
+    // Delete location.
+    $return = $error = "";
+     try {
+        start_db_transaction();
+
+        $location = get_db_row(fetch_template("dbsql/events.sql", "get_location_by_id", "events"), ["id" => $locationid]);
+
+        $SQL = fetch_template("dbsql/events.sql", "delete_location", "events");
+        execute_db_sql($SQL, [
+            "id" => $locationid,
+        ]);
+
+        log_entry("events", $location["location"], "Location deleted");
+        commit_db_transaction();
+        $return = "Location deleted.";
+    } catch (\Throwable $e) {
+        $return = false;
+        $error = $e->getMessage();
+        rollback_db_transaction($error);
+    }
+
+    if (!$ajax) {
+        return $return;
+    }
+
+    $return = $return ?: ""; // Return empty string instead of false to avoid JS errors.
+    ajax_return($return, $error);
+}
+
+function reassign_location($ajax = true) {
+    $locationid = clean_myvar_req("locationid", "int");
+    $reassignto = clean_myvar_req("reassignto", "int");
+
+     // Reassign events to new location.
+     $return = $error = "";
+     try {
+        start_db_transaction();
+
+        $location = get_db_row(fetch_template("dbsql/events.sql", "get_location_by_id", "events"), ["id" => $locationid]);
+
+        $SQL = fetch_template("dbsql/events.sql", "reassign_events_location", "events");
+        execute_db_sql($SQL, [
+            "locationid" => $locationid,
+            "reassignto" => $reassignto,
+        ]);
+
+        log_entry("events", $location["location"], "Location events reassigned.");
+        commit_db_transaction();
+        $return = "Location reassigned.";
+    } catch (\Throwable $e) {
+        $return = false;
+        $error = $e->getMessage();
+        rollback_db_transaction($error);
+    }
+
+    if (!$ajax) {
+        return $return;
+    }
+
+    $return = $return ?: ""; // Return empty string instead of false to avoid JS errors.
+    ajax_return($return, $error);
+}
+
+function contact_manager() {
+    global $USER, $CFG;
+
+    // Contact Editor.
+    ajaxapi([
+        "id" => "show_contact_editor",
+        "url" => "/features/events/events_ajax.php",
+        "data" => [
+            "action" => "show_contact_editor",
+            "contactid" => "js||$('#contacts').val()||js",
+        ],
+        "display" => "contacteditorcontainer",
+        "loading" => "loading_overlay",
+        "event" => "none", // We will reuse this so don't tie it to an singular button click.
+    ]);
+
+    // Get the pageid from session or request
+    $pageid = $CFG->SITEID; // Default to site
+
+    // Get all the contacts for this page.
+    $SQL = fetch_template("dbsql/events.sql", "get_my_contacts", "events");
+
+    $contactselect = [
+        "properties" => [
+            "name" => 'contacts',
+            "id" => 'contacts',
+            "onchange" => "if (Number($(this).val()) > 0) { show_contact_editor(); } else { $('#contacteditorcontainer').html(''); }",
+        ],
+        "values" => get_db_result($SQL, ["pageid" => $pageid]),
+        "valuename" => "contactid",
+        "firstoption" => "Select a contact",
+        "displayname" => "name",
+    ];
+
+    $params = [
+        "contactsselector" => make_select($contactselect),
+        "back" => link_maker([
+            "content" => icon("arrow-left") . " <span>Back</span>",
+            "onclick" => "show_data_entry_manager();",
+            "title" => "Back to Data Manager",
+        ]),
+    ];
+    $return = fill_template("tmp/events.template", "contactmanagertemplate", "events", $params);
+
+    ajax_return($return);
+}
+
+function show_contact_editor() {
+    global $CFG;
+    $contactid = clean_myvar_req("contactid", "int");
+    $return = "";
+    $pageid = $CFG->SITEID; // Default to site
+
+    // Save Changes.
+    ajaxapi([
+        "id" => "edit_contact",
+        "url" => "/features/events/events_ajax.php",
+        "data" => [
+            "action" => "save_contact_changes",
+            "contactid" => "js||$('#contacts').val()||js",
+        ],
+        "display" => "contacteditorcontainer",
+        "reqstring" => "contacteditorform",
+        "ondone" => "contact_manager();",
+        "loading" => "loading_overlay",
+    ]);
+
+    $SQL = fetch_template("dbsql/events.sql", "get_contact_by_id", "events");
+    if ($contact = get_db_row($SQL, ["contactid" => $contactid])) {
+        $usage = get_db_count(fetch_template("dbsql/events.sql", "get_usage_by_contact", "events"), ["contactid" => $contactid]);
+
+        // Clean up phone number for display in editor.
+        $contact["phone"] = format_phone($contact["phone"]);
+
+        $params = [
+            "variable" => $contact,
+            "usage" => $usage,
+            "save" => button_maker([
+                "id" => "edit_contact",
+                "content" => icon("save") . " <span>Save Changes</span>",
+                "title" => "Save Changes",
+            ]),
+        ];
+
+        if (empty($usage)) {
+            // Delete Contact.
+            ajaxapi([
+                "id" => "delete_contact",
+                "url" => "/features/events/events_ajax.php",
+                "if" => "confirm('Are you sure you want to delete this contact?')",
+                "data" => [
+                    "action" => "delete_contact",
+                    "contactid" => "js||$('#contacts').val()||js",
+                ],
+                "display" => "contacteditorcontainer",
+                "ondone" => "contact_manager();",
+                "loading" => "loading_overlay",
+            ]);
+            $params["delete"] = button_maker([
+                "content" => icon("trash") . " <span>Delete Contact</span>",
+                "id" => "delete_contact",
+                "title" => "Delete Contact",
+            ]);
+        } else { // Contact is in use, give select box to delete and move events to a new contact.
+            // Get all the contacts for this page.
+            $SQL = fetch_template("dbsql/events.sql", "get_my_contacts", "events");
+            $my_contacts = get_db_result($SQL, ["pageid" => $pageid]);
+
+            if (count_db_result($my_contacts) > 1) {
+                // Reassign and Delete Contact.
+                ajaxapi([
+                    "id" => "reassign_delete_contact",
+                    "url" => "/features/events/events_ajax.php",
+                    "if" => "Number($('#reassignto').val()) > 0 && confirm('Reassign events and remove this contact?')",
+                    "else" => "alert('Please select a contact to reassign events to before deleting.');",
+                    "data" => [
+                        "action" => "reassign_delete_contact",
+                        "contactid" => "js||$('#contacts').val()||js",
+                        "reassignto" => "js||$('#reassignto').val()||js",
+                    ],
+                    "display" => "contacteditorcontainer",
+                    "ondone" => "contact_manager();",
+                    "loading" => "loading_overlay",
+                ]);
+
+                // Reassign contact.
+                ajaxapi([
+                    "id" => "reassign_contact",
+                    "url" => "/features/events/events_ajax.php",
+                    "if" => "Number($('#reassignto').val()) > 0 && confirm('Reassign events to this contact?')",
+                    "else" => "alert('Please select a contact to reassign events to.');",
+                    "data" => [
+                        "action" => "reassign_contact",
+                        "contactid" => "js||$('#contacts').val()||js",
+                        "reassignto" => "js||$('#reassignto').val()||js",
+                    ],
+                    "display" => "contacteditorcontainer",
+                    "ondone" => "contact_manager();",
+                    "loading" => "loading_overlay",
+                ]);
+
+                $contactselect = [
+                    "properties" => [
+                        "name" => 'reassignto',
+                        "id" => 'reassignto',
+                        "style" => "max-width: 160px;margin-right: 5px;",
+                    ],
+                    "values" => $my_contacts,
+                    "valuename" => "contactid",
+                    "firstoption" => "Reassign Events to...",
+                    "displayname" => "name",
+                    "exclude" => $contactid,
+                ];
+                $params["delete"] = '
+                    <div class="flex_field">
+                    ' . make_select($contactselect) . button_maker([
+                        "id" => "reassign_delete_contact",
+                        "content" => " " . icon("trash"),
+                        "title" => "Reassign and Delete Contact",
+                        "style" => "margin-right:5px;",
+                    ]) . button_maker([
+                        "id" => "reassign_contact",
+                        "content" => " " . icon("exchange-alt"),
+                        "title" => "Reassign Contact Events",
+                    ]) . '
+                    </div>';
+            }
+        }
+
+        $return = fill_template("tmp/events.template", "contacteditortemplate", "events", $params);
+    }
+
+    ajax_return($return);
+}
+
+function save_contact_changes() {
+    global $CFG;
+
+    $contactid = clean_myvar_req("contactid", "int");
+    $name = clean_myvar_req("name", "string");
+    $email = clean_myvar_req("email", "string");
+    $phone = clean_myvar_opt("phone", "string", "");
+    $phone = format_phone($phone);
+
+    $return = $error = "";
+    try {
+        start_db_transaction();
+        $SQL = fetch_template("dbsql/events.sql", "edit_contact", "events");
+        $params = [
+            "contactid" => $contactid,
+            "name" => $name,
+            "email" => $email,
+            "phone" => $phone,
+        ];
+
+        execute_db_sql($SQL, $params);
+        commit_db_transaction();
+        $return = "Saved";
+
+        log_entry("events", $name, "Edited Contact");
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+        rollback_db_transaction($error);
+    }
+
+    ajax_return($return, $error);
+}
+
+function add_new_contact() {
+    global $CFG;
+
+    $name = clean_myvar_req("name", "string");
+    $email = clean_myvar_req("email", "string");
+    $phone1 = clean_myvar_opt("contact_phone_1", "string", "");
+    $phone2 = clean_myvar_opt("contact_phone_2", "string", "");
+    $phone3 = clean_myvar_opt("contact_phone_3", "string", "");
+    $phone = $phone1 . "-" . $phone2 . "-" . $phone3;
+    $phone = str_replace("--", "", $phone); // if the user didn't enter a phone number, this will just be an empty string instead of --. If they entered only part of the phone number, it will clean up the dashes.
+    $pageid = $CFG->SITEID; // Default to site
+
+    $SQL = fetch_template("dbsql/events.sql", "add_contact", "events");
+
+    $params = [
+        "pageid" => $pageid,
+        "name" => $name,
+        "email" => $email,
+        "phone" => $phone,
+    ];
+    $id = execute_db_sql($SQL, $params);
+
+    log_entry("events", $name, "Added Contact");
+    $return = get_my_contacts_select($pageid, $id);
+    ajax_return($return);
+}
+
+function delete_contact($ajax = true) {
+    $contactid = clean_myvar_req("contactid", "int");
+
+    // Delete contact.
+    $return = $error = "";
+     try {
+        start_db_transaction();
+
+        $contact = get_db_row(fetch_template("dbsql/events.sql", "get_contact_by_id", "events"), ["contactid" => $contactid]);
+
+        $SQL = fetch_template("dbsql/events.sql", "delete_contact", "events");
+        execute_db_sql($SQL, [
+            "contactid" => $contactid,
+        ]);
+
+        log_entry("events", $contact["name"], "Contact deleted");
+        commit_db_transaction();
+        $return = "Contact deleted.";
+    } catch (\Throwable $e) {
+        $return = false;
+        $error = $e->getMessage();
+        rollback_db_transaction($error);
+    }
+
+    if (!$ajax) {
+        return $return;
+    }
+
+    $return = $return ?: ""; // Return empty string instead of false to avoid JS errors.
+    ajax_return($return, $error);
+}
+
+function reassign_contact($ajax = true) {
+    $contactid = clean_myvar_req("contactid", "int");
+    $reassignto = clean_myvar_req("reassignto", "int");
+
+     // Reassign events to new contact.
+     $return = $error = "";
+     try {
+        start_db_transaction();
+
+        $contact = get_db_row(fetch_template("dbsql/events.sql", "get_contact_by_id", "events"), ["contactid" => $contactid]);
+
+        $SQL = fetch_template("dbsql/events.sql", "reassign_events_contact", "events");
+        execute_db_sql($SQL, [
+            "contactid" => $contactid,
+            "reassignto" => $reassignto,
+        ]);
+
+        log_entry("events", $contact["name"], "Contact events reassigned.");
+        commit_db_transaction();
+        $return = "Contact reassigned.";
+    } catch (\Throwable $e) {
+        $return = false;
+        $error = $e->getMessage();
+        rollback_db_transaction($error);
+    }
+
+    if (!$ajax) {
+        return $return;
+    }
+
+    $return = $return ?: ""; // Return empty string instead of false to avoid JS errors.
+    ajax_return($return, $error);
+}
+
+function reassign_delete_contact() {
+    $contactid = clean_myvar_req("contactid", "int");
+    $reassignto = clean_myvar_req("reassignto", "int");
+
+    // Reassign events to new contact and delete old contact.
+    $return = $error = "";
+     try {
+        reassign_contact(false); // Reuse the reassign contact function to move events to the new contact.
+
+        delete_contact(false); // Reuse the delete contact function to delete the old contact.
+
+        $return = "Contact reassigned and deleted.";
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+        rollback_db_transaction($error);
+    }
+    ajax_return($return, $error);
 }
 
 ?>

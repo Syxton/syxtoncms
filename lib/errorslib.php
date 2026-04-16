@@ -148,6 +148,10 @@ function debugging($message = '', $level = 1, $forced = false) {
 
         // If there's any content to display, return via ajax
         if (!empty($print)) {
+            // Make sure pagelib is included for ajax_return
+            if (!function_exists('ajax_return')) {
+                require_once __DIR__ . '/pagelib.php';
+            }
             ajax_return("", $print);
         }
     }

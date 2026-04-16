@@ -456,7 +456,6 @@ global $CFG, $USER;
 
         ajaxapi([
             "id" => "delete_event_" . $event['eventid'],
-            "paramlist" => "confirm = 0",
             "if" => "confirm('Are you sure you want to delete this event?')",
             "url" => "/features/events/events_ajax.php",
             "data" => [
@@ -1137,6 +1136,35 @@ global $CFG;
             </div>
         </form>';
     return $returnme;
+}
+
+function get_all_registrations_of_event($eventid, $onlineonly = false) {
+    $sort_info = get_db_row(fetch_template("dbsql/events.sql", "get_events_with_same_template", "events"), ["eventid" => $eventid]);
+
+    $sortelement = "elementname";
+    if ($sort_info['folder'] == "none") {
+        $sortelement = "elementid";
+    }
+    $sort_elements = explode(",", $sort_info["orderbyfield"]);
+
+    $select = "";
+    $orderby = "";
+    $i = 0;
+    while (isset($sort_elements[$i])) {
+        $select .= ", (SELECT value
+                        FROM events_registrations_values
+                        WHERE $sortelement='$sort_elements[$i]'
+                        AND regid=v.regid LIMIT 1) as val$i";
+        $orderby .= $orderby == "" ? "val$i" : ",val$i";
+        $i++;
+    }
+
+    return fill_template("dbsql/events.sql", "registration_sorting", "events", [
+        "eventid" => $eventid,
+        "onlineonly" => $onlineonly,
+        "orderby" => $orderby,
+        "select" => $select,
+    ]);
 }
 
 function get_registrant_name($regid) {
@@ -2663,6 +2691,75 @@ global $USER;
     return $returnme;
 }
 
+function new_contact_form($eventid) {
+    return '
+    <div id="new_event_contact_form">
+        <table>
+            <tr>
+                <td class="field_title">
+                    Name:
+                </td>
+                <td class="field_input">
+                    <input type="text" id="contact_name" name="name" />
+                </td>
+            </tr><tr><td></td><td class="field_input"><span id="contact_name_error" class="error_text"></span></td></tr>
+            <tr>
+                <td class="field_title">
+                    Email:
+                </td>
+                <td class="field_input">
+                    <input type="text" id="contact_email" name="email" />
+                </td>
+            </tr><tr><td></td><td class="field_input"><span id="contact_email_error" class="error_text"></span></td></tr>
+            <tr>
+                <td class="field_title">
+                    <span style="font-size:1.2em; color:blue;">(optional)</span> Phone:
+                </td>
+                <td class="field_input">
+                    ' . create_form_element("phone", "contact_phone", "1") . '
+                </td>
+            </tr><tr><td></td><td class="field_input"><span id="contact_phone_error" class="error_text"></span></td></tr>
+            <tr>
+                <td class="field_title"></td>
+                <td class="field_input">
+                    <button id="new_event_contact_submit">
+                        Submit
+                    </button>
+                </td>
+            </tr>
+        </table>
+    </div>';
+}
+
+function contact_list_form($eventid) {
+global $CFG;
+    $contacts = get_db_result("SELECT *
+                                FROM events_contacts
+                                WHERE pageid = ||pageid||
+                                ORDER BY name", ["pageid" => $CFG->SITEID]);
+
+    if (!$contacts) {
+        return "No other addable contacts.";
+    }
+
+    $options = '<option value="0">Select a contact</option>';
+    while ($contact = fetch_row($contacts)) {
+        $options .= '<option value="' . $contact['contactid'] . '">' . stripslashes($contact['name']) . '</option>';
+    }
+    $returnme = '
+        <div style="display: inline-flex;align-items: center;">
+            <select id="add_contact" onchange="get_contact_details()" style="margin: 10px;">
+                ' . $options . '
+            </select>
+            <button class="alike" title="Add Contact" onclick="copy_contact($(\'#add_contact\').val(), \'' . $eventid . '\');">
+                ' . icon("plus", 2) . '
+            </button>
+        </div>
+        <div id="contact_details_div" style="vertical-align:top"></div>';
+
+    return $returnme;
+}
+
 function events_delete($pageid, $featureid) {
     $params = [
         "pageid" => $pageid,
@@ -2705,7 +2802,7 @@ function create_form_element($type, $id, $value, $length = 0) {
         case "phone":
             $value = is_array($value) ? $value : explode("-", $value);
             if (count($value) < 3) {
-                $value = [0, 0, 0];
+                $value = ["", "", ""];
             }
 
             $returnme = '
@@ -2748,39 +2845,35 @@ global $CFG, $USER;
     }
 }
 
-function get_events_admin_contacts() {
-    $script = '
-        function fill_admin_contacts(values) {
-            values = values.split(": ");
-            document.getElementById("contact").value = values[0];
-            document.getElementById("email").value = values[1];
-            var phone = values[2].split("-");
-            document.getElementById("phone_1").value = phone[0];
-            document.getElementById("phone_2").value = phone[1];
-            document.getElementById("phone_3").value = phone[2];
-        }';
+function get_event_contact($contactid) {
+    return get_db_row("SELECT * FROM events_contacts WHERE contactid = ||contactid||", ["contactid" => $contactid]);
+}
+
+function get_events_admin_contacts($eventid = false) {
+    $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+    $selected = 0;
+    if ($eventid) {
+        $contactid = get_db_field("contact", "events", "eventid = ||eventid||", ["eventid" => $eventid]);
+        $selected = get_db_field('CONCAT(contactid, ":", name, ":", email, ":", phone) as contactdata', "events_contacts", "contactid = ||contactid||", ["contactid" => $contactid]);
+    }
+
+    // Script for filling contact details on selecting from dropdown.
+    $script = fetch_template("tmp/events.template", "admin_contacts_script", "events");
 
     $p = [
         "properties" => [
-            "name" => "admin_contacts",
-            "id" => "admin_contacts",
+            "name" => "contactid",
+            "id" => "contactid",
             "onchange" => 'fill_admin_contacts(this.value);',
         ],
-        "values" => get_db_result(fetch_template("dbsql/events.sql", "get_contacts_list", "events")),
-        "valuename" => "admin_contact",
-        "firstoption" => "",
+        "values" => get_db_result(fetch_template("dbsql/events.sql", "get_contacts_list", "events"), ["pageid" => $pageid]),
+        "valuename" => "contactdata",
+        "displayname" => "name",
+        "selected" => $selected,
+        "firstoption" => "Add New Contact",
     ];
 
-    return js_code_wrap($script) . '<br /><table style="width:100%">
-          <tr>
-              <td class="field_title" style="width:115px;">
-                  Contacts List:
-              </td>
-              <td class="field_input">
-                  ' . make_select($p) . '
-              </td>
-          </tr><tr><td></td><td class="field_input"><span id="contact_error" class="error_text"></span></td></tr>
-    </table>';
+    return js_code_wrap($script) . fill_template("tmp/events.template", "admin_contacts_dropdown", "events", ["contact_select" => make_select($p)]);
 }
 
 function get_events_admin_payable() {
@@ -3091,6 +3184,71 @@ global $CFG;
     return "";
 }
 
+function data_entry_manager_form() {
+    global $USER;
+    $pageid = get_pageid();
+
+    $params = [];
+
+    // For refreshing.
+    ajaxapi([
+        "id" => "show_data_entry_manager",
+        "url" => "/features/events/events_ajax.php",
+        "data" => [
+            "action" => "data_entry_manager",
+            "pageid" => $pageid,
+        ],
+        "display" => "datamanagercontainer",
+        "loading" => "loading_overlay",
+        "event" => "none",
+    ]);
+
+
+    if (user_is_able($USER->userid, "managelocations", $pageid)) {
+        // Location Manager.
+        ajaxapi([
+            "id" => "location_manager",
+            "url" => "/features/events/events_ajax.php",
+            "data" => [
+                "action" => "location_manager",
+            ],
+            "display" => "datamanagercontainer",
+            "loading" => "loading_overlay",
+            "event" => "none",
+        ]);
+        
+        $params["location_link"] = link_maker([
+            "content" => icon("location-arrow") . " <span>Manage Locations</span>",
+            "onclick" => "location_manager();",
+            "title" => "Manage Locations",
+        ]);
+    }
+
+    if (user_is_able($USER->userid, "managecontacts", $pageid)) {
+        // Contact Manager.
+        ajaxapi([
+            "id" => "contact_manager",
+            "url" => "/features/events/events_ajax.php",
+            "data" => [
+                "action" => "contact_manager",
+            ],
+            "display" => "datamanagercontainer",
+            "loading" => "loading_overlay",
+            "event" => "none",
+        ]);
+
+        $params["contact_link"] = link_maker([
+            "content" => icon("address-book") . " <span>Manage Contacts</span>",
+            "onclick" => "contact_manager();",
+            "title" => "Manage Contacts",
+        ]);
+    }
+
+    // Create a page to manage lists of locations, users, and paypal accounts.
+    $return = fill_template("tmp/events.template", "dataentrymanager", "events", $params);
+    return $return;
+}
+
 function events_adminpanel($pageid) {
     global $CFG, $USER;
 
@@ -3105,6 +3263,19 @@ function events_adminpanel($pageid) {
             "iframe" => true,
             "width"  => "640",
             "icon"  => icon("table-list"),
+            "class" => "adminpanel_links",
+        ]);
+    }
+
+    // Event Form Data Manager
+    if (user_is_able($USER->userid, "manageeventtemplates", $pageid)) {
+        $content .= make_modal_links([
+            "title"  => "Form Data Manager",
+            "text"   => "Form Data Manager",
+            "path"   => action_path("events") . "form_data_manager&pageid=$pageid",
+            "iframe" => true,
+            "width"  => "640",
+            "icon"  => icon("database"),
             "class" => "adminpanel_links",
         ]);
     }
@@ -3163,7 +3334,7 @@ global $CFG;
     while ($reserved < $reserveamount) {
         $SQL = $SQL2 = "";
         if ($regid = execute_db_sql("INSERT INTO events_registrations
-                                    (eventid, date, code, manual)
+                                    (eventid, `date`, `code`, `manual`)
                                     VALUES('$eventid','" . get_timestamp() . "','" . md5(uniqid(rand(), true)) . "',1)")) {
             if (!defined('FORMLIB')) { include_once($CFG->dirroot . '/lib/formlib.php'); }
             $template = get_event_template($template_id);
@@ -3445,5 +3616,42 @@ function events_print_confirmation($cart, $data) {
     $status = events_approved_payment($cart, $data);
 
     return events_registration_confirmation($cart, $data, $status);
+}
+
+// Function that accepts a name, email, and phone number, searches the contacts table for a match and returns the contact id if found, or creates a new contact and returns that id if not found.
+function get_contact_id($name, $email, $phone) {
+    $SQL = "SELECT contactid FROM events_contacts WHERE name = ||name||";
+    $contact = get_db_field("contactid", $SQL, ["name" => $name]);
+
+    if (!$contact) { // No contact found, create a new one.
+        $SQL = fetch_template("dbsql/events.sql", "insert_contact", "events", [
+                "name" => $name,
+                "email" => $email,
+                "phone" => $phone,
+                "pageid" => get_pageid(),
+        ]);
+        $contact = execute_db_sql($SQL, ["name" => $name, "email" => $email, "phone" => $phone]);
+    }
+    return $contact;
+}
+
+function get_contact($contactid) {
+    $SQL = "SELECT * FROM events_contacts WHERE contactid = ||contactid||";
+    return get_db_row($SQL, ["contactid" => $contactid]);
+}
+
+function get_my_contacts_select($pageid, $selected = false) {
+    $returnme = "";
+    $SQL = "SELECT * FROM events_contacts WHERE pageid = ||pageid|| ORDER BY name";
+
+    if ($contacts = get_db_result($SQL, ["pageid" => $pageid])) {
+        while ($contact = fetch_row($contacts)) {
+            $returnme .= $returnme == "" ? '<select id="contact" name="contact">' : '';
+            $selectme = $selected && ($contact['contactid'] == $selected) ? ' selected' : '';
+            $returnme .= '<option value="' . $contact['contactid'] . '"' . $selectme . '>' . stripslashes($contact['name']) . '</option>';
+        }
+    }
+    $returnme .= $returnme == "" ? "You must add a contact." : "</select>";
+    return $returnme;
 }
 ?>

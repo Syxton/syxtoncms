@@ -23,6 +23,23 @@ a svg {
 svg.dropshadow {
     filter: drop-shadow(1px 2px 2px black);
 }
+.flex_field_wrapper {
+    display:flex;
+    flex-direction: column;
+}
+.flex_field_wrapper .flex_field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px;
+}
+.flex_field > input, .flex_field > select {
+    width: 100%;
+    margin-right: auto;
+}
+.flex_field > span, .flex_field > label {
+    min-width: 30%;
+}
 div#ajax_errors {
     display: flex;
     position: absolute;
@@ -2048,6 +2065,7 @@ iframe {
     top: 0
 }
 input,select,textarea,button,a.buttonlike,div.button {
+    font-size: 1em;
     display: inline-block;
     box-sizing: border-box;
     padding: 6px 12px;
@@ -2059,6 +2077,11 @@ input,select,textarea,button,a.buttonlike,div.button {
     -webkit-transition: border-color ease-in-out .15s, -webkit-box-shadow ease-in-out .15s;
     -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
     transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s
+}
+input[type="text"]:read-only, textarea:read-only {
+    background-color: #eee;
+    border-color: #ddd;
+    color: #999;
 }
 input[type="color"] {
     border-radius: 5px;
