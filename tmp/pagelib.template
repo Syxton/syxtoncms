@@ -196,11 +196,10 @@ get_login_form_template||
             ||echo icon("passport");::none||
             <span>Sign In</span>
         </button>
-        <span style="float:right;font-size:.9em">
+        <div class="login_actions">
             ||newuserlink||
-            <br />
             ||forgotpasswordlink||
-        </span>
+        </div>
     </form>
     <div id="login_box_error" class="error_text"></div>
 ||get_login_form_template
@@ -305,12 +304,15 @@ reroute_after_login||
     ||echo get_js_set("main");::none||
     <div id="standalone_div">
         <input type="hidden" id="reroute" value="||url||" />
-        <div style="width:100%;max-width:600px;text-align:center;margin:auto;">
-            You must login to see this content.
-            <br />
-            <center>
+        <div style="width:100%;max-width:400px;text-align:center;margin:auto;">
+            <div style="padding:15px">
+                <h3>
+                    You must login to see this content.
+                </h3>
+            </div>
+            <div style="text-align:left">
                 ||echo get_login_form(true, false);::none||
-            </center>
+            </div>
         </div>
     </div>
 ||reroute_after_login

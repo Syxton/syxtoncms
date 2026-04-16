@@ -30,6 +30,7 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
 
     unset($_COOKIE["pageid"]);
     unset($_SESSION['pageid']);
+
     $pageid = get_pageid();
 
     // Get Page info
@@ -62,27 +63,41 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
     upgrade_check();
 
     if (is_logged_in()) {
+        $ABILITIES = user_abilities($USER->userid, $PAGE->id);
+        if (empty($ABILITIES->viewpages->allow)) {
+            if ($currentpage["opendoorpolicy"] == "0") {
+                $url = "/index.php?pageid=$pageid";
+                $content = fill_template("tmp/pagelib.template", "reroute_after_login", false, ["url" => $url]);
+                echo simple_page($content, false, false);
+
+                include('footer.html');
+                die(); // End Page
+            }
+        }
+
         $params = ["timeout" => 14599]; // Javascript that checks for valid login every x seconds.
         ajaxapi([
             "id" => "login_check",
             "url" => "/ajax/site_ajax.php",
-            "data" => ["action" => "login_check", "pageid" => $pageid, "check" => true],
+            "data" => [
+                "action" => "login_check", 
+                "pageid" => $pageid, 
+                "check" => true,
+            ],
             "ondone" => "login_check_response(data);",
             "event" => "none",
         ]);
         echo fill_template("tmp/index.template", "valid_login_check", false, $params);
-
-        $ABILITIES = user_abilities($USER->userid, $PAGE->id);
-        if (empty($ABILITIES->viewpages->allow)) {
-            if ($currentpage["opendoorpolicy"] == "0") {
-                set_pageid($CFG->SITEID);
-            }
-        }
     } else {
         $ABILITIES = role_abilities($ROLES->visitor, $PAGE->id);
         if (!($currentpage["siteviewable"] && !empty($ABILITIES->viewpages->allow))) {
             if ($currentpage["opendoorpolicy"] == "0") {
-                set_pageid($CFG->SITEID);
+                $url = "/index.php?pageid=$pageid";
+                $content = fill_template("tmp/pagelib.template", "reroute_after_login", false, ["url" => $url]);
+                echo simple_page($content, false, false);
+
+                include('footer.html');
+                die(); // End Page
             }
         }
     }

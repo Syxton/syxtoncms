@@ -173,8 +173,23 @@ function simple_page($content = "", $nav_menu = true, $carousel = true) {
     return fill_template("tmp/pagelib.template", "simple_page_template", false, $params);
 }
 
+/**
+ * Sets the page ID to use for the current page.
+ * If the page ID is not given, it will get the page ID from the session or cookie.
+ * If the page ID is not set in the session or cookie, it will return the site ID.
+ *
+ * @param int $pageid The page ID to set. Defaults to NULL.
+ *
+ * @return object The PAGE object with the set page ID.
+ */
+
 function set_pageid($pageid = NULL) {
-global $PAGE;
+    global $PAGE;
+
+    // Clear old page ID
+    unset($_COOKIE["pageid"]);
+    unset($_SESSION['pageid']);
+
     if (empty($PAGE)) {
         $PAGE = (object) [];
     }
@@ -188,35 +203,57 @@ global $PAGE;
         return false; // Page cannot be set.
     }
 
+    // Set the page ID in the PAGE global, session, and cookie.
     $PAGE->id = $pageid;
     $_SESSION["pageid"] = $pageid;
     $_COOKIE["pageid"] = $pageid;
+
     return $PAGE;
 }
 
+/**
+ * Gets the current page ID.
+ *
+ * First checks if the page ID is set as a clean variable.
+ * Then checks the GET, COOKIE, and SESSION variables for the page ID.
+ * If none are set, it returns the site ID.
+ *
+ * @return int The current page ID.
+ */
 function get_pageid() {
-global $PAGE, $CFG, $MYVARS;
+    global $PAGE, $CFG, $MYVARS;
 
+    // Check if the page ID is set as a clean variable
     if (clean_myvar_opt("pageid", "int", false)) {
         return clean_myvar_opt("pageid", "int", false);
     }
 
+    // Check the GET variable for the page ID
     if (!empty($_GET["pageid"]) && is_numeric($_GET["pageid"])) {
         return $_GET["pageid"];
     }
 
+    // Check if the referer is set and the page ID is not set
+    if (!isset($_SERVER['HTTP_REFERER'])) {
+        return $CFG->SITEID; // Return the site ID if the referer is not set
+    }
+
+    // Check the COOKIE variable for the page ID
     if (!empty($_COOKIE["pageid"]) && is_numeric($_COOKIE["pageid"])) {
         return $_COOKIE["pageid"];
     }
 
+    // Check the SESSION variable for the page ID
     if (!empty($_SESSION["pageid"]) && is_numeric($_SESSION["pageid"])) {
         return $_SESSION["pageid"];
     }
 
+    // Check if the page ID is set in the PAGE object
     if (!empty($PAGE->id) && is_numeric($PAGE->id)) {
         return $PAGE->id;
     }
 
+    // Return the site ID if none of the above is set
     return $CFG->SITEID;
 }
 

@@ -389,12 +389,21 @@ global $USER;
         if ($check) {
             if (isset($_SESSION['userid'])) {
                 $USER->userid = $_SESSION['userid'];
-                ajax_return(json_encode(["status" => "active", "check" => $check, "pageid" => $pageid]));
+                ajax_return(json_encode([
+                    "status" => "active", 
+                    "check" => $check, 
+                    "pageid" => $pageid,
+                ]));
                 exit;
             }
         } else {
             update_user_cookie();
-            ajax_return(json_encode(["status" => "active", "pageid" => $pageid, "content" => print_logout_button($USER->fname, $USER->lname, $pageid), "check" => $check]));
+            ajax_return(json_encode([
+                "status" => "active", 
+                "pageid" => $pageid, 
+                "content" => print_logout_button($USER->fname, $USER->lname, $pageid), 
+                "check" => $check,
+            ]));
             exit;
         }
     }
