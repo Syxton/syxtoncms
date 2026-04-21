@@ -46,10 +46,10 @@ global $CFG, $USER, $MYVARS;
         // Feature specific role assignment search. (only searches people that already have page privs)
         if ($type !== "per_page") {
             // Search for users with a higher role on the page
-            $SQL = fill_template("dbsql/roles.sql", "user_search_higher_role", false, ["searchstring" => $searchstring]);
+            $SQL = fill_template("dbsql/roles.sql", "user_search_higher_role", false, ["searchstring" => $searchstring], true);
         } else {  // Page role assignment search.
             // Search for users with a role lower than the user's on the page
-            $SQL = fill_template("dbsql/roles.sql", "user_search_lower_role", false, ["searchstring" => $searchstring]);
+            $SQL = fill_template("dbsql/roles.sql", "user_search_lower_role", false, ["searchstring" => $searchstring], true);
         }
 
         // Get the user's role on the page
@@ -297,7 +297,8 @@ global $CFG, $ROLES, $USER;
             $i++;
         }
 
-        $SQL = fill_template("dbsql/roles.sql", "get_nongroup_users", false, ["searchstring" => $searchstring]);
+        $SQL = fill_template("dbsql/roles.sql", "get_nongroup_users", false, ["searchstring" => $searchstring], true);
+
         $params = [
             "searchstring" => $searchstring,
             "pageid" => $pageid,
