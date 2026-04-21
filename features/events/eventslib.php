@@ -1344,9 +1344,11 @@ global $CFG;
 
     $payment_instructions = $remaining > 0 ? $payment_instructions : '';
 
+    $contact = get_event_contact($event["contact"]);
+
     $email_contacts = '
     <br /><br />
-    If you have any questions about this event, contact ' . $event["contact"] . ' at <a href="mailto:' . $event["email"] . '">' . $event["email"] . '</a>.<br />
+    If you have any questions about this event, contact ' . $contact["name"] . ' at <a href="mailto:' . $contact["email"] . '">' . $contact["email"] . '</a>.<br />
     We hope that you have enjoyed your time on the <strong>' . $CFG->sitename . ' </strong>website.';
 
     if ($pending) {
@@ -3216,7 +3218,7 @@ function data_entry_manager_form() {
             "loading" => "loading_overlay",
             "event" => "none",
         ]);
-        
+
         $params["location_link"] = link_maker([
             "content" => icon("location-arrow") . " <span>Manage Locations</span>",
             "onclick" => "location_manager();",

@@ -101,14 +101,14 @@ get_events_templates_form_names||
 get_current_events_with_same_template||
     SELECT eventid, (CONCAT(FROM_UNIXTIME(e.event_begin_date , '%Y'), ' ', e.name)) AS name
     FROM events e
-    WHERE e.confirmed = 1
+    WHERE e.eventid = ||eventid|| OR (e.confirmed = 1
     AND e.template_id = ||template_id||
     AND e.start_reg > 0
     AND (
         (e.event_begin_date - ||today||) < 31560000
         &&
         (e.event_begin_date - ||today||) > -7776000
-    )
+    ))
 ||get_current_events_with_same_template
 
 delete_event||

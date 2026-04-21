@@ -995,6 +995,7 @@ function get_registration_info() {
             [
                 "template_id" => $template_id,
                 "today" => get_timestamp(),
+                "eventid" => $eventid,
             ]
         );
 

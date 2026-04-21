@@ -78,6 +78,12 @@ function customtype_reglookup($element, $data = []) {
         $autofill = array_merge($autofill, get_like_event_autofill_registrations($data));
     }
 
+    // Go through autofill array add names.
+    $autofill = add_names_to_autofill($autofill);
+
+    // Sort autofill and remove duplicate names.
+    $autofill = remove_duplicate_names($autofill);
+
     $options = ""; $alreadyadded = [];
     $count = 0;
     if (!empty($autofill)) {
@@ -92,28 +98,25 @@ function customtype_reglookup($element, $data = []) {
                 continue;
             }
 
-            // Prepare names.
-            $camper_names = get_camper_names($reg->GET);
-
             // Birthday required to find unique registrations
             if (!isset($reg->GET["camper_birth_date"])) {
                 continue;
             }
 
             // Check for unique hash.
-            $hash = create_unique_registration_hash(1, $camper_names["full"], $reg->GET["camper_birth_date"]);
+            $hash = create_unique_registration_hash(1, $reg->name["full"], $reg->GET["camper_birth_date"]);
             if (isset($alreadyadded[$hash])) {
                 continue;
             }
 
-            $alreadyadded[$hash] = $camper_names["full"];
+            $alreadyadded[$hash] = $reg->name["full"];
             $carthash = isset($reg->hash) ? $reg->hash : 'false';
             $regid = isset($reg->regid) ? $reg->regid : 'false';
             $icon = isset($reg->regid) ? icon("database", 1, "", "navy") : icon("cart-arrow-down", 1, "", "green");
             $title = isset($reg->regid) ? "Autofill from prior registration" : "Autofill from current cart item";
 
             // Allow registrations that are already registerd but alert them.
-            if (already_registered($event["eventid"], $camper_names["full"], $reg->GET["camper_birth_date"])) {
+            if (already_registered($event["eventid"], $reg->name["full"], $reg->GET["camper_birth_date"])) {
                 $icon = icon("triangle-exclamation", 1, "", "red");
                 $title = "Already registered for this event";
             }
@@ -124,7 +127,7 @@ function customtype_reglookup($element, $data = []) {
                     type="button" id="' . $hash . '"
                     class="autofillbutton"
                     onclick="if(confirm(\'Are you sure you want to autofill this form?\')) { show_form_again(' . $event["eventid"] . ",'" . $carthash . "','" . $regid . '\'); }">
-                ' . $icon . ' <span>' . $camper_names["full"] . '</span>
+                ' . $icon . ' <span>' . $reg->name["full"] . '</span>
                 </button>';
             $count++;
         }

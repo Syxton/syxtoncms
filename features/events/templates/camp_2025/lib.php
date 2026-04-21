@@ -580,6 +580,31 @@ function print_registration_cart_total_html($registrations) {
     ]);
 }
 
+function add_names_to_autofill($autofill) {
+    foreach ($autofill as $key => $reg) {
+        // Prepare names.
+        $reg->name = get_camper_names($reg->GET);
+        $autofill[$key] = $reg;
+    }
+
+    return $autofill;
+}
+
+function remove_duplicate_names($autofill) {
+    $listed = [];
+    $fresharray = [];
+
+    foreach ($autofill as $key => $reg) {
+        $hash = hash("sha256", $reg->name["full"]);
+        if (!isset($listed[$hash])) {
+            $listed[$hash] = true;
+            $fresharray[$key] = $reg;
+        }
+    }
+
+    return $fresharray;
+}
+
 function get_camper_names($reg) {
     // Prepare names
     $names = [];
@@ -708,7 +733,8 @@ function get_like_event_autofill_registrations($data = []) {
     $event = clean_param_req($data, "event", "array");
 
     $templates = "WHERE folder = 'camp_new' OR folder = 'camp_2025'";
-    $SQL = fetch_template("dbsql/events.sql", "get_templates_event_registrations_by_email", "events", ["templates" => $templates]);
+    $SQL = fill_template("dbsql/events.sql", "get_templates_event_registrations_by_email", "events", ["templates" => $templates], true);
+    error_log($SQL);
     if ($registrations = get_db_result($SQL, ["email" => $USER->email])) {
         while ($registration = fetch_row($registrations)) {
             if ($registration["eventid"] === $event["eventid"]) {
