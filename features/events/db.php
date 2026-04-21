@@ -322,11 +322,12 @@ function events_upgrade() {
             update_feature($thisversion, "events");
         }
 
-        commit_db_transaction("Events updated to version " . $thisversion);
+        commit_db_transaction();
     } catch (\Throwable $e) {
         rollback_db_transaction($e->getMessage());
     }
 }
+
 
 function events_install() {
     $thisversion = 20260417;

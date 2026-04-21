@@ -141,7 +141,6 @@ global $conn;
 
 function commit_db_transaction($message = false) {
 global $conn;
-	if (empty($message)) { error_log("COMMIT MADE"); }
 	if (!empty($message)) { error_log("COMMIT MADE: " . $message); }
 	mysqli_commit($conn);
 }
