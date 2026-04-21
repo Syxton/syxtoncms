@@ -2847,10 +2847,6 @@ global $CFG, $USER;
     }
 }
 
-function get_event_contact($contactid) {
-    return get_db_row("SELECT * FROM events_contacts WHERE contactid = ||contactid||", ["contactid" => $contactid]);
-}
-
 function get_events_admin_contacts($eventid = false) {
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     $selected = 0;
@@ -3636,9 +3632,9 @@ function get_contact_id($name, $email, $phone) {
     return $contact;
 }
 
-function get_contact($contactid) {
-    $SQL = "SELECT * FROM events_contacts WHERE contactid = ||contactid||";
-    return get_db_row($SQL, ["contactid" => $contactid]);
+
+function get_event_contact($contactid) {
+    return get_db_row("SELECT * FROM events_contacts WHERE contactid = ||contactid||", ["contactid" => $contactid]);
 }
 
 function get_my_contacts_select($pageid, $selected = false) {

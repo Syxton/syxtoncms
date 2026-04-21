@@ -416,7 +416,7 @@ global $CFG, $USER;
         $name = $event["name"];
 
         $contactid = $event['contact'];
-        $contactinfo = get_contact($contactid);
+        $contactinfo = get_event_contact($contactid);
 
         $contact = $contactinfo['name'];
         $email = $contactinfo['email'];

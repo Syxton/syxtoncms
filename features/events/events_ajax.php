@@ -1462,7 +1462,7 @@ global $CFG, $USER;
                         }
                     }
 
-                    $contact = get_contact($event["contact"]);
+                    $contact = get_event_contact($event["contact"]);
                     $rowparams = [
                         "event" => $event,
                         "contact" => $contact,
@@ -1776,8 +1776,10 @@ global $CFG, $MYVARS, $USER, $error;
             'lname' => "",
         ];
 
+        $contact = get_event_contact($event["contact"]);
+
         $fromuser = (object)[
-            'email' => $event['email'],
+            'email' => $contact['email'],
             'fname' => $CFG->sitename,
             'lname' => "",
         ];
@@ -2426,7 +2428,7 @@ global $CFG;
 
 function get_contact_details() {
     $contactid = clean_myvar_req("contact", "int");
-    $contactinfo = get_contact($contactid);
+    $contactinfo = get_event_contact($contactid);
 
     if ($contactinfo) {
         $return = '
