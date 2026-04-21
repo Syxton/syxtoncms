@@ -734,7 +734,7 @@ function get_like_event_autofill_registrations($data = []) {
 
     $templates = "WHERE folder = 'camp_new' OR folder = 'camp_2025'";
     $SQL = fill_template("dbsql/events.sql", "get_templates_event_registrations_by_email", "events", ["templates" => $templates], true);
-    error_log($SQL);
+
     if ($registrations = get_db_result($SQL, ["email" => $USER->email])) {
         while ($registration = fetch_row($registrations)) {
             if ($registration["eventid"] === $event["eventid"]) {

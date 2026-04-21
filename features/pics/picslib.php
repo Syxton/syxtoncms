@@ -306,7 +306,7 @@ global $CFG, $USER;
             }
 
             $activated = '';
-            error_log("picid: " . $row["picsid"] . ", sitehidden: " . $row["sitehidden"] . ", pagehidden: " . $row["pagehidden"] . " issite: " . $issite);
+
             if ($canedit && (($issite && $row["sitehidden"] === 0) || (!$issite && $row["pagehidden"] === 0))) { // image is activated
                 $activated = 'pics_active';
             }
