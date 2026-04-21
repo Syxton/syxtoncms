@@ -156,6 +156,7 @@ table.searchresults, table.searchresultsnav {
     width: 100%;
     border-collapse: collapse;
     font-size: 1em;
+    margin-bottom: 100px;
 }
 table.searchresults td {
     padding: 5px 2px;
@@ -2390,7 +2391,7 @@ input[type=image] {
 /* Links inside the dropdown */
 .dropdowncreator .dropcontent a {
     color: black;
-    padding: 12px 16px;
+    padding: 5px 10px;
     text-decoration: none;
     display: block;
     white-space: nowrap;

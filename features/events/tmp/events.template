@@ -315,7 +315,7 @@ locationeditortemplate||
             <br />
             <div class="flex_field">
                 ||save||
-                <div class="centered">
+                <div style="text-align: center;">
                     Used in ||usage|| events.
                 </div>
                 ||*delete||
@@ -358,7 +358,7 @@ contacteditortemplate||
             <br />
             <div class="flex_field">
                 ||save||
-                <div class="centered">
+                <div style="text-align: center;">
                     Used in ||usage|| events.
                 </div>
                 ||*delete||

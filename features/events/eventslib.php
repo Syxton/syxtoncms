@@ -3620,17 +3620,16 @@ function events_print_confirmation($cart, $data) {
 
 // Function that accepts a name, email, and phone number, searches the contacts table for a match and returns the contact id if found, or creates a new contact and returns that id if not found.
 function get_contact_id($name, $email, $phone) {
-    $SQL = "SELECT contactid FROM events_contacts WHERE name = ||name||";
-    $contact = get_db_field("contactid", $SQL, ["name" => $name]);
+    $contact = get_db_field("contactid", "events_contacts", "name = ||name||", ["name" => $name]);
 
     if (!$contact) { // No contact found, create a new one.
-        $SQL = fetch_template("dbsql/events.sql", "insert_contact", "events", [
+        $SQL = fetch_template("dbsql/events.sql", "add_contact", "events");
+        $contact = execute_db_sql($SQL, [
                 "name" => $name,
                 "email" => $email,
                 "phone" => $phone,
                 "pageid" => get_pageid(),
         ]);
-        $contact = execute_db_sql($SQL, ["name" => $name, "email" => $email, "phone" => $phone]);
     }
     return $contact;
 }
