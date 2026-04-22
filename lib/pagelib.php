@@ -270,7 +270,7 @@ function get_feature_id($feature, $pageid) {
 }
 
 function get_feature_pageid($feature, $featureid) {
-    $SQL = fetch_template("dbsql/features.sql", "get_feature_page_features_by_pageid");
+    $SQL = fetch_template("dbsql/features.sql", "get_feature_page_features_by_featureid");
     $row = get_db_row($SQL, ["featureid" => $featureid, "feature" => $feature]);
     return $row["pageid"];
 }
@@ -2034,7 +2034,7 @@ function update_feature($version, $feature) {
     try {
         start_db_transaction();
         execute_db_sql("UPDATE features SET version=||version|| WHERE feature=||feature||", [
-            "version" => $version, 
+            "version" => $version,
             "feature" => $feature,
         ]);
         commit_db_transaction();

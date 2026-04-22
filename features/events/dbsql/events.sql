@@ -258,9 +258,9 @@ get_events_requests_questions||
 
 insert_events_request||
     INSERT INTO events_requests
-    (`featureid`, `contact_name`, `contact_email`, `contact_phone`, `event_name`, `startdate`, `enddate`, `participants`, `description`, `votes_for`, `votes_against`)
+    (`featureid`, `contact_name`, `contact_email`, `contact_phone`, `event_name`, `startdate`, `enddate`, `participants`, `description`, `votes_for`, `votes_against`, `voted`)
     VALUES
-    (||featureid||, ||contact_name||, ||contact_email||, ||contact_phone||, ||event_name||, ||startdate||, ||enddate||, ||participants||, ||description||, 0, 0)
+    (||featureid||, ||contact_name||, ||contact_email||, ||contact_phone||, ||event_name||, ||startdate||, ||enddate||, ||participants||, ||description||, 0, 0, '')
 ||insert_events_request
 
 get_events_requests||

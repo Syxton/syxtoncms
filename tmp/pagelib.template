@@ -328,3 +328,7 @@ centered_error||
         </div>
     </div>
 ||centered_error
+
+email_header||
+    <img src="||echo get_protocol() . $CFG->userfilesurl;::none||/branding/logos/||echo $CFG->logofile;::none||" style="max-width: 80%;" /><br />
+||email_header
