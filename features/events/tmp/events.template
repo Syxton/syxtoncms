@@ -594,6 +594,53 @@ event_request_form||
     ||validation||
 ||event_request_form
 
+event_request_thanks_email||
+    <strong>
+        Thank you for submitting a request for us to host your event: ||event_name||.
+    </strong>
+    <br /><br />
+    We will look over the details that you provided and respond shortly.
+    <br />
+    Through the approval process you may receive additional questions about your event.
+    <br /><br />
+    ||summary||
+||event_request_thanks_email
+
+event_request_voter_email||
+    <p>
+        A new event request has been submitted. Your input is required to approve the event. This email contains specific links designed for you to be able to submit and view questions as well as vote for this event's approval.
+    </p>
+    <p>
+        Do <strong>not</strong> delete this email. <strong>Please review the following event request.</strong>
+    </p>
+    <br />
+    <a href="||protocol||||echo $CFG->wwwroot;::none||/features/events/events_ajax.php?action=request_question&reqid=||reqid||&voteid=||voteid||">
+        View / Ask Questions
+    </a>
+    <br />
+    <a href="||protocol||||echo $CFG->wwwroot;::none||/features/events/events_ajax.php?action=request_vote&reqid=||reqid||&approve=1&voteid=||voteid||">
+        Approve
+    </a>
+    <br />
+    <a href="||protocol||||echo $CFG->wwwroot;::none||/features/events/events_ajax.php?action=request_vote&reqid=||reqid||&approve=0&voteid=||voteid||'">
+        Deny
+    </a>
+    <br /><br />
+    ||summary||
+||event_request_voter_email
+
+event_request_sent_notice||
+    <div style="width:100%;text-align:center;">
+        <strong>Your request has been sent.</strong>
+    </div>
+    <div>
+        <br />
+        You should receive an email shortly informing you of the event approval process.
+        <br /><br />
+        Thank you.
+    </div>
+||event_request_sent_notice
+
 eventslist||
     <div class="eventslist_container">
         <span class="eventslist" id="||containername||">

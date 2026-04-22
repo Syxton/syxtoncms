@@ -21,7 +21,14 @@ update_user_cookie();
 
 callfunction();
 
-//See if the date given is open for a requested event
+/**
+ * Checks if the given date or date range is available for a requested event.
+ *
+ * Expects 'featureid' (int), 'startdate' (string), and optionally 'enddate' (string) from the request.
+ * Outputs "true" if the date(s) are open, otherwise "false".
+ *
+ * @return void
+ */
 function request_date_open() {
 global $CFG;
     $featureid = clean_myvar_req("featureid", "int");
@@ -31,67 +38,93 @@ global $CFG;
     if ($featureid) {
         $pageid = get_feature_pageid("events", $featureid);
 
-        //Only site events need to be set to confirm=1
-        $confirm = $pageid == $CFG->SITEID ? "confirmed = 1 AND" : "pageid = $pageid AND";
-
         if (!$settings = fetch_settings("events", $featureid, $pageid)) {
-              save_batch_settings(default_settings("events", $pageid, $featureid));
-              $settings = fetch_settings("events", $featureid, $pageid);
-          }
+            save_batch_settings(default_settings("events", $pageid, $featureid));
+            $settings = fetch_settings("events", $featureid, $pageid);
+        }
 
+        // Get location that the event feature allows requests on.
         $locationid = $settings->events->$featureid->allowrequests->setting;
 
-        if ($enddate) { //check all dates between startdate and enddate
-            $startdate = strtotime($startdate) + get_offset(); $enddate = strtotime($enddate) + get_offset();
-            //get all events at location between dates
-            $SQL = "SELECT * FROM events
-                    WHERE $confirm location = ||location||
-                    AND (
-                            (||startdate|| >= event_begin_date AND ||startdate|| <= event_end_date)
-                            OR
-                            (||enddate|| >= event_begin_date AND ||enddate|| <= event_end_date)
-                            OR (||startdate|| <= event_begin_date AND ||enddate|| >= event_end_date)
-                    )";
-            if ($getdates = get_db_count($SQL, ["location" => $locationid, "startdate" => $startdate, "enddate" => $enddate])) {
-                echo "false";
-            } else { echo "true";}
-        } else { //only check a single day for an opening
-            $startdate = strtotime($startdate) + get_offset();
-            //get all events at location on date
-            $SQL = "SELECT *
-                    FROM events
-                    WHERE $confirm location = ||location||
-                    AND (||startdate|| >= event_begin_date AND ||startdate|| <= event_end_date)";
-            if ($getdates = get_db_count($SQL, ["location" => $locationid, "startdate" => $startdate])) {
-                echo "false";
-            } else { echo "true"; }
+        // If no location is set, then the event feature does not allow requests.
+        if (!$locationid) {
+            echo "false";
+            return;
+        }
+
+        // Only site events need to be set to confirm=1
+        $confirm = $pageid == $CFG->SITEID ? "confirmed = 1" : "pageid = $pageid";
+
+        // Add timezone offset
+        $startdate = strtotime($startdate) + get_offset();
+
+        if ($enddate) { // Check all dates between startdate and enddate
+            // Add timezone offset.
+            $enddate = strtotime($enddate) + get_offset();
+
+            // Get all events at location between dates
+            $SQL = fill_template("dbsql/events.sql", "get_events_at_location_between_dates", "events", ["confirmed" => $confirm], true);
+            if (!get_db_count($SQL, ["location" => $locationid, "startdate" => $startdate, "enddate" => $enddate])) {
+                echo "true";
+                return;
+            }
+        } else { // Only check a single day for an opening
+            // Get all events at location on date
+            $SQL = fill_template("dbsql/events.sql", "get_events_at_location_on_date", "events", ["confirmed" => $confirm], true);
+            if (!get_db_count($SQL, ["location" => $locationid, "startdate" => $startdate])) {
+                echo "true";
+                return;
+            }
         }
     }
+    echo "false";
 }
 
+/**
+ * Handles the submission of an event request by validating input, saving the request to the database,
+ * sending notification emails to the requester and approvers, and returning a status message.
+ *
+ * Expects the following request parameters: 'featureid' (int), 'name' (string), 'email' (string),
+ * 'phone' (string), 'event_name' (string), 'startdate' (string), 'enddate' (string, optional),
+ * 'participants' (int), and 'description' (html).
+ *
+ * Side effects:
+ * - Inserts a new event request into the database.
+ * - Sends notification emails to the requester and approvers.
+ * - Returns an AJAX response with a status message or error.
+ *
+ * @return void
+ */
 function event_request() {
 global $CFG, $MYVARS, $USER;
-    $featureid = clean_myvar_req("featureid", "int");
-    $contact_name = clean_myvar_req("name", "string");
-    $contact_email = clean_myvar_req("email", "string");
-    $contact_phone = clean_myvar_req("phone", "string");
-    $event_name = clean_myvar_req("event_name", "string");
-    $startdate = clean_myvar_req("startdate", "string");
-    $enddate = clean_myvar_opt("enddate", "string", $startdate);
-    $participants = clean_myvar_req("participants", "int");
-    $description = clean_myvar_req("description", "html");
-
     $return = $error = "";
     try {
+        $featureid = clean_myvar_req("featureid", "int");
+        $contact_name = clean_myvar_req("name", "string");
+        $contact_email = clean_myvar_req("email", "string");
+        $event_name = clean_myvar_req("event_name", "string");
+        $startdate = clean_myvar_req("startdate", "string");
+        $enddate = clean_myvar_opt("enddate", "string", $startdate);
+
         $startdate = strtotime($startdate);
         $enddate = strtotime($enddate);
         $protocol = get_protocol();
 
-        $SQL = "INSERT INTO events_requests
-                        (featureid,contact_name,contact_email,contact_phone,event_name,startdate,enddate,participants,description,votes_for,votes_against)
-                        VALUES('$featureid','$contact_name','$contact_email','$contact_phone','$event_name','$startdate','$enddate','$participants','$description', 0, 0)";
-        //Save the request
-        if (!$reqid = execute_db_sql($SQL)) {
+        $SQL = fetch_template("dbsql/events.sql", "insert_events_request", "events");
+        $params = [
+            "featureid" => $featureid,
+            "contact_name" => $contact_name,
+            "contact_email" => $contact_email,
+            "contact_phone" => clean_myvar_req("phone", "string"),
+            "event_name" => $event_name,
+            "startdate" => $startdate,
+            "enddate" => $enddate,
+            "participants" => clean_myvar_req("participants", "int"),
+            "description" => clean_myvar_req("description", "html"),
+        ];
+
+        // Save the request
+        if (!$reqid = execute_db_sql($SQL, $params)) {
             throw new Exception("Could not save request");
         }
 
@@ -101,65 +134,46 @@ global $CFG, $MYVARS, $USER;
             "lname" => "",
         ];
 
-        //Requesting email setup
+        // Requesting email setup
         $contact = (object)[
             "email" => $contact_email,
             "fname" => count(explode(" ", $contact_name)) > 1 ? explode(" ", $contact_name)[0] : $contact_name,
             "lname" => count(explode(" ", $contact_name)) > 1 ? explode(" ", $contact_name)[1] : "",
         ];
 
-        $request_info = get_request_info($reqid);
-        $subject = $CFG->sitename . " Event Request Received";
-        $event_name = stripslashes($event_name);
-        $message = '
-            <strong>Thank you for submitting a request for us to host your event: ' . $event_name . '.</strong>
-            <br /><br />
-            We will look over the details that you provided and respond shortly.
-            <br />
-            Through the approval process you may receive additional questions about your event.
-            <br /><br />
-            ' . $request_info;
+        $request_summary = get_request_summary($reqid);
 
-        //Send email to the requester letting them know we received the request
+        // Send email to the requester letting them know we received the request
+        $subject = $CFG->sitename . " Event Request Received";
+        $message = fill_template("tmp/events.template", "event_request_thanks_email", "events", [
+            "event_name" => $event_name,
+            "summary" => $request_summary,
+        ]);
         send_email($contact, $from, $subject, $message);
 
         if (isset($featureid)) {
             //Get feature request settings
             $pageid = get_feature_pageid("events", $featureid);
             if (!$settings = fetch_settings("events", $featureid, $pageid)) {
-                        save_batch_settings(default_settings("events", $pageid, $featureid));
-                        $settings = fetch_settings("events", $featureid, $pageid);
+                save_batch_settings(default_settings("events", $pageid, $featureid));
+                $settings = fetch_settings("events", $featureid, $pageid);
             }
 
             $subject = $CFG->sitename . " Event Request";
 
-            // Get and send to email list
+            // Get event approver email list.
             $emaillist = prepare_email_list($settings->events->$featureid->emaillistconfirm->setting);
 
+            // Send personalized voter email to each person on the list.
             foreach ($emaillist as $emailuser) {
                 //Each message must has an md5'd email address so I know if a person has voted or not
                 $voteid = md5($emailuser);
-                $message = '
-                    <p>
-                        A new event request has been submitted. Your input is required to approve the event. This email contains specific links designed for you to be able to submit and view questions as well as vote for this event\'s approval.
-                    </p>
-                    <p>
-                        Do <strong>not</strong> delete this email. <strong>Please review the following event request.</strong>
-                    </p>
-                    <br />
-                    <a href="' . $protocol . $CFG->wwwroot . '/features/events/events_ajax.php?action=request_question&reqid=' . $reqid . '&voteid=' . $voteid . '">
-                        View / Ask Questions
-                    </a>
-                    <br />
-                    <a href="' . $protocol . $CFG->wwwroot . '/features/events/events_ajax.php?action=request_vote&reqid=' . $reqid . '&approve=1&voteid=' . $voteid . '">
-                        Approve
-                    </a>
-                    <br />
-                    <a href="' . $protocol . $CFG->wwwroot . '/features/events/events_ajax.php?action=request_vote&reqid=' . $reqid . '&approve=0&voteid=' . $voteid . '">
-                        Deny
-                    </a>
-                    <br /><br />
-                    ' . $request_info;
+                $message = fill_template("tmp/events.template", "event_request_voter_email", "events", [
+                    "protocol" => $protocol,
+                    "reqid" => $reqid,
+                    "voteid" => $voteid,
+                    "summary" => $request_summary,
+                ]);
 
                 $thisuser = (object)[
                     "email" => $emailuser,
@@ -169,16 +183,7 @@ global $CFG, $MYVARS, $USER;
                 send_email($thisuser, $from, $subject, $message);
             }
         }
-        $return = '
-            <div style="width:100%;text-align:center;">
-                <strong>Your request has been sent.</strong>
-            </div>
-            <div>
-                <br />
-                You should receive an email shortly informing you of the event approval process.<br />
-                <br />
-                Thank you.
-            </div>';
+        $return = fetch_template("tmp/events.template", "event_request_sent_notice", "events");
     } catch (\Throwable $e) {
         $error = $e->getMessage();
     }
@@ -290,7 +295,7 @@ global $CFG, $MYVARS;
         "lname" => "",
     ];
 
-    $request_info = get_request_info($reqid);
+    $request_summary = get_request_summary($reqid);
 
     // Question is saved.  Now send it to everyone.
     $subject = $CFG->sitename . " Event Request Question";
@@ -314,7 +319,7 @@ global $CFG, $MYVARS;
                 Deny
             </a>
             <br /><br />
-            ' . $request_info;
+            ' . $request_summary;
 
         $thisuser = (object)[
             "email" => $emailuser,
@@ -582,7 +587,7 @@ global $CFG, $PAGE, $MYVARS;
             "lname" => count(explode(" ", $contact_name)) > 1 ? explode(" ", $contact_name)[1] : "",
         ];
 
-        $request_info = get_request_info($reqid);
+        $request_summary = get_request_summary($reqid);
         $subject = $CFG->sitename . " Event Request Received";
         $message = '
             <strong>Thank you for submitting a request for us to host your event: ' . $request["event_name"] . '</strong>
@@ -591,7 +596,7 @@ global $CFG, $PAGE, $MYVARS;
             <br />
             Through the approval process you may receive additional questions about your event.
             <br /><br />
-            ' . $request_info;
+            ' . $request_summary;
 
         if ($votes_for == $approveneeded && $votes_against < $denyneeded) {
             // Make event
@@ -614,7 +619,7 @@ global $CFG, $PAGE, $MYVARS;
             $message = '
                 <strong>The event ' . stripslashes($request["event_name"]) . ' has been approved by a vote of ' . $votes_for . ' to ' . $votes_against . '.</strong>
                 <br /><br />
-                ' . $request_info;
+                ' . $request_summary;
 
             //Send email to the requester letting them know we denied the request
             send_email($contact, $from, $subject, $message);
@@ -638,7 +643,7 @@ global $CFG, $PAGE, $MYVARS;
             $message = '
                 <strong>The event: ' . stripslashes($request["event_name"]) . ' has been denied by a vote of ' . $votes_for . ' to ' . $votes_against . '.</strong>
                 <br /><br />
-                ' . $request_info;
+                ' . $request_summary;
 
             //Send email to the requester letting them know we denied the request
             send_email($contact, $from, $subject, $message);
@@ -709,7 +714,7 @@ global $CFG, $MYVARS;
     return submit_new_event(true);
 }
 
-function get_request_info($reqid) {
+function get_request_summary($reqid) {
 global $CFG;
     if ($request = get_db_row("SELECT * FROM events_requests WHERE reqid='$reqid'")) {
         return '<br />

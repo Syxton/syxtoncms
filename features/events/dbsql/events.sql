@@ -111,6 +111,40 @@ get_current_events_with_same_template||
     ))
 ||get_current_events_with_same_template
 
+get_events_at_location_between_dates||
+    SELECT *
+    FROM events
+    WHERE ||confirmed||
+    AND location = ||location||
+    AND (
+            (
+                ||startdate|| >= event_begin_date
+                AND ||startdate|| <= event_end_date
+            )
+            OR
+            (
+                ||enddate|| >= event_begin_date
+                AND ||enddate|| <= event_end_date
+            )
+            OR
+            (
+                ||startdate|| <= event_begin_date
+                AND ||enddate|| >= event_end_date
+            )
+    )
+||get_events_at_location_between_dates
+
+get_events_at_location_on_date||
+    SELECT *
+    FROM events
+    WHERE ||confirmed||
+    AND location = ||location||
+    AND (
+        ||startdate|| >= event_begin_date
+        AND ||startdate|| <= event_end_date
+    )
+||get_events_at_location_on_date
+
 delete_event||
     DELETE
     FROM events
@@ -186,7 +220,7 @@ update_template_status||
 
 insert_events_template||
     INSERT INTO events_templates
-    (name, folder, formlist, registrant_name, orderbyfield, settings)
+    (`name`, `folder`, `formlist`, `registrant_name`, `orderbyfield`, `settings`)
     VALUES (||name||, ||folder||, ||formlist||, ||registrant_name||, ||orderbyfield||, ||settings||)
 ||insert_events_template
 
@@ -210,7 +244,7 @@ delete_events_requests_questions||
 
 insert_events_requests_questions||
     INSERT INTO events_requests_questions
-    (reqid, question, answer, question_time, answer_time)
+    (`reqid`, `question`, `answer`, `question_time`, `answer_time`)
     VALUES(||reqid||, ||question||, "", ||qtime||, 0)
 ||insert_events_requests_questions
 
@@ -221,6 +255,13 @@ get_events_requests_questions||
     ||*mod||
     ORDER BY question_time
 ||get_events_requests_questions
+
+insert_events_request||
+    INSERT INTO events_requests
+    (`featureid`, `contact_name`, `contact_email`, `contact_phone`, `event_name`, `startdate`, `enddate`, `participants`, `description`, `votes_for`, `votes_against`)
+    VALUES
+    (||featureid||, ||contact_name||, ||contact_email||, ||contact_phone||, ||event_name||, ||startdate||, ||enddate||, ||participants||, ||description||, 0, 0)
+||insert_events_request
 
 get_events_requests||
     SELECT *
@@ -261,14 +302,14 @@ events_requests_recalculate||
 ||events_requests_recalculate
 
 get_contacts_list||
-    SELECT *, CONCAT(contactid, ":", name, ":", email, ":", phone) as contactdata
+    SELECT *, CONCAT(contactid, ":", `name`, ":", `email`, ":", `phone`) AS contactdata
     FROM events_contacts
     WHERE pageid = ||pageid||
     ORDER BY name DESC
 ||get_contacts_list
 
 get_payable_list||
-    SELECT DISTINCT CONCAT(payableto, ': ', checksaddress, ': ', paypal) as admin_contact
+    SELECT DISTINCT CONCAT(payableto, ': ', checksaddress, ': ', paypal) AS admin_contact
     FROM events
     WHERE payableto <> ''
     AND confirmed = 1
@@ -346,22 +387,37 @@ delete_registration_values||
 
 update_staff_app||
     UPDATE events_staff
-    SET userid = ||userid||, pageid = ||pageid||, name = ||name||, phone = ||phone||,
-        dateofbirth = ||dateofbirth||, address = ||address||, agerange = ||agerange||,
-        cocmember = ||cocmember||, congregation = ||congregation||, priorwork = ||priorwork||,
-        q1_1 = ||q1_1||, q1_2 = ||q1_2||, q1_3 = ||q1_3||, q2_1 = ||q2_1||, q2_2 = ||q2_2||, q2_3 = ||q2_3||,
-        parentalconsent = ||parentalconsent||, parentalconsentsig = ||parentalconsentsig||,
-        workerconsent = ||workerconsent||, workerconsentsig = ||workerconsentsig||, workerconsentdate = ||workerconsentdate||,
-        ref1name = ||ref1name||, ref1relationship = ||ref1relationship||, ref1phone = ||ref1phone||,
-        ref2name = ||ref2name||, ref2relationship = ||ref2relationship||, ref2phone = ||ref2phone||,
-        ref3name = ||ref3name||, ref3relationship = ||ref3relationship||, ref3phone = ||ref3phone||
+    SET `userid` = ||userid||, `pageid` = ||pageid||, `name` = ||name||, `phone` = ||phone||,
+        `dateofbirth` = ||dateofbirth||, `address` = ||address||, `agerange` = ||agerange||,
+        `cocmember` = ||cocmember||, `congregation` = ||congregation||, `priorwork` = ||priorwork||,
+        `q1_1` = ||q1_1||, `q1_2` = ||q1_2||, `q1_3` = ||q1_3||, `q2_1` = ||q2_1||, `q2_2` = ||q2_2||, `q2_3` = ||q2_3||,
+        `parentalconsent` = ||parentalconsent||, `parentalconsentsig` = ||parentalconsentsig||,
+        `workerconsent` = ||workerconsent||, `workerconsentsig` = ||workerconsentsig||, `workerconsentdate` = ||workerconsentdate||,
+        `ref1name` = ||ref1name||, `ref1relationship` = ||ref1relationship||, `ref1phone` = ||ref1phone||,
+        `ref2name` = ||ref2name||, `ref2relationship` = ||ref2relationship||, `ref2phone` = ||ref2phone||,
+        `ref3name` = ||ref3name||, `ref3relationship` = ||ref3relationship||, `ref3phone` = ||ref3phone||
     WHERE staffid = ||staffid||
 ||update_staff_app
 
 insert_staff_app||
     INSERT INTO events_staff
-    (userid, pageid, name, phone, dateofbirth, address, agerange, cocmember, congregation, priorwork, q1_1, q1_2, q1_3, q2_1, q2_2, q2_3, parentalconsent, parentalconsentsig, workerconsent, workerconsentsig, workerconsentdate, ref1name, ref1relationship, ref1phone, ref2name, ref2relationship, ref2phone, ref3name, ref3relationship, ref3phone, bgcheckpass, bgcheckpassdate)
-    VALUES(||userid||, ||pageid||, ||name||, ||phone||, ||dateofbirth||, ||address||, ||agerange||, ||cocmember||, ||congregation||, ||priorwork||, ||q1_1||, ||q1_2||, ||q1_3||, ||q2_1||, ||q2_2||, ||q2_3||, ||parentalconsent||, ||parentalconsentsig||, ||workerconsent||, ||workerconsentsig||, ||workerconsentdate||, ||ref1name||,	||ref1relationship||, ||ref1phone||, ||ref2name||, ||ref2relationship||, ||ref2phone||, ||ref3name||, ||ref3relationship||, ||ref3phone||, '', 0)
+    (`userid`, `pageid`, `name`, `phone`, `dateofbirth`, `address`, `agerange`,
+    `cocmember`, `congregation`, `priorwork`,
+    `q1_1`, `q1_2`, `q1_3`, `q2_1`, `q2_2`, `q2_3`,
+    `parentalconsent`, `parentalconsentsig`, `workerconsent`, `workerconsentsig`, `workerconsentdate`,
+    `ref1name`, `ref1relationship`, `ref1phone`,
+    `ref2name`, `ref2relationship`, `ref2phone`,
+    `ref3name`, `ref3relationship`, `ref3phone`,
+    `bgcheckpass`, `bgcheckpassdate`)
+    VALUES
+    (||userid||, ||pageid||, ||name||, ||phone||, ||dateofbirth||, ||address||, ||agerange||,
+     ||cocmember||, ||congregation||, ||priorwork||,
+     ||q1_1||, ||q1_2||, ||q1_3||, ||q2_1||, ||q2_2||, ||q2_3||,
+     ||parentalconsent||, ||parentalconsentsig||, ||workerconsent||, ||workerconsentsig||, ||workerconsentdate||,
+     ||ref1name||, ||ref1relationship||, ||ref1phone||,
+     ||ref2name||, ||ref2relationship||, ||ref2phone||,
+     ||ref3name||, ||ref3relationship||, ||ref3phone||,
+     '', 0)
 ||insert_staff_app
 
 get_staff_app||

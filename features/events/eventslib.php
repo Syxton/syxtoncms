@@ -3428,7 +3428,7 @@ function request_questions_form($reqid, $voteid, $featureid, $pageid) {
     $middlecontents = '
         <div id="question_form" style="padding: 20px;">
             <h2>Questions Regarding Event Request</h2>
-            ' . get_request_info($reqid) . '
+            ' . get_request_summary($reqid) . '
             <form id="request_question_form" method="post" action="./events_ajax.php">
                 <br />
                 <input type="hidden" name="action" value="request_question_send" />
@@ -3531,7 +3531,7 @@ global $CFG;
     $middlecontents = '
         <div id="question_form" style="padding: 20px;">
             <h2>Questions Regarding Event Request</h2>
-            ' . get_request_info($reqid) . '
+            ' . get_request_summary($reqid) . '
             <br />
             ' . $request_answer_form . '
             <h3>Previous Questions</h3>
