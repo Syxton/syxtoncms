@@ -22,6 +22,6 @@ function chat_upgrade() {
 //			execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='chat'");
 //		}
 //	}
-
+    return upgrade_occured('Chat feature', $version, $thisversion);
 }
 ?>

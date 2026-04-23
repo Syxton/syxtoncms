@@ -22,6 +22,7 @@ function participants_upgrade() {
 //		}
 //	}
 
+    return upgrade_occured('Participants feature', $version, $thisversion);
 }
 
 function participants_install() {
@@ -36,6 +37,8 @@ function participants_install() {
         
         //first version number
         execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='participants'");        
+    
+        return upgrade_occured('Events feature', 0, $thisversion);
     }
 }
 ?>

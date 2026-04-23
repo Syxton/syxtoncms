@@ -32,5 +32,7 @@ function adminpanel_upgrade() {
 		add_role_ability('roles','manage_groups','Roles','3','Add/Edit/Delete Groups','1','0','0','0');
 		execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='adminpanel'");
 	}
+
+	return upgrade_occured('Admin Panel feature', $version, $thisversion);
 }
 ?>

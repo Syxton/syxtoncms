@@ -22,6 +22,6 @@ function bloglocker_upgrade() {
 //			execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='bloglocker'");
 //		}
 //	}
-
+    return upgrade_occured('Blog Locker feature', $version, $thisversion);
 }
 ?>

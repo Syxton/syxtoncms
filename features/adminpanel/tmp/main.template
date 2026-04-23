@@ -282,6 +282,10 @@ admin_versions||
                         </span>';
             }::featureversions||
         </div>
+        <br /><br />
+        <div>
+            <a href="||echo $CFG->wwwroot;::none||/upgrade.php">Check for Updates</a>
+        </div>
     </div>
 ||admin_versions
 

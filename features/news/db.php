@@ -49,5 +49,6 @@ function news_upgrade() {
 		}
 	}
 
+	return upgrade_occured('News feature', $version, $thisversion);
 }
 ?>

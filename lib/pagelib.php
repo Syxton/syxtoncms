@@ -850,15 +850,36 @@ function upgrade_check() {
         site_upgrade();
     }
 
+    $return = "<br /><br /><h2>Upgrade Check</h2><br /><br />";
+
     //install new features if they don't exist'
-    run_on_each_feature(NULL, "db", NULL, "_install");
+    $return .= run_on_each_feature(NULL, "db", NULL, "_install");
 
     //run updates
-    run_on_each_feature(NULL, "db", NULL, "_upgrade");
+    $return .= run_on_each_feature(NULL, "db", NULL, "_upgrade");
+
+    return $return;
+}
+
+
+function upgrade_occured($type, $before, $after) {
+    // Check if installing for first time.
+    if (empty($before)) {
+        return "<p><strong>" . $type . " version " . $after . " installed</strong></p>";
+    }
+
+    // Check if an update occured.
+    if ($before == $after) {
+        return "<p>$type version $after is already installed and up to date</p>";
+    }
+
+    return "<p><strong>" . $type . " updated from " . $before . " to " . $after . "</strong></p>";
 }
 
 function run_on_each_feature($filename_ext = "", $filename = "", $function_pre = "", $function_ext = "", $var1 = "notgiven", $var2 = "notgiven", $var3 = "notgiven", $var4 = "notgiven") {
 global $CFG;
+    $return = "";
+
     //Check for new features and feature updates
     $directory = $CFG->dirroot . "/features";
     if ($handle = opendir($directory)) {
@@ -873,22 +894,23 @@ global $CFG;
                 $action = $function_pre . $dir . $function_ext;
                 if (function_exists("$action")) {
                     if ($var1 == "notgiven") {
-                        $action();
+                        $return .= $action();
                     } elseif ($var2 == "notgiven") {
-                        $action($var1);
+                        $return .= $action($var1);
                     } elseif ($var3 == "notgiven") {
-                        $action($var1, $var2);
+                        $return .= $action($var1, $var2);
                     } elseif ($var4 == "notgiven") {
-                        $action($var1, $var2, $var3);
+                        $return .= $action($var1, $var2, $var3);
                     } else {
-                        $action($var1, $var2, $var3, $var4);
+                        $return .= $action($var1, $var2, $var3, $var4);
                     }
                 }
             }
         }
-        //close the directory handler
+        // close the directory handler
         closedir($handle);
     }
+    return $return;
 }
 
 function resort_page_features($pageid) {

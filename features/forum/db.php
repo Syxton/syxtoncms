@@ -29,5 +29,7 @@ function forum_upgrade() {
 			execute_db_sql("UPDATE features SET version = '$thisversion' WHERE feature = 'forum'");
 		}
 	}
+
+	return upgrade_occured('Forum feature', $version, $thisversion);
 }
 ?>

@@ -93,5 +93,7 @@ function html_upgrade() {
             execute_db_sql("UPDATE features SET version = '$thisversion' WHERE feature = 'html'");
         }
     }
+
+    return upgrade_occured('HTML feature', $version, $thisversion);
 }
 ?>

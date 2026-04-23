@@ -23,5 +23,6 @@ function onlineusers_upgrade() {
 //		}
 //	}
 
+    return upgrade_occured('Online Users feature', $version, $thisversion);
 }
 ?>

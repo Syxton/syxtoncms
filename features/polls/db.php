@@ -47,5 +47,6 @@ function polls_upgrade() {
 		}
 	}
 
+    return upgrade_occured('Polls feature', $version, $thisversion);
 }
 ?>

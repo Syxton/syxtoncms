@@ -21,6 +21,8 @@ function pics_upgrade() {
 //			execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='pics'");
 //		}
 //	}
+
+	return upgrade_occured('Pics feature', $version, $thisversion);
 }
 
 ?>

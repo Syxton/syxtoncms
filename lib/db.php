@@ -116,6 +116,8 @@ global $CFG;
             rollback_db_transaction($e->getMessage());
         }
     }
+
+    return upgrade_occured('Site', $version, $thisversion);
 }
 
 ?>

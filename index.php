@@ -59,9 +59,6 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
     //Cache roles
     $ROLES = load_roles();
 
-    //Check for upgrades or uninstalled components
-    upgrade_check();
-
     if (is_logged_in()) {
         $ABILITIES = user_abilities($USER->userid, $PAGE->id);
         if (empty($ABILITIES->viewpages->allow)) {

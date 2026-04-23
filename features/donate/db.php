@@ -22,6 +22,7 @@ global $CFG;
 		}
 	}
 
+	return upgrade_occured('Donation feature', $version, $thisversion);
 }
 
 function donate_install() {
@@ -74,6 +75,8 @@ function donate_install() {
 		
 		//first version number
 		execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='donate'");		
+
+		return upgrade_occured('Donation feature', 0, $thisversion);
 	}
 }
 ?>

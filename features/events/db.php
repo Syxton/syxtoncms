@@ -323,6 +323,7 @@ function events_upgrade() {
         }
 
         commit_db_transaction();
+        return upgrade_occured('Events feature', $version, $thisversion);
     } catch (\Throwable $e) {
         rollback_db_transaction($e->getMessage());
     }
@@ -330,8 +331,8 @@ function events_upgrade() {
 
 
 function events_install() {
-    $thisversion = 20260417;
     if (!get_db_row("SELECT * FROM features WHERE feature='events'")) {
+        $thisversion = 20260417;
         $SQL = fetch_template("dbsql/events.sql", "install", "events");
 
         if (execute_db_sql($SQL)) { // if successful install.
@@ -344,6 +345,7 @@ function events_install() {
                 rollback_db_transaction($e->getMessage());
             }
         }
+        return upgrade_occured('Events feature', 0, $thisversion);
     }
 }
 

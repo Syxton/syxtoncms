@@ -22,6 +22,6 @@ function calendar_upgrade() {
 //			execute_db_sql("UPDATE features SET version='$thisversion' WHERE feature='calendar'");
 //		}
 //	}
-
+    return upgrade_occured('Calendar feature', $version, $thisversion);
 }
 ?>
