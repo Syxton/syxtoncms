@@ -11,7 +11,7 @@ template_form||
                         <input type="hidden" id="event_begin_date" value="||event_begin_date||" />
                         <div style="display: flex;justify-content: center;">
                             <div style="font-size:15px;text-align:center;font-weight:bold">
-                                ||echo $CFG->sitename;::none|| Pre-Registration
+                                Camp Wabashi Online Pre-Registration
                                 <div style="font-size:13px;text-align:center;font-weight:bold">
                                     ||event[name]||
                                 </div>
