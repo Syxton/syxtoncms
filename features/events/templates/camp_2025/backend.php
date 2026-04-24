@@ -229,7 +229,7 @@ function register() {
                 $fullypaid = $newreg["total_owed"] > 0 ? false : true;
                 $message = registration_email($regid, $touser, $pending, $fullypaid);
 
-                $emailsubject = "Camp Wabashi Registration";
+                $emailsubject = $CFG->sitename . " Registration";
                 $usingpromo = empty($newreg["campership"]) ? "" : " (Campership: " . $newreg["campership"] . ")";
                 try {
                     if (\send_email($touser, $fromuser, $emailsubject, $message)) {

@@ -98,7 +98,7 @@ global $CFG, $MYVARS, $USER, $error;
                 throw new Exception($error);
             }
 
-            $emailsubject = "Camp Wabashi Registration";
+            $emailsubject = $CFG->sitename . " Registration";
             $campershipreq = "";
 
             // Successful registration
@@ -187,7 +187,7 @@ global $CFG, $MYVARS, $USER, $error;
                         </div>';
                 }
 
-                $emailsubject = "Camp Wabashi Registration";
+                $emailsubject = $CFG->sitename . " Registration";
                 if ($pending) { // Payment is required to finalize registration.
                     $return .= '<br /><h3 style="background-color: black; color: yellow">You\'re not finished yet...</h3>';
                     $emailsubject = "Pending Camp Wabashi Registration";

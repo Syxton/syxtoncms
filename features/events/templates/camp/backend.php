@@ -114,8 +114,8 @@ global $CFG, $MYVARS, $USER, $error;
         $fromuser->fname = $CFG->sitename;
         $fromuser->lname = "";
         $message = registration_email($regid, $touser);
-        if (send_email($touser, $fromuser, "Camp Wabashi Registration", $message)) {
-            send_email($fromuser, $fromuser, "Camp Wabashi Registration", $message);
+        if (send_email($touser, $fromuser, $CFG->sitename . " Registration", $message)) {
+            send_email($fromuser, $fromuser, $CFG->sitename . " Registration", $message);
         } else { echo "<br /><br />Registration Email NOT Sent."; }
 
     } else { //failed registration
