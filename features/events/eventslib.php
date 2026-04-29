@@ -386,16 +386,12 @@ function get_event_button_layout($pageid, $event, $edit, $confirm) {
 global $CFG;
     $buttons = get_event_edit_buttons($pageid, $event, $edit, $confirm);
 
-    $themeid = get_page_themeid($pageid);
-    $styles = get_styles($pageid, $themeid, "news");
-    $titlebgcolor = isset($styles['titlebgcolor']) ? $styles['titlebgcolor'] : "";
-
     if (strlen($buttons) > 0) {
         $params = [
             "featuretype" => "event",
             "featureid" => $event["eventid"],
             "buttons" => $buttons,
-            "icon" => icon("grip-vertical", 1, "", $titlebgcolor),
+            "icon" => icon("grip-vertical", 1, "", "var(--titlebgcolor)"),
         ];
         return fill_template("tmp/pagelib.template", "get_button_layout_template", false, $params);
     }

@@ -17,16 +17,23 @@ global $CFG, $MYVARS, $USER, $PAGE;
     $themeid = clean_myvar_opt("themeid", "int", 0);
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 
+    // Get page styles.
+    $styles = get_styles($pageid, $themeid);
+    $return = styles_array_to_css($styles);
+
     $pagename = get_db_field("name", "pages", "pageid = '$pageid'");
     $rolename = get_db_field("display_name", "roles", "roleid = " . user_role($USER->userid, $pageid));
 
-    $params["pagelist"] = get_css_box($pagename, $rolename, false, NULL, 'pagename', NULL, $themeid, false, $pageid);
-    $params["block"] = get_css_box("Title", "Content", null, null, null, null, $themeid, false, $pageid);
-    $return = fill_template("tmp/themes.template", "theme_selector_right_template", false, $params);
-
-    // Get page styles.
-    $styles = get_styles($pageid, $themeid);
-    $return .= styles_array_to_css($styles);
+    $params = [
+        "featuretype" => "preview",
+        "featureid" => "preview",
+        "buttons" => "",
+        "icon" => icon("grip-vertical", 1, "", "var(--titlebgcolor)"),
+    ];
+    $buttons = fill_template("tmp/pagelib.template", "get_button_layout_template", false, $params);
+    $params["pagelist"] = get_css_box($pagename, $rolename, $buttons, NULL, 'pagename', NULL, $themeid, false, $pageid);
+    $params["block"] = get_css_box("Title", "Content", $buttons, null, null, null, $themeid, false, $pageid);
+    $return .= fill_template("tmp/themes.template", "theme_selector_right_template", false, $params);
 
     ajax_return($return);
 }
@@ -37,7 +44,11 @@ global $PAGE;
     $themeid = get_page_themeid($pageid);
     $themeid = $themeid !== false ? $themeid : $PAGE->thememid;
 
-    $return = theme_selector($pageid, $themeid);
+    // Get page styles.
+    $styles = get_styles($pageid, 0);
+    $return = styles_array_to_css($styles);
+
+    $return .= theme_selector($pageid, $themeid);
     ajax_return($return);
 }
 
@@ -108,8 +119,16 @@ global $CFG, $MYVARS, $USER, $STYLES;
 
         $pagename = get_db_field("name", "pages", "pageid = '$pageid'");
         $rolename = get_db_field("display_name", "roles", "roleid = " . user_role($USER->userid, $pageid));
-        $params["pagelist"] = get_css_box($pagename, $rolename, "", NULL, 'pagename', "", false, true);
-        $params["block"] = get_css_box("Title", "Content", "", NULL, "page", "", false, true);
+
+        $params = [
+            "featuretype" => "preview",
+            "featureid" => "preview",
+            "buttons" => "",
+            "icon" => icon("grip-vertical", 1, "", "var(--titlebgcolor)"),
+        ];
+        $buttons = fill_template("tmp/pagelib.template", "get_button_layout_template", false, $params);
+        $params["pagelist"] = get_css_box($pagename, $rolename, $buttons, NULL, 'pagename', "", false, true);
+        $params["block"] = get_css_box("Title", "Content", $buttons, NULL, "page", "", false, true);
         $return = fill_template("tmp/themes.template", "theme_selector_right_template", false, $params);
     } else {
         $STYLES->preview = true;
@@ -126,6 +145,9 @@ global $CFG, $MYVARS, $USER, $STYLES;
         unset($STYLES->preview);
     }
 
+    // Get page styles.
+    $return .= styles_array_to_css($STYLES->page);
+
     ajax_return($return);
 }
 
@@ -134,19 +156,30 @@ global $CFG, $USER;
     $feature = clean_myvar_req("feature", "string");
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 
-    $return = "";
+    // Get page styles.
+    $styles = get_styles($pageid, 0);
+    $return = styles_array_to_css($styles);
+
+    $params = [
+        "featuretype" => "preview",
+        "featureid" => "preview",
+        "buttons" => "",
+        "icon" => icon("grip-vertical", 1, "", "var(--titlebgcolor)"),
+    ];
+    $buttons = fill_template("tmp/pagelib.template", "get_button_layout_template", false, $params);
+
     if ($feature == "page") {
         $pagename = get_db_field("name", "pages", "pageid = '$pageid'");
         $rolename = get_db_field("display_name", "roles", "roleid = " . user_role($USER->userid, $pageid));
 
         $params = [];
-        $params["pagelist"] = get_css_box($pagename, $rolename, false, NULL, 'pagename', NULL, '0', NULL, $pageid);
-        $params["block"] = get_css_box("Title", "Content", NULL, NULL, NULL, NULL, '0', NULL, $pageid);
+        $params["pagelist"] = get_css_box($pagename, $rolename, $buttons, NULL, 'pagename', NULL, '0', NULL, $pageid);
+        $params["block"] = get_css_box("Title", "Content", $buttons, NULL, NULL, NULL, '0', NULL, $pageid);
         $p = [
             "left" => custom_styles_selector($pageid, $feature),
             "right" => fill_template("tmp/themes.template", "theme_selector_right_template", false, $params),
         ];
-        $return = fill_template("tmp/themes.template", "make_template_selector_panes_template", false, $p);
+        $return .= fill_template("tmp/themes.template", "make_template_selector_panes_template", false, $p);
     } else {
           include_once($CFG->dirroot . '/features/' . $feature . '/' . $feature . 'lib.php');
           $function = "display_$feature";
@@ -154,7 +187,7 @@ global $CFG, $USER;
             "left" => custom_styles_selector($pageid, $feature, $featureid),
             "right" => $function($pageid, "side", $featureid),
         ];
-        $return = fill_template("tmp/themes.template", "make_template_selector_panes_template", false, $p);
+        $return .= fill_template("tmp/themes.template", "make_template_selector_panes_template", false, $p);
     }
 
     ajax_return($return);
@@ -165,6 +198,10 @@ global $CFG;
     $themeid = clean_myvar_opt("themeid", "int", 0);
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 
+    // Get page styles.
+    $styles = get_styles($pageid, $themeid);
+    $return = styles_array_to_css($styles);
+
     //Save selected Theme
     if (!$themeid && $pageid !== $CFG->SITEID) {
         execute_db_sql("DELETE FROM settings WHERE pageid = ||pageid|| AND setting_name = 'themeid'", ["pageid" => $pageid]);
@@ -173,11 +210,7 @@ global $CFG;
     }
 
     //Page has theme selected show themes
-    $return = theme_selector($pageid, $themeid);
-
-    // Get page styles.
-    $styles = get_styles($pageid, $themeid);
-    $return .= styles_array_to_css($styles);
+    $return .= theme_selector($pageid, $themeid);
 
     ajax_return($return);
 }

@@ -1875,20 +1875,12 @@ global $CFG, $PAGE;
         $buttons = $feature_buttons . get_edit_buttons($pageid, $featuretype, $featureid);
     }
 
-    $themeid = get_page_themeid($PAGE->id);
-    if (!$themeid && $pageid) {
-        $themeid = get_page_themeid($pageid);
-    }
-
-    $styles = get_styles($pageid, $themeid, $featuretype, $featureid);
-    $titlebgcolor   = $styles['titlebgcolor'] ?? "";
-
     if (strlen($buttons) > 0) {
         $params = [
             "featuretype" => $featuretype,
             "featureid" => $featureid,
             "buttons" => $buttons,
-            "icon" => icon("grip-vertical", 1, "", $titlebgcolor),
+            "icon" => icon("grip-vertical", 1, "", "var(--titlebgcolor)"),
         ];
         $returnme = fill_template("tmp/pagelib.template", "get_button_layout_template", false, $params);
     }

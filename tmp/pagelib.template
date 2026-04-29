@@ -134,7 +134,7 @@ print_logout_button_template||
 ||print_logout_button_template
 
 get_css_box_template1||
-    <div class="box_header pagename_box style_pagenamebordercolor style_pagenamebgcolor" style="border: 2px solid;">
+    <div class="box_header pagename_box style_pagenamebordercolor style_pagenamebgcolor" style="border-width: 2px;border-style: solid;">
         <div class="box_title style_pagenamefontcolor">
             <span class="box_title_text">
                 <strong>||title||</strong>
@@ -146,13 +146,13 @@ get_css_box_template1||
 
 get_css_box_template2||
     <div ||opendiv||>
-        <div class="box_header style_titlebgcolor style_bordercolor"  style="border: 2px solid;">
+        <div class="box_header style_titlebgcolor style_bordercolor"  style="border-width: 2px;border-style: solid;">
             <div class="box_title style_titlefontcolor">
                 ||title||
             </div>
             ||*buttons||
         </div>
-        <div class="box_content style_bordercolor style_contentbgcolor ||class||" style="border: 2px solid;border-top: none;||padding||">
+        <div class="box_content style_bordercolor style_contentbgcolor ||class||" style="border-width: 2px;border-style: solid;border-top: none;||padding||">
             ||content||
             ||bottom||
         </div>
@@ -180,7 +180,7 @@ get_login_form_template||
     <form id="login_form">
         <fieldset class="formContainer">
             <div class="rowContainer">
-                <label class="rowTitle style_titlefontcolor" for="username">Username</label>
+                <label class="rowTitle" for="username">Username</label>
                 <input style="width:100%" type="email" id="username" name="username" autocomplete="username" data-rule-required="true" data-msg-required="||echo getlang("input_required");::none||" />
                 <div class="tooltipContainer info">||input_username||</div>
                 <div class="spacer" style="clear: both;"></div>
@@ -211,7 +211,7 @@ get_button_layout_template||
                 ||*buttons||
             </div>
         </div>
-        <div class="slide_menu slide_menu_tab style_titlefontcolor style_titlebgcolor style_bordercolor" style="border:1px solid;border-right:none;" onclick="$(this).prev('#slide_menu').animate({width: 'toggle'}, function() { $(this).toggleClass('slide_menu_visible'); })">
+        <div class="slide_menu slide_menu_tab style_bordercolor" style="border-width:1px;border-style: solid;border-right:none;" onclick="$(this).prev('#slide_menu').animate({width: 'toggle'}, function() { $(this).toggleClass('slide_menu_visible'); })">
             ||icon||
         </div>
     </div>

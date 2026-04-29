@@ -66,27 +66,29 @@ global $CFG, $MYVARS;
 
 function styles_array_to_css($styles = []) {
     $css = '<style>';
-
+    $root = ":root {";
     foreach ($styles as $attribute => $value) {
-        $css .= '.style_' . $attribute . ' {';
+        $css .= ".style_$attribute {";
+        $root .= "--$attribute: $value;";
         switch ($attribute) {
             case "pagenamebordercolor":
             case "bordercolor":
-                $css .= "border-color: $value;";
+                $css .= "border-color: var(--$attribute);";
                 break;
             case "pagenamebgcolor":
             case "titlebgcolor":
             case "contentbgcolor":
-                $css .= "background-color: $value;";
+                $css .= "background-color: var(--$attribute);";
                 break;
             case "pagenamefontcolor":
             case "titlefontcolor":
-                $css .= "color: $value;";
+                $css .= "color: var(--$attribute);";
                 break;
         }
         $css .= "}";
     }
-    $css .= "</style>";
+    $root .= "}";
+    $css .= $root . "</style>";
     return $css;
 }
 
@@ -140,10 +142,16 @@ global $CFG, $MYVARS, $USER;
     $left = $tabs . fill_template("tmp/themes.template", "theme_selector_left_template", false, $params);
 
     $title = get_db_field("name", "pages", "pageid = ||pageid||", ["pageid" => $pageid]);
-    $title = '<span class="box_title_text">' . $title . '</span>';
 
-    $params["pagelist"] = get_css_box($title, "", false, NULL, 'pagename', NULL, $themeid, null, $pageid);
-    $params["block"] = get_css_box('<span class="box_title_text">Title</span>', "Content", null, null, null, null, $themeid, null, $pageid);
+    $params = [
+        "featuretype" => "preview",
+        "featureid" => "preview",
+        "buttons" => "",
+        "icon" => icon("grip-vertical", 1, "", "var(--titlebgcolor)"),
+    ];
+    $buttons = fill_template("tmp/pagelib.template", "get_button_layout_template", false, $params);
+    $params["pagelist"] = get_css_box($title, "", $buttons, NULL, 'pagename', NULL, $themeid, null, $pageid);
+    $params["block"] = get_css_box('Title', "Content", $buttons, null, null, null, $themeid, null, $pageid);
     $right = fill_template("tmp/themes.template", "theme_selector_right_template", false, $params);
 
     return fill_template("tmp/themes.template", "make_template_selector_panes_template", false, ["left" => $left, "right" => $right]);
