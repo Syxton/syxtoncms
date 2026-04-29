@@ -1666,6 +1666,11 @@ a.icon.mobile_menu {
     background: inherit;
     border-radius: 0
 }
+
+button.dropbtn:hover {
+    filter: brightness(.8) !important;
+}
+
 /* Style the dropdown content (hidden by default) */
 .dropdown-content {
     display: none;
@@ -2107,7 +2112,6 @@ input[type=submit]:active,input[type=button]:active,.buttonlike:active,button:ac
 }
 .smallbutton {
     font-size: .9em;
-    padding: 3px 6px;
     margin: 2px
 }
 .smallbutton *:first-child {
@@ -2364,7 +2368,6 @@ input[type=image] {
     display: inline-block;
 }
 .dropdowncreator .dropbtn {
-    color: white;
     padding: 4px;
     font-size: 16px;
     border: none;

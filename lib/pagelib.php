@@ -124,6 +124,9 @@ function icon_color($icon) {
         case "thumbs-down":
             $color = "red";
             break;
+        case "file-csv":
+            $color = "#1D6F42";
+            break;
         default:
             return "";
     }
