@@ -385,19 +385,13 @@ global $CFG, $USER;
 function get_event_button_layout($pageid, $event, $edit, $confirm) {
 global $CFG;
     $buttons = get_event_edit_buttons($pageid, $event, $edit, $confirm);
+
     $themeid = get_page_themeid($pageid);
     $styles = get_styles($pageid, $themeid, "news");
-
-    $contentbgcolor = isset($styles['contentbgcolor']) ? $styles['contentbgcolor'] : "";
-    $bordercolor = isset($styles['bordercolor']) ? $styles['bordercolor'] : "";
     $titlebgcolor = isset($styles['titlebgcolor']) ? $styles['titlebgcolor'] : "";
-    $titlefontcolor = isset($styles['titlefontcolor']) ? $styles['titlefontcolor'] : "";
 
     if (strlen($buttons) > 0) {
         $params = [
-            "bordercolor" => $bordercolor,
-            "titlefontcolor" => $titlefontcolor,
-            "titlebgcolor" => $titlebgcolor,
             "featuretype" => "event",
             "featureid" => $event["eventid"],
             "buttons" => $buttons,

@@ -81,6 +81,10 @@ global $CFG, $PAGE;
 		"event" => "none",
     ]);
 
+    // Get styles to css.
+    $styles = get_styles($pageid, $PAGE->themeid);
+    echo styles_array_to_css($styles);
+
 	echo fill_template("tmp/themes.template", "change_theme_template", false, $params);
 }
 ?>

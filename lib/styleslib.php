@@ -21,8 +21,8 @@ function get_styles($pageid, $themeid = false, $feature = '', $featureid = '') {
 global $CFG, $MYVARS;
     $pageid = clean_var_opt($pageid, "int", get_pageid());
     $themeid = clean_var_opt($themeid, "int", false);
-    $feature = clean_var_opt($feature, "string", "");
-    $featureid = clean_var_opt($featureid, "int", "");
+    $feature = clean_var_opt($feature, "string", "page");
+    $featureid = clean_var_opt($featureid, "int", false);
 
     // THEME RULES
     // Default styles are given pageid = 0
@@ -36,11 +36,10 @@ global $CFG, $MYVARS;
         "featureid" => $featureid,
     ];
 
-    if (!$themeid === 0) { // CUSTOM THEME
+    if ($themeid === 0) { // CUSTOM THEME
         // Hasn't saved custom colors yet return defaults;
         if (!get_db_field("id", "styles", "pageid = ||pageid||", ["pageid" => $revised_pageid])) {
-            $feature = "page";
-            if ($default_list = get_custom_styles($revised_pageid, $feature)) {
+            if ($default_list = get_custom_styles($revised_pageid, $feature, $featureid)) {
                 foreach ($default_list as $style) {
                     $temparray[$style[1]] = isset($MYVARS->GET[$style[1]]) ? dbescape($MYVARS->GET[$style[1]]) : false;
                 }
@@ -63,6 +62,32 @@ global $CFG, $MYVARS;
         return empty($styles) ? false : $styles;
     }
     return false;
+}
+
+function styles_array_to_css($styles = []) {
+    $css = '<style>';
+
+    foreach ($styles as $attribute => $value) {
+        $css .= '.style_' . $attribute . ' {';
+        switch ($attribute) {
+            case "pagenamebordercolor":
+            case "bordercolor":
+                $css .= "border-color: $value;";
+                break;
+            case "pagenamebgcolor":
+            case "titlebgcolor":
+            case "contentbgcolor":
+                $css .= "background-color: $value;";
+                break;
+            case "pagenamefontcolor":
+            case "titlefontcolor":
+                $css .= "color: $value;";
+                break;
+        }
+        $css .= "}";
+    }
+    $css .= "</style>";
+    return $css;
 }
 
 function theme_selector($pageid, $themeid, $feature="page", $checked1="checked", $checked2="") {

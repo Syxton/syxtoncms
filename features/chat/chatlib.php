@@ -33,9 +33,8 @@ global $CFG, $USER, $ROLES, $PAGE;
 	$content = get_js_tags(["scripts/frame_resize.js"]);
 
 	if ((is_logged_in() && user_is_able($USER->userid, "chat", $pageid)) || (!is_logged_in() && role_is_able($ROLES->visitor,"chat", $pageid))) {
-        $styles=get_styles($pageid, $PAGE->themeid);
 		if ($area == "middle") {
-			$content .= '<div style="width:100%;"><iframe id="chatframe" onload="resizeCaller(this.id);" src="' . $CFG->wwwroot . '/features/chat/plugin/index.php?pageid=' . $pageid . '" frameborder="0" style="background-color:' . $styles['contentbgcolor'] . ';overflow:hidden;height:500px;width:100%;"></iframe></div>';
+			$content .= '<div style="width:100%;"><iframe id="chatframe" class="style_contentbgcolor" onload="resizeCaller(this.id);" src="' . $CFG->wwwroot . '/features/chat/plugin/index.php?pageid=' . $pageid . '" frameborder="0" style="overflow:hidden;height:500px;width:100%;"></iframe></div>';
 		} else {
 			$content .= '<span class="centered_span">Cannot be used as a side panel.</span>';
         }

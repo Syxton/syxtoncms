@@ -24,6 +24,10 @@ global $CFG, $MYVARS, $USER, $PAGE;
     $params["block"] = get_css_box("Title", "Content", null, null, null, null, $themeid, false, $pageid);
     $return = fill_template("tmp/themes.template", "theme_selector_right_template", false, $params);
 
+    // Get page styles.
+    $styles = get_styles($pageid, $themeid);
+    $return .= styles_array_to_css($styles);
+
     ajax_return($return);
 }
 
@@ -170,6 +174,10 @@ global $CFG;
 
     //Page has theme selected show themes
     $return = theme_selector($pageid, $themeid);
+
+    // Get page styles.
+    $styles = get_styles($pageid, $themeid);
+    $return .= styles_array_to_css($styles);
 
     ajax_return($return);
 }

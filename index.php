@@ -56,6 +56,10 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
     //Start Page
     include('header.html');
 
+    // Get page styles.
+    $styles = get_styles($pageid, $PAGE->themeid);
+    echo styles_array_to_css($styles);
+
     //Cache roles
     $ROLES = load_roles();
 
@@ -77,8 +81,8 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
             "id" => "login_check",
             "url" => "/ajax/site_ajax.php",
             "data" => [
-                "action" => "login_check", 
-                "pageid" => $pageid, 
+                "action" => "login_check",
+                "pageid" => $pageid,
                 "check" => true,
             ],
             "ondone" => "login_check_response(data);",
