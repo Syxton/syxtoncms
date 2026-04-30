@@ -31,7 +31,6 @@ global $CFG, $MYVARS;
         $styles = $fn();
     }
 
-    error_log(print_r($styles, true));
     // THEME RULES
     // Default styles are given pageid = 0
     // Global styles are given forced = 1
@@ -58,7 +57,7 @@ global $CFG, $MYVARS;
                     }
                 }
             }
-            error_log(print_r($styles, true));
+
             return $styles;
         }
         $SQL = fetch_template("dbsql/styles.sql", "custom_theme_styles");
