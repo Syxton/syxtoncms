@@ -207,7 +207,7 @@ global $CFG, $USER, $PAGE;
             "path" => $CFG->wwwroot . "/pages/themes.php?action=change_theme&pageid=$pageid&feature=page",
             "iframe" => true,
             "refresh" => "true",
-            "width" => "640",
+            "width" => "800",
             "height" => "600",
             "icon" => icon("palette"),
             "class" => "slide_menu_button",

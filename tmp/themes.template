@@ -9,15 +9,11 @@ change_theme_template||
 ||change_theme_template
 
 theme_selector_tabs_template||
-    ||iscustom{{
-        <input onclick="show_themes_selector()" type="radio" name="group1" value="Theme Selector" ||checked1|| />
-        Theme Selector
-        &nbsp;
-        <input onclick="show_custom_styles()" type="radio" name="group1" value="Page Styles" ||checked2|| />
-        Page Styles
-    //OR//
-        <input type="radio" name="group1" value="Theme Selector" ||checked1|| />Theme Selector
-    }}iscustom||
+    <input onclick="show_themes_selector()" type="radio" name="group1" value="Theme Selector" ||checked1|| />
+    Theme Selector
+    &nbsp;
+    <input onclick="show_custom_styles(||themeid||)" type="radio" name="group1" value="Page Styles" ||checked2|| />
+    Page Styles
     <br />
     <br />
 ||theme_selector_tabs_template
@@ -53,7 +49,7 @@ theme_selector_right_template||
     </div>
 ||theme_selector_right_template
 
-custom_styles_selector_template||
+customize_style_selector_template||
     <center>
         <strong>
             Custom Colors
@@ -61,13 +57,29 @@ custom_styles_selector_template||
     </center>
     <br />
     <form id="colors" name="colors">
+        <input type="hidden" id="themeid" name="themeid" value="||themeid||" />
         ||style_inputs||
         <br />
-        <button type="button" id="save_custom_theme">
+        ||is_custom{{
+            <div>
+                <table style="font-size:1em;">
+                    <tbody><tr>
+                        <td style="width:170px;vertical-align:middle;">
+                            Make permanant
+                        </td>
+                        <td>
+                            <input onchange="$('#saveas_name').prop('disabled', !this.checked);" type="checkbox" id="saveas" name="saveas" />
+                            <input disabled class="themeinput" type="text" id="saveas_name" name="saveas_name" value="" />
+                        </td>
+                    </tr>
+                </tbody></table>
+            </div>
+        }}is_custom||
+        <button type="button" id="save_theme_customizations">
             Save
         </button>
     </form>
-||custom_styles_selector_template
+||customize_style_selector_template
 
 style_inputs_template||
     <div>
@@ -88,12 +100,11 @@ make_template_selector_panes_template||
     <div id="panes">
         <table style="font-size:1em;width:100%;">
             <tr>
-                <td style="width:48%;vertical-align:top;">
+                <td style="vertical-align:top;">
                     ||left||
                 </td>
                 <td style="width:2%;"></td>
-                <td style="width:50%;vertical-align:top;*padding-right:10px !important;">
-                    <div style="border:1px;position:absolute;width:50%;z-index:1000;"></div>
+                <td style="width: 250px;vertical-align:top;*padding-right:10px !important;">
                     ||right||
                 </td>
             </tr>

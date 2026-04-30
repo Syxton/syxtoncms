@@ -14,6 +14,7 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
     include($sub . 'lib/header.php');
 }
 define('STYLESLIB', true);
+define('CUSTOMTHEME', 0);
 
 $STYLES = (object) [];
 
@@ -103,7 +104,7 @@ global $CFG, $MYVARS, $USER;
         "feature" => $feature,
         "checked1" => $checked1,
         "checked2" => $checked2,
-        "iscustom" => empty($themeid),
+        "themeid" => $themeid,
     ];
 
     ajaxapi([
@@ -162,7 +163,7 @@ global $CFG, $MYVARS, $USER;
     return fill_template("tmp/themes.template", "make_template_selector_panes_template", false, ["left" => $left, "right" => $right]);
 }
 
-function custom_styles_selector($pageid, $feature, $featureid=false) {
+function customize_style_selector($pageid, $themeid, $feature = "page", $featureid = false) {
     global $CFG;
         $params = [
             "pageid" => $pageid,
@@ -170,7 +171,8 @@ function custom_styles_selector($pageid, $feature, $featureid=false) {
             "featureid" => $featureid,
             "checked1" => "",
             "checked2" => "checked",
-            "iscustom" => ($feature == "page"),
+            "themeid" => $themeid,
+            "is_custom" => ($themeid == CUSTOMTHEME),
         ];
         $tabs = fill_template("tmp/themes.template", "theme_selector_tabs_template", false, $params);
 
@@ -188,6 +190,7 @@ function custom_styles_selector($pageid, $feature, $featureid=false) {
             $p = [
                 "pageid" => $revised_pageid,
                 "attribute" => $attribute,
+                "themeid" => $themeid,
             ];
             $featuresql = "";
             if ($feature !== "page") {
@@ -195,7 +198,7 @@ function custom_styles_selector($pageid, $feature, $featureid=false) {
                 $p["feature"] = $feature;
                 $featuresql = " AND feature = ||feature|| AND featureid = ||featureid|| ";
             }
-            $value = get_db_field("value", "styles", "themeid = 0 AND attribute = ||attribute|| AND pageid = ||pageid|| $featuresql ORDER BY pageid DESC", $p);
+            $value = get_db_field("value", "styles", "themeid = ||themeid|| AND attribute = ||attribute|| AND pageid = ||pageid|| $featuresql ORDER BY pageid DESC", $p);
             if (!$value) { // No db value found, use the hard coded default value.
                 $value = $style['value'];
             }
@@ -207,23 +210,42 @@ function custom_styles_selector($pageid, $feature, $featureid=false) {
         }
 
         ajaxapi([
-            "id" => "save_custom_theme",
+            "id" => "save_theme_customizations",
             "url" => "/ajax/themes_ajax.php",
             "reqstring" => "colors",
             "data" => [
-                "action" => "save_custom_theme",
+                "action" => "save_theme_customizations",
                 "pageid" => $pageid,
                 "feature" => $feature,
                 "featureid" => $featureid,
             ],
-            "ondone" => "location.reload(true);",
+            "ondone" => "window.location.href = window.location.href + '&themeid=$themeid';",
         ]);
 
         $params["style_inputs"] = $style_inputs;
-        return $tabs . fill_template("tmp/themes.template", "custom_styles_selector_template", false, $params);
+        return $tabs . fill_template("tmp/themes.template", "customize_style_selector_template", false, $params);
 }
 
-function get_custom_styles($pageid, $feature = "page", $featureid = false) {
+function save_new_theme($name, $pageid) {    
+    $themeid = false;
+    try {
+        start_db_transaction();
+        
+        // Create a new template. Get new themeid.
+        $SQL = "INSERT INTO themes (name) VALUES (||name||)";
+        if ($themeid = execute_db_sql($SQL, ["name" => $name])) {
+            $SQL = "UPDATE styles SET themeid=||themeid|| WHERE themeid=0 AND pageid=||pageid||";
+            execute_db_sql($SQL, ["themeid" => $themeid, "pageid" => $pageid]);
+        }
+        commit_db_transaction();
+    } catch (\Throwable $e) {
+        rollback_db_transaction($e->getMessage());
+    }
+
+    return $themeid;
+}
+
+function get_custom_styles($pageid, $themeid = 0, $feature = "page", $featureid = false) {
 global $CFG;
     // Styles function
     $fn = $feature . '_default_styles';
@@ -240,9 +262,9 @@ global $CFG;
 
     foreach ($styles as $attribute => $style) { // go through each style type and see if there is a db setting that can replace it.
         if ($feature == "page") {
-            $SQL = "themeid=0 AND attribute='" . $attribute ."' AND pageid='$revised_pageid' AND feature <= '' AND featureid <= 0 ORDER BY pageid DESC";
+            $SQL = "themeid='" . $themeid . "' AND attribute='" . $attribute ."' AND pageid='$revised_pageid' AND feature <= '' AND featureid <= 0 ORDER BY pageid DESC";
         } else {
-            $SQL = "themeid=0 AND attribute='" . $attribute ."' AND pageid='$revised_pageid' AND feature='$feature' AND featureid='$featureid' ORDER BY pageid DESC";
+            $SQL = "themeid=" . $themeid . " AND attribute='" . $attribute ."' AND pageid='$revised_pageid' AND feature='$feature' AND featureid='$featureid' ORDER BY pageid DESC";
         }
         $value = get_db_field("value", "styles", $SQL);
         if ($value) { // No db value found, use the hard coded default value.

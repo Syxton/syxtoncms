@@ -39,7 +39,10 @@ global $CFG, $PAGE;
 	} else {
 		include_once($CFG->dirroot . '/features/' . $feature . '/' . $feature . 'lib.php');
 		$function = "display_$feature";
-		$p = ["left" => custom_styles_selector($pageid, $feature, $featureid), "right" => $function($pageid, "side", $featureid)];
+		$p = [
+            "left" => customize_style_selector($pageid, $PAGE->themeid, $feature, $featureid), 
+            "right" => $function($pageid, "side", $featureid),
+        ];
 		$params["pane"] = fill_template("tmp/themes.template", "make_template_selector_panes_template", false, $p);
 	}
 
@@ -52,6 +55,7 @@ global $CFG, $PAGE;
             "pageid" => $pageid,
             "feature" => $feature,
             "featureid" => $featureid,
+            "themeid" => "js||$('#themeid').val()||js",
         ],
         "display" => "color_preview",
         "event" => "none",
@@ -64,6 +68,7 @@ global $CFG, $PAGE;
             "action" => "show_themes",
             "pageid" => $pageid,
             "feature" => $feature,
+            "themeid" => "js||$('#themeid').val()||js",
         ],
         "display" => "themes_page",
 		"event" => "none",
@@ -76,6 +81,7 @@ global $CFG, $PAGE;
             "action" => "show_styles",
             "pageid" => $pageid,
             "feature" => $feature,
+            "themeid" => "js||$('#themes').val()||js",
         ],
         "display" => "themes_page",
 		"event" => "none",

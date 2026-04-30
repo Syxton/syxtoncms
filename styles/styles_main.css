@@ -1649,7 +1649,7 @@ div.dropwrapper > button {
 }
 /* Add an active class to highlight the current page */
 .active, .dropwrapper:has(a.active) {
-    filter: saturate(2.5);
+    filter: saturate(2) brightness(1.2);
 }
 /* Hide the link that should open and close the topnav on small screens */
 a.icon.mobile_menu {
@@ -1697,14 +1697,14 @@ button.dropbtn:hover {
 }
 /* Add a dark background on topnav links and the dropdown button on hover */
 .topnav > a:hover,.dropwrapper:hover {
-    filter: saturate(0.4);
+    filter: saturate(0.4) brightness(.9);
 }
 div.dropwrapper button:hover {
-    filter: saturate(0.4);
+    filter: saturate(0.4) brightness(.9);
 }
 /* Add a grey background to dropdown links on hover */
 .dropdown-content > a:hover {
-    filter: saturate(0.4);
+    filter: saturate(0.4) brightness(.9);
 }
 /* Show the dropdown menu when the user moves the mouse over the dropdown button */
 .topnav .dropdown:hover > .dropdown-content {

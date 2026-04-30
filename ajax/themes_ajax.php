@@ -14,7 +14,7 @@ callfunction();
 
 function theme_change() {
 global $CFG, $MYVARS, $USER, $PAGE;
-    $themeid = clean_myvar_opt("themeid", "int", 0);
+    $themeid = clean_myvar_opt("themeid", "int", CUSTOMTHEME);
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 
     // Get page styles.
@@ -41,39 +41,40 @@ global $CFG, $MYVARS, $USER, $PAGE;
 function show_themes() {
 global $PAGE;
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
-    $themeid = get_page_themeid($pageid);
-    $themeid = $themeid !== false ? $themeid : $PAGE->thememid;
+    $themeid = clean_myvar_opt("themeid", "int", get_page_themeid($pageid));
 
     // Get page styles.
-    $styles = get_styles($pageid, 0);
+    $styles = get_styles($pageid, $themeid);
     $return = styles_array_to_css($styles);
 
     $return .= theme_selector($pageid, $themeid);
     ajax_return($return);
 }
 
-function save_custom_theme() {
+function save_theme_customizations() {
 global $CFG;
     $feature = clean_myvar_req("feature", "string");
     $featureid = clean_myvar_opt("featureid", "int", 0);
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+    $themeid = clean_myvar_opt("themeid", "int", CUSTOMTHEME);
+    $saveas = clean_myvar_opt("saveas", "int", false);
 
     $pageid = $pageid == $CFG->SITEID ? 0 : $pageid;
     $styles = [];
     if ($feature === "page") {
-        $default_list = get_custom_styles($pageid);
+        $default_list = get_custom_styles($pageid, $themeid);
         foreach ($default_list as $attribute => $style) {
             $value = clean_myvar_opt($attribute, "string", "");
             $styles[] = [
                 "pageid" => $pageid,
                 "attribute" => $attribute,
                 "value" => $value,
-                "themeid" => '0',
+                "themeid" => $themeid,
                 "forced" => '0',
             ];
         }
     } else {
-        $default_list = get_custom_styles($pageid, $feature, $featureid);
+        $default_list = get_custom_styles($pageid, $themeid, $feature, $featureid);
         foreach ($default_list as $attribute => $style) {
             $value = clean_myvar_opt($attribute, "string", "");
             $styles[] = [
@@ -82,13 +83,17 @@ global $CFG;
                 "featureid" => $featureid,
                 "attribute" => $attribute,
                 "value" => $value,
-                "themeid" => '0',
+                "themeid" => $themeid,
                 "forced" => '0',
             ];
         }
     }
 
     if (make_or_update_styles_array($styles)) {
+        if ($saveas) {
+            $savename = clean_myvar_req("saveas_name", "string");
+            save_new_theme($savename, $pageid);
+        }
         $return = "Saved";
     } else {
         $return = "Failed";
@@ -102,6 +107,7 @@ global $CFG, $MYVARS, $USER, $STYLES;
     $featureid = clean_myvar_opt("featureid", "int", 0);
     $feature = clean_myvar_req("feature", "string");
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+    $themeid = clean_myvar_opt("themeid", "int", CUSTOMTHEME);
 
     // Start with a blank default list.
     $styles = [];
@@ -111,7 +117,7 @@ global $CFG, $MYVARS, $USER, $STYLES;
     }
 
     if ($feature == "page") {
-        $default_list = get_custom_styles($pageid);
+        $default_list = get_custom_styles($pageid, $themeid);
         foreach ($default_list as $attribute => $style) {
             $value = clean_myvar_opt($attribute, "string", false);
             if (!empty($value)) {
@@ -139,7 +145,7 @@ global $CFG, $MYVARS, $USER, $STYLES;
         $return = fill_template("tmp/themes.template", "theme_selector_right_template", false, $params);
     } else {
         $STYLES->preview = true;
-        $default_list = get_custom_styles($pageid, $feature, $featureid);
+        $default_list = get_custom_styles($pageid, $themeid, $feature, $featureid);
         foreach ($default_list as $attribute => $style) {
             $value = clean_myvar_opt($attribute, "string", false);
             $styles[$attribute]["value"] = $value;
@@ -162,9 +168,10 @@ function show_styles() {
 global $CFG, $USER;
     $feature = clean_myvar_req("feature", "string");
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+    $themeid = clean_myvar_opt("themeid", "string", CUSTOMTHEME);
 
     // Get page styles.
-    $styles = get_styles($pageid, 0);
+    $styles = get_styles($pageid, $themeid);
     $return = styles_array_to_css($styles);
 
     $params = [
@@ -183,7 +190,7 @@ global $CFG, $USER;
         $params["pagelist"] = get_css_box($pagename, $rolename, $buttons, NULL, 'pagename', NULL, '0', NULL, $pageid);
         $params["block"] = get_css_box("Title", "Content", $buttons, NULL, NULL, NULL, '0', NULL, $pageid);
         $p = [
-            "left" => custom_styles_selector($pageid, $feature),
+            "left" => customize_style_selector($pageid, $themeid),
             "right" => fill_template("tmp/themes.template", "theme_selector_right_template", false, $params),
         ];
         $return .= fill_template("tmp/themes.template", "make_template_selector_panes_template", false, $p);
@@ -191,7 +198,7 @@ global $CFG, $USER;
           include_once($CFG->dirroot . '/features/' . $feature . '/' . $feature . 'lib.php');
           $function = "display_$feature";
         $p = [
-            "left" => custom_styles_selector($pageid, $feature, $featureid),
+            "left" => customize_style_selector($pageid, $themeid, $feature, $featureid),
             "right" => $function($pageid, "side", $featureid),
         ];
         $return .= fill_template("tmp/themes.template", "make_template_selector_panes_template", false, $p);
@@ -202,7 +209,7 @@ global $CFG, $USER;
 
 function change_theme_save() {
 global $CFG;
-    $themeid = clean_myvar_opt("themeid", "int", 0);
+    $themeid = clean_myvar_opt("themeid", "int", CUSTOMTHEME);
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 
     // Get page styles.
