@@ -74,11 +74,10 @@ style_inputs_template||
         <table style="font-size:1em;">
             <tr>
                 <td style="width:170px;vertical-align:middle;">
-                    ||style[0]||
+                    ||title||
                 </td>
                 <td>
-                    <input class="themeinput" onchange="update_theme_preview()" type="color" name="||style[1]||" value="||value||" style="background-color:||value||;width:70px;" >
-
+                    <input class="themeinput" onchange="update_theme_preview()" type="color" name="||attribute||" value="||value||" style="background-color:||value||;width:70px;" >
                 </td>
             </tr>
         </table>

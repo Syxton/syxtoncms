@@ -3,7 +3,7 @@
     margin: 0
 }
 .svg-inline--fa {
-    color: var(--titlefontcolor);
+    color: var(--defaulticoncolor);
 }
 span.fa-stack {
     display: inline-grid !important;
@@ -67,11 +67,11 @@ div#ajax_error_display {
 a, .alike {
     text-decoration: none;
     cursor: pointer;
-    color: #2900cf;
+    color: var(--linkcolor);
 }
 a:hover, .alike:hover {
     text-decoration: none;
-    color: #026572;
+    filter: brightness(1.2);
 }
 a img, .alike img {
     border: none;
@@ -85,7 +85,8 @@ html {
 body {
     font-family: Geneva, Verdana, Arial, Helvetica, sans-serif;
     font-size: .8em;
-    overflow: auto
+    overflow: auto;
+    color: var(--contentcolor);
 }
 p {
     margin: 0 0 1em 0
@@ -1283,7 +1284,7 @@ div.box_content {
     -webkit-border-radius: 5px;
     -khtml-border-radius: 5px;
     border-radius: 5px;
-    border: 1px solid #fcd163;
+    border: 1px solid var(--bordercolor);
     z-index: -1;
     padding: 10px 0 10px 10px;
 }
@@ -1330,8 +1331,8 @@ div.box_content {
     z-index: 2;
     float: right;
     height: 24px;
-    color: var(--style_titlebgcolor);
-    background-color: var(--titlefontcolor);
+    color: var(--edittabhandlecolor);
+    background-color: var(--edittabbgcolor);
 }
 .slide_button_wrap {
     display: inline-flex;
@@ -1765,8 +1766,8 @@ iframe {
 }
 .forum_headers {
     padding: 10px;
-    background-color: #069;
-    color: #fff;
+    background-color: var(--titlefontcolor);
+    color: var(--titlebgcolor);
     font-weight: 700
 }
 .forum_author {
@@ -2001,7 +2002,7 @@ iframe {
     width: 100%;
 }
 .newstable .title {
-    color:red;
+    color: var(--titlefontcolor);
 }
 .newstable .summary {
     color: slategray;
@@ -2060,12 +2061,12 @@ iframe {
     left: 0;
     top: 0
 }
-input,select,textarea,button,a.buttonlike,div.button {
+input, select, textarea, button, a.buttonlike, div.button {
     font-size: 1em;
     display: inline-block;
     box-sizing: border-box;
     padding: 6px 12px;
-    color: #555;
+    color: var(--contentcolor);
     border: 1px solid #ccc;
     border-radius: 4px;
     -webkit-box-shadow: inset -2px -2px 2px 0px rgba(0, 0, 0, .075);

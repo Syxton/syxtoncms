@@ -206,7 +206,7 @@ get_login_form_template||
 
 get_button_layout_template||
     <div class="slide_menu_wrap">
-        <div id="slide_menu" class="slide_menu_invisible slide_menu style_bordercolor" style="border-top:1px solid;border-bottom:1px solid;">
+        <div id="slide_menu" class="slide_menu_invisible slide_menu style_bordercolor" style="border-style: solid;border-width: 1px 0px 1px 0px;">
             <div id="||featuretype||_||featureid||_buttons" class="slide_button_wrap">
                 ||*buttons||
             </div>

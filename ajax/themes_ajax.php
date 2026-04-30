@@ -27,8 +27,8 @@ global $CFG, $MYVARS, $USER, $PAGE;
     $params = [
         "featuretype" => "preview",
         "featureid" => "preview",
-        "buttons" => "",
-        "icon" => icon("grip-vertical", 1, "", "var(--titlebgcolor)"),
+        "buttons" => icon("gear"),
+        "icon" => icon("grip-vertical"),
     ];
     $buttons = fill_template("tmp/pagelib.template", "get_button_layout_template", false, $params);
     $params["pagelist"] = get_css_box($pagename, $rolename, $buttons, NULL, 'pagename', NULL, $themeid, false, $pageid);
@@ -61,12 +61,12 @@ global $CFG;
     $pageid = $pageid == $CFG->SITEID ? 0 : $pageid;
     $styles = [];
     if ($feature === "page") {
-        $default_list = get_custom_styles($pageid, $feature);
-        foreach ($default_list as $style) {
-            $value = clean_myvar_opt($style[1], "string", "");
+        $default_list = get_custom_styles($pageid);
+        foreach ($default_list as $attribute => $style) {
+            $value = clean_myvar_opt($attribute, "string", "");
             $styles[] = [
                 "pageid" => $pageid,
-                "attribute" => $style[1],
+                "attribute" => $attribute,
                 "value" => $value,
                 "themeid" => '0',
                 "forced" => '0',
@@ -74,13 +74,13 @@ global $CFG;
         }
     } else {
         $default_list = get_custom_styles($pageid, $feature, $featureid);
-        foreach ($default_list as $style) {
-            $value = clean_myvar_opt($style[1], "string", "");
+        foreach ($default_list as $attribute => $style) {
+            $value = clean_myvar_opt($attribute, "string", "");
             $styles[] = [
                 "feature" => $feature,
                 "pageid" => $pageid,
                 "featureid" => $featureid,
-                "attribute" => $style[1],
+                "attribute" => $attribute,
                 "value" => $value,
                 "themeid" => '0',
                 "forced" => '0',
@@ -103,19 +103,26 @@ global $CFG, $MYVARS, $USER, $STYLES;
     $feature = clean_myvar_req("feature", "string");
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 
+    // Start with a blank default list.
+    $styles = [];
+    $fn = $feature . "_default_styles";
+    if (function_exists($fn)) {
+        $styles = $fn();
+    }
+
     if ($feature == "page") {
-        $default_list = get_custom_styles($pageid, $feature);
-        foreach ($default_list as $style) {
-            $value = clean_myvar_opt($style[1], "string", false);
-            if (!empty($style)) {
-                $temparray[$style[1]] = $value;
+        $default_list = get_custom_styles($pageid);
+        foreach ($default_list as $attribute => $style) {
+            $value = clean_myvar_opt($attribute, "string", false);
+            if (!empty($value)) {
+                $styles[$attribute]["value"] = $value;
             } else {
-                $temparray[$style[1]] = $style["2"];
+                $styles[$attribute]["value"] = $style["value"];
             }
         }
 
-        $STYLES->pagename = $temparray;
-        $STYLES->page = $temparray;
+        $STYLES->pagename = $styles;
+        $STYLES->page = $styles;
 
         $pagename = get_db_field("name", "pages", "pageid = '$pageid'");
         $rolename = get_db_field("display_name", "roles", "roleid = " . user_role($USER->userid, $pageid));
@@ -123,8 +130,8 @@ global $CFG, $MYVARS, $USER, $STYLES;
         $params = [
             "featuretype" => "preview",
             "featureid" => "preview",
-            "buttons" => "",
-            "icon" => icon("grip-vertical", 1, "", "var(--titlebgcolor)"),
+            "buttons" => icon("gear"),
+            "icon" => icon("grip-vertical"),
         ];
         $buttons = fill_template("tmp/pagelib.template", "get_button_layout_template", false, $params);
         $params["pagelist"] = get_css_box($pagename, $rolename, $buttons, NULL, 'pagename', "", false, true);
@@ -133,11 +140,11 @@ global $CFG, $MYVARS, $USER, $STYLES;
     } else {
         $STYLES->preview = true;
         $default_list = get_custom_styles($pageid, $feature, $featureid);
-        foreach ($default_list as $style) {
-            $value = clean_myvar_opt($style[1], "string", false);
-            $temparray[$style[1]] = $value;
+        foreach ($default_list as $attribute => $style) {
+            $value = clean_myvar_opt($attribute, "string", false);
+            $styles[$attribute]["value"] = $value;
         }
-        $STYLES->$feature = $temparray;
+        $STYLES->$feature = $styles;
 
         include_once($CFG->dirroot . '/features/' . $feature . '/' . $feature . 'lib.php');
         $function = "display_$feature";
@@ -163,8 +170,8 @@ global $CFG, $USER;
     $params = [
         "featuretype" => "preview",
         "featureid" => "preview",
-        "buttons" => "",
-        "icon" => icon("grip-vertical", 1, "", "var(--titlebgcolor)"),
+        "buttons" => icon("gear"),
+        "icon" => icon("grip-vertical"),
     ];
     $buttons = fill_template("tmp/pagelib.template", "get_button_layout_template", false, $params);
 
@@ -211,6 +218,8 @@ global $CFG;
 
     //Page has theme selected show themes
     $return .= theme_selector($pageid, $themeid);
+
+    $return .= '<div id="change_saved" class="centered">Theme change saved.</div>';
 
     ajax_return($return);
 }

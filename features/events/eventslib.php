@@ -391,7 +391,7 @@ global $CFG;
             "featuretype" => "event",
             "featureid" => $event["eventid"],
             "buttons" => $buttons,
-            "icon" => icon("grip-vertical", 1, "", "var(--titlebgcolor)"),
+            "icon" => icon("grip-vertical"),
         ];
         return fill_template("tmp/pagelib.template", "get_button_layout_template", false, $params);
     }

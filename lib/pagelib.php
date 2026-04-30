@@ -127,6 +127,9 @@ function icon_color($icon) {
         case "file-csv":
             $color = "#1D6F42";
             break;
+        case "grip-vertical":
+            $color = "var(--edittabhandlecolor)";
+            break;
         default:
             return "";
     }
@@ -293,8 +296,8 @@ function page_masthead($nav_menu = true, $carousel = true) {
         header('Location: ' . $CFG->wwwroot);
         die();
     }
-    $styles = get_styles($pageid, $PAGE->themeid);
-    $header_color = $styles['pagenamebgcolor'] ?? "";
+
+    $header_color = "var(--pagenamebgcolor)" ?? "";
 
     $carousel = $carousel ? get_carousel($CFG->userfilesfolder . "/branding/carousel", 5) : "";
     $params = [
@@ -796,41 +799,69 @@ function get_editor_toolbar($type) {
 }
 
 function page_default_styles() {
-    $styles_array[] = [
-        "Page Name Border",
-        "pagenamebordercolor",
-        "#000000",
+    $styles_array = [
+        "pagenamebgcolor" => [
+            "title" => "Page Name Background",
+            "style" => "background-color",
+            "value" => "#FFFFFF",
+        ],
+        "pagenamefontcolor" => [
+            "title" => "Page Name Font",
+            "style" => "color",
+            "value" => "#000000",
+        ],
+        "pagenamebordercolor" => [
+            "title" => "Page Name Border",
+            "style" => "border-color",
+            "value" => "#000000",
+        ],
+        "titlebgcolor" => [
+            "title" => "Title Background",
+            "style" => "background-color",
+            "value" => "#FFFFFF",
+        ],
+        "titlefontcolor" => [
+            "title" => "Title Font",
+            "style" => "color",
+            "value" => "#000000",
+        ],
+        "bordercolor" => [
+            "title" => "Primary Border",
+            "style" => "border-color",
+            "value" => "#000000",
+        ],
+        "contentbgcolor" => [
+            "title" => "Content Background",
+            "style" => "background-color",
+            "value" => "#FFFFFF",
+        ],
+        "contentcolor" => [
+            "title" => "Content",
+            "style" => "color",
+            "value" => "#000000",
+        ],
+        "linkcolor" => [
+            "title" => "Links",
+            "style" => "color",
+            "value" => "#000000",
+        ],
+        "defaulticoncolor" => [
+            "title" => "Default Icon Color",
+            "style" => "color",
+            "value" => "#000000",
+        ],
+        "edittabbgcolor" => [
+            "title" => "Edit Tab Background",
+            "style" => "background-color",
+            "value" => "#000000",
+        ],
+        "edittabhandlecolor" => [
+            "title" => "Edit Tab Handle",
+            "style" => "color",
+            "value" => "#FFFFFF",
+        ],
     ];
-    $styles_array[] = [
-        "Page Name Background",
-        "pagenamebgcolor",
-        "#FFFFFF",
-    ];
-    $styles_array[] = [
-        "Page Name Text",
-        "pagenamefontcolor",
-        "#000000",
-    ];
-    $styles_array[] = [
-        "Title Background",
-        "titlebgcolor",
-        "#FFFFFF",
-    ];
-    $styles_array[] = [
-        "Title Text",
-        "titlefontcolor",
-        "#000000",
-    ];
-    $styles_array[] = [
-        "Border",
-        "bordercolor",
-        "#000000",
-    ];
-    $styles_array[] = [
-        "Content Background",
-        "contentbgcolor",
-        "#FFFFFF",
-    ];
+
     return $styles_array;
 }
 
@@ -1883,7 +1914,7 @@ global $CFG, $PAGE;
             "featuretype" => $featuretype,
             "featureid" => $featureid,
             "buttons" => $buttons,
-            "icon" => icon("grip-vertical", 1, "", "var(--titlebgcolor)"),
+            "icon" => icon("grip-vertical"),
         ];
         $returnme = fill_template("tmp/pagelib.template", "get_button_layout_template", false, $params);
     }
