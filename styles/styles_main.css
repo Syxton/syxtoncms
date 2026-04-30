@@ -2105,11 +2105,13 @@ button {
 }
 input[type=submit]:hover,input[type=button]:hover,.buttonlike:hover,button:hover,.button:hover {
     cursor: pointer;
-    filter: brightness(95%);
+    filter: brightness(101%);
+    box-shadow: inset 0px 0px 3px 0px rgba(0, 0, 0, .075)
 }
 input[type=submit]:active,input[type=button]:active,.buttonlike:active,button:active,.button:active {
     cursor: pointer;
-    filter: brightness(80%);
+    filter: brightness(97%);
+    box-shadow: inset 2px 2px 4px 0px rgba(0, 0, 0, .075);
 }
 .smallbutton {
     font-size: .9em;
