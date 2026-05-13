@@ -64,8 +64,8 @@ show_registrations_menu_tools||
 staff_emailer_template||
     <div class="dontprint">
         <form id="sendstaffemails">
-            <div style="text-align:center;margin:5px;font-weight: bolder;">
-                Staff Status Checker
+            <div style="text-align:center;padding-bottom: 10px;">
+                <h3>Staff Status Checker</h3>
             </div>
             <div style="float:right;line-height:35px;">
                 <label class="rowTitle" for="workerconsentsig">Send Emails</label>
@@ -86,7 +86,7 @@ staff_emailer_template||
 
 appsearchtemplate||
     <div class="dontprint">
-        <div style="text-align:center">
+        <div style="text-align:center;padding-bottom: 10px;">
             <h3>Search for applicants by their name.</h3>
         </div>
         <form onsubmit="perform_appsearch();">
@@ -99,8 +99,8 @@ appsearchtemplate||
                     </button>
                 }}canexport||
                 </div>
-                <div style="text-align:center;">
-                    <input type="text" id="searchbox" name="searchbox" />
+                <div style="width: 75%;display: flex;align-items: center;justify-content: center;">
+                    <input type="text" id="searchbox" name="searchbox" style="width: 75%;" />
                     <input type="submit" value="Search" style="margin-left: 5px;" />
                 </div>
             </div>
