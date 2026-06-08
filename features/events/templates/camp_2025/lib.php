@@ -376,7 +376,7 @@ function get_promo_code_form($event, $hash) {
     ]);
 
     // Check if promocode already set.
-    $promoname = "";
+    $promoname = "No Code Active";
     $promocode = "";
     foreach ($_SESSION['registrations'] as $key => $reg) {
         if ($reg->hash == $hash) {
