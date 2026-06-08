@@ -54,9 +54,14 @@ function clean_param_opt($params, $key, $type, $default) {
     }
 }
 
+function myvar_isset($key) {
+global $MYVARS;
+    return isset($MYVARS->GET[$key]);
+}
+
 function clean_myvar_req($key, $type) {
 global $MYVARS;
-    if (isset($MYVARS->GET[$key])) {
+    if (myvar_isset($key)) {
         return clean_var_req($MYVARS->GET[$key], $type, $key);
     }
     trigger_error("Missing required variable: $key", E_USER_ERROR);
@@ -65,7 +70,7 @@ global $MYVARS;
 
 function clean_myvar_opt($key, $type, $default) {
 global $MYVARS;
-    if (isset($MYVARS->GET[$key])) {
+    if (myvar_isset($key)) {
         return clean_var_opt($MYVARS->GET[$key], $type, $default);
     }
     return clean_var_opt($default, $type, $default);

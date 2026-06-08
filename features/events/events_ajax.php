@@ -857,7 +857,7 @@ global $CFG, $MYVARS, $USER;
 
         $SQL = ''; $params = [];
         while ($entry = fetch_row($entries)) {
-            if (clean_myvar_opt($entry["entryid"], "string", false)) {
+            if (myvar_isset($entry["entryid"])) {
                 $params["entryid_" . $entry["entryid"]] =  $entry["entryid"];
                 $params["entryvalue_" . $entry["entryid"]] =  clean_myvar_opt($entry["entryid"], "string", "");
                 $SQL .= $SQL == "" ? "" : ",";

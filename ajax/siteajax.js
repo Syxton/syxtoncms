@@ -726,11 +726,13 @@ function create_request_string(container) {
 function create_request_json(container) {
     let queryString = create_request_string(container);
     let obj = {}
-    if(queryString) {
-      queryString.slice(1).split('&').map((item) => {
-        const [ k, v ] = item.split('=')
-        v ? obj[k] = v : null
-      })
+    if (queryString) {
+        queryString.slice(1).split('&').map((item) => {
+            const [ k, v ] = item.split('=');
+            if (k !== undefined) {
+                obj[k] = v !== undefined ? v : '';
+            }
+        });
     }
     return JSON.stringify(obj);
 }
