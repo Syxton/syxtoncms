@@ -373,16 +373,6 @@ return [
         'required' => false,
     ],
     [
-        'name' => 'camper_shirt_price',
-        'section' => 'Extras',
-        'title' => 'Shirt Price',
-        'type' => 'hidden',
-        'dynamicvalue' => [
-            'shirt_price' => $path . '/custom.php',
-        ],
-        'required' => false,
-    ],
-    [
         'name' => 'payment_method',
         'section' => 'Checkout',
         'checkout' => true,
