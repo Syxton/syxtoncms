@@ -126,17 +126,70 @@ function remove_registration() {
     ajax_return($return, $error);
 }
 
+/**
+ * Locate the event ID associated with a registration cart item.
+ *
+ * Each registration stored in the session may be an object that includes
+ * a 'hash' property (unique identifier) and a GET payload (array or
+ * object) containing the original request parameters used when adding
+ * the registration to the cart. This function searches the session
+ * registrations for the matching hash and returns the eventid from
+ * the registration's GET data.
+ *
+ * @param string $hash The registration hash to look for.
+ * @return mixed The eventid (string/int) if found, or false if not found.
+ */
 function get_eventid_from_hash($hash) {
     global $_SESSION;
 
-    foreach ($_SESSION['registrations'] as $key => $reg) {
-        if ($reg->hash == $hash) {
-            return $reg->GET['eventid'];
-        }
+    // Quick checks to ensure we have registrations stored in session.
+    if (!isset($_SESSION['registrations']) || !is_array($_SESSION['registrations'])) {
+        // No registrations available.
+        return false;
     }
+
+    // Iterate through each registration entry and locate the one matching
+    // the provided hash. Registrations are expected to be objects but the
+    // code is defensive in case a non-object sneaks in.
+    foreach ($_SESSION['registrations'] as $key => $reg) {
+        // Skip entries that are not objects.
+        if (!is_object($reg)) {
+            continue;
+        }
+
+        // Skip if hash is missing or doesn't match the requested hash.
+        if (!isset($reg->hash) || $reg->hash !== $hash) {
+            continue;
+        }
+
+        // Found the registration; now extract eventid from the stored GET
+        // parameters. The GET container may be either an array (legacy/one
+        // format) or an object, so handle both safely.
+        if (isset($reg->GET)) {
+            if (is_array($reg->GET) && isset($reg->GET['eventid'])) {
+                return $reg->GET['eventid'];
+            } elseif (is_object($reg->GET) && isset($reg->GET->eventid)) {
+                return $reg->GET->eventid;
+            }
+        }
+        // If the registration matched by hash but no eventid was present in
+        // its GET data, treat it as not found and continue searching.
+    }
+
+    // No matching registration or no eventid found for the provided hash.
     return false;
 }
 
+/**
+ * Applies or removes a promo code to a registration in the cart.
+ *
+ * Retrieves the promo code from request and validates it against the event.
+ * If valid, adds the promo code and name to the registration item.
+ * If invalid, removes any existing promo code from the registration.
+ *
+ * @global array $_SESSION Stores user registration data.
+ * @return void Outputs JSON response with updated cart HTML and error status.
+ */
 function applypromo() {
     global $_SESSION;
     $checkout = clean_myvar_opt("checkout", "bool", false);
@@ -146,31 +199,34 @@ function applypromo() {
     // Get eventid of cart item.
     $eventid = get_eventid_from_hash($hash);
 
-    if ($eventid &&$promo = get_promo_code_match($eventid, $code)) {
-        if (isset($_SESSION['registrations'])) {
-            foreach ($_SESSION['registrations'] as $key => $reg) {
-                if ($reg->hash == $hash) {
-                    $_SESSION['registrations'][$key]->item["promocode"] = $code;
-                    $_SESSION['registrations'][$key]->item["promoname"] = $promo['name'];
-                }
+    if (!isset($_SESSION['registrations'])) {
+        $return = print_registration_cart($checkout);
+        ajax_return($return, "");
+        return;
+    }
+
+    if ($eventid && $promo = get_promo_code_match($eventid, $code)) {
+        // Apply valid promo code to matching registration
+        foreach ($_SESSION['registrations'] as $key => $reg) {
+            if ($reg->hash == $hash) {
+                $_SESSION['registrations'][$key]->item["promocode"] = $code;
+                $_SESSION['registrations'][$key]->item["promoname"] = $promo['name'];
+                break;
             }
         }
     } else {
-        // Make sure that the price is set back to the original prices
-        if (isset($_SESSION['registrations'])) {
-            foreach ($_SESSION['registrations'] as $key => $reg) {
-                if ($reg->hash == $hash) {
-                    unset($_SESSION['registrations'][$key]->item["promocode"]);
-                    unset($_SESSION['registrations'][$key]->item["promoname"]);
-                }
+        // Remove invalid or missing promo code
+        foreach ($_SESSION['registrations'] as $key => $reg) {
+            if ($reg->hash == $hash) {
+                unset($_SESSION['registrations'][$key]->item["promocode"]);
+                unset($_SESSION['registrations'][$key]->item["promoname"]);
+                break;
             }
         }
     }
 
     $return = print_registration_cart($checkout);
-
-    $error = "";
-    ajax_return($return, $error);
+    ajax_return($return, "");
 }
 
 function register() {

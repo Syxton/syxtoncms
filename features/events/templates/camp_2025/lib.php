@@ -402,7 +402,8 @@ function get_promo_code_match($eventid, $code) {
     }
 
     foreach ($promo_code_set as $promo_code) {
-        if ($promo_code["code"] === $code) {
+        // Make matches case insensitive.
+        if (strToLower($promo_code["code"]) === strToLower($code)) {
             return [
                 "name" => $promo_code["name"],
                 "reduction" => $promo_code["reduction"],
