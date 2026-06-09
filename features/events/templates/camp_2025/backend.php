@@ -210,7 +210,7 @@ function applypromo() {
         foreach ($_SESSION['registrations'] as $key => $reg) {
             if ($reg->hash == $hash) {
                 $_SESSION['registrations'][$key]->item["promocode"] = $code;
-                $_SESSION['registrations'][$key]->item["promoname"] = $promo['name'];
+                $_SESSION['registrations'][$key]->item["promoname"] = $promo['codename'];
                 break;
             }
         }

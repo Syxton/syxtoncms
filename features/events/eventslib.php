@@ -1076,6 +1076,10 @@ function get_reg_paymethod($regid) {
     return get_db_field("value", "events_registrations_values", "regid=||regid|| AND elementname LIKE '%method%'", ["regid" => $regid]);
 }
 
+function get_reg_promo($regid) {
+    return get_db_field("value", "events_registrations_values", "regid=||regid|| AND elementname LIKE '%campership%'", ["regid" => $regid]);
+}
+
 function update_total_cart_paid($paidcart) {
     global $_SESSION;
 
@@ -1281,16 +1285,75 @@ global $CFG, $why, $error;
     }
 }
 
-function registration_email($regid, $touser, $pending=false, $fullypaid=false) {
+function get_promo_by_name($eventid, $promoname) {
+    $setid = get_db_field("setting", "settings", "type='events_template' AND extra = ||extra|| AND setting_name='template_setting_promocode_set'", ["extra" => $eventid]);
+
+    if (!$promo_code_set = get_promocode_set_array($setid)) {
+        return false;
+    }
+
+    foreach ($promo_code_set as $promo_code) {
+        // Make matches case insensitive.
+        if (strToLower($promo_code["codename"]) === strToLower($promoname)) {
+            return [
+                "codename" => $promo_code["codename"],
+                "reduction" => $promo_code["reduction"],
+            ];
+        }
+    }
+    return false;
+}
+
+function get_promo_code_match($eventid, $code) {
+    $setid = get_db_field("setting", "settings", "type='events_template' AND extra = ||extra|| AND setting_name='template_setting_promocode_set'", ["extra" => $eventid]);
+
+    if (!$promo_code_set = get_promocode_set_array($setid)) {
+        return false;
+    }
+
+    foreach ($promo_code_set as $promo_code) {
+        // Make matches case insensitive.
+        if (strToLower($promo_code["code"]) === strToLower($code)) {
+            return [
+                "codename" => $promo_code["codename"],
+                "reduction" => $promo_code["reduction"],
+            ];
+        }
+    }
+    return false;
+}
+
+function apply_promo($promo, $price) {
+    // No such thing as a 0 or negative discount.
+    if ($promo["reduction"] <= 0) {
+        return $price;
+    }
+
+    // Check if % or flat discount.
+    if (substr($promo["reduction"], -1) == "%") {
+        $price = $price * (1 - (floatval($promo["reduction"]) / 100));
+    } else {
+        $price = $price - $promo["reduction"];
+    }
+
+    // Price can not be less than 0.
+    if ($price < 0) {
+        $price = 0;
+    }
+
+    return $price;
+}
+
+function registration_email($regid, $touser, $pending = false, $fullypaid = false) {
 global $CFG;
-    $reg = get_db_row("SELECT * FROM events_registrations WHERE regid='$regid'");
+    $reg = get_db_row("SELECT * FROM events_registrations WHERE regid=||regid||", ["regid" => $regid]);
     $event = get_event($reg["eventid"]);
     $template = get_event_template($event['template_id']);
 
     $protocol = get_protocol();
 
     if (!empty($CFG->logofile)) {
-        $email = '<img src="' . $protocol.$CFG->userfilesurl . '/branding/logos/' . $CFG->logofile . '" style="max-width: 80%;" /><br />';
+        $email = '<img src="' . $protocol . $CFG->userfilesurl . '/branding/logos/' . $CFG->logofile . '" style="max-width: 80%;" /><br />';
     } else {
         $email = '<h1>' . $CFG->sitename . '</h1>';
     }
@@ -1298,13 +1361,21 @@ global $CFG;
     // Get cost / owed information.
     $total_owed = (float) get_reg_owed($regid);
 
+    // Get paid information.
+    $paid = (float) get_reg_paid($regid);
+    $paid = empty($paid) ? 0 : $paid;
+
     if (empty($total_owed) && !$fullypaid) {
         // total_owed is empty but we didn't mark this as fully paid so find the owed amount.
         $total_owed = $reg["date"] < $event["sale_end"] ? $event["sale_fee"] : $event["fee_full"];
+
+        // Check for promo code useage.
+        $promo = get_promo_by_name($reg["eventid"], get_reg_promo($regid));
+        if ($promo) {
+            $total_owed = apply_promo($promo, $total_owed);
+        }
     }
 
-    $paid = (float) get_reg_paid($regid);
-    $paid = empty($paid) ? 0 : $paid;
     $remaining = $total_owed - $paid;
 
     // Instruction parts.
@@ -2910,7 +2981,7 @@ function get_promocode_set_array($setid) {
                 "codeid" => $code['codeid'],
                 "setid" => $code['setid'],
                 "code" => $code['code'],
-                "name" => $code['codename'],
+                "codename" => $code['codename'],
                 "reduction" => $code['reduction'],
             ];
         }

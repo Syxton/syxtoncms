@@ -938,8 +938,10 @@ function resend_registration_email() {
 global $CFG;
     $regid = clean_myvar_opt("regid", "int", false);
     $eventid = clean_myvar_opt("eventid", "int", false);
+    $preview = clean_myvar_opt("preview", "bool", false);
 
-    $emailstatus = "email could not be sent. <br />";
+    $emailstatus = $preview ? "email was not sent." : "email could not be sent.";
+
     if (!empty($regid) && !empty($eventid)) {
         $event = get_event($eventid);
 
@@ -957,8 +959,10 @@ global $CFG;
 
         try {
             $message = registration_email($regid, $touser);
-            if (send_email($touser, $fromuser, $event["name"] . " Registration", $message)) {
-                $emailstatus = 'email was sent';
+            if (!$preview) {
+                if (send_email($touser, $fromuser, $event["name"] . " Registration", $message)) {
+                    $emailstatus = 'email was sent.';
+                }
             }
         } catch (\Exception $e) {
             $emailstatus .= $e->getMessage() . "<br /><br />";
@@ -966,12 +970,12 @@ global $CFG;
     }
 
     $returnme = get_back_to_registrations_link($eventid) .
-                '<br />
-                <div style="text-align:center">
-                    <strong>The following ' . $emailstatus . '</strong>
-                    <br />
-                    ' . $message . '
-                </div>';
+        '<br />
+        <div style="text-align:center">
+            <strong>The following ' . $emailstatus . '</strong>
+            <br /><br />
+            ' . $message . '
+        </div>';
     ajax_return($returnme);
 }
 
@@ -1265,7 +1269,7 @@ global $CFG, $MYVARS, $USER;
             "valuename" => "regid",
             "displayname" => "name",
             "selected" => $selected,
-            "firstoption" => "Select Registration from List",
+            "firstoption" => "Select a Registration",
         ];
 
         $templateParams = [
@@ -1326,7 +1330,10 @@ function load_registrations_menu_javascript($callback) {
         "paramlist" => "eventid, regid",
         "if" => "regid != '' && confirm('Do you want to delete this registration?')",
         "url" => "/features/events/events_ajax.php",
-        "data" => ["action" => "delete_registration_info", "regid" => "js|| regid ||js"],
+        "data" => [
+            "action" => "delete_registration_info",
+            "regid" => "js|| regid ||js",
+        ],
         "ondone" => "$callback;",
         "loading" => "loading_overlay",
         "event" => "none",
@@ -1337,7 +1344,11 @@ function load_registrations_menu_javascript($callback) {
         "id" => "edit_registration",
         "paramlist" => "eventid, regid",
         "url" => "/features/events/events_ajax.php",
-        "data" => ["action" => "get_registration_info", "regid" => "js|| regid ||js", "eventid" => "js|| eventid ||js"],
+        "data" => [
+            "action" => "get_registration_info",
+            "regid" => "js|| regid ||js",
+            "eventid" => "js|| eventid ||js",
+        ],
         "display" => "searchcontainer",
         "loading" => "loading_overlay",
         "event" => "none",
@@ -1346,9 +1357,14 @@ function load_registrations_menu_javascript($callback) {
     ajaxapi([ // Resend Registration Email.
         "if" => "regid != ''",
         "id" => "email_registration",
-        "paramlist" => "eventid, regid",
+        "paramlist" => "eventid, regid, preview",
         "url" => "/features/events/events_ajax.php",
-        "data" => ["action" => "resend_registration_email", "regid" => "js|| regid ||js", "eventid" => "js|| eventid ||js"],
+        "data" => [
+            "action" => "resend_registration_email",
+            "regid" => "js|| regid ||js",
+            "eventid" => "js|| eventid ||js",
+            "preview" => "js|| preview ||js"
+        ],
         "display" => "searchcontainer",
         "loading" => "loading_overlay",
         "event" => "none",
@@ -1530,8 +1546,13 @@ function get_reg_actions($reg) {
                     "content" => icon("pencil") . " Edit Registration",
                 ]) .
                 link_maker([
+                    "title" => "Preview Registration Email",
+                    "onclick" => "email_registration(" . $reg["eventid"] . "," . $reg["regid"] . ", true)",
+                    "content" => icon("envelope-open") . " Preview Registration Email",
+                ]) .
+                link_maker([
                     "title" => "Resend Registration Email",
-                    "onclick" => "email_registration(" . $reg["eventid"] . "," . $reg["regid"] . ")",
+                    "onclick" => "email_registration(" . $reg["eventid"] . "," . $reg["regid"] . ", false)",
                     "content" => icon("envelope") . " Resend Registration Email",
                 ]) .
                 link_maker([

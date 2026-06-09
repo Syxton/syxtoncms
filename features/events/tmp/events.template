@@ -12,21 +12,21 @@ show_registrations_page||
             <div style="padding: 5px;">
                 <strong>Quick Reserve Spot</strong>
             </div>
-            <div style="display: inline-block;padding: 5px;">
-                <span>Reserve </span>
-                <input type="text" size="2" maxlength="2" id="reserveamount" value="1" onchange="if (!IsNumeric(this.value) || this.value <= 0) { this.value = 1; }" />
-                <span> Spot(s): </span>
+            <div style="display: flex;align-items: center;column-gap: 10px;">
+                <button id="add_blank_registration">
+                    || echo icon("truck-fast");::none||
+                    <span>Reserve</span>
+                </button>
+                <input type="text" size="1" maxlength="2" id="reserveamount" value="1" onchange="if (!IsNumeric(this.value) || this.value <= 0) { this.value = 1; }" />
+                <span>registration(s)</span>
             </div>
-            <button id="add_blank_registration">
-                Reserve Registration
-            </button>
         </div>
     </div>
 ||show_registrations_page
 
 show_registrations_menu_tools||
     <div style="padding: 5px 0 0 5px;">
-        <strong>Edit Registration of </strong>
+        <strong>||echo icon("pencil");::none|| Edit Registrations</strong>
     </div>
     <div style="display: flex;align-items: center;">
         <div style="display: inline-block;padding: 5px;width: 50%;">
@@ -40,7 +40,7 @@ show_registrations_menu_tools||
                 <li>
                     <button id="edit_registration" onclick="edit_registration(||eventid||, $('#registrants').val())" title="Edit Registration" class="alike">
                         ||echo icon("pencil");::none||
-                        <span> Edit Registration</span>
+                        <span>Edit Registration</span>
                     </button>
                 </li>
                 <li>
@@ -50,9 +50,15 @@ show_registrations_menu_tools||
                     </button>
                 </li>
                 <li>
-                    <button id="email_registration" onclick="email_registration(||eventid||, $('#registrants').val())" title="Send Registration Email" class="alike">
+                    <button id="email_registration" onclick="email_registration(||eventid||, $('#registrants').val(), true)" title="Send Registration Email" class="alike">
+                        ||echo icon("envelope-open");::none||
+                        <span>Preview Registration Email</span>
+                    </button>
+                </li>
+                <li>
+                    <button id="email_registration" onclick="email_registration(||eventid||, $('#registrants').val(), false)" title="Send Registration Email" class="alike">
                         ||echo icon("envelope");::none||
-                        <span> Send Registration Email</span>
+                        <span>Resend Registration Email</span>
                     </button>
                 </li>
             </ul>
@@ -773,7 +779,7 @@ promocode_code||
         <div class="promo_set_row">
             <div style="width: 60%;">
                 Promo Name<br />
-                <input style="width: 95%;" id="promoname" name="promoname" type="text" value="||code[name]||" />
+                <input style="width: 95%;" id="promoname" name="promoname" type="text" value="||code[codename]||" />
             </div>
             <div style="width: 20%;min-width:50px;">
                 Reduce By<br />

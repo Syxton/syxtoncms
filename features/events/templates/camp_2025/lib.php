@@ -150,7 +150,7 @@ function print_registration_cart($checkout = false) {
         // Check for promocode.
         if (isset($_SESSION['registrations'][$key]->item["promocode"])) {
             if ($promo = get_promo_code_match($eventid, $_SESSION['registrations'][$key]->item["promocode"])) {
-                $item['promoname'] = $promo['name'];
+                $item['promoname'] = $promo['codename'];
                 $item['promocode'] = $_SESSION['registrations'][$key]->item["promocode"];
                 $price = apply_promo($promo, $original_price);
             }
@@ -392,45 +392,6 @@ function get_promo_code_form($event, $hash) {
         "promocode" => $promocode,
         "promoname" => $promoname,
     ]);
-}
-
-function get_promo_code_match($eventid, $code) {
-    $setid = get_db_field("setting", "settings", "type='events_template' AND extra = ||extra|| AND setting_name='template_setting_promocode_set'", ["extra" => $eventid]);
-
-    if (!$promo_code_set = get_promocode_set_array($setid)) {
-        return false;
-    }
-
-    foreach ($promo_code_set as $promo_code) {
-        // Make matches case insensitive.
-        if (strToLower($promo_code["code"]) === strToLower($code)) {
-            return [
-                "name" => $promo_code["name"],
-                "reduction" => $promo_code["reduction"],
-            ];
-        }
-    }
-}
-
-function apply_promo($promo, $price) {
-    // No such thing as a 0 or negative discount.
-    if ($promo["reduction"] <= 0) {
-        return $price;
-    }
-
-    // Check if % or flat discount.
-    if (substr($promo["reduction"], -1) == "%") {
-        $price = $price * (1 - (floatval($promo["reduction"]) / 100));
-    } else {
-        $price = $price - $promo["reduction"];
-    }
-
-    // Price can not be less than 0.
-    if ($price < 0) {
-        $price = 0;
-    }
-
-    return $price;
 }
 
 /**
