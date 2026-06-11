@@ -1148,9 +1148,8 @@ a.header_links:hover {
     background-color: #CCCCCC;
     color: #333333;
 }
-.calendar_today {
-    background-color: #FFC18A;
-    color: #CF0000;
+td.calendar_today {
+    filter: brightness(0.8);
 }
 /* When the screen is less than 700 pixels wide */
 @media screen and (max-width: 700px) {
