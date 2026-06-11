@@ -560,17 +560,27 @@ function loadjs(scriptName, callback) {
  * @param {string} scriptname - The name of the script to load.
  */
 function loaddynamicjs(scriptname) {
-    var js = $('#' + scriptname).html();
+    var $el = $('#' + scriptname);
+    if ($el.length === 0) {
+        return false;
+    }
+    var js = $el.html();
+    if (!js || !js.trim()) {
+        return false;
+    }
+
     // Wait for 2 seconds before continuing.
     setTimeout(function() {
         return false;
     }, 2000);
+
     var head = document.getElementsByTagName("head")[0];
     var script = document.createElement('script');
-    script.id = "dynamicscript";
+    script.id = "dynamicscript_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5);
     script.type = 'text/javascript';
     script.text = js;
     head.appendChild(script);
+
     // Wait for 100ms before continuing.
     setTimeout(function() {
         return false;
