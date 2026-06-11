@@ -52,7 +52,6 @@ div#ajax_error_display.visible {
 }
 div#ajax_error_display {
     display: none;
-    */
     position: fixed;
     z-index: 999999;
     min-width: 36%;
@@ -977,8 +976,6 @@ span.pagename_header {
     text-align: center;
     font-size: .98em
 }
-div.pagelinklist {
-}
 div.pagelink {
     display: flex;
     justify-content: space-between;
@@ -1110,7 +1107,7 @@ a.header_links:hover {
 }
 .calendar_today_label {
     float: right;
-    font-size: .8em;
+    font-size: 1.1em;
     padding: 2px 5px;
 }
 .area_side .calendar_event_label {
@@ -1119,7 +1116,7 @@ a.header_links:hover {
 .area_middle .calendar_event_label {
     display: block;
     padding: 0 10px 10px 10px;
-    font-size: .8em;
+    font-size: 1.1em;
 }
 .calendar_week {
     font-size: 10px;
@@ -1154,6 +1151,16 @@ a.header_links:hover {
 .calendar_today {
     background-color: #FFC18A;
     color: #CF0000;
+}
+/* When the screen is less than 700 pixels wide */
+@media screen and (max-width: 700px) {
+    .area_middle .calendar_table td {
+        font-size: 14px !important;
+        border: 1px solid #ffffff4d;
+    }
+    .area_middle .calendar_day_label {
+        min-width: 20px;
+    }
 }
 .col1 div#day_info {
     font-size: .9vw;
@@ -2400,9 +2407,6 @@ input[type=image] {
 /* Show the dropdown menu on hover */
 .dropdowncreator:hover .dropcontent {
     display: block;
-}
-/* Change the background color of the dropdown button when the dropdown content is shown */
-.dropdowncreator:hover .dropbtn {
 }
 #mem_resultsdiv .searchresults .iconfield {
     display: flex;
