@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS `events` (
     `checksaddress` text,
     `confirmed` tinyint(1) DEFAULT '0',
     PRIMARY KEY (`eventid`),
-    KEYKEY `workers` (`workers`)
+        KEY `workers` (`workers`)
     ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
 
 CREATE TABLE IF NOT EXISTS `events_locations` (
@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS `events_templates` (
     `registrant_name` varchar(100) NOT NULL DEFAULT '',
     `orderbyfield` varchar(200) NOT NULL,
     `activated` tinyint(1) NOT NULL DEFAULT '1',
-    PRIMARY KEY `template_id` (`template_id`),
+        PRIMARY KEY (`template_id`),
     KEY `activated` (`activated`),
     ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
 
@@ -134,10 +134,10 @@ CREATE TABLE IF NOT EXISTS `events_staff` (
     `ref3phone` varchar(20) NOT NULL,
     `bgcheckpass` varchar(2) NOT NULL,
     `bgcheckpassdate` int(11) NOT NULL,
-    PRIMARY KEY `staffid` (`staffid`),
+        PRIMARY KEY (`staffid`),
     KEY `userid` (`userid`),
     KEY `dateofbirth` (`dateofbirth`),
-    KEY `priorwork` (`priorwork`),
+        KEY `priorwork` (`priorwork`)
     ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
 
 CREATE TABLE IF NOT EXISTS `events_staff_archive` (
@@ -176,7 +176,7 @@ CREATE TABLE IF NOT EXISTS `events_staff_archive` (
     `ref3phone` varchar(20) NOT NULL,
     `bgcheckpass` varchar(2) NOT NULL,
     `bgcheckpassdate` int(11) NOT NULL,
-    PRIMARY KEY `archiveid` (`archiveid`),
+        PRIMARY KEY (`archiveid`),
     KEY `staffid` (`staffid`),
     KEY `pageid` (`pageid`),
     KEY `userid` (`userid`),
@@ -190,7 +190,7 @@ CREATE TABLE IF NOT EXISTS `events_contacts` (
     `email` varchar(200) NOT NULL,
     `phone` varchar(20) NOT NULL,
     `pageid` INT NOT NULL ,
-    PRIMARY KEY `contactid` (`contactid`),
+        PRIMARY KEY (`contactid`),
     KEY `pageid` (`pageid`)
     ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
 ||install

@@ -1145,11 +1145,14 @@ function get_all_registrations_of_event($eventid, $onlineonly = false) {
     $orderby = "";
     $i = 0;
     while (isset($sort_elements[$i])) {
-        $select .= ", (SELECT value
-                        FROM events_registrations_values
-                        WHERE $sortelement='$sort_elements[$i]'
-                        AND regid=v.regid LIMIT 1) as val$i";
-        $orderby .= $orderby == "" ? "val$i" : ",val$i";
+        $select .= ", (";
+        $select .= fill_template("dbsql/events.sql", "registration_sorting_select", "events", [
+            "elementname" => $sortelement,
+            "elementvalue" => $sort_elements[$i],
+        ], true);
+        $select .= ") as val$i";
+
+        $orderby .= $orderby == "" ? "val$i" : ", val$i";
         $i++;
     }
 
