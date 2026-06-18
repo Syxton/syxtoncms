@@ -38,7 +38,7 @@ function customrule_max_age($data = []) {
         "setting_name" => "template_setting_max_age",
     ];
     $max_age = get_db_field("setting", "settings", "type = ||type|| AND extra = ||extra|| AND setting_name = ||setting_name||", $params);
-    $max_age_error = empty($max_age) ? "" : ' data-msg-max="' . getlang("error_age_max", "/features/events/templates/camp_2025", $min_age) . '"';
+    $max_age_error = empty($max_age) ? "" : ' data-msg-max="' . getlang("error_age_max", "/features/events/templates/camp_2025", $max_age) . '"';
     return empty($max_age) ? "" : " $max_age_error data-rule-max=\"$max_age\"";
 }
 

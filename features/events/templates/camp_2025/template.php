@@ -91,6 +91,7 @@ echo fill_template(
         "javascript" => get_js_tags(["jquery", "validate"]) . get_js_tags(["features/events/templates/camp_2025/ajax.js"]),
         "event" => $event,
         "event_begin_date" => date("Y-m-d", $event["event_begin_date"]),
+        "event_end_date" => date("Y-m-d", $event["event_end_date"]),
         "count_in_cart" => $count_in_cart,
         "form_elements" => $form_elements,
         "disable" => $disable,

@@ -295,6 +295,7 @@ validation_tooltip_actions||
         $(this).parent().find('.info').css('visibility', 'visible');
     }).blur(function() {
         $(this).parent().find('.info').css('visibility', 'hidden');
+        $(this).valid();
     });
 ||validation_tooltip_actions
 

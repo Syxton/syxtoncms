@@ -7,7 +7,7 @@
  * $Revision: 0.0.1
  ***************************************************************************/
 //Form name:Section:Title
-$thisversion = 2025042408;
+$thisversion = 2025042409;
 $templatename = 'Camp Wabashi Week 3.0';
 $templatefolder = 'camp_2025';
 $registrant_name = 'camper_name';
@@ -73,7 +73,7 @@ if (!$template = get_event_template_by_name($templatename)) {
         );
     }
 
-    // Adding promocode setting.
+    // Adding promocode setting && max age setting.
     if ($version < $thisversion) {
         execute_db_sql(
             fetch_template("dbsql/events.sql", "update_events_template", "events"),

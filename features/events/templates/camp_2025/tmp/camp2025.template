@@ -9,6 +9,7 @@ template_form||
                     <fieldset class="formContainer">
                         <input type="hidden" name="eventid" id="eventid" value="||event[eventid]||" />
                         <input type="hidden" id="event_begin_date" value="||event_begin_date||" />
+                        <input type="hidden" id="event_end_date" value="||event_end_date||" />
                         <div style="display: flex;justify-content: center;">
                             <div style="font-size:15px;text-align:center;font-weight:bold">
                                 ||echo $CFG->sitename;::none|| Pre-Registration

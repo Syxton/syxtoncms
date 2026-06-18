@@ -10,6 +10,13 @@ return [
         'defaultsetting' => '0',
     ],
     [
+        'setting_name' => 'template_setting_max_age',
+        'display'=> 'Maximum Age',
+        'inputtype' => 'text',
+        'numeric' => true,
+        'defaultsetting' => '20',
+    ],
+    [
         'setting_name' => 'template_setting_pictures',
         'display'=> 'Pictures',
         'inputtype' => 'yes/no',

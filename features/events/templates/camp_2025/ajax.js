@@ -58,11 +58,15 @@ function copy_to_form() {
 function updateAge() {
     // Get the camper's birth date and the event date
     var bday = datetype("camper_birth_date");
-    var event = datetype("event_begin_date");
+    var event = datetype("event_end_date");
 
-    var diffInMilliseconds = event.getTime() - bday.getTime();
-    const millisecondsInYear = 1000 * 60 * 60 * 24 * 365.25; // Account for leap years
+    // Calculate the difference in milliseconds between the event date and the birth date
+    var diffInMilliseconds = (event.getTime() + 86400000) - bday.getTime(); // Adding one day to event date
 
+    // Calculate the number of milliseconds in a year (accounting for leap years)
+    const millisecondsInYear = 1000 * 60 * 60 * 24 * 365.25;
+
+    // If the birth date is invalid or in the future, reset to last valid date and update age.
     if (isNaN(diffInMilliseconds) || diffInMilliseconds < 0) {
         bday = lastvaliddate;
         $("#camper_birth_date").val(lastvaliddate.toISOString().substring(0, 10));
@@ -73,9 +77,8 @@ function updateAge() {
     // Update the last valid date to the currently selected date.
     lastvaliddate = bday;
 
-    // Update the age field, rounding up to nearest full year.
-    let age = Math.round(diffInMilliseconds / millisecondsInYear);
-
+    // Update the age field.
+    let age = Math.floor(diffInMilliseconds / millisecondsInYear);
     $("#camper_age").val(age);
 }
 
@@ -121,6 +124,13 @@ $(function () {
     // Create lastvaliddate to prevent invalid dates in the camper_birth_date field
     window.lastvaliddate = datetype("camper_birth_date");
 
+    // Stop form submission on Enter key press for all input fields except textareas
+    $(document).on("keydown", ":input:not(textarea)",function (event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+        }
+    });
+
     /**
      * Toggles the visibility of the registration cart menu when clicked.
      * If the cart count is greater than zero, toggle the cart visibility.
@@ -139,6 +149,13 @@ $(function () {
      */
     $("#camper_birth_date").on("change", function () {
         updateAge();
+    });
+
+    /**
+     * Updates the camper's age when the birth date is done being changed.
+     */
+    $("#camper_birth_date").on("blur", function () {
+        $("#camper_age").blur();
     });
 
     /**
