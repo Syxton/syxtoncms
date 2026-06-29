@@ -1240,6 +1240,11 @@ function custom_registration_report() {
     $fields = clean_myvar_req("report_fields", "array");
     $sortby = clean_myvar_opt("sort_by_field", "string", false);
 
+    // If a sortby field is specified, make sure it is in the list of fields to display. If not, add it to the list.
+    if ($sortby && !in_array($sortby, $fields)) {
+        $fields[] = $sortby;
+    }
+
     $report_array = get_custom_registration_report($eventid, $fields, $sortby);
     $report = get_printable_registration_report($eventid, $report_array, $fields);
 
@@ -1257,11 +1262,6 @@ function custom_registration_report() {
 }
 
 function get_custom_registration_report($eventid, $fields, $sortby = false) {
-    // If a sortby field is specified, make sure it is in the list of fields to display. If not, add it to the list.
-    if ($sortby && !in_array($sortby, $fields)) {
-        $fields[] = $sortby;
-    }
-
     // Create an array of the fields that we can later sort.
     if ($registrations = get_db_result(get_all_registrations_of_event($eventid))) {
         $registrations_array = [];
