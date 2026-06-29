@@ -2,6 +2,8 @@ show_registrations_page||
     <div style="font-size:.9em;padding:15px 5px;">
         <h2>||eventname||</h2>
         ||registrationlist||
+        <hr>
+        <br />
         <div>
             <div style="padding: 5px;">
                 <strong>||echo icon("print");::none|| Bulk Print Options</strong>
@@ -12,6 +14,8 @@ show_registrations_page||
                 <option value="1">Print Online Registrations</option>
             </select>
         </div>
+        <br />
+        <hr>
         <br />
         <div>
             <div style="padding: 5px;">
@@ -27,12 +31,14 @@ show_registrations_page||
             </div>
         </div>
         <br />
+        <hr>
+        <br />
         <div>
             <div style="padding: 5px;">
                 <strong>||echo icon("table");::none|| Custom Report</strong>
             </div>
             <div>
-                <table style="width: 100%;border-spacing: 10px;">
+                <table style="width: 100%;border-spacing: 15px 5px;">
                     <tr>
                         <th style="text-align: left;">
                             Fields
