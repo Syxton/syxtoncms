@@ -1318,7 +1318,7 @@ function get_printable_registration_report($eventid, $registrations_array, $fiel
         }
 
         $report = '
-            <table class="searchresults registration_report" style="width:100%">
+            <table class="searchresults registration_report">
                 ' . $headers . '
                 ' . $values . '
             </table>';
