@@ -38,6 +38,12 @@ show_registrations_menu_tools||
             </button>
             <ul id="event_menu" style="||display||">
                 <li>
+                    <button id="print_registration" onclick="print_registration(||eventid||, $('#registrants').val())" title="Print Registration" class="alike">
+                        ||echo icon("print");::none||
+                        <span>Print Registration</span>
+                    </button>
+                </li>
+                <li>
                     <button id="edit_registration" onclick="edit_registration(||eventid||, $('#registrants').val())" title="Edit Registration" class="alike">
                         ||echo icon("pencil");::none||
                         <span>Edit Registration</span>

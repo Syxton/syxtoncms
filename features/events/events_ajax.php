@@ -1369,6 +1369,21 @@ function load_registrations_menu_javascript($callback) {
         "loading" => "loading_overlay",
         "event" => "none",
     ]);
+
+    ajaxapi([ // Print Single Registration.
+        "id" => "print_registration",
+        "if" => "regid != ''",
+        "paramlist" => "eventid, regid",
+        "url" => "/features/events/events_ajax.php",
+        "data" => [
+            "action" => "print_registration",
+            "regid" => "js|| regid ||js",
+            "eventid" => "js|| eventid ||js"
+        ],
+        "display" => "searchcontainer",
+        "loading" => "loading_overlay",
+        "event" => "none",
+    ]);
 }
 
 function registrationsearch() {
@@ -1540,6 +1555,11 @@ function get_reg_actions($reg) {
                 "content" => icon("gear")
             ]) .
             '<div class="dropcontent">' .
+                link_maker([
+                    "title" => "Print Registration",
+                    "onclick" => "print_registration(" . $reg["eventid"] . "," . $reg["regid"] . ")",
+                    "content" => icon("print") . " Print Registration",
+                ]) .
                 link_maker([
                     "title" => "Edit Registration",
                     "onclick" => "edit_registration(" . $reg["eventid"] . "," . $reg["regid"] . ")",
