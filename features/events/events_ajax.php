@@ -1240,7 +1240,8 @@ function custom_registration_report() {
     $fields = clean_myvar_req("report_fields", "array");
     $sortby = clean_myvar_opt("sort_by_field", "string", false);
 
-    $report = get_custom_registration_report($eventid, $fields, $sortby);
+    $report_array = get_custom_registration_report($eventid, $fields, $sortby);
+    $report = get_printable_registration_report($eventid, $report_array, $fields);
 
     $returnme = get_back_to_registrations_link($eventid) . '
         <link rel="stylesheet" type="text/css" media="print" href="' . $CFG->wwwroot . '/styles/print.css">
@@ -1250,14 +1251,12 @@ function custom_registration_report() {
                 "onclick" => "window.print();return false;",
                 "class" => "dontprint",
                 "content" => "Print",
-            ]) . '<br /><br /><div class="pagestart print">' . $report . '</div>
+            ]) . '<br /><br /><div class="print">' . $report . '</div>
         </form>';
     ajax_return($returnme);
 }
 
 function get_custom_registration_report($eventid, $fields, $sortby = false) {
-    $report = "";
-
     // If a sortby field is specified, make sure it is in the list of fields to display. If not, add it to the list.
     if ($sortby && !in_array($sortby, $fields)) {
         $fields[] = $sortby;
@@ -1269,7 +1268,15 @@ function get_custom_registration_report($eventid, $fields, $sortby = false) {
         while ($registration = fetch_row($registrations)) {
             $registration_data = [];
             foreach ($fields as $field) {
-                $value = get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname = ||elementname||", ["regid" => $registration["regid"], "elementname" => strtolower($field)]);
+                $value = get_db_field(
+                    "value",
+                    "events_registrations_values",
+                    "regid = ||regid|| AND elementname = ||elementname||",
+                    [
+                        "regid" => $registration["regid"],
+                        "elementname" => strtolower($field),
+                    ]
+                );
                 $registration_data[$field] = stripslashes($value);
             }
             $registrations_array[] = $registration_data;
@@ -1278,31 +1285,55 @@ function get_custom_registration_report($eventid, $fields, $sortby = false) {
         // Sort the registrations array if a sortby field is specified.
         if ($sortby) {
             usort($registrations_array, function($a, $b) use ($sortby) {
+                if (is_numeric($a[$sortby]) && is_numeric($b[$sortby])) {
+                    return $a[$sortby] - $b[$sortby];
+                }
                 return strcmp($a[$sortby], $b[$sortby]);
             });
         }
     }
 
-    if (isset($registrations_array) && !empty($registrations_array)) {
-        $report .= '<table class="registration_report" style="width:100%"><tr>';
-        foreach ($fields as $field) {
-            $report .= '<th style="text-align:left;">' . ucwords(str_replace("_", " ", $field)) . '</th>';
-        }
-        $report .= '</tr>';
+    return $registrations_array;
+}
 
+function get_printable_registration_report($eventid, $registrations_array, $fields) {
+    if (isset($registrations_array) && !empty($registrations_array)) {
+        $headers = '<tr>';
+        foreach ($fields as $field) {
+            $headers .= '
+                <th style="text-align:left;">
+                    ' . ucwords(str_replace("_", " ", $field)) . '
+                </th>';
+        }
+        $headers .= '</tr>';
+
+        $values = '';
         foreach ($registrations_array as $registration_data) {
-            $report .= '<tr>';
+            $values .= '<tr>';
             foreach ($fields as $field) {
                 $value = $registration_data[$field];
-                $report .= '<td>' . stripslashes($value) . '</td>';
+                $values .= '<td>' . stripslashes($value) . '</td>';
             }
-            $report .= '</tr>';
+            $values .= '</tr>';
         }
-        $report .= '</table>';
+
+        $report = '
+            <table class="searchresults registration_report" style="width:100%">
+                ' . $headers . '
+                ' . $values . '
+            </table>';
     } else {
-        $report .= '<div style="text-align:center">No registrations found for this event.</div>';
+        $report = '
+            <div style="text-align:center">
+                No registrations found for this event.
+            </div>';
     }
-    return $report;
+
+    $event = get_event($eventid);
+    return '
+        <h3 style="text-align:center;">
+            Custom Registration Report for ' . stripslashes($event["name"]) . '
+        </h3><br />' . $report;
 }
 
 function show_registrations() {
