@@ -1234,6 +1234,77 @@ function copy_registration($regid = false, $eventid = false) {
     }
 }
 
+function custom_registration_report() {
+    global $CFG;
+    $eventid = clean_myvar_req("eventid", "int");
+    $fields = clean_myvar_req("report_fields", "array");
+    $sortby = clean_myvar_opt("sort_by_field", "string", false);
+
+    $report = get_custom_registration_report($eventid, $fields, $sortby);
+
+    $returnme = get_back_to_registrations_link($eventid) . '
+        <link rel="stylesheet" type="text/css" media="print" href="' . $CFG->wwwroot . '/styles/print.css">
+        <form>
+            ' . button_maker([
+                "title" => "Print",
+                "onclick" => "window.print();return false;",
+                "class" => "dontprint",
+                "content" => "Print",
+            ]) . '<br /><br /><div class="pagestart print">' . $report . '</div>
+        </form>';
+    ajax_return($returnme);
+}
+
+function get_custom_registration_report($eventid, $fields, $sortby = false) {
+    $report = "";
+
+    // If a sortby field is specified, make sure it is in the list of fields to display. If not, add it to the list.
+    if ($sortby && !in_array($sortby, $fields)) {
+        $fields[] = $sortby;
+    }
+
+    // Create an array of the fields that we can later sort.
+    if ($registrations = get_db_result(get_all_registrations_of_event($eventid))) {
+        $registrations_array = [];
+        while ($registration = fetch_row($registrations)) {
+            $registration_data = [];
+            foreach ($fields as $field) {
+                $value = get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname = ||elementname||", ["regid" => $registration["regid"], "elementname" => strtolower($field)]);
+                $registration_data[$field] = stripslashes($value);
+            }
+            $registrations_array[] = $registration_data;
+        }
+
+        // Sort the registrations array if a sortby field is specified.
+        if ($sortby) {
+            usort($registrations_array, function($a, $b) use ($sortby) {
+                return strcmp($a[$sortby], $b[$sortby]);
+            });
+        }
+    }
+
+    if (isset($registrations_array) && !empty($registrations_array)) {
+        $report .= '<table class="registration_report" style="width:100%"><tr>';
+        foreach ($fields as $field) {
+            $report .= '<th style="text-align:left;">' . ucwords(str_replace("_", " ", $field)) . '</th>';
+        }
+        $report .= '</tr>';
+
+        foreach ($registrations_array as $registration_data) {
+            $report .= '<tr>';
+            foreach ($fields as $field) {
+                $value = $registration_data[$field];
+                $report .= '<td>' . stripslashes($value) . '</td>';
+            }
+            $report .= '</tr>';
+        }
+        $report .= '</table>';
+    } else {
+        $report .= '<div style="text-align:center">No registrations found for this event.</div>';
+    }
+    return $report;
+}
+
 function show_registrations() {
 global $CFG, $MYVARS, $USER;
     $eventid = clean_myvar_req("eventid", "int");
@@ -1287,13 +1358,57 @@ global $CFG, $MYVARS, $USER;
     // Load javascript needed for the print and quick reserve areas.
     load_show_registrations_javascript($eventid);
 
+    // Custom Report Fields.
+    $field_list = get_registration_fields($template_id);
+    $selectable_field_params = [
+        "properties" => [
+            "name" => "report_fields[]",
+            "id" => "report_fields",
+            "multiple" => "multiple",
+            "style" => "width: 100%;height:120px;",
+            "onchange" => 'if ($(this).val().length > 0) { $(\'#custom_registration_report\').show(); } else { $(\'#custom_registration_report\').hide(); }',
+        ],
+        "values" => $field_list,
+        "valuename" => "name",
+        "displayname" => "title",
+        "selected" => ["camper_name", "Camper_Name", "Name", "name", "first", "last", "firstname", "lastname",],
+    ];
+
+    $sortby_field_params = [
+        "properties" => [
+            "name" => "sort_by_field",
+            "id" => "sort_by_field",
+            "style" => "width: 100%;",
+        ],
+        "values" => $field_list,
+        "valuename" => "name",
+        "displayname" => "title",
+        "firstoption" => "Default Sort",
+    ];
+
     //Print all registration button and Print online registrations only button
     $templateParams = [
         "eventname" => $eventname,
         "registrationlist" => $registrationlist,
+        "selectable_field_list" => make_select($selectable_field_params),
+        "sort_by_field" => make_select($sortby_field_params),
     ];
 
     ajax_return(fill_template("tmp/events.template", "show_registrations_page", "events", $templateParams));
+}
+
+// Get a list of all registration fields that are selectable for reports. Multiple fields can be selected for reports, so this list is used to populate the select box.
+function get_registration_fields($template_id) {
+    $fields = [];
+    $template_forms = get_template_formlist($template_id);
+    foreach ($template_forms as $form) {
+        $field = get_template_formlist_element_array(get_event_template($template_id), $form);
+        if (isset($field["displayonly"])) {
+            continue;
+        }
+        $fields[] = $field;
+    }
+    return $fields;
 }
 
 function load_show_registrations_javascript($eventid) {
@@ -1320,6 +1435,19 @@ function load_show_registrations_javascript($eventid) {
             "eventid" => $eventid,
         ],
         "ondone" => "show_registrations($eventid);",
+        "loading" => "loading_overlay",
+    ]);
+
+    ajaxapi([ // Custom Registration Report.
+        "id" => "custom_registration_report",
+        "url" => "/features/events/events_ajax.php",
+        "data" => [
+            "action" => "custom_registration_report",
+            "eventid" => $eventid,
+            "report_fields" => "js|| $('#report_fields').val() ||js",
+            "sort_by_field" => "js|| $('#sort_by_field').val() ||js",
+        ],
+        "display" => "searchcontainer",
         "loading" => "loading_overlay",
     ]);
 }

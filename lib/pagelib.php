@@ -1602,7 +1602,7 @@ function make_options($params) {
     if (!$exclude) {
         // Determine if option is selected
         $selected = "";
-        if (isset($params["selected"]) && $params["value"] == $params["selected"]) {
+        if (isset($params["selected"]) && ($params["value"] == $params["selected"]) || (is_array($params["selected"]) && in_array($params["value"], $params["selected"]))) {
             $selected = 'selected="selected"';
         }
 

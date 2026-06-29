@@ -1,24 +1,63 @@
 show_registrations_page||
-    <select id="print_registrations" style="float: right;">
-        <option>Print Registrations</option>
-        <option value="0">Print All Registrations</option>
-        <option value="1">Print Online Registrations</option>
-    </select>
-    <br />
     <div style="font-size:.9em;padding:15px 5px;">
         <h2>||eventname||</h2>
         ||registrationlist||
         <div>
             <div style="padding: 5px;">
-                <strong>Quick Reserve Spot</strong>
+                <strong>||echo icon("print");::none|| Bulk Print Options</strong>
+            </div>
+            <select id="print_registrations">
+                <option>Select print option</option>
+                <option value="0">Print All Registrations</option>
+                <option value="1">Print Online Registrations</option>
+            </select>
+        </div>
+        <br />
+        <div>
+            <div style="padding: 5px;">
+                <strong>||echo icon("meteor");::none|| Quick Reserve Spot</strong>
             </div>
             <div style="display: flex;align-items: center;column-gap: 10px;">
                 <button id="add_blank_registration">
-                    || echo icon("truck-fast");::none||
+                    ||echo icon("truck-fast");::none||
                     <span>Reserve</span>
                 </button>
-                <input type="text" size="1" maxlength="2" id="reserveamount" value="1" onchange="if (!IsNumeric(this.value) || this.value <= 0) { this.value = 1; }" />
+                <input type="text" size="1" maxlength="2" id="reserveamount" value="1" onchange="if (!(IsNumeric(this.value) && this.value < 0)) { this.value = 1; }" />
                 <span>registration(s)</span>
+            </div>
+        </div>
+        <br />
+        <div>
+            <div style="padding: 5px;">
+                <strong>||echo icon("table");::none|| Custom Report</strong>
+            </div>
+            <div>
+                <table style="width: 100%;border-spacing: 10px;">
+                    <tr>
+                        <th style="text-align: left;">
+                            Fields
+                        </th>
+                        <th style="text-align: left;">
+                            Sort By
+                        </th>
+                        <th style="width: 80px">
+                        </th>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top">
+                            ||selectable_field_list||
+                        </td>
+                        <td style="vertical-align: top">
+                            ||sort_by_field||
+                        </td>
+                        <td style="vertical-align: top">
+                            <button id="custom_registration_report">
+                                ||echo icon("table");::none||
+                                <span>Report</span>
+                            </button>
+                        </td>
+                    </tr>
+                </table>
             </div>
         </div>
     </div>
@@ -171,7 +210,6 @@ regmanagersearchform||
         </div>
         <div style="text-align:center;">
             <form onsubmit="perform_registrationsearch();">
-                Type:
                 <select id="searchtype" name="searchtype">
                     <option value="events">Events</option>
                     <option value="registrations">Registrations</option>
