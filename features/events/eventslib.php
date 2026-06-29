@@ -1713,7 +1713,7 @@ function get_back_to_registrations_link($eventid) {
 
     return '
     <button class="dontprint alike" onclick="show_registrations(' . $eventid . ');" title="Back to ' . $eventname . ' registrations.">
-        Back to ' . $eventname . ' registrations.
+        ' . icon("arrow-left") . ' <span>Back to ' . $eventname . ' registrations.</span>
     </button>
     <div class="dontprint" style="padding: 10px"></div>';
 }
