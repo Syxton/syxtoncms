@@ -330,7 +330,7 @@ table.searchresults tr:hover {
 .profile_links:hover {
     color: red;
     text-decoration: none;
-    cursor: pointer
+    cursor: pointer;
 }
 .imgandlink {
     display: inline-block;
@@ -2630,4 +2630,56 @@ input[type=image] {
     #mem_resultsdiv .searchresults .iconfield {
         width: 35px;
     }
+}
+
+ul.multiselect_options_list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+div.multiselect_selected {
+    margin-bottom: 5px;
+}
+div.multiselect_selected_text {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    border-radius: 4px;
+}
+div.multiselect_selected_option {
+    background-color: #a6b2be;
+    color: white;
+    padding: 8px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+}
+input.multiselect_search {
+    width: 100%;
+    margin-bottom: 5px;
+}
+div.multiselect_remove_selected_option {
+    margin-right: 8px;
+}
+div.multiselect_remove_selected_option:hover {
+    cursor: pointer;
+}
+ul.multiselect_options_list li {
+    padding: 8px;
+    cursor: pointer;
+}
+ul.multiselect_options_list li:hover {
+    background-color: #f1f1f1;
+}
+ul.multiselect_options_list li.selected {
+    background-color: #007BFF;
+    color: white;
+}
+ul.multiselect_options_list li.selected:before {
+    content: "\2713"; /* Checkmark */
+    margin-right: 8px;
 }

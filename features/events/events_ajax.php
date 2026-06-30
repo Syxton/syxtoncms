@@ -1263,8 +1263,8 @@ function custom_registration_report() {
 
 function get_custom_registration_report($eventid, $fields, $sortby = false) {
     // Create an array of the fields that we can later sort.
+    $registrations_array = [];
     if ($registrations = get_db_result(get_all_registrations_of_event($eventid))) {
-        $registrations_array = [];
         while ($registration = fetch_row($registrations)) {
             $registration_data = [];
             foreach ($fields as $field) {
@@ -1421,7 +1421,7 @@ global $CFG, $MYVARS, $USER;
     $templateParams = [
         "eventname" => $eventname,
         "registrationlist" => $registrationlist,
-        "selectable_field_list" => make_select($selectable_field_params),
+        "selectable_field_list" => make_multiselect($selectable_field_params),
         "sort_by_field" => make_select($sortby_field_params),
     ];
 
@@ -1471,6 +1471,7 @@ function load_show_registrations_javascript($eventid) {
 
     ajaxapi([ // Custom Registration Report.
         "id" => "custom_registration_report",
+        "if" => "$('#report_fields').val() != ''",
         "url" => "/features/events/events_ajax.php",
         "data" => [
             "action" => "custom_registration_report",
