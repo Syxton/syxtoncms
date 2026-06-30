@@ -2010,7 +2010,7 @@ global $CFG, $USER;
                     "id" => "delete_" . $featuretype . "_" . $featureid,
                     "url" => "/ajax/site_ajax.php",
                     "data" => ["action" => "delete_feature", "pageid" => $pageid, "featuretype" => $featuretype, "featureid" =>  $featureid],
-                    "ondone" => "go_to_page(' . $pageid . ');",
+                    "ondone" => "go_to_page('$pageid');",
                 ]);
                 $returnme .= '<button id="delete_' . $featuretype . "_" . $featureid . '" class="alike slide_menu_button" title="Delete Feature">' . icon("trash") . '</button>';
             }

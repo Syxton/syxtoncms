@@ -390,8 +390,8 @@ global $USER;
             if (isset($_SESSION['userid'])) {
                 $USER->userid = $_SESSION['userid'];
                 ajax_return(json_encode([
-                    "status" => "active", 
-                    "check" => $check, 
+                    "status" => "active",
+                    "check" => $check,
                     "pageid" => $pageid,
                 ]));
                 exit;
@@ -399,9 +399,9 @@ global $USER;
         } else {
             update_user_cookie();
             ajax_return(json_encode([
-                "status" => "active", 
-                "pageid" => $pageid, 
-                "content" => print_logout_button($USER->fname, $USER->lname, $pageid), 
+                "status" => "active",
+                "pageid" => $pageid,
+                "content" => print_logout_button($USER->fname, $USER->lname, $pageid),
                 "check" => $check,
             ]));
             exit;
@@ -426,10 +426,16 @@ function addfeature() {
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     $type = clean_myvar_req("feature", "string");
 
-    update_user_cookie();
-    add_page_feature($pageid, $type);
+    $error = false;
+    try {
+        update_user_cookie();
+        add_page_feature($pageid, $type);
+        log_entry($featuretype, null, "Added $type Feature"); // Log
+    } catch (\Throwable $e) {
+        $error = $e->getMessage();
+    }
 
-    ajax_return("", false);
+    ajax_return("", $error);
 }
 
 function delete_feature() {
@@ -446,7 +452,7 @@ function delete_feature() {
     $var2 = $featureid ?? "#false#";
     $var3 = $subid ?? "#false#";
 
-    $error = "";
+    $error = false;
     try {
         all_features_function(false, $featuretype, "", "_delete", false, $var1, $var2, $var3);
         log_entry($featuretype, null, "Deleted Feature"); // Log
