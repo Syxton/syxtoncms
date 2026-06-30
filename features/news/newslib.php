@@ -542,6 +542,11 @@ function closetags($html) {
 }
 
 function news_delete($pageid, $featureid = false, $newsid = false) {
+    $params = [
+        "pageid" => $pageid,
+        "featureid" => $featureid,
+        "feature" => "news",
+    ];
     if (empty($newsid)) { // News feature delete
         try {
             start_db_transaction();

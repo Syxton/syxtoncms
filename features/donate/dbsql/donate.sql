@@ -1,7 +1,7 @@
 delete_donate_instance||
 	DELETE
 	FROM donate_instance
-	WHERE id = ||featureid||
+	WHERE donate_id = ||featureid||
 ||delete_donate_instance
 
 get_campaign||
