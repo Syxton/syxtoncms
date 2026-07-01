@@ -20,6 +20,12 @@ get_templates_event_registrations_by_email||
     ORDER BY `regid` DESC
 ||get_templates_event_registrations_by_email
 
+get_all_event_registrations||
+    SELECT *
+    FROM `events_registrations`
+    WHERE `eventid` = ||eventid||
+||get_all_event_registrations
+
 get_verified_event_registrations||
     SELECT *
     FROM `events_registrations`

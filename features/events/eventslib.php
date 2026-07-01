@@ -261,15 +261,19 @@ global $CFG, $USER, $ROLES;
     return get_css_box($title, $content, $buttons, NULL, "events", $featureid);
 }
 
+function get_registration_count($eventid) {
+    $SQL = fetch_template("dbsql/events.sql", "get_all_event_registrations", "events");
+    return get_db_count($SQL, ["eventid" => $eventid]);
+}
+
 function make_calendar_table($pageid, $daygraphic, $event, $buttons = false, $needsconfirmed = false) {
 global $CFG, $USER;
     $time = get_timestamp();
-    $registration_info = "";
-    $alert = $export = $info = $eventbuttons = "";
+    $alerts = $export = $info = $eventactions = "";
 
     $featureid = get_feature_id("events", $pageid);
     if ($event["start_reg"] > 0) { // Event is a registerable page...at one time.
-        $regcount = get_db_count("SELECT * FROM events_registrations WHERE eventid='" . $event['eventid'] . "'");
+        $regcount = get_registration_count($event['eventid']);
         $limit = $event['max_users'] == "0" ? "&#8734;" : $event['max_users'];
 
         // Currently can register for event (time check)
@@ -282,23 +286,22 @@ global $CFG, $USER;
                 $left = $event['max_users'] == "0" ? "&#8734;" : '(' . ($limit - $regcount) . ' out of ' . $limit . ' openings left)';
 
                 // Alert
+                $alerts = "";
                 if ($event['max_users'] > 0 && (($limit - $regcount) < 10)) {
-                    $alert = '<span class="events_limit_alert">Only ' . ($limit - $regcount) . ' spots remaining.</span>';
-                } else {
-                    $alert = "";
+                    $alerts = '<span class="events_limit_alert">Only ' . ($limit - $regcount) . ' spots remaining.</span>';
                 }
 
                 // Can you sign up for this event.
                 if (user_is_able($USER->userid, "signupforevents", $pageid, "events", $featureid)) {
-                    $eventbuttons .= get_event_register_link($event, $pageid, "for " . $event["name"], true);
+                    $eventactions .= get_event_register_link($event, $pageid, "for " . $event["name"], true);
                 }
 
                 // Can you pay for this event.
                 if ($event["paypal"] != "") {
-                    $eventbuttons .= get_event_pay_link($event, $pageid, true);
+                    $eventactions .= get_event_pay_link($event, $pageid, true);
                 }
             } else {
-                $alert = '<span class="events_limit_alert">No spots available.</span>';
+                $alerts = '<span class="events_limit_alert">No spots available.</span>';
             }
         }
 
@@ -328,58 +331,23 @@ global $CFG, $USER;
         }
     }
 
-    if ($info == "") { // If the info is empty, let's put something there.
+    if (empty($info)) { // If the info is empty, let's put something there.
         $location = get_db_row("SELECT * FROM events_locations WHERE id='" . $event['location'] . "'");
         $info = "Event Location: " . stripslashes($location["location"]);
     }
 
-    $registration_info = '<div role="export_button" class="events_reginfoblock">' . $export . '</div>' .
-                         '<div role="event_buttons" class="events_reginfoblock event_buttons">' . $eventbuttons . '</div>';
-
-    $confirmed = $needsconfirmed ? "Unconfirmed:" : "";
-    $returnme = '
-        <div id="confirm_' . $event['eventid'] . '">
-            <table class="eventstable">
-                <tr>
-                    <td style="width: 6%;min-width: 80px;vertical-align: top;">
-                    ' . $daygraphic . '
-                    </td>
-                    <td>
-                        <table style="width:100%;border-spacing: 0px;">
-                        <tr>
-                            <td>
-                                <div class="container_head">
-                                    <div class="event_title" style="color:gray;">
-                                        ' . $confirmed . '
-                                        ' . get_event_info_link($event, $pageid) . '
-                                    </div>
-                                    <span style="font-size:.85em;padding-left:5px;">
-                                        ' . stripslashes(strip_tags($event["byline"], '<a>')) . '
-                                    </span>
-                                    <div class="event_info_box">
-                                        <div class="event_info">
-                                            <div>
-                                            ' . $registration_info . '
-                                            </div>
-                                            <div style="width: 150px">
-                                            ' . $buttons . '
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <br />
-                                    <div class="event_info_box">
-                                        <div role="event_info" class="events_reginfoblock">' . $info . '</div>
-                                        <div role="alert" class="events_reginfoblock">' . $alert . '</div>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-        </table>
-    </div>';
-    return $returnme;
+    return fill_template("tmp/events.template", "event_calendar_event", "events", [
+        "eventid" => $event['eventid'],
+        "daygraphic" => $daygraphic,
+        "confirmed" => ($needsconfirmed ? "Unconfirmed:" : ""),
+        "title" => get_event_info_link($event, $pageid),
+        "byline" => stripslashes(strip_tags($event["byline"], '<a>')),
+        "export" => $export,
+        "eventbuttons" => $buttons,
+        "eventactions" => $eventactions,
+        "info" => $info,
+        "alerts" => $alerts,
+    ]);
 }
 
 function get_event_button_layout($pageid, $event, $edit, $confirm) {

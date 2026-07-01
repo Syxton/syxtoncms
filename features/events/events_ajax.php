@@ -1643,7 +1643,7 @@ global $CFG, $USER;
                     $export = "";
                     $limit = "&#8734;"; // infinity symbol
                     if ($event["start_reg"] > 0) {
-                        $regcount = get_db_count("SELECT * FROM events_registrations WHERE eventid='" . $event['eventid'] . "'");
+                        $regcount = get_registration_count($event['eventid']);
                         $limit = $event['max_users'] == "0" ? $limit : $event['max_users'];
 
                         // GET EXPORT CSV BUTTON

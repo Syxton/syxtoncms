@@ -1,3 +1,56 @@
+event_calendar_event||
+    <div id="confirm_||eventid||">
+            <table class="eventstable">
+                <tr>
+                    <td style="width: 6%;min-width: 80px;vertical-align: top;">
+                        ||daygraphic||
+                    </td>
+                    <td>
+                        <table style="width:100%;border-spacing: 0px;">
+                        <tr>
+                            <td>
+                                <div class="container_head">
+                                    <div class="event_title" style="color:gray;">
+                                        ||confirmed||
+                                        ||title||
+                                    </div>
+                                    <div class="event_byline">
+                                        ||byline||
+                                    </div>
+                                    <div class="event_info_box">
+                                        <div class="event_info">
+                                            <div>
+                                                <div role="export_button" class="events_reginfoblock">
+                                                    ||export||
+                                                </div>
+                                                <div role="event_buttons" class="events_reginfoblock event_buttons">
+                                                    ||eventactions||
+                                                </div>
+                                            </div>
+                                            <div style="width: 150px">
+                                                ||eventbuttons||
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <br />
+                                    <div class="event_info_box">
+                                        <div role="event_info" class="events_reginfoblock">
+                                            ||info||
+                                        </div>
+                                        <div role="alert" class="events_reginfoblock">
+                                            ||alerts||
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+||event_calendar_event
+
 show_registrations_page||
     <div style="font-size:.9em;padding:15px 5px;">
         <h2>||eventname||</h2>

@@ -714,6 +714,10 @@ div.registration_cart_checkout_title {
     font-size: .95em;
     padding-right: 10px
 }
+.event_byline {
+    font-size: .95em;
+    padding: 10px
+}
 .event_info_box {
     vertical-align: middle;
     color: gray;
