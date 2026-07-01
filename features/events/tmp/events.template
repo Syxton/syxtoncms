@@ -37,33 +37,34 @@ show_registrations_page||
             <div style="padding: 5px;">
                 <strong>||echo icon("table");::none|| Custom Report</strong>
             </div>
-            <div>
-                <table style="width: 100%;border-spacing: 15px 5px;">
-                    <tr>
-                        <th style="text-align: left;">
-                            Fields
-                        </th>
-                        <th style="text-align: left;">
-                            Sort By
-                        </th>
-                        <th style="width: 80px">
-                        </th>
-                    </tr>
-                    <tr>
-                        <td style="vertical-align: top">
-                            ||selectable_field_list||
-                        </td>
-                        <td style="vertical-align: top">
-                            ||sort_by_field||
-                        </td>
-                        <td style="vertical-align: top">
-                            <button id="custom_registration_report">
-                                ||echo icon("table");::none||
-                                <span>Report</span>
-                            </button>
-                        </td>
-                    </tr>
-                </table>
+            <div style="display: flex;padding: 5px 10px;gap: 10px;flex-wrap: wrap;">
+                <div style="width:45%;">
+                    <div style="padding-bottom:5px">
+                        <strong>Fields</strong>
+                    </div>
+                    <div>
+                        ||selectable_field_list||
+                    </div>
+                </div>
+                <div style="width: 20%;max-width:130px;min-width:65px;">
+                    <div style="padding-bottom:5px">
+                        <strong>Sort By</strong>
+                    </div>
+                    <div>
+                        ||sort_by_field||
+                    </div>
+                </div>
+                <div style="width: 80px">
+                    <div style="padding-bottom:5px">
+                        <strong>Action</strong>
+                    </div>
+                    <div>
+                        <button id="custom_registration_report">
+                            ||echo icon("table");::none||
+                            <span>Report</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -215,13 +216,13 @@ regmanagersearchform||
             <br />
         </div>
         <div style="text-align:center;">
-            <form onsubmit="perform_registrationsearch();">
-                <select id="searchtype" name="searchtype">
+            <form onsubmit="perform_registrationsearch();" style="display: flex;justify-content: center;column-gap: 5px;">
+                <select id="searchtype" name="searchtype" style="min-width: 80px;max-width: 110px;">
                     <option value="events">Events</option>
                     <option value="registrations">Registrations</option>
                 </select>
-                <input type="text" id="searchbox" name="searchbox" />
-                <button style="margin-left: 5px;">
+                <input type="text" id="searchbox" name="searchbox" style="width: 40%;" />
+                <button>
                     Search
                 </button>
             </form>

@@ -2636,7 +2636,7 @@ ul.multiselect_options_list {
     list-style-type: none;
     padding: 0;
     margin: 0;
-    max-height: 200px;
+    max-height: 150px;
     overflow-y: auto;
     border: 1px solid #ccc;
     border-radius: 4px;
