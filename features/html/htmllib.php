@@ -385,61 +385,98 @@ global $CFG;
 }
 
 function filter_photogallery($html) {
-global $CFG;
-    $exts = ['jpeg', 'jpg', 'gif', 'png'];
-    $regex = '/(<[aA]\s*.[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s""\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(<\/[aA]>)/';
-    if (preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) {
-        $i = 0;
-        foreach ($matches as $match) {
-            $url = $match[2];
-            //make internal links full paths
-            $localdirectory = $CFG->dirroot . "/" . substr($url, strpos($url, $CFG->userfilesfolder));
-            if (substr($localdirectory, -1) == '/') {
-                $localdirectory = substr($localdirectory, 0, -1);
+    global $CFG;
+    $extensions = ['jpg', 'jpeg', 'gif', 'png'];
+    $regex = '/<a\b[^>]*\bhref\s*=\s*(["\'])(?!#|mailto:|javascript:|location\.|.*?\.css|this\.)([^"\']+)\1[^>]*>(.*?)<\/a>/is';
+    if (!preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) {
+        return $html;
+    }
+
+    foreach ($matches as $index => $match) {
+        $url = $match[2];
+
+        // Must reference the user files area.
+        $pos = strpos($url, $CFG->userfilesfolder);
+        if ($pos === false) {
+            continue;
+        }
+
+        $localpath = rtrim($CFG->dirroot, '/') . '/' . ltrim(urldecode(substr($url, $pos)), '/');
+        $localpath = rtrim($localpath, '/');
+
+        if (!is_readable($localpath)) {
+            continue;
+        }
+
+        $gallery = '';
+        $galleryid = "autogallery_$index";
+
+        if (is_dir($localpath)) { // Directory gallery
+            if (strpos($match[0], 'title="gallery"') === false) {
+                continue;
             }
 
-            if (is_readable($localdirectory) && strpos($url, $CFG->userfilesfolder) !== false) {
-                $gallery = ""; $galleryid = uniqid("autogallery");
-                if (is_dir($localdirectory)) { // directory
-                    $captions = get_file_captions($localdirectory); // get the captions if they exist.
-                    if (strpos($match[0], 'title="gallery"') !== false) {
-                        $directoryList = opendir($localdirectory);
-                        while ($file = readdir($directoryList)) {
-                            if ($file != '.' && $file != '..') {
-                                $path = $localdirectory . '/' . $file;
-                                if (is_readable($path)) {
-                                    $pathparts = explode('/', $file);
-                                    $pathparts = explode('.', end($pathparts));
-                                    if (is_file($path) && in_array(end($pathparts), $exts)) {
-                                        $fileurl = $url . '/' . $file; // Use web url instead of local link.
-                                        $caption = $captions[$file] ?? $file; // Either a caption or the filename
-                                        $display = empty($gallery) ? "" : "display:none;";
-                                        $modalsettings = ["icon" => icon("images"), "id" => "autogallery_$i", "title" => $caption, "text" => $match[4], "gallery" => $galleryid, "path" => $fileurl, "styles" => $display];
-                                        $gallery .= empty($display) ? make_modal_links($modalsettings) : '<a href="' . $fileurl . '" title="' . $caption . '" data-rel="' . $galleryid . '" style="' . $display . '"></a>';
-                                    }
-                                }
-                            }
-                            //$i++;
-                        }
-                        closedir($directoryList);
-                    }
-                } else if (is_file($localdirectory)) { // file
-                    $file = basename($localdirectory); // get just the filename and extention.
-                    $captions = get_file_captions(str_replace($file, "", $localdirectory)); // get the caption from the image directory if possible
-                    $fileurl = $url; // Use web url instead of local link.
-                    $caption = $captions[$file] ?? $file; // Either a caption or the filename
-                    $name = $match[4]; // Use text inside original hyperlink.
-                    $modalsettings = ["icon" => icon("image"), "id" => "autogallery_$i", "title" => $caption, "text" => $name, "gallery" => $galleryid, "path" => $fileurl];
-                    $gallery = make_modal_links($modalsettings);
-                }
+            $captions = get_file_captions($localpath);
 
-                if (!empty($gallery)) {
-                    $html = str_replace($match[0], $gallery, $html);
-                }
+            // Get all files in directory.
+            $galleryArray = getdirectoryfiles($localpath, $extensions);
+
+            // Sort files by filename.
+            asort($galleryArray, SORT_STRING | SORT_FLAG_CASE | SORT_NATURAL);
+
+            // First file is the gallery link.
+            $first = array_shift($galleryArray);
+            $gallery .= make_modal_links([
+                "icon"    => icon("images"),
+                "id"      => "autogallery_$index",
+                "title"   => $captions[$first] ?? $first,
+                "text"    => $match[3],
+                "gallery" => $galleryid,
+                "path"    => rtrim($url, '/') . '/' . $first,
+            ]);
+
+            // The rest of the files are hidden links.
+            foreach ($galleryArray as $filename) {
+                $fileurl = rtrim($url, '/') . '/' . $filename;
+                $caption = $captions[$filename] ?? $filename;
+
+                $gallery .= sprintf(
+                    '<a href="%s" title="%s" data-rel="%s" style="display:none;"></a>',
+                    htmlspecialchars($fileurl, ENT_QUOTES),
+                    htmlspecialchars($caption, ENT_QUOTES),
+                    $galleryid
+                );
             }
-            $i++;
+        } elseif (is_file($localpath)) { // Single image
+            $filename = basename($localpath);
+            $captions = get_file_captions(dirname($localpath));
+
+            $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+            if (!in_array($extension, $extensions, true)) {
+                continue;
+            }
+
+            $gallery = make_modal_links([
+                "icon"    => icon("image"),
+                "id"      => "autogallery_$index",
+                "title"   => $captions[$filename] ?? $filename,
+                "text"    => $match[3],
+                "gallery" => $galleryid,
+                "path"    => $url,
+            ]);
+        }
+
+        if (!empty($gallery)) {
+            // Replace only the first occurrence of this exact match.
+            $html = preg_replace(
+                '/' . preg_quote($match[0], '/') . '/',
+                $gallery,
+                $html,
+                1
+            );
         }
     }
+
     return $html;
 }
 

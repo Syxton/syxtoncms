@@ -135,6 +135,25 @@ global $CFG;
     return $protocol;
 }
 
+function getdirectoryfiles($directory, $extensions = []) {
+    $files = [];
+    foreach (new DirectoryIterator($directory) as $file) {
+        if ($file->isDot() || !$file->isFile() || !$file->isReadable()) {
+            continue;
+        }
+
+        if (!empty($extensions)) {
+            $extension = strtolower($file->getExtension());
+            if (!in_array($extension, $extensions, true)) {
+                continue;
+            }
+        }
+
+        $files[] = $file->getFilename();
+    }
+    return $files;
+}
+
 /**
  * Fetches a template file and returns its contents.
  *
