@@ -3292,9 +3292,9 @@ global $CFG, $USER;
     ]);
 
     $returnme = '
-        <link rel="stylesheet" media="print" type="text/css" href="' . $CFG->wwwroot . '/styles/print.css">' .
+        <link rel="stylesheet" media="print" type="text/css" href="' . $CFG->wwwroot . '/styles/print.css"><br />' .
         button_maker([
-            "content" => "Return to Staff Applications",
+            "content" => icon("circle-chevron-left") . "<span>Return to Staff Applications</span>",
             "onclick" => "perform_appsearch(" . $pagenum . ");",
             "class" => "alike dontprint",
             "title" => "Return to Staff Applications",
@@ -3319,7 +3319,7 @@ global $CFG, $USER;
             "valuename" => "year",
             "selected" => $year,
         ];
-        $returnme .= "<br />" . make_select($params) . "<br />";
+        $returnme .= "<br /><br />" . make_select($params) . "<br />";
 
         ajaxapi([
             "if" => "$('#year_$staffid').val() > 0",
