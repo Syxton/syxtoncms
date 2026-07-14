@@ -3294,7 +3294,7 @@ global $CFG, $USER;
     $returnme = '
         <link rel="stylesheet" media="print" type="text/css" href="' . $CFG->wwwroot . '/styles/print.css">' .
         button_maker([
-            "text" => "Return to Staff Applications",
+            "content" => "Return to Staff Applications",
             "onclick" => "perform_appsearch(" . $pagenum . ");",
             "class" => "alike dontprint",
             "title" => "Return to Staff Applications",

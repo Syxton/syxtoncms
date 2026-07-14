@@ -332,7 +332,10 @@ staffapplication_form||
                 <div class="rowContainer">
                     <label class="rowTitle" for="phone">Phone</label>
                     <input ||viewonly{{ disabled="disabled" }}viewonly||
-                        type="text" id="phone" name="phone" value="||v["phone"]||"
+                        type="text"
+                        id="phone"
+                        name="phone"
+                        value="||v["phone"]||"
                         data-rule-required="true"
                         data-rule-phone="true"
                         data-msg-required="||echo getlang("input_required");::none||"
@@ -347,6 +350,7 @@ staffapplication_form||
                     <label class="rowTitle" for="address">Street Address</label>
                     <input
                         ||viewonly{{ disabled="disabled" }}viewonly||
+                        type="text"
                         id="street_address"
                         name="street_address"
                         value="||v["street_address"]||"
@@ -360,6 +364,7 @@ staffapplication_form||
                     <label class="rowTitle" for="address">Street Address 2</label>
                     <input
                         ||viewonly{{ disabled="disabled" }}viewonly||
+                        type="text"
                         id="street_address_2"
                         name="street_address_2"
                         value="||v["street_address_2"]||"
@@ -373,6 +378,7 @@ staffapplication_form||
                     <label class="rowTitle" for="city">City</label>
                     <input
                         ||viewonly{{ disabled="disabled" }}viewonly||
+                        type="text"
                         id="city"
                         name="city"
                         value="||v["city"]||"
@@ -394,6 +400,7 @@ staffapplication_form||
                     <label class="rowTitle" for="zipcode">Zipcode</label>
                     <input
                         ||viewonly{{ disabled="disabled" }}viewonly||
+                        type="text"
                         id="zipcode"
                         name="zipcode"
                         value="||v["zipcode"]||"

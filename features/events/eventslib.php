@@ -2155,6 +2155,7 @@ global $USER, $CFG, $MYVARS;
         "properties" => [
             "name" => 'state',
             "id" => 'state',
+            "disabled" => $viewonly ? 'disabled' : '',
         ],
         "values" => get_states_array(),
         "selected" => $v["state"],
