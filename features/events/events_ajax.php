@@ -3355,13 +3355,20 @@ global $CFG, $USER;
         $return = $error = "";
         try {
             start_db_transaction();
+            $street_address = clean_myvar_req("street_address", "string");
+            $street_address_2 = clean_myvar_opt("street_address_2", "string", "");
+            $city = clean_myvar_req("city", "string");
+            $state = clean_myvar_req("state", "string");
+            $zipcode = clean_myvar_req("zipcode", "string");
+            $address = $street_address . ($street_address_2 ? " " . $street_address_2 : "") . ", " . $city . ", " . $state . " " . $zipcode;
+
             $params = [
                 "userid" => $USER->userid,
                 "pageid" => $pageid,
                 "name" => nameize(clean_myvar_req("name", "string")),
                 "phone" => format_phone(clean_myvar_opt("phone", "string", "")),
                 "dateofbirth" => strtotime(clean_myvar_opt("dateofbirth", "string", "")),
-                "address" => clean_myvar_req("address", "string"),
+                "address" => $address,
                 "agerange" => clean_myvar_req("agerange", "int"),
                 "cocmember" => clean_myvar_opt("cocmember", "int", 0),
                 "congregation" => clean_myvar_req("congregation", "string"),
@@ -3474,13 +3481,19 @@ global $MYVARS, $CFG, $USER;
     $year = clean_myvar_opt("year", "int", date("Y"));
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     if (!defined('FILELIB')) { include_once ($CFG->dirroot . '/lib/filelib.php'); }
+    if (!defined('FORMLIB')) { include_once($CFG->dirroot . '/lib/formlib.php'); }
+
     $fields = [
         "STATUS",
         "Name",
         "Email",
         "Date of Birth",
         "Phone",
-        "Address",
+        "Address 1",
+        "Address 2",
+        "City",
+        "State",
+        "Zip",
         "Age Range",
         "Church of Christ Member",
         "Congregation",
@@ -3526,12 +3539,17 @@ global $MYVARS, $CFG, $USER;
             $app["parentalconsentsig"] = $app["parentalconsentsig"] == "on" ? "Signed" : "";
             $app["workerconsentsig"] = $app["workerconsentsig"] == "on" ? "Signed" : "";
             $app["bgcheckpass"] = $app["bgcheckpass"] == 0 ? "No" : "Yes";
+            $address = parseAddress($app["address"]);
             $CSV .= '"' . implode(" | " , array_column($status, 'full')).
                     '","' . $app["name"].
                     '","' . $email.
                     '","' . date('m/d/Y', $app["dateofbirth"]).
                     '","' . $app["phone"].
-                    '","' . $app["address"].
+                    '","' . $address['street_address'].
+                    '","' . $address['street_address_2'].
+                    '","' . $address['city'].
+                    '","' . $address['state'].
+                    '","' . $address['zipcode'].
                     '","' . $app["agerange"].
                     '","' . $app["cocmember"].
                     '","' . $app["congregation"].

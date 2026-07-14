@@ -1518,7 +1518,7 @@ function make_select($params) {
     $optionsstring = "";
 
     // Get value and display names
-    $valuename = $params["valuename"];
+    $valuename = $params["valuename"] ?? "";
     $displayname = $params["displayname"] ?? $valuename;
 
     if (!empty($params["values"])) {
@@ -1529,19 +1529,28 @@ function make_select($params) {
 
         if (is_array($params["values"])) {
             // Array.
-            foreach ($params["values"] as $value) {
-                $options = [
-                    "value" => $value[$valuename],
-                    "valuename" => $valuename,
-                    "display" => $value[$displayname],
-                    "selected" => $params["selected"] ?? null,
-                    "exclude" => $params["exclude"] ?? null,
-                ];
+            foreach ($params["values"] as $key => $value) {
+                if (is_array($value)) {
+                    $options = [
+                        "value" => $value[$valuename],
+                        "valuename" => $valuename,
+                        "display" => $value[$displayname],
+                        "selected" => $params["selected"] ?? null,
+                        "exclude" => $params["exclude"] ?? null,
+                    ];
+                } else {
+                    $options = [
+                        "value" => $key,
+                        "display" => $value,
+                        "selected" => $params["selected"] ?? null,
+                        "exclude" => $params["exclude"] ?? null,
+                    ];
+                }
                 $optionsstring .= make_options($options);
             }
         } elseif (get_class($params["values"]) == "stdClass") {
             // Standard object.
-            foreach ($params["values"] as $value) {
+            foreach ($params["values"] as $key => $value) {
                 $options = [
                     "value" => $value->$valuename,
                     "valuename" => $valuename,

@@ -2149,6 +2149,28 @@ global $USER, $CFG, $MYVARS;
     $v["ref3relationship"] = empty($row) ? "" : $row["ref3relationship"];
     $v["ref3phone"] = empty($row) ? "" : $row["ref3phone"];
 
+    if (!defined('FORMLIB')) { include_once($CFG->dirroot . '/lib/formlib.php'); }
+    $v += parseAddress($v["address"]);
+    $v["states"] = make_select([
+        "properties" => [
+            "name" => 'state',
+            "id" => 'state',
+        ],
+        "values" => get_states_array(),
+        "selected" => $v["state"],
+        "firstoption" => "Select One...",
+    ]);
+    $vars = [
+        "viewonly" => $viewonly,
+        "yestotal" => empty($v["yestotal"]),
+        "ar1selected" => empty($v["ar1selected"]),
+        "formtitle" => (!$viewonly ? 'Staff Application' : $v["name"] . ' Application'),
+        "newapp" => (empty($v["staffid"]) ? true : false),
+        "v" => $v,
+    ];
+
+    return fill_template("tmp/events.template", "staffapplication_form", "events", $vars);
+
     return '
         <div class="formDiv" id="staffapplication_form_div">
             <div style="text-align:center">

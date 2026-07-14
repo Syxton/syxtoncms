@@ -401,4 +401,172 @@ function get_element_value($element, $data = []) {
 
     return "";
 }
+
+// Takes an address string and parses it into an array with keys:
+// street_address, street_address_2, city, state, zipcode
+function parseAddress($address) {
+    $result = [
+        'street_address'   => '',
+        'street_address_2' => '',
+        'city'             => '',
+        'state'            => '',
+        'zipcode'          => ''
+    ];
+
+    $states = get_states_array();
+
+    // Normalize whitespace
+    $address = trim(str_replace(["\r\n", "\r"], "\n", $address));
+    $address = preg_replace('/[ \t]+/', ' ', $address);
+
+    // ------------------------
+    // ZIP Code
+    // ------------------------
+    if (preg_match('/\b(\d{5}(?:-\d{4})?)\b\s*$/', $address, $m)) {
+        $result['zipcode'] = $m[1];
+        $address = trim(substr($address, 0, strrpos($address, $m[1])));
+    } else {
+        return $result;
+    }
+
+    // ------------------------
+    // State
+    // ------------------------
+    if (preg_match('/\b([A-Z]{2})\b\s*,?\s*$/i', $address, $m)) {
+        $abbr = strtoupper($m[1]);
+
+        if (isset($states[$abbr])) {
+            $result['state'] = $abbr;
+            $address = trim(substr($address, 0, strrpos($address, $m[1])));
+        } else {
+            return $result;
+        }
+    } else {
+        return $result;
+    }
+
+    // Remove trailing commas/spaces
+    $address = rtrim($address, ", \t");
+
+    // ------------------------
+    // Split into lines
+    // ------------------------
+    $lines = array_values(array_filter(array_map('trim', explode("\n", $address))));
+
+    if (count($lines) > 1) {
+
+        // Multiline
+        $result['street_address'] = array_shift($lines);
+
+        // Last line is always the city
+        $result['city'] = trim(array_pop($lines), ", ");
+
+        // Everything between street and city is Address2
+        if (!empty($lines)) {
+            $result['street_address_2'] = implode(', ', $lines);
+        }
+
+    } else {
+
+        // Single line
+        $remaining = $lines[0];
+
+        // Split on commas
+        $parts = array_values(array_filter(array_map('trim', explode(',', $remaining))));
+
+        if (count($parts) >= 2) {
+
+            $result['city'] = array_pop($parts);
+
+            if (count($parts) > 1) {
+                $result['street_address_2'] = array_pop($parts);
+            }
+
+            $result['street_address'] = implode(', ', $parts);
+
+        } else {
+            return $result;
+        }
+    }
+
+    // ------------------------
+    // Detect Address2 if embedded in street_address
+    // ------------------------
+    if (empty($result['street_address_2'])) {
+
+        $pattern = '/\b(?:APT|APARTMENT|UNIT|SUITE|STE|#|ROOM|RM|FLOOR|FL|BUILDING|BLDG|DEPT|PO BOX|P\.?\s*O\.?\s*BOX|PMB)\b.*$/i';
+
+        if (preg_match($pattern, $result['street_address'], $m)) {
+
+            $result['street_address_2'] = trim($m[0], ", ");
+
+            $result['street_address'] = trim(
+                substr(
+                    $result['street_address'],
+                    0,
+                    strpos($result['street_address'], $m[0])
+                ),
+                ", "
+            );
+        }
+    }
+
+    return $result;
+}
+
+function get_states_array() {
+    return [
+        'AL' => 'Alabama',
+        'AK' => 'Alaska',
+        'AZ' => 'Arizona',
+        'AR' => 'Arkansas',
+        'CA' => 'California',
+        'CO' => 'Colorado',
+        'CT' => 'Connecticut',
+        'DE' => 'Delaware',
+        'DC' => 'District Of Columbia',
+        'FL' => 'Florida',
+        'GA' => 'Georgia',
+        'HI' => 'Hawaii',
+        'ID' => 'Idaho',
+        'IL' => 'Illinois',
+        'IN' => 'Indiana',
+        'IA' => 'Iowa',
+        'KS' => 'Kansas',
+        'KY' => 'Kentucky',
+        'LA' => 'Louisiana',
+        'ME' => 'Maine',
+        'MD' => 'Maryland',
+        'MA' => 'Massachusetts',
+        'MI' => 'Michigan',
+        'MN' => 'Minnesota',
+        'MS' => 'Mississippi',
+        'MO' => 'Missouri',
+        'MT' => 'Montana',
+        'NE' => 'Nebraska',
+        'NV' => 'Nevada',
+        'NH' => 'New Hampshire',
+        'NJ' => 'New Jersey',
+        'NM' => 'New Mexico',
+        'NY' => 'New York',
+        'NC' => 'North Carolina',
+        'ND' => 'North Dakota',
+        'OH' => 'Ohio',
+        'OK' => 'Oklahoma',
+        'OR' => 'Oregon',
+        'PA' => 'Pennsylvania',
+        'RI' => 'Rhode Island',
+        'SC' => 'South Carolina',
+        'SD' => 'South Dakota',
+        'TN' => 'Tennessee',
+        'TX' => 'Texas',
+        'UT' => 'Utah',
+        'VT' => 'Vermont',
+        'VA' => 'Virginia',
+        'WA' => 'Washington',
+        'WV' => 'West Virginia',
+        'WI' => 'Wisconsin',
+        'WY' => 'Wyoming',
+    ];
+}
 ?>
