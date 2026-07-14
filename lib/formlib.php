@@ -406,7 +406,7 @@ function get_element_value($element, $data = []) {
 // street_address, street_address_2, city, state, zipcode
 function parseAddress($address) {
     $result = [
-        'street_address'   => '',
+        'street_address'   => $address,
         'street_address_2' => '',
         'city'             => '',
         'state'            => '',
@@ -414,102 +414,181 @@ function parseAddress($address) {
     ];
 
     $states = get_states_array();
+    $usps = usps_abbreviations();
 
-    // Normalize whitespace
+    $additionalSuffixes = [
+        'CR',
+        'COUNTY ROAD',
+        'COUNTY RD',
+        'CO RD',
+        'SR',
+        'STATE ROAD',
+        'STATE RD',
+        'ST RD',
+        'FM',
+        'FM RD',
+        'TWP',
+        'TOWNSHIP ROAD'
+    ];
+
+    $suffixes = [];
+
+    foreach ($usps as $name => $abbr) {
+        $suffixes[] = preg_quote($name, '/');
+        $suffixes[] = preg_quote($abbr, '/');
+    }
+
+    foreach ($additionalSuffixes as $suffix) {
+        $suffixes[] = preg_quote($suffix, '/');
+    }
+
+    $suffixes = array_unique($suffixes);
+
+    $address2Pattern = '/\b(?:APT|APARTMENT|UNIT|SUITE|STE|#|ROOM|RM|FLOOR|FL|BUILDING|BLDG|DEPT|PO BOX|P\.?\s*O\.?\s*BOX|PMB|BOX)\b.*$/i';
+
+    // Normalize
     $address = trim(str_replace(["\r\n", "\r"], "\n", $address));
+    $address = preg_replace('/\.(?=\s|,|$)/', '', $address);
     $address = preg_replace('/[ \t]+/', ' ', $address);
 
-    // ------------------------
-    // ZIP Code
-    // ------------------------
+    // ZIP (optional)
     if (preg_match('/\b(\d{5}(?:-\d{4})?)\b\s*$/', $address, $m)) {
         $result['zipcode'] = $m[1];
         $address = trim(substr($address, 0, strrpos($address, $m[1])));
-    } else {
-        return $result;
     }
 
-    // ------------------------
-    // State
-    // ------------------------
+    // State detection
+    $stateFound = false;
+
+    // Two-letter abbreviation
     if (preg_match('/\b([A-Z]{2})\b\s*,?\s*$/i', $address, $m)) {
         $abbr = strtoupper($m[1]);
 
         if (isset($states[$abbr])) {
             $result['state'] = $abbr;
-            $address = trim(substr($address, 0, strrpos($address, $m[1])));
-        } else {
-            return $result;
+            $address = trim(
+                preg_replace('/\b' . preg_quote($m[1], '/') . '\s*,?\s*$/i', '', $address)
+            );
+            $stateFound = true;
         }
-    } else {
+    }
+
+    // Full or partial state name
+    if (!$stateFound) {
+        $matches = [];
+
+        foreach ($states as $abbr => $name) {
+            $nameLower = strtolower($name);
+
+            if (preg_match('/\b' . preg_quote($name, '/') . '\s*,?\s*$/i', $address)) {
+                $matches[] = [
+                    'abbr' => $abbr,
+                    'text' => $name,
+                    'length' => strlen($name)
+                ];
+            } elseif (strlen($name) >= 3 &&
+                preg_match('/\b' . preg_quote(substr($name, 0, 3), '/') . '[a-z]*\s*,?\s*$/i', $address, $m)) {
+
+                $matches[] = [
+                    'abbr' => $abbr,
+                    'text' => $m[0],
+                    'length' => strlen($m[0])
+                ];
+            }
+        }
+
+        if (!empty($matches)) {
+            usort($matches, function ($a, $b) {
+                return $b['length'] <=> $a['length'];
+            });
+
+            $state = $matches[0];
+
+            $result['state'] = $state['abbr'];
+
+            $address = trim(
+                preg_replace(
+                    '/\b' . preg_quote(trim($state['text']), '/') . '\s*,?\s*$/i',
+                    '',
+                    $address
+                ),
+                ", "
+            );
+
+            $stateFound = true;
+        }
+    }
+
+    if (!$stateFound) {
         return $result;
     }
 
-    // Remove trailing commas/spaces
-    $address = rtrim($address, ", \t");
+    $address = rtrim($address, ", \n");
 
-    // ------------------------
-    // Split into lines
-    // ------------------------
-    $lines = array_values(array_filter(array_map('trim', explode("\n", $address))));
+    // Multiline
+    if (strpos($address, "\n") !== false) {
 
-    if (count($lines) > 1) {
+        $lines = array_values(array_filter(array_map('trim', explode("\n", $address))));
 
-        // Multiline
         $result['street_address'] = array_shift($lines);
 
-        // Last line is always the city
-        $result['city'] = trim(array_pop($lines), ", ");
+        if (!empty($lines)) {
+            $result['city'] = trim(array_pop($lines), ", ");
+        }
 
-        // Everything between street and city is Address2
         if (!empty($lines)) {
             $result['street_address_2'] = implode(', ', $lines);
         }
 
-    } else {
+    // Comma separated
+    } elseif (strpos($address, ',') !== false) {
 
-        // Single line
-        $remaining = $lines[0];
-
-        // Split on commas
-        $parts = array_values(array_filter(array_map('trim', explode(',', $remaining))));
+        $parts = array_values(array_filter(array_map('trim', explode(',', $address))));
 
         if (count($parts) >= 2) {
-
             $result['city'] = array_pop($parts);
+            $result['street_address'] = array_shift($parts);
 
-            if (count($parts) > 1) {
-                $result['street_address_2'] = array_pop($parts);
+            if (!empty($parts)) {
+                $result['street_address_2'] = implode(', ', $parts);
             }
+        }
 
-            $result['street_address'] = implode(', ', $parts);
+    // No commas
+    } else {
 
-        } else {
-            return $result;
+        $pattern = '/\b(' . implode('|', $suffixes) . ')\b/i';
+
+        if (preg_match_all($pattern, $address, $matches, PREG_OFFSET_CAPTURE)) {
+
+            $last = end($matches[0]);
+
+            $split = $last[1] + strlen($last[0]);
+
+            $result['street_address'] = trim(substr($address, 0, $split));
+            $result['city'] = trim(substr($address, $split));
         }
     }
 
-    // ------------------------
-    // Detect Address2 if embedded in street_address
-    // ------------------------
-    if (empty($result['street_address_2'])) {
+    // Embedded address2
+    if (empty($result['street_address_2']) &&
+        preg_match($address2Pattern, $result['street_address'], $m)) {
 
-        $pattern = '/\b(?:APT|APARTMENT|UNIT|SUITE|STE|#|ROOM|RM|FLOOR|FL|BUILDING|BLDG|DEPT|PO BOX|P\.?\s*O\.?\s*BOX|PMB)\b.*$/i';
+        $result['street_address_2'] = trim($m[0], ", ");
 
-        if (preg_match($pattern, $result['street_address'], $m)) {
-
-            $result['street_address_2'] = trim($m[0], ", ");
-
-            $result['street_address'] = trim(
-                substr(
-                    $result['street_address'],
-                    0,
-                    strpos($result['street_address'], $m[0])
-                ),
-                ", "
-            );
-        }
+        $result['street_address'] = trim(
+            substr(
+                $result['street_address'],
+                0,
+                strpos($result['street_address'], $m[0])
+            ),
+            ", "
+        );
     }
+
+    $result['street_address'] = trim($result['street_address'], " .,");
+    $result['street_address_2'] = trim($result['street_address_2'], " .,");
+    $result['city'] = trim($result['city'], " .,");
 
     return $result;
 }
@@ -567,6 +646,214 @@ function get_states_array() {
         'WV' => 'West Virginia',
         'WI' => 'Wisconsin',
         'WY' => 'Wyoming',
+    ];
+}
+
+function usps_abbreviations() {
+    return [
+        'ALLEY'      => 'ALY',
+        'ANNEX'      => 'ANX',
+        'ARCADE'     => 'ARC',
+        'AVENUE'     => 'AVE',
+        'BAYOO'      => 'BYU',
+        'BEACH'      => 'BCH',
+        'BEND'       => 'BND',
+        'BLUFF'      => 'BLF',
+        'BLUFFS'     => 'BLFS',
+        'BOTTOM'     => 'BTM',
+        'BOULEVARD'  => 'BLVD',
+        'BRANCH'     => 'BR',
+        'BRIDGE'     => 'BRG',
+        'BROOK'      => 'BRK',
+        'BROOKS'     => 'BRKS',
+        'BURG'       => 'BG',
+        'BURGS'      => 'BGS',
+        'BYPASS'     => 'BYP',
+        'CAMP'       => 'CP',
+        'CANYON'     => 'CYN',
+        'CAPE'       => 'CPE',
+        'CAUSEWAY'   => 'CSWY',
+        'CENTER'     => 'CTR',
+        'CENTERS'    => 'CTRS',
+        'CIRCLE'     => 'CIR',
+        'CIRCLES'    => 'CIRS',
+        'CLIFF'      => 'CLF',
+        'CLIFFS'     => 'CLFS',
+        'CLUB'       => 'CLB',
+        'COMMON'     => 'CMN',
+        'CORNER'     => 'COR',
+        'CORNERS'    => 'CORS',
+        'COURSE'     => 'CRSE',
+        'COURT'      => 'CT',
+        'COURTS'     => 'CTS',
+        'COVE'       => 'CV',
+        'COVES'      => 'CVS',
+        'CREEK'      => 'CRK',
+        'CRESCENT'   => 'CRES',
+        'CREST'      => 'CRST',
+        'CROSSING'   => 'XING',
+        'CROSSROAD'  => 'XRD',
+        'CURVE'      => 'CURV',
+        'DALE'       => 'DL',
+        'DAM'        => 'DM',
+        'DIVIDE'     => 'DV',
+        'DRIVE'      => 'DR',
+        'DRIVES'     => 'DRS',
+        'ESTATE'     => 'EST',
+        'ESTATES'    => 'ESTS',
+        'EXPRESSWAY' => 'EXPY',
+        'EXTENSION'  => 'EXT',
+        'EXTENSIONS' => 'EXTS',
+        'FALL'       => 'FALL',
+        'FALLS'      => 'FLS',
+        'FERRY'      => 'FRY',
+        'FIELD'      => 'FLD',
+        'FIELDS'     => 'FLDS',
+        'FLAT'       => 'FLT',
+        'FLATS'      => 'FLTS',
+        'FORD'       => 'FRD',
+        'FORDS'      => 'FRDS',
+        'FOREST'     => 'FRST',
+        'FORGE'      => 'FRG',
+        'FORGES'     => 'FRGS',
+        'FORK'       => 'FRK',
+        'FORKS'      => 'FRKS',
+        'FORT'       => 'FT',
+        'FREEWAY'    => 'FWY',
+        'GARDEN'     => 'GDN',
+        'GARDENS'    => 'GDNS',
+        'GATEWAY'    => 'GTWY',
+        'GLEN'       => 'GLN',
+        'GLENS'      => 'GLNS',
+        'GREEN'      => 'GRN',
+        'GREENS'     => 'GRNS',
+        'GROVE'      => 'GRV',
+        'GROVES'     => 'GRVS',
+        'HARBOR'     => 'HBR',
+        'HARBORS'    => 'HBRS',
+        'HAVEN'      => 'HVN',
+        'HEIGHTS'    => 'HTS',
+        'HIGHWAY'    => 'HWY',
+        'HILL'       => 'HL',
+        'HILLS'      => 'HLS',
+        'HOLLOW'     => 'HOLW',
+        'INLET'      => 'INLT',
+        'INTERSTATE' => 'I',
+        'ISLAND'     => 'IS',
+        'ISLANDS'    => 'ISS',
+        'ISLE'       => 'ISLE',
+        'JUNCTION'   => 'JCT',
+        'JUNCTIONS'  => 'JCTS',
+        'KEY'        => 'KY',
+        'KEYS'       => 'KYS',
+        'KNOLL'      => 'KNL',
+        'KNOLLS'     => 'KNLS',
+        'LAKE'       => 'LK',
+        'LAKES'      => 'LKS',
+        'LAND'       => 'LAND',
+        'LANDING'    => 'LNDG',
+        'LANE'       => 'LN',
+        'LIGHT'      => 'LGT',
+        'LIGHTS'     => 'LGTS',
+        'LOAF'       => 'LF',
+        'LOCK'       => 'LCK',
+        'LOCKS'      => 'LCKS',
+        'LODGE'      => 'LDG',
+        'LOOP'       => 'LOOP',
+        'MALL'       => 'MALL',
+        'MANOR'      => 'MNR',
+        'MANORS'     => 'MNRS',
+        'MEADOW'     => 'MDW',
+        'MEADOWS'    => 'MDWS',
+        'MEWS'       => 'MEWS',
+        'MILL'       => 'ML',
+        'MILLS'      => 'MLS',
+        'MISSION'    => 'MSN',
+        'MOORHEAD'   => 'MHD',
+        'MOTORWAY'   => 'MTWY',
+        'MOUNT'      => 'MT',
+        'MOUNTAIN'   => 'MTN',
+        'MOUNTAINS'  => 'MTNS',
+        'NECK'       => 'NCK',
+        'ORCHARD'    => 'ORCH',
+        'OVAL'       => 'OVAL',
+        'OVERPASS'   => 'OPAS',
+        'PARK'       => 'PARK',
+        'PARKS'      => 'PARK',
+        'PARKWAY'    => 'PKWY',
+        'PARKWAYS'   => 'PKWY',
+        'PASS'       => 'PASS',
+        'PASSAGE'    => 'PSGE',
+        'PATH'       => 'PATH',
+        'PIKE'       => 'PIKE',
+        'PINE'       => 'PNE',
+        'PINES'      => 'PNES',
+        'PLACE'      => 'PL',
+        'PLAIN'      => 'PLN',
+        'PLAINS'     => 'PLNS',
+        'PLAZA'      => 'PLZ',
+        'POINT'      => 'PT',
+        'POINTS'     => 'PTS',
+        'PORT'       => 'PRT',
+        'PORTS'      => 'PRTS',
+        'PRAIRIE'    => 'PR',
+        'RADIAL'     => 'RADL',
+        'RAMP'       => 'RAMP',
+        'RANCH'      => 'RNCH',
+        'RAPID'      => 'RPD',
+        'RAPIDS'     => 'RPDS',
+        'REST'       => 'RST',
+        'RIDGE'      => 'RDG',
+        'RIDGES'     => 'RDGS',
+        'RIVER'      => 'RIV',
+        'ROAD'       => 'RD',
+        'ROADS'      => 'RDS',
+        'ROUTE'      => 'RTE',
+        'ROW'        => 'ROW',
+        'RUE'        => 'RUE',
+        'RUN'        => 'RUN',
+        'SHOAL'      => 'SHL',
+        'SHOALS'     => 'SHLS',
+        'SHORE'      => 'SHR',
+        'SHORES'     => 'SHRS',
+        'SKYWAY'     => 'SKWY',
+        'SPRING'     => 'SPG',
+        'SPRINGS'    => 'SPGS',
+        'SPUR'       => 'SPUR',
+        'SPURS'      => 'SPUR',
+        'SQUARE'     => 'SQ',
+        'SQUARES'    => 'SQS',
+        'STATION'    => 'STA',
+        'STREAM'     => 'STRM',
+        'STREET'     => 'ST',
+        'STREETS'    => 'STS',
+        'SUMMIT'     => 'SMT',
+        'TERRACE'    => 'TER',
+        'THROUGHWAY' => 'TRWY',
+        'TRACE'      => 'TRCE',
+        'TRACK'      => 'TRAK',
+        'TRAIL'      => 'TRL',
+        'TUNNEL'     => 'TUNL',
+        'TURNPIKE'   => 'TPKE',
+        'UNDERPASS'  => 'UPAS',
+        'UNION'      => 'UN',
+        'UNIONS'     => 'UNS',
+        'VALLEY'     => 'VLY',
+        'VALLEYS'    => 'VLYS',
+        'VIADUCT'    => 'VIA',
+        'VIEW'       => 'VW',
+        'VIEWS'      => 'VWS',
+        'VILLAGE'    => 'VLG',
+        'VILLAGES'   => 'VLGS',
+        'VILLE'      => 'VL',
+        'VISTA'      => 'VIS',
+        'WALK'       => 'WALK',
+        'WALKS'      => 'WALK',
+        'WALL'       => 'WALL',
+        'WAY'        => 'WAY',
+        'WAYS'       => 'WAYS',
+        'WELL'       => 'WL',
+        'WELLS'      => 'WLS'
     ];
 }
 ?>

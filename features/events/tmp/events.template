@@ -346,6 +346,7 @@ staffapplication_form||
                     </div>
                     <div class="spacer" style="clear: both;"></div>
                 </div>
+                <input type="hidden" value="||v["address"]||" />
                 <div class="rowContainer">
                     <label class="rowTitle" for="address">Street Address</label>
                     <input
