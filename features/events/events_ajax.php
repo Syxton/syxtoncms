@@ -3356,12 +3356,6 @@ global $CFG, $USER;
         $return = $error = "";
         try {
             start_db_transaction();
-            $street_address = clean_myvar_req("street_address", "string");
-            $street_address_2 = clean_myvar_opt("street_address_2", "string", "");
-            $city = clean_myvar_req("city", "string");
-            $state = clean_myvar_req("state", "string");
-            $zipcode = clean_myvar_req("zipcode", "string");
-            $address = $street_address . ($street_address_2 ? " " . $street_address_2 : "") . ", " . $city . ", " . $state . " " . $zipcode;
 
             $params = [
                 "userid" => $USER->userid,
@@ -3369,7 +3363,11 @@ global $CFG, $USER;
                 "name" => nameize(clean_myvar_req("name", "string")),
                 "phone" => format_phone(clean_myvar_opt("phone", "string", "")),
                 "dateofbirth" => strtotime(clean_myvar_opt("dateofbirth", "string", "")),
-                "address" => $address,
+                "address" => clean_myvar_req("address", "string"),
+                "address2" => clean_myvar_opt("address2", "string", ""),
+                "city" => clean_myvar_req("city", "string"),
+                "state" => clean_myvar_req("state", "string"),
+                "zip" => clean_myvar_req("zip", "string"),
                 "agerange" => clean_myvar_req("agerange", "int"),
                 "cocmember" => clean_myvar_opt("cocmember", "int", 0),
                 "congregation" => clean_myvar_req("congregation", "string"),
@@ -3488,14 +3486,14 @@ global $MYVARS, $CFG, $USER;
         "STATUS",
         "Name",
         "Email",
-        "Date of Birth",
         "Phone",
+        "Date of Birth",
+        "Age Range",
         "Address 1",
         "Address 2",
         "City",
         "State",
         "Zip",
-        "Age Range",
         "Church of Christ Member",
         "Congregation",
         "Has Worked at Camp",
@@ -3540,43 +3538,43 @@ global $MYVARS, $CFG, $USER;
             $app["parentalconsentsig"] = $app["parentalconsentsig"] == "on" ? "Signed" : "";
             $app["workerconsentsig"] = $app["workerconsentsig"] == "on" ? "Signed" : "";
             $app["bgcheckpass"] = $app["bgcheckpass"] == 0 ? "No" : "Yes";
-            $address = parseAddress($app["address"]);
-            $CSV .= '"' . implode(" | " , array_column($status, 'full')).
-                    '","' . $app["name"].
-                    '","' . $email.
-                    '","' . date('m/d/Y', $app["dateofbirth"]).
-                    '","' . $app["phone"].
-                    '","' . $address['street_address'].
-                    '","' . $address['street_address_2'].
-                    '","' . $address['city'].
-                    '","' . $address['state'].
-                    '","' . $address['zipcode'].
-                    '","' . $app["agerange"].
-                    '","' . $app["cocmember"].
-                    '","' . $app["congregation"].
-                    '","' . $app["priorwork"].
-                    '","' . $app["q1_1"].
-                    '","' . $app["q1_2"].
-                    '","' . $app["q1_3"].
-                    '","' . $app["q2_1"].
-                    '","' . $app["q2_2"].
-                    '","' . $app["q2_3"].
-                    '","' . $app["parentalconsent"].
-                    '","' . $app["parentalconsentsig"].
-                    '","' . $app["workerconsent"].
-                    '","' . $app["workerconsentsig"].
-                    '","' . date('m/d/Y', $app["workerconsentdate"]).
-                    '","' . $app["ref1name"].
-                    '","' . $app["ref1phone"].
-                    '","' . $app["ref1relationship"].
-                    '","' . $app["ref2name"].
-                    '","' . $app["ref2phone"].
-                    '","' . $app["ref2relationship"].
-                    '","' . $app["ref3name"].
-                    '","' . $app["ref1phone"].
-                    '","' . $app["ref3relationship"].
-                    '","' . $app["bgcheckpass"].
-                    '","' . (!empty($app["bgcheckpassdate"]) ? date('m/d/Y', $app["bgcheckpassdate"]) : '').
+
+            $CSV .= '"' . implode(" | " , array_column($status, 'full')) .
+                    '","' . $app["name"] .
+                    '","' . $email .
+                    '","' . $app["phone"] .
+                    '","' . date('m/d/Y', $app["dateofbirth"]) .
+                    '","' . $app["agerange"] .
+                    '","' . $app['address'] .
+                    '","' . $app['address2'] .
+                    '","' . $app['city'] .
+                    '","' . $app['state'] .
+                    '","' . $app['zip'] .
+                    '","' . $app["cocmember"] .
+                    '","' . $app["congregation"] .
+                    '","' . $app["priorwork"] .
+                    '","' . $app["q1_1"] .
+                    '","' . $app["q1_2"] .
+                    '","' . $app["q1_3"] .
+                    '","' . $app["q2_1"] .
+                    '","' . $app["q2_2"] .
+                    '","' . $app["q2_3"] .
+                    '","' . $app["parentalconsent"] .
+                    '","' . $app["parentalconsentsig"] .
+                    '","' . $app["workerconsent"] .
+                    '","' . $app["workerconsentsig"] .
+                    '","' . date('m/d/Y', $app["workerconsentdate"]) .
+                    '","' . $app["ref1name"] .
+                    '","' . $app["ref1phone"] .
+                    '","' . $app["ref1relationship"] .
+                    '","' . $app["ref2name"] .
+                    '","' . $app["ref2phone"] .
+                    '","' . $app["ref2relationship"] .
+                    '","' . $app["ref3name"] .
+                    '","' . $app["ref1phone"] .
+                    '","' . $app["ref3relationship"] .
+                    '","' . $app["bgcheckpass"] .
+                    '","' . (!empty($app["bgcheckpassdate"]) ? date('m/d/Y', $app["bgcheckpassdate"]) : '') .
                     '"' . "\n";
         }
     }
