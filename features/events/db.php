@@ -372,7 +372,7 @@ function events_upgrade() {
                     $address = parseAddress($row["address"]);
                     $SQL2 = 'UPDATE events_staff_archive
                         SET address=||address||,
-                        address2=||address||,
+                        address2=||address2||,
                         city=||city||,
                         state=||state||,
                         zip=||zip||
