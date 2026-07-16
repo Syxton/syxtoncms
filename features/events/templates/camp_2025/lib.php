@@ -7,6 +7,8 @@
  * Revision: 2.0.1
  ***************************************************************************/
 
+if (!defined('FORMLIB')) { include_once($CFG->dirroot . '/lib/formlib.php'); }
+
 define("TEMP_PROPS", [
     "GENDERS" => [
         '' => 'Select One...',
