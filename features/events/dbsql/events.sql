@@ -407,7 +407,8 @@ delete_registration_values||
 update_staff_app||
     UPDATE `events_staff`
     SET `userid` = ||userid||, `pageid` = ||pageid||, `name` = ||name||, `phone` = ||phone||,
-        `dateofbirth` = ||dateofbirth||, `address` = ||address||, `agerange` = ||agerange||,
+        `dateofbirth` = ||dateofbirth||, `agerange` = ||agerange||,
+        `address` = ||address||, `address2` = ||address2||, `city` = ||city||, `state` = ||state||, `zip` = ||zip||,
         `cocmember` = ||cocmember||, `congregation` = ||congregation||, `priorwork` = ||priorwork||,
         `q1_1` = ||q1_1||, `q1_2` = ||q1_2||, `q1_3` = ||q1_3||, `q2_1` = ||q2_1||, `q2_2` = ||q2_2||, `q2_3` = ||q2_3||,
         `parentalconsent` = ||parentalconsent||, `parentalconsentsig` = ||parentalconsentsig||,
@@ -420,7 +421,8 @@ update_staff_app||
 
 insert_staff_app||
     INSERT INTO `events_staff`
-    (`userid`, `pageid`, `name`, `phone`, `dateofbirth`, `address`, `agerange`,
+    (`userid`, `pageid`, `name`, `phone`, `dateofbirth`, `agerange`,
+    `address`, `address2`, `city`, `state`, `zip`,
     `cocmember`, `congregation`, `priorwork`,
     `q1_1`, `q1_2`, `q1_3`, `q2_1`, `q2_2`, `q2_3`,
     `parentalconsent`, `parentalconsentsig`, `workerconsent`, `workerconsentsig`, `workerconsentdate`,
@@ -429,7 +431,8 @@ insert_staff_app||
     `ref3name`, `ref3relationship`, `ref3phone`,
     `bgcheckpass`, `bgcheckpassdate`)
     VALUES
-    (||userid||, ||pageid||, ||name||, ||phone||, ||dateofbirth||, ||address||, ||agerange||,
+    (||userid||, ||pageid||, ||name||, ||phone||, ||dateofbirth||, ||agerange||,
+     ||address||, ||address2||, ||city||, ||state||, ||zip||,
      ||cocmember||, ||congregation||, ||priorwork||,
      ||q1_1||, ||q1_2||, ||q1_3||, ||q2_1||, ||q2_2||, ||q2_3||,
      ||parentalconsent||, ||parentalconsentsig||, ||workerconsent||, ||workerconsentsig||, ||workerconsentdate||,

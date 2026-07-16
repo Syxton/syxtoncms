@@ -2087,6 +2087,10 @@ global $USER, $CFG, $MYVARS;
     $v["phone"] = empty($row) ? "" : $row["phone"];
     $v["dateofbirth"] = empty($row) ? "" : (isset($row['dateofbirth']) ? date('m/d/Y', $row['dateofbirth']) : '');
     $v["address"] = empty($row) ? "" : $row["address"];
+    $v["address2"] = empty($row) ? "" : $row["address2"];
+    $v["city"] = empty($row) ? "" : $row["city"];
+    $v["state"] = empty($row) ? "" : $row["state"];
+    $v["zip"] = empty($row) ? "" : $row["zip"];
     $v["ar1selected"] = "";
     $v["ar2selected"] = "";
     $v["ar3selected"] = "";
@@ -2149,8 +2153,9 @@ global $USER, $CFG, $MYVARS;
     $v["ref3relationship"] = empty($row) ? "" : $row["ref3relationship"];
     $v["ref3phone"] = empty($row) ? "" : $row["ref3phone"];
 
+    // Include formlib to use get_states_array function.
     if (!defined('FORMLIB')) { include_once($CFG->dirroot . '/lib/formlib.php'); }
-    $v += parseAddress($v["address"]);
+
     $v["states"] = make_select([
         "properties" => [
             "name" => 'state',

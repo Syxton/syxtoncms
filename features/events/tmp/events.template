@@ -330,6 +330,37 @@ staffapplication_form||
                     <div class="spacer" style="clear: both;"></div>
                 </div>
                 <div class="rowContainer">
+                    <label class="rowTitle" for="agerange">Age Range</label>
+                    <select ||viewonly{{ disabled="disabled" }}viewonly||
+                        id="agerange"
+                        name="agerange"
+                        data-rule-required="true"
+                        onchange="
+                            if ($(this).val() != 0) {
+                                $('#sub18').hide();
+                                $('#parentalconsent').val('');
+                                $('#parentalconsent').removeData('rule-required').removeAttr('data-rule-required');
+                                $('#parentalconsentsig').prop('checked', false);
+                                $('#parentalconsentsig').removeData('rule-required').removeAttr('data-rule-required');
+                            }
+                            if ($(this).val() == 0) {
+                                $('#parentalconsent').val('');
+                                $('#parentalconsentsig').prop('checked', false);
+                                $('#parentalconsent').removeData('rule-required').attr('data-rule-required','true');
+                                $('#sub18').show();
+                            }">
+                        <option>Please select</option>
+                        <option value="0" ||v["ar1selected"]||>younger than 18</option>
+                        <option value="1" ||v["ar2selected"]||>18-25</option>
+                        <option value="2" ||v["ar3selected"]||>26 or older</option>
+                    </select>
+                    <div class="tooltipContainer info">
+                        ||echo getlang("input_staff_agerange", "/features/events");::none||
+                    </div>
+                    <br />
+                    <div class="spacer" style="clear: both;"></div>
+                </div>
+                <div class="rowContainer">
                     <label class="rowTitle" for="phone">Phone</label>
                     <input ||viewonly{{ disabled="disabled" }}viewonly||
                         type="text"
@@ -346,15 +377,14 @@ staffapplication_form||
                     </div>
                     <div class="spacer" style="clear: both;"></div>
                 </div>
-                <input type="hidden" value="||v["address"]||" />
                 <div class="rowContainer">
                     <label class="rowTitle" for="address">Street Address</label>
                     <input
                         ||viewonly{{ disabled="disabled" }}viewonly||
                         type="text"
-                        id="street_address"
-                        name="street_address"
-                        value="||v["street_address"]||"
+                        id="address"
+                        name="address"
+                        value="||v["address"]||"
                         data-rule-required="true" />
                     <div class="tooltipContainer info">
                         ||echo getlang("input_address1");::none||
@@ -362,13 +392,13 @@ staffapplication_form||
                     <div class="spacer" style="clear: both;"></div>
                 </div>
                 <div class="rowContainer">
-                    <label class="rowTitle" for="address">Street Address 2</label>
+                    <label class="rowTitle" for="address2">Street Address 2</label>
                     <input
                         ||viewonly{{ disabled="disabled" }}viewonly||
                         type="text"
-                        id="street_address_2"
-                        name="street_address_2"
-                        value="||v["street_address_2"]||"
+                        id="address2"
+                        name="address2"
+                        value="||v["address2"]||"
                     />
                     <div class="tooltipContainer info">
                         ||echo getlang("input_address2");::none||
@@ -398,50 +428,19 @@ staffapplication_form||
                     <div class="spacer" style="clear: both;"></div>
                 </div>
                 <div class="rowContainer">
-                    <label class="rowTitle" for="zipcode">Zipcode</label>
+                    <label class="rowTitle" for="zip">Zipcode</label>
                     <input
                         ||viewonly{{ disabled="disabled" }}viewonly||
                         type="text"
-                        id="zipcode"
-                        name="zipcode"
-                        value="||v["zipcode"]||"
+                        id="zip"
+                        name="zip"
+                        value="||v["zip"]||"
                         data-rule-required="true"
                         data-rule-number="true"
                         data-rule-minlength="5">
                     <div class="tooltipContainer info">
                         ||echo getlang("input_zip");::none||
                     </div>
-                    <div class="spacer" style="clear: both;"></div>
-                </div>
-                <div class="rowContainer">
-                    <label class="rowTitle" for="agerange">Age Range</label>
-                    <select ||viewonly{{ disabled="disabled" }}viewonly||
-                        id="agerange"
-                        name="agerange"
-                        data-rule-required="true"
-                        onchange="
-                            if ($(this).val() != 0) {
-                                $('#sub18').hide();
-                                $('#parentalconsent').val('');
-                                $('#parentalconsent').removeData('rule-required').removeAttr('data-rule-required');
-                                $('#parentalconsentsig').prop('checked', false);
-                                $('#parentalconsentsig').removeData('rule-required').removeAttr('data-rule-required');
-                            }
-                            if ($(this).val() == 0) {
-                                $('#parentalconsent').val('');
-                                $('#parentalconsentsig').prop('checked', false);
-                                $('#parentalconsent').removeData('rule-required').attr('data-rule-required','true');
-                                $('#sub18').show();
-                            }">
-                        <option>Please select</option>
-                        <option value="0" ||v["ar1selected"]||>younger than 18</option>
-                        <option value="1" ||v["ar2selected"]||>18-25</option>
-                        <option value="2" ||v["ar3selected"]||>26 or older</option>
-                    </select>
-                    <div class="tooltipContainer info">
-                        ||echo getlang("input_staff_agerange", "/features/events");::none||
-                    </div>
-                    <br />
                     <div class="spacer" style="clear: both;"></div>
                 </div>
                 <div class="rowContainer">

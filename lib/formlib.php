@@ -403,14 +403,14 @@ function get_element_value($element, $data = []) {
 }
 
 // Takes an address string and parses it into an array with keys:
-// street_address, street_address_2, city, state, zipcode
+// address, address2, city, state, zip
 function parseAddress($address) {
     $result = [
-        'street_address'   => $address,
-        'street_address_2' => '',
+        'address'   => $address,
+        'address2' => '',
         'city'             => '',
         'state'            => '',
-        'zipcode'          => ''
+        'zip'          => ''
     ];
 
     $states = get_states_array();
@@ -453,7 +453,7 @@ function parseAddress($address) {
 
     // ZIP (optional)
     if (preg_match('/\b(\d{5}(?:-\d{4})?)\b\s*$/', $address, $m)) {
-        $result['zipcode'] = $m[1];
+        $result['zip'] = $m[1];
         $address = trim(substr($address, 0, strrpos($address, $m[1])));
     }
 
@@ -530,14 +530,14 @@ function parseAddress($address) {
 
         $lines = array_values(array_filter(array_map('trim', explode("\n", $address))));
 
-        $result['street_address'] = array_shift($lines);
+        $result['address'] = array_shift($lines);
 
         if (!empty($lines)) {
             $result['city'] = trim(array_pop($lines), ", ");
         }
 
         if (!empty($lines)) {
-            $result['street_address_2'] = implode(', ', $lines);
+            $result['address2'] = implode(', ', $lines);
         }
 
     // Comma separated
@@ -547,10 +547,10 @@ function parseAddress($address) {
 
         if (count($parts) >= 2) {
             $result['city'] = array_pop($parts);
-            $result['street_address'] = array_shift($parts);
+            $result['address'] = array_shift($parts);
 
             if (!empty($parts)) {
-                $result['street_address_2'] = implode(', ', $parts);
+                $result['address2'] = implode(', ', $parts);
             }
         }
 
@@ -565,29 +565,29 @@ function parseAddress($address) {
 
             $split = $last[1] + strlen($last[0]);
 
-            $result['street_address'] = trim(substr($address, 0, $split));
+            $result['address'] = trim(substr($address, 0, $split));
             $result['city'] = trim(substr($address, $split));
         }
     }
 
     // Embedded address2
-    if (empty($result['street_address_2']) &&
-        preg_match($address2Pattern, $result['street_address'], $m)) {
+    if (empty($result['address2']) &&
+        preg_match($address2Pattern, $result['address'], $m)) {
 
-        $result['street_address_2'] = trim($m[0], ", ");
+        $result['address2'] = trim($m[0], ", ");
 
-        $result['street_address'] = trim(
+        $result['address'] = trim(
             substr(
-                $result['street_address'],
+                $result['address'],
                 0,
-                strpos($result['street_address'], $m[0])
+                strpos($result['address'], $m[0])
             ),
             ", "
         );
     }
 
-    $result['street_address'] = trim($result['street_address'], " .,");
-    $result['street_address_2'] = trim($result['street_address_2'], " .,");
+    $result['address'] = trim($result['address'], " .,");
+    $result['address2'] = trim($result['address2'], " .,");
     $result['city'] = trim($result['city'], " .,");
 
     return $result;

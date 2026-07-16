@@ -296,7 +296,7 @@ function events_upgrade() {
             if ($result = get_db_result($SQL2)) {
                 while ($row = fetch_row($result)) {
                     $SQL3 = fetch_template("dbsql/events.sql", "add_contact", "events");
-    
+
                     if ($contactid = execute_db_sql($SQL3, [
                         "pageid" => $row["pageid"],
                         "name" => $row["contact"],
@@ -322,6 +322,75 @@ function events_upgrade() {
             update_feature($thisversion, "events");
         }
 
+        $thisversion = 20260716;
+        if ($version < $thisversion) {
+            $SQL = "ALTER TABLE `events_staff`
+            ADD `address2` varchar(200) NOT NULL AFTER `address`,
+            ADD `city` varchar(200) NOT NULL AFTER `address2`,
+            ADD `state` varchar(2) NOT NULL AFTER `city`,
+            ADD `zip` varchar(10) NOT NULL AFTER `state`";
+            execute_db_sql($SQL);
+
+            $SQL = "ALTER TABLE `events_staff_archive`
+            ADD `address2` varchar(200) NOT NULL AFTER `address`,
+            ADD `city` varchar(200) NOT NULL AFTER `address2`,
+            ADD `state` varchar(2) NOT NULL AFTER `city`,
+            ADD `zip` varchar(10) NOT NULL AFTER `state`";
+            execute_db_sql($SQL);
+
+            start_db_transaction();
+
+            // Include formlib to use parseAddress function.
+            if (!defined('FORMLIB')) { include_once($CFG->dirroot . '/lib/formlib.php'); }
+
+            // Transition single address field to address, address2, city, state, zip fields.
+            $SQL = "SELECT * FROM events_staff";
+            if ($result = get_db_result($SQL)) {
+                while ($row = fetch_row($result)) {
+                    $address = parseAddress($row["address"]);
+                    $SQL2 = 'UPDATE events_staff
+                        SET address=||address||,
+                        address2=||address2||,
+                        city=||city||,
+                        state=||state||,
+                        zip=||zip||
+                        WHERE staffid=||staffid||';
+                    execute_db_sql($SQL2, [
+                        "address" => $address["address"],
+                        "address2" => $address["address2"],
+                        "city" => $address["city"],
+                        "state" => $address["state"],
+                        "zip" => $address["zip"],
+                        "staffid" => $row["staffid"],
+                    ]);
+                }
+            }
+
+            $SQL = "SELECT * FROM events_staff_archive";
+            if ($result = get_db_result($SQL)) {
+                while ($row = fetch_row($result)) {
+                    $address = parseAddress($row["address"]);
+                    $SQL2 = 'UPDATE events_staff_archive
+                        SET address=||address||,
+                        address2=||address||,
+                        city=||city||,
+                        state=||state||,
+                        zip=||zip||
+                        WHERE staffid=||staffid||';
+                    execute_db_sql($SQL2, [
+                        "address" => $address["address"],
+                        "address2" => $address["address2"],
+                        "city" => $address["city"],
+                        "state" => $address["state"],
+                        "zip" => $address["zip"],
+                        "staffid" => $row["staffid"],
+                    ]);
+                }
+            }
+
+            update_feature($thisversion, "events");
+        }
+
         commit_db_transaction();
         return upgrade_occured('Events feature', $version, $thisversion);
     } catch (\Throwable $e) {
@@ -332,14 +401,14 @@ function events_upgrade() {
 
 function events_install() {
     if (!get_db_row("SELECT * FROM features WHERE feature='events'")) {
-        $thisversion = 20260417;
-        $SQL = fetch_template("dbsql/events.sql", "install", "events");
+        $thisversion = 20260716;
+        $SQL = fetch_template("dbsql/install.sql", "install", "events");
 
         if (execute_db_sql($SQL)) { // if successful install.
             try {
                 // Add all current event abilities.
                 add_event_abilities();
-                update_feature($thisversion, "events");  
+                update_feature($thisversion, "events");
 
             } catch (\Throwable $e) {
                 rollback_db_transaction($e->getMessage());
@@ -358,15 +427,15 @@ function add_event_abilities() {
     add_role_ability('events','signupforevents','Events','1','Signup for events','1','1','1','1');
     add_role_ability('events','confirmevents','Events','3','Allow site viewability and add to calendar.','1','0','0','0');
     add_role_ability('events','exportcsv','Events','2','Export registration list to CSV','1','1','0','0');
-    
+
     add_role_ability('events','manageevents','Events','1','Manage Events','1','1');
     add_role_ability('events','manageapplications','Events','2','Manage worker applications','1','1');
     add_role_ability('events','manageeventtemplates','Events','2','Manage event templates','1','1');
-    
+
     add_role_ability('events','staffapply','Events','1','Apply as staff','1','1','1');
 
     add_role_ability('events','managepromocodes','Events','2','Manage Promo Codes','1','1','0','0');
-    
+
     add_role_ability('events','managelocations','Events','2','Manage Locations','1','1','0','0');
     add_role_ability('events','managecontacts','Events','2','Manage Contacts','1','1','0','0');
 }
