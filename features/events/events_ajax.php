@@ -3284,7 +3284,7 @@ global $CFG, $USER;
         "data" => [
             "action" => "appsearch",
             "pagenum" => "js||pagenum||js",
-            "searchwords" => "js||encodeURIComponent(searchwords)||js",
+            "searchwords" => "js||encodeURIComponent($('#searchwords').val())||js",
         ],
         "display" => "searchcontainer",
         "ondone" => "init_event_menu();",
@@ -3293,7 +3293,8 @@ global $CFG, $USER;
     ]);
 
     $returnme = '
-        <link rel="stylesheet" media="print" type="text/css" href="' . $CFG->wwwroot . '/styles/print.css"><br />' .
+        <link rel="stylesheet" media="print" type="text/css" href="' . $CFG->wwwroot . '/styles/print.css"><br />
+        <input type="hidden" id="searchwords" value="' . $searchwords . '" />' .
         button_maker([
             "content" => icon("circle-chevron-left") . "<span>Return to Staff Applications</span>",
             "onclick" => "perform_appsearch(" . $pagenum . ");",
