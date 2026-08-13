@@ -33,7 +33,7 @@ global $CFG, $USER, $ROLES, $ABILITIES;
     $p = [
         "title" => "Manage files",
         "text" => "Manage files",
-        "onclick" => "window.open('./scripts/tinymce/plugins/filemanager/index.php?standalone=1&pageid=$pageid&userid=$USER->userid','File Mananger','modal, width=850, height=600')",
+        "onclick" => "window.open('./scripts/tinymce/plugins/filemanager/index.php?standalone=1&pageid=$pageid&userid=$USER->userid','File Mananger','location=no,toolbar=no,menubar=no,scrollbars=yes,resizable=yes')",
         "icon" => icon("laptop-file"),
         "class" => "adminpanel_links",
     ];

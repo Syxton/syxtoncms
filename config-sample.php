@@ -81,14 +81,6 @@ $CFG->smtppass = '';
 $CFG->fmroot = 'C:\any\directory\under\webroot\filemanager'; // Path to the filemanager root directory
 $CFG->fm_secret = 'replace-with-a-random-secret-key';
 
-if (!defined('FMCONFIG')) {
-    $sub = '';
-    while (!file_exists($sub . 'fmconfig.php')) {
-        $sub = $sub == '' ? '../' : $sub . '../';
-    }
-    require_once($sub . 'fmconfig.php');
-}
-
 $CFG->directory = 'mywebsites/syxtoncms'; // Points to http://localhost/mywebsites/syxtoncms
 $CFG->wwwroot = '//' . $_SERVER['SERVER_NAME'];
 $CFG->wwwroot = $CFG->directory ? $CFG->wwwroot . '/' . $CFG->directory : $CFG->wwwroot;
@@ -144,4 +136,12 @@ $CFG->geolocationkey = "";
  */
 $CFG->cookietimeout = 600;
 $CFG->debug = 0;
+
+if (!defined('FMCONFIG')) {
+    $sub = '';
+    while (!file_exists($sub . 'fmconfig.php')) {
+        $sub = $sub == '' ? '../' : $sub . '../';
+    }
+    require_once($sub . 'fmconfig.php');
+}
 ?>
