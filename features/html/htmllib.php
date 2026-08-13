@@ -423,12 +423,11 @@ function filter_photogallery($html) {
             if ($userfilesfolder !== false) {
                 // Get all files in directory.
                 $galleryArray = getdirectoryfiles($localpath, $extensions);
+                asort($galleryArray, SORT_STRING | SORT_FLAG_CASE | SORT_NATURAL);
             } elseif ($fmroot !== false) {
                 $galleryArray = fm_get_gated_files_from_path($url, $extensions);
+                ksort($galleryArray, SORT_STRING | SORT_FLAG_CASE | SORT_NATURAL);
             }
-
-            // Sort files by filename.
-            asort($galleryArray, SORT_STRING | SORT_FLAG_CASE | SORT_NATURAL);
 
             // First file is the gallery link.
             $first = array_shift($galleryArray);

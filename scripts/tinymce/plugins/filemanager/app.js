@@ -11,12 +11,25 @@
   var CAN_OLD = root.dataset.canOld === '1';
   var TYPE = root.dataset.type; // '', 'image', 'media', 'file'
 
-  // Opened inside TinyMCE's dialog iframe vs. linked to directly. Insert/
-  // Cancel only make sense when there's a TinyMCE window on the other end.
-  var EMBEDDED = (function () {
-    try { return window.parent && window.parent !== window; }
-    catch (e) { return false; }
+  // Opened inside the picker's overlay iframe (appended directly to the
+  // host page's <body> by plugin.js - see its file header for why it's
+  // not a window.open() popup nor a nested TinyMCE dialog) vs. linked to
+  // directly elsewhere in the app.
+  //
+  // EMBEDDED (which shows Insert/Cancel) requires BOTH window.parent to
+  // be a different window AND the embed=1 marker plugin.js puts on the
+  // URL. window.parent alone isn't proof - nothing stops some other part
+  // of the app from iframing this page for an unrelated reason - and the
+  // marker alone isn't proof either, since a URL's query string can be
+  // copied into a plain link. Together they reliably mean "this really is
+  // the picker overlay, with the editor's page on the other end to post
+  // messages to".
+  var EMBED_FLAG = root.dataset.embed === '1';
+  var TARGET = (function () {
+    try { return (window.parent && window.parent !== window) ? window.parent : null; }
+    catch (e) { return null; }
   })();
+  var EMBEDDED = EMBED_FLAG && !!TARGET;
 
   var IMAGE_EXT = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
   var MEDIA_EXT = ['mp4', 'webm', 'mp3'];
@@ -75,7 +88,14 @@
     view: loadPref('view', 'grid'),       // 'grid' | 'list'
     sortBy: loadPref('sortBy', 'name'),   // 'name' | 'date' | 'size'
     sortDir: loadPref('sortDir', 'asc'),  // 'asc' | 'desc'
+    query: '',                            // current search filter (matches file/folder name)
   };
+
+  // Last successful 'list' response for the current area/path, cached so
+  // typing in the search box can re-filter instantly without re-hitting
+  // the API. Cleared/replaced by load().
+  var currentData = null;
+  var currentReadOnly = false;
 
   // Name of the item currently being dragged (drag-and-drop move), so drop
   // targets can refuse to drop a folder onto itself. Cleared on dragend.
@@ -189,6 +209,7 @@
     toolbar.appendChild(crumb);
     buildBreadcrumb();
 
+    toolbar.appendChild(buildSearchBox());
     toolbar.appendChild(buildViewSortControls());
 
     if (state.area === 'old') {
@@ -206,6 +227,52 @@
     uploadBtn.addEventListener('click', function () { uploadInput.click(); });
     toolbar.appendChild(uploadBtn);
     toolbar.appendChild(uploadInput);
+  }
+
+  /**
+   * Search box: filters the current folder's files/folders by name as the
+   * user types. Purely client-side against the already-loaded listing
+   * (currentData), so it doesn't hit the API - re-rendering is instant.
+   */
+  function buildSearchBox() {
+    var wrap = el('div', { class: 'fm-search' });
+
+    var input = el('input', {
+      type: 'search',
+      class: 'fm-search-input',
+      placeholder: 'Search this folder\u2026',
+      value: state.query,
+      'aria-label': 'Search files and folders',
+    });
+    var debounceTimer = null;
+    input.addEventListener('input', function () {
+      var value = input.value;
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(function () { setQuery(value); }, 150);
+    });
+    // Esc clears the box without waiting for the debounce.
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && input.value) {
+        e.stopPropagation();
+        clearTimeout(debounceTimer);
+        input.value = '';
+        setQuery('');
+      }
+    });
+    wrap.appendChild(input);
+
+    return wrap;
+  }
+
+  function setQuery(query) {
+    if (query === state.query) return;
+    state.query = query;
+    renderBody();
+  }
+
+  function matchesQuery(name) {
+    if (!state.query) return true;
+    return name.toLowerCase().indexOf(state.query.toLowerCase()) !== -1;
   }
 
   var SORT_LABELS = { name: 'Name', date: 'Date modified', size: 'Size' };
@@ -271,6 +338,7 @@
     state.id = area === 'pub' ? PAGEID : USERID; // priv and old are both keyed by userid
     state.path = '';
     state.selected = null;
+    state.query = '';
     updateTabHighlight();
     renderToolbar();
     load();
@@ -281,7 +349,7 @@
     if (!crumb) return;
     crumb.innerHTML = '';
     var rootBtn = el('button', { text: AREA_LABELS[state.area] });
-    rootBtn.addEventListener('click', function () { state.path = ''; state.selected = null; load(); });
+    rootBtn.addEventListener('click', function () { state.path = ''; state.selected = null; state.query = ''; renderToolbar(); load(); });
     crumb.appendChild(rootBtn);
     makeDropTarget(rootBtn, '');
     if (state.path) {
@@ -292,6 +360,8 @@
         b.addEventListener('click', function () {
           state.path = segPath;
           state.selected = null;
+          state.query = '';
+          renderToolbar();
           load();
         });
         crumb.appendChild(b);
@@ -350,47 +420,68 @@
 
   function load() {
     api('list', {}).then(function (res) {
-      var body = root.querySelector('.fm-body');
       buildBreadcrumb();
-      body.innerHTML = '';
       if (!res.ok) {
+        currentData = null;
+        var body = root.querySelector('.fm-body');
+        body.innerHTML = '';
         body.appendChild(el('div', { class: 'fm-empty', text: res.body.error || 'Error loading folder' }));
         renderFooter();
         return;
       }
-      var data = res.body;
-      var readOnly = state.area === 'old';
-
-      var folders = data.folders.map(function (f) {
-        return { isFolder: true, name: f.name, mtime: f.mtime, readOnly: readOnly };
-      });
-      var files = data.files.filter(function (f) { return typeAllowed(f.ext); }).map(function (f) {
-        return { isFolder: false, name: f.name, ext: f.ext, previewUrl: f.previewUrl, mtime: f.mtime, size: f.size, readOnly: readOnly };
-      });
-      folders.sort(compareEntries);
-      files.sort(compareEntries);
-
-      if (!folders.length && !files.length) {
-        body.appendChild(el('div', {
-          class: 'fm-empty',
-          text: readOnly ? 'No files found here.' : 'This folder is empty. Drag files here or click Upload.'
-        }));
-      } else if (state.view === 'list') {
-        body.appendChild(renderList(folders, files));
-      } else {
-        body.appendChild(renderGrid(folders, files));
-      }
+      currentData = res.body;
+      currentReadOnly = state.area === 'old';
+      renderBody();
       renderFooter();
     }).catch(function (err) {
+      currentData = null;
       var body = root.querySelector('.fm-body');
       body.innerHTML = '';
       body.appendChild(el('div', { class: 'fm-empty', text: err.message || 'Could not load this folder.' }));
     });
   }
 
+  /**
+   * Renders the current folder's contents from the cached currentData,
+   * applying the type filter (typeAllowed), the search filter
+   * (matchesQuery) and the current sort. Called after every fetch, and
+   * again whenever the search box or sort/view controls change - none of
+   * which need a fresh API call.
+   */
+  function renderBody() {
+    var body = root.querySelector('.fm-body');
+    if (!body) return;
+    body.innerHTML = '';
+    if (!currentData) return;
+    var data = currentData;
+    var readOnly = currentReadOnly;
+
+    var folders = data.folders.filter(function (f) { return matchesQuery(f.name); }).map(function (f) {
+      return { isFolder: true, name: f.name, mtime: f.mtime, readOnly: readOnly };
+    });
+    var files = data.files.filter(function (f) { return typeAllowed(f.ext) && matchesQuery(f.name); }).map(function (f) {
+      return { isFolder: false, name: f.name, ext: f.ext, previewUrl: f.previewUrl, mtime: f.mtime, size: f.size, readOnly: readOnly };
+    });
+    folders.sort(compareEntries);
+    files.sort(compareEntries);
+
+    if (!folders.length && !files.length) {
+      body.appendChild(el('div', {
+        class: 'fm-empty',
+        text: state.query
+          ? 'No files or folders match \u201c' + state.query + '\u201d.'
+          : (readOnly ? 'No files found here.' : 'This folder is empty. Drag files here or click Upload.')
+      }));
+    } else if (state.view === 'list') {
+      body.appendChild(renderList(folders, files));
+    } else {
+      body.appendChild(renderGrid(folders, files));
+    }
+  }
+
   function onOpenFor(f) {
     return f.isFolder
-      ? function () { state.path = (state.path ? state.path + '/' : '') + f.name; state.selected = null; load(); }
+      ? function () { state.path = (state.path ? state.path + '/' : '') + f.name; state.selected = null; state.query = ''; renderToolbar(); load(); }
       : function (itemEl) { selectItem({ name: f.name, isFolder: false, ext: f.ext, previewUrl: f.previewUrl }, itemEl); };
   }
   function onSelectFor(f) {
@@ -494,7 +585,9 @@
     var actions = el('div', { class: 'fm-footer-actions' });
     if (EMBEDDED) {
       var cancelBtn = el('button', { class: 'fm-btn secondary', text: 'Cancel' });
-      cancelBtn.addEventListener('click', function () { window.parent.postMessage({ mceAction: 'cancel' }, '*'); });
+      cancelBtn.addEventListener('click', function () {
+        TARGET.postMessage({ mceAction: 'cancel' }, '*');
+      });
       actions.appendChild(cancelBtn);
 
       var insertBtn = el('button', { class: 'fm-btn', text: 'Insert' });
@@ -502,14 +595,14 @@
       insertBtn.addEventListener('click', function () {
         if (!sel) return;
         if (state.area === 'old') {
-          window.parent.postMessage({
+          TARGET.postMessage({
             mceAction: 'insert',
             file: { name: sel.name, ext: sel.ext || '', url: sel.previewUrl, isFolder: !!sel.isFolder }
           }, '*');
           return;
         }
         getShareUrl(function (url) {
-          window.parent.postMessage({
+          TARGET.postMessage({
             mceAction: 'insert',
             file: { name: sel.name, ext: sel.ext || '', url: url, isFolder: !!sel.isFolder, mode: state.mode }
           }, '*');

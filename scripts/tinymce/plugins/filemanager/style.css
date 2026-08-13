@@ -63,6 +63,14 @@ body {
 }
 .fm-item-actions button:hover { background: #2271b1; color: #fff; }
 
+/* Search box */
+.fm-search { flex: 0 1 200px; min-width: 120px; }
+.fm-search-input {
+  width: 100%; font: inherit; padding: 6px 10px; border: 1px solid #dcdcde;
+  border-radius: 3px; background: #fff;
+}
+.fm-search-input:focus { outline: none; border-color: #2271b1; box-shadow: 0 0 0 1px #2271b1; }
+
 /* View toggle + sort controls */
 .fm-view-sort { display: flex; align-items: center; gap: 6px; }
 .fm-sort-select { font: inherit; padding: 5px 6px; border: 1px solid #dcdcde; border-radius: 3px; background: #fff; }

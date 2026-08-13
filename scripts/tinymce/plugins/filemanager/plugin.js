@@ -10,6 +10,19 @@
  *    call this when the user clicks "Browse", already scoped to the right
  *    file type (image/media/file), and expect just the URL back.
  *
+ * The picker renders as its own overlay appended directly to the host
+ * page's <body> - not inside TinyMCE's dialog system at all. That matters
+ * most for case 2: the native Image/Link/Media dialog is already a
+ * TinyMCE modal, so stacking a second TinyMCE dialog on top of it (the
+ * old behavior) was a modal-inside-a-modal. A real window.open() popup
+ * would dodge that too, but is unreliable here specifically because it's
+ * launched from a click already one layer deep inside another dialog -
+ * several browsers no longer treat that as a "direct" user gesture and
+ * silently block it. Our own overlay is just DOM, appended to the same
+ * top-level document as the editor, so it's not subject to popup
+ * blocking at all, and it paints above TinyMCE's own dialog (higher
+ * z-index) without being a child of it.
+ *
  * Required editor init options:
  *   filemanager_pageid : string  - current page id (public/page area)
  *   filemanager_userid : string  - current user id (private area)
@@ -35,9 +48,13 @@
       var base = editor.getParam('filemanager_url', urlOf());
       var pageid = editor.getParam('filemanager_pageid', '');
       var userid = editor.getParam('filemanager_userid', '');
+      // embed=1 marks this as opened by our own picker (as opposed to a
+      // plain link elsewhere in the app) - see index.php/app.js for why
+      // this matters for showing Insert/Cancel.
       var qs = 'pageid=' + encodeURIComponent(pageid) +
         '&userid=' + encodeURIComponent(userid) +
-        '&type=' + encodeURIComponent(type || '');
+        '&type=' + encodeURIComponent(type || '') +
+        '&embed=1';
       return base + (base.indexOf('?') === -1 ? '?' : '&') + qs;
     }
 
@@ -48,24 +65,92 @@
       return resource;
     }
 
+    /**
+     * Opens the picker as an overlay directly on the host page (i.e. the
+     * top-level document the editor itself lives in) - a backdrop plus a
+     * centered box holding an <iframe src="index.php">. Not a child of
+     * any TinyMCE dialog, so it's never "a modal inside a modal", and not
+     * a window.open() popup either, so there's no popup blocker to fight
+     * with - appending elements to the DOM always works.
+     */
     function openPicker(type, onPick) {
-      var win = editor.windowManager.openUrl({
-        title: 'File Manager',
-        url: dialogUrl(type),
-        width: 900,
-        height: 560,
-        buttons: [],
-        onMessage: function (api, message) {
-          if (!message || !message.mceAction) return;
-          if (message.mceAction === 'insert' && message.file) {
-            onPick(message.file);
-            api.close();
-          } else if (message.mceAction === 'cancel') {
-            api.close();
-          }
-        },
+      var doc = document;
+      var prevOverflow = doc.body.style.overflow;
+
+      var backdrop = doc.createElement('div');
+      backdrop.setAttribute('data-fm-picker-overlay', '1');
+      applyStyle(backdrop, {
+        position: 'fixed', top: '0', right: '0', bottom: '0', left: '0',
+        background: 'rgba(0, 0, 0, .5)', zIndex: '2147483000',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '20px',
       });
-      return win;
+
+      var box = doc.createElement('div');
+      applyStyle(box, {
+        position: 'relative', width: '1000px', maxWidth: '100%',
+        height: '680px', maxHeight: '100%', background: '#fff',
+        borderRadius: '6px', overflow: 'hidden',
+        boxShadow: '0 10px 40px rgba(0,0,0,.35)',
+      });
+
+      var closeBtn = doc.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.setAttribute('aria-label', 'Close');
+      closeBtn.textContent = '\u2715';
+      applyStyle(closeBtn, {
+        position: 'absolute', top: '6px', right: '8px', zIndex: '1',
+        border: 'none', background: 'transparent', fontSize: '16px',
+        lineHeight: '1', cursor: 'pointer', color: '#50575e', padding: '6px',
+      });
+      closeBtn.addEventListener('click', function () { cleanup(); });
+
+      var iframe = doc.createElement('iframe');
+      iframe.src = dialogUrl(type);
+      iframe.title = 'File Manager';
+      applyStyle(iframe, { display: 'block', width: '100%', height: '100%', border: '0' });
+
+      box.appendChild(iframe);
+      box.appendChild(closeBtn);
+      backdrop.appendChild(box);
+      doc.body.appendChild(backdrop);
+      doc.body.style.overflow = 'hidden';
+
+      function onMessage(e) {
+        if (e.source !== iframe.contentWindow) return;
+        var message = e.data;
+        if (!message || !message.mceAction) return;
+        if (message.mceAction === 'insert' && message.file) {
+          onPick(message.file);
+          cleanup();
+        } else if (message.mceAction === 'cancel') {
+          cleanup();
+        }
+      }
+      function onKeydown(e) {
+        if (e.key === 'Escape') cleanup();
+      }
+      // Clicking the backdrop itself (not the box) cancels, like a normal modal.
+      function onBackdropClick(e) {
+        if (e.target === backdrop) cleanup();
+      }
+      function cleanup() {
+        window.removeEventListener('message', onMessage);
+        doc.removeEventListener('keydown', onKeydown, true);
+        backdrop.removeEventListener('mousedown', onBackdropClick);
+        if (backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
+        doc.body.style.overflow = prevOverflow;
+      }
+
+      window.addEventListener('message', onMessage);
+      doc.addEventListener('keydown', onKeydown, true);
+      backdrop.addEventListener('mousedown', onBackdropClick);
+
+      return { close: cleanup };
+    }
+
+    function applyStyle(node, styles) {
+      Object.keys(styles).forEach(function (k) { node.style[k] = styles[k]; });
     }
 
     function insertAsContent(file) {

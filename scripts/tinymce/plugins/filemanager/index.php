@@ -3,12 +3,19 @@
 * plugins/filemanager/index.php - the file manager dialog itself.
 *
 * Works two ways:
-*  - Opened by plugin.js inside TinyMCE's dialog iframe, with pageid +
-*    userid in the query string - Insert/Cancel post messages back to the
-*    editor (app.js detects this via window.parent !== window).
+*  - Opened by plugin.js's picker: an iframe pointing here, inside an
+*    overlay plugin.js appends directly to the host page's <body> (not a
+*    TinyMCE dialog, not a window.open() popup - see plugin.js's file
+*    header for why). pageid + userid + embed=1 are in the query string;
+*    Insert/Cancel post messages back to the editor's page. app.js only
+*    enables this when BOTH embed=1 is present AND it can actually see a
+*    parent window to post to - neither alone is enough, since a copied
+*    query string or an unrelated iframe embedding elsewhere in the app
+*    could otherwise be mistaken for a picker session.
 *  - Opened directly in a browser tab/window (linked to from anywhere else
-*    in the app) - Insert/Cancel are hidden automatically, everything else
-*    (browse/upload/rename/delete/move/copy link) still works.
+*    in the app, no embed=1) - Insert/Cancel are hidden automatically,
+*    everything else (browse/upload/rename/delete/move/copy link) still
+*    works.
 ***************************************************************************/
 if (!isset($CFG) || !defined('LIBHEADER')) {
     $sub = '';
@@ -39,6 +46,8 @@ $userid = preg_replace('/[^A-Za-z0-9_\-]/', '', $_GET['userid'] ?? (string) $USE
 // 'type' narrows what the picker returns to TinyMCE's native dialogs
 // (image / media / file) - '' means "anything allowed".
 $type = preg_replace('/[^a-z]/', '', $_GET['type'] ?? '');
+// Only plugin.js's own picker sets this - see the comment above.
+$embed = !empty($_GET['embed']);
 
 $canPublic  = $pageid !== '' && fm_can_access_page($pageid);
 $canPrivate = $userid !== '' && fm_can_access_private($userid);
@@ -71,6 +80,7 @@ if (empty($_SESSION['fm_csrf'])) {
      data-can-private="<?php echo $canPrivate ? '1' : '0'; ?>"
      data-can-old="<?php echo $canOld ? '1' : '0'; ?>"
      data-type="<?php echo htmlspecialchars($type, ENT_QUOTES); ?>"
+     data-embed="<?php echo $embed ? '1' : '0'; ?>"
      data-csrf="<?php echo htmlspecialchars($_SESSION['fm_csrf'], ENT_QUOTES); ?>"
      data-api="api.php">
 </div>
