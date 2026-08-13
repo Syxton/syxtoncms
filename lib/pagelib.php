@@ -259,6 +259,11 @@ function get_pageid() {
         return $PAGE->id;
     }
 
+    // Check if parent_pageid is set in the GET variable
+    if (!empty($_GET["parent_pageid"]) && is_numeric($_GET["parent_pageid"])) {
+        return $_GET["parent_pageid"];
+    }
+
     // Return the site ID if none of the above is set
     return $CFG->SITEID;
 }
@@ -726,49 +731,61 @@ function get_editor_value_javascript($editorname = "editor1") {
 }
 
 function get_editor_box($params = []) {
-global $CFG;
+global $CFG, $USER;
+    // logged in
+    $loggedin = is_logged_in() ? true : false;
+    $userid = $loggedin ? $USER->userid : "";
+
+    // For scope.
+    $params["vars"]["userid"] ??= $userid;
+    $params["vars"]["pageid"] ??= get_pageid();
+    $params["vars"]["wwwroot"] = $CFG->wwwroot;
+    $params["vars"]["directory"] = get_directory();
+
+    // Set default values for the editor box parameters.
     $params["initialvalue"] ??= "";
     $params["name"] ??= "editor1";
+
+    // Set visual parameters for the editor box.
     $params["vars"]["charlimit"] = $params["charlimit"] ?? 0;
     $params["vars"]["height"] = $params["height"] ?? "calc(100dvh - 70px)";
     $params["vars"]["width"] = $params["width"] ?? "100%";
     $params["vars"]["type"] = $params["type"] ?? "HTML";
     $params["vars"]["plugins"] = get_editor_plugins($params["vars"]["type"]);
     $params["vars"]["toolbar"] = get_editor_toolbar($params["vars"]["type"]);
-    $params["vars"]["wwwroot"] = $CFG->wwwroot;
-    $params["vars"]["directory"] = get_directory();
+
     return get_editor_javascript() . fill_template("tmp/pagelib.template", "editor_box_template", false, $params);
 }
 
 function get_editor_plugins($type) {
     switch ($type) {
         case "Default":
-            $set = '"autolink autoresize image lists link responsivefilemanager charmap preview hr anchor pagebreak",
-                    "searchreplace wordcount visualblocks visualchars code fullscreen",
-                    "insertdatetime media nonbreaking paste table directionality"';
+            $set = '"autolink", "autoresize", "image", "lists", "link", "filemanager", "charmap", "preview", "anchor", "pagebreak",
+                "searchreplace", "wordcount", "visualblocks", "visualchars", "code", "fullscreen",
+                "insertdatetime", "media", "nonbreaking", "table", "directionality",';
             break;
         case "News":
-            $set = '"autolink autoresize image lists link responsivefilemanager charmap preview hr anchor pagebreak",
-                    "searchreplace wordcount visualblocks visualchars code fullscreen",
-                    "insertdatetime media nonbreaking paste table directionality"';
+            $set = '"autolink", "autoresize", "image", "lists", "link", "filemanager", "charmap", "preview", "anchor", "pagebreak",
+                "searchreplace", "wordcount", "visualblocks", "visualchars", "code", "fullscreen",
+                "insertdatetime", "media", "nonbreaking", "table", "directionality",';
             break;
         case "HTML":
-            $set = '"autolink autoresize image lists link responsivefilemanager charmap preview hr anchor pagebreak",
-                    "searchreplace wordcount visualblocks visualchars code fullscreen",
-                    "insertdatetime media nonbreaking paste table directionality"';
+            $set = '"autolink", "autoresize", "image", "lists", "link", "filemanager", "charmap", "preview", "anchor", "pagebreak",
+                "searchreplace", "wordcount", "visualblocks", "visualchars", "code", "fullscreen",
+                "insertdatetime", "media", "nonbreaking", "table", "directionality",';
             break;
         case "Basic":
-            $set = '"autolink autoresize lists charmap preview hr anchor pagebreak",
-                    "searchreplace wordcount visualblocks visualchars code fullscreen",
-                    "insertdatetime nonbreaking paste table directionality"';
+            $set = '"autolink", "autoresize", "lists", "charmap", "preview", "anchor", "pagebreak",
+                "searchreplace", "wordcount", "visualblocks", "visualchars", "code", "fullscreen",
+                "insertdatetime", "nonbreaking", "table", "directionality",';
             break;
         case "Forum":
-            $set = '"autolink autoresize image lists link responsivefilemanager charmap preview hr anchor pagebreak",
-                    "searchreplace wordcount visualblocks visualchars code fullscreen",
-                    "insertdatetime media nonbreaking paste table directionality"';
+            $set = '"autolink", "autoresize", "image", "lists", "link", "filemanager", "charmap", "preview", "anchor", "pagebreak",
+                "searchreplace", "wordcount", "visualblocks", "visualchars", "code", "fullscreen",
+                "insertdatetime", "media", "nonbreaking", "table", "directionality",';
             break;
         case "Shoutbox":
-            $set = '"autolink autoresize charmap wordcount visualblocks visualchars code"';
+            $set = '"autolink", "autoresize", "charmap", "wordcount", "visualblocks", "visualchars", "code",';
             break;
     }
     return $set;
@@ -1003,7 +1020,7 @@ function link_maker($v) {
 }
 
 function make_modal_links($v) {
-global $CFG;
+global $CFG, $USER, $PAGE;
     $v["button"]      = empty($v["button"]) ? "link" : "button";
     $v["title"]       ??= "";
     $v["class"]       ??= "";
@@ -1040,7 +1057,7 @@ global $CFG;
     $v["styles"] ??= false;
 
     $iframe      = empty($v["iframe"]) ? "" : ",fastIframe:false,iframe:true";
-    $i           = empty($v["iframe"]) ? "" : "&i=!";
+    $i           = empty($v["iframe"]) ? "" : "&i=!&parent_pageid=" . get_pageid() . "&parent_userid=" . $USER->userid;
 
     $v["refresh"] ??= false;
     $v["reuse"] ??= false;

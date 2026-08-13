@@ -1,0 +1,134 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  color: #23282d;
+  background: #fff;
+}
+#fm-root { display: flex; flex-direction: column; height: 100vh; }
+
+.fm-tabs { display: flex; border-bottom: 1px solid #dcdcde; background: #f6f7f7; }
+.fm-tab {
+  padding: 10px 16px; cursor: pointer; border-bottom: 2px solid transparent;
+  color: #50575e; font-weight: 600;
+}
+.fm-tab.active { color: #2271b1; border-bottom-color: #2271b1; background: #fff; }
+
+.fm-toolbar {
+  display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+  border-bottom: 1px solid #dcdcde; flex-wrap: wrap;
+}
+.fm-breadcrumb { flex: 1; min-width: 120px; color: #50575e; overflow-wrap: anywhere; }
+.fm-breadcrumb button {
+  background: none; border: none; color: #2271b1; cursor: pointer; padding: 2px 4px; font: inherit;
+}
+.fm-readonly-note { color: #8c8f94; font-style: italic; font-size: 12px; }
+.fm-btn {
+  background: #2271b1; color: #fff; border: none; border-radius: 3px;
+  padding: 6px 12px; cursor: pointer; font: inherit;
+}
+.fm-btn.secondary { background: #f0f0f1; color: #2c3338; }
+.fm-btn.danger { background: #d63638; }
+.fm-btn:disabled { opacity: .5; cursor: default; }
+
+.fm-body { flex: 1; overflow: auto; padding: 12px; }
+.fm-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px;
+}
+.fm-item {
+  border: 1px solid #dcdcde; border-radius: 4px; padding: 8px; cursor: pointer;
+  text-align: center; position: relative; background: #fff;
+}
+.fm-item:hover { border-color: #2271b1; }
+.fm-item.selected { border-color: #2271b1; background: #f0f6fc; }
+.fm-thumb {
+  height: 64px; display: flex; align-items: center; justify-content: center; margin-bottom: 6px;
+  font-size: 28px; background: #f6f7f7; border-radius: 3px; overflow: hidden;
+}
+.fm-thumb img { max-width: 100%; max-height: 100%; object-fit: cover; }
+.fm-badge {
+  width: 44px; height: 44px; border-radius: 6px; color: #fff; font-weight: 700;
+  font-size: 10px; letter-spacing: .02em; display: flex; align-items: center; justify-content: center;
+}
+.fm-badge-folder { background: none; color: inherit; font-size: 28px; }
+.fm-name { font-size: 12px; word-break: break-word; }
+.fm-meta { font-size: 10px; color: #8c8f94; margin-top: 2px; }
+.fm-item-actions {
+  position: absolute; top: 4px; right: 4px; display: none; gap: 2px;
+}
+.fm-list .fm-item-actions { position: static; justify-content: flex-end; }
+.fm-item:hover .fm-item-actions { display: flex; }
+.fm-item-actions button {
+  border: none; background: rgba(255,255,255,.9); height: 25px; width: 25px;border-radius: 5px; cursor: pointer; font-size: 11px; padding: 2px 4px;
+}
+.fm-item-actions button:hover { background: #2271b1; color: #fff; }
+
+/* View toggle + sort controls */
+.fm-view-sort { display: flex; align-items: center; gap: 6px; }
+.fm-sort-select { font: inherit; padding: 5px 6px; border: 1px solid #dcdcde; border-radius: 3px; background: #fff; }
+.fm-sort-dir { padding: 6px 9px; }
+.fm-view-toggle { display: flex; gap: 2px; }
+.fm-view-toggle .fm-btn { padding: 6px 10px; }
+.fm-view-toggle .fm-btn.active { background: #2271b1; color: #fff; }
+
+/* Drag-and-drop */
+.fm-item[draggable="true"] { cursor: grab; }
+.fm-item.fm-dragging { opacity: .4; }
+.fm-item.fm-drop-target,
+.fm-breadcrumb button.fm-drop-target {
+  outline: 2px dashed #2271b1; outline-offset: -3px; background: #f0f6fc;
+}
+.fm-breadcrumb button.fm-drop-target { border-radius: 3px; }
+
+/* List (details) view */
+.fm-list { display: flex; flex-direction: column; }
+.fm-list-row {
+  display: grid; grid-template-columns: 1fr 140px 90px 80px;
+  align-items: center; gap: 10px; padding: 6px 8px; border-bottom: 1px solid #f0f0f1;
+}
+.fm-list-header {
+  font-weight: 600; color: #50575e; font-size: 12px; border-bottom: 1px solid #dcdcde;
+  position: sticky; top: 0; background: #fff; z-index: 1;
+}
+.fm-list-th {
+  background: none; border: none; text-align: left; cursor: pointer; font: inherit;
+  font-weight: 600; color: #50575e; padding: 0; display: flex; align-items: center;
+}
+.fm-list-th.active { color: #2271b1; }
+.fm-list-th-actions { cursor: default; }
+.fm-list-row.fm-item { cursor: pointer; border-radius: 0; text-align: left; position: static; }
+.fm-list-row.fm-item:hover { background: #f6f7f7; border-color: transparent; }
+.fm-list-row.fm-item.selected { background: #f0f6fc; }
+.fm-list-cell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fm-list-name { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.fm-list-name .fm-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fm-list-thumb { width: 24px; height: 24px; object-fit: cover; border-radius: 3px; flex-shrink: 0; }
+.fm-list-icon { font-size: 16px; flex-shrink: 0; }
+.fm-list-icon-badge {
+  width: 24px; height: 24px; border-radius: 4px; color: #fff; font-weight: 700;
+  font-size: 8px; display: flex; align-items: center; justify-content: center;
+}
+.fm-list-date, .fm-list-size { font-size: 12px; color: #50575e; }
+.fm-list-actions { display: flex; gap: 2px; justify-content: flex-end; }
+.fm-list-actions button {
+  border: none; background: #f0f0f1; height: 25px; width: 25px;border-radius: 5px; cursor: pointer; font-size: 11px; padding: 3px 5px;
+}
+.fm-list-actions button:hover { background: #2271b1; color: #fff; }
+
+@media (max-width: 480px) {
+  .fm-list-row { grid-template-columns: 1fr 60px; }
+  .fm-list-date { display: none; }
+}
+
+.fm-footer {
+  display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border-top: 1px solid #dcdcde;
+}
+.fm-selection {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  background: #f6f7f7; border-radius: 4px; padding: 8px;
+}
+.fm-selection-name { font-weight: 600; margin-right: auto; word-break: break-word; }
+.fm-level-select { font: inherit; padding: 4px 6px; border: 1px solid #dcdcde; border-radius: 3px; }
+.fm-footer-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.fm-empty { color: #8c8f94; padding: 30px; text-align: center; }
+.fm-dropzone.dragover { outline: 2px dashed #2271b1; outline-offset: -6px; }

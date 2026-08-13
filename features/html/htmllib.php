@@ -196,14 +196,16 @@ global $CFG;
 
 function filter_docviewer($html) {
 global $CFG;
-    if (isset($CFG->doc_view_key)) {
-        $regex = '/(<[aA]\s*.[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s""\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(.[^\s]*)(<\/[aA]>)/';
+    if (!isset($CFG->doc_view_key)) {
+        $regex = '/(<[aA]\s.*[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s""\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(.[^\s]*)(<\/[aA]>)/';
         if (preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) {
             foreach ($matches as $match) {
                 if (!strstr($match[0], 'javascript:')) { // not a javascript link.
                     $filetypes = '/([\.[pP][dD][fF]|\.[dD][oO][cC]|\.[rR][tT][fF]|\.[pP][sS]|\.[pP][pP][tT]|\.[pP][pP][sS]|\.[tT][xX][tT]|\.[sS][xX][cC]|\.[oO][dD][sS]|\.[xX][lL][sS]|\.[oO][dD][tT]|\.[sS][xX][wW]|\.[oO][dD][pP]|\.[sS][xX][iI]])/';
                     if (preg_match($filetypes, $match[2])) {
-                        if (strstr($match[2], $CFG->userfilesurl) || strstr($match[2], $CFG->wwwroot)) { // internal link.
+                        if (strstr($match[2], "filegate.php")) {
+                            $url = $match[2];
+                        } elseif (strstr($match[2], $CFG->userfilesurl) || strstr($match[2], $CFG->wwwroot)) { // internal link.
                             $url = $CFG->wwwroot . strstr($match[2], '/' . $CFG->userfilesfolder . '/');
                         } else { // external link.
                             $url = $match[2];
@@ -224,8 +226,10 @@ global $CFG;
                                 $url = $protocol . $url;
                             }
 
-                            // Make sure www is in the url.
-                            $url = strstr($url, "://www.") !== false ? $url : str_replace("://", "://www.", $url);
+                            // Make sure www is in the url if it is expected
+                            if (strstr($CFG->wwwroot, "//www.")) {
+                                $url = strstr($url, "://www.") !== false ? $url : str_replace("://", "://www.", $url);
+                            }
 
                             //remove target from urls
                             if (preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/', $url, $target, PREG_OFFSET_CAPTURE)) { $url = str_replace($target[0], "", $url); }
@@ -239,9 +243,7 @@ global $CFG;
 
                         $link = "";
                         $text = $match[4].$match[5];
-                        if (strstr($url, $CFG->userfilespath) &&
-                            strstr($url, $CFG->wwwroot) &&
-                            !file_exists($CFG->docroot . strstr($url, '/' . $CFG->userfilesfolder . '/'))) { // internal link check.
+                        if (strstr($url, $CFG->userfilespath) && strstr($url, $CFG->wwwroot) && !file_exists($CFG->docroot . strstr($url, '/' . $CFG->userfilesfolder . '/'))) { // internal link check.
                             $icon = icon("ban");
                             $link = 'javascript: void(0);';
                             $title = "File Not Found: $url";
@@ -249,7 +251,7 @@ global $CFG;
                         } else {
                             $icon = icon("floppy-disk");
                             $title = $url;
-                            $link = $CFG->wwwroot . '/scripts/download.php?file=' . $url;
+                            $link = $CFG->wwwroot . '/scripts/download.php?file=' . rawurlencode($url);
                         }
                         $html = str_replace($match[0], '<a title="' . $title . '" href="' . $link . '" onclick="blur();">' . $icon . '</a>&nbsp;' . make_modal_links(["text" => $text, "title" => $title, "path" => $CFG->wwwroot . "/pages/ipaper.php?action=view_ipaper&doc_url=" . base64_encode($url),"height" => "80%", "width" => "80%"]), $html);
                     }
@@ -325,7 +327,7 @@ global $CFG;
         $i = 0;
         foreach ($matches as $match) {
             if (!strstr($match[0], 'javascript:')) {
-                $filetypes = '/([\.[fF][lL][vV]|\.[mM][pP][4])/';
+                $filetypes = '/\.flv|\.mp4/i';
                 if (preg_match($filetypes, $match[2])) {
                     //make internal links full paths
                     $url = strstr($match[2], $CFG->userfilespath) && !strstr($match[2], $CFG->wwwroot) ? str_replace($CFG->userfilespath, $CFG->userfilesurl, $match[2]) : $match[2];
@@ -334,29 +336,13 @@ global $CFG;
                     $url = preg_replace('/([\'|\"])/', '', $url);
 
                     $url = str_replace('\\', '', $url);
-                    $rand = rand(0, time());
-                    $script = " flowplayer('a.flowplayers', '" . $CFG->wwwroot . "/scripts/filters/video/flowplayer/flowplayer-3.2.4.swf',{
-                                clip: {
-                                        autoPlay: false,
-                                        autoBuffering: true,
-                                        onBegin: function() { this.getControls().css({height:'5%'});},
-                                        onMetaData: setInterval(function() {
-                                                        $('a.flowplayers').flowplayer().each(function() {
-                                                                var myclip = this.getClip(0);
-                                                                if (myclip.metaData != undefined) {
-                                                                        var width = $('#'+this.id()).parent('.flowplayer_div').attr('clientWidth') >= myclip.metaData.width ? myclip.metaData.width : $('#'+this.id()).parent('.flowplayer_div').attr('clientWidth');
-                                                                        var height = (width/myclip.metaData.width) * myclip.metaData.height;
-                                                                        var wrap = jQuery(this.getParent());
-                                                                        wrap.css({width: width+'px', height: height+'px'});
-                                                                }
-                                                        });
-                                                },1000)
-                                        }
-                                });";
-                    $html = str_replace($match[0], js_script_wrap($CFG->wwwroot . '/scripts/filters/video/flowplayer/flowplayer-3.2.4.min.js') .
-                             "<div id='vid_$rand' class='flowplayer_div' style='width:100%;'>
-                                <a href='$url' style='display:block;' class='flowplayers' id='player_$rand'></a>
-                            </div>" . js_code_wrap($script), $html);
+
+                    $html5player = '
+                    <video width="100%" controls>
+                        <source src="' . $url . '" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>';
+                    $html = str_replace($match[0], $html5player, $html);
                 }
             }
         $i++;
@@ -394,15 +380,31 @@ function filter_photogallery($html) {
 
     foreach ($matches as $index => $match) {
         $url = $match[2];
+        $urldir = str_replace('/', DIRECTORY_SEPARATOR, $url);
 
-        // Must reference the user files area.
-        $pos = strpos($url, $CFG->userfilesfolder);
-        if ($pos === false) {
+        // Must reference the user files area or the filemanager root.
+        $userfilesfolder = strstr($urldir, $CFG->userfilesfolder);
+        $fmroot = strstr($urldir, "filegate.php");
+
+        if ($userfilesfolder === false && $fmroot === false) {
             continue;
         }
 
-        $localpath = rtrim($CFG->dirroot, '/') . '/' . ltrim(urldecode(substr($url, $pos)), '/');
-        $localpath = rtrim($localpath, '/');
+        if ($userfilesfolder !== false) {
+            $localpath = rtrim($CFG->userfilespath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . trim(urldecode(substr($userfilesfolder, strlen($CFG->userfilesfolder))), DIRECTORY_SEPARATOR);
+        } elseif ($fmroot !== false && strpos($url, "m=0") !== false) { // Directory gallery link from filegate.php with m=0 (folder index) parameter.
+            $localpath = fm_gated_url_to_path($url);
+            if ($localpath === null || !is_dir($localpath)) {
+                continue;
+            }
+        } elseif ($fmroot !== false) { // Single file link from filegate.php.
+            $localpath = fm_gated_url_to_path($url);
+            if ($localpath === null || !is_file($localpath)) {
+                continue;
+            }
+        } else {
+            continue;
+        }
 
         if (!is_readable($localpath)) {
             continue;
@@ -418,26 +420,46 @@ function filter_photogallery($html) {
 
             $captions = get_file_captions($localpath);
 
-            // Get all files in directory.
-            $galleryArray = getdirectoryfiles($localpath, $extensions);
+            if ($userfilesfolder !== false) {
+                // Get all files in directory.
+                $galleryArray = getdirectoryfiles($localpath, $extensions);
+            } elseif ($fmroot !== false) {
+                $galleryArray = fm_get_gated_files_from_path($url, $extensions);
+            }
 
             // Sort files by filename.
             asort($galleryArray, SORT_STRING | SORT_FLAG_CASE | SORT_NATURAL);
 
             // First file is the gallery link.
             $first = array_shift($galleryArray);
+
+            $path = "";
+            if ($userfilesfolder !== false) {
+                $path = rtrim($url, '/') . '/' . $first;
+            } elseif ($fmroot !== false) {
+                $path = $first["fileurl"];
+                $first = $first["filename"];
+            }
+
             $gallery .= make_modal_links([
                 "icon"    => icon("images"),
                 "id"      => "autogallery_$index",
                 "title"   => $captions[$first] ?? $first,
                 "text"    => $match[3],
                 "gallery" => $galleryid,
-                "path"    => rtrim($url, '/') . '/' . $first,
+                "path"    => $path,
             ]);
 
             // The rest of the files are hidden links.
-            foreach ($galleryArray as $filename) {
-                $fileurl = rtrim($url, '/') . '/' . $filename;
+            foreach ($galleryArray as $file) {
+                if ($userfilesfolder !== false) {
+                    $fileurl = rtrim($url, '/') . '/' . $file;
+                    $filename = $file;
+                } elseif ($fmroot !== false) {
+                    $fileurl = $file["fileurl"];
+                    $filename = $file["filename"];
+                }
+
                 $caption = $captions[$filename] ?? $filename;
 
                 $gallery .= sprintf(
@@ -846,6 +868,7 @@ global $CFG, $USER;
             "iframe" => true,
             "refresh" => "true",
             "width" => "$('#html_$featureid').width() + 150",
+            "height" => "95%",
             "icon" => icon("pencil"),
             "class" => "slide_menu_button",
         ]);

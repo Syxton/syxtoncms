@@ -1,0 +1,438 @@
+<?php
+
+/***************************************************************************
+* plugins/filemanager/api.php - admin-side operations for the file manager
+* dialog. Always requires a logged-in session with edit permission on the
+* current area. All state-changing actions also require the CSRF token
+* that index.php embeds from the session.
+*
+* Actions (POST 'action'): list, mkdir, upload, rename, delete, move, geturl
+* Common params: area=pub|priv, id=<pageid|userid>, path=<relative folder>
+*
+* Output buffering: your app runs with $CFG->debug = 3 ("log and print"),
+* which means any stray notice/warning from included libs would otherwise
+* get echoed into the middle of this response and corrupt the JSON (this
+* was the cause of "upload succeeds but the screen doesn't refresh" - the
+* file really did save, but the browser's res.json() silently threw on the
+* malformed body). ob_start() here captures any such output so it can't
+* leak into the response; genuine PHP errors still go to your error log
+* per $CFG->debug, they just won't corrupt the JSON the browser sees.
+***************************************************************************/
+ob_start();
+
+if (!isset($CFG) || !defined('LIBHEADER')) {
+    $sub = '';
+    while (!file_exists($sub . 'lib/header.php')) {
+        $sub = $sub == '' ? '../' : $sub . '../';
+    }
+    require_once($sub . 'lib/header.php');
+}
+if (!defined('FMCONFIG')) {
+    $sub = '';
+    while (!file_exists($sub . 'fmconfig.php')) {
+        $sub = $sub == '' ? '../' : $sub . '../';
+    }
+    require_once($sub . 'fmconfig.php');
+}
+
+function fm_json($data, int $code = 200) {
+    http_response_code($code);
+    header('Content-Type: application/json');
+    ob_end_clean(); // discard anything a library printed before we got here
+    echo json_encode($data);
+    exit;
+}
+
+if (!is_logged_in()) {
+    fm_json(['error' => 'Not authenticated'], 403);
+}
+
+$action = $_REQUEST['action'] ?? '';
+$area   = $_REQUEST['area'] ?? '';
+$id     = (string) ($_REQUEST['id'] ?? '');
+$path   = (string) ($_REQUEST['path'] ?? '');
+
+if (!in_array($area, [FM_AREA_PUBLIC, FM_AREA_PRIVATE, FM_AREA_OLD], true) || $id === '') {
+    fm_json(['error' => 'Bad request'], 400);
+}
+
+// Permission choke point.
+if (!fm_can_access_area($area, $id)) {
+    fm_json(['error' => 'Forbidden'], 403);
+}
+
+// "Old files" is read-only browsing for manual migration - only list and
+// move (as a source) are allowed. Enforced here, not just hidden in the
+// UI, since the endpoint itself is the actual security boundary.
+if ($area === FM_AREA_OLD && !in_array($action, ['list', 'move'], true)) {
+    fm_json(['error' => 'Old files is read-only - move items into My files or Page files first'], 403);
+}
+
+// CSRF check for anything that changes state.
+$stateChanging = in_array($action, ['mkdir', 'upload', 'rename', 'delete', 'move'], true);
+if ($stateChanging) {
+    $csrf = $_REQUEST['csrf'] ?? '';
+    if (!isset($_SESSION['fm_csrf']) || !hash_equals($_SESSION['fm_csrf'], (string) $csrf)) {
+        fm_json(['error' => 'Bad CSRF token'], 403);
+    }
+}
+
+$relPath = fm_sanitize_relpath($path);
+if ($relPath === null) {
+    fm_json(['error' => 'Invalid path'], 400);
+}
+
+if ($area === FM_AREA_OLD && $relPath === '' && fm_old_root($id) === null) {
+    // No legacy files for this user yet - that's normal, not an error.
+    if ($action === 'list') {
+        fm_json(['path' => '', 'folders' => [], 'files' => []]);
+    }
+    fm_json(['error' => 'Folder not found'], 404);
+}
+
+$dir = fm_resolve_area_path($area, $id, $relPath);
+if ($dir === null || !is_dir($dir)) {
+    fm_json(['error' => 'Folder not found'], 404);
+}
+
+// filegate.php lives at the app root, so build its URL off $CFG->wwwroot -
+// stays correct whether the app is at the domain root or a subdirectory.
+$gateUrl = $CFG->wwwroot . '/filegate.php';
+
+switch ($action) {
+
+    case 'list': {
+        $folders = [];
+        $files = [];
+        foreach (scandir($dir) as $entry) {
+            if ($entry === '.' || $entry === '..') {
+                continue;
+            }
+            $full = $dir . DIRECTORY_SEPARATOR . $entry;
+            if (is_dir($full)) {
+                $folders[] = ['name' => $entry, 'mtime' => filemtime($full)];
+            } else {
+                $ext = strtolower(pathinfo($entry, PATHINFO_EXTENSION));
+                if (!array_key_exists($ext, $GLOBALS['FM_ALLOWED_EXT'])) {
+                    continue; // hide anything we wouldn't serve anyway
+                }
+                $mtime = filemtime($full);
+                $entryRel = ($relPath === '' ? '' : $relPath . '/') . $entry;
+                $files[] = [
+                    'name'  => $entry,
+                    'size'  => filesize($full),
+                    'mtime' => $mtime,
+                    'ext'   => $ext,
+                    // Old area: already directly linkable at its existing
+                    // (pre-migration) URL, no filegate involved. Otherwise:
+                    // admin-only preview URL, valid only within this
+                    // editing session - never insert this into content.
+                    'previewUrl' => $area === FM_AREA_OLD
+                        ? fm_old_direct_url($id, $entryRel)
+                        : fm_admin_preview_url($gateUrl, $area, $id, $entryRel, $mtime),
+                ];
+            }
+        }
+        // Folders: alphabetic. Files: newest modified first.
+        usort($folders, fn($a, $b) => strcasecmp($a['name'], $b['name']));
+        usort($files, fn($a, $b) => $b['mtime'] <=> $a['mtime']);
+        fm_json(['path' => $relPath, 'folders' => $folders, 'files' => $files]);
+        break;
+    }
+
+    case 'mkdir': {
+        $name = fm_sanitize_name((string) ($_REQUEST['name'] ?? ''));
+        if ($name === null) {
+            fm_json(['error' => 'Invalid folder name'], 400);
+        }
+        $target = $dir . DIRECTORY_SEPARATOR . $name;
+        if (file_exists($target)) {
+            fm_json(['error' => 'Already exists'], 409);
+        }
+        if (!mkdir($target, 0750)) {
+            fm_json(['error' => 'Could not create folder'], 500);
+        }
+        fm_json(['ok' => true]);
+        break;
+    }
+
+    case 'upload': {
+        if (empty($_FILES['file']) || !is_array($_FILES['file']['name'])) {
+            fm_json(['error' => 'No files received'], 400);
+        }
+        $maxBytes = 20 * 1024 * 1024; // 20MB, tune as needed
+        $results = [];
+        $count = count($_FILES['file']['name']);
+        for ($i = 0; $i < $count; $i++) {
+            $origName = $_FILES['file']['name'][$i];
+            $tmpPath  = $_FILES['file']['tmp_name'][$i];
+            $error    = $_FILES['file']['error'][$i];
+            $size     = $_FILES['file']['size'][$i];
+
+            if ($error !== UPLOAD_ERR_OK) {
+                $results[] = ['name' => $origName, 'ok' => false, 'error' => 'Upload error'];
+                continue;
+            }
+            if ($size > $maxBytes) {
+                $results[] = ['name' => $origName, 'ok' => false, 'error' => 'Too large'];
+                continue;
+            }
+            $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+            if (!array_key_exists($ext, $GLOBALS['FM_ALLOWED_EXT'])) {
+                $results[] = ['name' => $origName, 'ok' => false, 'error' => 'File type not allowed'];
+                continue;
+            }
+            $baseName = fm_sanitize_name(pathinfo($origName, PATHINFO_FILENAME));
+            if ($baseName === null) {
+                $baseName = 'file';
+            }
+            // Avoid overwriting: file, file(1), file(2), ...
+            $finalName = $baseName . '.' . $ext;
+            $n = 1;
+            while (file_exists($dir . DIRECTORY_SEPARATOR . $finalName)) {
+                $finalName = $baseName . '(' . $n . ').' . $ext;
+                $n++;
+            }
+            $dest = $dir . DIRECTORY_SEPARATOR . $finalName;
+            if (!move_uploaded_file($tmpPath, $dest)) {
+                $results[] = ['name' => $origName, 'ok' => false, 'error' => 'Could not save'];
+                continue;
+            }
+            chmod($dest, 0640);
+            $results[] = ['name' => $finalName, 'ok' => true];
+        }
+        fm_json(['results' => $results]);
+        break;
+    }
+
+    case 'rename': {
+        $old    = fm_sanitize_name((string) ($_REQUEST['old'] ?? ''));
+        $new    = fm_sanitize_name((string) ($_REQUEST['new'] ?? ''));
+        $target = (string) ($_REQUEST['target'] ?? ''); // 'file' | 'folder'
+        if ($old === null || $new === null || !in_array($target, ['file', 'folder'], true)) {
+            fm_json(['error' => 'Invalid request'], 400);
+        }
+        if ($target === 'file') {
+            $oldExt = strtolower(pathinfo($old, PATHINFO_EXTENSION));
+            $newExt = strtolower(pathinfo($new, PATHINFO_EXTENSION));
+            if ($newExt !== $oldExt) {
+                // Don't allow renaming to change/spoof the extension.
+                $new = pathinfo($new, PATHINFO_FILENAME) . '.' . $oldExt;
+            }
+        }
+        $oldPath = $dir . DIRECTORY_SEPARATOR . $old;
+        $newPath = $dir . DIRECTORY_SEPARATOR . $new;
+        if (!file_exists($oldPath)) {
+            fm_json(['error' => 'Not found'], 404);
+        }
+        if (file_exists($newPath)) {
+            fm_json(['error' => 'A file/folder with that name already exists'], 409);
+        }
+        if (!rename($oldPath, $newPath)) {
+            fm_json(['error' => 'Rename failed'], 500);
+        }
+        fm_json(['ok' => true, 'name' => $new]);
+        break;
+    }
+
+    case 'delete': {
+        $name   = fm_sanitize_name((string) ($_REQUEST['name'] ?? ''));
+        $target = (string) ($_REQUEST['target'] ?? '');
+        if ($name === null || !in_array($target, ['file', 'folder'], true)) {
+            fm_json(['error' => 'Invalid request'], 400);
+        }
+        $victim = $dir . DIRECTORY_SEPARATOR . $name;
+        if (!file_exists($victim)) {
+            fm_json(['error' => 'Not found'], 404);
+        }
+        if ($target === 'folder') {
+            if (!is_dir($victim)) {
+                fm_json(['error' => 'Not a folder'], 400);
+            }
+            fm_rrmdir($victim);
+        } else {
+            if (!is_file($victim)) {
+                fm_json(['error' => 'Not a file'], 400);
+            }
+            unlink($victim);
+        }
+        fm_json(['ok' => true]);
+        break;
+    }
+
+    case 'move': {
+        // Move a file or folder from the current area/id/path (already
+        // permission-checked above) into a DIFFERENT area/id - e.g. from
+        // "My files" into the current page's public area, or back.
+        $name   = fm_sanitize_name((string) ($_REQUEST['name'] ?? ''));
+        $target = (string) ($_REQUEST['target'] ?? ''); // 'file' | 'folder'
+        $toArea = (string) ($_REQUEST['toArea'] ?? '');
+        $toId   = (string) ($_REQUEST['toId'] ?? '');
+        $toPath = (string) ($_REQUEST['toPath'] ?? '');
+
+        if ($name === null || !in_array($target, ['file', 'folder'], true)
+            || !in_array($toArea, [FM_AREA_PUBLIC, FM_AREA_PRIVATE], true) || $toId === '') {
+            fm_json(['error' => 'Invalid request'], 400);
+        }
+
+        // Destination needs its OWN edit-permission check - moving into an
+        // area doesn't inherit permission from the source area. Old files
+        // can only ever be a source, never a destination (checked by the
+        // toArea allow-list above already excluding FM_AREA_OLD).
+        if (!fm_can_access_area($toArea, $toId)) {
+            fm_json(['error' => 'Forbidden (destination)'], 403);
+        }
+
+        $toRelPath = fm_sanitize_relpath($toPath);
+        if ($toRelPath === null) {
+            fm_json(['error' => 'Invalid destination path'], 400);
+        }
+        $toDir = fm_resolve_path($toArea, $toId, $toRelPath); // never 'old' here, plain resolver is fine
+        if ($toDir === null || !is_dir($toDir)) {
+            fm_json(['error' => 'Destination folder not found'], 404);
+        }
+
+        $srcPath = $dir . DIRECTORY_SEPARATOR . $name;
+        if (!file_exists($srcPath)) {
+            fm_json(['error' => 'Not found'], 404);
+        }
+        if ($area === $toArea && $id === $toId && $relPath === $toRelPath) {
+            fm_json(['error' => 'Source and destination are the same'], 400);
+        }
+
+        // Avoid clobbering an existing item at the destination.
+        $finalName = $name;
+        $n = 1;
+        $ext = $target === 'file' ? '.' . pathinfo($name, PATHINFO_EXTENSION) : '';
+        $base = $target === 'file' ? pathinfo($name, PATHINFO_FILENAME) : $name;
+        while (file_exists($toDir . DIRECTORY_SEPARATOR . $finalName)) {
+            $finalName = $base . '(' . $n . ')' . $ext;
+            $n++;
+        }
+        $destPath = $toDir . DIRECTORY_SEPARATOR . $finalName;
+
+        // "Old files" migration crosses from $CFG->userfilespath into
+        // $CFG->fmroot, which may not be the same filesystem/mount, so a
+        // plain rename() can fail there even though nothing is wrong -
+        // fall back to a recursive copy + delete-source in that case.
+        if (!fm_move_any($srcPath, $destPath)) {
+            fm_json(['error' => 'Move failed'], 500);
+        }
+        fm_json(['ok' => true, 'name' => $finalName]);
+        break;
+    }
+
+    case 'geturl': {
+        // Generate a signed SHARE link (what actually gets inserted into
+        // content or copied) for a specific file OR folder at a chosen
+        // access level. Distinct from the 'previewUrl' the list action
+        // returns, which only ever works inside this authenticated dialog.
+        $name   = fm_sanitize_name((string) ($_REQUEST['name'] ?? ''));
+        $target = (string) ($_REQUEST['target'] ?? 'file'); // 'file' | 'folder'
+        $level  = (string) ($_REQUEST['level'] ?? '');
+        $pageid = (string) ($_REQUEST['pageid'] ?? ''); // required for level=page
+        $mode   = (string) ($_REQUEST['mode'] ?? 'index'); // folder only: 'gallery' | 'index'
+
+        if ($name === null || !in_array($target, ['file', 'folder'], true)
+            || !in_array($level, [FM_LEVEL_LINK, FM_LEVEL_PAGE, FM_LEVEL_PRIVATE], true)) {
+            fm_json(['error' => 'Invalid request'], 400);
+        }
+        if ($target === 'folder' && !in_array($mode, ['gallery', 'index'], true)) {
+            fm_json(['error' => 'Invalid request'], 400);
+        }
+        if ($level === FM_LEVEL_PRIVATE && $area !== FM_AREA_PRIVATE) {
+            fm_json(['error' => '"My eyes only" is only available for files in My files'], 400);
+        }
+        if ($level === FM_LEVEL_PAGE && $pageid === '') {
+            fm_json(['error' => 'No page context available for a page-level link'], 400);
+        }
+
+        $entryRel = ($relPath === '' ? '' : $relPath . '/') . $name;
+        $full = $dir . DIRECTORY_SEPARATOR . $name;
+        $extra = $level === FM_LEVEL_PAGE ? $pageid : '';
+
+        if ($target === 'folder') {
+            if (!is_dir($full)) {
+                fm_json(['error' => 'Not found'], 404);
+            }
+            // Folder links are evergreen (mtime=0 sentinel) - see
+            // fm_build_share_token's docblock in fmconfig.php.
+            $url = fm_share_url($gateUrl, $level, $area, $id, $entryRel, 0, $extra, false);
+            fm_json(['ok' => true, 'url' => $url, 'level' => $level, 'mode' => $mode]);
+        }
+
+        if (!is_file($full)) {
+            fm_json(['error' => 'Not found'], 404);
+        }
+        $mtime = filemtime($full);
+        $url = fm_share_url($gateUrl, $level, $area, $id, $entryRel, $mtime, $extra, false);
+        fm_json(['ok' => true, 'url' => $url, 'level' => $level]);
+        break;
+    }
+
+    default:
+        fm_json(['error' => 'Unknown action'], 400);
+}
+
+/**
+ * Recursively delete a folder and everything in it.
+ */
+function fm_rrmdir(string $dir): void {
+    foreach (scandir($dir) as $entry) {
+        if ($entry === '.' || $entry === '..') {
+            continue;
+        }
+        $full = $dir . DIRECTORY_SEPARATOR . $entry;
+        if (is_dir($full)) {
+            fm_rrmdir($full);
+        } else {
+            unlink($full);
+        }
+    }
+    rmdir($dir);
+}
+
+/**
+ * Move src to dest, tolerating a cross-filesystem move (e.g. migrating out
+ * of the legacy $CFG->userfilespath tree into $CFG->fmroot, which may not
+ * share a mount) by falling back to recursive copy + delete-source when a
+ * plain rename() fails.
+ */
+function fm_move_any(string $src, string $dest): bool {
+    if (@rename($src, $dest)) {
+        return true;
+    }
+    if (is_dir($src)) {
+        if (!fm_copy_dir($src, $dest)) {
+            return false;
+        }
+        fm_rrmdir($src);
+        return true;
+    }
+    if (!@copy($src, $dest)) {
+        return false;
+    }
+    @unlink($src);
+    return true;
+}
+
+function fm_copy_dir(string $src, string $dest): bool {
+    if (!is_dir($dest) && !mkdir($dest, 0750, true)) {
+        return false;
+    }
+    foreach (scandir($src) as $entry) {
+        if ($entry === '.' || $entry === '..') {
+            continue;
+        }
+        $s = $src . DIRECTORY_SEPARATOR . $entry;
+        $d = $dest . DIRECTORY_SEPARATOR . $entry;
+        if (is_dir($s)) {
+            if (!fm_copy_dir($s, $d)) {
+                return false;
+            }
+        } elseif (!copy($s, $d)) {
+            return false;
+        }
+    }
+    return true;
+}

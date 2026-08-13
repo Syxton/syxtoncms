@@ -103,33 +103,33 @@ global $CFG, $ROLES, $ABILITIES;
 
     if (is_siteadmin($userid)) { return true; }
 
-    $roleid = user_role($userid, $pageid);
-
-    if ($roleid == $ROLES->visitor) {
-        if (role_is_able($ROLES->visitor, $ability, $pageid, $feature, $featureid)) {
-            return true;
-        }
-    } else {
-        // This sql template has a few spots with generated sql that need filled in before the params are prepared.
-        // It requires a fill_template instead of a fetch_template to add the additional sql to the template first.
-        $sqlparams = [
-            "groupsql" => groups_SQL($userid, $pageid, $ability),
-            "featuregroupsql" => groups_SQL($userid, $pageid, $ability, $feature, $featureid),
-        ];
-        $SQL = fill_template("dbsql/roles.sql", "user_has_ability_in_page", false, $sqlparams, true);
-        $params = [
-            "pageid" => $pageid,
-            "roleid" => $roleid,
-            "userid" => $userid,
-            "ability" => $ability,
-            "feature" => $feature,
-            "featureid" => $featureid,
-        ];
-
-        if (get_db_row($SQL, $params)) {
+    if (!is_logged_in($userid)) {
+        $roleid = user_role($userid, $pageid);
+        if (role_is_able($roleid, $ability, $pageid, $feature, $featureid)) {
             return true;
         }
     }
+
+    // This sql template has a few spots with generated sql that need filled in before the params are prepared.
+    // It requires a fill_template instead of a fetch_template to add the additional sql to the template first.
+    $sqlparams = [
+        "groupsql" => groups_SQL($userid, $pageid, $ability),
+        "featuregroupsql" => groups_SQL($userid, $pageid, $ability, $feature, $featureid),
+    ];
+    $SQL = fill_template("dbsql/roles.sql", "user_has_ability_in_page", false, $sqlparams, true);
+    $params = [
+        "pageid" => $pageid,
+        "roleid" => $roleid,
+        "userid" => $userid,
+        "ability" => $ability,
+        "feature" => $feature,
+        "featureid" => $featureid,
+    ];
+
+    if (get_db_row($SQL, $params)) {
+        return true;
+    }
+
     return false;
 }
 

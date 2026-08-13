@@ -56,6 +56,9 @@ editor_box_template||
     ||echo js_code_wrap('
     $(window).on("load", function() {
         $(".wysiwyg_editor").tinymce({
+            license_key: "gpl",
+            promotion: false,
+            branding: false,
             script_url : "' . vars["wwwroot"] . '/scripts/tinymce/tinymce.min.js",
             toolbar: "' . vars["toolbar"] . '",
             height: ' . (is_numeric(vars["height"]) ? vars["height"] - 70 : '"' . vars["height"] . '"') . ',
@@ -91,13 +94,13 @@ editor_box_template||
             convert_urls: false,
             plugins: [' . vars["plugins"] . '],
             resize: true,
-            min_height: 300,
-            min_width: 300,
+            min_height: 500,
+            min_width: 500,
             selector: "textarea",
             autoresize_bottom_margin: 50,
-            external_filemanager_path: "' . vars["wwwroot"] . '/scripts/tinymce/plugins/filemanager/",
-            filemanager_title: "File Manager" ,
-            external_plugins: { "filemanager" : "' . vars["wwwroot"] . '/scripts/tinymce/plugins/filemanager/plugin.min.js"}
+            filemanager_pageid: ' . vars["pageid"] . ',
+            filemanager_userid: ' . vars["userid"] . ',
+            file_picker_types: "image media file",
         });
     });');::vars||
 ||editor_box_template

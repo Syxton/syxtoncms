@@ -78,6 +78,17 @@ $CFG->smtppass = '';
  * @var string $docroot Document root directory
  * @var string $dirroot Directory root
  */
+$CFG->fmroot = 'C:\any\directory\under\webroot\filemanager'; // Path to the filemanager root directory
+$CFG->fm_secret = 'replace-with-a-random-secret-key';
+
+if (!defined('FMCONFIG')) {
+    $sub = '';
+    while (!file_exists($sub . 'fmconfig.php')) {
+        $sub = $sub == '' ? '../' : $sub . '../';
+    }
+    require_once($sub . 'fmconfig.php');
+}
+
 $CFG->directory = 'mywebsites/syxtoncms'; // Points to http://localhost/mywebsites/syxtoncms
 $CFG->wwwroot = '//' . $_SERVER['SERVER_NAME'];
 $CFG->wwwroot = $CFG->directory ? $CFG->wwwroot . '/' . $CFG->directory : $CFG->wwwroot;
@@ -91,7 +102,7 @@ $CFG->dirroot = $CFG->docroot;
  * @var string $userfilesurl URL to access user files
  */
 $CFG->userfilesfolder = 'userfiles';
-$CFG->userfilespath = $CFG->docroot . '\\' . $CFG->userfilesfolder;
+$CFG->userfilespath = $CFG->docroot . DIRECTORY_SEPARATOR . $CFG->userfilesfolder;
 $CFG->userfilesurl = $CFG->wwwroot . '/' . $CFG->userfilesfolder;
 
 /**

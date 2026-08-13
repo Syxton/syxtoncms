@@ -33,7 +33,7 @@ global $CFG, $USER, $ROLES, $ABILITIES;
     $p = [
         "title" => "Manage files",
         "text" => "Manage files",
-        "onclick" => "window.open('./scripts/tinymce/plugins/filemanager/dialog.php?type=0&editor=mce_0/','File Mananger','modal, width=850, height=600')",
+        "onclick" => "window.open('./scripts/tinymce/plugins/filemanager/index.php?standalone=1&pageid=$pageid&userid=$USER->userid','File Mananger','modal, width=850, height=600')",
         "icon" => icon("laptop-file"),
         "class" => "adminpanel_links",
     ];
@@ -122,7 +122,7 @@ function get_adminpanel_alerts($userid, $countonly = true) {
                     // Loops through all requests from a page.
                     while ($request = fetch_row($result)) {
                         $question = 'Allow ' . get_user_name($request["userid"]) . " into " . get_db_field("name", "pages", "pageid=" . $request["pageid"]) . '?';
-                        $buttons = 
+                        $buttons =
                         button_maker([
                             "class" => "alike",
                             "onclick" => "allow_page_request(" . $request["assignmentid"] . ", 1, 'userspan_" . $request["userid"] . "_" . $request["pageid"] . "');",
@@ -155,7 +155,7 @@ function get_adminpanel_alerts($userid, $countonly = true) {
             // Loops through all requests from a page.
             while ($invite = fetch_row($result)) {
                 $question = 'Allow ' . get_user_name($request["userid"]) . " into " . get_db_field("name", "pages", "pageid=" . $invite["pageid"]) . '?';
-                $buttons = 
+                $buttons =
                 button_maker([
                     "class" => "alike",
                     "onclick" => "allow_page_request(" . $invite["assignmentid"] . ", 1, 'pagespan_" . $invite["userid"] . "_" . $invite["pageid"] . "');",

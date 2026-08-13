@@ -784,7 +784,6 @@ div.registration_cart_checkout_title {
 }
 .eventtype_list {
     background-color:#edfafa;
-    white-space:nowrap;
     display: flex;
     flex-direction: column;
     padding: 2px 10px;
