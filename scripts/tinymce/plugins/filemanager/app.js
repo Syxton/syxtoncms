@@ -10,6 +10,11 @@
   var CAN_PRIVATE = root.dataset.canPrivate === '1';
   var CAN_OLD = root.dataset.canOld === '1';
   var TYPE = root.dataset.type; // '', 'image', 'media', 'file'
+  // Only true when opened by the HTML feature's editor (see plugin.js /
+  // tmp/pagelib.template) - the Gallery/Index folder-link choice only
+  // means anything there, since it's that feature's photogallery filter
+  // that looks for the resulting attribute (see htmllib.php).
+  var ALLOW_GALLERY = root.dataset.allowGallery === '1';
 
   // Opened inside the picker's overlay iframe (appended directly to the
   // host page's <body> by plugin.js - see its file header for why it's
@@ -555,7 +560,7 @@
         select.addEventListener('change', function () { state.level = select.value; });
         selRow.appendChild(select);
 
-        if (sel.isFolder) {
+        if (sel.isFolder && ALLOW_GALLERY) {
           var modeSelect = el('select', { class: 'fm-level-select' });
           [['index', 'Index (list files)'], ['gallery', 'Gallery']].forEach(function (pair) {
             var opt = el('option', { value: pair[0], text: pair[1] });

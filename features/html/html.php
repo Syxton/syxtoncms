@@ -83,7 +83,7 @@ function edithtml() {
             // Create edit form.
             $params = [
                 'formid' => "edit_html_form_$htmlid",
-                'editor' => get_editor_box(['initialvalue' => $row['html'], 'name' => "edit_html_$htmlid"]),
+                'editor' => get_editor_box(['initialvalue' => $row['html'], 'name' => "edit_html_$htmlid", 'allow_gallery' => true]),
             ];
             $returnme .= fill_template("tmp/html.template", "edit_form", "html", $params);
 

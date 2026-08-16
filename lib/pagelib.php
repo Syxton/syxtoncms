@@ -753,6 +753,11 @@ global $CFG, $USER;
     $params["vars"]["type"] = $params["type"] ?? "HTML";
     $params["vars"]["plugins"] = get_editor_plugins($params["vars"]["type"]);
     $params["vars"]["toolbar"] = get_editor_toolbar($params["vars"]["type"]);
+    // Explicit opt-in only - NOT derived from "type" above, since "type"
+    // is just a toolbar/plugin preset and defaults to "HTML" for any
+    // caller that doesn't specify one. Only features/html/html.php should
+    // ever pass this.
+    $params["vars"]["allow_gallery"] = !empty($params["allow_gallery"]) ? 'true' : 'false';
 
     return get_editor_javascript() . fill_template("tmp/pagelib.template", "editor_box_template", false, $params);
 }

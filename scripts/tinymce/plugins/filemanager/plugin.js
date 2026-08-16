@@ -48,13 +48,19 @@
       var base = editor.getParam('filemanager_url', urlOf());
       var pageid = editor.getParam('filemanager_pageid', '');
       var userid = editor.getParam('filemanager_userid', '');
+      // Only the HTML feature's editor sets this (see tmp/pagelib.template) -
+      // it's what the Gallery/Index folder-link option is gated on, since
+      // the "gallery" attribute it adds is only meaningful to the HTML
+      // feature's photogallery filter (see htmllib.php).
+      var allowGallery = !!editor.getParam('filemanager_allow_gallery', false);
       // embed=1 marks this as opened by our own picker (as opposed to a
       // plain link elsewhere in the app) - see index.php/app.js for why
       // this matters for showing Insert/Cancel.
       var qs = 'pageid=' + encodeURIComponent(pageid) +
         '&userid=' + encodeURIComponent(userid) +
         '&type=' + encodeURIComponent(type || '') +
-        '&embed=1';
+        '&embed=1' +
+        (allowGallery ? '&gallery=1' : '');
       return base + (base.indexOf('?') === -1 ? '?' : '&') + qs;
     }
 
@@ -155,8 +161,12 @@
 
     function insertAsContent(file) {
       if (file.isFolder) {
-        var cls = file.mode === 'gallery' ? ' class="gallery"' : '';
-        editor.insertContent('<a href="' + file.url + '"' + cls + '>' + escapeAttr(file.name) + '</a>');
+        // The HTML feature's photogallery filter (see filter_photogallery()
+        // in features/html/htmllib.php) turns a folder link into an image
+        // gallery when it finds title="gallery" on the <a> tag - add it
+        // automatically here instead of making the user type it in by hand.
+        var galleryAttr = file.mode === 'gallery' ? ' title="gallery"' : '';
+        editor.insertContent('<a href="' + file.url + '"' + galleryAttr + '>' + escapeAttr(file.name) + '</a>');
         return;
       }
       var ext = file.ext;
@@ -194,7 +204,17 @@
     // Wire into TinyMCE's native image/media/link "Source" browse button.
     editor.options.set('file_picker_callback', function (callback, value, meta) {
       openPicker(meta.filetype, function (file) {
-        callback(file.url, { alt: file.name });
+        var cbMeta = { alt: file.name };
+        if (file.isFolder && file.mode === 'gallery') {
+          // The Link dialog's "Title" field auto-fills from url.meta.title
+          // (see getTitleFromUrlChange() in plugins/link/plugin.js) and is
+          // what actually ends up as the <a title="..."> attribute once
+          // the dialog is submitted - insertAsContent() below never runs
+          // for this path, so this is the only way to get title="gallery"
+          // onto a link created via the native Link dialog's Browse button.
+          cbMeta.title = 'gallery';
+        }
+        callback(file.url, cbMeta);
       });
     });
 

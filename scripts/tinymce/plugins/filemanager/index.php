@@ -48,6 +48,12 @@ $userid = preg_replace('/[^A-Za-z0-9_\-]/', '', $_GET['userid'] ?? (string) $USE
 $type = preg_replace('/[^a-z]/', '', $_GET['type'] ?? '');
 // Only plugin.js's own picker sets this - see the comment above.
 $embed = !empty($_GET['embed']);
+// Only set by plugin.js when the editor was opened by the HTML feature
+// (see tmp/pagelib.template / filemanager_allow_gallery) - gates whether
+// the Gallery/Index folder-link option is shown at all, since the
+// "gallery" attribute it adds is only understood by that feature's
+// photogallery filter (see filter_photogallery() in htmllib.php).
+$allowGallery = !empty($_GET['gallery']);
 
 $canPublic  = $pageid !== '' && fm_can_access_page($pageid);
 $canPrivate = $userid !== '' && fm_can_access_private($userid);
@@ -81,6 +87,7 @@ if (empty($_SESSION['fm_csrf'])) {
      data-can-old="<?php echo $canOld ? '1' : '0'; ?>"
      data-type="<?php echo htmlspecialchars($type, ENT_QUOTES); ?>"
      data-embed="<?php echo $embed ? '1' : '0'; ?>"
+     data-allow-gallery="<?php echo $allowGallery ? '1' : '0'; ?>"
      data-csrf="<?php echo htmlspecialchars($_SESSION['fm_csrf'], ENT_QUOTES); ?>"
      data-api="api.php">
 </div>
