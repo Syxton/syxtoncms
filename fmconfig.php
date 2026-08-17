@@ -285,8 +285,8 @@ function fm_share_url(string $gateUrl, string $level, string $area, string $id, 
 
 /* -------------------------------------------------------------------------
  * PERMISSION HOOKS - wired to the app's real auth (roleslib.php / userlib.php).
- * These two functions are the only place access decisions are made; every
- * other file just calls them.
+ * These are the only places access decisions are made; every other file
+ * just calls them.
  * ---------------------------------------------------------------------- */
 
 /** Can the current user manage the given userid's private area? */
@@ -311,6 +311,43 @@ function fm_can_access_page(string $pageid): bool {
         return true;
     }
     return (bool) user_is_able($USER->userid, "editpage", (int) $pageid);
+}
+
+/**
+ * Ability gate for filemanager operations that are restricted to the Page
+ * files area - the "filemanager_view" ability controls whether the Page
+ * files / Old files TABS are even shown at all (see index.php); once
+ * inside Page files, "filemanager_delete" / "filemanager_upload" /
+ * "filemanager_move" / "filemanager_copy" / "filemanager_createfolder" /
+ * "filemanager_edit" separately gate each state-changing action there
+ * (see api.php's per-action checks). "filemanager_migrate" is different:
+ * it gates migrating OUT of Old files unconditionally, regardless of
+ * which area (Page files or My files) is the destination.
+ *
+ * My files (area=priv) deliberately has NO equivalent gate for the other
+ * five abilities - by product decision, any logged-in user gets full
+ * read/write access to their own private area regardless of those;
+ * only fm_can_access_private() ownership check applies there. Callers
+ * should only invoke this for operations that touch Page files (as
+ * source or destination), or for filemanager_migrate - never
+ * unconditionally otherwise.
+ *
+ * Scoped to the page currently being edited - with no page context
+ * there's nothing meaningful to scope an ability to, so this denies
+ * rather than falling back to some site-wide default.
+ */
+function fm_is_able(string $ability, string $pageid): bool {
+    global $USER;
+    if (!is_logged_in()) {
+        return false;
+    }
+    if (is_siteadmin($USER->userid)) {
+        return true;
+    }
+    if ($pageid === '') {
+        return false;
+    }
+    return (bool) user_is_able($USER->userid, $ability, (int) $pageid);
 }
 
 /**

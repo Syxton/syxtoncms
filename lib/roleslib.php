@@ -103,8 +103,8 @@ global $CFG, $ROLES, $ABILITIES;
 
     if (is_siteadmin($userid)) { return true; }
 
+    $roleid = user_role($userid, $pageid);
     if (!is_logged_in($userid)) {
-        $roleid = user_role($userid, $pageid);
         if (role_is_able($roleid, $ability, $pageid, $feature, $featureid)) {
             return true;
         }

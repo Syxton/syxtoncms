@@ -6,8 +6,18 @@
 * current area. All state-changing actions also require the CSRF token
 * that index.php embeds from the session.
 *
-* Actions (POST 'action'): list, mkdir, upload, rename, delete, move, geturl
-* Common params: area=pub|priv, id=<pageid|userid>, path=<relative folder>
+* Actions (POST 'action'): list, mkdir, upload, rename, delete, move, copy, geturl
+* Common params: area=pub|priv, id=<pageid|userid>, path=<relative folder>,
+* pageid=<the page being edited, for ability scoping - see fm_is_able()>
+*
+* Permissions: My files (area=priv) is open to any logged-in owner for
+* every action - no ability check beyond ownership. Page files (area=pub)
+* additionally requires filemanager_view just to browse it at all, plus a
+* matching filemanager_delete/upload/move/copy/createfolder/edit for each
+* state-changing action that touches it (as source OR destination - see
+* the 'move'/'copy' cases below). Migrating out of Old files always
+* requires filemanager_migrate, regardless of destination. See
+* fmconfig.php's fm_is_able().
 *
 * Output buffering: your app runs with $CFG->debug = 3 ("log and print"),
 * which means any stray notice/warning from included libs would otherwise
@@ -51,6 +61,9 @@ $action = $_REQUEST['action'] ?? '';
 $area   = $_REQUEST['area'] ?? '';
 $id     = (string) ($_REQUEST['id'] ?? '');
 $path   = (string) ($_REQUEST['path'] ?? '');
+// Scopes every filemanager_* ability check below (see fm_is_able() in
+// fmconfig.php) - app.js sends this on every request alongside area/id/path.
+$pageid = preg_replace('/[^A-Za-z0-9_\-]/', '', (string) ($_REQUEST['pageid'] ?? ''));
 
 if (!in_array($area, [FM_AREA_PUBLIC, FM_AREA_PRIVATE, FM_AREA_OLD], true) || $id === '') {
     fm_json(['error' => 'Bad request'], 400);
@@ -58,6 +71,15 @@ if (!in_array($area, [FM_AREA_PUBLIC, FM_AREA_PRIVATE, FM_AREA_OLD], true) || $i
 
 // Permission choke point.
 if (!fm_can_access_area($area, $id)) {
+    fm_json(['error' => 'Forbidden'], 403);
+}
+
+// Page files / Old files additionally require filemanager_view - without
+// it those tabs aren't even shown (see index.php), so a request against
+// them here means either a stale session or someone poking the API
+// directly. My files (area=priv) has no such gate - see fm_is_able()'s
+// docblock in fmconfig.php.
+if (($area === FM_AREA_PUBLIC || $area === FM_AREA_OLD) && !fm_is_able('filemanager_view', $pageid)) {
     fm_json(['error' => 'Forbidden'], 403);
 }
 
@@ -69,7 +91,7 @@ if ($area === FM_AREA_OLD && !in_array($action, ['list', 'move'], true)) {
 }
 
 // CSRF check for anything that changes state.
-$stateChanging = in_array($action, ['mkdir', 'upload', 'rename', 'delete', 'move'], true);
+$stateChanging = in_array($action, ['mkdir', 'upload', 'rename', 'delete', 'move', 'copy'], true);
 if ($stateChanging) {
     $csrf = $_REQUEST['csrf'] ?? '';
     if (!isset($_SESSION['fm_csrf']) || !hash_equals($_SESSION['fm_csrf'], (string) $csrf)) {
@@ -141,6 +163,9 @@ switch ($action) {
     }
 
     case 'mkdir': {
+        if ($area === FM_AREA_PUBLIC && !fm_is_able('filemanager_createfolder', $pageid)) {
+            fm_json(['error' => 'Forbidden'], 403);
+        }
         $name = fm_sanitize_name((string) ($_REQUEST['name'] ?? ''));
         if ($name === null) {
             fm_json(['error' => 'Invalid folder name'], 400);
@@ -157,6 +182,9 @@ switch ($action) {
     }
 
     case 'upload': {
+        if ($area === FM_AREA_PUBLIC && !fm_is_able('filemanager_upload', $pageid)) {
+            fm_json(['error' => 'Forbidden'], 403);
+        }
         if (empty($_FILES['file']) || !is_array($_FILES['file']['name'])) {
             fm_json(['error' => 'No files received'], 400);
         }
@@ -206,6 +234,9 @@ switch ($action) {
     }
 
     case 'rename': {
+        if ($area === FM_AREA_PUBLIC && !fm_is_able('filemanager_edit', $pageid)) {
+            fm_json(['error' => 'Forbidden'], 403);
+        }
         $old    = fm_sanitize_name((string) ($_REQUEST['old'] ?? ''));
         $new    = fm_sanitize_name((string) ($_REQUEST['new'] ?? ''));
         $target = (string) ($_REQUEST['target'] ?? ''); // 'file' | 'folder'
@@ -236,6 +267,9 @@ switch ($action) {
     }
 
     case 'delete': {
+        if ($area === FM_AREA_PUBLIC && !fm_is_able('filemanager_delete', $pageid)) {
+            fm_json(['error' => 'Forbidden'], 403);
+        }
         $name   = fm_sanitize_name((string) ($_REQUEST['name'] ?? ''));
         $target = (string) ($_REQUEST['target'] ?? '');
         if ($name === null || !in_array($target, ['file', 'folder'], true)) {
@@ -282,6 +316,21 @@ switch ($action) {
         if (!fm_can_access_area($toArea, $toId)) {
             fm_json(['error' => 'Forbidden (destination)'], 403);
         }
+        if ($toArea === FM_AREA_PUBLIC && !fm_is_able('filemanager_view', $pageid)) {
+            fm_json(['error' => 'Forbidden (destination)'], 403);
+        }
+        // Ability gate: migrating out of Old files ALWAYS requires
+        // filemanager_migrate, regardless of destination. An ordinary move
+        // (source isn't Old files) only requires filemanager_move when
+        // Page files is touched on either end - My files -> My files is
+        // always allowed (see fm_is_able()'s docblock).
+        if ($area === FM_AREA_OLD) {
+            if (!fm_is_able('filemanager_migrate', $pageid)) {
+                fm_json(['error' => 'Forbidden'], 403);
+            }
+        } elseif (($area === FM_AREA_PUBLIC || $toArea === FM_AREA_PUBLIC) && !fm_is_able('filemanager_move', $pageid)) {
+            fm_json(['error' => 'Forbidden'], 403);
+        }
 
         $toRelPath = fm_sanitize_relpath($toPath);
         if ($toRelPath === null) {
@@ -317,6 +366,75 @@ switch ($action) {
         // fall back to a recursive copy + delete-source in that case.
         if (!fm_move_any($srcPath, $destPath)) {
             fm_json(['error' => 'Move failed'], 500);
+        }
+        fm_json(['ok' => true, 'name' => $finalName]);
+        break;
+    }
+
+    case 'copy': {
+        // Copy a file or folder from the current area/id/path into a
+        // DIFFERENT area/id - same shape as 'move' above, except the
+        // source is left in place (no migrate-specific variant, since
+        // Old files is never a valid source here - it's excluded from the
+        // read-only allow-list near the top of this file).
+        $name   = fm_sanitize_name((string) ($_REQUEST['name'] ?? ''));
+        $target = (string) ($_REQUEST['target'] ?? ''); // 'file' | 'folder'
+        $toArea = (string) ($_REQUEST['toArea'] ?? '');
+        $toId   = (string) ($_REQUEST['toId'] ?? '');
+        $toPath = (string) ($_REQUEST['toPath'] ?? '');
+
+        if ($name === null || !in_array($target, ['file', 'folder'], true)
+            || !in_array($toArea, [FM_AREA_PUBLIC, FM_AREA_PRIVATE], true) || $toId === '') {
+            fm_json(['error' => 'Invalid request'], 400);
+        }
+
+        if (!fm_can_access_area($toArea, $toId)) {
+            fm_json(['error' => 'Forbidden (destination)'], 403);
+        }
+        if ($toArea === FM_AREA_PUBLIC && !fm_is_able('filemanager_view', $pageid)) {
+            fm_json(['error' => 'Forbidden (destination)'], 403);
+        }
+        // Ability gate: only applies when Page files is touched, as
+        // EITHER end of the copy - My files -> My files is always allowed
+        // (see fm_is_able()'s docblock).
+        if (($area === FM_AREA_PUBLIC || $toArea === FM_AREA_PUBLIC) && !fm_is_able('filemanager_copy', $pageid)) {
+            fm_json(['error' => 'Forbidden'], 403);
+        }
+
+        $toRelPath = fm_sanitize_relpath($toPath);
+        if ($toRelPath === null) {
+            fm_json(['error' => 'Invalid destination path'], 400);
+        }
+        $toDir = fm_resolve_path($toArea, $toId, $toRelPath);
+        if ($toDir === null || !is_dir($toDir)) {
+            fm_json(['error' => 'Destination folder not found'], 404);
+        }
+
+        $srcPath = $dir . DIRECTORY_SEPARATOR . $name;
+        if (!file_exists($srcPath)) {
+            fm_json(['error' => 'Not found'], 404);
+        }
+        if ($area === $toArea && $id === $toId && $relPath === $toRelPath) {
+            fm_json(['error' => 'Source and destination are the same'], 400);
+        }
+
+        // Avoid clobbering an existing item at the destination.
+        $finalName = $name;
+        $n = 1;
+        $ext = $target === 'file' ? '.' . pathinfo($name, PATHINFO_EXTENSION) : '';
+        $base = $target === 'file' ? pathinfo($name, PATHINFO_FILENAME) : $name;
+        while (file_exists($toDir . DIRECTORY_SEPARATOR . $finalName)) {
+            $finalName = $base . '(' . $n . ')' . $ext;
+            $n++;
+        }
+        $destPath = $toDir . DIRECTORY_SEPARATOR . $finalName;
+
+        $ok = is_dir($srcPath) ? fm_copy_dir($srcPath, $destPath) : @copy($srcPath, $destPath);
+        if (!$ok) {
+            fm_json(['error' => 'Copy failed'], 500);
+        }
+        if (!is_dir($srcPath)) {
+            @chmod($destPath, 0640);
         }
         fm_json(['ok' => true, 'name' => $finalName]);
         break;

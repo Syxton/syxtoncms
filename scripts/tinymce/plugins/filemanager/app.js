@@ -9,6 +9,22 @@
   var CAN_PUBLIC = root.dataset.canPublic === '1';
   var CAN_PRIVATE = root.dataset.canPrivate === '1';
   var CAN_OLD = root.dataset.canOld === '1';
+  // Per-action abilities - ONLY meaningful for Page files (area='pub').
+  // My files (area='priv') has no gate at all: any logged-in user gets
+  // full read/write access to their own private area, by product
+  // decision - see fm_is_able()'s docblock in fmconfig.php. Use the
+  // pubAreaOK()/moveAllowed()/copyAllowed()/migrateAllowed() helpers below
+  // rather than reading these directly, so that "priv is always allowed"
+  // rule stays in one place.
+  var PERM = {
+    delete: root.dataset.canDelete === '1',
+    upload: root.dataset.canUpload === '1',
+    move: root.dataset.canMove === '1',
+    copy: root.dataset.canCopy === '1',
+    createfolder: root.dataset.canCreatefolder === '1',
+    migrate: root.dataset.canMigrate === '1',
+    edit: root.dataset.canEdit === '1',
+  };
   var TYPE = root.dataset.type; // '', 'image', 'media', 'file'
   // Only true when opened by the HTML feature's editor (see plugin.js /
   // tmp/pagelib.template) - the Gallery/Index folder-link choice only
@@ -71,6 +87,29 @@
 
   var AREA_LABELS = { priv: 'My files', pub: 'Page files', old: 'Old files' };
 
+  // An action that only ever touches ONE area (delete / upload / create
+  // folder within the currently browsed folder) is gated only when that
+  // area is Page files - My files is always allowed.
+  function pubAreaOK(perm) { return state.area !== 'pub' || perm; }
+  // Move/copy touch TWO areas (source + destination) - gated as soon as
+  // Page files is on either end, per fm_is_able()'s docblock. Migrating
+  // out of Old files is different: it always requires filemanager_migrate,
+  // regardless of which area you're migrating INTO.
+  function moveAllowed(toArea) { return !((state.area === 'pub' || toArea === 'pub') && !PERM.move); }
+  function copyAllowed(toArea) { return !((state.area === 'pub' || toArea === 'pub') && !PERM.copy); }
+  function migrateAllowed() { return PERM.migrate; }
+
+  // Which areas are actually available AND permitted as a move/copy/
+  // migrate destination right now - drives both whether to show the
+  // relevant button at all, and which tabs the destination picker offers.
+  function destinationAreasFor(kind) {
+    var allowedFn = kind === 'move' ? moveAllowed : (kind === 'copy' ? copyAllowed : migrateAllowed);
+    var areas = [];
+    if (CAN_PRIVATE && allowedFn('priv')) areas.push('priv');
+    if (CAN_PUBLIC && allowedFn('pub')) areas.push('pub');
+    return areas;
+  }
+
   function loadPref(key, fallback) {
     try {
       var v = window.localStorage.getItem('fm_' + key);
@@ -90,11 +129,21 @@
     selected: null,   // {name, ext, isFolder, previewUrl, mtime, size}
     level: null,      // chosen access level for the current selection (pub/priv only)
     mode: 'index',    // chosen link mode for a selected folder: 'index' | 'gallery'
-    view: loadPref('view', 'grid'),       // 'grid' | 'list'
-    sortBy: loadPref('sortBy', 'name'),   // 'name' | 'date' | 'size'
-    sortDir: loadPref('sortDir', 'asc'),  // 'asc' | 'desc'
+    view: loadPref('view', 'list'),       // 'grid' | 'list'
+    sortBy: loadPref('sortBy', 'date'),   // 'name' | 'date' | 'size'
+    sortDir: loadPref('sortDir', 'desc'), // 'asc' | 'desc'
     query: '',                            // current search filter (matches file/folder name)
   };
+
+  // Multi-select for bulk move/copy/delete - keyed by "isFolder:name"
+  // within the CURRENT folder only (cleared on navigation), independent
+  // of state.selected (which drives the single-item link/rename/move
+  // panel and is set by clicking the item itself rather than its
+  // checkbox).
+  var multiSelected = {}; // key -> {name, isFolder}
+  function multiKey(name, isFolder) { return (isFolder ? 'd:' : 'f:') + name; }
+  function multiCount() { return Object.keys(multiSelected).length; }
+  function clearMultiSelect() { multiSelected = {}; }
 
   // Last successful 'list' response for the current area/path, cached so
   // typing in the search box can re-filter instantly without re-hitting
@@ -121,9 +170,9 @@
     return e;
   }
 
-  function api(action, params) {
+  function apiFor(area, id, path, action, params) {
     var body = new URLSearchParams(Object.assign({
-      action: action, area: state.area, id: state.id, path: state.path, csrf: CSRF
+      action: action, area: area, id: id, path: path, pageid: PAGEID, csrf: CSRF
     }, params || {}));
     return fetch(API, { method: 'POST', body: body, credentials: 'same-origin' })
       .then(function (r) {
@@ -134,6 +183,10 @@
           return { ok: r.ok, body: parsed };
         });
       });
+  }
+
+  function api(action, params) {
+    return apiFor(state.area, state.id, state.path, action, params);
   }
 
   function reportError(err) {
@@ -191,7 +244,7 @@
     root.appendChild(body);
     ['dragover', 'dragleave', 'drop'].forEach(function (evt) {
       body.addEventListener(evt, function (e) {
-        if (state.area === 'old') return; // read-only area, no uploads
+        if (state.area === 'old' || !pubAreaOK(PERM.upload)) return; // read-only, or no upload permission
         if (dragging) return; // internal file/folder move, not an OS file drag - handled by item/crumb drop targets
         e.preventDefault();
         body.classList.toggle('dragover', evt === 'dragover');
@@ -224,14 +277,16 @@
 
     var newFolderBtn = el('button', { class: 'fm-btn secondary', text: 'New folder' });
     newFolderBtn.addEventListener('click', onNewFolder);
-    toolbar.appendChild(newFolderBtn);
+    if (pubAreaOK(PERM.createfolder)) toolbar.appendChild(newFolderBtn);
 
     var uploadInput = el('input', { type: 'file', multiple: 'multiple', style: 'display:none' });
     uploadInput.addEventListener('change', function () { doUpload(uploadInput.files); uploadInput.value = ''; });
     var uploadBtn = el('button', { class: 'fm-btn', text: 'Upload' });
     uploadBtn.addEventListener('click', function () { uploadInput.click(); });
-    toolbar.appendChild(uploadBtn);
-    toolbar.appendChild(uploadInput);
+    if (pubAreaOK(PERM.upload)) {
+      toolbar.appendChild(uploadBtn);
+      toolbar.appendChild(uploadInput);
+    }
   }
 
   /**
@@ -344,6 +399,7 @@
     state.path = '';
     state.selected = null;
     state.query = '';
+    clearMultiSelect();
     updateTabHighlight();
     renderToolbar();
     load();
@@ -354,7 +410,7 @@
     if (!crumb) return;
     crumb.innerHTML = '';
     var rootBtn = el('button', { text: AREA_LABELS[state.area] });
-    rootBtn.addEventListener('click', function () { state.path = ''; state.selected = null; state.query = ''; renderToolbar(); load(); });
+    rootBtn.addEventListener('click', function () { state.path = ''; state.selected = null; state.query = ''; clearMultiSelect(); renderToolbar(); load(); });
     crumb.appendChild(rootBtn);
     makeDropTarget(rootBtn, '');
     if (state.path) {
@@ -366,6 +422,7 @@
           state.path = segPath;
           state.selected = null;
           state.query = '';
+          clearMultiSelect();
           renderToolbar();
           load();
         });
@@ -486,7 +543,7 @@
 
   function onOpenFor(f) {
     return f.isFolder
-      ? function () { state.path = (state.path ? state.path + '/' : '') + f.name; state.selected = null; state.query = ''; renderToolbar(); load(); }
+      ? function () { state.path = (state.path ? state.path + '/' : '') + f.name; state.selected = null; state.query = ''; clearMultiSelect(); renderToolbar(); load(); }
       : function (itemEl) { selectItem({ name: f.name, isFolder: false, ext: f.ext, previewUrl: f.previewUrl }, itemEl); };
   }
   function onSelectFor(f) {
@@ -504,7 +561,25 @@
 
   function renderList(folders, files) {
     var wrap = el('div', { class: 'fm-list' });
+    var all = folders.concat(files);
     var header = el('div', { class: 'fm-list-row fm-list-header' });
+
+    var checkHeaderCell = el('div', { class: 'fm-list-cell fm-list-check' });
+    var selectAll = el('input', { type: 'checkbox', class: 'fm-multi-check' });
+    selectAll.checked = all.length > 0 && all.every(isMultiSelected);
+    selectAll.addEventListener('change', function () {
+      if (selectAll.checked) {
+        all.forEach(function (f) { multiSelected[multiKey(f.name, f.isFolder)] = { name: f.name, isFolder: f.isFolder }; });
+        state.selected = null;
+      } else {
+        clearMultiSelect();
+      }
+      renderBody();
+      renderFooter();
+    });
+    checkHeaderCell.appendChild(selectAll);
+    header.appendChild(checkHeaderCell);
+
     [['name', 'Name'], ['date', 'Date modified'], ['size', 'Size']].forEach(function (pair) {
       var th = el('button', { class: 'fm-list-th' + (state.sortBy === pair[0] ? ' active' : '') });
       th.appendChild(document.createTextNode(pair[1] + ' '));
@@ -518,7 +593,7 @@
     });
     header.appendChild(el('span', { class: 'fm-list-th fm-list-th-actions' }));
     wrap.appendChild(header);
-    folders.concat(files).forEach(function (f) {
+    all.forEach(function (f) {
       wrap.appendChild(makeListRow(Object.assign({}, f, { onOpen: onOpenFor(f), onSelect: onSelectFor(f) })));
     });
     return wrap;
@@ -530,6 +605,22 @@
     state.selected = f;
     state.level = state.area === 'old' ? null : defaultLevel();
     state.mode = 'index';
+    if (multiCount()) { clearMultiSelect(); renderBody(); }
+    renderFooter();
+  }
+
+  function isMultiSelected(f) {
+    return !!multiSelected[multiKey(f.name, f.isFolder)];
+  }
+
+  function toggleMultiSelect(f) {
+    var key = multiKey(f.name, f.isFolder);
+    if (multiSelected[key]) delete multiSelected[key];
+    else multiSelected[key] = { name: f.name, isFolder: f.isFolder };
+    // A checkbox pick supersedes the single-item link/rename/move panel -
+    // keep exactly one selection mode active at a time.
+    state.selected = null;
+    renderBody();
     renderFooter();
   }
 
@@ -537,6 +628,12 @@
     var footer = document.getElementById('fm-footer');
     if (!footer) return;
     footer.innerHTML = '';
+
+    if (multiCount() > 0) {
+      footer.appendChild(buildBulkBar());
+      return;
+    }
+
     var sel = state.selected;
 
     if (sel) {
@@ -577,7 +674,7 @@
         });
         selRow.appendChild(copyBtn);
 
-        if (CAN_PUBLIC && CAN_PRIVATE) {
+        if (destinationAreasFor('move').indexOf(state.area === 'priv' ? 'pub' : 'priv') !== -1) {
           var moveBtn = el('button', { class: 'fm-btn secondary', text: 'Move to ' + (state.area === 'priv' ? 'Page files' : 'My files') });
           moveBtn.addEventListener('click', function () { onMove(sel); });
           selRow.appendChild(moveBtn);
@@ -618,6 +715,192 @@
     footer.appendChild(actions);
   }
 
+  /**
+   * Bulk action bar shown instead of the single-item panel whenever one or
+   * more items are checkbox-selected (see multiSelected). Move/Copy open
+   * the destination picker (any accessible folder, in any allowed area);
+   * Delete and Migrate act directly, mirroring their single-item
+   * counterparts (onDelete / onMigrate).
+   */
+  function buildBulkBar() {
+    var bar = el('div', { class: 'fm-selection' });
+    var items = Object.keys(multiSelected).map(function (k) { return multiSelected[k]; });
+    bar.appendChild(el('div', { class: 'fm-selection-name', text: items.length + ' selected' }));
+
+    var clearBtn = el('button', { class: 'fm-btn secondary', text: 'Clear' });
+    clearBtn.addEventListener('click', function () { clearMultiSelect(); renderBody(); renderFooter(); });
+    bar.appendChild(clearBtn);
+
+    if (state.area === 'old') {
+      if (destinationAreasFor('migrate').length) {
+        var migrateBtn = el('button', { class: 'fm-btn secondary', text: 'Migrate to\u2026' });
+        migrateBtn.addEventListener('click', function () { openDestinationPicker('migrate', items); });
+        bar.appendChild(migrateBtn);
+      }
+    } else {
+      if (destinationAreasFor('move').length) {
+        var moveBtn = el('button', { class: 'fm-btn secondary', text: 'Move to\u2026' });
+        moveBtn.addEventListener('click', function () { openDestinationPicker('move', items); });
+        bar.appendChild(moveBtn);
+      }
+      if (destinationAreasFor('copy').length) {
+        var copyBtn = el('button', { class: 'fm-btn secondary', text: 'Copy to\u2026' });
+        copyBtn.addEventListener('click', function () { openDestinationPicker('copy', items); });
+        bar.appendChild(copyBtn);
+      }
+      if (pubAreaOK(PERM.delete)) {
+        var delBtn = el('button', { class: 'fm-btn danger', text: 'Delete selected' });
+        delBtn.addEventListener('click', function () { onBulkDelete(items); });
+        bar.appendChild(delBtn);
+      }
+    }
+    return bar;
+  }
+
+  function onBulkDelete(items) {
+    if (!pubAreaOK(PERM.delete)) return;
+    var names = items.map(function (it) { return it.name; }).join(', ');
+    if (!confirm('Delete ' + items.length + ' item' + (items.length > 1 ? 's' : '') + '?\n\n' + names
+      + '\n\nThis deletes everything inside any selected folders.')) return;
+    Promise.all(items.map(function (it) {
+      return api('delete', { name: it.name, target: it.isFolder ? 'folder' : 'file' });
+    })).then(function (results) {
+      var failed = results.filter(function (r) { return !r.ok; });
+      clearMultiSelect();
+      state.selected = null;
+      if (failed.length) {
+        reportError(new Error(failed.length + ' item(s) could not be deleted.'));
+      }
+      load();
+    }).catch(reportError);
+  }
+
+  /**
+   * Move/Copy/Migrate `items` (from the currently browsed folder) to a
+   * folder the user navigates to and picks, in any area destinationAreasFor
+   * allows for `kind`. 'migrate' is just 'move' server-side (Old files has
+   * no separate action) - kept as its own `kind` here only so the picker
+   * offers the right destination areas and labels.
+   */
+  function openDestinationPicker(kind, items) {
+    var apiAction = kind === 'migrate' ? 'move' : kind;
+    var areas = destinationAreasFor(kind);
+    if (!items.length || !areas.length) return;
+
+    var pick = { area: areas[0], id: areas[0] === 'pub' ? PAGEID : USERID, path: '' };
+
+    var overlay = el('div', { class: 'fm-modal-overlay' });
+    var modal = el('div', { class: 'fm-modal' });
+    var verb = kind === 'copy' ? 'Copy' : (kind === 'migrate' ? 'Migrate' : 'Move');
+    modal.appendChild(el('div', {
+      class: 'fm-modal-title',
+      text: verb + ' ' + items.length + ' item' + (items.length > 1 ? 's' : '') + ' to\u2026'
+    }));
+
+    var tabsRow = el('div', { class: 'fm-modal-tabs' });
+    var crumbRow = el('div', { class: 'fm-modal-crumb' });
+    var listEl = el('div', { class: 'fm-modal-list' });
+    modal.appendChild(tabsRow);
+    modal.appendChild(crumbRow);
+    modal.appendChild(listEl);
+
+    var actionsRow = el('div', { class: 'fm-modal-actions' });
+    var cancelBtn = el('button', { class: 'fm-btn secondary', text: 'Cancel' });
+    cancelBtn.addEventListener('click', close);
+    var confirmBtn = el('button', { class: 'fm-btn', text: verb + ' here' });
+    confirmBtn.addEventListener('click', doConfirm);
+    actionsRow.appendChild(cancelBtn);
+    actionsRow.appendChild(confirmBtn);
+    modal.appendChild(actionsRow);
+    overlay.appendChild(modal);
+
+    function close() { overlay.remove(); }
+
+    function renderTabs() {
+      tabsRow.innerHTML = '';
+      if (areas.length < 2) return; // nothing to switch between
+      areas.forEach(function (a) {
+        var btn = el('button', { class: 'fm-btn secondary' + (a === pick.area ? ' active' : ''), text: AREA_LABELS[a] });
+        btn.addEventListener('click', function () {
+          pick.area = a; pick.id = a === 'pub' ? PAGEID : USERID; pick.path = '';
+          renderTabs(); refresh();
+        });
+        tabsRow.appendChild(btn);
+      });
+    }
+
+    function renderCrumb() {
+      crumbRow.innerHTML = '';
+      var rootBtn = el('button', { text: AREA_LABELS[pick.area] });
+      rootBtn.addEventListener('click', function () { pick.path = ''; refresh(); });
+      crumbRow.appendChild(rootBtn);
+      if (pick.path) {
+        pick.path.split('/').forEach(function (seg, idx, arr) {
+          crumbRow.appendChild(document.createTextNode(' / '));
+          var segPath = arr.slice(0, idx + 1).join('/');
+          var b = el('button', { text: seg });
+          b.addEventListener('click', function () { pick.path = segPath; refresh(); });
+          crumbRow.appendChild(b);
+        });
+      }
+    }
+
+    function refresh() {
+      renderCrumb();
+      listEl.innerHTML = '';
+      listEl.appendChild(el('div', { class: 'fm-empty', text: 'Loading\u2026' }));
+      apiFor(pick.area, pick.id, pick.path, 'list', {}).then(function (res) {
+        listEl.innerHTML = '';
+        if (!res.ok) {
+          listEl.appendChild(el('div', { class: 'fm-empty', text: res.body.error || 'Could not load this folder.' }));
+          return;
+        }
+        var folders = res.body.folders || [];
+        if (!folders.length) {
+          listEl.appendChild(el('div', { class: 'fm-empty', text: 'No subfolders here.' }));
+          return;
+        }
+        folders.forEach(function (f) {
+          var row = el('div', { class: 'fm-modal-folder' });
+          row.appendChild(el('span', { class: 'fm-list-icon', text: '\uD83D\uDCC1' }));
+          row.appendChild(el('span', { text: f.name }));
+          row.addEventListener('click', function () {
+            pick.path = (pick.path ? pick.path + '/' : '') + f.name;
+            refresh();
+          });
+          listEl.appendChild(row);
+        });
+      }).catch(function (err) {
+        listEl.innerHTML = '';
+        listEl.appendChild(el('div', { class: 'fm-empty', text: err.message || 'Could not load this folder.' }));
+      });
+    }
+
+    function doConfirm() {
+      confirmBtn.disabled = true;
+      var toArea = pick.area, toId = pick.id, toPath = pick.path;
+      Promise.all(items.map(function (it) {
+        return api(apiAction, { name: it.name, target: it.isFolder ? 'folder' : 'file', toArea: toArea, toId: toId, toPath: toPath });
+      })).then(function (results) {
+        var failed = results.filter(function (r) { return !r.ok; });
+        close();
+        clearMultiSelect();
+        state.selected = null;
+        if (failed.length) {
+          reportError(new Error(failed.length + ' item(s) could not be ' + (kind === 'copy' ? 'copied' : 'moved') + '.'));
+        }
+        load();
+      }).catch(function (err) {
+        confirmBtn.disabled = false;
+        reportError(err);
+      });
+    }
+
+    renderTabs();
+    refresh();
+    root.appendChild(overlay);
+  }
+
   function copyToClipboard(url, btn) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(url).then(function () {
@@ -652,32 +935,53 @@
   function buildItemActions(opts, container) {
     var actions = el('div', { class: 'fm-item-actions' });
     if (opts.readOnly) {
-      var migrateBtn = el('button', { text: '\u21ea', title: 'Migrate to My files / Page files' });
-      migrateBtn.addEventListener('click', function (e) { e.stopPropagation(); onMigrate(opts); });
-      actions.appendChild(migrateBtn);
+      if (destinationAreasFor('migrate').length) {
+        var migrateBtn = el('button', { text: '\u21ea', title: 'Migrate to My files / Page files' });
+        migrateBtn.addEventListener('click', function (e) { e.stopPropagation(); onMigrate(opts); });
+        actions.appendChild(migrateBtn);
+      }
     } else {
       if (opts.isFolder && opts.onSelect) {
         var linkBtn = el('button', { text: '\uD83D\uDD17', title: 'Get a link to this folder' });
         linkBtn.addEventListener('click', function (e) { e.stopPropagation(); opts.onSelect(container); });
         actions.appendChild(linkBtn);
       }
-      var renameBtn = el('button', { text: '\u270e', title: 'Rename' });
-      renameBtn.addEventListener('click', function (e) { e.stopPropagation(); onRename(opts); });
-      var deleteBtn = el('button', { text: '\u2715', title: 'Delete' });
-      deleteBtn.addEventListener('click', function (e) { e.stopPropagation(); onDelete(opts); });
-      actions.appendChild(renameBtn);
-      actions.appendChild(deleteBtn);
+      if (pubAreaOK(PERM.edit)) {
+        var renameBtn = el('button', { text: '\u270e', title: 'Rename' });
+        renameBtn.addEventListener('click', function (e) { e.stopPropagation(); onRename(opts); });
+        actions.appendChild(renameBtn);
+      }
+      if (pubAreaOK(PERM.delete)) {
+        var deleteBtn = el('button', { text: '\u2715', title: 'Delete' });
+        deleteBtn.addEventListener('click', function (e) { e.stopPropagation(); onDelete(opts); });
+        actions.appendChild(deleteBtn);
+      }
     }
     return actions;
   }
 
   /**
-   * Makes `item` draggable (as the source of a move) when not read-only,
-   * and, if it's a folder, wires it up as a drop target for other items
-   * being dragged onto it (moves the dragged item into this folder).
+   * Checkbox for bulk move/copy/delete/migrate (see multiSelected). Shown
+   * on every item regardless of readOnly - Old files items can still be
+   * bulk-migrated even though nothing else about them is editable.
+   */
+  function buildMultiCheckbox(opts) {
+    var box = el('input', { type: 'checkbox', class: 'fm-multi-check' });
+    box.checked = isMultiSelected(opts);
+    box.addEventListener('click', function (e) { e.stopPropagation(); });
+    box.addEventListener('change', function () { toggleMultiSelect(opts); });
+    return box;
+  }
+
+  /**
+   * Makes `item` draggable (as the source of a move) when not read-only
+   * AND the user actually holds the move permission for this context (see
+   * moveAllowed()), and, if it's a folder, wires it up as a drop target
+   * for other items being dragged onto it (moves the dragged item into
+   * this folder).
    */
   function wireDragAndDrop(item, opts) {
-    if (opts.readOnly) return;
+    if (opts.readOnly || !moveAllowed(state.area)) return;
     item.setAttribute('draggable', 'true');
     item.addEventListener('dragstart', function (e) {
       dragging = { name: opts.name, isFolder: !!opts.isFolder };
@@ -696,7 +1000,8 @@
   }
 
   function makeItem(opts) {
-    var item = el('div', { class: 'fm-item' });
+    var item = el('div', { class: 'fm-item' + (isMultiSelected(opts) ? ' multi-selected' : '') });
+    item.appendChild(buildMultiCheckbox(opts));
     var thumb = el('div', { class: 'fm-thumb' });
     if (!opts.isFolder && IMAGE_EXT.indexOf(opts.ext) !== -1) {
       thumb.appendChild(el('img', { src: opts.previewUrl, alt: opts.name }));
@@ -728,7 +1033,11 @@
   }
 
   function makeListRow(opts) {
-    var row = el('div', { class: 'fm-list-row fm-item' });
+    var row = el('div', { class: 'fm-list-row fm-item' + (isMultiSelected(opts) ? ' multi-selected' : '') });
+
+    var checkCell = el('div', { class: 'fm-list-cell fm-list-check' });
+    checkCell.appendChild(buildMultiCheckbox(opts));
+    row.appendChild(checkCell);
 
     var nameCell = el('div', { class: 'fm-list-cell fm-list-name' });
     if (!opts.isFolder && IMAGE_EXT.indexOf(opts.ext) !== -1) {
@@ -773,6 +1082,7 @@
   }
 
   function onNewFolder() {
+    if (!pubAreaOK(PERM.createfolder)) return;
     var name = prompt('New folder name:');
     if (!name) return;
     api('mkdir', { name: name }).then(function (res) {
@@ -782,6 +1092,7 @@
   }
 
   function onRename(opts) {
+    if (!pubAreaOK(PERM.edit)) return;
     var newName = prompt('Rename to:', opts.name);
     if (!newName || newName === opts.name) return;
     api('rename', { old: opts.name, new: newName, target: opts.isFolder ? 'folder' : 'file' }).then(function (res) {
@@ -791,6 +1102,7 @@
   }
 
   function onDelete(opts) {
+    if (!pubAreaOK(PERM.delete)) return;
     if (!confirm('Delete "' + opts.name + '"?' + (opts.isFolder ? ' This deletes everything inside it.' : ''))) return;
     api('delete', { name: opts.name, target: opts.isFolder ? 'folder' : 'file' }).then(function (res) {
       if (!res.ok) reportError(new Error(res.body.error || 'Delete failed'));
@@ -800,6 +1112,7 @@
 
   function onMove(opts) {
     var toArea = state.area === 'priv' ? 'pub' : 'priv';
+    if (!moveAllowed(toArea)) return;
     var toId = toArea === 'pub' ? PAGEID : USERID;
     var label = toArea === 'priv' ? 'My files' : 'Page files';
     if (!confirm('Move "' + opts.name + '" to ' + label + '?')) return;
@@ -811,9 +1124,12 @@
 
   function onMigrate(opts) {
     // Migrating out of the read-only "Old files" area into a real,
-    // managed area. If both destinations are available, ask which.
+    // managed area now always requires filemanager_migrate, regardless of
+    // which destination is chosen (see migrateAllowed()'s docblock).
+    if (!migrateAllowed()) return;
+    var offerPublic = CAN_PUBLIC;
     var toArea = 'priv';
-    if (CAN_PUBLIC) {
+    if (offerPublic) {
       toArea = confirm('Move "' + opts.name + '" to Page files?\n\nOK = Page files, Cancel = My files') ? 'pub' : 'priv';
     } else if (!confirm('Move "' + opts.name + '" to My files?')) {
       return;
@@ -826,12 +1142,13 @@
   }
 
   function doUpload(fileList) {
-    if (state.area === 'old') return; // read-only area
+    if (state.area === 'old' || !pubAreaOK(PERM.upload)) return;
     var fd = new FormData();
     fd.append('action', 'upload');
     fd.append('area', state.area);
     fd.append('id', state.id);
     fd.append('path', state.path);
+    fd.append('pageid', PAGEID);
     fd.append('csrf', CSRF);
     Array.prototype.forEach.call(fileList, function (file) { fd.append('file[]', file); });
     fetch(API, { method: 'POST', body: fd, credentials: 'same-origin' })

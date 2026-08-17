@@ -41,6 +41,10 @@ body {
 }
 .fm-item:hover { border-color: #2271b1; }
 .fm-item.selected { border-color: #2271b1; background: #f0f6fc; }
+.fm-item.multi-selected { border-color: #2271b1; background: #eaf2fb; }
+.fm-grid .fm-item .fm-multi-check {
+  position: absolute; top: 6px; left: 6px; z-index: 1; width: 16px; height: 16px; cursor: pointer;
+}
 .fm-thumb {
   height: 64px; display: flex; align-items: center; justify-content: center; margin-bottom: 6px;
   font-size: 28px; background: #f6f7f7; border-radius: 3px; overflow: hidden;
@@ -91,7 +95,7 @@ body {
 /* List (details) view */
 .fm-list { display: flex; flex-direction: column; }
 .fm-list-row {
-  display: grid; grid-template-columns: 1fr 140px 90px 80px;
+  display: grid; grid-template-columns: 24px 1fr 140px 90px 80px;
   align-items: center; gap: 10px; padding: 6px 8px; border-bottom: 1px solid #f0f0f1;
 }
 .fm-list-header {
@@ -107,6 +111,9 @@ body {
 .fm-list-row.fm-item { cursor: pointer; border-radius: 0; text-align: left; position: static; }
 .fm-list-row.fm-item:hover { background: #f6f7f7; border-color: transparent; }
 .fm-list-row.fm-item.selected { background: #f0f6fc; }
+.fm-list-row.fm-item.multi-selected { background: #eaf2fb; }
+.fm-list-check { display: flex; align-items: center; justify-content: center; }
+.fm-list-check .fm-multi-check { width: 16px; height: 16px; cursor: pointer; }
 .fm-list-cell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fm-list-name { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .fm-list-name .fm-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -124,7 +131,7 @@ body {
 .fm-list-actions button:hover { background: #2271b1; color: #fff; }
 
 @media (max-width: 480px) {
-  .fm-list-row { grid-template-columns: 1fr 60px; }
+  .fm-list-row { grid-template-columns: 24px 1fr 60px; }
   .fm-list-date { display: none; }
 }
 
@@ -140,3 +147,30 @@ body {
 .fm-footer-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .fm-empty { color: #8c8f94; padding: 30px; text-align: center; }
 .fm-dropzone.dragover { outline: 2px dashed #2271b1; outline-offset: -6px; }
+
+/* Destination picker modal (bulk Move to... / Copy to... / Migrate to...) */
+.fm-modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.4);
+  display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px;
+}
+.fm-modal {
+  background: #fff; border-radius: 6px; width: 420px; max-width: 100%; max-height: 80vh;
+  display: flex; flex-direction: column; box-shadow: 0 8px 30px rgba(0,0,0,.25);
+}
+.fm-modal-title { font-weight: 600; padding: 14px 16px 8px; }
+.fm-modal-tabs { display: flex; gap: 4px; padding: 0 16px 8px; }
+.fm-modal-crumb {
+  padding: 6px 16px; color: #50575e; font-size: 12px; border-top: 1px solid #f0f0f1;
+  border-bottom: 1px solid #f0f0f1; overflow-wrap: anywhere;
+}
+.fm-modal-crumb button {
+  background: none; border: none; color: #2271b1; cursor: pointer; padding: 2px 4px; font: inherit;
+}
+.fm-modal-list { flex: 1; overflow: auto; padding: 6px; min-height: 160px; }
+.fm-modal-folder {
+  display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 4px; cursor: pointer;
+}
+.fm-modal-folder:hover { background: #f0f6fc; }
+.fm-modal-actions {
+  display: flex; justify-content: flex-end; gap: 8px; padding: 10px 16px; border-top: 1px solid #dcdcde;
+}

@@ -55,12 +55,31 @@ $embed = !empty($_GET['embed']);
 // photogallery filter (see filter_photogallery() in htmllib.php).
 $allowGallery = !empty($_GET['gallery']);
 
-$canPublic  = $pageid !== '' && fm_can_access_page($pageid);
+$canView = fm_is_able('filemanager_view', $pageid);
+
+// My files: always available to any logged-in user who owns it - no
+// ability gate, only ownership (fm_can_access_private). Page files / Old
+// files: additionally require filemanager_view, or the tab isn't shown at
+// all - see fm_is_able()'s docblock in fmconfig.php.
+$canPublic  = $pageid !== '' && $canView && fm_can_access_page($pageid);
 $canPrivate = $userid !== '' && fm_can_access_private($userid);
 // Same ownership permission as private - just a different (legacy)
-// physical location. Shown whenever My files is, even if that user
-// happens to have no old files yet (browsing then just shows "empty").
-$canOld = $canPrivate;
+// physical location. Shown whenever My files is (and filemanager_view is
+// held), even if that user happens to have no old files yet (browsing
+// then just shows "empty").
+$canOld = $canPrivate && $canView;
+
+// Per-action abilities, all scoped to Page files only (see fm_is_able()).
+// api.php is the actual enforcement point; these just drive which buttons
+// app.js shows. Computed regardless of $canPublic - harmless either way,
+// since area=pub is unreachable in the UI without it.
+$canDeleteAbility       = fm_is_able('filemanager_delete', $pageid);
+$canUploadAbility       = fm_is_able('filemanager_upload', $pageid);
+$canMoveAbility         = fm_is_able('filemanager_move', $pageid);
+$canCopyAbility         = fm_is_able('filemanager_copy', $pageid);
+$canCreateFolderAbility = fm_is_able('filemanager_createfolder', $pageid);
+$canMigrateAbility      = fm_is_able('filemanager_migrate', $pageid);
+$canEditAbility         = fm_is_able('filemanager_edit', $pageid);
 
 if (!$canPublic && !$canPrivate) {
     http_response_code(403);
@@ -85,6 +104,13 @@ if (empty($_SESSION['fm_csrf'])) {
      data-can-public="<?php echo $canPublic ? '1' : '0'; ?>"
      data-can-private="<?php echo $canPrivate ? '1' : '0'; ?>"
      data-can-old="<?php echo $canOld ? '1' : '0'; ?>"
+     data-can-delete="<?php echo $canDeleteAbility ? '1' : '0'; ?>"
+     data-can-upload="<?php echo $canUploadAbility ? '1' : '0'; ?>"
+     data-can-move="<?php echo $canMoveAbility ? '1' : '0'; ?>"
+     data-can-copy="<?php echo $canCopyAbility ? '1' : '0'; ?>"
+     data-can-createfolder="<?php echo $canCreateFolderAbility ? '1' : '0'; ?>"
+     data-can-migrate="<?php echo $canMigrateAbility ? '1' : '0'; ?>"
+     data-can-edit="<?php echo $canEditAbility ? '1' : '0'; ?>"
      data-type="<?php echo htmlspecialchars($type, ENT_QUOTES); ?>"
      data-embed="<?php echo $embed ? '1' : '0'; ?>"
      data-allow-gallery="<?php echo $allowGallery ? '1' : '0'; ?>"
