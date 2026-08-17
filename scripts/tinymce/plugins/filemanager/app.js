@@ -9,13 +9,10 @@
   var CAN_PUBLIC = root.dataset.canPublic === '1';
   var CAN_PRIVATE = root.dataset.canPrivate === '1';
   var CAN_OLD = root.dataset.canOld === '1';
-  // Per-action abilities - ONLY meaningful for Page files (area='pub').
-  // My files (area='priv') has no gate at all: any logged-in user gets
-  // full read/write access to their own private area, by product
-  // decision - see fm_is_able()'s docblock in fmconfig.php. Use the
-  // pubAreaOK()/moveAllowed()/copyAllowed()/migrateAllowed() helpers below
-  // rather than reading these directly, so that "priv is always allowed"
-  // rule stays in one place.
+  // Per-action abilities - only meaningful for Page files (area='pub').
+  // My files has no gate at all. Use the pubAreaOK()/moveAllowed()/
+  // copyAllowed()/migrateAllowed() helpers below rather than reading
+  // these directly.
   var PERM = {
     delete: root.dataset.canDelete === '1',
     upload: root.dataset.canUpload === '1',
@@ -26,10 +23,8 @@
     edit: root.dataset.canEdit === '1',
   };
   var TYPE = root.dataset.type; // '', 'image', 'media', 'file'
-  // Only true when opened by the HTML feature's editor (see plugin.js /
-  // tmp/pagelib.template) - the Gallery/Index folder-link choice only
-  // means anything there, since it's that feature's photogallery filter
-  // that looks for the resulting attribute (see htmllib.php).
+  // Set only when opened by the HTML feature - gates the Gallery/Index
+  // folder-link choice (see filter_photogallery() in htmllib.php).
   var ALLOW_GALLERY = root.dataset.allowGallery === '1';
 
   // Opened inside the picker's overlay iframe (appended directly to the
@@ -87,21 +82,18 @@
 
   var AREA_LABELS = { priv: 'My files', pub: 'Page files', old: 'Old files' };
 
-  // An action that only ever touches ONE area (delete / upload / create
-  // folder within the currently browsed folder) is gated only when that
-  // area is Page files - My files is always allowed.
+  // Single-area actions (delete/upload/createfolder) are gated only when
+  // that area is Page files - My files is always allowed.
   function pubAreaOK(perm) { return state.area !== 'pub' || perm; }
-  // Move/copy touch TWO areas (source + destination) - gated as soon as
-  // Page files is on either end, per fm_is_able()'s docblock. Migrating
-  // out of Old files is different: it always requires filemanager_migrate,
-  // regardless of which area you're migrating INTO.
+  // Move/copy touch two areas - gated as soon as Page files is on either
+  // end. Migrating out of Old files always needs filemanager_migrate,
+  // regardless of destination.
   function moveAllowed(toArea) { return !((state.area === 'pub' || toArea === 'pub') && !PERM.move); }
   function copyAllowed(toArea) { return !((state.area === 'pub' || toArea === 'pub') && !PERM.copy); }
   function migrateAllowed() { return PERM.migrate; }
 
-  // Which areas are actually available AND permitted as a move/copy/
-  // migrate destination right now - drives both whether to show the
-  // relevant button at all, and which tabs the destination picker offers.
+  // Areas available AND permitted as a move/copy/migrate destination -
+  // drives both the relevant button's visibility and the picker's tabs.
   function destinationAreasFor(kind) {
     var allowedFn = kind === 'move' ? moveAllowed : (kind === 'copy' ? copyAllowed : migrateAllowed);
     var areas = [];
@@ -135,11 +127,8 @@
     query: '',                            // current search filter (matches file/folder name)
   };
 
-  // Multi-select for bulk move/copy/delete - keyed by "isFolder:name"
-  // within the CURRENT folder only (cleared on navigation), independent
-  // of state.selected (which drives the single-item link/rename/move
-  // panel and is set by clicking the item itself rather than its
-  // checkbox).
+  // Multi-select for bulk move/copy/delete, keyed within the current
+  // folder only (cleared on navigation) - independent of state.selected.
   var multiSelected = {}; // key -> {name, isFolder}
   function multiKey(name, isFolder) { return (isFolder ? 'd:' : 'f:') + name; }
   function multiCount() { return Object.keys(multiSelected).length; }
@@ -617,9 +606,7 @@
     var key = multiKey(f.name, f.isFolder);
     if (multiSelected[key]) delete multiSelected[key];
     else multiSelected[key] = { name: f.name, isFolder: f.isFolder };
-    // A checkbox pick supersedes the single-item link/rename/move panel -
-    // keep exactly one selection mode active at a time.
-    state.selected = null;
+    state.selected = null; // checkbox pick supersedes the single-item panel
     renderBody();
     renderFooter();
   }
@@ -715,13 +702,9 @@
     footer.appendChild(actions);
   }
 
-  /**
-   * Bulk action bar shown instead of the single-item panel whenever one or
-   * more items are checkbox-selected (see multiSelected). Move/Copy open
-   * the destination picker (any accessible folder, in any allowed area);
-   * Delete and Migrate act directly, mirroring their single-item
-   * counterparts (onDelete / onMigrate).
-   */
+  // Shown instead of the single-item panel when items are checkbox-
+  // selected. Move/Copy open the destination picker; Delete/Migrate act
+  // directly (mirroring onDelete/onMigrate).
   function buildBulkBar() {
     var bar = el('div', { class: 'fm-selection' });
     var items = Object.keys(multiSelected).map(function (k) { return multiSelected[k]; });
@@ -775,13 +758,9 @@
     }).catch(reportError);
   }
 
-  /**
-   * Move/Copy/Migrate `items` (from the currently browsed folder) to a
-   * folder the user navigates to and picks, in any area destinationAreasFor
-   * allows for `kind`. 'migrate' is just 'move' server-side (Old files has
-   * no separate action) - kept as its own `kind` here only so the picker
-   * offers the right destination areas and labels.
-   */
+  // Move/Copy/Migrate `items` to a folder the user navigates to and
+  // picks, in any area destinationAreasFor allows for `kind`. 'migrate' is
+  // just 'move' server-side - kept separate here for labels/destinations.
   function openDestinationPicker(kind, items) {
     var apiAction = kind === 'migrate' ? 'move' : kind;
     var areas = destinationAreasFor(kind);
@@ -926,12 +905,8 @@
     }).catch(reportError);
   }
 
-  /**
-   * Action buttons (migrate / link / rename / delete) shared by the grid
-   * tile and the list row. `container` is the item element itself, needed
-   * so the "get a link" button can pass it along to onSelect for the
-   * .selected highlight.
-   */
+  // Action buttons (migrate/link/rename/delete) shared by the grid tile
+  // and list row. `container` lets the link button pass itself to onSelect.
   function buildItemActions(opts, container) {
     var actions = el('div', { class: 'fm-item-actions' });
     if (opts.readOnly) {
@@ -960,11 +935,8 @@
     return actions;
   }
 
-  /**
-   * Checkbox for bulk move/copy/delete/migrate (see multiSelected). Shown
-   * on every item regardless of readOnly - Old files items can still be
-   * bulk-migrated even though nothing else about them is editable.
-   */
+  // Checkbox for bulk move/copy/delete/migrate. Shown even when readOnly -
+  // Old files items can still be bulk-migrated.
   function buildMultiCheckbox(opts) {
     var box = el('input', { type: 'checkbox', class: 'fm-multi-check' });
     box.checked = isMultiSelected(opts);
@@ -973,13 +945,8 @@
     return box;
   }
 
-  /**
-   * Makes `item` draggable (as the source of a move) when not read-only
-   * AND the user actually holds the move permission for this context (see
-   * moveAllowed()), and, if it's a folder, wires it up as a drop target
-   * for other items being dragged onto it (moves the dragged item into
-   * this folder).
-   */
+  // Makes `item` draggable when not read-only and move is permitted, and
+  // wires folders as drop targets for other dragged items.
   function wireDragAndDrop(item, opts) {
     if (opts.readOnly || !moveAllowed(state.area)) return;
     item.setAttribute('draggable', 'true');
@@ -1123,10 +1090,7 @@
   }
 
   function onMigrate(opts) {
-    // Migrating out of the read-only "Old files" area into a real,
-    // managed area now always requires filemanager_migrate, regardless of
-    // which destination is chosen (see migrateAllowed()'s docblock).
-    if (!migrateAllowed()) return;
+    if (!migrateAllowed()) return; // requires filemanager_migrate regardless of destination
     var offerPublic = CAN_PUBLIC;
     var toArea = 'priv';
     if (offerPublic) {

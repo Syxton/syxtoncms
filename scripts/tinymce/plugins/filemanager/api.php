@@ -11,12 +11,10 @@
 * pageid=<the page being edited, for ability scoping - see fm_is_able()>
 *
 * Permissions: My files (area=priv) is open to any logged-in owner for
-* every action - no ability check beyond ownership. Page files (area=pub)
-* additionally requires filemanager_view just to browse it at all, plus a
-* matching filemanager_delete/upload/move/copy/createfolder/edit for each
-* state-changing action that touches it (as source OR destination - see
-* the 'move'/'copy' cases below). Migrating out of Old files always
-* requires filemanager_migrate, regardless of destination. See
+* every action, ownership only. Page files (area=pub) also requires
+* filemanager_view to browse, plus filemanager_delete/upload/move/copy/
+* createfolder/edit per action (source OR destination - see 'move'/'copy').
+* filemanager_migrate always gates migrating out of Old files. See
 * fmconfig.php's fm_is_able().
 *
 * Output buffering: your app runs with $CFG->debug = 3 ("log and print"),
@@ -61,8 +59,7 @@ $action = $_REQUEST['action'] ?? '';
 $area   = $_REQUEST['area'] ?? '';
 $id     = (string) ($_REQUEST['id'] ?? '');
 $path   = (string) ($_REQUEST['path'] ?? '');
-// Scopes every filemanager_* ability check below (see fm_is_able() in
-// fmconfig.php) - app.js sends this on every request alongside area/id/path.
+// Scopes every filemanager_* check below (see fm_is_able()).
 $pageid = preg_replace('/[^A-Za-z0-9_\-]/', '', (string) ($_REQUEST['pageid'] ?? ''));
 
 if (!in_array($area, [FM_AREA_PUBLIC, FM_AREA_PRIVATE, FM_AREA_OLD], true) || $id === '') {
@@ -74,11 +71,8 @@ if (!fm_can_access_area($area, $id)) {
     fm_json(['error' => 'Forbidden'], 403);
 }
 
-// Page files / Old files additionally require filemanager_view - without
-// it those tabs aren't even shown (see index.php), so a request against
-// them here means either a stale session or someone poking the API
-// directly. My files (area=priv) has no such gate - see fm_is_able()'s
-// docblock in fmconfig.php.
+// Page files/Old files also require filemanager_view (see index.php) -
+// My files has no such gate (see fm_is_able() in fmconfig.php).
 if (($area === FM_AREA_PUBLIC || $area === FM_AREA_OLD) && !fm_is_able('filemanager_view', $pageid)) {
     fm_json(['error' => 'Forbidden'], 403);
 }
@@ -295,9 +289,8 @@ switch ($action) {
     }
 
     case 'move': {
-        // Move a file or folder from the current area/id/path (already
-        // permission-checked above) into a DIFFERENT area/id - e.g. from
-        // "My files" into the current page's public area, or back.
+        // Move a file/folder from the current area/id/path into a
+        // DIFFERENT area/id - e.g. My files into the page's Page files, or back.
         $name   = fm_sanitize_name((string) ($_REQUEST['name'] ?? ''));
         $target = (string) ($_REQUEST['target'] ?? ''); // 'file' | 'folder'
         $toArea = (string) ($_REQUEST['toArea'] ?? '');
@@ -309,21 +302,17 @@ switch ($action) {
             fm_json(['error' => 'Invalid request'], 400);
         }
 
-        // Destination needs its OWN edit-permission check - moving into an
-        // area doesn't inherit permission from the source area. Old files
-        // can only ever be a source, never a destination (checked by the
-        // toArea allow-list above already excluding FM_AREA_OLD).
+        // Destination needs its own permission check - Old files can only
+        // be a source (toArea's allow-list above excludes it).
         if (!fm_can_access_area($toArea, $toId)) {
             fm_json(['error' => 'Forbidden (destination)'], 403);
         }
         if ($toArea === FM_AREA_PUBLIC && !fm_is_able('filemanager_view', $pageid)) {
             fm_json(['error' => 'Forbidden (destination)'], 403);
         }
-        // Ability gate: migrating out of Old files ALWAYS requires
-        // filemanager_migrate, regardless of destination. An ordinary move
-        // (source isn't Old files) only requires filemanager_move when
-        // Page files is touched on either end - My files -> My files is
-        // always allowed (see fm_is_able()'s docblock).
+        // Migrating out of Old files always needs filemanager_migrate.
+        // Otherwise, filemanager_move is needed only if Page files is
+        // touched on either end (My files -> My files is always allowed).
         if ($area === FM_AREA_OLD) {
             if (!fm_is_able('filemanager_migrate', $pageid)) {
                 fm_json(['error' => 'Forbidden'], 403);
@@ -336,7 +325,7 @@ switch ($action) {
         if ($toRelPath === null) {
             fm_json(['error' => 'Invalid destination path'], 400);
         }
-        $toDir = fm_resolve_path($toArea, $toId, $toRelPath); // never 'old' here, plain resolver is fine
+        $toDir = fm_resolve_path($toArea, $toId, $toRelPath); // never 'old' here
         if ($toDir === null || !is_dir($toDir)) {
             fm_json(['error' => 'Destination folder not found'], 404);
         }
@@ -372,11 +361,9 @@ switch ($action) {
     }
 
     case 'copy': {
-        // Copy a file or folder from the current area/id/path into a
-        // DIFFERENT area/id - same shape as 'move' above, except the
-        // source is left in place (no migrate-specific variant, since
-        // Old files is never a valid source here - it's excluded from the
-        // read-only allow-list near the top of this file).
+        // Same shape as 'move' above, except the source is left in place.
+        // Old files is never a valid source (excluded from the read-only
+        // allow-list near the top of this file).
         $name   = fm_sanitize_name((string) ($_REQUEST['name'] ?? ''));
         $target = (string) ($_REQUEST['target'] ?? ''); // 'file' | 'folder'
         $toArea = (string) ($_REQUEST['toArea'] ?? '');
@@ -394,9 +381,8 @@ switch ($action) {
         if ($toArea === FM_AREA_PUBLIC && !fm_is_able('filemanager_view', $pageid)) {
             fm_json(['error' => 'Forbidden (destination)'], 403);
         }
-        // Ability gate: only applies when Page files is touched, as
-        // EITHER end of the copy - My files -> My files is always allowed
-        // (see fm_is_able()'s docblock).
+        // filemanager_copy is needed only if Page files is touched on
+        // either end (My files -> My files is always allowed).
         if (($area === FM_AREA_PUBLIC || $toArea === FM_AREA_PUBLIC) && !fm_is_able('filemanager_copy', $pageid)) {
             fm_json(['error' => 'Forbidden'], 403);
         }

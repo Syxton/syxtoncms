@@ -2,20 +2,10 @@
 /***************************************************************************
 * plugins/filemanager/index.php - the file manager dialog itself.
 *
-* Works two ways:
-*  - Opened by plugin.js's picker: an iframe pointing here, inside an
-*    overlay plugin.js appends directly to the host page's <body> (not a
-*    TinyMCE dialog, not a window.open() popup - see plugin.js's file
-*    header for why). pageid + userid + embed=1 are in the query string;
-*    Insert/Cancel post messages back to the editor's page. app.js only
-*    enables this when BOTH embed=1 is present AND it can actually see a
-*    parent window to post to - neither alone is enough, since a copied
-*    query string or an unrelated iframe embedding elsewhere in the app
-*    could otherwise be mistaken for a picker session.
-*  - Opened directly in a browser tab/window (linked to from anywhere else
-*    in the app, no embed=1) - Insert/Cancel are hidden automatically,
-*    everything else (browse/upload/rename/delete/move/copy link) still
-*    works.
+* Opened by plugin.js's picker (an overlay iframe, pageid+userid+embed=1 in
+* the query string, posts Insert/Cancel back to the editor - see plugin.js)
+* or directly in a browser tab (no embed=1, Insert/Cancel hidden, browsing
+* still works).
 ***************************************************************************/
 if (!isset($CFG) || !defined('LIBHEADER')) {
     $sub = '';
@@ -39,40 +29,26 @@ if (!is_logged_in()) {
 
 global $USER;
 $pageid = preg_replace('/[^A-Za-z0-9_\-]/', '', $_GET['pageid'] ?? '');
-// Default to the logged-in user's own id when opened without a userid
-// (e.g. a direct link, or the standalone/non-TinyMCE case) so "My files"
-// always works for whoever is logged in.
+// Defaults to the logged-in user's own id so "My files" works even
+// without a userid in the query string (e.g. a direct link).
 $userid = preg_replace('/[^A-Za-z0-9_\-]/', '', $_GET['userid'] ?? (string) $USER->userid);
-// 'type' narrows what the picker returns to TinyMCE's native dialogs
-// (image / media / file) - '' means "anything allowed".
+// Narrows the picker for TinyMCE's native image/media/link dialogs; '' = anything.
 $type = preg_replace('/[^a-z]/', '', $_GET['type'] ?? '');
-// Only plugin.js's own picker sets this - see the comment above.
-$embed = !empty($_GET['embed']);
-// Only set by plugin.js when the editor was opened by the HTML feature
-// (see tmp/pagelib.template / filemanager_allow_gallery) - gates whether
-// the Gallery/Index folder-link option is shown at all, since the
-// "gallery" attribute it adds is only understood by that feature's
-// photogallery filter (see filter_photogallery() in htmllib.php).
+$embed = !empty($_GET['embed']); // set only by plugin.js's own picker
+// Set only when opened by the HTML feature (see tmp/pagelib.template) -
+// gates the Gallery/Index folder-link option (see filter_photogallery() in htmllib.php).
 $allowGallery = !empty($_GET['gallery']);
 
 $canView = fm_is_able('filemanager_view', $pageid);
 
-// My files: always available to any logged-in user who owns it - no
-// ability gate, only ownership (fm_can_access_private). Page files / Old
-// files: additionally require filemanager_view, or the tab isn't shown at
-// all - see fm_is_able()'s docblock in fmconfig.php.
+// My files: any logged-in owner, no ability gate. Page files/Old files:
+// also require filemanager_view or the tab isn't shown (see fmconfig.php).
 $canPublic  = $pageid !== '' && $canView && fm_can_access_page($pageid);
 $canPrivate = $userid !== '' && fm_can_access_private($userid);
-// Same ownership permission as private - just a different (legacy)
-// physical location. Shown whenever My files is (and filemanager_view is
-// held), even if that user happens to have no old files yet (browsing
-// then just shows "empty").
-$canOld = $canPrivate && $canView;
+$canOld = $canPrivate && $canView; // same ownership check, legacy location
 
-// Per-action abilities, all scoped to Page files only (see fm_is_able()).
-// api.php is the actual enforcement point; these just drive which buttons
-// app.js shows. Computed regardless of $canPublic - harmless either way,
-// since area=pub is unreachable in the UI without it.
+// Per-action abilities, Page files only (see fm_is_able()) - api.php
+// enforces these; here they just drive which buttons app.js shows.
 $canDeleteAbility       = fm_is_able('filemanager_delete', $pageid);
 $canUploadAbility       = fm_is_able('filemanager_upload', $pageid);
 $canMoveAbility         = fm_is_able('filemanager_move', $pageid);

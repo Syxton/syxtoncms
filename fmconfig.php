@@ -314,27 +314,16 @@ function fm_can_access_page(string $pageid): bool {
 }
 
 /**
- * Ability gate for filemanager operations that are restricted to the Page
- * files area - the "filemanager_view" ability controls whether the Page
- * files / Old files TABS are even shown at all (see index.php); once
- * inside Page files, "filemanager_delete" / "filemanager_upload" /
- * "filemanager_move" / "filemanager_copy" / "filemanager_createfolder" /
- * "filemanager_edit" separately gate each state-changing action there
- * (see api.php's per-action checks). "filemanager_migrate" is different:
- * it gates migrating OUT of Old files unconditionally, regardless of
- * which area (Page files or My files) is the destination.
+ * Ability gate for Page files - filemanager_view controls the Page files /
+ * Old files tabs (see index.php); filemanager_delete/upload/move/copy/
+ * createfolder/edit each gate one state-changing action there (see
+ * api.php). filemanager_migrate is unconditional - it always gates
+ * migrating OUT of Old files, regardless of destination.
  *
- * My files (area=priv) deliberately has NO equivalent gate for the other
- * five abilities - by product decision, any logged-in user gets full
- * read/write access to their own private area regardless of those;
- * only fm_can_access_private() ownership check applies there. Callers
- * should only invoke this for operations that touch Page files (as
- * source or destination), or for filemanager_migrate - never
- * unconditionally otherwise.
+ * My files (area=priv) has no gate beyond fm_can_access_private()
+ * ownership - never call this unconditionally for a My files operation.
  *
- * Scoped to the page currently being edited - with no page context
- * there's nothing meaningful to scope an ability to, so this denies
- * rather than falling back to some site-wide default.
+ * Denies with no pageid, since there's nothing to scope to.
  */
 function fm_is_able(string $ability, string $pageid): bool {
     global $USER;

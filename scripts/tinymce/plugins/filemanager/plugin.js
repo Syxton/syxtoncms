@@ -48,14 +48,10 @@
       var base = editor.getParam('filemanager_url', urlOf());
       var pageid = editor.getParam('filemanager_pageid', '');
       var userid = editor.getParam('filemanager_userid', '');
-      // Only the HTML feature's editor sets this (see tmp/pagelib.template) -
-      // it's what the Gallery/Index folder-link option is gated on, since
-      // the "gallery" attribute it adds is only meaningful to the HTML
-      // feature's photogallery filter (see htmllib.php).
+      // Set only by the HTML feature's editor - gates the Gallery/Index
+      // folder-link option (only that feature's photogallery filter uses it).
       var allowGallery = !!editor.getParam('filemanager_allow_gallery', false);
-      // embed=1 marks this as opened by our own picker (as opposed to a
-      // plain link elsewhere in the app) - see index.php/app.js for why
-      // this matters for showing Insert/Cancel.
+      // embed=1 marks this as opened by our own picker - see index.php/app.js.
       var qs = 'pageid=' + encodeURIComponent(pageid) +
         '&userid=' + encodeURIComponent(userid) +
         '&type=' + encodeURIComponent(type || '') +
@@ -161,10 +157,8 @@
 
     function insertAsContent(file) {
       if (file.isFolder) {
-        // The HTML feature's photogallery filter (see filter_photogallery()
-        // in features/html/htmllib.php) turns a folder link into an image
-        // gallery when it finds title="gallery" on the <a> tag - add it
-        // automatically here instead of making the user type it in by hand.
+        // htmllib.php's photogallery filter turns a folder link into a
+        // gallery when it finds title="gallery" - add it automatically.
         var galleryAttr = file.mode === 'gallery' ? ' title="gallery"' : '';
         editor.insertContent('<a href="' + file.url + '"' + galleryAttr + '>' + escapeAttr(file.name) + '</a>');
         return;
@@ -206,12 +200,9 @@
       openPicker(meta.filetype, function (file) {
         var cbMeta = { alt: file.name };
         if (file.isFolder && file.mode === 'gallery') {
-          // The Link dialog's "Title" field auto-fills from url.meta.title
-          // (see getTitleFromUrlChange() in plugins/link/plugin.js) and is
-          // what actually ends up as the <a title="..."> attribute once
-          // the dialog is submitted - insertAsContent() below never runs
-          // for this path, so this is the only way to get title="gallery"
-          // onto a link created via the native Link dialog's Browse button.
+          // insertAsContent() never runs for this path - the Link
+          // dialog's Title field auto-fills from url.meta.title, so this
+          // is the only way to get title="gallery" onto the link.
           cbMeta.title = 'gallery';
         }
         callback(file.url, cbMeta);
