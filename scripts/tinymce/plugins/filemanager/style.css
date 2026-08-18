@@ -114,6 +114,7 @@ body {
 .fm-list-row.fm-item.multi-selected { background: #eaf2fb; }
 .fm-list-check { display: flex; align-items: center; justify-content: center; }
 .fm-list-check .fm-multi-check { width: 16px; height: 16px; cursor: pointer; }
+.fm-list.no-check .fm-list-row { grid-template-columns: 1fr 140px 90px 80px; }
 .fm-list-cell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fm-list-name { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .fm-list-name .fm-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -132,6 +133,7 @@ body {
 
 @media (max-width: 480px) {
   .fm-list-row { grid-template-columns: 24px 1fr 60px; }
+  .fm-list.no-check .fm-list-row { grid-template-columns: 1fr 60px; }
   .fm-list-date { display: none; }
 }
 
@@ -159,6 +161,11 @@ body {
 }
 .fm-modal-title { font-weight: 600; padding: 14px 16px 8px; }
 .fm-modal-tabs { display: flex; gap: 4px; padding: 0 16px 8px; }
+.fm-modal-tabs .fm-btn.active { background: #2271b1; color: #fff; }
+.fm-modal-tabs .fm-tab-single {
+  font: inherit; font-weight: 600; color: #2271b1; padding: 6px 10px;
+  background: #f0f6fc; border-radius: 3px;
+}
 .fm-modal-crumb {
   padding: 6px 16px; color: #50575e; font-size: 12px; border-top: 1px solid #f0f0f1;
   border-bottom: 1px solid #f0f0f1; overflow-wrap: anywhere;

@@ -180,6 +180,23 @@ function fm_resolve_old_path(string $userid, string $relpath): ?string {
 }
 
 /**
+ * True if this user has no Old files at all (no root folder, or an empty
+ * one) - used to hide the Old files tab instead of showing an area that
+ * will always be empty. Only checks the top level, not nested subfolders.
+ */
+function fm_old_is_empty(string $userid): bool {
+    $root = fm_old_root($userid);
+    if ($root === null) {
+        return true;
+    }
+    $entries = @scandir($root);
+    if ($entries === false) {
+        return true;
+    }
+    return count(array_diff($entries, ['.', '..'])) === 0;
+}
+
+/**
  * Direct (non-filegate) URL for a file/folder still in the old structure -
  * it's already sitting in a web-accessible folder today, so there's
  * nothing to gate; this is just the existing public URL.
@@ -214,7 +231,7 @@ function fm_resolve_area_path(string $area, string $id, string $relpath): ?strin
 /**
  * Build the signed token for an ADMIN PREVIEW url - used only for
  * thumbnails/previews inside the authenticated filemanager dialog itself.
- * Gated by the same edit permission that already let the user browse this
+ * Gated by the same access check that already let the user browse this
  * area (fm_can_access_private / fm_can_access_page), never handed out as a
  * link to embed anywhere.
  */
@@ -301,16 +318,15 @@ function fm_can_access_private(string $userid): bool {
     return (string) $USER->userid === (string) $userid;
 }
 
-/** Can the given page's public area be edited by the current user? */
+/**
+ * Basic sanity check for the Page files area - actual access is decided
+ * by filemanager_view, and each mutation by its own filemanager_* ability
+ * (see fm_is_able()). Deliberately does NOT require "editpage" - a
+ * view-only user (filemanager_view but no other ability) must still be
+ * able to reach Page files at all.
+ */
 function fm_can_access_page(string $pageid): bool {
-    global $CFG, $USER;
-    if (!is_logged_in()) {
-        return false;
-    }
-    if (is_siteadmin($USER->userid)) {
-        return true;
-    }
-    return (bool) user_is_able($USER->userid, "editpage", (int) $pageid);
+    return is_logged_in() && $pageid !== '';
 }
 
 /**
@@ -341,13 +357,13 @@ function fm_is_able(string $ability, string $pageid): bool {
 
 /**
  * VIEW permission for a "page" level share link - this is deliberately
- * separate from fm_can_access_page (which governs *editing*). Runs with
- * whatever session loaded the page containing the embedded file, which is
- * usually a site visitor, not the editor. Wire this to your real
- * page-visibility rules (published/draft, member-only pages, etc.) -
- * this default just requires the page id to be non-empty, i.e. treats
- * every page as publicly viewable. If some of your pages require login to
- * view, add that check here.
+ * separate from fm_can_access_page (which governs the filemanager dialog
+ * itself, not links embedded in page content). Runs with whatever session
+ * loaded the page containing the embedded file, which is usually a site
+ * visitor, not the editor. Wire this to your real page-visibility rules
+ * (published/draft, member-only pages, etc.) - this default just requires
+ * the page id to be non-empty, i.e. treats every page as publicly
+ * viewable. If some of your pages require login to view, add that check here.
  */
 function fm_can_view_page(string $pageid): bool {
     global $CFG, $USER;

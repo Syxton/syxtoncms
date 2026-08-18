@@ -102,6 +102,13 @@
     return areas;
   }
 
+  // Whether ANY bulk action (move/copy/delete/migrate) is possible right
+  // now - if not, don't show multi-select checkboxes at all.
+  function bulkActionsAvailable() {
+    if (state.area === 'old') return destinationAreasFor('migrate').length > 0;
+    return destinationAreasFor('move').length > 0 || destinationAreasFor('copy').length > 0 || pubAreaOK(PERM.delete);
+  }
+
   function loadPref(key, fallback) {
     try {
       var v = window.localStorage.getItem('fm_' + key);
@@ -549,25 +556,28 @@
   }
 
   function renderList(folders, files) {
-    var wrap = el('div', { class: 'fm-list' });
+    var showChecks = bulkActionsAvailable();
+    var wrap = el('div', { class: 'fm-list' + (showChecks ? '' : ' no-check') });
     var all = folders.concat(files);
     var header = el('div', { class: 'fm-list-row fm-list-header' });
 
-    var checkHeaderCell = el('div', { class: 'fm-list-cell fm-list-check' });
-    var selectAll = el('input', { type: 'checkbox', class: 'fm-multi-check' });
-    selectAll.checked = all.length > 0 && all.every(isMultiSelected);
-    selectAll.addEventListener('change', function () {
-      if (selectAll.checked) {
-        all.forEach(function (f) { multiSelected[multiKey(f.name, f.isFolder)] = { name: f.name, isFolder: f.isFolder }; });
-        state.selected = null;
-      } else {
-        clearMultiSelect();
-      }
-      renderBody();
-      renderFooter();
-    });
-    checkHeaderCell.appendChild(selectAll);
-    header.appendChild(checkHeaderCell);
+    if (showChecks) {
+      var checkHeaderCell = el('div', { class: 'fm-list-cell fm-list-check' });
+      var selectAll = el('input', { type: 'checkbox', class: 'fm-multi-check' });
+      selectAll.checked = all.length > 0 && all.every(isMultiSelected);
+      selectAll.addEventListener('change', function () {
+        if (selectAll.checked) {
+          all.forEach(function (f) { multiSelected[multiKey(f.name, f.isFolder)] = { name: f.name, isFolder: f.isFolder }; });
+          state.selected = null;
+        } else {
+          clearMultiSelect();
+        }
+        renderBody();
+        renderFooter();
+      });
+      checkHeaderCell.appendChild(selectAll);
+      header.appendChild(checkHeaderCell);
+    }
 
     [['name', 'Name'], ['date', 'Date modified'], ['size', 'Size']].forEach(function (pair) {
       var th = el('button', { class: 'fm-list-th' + (state.sortBy === pair[0] ? ' active' : '') });
@@ -797,7 +807,12 @@
 
     function renderTabs() {
       tabsRow.innerHTML = '';
-      if (areas.length < 2) return; // nothing to switch between
+      if (areas.length < 2) {
+        // Only one destination area is available - still show which one,
+        // rather than leaving the picker with no area indicator at all.
+        tabsRow.appendChild(el('span', { class: 'fm-tab-single', text: AREA_LABELS[areas[0]] }));
+        return;
+      }
       areas.forEach(function (a) {
         var btn = el('button', { class: 'fm-btn secondary' + (a === pick.area ? ' active' : ''), text: AREA_LABELS[a] });
         btn.addEventListener('click', function () {
@@ -968,7 +983,7 @@
 
   function makeItem(opts) {
     var item = el('div', { class: 'fm-item' + (isMultiSelected(opts) ? ' multi-selected' : '') });
-    item.appendChild(buildMultiCheckbox(opts));
+    if (bulkActionsAvailable()) item.appendChild(buildMultiCheckbox(opts));
     var thumb = el('div', { class: 'fm-thumb' });
     if (!opts.isFolder && IMAGE_EXT.indexOf(opts.ext) !== -1) {
       thumb.appendChild(el('img', { src: opts.previewUrl, alt: opts.name }));
@@ -1002,9 +1017,11 @@
   function makeListRow(opts) {
     var row = el('div', { class: 'fm-list-row fm-item' + (isMultiSelected(opts) ? ' multi-selected' : '') });
 
-    var checkCell = el('div', { class: 'fm-list-cell fm-list-check' });
-    checkCell.appendChild(buildMultiCheckbox(opts));
-    row.appendChild(checkCell);
+    if (bulkActionsAvailable()) {
+      var checkCell = el('div', { class: 'fm-list-cell fm-list-check' });
+      checkCell.appendChild(buildMultiCheckbox(opts));
+      row.appendChild(checkCell);
+    }
 
     var nameCell = el('div', { class: 'fm-list-cell fm-list-name' });
     if (!opts.isFolder && IMAGE_EXT.indexOf(opts.ext) !== -1) {

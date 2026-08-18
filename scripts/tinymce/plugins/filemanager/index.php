@@ -45,7 +45,7 @@ $canView = fm_is_able('filemanager_view', $pageid);
 // also require filemanager_view or the tab isn't shown (see fmconfig.php).
 $canPublic  = $pageid !== '' && $canView && fm_can_access_page($pageid);
 $canPrivate = $userid !== '' && fm_can_access_private($userid);
-$canOld = $canPrivate && $canView; // same ownership check, legacy location
+$canOld = $canPrivate && $canView && !fm_old_is_empty($userid); // same ownership check, legacy location
 
 // Per-action abilities, Page files only (see fm_is_able()) - api.php
 // enforces these; here they just drive which buttons app.js shows.
