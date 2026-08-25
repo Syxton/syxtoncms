@@ -160,6 +160,27 @@ body {
 .fm-upload-file-error .fm-upload-file-name { color: #d63638; }
 .fm-upload-file-msg { font-size: 11px; color: #d63638; flex-shrink: 0; }
 
+/* Undo toast (rename/move/delete) */
+.fm-undo-toast {
+  display: none; position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%);
+  z-index: 1200; background: #2c3338; color: #fff; border-radius: 6px;
+  padding: 8px 8px 8px 14px; align-items: center; gap: 10px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.3); max-width: calc(100% - 32px); font-size: 13px;
+}
+.fm-undo-toast.active { display: flex; }
+.fm-undo-msg { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fm-undo-btn {
+  background: none; border: none; color: #72aee6; font: inherit; font-weight: 600;
+  cursor: pointer; padding: 4px 6px; flex-shrink: 0;
+}
+.fm-undo-btn:hover { text-decoration: underline; }
+.fm-undo-btn:disabled { color: #8c8f94; cursor: default; text-decoration: none; }
+.fm-undo-dismiss {
+  background: none; border: none; color: #8c8f94; font: inherit; font-size: 13px;
+  cursor: pointer; padding: 4px 6px; flex-shrink: 0; line-height: 1;
+}
+.fm-undo-dismiss:hover { color: #fff; }
+
 .fm-footer {
   display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border-top: 1px solid #dcdcde;
 }

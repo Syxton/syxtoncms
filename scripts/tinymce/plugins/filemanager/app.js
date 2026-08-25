@@ -138,6 +138,13 @@
   // doUpload()/renderUploadProgress() - only one batch runs at a time.
   var uploadState = null; // { xhr, total, loaded, files: [{name, status, error}] }
 
+  // Tracks the single reversible action available for undo (rename/move/
+  // delete), or null when none is pending. See showUndo()/performUndo() -
+  // area/id/path context is captured in the closure at action time, not
+  // read live off `state`, so undo stays correct even if the person has
+  // since navigated elsewhere.
+  var undoState = null; // { message, action: () => Promise<{ok, body}>, timeoutId }
+
   // Multi-select for bulk move/copy/delete, keyed within the current
   // folder only (cleared on navigation) - independent of state.selected.
   var multiSelected = {}; // key -> {name, isFolder}
@@ -255,6 +262,7 @@
     });
 
     root.appendChild(el('div', { class: 'fm-footer', id: 'fm-footer' }));
+    root.appendChild(el('div', { class: 'fm-undo-toast', id: 'fm-undo-toast' }));
 
     renderToolbar();
     renderUploadProgress();
@@ -459,10 +467,15 @@
       var moved = dragging;
       if (toPath === state.path) return; // already here
       if (moved.isFolder && (state.path ? state.path + '/' : '') + moved.name === toPath) return; // folder onto itself
+      var fromArea = state.area, fromId = state.id, fromPath = state.path;
       api('move', { name: moved.name, target: moved.isFolder ? 'folder' : 'file', toArea: state.area, toId: state.id, toPath: toPath }).then(function (res) {
         if (!res.ok) { reportError(new Error(res.body.error || 'Move failed')); return; }
+        var finalName = res.body.name || moved.name;
         if (state.selected && state.selected.name === moved.name) state.selected = null;
         load();
+        showUndo('Moved "' + moved.name + '"', function () {
+          return apiFor(fromArea, fromId, toPath, 'move', { name: finalName, target: moved.isFolder ? 'folder' : 'file', toArea: fromArea, toId: fromId, toPath: fromPath });
+        });
       }).catch(reportError);
     });
   }
@@ -763,16 +776,34 @@
     var names = items.map(function (it) { return it.name; }).join(', ');
     if (!confirm('Delete ' + items.length + ' item' + (items.length > 1 ? 's' : '') + '?\n\n' + names
       + '\n\nThis deletes everything inside any selected folders.')) return;
+    var area = state.area, id = state.id, path = state.path;
     Promise.all(items.map(function (it) {
-      return api('delete', { name: it.name, target: it.isFolder ? 'folder' : 'file' });
-    })).then(function (results) {
-      var failed = results.filter(function (r) { return !r.ok; });
+      return api('delete', { name: it.name, target: it.isFolder ? 'folder' : 'file' })
+        .then(function (res) { return { item: it, res: res }; });
+    })).then(function (outcomes) {
+      var failed = outcomes.filter(function (o) { return !o.res.ok; });
+      var trashed = outcomes
+        .filter(function (o) { return o.res.ok && o.res.body.trashId; })
+        .map(function (o) { return { trashId: o.res.body.trashId }; });
       clearMultiSelect();
       state.selected = null;
       if (failed.length) {
         reportError(new Error(failed.length + ' item(s) could not be deleted.'));
       }
       load();
+      if (trashed.length) {
+        showUndo('Deleted ' + trashed.length + ' item' + (trashed.length > 1 ? 's' : ''), function () {
+          return Promise.all(trashed.map(function (t) {
+            return apiFor(area, id, path, 'restore', { trashId: t.trashId });
+          })).then(function (results) {
+            var restoreFailed = results.filter(function (r) { return !r.ok; });
+            return {
+              ok: restoreFailed.length === 0,
+              body: { error: restoreFailed.length ? restoreFailed.length + ' item(s) could not be restored.' : '' }
+            };
+          });
+        });
+      }
     }).catch(reportError);
   }
 
@@ -881,10 +912,20 @@
     function doConfirm() {
       confirmBtn.disabled = true;
       var toArea = pick.area, toId = pick.id, toPath = pick.path;
+      var fromArea = state.area, fromId = state.id, fromPath = state.path;
       Promise.all(items.map(function (it) {
-        return api(apiAction, { name: it.name, target: it.isFolder ? 'folder' : 'file', toArea: toArea, toId: toId, toPath: toPath });
-      })).then(function (results) {
-        var failed = results.filter(function (r) { return !r.ok; });
+        return api(apiAction, { name: it.name, target: it.isFolder ? 'folder' : 'file', toArea: toArea, toId: toId, toPath: toPath })
+          .then(function (res) { return { item: it, res: res }; });
+      })).then(function (outcomes) {
+        var failed = outcomes.filter(function (o) { return !o.res.ok; });
+        // Undo only for a plain 'move' - 'copy' leaves the source in place
+        // (nothing destructive to reverse), and 'migrate' can't be
+        // reversed through this same action since Old files is a valid
+        // move source but never a valid destination (see api.php).
+        var moved = kind === 'move'
+          ? outcomes.filter(function (o) { return o.res.ok; })
+              .map(function (o) { return { name: o.res.body.name || o.item.name, isFolder: o.item.isFolder }; })
+          : [];
         close();
         clearMultiSelect();
         state.selected = null;
@@ -892,6 +933,19 @@
           reportError(new Error(failed.length + ' item(s) could not be ' + (kind === 'copy' ? 'copied' : 'moved') + '.'));
         }
         load();
+        if (moved.length) {
+          showUndo('Moved ' + moved.length + ' item' + (moved.length > 1 ? 's' : '') + ' to ' + AREA_LABELS[toArea], function () {
+            return Promise.all(moved.map(function (m) {
+              return apiFor(toArea, toId, toPath, 'move', { name: m.name, target: m.isFolder ? 'folder' : 'file', toArea: fromArea, toId: fromId, toPath: fromPath });
+            })).then(function (results) {
+              var moveBackFailed = results.filter(function (r) { return !r.ok; });
+              return {
+                ok: moveBackFailed.length === 0,
+                body: { error: moveBackFailed.length ? moveBackFailed.length + ' item(s) could not be moved back.' : '' }
+              };
+            });
+          });
+        }
       }).catch(function (err) {
         confirmBtn.disabled = false;
         reportError(err);
@@ -1087,18 +1141,29 @@
     if (!pubAreaOK(PERM.edit)) return;
     var newName = prompt('Rename to:', opts.name);
     if (!newName || newName === opts.name) return;
+    var area = state.area, id = state.id, path = state.path;
     api('rename', { old: opts.name, new: newName, target: opts.isFolder ? 'folder' : 'file' }).then(function (res) {
-      if (!res.ok) reportError(new Error(res.body.error || 'Rename failed'));
-      else load();
+      if (!res.ok) { reportError(new Error(res.body.error || 'Rename failed')); return; }
+      var finalName = res.body.name || newName; // may differ from newName if the extension was corrected
+      load();
+      showUndo('Renamed "' + opts.name + '" to "' + finalName + '"', function () {
+        return apiFor(area, id, path, 'rename', { old: finalName, new: opts.name, target: opts.isFolder ? 'folder' : 'file' });
+      });
     }).catch(reportError);
   }
 
   function onDelete(opts) {
     if (!pubAreaOK(PERM.delete)) return;
     if (!confirm('Delete "' + opts.name + '"?' + (opts.isFolder ? ' This deletes everything inside it.' : ''))) return;
+    var area = state.area, id = state.id, path = state.path;
     api('delete', { name: opts.name, target: opts.isFolder ? 'folder' : 'file' }).then(function (res) {
-      if (!res.ok) reportError(new Error(res.body.error || 'Delete failed'));
-      else load();
+      if (!res.ok) { reportError(new Error(res.body.error || 'Delete failed')); return; }
+      load();
+      if (res.body.trashId) {
+        showUndo('Deleted "' + opts.name + '"', function () {
+          return apiFor(area, id, path, 'restore', { trashId: res.body.trashId });
+        });
+      }
     }).catch(reportError);
   }
 
@@ -1108,9 +1173,15 @@
     var toId = toArea === 'pub' ? PAGEID : USERID;
     var label = toArea === 'priv' ? 'My files' : 'Page files';
     if (!confirm('Move "' + opts.name + '" to ' + label + '?')) return;
+    var fromArea = state.area, fromId = state.id, fromPath = state.path;
     api('move', { name: opts.name, target: opts.isFolder ? 'folder' : 'file', toArea: toArea, toId: toId, toPath: '' }).then(function (res) {
-      if (!res.ok) reportError(new Error(res.body.error || 'Move failed'));
-      else { state.selected = null; load(); }
+      if (!res.ok) { reportError(new Error(res.body.error || 'Move failed')); return; }
+      var finalName = res.body.name || opts.name;
+      state.selected = null;
+      load();
+      showUndo('Moved "' + opts.name + '" to ' + label, function () {
+        return apiFor(toArea, toId, '', 'move', { name: finalName, target: opts.isFolder ? 'folder' : 'file', toArea: fromArea, toId: fromId, toPath: fromPath });
+      });
     }).catch(reportError);
   }
 
@@ -1257,6 +1328,61 @@
       });
       wrap.appendChild(list);
     }
+  }
+
+  var UNDO_TIMEOUT_MS = 8000;
+
+  /**
+   * Arms the undo toast for one reversible action. `undoFn` is called only
+   * if the person clicks Undo, and must return a promise resolving to the
+   * usual `{ok, body}` shape (see api()/apiFor()). Replaces any
+   * currently-showing toast - only one undo is offered at a time, matching
+   * the single-toast UX (see undoState's docblock above).
+   */
+  function showUndo(message, undoFn) {
+    if (undoState && undoState.timeoutId) clearTimeout(undoState.timeoutId);
+    undoState = { message: message, action: undoFn };
+    undoState.timeoutId = setTimeout(dismissUndo, UNDO_TIMEOUT_MS);
+    renderUndoToast();
+  }
+
+  function dismissUndo() {
+    if (undoState && undoState.timeoutId) clearTimeout(undoState.timeoutId);
+    undoState = null;
+    renderUndoToast();
+  }
+
+  function performUndo() {
+    if (!undoState) return;
+    var action = undoState.action;
+    if (undoState.timeoutId) clearTimeout(undoState.timeoutId);
+    var btn = document.querySelector('#fm-undo-toast .fm-undo-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Undoing\u2026'; }
+    action().then(function (res) {
+      undoState = null;
+      renderUndoToast();
+      if (res && res.ok === false) reportError(new Error((res.body && res.body.error) || 'Undo failed'));
+      load();
+    }).catch(function (err) {
+      undoState = null;
+      renderUndoToast();
+      reportError(err);
+    });
+  }
+
+  function renderUndoToast() {
+    var wrap = document.getElementById('fm-undo-toast');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    if (!undoState) { wrap.classList.remove('active'); return; }
+    wrap.classList.add('active');
+    wrap.appendChild(el('span', { class: 'fm-undo-msg', text: undoState.message }));
+    var undoBtn = el('button', { class: 'fm-undo-btn', text: 'Undo' });
+    undoBtn.addEventListener('click', performUndo);
+    wrap.appendChild(undoBtn);
+    var dismissBtn = el('button', { class: 'fm-undo-dismiss', text: '\u2715', title: 'Dismiss' });
+    dismissBtn.addEventListener('click', dismissUndo);
+    wrap.appendChild(dismissBtn);
   }
 
   render();

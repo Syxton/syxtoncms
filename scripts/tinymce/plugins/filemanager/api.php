@@ -6,7 +6,7 @@
 * current area. All state-changing actions also require the CSRF token
 * that index.php embeds from the session.
 *
-* Actions (POST 'action'): list, mkdir, upload, rename, delete, move, copy, geturl
+* Actions (POST 'action'): list, mkdir, upload, rename, delete, move, copy, geturl, restore
 * Common params: area=pub|priv, id=<pageid|userid>, path=<relative folder>,
 * pageid=<the page being edited, for ability scoping - see fm_is_able()>
 *
@@ -85,7 +85,7 @@ if ($area === FM_AREA_OLD && !in_array($action, ['list', 'move'], true)) {
 }
 
 // CSRF check for anything that changes state.
-$stateChanging = in_array($action, ['mkdir', 'upload', 'rename', 'delete', 'move', 'copy'], true);
+$stateChanging = in_array($action, ['mkdir', 'upload', 'rename', 'delete', 'move', 'copy', 'restore'], true);
 if ($stateChanging) {
     $csrf = $_REQUEST['csrf'] ?? '';
     if (!isset($_SESSION['fm_csrf']) || !hash_equals($_SESSION['fm_csrf'], (string) $csrf)) {
@@ -273,18 +273,93 @@ switch ($action) {
         if (!file_exists($victim)) {
             fm_json(['error' => 'Not found'], 404);
         }
-        if ($target === 'folder') {
-            if (!is_dir($victim)) {
-                fm_json(['error' => 'Not a folder'], 400);
-            }
-            fm_rrmdir($victim);
-        } else {
-            if (!is_file($victim)) {
-                fm_json(['error' => 'Not a file'], 400);
-            }
-            unlink($victim);
+        if ($target === 'folder' && !is_dir($victim)) {
+            fm_json(['error' => 'Not a folder'], 400);
         }
-        fm_json(['ok' => true]);
+        if ($target === 'file' && !is_file($victim)) {
+            fm_json(['error' => 'Not a file'], 400);
+        }
+
+        // Soft-delete: move into this area+id's trash instead of unlinking,
+        // so the filemanager's undo toast can reverse it via 'restore'
+        // below. $trashId is the handle the client hangs onto for that.
+        $trashRoot = fm_trash_root($area, $id);
+        if ($trashRoot === null) {
+            fm_json(['error' => 'Could not delete'], 500);
+        }
+        fm_purge_old_trash($trashRoot); // opportunistic - see its docblock
+
+        $trashId  = bin2hex(random_bytes(8));
+        $entryDir = $trashRoot . DIRECTORY_SEPARATOR . $trashId;
+        if (!mkdir($entryDir, 0750)) {
+            fm_json(['error' => 'Could not delete'], 500);
+        }
+        if (!fm_move_any($victim, $entryDir . DIRECTORY_SEPARATOR . $name)) {
+            fm_rrmdir($entryDir);
+            fm_json(['error' => 'Delete failed'], 500);
+        }
+        file_put_contents($entryDir . DIRECTORY_SEPARATOR . '.meta.json', json_encode([
+            'name'      => $name,
+            'target'    => $target,
+            'path'      => $relPath, // folder it was deleted FROM, for 'restore' to put it back
+            'deletedAt' => time(),
+        ]));
+        fm_json(['ok' => true, 'trashId' => $trashId]);
+        break;
+    }
+
+    case 'restore': {
+        // Undo for 'delete' above - same permission, since it's delete's
+        // exact inverse. Only reachable within the retention window
+        // fm_purge_old_trash() enforces (default 30 days); past that (or
+        // once already restored/undone) this just 404s.
+        if ($area === FM_AREA_PUBLIC && !fm_is_able('filemanager_delete', $pageid)) {
+            fm_json(['error' => 'Forbidden'], 403);
+        }
+        $trashId = (string) ($_REQUEST['trashId'] ?? '');
+        if (!preg_match('/^[0-9a-f]{16}$/', $trashId)) {
+            fm_json(['error' => 'Invalid request'], 400);
+        }
+        $trashRoot = fm_trash_root($area, $id);
+        $entryDir  = $trashRoot !== null ? $trashRoot . DIRECTORY_SEPARATOR . $trashId : null;
+        $metaFile  = $entryDir !== null ? $entryDir . DIRECTORY_SEPARATOR . '.meta.json' : null;
+        if ($entryDir === null || !is_dir($entryDir) || !is_file($metaFile)) {
+            fm_json(['error' => 'Nothing to restore - it may already have been restored, or the undo window has passed'], 404);
+        }
+        $meta = json_decode((string) file_get_contents($metaFile), true);
+        if (!is_array($meta) || !isset($meta['name'], $meta['target'], $meta['path'])) {
+            fm_json(['error' => 'Trash entry is corrupt'], 500);
+        }
+        $srcPath = $entryDir . DIRECTORY_SEPARATOR . $meta['name'];
+        if (!file_exists($srcPath)) {
+            fm_json(['error' => 'Trash entry is corrupt'], 500);
+        }
+
+        // Restore into its original folder if that folder still exists;
+        // fall back to the area root if it was itself renamed/moved/
+        // deleted in the meantime.
+        $destDir = fm_resolve_path($area, $id, (string) $meta['path']);
+        $restoredPath = (string) $meta['path'];
+        if ($destDir === null) {
+            $destDir = fm_area_root($area, $id);
+            $restoredPath = '';
+        }
+
+        // Avoid clobbering anything created at the destination since deletion.
+        $finalName = (string) $meta['name'];
+        $n = 1;
+        $ext = $meta['target'] === 'file' ? '.' . pathinfo($finalName, PATHINFO_EXTENSION) : '';
+        $base = $meta['target'] === 'file' ? pathinfo($finalName, PATHINFO_FILENAME) : $finalName;
+        while (file_exists($destDir . DIRECTORY_SEPARATOR . $finalName)) {
+            $finalName = $base . '(' . $n . ')' . $ext;
+            $n++;
+        }
+
+        if (!fm_move_any($srcPath, $destDir . DIRECTORY_SEPARATOR . $finalName)) {
+            fm_json(['error' => 'Restore failed'], 500);
+        }
+        fm_rrmdir($entryDir); // drop the now-empty trash entry (and its .meta.json)
+        fm_json(['ok' => true, 'name' => $finalName, 'path' => $restoredPath]);
         break;
     }
 
@@ -494,6 +569,30 @@ function fm_rrmdir(string $dir): void {
         }
     }
     rmdir($dir);
+}
+
+/**
+ * Sweep one area+id's trash (see fm_trash_root()) for entries past the
+ * retention window and hard-delete them. There's no cron here, so this
+ * runs opportunistically from 'delete' itself - cheap (one scandir of a
+ * folder that's normally tiny) and self-limiting since it only ever piggy-
+ * backs on a request that's already mutating that same trash.
+ */
+function fm_purge_old_trash(string $trashRoot, int $maxAgeSeconds = 2592000): void { // 2592000s = 30 days
+    $entries = @scandir($trashRoot);
+    if ($entries === false) {
+        return;
+    }
+    $cutoff = time() - $maxAgeSeconds;
+    foreach ($entries as $entry) {
+        if ($entry === '.' || $entry === '..') {
+            continue;
+        }
+        $full = $trashRoot . DIRECTORY_SEPARATOR . $entry;
+        if (is_dir($full) && filemtime($full) < $cutoff) {
+            fm_rrmdir($full);
+        }
+    }
 }
 
 /**
