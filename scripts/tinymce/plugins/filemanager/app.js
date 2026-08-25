@@ -134,6 +134,10 @@
     query: '',                            // current search filter (matches file/folder name)
   };
 
+  // Tracks the single in-flight upload batch, or null when idle. See
+  // doUpload()/renderUploadProgress() - only one batch runs at a time.
+  var uploadState = null; // { xhr, total, loaded, files: [{name, status, error}] }
+
   // Multi-select for bulk move/copy/delete, keyed within the current
   // folder only (cleared on navigation) - independent of state.selected.
   var multiSelected = {}; // key -> {name, isFolder}
@@ -235,12 +239,14 @@
     updateTabHighlight();
 
     root.appendChild(el('div', { class: 'fm-toolbar', id: 'fm-toolbar' }));
+    root.appendChild(el('div', { class: 'fm-upload-progress', id: 'fm-upload-progress' }));
 
     var body = el('div', { class: 'fm-body fm-dropzone' });
     root.appendChild(body);
     ['dragover', 'dragleave', 'drop'].forEach(function (evt) {
       body.addEventListener(evt, function (e) {
         if (state.area === 'old' || !pubAreaOK(PERM.upload)) return; // read-only, or no upload permission
+        if (uploadState) return; // one batch at a time - already uploading
         if (dragging) return; // internal file/folder move, not an OS file drag - handled by item/crumb drop targets
         e.preventDefault();
         body.classList.toggle('dragover', evt === 'dragover');
@@ -251,6 +257,7 @@
     root.appendChild(el('div', { class: 'fm-footer', id: 'fm-footer' }));
 
     renderToolbar();
+    renderUploadProgress();
     load();
   }
 
@@ -277,7 +284,8 @@
 
     var uploadInput = el('input', { type: 'file', multiple: 'multiple', style: 'display:none' });
     uploadInput.addEventListener('change', function () { doUpload(uploadInput.files); uploadInput.value = ''; });
-    var uploadBtn = el('button', { class: 'fm-btn', text: 'Upload' });
+    var uploadBtn = el('button', { class: 'fm-btn', text: uploadState ? 'Uploading\u2026' : 'Upload' });
+    if (uploadState) uploadBtn.disabled = true;
     uploadBtn.addEventListener('click', function () { uploadInput.click(); });
     if (pubAreaOK(PERM.upload)) {
       toolbar.appendChild(uploadBtn);
@@ -1124,6 +1132,11 @@
 
   function doUpload(fileList) {
     if (state.area === 'old' || !pubAreaOK(PERM.upload)) return;
+    if (uploadState) return; // one batch at a time - toolbar button/dropzone are disabled while uploading
+
+    var files = Array.prototype.slice.call(fileList);
+    if (!files.length) return;
+
     var fd = new FormData();
     fd.append('action', 'upload');
     fd.append('area', state.area);
@@ -1131,27 +1144,119 @@
     fd.append('path', state.path);
     fd.append('pageid', PAGEID);
     fd.append('csrf', CSRF);
-    Array.prototype.forEach.call(fileList, function (file) { fd.append('file[]', file); });
-    fetch(API, { method: 'POST', body: fd, credentials: 'same-origin' })
-      .then(function (r) {
-        return r.text().then(function (text) {
-          var parsed;
-          try { parsed = JSON.parse(text); }
-          catch (e) { throw new Error('Upload failed: the server returned an unexpected response (' + r.status + ').'); }
-          return parsed;
-        });
-      })
-      .then(function (res) {
-        var failed = (res.results || []).filter(function (r) { return !r.ok; });
-        if (failed.length) {
-          reportError(new Error('Some files failed to upload:\n' + failed.map(function (f) { return f.name + ': ' + f.error; }).join('\n')));
-        }
-        load();
-      })
-      .catch(function (err) {
-        reportError(err);
+    files.forEach(function (file) { fd.append('file[]', file); });
+
+    var xhr = new XMLHttpRequest();
+    uploadState = {
+      xhr: xhr,
+      total: files.reduce(function (sum, f) { return sum + f.size; }, 0),
+      loaded: 0,
+      files: files.map(function (f) { return { name: f.name, status: 'pending' }; }),
+    };
+    renderToolbar();
+    renderUploadProgress();
+
+    xhr.upload.addEventListener('progress', function (e) {
+      if (!uploadState) return;
+      if (e.lengthComputable) uploadState.loaded = e.loaded;
+      renderUploadProgress();
+    });
+
+    xhr.addEventListener('load', function () {
+      if (!uploadState) return; // cleared already (e.g. abort raced the load event)
+      var parsed = null;
+      try { parsed = JSON.parse(xhr.responseText); } catch (e) { /* handled below */ }
+      if (!parsed) {
+        uploadState = null;
+        renderToolbar();
+        renderUploadProgress();
+        reportError(new Error('Upload failed: the server returned an unexpected response (' + xhr.status + ').'));
         load(); // refresh anyway - the file(s) that did succeed should still show up
+        return;
+      }
+      var results = parsed.results || [];
+      uploadState.loaded = uploadState.total; // in case the final progress event never fired
+      uploadState.files.forEach(function (f, i) {
+        var r = results[i];
+        f.status = r && r.ok ? 'ok' : 'error';
+        f.error = r ? r.error : 'No response';
       });
+      var hadFailure = uploadState.files.some(function (f) { return f.status === 'error'; });
+      renderUploadProgress();
+      load();
+      // Leave the summary on screen briefly (longer if something failed) before clearing it.
+      setTimeout(function () {
+        uploadState = null;
+        renderToolbar();
+        renderUploadProgress();
+      }, hadFailure ? 3000 : 800);
+    });
+
+    xhr.addEventListener('error', function () {
+      uploadState = null;
+      renderToolbar();
+      renderUploadProgress();
+      reportError(new Error('Upload failed - network error.'));
+      load(); // refresh anyway - the file(s) that did succeed should still show up
+    });
+
+    xhr.addEventListener('abort', function () {
+      uploadState = null;
+      renderToolbar();
+      renderUploadProgress();
+      load();
+    });
+
+    xhr.open('POST', API, true);
+    xhr.withCredentials = true;
+    xhr.send(fd);
+  }
+
+  function cancelUpload() {
+    if (uploadState && uploadState.xhr) uploadState.xhr.abort();
+  }
+
+  function renderUploadProgress() {
+    var wrap = document.getElementById('fm-upload-progress');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    if (!uploadState) { wrap.classList.remove('active'); return; }
+    wrap.classList.add('active');
+
+    var pct = uploadState.total > 0 ? Math.min(100, Math.round(uploadState.loaded / uploadState.total * 100)) : 100;
+    var settled = uploadState.files.every(function (f) { return f.status !== 'pending'; });
+
+    var head = el('div', { class: 'fm-upload-head' });
+    head.appendChild(el('div', {
+      class: 'fm-upload-label',
+      text: settled
+        ? 'Upload complete'
+        : 'Uploading ' + uploadState.files.length + (uploadState.files.length === 1 ? ' file' : ' files') +
+          '\u2026 ' + humanSize(uploadState.loaded) + ' of ' + humanSize(uploadState.total) + ' (' + pct + '%)'
+    }));
+    if (!settled) {
+      var cancelBtn = el('button', { class: 'fm-upload-cancel', text: 'Cancel', title: 'Cancel upload' });
+      cancelBtn.addEventListener('click', cancelUpload);
+      head.appendChild(cancelBtn);
+    }
+    wrap.appendChild(head);
+
+    var track = el('div', { class: 'fm-upload-bar-track' });
+    track.appendChild(el('div', { class: 'fm-upload-bar-fill' + (settled ? ' done' : ''), style: 'width:' + pct + '%;' }));
+    wrap.appendChild(track);
+
+    if (uploadState.files.length > 1 || settled) {
+      var list = el('div', { class: 'fm-upload-files' });
+      uploadState.files.forEach(function (f) {
+        var row = el('div', { class: 'fm-upload-file fm-upload-file-' + f.status });
+        var icon = f.status === 'ok' ? '\u2713' : f.status === 'error' ? '\u2715' : '\u2026';
+        row.appendChild(el('span', { class: 'fm-upload-file-icon', text: icon }));
+        row.appendChild(el('span', { class: 'fm-upload-file-name', text: f.name }));
+        if (f.status === 'error' && f.error) row.appendChild(el('span', { class: 'fm-upload-file-msg', text: f.error }));
+        list.appendChild(row);
+      });
+      wrap.appendChild(list);
+    }
   }
 
   render();
