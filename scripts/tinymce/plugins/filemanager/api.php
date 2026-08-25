@@ -6,7 +6,7 @@
 * current area. All state-changing actions also require the CSRF token
 * that index.php embeds from the session.
 *
-* Actions (POST 'action'): list, mkdir, upload, rename, delete, move, copy, geturl, restore
+* Actions (POST 'action'): list, mkdir, upload, rename, delete, move, copy, geturl, restore, trash_list, trash_delete
 * Common params: area=pub|priv, id=<pageid|userid>, path=<relative folder>,
 * pageid=<the page being edited, for ability scoping - see fm_is_able()>
 *
@@ -85,7 +85,7 @@ if ($area === FM_AREA_OLD && !in_array($action, ['list', 'move'], true)) {
 }
 
 // CSRF check for anything that changes state.
-$stateChanging = in_array($action, ['mkdir', 'upload', 'rename', 'delete', 'move', 'copy', 'restore'], true);
+$stateChanging = in_array($action, ['mkdir', 'upload', 'rename', 'delete', 'move', 'copy', 'restore', 'trash_delete'], true);
 if ($stateChanging) {
     $csrf = $_REQUEST['csrf'] ?? '';
     if (!isset($_SESSION['fm_csrf']) || !hash_equals($_SESSION['fm_csrf'], (string) $csrf)) {
@@ -360,6 +360,67 @@ switch ($action) {
         }
         fm_rrmdir($entryDir); // drop the now-empty trash entry (and its .meta.json)
         fm_json(['ok' => true, 'name' => $finalName, 'path' => $restoredPath]);
+        break;
+    }
+
+    case 'trash_list': {
+        // Backs the "Trash" toolbar button - lets someone browse and
+        // restore anything soft-deleted within the retention window, not
+        // just the last delete (that's what the client's undo toast
+        // already covers via the trashId 'delete' hands back).
+        if ($area === FM_AREA_PUBLIC && !fm_is_able('filemanager_delete', $pageid)) {
+            fm_json(['error' => 'Forbidden'], 403);
+        }
+        $trashRoot = fm_trash_root($area, $id);
+        if ($trashRoot === null) {
+            fm_json(['items' => []]);
+        }
+        fm_purge_old_trash($trashRoot); // keep the list honest before showing it
+        $items = [];
+        foreach (scandir($trashRoot) as $entry) {
+            if ($entry === '.' || $entry === '..') {
+                continue;
+            }
+            $entryDir = $trashRoot . DIRECTORY_SEPARATOR . $entry;
+            $metaFile = $entryDir . DIRECTORY_SEPARATOR . '.meta.json';
+            if (!is_dir($entryDir) || !is_file($metaFile)) {
+                continue; // ignore anything that isn't a well-formed trash entry
+            }
+            $meta = json_decode((string) file_get_contents($metaFile), true);
+            if (!is_array($meta) || !isset($meta['name'], $meta['target'], $meta['path'], $meta['deletedAt'])) {
+                continue;
+            }
+            $items[] = [
+                'trashId'   => $entry,
+                'name'      => $meta['name'],
+                'target'    => $meta['target'],
+                'path'      => $meta['path'],
+                'deletedAt' => $meta['deletedAt'],
+            ];
+        }
+        usort($items, fn($a, $b) => $b['deletedAt'] <=> $a['deletedAt']); // most recently deleted first
+        fm_json(['items' => $items]);
+        break;
+    }
+
+    case 'trash_delete': {
+        // Permanent delete FROM trash ("Delete forever" in the Trash
+        // browser / "Empty trash") - unlike 'delete' above, this one has
+        // no undo.
+        if ($area === FM_AREA_PUBLIC && !fm_is_able('filemanager_delete', $pageid)) {
+            fm_json(['error' => 'Forbidden'], 403);
+        }
+        $trashId = (string) ($_REQUEST['trashId'] ?? '');
+        if (!preg_match('/^[0-9a-f]{16}$/', $trashId)) {
+            fm_json(['error' => 'Invalid request'], 400);
+        }
+        $trashRoot = fm_trash_root($area, $id);
+        $entryDir  = $trashRoot !== null ? $trashRoot . DIRECTORY_SEPARATOR . $trashId : null;
+        if ($entryDir === null || !is_dir($entryDir)) {
+            fm_json(['error' => 'Not found'], 404);
+        }
+        fm_rrmdir($entryDir);
+        fm_json(['ok' => true]);
         break;
     }
 

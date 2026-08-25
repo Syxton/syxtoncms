@@ -160,6 +160,21 @@ body {
 .fm-upload-file-error .fm-upload-file-name { color: #d63638; }
 .fm-upload-file-msg { font-size: 11px; color: #d63638; flex-shrink: 0; }
 
+/* Trash / recycling bin modal */
+.fm-trash-modal { width: 520px; }
+.fm-trash-list { display: flex; flex-direction: column; gap: 2px; }
+.fm-trash-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 4px; }
+.fm-trash-row:hover { background: #f6f7f7; }
+.fm-trash-icon { font-size: 18px; flex-shrink: 0; }
+.fm-trash-info { flex: 1; min-width: 0; }
+.fm-trash-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fm-trash-meta { font-size: 11px; color: #8c8f94; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fm-trash-row .fm-btn { flex-shrink: 0; padding: 5px 10px; font-size: 12px; }
+@media (max-width: 480px) {
+  .fm-trash-row { flex-wrap: wrap; }
+  .fm-trash-info { flex-basis: 100%; order: -1; }
+}
+
 /* Undo toast (rename/move/delete) */
 .fm-undo-toast {
   display: none; position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%);

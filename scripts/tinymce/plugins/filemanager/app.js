@@ -299,6 +299,10 @@
       toolbar.appendChild(uploadBtn);
       toolbar.appendChild(uploadInput);
     }
+
+    var trashBtn = el('button', { class: 'fm-btn secondary', text: 'Trash' });
+    trashBtn.addEventListener('click', openTrash);
+    if (pubAreaOK(PERM.delete)) toolbar.appendChild(trashBtn);
   }
 
   /**
@@ -955,6 +959,118 @@
     renderTabs();
     refresh();
     root.appendChild(overlay);
+  }
+
+  /**
+   * "Trash" toolbar button - browses this area+id's soft-deleted items
+   * (see the 'delete'/'restore'/'trash_list' actions in api.php) so
+   * anything past the undo toast's 8-second window is still recoverable
+   * for the full 30-day retention window. Never shown for Old files,
+   * since nothing is ever deleted from there.
+   */
+  function openTrash() {
+    var area = state.area, id = state.id;
+    var overlay = el('div', { class: 'fm-modal-overlay' });
+    var modal = el('div', { class: 'fm-modal fm-trash-modal' });
+    modal.appendChild(el('div', { class: 'fm-modal-title', text: 'Trash \u2014 ' + AREA_LABELS[area] }));
+    modal.appendChild(el('div', {
+      class: 'fm-modal-crumb',
+      text: 'Deleted items are kept for 30 days, then removed automatically.'
+    }));
+    var listEl = el('div', { class: 'fm-modal-list fm-trash-list' });
+    modal.appendChild(listEl);
+
+    var actionsRow = el('div', { class: 'fm-modal-actions' });
+    var emptyBtn = el('button', { class: 'fm-btn danger', text: 'Empty trash' });
+    emptyBtn.addEventListener('click', function () { emptyTrash(area, id, refresh); });
+    var closeBtn = el('button', { class: 'fm-btn secondary', text: 'Close' });
+    closeBtn.addEventListener('click', function () { overlay.remove(); });
+    actionsRow.appendChild(emptyBtn);
+    actionsRow.appendChild(closeBtn);
+    modal.appendChild(actionsRow);
+    overlay.appendChild(modal);
+
+    function refresh() {
+      listEl.innerHTML = '';
+      listEl.appendChild(el('div', { class: 'fm-empty', text: 'Loading\u2026' }));
+      apiFor(area, id, '', 'trash_list', {}).then(function (res) {
+        listEl.innerHTML = '';
+        if (!res.ok) {
+          listEl.appendChild(el('div', { class: 'fm-empty', text: res.body.error || 'Could not load trash.' }));
+          emptyBtn.disabled = true;
+          return;
+        }
+        var items = res.body.items || [];
+        emptyBtn.disabled = !items.length;
+        if (!items.length) {
+          listEl.appendChild(el('div', { class: 'fm-empty', text: 'Trash is empty.' }));
+          return;
+        }
+        items.forEach(function (it) {
+          listEl.appendChild(buildTrashRow(area, id, it, function () {
+            if (state.area === area && state.id === id) load(); // the folder it'll reappear in may be the one currently open
+            refresh();
+          }));
+        });
+      }).catch(function (err) {
+        listEl.innerHTML = '';
+        listEl.appendChild(el('div', { class: 'fm-empty', text: err.message || 'Could not load trash.' }));
+      });
+    }
+
+    refresh();
+    root.appendChild(overlay);
+  }
+
+  function buildTrashRow(area, id, it, onChanged) {
+    var row = el('div', { class: 'fm-trash-row' });
+    row.appendChild(el('span', { class: 'fm-trash-icon', text: it.target === 'folder' ? '\uD83D\uDCC1' : '\uD83D\uDCC4' }));
+
+    var info = el('div', { class: 'fm-trash-info' });
+    info.appendChild(el('div', { class: 'fm-trash-name', text: it.name }));
+    var whereText = 'Was in ' + AREA_LABELS[area] + (it.path ? ' / ' + it.path.split('/').join(' / ') : ' (root)');
+    var whenText = new Date(it.deletedAt * 1000).toLocaleString();
+    info.appendChild(el('div', { class: 'fm-trash-meta', text: whereText + ' \u00b7 Deleted ' + whenText }));
+    row.appendChild(info);
+
+    var restoreBtn = el('button', { class: 'fm-btn secondary', text: 'Restore' });
+    restoreBtn.addEventListener('click', function () {
+      restoreBtn.disabled = true;
+      apiFor(area, id, '', 'restore', { trashId: it.trashId }).then(function (res) {
+        if (!res.ok) { reportError(new Error(res.body.error || 'Restore failed')); restoreBtn.disabled = false; return; }
+        onChanged();
+      }).catch(function (err) { reportError(err); restoreBtn.disabled = false; });
+    });
+    row.appendChild(restoreBtn);
+
+    var deleteBtn = el('button', { class: 'fm-btn danger', text: 'Delete forever' });
+    deleteBtn.addEventListener('click', function () {
+      if (!confirm('Permanently delete "' + it.name + '"? This cannot be undone.')) return;
+      deleteBtn.disabled = true;
+      apiFor(area, id, '', 'trash_delete', { trashId: it.trashId }).then(function (res) {
+        if (!res.ok) { reportError(new Error(res.body.error || 'Delete failed')); deleteBtn.disabled = false; return; }
+        onChanged();
+      }).catch(function (err) { reportError(err); deleteBtn.disabled = false; });
+    });
+    row.appendChild(deleteBtn);
+
+    return row;
+  }
+
+  function emptyTrash(area, id, onChanged) {
+    apiFor(area, id, '', 'trash_list', {}).then(function (res) {
+      if (!res.ok) { reportError(new Error(res.body.error || 'Could not load trash.')); return; }
+      var items = res.body.items || [];
+      if (!items.length) return;
+      if (!confirm('Permanently delete all ' + items.length + ' item' + (items.length > 1 ? 's' : '') + ' in trash? This cannot be undone.')) return;
+      Promise.all(items.map(function (it) {
+        return apiFor(area, id, '', 'trash_delete', { trashId: it.trashId });
+      })).then(function (results) {
+        var failed = results.filter(function (r) { return !r.ok; });
+        if (failed.length) reportError(new Error(failed.length + ' item(s) could not be deleted.'));
+        onChanged();
+      }).catch(reportError);
+    }).catch(reportError);
   }
 
   function copyToClipboard(url, btn) {
