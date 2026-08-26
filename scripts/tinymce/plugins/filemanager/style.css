@@ -160,6 +160,12 @@ body {
 .fm-upload-file-error .fm-upload-file-name { color: #d63638; }
 .fm-upload-file-msg { font-size: 11px; color: #d63638; flex-shrink: 0; }
 
+/* Replace/Keep-both/Cancel conflict modal (upload, move, copy, migrate) */
+.fm-conflict-modal { width: 420px; }
+.fm-conflict-note { font-size: 12px; color: #8c8f94; margin-top: 8px; }
+.fm-conflict-actions { justify-content: flex-end; }
+.fm-conflict-actions .fm-btn { flex: none; }
+
 /* Trash / recycling bin modal */
 .fm-trash-modal { width: 520px; }
 .fm-trash-list { display: flex; flex-direction: column; gap: 2px; }
@@ -215,10 +221,11 @@ body {
   display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px;
 }
 .fm-modal {
+  padding: 15px;
   background: #fff; border-radius: 6px; width: 420px; max-width: 100%; max-height: 80vh;
   display: flex; flex-direction: column; box-shadow: 0 8px 30px rgba(0,0,0,.25);
 }
-.fm-modal-title { font-weight: 600; padding: 14px 16px 8px; }
+.fm-modal-title { font-weight: 600; padding: 5px 0; }
 .fm-modal-tabs { display: flex; gap: 4px; padding: 0 16px 8px; }
 .fm-modal-tabs .fm-btn.active { background: #2271b1; color: #fff; }
 .fm-modal-tabs .fm-tab-single {

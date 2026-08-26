@@ -138,6 +138,12 @@
   // doUpload()/renderUploadProgress() - only one batch runs at a time.
   var uploadState = null; // { xhr, total, loaded, files: [{name, status, error}] }
 
+  // True while doUpload()'s conflict precheck/choice modal is in flight,
+  // i.e. the window between picking files and uploadState actually being
+  // set - guards the Upload button/dropzone against a second upload
+  // starting while that's still being decided.
+  var uploadPending = false;
+
   // Tracks the single reversible action available for undo (rename/move/
   // delete), or null when none is pending. See showUndo()/performUndo() -
   // area/id/path context is captured in the closure at action time, not
@@ -293,8 +299,9 @@
     var uploadInput = el('input', { type: 'file', multiple: 'multiple', style: 'display:none' });
     uploadInput.addEventListener('change', function () { doUpload(uploadInput.files); uploadInput.value = ''; });
     var uploadBtn = el('button', { class: 'fm-btn', text: uploadState ? 'Uploading\u2026' : 'Upload' });
-    if (uploadState) uploadBtn.disabled = true;
+    if (uploadState || uploadPending) uploadBtn.disabled = true;
     uploadBtn.addEventListener('click', function () { uploadInput.click(); });
+
     if (pubAreaOK(PERM.upload)) {
       toolbar.appendChild(uploadBtn);
       toolbar.appendChild(uploadInput);
@@ -472,13 +479,19 @@
       if (toPath === state.path) return; // already here
       if (moved.isFolder && (state.path ? state.path + '/' : '') + moved.name === toPath) return; // folder onto itself
       var fromArea = state.area, fromId = state.id, fromPath = state.path;
-      api('move', { name: moved.name, target: moved.isFolder ? 'folder' : 'file', toArea: state.area, toId: state.id, toPath: toPath }).then(function (res) {
-        if (!res.ok) { reportError(new Error(res.body.error || 'Move failed')); return; }
-        var finalName = res.body.name || moved.name;
-        if (state.selected && state.selected.name === moved.name) state.selected = null;
-        load();
-        showUndo('Moved "' + moved.name + '"', function () {
-          return apiFor(fromArea, fromId, toPath, 'move', { name: finalName, target: moved.isFolder ? 'folder' : 'file', toArea: fromArea, toId: fromId, toPath: fromPath });
+      checkConflicts([moved], state.area, state.id, toPath).then(function (conflicts) {
+        var choicePromise = conflicts.length ? askConflictChoice(conflicts) : Promise.resolve('rename');
+        return choicePromise.then(function (onConflict) {
+          if (!onConflict) return; // cancelled
+          return api('move', { name: moved.name, target: moved.isFolder ? 'folder' : 'file', toArea: state.area, toId: state.id, toPath: toPath, onConflict: onConflict }).then(function (res) {
+            if (!res.ok) { reportError(new Error(res.body.error || 'Move failed')); return; }
+            var finalName = res.body.name || moved.name;
+            if (state.selected && state.selected.name === moved.name) state.selected = null;
+            load();
+            showUndo('Moved "' + moved.name + '"', function () {
+              return apiFor(fromArea, fromId, toPath, 'move', { name: finalName, target: moved.isFolder ? 'folder' : 'file', toArea: fromArea, toId: fromId, toPath: fromPath });
+            });
+          });
         });
       }).catch(reportError);
     });
@@ -668,6 +681,11 @@
         var copyBtnOld = el('button', { class: 'fm-btn secondary', text: 'Copy Link' });
         copyBtnOld.addEventListener('click', function () { copyToClipboard(sel.previewUrl, copyBtnOld); });
         selRow.appendChild(copyBtnOld);
+        if (!sel.isFolder) {
+          var downloadBtnOld = el('button', { class: 'fm-btn secondary', text: 'Download' });
+          downloadBtnOld.addEventListener('click', function () { onDownload(sel); });
+          selRow.appendChild(downloadBtnOld);
+        }
       } else {
         var levels = availableLevels();
         var select = el('select', { class: 'fm-level-select' });
@@ -695,6 +713,12 @@
           getShareUrl(function (url) { copyToClipboard(url, copyBtn); });
         });
         selRow.appendChild(copyBtn);
+
+        if (!sel.isFolder) {
+          var downloadBtn = el('button', { class: 'fm-btn secondary', text: 'Download' });
+          downloadBtn.addEventListener('click', function () { onDownload(sel); });
+          selRow.appendChild(downloadBtn);
+        }
 
         if (destinationAreasFor('move').indexOf(state.area === 'priv' ? 'pub' : 'priv') !== -1) {
           var moveBtn = el('button', { class: 'fm-btn secondary', text: 'Move to ' + (state.area === 'priv' ? 'Page files' : 'My files') });
@@ -917,39 +941,46 @@
       confirmBtn.disabled = true;
       var toArea = pick.area, toId = pick.id, toPath = pick.path;
       var fromArea = state.area, fromId = state.id, fromPath = state.path;
-      Promise.all(items.map(function (it) {
-        return api(apiAction, { name: it.name, target: it.isFolder ? 'folder' : 'file', toArea: toArea, toId: toId, toPath: toPath })
-          .then(function (res) { return { item: it, res: res }; });
-      })).then(function (outcomes) {
-        var failed = outcomes.filter(function (o) { return !o.res.ok; });
-        // Undo only for a plain 'move' - 'copy' leaves the source in place
-        // (nothing destructive to reverse), and 'migrate' can't be
-        // reversed through this same action since Old files is a valid
-        // move source but never a valid destination (see api.php).
-        var moved = kind === 'move'
-          ? outcomes.filter(function (o) { return o.res.ok; })
-              .map(function (o) { return { name: o.res.body.name || o.item.name, isFolder: o.item.isFolder }; })
-          : [];
-        close();
-        clearMultiSelect();
-        state.selected = null;
-        if (failed.length) {
-          reportError(new Error(failed.length + ' item(s) could not be ' + (kind === 'copy' ? 'copied' : 'moved') + '.'));
-        }
-        load();
-        if (moved.length) {
-          showUndo('Moved ' + moved.length + ' item' + (moved.length > 1 ? 's' : '') + ' to ' + AREA_LABELS[toArea], function () {
-            return Promise.all(moved.map(function (m) {
-              return apiFor(toArea, toId, toPath, 'move', { name: m.name, target: m.isFolder ? 'folder' : 'file', toArea: fromArea, toId: fromId, toPath: fromPath });
-            })).then(function (results) {
-              var moveBackFailed = results.filter(function (r) { return !r.ok; });
-              return {
-                ok: moveBackFailed.length === 0,
-                body: { error: moveBackFailed.length ? moveBackFailed.length + ' item(s) could not be moved back.' : '' }
-              };
-            });
+
+      checkConflicts(items, toArea, toId, toPath).then(function (conflicts) {
+        var choicePromise = conflicts.length ? askConflictChoice(conflicts) : Promise.resolve('rename');
+        return choicePromise.then(function (onConflict) {
+          if (!onConflict) { confirmBtn.disabled = false; return; } // cancelled - leave the picker open
+          return Promise.all(items.map(function (it) {
+            return api(apiAction, { name: it.name, target: it.isFolder ? 'folder' : 'file', toArea: toArea, toId: toId, toPath: toPath, onConflict: onConflict })
+              .then(function (res) { return { item: it, res: res }; });
+          })).then(function (outcomes) {
+            var failed = outcomes.filter(function (o) { return !o.res.ok; });
+            // Undo only for a plain 'move' - 'copy' leaves the source in place
+            // (nothing destructive to reverse), and 'migrate' can't be
+            // reversed through this same action since Old files is a valid
+            // move source but never a valid destination (see api.php).
+            var moved = kind === 'move'
+              ? outcomes.filter(function (o) { return o.res.ok; })
+                  .map(function (o) { return { name: o.res.body.name || o.item.name, isFolder: o.item.isFolder }; })
+              : [];
+            close();
+            clearMultiSelect();
+            state.selected = null;
+            if (failed.length) {
+              reportError(new Error(failed.length + ' item(s) could not be ' + (kind === 'copy' ? 'copied' : 'moved') + '.'));
+            }
+            load();
+            if (moved.length) {
+              showUndo('Moved ' + moved.length + ' item' + (moved.length > 1 ? 's' : '') + ' to ' + AREA_LABELS[toArea], function () {
+                return Promise.all(moved.map(function (m) {
+                  return apiFor(toArea, toId, toPath, 'move', { name: m.name, target: m.isFolder ? 'folder' : 'file', toArea: fromArea, toId: fromId, toPath: fromPath });
+                })).then(function (results) {
+                  var moveBackFailed = results.filter(function (r) { return !r.ok; });
+                  return {
+                    ok: moveBackFailed.length === 0,
+                    body: { error: moveBackFailed.length ? moveBackFailed.length + ' item(s) could not be moved back.' : '' }
+                  };
+                });
+              });
+            }
           });
-        }
+        });
       }).catch(function (err) {
         confirmBtn.disabled = false;
         reportError(err);
@@ -968,6 +999,63 @@
    * for the full 30-day retention window. Never shown for Old files,
    * since nothing is ever deleted from there.
    */
+  /**
+   * Shows a Replace/Keep both/Cancel choice for one or more colliding
+   * names, and resolves to the onConflict value to use: 'replace',
+   * 'rename' (= keep both, auto-numbered), or null if cancelled. Shared
+   * by upload/move/copy/migrate wherever a precheck (see checkConflicts
+   * below) found something that would actually collide.
+   */
+  function askConflictChoice(names) {
+    return new Promise(function (resolve) {
+      var overlay = el('div', { class: 'fm-modal-overlay' });
+      var modal = el('div', { class: 'fm-modal fm-conflict-modal' });
+      modal.appendChild(el('div', {
+        class: 'fm-modal-title',
+        text: names.length === 1 ? '"' + names[0] + '" already exists' : names.length + ' items already exist'
+      }));
+      if (names.length > 1) {
+        modal.appendChild(el('div', { class: 'fm-modal-crumb', text: names.join(', ') }));
+      }
+      modal.appendChild(el('div', { class: 'fm-conflict-note', text: 'Replaced items can be restored from Trash.' }));
+
+      function choose(value) { overlay.remove(); resolve(value); }
+      var actionsRow = el('div', { class: 'fm-modal-actions fm-conflict-actions' });
+      var replaceBtn = el('button', { class: 'fm-btn danger', text: 'Replace' });
+      replaceBtn.addEventListener('click', function () { choose('replace'); });
+      var keepBtn = el('button', { class: 'fm-btn secondary', text: 'Keep both' });
+      keepBtn.addEventListener('click', function () { choose('rename'); });
+      var cancelBtn = el('button', { class: 'fm-btn secondary', text: 'Cancel' });
+      cancelBtn.addEventListener('click', function () { choose(null); });
+      actionsRow.appendChild(replaceBtn);
+      actionsRow.appendChild(keepBtn);
+      actionsRow.appendChild(cancelBtn);
+      modal.appendChild(actionsRow);
+
+      overlay.appendChild(modal);
+      root.appendChild(overlay);
+    });
+  }
+
+  /**
+   * Precheck for the above - asks the server which of `items`
+   * ({name, isFolder}) already exist at the destination, so the choice
+   * modal is only shown when something would really collide. Destination
+   * defaults to the current area/id/path (e.g. for a same-folder upload
+   * or duplicate precheck) when toArea/toId/toPath are omitted. Fails
+   * open (reports no conflicts) if the precheck request itself fails -
+   * the real action's own numbering loop is still there as a backstop.
+   */
+  function checkConflicts(items, toArea, toId, toPath) {
+    var payload = {
+      items: JSON.stringify(items.map(function (it) { return { name: it.name, target: it.isFolder ? 'folder' : 'file' }; }))
+    };
+    if (toArea !== undefined) { payload.toArea = toArea; payload.toId = toId; payload.toPath = toPath; }
+    return api('check_conflicts', payload).then(function (res) {
+      return (res.ok && res.body.conflicts) || [];
+    }).catch(function () { return []; });
+  }
+
   function openTrash() {
     var area = state.area, id = state.id;
     var overlay = el('div', { class: 'fm-modal-overlay' });
@@ -1102,6 +1190,11 @@
   // and list row. `container` lets the link button pass itself to onSelect.
   function buildItemActions(opts, container) {
     var actions = el('div', { class: 'fm-item-actions' });
+    if (!opts.isFolder && opts.previewUrl) {
+      var downloadBtn = el('button', { text: '\u2B07', title: 'Download' });
+      downloadBtn.addEventListener('click', function (e) { e.stopPropagation(); onDownload(opts); });
+      actions.appendChild(downloadBtn);
+    }
     if (opts.readOnly) {
       if (destinationAreasFor('migrate').length) {
         var migrateBtn = el('button', { text: '\u21ea', title: 'Migrate to My files / Page files' });
@@ -1118,6 +1211,11 @@
         var renameBtn = el('button', { text: '\u270e', title: 'Rename' });
         renameBtn.addEventListener('click', function (e) { e.stopPropagation(); onRename(opts); });
         actions.appendChild(renameBtn);
+      }
+      if (pubAreaOK(PERM.copy)) {
+        var dupBtn = el('button', { text: '\u29C9', title: 'Duplicate' });
+        dupBtn.addEventListener('click', function (e) { e.stopPropagation(); onDuplicate(opts); });
+        actions.appendChild(dupBtn);
       }
       if (pubAreaOK(PERM.delete)) {
         var deleteBtn = el('button', { text: '\u2715', title: 'Delete' });
@@ -1268,6 +1366,34 @@
     }).catch(reportError);
   }
 
+  /**
+   * Forces a save-as instead of the browser just navigating to/previewing
+   * the file. For Old files, previewUrl is already the direct legacy URL
+   * (no filegate involved) - the `download` attribute alone is enough
+   * there since it's same-origin. Everywhere else it's an admin-preview
+   * filegate.php URL, which honors `dl=1` to send
+   * Content-Disposition: attachment (see filegate.php) - belt and braces
+   * with the `download` attribute for older browsers.
+   */
+  function onDownload(opts) {
+    if (opts.isFolder || !opts.previewUrl) return;
+    var url = state.area === 'old'
+      ? opts.previewUrl
+      : opts.previewUrl + (opts.previewUrl.indexOf('?') === -1 ? '?' : '&') + 'dl=1';
+    var a = el('a', { href: url, download: opts.name });
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  function onDuplicate(opts) {
+    if (!pubAreaOK(PERM.copy)) return;
+    api('duplicate', { name: opts.name, target: opts.isFolder ? 'folder' : 'file' }).then(function (res) {
+      if (!res.ok) { reportError(new Error(res.body.error || 'Duplicate failed')); return; }
+      load();
+    }).catch(reportError);
+  }
+
   function onDelete(opts) {
     if (!pubAreaOK(PERM.delete)) return;
     if (!confirm('Delete "' + opts.name + '"?' + (opts.isFolder ? ' This deletes everything inside it.' : ''))) return;
@@ -1290,13 +1416,19 @@
     var label = toArea === 'priv' ? 'My files' : 'Page files';
     if (!confirm('Move "' + opts.name + '" to ' + label + '?')) return;
     var fromArea = state.area, fromId = state.id, fromPath = state.path;
-    api('move', { name: opts.name, target: opts.isFolder ? 'folder' : 'file', toArea: toArea, toId: toId, toPath: '' }).then(function (res) {
-      if (!res.ok) { reportError(new Error(res.body.error || 'Move failed')); return; }
-      var finalName = res.body.name || opts.name;
-      state.selected = null;
-      load();
-      showUndo('Moved "' + opts.name + '" to ' + label, function () {
-        return apiFor(toArea, toId, '', 'move', { name: finalName, target: opts.isFolder ? 'folder' : 'file', toArea: fromArea, toId: fromId, toPath: fromPath });
+    checkConflicts([opts], toArea, toId, '').then(function (conflicts) {
+      var choicePromise = conflicts.length ? askConflictChoice(conflicts) : Promise.resolve('rename');
+      return choicePromise.then(function (onConflict) {
+        if (!onConflict) return; // cancelled
+        return api('move', { name: opts.name, target: opts.isFolder ? 'folder' : 'file', toArea: toArea, toId: toId, toPath: '', onConflict: onConflict }).then(function (res) {
+          if (!res.ok) { reportError(new Error(res.body.error || 'Move failed')); return; }
+          var finalName = res.body.name || opts.name;
+          state.selected = null;
+          load();
+          showUndo('Moved "' + opts.name + '" to ' + label, function () {
+            return apiFor(toArea, toId, '', 'move', { name: finalName, target: opts.isFolder ? 'folder' : 'file', toArea: fromArea, toId: fromId, toPath: fromPath });
+          });
+        });
       });
     }).catch(reportError);
   }
@@ -1311,19 +1443,47 @@
       return;
     }
     var toId = toArea === 'pub' ? PAGEID : USERID;
-    api('move', { name: opts.name, target: opts.isFolder ? 'folder' : 'file', toArea: toArea, toId: toId, toPath: '' }).then(function (res) {
-      if (!res.ok) reportError(new Error(res.body.error || 'Move failed'));
-      else { state.selected = null; load(); }
+    checkConflicts([opts], toArea, toId, '').then(function (conflicts) {
+      var choicePromise = conflicts.length ? askConflictChoice(conflicts) : Promise.resolve('rename');
+      return choicePromise.then(function (onConflict) {
+        if (!onConflict) return; // cancelled
+        return api('move', { name: opts.name, target: opts.isFolder ? 'folder' : 'file', toArea: toArea, toId: toId, toPath: '', onConflict: onConflict }).then(function (res) {
+          if (!res.ok) reportError(new Error(res.body.error || 'Move failed'));
+          else { state.selected = null; load(); }
+        });
+      });
     }).catch(reportError);
   }
 
   function doUpload(fileList) {
     if (state.area === 'old' || !pubAreaOK(PERM.upload)) return;
-    if (uploadState) return; // one batch at a time - toolbar button/dropzone are disabled while uploading
+    if (uploadState || uploadPending) return; // one batch at a time - toolbar button/dropzone are disabled while either is true
 
     var files = Array.prototype.slice.call(fileList);
     if (!files.length) return;
 
+    uploadPending = true;
+    renderToolbar();
+
+    // Precheck against the current folder before asking anything - only
+    // shows the Replace/Keep-both choice if a name in this batch would
+    // actually collide with something already here.
+    var items = files.map(function (f) { return { name: f.name, isFolder: false }; });
+    checkConflicts(items).then(function (conflicts) {
+      var choicePromise = conflicts.length ? askConflictChoice(conflicts) : Promise.resolve('rename');
+      return choicePromise.then(function (onConflict) {
+        uploadPending = false;
+        if (!onConflict) { renderToolbar(); return; } // cancelled - upload nothing
+        startUpload(files, onConflict);
+      });
+    }).catch(function (err) {
+      uploadPending = false;
+      renderToolbar();
+      reportError(err);
+    });
+  }
+
+  function startUpload(files, onConflict) {
     var fd = new FormData();
     fd.append('action', 'upload');
     fd.append('area', state.area);
@@ -1331,6 +1491,7 @@
     fd.append('path', state.path);
     fd.append('pageid', PAGEID);
     fd.append('csrf', CSRF);
+    fd.append('onConflict', onConflict);
     files.forEach(function (file) { fd.append('file[]', file); });
 
     var xhr = new XMLHttpRequest();

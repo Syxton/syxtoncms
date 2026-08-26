@@ -6,7 +6,7 @@
 * current area. All state-changing actions also require the CSRF token
 * that index.php embeds from the session.
 *
-* Actions (POST 'action'): list, mkdir, upload, rename, delete, move, copy, geturl, restore, trash_list, trash_delete
+* Actions (POST 'action'): list, mkdir, upload, rename, delete, move, copy, geturl, restore, trash_list, trash_delete, duplicate, check_conflicts
 * Common params: area=pub|priv, id=<pageid|userid>, path=<relative folder>,
 * pageid=<the page being edited, for ability scoping - see fm_is_able()>
 *
@@ -85,7 +85,7 @@ if ($area === FM_AREA_OLD && !in_array($action, ['list', 'move'], true)) {
 }
 
 // CSRF check for anything that changes state.
-$stateChanging = in_array($action, ['mkdir', 'upload', 'rename', 'delete', 'move', 'copy', 'restore', 'trash_delete'], true);
+$stateChanging = in_array($action, ['mkdir', 'upload', 'rename', 'delete', 'move', 'copy', 'restore', 'trash_delete', 'duplicate'], true);
 if ($stateChanging) {
     $csrf = $_REQUEST['csrf'] ?? '';
     if (!isset($_SESSION['fm_csrf']) || !hash_equals($_SESSION['fm_csrf'], (string) $csrf)) {
@@ -183,6 +183,7 @@ switch ($action) {
             fm_json(['error' => 'No files received'], 400);
         }
         $maxBytes = 20 * 1024 * 1024; // 20MB, tune as needed
+        $onConflict = ((string) ($_REQUEST['onConflict'] ?? 'rename')) === 'replace' ? 'replace' : 'rename';
         $results = [];
         $count = count($_FILES['file']['name']);
         for ($i = 0; $i < $count; $i++) {
@@ -208,12 +209,17 @@ switch ($action) {
             if ($baseName === null) {
                 $baseName = 'file';
             }
-            // Avoid overwriting: file, file(1), file(2), ...
             $finalName = $baseName . '.' . $ext;
-            $n = 1;
-            while (file_exists($dir . DIRECTORY_SEPARATOR . $finalName)) {
-                $finalName = $baseName . '(' . $n . ').' . $ext;
-                $n++;
+            if ($onConflict === 'replace' && file_exists($dir . DIRECTORY_SEPARATOR . $finalName)) {
+                $existing = $dir . DIRECTORY_SEPARATOR . $finalName;
+                fm_clear_for_replace($area, $id, $relPath, $existing, $finalName, is_dir($existing) ? 'folder' : 'file');
+            } else {
+                // Avoid overwriting: file, file(1), file(2), ...
+                $n = 1;
+                while (file_exists($dir . DIRECTORY_SEPARATOR . $finalName)) {
+                    $finalName = $baseName . '(' . $n . ').' . $ext;
+                    $n++;
+                }
             }
             $dest = $dir . DIRECTORY_SEPARATOR . $finalName;
             if (!move_uploaded_file($tmpPath, $dest)) {
@@ -283,27 +289,10 @@ switch ($action) {
         // Soft-delete: move into this area+id's trash instead of unlinking,
         // so the filemanager's undo toast can reverse it via 'restore'
         // below. $trashId is the handle the client hangs onto for that.
-        $trashRoot = fm_trash_root($area, $id);
-        if ($trashRoot === null) {
+        $trashId = fm_trash_move($area, $id, $relPath, $victim, $name, $target);
+        if ($trashId === null) {
             fm_json(['error' => 'Could not delete'], 500);
         }
-        fm_purge_old_trash($trashRoot); // opportunistic - see its docblock
-
-        $trashId  = bin2hex(random_bytes(8));
-        $entryDir = $trashRoot . DIRECTORY_SEPARATOR . $trashId;
-        if (!mkdir($entryDir, 0750)) {
-            fm_json(['error' => 'Could not delete'], 500);
-        }
-        if (!fm_move_any($victim, $entryDir . DIRECTORY_SEPARATOR . $name)) {
-            fm_rrmdir($entryDir);
-            fm_json(['error' => 'Delete failed'], 500);
-        }
-        file_put_contents($entryDir . DIRECTORY_SEPARATOR . '.meta.json', json_encode([
-            'name'      => $name,
-            'target'    => $target,
-            'path'      => $relPath, // folder it was deleted FROM, for 'restore' to put it back
-            'deletedAt' => time(),
-        ]));
         fm_json(['ok' => true, 'trashId' => $trashId]);
         break;
     }
@@ -474,14 +463,23 @@ switch ($action) {
             fm_json(['error' => 'Source and destination are the same'], 400);
         }
 
-        // Avoid clobbering an existing item at the destination.
+        // Resolve a destination name: onConflict='replace' clears whatever
+        // is already there (via trash, so it's still undoable) and moves
+        // in under the exact requested name; otherwise fall back to the
+        // usual file(1), file(2)... numbering.
+        $onConflict = ((string) ($_REQUEST['onConflict'] ?? 'rename')) === 'replace' ? 'replace' : 'rename';
         $finalName = $name;
-        $n = 1;
         $ext = $target === 'file' ? '.' . pathinfo($name, PATHINFO_EXTENSION) : '';
         $base = $target === 'file' ? pathinfo($name, PATHINFO_FILENAME) : $name;
-        while (file_exists($toDir . DIRECTORY_SEPARATOR . $finalName)) {
-            $finalName = $base . '(' . $n . ')' . $ext;
-            $n++;
+        $existingPath = $toDir . DIRECTORY_SEPARATOR . $finalName;
+        if ($onConflict === 'replace' && file_exists($existingPath)) {
+            fm_clear_for_replace($toArea, $toId, $toRelPath, $existingPath, $finalName, is_dir($existingPath) ? 'folder' : 'file');
+        } else {
+            $n = 1;
+            while (file_exists($toDir . DIRECTORY_SEPARATOR . $finalName)) {
+                $finalName = $base . '(' . $n . ')' . $ext;
+                $n++;
+            }
         }
         $destPath = $toDir . DIRECTORY_SEPARATOR . $finalName;
 
@@ -540,14 +538,23 @@ switch ($action) {
             fm_json(['error' => 'Source and destination are the same'], 400);
         }
 
-        // Avoid clobbering an existing item at the destination.
+        // Resolve a destination name: onConflict='replace' clears whatever
+        // is already there (via trash, so it's still undoable) and copies
+        // in under the exact requested name; otherwise fall back to the
+        // usual file(1), file(2)... numbering.
+        $onConflict = ((string) ($_REQUEST['onConflict'] ?? 'rename')) === 'replace' ? 'replace' : 'rename';
         $finalName = $name;
-        $n = 1;
         $ext = $target === 'file' ? '.' . pathinfo($name, PATHINFO_EXTENSION) : '';
         $base = $target === 'file' ? pathinfo($name, PATHINFO_FILENAME) : $name;
-        while (file_exists($toDir . DIRECTORY_SEPARATOR . $finalName)) {
-            $finalName = $base . '(' . $n . ')' . $ext;
-            $n++;
+        $existingPath = $toDir . DIRECTORY_SEPARATOR . $finalName;
+        if ($onConflict === 'replace' && file_exists($existingPath)) {
+            fm_clear_for_replace($toArea, $toId, $toRelPath, $existingPath, $finalName, is_dir($existingPath) ? 'folder' : 'file');
+        } else {
+            $n = 1;
+            while (file_exists($toDir . DIRECTORY_SEPARATOR . $finalName)) {
+                $finalName = $base . '(' . $n . ')' . $ext;
+                $n++;
+            }
         }
         $destPath = $toDir . DIRECTORY_SEPARATOR . $finalName;
 
@@ -559,6 +566,87 @@ switch ($action) {
             @chmod($destPath, 0640);
         }
         fm_json(['ok' => true, 'name' => $finalName]);
+        break;
+    }
+
+    case 'duplicate': {
+        // "Duplicate" quick action - copies an item into its own folder
+        // under an auto-generated name, e.g. 'photo.png' -> 'photo (copy).png'.
+        // Deliberately its own action rather than 'copy' with a matching
+        // source/destination: it gets a friendlier name pattern this way,
+        // and 'copy' keeps its "source and destination are the same"
+        // guard as a real no-op guard for that general-purpose action.
+        if ($area === FM_AREA_PUBLIC && !fm_is_able('filemanager_copy', $pageid)) {
+            fm_json(['error' => 'Forbidden'], 403);
+        }
+        $name   = fm_sanitize_name((string) ($_REQUEST['name'] ?? ''));
+        $target = (string) ($_REQUEST['target'] ?? '');
+        if ($name === null || !in_array($target, ['file', 'folder'], true)) {
+            fm_json(['error' => 'Invalid request'], 400);
+        }
+        $srcPath = $dir . DIRECTORY_SEPARATOR . $name;
+        if (!file_exists($srcPath)) {
+            fm_json(['error' => 'Not found'], 404);
+        }
+
+        $ext  = $target === 'file' ? '.' . pathinfo($name, PATHINFO_EXTENSION) : '';
+        $base = $target === 'file' ? pathinfo($name, PATHINFO_FILENAME) : $name;
+        $finalName = $base . ' (copy)' . $ext;
+        $n = 2;
+        while (file_exists($dir . DIRECTORY_SEPARATOR . $finalName)) {
+            $finalName = $base . ' (copy ' . $n . ')' . $ext;
+            $n++;
+        }
+        $destPath = $dir . DIRECTORY_SEPARATOR . $finalName;
+
+        $ok = is_dir($srcPath) ? fm_copy_dir($srcPath, $destPath) : @copy($srcPath, $destPath);
+        if (!$ok) {
+            fm_json(['error' => 'Duplicate failed'], 500);
+        }
+        if (!is_dir($srcPath)) {
+            @chmod($destPath, 0640);
+        }
+        fm_json(['ok' => true, 'name' => $finalName]);
+        break;
+    }
+
+    case 'check_conflicts': {
+        // Lightweight batch precheck the client uses to decide whether a
+        // Replace/Keep-both choice actually needs asking, for upload/
+        // move/copy - so the choice is only surfaced when something would
+        // really collide. Read-only, no CSRF needed (like 'list').
+        // 'items' is a JSON-encoded array of {name, target}; toArea/toId/
+        // toPath default to the current area/id/path (e.g. for an upload
+        // or duplicate precheck within the folder already being viewed).
+        $itemsParam = json_decode((string) ($_REQUEST['items'] ?? '[]'), true);
+        if (!is_array($itemsParam) || !$itemsParam) {
+            fm_json(['conflicts' => []]);
+        }
+        $toArea = (string) ($_REQUEST['toArea'] ?? $area);
+        $toId   = (string) ($_REQUEST['toId'] ?? $id);
+        $toPath = (string) ($_REQUEST['toPath'] ?? $relPath);
+
+        if ($toArea !== $area || $toId !== $id) {
+            // Cross-area/id destination (a move/copy target) needs its own
+            // access check, same as 'move'/'copy' require for theirs.
+            if (!fm_can_access_area($toArea, $toId)) {
+                fm_json(['error' => 'Forbidden (destination)'], 403);
+            }
+        }
+        $toRelPath = fm_sanitize_relpath($toPath);
+        $toDir = $toRelPath !== null ? fm_resolve_path($toArea, $toId, $toRelPath) : null;
+        if ($toDir === null) {
+            fm_json(['error' => 'Destination folder not found'], 404);
+        }
+
+        $conflicts = [];
+        foreach ($itemsParam as $it) {
+            $n = is_array($it) ? fm_sanitize_name((string) ($it['name'] ?? '')) : null;
+            if ($n !== null && file_exists($toDir . DIRECTORY_SEPARATOR . $n)) {
+                $conflicts[] = $n;
+            }
+        }
+        fm_json(['conflicts' => $conflicts]);
         break;
     }
 
@@ -635,9 +723,9 @@ function fm_rrmdir(string $dir): void {
 /**
  * Sweep one area+id's trash (see fm_trash_root()) for entries past the
  * retention window and hard-delete them. There's no cron here, so this
- * runs opportunistically from 'delete' itself - cheap (one scandir of a
- * folder that's normally tiny) and self-limiting since it only ever piggy-
- * backs on a request that's already mutating that same trash.
+ * runs opportunistically from fm_trash_move() itself - cheap (one scandir
+ * of a folder that's normally tiny) and self-limiting since it only ever
+ * piggybacks on a request that's already mutating that same trash.
  */
 function fm_purge_old_trash(string $trashRoot, int $maxAgeSeconds = 2592000): void { // 2592000s = 30 days
     $entries = @scandir($trashRoot);
@@ -654,6 +742,52 @@ function fm_purge_old_trash(string $trashRoot, int $maxAgeSeconds = 2592000): vo
             fm_rrmdir($full);
         }
     }
+}
+
+/**
+ * Soft-delete $srcPath (named $name, a $target 'file'|'folder', currently
+ * at $relPath within $area/$id) into that area+id's trash. Shared by the
+ * 'delete' action and by move/copy/upload's onConflict=replace path, so a
+ * mistaken "Replace" is just as undoable via the Trash browser as an
+ * explicit delete. Returns the new trashId on success, or null on
+ * failure (caller decides how to handle that).
+ */
+function fm_trash_move(string $area, string $id, string $relPath, string $srcPath, string $name, string $target): ?string {
+    $trashRoot = fm_trash_root($area, $id);
+    if ($trashRoot === null) {
+        return null;
+    }
+    fm_purge_old_trash($trashRoot);
+    $trashId  = bin2hex(random_bytes(8));
+    $entryDir = $trashRoot . DIRECTORY_SEPARATOR . $trashId;
+    if (!mkdir($entryDir, 0750)) {
+        return null;
+    }
+    if (!fm_move_any($srcPath, $entryDir . DIRECTORY_SEPARATOR . $name)) {
+        fm_rrmdir($entryDir);
+        return null;
+    }
+    file_put_contents($entryDir . DIRECTORY_SEPARATOR . '.meta.json', json_encode([
+        'name'      => $name,
+        'target'    => $target,
+        'path'      => $relPath,
+        'deletedAt' => time(),
+    ]));
+    return $trashId;
+}
+
+/**
+ * Clears the way for onConflict='replace' in 'move'/'copy'/'upload' by
+ * getting $existingPath (named $name, a $target 'file'|'folder', living
+ * at $relPath within $area/$id) out of the way - preferably into trash so
+ * a mistaken Replace can still be undone, falling back to a hard delete
+ * only if the trash move itself fails for some reason.
+ */
+function fm_clear_for_replace(string $area, string $id, string $relPath, string $existingPath, string $name, string $target): void {
+    if (fm_trash_move($area, $id, $relPath, $existingPath, $name, $target) !== null) {
+        return;
+    }
+    is_dir($existingPath) ? fm_rrmdir($existingPath) : @unlink($existingPath);
 }
 
 /**
