@@ -175,6 +175,12 @@
   // buildItemActions), or null. Only one open at a time.
   var openItemMenu = null;
 
+  // Reference to the toolbar's hidden upload <input>, set by
+  // renderToolbar() - lets the background right-click menu (see
+  // showBackgroundMenu) trigger the same file picker without building a
+  // second one.
+  var uploadInputEl = null;
+
   function closeItemMenu() {
     if (openItemMenu) {
       openItemMenu.classList.remove('open');
@@ -210,6 +216,61 @@
 
     menu.style.left = left + 'px';
     menu.style.top = top + 'px';
+  }
+
+  /**
+   * Same clamping as positionItemMenu, but anchored to a raw point
+   * (the cursor) rather than a button's rect - used for right-click.
+   */
+  function positionItemMenuAtPoint(menu, x, y) {
+    var margin = 8;
+    var menuW = menu.offsetWidth;
+    var menuH = menu.offsetHeight;
+    menu.style.left = Math.max(margin, Math.min(x, window.innerWidth - menuW - margin)) + 'px';
+    menu.style.top = Math.max(margin, Math.min(y, window.innerHeight - menuH - margin)) + 'px';
+  }
+
+  /**
+   * Right-click on empty space in the file list (not on an item - those
+   * stop propagation in buildItemActions' own contextmenu handler above)
+   * offers New folder/Upload, mirroring the toolbar. Built fresh each
+   * time and thrown away on close, rather than kept around like the
+   * per-item menus, since there's no single persistent "background item"
+   * to hang it off.
+   */
+  function showBackgroundMenu(x, y) {
+    if (state.area === 'old') return false; // read-only - same early-out as the toolbar
+
+    var menuItems = [];
+    if (pubAreaOK(PERM.createfolder)) {
+      menuItems.push({ icon: '\uD83D\uDCC1', label: 'New folder', handler: onNewFolder });
+    }
+    if (pubAreaOK(PERM.upload)) {
+      menuItems.push({ icon: '\u2B06', label: 'Upload', handler: function () { if (uploadInputEl) uploadInputEl.click(); } });
+    }
+    if (!menuItems.length) return false;
+
+    var menu = el('div', { class: 'fm-item-menu' });
+    menuItems.forEach(function (mi) {
+      var itemBtn = el('button', {}, [
+        el('span', { class: 'fm-item-menu-icon', text: mi.icon }),
+        el('span', { text: mi.label })
+      ]);
+      itemBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        closeItemMenu();
+        mi.handler();
+      });
+      menu.appendChild(itemBtn);
+    });
+
+    root.appendChild(menu);
+    closeItemMenu();
+    menu.classList.add('open');
+    openItemMenu = menu;
+    openItemMenu.onCloseExtra = function () { menu.remove(); };
+    positionItemMenuAtPoint(menu, x, y);
+    return true;
   }
 
   // Closes the open item menu on any click outside it, or on Escape.
@@ -313,6 +374,14 @@
     // won't scroll along with the row that opened it. Simplest fix: just
     // close it if this scrolls, same as clicking outside would.
     body.addEventListener('scroll', closeItemMenu);
+    body.addEventListener('contextmenu', function (e) {
+      // Item rows stop propagation in their own contextmenu handler (see
+      // buildItemActions), so this only ever fires for genuine empty
+      // space - the grid/list background, or the "this folder is empty"
+      // message. Only suppress the browser's own menu if we actually have
+      // something to offer instead (showBackgroundMenu reports that).
+      if (showBackgroundMenu(e.clientX, e.clientY)) e.preventDefault();
+    });
     ['dragover', 'dragleave', 'drop'].forEach(function (evt) {
       body.addEventListener(evt, function (e) {
         if (state.area === 'old' || !pubAreaOK(PERM.upload)) return; // read-only, or no upload permission
@@ -355,6 +424,7 @@
 
     var uploadInput = el('input', { type: 'file', multiple: 'multiple', style: 'display:none' });
     uploadInput.addEventListener('change', function () { doUpload(uploadInput.files); uploadInput.value = ''; });
+    uploadInputEl = uploadInput;
     var uploadBtn = el('button', { class: 'fm-btn', text: uploadState ? 'Uploading\u2026' : 'Upload' });
     if (uploadState || uploadPending) uploadBtn.disabled = true;
     uploadBtn.addEventListener('click', function () { uploadInput.click(); });
@@ -1288,15 +1358,27 @@
       menu.appendChild(itemBtn);
     });
 
-    menuBtn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      if (menu.classList.contains('open')) { closeItemMenu(); return; }
+    function openMenu(place) {
       closeItemMenu();
       menu.classList.add('open');
       container.classList.add('menu-open');
       openItemMenu = menu;
       openItemMenu.onCloseExtra = function () { container.classList.remove('menu-open'); };
-      positionItemMenu(menu, menuBtn);
+      place();
+    }
+
+    menuBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (menu.classList.contains('open')) { closeItemMenu(); return; }
+      openMenu(function () { positionItemMenu(menu, menuBtn); });
+    });
+
+    // Right-click anywhere on the item opens the same menu at the cursor,
+    // instead of the browser's native context menu.
+    container.addEventListener('contextmenu', function (e) {
+      e.preventDefault();
+      e.stopPropagation(); // don't also trigger the background New folder/Upload menu
+      openMenu(function () { positionItemMenuAtPoint(menu, e.clientX, e.clientY); });
     });
 
     wrap.appendChild(menuBtn);

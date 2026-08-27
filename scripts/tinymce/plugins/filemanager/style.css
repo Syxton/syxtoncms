@@ -62,6 +62,13 @@ body {
 }
 .fm-list .fm-item-actions { position: static; justify-content: flex-end; }
 .fm-item:hover .fm-item-actions, .fm-item.menu-open .fm-item-actions { display: flex; }
+@media (hover: none), (pointer: coarse) {
+  /* Touch devices have no reliable :hover, so the per-item menu (and
+     everything in it - download, rename, duplicate, delete, migrate)
+     would otherwise be unreachable there. Show it unconditionally
+     instead of gating on hover. */
+  .fm-item-actions { display: flex; }
+}
 .fm-item-menu-btn {
   border: none; background: rgba(255,255,255,.9); height: 25px; width: 25px; border-radius: 5px;
   cursor: pointer; font-size: 13px; line-height: 1; padding: 0;
@@ -142,10 +149,6 @@ body {
 }
 .fm-list-date, .fm-list-size { font-size: 12px; color: #50575e; }
 .fm-list-actions { display: flex; gap: 2px; justify-content: flex-end; }
-.fm-list-actions button {
-  border: none; background: #f0f0f1; height: 25px; width: 25px;border-radius: 5px; cursor: pointer; font-size: 11px; padding: 3px 5px;
-}
-.fm-list-actions button:hover { background: #2271b1; color: #fff; }
 
 @media (max-width: 480px) {
   .fm-list-row { grid-template-columns: 24px 1fr 60px; }
