@@ -900,6 +900,10 @@
     clearBtn.addEventListener('click', function () { clearMultiSelect(); renderBody(); renderFooter(); });
     bar.appendChild(clearBtn);
 
+    var zipBtn = el('button', { class: 'fm-btn secondary', text: 'Download zip' });
+    zipBtn.addEventListener('click', function () { downloadZip(items, zipBtn); });
+    bar.appendChild(zipBtn);
+
     if (state.area === 'old') {
       if (destinationAreasFor('migrate').length) {
         var migrateBtn = el('button', { class: 'fm-btn secondary', text: 'Migrate to\u2026' });
@@ -1544,6 +1548,46 @@
     document.body.appendChild(a);
     a.click();
     a.remove();
+  }
+
+  /**
+   * Bulk download for a multi-select - unlike single-file download
+   * (which just links straight to filegate.php), a zip has to be built
+   * fresh server-side, so this can't be a plain <a> click. Goes through
+   * fetch()+blob() instead of api()/apiFor(), which assume a JSON body -
+   * the response here is the zip's raw bytes, or JSON only on error.
+   */
+  function downloadZip(items, btn) {
+    if (!items.length) return;
+    var originalText = btn ? btn.textContent : null;
+    if (btn) { btn.disabled = true; btn.textContent = 'Zipping\u2026'; }
+
+    var body = new URLSearchParams({
+      action: 'download_zip', area: state.area, id: state.id, path: state.path,
+      pageid: PAGEID, csrf: CSRF,
+      items: JSON.stringify(items.map(function (it) { return { name: it.name, target: it.isFolder ? 'folder' : 'file' }; }))
+    });
+
+    fetch(API, { method: 'POST', body: body }).then(function (r) {
+      var contentType = r.headers.get('Content-Type') || '';
+      if (contentType.indexOf('application/json') !== -1) {
+        return r.json().then(function (body) { throw new Error((body && body.error) || 'Could not create zip'); });
+      }
+      if (!r.ok) throw new Error('Could not create zip');
+      var cd = r.headers.get('Content-Disposition') || '';
+      var match = /filename="?([^";]+)"?/.exec(cd);
+      var filename = match ? match[1] : 'files.zip';
+      return r.blob().then(function (blob) {
+        var url = URL.createObjectURL(blob);
+        var a = el('a', { href: url, download: filename });
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      });
+    }).catch(reportError).then(function () {
+      if (btn) { btn.disabled = false; btn.textContent = originalText; }
+    });
   }
 
   function onDuplicate(opts) {

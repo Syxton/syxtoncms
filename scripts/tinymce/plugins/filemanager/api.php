@@ -6,7 +6,7 @@
 * current area. All state-changing actions also require the CSRF token
 * that index.php embeds from the session.
 *
-* Actions (POST 'action'): list, mkdir, upload, rename, delete, move, copy, geturl, restore, trash_list, trash_delete, duplicate, check_conflicts
+* Actions (POST 'action'): list, mkdir, upload, rename, delete, move, copy, geturl, restore, trash_list, trash_delete, duplicate, check_conflicts, download_zip
 * Common params: area=pub|priv, id=<pageid|userid>, path=<relative folder>,
 * pageid=<the page being edited, for ability scoping - see fm_is_able()>
 *
@@ -80,7 +80,7 @@ if (($area === FM_AREA_PUBLIC || $area === FM_AREA_OLD) && !fm_is_able('filemana
 // "Old files" is read-only browsing for manual migration - only list and
 // move (as a source) are allowed. Enforced here, not just hidden in the
 // UI, since the endpoint itself is the actual security boundary.
-if ($area === FM_AREA_OLD && !in_array($action, ['list', 'move'], true)) {
+if ($area === FM_AREA_OLD && !in_array($action, ['list', 'move', 'download_zip'], true)) {
     fm_json(['error' => 'Old files is read-only - move items into My files or Page files first'], 403);
 }
 
@@ -650,6 +650,71 @@ switch ($action) {
         break;
     }
 
+    case 'download_zip': {
+        // Bulk download for a multi-select - bundles the given items
+        // (files and/or whole folders, from the current $dir only) into
+        // one zip and streams it back directly rather than through
+        // fm_json(). No extra permission beyond the area access already
+        // established above: this is a read, same as 'list'/single-file
+        // download, and Old files' read-only gate above explicitly allows
+        // it alongside 'list'/'move'.
+        if (!class_exists('ZipArchive')) {
+            fm_json(['error' => 'Zip downloads are not available on this server'], 500);
+        }
+        $itemsParam = json_decode((string) ($_REQUEST['items'] ?? '[]'), true);
+        if (!is_array($itemsParam) || !$itemsParam) {
+            fm_json(['error' => 'Nothing selected'], 400);
+        }
+
+        $tmpZip = tempnam(sys_get_temp_dir(), 'fmzip_');
+        if ($tmpZip === false) {
+            fm_json(['error' => 'Could not create zip'], 500);
+        }
+        $zip = new ZipArchive();
+        if ($zip->open($tmpZip, ZipArchive::OVERWRITE) !== true) {
+            @unlink($tmpZip);
+            fm_json(['error' => 'Could not create zip'], 500);
+        }
+
+        $added = 0;
+        foreach ($itemsParam as $it) {
+            $name   = is_array($it) ? fm_sanitize_name((string) ($it['name'] ?? '')) : null;
+            $target = is_array($it) ? (string) ($it['target'] ?? '') : '';
+            if ($name === null || !in_array($target, ['file', 'folder'], true)) {
+                continue; // silently skip anything malformed rather than failing the whole batch
+            }
+            $srcPath = $dir . DIRECTORY_SEPARATOR . $name;
+            if (!file_exists($srcPath)) {
+                continue; // may have been deleted/moved since the selection was made
+            }
+            if ($target === 'folder' && is_dir($srcPath)) {
+                fm_zip_add_dir($zip, $srcPath, $name);
+                $added++;
+            } elseif ($target === 'file' && is_file($srcPath)) {
+                $zip->addFile($srcPath, $name);
+                $added++;
+            }
+        }
+        $zip->close();
+
+        if ($added === 0) {
+            @unlink($tmpZip);
+            fm_json(['error' => 'None of the selected items could be found'], 404);
+        }
+
+        // Bypassing fm_json() for a binary response - same ob_end_clean()
+        // discipline it uses, so a stray library warning can't corrupt
+        // the zip the way it used to corrupt JSON (see file header).
+        ob_end_clean();
+        http_response_code(200);
+        header('Content-Type: application/zip');
+        header('Content-Disposition: attachment; filename="files-' . date('Y-m-d-His') . '.zip"');
+        header('Content-Length: ' . filesize($tmpZip));
+        readfile($tmpZip);
+        @unlink($tmpZip);
+        exit;
+    }
+
     case 'geturl': {
         // Generate a signed SHARE link (what actually gets inserted into
         // content or copied) for a specific file OR folder at a chosen
@@ -833,4 +898,27 @@ function fm_copy_dir(string $src, string $dest): bool {
         }
     }
     return true;
+}
+
+/**
+ * Recursively adds $dirPath into $zip under $zipSubPath (typically the
+ * folder's own name, since it's added as a top-level entry of a bulk
+ * download), preserving its internal structure. Used by 'download_zip'
+ * for any folders included in the selection.
+ */
+function fm_zip_add_dir(ZipArchive $zip, string $dirPath, string $zipSubPath): void {
+    $zip->addEmptyDir($zipSubPath);
+    $items = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($dirPath, FilesystemIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::SELF_FIRST
+    );
+    foreach ($items as $item) {
+        // Zip entries are always '/'-separated regardless of host OS.
+        $localPath = $zipSubPath . '/' . str_replace('\\', '/', substr($item->getPathname(), strlen($dirPath) + 1));
+        if ($item->isDir()) {
+            $zip->addEmptyDir($localPath);
+        } else {
+            $zip->addFile($item->getPathname(), $localPath);
+        }
+    }
 }
