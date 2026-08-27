@@ -171,6 +171,58 @@
   var tabEls = []; // [{el, area}] kept around so clicking a tab can update
                     // every tab's active class, not just re-derive it once.
 
+  // The currently-open per-item "more actions" dropdown (see
+  // buildItemActions), or null. Only one open at a time.
+  var openItemMenu = null;
+
+  function closeItemMenu() {
+    if (openItemMenu) {
+      openItemMenu.classList.remove('open');
+      if (openItemMenu.onCloseExtra) openItemMenu.onCloseExtra();
+      openItemMenu = null;
+    }
+  }
+
+  /**
+   * Places a fixed-position item menu against the button that opened it,
+   * clamped to the viewport. Fixed (rather than absolute-inside-the-item)
+   * is what lets this escape .fm-list-cell's overflow:hidden and the
+   * .fm-list-row.fm-item position:static override - it positions purely
+   * off btn's on-screen rect, not any ancestor. Prefers hanging
+   * below-and-right-aligned to the button (the old fixed CSS default),
+   * but slides left if that would run off the right edge (grid's
+   * leftmost column, where the item itself is narrower than the menu)
+   * and flips above the button if there's no room below.
+   */
+  function positionItemMenu(menu, btn) {
+    var margin = 8;
+    var btnRect = btn.getBoundingClientRect();
+    var menuW = menu.offsetWidth;
+    var menuH = menu.offsetHeight;
+
+    var left = btnRect.right - menuW; // right-align to the button by default
+    left = Math.max(margin, Math.min(left, window.innerWidth - menuW - margin));
+
+    var top = btnRect.bottom + 4;
+    if (top + menuH > window.innerHeight - margin) {
+      top = btnRect.top - menuH - 4; // no room below - open upward instead
+    }
+
+    menu.style.left = left + 'px';
+    menu.style.top = top + 'px';
+  }
+
+  // Closes the open item menu on any click outside it, or on Escape.
+  // Registered once - this whole file is a single IIFE run once per
+  // dialog load, so there's no risk of stacking duplicate listeners.
+  document.addEventListener('click', function (e) {
+    if (openItemMenu && !openItemMenu.contains(e.target)) closeItemMenu();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeItemMenu();
+  });
+  window.addEventListener('resize', closeItemMenu);
+
   function el(tag, attrs, children) {
     var e = document.createElement(tag);
     attrs = attrs || {};
@@ -256,6 +308,11 @@
 
     var body = el('div', { class: 'fm-body fm-dropzone' });
     root.appendChild(body);
+    // The item menu is position:fixed (see positionItemMenu) so it isn't
+    // clipped by .fm-list-cell's overflow:hidden - but that also means it
+    // won't scroll along with the row that opened it. Simplest fix: just
+    // close it if this scrolls, same as clicking outside would.
+    body.addEventListener('scroll', closeItemMenu);
     ['dragover', 'dragleave', 'drop'].forEach(function (evt) {
       body.addEventListener(evt, function (e) {
         if (state.area === 'old' || !pubAreaOK(PERM.upload)) return; // read-only, or no upload permission
@@ -1189,41 +1246,62 @@
   // Action buttons (migrate/link/rename/delete) shared by the grid tile
   // and list row. `container` lets the link button pass itself to onSelect.
   function buildItemActions(opts, container) {
-    var actions = el('div', { class: 'fm-item-actions' });
+    var wrap = el('div', { class: 'fm-item-actions' });
+    var menuItems = [];
+
     if (!opts.isFolder && opts.previewUrl) {
-      var downloadBtn = el('button', { text: '\u2B07', title: 'Download' });
-      downloadBtn.addEventListener('click', function (e) { e.stopPropagation(); onDownload(opts); });
-      actions.appendChild(downloadBtn);
+      menuItems.push({ icon: '\u2B07', label: 'Download', handler: function () { onDownload(opts); } });
     }
     if (opts.readOnly) {
       if (destinationAreasFor('migrate').length) {
-        var migrateBtn = el('button', { text: '\u21ea', title: 'Migrate to My files / Page files' });
-        migrateBtn.addEventListener('click', function (e) { e.stopPropagation(); onMigrate(opts); });
-        actions.appendChild(migrateBtn);
+        menuItems.push({ icon: '\u21ea', label: 'Migrate to My/Page files', handler: function () { onMigrate(opts); } });
       }
     } else {
       if (opts.isFolder && opts.onSelect) {
-        var linkBtn = el('button', { text: '\uD83D\uDD17', title: 'Get a link to this folder' });
-        linkBtn.addEventListener('click', function (e) { e.stopPropagation(); opts.onSelect(container); });
-        actions.appendChild(linkBtn);
+        menuItems.push({ icon: '\uD83D\uDD17', label: 'Get a link', handler: function () { opts.onSelect(container); } });
       }
       if (pubAreaOK(PERM.edit)) {
-        var renameBtn = el('button', { text: '\u270e', title: 'Rename' });
-        renameBtn.addEventListener('click', function (e) { e.stopPropagation(); onRename(opts); });
-        actions.appendChild(renameBtn);
+        menuItems.push({ icon: '\u270e', label: 'Rename', handler: function () { onRename(opts); } });
       }
       if (pubAreaOK(PERM.copy)) {
-        var dupBtn = el('button', { text: '\u29C9', title: 'Duplicate' });
-        dupBtn.addEventListener('click', function (e) { e.stopPropagation(); onDuplicate(opts); });
-        actions.appendChild(dupBtn);
+        menuItems.push({ icon: '\u29C9', label: 'Duplicate', handler: function () { onDuplicate(opts); } });
       }
       if (pubAreaOK(PERM.delete)) {
-        var deleteBtn = el('button', { text: '\u2715', title: 'Delete' });
-        deleteBtn.addEventListener('click', function (e) { e.stopPropagation(); onDelete(opts); });
-        actions.appendChild(deleteBtn);
+        menuItems.push({ icon: '\u2715', label: 'Delete', handler: function () { onDelete(opts); }, danger: true });
       }
     }
-    return actions;
+
+    if (!menuItems.length) return wrap; // nothing this item can do - no kebab needed
+
+    var menuBtn = el('button', { class: 'fm-item-menu-btn', text: '\u22EE', title: 'More actions' });
+    var menu = el('div', { class: 'fm-item-menu' });
+    menuItems.forEach(function (mi) {
+      var itemBtn = el('button', { class: mi.danger ? 'danger' : '' }, [
+        el('span', { class: 'fm-item-menu-icon', text: mi.icon }),
+        el('span', { text: mi.label })
+      ]);
+      itemBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        closeItemMenu();
+        mi.handler();
+      });
+      menu.appendChild(itemBtn);
+    });
+
+    menuBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (menu.classList.contains('open')) { closeItemMenu(); return; }
+      closeItemMenu();
+      menu.classList.add('open');
+      container.classList.add('menu-open');
+      openItemMenu = menu;
+      openItemMenu.onCloseExtra = function () { container.classList.remove('menu-open'); };
+      positionItemMenu(menu, menuBtn);
+    });
+
+    wrap.appendChild(menuBtn);
+    wrap.appendChild(menu);
+    return wrap;
   }
 
   // Checkbox for bulk move/copy/delete/migrate. Shown even when readOnly -
