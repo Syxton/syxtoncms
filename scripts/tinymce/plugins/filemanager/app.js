@@ -366,6 +366,7 @@
 
     root.appendChild(el('div', { class: 'fm-toolbar', id: 'fm-toolbar' }));
     root.appendChild(el('div', { class: 'fm-upload-progress', id: 'fm-upload-progress' }));
+    root.appendChild(el('div', { class: 'fm-breadcrumb-bar', id: 'fm-breadcrumb-bar' }));
 
     var body = el('div', { class: 'fm-body fm-dropzone' });
     root.appendChild(body);
@@ -401,42 +402,58 @@
     load();
   }
 
+  // Kept as a single entry point since call sites throughout the file
+  // expect one function to refresh "everything above the file list" -
+  // internally it's the two rows: search/sort, and the breadcrumb bar.
   function renderToolbar() {
+    renderSearchSortBar();
+    renderBreadcrumbBar();
+  }
+
+  function renderSearchSortBar() {
     var toolbar = document.getElementById('fm-toolbar');
     if (!toolbar) return;
     toolbar.innerHTML = '';
 
-    var crumb = el('div', { class: 'fm-breadcrumb' });
-    toolbar.appendChild(crumb);
-    buildBreadcrumb();
+    if (state.area !== 'old') {
+      var newFolderBtn = el('button', { class: 'fm-icon-btn', title: 'New folder', text: '\uD83D\uDCC1' });
+      newFolderBtn.addEventListener('click', onNewFolder);
+      if (pubAreaOK(PERM.createfolder)) toolbar.appendChild(newFolderBtn);
+
+      var uploadInput = el('input', { type: 'file', multiple: 'multiple', style: 'display:none' });
+      uploadInput.addEventListener('change', function () { doUpload(uploadInput.files); uploadInput.value = ''; });
+      uploadInputEl = uploadInput;
+      var uploadBtn = el('button', { class: 'fm-icon-btn', title: uploadState ? 'Uploading\u2026' : 'Upload', text: '\u2B06' });
+      if (uploadState || uploadPending) uploadBtn.disabled = true;
+      uploadBtn.addEventListener('click', function () { uploadInput.click(); });
+      if (pubAreaOK(PERM.upload)) {
+        toolbar.appendChild(uploadBtn);
+        toolbar.appendChild(uploadInput);
+      }
+
+      var trashBtn = el('button', { class: 'fm-icon-btn', title: 'Trash', text: '\u267B' });
+      trashBtn.addEventListener('click', openTrash);
+      if (pubAreaOK(PERM.delete)) toolbar.appendChild(trashBtn);
+    }
 
     toolbar.appendChild(buildSearchBox());
     toolbar.appendChild(buildViewSortControls());
 
     if (state.area === 'old') {
       toolbar.appendChild(el('div', { class: 'fm-readonly-note', text: 'Read-only - use Migrate to move items into My files or Page files.' }));
-      return;
     }
+  }
 
-    var newFolderBtn = el('button', { class: 'fm-btn secondary', text: 'New folder' });
-    newFolderBtn.addEventListener('click', onNewFolder);
-    if (pubAreaOK(PERM.createfolder)) toolbar.appendChild(newFolderBtn);
+  // Full-width row directly above the file list, so long paths get room
+  // to breathe instead of competing with the toolbar controls above.
+  function renderBreadcrumbBar() {
+    var bar = document.getElementById('fm-breadcrumb-bar');
+    if (!bar) return;
+    bar.innerHTML = '';
 
-    var uploadInput = el('input', { type: 'file', multiple: 'multiple', style: 'display:none' });
-    uploadInput.addEventListener('change', function () { doUpload(uploadInput.files); uploadInput.value = ''; });
-    uploadInputEl = uploadInput;
-    var uploadBtn = el('button', { class: 'fm-btn', text: uploadState ? 'Uploading\u2026' : 'Upload' });
-    if (uploadState || uploadPending) uploadBtn.disabled = true;
-    uploadBtn.addEventListener('click', function () { uploadInput.click(); });
-
-    if (pubAreaOK(PERM.upload)) {
-      toolbar.appendChild(uploadBtn);
-      toolbar.appendChild(uploadInput);
-    }
-
-    var trashBtn = el('button', { class: 'fm-btn secondary', text: 'Trash' });
-    trashBtn.addEventListener('click', openTrash);
-    if (pubAreaOK(PERM.delete)) toolbar.appendChild(trashBtn);
+    var crumb = el('div', { class: 'fm-breadcrumb' });
+    bar.appendChild(crumb);
+    buildBreadcrumb();
   }
 
   /**
@@ -812,6 +829,10 @@
           var downloadBtnOld = el('button', { class: 'fm-btn secondary', text: 'Download' });
           downloadBtnOld.addEventListener('click', function () { onDownload(sel); });
           selRow.appendChild(downloadBtnOld);
+        } else {
+          var zipBtnOld = el('button', { class: 'fm-btn secondary', text: 'Download zip' });
+          zipBtnOld.addEventListener('click', function () { downloadZip([sel], zipBtnOld); });
+          selRow.appendChild(zipBtnOld);
         }
       } else {
         var levels = availableLevels();
@@ -845,6 +866,10 @@
           var downloadBtn = el('button', { class: 'fm-btn secondary', text: 'Download' });
           downloadBtn.addEventListener('click', function () { onDownload(sel); });
           selRow.appendChild(downloadBtn);
+        } else {
+          var zipBtn = el('button', { class: 'fm-btn secondary', text: 'Download zip' });
+          zipBtn.addEventListener('click', function () { downloadZip([sel], zipBtn); });
+          selRow.appendChild(zipBtn);
         }
 
         if (destinationAreasFor('move').indexOf(state.area === 'priv' ? 'pub' : 'priv') !== -1) {
@@ -1325,6 +1350,9 @@
 
     if (!opts.isFolder && opts.previewUrl) {
       menuItems.push({ icon: '\u2B07', label: 'Download', handler: function () { onDownload(opts); } });
+    }
+    if (opts.isFolder) {
+      menuItems.push({ icon: '\u2B07', label: 'Download zip', handler: function () { downloadZip([opts]); } });
     }
     if (opts.readOnly) {
       if (destinationAreasFor('migrate').length) {

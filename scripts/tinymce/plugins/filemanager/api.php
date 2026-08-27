@@ -666,6 +666,42 @@ switch ($action) {
             fm_json(['error' => 'Nothing selected'], 400);
         }
 
+        // Tally first, build second: walking the selection (recursing into
+        // any folders) to total size/file count before touching disk means
+        // an oversized selection gets rejected cleanly instead of spending
+        // time/memory building a multi-gigabyte zip only to discard it.
+        // fm_zip_tally_dir() itself bails out of a single huge folder early
+        // once over limit, rather than always walking it in full.
+        $maxZipBytes = 200 * 1024 * 1024; // 200MB - keeps this synchronous request bounded
+        $maxZipFiles = 2000;
+        $totalBytes = 0;
+        $totalFiles = 0;
+        foreach ($itemsParam as $it) {
+            $name   = is_array($it) ? fm_sanitize_name((string) ($it['name'] ?? '')) : null;
+            $target = is_array($it) ? (string) ($it['target'] ?? '') : '';
+            if ($name === null || !in_array($target, ['file', 'folder'], true)) {
+                continue;
+            }
+            $srcPath = $dir . DIRECTORY_SEPARATOR . $name;
+            if (!file_exists($srcPath)) {
+                continue;
+            }
+            if ($target === 'folder' && is_dir($srcPath)) {
+                fm_zip_tally_dir($srcPath, $totalBytes, $totalFiles, $maxZipBytes, $maxZipFiles);
+            } elseif ($target === 'file' && is_file($srcPath)) {
+                $totalBytes += filesize($srcPath);
+                $totalFiles++;
+            }
+            if ($totalBytes > $maxZipBytes || $totalFiles > $maxZipFiles) {
+                break;
+            }
+        }
+        if ($totalBytes > $maxZipBytes || $totalFiles > $maxZipFiles) {
+            fm_json(['error' => 'That selection is too large to zip (limit '
+                . round($maxZipBytes / 1024 / 1024) . 'MB or ' . $maxZipFiles
+                . ' files) - try selecting fewer items.'], 413);
+        }
+
         $tmpZip = tempnam(sys_get_temp_dir(), 'fmzip_');
         if ($tmpZip === false) {
             fm_json(['error' => 'Could not create zip'], 500);
@@ -898,6 +934,29 @@ function fm_copy_dir(string $src, string $dest): bool {
         }
     }
     return true;
+}
+
+/**
+ * Recursively tallies $dirPath's total size/file count into the
+ * by-reference accumulators, stopping as soon as either exceeds the given
+ * limits so a genuinely huge folder doesn't get walked in full just to
+ * end up rejected anyway. Used by 'download_zip' to enforce its size cap
+ * before doing any real work.
+ */
+function fm_zip_tally_dir(string $dirPath, int &$totalBytes, int &$totalFiles, int $maxBytes, int $maxFiles): void {
+    $items = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($dirPath, FilesystemIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::SELF_FIRST
+    );
+    foreach ($items as $item) {
+        if ($item->isFile()) {
+            $totalBytes += $item->getSize();
+            $totalFiles++;
+        }
+        if ($totalBytes > $maxBytes || $totalFiles > $maxFiles) {
+            return; // over limit already - caller rejects the whole request, no point walking further
+        }
+    }
 }
 
 /**
