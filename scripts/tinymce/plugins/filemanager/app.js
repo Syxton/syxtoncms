@@ -49,6 +49,11 @@
 
   var IMAGE_EXT = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
   var MEDIA_EXT = ['mp4', 'webm', 'mp3'];
+  var PDF_EXT = 'pdf';
+
+  function isPreviewable(ext) {
+    return IMAGE_EXT.indexOf(ext) !== -1 || MEDIA_EXT.indexOf(ext) !== -1 || ext === PDF_EXT;
+  }
 
   // Distinct icon per filetype - colored "badge" (label + color) rather
   // than emoji, which renders inconsistently across OS/browsers and can't
@@ -1243,6 +1248,52 @@
     }).catch(function () { return []; });
   }
 
+  /**
+   * Lightbox-style preview for images, video, audio, and PDFs - the file
+   * types isPreviewable() recognizes. Reuses previewUrl as-is (no dl=1),
+   * which filegate.php serves with Content-Disposition: inline by
+   * default, so the browser renders it in place instead of downloading.
+   */
+  function openPreview(opts) {
+    var overlay = el('div', { class: 'fm-modal-overlay' });
+    var modal = el('div', { class: 'fm-modal fm-preview-modal' });
+    modal.appendChild(el('div', { class: 'fm-modal-title', text: opts.name }));
+
+    var body = el('div', { class: 'fm-preview-body' });
+    if (IMAGE_EXT.indexOf(opts.ext) !== -1) {
+      body.appendChild(el('img', { class: 'fm-preview-media', src: opts.previewUrl, alt: opts.name }));
+    } else if (opts.ext === 'mp4' || opts.ext === 'webm') {
+      body.appendChild(el('video', { class: 'fm-preview-media', src: opts.previewUrl, controls: 'controls' }));
+    } else if (opts.ext === 'mp3') {
+      body.appendChild(el('audio', { class: 'fm-preview-audio', src: opts.previewUrl, controls: 'controls' }));
+    } else if (opts.ext === PDF_EXT) {
+      body.appendChild(el('iframe', { class: 'fm-preview-pdf', src: opts.previewUrl, title: opts.name }));
+    } else {
+      body.appendChild(el('div', { class: 'fm-empty', text: 'No preview available for this file type.' }));
+    }
+    modal.appendChild(body);
+
+    var actionsRow = el('div', { class: 'fm-modal-actions' });
+    var downloadBtn = iconBtn('\u2B07', 'Download');
+    downloadBtn.addEventListener('click', function () { onDownload(opts); });
+    actionsRow.appendChild(downloadBtn);
+    var closeBtn = el('button', { class: 'fm-btn secondary', text: 'Close' });
+    closeBtn.addEventListener('click', close);
+    actionsRow.appendChild(closeBtn);
+    modal.appendChild(actionsRow);
+
+    function close() {
+      overlay.remove();
+      document.removeEventListener('keydown', onKey);
+    }
+    function onKey(e) { if (e.key === 'Escape') close(); }
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
+    document.addEventListener('keydown', onKey);
+
+    overlay.appendChild(modal);
+    root.appendChild(overlay);
+  }
+
   function openTrash() {
     var area = state.area, id = state.id;
     var overlay = el('div', { class: 'fm-modal-overlay' });
@@ -1388,6 +1439,9 @@
     var wrap = el('div', { class: 'fm-item-actions' });
     var menuItems = [];
 
+    if (!opts.isFolder && opts.previewUrl && isPreviewable(opts.ext)) {
+      menuItems.push({ icon: '\uD83D\uDC41', label: 'Preview', handler: function () { openPreview(opts); } });
+    }
     if (!opts.isFolder && opts.previewUrl) {
       menuItems.push({ icon: '\u2B07', label: 'Download', handler: function () { onDownload(opts); } });
     }
@@ -1517,6 +1571,7 @@
     });
     item.addEventListener('dblclick', function () {
       if (opts.isFolder) opts.onOpen();
+      else if (opts.previewUrl && isPreviewable(opts.ext)) openPreview(opts);
     });
     wireDragAndDrop(item, opts);
     return item;
@@ -1562,6 +1617,7 @@
     });
     row.addEventListener('dblclick', function () {
       if (opts.isFolder) opts.onOpen();
+      else if (opts.previewUrl && isPreviewable(opts.ext)) openPreview(opts);
     });
     wireDragAndDrop(row, opts);
     return row;
