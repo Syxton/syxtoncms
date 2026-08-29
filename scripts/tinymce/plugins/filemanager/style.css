@@ -28,11 +28,23 @@ body {
 }
 .fm-icon-btn {
   background: #f0f0f1; border: none; border-radius: 6px; cursor: pointer; flex-shrink: 0;
-  width: 40px; height: 40px; font-size: 20px; line-height: 1;
-  display: flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; padding: 0; font-size: 20px; line-height: 1; gap: 6px;
+  display: flex; align-items: center; justify-content: center; white-space: nowrap;
 }
+.fm-icon-btn-icon { font-size: 20px; line-height: 1; }
+.fm-icon-btn-label { display: none; font-size: 13px; }
 .fm-icon-btn:hover { background: #2271b1; color: #fff; }
 .fm-icon-btn:disabled { opacity: .5; cursor: default; }
+.fm-icon-btn.danger { background: #d63638; color: #fff; }
+.fm-icon-btn.danger:hover { background: #b32d2e; }
+@media (min-width: 700px) {
+  /* Enough room to say what a button does, not just show an icon for it -
+     icons alone read fine on a small/mobile layout but get ambiguous once
+     there's space for a label (Move to..., Migrate to..., etc). */
+  .fm-icon-btn { width: auto; padding: 0 12px; }
+  .fm-icon-btn-icon { font-size: 16px; }
+  .fm-icon-btn-label { display: inline; }
+}
 .fm-readonly-note { color: #8c8f94; font-style: italic; font-size: 12px; }
 .fm-btn {
   background: #2271b1; color: #fff; border: none; border-radius: 3px;
@@ -129,7 +141,7 @@ body {
 /* List (details) view */
 .fm-list { display: flex; flex-direction: column; }
 .fm-list-row {
-  display: grid; grid-template-columns: 24px 1fr 140px 90px 80px;
+  display: grid; grid-template-columns: 24px 1fr 100px 55px 30px;
   align-items: center; gap: 10px; padding: 6px 8px; border-bottom: 1px solid #f0f0f1;
 }
 .fm-list-header {
@@ -148,7 +160,7 @@ body {
 .fm-list-row.fm-item.multi-selected { background: #eaf2fb; }
 .fm-list-check { display: flex; align-items: center; justify-content: center; }
 .fm-list-check .fm-multi-check { width: 16px; height: 16px; cursor: pointer; }
-.fm-list.no-check .fm-list-row { grid-template-columns: 1fr 140px 90px 80px; }
+.fm-list.no-check .fm-list-row { grid-template-columns: 1fr 100px 55px 30px; }
 .fm-list-cell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fm-list-name { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .fm-list-name .fm-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -162,8 +174,14 @@ body {
 .fm-list-actions { display: flex; gap: 2px; justify-content: flex-end; }
 
 @media (max-width: 480px) {
-  .fm-list-row { grid-template-columns: 24px 1fr 60px; }
-  .fm-list.no-check .fm-list-row { grid-template-columns: 1fr 60px; }
+  /* 4 tracks, not 3 - the actions cell is still a grid item even when its
+     button is hidden pre-hover/pre-touch, so leaving it out here made
+     every row (header included) overflow onto a second internal grid
+     line once date was hidden. It was most visible in the header (real
+     text wrapping) but was happening in every data row too, just harder
+     to notice with an empty cell. */
+  .fm-list-row { grid-template-columns: 24px 1fr 50px 30px; }
+  .fm-list.no-check .fm-list-row { grid-template-columns: 1fr 50px 30px; }
   .fm-list-date { display: none; }
 }
 
@@ -236,12 +254,65 @@ body {
   display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border-top: 1px solid #dcdcde;
 }
 .fm-selection {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  display: flex; flex-direction: column; gap: 8px;
   background: #f6f7f7; border-radius: 4px; padding: 8px;
 }
-.fm-selection-name { font-weight: 600; margin-right: auto; word-break: break-word; }
+.fm-selection-top {
+  display: flex; flex-direction: column; align-items: stretch; gap: 8px;
+}
+.fm-selection-name { font-weight: 600; word-break: break-word; }
+.fm-selection-share, .fm-selection-actions {
+  display: flex; flex-direction: column; align-items: stretch; gap: 8px;
+}
+.fm-selection-share .fm-icon-btn, .fm-selection-actions .fm-icon-btn {
+  width: 100%; justify-content: flex-start; padding: 0 14px;
+}
+.fm-selection-share .fm-icon-btn-label,
+.fm-selection-actions .fm-icon-btn-label { display: inline; } /* shown even below the general icon-only breakpoint */
+.fm-selection-share select { width: 100%; }
 .fm-level-select { font: inherit; padding: 4px 6px; border: 1px solid #dcdcde; border-radius: 3px; }
 .fm-footer-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+@media (min-width: 700px) {
+  /* Enough room that stretched full-width controls just look sparse -
+     back to name-left/share-right on one line, actions right-aligned
+     underneath, everything auto-width instead of stretched. */
+  .fm-selection-top {
+    flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap;
+  }
+  .fm-selection-share {
+    flex-direction: row; align-items: center; flex-wrap: wrap; margin-left: auto; width: auto;
+  }
+  .fm-selection-actions {
+    flex-direction: row; align-items: center; flex-wrap: wrap; justify-content: flex-end;
+  }
+  .fm-selection-share .fm-icon-btn, .fm-selection-actions .fm-icon-btn {
+    width: auto; justify-content: center; padding: 0 12px;
+  }
+  .fm-selection-share select { width: auto; }
+}
+
+/* Bulk-selection bar (checkbox multi-select) - deliberately its own class
+   rather than reusing .fm-selection above, since the two want different
+   responsive behavior: this one goes full-width-stacked-with-label on
+   narrow screens (reads like an action sheet), but collapses back to a
+   single compact row - closer to how it worked before - once there's
+   enough width that stretched buttons just look sparse. */
+.fm-bulk-bar {
+  display: flex; flex-direction: column; gap: 8px;
+  background: #f6f7f7; border-radius: 4px; padding: 8px;
+}
+.fm-bulk-bar .fm-icon-btn {
+  width: 100%; justify-content: flex-start; padding: 0 14px;
+}
+.fm-bulk-bar .fm-icon-btn-label { display: inline; } /* shown even below the general icon-only breakpoint */
+@media (min-width: 700px) {
+  .fm-bulk-bar {
+    flex-direction: row; align-items: center; flex-wrap: wrap;
+  }
+  .fm-bulk-bar .fm-selection-name { margin-right: auto; }
+  .fm-bulk-bar .fm-icon-btn { width: auto; justify-content: center; }
+}
 .fm-empty { color: #8c8f94; padding: 30px; text-align: center; }
 .fm-dropzone.dragover { outline: 2px dashed #2271b1; outline-offset: -6px; }
 

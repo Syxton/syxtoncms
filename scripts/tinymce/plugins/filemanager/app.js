@@ -75,9 +75,9 @@
   var GENERIC_FILE_STYLE = { label: 'FILE', color: '#5f6368' };
 
   var LEVEL_LABELS = {
-    link: 'Anyone with this link (no login required)',
-    page: 'Can view page (may require login)',
-    private: 'My eyes only (only for My files)',
+    link: 'Anyone with this link',
+    page: 'Can view page',
+    private: 'My eyes only',
   };
 
   var AREA_LABELS = { priv: 'My files', pub: 'Page files', old: 'Old files' };
@@ -296,6 +296,22 @@
     return e;
   }
 
+  /**
+   * Icon+label button used throughout the toolbar/footer/bulk bar (New
+   * folder, Download, Move to..., etc). Renders both an icon and a text
+   * label; CSS hides the label below a width breakpoint so narrow/mobile
+   * layouts stay icon-only while wide layouts show the label too, since
+   * an icon alone is often ambiguous once there's room to just say what
+   * it does. `title` still carries the label for the icon-only case
+   * (tooltip, and screen readers via the button's accessible name).
+   */
+  function iconBtn(icon, label, extraClass) {
+    var btn = el('button', { class: 'fm-icon-btn' + (extraClass ? ' ' + extraClass : ''), title: label });
+    btn.appendChild(el('span', { class: 'fm-icon-btn-icon', text: icon }));
+    btn.appendChild(el('span', { class: 'fm-icon-btn-label', text: label }));
+    return btn;
+  }
+
   function apiFor(area, id, path, action, params) {
     var body = new URLSearchParams(Object.assign({
       action: action, area: area, id: id, path: path, pageid: PAGEID, csrf: CSRF
@@ -416,14 +432,14 @@
     toolbar.innerHTML = '';
 
     if (state.area !== 'old') {
-      var newFolderBtn = el('button', { class: 'fm-icon-btn', title: 'New folder', text: '\uD83D\uDCC1' });
+      var newFolderBtn = iconBtn('\uD83D\uDCC1', 'New folder');
       newFolderBtn.addEventListener('click', onNewFolder);
       if (pubAreaOK(PERM.createfolder)) toolbar.appendChild(newFolderBtn);
 
       var uploadInput = el('input', { type: 'file', multiple: 'multiple', style: 'display:none' });
       uploadInput.addEventListener('change', function () { doUpload(uploadInput.files); uploadInput.value = ''; });
       uploadInputEl = uploadInput;
-      var uploadBtn = el('button', { class: 'fm-icon-btn', title: uploadState ? 'Uploading\u2026' : 'Upload', text: '\u2B06' });
+      var uploadBtn = iconBtn('\u2B06', uploadState ? 'Uploading\u2026' : 'Upload');
       if (uploadState || uploadPending) uploadBtn.disabled = true;
       uploadBtn.addEventListener('click', function () { uploadInput.click(); });
       if (pubAreaOK(PERM.upload)) {
@@ -431,7 +447,7 @@
         toolbar.appendChild(uploadInput);
       }
 
-      var trashBtn = el('button', { class: 'fm-icon-btn', title: 'Trash', text: '\u267B' });
+      var trashBtn = iconBtn('\u267B', 'Trash');
       trashBtn.addEventListener('click', openTrash);
       if (pubAreaOK(PERM.delete)) toolbar.appendChild(trashBtn);
     }
@@ -761,8 +777,8 @@
       header.appendChild(checkHeaderCell);
     }
 
-    [['name', 'Name'], ['date', 'Date modified'], ['size', 'Size']].forEach(function (pair) {
-      var th = el('button', { class: 'fm-list-th' + (state.sortBy === pair[0] ? ' active' : '') });
+    [['name', 'Name', ''], ['date', 'Date modified', 'fm-list-date'], ['size', 'Size', 'fm-list-size']].forEach(function (pair) {
+      var th = el('button', { class: 'fm-list-th' + (pair[2] ? ' ' + pair[2] : '') + (state.sortBy === pair[0] ? ' active' : '') });
       th.appendChild(document.createTextNode(pair[1] + ' '));
       if (state.sortBy === pair[0]) {
         th.appendChild(document.createTextNode(state.sortDir === 'asc' ? '\u2191' : '\u2193'));
@@ -817,24 +833,35 @@
 
     if (sel) {
       var selRow = el('div', { class: 'fm-selection' });
-      selRow.appendChild(el('div', { class: 'fm-selection-name', text: sel.name }));
 
       if (state.area === 'old') {
+        var topRowOld = el('div', { class: 'fm-selection-top' });
+        topRowOld.appendChild(el('div', { class: 'fm-selection-name', text: sel.name }));
+
         // Old files bypass filegate entirely - the direct URL IS the link,
         // no access level to choose.
-        var copyBtnOld = el('button', { class: 'fm-btn secondary', text: 'Copy Link' });
+        var shareRowOld = el('div', { class: 'fm-selection-share' });
+        var copyBtnOld = iconBtn('\uD83D\uDD17', 'Copy link');
         copyBtnOld.addEventListener('click', function () { copyToClipboard(sel.previewUrl, copyBtnOld); });
-        selRow.appendChild(copyBtnOld);
+        shareRowOld.appendChild(copyBtnOld);
         if (!sel.isFolder) {
-          var downloadBtnOld = el('button', { class: 'fm-btn secondary', text: 'Download' });
+          var downloadBtnOld = iconBtn('\u2B07', 'Download');
           downloadBtnOld.addEventListener('click', function () { onDownload(sel); });
-          selRow.appendChild(downloadBtnOld);
+          shareRowOld.appendChild(downloadBtnOld);
         } else {
-          var zipBtnOld = el('button', { class: 'fm-btn secondary', text: 'Download zip' });
+          var zipBtnOld = iconBtn('\u2B07', 'Download zip');
           zipBtnOld.addEventListener('click', function () { downloadZip([sel], zipBtnOld); });
-          selRow.appendChild(zipBtnOld);
+          shareRowOld.appendChild(zipBtnOld);
         }
+        topRowOld.appendChild(shareRowOld);
+        selRow.appendChild(topRowOld);
       } else {
+        var topRow = el('div', { class: 'fm-selection-top' });
+        topRow.appendChild(el('div', { class: 'fm-selection-name', text: sel.name }));
+
+        var shareRow = el('div', { class: 'fm-selection-share' });
+        var actionsRow = el('div', { class: 'fm-selection-actions' });
+
         var levels = availableLevels();
         var select = el('select', { class: 'fm-level-select' });
         levels.forEach(function (lvl) {
@@ -843,40 +870,44 @@
           select.appendChild(opt);
         });
         select.addEventListener('change', function () { state.level = select.value; });
-        selRow.appendChild(select);
+        shareRow.appendChild(select);
 
         if (sel.isFolder && ALLOW_GALLERY) {
           var modeSelect = el('select', { class: 'fm-level-select' });
-          [['index', 'Index (list files)'], ['gallery', 'Gallery']].forEach(function (pair) {
+          [['index', 'Index'], ['gallery', 'Gallery']].forEach(function (pair) {
             var opt = el('option', { value: pair[0], text: pair[1] });
             if (pair[0] === state.mode) opt.setAttribute('selected', 'selected');
             modeSelect.appendChild(opt);
           });
           modeSelect.addEventListener('change', function () { state.mode = modeSelect.value; });
-          selRow.appendChild(modeSelect);
+          shareRow.appendChild(modeSelect);
         }
 
-        var copyBtn = el('button', { class: 'fm-btn secondary', text: 'Copy Link' });
+        var copyBtn = iconBtn('\uD83D\uDD17', 'Copy link');
         copyBtn.addEventListener('click', function () {
           getShareUrl(function (url) { copyToClipboard(url, copyBtn); });
         });
-        selRow.appendChild(copyBtn);
+        shareRow.appendChild(copyBtn);
+        topRow.appendChild(shareRow);
+        selRow.appendChild(topRow);
 
         if (!sel.isFolder) {
-          var downloadBtn = el('button', { class: 'fm-btn secondary', text: 'Download' });
+          var downloadBtn = iconBtn('\u2B07', 'Download');
           downloadBtn.addEventListener('click', function () { onDownload(sel); });
-          selRow.appendChild(downloadBtn);
+          actionsRow.appendChild(downloadBtn);
         } else {
-          var zipBtn = el('button', { class: 'fm-btn secondary', text: 'Download zip' });
+          var zipBtn = iconBtn('\u2B07', 'Download zip');
           zipBtn.addEventListener('click', function () { downloadZip([sel], zipBtn); });
-          selRow.appendChild(zipBtn);
+          actionsRow.appendChild(zipBtn);
         }
 
         if (destinationAreasFor('move').indexOf(state.area === 'priv' ? 'pub' : 'priv') !== -1) {
-          var moveBtn = el('button', { class: 'fm-btn secondary', text: 'Move to ' + (state.area === 'priv' ? 'Page files' : 'My files') });
+          var moveBtn = iconBtn('\uD83D\uDCE4', 'Move to ' + (state.area === 'priv' ? 'Page files' : 'My files'));
           moveBtn.addEventListener('click', function () { onMove(sel); });
-          selRow.appendChild(moveBtn);
+          actionsRow.appendChild(moveBtn);
         }
+
+        selRow.appendChild(actionsRow);
       }
 
       footer.appendChild(selRow);
@@ -917,37 +948,37 @@
   // selected. Move/Copy open the destination picker; Delete/Migrate act
   // directly (mirroring onDelete/onMigrate).
   function buildBulkBar() {
-    var bar = el('div', { class: 'fm-selection' });
+    var bar = el('div', { class: 'fm-bulk-bar' });
     var items = Object.keys(multiSelected).map(function (k) { return multiSelected[k]; });
     bar.appendChild(el('div', { class: 'fm-selection-name', text: items.length + ' selected' }));
 
-    var clearBtn = el('button', { class: 'fm-btn secondary', text: 'Clear' });
+    var clearBtn = iconBtn('\u2610', 'Clear selection');
     clearBtn.addEventListener('click', function () { clearMultiSelect(); renderBody(); renderFooter(); });
     bar.appendChild(clearBtn);
 
-    var zipBtn = el('button', { class: 'fm-btn secondary', text: 'Download zip' });
+    var zipBtn = iconBtn('\u2B07', 'Download zip');
     zipBtn.addEventListener('click', function () { downloadZip(items, zipBtn); });
     bar.appendChild(zipBtn);
 
     if (state.area === 'old') {
       if (destinationAreasFor('migrate').length) {
-        var migrateBtn = el('button', { class: 'fm-btn secondary', text: 'Migrate to\u2026' });
+        var migrateBtn = iconBtn('\u21ea', 'Migrate to\u2026');
         migrateBtn.addEventListener('click', function () { openDestinationPicker('migrate', items); });
         bar.appendChild(migrateBtn);
       }
     } else {
       if (destinationAreasFor('move').length) {
-        var moveBtn = el('button', { class: 'fm-btn secondary', text: 'Move to\u2026' });
+        var moveBtn = iconBtn('\uD83D\uDCE4', 'Move to\u2026');
         moveBtn.addEventListener('click', function () { openDestinationPicker('move', items); });
         bar.appendChild(moveBtn);
       }
       if (destinationAreasFor('copy').length) {
-        var copyBtn = el('button', { class: 'fm-btn secondary', text: 'Copy to\u2026' });
+        var copyBtn = iconBtn('\u29C9', 'Copy to\u2026');
         copyBtn.addEventListener('click', function () { openDestinationPicker('copy', items); });
         bar.appendChild(copyBtn);
       }
       if (pubAreaOK(PERM.delete)) {
-        var delBtn = el('button', { class: 'fm-btn danger', text: 'Delete selected' });
+        var delBtn = iconBtn('\u2715', 'Delete selected', 'danger');
         delBtn.addEventListener('click', function () { onBulkDelete(items); });
         bar.appendChild(delBtn);
       }
@@ -1320,9 +1351,18 @@
   function copyToClipboard(url, btn) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(url).then(function () {
-        var original = btn.textContent;
-        btn.textContent = 'Copied!';
-        setTimeout(function () { btn.textContent = original; }, 1500);
+        var iconSpan = btn.querySelector('.fm-icon-btn-icon');
+        var labelSpan = btn.querySelector('.fm-icon-btn-label');
+        var originalIcon = iconSpan ? iconSpan.textContent : null;
+        var originalLabel = labelSpan ? labelSpan.textContent : null;
+        if (iconSpan) iconSpan.textContent = '\u2713';
+        if (labelSpan) labelSpan.textContent = 'Copied!';
+        btn.title = 'Copied!';
+        setTimeout(function () {
+          if (iconSpan) iconSpan.textContent = originalIcon;
+          if (labelSpan) labelSpan.textContent = originalLabel;
+          btn.title = 'Copy link';
+        }, 1500);
       });
     } else {
       prompt('Copy this link:', url);
@@ -1587,8 +1627,17 @@
    */
   function downloadZip(items, btn) {
     if (!items.length) return;
-    var originalText = btn ? btn.textContent : null;
-    if (btn) { btn.disabled = true; btn.textContent = 'Zipping\u2026'; }
+    var iconSpan = btn ? btn.querySelector('.fm-icon-btn-icon') : null;
+    var labelSpan = btn ? btn.querySelector('.fm-icon-btn-label') : null;
+    var originalIcon = iconSpan ? iconSpan.textContent : null;
+    var originalLabel = labelSpan ? labelSpan.textContent : null;
+    var originalTitle = btn ? btn.title : null;
+    if (btn) {
+      btn.disabled = true;
+      btn.title = 'Zipping\u2026';
+      if (iconSpan) iconSpan.textContent = '\u23F3'; // hourglass
+      if (labelSpan) labelSpan.textContent = 'Zipping\u2026';
+    }
 
     var body = new URLSearchParams({
       action: 'download_zip', area: state.area, id: state.id, path: state.path,
@@ -1614,7 +1663,12 @@
         setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
       });
     }).catch(reportError).then(function () {
-      if (btn) { btn.disabled = false; btn.textContent = originalText; }
+      if (btn) {
+        btn.disabled = false;
+        btn.title = originalTitle;
+        if (iconSpan) iconSpan.textContent = originalIcon;
+        if (labelSpan) labelSpan.textContent = originalLabel;
+      }
     });
   }
 
