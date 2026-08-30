@@ -317,6 +317,32 @@
     return btn;
   }
 
+  /**
+   * Wraps `modal` in the standard .fm-modal-overlay, appends it to the
+   * DOM, and wires up the two dismissal paths every modal here should
+   * support: clicking the backdrop, and Escape. Returns a close()
+   * function the caller can also invoke itself (e.g. after a successful
+   * action), so it doesn't need to remember to remove its own listener.
+   * `onDismiss`, if given, runs on every close regardless of how it was
+   * triggered - for modals that resolve a Promise (see
+   * askConflictChoice), this is how Escape/backdrop-click still resolve
+   * it (as cancelled) instead of leaving it hanging forever.
+   */
+  function showModal(modal, onDismiss) {
+    var overlay = el('div', { class: 'fm-modal-overlay' });
+    overlay.appendChild(modal);
+    function close() {
+      overlay.remove();
+      document.removeEventListener('keydown', onKey);
+      if (onDismiss) onDismiss();
+    }
+    function onKey(e) { if (e.key === 'Escape') close(); }
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
+    document.addEventListener('keydown', onKey);
+    root.appendChild(overlay);
+    return close;
+  }
+
   function apiFor(area, id, path, action, params) {
     var body = new URLSearchParams(Object.assign({
       action: action, area: area, id: id, path: path, pageid: PAGEID, csrf: CSRF
@@ -1037,7 +1063,6 @@
 
     var pick = { area: areas[0], id: areas[0] === 'pub' ? PAGEID : USERID, path: '' };
 
-    var overlay = el('div', { class: 'fm-modal-overlay' });
     var modal = el('div', { class: 'fm-modal' });
     var verb = kind === 'copy' ? 'Copy' : (kind === 'migrate' ? 'Migrate' : 'Move');
     modal.appendChild(el('div', {
@@ -1054,15 +1079,14 @@
 
     var actionsRow = el('div', { class: 'fm-modal-actions' });
     var cancelBtn = el('button', { class: 'fm-btn secondary', text: 'Cancel' });
-    cancelBtn.addEventListener('click', close);
     var confirmBtn = el('button', { class: 'fm-btn', text: verb + ' here' });
     confirmBtn.addEventListener('click', doConfirm);
     actionsRow.appendChild(cancelBtn);
     actionsRow.appendChild(confirmBtn);
     modal.appendChild(actionsRow);
-    overlay.appendChild(modal);
 
-    function close() { overlay.remove(); }
+    var close = showModal(modal);
+    cancelBtn.addEventListener('click', close);
 
     function renderTabs() {
       tabsRow.innerHTML = '';
@@ -1181,16 +1205,8 @@
 
     renderTabs();
     refresh();
-    root.appendChild(overlay);
   }
 
-  /**
-   * "Trash" toolbar button - browses this area+id's soft-deleted items
-   * (see the 'delete'/'restore'/'trash_list' actions in api.php) so
-   * anything past the undo toast's 8-second window is still recoverable
-   * for the full 30-day retention window. Never shown for Old files,
-   * since nothing is ever deleted from there.
-   */
   /**
    * Shows a Replace/Keep both/Cancel choice for one or more colliding
    * names, and resolves to the onConflict value to use: 'replace',
@@ -1200,7 +1216,6 @@
    */
   function askConflictChoice(names) {
     return new Promise(function (resolve) {
-      var overlay = el('div', { class: 'fm-modal-overlay' });
       var modal = el('div', { class: 'fm-modal fm-conflict-modal' });
       modal.appendChild(el('div', {
         class: 'fm-modal-title',
@@ -1211,21 +1226,24 @@
       }
       modal.appendChild(el('div', { class: 'fm-conflict-note', text: 'Replaced items can be restored from Trash.' }));
 
-      function choose(value) { overlay.remove(); resolve(value); }
       var actionsRow = el('div', { class: 'fm-modal-actions fm-conflict-actions' });
       var replaceBtn = el('button', { class: 'fm-btn danger', text: 'Replace' });
-      replaceBtn.addEventListener('click', function () { choose('replace'); });
       var keepBtn = el('button', { class: 'fm-btn secondary', text: 'Keep both' });
-      keepBtn.addEventListener('click', function () { choose('rename'); });
       var cancelBtn = el('button', { class: 'fm-btn secondary', text: 'Cancel' });
-      cancelBtn.addEventListener('click', function () { choose(null); });
       actionsRow.appendChild(replaceBtn);
       actionsRow.appendChild(keepBtn);
       actionsRow.appendChild(cancelBtn);
       modal.appendChild(actionsRow);
 
-      overlay.appendChild(modal);
-      root.appendChild(overlay);
+      // Escape/backdrop-click resolve as cancelled too, rather than
+      // leaving the caller's await hanging forever - harmless to also
+      // fire after one of the buttons below already resolved, since a
+      // settled promise silently ignores any later resolve() calls.
+      var close = showModal(modal, function () { resolve(null); });
+      function choose(value) { close(); resolve(value); }
+      replaceBtn.addEventListener('click', function () { choose('replace'); });
+      keepBtn.addEventListener('click', function () { choose('rename'); });
+      cancelBtn.addEventListener('click', function () { choose(null); });
     });
   }
 
@@ -1255,7 +1273,6 @@
    * default, so the browser renders it in place instead of downloading.
    */
   function openPreview(opts) {
-    var overlay = el('div', { class: 'fm-modal-overlay' });
     var modal = el('div', { class: 'fm-modal fm-preview-modal' });
     modal.appendChild(el('div', { class: 'fm-modal-title', text: opts.name }));
 
@@ -1278,25 +1295,22 @@
     downloadBtn.addEventListener('click', function () { onDownload(opts); });
     actionsRow.appendChild(downloadBtn);
     var closeBtn = el('button', { class: 'fm-btn secondary', text: 'Close' });
-    closeBtn.addEventListener('click', close);
-    actionsRow.appendChild(closeBtn);
     modal.appendChild(actionsRow);
 
-    function close() {
-      overlay.remove();
-      document.removeEventListener('keydown', onKey);
-    }
-    function onKey(e) { if (e.key === 'Escape') close(); }
-    overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
-    document.addEventListener('keydown', onKey);
-
-    overlay.appendChild(modal);
-    root.appendChild(overlay);
+    var close = showModal(modal);
+    closeBtn.addEventListener('click', close);
+    actionsRow.appendChild(closeBtn);
   }
 
+  /**
+   * "Trash" toolbar button - browses this area+id's soft-deleted items
+   * (see the 'delete'/'restore'/'trash_list' actions in api.php) so
+   * anything past the undo toast's 8-second window is still recoverable
+   * for the full 30-day retention window. Never shown for Old files,
+   * since nothing is ever deleted from there.
+   */
   function openTrash() {
     var area = state.area, id = state.id;
-    var overlay = el('div', { class: 'fm-modal-overlay' });
     var modal = el('div', { class: 'fm-modal fm-trash-modal' });
     modal.appendChild(el('div', { class: 'fm-modal-title', text: 'Trash \u2014 ' + AREA_LABELS[area] }));
     modal.appendChild(el('div', {
@@ -1310,11 +1324,12 @@
     var emptyBtn = el('button', { class: 'fm-btn danger', text: 'Empty trash' });
     emptyBtn.addEventListener('click', function () { emptyTrash(area, id, refresh); });
     var closeBtn = el('button', { class: 'fm-btn secondary', text: 'Close' });
-    closeBtn.addEventListener('click', function () { overlay.remove(); });
     actionsRow.appendChild(emptyBtn);
     actionsRow.appendChild(closeBtn);
     modal.appendChild(actionsRow);
-    overlay.appendChild(modal);
+
+    var close = showModal(modal);
+    closeBtn.addEventListener('click', close);
 
     function refresh() {
       listEl.innerHTML = '';
@@ -1345,7 +1360,6 @@
     }
 
     refresh();
-    root.appendChild(overlay);
   }
 
   function buildTrashRow(area, id, it, onChanged) {
@@ -1647,6 +1661,11 @@
     api('rename', { old: opts.name, new: newName, target: opts.isFolder ? 'folder' : 'file' }).then(function (res) {
       if (!res.ok) { reportError(new Error(res.body.error || 'Rename failed')); return; }
       var finalName = res.body.name || newName; // may differ from newName if the extension was corrected
+      // It's still the same item, but under a new name - other fields the
+      // footer relies on (previewUrl in particular) are keyed to the old
+      // name and would 404, so clear the selection rather than leave it
+      // pointing at stale data.
+      if (state.selected && state.selected.name === opts.name) state.selected = null;
       load();
       showUndo('Renamed "' + opts.name + '" to "' + finalName + '"', function () {
         return apiFor(area, id, path, 'rename', { old: finalName, new: opts.name, target: opts.isFolder ? 'folder' : 'file' });
@@ -1742,6 +1761,10 @@
     var area = state.area, id = state.id, path = state.path;
     api('delete', { name: opts.name, target: opts.isFolder ? 'folder' : 'file' }).then(function (res) {
       if (!res.ok) { reportError(new Error(res.body.error || 'Delete failed')); return; }
+      // The item's gone - if it was the one showing in the footer (Copy
+      // link/Download/Move to...), that panel would otherwise keep
+      // pointing at a file that no longer exists.
+      if (state.selected && state.selected.name === opts.name) state.selected = null;
       load();
       if (res.body.trashId) {
         showUndo('Deleted "' + opts.name + '"', function () {

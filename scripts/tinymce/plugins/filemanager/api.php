@@ -51,6 +51,54 @@ function fm_json($data, int $code = 200) {
     exit;
 }
 
+/**
+ * Shared shape for "this action needs $permission, but only when it
+ * touches Page files" - My files has no per-action gate at all, and Old
+ * files never reaches here for actions that would call this (its own
+ * read-only allow-list at the top of the file handles that instead).
+ * 403s and exits on failure, same as fm_json() itself.
+ */
+function fm_require_public_permission(string $area, string $pageid, string $permission): void {
+    if ($area === FM_AREA_PUBLIC && !fm_is_able($permission, $pageid)) {
+        fm_json(['error' => 'Forbidden'], 403);
+    }
+}
+
+/**
+ * Finds a name for $name (a $target 'file'|'folder') that doesn't already
+ * exist in $dir, returning $name unchanged if there's no collision at
+ * all. $style picks the numbering scheme used once there is one:
+ *   'paren' (default) - name(1).ext, name(2).ext, ...
+ *   'copy'             - name (copy).ext, name (copy 2).ext, ...
+ * Shared by upload/move/copy/restore/duplicate, which otherwise each
+ * reimplemented this same base/extension split and probing loop.
+ */
+function fm_unique_name(string $dir, string $name, string $target, string $style = 'paren'): string {
+    if (!file_exists($dir . DIRECTORY_SEPARATOR . $name)) {
+        return $name;
+    }
+    $ext  = $target === 'file' ? '.' . pathinfo($name, PATHINFO_EXTENSION) : '';
+    $base = $target === 'file' ? pathinfo($name, PATHINFO_FILENAME) : $name;
+
+    if ($style === 'copy') {
+        $candidate = $base . ' (copy)' . $ext;
+        $n = 2;
+        while (file_exists($dir . DIRECTORY_SEPARATOR . $candidate)) {
+            $candidate = $base . ' (copy ' . $n . ')' . $ext;
+            $n++;
+        }
+        return $candidate;
+    }
+
+    $n = 1;
+    $candidate = $name;
+    while (file_exists($dir . DIRECTORY_SEPARATOR . $candidate)) {
+        $candidate = $base . '(' . $n . ')' . $ext;
+        $n++;
+    }
+    return $candidate;
+}
+
 if (!is_logged_in()) {
     fm_json(['error' => 'Not authenticated'], 403);
 }
@@ -157,9 +205,7 @@ switch ($action) {
     }
 
     case 'mkdir': {
-        if ($area === FM_AREA_PUBLIC && !fm_is_able('filemanager_createfolder', $pageid)) {
-            fm_json(['error' => 'Forbidden'], 403);
-        }
+        fm_require_public_permission($area, $pageid, 'filemanager_createfolder');
         $name = fm_sanitize_name((string) ($_REQUEST['name'] ?? ''));
         if ($name === null) {
             fm_json(['error' => 'Invalid folder name'], 400);
@@ -176,9 +222,7 @@ switch ($action) {
     }
 
     case 'upload': {
-        if ($area === FM_AREA_PUBLIC && !fm_is_able('filemanager_upload', $pageid)) {
-            fm_json(['error' => 'Forbidden'], 403);
-        }
+        fm_require_public_permission($area, $pageid, 'filemanager_upload');
         if (empty($_FILES['file']) || !is_array($_FILES['file']['name'])) {
             fm_json(['error' => 'No files received'], 400);
         }
@@ -214,12 +258,7 @@ switch ($action) {
                 $existing = $dir . DIRECTORY_SEPARATOR . $finalName;
                 fm_clear_for_replace($area, $id, $relPath, $existing, $finalName, is_dir($existing) ? 'folder' : 'file');
             } else {
-                // Avoid overwriting: file, file(1), file(2), ...
-                $n = 1;
-                while (file_exists($dir . DIRECTORY_SEPARATOR . $finalName)) {
-                    $finalName = $baseName . '(' . $n . ').' . $ext;
-                    $n++;
-                }
+                $finalName = fm_unique_name($dir, $finalName, 'file');
             }
             $dest = $dir . DIRECTORY_SEPARATOR . $finalName;
             if (!move_uploaded_file($tmpPath, $dest)) {
@@ -234,9 +273,7 @@ switch ($action) {
     }
 
     case 'rename': {
-        if ($area === FM_AREA_PUBLIC && !fm_is_able('filemanager_edit', $pageid)) {
-            fm_json(['error' => 'Forbidden'], 403);
-        }
+        fm_require_public_permission($area, $pageid, 'filemanager_edit');
         $old    = fm_sanitize_name((string) ($_REQUEST['old'] ?? ''));
         $new    = fm_sanitize_name((string) ($_REQUEST['new'] ?? ''));
         $target = (string) ($_REQUEST['target'] ?? ''); // 'file' | 'folder'
@@ -267,9 +304,7 @@ switch ($action) {
     }
 
     case 'delete': {
-        if ($area === FM_AREA_PUBLIC && !fm_is_able('filemanager_delete', $pageid)) {
-            fm_json(['error' => 'Forbidden'], 403);
-        }
+        fm_require_public_permission($area, $pageid, 'filemanager_delete');
         $name   = fm_sanitize_name((string) ($_REQUEST['name'] ?? ''));
         $target = (string) ($_REQUEST['target'] ?? '');
         if ($name === null || !in_array($target, ['file', 'folder'], true)) {
@@ -302,9 +337,7 @@ switch ($action) {
         // exact inverse. Only reachable within the retention window
         // fm_purge_old_trash() enforces (default 30 days); past that (or
         // once already restored/undone) this just 404s.
-        if ($area === FM_AREA_PUBLIC && !fm_is_able('filemanager_delete', $pageid)) {
-            fm_json(['error' => 'Forbidden'], 403);
-        }
+        fm_require_public_permission($area, $pageid, 'filemanager_delete');
         $trashId = (string) ($_REQUEST['trashId'] ?? '');
         if (!preg_match('/^[0-9a-f]{16}$/', $trashId)) {
             fm_json(['error' => 'Invalid request'], 400);
@@ -335,14 +368,7 @@ switch ($action) {
         }
 
         // Avoid clobbering anything created at the destination since deletion.
-        $finalName = (string) $meta['name'];
-        $n = 1;
-        $ext = $meta['target'] === 'file' ? '.' . pathinfo($finalName, PATHINFO_EXTENSION) : '';
-        $base = $meta['target'] === 'file' ? pathinfo($finalName, PATHINFO_FILENAME) : $finalName;
-        while (file_exists($destDir . DIRECTORY_SEPARATOR . $finalName)) {
-            $finalName = $base . '(' . $n . ')' . $ext;
-            $n++;
-        }
+        $finalName = fm_unique_name($destDir, (string) $meta['name'], (string) $meta['target']);
 
         if (!fm_move_any($srcPath, $destDir . DIRECTORY_SEPARATOR . $finalName)) {
             fm_json(['error' => 'Restore failed'], 500);
@@ -357,9 +383,7 @@ switch ($action) {
         // restore anything soft-deleted within the retention window, not
         // just the last delete (that's what the client's undo toast
         // already covers via the trashId 'delete' hands back).
-        if ($area === FM_AREA_PUBLIC && !fm_is_able('filemanager_delete', $pageid)) {
-            fm_json(['error' => 'Forbidden'], 403);
-        }
+        fm_require_public_permission($area, $pageid, 'filemanager_delete');
         $trashRoot = fm_trash_root($area, $id);
         if ($trashRoot === null) {
             fm_json(['items' => []]);
@@ -396,9 +420,7 @@ switch ($action) {
         // Permanent delete FROM trash ("Delete forever" in the Trash
         // browser / "Empty trash") - unlike 'delete' above, this one has
         // no undo.
-        if ($area === FM_AREA_PUBLIC && !fm_is_able('filemanager_delete', $pageid)) {
-            fm_json(['error' => 'Forbidden'], 403);
-        }
+        fm_require_public_permission($area, $pageid, 'filemanager_delete');
         $trashId = (string) ($_REQUEST['trashId'] ?? '');
         if (!preg_match('/^[0-9a-f]{16}$/', $trashId)) {
             fm_json(['error' => 'Invalid request'], 400);
@@ -469,17 +491,11 @@ switch ($action) {
         // usual file(1), file(2)... numbering.
         $onConflict = ((string) ($_REQUEST['onConflict'] ?? 'rename')) === 'replace' ? 'replace' : 'rename';
         $finalName = $name;
-        $ext = $target === 'file' ? '.' . pathinfo($name, PATHINFO_EXTENSION) : '';
-        $base = $target === 'file' ? pathinfo($name, PATHINFO_FILENAME) : $name;
         $existingPath = $toDir . DIRECTORY_SEPARATOR . $finalName;
         if ($onConflict === 'replace' && file_exists($existingPath)) {
             fm_clear_for_replace($toArea, $toId, $toRelPath, $existingPath, $finalName, is_dir($existingPath) ? 'folder' : 'file');
         } else {
-            $n = 1;
-            while (file_exists($toDir . DIRECTORY_SEPARATOR . $finalName)) {
-                $finalName = $base . '(' . $n . ')' . $ext;
-                $n++;
-            }
+            $finalName = fm_unique_name($toDir, $name, $target);
         }
         $destPath = $toDir . DIRECTORY_SEPARATOR . $finalName;
 
@@ -544,17 +560,11 @@ switch ($action) {
         // usual file(1), file(2)... numbering.
         $onConflict = ((string) ($_REQUEST['onConflict'] ?? 'rename')) === 'replace' ? 'replace' : 'rename';
         $finalName = $name;
-        $ext = $target === 'file' ? '.' . pathinfo($name, PATHINFO_EXTENSION) : '';
-        $base = $target === 'file' ? pathinfo($name, PATHINFO_FILENAME) : $name;
         $existingPath = $toDir . DIRECTORY_SEPARATOR . $finalName;
         if ($onConflict === 'replace' && file_exists($existingPath)) {
             fm_clear_for_replace($toArea, $toId, $toRelPath, $existingPath, $finalName, is_dir($existingPath) ? 'folder' : 'file');
         } else {
-            $n = 1;
-            while (file_exists($toDir . DIRECTORY_SEPARATOR . $finalName)) {
-                $finalName = $base . '(' . $n . ')' . $ext;
-                $n++;
-            }
+            $finalName = fm_unique_name($toDir, $name, $target);
         }
         $destPath = $toDir . DIRECTORY_SEPARATOR . $finalName;
 
@@ -576,9 +586,7 @@ switch ($action) {
         // source/destination: it gets a friendlier name pattern this way,
         // and 'copy' keeps its "source and destination are the same"
         // guard as a real no-op guard for that general-purpose action.
-        if ($area === FM_AREA_PUBLIC && !fm_is_able('filemanager_copy', $pageid)) {
-            fm_json(['error' => 'Forbidden'], 403);
-        }
+        fm_require_public_permission($area, $pageid, 'filemanager_copy');
         $name   = fm_sanitize_name((string) ($_REQUEST['name'] ?? ''));
         $target = (string) ($_REQUEST['target'] ?? '');
         if ($name === null || !in_array($target, ['file', 'folder'], true)) {
@@ -589,14 +597,7 @@ switch ($action) {
             fm_json(['error' => 'Not found'], 404);
         }
 
-        $ext  = $target === 'file' ? '.' . pathinfo($name, PATHINFO_EXTENSION) : '';
-        $base = $target === 'file' ? pathinfo($name, PATHINFO_FILENAME) : $name;
-        $finalName = $base . ' (copy)' . $ext;
-        $n = 2;
-        while (file_exists($dir . DIRECTORY_SEPARATOR . $finalName)) {
-            $finalName = $base . ' (copy ' . $n . ')' . $ext;
-            $n++;
-        }
+        $finalName = fm_unique_name($dir, $name, $target, 'copy');
         $destPath = $dir . DIRECTORY_SEPARATOR . $finalName;
 
         $ok = is_dir($srcPath) ? fm_copy_dir($srcPath, $destPath) : @copy($srcPath, $destPath);
