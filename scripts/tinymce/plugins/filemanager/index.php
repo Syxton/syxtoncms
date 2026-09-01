@@ -93,6 +93,6 @@ if (empty($_SESSION['fm_csrf'])) {
      data-csrf="<?php echo htmlspecialchars($_SESSION['fm_csrf'], ENT_QUOTES); ?>"
      data-api="api.php">
 </div>
-<script src="app.js"></script>
+<script src="app.min.js"></script>
 </body>
 </html>
