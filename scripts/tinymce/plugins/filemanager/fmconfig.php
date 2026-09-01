@@ -31,8 +31,39 @@ if (!isset($CFG->fmroot)) {
 // long random value set once per install - move this into config.php
 // itself (e.g. $CFG->fm_secret = getenv('FM_SECRET');) rather than leaving
 // it here. Placeholder only, so nothing fatals out in dev before you set it.
+const FM_SECRET_PLACEHOLDER = 'CHANGE-ME-set-a-random-64-char-secret-in-config.php';
 if (!isset($CFG->fm_secret)) {
-    $CFG->fm_secret = 'CHANGE-ME-set-a-random-64-char-secret-in-config.php';
+    $CFG->fm_secret = FM_SECRET_PLACEHOLDER;
+}
+
+/**
+ * True when $CFG->fm_secret is still the known-placeholder (or missing /
+ * absurdly short). Share and admin-preview tokens must not be issued in
+ * this state - anyone who can read this file could forge them.
+ */
+function fm_secret_is_insecure(): bool {
+    global $CFG;
+    $s = (string) ($CFG->fm_secret ?? '');
+    return $s === '' || $s === FM_SECRET_PLACEHOLDER || strlen($s) < 32;
+}
+
+/**
+ * Log once and refuse token issuance when the secret is still the
+ * placeholder. Called from the URL builders so a forgotten config.php
+ * override cannot silently produce forgeable share links.
+ */
+function fm_assert_secret_for_issue(): bool {
+    static $logged = false;
+    if (!fm_secret_is_insecure()) {
+        return true;
+    }
+    if (!$logged) {
+        error_log('SECURITY: $CFG->fm_secret is still the placeholder (or too short). '
+            . 'Set a random >=32-char secret in config.php before issuing share/admin tokens. '
+            . 'Token issuance is refused until then.');
+        $logged = true;
+    }
+    return false;
 }
 
 // Extensions the filemanager will store/serve, mapped to their MIME type.
@@ -260,6 +291,8 @@ function fm_resolve_area_path(string $area, string $id, string $relpath): ?strin
  */
 function fm_build_admin_token(string $area, string $id, string $relpath, int $mtime): string {
     global $CFG;
+    // Still produce a deterministic value so verify stays consistent even
+    // while the secret is insecure; issuance is gated by fm_admin_preview_url.
     return substr(hash_hmac('sha256', 'admin|' . $area . '|' . $id . '|' . $relpath . '|' . $mtime, $CFG->fm_secret), 0, 32);
 }
 
@@ -268,6 +301,9 @@ function fm_verify_admin_token(string $area, string $id, string $relpath, int $m
 }
 
 function fm_admin_preview_url(string $gateUrl, string $area, string $id, string $relpath, int $mtime): string {
+    if (!fm_assert_secret_for_issue()) {
+        return ''; // refuse to hand out a forgeable preview URL
+    }
     $token = fm_build_admin_token($area, $id, $relpath, $mtime);
     // Explicit '&' separator - http_build_query() otherwise defaults to
     // the arg_separator.output ini setting, which some PHP installs set
@@ -307,6 +343,7 @@ const FM_LEVEL_PRIVATE = 'private';
  */
 function fm_build_share_token(string $level, string $area, string $id, string $relpath, int $mtime, string $extra = ''): string {
     global $CFG;
+    // Deterministic even while insecure so existing verify paths stay consistent.
     return substr(hash_hmac('sha256', 'share|' . $level . '|' . $area . '|' . $id . '|' . $relpath . '|' . $mtime . '|' . $extra, $CFG->fm_secret), 0, 32);
 }
 
@@ -315,6 +352,9 @@ function fm_verify_share_token(string $level, string $area, string $id, string $
 }
 
 function fm_share_url(string $gateUrl, string $level, string $area, string $id, string $relpath, int $mtime, string $extra = '', bool $download = false): string {
+    if (!fm_assert_secret_for_issue()) {
+        return ''; // refuse to hand out a forgeable share URL
+    }
     $token = fm_build_share_token($level, $area, $id, $relpath, $mtime, $extra);
     $qs = http_build_query([
         'lvl' => $level, 'a' => $area, 'id' => $id, 'p' => $relpath, 'm' => $mtime,
@@ -442,7 +482,7 @@ function fm_get_gated_files_from_path($folderurl, $extensions) {
 
     $query = parse_url(fm_normalize_gated_url($folderurl), PHP_URL_QUERY);
     if (!$query) {
-        return null;
+        return []; // same failure shape as the !is_dir branch above
     }
     parse_str($query, $q);
 

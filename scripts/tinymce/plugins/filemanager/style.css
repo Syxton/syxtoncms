@@ -9,9 +9,15 @@ body {
 
 .fm-tabs { display: flex; border-bottom: 1px solid #dcdcde; background: #f6f7f7; }
 .fm-tab {
-  padding: 10px 16px; cursor: pointer; border-bottom: 2px solid transparent;
+  /* Reset button UA styles - these are real <button>s for keyboard access */
+  appearance: none; -webkit-appearance: none;
+  margin: 0; border: 0; border-bottom: 2px solid transparent;
+  background: transparent; font: inherit;
+  padding: 10px 16px; cursor: pointer;
   color: #50575e; font-weight: 600;
 }
+.fm-tab:hover { color: #1d2327; }
+.fm-tab:focus-visible { outline: 2px solid #2271b1; outline-offset: -2px; }
 .fm-tab.active { color: #2271b1; border-bottom-color: #2271b1; background: #fff; }
 
 .fm-toolbar {

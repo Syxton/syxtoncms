@@ -564,14 +564,42 @@
     root.innerHTML = '';
     tabEls = [];
 
-    var tabs = el('div', { class: 'fm-tabs' });
+    var tabs = el('div', { class: 'fm-tabs', role: 'tablist', 'aria-label': 'File areas' });
     // "My files" first, "Page files" second, "Old files" last - least to
-    // most rarely used.
+    // most rarely used. Buttons (not divs) so they participate in Tab
+    // order and are activatable with Enter/Space.
     [['priv', CAN_PRIVATE], ['pub', CAN_PUBLIC], ['old', CAN_OLD]].forEach(function (pair) {
       var area = pair[0], can = pair[1];
       if (!can) return;
-      var tabEl = el('div', { class: 'fm-tab', text: AREA_LABELS[area] });
+      var tabEl = el('button', {
+        type: 'button',
+        class: 'fm-tab',
+        text: AREA_LABELS[area],
+        role: 'tab',
+        'aria-selected': 'false',
+        id: 'fm-tab-' + area
+      });
       tabEl.addEventListener('click', function () { switchArea(area); });
+      tabEl.addEventListener('keydown', function (e) {
+        // Left/Right move focus (and activation) across the area tabs;
+        // stopPropagation so the root list navigator does not steal them.
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'Home' && e.key !== 'End') return;
+        e.preventDefault();
+        e.stopPropagation();
+        if (!tabEls.length) return;
+        var idx = -1;
+        for (var i = 0; i < tabEls.length; i++) {
+          if (tabEls[i].el === tabEl) { idx = i; break; }
+        }
+        if (idx === -1) return;
+        var next = idx;
+        if (e.key === 'ArrowRight') next = (idx + 1) % tabEls.length;
+        else if (e.key === 'ArrowLeft') next = (idx - 1 + tabEls.length) % tabEls.length;
+        else if (e.key === 'Home') next = 0;
+        else if (e.key === 'End') next = tabEls.length - 1;
+        switchArea(tabEls[next].area);
+        tabEls[next].el.focus();
+      });
       tabs.appendChild(tabEl);
       tabEls.push({ el: tabEl, area: area });
     });
@@ -589,7 +617,28 @@
     // won't scroll along with the row that opened it. Simplest fix: just
     // close it if this scrolls, same as clicking outside would.
     body.addEventListener('scroll', closeItemMenu);
-    body.addEventListener('keydown', handleItemKeydown);
+    // Arrow/Home/End/Ctrl+A for the file list are handled on the root so
+    // they work even when focus is still on a toolbar button (not yet
+    // tabbed into an .fm-item). handleItemKeydown ignores form controls,
+    // open menus, and modals so it won't steal keys from those.
+    root.addEventListener('keydown', handleItemKeydown);
+    // Click on empty space (grid/list background, not an item) clears the
+    // selection and parks keyboard focus on the first visible item so the
+    // next arrow key works immediately - same idea as the arrow bootstrap.
+    body.addEventListener('click', function (e) {
+      if (!visibleItems.length) return;
+      if (e.target.closest && e.target.closest('.fm-item')) return;
+      // Ignore clicks that originated on nested controls outside items
+      // (e.g. future chrome inside the body).
+      if (e.target.closest && e.target.closest('button, input, select, textarea, a')) return;
+      clearMultiSelect();
+      state.selected = null;
+      selectionAnchorKey = null;
+      focusedKey = multiKey(visibleItems[0].name, visibleItems[0].isFolder);
+      renderBody();
+      renderFooter();
+      focusItemByKey(focusedKey);
+    });
     body.addEventListener('contextmenu', function (e) {
       // Item rows stop propagation in their own contextmenu handler (see
       // buildItemActions), so this only ever fires for genuine empty
@@ -771,7 +820,12 @@
 
   function updateTabHighlight() {
     tabEls.forEach(function (t) {
-      t.el.classList.toggle('active', t.area === state.area);
+      var active = t.area === state.area;
+      t.el.classList.toggle('active', active);
+      t.el.setAttribute('aria-selected', active ? 'true' : 'false');
+      // Roving tabindex within the tablist: only the active tab is in the
+      // sequential Tab order; Left/Right move between tabs once focused.
+      t.el.tabIndex = active ? 0 : -1;
     });
   }
 
@@ -1405,12 +1459,21 @@
       actionsRow.appendChild(cancelBtn);
       modal.appendChild(actionsRow);
 
-      // Escape/backdrop-click resolve as cancelled too, rather than
-      // leaving the caller's await hanging forever - harmless to also
-      // fire after one of the buttons below already resolved, since a
-      // settled promise silently ignores any later resolve() calls.
-      var close = showModal(modal, function () { resolve(null); });
-      function choose(value) { close(); resolve(value); }
+      // Escape/backdrop-click resolve as cancelled. Button clicks must
+      // resolve FIRST, then close - showModal's close() always invokes
+      // onDismiss, and a Promise only accepts its first resolve(). Calling
+      // close() before resolve(value) was settling every choice as null
+      // (cancel), so Replace / Keep both never actually moved the file.
+      var settled = false;
+      var close = showModal(modal, function () {
+        if (!settled) { settled = true; resolve(null); }
+      });
+      function choose(value) {
+        if (settled) return;
+        settled = true;
+        resolve(value);
+        close();
+      }
       replaceBtn.addEventListener('click', function () { choose('replace'); });
       keepBtn.addEventListener('click', function () { choose('rename'); });
       cancelBtn.addEventListener('click', function () { choose(null); });
@@ -1738,24 +1801,90 @@
   }
 
   /**
-   * Delegated keydown handler for the whole file list (attached once on
-   * .fm-body - see render()), rather than wired per item, since items are
-   * torn down and rebuilt on every render. Covers arrow-key/Home/End
-   * navigation (with Shift for range-select, Ctrl/Cmd to move focus
-   * without changing selection), Space to toggle the focused item's
-   * multi-selection, Enter to activate it (open folder / preview file,
-   * matching double-click), Delete/Backspace to delete it (or the whole
-   * multi-selection if one is active), and Ctrl/Cmd+A to select
+   * Delegated keydown handler for the file list (attached once on the
+   * filemanager root - see render()), rather than wired per item, since
+   * items are torn down and rebuilt on every render. Covers arrow-key/
+   * Home/End navigation (with Shift for range-select, Ctrl/Cmd to move
+   * focus without changing selection), Space to toggle the focused
+   * item's multi-selection, Enter to activate it (open folder / preview
+   * file, matching double-click), Delete/Backspace to delete it (or the
+   * whole multi-selection if one is active), and Ctrl/Cmd+A to select
    * everything visible.
+   *
+   * When focus is not yet on an item (e.g. still on a toolbar button),
+   * the first Arrow/Home/End press jumps into the list - first item for
+   * Down/Right/Home, last item for Up/Left/End - so the user does not
+   * have to Tab through the toolbar to start keyboard navigation.
    */
   function handleItemKeydown(e) {
-    var itemEl = e.target && e.target.closest ? e.target.closest('.fm-item') : null;
-    if (!itemEl || !itemEl.dataset || !itemEl.dataset.key) return;
     if (!visibleItems.length) return;
+
+    // Never steal keys from form fields, an open item menu, a modal, or
+    // the area tablist (those handle Left/Right themselves).
+    var tag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : '';
+    if (tag === 'SELECT' || tag === 'INPUT' || tag === 'TEXTAREA') return;
+    if (e.target.closest && e.target.closest('.fm-tab, .fm-tabs')) return;
+    if (openItemMenu) return;
+    if (root.querySelector('.fm-modal-overlay')) return;
 
     var navKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
     var isNavKey = navKeys.indexOf(e.key) !== -1;
     var isSelectAllKey = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a';
+
+    var itemEl = e.target && e.target.closest ? e.target.closest('.fm-item') : null;
+
+    // Bootstrap into the list when nothing is focused yet.
+    if (!itemEl && isNavKey) {
+      e.preventDefault();
+      var bootstrapKey;
+      if (e.key === 'End' || e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+        var last = visibleItems[visibleItems.length - 1];
+        bootstrapKey = multiKey(last.name, last.isFolder);
+      } else {
+        // Down / Right / Home → first item, or the last focused item if
+        // it is still in the visible set (rovingKey already encodes that).
+        bootstrapKey = rovingKey();
+      }
+      if (!bootstrapKey) return;
+      var bootstrapItem = visibleItems[findVisibleIndex(bootstrapKey)];
+      if (!bootstrapItem) return;
+
+      if (e.shiftKey && bulkActionsAvailable()) {
+        selectionAnchorKey = selectionAnchorKey || bootstrapKey;
+        applyRangeSelection(selectionAnchorKey, bootstrapKey);
+      } else if (!(e.ctrlKey || e.metaKey)) {
+        clearMultiSelect();
+        selectionAnchorKey = bootstrapKey;
+        state.selected = bootstrapItem.isFolder
+          ? null
+          : { name: bootstrapItem.name, isFolder: false, ext: bootstrapItem.ext, previewUrl: bootstrapItem.previewUrl };
+      }
+      focusedKey = bootstrapKey;
+      renderBody();
+      renderFooter();
+      focusItemByKey(bootstrapKey);
+      return;
+    }
+
+    if (!itemEl || !itemEl.dataset || !itemEl.dataset.key) {
+      // Ctrl/Cmd+A with focus outside the list still selects all when
+      // bulk actions are available (and we already bailed on form fields).
+      if (isSelectAllKey && bulkActionsAvailable()) {
+        e.preventDefault();
+        var allOutside = {};
+        visibleItems.forEach(function (it) {
+          allOutside[multiKey(it.name, it.isFolder)] = { name: it.name, isFolder: it.isFolder };
+        });
+        multiSelected = allOutside;
+        state.selected = null;
+        focusedKey = rovingKey();
+        renderBody();
+        renderFooter();
+        focusItemByKey(focusedKey);
+      }
+      return;
+    }
+
     // Enter/Space/Delete only act on the item when the item itself has
     // focus (the roving-tabindex target) - if focus is on a nested
     // control instead (the multi-select checkbox, the kebab menu
@@ -1851,7 +1980,7 @@
    * (toggle just this item in the multi-selection), and Shift+click
    * (range-select from the last plain-selection anchor). Arrow keys,
    * Enter, Delete, Space, and Ctrl+A are handled once via delegation on
-   * .fm-body (see handleItemKeydown) rather than wired per item.
+   * the filemanager root (see handleItemKeydown) rather than wired per item.
    */
   function wireItemInteractions(item, opts) {
     var key = multiKey(opts.name, opts.isFolder);

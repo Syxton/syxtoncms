@@ -99,6 +99,113 @@ function fm_unique_name(string $dir, string $name, string $target, string $style
     return $candidate;
 }
 
+/**
+ * Resolve the final destination name for move/copy/upload when an
+ * onConflict policy is in play. Always derives $existingPath from the
+ * (already-sanitized) $name under $dir, then realpath-checks that any
+ * existing entry is still contained in $dir before clearing it. That keeps
+ * the "same folder / conflict" path safe even if fm_sanitize_name and
+ * fm_unique_name ever diverge on allowed characters later.
+ *
+ * Returns the name that the caller should write under $dir.
+ */
+function fm_resolve_conflict_name(
+    string $dir,
+    string $name,
+    string $target,
+    string $onConflict,
+    string $area,
+    string $id,
+    string $relPath
+): string {
+    $existingPath = $dir . DIRECTORY_SEPARATOR . $name;
+    if ($onConflict === 'replace' && file_exists($existingPath)) {
+        $realDir = realpath($dir);
+        $realExisting = realpath($existingPath);
+        // Containment check: existing must live inside $dir (or be $dir itself,
+        // which would be pathological for a name conflict and is rejected).
+        if ($realDir === false || $realExisting === false
+            || ($realExisting !== $realDir && strpos($realExisting, $realDir . DIRECTORY_SEPARATOR) !== 0)) {
+            // Name somehow escaped the destination dir - fall back to numbering
+            // rather than clearing something outside our tree.
+            return fm_unique_name($dir, $name, $target);
+        }
+        fm_clear_for_replace($area, $id, $relPath, $existingPath, $name, is_dir($existingPath) ? 'folder' : 'file');
+        return $name;
+    }
+    return fm_unique_name($dir, $name, $target);
+}
+
+/**
+ * Content-vs-extension check for a just-moved upload. Uses finfo when
+ * available, with a small alias table for common MIME variations, plus
+ * getimagesize() for image types. Returns true if the content is
+ * acceptable for $ext (or if we cannot check and should not block).
+ */
+function fm_validate_uploaded_content(string $path, string $ext): bool {
+    $expected = $GLOBALS['FM_ALLOWED_EXT'][$ext] ?? null;
+    if ($expected === null) {
+        return false;
+    }
+
+    // Image types: getimagesize is the most reliable quick check.
+    $imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    if (in_array($ext, $imageExts, true)) {
+        $info = @getimagesize($path);
+        if ($info === false) {
+            return false;
+        }
+        // Map IMAGETYPE_* to expected MIME where possible.
+        $typeToMime = [
+            IMAGETYPE_JPEG => 'image/jpeg',
+            IMAGETYPE_PNG  => 'image/png',
+            IMAGETYPE_GIF  => 'image/gif',
+            IMAGETYPE_WEBP => 'image/webp',
+        ];
+        $detectedType = $info[2] ?? 0;
+        if (isset($typeToMime[$detectedType]) && $typeToMime[$detectedType] !== $expected) {
+            return false;
+        }
+        return true;
+    }
+
+    if (!class_exists('finfo')) {
+        // No finfo extension - don't block non-image uploads solely for that.
+        return true;
+    }
+
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $detected = $finfo->file($path);
+    if ($detected === false || $detected === '') {
+        return true; // inconclusive - allow rather than false-positive reject
+    }
+
+    // Accept exact match or known aliases.
+    if ($detected === $expected) {
+        return true;
+    }
+    $aliases = [
+        'image/jpeg' => ['image/jpg', 'image/pjpeg'],
+        'image/svg+xml' => ['image/svg', 'text/xml', 'application/xml', 'text/plain'],
+        'text/plain' => ['text/x-plain', 'application/octet-stream'],
+        'text/csv' => ['text/plain', 'application/csv', 'text/x-csv', 'application/octet-stream'],
+        'application/pdf' => ['application/x-pdf'],
+        'application/zip' => ['application/x-zip-compressed', 'multipart/x-zip'],
+        'application/msword' => ['application/octet-stream'],
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => ['application/octet-stream', 'application/zip'],
+        'application/vnd.ms-excel' => ['application/octet-stream'],
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => ['application/octet-stream', 'application/zip'],
+        'application/vnd.ms-powerpoint' => ['application/octet-stream'],
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation' => ['application/octet-stream', 'application/zip'],
+        'audio/mpeg' => ['audio/mp3', 'audio/mpeg3'],
+        'video/mp4' => ['video/x-m4v'],
+    ];
+    if (isset($aliases[$expected]) && in_array($detected, $aliases[$expected], true)) {
+        return true;
+    }
+    return false;
+}
+
 if (!is_logged_in()) {
     fm_json(['error' => 'Not authenticated'], 403);
 }
@@ -253,16 +360,26 @@ switch ($action) {
             if ($baseName === null) {
                 $baseName = 'file';
             }
-            $finalName = $baseName . '.' . $ext;
-            if ($onConflict === 'replace' && file_exists($dir . DIRECTORY_SEPARATOR . $finalName)) {
-                $existing = $dir . DIRECTORY_SEPARATOR . $finalName;
-                fm_clear_for_replace($area, $id, $relPath, $existing, $finalName, is_dir($existing) ? 'folder' : 'file');
-            } else {
-                $finalName = fm_unique_name($dir, $finalName, 'file');
-            }
+            $finalName = fm_resolve_conflict_name(
+                $dir,
+                $baseName . '.' . $ext,
+                'file',
+                $onConflict,
+                $area,
+                $id,
+                $relPath
+            );
             $dest = $dir . DIRECTORY_SEPARATOR . $finalName;
             if (!move_uploaded_file($tmpPath, $dest)) {
                 $results[] = ['name' => $origName, 'ok' => false, 'error' => 'Could not save'];
+                continue;
+            }
+            // Content must match the claimed extension before we keep the file.
+            // chmod right after a successful move so the brief default-umask
+            // window is as short as possible; validation runs on the same path.
+            if (!fm_validate_uploaded_content($dest, $ext)) {
+                @unlink($dest);
+                $results[] = ['name' => $origName, 'ok' => false, 'error' => 'Content does not match file type'];
                 continue;
             }
             chmod($dest, 0640);
@@ -488,15 +605,10 @@ switch ($action) {
         // Resolve a destination name: onConflict='replace' clears whatever
         // is already there (via trash, so it's still undoable) and moves
         // in under the exact requested name; otherwise fall back to the
-        // usual file(1), file(2)... numbering.
+        // usual file(1), file(2)... numbering. Containment of any existing
+        // path is enforced inside fm_resolve_conflict_name.
         $onConflict = ((string) ($_REQUEST['onConflict'] ?? 'rename')) === 'replace' ? 'replace' : 'rename';
-        $finalName = $name;
-        $existingPath = $toDir . DIRECTORY_SEPARATOR . $finalName;
-        if ($onConflict === 'replace' && file_exists($existingPath)) {
-            fm_clear_for_replace($toArea, $toId, $toRelPath, $existingPath, $finalName, is_dir($existingPath) ? 'folder' : 'file');
-        } else {
-            $finalName = fm_unique_name($toDir, $name, $target);
-        }
+        $finalName = fm_resolve_conflict_name($toDir, $name, $target, $onConflict, $toArea, $toId, $toRelPath);
         $destPath = $toDir . DIRECTORY_SEPARATOR . $finalName;
 
         // "Old files" migration crosses from $CFG->userfilespath into
@@ -557,15 +669,10 @@ switch ($action) {
         // Resolve a destination name: onConflict='replace' clears whatever
         // is already there (via trash, so it's still undoable) and copies
         // in under the exact requested name; otherwise fall back to the
-        // usual file(1), file(2)... numbering.
+        // usual file(1), file(2)... numbering. Containment of any existing
+        // path is enforced inside fm_resolve_conflict_name.
         $onConflict = ((string) ($_REQUEST['onConflict'] ?? 'rename')) === 'replace' ? 'replace' : 'rename';
-        $finalName = $name;
-        $existingPath = $toDir . DIRECTORY_SEPARATOR . $finalName;
-        if ($onConflict === 'replace' && file_exists($existingPath)) {
-            fm_clear_for_replace($toArea, $toId, $toRelPath, $existingPath, $finalName, is_dir($existingPath) ? 'folder' : 'file');
-        } else {
-            $finalName = fm_unique_name($toDir, $name, $target);
-        }
+        $finalName = fm_resolve_conflict_name($toDir, $name, $target, $onConflict, $toArea, $toId, $toRelPath);
         $destPath = $toDir . DIRECTORY_SEPARATOR . $finalName;
 
         $ok = is_dir($srcPath) ? fm_copy_dir($srcPath, $destPath) : @copy($srcPath, $destPath);
