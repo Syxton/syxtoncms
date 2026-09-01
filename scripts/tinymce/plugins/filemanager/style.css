@@ -65,6 +65,7 @@ body {
 .fm-item:hover { border-color: #2271b1; }
 .fm-item.selected { border-color: #2271b1; background: #f0f6fc; }
 .fm-item.multi-selected { border-color: #2271b1; background: #eaf2fb; }
+.fm-item:focus-visible { outline: 2px solid #2271b1; outline-offset: -2px; }
 .fm-grid .fm-item .fm-multi-check {
   position: absolute; top: 6px; left: 6px; z-index: 1; width: 16px; height: 16px; cursor: pointer;
 }

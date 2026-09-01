@@ -163,6 +163,102 @@
   function multiCount() { return Object.keys(multiSelected).length; }
   function clearMultiSelect() { multiSelected = {}; }
 
+  // --- Keyboard navigation / range-select state -----------------------
+  // The flat, in-display-order list of {name, isFolder, ...} currently
+  // shown (post filter/sort), set by renderBody() each time it runs -
+  // this is what arrow keys, Home/End, and Ctrl+A operate over.
+  var visibleItems = [];
+  // multiKey() of the item that currently owns the roving tabindex (see
+  // rovingKey()) - independent of selection, though a plain click/arrow
+  // move sets both together.
+  var focusedKey = null;
+  // multiKey() of the item a Shift+click/Shift+arrow range extends from.
+  // Deliberately not reset by Ctrl+click/Ctrl+arrow, matching the usual
+  // desktop convention that only a *plain* selection redefines the anchor.
+  var selectionAnchorKey = null;
+
+  /**
+   * Pure index math for arrow-key navigation over a flat, row-major list
+   * of `total` items arranged in `columns` columns (columns=1 for the
+   * list view, which has no horizontal axis). Arrow keys clamp at the
+   * edges rather than wrapping - Home/End are the explicit way to jump to
+   * the absolute ends - matching most desktop file managers.
+   */
+  function computeNavIndex(current, total, columns, key) {
+    if (total <= 0) return -1;
+    if (key === 'Home') return 0;
+    if (key === 'End') return total - 1;
+    var next = current;
+    if (key === 'ArrowRight') next = current + 1;
+    else if (key === 'ArrowLeft') next = current - 1;
+    else if (key === 'ArrowDown') next = current + columns;
+    else if (key === 'ArrowUp') next = current - columns;
+    else return current;
+    if (next < 0 || next >= total) return current;
+    return next;
+  }
+
+  /** Inclusive range between anchorIndex and targetIndex, in list order, regardless of which is larger. */
+  function computeRangeSelection(items, anchorIndex, targetIndex) {
+    var lo = Math.min(anchorIndex, targetIndex);
+    var hi = Math.max(anchorIndex, targetIndex);
+    return items.slice(lo, hi + 1);
+  }
+
+  function findVisibleIndex(key) {
+    for (var i = 0; i < visibleItems.length; i++) {
+      if (multiKey(visibleItems[i].name, visibleItems[i].isFolder) === key) return i;
+    }
+    return -1;
+  }
+
+  /** Which item's multiKey should currently have tabindex=0 - the tracked focus if it's still visible, else the first item. */
+  function rovingKey() {
+    if (focusedKey && findVisibleIndex(focusedKey) !== -1) return focusedKey;
+    return visibleItems.length ? multiKey(visibleItems[0].name, visibleItems[0].isFolder) : null;
+  }
+
+  /** Re-selects the multi-select range between the anchor and target, tolerating a stale/missing anchor by falling back to a single-item range. */
+  function applyRangeSelection(anchorKey, targetKey) {
+    var anchorIndex = anchorKey ? findVisibleIndex(anchorKey) : -1;
+    var targetIndex = findVisibleIndex(targetKey);
+    if (anchorIndex === -1) anchorIndex = targetIndex;
+    var range = computeRangeSelection(visibleItems, anchorIndex, targetIndex);
+    var sel = {};
+    range.forEach(function (it) { sel[multiKey(it.name, it.isFolder)] = { name: it.name, isFolder: it.isFolder }; });
+    multiSelected = sel;
+    state.selected = null;
+  }
+
+  /** Finds the current DOM node for `key` post re-render and focuses it - a plain reference to the old node would be stale/detached. */
+  function focusItemByKey(key) {
+    if (!key) return;
+    var items = document.querySelectorAll('.fm-item');
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].dataset.key === key) { items[i].focus(); return; }
+    }
+  }
+
+  /**
+   * How many items make up one row of the grid view, for Up/Down arrow
+   * purposes - measured from actual layout (items sharing the first
+   * item's offsetTop) rather than computed from CSS, since the grid's
+   * column count is responsive (repeat(auto-fill, ...)). Always 1 for
+   * the list view, which has no horizontal axis.
+   */
+  function gridColumnCount() {
+    if (state.view !== 'grid') return 1;
+    var items = document.querySelectorAll('.fm-grid > .fm-item');
+    if (!items.length) return 1;
+    var firstTop = items[0].offsetTop;
+    var count = 0;
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].offsetTop === firstTop) count++;
+      else break;
+    }
+    return count || 1;
+  }
+
   // Last successful 'list' response for the current area/path, cached so
   // typing in the search box can re-filter instantly without re-hitting
   // the API. Cleared/replaced by load().
@@ -268,6 +364,7 @@
       });
       menu.appendChild(itemBtn);
     });
+    wireMenuKeyboardNav(menu);
 
     root.appendChild(menu);
     closeItemMenu();
@@ -275,6 +372,8 @@
     openItemMenu = menu;
     openItemMenu.onCloseExtra = function () { menu.remove(); };
     positionItemMenuAtPoint(menu, x, y);
+    var firstItem = focusableIn(menu)[0];
+    if (firstItem) firstItem.focus();
     return true;
   }
 
@@ -311,10 +410,45 @@
    * (tooltip, and screen readers via the button's accessible name).
    */
   function iconBtn(icon, label, extraClass) {
-    var btn = el('button', { class: 'fm-icon-btn' + (extraClass ? ' ' + extraClass : ''), title: label });
+    var btn = el('button', { class: 'fm-icon-btn' + (extraClass ? ' ' + extraClass : ''), title: label, 'aria-label': label });
     btn.appendChild(el('span', { class: 'fm-icon-btn-icon', text: icon }));
     btn.appendChild(el('span', { class: 'fm-icon-btn-label', text: label }));
     return btn;
+  }
+
+  var modalIdCounter = 0;
+
+  // Elements a keyboard user could reasonably land on inside a modal or
+  // menu - used both for the modal focus trap below and for arrow-key
+  // navigation within item/background menus.
+  function focusableIn(container) {
+    return Array.prototype.slice.call(
+      container.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')
+    );
+  }
+
+  /**
+   * Standard role="menu" keyboard conventions for a dropdown that's
+   * already open: ArrowUp/Down move between items, Home/End jump to the
+   * ends. Escape is already handled globally (see closeItemMenu's
+   * document-level listener), so it isn't duplicated here. Shared by the
+   * per-item kebab/right-click menu and the background New folder/Upload
+   * menu - both are flat lists of button children.
+   */
+  function wireMenuKeyboardNav(menu) {
+    menu.setAttribute('role', 'menu');
+    focusableIn(menu).forEach(function (it) { it.setAttribute('role', 'menuitem'); });
+    menu.addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp' && e.key !== 'Home' && e.key !== 'End') return;
+      var items = focusableIn(menu);
+      if (!items.length) return;
+      var idx = items.indexOf(document.activeElement);
+      e.preventDefault();
+      if (e.key === 'ArrowDown') items[(idx + 1) % items.length].focus();
+      else if (e.key === 'ArrowUp') items[(idx - 1 + items.length) % items.length].focus();
+      else if (e.key === 'Home') items[0].focus();
+      else if (e.key === 'End') items[items.length - 1].focus();
+    });
   }
 
   /**
@@ -327,19 +461,52 @@
    * triggered - for modals that resolve a Promise (see
    * askConflictChoice), this is how Escape/backdrop-click still resolve
    * it (as cancelled) instead of leaving it hanging forever.
+   *
+   * Also handles the accessibility groundwork every modal here wants:
+   * role="dialog"/aria-modal so assistive tech announces it as such,
+   * aria-labelledby pointing at whatever .fm-modal-title it finds (all
+   * four callers already have one), a Tab/Shift+Tab focus trap so
+   * keyboard focus can't silently leave the dialog into the page behind
+   * it, moving focus into the dialog on open, and restoring it to
+   * whatever triggered the dialog once it closes.
    */
   function showModal(modal, onDismiss) {
     var overlay = el('div', { class: 'fm-modal-overlay' });
+
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    if (!modal.hasAttribute('tabindex')) modal.setAttribute('tabindex', '-1');
+    var titleEl = modal.querySelector('.fm-modal-title');
+    if (titleEl) {
+      if (!titleEl.id) titleEl.id = 'fm-modal-title-' + (++modalIdCounter);
+      modal.setAttribute('aria-labelledby', titleEl.id);
+    }
+
     overlay.appendChild(modal);
+
+    var previouslyFocused = document.activeElement;
     function close() {
       overlay.remove();
       document.removeEventListener('keydown', onKey);
       if (onDismiss) onDismiss();
+      if (previouslyFocused && typeof previouslyFocused.focus === 'function') previouslyFocused.focus();
     }
-    function onKey(e) { if (e.key === 'Escape') close(); }
+    function onKey(e) {
+      if (e.key === 'Escape') { close(); return; }
+      if (e.key !== 'Tab') return;
+      var focusables = focusableIn(modal);
+      if (!focusables.length) { e.preventDefault(); return; }
+      var first = focusables[0], last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
     overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
     document.addEventListener('keydown', onKey);
     root.appendChild(overlay);
+
+    var initialFocusables = focusableIn(modal);
+    (initialFocusables[0] || modal).focus();
+
     return close;
   }
 
@@ -422,6 +589,7 @@
     // won't scroll along with the row that opened it. Simplest fix: just
     // close it if this scrolls, same as clicking outside would.
     body.addEventListener('scroll', closeItemMenu);
+    body.addEventListener('keydown', handleItemKeydown);
     body.addEventListener('contextmenu', function (e) {
       // Item rows stop propagation in their own contextmenu handler (see
       // buildItemActions), so this only ever fires for genuine empty
@@ -567,6 +735,7 @@
       class: 'fm-btn secondary fm-sort-dir',
       text: state.sortDir === 'asc' ? '\u2191' : '\u2193',
       title: state.sortDir === 'asc' ? 'Ascending' : 'Descending',
+      'aria-label': state.sortDir === 'asc' ? 'Ascending' : 'Descending',
     });
     dirBtn.addEventListener('click', function () { setSort(state.sortBy, state.sortDir === 'asc' ? 'desc' : 'asc'); });
     wrap.appendChild(dirBtn);
@@ -739,7 +908,7 @@
     var body = root.querySelector('.fm-body');
     if (!body) return;
     body.innerHTML = '';
-    if (!currentData) return;
+    if (!currentData) { visibleItems = []; return; }
     var data = currentData;
     var readOnly = currentReadOnly;
 
@@ -751,6 +920,7 @@
     });
     folders.sort(compareEntries);
     files.sort(compareEntries);
+    visibleItems = folders.concat(files);
 
     if (!folders.length && !files.length) {
       body.appendChild(el('div', {
@@ -777,7 +947,7 @@
   }
 
   function renderGrid(folders, files) {
-    var grid = el('div', { class: 'fm-grid' });
+    var grid = el('div', { class: 'fm-grid', role: 'listbox', 'aria-multiselectable': 'true' });
     folders.concat(files).forEach(function (f) {
       grid.appendChild(makeItem(Object.assign({}, f, { onOpen: onOpenFor(f), onSelect: onSelectFor(f) })));
     });
@@ -786,7 +956,7 @@
 
   function renderList(folders, files) {
     var showChecks = bulkActionsAvailable();
-    var wrap = el('div', { class: 'fm-list' + (showChecks ? '' : ' no-check') });
+    var wrap = el('div', { class: 'fm-list' + (showChecks ? '' : ' no-check'), role: 'listbox', 'aria-multiselectable': 'true' });
     var all = folders.concat(files);
     var header = el('div', { class: 'fm-list-row fm-list-header' });
 
@@ -1483,7 +1653,9 @@
 
     if (!menuItems.length) return wrap; // nothing this item can do - no kebab needed
 
-    var menuBtn = el('button', { class: 'fm-item-menu-btn', text: '\u22EE', title: 'More actions' });
+    var menuBtn = el('button', { class: 'fm-item-menu-btn', text: '\u22EE', title: 'More actions', 'aria-label': 'More actions' });
+    menuBtn.setAttribute('aria-haspopup', 'true');
+    menuBtn.setAttribute('aria-expanded', 'false');
     var menu = el('div', { class: 'fm-item-menu' });
     menuItems.forEach(function (mi) {
       var itemBtn = el('button', { class: mi.danger ? 'danger' : '' }, [
@@ -1497,14 +1669,22 @@
       });
       menu.appendChild(itemBtn);
     });
+    wireMenuKeyboardNav(menu);
 
     function openMenu(place) {
       closeItemMenu();
       menu.classList.add('open');
       container.classList.add('menu-open');
+      menuBtn.setAttribute('aria-expanded', 'true');
       openItemMenu = menu;
-      openItemMenu.onCloseExtra = function () { container.classList.remove('menu-open'); };
+      openItemMenu.onCloseExtra = function () {
+        container.classList.remove('menu-open');
+        menuBtn.setAttribute('aria-expanded', 'false');
+        menuBtn.focus();
+      };
       place();
+      var firstItem = focusableIn(menu)[0];
+      if (firstItem) firstItem.focus();
     }
 
     menuBtn.addEventListener('click', function (e) {
@@ -1557,6 +1737,160 @@
     }
   }
 
+  /**
+   * Delegated keydown handler for the whole file list (attached once on
+   * .fm-body - see render()), rather than wired per item, since items are
+   * torn down and rebuilt on every render. Covers arrow-key/Home/End
+   * navigation (with Shift for range-select, Ctrl/Cmd to move focus
+   * without changing selection), Space to toggle the focused item's
+   * multi-selection, Enter to activate it (open folder / preview file,
+   * matching double-click), Delete/Backspace to delete it (or the whole
+   * multi-selection if one is active), and Ctrl/Cmd+A to select
+   * everything visible.
+   */
+  function handleItemKeydown(e) {
+    var itemEl = e.target && e.target.closest ? e.target.closest('.fm-item') : null;
+    if (!itemEl || !itemEl.dataset || !itemEl.dataset.key) return;
+    if (!visibleItems.length) return;
+
+    var navKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+    var isNavKey = navKeys.indexOf(e.key) !== -1;
+    var isSelectAllKey = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a';
+    // Enter/Space/Delete only act on the item when the item itself has
+    // focus (the roving-tabindex target) - if focus is on a nested
+    // control instead (the multi-select checkbox, the kebab menu
+    // button), that control's own native Enter/Space behavior should
+    // apply, not this. Arrow keys/Home/End/Ctrl+A don't conflict with
+    // any nested control's native behavior, so those still work
+    // regardless of which element inside the item has focus.
+    if (!isNavKey && !isSelectAllKey && e.target !== itemEl) return;
+
+    if (isSelectAllKey) {
+      if (!bulkActionsAvailable()) return;
+      e.preventDefault();
+      var all = {};
+      visibleItems.forEach(function (it) { all[multiKey(it.name, it.isFolder)] = { name: it.name, isFolder: it.isFolder }; });
+      multiSelected = all;
+      state.selected = null;
+      renderBody();
+      renderFooter();
+      focusItemByKey(itemEl.dataset.key);
+      return;
+    }
+
+    var currentIndex = findVisibleIndex(itemEl.dataset.key);
+    if (currentIndex === -1) currentIndex = 0;
+    var f = visibleItems[currentIndex];
+
+    if (isNavKey) {
+      e.preventDefault();
+      var columns = gridColumnCount();
+      var newIndex = computeNavIndex(currentIndex, visibleItems.length, columns, e.key);
+      var target = visibleItems[newIndex];
+      var targetKey = multiKey(target.name, target.isFolder);
+
+      if (e.shiftKey && bulkActionsAvailable()) {
+        if (!selectionAnchorKey) selectionAnchorKey = itemEl.dataset.key;
+        applyRangeSelection(selectionAnchorKey, targetKey);
+      } else if (e.ctrlKey || e.metaKey) {
+        // Move focus only - leave the current selection exactly as is,
+        // matching the standard "move without selecting" listbox convention.
+      } else {
+        clearMultiSelect();
+        selectionAnchorKey = targetKey;
+        state.selected = target.isFolder ? null : { name: target.name, isFolder: false, ext: target.ext, previewUrl: target.previewUrl };
+      }
+      focusedKey = targetKey;
+      renderBody();
+      renderFooter();
+      focusItemByKey(targetKey);
+      return;
+    }
+
+    if (e.key === ' ') {
+      if (!bulkActionsAvailable()) return;
+      e.preventDefault();
+      toggleMultiSelect(f);
+      focusedKey = itemEl.dataset.key;
+      focusItemByKey(focusedKey);
+      return;
+    }
+
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (f.isFolder) {
+        state.path = (state.path ? state.path + '/' : '') + f.name;
+        state.selected = null;
+        state.query = '';
+        clearMultiSelect();
+        renderToolbar();
+        load();
+      } else if (f.previewUrl && isPreviewable(f.ext)) {
+        openPreview(f);
+      } else {
+        selectItem({ name: f.name, isFolder: false, ext: f.ext, previewUrl: f.previewUrl }, itemEl);
+      }
+      return;
+    }
+
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      e.preventDefault();
+      if (multiCount() > 0) {
+        onBulkDelete(Object.keys(multiSelected).map(function (k) { return multiSelected[k]; }));
+      } else {
+        onDelete(f);
+      }
+      return;
+    }
+  }
+
+  /**
+   * Wires the selection/navigation behavior shared by grid tiles and list
+   * rows: listbox option semantics (role, aria-selected, roving
+   * tabindex), plain click (select/open, same as before), Ctrl/Cmd+click
+   * (toggle just this item in the multi-selection), and Shift+click
+   * (range-select from the last plain-selection anchor). Arrow keys,
+   * Enter, Delete, Space, and Ctrl+A are handled once via delegation on
+   * .fm-body (see handleItemKeydown) rather than wired per item.
+   */
+  function wireItemInteractions(item, opts) {
+    var key = multiKey(opts.name, opts.isFolder);
+    item.dataset.key = key;
+    item.setAttribute('role', 'option');
+    var isSelected = isMultiSelected(opts)
+      || (!!state.selected && state.selected.name === opts.name && !!state.selected.isFolder === !!opts.isFolder);
+    item.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+    item.tabIndex = (rovingKey() === key) ? 0 : -1;
+
+    item.addEventListener('click', function (e) {
+      if (bulkActionsAvailable() && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        toggleMultiSelect(opts);
+        focusedKey = key;
+        focusItemByKey(key);
+        return;
+      }
+      if (bulkActionsAvailable() && e.shiftKey) {
+        e.preventDefault();
+        applyRangeSelection(selectionAnchorKey || key, key);
+        focusedKey = key;
+        renderBody();
+        renderFooter();
+        focusItemByKey(key);
+        return;
+      }
+      selectionAnchorKey = key;
+      focusedKey = key;
+      if (opts.isFolder) opts.onOpen();
+      else opts.onOpen(item);
+      item.focus(); // harmless no-op if opts.onOpen() already navigated away and replaced this node
+    });
+    item.addEventListener('dblclick', function () {
+      if (opts.isFolder) opts.onOpen();
+      else if (opts.previewUrl && isPreviewable(opts.ext)) openPreview(opts);
+    });
+  }
+
   function makeItem(opts) {
     var item = el('div', { class: 'fm-item' + (isMultiSelected(opts) ? ' multi-selected' : '') });
     if (bulkActionsAvailable()) item.appendChild(buildMultiCheckbox(opts));
@@ -1578,15 +1912,7 @@
     }
 
     item.appendChild(buildItemActions(opts, item));
-
-    item.addEventListener('click', function () {
-      if (opts.isFolder) opts.onOpen();
-      else opts.onOpen(item);
-    });
-    item.addEventListener('dblclick', function () {
-      if (opts.isFolder) opts.onOpen();
-      else if (opts.previewUrl && isPreviewable(opts.ext)) openPreview(opts);
-    });
+    wireItemInteractions(item, opts);
     wireDragAndDrop(item, opts);
     return item;
   }
@@ -1625,14 +1951,7 @@
     actionsCell.appendChild(buildItemActions(opts, row));
     row.appendChild(actionsCell);
 
-    row.addEventListener('click', function () {
-      if (opts.isFolder) opts.onOpen();
-      else opts.onOpen(row);
-    });
-    row.addEventListener('dblclick', function () {
-      if (opts.isFolder) opts.onOpen();
-      else if (opts.previewUrl && isPreviewable(opts.ext)) openPreview(opts);
-    });
+    wireItemInteractions(row, opts);
     wireDragAndDrop(row, opts);
     return row;
   }
@@ -2022,7 +2341,7 @@
     var undoBtn = el('button', { class: 'fm-undo-btn', text: 'Undo' });
     undoBtn.addEventListener('click', performUndo);
     wrap.appendChild(undoBtn);
-    var dismissBtn = el('button', { class: 'fm-undo-dismiss', text: '\u2715', title: 'Dismiss' });
+    var dismissBtn = el('button', { class: 'fm-undo-dismiss', text: '\u2715', title: 'Dismiss', 'aria-label': 'Dismiss' });
     dismissBtn.addEventListener('click', dismissUndo);
     wrap.appendChild(dismissBtn);
   }
