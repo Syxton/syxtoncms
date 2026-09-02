@@ -35,7 +35,7 @@ function display_addfeature($pageid, $area) {
                 "data" => [
                     "action" => "addfeature",
                     "pageid" => $pageid,
-                    "feature" => "js||$('#addfeaturelist').val()||js",
+                    "type" => "js||$('#addfeaturelist').val()||js",
                 ],
                 "ondone" => "go_to_page($pageid);",
             ]);

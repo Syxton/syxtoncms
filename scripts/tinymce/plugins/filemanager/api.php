@@ -6,16 +6,18 @@
 * current area. All state-changing actions also require the CSRF token
 * that index.php embeds from the session.
 *
-* Actions (POST 'action'): list, mkdir, upload, rename, delete, move, copy, geturl, restore, trash_list, trash_delete, duplicate, check_conflicts, download_zip
+* Actions (POST 'action'): list, mkdir, upload, rename, delete, move, copy, geturl, restore, trash_list, trash_delete, duplicate, check_conflicts, download_zip, search_pages
 * Common params: area=pub|priv, id=<pageid|userid>, path=<relative folder>,
 * pageid=<the page being edited, for ability scoping - see fm_is_able()>
 *
 * Permissions: My files (area=priv) is open to any logged-in owner for
 * every action, ownership only. Page files (area=pub) also requires
-* filemanager_view to browse, plus filemanager_delete/upload/move/copy/
-* createfolder/edit per action (source OR destination - see 'move'/'copy').
-* filemanager_migrate always gates migrating out of Old files. See
-* fmconfig.php's fm_is_able().
+* filemanager_view to browse (checked against the page id being accessed),
+* plus filemanager_delete/upload/move/copy/createfolder/edit per action.
+* For move/copy, source-side Page files is gated on the editor pageid;
+* destination-side Page files is gated on toId (so cross-page targets
+* cannot bypass permissions on the destination page). filemanager_migrate
+* always gates migrating out of Old files. See fmconfig.php's fm_is_able().
 *
 * Output buffering: your app runs with $CFG->debug = 3 ("log and print"),
 * which means any stray notice/warning from included libs would otherwise
@@ -228,14 +230,23 @@ if (!fm_can_access_area($area, $id)) {
 
 // Page files/Old files also require filemanager_view (see index.php) -
 // My files has no such gate (see fm_is_able() in fmconfig.php).
-if (($area === FM_AREA_PUBLIC || $area === FM_AREA_OLD) && !fm_is_able('filemanager_view', $pageid)) {
+// For Page files the check is against $id (the page whose tree is being
+// accessed) so cross-page destination browsing in the move/copy picker
+// is gated on the destination page, not only the editor page. Old files
+// has no per-page tree, so it still scopes to the editor $pageid.
+if ($area === FM_AREA_PUBLIC && !fm_is_able('filemanager_view', $id)) {
+    fm_json(['error' => 'Forbidden'], 403);
+}
+if ($area === FM_AREA_OLD && !fm_is_able('filemanager_view', $pageid)) {
     fm_json(['error' => 'Forbidden'], 403);
 }
 
-// "Old files" is read-only browsing for manual migration - only list and
-// move (as a source) are allowed. Enforced here, not just hidden in the
-// UI, since the endpoint itself is the actual security boundary.
-if ($area === FM_AREA_OLD && !in_array($action, ['list', 'move', 'download_zip'], true)) {
+// "Old files" is read-only browsing for manual migration - only list,
+// move (as a source), download_zip, and the read-only helpers the
+// migrate destination picker needs (check_conflicts, search_pages) are
+// allowed. Enforced here, not just hidden in the UI, since the endpoint
+// itself is the actual security boundary.
+if ($area === FM_AREA_OLD && !in_array($action, ['list', 'move', 'download_zip', 'check_conflicts', 'search_pages'], true)) {
     fm_json(['error' => 'Old files is read-only - move items into My files or Page files first'], 403);
 }
 
@@ -571,18 +582,22 @@ switch ($action) {
         if (!fm_can_access_area($toArea, $toId)) {
             fm_json(['error' => 'Forbidden (destination)'], 403);
         }
-        if ($toArea === FM_AREA_PUBLIC && !fm_is_able('filemanager_view', $pageid)) {
-            fm_json(['error' => 'Forbidden (destination)'], 403);
-        }
-        // Migrating out of Old files always needs filemanager_migrate.
-        // Otherwise, filemanager_move is needed only if Page files is
-        // touched on either end (My files -> My files is always allowed).
+        // Migrating out of Old files always needs filemanager_migrate
+        // (scoped to the editor page). Source-side Page files needs
+        // filemanager_move on the editor page. Destination-side Page
+        // files needs view + move on the *destination* page id — critical
+        // once cross-page destinations are allowed.
         if ($area === FM_AREA_OLD) {
             if (!fm_is_able('filemanager_migrate', $pageid)) {
                 fm_json(['error' => 'Forbidden'], 403);
             }
-        } elseif (($area === FM_AREA_PUBLIC || $toArea === FM_AREA_PUBLIC) && !fm_is_able('filemanager_move', $pageid)) {
+        } elseif ($area === FM_AREA_PUBLIC && !fm_is_able('filemanager_move', $pageid)) {
             fm_json(['error' => 'Forbidden'], 403);
+        }
+        if ($toArea === FM_AREA_PUBLIC) {
+            if (!fm_is_able('filemanager_view', $toId) || !fm_is_able('filemanager_move', $toId)) {
+                fm_json(['error' => 'Forbidden (destination)'], 403);
+            }
         }
 
         $toRelPath = fm_sanitize_relpath($toPath);
@@ -640,13 +655,16 @@ switch ($action) {
         if (!fm_can_access_area($toArea, $toId)) {
             fm_json(['error' => 'Forbidden (destination)'], 403);
         }
-        if ($toArea === FM_AREA_PUBLIC && !fm_is_able('filemanager_view', $pageid)) {
-            fm_json(['error' => 'Forbidden (destination)'], 403);
-        }
-        // filemanager_copy is needed only if Page files is touched on
-        // either end (My files -> My files is always allowed).
-        if (($area === FM_AREA_PUBLIC || $toArea === FM_AREA_PUBLIC) && !fm_is_able('filemanager_copy', $pageid)) {
+        // Source-side Page files needs filemanager_copy on the editor page.
+        // Destination-side Page files needs view + copy on the *destination*
+        // page id — critical once cross-page destinations are allowed.
+        if ($area === FM_AREA_PUBLIC && !fm_is_able('filemanager_copy', $pageid)) {
             fm_json(['error' => 'Forbidden'], 403);
+        }
+        if ($toArea === FM_AREA_PUBLIC) {
+            if (!fm_is_able('filemanager_view', $toId) || !fm_is_able('filemanager_copy', $toId)) {
+                fm_json(['error' => 'Forbidden (destination)'], 403);
+            }
         }
 
         $toRelPath = fm_sanitize_relpath($toPath);
@@ -745,6 +763,11 @@ switch ($action) {
             if (!fm_can_access_area($toArea, $toId)) {
                 fm_json(['error' => 'Forbidden (destination)'], 403);
             }
+            // Destination Page files also need view (browse) on that page.
+            // Write ability is enforced by the actual move/copy action.
+            if ($toArea === FM_AREA_PUBLIC && !fm_is_able('filemanager_view', $toId)) {
+                fm_json(['error' => 'Forbidden (destination)'], 403);
+            }
         }
         $toRelPath = fm_sanitize_relpath($toPath);
         $toDir = $toRelPath !== null ? fm_resolve_path($toArea, $toId, $toRelPath) : null;
@@ -760,6 +783,80 @@ switch ($action) {
             }
         }
         fm_json(['conflicts' => $conflicts]);
+        break;
+    }
+
+    case 'search_pages': {
+        // JSON page picker for cross-page move/copy destinations.
+        // Returns pages the current user can act on with the requested
+        // ability (filemanager_move | filemanager_copy | filemanager_view).
+        // Uses pages_user_is_able() so results already respect role grants;
+        // optional q= filters by name/id (case-insensitive substring).
+        //
+        // Cap: 100 rows after the pinned current page. Admins with access
+        // to every page should type a few characters to narrow the list
+        // rather than scrolling hundreds of rows in the modal.
+        //
+        // current=<pageid> (optional): when the user has the ability on
+        // that page it is always returned first — even if it does not
+        // match q — so the picker has a one-click path back to the
+        // editor's page after opening search.
+        global $USER;
+        $q = trim((string) ($_REQUEST['q'] ?? ''));
+        $current = preg_replace('/[^A-Za-z0-9_\-]/', '', (string) ($_REQUEST['current'] ?? ''));
+        $ability = (string) ($_REQUEST['ability'] ?? 'filemanager_move');
+        if (!in_array($ability, ['filemanager_move', 'filemanager_copy', 'filemanager_view'], true)) {
+            $ability = 'filemanager_move';
+        }
+        if (!is_logged_in()) {
+            fm_json(['error' => 'Not authenticated'], 403);
+        }
+        $results = pages_user_is_able($USER->userid, $ability, true, true);
+        $pages = [];
+        $currentPage = null;
+        if ($results) {
+            while ($row = fetch_row($results)) {
+                $pid = (string) ($row['pageid'] ?? '');
+                if ($pid === '' || $pid === '0') {
+                    continue;
+                }
+                $name = (string) ($row['name'] ?? '');
+                if ($name === '') {
+                    $name = 'Page ' . $pid;
+                }
+                $entry = [
+                    'id'   => $pid,
+                    'name' => $name,
+                ];
+                // Capture current page regardless of q so it can be pinned.
+                if ($current !== '' && $pid === $current) {
+                    $currentPage = $entry;
+                    // Still include it in the filtered list only if it matches q
+                    // (or q is empty); the pin below re-adds it either way.
+                }
+                if ($q !== '') {
+                    $hay = $name . ' ' . $pid;
+                    if (stripos($hay, $q) === false) {
+                        continue;
+                    }
+                }
+                // Skip current here — it is prepended after sort/cap so it
+                // never consumes a slot of the 100 and never sorts away
+                // from the top.
+                if ($current !== '' && $pid === $current) {
+                    continue;
+                }
+                $pages[] = $entry;
+            }
+        }
+        usort($pages, fn($a, $b) => strcasecmp($a['name'], $b['name']));
+        if (count($pages) > 100) {
+            $pages = array_slice($pages, 0, 100);
+        }
+        if ($currentPage !== null) {
+            array_unshift($pages, $currentPage);
+        }
+        fm_json(['pages' => $pages]);
         break;
     }
 

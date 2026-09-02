@@ -1325,12 +1325,26 @@
   // Move/Copy/Migrate `items` to a folder the user navigates to and
   // picks, in any area destinationAreasFor allows for `kind`. 'migrate' is
   // just 'move' server-side - kept separate here for labels/destinations.
+  //
+  // Page files destinations are no longer locked to the editor's current
+  // page: when the Page files tab is active the picker first offers a
+  // search-as-you-type page list (api search_pages), then folder browsing
+  // inside the chosen page. My files still keys off USERID as before.
   function openDestinationPicker(kind, items) {
     var apiAction = kind === 'migrate' ? 'move' : kind;
     var areas = destinationAreasFor(kind);
     if (!items.length || !areas.length) return;
 
-    var pick = { area: areas[0], id: areas[0] === 'pub' ? PAGEID : USERID, path: '' };
+    var pageAbility = kind === 'copy' ? 'filemanager_copy' : 'filemanager_move';
+    // Pre-select the editor's current page when landing on Page files so
+    // same-page moves stay one click; user can still change page via the
+    // crumb root / search.
+    var pick = {
+      area: areas[0],
+      id: areas[0] === 'pub' ? (PAGEID || '') : USERID,
+      path: '',
+      pageName: areas[0] === 'pub' && PAGEID ? 'Current page' : ''
+    };
 
     var modal = el('div', { class: 'fm-modal' });
     var verb = kind === 'copy' ? 'Copy' : (kind === 'migrate' ? 'Migrate' : 'Move');
@@ -1341,10 +1355,25 @@
 
     var tabsRow = el('div', { class: 'fm-modal-tabs' });
     var crumbRow = el('div', { class: 'fm-modal-crumb' });
+    var searchRow = el('div', { class: 'fm-modal-search', style: 'display:none' });
     var listEl = el('div', { class: 'fm-modal-list' });
     modal.appendChild(tabsRow);
     modal.appendChild(crumbRow);
+    modal.appendChild(searchRow);
     modal.appendChild(listEl);
+
+    var searchInput = el('input', {
+      type: 'search',
+      class: 'fm-modal-search-input',
+      placeholder: 'Search pages\u2026',
+      autocomplete: 'off'
+    });
+    searchRow.appendChild(searchInput);
+    var searchTimer = null;
+    searchInput.addEventListener('input', function () {
+      if (searchTimer) clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () { refresh(); }, 200);
+    });
 
     var actionsRow = el('div', { class: 'fm-modal-actions' });
     var cancelBtn = el('button', { class: 'fm-btn secondary', text: 'Cancel' });
@@ -1357,6 +1386,15 @@
     var close = showModal(modal);
     cancelBtn.addEventListener('click', close);
 
+    function needsPagePick() {
+      return pick.area === 'pub' && !pick.id;
+    }
+
+    function updateConfirmEnabled() {
+      // Can't land in Page files until a destination page is chosen.
+      confirmBtn.disabled = needsPagePick();
+    }
+
     function renderTabs() {
       tabsRow.innerHTML = '';
       if (areas.length < 2) {
@@ -1368,8 +1406,17 @@
       areas.forEach(function (a) {
         var btn = el('button', { class: 'fm-btn secondary' + (a === pick.area ? ' active' : ''), text: AREA_LABELS[a] });
         btn.addEventListener('click', function () {
-          pick.area = a; pick.id = a === 'pub' ? PAGEID : USERID; pick.path = '';
-          renderTabs(); refresh();
+          pick.area = a;
+          pick.path = '';
+          if (a === 'pub') {
+            pick.id = PAGEID || '';
+            pick.pageName = PAGEID ? 'Current page' : '';
+          } else {
+            pick.id = USERID;
+            pick.pageName = '';
+          }
+          renderTabs();
+          refresh();
         });
         tabsRow.appendChild(btn);
       });
@@ -1378,8 +1425,29 @@
     function renderCrumb() {
       crumbRow.innerHTML = '';
       var rootBtn = el('button', { text: AREA_LABELS[pick.area] });
-      rootBtn.addEventListener('click', function () { pick.path = ''; refresh(); });
+      rootBtn.addEventListener('click', function () {
+        if (pick.area === 'pub') {
+          // Back to page search.
+          pick.id = '';
+          pick.pageName = '';
+          pick.path = '';
+        } else {
+          pick.path = '';
+        }
+        refresh();
+      });
       crumbRow.appendChild(rootBtn);
+
+      if (pick.area === 'pub' && pick.id) {
+        crumbRow.appendChild(document.createTextNode(' / '));
+        var pageBtn = el('button', { text: pick.pageName || ('Page ' + pick.id) });
+        pageBtn.addEventListener('click', function () {
+          pick.path = '';
+          refresh();
+        });
+        crumbRow.appendChild(pageBtn);
+      }
+
       if (pick.path) {
         pick.path.split('/').forEach(function (seg, idx, arr) {
           crumbRow.appendChild(document.createTextNode(' / '));
@@ -1391,8 +1459,50 @@
       }
     }
 
-    function refresh() {
-      renderCrumb();
+    function showPageSearch() {
+      searchRow.style.display = '';
+      listEl.innerHTML = '';
+      listEl.appendChild(el('div', { class: 'fm-empty', text: 'Loading pages\u2026' }));
+      var q = (searchInput.value || '').trim();
+      api('search_pages', { q: q, ability: pageAbility, current: PAGEID || '' }).then(function (res) {
+        listEl.innerHTML = '';
+        if (!res.ok) {
+          listEl.appendChild(el('div', { class: 'fm-empty', text: res.body.error || 'Could not load pages.' }));
+          return;
+        }
+        var pages = res.body.pages || [];
+        if (!pages.length) {
+          listEl.appendChild(el('div', {
+            class: 'fm-empty',
+            text: q ? 'No matching pages.' : 'No pages you can write to.'
+          }));
+          return;
+        }
+        pages.forEach(function (p) {
+          var row = el('div', { class: 'fm-modal-folder fm-modal-page' });
+          row.appendChild(el('span', { class: 'fm-list-icon', text: '\uD83D\uDCC4' }));
+          var label = el('span', { text: p.name });
+          row.appendChild(label);
+          if (String(p.id) === String(PAGEID)) {
+            row.appendChild(el('span', { class: 'fm-modal-page-badge', text: 'current' }));
+          }
+          row.addEventListener('click', function () {
+            pick.id = String(p.id);
+            pick.pageName = p.name || ('Page ' + p.id);
+            pick.path = '';
+            searchInput.value = '';
+            refresh();
+          });
+          listEl.appendChild(row);
+        });
+      }).catch(function (err) {
+        listEl.innerHTML = '';
+        listEl.appendChild(el('div', { class: 'fm-empty', text: err.message || 'Could not load pages.' }));
+      });
+    }
+
+    function showFolderBrowser() {
+      searchRow.style.display = 'none';
       listEl.innerHTML = '';
       listEl.appendChild(el('div', { class: 'fm-empty', text: 'Loading\u2026' }));
       apiFor(pick.area, pick.id, pick.path, 'list', {}).then(function (res) {
@@ -1422,7 +1532,18 @@
       });
     }
 
+    function refresh() {
+      renderCrumb();
+      updateConfirmEnabled();
+      if (needsPagePick()) {
+        showPageSearch();
+      } else {
+        showFolderBrowser();
+      }
+    }
+
     function doConfirm() {
+      if (needsPagePick()) return;
       confirmBtn.disabled = true;
       var toArea = pick.area, toId = pick.id, toPath = pick.path;
       var fromArea = state.area, fromId = state.id, fromPath = state.path;
@@ -1483,13 +1604,7 @@
     refresh();
   }
 
-  /**
-   * Shows a Replace/Keep both/Cancel choice for one or more colliding
-   * names, and resolves to the onConflict value to use: 'replace',
-   * 'rename' (= keep both, auto-numbered), or null if cancelled. Shared
-   * by upload/move/copy/migrate wherever a precheck (see checkConflicts
-   * below) found something that would actually collide.
-   */
+
   function askConflictChoice(names) {
     return new Promise(function (resolve) {
       var modal = el('div', { class: 'fm-modal fm-conflict-modal' });

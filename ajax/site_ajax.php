@@ -424,13 +424,13 @@ function get_cookie() {
 
 function addfeature() {
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
-    $type = clean_myvar_req("feature", "string");
+    $type = clean_myvar_req("type", "string");
 
     $error = false;
     try {
         update_user_cookie();
         add_page_feature($pageid, $type);
-        log_entry($featuretype, null, "Added $type Feature"); // Log
+        log_entry($type, null, "Added $type Feature"); // Log
     } catch (\Throwable $e) {
         $error = $e->getMessage();
     }
