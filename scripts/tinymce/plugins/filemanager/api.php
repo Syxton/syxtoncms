@@ -662,17 +662,23 @@ switch ($action) {
         if (!file_exists($srcPath)) {
             fm_json(['error' => 'Not found'], 404);
         }
-        if ($area === $toArea && $id === $toId && $relPath === $toRelPath) {
-            fm_json(['error' => 'Source and destination are the same'], 400);
-        }
 
-        // Resolve a destination name: onConflict='replace' clears whatever
-        // is already there (via trash, so it's still undoable) and copies
-        // in under the exact requested name; otherwise fall back to the
-        // usual file(1), file(2)... numbering. Containment of any existing
-        // path is enforced inside fm_resolve_conflict_name.
-        $onConflict = ((string) ($_REQUEST['onConflict'] ?? 'rename')) === 'replace' ? 'replace' : 'rename';
-        $finalName = fm_resolve_conflict_name($toDir, $name, $target, $onConflict, $toArea, $toId, $toRelPath);
+        // Same-folder copy is allowed (unlike move) - it's the same idea as
+        // 'duplicate'. Use the friendlier "name (copy).ext" pattern when the
+        // destination folder is the source folder; otherwise honour the
+        // caller's onConflict policy for cross-folder copies.
+        $sameFolder = ($area === $toArea && $id === $toId && $relPath === $toRelPath);
+        if ($sameFolder) {
+            $finalName = fm_unique_name($toDir, $name, $target, 'copy');
+        } else {
+            // Resolve a destination name: onConflict='replace' clears whatever
+            // is already there (via trash, so it's still undoable) and copies
+            // in under the exact requested name; otherwise fall back to the
+            // usual file(1), file(2)... numbering. Containment of any existing
+            // path is enforced inside fm_resolve_conflict_name.
+            $onConflict = ((string) ($_REQUEST['onConflict'] ?? 'rename')) === 'replace' ? 'replace' : 'rename';
+            $finalName = fm_resolve_conflict_name($toDir, $name, $target, $onConflict, $toArea, $toId, $toRelPath);
+        }
         $destPath = $toDir . DIRECTORY_SEPARATOR . $finalName;
 
         $ok = is_dir($srcPath) ? fm_copy_dir($srcPath, $destPath) : @copy($srcPath, $destPath);
@@ -689,10 +695,9 @@ switch ($action) {
     case 'duplicate': {
         // "Duplicate" quick action - copies an item into its own folder
         // under an auto-generated name, e.g. 'photo.png' -> 'photo (copy).png'.
-        // Deliberately its own action rather than 'copy' with a matching
-        // source/destination: it gets a friendlier name pattern this way,
-        // and 'copy' keeps its "source and destination are the same"
-        // guard as a real no-op guard for that general-purpose action.
+        // Equivalent to 'copy' with toArea/toId/toPath matching the source
+        // folder; kept as its own action so the client can call it without
+        // destination params for the one-click menu item.
         fm_require_public_permission($area, $pageid, 'filemanager_copy');
         $name   = fm_sanitize_name((string) ($_REQUEST['name'] ?? ''));
         $target = (string) ($_REQUEST['target'] ?? '');

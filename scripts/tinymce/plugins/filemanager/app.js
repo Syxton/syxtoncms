@@ -1426,15 +1426,23 @@
       confirmBtn.disabled = true;
       var toArea = pick.area, toId = pick.id, toPath = pick.path;
       var fromArea = state.area, fromId = state.id, fromPath = state.path;
+      // Same-folder copy is Duplicate: the sources themselves would always
+      // show up as "conflicts", which is noise. Skip the dialog and let the
+      // server auto-name with the "name (copy).ext" pattern.
+      var sameFolderCopy = (kind === 'copy' && toArea === fromArea && toId === fromId && toPath === fromPath);
 
-      checkConflicts(items, toArea, toId, toPath).then(function (conflicts) {
-        var choicePromise = conflicts.length ? askConflictChoice(conflicts) : Promise.resolve('rename');
-        return choicePromise.then(function (onConflict) {
-          if (!onConflict) { confirmBtn.disabled = false; return; } // cancelled - leave the picker open
-          return Promise.all(items.map(function (it) {
-            return api(apiAction, { name: it.name, target: it.isFolder ? 'folder' : 'file', toArea: toArea, toId: toId, toPath: toPath, onConflict: onConflict })
-              .then(function (res) { return { item: it, res: res }; });
-          })).then(function (outcomes) {
+      var prep = sameFolderCopy
+        ? Promise.resolve('rename')
+        : checkConflicts(items, toArea, toId, toPath).then(function (conflicts) {
+            return conflicts.length ? askConflictChoice(conflicts) : 'rename';
+          });
+
+      prep.then(function (onConflict) {
+        if (!onConflict) { confirmBtn.disabled = false; return; } // cancelled - leave the picker open
+        return Promise.all(items.map(function (it) {
+          return api(apiAction, { name: it.name, target: it.isFolder ? 'folder' : 'file', toArea: toArea, toId: toId, toPath: toPath, onConflict: onConflict })
+            .then(function (res) { return { item: it, res: res }; });
+        })).then(function (outcomes) {
             var failed = outcomes.filter(function (o) { return !o.res.ok; });
             // Undo only for a plain 'move' - 'copy' leaves the source in place
             // (nothing destructive to reverse), and 'migrate' can't be
@@ -1465,7 +1473,6 @@
               });
             }
           });
-        });
       }).catch(function (err) {
         confirmBtn.disabled = false;
         reportError(err);
