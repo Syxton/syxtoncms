@@ -1117,6 +1117,13 @@
         }
         topRowOld.appendChild(shareRowOld);
         selRow.appendChild(topRowOld);
+        if (destinationAreasFor('migrate').length) {
+          var actionsRowOld = el('div', { class: 'fm-selection-actions' });
+          var migrateBtn = iconBtn('\u21ea', 'Migrate to\u2026');
+          migrateBtn.addEventListener('click', function () { openDestinationPicker('migrate', [sel]); });
+          actionsRowOld.appendChild(migrateBtn);
+          selRow.appendChild(actionsRowOld);
+        }
       } else {
         var topRow = el('div', { class: 'fm-selection-top' });
         topRow.appendChild(el('div', { class: 'fm-selection-name', text: sel.name }));
@@ -1163,10 +1170,15 @@
           actionsRow.appendChild(zipBtn);
         }
 
-        if (destinationAreasFor('move').indexOf(state.area === 'priv' ? 'pub' : 'priv') !== -1) {
-          var moveBtn = iconBtn('\uD83D\uDCE4', 'Move to ' + (state.area === 'priv' ? 'Page files' : 'My files'));
-          moveBtn.addEventListener('click', function () { onMove(sel); });
+        if (destinationAreasFor('move').length) {
+          var moveBtn = iconBtn('\uD83D\uDCE4', 'Move to\u2026');
+          moveBtn.addEventListener('click', function () { openDestinationPicker('move', [sel]); });
           actionsRow.appendChild(moveBtn);
+        }
+        if (destinationAreasFor('copy').length) {
+          var copyToBtn = iconBtn('\u29C9', 'Copy to\u2026');
+          copyToBtn.addEventListener('click', function () { openDestinationPicker('copy', [sel]); });
+          actionsRow.appendChild(copyToBtn);
         }
 
         selRow.appendChild(actionsRow);
@@ -1207,8 +1219,7 @@
   }
 
   // Shown instead of the single-item panel when items are checkbox-
-  // selected. Move/Copy open the destination picker; Delete/Migrate act
-  // directly (mirroring onDelete/onMigrate).
+  // selected. Move/Copy/Migrate open the destination picker; Delete acts directly.
   function buildBulkBar() {
     var bar = el('div', { class: 'fm-bulk-bar' });
     var items = Object.keys(multiSelected).map(function (k) { return multiSelected[k]; });
@@ -1704,11 +1715,17 @@
     }
     if (opts.readOnly) {
       if (destinationAreasFor('migrate').length) {
-        menuItems.push({ icon: '\u21ea', label: 'Migrate to My/Page files', handler: function () { onMigrate(opts); } });
+        menuItems.push({ icon: '\u21ea', label: 'Migrate to\u2026', handler: function () { openDestinationPicker('migrate', [opts]); } });
       }
     } else {
       if (opts.isFolder && opts.onSelect) {
         menuItems.push({ icon: '\uD83D\uDD17', label: 'Get a link', handler: function () { opts.onSelect(container); } });
+      }
+      if (destinationAreasFor('move').length) {
+        menuItems.push({ icon: '\uD83D\uDCE4', label: 'Move to\u2026', handler: function () { openDestinationPicker('move', [opts]); } });
+      }
+      if (destinationAreasFor('copy').length) {
+        menuItems.push({ icon: '\u29C9', label: 'Copy to\u2026', handler: function () { openDestinationPicker('copy', [opts]); } });
       }
       if (pubAreaOK(PERM.edit)) {
         menuItems.push({ icon: '\u270e', label: 'Rename', handler: function () { onRename(opts); } });
@@ -2320,52 +2337,6 @@
           return apiFor(area, id, path, 'restore', { trashId: res.body.trashId });
         });
       }
-    }).catch(reportError);
-  }
-
-  function onMove(opts) {
-    var toArea = state.area === 'priv' ? 'pub' : 'priv';
-    if (!moveAllowed(toArea)) return;
-    var toId = toArea === 'pub' ? PAGEID : USERID;
-    var label = toArea === 'priv' ? 'My files' : 'Page files';
-    if (!confirm('Move "' + opts.name + '" to ' + label + '?')) return;
-    var fromArea = state.area, fromId = state.id, fromPath = state.path;
-    checkConflicts([opts], toArea, toId, '').then(function (conflicts) {
-      var choicePromise = conflicts.length ? askConflictChoice(conflicts) : Promise.resolve('rename');
-      return choicePromise.then(function (onConflict) {
-        if (!onConflict) return; // cancelled
-        return api('move', { name: opts.name, target: opts.isFolder ? 'folder' : 'file', toArea: toArea, toId: toId, toPath: '', onConflict: onConflict }).then(function (res) {
-          if (!res.ok) { reportError(new Error(res.body.error || 'Move failed')); return; }
-          var finalName = res.body.name || opts.name;
-          state.selected = null;
-          load();
-          showUndo('Moved "' + opts.name + '" to ' + label, function () {
-            return apiFor(toArea, toId, '', 'move', { name: finalName, target: opts.isFolder ? 'folder' : 'file', toArea: fromArea, toId: fromId, toPath: fromPath });
-          });
-        });
-      });
-    }).catch(reportError);
-  }
-
-  function onMigrate(opts) {
-    if (!migrateAllowed()) return; // requires filemanager_migrate regardless of destination
-    var offerPublic = CAN_PUBLIC;
-    var toArea = 'priv';
-    if (offerPublic) {
-      toArea = confirm('Move "' + opts.name + '" to Page files?\n\nOK = Page files, Cancel = My files') ? 'pub' : 'priv';
-    } else if (!confirm('Move "' + opts.name + '" to My files?')) {
-      return;
-    }
-    var toId = toArea === 'pub' ? PAGEID : USERID;
-    checkConflicts([opts], toArea, toId, '').then(function (conflicts) {
-      var choicePromise = conflicts.length ? askConflictChoice(conflicts) : Promise.resolve('rename');
-      return choicePromise.then(function (onConflict) {
-        if (!onConflict) return; // cancelled
-        return api('move', { name: opts.name, target: opts.isFolder ? 'folder' : 'file', toArea: toArea, toId: toId, toPath: '', onConflict: onConflict }).then(function (res) {
-          if (!res.ok) reportError(new Error(res.body.error || 'Move failed'));
-          else { state.selected = null; load(); }
-        });
-      });
     }).catch(reportError);
   }
 
