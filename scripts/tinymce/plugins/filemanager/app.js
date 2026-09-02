@@ -1067,9 +1067,16 @@
 
   function toggleMultiSelect(f) {
     var key = multiKey(f.name, f.isFolder);
-    if (multiSelected[key]) delete multiSelected[key];
-    else multiSelected[key] = { name: f.name, isFolder: f.isFolder };
+    if (multiSelected[key]) {
+      delete multiSelected[key];
+    } else {
+      multiSelected[key] = { name: f.name, isFolder: f.isFolder };
+      // Starting or extending a multi-selection via checkbox should establish
+      // the range-select anchor, otherwise Shift+click has nothing to range from.
+      if (!selectionAnchorKey) selectionAnchorKey = key;
+    }
     state.selected = null; // checkbox pick supersedes the single-item panel
+    focusedKey = key;
     renderBody();
     renderFooter();
   }
@@ -1771,31 +1778,125 @@
 
   // Checkbox for bulk move/copy/delete/migrate. Shown even when readOnly -
   // Old files items can still be bulk-migrated.
+  //
+  // Shift+click on a checkbox ranges from the current selectionAnchorKey
+  // (same as Shift+click on the row itself). Plain click toggles just this
+  // item. We handle the logic on 'click' (where shiftKey is reliable) and
+  // prevent the subsequent 'change' from double-toggling.
   function buildMultiCheckbox(opts) {
     var box = el('input', { type: 'checkbox', class: 'fm-multi-check' });
     box.checked = isMultiSelected(opts);
-    box.addEventListener('click', function (e) { e.stopPropagation(); });
-    box.addEventListener('change', function () { toggleMultiSelect(opts); });
+    box.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (!bulkActionsAvailable()) return;
+      var key = multiKey(opts.name, opts.isFolder);
+      if (e.shiftKey) {
+        // Range-select from anchor (or this item if no anchor yet).
+        e.preventDefault(); // stop the browser flipping the checkbox itself
+        applyRangeSelection(selectionAnchorKey || key, key);
+        // Keep the original anchor; only set it if there was none.
+        if (!selectionAnchorKey) selectionAnchorKey = key;
+        focusedKey = key;
+        renderBody();
+        renderFooter();
+        focusItemByKey(key);
+        return;
+      }
+      // Plain / Ctrl click: let the checkbox toggle natively, then sync state
+      // on the following 'change' event. We still establish the anchor when
+      // the item becomes selected (see toggleMultiSelect).
+    });
+    box.addEventListener('change', function (e) {
+      // Shift path already handled everything and called preventDefault, so
+      // the checkbox state was not flipped by the browser. For non-Shift we
+      // sync multiSelected to match the new checked state.
+      if (e.shiftKey) return;
+      var key = multiKey(opts.name, opts.isFolder);
+      if (box.checked) {
+        multiSelected[key] = { name: opts.name, isFolder: opts.isFolder };
+        if (!selectionAnchorKey) selectionAnchorKey = key;
+      } else {
+        delete multiSelected[key];
+      }
+      state.selected = null;
+      focusedKey = key;
+      renderBody();
+      renderFooter();
+    });
     return box;
   }
 
-  // Makes `item` draggable when not read-only and move is permitted, and
-  // wires folders as drop targets for other dragged items.
+  // Makes `item` draggable for Chromium drag-out-to-download (always),
+  // and also for internal move when not read-only and move is permitted.
+  // Wires folders as drop targets only when internal move is allowed.
+  //
+  // Drag-out-to-download uses the DownloadURL DataTransfer type so the
+  // browser issues a background GET (cookies included) when the drop
+  // lands on the OS desktop / a folder. Single files go through the
+  // existing previewUrl + dl=1 path; folders / multi-select go through
+  // download_zip as a GET (it is not CSRF-gated and already accepts
+  // $_REQUEST). Chromium-only (Chrome/Edge/Brave/Opera); Firefox and
+  // Safari ignore DownloadURL and fall back to the Download buttons.
   function wireDragAndDrop(item, opts) {
-    if (opts.readOnly || !moveAllowed(state.area)) return;
     item.setAttribute('draggable', 'true');
     item.addEventListener('dragstart', function (e) {
       dragging = { name: opts.name, isFolder: !!opts.isFolder };
       item.classList.add('fm-dragging');
-      e.dataTransfer.effectAllowed = 'move';
+
+      var canMove = !opts.readOnly && moveAllowed(state.area);
+      e.dataTransfer.effectAllowed = canMove ? 'copyMove' : 'copy';
       // Needed for some browsers (notably Firefox) to allow the drag at all.
       try { e.dataTransfer.setData('text/plain', opts.name); } catch (e2) { /* ignore */ }
+
+      // Drag-out-to-download (Chromium only). Prefer the whole multi-
+      // selection when the dragged item is part of one.
+      try {
+        var key = multiKey(opts.name, opts.isFolder);
+        var items;
+        if (multiSelected[key] && multiCount() > 0) {
+          items = Object.keys(multiSelected).map(function (k) { return multiSelected[k]; });
+        } else {
+          items = [{ name: opts.name, isFolder: !!opts.isFolder, previewUrl: opts.previewUrl }];
+        }
+
+        var downloadUrl, filename, mime;
+        if (items.length === 1 && !items[0].isFolder && items[0].previewUrl) {
+          // Single file → existing authenticated preview URL with dl=1
+          var base = items[0].previewUrl;
+          downloadUrl = state.area === 'old'
+            ? base
+            : base + (base.indexOf('?') === -1 ? '?' : '&') + 'dl=1';
+          downloadUrl = new URL(downloadUrl, location.href).href;
+          filename = items[0].name;
+          mime = 'application/octet-stream';
+          e.dataTransfer.setData('DownloadURL', mime + ':' + filename + ':' + downloadUrl);
+        } else if (items.length <= 200) {
+          // Folder or multi-select → download_zip as GET.
+          // Cap at 200 to keep the query string reasonable (server already
+          // has 200 MB / 2000-file limits; this is just URL length).
+          var params = new URLSearchParams({
+            action: 'download_zip',
+            area: state.area,
+            id: state.id,
+            path: state.path,
+            pageid: PAGEID,
+            items: JSON.stringify(items.map(function (it) {
+              return { name: it.name, target: it.isFolder ? 'folder' : 'file' };
+            }))
+          });
+          downloadUrl = new URL(API + '?' + params.toString(), location.href).href;
+          filename = 'files-' + new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '') + '.zip';
+          mime = 'application/zip';
+          e.dataTransfer.setData('DownloadURL', mime + ':' + filename + ':' + downloadUrl);
+        }
+        // else: too many items for a comfortable GET URL — user can use the Download zip button
+      } catch (e3) { /* non-Chromium or URL construction failure */ }
     });
     item.addEventListener('dragend', function () {
       item.classList.remove('fm-dragging');
       dragging = null;
     });
-    if (opts.isFolder) {
+    if (!opts.readOnly && moveAllowed(state.area) && opts.isFolder) {
       makeDropTarget(item, (state.path ? state.path + '/' : '') + opts.name);
     }
   }
