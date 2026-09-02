@@ -1,6 +1,22 @@
 view_ipaper_template||
-  <iframe src="//docs.google.com/gview?url=||doc_url||&embedded=true" scrolling="no" style="margin-right:auto;margin-left:auto;border:none;width:100%;height:99vh;overflow:hidden;">
-	Your browser does not support inline frames or is currently configured
-	not to display inline frames.
+  <iframe src="||iframe_src||" scrolling="no"
+          style="margin:0 auto;border:none;width:calc(100vw - 100px);height:99vh;overflow:hidden;"
+          allowfullscreen>
+    Your browser does not support inline frames.
   </iframe>
 ||view_ipaper_template
+
+view_ipaper_fallback_template||
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:2rem;text-align:center;font-family:system-ui,sans-serif;color:#333;">
+    <div style="font-size:3rem;margin-bottom:1rem;">📄</div>
+    <h2 style="margin:0 0 0.5rem;font-size:1.25rem;font-weight:600;">Preview not available</h2>
+    <p style="margin:0 0 1.5rem;max-width:28rem;line-height:1.5;color:#555;">
+      This file can’t be shown in the browser viewer (private link or unsupported type). You can still download it.
+    </p>
+    <a href="||download_url||"
+       style="display:inline-block;padding:0.6rem 1.25rem;background:#1967d2;color:#fff;text-decoration:none;border-radius:6px;font-weight:500;"
+       download>
+      Download file
+    </a>
+  </div>
+||view_ipaper_fallback_template
