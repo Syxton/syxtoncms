@@ -59,6 +59,7 @@ body {
   background: #f0f0f1; border: none; border-radius: 6px; cursor: pointer; flex-shrink: 0;
   width: 40px; height: 40px; padding: 0; font-size: 20px; line-height: 1; gap: 6px;
   display: flex; align-items: center; justify-content: center; white-space: nowrap;
+  position: relative;
 }
 .fm-icon-btn-icon { font-size: 20px; line-height: 1; }
 .fm-icon-btn-label { display: none; font-size: 13px; }
@@ -66,6 +67,32 @@ body {
 .fm-icon-btn:disabled { opacity: .5; cursor: default; }
 .fm-icon-btn.danger { background: #d63638; color: #fff; }
 .fm-icon-btn.danger:hover { background: #b32d2e; }
+/* Recycle button when trash has soft-deleted items */
+.fm-icon-btn.has-items {
+  background: #f0b849;
+  color: #1d2327;
+}
+.fm-icon-btn.has-items:hover {
+  background: #dba017;
+  color: #fff;
+}
+.fm-trash-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: #d63638;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  pointer-events: none;
+  box-shadow: 0 0 0 2px #fff;
+}
 @media (min-width: 700px) {
   /* Enough room to say what a button does, not just show an icon for it -
      icons alone read fine on a small/mobile layout but get ambiguous once
@@ -73,6 +100,10 @@ body {
   .fm-icon-btn { width: auto; padding: 0 12px; }
   .fm-icon-btn-icon { font-size: 16px; }
   .fm-icon-btn-label { display: inline; }
+  .fm-trash-badge {
+    top: -6px;
+    right: -6px;
+  }
 }
 .fm-readonly-note { color: #8c8f94; font-style: italic; font-size: 12px; }
 .fm-btn {

@@ -265,6 +265,10 @@
   var currentData = null;
   var currentReadOnly = false;
 
+  // Soft-delete trash entry count for the current area+id (from list /
+  // trash_list). Drives the recycle button color, badge, and title.
+  var trashCount = 0;
+
   // Name of the item currently being dragged (drag-and-drop move), so drop
   // targets can refuse to drop a folder onto itself. Cleared on dragend.
   var dragging = null; // {name, isFolder}
@@ -695,7 +699,14 @@
         toolbar.appendChild(uploadInput);
       }
 
-      var trashBtn = iconBtn('\u267B', 'Trash');
+      var trashLabel = trashCount > 0
+        ? ('Trash (' + trashCount + ' item' + (trashCount === 1 ? '' : 's') + ')')
+        : 'Trash';
+      var trashBtn = iconBtn('\u267B', trashLabel, trashCount > 0 ? 'has-items' : '');
+      if (trashCount > 0) {
+        var badgeText = trashCount > 99 ? '99+' : String(trashCount);
+        trashBtn.appendChild(el('span', { class: 'fm-trash-badge', text: badgeText }));
+      }
       trashBtn.addEventListener('click', openTrash);
       if (pubAreaOK(PERM.delete)) toolbar.appendChild(trashBtn);
     }
@@ -960,6 +971,8 @@
       buildBreadcrumb();
       if (!res.ok) {
         currentData = null;
+        trashCount = 0;
+        renderSearchSortBar();
         var body = root.querySelector('.fm-body');
         body.innerHTML = '';
         body.appendChild(el('div', { class: 'fm-empty', text: res.body.error || 'Error loading folder' }));
@@ -968,10 +981,14 @@
       }
       currentData = res.body;
       currentReadOnly = state.area === 'old';
+      trashCount = (typeof res.body.trashCount === 'number') ? res.body.trashCount : 0;
+      renderSearchSortBar();
       renderBody();
       renderFooter();
     }).catch(function (err) {
       currentData = null;
+      trashCount = 0;
+      renderSearchSortBar();
       var body = root.querySelector('.fm-body');
       body.innerHTML = '';
       body.appendChild(el('div', { class: 'fm-empty', text: err.message || 'Could not load this folder.' }));
@@ -1743,6 +1760,11 @@
         }
         var items = res.body.items || [];
         emptyBtn.disabled = !items.length;
+        // Keep the toolbar recycle indicator in sync while browsing trash.
+        if (state.area === area && state.id === id) {
+          trashCount = items.length;
+          renderSearchSortBar();
+        }
         if (!items.length) {
           listEl.appendChild(el('div', { class: 'fm-empty', text: 'Trash is empty.' }));
           return;

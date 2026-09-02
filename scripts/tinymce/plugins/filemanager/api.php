@@ -267,7 +267,7 @@ if ($relPath === null) {
 if ($area === FM_AREA_OLD && $relPath === '' && fm_old_root($id) === null) {
     // No legacy files for this user yet - that's normal, not an error.
     if ($action === 'list') {
-        fm_json(['path' => '', 'folders' => [], 'files' => []]);
+        fm_json(['path' => '', 'folders' => [], 'files' => [], 'trashCount' => 0]);
     }
     fm_json(['error' => 'Folder not found'], 404);
 }
@@ -318,7 +318,31 @@ switch ($action) {
         // Folders: alphabetic. Files: newest modified first.
         usort($folders, fn($a, $b) => strcasecmp($a['name'], $b['name']));
         usort($files, fn($a, $b) => $b['mtime'] <=> $a['mtime']);
-        fm_json(['path' => $relPath, 'folders' => $folders, 'files' => $files]);
+
+        // Soft-delete trash indicator for the toolbar recycle button.
+        // Old files never soft-deletes, so count stays 0 there.
+        $trashCount = 0;
+        if ($area !== FM_AREA_OLD) {
+            $trashRoot = fm_trash_root($area, $id);
+            if ($trashRoot !== null) {
+                fm_purge_old_trash($trashRoot);
+                foreach (scandir($trashRoot) as $entry) {
+                    if ($entry === '.' || $entry === '..') {
+                        continue;
+                    }
+                    if (is_dir($trashRoot . DIRECTORY_SEPARATOR . $entry)) {
+                        $trashCount++;
+                    }
+                }
+            }
+        }
+
+        fm_json([
+            'path'       => $relPath,
+            'folders'    => $folders,
+            'files'      => $files,
+            'trashCount' => $trashCount,
+        ]);
         break;
     }
 
