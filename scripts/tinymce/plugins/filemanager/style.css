@@ -28,6 +28,29 @@ body {
   display: flex; align-items: center; gap: 8px; padding: 8px 12px;
   border-bottom: 1px solid #dcdcde; background: #fafafa; flex-wrap: wrap;
 }
+.fm-back-btn {
+  flex-shrink: 0;
+  width: 32px; height: 28px;
+  padding: 0;
+  border: 1px solid #dcdcde;
+  border-radius: 4px;
+  background: #fff;
+  color: #1d2327;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.fm-back-btn:hover:not(:disabled) {
+  background: #f0f0f1;
+  border-color: #8c8f94;
+}
+.fm-back-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
 .fm-breadcrumb { flex: 1; min-width: 120px; color: #50575e; overflow-wrap: anywhere; }
 .fm-breadcrumb button {
   background: none; border: none; color: #2271b1; cursor: pointer; padding: 2px 4px; font: inherit;

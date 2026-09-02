@@ -710,14 +710,41 @@
 
   // Full-width row directly above the file list, so long paths get room
   // to breathe instead of competing with the toolbar controls above.
+  // Leading back button (Windows Explorer style) goes up one folder.
   function renderBreadcrumbBar() {
     var bar = document.getElementById('fm-breadcrumb-bar');
     if (!bar) return;
     bar.innerHTML = '';
 
+    var backBtn = el('button', {
+      class: 'fm-back-btn',
+      text: '\u2190',
+      title: 'Up one folder',
+      'aria-label': 'Up one folder',
+    });
+    if (!state.path) {
+      backBtn.disabled = true;
+    } else {
+      backBtn.addEventListener('click', navigateUp);
+    }
+    bar.appendChild(backBtn);
+
     var crumb = el('div', { class: 'fm-breadcrumb' });
     bar.appendChild(crumb);
     buildBreadcrumb();
+  }
+
+  /** Navigate to the parent of state.path (no-op at area root). */
+  function navigateUp() {
+    if (!state.path) return;
+    var parts = state.path.split('/');
+    parts.pop();
+    state.path = parts.join('/');
+    state.selected = null;
+    state.query = '';
+    clearMultiSelect();
+    renderToolbar();
+    load();
   }
 
   /**
