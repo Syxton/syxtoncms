@@ -300,7 +300,7 @@ pagelinks_links_template||
 
 start_of_page_template||
     <!DOCTYPE HTML>
-        <html>
+        <html style="height: 100%">
             <head>
                 <title>||*title||</title>
                 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
@@ -310,8 +310,8 @@ start_of_page_template||
                 ||echo get_css_set("main");::none||
                 ||*head||
             </head>
-            <body>
-                <div style="box-sizing: border-box;padding: 10px;">
+            <body style="height: 100%">
+                <div style="height: 100%;box-sizing: border-box;padding: 10px 0 0 10px;">
 ||start_of_page_template
 
 end_of_page_template||

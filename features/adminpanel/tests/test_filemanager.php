@@ -239,19 +239,51 @@ if (!function_exists('curl_init')) {
         return $result;
     }
 
+    /**
+     * Permanently remove only those trash entries that originated under
+     * $testRoot (the disposable scratch folder for this test run). Leaves
+     * any pre-existing / unrelated items in the recycle bin alone.
+     *
+     * Matching rules (from trash_list meta):
+     *   - path === $testRoot, or path starts with "$testRoot/"
+     *   - path === '' AND name === $testRoot  (the scratch root itself)
+     */
+    function fm_test_purge_scratch_trash(string $apiUrl, string $cookieHeader, bool $relaxTls, array $base, string $testRoot): void {
+        [$code, $data] = fm_test_call($apiUrl, $cookieHeader, $relaxTls, $base + ['action' => 'trash_list']);
+        if ($code !== 200 || empty($data['items']) || !is_array($data['items'])) {
+            return;
+        }
+        $prefix = $testRoot . '/';
+        foreach ($data['items'] as $item) {
+            $path = (string) ($item['path'] ?? '');
+            $name = (string) ($item['name'] ?? '');
+            $tid  = (string) ($item['trashId'] ?? '');
+            if (!preg_match('/^[0-9a-f]{16}$/', $tid)) {
+                continue;
+            }
+            $underScratch = ($path === $testRoot)
+                || (strpos($path, $prefix) === 0)
+                || ($path === '' && $name === $testRoot);
+            if ($underScratch) {
+                fm_test_call($apiUrl, $cookieHeader, $relaxTls, $base + [
+                    'action' => 'trash_delete', 'trashId' => $tid,
+                ]);
+            }
+        }
+    }
+
     $base = ['area' => $fmArea, 'id' => $fmId, 'csrf' => $csrf];
 
     // --- cleanup, registered up front so a mid-test failure still tidies up ---
     register_shutdown_function(function () use ($apiUrl, $cookieHeader, $isLocalHost, $base, $testRoot) {
-        // Best effort: soft-delete then hard-delete the whole scratch folder.
-        $del = fm_test_call($apiUrl, $cookieHeader, $isLocalHost, $base + [
+        // Best effort: soft-delete the whole scratch folder (if it still
+        // exists), then permanently delete every trash entry that originated
+        // under it - including items left by onConflict=replace tests.
+        // Pre-existing recycle-bin items outside $testRoot are left alone.
+        fm_test_call($apiUrl, $cookieHeader, $isLocalHost, $base + [
             'action' => 'delete', 'name' => $testRoot, 'target' => 'folder', 'path' => '',
         ]);
-        if (is_array($del[1]) && !empty($del[1]['trashId'])) {
-            fm_test_call($apiUrl, $cookieHeader, $isLocalHost, $base + [
-                'action' => 'trash_delete', 'trashId' => $del[1]['trashId'],
-            ]);
-        }
+        fm_test_purge_scratch_trash($apiUrl, $cookieHeader, $isLocalHost, $base, $testRoot);
     });
 
     // 1) create the scratch root folder
@@ -666,14 +698,12 @@ if (!function_exists('curl_init')) {
         $pubBase = ['area' => FM_AREA_PUBLIC, 'id' => $realPageId, 'csrf' => $csrf, 'pageid' => $realPageId];
 
         register_shutdown_function(function () use ($apiUrl, $cookieHeader, $isLocalHost, $pubBase, $pubFolder) {
-            $del = fm_test_call($apiUrl, $cookieHeader, $isLocalHost, $pubBase + [
+            // Soft-delete the public scratch folder (if still present), then
+            // permanently delete only trash entries that originated under it.
+            fm_test_call($apiUrl, $cookieHeader, $isLocalHost, $pubBase + [
                 'action' => 'delete', 'name' => $pubFolder, 'target' => 'folder', 'path' => '',
             ]);
-            if (is_array($del[1]) && !empty($del[1]['trashId'])) {
-                fm_test_call($apiUrl, $cookieHeader, $isLocalHost, $pubBase + [
-                    'action' => 'trash_delete', 'trashId' => $del[1]['trashId'],
-                ]);
-            }
+            fm_test_purge_scratch_trash($apiUrl, $cookieHeader, $isLocalHost, $pubBase, $pubFolder);
         });
 
         [$code, $data] = fm_test_call($apiUrl, $cookieHeader, $isLocalHost, $pubBase + ['action' => 'mkdir', 'name' => $pubFolder, 'path' => '']);

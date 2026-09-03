@@ -32,7 +32,7 @@ if (!empty($_SESSION["lia_original"])) {
 callfunction();
 
 function admin_email_sender() {
-    ajax_return('<iframe id="email_sender" onload="resizeCaller(this.id);" style="width:100%;border:none;" src="/features/adminpanel/email_sender.php"></iframe>');
+    ajax_return('<iframe id="email_sender" style="height: calc(100% - 10px);width:100%;border:none;" src="/features/adminpanel/email_sender.php"></iframe>');
 }
 
 function admin_email_tester() {
@@ -368,8 +368,7 @@ global $CFG;
     $googlemapsiframe = '
         <iframe
             id="ip_map"
-            onload="resizeCaller(this.id);"
-            style="width:100%;height:100vh;border:none;"
+            style="width:100%;height:100vh;border:none;height: calc(100% - 10px);"
             src="https://www.google.com/maps/embed/v1/place?q=' . $lat . ',' . $lon . '&key=' . $CFG->googlemapsembedkey . '">
         </iframe>';
     ajax_return($googlemapsiframe);
