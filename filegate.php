@@ -55,9 +55,91 @@ if (!defined('FMCONFIG')) {
 }
 
 function fmgate_deny($code) {
-    http_response_code($code);
-    header('Content-Type: text/plain');
-    echo $code === 403 ? 'Forbidden' : ($code === 404 ? 'Not found' : 'Error');
+    //http_response_code($code);
+    header('Content-Type: text/html; charset=utf-8');
+
+    $variants = [
+        403 => [
+            'icon'    => '🔒',
+            'title'   => 'Access Restricted',
+            'message' => "You don't have permission to view this content. If you believe this is a mistake, please check with the person who shared it, or request access.",
+        ],
+        404 => [
+            'icon'    => '🔗',
+            'title'   => 'Link No Longer Valid',
+            'message' => 'This content may have been moved, renamed, or removed. Double-check the link, or ask the sender for an updated one.',
+        ],
+    ];
+
+    $variant = $variants[$code] ?? [
+        'icon'    => '⚠️',
+        'title'   => 'Something Went Wrong',
+        'message' => 'We ran into an unexpected error trying to load this content. Please try again in a moment.',
+    ];
+
+    echo <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{$variant['title']}</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f4f5f7;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1f2328;
+    padding: 24px;
+  }
+  .card {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    padding: 48px 40px;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+  }
+  .icon {
+    font-size: 48px;
+    line-height: 1;
+    margin-bottom: 20px;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 12px;
+  }
+  p {
+    font-size: 15px;
+    line-height: 1.5;
+    color: #57606a;
+    margin: 0;
+  }
+  .code {
+    margin-top: 24px;
+    font-size: 12px;
+    color: #8b949e;
+    letter-spacing: 0.03em;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">{$variant['icon']}</div>
+    <h1>{$variant['title']}</h1>
+    <p>{$variant['message']}</p>
+    <div class="code">Error {$code}</div>
+  </div>
+</body>
+</html>
+HTML;
     exit;
 }
 
