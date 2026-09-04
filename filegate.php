@@ -58,24 +58,7 @@ function fmgate_deny($code) {
     //http_response_code($code);
     header('Content-Type: text/html; charset=utf-8');
 
-    $variants = [
-        403 => [
-            'icon'    => '🔒',
-            'title'   => 'Access Restricted',
-            'message' => "You don't have permission to view this content. If you believe this is a mistake, please check with the person who shared it, or request access.",
-        ],
-        404 => [
-            'icon'    => '🔗',
-            'title'   => 'Link No Longer Valid',
-            'message' => 'This content may have been moved, renamed, or removed. Double-check the link, or ask the sender for an updated one.',
-        ],
-    ];
-
-    $variant = $variants[$code] ?? [
-        'icon'    => '⚠️',
-        'title'   => 'Something Went Wrong',
-        'message' => 'We ran into an unexpected error trying to load this content. Please try again in a moment.',
-    ];
+    $variant = fm_gate_message($code);
 
     echo <<<HTML
 <!DOCTYPE html>

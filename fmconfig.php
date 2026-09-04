@@ -537,6 +537,146 @@ function fm_gated_url_to_path(string $url): ?string {
 }
 
 /**
+ * Predict the outcome filegate.php itself would give for a gated URL,
+ * without resolving anything or leaking why - just which HTTP-style status
+ * a real request would come back with. Unlike fm_gated_url_diagnose(),
+ * this is safe to use against live requests: it exposes nothing that the
+ * person couldn't already learn by just following the link themselves,
+ * which is exactly what a caller deciding whether to embed the content
+ * (vs. show a placeholder) needs to know.
+ *
+ * Mirrors filegate.php's own check order so the code returned here always
+ * matches what that script would actually respond with.
+ *
+ * Returns 403, 404, or null (the URL should resolve fine).
+ */
+function fm_gated_url_predict_status(string $url): ?int {
+    $query = parse_url(fm_normalize_gated_url($url), PHP_URL_QUERY);
+    if (!$query) {
+        return 404;
+    }
+    parse_str($query, $q);
+
+    $area = (string) ($q['a'] ?? '');
+    $id   = (string) ($q['id'] ?? '');
+    $rel  = (string) ($q['p'] ?? '');
+    $mt   = isset($q['m']) ? (int) $q['m'] : -1;
+    $tok  = (string) ($q['t'] ?? '');
+    $lvl  = (string) ($q['lvl'] ?? '');
+    $ex   = (string) ($q['ex'] ?? '');
+
+    if (!in_array($area, [FM_AREA_PUBLIC, FM_AREA_PRIVATE], true) || $id === '' || $rel === '' || $tok === '' || $mt < 0) {
+        return 404;
+    }
+    $rel = fm_sanitize_relpath($rel);
+    if ($rel === null || $rel === '') {
+        return 404;
+    }
+
+    $isFolderLink = $mt === 0;
+    if ($isFolderLink && $lvl === '') {
+        return 404;
+    }
+
+    if ($lvl === '') {
+        if (!fm_can_access_area($area, $id)) {
+            return 403;
+        }
+    } elseif (!fm_check_share_permission($lvl, $area, $id, $ex)) {
+        return 403;
+    }
+
+    $full = fm_resolve_path($area, $id, $rel);
+    if ($full === null) {
+        return 404;
+    }
+
+    if ($isFolderLink) {
+        if (!is_dir($full)) {
+            return 404;
+        }
+        if (!fm_verify_share_token($lvl, $area, $id, $rel, 0, $ex, $tok)) {
+            return 403;
+        }
+        return null;
+    }
+
+    if (!is_file($full)) {
+        return 404;
+    }
+    $actualMtime = filemtime($full);
+    if ($actualMtime !== $mt) {
+        return 403;
+    }
+    $tokenOk = $lvl === ''
+        ? fm_verify_admin_token($area, $id, $rel, $mt, $tok)
+        : fm_verify_share_token($lvl, $area, $id, $rel, $mt, $ex, $tok);
+    if (!$tokenOk) {
+        return 403;
+    }
+
+    $ext = strtolower(pathinfo($full, PATHINFO_EXTENSION));
+    if (!array_key_exists($ext, $GLOBALS['FM_ALLOWED_EXT'])) {
+        return 404;
+    }
+
+    return null;
+}
+
+/**
+ * Copy for the gate's "can't show this" states - shared between the
+ * full-page filegate.php response (fmgate_deny()) and any inline
+ * placeholder that needs to explain, in miniature, why content it tried to
+ * embed didn't load (see fm_gate_placeholder_html()). Keeping this in one
+ * place means the two can't drift apart.
+ */
+function fm_gate_message(int $code): array {
+    $variants = [
+        403 => [
+            'icon'    => '🔒',
+            'title'   => 'Access Restricted',
+            'message' => "You don't have permission to view this content. If you believe this is a mistake, please check with the person who shared it, or request access.",
+        ],
+        404 => [
+            'icon'    => '🔗',
+            'title'   => 'Link No Longer Valid',
+            'message' => 'This content may have been moved, renamed, or removed. Double-check the link, or ask the sender for an updated one.',
+        ],
+    ];
+
+    return $variants[$code] ?? [
+        'icon'    => '⚠️',
+        'title'   => 'Something Went Wrong',
+        'message' => 'We ran into an unexpected error trying to load this content. Please try again in a moment.',
+    ];
+}
+
+/**
+ * Small inline placeholder for embedded media (audio/video, currently)
+ * that resolves to a gated URL filegate.php would refuse. Same wording as
+ * fmgate_deny(), just sized to sit in the flow of page content instead of
+ * filling the viewport - so a blocked/broken embed reads as an intentional
+ * message rather than a broken player.
+ */
+function fm_gate_placeholder_html(int $code): string {
+    $variant = fm_gate_message($code);
+
+    return '<div class="fm-embed-gate" style="'
+        . 'display:flex;align-items:center;gap:14px;'
+        . 'max-width:420px;padding:16px 20px;margin:4px 0;'
+        . 'border:1px solid #e1e4e8;border-radius:12px;'
+        . 'background:#f4f5f7;color:#1f2328;'
+        . "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;"
+        . '">'
+        . '<div style="font-size:28px;line-height:1;flex-shrink:0;" aria-hidden="true">' . $variant['icon'] . '</div>'
+        . '<div>'
+        . '<div style="font-size:14px;font-weight:600;margin:0 0 4px;">' . htmlspecialchars($variant['title'], ENT_QUOTES, 'UTF-8') . '</div>'
+        . '<div style="font-size:12.5px;line-height:1.4;color:#57606a;margin:0;">' . htmlspecialchars($variant['message'], ENT_QUOTES, 'UTF-8') . '</div>'
+        . '</div>'
+        . '</div>';
+}
+
+/**
  * Diagnostic sibling of fm_gated_url_to_path() - runs the exact same
  * checks but returns *why* it failed instead of a bare null. Only use
  * this in a throwaway debug script (it echoes things like the resolved

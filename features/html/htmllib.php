@@ -232,6 +232,17 @@ function filter_docviewer($html) {
             continue;
         }
 
+        // Gated link that would 403/404 at filegate.php - swap the
+        // icon/modal link for a small placeholder instead of pointing at a
+        // doc_url that will fail when opened.
+        if (stripos($href, 'filegate.php') !== false && ($status = fm_gated_url_predict_status($href)) !== null) {
+            $pos = strpos($html, $match[0]);
+            if ($pos !== false) {
+                $html = substr_replace($html, fm_gate_placeholder_html($status), $pos, strlen($match[0]));
+            }
+            continue;
+        }
+
         // --- build a usable absolute URL ---
         if (stripos($href, 'filegate.php') !== false) {
             // Keep gated URLs intact (token/mtime/level must survive).
@@ -327,9 +338,11 @@ function filter_embedaudio($html) {
         $href = html_entity_decode(trim($match[2]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
         $href = preg_replace('/[\'"]/', '', $href);
 
+        $isFilegate = stripos($href, 'filegate.php') !== false;
+
         // Extension: filegate → p= param; otherwise path
         $ext = '';
-        if (stripos($href, 'filegate.php') !== false) {
+        if ($isFilegate) {
             $parts = parse_url($href);
             parse_str($parts['query'] ?? '', $q);
             $rel = (string) ($q['p'] ?? '');
@@ -343,8 +356,18 @@ function filter_embedaudio($html) {
             continue;
         }
 
+        // Gated link that would 403/404 at filegate.php - swap the player
+        // for a small placeholder instead of embedding a src that will fail.
+        if ($isFilegate && ($status = fm_gated_url_predict_status($href)) !== null) {
+            $pos = strpos($html, $match[0]);
+            if ($pos !== false) {
+                $html = substr_replace($html, fm_gate_placeholder_html($status), $pos, strlen($match[0]));
+            }
+            continue;
+        }
+
         // Build a usable URL
-        if (stripos($href, 'filegate.php') !== false) {
+        if ($isFilegate) {
             $url = $href;
             if (!preg_match('#^https?://#i', $url)) {
                 if (strpos($url, '//') === 0) {
@@ -435,12 +458,19 @@ global $CFG;
 
                     $url = str_replace('\\', '', $url);
 
-                    $html5player = '
-                    <video width="100%" controls>
-                        <source src="' . $url . '" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>';
-                    $html = str_replace($match[0], $html5player, $html);
+                    // Gated link that would 403/404 at filegate.php - swap
+                    // the player for a small placeholder instead of
+                    // embedding a src that will fail.
+                    if (stripos($url, 'filegate.php') !== false && ($status = fm_gated_url_predict_status($url)) !== null) {
+                        $html = str_replace($match[0], fm_gate_placeholder_html($status), $html);
+                    } else {
+                        $html5player = '
+                        <video width="100%" controls>
+                            <source src="' . $url . '" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>';
+                        $html = str_replace($match[0], $html5player, $html);
+                    }
                 }
             }
         $i++;
@@ -489,6 +519,32 @@ function filter_photogallery($html) {
 
         // Resolve to a local path.
         if ($isFilegate) {
+            $parts = parse_url($url);
+            parse_str($parts['query'] ?? '', $q);
+            $isFolderLink    = isset($q['m']) && (string) $q['m'] === '0';
+            $rel             = (string) ($q['p'] ?? '');
+            $ext             = strtolower(pathinfo($rel, PATHINFO_EXTENSION));
+            $isGalleryFolder = stripos($match[0], 'title="gallery"') !== false;
+
+            // Only treat this as a broken embed when it actually looks like
+            // one this filter would have turned into a gallery - a folder
+            // link marked title="gallery", or a direct link to an image
+            // file - so other filegate links (docs, audio, plain downloads)
+            // are left for whichever filter actually owns them.
+            $looksLikeGallery = ($isFolderLink && $isGalleryFolder)
+                || (!$isFolderLink && $ext !== '' && in_array($ext, $extensions, true));
+
+            if ($looksLikeGallery) {
+                $status = fm_gated_url_predict_status($url);
+                if ($status !== null) {
+                    $pos = strpos($html, $match[0]);
+                    if ($pos !== false) {
+                        $html = substr_replace($html, fm_gate_placeholder_html($status), $pos, strlen($match[0]));
+                    }
+                    continue;
+                }
+            }
+
             $localpath = fm_gated_url_to_path($url);
             if ($localpath === null) {
                 continue;
