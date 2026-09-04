@@ -36,16 +36,21 @@ body {
 .fm-tab.active { color: #2271b1; border-bottom-color: #2271b1; background: #fff; }
 
 .fm-toolbar {
-  display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+  display: flex; align-items: center; gap: 6px; padding: 4px 8px;
   border-bottom: 1px solid #dcdcde; flex-wrap: wrap;
 }
+/* Sort + view controls always sit on the right of the toolbar row. */
+.fm-toolbar .fm-view-sort {
+  margin-left: auto;
+}
 .fm-breadcrumb-bar {
-  display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+  display: flex; align-items: center; gap: 4px; padding: 3px 8px;
   border-bottom: 1px solid #dcdcde; background: #fafafa; flex-wrap: wrap;
+  min-height: 0;
 }
 .fm-back-btn {
   flex-shrink: 0;
-  width: 32px; height: 28px;
+  width: 28px; height: 24px;
   padding: 0;
   border: 1px solid #dcdcde;
   border-radius: 4px;
@@ -66,9 +71,13 @@ body {
   opacity: 0.4;
   cursor: default;
 }
-.fm-breadcrumb { flex: 1; min-width: 120px; color: #50575e; overflow-wrap: anywhere; }
+.fm-breadcrumb {
+  flex: 1; min-width: 80px; color: #50575e; overflow-wrap: anywhere;
+  font-size: 12px; line-height: 1.3;
+}
 .fm-breadcrumb button {
-  background: none; border: none; color: #2271b1; cursor: pointer; padding: 2px 4px; font: inherit;
+  background: none; border: none; color: #2271b1; cursor: pointer;
+  padding: 1px 3px; font: inherit; font-size: 12px;
 }
 .fm-icon-btn {
   background: #f0f0f1; border: none; border-radius: 6px; cursor: pointer; flex-shrink: 0;
@@ -108,51 +117,9 @@ body {
   pointer-events: none;
   box-shadow: 0 0 0 2px #fff;
 }
-@media (min-width: 700px) {
-  /* Enough room to say what a button does, not just show an icon for it -
-     icons alone read fine on a small/mobile layout but get ambiguous once
-     there's space for a label (Move to..., Migrate to..., etc). */
-  .fm-icon-btn { width: auto; padding: 0 12px; }
-  .fm-icon-btn-icon { font-size: 16px; }
-  .fm-icon-btn-label { display: inline; }
-  .fm-trash-badge {
-    top: -6px;
-    right: -6px;
-  }
-}
+/* Toolbar icon buttons stay icon-only by default (title provides the name).
+   Labels appear only in the single "roomy" breakpoint at the end of this file. */
 
-/* Wide but short (e.g. landscape phone / short laptop window): labels on
-   toolbar icon buttons fight for horizontal space. Icon-only; title still
-   provides the name on hover/long-press. Keep footer actions right-aligned
-   like the normal ≥700px layout. */
-@media (min-width: 700px) and (max-height: 500px) {
-  .fm-toolbar .fm-icon-btn {
-    width: 32px;
-    height: 32px;
-    padding: 0;
-  }
-  .fm-toolbar .fm-icon-btn-label { display: none; }
-  .fm-toolbar .fm-icon-btn-icon { font-size: 16px; }
-
-  .fm-selection-top {
-    width: 100%;
-    justify-content: space-between;
-  }
-  .fm-selection-share {
-    margin-left: auto;
-  }
-  .fm-selection-actions {
-    width: 100%;
-    justify-content: flex-end;
-  }
-  .fm-bulk-bar {
-    width: 100%;
-    justify-content: flex-end;
-  }
-  .fm-bulk-bar .fm-selection-name {
-    margin-right: auto;
-  }
-}
 .fm-readonly-note { color: #8c8f94; font-style: italic; font-size: 12px; }
 .fm-btn {
   background: #2271b1; color: #fff; border: none; border-radius: 3px;
@@ -253,7 +220,11 @@ body {
 .fm-search-input:focus { outline: none; border-color: #2271b1; box-shadow: 0 0 0 1px #2271b1; }
 
 /* View toggle + sort controls */
-.fm-view-sort { display: flex; align-items: center; gap: 6px; }
+.fm-view-sort {
+  display: flex; align-items: center; gap: 6px;
+  margin-left: auto; /* also works if this block is used outside .fm-toolbar */
+  flex-shrink: 0;
+}
 .fm-sort-select { font: inherit; padding: 5px 6px; border: 1px solid #dcdcde; border-radius: 3px; background: #fff; }
 .fm-sort-dir { padding: 6px 9px; }
 .fm-view-toggle { display: flex; gap: 2px; }
@@ -316,6 +287,13 @@ body {
   .fm-list-row { grid-template-columns: 24px 1fr 50px 30px; }
   .fm-list.no-check .fm-list-row { grid-template-columns: 1fr 50px 30px; }
   .fm-list-date { display: none; }
+}
+
+@media (max-width: 350px) {
+  /* Drop Size too — name + checkbox + actions only. */
+  .fm-list-row { grid-template-columns: 24px 1fr 30px; }
+  .fm-list.no-check .fm-list-row { grid-template-columns: 1fr 30px; }
+  .fm-list-size { display: none; }
 }
 
 /* Upload progress */
@@ -384,206 +362,193 @@ body {
 .fm-undo-dismiss:hover { color: #fff; }
 
 .fm-footer {
-  display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border-top: 1px solid #dcdcde;
+  display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border-top: 1px solid #dcdcde;
+  /* Cap height so a long action list never swallows the file pane. */
+  max-height: min(42vh, 280px);
+  overflow-y: auto;
 }
 .fm-selection {
-  display: flex; flex-direction: column; gap: 8px;
-  background: #f6f7f7; border-radius: 4px; padding: 8px;
+  display: flex; flex-direction: column; gap: 6px;
+  background: #f6f7f7; border-radius: 4px; padding: 6px;
 }
+.fm-selection-name {
+  font-weight: 600; word-break: break-word;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* Default = compact: name on its own row, share + actions in 2 columns
+   with labels. Avoids stacked full-width buttons eating vertical space. */
 .fm-selection-top {
-  display: flex; flex-direction: column; align-items: stretch; gap: 8px;
+  display: flex; flex-direction: column; align-items: stretch; gap: 4px;
 }
-.fm-selection-name { font-weight: 600; word-break: break-word; }
-.fm-selection-share, .fm-selection-actions {
-  display: flex; flex-direction: column; align-items: stretch; gap: 8px;
+.fm-selection-share,
+.fm-selection-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  align-items: stretch;
 }
-.fm-selection-share .fm-icon-btn, .fm-selection-actions .fm-icon-btn {
-  width: 100%; justify-content: flex-start; padding: 0 14px;
+.fm-selection-share .fm-icon-btn,
+.fm-selection-actions .fm-icon-btn {
+  width: 100%;
+  height: auto;
+  min-height: 32px;
+  padding: 4px 8px;
+  justify-content: flex-start;
 }
 .fm-selection-share .fm-icon-btn-label,
-.fm-selection-actions .fm-icon-btn-label { display: inline; } /* shown even below the general icon-only breakpoint */
-.fm-selection-share select { width: 100%; }
-.fm-level-select { font: inherit; padding: 4px 6px; border: 1px solid #dcdcde; border-radius: 3px; }
-.fm-footer-actions { display: flex; justify-content: flex-end; gap: 8px; }
-
-@media (min-width: 700px) {
-  /* Enough room that stretched full-width controls just look sparse -
-     back to name-left/share-right on one line, actions right-aligned
-     underneath, everything auto-width instead of stretched. */
-  .fm-selection-top {
-    flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap;
-  }
-  .fm-selection-share {
-    /* nowrap keeps level select + Copy link on one row (wrap was dropping
-       the button under the permission selector and wasting height). */
-    flex-direction: row; align-items: center; flex-wrap: nowrap; margin-left: auto; width: auto; gap: 6px;
-  }
-  .fm-selection-actions {
-    flex-direction: row; align-items: center; flex-wrap: wrap; justify-content: flex-end;
-  }
-  .fm-selection-share .fm-icon-btn, .fm-selection-actions .fm-icon-btn {
-    width: auto; justify-content: center; padding: 0 12px; flex-shrink: 0;
-  }
-  .fm-selection-share select {
-    width: auto; max-width: 11em; min-width: 0; flex: 0 1 auto;
-  }
+.fm-selection-actions .fm-icon-btn-label {
+  display: inline;
+  font-size: 12px;
 }
+.fm-selection-share .fm-icon-btn-icon,
+.fm-selection-actions .fm-icon-btn-icon {
+  font-size: 14px;
+}
+.fm-selection-share select,
+.fm-level-select {
+  width: 100%;
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 6px;
+  border: 1px solid #dcdcde;
+  border-radius: 3px;
+}
+.fm-footer-actions { display: flex; justify-content: flex-end; gap: 6px; }
 
-/* Bulk-selection bar (checkbox multi-select) - deliberately its own class
-   rather than reusing .fm-selection above, since the two want different
-   responsive behavior: this one goes full-width-stacked-with-label on
-   narrow screens (reads like an action sheet), but collapses back to a
-   single compact row - closer to how it worked before - once there's
-   enough width that stretched buttons just look sparse. */
+/* Bulk bar — same compact 2-column default */
 .fm-bulk-bar {
-  display: flex; flex-direction: column; gap: 8px;
-  background: #f6f7f7; border-radius: 4px; padding: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  align-items: stretch;
+  background: #f6f7f7; border-radius: 4px; padding: 6px;
+}
+.fm-bulk-bar .fm-selection-name {
+  grid-column: 1 / -1;
+  margin-right: 0;
 }
 .fm-bulk-bar .fm-icon-btn {
-  width: 100%; justify-content: flex-start; padding: 0 14px;
+  width: 100%;
+  height: auto;
+  min-height: 32px;
+  padding: 4px 8px;
+  justify-content: flex-start;
 }
-.fm-bulk-bar .fm-icon-btn-label { display: inline; } /* shown even below the general icon-only breakpoint */
-@media (min-width: 700px) {
-  .fm-bulk-bar {
-    flex-direction: row; align-items: center; flex-wrap: wrap;
-  }
-  .fm-bulk-bar .fm-selection-name { margin-right: auto; }
-  .fm-bulk-bar .fm-icon-btn { width: auto; justify-content: center; }
-}
+.fm-bulk-bar .fm-icon-btn-label { display: inline; font-size: 12px; }
+.fm-bulk-bar .fm-icon-btn-icon { font-size: 14px; }
 
 /* ------------------------------------------------------------------
- * Narrow + short viewports only (width < 700px AND height < 800px).
- * Default is a single stacked column of full-width buttons, which
- * combined with a short dialog height eats the file list. Keep the
- * labels readable, but lay buttons out in two columns so the footer
- * is about half as tall. Wide-but-short and narrow-but-tall keep
- * their existing layouts.
+ * Single "roomy" breakpoint — only when there is clearly enough space.
+ * Everything else keeps the compact defaults above (err on small screens).
  * ------------------------------------------------------------------ */
-@media (max-width: 699px) and (max-height: 800px) {
-  .fm-tab { padding: 6px 12px; }
-  .fm-toolbar,
-  .fm-breadcrumb-bar { padding: 4px 8px; gap: 6px; }
-  .fm-body { padding: 0 8px 8px; min-height: 0; } /* no top pad — sticky header */
-  .fm-grid { padding-top: 8px; }
-  .fm-footer {
-    padding: 6px 8px;
-    gap: 4px;
-    /* Hard cap so a long action list never swallows the file pane;
-       rare overflow becomes a short internal scroll instead. */
-    max-height: min(40vh, 260px);
-    overflow-y: auto;
-  }
-  .fm-selection,
-  .fm-bulk-bar {
-    padding: 4px 6px;
-    gap: 4px;
-  }
-  .fm-selection-name {
-    font-size: 12px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  /* Name on its own row; share controls + actions in 2-column grids */
-  .fm-selection-top {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 4px;
-  }
-  .fm-selection-share,
+/* Footer action density by viewport height.
+   Only .fm-selection-actions / .fm-bulk-bar change column count — the share
+   row (level + Copy link) stays a single compact flex line so it doesn't
+   burn a whole grid row of mostly empty cells. minmax(0,1fr) lets columns
+   shrink so 4-across fits on narrow landscape widths. */
+@media (max-height: 699px) {
   .fm-selection-actions,
   .fm-bulk-bar {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-height: 599px) {
+  .fm-selection-top {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
     gap: 4px;
-    align-items: stretch;
   }
-  /* "N selected" spans the full width above the bulk action buttons */
-  .fm-bulk-bar .fm-selection-name {
-    grid-column: 1 / -1;
-    margin-right: 0;
-  }
-  .fm-selection-share .fm-icon-btn,
-  .fm-selection-actions .fm-icon-btn,
-  .fm-bulk-bar .fm-icon-btn {
-    width: 100%;
-    height: auto;
-    min-height: 32px;
-    padding: 4px 8px;
-    justify-content: flex-start;
-  }
-  .fm-selection-share .fm-icon-btn-label,
-  .fm-selection-actions .fm-icon-btn-label,
-  .fm-bulk-bar .fm-icon-btn-label {
-    display: inline; /* keep text — two columns is how we save height */
-    font-size: 12px;
-  }
-  .fm-selection-share .fm-icon-btn-icon,
-  .fm-selection-actions .fm-icon-btn-icon,
-  .fm-bulk-bar .fm-icon-btn-icon {
-    font-size: 14px;
+  .fm-selection-name { max-width: 40%; }
+  .fm-selection-share {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    width: auto;
   }
   .fm-selection-share select,
-  .fm-level-select {
-    width: 100%;
-    font-size: 12px;
-    padding: 4px 6px;
+  .fm-selection-share .fm-level-select {
+    width: auto;
+    max-width: 9em;
+    min-width: 0;
+    flex: 0 1 auto;
   }
-  .fm-footer-actions { gap: 6px; }
-  .fm-footer-actions .fm-btn { padding: 4px 10px; }
-}
-
-
-/* Short landscape (phones rotated): keep readable type from viewport meta,
-   but shrink vertical chrome so the file list isn't crushed. */
-@media (orientation: landscape) and (max-height: 500px) {
-  .fm-tab { padding: 4px 10px; font-size: 12px; }
-  .fm-toolbar,
-  .fm-breadcrumb-bar { padding: 2px 8px; gap: 4px; }
-  .fm-icon-btn { width: 32px; height: 32px; }
-  .fm-icon-btn-icon { font-size: 16px; }
-  .fm-body { padding: 0 8px 8px; }
-  .fm-grid { padding-top: 8px; }
-  .fm-footer { padding: 4px 8px; gap: 4px; }
-  .fm-selection,
-  .fm-bulk-bar { padding: 4px 6px; gap: 4px; }
-  .fm-selection-top {
-    flex-direction: row; align-items: center; flex-wrap: wrap; gap: 4px;
-    width: 100%; justify-content: space-between;
-  }
-  .fm-selection-share {
-    display: flex; flex-direction: row; flex-wrap: nowrap; gap: 4px;
-    align-items: center; margin-left: auto;
+  .fm-selection-share .fm-icon-btn {
+    width: auto;
+    min-height: 28px;
+    padding: 0 8px;
+    flex-shrink: 0;
   }
   .fm-selection-actions,
   .fm-bulk-bar {
-    display: flex; flex-direction: row; flex-wrap: wrap; gap: 4px;
-    align-items: center;
-    width: 100%;
-    justify-content: flex-end;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-  .fm-bulk-bar .fm-selection-name {
-    margin-right: auto;
+}
+@media (max-height: 499px) {
+  .fm-selection-actions,
+  .fm-bulk-bar {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
-  .fm-selection-share select {
-    width: auto; max-width: 10em; min-width: 0; flex: 0 1 auto;
+}
+
+@media (min-width: 800px) and (min-height: 600px) {
+  .fm-toolbar { padding: 8px 12px; gap: 8px; }
+  .fm-breadcrumb-bar { padding: 8px 12px; gap: 8px; }
+  .fm-back-btn { width: 32px; height: 28px; }
+  .fm-breadcrumb { font-size: inherit; min-width: 120px; }
+  .fm-breadcrumb button { padding: 2px 4px; font-size: inherit; }
+
+  .fm-icon-btn { width: auto; height: 40px; padding: 0 12px; }
+  .fm-icon-btn-icon { font-size: 16px; }
+  .fm-icon-btn-label { display: inline; }
+  .fm-trash-badge { top: -6px; right: -6px; }
+
+  .fm-footer {
+    padding: 10px 12px;
+    gap: 8px;
+    max-height: none;
+    overflow-y: visible;
+  }
+  .fm-selection { padding: 8px; gap: 8px; }
+  .fm-selection-top {
+    flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  }
+  .fm-selection-share {
+    display: flex; flex-direction: row; flex-wrap: nowrap; align-items: center;
+    margin-left: auto; width: auto; gap: 6px;
+  }
+  .fm-selection-actions {
+    display: flex; flex-direction: row; flex-wrap: wrap; align-items: center;
+    justify-content: flex-end; width: 100%; gap: 6px;
   }
   .fm-selection-share .fm-icon-btn,
-  .fm-selection-actions .fm-icon-btn,
-  .fm-bulk-bar .fm-icon-btn {
-    width: auto; height: 28px; min-height: 28px; padding: 0 8px; flex-shrink: 0;
+  .fm-selection-actions .fm-icon-btn {
+    width: auto; height: 40px; min-height: 0; padding: 0 12px;
+    justify-content: center; flex-shrink: 0;
   }
-  .fm-toolbar .fm-icon-btn {
-    width: 32px; height: 32px; padding: 0;
-  }
-  .fm-toolbar .fm-icon-btn-label { display: none; }
   .fm-selection-share .fm-icon-btn-label,
-  .fm-selection-actions .fm-icon-btn-label,
-  .fm-bulk-bar .fm-icon-btn-label {
-    display: inline; font-size: 12px;
+  .fm-selection-actions .fm-icon-btn-label { font-size: 13px; }
+  .fm-selection-share .fm-icon-btn-icon,
+  .fm-selection-actions .fm-icon-btn-icon { font-size: 16px; }
+  .fm-selection-share select,
+  .fm-level-select {
+    width: auto; max-width: 11em; min-width: 0; flex: 0 1 auto; font-size: inherit;
   }
-  .fm-selection-name { max-width: 30%; font-size: 12px; }
-  .fm-footer-actions .fm-btn { padding: 3px 8px; }
+
+  .fm-bulk-bar {
+    display: flex; flex-direction: row; flex-wrap: wrap; align-items: center;
+    gap: 8px; padding: 8px;
+  }
+  .fm-bulk-bar .fm-selection-name { grid-column: auto; margin-right: auto; }
+  .fm-bulk-bar .fm-icon-btn {
+    width: auto; height: 40px; min-height: 0; padding: 0 12px; justify-content: center;
+  }
+  .fm-bulk-bar .fm-icon-btn-label { font-size: 13px; }
+  .fm-bulk-bar .fm-icon-btn-icon { font-size: 16px; }
 }
 
 .fm-empty { color: #8c8f94; padding: 30px; text-align: center; }

@@ -305,9 +305,9 @@
    * leftmost column, where the item itself is narrower than the menu)
    * and flips above the button if there's no room below.
    */
-  /** Narrow / mobile layout — menus are centered so they can't open off-screen. */
+  /** Short viewport — center menus so they stay fully on-screen. */
   function isMobileMenuLayout() {
-    return window.innerWidth < 700 || isCoarsePointer();
+    return window.innerHeight < 500;
   }
 
   /**
@@ -1267,21 +1267,9 @@
         topRow.appendChild(shareRow);
         selRow.appendChild(topRow);
 
-        // Preview (previewable files only)
-        if (!sel.isFolder && sel.previewUrl && isPreviewable(sel.ext)) {
-          var previewBtn = iconBtn('\uD83D\uDC41', 'Preview');
-          previewBtn.addEventListener('click', function () { openPreview(sel); });
-          actionsRow.appendChild(previewBtn);
-        }
-
-        // Mobile: explicit Open (double-tap is unreliable). Desktop keeps
-        // double-click / Enter for navigation.
-        if (sel.isFolder && isCoarsePointer()) {
-          var openBtn = iconBtn('\uD83D\uDCC2', 'Open');
-          openBtn.addEventListener('click', function () { openFolder(sel); });
-          actionsRow.appendChild(openBtn);
-        }
-
+        // Order matters for the multi-column footer grid: Download first so
+        // it lands on row 1; Move + Copy adjacent so they stay on the same
+        // row; no gaps left in the middle of the sequence.
         if (!sel.isFolder) {
           var downloadBtn = iconBtn('\u2B07', 'Download');
           downloadBtn.addEventListener('click', function () { onDownload(sel); });
@@ -1301,6 +1289,21 @@
           var copyToBtn = iconBtn('\u29C9', 'Copy to\u2026');
           copyToBtn.addEventListener('click', function () { openDestinationPicker('copy', [sel]); });
           actionsRow.appendChild(copyToBtn);
+        }
+
+        if (!sel.isFolder && sel.previewUrl && isPreviewable(sel.ext)) {
+          var previewBtn = iconBtn('\uD83D\uDC41', 'Preview');
+          previewBtn.addEventListener('click', function () { openPreview(sel); });
+          actionsRow.appendChild(previewBtn);
+        }
+
+        // Mobile: explicit Open (double-tap is unreliable). Desktop keeps
+        // double-click / Enter for navigation. After Move/Copy so those two
+        // stay paired in the grid.
+        if (sel.isFolder && isCoarsePointer()) {
+          var openBtn = iconBtn('\uD83D\uDCC2', 'Open');
+          openBtn.addEventListener('click', function () { openFolder(sel); });
+          actionsRow.appendChild(openBtn);
         }
 
         // Rename / Delete — same permission gates as the per-item kebab
