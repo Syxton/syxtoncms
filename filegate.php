@@ -54,11 +54,11 @@ if (!defined('FMCONFIG')) {
     include($sub . 'fmconfig.php');
 }
 
-function fmgate_deny($code) {
+function fmgate_deny($code, $filename = null) {
     //http_response_code($code);
     header('Content-Type: text/html; charset=utf-8');
 
-    $variant = fm_gate_message($code);
+    $variant = fm_gate_message($code, is_string($filename) ? $filename : null);
 
     echo <<<HTML
 <!DOCTYPE html>
@@ -142,12 +142,13 @@ $rel = fm_sanitize_relpath($rel);
 if ($rel === null || $rel === '') {
     fmgate_deny(404);
 }
+$gateName = basename(str_replace(['\\', '/'], '/', $rel));
 
 $isFolderLink = $mt === 0;
 if ($isFolderLink && $lvl === '') {
     // Admin-preview kind is only ever issued for single files - never
     // minted for a folder, so treat one as invalid rather than guessing.
-    fmgate_deny(404);
+    fmgate_deny(404, $gateName);
 }
 
 if ($lvl === '') {
@@ -155,11 +156,11 @@ if ($lvl === '') {
     // touching the token so an invalid token on someone else's private
     // file never gets a distinguishable response either way.
     if (!fm_can_access_area($area, $id)) {
-        fmgate_deny(403);
+        fmgate_deny(403, $gateName);
     }
 } else {
     if (!fm_check_share_permission($lvl, $area, $id, $ex)) {
-        fmgate_deny(403);
+        fmgate_deny(403, $gateName);
     }
     // FM_LEVEL_LINK: no session check at all - the whole point is it never
     // requires login. Still needs a valid, unmodified token below.
@@ -168,40 +169,40 @@ if ($lvl === '') {
 // Resolve to a real, contained path (works for files and folders alike).
 $full = fm_resolve_path($area, $id, $rel);
 if ($full === null) {
-    fmgate_deny(404);
+    fmgate_deny(404, $gateName);
 }
 
 if ($isFolderLink) {
     if (!is_dir($full)) {
-        fmgate_deny(404);
+        fmgate_deny(404, $gateName);
     }
     if (!fm_verify_share_token($lvl, $area, $id, $rel, 0, $ex, $tok)) {
-        fmgate_deny(403);
+        fmgate_deny(403, $gateName);
     }
     fmgate_render_folder_index($full, $lvl, $area, $id, $rel, $ex);
     exit;
 }
 
 if (!is_file($full)) {
-    fmgate_deny(404);
+    fmgate_deny(404, $gateName);
 }
 
 // Token binds mtime, so if the file was replaced since the link was
 // generated, the old token no longer validates.
 $actualMtime = filemtime($full);
 if ($actualMtime !== $mt) {
-    fmgate_deny(403);
+    fmgate_deny(403, $gateName);
 }
 $tokenOk = $lvl === ''
     ? fm_verify_admin_token($area, $id, $rel, $mt, $tok)
     : fm_verify_share_token($lvl, $area, $id, $rel, $mt, $ex, $tok);
 if (!$tokenOk) {
-    fmgate_deny(403);
+    fmgate_deny(403, $gateName);
 }
 
 $ext = strtolower(pathinfo($full, PATHINFO_EXTENSION));
 if (!array_key_exists($ext, $GLOBALS['FM_ALLOWED_EXT'])) {
-    fmgate_deny(404);
+    fmgate_deny(404, $gateName);
 }
 
 $mtype = $GLOBALS['FM_ALLOWED_EXT'][$ext];

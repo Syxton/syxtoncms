@@ -630,25 +630,49 @@ function fm_gated_url_predict_status(string $url): ?int {
  * embed didn't load (see fm_gate_placeholder_html()). Keeping this in one
  * place means the two can't drift apart.
  */
-function fm_gate_message(int $code): array {
+function fm_gate_message(int $code, ?string $filename = null): array {
+    $name = is_string($filename) ? trim($filename) : '';
+    $name = $name !== '' ? basename(str_replace(['\\', '/'], '/', $name)) : '';
+    $quoted = $name !== '' ? '"' . $name . '"' : 'this content';
+
     $variants = [
         403 => [
             'icon'    => '🔒',
             'title'   => 'Access Restricted',
-            'message' => "You don't have permission to view this content. If you believe this is a mistake, please check with the person who shared it, or request access.",
+            'message' => "You don't have permission to view {$quoted}. If you believe this is a mistake, please check with the person who shared it, or request access.",
         ],
         404 => [
             'icon'    => '🔗',
             'title'   => 'Link No Longer Valid',
-            'message' => 'This content may have been moved, renamed, or removed. Double-check the link, or ask the sender for an updated one.',
+            'message' => $name !== ''
+                ? "{$quoted} may have been moved, renamed, or removed. Double-check the link, or ask the sender for an updated one."
+                : 'This content may have been moved, renamed, or removed. Double-check the link, or ask the sender for an updated one.',
         ],
     ];
 
     return $variants[$code] ?? [
         'icon'    => '⚠️',
         'title'   => 'Something Went Wrong',
-        'message' => 'We ran into an unexpected error trying to load this content. Please try again in a moment.',
+        'message' => $name !== ''
+            ? "We ran into an unexpected error trying to load {$quoted}. Please try again in a moment."
+            : 'We ran into an unexpected error trying to load this content. Please try again in a moment.',
     ];
+}
+
+/**
+ * Best-effort display name for a gated filegate URL (basename of p=).
+ */
+function fm_gate_filename_from_url(string $url): string {
+    $query = parse_url(fm_normalize_gated_url($url), PHP_URL_QUERY);
+    if (!$query) {
+        return '';
+    }
+    parse_str($query, $q);
+    $rel = (string) ($q['p'] ?? '');
+    if ($rel === '') {
+        return '';
+    }
+    return basename(str_replace(['\\', '/'], '/', $rel));
 }
 
 /**
@@ -658,8 +682,8 @@ function fm_gate_message(int $code): array {
  * filling the viewport - so a blocked/broken embed reads as an intentional
  * message rather than a broken player.
  */
-function fm_gate_placeholder_html(int $code): string {
-    $variant = fm_gate_message($code);
+function fm_gate_placeholder_html(int $code, ?string $filename = null): string {
+    $variant = fm_gate_message($code, $filename);
 
     return '<div class="fm-embed-gate" style="'
         . 'display:flex;align-items:center;gap:14px;'

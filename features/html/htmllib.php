@@ -238,7 +238,7 @@ function filter_docviewer($html) {
         if (stripos($href, 'filegate.php') !== false && ($status = fm_gated_url_predict_status($href)) !== null) {
             $pos = strpos($html, $match[0]);
             if ($pos !== false) {
-                $html = substr_replace($html, fm_gate_placeholder_html($status), $pos, strlen($match[0]));
+                $html = substr_replace($html, fm_gate_placeholder_html($status, fm_gate_filename_from_url($href)), $pos, strlen($match[0]));
             }
             continue;
         }
@@ -361,7 +361,7 @@ function filter_embedaudio($html) {
         if ($isFilegate && ($status = fm_gated_url_predict_status($href)) !== null) {
             $pos = strpos($html, $match[0]);
             if ($pos !== false) {
-                $html = substr_replace($html, fm_gate_placeholder_html($status), $pos, strlen($match[0]));
+                $html = substr_replace($html, fm_gate_placeholder_html($status, fm_gate_filename_from_url($href)), $pos, strlen($match[0]));
             }
             continue;
         }
@@ -462,7 +462,7 @@ global $CFG;
                     // the player for a small placeholder instead of
                     // embedding a src that will fail.
                     if (stripos($url, 'filegate.php') !== false && ($status = fm_gated_url_predict_status($url)) !== null) {
-                        $html = str_replace($match[0], fm_gate_placeholder_html($status), $html);
+                        $html = str_replace($match[0], fm_gate_placeholder_html($status, fm_gate_filename_from_url($url)), $html);
                     } else {
                         $html5player = '
                         <video width="100%" controls>
@@ -539,7 +539,7 @@ function filter_photogallery($html) {
                 if ($status !== null) {
                     $pos = strpos($html, $match[0]);
                     if ($pos !== false) {
-                        $html = substr_replace($html, fm_gate_placeholder_html($status), $pos, strlen($match[0]));
+                        $html = substr_replace($html, fm_gate_placeholder_html($status, fm_gate_filename_from_url($url)), $pos, strlen($match[0]));
                     }
                     continue;
                 }
@@ -604,6 +604,13 @@ function filter_photogallery($html) {
             }
 
             if (empty($files)) {
+                // No images in this gallery folder — remove the link entirely
+                // rather than leaving a dead gallery that opens as "(empty)".
+                $pos = strpos($html, $match[0]);
+                if ($pos !== false) {
+                    // Keep the link text, drop the <a>
+                    $html = substr_replace($html, $match[3], $pos, strlen($match[0]));
+                }
                 continue;
             }
 
