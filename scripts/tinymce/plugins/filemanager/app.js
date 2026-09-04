@@ -305,12 +305,27 @@
    * leftmost column, where the item itself is narrower than the menu)
    * and flips above the button if there's no room below.
    */
+  /** Narrow / mobile layout — menus are centered so they can't open off-screen. */
+  function isMobileMenuLayout() {
+    return window.innerWidth < 700 || isCoarsePointer();
+  }
+
+  /**
+   * On mobile, center the menu in the viewport. On desktop, anchor to the
+   * kebab button (prefer below-right, flip/clamp if near edges).
+   */
   function positionItemMenu(menu, btn) {
     var margin = 8;
-    var btnRect = btn.getBoundingClientRect();
     var menuW = menu.offsetWidth;
     var menuH = menu.offsetHeight;
 
+    if (isMobileMenuLayout()) {
+      menu.style.left = Math.max(margin, (window.innerWidth - menuW) / 2) + 'px';
+      menu.style.top = Math.max(margin, (window.innerHeight - menuH) / 2) + 'px';
+      return;
+    }
+
+    var btnRect = btn.getBoundingClientRect();
     var left = btnRect.right - menuW; // right-align to the button by default
     left = Math.max(margin, Math.min(left, window.innerWidth - menuW - margin));
 
@@ -324,13 +339,20 @@
   }
 
   /**
-   * Same clamping as positionItemMenu, but anchored to a raw point
-   * (the cursor) rather than a button's rect - used for right-click.
+   * Same as positionItemMenu, but anchored to a raw point (cursor /
+   * long-press). Mobile still centers so the menu stays fully on-screen.
    */
   function positionItemMenuAtPoint(menu, x, y) {
     var margin = 8;
     var menuW = menu.offsetWidth;
     var menuH = menu.offsetHeight;
+
+    if (isMobileMenuLayout()) {
+      menu.style.left = Math.max(margin, (window.innerWidth - menuW) / 2) + 'px';
+      menu.style.top = Math.max(margin, (window.innerHeight - menuH) / 2) + 'px';
+      return;
+    }
+
     menu.style.left = Math.max(margin, Math.min(x, window.innerWidth - menuW - margin)) + 'px';
     menu.style.top = Math.max(margin, Math.min(y, window.innerHeight - menuH - margin)) + 'px';
   }
@@ -1034,13 +1056,37 @@
     }
   }
 
+  /** Navigate into a folder (used by double-click, Enter, and mobile second-tap). */
+  function openFolder(f) {
+    state.path = (state.path ? state.path + '/' : '') + f.name;
+    state.selected = null;
+    state.query = '';
+    clearMultiSelect();
+    renderToolbar();
+    load();
+  }
+
+  /** Touch / stylus primary input — double-click is unreliable here. */
+  function isCoarsePointer() {
+    try {
+      return !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+    } catch (e) {
+      return 'ontouchstart' in window;
+    }
+  }
+
   function onOpenFor(f) {
+    // Single-click always selects (files and folders). Folder navigation is
+    // on double-click / Enter via openFolder(). Kept as a named helper so
+    // makeItem/makeListRow can still pass onOpen for the dblclick path.
     return f.isFolder
-      ? function () { state.path = (state.path ? state.path + '/' : '') + f.name; state.selected = null; state.query = ''; clearMultiSelect(); renderToolbar(); load(); }
+      ? function () { openFolder(f); }
       : function (itemEl) { selectItem({ name: f.name, isFolder: false, ext: f.ext, previewUrl: f.previewUrl }, itemEl); };
   }
   function onSelectFor(f) {
-    if (f.readOnly || !f.isFolder) return null;
+    // Kept for any caller that still wants to select a folder programmatically.
+    // Single-click already selects folders (and the footer shows link options).
+    if (!f.isFolder) return null;
     return function (itemEl) { selectItem({ name: f.name, isFolder: true }, itemEl); };
   }
 
@@ -1066,8 +1112,11 @@
         if (selectAll.checked) {
           all.forEach(function (f) { multiSelected[multiKey(f.name, f.isFolder)] = { name: f.name, isFolder: f.isFolder }; });
           state.selected = null;
+          // Give subsequent Shift+click a sensible anchor (first visible item).
+          if (all.length) selectionAnchorKey = multiKey(all[0].name, all[0].isFolder);
         } else {
           clearMultiSelect();
+          selectionAnchorKey = null;
         }
         renderBody();
         renderFooter();
@@ -1115,10 +1164,13 @@
       delete multiSelected[key];
     } else {
       multiSelected[key] = { name: f.name, isFolder: f.isFolder };
-      // Starting or extending a multi-selection via checkbox should establish
-      // the range-select anchor, otherwise Shift+click has nothing to range from.
-      if (!selectionAnchorKey) selectionAnchorKey = key;
     }
+    // Always update the range-select anchor on plain/Ctrl toggle so a
+    // subsequent Shift+click ranges from the item the user just interacted with
+    // (standard desktop / Explorer / Gmail checkbox behavior). Previously the
+    // anchor was only set when null, which left a stale anchor after selecting
+    // later items and made Shift ranges jump to unexpected files.
+    selectionAnchorKey = key;
     state.selected = null; // checkbox pick supersedes the single-item panel
     focusedKey = key;
     renderBody();
@@ -1161,13 +1213,24 @@
         }
         topRowOld.appendChild(shareRowOld);
         selRow.appendChild(topRowOld);
+
+        var actionsRowOld = el('div', { class: 'fm-selection-actions' });
+        if (sel.isFolder && isCoarsePointer()) {
+          var openBtnOld = iconBtn('\uD83D\uDCC2', 'Open');
+          openBtnOld.addEventListener('click', function () { openFolder(sel); });
+          actionsRowOld.appendChild(openBtnOld);
+        }
+        if (!sel.isFolder && sel.previewUrl && isPreviewable(sel.ext)) {
+          var previewBtnOld = iconBtn('\uD83D\uDC41', 'Preview');
+          previewBtnOld.addEventListener('click', function () { openPreview(sel); });
+          actionsRowOld.appendChild(previewBtnOld);
+        }
         if (destinationAreasFor('migrate').length) {
-          var actionsRowOld = el('div', { class: 'fm-selection-actions' });
           var migrateBtn = iconBtn('\u21ea', 'Migrate to\u2026');
           migrateBtn.addEventListener('click', function () { openDestinationPicker('migrate', [sel]); });
           actionsRowOld.appendChild(migrateBtn);
-          selRow.appendChild(actionsRowOld);
         }
+        if (actionsRowOld.childNodes.length) selRow.appendChild(actionsRowOld);
       } else {
         var topRow = el('div', { class: 'fm-selection-top' });
         topRow.appendChild(el('div', { class: 'fm-selection-name', text: sel.name }));
@@ -1204,6 +1267,21 @@
         topRow.appendChild(shareRow);
         selRow.appendChild(topRow);
 
+        // Preview (previewable files only)
+        if (!sel.isFolder && sel.previewUrl && isPreviewable(sel.ext)) {
+          var previewBtn = iconBtn('\uD83D\uDC41', 'Preview');
+          previewBtn.addEventListener('click', function () { openPreview(sel); });
+          actionsRow.appendChild(previewBtn);
+        }
+
+        // Mobile: explicit Open (double-tap is unreliable). Desktop keeps
+        // double-click / Enter for navigation.
+        if (sel.isFolder && isCoarsePointer()) {
+          var openBtn = iconBtn('\uD83D\uDCC2', 'Open');
+          openBtn.addEventListener('click', function () { openFolder(sel); });
+          actionsRow.appendChild(openBtn);
+        }
+
         if (!sel.isFolder) {
           var downloadBtn = iconBtn('\u2B07', 'Download');
           downloadBtn.addEventListener('click', function () { onDownload(sel); });
@@ -1223,6 +1301,18 @@
           var copyToBtn = iconBtn('\u29C9', 'Copy to\u2026');
           copyToBtn.addEventListener('click', function () { openDestinationPicker('copy', [sel]); });
           actionsRow.appendChild(copyToBtn);
+        }
+
+        // Rename / Delete — same permission gates as the per-item kebab
+        if (pubAreaOK(PERM.edit)) {
+          var renameBtn = iconBtn('\u270e', 'Rename');
+          renameBtn.addEventListener('click', function () { onRename(sel); });
+          actionsRow.appendChild(renameBtn);
+        }
+        if (pubAreaOK(PERM.delete)) {
+          var deleteBtn = iconBtn('\u2715', 'Delete', 'danger');
+          deleteBtn.addEventListener('click', function () { onDelete(sel); });
+          actionsRow.appendChild(deleteBtn);
         }
 
         selRow.appendChild(actionsRow);
@@ -1889,9 +1979,8 @@
         menuItems.push({ icon: '\u21ea', label: 'Migrate to\u2026', handler: function () { openDestinationPicker('migrate', [opts]); } });
       }
     } else {
-      if (opts.isFolder && opts.onSelect) {
-        menuItems.push({ icon: '\uD83D\uDD17', label: 'Get a link', handler: function () { opts.onSelect(container); } });
-      }
+      // "Get a link" removed — single-click selects the item; the footer
+      // already offers Copy link (+ Index/Gallery when opened with gallery=1).
       if (destinationAreasFor('move').length) {
         menuItems.push({ icon: '\uD83D\uDCE4', label: 'Move to\u2026', handler: function () { openDestinationPicker('move', [opts]); } });
       }
@@ -1941,8 +2030,13 @@
         menuBtn.focus();
       };
       place();
-      var firstItem = focusableIn(menu)[0];
-      if (firstItem) firstItem.focus();
+      // Auto-focusing the first menu item after a touch long-press can
+      // leave some mobile browsers in an odd state (keyboard / scroll
+      // lock). Desktop keyboard users still get focus for arrow navigation.
+      if (!isCoarsePointer()) {
+        var firstItem = focusableIn(menu)[0];
+        if (firstItem) firstItem.focus();
+      }
     }
 
     menuBtn.addEventListener('click', function (e) {
@@ -1991,8 +2085,7 @@
         return;
       }
       // Plain / Ctrl click: let the checkbox toggle natively, then sync state
-      // on the following 'change' event. We still establish the anchor when
-      // the item becomes selected (see toggleMultiSelect).
+      // (and always update selectionAnchorKey) on the following 'change' event.
     });
     box.addEventListener('change', function (e) {
       // Shift path already handled everything and called preventDefault, so
@@ -2002,10 +2095,14 @@
       var key = multiKey(opts.name, opts.isFolder);
       if (box.checked) {
         multiSelected[key] = { name: opts.name, isFolder: opts.isFolder };
-        if (!selectionAnchorKey) selectionAnchorKey = key;
       } else {
         delete multiSelected[key];
       }
+      // Always update the range-select anchor on plain checkbox interaction so a
+      // subsequent Shift+click ranges from the item just toggled (not a stale
+      // earlier anchor). This fixes erratic range selection after clicking the
+      // last checkbox then Shift-clicking an item above it.
+      selectionAnchorKey = key;
       state.selected = null;
       focusedKey = key;
       renderBody();
@@ -2026,6 +2123,14 @@
   // $_REQUEST). Chromium-only (Chrome/Edge/Brave/Opera); Firefox and
   // Safari ignore DownloadURL and fall back to the Download buttons.
   function wireDragAndDrop(item, opts) {
+    // On touch devices a long-press starts HTML5 drag, which commonly
+    // freezes or captures the UI (especially with DownloadURL payloads).
+    // Skip drag entirely on coarse pointers; long-press still opens the
+    // item context menu via the contextmenu handler in buildItemActions.
+    if (isCoarsePointer()) {
+      item.setAttribute('draggable', 'false');
+      return;
+    }
     item.setAttribute('draggable', 'true');
     item.addEventListener('dragstart', function (e) {
       dragging = { name: opts.name, isFolder: !!opts.isFolder };
@@ -2144,9 +2249,12 @@
       } else if (!(e.ctrlKey || e.metaKey)) {
         clearMultiSelect();
         selectionAnchorKey = bootstrapKey;
+        // Select folders as well as files so the footer shows folder actions.
         state.selected = bootstrapItem.isFolder
-          ? null
+          ? { name: bootstrapItem.name, isFolder: true }
           : { name: bootstrapItem.name, isFolder: false, ext: bootstrapItem.ext, previewUrl: bootstrapItem.previewUrl };
+        state.level = state.area === 'old' ? null : defaultLevel();
+        state.mode = 'index';
       }
       focusedKey = bootstrapKey;
       renderBody();
@@ -2216,7 +2324,12 @@
       } else {
         clearMultiSelect();
         selectionAnchorKey = targetKey;
-        state.selected = target.isFolder ? null : { name: target.name, isFolder: false, ext: target.ext, previewUrl: target.previewUrl };
+        // Select folders as well as files so the footer shows folder actions.
+        state.selected = target.isFolder
+          ? { name: target.name, isFolder: true }
+          : { name: target.name, isFolder: false, ext: target.ext, previewUrl: target.previewUrl };
+        state.level = state.area === 'old' ? null : defaultLevel();
+        state.mode = 'index';
       }
       focusedKey = targetKey;
       renderBody();
@@ -2265,11 +2378,12 @@
   /**
    * Wires the selection/navigation behavior shared by grid tiles and list
    * rows: listbox option semantics (role, aria-selected, roving
-   * tabindex), plain click (select/open, same as before), Ctrl/Cmd+click
+   * tabindex), plain click (select the item — files and folders), Ctrl/Cmd+click
    * (toggle just this item in the multi-selection), and Shift+click
-   * (range-select from the last plain-selection anchor). Arrow keys,
-   * Enter, Delete, Space, and Ctrl+A are handled once via delegation on
-   * the filemanager root (see handleItemKeydown) rather than wired per item.
+   * (range-select from the last plain-selection anchor). Double-click opens
+   * a folder or previews a file. Arrow keys, Enter, Delete, Space, and
+   * Ctrl+A are handled once via delegation on the filemanager root
+   * (see handleItemKeydown) rather than wired per item.
    */
   function wireItemInteractions(item, opts) {
     var key = multiKey(opts.name, opts.isFolder);
@@ -2297,14 +2411,28 @@
         focusItemByKey(key);
         return;
       }
+      // Plain click selects the item (folder or file) so the footer shows
+      // share/move/copy/zip options. Entering a folder is double-click (or Enter)
+      // on desktop; on coarse pointers (phones/tablets), a second tap on an
+      // already-selected folder opens it instead.
       selectionAnchorKey = key;
       focusedKey = key;
-      if (opts.isFolder) opts.onOpen();
-      else opts.onOpen(item);
-      item.focus(); // harmless no-op if opts.onOpen() already navigated away and replaced this node
+      if (opts.isFolder) {
+        var alreadySelected = !!state.selected
+          && state.selected.isFolder
+          && state.selected.name === opts.name;
+        if (alreadySelected && isCoarsePointer()) {
+          openFolder(opts);
+          return;
+        }
+        selectItem({ name: opts.name, isFolder: true }, item);
+      } else {
+        opts.onOpen(item);
+      }
+      item.focus();
     });
     item.addEventListener('dblclick', function () {
-      if (opts.isFolder) opts.onOpen();
+      if (opts.isFolder) opts.onOpen(); // navigate into the folder
       else if (opts.previewUrl && isPreviewable(opts.ext)) openPreview(opts);
     });
   }

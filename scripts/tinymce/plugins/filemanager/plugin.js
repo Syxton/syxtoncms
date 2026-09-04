@@ -81,18 +81,27 @@
 
       var backdrop = doc.createElement('div');
       backdrop.setAttribute('data-fm-picker-overlay', '1');
+      // Size the dialog to the viewport. On phones the old fixed 1000×680
+      // with 20px padding left a tiny usable area; go nearly full-screen
+      // under 700px width.
+      var narrow = (window.innerWidth || doc.documentElement.clientWidth || 0) < 700;
       applyStyle(backdrop, {
         position: 'fixed', top: '0', right: '0', bottom: '0', left: '0',
         background: 'rgba(0, 0, 0, .5)', zIndex: '2147483000',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '20px',
+        padding: narrow ? '0' : '20px',
       });
 
       var box = doc.createElement('div');
       applyStyle(box, {
-        position: 'relative', width: '1000px', maxWidth: '100%',
-        height: '680px', maxHeight: '100%', background: '#fff',
-        borderRadius: '6px', overflow: 'hidden',
+        position: 'relative',
+        width: narrow ? '100%' : '1000px',
+        maxWidth: '100%',
+        height: narrow ? '100%' : '680px',
+        maxHeight: '100%',
+        background: '#fff',
+        borderRadius: narrow ? '0' : '6px',
+        overflow: 'hidden',
         boxShadow: '0 10px 40px rgba(0,0,0,.35)',
       });
 
