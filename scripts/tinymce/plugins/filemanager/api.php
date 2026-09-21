@@ -17,7 +17,9 @@
 * For move/copy, source-side Page files is gated on the editor pageid;
 * destination-side Page files is gated on toId (so cross-page targets
 * cannot bypass permissions on the destination page). filemanager_migrate
-* always gates migrating out of Old files. See fmconfig.php's fm_is_able().
+* always gates migrating out of Old files. Old files can also be deleted
+* (soft-delete into its own trash, restorable like any other area) on
+* ownership alone, same as My files. See fmconfig.php's fm_is_able().
 *
 * Output buffering: your app runs with $CFG->debug = 3 ("log and print"),
 * which means any stray notice/warning from included libs would otherwise
@@ -55,9 +57,9 @@ function fm_json($data, int $code = 200) {
 
 /**
  * Shared shape for "this action needs $permission, but only when it
- * touches Page files" - My files has no per-action gate at all, and Old
- * files never reaches here for actions that would call this (its own
- * read-only allow-list at the top of the file handles that instead).
+ * touches Page files" - My files and Old files have no per-action gate
+ * beyond ownership (which actions Old files allows at all is decided by
+ * the allow-list further down, before any action runs).
  * 403s and exits on failure, same as fm_json() itself.
  */
 function fm_require_public_permission(string $area, string $pageid, string $permission): void {
@@ -241,13 +243,14 @@ if ($area === FM_AREA_OLD && !fm_is_able('filemanager_view', $pageid)) {
     fm_json(['error' => 'Forbidden'], 403);
 }
 
-// "Old files" is read-only browsing for manual migration - only list,
-// move (as a source), download_zip, and the read-only helpers the
-// migrate destination picker needs (check_conflicts, search_pages) are
-// allowed. Enforced here, not just hidden in the UI, since the endpoint
-// itself is the actual security boundary.
-if ($area === FM_AREA_OLD && !in_array($action, ['list', 'move', 'download_zip', 'check_conflicts', 'search_pages'], true)) {
-    fm_json(['error' => 'Old files is read-only - move items into My files or Page files first'], 403);
+// "Old files" is browse / migrate / delete only: list, move (as a source),
+// download_zip, the read-only helpers the migrate destination picker needs
+// (check_conflicts, search_pages), and delete with its undo/trash trio
+// (restore, trash_list, trash_delete). Nothing may be created, renamed,
+// copied or uploaded there. Enforced here, not just hidden in the UI,
+// since the endpoint itself is the actual security boundary.
+if ($area === FM_AREA_OLD && !in_array($action, ['list', 'move', 'download_zip', 'check_conflicts', 'search_pages', 'delete', 'restore', 'trash_list', 'trash_delete'], true)) {
+    fm_json(['error' => 'Old files can only be browsed, migrated or deleted'], 403);
 }
 
 // CSRF check for anything that changes state.
@@ -319,20 +322,18 @@ switch ($action) {
         usort($folders, fn($a, $b) => strcasecmp($a['name'], $b['name']));
         usort($files, fn($a, $b) => $b['mtime'] <=> $a['mtime']);
 
-        // Soft-delete trash indicator for the toolbar recycle button.
-        // Old files never soft-deletes, so count stays 0 there.
+        // Soft-delete trash indicator for the toolbar recycle button
+        // (every area has its own trash, Old files included).
         $trashCount = 0;
-        if ($area !== FM_AREA_OLD) {
-            $trashRoot = fm_trash_root($area, $id);
-            if ($trashRoot !== null) {
-                fm_purge_old_trash($trashRoot);
-                foreach (scandir($trashRoot) as $entry) {
-                    if ($entry === '.' || $entry === '..') {
-                        continue;
-                    }
-                    if (is_dir($trashRoot . DIRECTORY_SEPARATOR . $entry)) {
-                        $trashCount++;
-                    }
+        $trashRoot = fm_trash_root($area, $id);
+        if ($trashRoot !== null) {
+            fm_purge_old_trash($trashRoot);
+            foreach (scandir($trashRoot) as $entry) {
+                if ($entry === '.' || $entry === '..') {
+                    continue;
+                }
+                if (is_dir($trashRoot . DIRECTORY_SEPARATOR . $entry)) {
+                    $trashCount++;
                 }
             }
         }
@@ -512,11 +513,14 @@ switch ($action) {
         // Restore into its original folder if that folder still exists;
         // fall back to the area root if it was itself renamed/moved/
         // deleted in the meantime.
-        $destDir = fm_resolve_path($area, $id, (string) $meta['path']);
+        $destDir = fm_resolve_area_path($area, $id, (string) $meta['path']);
         $restoredPath = (string) $meta['path'];
         if ($destDir === null) {
-            $destDir = fm_area_root($area, $id);
+            $destDir = fm_area_base($area, $id);
             $restoredPath = '';
+            if ($destDir === null) {
+                fm_json(['error' => 'Restore failed - the destination folder no longer exists'], 500);
+            }
         }
 
         // Avoid clobbering anything created at the destination since deletion.
@@ -1038,15 +1042,25 @@ switch ($action) {
 }
 
 /**
- * Recursively delete a folder and everything in it.
+ * Recursively delete a folder and everything in it. Symlinks are removed
+ * as links and never followed: is_dir() is true for a symlink to a folder,
+ * so without this a link inside a legacy Old files folder would send the
+ * recursion into - and empty - whatever it points at, outside the tree
+ * being deleted.
  */
 function fm_rrmdir(string $dir): void {
+    if (is_link($dir)) {
+        @unlink($dir) || @rmdir($dir); // rmdir: Windows directory symlinks
+        return;
+    }
     foreach (scandir($dir) as $entry) {
         if ($entry === '.' || $entry === '..') {
             continue;
         }
         $full = $dir . DIRECTORY_SEPARATOR . $entry;
-        if (is_dir($full)) {
+        if (is_link($full)) {
+            @unlink($full) || @rmdir($full);
+        } elseif (is_dir($full)) {
             fm_rrmdir($full);
         } else {
             unlink($full);

@@ -726,23 +726,25 @@
         toolbar.appendChild(uploadInput);
       }
 
-      var trashLabel = trashCount > 0
-        ? ('Trash (' + trashCount + ' item' + (trashCount === 1 ? '' : 's') + ')')
-        : 'Trash';
-      var trashBtn = iconBtn('\u267B', trashLabel, trashCount > 0 ? 'has-items' : '');
-      if (trashCount > 0) {
-        var badgeText = trashCount > 99 ? '99+' : String(trashCount);
-        trashBtn.appendChild(el('span', { class: 'fm-trash-badge', text: badgeText }));
-      }
-      trashBtn.addEventListener('click', openTrash);
-      if (pubAreaOK(PERM.delete)) toolbar.appendChild(trashBtn);
     }
+
+    // Every area has a Trash - Old files included, now that its items can be deleted.
+    var trashLabel = trashCount > 0
+      ? ('Trash (' + trashCount + ' item' + (trashCount === 1 ? '' : 's') + ')')
+      : 'Trash';
+    var trashBtn = iconBtn('\u267B', trashLabel, trashCount > 0 ? 'has-items' : '');
+    if (trashCount > 0) {
+      var badgeText = trashCount > 99 ? '99+' : String(trashCount);
+      trashBtn.appendChild(el('span', { class: 'fm-trash-badge', text: badgeText }));
+    }
+    trashBtn.addEventListener('click', openTrash);
+    if (pubAreaOK(PERM.delete)) toolbar.appendChild(trashBtn);
 
     toolbar.appendChild(buildSearchBox());
     toolbar.appendChild(buildViewSortControls());
 
     if (state.area === 'old') {
-      toolbar.appendChild(el('div', { class: 'fm-readonly-note', text: 'Read-only - use Migrate to move items into My files or Page files.' }));
+      toolbar.appendChild(el('div', { class: 'fm-readonly-note', text: 'Old files can\'t be edited - use Migrate to move items into My files or Page files, or delete what you no longer need.' }));
     }
   }
 
@@ -1310,6 +1312,11 @@
           migrateBtn.addEventListener('click', function () { openDestinationPicker('migrate', [sel]); });
           actionsRowOld.appendChild(migrateBtn);
         }
+        if (pubAreaOK(PERM.delete)) {
+          var deleteBtnOld = iconBtn('\u2715', 'Delete', 'danger');
+          deleteBtnOld.addEventListener('click', function () { onDelete(sel); });
+          actionsRowOld.appendChild(deleteBtnOld);
+        }
         if (actionsRowOld.childNodes.length) selRow.appendChild(actionsRowOld);
       } else {
         var topRow = el('div', { class: 'fm-selection-top' });
@@ -1467,20 +1474,29 @@
         copyBtn.addEventListener('click', function () { openDestinationPicker('copy', items); });
         bar.appendChild(copyBtn);
       }
-      if (pubAreaOK(PERM.delete)) {
-        var delBtn = iconBtn('\u2715', 'Delete selected', 'danger');
-        delBtn.addEventListener('click', function () { onBulkDelete(items); });
-        bar.appendChild(delBtn);
-      }
+    }
+    // Same button in every area (Old files included) - last in the bar.
+    if (pubAreaOK(PERM.delete)) {
+      var delBtn = iconBtn('\u2715', 'Delete selected', 'danger');
+      delBtn.addEventListener('click', function () { onBulkDelete(items); });
+      bar.appendChild(delBtn);
     }
     return bar;
+  }
+
+  // Extra line for the delete confirms in Old files: those files are served
+  // from their original public URLs, so pages linking straight to them break.
+  function oldDeleteNote() {
+    return state.area === 'old'
+      ? '\n\nPages that link directly to old files will stop working until they are restored from Trash (kept for 30 days).'
+      : '';
   }
 
   function onBulkDelete(items) {
     if (!pubAreaOK(PERM.delete)) return;
     var names = items.map(function (it) { return it.name; }).join(', ');
     if (!confirm('Delete ' + items.length + ' item' + (items.length > 1 ? 's' : '') + '?\n\n' + names
-      + '\n\nThis deletes everything inside any selected folders.')) return;
+      + '\n\nThis deletes everything inside any selected folders.' + oldDeleteNote())) return;
     var area = state.area, id = state.id, path = state.path;
     Promise.all(items.map(function (it) {
       return api('delete', { name: it.name, target: it.isFolder ? 'folder' : 'file' })
@@ -1896,8 +1912,8 @@
    * "Trash" toolbar button - browses this area+id's soft-deleted items
    * (see the 'delete'/'restore'/'trash_list' actions in api.php) so
    * anything past the undo toast's 8-second window is still recoverable
-   * for the full 30-day retention window. Never shown for Old files,
-   * since nothing is ever deleted from there.
+   * for the full 30-day retention window. Each area (Old files too) has
+   * its own trash, and restoring puts an item back in the tree it came from.
    */
   function openTrash() {
     var area = state.area, id = state.id;
@@ -2076,9 +2092,10 @@
       if (pubAreaOK(PERM.copy)) {
         menuItems.push({ icon: '\u29C9', label: 'Duplicate', handler: function () { onDuplicate(opts); } });
       }
-      if (pubAreaOK(PERM.delete)) {
-        menuItems.push({ icon: '\u2715', label: 'Delete', handler: function () { onDelete(opts); }, danger: true });
-      }
+    }
+    // Delete is the one edit Old files (opts.readOnly) allows - always last.
+    if (pubAreaOK(PERM.delete)) {
+      menuItems.push({ icon: '\u2715', label: 'Delete', handler: function () { onDelete(opts); }, danger: true });
     }
 
     if (!menuItems.length) return wrap; // nothing this item can do - no kebab needed
@@ -2733,7 +2750,7 @@
 
   function onDelete(opts) {
     if (!pubAreaOK(PERM.delete)) return;
-    if (!confirm('Delete "' + opts.name + '"?' + (opts.isFolder ? ' This deletes everything inside it.' : ''))) return;
+    if (!confirm('Delete "' + opts.name + '"?' + (opts.isFolder ? ' This deletes everything inside it.' : '') + oldDeleteNote())) return;
     var area = state.area, id = state.id, path = state.path;
     api('delete', { name: opts.name, target: opts.isFolder ? 'folder' : 'file' }).then(function (res) {
       if (!res.ok) { reportError(new Error(res.body.error || 'Delete failed')); return; }

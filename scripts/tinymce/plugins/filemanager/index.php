@@ -45,7 +45,9 @@ $canView = fm_is_able('filemanager_view', $pageid);
 // also require filemanager_view or the tab isn't shown (see fmconfig.php).
 $canPublic  = $pageid !== '' && $canView && fm_can_access_page($pageid);
 $canPrivate = $userid !== '' && fm_can_access_private($userid);
-$canOld = $canPrivate && $canView && !fm_old_is_empty($userid); // same ownership check, legacy location
+// Same ownership check, legacy location. The tab stays while it has soft-deleted
+// items in its Trash even once the folder itself is empty, so they can still be restored.
+$canOld = $canPrivate && $canView && (!fm_old_is_empty($userid) || fm_trash_has_entries(FM_AREA_OLD, $userid));
 
 // Per-action abilities, Page files only (see fm_is_able()) - api.php
 // enforces these; here they just drive which buttons app.js shows.

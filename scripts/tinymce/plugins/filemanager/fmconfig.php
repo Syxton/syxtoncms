@@ -160,7 +160,11 @@ function fm_area_root(string $area, string $id): ?string {
 
 /**
  * Hidden per-area+id soft-delete trash, used by the 'delete'/'restore'
- * actions in api.php to back the filemanager's undo toast. Deliberately a
+ * actions in api.php to back the filemanager's undo toast. Each area has
+ * its own trash tree (public / private / old) so a restore always lands
+ * back in the tree the item was deleted from - Old files in particular
+ * must never share My files' trash, since restoring there would drop the
+ * item into a different tree. Deliberately a
  * SIBLING of the public/private trees (fmroot/trash/... rather than
  * fmroot/public/.trash/...), not a dot-folder nested inside them - a
  * dot-prefixed name would still pass fm_sanitize_name() (it only rejects
@@ -175,10 +179,44 @@ function fm_trash_root(string $area, string $id): ?string {
     if ($id === '') {
         return null;
     }
-    $sub = ($area === FM_AREA_PUBLIC) ? 'public' : 'private';
-    $base = rtrim($CFG->fmroot, '/\\') . DIRECTORY_SEPARATOR . 'trash' . DIRECTORY_SEPARATOR . $sub . DIRECTORY_SEPARATOR . $id;
+    $base = rtrim($CFG->fmroot, '/\\') . DIRECTORY_SEPARATOR . 'trash' . DIRECTORY_SEPARATOR . fm_trash_subdir($area) . DIRECTORY_SEPARATOR . $id;
     recursive_mkdir($base);
     return realpath($base) ?: null;
+}
+
+/** Folder name of an area's tree under fmroot/trash/ - see fm_trash_root(). */
+function fm_trash_subdir(string $area): string {
+    if ($area === FM_AREA_PUBLIC) {
+        return 'public';
+    }
+    return $area === FM_AREA_OLD ? 'old' : 'private';
+}
+
+/**
+ * True if this area+id has at least one soft-deleted entry waiting in its
+ * trash. Read-only on purpose (unlike fm_trash_root() it never creates
+ * the folder), so it's safe to call on every dialog open. index.php uses it
+ * to keep the Old files tab visible after its last file is deleted -
+ * otherwise the tab would vanish and the Trash button holding those items
+ * with it.
+ */
+function fm_trash_has_entries(string $area, string $id): bool {
+    global $CFG;
+    $id = preg_replace('/[^A-Za-z0-9_\-]/', '', $id);
+    if ($id === '') {
+        return false;
+    }
+    $base = rtrim($CFG->fmroot, '/\\') . DIRECTORY_SEPARATOR . 'trash' . DIRECTORY_SEPARATOR . fm_trash_subdir($area) . DIRECTORY_SEPARATOR . $id;
+    $entries = is_dir($base) ? @scandir($base) : false;
+    if ($entries === false) {
+        return false;
+    }
+    foreach ($entries as $entry) {
+        if ($entry !== '.' && $entry !== '..' && is_dir($base . DIRECTORY_SEPARATOR . $entry)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 /**
@@ -273,6 +311,15 @@ function fm_can_access_area(string $area, string $id): bool {
         return fm_can_access_page($id);
     }
     return fm_can_access_private($id); // priv and old both gate on ownership
+}
+
+/**
+ * Top-level folder of an area+id - fm_area_root() for the new areas,
+ * fm_old_root() (never auto-created) for Old files. Note fm_area_root()
+ * alone would hand back the *private* root for area 'old'.
+ */
+function fm_area_base(string $area, string $id): ?string {
+    return $area === FM_AREA_OLD ? fm_old_root($id) : fm_area_root($area, $id);
 }
 
 function fm_resolve_area_path(string $area, string $id, string $relpath): ?string {
