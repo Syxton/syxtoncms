@@ -223,7 +223,10 @@ if ($lvl === FM_LEVEL_PRIVATE || ($lvl === '' && $area === FM_AREA_PRIVATE)) {
     header('Cache-Control: public, max-age=31536000, immutable');
 }
 
-ob_clean();
+if (ob_get_length() > 0) {
+    ob_clean();
+}
+
 flush();
 readfile($full);
 exit;
