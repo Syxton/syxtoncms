@@ -117,6 +117,27 @@ global $CFG;
         }
     }
 
+    $thisversion = 20260816.02;
+    if ($version < $thisversion) {
+        try {
+            start_db_transaction();
+            add_role_ability('filemanager', 'filemanager_view',         'Filemanager', '2', 'Can view page files',           '1', '1', '1', '1');
+            add_role_ability('filemanager', 'filemanager_upload',       'Filemanager', '2', 'Can upload files',              '1', '1', '0', '0');
+            add_role_ability('filemanager', 'filemanager_delete',       'Filemanager', '1', 'Can delete files and folders',  '1', '1', '0', '0');
+            add_role_ability('filemanager', 'filemanager_move',         'Filemanager', '2', 'Can move files and folders',    '1', '1', '0', '0');
+            add_role_ability('filemanager', 'filemanager_copy',         'Filemanager', '3', 'Can copy files and folders',    '1', '1', '0', '0');
+            add_role_ability('filemanager', 'filemanager_createfolder', 'Filemanager', '3', 'Can create folders',            '1', '1', '0', '0');
+            add_role_ability('filemanager', 'filemanager_migrate',      'Filemanager', '2', 'Can migrate files and folders', '1', '1', '0', '0');
+            add_role_ability('filemanager', 'filemanager_edit',      'Filemanager', '3', 'Can migrate files and folders', '1', '1', '0', '0');
+
+            $SQL = "UPDATE settings SET setting = ||setting|| WHERE type = ||type|| AND setting_name = ||setting_name||";
+            execute_db_sql($SQL, ['setting' => $thisversion, 'type' => 'site', 'setting_name' => 'version']);
+            commit_db_transaction();
+        } catch (\Throwable $e) {
+            rollback_db_transaction($e->getMessage());
+        }
+    }
+
     return upgrade_occured('Site', $version, $thisversion);
 }
 

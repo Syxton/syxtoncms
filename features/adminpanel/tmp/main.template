@@ -16,7 +16,7 @@ pagination_bar||
 ||pagination_bar
 
 userlog||
-    <iframe id="userlog_graph" onload="resizeCaller(this.id);" src="||url||" style="width:100%;border:none;"></iframe>
+    <iframe id="userlog_graph"  src="||url||" style="height: calc(100% - 10px);width:100%;border:none;"></iframe>
     <div id="actions_div">
         ||useractions||
     </div>
@@ -195,7 +195,7 @@ members_search_page||
 ||members_search_page
 
 site_administration||
-    <div class="adminpaneldiv" style="display: flex;">
+    <div class="adminpaneldiv" style="display: flex;height: calc(100% - 10px);">
         <div style="min-height:300px;display:inline-block;vertical-align:top;border:2px solid silver;background-color:DarkSlateGray;">
             <ul class="vertmenu">
                 <li>
@@ -245,8 +245,8 @@ site_administration||
                 </li>
             </ul>
         </div>
-        <div id="display" style="width: 100%;height: 100%;padding: 10px;box-sizing: border-box;">
-            <div style="font-size:.8em;width:98%;padding:10px;text-align:center;">
+        <div id="display" style="width: 100%;height: 100%;overflow: auto;padding: 10px 0 0 10px;box-sizing: border-box;">
+            <div style="font-size:.8em;padding:10px;text-align:center;box-sizing: border-box;">
                 <h2>Site Administration Area</h2>
                 All administration features are displayed in this area.  Click the links to the left to display the various administration features.
             </div>
@@ -260,7 +260,7 @@ site_administration||
 ||site_administration
 
 admin_iframe||
-    <iframe id="||id||" onload="resizeCaller(this.id);" style="width:100%;border:none;padding: 15px;" src="||src||"></iframe>
+    <iframe id="||id||" style="width:100%;border:none;padding: 15px;height: calc(100% - 10px);" src="||src||"></iframe>
 ||admin_iframe
 
 admin_versions||

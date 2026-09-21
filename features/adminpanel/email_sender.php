@@ -50,7 +50,7 @@ ajaxapi([
 echo '
     <h1 class="centered">Send Mass Email</h1>
     <br /><br />
-    <div id="display" style="width: 100%;padding: 10px;box-sizing: border-box;">
+    <div id="display" style="width: 100%;padding: 10px 0 0 10px;box-sizing: border-box;">
         <div class="centered">
             <fieldset class="formContainer" style="text-align: left;">
                 <div class="rowContainer">

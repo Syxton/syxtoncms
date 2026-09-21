@@ -32,7 +32,7 @@ global $CFG, $MYVARS;
 			}
 		} else {
 			$pageid = clean_myvar_opt("pageid", "int", get_pageid());
-			if (user_is_able($userid, "viewpage", $pageid)) {	
+			if (user_is_able($userid, "viewpages", $pageid)) {
 				// User has already created rssid...just needs the link for it again.
 				if ($feed = get_db_row("SELECT * FROM rss_feeds WHERE pageid = '$pageid' AND type='page' AND rssid IN (SELECT rssid FROM rss WHERE userid = '$userid')")) {
 					$rssname = get_db_field("rssname", "rss", "rssid=" . $feed["rssid"]);
@@ -63,12 +63,12 @@ function sort_feeds($feed) {
 global $CFG;
 	$items = explode('<item>', $feed);
 	unset($items[0]);
-	
+
 	$sorteditems = [];
 	//break down feed
 	foreach ($items as $item) {
 		$item = str_replace('</',',</', $item);
-		$item = strip_tags($item); 
+		$item = strip_tags($item);
 		$item = explode(',', $item);
 		$sorteditems[] = [
 			"title" => $item[0],
@@ -76,7 +76,7 @@ global $CFG;
 			"link" => $item[3],
 		];
 	}
-	
+
 	//sort feed
 	usort($sorteditems, 'compare_fields');
 
@@ -87,15 +87,15 @@ global $CFG;
     foreach ($sorteditems as $item) {
 		$feed .= '<item>
 					<title>
-					' . $item["title"] . 
+					' . $item["title"] .
 					'</title>
 					<description>
-					' . $item["description"] . 
+					' . $item["description"] .
 					'</description>
 					<link>
-					' . $item["link"] . 
+					' . $item["link"] .
 					'</link>
-				</item>';	
+				</item>';
 	}
 	return $feed;
 }
@@ -105,7 +105,7 @@ function compare_fields($a, $b) {
 	$bdate = explode(", ", $b['description']);
 	$returnme = strtotime($adate[1]) > strtotime($bdate[1]) ? -1 : 1;
 	return $returnme;
-} 
+}
 
 function find_feed($pageid = false, $feature = false, $featureid = false) {
 global $USER;
@@ -137,7 +137,7 @@ global $CFG;
 function feature_feeds($feed, $userid, $userkey) {
 global $CFG;
 	if ($feed["type"] == "page") {
-        $feeds = create_page_feed($feed["pageid"], $userid, $userkey); $feeds = sort_feeds($feeds); 
+        $feeds = create_page_feed($feed["pageid"], $userid, $userkey); $feeds = sort_feeds($feeds);
     } else {
         $feeds = all_features_function(false, $feed["type"], "", "_rss", false, $feed, $userid, $userkey);
     }
@@ -151,7 +151,7 @@ global $CFG;
         if ($result = get_db_result("SELECT * FROM rss_feeds WHERE rssid = '$rssid'")) {
             while ($feed = fetch_row($result)) {
                 $feeds .= feature_feeds($feed, $userid, $userkey);
-            }	
+            }
         }
     }
 	return $feeds;

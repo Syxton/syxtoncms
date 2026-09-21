@@ -195,129 +195,252 @@ global $CFG;
 }
 
 function filter_docviewer($html) {
-global $CFG;
+    global $CFG;
     if (isset($CFG->doc_view_key)) {
-        $regex = '/(<[aA]\s*.[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s""\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(.[^\s]*)(<\/[aA]>)/';
-        if (preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) {
-            foreach ($matches as $match) {
-                if (!strstr($match[0], 'javascript:')) { // not a javascript link.
-                    $filetypes = '/([\.[pP][dD][fF]|\.[dD][oO][cC]|\.[rR][tT][fF]|\.[pP][sS]|\.[pP][pP][tT]|\.[pP][pP][sS]|\.[tT][xX][tT]|\.[sS][xX][cC]|\.[oO][dD][sS]|\.[xX][lL][sS]|\.[oO][dD][tT]|\.[sS][xX][wW]|\.[oO][dD][pP]|\.[sS][xX][iI]])/';
-                    if (preg_match($filetypes, $match[2])) {
-                        if (strstr($match[2], $CFG->userfilesurl) || strstr($match[2], $CFG->wwwroot)) { // internal link.
-                            $url = $CFG->wwwroot . strstr($match[2], '/' . $CFG->userfilesfolder . '/');
-                        } else { // external link.
-                            $url = $match[2];
-                        }
+        return $html;
+    }
 
-                        if (!empty($url)) {
-                            // make full url if not full
-                            $protocol = get_protocol() . "//";
-                            $url_parts = parse_url($url);
-                            $url = str_replace("://", "", $url);
-                            $url = str_replace(":", "", $url);
-                            $url = str_replace("//", "/", $url);
-                            $url = trim($url, "/");
+    $docExts = 'pdf|doc|docx|rtf|ppt|pptx|pps|txt|xls|xlsx|ods|odt|odp|sxc|sxw|sxi';
+    $regex = '/(<[aA]\s.*[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s"\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(.[^\s]*)(<\/[aA]>)/';
 
-                            if (!empty($url_parts["scheme"])) { // protocol exists.
-                                $url = str_replace($url_parts["scheme"], $protocol, $url);
-                            } else {
-                                $url = $protocol . $url;
-                            }
+    if (!preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) {
+        return $html;
+    }
 
-                            // Make sure www is in the url.
-                            $url = strstr($url, "://www.") !== false ? $url : str_replace("://", "://www.", $url);
+    foreach ($matches as $match) {
+        if (strstr($match[0], 'javascript:')) {
+            continue;
+        }
 
-                            //remove target from urls
-                            if (preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/', $url, $target, PREG_OFFSET_CAPTURE)) { $url = str_replace($target[0], "", $url); }
-                            $url = preg_replace('/([\'|\"])/', '', $url);
+        $href = html_entity_decode(trim($match[2]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $href = preg_replace('/([\'"])/', '', $href);
 
-                            //make ipaper links
-                            $url = str_replace('\\', '', $url);
-                            $url = str_replace('../', '', $url);
-                            $url = str_replace('..', '', $url);
-                        }
+        // --- extension detection ---
+        $ext = '';
+        if (stripos($href, 'filegate.php') !== false) {
+            $parts = parse_url($href);
+            parse_str($parts['query'] ?? '', $q);
+            $rel = (string) ($q['p'] ?? '');
+            $ext = strtolower(pathinfo($rel, PATHINFO_EXTENSION));
+        } else {
+            // path or last path segment before ?/#
+            $path = parse_url($href, PHP_URL_PATH) ?: $href;
+            $ext  = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        }
 
-                        $link = "";
-                        $text = $match[4].$match[5];
-                        if (strstr($url, $CFG->userfilespath) &&
-                            strstr($url, $CFG->wwwroot) &&
-                            !file_exists($CFG->docroot . strstr($url, '/' . $CFG->userfilesfolder . '/'))) { // internal link check.
-                            $icon = icon("ban");
-                            $link = 'javascript: void(0);';
-                            $title = "File Not Found: $url";
-                            $url = "";
-                        } else {
-                            $icon = icon("floppy-disk");
-                            $title = $url;
-                            $link = $CFG->wwwroot . '/scripts/download.php?file=' . $url;
-                        }
-                        $html = str_replace($match[0], '<a title="' . $title . '" href="' . $link . '" onclick="blur();">' . $icon . '</a>&nbsp;' . make_modal_links(["text" => $text, "title" => $title, "path" => $CFG->wwwroot . "/pages/ipaper.php?action=view_ipaper&doc_url=" . base64_encode($url),"height" => "80%", "width" => "80%"]), $html);
-                    }
+        if ($ext === '' || !preg_match('/^(' . $docExts . ')$/i', $ext)) {
+            continue;
+        }
+
+        // Gated link that would 403/404 at filegate.php - swap the
+        // icon/modal link for a small placeholder instead of pointing at a
+        // doc_url that will fail when opened.
+        if (stripos($href, 'filegate.php') !== false && ($status = fm_gated_url_predict_status($href)) !== null) {
+            $pos = strpos($html, $match[0]);
+            if ($pos !== false) {
+                $html = substr_replace($html, fm_gate_placeholder_html($status, fm_gate_filename_from_url($href)), $pos, strlen($match[0]));
+            }
+            continue;
+        }
+
+        // --- build a usable absolute URL ---
+        if (stripos($href, 'filegate.php') !== false) {
+            // Keep gated URLs intact (token/mtime/level must survive).
+            $url = $href;
+            // Absolute if relative
+            if (!preg_match('#^https?://#i', $url)) {
+                $url = rtrim($CFG->wwwroot, '/') . '/' . ltrim($url, '/');
+            }
+        } elseif (strstr($href, $CFG->userfilesurl) || strstr($href, $CFG->wwwroot)) {
+            $url = $CFG->wwwroot . strstr($href, '/' . $CFG->userfilesfolder . '/');
+        } else {
+            $url = $href;
+        }
+
+        // Normalize scheme / www only for non-gated links
+        if (stripos($href, 'filegate.php') !== false) {
+            $url = $href;
+
+            // Protocol-relative: //syxtoncms.test/filegate.php?...
+            if (strpos($url, '//') === 0) {
+                $scheme = parse_url($CFG->wwwroot, PHP_URL_SCHEME) ?: 'https';
+                $url = $scheme . ':' . $url;   // → https://syxtoncms.test/filegate.php?...
+            }
+
+            if (!preg_match('#^https?://#i', $url)) {
+                $host   = parse_url($CFG->wwwroot, PHP_URL_HOST);
+                $scheme = parse_url($CFG->wwwroot, PHP_URL_SCHEME) ?: 'https';
+
+                if (isset($url[0]) && $url[0] === '/') {
+                    // Root-relative: /filegate.php?...
+                    $url = $scheme . '://' . $host . $url;
+                } elseif (stripos($url, $host) === 0) {
+                    // Bare host: syxtoncms.test/filegate.php?...
+                    $url = $scheme . '://' . $url;
+                } else {
+                    // Relative: filegate.php?...
+                    $url = rtrim($CFG->wwwroot, '/') . '/' . ltrim($url, '/');
                 }
             }
         }
+
+        // strip any leftover target="..." that landed in the href capture
+        if (preg_match('/\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"\']?[^\s]*/', $url, $target)) {
+            $url = str_replace($target[0], '', $url);
+        }
+
+        $text  = $match[4] . $match[5];
+        $title = $url;
+        $icon  = icon('floppy-disk');
+        $dl    = $CFG->wwwroot . '/scripts/download.php?file=' . rawurlencode($url);
+
+        // Skip the old filesystem "file not found" check for gated URLs;
+        // download.php / filegate already enforce existence + permissions.
+        if (stripos($url, 'filegate.php') === false
+            && strstr($url, $CFG->userfilespath)
+            && strstr($url, $CFG->wwwroot)
+            && !file_exists($CFG->docroot . strstr($url, '/' . $CFG->userfilesfolder . '/'))
+        ) {
+            $icon  = icon('ban');
+            $dl    = 'javascript:void(0);';
+            $title = "File Not Found: $url";
+            $url   = '';
+        }
+
+        $modal = make_modal_links([
+            'text'   => $text,
+            'title'  => $title,
+            'path'   => $CFG->wwwroot . '/pages/ipaper.php?action=view_ipaper&doc_url=' . base64_encode($url),
+        ]);
+
+        $html = str_replace(
+            $match[0],
+            '<a title="' . htmlspecialchars($title) . '" href="' . $dl . '" onclick="blur();">' . $icon . '</a>&nbsp;' . $modal,
+            $html
+        );
     }
+
     return $html;
 }
 
 function filter_embedaudio($html) {
-global $CFG;
-    $regex = '/(<[aA]\s*.[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s""\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(.[^\s]*)(<\/[aA]>)/';
-    if (preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) {
-        $i = 0;
-        foreach ($matches as $match) {
-            if (!strstr($match[0], 'javascript:')) {
-                $found = false;
-                $filetypes = '/([\.[aA][aA][cC]|\.[mM][4][aA])/';
-                if (preg_match($filetypes, $match[2])) {
-                    //make internal links full paths
-                    $url = strstr($match[2], $CFG->userfilespath) && !strstr($match[2], $CFG->wwwroot) ? str_replace($CFG->userfilespath, $CFG->userfilesurl, $match[2]) : $match[2];
-                    //remove target from urls
-                    if (preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/', $url, $target, PREG_OFFSET_CAPTURE)) { $url = str_replace($target[0], "", $url);}
-                    $url = preg_replace('/([\'|\"])/', '', $url);
+    global $CFG;
 
-                    $url = str_replace('\\', '', $url);
-                    $info = explode(".", $match[4].$match[5]);
-                    $script = "var s$i = new SWFObject('" . $CFG->wwwroot . "/scripts/filters/video/player.swf','ply','290','30','9','#ffffff');
-                                 s$i.addParam('allowfullscreen','true');
-                                 s$i.addParam('allowscriptaccess','always');
-                                 s$i.addParam('wmode','opaque');
-                                 s$i.addParam('flashvars','file=" . stripslashes(urlencode($url)) . "&skin=" . $CFG->wwwroot . "/scripts/filters/video/skins/stylish_slim.swf');
-                                 s$i.write('mediaspace_s$i');";
-                    $html = str_replace($match[0], js_script_wrap($CFG->wwwroot . "/scripts/filters/video/swfobject.js") . "<span id='mediaspace_s$i'></span>" . js_code_wrap($script), $html);
-                }
+    // Formats browsers can play natively in <audio>
+    $audioExts = ['mp3', 'm4a', 'aac', 'ogg', 'oga', 'wav', 'webm'];
 
-                $found = false;
-                $filetypes = '/([\.[mM][pP][3])/';
-                if (preg_match($filetypes, $match[2])) {
-                    $player = "";
-                    if (!$found) {
-                        $player = js_script_wrap($CFG->wwwroot . "/scripts/filters/audio/audio-player.js") . js_code_wrap("AudioPlayer.setup('" . $CFG->wwwroot . "/scripts/filters/audio/player.swf', { width: 290 });");
-                    }
+    $regex = '/<a\b[^>]*\bhref\s*=\s*(["\'])(?!#|mailto:|javascript:|location\.|.*?\.css|this\.)([^"\']+)\1[^>]*>(.*?)<\/a>/is';
+    if (!preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) {
+        return $html;
+    }
 
-                    $found = true;
-                    //make internal links full paths
-                    $url = strstr($match[2], $CFG->userfilespath) && !strstr($match[2], $CFG->wwwroot) ? str_replace($CFG->userfilespath, $CFG->userfilesurl, $match[2]) : $match[2];
-                    //remove target from urls
-                    if (preg_match('/(\s*[tT][aA][rR][gG][eE][tT]\s*=\s*[\"|\']*[^\s]*)/', $url, $target, PREG_OFFSET_CAPTURE)) { $url = str_replace($target[0], "", $url);}
-                    $url = preg_replace('/([\'|\"])/', '', $url);
-                    $url = str_replace('\\', '', $url);
-                    $info = explode(".", $match[4].$match[5]);
-                    $info = explode("-", $info[0]);
-                    $script = "AudioPlayer.embed('audioplayer_$featureid"."_$i"."', {
-                                    soundFile: '" . stripslashes($url) . "',
-                                    titles: '$info[1]',
-                                    artists: '$info[0]',
-                                    autostart: 'no'
-                                });";
-                    $html = str_replace($match[0], $player . "<span id='audioplayer_$featureid"."_$i"."'></span>" . js_code_wrap($script), $html);
+    foreach ($matches as $index => $match) {
+        $href = html_entity_decode(trim($match[2]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $href = preg_replace('/[\'"]/', '', $href);
+
+        $isFilegate = stripos($href, 'filegate.php') !== false;
+
+        // Extension: filegate → p= param; otherwise path
+        $ext = '';
+        if ($isFilegate) {
+            $parts = parse_url($href);
+            parse_str($parts['query'] ?? '', $q);
+            $rel = (string) ($q['p'] ?? '');
+            $ext = strtolower(pathinfo($rel, PATHINFO_EXTENSION));
+        } else {
+            $path = parse_url($href, PHP_URL_PATH) ?: $href;
+            $ext  = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        }
+
+        if ($ext === '' || !in_array($ext, $audioExts, true)) {
+            continue;
+        }
+
+        // Gated link that would 403/404 at filegate.php - swap the player
+        // for a small placeholder instead of embedding a src that will fail.
+        if ($isFilegate && ($status = fm_gated_url_predict_status($href)) !== null) {
+            $pos = strpos($html, $match[0]);
+            if ($pos !== false) {
+                $html = substr_replace($html, fm_gate_placeholder_html($status, fm_gate_filename_from_url($href)), $pos, strlen($match[0]));
+            }
+            continue;
+        }
+
+        // Build a usable URL
+        if ($isFilegate) {
+            $url = $href;
+            if (!preg_match('#^https?://#i', $url)) {
+                if (strpos($url, '//') === 0) {
+                    $scheme = parse_url($CFG->wwwroot, PHP_URL_SCHEME) ?: 'https';
+                    $url = $scheme . ':' . $url;
+                } elseif (isset($url[0]) && $url[0] === '/') {
+                    $host = parse_url($CFG->wwwroot, PHP_URL_HOST);
+                    $scheme = parse_url($CFG->wwwroot, PHP_URL_SCHEME) ?: 'https';
+                    $url = $scheme . '://' . $host . $url;
+                } else {
+                    $url = rtrim($CFG->wwwroot, '/') . '/' . ltrim($url, '/');
                 }
             }
-        $i++;
+        } elseif (strstr($href, $CFG->userfilespath) && !strstr($href, $CFG->wwwroot)) {
+            $url = str_replace($CFG->userfilespath, $CFG->userfilesurl, $href);
+        } else {
+            $url = $href;
+        }
+
+        // Strip accidental target="..." left in the capture
+        if (preg_match('/\s*target\s*=\s*[\"\']?[^\s]*/i', $url, $target)) {
+            $url = str_replace($target[0], '', $url);
+        }
+        $url = str_replace('\\', '', $url);
+
+        $linkText = trim(html_entity_decode(strip_tags($match[3]), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        $title = $linkText !== '' ? $linkText : basename(parse_url($url, PHP_URL_PATH) ?: $url);
+
+        // Optional: derive artist/title from "Artist - Title.mp3" style text
+        $artist = '';
+        $track  = $title;
+        if (strpos($title, ' - ') !== false) {
+            [$artist, $track] = array_map('trim', explode(' - ', $title, 2));
+        }
+
+        $mime = match ($ext) {
+            'mp3'        => 'audio/mpeg',
+            'm4a', 'aac' => 'audio/mp4',
+            'ogg', 'oga' => 'audio/ogg',
+            'wav'        => 'audio/wav',
+            'webm'       => 'audio/webm',
+            default      => 'audio/' . $ext,
+        };
+
+        $playerId = 'audioplayer_' . $index;
+
+        $label = $artist !== ''
+            ? htmlspecialchars($artist . ' — ' . $track, ENT_QUOTES, 'UTF-8')
+            : htmlspecialchars($track, ENT_QUOTES, 'UTF-8');
+
+        $embed = sprintf(
+            '<figure class="embedded-audio" id="%s">'
+            . '<audio controls preload="metadata" style="max-width:100%%;width:320px;">'
+            . '<source src="%s" type="%s">'
+            . 'Your browser does not support HTML5 audio.'
+            . '<a href="%s">Download</a>'
+            . '</audio>'
+            . '</figure>',
+            htmlspecialchars($playerId, ENT_QUOTES, 'UTF-8'),
+            htmlspecialchars($url, ENT_QUOTES, 'UTF-8'),
+            htmlspecialchars($mime, ENT_QUOTES, 'UTF-8'),
+            htmlspecialchars($url, ENT_QUOTES, 'UTF-8')
+        );
+
+        $pos = strpos($html, $match[0]);
+        if ($pos !== false) {
+            $html = substr_replace($html, $embed, $pos, strlen($match[0]));
         }
     }
+
     return $html;
 }
+
 function filter_embedvideo($html) {
 global $CFG;
     $regex = '/(<[aA]\s*.[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s""\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(.[^\s]*)(<\/[aA]>)/';
@@ -325,7 +448,7 @@ global $CFG;
         $i = 0;
         foreach ($matches as $match) {
             if (!strstr($match[0], 'javascript:')) {
-                $filetypes = '/([\.[fF][lL][vV]|\.[mM][pP][4])/';
+                $filetypes = '/\.flv|\.mp4/i';
                 if (preg_match($filetypes, $match[2])) {
                     //make internal links full paths
                     $url = strstr($match[2], $CFG->userfilespath) && !strstr($match[2], $CFG->wwwroot) ? str_replace($CFG->userfilespath, $CFG->userfilesurl, $match[2]) : $match[2];
@@ -334,29 +457,20 @@ global $CFG;
                     $url = preg_replace('/([\'|\"])/', '', $url);
 
                     $url = str_replace('\\', '', $url);
-                    $rand = rand(0, time());
-                    $script = " flowplayer('a.flowplayers', '" . $CFG->wwwroot . "/scripts/filters/video/flowplayer/flowplayer-3.2.4.swf',{
-                                clip: {
-                                        autoPlay: false,
-                                        autoBuffering: true,
-                                        onBegin: function() { this.getControls().css({height:'5%'});},
-                                        onMetaData: setInterval(function() {
-                                                        $('a.flowplayers').flowplayer().each(function() {
-                                                                var myclip = this.getClip(0);
-                                                                if (myclip.metaData != undefined) {
-                                                                        var width = $('#'+this.id()).parent('.flowplayer_div').attr('clientWidth') >= myclip.metaData.width ? myclip.metaData.width : $('#'+this.id()).parent('.flowplayer_div').attr('clientWidth');
-                                                                        var height = (width/myclip.metaData.width) * myclip.metaData.height;
-                                                                        var wrap = jQuery(this.getParent());
-                                                                        wrap.css({width: width+'px', height: height+'px'});
-                                                                }
-                                                        });
-                                                },1000)
-                                        }
-                                });";
-                    $html = str_replace($match[0], js_script_wrap($CFG->wwwroot . '/scripts/filters/video/flowplayer/flowplayer-3.2.4.min.js') .
-                             "<div id='vid_$rand' class='flowplayer_div' style='width:100%;'>
-                                <a href='$url' style='display:block;' class='flowplayers' id='player_$rand'></a>
-                            </div>" . js_code_wrap($script), $html);
+
+                    // Gated link that would 403/404 at filegate.php - swap
+                    // the player for a small placeholder instead of
+                    // embedding a src that will fail.
+                    if (stripos($url, 'filegate.php') !== false && ($status = fm_gated_url_predict_status($url)) !== null) {
+                        $html = str_replace($match[0], fm_gate_placeholder_html($status, fm_gate_filename_from_url($url)), $html);
+                    } else {
+                        $html5player = '
+                        <video width="100%" controls>
+                            <source src="' . $url . '" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>';
+                        $html = str_replace($match[0], $html5player, $html);
+                    }
                 }
             }
         $i++;
@@ -386,94 +500,170 @@ global $CFG;
 
 function filter_photogallery($html) {
     global $CFG;
+
     $extensions = ['jpg', 'jpeg', 'gif', 'png'];
     $regex = '/<a\b[^>]*\bhref\s*=\s*(["\'])(?!#|mailto:|javascript:|location\.|.*?\.css|this\.)([^"\']+)\1[^>]*>(.*?)<\/a>/is';
+
     if (!preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) {
         return $html;
     }
 
     foreach ($matches as $index => $match) {
-        $url = $match[2];
+        $url = html_entity_decode(trim($match[2]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $isFilegate = (stripos($url, 'filegate.php') !== false);
+        $isUserfiles = (strpos($url, $CFG->userfilesfolder) !== false);
 
-        // Must reference the user files area.
-        $pos = strpos($url, $CFG->userfilesfolder);
-        if ($pos === false) {
+        if (!$isFilegate && !$isUserfiles) {
             continue;
         }
 
-        $localpath = rtrim($CFG->dirroot, '/') . '/' . ltrim(urldecode(substr($url, $pos)), '/');
-        $localpath = rtrim($localpath, '/');
+        // Resolve to a local path.
+        if ($isFilegate) {
+            $parts = parse_url($url);
+            parse_str($parts['query'] ?? '', $q);
+            $isFolderLink    = isset($q['m']) && (string) $q['m'] === '0';
+            $rel             = (string) ($q['p'] ?? '');
+            $ext             = strtolower(pathinfo($rel, PATHINFO_EXTENSION));
+            $isGalleryFolder = stripos($match[0], 'title="gallery"') !== false;
+
+            // Only treat this as a broken embed when it actually looks like
+            // one this filter would have turned into a gallery - a folder
+            // link marked title="gallery", or a direct link to an image
+            // file - so other filegate links (docs, audio, plain downloads)
+            // are left for whichever filter actually owns them.
+            $looksLikeGallery = ($isFolderLink && $isGalleryFolder)
+                || (!$isFolderLink && $ext !== '' && in_array($ext, $extensions, true));
+
+            if ($looksLikeGallery) {
+                $status = fm_gated_url_predict_status($url);
+                if ($status !== null) {
+                    $pos = strpos($html, $match[0]);
+                    if ($pos !== false) {
+                        $html = substr_replace($html, fm_gate_placeholder_html($status, fm_gate_filename_from_url($url)), $pos, strlen($match[0]));
+                    }
+                    continue;
+                }
+            }
+
+            $localpath = fm_gated_url_to_path($url);
+            if ($localpath === null) {
+                continue;
+            }
+        } else {
+            // Legacy userfiles URL → filesystem path
+            $pos = strpos($url, $CFG->userfilesfolder);
+            $rel = trim(urldecode(substr($url, $pos + strlen($CFG->userfilesfolder))), '/\\');
+            $localpath = rtrim($CFG->userfilespath, '/\\') . DIRECTORY_SEPARATOR
+                       . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $rel);
+        }
 
         if (!is_readable($localpath)) {
             continue;
         }
 
-        $gallery = '';
-        $galleryid = "autogallery_$index";
+        $galleryid = 'autogallery_' . $index;
+        $gallery   = '';
 
-        if (is_dir($localpath)) { // Directory gallery
-            if (strpos($match[0], 'title="gallery"') === false) {
+        if (is_dir($localpath)) {
+            // Folder galleries require title="gallery" on the <a>.
+            if (stripos($match[0], 'title="gallery"') === false) {
                 continue;
+            }
+
+            // Filegate folder links use m=0 (evergreen index).
+            if ($isFilegate) {
+                $parts = parse_url($url);
+                parse_str($parts['query'] ?? '', $q);
+                if (!isset($q['m']) || (string) $q['m'] !== '0') {
+                    continue;
+                }
             }
 
             $captions = get_file_captions($localpath);
 
-            // Get all files in directory.
-            $galleryArray = getdirectoryfiles($localpath, $extensions);
+            if ($isUserfiles) {
+                $files = getdirectoryfiles($localpath, $extensions);
+                // name => name (legacy returns filenames only)
+                $files = array_combine($files, $files) ?: [];
+                foreach ($files as $name => $_) {
+                    $files[$name] = rtrim($url, '/') . '/' . rawurlencode($name);
+                }
+            } else {
+                // Expect [ filename => ['filename'=>..., 'fileurl'=>...], ... ]
+                // or the list form you already use — normalize to name => url
+                $raw = fm_get_gated_files_from_path($url, $extensions);
+                $files = [];
+                foreach ($raw as $key => $item) {
+                    if (is_array($item)) {
+                        $files[$item['filename']] = $item['fileurl'];
+                    } else {
+                        // if it returns filename => url already
+                        $files[is_string($key) ? $key : $item] = is_array($item) ? $item['fileurl'] : $item;
+                    }
+                }
+            }
 
-            // Sort files by filename.
-            asort($galleryArray, SORT_STRING | SORT_FLAG_CASE | SORT_NATURAL);
+            if (empty($files)) {
+                // No images in this gallery folder — remove the link entirely
+                // rather than leaving a dead gallery that opens as "(empty)".
+                $pos = strpos($html, $match[0]);
+                if ($pos !== false) {
+                    // Keep the link text, drop the <a>
+                    $html = substr_replace($html, $match[3], $pos, strlen($match[0]));
+                }
+                continue;
+            }
 
-            // First file is the gallery link.
-            $first = array_shift($galleryArray);
+            // Natural case-insensitive sort by filename
+            uksort($files, fn($a, $b) => strnatcasecmp($a, $b));
+
+            $firstName = array_key_first($files);
+            $firstUrl  = $files[$firstName];
+            unset($files[$firstName]);
+
             $gallery .= make_modal_links([
-                "icon"    => icon("images"),
-                "id"      => "autogallery_$index",
-                "title"   => $captions[$first] ?? $first,
-                "text"    => $match[3],
-                "gallery" => $galleryid,
-                "path"    => rtrim($url, '/') . '/' . $first,
+                'icon'    => icon('images'),
+                'id'      => $galleryid,
+                'title'   => $captions[$firstName] ?? $firstName,
+                'text'    => $match[3],
+                'gallery' => $galleryid,
+                'path'    => $firstUrl,
             ]);
 
-            // The rest of the files are hidden links.
-            foreach ($galleryArray as $filename) {
-                $fileurl = rtrim($url, '/') . '/' . $filename;
+            foreach ($files as $filename => $fileurl) {
                 $caption = $captions[$filename] ?? $filename;
-
                 $gallery .= sprintf(
                     '<a href="%s" title="%s" data-rel="%s" style="display:none;"></a>',
-                    htmlspecialchars($fileurl, ENT_QUOTES),
-                    htmlspecialchars($caption, ENT_QUOTES),
-                    $galleryid
+                    htmlspecialchars($fileurl, ENT_QUOTES, 'UTF-8'),
+                    htmlspecialchars($caption, ENT_QUOTES, 'UTF-8'),
+                    htmlspecialchars($galleryid, ENT_QUOTES, 'UTF-8')
                 );
             }
-        } elseif (is_file($localpath)) { // Single image
-            $filename = basename($localpath);
-            $captions = get_file_captions(dirname($localpath));
-
+        } elseif (is_file($localpath)) {
+            $filename  = basename($localpath);
             $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
             if (!in_array($extension, $extensions, true)) {
                 continue;
             }
 
+            $captions = get_file_captions(dirname($localpath));
+
             $gallery = make_modal_links([
-                "icon"    => icon("image"),
-                "id"      => "autogallery_$index",
-                "title"   => $captions[$filename] ?? $filename,
-                "text"    => $match[3],
-                "gallery" => $galleryid,
-                "path"    => $url,
+                'icon'    => icon('image'),
+                'id'      => $galleryid,
+                'title'   => $captions[$filename] ?? $filename,
+                'text'    => $match[3],
+                'gallery' => $galleryid,
+                'path'    => $url,
             ]);
         }
 
-        if (!empty($gallery)) {
-            // Replace only the first occurrence of this exact match.
-            $html = preg_replace(
-                '/' . preg_quote($match[0], '/') . '/',
-                $gallery,
-                $html,
-                1
-            );
+        if ($gallery !== '') {
+            // Replace only this occurrence (exact match).
+            $pos = strpos($html, $match[0]);
+            if ($pos !== false) {
+                $html = substr_replace($html, $gallery, $pos, strlen($match[0]));
+            }
         }
     }
 
@@ -846,6 +1036,7 @@ global $CFG, $USER;
             "iframe" => true,
             "refresh" => "true",
             "width" => "$('#html_$featureid').width() + 150",
+            "height" => "95%",
             "icon" => icon("pencil"),
             "class" => "slide_menu_button",
         ]);
