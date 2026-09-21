@@ -61,6 +61,7 @@ editor_box_template||
             branding: false,
             script_url : "' . vars["wwwroot"] . '/scripts/tinymce/tinymce.min.js",
             toolbar: "' . vars["toolbar"] . '",
+            sandbox_iframes: false,
             height: ' . (is_numeric(vars["height"]) ? vars["height"] - 70 : '"' . vars["height"] . '"') . ',
             width: ' . (is_numeric(vars["width"]) ? vars["width"] - 70 : '"' . vars["width"] . '"') . ',
             setup: (editor) => {
