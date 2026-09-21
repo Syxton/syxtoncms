@@ -234,6 +234,14 @@ body {
 /* Drag-and-drop */
 .fm-item[draggable="true"] { cursor: grab; }
 .fm-item.fm-dragging { opacity: .4; }
+/* Drag image for a multi-item move (see wireDragAndDrop). Parked off-screen:
+   the browser snapshots it at dragstart and app.js removes it a tick later. */
+.fm-drag-badge {
+  position: fixed; top: -1000px; left: -1000px;
+  padding: 6px 12px; border-radius: 14px;
+  background: #2271b1; color: #fff;
+  font-size: 13px; font-weight: 600; line-height: 1.2; white-space: nowrap;
+}
 .fm-item.fm-drop-target,
 .fm-breadcrumb button.fm-drop-target {
   outline: 2px dashed #2271b1; outline-offset: -3px; background: #f0f6fc;

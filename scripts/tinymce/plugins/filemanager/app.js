@@ -269,9 +269,14 @@
   // trash_list). Drives the recycle button color, badge, and title.
   var trashCount = 0;
 
-  // Name of the item currently being dragged (drag-and-drop move), so drop
-  // targets can refuse to drop a folder onto itself. Cleared on dragend.
-  var dragging = null; // {name, isFolder}
+  // What's currently being dragged for an internal drag-and-drop move, or
+  // null. `items` is the whole multi-selection when the grabbed item is
+  // part of one (so a single drag moves everything selected), otherwise
+  // just the grabbed item. `canMove` is false in read-only areas / without
+  // move permission, which keeps every drop target inert. Cleared on
+  // dragend.
+  var dragging = null; // {items: [{name, isFolder}], canMove: bool}
+  var dropMoveBusy = false; // true while a drop-move batch is in flight
 
   var tabEls = []; // [{el, area}] kept around so clicking a tab can update
                     // every tab's active class, not just re-derive it once.
@@ -930,16 +935,35 @@
   }
 
   /**
+   * True if the current drag (see `dragging`) may be dropped into
+   * `toPath` (a folder path within the current area/id). Shared by the
+   * dragover and drop handlers so a target is never highlighted unless a
+   * drop on it would actually be accepted. Refuses: nothing being dragged,
+   * no move permission / read-only "Old files", a batch still in flight,
+   * dropping into the folder the items are already in, and dropping a
+   * folder onto itself (matters when the dragged selection includes the
+   * target folder's own tile).
+   */
+  function canDropOn(toPath) {
+    if (!dragging || !dragging.canMove || dropMoveBusy || state.area === 'old') return false;
+    if (toPath === state.path) return false; // already in that folder
+    var base = state.path ? state.path + '/' : '';
+    for (var i = 0; i < dragging.items.length; i++) {
+      if (dragging.items[i].isFolder && base + dragging.items[i].name === toPath) return false;
+    }
+    return true;
+  }
+
+  /**
    * Wire up `target` (a breadcrumb button, or a folder tile/row) as a
-   * drop target for drag-and-drop moves: dropping a dragged file/folder
-   * on it moves that item into `toPath` (a folder path within the
-   * current area/id). No-op (not even highlighted) in the read-only
-   * "Old files" area or while nothing is being dragged.
+   * drop target for drag-and-drop moves: dropping the dragged file(s)/
+   * folder(s) - one item, or the whole multi-selection - on it moves them
+   * into `toPath` (a folder path within the current area/id). Not even
+   * highlighted when canDropOn() says no.
    */
   function makeDropTarget(target, toPath) {
     target.addEventListener('dragover', function (e) {
-      if (!dragging || state.area === 'old') return;
-      if (dragging.isFolder && (state.path ? state.path + '/' : '') + dragging.name === toPath) return; // no dropping a folder onto itself
+      if (!canDropOn(toPath)) return;
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
       target.classList.add('fm-drop-target');
@@ -947,28 +971,84 @@
     target.addEventListener('dragleave', function () { target.classList.remove('fm-drop-target'); });
     target.addEventListener('drop', function (e) {
       target.classList.remove('fm-drop-target');
-      if (!dragging || state.area === 'old') return;
+      if (!canDropOn(toPath)) return;
       e.preventDefault();
-      var moved = dragging;
-      if (toPath === state.path) return; // already here
-      if (moved.isFolder && (state.path ? state.path + '/' : '') + moved.name === toPath) return; // folder onto itself
-      var fromArea = state.area, fromId = state.id, fromPath = state.path;
-      checkConflicts([moved], state.area, state.id, toPath).then(function (conflicts) {
-        var choicePromise = conflicts.length ? askConflictChoice(conflicts) : Promise.resolve('rename');
-        return choicePromise.then(function (onConflict) {
-          if (!onConflict) return; // cancelled
-          return api('move', { name: moved.name, target: moved.isFolder ? 'folder' : 'file', toArea: state.area, toId: state.id, toPath: toPath, onConflict: onConflict }).then(function (res) {
-            if (!res.ok) { reportError(new Error(res.body.error || 'Move failed')); return; }
-            var finalName = res.body.name || moved.name;
-            if (state.selected && state.selected.name === moved.name) state.selected = null;
-            load();
-            showUndo('Moved "' + moved.name + '"', function () {
-              return apiFor(fromArea, fromId, toPath, 'move', { name: finalName, target: moved.isFolder ? 'folder' : 'file', toArea: fromArea, toId: fromId, toPath: fromPath });
+      moveDroppedItems(dragging.items.slice(), toPath);
+    });
+  }
+
+  // Runs fn(item) -> Promise for each item strictly one after another.
+  function runSerial(list, fn) {
+    return list.reduce(function (chain, it) {
+      return chain.then(function () { return fn(it); });
+    }, Promise.resolve());
+  }
+
+  /**
+   * Moves `items` ({name, isFolder}) from the current folder into `toPath`
+   * (same area/id) after a drop. Same flow as the destination picker's
+   * Move - one conflict precheck for the whole batch, a single
+   * Replace / Keep both / Cancel choice, one undo toast - but the requests
+   * are sent one at a time: the server numbers "name(1)" duplicates by
+   * looking at what's already in the destination, so parallel requests
+   * could pick the same name. Partial failures are reported without
+   * abandoning the items that did move (they stay undoable).
+   */
+  function moveDroppedItems(items, toPath) {
+    var toArea = state.area, toId = state.id;
+    var fromArea = state.area, fromId = state.id, fromPath = state.path;
+    dropMoveBusy = true;
+
+    checkConflicts(items, toArea, toId, toPath).then(function (conflicts) {
+      return conflicts.length ? askConflictChoice(conflicts) : 'rename';
+    }).then(function (onConflict) {
+      if (!onConflict) return; // cancelled
+      var moved = [];    // {from, name, isFolder} - `name` is the final name (may be renamed on conflict)
+      var failed = 0, firstError = '';
+      return runSerial(items, function (it) {
+        return apiFor(fromArea, fromId, fromPath, 'move', {
+          name: it.name, target: it.isFolder ? 'folder' : 'file',
+          toArea: toArea, toId: toId, toPath: toPath, onConflict: onConflict
+        }).then(function (res) {
+          if (res.ok) {
+            moved.push({ from: it.name, name: res.body.name || it.name, isFolder: it.isFolder });
+          } else {
+            failed++;
+            if (!firstError) firstError = (res.body && res.body.error) || '';
+          }
+        }).catch(function (err) {
+          failed++;
+          if (!firstError) firstError = (err && err.message) || '';
+        });
+      }).then(function () {
+        // Drop the moved items from the selection; anything that failed stays selected.
+        moved.forEach(function (m) {
+          delete multiSelected[multiKey(m.from, m.isFolder)];
+          if (state.selected && state.selected.name === m.from && !!state.selected.isFolder === !!m.isFolder) state.selected = null;
+        });
+        load();
+        if (moved.length) {
+          var label = moved.length === 1
+            ? 'Moved "' + moved[0].name + '"'
+            : 'Moved ' + moved.length + ' items';
+          showUndo(label, function () {
+            var undoFailed = 0;
+            return runSerial(moved, function (m) {
+              return apiFor(toArea, toId, toPath, 'move', {
+                name: m.name, target: m.isFolder ? 'folder' : 'file',
+                toArea: fromArea, toId: fromId, toPath: fromPath
+              }).then(function (r) { if (!r.ok) undoFailed++; })
+                .catch(function () { undoFailed++; });
+            }).then(function () {
+              return { ok: undoFailed === 0, body: { error: undoFailed ? undoFailed + ' item(s) could not be moved back.' : '' } };
             });
           });
-        });
-      }).catch(reportError);
-    });
+        }
+        if (failed) {
+          reportError(new Error(failed + ' item' + (failed > 1 ? 's' : '') + ' could not be moved' + (firstError ? ': ' + firstError : '.')));
+        }
+      });
+    }).catch(reportError).then(function () { dropMoveBusy = false; });
   }
 
   /**
@@ -2136,10 +2216,36 @@
     }
     item.setAttribute('draggable', 'true');
     item.addEventListener('dragstart', function (e) {
-      dragging = { name: opts.name, isFolder: !!opts.isFolder };
+      // Grabbing an item that's part of the multi-selection drags the whole
+      // selection; grabbing an unselected one drags just that item and
+      // leaves the selection alone.
+      var grabKey = multiKey(opts.name, opts.isFolder);
+      var dragItems = (multiSelected[grabKey] && multiCount() > 0)
+        ? Object.keys(multiSelected).map(function (k) { return { name: multiSelected[k].name, isFolder: !!multiSelected[k].isFolder }; })
+        : [{ name: opts.name, isFolder: !!opts.isFolder }];
+      var canMove = !opts.readOnly && moveAllowed(state.area);
+      dragging = { items: dragItems, canMove: canMove };
       item.classList.add('fm-dragging');
 
-      var canMove = !opts.readOnly && moveAllowed(state.area);
+      if (dragItems.length > 1) {
+        // A count badge as the drag image (the default would only show the
+        // one grabbed tile), and dim every selected item, not just that one.
+        // Both deferred a tick: the badge must be in the DOM when the browser
+        // snapshots it, and touching the list inside dragstart can cancel the
+        // drag in Chromium.
+        try {
+          var badge = el('div', { class: 'fm-drag-badge', text: dragItems.length + ' items' });
+          document.body.appendChild(badge);
+          e.dataTransfer.setDragImage(badge, 12, 12);
+          setTimeout(function () { if (badge.parentNode) badge.parentNode.removeChild(badge); }, 0);
+        } catch (e4) { /* setDragImage unsupported - the browser's default drag image is fine */ }
+        setTimeout(function () {
+          if (!dragging) return; // drag already ended
+          var sel = root.querySelectorAll('.fm-item.multi-selected');
+          for (var i = 0; i < sel.length; i++) sel[i].classList.add('fm-dragging');
+        }, 0);
+      }
+
       e.dataTransfer.effectAllowed = canMove ? 'copyMove' : 'copy';
       // Needed for some browsers (notably Firefox) to allow the drag at all.
       try { e.dataTransfer.setData('text/plain', opts.name); } catch (e2) { /* ignore */ }
@@ -2190,6 +2296,8 @@
     });
     item.addEventListener('dragend', function () {
       item.classList.remove('fm-dragging');
+      var dim = root.querySelectorAll('.fm-dragging');
+      for (var i = 0; i < dim.length; i++) dim[i].classList.remove('fm-dragging');
       dragging = null;
     });
     if (!opts.readOnly && moveAllowed(state.area) && opts.isFolder) {
