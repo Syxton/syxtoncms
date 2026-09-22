@@ -124,12 +124,65 @@
     try { window.localStorage.setItem('fm_' + key, value); } catch (e) { /* ignore (e.g. private mode) */ }
   }
 
+  // Remembers the last area/folder visited, per-page (see LAST_LOC_KEY),
+  // so reopening the filemanager from the SAME page within
+  // LAST_LOC_MAX_AGE_MS returns straight to it instead of the default
+  // landing tab. Keyed on pageid, not on the exact My files/Page files
+  // area within it, since "the folder I last visited" is a single place,
+  // not one memory per tab. Stored in localStorage (survives closing the
+  // tab/browser, unlike sessionStorage) and stamped with USERID, so a
+  // shared computer with a different editor logged in still never sees
+  // someone else's folder - LAST_LOC_MAX_AGE_MS is what makes the memory
+  // "short", not the storage's own lifetime.
+  var LAST_LOC_KEY = 'fm_lastloc_' + PAGEID;
+  var LAST_LOC_MAX_AGE_MS = 5 * 60 * 1000;
+
+  function loadLastLocation() {
+    try {
+      var raw = window.localStorage.getItem(LAST_LOC_KEY);
+      if (!raw) return null;
+      var loc = JSON.parse(raw);
+      if (!loc || typeof loc.area !== 'string' || typeof loc.id !== 'string' || typeof loc.path !== 'string' || typeof loc.ts !== 'number') return null;
+      if (loc.userid !== USERID) return null; // different editor's session - never reuse their folder
+      if (Date.now() - loc.ts > LAST_LOC_MAX_AGE_MS) return null; // stale - fall back to the default landing tab
+      return loc;
+    } catch (e) { return null; }
+  }
+
+  function saveLastLocation() {
+    try {
+      window.localStorage.setItem(LAST_LOC_KEY, JSON.stringify({
+        area: state.area, id: state.id, path: state.path, userid: USERID, ts: Date.now()
+      }));
+    } catch (e) { /* ignore (e.g. private mode) */ }
+  }
+
+  // Only remembered areas the viewer can actually still reach are used -
+  // an ability could have been revoked, or Old files emptied, since the
+  // memory was written.
+  function lastLocationAreaAvailable(area) {
+    if (area === 'pub') return CAN_PUBLIC;
+    if (area === 'priv') return CAN_PRIVATE;
+    if (area === 'old') return CAN_OLD;
+    return false;
+  }
+
+  var lastLocation = loadLastLocation();
+  // Both id and path are trusted only in combination with their own
+  // remembered area - falling back to the normal default area (below)
+  // must not keep a leftover id/path from a different one.
+  var restoreLastLocation = !!lastLocation && lastLocationAreaAvailable(lastLocation.area);
+
   var state = {
-    // "My files" first per product decision - private area is the default
-    // landing tab whenever it's available.
-    area: CAN_PRIVATE ? 'priv' : (CAN_PUBLIC ? 'pub' : 'old'),
-    id: CAN_PRIVATE ? USERID : (CAN_PUBLIC ? PAGEID : USERID),
-    path: '',
+    // Page files first per product decision - editing a page is the
+    // common case, so its own files are the default landing tab whenever
+    // that page has any; My files, then Old files, as fallbacks. Whatever
+    // that default would be, a fresh-enough remembered location (same
+    // page, same session, within LAST_LOC_MAX_AGE_MS - see above) wins
+    // instead, since returning to the exact spot beats the general default.
+    area: restoreLastLocation ? lastLocation.area : (CAN_PUBLIC ? 'pub' : (CAN_PRIVATE ? 'priv' : 'old')),
+    id: restoreLastLocation ? lastLocation.id : (CAN_PUBLIC ? PAGEID : USERID),
+    path: restoreLastLocation ? lastLocation.path : '',
     selected: null,   // {name, ext, isFolder, previewUrl, mtime, size}
     level: null,      // chosen access level for the current selection (pub/priv only)
     mode: 'index',    // chosen link mode for a selected folder: 'index' | 'gallery'
@@ -1074,6 +1127,15 @@
     api('list', {}).then(function (res) {
       buildBreadcrumb();
       if (!res.ok) {
+        // A remembered (or otherwise stale) folder that's been renamed,
+        // moved or deleted since 404s here - fall back to this area's
+        // root once rather than just showing an error for a place that
+        // no longer exists.
+        if (state.path !== '') {
+          state.path = '';
+          load();
+          return;
+        }
         currentData = null;
         trashCount = 0;
         renderSearchSortBar();
@@ -1089,6 +1151,7 @@
       renderSearchSortBar();
       renderBody();
       renderFooter();
+      saveLastLocation();
     }).catch(function (err) {
       currentData = null;
       trashCount = 0;
