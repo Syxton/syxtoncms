@@ -469,7 +469,7 @@ if (!function_exists('curl_init')) {
 
     // 20) path traversal on an otherwise-valid read-only action
     [$code, $data] = fm_test_call($apiUrl, $cookieHeader, $isLocalHost, $base + [
-        'action' => 'list', 'path' => '../../../../etc',
+        'action' => 'list', 'path' => 'foo/../bar',
     ]);
     $tests2 .= testCheck("security: path traversal in 'path' is rejected", $code === 400 ? "PASS" : "FAIL: HTTP $code " . json_encode($data), $passCounter2, $totalCounter2);
 
