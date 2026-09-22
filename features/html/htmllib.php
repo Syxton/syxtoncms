@@ -196,9 +196,6 @@ global $CFG;
 
 function filter_docviewer($html) {
     global $CFG;
-    if (isset($CFG->doc_view_key)) {
-        return $html;
-    }
 
     $docExts = 'pdf|doc|docx|rtf|ppt|pptx|pps|txt|xls|xlsx|ods|odt|odp|sxc|sxw|sxi';
     $regex = '/(<[aA]\s.*[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s"\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(.[^\s]*)(<\/[aA]>)/';
