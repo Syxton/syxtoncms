@@ -100,8 +100,15 @@ const FM_AREA_OLD = 'old';
 
 /**
  * Sanitize a user-supplied relative path (subfolder chain + optional
- * filename). Rejects traversal, absolute paths, null bytes, and empty
- * segments. Returns null if the input is not safe.
+ * filename). Rejects traversal, absolute paths, and empty segments.
+ * Each segment is held to exactly the same rule as a bare filename -
+ * see fm_sanitize_name() below, which this delegates to per-segment
+ * rather than keeping its own separate copy of that rule. (It used to
+ * keep its own copy - an allowlist that rejected commas, apostrophes,
+ * ampersands, accented letters and plenty of other characters real
+ * filenames use - which drifted out of sync with fm_sanitize_name()'s
+ * fix below and broke any share link or folder path containing one.)
+ * Returns null if the input is not safe.
  */
 function fm_sanitize_relpath(string $relpath): ?string {
     $relpath = str_replace('\\', '/', $relpath);
@@ -109,16 +116,11 @@ function fm_sanitize_relpath(string $relpath): ?string {
     if ($relpath === '') {
         return '';
     }
-    if (strpos($relpath, "\0") !== false) {
-        return null;
-    }
     $parts = explode('/', $relpath);
     $clean = [];
     foreach ($parts as $part) {
-        if ($part === '' || $part === '.' || $part === '..') {
-            return null;
-        }
-        if (!preg_match('/^[A-Za-z0-9 _\-\.\(\)]+$/', $part)) {
+        $part = fm_sanitize_name($part);
+        if ($part === null) {
             return null;
         }
         $clean[] = $part;
@@ -127,15 +129,25 @@ function fm_sanitize_relpath(string $relpath): ?string {
 }
 
 /**
- * Sanitize a single new name (used for rename / mkdir / upload targets) -
- * same rule as fm_sanitize_relpath but for exactly one path segment.
+ * Validates a file/folder name given by the client (upload, rename, mkdir,
+ * or naming an existing item for move/copy/delete/etc.) before it's used
+ * to build a path on disk. Deliberately a denylist, not the old
+ * allowlist: real filenames commonly contain commas, apostrophes,
+ * ampersands, brackets, accented letters and plenty else that an
+ * allowlist keeps rejecting one character at a time. What must never
+ * appear: a path separator (a single "name" becoming more than one path
+ * segment - fm_resolve_path()'s containment check guards against
+ * escaping the area root, but never expects a "name" to add subfolders
+ * of its own), a control character, or a character Windows treats as
+ * reserved (kept off even on Linux, so a zip download or a future
+ * Windows deployment never has to cope with a name it can't represent).
  */
 function fm_sanitize_name(string $name): ?string {
     $name = trim($name);
     if ($name === '' || $name === '.' || $name === '..') {
         return null;
     }
-    if (!preg_match('/^[A-Za-z0-9 _\-\.\(\)]+$/', $name)) {
+    if (preg_match('#[/\\\\\x00-\x1F<>:"|?*]#', $name)) {
         return null;
     }
     return $name;
