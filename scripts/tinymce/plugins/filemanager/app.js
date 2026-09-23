@@ -639,6 +639,8 @@
 
   function defaultLevel() {
     var levels = availableLevels();
+    var preflevel = loadPref(state.area + '_level', '');
+    if (preflevel !== '') return preflevel;
     if (state.area === 'priv' && levels.indexOf('private') !== -1) return 'private';
     if (state.area === 'pub' && levels.indexOf('page') !== -1) return 'page';
     return levels[0];
