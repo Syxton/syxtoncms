@@ -1390,12 +1390,18 @@
 
         var levels = availableLevels();
         var select = el('select', { class: 'fm-level-select' });
+        var preflevel = loadPref(state.area + '_level', state.level);
         levels.forEach(function (lvl) {
           var opt = el('option', { value: lvl, text: LEVEL_LABELS[lvl] });
-          if (lvl === state.level) opt.setAttribute('selected', 'selected');
+          if (lvl === preflevel) {
+            opt.setAttribute('selected', 'selected');
+          }
           select.appendChild(opt);
         });
-        select.addEventListener('change', function () { state.level = select.value; });
+        select.addEventListener('change', function () {
+          state.level = select.value;
+          savePref(state.area + '_level', state.level);
+        });
         shareRow.appendChild(select);
 
         if (sel.isFolder && ALLOW_GALLERY) {

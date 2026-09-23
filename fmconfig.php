@@ -211,6 +211,34 @@ function fm_gate_placeholder_html(int $code, ?string $filename = null): string {
 }
 
 /**
+ * Copy for the gate's "can't show this" states - shared between the
+ * full-page filegate.php response (fmgate_deny()) and any inline
+ * placeholder that needs to explain, in miniature, why content it tried to
+ * embed didn't load (see fm_gate_placeholder_html()). Keeping this in one
+ * place means the two can't drift apart.
+ */
+function fm_gate_message(int $code): array {
+    $variants = [
+        403 => [
+            'icon'    => '🔒',
+            'title'   => 'Access Restricted',
+            'message' => "You don't have permission to view this content. If you believe this is a mistake, please check with the person who shared it, or request access.",
+        ],
+        404 => [
+            'icon'    => '🔗',
+            'title'   => 'Link No Longer Valid',
+            'message' => 'This content may have been moved, renamed, or removed. Double-check the link, or ask the sender for an updated one.',
+        ],
+    ];
+
+    return $variants[$code] ?? [
+        'icon'    => '⚠️',
+        'title'   => 'Something Went Wrong',
+        'message' => 'We ran into an unexpected error trying to load this content. Please try again in a moment.',
+    ];
+}
+
+/**
  * Best-effort display name for a gated filegate URL (basename of p=).
  */
 function fm_gate_filename_from_url(string $url): string {
