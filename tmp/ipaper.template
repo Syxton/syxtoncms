@@ -1,6 +1,6 @@
 view_ipaper_template||
   <iframe src="||iframe_src||" scrolling="no"
-          style="margin:0 auto;border:none;width:calc(100vw - 100px);height:99vh;overflow:hidden;"
+          style="margin:0 auto;border:none;width:calc(100vw - 90px);height:calc(100vh - 90px);overflow:hidden;"
           allowfullscreen>
     Your browser does not support inline frames.
   </iframe>

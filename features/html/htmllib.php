@@ -312,7 +312,7 @@ function filter_docviewer($html) {
 
         $html = str_replace(
             $match[0],
-            '<a title="' . htmlspecialchars($title) . '" href="' . $dl . '" onclick="blur();">' . $icon . '</a>&nbsp;' . $modal,
+            '<span class="docviewer_download_link"><a title="' . htmlspecialchars($title) . '" href="' . $dl . '" onclick="blur();">' . $icon . '</a>' . $modal . '</span>',
             $html
         );
     }

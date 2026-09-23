@@ -216,6 +216,12 @@ table.searchresults tr:hover {
 .area_side .html_grid {
     flex-direction: column;
 }
+.docviewer_download_link {
+    display: inline-flex;
+    gap: 2px;
+    align-items: center;
+    flex-wrap: nowrap;
+}
 .html_fullscreen_button {
     text-align: right;
     font-size: 2em;
