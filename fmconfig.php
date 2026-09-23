@@ -31,8 +31,39 @@ if (!isset($CFG->fmroot)) {
 // long random value set once per install - move this into config.php
 // itself (e.g. $CFG->fm_secret = getenv('FM_SECRET');) rather than leaving
 // it here. Placeholder only, so nothing fatals out in dev before you set it.
+const FM_SECRET_PLACEHOLDER = 'CHANGE-ME-set-a-random-64-char-secret-in-config.php';
 if (!isset($CFG->fm_secret)) {
-    $CFG->fm_secret = 'CHANGE-ME-set-a-random-64-char-secret-in-config.php';
+    $CFG->fm_secret = FM_SECRET_PLACEHOLDER;
+}
+
+/**
+ * True when $CFG->fm_secret is still the known-placeholder (or missing /
+ * absurdly short). Share and admin-preview tokens must not be issued in
+ * this state - anyone who can read this file could forge them.
+ */
+function fm_secret_is_insecure(): bool {
+    global $CFG;
+    $s = (string) ($CFG->fm_secret ?? '');
+    return $s === '' || $s === FM_SECRET_PLACEHOLDER || strlen($s) < 32;
+}
+
+/**
+ * Log once and refuse token issuance when the secret is still the
+ * placeholder. Called from the URL builders so a forgotten config.php
+ * override cannot silently produce forgeable share links.
+ */
+function fm_assert_secret_for_issue(): bool {
+    static $logged = false;
+    if (!fm_secret_is_insecure()) {
+        return true;
+    }
+    if (!$logged) {
+        error_log('SECURITY: $CFG->fm_secret is still the placeholder (or too short). '
+            . 'Set a random >=32-char secret in config.php before issuing share/admin tokens. '
+            . 'Token issuance is refused until then.');
+        $logged = true;
+    }
+    return false;
 }
 
 // Extensions the filemanager will store/serve, mapped to their MIME type.
@@ -68,9 +99,144 @@ const FM_AREA_PRIVATE = 'priv';
 const FM_AREA_OLD = 'old';
 
 /**
+ * Predict the outcome filegate.php itself would give for a gated URL,
+ * without resolving anything or leaking why - just which HTTP-style status
+ * a real request would come back with. Unlike fm_gated_url_diagnose(),
+ * this is safe to use against live requests: it exposes nothing that the
+ * person couldn't already learn by just following the link themselves,
+ * which is exactly what a caller deciding whether to embed the content
+ * (vs. show a placeholder) needs to know.
+ *
+ * Mirrors filegate.php's own check order so the code returned here always
+ * matches what that script would actually respond with.
+ *
+ * Returns 403, 404, or null (the URL should resolve fine).
+ */
+function fm_gated_url_predict_status(string $url): ?int {
+    $query = parse_url(fm_normalize_gated_url($url), PHP_URL_QUERY);
+    if (!$query) {
+        return 404;
+    }
+    parse_str($query, $q);
+
+    $area = (string) ($q['a'] ?? '');
+    $id   = (string) ($q['id'] ?? '');
+    $rel  = (string) ($q['p'] ?? '');
+    $mt   = isset($q['m']) ? (int) $q['m'] : -1;
+    $tok  = (string) ($q['t'] ?? '');
+    $lvl  = (string) ($q['lvl'] ?? '');
+    $ex   = (string) ($q['ex'] ?? '');
+
+    if (!in_array($area, [FM_AREA_PUBLIC, FM_AREA_PRIVATE], true) || $id === '' || $rel === '' || $tok === '' || $mt < 0) {
+        return 404;
+    }
+    $rel = fm_sanitize_relpath($rel);
+    if ($rel === null || $rel === '') {
+        return 404;
+    }
+
+    $isFolderLink = $mt === 0;
+    if ($isFolderLink && $lvl === '') {
+        return 404;
+    }
+
+    if ($lvl === '') {
+        if (!fm_can_access_area($area, $id)) {
+            return 403;
+        }
+    } elseif (!fm_check_share_permission($lvl, $area, $id, $ex)) {
+        return 403;
+    }
+
+    $full = fm_resolve_path($area, $id, $rel);
+    if ($full === null) {
+        return 404;
+    }
+
+    if ($isFolderLink) {
+        if (!is_dir($full)) {
+            return 404;
+        }
+        if (!fm_verify_share_token($lvl, $area, $id, $rel, 0, $ex, $tok)) {
+            return 403;
+        }
+        return null;
+    }
+
+    if (!is_file($full)) {
+        return 404;
+    }
+    $actualMtime = filemtime($full);
+    if ($actualMtime !== $mt) {
+        return 403;
+    }
+    $tokenOk = $lvl === ''
+        ? fm_verify_admin_token($area, $id, $rel, $mt, $tok)
+        : fm_verify_share_token($lvl, $area, $id, $rel, $mt, $ex, $tok);
+    if (!$tokenOk) {
+        return 403;
+    }
+
+    $ext = strtolower(pathinfo($full, PATHINFO_EXTENSION));
+    if (!array_key_exists($ext, $GLOBALS['FM_ALLOWED_EXT'])) {
+        return 404;
+    }
+
+    return null;
+}
+
+/**
+ * Small inline placeholder for embedded media (audio/video, currently)
+ * that resolves to a gated URL filegate.php would refuse. Same wording as
+ * fmgate_deny(), just sized to sit in the flow of page content instead of
+ * filling the viewport - so a blocked/broken embed reads as an intentional
+ * message rather than a broken player.
+ */
+function fm_gate_placeholder_html(int $code, ?string $filename = null): string {
+    $variant = fm_gate_message($code, $filename);
+
+    return '<div class="fm-embed-gate" style="'
+        . 'display:flex;align-items:center;gap:14px;'
+        . 'max-width:420px;padding:16px 20px;margin:4px 0;'
+        . 'border:1px solid #e1e4e8;border-radius:12px;'
+        . 'background:#f4f5f7;color:#1f2328;'
+        . "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;"
+        . '">'
+        . '<div style="font-size:28px;line-height:1;flex-shrink:0;" aria-hidden="true">' . $variant['icon'] . '</div>'
+        . '<div>'
+        . '<div style="font-size:14px;font-weight:600;margin:0 0 4px;">' . htmlspecialchars($variant['title'], ENT_QUOTES, 'UTF-8') . '</div>'
+        . '<div style="font-size:12.5px;line-height:1.4;color:#57606a;margin:0;">' . htmlspecialchars($variant['message'], ENT_QUOTES, 'UTF-8') . '</div>'
+        . '</div>'
+        . '</div>';
+}
+
+/**
+ * Best-effort display name for a gated filegate URL (basename of p=).
+ */
+function fm_gate_filename_from_url(string $url): string {
+    $query = parse_url(fm_normalize_gated_url($url), PHP_URL_QUERY);
+    if (!$query) {
+        return '';
+    }
+    parse_str($query, $q);
+    $rel = (string) ($q['p'] ?? '');
+    if ($rel === '') {
+        return '';
+    }
+    return basename(str_replace(['\\', '/'], '/', $rel));
+}
+
+/**
  * Sanitize a user-supplied relative path (subfolder chain + optional
- * filename). Rejects traversal, absolute paths, null bytes, and empty
- * segments. Returns null if the input is not safe.
+ * filename). Rejects traversal, absolute paths, and empty segments.
+ * Each segment is held to exactly the same rule as a bare filename -
+ * see fm_sanitize_name() below, which this delegates to per-segment
+ * rather than keeping its own separate copy of that rule. (It used to
+ * keep its own copy - an allowlist that rejected commas, apostrophes,
+ * ampersands, accented letters and plenty of other characters real
+ * filenames use - which drifted out of sync with fm_sanitize_name()'s
+ * fix below and broke any share link or folder path containing one.)
+ * Returns null if the input is not safe.
  */
 function fm_sanitize_relpath(string $relpath): ?string {
     $relpath = str_replace('\\', '/', $relpath);
@@ -78,16 +244,11 @@ function fm_sanitize_relpath(string $relpath): ?string {
     if ($relpath === '') {
         return '';
     }
-    if (strpos($relpath, "\0") !== false) {
-        return null;
-    }
     $parts = explode('/', $relpath);
     $clean = [];
     foreach ($parts as $part) {
-        if ($part === '' || $part === '.' || $part === '..') {
-            return null;
-        }
-        if (!preg_match('/^[A-Za-z0-9 _\-\.\(\)]+$/', $part)) {
+        $part = fm_sanitize_name($part);
+        if ($part === null) {
             return null;
         }
         $clean[] = $part;
@@ -96,15 +257,25 @@ function fm_sanitize_relpath(string $relpath): ?string {
 }
 
 /**
- * Sanitize a single new name (used for rename / mkdir / upload targets) -
- * same rule as fm_sanitize_relpath but for exactly one path segment.
+ * Validates a file/folder name given by the client (upload, rename, mkdir,
+ * or naming an existing item for move/copy/delete/etc.) before it's used
+ * to build a path on disk. Deliberately a denylist, not the old
+ * allowlist: real filenames commonly contain commas, apostrophes,
+ * ampersands, brackets, accented letters and plenty else that an
+ * allowlist keeps rejecting one character at a time. What must never
+ * appear: a path separator (a single "name" becoming more than one path
+ * segment - fm_resolve_path()'s containment check guards against
+ * escaping the area root, but never expects a "name" to add subfolders
+ * of its own), a control character, or a character Windows treats as
+ * reserved (kept off even on Linux, so a zip download or a future
+ * Windows deployment never has to cope with a name it can't represent).
  */
 function fm_sanitize_name(string $name): ?string {
     $name = trim($name);
     if ($name === '' || $name === '.' || $name === '..') {
         return null;
     }
-    if (!preg_match('/^[A-Za-z0-9 _\-\.\(\)]+$/', $name)) {
+    if (preg_match('#[/\\\\\x00-\x1F<>:"|?*]#', $name)) {
         return null;
     }
     return $name;
@@ -125,6 +296,67 @@ function fm_area_root(string $area, string $id): ?string {
     $base = rtrim($CFG->fmroot, '/\\') . DIRECTORY_SEPARATOR . $sub . DIRECTORY_SEPARATOR . $id;
     recursive_mkdir($base); // from filelib.php - same helper the app already uses
     return realpath($base) ?: null;
+}
+
+/**
+ * Hidden per-area+id soft-delete trash, used by the 'delete'/'restore'
+ * actions in api.php to back the filemanager's undo toast. Each area has
+ * its own trash tree (public / private / old) so a restore always lands
+ * back in the tree the item was deleted from - Old files in particular
+ * must never share My files' trash, since restoring there would drop the
+ * item into a different tree. Deliberately a
+ * SIBLING of the public/private trees (fmroot/trash/... rather than
+ * fmroot/public/.trash/...), not a dot-folder nested inside them - a
+ * dot-prefixed name would still pass fm_sanitize_name() (it only rejects
+ * '.' and '..' exactly, not a leading dot), so a user could otherwise
+ * mkdir a real folder that collides with it. Rooting it outside the
+ * browsable tree entirely rules that out, and means 'list' never needs to
+ * filter it out of scandir() results either.
+ */
+function fm_trash_root(string $area, string $id): ?string {
+    global $CFG;
+    $id = preg_replace('/[^A-Za-z0-9_\-]/', '', $id);
+    if ($id === '') {
+        return null;
+    }
+    $base = rtrim($CFG->fmroot, '/\\') . DIRECTORY_SEPARATOR . 'trash' . DIRECTORY_SEPARATOR . fm_trash_subdir($area) . DIRECTORY_SEPARATOR . $id;
+    recursive_mkdir($base);
+    return realpath($base) ?: null;
+}
+
+/** Folder name of an area's tree under fmroot/trash/ - see fm_trash_root(). */
+function fm_trash_subdir(string $area): string {
+    if ($area === FM_AREA_PUBLIC) {
+        return 'public';
+    }
+    return $area === FM_AREA_OLD ? 'old' : 'private';
+}
+
+/**
+ * True if this area+id has at least one soft-deleted entry waiting in its
+ * trash. Read-only on purpose (unlike fm_trash_root() it never creates
+ * the folder), so it's safe to call on every dialog open. index.php uses it
+ * to keep the Old files tab visible after its last file is deleted -
+ * otherwise the tab would vanish and the Trash button holding those items
+ * with it.
+ */
+function fm_trash_has_entries(string $area, string $id): bool {
+    global $CFG;
+    $id = preg_replace('/[^A-Za-z0-9_\-]/', '', $id);
+    if ($id === '') {
+        return false;
+    }
+    $base = rtrim($CFG->fmroot, '/\\') . DIRECTORY_SEPARATOR . 'trash' . DIRECTORY_SEPARATOR . fm_trash_subdir($area) . DIRECTORY_SEPARATOR . $id;
+    $entries = is_dir($base) ? @scandir($base) : false;
+    if ($entries === false) {
+        return false;
+    }
+    foreach ($entries as $entry) {
+        if ($entry !== '.' && $entry !== '..' && is_dir($base . DIRECTORY_SEPARATOR . $entry)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 /**
@@ -221,6 +453,15 @@ function fm_can_access_area(string $area, string $id): bool {
     return fm_can_access_private($id); // priv and old both gate on ownership
 }
 
+/**
+ * Top-level folder of an area+id - fm_area_root() for the new areas,
+ * fm_old_root() (never auto-created) for Old files. Note fm_area_root()
+ * alone would hand back the *private* root for area 'old'.
+ */
+function fm_area_base(string $area, string $id): ?string {
+    return $area === FM_AREA_OLD ? fm_old_root($id) : fm_area_root($area, $id);
+}
+
 function fm_resolve_area_path(string $area, string $id, string $relpath): ?string {
     if ($area === FM_AREA_OLD) {
         return fm_resolve_old_path($id, $relpath);
@@ -237,6 +478,8 @@ function fm_resolve_area_path(string $area, string $id, string $relpath): ?strin
  */
 function fm_build_admin_token(string $area, string $id, string $relpath, int $mtime): string {
     global $CFG;
+    // Still produce a deterministic value so verify stays consistent even
+    // while the secret is insecure; issuance is gated by fm_admin_preview_url.
     return substr(hash_hmac('sha256', 'admin|' . $area . '|' . $id . '|' . $relpath . '|' . $mtime, $CFG->fm_secret), 0, 32);
 }
 
@@ -245,6 +488,9 @@ function fm_verify_admin_token(string $area, string $id, string $relpath, int $m
 }
 
 function fm_admin_preview_url(string $gateUrl, string $area, string $id, string $relpath, int $mtime): string {
+    if (!fm_assert_secret_for_issue()) {
+        return ''; // refuse to hand out a forgeable preview URL
+    }
     $token = fm_build_admin_token($area, $id, $relpath, $mtime);
     // Explicit '&' separator - http_build_query() otherwise defaults to
     // the arg_separator.output ini setting, which some PHP installs set
@@ -284,6 +530,7 @@ const FM_LEVEL_PRIVATE = 'private';
  */
 function fm_build_share_token(string $level, string $area, string $id, string $relpath, int $mtime, string $extra = ''): string {
     global $CFG;
+    // Deterministic even while insecure so existing verify paths stay consistent.
     return substr(hash_hmac('sha256', 'share|' . $level . '|' . $area . '|' . $id . '|' . $relpath . '|' . $mtime . '|' . $extra, $CFG->fm_secret), 0, 32);
 }
 
@@ -292,6 +539,9 @@ function fm_verify_share_token(string $level, string $area, string $id, string $
 }
 
 function fm_share_url(string $gateUrl, string $level, string $area, string $id, string $relpath, int $mtime, string $extra = '', bool $download = false): string {
+    if (!fm_assert_secret_for_issue()) {
+        return ''; // refuse to hand out a forgeable share URL
+    }
     $token = fm_build_share_token($level, $area, $id, $relpath, $mtime, $extra);
     $qs = http_build_query([
         'lvl' => $level, 'a' => $area, 'id' => $id, 'p' => $relpath, 'm' => $mtime,
@@ -419,7 +669,7 @@ function fm_get_gated_files_from_path($folderurl, $extensions) {
 
     $query = parse_url(fm_normalize_gated_url($folderurl), PHP_URL_QUERY);
     if (!$query) {
-        return null;
+        return []; // same failure shape as the !is_dir branch above
     }
     parse_str($query, $q);
 
@@ -534,170 +784,6 @@ function fm_gated_url_to_path(string $url): ?string {
     }
 
     return $full;
-}
-
-/**
- * Predict the outcome filegate.php itself would give for a gated URL,
- * without resolving anything or leaking why - just which HTTP-style status
- * a real request would come back with. Unlike fm_gated_url_diagnose(),
- * this is safe to use against live requests: it exposes nothing that the
- * person couldn't already learn by just following the link themselves,
- * which is exactly what a caller deciding whether to embed the content
- * (vs. show a placeholder) needs to know.
- *
- * Mirrors filegate.php's own check order so the code returned here always
- * matches what that script would actually respond with.
- *
- * Returns 403, 404, or null (the URL should resolve fine).
- */
-function fm_gated_url_predict_status(string $url): ?int {
-    $query = parse_url(fm_normalize_gated_url($url), PHP_URL_QUERY);
-    if (!$query) {
-        return 404;
-    }
-    parse_str($query, $q);
-
-    $area = (string) ($q['a'] ?? '');
-    $id   = (string) ($q['id'] ?? '');
-    $rel  = (string) ($q['p'] ?? '');
-    $mt   = isset($q['m']) ? (int) $q['m'] : -1;
-    $tok  = (string) ($q['t'] ?? '');
-    $lvl  = (string) ($q['lvl'] ?? '');
-    $ex   = (string) ($q['ex'] ?? '');
-
-    if (!in_array($area, [FM_AREA_PUBLIC, FM_AREA_PRIVATE], true) || $id === '' || $rel === '' || $tok === '' || $mt < 0) {
-        return 404;
-    }
-    $rel = fm_sanitize_relpath($rel);
-    if ($rel === null || $rel === '') {
-        return 404;
-    }
-
-    $isFolderLink = $mt === 0;
-    if ($isFolderLink && $lvl === '') {
-        return 404;
-    }
-
-    if ($lvl === '') {
-        if (!fm_can_access_area($area, $id)) {
-            return 403;
-        }
-    } elseif (!fm_check_share_permission($lvl, $area, $id, $ex)) {
-        return 403;
-    }
-
-    $full = fm_resolve_path($area, $id, $rel);
-    if ($full === null) {
-        return 404;
-    }
-
-    if ($isFolderLink) {
-        if (!is_dir($full)) {
-            return 404;
-        }
-        if (!fm_verify_share_token($lvl, $area, $id, $rel, 0, $ex, $tok)) {
-            return 403;
-        }
-        return null;
-    }
-
-    if (!is_file($full)) {
-        return 404;
-    }
-    $actualMtime = filemtime($full);
-    if ($actualMtime !== $mt) {
-        return 403;
-    }
-    $tokenOk = $lvl === ''
-        ? fm_verify_admin_token($area, $id, $rel, $mt, $tok)
-        : fm_verify_share_token($lvl, $area, $id, $rel, $mt, $ex, $tok);
-    if (!$tokenOk) {
-        return 403;
-    }
-
-    $ext = strtolower(pathinfo($full, PATHINFO_EXTENSION));
-    if (!array_key_exists($ext, $GLOBALS['FM_ALLOWED_EXT'])) {
-        return 404;
-    }
-
-    return null;
-}
-
-/**
- * Copy for the gate's "can't show this" states - shared between the
- * full-page filegate.php response (fmgate_deny()) and any inline
- * placeholder that needs to explain, in miniature, why content it tried to
- * embed didn't load (see fm_gate_placeholder_html()). Keeping this in one
- * place means the two can't drift apart.
- */
-function fm_gate_message(int $code, ?string $filename = null): array {
-    $name = is_string($filename) ? trim($filename) : '';
-    $name = $name !== '' ? basename(str_replace(['\\', '/'], '/', $name)) : '';
-    $quoted = $name !== '' ? '"' . $name . '"' : 'this content';
-
-    $variants = [
-        403 => [
-            'icon'    => '🔒',
-            'title'   => 'Access Restricted',
-            'message' => "You don't have permission to view {$quoted}. If you believe this is a mistake, please check with the person who shared it, or request access.",
-        ],
-        404 => [
-            'icon'    => '🔗',
-            'title'   => 'Link No Longer Valid',
-            'message' => $name !== ''
-                ? "{$quoted} may have been moved, renamed, or removed. Double-check the link, or ask the sender for an updated one."
-                : 'This content may have been moved, renamed, or removed. Double-check the link, or ask the sender for an updated one.',
-        ],
-    ];
-
-    return $variants[$code] ?? [
-        'icon'    => '⚠️',
-        'title'   => 'Something Went Wrong',
-        'message' => $name !== ''
-            ? "We ran into an unexpected error trying to load {$quoted}. Please try again in a moment."
-            : 'We ran into an unexpected error trying to load this content. Please try again in a moment.',
-    ];
-}
-
-/**
- * Best-effort display name for a gated filegate URL (basename of p=).
- */
-function fm_gate_filename_from_url(string $url): string {
-    $query = parse_url(fm_normalize_gated_url($url), PHP_URL_QUERY);
-    if (!$query) {
-        return '';
-    }
-    parse_str($query, $q);
-    $rel = (string) ($q['p'] ?? '');
-    if ($rel === '') {
-        return '';
-    }
-    return basename(str_replace(['\\', '/'], '/', $rel));
-}
-
-/**
- * Small inline placeholder for embedded media (audio/video, currently)
- * that resolves to a gated URL filegate.php would refuse. Same wording as
- * fmgate_deny(), just sized to sit in the flow of page content instead of
- * filling the viewport - so a blocked/broken embed reads as an intentional
- * message rather than a broken player.
- */
-function fm_gate_placeholder_html(int $code, ?string $filename = null): string {
-    $variant = fm_gate_message($code, $filename);
-
-    return '<div class="fm-embed-gate" style="'
-        . 'display:flex;align-items:center;gap:14px;'
-        . 'max-width:420px;padding:16px 20px;margin:4px 0;'
-        . 'border:1px solid #e1e4e8;border-radius:12px;'
-        . 'background:#f4f5f7;color:#1f2328;'
-        . "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;"
-        . '">'
-        . '<div style="font-size:28px;line-height:1;flex-shrink:0;" aria-hidden="true">' . $variant['icon'] . '</div>'
-        . '<div>'
-        . '<div style="font-size:14px;font-weight:600;margin:0 0 4px;">' . htmlspecialchars($variant['title'], ENT_QUOTES, 'UTF-8') . '</div>'
-        . '<div style="font-size:12.5px;line-height:1.4;color:#57606a;margin:0;">' . htmlspecialchars($variant['message'], ENT_QUOTES, 'UTF-8') . '</div>'
-        . '</div>'
-        . '</div>';
 }
 
 /**
