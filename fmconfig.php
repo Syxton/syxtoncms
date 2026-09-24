@@ -192,22 +192,34 @@ function fm_gated_url_predict_status(string $url): ?int {
  * filling the viewport - so a blocked/broken embed reads as an intentional
  * message rather than a broken player.
  */
-function fm_gate_placeholder_html(int $code, ?string $filename = null): string {
+function fm_gate_placeholder_html(int $code, ?string $filename = null, ?string $text = null): string {
     $variant = fm_gate_message($code, $filename);
 
-    return '<div class="fm-embed-gate" style="'
-        . 'display:flex;align-items:center;gap:14px;'
-        . 'max-width:420px;padding:16px 20px;margin:4px 0;'
-        . 'border:1px solid #e1e4e8;border-radius:12px;'
-        . 'background:#f4f5f7;color:#1f2328;'
-        . "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;"
-        . '">'
-        . '<div style="font-size:28px;line-height:1;flex-shrink:0;" aria-hidden="true">' . $variant['icon'] . '</div>'
-        . '<div>'
-        . '<div style="font-size:14px;font-weight:600;margin:0 0 4px;">' . htmlspecialchars($variant['title'], ENT_QUOTES, 'UTF-8') . '</div>'
-        . '<div style="font-size:12.5px;line-height:1.4;color:#57606a;margin:0;">' . htmlspecialchars($variant['message'], ENT_QUOTES, 'UTF-8') . '</div>'
-        . '</div>'
-        . '</div>';
+    if ($text !== null) {
+        return '
+        <a class="fm-embed-gate-link"
+            data-fm-gate-message="' . htmlspecialchars($filename . ' - ' . $variant['message'], ENT_QUOTES, 'UTF-8') . '"
+            title="' . htmlspecialchars($variant['title'], ENT_QUOTES, 'UTF-8') . '">
+            ' . $variant['icon'] . '
+            ' . $text . '
+        </a>';
+    } else {
+        return '
+        <div class="fm-embed-gate">
+            <div class="fm-embed-gate-icon" aria-hidden="true">
+                ' . $variant['icon'] . '
+            </div>
+            <div>
+                <div class="fm-embed-gate-title">
+                    ' . htmlspecialchars($variant['title'], ENT_QUOTES, 'UTF-8') . '
+                </div>
+                <div class="fm-embed-gate-message">
+                    ' . htmlspecialchars($variant['message'], ENT_QUOTES, 'UTF-8') . '
+                </div>
+            </div>
+        </div>';
+    }
+
 }
 
 /**

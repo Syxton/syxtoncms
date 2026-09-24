@@ -967,4 +967,11 @@ function toggle_nav_menu() {
 
 $(function() { // At the end of the document load.  do these things.
     activatejs(); // Check for inactive ajax javascript and attempt to activate it.
+
+    // Click event for gated links.
+    $(document).on('click', 'a.fm-embed-gate-link', function (e) {
+        e.preventDefault();
+        let message = $(this).data('fm-gate-message') || 'You must be logged in to access this content.';
+        alert(message);
+    });
 });

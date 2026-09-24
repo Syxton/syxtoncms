@@ -197,7 +197,7 @@ global $CFG;
 function filter_docviewer($html) {
     global $CFG;
 
-    $docExts = 'pdf|doc|docx|rtf|ppt|pptx|pps|txt|xls|xlsx|ods|odt|odp|sxc|sxw|sxi';
+    $docExts = 'csv|pdf|doc|docx|rtf|ppt|pptx|pps|txt|xls|xlsx|ods|odt|odp|sxc|sxw|sxi|xml|xps|epub|djvu|mobi|azw|azw3|fb2|fbz|ibooks';
     $regex = '/(<[aA]\s.*[^>]*)(?:[hH][rR][eE][fF]\s*=)(?:[\s"\']*)(?!#|[Mm]ailto|[lL]ocation.|[jJ]avascript|.*css|.*this\.)(.*?)(\s*[\"|\']>)(.*?)(.[^\s]*)(<\/[aA]>)/';
 
     if (!preg_match_all($regex, $html, $matches, PREG_SET_ORDER)) {
@@ -209,6 +209,7 @@ function filter_docviewer($html) {
             continue;
         }
 
+        $text  = $match[4] . $match[5];
         $href = html_entity_decode(trim($match[2]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
         $href = preg_replace('/([\'"])/', '', $href);
 
@@ -235,7 +236,7 @@ function filter_docviewer($html) {
         if (stripos($href, 'filegate.php') !== false && ($status = fm_gated_url_predict_status($href)) !== null) {
             $pos = strpos($html, $match[0]);
             if ($pos !== false) {
-                $html = substr_replace($html, fm_gate_placeholder_html($status, fm_gate_filename_from_url($href)), $pos, strlen($match[0]));
+                $html = substr_replace($html, fm_gate_placeholder_html($status, fm_gate_filename_from_url($href), $text), $pos, strlen($match[0]));
             }
             continue;
         }
@@ -286,7 +287,6 @@ function filter_docviewer($html) {
             $url = str_replace($target[0], '', $url);
         }
 
-        $text  = $match[4] . $match[5];
         $title = $url;
         $icon  = icon('floppy-disk');
         $dl    = $CFG->wwwroot . '/scripts/download.php?file=' . rawurlencode($url);
@@ -522,6 +522,7 @@ function filter_photogallery($html) {
             $rel             = (string) ($q['p'] ?? '');
             $ext             = strtolower(pathinfo($rel, PATHINFO_EXTENSION));
             $isGalleryFolder = stripos($match[0], 'title="gallery"') !== false;
+            $text = $match[3];
 
             // Only treat this as a broken embed when it actually looks like
             // one this filter would have turned into a gallery - a folder
@@ -536,7 +537,7 @@ function filter_photogallery($html) {
                 if ($status !== null) {
                     $pos = strpos($html, $match[0]);
                     if ($pos !== false) {
-                        $html = substr_replace($html, fm_gate_placeholder_html($status, fm_gate_filename_from_url($url)), $pos, strlen($match[0]));
+                        $html = substr_replace($html, fm_gate_placeholder_html($status, fm_gate_filename_from_url($url), $text), $pos, strlen($match[0]));
                     }
                     continue;
                 }
@@ -606,7 +607,7 @@ function filter_photogallery($html) {
                 $pos = strpos($html, $match[0]);
                 if ($pos !== false) {
                     // Keep the link text, drop the <a>
-                    $html = substr_replace($html, $match[3], $pos, strlen($match[0]));
+                    $html = substr_replace($html, $text, $pos, strlen($match[0]));
                 }
                 continue;
             }
@@ -622,7 +623,7 @@ function filter_photogallery($html) {
                 'icon'    => icon('images'),
                 'id'      => $galleryid,
                 'title'   => $captions[$firstName] ?? $firstName,
-                'text'    => $match[3],
+                'text'    => $text,
                 'gallery' => $galleryid,
                 'path'    => $firstUrl,
             ]);
