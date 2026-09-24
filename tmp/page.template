@@ -311,7 +311,7 @@ start_of_page_template||
                 ||*head||
             </head>
             <body style="height: 100%">
-                <div style="height: 100%;box-sizing: border-box;padding: 10px 0 0 10px;">
+                <div style="height: 100%;box-sizing: border-box;padding: 10px;">
 ||start_of_page_template
 
 end_of_page_template||

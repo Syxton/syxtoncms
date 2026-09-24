@@ -210,7 +210,7 @@ print_abilities_ability||
         </td>
     </tr>
     <tr class="roles_header">
-        <td colspan="4" style="text-align:left">
+        <td colspan="4">
             <strong>
                 ||ability[section_display]||
             </strong>
@@ -218,23 +218,23 @@ print_abilities_ability||
     </tr>
   }}thissection||
     <tr ||currentstyle||>
-        <td style="text-align:left">
+        <td class="ability_name">
             ||ability[ability_display]||
         </td>
         <td>
-            <div style="max-width:75px;text-align:center;||notify1{{ ||notify{{ background-color:yellow; }}notify|| }}notify1||" id="||type||abilty_||ability[abilityid]||_yes">
+            <div class="ability_cell" style="||notify1{{ ||notify{{ background-color:yellow; }}notify|| }}notify1||" id="||type||abilty_||ability[abilityid]||_yes">
                 <input style="margin-right:0" onclick="||swap_function||('||type||abilty_||ability[abilityid]||_yes','||type||abilty_||ability[abilityid]||_no');" type="radio" name="||ability[ability]||" value="1" ||notify1{{ checked }}notify1|| />
             </div>
         </td>
         <td>
-            <div style="max-width:75px;text-align:center;">
+            <div class="ability_cell">
                 ||default_toggle{{
                 <input onclick="clear_highlights('||type||abilty_||ability[abilityid]||_no','||type||abilty_||ability[abilityid]||_yes');" type="radio" name="||ability[ability]||" style="margin-right: 0;" value="" ||default_checked{{ checked }}default_checked|| />
                 }}default_toggle||
             </div>
         </td>
         <td>
-            <div style="max-width:75px;text-align:center;||notify2{{ ||notify{{ background-color:yellow; }}notify|| }}notify2||" id="||type||abilty_||ability[abilityid]||_no">
+            <div class="ability_cell" style="||notify2{{||notify{{ background-color:yellow; }}notify|| }}notify2||" id="||type||abilty_||ability[abilityid]||_no">
                 <input style="margin-right:0"  onclick="||swap_function||('||type||abilty_||ability[abilityid]||_no','||type||abilty_||ability[abilityid]||_yes');" type="radio" name="||ability[ability]||" value="0" ||notify2{{ checked }}notify2|| />
             </div>
         </td>

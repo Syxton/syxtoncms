@@ -496,7 +496,7 @@ function resize_colorbox(container) {
     setTimeout(function () {
         getRoot()[0].resizeAll();
         getRoot().trigger("resize");
-    }, 100);
+    }, 50);
 }
 
 /**
@@ -581,10 +581,10 @@ function loaddynamicjs(scriptname) {
     script.text = js;
     head.appendChild(script);
 
-    // Wait for 100ms before continuing.
+    // Wait for 50ms before continuing.
     setTimeout(function() {
         return false;
-    }, 100);
+    }, 50);
 }
 
 /**
