@@ -123,6 +123,37 @@ p {
 .block_divider {
     padding: 5px 0px;
 }
+table.csvdisplay {
+    border-collapse: collapse;
+    border: 1px solid silver;
+}
+table.csvdisplay td, table.csvdisplay th {
+    vertical-align: middle;
+}
+th.csvcell, td.csvcell {
+    border-right: 1px solid #CCC;
+    border-bottom: 1px solid #CCC;
+    height: 22px;
+    empty-cells: show;
+    line-height: 21px;
+    padding: 5px;
+    background-color: #FFF;
+    vertical-align: top;
+    overflow: hidden;
+    outline-width: 0;
+    word-break: keep-all;
+}
+th.csvheader {
+    background-color: #EEE;
+    color: #222;
+    text-align: center;
+    font-weight: normal;
+    white-space: nowrap;
+}
+col.rowHeader {
+    width: 50px;
+}
+
 div.searchresultsnav {
     display: flex;
     justify-content: space-between;

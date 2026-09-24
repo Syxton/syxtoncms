@@ -87,6 +87,22 @@ function view_ipaper() {
     ]);
 }
 
+function number_to_alphabet($number) {
+    $number = intval($number);
+    if ($number <= 0) {
+        return '';
+    }
+
+    $alphabet = '';
+    while ($number != 0) {
+        $p = ($number - 1) % 26;
+        $number = intval(($number - $p) / 26);
+        $alphabet = chr(65 + $p) . $alphabet;
+    }
+
+    return $alphabet;
+}
+
 function native_csv(string $url): string
 {
     $path = fm_gated_url_to_path($url);
@@ -108,17 +124,38 @@ function native_csv(string $url): string
         return 'Unable to open the CSV file on disk.';
     }
 
-    $html = '<table class="searchresults" style="margin: 10px 0;">';
+    $columnCount = 0;
+    $rowCount = 1;
+    $table = "";
     while (($row = fgetcsv($handle, 0, ',', '"', '\\')) !== false) {
-        $html .= '<tr>';
+        $table .= '<tr>';
+        $table .= '<th class="csvcell csvheader">' . $rowCount . '</th>';
+        $columnCount = count($row) > $columnCount ? count($row) : $columnCount;
         foreach ($row as $cell) {
-            $html .= '<td style="padding: 2px;border:1px solid silver">' . htmlspecialchars($cell, ENT_QUOTES, 'UTF-8') . '</td>';
+            $table .= '
+                <td class="csvcell">
+                    ' . htmlspecialchars($cell, ENT_QUOTES, 'UTF-8') . '
+                </td>';
         }
-        $html .= '</tr>';
+        $table .= '</tr>';
+        $rowCount++;
     }
+
+    // Create table header.
+    $colgroup = '<colgroup><col class="rowHeader" />';
+    $header = '<thead><tr><th class="csvcell csvheader"></th>';
+    for ($i=1; $i <= $columnCount; $i++) {
+        $colgroup .= '<col style="width: 150px" />';
+        $header .= '<th class="csvcell csvheader">' . number_to_alphabet($i) . '</th>';
+    }
+    $header .= '</tr></thead>';
+    $colgroup .= '</colgroup>';
+
     fclose($handle);
-    $html .= '</table>';
-    return $html;
+    return '
+    <table class="csvdisplay" style="margin: 10px 0;">
+     ' . $colgroup . $header . $table . '
+    </table>';
 }
 
 function native_whatever(string $url): string
