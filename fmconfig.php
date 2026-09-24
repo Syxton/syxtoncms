@@ -232,19 +232,34 @@ function fm_gate_placeholder_html(int $code, ?string $filename = null, ?string $
 function fm_gate_message(int $code): array {
     $variants = [
         403 => [
-            'icon'    => '🔒',
+            'icon'    => icon([
+                            [
+                                "icon" => "lock",
+                                "color" => "#afa400",
+                            ]
+                        ]),
             'title'   => 'Access Restricted',
             'message' => "You don't have permission to view this content. If you believe this is a mistake, please check with the person who shared it, or request access.",
         ],
         404 => [
-            'icon'    => '🔗',
+            'icon'    => icon([
+                            [
+                                "icon" => "link-slash",
+                                "color" => "#7e7e7e",
+                            ]
+                        ]),
             'title'   => 'Link No Longer Valid',
             'message' => 'This content may have been moved, renamed, or removed. Double-check the link, or ask the sender for an updated one.',
         ],
     ];
 
     return $variants[$code] ?? [
-        'icon'    => '⚠️',
+        'icon'    => icon([
+                            [
+                                "icon" => "triangle-exclamation",
+                                "color" => "#ffbb00",
+                            ]
+                        ]),
         'title'   => 'Something Went Wrong',
         'message' => 'We ran into an unexpected error trying to load this content. Please try again in a moment.',
     ];
