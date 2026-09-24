@@ -514,6 +514,8 @@ function filter_photogallery($html) {
             continue;
         }
 
+        $text = $match[3];
+
         // Resolve to a local path.
         if ($isFilegate) {
             $parts = parse_url($url);
@@ -522,7 +524,6 @@ function filter_photogallery($html) {
             $rel             = (string) ($q['p'] ?? '');
             $ext             = strtolower(pathinfo($rel, PATHINFO_EXTENSION));
             $isGalleryFolder = stripos($match[0], 'title="gallery"') !== false;
-            $text = $match[3];
 
             // Only treat this as a broken embed when it actually looks like
             // one this filter would have turned into a gallery - a folder
