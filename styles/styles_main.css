@@ -2257,20 +2257,21 @@ input[type=image] {
 @media only screen and (max-width :640px) {
     #logosmall+#logo {
         display: none
-}
+    }
     #logosmall {
         display: block !important
-}
+    }
     .logo_nav #logo {
         float: left !important
-}
+    }
     .logo_nav #logo_div {
         padding-bottom: 0px !important
-}
+    }
 }
 .accordioncontent .ui-accordion-header {
     background-color: #ccc;
-    margin: 0
+    margin: 0;
+    border-bottom: 1px solid darkgrey;
 }
 .accordioncontent .ui-accordion-header:hover {
     background-color: #9e9e9e
