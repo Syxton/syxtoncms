@@ -19,7 +19,7 @@
 * cannot bypass permissions on the destination page). filemanager_migrate
 * always gates migrating out of Old files. Old files can also be deleted
 * (soft-delete into its own trash, restorable like any other area) on
-* ownership alone, same as My files. See fmconfig.php's fm_is_able().
+* ownership alone, same as My files. See filegatelib.php's fm_is_able().
 *
 * Output buffering: your app runs with $CFG->debug = 3 ("log and print"),
 * which means any stray notice/warning from included libs would otherwise
@@ -41,10 +41,10 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
 }
 if (!defined('FMCONFIG')) {
     $sub = '';
-    while (!file_exists($sub . 'fmconfig.php')) {
+    while (!file_exists($sub . 'filegatelib.php')) {
         $sub = $sub == '' ? '../' : $sub . '../';
     }
-    require_once($sub . 'fmconfig.php');
+    require_once($sub . 'filegatelib.php');
 }
 
 function fm_json($data, int $code = 200) {
@@ -231,7 +231,7 @@ if (!fm_can_access_area($area, $id)) {
 }
 
 // Page files/Old files also require filemanager_view (see index.php) -
-// My files has no such gate (see fm_is_able() in fmconfig.php).
+// My files has no such gate (see fm_is_able() in filegatelib.php).
 // For Page files the check is against $id (the page whose tree is being
 // accessed) so cross-page destination browsing in the move/copy picker
 // is gated on the destination page, not only the editor page. Old files
@@ -1023,7 +1023,7 @@ switch ($action) {
                 fm_json(['error' => 'Not found'], 404);
             }
             // Folder links are evergreen (mtime=0 sentinel) - see
-            // fm_build_share_token's docblock in fmconfig.php.
+            // fm_build_share_token's docblock in filegatelib.php.
             $url = fm_share_url($gateUrl, $level, $area, $id, $entryRel, 0, $extra, false);
             fm_json(['ok' => true, 'url' => $url, 'level' => $level, 'mode' => $mode]);
         }

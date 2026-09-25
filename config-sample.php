@@ -139,9 +139,9 @@ $CFG->debug = 0;
 
 if (!defined('FMCONFIG')) {
     $sub = '';
-    while (!file_exists($sub . 'fmconfig.php')) {
+    while (!file_exists($sub . 'filegatelib.php')) {
         $sub = $sub == '' ? '../' : $sub . '../';
     }
-    require_once($sub . 'fmconfig.php');
+    require_once($sub . 'filegatelib.php');
 }
 ?>

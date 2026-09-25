@@ -68,8 +68,12 @@ global $CFG;
         $pic = get_db_row("SELECT * FROM pics WHERE picsid = ||picsid||", ["picsid" => $picsid]);
         if ($pageid !== $pic["pageid"]) { // Pic is from a different course and needs to be copied to this course.
             $featureid = get_db_field("featureid", "pics_galleries", "galleryid = ||galleryid||", ["galleryid" => $galleryid]);
-            $old = $CFG->userfilespath . '/pics/files/' . $pic["pageid"] . "/" . $pic["featureid"]. "/" . $pic["imagename"];
-            $new = $CFG->userfilespath . '/pics/files/' . $pageid . "/" . $featureid . "/" . $pic["imagename"];
+            $old = pics_disk_path($pic["pageid"], $pic["featureid"], $pic["imagename"]);
+            $newdir = pics_disk_dir($pageid, $featureid);
+            if ($old === null || $newdir === null) {
+                throw new Exception("Could not resolve source or destination path.");
+            }
+            $new = $newdir . DIRECTORY_SEPARATOR . $pic["imagename"];
             if (!copy_file($old, $new)) {
                 throw new Exception("Could not copy file.");
             }
@@ -133,7 +137,8 @@ global $CFG;
     $return = $error = "";
     try {
         $row = get_db_row("SELECT * FROM pics WHERE picsid = ||picsid||", ["picsid" => $picsid]);
-        if (!delete_file($CFG->userfilespath . '/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row["imagename"])) {
+        $disk = pics_disk_path($row["pageid"], $row["featureid"], $row["imagename"]);
+        if ($disk !== null && !delete_file($disk)) {
             throw new Exception("Could not delete files.");
         }
 
@@ -161,8 +166,12 @@ global $CFG, $MYVARS;
                     if ($pageid !== $CFG->SITEID && !empty($row["siteviewable"])) { //siteviewable images from a page other than SITE.  Move them to site
                         $copy = true;
                         $site_featureid = get_db_field("featureid", "pages_features", "feature='pics' AND pageid=||pageid||", ["pageid" => $CFG->SITEID]);
-                        $old = $CFG->userfilespath . '/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row["imagename"];
-                        $new = $CFG->userfilespath . '/pics/files/' . $CFG->SITEID. "/" . $site_featureid. "/" . $row["imagename"];
+                        $old = pics_disk_path($row["pageid"], $row["featureid"], $row["imagename"]);
+                        $newdir = pics_disk_dir($CFG->SITEID, $site_featureid);
+                        if ($old === null || $newdir === null) {
+                            throw new Exception("Could not resolve source or destination path.");
+                        }
+                        $new = $newdir . DIRECTORY_SEPARATOR . $row["imagename"];
                         if (!copy_file($old, $new)) {
                             throw new Exception("Could not copy file.");
                         }
@@ -174,7 +183,8 @@ global $CFG, $MYVARS;
                         execute_db_sql("UPDATE pics SET siteviewable = 0 WHERE galleryid = ||galleryid||", ["galleryid" => $galleryid]);
                     } else { //nobody is using it, so delete it
                         $delete = true;
-                        if (!delete_file($CFG->userfilespath . '/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row["imagename"])) {
+                        $disk = pics_disk_path($row["pageid"], $row["featureid"], $row["imagename"]);
+                        if ($disk !== null && !delete_file($disk)) {
                             throw new Exception("Could not delete file.");
                         }
                         execute_db_sql("DELETE FROM pics WHERE picsid='" . $row["picsid"] . "'");
@@ -206,15 +216,18 @@ global $CFG;
     $pageid = clean_myvar_req("pageid", "int");
     $featureid = clean_myvar_req("featureid", "int");
 
-    // upload directory.
-    $upload_dir = $CFG->userfilespath . "/pics/files/$pageid/$featureid/";
+    // Gated storage under fmroot/pics/files/{pageid}/{featureid}/
+    $upload_dir = pics_disk_dir($pageid, $featureid);
+    if ($upload_dir === null) {
+        die("Error: Could not create or resolve upload directory.");
+    }
+    $upload_dir = rtrim($upload_dir, '/\\') . DIRECTORY_SEPARATOR;
 
     try {
         start_db_transaction();
         //must have a featureid and pageid
         if (!empty($featureid) && !empty($pageid)) {
-            //Make sure that upload directory exists
-            recursive_mkdir($upload_dir);
+            // directory already ensured by pics_disk_dir()
 
             //the file size in bytes.
             $max_upload_bytes = return_bytes(ini_get('upload_max_filesize')); //Gets max upload filesize from server.

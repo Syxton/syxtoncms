@@ -17,7 +17,7 @@
 *
 *  - SHARE (`lvl=link|page|private`): the URL actually inserted into page
 *    content or handed to "Copy Link" / "Insert" - a single file, OR a
-*    whole folder (see below). Gated per level - see fmconfig.php's
+*    whole folder (see below). Gated per level - see filegatelib.php's
 *    fm_can_view_page / fm_can_access_private.
 *
 * Folder links: same share levels as files, but with `m=0` (the sentinel
@@ -48,10 +48,10 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
 }
 if (!defined('FMCONFIG')) {
     $sub = '';
-    while (!file_exists($sub . 'fmconfig.php')) {
+    while (!file_exists($sub . 'filegatelib.php')) {
         $sub = $sub == '' ? '../' : $sub . '../';
     }
-    include($sub . 'fmconfig.php');
+    include($sub . 'filegatelib.php');
 }
 
 function fmgate_deny($code, $filename = null) {
@@ -134,7 +134,7 @@ $tok  = isset($_GET['t']) ? (string) $_GET['t'] : '';
 $lvl  = isset($_GET['lvl']) ? (string) $_GET['lvl'] : '';
 $ex   = isset($_GET['ex']) ? (string) $_GET['ex'] : '';
 
-if (!in_array($area, [FM_AREA_PUBLIC, FM_AREA_PRIVATE], true) || $id === '' || $rel === '' || $tok === '' || $mt < 0) {
+if (!fm_is_valid_area($area) || $id === '' || $rel === '' || $tok === '' || $mt < 0) {
     fmgate_deny(404);
 }
 

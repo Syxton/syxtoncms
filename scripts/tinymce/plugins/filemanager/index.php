@@ -16,10 +16,10 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
 }
 if (!defined('FMCONFIG')) {
     $sub = '';
-    while (!file_exists($sub . 'fmconfig.php')) {
+    while (!file_exists($sub . 'filegatelib.php')) {
         $sub = $sub == '' ? '../' : $sub . '../';
     }
-    require_once($sub . 'fmconfig.php');
+    require_once($sub . 'filegatelib.php');
 }
 
 if (!is_logged_in()) {
@@ -42,7 +42,7 @@ $allowGallery = !empty($_GET['gallery']);
 $canView = fm_is_able('filemanager_view', $pageid);
 
 // My files: any logged-in owner, no ability gate. Page files/Old files:
-// also require filemanager_view or the tab isn't shown (see fmconfig.php).
+// also require filemanager_view or the tab isn't shown (see filegatelib.php).
 $canPublic  = $pageid !== '' && $canView && fm_can_access_page($pageid);
 $canPrivate = $userid !== '' && fm_can_access_private($userid);
 // Same ownership check, legacy location. The tab stays while it has soft-deleted

@@ -65,6 +65,7 @@ global $USER;
 
 function load_user_cookie() {
 global $CFG, $USER;
+    $temp = (object)["userid" => 0];
     if (!empty($_SESSION['userid'])) { //cookie exists
         $time = get_timestamp();
         $recentlyactive = "";
@@ -73,16 +74,15 @@ global $CFG, $USER;
         if (!$loggedinas) {
             $recentlyactive = " AND last_activity > " . $CFG->cookietimeout;
         }
+
         $SQL = fetch_template("dbsql/users.sql", "get_active_user", false, ["recentlyactive" => $recentlyactive]);
         if ($row = get_db_row($SQL, ["userid" => $_SESSION['userid']])) { // Get user info from db, load into $USER global
             $temp = (object)$row;
             $_SESSION['userid'] = $temp->userid;
         } else {
-            $temp = (object)["userid" => 0];
             $_SESSION['userid'] = "";
         }
     } else {
-        $temp = (object)["userid" => 0];
         $_SESSION['userid'] = "";
     }
     $USER = $temp;
@@ -207,8 +207,8 @@ function get_user_name($userid) {
 function is_logged_in($userid = false) {
 global $CFG, $USER;
     $key = clean_myvar_opt("key", "string", false);
-
     $userid = $userid ? $userid : ($USER->userid ?? false);
+
     if (!$userid) {
         if (!$key) {
             return false;

@@ -5,7 +5,7 @@
  * -------------------------------------------------------------------------
  * Two layers:
  *
- *   1. PURE HELPER TESTS - call fmconfig.php's sanitize/token/permission
+ *   1. PURE HELPER TESTS - call filegatelib.php's sanitize/token/permission
  *      functions directly, in-process. Fast, deterministic, no disk/HTTP.
  *
  *   2. LIVE API TESTS - real HTTP requests to api.php (via curl, reusing
@@ -28,13 +28,13 @@ $totalCounter = 0;
 $tests = "";
 
 if (!defined('FMCONFIG')) {
-    require_once($CFG->dirroot . '/scripts/tinymce/plugins/filemanager/fmconfig.php');
+    require_once($CFG->dirroot . '/scripts/tinymce/plugins/filemanager/filegatelib.php');
 }
 
 global $USER;
 
 // ===========================================================================
-// LAYER 1: pure helper function tests (fmconfig.php) - no disk, no HTTP.
+// LAYER 1: pure helper function tests (filegatelib.php) - no disk, no HTTP.
 // ===========================================================================
 
 // -- fm_sanitize_relpath() ---------------------------------------------------
@@ -110,6 +110,73 @@ $tests .= testCheck("check_share_permission: 'private' level is refused for a Pa
     !fm_check_share_permission(FM_LEVEL_PRIVATE, FM_AREA_PUBLIC, (string) $USER->userid, "") ? "PASS" : "FAIL", $passCounter, $totalCounter);
 $tests .= testCheck("check_share_permission: unknown level is refused",
     !fm_check_share_permission("bogus", FM_AREA_PUBLIC, "1", "") ? "PASS" : "FAIL", $passCounter, $totalCounter);
+
+// -- fm_is_valid_area() / fm_area_folder() (feature areas + reserved protection)
+$tests .= testCheck("is_valid_area: built-in 'pub' is valid",
+    fm_is_valid_area(FM_AREA_PUBLIC) ? "PASS" : "FAIL", $passCounter, $totalCounter);
+$tests .= testCheck("is_valid_area: built-in 'priv' is valid",
+    fm_is_valid_area(FM_AREA_PRIVATE) ? "PASS" : "FAIL", $passCounter, $totalCounter);
+$tests .= testCheck("is_valid_area: built-in 'old' is valid",
+    fm_is_valid_area(FM_AREA_OLD) ? "PASS" : "FAIL", $passCounter, $totalCounter);
+$tests .= testCheck("is_valid_area: feature key 'pics' is valid",
+    fm_is_valid_area('pics') ? "PASS" : "FAIL", $passCounter, $totalCounter);
+$tests .= testCheck("is_valid_area: feature key 'branding' is valid",
+    fm_is_valid_area('branding') ? "PASS" : "FAIL", $passCounter, $totalCounter);
+$tests .= testCheck("is_valid_area: feature key 'forum' is valid",
+    fm_is_valid_area('forum') ? "PASS" : "FAIL", $passCounter, $totalCounter);
+$tests .= testCheck("is_valid_area: slug with underscore and hyphen is valid",
+    fm_is_valid_area('my_feature-2') ? "PASS" : "FAIL", $passCounter, $totalCounter);
+$tests .= testCheck("is_valid_area: reserved 'public' (filemanager folder) is rejected",
+    !fm_is_valid_area('public') ? "PASS" : "FAIL", $passCounter, $totalCounter);
+$tests .= testCheck("is_valid_area: reserved 'private' (filemanager folder) is rejected",
+    !fm_is_valid_area('private') ? "PASS" : "FAIL", $passCounter, $totalCounter);
+$tests .= testCheck("is_valid_area: reserved 'trash' is rejected",
+    !fm_is_valid_area('trash') ? "PASS" : "FAIL", $passCounter, $totalCounter);
+// FM_AREA_OLD === 'old': the built-in branch accepts it before the reserved list runs.
+$tests .= testCheck("is_valid_area: 'old' is accepted as the built-in key",
+    fm_is_valid_area(FM_AREA_OLD) && fm_is_valid_area('old') ? "PASS" : "FAIL", $passCounter, $totalCounter);
+$tests .= testCheck("is_valid_area: uppercase is rejected",
+    !fm_is_valid_area('Pics') ? "PASS" : "FAIL", $passCounter, $totalCounter);
+$tests .= testCheck("is_valid_area: empty string is rejected",
+    !fm_is_valid_area('') ? "PASS" : "FAIL", $passCounter, $totalCounter);
+$tests .= testCheck("is_valid_area: path-like value is rejected",
+    !fm_is_valid_area('pics/files') ? "PASS" : "FAIL", $passCounter, $totalCounter);
+$tests .= testCheck("is_valid_area: starts with digit is rejected",
+    !fm_is_valid_area('1pics') ? "PASS" : "FAIL", $passCounter, $totalCounter);
+
+$tests .= testCheck("area_folder: pub maps to 'public'",
+    fm_area_folder(FM_AREA_PUBLIC) === 'public' ? "PASS" : "FAIL", $passCounter, $totalCounter);
+$tests .= testCheck("area_folder: priv maps to 'private'",
+    fm_area_folder(FM_AREA_PRIVATE) === 'private' ? "PASS" : "FAIL", $passCounter, $totalCounter);
+$tests .= testCheck("area_folder: old maps to 'old'",
+    fm_area_folder(FM_AREA_OLD) === 'old' ? "PASS" : "FAIL", $passCounter, $totalCounter);
+$tests .= testCheck("area_folder: feature key 'pics' is used as-is",
+    fm_area_folder('pics') === 'pics' ? "PASS" : "FAIL", $passCounter, $totalCounter);
+$tests .= testCheck("area_folder: feature key 'branding' is used as-is",
+    fm_area_folder('branding') === 'branding' ? "PASS" : "FAIL", $passCounter, $totalCounter);
+
+// Tokens and share permission still work with a feature-area key (no special casing)
+$featTok = fm_build_share_token(FM_LEVEL_LINK, 'pics', '1', 'files/2/photo.jpg', 12345, '');
+$tests .= testCheck("share token: feature area 'pics' verifies against its own inputs",
+    fm_verify_share_token(FM_LEVEL_LINK, 'pics', '1', 'files/2/photo.jpg', 12345, '', $featTok) ? "PASS" : "FAIL", $passCounter, $totalCounter);
+$tests .= testCheck("share token: feature area rejects a swapped area key",
+    !fm_verify_share_token(FM_LEVEL_LINK, 'branding', '1', 'files/2/photo.jpg', 12345, '', $featTok) ? "PASS" : "FAIL", $passCounter, $totalCounter);
+$tests .= testCheck("check_share_permission: 'link' level works for feature area 'pics'",
+    fm_check_share_permission(FM_LEVEL_LINK, 'pics', '1', '') ? "PASS" : "FAIL", $passCounter, $totalCounter);
+$tests .= testCheck("check_share_permission: 'private' level is refused for feature area 'pics'",
+    !fm_check_share_permission(FM_LEVEL_PRIVATE, 'pics', (string) $USER->userid, '') ? "PASS" : "FAIL", $passCounter, $totalCounter);
+
+$adminFeatTok = fm_build_admin_token('pics', '1', 'files/2/photo.jpg', 999);
+$tests .= testCheck("admin token: feature area 'pics' verifies against its own inputs",
+    fm_verify_admin_token('pics', '1', 'files/2/photo.jpg', 999, $adminFeatTok) ? "PASS" : "FAIL", $passCounter, $totalCounter);
+$tests .= testCheck("admin token: feature area rejects a tampered path",
+    !fm_verify_admin_token('pics', '1', 'files/2/other.jpg', 999, $adminFeatTok) ? "PASS" : "FAIL", $passCounter, $totalCounter);
+
+// can_access_area for feature keys (logged-in siteadmin session)
+$tests .= testCheck("can_access_area: feature area 'pics' is allowed for logged-in session",
+    fm_can_access_area('pics', '1') ? "PASS" : "FAIL", $passCounter, $totalCounter);
+$tests .= testCheck("can_access_area: reserved/invalid area is refused",
+    !fm_can_access_area('trash', '1') ? "PASS" : "FAIL", $passCounter, $totalCounter);
 
 echo '
     <li>

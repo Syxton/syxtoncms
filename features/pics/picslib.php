@@ -15,6 +15,81 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
 }
 define('PICSLIB', true);
 
+/**
+ * Pics is its own FM area key (not a filemanager constant — any feature may
+ * choose a free slug). Layout:
+ *   {fmroot}/pics/{pageid}/files/{featureid}/{imagename}
+ * Other features do the same with their own key, e.g. area 'branding'.
+ */
+const PICS_AREA = 'pics';
+
+/**
+ * Relative path within the pics area root (id = pageid) for a single image.
+ */
+function pics_relpath(string $featureid, string $imagename): ?string {
+    return fm_sanitize_relpath('files/' . $featureid . '/' . $imagename);
+}
+
+/**
+ * Absolute filesystem path for a pics image under the gated fmroot tree.
+ */
+function pics_disk_path(string $pageid, string $featureid, string $imagename): ?string {
+    $rel = pics_relpath($featureid, $imagename);
+    if ($rel === null || $rel === '') {
+        return null;
+    }
+    return fm_resolve_path(PICS_AREA, (string) $pageid, $rel);
+}
+
+/**
+ * Absolute directory for a feature instance's images (created on demand).
+ */
+function pics_disk_dir(string $pageid, string $featureid): ?string {
+    $root = fm_area_root(PICS_AREA, (string) $pageid);
+    if ($root === null) {
+        return null;
+    }
+    $dir = $root . DIRECTORY_SEPARATOR . 'files' . DIRECTORY_SEPARATOR . $featureid;
+    if (!is_dir($dir)) {
+        recursive_mkdir($dir);
+    }
+    return realpath($dir) ?: null;
+}
+
+/**
+ * Public share URL (lvl=link) for a pics image. Tokens bind mtime so
+ * replacing the file invalidates old links automatically.
+ */
+function pics_share_url(string $pageid, string $featureid, string $imagename, ?int $mtime = null): string {
+    global $CFG;
+    $full = pics_disk_path($pageid, $featureid, $imagename);
+    if ($full === null || !is_file($full)) {
+        return $CFG->wwwroot . '/features/pics/images/not_found.png';
+    }
+    $mt = $mtime ?? (int) filemtime($full);
+    $rel = pics_relpath($featureid, $imagename);
+    $gateUrl = $CFG->wwwroot . '/filegate.php';
+    $url = fm_share_url($gateUrl, FM_LEVEL_LINK, PICS_AREA, (string) $pageid, $rel, $mt);
+    return $url !== '' ? $url : ($CFG->wwwroot . '/features/pics/images/not_found.png');
+}
+
+/**
+ * Admin-preview URL (no lvl) for thumbnails inside the pics manager.
+ * Requires a logged-in session (fm_can_access_area for feature areas).
+ */
+function pics_admin_preview_url(string $pageid, string $featureid, string $imagename, ?int $mtime = null): string {
+    global $CFG;
+    $full = pics_disk_path($pageid, $featureid, $imagename);
+    if ($full === null || !is_file($full)) {
+        return $CFG->wwwroot . '/features/pics/images/not_found.png';
+    }
+    $mt = $mtime ?? (int) filemtime($full);
+    $rel = pics_relpath($featureid, $imagename);
+    $gateUrl = $CFG->wwwroot . '/filegate.php';
+    $url = fm_admin_preview_url($gateUrl, PICS_AREA, (string) $pageid, $rel, $mt);
+    return $url !== '' ? $url : ($CFG->wwwroot . '/features/pics/images/not_found.png');
+}
+
 function display_pics($pageid, $area, $featureid) {
 global $CFG, $USER, $ROLES;
 
@@ -113,7 +188,6 @@ global $CFG, $MYVARS, $USER;
 
 function get_gallery_links($pageid, $featureid, $allsections = true) {
 global $CFG;
-    $path = $CFG->userfilesurl . '/pics/files/';
     if ($pageid === $CFG->SITEID) {
         $section = $allsections ? "" : "AND p.featureid=$featureid";
         $SQL = "SELECT * FROM pics p LEFT JOIN pics_galleries pg ON pg.galleryid = p.galleryid WHERE (p.pageid='$pageid' $section AND p.sitehidden=0) OR (p.siteviewable=1 and p.sitehidden=0) ORDER BY p.galleryid DESC,p.dateadded ASC";
@@ -130,7 +204,8 @@ global $CFG;
             $display = empty($gallery) || $gallery !== $row['galleryid'] ? true : false;
             $display = $display ? '' : 'display:none;';
             $title = empty($row['caption']) ? $row['gallery_title'] : $row['caption'];
-            $imgpath = $path . $row['pageid'] . "/" . $row['featureid'] . "/" . $row['imagename'];
+            // Gated "link" level URL — publicly shareable, self-authenticating via HMAC.
+            $imgpath = pics_share_url($row['pageid'], $row['featureid'], $row['imagename']);
             if (empty($display)) {
                 if ($area == "middle") {
                     $links .= make_modal_links([
@@ -295,9 +370,9 @@ global $CFG, $USER;
 
         $returnme = '';
         while ($row = fetch_row($pages)) {
-            if (file_exists($CFG->userfilespath . '/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row['imagename'])) {
-                $filepath = $CFG->userfilespath . '/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row['imagename'];
-                $webpath = $CFG->userfilesurl . '/pics/files/' . $row["pageid"]. "/" . $row["featureid"]. "/" . $row['imagename'];
+            $filepath = pics_disk_path($row["pageid"], $row["featureid"], $row['imagename']);
+            if ($filepath !== null && is_file($filepath)) {
+                $webpath = pics_admin_preview_url($row["pageid"], $row["featureid"], $row['imagename']);
                 $mypicture = getimagesize($filepath);
             } else {
                 $filepath = $CFG->dirroot . "/features/pics/images/not_found.png";
@@ -390,7 +465,10 @@ global $CFG, $USER;
 function pics_delete($pageid, $featureid) {
 global $CFG;
     if (isset($featureid)) { //Pics section delete
-        recursive_delete($CFG->userfilespath . '/pics/files/' . $pageid . "/" . $featureid);
+        $dir = pics_disk_dir($pageid, $featureid);
+        if ($dir !== null) {
+            recursive_delete($dir);
+        }
 
         $params = [
             "pageid" => $pageid,

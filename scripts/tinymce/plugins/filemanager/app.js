@@ -61,7 +61,7 @@
   // images (including svg) already get an actual thumbnail preview, which
   // is more informative than a badge. Anything not listed falls back to a
   // generic gray "FILE" badge. Keep in sync with $GLOBALS['FM_ALLOWED_EXT']
-  // in fmconfig.php - fine for this to be a subset.
+  // in filegatelib.php - fine for this to be a subset.
   var FILE_TYPE_STYLES = {
     pdf:  { label: 'PDF',  color: '#d93025' },
     doc:  { label: 'DOC',  color: '#2b579a' },

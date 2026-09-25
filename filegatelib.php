@@ -1,6 +1,6 @@
 <?php
 /***************************************************************************
-* fmconfig.php - shared configuration/helpers for the filemanager.
+* filegatelib.php - shared configuration/helpers for the filemanager.
 * -------------------------------------------------------------------------
 * Lives at the app root, alongside config.php. Included by filegate.php
 * (public/gateway) and tinymce/plugins/filemanager/api.php + index.php
@@ -74,6 +74,7 @@ $GLOBALS['FM_ALLOWED_EXT'] = [
     'gif'  => 'image/gif',
     'webp' => 'image/webp',
     'svg'  => 'image/svg+xml',
+    'bmp'  => 'image/bmp',
     'pdf'  => 'application/pdf',
     'doc'  => 'application/msword',
     'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -94,9 +95,58 @@ $GLOBALS['FM_ALLOWED_EXT'] = [
 // be manually reviewed and moved into the new private/public areas. Never
 // goes through filegate.php - these files are already directly linkable
 // at their existing (pre-migration) URL, so that's what's handed out.
+// Built-in filemanager areas only. Feature/app stores (pics, branding,
+// forum, …) do not need constants — pass the area key as a plain string.
+// Physical layout is always {fmroot}/{folder}/{id}/... where folder is
+// fm_area_folder($area): pub→public, priv→private, otherwise the key itself.
 const FM_AREA_PUBLIC  = 'pub';
 const FM_AREA_PRIVATE = 'priv';
-const FM_AREA_OLD = 'old';
+const FM_AREA_OLD     = 'old';
+
+/**
+ * True when $area is a legal top-level storage key under fmroot.
+ *
+ * - Built-in filemanager keys: pub, priv, old (special permission semantics).
+ * - Feature/app keys: any short lowercase slug (pics, branding, forum, …).
+ *
+ * Reserved names are blocked so features cannot collide with the filemanager
+ * trees (public/private), the soft-delete trash, or other internal folders.
+ */
+function fm_is_valid_area(string $area): bool {
+    if ($area === FM_AREA_PUBLIC || $area === FM_AREA_PRIVATE || $area === FM_AREA_OLD) {
+        return true;
+    }
+    // Feature/app areas: short lowercase slug, no path separators.
+    if (!preg_match('/^[a-z][a-z0-9_\-]{0,31}$/', $area)) {
+        return false;
+    }
+    // Protect filemanager + internal folder names from being claimed as areas.
+    static $reserved = [
+        'public', 'private', // filemanager disk folders (pub/priv map here)
+        'trash',             // soft-delete tree
+        'old',               // legacy area folder name
+        'tmp', 'temp', 'cache',
+    ];
+    return !in_array($area, $reserved, true);
+}
+
+/**
+ * Filesystem folder name for an area under fmroot (and under fmroot/trash/).
+ * pub/priv keep their historical long names; feature areas use the key as-is
+ * (pics → fmroot/pics/, branding → fmroot/branding/, …).
+ */
+function fm_area_folder(string $area): string {
+    if ($area === FM_AREA_PUBLIC) {
+        return 'public';
+    }
+    if ($area === FM_AREA_PRIVATE) {
+        return 'private';
+    }
+    if ($area === FM_AREA_OLD) {
+        return 'old';
+    }
+    return $area;
+}
 
 /**
  * Predict the outcome filegate.php itself would give for a gated URL,
@@ -127,7 +177,7 @@ function fm_gated_url_predict_status(string $url): ?int {
     $lvl  = (string) ($q['lvl'] ?? '');
     $ex   = (string) ($q['ex'] ?? '');
 
-    if (!in_array($area, [FM_AREA_PUBLIC, FM_AREA_PRIVATE], true) || $id === '' || $rel === '' || $tok === '' || $mt < 0) {
+    if (!fm_is_valid_area($area) || $id === '' || $rel === '' || $tok === '' || $mt < 0) {
         return 404;
     }
     $rel = fm_sanitize_relpath($rel);
@@ -343,12 +393,17 @@ function fm_sanitize_name(string $name): ?string {
  */
 function fm_area_root(string $area, string $id): ?string {
     global $CFG;
+    if (!fm_is_valid_area($area) || $area === FM_AREA_OLD) {
+        // Old files use fm_old_root(), not this path.
+        return null;
+    }
     $id = preg_replace('/[^A-Za-z0-9_\-]/', '', $id);
     if ($id === '') {
         return null;
     }
-    $sub = ($area === FM_AREA_PUBLIC) ? 'public' : 'private';
-    $base = rtrim($CFG->fmroot, '/\\') . DIRECTORY_SEPARATOR . $sub . DIRECTORY_SEPARATOR . $id;
+    // {fmroot}/{folder}/{id}/...  — folder is the area key (pics, branding, …)
+    // or the historical public/private names for the built-in filemanager trees.
+    $base = rtrim($CFG->fmroot, '/\\') . DIRECTORY_SEPARATOR . fm_area_folder($area) . DIRECTORY_SEPARATOR . $id;
     recursive_mkdir($base); // from filelib.php - same helper the app already uses
     return realpath($base) ?: null;
 }
@@ -381,10 +436,7 @@ function fm_trash_root(string $area, string $id): ?string {
 
 /** Folder name of an area's tree under fmroot/trash/ - see fm_trash_root(). */
 function fm_trash_subdir(string $area): string {
-    if ($area === FM_AREA_PUBLIC) {
-        return 'public';
-    }
-    return $area === FM_AREA_OLD ? 'old' : 'private';
+    return fm_area_folder($area);
 }
 
 /**
@@ -505,7 +557,13 @@ function fm_can_access_area(string $area, string $id): bool {
     if ($area === FM_AREA_PUBLIC) {
         return fm_can_access_page($id);
     }
-    return fm_can_access_private($id); // priv and old both gate on ownership
+    if ($area === FM_AREA_PRIVATE || $area === FM_AREA_OLD) {
+        return fm_can_access_private($id);
+    }
+    // Any other valid feature area (pics, branding, …): logged-in session
+    // may request an admin-preview token. Share links (lvl=link|page|…)
+    // skip this check via fm_check_share_permission().
+    return fm_is_valid_area($area) && is_logged_in();
 }
 
 /**
@@ -614,6 +672,7 @@ function fm_share_url(string $gateUrl, string $level, string $area, string $id, 
 /** Can the current user manage the given userid's private area? */
 function fm_can_access_private(string $userid): bool {
     global $USER;
+
     if (!is_logged_in()) {
         return false;
     }
@@ -790,7 +849,7 @@ function fm_gated_url_to_path(string $url): ?string {
     $lvl  = (string) ($q['lvl'] ?? '');
     $ex   = (string) ($q['ex'] ?? '');
 
-    if (!in_array($area, [FM_AREA_PUBLIC, FM_AREA_PRIVATE], true) || $id === '' || $rel === '' || $tok === '' || $mt < 0) {
+    if (!fm_is_valid_area($area) || $id === '' || $rel === '' || $tok === '' || $mt < 0) {
         return null;
     }
     $rel = fm_sanitize_relpath($rel);
@@ -876,8 +935,8 @@ function fm_gated_url_diagnose(string $url): array {
     $lvl  = (string) ($q['lvl'] ?? '');
     $ex   = (string) ($q['ex'] ?? '');
 
-    if (!in_array($area, [FM_AREA_PUBLIC, FM_AREA_PRIVATE], true)) {
-        $result['reason'] = "'a' param is '$area', expected 'pub' or 'priv'.";
+    if (!fm_is_valid_area($area)) {
+        $result['reason'] = "'a' param is '$area', which is not a valid area (pub, priv, old, or a feature key like pics/branding).";
         return $result;
     }
     if ($id === '' || $rel === '' || $tok === '' || $mt < 0) {
@@ -932,7 +991,7 @@ function fm_gated_url_diagnose(string $url): array {
         $result['details']['given_token'] = $tok;
         $result['details']['token_ok'] = hash_equals($expected, $tok);
         if (!$result['details']['token_ok']) {
-            $result['reason'] = 'Token mismatch. Either the URL was edited/tampered with, or $CFG->fm_secret is different now than when this link was generated (different server/environment, secret rotated, or config.php not loaded consistently before fmconfig.php).';
+            $result['reason'] = 'Token mismatch. Either the URL was edited/tampered with, or $CFG->fm_secret is different now than when this link was generated (different server/environment, secret rotated, or config.php not loaded consistently before filegatelib.php).';
             return $result;
         }
         $result['ok'] = true;
