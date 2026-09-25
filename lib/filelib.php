@@ -20,17 +20,63 @@ if (!isset($LOADED)) {
     $LOADED = [];
 }
 
+/**
+ * Read captions.txt from a local directory path.
+ * Prefer this (or fm_read_captions) after resolving a gated URL to disk.
+ *
+ * @return array<string,string> map keyed by basename WITHOUT extension
+ */
 function get_file_captions($path) {
-    $caption_return = [];
-    if (file_exists($path . '/captions.txt')) {
-        $fhandle = fopen($path . '/captions.txt', 'r');
-        while(!feof($fhandle)) { // until end of file
-            $caption = explode("||", fgets($fhandle));
-            $caption_return[trim($caption[0])] = trim($caption[1]);
-        }
-        fclose($fhandle);
+    // Delegate to the shared parser in filegatelib so filemanager + filters
+    // stay in sync on separator handling and key format.
+    if (function_exists('fm_read_captions')) {
+        return fm_read_captions((string) $path);
     }
+
+    // Fallback if filegatelib isn't loaded (legacy installs).
+    $caption_return = [];
+    $file = rtrim((string) $path, '/\\') . '/captions.txt';
+    if (!file_exists($file)) {
+        return $caption_return;
+    }
+    $fhandle = fopen($file, 'r');
+    if ($fhandle === false) {
+        return $caption_return;
+    }
+    while (!feof($fhandle)) {
+        $line = trim((string) fgets($fhandle));
+        if ($line === '') {
+            continue;
+        }
+        $parts = explode('||', $line, 2);
+        if (count($parts) < 2) {
+            continue;
+        }
+        $key = trim($parts[0]);
+        if ($key !== '') {
+            $caption_return[$key] = trim($parts[1]);
+        }
+    }
+    fclose($fhandle);
     return $caption_return;
+}
+
+/**
+ * Resolve caption text for an image filename against a captions map.
+ * Tries basename without extension first (filemanager format), then full name.
+ */
+function caption_for_file(array $captions, string $filename): string {
+    if (function_exists('fm_caption_for')) {
+        return fm_caption_for($captions, $filename);
+    }
+    $base = pathinfo($filename, PATHINFO_FILENAME);
+    if (isset($captions[$base]) && $captions[$base] !== '') {
+        return $captions[$base];
+    }
+    if (isset($captions[$filename]) && $captions[$filename] !== '') {
+        return $captions[$filename];
+    }
+    return $filename;
 }
 
 function delete_old_files($path, $days = 1) {

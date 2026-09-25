@@ -623,14 +623,14 @@ function filter_photogallery($html) {
             $gallery .= make_modal_links([
                 'icon'    => icon('images'),
                 'id'      => $galleryid,
-                'title'   => $captions[$firstName] ?? $firstName,
+                'title'   => caption_for_file($captions, $firstName),
                 'text'    => $text,
                 'gallery' => $galleryid,
                 'path'    => $firstUrl,
             ]);
 
             foreach ($files as $filename => $fileurl) {
-                $caption = $captions[$filename] ?? $filename;
+                $caption = caption_for_file($captions, $filename);
                 $gallery .= sprintf(
                     '<a href="%s" title="%s" data-rel="%s" style="display:none;"></a>',
                     htmlspecialchars($fileurl, ENT_QUOTES, 'UTF-8'),
@@ -650,7 +650,7 @@ function filter_photogallery($html) {
             $gallery = make_modal_links([
                 'icon'    => icon('image'),
                 'id'      => $galleryid,
-                'title'   => $captions[$filename] ?? $filename,
+                'title'   => caption_for_file($captions, $filename),
                 'text'    => $match[3],
                 'gallery' => $galleryid,
                 'path'    => $url,

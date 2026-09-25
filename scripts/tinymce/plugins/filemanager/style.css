@@ -614,3 +614,33 @@ body {
 .fm-modal-actions {
   display: flex; justify-content: flex-end; gap: 8px; padding: 10px 16px; border-top: 1px solid #dcdcde;
 }
+
+/* In-place .txt editor (caption.txt and general text files) */
+.fm-text-editor-modal {
+  width: 560px;
+  max-width: 100%;
+  max-height: 85vh;
+}
+.fm-text-editor {
+  width: 100%;
+  min-height: 280px;
+  max-height: 55vh;
+  box-sizing: border-box;
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  border: 1px solid #c3c4c7;
+  border-radius: 4px;
+  resize: vertical;
+  white-space: pre;
+  overflow: auto;
+}
+.fm-text-editor:focus {
+  outline: 2px solid #2271b1;
+  outline-offset: -1px;
+  border-color: #2271b1;
+}
+.fm-text-editor:disabled {
+  background: #f6f7f7;
+  color: #50575e;
+}

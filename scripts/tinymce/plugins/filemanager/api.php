@@ -6,7 +6,7 @@
 * current area. All state-changing actions also require the CSRF token
 * that index.php embeds from the session.
 *
-* Actions (POST 'action'): list, mkdir, upload, rename, delete, move, copy, geturl, restore, trash_list, trash_delete, duplicate, check_conflicts, download_zip, search_pages
+* Actions (POST 'action'): list, mkdir, upload, rename, delete, move, copy, geturl, restore, trash_list, trash_delete, duplicate, check_conflicts, download_zip, search_pages, read_text, write_text
 * Common params: area=pub|priv, id=<pageid|userid>, path=<relative folder>,
 * pageid=<the page being edited, for ability scoping - see fm_is_able()>
 *
@@ -254,7 +254,7 @@ if ($area === FM_AREA_OLD && !in_array($action, ['list', 'move', 'download_zip',
 }
 
 // CSRF check for anything that changes state.
-$stateChanging = in_array($action, ['mkdir', 'upload', 'rename', 'delete', 'move', 'copy', 'restore', 'trash_delete', 'duplicate'], true);
+$stateChanging = in_array($action, ['mkdir', 'upload', 'rename', 'delete', 'move', 'copy', 'restore', 'trash_delete', 'duplicate', 'write_text'], true);
 if ($stateChanging) {
     $csrf = $_REQUEST['csrf'] ?? '';
     if (!isset($_SESSION['fm_csrf']) || !hash_equals($_SESSION['fm_csrf'], (string) $csrf)) {
@@ -1034,6 +1034,55 @@ switch ($action) {
         $mtime = filemtime($full);
         $url = fm_share_url($gateUrl, $level, $area, $id, $entryRel, $mtime, $extra, false);
         fm_json(['ok' => true, 'url' => $url, 'level' => $level]);
+        break;
+    }
+
+    case 'read_text': {
+        // Read a .txt file's contents for in-place editing (e.g. captions.txt).
+        $name = fm_sanitize_name((string) ($_REQUEST['name'] ?? ''));
+        if ($name === null) {
+            fm_json(['error' => 'Invalid name'], 400);
+        }
+        $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+        if ($ext !== 'txt') {
+            fm_json(['error' => 'Only .txt files can be read as text'], 400);
+        }
+        $full = $dir . DIRECTORY_SEPARATOR . $name;
+        if (!is_file($full)) {
+            fm_json(['error' => 'Not found'], 404);
+        }
+        $content = file_get_contents($full);
+        if ($content === false) {
+            fm_json(['error' => 'Could not read file'], 500);
+        }
+        fm_json(['ok' => true, 'name' => $name, 'content' => $content]);
+        break;
+    }
+
+    case 'write_text': {
+        // Create or overwrite a .txt file (used for captions.txt and general text edit).
+        fm_require_public_permission($area, $pageid, 'filemanager_edit');
+        $name = fm_sanitize_name((string) ($_REQUEST['name'] ?? ''));
+        if ($name === null) {
+            fm_json(['error' => 'Invalid name'], 400);
+        }
+        $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+        if ($ext !== 'txt') {
+            fm_json(['error' => 'Only .txt files can be written as text'], 400);
+        }
+        // Content may be large; accept from POST body.
+        $content = (string) ($_REQUEST['content'] ?? '');
+        // Normalize line endings to \n for consistent caption files.
+        $content = str_replace(["\r\n", "\r"], "\n", $content);
+        $full = $dir . DIRECTORY_SEPARATOR . $name;
+        if (file_exists($full) && !is_file($full)) {
+            fm_json(['error' => 'A folder with that name already exists'], 409);
+        }
+        if (file_put_contents($full, $content) === false) {
+            fm_json(['error' => 'Could not write file'], 500);
+        }
+        chmod($full, 0640);
+        fm_json(['ok' => true, 'name' => $name]);
         break;
     }
 

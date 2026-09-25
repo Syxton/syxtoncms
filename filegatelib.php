@@ -818,6 +818,89 @@ function fm_get_gated_files_from_path($folderurl, $extensions) {
 
     return $urlarray;
 }
+
+/**
+ * Read captions.txt from a local directory (already permission-checked).
+ *
+ * Format (one image per line, matching the filemanager "Update captions" writer):
+ *   basename-without-extension || caption text
+ *
+ * Returns map keyed by basename WITHOUT extension, e.g.
+ *   ['photo (1)' => 'A sunny day', ...]
+ * Missing or unreadable file → empty array. Blank captions are kept as ''.
+ */
+function fm_read_captions(string $dirPath): array {
+    $file = rtrim($dirPath, '/\\') . DIRECTORY_SEPARATOR . 'captions.txt';
+    if (!is_file($file) || !is_readable($file)) {
+        return [];
+    }
+    $out = [];
+    $fh = fopen($file, 'r');
+    if ($fh === false) {
+        return [];
+    }
+    while (($line = fgets($fh)) !== false) {
+        $line = trim($line);
+        if ($line === '') {
+            continue;
+        }
+        // Prefer " || " (filemanager format); fall back to bare "||".
+        $sep = strpos($line, ' || ');
+        $sepLen = 4;
+        if ($sep === false) {
+            $sep = strpos($line, '||');
+            $sepLen = 2;
+        }
+        if ($sep === false) {
+            continue;
+        }
+        $key = trim(substr($line, 0, $sep));
+        $caption = trim(substr($line, $sep + $sepLen));
+        if ($key !== '') {
+            $out[$key] = $caption;
+        }
+    }
+    fclose($fh);
+    return $out;
+}
+
+/**
+ * Look up a caption for an image filename. Tries basename without extension
+ * first (captions.txt format), then the full filename, then returns $fallback
+ * (defaults to the filename itself).
+ */
+function fm_caption_for(array $captions, string $filename, ?string $fallback = null): string {
+    $base = pathinfo($filename, PATHINFO_FILENAME);
+    if (array_key_exists($base, $captions) && $captions[$base] !== '') {
+        return $captions[$base];
+    }
+    if (array_key_exists($filename, $captions) && $captions[$filename] !== '') {
+        return $captions[$filename];
+    }
+    // Empty caption stored for this key — still "found", but show fallback.
+    if (array_key_exists($base, $captions) || array_key_exists($filename, $captions)) {
+        return $fallback !== null ? $fallback : $filename;
+    }
+    return $fallback !== null ? $fallback : $filename;
+}
+
+/**
+ * Resolve a filegate folder (or file-in-folder) URL via the same permission
+ * + token checks as filegate.php, then read that folder's captions.txt.
+ *
+ * Pass a folder share/admin URL, or a file URL (dirname is used). Returns []
+ * if the URL is not allowed / not found / has no captions.txt — same silent
+ * failure shape as fm_gated_url_to_path().
+ */
+function fm_get_captions_from_gated_url(string $url): array {
+    $local = fm_gated_url_to_path($url);
+    if ($local === null) {
+        return [];
+    }
+    $dir = is_dir($local) ? $local : dirname($local);
+    return fm_read_captions($dir);
+}
+
 /**
  * Resolve a gated filegate.php URL back to a local filesystem path, IF the
  * current session has permission to view it and the token/mtime are valid

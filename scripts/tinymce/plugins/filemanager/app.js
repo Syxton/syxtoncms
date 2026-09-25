@@ -1464,11 +1464,20 @@
           actionsRow.appendChild(openBtn);
         }
 
-        // Rename / Delete — same permission gates as the per-item kebab
+        // Rename / Delete / Captions / Edit text — same permission gates as the per-item kebab
         if (pubAreaOK(PERM.edit)) {
           var renameBtn = iconBtn('\u270e', 'Rename');
           renameBtn.addEventListener('click', function () { onRename(sel); });
           actionsRow.appendChild(renameBtn);
+          if (sel.isFolder) {
+            var captionsBtn = iconBtn('\uD83D\uDCDD', 'Update captions');
+            captionsBtn.addEventListener('click', function () { onUpdateCaptions(sel); });
+            actionsRow.appendChild(captionsBtn);
+          } else if ((sel.ext || '').toLowerCase() === 'txt') {
+            var editTxtBtn = iconBtn('\u270E', 'Edit');
+            editTxtBtn.addEventListener('click', function () { onEditText(sel); });
+            actionsRow.appendChild(editTxtBtn);
+          }
         }
         if (pubAreaOK(PERM.delete)) {
           var deleteBtn = iconBtn('\u2715', 'Delete', 'danger');
@@ -2159,6 +2168,11 @@
       }
       if (pubAreaOK(PERM.edit)) {
         menuItems.push({ icon: '\u270e', label: 'Rename', handler: function () { onRename(opts); } });
+        if (opts.isFolder) {
+          menuItems.push({ icon: '\uD83D\uDCDD', label: 'Update captions', handler: function () { onUpdateCaptions(opts); } });
+        } else if ((opts.ext || '').toLowerCase() === 'txt') {
+          menuItems.push({ icon: '\u270E', label: 'Edit', handler: function () { onEditText(opts); } });
+        }
       }
       if (pubAreaOK(PERM.copy)) {
         menuItems.push({ icon: '\u29C9', label: 'Duplicate', handler: function () { onDuplicate(opts); } });
@@ -2735,6 +2749,203 @@
         return apiFor(area, id, path, 'rename', { old: finalName, new: opts.name, target: opts.isFolder ? 'folder' : 'file' });
       });
     }).catch(reportError);
+  }
+
+  var CAPTION_FILENAME = 'captions.txt';
+
+  /**
+   * Opens a modal text editor for a .txt file. Loads current content via
+   * read_text, lets the user edit, and saves with write_text.
+   */
+  function onEditText(opts) {
+    if (!pubAreaOK(PERM.edit) || opts.isFolder) return;
+    if ((opts.ext || '').toLowerCase() !== 'txt') return;
+
+    var modal = el('div', { class: 'fm-modal fm-text-editor-modal' });
+    modal.appendChild(el('div', { class: 'fm-modal-title', text: 'Edit ' + opts.name }));
+
+    var textarea = el('textarea', { class: 'fm-text-editor', spellcheck: 'false' });
+    textarea.value = 'Loading\u2026';
+    textarea.disabled = true;
+    modal.appendChild(textarea);
+
+    var actionsRow = el('div', { class: 'fm-modal-actions' });
+    var cancelBtn = el('button', { class: 'fm-btn secondary', text: 'Cancel' });
+    var saveBtn = el('button', { class: 'fm-btn', text: 'Save' });
+    saveBtn.disabled = true;
+    actionsRow.appendChild(cancelBtn);
+    actionsRow.appendChild(saveBtn);
+    modal.appendChild(actionsRow);
+
+    var close = showModal(modal);
+
+    cancelBtn.addEventListener('click', function () { close(); });
+
+    api('read_text', { name: opts.name }).then(function (res) {
+      if (!res.ok) {
+        reportError(new Error(res.body.error || 'Could not read file'));
+        close();
+        return;
+      }
+      textarea.value = res.body.content || '';
+      textarea.disabled = false;
+      saveBtn.disabled = false;
+      textarea.focus();
+    }).catch(function (err) {
+      reportError(err);
+      close();
+    });
+
+    saveBtn.addEventListener('click', function () {
+      saveBtn.disabled = true;
+      api('write_text', { name: opts.name, content: textarea.value }).then(function (res) {
+        if (!res.ok) {
+          reportError(new Error(res.body.error || 'Could not save file'));
+          saveBtn.disabled = false;
+          return;
+        }
+        close();
+        load();
+      }).catch(function (err) {
+        reportError(err);
+        saveBtn.disabled = false;
+      });
+    });
+  }
+
+  /**
+   * For a selected folder: create or update captions.txt listing every
+   * image in that folder (not subfolders). Existing rows are left alone;
+   * new images are appended with an empty caption; the full list is
+   * alphabetized by image name (basename without extension).
+   */
+  function onUpdateCaptions(opts) {
+    if (!pubAreaOK(PERM.edit) || !opts.isFolder) return;
+
+    var folderPath = state.path ? (state.path + '/' + opts.name) : opts.name;
+    var area = state.area, id = state.id;
+
+    apiFor(area, id, folderPath, 'list', {}).then(function (listRes) {
+      if (!listRes.ok) {
+        reportError(new Error(listRes.body.error || 'Could not list folder'));
+        return;
+      }
+      var files = listRes.body.files || [];
+      var imageKeys = {};
+      files.forEach(function (f) {
+        var ext = (f.ext || '').toLowerCase();
+        if (IMAGE_EXT.indexOf(ext) === -1) return;
+        var key = f.name.replace(/\.[^.]+$/, '');
+        imageKeys[key] = true;
+      });
+      var imageNames = Object.keys(imageKeys).sort(function (a, b) {
+        return a.localeCompare(b, undefined, { sensitivity: 'base' });
+      });
+
+      function writeCaptionFile(existingMap) {
+        var lines = imageNames.map(function (key) {
+          var caption = Object.prototype.hasOwnProperty.call(existingMap, key) ? existingMap[key] : '';
+          return key + ' || ' + caption;
+        });
+        var content = lines.length ? (lines.join('\n') + '\n') : '';
+        return apiFor(area, id, folderPath, 'write_text', {
+          name: CAPTION_FILENAME,
+          content: content
+        }).then(function (writeRes) {
+          if (!writeRes.ok) {
+            reportError(new Error(writeRes.body.error || 'Could not write captions.txt'));
+            return;
+          }
+          load();
+          if (confirm('captions.txt updated with ' + imageNames.length + ' image(s).\n\nOpen it for editing?')) {
+            openCaptionEditor(folderPath);
+          }
+        });
+      }
+
+      return apiFor(area, id, folderPath, 'read_text', { name: CAPTION_FILENAME }).then(function (readRes) {
+        var existing = {};
+        if (readRes.ok && typeof readRes.body.content === 'string') {
+          readRes.body.content.split('\n').forEach(function (line) {
+            line = line.replace(/\r$/, '');
+            if (!line.trim()) return;
+            var sep = line.indexOf(' || ');
+            var sepLen = 4;
+            if (sep === -1) {
+              sep = line.indexOf('||');
+              sepLen = 2;
+            }
+            if (sep === -1) return;
+            var key = line.slice(0, sep).trim();
+            var caption = line.slice(sep + sepLen).replace(/^\s+/, '');
+            if (imageKeys[key]) existing[key] = caption;
+          });
+        }
+        return writeCaptionFile(existing);
+      }).catch(function () {
+        // Missing file or network blip on read: still create/update from images.
+        return writeCaptionFile({});
+      });
+    }).catch(reportError);
+  }
+
+  /**
+   * Open the text editor for captions.txt inside folderPath (relative path
+   * of the folder that owns the file). Used after Update captions.
+   */
+  function openCaptionEditor(folderPath) {
+    var modal = el('div', { class: 'fm-modal fm-text-editor-modal' });
+    modal.appendChild(el('div', { class: 'fm-modal-title', text: 'Edit ' + CAPTION_FILENAME }));
+
+    var textarea = el('textarea', { class: 'fm-text-editor', spellcheck: 'false' });
+    textarea.value = 'Loading\u2026';
+    textarea.disabled = true;
+    modal.appendChild(textarea);
+
+    var actionsRow = el('div', { class: 'fm-modal-actions' });
+    var cancelBtn = el('button', { class: 'fm-btn secondary', text: 'Cancel' });
+    var saveBtn = el('button', { class: 'fm-btn', text: 'Save' });
+    saveBtn.disabled = true;
+    actionsRow.appendChild(cancelBtn);
+    actionsRow.appendChild(saveBtn);
+    modal.appendChild(actionsRow);
+
+    var close = showModal(modal);
+    cancelBtn.addEventListener('click', function () { close(); });
+
+    apiFor(state.area, state.id, folderPath, 'read_text', { name: CAPTION_FILENAME }).then(function (res) {
+      if (!res.ok) {
+        reportError(new Error(res.body.error || 'Could not read captions.txt'));
+        close();
+        return;
+      }
+      textarea.value = res.body.content || '';
+      textarea.disabled = false;
+      saveBtn.disabled = false;
+      textarea.focus();
+    }).catch(function (err) {
+      reportError(err);
+      close();
+    });
+
+    saveBtn.addEventListener('click', function () {
+      saveBtn.disabled = true;
+      apiFor(state.area, state.id, folderPath, 'write_text', {
+        name: CAPTION_FILENAME,
+        content: textarea.value
+      }).then(function (res) {
+        if (!res.ok) {
+          reportError(new Error(res.body.error || 'Could not save captions.txt'));
+          saveBtn.disabled = false;
+          return;
+        }
+        close();
+        load();
+      }).catch(function (err) {
+        reportError(err);
+        saveBtn.disabled = false;
+      });
+    });
   }
 
   /**
