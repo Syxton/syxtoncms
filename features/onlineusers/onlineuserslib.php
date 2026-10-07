@@ -95,9 +95,14 @@ global $CFG, $USER;
         }
     } else {
         if ($pageid == $CFG->SITEID) {
-            $SQL = "SELECT l.* FROM logfile l WHERE l.timeline > $timelimit GROUP BY l.ip ORDER BY l.timeline DESC";
+            $SQL = "SELECT DISTINCT l.ip
+                    FROM logfile l
+                    WHERE l.timeline > $timelimit";
         } else {
-            $SQL = "SELECT l.* FROM logfile l WHERE l.timeline > $timelimit AND l.pagid=$pageid GROUP BY l.ip ORDER BY l.timeline DESC";
+            $SQL = "SELECT DISTINCT l.ip
+                    FROM logfile l
+                    WHERE l.timeline > $timelimit
+                    AND l.pagid = $pageid";
         }
 
         $onlineusers = get_db_count($SQL);

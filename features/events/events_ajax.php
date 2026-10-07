@@ -3358,38 +3358,41 @@ global $CFG, $USER;
         try {
             start_db_transaction();
 
-            $params = [
+            // Dynamic collection – system fields still written to classic columns for compatibility.
+            if (!defined('STAFFFORMLIB')) {
+                include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
+            }
+            list($col_params, $form_data) = collect_staff_application_post($pageid);
+
+            // Ensure every classic column the SQL templates expect is present (defaults for any not in the current form).
+            $params = array_merge([
                 "userid" => $USER->userid,
                 "pageid" => $pageid,
-                "name" => nameize(clean_myvar_req("name", "string")),
-                "phone" => format_phone(clean_myvar_opt("phone", "string", "")),
-                "dateofbirth" => strtotime(clean_myvar_opt("dateofbirth", "string", "")),
-                "address" => clean_myvar_req("address", "string"),
-                "address2" => clean_myvar_opt("address2", "string", ""),
-                "city" => clean_myvar_req("city", "string"),
-                "state" => clean_myvar_req("state", "string"),
-                "zip" => clean_myvar_req("zip", "string"),
-                "agerange" => clean_myvar_req("agerange", "int"),
-                "cocmember" => clean_myvar_opt("cocmember", "int", 0),
-                "congregation" => clean_myvar_req("congregation", "string"),
-                "priorwork" => clean_myvar_opt("priorwork", "int", 0),
-                "q1_1" => clean_myvar_req("q1_1", "int"), "q1_2" => clean_myvar_req("q1_2", "int"), "q1_3" => clean_myvar_req("q1_3", "int"),
-                "q2_1" => clean_myvar_req("q2_1", "int"), "q2_2" => clean_myvar_req("q2_2", "int"), "q2_3" => clean_myvar_opt("q2_3", "string", ""),
-                "parentalconsent" => clean_myvar_opt("parentalconsent", "string", ""),
-                "parentalconsentsig" => clean_myvar_opt("parentalconsentsig", "string", ""),
-                "workerconsent" => clean_myvar_opt("workerconsent", "string", ""),
-                "workerconsentsig" => clean_myvar_opt("workerconsentsig", "string", ""),
-                "workerconsentdate" => strtotime(clean_myvar_opt("workerconsentdate", "string", "")),
-                "ref1name" => nameize(clean_myvar_req("ref1name", "string")),
-                "ref1relationship" => clean_myvar_req("ref1relationship", "string"),
-                "ref1phone" => format_phone(clean_myvar_req("ref1phone", "string")),
-                "ref2name" => nameize(clean_myvar_req("ref2name", "string")),
-                "ref2relationship" => clean_myvar_req("ref2relationship", "string"),
-                "ref2phone" => format_phone(clean_myvar_req("ref2phone", "string")),
-                "ref3name" => nameize(clean_myvar_req("ref3name", "string")),
-                "ref3relationship" => clean_myvar_req("ref3relationship", "string"),
-                "ref3phone" => format_phone(clean_myvar_req("ref3phone", "string")),
-            ];
+                "name" => "",
+                "phone" => "",
+                "dateofbirth" => 0,
+                "address" => "",
+                "address2" => "",
+                "city" => "",
+                "state" => "",
+                "zip" => "",
+                "agerange" => 0,
+                "cocmember" => 0,
+                "congregation" => "",
+                "priorwork" => 0,
+                "q1_1" => 0, "q1_2" => 0, "q1_3" => 0,
+                "q2_1" => 0, "q2_2" => 0, "q2_3" => "",
+                "parentalconsent" => "",
+                "parentalconsentsig" => "",
+                "workerconsent" => "",
+                "workerconsentsig" => "",
+                "workerconsentdate" => 0,
+                "ref1name" => "", "ref1relationship" => "", "ref1phone" => "",
+                "ref2name" => "", "ref2relationship" => "", "ref2phone" => "",
+                "ref3name" => "", "ref3relationship" => "", "ref3phone" => "",
+            ], $col_params);
+
+            $params["form_data"] = json_encode($form_data);
 
             $newid = false;
             if ($staffid) { // Update / Edit staff app
@@ -3481,102 +3484,45 @@ global $MYVARS, $CFG, $USER;
     $year = clean_myvar_opt("year", "int", date("Y"));
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     if (!defined('FILELIB')) { include_once ($CFG->dirroot . '/lib/filelib.php'); }
-    if (!defined('FORMLIB')) { include_once($CFG->dirroot . '/lib/formlib.php'); }
+    if (!defined('STAFFFORMLIB')) { include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php'); }
 
-    $fields = [
-        "STATUS",
-        "Name",
-        "Email",
-        "Phone",
-        "Date of Birth",
-        "Age Range",
-        "Address 1",
-        "Address 2",
-        "City",
-        "State",
-        "Zip",
-        "Church of Christ Member",
-        "Congregation",
-        "Has Worked at Camp",
-        "Been arrested for any reason?",
-        "Been convicted of, or pleaded guilty or no contest to, any crime?",
-        "Engaged in, or been accused of, any child molestation, exploitation, or abuse?",
-        "Having any traits or tendencies that could pose any threat to children, youth, or others?",
-        "Any reason why you should not work with children, youth, or others?",
-        "Explain",
-        "Parental Consent Name",
-        "Parental Consent Signed",
-        "Worker Consent Name",
-        "Worker Consent Signed",
-        "Worker Consent Date",
-        "Ref1 Name",
-        "Ref1 Phone",
-        "Ref1 Relationship",
-        "Ref2 Name",
-        "Ref2 Phone",
-        "Ref2 Relationship",
-        "Ref3 Name",
-        "Ref3 Phone",
-        "Ref3 Relationship",
-        "Background Check",
-        "Background Check Date",
-    ];
-    $CSV = '"' . implode('","', $fields) . "\"\n";
+    $form_fields = get_staff_form_fields($pageid);
+    $headers = ["STATUS", "Email"];
+    $export_keys = [];
+    foreach ($form_fields as $f) {
+        if ($f['type'] === 'section') continue;
+        $headers[] = $f['label'];
+        $export_keys[] = $f['field_key'];
+    }
+    $headers[] = "Background Check";
+    $headers[] = "Background Check Date";
+    $CSV = '"' . implode('","', $headers) . "\"\n";
 
     if ($applications = get_db_result(fetch_template("dbsql/events.sql", "get_all_staff_by_year", "events"), ["pageid" => $pageid, "year" => $year])) {
         while ($app = fetch_row($applications)) {
             $status = staff_status($app);
-            $status = empty($status) ? ["APPROVED"] : $status;
+            $status = empty($status) ? [["full" => "APPROVED"]] : $status;
             $email = get_db_field("email", "users", "userid='" . $app["userid"] . "'");
-            $app["agerange"] = $app["agerange"] == 0 ? "under 18" : ($app["agerange"] == 1 ? "18 - 25" : "26 or older");
-            $app["cocmember"] = $app["cocmember"] == 0 ? "No" : "Yes";
-            $app["priorwork"] = $app["priorwork"] == 0 ? "No" : "Yes";
-            $app["q1_1"] = $app["q1_1"] == 0 ? "No" : "Yes";
-            $app["q1_2"] = $app["q1_2"] == 0 ? "No" : "Yes";
-            $app["q1_3"] = $app["q1_3"] == 0 ? "No" : "Yes";
-            $app["q2_1"] = $app["q2_1"] == 0 ? "No" : "Yes";
-            $app["q2_2"] = $app["q2_2"] == 0 ? "No" : "Yes";
-            $app["parentalconsentsig"] = $app["parentalconsentsig"] == "on" ? "Signed" : "";
-            $app["workerconsentsig"] = $app["workerconsentsig"] == "on" ? "Signed" : "";
-            $app["bgcheckpass"] = $app["bgcheckpass"] == 0 ? "No" : "Yes";
-
-            $CSV .= '"' . implode(" | " , array_column($status, 'full')) .
-                    '","' . $app["name"] .
-                    '","' . $email .
-                    '","' . $app["phone"] .
-                    '","' . date('m/d/Y', $app["dateofbirth"]) .
-                    '","' . $app["agerange"] .
-                    '","' . $app['address'] .
-                    '","' . $app['address2'] .
-                    '","' . $app['city'] .
-                    '","' . $app['state'] .
-                    '","' . $app['zip'] .
-                    '","' . $app["cocmember"] .
-                    '","' . $app["congregation"] .
-                    '","' . $app["priorwork"] .
-                    '","' . $app["q1_1"] .
-                    '","' . $app["q1_2"] .
-                    '","' . $app["q1_3"] .
-                    '","' . $app["q2_1"] .
-                    '","' . $app["q2_2"] .
-                    '","' . $app["q2_3"] .
-                    '","' . $app["parentalconsent"] .
-                    '","' . $app["parentalconsentsig"] .
-                    '","' . $app["workerconsent"] .
-                    '","' . $app["workerconsentsig"] .
-                    '","' . date('m/d/Y', $app["workerconsentdate"]) .
-                    '","' . $app["ref1name"] .
-                    '","' . $app["ref1phone"] .
-                    '","' . $app["ref1relationship"] .
-                    '","' . $app["ref2name"] .
-                    '","' . $app["ref2phone"] .
-                    '","' . $app["ref2relationship"] .
-                    '","' . $app["ref3name"] .
-                    '","' . $app["ref1phone"] .
-                    '","' . $app["ref3relationship"] .
-                    '","' . $app["bgcheckpass"] .
-                    '","' . (!empty($app["bgcheckpassdate"]) ? date('m/d/Y', $app["bgcheckpassdate"]) : '') .
-                    '"' . "\n";
+            $vals = get_staff_application_values($app);
+            $row = [implode(" | ", array_column($status, 'full')), $email];
+            foreach ($export_keys as $k) {
+                $v = $vals[$k] ?? '';
+                if (in_array($k, ['dateofbirth', 'workerconsentdate'], true) && is_numeric($v) && $v > 0) {
+                    $v = date('m/d/Y', $v);
+                }
+                // yes/no display
+                if ($v === '0' || $v === 0) $v = 'No';
+                if ($v === '1' || $v === 1) {
+                    // only for known yesno-ish - leave as Yes for 1 on short fields
+                    if (strlen((string)$v) <= 2) $v = 'Yes';
+                }
+                $row[] = str_replace('"', '""', (string)$v);
+            }
+            $bg = !empty($app['bgcheckpass']) ? 'Yes' : 'No';
+            $bgd = !empty($app['bgcheckpassdate']) ? date('m/d/Y', $app['bgcheckpassdate']) : '';
+            $row[] = $bg;
+            $row[] = $bgd;
+            $CSV .= '"' . implode('","', $row) . "\"\n";
         }
     }
 
@@ -4528,5 +4474,265 @@ function reassign_delete_contact() {
     }
     ajax_return($return, $error);
 }
+
+
+function staff_form_save_field() {
+    global $CFG;
+    if (!defined('STAFFFORMLIB')) {
+        include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
+    }
+    $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+    $fieldid = clean_myvar_opt("fieldid", "int", 0);
+    $field_key = clean_myvar_req("field_key", "string");
+    $label = clean_myvar_req("label", "string");
+    $type = clean_myvar_req("type", "string");
+    $section = clean_myvar_opt("section", "string", "");
+    $sortorder = clean_myvar_opt("sortorder", "int", 500);
+    $required = clean_myvar_opt("required", "int", 0);
+    $active = clean_myvar_opt("active", "int", 1);
+    $helptext = clean_myvar_opt("helptext", "string", "");
+    $now = time();
+
+    // JS attributes — read raw POST (clean_myvar "string" can strip JS punctuation)
+    $extra_attrs = [];
+    $fieldid_tmp = clean_myvar_opt("fieldid", "int", 0);
+    if ($fieldid_tmp) {
+        $existing = get_db_row("SELECT extra_attrs FROM events_staff_form_fields WHERE fieldid=||id||", ['id' => $fieldid_tmp]);
+        if ($existing && !empty($existing['extra_attrs'])) {
+            $prev = is_string($existing['extra_attrs']) ? json_decode($existing['extra_attrs'], true) : $existing['extra_attrs'];
+            if (is_array($prev)) {
+                $extra_attrs = $prev;
+            }
+        }
+    }
+    // Always apply posted onblur/onchange (including empty to clear).
+    // Check common request bags used by this CMS ajax layer.
+    $onblur = null;
+    $onchange = null;
+    foreach ([$_POST, $_REQUEST, $_GET] as $bag) {
+        if ($onblur === null && array_key_exists('attr_onblur', $bag)) {
+            $onblur = (string)$bag['attr_onblur'];
+        }
+        if ($onchange === null && array_key_exists('attr_onchange', $bag)) {
+            $onchange = (string)$bag['attr_onchange'];
+        }
+    }
+    // Some ajax wrappers nest form fields under a parent key
+    if ($onblur === null || $onchange === null) {
+        foreach ([$_POST, $_REQUEST] as $bag) {
+            foreach ($bag as $k => $v) {
+                if (!is_array($v)) continue;
+                if ($onblur === null && array_key_exists('attr_onblur', $v)) {
+                    $onblur = (string)$v['attr_onblur'];
+                }
+                if ($onchange === null && array_key_exists('attr_onchange', $v)) {
+                    $onchange = (string)$v['attr_onchange'];
+                }
+            }
+        }
+    }
+    if ($onblur !== null) {
+        $onblur = str_replace("\0", '', $onblur);
+        if (strlen($onblur) > 4000) {
+            $onblur = substr($onblur, 0, 4000);
+        }
+        if ($onblur === '') {
+            unset($extra_attrs['onblur']);
+        } else {
+            $extra_attrs['onblur'] = $onblur;
+        }
+    }
+    if ($onchange !== null) {
+        $onchange = str_replace("\0", '', $onchange);
+        if (strlen($onchange) > 4000) {
+            $onchange = substr($onchange, 0, 4000);
+        }
+        if ($onchange === '') {
+            unset($extra_attrs['onchange']);
+        } else {
+            $extra_attrs['onchange'] = $onchange;
+        }
+    }
+    // Locked / read-only on the live form
+    $locked = clean_myvar_opt("locked", "int", 0);
+    if ($locked) {
+        $extra_attrs['locked'] = 1;
+    } else {
+        unset($extra_attrs['locked']);
+        // Do not leave stale disabled/readonly from older saves unless explicitly set elsewhere
+        unset($extra_attrs['disabled'], $extra_attrs['readonly']);
+    }
+    $extra_attrs_json = !empty($extra_attrs) ? json_encode($extra_attrs, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : '';
+
+    // Visibility rule — multiple conditions from JSON
+    $visibility = '';
+    $vis_action = clean_myvar_opt("vis_action", "string", "");
+    $vis_conds_raw = clean_myvar_opt("vis_conditions_json", "string", "[]");
+    $vis_conds = json_decode($vis_conds_raw, true);
+    if (!is_array($vis_conds)) {
+        $vis_conds = [];
+    }
+    $vis_conds = array_values(array_filter($vis_conds, function ($c) {
+        return is_array($c) && !empty($c['field']);
+    }));
+    if ($vis_action && !empty($vis_conds)) {
+        $visibility = json_encode([
+            'action' => $vis_action,
+            'logic' => clean_myvar_opt("vis_logic", "string", "and"),
+            'conditions' => $vis_conds,
+        ]);
+    }
+
+    // Required-when — multiple conditions from JSON
+    $required_when = '';
+    $reqw_conds_raw = clean_myvar_opt("reqw_conditions_json", "string", "[]");
+    $reqw_conds = json_decode($reqw_conds_raw, true);
+    if (!is_array($reqw_conds)) {
+        $reqw_conds = [];
+    }
+    $reqw_conds = array_values(array_filter($reqw_conds, function ($c) {
+        return is_array($c) && !empty($c['field']);
+    }));
+    if (clean_myvar_opt("reqw_enable", "int", 0) && !empty($reqw_conds)) {
+        $required_when = json_encode([
+            'logic' => clean_myvar_opt("reqw_logic", "string", "and"),
+            'conditions' => $reqw_conds,
+        ]);
+    }
+
+    // Select options
+    $options_json = '';
+    $opts_raw = clean_myvar_opt("options_json", "string", "[]");
+    if (isset($_REQUEST['options_json'])) {
+        $opts_raw = (string)$_REQUEST['options_json'];
+    }
+    $opts = json_decode($opts_raw, true);
+    if (!is_array($opts)) {
+        $opts = [];
+    }
+    $opts = array_values(array_filter($opts, function ($o) {
+        return is_array($o) && (isset($o['value']) || isset($o['label']));
+    }));
+    if ($type === 'select' && !empty($opts)) {
+        $options_json = json_encode($opts, JSON_UNESCAPED_UNICODE);
+    } elseif ($type === 'file_viewer') {
+        $vurl = clean_myvar_opt('viewer_url', 'string', '');
+        if (isset($_REQUEST['viewer_url'])) {
+            $vurl = (string)$_REQUEST['viewer_url'];
+        }
+        $vheight = clean_myvar_opt('viewer_height', 'int', 480);
+        $vconfirm = clean_myvar_opt('viewer_confirm', 'int', 1);
+        $options_json = json_encode([
+            'url' => $vurl,
+            'height' => $vheight,
+            'confirm' => $vconfirm ? 1 : 0,
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    } elseif ($type !== 'select') {
+        $options_json = '';
+    } else {
+        $options_json = '[]';
+    }
+
+    ensure_staff_form_tables();
+
+    $params = compact('field_key', 'label', 'type', 'section', 'sortorder', 'required', 'active', 'helptext', 'visibility', 'required_when', 'now', 'pageid');
+    $params['extra_attrs'] = $extra_attrs_json;
+    $params['options'] = $options_json;
+
+    if ($fieldid) {
+        $params['fieldid'] = $fieldid;
+        // Match by fieldid only — seeded defaults use pageid=0, not the current page
+        execute_db_sql(
+            "UPDATE events_staff_form_fields SET
+                field_key=||field_key||, label=||label||, type=||type||, section=||section||,
+                sortorder=||sortorder||, required=||required||, active=||active||, helptext=||helptext||,
+                visibility=||visibility||, required_when=||required_when||, extra_attrs=||extra_attrs||,
+                options=||options||, modified=||now||
+             WHERE fieldid=||fieldid||",
+            $params
+        );
+    } else {
+        // Prefer global (pageid=0) uniqueness for field_key
+        $exists = get_db_row(
+            "SELECT fieldid FROM events_staff_form_fields WHERE field_key=||key|| AND (pageid=0 OR pageid=||pageid||) LIMIT 1",
+            ['pageid' => $pageid, 'key' => $field_key]
+        );
+        if ($exists) {
+            ajax_return(staff_form_editor_ui($pageid), "Field key already exists");
+            return;
+        }
+        // New custom fields still attach to current pageid; core defaults stay on 0
+        $params['pageid'] = 0;
+        execute_db_sql(
+            "INSERT INTO events_staff_form_fields
+                (pageid, field_key, label, type, section, sortorder, required, active, helptext, visibility, required_when, extra_attrs, options, is_system, created, modified)
+             VALUES
+                (||pageid||, ||field_key||, ||label||, ||type||, ||section||, ||sortorder||, ||required||, ||active||, ||helptext||, ||visibility||, ||required_when||, ||extra_attrs||, ||options||, 0, ||now||, ||now||)",
+            $params
+        );
+    }
+    ajax_return(staff_form_editor_ui($pageid));
+}
+
+function staff_form_delete_field() {
+    global $CFG;
+    if (!defined('STAFFFORMLIB')) {
+        include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
+    }
+    $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+    $fieldid = clean_myvar_req("fieldid", "int");
+    $row = get_db_row("SELECT * FROM events_staff_form_fields WHERE fieldid=||id||", ['id' => $fieldid]);
+    $consent_keys = get_staff_form_fixed_consent_keys();
+    $core_keys = ['name', 'phone', 'dateofbirth'];
+    // Never delete consent blocks or core search fields
+    if ($row
+        && !in_array($row['field_key'], $consent_keys, true)
+        && !in_array($row['field_key'], $core_keys, true)
+    ) {
+        execute_db_sql("DELETE FROM events_staff_form_fields WHERE fieldid=||id||", ['id' => $fieldid]);
+    }
+    ajax_return(staff_form_editor_ui($pageid));
+}
+
+function staff_form_migrate() {
+    global $CFG;
+    if (!defined('STAFFFORMLIB')) {
+        include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
+    }
+    $pageid = clean_myvar_opt("pageid", "int", null);
+    $result = migrate_staff_form_data($pageid);
+    $msg = "Migration complete: seeded {$result['seeded_fields']} fields, updated {$result['staff_updated']} staff rows, {$result['archive_updated']} archive rows.";
+    ajax_return($msg);
+}
+
+function staff_form_reorder() {
+    global $CFG;
+    if (!defined('STAFFFORMLIB')) {
+        include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
+    }
+    $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+    // order is expected as comma-separated fieldids
+    $order = clean_myvar_opt("order", "string", "");
+    if ($order === '' && isset($_REQUEST['order'])) {
+        $order = (string)$_REQUEST['order'];
+    }
+    if ($order) {
+        $ids = array_filter(array_map('intval', explode(',', $order)));
+        $sort = 10;
+        foreach ($ids as $id) {
+            if ($id <= 0) {
+                continue;
+            }
+            // Match by fieldid only (defaults live on pageid=0)
+            execute_db_sql(
+                "UPDATE events_staff_form_fields SET sortorder=||s||, modified=||m|| WHERE fieldid=||id||",
+                ['s' => $sort, 'id' => $id, 'm' => time()]
+            );
+            $sort += 10;
+        }
+    }
+    ajax_return(staff_form_editor_ui($pageid));
+}
+
 
 ?>

@@ -406,16 +406,11 @@ delete_registration_values||
 
 update_staff_app||
     UPDATE `events_staff`
-    SET `userid` = ||userid||, `pageid` = ||pageid||, `name` = ||name||, `phone` = ||phone||,
-        `dateofbirth` = ||dateofbirth||, `agerange` = ||agerange||,
-        `address` = ||address||, `address2` = ||address2||, `city` = ||city||, `state` = ||state||, `zip` = ||zip||,
-        `cocmember` = ||cocmember||, `congregation` = ||congregation||, `priorwork` = ||priorwork||,
-        `q1_1` = ||q1_1||, `q1_2` = ||q1_2||, `q1_3` = ||q1_3||, `q2_1` = ||q2_1||, `q2_2` = ||q2_2||, `q2_3` = ||q2_3||,
+    SET `userid` = ||userid||, `pageid` = ||pageid||,
+        `name` = ||name||, `phone` = ||phone||, `dateofbirth` = ||dateofbirth||,
         `parentalconsent` = ||parentalconsent||, `parentalconsentsig` = ||parentalconsentsig||,
         `workerconsent` = ||workerconsent||, `workerconsentsig` = ||workerconsentsig||, `workerconsentdate` = ||workerconsentdate||,
-        `ref1name` = ||ref1name||, `ref1relationship` = ||ref1relationship||, `ref1phone` = ||ref1phone||,
-        `ref2name` = ||ref2name||, `ref2relationship` = ||ref2relationship||, `ref2phone` = ||ref2phone||,
-        `ref3name` = ||ref3name||, `ref3relationship` = ||ref3relationship||, `ref3phone` = ||ref3phone||
+        `form_data` = ||form_data||
     WHERE `staffid` = ||staffid||
 ||update_staff_app
 
@@ -429,17 +424,17 @@ insert_staff_app||
     `ref1name`, `ref1relationship`, `ref1phone`,
     `ref2name`, `ref2relationship`, `ref2phone`,
     `ref3name`, `ref3relationship`, `ref3phone`,
-    `bgcheckpass`, `bgcheckpassdate`)
+    `bgcheckpass`, `bgcheckpassdate`, `form_data`)
     VALUES
-    (||userid||, ||pageid||, ||name||, ||phone||, ||dateofbirth||, ||agerange||,
-     ||address||, ||address2||, ||city||, ||state||, ||zip||,
-     ||cocmember||, ||congregation||, ||priorwork||,
-     ||q1_1||, ||q1_2||, ||q1_3||, ||q2_1||, ||q2_2||, ||q2_3||,
+    (||userid||, ||pageid||, ||name||, ||phone||, ||dateofbirth||, '',
+     '', '', '', '', '',
+     '', '', '',
+     '', '', '', '', '', '',
      ||parentalconsent||, ||parentalconsentsig||, ||workerconsent||, ||workerconsentsig||, ||workerconsentdate||,
-     ||ref1name||, ||ref1relationship||, ||ref1phone||,
-     ||ref2name||, ||ref2relationship||, ||ref2phone||,
-     ||ref3name||, ||ref3relationship||, ||ref3phone||,
-     '', 0)
+     '', '', '',
+     '', '', '',
+     '', '', '',
+     '', 0, ||form_data||)
 ||insert_staff_app
 
 get_staff_app||
@@ -459,24 +454,20 @@ search_staff_app||
 
 update_staff_app_archive||
     UPDATE `events_staff_archive`
-    SET `userid` = ||userid||, `pageid` = ||pageid||, `name` = ||name||, `phone` = ||phone||,
-        `dateofbirth` = ||dateofbirth||, `address` = ||address||, `agerange` = ||agerange||,
-        `cocmember` = ||cocmember||, `congregation` = ||congregation||, `priorwork` = ||priorwork||,
-        `q1_1` = ||q1_1||, `q1_2` = ||q1_2||, `q1_3` = ||q1_3||, `q2_1` = ||q2_1||, `q2_2` = ||q2_2||, `q2_3` = ||q2_3||,
+    SET `userid` = ||userid||, `pageid` = ||pageid||,
+        `name` = ||name||, `phone` = ||phone||, `dateofbirth` = ||dateofbirth||,
         `parentalconsent` = ||parentalconsent||, `parentalconsentsig` = ||parentalconsentsig||,
         `workerconsent` = ||workerconsent||, `workerconsentsig` = ||workerconsentsig||, `workerconsentdate` = ||workerconsentdate||,
-        `ref1name` = ||ref1name||, `ref1relationship` = ||ref1relationship||, `ref1phone` = ||ref1phone||,
-        `ref2name` = ||ref2name||, `ref2relationship` = ||ref2relationship||, `ref2phone` = ||ref2phone||,
-        `ref3name` = ||ref3name||, `ref3relationship` = ||ref3relationship||, `ref3phone` = ||ref3phone||,
-        `bgcheckpass` = ||bgcheckpass||, `bgcheckpassdate` = ||bgcheckpassdate||
+        `bgcheckpass` = ||bgcheckpass||, `bgcheckpassdate` = ||bgcheckpassdate||,
+        `form_data` = ||form_data||
     WHERE `staffid` = ||staffid|| AND `year` = ||year|| AND `pageid` = ||pageid||
 ||update_staff_app_archive
 
 insert_staff_app_archive||
     INSERT INTO `events_staff_archive`
-    (`userid`, `staffid`, `pageid`, `name`, `phone`, `dateofbirth`, `address`, `agerange`, `cocmember`, `congregation`, `priorwork`, `q1_1`, `q1_2`, `q1_3`, `q2_1`, `q2_2`, `q2_3`, `parentalconsent`, `parentalconsentsig`, `workerconsent`, `workerconsentsig`, `workerconsentdate`, `ref1name`, `ref1relationship`, `ref1phone`, `ref2name`, `ref2relationship`, `ref2phone`, `ref3name`, `ref3relationship`, `ref3phone`, `bgcheckpass`, `bgcheckpassdate`, `year`)
+    (`userid`, `staffid`, `pageid`, `name`, `phone`, `dateofbirth`, `address`, `agerange`, `cocmember`, `congregation`, `priorwork`, `q1_1`, `q1_2`, `q1_3`, `q2_1`, `q2_2`, `q2_3`, `parentalconsent`, `parentalconsentsig`, `workerconsent`, `workerconsentsig`, `workerconsentdate`, `ref1name`, `ref1relationship`, `ref1phone`, `ref2name`, `ref2relationship`, `ref2phone`, `ref3name`, `ref3relationship`, `ref3phone`, `bgcheckpass`, `bgcheckpassdate`, `year`, `form_data`)
     VALUES
-    (||userid||, ||staffid||, ||pageid||, ||name||, ||phone||, ||dateofbirth||, ||address||, ||agerange||, ||cocmember||, ||congregation||, ||priorwork||, ||q1_1||, ||q1_2||, ||q1_3||, ||q2_1||, ||q2_2||, ||q2_3||, ||parentalconsent||, ||parentalconsentsig||, ||workerconsent||, ||workerconsentsig||, ||workerconsentdate||, ||ref1name||,	||ref1relationship||, ||ref1phone||, ||ref2name||, ||ref2relationship||, ||ref2phone||, ||ref3name||, ||ref3relationship||, ||ref3phone||, '', 0, ||year||)
+    (||userid||, ||staffid||, ||pageid||, ||name||, ||phone||, ||dateofbirth||, ||address||, ||agerange||, ||cocmember||, ||congregation||, ||priorwork||, ||q1_1||, ||q1_2||, ||q1_3||, ||q2_1||, ||q2_2||, ||q2_3||, ||parentalconsent||, ||parentalconsentsig||, ||workerconsent||, ||workerconsentsig||, ||workerconsentdate||, ||ref1name||, ||ref1relationship||, ||ref1phone||, ||ref2name||, ||ref2relationship||, ||ref2phone||, ||ref3name||, ||ref3relationship||, ||ref3phone||, '', 0, ||year||, ||form_data||)
 ||insert_staff_app_archive
 
 get_staff_by_year||
