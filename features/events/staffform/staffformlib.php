@@ -922,10 +922,10 @@ function render_staff_form_field($field, $value, $viewonly = false) {
             }
             if ($need_confirm && !$viewonly) {
                 $checked = (!empty($val) && $val !== '0') ? ' checked="checked"' : '';
-                $html .= '<label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-weight:normal">';
-                $html .= '<input type="checkbox" id="' . htmlspecialchars($key) . '" name="' . htmlspecialchars($key) . '" value="1"'
+                $html .= '<label class="staff-file-viewer-confirm" style="display:flex;align-items:center;gap:8px;margin-top:8px;font-weight:normal">';
+                $html .= '<input style="width: 45px;" type="checkbox" id="' . htmlspecialchars($key) . '" name="' . htmlspecialchars($key) . '" value="1"'
                        . $checked . $data_rules . $extra . ' />';
-                $html .= '<span>I have reviewed this document</span></label>';
+                $html .= '<div style="width: 100%;">I have reviewed this document</div></label>';
             } elseif ($viewonly) {
                 $html .= '<div>' . ((!empty($val) && $val !== '0') ? 'Reviewed' : 'Not confirmed') . '</div>';
             }
