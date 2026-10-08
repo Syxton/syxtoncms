@@ -843,9 +843,12 @@ function staff_form_display_value($field, $value) {
         if (!is_array($opts)) {
             $opts = [];
         }
-        $url = (string)($opts['url'] ?? '');
+        $url = (string)($opts['url'] ?? $opts['viewer_url'] ?? '');
+        // Link text is generic — the field label is already shown as the row title in view-only.
         $reviewed = (!empty($val) && $val !== '0') ? 'Reviewed' : 'Not confirmed';
-        $link = $url !== '' ? '<a href="' . htmlspecialchars($url) . '" target="_blank" rel="noopener">' . htmlspecialchars($url) . '</a>' : '';
+        $link = $url !== ''
+            ? '<a href="' . htmlspecialchars($url) . '" target="_blank" rel="noopener">View document</a>'
+            : '';
         return ($link ? $link . '<br />' : '') . htmlspecialchars($reviewed);
     }
     if ($type === 'yesno') {
