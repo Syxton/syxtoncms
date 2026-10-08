@@ -25,9 +25,10 @@ global $CFG, $USER, $ROLES, $ABILITIES;
     }
 
     $title = $settings->adminpanel->$featureid->feature_title->setting;
-    $content = "";
-    $site = $pageid == $CFG->SITEID ? "Site " : "Page ";
-    $abilities = user_abilities($USER->userid, $pageid,"roles");
+    $abilities = user_abilities($USER->userid, $pageid, "roles");
+
+    // ---- System links (always visible) ----
+    $system_links = "";
 
     // File Manager
     $p = [
@@ -37,7 +38,7 @@ global $CFG, $USER, $ROLES, $ABILITIES;
         "icon" => icon("laptop-file"),
         "class" => "adminpanel_links",
     ];
-    $content .= user_is_able($USER->userid, "manage_files", $pageid) ? make_modal_links($p) : "";
+    $system_links .= user_is_able($USER->userid, "manage_files", $pageid) ? make_modal_links($p) : "";
 
     // Roles & Abilities Manager
     $p = [
@@ -50,7 +51,7 @@ global $CFG, $USER, $ROLES, $ABILITIES;
         "icon" => icon("key"),
         "class" => "adminpanel_links",
     ];
-    $content .= !empty($abilities->edit_roles->allow) || !empty($abilities->assign_roles->allow) || !empty($abilities->edit_user_abilities->allow) ? make_modal_links($p) : "";
+    $system_links .= !empty($abilities->edit_roles->allow) || !empty($abilities->assign_roles->allow) || !empty($abilities->edit_user_abilities->allow) ? make_modal_links($p) : "";
 
     // Site Admin Area
     if (is_siteadmin($USER->userid)) {
@@ -59,35 +60,140 @@ global $CFG, $USER, $ROLES, $ABILITIES;
             "text" => "Admin Area",
             "path" => action_path("adminpanel") . "site_administration&pageid=$pageid",
             "iframe" => true,
-            "width"=> "95%",
-            "height"=> "95%",
+            "width" => "95%",
+            "height" => "95%",
             "icon" => icon("screwdriver-wrench"),
             "class" => "adminpanel_links",
         ];
-        $content .= user_is_able($USER->userid, "addevents", $pageid) ? make_modal_links($p) : "";
+        $system_links .= user_is_able($USER->userid, "addevents", $pageid) ? make_modal_links($p) : "";
     }
 
+    // ---- Feature groups (collapsible) ----
+    $feature_groups = [];
     $directory = $CFG->dirroot . "/features";
     if ($handle = opendir($directory)) {
-        /* This is the correct way to loop over the directory. */
+        $dirs = [];
         while (false !== ($dir = readdir($handle))) {
-            if (!strstr($dir,".") && is_dir($directory . "/" . $dir)) {
-                include_once($directory . "/" . $dir . '/' . $dir . "lib.php");
-                $action = $dir . "_adminpanel";
-                if (function_exists("$action")) {
-                    $content .= $action($pageid);
-                }
+            if ($dir === '.' || $dir === '..' || $dir === 'adminpanel') {
+                continue;
+            }
+            if (!strstr($dir, ".") && is_dir($directory . "/" . $dir)) {
+                $dirs[] = $dir;
             }
         }
-        // Close the directory handler
         closedir($handle);
+        sort($dirs, SORT_NATURAL | SORT_FLAG_CASE);
+
+        foreach ($dirs as $dir) {
+            $lib = $directory . "/" . $dir . "/" . $dir . "lib.php";
+            if (!file_exists($lib)) {
+                continue;
+            }
+            include_once($lib);
+            $action = $dir . "_adminpanel";
+            if (!function_exists($action)) {
+                continue;
+            }
+            $feature_html = $action($pageid);
+            if (trim((string)$feature_html) === "") {
+                continue;
+            }
+            $feature_groups[$dir] = $feature_html;
+        }
     }
+
+    $content = adminpanel_render_groups($system_links, $feature_groups);
 
     $buttons = get_button_layout("adminpanel", $featureid, $pageid);
     $title = '<span class="box_title_text">' . $title . '</span>';
     $returnme = $content != "" ? get_css_box($title, $content, $buttons, NULL, "adminpanel", $featureid) : "";
 
     return $returnme;
+}
+
+/**
+ * Friendly display names for known feature folders.
+ */
+function adminpanel_feature_label($dir) {
+    static $labels = [
+        'events'       => 'Events',
+        'bloglocker'   => 'Blog Locker',
+        'calendar'     => 'Calendar',
+        'chat'         => 'Chat',
+        'donate'       => 'Donate',
+        'forum'        => 'Forum',
+        'html'         => 'HTML',
+        'news'         => 'News',
+        'onlineusers'  => 'Online Users',
+        'participants' => 'Participants',
+        'pics'         => 'Pics',
+    ];
+    if (isset($labels[$dir])) {
+        return $labels[$dir];
+    }
+    return ucwords(str_replace(['_', '-'], ' ', $dir));
+}
+
+/**
+ * Render System (always open) + feature collapsible groups.
+ */
+function adminpanel_render_groups($system_links, $feature_groups) {
+    $html = '
+<style>
+.ap-groups { display:flex; flex-direction:column; gap:8px; }
+.ap-group {
+    border:1px solid #e2e8f0; border-radius:8px; background:#f8fafc;
+    overflow:hidden;
+}
+.ap-group-summary {
+    list-style:none; cursor:pointer; user-select:none;
+    display:flex; align-items:center; gap:8px;
+    padding:8px 12px; font-weight:600; color:#1e293b;
+    background:#f1f5f9;
+}
+.ap-group-summary::-webkit-details-marker { display:none; }
+.ap-group-summary::before {
+    content:""; display:inline-block; width:0; height:0;
+    border-left:5px solid #64748b; border-top:4px solid transparent; border-bottom:4px solid transparent;
+    transition: transform .15s ease;
+}
+.ap-group[open] > .ap-group-summary::before { transform: rotate(90deg); }
+.ap-group-summary .ap-count {
+    margin-left:auto; font-weight:500; font-size:.75em; color:#64748b;
+    background:#e2e8f0; border-radius:999px; padding:1px 8px;
+}
+.ap-group-body { padding:6px 10px 10px; background:#fff; }
+.ap-group-system { border-color:#cbd5e1; }
+.ap-group-system > .ap-group-summary { background:#e2e8f0; cursor:default; }
+.ap-group-system > .ap-group-summary::before { display:none; }
+</style>
+<div class="ap-groups">';
+
+    if (trim((string)$system_links) !== "") {
+        // System is always expanded (not collapsible).
+        $html .= '
+    <div class="ap-group ap-group-system">
+        <div class="ap-group-summary">System</div>
+        <div class="ap-group-body">' . $system_links . '</div>
+    </div>';
+    }
+
+    foreach ($feature_groups as $dir => $links) {
+        $label = htmlspecialchars(adminpanel_feature_label($dir));
+        // Count link-like children roughly by adminpanel_links class occurrences
+        $count = substr_count($links, 'adminpanel_links');
+        $count_html = $count > 0 ? '<span class="ap-count">' . $count . '</span>' : '';
+        $html .= '
+    <details class="ap-group">
+        <summary class="ap-group-summary">' . $label . $count_html . '</summary>
+        <div class="ap-group-body">' . $links . '</div>
+    </details>';
+    }
+
+    $html .= '
+</div>';
+
+    return $html;
 }
 
 function adminpanel_delete($pageid, $featureid) {
