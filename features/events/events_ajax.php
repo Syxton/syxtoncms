@@ -3422,18 +3422,29 @@ global $CFG, $USER;
 
                 $bgdate = (int)($staff["bgcheckpassdate"] ?? 0);
                 $expire = (int)$settings->events->$featureid->bgcheck_years->setting * 365 * 24 * 60 * 60;
-                $status = ($bgdate > 0) && ((time() - $bgdate) <= $expire);
+                $bg_ok = ($bgdate > 0) && ((time() - $bgdate) <= $expire);
 
+                $dob = (int)($params["dateofbirth"] ?? 0);
                 $eighteen = 18 * 365 * 24 * 60 * 60; // 18 years in seconds
-                $backgroundchecklink = ((time() - $params["dateofbirth"]) < $eighteen) || ($status || empty($linkurl)) ? '' : '
+                $under18 = ($dob > 0) && ((time() - $dob) < $eighteen);
+
+                // Under 18, valid bg check, or no bg-check URL configured → application is complete.
+                // Otherwise prompt for a background check.
+                if ($under18 || $bg_ok || empty($linkurl)) {
+                    $followup = '
+                    <br /><br />
+                    <p>Your Staff Application process is completed. Thank you!</p>';
+                } else {
+                    $followup = '
                     <br /><br />
                     If you have not already done so, please complete a background check.<br />
-                    <h2><a href="' . $linkurl . '">Submit a background check</a></h2>';
+                    <h2><a href="' . htmlspecialchars($linkurl) . '">Submit a background check</a></h2>';
+                }
 
                 $return = '
                     <div style="text-align:center;">
                         <h1>' . $subject . '</h1>
-                        ' . $backgroundchecklink . '
+                        ' . $followup . '
                     </div>';
             }
         } catch (\Throwable $e) {
