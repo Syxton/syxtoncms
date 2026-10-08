@@ -1058,11 +1058,11 @@ function render_staff_form_field($field, $value, $viewonly = false) {
                 // Checkbox + text as siblings (not a flex <label>) so validation .error
                 // labels are not trapped/squished inside the confirm row.
                 $html .= '<div class="staff-file-confirm" style="margin-top:10px">';
-                $html .= '<div class="staff-file-confirm-row" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px">';
+                $html .= '<div class="staff-file-confirm-row">';
                 $html .= '<input type="checkbox" id="' . htmlspecialchars($key) . '" name="' . htmlspecialchars($key) . '" value="1"'
-                       . ' style="width:45px;height:30px;flex:0 0 auto;margin:0"'
+                       . ' style="width:45px;height:30px;margin:0"'
                        . $checked . $data_rules . $extra . ' />';
-                $html .= '<label for="' . htmlspecialchars($key) . '" class="staff-file-confirm-text" style="font-weight:normal;margin:0;cursor:pointer;flex:1 1 auto">'
+                $html .= '<label for="' . htmlspecialchars($key) . '" class="staff-file-confirm-text">'
                        . 'I have reviewed this document</label>';
                 $html .= '</div>';
                 $html .= '</div>';
@@ -1176,18 +1176,31 @@ function staff_application_form_dynamic($row, $viewonly = false) {
                 .staff-form-page { display:none; }
                 .staff-form-page.active { display:block; }
                 .staff-form-viewonly .staff-form-page { display:block !important; }
-                .staff-file-confirm-row input[type=checkbox] {
+                /* Grid keeps checkbox + text on one row even when jQuery inserts .error after the input */
+                .staff-file-confirm-row {
+                    display: grid;
+                    grid-template-columns: 45px 1fr;
+                    grid-template-areas:
+                        "check text"
+                        "error error";
+                    column-gap: 8px;
+                    row-gap: 4px;
+                    align-items: center;
+                }
+                .staff-file-confirm-row > input[type=checkbox] {
+                    grid-area: check;
                     width: 45px !important; height: 30px !important; max-width: none !important;
-                    flex: 0 0 auto; margin: 0;
+                    margin: 0;
                 }
                 .staff-file-confirm-row > label.staff-file-confirm-text {
-                    flex: 1 1 auto; font-weight: normal; margin: 0; cursor: pointer;
+                    grid-area: text;
+                    font-weight: normal; margin: 0; cursor: pointer;
                 }
-                /* Validation error sits on its own full-width row, not squished beside the checkbox */
                 .staff-file-confirm-row > label.error,
                 .staff-file-confirm > label.error {
-                    flex: 1 1 100%; display: block; width: 100%;
-                    color: #dc2626; font-weight: normal; margin: 4px 0 0;
+                    grid-area: error;
+                    display: block; width: 100%;
+                    color: #dc2626; font-weight: normal; margin: 0;
                 }
                 .staff-viewonly-row { margin-bottom: 8px; page-break-inside: avoid; }
                 .staff-viewonly-value { font-weight: 500; color: #0f172a; padding: 2px 0 8px; border-bottom: 1px dotted #e2e8f0; }
