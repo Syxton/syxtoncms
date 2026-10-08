@@ -485,6 +485,7 @@ function get_default_staff_form_fields() {
  * These are required consent blocks, not editable questions.
  */
 function get_staff_form_fixed_consent_keys() {
+    // Forced to the bottom of the live form (signature / consent blocks)
     return [
         'section_workerconsent',
         'workerconsent',
@@ -494,6 +495,11 @@ function get_staff_form_fixed_consent_keys() {
         'parentalconsent',
         'parentalconsentsig',
     ];
+}
+
+/** Fields that cannot be deleted (consent set + date of birth). */
+function get_staff_form_protected_keys() {
+    return array_merge(['dateofbirth'], get_staff_form_fixed_consent_keys());
 }
 
 function get_staff_form_fields($pageid = 0, $include_inactive = false) {
@@ -764,6 +770,63 @@ function get_staff_application_values($row) {
 }
 
 /**
+ * Plain-text display for a field value (view-only / print).
+ */
+function staff_form_display_value($field, $value) {
+    $type = $field['type'] ?? 'text';
+    $val = $value ?? '';
+    if ($type === 'file_viewer') {
+        $opts = $field['options'] ?? [];
+        if (is_string($opts) && $opts !== '') {
+            $opts = json_decode($opts, true) ?: [];
+        }
+        if (!is_array($opts)) {
+            $opts = [];
+        }
+        $url = (string)($opts['url'] ?? '');
+        $reviewed = (!empty($val) && $val !== '0') ? 'Reviewed' : 'Not confirmed';
+        $link = $url !== '' ? '<a href="' . htmlspecialchars($url) . '" target="_blank" rel="noopener">' . htmlspecialchars($url) . '</a>' : '';
+        return ($link ? $link . '<br />' : '') . htmlspecialchars($reviewed);
+    }
+    if ($type === 'yesno') {
+        if ((string)$val === '1') {
+            return 'Yes';
+        }
+        if ((string)$val === '0') {
+            return 'No';
+        }
+        return htmlspecialchars((string)$val);
+    }
+    if ($type === 'checkbox') {
+        return (!empty($val) && $val !== '0') ? 'Yes' : 'No';
+    }
+    if ($type === 'select') {
+        $options = $field['options'] ?? [];
+        if (is_string($options) && $options !== '') {
+            $options = json_decode($options, true) ?: [];
+        }
+        if (!is_array($options)) {
+            $options = [];
+        }
+        foreach ($options as $opt) {
+            $ov = is_array($opt) ? (string)($opt['value'] ?? '') : (string)$opt;
+            $ol = is_array($opt) ? (string)($opt['label'] ?? $ov) : (string)$opt;
+            if ((string)$val === $ov) {
+                return htmlspecialchars($ol);
+            }
+        }
+        return htmlspecialchars((string)$val);
+    }
+    if ($type === 'date' && is_numeric($val) && (int)$val > 0) {
+        return htmlspecialchars(date('m/d/Y', (int)$val));
+    }
+    if ($type === 'textarea') {
+        return nl2br(htmlspecialchars((string)$val));
+    }
+    return htmlspecialchars((string)$val);
+}
+
+/**
  * Render a single field as HTML matching the existing visual style.
  */
 function render_staff_form_field($field, $value, $viewonly = false) {
@@ -780,19 +843,29 @@ function render_staff_form_field($field, $value, $viewonly = false) {
     $locked = !empty($attrs['locked']) || !empty($attrs['disabled']) || !empty($attrs['readonly']);
     $disabled = $viewonly || $locked;
 
-    // Section headers
+    // Section type = subsection heading on the current form page
     if ($type === 'section') {
         $vis_attr = '';
-        if (!empty($field['visibility'])) {
-            $vis_attr = ' style="display:none"'; // JS rules will show when conditions match
+        if (!empty($field['visibility']) && !$viewonly) {
+            $vis_attr = ' style="display:none"';
         }
         if (!empty($attrs['wrapper_id'])) {
             return '<div id="' . htmlspecialchars($attrs['wrapper_id']) . '" data-staff-section="' . htmlspecialchars($key) . '"' . $vis_attr . '>
-                        <br /><hr><br />
-                        <h3>' . htmlspecialchars($label) . '</h3><br />
-                        <em>You should understand that the name field and signature field have the same legal effect and can be enforced in the same way as a written signature.</em><br /><br />';
+                        <h4 class="staff-subsection-heading">' . htmlspecialchars($label) . '</h4>';
         }
-        return '<div data-staff-section="' . htmlspecialchars($key) . '"' . $vis_attr . '><br /><hr><br /><h3>' . htmlspecialchars($label) . '</h3><br /></div>';
+        return '<div class="staff-subsection" data-staff-section="' . htmlspecialchars($key) . '"' . $vis_attr . '>'
+             . '<h4 class="staff-subsection-heading">' . htmlspecialchars($label) . '</h4>'
+             . '</div>';
+    }
+
+    // View-only / print: show answers as text, not form controls
+    if ($viewonly) {
+        $display = staff_form_display_value($field, $val);
+        $html = '<div class="rowContainer staff-viewonly-row" data-staff-field-key="' . htmlspecialchars($key) . '">';
+        $html .= '<label class="rowTitle">' . htmlspecialchars($label) . '</label>';
+        $html .= '<div class="staff-viewonly-value">' . $display . '</div>';
+        $html .= '</div>';
+        return $html;
     }
 
     // Close parental wrapper after its last field (handled by caller or by a special end marker if needed)
@@ -922,10 +995,10 @@ function render_staff_form_field($field, $value, $viewonly = false) {
             }
             if ($need_confirm && !$viewonly) {
                 $checked = (!empty($val) && $val !== '0') ? ' checked="checked"' : '';
-                $html .= '<label class="staff-file-viewer-confirm" style="display:flex;align-items:center;gap:8px;margin-top:8px;font-weight:normal">';
-                $html .= '<input style="width: 45px;" type="checkbox" id="' . htmlspecialchars($key) . '" name="' . htmlspecialchars($key) . '" value="1"'
+                $html .= '<label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-weight:normal">';
+                $html .= '<input type="checkbox" id="' . htmlspecialchars($key) . '" name="' . htmlspecialchars($key) . '" value="1"'
                        . $checked . $data_rules . $extra . ' />';
-                $html .= '<div style="width: 100%;">I have reviewed this document</div></label>';
+                $html .= '<span>I have reviewed this document</span></label>';
             } elseif ($viewonly) {
                 $html .= '<div>' . ((!empty($val) && $val !== '0') ? 'Reviewed' : 'Not confirmed') . '</div>';
             }
@@ -1024,7 +1097,7 @@ function staff_application_form_dynamic($row, $viewonly = false) {
     $page_count = count($pages);
 
     $html = '
-        <div id="staffapplication_form_div">
+        <div id="staffapplication_form_div" class="' . ($viewonly ? 'staff-form-viewonly' : '') . '">
             <style>
                 .staff-form-pager { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin: 0 0 14px; }
                 .staff-form-pager .sfp-step {
@@ -1035,6 +1108,13 @@ function staff_application_form_dynamic($row, $viewonly = false) {
                 .staff-form-pager .sfp-step.done { background:#dbeafe; border-color:#93c5fd; color:#1e40af; }
                 .staff-form-page { display:none; }
                 .staff-form-page.active { display:block; }
+                .staff-form-viewonly .staff-form-page { display:block !important; }
+                .staff-viewonly-row { margin-bottom: 8px; page-break-inside: avoid; }
+                .staff-viewonly-value { font-weight: 500; color: #0f172a; padding: 2px 0 8px; border-bottom: 1px dotted #e2e8f0; }
+                @media print {
+                    .staff-form-viewonly .staff-form-page { display:block !important; }
+                    .staff-form-pager, .staff-form-nav, .staff-form-progress { display:none !important; }
+                }
                 .staff-form-nav {
                     display:flex; justify-content:space-between; gap:10px; margin-top:16px; flex-wrap:wrap;
                 }
@@ -1044,6 +1124,8 @@ function staff_application_form_dynamic($row, $viewonly = false) {
                 .staff-form-nav button.secondary { background:#64748b; }
                 .staff-form-nav button:disabled { opacity:.5; cursor:default; }
                 .staff-form-progress { text-align:center; font-size:.85em; color:#64748b; margin-bottom:8px; }
+                .staff-subsection-heading { margin: 1rem 0 .5rem; font-size: 1.05em; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
+                .staff-subsection { margin-top: .5rem; }
             </style>
             <div style="text-align:center;">
                 <h2>' . (!$viewonly ? 'Staff Application' : htmlspecialchars($vals['name'] ?? '') . ' Application') . '</h2>
@@ -1067,7 +1149,7 @@ function staff_application_form_dynamic($row, $viewonly = false) {
     }
 
     foreach ($pages as $i => $page) {
-        $active = ($i === 0) ? ' active' : '';
+        $active = ($viewonly || $i === 0) ? ' active' : '';
         $html .= '<div class="staff-form-page' . $active . '" data-page="' . $i . '" data-section="' . htmlspecialchars($page['title']) . '">';
         $html .= '<h3 style="margin-top:0">' . htmlspecialchars($page['title']) . '</h3>';
 
@@ -1076,18 +1158,11 @@ function staff_application_form_dynamic($row, $viewonly = false) {
             $key = $field['field_key'];
             $val = $vals[$key] ?? '';
 
-            // Skip pure section-type headers when using paginated section titles
-            if (($field['type'] ?? '') === 'section' && $key !== 'section_parental') {
-                // Keep section_parental special wrapper; other section headers are redundant with page title
-                if (strpos($key, 'section_') === 0 && $key !== 'section_parental') {
-                    continue;
-                }
-            }
-
+            // Section-type fields render as subsection headings via render_staff_form_field()
             if ($key === 'section_parental') {
-                $html .= '<div id="sub18" data-staff-section="section_parental" style="display:none">';
-                $html .= '<br /><hr><br /><h3>' . htmlspecialchars($field['label']) . '</h3><br />';
-                $html .= '<em>You should understand that the name field and signature field have the same legal effect and can be enforced in the same way as a written signature.</em><br /><br />';
+                $par_style = $viewonly ? '' : ' style="display:none"';
+                $html .= '<div id="sub18" data-staff-section="section_parental"' . $par_style . '>';
+                $html .= '<h4 class="staff-subsection-heading">' . htmlspecialchars($field['label']) . '</h4>';
                 $inside_parental = true;
                 continue;
             }
@@ -1492,6 +1567,95 @@ function migrate_staff_form_data($pageid = null) {
     ];
 }
 
+/**
+ * Columns retained after deprecation drop.
+ */
+function get_staff_form_retained_columns() {
+    return [
+        'staffid', 'userid', 'pageid',
+        'name', 'phone', 'dateofbirth',
+        'parentalconsent', 'parentalconsentsig',
+        'workerconsent', 'workerconsentsig', 'workerconsentdate',
+        'bgcheckpass', 'bgcheckpassdate',
+        'form_data',
+    ];
+}
+
+/**
+ * Classic answer columns that live only in form_data after migration.
+ */
+function get_staff_form_deprecated_columns() {
+    return [
+        'address', 'address2', 'city', 'state', 'zip',
+        'agerange', 'cocmember', 'congregation', 'priorwork',
+        'q1_1', 'q1_2', 'q1_3', 'q2_1', 'q2_2', 'q2_3',
+        'ref1name', 'ref1relationship', 'ref1phone',
+        'ref2name', 'ref2relationship', 'ref2phone',
+        'ref3name', 'ref3relationship', 'ref3phone',
+    ];
+}
+
+/**
+ * Drop deprecated classic columns from events_staff and events_staff_archive
+ * after form_data migration is complete.
+ */
+function drop_deprecated_staff_columns() {
+    $deprecated = get_staff_form_deprecated_columns();
+
+    // Safety: refuse if any staff row still lacks form_data
+    $missing = get_db_row(
+        "SELECT COUNT(*) AS cnt FROM events_staff
+         WHERE form_data IS NULL OR form_data = '' OR form_data = '{}'"
+    );
+    $missing_cnt = $missing ? (int)$missing['cnt'] : 0;
+    if ($missing_cnt > 0) {
+        return [
+            'ok' => false,
+            'message' => "Cannot drop columns: {$missing_cnt} staff row(s) still have empty form_data. Run Data Migration first.",
+            'dropped' => [],
+        ];
+    }
+
+    $arch_missing = get_db_row(
+        "SELECT COUNT(*) AS cnt FROM events_staff_archive
+         WHERE form_data IS NULL OR form_data = '' OR form_data = '{}'"
+    );
+    $arch_cnt = $arch_missing ? (int)$arch_missing['cnt'] : 0;
+    if ($arch_cnt > 0) {
+        return [
+            'ok' => false,
+            'message' => "Cannot drop columns: {$arch_cnt} archive row(s) still have empty form_data. Run Data Migration first.",
+            'dropped' => [],
+        ];
+    }
+
+    $dropped = [];
+    foreach (['events_staff', 'events_staff_archive'] as $table) {
+        foreach ($deprecated as $col) {
+            $row = get_db_row(
+                "SELECT COUNT(*) AS cnt FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE()
+                   AND TABLE_NAME = ||table||
+                   AND COLUMN_NAME = ||column||",
+                ['table' => $table, 'column' => $col]
+            );
+            if ($row && (int)$row['cnt'] > 0) {
+                execute_db_sql("ALTER TABLE `{$table}` DROP COLUMN `{$col}`");
+                $dropped[] = "{$table}.{$col}";
+            }
+        }
+    }
+
+    return [
+        'ok' => true,
+        'message' => empty($dropped)
+            ? 'No deprecated columns remained to drop.'
+            : ('Dropped ' . count($dropped) . ' column(s): ' . implode(', ', $dropped)),
+        'dropped' => $dropped,
+    ];
+}
+
+
 function staff_form_editor_ui($pageid) {
     if (!defined('STAFFFORMLIB')) {
         global $CFG;
@@ -1501,7 +1665,7 @@ function staff_form_editor_ui($pageid) {
 
     $fields = get_staff_form_fields($pageid, true);
     $consent_keys = get_staff_form_fixed_consent_keys();
-    $core_keys = ['name', 'phone', 'dateofbirth'];
+    $protected_keys = get_staff_form_protected_keys();
 
     $key_opts = '';
     $section_names = [];
@@ -1527,6 +1691,7 @@ function staff_form_editor_ui($pageid) {
     foreach ($fields as $f) {
         $fid = (int)($f['fieldid'] ?? 0);
         $is_consent = in_array($f['field_key'], $consent_keys, true);
+        $is_protected = in_array($f['field_key'], $protected_keys, true);
         $active = !empty($f['active']) ? '<span style="color:#0a0">Active</span>' : '<span style="color:#999">Inactive</span>';
 
         $visibility = $f['visibility'] ?? [];
@@ -1587,10 +1752,12 @@ function staff_form_editor_ui($pageid) {
             }
         }
 
-        $badge = $is_consent ? ' <span style="background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:4px;font-size:.75em">consent</span>' : '';
-        $del = ($fid === 0 || in_array($f['field_key'], $core_keys, true) || $is_consent)
+        $badge = $is_protected ? ' <span style="background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:4px;font-size:.75em">protected</span>' : '';
+        $edit_icon = function_exists('icon') ? icon([['icon' => 'pen-to-square']]) : 'Edit';
+        $del_icon = function_exists('icon') ? icon([['icon' => 'trash']]) : 'Delete';
+        $del = ($fid === 0 || $is_protected)
             ? ''
-            : '<button type="button" class="btn-danger" onclick="if(confirm(\'Delete this field?\')) staff_form_delete_field(' . $fid . ')">Delete</button>';
+            : '<button type="button" class="btn-danger" title="Delete" onclick="if(confirm(\'Delete this field?\')) staff_form_delete_field(' . $fid . ')">' . $del_icon . '</button>';
 
         $map_key = $fid > 0 ? (string)$fid : ('k_' . $f['field_key']);
         $edit_map[$map_key] = [
@@ -1617,7 +1784,7 @@ function staff_form_editor_ui($pageid) {
             'viewer_height' => $viewer_height,
             'viewer_confirm' => $viewer_confirm,
             'is_consent' => $is_consent ? 1 : 0,
-            'is_core' => in_array($f['field_key'], $core_keys, true) ? 1 : 0,
+            'is_core' => $is_protected ? 1 : 0,
         ];
 
         $edit_js_id = $fid > 0 ? $fid : ("'" . $map_key . "'");
@@ -1632,7 +1799,7 @@ function staff_form_editor_ui($pageid) {
             <td style="text-align:center">' . $reqw . '</td>
             <td>' . $active . '</td>
             <td style="white-space:nowrap">
-                <button type="button" onclick="staffFormEditField(' . $edit_js_id . ')">Edit</button>
+                <button type="button" title="Edit" onclick="staffFormEditField(' . $edit_js_id . ')">' . $edit_icon . '</button>
                 ' . $del . '
             </td>
         </tr>';
@@ -1662,7 +1829,8 @@ function staff_form_editor_ui($pageid) {
         .sfe-wrap .sfe-actions { margin-top: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         .sfe-wrap button { background: #2563eb; color: #fff; border: none; border-radius: 6px; padding: 8px 14px; cursor: pointer; font-size: .9em; }
         .sfe-wrap button:hover { background: #1d4ed8; }
-        .sfe-wrap button.btn-danger { background: #dc2626; }
+        .sfe-wrap button.btn-danger { background: #dc2626; color: #fff !important; }
+        .sfe-wrap button.btn-danger * { color: #fff !important; }
         .sfe-wrap button.btn-secondary { background: #64748b; }
         .sfe-wrap button.btn-small { padding: 4px 10px; font-size: .8em; }
         .sfe-wrap .sfe-rules { background: #f8fafc; border: 1px dashed #94a3b8; border-radius: 6px; padding: 12px; margin-top: 8px; }
@@ -1690,13 +1858,8 @@ function staff_form_editor_ui($pageid) {
     <div class="sfe-wrap" id="staff_form_editor_container">
         <h2>Staff Application Form Editor</h2>
         <p class="sfe-note">
-            Show/Hide and Required When support <strong>multiple conditions</strong> combined with AND or OR.
-            Rules are set on the <em>dependent</em> field (e.g. parental consent watches <code>agerange</code>).
-            DOB auto-sets Age Range via the <code>onblur</code> attribute.
-        </p>
-        <p>
-            <button type="button" class="btn-secondary" onclick="staff_form_migrate()">Run Data Migration</button>
-            <span id="staff_form_migrate_result" style="margin-left:10px;color:#166534"></span>
+            Add, edit, reorder, and configure questions for the staff application form.
+            Use field types, show/hide and required-when rules, and JavaScript attributes as needed.
         </p>
         <p class="sfe-dnd-hint">Drag the <strong>⋮⋮</strong> handle to reorder fields. Order is saved automatically.</p>
         <table class="sfe-table" id="sfe-fields-table">
@@ -1871,6 +2034,10 @@ function staff_form_editor_ui($pageid) {
                 </div>
             </form>
         </div>
+        <p style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid #e2e8f0">
+            <button type="button" class="btn-secondary" id="staff_form_migrate_btn" onclick="staffFormRunMigrate()">Run Data Migration</button>
+            <span id="staff_form_migrate_result" style="margin-left:10px"></span>
+        </p>
     </div>
     <script>
     window.STAFF_FORM_EDIT_MAP = ' . $edit_json . ';
@@ -2063,6 +2230,44 @@ function staff_form_editor_ui($pageid) {
         var card = document.getElementById("sfe-edit-card");
         if (card) card.style.display = "none";
         staffFormResetEdit();
+    }
+
+    function staffFormRunMigrate() {
+        var btn = document.getElementById("staff_form_migrate_btn");
+        var out = document.getElementById("staff_form_migrate_result");
+        if (btn) {
+            if (btn.disabled) return;
+            btn.disabled = true;
+            btn.setAttribute("data-label", btn.innerHTML);
+            btn.innerHTML = "Migrating…";
+        }
+        if (out) out.innerHTML = "<em>Working… please wait.</em>";
+        if (typeof staff_form_migrate === "function") {
+            staff_form_migrate();
+        }
+        // Re-enable after response paints (ajax replaces #staff_form_migrate_result)
+        setTimeout(function() {
+            var b = document.getElementById("staff_form_migrate_btn");
+            if (b) {
+                b.disabled = false;
+                if (b.getAttribute("data-label")) b.innerHTML = b.getAttribute("data-label");
+            }
+        }, 8000);
+    }
+
+    function staffFormDropDeprecated() {
+        if (!confirm("Permanently drop deprecated answer columns from events_staff and events_staff_archive? This cannot be undone. Only proceed after a successful data migration.")) {
+            return;
+        }
+        var btn = document.getElementById("staff_form_drop_cols_btn");
+        if (btn) {
+            if (btn.disabled) return;
+            btn.disabled = true;
+            btn.innerHTML = "Dropping columns…";
+        }
+        if (typeof staff_form_drop_deprecated_columns === "function") {
+            staff_form_drop_deprecated_columns();
+        }
     }
 
     function staffFormResetEdit() {

@@ -2003,14 +2003,33 @@ function staff_status($staff, $userid = true) {
             ];
         }
 
-        if ($staff["workerconsentdate"] < strtotime($settings->events->$featureid->staffapp_expires->setting . '/' . date('Y'))) {
+        // Prefer form_data for dynamic answers; keep column fallback for unmigrated rows
+        if (!defined('STAFFFORMLIB')) {
+            global $CFG;
+            include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
+        }
+        $vals = function_exists('get_staff_application_values') ? get_staff_application_values($staff) : $staff;
+        $workerconsentdate = $vals['workerconsentdate'] ?? ($staff['workerconsentdate'] ?? 0);
+        if (!is_numeric($workerconsentdate) && !empty($workerconsentdate)) {
+            $workerconsentdate = strtotime($workerconsentdate);
+        }
+        $dob = $vals['dateofbirth'] ?? ($staff['dateofbirth'] ?? 0);
+        if (!is_numeric($dob) && !empty($dob)) {
+            $dob = strtotime($dob);
+        }
+
+        if ((int)$workerconsentdate < strtotime($settings->events->$featureid->staffapp_expires->setting . '/' . date('Y'))) {
             $status[] = [
                 "tag" => "Application",
                 "full" => "Application Out of Date",
             ];
         }
 
-        $flag = $staff["q1_1"] + $staff["q1_2"] + $staff["q1_3"] + $staff["q2_1"] + $staff["q2_2"];
+        $flag = (int)($vals['q1_1'] ?? $staff['q1_1'] ?? 0)
+              + (int)($vals['q1_2'] ?? $staff['q1_2'] ?? 0)
+              + (int)($vals['q1_3'] ?? $staff['q1_3'] ?? 0)
+              + (int)($vals['q2_1'] ?? $staff['q2_1'] ?? 0)
+              + (int)($vals['q2_2'] ?? $staff['q2_2'] ?? 0);
         if (!empty($flag)) {
             $status[] = [
                 "tag" => "Flagged",
@@ -2021,13 +2040,15 @@ function staff_status($staff, $userid = true) {
         $eighteen = 18 * 365 * 24 * 60 * 60; // 18 years in seconds
         $expireyear = $settings->events->$featureid->bgcheck_years->setting * 365 * 24 * 60 * 60;
         $time = get_timestamp();
-        if (($time - $staff["dateofbirth"]) > $eighteen ) {
-            if (empty($staff["bgcheckpass"])) {
+        if (($time - (int)$dob) > $eighteen ) {
+            // bgcheckpassdate alone is sufficient: 0/empty = incomplete; stale date = out of date
+            $bgdate = (int)($staff["bgcheckpassdate"] ?? 0);
+            if ($bgdate <= 0) {
                 $status[] =  [
                     "tag" => "Background Check",
                     "full" => "Background Check Incomplete",
                 ];
-            } else if (($time - $staff["bgcheckpassdate"]) > $expireyear) {
+            } else if (($time - $bgdate) > $expireyear) {
                 $status[] =  [
                     "tag" => "Background Check",
                     "full" => "Background Check Out of Date",

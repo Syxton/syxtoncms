@@ -258,6 +258,18 @@ global $CFG;
             "pageid" => $pageid,
         ],
         "display" => "staff_form_migrate_result",
+        "loading" => "loading_overlay",
+        "event" => "none",
+    ]);
+    ajaxapi([
+        "id" => "staff_form_drop_deprecated_columns",
+        "url" => "/features/events/events_ajax.php",
+        "data" => [
+            "action" => "staff_form_drop_deprecated_columns",
+            "pageid" => $pageid,
+        ],
+        "display" => "staff_form_migrate_result",
+        "loading" => "loading_overlay",
         "event" => "none",
     ]);
     ajaxapi([

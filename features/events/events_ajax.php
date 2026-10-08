@@ -3279,12 +3279,14 @@ global $CFG, $USER;
 
     ajaxapi([
         "id" => "perform_appsearch",
-        "paramlist" => "pagenum = 0",
+        "paramlist" => "pagenum = 0, searchwords = false",
+        "before" => "var searchwords = searchwords ? searchwords : $('#searchbox').val();",
         "url" => "/features/events/events_ajax.php",
         "data" => [
             "action" => "appsearch",
             "pagenum" => "js||pagenum||js",
-            "searchwords" => "js||encodeURIComponent($('#searchwords').val())||js",
+            "here" => "true",
+            "searchwords" => "js||encodeURIComponent(searchwords)||js",
         ],
         "display" => "searchcontainer",
         "ondone" => "init_event_menu();",
@@ -4682,13 +4684,9 @@ function staff_form_delete_field() {
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     $fieldid = clean_myvar_req("fieldid", "int");
     $row = get_db_row("SELECT * FROM events_staff_form_fields WHERE fieldid=||id||", ['id' => $fieldid]);
-    $consent_keys = get_staff_form_fixed_consent_keys();
-    $core_keys = ['name', 'phone', 'dateofbirth'];
-    // Never delete consent blocks or core search fields
-    if ($row
-        && !in_array($row['field_key'], $consent_keys, true)
-        && !in_array($row['field_key'], $core_keys, true)
-    ) {
+    $protected = get_staff_form_protected_keys();
+    // Never delete consent set or dateofbirth
+    if ($row && !in_array($row['field_key'], $protected, true)) {
         execute_db_sql("DELETE FROM events_staff_form_fields WHERE fieldid=||id||", ['id' => $fieldid]);
     }
     ajax_return(staff_form_editor_ui($pageid));
@@ -4702,7 +4700,21 @@ function staff_form_migrate() {
     $pageid = clean_myvar_opt("pageid", "int", null);
     $result = migrate_staff_form_data($pageid);
     $msg = "Migration complete: seeded {$result['seeded_fields']} fields, updated {$result['staff_updated']} staff rows, {$result['archive_updated']} archive rows.";
-    ajax_return($msg);
+    // HTML so the editor can reveal the drop-columns control
+    $html = '<span style="color:#166534">' . htmlspecialchars($msg) . '</span> '
+          . '<button type="button" id="staff_form_drop_cols_btn" class="btn-secondary" style="margin-left:10px" '
+          . 'onclick="staffFormDropDeprecated()">Remove deprecated DB columns</button>';
+    ajax_return($html);
+}
+
+function staff_form_drop_deprecated_columns() {
+    global $CFG;
+    if (!defined('STAFFFORMLIB')) {
+        include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
+    }
+    $result = drop_deprecated_staff_columns();
+    $color = !empty($result['ok']) ? '#166534' : '#b91c1c';
+    ajax_return('<span style="color:' . $color . '">' . htmlspecialchars($result['message']) . '</span>');
 }
 
 function staff_form_reorder() {
