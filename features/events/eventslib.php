@@ -1979,6 +1979,24 @@ function get_my_category($selected = false) {
     return $returnme;
 }
 
+function get_staff_appsearch_js() {
+    ajaxapi([
+        "id" => "perform_appsearch",
+        "paramlist" => "pagenum = 0, searchwords = false",
+        "before" => "searchwords = searchwords ? searchwords : $('#searchbox').val();",
+        "url" => "/features/events/events_ajax.php",
+        "data" => [
+            "action" => "appsearch",
+            "pagenum" => "js||pagenum||js",
+            "searchwords" => "js||encodeURIComponent(searchwords)||js",
+        ],
+        "display" => "searchcontainer",
+        "ondone" => "init_event_menu();",
+        "loading" => "loading_overlay",
+        "event" => "none",
+    ]);
+}
+
 function staff_status($staff, $userid = true) {
     $status = [];
 

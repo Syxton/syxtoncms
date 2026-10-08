@@ -1498,72 +1498,93 @@ function collect_staff_application_post($pageid = 0) {
  * 2. Seed default fields
  * 3. For every existing staff row, populate form_data from the classic columns
  */
+/**
+ * Build form_data JSON from a staff/archive row using all classic answer columns.
+ * Existing form_data keys are kept; missing keys are filled from columns (including "0").
+ */
+function staff_form_row_to_form_data($row) {
+    $data = [];
+    if (!empty($row['form_data'])) {
+        $existing = is_string($row['form_data']) ? json_decode($row['form_data'], true) : $row['form_data'];
+        if (is_array($existing)) {
+            $data = $existing;
+        }
+    }
+
+    // Every field definition key + known deprecated columns
+    $keys = [];
+    foreach (get_default_staff_form_fields() as $f) {
+        if (($f['type'] ?? '') === 'section') {
+            continue;
+        }
+        $keys[$f['field_key']] = true;
+    }
+    foreach (get_staff_form_deprecated_columns() as $k) {
+        $keys[$k] = true;
+    }
+    foreach (['name', 'phone', 'dateofbirth', 'parentalconsent', 'parentalconsentsig',
+              'workerconsent', 'workerconsentsig', 'workerconsentdate'] as $k) {
+        $keys[$k] = true;
+    }
+
+    foreach (array_keys($keys) as $k) {
+        if (!array_key_exists($k, $row) || $row[$k] === null) {
+            continue;
+        }
+        // Fill when form_data lacks the key (allow "0" and empty string from columns)
+        if (!array_key_exists($k, $data)) {
+            $data[$k] = $row[$k];
+        }
+    }
+
+    return $data;
+}
+
 function migrate_staff_form_data($pageid = null) {
     ensure_staff_form_tables();
     $seeded = seed_staff_form_fields(0); // global defaults
 
-    $where = $pageid !== null ? ' WHERE pageid = ' . (int)$pageid : '';
-    $rows = get_db_result("SELECT * FROM events_staff $where");
+    // Always migrate ALL rows (schema-wide). pageid filter only affects messaging if needed.
+    // Archives from prior years must not be skipped when admin is on a different page.
+    $rows = get_db_result("SELECT * FROM events_staff");
     $updated = 0;
-    $system_keys = [];
-    foreach (get_default_staff_form_fields() as $f) {
-        if (!empty($f['is_system'])) {
-            $system_keys[] = $f['field_key'];
-        }
-    }
+    $skipped = 0;
 
     if ($rows) {
         while ($row = fetch_row($rows)) {
-            $data = [];
-            foreach ($system_keys as $k) {
-                if (array_key_exists($k, $row) && $row[$k] !== null && $row[$k] !== '') {
-                    $data[$k] = $row[$k];
-                }
-            }
-            // Keep any already-present form_data
-            if (!empty($row['form_data'])) {
-                $existing = is_string($row['form_data']) ? json_decode($row['form_data'], true) : $row['form_data'];
-                if (is_array($existing)) {
-                    $data = array_merge($data, $existing);
-                }
-            }
+            $data = staff_form_row_to_form_data($row);
+            // Always write — even if only zeros — so form_data is never NULL
             execute_db_sql(
                 "UPDATE events_staff SET form_data = ||fd|| WHERE staffid = ||id||",
-                ['fd' => json_encode($data), 'id' => $row['staffid']]
+                ['fd' => json_encode($data, JSON_UNESCAPED_UNICODE), 'id' => $row['staffid']]
             );
             $updated++;
         }
     }
 
-    // Same for archive
-    $arows = get_db_result("SELECT * FROM events_staff_archive $where");
+    $arows = get_db_result("SELECT * FROM events_staff_archive");
     $aupdated = 0;
     if ($arows) {
         while ($row = fetch_row($arows)) {
-            $data = [];
-            foreach ($system_keys as $k) {
-                if (array_key_exists($k, $row) && $row[$k] !== null && $row[$k] !== '') {
-                    $data[$k] = $row[$k];
-                }
-            }
-            if (!empty($row['form_data'])) {
-                $existing = is_string($row['form_data']) ? json_decode($row['form_data'], true) : $row['form_data'];
-                if (is_array($existing)) {
-                    $data = array_merge($data, $existing);
-                }
-            }
+            $data = staff_form_row_to_form_data($row);
             execute_db_sql(
                 "UPDATE events_staff_archive SET form_data = ||fd|| WHERE archiveid = ||id||",
-                ['fd' => json_encode($data), 'id' => $row['archiveid']]
+                ['fd' => json_encode($data, JSON_UNESCAPED_UNICODE), 'id' => $row['archiveid']]
             );
             $aupdated++;
         }
     }
 
+    // Count remaining empty for the message
+    $miss = get_db_row("SELECT COUNT(*) AS cnt FROM events_staff WHERE form_data IS NULL OR form_data = ''");
+    $amiss = get_db_row("SELECT COUNT(*) AS cnt FROM events_staff_archive WHERE form_data IS NULL OR form_data = ''");
+
     return [
         'seeded_fields' => $seeded,
         'staff_updated' => $updated,
         'archive_updated' => $aupdated,
+        'staff_still_empty' => $miss ? (int)$miss['cnt'] : 0,
+        'archive_still_empty' => $amiss ? (int)$amiss['cnt'] : 0,
     ];
 }
 

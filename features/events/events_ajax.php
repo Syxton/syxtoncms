@@ -3277,22 +3277,7 @@ global $CFG, $USER;
     $pagenum = clean_myvar_opt("pagenum", "int", 0);
     $year = clean_myvar_opt("year", "int", false);
 
-    ajaxapi([
-        "id" => "perform_appsearch",
-        "paramlist" => "pagenum = 0, searchwords = false",
-        "before" => "var searchwords = searchwords ? searchwords : $('#searchbox').val();",
-        "url" => "/features/events/events_ajax.php",
-        "data" => [
-            "action" => "appsearch",
-            "pagenum" => "js||pagenum||js",
-            "here" => "true",
-            "searchwords" => "js||encodeURIComponent(searchwords)||js",
-        ],
-        "display" => "searchcontainer",
-        "ondone" => "init_event_menu();",
-        "loading" => "loading_overlay",
-        "event" => "none",
-    ]);
+    get_staff_appsearch_js();
 
     $returnme = '
         <link rel="stylesheet" media="print" type="text/css" href="' . $CFG->wwwroot . '/styles/print.css"><br />
@@ -4700,10 +4685,15 @@ function staff_form_migrate() {
     $pageid = clean_myvar_opt("pageid", "int", null);
     $result = migrate_staff_form_data($pageid);
     $msg = "Migration complete: seeded {$result['seeded_fields']} fields, updated {$result['staff_updated']} staff rows, {$result['archive_updated']} archive rows.";
-    // HTML so the editor can reveal the drop-columns control
-    $html = '<span style="color:#166534">' . htmlspecialchars($msg) . '</span> '
-          . '<button type="button" id="staff_form_drop_cols_btn" class="btn-secondary" style="margin-left:10px" '
-          . 'onclick="staffFormDropDeprecated()">Remove deprecated DB columns</button>';
+    $still = (int)($result['staff_still_empty'] ?? 0) + (int)($result['archive_still_empty'] ?? 0);
+    if ($still > 0) {
+        $msg .= " WARNING: {$still} row(s) still have empty form_data.";
+        $html = '<span style="color:#b91c1c">' . htmlspecialchars($msg) . '</span>';
+    } else {
+        $html = '<span style="color:#166534">' . htmlspecialchars($msg) . '</span> '
+              . '<button type="button" id="staff_form_drop_cols_btn" class="btn-secondary" style="margin-left:10px" '
+              . 'onclick="staffFormDropDeprecated()">Remove deprecated DB columns</button>';
+    }
     ajax_return($html);
 }
 
