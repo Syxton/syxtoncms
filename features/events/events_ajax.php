@@ -4474,7 +4474,8 @@ function staff_form_save_field() {
     $label = clean_myvar_req("label", "string");
     $type = clean_myvar_req("type", "string");
     $section = clean_myvar_opt("section", "string", "");
-    $sortorder = clean_myvar_opt("sortorder", "int", 500);
+    $place_after = clean_myvar_opt("place_after", "string", "end");
+    $sortorder = staff_form_resolve_sortorder($pageid, $fieldid, $place_after);
     $required = clean_myvar_opt("required", "int", 0);
     $active = clean_myvar_opt("active", "int", 1);
     $helptext = clean_myvar_opt("helptext", "string", "");
@@ -4689,6 +4690,15 @@ function staff_form_migrate() {
     if ($still > 0) {
         $msg .= " WARNING: {$still} row(s) still have empty form_data.";
         $html = '<span style="color:#b91c1c">' . htmlspecialchars($msg) . '</span>';
+        ajax_return($html);
+        return;
+    }
+
+    $status = staff_form_migration_status();
+    if (!empty($status['complete'])) {
+        // Fully done (no deprecated columns either) — hide tooling
+        $html = '<span style="color:#166534">' . htmlspecialchars($msg) . ' Migration tools are no longer needed.</span>'
+              . '<script>var t=document.getElementById("staff_form_migration_tools"); if(t){ setTimeout(function(){ t.style.display="none"; }, 2500); }</script>';
     } else {
         $html = '<span style="color:#166534">' . htmlspecialchars($msg) . '</span> '
               . '<button type="button" id="staff_form_drop_cols_btn" class="btn-secondary" style="margin-left:10px" '
@@ -4704,7 +4714,14 @@ function staff_form_drop_deprecated_columns() {
     }
     $result = drop_deprecated_staff_columns();
     $color = !empty($result['ok']) ? '#166534' : '#b91c1c';
-    ajax_return('<span style="color:' . $color . '">' . htmlspecialchars($result['message']) . '</span>');
+    $html = '<span style="color:' . $color . '">' . htmlspecialchars($result['message']) . '</span>';
+    if (!empty($result['ok'])) {
+        $status = staff_form_migration_status();
+        if (!empty($status['complete'])) {
+            $html .= '<script>var t=document.getElementById("staff_form_migration_tools"); if(t){ setTimeout(function(){ t.style.display="none"; }, 2000); }</script>';
+        }
+    }
+    ajax_return($html);
 }
 
 function staff_form_reorder() {

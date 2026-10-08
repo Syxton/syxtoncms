@@ -1732,6 +1732,91 @@ function get_staff_form_deprecated_columns() {
 }
 
 /**
+ * Whether legacy migration tooling is still needed.
+ * - needs_migration: any staff/archive row lacks form_data
+ * - needs_drop: any deprecated classic column still exists on either table
+ * - complete: neither of the above
+ */
+function staff_form_migration_status() {
+    ensure_staff_form_tables();
+
+    $staff_empty = get_db_row(
+        "SELECT COUNT(*) AS cnt FROM events_staff
+         WHERE form_data IS NULL OR form_data = '' OR form_data = '{}'"
+    );
+    $arch_empty = get_db_row(
+        "SELECT COUNT(*) AS cnt FROM events_staff_archive
+         WHERE form_data IS NULL OR form_data = '' OR form_data = '{}'"
+    );
+    $empty_cnt = (int)($staff_empty['cnt'] ?? 0) + (int)($arch_empty['cnt'] ?? 0);
+
+    $deprecated = get_staff_form_deprecated_columns();
+    $remaining_cols = [];
+    foreach (['events_staff', 'events_staff_archive'] as $table) {
+        foreach ($deprecated as $col) {
+            $row = get_db_row(
+                "SELECT COUNT(*) AS cnt FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE()
+                   AND TABLE_NAME = ||t||
+                   AND COLUMN_NAME = ||c||",
+                ['t' => $table, 'c' => $col]
+            );
+            if ($row && (int)$row['cnt'] > 0) {
+                $remaining_cols[$col] = true;
+            }
+        }
+    }
+
+    $needs_migration = $empty_cnt > 0;
+    $needs_drop = !empty($remaining_cols);
+
+    return [
+        'needs_migration' => $needs_migration,
+        'needs_drop' => $needs_drop,
+        'empty_form_data_rows' => $empty_cnt,
+        'remaining_columns' => array_keys($remaining_cols),
+        'complete' => !$needs_migration && !$needs_drop,
+    ];
+}
+
+/**
+ * Migration toolbar HTML for the form editor.
+ * Hidden entirely when form_data is filled and deprecated columns are gone.
+ */
+function staff_form_migration_tools_html() {
+    $status = staff_form_migration_status();
+    if (!empty($status['complete'])) {
+        return ''; // Fully migrated — no tooling needed
+    }
+
+    $html = '<div id="staff_form_migration_tools" style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid #e2e8f0">';
+
+    if (!empty($status['needs_migration'])) {
+        $empty = (int)($status['empty_form_data_rows'] ?? 0);
+        $html .= '<p class="sfe-hint" style="margin:0 0 8px">
+            Legacy data still needs migration'
+            . ($empty > 0 ? ' (' . $empty . ' row(s) without form_data)' : '')
+            . '.
+        </p>
+        <button type="button" class="btn-secondary" id="staff_form_migrate_btn" onclick="staffFormRunMigrate()">Run Data Migration</button>
+        <span id="staff_form_migrate_result" style="margin-left:10px"></span>';
+    } elseif (!empty($status['needs_drop'])) {
+        $cols = implode(', ', array_slice($status['remaining_columns'] ?? [], 0, 8));
+        $more = count($status['remaining_columns'] ?? []) > 8 ? '…' : '';
+        $html .= '<p class="sfe-hint" style="margin:0 0 8px">
+            Data is migrated. Deprecated DB columns can be removed'
+            . ($cols !== '' ? ' (' . htmlspecialchars($cols) . $more . ')' : '')
+            . '.
+        </p>
+        <button type="button" id="staff_form_drop_cols_btn" class="btn-secondary" onclick="staffFormDropDeprecated()">Remove deprecated DB columns</button>
+        <span id="staff_form_migrate_result" style="margin-left:10px"></span>';
+    }
+
+    $html .= '</div>';
+    return $html;
+}
+
+/**
  * Drop deprecated classic columns from events_staff and events_staff_archive
  * after form_data migration is complete.
  */
@@ -1791,6 +1876,75 @@ function drop_deprecated_staff_columns() {
     ];
 }
 
+
+/**
+ * Resolve "Position in form" selection into a sortorder integer.
+ * place_after: keep | start | end | after:{fieldid}
+ * When inserting/moving after another field, bumps following sortorders to make room.
+ */
+function staff_form_resolve_sortorder($pageid, $fieldid, $place_after) {
+    $pageid = (int)$pageid;
+    $fieldid = (int)$fieldid;
+    $place = trim((string)$place_after);
+    if ($place === '') {
+        $place = 'end';
+    }
+
+    // Keep current position when editing
+    if ($place === 'keep') {
+        if ($fieldid > 0) {
+            $row = get_db_row(
+                "SELECT sortorder FROM events_staff_form_fields WHERE fieldid=||id||",
+                ['id' => $fieldid]
+            );
+            if ($row) {
+                return (int)$row['sortorder'];
+            }
+        }
+        $place = 'end';
+    }
+
+    $scope = "pageid IN (0, ||p||)";
+    $p = ['p' => $pageid];
+
+    if ($place === 'start') {
+        // Make room at the top; new field always gets sortorder 10
+        execute_db_sql(
+            "UPDATE events_staff_form_fields SET sortorder = sortorder + 10 WHERE {$scope}"
+                . ($fieldid > 0 ? " AND fieldid <> ||id||" : ""),
+            $fieldid > 0 ? array_merge($p, ['id' => $fieldid]) : $p
+        );
+        return 10;
+    }
+
+    if (strpos($place, 'after:') === 0) {
+        $after_id = (int)substr($place, 6);
+        if ($after_id > 0) {
+            $row = get_db_row(
+                "SELECT sortorder FROM events_staff_form_fields WHERE fieldid=||id||",
+                ['id' => $after_id]
+            );
+            if ($row) {
+                $sort = (int)$row['sortorder'] + 1;
+                // Make room: shift fields at or after this slot
+                execute_db_sql(
+                    "UPDATE events_staff_form_fields SET sortorder = sortorder + 1
+                     WHERE {$scope} AND sortorder >= ||s||"
+                        . ($fieldid > 0 ? " AND fieldid <> ||id||" : ""),
+                    $fieldid > 0
+                        ? array_merge($p, ['s' => $sort, 'id' => $fieldid])
+                        : array_merge($p, ['s' => $sort])
+                );
+                return $sort;
+            }
+        }
+        $place = 'end';
+    }
+
+    // Default: end of list
+    $row = get_db_row("SELECT MAX(sortorder) AS m FROM events_staff_form_fields WHERE {$scope}", $p);
+    return ($row && $row['m'] !== null) ? ((int)$row['m'] + 10) : 500;
+}
 
 function staff_form_editor_ui($pageid) {
     if (!defined('STAFFFORMLIB')) {
@@ -1926,7 +2080,6 @@ function staff_form_editor_ui($pageid) {
         $edit_js_id = $fid > 0 ? $fid : ("'" . $map_key . "'");
         $rows .= '<tr draggable="true" data-fieldid="' . (int)$fid . '" class="sfe-field-row">
             <td class="sfe-drag-handle" title="Drag to reorder">&#8942;&#8942;</td>
-            <td style="text-align:center" class="sfe-sort-display">' . (int)$f['sortorder'] . '</td>
             <td><code>' . htmlspecialchars($f['field_key']) . '</code>' . $badge . '</td>
             <td>' . htmlspecialchars($f['label']) . '</td>
             <td>' . htmlspecialchars($f['type']) . '</td>
@@ -1939,6 +2092,23 @@ function staff_form_editor_ui($pageid) {
                 ' . $del . '
             </td>
         </tr>';
+    }
+
+    // Position dropdown options (After: Label) — used in the edit form
+    $position_opts = '<option value="start">At the beginning</option>';
+    $position_opts .= '<option value="end" selected>At the end</option>';
+    foreach ($fields as $f) {
+        $fid = (int)($f['fieldid'] ?? 0);
+        if ($fid <= 0) {
+            continue;
+        }
+        $lbl = trim((string)($f['label'] ?? $f['field_key']));
+        $sec = trim((string)($f['section'] ?? ''));
+        $disp = $lbl !== '' ? $lbl : $f['field_key'];
+        if ($sec !== '') {
+            $disp .= ' (' . $sec . ')';
+        }
+        $position_opts .= '<option value="after:' . $fid . '">After: ' . htmlspecialchars($disp) . '</option>';
     }
 
     $edit_json = json_encode($edit_map, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
@@ -2001,8 +2171,8 @@ function staff_form_editor_ui($pageid) {
         <table class="sfe-table" id="sfe-fields-table">
             <thead>
                 <tr>
-                    <th style="width:28px"></th>
-                    <th>Order</th><th>Key</th><th>Label</th><th>Type</th><th>Section</th>
+                    <th style="width:28px" title="Drag to reorder"></th>
+                    <th>Key</th><th>Label</th><th>Type</th><th>Section</th>
                     <th>Show/Hide</th><th>Req. When</th><th>Status</th><th></th>
                 </tr>
             </thead>
@@ -2047,8 +2217,12 @@ function staff_form_editor_ui($pageid) {
                         <datalist id="sfe-section-list">' . $section_opts . '</datalist>
                     </div>
                     <div>
-                        <label>Sort Order</label>
-                        <input type="number" name="sortorder" id="edit_sortorder" value="500" />
+                        <label>Position in form</label>
+                        <select name="place_after" id="edit_place_after">
+                            <option value="keep">Keep current position</option>
+                            ' . $position_opts . '
+                        </select>
+                        <div class="sfe-hint">Or drag rows in the list above to reorder.</div>
                     </div>
                     <div>
                         <label>Required</label>
@@ -2170,10 +2344,7 @@ function staff_form_editor_ui($pageid) {
                 </div>
             </form>
         </div>
-        <p style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid #e2e8f0">
-            <button type="button" class="btn-secondary" id="staff_form_migrate_btn" onclick="staffFormRunMigrate()">Run Data Migration</button>
-            <span id="staff_form_migrate_result" style="margin-left:10px"></span>
-        </p>
+        ' . staff_form_migration_tools_html() . '
     </div>
     <script>
     window.STAFF_FORM_EDIT_MAP = ' . $edit_json . ';
@@ -2313,7 +2484,12 @@ function staff_form_editor_ui($pageid) {
         $("#edit_label").val(f.label);
         $("#edit_type").val(f.type);
         $("#edit_section").val(f.section);
-        $("#edit_sortorder").val(f.sortorder);
+        // Default to keep current position when editing; hide "after self" option
+        $("#edit_place_after").val("keep");
+        $("#edit_place_after option").prop("disabled", false).show();
+        if (f.fieldid > 0) {
+            $("#edit_place_after option[value=\"after:" + f.fieldid + "\"]").prop("disabled", true).hide();
+        }
         $("#edit_required").val(String(f.required));
         $("#edit_active").val(String(f.active));
         $("#edit_locked").val(f.locked || "0");
@@ -2422,6 +2598,8 @@ function staff_form_editor_ui($pageid) {
         document.getElementById("edit_reqw_conditions").innerHTML = "";
         $("#edit_vis_conditions_json").val("[]");
         $("#edit_reqw_conditions_json").val("[]");
+        $("#edit_place_after option").prop("disabled", false).show();
+        $("#edit_place_after").val("end");
         $("#sfe-form-title").text("Add Field");
     }
 
