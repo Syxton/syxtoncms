@@ -586,6 +586,38 @@ function ensure_staff_form_tables() {
     // Add form_data columns only when missing
     staff_form_add_column_if_missing('events_staff', 'form_data', 'LONGTEXT DEFAULT NULL', 'bgcheckpassdate');
     staff_form_add_column_if_missing('events_staff_archive', 'form_data', 'LONGTEXT DEFAULT NULL', 'bgcheckpassdate');
+
+    // Allow inserts that omit legacy columns while they still exist
+    foreach (get_staff_form_deprecated_columns() as $col) {
+        staff_form_ensure_column_default('events_staff', $col);
+        staff_form_ensure_column_default('events_staff_archive', $col);
+    }
+}
+
+/**
+ * Ensure a legacy column has a DEFAULT so partial INSERTs work until the column is dropped.
+ */
+function staff_form_ensure_column_default($table, $column) {
+    $row = get_db_row(
+        "SELECT DATA_TYPE, COLUMN_TYPE, IS_NULLABLE, COLUMN_DEFAULT FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = ||table||
+           AND COLUMN_NAME = ||column||",
+        ['table' => $table, 'column' => $column]
+    );
+    if (!$row) {
+        return;
+    }
+    if ($row['COLUMN_DEFAULT'] !== null) {
+        return; // already has a default
+    }
+    $ctype = $row['COLUMN_TYPE'];
+    $dtype = strtolower($row['DATA_TYPE'] ?? '');
+    if (in_array($dtype, ['int', 'bigint', 'smallint', 'tinyint', 'mediumint'])) {
+        execute_db_sql("ALTER TABLE `{$table}` MODIFY COLUMN `{$column}` {$ctype} NOT NULL DEFAULT 0");
+    } else {
+        execute_db_sql("ALTER TABLE `{$table}` MODIFY COLUMN `{$column}` {$ctype} NOT NULL DEFAULT ''");
+    }
 }
 
 /**
@@ -728,6 +760,28 @@ function seed_staff_form_fields($pageid = 0, $force = false) {
 /**
  * Merge a DB row (columns) with form_data JSON into a single values array keyed by field_key.
  */
+/**
+ * Normalize legacy checkbox / signature values to canonical "1" / "0".
+ * Browsers historically posted "on" for checkboxes without an explicit value attribute.
+ */
+function staff_form_normalize_checkbox_value($val) {
+    if ($val === null || $val === '') {
+        return '0';
+    }
+    if (is_bool($val)) {
+        return $val ? '1' : '0';
+    }
+    $s = strtolower(trim((string)$val));
+    if ($s === '1' || $s === 'on' || $s === 'yes' || $s === 'true' || $s === 'checked') {
+        return '1';
+    }
+    if ($s === '0' || $s === 'off' || $s === 'no' || $s === 'false') {
+        return '0';
+    }
+    // Any other non-empty string treats as checked (legacy safety)
+    return '1';
+}
+
 function get_staff_application_values($row) {
     if (empty($row)) {
         return [];
@@ -765,6 +819,12 @@ function get_staff_application_values($row) {
     }
     if (!empty($vals['workerconsentdate']) && is_numeric($vals['workerconsentdate'])) {
         $vals['workerconsentdate'] = date('m/d/Y', $vals['workerconsentdate']);
+    }
+    // Normalize signature / checkbox consents: legacy "on" → "1"
+    foreach (['workerconsentsig', 'parentalconsentsig'] as $sig_key) {
+        if (array_key_exists($sig_key, $vals)) {
+            $vals[$sig_key] = staff_form_normalize_checkbox_value($vals[$sig_key]);
+        }
     }
     return $vals;
 }
@@ -1537,6 +1597,13 @@ function staff_form_row_to_form_data($row) {
         }
     }
 
+    // Normalize signature checkboxes: legacy "on" → "1" (both from columns and existing form_data)
+    foreach (['workerconsentsig', 'parentalconsentsig'] as $sig_key) {
+        if (array_key_exists($sig_key, $data)) {
+            $data[$sig_key] = staff_form_normalize_checkbox_value($data[$sig_key]);
+        }
+    }
+
     return $data;
 }
 
@@ -1553,10 +1620,20 @@ function migrate_staff_form_data($pageid = null) {
     if ($rows) {
         while ($row = fetch_row($rows)) {
             $data = staff_form_row_to_form_data($row);
-            // Always write — even if only zeros — so form_data is never NULL
+            // Always write — even if only zeros — so form_data is never NULL.
+            // Also normalize legacy signature columns ("on" → "1") so classic columns match form_data.
+            $wsig = staff_form_normalize_checkbox_value($data['workerconsentsig'] ?? ($row['workerconsentsig'] ?? ''));
+            $psig = staff_form_normalize_checkbox_value($data['parentalconsentsig'] ?? ($row['parentalconsentsig'] ?? ''));
+            $data['workerconsentsig'] = $wsig;
+            $data['parentalconsentsig'] = $psig;
             execute_db_sql(
-                "UPDATE events_staff SET form_data = ||fd|| WHERE staffid = ||id||",
-                ['fd' => json_encode($data, JSON_UNESCAPED_UNICODE), 'id' => $row['staffid']]
+                "UPDATE events_staff SET form_data = ||fd||, workerconsentsig = ||wsig||, parentalconsentsig = ||psig|| WHERE staffid = ||id||",
+                [
+                    'fd' => json_encode($data, JSON_UNESCAPED_UNICODE),
+                    'wsig' => $wsig,
+                    'psig' => $psig,
+                    'id' => $row['staffid'],
+                ]
             );
             $updated++;
         }
@@ -1567,9 +1644,18 @@ function migrate_staff_form_data($pageid = null) {
     if ($arows) {
         while ($row = fetch_row($arows)) {
             $data = staff_form_row_to_form_data($row);
+            $wsig = staff_form_normalize_checkbox_value($data['workerconsentsig'] ?? ($row['workerconsentsig'] ?? ''));
+            $psig = staff_form_normalize_checkbox_value($data['parentalconsentsig'] ?? ($row['parentalconsentsig'] ?? ''));
+            $data['workerconsentsig'] = $wsig;
+            $data['parentalconsentsig'] = $psig;
             execute_db_sql(
-                "UPDATE events_staff_archive SET form_data = ||fd|| WHERE archiveid = ||id||",
-                ['fd' => json_encode($data, JSON_UNESCAPED_UNICODE), 'id' => $row['archiveid']]
+                "UPDATE events_staff_archive SET form_data = ||fd||, workerconsentsig = ||wsig||, parentalconsentsig = ||psig|| WHERE archiveid = ||id||",
+                [
+                    'fd' => json_encode($data, JSON_UNESCAPED_UNICODE),
+                    'wsig' => $wsig,
+                    'psig' => $psig,
+                    'id' => $row['archiveid'],
+                ]
             );
             $aupdated++;
         }
