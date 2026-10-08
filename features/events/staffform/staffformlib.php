@@ -1055,10 +1055,17 @@ function render_staff_form_field($field, $value, $viewonly = false) {
             }
             if ($need_confirm && !$viewonly) {
                 $checked = (!empty($val) && $val !== '0') ? ' checked="checked"' : '';
-                $html .= '<label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-weight:normal">';
+                // Checkbox + text as siblings (not a flex <label>) so validation .error
+                // labels are not trapped/squished inside the confirm row.
+                $html .= '<div class="staff-file-confirm" style="margin-top:10px">';
+                $html .= '<div class="staff-file-confirm-row" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px">';
                 $html .= '<input type="checkbox" id="' . htmlspecialchars($key) . '" name="' . htmlspecialchars($key) . '" value="1"'
+                       . ' style="width:45px;height:30px;flex:0 0 auto;margin:0"'
                        . $checked . $data_rules . $extra . ' />';
-                $html .= '<span>I have reviewed this document</span></label>';
+                $html .= '<label for="' . htmlspecialchars($key) . '" class="staff-file-confirm-text" style="font-weight:normal;margin:0;cursor:pointer;flex:1 1 auto">'
+                       . 'I have reviewed this document</label>';
+                $html .= '</div>';
+                $html .= '</div>';
             } elseif ($viewonly) {
                 $html .= '<div>' . ((!empty($val) && $val !== '0') ? 'Reviewed' : 'Not confirmed') . '</div>';
             }
@@ -1169,6 +1176,19 @@ function staff_application_form_dynamic($row, $viewonly = false) {
                 .staff-form-page { display:none; }
                 .staff-form-page.active { display:block; }
                 .staff-form-viewonly .staff-form-page { display:block !important; }
+                .staff-file-confirm-row input[type=checkbox] {
+                    width: 45px !important; height: 30px !important; max-width: none !important;
+                    flex: 0 0 auto; margin: 0;
+                }
+                .staff-file-confirm-row > label.staff-file-confirm-text {
+                    flex: 1 1 auto; font-weight: normal; margin: 0; cursor: pointer;
+                }
+                /* Validation error sits on its own full-width row, not squished beside the checkbox */
+                .staff-file-confirm-row > label.error,
+                .staff-file-confirm > label.error {
+                    flex: 1 1 100%; display: block; width: 100%;
+                    color: #dc2626; font-weight: normal; margin: 4px 0 0;
+                }
                 .staff-viewonly-row { margin-bottom: 8px; page-break-inside: avoid; }
                 .staff-viewonly-value { font-weight: 500; color: #0f172a; padding: 2px 0 8px; border-bottom: 1px dotted #e2e8f0; }
                 @media print {
