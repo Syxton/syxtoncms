@@ -1277,8 +1277,9 @@ function staff_form_pagination_js($page_count) {
     var total = ' . $page_count . ';
     var cur = 0;
     function pages(){ return jQuery("#staffapplication_form .staff-form-page"); }
-    function showPage(i){
+    function showPage(i, opts){
         if (typeof jQuery === "undefined") return;
+        opts = opts || {};
         cur = Math.max(0, Math.min(total - 1, i));
         pages().removeClass("active").eq(cur).addClass("active");
         jQuery("#staff-form-pager .sfp-step").removeClass("active").each(function(){
@@ -1296,18 +1297,30 @@ function staff_form_pagination_js($page_count) {
             jQuery("#sfp-submit").hide();
         }
         if (window.staffFormApplyRules) window.staffFormApplyRules();
-        try {
-            var top = jQuery("#staffapplication_form_div").offset();
-            if (top) jQuery("html, body").animate({scrollTop: top.top - 20}, 200);
-        } catch(e) {}
+        // Keep the form top in view only when it has scrolled out of the viewport.
+        // Never force a document scroll on every step (that caused the page to creep downward).
+        if (!opts.noScroll) {
+            try {
+                var el = document.getElementById("staffapplication_form_div");
+                if (el && typeof el.getBoundingClientRect === "function") {
+                    var rect = el.getBoundingClientRect();
+                    // Only nudge if the form header is above the visible area
+                    if (rect.top < 0) {
+                        var y = window.pageYOffset + rect.top - 20;
+                        if (y < 0) y = 0;
+                        window.scrollTo({ top: y, behavior: "smooth" });
+                    }
+                }
+            } catch(e) {}
+        }
     }
-    function validateCurrentPage(){
+    function validatePage(idx){
         if (typeof jQuery === "undefined") return true;
-        var $page = pages().eq(cur);
+        var $page = pages().eq(idx);
         var ok = true;
         $page.find("[data-rule-required=true], [data-rule-required=\'true\']").each(function(){
             var $el = jQuery(this);
-            if (!$el.is(":visible")) return;
+            // Treat as visible if its page is the one we are validating (even if temporarily hidden)
             var val = $el.is(":checkbox") ? ($el.is(":checked") ? "1" : "") : String($el.val() || "");
             if (val === "" || val === "Please select") {
                 ok = false;
@@ -1316,6 +1329,10 @@ function staff_form_pagination_js($page_count) {
                 $el.removeClass("error");
             }
         });
+        return ok;
+    }
+    function validateCurrentPage(){
+        var ok = validatePage(cur);
         if (!ok) {
             alert("Please complete the required fields on this step before continuing.");
         }
@@ -1323,27 +1340,38 @@ function staff_form_pagination_js($page_count) {
     }
     function bind(){
         if (typeof jQuery === "undefined") { setTimeout(bind, 50); return; }
-        jQuery("#sfp-next").on("click", function(){
+        jQuery("#sfp-next").on("click", function(e){
+            e.preventDefault();
+            e.stopPropagation();
             if (!validateCurrentPage()) return;
             showPage(cur + 1);
         });
-        jQuery("#sfp-prev").on("click", function(){ showPage(cur - 1); });
-        jQuery("#staff-form-pager").on("click", ".sfp-step", function(){
-            var p = parseInt(jQuery(this).data("page"), 10);
-            if (p < cur) { showPage(p); return; }
-            // only allow forward if current page validates
-            if (p > cur) {
-                if (!validateCurrentPage()) return;
-                // validate intermediate pages loosely by walking forward
-                while (cur < p) {
-                    if (!validateCurrentPage()) return;
-                    cur++;
-                    pages().removeClass("active").eq(cur).addClass("active");
-                }
-                showPage(p);
-            }
+        jQuery("#sfp-prev").on("click", function(e){
+            e.preventDefault();
+            e.stopPropagation();
+            showPage(cur - 1);
         });
-        showPage(0);
+        jQuery("#staff-form-pager").on("click", ".sfp-step", function(e){
+            e.preventDefault();
+            e.stopPropagation();
+            var p = parseInt(jQuery(this).data("page"), 10);
+            if (isNaN(p) || p === cur) return;
+            if (p < cur) {
+                showPage(p);
+                return;
+            }
+            // Forward: require every step up to (but not including) the target to pass validation
+            for (var i = cur; i < p; i++) {
+                if (!validatePage(i)) {
+                    showPage(i); // jump to the first incomplete step
+                    alert("Please complete the required fields on this step before continuing.");
+                    return;
+                }
+            }
+            showPage(p);
+        });
+        // Initial paint — do not scroll the document on first load
+        showPage(0, { noScroll: true });
     }
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bind);
     else bind();
