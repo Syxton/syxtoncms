@@ -416,25 +416,13 @@ update_staff_app||
 
 insert_staff_app||
     INSERT INTO `events_staff`
-    (`userid`, `pageid`, `name`, `phone`, `dateofbirth`, `agerange`,
-    `address`, `address2`, `city`, `state`, `zip`,
-    `cocmember`, `congregation`, `priorwork`,
-    `q1_1`, `q1_2`, `q1_3`, `q2_1`, `q2_2`, `q2_3`,
+    (`userid`, `pageid`, `name`, `phone`, `dateofbirth`,
     `parentalconsent`, `parentalconsentsig`, `workerconsent`, `workerconsentsig`, `workerconsentdate`,
-    `ref1name`, `ref1relationship`, `ref1phone`,
-    `ref2name`, `ref2relationship`, `ref2phone`,
-    `ref3name`, `ref3relationship`, `ref3phone`,
-    `bgcheckpass`, `bgcheckpassdate`, `form_data`)
+    `bgcheckpassdate`, `form_data`)
     VALUES
-    (||userid||, ||pageid||, ||name||, ||phone||, ||dateofbirth||, '',
-     '', '', '', '', '',
-     '', '', '',
-     '', '', '', '', '', '',
+    (||userid||, ||pageid||, ||name||, ||phone||, ||dateofbirth||,
      ||parentalconsent||, ||parentalconsentsig||, ||workerconsent||, ||workerconsentsig||, ||workerconsentdate||,
-     '', '', '',
-     '', '', '',
-     '', '', '',
-     '', 0, ||form_data||)
+     0, ||form_data||)
 ||insert_staff_app
 
 get_staff_app||
@@ -465,9 +453,13 @@ update_staff_app_archive||
 
 insert_staff_app_archive||
     INSERT INTO `events_staff_archive`
-    (`userid`, `staffid`, `pageid`, `name`, `phone`, `dateofbirth`, `address`, `agerange`, `cocmember`, `congregation`, `priorwork`, `q1_1`, `q1_2`, `q1_3`, `q2_1`, `q2_2`, `q2_3`, `parentalconsent`, `parentalconsentsig`, `workerconsent`, `workerconsentsig`, `workerconsentdate`, `ref1name`, `ref1relationship`, `ref1phone`, `ref2name`, `ref2relationship`, `ref2phone`, `ref3name`, `ref3relationship`, `ref3phone`, `bgcheckpass`, `bgcheckpassdate`, `year`, `form_data`)
+    (`userid`, `staffid`, `pageid`, `year`, `name`, `phone`, `dateofbirth`,
+    `parentalconsent`, `parentalconsentsig`, `workerconsent`, `workerconsentsig`, `workerconsentdate`,
+    `bgcheckpassdate`, `form_data`)
     VALUES
-    (||userid||, ||staffid||, ||pageid||, ||name||, ||phone||, ||dateofbirth||, ||address||, ||agerange||, ||cocmember||, ||congregation||, ||priorwork||, ||q1_1||, ||q1_2||, ||q1_3||, ||q2_1||, ||q2_2||, ||q2_3||, ||parentalconsent||, ||parentalconsentsig||, ||workerconsent||, ||workerconsentsig||, ||workerconsentdate||, ||ref1name||, ||ref1relationship||, ||ref1phone||, ||ref2name||, ||ref2relationship||, ||ref2phone||, ||ref3name||, ||ref3relationship||, ||ref3phone||, '', 0, ||year||, ||form_data||)
+    (||userid||, ||staffid||, ||pageid||, ||year||, ||name||, ||phone||, ||dateofbirth||,
+     ||parentalconsent||, ||parentalconsentsig||, ||workerconsent||, ||workerconsentsig||, ||workerconsentdate||,
+     ||bgcheckpassdate||, ||form_data||)
 ||insert_staff_app_archive
 
 get_staff_by_year||

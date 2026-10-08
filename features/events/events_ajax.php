@@ -3351,32 +3351,19 @@ global $CFG, $USER;
             }
             list($col_params, $form_data) = collect_staff_application_post($pageid);
 
-            // Ensure every classic column the SQL templates expect is present (defaults for any not in the current form).
+            // Only retained classic columns + form_data (deprecated answer columns live only in form_data).
             $params = array_merge([
                 "userid" => $USER->userid,
                 "pageid" => $pageid,
                 "name" => "",
                 "phone" => "",
                 "dateofbirth" => 0,
-                "address" => "",
-                "address2" => "",
-                "city" => "",
-                "state" => "",
-                "zip" => "",
-                "agerange" => 0,
-                "cocmember" => 0,
-                "congregation" => "",
-                "priorwork" => 0,
-                "q1_1" => 0, "q1_2" => 0, "q1_3" => 0,
-                "q2_1" => 0, "q2_2" => 0, "q2_3" => "",
                 "parentalconsent" => "",
                 "parentalconsentsig" => "",
                 "workerconsent" => "",
                 "workerconsentsig" => "",
                 "workerconsentdate" => 0,
-                "ref1name" => "", "ref1relationship" => "", "ref1phone" => "",
-                "ref2name" => "", "ref2relationship" => "", "ref2phone" => "",
-                "ref3name" => "", "ref3relationship" => "", "ref3phone" => "",
+                "bgcheckpassdate" => 0,
             ], $col_params);
 
             $params["form_data"] = json_encode($form_data);
