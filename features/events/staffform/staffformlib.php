@@ -745,7 +745,7 @@ function get_staff_application_values($row) {
         'staffid', 'userid', 'pageid', 'name', 'phone', 'dateofbirth',
         'workerconsent', 'workerconsentdate', 'workerconsentsig',
         'parentalconsent', 'parentalconsentsig',
-        'bgcheckpass', 'bgcheckpassdate',
+        'bgcheckpassdate',
     ];
     foreach ($static_keys as $k) {
         if (array_key_exists($k, $row) && $row[$k] !== null && $row[$k] !== '') {
@@ -1597,7 +1597,7 @@ function get_staff_form_retained_columns() {
         'name', 'phone', 'dateofbirth',
         'parentalconsent', 'parentalconsentsig',
         'workerconsent', 'workerconsentsig', 'workerconsentdate',
-        'bgcheckpass', 'bgcheckpassdate',
+        'bgcheckpassdate',
         'form_data',
     ];
 }
@@ -1613,6 +1613,7 @@ function get_staff_form_deprecated_columns() {
         'ref1name', 'ref1relationship', 'ref1phone',
         'ref2name', 'ref2relationship', 'ref2phone',
         'ref3name', 'ref3relationship', 'ref3phone',
+        'bgcheckpass', // superseded by bgcheckpassdate alone
     ];
 }
 

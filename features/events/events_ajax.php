@@ -3013,11 +3013,11 @@ function change_bgcheck_status() {
     $date = clean_myvar_opt("bgcdate", "string", "");
 
     if ($pageid && $staffid && $date) {
-        execute_db_sql("UPDATE events_staff SET bgcheckpassdate = ||bgcheckpassdate||, bgcheckpass = '1' WHERE staffid = ||staffid|| AND pageid = ||pageid||", ["staffid" => $staffid, "pageid" => $pageid, "bgcheckpassdate" => strtotime($date)]);
-        execute_db_sql("UPDATE events_staff_archive SET bgcheckpassdate = ||bgcheckpassdate||, bgcheckpass = '1' WHERE staffid = ||staffid|| AND year = '" . date('Y') . "' AND pageid = ||pageid||", ["staffid" => $staffid, "pageid" => $pageid, "bgcheckpassdate" => strtotime($date)]);
+        execute_db_sql("UPDATE events_staff SET bgcheckpassdate = ||bgcheckpassdate|| WHERE staffid = ||staffid|| AND pageid = ||pageid||", ["staffid" => $staffid, "pageid" => $pageid, "bgcheckpassdate" => strtotime($date)]);
+        execute_db_sql("UPDATE events_staff_archive SET bgcheckpassdate = ||bgcheckpassdate|| WHERE staffid = ||staffid|| AND year = '" . date('Y') . "' AND pageid = ||pageid||", ["staffid" => $staffid, "pageid" => $pageid, "bgcheckpassdate" => strtotime($date)]);
     } elseif ($pageid && $staffid && !$date) {
-        execute_db_sql("UPDATE events_staff SET bgcheckpassdate = 0, bgcheckpass = '' WHERE staffid = ||staffid|| AND pageid = ||pageid||", ["staffid" => $staffid, "pageid" => $pageid]);
-        execute_db_sql("UPDATE events_staff_archive SET bgcheckpassdate = 0, bgcheckpass = '' WHERE staffid = ||staffid|| AND year = '" . date('Y') . "' AND pageid = ||pageid||", ["staffid" => $staffid, "pageid" => $pageid]);
+        execute_db_sql("UPDATE events_staff SET bgcheckpassdate = 0 WHERE staffid = ||staffid|| AND pageid = ||pageid||", ["staffid" => $staffid, "pageid" => $pageid]);
+        execute_db_sql("UPDATE events_staff_archive SET bgcheckpassdate = 0 WHERE staffid = ||staffid|| AND year = '" . date('Y') . "' AND pageid = ||pageid||", ["staffid" => $staffid, "pageid" => $pageid]);
     }
     appsearch();
 }
@@ -3395,8 +3395,7 @@ global $CFG, $USER;
             // Update the staff archives.
             if ($staffid) {
                 $staff = get_db_row(fetch_template("dbsql/events.sql", "get_staff_app", "events"), ["staffid" => $staffid]);
-                $params["bgcheckpass"] = $staff["bgcheckpass"];
-                $params["bgcheckpassdate"] = $staff["bgcheckpassdate"];
+                $params["bgcheckpassdate"] = $staff["bgcheckpassdate"] ?? 0;
                 $params["year"] = date("Y");
                 $params["staffid"] = $staffid; // Make sure this is set.
 
@@ -3434,7 +3433,9 @@ global $CFG, $USER;
 
                 $linkurl = $settings->events->$featureid->bgcheck_url->setting;
 
-                $status = empty($staff["bgcheckpass"]) ? false : (time() - $staff["bgcheckpassdate"] > ($settings->events->$featureid->bgcheck_years->setting * 365 * 24 * 60 * 60) ? false : true);
+                $bgdate = (int)($staff["bgcheckpassdate"] ?? 0);
+                $expire = (int)$settings->events->$featureid->bgcheck_years->setting * 365 * 24 * 60 * 60;
+                $status = ($bgdate > 0) && ((time() - $bgdate) <= $expire);
 
                 $eighteen = 18 * 365 * 24 * 60 * 60; // 18 years in seconds
                 $backgroundchecklink = ((time() - $params["dateofbirth"]) < $eighteen) || ($status || empty($linkurl)) ? '' : '
@@ -3505,8 +3506,9 @@ global $MYVARS, $CFG, $USER;
                 }
                 $row[] = str_replace('"', '""', (string)$v);
             }
-            $bg = !empty($app['bgcheckpass']) ? 'Yes' : 'No';
-            $bgd = !empty($app['bgcheckpassdate']) ? date('m/d/Y', $app['bgcheckpassdate']) : '';
+            $bgd_ts = (int)($app['bgcheckpassdate'] ?? 0);
+            $bg = ($bgd_ts > 0) ? 'Yes' : 'No';
+            $bgd = ($bgd_ts > 0) ? date('m/d/Y', $bgd_ts) : '';
             $row[] = $bg;
             $row[] = $bgd;
             $CSV .= '"' . implode('","', $row) . "\"\n";

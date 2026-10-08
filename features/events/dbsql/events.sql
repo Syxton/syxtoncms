@@ -458,7 +458,7 @@ update_staff_app_archive||
         `name` = ||name||, `phone` = ||phone||, `dateofbirth` = ||dateofbirth||,
         `parentalconsent` = ||parentalconsent||, `parentalconsentsig` = ||parentalconsentsig||,
         `workerconsent` = ||workerconsent||, `workerconsentsig` = ||workerconsentsig||, `workerconsentdate` = ||workerconsentdate||,
-        `bgcheckpass` = ||bgcheckpass||, `bgcheckpassdate` = ||bgcheckpassdate||,
+        `bgcheckpassdate` = ||bgcheckpassdate||,
         `form_data` = ||form_data||
     WHERE `staffid` = ||staffid|| AND `year` = ||year|| AND `pageid` = ||pageid||
 ||update_staff_app_archive
