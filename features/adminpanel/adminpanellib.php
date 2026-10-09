@@ -66,6 +66,19 @@ global $CFG, $USER, $ROLES, $ABILITIES;
             "class" => "adminpanel_links",
         ];
         $system_links .= user_is_able($USER->userid, "addevents", $pageid) ? make_modal_links($p) : "";
+
+        // Core Form Editor (named forms / hooks — not limited to Events)
+        $p = [
+            "title" => "Form Editor",
+            "text" => "Form Editor",
+            "path" => action_path("adminpanel") . "form_editor&pageid=$pageid",
+            "iframe" => true,
+            "width" => "95%",
+            "height" => "95%",
+            "icon" => icon("list-check"),
+            "class" => "adminpanel_links",
+        ];
+        $system_links .= make_modal_links($p);
     }
 
     // ---- Feature groups (collapsible) ----

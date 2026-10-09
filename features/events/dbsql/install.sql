@@ -101,7 +101,7 @@ CREATE TABLE IF NOT EXISTS `events_templates_forms` (
     ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
 
 -- Staff applications: retained identity/consent/bgcheck columns + form_data JSON for answers.
--- Dynamic questions are defined in events_staff_form_fields (no classic answer columns).
+-- Dynamic questions are defined in form_fields core table (no classic answer columns).
 CREATE TABLE IF NOT EXISTS `events_staff` (
     `staffid` int(11) NOT NULL AUTO_INCREMENT,
     `pageid` int(11) NOT NULL DEFAULT '0',
@@ -146,33 +146,8 @@ CREATE TABLE IF NOT EXISTS `events_staff_archive` (
     KEY `dateofbirth` (`dateofbirth`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
 
--- Dynamic staff application form field definitions (pageid 0 = global defaults)
-CREATE TABLE IF NOT EXISTS `events_staff_form_fields` (
-    `fieldid` int(11) NOT NULL AUTO_INCREMENT,
-    `pageid` int(11) NOT NULL DEFAULT '0' COMMENT '0 = global/default form',
-    `field_key` varchar(100) NOT NULL,
-    `label` varchar(255) NOT NULL,
-    `type` varchar(50) NOT NULL DEFAULT 'text',
-    `options` longtext DEFAULT NULL,
-    `required` tinyint(1) NOT NULL DEFAULT '0',
-    `sortorder` int(11) NOT NULL DEFAULT '0',
-    `section` varchar(200) DEFAULT NULL,
-    `helptext` text,
-    `validation` longtext DEFAULT NULL,
-    `is_system` tinyint(1) NOT NULL DEFAULT '0' COMMENT '1 = maps to a static DB column',
-    `active` tinyint(1) NOT NULL DEFAULT '1',
-    `extra_attrs` longtext DEFAULT NULL,
-    `visibility` longtext DEFAULT NULL COMMENT 'JSON show/hide rules',
-    `required_when` longtext DEFAULT NULL COMMENT 'JSON conditional required rules',
-    `created` int(11) NOT NULL DEFAULT '0',
-    `modified` int(11) NOT NULL DEFAULT '0',
-    PRIMARY KEY (`fieldid`),
-    UNIQUE KEY `page_field` (`pageid`,`field_key`),
-    KEY `pageid` (`pageid`),
-    KEY `sortorder` (`sortorder`),
-    KEY `active` (`active`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
-
+-- events_staff_form_fields: now core lib/formengine (see lib/formengine/dbsql/formengine.sql)
+-- events_form_hooks: now core lib/formengine (see lib/formengine/dbsql/formengine.sql)
 CREATE TABLE IF NOT EXISTS `events_contacts` (
     `contactid` int(11) NOT NULL AUTO_INCREMENT,
     `name` varchar(200) NOT NULL,

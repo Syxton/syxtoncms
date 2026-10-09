@@ -196,85 +196,21 @@ global $CFG;
 
 
 function staff_form_editor() {
-global $CFG;
-    if (!defined('STAFFFORMLIB')) {
-        include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
-    }
+    // Legacy URL — editor lives under Admin Panel → System → Form Editor.
+    // Keep this action working so old bookmarks do not break.
+    global $CFG, $USER;
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
-
-    // Ensure schema + seed defaults on first visit
-    ensure_staff_form_tables();
-    seed_staff_form_fields(0);
-
-    ajaxapi([
-        "id" => "staff_form_save_field",
-        "url" => "/features/events/events_ajax.php",
-        "data" => [
-            "action" => "staff_form_save_field",
-            "pageid" => $pageid,
-            // Explicitly send JS attrs (reqstring can miss textarea content in some ajax builds)
-            "attr_onblur" => "js||$('#edit_attr_onblur').val()||js",
-            "attr_onchange" => "js||$('#edit_attr_onchange').val()||js",
-            "vis_conditions_json" => "js||$('#edit_vis_conditions_json').val()||js",
-            "reqw_conditions_json" => "js||$('#edit_reqw_conditions_json').val()||js",
-            "options_json" => "js||$('#edit_options_json').val()||js",
-            "viewer_url" => "js||$('#edit_viewer_url').val()||js",
-            "viewer_height" => "js||$('#edit_viewer_height').val()||js",
-            "viewer_confirm" => "js||$('#edit_viewer_confirm').val()||js",
-        ],
-        "reqstring" => "staff_field_form",
-        "display" => "staff_form_editor_container",
-        "event" => "none",
-    ]);
-    ajaxapi([
-        "id" => "staff_form_delete_field",
-        "url" => "/features/events/events_ajax.php",
-        "data" => [
-            "action" => "staff_form_delete_field",
-            "pageid" => $pageid,
-            "fieldid" => "js||fieldid||js",
-        ],
-        "display" => "staff_form_editor_container",
-        "event" => "none",
-    ]);
-    ajaxapi([
-        "id" => "staff_form_migrate",
-        "url" => "/features/events/events_ajax.php",
-        "data" => [
-            "action" => "staff_form_migrate",
-            "pageid" => $pageid,
-        ],
-        "display" => "staff_form_migrate_result",
-        "loading" => "loading_overlay",
-        "event" => "none",
-    ]);
-    ajaxapi([
-        "id" => "staff_form_drop_deprecated_columns",
-        "url" => "/features/events/events_ajax.php",
-        "data" => [
-            "action" => "staff_form_drop_deprecated_columns",
-            "pageid" => $pageid,
-        ],
-        "display" => "staff_form_migrate_result",
-        "loading" => "loading_overlay",
-        "event" => "none",
-    ]);
-    ajaxapi([
-        "id" => "staff_form_reorder",
-        "url" => "/features/events/events_ajax.php",
-        "data" => [
-            "action" => "staff_form_reorder",
-            "pageid" => $pageid,
-            "order" => "js||order||js",
-        ],
-        "display" => "staff_form_editor_container",
-        "event" => "none",
-    ]);
-
-    echo staff_form_editor_ui($pageid);
+    $form_key = defined("FORM_KEY_STAFF_APP") ? FORM_KEY_STAFF_APP : "staff_app";
+    if (!is_siteadmin($USER->userid ?? 0) && !user_is_able($USER->userid ?? 0, "manageapplications", $pageid)) {
+        echo getlang("generic_permissions");
+        return;
+    }
+    if (!defined("FORMEDITORLIB")) {
+        include_once($CFG->dirroot . "/lib/formengine/formeditorlib.php");
+    }
+    form_editor_page($form_key, $pageid, false);
 }
 
-// staff_form_editor_ui() lives in staffform/staffformlib.php
 
 function pay_title() {
     return "Event Payments";

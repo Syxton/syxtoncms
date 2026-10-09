@@ -1,26 +1,4 @@
--- Staff Form Fields definition table
-CREATE TABLE IF NOT EXISTS `events_staff_form_fields` (
-  `fieldid` int NOT NULL AUTO_INCREMENT,
-  `pageid` int NOT NULL DEFAULT 0 COMMENT '0 = global/default form',
-  `field_key` varchar(100) NOT NULL,
-  `label` varchar(255) NOT NULL,
-  `type` varchar(50) NOT NULL DEFAULT 'text',
-  `options` longtext DEFAULT NULL,
-  `required` tinyint(1) NOT NULL DEFAULT 0,
-  `sortorder` int NOT NULL DEFAULT 0,
-  `section` varchar(200) DEFAULT NULL,
-  `helptext` text,
-  `validation` longtext DEFAULT NULL,
-  `is_system` tinyint(1) NOT NULL DEFAULT 0 COMMENT '1 = maps to a static DB column',
-  `active` tinyint(1) NOT NULL DEFAULT 1,
-  `extra_attrs` longtext DEFAULT NULL,
-  `visibility` longtext DEFAULT NULL COMMENT 'JSON show/hide rules',
-  `required_when` longtext DEFAULT NULL COMMENT 'JSON conditional required rules',
-  `created` int NOT NULL DEFAULT 0,
-  `modified` int NOT NULL DEFAULT 0,
-  PRIMARY KEY (`fieldid`),
-  UNIQUE KEY `page_field` (`pageid`,`field_key`),
-  KEY `pageid` (`pageid`),
-  KEY `sortorder` (`sortorder`),
-  KEY `active` (`active`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- Staff form field/hook tables moved to core:
+--   lib/formengine/dbsql/formengine.sql
+--   Tables: form_fields, form_hook_bindings
+-- Events only seeds staff_app defaults and declares required hooks in PHP.

@@ -2027,11 +2027,25 @@ function staff_status($staff, $userid = true) {
             include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
         }
         $vals = function_exists('get_staff_application_values') ? get_staff_application_values($staff) : $staff;
-        $workerconsentdate = $vals['workerconsentdate'] ?? ($staff['workerconsentdate'] ?? 0);
+        // Process values via form hooks (bindings → field keys; no hardcoded q1_* / agerange)
+        if (!defined('FORMENGINELIB')) {
+            global $CFG;
+            include_once($CFG->dirroot . '/features/events/staffform/formenginelib.php');
+        }
+        $form_key = defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app';
+        $workerconsentdate = function_exists('form_hook_value')
+            ? form_hook_value($form_key, 'consent.worker_date', $vals) : null;
+        if ($workerconsentdate === null || $workerconsentdate === '') {
+            $workerconsentdate = $vals['workerconsentdate'] ?? ($staff['workerconsentdate'] ?? 0);
+        }
         if (!is_numeric($workerconsentdate) && !empty($workerconsentdate)) {
             $workerconsentdate = strtotime($workerconsentdate);
         }
-        $dob = $vals['dateofbirth'] ?? ($staff['dateofbirth'] ?? 0);
+        $dob = function_exists('form_hook_value')
+            ? form_hook_value($form_key, 'identity.date_of_birth', $vals) : null;
+        if ($dob === null || $dob === '') {
+            $dob = $vals['dateofbirth'] ?? ($staff['dateofbirth'] ?? 0);
+        }
         if (!is_numeric($dob) && !empty($dob)) {
             $dob = strtotime($dob);
         }
@@ -2043,22 +2057,19 @@ function staff_status($staff, $userid = true) {
             ];
         }
 
-        $flag = (int)($vals['q1_1'] ?? $staff['q1_1'] ?? 0)
-              + (int)($vals['q1_2'] ?? $staff['q1_2'] ?? 0)
-              + (int)($vals['q1_3'] ?? $staff['q1_3'] ?? 0)
-              + (int)($vals['q2_1'] ?? $staff['q2_1'] ?? 0)
-              + (int)($vals['q2_2'] ?? $staff['q2_2'] ?? 0);
-        if (!empty($flag)) {
+        if (function_exists('form_engine_staff_is_flagged') && form_engine_staff_is_flagged($vals, $form_key)) {
             $status[] = [
                 "tag" => "Flagged",
                 "full" => "Flagged for review!",
             ];
         }
 
-        $eighteen = 18 * 365 * 24 * 60 * 60; // 18 years in seconds
         $expireyear = $settings->events->$featureid->bgcheck_years->setting * 365 * 24 * 60 * 60;
         $time = get_timestamp();
-        if (($time - (int)$dob) > $eighteen ) {
+        $under18 = function_exists('form_engine_is_under_18')
+            ? form_engine_is_under_18($dob)
+            : ((time() - (int)$dob) < (18 * 365 * 24 * 60 * 60));
+        if (!$under18) {
             // bgcheckpassdate alone is sufficient: 0/empty = incomplete; stale date = out of date
             $bgdate = (int)($staff["bgcheckpassdate"] ?? 0);
             if ($bgdate <= 0) {
@@ -2125,7 +2136,7 @@ global $CFG;
 }
 
 function staff_application_form($row, $viewonly = false) {
-    // Dynamic form – definition lives in events_staff_form_fields (or defaults).
+    // Dynamic form – definition lives in form_fields (or defaults).
     // All existing columns + bgcheck metadata are still written for compatibility.
     if (!defined('STAFFFORMLIB')) {
         global $CFG;
@@ -2865,18 +2876,6 @@ function events_adminpanel($pageid) {
         ]);
     }
 
-    // Staff Form Editor (dynamic questions)
-    if (user_is_able($USER->userid, "manageapplications", $pageid)) {
-        $content .= make_modal_links([
-            "title"  => "Staff Form Editor",
-            "text"   => "Staff Form Editor",
-            "path"   => action_path("events") . "staff_form_editor&pageid=$pageid",
-            "iframe" => true,
-            "width"  => "900",
-            "icon"  => icon("list-check"),
-            "class" => "adminpanel_links",
-        ]);
-    }
 
     return $content;
 }

@@ -3345,55 +3345,29 @@ global $CFG, $USER;
         try {
             start_db_transaction();
 
-            // Dynamic collection – system fields still written to classic columns for compatibility.
+            // Dynamic collection + staff storage adapter (form_key staff_app)
             if (!defined('STAFFFORMLIB')) {
                 include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
             }
+            if (!defined('FORMENGINELIB')) {
+                include_once($CFG->dirroot . '/features/events/staffform/formenginelib.php');
+            }
             list($col_params, $form_data) = collect_staff_application_post($pageid);
 
-            // Only retained classic columns + form_data (deprecated answer columns live only in form_data).
+            $save = form_engine_staff_save_application($pageid, $staffid, $col_params, $form_data, $USER->userid);
+            $staffid = $save['staffid'] ?? false;
+            $newid = !empty($save['new']);
+            $subject = $newid ? "Application Complete" : "Application Updated";
             $params = array_merge([
                 "userid" => $USER->userid,
                 "pageid" => $pageid,
                 "name" => "",
                 "phone" => "",
                 "dateofbirth" => 0,
-                "parentalconsent" => "",
-                "parentalconsentsig" => "",
-                "workerconsent" => "",
-                "workerconsentsig" => "",
-                "workerconsentdate" => 0,
-                "bgcheckpassdate" => 0,
             ], $col_params);
+            $staff = $save['row'] ?? null;
 
-            $params["form_data"] = json_encode($form_data);
-
-            $newid = false;
-            if ($staffid) { // Update / Edit staff app
-                $params["staffid"] = $staffid;
-                execute_db_sql(fetch_template("dbsql/events.sql", "update_staff_app", "events"), $params);
-                $subject = "Application Updated";
-            } else { // New staff app
-                $newid = execute_db_sql(fetch_template("dbsql/events.sql", "insert_staff_app", "events"), $params);
-                $subject = "Application Complete";
-            }
-
-            $staffid = $newid ? $newid : ($staffid ? $staffid : false);
-            // Update the staff archives.
             if ($staffid) {
-                $staff = get_db_row(fetch_template("dbsql/events.sql", "get_staff_app", "events"), ["staffid" => $staffid]);
-                $params["bgcheckpassdate"] = $staff["bgcheckpassdate"] ?? 0;
-                $params["year"] = date("Y");
-                $params["staffid"] = $staffid; // Make sure this is set.
-
-                if (get_db_row(fetch_template("dbsql/events.sql", "get_staff_by_year", "events"), ["staffid" => $staffid, "pageid" => $pageid, "year" => $params["year"]])) {
-                    $SQL = fetch_template("dbsql/events.sql", "update_staff_app_archive", "events");
-                } else {
-                    $SQL = fetch_template("dbsql/events.sql", "insert_staff_app_archive", "events");
-                }
-
-                execute_db_sql($SQL, $params);
-
                 commit_db_transaction();
 
                 log_entry("event", $pageid, $subject);
@@ -3405,7 +3379,7 @@ global $CFG, $USER;
                 ];
 
                 //Requesting email setup
-                $name = stripslashes($params["name"]);
+                $name = stripslashes($params["name"] ?? '');
                 $message = "<strong>$name has applied to work</strong>";
 
                 //Send email to the requester letting them know we received the request
@@ -4485,7 +4459,7 @@ function staff_form_save_field() {
     $extra_attrs = [];
     $fieldid_tmp = clean_myvar_opt("fieldid", "int", 0);
     if ($fieldid_tmp) {
-        $existing = get_db_row("SELECT extra_attrs FROM events_staff_form_fields WHERE fieldid=||id||", ['id' => $fieldid_tmp]);
+        $existing = get_db_row("SELECT extra_attrs FROM form_fields WHERE fieldid=||id||", ['id' => $fieldid_tmp]);
         if ($existing && !empty($existing['extra_attrs'])) {
             $prev = is_string($existing['extra_attrs']) ? json_decode($existing['extra_attrs'], true) : $existing['extra_attrs'];
             if (is_array($prev)) {
@@ -4631,7 +4605,7 @@ function staff_form_save_field() {
         $params['fieldid'] = $fieldid;
         // Match by fieldid only — seeded defaults use pageid=0, not the current page
         execute_db_sql(
-            "UPDATE events_staff_form_fields SET
+            "UPDATE form_fields SET
                 field_key=||field_key||, label=||label||, type=||type||, section=||section||,
                 sortorder=||sortorder||, required=||required||, active=||active||, helptext=||helptext||,
                 visibility=||visibility||, required_when=||required_when||, extra_attrs=||extra_attrs||,
@@ -4641,9 +4615,11 @@ function staff_form_save_field() {
         );
     } else {
         // Prefer global (pageid=0) uniqueness for field_key
+        $form_key = defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app';
         $exists = get_db_row(
-            "SELECT fieldid FROM events_staff_form_fields WHERE field_key=||key|| AND (pageid=0 OR pageid=||pageid||) LIMIT 1",
-            ['pageid' => $pageid, 'key' => $field_key]
+            "SELECT fieldid FROM form_fields
+             WHERE form_key=||fk|| AND field_key=||key|| AND (pageid=0 OR pageid=||pageid||) LIMIT 1",
+            ['pageid' => $pageid, 'key' => $field_key, 'fk' => $form_key]
         );
         if ($exists) {
             ajax_return(staff_form_editor_ui($pageid), "Field key already exists");
@@ -4651,11 +4627,12 @@ function staff_form_save_field() {
         }
         // New custom fields still attach to current pageid; core defaults stay on 0
         $params['pageid'] = 0;
+        $params['form_key'] = $form_key;
         execute_db_sql(
-            "INSERT INTO events_staff_form_fields
-                (pageid, field_key, label, type, section, sortorder, required, active, helptext, visibility, required_when, extra_attrs, options, is_system, created, modified)
+            "INSERT INTO form_fields
+                (form_key, pageid, field_key, label, type, section, sortorder, required, active, helptext, visibility, required_when, extra_attrs, options, is_system, created, modified)
              VALUES
-                (||pageid||, ||field_key||, ||label||, ||type||, ||section||, ||sortorder||, ||required||, ||active||, ||helptext||, ||visibility||, ||required_when||, ||extra_attrs||, ||options||, 0, ||now||, ||now||)",
+                (||form_key||, ||pageid||, ||field_key||, ||label||, ||type||, ||section||, ||sortorder||, ||required||, ||active||, ||helptext||, ||visibility||, ||required_when||, ||extra_attrs||, ||options||, 0, ||now||, ||now||)",
             $params
         );
     }
@@ -4664,16 +4641,24 @@ function staff_form_save_field() {
 
 function staff_form_delete_field() {
     global $CFG;
+    if (!defined('FORMENGINELIB')) {
+        include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
+    }
+    if (!defined('FORMEDITORLIB')) {
+        include_once($CFG->dirroot . '/lib/formengine/formeditorlib.php');
+    }
     if (!defined('STAFFFORMLIB')) {
         include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
     }
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+    $form_key = defined("FORM_KEY_STAFF_APP") ? FORM_KEY_STAFF_APP : "staff_app";
     $fieldid = clean_myvar_req("fieldid", "int");
-    $row = get_db_row("SELECT * FROM events_staff_form_fields WHERE fieldid=||id||", ['id' => $fieldid]);
-    $protected = get_staff_form_protected_keys();
-    // Never delete consent set or dateofbirth
-    if ($row && !in_array($row['field_key'], $protected, true)) {
-        execute_db_sql("DELETE FROM events_staff_form_fields WHERE fieldid=||id||", ['id' => $fieldid]);
+    $row = get_db_row("SELECT * FROM form_fields WHERE fieldid=||id||", ['id' => $fieldid]);
+    if ($row) {
+        if (function_exists('form_engine_unbind_field')) {
+            form_engine_unbind_field($form_key, $row['field_key'] ?? '', $pageid);
+        }
+        execute_db_sql("DELETE FROM form_fields WHERE fieldid=||id||", ['id' => $fieldid]);
     }
     ajax_return(staff_form_editor_ui($pageid));
 }
@@ -4683,8 +4668,14 @@ function staff_form_migrate() {
     if (!defined('STAFFFORMLIB')) {
         include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
     }
+    if (!defined('FORMENGINELIB')) {
+        include_once($CFG->dirroot . '/features/events/staffform/formenginelib.php');
+    }
     $pageid = clean_myvar_opt("pageid", "int", null);
-    $result = migrate_staff_form_data($pageid);
+    // Named form migration plan for staff_app (seeds hooks + form_data backfill)
+    $result = function_exists('form_engine_run_migration')
+        ? form_engine_run_migration(FORM_KEY_STAFF_APP, $pageid)
+        : migrate_staff_form_data($pageid);
     $msg = "Migration complete: seeded {$result['seeded_fields']} fields, updated {$result['staff_updated']} staff rows, {$result['archive_updated']} archive rows.";
     $still = (int)($result['staff_still_empty'] ?? 0) + (int)($result['archive_still_empty'] ?? 0);
     if ($still > 0) {
@@ -4724,6 +4715,42 @@ function staff_form_drop_deprecated_columns() {
     ajax_return($html);
 }
 
+function staff_form_save_hooks() {
+    global $CFG;
+    if (!defined('STAFFFORMLIB')) {
+        include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
+    }
+    if (!defined('FORMENGINELIB')) {
+        include_once($CFG->dirroot . '/features/events/staffform/formenginelib.php');
+    }
+    $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+    $raw = clean_myvar_opt("bindings_json", "string", "[]");
+    if (($raw === '' || $raw === '[]') && isset($_REQUEST['bindings_json'])) {
+        $raw = (string)$_REQUEST['bindings_json'];
+    }
+    $bindings = json_decode($raw, true);
+    if (!is_array($bindings)) {
+        $bindings = [];
+    }
+    $form_key = FORM_KEY_STAFF_APP;
+    $n = 0;
+    foreach ($bindings as $b) {
+        if (!is_array($b) || empty($b['hook_id'])) {
+            continue;
+        }
+        // Only single-field bindings are editable here (computed/multi left as seeded)
+        form_engine_save_hook_binding(
+            $form_key,
+            0, // global bindings for staff_app
+            (string)$b['hook_id'],
+            isset($b['field_key']) ? (string)$b['field_key'] : null,
+            null
+        );
+        $n++;
+    }
+    ajax_return('<span style="color:#166534">Saved ' . (int)$n . ' hook binding(s).</span>');
+}
+
 function staff_form_reorder() {
     global $CFG;
     if (!defined('STAFFFORMLIB')) {
@@ -4744,7 +4771,7 @@ function staff_form_reorder() {
             }
             // Match by fieldid only (defaults live on pageid=0)
             execute_db_sql(
-                "UPDATE events_staff_form_fields SET sortorder=||s||, modified=||m|| WHERE fieldid=||id||",
+                "UPDATE form_fields SET sortorder=||s||, modified=||m|| WHERE fieldid=||id||",
                 ['s' => $sort, 'id' => $id, 'm' => time()]
             );
             $sort += 10;

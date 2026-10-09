@@ -15,6 +15,11 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
 }
 define('FORMLIB', true);
 
+// Dynamic named forms (hooks, DB definitions, migration plans). Optional until fully unified.
+if (file_exists((isset($CFG) ? $CFG->dirroot : dirname(__DIR__)) . '/lib/formengine/formenginelib.php')) {
+    include_once((isset($CFG) ? $CFG->dirroot : dirname(__DIR__)) . '/lib/formengine/formenginelib.php');
+}
+
 function get_form_section($element, $section = false) {
     if (isset($element['section'])) {
         if ($section === false) { // No section started.

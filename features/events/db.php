@@ -392,6 +392,28 @@ function events_upgrade() {
         }
 
         commit_db_transaction();
+
+        // Core form engine tables (form_fields / form_hook_bindings) + legacy rename
+        $thisversion = 20261009;
+        if ($version < $thisversion) {
+            global $CFG;
+            if (!defined('FORMENGINELIB')) {
+                include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
+            }
+            if (function_exists('form_engine_ensure_schema')) {
+                form_engine_ensure_schema();
+            }
+            if (function_exists('ensure_staff_form_tables')) {
+                include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
+                ensure_staff_form_tables();
+                seed_staff_form_fields(0);
+            }
+            if (function_exists('form_engine_seed_hooks')) {
+                form_engine_seed_hooks(defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app', 0);
+            }
+            update_feature($thisversion, "events");
+        }
+
         return upgrade_occured('Events feature', $version, $thisversion);
     } catch (\Throwable $e) {
         rollback_db_transaction($e->getMessage());
@@ -400,14 +422,27 @@ function events_upgrade() {
 
 
 function events_install() {
+    global $CFG;
     if (!get_db_row("SELECT * FROM features WHERE feature='events'")) {
-        $thisversion = 20260716;
+        $thisversion = 20261009;
         $SQL = fetch_template("dbsql/install.sql", "install", "events");
 
         if (execute_db_sql($SQL)) { // if successful install.
             try {
                 // Add all current event abilities.
                 add_event_abilities();
+                // Core form engine (neutral tables)
+                if (!defined('FORMENGINELIB')) {
+                    include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
+                }
+                if (function_exists('form_engine_ensure_schema')) {
+                    form_engine_ensure_schema();
+                }
+                if (function_exists('ensure_staff_form_tables')) {
+                    include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
+                    ensure_staff_form_tables();
+                    seed_staff_form_fields(0);
+                }
                 update_feature($thisversion, "events");
 
             } catch (\Throwable $e) {

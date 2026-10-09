@@ -31,6 +31,26 @@ function site_administration() {
     echo fill_template("tmp/main.template", "site_administration", "adminpanel");
 }
 
+
+/**
+ * Core Form Editor (System admin).
+ * Named form engine under lib/formengine; staff_app uses events staffform UI until fully extracted.
+ */
+function form_editor() {
+    global $CFG, $USER;
+    if (!is_siteadmin($USER->userid ?? 0)) {
+        echo getlang("generic_permissions");
+        return;
+    }
+    $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+    $form_key = clean_myvar_opt("form_key", "string", defined("FORM_KEY_STAFF_APP") ? FORM_KEY_STAFF_APP : "staff_app");
+    if (!defined("FORMEDITORLIB")) {
+        include_once($CFG->dirroot . "/lib/formengine/formeditorlib.php");
+    }
+    form_editor_page($form_key, $pageid, true);
+}
+
+
 function site_admin_javascript() {
     ajaxapi([
         "id" => "user_admin",
