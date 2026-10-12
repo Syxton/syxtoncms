@@ -3279,7 +3279,7 @@ global $CFG, $USER;
 
     get_staff_appsearch_js();
 
-    $returnme = '
+$returnme = '
         <link rel="stylesheet" media="print" type="text/css" href="' . $CFG->wwwroot . '/styles/print.css"><br />
         <input type="hidden" id="searchwords" value="' . $searchwords . '" />' .
         button_maker([
@@ -3350,11 +3350,11 @@ global $CFG, $USER;
                 include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
             }
             if (!defined('FORMENGINELIB')) {
-                include_once($CFG->dirroot . '/features/events/staffform/formenginelib.php');
+                include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
             }
             list($col_params, $form_data) = collect_staff_application_post($pageid);
 
-            $save = form_engine_staff_save_application($pageid, $staffid, $col_params, $form_data, $USER->userid);
+            $save = staff_app_save_application($pageid, $staffid, $col_params, $form_data, $USER->userid);
             $staffid = $save['staffid'] ?? false;
             $newid = !empty($save['new']);
             $subject = $newid ? "Application Complete" : "Application Updated";
@@ -4524,6 +4524,12 @@ function staff_form_save_field() {
         // Do not leave stale disabled/readonly from older saves unless explicitly set elsewhere
         unset($extra_attrs['disabled'], $extra_attrs['readonly']);
     }
+    $no_autofill = (int)clean_myvar_opt("no_autofill", "int", 0);
+    if ($no_autofill) {
+        $extra_attrs['no_autofill'] = 1;
+    } else {
+        unset($extra_attrs['no_autofill']);
+    }
     $extra_attrs_json = !empty($extra_attrs) ? json_encode($extra_attrs, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : '';
 
     // Visibility rule — multiple conditions from JSON
@@ -4584,10 +4590,15 @@ function staff_form_save_field() {
         }
         $vheight = clean_myvar_opt('viewer_height', 'int', 480);
         $vconfirm = clean_myvar_opt('viewer_confirm', 'int', 1);
+        $vconfirm_text = clean_myvar_opt('viewer_confirm_text', 'string', '');
+        if (isset($_REQUEST['viewer_confirm_text'])) {
+            $vconfirm_text = (string)$_REQUEST['viewer_confirm_text'];
+        }
         $options_json = json_encode([
             'url' => $vurl,
             'height' => $vheight,
             'confirm' => $vconfirm ? 1 : 0,
+            'confirm_text' => $vconfirm_text,
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     } elseif ($type !== 'select') {
         $options_json = '';
@@ -4669,7 +4680,7 @@ function staff_form_migrate() {
         include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
     }
     if (!defined('FORMENGINELIB')) {
-        include_once($CFG->dirroot . '/features/events/staffform/formenginelib.php');
+        include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
     }
     $pageid = clean_myvar_opt("pageid", "int", null);
     // Named form migration plan for staff_app (seeds hooks + form_data backfill)
@@ -4721,7 +4732,7 @@ function staff_form_save_hooks() {
         include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
     }
     if (!defined('FORMENGINELIB')) {
-        include_once($CFG->dirroot . '/features/events/staffform/formenginelib.php');
+        include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
     }
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     $raw = clean_myvar_opt("bindings_json", "string", "[]");

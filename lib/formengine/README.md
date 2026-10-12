@@ -26,3 +26,16 @@ Legacy tables `events_staff_form_fields` / `events_form_hooks` are renamed or co
 
 - Admin panel → System → Form Editor
 - AJAX: `/ajax/formengine_ajax.php`
+
+
+## Form definitions (consumers)
+
+Each feature registers named forms under:
+
+```
+features/{feature}/formdefs/{form_key}.php
+```
+
+Example: `features/events/formdefs/staff_app.php` calls `form_engine_register_form()` with
+hooks, `resolve` callables, `seed_fields`, `migration_run`, and `resolve_values`.
+Runtime/storage code stays in the feature (e.g. `features/events/staffform/`).

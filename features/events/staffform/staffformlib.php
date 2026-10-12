@@ -7,6 +7,14 @@
 
 if (!defined('STAFFFORMLIB')) {
     define('STAFFFORMLIB', true);
+
+// Register staff_app form definition (hooks + computed resolvers)
+$__staff_app_formdef = dirname(__DIR__) . '/formdefs/staff_app.php';
+if (file_exists($__staff_app_formdef)) {
+    include_once($__staff_app_formdef);
+}
+unset($__staff_app_formdef);
+
 }
 // Named form engine (hooks, storage, migration plans)
 if (!defined('FORMENGINELIB')) {
@@ -506,7 +514,7 @@ function get_staff_form_fixed_consent_keys() {
 
 /** Fields that cannot be deleted (consent set + date of birth). */
 function get_staff_form_protected_keys() {
-    // Deprecated: use form_engine_hooks_for_field / form_engine_protected_field_keys (hook-derived)
+    // Thin wrapper — prefer form_engine_protected_field_keys()
     global $CFG;
     if (!defined('FORMENGINELIB')) {
         include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
@@ -588,6 +596,8 @@ function ensure_staff_form_tables() {
     }
     form_engine_ensure_schema();
     // Staff storage columns on events_staff / archive (feature-owned, not form engine)
+    staff_form_add_column_if_missing('events_staff', 'form_data', 'LONGTEXT DEFAULT NULL');
+    staff_form_add_column_if_missing('events_staff_archive', 'form_data', 'LONGTEXT DEFAULT NULL');
     staff_form_ensure_longtext_column('events_staff', 'form_data');
     staff_form_ensure_longtext_column('events_staff_archive', 'form_data');
     foreach (['workerconsent', 'workerconsentdate', 'workerconsentsig',
@@ -912,6 +922,11 @@ function render_staff_form_field($field, $value, $viewonly = false) {
     $val   = $value ?? '';
     $locked = !empty($attrs['locked']) || !empty($attrs['disabled']) || !empty($attrs['readonly']);
     $disabled = $viewonly || $locked;
+    // no_autofill: do not pre-fill from saved values (editable forms only)
+    $no_autofill = !empty($attrs['no_autofill']);
+    if ($no_autofill && !$viewonly) {
+        $val = '';
+    }
 
     // Section type = subsection heading on the current form page
     if ($type === 'section') {
@@ -964,8 +979,13 @@ function render_staff_form_field($field, $value, $viewonly = false) {
 
     $extra = '';
     foreach ($attrs as $ak => $av) {
-        if (in_array($ak, ['disabled', 'readonly', 'wrapper_id'])) continue;
-        $extra .= ' ' . $ak . '="' . htmlspecialchars($av) . '"';
+        if (in_array($ak, ['disabled', 'readonly', 'wrapper_id', 'locked', 'no_autofill'], true)) {
+            continue;
+        }
+        $extra .= ' ' . $ak . '="' . htmlspecialchars((string)$av) . '"';
+    }
+    if ($no_autofill && !$viewonly) {
+        $extra .= ' autocomplete="off"';
     }
     if ($disabled) {
         // Locked (not full view-only): prefer readonly so text values still POST
@@ -1065,6 +1085,10 @@ function render_staff_form_field($field, $value, $viewonly = false) {
             }
             if ($need_confirm && !$viewonly) {
                 $checked = (!empty($val) && $val !== '0') ? ' checked="checked"' : '';
+                $confirm_text = trim((string)($opts['confirm_text'] ?? ''));
+                if ($confirm_text === '') {
+                    $confirm_text = 'I have reviewed this document';
+                }
                 // Checkbox + text as siblings (not a flex <label>) so validation .error
                 // labels are not trapped/squished inside the confirm row.
                 $html .= '<div class="staff-file-confirm" style="margin-top:10px">';
@@ -1073,7 +1097,7 @@ function render_staff_form_field($field, $value, $viewonly = false) {
                        . ' style="width:45px;height:30px;margin:0"'
                        . $checked . $data_rules . $extra . ' />';
                 $html .= '<label for="' . htmlspecialchars($key) . '" class="staff-file-confirm-text">'
-                       . 'I have reviewed this document</label>';
+                       . htmlspecialchars($confirm_text) . '</label>';
                 $html .= '</div>';
                 $html .= '</div>';
             } elseif ($viewonly) {
@@ -1780,18 +1804,42 @@ function get_staff_form_deprecated_columns() {
  * - needs_drop: any deprecated classic column still exists on either table
  * - complete: neither of the above
  */
+function staff_form_column_exists($table, $column) {
+    $row = get_db_row(
+        "SELECT COUNT(*) AS cnt FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = ||t||
+           AND COLUMN_NAME = ||c||",
+        ['t' => $table, 'c' => $column]
+    );
+    return $row && (int)$row['cnt'] > 0;
+}
+
 function staff_form_migration_status() {
     ensure_staff_form_tables();
 
-    $staff_empty = get_db_row(
-        "SELECT COUNT(*) AS cnt FROM events_staff
-         WHERE form_data IS NULL OR form_data = '' OR form_data = '{}'"
-    );
-    $arch_empty = get_db_row(
-        "SELECT COUNT(*) AS cnt FROM events_staff_archive
-         WHERE form_data IS NULL OR form_data = '' OR form_data = '{}'"
-    );
-    $empty_cnt = (int)($staff_empty['cnt'] ?? 0) + (int)($arch_empty['cnt'] ?? 0);
+    $empty_cnt = 0;
+    if (staff_form_column_exists('events_staff', 'form_data')) {
+        $staff_empty = get_db_row(
+            "SELECT COUNT(*) AS cnt FROM events_staff
+             WHERE form_data IS NULL OR form_data = '' OR form_data = '{}'"
+        );
+        $empty_cnt += (int)($staff_empty['cnt'] ?? 0);
+    } else {
+        // Column still missing — treat as needing migration path
+        $cnt = get_db_row("SELECT COUNT(*) AS cnt FROM events_staff");
+        $empty_cnt += (int)($cnt['cnt'] ?? 0);
+    }
+    if (staff_form_column_exists('events_staff_archive', 'form_data')) {
+        $arch_empty = get_db_row(
+            "SELECT COUNT(*) AS cnt FROM events_staff_archive
+             WHERE form_data IS NULL OR form_data = '' OR form_data = '{}'"
+        );
+        $empty_cnt += (int)($arch_empty['cnt'] ?? 0);
+    } else {
+        $cnt = get_db_row("SELECT COUNT(*) AS cnt FROM events_staff_archive");
+        $empty_cnt += (int)($cnt['cnt'] ?? 0);
+    }
 
     $deprecated = get_staff_form_deprecated_columns();
     $remaining_cols = [];
@@ -1832,7 +1880,7 @@ function staff_form_migration_tools_html() {
         return ''; // Fully migrated — no tooling needed
     }
 
-    $html = '<div id="staff_form_migration_tools" style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid #e2e8f0">';
+    $html = '<div id="form_editor_migration_tools" style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid #e2e8f0">';
 
     if (!empty($status['needs_migration'])) {
         $empty = (int)($status['empty_form_data_rows'] ?? 0);
@@ -1841,8 +1889,8 @@ function staff_form_migration_tools_html() {
             . ($empty > 0 ? ' (' . $empty . ' row(s) without form_data)' : '')
             . '.
         </p>
-        <button type="button" class="btn-secondary" id="staff_form_migrate_btn" onclick="staffFormRunMigrate()">Run Data Migration</button>
-        <span id="staff_form_migrate_result" style="margin-left:10px"></span>';
+        <button type="button" class="btn-secondary" id="form_engine_migrate_btn" onclick="formEngineRunMigrate()">Run Data Migration</button>
+        <span id="form_engine_migrate_result" style="margin-left:10px"></span>';
     } elseif (!empty($status['needs_drop'])) {
         $cols = implode(', ', array_slice($status['remaining_columns'] ?? [], 0, 8));
         $more = count($status['remaining_columns'] ?? []) > 8 ? '…' : '';
@@ -1851,8 +1899,8 @@ function staff_form_migration_tools_html() {
             . ($cols !== '' ? ' (' . htmlspecialchars($cols) . $more . ')' : '')
             . '.
         </p>
-        <button type="button" id="staff_form_drop_cols_btn" class="btn-secondary" onclick="staffFormDropDeprecated()">Remove deprecated DB columns</button>
-        <span id="staff_form_migrate_result" style="margin-left:10px"></span>';
+        <button type="button" id="form_editor_drop_cols_btn" class="btn-secondary" onclick="formEngineDropDeprecated()">Remove deprecated DB columns</button>
+        <span id="form_engine_migrate_result" style="margin-left:10px"></span>';
     }
 
     $html .= '</div>';
@@ -1949,4 +1997,51 @@ function staff_form_resolve_sortorder($pageid, $fieldid, $place_after) {
     }
     $fk = defined("FORM_KEY_STAFF_APP") ? FORM_KEY_STAFF_APP : "staff_app";
     return form_editor_resolve_sortorder($fk, $pageid, $fieldid, $place_after);
+}
+
+/**
+ * Persist staff application columns + form_data (Events storage adapter).
+ */
+function staff_app_save_application($pageid, $staffid, $col_params, $form_data, $userid) {
+    $params = array_merge([
+        'userid' => $userid,
+        'pageid' => $pageid,
+        'name' => '',
+        'phone' => '',
+        'dateofbirth' => 0,
+        'parentalconsent' => '',
+        'parentalconsentsig' => '',
+        'workerconsent' => '',
+        'workerconsentsig' => '',
+        'workerconsentdate' => 0,
+        'bgcheckpassdate' => 0,
+    ], $col_params);
+    $params['form_data'] = is_string($form_data) ? $form_data : json_encode($form_data, JSON_UNESCAPED_UNICODE);
+
+    $newid = false;
+    $staff = null;
+    if ($staffid) {
+        $params['staffid'] = $staffid;
+        execute_db_sql(fetch_template('dbsql/events.sql', 'update_staff_app', 'events'), $params);
+    } else {
+        $newid = execute_db_sql(fetch_template('dbsql/events.sql', 'insert_staff_app', 'events'), $params);
+        $staffid = $newid ? $newid : false;
+    }
+
+    if ($staffid) {
+        $staff = get_db_row(fetch_template('dbsql/events.sql', 'get_staff_app', 'events'), ['staffid' => $staffid]);
+        $params['bgcheckpassdate'] = $staff['bgcheckpassdate'] ?? 0;
+        $params['year'] = date('Y');
+        $params['staffid'] = $staffid;
+        if (get_db_row(fetch_template('dbsql/events.sql', 'get_staff_by_year', 'events'), [
+            'staffid' => $staffid, 'pageid' => $pageid, 'year' => $params['year'],
+        ])) {
+            $SQL = fetch_template('dbsql/events.sql', 'update_staff_app_archive', 'events');
+        } else {
+            $SQL = fetch_template('dbsql/events.sql', 'insert_staff_app_archive', 'events');
+        }
+        execute_db_sql($SQL, $params);
+    }
+
+    return ['staffid' => $staffid, 'new' => (bool)$newid, 'row' => $staff];
 }

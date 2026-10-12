@@ -3,7 +3,7 @@
 
 CREATE TABLE IF NOT EXISTS `form_fields` (
   `fieldid` int NOT NULL AUTO_INCREMENT,
-  `form_key` varchar(64) NOT NULL DEFAULT 'staff_app',
+  `form_key` varchar(64) NOT NULL DEFAULT '',
   `pageid` int NOT NULL DEFAULT 0 COMMENT '0 = global/default form',
   `field_key` varchar(64) NOT NULL,
   `label` varchar(255) NOT NULL DEFAULT '',

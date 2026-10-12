@@ -15,13 +15,30 @@ if (!defined('FORMEDITORLIB')) {
     include_once($CFG->dirroot . '/lib/formengine/formeditorlib.php');
 }
 
+/** form_key from request, or first registered form, or empty. */
+function form_engine_request_form_key() {
+    form_engine_load_consumer_forms();
+    $fk = clean_myvar_opt("form_key", "string", "");
+    if ($fk !== "") {
+        return $fk;
+    }
+    $reg = form_engine_registry();
+    if ($reg) {
+        return (string)array_key_first($reg);
+    }
+    return "";
+}
+
 function form_engine_save_field() {
     global $CFG;
-    if (!defined('STAFFFORMLIB')) {
-        include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
+    if (!defined('FORMENGINELIB')) {
+        include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
+    }
+    if (!defined('FORMEDITORLIB')) {
+        include_once($CFG->dirroot . '/lib/formengine/formeditorlib.php');
     }
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
-    $form_key = clean_myvar_opt("form_key", "string", defined("FORM_KEY_STAFF_APP") ? FORM_KEY_STAFF_APP : "staff_app");
+    $form_key = form_engine_request_form_key();
     $fieldid = clean_myvar_opt("fieldid", "int", 0);
     $field_key = clean_myvar_req("field_key", "string");
     $label = clean_myvar_req("label", "string");
@@ -103,6 +120,17 @@ function form_engine_save_field() {
         // Do not leave stale disabled/readonly from older saves unless explicitly set elsewhere
         unset($extra_attrs['disabled'], $extra_attrs['readonly']);
     }
+    // Disable pre-fill from saved application values
+    $no_autofill = clean_myvar_opt("no_autofill", "int", 0);
+    if ($no_autofill === '' && isset($_REQUEST['no_autofill'])) {
+        $no_autofill = (int)$_REQUEST['no_autofill'];
+    }
+    $no_autofill = (int)$no_autofill;
+    if ($no_autofill) {
+        $extra_attrs['no_autofill'] = 1;
+    } else {
+        unset($extra_attrs['no_autofill']);
+    }
     $extra_attrs_json = !empty($extra_attrs) ? json_encode($extra_attrs, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : '';
 
     // Visibility rule — multiple conditions from JSON
@@ -163,10 +191,15 @@ function form_engine_save_field() {
         }
         $vheight = clean_myvar_opt('viewer_height', 'int', 480);
         $vconfirm = clean_myvar_opt('viewer_confirm', 'int', 1);
+        $vconfirm_text = clean_myvar_opt('viewer_confirm_text', 'string', '');
+        if (isset($_REQUEST['viewer_confirm_text'])) {
+            $vconfirm_text = (string)$_REQUEST['viewer_confirm_text'];
+        }
         $options_json = json_encode([
             'url' => $vurl,
             'height' => $vheight,
             'confirm' => $vconfirm ? 1 : 0,
+            'confirm_text' => $vconfirm_text,
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     } elseif ($type !== 'select') {
         $options_json = '';
@@ -174,7 +207,7 @@ function form_engine_save_field() {
         $options_json = '[]';
     }
 
-    ensure_staff_form_tables();
+    form_engine_ensure_schema();
 
     $params = compact('field_key', 'label', 'type', 'section', 'sortorder', 'required', 'active', 'helptext', 'visibility', 'required_when', 'now', 'pageid');
     $params['extra_attrs'] = $extra_attrs_json;
@@ -194,7 +227,7 @@ function form_engine_save_field() {
         );
     } else {
         // Prefer global (pageid=0) uniqueness for field_key
-        $form_key = defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app';
+        $form_key = form_engine_request_form_key();
         $exists = get_db_row(
             "SELECT fieldid FROM form_fields
              WHERE form_key=||fk|| AND field_key=||key|| AND (pageid=0 OR pageid=||pageid||) LIMIT 1",
@@ -228,11 +261,10 @@ function form_engine_delete_field() {
         include_once($CFG->dirroot . '/lib/formengine/formeditorlib.php');
     }
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
-    $form_key = clean_myvar_opt("form_key", "string", defined("FORM_KEY_STAFF_APP") ? FORM_KEY_STAFF_APP : "staff_app");
+    $form_key = form_engine_request_form_key();
     $fieldid = clean_myvar_req("fieldid", "int");
     $row = get_db_row("SELECT * FROM form_fields WHERE fieldid=||id||", ['id' => $fieldid]);
     if ($row) {
-        // Unbind any process hooks pointing at this field, then delete
         if (function_exists('form_engine_unbind_field')) {
             form_engine_unbind_field($form_key, $row['field_key'] ?? '', $pageid);
         }
@@ -244,35 +276,23 @@ function form_engine_delete_field() {
 
 function form_engine_migrate() {
     global $CFG;
-    if (!defined('STAFFFORMLIB')) {
-        include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
-    }
     if (!defined('FORMENGINELIB')) {
-        include_once($CFG->dirroot . '/features/events/staffform/formenginelib.php');
+        include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
     }
-    $pageid = clean_myvar_opt("pageid", "int", null);
-    // Named form migration plan for staff_app (seeds hooks + form_data backfill)
-    $result = function_exists('form_engine_run_migration')
-        ? form_engine_run_migration($form_key, $pageid)
-        : migrate_staff_form_data($pageid);
-    $msg = "Migration complete: seeded {$result['seeded_fields']} fields, updated {$result['staff_updated']} staff rows, {$result['archive_updated']} archive rows.";
-    $still = (int)($result['staff_still_empty'] ?? 0) + (int)($result['archive_still_empty'] ?? 0);
-    if ($still > 0) {
-        $msg .= " WARNING: {$still} row(s) still have empty form_data.";
-        $html = '<span style="color:#b91c1c">' . htmlspecialchars($msg) . '</span>';
-        ajax_return($html);
-        return;
-    }
-
-    $status = staff_form_migration_status();
-    if (!empty($status['complete'])) {
-        // Fully done (no deprecated columns either) — hide tooling
-        $html = '<span style="color:#166534">' . htmlspecialchars($msg) . ' Migration tools are no longer needed.</span>'
-              . '<script>var t=document.getElementById("staff_form_migration_tools"); if(t){ setTimeout(function(){ t.style.display="none"; }, 2500); }</script>';
-    } else {
-        $html = '<span style="color:#166534">' . htmlspecialchars($msg) . '</span> '
-              . '<button type="button" id="staff_form_drop_cols_btn" class="btn-secondary" style="margin-left:10px" '
-              . 'onclick="staffFormDropDeprecated()">Remove deprecated DB columns</button>';
+    $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+    $form_key = form_engine_request_form_key();
+    // Load feature runtime if the form def registers migration_run helpers
+    form_engine_load_form_runtime($form_key);
+    $def = form_engine_get_form_def($form_key);
+    $result = form_engine_run_migration($form_key, $pageid);
+    $ok = !empty($result['ok']) || !isset($result['ok']);
+    $msg = $result['message'] ?? ($ok ? 'Migration complete.' : 'Migration failed.');
+    $color = $ok ? '#166534' : '#b91c1c';
+    $html = '<span style="color:' . $color . '">' . htmlspecialchars($msg) . '</span>';
+    // Optional post-migrate UI from form def
+    $post = $def['migration_result_html'] ?? null;
+    if ($post && is_string($post) && function_exists($post)) {
+        $html .= call_user_func($post, $form_key, $result);
     }
     ajax_return($html);
 }
@@ -280,17 +300,24 @@ function form_engine_migrate() {
 
 function form_engine_drop_deprecated() {
     global $CFG;
-    if (!defined('STAFFFORMLIB')) {
-        include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
+    if (!defined('FORMENGINELIB')) {
+        include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
     }
-    $result = drop_deprecated_staff_columns();
+    $form_key = form_engine_request_form_key();
+    form_engine_load_form_runtime($form_key);
+    $def = form_engine_get_form_def($form_key);
+    $fn = $def['drop_deprecated'] ?? null;
+    $result = ['ok' => false, 'message' => 'No drop-deprecated handler for this form.'];
+    if ($fn && is_string($fn) && function_exists($fn)) {
+        $result = call_user_func($fn);
+    } elseif ($fn && is_callable($fn)) {
+        $result = call_user_func($fn);
+    }
     $color = !empty($result['ok']) ? '#166534' : '#b91c1c';
-    $html = '<span style="color:' . $color . '">' . htmlspecialchars($result['message']) . '</span>';
-    if (!empty($result['ok'])) {
-        $status = staff_form_migration_status();
-        if (!empty($status['complete'])) {
-            $html .= '<script>var t=document.getElementById("staff_form_migration_tools"); if(t){ setTimeout(function(){ t.style.display="none"; }, 2000); }</script>';
-        }
+    $html = '<span style="color:' . $color . '">' . htmlspecialchars($result['message'] ?? '') . '</span>';
+    $post = $def['migration_result_html'] ?? null;
+    if ($post && is_string($post) && function_exists($post)) {
+        $html .= call_user_func($post, $form_key, $result);
     }
     ajax_return($html);
 }
@@ -298,14 +325,10 @@ function form_engine_drop_deprecated() {
 
 function form_engine_save_hooks() {
     global $CFG;
-    if (!defined('STAFFFORMLIB')) {
-        include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
-    }
     if (!defined('FORMENGINELIB')) {
-        include_once($CFG->dirroot . '/features/events/staffform/formenginelib.php');
+        include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
     }
-    $pageid = clean_myvar_opt("pageid", "int", get_pageid());
-    $form_key = clean_myvar_opt("form_key", "string", defined("FORM_KEY_STAFF_APP") ? FORM_KEY_STAFF_APP : "staff_app");
+    $form_key = form_engine_request_form_key();
     $raw = clean_myvar_opt("bindings_json", "string", "[]");
     if (($raw === '' || $raw === '[]') && isset($_REQUEST['bindings_json'])) {
         $raw = (string)$_REQUEST['bindings_json'];
@@ -314,18 +337,16 @@ function form_engine_save_hooks() {
     if (!is_array($bindings)) {
         $bindings = [];
     }
-    $form_key = FORM_KEY_STAFF_APP;
     $n = 0;
     foreach ($bindings as $b) {
         if (!is_array($b) || empty($b['hook_id'])) {
             continue;
         }
-        // Only single-field bindings are editable here (computed/multi left as seeded)
         form_engine_save_hook_binding(
             $form_key,
-            0, // global bindings for staff_app
+            0,
             (string)$b['hook_id'],
-            isset($b['field_key']) ? (string)$b['field_key'] : null,
+            isset($b['field_key']) ? (string)$b['field_key'] : '',
             null
         );
         $n++;
@@ -336,12 +357,14 @@ function form_engine_save_hooks() {
 
 function form_engine_reorder() {
     global $CFG;
-    if (!defined('STAFFFORMLIB')) {
-        include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
+    if (!defined('FORMENGINELIB')) {
+        include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
+    }
+    if (!defined('FORMEDITORLIB')) {
+        include_once($CFG->dirroot . '/lib/formengine/formeditorlib.php');
     }
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
-    $form_key = clean_myvar_opt("form_key", "string", defined("FORM_KEY_STAFF_APP") ? FORM_KEY_STAFF_APP : "staff_app");
-    // order is expected as comma-separated fieldids
+    $form_key = form_engine_request_form_key();
     $order = clean_myvar_opt("order", "string", "");
     if ($order === '' && isset($_REQUEST['order'])) {
         $order = (string)$_REQUEST['order'];
@@ -353,7 +376,6 @@ function form_engine_reorder() {
             if ($id <= 0) {
                 continue;
             }
-            // Match by fieldid only (defaults live on pageid=0)
             execute_db_sql(
                 "UPDATE form_fields SET sortorder=||s||, modified=||m|| WHERE fieldid=||id||",
                 ['s' => $sort, 'id' => $id, 'm' => time()]
@@ -364,8 +386,6 @@ function form_engine_reorder() {
     ajax_return(form_editor_ui($form_key, $pageid));
 }
 
-
-?>
 
 // Dispatch
 $action = clean_myvar_opt('action', 'string', '');

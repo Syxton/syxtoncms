@@ -3,7 +3,7 @@
  * formeditorlib.php - Core Form Editor UI (named forms)
  * -------------------------------------------------------------------------
  * Lives under lib/formengine. Independent of Events.
- * Consumers pass form_key (e.g. staff_app).
+ * Consumers pass a registered form_key.
  ***************************************************************************/
 if (!defined('FORMEDITORLIB')) {
     define('FORMEDITORLIB', true);
@@ -24,6 +24,7 @@ function form_editor_page($form_key, $pageid, $show_form_picker = true) {
         include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
     }
     form_engine_ensure_schema();
+    form_engine_load_form_runtime($form_key);
     form_engine_seed_fields($form_key, 0);
     form_engine_seed_hooks($form_key, 0);
 
@@ -38,7 +39,7 @@ function form_editor_page($form_key, $pageid, $show_form_picker = true) {
         echo '<div style="padding:12px 16px;border-bottom:1px solid #e2e8f0;margin-bottom:8px">';
         echo '<label style="font-weight:600;margin-right:8px">Form</label>';
         echo '<select id="core_form_key" onchange="var u=new URL(location.href);u.searchParams.set(\'form_key\',this.value);location.href=u.toString()">';
-        echo $options ?: '<option value="staff_app">Staff Application</option>';
+        echo $options ?: '<option value="">(no forms registered)</option>';
         echo '</select>';
         echo '<span style="margin-left:12px;color:#64748b;font-size:.9em">Form Editor</span>';
         echo '</div>';
@@ -59,9 +60,11 @@ function form_editor_page($form_key, $pageid, $show_form_picker = true) {
             'viewer_url' => "js||$('#edit_viewer_url').val()||js",
             'viewer_height' => "js||$('#edit_viewer_height').val()||js",
             'viewer_confirm' => "js||$('#edit_viewer_confirm').val()||js",
+            'viewer_confirm_text' => "js||$('#edit_viewer_confirm_text').val()||js",
+            'no_autofill' => "js||$('#edit_no_autofill').val()||js",
         ]),
-        'reqstring' => 'staff_field_form',
-        'display' => 'staff_form_editor_container',
+        'reqstring' => 'form_field_form',
+        'display' => 'form_editor_container',
         'event' => 'none',
     ]);
     ajaxapi([
@@ -71,7 +74,7 @@ function form_editor_page($form_key, $pageid, $show_form_picker = true) {
             'action' => 'form_engine_delete_field',
             'fieldid' => 'js||fieldid||js',
         ]),
-        'display' => 'staff_form_editor_container',
+        'display' => 'form_editor_container',
         'event' => 'none',
     ]);
     ajaxapi([
@@ -97,7 +100,7 @@ function form_editor_page($form_key, $pageid, $show_form_picker = true) {
             'action' => 'form_engine_reorder',
             'order' => 'js||order||js',
         ]),
-        'display' => 'staff_form_editor_container',
+        'display' => 'form_editor_container',
         'event' => 'none',
     ]);
     ajaxapi([
@@ -118,35 +121,55 @@ function form_editor_page($form_key, $pageid, $show_form_picker = true) {
 function form_editor_hooks_panel_html($form_key, $pageid) {
     global $CFG;
     if (!defined('FORMENGINELIB')) {
-        include_once($CFG->dirroot . '/features/events/staffform/formenginelib.php');
+        include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
     }
-    $hooks = form_engine_get_hooks($form_key, $pageid);
+    // Only bindable hooks appear in the field-mapping UI (computed resolvers are excluded)
+    $hooks = function_exists('form_engine_get_bindable_hooks')
+        ? form_engine_get_bindable_hooks($form_key, $pageid)
+        : form_engine_get_hooks($form_key, $pageid);
     $fields = form_engine_get_fields($form_key, $pageid, true);
     $field_opts = '<option value="">— unbound —</option>';
+    $field_key_set = [];
     foreach ($fields as $f) {
         if (($f['type'] ?? '') === 'section') {
             continue;
         }
-        $field_opts .= '<option value="' . htmlspecialchars($f['field_key']) . '">'
-            . htmlspecialchars(($f['label'] ?? '') . ' (' . $f['field_key'] . ')') . '</option>';
+        $field_key_set[$f['field_key']] = true;
+        $opt_label = trim((string)($f['label'] ?? '')) . ' (' . $f['field_key'] . ')';
+        if (function_exists('mb_strlen') && mb_strlen($opt_label) > 60) {
+            $opt_label = mb_substr($opt_label, 0, 57) . '…';
+        } elseif (strlen($opt_label) > 60) {
+            $opt_label = substr($opt_label, 0, 57) . '…';
+        }
+        $field_opts .= '<option value="' . htmlspecialchars($f['field_key']) . '" title="'
+            . htmlspecialchars(trim((string)($f['label'] ?? '')) . ' (' . $f['field_key'] . ')') . '">'
+            . htmlspecialchars($opt_label) . '</option>';
     }
 
     $rows = '';
+    $total = 0;
+    $unbound = 0;
     foreach ($hooks as $h) {
+        $total++;
         $hid = htmlspecialchars($h['hook_id']);
         $req = !empty($h['required'])
             ? '<span style="background:#fee2e2;color:#991b1b;padding:1px 6px;border-radius:4px;font-size:.75em">required</span>'
             : '<span style="background:#e2e8f0;color:#475569;padding:1px 6px;border-radius:4px;font-size:.75em">optional</span>';
         $meta = $h['meta'] ?? [];
         $extra = '';
+        $is_bound = false;
         if (!empty($meta['field_keys']) && is_array($meta['field_keys'])) {
             $extra = '<div class="sfe-hint">Sources: <code>' . htmlspecialchars(implode(', ', $meta['field_keys'])) . '</code></div>';
             $sel = '<em style="color:#64748b">multi-field (see sources)</em>';
+            $is_bound = true; // multi-source treated as bound by definition
         } elseif (!empty($meta['computed'])) {
             $extra = '<div class="sfe-hint">Computed: <code>' . htmlspecialchars($meta['computed']) . '</code></div>';
             $sel = '<em style="color:#64748b">computed</em>';
+            $is_bound = true;
         } else {
             $cur = (string)($h['field_key'] ?? '');
+            // Bound only if a real form field exists for this key (stale seeds count as open)
+            $is_bound = ($cur !== '' && isset($field_key_set[$cur]));
             $opts = $field_opts;
             if ($cur !== '') {
                 $opts = str_replace(
@@ -157,23 +180,40 @@ function form_editor_hooks_panel_html($form_key, $pageid) {
             }
             $sel = '<select class="sfe-hook-field" data-hook-id="' . $hid . '">' . $opts . '</select>';
         }
+        if (!$is_bound) {
+            $unbound++;
+        }
         $rows .= '<tr>
-            <td><code>' . $hid . '</code><div class="sfe-hint">' . htmlspecialchars($h['help'] ?? '') . '</div>' . $extra . '</td>
-            <td>' . htmlspecialchars($h['label'] ?? $h['hook_id']) . ' ' . $req . '</td>
-            <td>' . $sel . '</td>
+            <td data-label="Hook"><code>' . $hid . '</code><div class="sfe-hint">' . htmlspecialchars($h['help'] ?? '') . '</div>' . $extra . '</td>
+            <td data-label="Label">' . htmlspecialchars($h['label'] ?? $h['hook_id']) . ' ' . $req . '</td>
+            <td data-label="Bound field">' . $sel . '</td>
         </tr>';
     }
 
+    $bound = max(0, $total - $unbound);
+    $count_bits = (int)$total . ' hook' . ($total === 1 ? '' : 's');
+    if ($total > 0) {
+        $count_bits .= ' · ' . (int)$bound . ' bound';
+        if ($unbound > 0) {
+            $count_bits .= ' · <span style="color:#b45309;font-weight:600">' . (int)$unbound . ' open</span>';
+        } else {
+            $count_bits .= ' · <span style="color:#166534">all bound</span>';
+        }
+    }
+    $summary_class = $unbound > 0 ? 'has-content' : '';
+
     return '
-    <details class="sfe-collapse has-content" style="margin:12px 0" open>
-        <summary>Process hooks (backend bindings)</summary>
+    <details class="sfe-collapse ' . $summary_class . '" style="margin:12px 0">
+        <summary>Process hooks <span style="font-weight:400;color:#64748b">(' . $count_bits . ')</span></summary>
         <div class="sfe-collapse-body">
-            <p class="sfe-hint">These slots feed application status, consent, and background-check logic.
-            Bind each required hook to a form field. Custom questions need no binding.</p>
-            <table class="sfe-table" style="margin-top:8px">
+            <p class="sfe-hint">These slots feed process logic for this form (status, validation, storage adapters).
+            Bind each process hook to a form field. Computed values (under-18, screening flags) are defined by the form consumer and are not listed here.</p>
+            <div class="sfe-table-scroll">
+            <table class="sfe-table sfe-hooks-table" style="margin-top:8px">
                 <thead><tr><th>Hook</th><th>Label</th><th>Bound field</th></tr></thead>
                 <tbody>' . $rows . '</tbody>
             </table>
+            </div>
             <div class="sfe-actions">
                 <button type="button" class="btn-secondary" onclick="formEngineSaveHooks()">Save hook bindings</button>
                 <span id="sfe-hooks-result" style="margin-left:8px"></span>
@@ -252,14 +292,17 @@ function form_editor_resolve_sortorder($form_key, $pageid, $fieldid, $place_afte
 }
 
 function form_editor_ui($form_key, $pageid) {
-    if (!defined('STAFFFORMLIB')) {
-        global $CFG;
-        include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
+    global $CFG;
+    if (!defined('FORMENGINELIB')) {
+        include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
     }
+    form_engine_load_form_runtime($form_key);
     form_engine_seed_fields($form_key, 0);
+    $def = form_engine_get_form_def($form_key);
+    $form_title = ($def['label'] ?? $form_key) . ' — Form Editor';
 
     $fields = form_engine_get_fields($form_key, $pageid, true);
-    $consent_keys = form_engine_fixed_keys($form_key);
+    $fixed_keys = form_engine_fixed_keys($form_key);
     // Labels/delete warnings come from hook bindings (no hard protected list)
 
     $key_opts = '';
@@ -285,7 +328,7 @@ function form_editor_ui($form_key, $pageid) {
     $rows = '';
     foreach ($fields as $f) {
         $fid = (int)($f['fieldid'] ?? 0);
-        $is_consent = in_array($f['field_key'], $consent_keys, true);
+        $is_fixed = in_array($f['field_key'], $fixed_keys, true);
         $bound_hooks = function_exists('form_engine_hooks_for_field')
             ? form_engine_hooks_for_field($form_key, $f['field_key'] ?? '', $pageid)
             : [];
@@ -330,6 +373,7 @@ function form_editor_ui($form_key, $pageid) {
         $viewer_url = '';
         $viewer_height = '480';
         $viewer_confirm = '1';
+        $viewer_confirm_text = '';
         if (($f['type'] ?? '') === 'file_viewer' && is_array($options)) {
             $viewer_url = (string)($options['url'] ?? $options['viewer_url'] ?? '');
             $viewer_height = (string)($options['height'] ?? $options['viewer_height'] ?? '480');
@@ -337,6 +381,7 @@ function form_editor_ui($form_key, $pageid) {
             if (isset($options['confirm'])) {
                 $viewer_confirm = $options['confirm'] ? '1' : '0';
             }
+            $viewer_confirm_text = (string)($options['confirm_text'] ?? '');
         } else {
             foreach ($options as $opt) {
                 if (is_array($opt)) {
@@ -356,8 +401,7 @@ function form_editor_ui($form_key, $pageid) {
             $hook_labels = array_map(function ($h) {
                 return $h['label'] ?? $h['hook_id'];
             }, $bound_hooks);
-            $badge = ' <span title="Bound to process hook(s): ' . htmlspecialchars(implode(', ', $hook_labels)) . '" '
-                . 'style="background:#dbeafe;color:#1e40af;padding:1px 6px;border-radius:4px;font-size:.75em">hooked</span>';
+            $badge = '<span class="sfe-hook-badge" title="Bound to process hook(s): ' . htmlspecialchars(implode(', ', $hook_labels)) . '">hooked</span>';
             $del_msg = 'This field is bound to process hook(s): ' . implode(', ', $hook_labels)
                 . '.\n\nDeleting it will unbind those hooks. Continue?';
         }
@@ -391,22 +435,24 @@ function form_editor_ui($form_key, $pageid) {
             'viewer_url' => $viewer_url,
             'viewer_height' => $viewer_height,
             'viewer_confirm' => $viewer_confirm,
-            'is_consent' => $is_consent ? 1 : 0,
+            'viewer_confirm_text' => $viewer_confirm_text,
+            'no_autofill' => !empty($attrs['no_autofill']) ? '1' : '0',
+            'is_fixed' => $is_fixed ? 1 : 0,
             'is_core' => $is_hooked ? 1 : 0, // hooked — editor may still warn on key change
         ];
 
         $edit_js_id = $fid > 0 ? $fid : ("'" . $map_key . "'");
         $rows .= '<tr draggable="true" data-fieldid="' . (int)$fid . '" class="sfe-field-row">
-            <td class="sfe-drag-handle" title="Drag to reorder">&#8942;&#8942;</td>
-            <td><code>' . htmlspecialchars($f['field_key']) . '</code>' . $badge . '</td>
-            <td>' . htmlspecialchars($f['label']) . '</td>
-            <td>' . htmlspecialchars($f['type']) . '</td>
-            <td>' . htmlspecialchars($f['section'] ?? '') . '</td>
-            <td style="text-align:center">' . $vis . '</td>
-            <td style="text-align:center">' . $reqw . '</td>
-            <td>' . $active . '</td>
-            <td style="white-space:nowrap">
-                <button type="button" title="Edit" onclick="staffFormEditField(' . $edit_js_id . ')">' . $edit_icon . '</button>
+            <td class="sfe-drag-handle" data-label="" title="Drag to reorder">&#8942;&#8942;</td>
+            <td data-label="Key"><span class="sfe-key-cell"><code>' . htmlspecialchars($f['field_key']) . '</code>' . $badge . '</span></td>
+            <td data-label="Label">' . htmlspecialchars($f['label']) . '</td>
+            <td data-label="Type">' . htmlspecialchars($f['type']) . '</td>
+            <td data-label="Section">' . htmlspecialchars($f['section'] ?? '') . '</td>
+            <td data-label="Show/Hide" style="text-align:center">' . $vis . '</td>
+            <td data-label="Req. When" style="text-align:center">' . $reqw . '</td>
+            <td data-label="Status">' . $active . '</td>
+            <td data-label="Actions" class="sfe-actions-cell">
+                <button type="button" title="Edit" onclick="formEditorEditField(' . $edit_js_id . ')">' . $edit_icon . '</button>
                 ' . $del . '
             </td>
         </tr>';
@@ -436,19 +482,179 @@ function form_editor_ui($form_key, $pageid) {
 
     return '
     <style>
-        .sfe-wrap { max-width: 1100px; margin: 0 auto; font-family: system-ui, sans-serif; }
-        .sfe-wrap h2 { margin-bottom: .25rem; }
+        .sfe-wrap {
+            max-width: 1100px; margin: 0 auto; font-family: system-ui, sans-serif;
+            padding: 0 12px; box-sizing: border-box; width: 100%;
+        }
+        .sfe-wrap h2 { margin-bottom: .25rem; word-break: break-word; }
         .sfe-wrap .sfe-note { color: #555; margin-bottom: 1rem; font-size: .95em; }
-        .sfe-wrap table.sfe-table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
-        .sfe-wrap table.sfe-table th { background: #2c3e50; color: #fff; padding: 8px 10px; text-align: left; font-weight: 600; font-size: .85em; }
-        .sfe-wrap table.sfe-table td { padding: 8px 10px; border-bottom: 1px solid #eee; font-size: .9em; vertical-align: middle; }
+        .sfe-wrap .sfe-table-scroll {
+            width: 100%; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;
+            margin: 8px 0; border-radius: 6px;
+        }
+        .sfe-wrap table.sfe-table {
+            width: 100%; max-width: 100%; border-collapse: collapse; background: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,.08); table-layout: fixed;
+        }
+        .sfe-wrap table.sfe-table th {
+            background: #2c3e50; color: #fff; padding: 8px 10px; text-align: left;
+            font-weight: 600; font-size: .85em;
+        }
+        .sfe-wrap table.sfe-table td {
+            padding: 8px 10px; border-bottom: 1px solid #eee; font-size: .9em;
+            vertical-align: middle; overflow: visible; word-break: break-word;
+        }
+        .sfe-wrap table.sfe-fields-table .sfe-col-drag { width: 28px; }
+        .sfe-wrap table.sfe-fields-table th:nth-child(2),
+        .sfe-wrap table.sfe-fields-table td:nth-child(2) { width: auto; min-width: 0; }
+        .sfe-wrap table.sfe-fields-table th:nth-child(3),
+        .sfe-wrap table.sfe-fields-table td:nth-child(3) { width: auto; min-width: 0; }
+        .sfe-wrap table.sfe-fields-table code {
+            word-break: break-word; white-space: normal;
+        }
+        .sfe-wrap .sfe-key-cell {
+            display: inline-flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+            max-width: 100%;
+        }
+        .sfe-wrap .sfe-hook-badge {
+            display: inline-block;
+            flex-shrink: 0;
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: .75em;
+            line-height: 1.3;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+        .sfe-wrap table.sfe-fields-table .sfe-actions-cell {
+            white-space: nowrap; width: auto; min-width: 4.5rem; overflow: visible;
+        }
+        .sfe-wrap select.sfe-hook-field {
+            width: 100%; max-width: 100%; box-sizing: border-box;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
         .sfe-wrap table.sfe-table tr:hover td { background: #f7fafc; }
-        .sfe-wrap .sfe-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px 20px; margin-top: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+        .sfe-wrap .sfe-card {
+            background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
+            padding: 16px 20px; margin-top: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,.06);
+            max-width: 100%; box-sizing: border-box;
+        }
         .sfe-wrap .sfe-card h3 { margin-top: 0; }
         .sfe-wrap .sfe-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; }
         .sfe-wrap .sfe-grid label { display: block; font-weight: 600; font-size: .85em; margin-bottom: 4px; color: #334155; }
         .sfe-wrap .sfe-grid input, .sfe-wrap .sfe-grid select, .sfe-wrap .sfe-grid textarea {
-            width: 100%; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;
+            width: 100%; max-width: 100%; padding: 7px 10px; border: 1px solid #cbd5e1;
+            border-radius: 6px; box-sizing: border-box;
+        }
+        @media (max-width: 800px) {
+            .sfe-wrap .sfe-grid { grid-template-columns: 1fr; }
+            .sfe-wrap .sfe-cond-row { grid-template-columns: 1fr; }
+            /* Card layout for field rows — no horizontal overflow */
+            .sfe-wrap table.sfe-fields-table thead { display: none; }
+            .sfe-wrap table.sfe-fields-table,
+            .sfe-wrap table.sfe-fields-table tbody,
+            .sfe-wrap table.sfe-fields-table tr,
+            .sfe-wrap table.sfe-fields-table td {
+                display: block; width: 100%; box-sizing: border-box;
+            }
+            .sfe-wrap table.sfe-fields-table { table-layout: auto; box-shadow: none; background: transparent; }
+            .sfe-wrap table.sfe-fields-table tr.sfe-field-row {
+                background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
+                margin-bottom: 10px; padding: 8px 10px 10px; box-shadow: 0 1px 2px rgba(0,0,0,.05);
+            }
+            .sfe-wrap table.sfe-fields-table tr.sfe-field-row:hover td { background: transparent; }
+            .sfe-wrap table.sfe-fields-table td {
+                display: block;
+                width: 100%;
+                box-sizing: border-box;
+                border-bottom: 1px solid #f1f5f9;
+                padding: 8px 4px;
+                text-align: left !important;
+                overflow: visible;
+            }
+            .sfe-wrap table.sfe-fields-table td::before {
+                content: attr(data-label);
+                display: block;
+                font-weight: 600; font-size: .75em; color: #64748b;
+                text-transform: uppercase; letter-spacing: .02em;
+                margin-bottom: 4px;
+                text-align: left;
+            }
+            .sfe-wrap table.sfe-fields-table td[data-label=""]::before,
+            .sfe-wrap table.sfe-fields-table td.sfe-drag-handle::before {
+                content: none;
+                display: none;
+            }
+            .sfe-wrap table.sfe-fields-table .sfe-key-cell {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: flex-start;
+                gap: 6px;
+                max-width: 100%;
+            }
+            .sfe-wrap table.sfe-fields-table .sfe-key-cell code {
+                overflow: visible;
+                text-overflow: unset;
+                white-space: normal;
+                word-break: break-word;
+                max-width: none;
+            }
+            .sfe-wrap table.sfe-fields-table td:last-child { border-bottom: none; }
+            .sfe-wrap table.sfe-fields-table td.sfe-drag-handle {
+                padding-bottom: 2px; border-bottom: none;
+            }
+            .sfe-wrap table.sfe-fields-table td.sfe-actions-cell {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: flex-start;
+                gap: 8px;
+                overflow: visible;
+                width: 100%;
+            }
+            .sfe-wrap table.sfe-fields-table td.sfe-actions-cell::before {
+                flex: 0 0 100%;
+                margin-bottom: 4px;
+            }
+            .sfe-wrap table.sfe-fields-table td.sfe-actions-cell button {
+                flex-shrink: 0;
+            }
+            /* Hooks table card layout */
+            .sfe-wrap table.sfe-hooks-table thead { display: none; }
+            .sfe-wrap table.sfe-hooks-table,
+            .sfe-wrap table.sfe-hooks-table tbody,
+            .sfe-wrap table.sfe-hooks-table tr,
+            .sfe-wrap table.sfe-hooks-table td {
+                display: block; width: 100%; box-sizing: border-box;
+            }
+            .sfe-wrap table.sfe-hooks-table { table-layout: auto; box-shadow: none; background: transparent; }
+            .sfe-wrap table.sfe-hooks-table tr {
+                background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
+                margin-bottom: 10px; padding: 8px 10px; box-shadow: 0 1px 2px rgba(0,0,0,.05);
+            }
+            .sfe-wrap table.sfe-hooks-table td {
+                border-bottom: 1px solid #f1f5f9; padding: 6px 4px;
+            }
+            .sfe-wrap table.sfe-hooks-table td:last-child { border-bottom: none; }
+            .sfe-wrap table.sfe-hooks-table td::before {
+                content: attr(data-label);
+                display: block; font-weight: 600; font-size: .75em; color: #64748b;
+                text-transform: uppercase; margin-bottom: 4px;
+            }
+            .sfe-wrap .sfe-table-scroll { overflow-x: visible; }
+        }
+        @media (max-width: 480px) {
+            .sfe-wrap { padding: 0 8px; }
+            .sfe-wrap .sfe-card { padding: 12px 14px; }
+            .sfe-wrap button { padding: 8px 12px; }
         }
         .sfe-wrap .sfe-actions { margin-top: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         .sfe-wrap button { background: #2563eb; color: #fff; border: none; border-radius: 6px; padding: 8px 14px; cursor: pointer; font-size: .9em; }
@@ -479,33 +685,35 @@ function form_editor_ui($form_key, $pageid) {
         .sfe-wrap details.sfe-collapse .sfe-collapse-body { padding: 0 12px 12px; }
         .sfe-wrap details.sfe-collapse.has-content > summary { color: #1e40af; }
     </style>
-    <div class="sfe-wrap" id="staff_form_editor_container">
-        <h2>Staff Application Form Editor</h2>
+    <div class="sfe-wrap" id="form_editor_container">
+        <h2>' . htmlspecialchars($form_title) . '</h2>
         <p class="sfe-note">
-            Add, edit, reorder, and configure questions for the staff application form
-            (<code>form_key=staff_app</code>).
-            <strong>Process hooks</strong> below map questions to backend status logic.
-            Custom questions are free-form and only stored in form data.
+            Add, edit, reorder, and configure fields for
+            <code>form_key=' . htmlspecialchars($form_key) . '</code>.
+            <strong>Process hooks</strong> map fields to backend process slots.
+            Unbound fields are stored with the form storage adapter (e.g. JSON).
         </p>
         ' . form_editor_hooks_panel_html($form_key, $pageid) . '
         <p class="sfe-dnd-hint">Drag the <strong>⋮⋮</strong> handle to reorder fields. Order is saved automatically.</p>
-        <table class="sfe-table" id="sfe-fields-table">
+        <div class="sfe-table-scroll">
+        <table class="sfe-table sfe-fields-table" id="sfe-fields-table">
             <thead>
                 <tr>
-                    <th style="width:28px" title="Drag to reorder"></th>
+                    <th class="sfe-col-drag" title="Drag to reorder"></th>
                     <th>Key</th><th>Label</th><th>Type</th><th>Section</th>
                     <th>Show/Hide</th><th>Req. When</th><th>Status</th><th></th>
                 </tr>
             </thead>
             <tbody>' . $rows . '</tbody>
         </table>
+        </div>
 
         <p style="margin-top:1rem">
-            <button type="button" onclick="staffFormShowNew()">+ New Field</button>
+            <button type="button" onclick="formEditorShowNew()">+ New Field</button>
         </p>
         <div class="sfe-card" id="sfe-edit-card" style="display:none">
             <h3 id="sfe-form-title">Add Field</h3>
-            <form id="staff_field_form">
+            <form id="form_field_form">
                 <input type="hidden" name="fieldid" id="edit_fieldid" value="0" />
                 <input type="hidden" name="vis_conditions_json" id="edit_vis_conditions_json" value="[]" />
                 <input type="hidden" name="reqw_conditions_json" id="edit_reqw_conditions_json" value="[]" />
@@ -558,6 +766,13 @@ function form_editor_ui($form_key, $pageid) {
                         <select name="locked" id="edit_locked"><option value="0">No</option><option value="1">Yes — show but cannot change</option></select>
                     </div>
                     <div>
+                        <label>Autofill from saved data</label>
+                        <select name="no_autofill" id="edit_no_autofill">
+                            <option value="0">Allow (pre-fill when available)</option>
+                            <option value="1">Disable (force re-entry each time)</option>
+                        </select>
+                    </div>
+                    <div>
                         <label>Help / Tooltip</label>
                         <input type="text" name="helptext" id="edit_helptext" />
                     </div>
@@ -573,7 +788,7 @@ function form_editor_ui($form_key, $pageid) {
 
                 <div class="sfe-rules" id="sfe-viewer-panel" style="display:none">
                     <h4>File / Document viewer</h4>
-                    <p class="sfe-hint">URL of a PDF or page to embed for the applicant to review. Optional confirmation checkbox uses the field label.</p>
+                    <p class="sfe-hint">URL of a PDF or page to embed. Optional confirmation checkbox; customize the checkbox label below.</p>
                     <div class="sfe-grid">
                         <div style="grid-column:1/-1">
                             <label>Document URL</label>
@@ -590,13 +805,18 @@ function form_editor_ui($form_key, $pageid) {
                                 <option value="0">No (display only)</option>
                             </select>
                         </div>
+                        <div style="grid-column:1/-1">
+                            <label>Confirmation checkbox text</label>
+                            <input type="text" name="viewer_confirm_text" id="edit_viewer_confirm_text" placeholder="I have reviewed this document" />
+                            <div class="sfe-hint">Leave blank for the default: “I have reviewed this document”.</div>
+                        </div>
                     </div>
                 </div>
 
                 <details class="sfe-collapse" id="sfe-panel-js">
                     <summary>JavaScript attributes</summary>
                     <div class="sfe-collapse-body">
-                        <p class="sfe-hint">DOB uses onblur to set Age Range, which then drives show/hide on other fields.</p>
+                        <p class="sfe-hint">Optional client-side handlers. Prefer show/hide and required-when rules when possible.</p>
                         <div class="sfe-grid">
                             <div style="grid-column:1/-1">
                                 <label>onblur</label>
@@ -661,19 +881,21 @@ function form_editor_ui($form_key, $pageid) {
 
                 <div class="sfe-actions">
                     <button type="submit" onclick="return sfeSaveField();">Save Field</button>
-                    <button type="button" class="btn-secondary" onclick="staffFormHideForm()">Cancel</button>
+                    <button type="button" class="btn-secondary" onclick="formEditorHideForm()">Cancel</button>
                 </div>
             </form>
         </div>
         ' . form_editor_migration_tools_html($form_key) . '
     </div>
     <script>
-    window.STAFF_FORM_EDIT_MAP = ' . $edit_json . ';
-    window.STAFF_FORM_FIELD_KEYS = ' . $key_opts_js . ';
+    window.FORM_EDITOR_FORM_KEY = ' . json_encode($form_key) . ';
+    window.FORM_EDITOR_PAGEID = ' . (int)$pageid . ';
+    window.FORM_EDITOR_EDIT_MAP = ' . $edit_json . ';
+    window.FORM_EDITOR_FIELD_KEYS = ' . $key_opts_js . ';
 
     function sfeFieldOptions(selected) {
         var html = "<option value=\\"\\">—</option>";
-        (window.STAFF_FORM_FIELD_KEYS || []).forEach(function(k) {
+        (window.FORM_EDITOR_FIELD_KEYS || []).forEach(function(k) {
             html += "<option value=\\"" + k + "\\"" + (k === selected ? " selected" : "") + ">" + k + "</option>";
         });
         return html;
@@ -792,12 +1014,12 @@ function form_editor_ui($form_key, $pageid) {
         setPanel(reqPanel, hasReq, hasReq);
     }
 
-    function staffFormEditField(id) {
-        var f = window.STAFF_FORM_EDIT_MAP[id] || window.STAFF_FORM_EDIT_MAP[String(id)];
+    function formEditorEditField(id) {
+        var f = window.FORM_EDITOR_EDIT_MAP[id] || window.FORM_EDITOR_EDIT_MAP[String(id)];
         if (!f) { alert("Field data not found"); return; }
         $("#edit_fieldid").val(f.fieldid);
         $("#edit_field_key").val(f.field_key);
-        if (f.is_core == 1 || f.is_consent == 1) {
+        if (f.is_core == 1 || f.is_fixed == 1) {
             $("#edit_field_key").prop("readonly", true).css("background", "#f1f5f9");
         } else {
             $("#edit_field_key").prop("readonly", false).css("background", "");
@@ -825,6 +1047,8 @@ function form_editor_ui($form_key, $pageid) {
         $("#edit_viewer_url").val(f.viewer_url || "");
         $("#edit_viewer_height").val(f.viewer_height || "480");
         $("#edit_viewer_confirm").val(f.viewer_confirm || "1");
+        $("#edit_viewer_confirm_text").val(f.viewer_confirm_text || "");
+        $("#edit_no_autofill").val(f.no_autofill || "0");
         sfeToggleOptionsPanel();
         $("#edit_vis_action").val(f.vis_action || "");
         $("#edit_vis_logic").val(f.vis_logic || "and");
@@ -849,8 +1073,8 @@ function form_editor_ui($form_key, $pageid) {
         }
     }
 
-    function staffFormShowNew() {
-        staffFormResetEdit();
+    function formEditorShowNew() {
+        formEditorResetEdit();
         sfeSyncCollapsePanels({});
         var card = document.getElementById("sfe-edit-card");
         if (card) {
@@ -859,10 +1083,10 @@ function form_editor_ui($form_key, $pageid) {
         }
     }
 
-    function staffFormHideForm() {
+    function formEditorHideForm() {
         var card = document.getElementById("sfe-edit-card");
         if (card) card.style.display = "none";
-        staffFormResetEdit();
+        formEditorResetEdit();
     }
 
     function formEngineSaveHooks() {
@@ -905,10 +1129,10 @@ function form_editor_ui($form_key, $pageid) {
     }
 
     function formEngineDropDeprecated() {
-        if (!confirm("Permanently drop deprecated answer columns from events_staff and events_staff_archive? This cannot be undone. Only proceed after a successful data migration.")) {
+        if (!confirm("Permanently drop deprecated storage columns for this form? This cannot be undone. Only proceed after a successful data migration.")) {
             return;
         }
-        var btn = document.getElementById("staff_form_drop_cols_btn");
+        var btn = document.getElementById("form_editor_drop_cols_btn");
         if (btn) {
             if (btn.disabled) return;
             btn.disabled = true;
@@ -919,8 +1143,8 @@ function form_editor_ui($form_key, $pageid) {
         }
     }
 
-    function staffFormResetEdit() {
-        $("#staff_field_form")[0].reset();
+    function formEditorResetEdit() {
+        $("#form_field_form")[0].reset();
         $("#edit_fieldid").val(0);
         $("#edit_field_key").prop("readonly", false).css("background", "");
         $("#edit_attr_onblur").val("");
@@ -930,6 +1154,8 @@ function form_editor_ui($form_key, $pageid) {
         $("#edit_viewer_url").val("");
         $("#edit_viewer_height").val("480");
         $("#edit_viewer_confirm").val("1");
+        $("#edit_viewer_confirm_text").val("");
+        $("#edit_no_autofill").val("0");
         sfeToggleOptionsPanel();
         document.getElementById("edit_vis_conditions").innerHTML = "";
         document.getElementById("edit_reqw_conditions").innerHTML = "";
@@ -944,7 +1170,7 @@ function form_editor_ui($form_key, $pageid) {
     sfeToggleOptionsPanel();
 
     // --- Drag and drop reorder ---
-    (function initStaffFormDnD() {
+    (function initFormEditorDnD() {
         var tbody = document.querySelector("#sfe-fields-table tbody");
         if (!tbody) return;
         var dragRow = null;
@@ -1013,14 +1239,15 @@ function form_editor_ui($form_key, $pageid) {
                 window.order = ids.join(",");
                 form_engine_reorder();
             } else if (typeof jQuery !== "undefined") {
-                jQuery.post("/features/events/events_ajax.php", {
+                jQuery.post("/ajax/formengine_ajax.php", {
                     action: "form_engine_reorder",
-                    order: ids.join(",")
+                    order: ids.join(","),
+                    form_key: ' . json_encode($form_key) . ',
+                    pageid: ' . (int)$pageid . '
                 }, function(html) {
-                    var $box = jQuery("#staff_form_editor_container");
+                    var $box = jQuery("#form_editor_container");
                     if ($box.length && html) {
-                        // response may be full container html
-                        if (html.indexOf("staff_form_editor_container") >= 0) {
+                        if (html.indexOf("form_editor_container") >= 0) {
                             $box.replaceWith(html);
                         } else {
                             $box.html(html);
@@ -1031,4 +1258,20 @@ function form_editor_ui($form_key, $pageid) {
         });
     })();
     </script>';
+}
+
+/**
+ * Migration tools strip — delegated to the form definition when provided.
+ */
+function form_editor_migration_tools_html($form_key) {
+    form_engine_load_form_runtime($form_key);
+    $def = form_engine_get_form_def($form_key);
+    $fn = $def['migration_tools_html'] ?? null;
+    if ($fn && is_string($fn) && function_exists($fn)) {
+        return call_user_func($fn, $form_key);
+    }
+    if ($fn && is_callable($fn)) {
+        return call_user_func($fn, $form_key);
+    }
+    return '';
 }

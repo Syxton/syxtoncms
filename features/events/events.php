@@ -168,7 +168,7 @@ global $CFG;
 
     get_staff_appsearch_js();
 
-    $params = [
+$params = [
         "pageid" => $pageid,
         "canexport" => $canexport,
         "exportselect" => $exportselect,

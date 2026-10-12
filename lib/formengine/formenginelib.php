@@ -2,7 +2,7 @@
 /***************************************************************************
  * formenginelib.php - Named form engine (hooks, storage profiles, migration plans)
  * -------------------------------------------------------------------------
- * Forms are identified by form_key (e.g. staff_app). Callers declare process
+ * Forms are identified by form_key (e.g. a feature-defined key). Callers declare process
  * hooks; the editor binds field_keys to those hooks. Storage adapters know
  * where values live (columns + optional JSON). Each form definition can
  * describe a migration plan from legacy static columns.
@@ -12,24 +12,81 @@ if (!defined('FORMENGINELIB')) {
     define('FORMENGINELIB', true);
 }
 
-/** Canonical form key for the staff application consumer. */
-define('FORM_KEY_STAFF_APP', 'staff_app');
+/** @var array form_key => form definition (registered by feature form definition files) */
+$GLOBALS['FORM_ENGINE_REGISTRY'] = $GLOBALS['FORM_ENGINE_REGISTRY'] ?? [];
 
 /**
- * Registry of known forms: metadata, default hooks, storage profile id, migration plan.
- * Storage profile implementations live in code (v1); signup can register later.
+ * Register a named form (hooks, storage, migration). Called by feature form definition files.
+ */
+function form_engine_register_form($form_key, array $def) {
+    $GLOBALS['FORM_ENGINE_REGISTRY'][$form_key] = $def;
+}
+
+/**
+ * Load consumer form definitions.
+ * Discovers features/{feature}/formdefs/*.php (one structure for all form consumers).
+ */
+function form_engine_load_consumer_forms() {
+    global $CFG;
+    static $loaded = false;
+    if ($loaded) {
+        return;
+    }
+    $loaded = true;
+    $root = $CFG->dirroot ?? '';
+    if ($root === '') {
+        return;
+    }
+    foreach (glob($root . '/features/*/formdefs/*.php') ?: [] as $path) {
+        include_once($path);
+    }
+}
+
+/**
+ * Registry of known forms: metadata, hooks, storage profile id, migration plan.
  */
 function form_engine_registry() {
-    return [
-        FORM_KEY_STAFF_APP => [
-            'label' => 'Staff Application',
-            'description' => 'Staff work application with consent, screening, and background-check process hooks.',
-            'storage' => 'staff',
-            'hooks' => form_engine_staff_app_hook_defs(),
-            'migration' => form_engine_staff_app_migration_plan(),
-        ],
-        // Future: 'signup' => [ 'label' => 'Sign up', 'storage' => 'user', 'hooks' => [...], 'migration' => [...] ]
-    ];
+    form_engine_load_consumer_forms();
+    return $GLOBALS['FORM_ENGINE_REGISTRY'] ?? [];
+}
+
+function form_engine_default_form_key() {
+    $reg = form_engine_registry();
+    if ($reg) {
+        return (string)array_key_first($reg);
+    }
+    return '';
+}
+
+
+/**
+ * Include the form definition's runtime library (seed, migrate, storage helpers).
+ */
+function form_engine_load_form_runtime($form_key) {
+    global $CFG;
+    form_engine_load_consumer_forms();
+    $def = form_engine_get_form_def($form_key);
+    if (!$def) {
+        return false;
+    }
+    $lib = $def['runtime_lib'] ?? null;
+    if (!$lib) {
+        return true;
+    }
+    $path = $lib;
+    if ($path[0] !== '/' && empty($CFG->dirroot)) {
+        return false;
+    }
+    if (isset($CFG->dirroot) && $path[0] === '/') {
+        $path = $CFG->dirroot . $path;
+    } elseif (isset($CFG->dirroot) && strpos($path, $CFG->dirroot) !== 0) {
+        $path = $CFG->dirroot . '/' . ltrim($path, '/');
+    }
+    if (file_exists($path)) {
+        include_once($path);
+        return true;
+    }
+    return false;
 }
 
 function form_engine_get_form_def($form_key) {
@@ -38,160 +95,24 @@ function form_engine_get_form_def($form_key) {
 }
 
 /**
- * Default process hooks for staff_app (semantic slots the backend understands).
- * meta.field_keys: multi-source hooks (screening). meta.computed: derived values.
+ * True if a hook can be bound to a form field in the editor.
+ * Computed hooks (resolve callable, bindable=false) are not linkable.
  */
-function form_engine_staff_app_hook_defs() {
-    return [
-        [
-            'hook_id' => 'identity.name',
-            'label' => 'Full name',
-            'required' => 1,
-            'field_key' => 'name',
-            'help' => 'Used in emails, manager lists, and export.',
-        ],
-        [
-            'hook_id' => 'identity.phone',
-            'label' => 'Phone',
-            'required' => 1,
-            'field_key' => 'phone',
-            'help' => 'Contact phone on the application record.',
-        ],
-        [
-            'hook_id' => 'identity.date_of_birth',
-            'label' => 'Date of birth',
-            'required' => 1,
-            'field_key' => 'dateofbirth',
-            'help' => 'Drives under-18 / parental consent and background-check eligibility.',
-        ],
-        [
-            'hook_id' => 'consent.worker_name',
-            'label' => 'Worker consent name',
-            'required' => 1,
-            'field_key' => 'workerconsent',
-            'help' => 'Printed name on worker consent.',
-        ],
-        [
-            'hook_id' => 'consent.worker_date',
-            'label' => 'Worker consent date',
-            'required' => 1,
-            'field_key' => 'workerconsentdate',
-            'help' => 'Determines whether the application is out of date.',
-        ],
-        [
-            'hook_id' => 'consent.worker_sig',
-            'label' => 'Worker signature',
-            'required' => 1,
-            'field_key' => 'workerconsentsig',
-            'help' => 'Checkbox signature for worker consent.',
-        ],
-        [
-            'hook_id' => 'consent.parental_name',
-            'label' => 'Parental consent name',
-            'required' => 0,
-            'field_key' => 'parentalconsent',
-            'help' => 'Required when applicant is under 18.',
-        ],
-        [
-            'hook_id' => 'consent.parental_sig',
-            'label' => 'Parental signature',
-            'required' => 0,
-            'field_key' => 'parentalconsentsig',
-            'help' => 'Required when applicant is under 18.',
-        ],
-        [
-            'hook_id' => 'screening.flag_sources',
-            'label' => 'Screening risk questions',
-            'required' => 0,
-            'field_key' => null,
-            'meta' => [
-                'field_keys' => ['q1_1', 'q1_2', 'q1_3', 'q2_1', 'q2_2'],
-                'aggregate' => 'any_truthy',
-            ],
-            'help' => 'Yes answers on these fields flag the application for review (server-side).',
-        ],
-        [
-            'hook_id' => 'meta.under_18',
-            'label' => 'Under 18 (computed)',
-            'required' => 0,
-            'field_key' => null,
-            'meta' => [
-                'computed' => 'under_18_from_dob',
-                'from_hook' => 'identity.date_of_birth',
-                // Optional legacy field still used by client rules until replaced
-                'legacy_field_key' => 'agerange',
-            ],
-            'help' => 'Derived from date of birth on the server. Client may still use agerange for show/hide.',
-        ],
-    ];
+function form_engine_hook_is_bindable(array $h) {
+    if (array_key_exists('bindable', $h)) {
+        return !empty($h['bindable']);
+    }
+    // Default: bindable unless it has a resolve callable
+    if (!empty($h['resolve'])) {
+        return false;
+    }
+    $meta = $h['meta'] ?? [];
+    if (!empty($meta['resolve']) || !empty($meta['computed'])) {
+        return false;
+    }
+    return true;
 }
 
-/**
- * Migration plan from original static staff columns → form_data + hooks.
- * Used by migrate tooling and documentation; executable steps call existing migrate helpers.
- */
-function form_engine_staff_app_migration_plan() {
-    return [
-        'from' => 'static_events_staff_columns',
-        'description' => 'Legacy events_staff / events_staff_archive answer columns → form_data JSON; process fields retained as columns.',
-        'steps' => [
-            [
-                'id' => 'ensure_schema',
-                'label' => 'Ensure form_data, form_key, and hooks tables exist',
-            ],
-            [
-                'id' => 'seed_fields',
-                'label' => 'Seed default field definitions (form_key=staff_app)',
-            ],
-            [
-                'id' => 'seed_hooks',
-                'label' => 'Seed default process hook bindings',
-            ],
-            [
-                'id' => 'backfill_form_data',
-                'label' => 'Copy classic columns into form_data for all staff and archive rows',
-                'source_columns' => [
-                    'address', 'address2', 'city', 'state', 'zip',
-                    'agerange', 'cocmember', 'congregation', 'priorwork',
-                    'q1_1', 'q1_2', 'q1_3', 'q2_1', 'q2_2', 'q2_3',
-                    'ref1name', 'ref1relationship', 'ref1phone',
-                    'ref2name', 'ref2relationship', 'ref2phone',
-                    'ref3name', 'ref3relationship', 'ref3phone',
-                    'name', 'phone', 'dateofbirth',
-                    'parentalconsent', 'parentalconsentsig',
-                    'workerconsent', 'workerconsentsig', 'workerconsentdate',
-                ],
-            ],
-            [
-                'id' => 'normalize_signatures',
-                'label' => 'Normalize checkbox signatures on → 1',
-            ],
-            [
-                'id' => 'drop_deprecated_columns',
-                'label' => 'Drop classic answer columns after form_data is complete',
-                'columns' => [
-                    'address', 'address2', 'city', 'state', 'zip',
-                    'agerange', 'cocmember', 'congregation', 'priorwork',
-                    'q1_1', 'q1_2', 'q1_3', 'q2_1', 'q2_2', 'q2_3',
-                    'ref1name', 'ref1relationship', 'ref1phone',
-                    'ref2name', 'ref2relationship', 'ref2phone',
-                    'ref3name', 'ref3relationship', 'ref3phone',
-                    'bgcheckpass',
-                ],
-            ],
-        ],
-        'retained_columns' => [
-            'staffid', 'userid', 'pageid', 'name', 'phone', 'dateofbirth',
-            'parentalconsent', 'parentalconsentsig',
-            'workerconsent', 'workerconsentsig', 'workerconsentdate',
-            'bgcheckpassdate', 'form_data',
-        ],
-    ];
-}
-
-/**
- * Ensure form_key column + hooks table; backfill form_key; seed hook bindings.
- */
 function form_engine_ensure_schema() {
     global $CFG;
     static $done = false;
@@ -221,10 +142,10 @@ function form_engine_ensure_schema() {
         if (!$cols || !count_db_result($cols)) {
             @execute_db_sql(
                 "ALTER TABLE form_fields
-                 ADD COLUMN form_key varchar(64) NOT NULL DEFAULT 'staff_app' AFTER fieldid"
+                 ADD COLUMN form_key varchar(64) NOT NULL DEFAULT '' AFTER fieldid"
             );
             @execute_db_sql(
-                "UPDATE form_fields SET form_key = 'staff_app'
+                "UPDATE form_fields SET form_key = ''
                  WHERE form_key = '' OR form_key IS NULL"
             );
         }
@@ -335,7 +256,7 @@ function form_engine_table_columns($table) {
 
 function form_engine_ensure_form_page_field_index() {
     // Normalize key columns to VARCHAR so unique indexes are valid (legacy may be TEXT)
-    form_engine_ensure_varchar_column('form_fields', 'form_key', 64, "'staff_app'");
+    form_engine_ensure_varchar_column('form_fields', 'form_key', 64, "''");
     form_engine_ensure_varchar_column('form_fields', 'field_key', 64, "''");
 
     $idx = get_db_result(
@@ -421,7 +342,7 @@ function form_engine_normalize_hook_bindings_schema() {
     }
     // Ensure required columns exist
     $need = [
-        'form_key' => "varchar(64) NOT NULL DEFAULT 'staff_app'",
+        'form_key' => "varchar(64) NOT NULL DEFAULT ''",
         'pageid' => "int NOT NULL DEFAULT 0",
         'hook_id' => "varchar(96) NOT NULL DEFAULT ''",
         'field_key' => "varchar(64) DEFAULT NULL",
@@ -434,7 +355,7 @@ function form_engine_normalize_hook_bindings_schema() {
             @execute_db_sql("ALTER TABLE `form_hook_bindings` ADD COLUMN `$col` $def");
         }
     }
-    form_engine_ensure_varchar_column('form_hook_bindings', 'form_key', 64, "'staff_app'");
+    form_engine_ensure_varchar_column('form_hook_bindings', 'form_key', 64, "''");
     form_engine_ensure_varchar_column('form_hook_bindings', 'hook_id', 96, "''");
     form_engine_ensure_varchar_column('form_hook_bindings', 'field_key', 64, "''");
 }
@@ -470,6 +391,10 @@ function form_engine_seed_hooks($form_key, $pageid = 0) {
     $now = time();
     $seeded = 0;
     foreach ($def['hooks'] as $h) {
+        // Computed hooks are not stored as field bindings
+        if (!form_engine_hook_is_bindable($h)) {
+            continue;
+        }
         $hook_id = $h['hook_id'];
         $exists = get_db_row(
             "SELECT hook_id FROM form_hook_bindings
@@ -504,6 +429,7 @@ function form_engine_seed_hooks($form_key, $pageid = 0) {
         );
         $seeded++;
     }
+    form_engine_prune_stale_hooks($form_key);
     return $seeded;
 }
 
@@ -564,11 +490,13 @@ function form_engine_get_hooks($form_key, $pageid = 0) {
             'required' => $b ? (int)$b['required'] : (int)(!empty($h['required'])),
             'field_key' => $b ? ($b['field_key'] ?? null) : ($h['field_key'] ?? null),
             'meta' => $meta,
+            'bindable' => form_engine_hook_is_bindable($h),
+            'resolve' => $h['resolve'] ?? ($meta['resolve'] ?? null),
             'hookid' => $b ? (int)($b['id'] ?? $b['hookid'] ?? 0) : 0,
         ];
         $seen[$hid] = true;
     }
-    // Extra DB-only hooks
+    // Extra DB-only hooks (always treated as bindable field bindings)
     foreach ($bindings as $hid => $b) {
         if (!empty($seen[$hid])) {
             continue;
@@ -584,10 +512,22 @@ function form_engine_get_hooks($form_key, $pageid = 0) {
             'required' => (int)$b['required'],
             'field_key' => $b['field_key'] ?? null,
             'meta' => $meta,
+            'bindable' => true,
+            'resolve' => null,
             'hookid' => (int)($b['id'] ?? $b['hookid'] ?? 0),
         ];
     }
     return $out;
+}
+
+/**
+ * Hooks that can be bound to a form field (excludes computed / resolve-only).
+ */
+function form_engine_get_bindable_hooks($form_key, $pageid = 0) {
+    $all = form_engine_get_hooks($form_key, $pageid);
+    return array_values(array_filter($all, function ($h) {
+        return !empty($h['bindable']);
+    }));
 }
 
 /**
@@ -597,6 +537,9 @@ function form_hook_value($form_key, $hook_id, $values) {
     if (!is_array($values)) {
         $values = [];
     }
+    // Ensure consumer form defs (and resolve callables) are loaded
+    form_engine_load_consumer_forms();
+
     $hooks = form_engine_get_hooks($form_key, 0);
     $hook = null;
     foreach ($hooks as $h) {
@@ -610,41 +553,19 @@ function form_hook_value($form_key, $hook_id, $values) {
     }
 
     $meta = $hook['meta'] ?? [];
+    $resolve = $hook['resolve'] ?? ($meta['resolve'] ?? null);
 
-    // Computed under_18
-    if (($meta['computed'] ?? '') === 'under_18_from_dob') {
-        $dob = null;
-        $from = $meta['from_hook'] ?? 'identity.date_of_birth';
-        // Prefer DOB from identity hook field
-        foreach ($hooks as $h2) {
-            if ($h2['hook_id'] === $from && !empty($h2['field_key'])) {
-                $dob = $values[$h2['field_key']] ?? null;
-                break;
-            }
+    // Computed / feature-defined resolvers (e.g. feature resolve callable)
+    if ($resolve) {
+        if (is_string($resolve) && function_exists($resolve)) {
+            return call_user_func($resolve, $values, $hook, $form_key);
         }
-        if ($dob === null || $dob === '') {
-            $dob = $values['dateofbirth'] ?? null;
-        }
-        return form_engine_is_under_18($dob) ? '1' : '0';
-    }
-
-    // Multi-field aggregate (screening)
-    if (!empty($meta['field_keys']) && is_array($meta['field_keys'])) {
-        $agg = $meta['aggregate'] ?? 'any_truthy';
-        if ($agg === 'any_truthy') {
-            foreach ($meta['field_keys'] as $fk) {
-                $v = $values[$fk] ?? null;
-                if ($v === true || $v === 1 || $v === '1' || $v === 'yes' || $v === 'on') {
-                    return '1';
-                }
-                if (is_numeric($v) && (float)$v > 0) {
-                    return '1';
-                }
-            }
-            return '0';
+        if (is_callable($resolve)) {
+            return call_user_func($resolve, $values, $hook, $form_key);
         }
     }
 
+    // Standard: value of the bound field_key
     $fk = $hook['field_key'] ?? null;
     if ($fk === null || $fk === '') {
         return null;
@@ -653,62 +574,35 @@ function form_hook_value($form_key, $hook_id, $values) {
 }
 
 /**
- * Whether DOB indicates under 18 (accepts unix timestamp or m/d/Y string).
- */
-function form_engine_is_under_18($dob) {
-    if ($dob === null || $dob === '' || $dob === false) {
-        return false;
-    }
-    if (!is_numeric($dob)) {
-        $ts = strtotime((string)$dob);
-    } else {
-        $ts = (int)$dob;
-    }
-    if ($ts <= 0) {
-        return false;
-    }
-    $eighteen = 18 * 365 * 24 * 60 * 60;
-    return (time() - $ts) < $eighteen;
-}
-
-/**
- * Screening flagged? Uses screening.flag_sources hook.
- */
-function form_engine_staff_is_flagged($values, $form_key = FORM_KEY_STAFF_APP) {
-    $v = form_hook_value($form_key, 'screening.flag_sources', $values);
-    return $v === '1' || $v === 1 || $v === true;
-}
-
-/**
  * Resolve flat values from a storage row using staff merge rules.
- * (Generic name; staff implementation delegates to get_staff_application_values.)
+ * Flatten a storage row to field values (uses form def resolve_values callback if set).
  */
 function resolve_form_values($form_key, $storage_row) {
-    global $CFG;
-    if ($form_key === FORM_KEY_STAFF_APP) {
-        if (!function_exists('get_staff_application_values')) {
-            include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
+    form_engine_load_consumer_forms();
+    $def = form_engine_get_form_def($form_key);
+    $resolver = $def['resolve_values'] ?? null;
+    if ($resolver) {
+        if (is_string($resolver) && function_exists($resolver)) {
+            return call_user_func($resolver, $storage_row);
         }
-        return get_staff_application_values($storage_row);
+        if (is_callable($resolver)) {
+            return call_user_func($resolver, $storage_row);
+        }
     }
-    // Generic fallback: form_data JSON only
+    // Generic fallback: form_data JSON merged over row
+    $values = is_array($storage_row) ? $storage_row : [];
     if (!empty($storage_row['form_data'])) {
-        $json = is_string($storage_row['form_data']) ? json_decode($storage_row['form_data'], true) : $storage_row['form_data'];
+        $json = is_string($storage_row['form_data'])
+            ? json_decode($storage_row['form_data'], true)
+            : $storage_row['form_data'];
         if (is_array($json)) {
-            return $json;
+            $values = array_merge($values, $json);
         }
     }
-    return is_array($storage_row) ? $storage_row : [];
+    return $values;
 }
 
-/**
- * Field keys that satisfy any required hook (delete protection).
- */
 
-/**
- * Hook rows bound to a given field_key (for editor labels / delete warnings).
- * @return array list of [hook_id, label, required]
- */
 function form_engine_hooks_for_field($form_key, $field_key, $pageid = 0) {
     if ($field_key === '' || $field_key === null) {
         return [];
@@ -746,25 +640,14 @@ function form_engine_unbind_field($form_key, $field_key, $pageid = 0) {
 }
 
 function form_engine_protected_field_keys($form_key, $pageid = 0) {
+    // Required bindable hooks that currently have a field_key (hook-derived only)
     $keys = [];
-    foreach (form_engine_get_hooks($form_key, $pageid) as $h) {
+    foreach (form_engine_get_bindable_hooks($form_key, $pageid) as $h) {
         if (empty($h['required'])) {
             continue;
         }
         if (!empty($h['field_key'])) {
             $keys[$h['field_key']] = true;
-        }
-        $meta = $h['meta'] ?? [];
-        if (!empty($meta['field_keys']) && is_array($meta['field_keys'])) {
-            foreach ($meta['field_keys'] as $fk) {
-                // multi-source screening not individually required for delete
-            }
-        }
-    }
-    // Always protect DOB-related and consent section keys for staff
-    if ($form_key === FORM_KEY_STAFF_APP && function_exists('get_staff_form_protected_keys')) {
-        foreach (get_staff_form_protected_keys() as $k) {
-            $keys[$k] = true;
         }
     }
     return array_keys($keys);
@@ -822,77 +705,71 @@ function form_engine_save_hook_binding($form_key, $pageid, $hook_id, $field_key,
 }
 
 
-function form_engine_staff_save_application($pageid, $staffid, $col_params, $form_data, $userid) {
-    global $CFG;
-    if (!function_exists('fetch_template')) {
-        // CMS core assumed available
-    }
-    $params = array_merge([
-        'userid' => $userid,
-        'pageid' => $pageid,
-        'name' => '',
-        'phone' => '',
-        'dateofbirth' => 0,
-        'parentalconsent' => '',
-        'parentalconsentsig' => '',
-        'workerconsent' => '',
-        'workerconsentsig' => '',
-        'workerconsentdate' => 0,
-        'bgcheckpassdate' => 0,
-    ], $col_params);
-    $params['form_data'] = is_string($form_data) ? $form_data : json_encode($form_data, JSON_UNESCAPED_UNICODE);
-
-    $newid = false;
-    if ($staffid) {
-        $params['staffid'] = $staffid;
-        execute_db_sql(fetch_template('dbsql/events.sql', 'update_staff_app', 'events'), $params);
-    } else {
-        $newid = execute_db_sql(fetch_template('dbsql/events.sql', 'insert_staff_app', 'events'), $params);
-        $staffid = $newid ? $newid : false;
-    }
-
-    if ($staffid) {
-        $staff = get_db_row(fetch_template('dbsql/events.sql', 'get_staff_app', 'events'), ['staffid' => $staffid]);
-        $params['bgcheckpassdate'] = $staff['bgcheckpassdate'] ?? 0;
-        $params['year'] = date('Y');
-        $params['staffid'] = $staffid;
-        if (get_db_row(fetch_template('dbsql/events.sql', 'get_staff_by_year', 'events'), [
-            'staffid' => $staffid, 'pageid' => $pageid, 'year' => $params['year'],
-        ])) {
-            $SQL = fetch_template('dbsql/events.sql', 'update_staff_app_archive', 'events');
-        } else {
-            $SQL = fetch_template('dbsql/events.sql', 'insert_staff_app_archive', 'events');
-        }
-        execute_db_sql($SQL, $params);
-    }
-
-    return ['staffid' => $staffid, 'new' => (bool)$newid, 'row' => $staff ?? null];
-}
 
 /**
- * Run form migration plan executable steps for staff_app (wraps existing migrate).
+ * Run form migration via form def migration_run / migration.run callback.
  */
 function form_engine_run_migration($form_key, $pageid = null) {
-    global $CFG;
-    if ($form_key !== FORM_KEY_STAFF_APP) {
-        return ['ok' => false, 'message' => 'No migration plan implemented for ' . $form_key];
-    }
+    form_engine_load_form_runtime($form_key);
     form_engine_ensure_schema();
     form_engine_seed_hooks($form_key, 0);
-    if (!function_exists('migrate_staff_form_data')) {
-        include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
+    form_engine_prune_stale_hooks($form_key);
+    $def = form_engine_get_form_def($form_key);
+    if (!$def) {
+        return ['ok' => false, 'message' => 'Unknown form_key: ' . $form_key];
     }
-    $result = migrate_staff_form_data($pageid);
-    $result['hooks_seeded'] = true;
-    $result['form_key'] = $form_key;
-    $result['plan'] = form_engine_staff_app_migration_plan()['id'] ?? 'staff_app_legacy';
+    $runner = $def['migration_run'] ?? ($def['migration']['run'] ?? null);
+    $result = ['ok' => true, 'form_key' => $form_key, 'hooks_seeded' => true];
+    if ($runner) {
+        if (is_string($runner) && function_exists($runner)) {
+            $result = array_merge($result, (array)call_user_func($runner, $pageid));
+        } elseif (is_callable($runner)) {
+            $result = array_merge($result, (array)call_user_func($runner, $pageid));
+        }
+    }
+    $plan = $def['migration'] ?? [];
+    $result['plan'] = is_array($plan) ? ($plan['from'] ?? $plan['id'] ?? $form_key) : $form_key;
     return $result;
 }
 
-
 /**
- * Load field definitions for a form_key (page-specific overrides global pageid=0).
+ * Remove DB hook bindings that are no longer in the form definition catalog
+ * (or are non-bindable computed hooks). Cleans leftovers like renamed hooks.
  */
+function form_engine_prune_stale_hooks($form_key) {
+    form_engine_ensure_schema();
+    $def = form_engine_get_form_def($form_key);
+    $keep = [];
+    if ($def && !empty($def['hooks'])) {
+        foreach ($def['hooks'] as $h) {
+            if (form_engine_hook_is_bindable($h)) {
+                $keep[$h['hook_id']] = true;
+            }
+        }
+    }
+    $rows = get_db_result(
+        "SELECT hook_id FROM form_hook_bindings WHERE form_key=||fk||",
+        ['fk' => $form_key]
+    );
+    if (!$rows) {
+        return 0;
+    }
+    $removed = 0;
+    while ($r = fetch_row($rows)) {
+        $hid = $r['hook_id'] ?? '';
+        if ($hid === '' || isset($keep[$hid])) {
+            continue;
+        }
+        execute_db_sql(
+            "DELETE FROM form_hook_bindings WHERE form_key=||fk|| AND hook_id=||hid||",
+            ['fk' => $form_key, 'hid' => $hid]
+        );
+        $removed++;
+    }
+    return $removed;
+}
+
+
 function form_engine_get_fields($form_key, $pageid = 0, $include_inactive = false) {
     form_engine_ensure_schema();
     $where = $include_inactive ? '' : ' AND active = 1';
@@ -930,50 +807,36 @@ function form_engine_get_fields($form_key, $pageid = 0, $include_inactive = fals
 }
 
 /**
- * Seed default fields for a form_key (staff_app uses events seed helper).
+ * Seed default fields via form def seed_fields callback.
  */
 function form_engine_seed_fields($form_key, $pageid = 0, $force = false) {
-    global $CFG;
-    if ($form_key === (defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app')) {
-        if (!function_exists('seed_staff_form_fields')) {
-            include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
-        }
-        return seed_staff_form_fields($pageid, $force);
+    form_engine_load_form_runtime($form_key);
+    $def = form_engine_get_form_def($form_key);
+    $seeder = $def['seed_fields'] ?? null;
+    if ($seeder && is_string($seeder) && function_exists($seeder)) {
+        return call_user_func($seeder, $pageid, $force);
     }
-    form_engine_seed_hooks($form_key, 0);
+    if ($seeder && is_callable($seeder)) {
+        return call_user_func($seeder, $pageid, $force);
+    }
     return 0;
 }
 
 /**
- * Keys forced to form bottom (consent blocks) — form-specific.
+ * Optional fixed field keys declared by the form definition (not core knowledge).
  */
 function form_engine_fixed_keys($form_key) {
-    global $CFG;
-    if ($form_key === (defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app')) {
-        if (!function_exists('get_staff_form_fixed_consent_keys')) {
-            include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
-        }
-        return get_staff_form_fixed_consent_keys();
+    form_engine_load_consumer_forms();
+    $def = form_engine_get_form_def($form_key);
+    if (!$def) {
+        return [];
+    }
+    if (!empty($def['fixed_keys']) && is_array($def['fixed_keys'])) {
+        return $def['fixed_keys'];
+    }
+    $fk = $def['fixed_keys_fn'] ?? null;
+    if ($fk && is_string($fk) && function_exists($fk)) {
+        return (array)call_user_func($fk);
     }
     return [];
-}
-
-/**
- * Migration tools HTML for editor (delegates to form plan / staff tools).
- */
-function form_editor_migration_tools_html($form_key) {
-    global $CFG;
-    if ($form_key === (defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app')) {
-        if (!function_exists('staff_form_migration_tools_html')) {
-            include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
-        }
-        // Rewrite button onclick to core JS names if present
-        $html = staff_form_migration_tools_html();
-        $html = str_replace('staffFormRunMigrate', 'formEngineRunMigrate', $html);
-        $html = str_replace('staffFormDropDeprecated', 'formEngineDropDeprecated', $html);
-        $html = str_replace('staff_form_migrate_btn', 'form_engine_migrate_btn', $html);
-        $html = str_replace('staff_form_migrate_result', 'form_engine_migrate_result', $html);
-        return $html;
-    }
-    return '';
 }

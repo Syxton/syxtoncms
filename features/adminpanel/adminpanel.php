@@ -34,7 +34,7 @@ function site_administration() {
 
 /**
  * Core Form Editor (System admin).
- * Named form engine under lib/formengine; staff_app uses events staffform UI until fully extracted.
+ * Named form engine editor (lib/formengine). form_key selects a registered form definition.
  */
 function form_editor() {
     global $CFG, $USER;
@@ -42,10 +42,16 @@ function form_editor() {
         echo getlang("generic_permissions");
         return;
     }
-    $pageid = clean_myvar_opt("pageid", "int", get_pageid());
-    $form_key = clean_myvar_opt("form_key", "string", defined("FORM_KEY_STAFF_APP") ? FORM_KEY_STAFF_APP : "staff_app");
+    if (!defined("FORMENGINELIB")) {
+        include_once($CFG->dirroot . "/lib/formengine/formenginelib.php");
+    }
     if (!defined("FORMEDITORLIB")) {
         include_once($CFG->dirroot . "/lib/formengine/formeditorlib.php");
+    }
+    $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+    $form_key = clean_myvar_opt("form_key", "string", "");
+    if ($form_key === "") {
+        $form_key = form_engine_default_form_key();
     }
     form_editor_page($form_key, $pageid, true);
 }

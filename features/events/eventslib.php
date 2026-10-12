@@ -1979,11 +1979,15 @@ function get_my_category($selected = false) {
     return $returnme;
 }
 
+
+/**
+ * Shared ajaxapi registration for staff application search.
+ */
 function get_staff_appsearch_js() {
     ajaxapi([
         "id" => "perform_appsearch",
         "paramlist" => "pagenum = 0, searchwords = false",
-        "before" => "searchwords = searchwords ? searchwords : $('#searchbox').val();",
+        "before" => "searchwords = searchwords ? searchwords : ($('#searchbox').length ? $('#searchbox').val() : $('#searchwords').val());",
         "url" => "/features/events/events_ajax.php",
         "data" => [
             "action" => "appsearch",
@@ -2016,7 +2020,7 @@ function staff_status($staff, $userid = true) {
                 ],
                 [
                     "tag" => "Background Check",
-                    "full" => "Background Check Incomplete",
+                    "full" => "No Background Check",
                 ],
             ];
         }
@@ -2030,7 +2034,7 @@ function staff_status($staff, $userid = true) {
         // Process values via form hooks (bindings → field keys; no hardcoded q1_* / agerange)
         if (!defined('FORMENGINELIB')) {
             global $CFG;
-            include_once($CFG->dirroot . '/features/events/staffform/formenginelib.php');
+            include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
         }
         $form_key = defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app';
         $workerconsentdate = function_exists('form_hook_value')
@@ -2057,7 +2061,21 @@ function staff_status($staff, $userid = true) {
             ];
         }
 
-        if (function_exists('form_engine_staff_is_flagged') && form_engine_staff_is_flagged($vals, $form_key)) {
+        // Ensure staff_app form defs / resolvers are loaded
+        if (!function_exists('staff_app_is_flagged')) {
+            global $CFG;
+            $saf = $CFG->dirroot . '/features/events/formdefs/staff_app.php';
+            if (file_exists($saf)) {
+                include_once($saf);
+            }
+        }
+        $flagged = function_exists('form_hook_value')
+            ? form_hook_value($form_key, 'screening.flagged', $vals)
+            : null;
+        if (($flagged === null || $flagged === '') && function_exists('staff_app_is_flagged')) {
+            $flagged = staff_app_is_flagged($vals, $form_key) ? '1' : '0';
+        }
+        if ($flagged === '1' || $flagged === 1 || $flagged === true) {
             $status[] = [
                 "tag" => "Flagged",
                 "full" => "Flagged for review!",
@@ -2066,28 +2084,35 @@ function staff_status($staff, $userid = true) {
 
         $expireyear = $settings->events->$featureid->bgcheck_years->setting * 365 * 24 * 60 * 60;
         $time = get_timestamp();
-        $under18 = function_exists('form_engine_is_under_18')
-            ? form_engine_is_under_18($dob)
-            : ((time() - (int)$dob) < (18 * 365 * 24 * 60 * 60));
+        $under18_hook = function_exists('form_hook_value')
+            ? form_hook_value($form_key, 'meta.under_18', $vals)
+            : null;
+        if ($under18_hook !== null && $under18_hook !== '') {
+            $under18 = ($under18_hook === '1' || $under18_hook === 1 || $under18_hook === true);
+        } elseif (function_exists('staff_app_is_under_18')) {
+            $under18 = staff_app_is_under_18($dob);
+        } else {
+            $under18 = ((time() - (int)$dob) < (18 * 365 * 24 * 60 * 60));
+        }
         if (!$under18) {
             // bgcheckpassdate alone is sufficient: 0/empty = incomplete; stale date = out of date
             $bgdate = (int)($staff["bgcheckpassdate"] ?? 0);
             if ($bgdate <= 0) {
                 $status[] =  [
                     "tag" => "Background Check",
-                    "full" => "Background Check Incomplete",
+                    "full" => "No Background Check",
                 ];
             } else if (($time - $bgdate) > $expireyear) {
                 $status[] =  [
                     "tag" => "Background Check",
-                    "full" => "Background Check Out of Date",
+                    "full" => "Old Background Check",
                 ];
             }
         }
     } else {
         $status[] = ["tag" => "Account", "full" => "No account"];
         $status[] = ["tag" => "Application", "full" => "Application Incomplete"];
-        $status[] = ["tag" => "Background Check", "full" => "Background Check Incomplete"];
+        $status[] = ["tag" => "Background Check", "full" => "No Background Check"];
     }
 
     return $status;
@@ -2096,7 +2121,7 @@ function staff_status($staff, $userid = true) {
 function bgcheck_complete($status) {
     foreach ($status as $s) {
         if ($s["tag"] == "Background Check") {
-            if ($s["full"] == "Background Check Incomplete" || $s["full"] == "Background Check Out of Date") {
+            if ($s["full"] == "No Background Check" || $s["full"] == "Old Background Check") {
                 return false;
             }
         }
