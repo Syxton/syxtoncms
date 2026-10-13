@@ -1132,18 +1132,52 @@ function render_staff_form_field($field, $value, $viewonly = false) {
     return $html;
 }
 
-/**
- * Dynamic replacement for the old staff_application_form().
- * Renders from the field definition while preserving all special JS behaviour.
- */
 function staff_application_form_dynamic($row, $viewonly = false) {
-    global $USER, $CFG;
+    global $USER;
 
     $pageid = get_pageid() ?: 0;
-    // Ensure default visibility/required_when exist for seeded fields that predate those columns
     seed_staff_form_fields(0);
-    $fields = get_staff_form_fields($pageid);
-    // Always keep consent blocks at the bottom, regardless of sortorder edits
+
+    $fields = staff_form_fields_consent_last(get_staff_form_fields($pageid));
+    $vals = get_staff_application_values($row);
+    $vals = staff_form_prepare_application_values($vals, $row, $viewonly);
+
+    $pages = staff_form_group_fields_by_section($fields);
+    $page_count = count($pages);
+
+    $parts = [];
+    $parts[] = '<div id="staffapplication_form_div" class="' . ($viewonly ? 'staff-form-viewonly' : '') . '">';
+    $parts[] = staff_form_application_styles();
+    $parts[] = staff_form_application_header_html($vals, $viewonly);
+    $parts[] = staff_form_application_form_open_html($vals, $viewonly);
+
+    if ($page_count > 1 && !$viewonly) {
+        $parts[] = staff_form_application_pager_html($pages);
+    }
+
+    foreach ($pages as $i => $page) {
+        $parts[] = staff_form_application_page_html($page, $i, $vals, $viewonly);
+    }
+
+    $parts[] = staff_form_application_submit_nav_html($page_count, $viewonly);
+    $parts[] = '</fieldset></form>';
+
+    if (!$viewonly) {
+        $parts[] = staff_form_rules_js($fields);
+        if ($page_count > 1) {
+            $parts[] = staff_form_pagination_js($page_count);
+        }
+    }
+    $parts[] = keepalive();
+    $parts[] = '</div>';
+
+    return implode("\n", $parts);
+}
+
+/**
+ * Keep fixed consent keys at the end of the field list (order within each group preserved).
+ */
+function staff_form_fields_consent_last(array $fields) {
     $consent_keys = get_staff_form_fixed_consent_keys();
     $main = [];
     $consent = [];
@@ -1154,183 +1188,201 @@ function staff_application_form_dynamic($row, $viewonly = false) {
             $main[] = $f;
         }
     }
-    $fields = array_merge($main, $consent);
-    $vals   = get_staff_application_values($row);
+    return array_merge($main, $consent);
+}
 
-    // Pre-fill name for new applications
+/**
+ * New-application name prefill and editable-form consent reset.
+ */
+function staff_form_prepare_application_values(array $vals, $row, $viewonly) {
+    global $USER;
     if (empty($row) && isset($USER->fname)) {
-        $vals['name'] = trim($USER->fname . ' ' . $USER->lname);
+        $vals['name'] = trim($USER->fname . ' ' . ($USER->lname ?? ''));
     }
-
-    // When the applicant is filling/renewing the form (not admin view-only review),
-    // always require fresh consent + signature each time — never pre-fill them.
     if (!$viewonly) {
         foreach ([
-            'workerconsent',
-            'workerconsentdate',
-            'workerconsentsig',
-            'parentalconsent',
-            'parentalconsentsig',
-        ] as $consent_key) {
-            $vals[$consent_key] = '';
+            'workerconsent', 'workerconsentdate', 'workerconsentsig',
+            'parentalconsent', 'parentalconsentsig',
+        ] as $key) {
+            $vals[$key] = '';
         }
     }
+    return $vals;
+}
 
-    // Age-range selection helpers for select options (already handled inside render)
-    // Determine whether parental block should be visible
-    $agerange = $vals['agerange'] ?? '';
-    $show_parental = ((string)$agerange === '0');
-
-    // Group fields into pages by section name (order of first appearance)
-    $pages = []; // [ ['title' => ..., 'fields' => [...] ], ... ]
-    $page_index = [];
+/**
+ * Group form fields into pages by section (first-seen order).
+ * @return array<int, array{title:string,fields:array}>
+ */
+function staff_form_group_fields_by_section(array $fields) {
+    $pages = [];
+    $index = [];
     foreach ($fields as $field) {
         $sec = trim((string)($field['section'] ?? ''));
         if ($sec === '') {
             $sec = 'General';
         }
-        if (!isset($page_index[$sec])) {
-            $page_index[$sec] = count($pages);
+        if (!isset($index[$sec])) {
+            $index[$sec] = count($pages);
             $pages[] = ['title' => $sec, 'fields' => []];
         }
-        $pages[$page_index[$sec]]['fields'][] = $field;
+        $pages[$index[$sec]]['fields'][] = $field;
     }
-    $page_count = count($pages);
+    return $pages;
+}
 
-    $html = '
-        <div id="staffapplication_form_div" class="' . ($viewonly ? 'staff-form-viewonly' : '') . '">
-            <style>
-                .staff-form-pager { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin: 0 0 14px; }
-                .staff-form-pager .sfp-step {
-                    border:1px solid #cbd5e1; background:#f8fafc; color:#475569;
-                    border-radius:999px; padding:4px 10px; font-size:.8em; cursor:pointer;
-                }
-                .staff-form-pager .sfp-step.active { background:#2563eb; border-color:#2563eb; color:#fff; }
-                .staff-form-pager .sfp-step.done { background:#dbeafe; border-color:#93c5fd; color:#1e40af; }
-                .staff-form-page { display:none; }
-                .staff-form-page.active { display:block; }
-                .staff-form-viewonly .staff-form-page { display:block !important; }
-                /* Grid keeps checkbox + text on one row even when jQuery inserts .error after the input */
-                .staff-file-confirm-row {
-                    display: grid;
-                    grid-template-columns: 45px 1fr;
-                    grid-template-areas:
-                        "check text"
-                        "error error";
-                    column-gap: 8px;
-                    row-gap: 4px;
-                    align-items: center;
-                }
-                .staff-file-confirm-row > input[type=checkbox] {
-                    grid-area: check;
-                    width: 45px !important; height: 30px !important; max-width: none !important;
-                    margin: 0;
-                }
-                .staff-file-confirm-row > label.staff-file-confirm-text {
-                    grid-area: text;
-                    font-weight: normal; margin: 0; cursor: pointer;
-                }
-                .staff-file-confirm-row > label.error,
-                .staff-file-confirm > label.error {
-                    grid-area: error;
-                    display: block; width: 100%;
-                    color: #dc2626; font-weight: normal; margin: 0;
-                }
-                .staff-viewonly-row { margin-bottom: 8px; page-break-inside: avoid; }
-                .staff-viewonly-value { font-weight: 500; color: #0f172a; padding: 2px 0 8px; border-bottom: 1px dotted #e2e8f0; }
-                @media print {
-                    .staff-form-viewonly .staff-form-page { display:block !important; }
-                    .staff-form-pager, .staff-form-nav, .staff-form-progress { display:none !important; }
-                }
-                .staff-form-nav {
-                    display:flex; justify-content:space-between; gap:10px; margin-top:16px; flex-wrap:wrap;
-                }
-                .staff-form-nav button {
-                    background:#2563eb; color:#fff; border:none; border-radius:6px; padding:8px 16px; cursor:pointer;
-                }
-                .staff-form-nav button.secondary { background:#64748b; }
-                .staff-form-nav button:disabled { opacity:.5; cursor:default; }
-                .staff-form-progress { text-align:center; font-size:.85em; color:#64748b; margin-bottom:8px; }
-                .staff-subsection-heading { margin: 1rem 0 .5rem; font-size: 1.05em; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
-                .staff-subsection { margin-top: .5rem; }
-            </style>
-            <div style="text-align:center;">
-                <h2>' . (!$viewonly ? 'Staff Application' : htmlspecialchars($vals['name'] ?? '') . ' Application') . '</h2>
-                <span style="font-weight:bold;font-size:.9em">
-                    If you are not ' . htmlspecialchars($vals['name'] ?? '') . ', please sign into your own account.
-                </span>
-            </div>
-            <br />
-            <form name="staffapplication_form" id="staffapplication_form">
-                ' . (empty($vals['staffid']) ? '' : '<input type="hidden" id="staffid" name="staffid" value="' . (int)$vals['staffid'] . '" />') . '
-                <fieldset class="formContainer" ' . ($viewonly ? '' : 'style="max-width: 520px;margin-left: auto;margin-right: auto;"') . '>';
-
-    if ($page_count > 1 && !$viewonly) {
-        $html .= '<div class="staff-form-progress"><span id="sfp-progress-label">Step 1 of ' . $page_count . '</span></div>';
-        $html .= '<div class="staff-form-pager" id="staff-form-pager">';
-        foreach ($pages as $i => $page) {
-            $html .= '<button type="button" class="sfp-step' . ($i === 0 ? ' active' : '') . '" data-page="' . $i . '">'
-                   . htmlspecialchars($page['title']) . '</button>';
-        }
-        $html .= '</div>';
+function staff_form_application_styles() {
+    return <<<'CSS'
+<style>
+    .staff-form-pager { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin: 0 0 14px; }
+    .staff-form-pager .sfp-step {
+        border:1px solid #cbd5e1; background:#f8fafc; color:#475569;
+        border-radius:999px; padding:4px 10px; font-size:.8em; cursor:pointer;
     }
+    .staff-form-pager .sfp-step.active { background:#2563eb; border-color:#2563eb; color:#fff; }
+    .staff-form-pager .sfp-step.done { background:#dbeafe; border-color:#93c5fd; color:#1e40af; }
+    .staff-form-page { display:none; }
+    .staff-form-page.active { display:block; }
+    .staff-form-viewonly .staff-form-page { display:block !important; }
+    .staff-file-confirm-row {
+        display: grid;
+        grid-template-columns: 45px 1fr;
+        grid-template-areas: "check text" "error error";
+        column-gap: 8px; row-gap: 4px; align-items: center;
+    }
+    .staff-file-confirm-row > input[type=checkbox] {
+        grid-area: check;
+        width: 45px !important; height: 30px !important; max-width: none !important;
+        margin: 0;
+    }
+    .staff-file-confirm-row > label.staff-file-confirm-text {
+        grid-area: text; font-weight: normal; margin: 0; cursor: pointer;
+    }
+    .staff-file-confirm-row > label.error,
+    .staff-file-confirm > label.error {
+        grid-area: error; display: block; width: 100%;
+        color: #dc2626; font-weight: normal; margin: 0;
+    }
+    .staff-viewonly-row { margin-bottom: 8px; page-break-inside: avoid; }
+    .staff-viewonly-value {
+        font-weight: 500; color: #0f172a; padding: 2px 0 8px; border-bottom: 1px dotted #e2e8f0;
+    }
+    @media print {
+        .staff-form-viewonly .staff-form-page { display:block !important; }
+        .staff-form-pager, .staff-form-nav, .staff-form-progress { display:none !important; }
+    }
+    .staff-form-nav {
+        display:flex; justify-content:space-between; gap:10px; margin-top:16px; flex-wrap:wrap;
+    }
+    .staff-form-nav button {
+        background:#2563eb; color:#fff; border:none; border-radius:6px; padding:8px 16px; cursor:pointer;
+    }
+    .staff-form-nav button.secondary { background:#64748b; }
+    .staff-form-nav button:disabled { opacity:.5; cursor:default; }
+    .staff-form-progress { text-align:center; font-size:.85em; color:#64748b; margin-bottom:8px; }
+    .staff-subsection-heading {
+        margin: 1rem 0 .5rem; font-size: 1.05em; color: #1e293b;
+        border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;
+    }
+    .staff-subsection { margin-top: .5rem; }
+</style>
+CSS;
+}
 
+function staff_form_application_header_html(array $vals, $viewonly) {
+    $name = htmlspecialchars($vals['name'] ?? '');
+    $title = $viewonly ? ($name . ' Application') : 'Staff Application';
+    return '
+    <div style="text-align:center;">
+        <h2>' . $title . '</h2>
+        <span style="font-weight:bold;font-size:.9em">
+            If you are not ' . $name . ', please sign into your own account.
+        </span>
+    </div>
+    <br />';
+}
+
+function staff_form_application_form_open_html(array $vals, $viewonly) {
+    $staffid = empty($vals['staffid'])
+        ? ''
+        : '<input type="hidden" id="staffid" name="staffid" value="' . (int)$vals['staffid'] . '" />';
+    $fs_style = $viewonly ? '' : 'style="max-width: 520px;margin-left: auto;margin-right: auto;"';
+    return '
+    <form name="staffapplication_form" id="staffapplication_form">
+        ' . $staffid . '
+        <fieldset class="formContainer" ' . $fs_style . '>';
+}
+
+function staff_form_application_pager_html(array $pages) {
+    $n = count($pages);
+    $steps = '';
     foreach ($pages as $i => $page) {
-        $active = ($viewonly || $i === 0) ? ' active' : '';
-        $html .= '<div class="staff-form-page' . $active . '" data-page="' . $i . '" data-section="' . htmlspecialchars($page['title']) . '">';
-        $html .= '<h3 style="margin-top:0">' . htmlspecialchars($page['title']) . '</h3>';
+        $cls = 'sfp-step' . ($i === 0 ? ' active' : '');
+        $steps .= '<button type="button" class="' . $cls . '" data-page="' . (int)$i . '">'
+            . htmlspecialchars($page['title']) . '</button>';
+    }
+    return '
+    <div class="staff-form-progress"><span id="sfp-progress-label">Step 1 of ' . (int)$n . '</span></div>
+    <div class="staff-form-pager" id="staff-form-pager">' . $steps . '</div>';
+}
 
-        $inside_parental = false;
-        foreach ($page['fields'] as $field) {
-            $key = $field['field_key'];
-            $val = $vals[$key] ?? '';
+/**
+ * One multi-step (or view-only) section page of fields.
+ */
+function staff_form_application_page_html(array $page, $index, array $vals, $viewonly) {
+    $active = ($viewonly || (int)$index === 0) ? ' active' : '';
+    $title = htmlspecialchars($page['title']);
 
-            // Section-type fields render as subsection headings via render_staff_form_field()
-            if ($key === 'section_parental') {
-                $par_style = $viewonly ? '' : ' style="display:none"';
-                $html .= '<div id="sub18" data-staff-section="section_parental"' . $par_style . '>';
-                $html .= '<h4 class="staff-subsection-heading">' . htmlspecialchars($field['label']) . '</h4>';
-                $inside_parental = true;
-                continue;
-            }
+    $field_html = '';
+    $inside_parental = false;
+    foreach ($page['fields'] as $field) {
+        $key = $field['field_key'];
+        $val = $vals[$key] ?? '';
 
-            if ($inside_parental && $key !== 'parentalconsent' && $key !== 'parentalconsentsig') {
-                $html .= '</div>';
-                $inside_parental = false;
-            }
-
-            if ($viewonly && strpos($key, 'section_ref') === 0 && $key === 'section_ref1') {
-                $html .= '<div style="text-align:center"><h2>' . htmlspecialchars($vals['name'] ?? '') . ' References</h2></div>';
-            }
-
-            $html .= render_staff_form_field($field, $val, $viewonly);
+        // Parental consent section: wrapper toggled by under-18 rules
+        if ($key === 'section_parental') {
+            $par_style = $viewonly ? '' : ' style="display:none"';
+            $inside_parental = true;
+            $field_html .= '
+                <div id="sub18" data-staff-section="section_parental"' . $par_style . '>
+                    <h4 class="staff-subsection-heading">
+                    ' . htmlspecialchars($field['label']) . '
+                    </h4>';
+            continue;
         }
-        if ($inside_parental) {
-            $html .= '</div>';
+
+        if ($inside_parental && $key !== 'parentalconsent' && $key !== 'parentalconsentsig') {
+            $field_html .= '</div>';
+            $inside_parental = false;
         }
-        $html .= '</div>'; // page
+
+        $field_html .= render_staff_form_field($field, $val, $viewonly);
     }
 
-    if ($page_count > 1 && !$viewonly) {
-        $html .= '
+    if ($inside_parental) {
+        $field_html .= '</div>';
+    }
+
+    return '
+        <div class="staff-form-page' . $active . '" data-page="' . (int)$index . '" data-section="' . $title . '">
+            <h3 style="margin-top:0">' . $title . '</h3>
+            ' . $field_html . '
+        </div>';
+}
+
+function staff_form_application_submit_nav_html($page_count, $viewonly) {
+    if ($viewonly) {
+        return '';
+    }
+    if ((int)$page_count > 1) {
+        return '
             <div class="staff-form-nav">
                 <button type="button" class="secondary" id="sfp-prev" disabled>Previous</button>
                 <button type="button" id="sfp-next">Next</button>
                 <input class="submit" id="sfp-submit" name="submit" type="submit" value="Submit Application" style="display:none" />
             </div>';
-    } else {
-        $html .= ($viewonly ? '' : '<input class="submit" name="submit" type="submit" onmouseover="this.focus();" value="Submit Application" />');
     }
-
-    $html .= '
-                </fieldset>
-            </form>
-            ' . (!$viewonly ? staff_form_rules_js($fields) : '') . '
-            ' . (!$viewonly && $page_count > 1 ? staff_form_pagination_js($page_count) : '') . '
-            ' . keepalive() . '
-        </div>';
-
-    return $html;
+    return '<input class="submit" name="submit" type="submit" onmouseover="this.focus();" value="Submit Application" />';
 }
 
 /**
