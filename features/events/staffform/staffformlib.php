@@ -1132,6 +1132,10 @@ function render_staff_form_field($field, $value, $viewonly = false) {
     return $html;
 }
 
+/**
+ * Dynamic replacement for the old staff_application_form().
+ * Renders from the field definition while preserving all special JS behaviour.
+ */
 function staff_application_form_dynamic($row, $viewonly = false) {
     global $USER;
 
