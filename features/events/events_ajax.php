@@ -3207,7 +3207,8 @@ global $CFG, $USER;
                 "id" => "save_staff_bg",
                 "paramlist" => "staffid",
                 "if" => "!$('#bgcheckdate_' + staffid).prop('disabled')",
-                "else" => "$('#bgcheckdate_' + staffid).prop('disabled', false);",
+                "before" => "$('.savebg_' + staffid).toggle(); $('.editbg_' + staffid).toggle();",
+                "else" => "$('#bgcheckdate_' + staffid).prop('disabled', false); $('.savebg_' + staffid).toggle(); $('.editbg_' + staffid).toggle();",
                 "url" => "/features/events/events_ajax.php",
                 "data" => [
                     "action" => "change_bgcheck_status",

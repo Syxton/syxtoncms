@@ -2004,6 +2004,34 @@ function get_staff_appsearch_js() {
 function staff_status($staff, $userid = true) {
     $status = [];
 
+    $fullstatus = [
+        "account" => [
+            "tag" => "Account",
+            "icon" => "user-xmark",
+            "full" => "No Account",
+        ],
+        "app" => [
+            "tag" => "Application",
+            "icon" => "file-lines",
+            "full" => "Application Incomplete",
+        ],
+        "nobg" => [
+            "tag" => "Background Check",
+            "icon" => "calendar",
+            "full" => "No Background Check",
+        ],
+        "oldbg" => [
+            "tag" => "Background Check",
+            "icon" => "calendar-check",
+            "full" => "Old Background Check",
+        ],
+        "flagged" => [
+            "tag" => "Flagged",
+            "icon" => "flag",
+            "full" => "Flagged for review!",
+        ],
+    ];
+
     if ($userid) {
         $pageid = $_SESSION["pageid"];
         $featureid = "*";
@@ -2014,14 +2042,8 @@ function staff_status($staff, $userid = true) {
 
         if (!$staff) { // User exists but no staff history.
             return [
-                [
-                    "tag" => "Application",
-                    "full" => "Application Incomplete",
-                ],
-                [
-                    "tag" => "Background Check",
-                    "full" => "No Background Check",
-                ],
+                $fullstatus["app"],
+                $fullstatus["nobg"],
             ];
         }
 
@@ -2055,10 +2077,7 @@ function staff_status($staff, $userid = true) {
         }
 
         if ((int)$workerconsentdate < strtotime($settings->events->$featureid->staffapp_expires->setting . '/' . date('Y'))) {
-            $status[] = [
-                "tag" => "Application",
-                "full" => "Application Out of Date",
-            ];
+            $status[] = $fullstatus["app"];
         }
 
         // Ensure staff_app form defs / resolvers are loaded
@@ -2076,10 +2095,7 @@ function staff_status($staff, $userid = true) {
             $flagged = staff_app_is_flagged($vals, $form_key) ? '1' : '0';
         }
         if ($flagged === '1' || $flagged === 1 || $flagged === true) {
-            $status[] = [
-                "tag" => "Flagged",
-                "full" => "Flagged for review!",
-            ];
+            $status[] = $fullstatus["flagged"];
         }
 
         $expireyear = $settings->events->$featureid->bgcheck_years->setting * 365 * 24 * 60 * 60;
@@ -2098,21 +2114,15 @@ function staff_status($staff, $userid = true) {
             // bgcheckpassdate alone is sufficient: 0/empty = incomplete; stale date = out of date
             $bgdate = (int)($staff["bgcheckpassdate"] ?? 0);
             if ($bgdate <= 0) {
-                $status[] =  [
-                    "tag" => "Background Check",
-                    "full" => "No Background Check",
-                ];
+                $status[] =  $fullstatus["nobg"];
             } else if (($time - $bgdate) > $expireyear) {
-                $status[] =  [
-                    "tag" => "Background Check",
-                    "full" => "Old Background Check",
-                ];
+                $status[] =  $fullstatus["oldbg"];
             }
         }
     } else {
-        $status[] = ["tag" => "Account", "full" => "No account"];
-        $status[] = ["tag" => "Application", "full" => "Application Incomplete"];
-        $status[] = ["tag" => "Background Check", "full" => "No Background Check"];
+        $status[] = $fullstatus["account"];
+        $status[] = $fullstatus["app"];
+        $status[] = $fullstatus["nobg"];
     }
 
     return $status;
@@ -2146,9 +2156,10 @@ global $CFG;
     $print = '';
     if (!empty($status)) {
         foreach ($status as $s) {
+            $icon = isset($s["icon"]) ? $s["icon"] : "circle-exclamation";
             $print .= '
                 <div class="staff_status_alert">
-                    ' . icon("circle-exclamation") . ' ' . $s["full"] . '
+                    ' . icon($icon) . ' ' . $s["full"] . '
                 </div>';
         }
     } else {

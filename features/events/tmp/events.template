@@ -256,7 +256,8 @@ staffsearchrow||
         <td style="text-align:right;">
             <input style="width: 100px;margin: 0;" type="text" disabled="disabled" id="bgcheckdate_||staff[staffid]||" name="bgcheckdate_||staff[staffid]||" value="||bgcheckdate||" />
             <button onclick="save_staff_bg(||staff[staffid]||);" class="alike" style="padding: 0 5px;" title="Edit Background Check Date">
-                ||echo icon("floppy-disk");::none||
+                <span class="editbg_||staff[staffid]||">||echo icon("pen-to-square");::none||</span>
+                <span class="savebg_||staff[staffid]||" style="display:none">||echo icon("floppy-disk");::none||</span>
             </button>
         </td>
     </tr>
