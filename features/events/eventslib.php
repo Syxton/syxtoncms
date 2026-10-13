@@ -1979,6 +1979,33 @@ function get_my_category($selected = false) {
     return $returnme;
 }
 
+const APPSTATUS = [
+    "account" => [
+        "tag" => "Account",
+        "icon" => "user-xmark",
+        "full" => "No Account",
+    ],
+    "app" => [
+        "tag" => "Application",
+        "icon" => "file-lines",
+        "full" => "Application Incomplete",
+    ],
+    "nobg" => [
+        "tag" => "Background Check",
+        "icon" => "calendar",
+        "full" => "No Background Check",
+    ],
+    "oldbg" => [
+        "tag" => "Background Check",
+        "icon" => "calendar-check",
+        "full" => "Old Background Check",
+    ],
+    "flagged" => [
+        "tag" => "Flagged",
+        "icon" => "flag",
+        "full" => "Flagged for review!",
+    ],
+];
 
 /**
  * Shared ajaxapi registration for staff application search.
@@ -2004,34 +2031,6 @@ function get_staff_appsearch_js() {
 function staff_status($staff, $userid = true) {
     $status = [];
 
-    $fullstatus = [
-        "account" => [
-            "tag" => "Account",
-            "icon" => "user-xmark",
-            "full" => "No Account",
-        ],
-        "app" => [
-            "tag" => "Application",
-            "icon" => "file-lines",
-            "full" => "Application Incomplete",
-        ],
-        "nobg" => [
-            "tag" => "Background Check",
-            "icon" => "calendar",
-            "full" => "No Background Check",
-        ],
-        "oldbg" => [
-            "tag" => "Background Check",
-            "icon" => "calendar-check",
-            "full" => "Old Background Check",
-        ],
-        "flagged" => [
-            "tag" => "Flagged",
-            "icon" => "flag",
-            "full" => "Flagged for review!",
-        ],
-    ];
-
     if ($userid) {
         $pageid = $_SESSION["pageid"];
         $featureid = "*";
@@ -2042,8 +2041,8 @@ function staff_status($staff, $userid = true) {
 
         if (!$staff) { // User exists but no staff history.
             return [
-                $fullstatus["app"],
-                $fullstatus["nobg"],
+                APPSTATUS["app"],
+                APPSTATUS["nobg"],
             ];
         }
 
@@ -2077,7 +2076,7 @@ function staff_status($staff, $userid = true) {
         }
 
         if ((int)$workerconsentdate < strtotime($settings->events->$featureid->staffapp_expires->setting . '/' . date('Y'))) {
-            $status[] = $fullstatus["app"];
+            $status[] = APPSTATUS["app"];
         }
 
         // Ensure staff_app form defs / resolvers are loaded
@@ -2095,7 +2094,7 @@ function staff_status($staff, $userid = true) {
             $flagged = staff_app_is_flagged($vals, $form_key) ? '1' : '0';
         }
         if ($flagged === '1' || $flagged === 1 || $flagged === true) {
-            $status[] = $fullstatus["flagged"];
+            $status[] = APPSTATUS["flagged"];
         }
 
         $expireyear = $settings->events->$featureid->bgcheck_years->setting * 365 * 24 * 60 * 60;
@@ -2114,15 +2113,15 @@ function staff_status($staff, $userid = true) {
             // bgcheckpassdate alone is sufficient: 0/empty = incomplete; stale date = out of date
             $bgdate = (int)($staff["bgcheckpassdate"] ?? 0);
             if ($bgdate <= 0) {
-                $status[] =  $fullstatus["nobg"];
+                $status[] =  APPSTATUS["nobg"];
             } else if (($time - $bgdate) > $expireyear) {
-                $status[] =  $fullstatus["oldbg"];
+                $status[] =  APPSTATUS["oldbg"];
             }
         }
     } else {
-        $status[] = $fullstatus["account"];
-        $status[] = $fullstatus["app"];
-        $status[] = $fullstatus["nobg"];
+        $status[] = APPSTATUS["account"];
+        $status[] = APPSTATUS["app"];
+        $status[] = APPSTATUS["nobg"];
     }
 
     return $status;
@@ -2130,8 +2129,9 @@ function staff_status($staff, $userid = true) {
 
 function bgcheck_complete($status) {
     foreach ($status as $s) {
-        if ($s["tag"] == "Background Check") {
-            if ($s["full"] == "No Background Check" || $s["full"] == "Old Background Check") {
+        if ($s["tag"] === APPSTATUS["nobg"]["tag"]) {
+            if ($s["full"] === APPSTATUS["nobg"]["full"] ||
+            $s["full"] === APPSTATUS["oldbg"]["full"]) {
                 return false;
             }
         }
@@ -2141,8 +2141,8 @@ function bgcheck_complete($status) {
 
 function app_complete($status) {
     foreach ($status as $s) {
-        if ($s["tag"] == "Application") {
-            if ($s["full"] == "Application Incomplete" || $s["full"] == "Application Out of Date") {
+        if ($s["tag"] === "Application") {
+            if ($s["full"] === APPSTATUS["app"]["full"]) {
                 return false;
             }
         }

@@ -3065,7 +3065,11 @@ global $CFG, $USER;
                     // Email standard header.
                     $message_header = fill_template("tmp/pagelib.template", "email_header");
 
-                    if (!empty($status) && !(count($status) == 1 && $status[0]["tag"] == "Flagged")) {
+                    if (
+                        !empty($status) &&
+                        !(count($status)) === 1 &&
+                        $status[0]["tag"] === APPSTATUS["flagged"]["tag"]
+                    ) {
                         $bgcheckgood = bgcheck_complete($status);
                         $appgood = app_complete($status);
 
@@ -3131,7 +3135,7 @@ global $CFG, $USER;
                         $staffcomstatus[] = "$name($email) is APPROVED / was NOT contacted.";
                     }
                 } else {
-                    if (empty($status) || (count($status) == 1 && $status[0]["tag"] == "Flagged")) {
+                    if (empty($status) || (count($status) == 1 && $status[0]["tag"] === APPSTATUS["flagged"]["tag"])) {
                         if (!empty($status)) {
                             $staffapproved[] = "$name($email) is <strong> APPROVED (FLAGGED)</strong>";
                         } else {
