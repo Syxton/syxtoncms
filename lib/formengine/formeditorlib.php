@@ -913,7 +913,7 @@ function form_editor_ui($form_key, $pageid) {
                 "<option value=\\"neq\\"" + (cond.op === "neq" ? " selected" : "") + ">not equals</option>" +
             "</select></div>" +
             "<div><label>Value</label><input type=\\"text\\" class=\\"sfe-c-value\\" value=\\"" + (cond.value != null ? String(cond.value).replace(/"/g, "&quot;") : "") + "\\" /></div>" +
-            "<div><button type=\\"button\\" class=\\"btn-danger btn-small\\" onclick=\\"this.closest(\".sfe-cond-row\").remove()\\">Remove</button></div>";
+            "<div><button type=\\"button\\" class=\\"btn-danger btn-small\\" onclick=\\"this.closest(\'.sfe-cond-row\').remove()\\">Remove</button></div>";
         box.appendChild(row);
     }
 

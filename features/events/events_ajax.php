@@ -3284,7 +3284,7 @@ global $CFG, $USER;
 
     get_staff_appsearch_js();
 
-$returnme = '
+    $returnme = '
         <link rel="stylesheet" media="print" type="text/css" href="' . $CFG->wwwroot . '/styles/print.css"><br />
         <input type="hidden" id="searchwords" value="' . $searchwords . '" />' .
         button_maker([
