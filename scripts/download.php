@@ -47,46 +47,50 @@ $allowed_ext = [
 ];
 
 if (!empty($_GET['file'])) {
-    $file = $_GET['file'];
-    $file = urldecode($file);
+    // Query string may be encoded; restore a real filesystem path.
+    $file = urldecode((string)$_GET['file']);
+    // Strip slashes added when path was embedded in HTML (create_file uses addslashes).
+    $file = stripslashes($file);
 
     // check if gated file.
     if (strstr($file, "filegate.php")) {
-        // check if file exists.
         $file = fm_gated_url_to_path($file);
         if (!file_exists($file)) {
             die("File not found.");
         }
         $path_parts = pathinfo($file);
     } else {
-        $file = str_replace("\\", "/", $file);
+        // Normalize separators only — do NOT rawurlencode the path for readfile().
+        // rawurlencode turned staffapps(2021).csv into staffapps%282021%29.csv and broke exports.
+        $file = str_replace('\\', '/', $file);
+        // Collapse accidental duplicate slashes in the path (keep leading protocol-style C:/)
+        $file = preg_replace('#(?<!:)/+#', '/', $file);
         $path_parts = pathinfo($file);
-
-        $file = str_replace(
-            ['%3A', '%2F'],
-            [':', '/'],
-            rawurlencode($file)
-        );
     }
 
     if (empty($path_parts['filename']) && empty($path_parts['extension'])) {
         die("Invalid file path.");
     }
 
-    if (!array_key_exists($path_parts['extension'], $allowed_ext)) {
+    $ext = strtolower($path_parts['extension'] ?? '');
+    if ($ext === '' || !array_key_exists($ext, $allowed_ext)) {
         die("Not allowed file type.");
     }
 
-    $filename = $path_parts['filename'] . "." . $path_parts['extension'];
+    // Download name is basename only (safe for Content-Disposition)
+    $filename = $path_parts['filename'] . "." . $ext;
+
+    if (!is_file($file) || !is_readable($file)) {
+        die("File not found.");
+    }
 
     // get mime type
-    if ($allowed_ext[$path_parts['extension']] == '') {
+    if ($allowed_ext[$ext] == '') {
         $mtype = '';
-        // mime type is not set, get from server settings
         if (function_exists('mime_content_type')) {
             $mtype = mime_content_type($file);
-        }elseif (function_exists('finfo_file')) {
-            $finfo = finfo_open(FILEINFO_MIME); // return mime type
+        } elseif (function_exists('finfo_file')) {
+            $finfo = finfo_open(FILEINFO_MIME);
             $mtype = finfo_file($finfo, $file);
             finfo_close($finfo);
         }
@@ -94,22 +98,24 @@ if (!empty($_GET['file'])) {
             $mtype = "application/octet-stream";
         }
     } else {
-      // get mime type defined by admin
-      $mtype = $allowed_ext[$path_parts['extension']];
+        $mtype = $allowed_ext[$ext];
     }
 
-    ob_start();
+    // Prefer realpath for read; keep $filename for the download name
+    $realpath = realpath($file);
+    if ($realpath === false) {
+        die("File not found.");
+    }
+
     header("Pragma: public");
     header("Expires: 0");
     header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
     header("Cache-Control: public");
     header("Content-Description: File Transfer");
     header("Content-Type: $mtype");
-    header("Content-Disposition: attachment; filename=\"" . $filename . "\"");
+    header("Content-Disposition: attachment; filename=\"" . str_replace('"', '', $filename) . "\"");
     header("Content-Transfer-Encoding: binary");
-    ob_clean();
-    flush();
-    readfile($file);
+    header("Content-Length: " . filesize($realpath));
+    readfile($realpath);
 }
 exit;
-?>

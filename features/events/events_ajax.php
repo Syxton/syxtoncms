@@ -3465,15 +3465,19 @@ global $MYVARS, $CFG, $USER;
 
     if ($applications = get_db_result(fetch_template("dbsql/events.sql", "get_all_staff_by_year", "events"), ["pageid" => $pageid, "year" => $year])) {
         while ($app = fetch_row($applications)) {
-            $status = staff_status($app);
+            $status = staff_status($app, true, (int)$year); // archive year, not today
             $status = empty($status) ? [["full" => "APPROVED"]] : $status;
             $email = get_db_field("email", "users", "userid='" . $app["userid"] . "'");
             $vals = get_staff_application_values($app);
             $row = [implode(" | ", array_column($status, 'full')), $email];
             foreach ($export_keys as $k) {
                 $v = $vals[$k] ?? '';
-                if (in_array($k, ['dateofbirth', 'workerconsentdate'], true) && is_numeric($v) && $v > 0) {
-                    $v = date('m/d/Y', $v);
+                if (in_array($k, ['dateofbirth', 'workerconsentdate'], true)) {
+                    if (function_exists('staff_form_format_date_only')) {
+                        $v = staff_form_format_date_only($v);
+                    } elseif (is_numeric($v) && (int)$v > 0) {
+                        $v = gmdate('m/d/Y', (int)$v);
+                    }
                 }
                 // yes/no display
                 if ($v === '0' || $v === 0) $v = 'No';
@@ -3483,9 +3487,24 @@ global $MYVARS, $CFG, $USER;
                 }
                 $row[] = str_replace('"', '""', (string)$v);
             }
+            // Archive bgcheck; for current year fall back to live staff if archive is empty
             $bgd_ts = (int)($app['bgcheckpassdate'] ?? 0);
+            if ($bgd_ts <= 0 && (int)$year === (int)date('Y') && !empty($app['staffid'])) {
+                $live = get_db_row(
+                    "SELECT bgcheckpassdate FROM events_staff WHERE staffid = ||sid|| AND pageid = ||pageid||",
+                    ["sid" => $app["staffid"], "pageid" => $pageid]
+                );
+                if ($live) {
+                    $bgd_ts = (int)($live['bgcheckpassdate'] ?? 0);
+                }
+            }
             $bg = ($bgd_ts > 0) ? 'Yes' : 'No';
-            $bgd = ($bgd_ts > 0) ? date('m/d/Y', $bgd_ts) : '';
+            $bgd = '';
+            if ($bgd_ts > 0) {
+                $bgd = function_exists('staff_form_format_date_only')
+                    ? staff_form_format_date_only($bgd_ts)
+                    : gmdate('m/d/Y', $bgd_ts);
+            }
             $row[] = $bg;
             $row[] = $bgd;
             $CSV .= '"' . implode('","', $row) . "\"\n";

@@ -799,6 +799,138 @@ function staff_form_normalize_checkbox_value($val) {
     return '1';
 }
 
+
+/**
+ * Parse a calendar date string to a UTC-midnight unix timestamp.
+ * Accepts m/d/Y, n/j/Y, and Y-m-d. Avoids timezone day-shifts for DOB-style fields.
+ *
+ * @param string $str
+ * @return int Unix timestamp (UTC midnight) or 0
+ */
+function staff_form_parse_date_only($str) {
+    $str = trim((string)$str);
+    if ($str === '') {
+        return 0;
+    }
+    // Already a pure integer timestamp
+    if (is_numeric($str) && (string)(int)$str === (string)$str && (int)$str > 0) {
+        // Normalize existing timestamps to UTC midnight of their UTC calendar day
+        return staff_form_normalize_ts_to_utc_midnight((int)$str);
+    }
+    $tz = new DateTimeZone('UTC');
+    foreach (['!m/d/Y', '!n/j/Y', '!Y-m-d'] as $fmt) {
+        $dt = DateTime::createFromFormat($fmt, $str, $tz);
+        if ($dt instanceof DateTime) {
+            $errs = DateTime::getLastErrors();
+            if (is_array($errs) && (!empty($errs['warning_count']) || !empty($errs['error_count']))) {
+                continue;
+            }
+            $dt->setTime(0, 0, 0);
+            return (int)$dt->getTimestamp();
+        }
+    }
+    return 0;
+}
+
+/**
+ * Force a timestamp to UTC midnight on the same UTC calendar day.
+ * Stabilizes legacy values that were stored at local midnights.
+ *
+ * @param int $ts
+ * @return int
+ */
+function staff_form_normalize_ts_to_utc_midnight($ts) {
+    $ts = (int)$ts;
+    if ($ts <= 0) {
+        return 0;
+    }
+    $day = gmdate('Y-m-d', $ts);
+    $dt = DateTime::createFromFormat('!Y-m-d', $day, new DateTimeZone('UTC'));
+    return $dt ? (int)$dt->getTimestamp() : 0;
+}
+
+/**
+ * Format a date-only timestamp (or date string) as m/d/Y using the UTC calendar day.
+ *
+ * @param mixed $ts
+ * @return string
+ */
+function staff_form_format_date_only($ts) {
+    if ($ts === null || $ts === '' || $ts === false) {
+        return '';
+    }
+    if (!is_numeric($ts)) {
+        $s = trim((string)$ts);
+        if (preg_match('/^\d{1,2}\/\d{1,2}\/\d{4}$/', $s)) {
+            return $s;
+        }
+        $ts = staff_form_parse_date_only($s);
+    }
+    $ts = (int)$ts;
+    if ($ts <= 0) {
+        return '';
+    }
+    return gmdate('m/d/Y', $ts);
+}
+
+/**
+ * Propagate a corrected date of birth to all archive rows for this user on the page.
+ * Also patches form_data JSON when it contains dateofbirth.
+ *
+ * @param int $userid
+ * @param int $pageid
+ * @param int $dob_ts UTC-midnight timestamp
+ */
+function staff_form_sync_dob_to_archives($userid, $pageid, $dob_ts) {
+    $userid = (int)$userid;
+    $pageid = (int)$pageid;
+    $dob_ts = (int)$dob_ts;
+    if ($userid <= 0 || $pageid <= 0 || $dob_ts <= 0) {
+        return;
+    }
+
+    execute_db_sql(
+        "UPDATE events_staff_archive
+         SET dateofbirth = ||dob||
+         WHERE userid = ||userid|| AND pageid = ||pageid||",
+        ["dob" => $dob_ts, "userid" => $userid, "pageid" => $pageid]
+    );
+
+    // Keep form_data in sync when present
+    $rows = get_db_result(
+        "SELECT staffid, year, form_data FROM events_staff_archive
+         WHERE userid = ||userid|| AND pageid = ||pageid||",
+        ["userid" => $userid, "pageid" => $pageid]
+    );
+    if (!$rows) {
+        return;
+    }
+    while ($row = fetch_row($rows)) {
+        if (empty($row['form_data'])) {
+            continue;
+        }
+        $json = is_string($row['form_data']) ? json_decode($row['form_data'], true) : $row['form_data'];
+        if (!is_array($json)) {
+            continue;
+        }
+        if (isset($json['dateofbirth']) && (int)$json['dateofbirth'] === $dob_ts) {
+            continue;
+        }
+        $json['dateofbirth'] = $dob_ts;
+        execute_db_sql(
+            "UPDATE events_staff_archive
+             SET form_data = ||form_data||
+             WHERE staffid = ||staffid|| AND year = ||year|| AND pageid = ||pageid||",
+            [
+                "form_data" => json_encode($json, JSON_UNESCAPED_UNICODE),
+                "staffid" => $row["staffid"],
+                "year" => $row["year"],
+                "pageid" => $pageid,
+            ]
+        );
+    }
+}
+
 function get_staff_application_values($row) {
     if (empty($row)) {
         return [];
@@ -830,12 +962,12 @@ function get_staff_application_values($row) {
             $vals[$k] = $v;
         }
     }
-    // Normalize dates for display
-    if (!empty($vals['dateofbirth']) && is_numeric($vals['dateofbirth'])) {
-        $vals['dateofbirth'] = date('m/d/Y', $vals['dateofbirth']);
+    // Normalize dates for display (UTC calendar day — no TZ day-shift)
+    if (!empty($vals['dateofbirth'])) {
+        $vals['dateofbirth'] = staff_form_format_date_only($vals['dateofbirth']);
     }
-    if (!empty($vals['workerconsentdate']) && is_numeric($vals['workerconsentdate'])) {
-        $vals['workerconsentdate'] = date('m/d/Y', $vals['workerconsentdate']);
+    if (!empty($vals['workerconsentdate'])) {
+        $vals['workerconsentdate'] = staff_form_format_date_only($vals['workerconsentdate']);
     }
     // Normalize signature / checkbox consents: legacy "on" → "1"
     foreach (['workerconsentsig', 'parentalconsentsig'] as $sig_key) {
@@ -897,8 +1029,9 @@ function staff_form_display_value($field, $value) {
         }
         return htmlspecialchars((string)$val);
     }
-    if ($type === 'date' && is_numeric($val) && (int)$val > 0) {
-        return htmlspecialchars(date('m/d/Y', (int)$val));
+    if ($type === 'date') {
+        $formatted = staff_form_format_date_only($val);
+        return $formatted !== '' ? htmlspecialchars($formatted) : '';
     }
     if ($type === 'textarea') {
         return nl2br(htmlspecialchars((string)$val));
@@ -1674,7 +1807,7 @@ function collect_staff_application_post($pageid = 0) {
                 break;
             case 'date':
                 $str = clean_myvar_opt($key, 'string', '');
-                $raw = $str ? strtotime($str) : 0;
+                $raw = staff_form_parse_date_only($str);
                 break;
             case 'phone':
                 $raw = format_phone(clean_myvar_opt($key, 'string', ''));
@@ -1751,7 +1884,35 @@ function staff_app_save_application($pageid, $staffid, $col_params, $form_data, 
         'workerconsentdate' => 0,
         'bgcheckpassdate' => 0,
     ], $col_params);
-    $params['form_data'] = is_string($form_data) ? $form_data : json_encode($form_data, JSON_UNESCAPED_UNICODE);
+
+    // Date-only fields: normalize to UTC midnight so archives/export never drift by TZ
+    if (!empty($params['dateofbirth'])) {
+        $params['dateofbirth'] = staff_form_parse_date_only($params['dateofbirth']);
+    } else {
+        $params['dateofbirth'] = 0;
+    }
+    if (!empty($params['workerconsentdate'])) {
+        $params['workerconsentdate'] = staff_form_parse_date_only($params['workerconsentdate']);
+    } else {
+        $params['workerconsentdate'] = 0;
+    }
+
+    // Keep form_data timestamps aligned with column values
+    if (is_string($form_data)) {
+        $fd = json_decode($form_data, true);
+        if (!is_array($fd)) {
+            $fd = [];
+        }
+    } else {
+        $fd = is_array($form_data) ? $form_data : [];
+    }
+    if (!empty($params['dateofbirth'])) {
+        $fd['dateofbirth'] = $params['dateofbirth'];
+    }
+    if (!empty($params['workerconsentdate'])) {
+        $fd['workerconsentdate'] = $params['workerconsentdate'];
+    }
+    $params['form_data'] = json_encode($fd, JSON_UNESCAPED_UNICODE);
 
     $newid = false;
     $staff = null;
@@ -1776,6 +1937,11 @@ function staff_app_save_application($pageid, $staffid, $col_params, $form_data, 
             $SQL = fetch_template('dbsql/events.sql', 'insert_staff_app_archive', 'events');
         }
         execute_db_sql($SQL, $params);
+
+        // DOB does not change year-to-year: push corrected value to all archives for this user
+        if (!empty($params['dateofbirth'])) {
+            staff_form_sync_dob_to_archives((int)$userid, (int)$pageid, (int)$params['dateofbirth']);
+        }
     }
 
     return ['staffid' => $staffid, 'new' => (bool)$newid, 'row' => $staff];

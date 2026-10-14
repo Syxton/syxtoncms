@@ -2028,11 +2028,27 @@ function get_staff_appsearch_js() {
     ]);
 }
 
-function staff_status($staff, $userid = true) {
+/**
+ * Staff application status flags.
+ *
+ * @param array|false $staff Staff row (live or archive)
+ * @param bool $userid True if the person has a user account context
+ * @param int|null $as_of_year When set (e.g. archive export year), evaluate
+ *        consent expiry and bg-check age relative to that season year instead
+ *        of "right now". Prevents past-year exports from all showing Incomplete.
+ */
+function staff_status($staff, $userid = true, $as_of_year = null) {
     $status = [];
+    $as_of_year = $as_of_year !== null ? (int)$as_of_year : (int)date('Y');
 
     if ($userid) {
-        $pageid = $_SESSION["pageid"];
+        $pageid = 0;
+        if (is_array($staff) && !empty($staff['pageid'])) {
+            $pageid = (int)$staff['pageid'];
+        }
+        if (!$pageid) {
+            $pageid = (int)($_SESSION['pageid'] ?? 0);
+        }
         $featureid = "*";
         if (!$settings = fetch_settings("events", $featureid, $pageid)) {
             save_batch_settings(default_settings("events", $pageid, $featureid));
@@ -2051,35 +2067,59 @@ function staff_status($staff, $userid = true) {
             global $CFG;
             include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
         }
+        // Use raw column timestamps for comparisons (display formatting breaks numeric checks)
+        $vals_raw = is_array($staff) ? $staff : [];
+        if (!empty($staff['form_data'])) {
+            $json = is_string($staff['form_data']) ? json_decode($staff['form_data'], true) : $staff['form_data'];
+            if (is_array($json)) {
+                $vals_raw = array_merge($json, $vals_raw);
+            }
+        }
         $vals = function_exists('get_staff_application_values') ? get_staff_application_values($staff) : $staff;
-        // Process values via form hooks (bindings → field keys; no hardcoded q1_* / agerange)
         if (!defined('FORMENGINELIB')) {
             global $CFG;
             include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
         }
         $form_key = defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app';
-        $workerconsentdate = function_exists('form_hook_value')
-            ? form_hook_value($form_key, 'consent.worker_date', $vals) : null;
-        if ($workerconsentdate === null || $workerconsentdate === '') {
-            $workerconsentdate = $vals['workerconsentdate'] ?? ($staff['workerconsentdate'] ?? 0);
+
+        $workerconsentdate = $vals_raw['workerconsentdate'] ?? ($staff['workerconsentdate'] ?? 0);
+        if (function_exists('form_hook_value')) {
+            $hooked = form_hook_value($form_key, 'consent.worker_date', $vals);
+            if ($hooked !== null && $hooked !== '') {
+                $workerconsentdate = $hooked;
+            }
         }
         if (!is_numeric($workerconsentdate) && !empty($workerconsentdate)) {
-            $workerconsentdate = strtotime($workerconsentdate);
+            $workerconsentdate = function_exists('staff_form_parse_date_only')
+                ? staff_form_parse_date_only($workerconsentdate)
+                : strtotime($workerconsentdate);
         }
-        $dob = function_exists('form_hook_value')
-            ? form_hook_value($form_key, 'identity.date_of_birth', $vals) : null;
-        if ($dob === null || $dob === '') {
-            $dob = $vals['dateofbirth'] ?? ($staff['dateofbirth'] ?? 0);
+        $workerconsentdate = (int)$workerconsentdate;
+
+        $dob = $vals_raw['dateofbirth'] ?? ($staff['dateofbirth'] ?? 0);
+        if (function_exists('form_hook_value')) {
+            $hooked = form_hook_value($form_key, 'identity.date_of_birth', $vals);
+            if ($hooked !== null && $hooked !== '') {
+                $dob = $hooked;
+            }
         }
         if (!is_numeric($dob) && !empty($dob)) {
-            $dob = strtotime($dob);
+            $dob = function_exists('staff_form_parse_date_only')
+                ? staff_form_parse_date_only($dob)
+                : strtotime($dob);
         }
+        $dob = (int)$dob;
 
-        if ((int)$workerconsentdate < strtotime($settings->events->$featureid->staffapp_expires->setting . '/' . date('Y'))) {
+        // Consent must be on/after the season expiry cutoff for the evaluated year
+        $expires_setting = $settings->events->$featureid->staffapp_expires->setting ?? '1/1';
+        $season_cutoff = strtotime($expires_setting . '/' . $as_of_year);
+        if ($season_cutoff === false) {
+            $season_cutoff = strtotime($as_of_year . '-01-01');
+        }
+        if ($workerconsentdate < (int)$season_cutoff) {
             $status[] = APPSTATUS["app"];
         }
 
-        // Ensure staff_app form defs / resolvers are loaded
         if (!function_exists('staff_app_is_flagged')) {
             global $CFG;
             $saf = $CFG->dirroot . '/features/events/formdefs/staff_app.php';
@@ -2097,8 +2137,12 @@ function staff_status($staff, $userid = true) {
             $status[] = APPSTATUS["flagged"];
         }
 
-        $expireyear = $settings->events->$featureid->bgcheck_years->setting * 365 * 24 * 60 * 60;
-        $time = get_timestamp();
+        $expire_secs = (float)($settings->events->$featureid->bgcheck_years->setting ?? 1) * 365 * 24 * 60 * 60;
+        // For archive years, treat "as of" end of that year so past seasons aren't all "old bg"
+        $as_of_ts = ($as_of_year < (int)date('Y'))
+            ? (int)strtotime($as_of_year . '-12-31 23:59:59')
+            : (int)get_timestamp();
+
         $under18_hook = function_exists('form_hook_value')
             ? form_hook_value($form_key, 'meta.under_18', $vals)
             : null;
@@ -2107,15 +2151,14 @@ function staff_status($staff, $userid = true) {
         } elseif (function_exists('staff_app_is_under_18')) {
             $under18 = staff_app_is_under_18($dob);
         } else {
-            $under18 = ((time() - (int)$dob) < (18 * 365 * 24 * 60 * 60));
+            $under18 = ($dob > 0) && (($as_of_ts - $dob) < (18 * 365 * 24 * 60 * 60));
         }
         if (!$under18) {
-            // bgcheckpassdate alone is sufficient: 0/empty = incomplete; stale date = out of date
             $bgdate = (int)($staff["bgcheckpassdate"] ?? 0);
             if ($bgdate <= 0) {
-                $status[] =  APPSTATUS["nobg"];
-            } else if (($time - $bgdate) > $expireyear) {
-                $status[] =  APPSTATUS["oldbg"];
+                $status[] = APPSTATUS["nobg"];
+            } else if (($as_of_ts - $bgdate) > $expire_secs) {
+                $status[] = APPSTATUS["oldbg"];
             }
         }
     } else {
