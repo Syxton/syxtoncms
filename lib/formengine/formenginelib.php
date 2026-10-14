@@ -89,6 +89,39 @@ function form_engine_load_form_runtime($form_key) {
     return false;
 }
 
+
+/**
+ * Load optional migration library for a form (legacy column → form_data, etc.).
+ * Registered as form def key migration_lib. Missing file is a no-op so the
+ * file can be deleted after migration is complete.
+ */
+function form_engine_load_form_migration($form_key) {
+    global $CFG;
+    form_engine_load_consumer_forms();
+    $def = form_engine_get_form_def($form_key);
+    if (!$def) {
+        return false;
+    }
+    $lib = $def['migration_lib'] ?? null;
+    if (!$lib) {
+        return true;
+    }
+    $path = $lib;
+    if ($path[0] !== '/' && empty($CFG->dirroot)) {
+        return false;
+    }
+    if (isset($CFG->dirroot) && $path[0] === '/') {
+        $path = $CFG->dirroot . $path;
+    } elseif (isset($CFG->dirroot) && strpos($path, $CFG->dirroot) !== 0) {
+        $path = $CFG->dirroot . '/' . ltrim($path, '/');
+    }
+    if (file_exists($path)) {
+        include_once($path);
+        return true;
+    }
+    return false;
+}
+
 function form_engine_get_form_def($form_key) {
     $reg = form_engine_registry();
     return $reg[$form_key] ?? null;
@@ -711,6 +744,7 @@ function form_engine_save_hook_binding($form_key, $pageid, $hook_id, $field_key,
  */
 function form_engine_run_migration($form_key, $pageid = null) {
     form_engine_load_form_runtime($form_key);
+    form_engine_load_form_migration($form_key);
     form_engine_ensure_schema();
     form_engine_seed_hooks($form_key, 0);
     form_engine_prune_stale_hooks($form_key);

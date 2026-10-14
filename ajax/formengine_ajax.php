@@ -305,6 +305,9 @@ function form_engine_drop_deprecated() {
     }
     $form_key = form_engine_request_form_key();
     form_engine_load_form_runtime($form_key);
+    if (function_exists('form_engine_load_form_migration')) {
+        form_engine_load_form_migration($form_key);
+    }
     $def = form_engine_get_form_def($form_key);
     $fn = $def['drop_deprecated'] ?? null;
     $result = ['ok' => false, 'message' => 'No drop-deprecated handler for this form.'];

@@ -499,6 +499,9 @@ function form_editor_ui($form_key, $pageid) {
 
 function form_editor_migration_tools_html($form_key) {
     form_engine_load_form_runtime($form_key);
+    if (function_exists('form_engine_load_form_migration')) {
+        form_engine_load_form_migration($form_key);
+    }
     $def = form_engine_get_form_def($form_key);
     $fn = $def['migration_tools_html'] ?? null;
     if ($fn && is_string($fn) && function_exists($fn)) {

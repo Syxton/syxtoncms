@@ -260,5 +260,7 @@ if (function_exists('form_engine_register_form')) {
         'migration_tools_html' => 'staff_form_migration_tools_html',
         'drop_deprecated' => 'drop_deprecated_staff_columns',
         'runtime_lib' => '/features/events/staffform/staffformlib.php',
+        // Optional: delete this file + the three migration_* keys after migrate+drop is complete
+        'migration_lib' => '/features/events/staffform/staffform_migration.php',
     ]);
 }
