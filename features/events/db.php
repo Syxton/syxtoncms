@@ -414,6 +414,47 @@ function events_upgrade() {
             update_feature($thisversion, "events");
         }
 
+        // Forward-fill blank bgcheckpassdate in archive from prior years
+        $thisversion = 20261015;
+        if ($version < $thisversion) {
+            start_db_transaction("Forward-fill archive bgcheckpassdate");
+
+            $SQL = "SELECT archiveid, staffid, pageid, year, bgcheckpassdate
+                    FROM events_staff_archive
+                    ORDER BY pageid, staffid, year ASC";
+            $result = get_db_result($SQL);
+
+            $last_by_staff = []; // key: "pageid:staffid" => last known bgcheckpassdate
+            $updated = 0;
+
+            if ($result) {
+                while ($row = fetch_row($result)) {
+                    $key = $row['pageid'] . ':' . $row['staffid'];
+                    $bg = (int)($row['bgcheckpassdate'] ?? 0);
+
+                    if ($bg > 0) {
+                        // New or updated check for this year — becomes the new baseline.
+                        $last_by_staff[$key] = $bg;
+                        continue;
+                    }
+
+                    // Blank this year: fill from last known if we have one.
+                    if (!empty($last_by_staff[$key])) {
+                        $fill = (int)$last_by_staff[$key];
+                        execute_db_sql(
+                            "UPDATE events_staff_archive
+                             SET bgcheckpassdate = ||bg||
+                             WHERE archiveid = ||aid||",
+                            ["bg" => $fill, "aid" => $row['archiveid']]
+                        );
+                        $updated++;
+                    }
+                    // else: never had a check yet — leave blank
+                }
+            }
+            update_feature($thisversion, "events");
+        }
+
         return upgrade_occured('Events feature', $version, $thisversion);
     } catch (\Throwable $e) {
         rollback_db_transaction($e->getMessage());
