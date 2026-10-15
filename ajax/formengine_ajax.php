@@ -345,12 +345,33 @@ function form_engine_save_hooks() {
         if (!is_array($b) || empty($b['hook_id'])) {
             continue;
         }
+        // Expected: { hook_id, bindings: { slotName: [form_field_key, ...] } }
+        $slot_bindings = [];
+        if (!empty($b['bindings']) && is_array($b['bindings'])) {
+            foreach ($b['bindings'] as $slot => $keys) {
+                $slot_bindings[(string)$slot] = array_values(array_filter(array_map('strval', (array)$keys)));
+            }
+        } elseif (!empty($b['field_keys']) && is_array($b['field_keys'])) {
+            $slot_bindings['value'] = array_values(array_filter(array_map('strval', $b['field_keys'])));
+        } elseif (isset($b['field_key']) && $b['field_key'] !== '') {
+            $slot = !empty($b['slot']) ? (string)$b['slot'] : (string)$b['field_key'];
+            $slot_bindings[$slot] = [(string)$b['field_key']];
+        }
+        $all_keys = [];
+        foreach ($slot_bindings as $list) {
+            foreach ($list as $k) {
+                $all_keys[] = $k;
+            }
+        }
+        $fk = $all_keys ? $all_keys[0] : '';
+        $meta = ['bindings' => $slot_bindings];
         form_engine_save_hook_binding(
             $form_key,
             0,
             (string)$b['hook_id'],
-            isset($b['field_key']) ? (string)$b['field_key'] : '',
-            null
+            $fk,
+            null,
+            $meta
         );
         $n++;
     }

@@ -135,16 +135,207 @@ function form_engine_hook_is_bindable(array $h) {
     if (array_key_exists('bindable', $h)) {
         return !empty($h['bindable']);
     }
-    // Default: bindable unless it has a resolve callable
+    // Declared field slots mean the editor can bind sources (even when resolve() computes a value)
+    if (!empty($h['fields']) && is_array($h['fields'])) {
+        return true;
+    }
+    // Legacy single field_key
+    if (!empty($h['field_key'])) {
+        return true;
+    }
+    // Pure computed: resolve only, no field slots
     if (!empty($h['resolve'])) {
         return false;
     }
     $meta = $h['meta'] ?? [];
-    if (!empty($meta['resolve']) || !empty($meta['computed'])) {
+    if (is_string($meta) && $meta !== '') {
+        $meta = json_decode($meta, true) ?: [];
+    }
+    if (is_array($meta) && (!empty($meta['resolve']) || !empty($meta['computed']))) {
         return false;
     }
     return true;
 }
+
+
+/**
+ * Normalize hook field slots.
+ *
+ * Def shape: 'fields' => [ [slot_name, type, amount], ... ]
+ *   slot_name — process-facing name (e.g. "fieldA"). Multi values become fieldA_1, fieldA_2, ...
+ *   type      — expected form field type (text, yesno, number, date, ...). null = any.
+ *   amount    — 1 = single binding; 0 or omitted = unlimited multi binding.
+ *
+ * Bound form field_keys live in meta.bindings[slot_name] = ['form_key', ...]
+ * (also accepts legacy meta.fields rows with keys, meta.field_keys, field_key).
+ *
+ * @return array[] each: ['slot'=>string,'type'=>?string,'amount'=>int,'keys'=>string[]]
+ */
+function form_engine_hook_fields_spec(array $h) {
+    $meta = $h['meta'] ?? [];
+    if (is_string($meta) && $meta !== '') {
+        $meta = json_decode($meta, true) ?: [];
+    }
+    if (!is_array($meta)) {
+        $meta = [];
+    }
+    $bindings = [];
+    if (!empty($meta['bindings']) && is_array($meta['bindings'])) {
+        foreach ($meta['bindings'] as $slot => $keys) {
+            $bindings[(string)$slot] = array_values(array_filter(array_map('strval', (array)$keys)));
+        }
+    }
+
+    $slots = [];
+    if (!empty($h['fields']) && is_array($h['fields'])) {
+        foreach ($h['fields'] as $row) {
+            if (!is_array($row)) {
+                $slot = (string)$row;
+                $type = null;
+                $amt = 1;
+            } elseif (array_key_exists(0, $row) || array_key_exists(1, $row)) {
+                $slot = (string)($row[0] ?? '');
+                $type = $row[1] ?? null;
+                $amt = array_key_exists(2, $row) ? $row[2] : 1;
+            } else {
+                $slot = (string)($row['slot'] ?? $row['key'] ?? $row['field_key'] ?? '');
+                $type = $row['type'] ?? $row['fieldtype'] ?? null;
+                $amt = array_key_exists('amount', $row) ? $row['amount'] : 1;
+                if (!empty($row['keys']) && is_array($row['keys']) && empty($bindings[$slot])) {
+                    $bindings[$slot] = array_values(array_filter(array_map('strval', $row['keys'])));
+                }
+            }
+            if ($slot === '') {
+                continue;
+            }
+            if ($type === '') {
+                $type = null;
+            }
+            $amt = ($amt === null || $amt === '') ? 0 : (int)$amt;
+            $keys = $bindings[$slot] ?? [];
+            // Legacy: meta.fields entry that listed form keys as first element of many rows
+            // with same type — handled via bindings only.
+            $slots[] = [
+                'slot' => $slot,
+                'type' => $type,
+                'amount' => $amt,
+                'keys' => $keys,
+            ];
+        }
+    }
+
+    // If def had no fields, synthesize from legacy field_key / meta.field_keys
+    if (!$slots) {
+        if (!empty($meta['field_keys']) && is_array($meta['field_keys'])) {
+            $keys = array_values(array_filter(array_map('strval', $meta['field_keys'])));
+            $slots[] = ['slot' => 'value', 'type' => null, 'amount' => 0, 'keys' => $keys];
+        } elseif (!empty($h['field_key'])) {
+            $slots[] = [
+                'slot' => (string)$h['field_key'],
+                'type' => null,
+                'amount' => 1,
+                'keys' => [(string)$h['field_key']],
+            ];
+        }
+    }
+
+    // Apply bindings onto slots that still have empty keys
+    foreach ($slots as &$s) {
+        if (empty($s['keys']) && !empty($bindings[$s['slot']])) {
+            $s['keys'] = $bindings[$s['slot']];
+        }
+        // Default seed: for amount 1, if no keys yet, bind slot name as form field_key
+        if (empty($s['keys']) && (int)$s['amount'] === 1) {
+            // leave empty for editor — seed_hooks may set defaults
+        }
+    }
+    unset($s);
+
+    return $slots;
+}
+
+/**
+ * All bound form field_keys across every slot.
+ *
+ * @param array $h
+ * @return string[]
+ */
+function form_engine_hook_field_keys(array $h) {
+    $keys = [];
+    foreach (form_engine_hook_fields_spec($h) as $s) {
+        foreach ($s['keys'] as $k) {
+            if ($k !== '') {
+                $keys[] = $k;
+            }
+        }
+    }
+    return array_values(array_unique($keys));
+}
+
+/**
+ * True when any slot allows more than one form field (amount 0 or >1).
+ */
+function form_engine_hook_is_multi(array $h) {
+    foreach (form_engine_hook_fields_spec($h) as $s) {
+        $amt = (int)($s['amount'] ?? 1);
+        if ($amt === 0 || $amt > 1) {
+            return true;
+        }
+    }
+    // Multiple single slots still need a multi-capable UI (one control per slot)
+    $slots = form_engine_hook_fields_spec($h);
+    return count($slots) > 1;
+}
+
+/**
+ * Types declared on slots (empty = any).
+ *
+ * @return string[]
+ */
+function form_engine_hook_allowed_types(array $h) {
+    $types = [];
+    foreach (form_engine_hook_fields_spec($h) as $s) {
+        if (!empty($s['type'])) {
+            $types[(string)$s['type']] = true;
+        }
+    }
+    return array_keys($types);
+}
+
+/**
+ * Resolve process-facing values from a hook + form values map.
+ * Single slot amount 1 → [slot => value]
+ * Multi slot amount 0 → [slot => [v1,v2,...], slot_1 => v1, slot_2 => v2, ...]
+ *
+ * @param array $h
+ * @param array $values field_key => value
+ * @return array
+ */
+function form_engine_hook_slot_values(array $h, array $values) {
+    $out = [];
+    foreach (form_engine_hook_fields_spec($h) as $s) {
+        $slot = $s['slot'];
+        $keys = $s['keys'];
+        $amt = (int)$s['amount'];
+        if ($amt === 1) {
+            $fk = $keys[0] ?? '';
+            $out[$slot] = ($fk !== '' && array_key_exists($fk, $values)) ? $values[$fk] : null;
+        } else {
+            $list = [];
+            $i = 1;
+            foreach ($keys as $fk) {
+                $v = array_key_exists($fk, $values) ? $values[$fk] : null;
+                $list[] = $v;
+                $out[$slot . '_' . $i] = $v;
+                $i++;
+            }
+            $out[$slot] = $list;
+        }
+    }
+    return $out;
+}
+
+
 
 function form_engine_ensure_schema() {
     global $CFG;
@@ -437,15 +628,32 @@ function form_engine_seed_hooks($form_key, $pageid = 0) {
         if ($exists) {
             continue;
         }
-        $meta = '';
-        if (!empty($h['meta'])) {
-            $meta = json_encode($h['meta'], JSON_UNESCAPED_UNICODE);
+        $fields_spec = form_engine_hook_fields_spec($h);
+        $bindings = [];
+        if (!empty($h['default_bindings']) && is_array($h['default_bindings'])) {
+            foreach ($h['default_bindings'] as $slot => $keys) {
+                $bindings[(string)$slot] = array_values(array_filter(array_map('strval', (array)$keys)));
+            }
         }
-        // Never pass null into ||placeholders|| (isset(null) fails in dblib)
-        $field = $h['field_key'] ?? '';
-        if ($field === null) {
-            $field = '';
+        // amount 1 with no default: seed form field_key = slot name (legacy identity.*)
+        foreach ($fields_spec as $s) {
+            $slot = $s['slot'];
+            if (empty($bindings[$slot]) && (int)$s['amount'] === 1) {
+                $bindings[$slot] = [$slot];
+            }
         }
+        $keys = [];
+        foreach ($bindings as $list) {
+            foreach ($list as $k) {
+                $keys[] = $k;
+            }
+        }
+        $field = $keys ? $keys[0] : '';
+        $meta_arr = ['bindings' => $bindings, 'fields' => $h['fields'] ?? []];
+        if (!empty($h['meta']) && is_array($h['meta'])) {
+            $meta_arr = array_merge($h['meta'], $meta_arr);
+        }
+        $meta = json_encode($meta_arr, JSON_UNESCAPED_UNICODE);
         execute_db_sql(
             "INSERT INTO form_hook_bindings
              (form_key, pageid, hook_id, field_key, required, meta, modified)
@@ -516,12 +724,59 @@ function form_engine_get_hooks($form_key, $pageid = 0) {
                 $meta = $decoded;
             }
         }
+        // Merge def + DB bindings into meta.bindings[slot] = [form_field_keys...]
+        $merged = $h;
+        $meta_bindings = [];
+        if (!empty($meta['bindings']) && is_array($meta['bindings'])) {
+            $meta_bindings = $meta['bindings'];
+        } elseif (!empty($meta['fields']) && is_array($meta['fields'])) {
+            // Legacy: rows may be [key,type,amount] used as form keys — collapse by slot/type
+            foreach ($meta['fields'] as $row) {
+                if (!is_array($row)) {
+                    $meta_bindings['value'][] = (string)$row;
+                    continue;
+                }
+                $k = (string)($row[0] ?? $row['key'] ?? $row['field_key'] ?? $row['slot'] ?? '');
+                $keys = $row['keys'] ?? null;
+                if (is_array($keys)) {
+                    $slot = (string)($row['slot'] ?? $k);
+                    $meta_bindings[$slot] = array_map('strval', $keys);
+                } elseif ($k !== '') {
+                    // treat first element as form field key under a generic/default slot
+                    $slot = (string)($row['slot'] ?? 'value');
+                    $meta_bindings[$slot][] = $k;
+                }
+            }
+        } elseif (!empty($meta['field_keys']) && is_array($meta['field_keys'])) {
+            $meta_bindings['value'] = array_map('strval', $meta['field_keys']);
+        } elseif ($b && !empty($b['field_key'])) {
+            // Single column field_key → bind to first def slot name
+            $def_slots = form_engine_hook_fields_spec($h);
+            $slot = $def_slots ? $def_slots[0]['slot'] : (string)$b['field_key'];
+            $meta_bindings[$slot] = [(string)$b['field_key']];
+        }
+        // Default bindings from def when DB has none for a slot
+        if (!empty($h['default_bindings']) && is_array($h['default_bindings'])) {
+            foreach ($h['default_bindings'] as $slot => $keys) {
+                if (empty($meta_bindings[$slot])) {
+                    $meta_bindings[$slot] = array_values(array_filter(array_map('strval', (array)$keys)));
+                }
+            }
+        }
+        $meta['bindings'] = $meta_bindings;
+        $merged['meta'] = $meta;
+        if ($b) {
+            $merged['field_key'] = $b['field_key'] ?? null;
+        }
+        $fields_spec = form_engine_hook_fields_spec($merged);
+        $keys = form_engine_hook_field_keys($merged);
         $out[] = [
             'hook_id' => $hid,
             'label' => $h['label'] ?? $hid,
             'help' => $h['help'] ?? '',
             'required' => $b ? (int)$b['required'] : (int)(!empty($h['required'])),
-            'field_key' => $b ? ($b['field_key'] ?? null) : ($h['field_key'] ?? null),
+            'fields' => $fields_spec,
+            'field_key' => $keys ? $keys[0] : null, // first key for legacy consumers
             'meta' => $meta,
             'bindable' => form_engine_hook_is_bindable($h),
             'resolve' => $h['resolve'] ?? ($meta['resolve'] ?? null),
@@ -598,11 +853,21 @@ function form_hook_value($form_key, $hook_id, $values) {
         }
     }
 
-    // Standard: value of the bound field_key
-    $fk = $hook['field_key'] ?? null;
-    if ($fk === null || $fk === '') {
+    // Standard: first process slot value (or first bound field)
+    $slot_vals = form_engine_hook_slot_values($hook, $values);
+    if ($slot_vals) {
+        $first = reset($slot_vals);
+        // multi slots return arrays — expose first element for simple consumers
+        if (is_array($first)) {
+            return $first ? reset($first) : null;
+        }
+        return $first;
+    }
+    $keys = form_engine_hook_field_keys($hook);
+    if (!$keys) {
         return null;
     }
+    $fk = $keys[0];
     return array_key_exists($fk, $values) ? $values[$fk] : null;
 }
 
@@ -643,7 +908,8 @@ function form_engine_hooks_for_field($form_key, $field_key, $pageid = 0) {
     $hooks = form_engine_get_hooks($form_key, $pageid);
     $out = [];
     foreach ($hooks as $h) {
-        if (($h['field_key'] ?? '') === $field_key) {
+        $keys = form_engine_hook_field_keys($h);
+        if (in_array((string)$field_key, $keys, true)) {
             $out[] = [
                 'hook_id' => $h['hook_id'],
                 'label' => $h['label'] ?? $h['hook_id'],
@@ -689,7 +955,7 @@ function form_engine_protected_field_keys($form_key, $pageid = 0) {
 /**
  * Save a hook binding (pageid 0 global by default).
  */
-function form_engine_save_hook_binding($form_key, $pageid, $hook_id, $field_key, $required = null) {
+function form_engine_save_hook_binding($form_key, $pageid, $hook_id, $field_key, $required = null, $meta = null) {
     form_engine_ensure_schema();
     $now = time();
     $pageid = (int)$pageid;
@@ -707,19 +973,29 @@ function form_engine_save_hook_binding($form_key, $pageid, $hook_id, $field_key,
         $req = 1;
     }
     $fk_val = ($field_key === null || $field_key === '') ? '' : (string)$field_key;
+
+    // Merge meta: allow multi field_keys array from editor
+    $meta_json = '';
+    if ($meta !== null) {
+        if (is_array($meta)) {
+            $meta_json = json_encode($meta, JSON_UNESCAPED_UNICODE);
+        } elseif (is_string($meta)) {
+            $meta_json = $meta;
+        }
+    } elseif ($existing && !empty($existing['meta'])) {
+        $meta_json = is_string($existing['meta']) ? $existing['meta'] : json_encode($existing['meta']);
+    }
+
     if ($existing) {
         $id = (int)($existing[$pk] ?? $existing['id'] ?? $existing['hookid'] ?? 0);
-        if ($pk === 'hookid') {
-            execute_db_sql(
-                "UPDATE form_hook_bindings SET field_key=||field||, required=||req||, modified=||m|| WHERE hookid=||id||",
-                ['field' => $fk_val, 'req' => (int)$req, 'm' => $now, 'id' => $id]
-            );
-        } else {
-            execute_db_sql(
-                "UPDATE form_hook_bindings SET field_key=||field||, required=||req||, modified=||m|| WHERE id=||id||",
-                ['field' => $fk_val, 'req' => (int)$req, 'm' => $now, 'id' => $id]
-            );
-        }
+        $sql = "UPDATE form_hook_bindings SET field_key=||field||, required=||req||, meta=||meta||, modified=||m|| WHERE `$pk`=||id||";
+        execute_db_sql($sql, [
+            'field' => $fk_val,
+            'req' => (int)$req,
+            'meta' => $meta_json === null ? '' : (string)$meta_json,
+            'm' => $now,
+            'id' => $id,
+        ]);
         return $id;
     }
     return execute_db_sql(
@@ -731,7 +1007,7 @@ function form_engine_save_hook_binding($form_key, $pageid, $hook_id, $field_key,
             'hid' => $hook_id,
             'field' => $fk_val,
             'req' => (int)$req,
-            'meta' => '',
+            'meta' => $meta_json === null ? '' : (string)$meta_json,
             'm' => $now,
         ]
     );

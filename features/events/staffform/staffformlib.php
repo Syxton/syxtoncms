@@ -55,7 +55,6 @@ function get_default_staff_form_fields() {
             'is_system'   => 1,
             'validation'  => [
                 'required' => true,
-                'custom'   => '^[0-9]{2}/[0-9]{2}/[0-9]{4}$',
                 'date'     => true,
             ],
             'extra_attrs' => [
@@ -1132,9 +1131,30 @@ function render_staff_form_field($field, $value, $viewonly = false) {
     switch ($type) {
         case 'text':
         case 'phone':
-        case 'date':
             $html .= '<input type="text" id="' . htmlspecialchars($key) . '" name="' . htmlspecialchars($key) . '"
                         value="' . htmlspecialchars($val) . '"' . $data_rules . $extra . ' />';
+            break;
+
+        case 'date':
+            // HTML5 date input expects Y-m-d; parse accepts Y-m-d and m/d/Y
+            $date_val = '';
+            if ($val !== '' && $val !== null) {
+                $ts = is_numeric($val) ? (int)$val : staff_form_parse_date_only($val);
+                if ($ts > 0) {
+                    $date_val = gmdate('Y-m-d', $ts);
+                } elseif (preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$val)) {
+                    $date_val = (string)$val;
+                }
+            }
+            // Drop legacy slash-format custom rule; browser + server parse handle it
+            $date_rules = $data_rules;
+            if (!empty($validation['date']) || !empty($validation['required'])) {
+                // keep required / date flags; custom slash regex is not needed for type=date
+                $date_rules = preg_replace('/\s*data-rule-custom="[^"]*"/', '', $date_rules);
+                $date_rules = preg_replace('/\s*data-msg-custom="[^"]*"/', '', $date_rules);
+            }
+            $html .= '<input type="date" id="' . htmlspecialchars($key) . '" name="' . htmlspecialchars($key) . '"
+                        value="' . htmlspecialchars($date_val) . '"' . $date_rules . $extra . ' />';
             break;
 
         case 'textarea':
@@ -1926,7 +1946,26 @@ function staff_app_save_application($pageid, $staffid, $col_params, $form_data, 
 
     if ($staffid) {
         $staff = get_db_row(fetch_template('dbsql/events.sql', 'get_staff_app', 'events'), ['staffid' => $staffid]);
-        $params['bgcheckpassdate'] = $staff['bgcheckpassdate'] ?? 0;
+        // Carry forward the latest non-zero background-check date so yearly archives
+        // keep the last known check until a new one is recorded on the live row.
+        $bg = (int)($staff['bgcheckpassdate'] ?? 0);
+        if ($bg <= 0) {
+            $prev = get_db_row(
+                "SELECT bgcheckpassdate FROM events_staff_archive
+                 WHERE staffid = ||staffid|| AND pageid = ||pageid|| AND bgcheckpassdate > 0
+                 ORDER BY year DESC LIMIT 1",
+                ['staffid' => $staffid, 'pageid' => $pageid]
+            );
+            if ($prev && (int)($prev['bgcheckpassdate'] ?? 0) > 0) {
+                $bg = (int)$prev['bgcheckpassdate'];
+                // Heal live row so future saves and UI see the carried value
+                execute_db_sql(
+                    "UPDATE events_staff SET bgcheckpassdate = ||bg|| WHERE staffid = ||staffid|| AND pageid = ||pageid||",
+                    ['bg' => $bg, 'staffid' => $staffid, 'pageid' => $pageid]
+                );
+            }
+        }
+        $params['bgcheckpassdate'] = $bg;
         $params['year'] = date('Y');
         $params['staffid'] = $staffid;
         if (get_db_row(fetch_template('dbsql/events.sql', 'get_staff_by_year', 'events'), [

@@ -123,28 +123,66 @@ function form_editor_hooks_panel_html($form_key, $pageid) {
     if (!defined('FORMENGINELIB')) {
         include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
     }
-    // Only bindable hooks appear in the field-mapping UI (computed resolvers are excluded)
     $hooks = function_exists('form_engine_get_bindable_hooks')
         ? form_engine_get_bindable_hooks($form_key, $pageid)
         : form_engine_get_hooks($form_key, $pageid);
     $fields = form_engine_get_fields($form_key, $pageid, true);
-    $field_opts = '<option value="">— unbound —</option>';
-    $field_key_set = [];
+
+    // Index form fields by type for slot filters
+    $fields_by_type = [];
+    $all_bindable_fields = [];
     foreach ($fields as $f) {
         if (($f['type'] ?? '') === 'section') {
             continue;
         }
-        $field_key_set[$f['field_key']] = true;
-        $opt_label = trim((string)($f['label'] ?? '')) . ' (' . $f['field_key'] . ')';
-        if (function_exists('mb_strlen') && mb_strlen($opt_label) > 60) {
-            $opt_label = mb_substr($opt_label, 0, 57) . '…';
-        } elseif (strlen($opt_label) > 60) {
-            $opt_label = substr($opt_label, 0, 57) . '…';
+        $fk = (string)$f['field_key'];
+        $ftype = (string)($f['type'] ?? 'text');
+        $lab = trim((string)($f['label'] ?? '')) . ' (' . $fk . ')';
+        $entry = ['key' => $fk, 'type' => $ftype, 'label' => $lab];
+        $all_bindable_fields[] = $entry;
+        $fields_by_type[$ftype][] = $entry;
+        // phone ~ text
+        if ($ftype === 'phone') {
+            $fields_by_type['text'][] = $entry;
         }
-        $field_opts .= '<option value="' . htmlspecialchars($f['field_key']) . '" title="'
-            . htmlspecialchars(trim((string)($f['label'] ?? '')) . ' (' . $f['field_key'] . ')') . '">'
-            . htmlspecialchars($opt_label) . '</option>';
+        if ($ftype === 'text') {
+            $fields_by_type['phone'][] = $entry;
+        }
     }
+
+    /**
+     * Options list for a slot: form fields matching $type (or all if none match / type null).
+     * $selected = list of currently bound form field_keys.
+     */
+    $options_for = function ($type, array $selected, $multiple) use ($fields_by_type, $all_bindable_fields) {
+        $pool = [];
+        if ($type && !empty($fields_by_type[$type])) {
+            $pool = $fields_by_type[$type];
+        } else {
+            $pool = $all_bindable_fields;
+        }
+        // Always include already-selected keys even if type drifted
+        $seen = [];
+        foreach ($pool as $e) {
+            $seen[$e['key']] = true;
+        }
+        foreach ($all_bindable_fields as $e) {
+            if (in_array($e['key'], $selected, true) && empty($seen[$e['key']])) {
+                $pool[] = $e;
+                $seen[$e['key']] = true;
+            }
+        }
+        $html = '';
+        if (!$multiple) {
+            $html .= '<option value="">— unbound —</option>';
+        }
+        foreach ($pool as $e) {
+            $sel = in_array($e['key'], $selected, true) ? ' selected' : '';
+            $html .= '<option value="' . htmlspecialchars($e['key']) . '"' . $sel . '>'
+                . htmlspecialchars($e['label']) . '</option>';
+        }
+        return $html;
+    };
 
     $rows = '';
     $total = 0;
@@ -153,40 +191,75 @@ function form_editor_hooks_panel_html($form_key, $pageid) {
         $total++;
         $hid = htmlspecialchars($h['hook_id']);
         $req = !empty($h['required'])
-            ? '<span style="background:#fee2e2;color:#991b1b;padding:1px 6px;border-radius:4px;font-size:.75em">required</span>'
-            : '<span style="background:#e2e8f0;color:#475569;padding:1px 6px;border-radius:4px;font-size:.75em">optional</span>';
-        $meta = $h['meta'] ?? [];
-        $extra = '';
+            ? '<span style="background:#fee2e2;color:#991b1b;padding:1px 6px;border-radius:4px;font-size:.9em">required</span>'
+            : '<span style="background:#e2e8f0;color:#475569;padding:1px 6px;border-radius:4px;font-size:.9em">optional</span>';
+
+        $slots = function_exists('form_engine_hook_fields_spec')
+            ? form_engine_hook_fields_spec($h)
+            : [];
+
         $is_bound = false;
-        if (!empty($meta['field_keys']) && is_array($meta['field_keys'])) {
-            $extra = '<div class="sfe-hint">Sources: <code>' . htmlspecialchars(implode(', ', $meta['field_keys'])) . '</code></div>';
-            $sel = '<em style="color:#64748b">multi-field (see sources)</em>';
-            $is_bound = true; // multi-source treated as bound by definition
-        } elseif (!empty($meta['computed'])) {
-            $extra = '<div class="sfe-hint">Computed: <code>' . htmlspecialchars($meta['computed']) . '</code></div>';
-            $sel = '<em style="color:#64748b">computed</em>';
-            $is_bound = true;
+        $sel = '';
+
+        if (!$slots) {
+            $sel = '<em style="color:#94a3b8">No slots declared</em>';
         } else {
-            $cur = (string)($h['field_key'] ?? '');
-            // Bound only if a real form field exists for this key (stale seeds count as open)
-            $is_bound = ($cur !== '' && isset($field_key_set[$cur]));
-            $opts = $field_opts;
-            if ($cur !== '') {
-                $opts = str_replace(
-                    'value="' . htmlspecialchars($cur) . '"',
-                    'value="' . htmlspecialchars($cur) . '" selected',
-                    $opts
-                );
+            $sel = '<div class="sfe-hook-slots">';
+            foreach ($slots as $slot) {
+                $slot_name = (string)($slot['slot'] ?? '');
+                if ($slot_name === '') {
+                    continue;
+                }
+                $stype = $slot['type'] ?? null;
+                $amt = (int)($slot['amount'] ?? 1);
+                $selected = array_values(array_filter(array_map('strval', $slot['keys'] ?? [])));
+                if ($selected) {
+                    $is_bound = true;
+                }
+                $is_multi = ($amt === 0 || $amt > 1);
+                $type_bit = $stype ? htmlspecialchars((string)$stype) : 'any';
+                $amt_bit = $is_multi ? 'unlimited' : '1';
+
+                $sel .= '<div class="sfe-hook-slot" style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px;margin:6px 0;padding:8px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc">';
+                $sel .= '<div style="min-width:120px;padding-top:6px">'
+                    . '<code style="font-weight:600">' . htmlspecialchars($slot_name) . '</code>'
+                    . '<div style="font-size:.9em;color:#64748b">' . $type_bit . ' · ' . $amt_bit . '</div>'
+                    . '</div>';
+                $sel .= '<div style="flex:1;min-width:180px">';
+
+                if ($is_multi) {
+                    // Multiselect list of matching form fields
+                    $size = max(3, min(8, count($all_bindable_fields)));
+                    $sel .= '<select multiple size="' . (int)$size . '" class="sfe-hook-multi-select"'
+                        . ' data-hook-id="' . $hid . '" data-slot="' . htmlspecialchars($slot_name) . '"'
+                        . ' style="width:100%;min-height:72px">'
+                        . $options_for($stype, $selected, true)
+                        . '</select>';
+                    $sel .= '<div style="font-size:.9em;color:#64748b;margin-top:2px">Ctrl/Cmd-click to select multiple → '
+                        . '<code>' . htmlspecialchars($slot_name) . '_1</code>, <code>'
+                        . htmlspecialchars($slot_name) . '_2</code>, …</div>';
+                } else {
+                    // Single select of matching form fields
+                    $sel .= '<select class="sfe-hook-field" data-hook-id="' . $hid
+                        . '" data-slot="' . htmlspecialchars($slot_name) . '" style="width:100%">'
+                        . $options_for($stype, $selected, false)
+                        . '</select>';
+                    $sel .= '<div style="font-size:.9em;color:#64748b;margin-top:2px">Process value: <code>'
+                        . htmlspecialchars($slot_name) . '</code></div>';
+                }
+
+                $sel .= '</div></div>';
             }
-            $sel = '<select class="sfe-hook-field" data-hook-id="' . $hid . '">' . $opts . '</select>';
+            $sel .= '</div>';
         }
+
         if (!$is_bound) {
             $unbound++;
         }
         $rows .= '<tr>
-            <td data-label="Hook"><code>' . $hid . '</code><div class="sfe-hint">' . htmlspecialchars($h['help'] ?? '') . '</div>' . $extra . '</td>
+            <td data-label="Hook"><code>' . $hid . '</code><div class="sfe-hint">' . htmlspecialchars($h['help'] ?? '') . '</div></td>
             <td data-label="Label">' . htmlspecialchars($h['label'] ?? $h['hook_id']) . ' ' . $req . '</td>
-            <td data-label="Bound field">' . $sel . '</td>
+            <td data-label="Slots">' . $sel . '</td>
         </tr>';
     }
 
@@ -206,11 +279,11 @@ function form_editor_hooks_panel_html($form_key, $pageid) {
     <details class="sfe-collapse ' . $summary_class . '" style="margin:12px 0">
         <summary>Process hooks <span style="font-weight:400;color:#64748b">(' . $count_bits . ')</span></summary>
         <div class="sfe-collapse-body">
-            <p class="sfe-hint">These slots feed process logic for this form (status, validation, storage adapters).
-            Bind each process hook to a form field. Computed values (under-18, screening flags) are defined by the form consumer and are not listed here.</p>
+            <p class="sfe-hint">Each hook declares named <strong>slots</strong>. Bind form fields to those slots:
+            amount <code>1</code> → single select; amount <code>0</code> → multi-select (values become <code>slot_1</code>, <code>slot_2</code>, …).</p>
             <div class="sfe-table-scroll">
             <table class="sfe-table sfe-hooks-table" style="margin-top:8px">
-                <thead><tr><th>Hook</th><th>Label</th><th>Bound field</th></tr></thead>
+                <thead><tr><th>Hook</th><th>Label</th><th>Slots</th></tr></thead>
                 <tbody>' . $rows . '</tbody>
             </table>
             </div>

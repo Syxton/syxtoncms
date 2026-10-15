@@ -17,90 +17,94 @@ if (!defined('FORM_KEY_STAFF_APP')) {
 
 function staff_app_hook_defs() {
     return [
-        // --- Bindable (editor can map field_key) ---
+        // fields: [ [slot_name, type, amount], ... ]
+        // slot_name is the process-facing name (value available as that key; multi → slot_1, slot_2, …)
+        // amount 1 = one form field; 0 = unlimited form fields of that type
         [
             'hook_id' => 'identity.name',
             'label' => 'Full name',
             'required' => 1,
-            'field_key' => 'name',
-            'bindable' => true,
+            'fields' => [['name', 'text', 1]],
             'help' => 'Used in emails, manager lists, and export.',
         ],
         [
             'hook_id' => 'identity.phone',
             'label' => 'Phone',
             'required' => 1,
-            'field_key' => 'phone',
-            'bindable' => true,
+            'fields' => [['phone', 'phone', 1]],
             'help' => 'Contact phone on the application record.',
         ],
         [
             'hook_id' => 'identity.date_of_birth',
             'label' => 'Date of birth',
             'required' => 1,
-            'field_key' => 'dateofbirth',
-            'bindable' => true,
+            'fields' => [['dateofbirth', 'date', 1]],
             'help' => 'Drives under-18 / parental consent and background-check eligibility.',
         ],
         [
             'hook_id' => 'consent.worker_name',
             'label' => 'Worker consent name',
             'required' => 1,
-            'field_key' => 'workerconsent',
-            'bindable' => true,
+            'fields' => [['workerconsent', 'text', 1]],
             'help' => 'Printed name on worker consent.',
         ],
         [
             'hook_id' => 'consent.worker_date',
             'label' => 'Worker consent date',
             'required' => 1,
-            'field_key' => 'workerconsentdate',
-            'bindable' => true,
+            'fields' => [['workerconsentdate', 'date', 1]],
             'help' => 'Determines whether the application is out of date.',
         ],
         [
             'hook_id' => 'consent.worker_sig',
             'label' => 'Worker signature',
             'required' => 1,
-            'field_key' => 'workerconsentsig',
-            'bindable' => true,
+            'fields' => [['workerconsentsig', 'checkbox', 1]],
             'help' => 'Checkbox signature for worker consent.',
         ],
         [
             'hook_id' => 'consent.parental_name',
             'label' => 'Parental consent name',
             'required' => 0,
-            'field_key' => 'parentalconsent',
-            'bindable' => true,
+            'fields' => [['parentalconsent', 'text', 1]],
             'help' => 'Required when applicant is under 18.',
         ],
         [
             'hook_id' => 'consent.parental_sig',
             'label' => 'Parental signature',
             'required' => 0,
-            'field_key' => 'parentalconsentsig',
-            'bindable' => true,
+            'fields' => [['parentalconsentsig', 'checkbox', 1]],
             'help' => 'Required when applicant is under 18.',
         ],
-
-        // --- Computed (not linkable in editor; resolve() computes from values) ---
         [
             'hook_id' => 'meta.under_18',
             'label' => 'Under 18 (computed)',
             'required' => 0,
-            'field_key' => null,
-            'bindable' => false,
+            'bindable' => true,
+            // Slot "dob" → one date field; resolve returns '1'/'0'
+            'fields' => [
+                ['dob', 'date', 1],
+            ],
+            'default_bindings' => [
+                'dob' => ['dateofbirth'],
+            ],
             'resolve' => 'staff_app_resolve_under_18',
-            'help' => 'Derived from date of birth on the server. Not a form field.',
+            'help' => 'Computed from the bound date-of-birth field (slot "dob").',
         ],
         [
             'hook_id' => 'screening.flagged',
-            'label' => 'Screening flagged (computed)',
+            'label' => 'Screening flagged',
             'required' => 0,
-            'field_key' => null,
-            'bindable' => false,
+            'bindable' => true,
+            // slot "risk": unlimited yes/no form fields → risk_1, risk_2, …
+            'fields' => [
+                ['risk', 'yesno', 0],
+            ],
+            'default_bindings' => [
+                'risk' => ['q1_1', 'q1_2', 'q1_3', 'q2_1', 'q2_2'],
+            ],
             'resolve' => 'staff_app_resolve_flagged',
-            'help' => 'True if any screening risk answer is truthy. Server-side only.',
+            'help' => 'True if any bound risk answer is truthy. Bind any number of yes/no fields to slot "risk".',
         ],
     ];
 }
@@ -115,13 +119,30 @@ function staff_app_hook_defs() {
  */
 function staff_app_resolve_under_18($values, $hook = [], $form_key = 'staff_app') {
     $dob = null;
-    if (function_exists('form_hook_value')) {
-        // Avoid recursion: read DOB via field binding, not this computed hook
-        $hooks = form_engine_get_hooks($form_key, 0);
-        foreach ($hooks as $h) {
-            if (($h['hook_id'] ?? '') === 'identity.date_of_birth' && !empty($h['field_key'])) {
-                $dob = $values[$h['field_key']] ?? null;
+    // Prefer this hook's bound "dob" slot (or any bound keys on $hook)
+    if ($hook && function_exists('form_engine_hook_field_keys')) {
+        foreach (form_engine_hook_field_keys($hook) as $fk) {
+            if ($fk !== '' && array_key_exists($fk, $values) && $values[$fk] !== '' && $values[$fk] !== null) {
+                $dob = $values[$fk];
                 break;
+            }
+        }
+    }
+    // Fall back to identity.date_of_birth binding
+    if ($dob === null || $dob === '') {
+        $hooks = function_exists('form_engine_get_hooks') ? form_engine_get_hooks($form_key, 0) : [];
+        foreach ($hooks as $h) {
+            if (($h['hook_id'] ?? '') !== 'identity.date_of_birth') {
+                continue;
+            }
+            if (!function_exists('form_engine_hook_field_keys')) {
+                break;
+            }
+            foreach (form_engine_hook_field_keys($h) as $fk) {
+                if ($fk !== '' && array_key_exists($fk, $values) && $values[$fk] !== '' && $values[$fk] !== null) {
+                    $dob = $values[$fk];
+                    break 2;
+                }
             }
         }
     }
@@ -140,8 +161,12 @@ function staff_app_resolve_under_18($values, $hook = [], $form_key = 'staff_app'
  * @return string '1' or '0'
  */
 function staff_app_resolve_flagged($values, $hook = [], $form_key = 'staff_app') {
-    // Hard-coded screening keys for staff_app until multi-field binding exists
-    $keys = ['q1_1', 'q1_2', 'q1_3', 'q2_1', 'q2_2'];
+    $keys = function_exists('form_engine_hook_field_keys')
+        ? form_engine_hook_field_keys($hook)
+        : [];
+    if (!$keys) {
+        $keys = ['q1_1', 'q1_2', 'q1_3', 'q2_1', 'q2_2'];
+    }
     foreach ($keys as $fk) {
         $v = $values[$fk] ?? null;
         if ($v === true || $v === 1 || $v === '1' || $v === 'yes' || $v === 'on') {
