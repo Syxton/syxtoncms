@@ -141,13 +141,6 @@ function form_editor_hooks_panel_html($form_key, $pageid) {
         $entry = ['key' => $fk, 'type' => $ftype, 'label' => $lab];
         $all_bindable_fields[] = $entry;
         $fields_by_type[$ftype][] = $entry;
-        // phone ~ text
-        if ($ftype === 'phone') {
-            $fields_by_type['text'][] = $entry;
-        }
-        if ($ftype === 'text') {
-            $fields_by_type['phone'][] = $entry;
-        }
     }
 
     /**
@@ -199,12 +192,11 @@ function form_editor_hooks_panel_html($form_key, $pageid) {
             : [];
 
         $is_bound = false;
-        $sel = '';
 
+        $sel = '';
         if (!$slots) {
             $sel = '<em style="color:#94a3b8">No slots declared</em>';
         } else {
-            $sel = '<div class="sfe-hook-slots">';
             foreach ($slots as $slot) {
                 $slot_name = (string)($slot['slot'] ?? '');
                 if ($slot_name === '') {
@@ -220,35 +212,50 @@ function form_editor_hooks_panel_html($form_key, $pageid) {
                 $type_bit = $stype ? htmlspecialchars((string)$stype) : 'any';
                 $amt_bit = $is_multi ? 'unlimited' : '1';
 
-                $sel .= '<div class="sfe-hook-slot" style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px;margin:6px 0;padding:8px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc">';
-                $sel .= '<div style="min-width:120px;padding-top:6px">'
-                    . '<code style="font-weight:600">' . htmlspecialchars($slot_name) . '</code>'
-                    . '<div style="font-size:.9em;color:#64748b">Hooks to: ' . $amt_bit . ' ' . $type_bit . '</div>'
-                    . '</div>';
-                $sel .= '<div style="flex:1;min-width:180px">';
-
+                $matchfields = '';
                 if ($is_multi) {
                     // Multiselect list of matching form fields
                     $size = max(3, min(8, count($all_bindable_fields)));
-                    $sel .= '<select multiple size="' . (int)$size . '" class="sfe-hook-multi-select"'
-                        . ' data-hook-id="' . $hid . '" data-slot="' . htmlspecialchars($slot_name) . '"'
-                        . ' style="width:100%;min-height:72px">'
-                        . $options_for($stype, $selected, true)
-                        . '</select>';
-                    $sel .= '<div style="font-size:.9em;color:#64748b;margin-top:2px">Ctrl / Cmd-click to select multiple</div>';
+                    $matchfields .= '
+                        <select multiple
+                                size="' . (int)$size . '"
+                                class="sfe-hook-multi-select"
+                                data-hook-id="' . $hid . '"
+                                data-slot="' . htmlspecialchars($slot_name) . '"
+                                style="width:100%;min-height:72px">
+                            ' . $options_for($stype, $selected, true) . '
+                        </select>
+                        <div style="font-size:.9em;color:#64748b;margin-top:2px">
+                            Ctrl / Cmd-click to select multiple
+                        </div>';
                 } else {
                     // Single select of matching form fields
-                    $sel .= '<select class="sfe-hook-field" data-hook-id="' . $hid
-                        . '" data-slot="' . htmlspecialchars($slot_name) . '" style="width:100%">'
-                        . $options_for($stype, $selected, false)
-                        . '</select>';
-                    $sel .= '<div style="font-size:.9em;color:#64748b;margin-top:2px">Backend name: <code>'
-                        . htmlspecialchars($slot_name) . '</code></div>';
+                    $matchfields .= '
+                        <select
+                            class="sfe-hook-field"
+                            data-hook-id="' . $hid . '"
+                            data-slot="' . htmlspecialchars($slot_name) . '"
+                            style="width:100%">
+                            ' . $options_for($stype, $selected, false) . '
+                        </select>';
                 }
 
-                $sel .= '</div></div>';
+                $sel .= '
+                    <div class="sfe-hook-slot" style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px;margin:6px 0;padding:8px;border:1px solid #e2e8f0;border-radius:6px;background:#deefff">
+                        <div style="min-width:120px;padding-top:6px">
+                            <code style="font-weight:600">
+                                Backend name: ' . htmlspecialchars($slot_name) . '
+                            </code>
+                            <div style="font-size:.9em;color:#64748b;font-weight: bold;">
+                                Hooks to: ' . $amt_bit . ' ' . $type_bit . '
+                            </div>
+                        </div>
+                        <div style="flex:1;min-width:180px">
+                        ' . $matchfields . '
+                        </div>
+                    </div>';
             }
-            $sel .= '</div>';
+            $sel = '<div class="sfe-hook-slots">' . $sel . '</div>';
         }
 
         if (!$is_bound) {

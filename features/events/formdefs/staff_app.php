@@ -81,13 +81,8 @@ function staff_app_hook_defs() {
             'label' => 'Under 18 (computed)',
             'required' => 0,
             'bindable' => true,
-            // Slot "dob" → one date field; resolve returns '1'/'0'
-            'fields' => [
-                ['dob', 'date', 1],
-            ],
-            'default_bindings' => [
-                'dob' => ['dateofbirth'],
-            ],
+            'fields' => [['dob', 'date', 1]],
+            'default_bindings' => ['dob' => ['dateofbirth']],
             'resolve' => 'staff_app_resolve_under_18',
             'help' => 'Computed from the bound date-of-birth field (slot "dob").',
         ],
@@ -96,10 +91,7 @@ function staff_app_hook_defs() {
             'label' => 'Screening flagged',
             'required' => 0,
             'bindable' => true,
-            // slot "risk": unlimited yes/no form fields → risk_1, risk_2, …
-            'fields' => [
-                ['risk', 'yesno', 0],
-            ],
+            'fields' => [['risk', 'yesno', 0]],
             'default_bindings' => [
                 'risk' => ['q1_1', 'q1_2', 'q1_3', 'q2_1', 'q2_2'],
             ],
