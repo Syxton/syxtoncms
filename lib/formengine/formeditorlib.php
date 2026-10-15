@@ -223,7 +223,7 @@ function form_editor_hooks_panel_html($form_key, $pageid) {
                 $sel .= '<div class="sfe-hook-slot" style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px;margin:6px 0;padding:8px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc">';
                 $sel .= '<div style="min-width:120px;padding-top:6px">'
                     . '<code style="font-weight:600">' . htmlspecialchars($slot_name) . '</code>'
-                    . '<div style="font-size:.9em;color:#64748b">' . $type_bit . ' · ' . $amt_bit . '</div>'
+                    . '<div style="font-size:.9em;color:#64748b">Hooks to: ' . $amt_bit . ' ' . $type_bit . '</div>'
                     . '</div>';
                 $sel .= '<div style="flex:1;min-width:180px">';
 
@@ -235,16 +235,14 @@ function form_editor_hooks_panel_html($form_key, $pageid) {
                         . ' style="width:100%;min-height:72px">'
                         . $options_for($stype, $selected, true)
                         . '</select>';
-                    $sel .= '<div style="font-size:.9em;color:#64748b;margin-top:2px">Ctrl/Cmd-click to select multiple → '
-                        . '<code>' . htmlspecialchars($slot_name) . '_1</code>, <code>'
-                        . htmlspecialchars($slot_name) . '_2</code>, …</div>';
+                    $sel .= '<div style="font-size:.9em;color:#64748b;margin-top:2px">Ctrl / Cmd-click to select multiple</div>';
                 } else {
                     // Single select of matching form fields
                     $sel .= '<select class="sfe-hook-field" data-hook-id="' . $hid
                         . '" data-slot="' . htmlspecialchars($slot_name) . '" style="width:100%">'
                         . $options_for($stype, $selected, false)
                         . '</select>';
-                    $sel .= '<div style="font-size:.9em;color:#64748b;margin-top:2px">Process value: <code>'
+                    $sel .= '<div style="font-size:.9em;color:#64748b;margin-top:2px">Backend name: <code>'
                         . htmlspecialchars($slot_name) . '</code></div>';
                 }
 
