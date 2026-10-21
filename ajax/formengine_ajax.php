@@ -207,11 +207,125 @@ function form_engine_save_field() {
         $options_json = '[]';
     }
 
+    // Validation JSON: preserve existing + min/max + number subtype
+    $validation = [];
+    $fieldid_for_val = clean_myvar_opt("fieldid", "int", 0);
+    if ($fieldid_for_val) {
+        $existing_val = get_db_row("SELECT validation FROM form_fields WHERE fieldid=||id||", ['id' => $fieldid_for_val]);
+        if ($existing_val && !empty($existing_val['validation'])) {
+            $prev_v = is_string($existing_val['validation'])
+                ? json_decode($existing_val['validation'], true)
+                : $existing_val['validation'];
+            if (is_array($prev_v)) {
+                $validation = $prev_v;
+            }
+        }
+    }
+    // Keep required flag in sync with the Required select
+    if ($required) {
+        $validation['required'] = true;
+    } else {
+        unset($validation['required']);
+    }
+    if ($type === 'date') {
+        $validation['date'] = true;
+    } elseif ($type === 'phone') {
+        $validation['phone'] = true;
+    } else {
+        // do not force-remove date/phone if type changed; clean type-specific keys below
+        if ($type !== 'date') {
+            unset($validation['date']);
+        }
+        if ($type !== 'phone') {
+            unset($validation['phone']);
+        }
+    }
+
+    // Number subtype + numeric min/max
+    if ($type === 'number') {
+        $subtype = clean_myvar_opt('number_subtype', 'string', 'decimal');
+        if (!in_array($subtype, ['integer', 'decimal', 'money'], true)) {
+            $subtype = 'decimal';
+        }
+        $validation['number_subtype'] = $subtype;
+        $vmin = clean_myvar_opt('val_min', 'string', '');
+        $vmax = clean_myvar_opt('val_max', 'string', '');
+        if (isset($_REQUEST['val_min'])) {
+            $vmin = trim((string)$_REQUEST['val_min']);
+        }
+        if (isset($_REQUEST['val_max'])) {
+            $vmax = trim((string)$_REQUEST['val_max']);
+        }
+        if ($vmin !== '' && is_numeric($vmin)) {
+            $validation['min'] = $subtype === 'integer' ? (int)$vmin : (float)$vmin;
+        } else {
+            unset($validation['min']);
+        }
+        if ($vmax !== '' && is_numeric($vmax)) {
+            $validation['max'] = $subtype === 'integer' ? (int)$vmax : (float)$vmax;
+        } else {
+            unset($validation['max']);
+        }
+    } elseif ($type === 'date') {
+        unset($validation['number_subtype']);
+        // Date min/max: mode current | static + optional static value
+        $min_mode = clean_myvar_opt('date_min_mode', 'string', '');
+        $max_mode = clean_myvar_opt('date_max_mode', 'string', '');
+        $min_static = clean_myvar_opt('date_min_static', 'string', '');
+        $max_static = clean_myvar_opt('date_max_static', 'string', '');
+        if (isset($_REQUEST['date_min_static'])) {
+            $min_static = trim((string)$_REQUEST['date_min_static']);
+        }
+        if (isset($_REQUEST['date_max_static'])) {
+            $max_static = trim((string)$_REQUEST['date_max_static']);
+        }
+        if ($min_mode === 'current') {
+            $validation['min'] = 'current';
+        } elseif ($min_mode === 'static' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $min_static)) {
+            $validation['min'] = $min_static;
+        } else {
+            unset($validation['min']);
+        }
+        if ($max_mode === 'current') {
+            $validation['max'] = 'current';
+        } elseif ($max_mode === 'static' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $max_static)) {
+            $validation['max'] = $max_static;
+        } else {
+            unset($validation['max']);
+        }
+        // Relative to another date field
+        $rel_field = clean_myvar_opt('date_rel_field', 'string', '');
+        $rel_op = clean_myvar_opt('date_rel_op', 'string', '');
+        if (isset($_REQUEST['date_rel_field'])) {
+            $rel_field = trim((string)$_REQUEST['date_rel_field']);
+        }
+        if (isset($_REQUEST['date_rel_op'])) {
+            $rel_op = trim((string)$_REQUEST['date_rel_op']);
+        }
+        $allowed_ops = ['before', 'before_or_equal', 'after', 'after_or_equal', 'same'];
+        $rel_field = preg_replace('/[^a-zA-Z0-9_]/', '', $rel_field);
+        if ($rel_field !== '' && in_array($rel_op, $allowed_ops, true)) {
+            $validation['relative'] = [
+                'field' => $rel_field,
+                'op' => $rel_op,
+            ];
+        } else {
+            unset($validation['relative']);
+        }
+    } else {
+        unset($validation['number_subtype'], $validation['min'], $validation['max'], $validation['relative']);
+    }
+
+    $validation_json = !empty($validation)
+        ? json_encode($validation, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+        : '';
+
     form_engine_ensure_schema();
 
     $params = compact('field_key', 'label', 'type', 'section', 'sortorder', 'required', 'active', 'helptext', 'visibility', 'required_when', 'now', 'pageid');
     $params['extra_attrs'] = $extra_attrs_json;
     $params['options'] = $options_json;
+    $params['validation'] = $validation_json;
 
     if ($fieldid) {
         $params['fieldid'] = $fieldid;
@@ -221,7 +335,7 @@ function form_engine_save_field() {
                 field_key=||field_key||, label=||label||, type=||type||, section=||section||,
                 sortorder=||sortorder||, required=||required||, active=||active||, helptext=||helptext||,
                 visibility=||visibility||, required_when=||required_when||, extra_attrs=||extra_attrs||,
-                options=||options||, modified=||now||
+                options=||options||, validation=||validation||, modified=||now||
              WHERE fieldid=||fieldid||",
             $params
         );
@@ -242,9 +356,9 @@ function form_engine_save_field() {
         $params['form_key'] = $form_key;
         execute_db_sql(
             "INSERT INTO form_fields
-                (form_key, pageid, field_key, label, type, section, sortorder, required, active, helptext, visibility, required_when, extra_attrs, options, is_system, created, modified)
+                (form_key, pageid, field_key, label, type, section, sortorder, required, active, helptext, visibility, required_when, extra_attrs, options, validation, is_system, created, modified)
              VALUES
-                (||form_key||, ||pageid||, ||field_key||, ||label||, ||type||, ||section||, ||sortorder||, ||required||, ||active||, ||helptext||, ||visibility||, ||required_when||, ||extra_attrs||, ||options||, 0, ||now||, ||now||)",
+                (||form_key||, ||pageid||, ||field_key||, ||label||, ||type||, ||section||, ||sortorder||, ||required||, ||active||, ||helptext||, ||visibility||, ||required_when||, ||extra_attrs||, ||options||, ||validation||, 0, ||now||, ||now||)",
             $params
         );
     }

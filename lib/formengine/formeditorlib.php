@@ -489,6 +489,34 @@ function form_editor_ui($form_key, $pageid) {
             ? ''
             : '<button type="button" class="btn-danger" title="Delete" onclick="if(confirm(' . json_encode($del_msg) . ')) form_engine_delete_field(' . $fid . ')">' . $del_icon . '</button>';
 
+        $validation = $f['validation'] ?? [];
+        if (is_string($validation) && $validation !== '') {
+            $validation = json_decode($validation, true) ?: [];
+        }
+        if (!is_array($validation)) {
+            $validation = [];
+        }
+        $number_subtype = (string)($validation['number_subtype'] ?? 'decimal');
+        if (!in_array($number_subtype, ['integer', 'decimal', 'money'], true)) {
+            $number_subtype = 'decimal';
+        }
+        $val_min = array_key_exists('min', $validation) ? $validation['min'] : '';
+        $val_max = array_key_exists('max', $validation) ? $validation['max'] : '';
+        // For date fields expose as date_min/date_max; numbers use val_min/val_max
+        $date_min = (($f['type'] ?? '') === 'date') ? $val_min : '';
+        $date_max = (($f['type'] ?? '') === 'date') ? $val_max : '';
+        $date_rel_field = '';
+        $date_rel_op = 'before';
+        if (($f['type'] ?? '') === 'date') {
+            $val_min = '';
+            $val_max = '';
+            $rel = $validation['relative'] ?? null;
+            if (is_array($rel)) {
+                $date_rel_field = (string)($rel['field'] ?? '');
+                $date_rel_op = (string)($rel['op'] ?? 'before');
+            }
+        }
+
         $map_key = $fid > 0 ? (string)$fid : ('k_' . $f['field_key']);
         $edit_map[$map_key] = [
             'fieldid' => $fid,
@@ -515,6 +543,13 @@ function form_editor_ui($form_key, $pageid) {
             'viewer_confirm' => $viewer_confirm,
             'viewer_confirm_text' => $viewer_confirm_text,
             'no_autofill' => !empty($attrs['no_autofill']) ? '1' : '0',
+            'number_subtype' => $number_subtype,
+            'val_min' => $val_min,
+            'val_max' => $val_max,
+            'date_min' => $date_min,
+            'date_max' => $date_max,
+            'date_rel_field' => $date_rel_field,
+            'date_rel_op' => $date_rel_op,
             'is_fixed' => $is_fixed ? 1 : 0,
             'is_core' => $is_hooked ? 1 : 0, // hooked — editor may still warn on key change
         ];

@@ -514,6 +514,7 @@ form_editor_ui||
                             <option value="yesno">Yes/No</option>
                             <option value="select">Select</option>
                             <option value="date">Date</option>
+                            <option value="number">Number</option>
                             <option value="phone">Phone</option>
                             <option value="checkbox">Checkbox</option>
                             <option value="section">Section Header</option>
@@ -589,6 +590,74 @@ form_editor_ui||
                             <label>Confirmation checkbox text</label>
                             <input type="text" name="viewer_confirm_text" id="edit_viewer_confirm_text" placeholder="I have reviewed this document" />
                             <div class="sfe-hint">Leave blank for the default: “I have reviewed this document”.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sfe-rules" id="sfe-number-panel" style="display:none">
+                    <h4>Number options</h4>
+                    <p class="sfe-hint">Choose how the value is entered and stored. Min/max are optional browser + server constraints.</p>
+                    <div class="sfe-grid">
+                        <div>
+                            <label>Subtype</label>
+                            <select name="number_subtype" id="edit_number_subtype">
+                                <option value="decimal">Decimal</option>
+                                <option value="integer">Whole number</option>
+                                <option value="money">Money</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Minimum</label>
+                            <input type="text" name="val_min" id="edit_val_min" placeholder="e.g. 0" inputmode="decimal" />
+                        </div>
+                        <div>
+                            <label>Maximum</label>
+                            <input type="text" name="val_max" id="edit_val_max" placeholder="e.g. 100" inputmode="decimal" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sfe-rules" id="sfe-date-limits-panel" style="display:none">
+                    <h4>Date limits</h4>
+                    <p class="sfe-hint">Optional minimum and maximum. Use a fixed date (YYYY-MM-DD) or choose <strong>Current date</strong> so the bound moves with today.</p>
+                    <div class="sfe-grid">
+                        <div>
+                            <label>Minimum</label>
+                            <select name="date_min_mode" id="edit_date_min_mode" onchange="sfeDateLimitMode('min')">
+                                <option value="">None</option>
+                                <option value="static">Fixed date</option>
+                                <option value="current">Current date</option>
+                            </select>
+                            <input type="date" name="date_min_static" id="edit_date_min_static" style="margin-top:6px;display:none" />
+                        </div>
+                        <div>
+                            <label>Maximum</label>
+                            <select name="date_max_mode" id="edit_date_max_mode" onchange="sfeDateLimitMode('max')">
+                                <option value="">None</option>
+                                <option value="static">Fixed date</option>
+                                <option value="current">Current date</option>
+                            </select>
+                            <input type="date" name="date_max_static" id="edit_date_max_static" style="margin-top:6px;display:none" />
+                        </div>
+                    </div>
+                    <h4 style="margin-top:14px">Compare to another date field</h4>
+                    <p class="sfe-hint">Require this date to be before / after / the same as another date field on the form.</p>
+                    <div class="sfe-grid">
+                        <div>
+                            <label>Related date field</label>
+                            <select name="date_rel_field" id="edit_date_rel_field">
+                                <option value="">— none —</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Must be</label>
+                            <select name="date_rel_op" id="edit_date_rel_op">
+                                <option value="before">Before the related date</option>
+                                <option value="before_or_equal">On or before the related date</option>
+                                <option value="after">After the related date</option>
+                                <option value="after_or_equal">On or after the related date</option>
+                                <option value="same">The same as the related date</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -776,12 +845,47 @@ form_editor_ui||
             return out;
         }
 
+                function sfeDateLimitMode(which) {
+            var mode = document.getElementById("edit_date_" + which + "_mode").value;
+            var inp = document.getElementById("edit_date_" + which + "_static");
+            if (inp) inp.style.display = (mode === "static") ? "" : "none";
+        }
+
+        /** Populate related-date field select from known date fields in the editor list. */
+        function sfeFillDateRelFieldOptions(excludeKey) {
+            var sel = document.getElementById("edit_date_rel_field");
+            if (!sel) return;
+            var prev = sel.value;
+            var html = "<option value=\"\">— none —</option>";
+            var map = window.FORM_EDITOR_EDIT_MAP ? window.FORM_EDITOR_EDIT_MAP : {};
+            Object.keys(map).forEach(function(k) {
+                var f = map[k];
+                if (!f) return;
+                if (f.type !== "date") return;
+                var fk = f.field_key ? f.field_key : "";
+                if (!fk) return;
+                if (fk === excludeKey) return;
+                var lab = (f.label ? f.label : fk) + " (" + fk + ")";
+                html += "<option value=\"" + String(fk).replace(/"/g, "&quot;") + "\">" + String(lab).replace(/</g, "&lt;") + "</option>";
+            });
+            sel.innerHTML = html;
+            if (prev) sel.value = prev;
+        }
+
         function sfeToggleOptionsPanel() {
             var type = document.getElementById("edit_type").value;
             var panel = document.getElementById("sfe-options-panel");
             var vpanel = document.getElementById("sfe-viewer-panel");
+            var npanel = document.getElementById("sfe-number-panel");
+            var dpanel = document.getElementById("sfe-date-limits-panel");
             if (panel) panel.style.display = (type === "select") ? "" : "none";
             if (vpanel) vpanel.style.display = (type === "file_viewer") ? "" : "none";
+            if (npanel) npanel.style.display = (type === "number") ? "" : "none";
+            if (dpanel) dpanel.style.display = (type === "date") ? "" : "none";
+            if (type === "date" && typeof sfeFillDateRelFieldOptions === "function") {
+                var ek = document.getElementById("edit_field_key");
+                sfeFillDateRelFieldOptions(ek ? ek.value : "");
+            }
         }
 
         function sfeSaveField() {
@@ -863,6 +967,44 @@ form_editor_ui||
             $("#edit_viewer_confirm").val(f.viewer_confirm ? f.viewer_confirm : "1");
             $("#edit_viewer_confirm_text").val(f.viewer_confirm_text ? f.viewer_confirm_text : "");
             $("#edit_no_autofill").val(f.no_autofill ? f.no_autofill : "0");
+            $("#edit_number_subtype").val(f.number_subtype ? f.number_subtype : "decimal");
+            $("#edit_val_min").val(f.val_min != null && f.val_min !== "" ? String(f.val_min) : "");
+            $("#edit_val_max").val(f.val_max != null && f.val_max !== "" ? String(f.val_max) : "");
+            // Date min/max modes
+            (function() {
+                var minv = f.date_min != null ? String(f.date_min) : (f.val_min != null ? String(f.val_min) : "");
+                var maxv = f.date_max != null ? String(f.date_max) : (f.val_max != null ? String(f.val_max) : "");
+                if (f.type === "date") {
+                    if (minv === "current") {
+                        $("#edit_date_min_mode").val("current");
+                        $("#edit_date_min_static").val("").hide();
+                    } else if (minv) {
+                        $("#edit_date_min_mode").val("static");
+                        $("#edit_date_min_static").val(minv).show();
+                    } else {
+                        $("#edit_date_min_mode").val("");
+                        $("#edit_date_min_static").val("").hide();
+                    }
+                    if (maxv === "current") {
+                        $("#edit_date_max_mode").val("current");
+                        $("#edit_date_max_static").val("").hide();
+                    } else if (maxv) {
+                        $("#edit_date_max_mode").val("static");
+                        $("#edit_date_max_static").val(maxv).show();
+                    } else {
+                        $("#edit_date_max_mode").val("");
+                        $("#edit_date_max_static").val("").hide();
+                    }
+                } else {
+                    $("#edit_date_min_mode").val("");
+                    $("#edit_date_max_mode").val("");
+                    $("#edit_date_min_static").val("").hide();
+                    $("#edit_date_max_static").val("").hide();
+                }
+            })();
+            sfeFillDateRelFieldOptions(f.field_key ? f.field_key : "");
+            $("#edit_date_rel_field").val(f.date_rel_field ? f.date_rel_field : "");
+            $("#edit_date_rel_op").val(f.date_rel_op ? f.date_rel_op : "before");
             sfeToggleOptionsPanel();
             $("#edit_vis_action").val(f.vis_action ? f.vis_action : "");
             $("#edit_vis_logic").val(f.vis_logic ? f.vis_logic : "and");
@@ -1029,6 +1171,16 @@ form_editor_ui||
             $("#edit_viewer_confirm").val("1");
             $("#edit_viewer_confirm_text").val("");
             $("#edit_no_autofill").val("0");
+            $("#edit_number_subtype").val("decimal");
+            $("#edit_val_min").val("");
+            $("#edit_val_max").val("");
+            $("#edit_date_min_mode").val("");
+            $("#edit_date_max_mode").val("");
+            $("#edit_date_min_static").val("").hide();
+            $("#edit_date_max_static").val("").hide();
+            sfeFillDateRelFieldOptions("");
+            $("#edit_date_rel_field").val("");
+            $("#edit_date_rel_op").val("before");
             sfeToggleOptionsPanel();
             document.getElementById("edit_vis_conditions").innerHTML = "";
             document.getElementById("edit_reqw_conditions").innerHTML = "";

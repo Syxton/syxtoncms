@@ -1098,6 +1098,8 @@ function form_engine_get_fields($form_key, $pageid = 0, $include_inactive = fals
                 } elseif (is_string($r[$json_col])) {
                     $decoded = json_decode($r[$json_col], true);
                     $r[$json_col] = is_array($decoded) ? $decoded : [];
+                } elseif (!is_array($r[$json_col])) {
+                    $r[$json_col] = [];
                 }
             }
             $k = $r['field_key'];
@@ -1150,3 +1152,23 @@ function form_engine_fixed_keys($form_key) {
     }
     return [];
 }
+
+
+// Field rendering / display (optional module; same directory)
+if (!defined('FORMRENDERLIB')) {
+    $__fr = dirname(__FILE__) . '/formrenderlib.php';
+    if (file_exists($__fr)) {
+        include_once($__fr);
+    }
+    unset($__fr);
+}
+
+// Client helpers: rules JS, multipage (optional module)
+if (!defined('FORMCLIENTLIB')) {
+    $__fc = dirname(__FILE__) . '/formclientlib.php';
+    if (file_exists($__fc)) {
+        include_once($__fc);
+    }
+    unset($__fc);
+}
+
