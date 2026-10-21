@@ -558,13 +558,6 @@ function get_staff_form_protected_keys() {
 
 
 function get_staff_form_fields($pageid = 0, $include_inactive = false) {
-    // Ensure Events legacy columns / tables (safe no-op if already present)
-    static $table_checked = false;
-    if (!$table_checked) {
-        ensure_staff_form_tables();
-        $table_checked = true;
-    }
-
     $form_key = defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app';
     if (!defined('FORMENGINELIB')) {
         global $CFG;
@@ -572,25 +565,7 @@ function get_staff_form_fields($pageid = 0, $include_inactive = false) {
             include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
         }
     }
-    $list = form_engine_get_fields($form_key, $pageid, $include_inactive);
-    if (!empty($list)) {
-        return $list;
-    }
-
-    // Fallback to hard-coded defaults when DB has no rows yet
-    $by_key = [];
-    $defaults = get_default_staff_form_fields();
-    foreach ($defaults as $f) {
-        $f['fieldid'] = 0;
-        $f['pageid']  = 0;
-        $f['active']  = 1;
-        $by_key[$f['field_key']] = $f;
-    }
-    $list = array_values($by_key);
-    usort($list, function ($a, $b) {
-        return ((int)$a['sortorder'] <=> (int)$b['sortorder']) ?: ((int)($a['fieldid'] ?? 0) <=> (int)($b['fieldid'] ?? 0));
-    });
-    return $list;
+    return form_engine_fields($form_key, $pageid, $include_inactive);
 }
 
 /**
@@ -924,45 +899,19 @@ function get_staff_application_values($row) {
  * Renders from the field definition while preserving all special JS behaviour.
  */
 function staff_application_form_dynamic($row, $viewonly = false) {
-    global $USER;
-
-    $pageid = get_pageid() ?: 0;
-    seed_staff_form_fields(0);
-
-    $fields = staff_form_fields_consent_last(get_staff_form_fields($pageid));
-    $vals = get_staff_application_values($row);
-    $vals = staff_form_prepare_application_values($vals, $row, $viewonly);
-
-    $pages = form_engine_group_fields_by_section($fields);
-    $page_count = count($pages);
-
-    $parts = [];
-    $parts[] = '<div id="staffapplication_form_div" class="' . ($viewonly ? 'staff-form-viewonly' : '') . '">';
-    $parts[] = staff_form_application_styles();
-    $parts[] = staff_form_application_header_html($vals, $viewonly);
-    $parts[] = staff_form_application_form_open_html($vals, $viewonly);
-
-    if ($page_count > 1 && !$viewonly) {
-        $parts[] = form_engine_pager_html($pages);
-    }
-
-    foreach ($pages as $i => $page) {
-        $parts[] = staff_form_application_page_html($page, $i, $vals, $viewonly);
-    }
-
-    $parts[] = staff_form_application_submit_nav_html($page_count, $viewonly);
-    $parts[] = '</fieldset></form>';
-
-    if (!$viewonly) {
-        $parts[] = form_engine_rules_js($fields);
-        if ($page_count > 1) {
-            $parts[] = form_engine_multipage_js($page_count);
+    $form_key = defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app';
+    if (!defined('FORMENGINELIB')) {
+        global $CFG;
+        if (!empty($CFG->dirroot)) {
+            include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
         }
     }
-    $parts[] = keepalive();
-    $parts[] = '</div>';
-
-    return implode("\n", $parts);
+    $pageid = function_exists('get_pageid') ? (get_pageid() ?: 0) : 0;
+    return form_engine_render($form_key, is_array($row) ? $row : [], [
+        'viewonly' => $viewonly,
+        'pageid' => $pageid,
+        'seed' => true,
+    ]);
 }
 
 /**
@@ -1127,60 +1076,14 @@ function staff_form_application_submit_nav_html($page_count, $viewonly) {
 
 
 function collect_staff_application_post($pageid = 0) {
-    $fields = get_staff_form_fields($pageid);
-    $columns = [];
-    $form_data = [];
-
-    // Always capture staffid if present
-    $staffid = clean_myvar_opt('staffid', 'int', false);
-    if ($staffid) {
-        $columns['staffid'] = $staffid;
+    $form_key = defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app';
+    if (!defined('FORMENGINELIB')) {
+        global $CFG;
+        if (!empty($CFG->dirroot)) {
+            include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
+        }
     }
-
-    foreach ($fields as $f) {
-        if ($f['type'] === 'section') {
-            continue;
-        }
-        $key = $f['field_key'];
-        $raw = null;
-
-        switch ($f['type']) {
-            case 'checkbox':
-                $raw = clean_myvar_opt($key, 'string', '') ? '1' : '0';
-                break;
-            case 'yesno':
-            case 'select':
-                $raw = clean_myvar_opt($key, 'string', '0');
-                break;
-            case 'date':
-                $str = clean_myvar_opt($key, 'string', '');
-                $raw = form_engine_parse_date_only($str);
-                break;
-            case 'phone':
-                $raw = format_phone(clean_myvar_opt($key, 'string', ''));
-                break;
-            case 'textarea':
-            case 'text':
-            default:
-                $raw = clean_myvar_opt($key, 'string', '');
-                if ($key === 'name' || strpos($key, 'ref') === 0 && strpos($key, 'name') !== false) {
-                    $raw = nameize($raw);
-                }
-                break;
-        }
-
-        // System fields also go into the classic columns
-        if (!empty($f['is_system'])) {
-            $columns[$key] = $raw;
-        }
-        // Everything goes into form_data for the future-proof store
-        $form_data[$key] = $raw;
-    }
-
-    // Preserve bgcheck metadata (never part of the public form)
-    // Caller is responsible for copying existing bgcheck values on update.
-
-    return [$columns, $form_data];
+    return form_engine_collect($form_key, $pageid);
 }
 
 /**
@@ -1217,6 +1120,16 @@ function staff_form_resolve_sortorder($pageid, $fieldid, $place_after) {
 /**
  * Persist staff application columns + form_data (Events storage adapter).
  */
+function staff_app_form_engine_save($form_key, array $ctx) {
+    return staff_app_save_application(
+        (int)($ctx['pageid'] ?? 0),
+        (int)($ctx['id'] ?? $ctx['staffid'] ?? 0),
+        $ctx['columns'] ?? [],
+        $ctx['form_data'] ?? [],
+        (int)($ctx['userid'] ?? 0)
+    );
+}
+
 function staff_app_save_application($pageid, $staffid, $col_params, $form_data, $userid) {
     $params = array_merge([
         'userid' => $userid,

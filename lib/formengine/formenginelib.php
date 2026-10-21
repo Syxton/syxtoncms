@@ -1119,6 +1119,139 @@ function form_engine_get_fields($form_key, $pageid = 0, $include_inactive = fals
 }
 
 /**
+ * Resolve in-memory default field definitions from the form def (no DB write).
+ * Checks: default_fields (array), default_fields_fn (callable/string), else [].
+ *
+ * @return array list of field rows (may be incomplete; normalized by load_fields)
+ */
+function form_engine_default_fields($form_key) {
+    form_engine_load_form_runtime($form_key);
+    $def = form_engine_get_form_def($form_key);
+    if (!$def) {
+        return [];
+    }
+    if (!empty($def['default_fields']) && is_array($def['default_fields'])) {
+        return $def['default_fields'];
+    }
+    $fn = $def['default_fields_fn'] ?? null;
+    if ($fn && is_string($fn) && function_exists($fn)) {
+        $out = call_user_func($fn);
+        return is_array($out) ? $out : [];
+    }
+    if ($fn && is_callable($fn)) {
+        $out = call_user_func($fn);
+        return is_array($out) ? $out : [];
+    }
+    return [];
+}
+
+/**
+ * Normalize a default/seed field row for runtime use when DB has no rows yet.
+ */
+function form_engine_normalize_default_field(array $f, $pageid = 0) {
+    if (!isset($f['fieldid'])) {
+        $f['fieldid'] = 0;
+    }
+    if (!isset($f['pageid'])) {
+        $f['pageid'] = (int)$pageid;
+    }
+    if (!isset($f['active'])) {
+        $f['active'] = 1;
+    }
+    foreach (['options', 'validation', 'extra_attrs', 'visibility', 'required_when'] as $json_col) {
+        if (!isset($f[$json_col]) || $f[$json_col] === '' || $f[$json_col] === null) {
+            $f[$json_col] = [];
+        } elseif (is_string($f[$json_col])) {
+            $decoded = json_decode($f[$json_col], true);
+            $f[$json_col] = is_array($decoded) ? $decoded : [];
+        } elseif (!is_array($f[$json_col])) {
+            $f[$json_col] = [];
+        }
+    }
+    return $f;
+}
+
+/**
+ * Full field-load pipeline for a form_key (shared order of operations).
+ *
+ * Order:
+ *   1. form_engine_ensure_schema()
+ *   2. form def ensure / ensure_fn (optional feature bootstrap, e.g. extra columns)
+ *   3. Load from DB (form_engine_get_fields)
+ *   4. If empty: in-memory defaults from form def (default_fields / default_fields_fn)
+ *   5. Optional post_process_fields hook (filter/reorder/annotate)
+ *   6. Return list
+ *
+ * Form definition keys (all optional except that defaults need one of the default_*):
+ *   - ensure | ensure_fn: callable/string void() feature bootstrap
+ *   - default_fields: array of field defs
+ *   - default_fields_fn: callable/string → array of field defs
+ *   - post_process_fields: callable/string ($fields, $pageid, $include_inactive) → array
+ *
+ * Consumers that only need post-processing should register post_process_fields and
+ * call form_engine_load_fields($form_key, $pageid) — no local get_*_fields needed.
+ *
+ * @return array list of field rows
+ */
+function form_engine_load_fields($form_key, $pageid = 0, $include_inactive = false) {
+    form_engine_ensure_schema();
+    form_engine_load_form_runtime($form_key);
+    $def = form_engine_get_form_def($form_key) ?: [];
+
+    // 2. Feature bootstrap (idempotent)
+    $ensure = $def['ensure'] ?? $def['ensure_fn'] ?? null;
+    if ($ensure && is_string($ensure) && function_exists($ensure)) {
+        call_user_func($ensure);
+    } elseif ($ensure && is_callable($ensure)) {
+        call_user_func($ensure);
+    }
+
+    // 3. DB rows
+    $list = form_engine_get_fields($form_key, $pageid, $include_inactive);
+
+    // 4. In-memory defaults when DB empty
+    if (empty($list)) {
+        $defaults = form_engine_default_fields($form_key);
+        $by_key = [];
+        foreach ($defaults as $f) {
+            if (!is_array($f) || empty($f['field_key'])) {
+                continue;
+            }
+            if (!$include_inactive && isset($f['active']) && !(int)$f['active']) {
+                continue;
+            }
+            $f = form_engine_normalize_default_field($f, 0);
+            $by_key[$f['field_key']] = $f;
+        }
+        $list = array_values($by_key);
+        usort($list, function ($a, $b) {
+            $sa = (int)($a['sortorder'] ?? 0);
+            $sb = (int)($b['sortorder'] ?? 0);
+            if ($sa !== $sb) {
+                return $sa - $sb;
+            }
+            return ((int)($a['fieldid'] ?? 0)) - ((int)($b['fieldid'] ?? 0));
+        });
+    }
+
+    // 5. Post-process hook
+    $pp = $def['post_process_fields'] ?? null;
+    if ($pp && is_string($pp) && function_exists($pp)) {
+        $out = call_user_func($pp, $list, $pageid, $include_inactive);
+        if (is_array($out)) {
+            $list = $out;
+        }
+    } elseif ($pp && is_callable($pp)) {
+        $out = call_user_func($pp, $list, $pageid, $include_inactive);
+        if (is_array($out)) {
+            $list = $out;
+        }
+    }
+
+    return $list;
+}
+
+/**
  * Seed default fields via form def seed_fields callback.
  */
 function form_engine_seed_fields($form_key, $pageid = 0, $force = false) {
@@ -1172,3 +1305,337 @@ if (!defined('FORMCLIENTLIB')) {
     unset($__fc);
 }
 
+
+// ---------------------------------------------------------------------------
+// Facade: simple entry points for consumers
+// ---------------------------------------------------------------------------
+
+/**
+ * Load fields for a form (full pipeline). Alias of form_engine_load_fields.
+ */
+function form_engine_fields($form_key, $pageid = 0, $include_inactive = false) {
+    return form_engine_load_fields($form_key, $pageid, $include_inactive);
+}
+
+/**
+ * Invoke a form-def callable/string hook if present.
+ *
+ * @return mixed|null null if not set
+ */
+function form_engine_call_hook($form_key, $hook_name, array $args = []) {
+    form_engine_load_form_runtime($form_key);
+    $def = form_engine_get_form_def($form_key) ?: [];
+    $fn = $def[$hook_name] ?? null;
+    if (!$fn) {
+        return null;
+    }
+    if (is_string($fn) && function_exists($fn)) {
+        return call_user_func_array($fn, $args);
+    }
+    if (is_callable($fn)) {
+        return call_user_func_array($fn, $args);
+    }
+    return null;
+}
+
+/**
+ * Collect POST into [columns, form_data] using field types + storage profile.
+ *
+ * Form def optional keys:
+ *   storage.columns — field_keys always stored as DB columns (plus is_system fields)
+ *   storage.json_column — name of JSON bag (default form_data); informational for save
+ *
+ * @return array{0:array,1:array} [columns, form_data]
+ */
+function form_engine_collect($form_key, $pageid = 0) {
+    form_engine_load_form_runtime($form_key);
+    $def = form_engine_get_form_def($form_key) ?: [];
+    $storage = $def['storage'] ?? [];
+    if (!is_array($storage)) {
+        $storage = [];
+    }
+    $column_keys = [];
+    if (!empty($storage['columns']) && is_array($storage['columns'])) {
+        foreach ($storage['columns'] as $ck) {
+            $column_keys[(string)$ck] = true;
+        }
+    }
+
+    $fields = form_engine_fields($form_key, $pageid, false);
+    $columns = [];
+    $form_data = [];
+
+    foreach ($fields as $f) {
+        if (($f['type'] ?? '') === 'section') {
+            continue;
+        }
+        $key = $f['field_key'];
+        $raw = null;
+        $type = $f['type'] ?? 'text';
+
+        switch ($type) {
+            case 'checkbox':
+                $raw = (function_exists('clean_myvar_opt') ? clean_myvar_opt($key, 'string', '') : ($_POST[$key] ?? '')) ? '1' : '0';
+                break;
+            case 'yesno':
+            case 'select':
+                $raw = function_exists('clean_myvar_opt')
+                    ? clean_myvar_opt($key, 'string', '0')
+                    : (string)($_POST[$key] ?? '0');
+                break;
+            case 'date':
+                $str = function_exists('clean_myvar_opt')
+                    ? clean_myvar_opt($key, 'string', '')
+                    : (string)($_POST[$key] ?? '');
+                $raw = function_exists('form_engine_parse_date_only')
+                    ? form_engine_parse_date_only($str)
+                    : $str;
+                break;
+            case 'number':
+                $str = function_exists('clean_myvar_opt')
+                    ? clean_myvar_opt($key, 'string', '')
+                    : (string)($_POST[$key] ?? '');
+                $raw = ($str === '' || $str === null) ? '' : $str;
+                break;
+            case 'phone':
+                $str = function_exists('clean_myvar_opt')
+                    ? clean_myvar_opt($key, 'string', '')
+                    : (string)($_POST[$key] ?? '');
+                $raw = function_exists('format_phone') ? format_phone($str) : $str;
+                break;
+            case 'textarea':
+            case 'text':
+            default:
+                $raw = function_exists('clean_myvar_opt')
+                    ? clean_myvar_opt($key, 'string', '')
+                    : (string)($_POST[$key] ?? '');
+                if (($key === 'name' || (strpos($key, 'ref') === 0 && strpos($key, 'name') !== false))
+                    && function_exists('nameize')) {
+                    $raw = nameize($raw);
+                }
+                break;
+        }
+
+        if (!empty($f['is_system']) || isset($column_keys[$key])) {
+            $columns[$key] = $raw;
+        }
+        $form_data[$key] = $raw;
+    }
+
+    return [$columns, $form_data];
+}
+
+/**
+ * Persist via form def save adapter.
+ *
+ * $ctx keys (conventional):
+ *   pageid, id (record pk), columns, form_data, userid, and any extra the adapter needs
+ *
+ * Form def:
+ *   save — callable($form_key, array $ctx)
+ *   save_fn — alias of save
+ *
+ * @return mixed adapter result, or false if no adapter
+ */
+function form_engine_save($form_key, array $ctx) {
+    form_engine_load_form_runtime($form_key);
+    $def = form_engine_get_form_def($form_key) ?: [];
+    $fn = $def['save'] ?? $def['save_fn'] ?? null;
+    if ($fn && is_string($fn) && function_exists($fn)) {
+        return call_user_func($fn, $form_key, $ctx);
+    }
+    if ($fn && is_callable($fn)) {
+        return call_user_func($fn, $form_key, $ctx);
+    }
+    return false;
+}
+
+/**
+ * Render a full form: layout shell + pages + fields + client JS.
+ *
+ * $values may be a storage row (resolved via resolve_values) or a flat field map.
+ *
+ * $opts:
+ *   viewonly (bool), pageid (int), seed (bool, default true),
+ *   include_inactive (bool), client (array merge into client opts),
+ *   markup (array merge into markup profile)
+ *
+ * Form def optional hooks / keys:
+ *   seed_fields — run when opts.seed
+ *   resolve_values — storage row → flat values
+ *   prepare_values($vals, $row, $viewonly) — post-resolve prep
+ *   post_process_fields — already applied inside form_engine_fields
+ *   wrap_field — field wrapper callback for page_html
+ *   render_layout.styles|header|form_open|form_close — callables
+ *   render_layout.wrapper_id|wrapper_class|wrapper_class_viewonly
+ *   render_layout.keepalive (bool)
+ *   render_layout.submit_value (string) — submit button label (preferred place)
+ *   client — JS/selectors/multipage opts (do not put submit_value here; use render_layout)
+ *
+ * @return string HTML
+ */
+function form_engine_render($form_key, $values = [], $opts = []) {
+    if (!function_exists('form_engine_render_field')) {
+        $dir = dirname(__FILE__);
+        if (file_exists($dir . '/formrenderlib.php')) {
+            include_once($dir . '/formrenderlib.php');
+        }
+    }
+    if (!function_exists('form_engine_rules_js')) {
+        $dir = dirname(__FILE__);
+        if (file_exists($dir . '/formclientlib.php')) {
+            include_once($dir . '/formclientlib.php');
+        }
+    }
+
+    form_engine_load_form_runtime($form_key);
+    $def = form_engine_get_form_def($form_key) ?: [];
+    $viewonly = !empty($opts['viewonly']);
+    $pageid = isset($opts['pageid']) ? (int)$opts['pageid'] : (function_exists('get_pageid') ? (int)(get_pageid() ?: 0) : 0);
+    $seed = !array_key_exists('seed', $opts) || !empty($opts['seed']);
+    $include_inactive = !empty($opts['include_inactive']);
+
+    if ($seed) {
+        form_engine_seed_fields($form_key, 0, false);
+    }
+
+    $fields = form_engine_fields($form_key, $pageid, $include_inactive);
+
+    $row = is_array($values) ? $values : [];
+    $vals = resolve_form_values($form_key, $row);
+    if (!is_array($vals)) {
+        $vals = [];
+    }
+    $prepared = form_engine_call_hook($form_key, 'prepare_values', [$vals, $row, $viewonly]);
+    if (is_array($prepared)) {
+        $vals = $prepared;
+    }
+
+    $layout = $def['render_layout'] ?? [];
+    if (!is_array($layout)) {
+        $layout = [];
+    }
+    // submit_value: prefer render_layout, then client, then default (declare once)
+    $client_base = is_array($def['client'] ?? null) ? $def['client'] : [];
+    $client_override = is_array($opts['client'] ?? null) ? $opts['client'] : [];
+    $submit_value = $layout['submit_value']
+        ?? $client_override['submit_value']
+        ?? $client_base['submit_value']
+        ?? (form_engine_default_client_opts()['submit_value'] ?? 'Submit');
+    unset($client_base['submit_value'], $client_override['submit_value']);
+    $client_opts = form_engine_merge_client_opts(array_merge(
+        $client_base,
+        $client_override,
+        [
+            'viewonly' => $viewonly,
+            'submit_value' => $submit_value,
+        ]
+    ));
+    if (!empty($def['wrap_field'])) {
+        $client_opts['wrap_field'] = $def['wrap_field'];
+    }
+    if (!empty($opts['wrap_field'])) {
+        $client_opts['wrap_field'] = $opts['wrap_field'];
+    }
+    $client_opts['render_field'] = function ($field, $value, $vo) use ($opts) {
+        $ro = ['viewonly' => $vo];
+        if (!empty($opts['markup']) && is_array($opts['markup'])) {
+            $ro['markup'] = $opts['markup'];
+        }
+        return form_engine_render_field($field, $value, $ro);
+    };
+
+    $pages = form_engine_group_fields_by_section($fields, $client_opts['default_section'] ?? 'General');
+    $page_count = count($pages);
+
+    $wrapper_id = $layout['wrapper_id'] ?? ('form_engine_' . preg_replace('/[^a-z0-9_]+/i', '_', $form_key));
+    $wrapper_class = $layout['wrapper_class'] ?? '';
+    if ($viewonly && !empty($layout['wrapper_class_viewonly'])) {
+        $wrapper_class = trim($wrapper_class . ' ' . $layout['wrapper_class_viewonly']);
+    }
+
+    $parts = [];
+    $parts[] = '<div id="' . htmlspecialchars($wrapper_id) . '"'
+        . ($wrapper_class !== '' ? ' class="' . htmlspecialchars($wrapper_class) . '"' : '')
+        . '>';
+
+    $styles = form_engine_call_hook($form_key, 'styles', []);
+    if ($styles === null && !empty($layout['styles'])) {
+        $fn = $layout['styles'];
+        if (is_string($fn) && function_exists($fn)) {
+            $styles = call_user_func($fn);
+        } elseif (is_callable($fn)) {
+            $styles = call_user_func($fn);
+        }
+    }
+    // Also allow render_layout.styles without top-level key via layout only (already handled)
+    if (is_string($styles) && $styles !== '') {
+        $parts[] = $styles;
+    }
+
+    $header = null;
+    if (!empty($layout['header'])) {
+        $fn = $layout['header'];
+        if (is_string($fn) && function_exists($fn)) {
+            $header = call_user_func($fn, $vals, $viewonly);
+        } elseif (is_callable($fn)) {
+            $header = call_user_func($fn, $vals, $viewonly);
+        }
+    }
+    if (is_string($header) && $header !== '') {
+        $parts[] = $header;
+    }
+
+    $form_open = null;
+    if (!empty($layout['form_open'])) {
+        $fn = $layout['form_open'];
+        if (is_string($fn) && function_exists($fn)) {
+            $form_open = call_user_func($fn, $vals, $viewonly);
+        } elseif (is_callable($fn)) {
+            $form_open = call_user_func($fn, $vals, $viewonly);
+        }
+    }
+    if ($form_open === null) {
+        $form_id = ltrim($client_opts['form_selector'] ?? '#form_engine_form', '#');
+        $form_open = '<form name="' . htmlspecialchars($form_id) . '" id="' . htmlspecialchars($form_id) . '"><fieldset class="formContainer">';
+    }
+    $parts[] = $form_open;
+
+    if ($page_count > 1 && !$viewonly) {
+        $parts[] = form_engine_pager_html($pages, $client_opts);
+    }
+
+    foreach ($pages as $i => $page) {
+        $parts[] = form_engine_page_html($page, $i, $vals, $client_opts);
+    }
+
+    $parts[] = form_engine_submit_nav_html($page_count, $client_opts);
+
+    $form_close = null;
+    if (!empty($layout['form_close'])) {
+        $fn = $layout['form_close'];
+        if (is_string($fn) && function_exists($fn)) {
+            $form_close = call_user_func($fn, $vals, $viewonly);
+        } elseif (is_callable($fn)) {
+            $form_close = call_user_func($fn, $vals, $viewonly);
+        }
+    }
+    if ($form_close === null) {
+        $form_close = '</fieldset></form>';
+    }
+    $parts[] = $form_close;
+
+    if (!$viewonly) {
+        $parts[] = form_engine_rules_js($fields, $client_opts);
+        if ($page_count > 1) {
+            $parts[] = form_engine_multipage_js($page_count, $client_opts);
+        }
+    }
+
+    if (!empty($layout['keepalive']) && function_exists('keepalive')) {
+        $parts[] = keepalive();
+    }
+
+    $parts[] = '</div>';
+    return implode("\n", $parts);
+}
