@@ -46,7 +46,7 @@ global $CFG, $MYVARS;
 
     if ($themeid === 0) { // CUSTOM THEME
         // Hasn't saved custom colors yet return defaults;
-        if (!get_db_field("id", "styles", "pageid = ||pageid||", ["pageid" => $pageid])) {
+        if (!get_db_field("id", "styles", "pageid = @@pageid@@", ["pageid" => $pageid])) {
             if ($custom_styles = get_custom_styles($pageid, $feature, $featureid)) {
                 foreach ($custom_styles as $attribute => $custom) {
                     // Custom style was sent.
@@ -113,7 +113,7 @@ global $CFG, $MYVARS, $USER;
         "data" => [
             "action" => "change_theme_save",
             "pageid" => $pageid,
-            "themeid" => "js||encodeURIComponent($('#themes').val())||js",
+            "themeid" => "js@@encodeURIComponent($('#themes').val())@@js",
         ],
         "display" => "themes_page",
         "ondone"  => "setTimeout(function(){ $('#change_saved').remove();}, 3000);",
@@ -126,7 +126,7 @@ global $CFG, $MYVARS, $USER;
         "data" => [
             "action" => "theme_change",
             "pageid" => $pageid,
-            "themeid" => "js||encodeURIComponent($('#themes').val())||js",
+            "themeid" => "js@@encodeURIComponent($('#themes').val())@@js",
         ],
         "display" => "color_preview",
         "event" => "change",
@@ -147,7 +147,7 @@ global $CFG, $MYVARS, $USER;
     $tabs = fill_template("tmp/themes.template", "theme_selector_tabs_template", false, $params);
     $left = $tabs . fill_template("tmp/themes.template", "theme_selector_left_template", false, $params);
 
-    $title = get_db_field("name", "pages", "pageid = ||pageid||", ["pageid" => $pageid]);
+    $title = get_db_field("name", "pages", "pageid = @@pageid@@", ["pageid" => $pageid]);
 
     $params = [
         "featuretype" => "preview",
@@ -196,9 +196,9 @@ function customize_style_selector($pageid, $themeid, $feature = "page", $feature
             if ($feature !== "page") {
                 $p["featureid"] = $featureid;
                 $p["feature"] = $feature;
-                $featuresql = " AND feature = ||feature|| AND featureid = ||featureid|| ";
+                $featuresql = " AND feature = @@feature@@ AND featureid = @@featureid@@ ";
             }
-            $value = get_db_field("value", "styles", "themeid = ||themeid|| AND attribute = ||attribute|| AND pageid = ||pageid|| $featuresql ORDER BY pageid DESC", $p);
+            $value = get_db_field("value", "styles", "themeid = @@themeid@@ AND attribute = @@attribute@@ AND pageid = @@pageid@@ $featuresql ORDER BY pageid DESC", $p);
             if (!$value) { // No db value found, use the hard coded default value.
                 $value = $style['value'];
             }
@@ -232,9 +232,9 @@ function save_new_theme($name, $pageid) {
         start_db_transaction();
         
         // Create a new template. Get new themeid.
-        $SQL = "INSERT INTO themes (name) VALUES (||name||)";
+        $SQL = "INSERT INTO themes (name) VALUES (@@name@@)";
         if ($themeid = execute_db_sql($SQL, ["name" => $name])) {
-            $SQL = "UPDATE styles SET themeid=||themeid|| WHERE themeid=0 AND pageid=||pageid||";
+            $SQL = "UPDATE styles SET themeid=@@themeid@@ WHERE themeid=0 AND pageid=@@pageid@@";
             execute_db_sql($SQL, ["themeid" => $themeid, "pageid" => $pageid]);
         }
         commit_db_transaction();

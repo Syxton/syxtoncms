@@ -38,7 +38,7 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
     $pageid = get_pageid();
 
     if (!$currentpage = get_db_row(
-        "SELECT * FROM pages WHERE pageid = ||pageid||",
+        "SELECT * FROM pages WHERE pageid = @@pageid@@",
         ["pageid" => $pageid]
     )) {
         unset($_SESSION["pageid"], $_COOKIE["pageid"]);

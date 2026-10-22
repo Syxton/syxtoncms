@@ -1,199 +1,199 @@
-discussion_form||
-    <form id="||formid||">
+discussion_form@@
+    <form id="@@formid@@">
         <div class="centered">
             <div style="padding:10px;text-align:left;">
                 <strong>Discussion Title</strong>
                 <br />
-                <input type="text" style="width: 100%;" id="discussion_title" value="||title||" />
+                <input type="text" style="width: 100%;" id="discussion_title" value="@@title@@" />
             </div>
-            ||editor||
+            @@editor@@
             <input type="submit" style="margin: 10px;" value="Save" />
         </div>
     </form>
-||discussion_form
+@@discussion_form
 
-shoutbox||
+shoutbox@@
     <div class="shoutbox">
         <span class="shoutbox_tabtext">
-            ||tab||
+            @@tab@@
         </span>
-        ||shouts||
+        @@shouts@@
     </div>
-||shoutbox||
+@@shoutbox@@
 
-shoutbox_posts||
+shoutbox_posts@@
     <div class="shoutbox_post">
         <div class="shoutbox_post_content">
-            <div class="post_message">||message||</div>
-            <div class="post_by">||alias|| ||posted||</div>
+            <div class="post_message">@@message@@</div>
+            <div class="post_by">@@alias@@ @@posted@@</div>
         </div>
     </div>
-||shoutbox_posts
+@@shoutbox_posts
 
-shoutbox_form||
-    <form id="||formid||">
+shoutbox_form@@
+    <form id="@@formid@@">
         <div class="centered">
-            ||alias{{
+            @@alias{{
                 <div>
                     Alias: <input type="text" id="alias" size="21" name="alias" value="Anonymous" />
                 </div>
-            }}alias||
-            ||editor||
-            <input type="hidden" id="userid" name="userid" value="||userid||" />
+            }}alias@@
+            @@editor@@
+            <input type="hidden" id="userid" name="userid" value="@@userid@@" />
             <input type="submit" style="margin: 10px;" value="Shout" />
         </div>
     </form>
-||shoutbox_form
+@@shoutbox_form
 
-edit_post_form||
-    <form id="||formid||">
+edit_post_form@@
+    <form id="@@formid@@">
         <div class="centered">
             <h3>
-                Editing post made by ||author|| ||time||
+                Editing post made by @@author@@ @@time@@
             </h3>
             <br />
-            ||editor||
+            @@editor@@
             <input type="submit" style="margin: 10px;" value="Save" />
         </div>
     </form>
-||edit_post_form
+@@edit_post_form
 
-post_form||
-    <form id="||formid||">
+post_form@@
+    <form id="@@formid@@">
         <div class="centered">
             <h3>
                 Post
             </h3>
             <br />
-            ||editor||
+            @@editor@@
             <input type="submit" style="margin: 10px;" value="Post" />
         </div>
     </form>
-||post_form
+@@post_form
 
-quote_post_form||
-    <form id="||formid||">
+quote_post_form@@
+    <form id="@@formid@@">
         <div class="centered">
             <h3>
                 Post
             </h3>
-            ||quote||
+            @@quote@@
             <br />
-            ||editor||
+            @@editor@@
             <input type="submit" style="margin: 10px;" value="Post" />
         </div>
     </form>
-||quote_post_form
+@@quote_post_form
 
-forum_quote||
+forum_quote@@
     <div class="forum_quote">
-        ||quotemessage||
+        @@quotemessage@@
         <div style="text-align: right;">
-            [quoted from ||author|| ||time||]
+            [quoted from @@author@@ @@time@@]
         </div>
     </div>
-||forum_quote
+@@forum_quote
 
-category_form||
-    <div class="formDiv" id="category_div_||forumid||" style="padding: 20px">
-        <form id="||formid||">
+category_form@@
+    <div class="formDiv" id="category_div_@@forumid@@" style="padding: 20px">
+        <form id="@@formid@@">
             <fieldset class="formContainer">
                 <div class="rowContainer">
                     <label class="rowTitle" for="title">Category Name</label>
-                    <input type="text" id="title" name="title" value="||*title||" data-rule-required="true" style="width: 100%;" />
-                    <div class="tooltipContainer info">||help||</div>
+                    <input type="text" id="title" name="title" value="@@*title@@" data-rule-required="true" style="width: 100%;" />
+                    <div class="tooltipContainer info">@@help@@</div>
                     <div class="spacer" style="clear: both;"></div>
                 </div>
             </fieldset>
             <input class="submit" name="submit" type="submit" value="Submit" style="margin: 0px auto;display: block;" />
         </form>
     </div>
-||category_form
+@@category_form
 
-forum_breadcrumb||
+forum_breadcrumb@@
     <div class="forum_breadcrumb">
         <div>
-            <button id="get_categories_||forumid||" class="alike">
+            <button id="get_categories_@@forumid@@" class="alike">
                 Categories
             </button>
             <i class="fa-solid fa-caret-right"></i>
-            ||title||
+            @@title@@
         </div>
     </div>
-||forum_breadcrumb
+@@forum_breadcrumb
 
-forum_post||
+forum_post@@
     <tr>
         <td class="forum_author">
-            ||echo get_user_name(forumpost["userid"]);::forumpost||
+            @@echo get_user_name(forumpost["userid"]);::forumpost@@
             <br />
-            Posts: ||postcount||
+            Posts: @@postcount@@
         </td>
         <td class="forum_message">
-            ||quote{{
+            @@quote{{
                 <span class="forum_post_actions" style="">
-                    ||quote||
+                    @@quote@@
                 </span>
-            }}quote||
+            }}quote@@
             <span class="forum_post_actions" style="float:right;">
-                Posted: ||echo ago(forumpost["posted"]);::forumpost||
+                Posted: @@echo ago(forumpost["posted"]);::forumpost@@
             </span>
             <div class="forum_post_message">
-                ||forumpost["message"]||
+                @@forumpost["message"]@@
             </div>
-            ||edited{{
+            @@edited{{
                 <span class="centered_span" style="font-size:.9em; color:gray;">
-                    [edited by ||echo get_user_name(forumpost["editedby"]);::forumpost|| on ||echo ago(forumpost["edited"]);::forumpost||
+                    [edited by @@echo get_user_name(forumpost["editedby"]);::forumpost@@ on @@echo ago(forumpost["edited"]);::forumpost@@
                 </span>
-            }}edited||
-            ||edit{{
+            }}edited@@
+            @@edit{{
                 <span class="forum_post_actions" style="">
-                    ||edit||
+                    @@edit@@
                 </span>
-            }}edit||
-            ||delete{{
+            }}edit@@
+            @@delete{{
                 <span class="forum_post_actions" style="">
-                    <button onclick="delete_post(||forumpost["postid"]||);" class="alike">
+                    <button onclick="delete_post(@@forumpost["postid"]@@);" class="alike">
                         Delete
                     </button>
                 </span>
-            }}delete||
-            ||reply{{
+            }}delete@@
+            @@reply{{
                 <span class="forum_post_actions" style="float:right;">
-                    ||reply||
+                    @@reply@@
                 </span>
-            }}reply||
+            }}reply@@
         </td>
     </tr>
-||forum_post
+@@forum_post
 
-no_forum_post||
+no_forum_post@@
     <tr>
         <td colspan="4" class="forum_col1" style="text-align: center">
             No Posts Yet.
-            ||postlink{{
+            @@postlink{{
                 <span class="forum_post_actions" style="float:right;">
-                    ||postlink||
+                    @@postlink@@
                 </span>
-            }}postlink||
+            }}postlink@@
         </td>
     </tr>
-||no_forum_post
+@@no_forum_post
 
-forum_template||
+forum_template@@
     <div class="forum_breadcrumb">
-        <button id="get_categories_||forumid||" class="alike">
+        <button id="get_categories_@@forumid@@" class="alike">
             Categories
         </button>
-        ||echo icon("caret-right");::none||
-        <button id="get_forum_discussions_||forumid||" class="alike">
-            ||cattitle||
+        @@echo icon("caret-right");::none@@
+        <button id="get_forum_discussions_@@forumid@@" class="alike">
+            @@cattitle@@
         </button>
-        ||echo icon("caret-right");::none||
-        ||distitle||
+        @@echo icon("caret-right");::none@@
+        @@distitle@@
     </div>
-    ||discussionlink||
-    ||postspage||
+    @@discussionlink@@
+    @@postspage@@
     <table class="forum_discussion">
         <tr>
             <th class="forum_headers" style="width:125px;">
@@ -203,16 +203,16 @@ forum_template||
                 Message
             </th>
         </tr>
-        ||content||
+        @@content@@
         <tr>
             <td colspan="4" class="forum_posts_lastrow">
-                ||postspage||
+                @@postspage@@
             </td>
         </tr>
     </table>
-||forum_template
+@@forum_template
 
-category_template||
+category_template@@
     <table class="forum_category">
         <tr>
             <th class="forum_headers">
@@ -225,35 +225,35 @@ category_template||
                 Posts
             </th>
         </tr>
-        ||content||
+        @@content@@
     </table>
-||category_template
+@@category_template
 
-category_row_template||
+category_row_template@@
     <tr>
-        <td class="||viewclass||">
-            <button id="get_forum_discussions_||category[catid]||" class="alike" title="Get Forum Discussions">
-                ||echo icon("layer-group");::none||
-                <span>||category[title]||</span>
+        <td class="@@viewclass@@">
+            <button id="get_forum_discussions_@@category[catid]@@" class="alike" title="Get Forum Discussions">
+                @@echo icon("layer-group");::none@@
+                <span>@@category[title]@@</span>
             </button>
             <span class="forum_inline_buttons">
-                ||buttons||
+                @@buttons@@
             </span>
         </td>
         <td class="forum_disccol">
-            ||count||
+            @@count@@
         </td>
         <td class="forum_dispostscol">
-            ||posts||
+            @@posts@@
         </td>
     </tr>
-||category_row_template
+@@category_row_template
 
-discussion_template||
-    <table class="||classprefix||_header">
+discussion_template@@
+    <table class="@@classprefix@@_header">
         <tr>
             <th class="forum_headers">
-                <strong>||title||</strong>
+                <strong>@@title@@</strong>
             </th>
             <th class="forum_headers" style="width:50px;">
                 Replies
@@ -265,37 +265,37 @@ discussion_template||
                 Last Posted
             </th>
         </tr>
-        ||content||
+        @@content@@
     </table>
-||discussion_template
+@@discussion_template
 
-discussion_row_template||
+discussion_row_template@@
     <tr>
-        <td class="col_||classprefix||">
-            <div class="||classprefix||">
-                <div class="||viewclass||">
-                    ||lock||
-                    <button id="get_discussion_posts_||discussion["discussionid"]||" class="alike">
-                        ||echo icon("comments");::none||
+        <td class="col_@@classprefix@@">
+            <div class="@@classprefix@@">
+                <div class="@@viewclass@@">
+                    @@lock@@
+                    <button id="get_discussion_posts_@@discussion["discussionid"]@@" class="alike">
+                        @@echo icon("comments");::none@@
                         <span>
-                        ||discussion["title"]||
+                        @@discussion["title"]@@
                         </span>
                     </button>
                 </div>
-                ||buttons||
+                @@buttons@@
             </div>
-            ||post_pages||
+            @@post_pages@@
         </td>
-        <td class="forum_postscol col_||classprefix||">
-            ||post_count||
+        <td class="forum_postscol col_@@classprefix@@">
+            @@post_count@@
         </td>
-        <td class="forum_viewscol col_||classprefix||">
-            ||discussion["views"]||
+        <td class="forum_viewscol col_@@classprefix@@">
+            @@discussion["views"]@@
         </td>
-        <td class="forum_postedcol col_||classprefix||">
-            ||last_post_age||
+        <td class="forum_postedcol col_@@classprefix@@">
+            @@last_post_age@@
             <br />
-            ||last_post_author||
+            @@last_post_author@@
         </td>
     </tr>
-||discussion_row_template
+@@discussion_row_template

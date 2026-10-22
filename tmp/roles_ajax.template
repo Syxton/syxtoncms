@@ -1,48 +1,48 @@
-name_search_template||
+name_search_template@@
     <div style="width:100%; text-align:center;">
-        <select size="10" width="100%" style="width: 100%; font-size:.85em;" name="userid" id="||type||_user_select">
-            ||options||
+        <select size="10" width="100%" style="width: 100%; font-size:.85em;" name="userid" id="@@type@@_user_select">
+            @@options@@
         </select>
     </div>
-||name_search_template
+@@name_search_template
 
-add_to_group_search_template||
+add_to_group_search_template@@
     <select size="5" width="100%" style="width: 100%; font-size:.85em;" name="userid" id="add_user_select">
-        ||options||
+        @@options@@
     </select>
-||add_to_group_search_template
+@@add_to_group_search_template
 
-refresh_group_users_template||
-    ||canmanage{{
+refresh_group_users_template@@
+    @@canmanage{{
         <div style="padding-bottom: 10px;">
-            <button onclick="create_edit_group_form(||groupid||)">
-                || echo icon("pencil");::none||
+            <button onclick="create_edit_group_form(@@groupid@@)">
+                @@ echo icon("pencil");::none@@
                 <span>Edit Name</span>
             </button>
             &nbsp;
             <button id="delete_group">
-                || echo icon("trash");::none||
+                @@ echo icon("trash");::none@@
                 <span>Delete Group</span>
             </button>
         </div>
-    }}canmanage||
-    <strong>Group: ||groupname||</strong>
+    }}canmanage@@
+    <strong>Group: @@groupname@@</strong>
     <div style="width:100%; text-align:center;">
         <select size="5" width="100%" style="width: 100%;" name="per_group_userid" id="per_group_user_select">
-            ||options||
+            @@options@@
         </select>
-        ||canmanage{{
+        @@canmanage{{
             <button style="margin: 5px" id="manage_group_users_form">
-                ||echo icon('user');::none||&nbsp;Manage Users
+                @@echo icon('user');::none@@&nbsp;Manage Users
             </button>
-        }}canmanage||
+        }}canmanage@@
     </div>
-||refresh_group_users_template
+@@refresh_group_users_template
 
-refresh_manage_groups_template||
-    <strong>Group: ||groupname||</strong>
+refresh_manage_groups_template@@
+    <strong>Group: @@groupname@@</strong>
     <form onsubmit="add_to_group_search()">
-        User Search: <input type="text" id="per_group_search_text" size="18" value="||*searchstring||" />
+        User Search: <input type="text" id="per_group_search_text" size="18" value="@@*searchstring@@" />
         <button type="submit">
             Search
         </button>
@@ -51,10 +51,10 @@ refresh_manage_groups_template||
     <br />
     <div id="per_group_users_display_div" style="width:100%;display:flex;">
         <select size="5" style="width: 100%;" name="userid" id="add_user_select">
-            ||options1||
+            @@options1@@
         </select>
         <button style="margin: 5px;float:right;" id="add_user_to_group" class="alike">
-            ||echo icon("user-plus", 2, "", "green");::none||
+            @@echo icon("user-plus", 2, "", "green");::none@@
         </button>
     </div>
     <br />
@@ -62,49 +62,49 @@ refresh_manage_groups_template||
     <br />
     <div id="per_group_users_display_div2" style="width:100%;display:flex;">
         <select size="5" style="width: 100%;" id="remove_user_select">
-            ||options2||
+            @@options2@@
         </select>
         <button id="remove_user_from_group" style="margin: 5px;float:right;" class="alike">
-            ||echo icon("user-minus", 2, "", "red");::none||
+            @@echo icon("user-minus", 2, "", "red");::none@@
         </button>
     </div>
 
-||refresh_manage_groups_template
+@@refresh_manage_groups_template
 
-create_edit_group_form_template||
+create_edit_group_form_template@@
     <div>
-        <strong>||groupid{{ Edit Group //OR// Create Group }}groupid||</strong>
+        <strong>@@groupid{{ Edit Group //OR// Create Group }}groupid@@</strong>
     </div>
     <div style="display:flex;align-items: center;padding: 5px 0;">
         <label for="per_group_name" style="width: 10%;padding: 5px;">
             Name:
         </label>
-        <input style="width: 100%" type="text" id="per_group_name" name="per_group_name" value="||name||" />
+        <input style="width: 100%" type="text" id="per_group_name" name="per_group_name" value="@@name@@" />
     </div>
     <div style="display:flex;align-items: center;;padding: 5px 0;">
         <label for="per_group_edit_group_select" style="width: 10%;padding: 5px">
             Parent:
         </label>
-        ||parents||
+        @@parents@@
     </div>
     <button id="save_group" style="float: right;margin: 5px;">
-        ||echo icon("floppy-disk");::none||
+        @@echo icon("floppy-disk");::none@@
         <span>Save Group</span>
     </button>
     <br /><br />
-||create_edit_group_form_template
+@@create_edit_group_form_template
 
-refresh_user_roles_template||
+refresh_user_roles_template@@
   <br />
   <br />
-  Current Role: <strong>||rolename||</strong>
+  Current Role: <strong>@@rolename@@</strong>
   <br />
   <br />
   Assign Role:
   <form id="roles_form">
     <div style="width:100%; text-align:center">
         <select name="roleid" id="role_select" >
-        ||options||
+        @@options@@
         </select>
         &nbsp;
         <button id="assign_role_button">
@@ -114,4 +114,4 @@ refresh_user_roles_template||
         </div>
     </div>
   </form>
-||refresh_user_roles_template
+@@refresh_user_roles_template

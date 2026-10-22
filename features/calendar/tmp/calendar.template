@@ -1,11 +1,11 @@
-calendar_table_start||
+calendar_table_start@@
     <table class="calendar_table">
         <tr>
             <td class="calendar_month" colspan="7">
                 <div class="calendar_month_flex">
-                    ||prev||
-                    ||current||
-                    ||next||
+                    @@prev@@
+                    @@current@@
+                    @@next@@
                 </div>
             </td>
         </tr>
@@ -19,4 +19,4 @@ calendar_table_start||
             <th>S</th>
         </tr>
         <tr class="calendar_week">
-||calendar_table_start
+@@calendar_table_start

@@ -24,8 +24,8 @@ ajaxapi([
     "url" => "/features/adminpanel/camper_list_script.php",
     "data" => [
         "action" => "all_campers_list",
-        "removeduplicates" => "js||$('#remdup').val()||js",
-        "year" => "js||$('#year').val()||js",
+        "removeduplicates" => "js@@$('#remdup').val()@@js",
+        "year" => "js@@$('#year').val()@@js",
     ],
     "display" => "downloadfile",
 ]);
@@ -36,8 +36,8 @@ ajaxapi([
     "data" => [
         "action" => "all_campers_list",
         "minage" => "19",
-        "removeduplicates" => "js||$('#remdup').val()||js",
-        "year" => "js||$('#year').val()||js",
+        "removeduplicates" => "js@@$('#remdup').val()@@js",
+        "year" => "js@@$('#year').val()@@js",
     ],
     "display" => "downloadfile",
 ]);
@@ -48,8 +48,8 @@ ajaxapi([
     "data" => [
         "action" => "all_campers_list",
         "maxage" => "19.5",
-        "removeduplicates" => "js||$('#remdup').val()||js",
-        "year" => "js||$('#year').val()||js",
+        "removeduplicates" => "js@@$('#remdup').val()@@js",
+        "year" => "js@@$('#year').val()@@js",
     ],
     "display" => "downloadfile",
 ]);
@@ -61,8 +61,8 @@ ajaxapi([
         "action" => "all_campers_list",
         "minage" => "13",
         "maxage" => "19.5",
-        "removeduplicates" => "js||$('#remdup').val()||js",
-        "year" => "js||$('#year').val()||js",
+        "removeduplicates" => "js@@$('#remdup').val()@@js",
+        "year" => "js@@$('#year').val()@@js",
     ],
     "display" => "downloadfile",
 ]);

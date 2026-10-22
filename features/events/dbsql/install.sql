@@ -1,4 +1,4 @@
-install||
+install@@
 CREATE TABLE IF NOT EXISTS `events` (
     `eventid` int(11) NOT NULL AUTO_INCREMENT,
     `pageid` int(11) DEFAULT NULL,
@@ -157,4 +157,4 @@ CREATE TABLE IF NOT EXISTS `events_contacts` (
         PRIMARY KEY (`contactid`),
     KEY `pageid` (`pageid`)
     ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
-||install
+@@install

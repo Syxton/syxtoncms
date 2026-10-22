@@ -1,4 +1,4 @@
-form_section_js||
+form_section_js@@
     <script type="text/javascript">
         function updateFormMenu() {
             let sectioncount = $(".formSection").length;
@@ -70,21 +70,21 @@ form_section_js||
             });
         });
     </script>
-||form_section_js
+@@form_section_js
 
-form_navigation_buttons||
-    <div class="formNavigation ||*classes||">
+form_navigation_buttons@@
+    <div class="formNavigation @@*classes@@">
         <div class="formNavigationPrevious">
             <button type="button">
-                ||echo icon("arrow-left");::none||
+                @@echo icon("arrow-left");::none@@
                 <span>Previous Section</span>
             </button>
         </div>
         <div class="formNavigationNext">
             <button type="button">
                 <span>Next Section</span>
-                ||echo icon("arrow-right");::none||
+                @@echo icon("arrow-right");::none@@
             </button>
         </div>
     </div>
-||form_navigation_buttons
+@@form_navigation_buttons

@@ -1,4 +1,4 @@
-form_editor_ui||
+form_editor_ui@@
     <style>
         .sfe-wrap {
             max-width: 1100px;
@@ -467,13 +467,13 @@ form_editor_ui||
         }
     </style>
     <div class="sfe-wrap" id="form_editor_container">
-        <h2>||form_title||</h2>
+        <h2>@@form_title@@</h2>
         <p class="sfe-note">
             Add, edit, reorder, and configure fields for
-            form with key: <code>||form_key||</code>.
+            form with key: <code>@@form_key@@</code>.
             <strong>Process hooks</strong> map form fields to backend required variables.
         </p>
-       ||hooks_panel||
+       @@hooks_panel@@
         <p class="sfe-dnd-hint">Drag the <strong>⋮⋮</strong> handle to reorder fields. Order is saved automatically.</p>
         <div class="sfe-table-scroll">
         <table class="sfe-table sfe-fields-table" id="sfe-fields-table">
@@ -484,7 +484,7 @@ form_editor_ui||
                     <th>Show/Hide</th><th>Req. When</th><th>Status</th><th></th>
                 </tr>
             </thead>
-            <tbody>||field_rows||</tbody>
+            <tbody>@@field_rows@@</tbody>
         </table>
         </div>
 
@@ -524,13 +524,13 @@ form_editor_ui||
                     <div>
                         <label>Section</label>
                         <input type="text" name="section" id="edit_section" list="sfe-section-list" autocomplete="off" placeholder="Start typing..." />
-                        <datalist id="sfe-section-list">||section_opts||</datalist>
+                        <datalist id="sfe-section-list">@@section_opts@@</datalist>
                     </div>
                     <div>
                         <label>Position in form</label>
                         <select name="place_after" id="edit_place_after">
                             <option value="keep">Keep current position</option>
-                           ||position_opts||
+                           @@position_opts@@
                         </select>
                         <div class="sfe-hint">Or drag rows in the list above to reorder.</div>
                     </div>
@@ -734,14 +734,14 @@ form_editor_ui||
                 </div>
             </form>
         </div>
-       ||migration_tools||
+       @@migration_tools@@
     </div>
 
     <script>
-        window.FORM_EDITOR_FORM_KEY =||form_key_json||;
-        window.FORM_EDITOR_PAGEID =||pageid||;
-        window.FORM_EDITOR_EDIT_MAP =||edit_json||;
-        window.FORM_EDITOR_FIELD_KEYS =||key_opts_js||;
+        window.FORM_EDITOR_FORM_KEY =@@form_key_json@@;
+        window.FORM_EDITOR_PAGEID =@@pageid@@;
+        window.FORM_EDITOR_EDIT_MAP =@@edit_json@@;
+        window.FORM_EDITOR_FIELD_KEYS =@@key_opts_js@@;
 
         function sfeFieldOptions(selected) {
             var html = "<option value=\"\">—</option>";
@@ -1276,8 +1276,8 @@ form_editor_ui||
                     jQuery.post("/ajax/formengine_ajax.php", {
                         action: "form_engine_reorder",
                         order: ids.join(","),
-                        form_key: ||form_key_json||,
-                        pageid: ||pageid||
+                        form_key: @@form_key_json@@,
+                        pageid: @@pageid@@
                     }, function(html) {
                         var $box = jQuery("#form_editor_container");
                         if ($box.length && html) {
@@ -1292,4 +1292,4 @@ form_editor_ui||
             });
         })();
     </script>
-||form_editor_ui
+@@form_editor_ui

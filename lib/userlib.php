@@ -99,7 +99,7 @@ global $CFG, $USER;
     if (is_logged_in()) { // check if $USER global is set now.
         $_SESSION['userid'] = $USER->userid;
         // Update last active timestamp
-        execute_db_sql("UPDATE users SET last_activity = ||time|| WHERE userid = ||userid||", ["time" => $time, "userid" => $USER->userid]);
+        execute_db_sql("UPDATE users SET last_activity = @@time@@ WHERE userid = @@userid@@", ["time" => $time, "userid" => $USER->userid]);
     } else { // Still not logged in. Set $USER global to 0
         $USER = (object) ["userid" => 0];
     }
@@ -213,7 +213,7 @@ global $CFG, $USER;
         if (!$key) {
             return false;
         }
-        $userid = get_db_field("userid", "users", "userkey=||key||", ["key" => $key]);
+        $userid = get_db_field("userid", "users", "userkey=@@key@@", ["key" => $key]);
     }
 
     if (!empty($userid)) {

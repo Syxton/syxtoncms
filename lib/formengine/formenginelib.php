@@ -622,7 +622,7 @@ function form_engine_seed_hooks($form_key, $pageid = 0) {
         $hook_id = $h['hook_id'];
         $exists = get_db_row(
             "SELECT hook_id FROM form_hook_bindings
-             WHERE form_key=||fk|| AND pageid=||p|| AND hook_id=||hid||",
+             WHERE form_key=@@fk@@ AND pageid=@@p@@ AND hook_id=@@hid@@",
             ['fk' => $form_key, 'p' => (int)$pageid, 'hid' => $hook_id]
         );
         if ($exists) {
@@ -657,7 +657,7 @@ function form_engine_seed_hooks($form_key, $pageid = 0) {
         execute_db_sql(
             "INSERT INTO form_hook_bindings
              (form_key, pageid, hook_id, field_key, required, meta, modified)
-             VALUES (||fk||, ||p||, ||hid||, ||field||, ||req||, ||meta||, ||m||)",
+             VALUES (@@fk@@, @@p@@, @@hid@@, @@field@@, @@req@@, @@meta@@, @@m@@)",
             [
                 'fk' => $form_key,
                 'p' => (int)$pageid,
@@ -693,7 +693,7 @@ function form_engine_get_hooks($form_key, $pageid = 0) {
     // DB bindings: global (pageid 0) then page-specific overlay
     $bindings = [];
     $rows = get_db_result(
-        "SELECT * FROM form_hook_bindings WHERE form_key=||fk|| AND pageid=0",
+        "SELECT * FROM form_hook_bindings WHERE form_key=@@fk@@ AND pageid=0",
         ['fk' => $form_key]
     );
     if ($rows) {
@@ -703,7 +703,7 @@ function form_engine_get_hooks($form_key, $pageid = 0) {
     }
     if ((int)$pageid > 0) {
         $rows = get_db_result(
-            "SELECT * FROM form_hook_bindings WHERE form_key=||fk|| AND pageid=||p||",
+            "SELECT * FROM form_hook_bindings WHERE form_key=@@fk@@ AND pageid=@@p@@",
             ['fk' => $form_key, 'p' => (int)$pageid]
         );
         if ($rows) {
@@ -931,8 +931,8 @@ function form_engine_unbind_field($form_key, $field_key, $pageid = 0) {
     $now = time();
     // Unbind global + page-specific rows
     execute_db_sql(
-        "UPDATE form_hook_bindings SET field_key='', modified=||m||
-         WHERE form_key=||fk|| AND field_key=||field|| AND (pageid=0 OR pageid=||p||)",
+        "UPDATE form_hook_bindings SET field_key='', modified=@@m@@
+         WHERE form_key=@@fk@@ AND field_key=@@field@@ AND (pageid=0 OR pageid=@@p@@)",
         ['m' => $now, 'fk' => $form_key, 'field' => (string)$field_key, 'p' => (int)$pageid]
     );
     return true;
@@ -962,7 +962,7 @@ function form_engine_save_hook_binding($form_key, $pageid, $hook_id, $field_key,
     $pk = form_engine_hooks_pk();
     $existing = get_db_row(
         "SELECT * FROM form_hook_bindings
-         WHERE form_key=||fk|| AND pageid=||p|| AND hook_id=||hid||",
+         WHERE form_key=@@fk@@ AND pageid=@@p@@ AND hook_id=@@hid@@",
         ['fk' => $form_key, 'p' => $pageid, 'hid' => $hook_id]
     );
     $req = $required;
@@ -988,7 +988,7 @@ function form_engine_save_hook_binding($form_key, $pageid, $hook_id, $field_key,
 
     if ($existing) {
         $id = (int)($existing[$pk] ?? $existing['id'] ?? $existing['hookid'] ?? 0);
-        $sql = "UPDATE form_hook_bindings SET field_key=||field||, required=||req||, meta=||meta||, modified=||m|| WHERE `$pk`=||id||";
+        $sql = "UPDATE form_hook_bindings SET field_key=@@field@@, required=@@req@@, meta=@@meta@@, modified=@@m@@ WHERE `$pk`=@@id@@";
         execute_db_sql($sql, [
             'field' => $fk_val,
             'req' => (int)$req,
@@ -1000,7 +1000,7 @@ function form_engine_save_hook_binding($form_key, $pageid, $hook_id, $field_key,
     }
     return execute_db_sql(
         "INSERT INTO form_hook_bindings (form_key, pageid, hook_id, field_key, required, meta, modified)
-         VALUES (||fk||, ||p||, ||hid||, ||field||, ||req||, ||meta||, ||m||)",
+         VALUES (@@fk@@, @@p@@, @@hid@@, @@field@@, @@req@@, @@meta@@, @@m@@)",
         [
             'fk' => $form_key,
             'p' => $pageid,
@@ -1058,7 +1058,7 @@ function form_engine_prune_stale_hooks($form_key) {
         }
     }
     $rows = get_db_result(
-        "SELECT hook_id FROM form_hook_bindings WHERE form_key=||fk||",
+        "SELECT hook_id FROM form_hook_bindings WHERE form_key=@@fk@@",
         ['fk' => $form_key]
     );
     if (!$rows) {
@@ -1071,7 +1071,7 @@ function form_engine_prune_stale_hooks($form_key) {
             continue;
         }
         execute_db_sql(
-            "DELETE FROM form_hook_bindings WHERE form_key=||fk|| AND hook_id=||hid||",
+            "DELETE FROM form_hook_bindings WHERE form_key=@@fk@@ AND hook_id=@@hid@@",
             ['fk' => $form_key, 'hid' => $hid]
         );
         $removed++;
@@ -1084,8 +1084,8 @@ function form_engine_get_fields($form_key, $pageid = 0, $include_inactive = fals
     form_engine_ensure_schema();
     $where = $include_inactive ? '' : ' AND active = 1';
     $sql = "SELECT * FROM form_fields
-            WHERE form_key = ||form_key||
-              AND (pageid = ||pageid|| OR pageid = 0)
+            WHERE form_key = @@form_key@@
+              AND (pageid = @@pageid@@ OR pageid = 0)
             $where
             ORDER BY pageid DESC, sortorder ASC, fieldid ASC";
     $rows = get_db_result($sql, ['pageid' => (int)$pageid, 'form_key' => $form_key]);

@@ -103,7 +103,7 @@ global $CFG, $USER;
     $dpagenum = $dpagenum == "last" ? (int)(ceil($discussioncount / $sqlparams["perpage"]) - 1) : $dpagenum; // if last, set to last page int
 
     // Add limits onto query.
-    $SQL .= ' LIMIT ||limit||, ||perpage||';
+    $SQL .= ' LIMIT @@limit@@, @@perpage@@';
     $sqlparams["limit"] = $sqlparams["perpage"] * $dpagenum;
 
     // Pagenum problem...aka deleted last post on page...go to previous page.
@@ -150,7 +150,7 @@ function get_discussions_list($discussions, $title = "Discussions", $classprefix
             $forumid = $discussion['forumid'];
             // Find if new posts are available
             if (is_logged_in()) {
-                if (!$lastviewed = get_db_field("lastviewed", "forum_views", "discussionid = ||discussionid|| ORDER BY lastviewed DESC", ["discussionid" => $discussion["discussionid"]])) { $lastviewed = 0;}
+                if (!$lastviewed = get_db_field("lastviewed", "forum_views", "discussionid = @@discussionid@@ ORDER BY lastviewed DESC", ["discussionid" => $discussion["discussionid"]])) { $lastviewed = 0;}
                 $notviewed =  $lastpost["posted"] > $lastviewed ? true : false;
             }
             $viewclass = $notviewed ? 'forum_notviewed' : '';
@@ -319,7 +319,7 @@ global $CFG, $USER;
     execute_db_sql(fetch_template("dbsql/forum.sql", "update_discussion_views", "forum"), ["discussionid" => $discussionid]);
 
     $limit = $settings->forum->$forumid->postsperpage->setting * $pagenum;
-    $SQL = fetch_template("dbsql/forum.sql", "get_discussion_posts", "forum") . ' ORDER BY posted LIMIT ||limit||,||perpage||';
+    $SQL = fetch_template("dbsql/forum.sql", "get_discussion_posts", "forum") . ' ORDER BY posted LIMIT @@limit@@,@@perpage@@';
     while ($pagenum >= 0 && !$posts = get_db_result($SQL, ["discussionid" => $discussionid, "limit" => $limit, "perpage" => $settings->forum->$forumid->postsperpage->setting])) { // Pagenum problem...aka deleted last post on page...go to previous page.
         $pagenum--;
         $limit = $settings->forum->$forumid->postsperpage->setting * $pagenum;
@@ -357,7 +357,7 @@ global $CFG, $USER;
                 "url" => "/features/forum/forum_ajax.php",
                 "data" => [
                     "action" => "delete_post",
-                    "postid" => "js||postid||js",
+                    "postid" => "js@@postid@@js",
                     "pagenum" => $pagenum,
                 ],
                 "display" => "forum_div_$forumid",
@@ -450,8 +450,8 @@ global $CFG, $USER;
 
     $params = [
         "forumid" => $forumid,
-        "cattitle" => get_db_field("title", "forum_categories", "catid = ||catid||", ["catid" => $catid]),
-        "distitle" => get_db_field("title", "forum_discussions", "discussionid = ||discussionid||", ["discussionid" => $discussionid]),
+        "cattitle" => get_db_field("title", "forum_categories", "catid = @@catid@@", ["catid" => $catid]),
+        "distitle" => get_db_field("title", "forum_discussions", "discussionid = @@discussionid@@", ["discussionid" => $discussionid]),
         "wwwroot" => $CFG->wwwroot,
         "postspage" => $postspage,
         "discussionlink" => $discussionlink,
@@ -546,8 +546,8 @@ global $USER, $CFG;
             }
 
             // Get the count of discussions and posts in the category
-            $discussion_count = get_db_count("SELECT * FROM forum_discussions WHERE catid=||catid|| AND shoutbox=0", ["catid" => $category["catid"]]);
-            $posts_count = get_db_count("SELECT * FROM forum_posts WHERE catid=||catid||", ["catid" => $category["catid"]]);
+            $discussion_count = get_db_count("SELECT * FROM forum_discussions WHERE catid=@@catid@@ AND shoutbox=0", ["catid" => $category["catid"]]);
+            $posts_count = get_db_count("SELECT * FROM forum_posts WHERE catid=@@catid@@", ["catid" => $category["catid"]]);
 
             // Add the category to the content
             $content .= fill_template("tmp/forum.template", "category_row_template", "forum", [
@@ -621,9 +621,9 @@ global $USER, $CFG;
     $shoutboxlimit = isset($settings->forum->$forumid->shoutboxlimit->setting) ? " LIMIT " . $settings->forum->$forumid->shoutboxlimit->setting : "";
     $userid = is_logged_in() ? $USER->userid : "";
 
-    $shoutboxid = get_db_field("discussionid", "forum_discussions", "forumid=||forumid|| AND shoutbox=1", ["forumid" => $forumid]);
+    $shoutboxid = get_db_field("discussionid", "forum_discussions", "forumid=@@forumid@@ AND shoutbox=1", ["forumid" => $forumid]);
     $shouts = "";
-    if ($posts = get_db_result("SELECT * FROM forum_posts WHERE discussionid=||shoutboxid|| ORDER BY posted DESC $shoutboxlimit", ["shoutboxid" => $shoutboxid])) {
+    if ($posts = get_db_result("SELECT * FROM forum_posts WHERE discussionid=@@shoutboxid@@ ORDER BY posted DESC $shoutboxlimit", ["shoutboxid" => $shoutboxid])) {
         while ($post = fetch_row($posts)) {
             $params = [
                 "message" => strip_tags($post["message"], "<img><a>"),
@@ -871,7 +871,7 @@ global $CFG;
 }
 
 function first_post($discussionid) {
-    $postid = get_db_field("MIN(postid)", "forum_posts", "discussionid = ||discussionid||", ["discussionid" => $discussionid]);
+    $postid = get_db_field("MIN(postid)", "forum_posts", "discussionid = @@discussionid@@", ["discussionid" => $discussionid]);
     return $postid;
 }
 
@@ -892,7 +892,7 @@ function insert_blank_forum($pageid) {
     try {
         start_db_transaction();
         if ($featureid = execute_db_sql(fetch_template("dbsql/forum.sql", "insert_forum", $type), ["pageid" => $pageid])) {
-            $area = get_db_field("default_area", "features", "feature = ||feature||", ["feature" => $type]);
+            $area = get_db_field("default_area", "features", "feature = @@feature@@", ["feature" => $type]);
             $sort = get_db_count(fetch_template("dbsql/features.sql", "get_features_by_page_area"), ["pageid" => $pageid, "area" => $area]) + 1;
             $params = [
                 "pageid" => $pageid,

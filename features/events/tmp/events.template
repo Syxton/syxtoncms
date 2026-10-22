@@ -1,9 +1,9 @@
-event_calendar_event||
-    <div id="confirm_||eventid||">
+event_calendar_event@@
+    <div id="confirm_@@eventid@@">
             <table class="eventstable">
                 <tr>
                     <td style="width: 6%;min-width: 80px;vertical-align: top;">
-                        ||daygraphic||
+                        @@daygraphic@@
                     </td>
                     <td>
                         <table style="width:100%;border-spacing: 0px;">
@@ -11,34 +11,34 @@ event_calendar_event||
                             <td>
                                 <div class="container_head">
                                     <div class="event_title" style="color:gray;">
-                                        ||confirmed||
-                                        ||title||
+                                        @@confirmed@@
+                                        @@title@@
                                     </div>
                                     <div class="event_byline">
-                                        ||byline||
+                                        @@byline@@
                                     </div>
                                     <div class="event_info_box">
                                         <div class="event_info">
                                             <div>
                                                 <div role="export_button" class="events_reginfoblock">
-                                                    ||export||
+                                                    @@export@@
                                                 </div>
                                                 <div role="event_buttons" class="events_reginfoblock event_buttons">
-                                                    ||eventactions||
+                                                    @@eventactions@@
                                                 </div>
                                             </div>
                                             <div style="width: 150px">
-                                                ||eventbuttons||
+                                                @@eventbuttons@@
                                             </div>
                                         </div>
                                     </div>
                                     <br />
                                     <div class="event_info_box">
                                         <div role="event_info" class="events_reginfoblock">
-                                            ||info||
+                                            @@info@@
                                         </div>
                                         <div role="alert" class="events_reginfoblock">
-                                            ||alerts||
+                                            @@alerts@@
                                         </div>
                                     </div>
                                 </div>
@@ -49,17 +49,17 @@ event_calendar_event||
             </tr>
         </table>
     </div>
-||event_calendar_event
+@@event_calendar_event
 
-show_registrations_page||
+show_registrations_page@@
     <div style="font-size:.9em;padding:15px 5px;">
-        <h2>||eventname||</h2>
-        ||registrationlist||
+        <h2>@@eventname@@</h2>
+        @@registrationlist@@
         <hr>
         <br />
         <div>
             <div style="padding: 5px;">
-                <strong>||echo icon("print");::none|| Bulk Print Options</strong>
+                <strong>@@echo icon("print");::none@@ Bulk Print Options</strong>
             </div>
             <select id="print_registrations">
                 <option>Select print option</option>
@@ -72,11 +72,11 @@ show_registrations_page||
         <br />
         <div>
             <div style="padding: 5px;">
-                <strong>||echo icon("meteor");::none|| Quick Reserve Spot</strong>
+                <strong>@@echo icon("meteor");::none@@ Quick Reserve Spot</strong>
             </div>
             <div style="display: flex;align-items: center;column-gap: 10px;">
                 <button id="add_blank_registration">
-                    ||echo icon("truck-fast");::none||
+                    @@echo icon("truck-fast");::none@@
                     <span>Reserve</span>
                 </button>
                 <input type="text" size="1" maxlength="2" id="reserveamount" value="1" onchange="if (!(IsNumeric(this.value) && this.value < 0)) { this.value = 1; }" />
@@ -88,7 +88,7 @@ show_registrations_page||
         <br />
         <div>
             <div style="padding: 5px;">
-                <strong>||echo icon("table");::none|| Custom Report</strong>
+                <strong>@@echo icon("table");::none@@ Custom Report</strong>
             </div>
             <div style="display: flex;padding: 5px 10px;gap: 10px;flex-wrap: wrap;">
                 <div style="width:45%;">
@@ -96,7 +96,7 @@ show_registrations_page||
                         <strong>Fields</strong>
                     </div>
                     <div>
-                        ||selectable_field_list||
+                        @@selectable_field_list@@
                     </div>
                 </div>
                 <div style="width: 20%;max-width:130px;min-width:65px;">
@@ -104,7 +104,7 @@ show_registrations_page||
                         <strong>Sort By</strong>
                     </div>
                     <div>
-                        ||sort_by_field||
+                        @@sort_by_field@@
                     </div>
                 </div>
                 <div style="width: 80px">
@@ -113,7 +113,7 @@ show_registrations_page||
                     </div>
                     <div>
                         <button id="custom_registration_report">
-                            ||echo icon("table");::none||
+                            @@echo icon("table");::none@@
                             <span>Report</span>
                         </button>
                     </div>
@@ -121,48 +121,48 @@ show_registrations_page||
             </div>
         </div>
     </div>
-||show_registrations_page
+@@show_registrations_page
 
-show_registrations_menu_tools||
+show_registrations_menu_tools@@
     <div style="padding: 5px 0 0 5px;">
-        <strong>||echo icon("pencil");::none|| Edit Registrations</strong>
+        <strong>@@echo icon("pencil");::none@@ Edit Registrations</strong>
     </div>
     <div style="display: flex;align-items: center;">
         <div style="display: inline-block;padding: 5px;width: 50%;">
-            ||menu||
+            @@menu@@
         </div>
         <div style="display: inline-block;padding: 5px;">
-            <button class="alike" id="event_menu_button" title="Menu" style="padding-right: 5px;||display||">
-                ||echo icon("bars", 2);::none||
+            <button class="alike" id="event_menu_button" title="Menu" style="padding-right: 5px;@@display@@">
+                @@echo icon("bars", 2);::none@@
             </button>
-            <ul id="event_menu" style="||display||">
+            <ul id="event_menu" style="@@display@@">
                 <li>
-                    <button id="print_registration" onclick="print_registration(||eventid||, $('#registrants').val())" title="Print Registration" class="alike">
-                        ||echo icon("print");::none||
+                    <button id="print_registration" onclick="print_registration(@@eventid@@, $('#registrants').val())" title="Print Registration" class="alike">
+                        @@echo icon("print");::none@@
                         <span>Print Registration</span>
                     </button>
                 </li>
                 <li>
-                    <button id="edit_registration" onclick="edit_registration(||eventid||, $('#registrants').val())" title="Edit Registration" class="alike">
-                        ||echo icon("pencil");::none||
+                    <button id="edit_registration" onclick="edit_registration(@@eventid@@, $('#registrants').val())" title="Edit Registration" class="alike">
+                        @@echo icon("pencil");::none@@
                         <span>Edit Registration</span>
                     </button>
                 </li>
                 <li>
-                    <button id="delete_registration" onclick="delete_registration(||eventid||, $('#registrants').val())" title="Delete Registration" class="alike">
-                        ||echo icon("trash");::none||
+                    <button id="delete_registration" onclick="delete_registration(@@eventid@@, $('#registrants').val())" title="Delete Registration" class="alike">
+                        @@echo icon("trash");::none@@
                         <span>Delete Registration</span>
                     </button>
                 </li>
                 <li>
-                    <button id="email_registration" onclick="email_registration(||eventid||, $('#registrants').val(), true)" title="Send Registration Email" class="alike">
-                        ||echo icon("envelope-open");::none||
+                    <button id="email_registration" onclick="email_registration(@@eventid@@, $('#registrants').val(), true)" title="Send Registration Email" class="alike">
+                        @@echo icon("envelope-open");::none@@
                         <span>Preview Registration Email</span>
                     </button>
                 </li>
                 <li>
-                    <button id="email_registration" onclick="email_registration(||eventid||, $('#registrants').val(), false)" title="Send Registration Email" class="alike">
-                        ||echo icon("envelope");::none||
+                    <button id="email_registration" onclick="email_registration(@@eventid@@, $('#registrants').val(), false)" title="Send Registration Email" class="alike">
+                        @@echo icon("envelope");::none@@
                         <span>Resend Registration Email</span>
                     </button>
                 </li>
@@ -170,9 +170,9 @@ show_registrations_menu_tools||
         </div>
     </div>
     <br />
-||show_registrations_menu_tools
+@@show_registrations_menu_tools
 
-staff_emailer_template||
+staff_emailer_template@@
     <div class="dontprint">
         <form id="sendstaffemails">
             <div style="text-align:center;padding-bottom: 10px;">
@@ -192,10 +192,10 @@ staff_emailer_template||
         </form>
         <br />
     </div>
-    ||searchcontainer||
-||staff_emailer_template
+    @@searchcontainer@@
+@@staff_emailer_template
 
-appsearchtemplate||
+appsearchtemplate@@
     <div class="dontprint">
         <div style="text-align:center;padding-bottom: 10px;">
             <h3>Search for applicants by their name.</h3>
@@ -203,12 +203,12 @@ appsearchtemplate||
         <form onsubmit="perform_appsearch();">
             <div style="display: flex;align-items: center;justify-content: flex-start;">
                 <div style="width: 25%;display: flex;align-items: center;justify-content: space-evenly;">
-                ||canexport{{
-                    ||exportselect||
-                    <button class="alike" type="button" title="Export" id="export_staffapp_||pageid||">
-                        ||echo icon("file-csv", 2);::none||
+                @@canexport{{
+                    @@exportselect@@
+                    <button class="alike" type="button" title="Export" id="export_staffapp_@@pageid@@">
+                        @@echo icon("file-csv", 2);::none@@
                     </button>
-                }}canexport||
+                }}canexport@@
                 </div>
                 <div style="width: 75%;display: flex;align-items: center;justify-content: center;">
                     <input type="text" id="searchbox" name="searchbox" style="width: 75%;" />
@@ -218,11 +218,11 @@ appsearchtemplate||
         </form>
         <br />
     </div>
-    ||searchcontainer||
-||appsearchtemplate
+    @@searchcontainer@@
+@@appsearchtemplate
 
-staffsearchresults||
-    ||searchnav||
+staffsearchresults@@
+    @@searchnav@@
     <table class="searchresults">
         <tr>
             <th style="width:40%;">
@@ -235,35 +235,35 @@ staffsearchresults||
                 Date / Edit
             </th>
         </tr>
-        ||rows||
+        @@rows@@
     </table>
-||staffsearchresults
+@@staffsearchresults
 
-staffsearchrow||
+staffsearchrow@@
     <tr>
         <td>
-            <button class="alike" onclick="show_staff_app(||staff[staffid]||);">
-                ||staff[name]||
+            <button class="alike" onclick="show_staff_app(@@staff[staffid]@@);">
+                @@staff[name]@@
             </button>
             <br />
             <span style="font-size:.9em">
-                ||staff[email]||
+                @@staff[email]@@
             </span>
         </td>
         <td>
-            ||status||
+            @@status@@
         </td>
         <td style="text-align:right;">
-            <input style="width: 100px;margin: 0;" type="text" disabled="disabled" id="bgcheckdate_||staff[staffid]||" name="bgcheckdate_||staff[staffid]||" value="||bgcheckdate||" />
-            <button onclick="save_staff_bg(||staff[staffid]||);" class="alike" style="padding: 0 5px;" title="Edit Background Check Date">
-                <span class="editbg_||staff[staffid]||">||echo icon("pen-to-square");::none||</span>
-                <span class="savebg_||staff[staffid]||" style="display:none">||echo icon("floppy-disk");::none||</span>
+            <input style="width: 100px;margin: 0;" type="text" disabled="disabled" id="bgcheckdate_@@staff[staffid]@@" name="bgcheckdate_@@staff[staffid]@@" value="@@bgcheckdate@@" />
+            <button onclick="save_staff_bg(@@staff[staffid]@@);" class="alike" style="padding: 0 5px;" title="Edit Background Check Date">
+                <span class="editbg_@@staff[staffid]@@">@@echo icon("pen-to-square");::none@@</span>
+                <span class="savebg_@@staff[staffid]@@" style="display:none">@@echo icon("floppy-disk");::none@@</span>
             </button>
         </td>
     </tr>
-||staffsearchrow
+@@staffsearchrow
 
-regmanagersearchform||
+regmanagersearchform@@
     <div class="dontprint">
         <div style="text-align:center">
             <h3>Search for events or registrations by name.</h3>
@@ -283,11 +283,11 @@ regmanagersearchform||
         </div>
         <br />
     </div>
-    ||searchcontainer||
-||regmanagersearchform
+    @@searchcontainer@@
+@@regmanagersearchform
 
-eventsearchresults||
-    ||searchnav||
+eventsearchresults@@
+    @@searchnav@@
     <table class="searchresults">
         <tr>
             <th style="text-align:left;">
@@ -302,35 +302,35 @@ eventsearchresults||
                 Contact
             </th>
         </tr>
-        ||rows||
+        @@rows@@
     </table>
-||eventsearchresults
+@@eventsearchresults
 
-eventsearchrows||
+eventsearchrows@@
     <tr>
         <td style="width:40%;">
-            <button class="alike" onclick="show_registrations(||event[eventid]||);">
-                ||event[name]||
+            <button class="alike" onclick="show_registrations(@@event[eventid]@@);">
+                @@event[name]@@
             </button>
         </td>
         <td style="text-align:center;">
-            ||begindate||
+            @@begindate@@
         </td>
-        ||canexport{{
+        @@canexport{{
             <td style="text-align:center;">
-                <button onclick="export_event_registrations(||event[eventid]||,||event[pageid]||);" class="alike" title="Export ||regcount||/||limit|| Registrations">
-                    ||echo icon([["icon" => "file-csv", "style" => "font-size: 1.3em"]]);::none||
+                <button onclick="export_event_registrations(@@event[eventid]@@,@@event[pageid]@@);" class="alike" title="Export @@regcount@@/@@limit@@ Registrations">
+                    @@echo icon([["icon" => "file-csv", "style" => "font-size: 1.3em"]]);::none@@
                 </button>
             </td>
-        }}canexport||
+        }}canexport@@
         <td style="text-align:center;">
-            <a href="mailto: ||contact[email]||" />||contact[name]||</a>
+            <a href="mailto: @@contact[email]@@" />@@contact[name]@@</a>
         </td>
     </tr>
-||eventsearchrows
+@@eventsearchrows
 
-regsearchresults||
-    ||searchnav||
+regsearchresults@@
+    @@searchnav@@
     <table class="searchresults">
         <tr>
             <th style="text-align:center;">
@@ -345,140 +345,140 @@ regsearchresults||
                 Event
             </th>
         </tr>
-        ||rows||
+        @@rows@@
     </table>
-||regsearchresults
+@@regsearchresults
 
-regsearchrows||
+regsearchrows@@
     <tr>
         <td style="text-align:center;">
-            ||actions||
+            @@actions@@
         </td>
         <td style="max-width: 200px">
-            ||name||
+            @@name@@
         </td>
         <td style="text-align:center;">
-            ||regdate||
+            @@regdate@@
         </td>
         <td style="text-align:center;">
-            <button class="alike" onclick="show_registrations(||reg[eventid]||);">
-                ||reg[name]||
+            <button class="alike" onclick="show_registrations(@@reg[eventid]@@);">
+                @@reg[name]@@
             </button>
         </td>
     </tr>
-||regsearchrows
+@@regsearchrows
 
-dataentrymanager||
+dataentrymanager@@
     <div id="datamanagercontainer">
         <div style="text-align:center">
             <h3>Manage Data</h3>
         </div>
         <div style="display: flex;flex-direction: column;grid-gap: 10px;">
-            ||*location_link||
-            ||*contact_link||
+            @@*location_link@@
+            @@*contact_link@@
         </div>
     </div>
-||dataentrymanager
+@@dataentrymanager
 
-locationmanagertemplate||
+locationmanagertemplate@@
     <div id="locationmanagercontainer">
         <div>
-            ||back||
+            @@back@@
         </div>
         <div style="text-align:center">
             <h3>Select a Location to Manage</h3>
         </div>
         <br /><br />
-        <center>||locationselector||</center>
+        <center>@@locationselector@@</center>
         <div id="locationeditorcontainer">
         </div>
     </div>
-||locationmanagertemplate
+@@locationmanagertemplate
 
-locationeditortemplate||
+locationeditortemplate@@
     <br />
     <form name="locationeditorform" id="locationeditorform" onsubmit="edit_location();">
         <div class="flex_field_wrapper">
             <div class="flex_field">
                 <span>Name:</span>
-                <input type="text" id="location" name="location" value="||echo stripslashes(variable["location"]);::variable||" />
+                <input type="text" id="location" name="location" value="@@echo stripslashes(variable["location"]);::variable@@" />
             </div>
             <div class="flex_field">
                 <span>Address1:</span>
-                <input type="text" id="add1" name="add1" value="||echo stripslashes(variable["address_1"]);::variable||" />
+                <input type="text" id="add1" name="add1" value="@@echo stripslashes(variable["address_1"]);::variable@@" />
             </div>
             <div class="flex_field">
                 <span>Address2:</span>
-                <input type="text" id="add2" name="add2" value="||echo stripslashes(variable["address_2"]);::variable||" />
+                <input type="text" id="add2" name="add2" value="@@echo stripslashes(variable["address_2"]);::variable@@" />
             </div>
             <div class="flex_field">
                 <span>Zip:</span>
-                <input type="text" id="zip" name="zip" value="||variable["zip"]||" maxlength="5" />
+                <input type="text" id="zip" name="zip" value="@@variable["zip"]@@" maxlength="5" />
             </div>
             <div class="flex_field">
                 <span>Phone:</span>
-                <input type="text" id="phone" name="phone" value="||variable["phone"]||" maxlength="14" />
+                <input type="text" id="phone" name="phone" value="@@variable["phone"]@@" maxlength="14" />
             </div>
             <div class="flex_field">
                 <span>Shared:</span>
-                <input type="checkbox" id="shared" name="shared" ||shared{{ checked }}shared|| />
+                <input type="checkbox" id="shared" name="shared" @@shared{{ checked }}shared@@ />
             </div>
             <br />
             <div class="flex_field">
-                ||save||
+                @@save@@
                 <div style="text-align: center;">
-                    Used in ||usage|| events.
+                    Used in @@usage@@ events.
                 </div>
-                ||*delete||
+                @@*delete@@
             </div>
         </div>
     </form>
-||locationeditortemplate
+@@locationeditortemplate
 
-contactmanagertemplate||
+contactmanagertemplate@@
     <div id="contactmanagercontainer">
         <div>
-            ||back||
+            @@back@@
         </div>
         <div style="text-align:center">
             <h3>Select a Contact to Manage</h3>
         </div>
         <br /><br />
-        <center>||contactsselector||</center>
+        <center>@@contactsselector@@</center>
         <div id="contacteditorcontainer">
         </div>
     </div>
-||contactmanagertemplate
+@@contactmanagertemplate
 
-contacteditortemplate||
+contacteditortemplate@@
     <br />
     <form name="contacteditorform" id="contacteditorform" onsubmit="edit_contact();">
         <div class="flex_field_wrapper">
             <div class="flex_field">
                 <span>Name:</span>
-                <input type="text" id="name" name="name" value="||echo stripslashes(variable["name"]);::variable||" />
+                <input type="text" id="name" name="name" value="@@echo stripslashes(variable["name"]);::variable@@" />
             </div>
             <div class="flex_field">
                 <span>Email:</span>
-                <input type="text" id="email" name="email" value="||echo stripslashes(variable["email"]);::variable||" />
+                <input type="text" id="email" name="email" value="@@echo stripslashes(variable["email"]);::variable@@" />
             </div>
             <div class="flex_field">
                 <span>Phone:</span>
-                <input type="text" id="phone" name="phone" value="||variable["phone"]||" maxlength="14" />
+                <input type="text" id="phone" name="phone" value="@@variable["phone"]@@" maxlength="14" />
             </div>
             <br />
             <div class="flex_field">
-                ||save||
+                @@save@@
                 <div style="text-align: center;">
-                    Used in ||usage|| events.
+                    Used in @@usage@@ events.
                 </div>
-                ||*delete||
+                @@*delete@@
             </div>
         </div>
     </form>
-||contacteditortemplate
+@@contacteditortemplate
 
-templatesearchform||
+templatesearchform@@
     <div id="event_template_div" class="dontprint">
         <div style="text-align:center">
             <h3>Search for templates by their name.</h3>
@@ -491,12 +491,12 @@ templatesearchform||
             </div>
         </form>
         <br />
-        ||searchcontainer||
+        @@searchcontainer@@
     </div>
-||templatesearchform
+@@templatesearchform
 
-templatesearchresults||
-    ||searchnav||
+templatesearchresults@@
+    @@searchnav@@
     <table class="searchresults">
         <tr>
             <th style="text-align:left;">
@@ -514,65 +514,65 @@ templatesearchresults||
                 Active
             </th>
         </tr>
-        ||rows||
+        @@rows@@
     </table>
-||templatesearchresults
+@@templatesearchresults
 
-templatesearchrow||
+templatesearchrow@@
     <tr style="height:30px;border:3px solid white;">
         <td style="padding:5px;">
-            ||name||
+            @@name@@
         </td>
         <td style="padding:5px;text-align:center;">
-            ||type||
+            @@type@@
         </td>
         <td style="text-align:center;padding:5px;">
-            ||*version||
+            @@*version@@
         </td>
         <td style="text-align:center;padding:5px;">
-            ||issettings{{
-                <button title="Edit Global Template Settings" class="alike" id="global_settings_||template_id||">
-                    ||echo icon("sliders");::none||
+            @@issettings{{
+                <button title="Edit Global Template Settings" class="alike" id="global_settings_@@template_id@@">
+                    @@echo icon("sliders");::none@@
                 </button>
-            }}issettings||
+            }}issettings@@
         </td>
         <td style="text-align:center;padding:5px;">
-            ||isactive{{
-                <button class="alike" title="Deactivate Template" onclick="change_template_status(||template_id||);">
-                    ||echo icon("circle-check");::none||
+            @@isactive{{
+                <button class="alike" title="Deactivate Template" onclick="change_template_status(@@template_id@@);">
+                    @@echo icon("circle-check");::none@@
                 </button>
                 //OR//
-                <button class="alike" title="Activate Template" onclick="change_template_status(||template_id||, 1);">
-                    ||echo icon("circle");::none||
+                <button class="alike" title="Activate Template" onclick="change_template_status(@@template_id@@, 1);">
+                    @@echo icon("circle");::none@@
                 </button>
-            }}isactive||
+            }}isactive@@
         </td>
     </tr>
-||templatesearchrow
+@@templatesearchrow
 
-searchnav||
+searchnav@@
     <div class="searchresultsnav">
         <span style="width: 100px">
-            ||isprev{{
-                <button class="alike" onclick="||prev_action||" title="Previous Page">
-                    ||echo icon("chevron-left", 2);::none||
+            @@isprev{{
+                <button class="alike" onclick="@@prev_action@@" title="Previous Page">
+                    @@echo icon("chevron-left", 2);::none@@
                 </button>
-            }}isprev||
+            }}isprev@@
         </span>
         <span>
-            Viewing ||firstonpage|| through ||amountshown|| out of ||total||
+            Viewing @@firstonpage@@ through @@amountshown@@ out of @@total@@
         </span>
         <span style="width: 100px">
-            ||isnext{{
-                <button class="alike" onclick="||next_action||" title="Next Page">
-                    ||echo icon("chevron-right", 2);::none||
+            @@isnext{{
+                <button class="alike" onclick="@@next_action@@" title="Next Page">
+                    @@echo icon("chevron-right", 2);::none@@
                 </button>
-            }}isnext||
+            }}isnext@@
         </span>
     </div>
-||searchnav
+@@searchnav
 
-registration_info_form||
+registration_info_form@@
     <h3>Edit Registration Values</h3>
     <form name="reg_form" id="save_reg_changes">
         <table style="border-top: 1px solid grey;width:100%">
@@ -586,7 +586,7 @@ registration_info_form||
                     Event
                 </td>
                 <td>
-                    ||selected||
+                    @@selected@@
                 </td>
             </tr>
             <tr>
@@ -594,7 +594,7 @@ registration_info_form||
                     Email
                 </td>
                 <td>
-                    <input id="reg_email" name="reg_email" type="text" style="width: 100%" value="||email||" />
+                    <input id="reg_email" name="reg_email" type="text" style="width: 100%" value="@@email@@" />
                 </td>
             </tr>
             <tr>
@@ -602,10 +602,10 @@ registration_info_form||
                     Pay Code
                 </td>
                 <td>
-                    <input id="reg_code" name="reg_code" type="text" style="width: 100%" value="||code||" />
+                    <input id="reg_code" name="reg_code" type="text" style="width: 100%" value="@@code@@" />
                 </td>
             </tr>
-            ||rows||
+            @@rows@@
             <tr>
                 <td colspan="2" style="text-align: center">
                     <input type="submit" value="Save Changes" />
@@ -613,9 +613,9 @@ registration_info_form||
             </tr>
         </table>
     </form>
-||registration_info_form
+@@registration_info_form
 
-copy_registration_info_form||
+copy_registration_info_form@@
     <h3>Copy Registration</h3>
     <form name="copy_form" id="copy_registration">
         <table style="border-top: 1px solid grey;width:100%">
@@ -624,7 +624,7 @@ copy_registration_info_form||
                     Copy To
                 </td>
                 <td>
-                    ||eventselect||
+                    @@eventselect@@
                 </td>
             </tr>
             <tr>
@@ -635,158 +635,158 @@ copy_registration_info_form||
             </tr>
         </table>
     </form>
-||copy_registration_info_form
+@@copy_registration_info_form
 
-event_request_form||
+event_request_form@@
     <div class="formDiv" id="request_form_div" style="padding: 10px">
         <p align="center">
             <strong><font size="+1">Event Request Form</font></strong>
         </p>
         <br />
-        ||request_text||
+        @@request_text@@
         <br />
-        If you would like to have your event hosted at ||location|| please fill out the below form and we will get back to you.
+        If you would like to have your event hosted at @@location@@ please fill out the below form and we will get back to you.
         <br /><br /><br />
         <form name="request_form" id="request_form">
-            <input type="hidden" id="featureid" name="featureid" value="||featureid||" />
+            <input type="hidden" id="featureid" name="featureid" value="@@featureid@@" />
             <fieldset class="formContainer">
                     <div class="rowContainer">
                     <label for="name">Contact Name</label>
-                    <input type="text" id="name" name="name" data-rule-required="true" data-msg-required="||echo getlang("input_required");::none||" />
-                    <div class="tooltipContainer info">||echo getlang("input_contact", "/features/events");::none||</div>
+                    <input type="text" id="name" name="name" data-rule-required="true" data-msg-required="@@echo getlang("input_required");::none@@" />
+                    <div class="tooltipContainer info">@@echo getlang("input_contact", "/features/events");::none@@</div>
                     <br />
                 </div>
                 <div class="rowContainer">
                     <label for="email">Email Address</label>
-                    <input type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-msg-required="||echo getlang("input_required");::none||" data-msg-email="||echo getlang("invalid_email");::none||" />
-                    <div class="tooltipContainer info">||echo getlang("input_default_email");::none||</div>
+                    <input type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-msg-required="@@echo getlang("input_required");::none@@" data-msg-email="@@echo getlang("invalid_email");::none@@" />
+                    <div class="tooltipContainer info">@@echo getlang("input_default_email");::none@@</div>
                     <br />
                 </div>
                 <div class="rowContainer">
                     <label for="phone">Phone</label>
-                    <input type="text" id="phone" name="phone" data-rule-required="true"  data-rule-phone="true" data-msg-required="||echo getlang("input_required");::none||" data-msg-phone="||echo getlang("invalid_phone");::none||" />
-                    <div class="tooltipContainer info">||echo getlang("input_default_phone");::none||</div>
+                    <input type="text" id="phone" name="phone" data-rule-required="true"  data-rule-phone="true" data-msg-required="@@echo getlang("input_required");::none@@" data-msg-phone="@@echo getlang("invalid_phone");::none@@" />
+                    <div class="tooltipContainer info">@@echo getlang("input_default_phone");::none@@</div>
                     <br />
                 </div>
                 <div class="rowContainer">
                     <label for="event_name">Event Name</label>
-                    <input type="text" id="event_name" name="event_name" data-rule-required="true" data-msg-required="||echo getlang("input_required");::none||" />
-                    <div class="tooltipContainer info">||echo getlang("input_event_name", "/features/events");::none||</div>
+                    <input type="text" id="event_name" name="event_name" data-rule-required="true" data-msg-required="@@echo getlang("input_required");::none@@" />
+                    <div class="tooltipContainer info">@@echo getlang("input_event_name", "/features/events");::none@@</div>
                     <br />
                 </div>
                 <div class="rowContainer">
                     <label for="startdate">Event Start Date</label>
-                    <input type="text" id="startdate" name="startdate" data-rule-required="true" data-rule-date="true" data-rule-futuredate="true" date-rule-ajax1="features/events/events_ajax.php::request_date_open::&featureid=||featureid||&startdate=::true" data-msg-ajax1="||echo getlang("valid_request_date_used", "/features/events");::none||" data-msg-futuredate="||echo getlang("valid_request_date_future", "/features/events");::none||" />
-                    <div class="tooltipContainer info">||echo getlang("input_request_startdate", "/features/events");::none||</div>
+                    <input type="text" id="startdate" name="startdate" data-rule-required="true" data-rule-date="true" data-rule-futuredate="true" date-rule-ajax1="features/events/events_ajax.php::request_date_open::&featureid=@@featureid@@&startdate=::true" data-msg-ajax1="@@echo getlang("valid_request_date_used", "/features/events");::none@@" data-msg-futuredate="@@echo getlang("valid_request_date_future", "/features/events");::none@@" />
+                    <div class="tooltipContainer info">@@echo getlang("input_request_startdate", "/features/events");::none@@</div>
                 </div>
                 <div class="rowContainer">
                     <label>&nbsp;</label><span style="font-size:.8em;">through</span>
                 </div>
                 <div class="rowContainer">
                     <label for="enddate">Event End Date</label>
-                    <input type="text" id="enddate" name="enddate" data-rule-date="true" data-rule-futuredate="#startdate" data-rule-ajax1="features/events/events_ajax.php::request_date_open::&featureid=||featureid||&startdate=#startdate&enddate=::true" data-msg-ajax1="||echo getlang("valid_request_date_used", "/features/events");::none||" data-msg-futuredate="||echo getlang("valid_request_date_later", "/features/events");::none||" />
-                    <div class="tooltipContainer info">||echo getlang("input_request_enddate", "/features/events");::none||</div>
+                    <input type="text" id="enddate" name="enddate" data-rule-date="true" data-rule-futuredate="#startdate" data-rule-ajax1="features/events/events_ajax.php::request_date_open::&featureid=@@featureid@@&startdate=#startdate&enddate=::true" data-msg-ajax1="@@echo getlang("valid_request_date_used", "/features/events");::none@@" data-msg-futuredate="@@echo getlang("valid_request_date_later", "/features/events");::none@@" />
+                    <div class="tooltipContainer info">@@echo getlang("input_request_enddate", "/features/events");::none@@</div>
                 </div>
                     <div class="rowContainer">
                     <label for="participants"># of participants</label>
                     <input type="text" id="participants" name="participants" data-rule-required="true" data-rule-number="true" />
-                    <div class="tooltipContainer info">||echo getlang("input_request_participants", "/features/events");::none||</div>
+                    <div class="tooltipContainer info">@@echo getlang("input_request_participants", "/features/events");::none@@</div>
                 </div>
                 <div class="rowContainer">
                     <label for="description">Event Description</label>
-                    <textarea rows="10" id="description" name="description" data-rule-required="true" data-msg-required="||echo getlang("input_required");::none||"></textarea>
-                    <div class="tooltipContainer info">||echo getlang("input_request_description", "/features/events");::none||</div>
+                    <textarea rows="10" id="description" name="description" data-rule-required="true" data-msg-required="@@echo getlang("input_required");::none@@"></textarea>
+                    <div class="tooltipContainer info">@@echo getlang("input_request_description", "/features/events");::none@@</div>
                     <br />
                 </div>
                 <input class="submit" name="submit" type="submit" value="Submit" />
             </fieldset>
         </form>
     </div>
-    ||validation||
-||event_request_form
+    @@validation@@
+@@event_request_form
 
-event_request_thanks_email||
+event_request_thanks_email@@
     <br />
     <strong>
-        Thank you for submitting a request for us to host your event: ||event_name||.
+        Thank you for submitting a request for us to host your event: @@event_name@@.
     </strong>
     <br /><br />
     We will look over the details that you provided and respond shortly.
     <br />
     Through the approval process you may receive additional questions about your event.
-    ||summary||
-||event_request_thanks_email
+    @@summary@@
+@@event_request_thanks_email
 
-event_request_new_request||
+event_request_new_request@@
     <p>
         A new event request has been submitted. Your input is required to approve the event. This email contains specific links designed for you to be able to submit and view questions as well as vote for this event's approval.
     </p>
     <p>
         Do <strong>not</strong> delete this email. <strong>Please review the following event request.</strong>
     </p>
-||event_request_new_request
+@@event_request_new_request
 
-event_request_vote_links||
+event_request_vote_links@@
     <br />
     <h3>Actions to Take</h3>
-    <a href="||echo get_protocol() . $CFG->wwwroot;::none||/features/events/events_ajax.php?action=request_question&reqid=||reqid||&voteid=||voteid||">
+    <a href="@@echo get_protocol() . $CFG->wwwroot;::none@@/features/events/events_ajax.php?action=request_question&reqid=@@reqid@@&voteid=@@voteid@@">
         View / Ask Questions
     </a>
     <br />
-    <a href="||echo get_protocol() . $CFG->wwwroot;::none||/features/events/events_ajax.php?action=request_vote&reqid=||reqid||&approve=1&voteid=||voteid||">
+    <a href="@@echo get_protocol() . $CFG->wwwroot;::none@@/features/events/events_ajax.php?action=request_vote&reqid=@@reqid@@&approve=1&voteid=@@voteid@@">
         Approve
     </a>
     <br />
-    <a href="||echo get_protocol() . $CFG->wwwroot;::none||/features/events/events_ajax.php?action=request_vote&reqid=||reqid||&approve=0&voteid=||voteid||">
+    <a href="@@echo get_protocol() . $CFG->wwwroot;::none@@/features/events/events_ajax.php?action=request_vote&reqid=@@reqid@@&approve=0&voteid=@@voteid@@">
         Deny
     </a>
-||event_request_vote_links
+@@event_request_vote_links
 
-events_request_question_email||
+events_request_question_email@@
     <h3>Event Request Question</h3>
-    <strong>A question has been asked about the (||event_name||) event request.</strong>
+    <strong>A question has been asked about the (@@event_name@@) event request.</strong>
     <br /><br />
-    <strong>Question: </strong>||question||
+    <strong>Question: </strong>@@question@@
     <br />
-||events_request_question_email
+@@events_request_question_email
 
-events_request_answer_link||
+events_request_answer_link@@
     <br />
-    <a href="||echo get_protocol() . $CFG->wwwroot;::none||/features/events/events_ajax.php?action=request_answer&qid=||qid||&reqid=||reqid||">
+    <a href="@@echo get_protocol() . $CFG->wwwroot;::none@@/features/events/events_ajax.php?action=request_answer&qid=@@qid@@&reqid=@@reqid@@">
         Respond to Question
     </a>
     <br />
-||events_request_answer_link
+@@events_request_answer_link
 
-events_request_answer_email||
+events_request_answer_email@@
     <h3>Event Request Question Response</h3>
-    <strong>A response was given to the question about the (||event_name||) event request.</strong>
+    <strong>A response was given to the question about the (@@event_name@@) event request.</strong>
     <br /><br />
-    <strong>Question: </strong>||question||
+    <strong>Question: </strong>@@question@@
     <br /><br />
-    <strong>Response: </strong>||answer||
+    <strong>Response: </strong>@@answer@@
     <br />
-||events_request_answer_email
+@@events_request_answer_email
 
-event_request_approved_email||
+event_request_approved_email@@
     <br />
-    <strong>The requested event ||event_name|| has been approved by a vote of ||for|| to ||against||.</strong>
-||event_request_approved_email
+    <strong>The requested event @@event_name@@ has been approved by a vote of @@for@@ to @@against@@.</strong>
+@@event_request_approved_email
 
-event_request_postvote_thanks||
+event_request_postvote_thanks@@
     <div id="question_form" style="padding: 20px;text-align: center;">
-        <h3>||response||</h3>
+        <h3>@@response@@</h3>
         <br />
         <strong>Thank you for your feedback.</strong>
     </div>
-||event_request_postvote_thanks
+@@event_request_postvote_thanks
 
-event_request_denied_email||
+event_request_denied_email@@
     <br />
-    <strong>The requested event ||event_name|| has been denied by a vote of ||against|| to ||for||.</strong>
-||event_request_denied_email
+    <strong>The requested event @@event_name@@ has been denied by a vote of @@against@@ to @@for@@.</strong>
+@@event_request_denied_email
 
-event_request_sent_notice||
+event_request_sent_notice@@
     <div style="width:100%;text-align:center;">
         <strong>Your request has been sent.</strong>
     </div>
@@ -796,135 +796,135 @@ event_request_sent_notice||
         <br /><br />
         Thank you.
     </div>
-||event_request_sent_notice
+@@event_request_sent_notice
 
-eventslist||
+eventslist@@
     <div class="eventslist_container">
-        <span class="eventslist" id="||containername||">
-            ||info||
+        <span class="eventslist" id="@@containername@@">
+            @@info@@
             <span>
-            ||foreach (buttons as $b) { echo $b; }::buttons||
+            @@foreach (buttons as $b) { echo $b; }::buttons@@
             </span>
         </span>
         <div class="extrainfo">
-            ||*extrainfo||
+            @@*extrainfo@@
         </div>
     </div>
-||eventslist
+@@eventslist
 
-eventtype||
+eventtype@@
     <div class="eventtype">
         <div class="eventtype_title">
-            ||title||
+            @@title@@
         </div>
         <hr />
         <div class="eventtype_list">
-            ||eventslist||
+            @@eventslist@@
         </div>
     </div>
-||eventtype
+@@eventtype
 
-promocodes_manager||
+promocodes_manager@@
     <div class="centered">
         <button type="button" id="add_promoset_form">
-            ||echo icon("add");::none||
+            @@echo icon("add");::none@@
             <span>Add Set</span>
         </button>
     </div>
     <br /><br />
     <div class="promo_sets_container">
-        ||sets||
+        @@sets@@
     </div>
-||promocodes_manager
+@@promocodes_manager
 
-promocodes_manager_code_editor||
-    <h3 class="centered">Editing ||setname||</h3>
+promocodes_manager_code_editor@@
+    <h3 class="centered">Editing @@setname@@</h3>
     <br />
     <div>
         <button type="button" id="get_promocode_manager_ajax">
-            ||echo icon("arrow-left");::none||
+            @@echo icon("arrow-left");::none@@
             <span>Back</span>
         </button>
     </div>
     <div class="centered">
         <button type="button" id="add_promocode_form">
-            ||echo icon("add");::none||
+            @@echo icon("add");::none@@
             <span>Add Code</span>
         </button>
     </div>
     <br /><br />
     <div class="promo_sets_container">
-        ||codes||
+        @@codes@@
     </div>
-||promocodes_manager_code_editor
+@@promocodes_manager_code_editor
 
-promocode_set||
+promocode_set@@
     <div class="promo_set_row">
         <div style="width: 50%;min-width:300px;display: flex;align-items: center;justify-content: flex-start;">
             <span style="padding-right: 10px;">
-                ||set[setname]||
+                @@set[setname]@@
             </span>
-            <button title="Edit Set Name" class="alike" type="button" onclick="edit_promoset_form(||set[setid]||)">
-                ||echo icon("edit");::none||
+            <button title="Edit Set Name" class="alike" type="button" onclick="edit_promoset_form(@@set[setid]@@)">
+                @@echo icon("edit");::none@@
             </button>
         </div>
         <div>
-            <button title="Edit Set" type="button" onclick="edit_promocode_set(||set[setid]||)">
-                ||echo icon("edit");::none||
+            <button title="Edit Set" type="button" onclick="edit_promocode_set(@@set[setid]@@)">
+                @@echo icon("edit");::none@@
             </button>
-            <button title="Delete Set" type="button" onclick="delete_promocode_set(||set[setid]||)">
-                ||echo icon("trash", 1, "", "red");::none||
+            <button title="Delete Set" type="button" onclick="delete_promocode_set(@@set[setid]@@)">
+                @@echo icon("trash", 1, "", "red");::none@@
             </button>
         </div>
     </div>
-||promocode_set
+@@promocode_set
 
-promocode_code||
-    <form id="code||code[codeid]||" class="edit_promocode_form">
+promocode_code@@
+    <form id="code@@code[codeid]@@" class="edit_promocode_form">
         <div class="promo_set_row">
             <div style="width: 60%;">
                 Promo Name<br />
-                <input style="width: 95%;" id="promoname" name="promoname" type="text" value="||code[codename]||" />
+                <input style="width: 95%;" id="promoname" name="promoname" type="text" value="@@code[codename]@@" />
             </div>
             <div style="width: 20%;min-width:50px;">
                 Reduce By<br />
-                <input style="width: 70px;" id="promoreduction" name="promoreduction" type="number" value="||code[reduction]||" />
+                <input style="width: 70px;" id="promoreduction" name="promoreduction" type="number" value="@@code[reduction]@@" />
             </div>
             <div class="centered" style="width: 20%;min-width:40px;">
                 Save<br />
-                <button type="button" onclick="save_promocode(||code[codeid]||)">
-                    ||echo icon("floppy-disk");::none||
+                <button type="button" onclick="save_promocode(@@code[codeid]@@)">
+                    @@echo icon("floppy-disk");::none@@
                 </button>
             </div>
         </div>
         <div class="promo_set_row">
             <div style="width: 60%;">
                 Code<br />
-                <input style="width: 95%;" id="promocode" name="promocode" type="text" value="||code[code]||" />
+                <input style="width: 95%;" id="promocode" name="promocode" type="text" value="@@code[code]@@" />
             </div>
             <div style="width: 20%;">
                 Type<br />
                 <select id="promotype" name="promotype">
-                    <option value="dollar" ||code[dollartype]||>$</option>
-                    <option value="percent" ||code[percenttype]||>%</option>
+                    <option value="dollar" @@code[dollartype]@@>$</option>
+                    <option value="percent" @@code[percenttype]@@>%</option>
                 </select>
             </div>
             <div class="centered" style="width: 20%;min-width:40px;">
                 Delete<br />
-                <button type="button" onclick="delete_promocode(||code[codeid]||)">
-                    ||echo icon("trash", 1, "", "red");::none||
+                <button type="button" onclick="delete_promocode(@@code[codeid]@@)">
+                    @@echo icon("trash", 1, "", "red");::none@@
                 </button>
             </div>
         </div>
     </form>
-||promocode_code
+@@promocode_code
 
-add_promocode_form||
+add_promocode_form@@
     <h3 class="centered">New Code</h3>
     <br />
     <div>
         <button type="button" id="back_to_promo_set">
-            ||echo icon("arrow-left");::none||
+            @@echo icon("arrow-left");::none@@
             <span>Back</span>
         </button>
     </div>
@@ -958,20 +958,20 @@ add_promocode_form||
                 <div class="centered" style="width: 20%;min-width:40px;">
                     Add<br />
                     <button id="add_promocode">
-                        ||echo icon("floppy-disk");::none||
+                        @@echo icon("floppy-disk");::none@@
                     </button>
                 </div>
             </div>
         </form>
     </div>
-||add_promocode_form
+@@add_promocode_form
 
-add_promoset_form||
+add_promoset_form@@
     <h3 class="centered">New Promo Code Set</h3>
     <br />
     <div>
         <button type="button" id="back_to_promo_sets">
-            ||echo icon("arrow-left");::none||
+            @@echo icon("arrow-left");::none@@
             <span>Back</span>
         </button>
     </div>
@@ -986,20 +986,20 @@ add_promoset_form||
                 <div class="centered" style="width: 20%;min-width:40px;">
                     Add<br />
                     <button id="add_promoset">
-                        ||echo icon("floppy-disk");::none||
+                        @@echo icon("floppy-disk");::none@@
                     </button>
                 </div>
             </div>
         </form>
     </div>
-||add_promoset_form
+@@add_promoset_form
 
-edit_promoset_form||
+edit_promoset_form@@
     <h3 class="centered">Edit Promo Code Set</h3>
     <br />
     <div>
         <button type="button" id="back_to_promo_sets">
-            ||echo icon("arrow-left");::none||
+            @@echo icon("arrow-left");::none@@
             <span>Back</span>
         </button>
     </div>
@@ -1009,65 +1009,65 @@ edit_promoset_form||
             <div class="promo_set_row">
                 <div style="width: 80%;">
                     Promo Set Name<br />
-                    <input style="width: 95%;" id="setname" name="setname" type="text" value="||setname||" />
+                    <input style="width: 95%;" id="setname" name="setname" type="text" value="@@setname@@" />
                 </div>
                 <div class="centered" style="width: 20%;min-width:40px;">
                     Save<br />
                     <button id="edit_promoset">
-                        ||echo icon("floppy-disk");::none||
+                        @@echo icon("floppy-disk");::none@@
                     </button>
                 </div>
             </div>
         </form>
     </div>
-||edit_promoset_form
+@@edit_promoset_form
 
-payment_process_issues||
+payment_process_issues@@
     <div class="centered">
-        <h1>||echo icon("triangle-exclamation", 1, "", "orange");::none|| Payment Received, But There Was an Issue</h1>
+        <h1>@@echo icon("triangle-exclamation", 1, "", "orange");::none@@ Payment Received, But There Was an Issue</h1>
         <br />
         <p>Thank you for your payment. The transaction was successful, but we encountered an issue while processing your payment.</p>
         <p>Please reach out to the site administrators so we can assist you further.</p>
         <div class="contact-info">
-            Contact: <a href="mailto:||echo $CFG->siteemail::none||">||echo $CFG->siteemail::none||</a>
+            Contact: <a href="mailto:@@echo $CFG->siteemail::none@@">@@echo $CFG->siteemail::none@@</a>
         </div>
     </div>
-||payment_process_issues
+@@payment_process_issues
 
-payment_process_success||
+payment_process_success@@
     <div class="centered">
-        <h1>||echo icon("check", 1, "", "green");::none|| Payment Recieved</h1>
+        <h1>@@echo icon("check", 1, "", "green");::none@@ Payment Recieved</h1>
         <br />
         <p>Your payment was successfully processed.</p>
-        <p>||cart||</p>
-        <p>||message||</p>
+        <p>@@cart@@</p>
+        <p>@@message@@</p>
     </div>
-||payment_process_success
+@@payment_process_success
 
-payment_proccess_failure||
+payment_proccess_failure@@
     <div class="centered>
-        <h1>||echo icon("circle-exclamation", 1, "", "red");::none|| Payment Failed</h1>
+        <h1>@@echo icon("circle-exclamation", 1, "", "red");::none@@ Payment Failed</h1>
         <br />
         <p>Unfortunately, there was an issue processing your payment.</p>
         <p>No charges were completed.</p>
         <p>Please contact the site administrators for further assistance.</p>
         <div class="contact-info">
-        Contact: <a href="mailto:||echo $CFG->siteemail::none||">||echo $CFG->siteemail::none||</a>
+        Contact: <a href="mailto:@@echo $CFG->siteemail::none@@">@@echo $CFG->siteemail::none@@</a>
         </div>
     </div>
-||payment_process_failure
+@@payment_process_failure
 
-payment_cart_row||
-    <div class="||class||">
-        <div style="flex: 3;text-align: left;">||desc||</div>
-        <div style="flex: 1;">||val1||</div>
-        <div style="flex: 1;">||val2||</div>
+payment_cart_row@@
+    <div class="@@class@@">
+        <div style="flex: 3;text-align: left;">@@desc@@</div>
+        <div style="flex: 1;">@@val1@@</div>
+        <div style="flex: 1;">@@val2@@</div>
     </div>
-||payment_cart_row
+@@payment_cart_row
 
-payment_page||
+payment_page@@
     <div style="text-align:center;padding:15px;">
-        <h3>||sitename|| Registration Lookup</h3><br />
+        <h3>@@sitename@@ Registration Lookup</h3><br />
         <form id="payarea_form" onsubmit="lookup_reg($('#code').val()); return false;">
             <div style="centered">
                 <strong>
@@ -1075,7 +1075,7 @@ payment_page||
                 </strong>
             </div>
             <div style="display:flex;align-items: center;">
-                <input type="text" id="code" style="width: 80vw;margin: 0 10px;" value="||regcode||" />
+                <input type="text" id="code" style="width: 80vw;margin: 0 10px;" value="@@regcode@@" />
                 <button type="submit">
                     Submit
                 </button>
@@ -1083,22 +1083,22 @@ payment_page||
         </form>
     </div>
     <div id="payarea" style="padding:15px;"></div>
-||payment_page
+@@payment_page
 
-admin_contacts_dropdown||
+admin_contacts_dropdown@@
     <table style="width:100%;margin-top:10px;">
         <tr>
             <td class="field_title" style="width:115px;">
                 Contacts List:
             </td>
             <td class="field_input">
-                ||contact_select||
+                @@contact_select@@
             </td>
         </tr><tr><td></td><td class="field_input"><span id="contact_error" class="error_text"></span></td></tr>
     </table>
-||admin_contacts_dropdown
+@@admin_contacts_dropdown
 
-admin_contacts_script||
+admin_contacts_script@@
     function fill_admin_contacts(values) {
         if (!values) {
             $("#contact").val("");
@@ -1135,4 +1135,4 @@ admin_contacts_script||
             lock_contact_fields(true);
         }
     });
-||admin_contacts_script
+@@admin_contacts_script

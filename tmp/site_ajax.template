@@ -1,45 +1,45 @@
-password_change_reroute_template||
-	<input type="hidden" id="reroute" value="/pages/user.php?action=reset_password&userid=||userid||&alternate=||password||" />
-||password_change_reroute_template
+password_change_reroute_template@@
+	<input type="hidden" id="reroute" value="/pages/user.php?action=reset_password&userid=@@userid@@&alternate=@@password@@" />
+@@password_change_reroute_template
 
-reset_password_passfail_template||
+reset_password_passfail_template@@
 		<br />
 		<span class="centered_span">
-			||success{{
+			@@success{{
 			Password changed successfully.
 			//OR//
 			Password change failed.
-			}}success||
+			}}success@@
 		</span>
-||reset_password_passfail_template
+@@reset_password_passfail_template
 
-change_profile_success_template||
+change_profile_success_template@@
   <br />
   <br />
   <span class="centered_span">
-	||success{{
+	@@success{{
 		Profile changed successfully.
 	//OR//
-		||notused{{
-		Profile change failed.
+		@@notused{{
+			Profile change failed.
 		//OR//
-		This email address is already associated with another account.
-		}}notused||
-	}}success||
+			This email address is already associated with another account.
+		}}notused@@
+	}}success@@
   </span>
-||change_profile_success_template
+@@change_profile_success_template
 
-forgot_password_email_template||
+forgot_password_email_template@@
   <p>
 	<font face="Tahoma" size="3" color="#993366">
-		Dear <strong>||user[fname]|| ||user[lname]||</strong>,
+		Dear <strong>@@user[fname]@@ @@user[lname]@@</strong>,
 	</font>
   </p>
   <br />
   <blockquote>
 	<p>
 		<font size="3" face="Tahoma">
-		<strong>||sitename||</strong> has recieved notification that you have forgotten your password.&nbsp; A new temporary password is being sent to you in this email.
+		<strong>@@sitename@@</strong> has recieved notification that you have forgotten your password.&nbsp; A new temporary password is being sent to you in this email.
 		</font>
 	</p>
   </blockquote>
@@ -51,7 +51,7 @@ forgot_password_email_template||
 		<font face="Tahoma">
 		<strong>Username:</strong>&nbsp;
 		<font color="#3366ff">
-			||email||
+			@@email@@
 		</font>
 		</font>
 	</p>
@@ -59,7 +59,7 @@ forgot_password_email_template||
 	<font face="Tahoma">
 		<strong>Password:</strong>&nbsp;
 		<font color="#3366ff">
-			||alternate||
+			@@alternate@@
 		</font>
 		</font>
 	</p>
@@ -71,7 +71,7 @@ forgot_password_email_template||
 		<font size="3" face="Tahoma">
 		After you have successfully logged into the site using the password provided a password reset form will open up.  Please create a new password at that time.  If you somehow exit this form without entering a new password, your forgotten password will still be valid and the password in this email will still be valid.  If you have any questions during your use of the site, feel free to contact us at
 		<font color="#ff0000">
-			||siteemail||
+			@@siteemail@@
 		</font>.
 		<br />
 		</font>
@@ -87,28 +87,28 @@ forgot_password_email_template||
   </p>
   <p>
 	<font size="3" face="Tahoma">
-		<em>||siteowner||</em>
+		<em>@@siteowner@@</em>
 	</font>
 	&nbsp;
 	<font size="3" face="Tahoma" color="#ff0000">
-		&lt;||siteemail||
+		&lt;@@siteemail@@
 	</font>
 	<font face="Tahoma" size="3" color="#ff0000">
 		&gt;
 	</font>
   </p>
-||forgot_password_email_template
+@@forgot_password_email_template
 
-forgot_password_submitted_template||
-	||admin{{
-		||success{{
-			|| echo icon("retweet disabled", 2);::none||
-		}}success||
+forgot_password_submitted_template@@
+	@@admin{{
+		@@success{{
+			@@echo icon("retweet disabled", 2);::none@@
+		}}success@@
 	//OR//
 		<br />
 		<span class="centered_span">
-		||user{{
-			||success{{
+		@@user{{
+			@@success{{
 				An email has been sent to your address that contains a new temporary password.
 				<br />
 				Your forgotten password will still work until you log into the site with the new password.
@@ -120,27 +120,27 @@ forgot_password_submitted_template||
 				A password reset could not be done at this time.
 				<br />
 				Please try again later.
-			}}success||
+			}}success@@
 		//OR//
 			There is no user with this email address.
-		}}user||
+		}}user@@
 		</span>
 		<br />
-  	}}admin||
-||forgot_password_submitted_template
+	}}admin@@
+@@forgot_password_submitted_template
 
-delete_user_template||
-  ||yourself{{
+delete_user_template@@
+  	@@yourself{{
 		You can't delete yourself!
 	//OR//
-	 ||admin{{
-		You can't delete admins!
-		 //OR//
-		||user{{
-			User deleted.
+		@@admin{{
+			You can't delete admins!
+		//OR//
+			@@user{{
+				User deleted.
 			//OR//
-			User not found.
-		}}user||
-	 }}admin||
-  }}yourself||
-||delete_user_template
+				User not found.
+			}}user@@
+		}}admin@@
+  	}}yourself@@
+@@delete_user_template

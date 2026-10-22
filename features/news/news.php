@@ -65,9 +65,9 @@ global $CFG, $MYVARS, $USER;
                 "action" => "edit_news",
                 "newsid" => $newsid,
                 "pageid" => $pageid,
-                "html" => "js||encodeURIComponent(" . get_editor_value_javascript() . ")||js",
-                "summary" => "js||encodeURIComponent($('#news_summary').val())||js",
-                "title" => "js||encodeURIComponent($('#news_title').val())||js",
+                "html" => "js@@encodeURIComponent(" . get_editor_value_javascript() . ")@@js",
+                "summary" => "js@@encodeURIComponent($('#news_summary').val())@@js",
+                "title" => "js@@encodeURIComponent($('#news_title').val())@@js",
             ],
             "event" => "submit",
             "ondone" => "close_modal();",
@@ -86,9 +86,9 @@ global $CFG, $MYVARS, $USER;
                 "action" => "add_news",
                 "featureid" => $featureid,
                 "pageid" => $pageid,
-                "html" => "js||encodeURIComponent(" . get_editor_value_javascript() . ")||js",
-                "summary" => "js||encodeURIComponent($('#news_summary').val())||js",
-                "title" => "js||encodeURIComponent($('#news_title').val())||js",
+                "html" => "js@@encodeURIComponent(" . get_editor_value_javascript() . ")@@js",
+                "summary" => "js@@encodeURIComponent($('#news_summary').val())@@js",
+                "title" => "js@@encodeURIComponent($('#news_title').val())@@js",
             ],
             "event" => "submit",
             "ondone" => "close_modal();",
@@ -124,7 +124,7 @@ global $CFG, $MYVARS, $USER, $ROLES;
 
 function news_wrapper($newsid, $pageid, $newsonly) {
 global $CFG;
-    $news = get_db_row("SELECT * FROM news WHERE newsid=||newsid||", ["newsid" => $newsid]);
+    $news = get_db_row("SELECT * FROM news WHERE newsid=@@newsid@@", ["newsid" => $newsid]);
     if (!$news) {
         trigger_error("News item not found.", E_USER_WARNING);
         return;

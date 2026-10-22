@@ -65,7 +65,7 @@ if (!$fp) {
 		// check that payment_amount/payment_currency are correct
 		// process payment
 		if (!empty($keyarray['item_number']) && $keyarray['item_number'] == "DONATE") {
-			$SQL = "SELECT * FROM donate_donations WHERE paypal_TX = ||paypal_TX||";
+			$SQL = "SELECT * FROM donate_donations WHERE paypal_TX = @@paypal_TX@@";
 			if (!get_db_row($SQL, ["paypal_TX" => $keyarray["txn_id"]])) {
 				$params = [];
 				$params["campaign_id"] = clean_var_req($keyarray["custom"], "int");
@@ -94,9 +94,9 @@ if (!$fp) {
 					];
 					execute_db_sql(fetch_template("dbsql/events.sql", "update_reg_value", "events"), $params);
 
-					$eventid = get_db_field("eventid", "events_registrations_values", "regid = |||regid||", ["regid" => $rid]);
-					$minimum = get_db_field("fee_min", "events", "eventid = |||eventid||", ["eventid" => $eventid]);
-					$verified = get_db_field("verified", "events_registrations", "regid = |||regid||", ["regid" => $rid]);
+					$eventid = get_db_field("eventid", "events_registrations_values", "regid = |@@regid@@", ["regid" => $rid]);
+					$minimum = get_db_field("fee_min", "events", "eventid = |@@eventid@@", ["eventid" => $eventid]);
+					$verified = get_db_field("verified", "events_registrations", "regid = |@@regid@@", ["regid" => $rid]);
 
 					if ($paid >= $minimum) {
 						if (!$verified) { // Not already verified.
@@ -104,9 +104,9 @@ if (!$fp) {
 							execute_db_sql(fetch_template("dbsql/events.sql", "update_reg_status", "events"), ["regid" => $rid, "verified" => 1]);
 
 							$touser = (object) [];
-							$touser->fname = get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname='Camper_Name_First'", ["regid" => $rid]);
-							$touser->lname = get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname='Camper_Name_Last'", ["regid" => $rid]);
-							$touser->email = get_db_field("email", "events_registrations", "regid = ||regid||", ["regid" => $rid]);
+							$touser->fname = get_db_field("value", "events_registrations_values", "regid = @@regid@@ AND elementname='Camper_Name_First'", ["regid" => $rid]);
+							$touser->lname = get_db_field("value", "events_registrations_values", "regid = @@regid@@ AND elementname='Camper_Name_Last'", ["regid" => $rid]);
+							$touser->email = get_db_field("email", "events_registrations", "regid = @@regid@@", ["regid" => $rid]);
 
 							$fromuser = (object) [];
 							$fromuser->email = $CFG->siteemail;

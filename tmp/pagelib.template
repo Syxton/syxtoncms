@@ -1,59 +1,59 @@
-main_js_css||
-    ||echo js_code_wrap('var dirfromroot = "' . directory . '";');::directory||
-    ||echo js_code_wrap(fill_template("tmp/pagelib.template", "defer_script"));::none||
-    ||echo get_js_set("main");::none||
-    ||echo get_css_tags(["main"]);::none||
-||main_js_css
+main_js_css@@
+    @@echo js_code_wrap('var dirfromroot = "' . directory . '";');::directory@@
+    @@echo js_code_wrap(fill_template("tmp/pagelib.template", "defer_script"));::none@@
+    @@echo get_js_set("main");::none@@
+    @@echo get_css_tags(["main"]);::none@@
+@@main_js_css
 
-simple_page_template||
+simple_page_template@@
     <div id="ajax_errors">
         <div id="ajax_error_display" style="display: none;"></div>
     </div>
     <div id="wholepage">
         <div class="logo_nav">
-            ||masthead||
+            @@masthead@@
         </div>
         <div style="margin: 5px auto;max-width: 75vw;">
 			<span id="column_width" style="width:100%;"></span>
-			||content||
+			@@content@@
 		</div>
     </div>
     <div style="clear:both;"></div>
-||simple_page_template
+@@simple_page_template
 
-page_masthead_template||
+page_masthead_template@@
     <div class="nav_header">
         <div id="logo_div">
-            <a href="||wwwroot||">
-                ||hasmobilelogo{{
-                    <img id="logosmall" loading="lazy" src="||brandingpath||/branding/logos/||mobilelogofile||" alt="||sitename|| Logo" />
-                }}hasmobilelogo||
-                ||haslogo{{
-                    <img id="logo" loading="lazy" src="||brandingpath||/branding/logos/||logofile||" alt="||sitename|| Logo" />
+            <a href="@@wwwroot@@">
+                @@hasmobilelogo{{
+                    <img id="logosmall" loading="lazy" src="@@brandingpath@@/branding/logos/@@mobilelogofile@@" alt="@@sitename@@ Logo" />
+                }}hasmobilelogo@@
+                @@haslogo{{
+                    <img id="logo" loading="lazy" src="@@brandingpath@@/branding/logos/@@logofile@@" alt="@@sitename@@ Logo" />
                 //OR//
                     <div id="logo">
-                        ||sitename||
+                        @@sitename@@
                     </div>
-                }}haslogo||
+                }}haslogo@@
             </a>
         </div>
         <div class="nav">
-            ||nav_menu||
+            @@nav_menu@@
         </div>
     </div>
-    ||carousel||
-    <div style="background: linear-gradient(to right, rgba(0, 0, 0, 0), ||header_color||, rgba(0, 0, 0, 0));">
+    @@carousel@@
+    <div style="background: linear-gradient(to right, rgba(0, 0, 0, 0), @@header_color@@, rgba(0, 0, 0, 0));">
         <div style="padding: 2px;text-align: center;justify-content: center;display: flex;align-items: center;height: 30px;">
             <span class="style_pagenamefontcolor" style="font-size: 2em;position: relative;height: 24px;top: -6px;font-weight: bold;">
-                ||pagename||
+                @@pagename@@
             </span>
         </div>
     </div>
-||page_masthead_template
+@@page_masthead_template
 
-editor_box_template||
-    <textarea id="||name||" name="||name||" class="wysiwyg_editor">||initialvalue||</textarea>
-    ||echo js_code_wrap('
+editor_box_template@@
+    <textarea id="@@name@@" name="@@name@@" class="wysiwyg_editor">@@initialvalue@@</textarea>
+    @@echo js_code_wrap('
     $(window).on("load", function() {
         $(".wysiwyg_editor").tinymce({
             license_key: "gpl",
@@ -104,10 +104,10 @@ editor_box_template||
             filemanager_allow_gallery: ' . vars["allow_gallery"] . ',
             file_picker_types: "image media file",
         });
-    });');::vars||
-||editor_box_template
+    });');::vars@@
+@@editor_box_template
 
-defer_script||
+defer_script@@
     function defer(method) {
         if (window.jQuery) {
             method();
@@ -115,166 +115,166 @@ defer_script||
             setTimeout(function() { defer(method) }, 10);
         }
     }
-||defer_script
+@@defer_script
 
-print_logout_button_switchback_template||
-    <button id="lia_switchback" class="alike" title="Switch back to: ||lia_name||" style="padding-bottom: 5px;">
-        || echo icon("rotate-left");::none||
+print_logout_button_switchback_template@@
+    <button id="lia_switchback" class="alike" title="Switch back to: @@lia_name@@" style="padding-bottom: 5px;">
+        @@ echo icon("rotate-left");::none@@
         <span style="padding-left: 2px;">Switch Back</span>
     </button>
-||print_logout_button_switchback_template
+@@print_logout_button_switchback_template
 
-print_logout_button_template||
+print_logout_button_template@@
     <div id="login_box" class="login_box logout" style="padding: 2px 5px 8px;">
-        ||logoutas||
+        @@logoutas@@
         <span class="logout_buttons">
             <span class="pagerole">
-                ||role||
+                @@role@@
             </span>
-            ||profile||
-            <button id="logout" class="alike" title="Log Out">||echo icon("right-from-bracket", 2);::none||</button>
+            @@profile@@
+            <button id="logout" class="alike" title="Log Out">@@echo icon("right-from-bracket", 2);::none@@</button>
         </span>
     </div>
-    ||userlinks||
-||print_logout_button_template
+    @@userlinks@@
+@@print_logout_button_template
 
-get_css_box_template1||
+get_css_box_template1@@
     <div class="box_header pagename_box style_pagenamebordercolor style_pagenamebgcolor" style="border-width: 2px;border-style: solid;">
         <div class="box_title style_pagenamefontcolor">
             <span class="box_title_text">
-                <strong>||title||</strong>
+                <strong>@@title@@</strong>
             </span>
         </div>
-        ||*buttons||
+        @@*buttons@@
     </div>
-||get_css_box_template1
+@@get_css_box_template1
 
-get_css_box_template2||
-    <div ||opendiv||>
+get_css_box_template2@@
+    <div @@opendiv@@>
         <div class="box_header style_titlebgcolor style_bordercolor"  style="border-width: 2px;border-style: solid;">
             <div class="box_title style_titlefontcolor">
-                ||title||
+                @@title@@
             </div>
-            ||*buttons||
+            @@*buttons@@
         </div>
-        <div class="box_content style_bordercolor style_contentbgcolor ||class||" style="border-width: 2px;border-style: solid;border-top: none;||padding||">
-            ||content||
-            ||bottom||
+        <div class="box_content style_bordercolor style_contentbgcolor @@class@@" style="border-width: 2px;border-style: solid;border-top: none;@@padding@@">
+            @@content@@
+            @@bottom@@
         </div>
         <div class="block_divider"></div>
     </div>
-||get_css_box_template2
+@@get_css_box_template2
 
-get_css_box_bottom_template||
+get_css_box_bottom_template@@
     <div class="style_contentbgcolor" style="display:table;width:100%;">
         <div style="float:left;padding-left:2px;">
-            ||bottom_left||
+            @@bottom_left@@
         </div>
         <div style="text-align:center;position:relative;float:left;left:18%;width:60%">
-            ||bottom_center||
+            @@bottom_center@@
         </div>
         <div style="float:right;padding-right:2px;">
-            ||bottom_right||
+            @@bottom_right@@
         </div>
     </div>
-||get_css_box_bottom_template
+@@get_css_box_bottom_template
 
-get_login_form_template||
-    ||echo get_js_tags(["validate"]);::none||
-    ||validation_script||
+get_login_form_template@@
+    @@echo get_js_tags(["validate"]);::none@@
+    @@validation_script@@
     <form id="login_form">
         <fieldset class="formContainer">
             <div class="rowContainer">
                 <label class="rowTitle" for="username">Username</label>
-                <input style="width:100%" type="email" id="username" name="username" autocomplete="username" data-rule-required="true" data-msg-required="||echo getlang("input_required");::none||" />
-                <div class="tooltipContainer info">||input_username||</div>
+                <input style="width:100%" type="email" id="username" name="username" autocomplete="username" data-rule-required="true" data-msg-required="@@echo getlang("input_required");::none@@" />
+                <div class="tooltipContainer info">@@input_username@@</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
                 <label class="rowTitle" for="password">Password</label>
-                <input style="width:100%" type="password" id="password" name="password" autocomplete="current-password" data-rule-required="true" data-msg-required="||echo getlang("input_required");::none||" />
-                <div class="tooltipContainer info">||input_password2||</div>
+                <input style="width:100%" type="password" id="password" name="password" autocomplete="current-password" data-rule-required="true" data-msg-required="@@echo getlang("input_required");::none@@" />
+                <div class="tooltipContainer info">@@input_password2@@</div>
                 <div class="spacer" style="clear: both;"></div>
             </div>
         </fieldset>
         <button name="submit" type="submit" style="margin-left:5px;">
-            ||echo icon("passport");::none||
+            @@echo icon("passport");::none@@
             <span>Sign In</span>
         </button>
         <div class="login_actions">
-            ||newuserlink||
-            ||forgotpasswordlink||
+            @@newuserlink@@
+            @@forgotpasswordlink@@
         </div>
     </form>
     <div id="login_box_error" class="error_text"></div>
-||get_login_form_template
+@@get_login_form_template
 
-get_button_layout_template||
+get_button_layout_template@@
     <div class="slide_menu_wrap">
         <div id="slide_menu" class="slide_menu_invisible slide_menu style_bordercolor" style="border-style: solid;border-width: 1px 0px 1px 0px;">
-            <div id="||featuretype||_||featureid||_buttons" class="slide_button_wrap">
-                ||*buttons||
+            <div id="@@featuretype@@_@@featureid@@_buttons" class="slide_button_wrap">
+                @@*buttons@@
             </div>
         </div>
         <div class="slide_menu slide_menu_tab style_bordercolor" style="border-width:1px;border-style: solid;border-right:none;" onclick="$(this).prev('#slide_menu').animate({width: 'toggle'}, function() { $(this).toggleClass('slide_menu_visible'); })">
-            ||icon||
+            @@icon@@
         </div>
     </div>
     <div style="clear:both"></div>
-||get_button_layout_template
+@@get_button_layout_template
 
-make_search_box_template||
-    <div id="loading_overlay||name_addition{{_||name_addition||//OR//}}name_addition||" class="loading_overlay dontprint" style="display: none;">
-        ||echo icon("spinner fa-spin-pulse");::none||
+make_search_box_template@@
+    <div id="loading_overlay@@name_addition{{_@@name_addition@@//OR//}}name_addition@@" class="loading_overlay dontprint" style="display: none;">
+        @@echo icon("spinner fa-spin-pulse");::none@@
     </div>
-    <span style="min-height: 300px;" id="searchcontainer||name_addition{{_||name_addition||//OR//}}name_addition||">||contents||</span>
-||make_search_box_template
+    <span style="min-height: 300px;" id="searchcontainer@@name_addition{{_@@name_addition@@//OR//}}name_addition@@">@@contents@@</span>
+@@make_search_box_template
 
-format_popup_template||
-    ||*before||
-    <div class="popup_template" style="padding:||padding||;height:||*height||;">
-        <h2 style="text-align:center">||title||</h2>
+format_popup_template@@
+    @@*before@@
+    <div class="popup_template" style="padding:@@padding@@;height:@@*height@@;">
+        <h2 style="text-align:center">@@title@@</h2>
         <br />
-        ||content||
+        @@content@@
     </div>
-||format_popup_template
+@@format_popup_template
 
-keepalive_template||
-    <iframe style="display:none;" src="||wwwroot||/index.php?keepalive=true"></iframe>
-||keepalive_template
+keepalive_template@@
+    <iframe style="display:none;" src="@@wwwroot@@/index.php?keepalive=true"></iframe>
+@@keepalive_template
 
-user_alerts_group||
+user_alerts_group@@
     <div class="alertgroup">
         <div class="alerttitle">
-            ||title||
+            @@title@@
         </div>
-        ||alerts_rows||
+        @@alerts_rows@@
     </div>
-||user_alerts_group
+@@user_alerts_group
 
-user_alerts_row||
+user_alerts_row@@
     <div class="alertrows">
         <div class="alertquestion">
-            ||question||
+            @@question@@
         </div>
         <span>
-            ||buttons||
+            @@buttons@@
         </span>
     </div>
-||user_alerts_row
+@@user_alerts_row
 
-get_user_alerts_template||
+get_user_alerts_template@@
     <span class="centered_span">
         There are no more alerts for you at this time.
     </span>
-||get_user_alerts_template
+@@get_user_alerts_template
 
-validation_tooltip_actions||
+validation_tooltip_actions@@
     $.validator.setDefaults({done: 'valid'});
-	$('#||formname||').validate({
+	$('#@@formname@@').validate({
 		meta: 'validate',
 		submitHandler: function() {
-		    ||code||
+		    @@code@@
 		},
         invalidHandler: function() {
             setTimeout(function() {
@@ -302,14 +302,14 @@ validation_tooltip_actions||
         $(this).parent().find('.info').css('visibility', 'hidden');
         $(this).valid();
     });
-||validation_tooltip_actions
+@@validation_tooltip_actions
 
-reroute_after_login||
-    ||echo js_code_wrap('var dirfromroot = "' . $CFG->directory . '";');::none||
-    ||echo js_code_wrap(fill_template("tmp/pagelib.template", "defer_script"));::none||
-    ||echo get_js_set("main");::none||
+reroute_after_login@@
+    @@echo js_code_wrap('var dirfromroot = "' . $CFG->directory . '";');::none@@
+    @@echo js_code_wrap(fill_template("tmp/pagelib.template", "defer_script"));::none@@
+    @@echo get_js_set("main");::none@@
     <div id="standalone_div">
-        <input type="hidden" id="reroute" value="||url||" />
+        <input type="hidden" id="reroute" value="@@url@@" />
         <div style="width:100%;max-width:400px;text-align:center;margin:auto;">
             <div style="padding:15px">
                 <h3>
@@ -317,29 +317,29 @@ reroute_after_login||
                 </h3>
             </div>
             <div style="text-align:left">
-                ||echo get_login_form(true, false);::none||
+                @@echo get_login_form(true, false);::none@@
             </div>
         </div>
     </div>
-||reroute_after_login
+@@reroute_after_login
 
-centered_error||
+centered_error@@
     <div class="centered">
         <div style="width:100%;max-width: 600px">
             <span class="error_text">
-                ||title||
+                @@title@@
             </span>
             <br />
-            ||*error||
+            @@*error@@
         </div>
     </div>
-||centered_error
+@@centered_error
 
-email_header||
-    <img src="||echo get_protocol() . $CFG->userfilesurl;::none||/branding/logos/||echo $CFG->logofile;::none||" style="max-width: 80%;" /><br />
-||email_header
+email_header@@
+    <img src="@@echo get_protocol() . $CFG->userfilesurl;::none@@/branding/logos/@@echo $CFG->logofile;::none@@" style="max-width: 80%;" /><br />
+@@email_header
 
-multiselect_template||
+multiselect_template@@
     <div class="multiselect_container">
         <div class="multiselect_selected">
             <div class="multiselect_selected_text"></div>
@@ -349,4 +349,4 @@ multiselect_template||
             <ul class="multiselect_options_list"></ul>
         </div>
     </div>
-||multiselect_template
+@@multiselect_template

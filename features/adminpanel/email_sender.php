@@ -40,9 +40,9 @@ ajaxapi([
     "url" => "/features/adminpanel/email_sender_script.php",
     "data" => [
         "action" => "admin_email_send",
-        "email" => "js||$('#emails').val()||js",
-        "subject" => "js||encodeURIComponent($('#subject').val())||js",
-        "message" => 'js||encodeURIComponent(' . get_editor_value_javascript("mass_email") . ')||js',
+        "email" => "js@@$('#emails').val()@@js",
+        "subject" => "js@@encodeURIComponent($('#subject').val())@@js",
+        "message" => 'js@@encodeURIComponent(' . get_editor_value_javascript("mass_email") . ')@@js',
     ],
     "display" => "display",
 ]);

@@ -38,7 +38,7 @@ global $CFG, $MYVARS, $USER;
             "url" => "/ajax/rss_ajax.php",
             "data" => [
                 "action" => "edit_name",
-                "rssname" => "js||encodeURIComponent($('#rssname').val())||js",
+                "rssname" => "js@@encodeURIComponent($('#rssname').val())@@js",
                 "rssid" => $feed["rssid"],
             ],
             "display" => "saved",
@@ -61,7 +61,7 @@ global $CFG, $MYVARS, $USER;
             "url" => "/ajax/rss_ajax.php",
             "data" => [
                 "action" => "add_feed",
-                "rssname" => "js||encodeURIComponent($('#rssname').val())||js",
+                "rssname" => "js@@encodeURIComponent($('#rssname').val())@@js",
                 "key" => $userkey,
                 "pageid" => $pageid,
                 "type" => $feature,

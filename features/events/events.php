@@ -68,9 +68,9 @@ function registration_manager() {
         "url" => "/features/events/events_ajax.php",
         "data" => [
             "action" => "registrationsearch",
-            "pagenum" => "js||pagenum||js",
-            "searchtype" => "js||$('#searchtype').val()||js",
-            "searchwords" => "js||encodeURIComponent(searchwords)||js"],
+            "pagenum" => "js@@pagenum@@js",
+            "searchtype" => "js@@$('#searchtype').val()@@js",
+            "searchwords" => "js@@encodeURIComponent(searchwords)@@js"],
         "display" => "searchcontainer",
         "ondone" => "init_event_menu();",
         "loading" => "loading_overlay",
@@ -83,8 +83,8 @@ function registration_manager() {
         "url" => "/features/events/events_ajax.php",
         "data" => [
             "action" => "show_registrations",
-            "eventid" => "js||eventid||js",
-            "sel" => "js||sel||js",
+            "eventid" => "js@@eventid@@js",
+            "sel" => "js@@sel@@js",
         ],
         "display" => "searchcontainer",
         "ondone" => "init_event_menu();",
@@ -110,8 +110,8 @@ global $CFG;
         "url" => "/features/events/events_ajax.php",
         "data" => [
             "action" => "templatesearch",
-            "pagenum" => "js||pagenum||js",
-            "searchwords" => "js||encodeURIComponent(searchwords)||js",
+            "pagenum" => "js@@pagenum@@js",
+            "searchwords" => "js@@encodeURIComponent(searchwords)@@js",
         ],
         "display" => "searchcontainer",
         "ondone" => "init_event_menu();",
@@ -160,7 +160,7 @@ global $CFG;
             "data" => [
                 "action" => "export_staffapp",
                 "pageid" => $pageid,
-                "year" => "js||$('#appyears').val()||js",
+                "year" => "js@@$('#appyears').val()@@js",
             ],
             "display" => "downloadframe",
         ]);
@@ -184,8 +184,8 @@ global $CFG;
         "url" => "/features/events/events_ajax.php",
         "data" => [
             "action" => "sendstaffemails",
-            "stafflist" => "js||$('#stafflist').val()||js",
-            "sendemails" => "js||$('#sendemails').prop('checked')||js",
+            "stafflist" => "js@@$('#stafflist').val()@@js",
+            "sendemails" => "js@@$('#sendemails').prop('checked')@@js",
         ],
         "display" => "searchcontainer",
         "loading" => "loading_overlay",
@@ -231,7 +231,7 @@ global $CFG;
         "url" => "/features/events/events_ajax.php",
         "data" => [
             "action" => "lookup_reg",
-            "code" => "js||$('#code').val()||js",
+            "code" => "js@@$('#code').val()@@js",
         ],
         "display" => "payarea",
         "event" => "none",
@@ -270,8 +270,8 @@ global $CFG;
             "url" => "/features/events/events_ajax.php",
             "data" => [
                 "action" => "event_request",
-                "stafflist" => "js||$('#stafflist').val()||js",
-                "sendemails" => "js||$('#sendemails').prop('checked')||js",
+                "stafflist" => "js@@$('#stafflist').val()@@js",
+                "sendemails" => "js@@$('#sendemails').prop('checked')@@js",
             ],
             "reqstring" => "request_form",
             "display" => "request_form_div",
@@ -281,7 +281,7 @@ global $CFG;
         $params = [
             "validation" => create_validation_script("request_form" , "request_event();"),
             "request_text" => $request_text,
-            "location" => get_db_field("location", "events_locations", "id = ||id||", ["id" => $locationid]),
+            "location" => get_db_field("location", "events_locations", "id = @@id@@", ["id" => $locationid]),
             "featureid" => $featureid,
             "locationid" => $locationid,
         ];
@@ -322,7 +322,7 @@ global $CFG;
     $end = $allday = "";
 
     if ($eventid && $event = get_event($eventid)) {
-        $location = get_db_row("SELECT * FROM events_locations WHERE id = ||id||", ["id" => $event["location"]]);
+        $location = get_db_row("SELECT * FROM events_locations WHERE id = @@id@@", ["id" => $event["location"]]);
         date_default_timezone_set("UTC");
 
         if ($event['event_begin_date'] != $event['event_end_date']) { // Multi day event
@@ -504,7 +504,7 @@ global $CFG, $USER;
         "url" => "/features/events/events_ajax.php",
         "data" => [
             "action" => "add_location_form",
-            "formtype" => "js||formtype||js",
+            "formtype" => "js@@formtype@@js",
             "eventid" => $eventid,
         ],
         "display" => "location_menu",
@@ -519,7 +519,7 @@ global $CFG, $USER;
         "url" => "/features/events/events_ajax.php",
         "data" => [
             "action" => "get_location_details",
-            "location" => "js||$('#add_location').val()||js",
+            "location" => "js@@$('#add_location').val()@@js",
         ],
         "display" => "location_details_div",
         "event" => "none",
@@ -531,7 +531,7 @@ global $CFG, $USER;
         "url" => "/features/events/events_ajax.php",
         "data" => [
             "action" => "copy_location",
-            "location" => "js||$('#add_location').val()||js",
+            "location" => "js@@$('#add_location').val()@@js",
             "eventid" => $eventid,
         ],
         "display" => "select_location",
@@ -546,9 +546,9 @@ global $CFG, $USER;
         "url" => "/features/events/events_ajax.php",
         "data" => [
             "action" => "get_end_time",
-            "starttime" => "js||$('#begin_time').val()||js",
-            "endtime" => "js||endtime||js",
-            "limit" => "js||limit||js",
+            "starttime" => "js@@$('#begin_time').val()@@js",
+            "endtime" => "js@@endtime@@js",
+            "limit" => "js@@limit@@js",
         ],
         "display" => "end_time_span",
         "event" => "none",
@@ -574,7 +574,7 @@ global $CFG, $USER;
         "url" => "/features/events/events_ajax.php",
         "data" => [
             "action" => "get_limit_form",
-            "template_id" => "js||$('#template').val()||js",
+            "template_id" => "js@@$('#template').val()@@js",
         ],
         "ondone" => "prepareInputsForHints();",
         "display" => "limit_form",
@@ -586,11 +586,11 @@ global $CFG, $USER;
         "url" => "/features/events/events_ajax.php",
         "data" => [
             "action" => "delete_limit",
-            "limit_type" => "js||limit_type||js",
-            "limit_num" => "js||limit_num||js",
-            "hard_limits" => "js||$('#hard_limits').val()||js",
-            "soft_limits" => "js||$('#soft_limits').val()||js",
-            "template_id" => "js||$('#template').val()||js",
+            "limit_type" => "js@@limit_type@@js",
+            "limit_num" => "js@@limit_num@@js",
+            "hard_limits" => "js@@$('#hard_limits').val()@@js",
+            "soft_limits" => "js@@$('#soft_limits').val()@@js",
+            "template_id" => "js@@$('#template').val()@@js",
         ],
         "display" => "custom_limits",
         "event" => "none",

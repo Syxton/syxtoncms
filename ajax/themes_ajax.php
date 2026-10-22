@@ -218,7 +218,7 @@ global $CFG;
 
     //Save selected Theme
     if (!$themeid && $pageid !== $CFG->SITEID) {
-        execute_db_sql("DELETE FROM settings WHERE pageid = ||pageid|| AND setting_name = 'themeid'", ["pageid" => $pageid]);
+        execute_db_sql("DELETE FROM settings WHERE pageid = @@pageid@@ AND setting_name = 'themeid'", ["pageid" => $pageid]);
     } else {
         save_setting(false, ["type" => "page", "pageid" => $pageid, "setting_name" => "themeid"], $themeid);
     }

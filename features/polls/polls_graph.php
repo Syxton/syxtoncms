@@ -20,12 +20,12 @@
     collect_vars();
 
     $pollid = clean_myvar_req("pollid", "int");
-    $area = clean_myvar_opt("area", "string", get_db_field("area", "pages_features", 'feature = "polls" AND featureid = ||pollid||', ["pollid" => $pollid]));
+    $area = clean_myvar_opt("area", "string", get_db_field("area", "pages_features", 'feature = "polls" AND featureid = @@pollid@@', ["pollid" => $pollid]));
 
     if ($pollid && $area) {
         $height = $area == "middle" ? "calc(95dvh - 40px)" : "auto";
         $titlesize = $area == "middle" ? "25" : "15";
-        $poll = get_db_row("SELECT * FROM polls WHERE pollid = ||pollid||", ["pollid" => $pollid]);
+        $poll = get_db_row("SELECT * FROM polls WHERE pollid = @@pollid@@", ["pollid" => $pollid]);
         echo '
         <script type="text/javascript">
             google.charts.load("current", {"packages":["corechart"]});

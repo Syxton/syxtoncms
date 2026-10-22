@@ -1,16 +1,16 @@
-rss_subscribe_feature_template||
+rss_subscribe_feature_template@@
     <div id="add_feed_div">
         <span style="float:left;">
             <strong>
-                ||feed{{ Edit //OR// Add }}feed||RSS Feed
+                @@feed{{ Edit //OR// Add }}feed@@RSS Feed
             </strong>
         </span>
-        ||feed{{
-            <a target="_blank" rel="noopener noreferrer" type="application/atom+xml" style="float:right;display:inline-flex;align-items: center;" href="||wwwroot||/scripts/rss/rss.php?rssid=||rss["rssid"]||&key=||userkey||">
-                ||echo icon([["icon" => "square", "stacksize" => 2, "color" => "white"], ["icon" => "square-rss"],]);::none||
+        @@feed{{
+            <a target="_blank" rel="noopener noreferrer" type="application/atom+xml" style="float:right;display:inline-flex;align-items: center;" href="@@wwwroot@@/scripts/rss/rss.php?rssid=@@rss["rssid"]@@&key=@@userkey@@">
+                @@echo icon([["icon" => "square", "stacksize" => 2, "color" => "white"], ["icon" => "square-rss"],]);::none@@
                 <span>Subscribe</span>
             </a>
-        }}feed||
+        }}feed@@
         <br />
         <br />
         <div style="display:flex;align-items: center;">
@@ -18,13 +18,13 @@ rss_subscribe_feature_template||
                 Feed Title:
             </span>
             <div style="width: 100%;padding-right: 5px;">
-                <input type="text" id="rssname" style="width: 100%" value="||rss["rssname"]||"/>
+                <input type="text" id="rssname" style="width: 100%" value="@@rss["rssname"]@@"/>
             </div>
             <button id="rss_modify_button" />
-                ||echo icon("floppy-disk");::none||
+                @@echo icon("floppy-disk");::none@@
                 <span>Save</span>
             </button>
         </div>
         <div id="saved" style="text-align: center;"></div>
     </div>
-||rss_subscribe_feature_template
+@@rss_subscribe_feature_template

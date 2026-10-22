@@ -55,7 +55,7 @@ global $CFG, $USER;
         "url" => "/features/pics/pics_ajax.php",
         "data" => [
             "action" => "new_gallery",
-            "param" => "js||$('#new_gallery').val()||js",
+            "param" => "js@@$('#new_gallery').val()@@js",
             "pageid" => $pageid,
         ],
         "event" => "change",

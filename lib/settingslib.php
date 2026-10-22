@@ -207,10 +207,10 @@ function make_setting_input($info, $settingid = false, $value = "", $savebutton 
         "url" => "/ajax/site_ajax.php",
         "data" => [
             "action" => "save_settings",
-            "settingid" => "js||settingid||js",
-            "setting" => "js||encodeURIComponent($('#' + name).val())||js",
+            "settingid" => "js@@settingid@@js",
+            "setting" => "js@@encodeURIComponent($('#' + name).val())@@js",
         ],
-        "display" => "js||name||js_results",
+        "display" => "js@@name@@js_results",
         "ondone" => "setTimeout(function() { clear_display(name +'_results'); }, 5000);",
         "event" => "none",
     ]);
@@ -248,7 +248,7 @@ function save_setting($settingid = false, $settinginfo = [], $value = false, $ex
                 if ($field !== "defaultsetting") {
                     if (isset($settinginfo[$field]) && $settinginfo[$field] !== false) {
                         $idsql .= $idsql == "" ? "" : " AND "; // Add AND if not first field.
-                        $idsql .= "$field = ||$field||";
+                        $idsql .= "$field = @@$field@@";
                                 $params[$field] = $settinginfo[$field];
                     }
                 }
@@ -274,16 +274,16 @@ function save_setting($settingid = false, $settinginfo = [], $value = false, $ex
             if ($index == "value" || $index == "extravalue") { // Setting values.
                 if ($$index !== false) { // Check $value or $extravalue is set.
                     $sqlfields .= empty($sqlfields) ? "" : ", "; // Add comma if not first field.
-                    $sqlfields .= "$field = ||$field||";
+                    $sqlfields .= "$field = @@$field@@";
                     $params[$field] = $$index;
                 }
             } elseif (isset($settinginfo[$field]) && $settinginfo[$field] !== false) { // Standard fields from default array.
                 $sqlfields .= empty($sqlfields) ? "" : ", "; // Add comma if not first field.
-                $sqlfields .= "$field = ||$field||"; // Add field set statement.
+                $sqlfields .= "$field = @@$field@@"; // Add field set statement.
                 $params[$field] = $settinginfo[$field];
             }
         }
-        $SQL = "UPDATE settings SET $sqlfields WHERE settingid = ||settingid||";
+        $SQL = "UPDATE settings SET $sqlfields WHERE settingid = @@settingid@@";
     } else {
         // Setting has never been created.  Let's insert a row in the settings table.
         foreach ($fields as $index => $field) {
@@ -301,7 +301,7 @@ function save_setting($settingid = false, $settinginfo = [], $value = false, $ex
                 $sqlfields .= empty($sqlfields) ? "" : ", "; // Add comma if not first field.
                 $sqlfields .= $field; // Add field to list of fields.
                 $sqlvalues .= empty($sqlvalues) ? "" : ", "; // Add comma if not first field.
-                $sqlvalues .= "||$field||"; // Add value to list of values.
+                $sqlvalues .= "@@$field@@"; // Add value to list of values.
                 $params[$field] = $settinginfo[$field];
             }
         }

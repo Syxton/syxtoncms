@@ -26,7 +26,7 @@ global $CFG, $USER, $ROLES, $PAGE, $STYLES;
     $preview = isset($STYLES->preview) ? true : false;
     if (!$pageid) { $pageid = $CFG->SITEID; }
 
-    $title = get_db_field("name", "pages", "pageid = ||pageid||", ["pageid" => $pageid]);
+    $title = get_db_field("name", "pages", "pageid = @@pageid@@", ["pageid" => $pageid]);
     $rolename = get_db_field("display_name", "roles", "roleid=" . user_role($USER->userid, $pageid));
     $buttons = $userid = $button_layout = NULL;
     $browse_vars = "";
@@ -132,7 +132,7 @@ global $CFG, $ROLES, $USER;
             "url" => "/ajax/page_ajax.php",
             "data" => [
                 "action" => "unlink_page",
-                "linkpageid" => "js||linkpageid||js",
+                "linkpageid" => "js@@linkpageid@@js",
                 "pageid" => $pageid,
             ],
             "event" => "none",

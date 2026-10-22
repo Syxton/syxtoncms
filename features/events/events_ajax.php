@@ -228,7 +228,7 @@ global $CFG, $PAGE;
     $voteid = clean_myvar_req("voteid", "string");
 
     // Make sure request exists and get the featureid
-    if (!$featureid = get_db_field("featureid", "events_requests", "reqid = ||reqid||", ["reqid" => $reqid])) {
+    if (!$featureid = get_db_field("featureid", "events_requests", "reqid = @@reqid@@", ["reqid" => $reqid])) {
         throw new Exception(getlang("old_request", "/features/events"));
     }
 
@@ -263,7 +263,7 @@ global $CFG, $MYVARS;
     $question = strip_tags(trim($question, " \n\r\t"),'<a><em><u><img><br>');
 
     // Make sure request exists and get the featureid
-    if (!$featureid = get_db_field("featureid", "events_requests", "reqid = ||reqid||", ["reqid" => $reqid])) {
+    if (!$featureid = get_db_field("featureid", "events_requests", "reqid = @@reqid@@", ["reqid" => $reqid])) {
         throw new Exception(getlang("old_request", "/features/events"));
     }
 
@@ -286,7 +286,7 @@ global $CFG, $MYVARS;
         throw new Exception(getlang("generic_error"));
     }
 
-    if (!$request = get_db_row("SELECT * FROM events_requests WHERE reqid = ||reqid||", ["reqid" => $reqid])) {
+    if (!$request = get_db_row("SELECT * FROM events_requests WHERE reqid = @@reqid@@", ["reqid" => $reqid])) {
         throw new Exception(getlang("old_request", "/features/events"));
     }
 
@@ -356,7 +356,7 @@ global $CFG, $PAGE;
     $qid = $qid === false ? clean_myvar_opt("qid", "int", 0) : $qid;
 
     // Make sure request exists and get the featureid
-    if (!$featureid = get_db_field("featureid", "events_requests", "reqid = ||reqid||", ["reqid" => $reqid])) {
+    if (!$featureid = get_db_field("featureid", "events_requests", "reqid = @@reqid@@", ["reqid" => $reqid])) {
         throw new Exception(getlang("old_request", "/features/events"));
     }
 
@@ -387,7 +387,7 @@ global $CFG;
     $answer = strip_tags(trim($answer, " \n\r\t"),'<a><em><u><img><br>');
 
     // Make sure request exists and get the featureid
-    if (!$featureid = get_db_field("featureid", "events_requests", "reqid = ||reqid||", ["reqid" => $reqid])) {
+    if (!$featureid = get_db_field("featureid", "events_requests", "reqid = @@reqid@@", ["reqid" => $reqid])) {
         throw new Exception(getlang("old_request", "/features/events"));
     }
 
@@ -399,9 +399,9 @@ global $CFG;
         save_batch_settings(default_settings("events", $pageid, $featureid));
         $settings = fetch_settings("events", $featureid, $pageid);
     }
-    $request = get_db_row("SELECT * FROM events_requests WHERE reqid = ||reqid||", ["reqid" => $reqid]);
+    $request = get_db_row("SELECT * FROM events_requests WHERE reqid = @@reqid@@", ["reqid" => $reqid]);
 
-    $SQL = "UPDATE events_requests_questions set answer = ||answer||, answer_time = ||answer_time|| WHERE id = ||id||";
+    $SQL = "UPDATE events_requests_questions set answer = @@answer@@, answer_time = @@answer_time@@ WHERE id = @@id@@";
     if (!execute_db_sql($SQL, ["answer" => $answer, "answer_time" => get_timestamp(), "id" => $qid])) {
         throw new Exception(getlang("generic_error"));
     }
@@ -420,8 +420,8 @@ global $CFG;
 
     $request_summary = get_request_summary($reqid);
 
-    $question = get_db_field("question", "events_requests_questions", "id = ||id||", ["id" => $qid]);
-    $answer = get_db_field("answer", "events_requests_questions", "id = ||id||", ["id" => $qid]);
+    $question = get_db_field("question", "events_requests_questions", "id = @@id@@", ["id" => $qid]);
+    $answer = get_db_field("answer", "events_requests_questions", "id = @@id@@", ["id" => $qid]);
     $message_answer = fill_template("tmp/events.template", "events_request_answer_email", "events", [
         "event_name" => $request["event_name"],
         "question" => $question,
@@ -484,7 +484,7 @@ global $CFG, $PAGE, $MYVARS;
         $stance = $newvote ? "approve" : "deny";
 
         // Make sure request exists and get the featureid
-        if (!$featureid = get_db_field("featureid", "events_requests", "reqid = ||reqid||", ["reqid" => $reqid])) {
+        if (!$featureid = get_db_field("featureid", "events_requests", "reqid = @@reqid@@", ["reqid" => $reqid])) {
             throw new Exception(getlang("old_request", "/features/events"));
         }
 
@@ -861,7 +861,7 @@ global $CFG, $MYVARS, $USER;
                 $params["entryid_" . $entry["entryid"]] =  $entry["entryid"];
                 $params["entryvalue_" . $entry["entryid"]] =  clean_myvar_opt($entry["entryid"], "string", "");
                 $SQL .= $SQL == "" ? "" : ",";
-                $SQL .= "(||entryid_" . $entry["entryid"] . "||, ||entryvalue_" . $entry["entryid"] . "||)";
+                $SQL .= "(@@entryid_" . $entry["entryid"] . "@@, @@entryvalue_" . $entry["entryid"] . "@@)";
             }
         }
         $SQL = "INSERT INTO temp_updates (entryid, newvalue) VALUES" . $SQL;
@@ -871,17 +871,17 @@ global $CFG, $MYVARS, $USER;
                 $paid = (float) get_reg_paid($regid);
                 $payment_method = get_reg_paymethod($regid);
 
-                $minimum = get_db_field("fee_min", "events", "eventid = ||eventid||", ["eventid" => $eventid]);
-                $verified = get_db_field("verified", "events_registrations", "regid = ||regid||", ["regid" => $regid]);
+                $minimum = get_db_field("fee_min", "events", "eventid = @@eventid@@", ["eventid" => $eventid]);
+                $verified = get_db_field("verified", "events_registrations", "regid = @@regid@@", ["regid" => $regid]);
                 if ($paid >= $minimum) {
                     if (empty($verified)) { // Not already verified.
                         // If payment is made, it is no longer in queue.
                         execute_db_sql(fetch_template("dbsql/events.sql", "update_reg_status", "events"), ["regid" => $regid, "verified" => 1]);
 
                         $touser = (object) [
-                            "fname" => get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname='Camper_Name_First'", ["regid" => $regid]),
-                            "lname" => get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname='Camper_Name_Last'", ["regid" => $regid]),
-                            "email" => get_db_field("email", "events_registrations", "regid = ||regid||", ["regid" => $regid]),
+                            "fname" => get_db_field("value", "events_registrations_values", "regid = @@regid@@ AND elementname='Camper_Name_First'", ["regid" => $regid]),
+                            "lname" => get_db_field("value", "events_registrations_values", "regid = @@regid@@ AND elementname='Camper_Name_Last'", ["regid" => $regid]),
+                            "email" => get_db_field("email", "events_registrations", "regid = @@regid@@", ["regid" => $regid]),
                         ];
 
                         $fromuser = (object) [
@@ -946,7 +946,7 @@ global $CFG;
         $event = get_event($eventid);
 
         $touser = (object)[
-            'email' => get_db_field("email", "events_registrations", "regid=||regid||", ["regid" => $regid]),
+            'email' => get_db_field("email", "events_registrations", "regid=@@regid@@", ["regid" => $regid]),
             'fname' => get_registrant_name($regid),
             'lname' => "",
         ];
@@ -1271,7 +1271,7 @@ function get_custom_registration_report($eventid, $fields, $sortby = false) {
                 $value = get_db_field(
                     "value",
                     "events_registrations_values",
-                    "regid = ||regid|| AND elementname = ||elementname||",
+                    "regid = @@regid@@ AND elementname = @@elementname@@",
                     [
                         "regid" => $registration["regid"],
                         "elementname" => strtolower($field),
@@ -1450,7 +1450,7 @@ function load_show_registrations_javascript($eventid) {
         "data" => [
             "action" => "print_registration",
             "eventid" => $eventid,
-            "online_only" => "js|| $('#print_registrations').val() ||js",
+            "online_only" => "js@@ $('#print_registrations').val() @@js",
         ],
         "display" => "searchcontainer",
         "loading" => "loading_overlay",
@@ -1462,7 +1462,7 @@ function load_show_registrations_javascript($eventid) {
         "url" => "/features/events/events_ajax.php",
         "data" => [
             "action" => "add_blank_registration_ajax",
-            "reserveamount" => "js|| $('#reserveamount').val() ||js",
+            "reserveamount" => "js@@ $('#reserveamount').val() @@js",
             "eventid" => $eventid,
         ],
         "ondone" => "show_registrations($eventid);",
@@ -1476,8 +1476,8 @@ function load_show_registrations_javascript($eventid) {
         "data" => [
             "action" => "custom_registration_report",
             "eventid" => $eventid,
-            "report_fields" => "js|| $('#report_fields').val() ||js",
-            "sort_by_field" => "js|| $('#sort_by_field').val() ||js",
+            "report_fields" => "js@@ $('#report_fields').val() @@js",
+            "sort_by_field" => "js@@ $('#sort_by_field').val() @@js",
         ],
         "display" => "searchcontainer",
         "loading" => "loading_overlay",
@@ -1492,7 +1492,7 @@ function load_registrations_menu_javascript($callback) {
         "url" => "/features/events/events_ajax.php",
         "data" => [
             "action" => "delete_registration_info",
-            "regid" => "js|| regid ||js",
+            "regid" => "js@@ regid @@js",
         ],
         "ondone" => "$callback;",
         "loading" => "loading_overlay",
@@ -1506,8 +1506,8 @@ function load_registrations_menu_javascript($callback) {
         "url" => "/features/events/events_ajax.php",
         "data" => [
             "action" => "get_registration_info",
-            "regid" => "js|| regid ||js",
-            "eventid" => "js|| eventid ||js",
+            "regid" => "js@@ regid @@js",
+            "eventid" => "js@@ eventid @@js",
         ],
         "display" => "searchcontainer",
         "loading" => "loading_overlay",
@@ -1521,9 +1521,9 @@ function load_registrations_menu_javascript($callback) {
         "url" => "/features/events/events_ajax.php",
         "data" => [
             "action" => "resend_registration_email",
-            "regid" => "js|| regid ||js",
-            "eventid" => "js|| eventid ||js",
-            "preview" => "js|| preview ||js"
+            "regid" => "js@@ regid @@js",
+            "eventid" => "js@@ eventid @@js",
+            "preview" => "js@@ preview @@js"
         ],
         "display" => "searchcontainer",
         "loading" => "loading_overlay",
@@ -1537,8 +1537,8 @@ function load_registrations_menu_javascript($callback) {
         "url" => "/features/events/events_ajax.php",
         "data" => [
             "action" => "print_registration",
-            "regid" => "js|| regid ||js",
-            "eventid" => "js|| eventid ||js"
+            "regid" => "js@@ regid @@js",
+            "eventid" => "js@@ eventid @@js"
         ],
         "display" => "searchcontainer",
         "loading" => "loading_overlay",
@@ -1575,7 +1575,7 @@ global $CFG, $USER;
         if ($searchtype == "events") {
             while (isset($words[$i])) {
                 $searchparams["words$i"] = "%" . $words[$i] . "%";
-                $searchpart = "(name LIKE ||words$i||)";
+                $searchpart = "(name LIKE @@words$i@@)";
                 $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
                 $i++;
             }
@@ -1588,7 +1588,7 @@ global $CFG, $USER;
         } else {
             while (isset($words[$i])) {
                 $searchparams["words$i"] = "%" . $words[$i] . "%";
-                $searchpart = "(LOWER(v.elementname) LIKE '%name%' AND value LIKE ||words$i||)";
+                $searchpart = "(LOWER(v.elementname) LIKE '%name%' AND value LIKE @@words$i@@)";
                 $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
                 $i++;
             }
@@ -1632,8 +1632,8 @@ global $CFG, $USER;
                     "url" => "/features/events/events_ajax.php",
                     "data" => [
                         "action" => "export_registrations",
-                        "pagieid" => "js||pageid||js",
-                        "eventid" => "js||eventid||js",
+                        "pagieid" => "js@@pageid@@js",
+                        "eventid" => "js@@eventid@@js",
                     ],
                     "display" => "downloadframe",
                     "event" => "none",
@@ -1758,7 +1758,7 @@ global $CFG, $MYVARS, $USER;
 
     $return = $error = "";
     try {
-        $SQL = "SELECT * FROM events_registrations WHERE code = ||code||";
+        $SQL = "SELECT * FROM events_registrations WHERE code = @@code@@";
         if (strlen($code) <= 5 || !$registration = get_db_row($SQL, ["code" => $code])) {
             $return = '
                 <div style="text-align:center;padding: 20px">
@@ -1767,7 +1767,7 @@ global $CFG, $MYVARS, $USER;
             goto instant_end;
         }
 
-        $SQL = "SELECT * FROM events WHERE eventid = ||eventid|| AND fee_full != 0";
+        $SQL = "SELECT * FROM events WHERE eventid = @@eventid@@ AND fee_full != 0";
         if (!$event = get_db_row($SQL, ["eventid" => $registration["eventid"]])) {
             $return = '
                 <div style="text-align:center;padding: 20px">
@@ -1795,7 +1795,7 @@ global $CFG, $MYVARS, $USER;
                 "data" => [
                     "action" => "makepayment",
                     "regid" => $registration["regid"],
-                    "amount" => "js||$('#payment_amount').val()||js",
+                    "amount" => "js@@$('#payment_amount').val()@@js",
                 ],
                 "display" => "paymentarea",
             ]);
@@ -2120,7 +2120,7 @@ function get_limit_form() {
         if ($template["folder"] == "none") {
             $SQL = "SELECT *
                     FROM events_templates_forms
-                    WHERE template_id = ||template_id||
+                    WHERE template_id = @@template_id@@
                     AND type != 'payment'";
             $values = get_db_result($SQL, ["template_id" => $template_id]);
         } else {
@@ -2301,7 +2301,7 @@ global $CFG, $MYVARS;
     $eventid = clean_myvar_opt("eventid", "int", false);
     $pageid = clean_myvar_opt("pageid", "int", false);
     if (!$pageid && $eventid) {
-        $pageid = get_db_field("pageid", "events", "eventid = ||eventid||", ["eventid" => $eventid]);
+        $pageid = get_db_field("pageid", "events", "eventid = @@eventid@@", ["eventid" => $eventid]);
     }
     $name = clean_myvar_req("event_name", "string");
 
@@ -2545,7 +2545,7 @@ function add_location_form() {
                 "url" => "/features/events/events_ajax.php",
                 "data" => [
                     "action" => "add_new_location",
-                    "eventid" => "js||$('#eventid').length ? $('#eventid').val() : 0||js",
+                    "eventid" => "js@@$('#eventid').length ? $('#eventid').val() : 0@@js",
                 ],
                 "display" => "select_location",
                 "ondone" => "$('#location_status').html('Location Added'); reset_location_menu(); setTimeout('clear_display(\'location_status\')', 5000);",
@@ -2560,7 +2560,7 @@ function add_location_form() {
                     "action" => "unique_relay",
                     "table" => "events_locations",
                     "key" => "location",
-                    "value" => "js||$('#location_name').val()||js",
+                    "value" => "js@@$('#location_name').val()@@js",
                 ],
                 "event" => "none",
             ]);
@@ -2588,7 +2588,7 @@ function add_contact_form() {
                 "url" => "/features/events/events_ajax.php",
                 "data" => [
                     "action" => "add_new_contact",
-                    "eventid" => "js||$('#eventid').length ? $('#eventid').val() : 0||js",
+                    "eventid" => "js@@$('#eventid').length ? $('#eventid').val() : 0@@js",
                 ],
                 "display" => "select_contact",
                 "ondone" => "$('#contact_status').html('Contact Added'); reset_contact_menu(); setTimeout('clear_display(\'contact_status\')', 5000);",
@@ -2603,7 +2603,7 @@ function add_contact_form() {
                     "action" => "unique_relay",
                     "table" => "events_contacts",
                     "key" => "name",
-                    "value" => "js||$('#contact_name').val()||js",
+                    "value" => "js@@$('#contact_name').val()@@js",
                 ],
                 "event" => "none",
             ]);
@@ -2648,8 +2648,8 @@ global $USER;
     $eventid = clean_myvar_opt("eventid", "int", false);
     $location = clean_myvar_req("location", "int");
     execute_db_sql("UPDATE events_locations
-                    SET userid = CONCAT(userid,||userid||)
-                    WHERE id = ||id||", ["id" => $location, "userid" => $USER->userid . ","]);
+                    SET userid = CONCAT(userid,@@userid@@)
+                    WHERE id = @@id@@", ["id" => $location, "userid" => $USER->userid . ","]);
     $return = get_my_locations($USER->userid, $location, $eventid);
 
     ajax_return($return);
@@ -2657,7 +2657,7 @@ global $USER;
 
 function get_location_details() {
     $location = clean_myvar_req("location", "int");
-    $row = get_db_row("SELECT * FROM events_locations WHERE id = ||id||", ["id" => $location]);
+    $row = get_db_row("SELECT * FROM events_locations WHERE id = @@id@@", ["id" => $location]);
 
     $return = '
         <strong>' . $row['location'] . '</strong>
@@ -2735,7 +2735,7 @@ global $CFG, $USER;
 
     if ($registrations = get_db_result("SELECT *
                                         FROM events_registrations
-                                        WHERE eventid = ||eventid||
+                                        WHERE eventid = @@eventid@@
                                         AND queue = 0
                                         AND verified = 0", ["eventid" => $eventid])) {
         $CSV .= "\nPENDING\n";
@@ -2743,7 +2743,7 @@ global $CFG, $USER;
             $row = date("F j g:i a", $regid["date"]) . "," . $regid["email"];
             $values = get_db_result("SELECT *
                                      FROM events_registrations_values
-                                     WHERE regid = ||regid||
+                                     WHERE regid = @@regid@@
                                      ORDER BY entryid", ["regid" => $regid["regid"]]);
             $reorder = [];
             while ($value = fetch_row($values)) {
@@ -2761,7 +2761,7 @@ global $CFG, $USER;
             } else {
                 $formlist = get_db_result("SELECT *
                                            FROM events_templates_forms
-                                           WHERE template_id = ||template_id||
+                                           WHERE template_id = @@template_id@@
                                            ORDER BY sort", ["template_id" => $event['template_id']]);
                 $sortby = "elementid";
                 while ($form = fetch_row($formlist)) {
@@ -2774,14 +2774,14 @@ global $CFG, $USER;
 
     if ($registrations = get_db_result("SELECT *
                                         FROM events_registrations
-                                        WHERE eventid = ||eventid||
+                                        WHERE eventid = @@eventid@@
                                         AND queue = 1", ["eventid" => $eventid])) {
         $CSV .= "\nQUEUE\n";
         while ($regid = fetch_row($registrations)) {
             $row = date("F j g:i a", $regid["date"]) . "," . $regid["email"];
             $values = get_db_result("SELECT *
                                      FROM events_registrations_values
-                                     WHERE regid = ||regid||
+                                     WHERE regid = @@regid@@
                                      ORDER BY entryid", ["regid" => $regid["regid"]]);
             $reorder = [];
             while ($value = fetch_row($values)) {
@@ -2799,7 +2799,7 @@ global $CFG, $USER;
             } else {
                 $formlist = get_db_result("SELECT *
                                             FROM events_templates_forms
-                                            WHERE template_id = ||template_id||
+                                            WHERE template_id = @@template_id@@
                                             ORDER BY sort", ["template_id" => $event['template_id']]);
                 $sortby = "elementid";
                   while ($form = fetch_row($formlist)) {
@@ -2901,7 +2901,7 @@ global $CFG, $USER;
         $words = explode(" ", $dbsearchwords);
         while (isset($words[$i])) {
             $searchparams["words$i"] = "%" . $words[$i] . "%";
-            $searchpart = "(name LIKE ||words$i||)";
+            $searchpart = "(name LIKE @@words$i@@)";
             $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
             $i++;
         }
@@ -2930,8 +2930,8 @@ global $CFG, $USER;
                 'url' => '/features/events/events_ajax.php',
                 'data' => [
                     'action' => 'change_template_status',
-                    'status' => "js||status||js",
-                    'template_id' => "js||template_id||js",
+                    'status' => "js@@status@@js",
+                    'template_id' => "js@@template_id@@js",
                 ],
                 "loading" => "loading_overlay",
                 "event" => "none",
@@ -2956,7 +2956,7 @@ global $CFG, $USER;
                     ]);
                 }
 
-                $version = empty($template["folder"]) ? "N/A" : get_db_field("setting", "settings", "setting_name='version' AND type='events_template' AND extra = ||folder||", ["folder" => $template["folder"]]);
+                $version = empty($template["folder"]) ? "N/A" : get_db_field("setting", "settings", "setting_name='version' AND type='events_template' AND extra = @@folder@@", ["folder" => $template["folder"]]);
                 $rowparams = [
                     "name" => $template["name"],
                     "type" => $template["folder"] == "none" ? icon("database") : icon("folder"),
@@ -3013,11 +3013,11 @@ function change_bgcheck_status() {
     $date = clean_myvar_opt("bgcdate", "string", "");
 
     if ($pageid && $staffid && $date) {
-        execute_db_sql("UPDATE events_staff SET bgcheckpassdate = ||bgcheckpassdate|| WHERE staffid = ||staffid|| AND pageid = ||pageid||", ["staffid" => $staffid, "pageid" => $pageid, "bgcheckpassdate" => strtotime($date)]);
-        execute_db_sql("UPDATE events_staff_archive SET bgcheckpassdate = ||bgcheckpassdate|| WHERE staffid = ||staffid|| AND year = '" . date('Y') . "' AND pageid = ||pageid||", ["staffid" => $staffid, "pageid" => $pageid, "bgcheckpassdate" => strtotime($date)]);
+        execute_db_sql("UPDATE events_staff SET bgcheckpassdate = @@bgcheckpassdate@@ WHERE staffid = @@staffid@@ AND pageid = @@pageid@@", ["staffid" => $staffid, "pageid" => $pageid, "bgcheckpassdate" => strtotime($date)]);
+        execute_db_sql("UPDATE events_staff_archive SET bgcheckpassdate = @@bgcheckpassdate@@ WHERE staffid = @@staffid@@ AND year = '" . date('Y') . "' AND pageid = @@pageid@@", ["staffid" => $staffid, "pageid" => $pageid, "bgcheckpassdate" => strtotime($date)]);
     } elseif ($pageid && $staffid && !$date) {
-        execute_db_sql("UPDATE events_staff SET bgcheckpassdate = 0 WHERE staffid = ||staffid|| AND pageid = ||pageid||", ["staffid" => $staffid, "pageid" => $pageid]);
-        execute_db_sql("UPDATE events_staff_archive SET bgcheckpassdate = 0 WHERE staffid = ||staffid|| AND year = '" . date('Y') . "' AND pageid = ||pageid||", ["staffid" => $staffid, "pageid" => $pageid]);
+        execute_db_sql("UPDATE events_staff SET bgcheckpassdate = 0 WHERE staffid = @@staffid@@ AND pageid = @@pageid@@", ["staffid" => $staffid, "pageid" => $pageid]);
+        execute_db_sql("UPDATE events_staff_archive SET bgcheckpassdate = 0 WHERE staffid = @@staffid@@ AND year = '" . date('Y') . "' AND pageid = @@pageid@@", ["staffid" => $staffid, "pageid" => $pageid]);
     }
     appsearch();
 }
@@ -3044,13 +3044,13 @@ global $CFG, $USER;
             $name = "";
             $email = trim($email);
             if (strpos($email, '@') !== false) { // It is an email address, so let's get an email ready.
-                $user = get_db_row("SELECT * FROM users WHERE LOWER(email) LIKE LOWER(||email||)", ["email" => "%$email%"]);
+                $user = get_db_row("SELECT * FROM users WHERE LOWER(email) LIKE LOWER(@@email@@)", ["email" => "%$email%"]);
 
                 $greeting = "Hello future staff member!,";
                 if ($user) {
                     $name = $user["fname"] . " " . $user["lname"];
                     $greeting = "Hello " . trim($name) . "!,";
-                    $archive = get_db_row("SELECT * FROM events_staff WHERE userid = ||userid|| LIMIT 1", ["userid" => $user["userid"]]);
+                    $archive = get_db_row("SELECT * FROM events_staff WHERE userid = @@userid@@ LIMIT 1", ["userid" => $user["userid"]]);
                     $status = staff_status($archive);
                     $action1 = "login.";
                     $action2 = "<li>If you have previously applied, the information from your previous application should already be filled in. Please update any information as needed.</li>";
@@ -3182,7 +3182,7 @@ global $CFG, $USER;
         $words = explode(" ", $dbsearchwords);
         while (isset($words[$i])) {
             $searchparams["words$i"] = "%" . $words[$i] . "%";
-            $searchpart = "(s.name LIKE ||words$i||)";
+            $searchpart = "(s.name LIKE @@words$i@@)";
             $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
             $i++;
         }
@@ -3216,10 +3216,10 @@ global $CFG, $USER;
                 "url" => "/features/events/events_ajax.php",
                 "data" => [
                     "action" => "change_bgcheck_status",
-                    "staffid" => "js||staffid||js",
-                    "bgcdate" => "js||$('#bgcheckdate_' + staffid).val()||js",
+                    "staffid" => "js@@staffid@@js",
+                    "bgcdate" => "js@@$('#bgcheckdate_' + staffid).val()@@js",
                     "pagenum" => $pagenum,
-                    "searchwords" => "js||encodeURIComponent('$searchwords')||js"],
+                    "searchwords" => "js@@encodeURIComponent('$searchwords')@@js"],
                 "display" => "searchcontainer",
                 "loading" => "loading_overlay",
                 "event" => "none",
@@ -3232,9 +3232,9 @@ global $CFG, $USER;
                 "url" => "/features/events/events_ajax.php",
                 "data" => [
                     "action" => "show_staff_app",
-                    "staffid" => "js||staffid||js",
+                    "staffid" => "js@@staffid@@js",
                     "pagenum" => $pagenum,
-                    "searchwords" => "js||encodeURIComponent('$searchwords')||js"],
+                    "searchwords" => "js@@encodeURIComponent('$searchwords')@@js"],
                 "display" => "searchcontainer",
                 "loading" => "loading_overlay",
                 "event" => "none",
@@ -3294,7 +3294,7 @@ $returnme = '
             "title" => "Return to Staff Applications",
         ]);
 
-    if ($archive = get_db_result("SELECT * FROM events_staff_archive WHERE staffid = ||staffid|| ORDER BY year", ["staffid" => $staffid])) {
+    if ($archive = get_db_result("SELECT * FROM events_staff_archive WHERE staffid = @@staffid@@ ORDER BY year", ["staffid" => $staffid])) {
         $i = -1;
         $values = (object) [];
         while ($vals = fetch_row($archive)) {
@@ -3319,7 +3319,7 @@ $returnme = '
             "if" => "$('#year_$staffid').val() > 0",
             "id" => "year_$staffid",
             "url" => "/features/events/events_ajax.php",
-            "data" => ["action" => "show_staff_app", "staffid" => $staffid, "pagenum" => $pagenum, "year" => "js|| $('#year_$staffid').val() ||js", "searchwords" => "js||encodeURIComponent('$searchwords')||js"],
+            "data" => ["action" => "show_staff_app", "staffid" => $staffid, "pagenum" => $pagenum, "year" => "js@@ $('#year_$staffid').val() @@js", "searchwords" => "js@@encodeURIComponent('$searchwords')@@js"],
             "display" => "searchcontainer",
             "loading" => "loading_overlay",
             "event" => "change",
@@ -3491,7 +3491,7 @@ global $MYVARS, $CFG, $USER;
             $bgd_ts = (int)($app['bgcheckpassdate'] ?? 0);
             if ($bgd_ts <= 0 && (int)$year === (int)date('Y') && !empty($app['staffid'])) {
                 $live = get_db_row(
-                    "SELECT bgcheckpassdate FROM events_staff WHERE staffid = ||sid|| AND pageid = ||pageid||",
+                    "SELECT bgcheckpassdate FROM events_staff WHERE staffid = @@sid@@ AND pageid = @@pageid@@",
                     ["sid" => $app["staffid"], "pageid" => $pageid]
                 );
                 if ($live) {
@@ -3544,11 +3544,11 @@ function edit_promocode_set() {
             "url" => "/features/events/events_ajax.php",
             "data" => [
                 "action" => "save_promocode",
-                "codeid" => "js||codeid||js",
+                "codeid" => "js@@codeid@@js",
                 "setid" => $setid,
                 "pageid" => $set["pageid"],
             ],
-            "reqstring" => "codejs||codeid||js",
+            "reqstring" => "codejs@@codeid@@js",
             "display" => "promocodemanager",
             "loading" => "loading_overlay",
             "event" => "none",
@@ -3561,7 +3561,7 @@ function edit_promocode_set() {
             "url" => "/features/events/events_ajax.php",
             "data" => [
                 "action" => "delete_promocode",
-                "codeid" => "js||codeid||js",
+                "codeid" => "js@@codeid@@js",
                 "setid" => $setid,
                 "pageid" => $set["pageid"],
             ],
@@ -3892,7 +3892,7 @@ function location_manager() {
         "url" => "/features/events/events_ajax.php",
         "data" => [
             "action" => "show_location_editor",
-            "locationid" => "js||$('#locations').val()||js",
+            "locationid" => "js@@$('#locations').val()@@js",
         ],
         "display" => "locationeditorcontainer",
         "loading" => "loading_overlay",
@@ -3938,7 +3938,7 @@ function show_location_editor() {
         "url" => "/features/events/events_ajax.php",
         "data" => [
             "action" => "save_location_changes",
-            "locationid" => "js||$('#locations').val()||js",
+            "locationid" => "js@@$('#locations').val()@@js",
         ],
         "display" => "locationeditorcontainer",
         "reqstring" => "locationeditorform",
@@ -3972,7 +3972,7 @@ function show_location_editor() {
                 "if" => "confirm('Are you sure you want to delete this location?')",
                 "data" => [
                     "action" => "delete_location",
-                    "locationid" => "js||$('#locations').val()||js",
+                    "locationid" => "js@@$('#locations').val()@@js",
                 ],
                 "display" => "locationeditorcontainer",
                 "ondone" => "location_manager();",
@@ -3997,8 +3997,8 @@ function show_location_editor() {
                     "else" => "alert('Please select a location to reassign events to before deleting.');",
                     "data" => [
                         "action" => "reassign_delete_location",
-                        "locationid" => "js||$('#locations').val()||js",
-                        "reassignto" => "js||$('#reassignto').val()||js",
+                        "locationid" => "js@@$('#locations').val()@@js",
+                        "reassignto" => "js@@$('#reassignto').val()@@js",
                     ],
                     "display" => "locationeditorcontainer",
                     "ondone" => "location_manager();",
@@ -4013,8 +4013,8 @@ function show_location_editor() {
                     "else" => "alert('Please select a location to reassign events to.');",
                     "data" => [
                         "action" => "reassign_location",
-                        "locationid" => "js||$('#locations').val()||js",
-                        "reassignto" => "js||$('#reassignto').val()||js",
+                        "locationid" => "js@@$('#locations').val()@@js",
+                        "reassignto" => "js@@$('#reassignto').val()@@js",
                     ],
                     "display" => "locationeditorcontainer",
                     "ondone" => "location_manager();",
@@ -4149,7 +4149,7 @@ function contact_manager() {
         "url" => "/features/events/events_ajax.php",
         "data" => [
             "action" => "show_contact_editor",
-            "contactid" => "js||$('#contacts').val()||js",
+            "contactid" => "js@@$('#contacts').val()@@js",
         ],
         "display" => "contacteditorcontainer",
         "loading" => "loading_overlay",
@@ -4199,7 +4199,7 @@ function show_contact_editor() {
         "url" => "/features/events/events_ajax.php",
         "data" => [
             "action" => "save_contact_changes",
-            "contactid" => "js||$('#contacts').val()||js",
+            "contactid" => "js@@$('#contacts').val()@@js",
         ],
         "display" => "contacteditorcontainer",
         "reqstring" => "contacteditorform",
@@ -4232,7 +4232,7 @@ function show_contact_editor() {
                 "if" => "confirm('Are you sure you want to delete this contact?')",
                 "data" => [
                     "action" => "delete_contact",
-                    "contactid" => "js||$('#contacts').val()||js",
+                    "contactid" => "js@@$('#contacts').val()@@js",
                 ],
                 "display" => "contacteditorcontainer",
                 "ondone" => "contact_manager();",
@@ -4257,8 +4257,8 @@ function show_contact_editor() {
                     "else" => "alert('Please select a contact to reassign events to before deleting.');",
                     "data" => [
                         "action" => "reassign_delete_contact",
-                        "contactid" => "js||$('#contacts').val()||js",
-                        "reassignto" => "js||$('#reassignto').val()||js",
+                        "contactid" => "js@@$('#contacts').val()@@js",
+                        "reassignto" => "js@@$('#reassignto').val()@@js",
                     ],
                     "display" => "contacteditorcontainer",
                     "ondone" => "contact_manager();",
@@ -4273,8 +4273,8 @@ function show_contact_editor() {
                     "else" => "alert('Please select a contact to reassign events to.');",
                     "data" => [
                         "action" => "reassign_contact",
-                        "contactid" => "js||$('#contacts').val()||js",
-                        "reassignto" => "js||$('#reassignto').val()||js",
+                        "contactid" => "js@@$('#contacts').val()@@js",
+                        "reassignto" => "js@@$('#reassignto').val()@@js",
                     ],
                     "display" => "contacteditorcontainer",
                     "ondone" => "contact_manager();",
@@ -4483,7 +4483,7 @@ function staff_form_save_field() {
     $extra_attrs = [];
     $fieldid_tmp = clean_myvar_opt("fieldid", "int", 0);
     if ($fieldid_tmp) {
-        $existing = get_db_row("SELECT extra_attrs FROM form_fields WHERE fieldid=||id||", ['id' => $fieldid_tmp]);
+        $existing = get_db_row("SELECT extra_attrs FROM form_fields WHERE fieldid=@@id@@", ['id' => $fieldid_tmp]);
         if ($existing && !empty($existing['extra_attrs'])) {
             $prev = is_string($existing['extra_attrs']) ? json_decode($existing['extra_attrs'], true) : $existing['extra_attrs'];
             if (is_array($prev)) {
@@ -4641,11 +4641,11 @@ function staff_form_save_field() {
         // Match by fieldid only — seeded defaults use pageid=0, not the current page
         execute_db_sql(
             "UPDATE form_fields SET
-                field_key=||field_key||, label=||label||, type=||type||, section=||section||,
-                sortorder=||sortorder||, required=||required||, active=||active||, helptext=||helptext||,
-                visibility=||visibility||, required_when=||required_when||, extra_attrs=||extra_attrs||,
-                options=||options||, modified=||now||
-             WHERE fieldid=||fieldid||",
+                field_key=@@field_key@@, label=@@label@@, type=@@type@@, section=@@section@@,
+                sortorder=@@sortorder@@, required=@@required@@, active=@@active@@, helptext=@@helptext@@,
+                visibility=@@visibility@@, required_when=@@required_when@@, extra_attrs=@@extra_attrs@@,
+                options=@@options@@, modified=@@now@@
+             WHERE fieldid=@@fieldid@@",
             $params
         );
     } else {
@@ -4653,7 +4653,7 @@ function staff_form_save_field() {
         $form_key = defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app';
         $exists = get_db_row(
             "SELECT fieldid FROM form_fields
-             WHERE form_key=||fk|| AND field_key=||key|| AND (pageid=0 OR pageid=||pageid||) LIMIT 1",
+             WHERE form_key=@@fk@@ AND field_key=@@key@@ AND (pageid=0 OR pageid=@@pageid@@) LIMIT 1",
             ['pageid' => $pageid, 'key' => $field_key, 'fk' => $form_key]
         );
         if ($exists) {
@@ -4667,7 +4667,7 @@ function staff_form_save_field() {
             "INSERT INTO form_fields
                 (form_key, pageid, field_key, label, type, section, sortorder, required, active, helptext, visibility, required_when, extra_attrs, options, is_system, created, modified)
              VALUES
-                (||form_key||, ||pageid||, ||field_key||, ||label||, ||type||, ||section||, ||sortorder||, ||required||, ||active||, ||helptext||, ||visibility||, ||required_when||, ||extra_attrs||, ||options||, 0, ||now||, ||now||)",
+                (@@form_key@@, @@pageid@@, @@field_key@@, @@label@@, @@type@@, @@section@@, @@sortorder@@, @@required@@, @@active@@, @@helptext@@, @@visibility@@, @@required_when@@, @@extra_attrs@@, @@options@@, 0, @@now@@, @@now@@)",
             $params
         );
     }
@@ -4688,12 +4688,12 @@ function staff_form_delete_field() {
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     $form_key = defined("FORM_KEY_STAFF_APP") ? FORM_KEY_STAFF_APP : "staff_app";
     $fieldid = clean_myvar_req("fieldid", "int");
-    $row = get_db_row("SELECT * FROM form_fields WHERE fieldid=||id||", ['id' => $fieldid]);
+    $row = get_db_row("SELECT * FROM form_fields WHERE fieldid=@@id@@", ['id' => $fieldid]);
     if ($row) {
         if (function_exists('form_engine_unbind_field')) {
             form_engine_unbind_field($form_key, $row['field_key'] ?? '', $pageid);
         }
-        execute_db_sql("DELETE FROM form_fields WHERE fieldid=||id||", ['id' => $fieldid]);
+        execute_db_sql("DELETE FROM form_fields WHERE fieldid=@@id@@", ['id' => $fieldid]);
     }
     ajax_return(staff_form_editor_ui($pageid));
 }
@@ -4806,7 +4806,7 @@ function staff_form_reorder() {
             }
             // Match by fieldid only (defaults live on pageid=0)
             execute_db_sql(
-                "UPDATE form_fields SET sortorder=||s||, modified=||m|| WHERE fieldid=||id||",
+                "UPDATE form_fields SET sortorder=@@s@@, modified=@@m@@ WHERE fieldid=@@id@@",
                 ['s' => $sort, 'id' => $id, 'm' => time()]
             );
             $sort += 10;

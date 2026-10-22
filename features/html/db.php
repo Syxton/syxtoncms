@@ -74,12 +74,12 @@ function html_upgrade() {
                     'htmlid' => $comment['htmlid'],
                     'parentid' => $comment['commentid'],
                 ];
-                $SQL = "SELECT * FROM html_replies WHERE commentid = ||commentid|| ORDER BY replyid";
+                $SQL = "SELECT * FROM html_replies WHERE commentid = @@commentid@@ ORDER BY replyid";
                 if ($replies = get_db_result($SQL, ['commentid' => $comment['commentid']])) {
                     while ($reply = fetch_row($replies)) {
                         $params['userid'] = $reply['userid'];
                         $params['reply'] = $reply['reply'];
-                        $SQL = "INSERT INTO html_comments (userid, comment, htmlid, parentid) VALUES (||userid||, ||reply||, ||htmlid||, ||parentid||)";
+                        $SQL = "INSERT INTO html_comments (userid, comment, htmlid, parentid) VALUES (@@userid@@, @@reply@@, @@htmlid@@, @@parentid@@)";
                         execute_db_sql($SQL, $params);
                     }
                 }

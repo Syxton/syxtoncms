@@ -109,7 +109,7 @@ global $CFG;
         try {
             start_db_transaction();
             add_role_ability('roles', 'removeownrole', 'Roles', '2', 'Can remove own role from page', '1', '1', '1', '1');
-            $SQL = "UPDATE settings SET setting = ||setting|| WHERE type = ||type|| AND setting_name = ||setting_name||";
+            $SQL = "UPDATE settings SET setting = @@setting@@ WHERE type = @@type@@ AND setting_name = @@setting_name@@";
             execute_db_sql($SQL, ['setting' => $thisversion, 'type' => 'site', 'setting_name' => 'version']);
             commit_db_transaction();
         } catch (\Throwable $e) {
@@ -130,7 +130,7 @@ global $CFG;
             add_role_ability('filemanager', 'filemanager_migrate',      'Filemanager', '2', 'Can migrate files and folders', '1', '1', '0', '0');
             add_role_ability('filemanager', 'filemanager_edit',      'Filemanager', '3', 'Can migrate files and folders', '1', '1', '0', '0');
 
-            $SQL = "UPDATE settings SET setting = ||setting|| WHERE type = ||type|| AND setting_name = ||setting_name||";
+            $SQL = "UPDATE settings SET setting = @@setting@@ WHERE type = @@type@@ AND setting_name = @@setting_name@@";
             execute_db_sql($SQL, ['setting' => $thisversion, 'type' => 'site', 'setting_name' => 'version']);
             commit_db_transaction();
         } catch (\Throwable $e) {

@@ -1,103 +1,103 @@
-custom_theme_styles||
+custom_theme_styles@@
 	SELECT *, 1 as ranky
 	FROM styles
-	WHERE pageid = ||pageid||
-	AND themeid = ||themeid||
+	WHERE pageid = @@pageid@@
+	AND themeid = @@themeid@@
 	UNION
 	SELECT *, 2 as ranky
 	FROM styles
-	WHERE pageid = ||pageid||
-	AND themeid = ||themeid||
-	AND feature = ||feature||
+	WHERE pageid = @@pageid@@
+	AND themeid = @@themeid@@
+	AND feature = @@feature@@
 	AND featureid = 0
 	UNION
 	SELECT *, 3 as ranky
 	FROM styles
-	WHERE pageid = ||pageid||
-	AND themeid = ||themeid||
-	AND feature = ||feature||
-	AND featureid = ||featureid||
+	WHERE pageid = @@pageid@@
+	AND themeid = @@themeid@@
+	AND feature = @@feature@@
+	AND featureid = @@featureid@@
 	UNION
 	SELECT *, 4 as ranky
 	FROM styles
 	WHERE pageid = 0
 	AND forced = 1
-	AND feature = ||feature||
+	AND feature = @@feature@@
 	AND featureid = 0
 	ORDER BY ranky
-||custom_theme_styles
+@@custom_theme_styles
 
-saved_theme_styles||
+saved_theme_styles@@
 	SELECT *, 1 as ranky
 	FROM styles
-	WHERE themeid = ||themeid||
+	WHERE themeid = @@themeid@@
 	UNION
 	SELECT *, 2 as ranky
 	FROM styles
-	WHERE themeid = ||themeid||
-	AND feature = ||feature||
+	WHERE themeid = @@themeid@@
+	AND feature = @@feature@@
 	AND featureid = 0
 	UNION
 	SELECT *, 3 as ranky
 	FROM styles
-	WHERE themeid = ||themeid||
-	AND feature = ||feature||
-	AND featureid = ||featureid||
+	WHERE themeid = @@themeid@@
+	AND feature = @@feature@@
+	AND featureid = @@featureid@@
 	UNION
 	SELECT *, 4 as ranky
 	FROM styles
 	WHERE pageid = 0
 	AND forced = 1
-	AND feature = ||feature||
+	AND feature = @@feature@@
 	AND featureid = 0
 	ORDER BY ranky
-||saved_theme_styles
+@@saved_theme_styles
 
-parent_theme_styles||
+parent_theme_styles@@
 	SELECT *, 1 as ranky
 	FROM styles
 	WHERE pageid = 0
-	AND themeid = ||themeid||
+	AND themeid = @@themeid@@
 	AND feature <= ''
 	UNION
 	SELECT *, 2 as ranky
 	FROM styles
-	WHERE pageid = ||pageid||
-	AND themeid = ||themeid||
-	AND feature = ||feature||
+	WHERE pageid = @@pageid@@
+	AND themeid = @@themeid@@
+	AND feature = @@feature@@
 	AND featureid = 0
 	UNION
 	SELECT *, 3 as ranky
 	FROM styles
-	WHERE pageid = ||pageid||
-	AND feature = ||feature||
-	AND featureid = ||featureid||
-	AND themeid = ||themeid||
+	WHERE pageid = @@pageid@@
+	AND feature = @@feature@@
+	AND featureid = @@featureid@@
+	AND themeid = @@themeid@@
 	UNION
 	SELECT *, 4 as ranky
 	FROM styles
 	WHERE pageid = 0
 	AND forced = 1
-	AND feature = ||feature||
+	AND feature = @@feature@@
 	AND featureid = 0
-	AND themeid = ||themeid||
+	AND themeid = @@themeid@@
 	ORDER BY ranky DESC
-||parent_theme_styles
+@@parent_theme_styles
 
-theme_selector_sql||
+theme_selector_sql@@
 	SELECT *, 9999 as sort
 	FROM themes
-	||notsite{{
+	@@notsite{{
 	UNION
 	SELECT '', 'None', 1
-	}}notsite||
+	}}notsite@@
 	UNION
 	SELECT '0', 'Custom', 2
 	ORDER BY sort
-||theme_selector_sql
+@@theme_selector_sql
 
-delete_page_styles||
+delete_page_styles@@
 	DELETE
 	FROM `styles`
-	WHERE pageid = ||pageid||;
-||delete_page_styles
+	WHERE pageid = @@pageid@@;
+@@delete_page_styles

@@ -1,7 +1,7 @@
-polls_edit_form||
+polls_edit_form@@
     <h3>Edit Poll</h3>
-    <input id="savedstartdate" type="hidden" value="||savedstart||" />
-    <input id="savedstopdate" type="hidden" value="||savedstop||" />
+    <input id="savedstartdate" type="hidden" value="@@savedstart@@" />
+    <input id="savedstopdate" type="hidden" value="@@savedstop@@" />
     <input id="lasthint" type="hidden" />
     <div id="edit_html_div">
         <form id="polls_edit_form">
@@ -11,7 +11,7 @@ polls_edit_form||
                         Poll Question:
                     </td>
                     <td class="field_input">
-                        <input type="text" id="polls_question" size="30" value="||question||"/>
+                        <input type="text" id="polls_question" size="30" value="@@question@@"/>
                         <span class="hint">This is the question of your poll ex. (What is your favorite fruit?)
                     </td>
                 </tr><tr><td></td><td class="field_input"><span id="question_error" class="error_text"></span></td></tr>
@@ -20,7 +20,7 @@ polls_edit_form||
                         Poll Answers:
                     </td>
                     <td class="field_input">
-                        <input type="text" id="polls_answers" size="30" value="||answers||"/>
+                        <input type="text" id="polls_answers" size="30" value="@@answers@@"/>
                         <span class="hint">These are the answers to your poll, comma delimited. <br /> ex. (Apples,Oranges,Pears)
                     </td>
                 </tr><tr><td></td><td class="field_input"><span id="answers_error" class="error_text"></span></td></tr>
@@ -31,7 +31,7 @@ polls_edit_form||
                         Start Date:
                     </td>
                     <td class="field_input">
-                        <input type="checkbox" id="startdateenabled" onclick="hide_show_span('startdatespan')" /> (optional) ||startdate||
+                        <input type="checkbox" id="startdateenabled" onclick="hide_show_span('startdatespan')" /> (optional) @@startdate@@
                     </td>
                 </tr>
                 <tr>
@@ -40,7 +40,7 @@ polls_edit_form||
                     </td>
                     <td class="field_input">
                         <div id="startdatespan" style="display:none;">
-                            <input type="date" id="startdate" name="startdate" value="||savedstart||">
+                            <input type="date" id="startdate" name="startdate" value="@@savedstart@@">
                         </div>
                     </td>
                 </tr><tr><td></td><td class="field_input"><div id="startdate_error" class="error_text"></div></td></tr>
@@ -49,7 +49,7 @@ polls_edit_form||
                         Stop Date:
                     </td>
                     <td class="field_input">
-                        <input type="checkbox" id="stopdateenabled" onclick="hide_show_span('stopdatespan')" /> (optional) ||stopdate||
+                        <input type="checkbox" id="stopdateenabled" onclick="hide_show_span('stopdatespan')" /> (optional) @@stopdate@@
                     </td>
                 </tr>
                 <tr>
@@ -57,7 +57,7 @@ polls_edit_form||
                     </td>
                     <td class="field_input">
                         <div id="stopdatespan" style="display:none;">
-                            <input type="date" id="stopdate" name="stopdate" value="||savedstop||">
+                            <input type="date" id="stopdate" name="stopdate" value="@@savedstop@@">
                         </div>
                     </td>
                 </tr><tr><td></td><td class="field_input"><div id="stopdate_error" class="error_text"></div></td></tr>
@@ -70,4 +70,4 @@ polls_edit_form||
             </table>
         </form>
     </div>
-||polls_edit_form
+@@polls_edit_form

@@ -102,7 +102,7 @@ function migrate_staff_form_data($pageid = null) {
             $data['workerconsentsig'] = $wsig;
             $data['parentalconsentsig'] = $psig;
             execute_db_sql(
-                "UPDATE events_staff SET form_data = ||fd||, workerconsentsig = ||wsig||, parentalconsentsig = ||psig|| WHERE staffid = ||id||",
+                "UPDATE events_staff SET form_data = @@fd@@, workerconsentsig = @@wsig@@, parentalconsentsig = @@psig@@ WHERE staffid = @@id@@",
                 [
                     'fd' => json_encode($data, JSON_UNESCAPED_UNICODE),
                     'wsig' => $wsig,
@@ -124,7 +124,7 @@ function migrate_staff_form_data($pageid = null) {
             $data['workerconsentsig'] = $wsig;
             $data['parentalconsentsig'] = $psig;
             execute_db_sql(
-                "UPDATE events_staff_archive SET form_data = ||fd||, workerconsentsig = ||wsig||, parentalconsentsig = ||psig|| WHERE archiveid = ||id||",
+                "UPDATE events_staff_archive SET form_data = @@fd@@, workerconsentsig = @@wsig@@, parentalconsentsig = @@psig@@ WHERE archiveid = @@id@@",
                 [
                     'fd' => json_encode($data, JSON_UNESCAPED_UNICODE),
                     'wsig' => $wsig,
@@ -188,8 +188,8 @@ function staff_form_column_exists($table, $column) {
     $row = get_db_row(
         "SELECT COUNT(*) AS cnt FROM information_schema.COLUMNS
          WHERE TABLE_SCHEMA = DATABASE()
-           AND TABLE_NAME = ||t||
-           AND COLUMN_NAME = ||c||",
+           AND TABLE_NAME = @@t@@
+           AND COLUMN_NAME = @@c@@",
         ['t' => $table, 'c' => $column]
     );
     return $row && (int)$row['cnt'] > 0;
@@ -228,8 +228,8 @@ function staff_form_migration_status() {
             $row = get_db_row(
                 "SELECT COUNT(*) AS cnt FROM information_schema.COLUMNS
                  WHERE TABLE_SCHEMA = DATABASE()
-                   AND TABLE_NAME = ||t||
-                   AND COLUMN_NAME = ||c||",
+                   AND TABLE_NAME = @@t@@
+                   AND COLUMN_NAME = @@c@@",
                 ['t' => $table, 'c' => $col]
             );
             if ($row && (int)$row['cnt'] > 0) {
@@ -327,8 +327,8 @@ function drop_deprecated_staff_columns() {
             $row = get_db_row(
                 "SELECT COUNT(*) AS cnt FROM information_schema.COLUMNS
                  WHERE TABLE_SCHEMA = DATABASE()
-                   AND TABLE_NAME = ||table||
-                   AND COLUMN_NAME = ||column||",
+                   AND TABLE_NAME = @@table@@
+                   AND COLUMN_NAME = @@column@@",
                 ['table' => $table, 'column' => $col]
             );
             if ($row && (int)$row['cnt'] > 0) {

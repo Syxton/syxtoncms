@@ -156,8 +156,8 @@ global $CFG;
 
 function take_poll_form($pageid, $pollid, $area) {
     $answers = "";
-    $poll = get_db_row("SELECT * FROM polls WHERE pollid = ||pollid||", ["pollid" => $pollid]);
-    if ($result = get_db_result("SELECT * FROM polls_answers WHERE pollid = ||pollid|| ORDER BY sort", ["pollid" => $pollid])) {
+    $poll = get_db_row("SELECT * FROM polls WHERE pollid = @@pollid@@", ["pollid" => $pollid]);
+    if ($result = get_db_result("SELECT * FROM polls_answers WHERE pollid = @@pollid@@ ORDER BY sort", ["pollid" => $pollid])) {
         while ($answer = fetch_row($result)) {
             $answers .= '<input type="radio" name="poll' . $pollid . '" value="' . $answer["answerid"] . '" /> ' . htmlentities($answer["answer"]) . '<br />';
         }
@@ -170,7 +170,7 @@ function take_poll_form($pageid, $pollid, $area) {
             "action" => "submitanswer",
             "pageid" => $pageid,
             "featureid" => $pollid,
-            "extra" => "js||getRadioValue('poll" . $pollid . "')||js",
+            "extra" => "js@@getRadioValue('poll" . $pollid . "')@@js",
         ],
         "display" => "polldiv$pollid",
     ]);
@@ -238,7 +238,7 @@ global $CFG;
     try {
         start_db_transaction();
         if ($featureid = execute_db_sql(fetch_template("dbsql/polls.sql", "insert_poll", $type), ["pageid" => $pageid])) {
-            $area = get_db_field("default_area", "features", "feature = ||feature||", ["feature" => $type]);
+            $area = get_db_field("default_area", "features", "feature = @@feature@@", ["feature" => $type]);
             $sort = get_db_count(fetch_template("dbsql/features.sql", "get_features_by_page_area"), ["pageid" => $pageid, "area" => $area]) + 1;
             $params = [
                 "pageid" => $pageid,
@@ -266,7 +266,7 @@ global $USER;
     $canopen = user_is_able($USER->userid, "openpolls", $pageid, "polls", $featureid);
     $canclose = user_is_able($USER->userid, "closepolls", $pageid, "polls", $featureid);
 
-    $pollstatus = get_db_field("status", "polls", "pollid = ||pollid||", ["pollid" => $featureid]);
+    $pollstatus = get_db_field("status", "polls", "pollid = @@pollid@@", ["pollid" => $featureid]);
     if (($pollstatus < 2 && $canedit) || ($pollstatus == 2 && $caneditopen)) { //Poll not created yet
         $return .= make_modal_links([
             "title"=> "Edit Feature",

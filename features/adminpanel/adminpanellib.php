@@ -309,7 +309,7 @@ function get_adminpanel_alerts($userid, $countonly = true) {
             "data" => [
                 "action" => "refresh_user_alerts",
                 "userid" => $userid,
-                "approve" => "js||approve||js",
+                "approve" => "js@@approve@@js",
             ],
             "event" => "none",
             "display" => "user_alerts_div",
@@ -322,8 +322,8 @@ function get_adminpanel_alerts($userid, $countonly = true) {
             "paramlist" => "requestid, approve, display",
             "data" => [
                 "action" => "allow_page_request",
-                "requestid" => "js||requestid||js",
-                "approve" => "js||approve||js",
+                "requestid" => "js@@requestid@@js",
+                "approve" => "js@@approve@@js",
             ],
             "ondone" => "if (istrue(data)) { refresh_user_alerts(); }",
             "event" => "none",

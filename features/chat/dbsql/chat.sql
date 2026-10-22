@@ -1,5 +1,5 @@
-delete_chat||
+delete_chat@@
   DELETE
   FROM chat
-  WHERE pageid = ||pageid||
-||delete_chat
+  WHERE pageid = @@pageid@@
+@@delete_chat

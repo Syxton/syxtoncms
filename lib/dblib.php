@@ -182,7 +182,7 @@ global $conn;
 }
 
 function insert_result_data_as_var($vars, $result) {
-    $pattern = '/\|\|result\[([0-9]+)\]\|\|/i'; //Look for stuff between ||xxx||
+    $pattern = '/@@result\[([0-9]+)\]@@/i';
     foreach ($vars as $key => $value) {
         preg_match_all($pattern, $value, $matches);
         foreach ($matches[1] as $match) {
@@ -197,10 +197,10 @@ function insert_result_data_as_var($vars, $result) {
 }
 
 function insert_result_data_as_template($SQL, $result) {
-    $pattern = '/(\|\|result\[[0-9]+\]\|\|)/i'; //Look for stuff between ||xxx||
+    $pattern = '/(@@result\[[0-9]+\]@@)/i';
     preg_match_all($pattern, $SQL, $matches);
     foreach ($matches[1] as $match) {
-        $pattern = '/\|\|result\[([0-9]+)\]\|\|/i'; //Look for stuff between ||xxx||
+        $pattern = '/@@result\[([0-9]+)\]@@/i';
         preg_match_all($pattern, $match, $keys);
         foreach ($keys[1] as $key) {
             if (is_numeric($key)) {
@@ -242,7 +242,7 @@ function build_prepared_variables($SQL, $vars, $pattern) {
     $data = [];
     preg_match_all($pattern, $SQL, $matches);
     foreach ($matches[0] as $match) {
-        $variablename = trim($match, "|\"'"); // cuts off template tags leaving only xxx
+        $variablename = trim($match, "@\"'"); // cuts off template tags leaving only xxx
         if (isset($vars[$variablename])) {
             $data[] = $vars[$variablename];
             $typestring .= find_var_type($vars[$variablename]);

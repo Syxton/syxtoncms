@@ -60,7 +60,7 @@ global $CFG;
         "url" => "/ajax/page_ajax.php",
         "data" => [
             "action" => "pagesearch",
-            "searchwords" => "js||encodeURIComponent($('#searchbox').val())||js",
+            "searchwords" => "js@@encodeURIComponent($('#searchbox').val())@@js",
         ],
         "event" => "submit",
         "loading" => "loading_overlay_pagesearch",
@@ -82,7 +82,7 @@ global $CFG;
 		"url" => "/ajax/page_ajax.php",
 		"data" => [
 			"action" => "usersearch",
-			"searchwords" => "js||encodeURIComponent($('#searchbox').val())||js",
+			"searchwords" => "js@@encodeURIComponent($('#searchbox').val())@@js",
 		],
 		"event" => "submit",
 		"loading" => "loading_overlay_usersearch",
@@ -103,7 +103,7 @@ global $CFG, $MYVARS, $ROLES, $USER;
             $content .= getlang("generic_permissions");
             return;
         }
-        $page = get_db_row("SELECT * FROM pages WHERE pageid = ||pageid||", ["pageid" => $pageid]);
+        $page = get_db_row("SELECT * FROM pages WHERE pageid = @@pageid@@", ["pageid" => $pageid]);
         $name = $page["name"];
         $description = $page["description"];
         $keywords = $page["keywords"];
@@ -139,14 +139,14 @@ global $CFG, $MYVARS, $ROLES, $USER;
             "url" => "/ajax/page_ajax.php",
             "data" => [
                 "action" => "edit_page",
-                "name" => "js||encodeURIComponent($('#name').val())||js",
-                "description" => "js||encodeURIComponent($('#summary').val())||js",
-                "keywords" => "js||encodeURIComponent($('#keywords').val())||js",
-                "defaultrole" => "js||encodeURIComponent($('#role_select').val())||js",
-                "opendoor" => "js||encodeURIComponent($('#opendoor').val())||js",
-                "siteviewable" => "js||encodeURIComponent($('#siteviewable').val())||js",
-                "menu_page" => "js||encodeURIComponent($('#menu_page').val())||js",
-                "hidefromvisitors" => "js||encodeURIComponent($('#hidefromvisitors').val())||js",
+                "name" => "js@@encodeURIComponent($('#name').val())@@js",
+                "description" => "js@@encodeURIComponent($('#summary').val())@@js",
+                "keywords" => "js@@encodeURIComponent($('#keywords').val())@@js",
+                "defaultrole" => "js@@encodeURIComponent($('#role_select').val())@@js",
+                "opendoor" => "js@@encodeURIComponent($('#opendoor').val())@@js",
+                "siteviewable" => "js@@encodeURIComponent($('#siteviewable').val())@@js",
+                "menu_page" => "js@@encodeURIComponent($('#menu_page').val())@@js",
+                "hidefromvisitors" => "js@@encodeURIComponent($('#hidefromvisitors').val())@@js",
                 "pageid" => $pageid,
             ],
             "ondone" => "close_modal();",
@@ -160,14 +160,14 @@ global $CFG, $MYVARS, $ROLES, $USER;
             "url" => "/ajax/page_ajax.php",
             "data" => [
                 "action" => "create_page",
-                "name" => "js||encodeURIComponent($('#name').val())||js",
-                "description" => "js||encodeURIComponent($('#summary').val())||js",
-                "keywords" => "js||encodeURIComponent($('#keywords').val())||js",
-                "defaultrole" => "js||encodeURIComponent($('#role_select').val())||js",
-                "opendoor" => "js||encodeURIComponent($('#opendoor').val())||js",
-                "siteviewable" => "js||encodeURIComponent($('#siteviewable').val())||js",
-                "menu_page" => "js||encodeURIComponent($('#menu_page').val())||js",
-                "hidefromvisitors" => "js||encodeURIComponent($('#hidefromvisitors').val())||js",
+                "name" => "js@@encodeURIComponent($('#name').val())@@js",
+                "description" => "js@@encodeURIComponent($('#summary').val())@@js",
+                "keywords" => "js@@encodeURIComponent($('#keywords').val())@@js",
+                "defaultrole" => "js@@encodeURIComponent($('#role_select').val())@@js",
+                "opendoor" => "js@@encodeURIComponent($('#opendoor').val())@@js",
+                "siteviewable" => "js@@encodeURIComponent($('#siteviewable').val())@@js",
+                "menu_page" => "js@@encodeURIComponent($('#menu_page').val())@@js",
+                "hidefromvisitors" => "js@@encodeURIComponent($('#hidefromvisitors').val())@@js",
             ],
             "ondone" => "var pageid = parseInt(data.message) || 0; if (pageid !== 0) { self.parent.go_to_page(pageid); }",
             "event" => "none",
@@ -175,7 +175,7 @@ global $CFG, $MYVARS, $ROLES, $USER;
         $content .= create_validation_script("create_page_form", "valid_create_page_form();");
     }
 
-    $SQL = 'SELECT * FROM roles WHERE roleid > ||creator|| AND roleid < ||none|| ORDER BY roleid DESC';
+    $SQL = 'SELECT * FROM roles WHERE roleid > @@creator@@ AND roleid < @@none@@ ORDER BY roleid DESC';
     $roleselector = [
             "properties" => [
             "name" => "role_select",

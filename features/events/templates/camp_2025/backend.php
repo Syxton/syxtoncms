@@ -73,7 +73,7 @@ function add_registration_to_cart() {
         "data" => [
             "action" => "remove_registration",
             "checkout" => $checkout,
-            "hash" => "js||hash||js",
+            "hash" => "js@@hash@@js",
         ],
         "reqstring" => "form1",
         "display" => "refreshableregcart",
@@ -117,7 +117,7 @@ function remove_registration() {
         "data" => [
             "action" => "remove_registration",
             "checkout" => $checkout,
-            "hash" => "js||hash||js",
+            "hash" => "js@@hash@@js",
         ],
         "display" => "refreshableregcart",
         "event" => "none",

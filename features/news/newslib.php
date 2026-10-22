@@ -191,7 +191,7 @@ global $CFG;
                 "action" => "update_archive_months",
                 "featureid" => $featureid,
                 "pageid" => $pageid,
-                "year" => "js||$('#news_" . $featureid . "_archive_year').val()||js",
+                "year" => "js@@$('#news_" . $featureid . "_archive_year').val()@@js",
             ],
             "event" => "change",
             "display" => "month_span_" . $featureid . "_archive",
@@ -206,8 +206,8 @@ global $CFG;
                 "action" => "update_archive_articles",
                 "featureid" => $featureid,
                 "pageid" => $pageid,
-                "year" => "js||$('#news_" . $featureid . "_archive_year').val()||js",
-                "month" => "js||$('#news_" . $featureid . "_archive_month').val()||js",
+                "year" => "js@@$('#news_" . $featureid . "_archive_year').val()@@js",
+                "month" => "js@@$('#news_" . $featureid . "_archive_month').val()@@js",
             ],
             "event" => "change",
             "display" => "article_span_" . $featureid . "_archive",
@@ -608,7 +608,7 @@ function insert_blank_news($pageid) {
         start_db_transaction();
         fetch_template("dbsql/news.sql", "insert_news_feature", "news");
         if ($featureid = execute_db_sql(fetch_template("dbsql/news.sql", "insert_news_feature", $type), ["pageid" => $pageid, "lastupdate" => get_timestamp()])) {
-            $area = get_db_field("default_area", "features", "feature = ||feature||", ["feature" => $type]);
+            $area = get_db_field("default_area", "features", "feature = @@feature@@", ["feature" => $type]);
             $sort = get_db_count(fetch_template("dbsql/features.sql", "get_features_by_page_area"), ["pageid" => $pageid, "area" => $area]) + 1;
             $params = [
                 "pageid" => $pageid,
@@ -655,7 +655,7 @@ $return = "";
                     "subid" => $featureid,
                     "pageid" => $pageid,
                     "featuretype" => $featuretype,
-                    "month" => "js||$('#news_" . $featureid . "_archive_month').val()||js",
+                    "month" => "js@@$('#news_" . $featureid . "_archive_month').val()@@js",
                 ],
                 "ondone" => "go_to_page(' . $pageid . ');",
             ]);

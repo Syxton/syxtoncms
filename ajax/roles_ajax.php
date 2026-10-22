@@ -92,7 +92,7 @@ function get_name_search_actions($type, $pageid, $feature = false, $featureid = 
             "data" => [
                 "action" => "refresh_user_roles",
                 "pageid" => $pageid,
-                "userid" => "js||$('#" . $type . "_user_select').val()||js",
+                "userid" => "js@@$('#" . $type . "_user_select').val()@@js",
             ],
             "display" => $type . "_roles_div",
         ]);
@@ -107,7 +107,7 @@ function get_name_search_actions($type, $pageid, $feature = false, $featureid = 
                 "pageid" => $pageid,
                 "feature" => $feature,
                 "featureid" => $featureid,
-                "userid" => "js||$('#" . $type . "_user_select').val()||js",
+                "userid" => "js@@$('#" . $type . "_user_select').val()@@js",
             ],
             "display" => $type . "_abilities_div",
         ]);
@@ -152,7 +152,7 @@ global $CFG, $MYVARS, $USER;
     group_users_actions($pageid, $groupid, $feature, $featureid);
 
     $params = [
-        "groupname" => get_db_field("name", "groups", "groupid = ||groupid||", ["groupid" => $groupid]),
+        "groupname" => get_db_field("name", "groups", "groupid = @@groupid@@", ["groupid" => $groupid]),
         "groupid" => $groupid,
         "canmanage" => user_is_able($USER->userid, "manage_groups", $pageid),
         "options" => $options,
@@ -397,7 +397,7 @@ function group_manager_actions($pageid, $groupid, $feature = false, $featureid =
             "groupid" => $groupid,
             "feature" => $feature,
             "featureid" => $featureid,
-            "searchstring" => "js||encodeURIComponent($('#per_group_search_text').val())||js",
+            "searchstring" => "js@@encodeURIComponent($('#per_group_search_text').val())@@js",
         ],
         "display" => "per_group_display_div",
         "event" => "none",
@@ -409,7 +409,7 @@ function group_manager_actions($pageid, $groupid, $feature = false, $featureid =
         "url" => "/ajax/roles_ajax.php",
         "data" => [
             "action" => "add_group_user",
-            "userid" => "js||$('#add_user_select').val()||js",
+            "userid" => "js@@$('#add_user_select').val()@@js",
             "pageid" => $pageid,
             "groupid" => $groupid,
             "feature" => $feature,
@@ -425,7 +425,7 @@ function group_manager_actions($pageid, $groupid, $feature = false, $featureid =
         "url" => "/ajax/roles_ajax.php",
         "data" => [
             "action" => "remove_group_user",
-            "userid" => "js||$('#remove_user_select').val()||js",
+            "userid" => "js@@$('#remove_user_select').val()@@js",
             "pageid" => $pageid,
             "groupid" => $groupid,
             "feature" => $feature,
@@ -494,8 +494,8 @@ global $CFG;
             "url" => "/ajax/roles_ajax.php",
             "data" => [
                 "action" => "save_group",
-                "name" => "js||encodeURIComponent($('#per_group_name').val())||js",
-                "parent" => "js||encodeURIComponent($('#per_group_edit_group_select').val())||js",
+                "name" => "js@@encodeURIComponent($('#per_group_name').val())@@js",
+                "parent" => "js@@encodeURIComponent($('#per_group_edit_group_select').val())@@js",
                 "groupid" => $groupid,
                 "pageid" => $pageid,
             ],
@@ -905,7 +905,7 @@ function refresh_user_roles() {
                 "action" => "assign_role",
                 "pageid" => $pageid,
                 "userid" => $userid,
-                "roleid" => "js||$('#role_select').val()||js",
+                "roleid" => "js@@$('#role_select').val()@@js",
             ],
             "ondone" => "jq_display('per_page_saved_div1', data); jq_display('per_page_saved_div2', data); refresh_user_roles();",
         ]);
@@ -916,7 +916,7 @@ function refresh_user_roles() {
             "data" => [
                 "action" => "refresh_user_roles",
                 "pageid" => $pageid,
-                "userid" => "js||$('#per_page_user_select').val()||js",
+                "userid" => "js@@$('#per_page_user_select').val()@@js",
             ],
             "event" => "none",
             "display" => "per_page_roles_div",

@@ -594,8 +594,8 @@ function staff_form_ensure_column_default($table, $column) {
     $row = get_db_row(
         "SELECT DATA_TYPE, COLUMN_TYPE, IS_NULLABLE, COLUMN_DEFAULT FROM information_schema.COLUMNS
          WHERE TABLE_SCHEMA = DATABASE()
-           AND TABLE_NAME = ||table||
-           AND COLUMN_NAME = ||column||",
+           AND TABLE_NAME = @@table@@
+           AND COLUMN_NAME = @@column@@",
         ['table' => $table, 'column' => $column]
     );
     if (!$row) {
@@ -620,8 +620,8 @@ function staff_form_ensure_longtext_column($table, $column) {
     $row = get_db_row(
         "SELECT DATA_TYPE FROM information_schema.COLUMNS
          WHERE TABLE_SCHEMA = DATABASE()
-           AND TABLE_NAME = ||table||
-           AND COLUMN_NAME = ||column||",
+           AND TABLE_NAME = @@table@@
+           AND COLUMN_NAME = @@column@@",
         ['table' => $table, 'column' => $column]
     );
     if (!$row) {
@@ -644,8 +644,8 @@ function staff_form_add_column_if_missing($table, $column, $definition = 'LONGTE
     $params = ['table' => $table, 'column' => $column];
     $sql = "SELECT COUNT(*) AS cnt FROM information_schema.COLUMNS
             WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = ||table||
-              AND COLUMN_NAME = ||column||";
+              AND TABLE_NAME = @@table@@
+              AND COLUMN_NAME = @@column@@";
     $row = get_db_row($sql, $params);
     if ($row && (int)$row['cnt'] > 0) {
         return; // already exists
@@ -665,7 +665,7 @@ function seed_staff_form_fields($pageid = 0, $force = false) {
     foreach ($defaults as $f) {
         $exists = get_db_row(
             "SELECT fieldid FROM form_fields
-             WHERE form_key = ||fk|| AND pageid = ||pageid|| AND field_key = ||key||",
+             WHERE form_key = @@fk@@ AND pageid = @@pageid@@ AND field_key = @@key@@",
             [
                 'fk' => defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app',
                 'pageid' => $pageid,
@@ -678,8 +678,8 @@ function seed_staff_form_fields($pageid = 0, $force = false) {
             // those are editable in the UI and must persist across editor reloads.
             execute_db_sql(
                 "UPDATE form_fields SET
-                    is_system = ||is_system||, modified = ||modified||
-                 WHERE fieldid = ||fieldid||",
+                    is_system = @@is_system@@, modified = @@modified@@
+                 WHERE fieldid = @@fieldid@@",
                 [
                     'is_system' => (int)($f['is_system'] ?? 0),
                     'modified' => $now,
@@ -687,24 +687,24 @@ function seed_staff_form_fields($pageid = 0, $force = false) {
                 ]
             );
             // One-time backfill: if visibility/required_when/extra_attrs empty in DB, copy from defaults
-            $row = get_db_row("SELECT visibility, required_when, extra_attrs FROM form_fields WHERE fieldid=||id||", ['id' => $exists['fieldid']]);
+            $row = get_db_row("SELECT visibility, required_when, extra_attrs FROM form_fields WHERE fieldid=@@id@@", ['id' => $exists['fieldid']]);
             $sets = [];
             $params = ['fieldid' => $exists['fieldid']];
             if ($row && ($row['visibility'] === null || $row['visibility'] === '') && !empty($f['visibility'])) {
-                $sets[] = 'visibility = ||visibility||';
+                $sets[] = 'visibility = @@visibility@@';
                 $params['visibility'] = json_encode($f['visibility']);
             }
             if ($row && ($row['required_when'] === null || $row['required_when'] === '') && !empty($f['required_when'])) {
-                $sets[] = 'required_when = ||required_when||';
+                $sets[] = 'required_when = @@required_when@@';
                 $params['required_when'] = json_encode($f['required_when']);
             }
             if ($row && ($row['extra_attrs'] === null || $row['extra_attrs'] === '') && !empty($f['extra_attrs'])) {
-                $sets[] = 'extra_attrs = ||extra_attrs||';
+                $sets[] = 'extra_attrs = @@extra_attrs@@';
                 $params['extra_attrs'] = json_encode($f['extra_attrs']);
             }
             if ($sets) {
                 execute_db_sql(
-                    "UPDATE form_fields SET " . implode(', ', $sets) . " WHERE fieldid = ||fieldid||",
+                    "UPDATE form_fields SET " . implode(', ', $sets) . " WHERE fieldid = @@fieldid@@",
                     $params
                 );
             }
@@ -734,12 +734,12 @@ function seed_staff_form_fields($pageid = 0, $force = false) {
         if ($exists && $force) {
             execute_db_sql(
                 "UPDATE form_fields SET
-                    form_key=||form_key||, label=||label||, type=||type||, options=||options||, required=||required||,
-                    sortorder=||sortorder||, section=||section||, helptext=||helptext||,
-                    validation=||validation||, is_system=||is_system||, active=||active||,
-                    extra_attrs=||extra_attrs||, visibility=||visibility||, required_when=||required_when||,
-                    modified=||modified||
-                 WHERE fieldid = ||fieldid||",
+                    form_key=@@form_key@@, label=@@label@@, type=@@type@@, options=@@options@@, required=@@required@@,
+                    sortorder=@@sortorder@@, section=@@section@@, helptext=@@helptext@@,
+                    validation=@@validation@@, is_system=@@is_system@@, active=@@active@@,
+                    extra_attrs=@@extra_attrs@@, visibility=@@visibility@@, required_when=@@required_when@@,
+                    modified=@@modified@@
+                 WHERE fieldid = @@fieldid@@",
                 array_merge($params, ['fieldid' => $exists['fieldid']])
             );
         } else {
@@ -747,7 +747,7 @@ function seed_staff_form_fields($pageid = 0, $force = false) {
                 "INSERT INTO form_fields
                     (form_key, pageid, field_key, label, type, options, required, sortorder, section, helptext, validation, is_system, active, extra_attrs, visibility, required_when, created, modified)
                  VALUES
-                    (||form_key||, ||pageid||, ||field_key||, ||label||, ||type||, ||options||, ||required||, ||sortorder||, ||section||, ||helptext||, ||validation||, ||is_system||, ||active||, ||extra_attrs||, ||visibility||, ||required_when||, ||created||, ||modified||)",
+                    (@@form_key@@, @@pageid@@, @@field_key@@, @@label@@, @@type@@, @@options@@, @@required@@, @@sortorder@@, @@section@@, @@helptext@@, @@validation@@, @@is_system@@, @@active@@, @@extra_attrs@@, @@visibility@@, @@required_when@@, @@created@@, @@modified@@)",
                 $params
             );
             $inserted++;
@@ -806,15 +806,15 @@ function staff_form_sync_dob_to_archives($userid, $pageid, $dob_ts) {
 
     execute_db_sql(
         "UPDATE events_staff_archive
-         SET dateofbirth = ||dob||
-         WHERE userid = ||userid|| AND pageid = ||pageid||",
+         SET dateofbirth = @@dob@@
+         WHERE userid = @@userid@@ AND pageid = @@pageid@@",
         ["dob" => $dob_ts, "userid" => $userid, "pageid" => $pageid]
     );
 
     // Keep form_data in sync when present
     $rows = get_db_result(
         "SELECT staffid, year, form_data FROM events_staff_archive
-         WHERE userid = ||userid|| AND pageid = ||pageid||",
+         WHERE userid = @@userid@@ AND pageid = @@pageid@@",
         ["userid" => $userid, "pageid" => $pageid]
     );
     if (!$rows) {
@@ -834,8 +834,8 @@ function staff_form_sync_dob_to_archives($userid, $pageid, $dob_ts) {
         $json['dateofbirth'] = $dob_ts;
         execute_db_sql(
             "UPDATE events_staff_archive
-             SET form_data = ||form_data||
-             WHERE staffid = ||staffid|| AND year = ||year|| AND pageid = ||pageid||",
+             SET form_data = @@form_data@@
+             WHERE staffid = @@staffid@@ AND year = @@year@@ AND pageid = @@pageid@@",
             [
                 "form_data" => json_encode($json, JSON_UNESCAPED_UNICODE),
                 "staffid" => $row["staffid"],
@@ -1192,7 +1192,7 @@ function staff_app_save_application($pageid, $staffid, $col_params, $form_data, 
         if ($bg <= 0) {
             $prev = get_db_row(
                 "SELECT bgcheckpassdate FROM events_staff_archive
-                 WHERE staffid = ||staffid|| AND pageid = ||pageid|| AND bgcheckpassdate > 0
+                 WHERE staffid = @@staffid@@ AND pageid = @@pageid@@ AND bgcheckpassdate > 0
                  ORDER BY year DESC LIMIT 1",
                 ['staffid' => $staffid, 'pageid' => $pageid]
             );
@@ -1200,7 +1200,7 @@ function staff_app_save_application($pageid, $staffid, $col_params, $form_data, 
                 $bg = (int)$prev['bgcheckpassdate'];
                 // Heal live row so future saves and UI see the carried value
                 execute_db_sql(
-                    "UPDATE events_staff SET bgcheckpassdate = ||bg|| WHERE staffid = ||staffid|| AND pageid = ||pageid||",
+                    "UPDATE events_staff SET bgcheckpassdate = @@bg@@ WHERE staffid = @@staffid@@ AND pageid = @@pageid@@",
                     ['bg' => $bg, 'staffid' => $staffid, 'pageid' => $pageid]
                 );
             }

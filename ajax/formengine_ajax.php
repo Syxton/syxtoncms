@@ -55,7 +55,7 @@ function form_engine_save_field() {
     $extra_attrs = [];
     $fieldid_tmp = clean_myvar_opt("fieldid", "int", 0);
     if ($fieldid_tmp) {
-        $existing = get_db_row("SELECT extra_attrs FROM form_fields WHERE fieldid=||id||", ['id' => $fieldid_tmp]);
+        $existing = get_db_row("SELECT extra_attrs FROM form_fields WHERE fieldid=@@id@@", ['id' => $fieldid_tmp]);
         if ($existing && !empty($existing['extra_attrs'])) {
             $prev = is_string($existing['extra_attrs']) ? json_decode($existing['extra_attrs'], true) : $existing['extra_attrs'];
             if (is_array($prev)) {
@@ -211,7 +211,7 @@ function form_engine_save_field() {
     $validation = [];
     $fieldid_for_val = clean_myvar_opt("fieldid", "int", 0);
     if ($fieldid_for_val) {
-        $existing_val = get_db_row("SELECT validation FROM form_fields WHERE fieldid=||id||", ['id' => $fieldid_for_val]);
+        $existing_val = get_db_row("SELECT validation FROM form_fields WHERE fieldid=@@id@@", ['id' => $fieldid_for_val]);
         if ($existing_val && !empty($existing_val['validation'])) {
             $prev_v = is_string($existing_val['validation'])
                 ? json_decode($existing_val['validation'], true)
@@ -332,11 +332,11 @@ function form_engine_save_field() {
         // Match by fieldid only — seeded defaults use pageid=0, not the current page
         execute_db_sql(
             "UPDATE form_fields SET
-                field_key=||field_key||, label=||label||, type=||type||, section=||section||,
-                sortorder=||sortorder||, required=||required||, active=||active||, helptext=||helptext||,
-                visibility=||visibility||, required_when=||required_when||, extra_attrs=||extra_attrs||,
-                options=||options||, validation=||validation||, modified=||now||
-             WHERE fieldid=||fieldid||",
+                field_key=@@field_key@@, label=@@label@@, type=@@type@@, section=@@section@@,
+                sortorder=@@sortorder@@, required=@@required@@, active=@@active@@, helptext=@@helptext@@,
+                visibility=@@visibility@@, required_when=@@required_when@@, extra_attrs=@@extra_attrs@@,
+                options=@@options@@, validation=@@validation@@, modified=@@now@@
+             WHERE fieldid=@@fieldid@@",
             $params
         );
     } else {
@@ -344,7 +344,7 @@ function form_engine_save_field() {
         $form_key = form_engine_request_form_key();
         $exists = get_db_row(
             "SELECT fieldid FROM form_fields
-             WHERE form_key=||fk|| AND field_key=||key|| AND (pageid=0 OR pageid=||pageid||) LIMIT 1",
+             WHERE form_key=@@fk@@ AND field_key=@@key@@ AND (pageid=0 OR pageid=@@pageid@@) LIMIT 1",
             ['pageid' => $pageid, 'key' => $field_key, 'fk' => $form_key]
         );
         if ($exists) {
@@ -358,7 +358,7 @@ function form_engine_save_field() {
             "INSERT INTO form_fields
                 (form_key, pageid, field_key, label, type, section, sortorder, required, active, helptext, visibility, required_when, extra_attrs, options, validation, is_system, created, modified)
              VALUES
-                (||form_key||, ||pageid||, ||field_key||, ||label||, ||type||, ||section||, ||sortorder||, ||required||, ||active||, ||helptext||, ||visibility||, ||required_when||, ||extra_attrs||, ||options||, ||validation||, 0, ||now||, ||now||)",
+                (@@form_key@@, @@pageid@@, @@field_key@@, @@label@@, @@type@@, @@section@@, @@sortorder@@, @@required@@, @@active@@, @@helptext@@, @@visibility@@, @@required_when@@, @@extra_attrs@@, @@options@@, @@validation@@, 0, @@now@@, @@now@@)",
             $params
         );
     }
@@ -377,12 +377,12 @@ function form_engine_delete_field() {
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     $form_key = form_engine_request_form_key();
     $fieldid = clean_myvar_req("fieldid", "int");
-    $row = get_db_row("SELECT * FROM form_fields WHERE fieldid=||id||", ['id' => $fieldid]);
+    $row = get_db_row("SELECT * FROM form_fields WHERE fieldid=@@id@@", ['id' => $fieldid]);
     if ($row) {
         if (function_exists('form_engine_unbind_field')) {
             form_engine_unbind_field($form_key, $row['field_key'] ?? '', $pageid);
         }
-        execute_db_sql("DELETE FROM form_fields WHERE fieldid=||id||", ['id' => $fieldid]);
+        execute_db_sql("DELETE FROM form_fields WHERE fieldid=@@id@@", ['id' => $fieldid]);
     }
     ajax_return(form_editor_ui($form_key, $pageid));
 }
@@ -515,7 +515,7 @@ function form_engine_reorder() {
                 continue;
             }
             execute_db_sql(
-                "UPDATE form_fields SET sortorder=||s||, modified=||m|| WHERE fieldid=||id||",
+                "UPDATE form_fields SET sortorder=@@s@@, modified=@@m@@ WHERE fieldid=@@id@@",
                 ['s' => $sort, 'id' => $id, 'm' => time()]
             );
             $sort += 10;

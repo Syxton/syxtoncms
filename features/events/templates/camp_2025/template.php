@@ -123,7 +123,7 @@ ajaxapi([
     "url" => "/features/events/templates/camp_2025/backend.php",
     "data" => [
         "action" => "remove_registration",
-        "hash" => "js||hash||js",
+        "hash" => "js@@hash@@js",
         "checkout" => false,
     ],
     "ondone" => "$('#count_in_cart').val(parseInt($('#count_in_cart').val())-1); $('.registration_cart_menu span.fa-layers-text').text(parseInt($('#count_in_cart').val()));",

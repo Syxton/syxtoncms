@@ -349,12 +349,12 @@ function events_upgrade() {
                 while ($row = fetch_row($result)) {
                     $address = parseAddress($row["address"]);
                     $SQL2 = 'UPDATE events_staff
-                        SET address=||address||,
-                        address2=||address2||,
-                        city=||city||,
-                        state=||state||,
-                        zip=||zip||
-                        WHERE staffid=||staffid||';
+                        SET address=@@address@@,
+                        address2=@@address2@@,
+                        city=@@city@@,
+                        state=@@state@@,
+                        zip=@@zip@@
+                        WHERE staffid=@@staffid@@';
                     execute_db_sql($SQL2, [
                         "address" => $address["address"],
                         "address2" => $address["address2"],
@@ -371,12 +371,12 @@ function events_upgrade() {
                 while ($row = fetch_row($result)) {
                     $address = parseAddress($row["address"]);
                     $SQL2 = 'UPDATE events_staff_archive
-                        SET address=||address||,
-                        address2=||address2||,
-                        city=||city||,
-                        state=||state||,
-                        zip=||zip||
-                        WHERE staffid=||staffid||';
+                        SET address=@@address@@,
+                        address2=@@address2@@,
+                        city=@@city@@,
+                        state=@@state@@,
+                        zip=@@zip@@
+                        WHERE staffid=@@staffid@@';
                     execute_db_sql($SQL2, [
                         "address" => $address["address"],
                         "address2" => $address["address2"],
@@ -443,8 +443,8 @@ function events_upgrade() {
                         $fill = (int)$last_by_staff[$key];
                         execute_db_sql(
                             "UPDATE events_staff_archive
-                             SET bgcheckpassdate = ||bg||
-                             WHERE archiveid = ||aid||",
+                             SET bgcheckpassdate = @@bg@@
+                             WHERE archiveid = @@aid@@",
                             ["bg" => $fill, "aid" => $row['archiveid']]
                         );
                         $updated++;

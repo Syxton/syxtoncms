@@ -52,16 +52,16 @@ function form_editor_page($form_key, $pageid, $show_form_picker = true) {
         'url' => $ajax_url,
         'data' => array_merge($common, [
             'action' => 'form_engine_save_field',
-            'attr_onblur' => "js||$('#edit_attr_onblur').val()||js",
-            'attr_onchange' => "js||$('#edit_attr_onchange').val()||js",
-            'vis_conditions_json' => "js||$('#edit_vis_conditions_json').val()||js",
-            'reqw_conditions_json' => "js||$('#edit_reqw_conditions_json').val()||js",
-            'options_json' => "js||$('#edit_options_json').val()||js",
-            'viewer_url' => "js||$('#edit_viewer_url').val()||js",
-            'viewer_height' => "js||$('#edit_viewer_height').val()||js",
-            'viewer_confirm' => "js||$('#edit_viewer_confirm').val()||js",
-            'viewer_confirm_text' => "js||$('#edit_viewer_confirm_text').val()||js",
-            'no_autofill' => "js||$('#edit_no_autofill').val()||js",
+            'attr_onblur' => "js@@$('#edit_attr_onblur').val()@@js",
+            'attr_onchange' => "js@@$('#edit_attr_onchange').val()@@js",
+            'vis_conditions_json' => "js@@$('#edit_vis_conditions_json').val()@@js",
+            'reqw_conditions_json' => "js@@$('#edit_reqw_conditions_json').val()@@js",
+            'options_json' => "js@@$('#edit_options_json').val()@@js",
+            'viewer_url' => "js@@$('#edit_viewer_url').val()@@js",
+            'viewer_height' => "js@@$('#edit_viewer_height').val()@@js",
+            'viewer_confirm' => "js@@$('#edit_viewer_confirm').val()@@js",
+            'viewer_confirm_text' => "js@@$('#edit_viewer_confirm_text').val()@@js",
+            'no_autofill' => "js@@$('#edit_no_autofill').val()@@js",
         ]),
         'reqstring' => 'form_field_form',
         'display' => 'form_editor_container',
@@ -72,7 +72,7 @@ function form_editor_page($form_key, $pageid, $show_form_picker = true) {
         'url' => $ajax_url,
         'data' => array_merge($common, [
             'action' => 'form_engine_delete_field',
-            'fieldid' => 'js||fieldid||js',
+            'fieldid' => 'js@@fieldid@@js',
         ]),
         'display' => 'form_editor_container',
         'event' => 'none',
@@ -98,7 +98,7 @@ function form_editor_page($form_key, $pageid, $show_form_picker = true) {
         'url' => $ajax_url,
         'data' => array_merge($common, [
             'action' => 'form_engine_reorder',
-            'order' => 'js||order||js',
+            'order' => 'js@@order@@js',
         ]),
         'display' => 'form_editor_container',
         'event' => 'none',
@@ -108,7 +108,7 @@ function form_editor_page($form_key, $pageid, $show_form_picker = true) {
         'url' => $ajax_url,
         'data' => array_merge($common, [
             'action' => 'form_engine_save_hooks',
-            'bindings_json' => 'js||window.__sfeHooksJson||js',
+            'bindings_json' => 'js@@window.__sfeHooksJson@@js',
         ]),
         'display' => 'sfe-hooks-result',
         'event' => 'none',
@@ -317,7 +317,7 @@ function form_editor_resolve_sortorder($form_key, $pageid, $fieldid, $place_afte
     if ($place === 'keep') {
         if ($fieldid > 0) {
             $row = get_db_row(
-                "SELECT sortorder FROM form_fields WHERE fieldid=||id||",
+                "SELECT sortorder FROM form_fields WHERE fieldid=@@id@@",
                 ['id' => $fieldid]
             );
             if ($row) {
@@ -327,14 +327,14 @@ function form_editor_resolve_sortorder($form_key, $pageid, $fieldid, $place_afte
         $place = 'end';
     }
 
-    $scope = "form_key = ||fk|| AND pageid IN (0, ||p||)";
+    $scope = "form_key = @@fk@@ AND pageid IN (0, @@p@@)";
     $p = ['p' => $pageid, 'fk' => $form_key];
 
     if ($place === 'start') {
         // Make room at the top; new field always gets sortorder 10
         execute_db_sql(
             "UPDATE form_fields SET sortorder = sortorder + 10 WHERE {$scope}"
-                . ($fieldid > 0 ? " AND fieldid <> ||id||" : ""),
+                . ($fieldid > 0 ? " AND fieldid <> @@id@@" : ""),
             $fieldid > 0 ? array_merge($p, ['id' => $fieldid]) : $p
         );
         return 10;
@@ -344,7 +344,7 @@ function form_editor_resolve_sortorder($form_key, $pageid, $fieldid, $place_afte
         $after_id = (int)substr($place, 6);
         if ($after_id > 0) {
             $row = get_db_row(
-                "SELECT sortorder FROM form_fields WHERE fieldid=||id||",
+                "SELECT sortorder FROM form_fields WHERE fieldid=@@id@@",
                 ['id' => $after_id]
             );
             if ($row) {
@@ -352,8 +352,8 @@ function form_editor_resolve_sortorder($form_key, $pageid, $fieldid, $place_afte
                 // Make room: shift fields at or after this slot
                 execute_db_sql(
                     "UPDATE form_fields SET sortorder = sortorder + 1
-                     WHERE {$scope} AND sortorder >= ||s||"
-                        . ($fieldid > 0 ? " AND fieldid <> ||id||" : ""),
+                     WHERE {$scope} AND sortorder >= @@s@@"
+                        . ($fieldid > 0 ? " AND fieldid <> @@id@@" : ""),
                     $fieldid > 0
                         ? array_merge($p, ['s' => $sort, 'id' => $fieldid])
                         : array_merge($p, ['s' => $sort])

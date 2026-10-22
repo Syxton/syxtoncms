@@ -28,9 +28,9 @@ function new_edition() {
     $error = "";
     try {
         start_db_transaction();
-        $html = get_db_row("SELECT * FROM html h JOIN pages_features pf ON pf.featureid = h.htmlid WHERE h.htmlid = ||htmlid|| AND pf.feature = 'html'", ["htmlid" => $htmlid]);
+        $html = get_db_row("SELECT * FROM html h JOIN pages_features pf ON pf.featureid = h.htmlid WHERE h.htmlid = @@htmlid@@ AND pf.feature = 'html'", ["htmlid" => $htmlid]);
         if ($newhtmlid = execute_db_sql(fetch_template("dbsql/html.sql", "insert_html", $type), ["pageid" => $pageid, "html" => '', "dateposted" => get_timestamp()])) {
-            $area = get_db_field("default_area", "features", "feature = ||feature||", ["feature" => $type]);
+            $area = get_db_field("default_area", "features", "feature = @@feature@@", ["feature" => $type]);
             $sort = get_db_count(fetch_template("dbsql/features.sql", "get_features_by_page_area"), ["pageid" => $pageid, "area" => $area]) + 1;
 
             $params = ["feature" => $type, "pageid" => $pageid, "sort" => $sort, "area" => $area, "featureid" => $newhtmlid];
@@ -145,7 +145,7 @@ function deletecomment() {
     $info = get_info_from_commentid($commentid);
 
     // Has replies, so don't delete it, just remove data.
-    if (get_db_result("SELECT * FROM html_comments WHERE parentid = ||parentid||", ["parentid" => $commentid])) {
+    if (get_db_result("SELECT * FROM html_comments WHERE parentid = @@parentid@@", ["parentid" => $commentid])) {
         $SQL = fetch_template("dbsql/html.sql", "update_comment", "html");
         execute_db_sql($SQL, ["comment" => "Removed", "commentid" => $commentid, "modified" => get_timestamp()]);
     } else {

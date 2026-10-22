@@ -65,9 +65,9 @@ global $CFG;
 
     $return = $error = "";
     try {
-        $pic = get_db_row("SELECT * FROM pics WHERE picsid = ||picsid||", ["picsid" => $picsid]);
+        $pic = get_db_row("SELECT * FROM pics WHERE picsid = @@picsid@@", ["picsid" => $picsid]);
         if ($pageid !== $pic["pageid"]) { // Pic is from a different course and needs to be copied to this course.
-            $featureid = get_db_field("featureid", "pics_galleries", "galleryid = ||galleryid||", ["galleryid" => $galleryid]);
+            $featureid = get_db_field("featureid", "pics_galleries", "galleryid = @@galleryid@@", ["galleryid" => $galleryid]);
             $old = pics_disk_path($pic["pageid"], $pic["featureid"], $pic["imagename"]);
             $newdir = pics_disk_dir($pageid, $featureid);
             if ($old === null || $newdir === null) {
@@ -86,7 +86,7 @@ global $CFG;
                 "picsid" => $picsid,
                 "galleryid" => $galleryid,
             ];
-            if (!execute_db_sql("UPDATE pics SET galleryid = ||galleryid||, pageid = ||pageid|| WHERE picsid = ||picsid||", $params)) {
+            if (!execute_db_sql("UPDATE pics SET galleryid = @@galleryid@@, pageid = @@pageid@@ WHERE picsid = @@picsid@@", $params)) {
                 throw new Exception("Could not change pics gallery");
             }
         }
@@ -103,7 +103,7 @@ function save_caption() {
 
     $return = $error = "";
     try {
-        if (!execute_db_sql("UPDATE pics SET caption = ||caption|| WHERE picsid = ||picsid||", ["picsid" => $picsid, "caption" => $caption])) {
+        if (!execute_db_sql("UPDATE pics SET caption = @@caption@@ WHERE picsid = @@picsid@@", ["picsid" => $picsid, "caption" => $caption])) {
             throw new Exception("Could not add caption");
         }
     } catch (\Throwable $e) {
@@ -120,7 +120,7 @@ function save_viewability() {
 
     $return = $error = "";
     try {
-        if (!execute_db_sql("UPDATE pics SET siteviewable = ||siteviewable|| WHERE picsid =||picsid||", ["picsid" => $picsid, "siteviewable" => $siteviewable])) {
+        if (!execute_db_sql("UPDATE pics SET siteviewable = @@siteviewable@@ WHERE picsid =@@picsid@@", ["picsid" => $picsid, "siteviewable" => $siteviewable])) {
             throw new Exception("Could not save viewability.");
         }
     } catch (\Throwable $e) {
@@ -136,13 +136,13 @@ global $CFG;
 
     $return = $error = "";
     try {
-        $row = get_db_row("SELECT * FROM pics WHERE picsid = ||picsid||", ["picsid" => $picsid]);
+        $row = get_db_row("SELECT * FROM pics WHERE picsid = @@picsid@@", ["picsid" => $picsid]);
         $disk = pics_disk_path($row["pageid"], $row["featureid"], $row["imagename"]);
         if ($disk !== null && !delete_file($disk)) {
             throw new Exception("Could not delete files.");
         }
 
-        if (!execute_db_sql("DELETE FROM pics WHERE picsid = ||picsid||", ["picsid" => $picsid])) {
+        if (!execute_db_sql("DELETE FROM pics WHERE picsid = @@picsid@@", ["picsid" => $picsid])) {
             throw new Exception("Could not save viewability.");
         }
     } catch (\Throwable $e) {
@@ -165,7 +165,7 @@ global $CFG, $MYVARS;
                 while ($row = fetch_row($result)) {
                     if ($pageid !== $CFG->SITEID && !empty($row["siteviewable"])) { //siteviewable images from a page other than SITE.  Move them to site
                         $copy = true;
-                        $site_featureid = get_db_field("featureid", "pages_features", "feature='pics' AND pageid=||pageid||", ["pageid" => $CFG->SITEID]);
+                        $site_featureid = get_db_field("featureid", "pages_features", "feature='pics' AND pageid=@@pageid@@", ["pageid" => $CFG->SITEID]);
                         $old = pics_disk_path($row["pageid"], $row["featureid"], $row["imagename"]);
                         $newdir = pics_disk_dir($CFG->SITEID, $site_featureid);
                         if ($old === null || $newdir === null) {
@@ -180,7 +180,7 @@ global $CFG, $MYVARS;
                             throw new Exception("Could not delete file.");
                         }
                     } elseif ($pageid == $CFG->SITEID && $pageid != $row["pageid"]) {  //SITE is dealing with images from another page
-                        execute_db_sql("UPDATE pics SET siteviewable = 0 WHERE galleryid = ||galleryid||", ["galleryid" => $galleryid]);
+                        execute_db_sql("UPDATE pics SET siteviewable = 0 WHERE galleryid = @@galleryid@@", ["galleryid" => $galleryid]);
                     } else { //nobody is using it, so delete it
                         $delete = true;
                         $disk = pics_disk_path($row["pageid"], $row["featureid"], $row["imagename"]);
@@ -193,14 +193,14 @@ global $CFG, $MYVARS;
             }
 
             if ($copy) {
-                $SQL = "UPDATE pics SET pageid = ||pageid||, featureid = ||featureid|| WHERE galleryid = ||galleryid||";
+                $SQL = "UPDATE pics SET pageid = @@pageid@@, featureid = @@featureid@@ WHERE galleryid = @@galleryid@@";
                 execute_db_sql($SQL, ["pageid" => $CFG->SITEID, "featureid" => $site_featureid, "galleryid" => $galleryid]);
-                $SQL = "UPDATE pics_galleries SET pageid = ||pageid||, featureid = ||featureid|| WHERE galleryid = ||galleryid||";
+                $SQL = "UPDATE pics_galleries SET pageid = @@pageid@@, featureid = @@featureid@@ WHERE galleryid = @@galleryid@@";
                 execute_db_sql($SQL, ["galleryid" => $galleryid]);
             }
 
             if ($delete) {
-                execute_db_sql("DELETE FROM pics_galleries WHERE galleryid = ||galleryid||", ["galleryid" => $galleryid]);
+                execute_db_sql("DELETE FROM pics_galleries WHERE galleryid = @@galleryid@@", ["galleryid" => $galleryid]);
             }
         }
     } catch (\Throwable $e) {
@@ -299,7 +299,7 @@ global $CFG;
                                     $SQL = fetch_template("dbsql/pics.sql", "insert_gallery", "pics");
                                     $galleryid = execute_db_sql($SQL, ["pageid" => $pageid, "featureid" => $featureid, "gallery_name" => $gallery_name]);
                                 } elseif (!$newgallery && $galleryid) {
-                                    $gallery_name = get_db_field("name", "pics_galleries", "galleryid = ||galleryid||", ["galleryid" => $galleryid]);
+                                    $gallery_name = get_db_field("name", "pics_galleries", "galleryid = @@galleryid@@", ["galleryid" => $galleryid]);
                                 }
                                 $params = [
                                     "pageid" => $pageid,
@@ -352,7 +352,7 @@ global $CFG;
     $return = $error = "";
     try {
         start_db_transaction();
-        $pics = get_db_row("SELECT * FROM pics WHERE picsid = ||picsid||", ["picsid" => $picsid]);
+        $pics = get_db_row("SELECT * FROM pics WHERE picsid = @@picsid@@", ["picsid" => $picsid]);
 
         $sitehidden = $pics["sitehidden"];
         $pagehidden = $pics["pagehidden"];
@@ -361,9 +361,9 @@ global $CFG;
         $pagehidden = $pagehidden == 0 ? 1 : 0;
 
         if ($pageid === $CFG->SITEID) { // SITE IMAGE
-            execute_db_sql("UPDATE pics SET sitehidden = ||sitehidden|| WHERE picsid = ||picsid||", ["sitehidden" => $sitehidden, "picsid" => $picsid]);
+            execute_db_sql("UPDATE pics SET sitehidden = @@sitehidden@@ WHERE picsid = @@picsid@@", ["sitehidden" => $sitehidden, "picsid" => $picsid]);
         } else {
-            execute_db_sql("UPDATE pics SET pagehidden = ||pagehidden|| WHERE picsid = ||picsid||", ["pagehidden" => $pagehidden, "picsid" => $picsid]);
+            execute_db_sql("UPDATE pics SET pagehidden = @@pagehidden@@ WHERE picsid = @@picsid@@", ["pagehidden" => $pagehidden, "picsid" => $picsid]);
         }
 
         commit_db_transaction();

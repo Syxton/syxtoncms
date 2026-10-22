@@ -86,8 +86,8 @@ if (strcmp($res, "VERIFIED") == 0) {
 	$name = !$fname && !$lname ? $payer_email : ($fname && $lname ? $fname . ' ' . $lname : ($fname ? $fname : $lname));
 
 	if ($campaign_id) {
-		if (!get_db_row("SELECT * FROM logfile WHERE feature = 'donate' AND description = 'Paypal' AND info = ||info||", ["info" => $txn_id])) {
-			if (!get_db_row("SELECT * FROM donate_donations WHERE paypal_TX = ||paypal_TX||", ["paypal_TX" => $txn_id])) {
+		if (!get_db_row("SELECT * FROM logfile WHERE feature = 'donate' AND description = 'Paypal' AND info = @@info@@", ["info" => $txn_id])) {
+			if (!get_db_row("SELECT * FROM donate_donations WHERE paypal_TX = @@paypal_TX@@", ["paypal_TX" => $txn_id])) {
 				$params = [];
 				$params["campaign_id"] = $campaign_id;
 				$params["name"] = $name;
@@ -98,9 +98,9 @@ if (strcmp($res, "VERIFIED") == 0) {
 
 				$c = get_db_row(fetch_template("dbsql/donate.sql", "get_campaign", "donate"), ["campaign_id" => $campaign_id]);
 				if ($c["metgoal"] == "0") {
-					$sum = get_db_field("SUM(amount)", "donate_donations", "campaign_id = ||campaign_id||", ["campaign_id" => $campaign_id]);
+					$sum = get_db_field("SUM(amount)", "donate_donations", "campaign_id = @@campaign_id@@", ["campaign_id" => $campaign_id]);
 					if ($sum >= $c["goal_amount"]) {
-						execute_db_sql("UPDATE donate_campaign SET metgoal = 1 WHERE campaign_id = ||campaign_id||", ["campaign_id" => $campaign_id]);
+						execute_db_sql("UPDATE donate_campaign SET metgoal = 1 WHERE campaign_id = @@campaign_id@@", ["campaign_id" => $campaign_id]);
 						log_entry('donate', $campaign_id, "Campaign Goal Met");
 					}
 				}

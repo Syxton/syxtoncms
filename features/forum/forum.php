@@ -47,7 +47,7 @@ global $CFG, $USER;
         if (!defined('VALIDATELIB')) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
 
         $forumid = clean_myvar_req("forumid", "int");
-        $pageid = get_db_field("pageid", "forum", "forumid = ||forumid||", ["forumid" => $forumid]);
+        $pageid = get_db_field("pageid", "forum", "forumid = @@forumid@@", ["forumid" => $forumid]);
 
         if ($forumid && $pageid) {
 
@@ -61,7 +61,7 @@ global $CFG, $USER;
 
             $script = ajaxapi([
                 "url" => "/features/forum/forum_ajax.php",
-                "data" => ["action" => "create_category", "forumid" => $forumid, "title" => "js||encodeURIComponent($('#title').val()) ||js"],
+                "data" => ["action" => "create_category", "forumid" => $forumid, "title" => "js@@encodeURIComponent($('#title').val()) @@js"],
                 "display" => "category_div_$forumid",
                 "ondone" => "close_modal();",
             ], "code");
@@ -88,7 +88,7 @@ global $CFG, $USER;
     if (!defined('VALIDATELIB')) { include_once($CFG->dirroot . '/lib/validatelib.php'); }
     $catid = clean_myvar_req("catid", "int");
     try {
-        $category = get_db_row("SELECT * FROM forum_categories WHERE catid = ||catid||", ["catid" => $catid]);
+        $category = get_db_row("SELECT * FROM forum_categories WHERE catid = @@catid@@", ["catid" => $catid]);
         $forumid = $category["forumid"];
         $pageid = $category["pageid"];
 
@@ -101,7 +101,7 @@ global $CFG, $USER;
 
         $script = ajaxapi([
             "url" => "/features/forum/forum_ajax.php",
-            "data" => ["action" => "edit_category", "catid" => $catid, "title" => "js||encodeURIComponent($('#title').val()) ||js"],
+            "data" => ["action" => "edit_category", "catid" => $catid, "title" => "js@@encodeURIComponent($('#title').val()) @@js"],
             "display" => "category_div_$forumid",
             "ondone" => "close_modal();",
         ], "code");
@@ -134,7 +134,7 @@ global $CFG;
         "id" => "edit_post_submit",
         "if" => "$editorcontent.length > 0",
         "url" => "/features/forum/forum_ajax.php",
-        "data" => ["action" => "edit_post", "postid" => $postid, "message" => "js||encodeURIComponent($editorcontent) ||js"],
+        "data" => ["action" => "edit_post", "postid" => $postid, "message" => "js@@encodeURIComponent($editorcontent) @@js"],
         "ondone" => "close_modal();",
         "event" => "submit",
     ]);
@@ -158,7 +158,7 @@ global $CFG;
         "id" => "quote_post_submit",
         "if" => "$editorcontent.length > 0",
         "url" => "/features/forum/forum_ajax.php",
-        "data" => ["action" => "quote_post", "quotepost" => $quotepost, "message" => "js||encodeURIComponent($editorcontent) ||js"],
+        "data" => ["action" => "quote_post", "quotepost" => $quotepost, "message" => "js@@encodeURIComponent($editorcontent) @@js"],
         "ondone" => "close_modal();",
         "event" => "submit",
     ]);
@@ -189,7 +189,7 @@ global $CFG;
         }
 
         $editorcontent = get_editor_value_javascript();
-        $data = ["action" => "post", "message" => "js||encodeURIComponent($editorcontent) ||js"];
+        $data = ["action" => "post", "message" => "js@@encodeURIComponent($editorcontent) @@js"];
 
         if ($replyto) {
             $data["replyto"] = $replyto;
@@ -225,7 +225,7 @@ global $CFG, $USER;
         "id" => "shoutbox_post_submit",
         "if" => "$editorcontent.length > 0",
         "url" => "/features/forum/forum_ajax.php",
-        "data" => ["action" => "shoutbox_post", "forumid" => $forumid, "alias" => "js|| $('#alias').val() ||js", "userid" => "js|| $('#userid').val() ||js", "message" => "js||encodeURIComponent($editorcontent) ||js"],
+        "data" => ["action" => "shoutbox_post", "forumid" => $forumid, "alias" => "js@@ $('#alias').val() @@js", "userid" => "js@@ $('#userid').val() @@js", "message" => "js@@encodeURIComponent($editorcontent) @@js"],
         "ondone" => "close_modal();",
         "event" => "submit",
     ]);
@@ -246,7 +246,7 @@ global $CFG;
     $catid = $discussion["catid"];
 
     $postid = first_post($discussionid);
-    $message = get_db_field("message", "forum_posts", "postid = ||postid|| ORDER BY postid", ["postid" => $postid]);
+    $message = get_db_field("message", "forum_posts", "postid = @@postid@@ ORDER BY postid", ["postid" => $postid]);
     $title = $discussion["title"];
 
     $editor = get_editor_box(["initialvalue" => $message, "type" => "Forum", "height" => "calc(100% - 75px)"]);
@@ -256,7 +256,7 @@ global $CFG;
         "id" => "edit_discussion_submit",
         "if" => "$editorcontent.length > 0 && $('#discussion_title').val().length > 0",
         "url" => "/features/forum/forum_ajax.php",
-        "data" => ["action" => "edit_discussion", "postid" => $postid, "discussionid" => $discussionid, "message" => "js||encodeURIComponent($editorcontent) ||js", "title" => "js||encodeURIComponent($('#discussion_title').val()) ||js"],
+        "data" => ["action" => "edit_discussion", "postid" => $postid, "discussionid" => $discussionid, "message" => "js@@encodeURIComponent($editorcontent) @@js", "title" => "js@@encodeURIComponent($('#discussion_title').val()) @@js"],
         "ondone" => "close_modal();",
         "event" => "submit",
     ]);
@@ -280,7 +280,7 @@ global $CFG;
         "id" => "create_discussion_submit",
         "if" => "$editorcontent.length > 0 && $('#discussion_title').val().length > 0",
         "url" => "/features/forum/forum_ajax.php",
-        "data" => ["action" => "create_discussion", "catid" => $catid, "message" => "js||encodeURIComponent($editorcontent) ||js", "title" => "js||encodeURIComponent($('#discussion_title').val()) ||js"],
+        "data" => ["action" => "create_discussion", "catid" => $catid, "message" => "js@@encodeURIComponent($editorcontent) @@js", "title" => "js@@encodeURIComponent($('#discussion_title').val()) @@js"],
         "ondone" => "close_modal();",
         "event" => "submit",
     ]);

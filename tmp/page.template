@@ -1,37 +1,37 @@
-make_ul||
-    <ul id="||id||" class="||class||">
-        ||items||
+make_ul@@
+    <ul id="@@id@@" class="@@class@@">
+        @@items@@
     </ul>
-||make_ul
+@@make_ul
 
-get_ul_item||
+get_ul_item@@
     <li>
         <div>
-            ||item||
+            @@item@@
         </div>
     </li>
-||get_ul_item
+@@get_ul_item
 
-make_main_nav||
+make_main_nav@@
     <a href="javascript:void(0);" class="icon mobile_menu" onclick="toggle_nav_menu()">&#9776;</a>
-    <div id="||id||" class="||class||">
-        ||items||
+    <div id="@@id@@" class="@@class@@">
+        @@items@@
     </div>
-||make_main_nav
+@@make_main_nav
 
-make_sub_nav||
-    <div class="||class||">
-        ||items||
+make_sub_nav@@
+    <div class="@@class@@">
+        @@items@@
     </div>
-||make_sub_nav
+@@make_sub_nav
 
-get_nav_item||
-    ||is_parent{{
+get_nav_item@@
+    @@is_parent{{
         <div class="dropdown">
             <div class="dropwrapper">
-                <a href="||link||" ||is_active{{ class="active" }}is_active||>
+                <a href="@@link@@" @@is_active{{ class="active" }}is_active@@>
                     <span>
-                        ||text||
+                        @@text@@
                     </span>
                 </a>
                 <button class="dropbtn">
@@ -39,55 +39,55 @@ get_nav_item||
                 </button>
             </div>
             <div class="dropdown-content">
-                ||menu_children||
+                @@menu_children@@
             </div>
         </div>
     //OR//
-        <a href="||link||" ||is_active{{ class="active" }}is_active||>
+        <a href="@@link@@" @@is_active{{ class="active" }}is_active@@>
            <span>
-                ||text||
+                @@text@@
             </span>
         </a>
-    }}is_parent||
-||get_nav_item
+    }}is_parent@@
+@@get_nav_item
 
-page_js_css||
-    ||echo js_code_wrap('var dirfromroot = "' . dirroot . '";');::dirroot||
-    ||echo get_js_set("basics");::none||
-    ||echo get_css_set("main");::none||
+page_js_css@@
+    @@echo js_code_wrap('var dirfromroot = "' . dirroot . '";');::dirroot@@
+    @@echo get_js_set("basics");::none@@
+    @@echo get_css_set("main");::none@@
     <input id="lasthint" type="hidden" />
-||page_js_css
+@@page_js_css
 
-browse_template||
-||echo get_js_tags(["tabs"]);::none||
+browse_template@@
+@@echo get_js_tags(["tabs"]);::none@@
     <body style="background-color: white;">
     <ul id="findpagetabs" class="shadetabs">
         <li>
-            <a class="||pagesearchselected||" href="page.php?action=browse_search" style="text-decoration: none;position: relative;top: 3px;z-index: 1;padding-top: 3px; padding-right: 7px; padding-left: 7px;margin-right: 3px;border-top: 1px solid #778;border-right: 1px solid #778;border-left: 1px solid #778;color: #2d2b2b;" rel="contentscontainer" onmouseup="this.blur()">
+            <a class="@@pagesearchselected@@" href="page.php?action=browse_search" style="text-decoration: none;position: relative;top: 3px;z-index: 1;padding-top: 3px; padding-right: 7px; padding-left: 7px;margin-right: 3px;border-top: 1px solid #778;border-right: 1px solid #778;border-left: 1px solid #778;color: #2d2b2b;" rel="contentscontainer" onmouseup="this.blur()">
             Search Pages
             </a>
         </li>
-        ||usersearchtab||
+        @@usersearchtab@@
     </ul>
     <div id="contentscontainer" style="border-top:1px solid gray;position:relative;padding: 10px 0px;"></div>
-    ||echo js_code_wrap('var findmethods=new ddajaxtabs("findpagetabs", "contentscontainer");findmethods.setpersist(false);findmethods.setselectedClassTarget("link");findmethods.init();');::none||
-||browse_template
+    @@echo js_code_wrap('var findmethods=new ddajaxtabs("findpagetabs", "contentscontainer");findmethods.setpersist(false);findmethods.setselectedClassTarget("link");findmethods.init();');::none@@
+@@browse_template
 
-browse_usersearch_template||
+browse_usersearch_template@@
     <li>
-        <a class="||usersearchselected||" href="page.php?action=browse_users" style="text-decoration: none;position: relative;top: 3px;z-index: 1;padding-top: 3px; padding-right: 7px; padding-left: 7px;margin-right: 3px;border-top: 1px solid #778;border-right: 1px solid #778;border-left: 1px solid #778;color: #2d2b2b;" rel="contentscontainer" onmouseup="this.blur()">
+        <a class="@@usersearchselected@@" href="page.php?action=browse_users" style="text-decoration: none;position: relative;top: 3px;z-index: 1;padding-top: 3px; padding-right: 7px; padding-left: 7px;margin-right: 3px;border-top: 1px solid #778;border-right: 1px solid #778;border-left: 1px solid #778;color: #2d2b2b;" rel="contentscontainer" onmouseup="this.blur()">
             Search Members
         </a>
     </li>
-||browse_usersearch_template
+@@browse_usersearch_template
 
-browse_search_template||
+browse_search_template@@
     <form id="pagesearch">
         <div>
             <div style="line-height: 20px;">
                 Search for pages by either their name, thier keywords, or their description.<br />
-                Add or Remove from your personal pagelist with ||echo icon("plus");::none|| / ||echo icon("subtract");::none|| buttons.<br />
-                Request access to a private page with the ||echo icon("envelope");::none|| button.
+                Add or Remove from your personal pagelist with @@echo icon("plus");::none@@ / @@echo icon("subtract");::none@@ buttons.<br />
+                Request access to a private page with the @@echo icon("envelope");::none@@ button.
             </div>
             <br />
             <div style="text-align: center">
@@ -96,14 +96,14 @@ browse_search_template||
         </div>
         <br />
     </form>
-    ||search_results_box||
-||browse_search_template
+    @@search_results_box@@
+@@browse_search_template
 
-browse_user_template||
+browse_user_template@@
     <form id="usersearch">
         <div style="line-height: 20px;">
             Search for users by either their name or thier email address.<br />
-            Invite a user to a private page with the ||echo icon("envelope");::none|| button, then select the page you would like to invite them to.
+            Invite a user to a private page with the @@echo icon("envelope");::none@@ button, then select the page you would like to invite them to.
         </div>
         <br />
         <div style="text-align: center">
@@ -111,85 +111,85 @@ browse_user_template||
         </div>
         <br />
     </form>
-    ||search_results_box||
-||browse_user_template
+    @@search_results_box@@
+@@browse_user_template
 
-create_edit_page_template||
+create_edit_page_template@@
     <div class="formDiv" id="create_page_div">
     <form id="create_page_form">
         <fieldset class="formContainer">
             <div class="rowContainer">
             <label class="rowTitle" for="name">Page Name</label>
-            <input type="text" id="name" name="name" data-rule-required="true" data-rule-maxlength="50" value="||name||" />
-            <div class="tooltipContainer info">||input_name_help||</div>
+            <input type="text" id="name" name="name" data-rule-required="true" data-rule-maxlength="50" value="@@name@@" />
+            <div class="tooltipContainer info">@@input_name_help@@</div>
             <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
             <label class="rowTitle" for="keywords">Page Keywords</label>
-            <textarea id="keywords" name="keywords" cols="28" rows="2" data-rule-required="true" data-rule-maxlength="255">||keywords||</textarea>
-            <div class="tooltipContainer info">||input_page_tags||</div>
+            <textarea id="keywords" name="keywords" cols="28" rows="2" data-rule-required="true" data-rule-maxlength="255">@@keywords@@</textarea>
+            <div class="tooltipContainer info">@@input_page_tags@@</div>
             <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
             <label class="rowTitle" for="description">Page Description</label>
-            <textarea id="summary" name="summary" cols="28" rows="4" data-rule-required="true" data-rule-maxlength="255">||description||</textarea>
-            <div class="tooltipContainer info">||input_page_summary||</div>
+            <textarea id="summary" name="summary" cols="28" rows="4" data-rule-required="true" data-rule-maxlength="255">@@description@@</textarea>
+            <div class="tooltipContainer info">@@input_page_summary@@</div>
             <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
             <label class="rowTitle" for="role_select">Default Role</label>
-            ||roleselector||
-            <div class="tooltipContainer info">||input_page_default_role||</div>
+            @@roleselector@@
+            <div class="tooltipContainer info">@@input_page_default_role@@</div>
             <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
             <label class="rowTitle" for="opendoor">Open Door Policy</label>
             <select name="opendoor" id="opendoor">
-                <option value="0" ||openno||>No</option>
-                <option value="1" ||openyes||>Yes</option>
+                <option value="0" @@openno@@>No</option>
+                <option value="1" @@openyes@@>Yes</option>
             </select>
-            <div class="tooltipContainer info">||input_page_opendoor||</div>
+            <div class="tooltipContainer info">@@input_page_opendoor@@</div>
             <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
             <label class="rowTitle" for="siteviewable">Site viewable</label>
             <select name="siteviewable" id="siteviewable">
-                <option value="0" ||globalno||>No</option>
-                <option value="1" ||globalyes||>Yes</option>
+                <option value="0" @@globalno@@>No</option>
+                <option value="1" @@globalyes@@>Yes</option>
             </select>
-            <div class="tooltipContainer info">||input_page_siteviewable||</div>
+            <div class="tooltipContainer info">@@input_page_siteviewable@@</div>
             <div class="spacer" style="clear: both;"></div>
             </div>
-        ||admin{{
+        @@admin{{
             <div class="rowContainer">
             <label class="rowTitle" for="menu_page">Show in Main Menu</label>
             <select name="menu_page" id="menu_page">
-                <option value="0" ||menuno||>No</option>
-                <option value="1" ||menuyes||>Yes</option>
+                <option value="0" @@menuno@@>No</option>
+                <option value="1" @@menuyes@@>Yes</option>
             </select>
-            <div class="tooltipContainer info">||input_page_menulink||</div>
+            <div class="tooltipContainer info">@@input_page_menulink@@</div>
             <div class="spacer" style="clear: both;"></div>
             </div>
             <div class="rowContainer">
             <label class="rowTitle" for="hidefromvisitors">Hide Menu from Visitors</label>
             <select name="hidefromvisitors" id="hidefromvisitors">
-                <option value="0" ||hideno||>No</option>
-                <option value="1" ||hideyes||>Yes</option>
+                <option value="0" @@hideno@@>No</option>
+                <option value="1" @@hideyes@@>Yes</option>
             </select>
-            <div class="tooltipContainer info">||input_page_visitors_hide||</div>
+            <div class="tooltipContainer info">@@input_page_visitors_hide@@</div>
             <div class="spacer" style="clear: both;"></div>
             </div>
-            //OR//
-            <input type="hidden" id="menu_page" name="menu_page" value="||menupage||" />
-            <input type="hidden" id="hidefromvisitors" name="hidefromvisitors" value="||hidefromvisitors||" />
-        }}admin||
-            <input class="submit" name="submit" type="submit" value="||buttonname||" />
+        //OR//
+            <input type="hidden" id="menu_page" name="menu_page" value="@@menupage@@" />
+            <input type="hidden" id="hidefromvisitors" name="hidefromvisitors" value="@@hidefromvisitors@@" />
+        }}admin@@
+            <input class="submit" name="submit" type="submit" value="@@buttonname@@" />
         </fieldset>
     </form>
     </div>
-||create_edit_page_template
+@@create_edit_page_template
 
-create_edit_links_template||
+create_edit_links_template@@
     <div id="links_editor" style="padding: 10px 0px 10px 0px;">
         <strong>Links Editor Mode</strong>
         &nbsp;&nbsp;
@@ -203,31 +203,31 @@ create_edit_links_template||
         <br />
         <span id="links_mode_span"></span>
     </div>
-||create_edit_links_template
+@@create_edit_links_template
 
-display_addfeature_template||
+display_addfeature_template@@
     <div style="display: flex">
         <select id="addfeaturelist" style="width:100%;margin-right:5px;" onchange="$('#addfeature_button').hide(); if ($(this).val().length) { $('#addfeature_button').show(); }">
             <option value="" selected>Add Feature...</option>
-            ||options||
+            @@options@@
         </select>
         <button id="addfeature_button" style="display:none;padding: 5px;">
-            ||echo icon("plus");::none||&nbsp;Add
+            @@echo icon("plus");::none@@&nbsp;Add
         </button>
     </div>
-||display_addfeature_template
+@@display_addfeature_template
 
-account_activation_email||
+account_activation_email@@
     <p>
         <font face="Tahoma" size="3" color="#993366">
-            Dear <strong>||user[fname]|| ||user[lname]||</strong>,
+            Dear <strong>@@user[fname]@@ @@user[lname]@@</strong>,
             <br />
         </font>
     </p>
     <blockquote>
         <p>
             <font size="3" face="Tahoma">
-            <strong>||sitename||</strong> has recieved notification that you have activated your account.&nbsp; The temporary password you used to log in has now been replaced with the original password you used when you signed up.
+            <strong>@@sitename@@</strong> has recieved notification that you have activated your account.&nbsp; The temporary password you used to log in has now been replaced with the original password you used when you signed up.
             </font>
         </p>
     </blockquote>
@@ -239,39 +239,39 @@ account_activation_email||
     </p>
     <p>
         <font size="3" face="Tahoma">
-            <em>||siteowner|| </em>
+            <em>@@siteowner@@ </em>
         </font>
         <font size="3" face="Tahoma" color="#ff0000">
-            &lt;||siteemail||
+            &lt;@@siteemail@@
         </font>
         <font face="Tahoma" size="3" color="#ff0000">
             &gt;
         </font>
     </p>
     <p>&nbsp;</p>
-||account_activation_email
+@@account_activation_email
 
-pagelist_template||
-    ||pagelist||
+pagelist_template@@
+    @@pagelist@@
         <span class="centered_span">
-            ||browse||
+            @@browse@@
         </span>
-    ||pagelinks||
-||pagelist_template
+    @@pagelinks@@
+@@pagelist_template
 
-role_on_pagelist_template||
-    ||roleonpage||
+role_on_pagelist_template@@
+    @@roleonpage@@
         <div class="block_divider"></div>
-    ||pagelistblock||
-||role_on_pagelist_template
+    @@pagelistblock@@
+@@role_on_pagelist_template
 
-format_pagelist_select||
+format_pagelist_select@@
     <select id="select_page" style="width:100%" onchange="go_to_page($(this).val());">
-        ||options||
+        @@options@@
     </select>
-||format_pagelist_select
+@@format_pagelist_select
 
-pagelinks_template||
+pagelinks_template@@
     <div id="page_links_div">
         <br />
         <div style="border: 1px solid gray; background-color:#EFEFEF;">
@@ -279,57 +279,57 @@ pagelinks_template||
                 <strong>Page Links</strong>
             </div>
             <div class="pagelinklist">
-            ||links||
+            @@links@@
             </div>
         </div>
     </div>
-||pagelinks_template
+@@pagelinks_template
 
-pagelinks_links_template||
-    <div class="pagelink" id="link_span_||page[linkid]||">
-        <a href="||echo $CFG->wwwroot;::none||/index.php?pageid=||page[linkpageid]||">
-            ||page[linkdisplay]||
+pagelinks_links_template@@
+    <div class="pagelink" id="link_span_@@page[linkid]@@">
+        <a href="@@echo $CFG->wwwroot;::none@@/index.php?pageid=@@page[linkpageid]@@">
+            @@page[linkdisplay]@@
         </a>
-        ||canedit{{
-        <button class="alike" title="Unlink Page" onclick="unlink_page(||page[linkpageid]||)">
-            || echo icon("link-slash");::none||
+        @@canedit{{
+        <button class="alike" title="Unlink Page" onclick="unlink_page(@@page[linkpageid]@@)">
+            @@ echo icon("link-slash");::none@@
         </button>
-        }}canedit||
+        }}canedit@@
     </div>
-||pagelinks_links_template
+@@pagelinks_links_template
 
-start_of_page_template||
+start_of_page_template@@
     <!DOCTYPE HTML>
         <html style="height: 100%">
             <head>
-                <title>||*title||</title>
+                <title>@@*title@@</title>
                 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                <link rel="shortcut icon" href="||echo $CFG->userfilesurl;::none||/branding/logos/favicon.ico" />
+                <link rel="shortcut icon" href="@@echo $CFG->userfilesurl;::none@@/branding/logos/favicon.ico" />
 
-                ||echo get_css_set("main");::none||
-                ||*head||
+                @@echo get_css_set("main");::none@@
+                @@*head@@
             </head>
             <body style="height: 100%">
                 <div style="height: 100%;box-sizing: border-box;padding: 10px;">
-||start_of_page_template
+@@start_of_page_template
 
-end_of_page_template||
+end_of_page_template@@
             </div>
         </body>
     </html>
-||end_of_page_template
+@@end_of_page_template
 
-select_options_template||
-    <option value="||value||" ||*selected||>
-        ||display||
+select_options_template@@
+    <option value="@@value@@" @@*selected@@>
+        @@display@@
     </option>
-||select_options_template
+@@select_options_template
 
-setting_change_template||
-    ||success{{
-        || echo icon("circle-check");::none||
+setting_change_template@@
+    @@success{{
+        @@echo icon("circle-check");::none@@
     //OR//
-        || echo icon("circle-exclamation");::none||
-    }}success||
-||setting_change_template
+        @@echo icon("circle-exclamation");::none@@
+    }}success@@
+@@setting_change_template

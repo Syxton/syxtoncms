@@ -1,68 +1,68 @@
-comment_template||
-    <div class="html_comment ||childclass||">
+comment_template@@
+    <div class="html_comment @@childclass@@">
         <span class="comment_byline">
-            <span class="comment_user">||username|| ||says||</span>
-            <span class="comment_time">||time||</span>
+            <span class="comment_user">@@username@@ @@says@@</span>
+            <span class="comment_time">@@time@@</span>
         </span>
-        <span class="comment_message">||comment||</span>
+        <span class="comment_message">@@comment@@</span>
         <span class="comment_buttons">
-            <span class="comment_replylink">||buttons["reply"]||</span>
-            <span class="comment_editlink">||buttons["edit"]||</span>
-            <span class="comment_deletelink">||buttons["delete"]||</span>
+            <span class="comment_replylink">@@buttons["reply"]@@</span>
+            <span class="comment_editlink">@@buttons["edit"]@@</span>
+            <span class="comment_deletelink">@@buttons["delete"]@@</span>
         </span>
     </div>
-||comment_template
+@@comment_template
 
-comment_form_template||
-    <form class="html_comment_form" id="comment_form_||htmlid||">
+comment_form_template@@
+    <form class="html_comment_form" id="comment_form_@@htmlid@@">
         <div class="title">
-            <strong>||title||</strong>
+            <strong>@@title@@</strong>
         </div>
-        ||replytoid{{
+        @@replytoid{{
         <div class="html_replytocomment">
-            ||replytocomment||
+            @@replytocomment@@
 		  </div>
-        }}replytoid||
+        }}replytoid@@
         <div class="html_commentinput">
-            <textarea id="comment" style="width: 100%" rows="8">||comment||</textarea>
+            <textarea id="comment" style="width: 100%" rows="8">@@comment@@</textarea>
         </div>
         <div class="centered">
-            <input type="submit" value="||title||" />
+            <input type="submit" value="@@title@@" />
         </div>
     </form>
-||comment_form_template
+@@comment_form_template
 
-edit_form||
-	<form id="||formid||" style="margin-top: 40px;">
+edit_form@@
+	<form id="@@formid@@" style="margin-top: 40px;">
 		<div class="centered">
-			||editor||
+			@@editor@@
 			<input type="submit" class="html_editor_save" value="Save" />
 		</div>
 	</form>
-||edit_form
+@@edit_form
 
-comment_area||
-    <div id="html_comment_button_box_||featureid||" class="html_comment_button_box" style="||comments{{//OR//display:none;}}comments||">
-        <button id="html_||featureid||_comments_button" title="Show Comments" onclick="$('#html_||featureid|| .html_comments_grid').css('width', '100%'); $('#comment_area_||featureid||, #html_||featureid||_comments_button, #html_||featureid||_hide_button').toggle();" class="alike html_comment_button">
-            ||echo icon([["icon" => "comment", "stacksize" => 2, "color" => "#7676cf"],["icon" => "eye", "color" => "white", "transform" => "shrink-8.5 left-1 up-.5"]]);::none||
+comment_area@@
+    <div id="html_comment_button_box_@@featureid@@" class="html_comment_button_box" style="@@comments{{//OR//display:none;}}comments@@">
+        <button id="html_@@featureid@@_comments_button" title="Show Comments" onclick="$('#html_@@featureid@@ .html_comments_grid').css('width', '100%'); $('#comment_area_@@featureid@@, #html_@@featureid@@_comments_button, #html_@@featureid@@_hide_button').toggle();" class="alike html_comment_button">
+            @@echo icon([["icon" => "comment", "stacksize" => 2, "color" => "#7676cf"],["icon" => "eye", "color" => "white", "transform" => "shrink-8.5 left-1 up-.5"]]);::none@@
         </button>
-        <button id="html_||featureid||_hide_button" title="Hide Comments" onclick="$('#html_||featureid|| .html_comments_grid').css('width', 'auto'); $('#comment_area_||featureid||, #html_||featureid||_comments_button, #html_||featureid||_hide_button').toggle();" class="alike html_comment_button" style="display:none;">
-            ||echo icon([["icon" => "comment", "stacksize" => 2, "color" => "#7676cf"],["icon" => "eye-slash", "color" => "white", "transform" => "shrink-8.5 left-2 up-.5"]]);::none||
+        <button id="html_@@featureid@@_hide_button" title="Hide Comments" onclick="$('#html_@@featureid@@ .html_comments_grid').css('width', 'auto'); $('#comment_area_@@featureid@@, #html_@@featureid@@_comments_button, #html_@@featureid@@_hide_button').toggle();" class="alike html_comment_button" style="display:none;">
+            @@echo icon([["icon" => "comment", "stacksize" => 2, "color" => "#7676cf"],["icon" => "eye-slash", "color" => "white", "transform" => "shrink-8.5 left-2 up-.5"]]);::none@@
         </button>
     </div>
-    <div id="comment_area_||featureid||" class="html_comments_area" style="display:none;">
-        ||makecomment||
-        ||comments||
+    <div id="comment_area_@@featureid@@" class="html_comments_area" style="display:none;">
+        @@makecomment@@
+        @@comments@@
     </div>
-||comment_area
+@@comment_area
 
-under_construction||
+under_construction@@
     <div style="padding: 10px">
         <div style="padding: 5px;text-align:center;">
-            ||echo icon("person-digging", 10);::none||
+            @@echo icon("person-digging", 10);::none@@
         </div>
         <div style="padding: 25px;text-align:center;">
-            This area is currently being edited by: ||by||
+            This area is currently being edited by: @@by@@
         </div>
     </div>
-||under_construction
+@@under_construction

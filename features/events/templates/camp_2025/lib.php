@@ -83,12 +83,12 @@ function print_registration_cart($checkout = false) {
         $_SESSION['registrations'][$key]->hash = create_unique_registration_hash($event["eventid"], $camper_names["full"], $reg["camper_birth_date"]);
 
         // Get registration info for pictures.
-        $picture_cost = get_db_field("setting", "settings", "type='events_template' AND extra = ||extra|| AND setting_name='template_setting_pictures_price'", ["extra" => $eventid]);
+        $picture_cost = get_db_field("setting", "settings", "type='events_template' AND extra = @@extra@@ AND setting_name='template_setting_pictures_price'", ["extra" => $eventid]);
         $camper_picture = clean_param_opt($reg, "camper_picture", "bool", false);
         $picture_cost = $camper_picture ? $picture_cost : 0;
 
         // Get registration info for shirts.
-        $shirt_cost = get_db_field("setting", "settings", "type='events_template' AND extra = ||extra|| AND setting_name='template_setting_shirt_price'", ["extra" => $eventid]);
+        $shirt_cost = get_db_field("setting", "settings", "type='events_template' AND extra = @@extra@@ AND setting_name='template_setting_shirt_price'", ["extra" => $eventid]);
         $camper_shirt = clean_param_opt($reg, "camper_shirt", "bool", false);
         $shirt_cost = $camper_shirt ? $shirt_cost : 0;
 
@@ -315,7 +315,7 @@ function get_promo_code_form($event, $hash) {
         "url" => "/features/events/templates/camp_2025/backend.php",
         "data" => [
             "action" => "applypromo",
-            "code" => "js||$('#promo_code_" . $hash . "').val()||js", // Code to send.
+            "code" => "js@@$('#promo_code_" . $hash . "').val()@@js", // Code to send.
             "hash" => $hash, // The registration hash.
             "checkout" => $checkout,
         ],
@@ -427,7 +427,7 @@ function print_registration_cart_items_html($registrations) {
                 $delete = true;
                 $hash = $reg->hash;
 
-                $setid = get_db_field("setting", "settings", "type='events_template' AND extra = ||extra|| AND setting_name='template_setting_promocode_set'", ["extra" => $event["eventid"]]);
+                $setid = get_db_field("setting", "settings", "type='events_template' AND extra = @@extra@@ AND setting_name='template_setting_promocode_set'", ["extra" => $event["eventid"]]);
                 if ($setid > 0) { // A promocode set is selected for this event.
                     $promo_code_form = get_promo_code_form($event, $reg->hash);
                 }

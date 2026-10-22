@@ -322,8 +322,8 @@ global $CFG, $USER;
                 "url" => "/features/events/events_ajax.php",
                 "data" => [
                     "action" => "export_registrations",
-                    "pagieid" => "js||pageid||js",
-                    "eventid" => "js||eventid||js",
+                    "pagieid" => "js@@pageid@@js",
+                    "eventid" => "js@@eventid@@js",
                 ],
                 "display" => "downloadframe",
                 "event" => "none",
@@ -390,7 +390,7 @@ global $CFG, $USER;
             "url" => "/features/events/events_ajax.php",
             "data" => [
                 "action" => "confirm_event_relay",
-                "confirm" => "js||confirm||js",
+                "confirm" => "js@@confirm@@js",
                 "pagieid" => $pageid,
                 "eventid" => $event['eventid'],
             ],
@@ -455,11 +455,11 @@ global $CFG, $USER;
             "url" => "/features/events/events_ajax.php",
             "data" => [
                 "action" => "confirm_event_relay",
-                "confirm" => "js||confirmed||js",
+                "confirm" => "js@@confirmed@@js",
                 "pagieid" => $pageid,
-                "eventid" => "js||eventid||js",
+                "eventid" => "js@@eventid@@js",
             ],
-            "display" => "confirm_js||eventid||js",
+            "display" => "confirm_js@@eventid@@js",
             "ondone" => "go_to_page('" . $pageid . "');",
             "event" => "none",
         ]);
@@ -512,7 +512,7 @@ function get_editable_events($pageid) {
             "url" => "/features/events/events_ajax.php",
             "data" => [
                 "action" => "delete_events_relay",
-                "eventid" => "js||eventid||js",
+                "eventid" => "js@@eventid@@js",
             ],
             "ondone" => "go_to_page('" . $pageid . "');",
             "event" => "none",
@@ -570,7 +570,7 @@ function get_open_enrollment_events($pageid) {
             "url" => "/features/events/events_ajax.php",
             "data" => [
                 "action" => "delete_events_relay",
-                "eventid" => "js||eventid||js",
+                "eventid" => "js@@eventid@@js",
             ],
             "ondone" => "go_to_page('" . $pageid . "');",
             "event" => "none",
@@ -582,8 +582,8 @@ function get_open_enrollment_events($pageid) {
             "url" => "/features/events/events_ajax.php",
             "data" => [
                 "action" => "export_registrations",
-                "pagieid" => "js||pageid||js",
-                "eventid" => "js||eventid||js",
+                "pagieid" => "js@@pageid@@js",
+                "eventid" => "js@@eventid@@js",
             ],
             "display" => "downloadframe",
             "event" => "none",
@@ -947,7 +947,7 @@ function events_approved_payment($cart, $tx) {
             $method = isset($tx->payment_source->venmo) ? "venmo" : $method;
 
             if (!empty($tx->id) &&
-                !get_db_row("SELECT * FROM logfile WHERE feature=||feature|| AND info=||info||", ["feature" => "events", "info" => $tx->id])) {
+                !get_db_row("SELECT * FROM logfile WHERE feature=@@feature@@ AND info=@@info@@", ["feature" => "events", "info" => $tx->id])) {
 
                 foreach ($cart as $item) {
                     $regid = $item->i;
@@ -956,19 +956,19 @@ function events_approved_payment($cart, $tx) {
                     $paid = (float) get_reg_paid($regid);
 
                     // Update total paid for this registration.
-                    $SQL = "UPDATE events_registrations_values SET value=||paid|| WHERE elementname LIKE '%paid%' AND regid=||regid||";
+                    $SQL = "UPDATE events_registrations_values SET value=@@paid@@ WHERE elementname LIKE '%paid%' AND regid=@@regid@@";
                     execute_db_sql($SQL, ["paid" => ((float) $paid + (float) $add), "regid" => $regid]);
 
                     // Update payment method for this registration.
-                    $currentmethod = get_db_field("value", "events_registrations_values", "elementname LIKE '%method%' AND regid=||regid||", ["regid" => $regid]);
+                    $currentmethod = get_db_field("value", "events_registrations_values", "elementname LIKE '%method%' AND regid=@@regid@@", ["regid" => $regid]);
 
                     if (empty($currentmethod)) {
-                        $SQL = "UPDATE events_registrations_values SET value=||method|| WHERE elementname LIKE '%method%' AND regid=||regid||";
+                        $SQL = "UPDATE events_registrations_values SET value=@@method@@ WHERE elementname LIKE '%method%' AND regid=@@regid@@";
                         execute_db_sql($SQL, ["method" => $method, "regid" => $regid]);
                     }
 
                     // If payment is made, it is now verified.
-                    $SQL = "UPDATE events_registrations SET verified=||verified|| WHERE regid=||regid||";
+                    $SQL = "UPDATE events_registrations SET verified=@@verified@@ WHERE regid=@@regid@@";
                     execute_db_sql($SQL, ["regid" => $regid, "verified" => "1"]);
 
                     // Make an entry for this transaction that links it to this registration.
@@ -986,12 +986,12 @@ function events_approved_payment($cart, $tx) {
                             "txid" => $tx->id,
                         ]),
                     ];
-                    $SQL = "INSERT INTO events_registrations_values (eventid, elementname, regid, value) VALUES(||eventid||, ||elementname||, ||regid||, ||logparams||)";
+                    $SQL = "INSERT INTO events_registrations_values (eventid, elementname, regid, value) VALUES(@@eventid@@, @@elementname@@, @@regid@@, @@logparams@@)";
                     execute_db_sql($SQL, $params);
 
                     // Send an updated email to the registration owner.
                     $touser = (object)[
-                        'email' => get_db_field("email", "events_registrations", "regid=||regid||", ["regid" => $regid]),
+                        'email' => get_db_field("email", "events_registrations", "regid=@@regid@@", ["regid" => $regid]),
                         'fname' => get_registrant_name($regid),
                         'lname' => "",
                     ];
@@ -1038,19 +1038,19 @@ function get_total_cart_owed() {
 }
 
 function get_reg_owed($regid) {
-    return get_db_field("value", "events_registrations_values", "regid=||regid|| AND elementname LIKE '%owed%'", ["regid" => $regid]);
+    return get_db_field("value", "events_registrations_values", "regid=@@regid@@ AND elementname LIKE '%owed%'", ["regid" => $regid]);
 }
 
 function get_reg_paid($regid) {
-    return get_db_field("value", "events_registrations_values", "regid=||regid|| AND elementname LIKE '%paid%'", ["regid" => $regid]);
+    return get_db_field("value", "events_registrations_values", "regid=@@regid@@ AND elementname LIKE '%paid%'", ["regid" => $regid]);
 }
 
 function get_reg_paymethod($regid) {
-    return get_db_field("value", "events_registrations_values", "regid=||regid|| AND elementname LIKE '%method%'", ["regid" => $regid]);
+    return get_db_field("value", "events_registrations_values", "regid=@@regid@@ AND elementname LIKE '%method%'", ["regid" => $regid]);
 }
 
 function get_reg_promo($regid) {
-    return get_db_field("value", "events_registrations_values", "regid=||regid|| AND elementname LIKE '%campership%'", ["regid" => $regid]);
+    return get_db_field("value", "events_registrations_values", "regid=@@regid@@ AND elementname LIKE '%campership%'", ["regid" => $regid]);
 }
 
 function update_total_cart_paid($paidcart) {
@@ -1200,7 +1200,7 @@ global $CFG, $why, $error;
                 if ($nolimit = hard_limits($regid, $event, $template)) {
                     if (!$nolimit = soft_limits($regid, $event, $template)) {
                         $error = "Because this event has $why, you have been placed in the waiting line for this event.";
-                        execute_db_sql("UPDATE events_registrations SET queue = 1 WHERE regid = ||regid||", ["regid" => $regid]);
+                        execute_db_sql("UPDATE events_registrations SET queue = 1 WHERE regid = @@regid@@", ["regid" => $regid]);
                     }
                 } else {
                     if (!$nolimit) {
@@ -1262,7 +1262,7 @@ global $CFG, $why, $error;
 }
 
 function get_promo_by_name($eventid, $promoname) {
-    $setid = get_db_field("setting", "settings", "type='events_template' AND extra = ||extra|| AND setting_name='template_setting_promocode_set'", ["extra" => $eventid]);
+    $setid = get_db_field("setting", "settings", "type='events_template' AND extra = @@extra@@ AND setting_name='template_setting_promocode_set'", ["extra" => $eventid]);
 
     if (!$promo_code_set = get_promocode_set_array($setid)) {
         return false;
@@ -1281,7 +1281,7 @@ function get_promo_by_name($eventid, $promoname) {
 }
 
 function get_promo_code_match($eventid, $code) {
-    $setid = get_db_field("setting", "settings", "type='events_template' AND extra = ||extra|| AND setting_name='template_setting_promocode_set'", ["extra" => $eventid]);
+    $setid = get_db_field("setting", "settings", "type='events_template' AND extra = @@extra@@ AND setting_name='template_setting_promocode_set'", ["extra" => $eventid]);
 
     if (!$promo_code_set = get_promocode_set_array($setid)) {
         return false;
@@ -1322,7 +1322,7 @@ function apply_promo($promo, $price) {
 
 function registration_email($regid, $touser, $pending = false, $fullypaid = false) {
 global $CFG;
-    $reg = get_db_row("SELECT * FROM events_registrations WHERE regid=||regid||", ["regid" => $regid]);
+    $reg = get_db_row("SELECT * FROM events_registrations WHERE regid=@@regid@@", ["regid" => $regid]);
     $event = get_event($reg["eventid"]);
     $template = get_event_template($event['template_id']);
 
@@ -1644,7 +1644,7 @@ global $CFG, $USER;
     $event = get_event($eventid);
     $confirm = $confirm ? 1 : 0;
 
-    $status = execute_db_sql("UPDATE events SET confirmed = ||confirmed|| WHERE eventid = ||eventid||", ["confirmed" => $confirm, "eventid" => $eventid]);
+    $status = execute_db_sql("UPDATE events SET confirmed = @@confirmed@@ WHERE eventid = @@eventid@@", ["confirmed" => $confirm, "eventid" => $eventid]);
 
     if (!$status) {
         return false;
@@ -1691,7 +1691,7 @@ function get_back_to_registrations_link($eventid) {
     <div class="dontprint" style="padding: 10px"></div>';
 }
 function get_event($id) {
-    return get_db_row("SELECT * FROM events WHERE eventid = ||eventid||", ["eventid" => $id]);
+    return get_db_row("SELECT * FROM events WHERE eventid = @@eventid@@", ["eventid" => $id]);
 }
 
 function get_event_from_regid($regid) {
@@ -1702,11 +1702,11 @@ function get_event_from_regid($regid) {
 }
 
 function get_event_template($id) {
-    return get_db_row("SELECT * FROM events_templates WHERE template_id = ||template_id||", ["template_id" => $id]);
+    return get_db_row("SELECT * FROM events_templates WHERE template_id = @@template_id@@", ["template_id" => $id]);
 }
 
 function get_event_template_by_name($name) {
-    return get_db_row("SELECT * FROM events_templates WHERE name = ||name||", ["name" => $name]);
+    return get_db_row("SELECT * FROM events_templates WHERE name = @@name@@", ["name" => $name]);
 }
 
 function get_event_length($event) {
@@ -1744,7 +1744,7 @@ global $CFG;
         "url" => "/features/events/events_ajax.php",
         "data" => [
             "action" => "show_template_settings",
-            "templateid" => "js||$('#template').val()||js",
+            "templateid" => "js@@$('#template').val()@@js",
             "eventid" => $eventid,
         ],
         "display" => "template_settings_div",
@@ -2018,8 +2018,8 @@ function get_staff_appsearch_js() {
         "url" => "/features/events/events_ajax.php",
         "data" => [
             "action" => "appsearch",
-            "pagenum" => "js||pagenum||js",
-            "searchwords" => "js||encodeURIComponent(searchwords)||js",
+            "pagenum" => "js@@pagenum@@js",
+            "searchwords" => "js@@encodeURIComponent(searchwords)@@js",
         ],
         "display" => "searchcontainer",
         "ondone" => "init_event_menu();",
@@ -2375,7 +2375,7 @@ function contact_list_form($eventid) {
 global $CFG;
     $contacts = get_db_result("SELECT *
                                 FROM events_contacts
-                                WHERE pageid = ||pageid||
+                                WHERE pageid = @@pageid@@
                                 ORDER BY name", ["pageid" => $CFG->SITEID]);
 
     if (!$contacts) {
@@ -2489,8 +2489,8 @@ function get_events_admin_contacts($eventid = false) {
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     $selected = 0;
     if ($eventid) {
-        $contactid = get_db_field("contact", "events", "eventid = ||eventid||", ["eventid" => $eventid]);
-        $selected = get_db_field('CONCAT(contactid, ":", name, ":", email, ":", phone) as contactdata', "events_contacts", "contactid = ||contactid||", ["contactid" => $contactid]);
+        $contactid = get_db_field("contact", "events", "eventid = @@eventid@@", ["eventid" => $eventid]);
+        $selected = get_db_field('CONCAT(contactid, ":", name, ":", email, ":", phone) as contactdata', "events_contacts", "contactid = @@contactid@@", ["contactid" => $contactid]);
     }
 
     // Script for filling contact details on selecting from dropdown.
@@ -2585,7 +2585,7 @@ function get_promocode_manager($pageid) {
             "url" => "/features/events/events_ajax.php",
             "data" => [
                 "action" => "edit_promocode_set",
-                "setid" => "js||setid||js",
+                "setid" => "js@@setid@@js",
             ],
             "display" => "promocodemanager",
             "loading" => "loading_overlay",
@@ -2598,7 +2598,7 @@ function get_promocode_manager($pageid) {
             "url" => "/features/events/events_ajax.php",
             "data" => [
                 "action" => "edit_promoset_form",
-                "setid" => "js||setid||js",
+                "setid" => "js@@setid@@js",
                 "pageid" => $pageid,
             ],
             "display" => "promocodemanager",
@@ -2613,7 +2613,7 @@ function get_promocode_manager($pageid) {
             "url" => "/features/events/events_ajax.php",
             "data" => [
                 "action" => "delete_promoset",
-                "setid" => "js||setid||js",
+                "setid" => "js@@setid@@js",
                 "pageid" => $pageid,
             ],
             "display" => "promocodemanager",
@@ -3038,7 +3038,7 @@ function request_questions_form($reqid, $voteid, $featureid, $pageid) {
     // Print out previous questions and answers
     if ($results = get_db_result("SELECT *
                                     FROM events_requests_questions
-                                WHERE reqid = ||reqid||
+                                WHERE reqid = @@reqid@@
                                 ORDER BY question_time", ["reqid" => $reqid])) {
         while ($row = fetch_row($results)) {
             $question = strip_tags(trim($row['question'], " \n\r\t"),'<a><em><u><img><br>');
@@ -3105,7 +3105,7 @@ global $CFG;
         "reqid" => $reqid,
         "qid" => $qid,
     ];
-    $mod = "AND id <> ||qid||";
+    $mod = "AND id <> @@qid@@";
 
     $prev_questions = "";
     $SQL = fill_template("dbsql/events.sql", "get_events_requests_questions", "events", ["mod" => $mod], true);
@@ -3146,8 +3146,8 @@ global $CFG;
 
     $request_answer_form = "";
     if (!empty($qid)) {
-        $answer = get_db_field("answer", "events_requests_questions", "id = ||id||", ["id" => $qid]);
-        $question = get_db_field("question", "events_requests_questions", "id = ||id||", ["id" => $qid]);
+        $answer = get_db_field("answer", "events_requests_questions", "id = @@id@@", ["id" => $qid]);
+        $question = get_db_field("question", "events_requests_questions", "id = @@id@@", ["id" => $qid]);
         $question = strip_tags(trim($question, " \n\r\t"),'<a><em><u><img><br>');
         $request_answer_form = '
             <form id="request_answers_form" method="post" action="./events_ajax.php">
@@ -3183,8 +3183,8 @@ global $CFG;
 function request_has_already_voted($reqid, $voteid) {
     $SQL = 'SELECT *
             FROM events_requests
-            WHERE reqid = ||reqid||
-            AND voted LIKE ||voted||';
+            WHERE reqid = @@reqid@@
+            AND voted LIKE @@voted@@';
     return get_db_row($SQL, ["reqid" => $reqid, "voted" => "%:$voteid;%"]);
 }
 
@@ -3229,9 +3229,9 @@ global $CFG, $USER;
             "url" => "/features/events/events_ajax.php",
             "data" => [
                 "action" => "confirm_event_relay",
-                "confirm" => "js||confirm||js",
+                "confirm" => "js@@confirm@@js",
                 "pagieid" => $pageid,
-                "eventid" => "js||eventid||js",
+                "eventid" => "js@@eventid@@js",
             ],
             "event" => "none",
             "display" => "user_alerts_div",
@@ -3257,7 +3257,7 @@ function events_print_confirmation($cart, $data) {
 
 // Function that accepts a name, email, and phone number, searches the contacts table for a match and returns the contact id if found, or creates a new contact and returns that id if not found.
 function get_contact_id($name, $email, $phone) {
-    $contact = get_db_field("contactid", "events_contacts", "name = ||name||", ["name" => $name]);
+    $contact = get_db_field("contactid", "events_contacts", "name = @@name@@", ["name" => $name]);
 
     if (!$contact) { // No contact found, create a new one.
         $SQL = fetch_template("dbsql/events.sql", "add_contact", "events");
@@ -3273,12 +3273,12 @@ function get_contact_id($name, $email, $phone) {
 
 
 function get_event_contact($contactid) {
-    return get_db_row("SELECT * FROM events_contacts WHERE contactid = ||contactid||", ["contactid" => $contactid]);
+    return get_db_row("SELECT * FROM events_contacts WHERE contactid = @@contactid@@", ["contactid" => $contactid]);
 }
 
 function get_my_contacts_select($pageid, $selected = false) {
     $returnme = "";
-    $SQL = "SELECT * FROM events_contacts WHERE pageid = ||pageid|| ORDER BY name";
+    $SQL = "SELECT * FROM events_contacts WHERE pageid = @@pageid@@ ORDER BY name";
 
     if ($contacts = get_db_result($SQL, ["pageid" => $pageid])) {
         while ($contact = fetch_row($contacts)) {

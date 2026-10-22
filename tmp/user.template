@@ -1,4 +1,4 @@
-new_user_template||
+new_user_template@@
   <div class="formDiv" id="new_user_div">
     <input id="hiddenusername" type="hidden" /><input id="hiddenpassword" type="hidden" />
     <form id="signup_form">
@@ -7,9 +7,9 @@ new_user_template||
             <label class="rowTitle" for="email">
             Email Address
             </label>
-            <input type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-rule-ajax1="ajax/site_ajax.php::unique_email::&email=::true" data-msg-required="||echo getlang("input_required");::none||" data-msg-email="||email_valid||" data-msg-ajax1="||email_unique||" />
+            <input type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-rule-ajax1="ajax/site_ajax.php::unique_email::&email=::true" data-msg-required="@@echo getlang("input_required");::none@@" data-msg-email="@@email_valid@@" data-msg-ajax1="@@email_unique@@" />
             <div class="tooltipContainer info">
-            ||email_help||
+            @@email_help@@
             </div>
             <div class="spacer" style="clear: both;"></div>
         </div>
@@ -17,9 +17,9 @@ new_user_template||
             <label class="rowTitle" for="fname">
             First Name
             </label>
-            <input type="text" id="fname" name="fname" data-rule-required="true" data-msg-required="||echo getlang("input_required");::none||" />
+            <input type="text" id="fname" name="fname" data-rule-required="true" data-msg-required="@@echo getlang("input_required");::none@@" />
             <div class="tooltipContainer info">
-            ||fname_help||
+            @@fname_help@@
             </div>
             <div class="spacer" style="clear: both;"></div>
         </div>
@@ -27,9 +27,9 @@ new_user_template||
             <label class="rowTitle" for="lname">
             Last Name
             </label>
-            <input type="text" id="lname" name="lname" data-rule-required="true" data-msg-required="||echo getlang("input_required");::none||" />
+            <input type="text" id="lname" name="lname" data-rule-required="true" data-msg-required="@@echo getlang("input_required");::none@@" />
             <div class="tooltipContainer info">
-            ||lname_help||
+            @@lname_help@@
             </div>
             <div class="spacer" style="clear: both;"></div>
         </div>
@@ -37,9 +37,9 @@ new_user_template||
             <label class="rowTitle" for="mypassword">
             Password
             </label>
-            <input type="password" id="mypassword" name="mypassword" data-rule-required="true" data-rule-minlength="6" data-msg-required="||echo getlang("input_required");::none||" data-msg-minlength="||password_length||" />
+            <input type="password" id="mypassword" name="mypassword" data-rule-required="true" data-rule-minlength="6" data-msg-required="@@echo getlang("input_required");::none@@" data-msg-minlength="@@password_length@@" />
             <div class="tooltipContainer info">
-            ||password_help||
+            @@password_help@@
             </div>
             <div class="spacer" style="clear: both;"></div>
         </div>
@@ -47,138 +47,131 @@ new_user_template||
             <label class="rowTitle" for="vpassword">
             Verify Password
             </label>
-            <input type="password" id="vpassword" name="vpassword" data-rule-required="true" data-rule-equalTo="#mypassword" data-msg-required="||echo getlang("input_required");::none||" data-msg-equalTo="||vpassword_match||" /><div class="tooltipContainer info">||vpassword_help||</div><br/>
+            <input type="password" id="vpassword" name="vpassword" data-rule-required="true" data-rule-equalTo="#mypassword" data-msg-required="@@echo getlang("input_required");::none@@" data-msg-equalTo="@@vpassword_match@@" /><div class="tooltipContainer info">@@vpassword_help@@</div><br/>
             <div class="spacer" style="clear: both;"></div>
         </div>
         <input class="submit" name="submit" type="submit" value="Sign Up" style="margin: auto;width: 80px;display: block;" />
         </fieldset>
     </form>
   </div>
-||new_user_template
+@@new_user_template
 
-reset_password_template||
-  ||alternate{{
+reset_password_template@@
+    @@alternate{{
         <h1>
         Change Password
         </h1>
         <br />
         <div id="forgot_password">
         Please type a new password then verify it.  After submitting your new password, you will be logged into the site and your new password will be set.
-        <br />
-        <br />
+        <br /><br />
         <form id="password_reset_form">
             <fieldset class="formContainer">
-            <div class="rowContainer">
-                <label class="rowTitle" for="mypassword">
-                New Password
-                </label>
-                <input value="" type="password" id="mypassword" name="mypassword" data-rule-required="true" data-rule-minlength="6" data-msg-required="||echo getlang("input_required");::none||" data-msg-minlength="||password_length||" />
-                <div class="tooltipContainer info">
-                ||password_help||
+                <div class="rowContainer">
+                    <label class="rowTitle" for="mypassword">
+                        New Password
+                    </label>
+                    <input value="" type="password" id="mypassword" name="mypassword" data-rule-required="true" data-rule-minlength="6" data-msg-required="@@echo getlang("input_required");::none@@" data-msg-minlength="@@password_length@@" />
+                    <div class="tooltipContainer info">
+                        @@password_help@@
+                    </div>
+                    <div class="spacer" style="clear: both;"></div>
                 </div>
-                <div class="spacer" style="clear: both;"></div>
-            </div>
-            <div class="rowContainer">
-                <label class="rowTitle" for="vpassword">
-                Verify Password
-                </label>
-                <input value="" type="password" id="vpassword" name="vpassword" data-rule-required="true" data-rule-equalTo="#mypassword" data-msg-required="||echo getlang("input_required");::none||" data-msg-equalTo="||vpassword_match||" />
-                <div class="tooltipContainer info">
-                ||vpassword_help||
+                <div class="rowContainer">
+                    <label class="rowTitle" for="vpassword">
+                        Verify Password
+                    </label>
+                    <input value="" type="password" id="vpassword" name="vpassword" data-rule-required="true" data-rule-equalTo="#mypassword" data-msg-required="@@echo getlang("input_required");::none@@" data-msg-equalTo="@@vpassword_match@@" />
+                    <div class="tooltipContainer info">
+                        @@vpassword_help@@
+                    </div>
+                    <br />
+                    <div class="spacer" style="clear: both;"></div>
                 </div>
-                <br />
-                <div class="spacer" style="clear: both;"></div>
-            </div>
-            <input class="submit" name="submit" type="submit" value="Save" style="margin: auto;width: 80px;display: block;" />
+                <input class="submit" name="submit" type="submit" value="Save" style="margin: auto;width: 80px;display: block;" />
             </fieldset>
         </form>
-            ||echo js_code_wrap('
+            @@echo js_code_wrap('
             setTimeout(function() {
-                        document.getElementById("mypassword").value = "";
-                        document.getElementById("vpassword").value = "";
-                        document.getElementById("mypassword").focus();
-                        },500);
-            ');::none||
+                document.getElementById("mypassword").value = "";
+                document.getElementById("vpassword").value = "";
+                document.getElementById("mypassword").focus();
+                },500);
+            ');::none@@
         </div>
-
-        //OR//
-
-        ||echo js_code_wrap('go_to_page(' . siteid . ');');::siteid||
-  }}alternate||
-||reset_password_template
-
-change_profile_template||
-  ||userid{{
-    <div id="change_profile">
-        You can change you profile details here.
-        <br />
-        <br />
-        <form id="profile_change_form">
-        <fieldset class="formContainer">
-            <div class="rowContainer">
-            <label class="rowTitle" for="myfname">
-                First Name
-            </label>
-            <input value="||user->fname||" type="text" id="myfname" name="myfname" data-rule-required="true" />
-            <div class="tooltipContainer info">
-                ||fname_help||
-            </div>
-            <div class="spacer" style="clear: both;"></div>
-            </div>
-            <div class="rowContainer">
-            <label class="rowTitle" for="mylname">
-                Last Name
-            </label>
-            <input value="||user->lname||" type="text" id="mylname" name="mylname" data-rule-required="true" />
-            <div class="tooltipContainer info">
-                ||lname_help||
-            </div>
-            <div class="spacer" style="clear: both;"></div>
-            </div>
-            <div class="rowContainer">
-            <label class="rowTitle" for="email">
-                Email Address
-            </label>
-            <input type="text" value="||user->email||" id="email" name="email" data-rule-required="true" data-rule-email="true" data-rule-ajax1="ajax/site_ajax.php::unique_email::&email=::true::||user->email||" data-msg-required="||echo getlang("input_required");::none||" data-msg-email="||email_valid||" data-msg-ajax1="||email_unique||" />
-            <div class="tooltipContainer info">
-                ||email_help||
-            </div>
-            <div class="spacer" style="clear: both;"></div>
-            </div>
-            <div class="rowContainer">
-            <label class="rowTitle" for="mypassword">
-                Password
-            </label>
-            <input type="password" id="mypassword" name="mypassword" data-rule-minlength="6" data-msg-minlength="||password_length||" />
-            <div class="tooltipContainer info">
-                ||password_help||
-            </div>
-            <div class="spacer" style="clear: both;"></div>
-            </div>
-            <div class="rowContainer">
-            <label class="rowTitle" for="vpassword">
-                Verify Password
-            </label>
-            <input type="password" id="vpassword" name="vpassword" data-rule-equalTo="#mypassword" data-msg-equalTo="||vpassword_match||" />
-            <div class="tooltipContainer info">
-                ||vpassword_help||
-            </div>
-            <div class="spacer" style="clear: both;"></div>
-            </div>
-            <input class="submit" name="submit" type="submit" value="Save" style="margin: auto;width: 80px;display: block;" />
-            <br/>
-        </fieldset>
-        </form>
-    </div>
-
     //OR//
+        @@echo js_code_wrap('go_to_page(' . siteid . ');');::siteid@@
+    }}alternate@@
+@@reset_password_template
 
-    ||echo js_code_wrap('go_to_page(' . siteid . ');');::siteid||
+change_profile_template@@
+    @@userid{{
+        <div id="change_profile">
+            You can change you profile details here.
+            <br /><br />
+            <form id="profile_change_form">
+                <fieldset class="formContainer">
+                    <div class="rowContainer">
+                        <label class="rowTitle" for="myfname">
+                            First Name
+                        </label>
+                        <input value="@@user->fname@@" type="text" id="myfname" name="myfname" data-rule-required="true" />
+                        <div class="tooltipContainer info">
+                            @@fname_help@@
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
+                    </div>
+                    <div class="rowContainer">
+                        <label class="rowTitle" for="mylname">
+                            Last Name
+                        </label>
+                        <input value="@@user->lname@@" type="text" id="mylname" name="mylname" data-rule-required="true" />
+                        <div class="tooltipContainer info">
+                            @@lname_help@@
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
+                    </div>
+                    <div class="rowContainer">
+                        <label class="rowTitle" for="email">
+                            Email Address
+                        </label>
+                        <input type="text" value="@@user->email@@" id="email" name="email" data-rule-required="true" data-rule-email="true" data-rule-ajax1="ajax/site_ajax.php::unique_email::&email=::true::@@user->email@@" data-msg-required="@@echo getlang("input_required");::none@@" data-msg-email="@@email_valid@@" data-msg-ajax1="@@email_unique@@" />
+                        <div class="tooltipContainer info">
+                            @@email_help@@
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
+                    </div>
+                    <div class="rowContainer">
+                        <label class="rowTitle" for="mypassword">
+                            Password
+                        </label>
+                        <input type="password" id="mypassword" name="mypassword" data-rule-minlength="6" data-msg-minlength="@@password_length@@" />
+                        <div class="tooltipContainer info">
+                            @@password_help@@
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
+                    </div>
+                    <div class="rowContainer">
+                        <label class="rowTitle" for="vpassword">
+                            Verify Password
+                        </label>
+                        <input type="password" id="vpassword" name="vpassword" data-rule-equalTo="#mypassword" data-msg-equalTo="@@vpassword_match@@" />
+                        <div class="tooltipContainer info">
+                            @@vpassword_help@@
+                        </div>
+                        <div class="spacer" style="clear: both;"></div>
+                    </div>
+                    <input class="submit" name="submit" type="submit" value="Save" style="margin: auto;width: 80px;display: block;" />
+                    <br/>
+                </fieldset>
+            </form>
+        </div>
+    //OR//
+        @@echo js_code_wrap('go_to_page(' . siteid . ');');::siteid@@
+    }}userid@@
+@@change_profile_template
 
-  }}userid||
-||change_profile_template
-
-forgot_password_form_template||
+forgot_password_form_template@@
   <div id="forgot_password">
     Please type the email address that is associated with your user account.  A new temporary password will be sent to this address.  You will then be able to log into the website and change your password.
     <br />
@@ -189,9 +182,9 @@ forgot_password_form_template||
             <label class="rowTitle" for="email">
             Email Address
             </label>
-            <input type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-rule-ajax1="ajax/site_ajax.php::unique_email::&email=::false" data-msg-required="||echo getlang("input_required");::none||" data-msg-email="||email_valid||" data-msg-ajax1="||email_used||" />
+            <input type="text" id="email" name="email" data-rule-required="true" data-rule-email="true" data-rule-ajax1="ajax/site_ajax.php::unique_email::&email=::false" data-msg-required="@@echo getlang("input_required");::none@@" data-msg-email="@@email_valid@@" data-msg-ajax1="@@email_used@@" />
             <div class="tooltipContainer info">
-            ||email_help||
+            @@email_help@@
             </div>
             <div class="spacer" style="clear: both;"></div>
         </div>
@@ -199,27 +192,27 @@ forgot_password_form_template||
         </fieldset>
     </form>
   </div>
-||forgot_password_form_template
+@@forgot_password_form_template
 
-user_alerts_template||
+user_alerts_template@@
   <div id="user_alerts_div">
     <h2 style="text-align: center">User Alerts</h2>
-    ||alerts||
+    @@alerts@@
   </div>
-||user_alerts_template
+@@user_alerts_template
 
-confirmation_email_template||
+confirmation_email_template@@
     <p>
         <font face="Tahoma">
             <font size="3" color="#993366">
-                Dear <strong>||fname|| ||lname||</strong>,
+                Dear <strong>@@fname@@ @@lname@@</strong>,
             </font><br />
         </font>
     </p>
     <blockquote>
         <p>
             <font size="3" face="Tahoma">
-                Thank you for joining <strong>||config->sitename||</strong>.&nbsp; To finalize the account creation process, use the following instructions to log into the site.
+                Thank you for joining <strong>@@config->sitename@@</strong>.&nbsp; To finalize the account creation process, use the following instructions to log into the site.
             </font>
         </p>
     </blockquote>
@@ -231,7 +224,7 @@ confirmation_email_template||
             <font face="Tahoma">
                 <strong>Username: </strong>
                 <font color="#3366ff">
-                    ||email||
+                    @@email@@
                 </font>
             </font>
         </p>
@@ -239,7 +232,7 @@ confirmation_email_template||
             <font face="Tahoma">
                 <strong>Password: </strong>
                 <font color="#3366ff">
-                    ||temp||
+                    @@temp@@
                 </font>
             </font>
         </p>
@@ -249,7 +242,7 @@ confirmation_email_template||
     <blockquote>
         <p>
             <font size="3" face="Tahoma">
-                After you have successfully logged into the site using the password provided, your account will be finalized and your password will then be changed to the password you specified inside the account creation form.&nbsp; Again, we would like to thank you for joining <strong>||config->sitename||</strong> and if you have any questions during your use of the site, feel free to contact us at <font color="#ff0000">||config->siteemail||</font>.<br />
+                After you have successfully logged into the site using the password provided, your account will be finalized and your password will then be changed to the password you specified inside the account creation form.&nbsp; Again, we would like to thank you for joining <strong>@@config->sitename@@</strong> and if you have any questions during your use of the site, feel free to contact us at <font color="#ff0000">@@config->siteemail@@</font>.<br />
             </font>
         </p>
     </blockquote>
@@ -265,11 +258,11 @@ confirmation_email_template||
     </p>
     <p>
         <font size="3" face="Tahoma">
-            <em>||config->siteowner|| </em>
+            <em>@@config->siteowner@@ </em>
         </font>
         <font size="3" face="Tahoma" color="#ff0000">
-            &lt;||config->siteemail||&gt;
+            &lt;@@config->siteemail@@&gt;
         </font>
     </p>
     <p>&nbsp;</p>
-||confirmation_email_template
+@@confirmation_email_template

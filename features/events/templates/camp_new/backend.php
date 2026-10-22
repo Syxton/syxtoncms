@@ -39,8 +39,8 @@ global $CFG, $MYVARS, $USER, $error;
         //Get charges for pictures and shirts
         $Camper_Picture = clean_myvar_opt("Camper_Picture", "bool", false);
         $Camper_Shirt = clean_myvar_opt("Camper_Shirt", "bool", false);
-        $picture_cost = get_db_field("setting", "settings", "type='events_template' AND extra = ||extra|| AND setting_name='template_setting_pictures_price'", ["extra" => $eventid]);
-        $shirt_cost = get_db_field("setting", "settings", "type='events_template' AND extra = ||extra|| AND setting_name='template_setting_shirt_price'", ["extra" => $eventid]);
+        $picture_cost = get_db_field("setting", "settings", "type='events_template' AND extra = @@extra@@ AND setting_name='template_setting_pictures_price'", ["extra" => $eventid]);
+        $shirt_cost = get_db_field("setting", "settings", "type='events_template' AND extra = @@extra@@ AND setting_name='template_setting_shirt_price'", ["extra" => $eventid]);
         $picture_cost = $Camper_Picture ? $picture_cost : 0;
         $shirt_cost = $Camper_Shirt ? $shirt_cost : 0;
 
@@ -103,7 +103,7 @@ global $CFG, $MYVARS, $USER, $error;
 
             // Successful registration
             if ($event['fee_full'] === 0) { // Support for a free event.
-                execute_db_sql("UPDATE events_registrations SET verified = 1 WHERE regid = ||regid||", ["regid" => $regid]);
+                execute_db_sql("UPDATE events_registrations SET verified = 1 WHERE regid = @@regid@@", ["regid" => $regid]);
                 $return .= '<h3>You have successfully registered ' . $Camper_Name_First . ' for ' . $event['name'] . '.</h3>';
 
                 $message = registration_email($regid, $touser); // Get email message.
@@ -313,8 +313,8 @@ function common_weeks($event, $included = true, $id = "", $regid = "", $autofill
 global $CFG, $USER, $PAGE;
     $returnme = "";
     $time = get_timestamp();
-    $camper_age = $autofill == 0 ? false : get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname='Camper_Age'", ["regid" => $regid]);
-    $camper_name = $autofill == 0 ? false : get_db_field("value", "events_registrations_values", "regid = ||regid|| AND elementname='Camper_Name'", ["regid" => $regid]);
+    $camper_age = $autofill == 0 ? false : get_db_field("value", "events_registrations_values", "regid = @@regid@@ AND elementname='Camper_Age'", ["regid" => $regid]);
+    $camper_name = $autofill == 0 ? false : get_db_field("value", "events_registrations_values", "regid = @@regid@@ AND elementname='Camper_Name'", ["regid" => $regid]);
     $siteviewable = $event["pageid"] == $CFG->SITEID || ($event["siteviewable"] == 1 && $event["confirmed"] == 1) ? " OR (siteviewable = '1' AND confirmed = '1')" : "";
     $includelastevent = $included ? "" : "e.eventid != " . $event["eventid"]. " AND ";
     $SQL = "SELECT e.* FROM events e WHERE $includelastevent (e.template_id=" . $event["template_id"] . " AND (e.pageid='" . $event["pageid"] . "' $siteviewable)) AND (e.start_reg < $time AND e.stop_reg > ($time - 86400)) AND (e.max_users=0 OR (e.max_users != 0 AND e.max_users > (SELECT COUNT(*) FROM events_registrations er WHERE er.eventid=e.eventid AND verified='1')))";

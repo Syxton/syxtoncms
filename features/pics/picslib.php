@@ -131,9 +131,9 @@ global $CFG, $MYVARS, $USER;
             "url" => "/features/pics/pics_ajax.php",
             "data" => [
                 "action" => "pics_pageturn",
-                "pagenum" => "js||pagenum||js",
+                "pagenum" => "js@@pagenum@@js",
                 "featureid" => $featureid,
-                "galleryid" => "js||$('#gallery').val()||js",
+                "galleryid" => "js@@$('#gallery').val()@@js",
             ],
             "display" => "searchcontainer",
             "loading" => "loading_overlay",
@@ -162,7 +162,7 @@ global $CFG, $MYVARS, $USER;
                 "action" => "delete_gallery",
                 "pageid" => $pageid,
                 "featureid" => $featureid,
-                "galleryid" => "js||$('#gallery').val()||js",
+                "galleryid" => "js@@$('#gallery').val()@@js",
             ],
             "display" => "pics_manager",
             "loading" => "loading_overlay",
@@ -271,11 +271,11 @@ global $CFG, $USER;
     $pagehidden = $canedit ? "" : " AND pagehidden = 0";
 
     if ($issite) {
-        $SQL = 'SELECT * FROM pics WHERE (featureid = ||featureid|| OR siteviewable = 1)' . $whichgallery . $sitehidden . ' ORDER BY' . $full_order;
+        $SQL = 'SELECT * FROM pics WHERE (featureid = @@featureid@@ OR siteviewable = 1)' . $whichgallery . $sitehidden . ' ORDER BY' . $full_order;
     } else {
         $SQL = 'SELECT *
                 FROM pics
-                WHERE featureid = ||featureid||
+                WHERE featureid = @@featureid@@
                 ' . $whichgallery . '
                 ' . $pagehidden . '
                 ORDER BY ' . $full_order;
@@ -296,7 +296,7 @@ global $CFG, $USER;
                 "url" => "/features/pics/pics_ajax.php",
                 "data" => [
                     "action" => "delete_pic",
-                    "picsid" => "js||picsid||js",
+                    "picsid" => "js@@picsid@@js",
                 ],
                 "ondone" => "pics_pageturn($pagenum);",
                 "event" => "none",
@@ -311,7 +311,7 @@ global $CFG, $USER;
                 "url" => "/features/pics/pics_ajax.php",
                 "data" => [
                     "action" => "toggle_activate",
-                    "picsid" => "js||picsid||js",
+                    "picsid" => "js@@picsid@@js",
                 ],
                 "ondone" => "$('#activated_picsid_' + picsid).toggleClass('pics_active');",
                 "event" => "none",
@@ -324,9 +324,9 @@ global $CFG, $USER;
                 "url" => "/features/pics/pics_ajax.php",
                 "data" => [
                     "action" => "save_caption",
-                    "picsid" => "js||picsid||js",
-                    "caption" => "js||encodeURIComponent($('#caption_' + picsid).val())||js",
-                    "galleryid" => "js||$('#movepics_' + picsid).val()||js",
+                    "picsid" => "js@@picsid@@js",
+                    "caption" => "js@@encodeURIComponent($('#caption_' + picsid).val())@@js",
+                    "galleryid" => "js@@$('#movepics_' + picsid).val()@@js",
                 ],
                 "ondone" => "pics_pageturn($pagenum);",
                 "event" => "none",
@@ -342,8 +342,8 @@ global $CFG, $USER;
                     "url" => "/features/pics/pics_ajax.php",
                     "data" => [
                         "action" => "save_viewability",
-                        "picsid" => "js||picsid||js",
-                        "siteviewable" => "js||$('#siteviewable_' + picsid).prop('checked')||js",
+                        "picsid" => "js@@picsid@@js",
+                        "siteviewable" => "js@@$('#siteviewable_' + picsid).prop('checked')@@js",
                     ],
                     "ondone" => "pics_pageturn($pagenum);",
                     "event" => "none",
@@ -359,8 +359,8 @@ global $CFG, $USER;
                 "url" => "/features/pics/pics_ajax.php",
                 "data" => [
                     "action" => "altergallery",
-                    "picsid" => "js||picsid||js",
-                    "galleryid" => "js||$('#altergallery_' + picsid).val()||js",
+                    "picsid" => "js@@picsid@@js",
+                    "galleryid" => "js@@$('#altergallery_' + picsid).val()@@js",
                 ],
                 "loading" => "loading_overlay",
                 "ondone" => "pics_pageturn($pagenum);",
@@ -561,7 +561,7 @@ global $CFG;
     try {
         start_db_transaction();
         if ($featureid = execute_db_sql(fetch_template("dbsql/pics.sql", "insert_pics_feature", "pics"), ["pageid" => $pageid])) {
-            $area = get_db_field("default_area", "features", "feature = ||feature||", ["feature" => $type]);
+            $area = get_db_field("default_area", "features", "feature = @@feature@@", ["feature" => $type]);
             $sort = get_db_count(fetch_template("dbsql/features.sql", "get_features_by_page_area"), ["pageid" => $pageid, "area" => $area]) + 1;
             $params = [
                 "pageid" => $pageid,
