@@ -26,7 +26,7 @@ function form_editor_page($form_key, $pageid, $show_form_picker = true) {
         include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
     }
     form_engine_ensure_schema();
-    form_engine_include_def_lib($form_key, 'runtime_lib');
+    form_engine_def($form_key);
     form_engine_sync_field_defs($form_key, 0);
     form_engine_seed_hooks($form_key, 0);
 
@@ -390,9 +390,8 @@ function form_editor_ui($form_key, $pageid) {
     if (!defined('FORMENGINELIB')) {
         include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
     }
-    form_engine_include_def_lib($form_key, 'runtime_lib');
+    $def = form_engine_def($form_key);
     form_engine_sync_field_defs($form_key, 0);
-    $def = form_engine_get_form_def($form_key);
     $form_title = ($def['label'] ?? $form_key) . ' — Form Editor';
 
     $fields = form_engine_get_fields($form_key, $pageid, true);
@@ -571,7 +570,7 @@ function form_editor_ui($form_key, $pageid) {
         ];
 
         $edit_js_id = $fid > 0 ? $fid : ("'" . $map_key . "'");
-        $rows .= '<tr draggable="true" data-fieldid="' . (int)$fid . '" class="sfe-field-row">
+        $rows .= '<tr data-fieldid="' . (int)$fid . '" class="sfe-field-row">
             <td class="sfe-drag-handle" data-label="" title="Drag to reorder">&#8942;&#8942;</td>
             <td data-label="Key"><span class="sfe-key-cell"><code>' . htmlspecialchars($f['field_key']) . '</code>' . $badge . '</span></td>
             <td data-label="Label">' . htmlspecialchars($f['label']) . '</td>
@@ -631,9 +630,8 @@ function form_editor_ui($form_key, $pageid) {
  * @return string HTML
  */
 function form_editor_migration_tools_html($form_key) {
-    form_engine_include_def_lib($form_key, 'runtime_lib');
+    $def = form_engine_def($form_key);
     form_engine_include_def_lib($form_key, 'migration_lib');
-    $def = form_engine_get_form_def($form_key);
     $fn = $def['migration_tools_html'] ?? null;
     if ($fn && is_string($fn) && function_exists($fn)) {
         return call_user_func($fn, $form_key);

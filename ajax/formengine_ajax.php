@@ -396,8 +396,7 @@ function form_engine_migrate() {
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     $form_key = form_engine_request_form_key();
     // Load feature runtime if the form def registers migration_run helpers
-    form_engine_include_def_lib($form_key, 'runtime_lib');
-    $def = form_engine_get_form_def($form_key);
+    $def = form_engine_def($form_key);
     $result = form_engine_run_migration($form_key, $pageid);
     $ok = !empty($result['ok']) || !isset($result['ok']);
     $msg = $result['message'] ?? ($ok ? 'Migration complete.' : 'Migration failed.');
@@ -418,9 +417,8 @@ function form_engine_drop_deprecated() {
         include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
     }
     $form_key = form_engine_request_form_key();
-    form_engine_include_def_lib($form_key, 'runtime_lib');
+    $def = form_engine_def($form_key);
     form_engine_include_def_lib($form_key, 'migration_lib');
-    $def = form_engine_get_form_def($form_key);
     $fn = $def['drop_deprecated'] ?? null;
     $result = ['ok' => false, 'message' => 'No drop-deprecated handler for this form.'];
     if ($fn && is_string($fn) && function_exists($fn)) {

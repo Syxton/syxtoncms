@@ -76,7 +76,7 @@ function form_engine_default_form_key() {
 function form_engine_include_def_lib($form_key, $lib_key) {
     global $CFG;
     form_engine_load_consumer_forms();
-    $def = form_engine_get_form_def($form_key);
+    $def = form_engine_def($form_key, false);
     if (!$def) {
         return false;
     }
@@ -108,6 +108,109 @@ function form_engine_include_def_lib($form_key, $lib_key) {
 function form_engine_get_form_def($form_key) {
     $reg = form_engine_registry();
     return $reg[$form_key] ?? null;
+}
+
+/**
+ * Ensure a table column exists, adding it as nullable LONGTEXT when absent.
+ * @param string $table
+ * @param string $column
+ * @param string|null $after
+ * @return void
+ */
+function form_engine_add_column_if_missing($table, $column, $after = null) {
+    foreach ([$table, $column] as $identifier) {
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', (string)$identifier)) {
+            throw new InvalidArgumentException('Invalid database identifier.');
+        }
+    }
+    if ($after !== null && !preg_match('/^[a-zA-Z0-9_]+$/', (string)$after)) {
+        throw new InvalidArgumentException('Invalid database identifier.');
+    }
+    $row = get_db_row(
+        "SELECT COUNT(*) AS cnt FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = @@table@@
+           AND COLUMN_NAME = @@column@@",
+        ['table' => $table, 'column' => $column]
+    );
+    if ($row && (int)$row['cnt'] > 0) {
+        return;
+    }
+    $after_clause = $after !== null ? " AFTER `{$after}`" : '';
+    execute_db_sql("ALTER TABLE `{$table}` ADD COLUMN `{$column}` LONGTEXT DEFAULT NULL{$after_clause}");
+}
+
+/**
+ * Ensure an existing column uses a text type suitable for JSON data.
+ * @param string $table
+ * @param string $column
+ * @return void
+ */
+function form_engine_ensure_longtext_column($table, $column) {
+    foreach ([$table, $column] as $identifier) {
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', (string)$identifier)) {
+            throw new InvalidArgumentException('Invalid database identifier.');
+        }
+    }
+    $row = get_db_row(
+        "SELECT DATA_TYPE FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = @@table@@
+           AND COLUMN_NAME = @@column@@",
+        ['table' => $table, 'column' => $column]
+    );
+    if (!$row) {
+        return;
+    }
+    $type = strtolower($row['DATA_TYPE'] ?? '');
+    if (in_array($type, ['longtext', 'text', 'mediumtext', 'tinytext', 'varchar', 'char'], true)) {
+        return;
+    }
+    execute_db_sql("ALTER TABLE `{$table}` MODIFY COLUMN `{$column}` LONGTEXT DEFAULT NULL");
+}
+
+/**
+ * Ensure an existing column is NOT NULL and has a zero/empty default.
+ * @param string $table
+ * @param string $column
+ * @return void
+ */
+function form_engine_ensure_column_default($table, $column) {
+    foreach ([$table, $column] as $identifier) {
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', (string)$identifier)) {
+            throw new InvalidArgumentException('Invalid database identifier.');
+        }
+    }
+    $row = get_db_row(
+        "SELECT DATA_TYPE, COLUMN_TYPE, IS_NULLABLE, COLUMN_DEFAULT FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = @@table@@
+           AND COLUMN_NAME = @@column@@",
+        ['table' => $table, 'column' => $column]
+    );
+    if (!$row || $row['COLUMN_DEFAULT'] !== null) {
+        return;
+    }
+    $ctype = $row['COLUMN_TYPE'];
+    $dtype = strtolower($row['DATA_TYPE'] ?? '');
+    if (in_array($dtype, ['int', 'bigint', 'smallint', 'tinyint', 'mediumint'], true)) {
+        execute_db_sql("ALTER TABLE `{$table}` MODIFY COLUMN `{$column}` {$ctype} NOT NULL DEFAULT 0");
+    } else {
+        execute_db_sql("ALTER TABLE `{$table}` MODIFY COLUMN `{$column}` {$ctype} NOT NULL DEFAULT ''");
+    }
+}
+
+/**
+ * Get a form definition after optionally loading its runtime library.
+ * @param string $form_key Form identifier
+ * @param bool $load_runtime Include runtime_lib before returning the definition
+ * @return array Definition array, or an empty array when the form is unknown
+ */
+function form_engine_def($form_key, $load_runtime = true) {
+    if ($load_runtime) {
+        form_engine_include_def_lib($form_key, 'runtime_lib');
+    }
+    return form_engine_get_form_def($form_key) ?: [];
 }
 
 /**
@@ -178,9 +281,6 @@ function form_engine_hook_fields_spec(array $h) {
                 $slot = (string)($row['slot'] ?? $row['key'] ?? $row['field_key'] ?? '');
                 $type = $row['type'] ?? $row['fieldtype'] ?? null;
                 $amt = array_key_exists('amount', $row) ? $row['amount'] : 1;
-                if (!empty($row['keys']) && is_array($row['keys']) && empty($bindings[$slot])) {
-                    $bindings[$slot] = array_values(array_filter(array_map('strval', $row['keys'])));
-                }
             }
             if ($slot === '') {
                 continue;
@@ -190,8 +290,6 @@ function form_engine_hook_fields_spec(array $h) {
             }
             $amt = ($amt === null || $amt === '') ? 0 : (int)$amt;
             $keys = $bindings[$slot] ?? [];
-            // Legacy: meta.fields entry that listed form keys as first element of many rows
-            // with same type — handled via bindings only.
             $slots[] = [
                 'slot' => $slot,
                 'type' => $type,
@@ -201,12 +299,9 @@ function form_engine_hook_fields_spec(array $h) {
         }
     }
 
-    // If def had no fields, synthesize from legacy field_key / meta.field_keys
+    // Forms without declared slots can still use the single field_key column.
     if (!$slots) {
-        if (!empty($meta['field_keys']) && is_array($meta['field_keys'])) {
-            $keys = array_values(array_filter(array_map('strval', $meta['field_keys'])));
-            $slots[] = ['slot' => 'value', 'type' => null, 'amount' => 0, 'keys' => $keys];
-        } elseif (!empty($h['field_key'])) {
+        if (!empty($h['field_key'])) {
             $slots[] = [
                 'slot' => (string)$h['field_key'],
                 'type' => null,
@@ -595,6 +690,57 @@ function form_engine_hooks_pk() {
 }
 
 /**
+ * Store hook field associations in the canonical meta.bindings structure.
+ * @param mixed $meta Existing or submitted metadata
+ * @param string|null $field_key Legacy single-key column value
+ * @param array $hook Hook definition
+ * @return array
+ */
+function form_engine_normalize_hook_meta($meta, $field_key, array $hook) {
+    if (is_string($meta)) {
+        $meta = json_decode($meta, true);
+    }
+    $meta = is_array($meta) ? $meta : [];
+    $bindings = [];
+    if (isset($meta['bindings']) && is_array($meta['bindings'])) {
+        foreach ($meta['bindings'] as $slot => $keys) {
+            $bindings[(string)$slot] = array_values(array_filter(array_map('strval', (array)$keys)));
+        }
+    } elseif (!empty($meta['field_keys']) && is_array($meta['field_keys'])) {
+        $bindings['value'] = array_values(array_filter(array_map('strval', $meta['field_keys'])));
+    } elseif (!empty($meta['fields']) && is_array($meta['fields'])) {
+        foreach ($meta['fields'] as $row) {
+            if (!is_array($row)) {
+                $bindings['value'][] = (string)$row;
+                continue;
+            }
+            $key = (string)($row[0] ?? $row['key'] ?? $row['field_key'] ?? '');
+            $keys = $row['keys'] ?? null;
+            if (is_array($keys)) {
+                $slot = (string)($row['slot'] ?? $key);
+                $bindings[$slot] = array_values(array_filter(array_map('strval', $keys)));
+            } elseif ($key !== '') {
+                $slot = (string)($row['slot'] ?? 'value');
+                $bindings[$slot][] = $key;
+            }
+        }
+    }
+    if (!isset($meta['bindings']) && !$bindings && $field_key !== null && $field_key !== '') {
+        $slots = form_engine_hook_fields_spec($hook);
+        $slot = $slots ? $slots[0]['slot'] : 'value';
+        $bindings[$slot] = [(string)$field_key];
+    }
+    foreach (($hook['default_bindings'] ?? []) as $slot => $keys) {
+        if (!array_key_exists($slot, $bindings)) {
+            $bindings[(string)$slot] = array_values(array_filter(array_map('strval', (array)$keys)));
+        }
+    }
+    unset($meta['fields'], $meta['field_keys']);
+    $meta['bindings'] = $bindings;
+    return $meta;
+}
+
+/**
  * Seed default hook bindings for a form when missing (pageid 0 = global).
  * @param string $form_key Form identifier
  * @param int $pageid Page id (0 = global defaults)
@@ -602,7 +748,7 @@ function form_engine_hooks_pk() {
  */
 function form_engine_seed_hooks($form_key, $pageid = 0) {
     form_engine_ensure_schema();
-    $def = form_engine_get_form_def($form_key);
+    $def = form_engine_def($form_key);
     if (!$def || empty($def['hooks'])) {
         return 0;
     }
@@ -615,11 +761,34 @@ function form_engine_seed_hooks($form_key, $pageid = 0) {
         }
         $hook_id = $h['hook_id'];
         $exists = get_db_row(
-            "SELECT hook_id FROM form_hook_bindings
+            "SELECT * FROM form_hook_bindings
              WHERE form_key=@@fk@@ AND pageid=@@p@@ AND hook_id=@@hid@@",
             ['fk' => $form_key, 'p' => (int)$pageid, 'hid' => $hook_id]
         );
         if ($exists) {
+            $existing_meta = is_string($exists['meta'] ?? null)
+                ? json_decode($exists['meta'], true)
+                : ($exists['meta'] ?? []);
+            if (!is_array($existing_meta)
+                || !isset($existing_meta['bindings'])
+                || !is_array($existing_meta['bindings'])
+                || isset($existing_meta['fields'])
+                || isset($existing_meta['field_keys'])) {
+                $normalized = form_engine_normalize_hook_meta(
+                    $exists['meta'] ?? [],
+                    $exists['field_key'] ?? '',
+                    $h
+                );
+                $keys = form_engine_hook_field_keys(['fields' => $h['fields'] ?? [], 'meta' => $normalized]);
+                form_engine_save_hook_binding(
+                    $form_key,
+                    $pageid,
+                    $hook_id,
+                    $keys ? $keys[0] : '',
+                    (int)($exists['required'] ?? 0),
+                    $normalized
+                );
+            }
             continue;
         }
         $fields_spec = form_engine_hook_fields_spec($h);
@@ -643,10 +812,8 @@ function form_engine_seed_hooks($form_key, $pageid = 0) {
             }
         }
         $field = $keys ? $keys[0] : '';
-        $meta_arr = ['bindings' => $bindings, 'fields' => $h['fields'] ?? []];
-        if (!empty($h['meta']) && is_array($h['meta'])) {
-            $meta_arr = array_merge($h['meta'], $meta_arr);
-        }
+        $meta_arr = is_array($h['meta'] ?? null) ? $h['meta'] : [];
+        $meta_arr['bindings'] = $bindings;
         $meta = json_encode($meta_arr, JSON_UNESCAPED_UNICODE);
         execute_db_sql(
             "INSERT INTO form_hook_bindings
@@ -678,7 +845,7 @@ function form_engine_get_hooks($form_key, $pageid = 0) {
     form_engine_ensure_schema();
     form_engine_seed_hooks($form_key, 0);
 
-    $def = form_engine_get_form_def($form_key);
+    $def = form_engine_def($form_key);
     $catalog = [];
     if ($def && !empty($def['hooks'])) {
         foreach ($def['hooks'] as $h) {
@@ -710,7 +877,6 @@ function form_engine_get_hooks($form_key, $pageid = 0) {
     }
 
     $out = [];
-    $seen = [];
     foreach ($catalog as $hid => $h) {
         $b = $bindings[$hid] ?? null;
         $meta = $h['meta'] ?? [];
@@ -722,31 +888,11 @@ function form_engine_get_hooks($form_key, $pageid = 0) {
         }
         // Merge def + DB bindings into meta.bindings[slot] = [form_field_keys...]
         $merged = $h;
-        $meta_bindings = [];
-        if (!empty($meta['bindings']) && is_array($meta['bindings'])) {
-            $meta_bindings = $meta['bindings'];
-        } elseif (!empty($meta['fields']) && is_array($meta['fields'])) {
-            // Legacy: rows may be [key,type,amount] used as form keys — collapse by slot/type
-            foreach ($meta['fields'] as $row) {
-                if (!is_array($row)) {
-                    $meta_bindings['value'][] = (string)$row;
-                    continue;
-                }
-                $k = (string)($row[0] ?? $row['key'] ?? $row['field_key'] ?? $row['slot'] ?? '');
-                $keys = $row['keys'] ?? null;
-                if (is_array($keys)) {
-                    $slot = (string)($row['slot'] ?? $k);
-                    $meta_bindings[$slot] = array_map('strval', $keys);
-                } elseif ($k !== '') {
-                    // treat first element as form field key under a generic/default slot
-                    $slot = (string)($row['slot'] ?? 'value');
-                    $meta_bindings[$slot][] = $k;
-                }
-            }
-        } elseif (!empty($meta['field_keys']) && is_array($meta['field_keys'])) {
-            $meta_bindings['value'] = array_map('strval', $meta['field_keys']);
-        } elseif ($b && !empty($b['field_key'])) {
-            // Single column field_key → bind to first def slot name
+        $has_meta_bindings = isset($meta['bindings']) && is_array($meta['bindings']);
+        $meta_bindings = $has_meta_bindings
+            ? $meta['bindings']
+            : [];
+        if (!$has_meta_bindings && $b && !empty($b['field_key'])) {
             $def_slots = form_engine_hook_fields_spec($h);
             $slot = $def_slots ? $def_slots[0]['slot'] : (string)$b['field_key'];
             $meta_bindings[$slot] = [(string)$b['field_key']];
@@ -754,7 +900,7 @@ function form_engine_get_hooks($form_key, $pageid = 0) {
         // Default bindings from def when DB has none for a slot
         if (!empty($h['default_bindings']) && is_array($h['default_bindings'])) {
             foreach ($h['default_bindings'] as $slot => $keys) {
-                if (empty($meta_bindings[$slot])) {
+                if (!array_key_exists($slot, $meta_bindings)) {
                     $meta_bindings[$slot] = array_values(array_filter(array_map('strval', (array)$keys)));
                 }
             }
@@ -777,28 +923,6 @@ function form_engine_get_hooks($form_key, $pageid = 0) {
             'bindable' => form_engine_hook_is_bindable($h),
             'resolve' => $h['resolve'] ?? ($meta['resolve'] ?? null),
             'hookid' => $b ? (int)($b['id'] ?? $b['hookid'] ?? 0) : 0,
-        ];
-        $seen[$hid] = true;
-    }
-    // Extra DB-only hooks (always treated as bindable field bindings)
-    foreach ($bindings as $hid => $b) {
-        if (!empty($seen[$hid])) {
-            continue;
-        }
-        $meta = [];
-        if (!empty($b['meta'])) {
-            $meta = is_string($b['meta']) ? (json_decode($b['meta'], true) ?: []) : (array)$b['meta'];
-        }
-        $out[] = [
-            'hook_id' => $hid,
-            'label' => $hid,
-            'help' => '',
-            'required' => (int)$b['required'],
-            'field_key' => $b['field_key'] ?? null,
-            'meta' => $meta,
-            'bindable' => true,
-            'resolve' => null,
-            'hookid' => (int)($b['id'] ?? $b['hookid'] ?? 0),
         ];
     }
     return $out;
@@ -882,16 +1006,9 @@ function form_hook_value($form_key, $hook_id, $values) {
  * @return array field_key => value
  */
 function form_engine_prepare_db_array($form_key, $storage_row) {
-    form_engine_load_consumer_forms();
-    $def = form_engine_get_form_def($form_key) ?: [];
-    $resolver = $def['prepare_db_array_fn'] ?? $def['resolve_values'] ?? null;
-    if ($resolver) {
-        if (is_string($resolver) && function_exists($resolver)) {
-            return call_user_func($resolver, $storage_row);
-        }
-        if (is_callable($resolver)) {
-            return call_user_func($resolver, $storage_row);
-        }
+    $resolved = form_engine_call_hook($form_key, 'prepare_db_array_fn', [$storage_row], ['resolve_values']);
+    if ($resolved !== null) {
+        return $resolved;
     }
     // Generic fallback: form_data JSON merged over row
     $values = is_array($storage_row) ? $storage_row : [];
@@ -944,13 +1061,51 @@ function form_engine_unbind_field($form_key, $field_key, $pageid = 0) {
         return 0;
     }
     form_engine_ensure_schema();
-    $now = time();
-    // Unbind global + page-specific rows
-    execute_db_sql(
-        "UPDATE form_hook_bindings SET field_key='', modified=@@m@@
-         WHERE form_key=@@fk@@ AND field_key=@@field@@ AND (pageid=0 OR pageid=@@p@@)",
-        ['m' => $now, 'fk' => $form_key, 'field' => (string)$field_key, 'p' => (int)$pageid]
+    $def = form_engine_def($form_key);
+    $hook_defs = [];
+    foreach (($def['hooks'] ?? []) as $hook) {
+        $hook_defs[$hook['hook_id']] = $hook;
+    }
+    $rows = get_db_result(
+        "SELECT pageid, hook_id, field_key, required, meta
+         FROM form_hook_bindings
+         WHERE form_key=@@fk@@ AND (pageid=0 OR pageid=@@p@@)",
+        ['fk' => $form_key, 'p' => (int)$pageid]
     );
+    if ($rows) {
+        while ($row = fetch_row($rows)) {
+            $hook = $hook_defs[$row['hook_id']] ?? [];
+            $meta = form_engine_normalize_hook_meta(
+                $row['meta'] ?? [],
+                $row['field_key'] ?? '',
+                $hook
+            );
+            $changed = false;
+            foreach ($meta['bindings'] as $slot => $keys) {
+                $filtered = array_values(array_filter($keys, function ($key) use ($field_key) {
+                    return $key !== (string)$field_key;
+                }));
+                if (count($filtered) !== count($keys)) {
+                    $meta['bindings'][$slot] = $filtered;
+                    $changed = true;
+                }
+            }
+            if ($changed) {
+                $keys = form_engine_hook_field_keys([
+                    'fields' => $hook['fields'] ?? [],
+                    'meta' => $meta,
+                ]);
+                form_engine_save_hook_binding(
+                    $form_key,
+                    (int)$row['pageid'],
+                    $row['hook_id'],
+                    $keys ? $keys[0] : '',
+                    (int)$row['required'],
+                    $meta
+                );
+            }
+        }
+    }
     return true;
 }
 
@@ -1003,17 +1158,28 @@ function form_engine_save_hook_binding($form_key, $pageid, $hook_id, $field_key,
     }
     $fk_val = ($field_key === null || $field_key === '') ? '' : (string)$field_key;
 
-    // Merge meta: allow multi field_keys array from editor
-    $meta_json = '';
-    if ($meta !== null) {
-        if (is_array($meta)) {
-            $meta_json = json_encode($meta, JSON_UNESCAPED_UNICODE);
-        } elseif (is_string($meta)) {
-            $meta_json = $meta;
-        }
-    } elseif ($existing && !empty($existing['meta'])) {
-        $meta_json = is_string($existing['meta']) ? $existing['meta'] : json_encode($existing['meta']);
+    $source_meta = $meta;
+    if ($source_meta === null && $existing) {
+        $source_meta = $existing['meta'] ?? [];
     }
+    $def = form_engine_def($form_key);
+    $hook = [];
+    foreach (($def['hooks'] ?? []) as $candidate) {
+        if (($candidate['hook_id'] ?? '') === $hook_id) {
+            $hook = $candidate;
+            break;
+        }
+    }
+    $normalized_meta = form_engine_normalize_hook_meta($source_meta, $fk_val, $hook);
+    if ($fk_val === '' && !empty($normalized_meta['bindings'])) {
+        foreach ($normalized_meta['bindings'] as $keys) {
+            if (!empty($keys)) {
+                $fk_val = (string)reset($keys);
+                break;
+            }
+        }
+    }
+    $meta_json = json_encode($normalized_meta, JSON_UNESCAPED_UNICODE);
 
     if ($existing) {
         $id = (int)($existing[$pk] ?? $existing['id'] ?? $existing['hookid'] ?? 0);
@@ -1021,7 +1187,7 @@ function form_engine_save_hook_binding($form_key, $pageid, $hook_id, $field_key,
         execute_db_sql($sql, [
             'field' => $fk_val,
             'req' => (int)$req,
-            'meta' => $meta_json === null ? '' : (string)$meta_json,
+            'meta' => (string)$meta_json,
             'm' => $now,
             'id' => $id,
         ]);
@@ -1036,7 +1202,7 @@ function form_engine_save_hook_binding($form_key, $pageid, $hook_id, $field_key,
             'hid' => $hook_id,
             'field' => $fk_val,
             'req' => (int)$req,
-            'meta' => $meta_json === null ? '' : (string)$meta_json,
+            'meta' => (string)$meta_json,
             'm' => $now,
         ]
     );
@@ -1054,7 +1220,7 @@ function form_engine_run_migration($form_key, $pageid = null) {
     form_engine_ensure_schema();
     form_engine_seed_hooks($form_key, 0);
     form_engine_prune_stale_hooks($form_key);
-    $def = form_engine_get_form_def($form_key);
+    $def = form_engine_def($form_key, false);
     if (!$def) {
         return ['ok' => false, 'message' => 'Unknown form_key: ' . $form_key];
     }
@@ -1079,7 +1245,7 @@ function form_engine_run_migration($form_key, $pageid = null) {
  */
 function form_engine_prune_stale_hooks($form_key) {
     form_engine_ensure_schema();
-    $def = form_engine_get_form_def($form_key);
+    $def = form_engine_def($form_key);
     $keep = [];
     if ($def && !empty($def['hooks'])) {
         foreach ($def['hooks'] as $h) {
@@ -1161,24 +1327,15 @@ function form_engine_get_fields($form_key, $pageid = 0, $include_inactive = fals
  * @return array List of field rows
  */
 function form_engine_default_fields($form_key) {
-    form_engine_include_def_lib($form_key, 'runtime_lib');
-    $def = form_engine_get_form_def($form_key);
+    $def = form_engine_def($form_key);
     if (!$def) {
         return [];
     }
     if (!empty($def['default_fields']) && is_array($def['default_fields'])) {
         return $def['default_fields'];
     }
-    $fn = $def['get_field_defaults_fn'] ?? $def['default_fields_fn'] ?? null;
-    if ($fn && is_string($fn) && function_exists($fn)) {
-        $out = call_user_func($fn);
-        return is_array($out) ? $out : [];
-    }
-    if ($fn && is_callable($fn)) {
-        $out = call_user_func($fn);
-        return is_array($out) ? $out : [];
-    }
-    return [];
+    $out = form_engine_call_hook($form_key, 'get_field_defaults_fn', [], ['default_fields_fn']);
+    return is_array($out) ? $out : [];
 }
 
 /**
@@ -1219,16 +1376,9 @@ function form_engine_normalize_default_field(array $f, $pageid = 0) {
  */
 function form_engine_fields($form_key, $pageid = 0, $include_inactive = false) {
     form_engine_ensure_schema();
-    form_engine_include_def_lib($form_key, 'runtime_lib');
-    $def = form_engine_get_form_def($form_key) ?: [];
 
     // 2. Feature bootstrap (idempotent)
-    $ensure = $def['meet_db_requirement_fn'] ?? $def['ensure'] ?? $def['ensure_fn'] ?? null;
-    if ($ensure && is_string($ensure) && function_exists($ensure)) {
-        call_user_func($ensure);
-    } elseif ($ensure && is_callable($ensure)) {
-        call_user_func($ensure);
-    }
+    form_engine_call_hook($form_key, 'meet_db_requirement_fn', [], ['ensure', 'ensure_fn']);
 
     // 3. DB rows
     $list = form_engine_get_fields($form_key, $pageid, $include_inactive);
@@ -1259,17 +1409,14 @@ function form_engine_fields($form_key, $pageid = 0, $include_inactive = false) {
     }
 
     // 5. Post-process hook
-    $pp = $def['finalize_field_list_fn'] ?? $def['post_process_fields'] ?? null;
-    if ($pp && is_string($pp) && function_exists($pp)) {
-        $out = call_user_func($pp, $list, $pageid, $include_inactive);
-        if (is_array($out)) {
-            $list = $out;
-        }
-    } elseif ($pp && is_callable($pp)) {
-        $out = call_user_func($pp, $list, $pageid, $include_inactive);
-        if (is_array($out)) {
-            $list = $out;
-        }
+    $out = form_engine_call_hook(
+        $form_key,
+        'finalize_field_list_fn',
+        [$list, $pageid, $include_inactive],
+        ['post_process_fields']
+    );
+    if (is_array($out)) {
+        $list = $out;
     }
 
     return $list;
@@ -1283,16 +1430,7 @@ function form_engine_fields($form_key, $pageid = 0, $include_inactive = false) {
  * @return int|mixed Callback result (typically count seeded)
  */
 function form_engine_sync_field_defs($form_key, $pageid = 0, $force = false) {
-    form_engine_include_def_lib($form_key, 'runtime_lib');
-    $def = form_engine_get_form_def($form_key) ?: [];
-    $seeder = $def['sync_field_defs_fn'] ?? $def['seed_fields'] ?? null;
-    if ($seeder && is_string($seeder) && function_exists($seeder)) {
-        return call_user_func($seeder, $pageid, $force);
-    }
-    if ($seeder && is_callable($seeder)) {
-        return call_user_func($seeder, $pageid, $force);
-    }
-    return 0;
+    return form_engine_call_hook($form_key, 'sync_field_defs_fn', [$pageid, $force], ['seed_fields']) ?? 0;
 }
 
 /**
@@ -1301,19 +1439,15 @@ function form_engine_sync_field_defs($form_key, $pageid = 0, $force = false) {
  * @return string[]
  */
 function form_engine_fixed_keys($form_key) {
-    form_engine_load_consumer_forms();
-    $def = form_engine_get_form_def($form_key);
+    $def = form_engine_def($form_key);
     if (!$def) {
         return [];
     }
     if (!empty($def['fixed_keys']) && is_array($def['fixed_keys'])) {
         return $def['fixed_keys'];
     }
-    $fk = $def['fixed_keys_fn'] ?? null;
-    if ($fk && is_string($fk) && function_exists($fk)) {
-        return (array)call_user_func($fk);
-    }
-    return [];
+    $keys = form_engine_call_hook($form_key, 'fixed_keys_fn');
+    return is_array($keys) ? $keys : [];
 }
 
 
@@ -1345,20 +1479,19 @@ if (!defined('FORMCLIENTLIB')) {
  * @param string $form_key Form identifier
  * @param string $hook_name Key on the form definition
  * @param array $args Arguments passed to the callable
+ * @param string[] $aliases Fallback definition keys
  * @return mixed|null Null if the hook is not set
  */
-function form_engine_call_hook($form_key, $hook_name, array $args = []) {
-    form_engine_include_def_lib($form_key, 'runtime_lib');
-    $def = form_engine_get_form_def($form_key) ?: [];
-    $fn = $def[$hook_name] ?? null;
-    if (!$fn) {
-        return null;
-    }
-    if (is_string($fn) && function_exists($fn)) {
-        return call_user_func_array($fn, $args);
-    }
-    if (is_callable($fn)) {
-        return call_user_func_array($fn, $args);
+function form_engine_call_hook($form_key, $hook_name, array $args = [], array $aliases = []) {
+    $def = form_engine_def($form_key);
+    foreach (array_merge([$hook_name], $aliases) as $key) {
+        $fn = $def[$key] ?? null;
+        if (is_string($fn) && function_exists($fn)) {
+            return call_user_func_array($fn, $args);
+        }
+        if (is_callable($fn)) {
+            return call_user_func_array($fn, $args);
+        }
     }
     return null;
 }
@@ -1370,8 +1503,7 @@ function form_engine_call_hook($form_key, $hook_name, array $args = []) {
  * @return array{0: array, 1: array} [columns, form_data]
  */
 function form_engine_collect($form_key, $pageid = 0) {
-    form_engine_include_def_lib($form_key, 'runtime_lib');
-    $def = form_engine_get_form_def($form_key) ?: [];
+    $def = form_engine_def($form_key);
     $storage = $def['storage'] ?? [];
     if (!is_array($storage)) {
         $storage = [];
@@ -1454,16 +1586,32 @@ function form_engine_collect($form_key, $pageid = 0) {
  * @return mixed Adapter result, or false if no adapter
  */
 function form_engine_save($form_key, array $ctx) {
-    form_engine_include_def_lib($form_key, 'runtime_lib');
-    $def = form_engine_get_form_def($form_key) ?: [];
+    $def = form_engine_def($form_key);
     $fn = $def['save'] ?? $def['save_fn'] ?? null;
-    if ($fn && is_string($fn) && function_exists($fn)) {
-        return call_user_func($fn, $form_key, $ctx);
+    if (!is_callable($fn)) {
+        return false;
     }
-    if ($fn && is_callable($fn)) {
-        return call_user_func($fn, $form_key, $ctx);
+    $reflection = new ReflectionFunction(Closure::fromCallable($fn));
+    $args = $reflection->getNumberOfParameters() <= 1 ? [$ctx] : [$form_key, $ctx];
+    return form_engine_call_hook($form_key, 'save', $args, ['save_fn']);
+}
+
+/**
+ * Invoke a callable stored in a render_layout entry.
+ * @param array $layout
+ * @param string $key
+ * @param array $args
+ * @return mixed|null
+ */
+function form_engine_call_layout(array $layout, $key, array $args = []) {
+    $fn = $layout[$key] ?? null;
+    if (is_string($fn) && function_exists($fn)) {
+        return call_user_func_array($fn, $args);
     }
-    return false;
+    if (is_callable($fn)) {
+        return call_user_func_array($fn, $args);
+    }
+    return null;
 }
 
 /**
@@ -1487,8 +1635,7 @@ function form_engine_render($form_key, $values = [], $opts = []) {
         }
     }
 
-    form_engine_include_def_lib($form_key, 'runtime_lib');
-    $def = form_engine_get_form_def($form_key) ?: [];
+    $def = form_engine_def($form_key);
     $viewonly = !empty($opts['viewonly']);
     $pageid = isset($opts['pageid']) ? (int)$opts['pageid'] : (function_exists('get_pageid') ? (int)(get_pageid() ?: 0) : 0);
     $seed = !array_key_exists('seed', $opts) || !empty($opts['seed']);
@@ -1505,10 +1652,12 @@ function form_engine_render($form_key, $values = [], $opts = []) {
     if (!is_array($vals)) {
         $vals = [];
     }
-    $prepared = form_engine_call_hook($form_key, 'prepare_display_values_fn', [$vals, $row, $viewonly]);
-    if ($prepared === null) {
-        $prepared = form_engine_call_hook($form_key, 'prepare_values', [$vals, $row, $viewonly]);
-    }
+    $prepared = form_engine_call_hook(
+        $form_key,
+        'prepare_display_values_fn',
+        [$vals, $row, $viewonly],
+        ['prepare_values']
+    );
     if (is_array($prepared)) {
         $vals = $prepared;
     }
@@ -1561,42 +1710,14 @@ function form_engine_render($form_key, $values = [], $opts = []) {
         . ($wrapper_class !== '' ? ' class="' . htmlspecialchars($wrapper_class) . '"' : '')
         . '>';
 
-    $styles = form_engine_call_hook($form_key, 'styles', []);
-    if ($styles === null && !empty($layout['styles'])) {
-        $fn = $layout['styles'];
-        if (is_string($fn) && function_exists($fn)) {
-            $styles = call_user_func($fn);
-        } elseif (is_callable($fn)) {
-            $styles = call_user_func($fn);
+    foreach (['styles' => [], 'header' => [$vals, $viewonly]] as $key => $args) {
+        $html = form_engine_call_layout($layout, $key, $args);
+        if (is_string($html) && $html !== '') {
+            $parts[] = $html;
         }
-    }
-    // Also allow render_layout.styles without top-level key via layout only (already handled)
-    if (is_string($styles) && $styles !== '') {
-        $parts[] = $styles;
     }
 
-    $header = null;
-    if (!empty($layout['header'])) {
-        $fn = $layout['header'];
-        if (is_string($fn) && function_exists($fn)) {
-            $header = call_user_func($fn, $vals, $viewonly);
-        } elseif (is_callable($fn)) {
-            $header = call_user_func($fn, $vals, $viewonly);
-        }
-    }
-    if (is_string($header) && $header !== '') {
-        $parts[] = $header;
-    }
-
-    $form_open = null;
-    if (!empty($layout['form_open'])) {
-        $fn = $layout['form_open'];
-        if (is_string($fn) && function_exists($fn)) {
-            $form_open = call_user_func($fn, $vals, $viewonly);
-        } elseif (is_callable($fn)) {
-            $form_open = call_user_func($fn, $vals, $viewonly);
-        }
-    }
+    $form_open = form_engine_call_layout($layout, 'form_open', [$vals, $viewonly]);
     if ($form_open === null) {
         $form_id = ltrim($client_opts['form_selector'] ?? '#form_engine_form', '#');
         $form_open = '<form name="' . htmlspecialchars($form_id) . '" id="' . htmlspecialchars($form_id) . '"><fieldset class="formContainer">';
@@ -1613,15 +1734,7 @@ function form_engine_render($form_key, $values = [], $opts = []) {
 
     $parts[] = form_engine_submit_nav_html($page_count, $client_opts);
 
-    $form_close = null;
-    if (!empty($layout['form_close'])) {
-        $fn = $layout['form_close'];
-        if (is_string($fn) && function_exists($fn)) {
-            $form_close = call_user_func($fn, $vals, $viewonly);
-        } elseif (is_callable($fn)) {
-            $form_close = call_user_func($fn, $vals, $viewonly);
-        }
-    }
+    $form_close = form_engine_call_layout($layout, 'form_close', [$vals, $viewonly]);
     if ($form_close === null) {
         $form_close = '</fieldset></form>';
     }

@@ -553,81 +553,15 @@ function ensure_staff_form_tables() {
     }
     form_engine_ensure_schema();
     // Staff storage columns on events_staff / archive (feature-owned, not form engine)
-    staff_form_add_column_if_missing('events_staff', 'form_data', 'LONGTEXT DEFAULT NULL');
-    staff_form_add_column_if_missing('events_staff_archive', 'form_data', 'LONGTEXT DEFAULT NULL');
-    staff_form_ensure_longtext_column('events_staff', 'form_data');
-    staff_form_ensure_longtext_column('events_staff_archive', 'form_data');
+    form_engine_add_column_if_missing('events_staff', 'form_data');
+    form_engine_add_column_if_missing('events_staff_archive', 'form_data');
+    form_engine_ensure_longtext_column('events_staff', 'form_data');
+    form_engine_ensure_longtext_column('events_staff_archive', 'form_data');
     foreach (['workerconsent', 'workerconsentdate', 'workerconsentsig',
               'parentalconsent', 'parentalconsentsig', 'bgcheck'] as $col) {
-        staff_form_ensure_column_default('events_staff', $col);
-        staff_form_ensure_column_default('events_staff_archive', $col);
+        form_engine_ensure_column_default('events_staff', $col);
+        form_engine_ensure_column_default('events_staff_archive', $col);
     }
-}
-
-
-function staff_form_ensure_column_default($table, $column) {
-    $row = get_db_row(
-        "SELECT DATA_TYPE, COLUMN_TYPE, IS_NULLABLE, COLUMN_DEFAULT FROM information_schema.COLUMNS
-         WHERE TABLE_SCHEMA = DATABASE()
-           AND TABLE_NAME = @@table@@
-           AND COLUMN_NAME = @@column@@",
-        ['table' => $table, 'column' => $column]
-    );
-    if (!$row) {
-        return;
-    }
-    if ($row['COLUMN_DEFAULT'] !== null) {
-        return; // already has a default
-    }
-    $ctype = $row['COLUMN_TYPE'];
-    $dtype = strtolower($row['DATA_TYPE'] ?? '');
-    if (in_array($dtype, ['int', 'bigint', 'smallint', 'tinyint', 'mediumint'])) {
-        execute_db_sql("ALTER TABLE `{$table}` MODIFY COLUMN `{$column}` {$ctype} NOT NULL DEFAULT 0");
-    } else {
-        execute_db_sql("ALTER TABLE `{$table}` MODIFY COLUMN `{$column}` {$ctype} NOT NULL DEFAULT ''");
-    }
-}
-
-/**
- * If a column exists and is JSON (or anything other than longtext/text), convert it to LONGTEXT.
- */
-function staff_form_ensure_longtext_column($table, $column) {
-    $row = get_db_row(
-        "SELECT DATA_TYPE FROM information_schema.COLUMNS
-         WHERE TABLE_SCHEMA = DATABASE()
-           AND TABLE_NAME = @@table@@
-           AND COLUMN_NAME = @@column@@",
-        ['table' => $table, 'column' => $column]
-    );
-    if (!$row) {
-        return; // column does not exist yet (CREATE will handle it)
-    }
-    $type = strtolower($row['DATA_TYPE'] ?? '');
-    if (in_array($type, ['longtext', 'text', 'mediumtext', 'tinytext', 'varchar', 'char'])) {
-        return; // already a text type
-    }
-    // Convert JSON (or other) to LONGTEXT
-    execute_db_sql("ALTER TABLE `{$table}` MODIFY COLUMN `{$column}` LONGTEXT DEFAULT NULL");
-}
-
-/**
- * Safely add a column if it does not already exist.
- * Uses information_schema so it works on MySQL versions that lack "ADD COLUMN IF NOT EXISTS".
- * Uses LONGTEXT (universally supported) to store JSON-encoded form data.
- */
-function staff_form_add_column_if_missing($table, $column, $definition = 'LONGTEXT DEFAULT NULL', $after = null) {
-    $params = ['table' => $table, 'column' => $column];
-    $sql = "SELECT COUNT(*) AS cnt FROM information_schema.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = @@table@@
-              AND COLUMN_NAME = @@column@@";
-    $row = get_db_row($sql, $params);
-    if ($row && (int)$row['cnt'] > 0) {
-        return; // already exists
-    }
-    $after_clause = $after ? " AFTER `{$after}`" : '';
-    // LONGTEXT is safe on all MySQL/MariaDB versions and stores JSON just fine
-    execute_db_sql("ALTER TABLE `{$table}` ADD COLUMN `{$column}` LONGTEXT DEFAULT NULL{$after_clause}");
 }
 
 /**
@@ -637,56 +571,48 @@ function seed_staff_form_fields($pageid = 0, $force = false) {
     $defaults = get_default_staff_form_fields();
     $now = time();
     $inserted = 0;
+    $form_key = defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app';
+    $rows = get_db_result(
+        "SELECT fieldid, field_key, visibility, required_when, extra_attrs
+         FROM form_fields WHERE form_key = @@fk@@ AND pageid = @@pageid@@",
+        ['fk' => $form_key, 'pageid' => $pageid]
+    );
+    $existing = [];
+    if ($rows) {
+        while ($row = fetch_row($rows)) {
+            $existing[$row['field_key']] = $row;
+        }
+    }
+
     foreach ($defaults as $f) {
-        $exists = get_db_row(
-            "SELECT fieldid FROM form_fields
-             WHERE form_key = @@fk@@ AND pageid = @@pageid@@ AND field_key = @@key@@",
-            [
-                'fk' => defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app',
-                'pageid' => $pageid,
-                'key' => $f['field_key'],
-            ]
-        );
+        $exists = $existing[$f['field_key']] ?? null;
         if ($exists && !$force) {
             // Refresh only flags that must stay in sync with code defaults.
             // Do NOT overwrite extra_attrs / visibility / required_when / helptext / label —
             // those are editable in the UI and must persist across editor reloads.
-            execute_db_sql(
-                "UPDATE form_fields SET
-                    is_system = @@is_system@@, modified = @@modified@@
-                 WHERE fieldid = @@fieldid@@",
-                [
-                    'is_system' => (int)($f['is_system'] ?? 0),
-                    'modified' => $now,
-                    'fieldid'  => $exists['fieldid'],
-                ]
-            );
-            // One-time backfill: if visibility/required_when/extra_attrs empty in DB, copy from defaults
-            $row = get_db_row("SELECT visibility, required_when, extra_attrs FROM form_fields WHERE fieldid=@@id@@", ['id' => $exists['fieldid']]);
-            $sets = [];
-            $params = ['fieldid' => $exists['fieldid']];
-            if ($row && ($row['visibility'] === null || $row['visibility'] === '') && !empty($f['visibility'])) {
+            $sets = ['is_system = @@is_system@@', 'modified = @@modified@@'];
+            $params = [
+                'is_system' => (int)($f['is_system'] ?? 0),
+                'modified' => $now,
+                'fieldid' => $exists['fieldid'],
+            ];
+            if (($exists['visibility'] === null || $exists['visibility'] === '') && !empty($f['visibility'])) {
                 $sets[] = 'visibility = @@visibility@@';
                 $params['visibility'] = json_encode($f['visibility']);
             }
-            if ($row && ($row['required_when'] === null || $row['required_when'] === '') && !empty($f['required_when'])) {
+            if (($exists['required_when'] === null || $exists['required_when'] === '') && !empty($f['required_when'])) {
                 $sets[] = 'required_when = @@required_when@@';
                 $params['required_when'] = json_encode($f['required_when']);
             }
-            if ($row && ($row['extra_attrs'] === null || $row['extra_attrs'] === '') && !empty($f['extra_attrs'])) {
+            if (($exists['extra_attrs'] === null || $exists['extra_attrs'] === '') && !empty($f['extra_attrs'])) {
                 $sets[] = 'extra_attrs = @@extra_attrs@@';
                 $params['extra_attrs'] = json_encode($f['extra_attrs']);
             }
-            if ($sets) {
-                execute_db_sql(
-                    "UPDATE form_fields SET " . implode(', ', $sets) . " WHERE fieldid = @@fieldid@@",
-                    $params
-                );
-            }
+            execute_db_sql("UPDATE form_fields SET " . implode(', ', $sets) . " WHERE fieldid = @@fieldid@@", $params);
             continue;
         }
         $params = [
-            'form_key'   => defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app',
+            'form_key'   => $form_key,
             'pageid'     => $pageid,
             'field_key'  => $f['field_key'],
             'label'      => $f['label'],
@@ -1033,19 +959,14 @@ function staff_form_wrap_field_html($field, $html, &$ctx, $viewonly) {
 }
 
 /**
- * Persist staff application columns + form_data (Events storage adapter).
+ * Persist staff application columns + form_data (form-engine save callback).
  */
-function staff_app_form_engine_save($form_key, array $ctx) {
-    return staff_app_save_application(
-        (int)($ctx['pageid'] ?? 0),
-        (int)($ctx['id'] ?? $ctx['staffid'] ?? 0),
-        $ctx['columns'] ?? [],
-        $ctx['form_data'] ?? [],
-        (int)($ctx['userid'] ?? 0)
-    );
-}
-
-function staff_app_save_application($pageid, $staffid, $col_params, $form_data, $userid) {
+function staff_app_save_application($form_key, array $ctx) {
+    $pageid = (int)($ctx['pageid'] ?? 0);
+    $staffid = (int)($ctx['id'] ?? $ctx['staffid'] ?? 0);
+    $col_params = $ctx['columns'] ?? [];
+    $form_data = $ctx['form_data'] ?? [];
+    $userid = (int)($ctx['userid'] ?? 0);
     $params = array_merge([
         'userid' => $userid,
         'pageid' => $pageid,

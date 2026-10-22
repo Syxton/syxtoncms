@@ -422,6 +422,8 @@ form_editor_ui@@
             cursor: grab;
             color: #94a3b8;
             user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
             font-size: 1.1em;
             padding: 0 6px;
         }
@@ -1196,86 +1198,84 @@ form_editor_ui@@
 
         // --- Drag and drop reorder ---
         (function initFormEditorDnD() {
-            var tbody = document.querySelector("#sfe-fields-table tbody");
-            if (!tbody) return;
+            if (window.__formEditorDnDInitialized) return;
+            window.__formEditorDnDInitialized = true;
             var dragRow = null;
-
-            tbody.addEventListener("dragstart", function(e) {
-                var tr = e.target.closest("tr.sfe-field-row");
-                if (!tr ? true : !tr.getAttribute("data-fieldid")) {
-                    e.preventDefault();
-                    return;
-                }
-                // Only start from handle or row
-                dragRow = tr;
-                tr.classList.add("sfe-dragging");
-                try {
-                    e.dataTransfer.effectAllowed = "move";
-                    e.dataTransfer.setData("text/plain", tr.getAttribute("data-fieldid"));
-                } catch (err) {}
-            });
-
-            tbody.addEventListener("dragend", function(e) {
+            var dragPointerId = null;
+            var initialOrder = "";
+            var getFieldRow = function(target) {
+                if (!target || typeof target.closest !== "function") return null;
+                return target.closest("#sfe-fields-table tr.sfe-field-row");
+            };
+            var getOrder = function(tbody) {
+                return Array.prototype.map.call(
+                    tbody.querySelectorAll("tr.sfe-field-row"),
+                    function(row) { return row.getAttribute("data-fieldid"); }
+                ).join(",");
+            };
+            var clearDragState = function() {
                 if (dragRow) dragRow.classList.remove("sfe-dragging");
-                tbody.querySelectorAll("tr.sfe-drag-over").forEach(function(r) {
-                    r.classList.remove("sfe-drag-over");
+                document.querySelectorAll("#sfe-fields-table tr.sfe-drag-over").forEach(function(row) {
+                    row.classList.remove("sfe-drag-over");
                 });
                 dragRow = null;
-            });
+                dragPointerId = null;
+                initialOrder = "";
+            };
 
-            tbody.addEventListener("dragover", function(e) {
+            document.addEventListener("pointerdown", function(e) {
+                var handle = e.target.closest && e.target.closest("#sfe-fields-table .sfe-drag-handle");
+                var tr = handle && getFieldRow(handle);
+                var fieldid = tr && parseInt(tr.getAttribute("data-fieldid"), 10);
+                if (!tr || !fieldid || fieldid <= 0 || e.button !== 0) return;
+
+                var tbody = tr.parentNode;
+                if (!tbody || !tbody.matches("#sfe-fields-table tbody")) return;
                 e.preventDefault();
-                var tr = e.target.closest("tr.sfe-field-row");
-                if (!tr ? true : tr === dragRow) return;
-                tbody.querySelectorAll("tr.sfe-drag-over").forEach(function(r) {
-                    if (r !== tr) r.classList.remove("sfe-drag-over");
-                });
-                tr.classList.add("sfe-drag-over");
-                try {
-                    e.dataTransfer.dropEffect = "move";
-                } catch (err) {}
+                dragRow = tr;
+                dragPointerId = e.pointerId;
+                initialOrder = getOrder(tbody);
+                tr.classList.add("sfe-dragging");
+                if (handle.setPointerCapture) handle.setPointerCapture(e.pointerId);
             });
 
-            tbody.addEventListener("dragleave", function(e) {
-                var tr = e.target.closest("tr.sfe-field-row");
-                if (tr) tr.classList.remove("sfe-drag-over");
-            });
+            document.addEventListener("pointermove", function(e) {
+                if (!dragRow || e.pointerId !== dragPointerId) return;
+                var target = document.elementFromPoint(e.clientX, e.clientY);
+                var targetRow = getFieldRow(target);
+                if (!targetRow || targetRow === dragRow
+                    || targetRow.parentNode !== dragRow.parentNode
+                    || parseInt(targetRow.getAttribute("data-fieldid"), 10) <= 0) return;
 
-            tbody.addEventListener("drop", function(e) {
                 e.preventDefault();
-                var tr = e.target.closest("tr.sfe-field-row");
-                tbody.querySelectorAll("tr.sfe-drag-over").forEach(function(r) {
-                    r.classList.remove("sfe-drag-over");
-                });
-                if (!dragRow ? true : (!tr ? true : dragRow === tr)) return;
-
-                var rect = tr.getBoundingClientRect();
+                var rect = targetRow.getBoundingClientRect();
                 var before = (e.clientY - rect.top) < (rect.height / 2);
-                if (before) {
-                    tbody.insertBefore(dragRow, tr);
-                } else {
-                    tbody.insertBefore(dragRow, tr.nextSibling);
-                }
-
-                // Build new order of fieldids
-                var ids = [];
-                tbody.querySelectorAll("tr.sfe-field-row").forEach(function(row, idx) {
-                    var id = parseInt(row.getAttribute("data-fieldid"), 10);
-                    if (id > 0) ids.push(id);
-                    var disp = row.querySelector(".sfe-sort-display");
-                    if (disp) disp.textContent = String((idx + 1) * 10);
+                var tbody = dragRow.parentNode;
+                document.querySelectorAll("#sfe-fields-table tr.sfe-drag-over").forEach(function(row) {
+                    if (row !== targetRow) row.classList.remove("sfe-drag-over");
                 });
-                if (!ids.length) return;
+                if (before && targetRow !== dragRow.nextElementSibling) {
+                    tbody.insertBefore(dragRow, targetRow);
+                } else if (!before && targetRow !== dragRow.previousElementSibling) {
+                    tbody.insertBefore(dragRow, targetRow.nextElementSibling);
+                }
+                targetRow.classList.add("sfe-drag-over");
+            });
 
-                // Persist via existing ajaxapi helper
+            document.addEventListener("pointerup", function(e) {
+                if (!dragRow || e.pointerId !== dragPointerId) return;
+                var tbody = dragRow.parentNode;
+                var order = getOrder(tbody);
+                var changed = order !== initialOrder;
+                clearDragState();
+                if (!changed) return;
                 if (typeof form_engine_reorder === "function") {
-                    // ajaxapi uses js order binding — set global for the binding
-                    window.order = ids.join(",");
+                    window.order = order;
                     form_engine_reorder();
                 } else if (typeof jQuery !== "undefined") {
                     jQuery.post("/ajax/formengine_ajax.php", {
                         action: "form_engine_reorder",
-                        order: ids.join(","),
+                        order: order,
                         form_key: @@form_key_json@@,
                         pageid: @@pageid@@
                     }, function(html) {
@@ -1290,6 +1290,8 @@ form_editor_ui@@
                     });
                 }
             });
+
+            document.addEventListener("pointercancel", clearDragState);
         })();
     </script>
 @@form_editor_ui

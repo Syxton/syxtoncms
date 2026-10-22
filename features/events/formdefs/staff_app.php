@@ -291,7 +291,7 @@ if (function_exists('form_engine_register_form')) {
         'meet_db_requirement_fn' => 'ensure_staff_form_tables',
         'get_field_defaults_fn' => 'get_default_staff_form_fields',
         'wrap_field' => 'staff_form_wrap_field_html',
-        'save' => 'staff_app_form_engine_save',
+        'save' => 'staff_app_save_application',
         'client' => [
             'form_selector' => '#staffapplication_form',
             'apply_rules_global' => 'staffFormApplyRules',
