@@ -3357,7 +3357,8 @@ global $CFG, $USER;
             if (!defined('FORMENGINELIB')) {
                 include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
             }
-            list($col_params, $form_data) = collect_staff_application_post($pageid);
+            $form_key = defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app';
+            list($col_params, $form_data) = form_engine_collect($form_key, $pageid);
 
             $save = staff_app_save_application($pageid, $staffid, $col_params, $form_data, $USER->userid);
             $staffid = $save['staffid'] ?? false;
@@ -3450,8 +3451,10 @@ global $MYVARS, $CFG, $USER;
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     if (!defined('FILELIB')) { include_once ($CFG->dirroot . '/lib/filelib.php'); }
     if (!defined('STAFFFORMLIB')) { include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php'); }
+    if (!defined('FORMENGINELIB')) { include_once($CFG->dirroot . '/lib/formengine/formenginelib.php'); }
 
-    $form_fields = get_staff_form_fields($pageid);
+    $form_key = defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app';
+    $form_fields = form_engine_fields($form_key, $pageid);
     $headers = ["STATUS", "Email"];
     $export_keys = [];
     foreach ($form_fields as $f) {
@@ -4466,6 +4469,9 @@ function staff_form_save_field() {
     if (!defined('STAFFFORMLIB')) {
         include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
     }
+    if (!defined('FORMEDITORLIB')) {
+        include_once($CFG->dirroot . '/lib/formengine/formeditorlib.php');
+    }
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     $fieldid = clean_myvar_opt("fieldid", "int", 0);
     $field_key = clean_myvar_req("field_key", "string");
@@ -4473,7 +4479,8 @@ function staff_form_save_field() {
     $type = clean_myvar_req("type", "string");
     $section = clean_myvar_opt("section", "string", "");
     $place_after = clean_myvar_opt("place_after", "string", "end");
-    $sortorder = staff_form_resolve_sortorder($pageid, $fieldid, $place_after);
+    $form_key = defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app';
+    $sortorder = form_editor_resolve_sortorder($form_key, $pageid, $fieldid, $place_after);
     $required = clean_myvar_opt("required", "int", 0);
     $active = clean_myvar_opt("active", "int", 1);
     $helptext = clean_myvar_opt("helptext", "string", "");
@@ -4657,7 +4664,7 @@ function staff_form_save_field() {
             ['pageid' => $pageid, 'key' => $field_key, 'fk' => $form_key]
         );
         if ($exists) {
-            ajax_return(staff_form_editor_ui($pageid), "Field key already exists");
+            ajax_return(form_editor_ui((defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app'), $pageid), "Field key already exists");
             return;
         }
         // New custom fields still attach to current pageid; core defaults stay on 0
@@ -4671,7 +4678,7 @@ function staff_form_save_field() {
             $params
         );
     }
-    ajax_return(staff_form_editor_ui($pageid));
+    ajax_return(form_editor_ui((defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app'), $pageid));
 }
 
 function staff_form_delete_field() {
@@ -4695,7 +4702,7 @@ function staff_form_delete_field() {
         }
         execute_db_sql("DELETE FROM form_fields WHERE fieldid=@@id@@", ['id' => $fieldid]);
     }
-    ajax_return(staff_form_editor_ui($pageid));
+    ajax_return(form_editor_ui((defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app'), $pageid));
 }
 
 function staff_form_migrate() {
@@ -4791,6 +4798,9 @@ function staff_form_reorder() {
     if (!defined('STAFFFORMLIB')) {
         include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
     }
+    if (!defined('FORMEDITORLIB')) {
+        include_once($CFG->dirroot . '/lib/formengine/formeditorlib.php');
+    }
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     // order is expected as comma-separated fieldids
     $order = clean_myvar_opt("order", "string", "");
@@ -4812,7 +4822,7 @@ function staff_form_reorder() {
             $sort += 10;
         }
     }
-    ajax_return(staff_form_editor_ui($pageid));
+    ajax_return(form_editor_ui((defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app'), $pageid));
 }
 
 

@@ -269,7 +269,6 @@ if (function_exists('form_engine_register_form')) {
         'label' => 'Staff Application',
         'description' => 'Staff work application with consent, screening, and background-check process hooks.',
         'storage' => [
-            'profile' => 'staff',
             'json_column' => 'form_data',
             // Promoted identity/consent columns (also is_system on field defs)
             'columns' => [
@@ -281,16 +280,16 @@ if (function_exists('form_engine_register_form')) {
         'hooks' => staff_app_hook_defs(),
         'migration' => staff_app_migration_plan(),
         'migration_run' => 'migrate_staff_form_data',
-        'seed_fields' => 'seed_staff_form_fields',
-        'resolve_values' => 'get_staff_application_values',
-        'prepare_values' => 'staff_form_prepare_application_values',
-        'post_process_fields' => 'staff_form_fields_consent_last',
+        'sync_field_defs_fn' => 'seed_staff_form_fields',
+        'prepare_db_array_fn' => 'get_staff_application_values',
+        'prepare_display_values_fn' => 'staff_form_prepare_application_values',
+        'finalize_field_list_fn' => 'staff_form_fields_consent_last',
         'migration_tools_html' => 'staff_form_migration_tools_html',
         'drop_deprecated' => 'drop_deprecated_staff_columns',
         'runtime_lib' => '/features/events/staffform/staffformlib.php',
         'migration_lib' => '/features/events/staffform/staffform_migration.php',
-        'ensure' => 'ensure_staff_form_tables',
-        'default_fields_fn' => 'get_default_staff_form_fields',
+        'meet_db_requirement_fn' => 'ensure_staff_form_tables',
+        'get_field_defaults_fn' => 'get_default_staff_form_fields',
         'wrap_field' => 'staff_form_wrap_field_html',
         'save' => 'staff_app_form_engine_save',
         'client' => [

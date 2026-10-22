@@ -22,7 +22,8 @@ if (!defined('FORMRENDERLIB')) {
 }
 
 /**
- * Default client options (staff application form).
+ * Default client/JS options for multipage forms and visibility rules.
+ * @return array
  */
 function form_engine_default_client_opts() {
     return [
@@ -51,6 +52,11 @@ function form_engine_default_client_opts() {
     ];
 }
 
+/**
+ * Merge caller overrides onto default client options.
+ * @param array $override Partial client option overrides
+ * @return array
+ */
 function form_engine_merge_client_opts($override = []) {
     $base = form_engine_default_client_opts();
     if (!is_array($override)) {
@@ -68,8 +74,9 @@ function form_engine_merge_client_opts($override = []) {
 
 /**
  * Group fields into pages by section title.
- *
- * @return array[] each: ['title' => string, 'fields' => array]
+ * @param array $fields Field rows
+ * @param string $default_section Section name when field has none
+ * @return array List of pages [title, fields]
  */
 function form_engine_group_fields_by_section(array $fields, $default_section = 'General') {
     $pages = [];
@@ -89,7 +96,10 @@ function form_engine_group_fields_by_section(array $fields, $default_section = '
 }
 
 /**
- * Step pager HTML (progress label + step buttons).
+ * Multipage step pager HTML.
+ * @param array $pages Page list from form_engine_group_fields_by_section
+ * @param array $opts Client options (form_selector, etc.)
+ * @return string HTML
  */
 function form_engine_pager_html(array $pages, $opts = []) {
     $o = form_engine_merge_client_opts($opts);
@@ -106,10 +116,12 @@ function form_engine_pager_html(array $pages, $opts = []) {
 }
 
 /**
- * One multipage section panel: title + rendered fields.
- *
- * $opts['render_field'] callable($field, $value, $viewonly)
- * $opts['wrap_field'] optional callable($field, $html, &$ctx, $viewonly)
+ * Render one form page (section of fields).
+ * @param array $page Page [title, fields]
+ * @param int $index Zero-based page index
+ * @param array $vals field_key => value
+ * @param array $opts viewonly, wrap_field, render_field, client opts
+ * @return string HTML
  */
 function form_engine_page_html(array $page, $index, array $vals, $opts = []) {
     $o = form_engine_merge_client_opts($opts);
@@ -154,7 +166,10 @@ function form_engine_page_html(array $page, $index, array $vals, $opts = []) {
 }
 
 /**
- * Submit / next-prev navigation.
+ * Submit / next-previous navigation HTML for multipage forms.
+ * @param int $page_count Number of pages
+ * @param array $opts viewonly, submit_value, form_selector
+ * @return string HTML
  */
 function form_engine_submit_nav_html($page_count, $opts = []) {
     $o = form_engine_merge_client_opts($opts);
@@ -175,7 +190,10 @@ function form_engine_submit_nav_html($page_count, $opts = []) {
 }
 
 /**
- * Multipage navigation + per-step required validation JS.
+ * JavaScript for multipage navigation and validation gates.
+ * @param int $page_count Number of pages
+ * @param array $opts Client options
+ * @return string HTML script block
  */
 function form_engine_multipage_js($page_count, $opts = []) {
     $o = form_engine_merge_client_opts($opts);
@@ -298,7 +316,10 @@ function form_engine_multipage_js($page_count, $opts = []) {
 }
 
 /**
- * Visibility / required-when rules JS.
+ * JavaScript for visibility / required_when field rules.
+ * @param array $fields Field rows
+ * @param array $opts Client options
+ * @return string HTML script block
  */
 function form_engine_rules_js(array $fields, $opts = []) {
     $o = form_engine_merge_client_opts($opts);

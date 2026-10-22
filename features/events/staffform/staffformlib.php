@@ -543,31 +543,6 @@ function get_staff_form_fixed_consent_keys() {
     ];
 }
 
-/** Fields that cannot be deleted (consent set + date of birth). */
-function get_staff_form_protected_keys() {
-    // Thin wrapper — prefer form_engine_protected_field_keys()
-    global $CFG;
-    if (!defined('FORMENGINELIB')) {
-        include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
-    }
-    if (function_exists('form_engine_protected_field_keys')) {
-        return form_engine_protected_field_keys(defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app', 0);
-    }
-    return [];
-}
-
-
-function get_staff_form_fields($pageid = 0, $include_inactive = false) {
-    $form_key = defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app';
-    if (!defined('FORMENGINELIB')) {
-        global $CFG;
-        if (!empty($CFG->dirroot)) {
-            include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
-        }
-    }
-    return form_engine_fields($form_key, $pageid, $include_inactive);
-}
-
 /**
  * Ensure the new tables / columns exist (idempotent, compatible with MySQL 5.7+/8.x).
  */
@@ -1055,66 +1030,6 @@ function staff_form_wrap_field_html($field, $html, &$ctx, $viewonly) {
         }
     }
     return $html;
-}
-
-function staff_form_application_page_html(array $page, $index, array $vals, $viewonly) {
-    return form_engine_page_html($page, $index, $vals, [
-        'viewonly' => $viewonly,
-        'wrap_field' => 'staff_form_wrap_field_html',
-        'render_field' => function ($field, $value, $vo) {
-            return form_engine_render_field($field, $value, ['viewonly' => $vo]);
-        },
-    ]);
-}
-
-function staff_form_application_submit_nav_html($page_count, $viewonly) {
-    return form_engine_submit_nav_html($page_count, [
-        'viewonly' => $viewonly,
-        'submit_value' => 'Submit Application',
-    ]);
-}
-
-
-function collect_staff_application_post($pageid = 0) {
-    $form_key = defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app';
-    if (!defined('FORMENGINELIB')) {
-        global $CFG;
-        if (!empty($CFG->dirroot)) {
-            include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
-        }
-    }
-    return form_engine_collect($form_key, $pageid);
-}
-
-/**
- * Process hooks panel for the form editor (bindings for form_key staff_app).
- */
-
-function staff_form_editor_ui($pageid) {
-    global $CFG;
-    if (!defined('FORMEDITORLIB')) {
-        include_once($CFG->dirroot . '/lib/formengine/formeditorlib.php');
-    }
-    $form_key = defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app';
-    return form_editor_ui($form_key, $pageid);
-}
-
-function staff_form_hooks_panel_html($pageid) {
-    global $CFG;
-    if (!defined('FORMEDITORLIB')) {
-        include_once($CFG->dirroot . '/lib/formengine/formeditorlib.php');
-    }
-    $form_key = defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app';
-    return form_editor_hooks_panel_html($form_key, $pageid);
-}
-
-function staff_form_resolve_sortorder($pageid, $fieldid, $place_after) {
-    global $CFG;
-    if (!defined("FORMEDITORLIB")) {
-        include_once($CFG->dirroot . "/lib/formengine/formeditorlib.php");
-    }
-    $fk = defined("FORM_KEY_STAFF_APP") ? FORM_KEY_STAFF_APP : "staff_app";
-    return form_editor_resolve_sortorder($fk, $pageid, $fieldid, $place_after);
 }
 
 /**

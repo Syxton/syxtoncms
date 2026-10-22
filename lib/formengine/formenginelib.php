@@ -1,6 +1,6 @@
 <?php
 /***************************************************************************
- * formenginelib.php - Named form engine (hooks, storage profiles, migration plans)
+ * formenginelib.php - Named form engine (hooks, answer storage, migration plans)
  * -------------------------------------------------------------------------
  * Forms are identified by form_key (e.g. a feature-defined key). Callers declare process
  * hooks; the editor binds field_keys to those hooks. Storage adapters know
@@ -17,14 +17,17 @@ $GLOBALS['FORM_ENGINE_REGISTRY'] = $GLOBALS['FORM_ENGINE_REGISTRY'] ?? [];
 
 /**
  * Register a named form (hooks, storage, migration). Called by feature form definition files.
+ * @param string $form_key Unique form identifier (e.g. staff_app)
+ * @param array $def Form definition array
+ * @return void
  */
 function form_engine_register_form($form_key, array $def) {
     $GLOBALS['FORM_ENGINE_REGISTRY'][$form_key] = $def;
 }
 
 /**
- * Load consumer form definitions.
- * Discovers features/{feature}/formdefs/*.php (one structure for all form consumers).
+ * Load consumer form definitions from features/{feature}/formdefs/*.php (once per request).
+ * @return void
  */
 function form_engine_load_consumer_forms() {
     global $CFG;
@@ -43,13 +46,18 @@ function form_engine_load_consumer_forms() {
 }
 
 /**
- * Registry of known forms: metadata, hooks, storage profile id, migration plan.
+ * Return the registry of known forms (metadata, hooks, storage, migration).
+ * @return array form_key => form definition
  */
 function form_engine_registry() {
     form_engine_load_consumer_forms();
     return $GLOBALS['FORM_ENGINE_REGISTRY'] ?? [];
 }
 
+/**
+ * First registered form_key, or empty string when none are registered.
+ * @return string
+ */
 function form_engine_default_form_key() {
     $reg = form_engine_registry();
     if ($reg) {
@@ -58,18 +66,21 @@ function form_engine_default_form_key() {
     return '';
 }
 
-
 /**
- * Include the form definition's runtime library (seed, migrate, storage helpers).
+ * Resolve and include a form-def library path (runtime_lib / migration_lib).
+ * Missing file is a no-op so migration libs can be deleted after use.
+ * @param string $form_key Form identifier
+ * @param string $lib_key Def key for the path (runtime_lib or migration_lib)
+ * @return bool False if the form is unknown or path cannot be resolved; true if included or not required
  */
-function form_engine_load_form_runtime($form_key) {
+function form_engine_include_def_lib($form_key, $lib_key) {
     global $CFG;
     form_engine_load_consumer_forms();
     $def = form_engine_get_form_def($form_key);
     if (!$def) {
         return false;
     }
-    $lib = $def['runtime_lib'] ?? null;
+    $lib = $def[$lib_key] ?? null;
     if (!$lib) {
         return true;
     }
@@ -89,39 +100,11 @@ function form_engine_load_form_runtime($form_key) {
     return false;
 }
 
-
 /**
- * Load optional migration library for a form (legacy column → form_data, etc.).
- * Registered as form def key migration_lib. Missing file is a no-op so the
- * file can be deleted after migration is complete.
+ * Get a single form definition from the registry.
+ * @param string $form_key Form identifier
+ * @return array|null Definition array or null if unknown
  */
-function form_engine_load_form_migration($form_key) {
-    global $CFG;
-    form_engine_load_consumer_forms();
-    $def = form_engine_get_form_def($form_key);
-    if (!$def) {
-        return false;
-    }
-    $lib = $def['migration_lib'] ?? null;
-    if (!$lib) {
-        return true;
-    }
-    $path = $lib;
-    if ($path[0] !== '/' && empty($CFG->dirroot)) {
-        return false;
-    }
-    if (isset($CFG->dirroot) && $path[0] === '/') {
-        $path = $CFG->dirroot . $path;
-    } elseif (isset($CFG->dirroot) && strpos($path, $CFG->dirroot) !== 0) {
-        $path = $CFG->dirroot . '/' . ltrim($path, '/');
-    }
-    if (file_exists($path)) {
-        include_once($path);
-        return true;
-    }
-    return false;
-}
-
 function form_engine_get_form_def($form_key) {
     $reg = form_engine_registry();
     return $reg[$form_key] ?? null;
@@ -130,6 +113,8 @@ function form_engine_get_form_def($form_key) {
 /**
  * True if a hook can be bound to a form field in the editor.
  * Computed hooks (resolve callable, bindable=false) are not linkable.
+ * @param array $h Hook definition row
+ * @return bool
  */
 function form_engine_hook_is_bindable(array $h) {
     if (array_key_exists('bindable', $h)) {
@@ -157,19 +142,11 @@ function form_engine_hook_is_bindable(array $h) {
     return true;
 }
 
-
 /**
- * Normalize hook field slots.
- *
- * Def shape: 'fields' => [ [slot_name, type, amount], ... ]
- *   slot_name — process-facing name (e.g. "fieldA"). Multi values become fieldA_1, fieldA_2, ...
- *   type      — expected form field type (text, yesno, number, date, ...). null = any.
- *   amount    — 1 = single binding; 0 or omitted = unlimited multi binding.
- *
- * Bound form field_keys live in meta.bindings[slot_name] = ['form_key', ...]
- * (also accepts legacy meta.fields rows with keys, meta.field_keys, field_key).
- *
- * @return array[] each: ['slot'=>string,'type'=>?string,'amount'=>int,'keys'=>string[]]
+ * Normalize hook field slots from def + meta bindings.
+ * Def shape: fields => [ [slot_name, type, amount], ... ]
+ * @param array $h Hook definition row
+ * @return array[] Each: slot (string), type (?string), amount (int), keys (string[])
  */
 function form_engine_hook_fields_spec(array $h) {
     $meta = $h['meta'] ?? [];
@@ -255,9 +232,8 @@ function form_engine_hook_fields_spec(array $h) {
 }
 
 /**
- * All bound form field_keys across every slot.
- *
- * @param array $h
+ * All bound form field_keys across every slot on a hook.
+ * @param array $h Hook definition row
  * @return string[]
  */
 function form_engine_hook_field_keys(array $h) {
@@ -273,7 +249,9 @@ function form_engine_hook_field_keys(array $h) {
 }
 
 /**
- * True when any slot allows more than one form field (amount 0 or >1).
+ * True when any slot allows more than one form field (amount 0 or >1), or multiple slots exist.
+ * @param array $h Hook definition row
+ * @return bool
  */
 function form_engine_hook_is_multi(array $h) {
     foreach (form_engine_hook_fields_spec($h) as $s) {
@@ -288,8 +266,8 @@ function form_engine_hook_is_multi(array $h) {
 }
 
 /**
- * Types declared on slots (empty = any).
- *
+ * Types declared on hook slots (empty list means any type is allowed).
+ * @param array $h Hook definition row
  * @return string[]
  */
 function form_engine_hook_allowed_types(array $h) {
@@ -304,10 +282,8 @@ function form_engine_hook_allowed_types(array $h) {
 
 /**
  * Resolve process-facing values from a hook + form values map.
- * Single slot amount 1 → [slot => value]
- * Multi slot amount 0 → [slot => [v1,v2,...], slot_1 => v1, slot_2 => v2, ...]
- *
- * @param array $h
+ * Single slot amount 1 → [slot => value]; multi → [slot => [...], slot_1 => v1, ...]
+ * @param array $h Hook definition row
  * @param array $values field_key => value
  * @return array
  */
@@ -335,8 +311,10 @@ function form_engine_hook_slot_values(array $h, array $values) {
     return $out;
 }
 
-
-
+/**
+ * Create/migrate core form_fields and form_hook_bindings tables (idempotent).
+ * @return void
+ */
 function form_engine_ensure_schema() {
     global $CFG;
     static $done = false;
@@ -379,9 +357,8 @@ function form_engine_ensure_schema() {
 }
 
 /**
- * Legacy → core:
- *   events_staff_form_fields → form_fields
- *   events_form_hooks        → form_hook_bindings
+ * Rename or copy legacy Events tables into core form_fields / form_hook_bindings.
+ * @return void
  */
 function form_engine_migrate_legacy_tables() {
     form_engine_migrate_one_table('events_staff_form_fields', 'form_fields');
@@ -390,6 +367,8 @@ function form_engine_migrate_legacy_tables() {
 
 /**
  * True if a base table exists in the current database.
+ * @param string $table Table name
+ * @return bool
  */
 function form_engine_table_exists($table) {
     $table = preg_replace('/[^a-z0-9_]/i', '', (string)$table);
@@ -403,7 +382,9 @@ function form_engine_table_exists($table) {
 
 /**
  * Rename or column-safe copy of one legacy table into a core table name.
- * Never uses INSERT SELECT * (column order may differ).
+ * @param string $old Legacy table name
+ * @param string $new Target table name
+ * @return void
  */
 function form_engine_migrate_one_table($old, $new) {
     $has_old = form_engine_table_exists($old);
@@ -458,6 +439,8 @@ function form_engine_migrate_one_table($old, $new) {
 
 /**
  * Ordered list of column names for a table.
+ * @param string $table Table name
+ * @return string[]
  */
 function form_engine_table_columns($table) {
     $table = preg_replace('/[^a-z0-9_]/i', '', (string)$table);
@@ -477,7 +460,10 @@ function form_engine_table_columns($table) {
     return $cols;
 }
 
-
+/**
+ * Ensure form_fields unique index on (form_key, pageid, field_key).
+ * @return void
+ */
 function form_engine_ensure_form_page_field_index() {
     // Normalize key columns to VARCHAR so unique indexes are valid (legacy may be TEXT)
     form_engine_ensure_varchar_column('form_fields', 'form_key', 64, "''");
@@ -515,6 +501,11 @@ function form_engine_ensure_form_page_field_index() {
 
 /**
  * Force a column to VARCHAR(n) if it exists as TEXT/BLOB or wrong type.
+ * @param string $table Table name
+ * @param string $column Column name
+ * @param int $len Maximum length
+ * @param string $default_sql SQL default expression (e.g. "''")
+ * @return void
  */
 function form_engine_ensure_varchar_column($table, $column, $len = 64, $default_sql = "''") {
     $table = preg_replace('/[^a-z0-9_]/i', '', (string)$table);
@@ -546,10 +537,9 @@ function form_engine_ensure_varchar_column($table, $column, $len = 64, $default_
     );
 }
 
-
 /**
- * Align form_hook_bindings with core schema after legacy rename.
- * Legacy used PK `hookid`; core uses `id`.
+ * Align form_hook_bindings with core schema after legacy rename (hookid → id, required columns).
+ * @return void
  */
 function form_engine_normalize_hook_bindings_schema() {
     if (!form_engine_table_exists('form_hook_bindings')) {
@@ -585,7 +575,8 @@ function form_engine_normalize_hook_bindings_schema() {
 }
 
 /**
- * Primary key column name for form_hook_bindings (`id` or legacy `hookid`).
+ * Primary key column name for form_hook_bindings (id or legacy hookid).
+ * @return string
  */
 function form_engine_hooks_pk() {
     static $pk = null;
@@ -605,6 +596,9 @@ function form_engine_hooks_pk() {
 
 /**
  * Seed default hook bindings for a form when missing (pageid 0 = global).
+ * @param string $form_key Form identifier
+ * @param int $pageid Page id (0 = global defaults)
+ * @return int Number of rows inserted
  */
 function form_engine_seed_hooks($form_key, $pageid = 0) {
     form_engine_ensure_schema();
@@ -676,7 +670,9 @@ function form_engine_seed_hooks($form_key, $pageid = 0) {
 
 /**
  * Hook catalog for editor (defs merged with DB bindings).
- * Returns list of [hook_id, label, required, field_key, help, meta, bound].
+ * @param string $form_key Form identifier
+ * @param int $pageid Page id for page-specific overlay
+ * @return array List of hook rows
  */
 function form_engine_get_hooks($form_key, $pageid = 0) {
     form_engine_ensure_schema();
@@ -810,6 +806,9 @@ function form_engine_get_hooks($form_key, $pageid = 0) {
 
 /**
  * Hooks that can be bound to a form field (excludes computed / resolve-only).
+ * @param string $form_key Form identifier
+ * @param int $pageid Page id
+ * @return array
  */
 function form_engine_get_bindable_hooks($form_key, $pageid = 0) {
     $all = form_engine_get_hooks($form_key, $pageid);
@@ -820,6 +819,10 @@ function form_engine_get_bindable_hooks($form_key, $pageid = 0) {
 
 /**
  * Resolve a single hook value from a flat values map (field_key => value).
+ * @param string $form_key Form identifier
+ * @param string $hook_id Process hook id
+ * @param array $values field_key => value
+ * @return mixed|null
  */
 function form_hook_value($form_key, $hook_id, $values) {
     if (!is_array($values)) {
@@ -872,13 +875,16 @@ function form_hook_value($form_key, $hook_id, $values) {
 }
 
 /**
- * Resolve flat values from a storage row using staff merge rules.
- * Flatten a storage row to field values (uses form def resolve_values callback if set).
+ * Flatten a storage row to field_key => value.
+ * Uses form def prepare_db_array_fn when set; otherwise merges form_data JSON over the row.
+ * @param string $form_key Form identifier
+ * @param array $storage_row DB row (may include form_data JSON)
+ * @return array field_key => value
  */
-function resolve_form_values($form_key, $storage_row) {
+function form_engine_prepare_db_array($form_key, $storage_row) {
     form_engine_load_consumer_forms();
-    $def = form_engine_get_form_def($form_key);
-    $resolver = $def['resolve_values'] ?? null;
+    $def = form_engine_get_form_def($form_key) ?: [];
+    $resolver = $def['prepare_db_array_fn'] ?? $def['resolve_values'] ?? null;
     if ($resolver) {
         if (is_string($resolver) && function_exists($resolver)) {
             return call_user_func($resolver, $storage_row);
@@ -900,7 +906,13 @@ function resolve_form_values($form_key, $storage_row) {
     return $values;
 }
 
-
+/**
+ * Hooks that currently bind the given form field_key.
+ * @param string $form_key Form identifier
+ * @param string $field_key Field key
+ * @param int $pageid Page id
+ * @return array List of [hook_id, label, required]
+ */
 function form_engine_hooks_for_field($form_key, $field_key, $pageid = 0) {
     if ($field_key === '' || $field_key === null) {
         return [];
@@ -922,6 +934,10 @@ function form_engine_hooks_for_field($form_key, $field_key, $pageid = 0) {
 
 /**
  * Clear all hook bindings that point at a field_key (after field delete or key change).
+ * @param string $form_key Form identifier
+ * @param string $field_key Field key to unbind
+ * @param int $pageid Page id (also clears global pageid 0)
+ * @return bool
  */
 function form_engine_unbind_field($form_key, $field_key, $pageid = 0) {
     if ($field_key === '' || $field_key === null) {
@@ -938,6 +954,12 @@ function form_engine_unbind_field($form_key, $field_key, $pageid = 0) {
     return true;
 }
 
+/**
+ * Field keys bound to required bindable hooks (should not be deleted in the editor).
+ * @param string $form_key Form identifier
+ * @param int $pageid Page id
+ * @return string[]
+ */
 function form_engine_protected_field_keys($form_key, $pageid = 0) {
     // Required bindable hooks that currently have a field_key (hook-derived only)
     $keys = [];
@@ -954,6 +976,13 @@ function form_engine_protected_field_keys($form_key, $pageid = 0) {
 
 /**
  * Save a hook binding (pageid 0 global by default).
+ * @param string $form_key Form identifier
+ * @param int $pageid Page id
+ * @param string $hook_id Process hook id
+ * @param string|null $field_key Bound field key (empty to unbind)
+ * @param int|null $required Required flag (null keeps existing)
+ * @param array|string|null $meta Optional meta JSON/array
+ * @return int Binding row id
  */
 function form_engine_save_hook_binding($form_key, $pageid, $hook_id, $field_key, $required = null, $meta = null) {
     form_engine_ensure_schema();
@@ -1013,14 +1042,15 @@ function form_engine_save_hook_binding($form_key, $pageid, $hook_id, $field_key,
     );
 }
 
-
-
 /**
- * Run form migration via form def migration_run / migration.run callback.
+ * Run form migration via form def migration_run callback.
+ * @param string $form_key Form identifier
+ * @param int|null $pageid Optional page context for the runner
+ * @return array Result with ok, message, and runner payload
  */
 function form_engine_run_migration($form_key, $pageid = null) {
-    form_engine_load_form_runtime($form_key);
-    form_engine_load_form_migration($form_key);
+    form_engine_include_def_lib($form_key, 'runtime_lib');
+    form_engine_include_def_lib($form_key, 'migration_lib');
     form_engine_ensure_schema();
     form_engine_seed_hooks($form_key, 0);
     form_engine_prune_stale_hooks($form_key);
@@ -1043,8 +1073,9 @@ function form_engine_run_migration($form_key, $pageid = null) {
 }
 
 /**
- * Remove DB hook bindings that are no longer in the form definition catalog
- * (or are non-bindable computed hooks). Cleans leftovers like renamed hooks.
+ * Remove DB hook bindings no longer in the form definition catalog (or non-bindable).
+ * @param string $form_key Form identifier
+ * @return int Number of rows deleted
  */
 function form_engine_prune_stale_hooks($form_key) {
     form_engine_ensure_schema();
@@ -1079,7 +1110,13 @@ function form_engine_prune_stale_hooks($form_key) {
     return $removed;
 }
 
-
+/**
+ * Load field definition rows from the database for a form_key.
+ * @param string $form_key Form identifier
+ * @param int $pageid Page id (page-specific overlays pageid 0)
+ * @param bool $include_inactive Include inactive fields
+ * @return array List of field rows
+ */
 function form_engine_get_fields($form_key, $pageid = 0, $include_inactive = false) {
     form_engine_ensure_schema();
     $where = $include_inactive ? '' : ' AND active = 1';
@@ -1119,13 +1156,12 @@ function form_engine_get_fields($form_key, $pageid = 0, $include_inactive = fals
 }
 
 /**
- * Resolve in-memory default field definitions from the form def (no DB write).
- * Checks: default_fields (array), default_fields_fn (callable/string), else [].
- *
- * @return array list of field rows (may be incomplete; normalized by load_fields)
+ * In-memory default field definitions from the form def (no DB write).
+ * @param string $form_key Form identifier
+ * @return array List of field rows
  */
 function form_engine_default_fields($form_key) {
-    form_engine_load_form_runtime($form_key);
+    form_engine_include_def_lib($form_key, 'runtime_lib');
     $def = form_engine_get_form_def($form_key);
     if (!$def) {
         return [];
@@ -1133,7 +1169,7 @@ function form_engine_default_fields($form_key) {
     if (!empty($def['default_fields']) && is_array($def['default_fields'])) {
         return $def['default_fields'];
     }
-    $fn = $def['default_fields_fn'] ?? null;
+    $fn = $def['get_field_defaults_fn'] ?? $def['default_fields_fn'] ?? null;
     if ($fn && is_string($fn) && function_exists($fn)) {
         $out = call_user_func($fn);
         return is_array($out) ? $out : [];
@@ -1147,6 +1183,9 @@ function form_engine_default_fields($form_key) {
 
 /**
  * Normalize a default/seed field row for runtime use when DB has no rows yet.
+ * @param array $f Field row
+ * @param int $pageid Default pageid when missing
+ * @return array
  */
 function form_engine_normalize_default_field(array $f, $pageid = 0) {
     if (!isset($f['fieldid'])) {
@@ -1172,34 +1211,19 @@ function form_engine_normalize_default_field(array $f, $pageid = 0) {
 }
 
 /**
- * Full field-load pipeline for a form_key (shared order of operations).
- *
- * Order:
- *   1. form_engine_ensure_schema()
- *   2. form def ensure / ensure_fn (optional feature bootstrap, e.g. extra columns)
- *   3. Load from DB (form_engine_get_fields)
- *   4. If empty: in-memory defaults from form def (default_fields / default_fields_fn)
- *   5. Optional post_process_fields hook (filter/reorder/annotate)
- *   6. Return list
- *
- * Form definition keys (all optional except that defaults need one of the default_*):
- *   - ensure | ensure_fn: callable/string void() feature bootstrap
- *   - default_fields: array of field defs
- *   - default_fields_fn: callable/string → array of field defs
- *   - post_process_fields: callable/string ($fields, $pageid, $include_inactive) → array
- *
- * Consumers that only need post-processing should register post_process_fields and
- * call form_engine_load_fields($form_key, $pageid) — no local get_*_fields needed.
- *
- * @return array list of field rows
+ * Full field-load pipeline: meet_db_requirement_fn, DB rows, defaults, finalize_field_list_fn.
+ * @param string $form_key Form identifier
+ * @param int $pageid Page id
+ * @param bool $include_inactive Include inactive fields
+ * @return array List of field rows
  */
-function form_engine_load_fields($form_key, $pageid = 0, $include_inactive = false) {
+function form_engine_fields($form_key, $pageid = 0, $include_inactive = false) {
     form_engine_ensure_schema();
-    form_engine_load_form_runtime($form_key);
+    form_engine_include_def_lib($form_key, 'runtime_lib');
     $def = form_engine_get_form_def($form_key) ?: [];
 
     // 2. Feature bootstrap (idempotent)
-    $ensure = $def['ensure'] ?? $def['ensure_fn'] ?? null;
+    $ensure = $def['meet_db_requirement_fn'] ?? $def['ensure'] ?? $def['ensure_fn'] ?? null;
     if ($ensure && is_string($ensure) && function_exists($ensure)) {
         call_user_func($ensure);
     } elseif ($ensure && is_callable($ensure)) {
@@ -1235,7 +1259,7 @@ function form_engine_load_fields($form_key, $pageid = 0, $include_inactive = fal
     }
 
     // 5. Post-process hook
-    $pp = $def['post_process_fields'] ?? null;
+    $pp = $def['finalize_field_list_fn'] ?? $def['post_process_fields'] ?? null;
     if ($pp && is_string($pp) && function_exists($pp)) {
         $out = call_user_func($pp, $list, $pageid, $include_inactive);
         if (is_array($out)) {
@@ -1252,12 +1276,16 @@ function form_engine_load_fields($form_key, $pageid = 0, $include_inactive = fal
 }
 
 /**
- * Seed default fields via form def seed_fields callback.
+ * Sync default field definitions via form def sync_field_defs_fn callback.
+ * @param string $form_key Form identifier
+ * @param int $pageid Page id
+ * @param bool $force Force re-seed when supported by the callback
+ * @return int|mixed Callback result (typically count seeded)
  */
-function form_engine_seed_fields($form_key, $pageid = 0, $force = false) {
-    form_engine_load_form_runtime($form_key);
-    $def = form_engine_get_form_def($form_key);
-    $seeder = $def['seed_fields'] ?? null;
+function form_engine_sync_field_defs($form_key, $pageid = 0, $force = false) {
+    form_engine_include_def_lib($form_key, 'runtime_lib');
+    $def = form_engine_get_form_def($form_key) ?: [];
+    $seeder = $def['sync_field_defs_fn'] ?? $def['seed_fields'] ?? null;
     if ($seeder && is_string($seeder) && function_exists($seeder)) {
         return call_user_func($seeder, $pageid, $force);
     }
@@ -1268,7 +1296,9 @@ function form_engine_seed_fields($form_key, $pageid = 0, $force = false) {
 }
 
 /**
- * Optional fixed field keys declared by the form definition (not core knowledge).
+ * Optional fixed field keys declared by the form definition.
+ * @param string $form_key Form identifier
+ * @return string[]
  */
 function form_engine_fixed_keys($form_key) {
     form_engine_load_consumer_forms();
@@ -1311,19 +1341,14 @@ if (!defined('FORMCLIENTLIB')) {
 // ---------------------------------------------------------------------------
 
 /**
- * Load fields for a form (full pipeline). Alias of form_engine_load_fields.
- */
-function form_engine_fields($form_key, $pageid = 0, $include_inactive = false) {
-    return form_engine_load_fields($form_key, $pageid, $include_inactive);
-}
-
-/**
  * Invoke a form-def callable/string hook if present.
- *
- * @return mixed|null null if not set
+ * @param string $form_key Form identifier
+ * @param string $hook_name Key on the form definition
+ * @param array $args Arguments passed to the callable
+ * @return mixed|null Null if the hook is not set
  */
 function form_engine_call_hook($form_key, $hook_name, array $args = []) {
-    form_engine_load_form_runtime($form_key);
+    form_engine_include_def_lib($form_key, 'runtime_lib');
     $def = form_engine_get_form_def($form_key) ?: [];
     $fn = $def[$hook_name] ?? null;
     if (!$fn) {
@@ -1339,16 +1364,13 @@ function form_engine_call_hook($form_key, $hook_name, array $args = []) {
 }
 
 /**
- * Collect POST into [columns, form_data] using field types + storage profile.
- *
- * Form def optional keys:
- *   storage.columns — field_keys always stored as DB columns (plus is_system fields)
- *   storage.json_column — name of JSON bag (default form_data); informational for save
- *
- * @return array{0:array,1:array} [columns, form_data]
+ * Collect POST into [columns, form_data] using field types + storage.columns / json_column.
+ * @param string $form_key Form identifier
+ * @param int $pageid Page id for field list
+ * @return array{0: array, 1: array} [columns, form_data]
  */
 function form_engine_collect($form_key, $pageid = 0) {
-    form_engine_load_form_runtime($form_key);
+    form_engine_include_def_lib($form_key, 'runtime_lib');
     $def = form_engine_get_form_def($form_key) ?: [];
     $storage = $def['storage'] ?? [];
     if (!is_array($storage)) {
@@ -1427,18 +1449,12 @@ function form_engine_collect($form_key, $pageid = 0) {
 
 /**
  * Persist via form def save adapter.
- *
- * $ctx keys (conventional):
- *   pageid, id (record pk), columns, form_data, userid, and any extra the adapter needs
- *
- * Form def:
- *   save — callable($form_key, array $ctx)
- *   save_fn — alias of save
- *
- * @return mixed adapter result, or false if no adapter
+ * @param string $form_key Form identifier
+ * @param array $ctx Context (pageid, id, columns, form_data, userid, ...)
+ * @return mixed Adapter result, or false if no adapter
  */
 function form_engine_save($form_key, array $ctx) {
-    form_engine_load_form_runtime($form_key);
+    form_engine_include_def_lib($form_key, 'runtime_lib');
     $def = form_engine_get_form_def($form_key) ?: [];
     $fn = $def['save'] ?? $def['save_fn'] ?? null;
     if ($fn && is_string($fn) && function_exists($fn)) {
@@ -1452,26 +1468,9 @@ function form_engine_save($form_key, array $ctx) {
 
 /**
  * Render a full form: layout shell + pages + fields + client JS.
- *
- * $values may be a storage row (resolved via resolve_values) or a flat field map.
- *
- * $opts:
- *   viewonly (bool), pageid (int), seed (bool, default true),
- *   include_inactive (bool), client (array merge into client opts),
- *   markup (array merge into markup profile)
- *
- * Form def optional hooks / keys:
- *   seed_fields — run when opts.seed
- *   resolve_values — storage row → flat values
- *   prepare_values($vals, $row, $viewonly) — post-resolve prep
- *   post_process_fields — already applied inside form_engine_fields
- *   wrap_field — field wrapper callback for page_html
- *   render_layout.styles|header|form_open|form_close — callables
- *   render_layout.wrapper_id|wrapper_class|wrapper_class_viewonly
- *   render_layout.keepalive (bool)
- *   render_layout.submit_value (string) — submit button label (preferred place)
- *   client — JS/selectors/multipage opts (do not put submit_value here; use render_layout)
- *
+ * @param string $form_key Form identifier
+ * @param array $values Storage row or flat field map
+ * @param array $opts viewonly, pageid, seed, include_inactive, client, markup
  * @return string HTML
  */
 function form_engine_render($form_key, $values = [], $opts = []) {
@@ -1488,7 +1487,7 @@ function form_engine_render($form_key, $values = [], $opts = []) {
         }
     }
 
-    form_engine_load_form_runtime($form_key);
+    form_engine_include_def_lib($form_key, 'runtime_lib');
     $def = form_engine_get_form_def($form_key) ?: [];
     $viewonly = !empty($opts['viewonly']);
     $pageid = isset($opts['pageid']) ? (int)$opts['pageid'] : (function_exists('get_pageid') ? (int)(get_pageid() ?: 0) : 0);
@@ -1496,17 +1495,20 @@ function form_engine_render($form_key, $values = [], $opts = []) {
     $include_inactive = !empty($opts['include_inactive']);
 
     if ($seed) {
-        form_engine_seed_fields($form_key, 0, false);
+        form_engine_sync_field_defs($form_key, 0, false);
     }
 
     $fields = form_engine_fields($form_key, $pageid, $include_inactive);
 
     $row = is_array($values) ? $values : [];
-    $vals = resolve_form_values($form_key, $row);
+    $vals = form_engine_prepare_db_array($form_key, $row);
     if (!is_array($vals)) {
         $vals = [];
     }
-    $prepared = form_engine_call_hook($form_key, 'prepare_values', [$vals, $row, $viewonly]);
+    $prepared = form_engine_call_hook($form_key, 'prepare_display_values_fn', [$vals, $row, $viewonly]);
+    if ($prepared === null) {
+        $prepared = form_engine_call_hook($form_key, 'prepare_values', [$vals, $row, $viewonly]);
+    }
     if (is_array($prepared)) {
         $vals = $prepared;
     }

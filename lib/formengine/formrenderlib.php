@@ -16,7 +16,8 @@ if (!defined('FORMENGINELIB')) {
 }
 
 /**
- * Default markup / CSS profile (staff application visual language).
+ * Default markup / CSS class profile for field rendering.
+ * @return array
  */
 function form_engine_default_markup_profile() {
     return [
@@ -38,6 +39,11 @@ function form_engine_default_markup_profile() {
     ];
 }
 
+/**
+ * Merge caller overrides onto the default markup profile.
+ * @param array $override Partial profile overrides
+ * @return array
+ */
 function form_engine_merge_markup_profile($override = []) {
     $base = form_engine_default_markup_profile();
     if (!is_array($override)) {
@@ -48,6 +54,8 @@ function form_engine_merge_markup_profile($override = []) {
 
 /**
  * Normalize field validation JSON to an array.
+ * @param array $field Field row
+ * @return array
  */
 function form_engine_field_validation($field) {
     $validation = $field['validation'] ?? [];
@@ -57,6 +65,11 @@ function form_engine_field_validation($field) {
     return is_array($validation) ? $validation : [];
 }
 
+/**
+ * Normalize checkbox / signature values to "1" or "0".
+ * @param mixed $val Raw value
+ * @return string "1" or "0"
+ */
 function form_engine_normalize_checkbox_value($val) {
     if ($val === null || $val === '') {
         return '0';
@@ -75,6 +88,11 @@ function form_engine_normalize_checkbox_value($val) {
     return '1';
 }
 
+/**
+ * Parse a date-only string or timestamp into a UTC-midnight unix timestamp.
+ * @param mixed $str Date string (m/d/Y, Y-m-d) or numeric timestamp
+ * @return int Unix timestamp or 0
+ */
 function form_engine_parse_date_only($str) {
     $str = trim((string)$str);
     if ($str === '') {
@@ -100,6 +118,11 @@ function form_engine_parse_date_only($str) {
     return 0;
 }
 
+/**
+ * Normalize a unix timestamp to UTC midnight of its UTC calendar day.
+ * @param int $ts Unix timestamp
+ * @return int
+ */
 function form_engine_normalize_ts_to_utc_midnight($ts) {
     $ts = (int)$ts;
     if ($ts <= 0) {
@@ -110,6 +133,11 @@ function form_engine_normalize_ts_to_utc_midnight($ts) {
     return $dt ? (int)$dt->getTimestamp() : 0;
 }
 
+/**
+ * Format a timestamp or date string as m/d/Y for display (UTC calendar day).
+ * @param mixed $ts Timestamp or date string
+ * @return string
+ */
 function form_engine_format_date_only($ts) {
     if ($ts === null || $ts === '' || $ts === false) {
         return '';
@@ -128,6 +156,12 @@ function form_engine_format_date_only($ts) {
     return gmdate('m/d/Y', $ts);
 }
 
+/**
+ * Human-readable display string for a field value (view-only mode).
+ * @param array $field Field row
+ * @param mixed $value Stored value
+ * @return string
+ */
 function form_engine_display_value($field, $value) {
     $type = $field['type'] ?? 'text';
     $val = $value ?? '';
@@ -206,6 +240,13 @@ function form_engine_display_value($field, $value) {
     return htmlspecialchars((string)$val);
 }
 
+/**
+ * Render a single form field as HTML (input or view-only).
+ * @param array $field Field row
+ * @param mixed $value Current value
+ * @param array $opts viewonly, markup profile keys, etc.
+ * @return string HTML
+ */
 function form_engine_render_field($field, $value, $opts = []) {
     if (!is_array($opts)) {
         $opts = ['viewonly' => !empty($opts)];

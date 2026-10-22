@@ -19,7 +19,7 @@ if (!defined('STAFFFORM_MIGRATION')) {
 }
 
 // Runtime helpers: ensure_staff_form_tables, seed_staff_form_fields,
-// get_default_staff_form_fields, staff_form_normalize_checkbox_value
+// get_default_staff_form_fields, form_engine_normalize_checkbox_value
 if (!defined('STAFFFORMLIB')) {
     $__sf = __DIR__ . '/staffformlib.php';
     if (file_exists($__sf)) {
@@ -75,7 +75,7 @@ function staff_form_row_to_form_data($row) {
     // Normalize signature checkboxes: legacy "on" → "1" (both from columns and existing form_data)
     foreach (['workerconsentsig', 'parentalconsentsig'] as $sig_key) {
         if (array_key_exists($sig_key, $data)) {
-            $data[$sig_key] = staff_form_normalize_checkbox_value($data[$sig_key]);
+            $data[$sig_key] = form_engine_normalize_checkbox_value($data[$sig_key]);
         }
     }
 
@@ -97,8 +97,8 @@ function migrate_staff_form_data($pageid = null) {
             $data = staff_form_row_to_form_data($row);
             // Always write — even if only zeros — so form_data is never NULL.
             // Also normalize legacy signature columns ("on" → "1") so classic columns match form_data.
-            $wsig = staff_form_normalize_checkbox_value($data['workerconsentsig'] ?? ($row['workerconsentsig'] ?? ''));
-            $psig = staff_form_normalize_checkbox_value($data['parentalconsentsig'] ?? ($row['parentalconsentsig'] ?? ''));
+            $wsig = form_engine_normalize_checkbox_value($data['workerconsentsig'] ?? ($row['workerconsentsig'] ?? ''));
+            $psig = form_engine_normalize_checkbox_value($data['parentalconsentsig'] ?? ($row['parentalconsentsig'] ?? ''));
             $data['workerconsentsig'] = $wsig;
             $data['parentalconsentsig'] = $psig;
             execute_db_sql(
@@ -119,8 +119,8 @@ function migrate_staff_form_data($pageid = null) {
     if ($arows) {
         while ($row = fetch_row($arows)) {
             $data = staff_form_row_to_form_data($row);
-            $wsig = staff_form_normalize_checkbox_value($data['workerconsentsig'] ?? ($row['workerconsentsig'] ?? ''));
-            $psig = staff_form_normalize_checkbox_value($data['parentalconsentsig'] ?? ($row['parentalconsentsig'] ?? ''));
+            $wsig = form_engine_normalize_checkbox_value($data['workerconsentsig'] ?? ($row['workerconsentsig'] ?? ''));
+            $psig = form_engine_normalize_checkbox_value($data['parentalconsentsig'] ?? ($row['parentalconsentsig'] ?? ''));
             $data['workerconsentsig'] = $wsig;
             $data['parentalconsentsig'] = $psig;
             execute_db_sql(

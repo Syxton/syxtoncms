@@ -13,10 +13,12 @@ if (!defined('FORMENGINELIB')) {
     include_once(($CFG->dirroot ?? dirname(__DIR__, 2)) . '/lib/formengine/formenginelib.php');
 }
 
-
 /**
  * Full editor page: ajax registrations + UI for a form_key.
- * Used by Admin Panel Form Editor and any feature entry points.
+ * @param string $form_key Form identifier
+ * @param int $pageid Page id
+ * @param bool $show_form_picker Show form selector when multiple forms are registered
+ * @return void Echoes HTML
  */
 function form_editor_page($form_key, $pageid, $show_form_picker = true) {
     global $CFG;
@@ -24,8 +26,8 @@ function form_editor_page($form_key, $pageid, $show_form_picker = true) {
         include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
     }
     form_engine_ensure_schema();
-    form_engine_load_form_runtime($form_key);
-    form_engine_seed_fields($form_key, 0);
+    form_engine_include_def_lib($form_key, 'runtime_lib');
+    form_engine_sync_field_defs($form_key, 0);
     form_engine_seed_hooks($form_key, 0);
 
     if ($show_form_picker) {
@@ -117,7 +119,12 @@ function form_editor_page($form_key, $pageid, $show_form_picker = true) {
     echo form_editor_ui($form_key, $pageid);
 }
 
-
+/**
+ * Process-hooks panel HTML for binding form fields to hook slots.
+ * @param string $form_key Form identifier
+ * @param int $pageid Page id
+ * @return string HTML
+ */
 function form_editor_hooks_panel_html($form_key, $pageid) {
     global $CFG;
     if (!defined('FORMENGINELIB')) {
@@ -302,8 +309,11 @@ function form_editor_hooks_panel_html($form_key, $pageid) {
 
 /**
  * Resolve "Position in form" selection into a sortorder integer.
- * place_after: keep | start | end | after:{fieldid}
- * When inserting/moving after another field, bumps following sortorders to make room.
+ * @param string $form_key Form identifier
+ * @param int $pageid Page id
+ * @param int $fieldid Existing field id (0 when inserting)
+ * @param string $place_after keep|start|end|after:{fieldid}
+ * @return int sortorder
  */
 function form_editor_resolve_sortorder($form_key, $pageid, $fieldid, $place_after) {
     $pageid = (int)$pageid;
@@ -369,13 +379,19 @@ function form_editor_resolve_sortorder($form_key, $pageid, $fieldid, $place_afte
     return ($row && $row['m'] !== null) ? ((int)$row['m'] + 10) : 500;
 }
 
+/**
+ * Main form editor UI (field list, edit form, hooks panel).
+ * @param string $form_key Form identifier
+ * @param int $pageid Page id
+ * @return string HTML
+ */
 function form_editor_ui($form_key, $pageid) {
     global $CFG;
     if (!defined('FORMENGINELIB')) {
         include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
     }
-    form_engine_load_form_runtime($form_key);
-    form_engine_seed_fields($form_key, 0);
+    form_engine_include_def_lib($form_key, 'runtime_lib');
+    form_engine_sync_field_defs($form_key, 0);
     $def = form_engine_get_form_def($form_key);
     $form_title = ($def['label'] ?? $form_key) . ' — Form Editor';
 
@@ -609,12 +625,14 @@ function form_editor_ui($form_key, $pageid) {
     return fill_template('lib/formengine/tmp/formeditor.template', 'form_editor_ui', false, $params);
 }
 
-
+/**
+ * Optional migration tools block from the form def migration_tools_html callback.
+ * @param string $form_key Form identifier
+ * @return string HTML
+ */
 function form_editor_migration_tools_html($form_key) {
-    form_engine_load_form_runtime($form_key);
-    if (function_exists('form_engine_load_form_migration')) {
-        form_engine_load_form_migration($form_key);
-    }
+    form_engine_include_def_lib($form_key, 'runtime_lib');
+    form_engine_include_def_lib($form_key, 'migration_lib');
     $def = form_engine_get_form_def($form_key);
     $fn = $def['migration_tools_html'] ?? null;
     if ($fn && is_string($fn) && function_exists($fn)) {
