@@ -2080,7 +2080,7 @@ function staff_status($staff, $userid = true, $as_of_year = null) {
             global $CFG;
             include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
         }
-        $form_key = defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app';
+        $form_key = 'staff_app';
 
         $workerconsentdate = $vals_raw['workerconsentdate'] ?? ($staff['workerconsentdate'] ?? 0);
         if (function_exists('form_hook_value')) {

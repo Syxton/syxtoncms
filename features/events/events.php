@@ -200,7 +200,7 @@ function staff_form_editor() {
     // Keep this action working so old bookmarks do not break.
     global $CFG, $USER;
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
-    $form_key = defined("FORM_KEY_STAFF_APP") ? FORM_KEY_STAFF_APP : "staff_app";
+    $form_key = 'staff_app';
     if (!is_siteadmin($USER->userid ?? 0) && !user_is_able($USER->userid ?? 0, "manageapplications", $pageid)) {
         echo getlang("generic_permissions");
         return;

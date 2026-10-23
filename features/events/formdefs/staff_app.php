@@ -11,10 +11,6 @@ if (!defined('FORMENGINELIB')) {
     include_once(($CFG->dirroot ?? dirname(__DIR__, 3)) . '/lib/formengine/formenginelib.php');
 }
 
-if (!defined('FORM_KEY_STAFF_APP')) {
-    define('FORM_KEY_STAFF_APP', 'staff_app');
-}
-
 function staff_app_hook_defs() {
     return [
         // fields: [ [slot_name, type, amount], ... ]
@@ -265,7 +261,7 @@ function staff_app_migration_plan() {
 
 // Register with core form engine
 if (function_exists('form_engine_register_form')) {
-    form_engine_register_form(FORM_KEY_STAFF_APP, [
+    form_engine_register_form('staff_app', [
         'label' => 'Staff Application',
         'description' => 'Staff work application with consent, screening, and background-check process hooks.',
         'storage' => [

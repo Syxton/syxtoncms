@@ -571,7 +571,7 @@ function seed_staff_form_fields($pageid = 0, $force = false) {
     $defaults = get_default_staff_form_fields();
     $now = time();
     $inserted = 0;
-    $form_key = defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app';
+    $form_key = 'staff_app';
     $rows = get_db_result(
         "SELECT fieldid, field_key, visibility, required_when, extra_attrs
          FROM form_fields WHERE form_key = @@fk@@ AND pageid = @@pageid@@",
@@ -800,7 +800,7 @@ function get_staff_application_values($row) {
  * Renders from the field definition while preserving all special JS behaviour.
  */
 function staff_application_form_dynamic($row, $viewonly = false) {
-    $form_key = defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app';
+    $form_key = 'staff_app';
     if (!defined('FORMENGINELIB')) {
         global $CFG;
         if (!empty($CFG->dirroot)) {

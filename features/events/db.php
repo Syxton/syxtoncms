@@ -409,7 +409,7 @@ function events_upgrade() {
                 seed_staff_form_fields(0);
             }
             if (function_exists('form_engine_seed_hooks')) {
-                form_engine_seed_hooks(defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app', 0);
+                form_engine_seed_hooks('staff_app', 0);
             }
             update_feature($thisversion, "events");
         }

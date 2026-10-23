@@ -3357,7 +3357,7 @@ global $CFG, $USER;
             if (!defined('FORMENGINELIB')) {
                 include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
             }
-            $form_key = defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app';
+            $form_key = 'staff_app';
             list($col_params, $form_data) = form_engine_collect($form_key, $pageid);
 
             $save = form_engine_save($form_key, [
@@ -3459,7 +3459,7 @@ global $MYVARS, $CFG, $USER;
     if (!defined('STAFFFORMLIB')) { include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php'); }
     if (!defined('FORMENGINELIB')) { include_once($CFG->dirroot . '/lib/formengine/formenginelib.php'); }
 
-    $form_key = defined('FORM_KEY_STAFF_APP') ? FORM_KEY_STAFF_APP : 'staff_app';
+    $form_key = 'staff_app';
     $form_fields = form_engine_fields($form_key, $pageid);
     $headers = ["STATUS", "Email"];
     $export_keys = [];
