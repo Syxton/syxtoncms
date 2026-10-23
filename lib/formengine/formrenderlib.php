@@ -218,13 +218,7 @@ function form_engine_display_value($field, $value) {
         if ($val === '' || $val === null) {
             return '';
         }
-        $validation = $field['validation'] ?? [];
-        if (is_string($validation) && $validation !== '') {
-            $validation = json_decode($validation, true) ?: [];
-        }
-        if (!is_array($validation)) {
-            $validation = [];
-        }
+        $validation = form_engine_field_validation($field);
         $subtype = (string)($validation['number_subtype'] ?? 'decimal');
         if ($subtype === 'money' && is_numeric($val)) {
             return htmlspecialchars('$' . number_format((float)$val, 2, '.', ','));
@@ -301,10 +295,7 @@ function form_engine_render_field($field, $value, $opts = []) {
     $html .= '<label class="' . htmlspecialchars($m['label_class']) . '" for="' . htmlspecialchars($key) . '">' . htmlspecialchars($label) . '</label>';
 
     $data_rules = '';
-    $validation = $field['validation'] ?? [];
-    if (!is_array($validation)) {
-        $validation = (is_string($validation) && $validation !== '') ? (json_decode($validation, true) ?: []) : [];
-    }
+    $validation = form_engine_field_validation($field);
     if ($req || !empty($validation['required'])) {
         $data_rules .= ' data-rule-required="true"';
         $data_rules .= ' data-msg-required="' . htmlspecialchars(getlang('input_required')) . '"';

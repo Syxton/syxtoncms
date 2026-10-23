@@ -344,38 +344,6 @@ function form_engine_hook_field_keys(array $h) {
 }
 
 /**
- * True when any slot allows more than one form field (amount 0 or >1), or multiple slots exist.
- * @param array $h Hook definition row
- * @return bool
- */
-function form_engine_hook_is_multi(array $h) {
-    foreach (form_engine_hook_fields_spec($h) as $s) {
-        $amt = (int)($s['amount'] ?? 1);
-        if ($amt === 0 || $amt > 1) {
-            return true;
-        }
-    }
-    // Multiple single slots still need a multi-capable UI (one control per slot)
-    $slots = form_engine_hook_fields_spec($h);
-    return count($slots) > 1;
-}
-
-/**
- * Types declared on hook slots (empty list means any type is allowed).
- * @param array $h Hook definition row
- * @return string[]
- */
-function form_engine_hook_allowed_types(array $h) {
-    $types = [];
-    foreach (form_engine_hook_fields_spec($h) as $s) {
-        if (!empty($s['type'])) {
-            $types[(string)$s['type']] = true;
-        }
-    }
-    return array_keys($types);
-}
-
-/**
  * Resolve process-facing values from a hook + form values map.
  * Single slot amount 1 → [slot => value]; multi → [slot => [...], slot_1 => v1, ...]
  * @param array $h Hook definition row
@@ -1107,26 +1075,6 @@ function form_engine_unbind_field($form_key, $field_key, $pageid = 0) {
         }
     }
     return true;
-}
-
-/**
- * Field keys bound to required bindable hooks (should not be deleted in the editor).
- * @param string $form_key Form identifier
- * @param int $pageid Page id
- * @return string[]
- */
-function form_engine_protected_field_keys($form_key, $pageid = 0) {
-    // Required bindable hooks that currently have a field_key (hook-derived only)
-    $keys = [];
-    foreach (form_engine_get_bindable_hooks($form_key, $pageid) as $h) {
-        if (empty($h['required'])) {
-            continue;
-        }
-        if (!empty($h['field_key'])) {
-            $keys[$h['field_key']] = true;
-        }
-    }
-    return array_keys($keys);
 }
 
 /**

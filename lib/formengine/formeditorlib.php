@@ -398,14 +398,7 @@ function form_editor_ui($form_key, $pageid) {
     $fixed_keys = form_engine_fixed_keys($form_key);
     // Labels/delete warnings come from hook bindings (no hard protected list)
 
-    $key_opts = '';
     $section_names = [];
-    foreach ($fields as $f) {
-        if (($f['type'] ?? '') === 'section') {
-            continue;
-        }
-        $key_opts .= '<option value="' . htmlspecialchars($f['field_key']) . '">' . htmlspecialchars($f['field_key']) . '</option>';
-    }
     foreach ($fields as $f) {
         $sec = trim((string)($f['section'] ?? ''));
         if ($sec !== '') {
@@ -604,7 +597,7 @@ function form_editor_ui($form_key, $pageid) {
     }
 
     $edit_json = json_encode($edit_map, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
-    $key_opts_js = json_encode(array_values(array_filter(array_map(function ($f) {
+    $field_keys_json = json_encode(array_values(array_filter(array_map(function ($f) {
         return (($f['type'] ?? '') === 'section') ? null : $f['field_key'];
     }, $fields))), JSON_UNESCAPED_UNICODE);
 
@@ -619,7 +612,7 @@ function form_editor_ui($form_key, $pageid) {
         'form_key_json' => json_encode($form_key),
         'pageid' => (int)$pageid,
         'edit_json' => $edit_json,
-        'key_opts_js' => $key_opts_js,
+        'field_keys_json' => $field_keys_json,
     ];
     return fill_template('lib/formengine/tmp/formeditor.template', 'form_editor_ui', false, $params);
 }

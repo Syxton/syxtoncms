@@ -743,7 +743,7 @@ form_editor_ui@@
         window.FORM_EDITOR_FORM_KEY =@@form_key_json@@;
         window.FORM_EDITOR_PAGEID =@@pageid@@;
         window.FORM_EDITOR_EDIT_MAP =@@edit_json@@;
-        window.FORM_EDITOR_FIELD_KEYS =@@key_opts_js@@;
+        window.FORM_EDITOR_FIELD_KEYS =@@field_keys_json@@;
 
         function sfeFieldOptions(selected) {
             var html = "<option value=\"\">—</option>";
