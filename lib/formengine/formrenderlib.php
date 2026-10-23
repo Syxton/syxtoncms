@@ -3,7 +3,8 @@
  * formrenderlib.php - Form engine field rendering & value display
  * -------------------------------------------------------------------------
  * Shared by all form_key consumers. Markup CSS hooks are configurable via
- * a profile (defaults match the staff application form for BC).
+ * a profile (defaults intentionally match the staff application form for BC;
+ * non-staff consumers should provide their own profile overrides).
  ***************************************************************************/
 if (!defined('FORMRENDERLIB')) {
     define('FORMRENDERLIB', true);
@@ -16,7 +17,8 @@ if (!defined('FORMENGINELIB')) {
 }
 
 /**
- * Default markup / CSS class profile for field rendering.
+ * Default markup / CSS class profile for field rendering. Legacy staff
+ * selectors are retained for compatibility; other forms should override them.
  * @return array
  */
 function form_engine_default_markup_profile() {

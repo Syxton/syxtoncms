@@ -894,17 +894,10 @@ form_editor_ui@@
             document.getElementById("edit_vis_conditions_json").value = JSON.stringify(sfeCollectConds("vis"));
             document.getElementById("edit_reqw_conditions_json").value = JSON.stringify(sfeCollectConds("reqw"));
             document.getElementById("edit_options_json").value = JSON.stringify(sfeCollectOptions());
-            // Ensure textareas are not skipped: copy into hidden fields as well
             var ob = document.getElementById("edit_attr_onblur");
             var oc = document.getElementById("edit_attr_onchange");
-            if (ob) {
-                ob.setAttribute("name", "attr_onblur");
-                ob.name = "attr_onblur";
-            }
-            if (oc) {
-                oc.setAttribute("name", "attr_onchange");
-                oc.name = "attr_onchange";
-            }
+            if (ob) ob.name = "attr_onblur";
+            if (oc) oc.name = "attr_onchange";
             form_engine_save_field();
             return false;
         }
@@ -914,7 +907,7 @@ form_editor_ui@@
             var jsPanel = document.getElementById("sfe-panel-js");
             var visPanel = document.getElementById("sfe-panel-vis");
             var reqPanel = document.getElementById("sfe-panel-reqw");
-            var hasJs = !!(f.attr_onblur ? f.attr_onblur : f.attr_onchange);
+            var hasJs = !!(f.attr_onblur || f.attr_onchange);
             var hasVis = !!(f.vis_action && (f.vis_conditions ? f.vis_conditions : []).length);
             var hasReq = (f.reqw_enable == "1" && (f.reqw_conditions ? f.reqw_conditions : []).length);
 
@@ -1164,8 +1157,6 @@ form_editor_ui@@
             $("#form_field_form")[0].reset();
             $("#edit_fieldid").val(0);
             $("#edit_field_key").prop("readonly", false).css("background", "");
-            $("#edit_attr_onblur").val("");
-            $("#edit_attr_onchange").val("");
             document.getElementById("edit_select_options").innerHTML = "";
             $("#edit_options_json").val("[]");
             $("#edit_viewer_url").val("");

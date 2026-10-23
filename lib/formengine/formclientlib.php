@@ -3,7 +3,7 @@
  * formclientlib.php - Form engine client helpers (rules JS, multipage UI)
  * -------------------------------------------------------------------------
  * Shared by form_key consumers. Defaults match staff application selectors
- * for backward compatibility; pass $opts to retarget.
+ * for backward compatibility; pass $opts to retarget other forms.
  ***************************************************************************/
 if (!defined('FORMCLIENTLIB')) {
     define('FORMCLIENTLIB', true);
@@ -22,7 +22,8 @@ if (!defined('FORMRENDERLIB')) {
 }
 
 /**
- * Default client/JS options for multipage forms and visibility rules.
+ * Default client/JS options for multipage forms and visibility rules. These
+ * legacy selectors and targets are retained for compatibility with staff_app.
  * @return array
  */
 function form_engine_default_client_opts() {

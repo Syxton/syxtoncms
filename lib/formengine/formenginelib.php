@@ -974,7 +974,7 @@ function form_hook_value($form_key, $hook_id, $values) {
  * @return array field_key => value
  */
 function form_engine_prepare_db_array($form_key, $storage_row) {
-    $resolved = form_engine_call_hook($form_key, 'prepare_db_array_fn', [$storage_row], ['resolve_values']);
+    $resolved = form_engine_call_hook($form_key, 'prepare_db_array_fn', [$storage_row]);
     if ($resolved !== null) {
         return $resolved;
     }
@@ -1243,16 +1243,7 @@ function form_engine_get_fields($form_key, $pageid = 0, $include_inactive = fals
     $by_key = [];
     if ($rows) {
         while ($r = fetch_row($rows)) {
-            foreach (['options', 'validation', 'extra_attrs', 'visibility', 'required_when'] as $json_col) {
-                if (!isset($r[$json_col]) || $r[$json_col] === '' || $r[$json_col] === null) {
-                    $r[$json_col] = [];
-                } elseif (is_string($r[$json_col])) {
-                    $decoded = json_decode($r[$json_col], true);
-                    $r[$json_col] = is_array($decoded) ? $decoded : [];
-                } elseif (!is_array($r[$json_col])) {
-                    $r[$json_col] = [];
-                }
-            }
+            $r = form_engine_decode_field_json_cols($r);
             $k = $r['field_key'];
             if (!isset($by_key[$k]) || (int)$r['pageid'] === (int)$pageid) {
                 $by_key[$k] = $r;
@@ -1270,6 +1261,25 @@ function form_engine_get_fields($form_key, $pageid = 0, $include_inactive = fals
 }
 
 /**
+ * Decode JSON-backed field columns into arrays.
+ * @param array $row Field row
+ * @return array
+ */
+function form_engine_decode_field_json_cols(array $row) {
+    foreach (['options', 'validation', 'extra_attrs', 'visibility', 'required_when'] as $json_col) {
+        if (!isset($row[$json_col]) || $row[$json_col] === '' || $row[$json_col] === null) {
+            $row[$json_col] = [];
+        } elseif (is_string($row[$json_col])) {
+            $decoded = json_decode($row[$json_col], true);
+            $row[$json_col] = is_array($decoded) ? $decoded : [];
+        } elseif (!is_array($row[$json_col])) {
+            $row[$json_col] = [];
+        }
+    }
+    return $row;
+}
+
+/**
  * In-memory default field definitions from the form def (no DB write).
  * @param string $form_key Form identifier
  * @return array List of field rows
@@ -1282,7 +1292,7 @@ function form_engine_default_fields($form_key) {
     if (!empty($def['default_fields']) && is_array($def['default_fields'])) {
         return $def['default_fields'];
     }
-    $out = form_engine_call_hook($form_key, 'get_field_defaults_fn', [], ['default_fields_fn']);
+    $out = form_engine_call_hook($form_key, 'get_field_defaults_fn');
     return is_array($out) ? $out : [];
 }
 
@@ -1302,17 +1312,7 @@ function form_engine_normalize_default_field(array $f, $pageid = 0) {
     if (!isset($f['active'])) {
         $f['active'] = 1;
     }
-    foreach (['options', 'validation', 'extra_attrs', 'visibility', 'required_when'] as $json_col) {
-        if (!isset($f[$json_col]) || $f[$json_col] === '' || $f[$json_col] === null) {
-            $f[$json_col] = [];
-        } elseif (is_string($f[$json_col])) {
-            $decoded = json_decode($f[$json_col], true);
-            $f[$json_col] = is_array($decoded) ? $decoded : [];
-        } elseif (!is_array($f[$json_col])) {
-            $f[$json_col] = [];
-        }
-    }
-    return $f;
+    return form_engine_decode_field_json_cols($f);
 }
 
 /**
@@ -1326,7 +1326,7 @@ function form_engine_fields($form_key, $pageid = 0, $include_inactive = false) {
     form_engine_ensure_schema();
 
     // 2. Feature bootstrap (idempotent)
-    form_engine_call_hook($form_key, 'meet_db_requirement_fn', [], ['ensure', 'ensure_fn']);
+    form_engine_call_hook($form_key, 'meet_db_requirement_fn');
 
     // 3. DB rows
     $list = form_engine_get_fields($form_key, $pageid, $include_inactive);
@@ -1360,8 +1360,7 @@ function form_engine_fields($form_key, $pageid = 0, $include_inactive = false) {
     $out = form_engine_call_hook(
         $form_key,
         'finalize_field_list_fn',
-        [$list, $pageid, $include_inactive],
-        ['post_process_fields']
+        [$list, $pageid, $include_inactive]
     );
     if (is_array($out)) {
         $list = $out;
@@ -1378,7 +1377,7 @@ function form_engine_fields($form_key, $pageid = 0, $include_inactive = false) {
  * @return int|mixed Callback result (typically count seeded)
  */
 function form_engine_sync_field_defs($form_key, $pageid = 0, $force = false) {
-    return form_engine_call_hook($form_key, 'sync_field_defs_fn', [$pageid, $force], ['seed_fields']) ?? 0;
+    return form_engine_call_hook($form_key, 'sync_field_defs_fn', [$pageid, $force]) ?? 0;
 }
 
 /**
@@ -1427,19 +1426,16 @@ if (!defined('FORMCLIENTLIB')) {
  * @param string $form_key Form identifier
  * @param string $hook_name Key on the form definition
  * @param array $args Arguments passed to the callable
- * @param string[] $aliases Fallback definition keys
  * @return mixed|null Null if the hook is not set
  */
-function form_engine_call_hook($form_key, $hook_name, array $args = [], array $aliases = []) {
+function form_engine_call_hook($form_key, $hook_name, array $args = []) {
     $def = form_engine_def($form_key);
-    foreach (array_merge([$hook_name], $aliases) as $key) {
-        $fn = $def[$key] ?? null;
-        if (is_string($fn) && function_exists($fn)) {
-            return call_user_func_array($fn, $args);
-        }
-        if (is_callable($fn)) {
-            return call_user_func_array($fn, $args);
-        }
+    $fn = $def[$hook_name] ?? null;
+    if (is_string($fn) && function_exists($fn)) {
+        return call_user_func_array($fn, $args);
+    }
+    if (is_callable($fn)) {
+        return call_user_func_array($fn, $args);
     }
     return null;
 }
@@ -1535,13 +1531,13 @@ function form_engine_collect($form_key, $pageid = 0) {
  */
 function form_engine_save($form_key, array $ctx) {
     $def = form_engine_def($form_key);
-    $fn = $def['save'] ?? $def['save_fn'] ?? null;
+    $fn = $def['save'] ?? null;
     if (!is_callable($fn)) {
         return false;
     }
     $reflection = new ReflectionFunction(Closure::fromCallable($fn));
     $args = $reflection->getNumberOfParameters() <= 1 ? [$ctx] : [$form_key, $ctx];
-    return form_engine_call_hook($form_key, 'save', $args, ['save_fn']);
+    return form_engine_call_hook($form_key, 'save', $args);
 }
 
 /**
@@ -1603,8 +1599,7 @@ function form_engine_render($form_key, $values = [], $opts = []) {
     $prepared = form_engine_call_hook(
         $form_key,
         'prepare_display_values_fn',
-        [$vals, $row, $viewonly],
-        ['prepare_values']
+        [$vals, $row, $viewonly]
     );
     if (is_array($prepared)) {
         $vals = $prepared;

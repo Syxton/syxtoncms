@@ -21,10 +21,6 @@ if (!defined('FORMENGINELIB')) {
  * @return void Echoes HTML
  */
 function form_editor_page($form_key, $pageid, $show_form_picker = true) {
-    global $CFG;
-    if (!defined('FORMENGINELIB')) {
-        include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
-    }
     form_engine_ensure_schema();
     form_engine_def($form_key);
     form_engine_sync_field_defs($form_key, 0);
@@ -48,7 +44,14 @@ function form_editor_page($form_key, $pageid, $show_form_picker = true) {
     }
 
     $ajax_url = '/ajax/formengine_ajax.php';
-    $common = ['pageid' => $pageid, 'form_key' => $form_key];
+    if (empty($_SESSION['form_engine_csrf'])) {
+        $_SESSION['form_engine_csrf'] = bin2hex(random_bytes(32));
+    }
+    $common = [
+        'pageid' => $pageid,
+        'form_key' => $form_key,
+        'form_engine_csrf' => $_SESSION['form_engine_csrf'],
+    ];
     ajaxapi([
         'id' => 'form_engine_save_field',
         'url' => $ajax_url,
@@ -126,10 +129,6 @@ function form_editor_page($form_key, $pageid, $show_form_picker = true) {
  * @return string HTML
  */
 function form_editor_hooks_panel_html($form_key, $pageid) {
-    global $CFG;
-    if (!defined('FORMENGINELIB')) {
-        include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
-    }
     $hooks = function_exists('form_engine_get_bindable_hooks')
         ? form_engine_get_bindable_hooks($form_key, $pageid)
         : form_engine_get_hooks($form_key, $pageid);
@@ -386,10 +385,6 @@ function form_editor_resolve_sortorder($form_key, $pageid, $fieldid, $place_afte
  * @return string HTML
  */
 function form_editor_ui($form_key, $pageid) {
-    global $CFG;
-    if (!defined('FORMENGINELIB')) {
-        include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
-    }
     $def = form_engine_def($form_key);
     form_engine_sync_field_defs($form_key, 0);
     $form_title = ($def['label'] ?? $form_key) . ' — Form Editor';
@@ -413,6 +408,7 @@ function form_editor_ui($form_key, $pageid) {
     $edit_map = [];
     $rows = '';
     foreach ($fields as $f) {
+        $f = form_engine_decode_field_json_cols($f);
         $fid = (int)($f['fieldid'] ?? 0);
         $is_fixed = in_array($f['field_key'], $fixed_keys, true);
         $bound_hooks = function_exists('form_engine_hooks_for_field')
@@ -421,39 +417,15 @@ function form_editor_ui($form_key, $pageid) {
         $is_hooked = !empty($bound_hooks);
         $active = !empty($f['active']) ? '<span style="color:#0a0">Active</span>' : '<span style="color:#999">Inactive</span>';
 
-        $visibility = $f['visibility'] ?? [];
-        if (is_string($visibility) && $visibility !== '') {
-            $visibility = json_decode($visibility, true) ?: [];
-        }
-        if (!is_array($visibility)) {
-            $visibility = [];
-        }
+        $visibility = $f['visibility'];
         $vis = !empty($visibility['conditions']) ? 'Yes (' . count($visibility['conditions']) . ')' : '—';
 
-        $required_when = $f['required_when'] ?? [];
-        if (is_string($required_when) && $required_when !== '') {
-            $required_when = json_decode($required_when, true) ?: [];
-        }
-        if (!is_array($required_when)) {
-            $required_when = [];
-        }
+        $required_when = $f['required_when'];
         $reqw = !empty($required_when['conditions']) ? 'Yes (' . count($required_when['conditions']) . ')' : '—';
 
-        $attrs = $f['extra_attrs'] ?? [];
-        if (is_string($attrs) && $attrs !== '') {
-            $attrs = json_decode($attrs, true) ?: [];
-        }
-        if (!is_array($attrs)) {
-            $attrs = [];
-        }
+        $attrs = $f['extra_attrs'];
 
-        $options = $f['options'] ?? [];
-        if (is_string($options) && $options !== '') {
-            $options = json_decode($options, true) ?: [];
-        }
-        if (!is_array($options)) {
-            $options = [];
-        }
+        $options = $f['options'];
         // Normalize to [{value,label}, ...]
         $norm_opts = [];
         $viewer_url = '';
@@ -497,13 +469,7 @@ function form_editor_ui($form_key, $pageid) {
             ? ''
             : '<button type="button" class="btn-danger" title="Delete" onclick="if(confirm(' . json_encode($del_msg) . ')) form_engine_delete_field(' . $fid . ')">' . $del_icon . '</button>';
 
-        $validation = $f['validation'] ?? [];
-        if (is_string($validation) && $validation !== '') {
-            $validation = json_decode($validation, true) ?: [];
-        }
-        if (!is_array($validation)) {
-            $validation = [];
-        }
+        $validation = $f['validation'];
         $number_subtype = (string)($validation['number_subtype'] ?? 'decimal');
         if (!in_array($number_subtype, ['integer', 'decimal', 'money'], true)) {
             $number_subtype = 'decimal';
@@ -536,14 +502,14 @@ function form_editor_ui($form_key, $pageid) {
             'required' => (int)($f['required'] ?? 0),
             'active' => (int)($f['active'] ?? 1),
             'helptext' => $f['helptext'] ?? '',
+            'attr_onblur' => $attrs['onblur'] ?? '',
+            'attr_onchange' => $attrs['onchange'] ?? '',
             'vis_action' => $visibility['action'] ?? '',
             'vis_logic' => $visibility['logic'] ?? 'and',
             'vis_conditions' => $visibility['conditions'] ?? [],
             'reqw_enable' => !empty($required_when['conditions']) ? '1' : '0',
             'reqw_logic' => $required_when['logic'] ?? 'and',
             'reqw_conditions' => $required_when['conditions'] ?? [],
-            'attr_onblur' => $attrs['onblur'] ?? '',
-            'attr_onchange' => $attrs['onchange'] ?? '',
             'locked' => !empty($attrs['locked']) ? '1' : '0',
             'options' => $norm_opts,
             'viewer_url' => $viewer_url,

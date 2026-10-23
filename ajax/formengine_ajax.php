@@ -15,31 +15,60 @@ if (!defined('FORMEDITORLIB')) {
     include_once($CFG->dirroot . '/lib/formengine/formeditorlib.php');
 }
 
+function form_engine_ajax_user_can_edit($form_key, $pageid, $action) {
+    global $USER;
+    $userid = (int)($USER->userid ?? 0);
+    if ($userid < 1 || !function_exists('is_logged_in') || !is_logged_in()) {
+        return false;
+    }
+    if (function_exists('is_siteadmin') && is_siteadmin($userid)) {
+        return true;
+    }
+    if ($action === 'form_engine_drop_deprecated' || $form_key !== 'staff_app') {
+        return false;
+    }
+    return function_exists('user_is_able')
+        && user_is_able($userid, 'manageapplications', (int)$pageid);
+}
+
+function form_engine_ajax_has_valid_csrf_token() {
+    $session_token = $_SESSION['form_engine_csrf'] ?? '';
+    $request_token = $_REQUEST['form_engine_csrf'] ?? '';
+    return is_string($session_token)
+        && $session_token !== ''
+        && is_string($request_token)
+        && hash_equals($session_token, $request_token);
+}
+
+function form_engine_ajax_field_for_form($fieldid, $form_key, $pageid) {
+    return get_db_row(
+        "SELECT * FROM form_fields
+         WHERE fieldid=@@id@@ AND form_key=@@fk@@ AND pageid IN (0, @@pageid@@)",
+        ['id' => (int)$fieldid, 'fk' => $form_key, 'pageid' => (int)$pageid]
+    );
+}
+
 /** form_key from request, or first registered form, or empty. */
 function form_engine_request_form_key() {
-    form_engine_load_consumer_forms();
     $fk = clean_myvar_opt("form_key", "string", "");
     if ($fk !== "") {
         return $fk;
     }
-    $reg = form_engine_registry();
-    if ($reg) {
-        return (string)array_key_first($reg);
-    }
-    return "";
+    return form_engine_default_form_key();
 }
 
 function form_engine_save_field() {
-    global $CFG;
-    if (!defined('FORMENGINELIB')) {
-        include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
-    }
-    if (!defined('FORMEDITORLIB')) {
-        include_once($CFG->dirroot . '/lib/formengine/formeditorlib.php');
-    }
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     $form_key = form_engine_request_form_key();
     $fieldid = clean_myvar_opt("fieldid", "int", 0);
+    $existing = null;
+    if ($fieldid) {
+        $existing = form_engine_ajax_field_for_form($fieldid, $form_key, $pageid);
+        if (!$existing) {
+            ajax_return('', 'Field not found for this form.');
+            return;
+        }
+    }
     $field_key = clean_myvar_req("field_key", "string");
     $label = clean_myvar_req("label", "string");
     $type = clean_myvar_req("type", "string");
@@ -51,64 +80,37 @@ function form_engine_save_field() {
     $helptext = clean_myvar_opt("helptext", "string", "");
     $now = time();
 
-    // JS attributes — read raw POST (clean_myvar "string" can strip JS punctuation)
+    // Preserve existing attributes and accept handler edits only through the permission-checked endpoint.
     $extra_attrs = [];
-    $fieldid_tmp = clean_myvar_opt("fieldid", "int", 0);
-    if ($fieldid_tmp) {
-        $existing = get_db_row("SELECT extra_attrs FROM form_fields WHERE fieldid=@@id@@", ['id' => $fieldid_tmp]);
-        if ($existing && !empty($existing['extra_attrs'])) {
-            $prev = is_string($existing['extra_attrs']) ? json_decode($existing['extra_attrs'], true) : $existing['extra_attrs'];
-            if (is_array($prev)) {
-                $extra_attrs = $prev;
+    if ($existing && !empty($existing['extra_attrs'])) {
+        $previous_attrs = is_string($existing['extra_attrs'])
+            ? json_decode($existing['extra_attrs'], true)
+            : $existing['extra_attrs'];
+        if (is_array($previous_attrs)) {
+            $extra_attrs = $previous_attrs;
+        }
+    }
+    foreach (['onblur', 'onchange'] as $event_name) {
+        $posted_value = null;
+        foreach ([$_POST, $_REQUEST, $_GET] as $request_values) {
+            if (array_key_exists('attr_' . $event_name, $request_values)) {
+                $posted_value = (string)$request_values['attr_' . $event_name];
+                break;
             }
-        }
-    }
-    // Always apply posted onblur/onchange (including empty to clear).
-    // Check common request bags used by this CMS ajax layer.
-    $onblur = null;
-    $onchange = null;
-    foreach ([$_POST, $_REQUEST, $_GET] as $bag) {
-        if ($onblur === null && array_key_exists('attr_onblur', $bag)) {
-            $onblur = (string)$bag['attr_onblur'];
-        }
-        if ($onchange === null && array_key_exists('attr_onchange', $bag)) {
-            $onchange = (string)$bag['attr_onchange'];
-        }
-    }
-    // Some ajax wrappers nest form fields under a parent key
-    if ($onblur === null || $onchange === null) {
-        foreach ([$_POST, $_REQUEST] as $bag) {
-            foreach ($bag as $k => $v) {
-                if (!is_array($v)) continue;
-                if ($onblur === null && array_key_exists('attr_onblur', $v)) {
-                    $onblur = (string)$v['attr_onblur'];
-                }
-                if ($onchange === null && array_key_exists('attr_onchange', $v)) {
-                    $onchange = (string)$v['attr_onchange'];
+            foreach ($request_values as $value) {
+                if (is_array($value) && array_key_exists('attr_' . $event_name, $value)) {
+                    $posted_value = (string)$value['attr_' . $event_name];
+                    break 2;
                 }
             }
         }
-    }
-    if ($onblur !== null) {
-        $onblur = str_replace("\0", '', $onblur);
-        if (strlen($onblur) > 4000) {
-            $onblur = substr($onblur, 0, 4000);
-        }
-        if ($onblur === '') {
-            unset($extra_attrs['onblur']);
-        } else {
-            $extra_attrs['onblur'] = $onblur;
-        }
-    }
-    if ($onchange !== null) {
-        $onchange = str_replace("\0", '', $onchange);
-        if (strlen($onchange) > 4000) {
-            $onchange = substr($onchange, 0, 4000);
-        }
-        if ($onchange === '') {
-            unset($extra_attrs['onchange']);
-        } else {
-            $extra_attrs['onchange'] = $onchange;
+        if ($posted_value !== null) {
+            $posted_value = substr(str_replace("\0", '', $posted_value), 0, 4000);
+            if ($posted_value === '') {
+                unset($extra_attrs[$event_name]);
+            } else {
+                $extra_attrs[$event_name] = $posted_value;
+            }
         }
     }
     // Locked / read-only on the live form
@@ -336,8 +338,8 @@ function form_engine_save_field() {
                 sortorder=@@sortorder@@, required=@@required@@, active=@@active@@, helptext=@@helptext@@,
                 visibility=@@visibility@@, required_when=@@required_when@@, extra_attrs=@@extra_attrs@@,
                 options=@@options@@, validation=@@validation@@, modified=@@now@@
-             WHERE fieldid=@@fieldid@@",
-            $params
+             WHERE fieldid=@@fieldid@@ AND form_key=@@form_key@@ AND pageid IN (0, @@pageid@@)",
+            array_merge($params, ['form_key' => $form_key])
         );
     } else {
         // Prefer global (pageid=0) uniqueness for field_key
@@ -367,32 +369,25 @@ function form_engine_save_field() {
 
 
 function form_engine_delete_field() {
-    global $CFG;
-    if (!defined('FORMENGINELIB')) {
-        include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
-    }
-    if (!defined('FORMEDITORLIB')) {
-        include_once($CFG->dirroot . '/lib/formengine/formeditorlib.php');
-    }
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     $form_key = form_engine_request_form_key();
     $fieldid = clean_myvar_req("fieldid", "int");
-    $row = get_db_row("SELECT * FROM form_fields WHERE fieldid=@@id@@", ['id' => $fieldid]);
+    $row = form_engine_ajax_field_for_form($fieldid, $form_key, $pageid);
     if ($row) {
         if (function_exists('form_engine_unbind_field')) {
             form_engine_unbind_field($form_key, $row['field_key'] ?? '', $pageid);
         }
-        execute_db_sql("DELETE FROM form_fields WHERE fieldid=@@id@@", ['id' => $fieldid]);
+        execute_db_sql(
+            "DELETE FROM form_fields
+             WHERE fieldid=@@id@@ AND form_key=@@fk@@ AND pageid IN (0, @@pageid@@)",
+            ['id' => $fieldid, 'fk' => $form_key, 'pageid' => $pageid]
+        );
     }
     ajax_return(form_editor_ui($form_key, $pageid));
 }
 
 
 function form_engine_migrate() {
-    global $CFG;
-    if (!defined('FORMENGINELIB')) {
-        include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
-    }
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     $form_key = form_engine_request_form_key();
     // Load feature runtime if the form def registers migration_run helpers
@@ -412,10 +407,6 @@ function form_engine_migrate() {
 
 
 function form_engine_drop_deprecated() {
-    global $CFG;
-    if (!defined('FORMENGINELIB')) {
-        include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
-    }
     $form_key = form_engine_request_form_key();
     $def = form_engine_def($form_key);
     form_engine_include_def_lib($form_key, 'migration_lib');
@@ -437,10 +428,6 @@ function form_engine_drop_deprecated() {
 
 
 function form_engine_save_hooks() {
-    global $CFG;
-    if (!defined('FORMENGINELIB')) {
-        include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
-    }
     $form_key = form_engine_request_form_key();
     $raw = clean_myvar_opt("bindings_json", "string", "[]");
     if (($raw === '' || $raw === '[]') && isset($_REQUEST['bindings_json'])) {
@@ -490,13 +477,6 @@ function form_engine_save_hooks() {
 
 
 function form_engine_reorder() {
-    global $CFG;
-    if (!defined('FORMENGINELIB')) {
-        include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
-    }
-    if (!defined('FORMEDITORLIB')) {
-        include_once($CFG->dirroot . '/lib/formengine/formeditorlib.php');
-    }
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     $form_key = form_engine_request_form_key();
     $order = clean_myvar_opt("order", "string", "");
@@ -511,8 +491,9 @@ function form_engine_reorder() {
                 continue;
             }
             execute_db_sql(
-                "UPDATE form_fields SET sortorder=@@s@@, modified=@@m@@ WHERE fieldid=@@id@@",
-                ['s' => $sort, 'id' => $id, 'm' => time()]
+                "UPDATE form_fields SET sortorder=@@s@@, modified=@@m@@
+                 WHERE fieldid=@@id@@ AND form_key=@@fk@@ AND pageid IN (0, @@pageid@@)",
+                ['s' => $sort, 'id' => $id, 'm' => time(), 'fk' => $form_key, 'pageid' => $pageid]
             );
             $sort += 10;
         }
@@ -523,7 +504,30 @@ function form_engine_reorder() {
 
 // Dispatch
 $action = clean_myvar_opt('action', 'string', '');
-if ($action && function_exists($action)) {
+if (in_array($action, [
+    'form_engine_save_field',
+    'form_engine_delete_field',
+    'form_engine_migrate',
+    'form_engine_drop_deprecated',
+    'form_engine_save_hooks',
+    'form_engine_reorder',
+], true)) {
+    $pageid = clean_myvar_opt('pageid', 'int', get_pageid());
+    $form_key = form_engine_request_form_key();
+    if (!form_engine_ajax_user_can_edit($form_key, $pageid, $action)) {
+        if (function_exists('http_response_code')) {
+            http_response_code(403);
+        }
+        ajax_return('', getlang('generic_permissions'));
+        return;
+    }
+    if (!form_engine_ajax_has_valid_csrf_token()) {
+        if (function_exists('http_response_code')) {
+            http_response_code(403);
+        }
+        ajax_return('', getlang('generic_permissions'));
+        return;
+    }
     $action();
 } else {
     if (function_exists('ajax_return')) {
