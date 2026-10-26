@@ -395,12 +395,32 @@ function form_engine_migrate() {
     $result = form_engine_run_migration($form_key, $pageid);
     $ok = !empty($result['ok']) || !isset($result['ok']);
     $msg = $result['message'] ?? ($ok ? 'Migration complete.' : 'Migration failed.');
+    if ($ok && empty($result['message'])) {
+        $parts = [];
+        if (isset($result['staff_updated'])) {
+            $parts[] = (int)$result['staff_updated'] . ' staff row(s)';
+        }
+        if (isset($result['archive_updated'])) {
+            $parts[] = (int)$result['archive_updated'] . ' archive row(s)';
+        }
+        if ($parts) {
+            $msg = 'Data migration finished: ' . implode(', ', $parts) . '.';
+        }
+    }
     $color = $ok ? '#166534' : '#b91c1c';
-    $html = '<span style="color:' . $color . '">' . htmlspecialchars($msg) . '</span>';
+    // Status + refreshed tools go into #form_editor_migration_slot so step 2
+    // (drop deprecated) appears without leaving the editor.
+    $html = '<div class="sfe-migrate-status" style="margin:12px 0;color:' . $color . '">'
+        . htmlspecialchars($msg) . '</div>';
     // Optional post-migrate UI from form def
     $post = $def['migration_result_html'] ?? null;
     if ($post && is_string($post) && function_exists($post)) {
         $html .= call_user_func($post, $form_key, $result);
+    } elseif ($post && is_callable($post)) {
+        $html .= call_user_func($post, $form_key, $result);
+    }
+    if (function_exists('form_editor_migration_tools_html')) {
+        $html .= form_editor_migration_tools_html($form_key);
     }
     ajax_return($html);
 }
@@ -418,10 +438,16 @@ function form_engine_drop_deprecated() {
         $result = call_user_func($fn);
     }
     $color = !empty($result['ok']) ? '#166534' : '#b91c1c';
-    $html = '<span style="color:' . $color . '">' . htmlspecialchars($result['message'] ?? '') . '</span>';
+    $html = '<div class="sfe-migrate-status" style="margin:12px 0;color:' . $color . '">'
+        . htmlspecialchars($result['message'] ?? '') . '</div>';
     $post = $def['migration_result_html'] ?? null;
     if ($post && is_string($post) && function_exists($post)) {
         $html .= call_user_func($post, $form_key, $result);
+    } elseif ($post && is_callable($post)) {
+        $html .= call_user_func($post, $form_key, $result);
+    }
+    if (function_exists('form_editor_migration_tools_html')) {
+        $html .= form_editor_migration_tools_html($form_key);
     }
     ajax_return($html);
 }

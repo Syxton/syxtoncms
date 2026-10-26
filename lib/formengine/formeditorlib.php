@@ -86,7 +86,8 @@ function form_editor_page($form_key, $pageid, $show_form_picker = true) {
         'id' => 'form_engine_migrate',
         'url' => $ajax_url,
         'data' => array_merge($common, ['action' => 'form_engine_migrate']),
-        'display' => 'form_engine_migrate_result',
+        // Replace the whole migration tools slot so step 2 appears without reload
+        'display' => 'form_editor_migration_slot',
         'loading' => 'loading_overlay',
         'event' => 'none',
     ]);
@@ -94,7 +95,7 @@ function form_editor_page($form_key, $pageid, $show_form_picker = true) {
         'id' => 'form_engine_drop_deprecated',
         'url' => $ajax_url,
         'data' => array_merge($common, ['action' => 'form_engine_drop_deprecated']),
-        'display' => 'form_engine_migrate_result',
+        'display' => 'form_editor_migration_slot',
         'loading' => 'loading_overlay',
         'event' => 'none',
     ]);

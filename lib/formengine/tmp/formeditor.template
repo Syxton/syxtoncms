@@ -736,7 +736,7 @@ form_editor_ui@@
                 </div>
             </form>
         </div>
-       @@migration_tools@@
+       <div id="form_editor_migration_slot">@@migration_tools@@</div>
     </div>
 
     <script>
@@ -1117,25 +1117,27 @@ form_editor_ui@@
 
         function formEngineRunMigrate() {
             var btn = document.getElementById("form_engine_migrate_btn");
-            var out = document.getElementById("form_engine_migrate_result");
             if (btn) {
                 if (btn.disabled) return;
                 btn.disabled = true;
-                btn.setAttribute("data-label", btn.innerHTML);
                 btn.innerHTML = "Migrating…";
             }
-            if (out) out.innerHTML = "<em>Working… please wait.</em>";
+            // Progress text in the slot; response replaces the whole slot with
+            // status + refreshed tools (step 2 / complete) without leaving the editor.
+            var slot = document.getElementById("form_editor_migration_slot");
+            if (slot) {
+                var status = slot.querySelector(".sfe-migrate-status");
+                if (!status) {
+                    status = document.createElement("div");
+                    status.className = "sfe-migrate-status";
+                    status.style.margin = "12px 0";
+                    slot.insertBefore(status, slot.firstChild);
+                }
+                status.innerHTML = "<em>Working… please wait.</em>";
+            }
             if (typeof form_engine_migrate === "function") {
                 form_engine_migrate();
             }
-            // Re-enable after response paints (ajax replaces #form_engine_migrate_result)
-            setTimeout(function() {
-                var b = document.getElementById("form_engine_migrate_btn");
-                if (b) {
-                    b.disabled = false;
-                    if (b.getAttribute("data-label")) b.innerHTML = b.getAttribute("data-label");
-                }
-            }, 8000);
         }
 
         function formEngineDropDeprecated() {
@@ -1147,6 +1149,17 @@ form_editor_ui@@
                 if (btn.disabled) return;
                 btn.disabled = true;
                 btn.innerHTML = "Dropping columns…";
+            }
+            var slot = document.getElementById("form_editor_migration_slot");
+            if (slot) {
+                var status = slot.querySelector(".sfe-migrate-status");
+                if (!status) {
+                    status = document.createElement("div");
+                    status.className = "sfe-migrate-status";
+                    status.style.margin = "12px 0";
+                    slot.insertBefore(status, slot.firstChild);
+                }
+                status.innerHTML = "<em>Working… please wait.</em>";
             }
             if (typeof form_engine_drop_deprecated === "function") {
                 form_engine_drop_deprecated();
