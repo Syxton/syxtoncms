@@ -228,7 +228,7 @@ function get_members_search_ajax() {
         "paramlist" => "userid",
         "data" => [
             "action" => "delete_user",
-            "userid" => "js||userid||js"
+            "userid" => "js@@userid@@js"
         ],
         "ondone" => "members_search();",
         "event" => "none",
@@ -242,7 +242,7 @@ function get_members_search_ajax() {
         "data" => [
             "action" => "forgot_password",
             "admin" => "true",
-            "userid" => "js||userid||js"
+            "userid" => "js@@userid@@js"
         ],
         "ondone" => "jq_display('reset_password_' + userid, data);",
         "event" => "none",
@@ -253,10 +253,10 @@ function get_members_search_ajax() {
         "url" => "/features/adminpanel/adminpanel_ajax.php",
         "data" => [
             "action" => "ipmap",
-            "geodata" => "js||geodata||js"
+            "geodata" => "js@@geodata@@js"
         ],
         "paramlist" => "geodata, display",
-        "display" => "js||display||js",
+        "display" => "js@@display@@js",
         "event" => "none",
     ]);
 
@@ -267,7 +267,7 @@ function get_members_search_ajax() {
         "url" => 'https://api.ipgeolocation.io/v2/ipgeo',
         "data" => [
             "fields" => "location",
-            "ip" => "js||ip||js",
+            "ip" => "js@@ip@@js",
             "apiKey" => $CFG->geolocationkey,
         ],
         "paramlist" => "ip, display",
@@ -284,7 +284,7 @@ function get_members_search_ajax() {
         "url" => "/features/adminpanel/adminpanel_ajax.php",
         "data" => [
             "action" => "loginas",
-            "userid" => "js||userid||js",
+            "userid" => "js@@userid@@js",
         ],
         "paramlist" => "userid",
         "ondone" => "getRoot()[0].go_to_page(data.message);",
@@ -296,7 +296,7 @@ function get_members_search_ajax() {
         "url" => "/features/adminpanel/adminpanel_ajax.php",
         "data" => [
             "action" => "view_logfile",
-            "userid" => "js||userid||js",
+            "userid" => "js@@userid@@js",
         ],
         "paramlist" => "userid",
         "display" => "display",

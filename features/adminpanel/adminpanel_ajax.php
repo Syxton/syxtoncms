@@ -46,7 +46,7 @@ function admin_email_test_form() {
         "url" => "/features/adminpanel/adminpanel_ajax.php",
         "data" => [
             "action" => "admin_email_test",
-            "email" => "js||$('#email').val()||js",
+            "email" => "js@@$('#email').val()@@js",
         ],
         "display" => "display",
     ]);

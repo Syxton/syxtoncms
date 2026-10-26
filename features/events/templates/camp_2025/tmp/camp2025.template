@@ -1,98 +1,98 @@
-template_form||
+template_form@@
     <!DOCTYPE HTML>
         <html>
             <head>
-                ||javascript||
+                @@javascript@@
             </head>
             <body>
                 <form class="event_template_form" name="form1" id="form1">
                     <fieldset class="formContainer">
-                        <input type="hidden" name="eventid" id="eventid" value="||event[eventid]||" />
-                        <input type="hidden" id="event_begin_date" value="||event_begin_date||" />
-                        <input type="hidden" id="event_end_date" value="||event_end_date||" />
+                        <input type="hidden" name="eventid" id="eventid" value="@@event[eventid]@@" />
+                        <input type="hidden" id="event_begin_date" value="@@event_begin_date@@" />
+                        <input type="hidden" id="event_end_date" value="@@event_end_date@@" />
                         <div style="display: flex;justify-content: center;">
                             <div style="font-size:15px;text-align:center;font-weight:bold">
-                                ||echo $CFG->sitename;::none|| Pre-Registration
+                                @@echo $CFG->sitename;::none@@ Pre-Registration
                                 <div style="font-size:13px;text-align:center;font-weight:bold">
-                                    ||event[name]||
+                                    @@event[name]@@
                                 </div>
                             </div>
                             <div style="width: 50px;">
-                                <input type="hidden" id="count_in_cart" value="||count_in_cart||" />
+                                <input type="hidden" id="count_in_cart" value="@@count_in_cart@@" />
                                 <button type="button" class="registration_cart_menu alike">
-                                    ||carticon||
+                                    @@carticon@@
                                 </button>
                                 <div id="refreshableregcart">
-                                    ||registrations||
+                                    @@registrations@@
                                 </div>
                             </div>
                         </div>
                         <div>
-                            <a target="policy" href="||echo $CFG->wwwroot;::none||/features/events/templates/camp_2025/regpolicy.html">
+                            <a target="policy" href="@@echo $CFG->wwwroot;::none@@/features/events/templates/camp_2025/regpolicy.html">
                                 Registration Policy
                             </a>
                         </div>
-                        ||form_elements||
+                        @@form_elements@@
                         <div class="displayOnFinalSection centered">
                             <br />
-                            <button type="submit" name="submit" style="font-size: 1.25em;background-color: green;color: white;" ||disable||>
-                                ||echo icon("cart-plus", 1, "", "white");::none||
+                            <button type="submit" name="submit" style="font-size: 1.25em;background-color: green;color: white;" @@disable@@>
+                                @@echo icon("cart-plus", 1, "", "white");::none@@
                                 <span>Add to Cart</span>
                             </button>
                             <br />
                             <br />
-                            <button type="button" name="reset" onclick="resetRegistration();" style="font-size: 1.25em;background-color: red;color: white;" ||disable||>
-                                ||echo icon("power-off", 1, "", "white");::none||
+                            <button type="button" name="reset" onclick="resetRegistration();" style="font-size: 1.25em;background-color: red;color: white;" @@disable@@>
+                                @@echo icon("power-off", 1, "", "white");::none@@
                                 <span>Reset</span>
                             </button>
                         </div>
                     </fieldset>
                 </form>
-||template_form
+@@template_form
 
-registration_cart_total||
+registration_cart_total@@
     <div class="registration_cart_total">
         <div class="registration_cart_item_name">
             Registration Total
         </div>
         <div class="registration_cart_item_price">
-            $||total||
+            $@@total@@
         </div>
     </div>
-||registration_cart_total
+@@registration_cart_total
 
-show_post_registration_page||
+show_post_registration_page@@
     <div>
         <br /><br />
-        <h2 class="centered">||title||</h2>
+        <h2 class="centered">@@title@@</h2>
         <br />
         <div class="centered">
             <strong>
-            ||subtitle||
+            @@subtitle@@
             </strong>
         </div>
         <br /><br />
-        ||message||
+        @@message@@
     </div>
-||show_post_registration_page
+@@show_post_registration_page
 
-copy_options||
+copy_options@@
     <br />
     <div class="centered">
         <strong>Copy an existing registration to another event.</strong>
         <br /><br />
         <select id="copy_event_to_form">
             <option value="0">Select an event</option>
-            ||options||
+            @@options@@
         </select>
         <button id="copy_registration" style="margin: 5px;" onclick="copy_to_form();">
-            ||echo icon("copy");::none||
+            @@echo icon("copy");::none@@
             <span>Copy Registration</span>
         </button>
     </div>
-||copy_options
+@@copy_options
 
-checkout_form||
+checkout_form@@
     <script>
         $(function () {
             calculate_payment_amount();
@@ -113,7 +113,7 @@ checkout_form||
                 </div>
                 <br />
                 <button id="cart_register_button" style="display: block; margin: auto; background: green; color: white;">
-                    ||echo icon("cart-shopping", 1, "", "white");::none||
+                    @@echo icon("cart-shopping", 1, "", "white");::none@@
                     <span>Checkout</span>
                 </button>
             </div>
@@ -121,103 +121,103 @@ checkout_form||
         <br />
         <div class="registration_cart_checkout" style="background: lightskyblue;border-radius: 10px;">
             <h2 class="centered">Not Finished?</h2>
-            ||add_options||
+            @@add_options@@
             <br />
-            ||copy_options||
+            @@copy_options@@
         </div>
     </div>
-||checkout_form
+@@checkout_form
 
-go_to_checkout||
+go_to_checkout@@
     <div class="registration_cart_bottom">
         <button type="button" id="registration_cart_checkout" style="background: navy;color: white;">
-            ||echo icon("person-walking-arrow-right", 1, "", "white");::none||
+            @@echo icon("person-walking-arrow-right", 1, "", "white");::none@@
             <span>Go to Checkout</span>
         </button>
     </div>
-||go_to_checkout
+@@go_to_checkout
 
-promo_form||
+promo_form@@
     <div>
-        <input id="promo_code_||hash||"
+        <input id="promo_code_@@hash@@"
             type="text"
-            name="promo_code_||hash||"
+            name="promo_code_@@hash@@"
             placeholder="Promo Code"
-            value="||promocode||"
+            value="@@promocode@@"
             style="display: inline-block;zoom:.8;width: 110px;" />
-        <button id="applypromo_||hash||"
+        <button id="applypromo_@@hash@@"
             type="button"
             style="display: inline-block;zoom:.8;">
             Apply
         </button>
-        <div id="promoresult_||hash||" style="zoom: .8;color: green;padding: 2px;text-align: center;">
-            ||promoname||
+        <div id="promoresult_@@hash@@" style="zoom: .8;color: green;padding: 2px;text-align: center;">
+            @@promoname@@
         </div>
     </div>
-||promo_form
+@@promo_form
 
-cart_item||
+cart_item@@
     <div class="registration_cart_item">
         <div>
-            ||delete{{
-                <button type="button" class="registration_cart_item_remove" onclick="remove_camp_2025_registration('||hash||');">
-                    ||echo icon("trash");::none||
+            @@delete{{
+                <button type="button" class="registration_cart_item_remove" onclick="remove_camp_2025_registration('@@hash@@');">
+                    @@echo icon("trash");::none@@
                 </button>
-            }}delete||
+            }}delete@@
         </div>
         <div class="registration_cart_item_name">
-            ||name||
+            @@name@@
         </div>
         <div class="registration_cart_item_price">
-            <strong>Price: ||price||</strong>
-            ||promo_form{{
+            <strong>Price: @@price@@</strong>
+            @@promo_form{{
                 <div class="registration_cart_item_promo_code">
-                    ||promo_form||
+                    @@promo_form@@
                 </div>
-            }}promo_form||
-            ||pay_on||
+            }}promo_form@@
+            @@pay_on@@
         </div>
     </div>
-||cart_item
+@@cart_item
 
-post_cart_item||
+post_cart_item@@
     <div class="registration_cart_item">
         <div class="registration_cart_item_name">
             <div style="display: flex;align-items: center;">
-                <span style="padding-right: 10px;">||facebook||</span>
-                <span>||description||</span>
+                <span style="padding-right: 10px;">@@facebook@@</span>
+                <span>@@description@@</span>
             </div>
-            ||*allowedin||
+            @@*allowedin@@
         </div>
         <div class="registration_cart_item_price" style="text-align: center;">
-        ||status||
+        @@status@@
         </div>
     </div>
-||post_cart_item
+@@post_cart_item
 
-post_cart||
+post_cart@@
     <div class="registration_cart">
         <div class="registration_cart_title">
             Registration Review
         </div>
-        ||cartitems||
+        @@cartitems@@
     </div>
-||post_cart
+@@post_cart
 
-pay_on_item||
+pay_on_item@@
     <br />
     <div style="zoom: .8">
         <strong>Pay Now: </strong>
-        ||pay_options||
+        @@pay_options@@
     </div>
-||pay_on_item
+@@pay_on_item
 
-message_allowedin||
+message_allowedin@@
     <div class="registration_allowed_in_page">
         This registration has granted you access into a private event page.
         This area contains specific information about the event.<br />
-        <a title="Open Event Page" target="_blank" href="||wwwroot||/index.php?pageid=||pageid||">
+        <a title="Open Event Page" target="_blank" href="@@wwwroot@@/index.php?pageid=@@pageid@@">
             Open Event Page
         </a>
     </div>
-||message_allowedin
+@@message_allowedin

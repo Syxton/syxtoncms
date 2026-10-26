@@ -287,7 +287,7 @@ function get_feature_pageid($feature, $featureid) {
 }
 
 function get_default_role($pageid) {
-    return get_db_field("default_role", "pages", "pageid = ||pageid||", ["pageid" => $pageid]);
+    return get_db_field("default_role", "pages", "pageid = @@pageid@@", ["pageid" => $pageid]);
 }
 
 function page_masthead($nav_menu = true, $carousel = true) {
@@ -297,7 +297,7 @@ function page_masthead($nav_menu = true, $carousel = true) {
     $pageid = $PAGE->id;
     $PAGE->themeid ??= get_page_themeid($pageid);
 
-    if (!$currentpage = get_db_row("SELECT * FROM pages WHERE pageid = ||pageid||", ["pageid" => $pageid])) {
+    if (!$currentpage = get_db_row("SELECT * FROM pages WHERE pageid = @@pageid@@", ["pageid" => $pageid])) {
         header('Location: ' . $CFG->wwwroot);
         die();
     }
@@ -336,7 +336,7 @@ function random_quotes($count = 5) {
 
     // Get enough quotes to add to the images.
     $quotes = [];
-    if ($result = get_db_result("SELECT quote, author FROM quotes ORDER BY RAND() LIMIT 0, ||count||", ["count" => $count])) {
+    if ($result = get_db_result("SELECT quote, author FROM quotes ORDER BY RAND() LIMIT 0, @@count@@", ["count" => $count])) {
         while ($row = fetch_row($result)) {
             // Set quotes and authors.
             $quote = empty($row['quote']) ? '' : '<div>' . $row['quote'] . '</div>';
@@ -457,7 +457,7 @@ function get_carousel($imageDir, $imageamount = 5) {
  *                  - data (array): The data to send with the request.
  *                  - if (string): Javascript: The condition to check before sending the request.
  *                  - else (string): Javascript:The code to execute if the condition is false.
- *                  - display (string): Javascript (js|| template allowed): The id of the element to update.
+ *                  - display (string): Javascript (js@@ template allowed): The id of the element to update.
  *                  - classes (string): HTML: The classes to add to the script element.
  *                  - datatype (string): The data type of the response, default to json.
  *                  - contenttype (string): The content type of the request, default to application/x-www-form-urlencoded; charset=UTF-8.
@@ -468,7 +468,7 @@ function get_carousel($imageDir, $imageamount = 5) {
  *                  - async (bool): Whether the request should be asynchronous or not, default to true.
  *                  - external (bool): Whether the URL given is an external URL. Defaults to false.
  *                  - event (string): The event to trigger the AJAX call on, default to click. If set to "none", it will create a function with the name given in id parameter instead of attaching to an event.
- *                  - paramlist (string): A comma separated list of parameters to pass to the function created if event is "none" or "function". These will be passed as variables to the function in the order given. (ie "id, name, value") The variables will be cleaned as strings by default, but can be set to other types by using js|| qualifier in the list (ie "id, js||value||js").
+ *                  - paramlist (string): A comma separated list of parameters to pass to the function created if event is "none" or "function". These will be passed as variables to the function in the order given. (ie "id, name, value") The variables will be cleaned as strings by default, but can be set to other types by using js@@ qualifier in the list (ie "id, js@@value@@js").
  *                  - intervalid (string): If provided, the function will be added to the myIntervals[] array with this name as the key.
  *                  - interval (int): If intervalid is provided, this sets how often the function in myIntervals[] should be run in milliseconds. Default is 60000 (1 minute).
  * @param bool $forcereturn Whether to return the generated script instead of printing it. If set to "function", it will return the raw function code without wrapping it in a script tag. Default is false, which will print the script.
@@ -515,11 +515,11 @@ global $CFG, $LOADAJAX;
         $before = $params["before"] ?? ""; // Function run before ajax call.
 
         if ($display) {
-            if (strpos($display, "js||") === false) { // no embedded js code.
+            if (strpos($display, "js@@") === false) { // no embedded js code.
                 $display = "'$display'"; // container id is a string and should be in quotes.
             } else {
                 // Define the pattern to match the qualifiers.
-                $pattern = '/((?<intro>.*)js\|\|(?<var>.*)\|\|js(?<outro>.*))/i';
+                $pattern = '/((?<intro>.*)js@@(?<var>.*)@@js(?<outro>.*))/i';
 
                 // Find all the qualifiers in the content.
                 preg_match_all($pattern, $display, $matches);
@@ -558,20 +558,20 @@ global $CFG, $LOADAJAX;
         $ifclose = $if ? "} $else" : "";
 
         // datestamp to make each call unique.
-        $data["timestamp"] = "js|| Date.now() ||js";
+        $data["timestamp"] = "js@@ Date.now() @@js";
         $data["ajaxapi"] = 1;
 
         // prepare data json.
         $data = json_encode($data);
-        $data = str_replace(['"js||', '||js"', '\'js||', '||js\''], '', $data);
+        $data = str_replace(['"js@@', '@@js"', '\'js@@', '@@js\''], '', $data);
 
         // if entire form data is needed, merge it with the original request data.
         if (!empty($reqstring)) {
-            if (strpos($reqstring, "js||") === false) { // no embedded js code.
+            if (strpos($reqstring, "js@@") === false) { // no embedded js code.
                 $reqstring = "'$reqstring'"; // container id is a string and should be in quotes.
             } else {
                 // Define the pattern to match the qualifiers.
-                $pattern = '/((?<intro>.*)js\|\|(?<var>.*)\|\|js(?<outro>.*))/i';
+                $pattern = '/((?<intro>.*)js@@(?<var>.*)@@js(?<outro>.*))/i';
 
                 // Find all the qualifiers in the content.
                 preg_match_all($pattern, $reqstring, $matches);
@@ -1499,8 +1499,8 @@ function search_template($templateparams) {
         "url" => "/ajax/page_ajax.php",
         "data" => [
             "action" => $templateparams["searchtype"],
-            "searchwords" => "js||encodeURIComponent('" . $templateparams["searchwords"] . "')||js",
-            "pagenum" => "js||pagenum||js",
+            "searchwords" => "js@@encodeURIComponent('" . $templateparams["searchwords"] . "')@@js",
+            "pagenum" => "js@@pagenum@@js",
         ],
         "display" => "searchcontainer_" . $templateparams["searchtype"],
         "loading" => "loading_overlay_" . $templateparams["searchtype"],
@@ -1767,8 +1767,8 @@ global $USER;
 function get_feature_data($feature, $featureid) {
     $SQL = "SELECT area
             FROM pages_features
-            WHERE feature = ||feature||
-            AND featureid = ||featureid||";
+            WHERE feature = @@feature@@
+            AND featureid = @@featureid@@";
     return get_db_row($SQL, ["feature" => $feature, "featureid" => $featureid]);
 }
 
@@ -1823,9 +1823,9 @@ global $CFG;
         'url' => '/ajax/site_ajax.php',
         'data' => [
             'action' => "login",
-            'username' => "js||encodeURIComponent($('#username').val())||js",
-            'password' => "js||$('#password').val()||js",
-            'reroute' => "js||$('#reroute').val()||js",
+            'username' => "js@@encodeURIComponent($('#username').val())@@js",
+            'password' => "js@@$('#password').val()@@js",
+            'reroute' => "js@@$('#reroute').val()@@js",
         ],
         "event" => "none",
         "ondone" => "verify_login(data);",
@@ -2089,7 +2089,7 @@ function move_features($params) {
 function update_feature($version, $feature) {
     try {
         start_db_transaction();
-        execute_db_sql("UPDATE features SET version=||version|| WHERE feature=||feature||", [
+        execute_db_sql("UPDATE features SET version=@@version@@ WHERE feature=@@feature@@", [
             "version" => $version,
             "feature" => $feature,
         ]);

@@ -21,7 +21,7 @@ function customrule_min_age($data = []) {
         "type" => "events_template",
         "setting_name" => "template_setting_min_age",
     ];
-    $min_age = get_db_field("setting", "settings", "type = ||type|| AND extra = ||extra|| AND setting_name = ||setting_name||", $params);
+    $min_age = get_db_field("setting", "settings", "type = @@type@@ AND extra = @@extra@@ AND setting_name = @@setting_name@@", $params);
     $min_age_error = empty($min_age) ? "" : ' data-msg-min="' . getlang("error_age_min", "/features/events/templates/camp_2025", $min_age) . '"';
     return empty($min_age) ? "" : " $min_age_error data-rule-min=\"$min_age\"";
 }
@@ -37,7 +37,7 @@ function customrule_max_age($data = []) {
         "type" => "events_template",
         "setting_name" => "template_setting_max_age",
     ];
-    $max_age = get_db_field("setting", "settings", "type = ||type|| AND extra = ||extra|| AND setting_name = ||setting_name||", $params);
+    $max_age = get_db_field("setting", "settings", "type = @@type@@ AND extra = @@extra@@ AND setting_name = @@setting_name@@", $params);
     $max_age_error = empty($max_age) ? "" : ' data-msg-max="' . getlang("error_age_max", "/features/events/templates/camp_2025", $max_age) . '"';
     return empty($max_age) ? "" : " $max_age_error data-rule-max=\"$max_age\"";
 }
@@ -188,7 +188,7 @@ function customvalue_shirt($data = []) {
         "type" => "events_template",
         "setting_name" => "template_setting_shirt",
     ];
-    $shirt = get_db_field("setting", "settings", "type = ||type|| AND extra = ||extra|| AND setting_name = ||setting_name||", $params);
+    $shirt = get_db_field("setting", "settings", "type = @@type@@ AND extra = @@extra@@ AND setting_name = @@setting_name@@", $params);
     return empty($shirt) ? 0 : 1;
 }
 
@@ -204,14 +204,14 @@ function customvalue_shirt_price($data = []) {
         "type" => "events_template",
         "setting_name" => "template_setting_shirt",
     ];
-    $shirt = get_db_field("setting", "settings", "type = ||type|| AND extra = ||extra|| AND setting_name = ||setting_name||", $params);
+    $shirt = get_db_field("setting", "settings", "type = @@type@@ AND extra = @@extra@@ AND setting_name = @@setting_name@@", $params);
 
     if (!$shirt) {
         return 0;
     }
 
     $params["setting_name"] = "template_setting_shirt_price";
-    $shirt_price = get_db_field("setting", "settings", "type = ||type|| AND extra = ||extra|| AND setting_name = ||setting_name||", $params);
+    $shirt_price = get_db_field("setting", "settings", "type = @@type@@ AND extra = @@extra@@ AND setting_name = @@setting_name@@", $params);
 
     return empty($shirt_price) ? "0" : $shirt_price;
 }
@@ -229,14 +229,14 @@ function customoptions_shirt($data = []) {
         "type" => "events_template",
         "setting_name" => "template_setting_shirt",
     ];
-    $shirt = get_db_field("setting", "settings", "type = ||type|| AND extra = ||extra|| AND setting_name = ||setting_name||", $params);
+    $shirt = get_db_field("setting", "settings", "type = @@type@@ AND extra = @@extra@@ AND setting_name = @@setting_name@@", $params);
 
     if (!$shirt) {
         return 0;
     }
 
     $params["setting_name"] = "template_setting_shirt_price";
-    $shirt_price = get_db_field("setting", "settings", "type = ||type|| AND extra = ||extra|| AND setting_name = ||setting_name||", $params);
+    $shirt_price = get_db_field("setting", "settings", "type = @@type@@ AND extra = @@extra@@ AND setting_name = @@setting_name@@", $params);
     $shirt_price = empty($shirt_price) ? "0" : $shirt_price;
 
     $shirt_sizes = TEMP_PROPS["SHIRTSIZES"];
@@ -262,7 +262,7 @@ function customhelp_shirt_size($data = []) {
         "setting_name" => "template_setting_shirt_price",
     ];
 
-    $shirt_price = get_db_field("setting", "settings", "type = ||type|| AND extra = ||extra|| AND setting_name = ||setting_name||", $params);
+    $shirt_price = get_db_field("setting", "settings", "type = @@type@@ AND extra = @@extra@@ AND setting_name = @@setting_name@@", $params);
     $shirt_price = empty($shirt_price) ? "no extra charge" : '+ $' . $shirt_price . '.00';
 
     return getlang("help_shirt_size", "/features/events/templates/camp_2025") . " ($shirt_price)";
@@ -281,14 +281,14 @@ function customoptions_picture($data = []) {
         "type" => "events_template",
         "setting_name" => "template_setting_pictures",
     ];
-    $pictures = get_db_field("setting", "settings", "type = ||type|| AND extra = ||extra|| AND setting_name = ||setting_name||", $params);
+    $pictures = get_db_field("setting", "settings", "type = @@type@@ AND extra = @@extra@@ AND setting_name = @@setting_name@@", $params);
 
     if (!$pictures) {
         return 0;
     }
 
     $params["setting_name"] = "template_setting_pictures_price";
-    $pictures_price = get_db_field("setting", "settings", "type = ||type|| AND extra = ||extra|| AND setting_name = ||setting_name||", $params);
+    $pictures_price = get_db_field("setting", "settings", "type = @@type@@ AND extra = @@extra@@ AND setting_name = @@setting_name@@", $params);
     $pictures_price = empty($pictures_price) ? "0" : $pictures_price;
 
     if ($event['fee_full'] > 0 && $pictures_price > 0) {
@@ -314,7 +314,7 @@ function customhelp_picture($data = []) {
         "type" => "events_template",
         "setting_name" => "template_setting_pictures_price",
     ];
-    $pictures_price = get_db_field("setting", "settings", "type = ||type|| AND extra = ||extra|| AND setting_name = ||setting_name||", $params);
+    $pictures_price = get_db_field("setting", "settings", "type = @@type@@ AND extra = @@extra@@ AND setting_name = @@setting_name@@", $params);
     $pictures_price = empty($pictures_price) ? "0" : $pictures_price;
 
     return getlang("help_pictures", "/features/events/templates/camp_2025") . ' ($' . $pictures_price . '.00 for 8x10 group photo)';

@@ -194,11 +194,11 @@ global $CFG, $ROLES;
     $params = ["userid" => $userid, "ability" => $ability];
 
     // This is a partial sql template that needs to create a dynamic field value for each role.
-    // It will replace ||roleid|| with ||roleid_1||, ||roleid_2||, etc.  It also adds the roleid as a new parameter to be prepared.
+    // It will replace @@roleid@@ with @@roleid_1@@, @@roleid_2@@, etc.  It also adds the roleid as a new parameter to be prepared.
     $rolesql = "";
     foreach ($ROLES as $roleid) {
         $params["roleid_$roleid"] = $roleid;
-        $rolesql .= fill_template("dbsql/roles.sql", "user_has_ability_in_pages_perrole", false, ["notsiteviewable" => (!$siteviewable), "notmenuitems" => (!$menuitems), "roleid" => "||roleid_$roleid||"], true);
+        $rolesql .= fill_template("dbsql/roles.sql", "user_has_ability_in_pages_perrole", false, ["notsiteviewable" => (!$siteviewable), "notmenuitems" => (!$menuitems), "roleid" => "@@roleid_$roleid@@"], true);
     }
 
     // This sql template has a few spots with generated sql that need filled in before the params are prepared.
@@ -225,7 +225,7 @@ global $CFG, $ROLES, $ABILITIES;
         foreach ((array) $section as $s) { // if string, cast to array and keep going
             $ref = preg_replace('/\s+/', '', $s); // Just in case section has spaces.
             $params["section_$ref"] = $s;
-            $section_sql .= $section_sql == "" ? "section = ||section_$ref||" : " OR section = ||section_$ref||";
+            $section_sql .= $section_sql == "" ? "section = @@section_$ref@@" : " OR section = @@section_$ref@@";
         }
     }
 
@@ -317,7 +317,7 @@ global $CFG, $ROLES, $USER;
         if ($admin) { return $ROLES->admin; } // Site admin, but doesn't have a role in the page.
 
         // If page has open door policy, return default role for page.
-        if (get_db_field("opendoorpolicy", "pages", "pageid = ||pageid||", ["pageid" => $pageid]) == 1) {
+        if (get_db_field("opendoorpolicy", "pages", "pageid = @@pageid@@", ["pageid" => $pageid]) == 1) {
             return get_default_role($pageid);
         }
     }
@@ -373,13 +373,13 @@ function groups_SQL($userid, $pageid, $ability = 'a.ability', $feature = false, 
     if (empty($hierarchy)) { $groupsSQL[0] = ""; $groupsSQL[1] = "";	return $groupsSQL; }
 
     //Add quotes around a specific ability or link to SQL variable if not given
-    $ability = $ability == 'a.ability' ? 'a.ability' : '||ability||';
+    $ability = $ability == 'a.ability' ? 'a.ability' : '@@ability@@';
 
     //Decide which table the SQL requires
     $table = $feature && $featureid ? 'roles_ability_perfeature_pergroup' : 'roles_ability_pergroup';
 
     //Add feature checks if a perfeature SQL is asked for
-    $extraSQL = $feature && $featureid ? "AND feature = ||feature|| AND featureid = ||featureid||" : "";
+    $extraSQL = $feature && $featureid ? "AND feature = @@feature@@ AND featureid = @@featureid@@" : "";
 
     //Create dynamic groups sql
     $SQL1 = "";	$SQL2 = "";
@@ -424,7 +424,7 @@ global $CFG, $USER;
             "pageid" => $pageid,
             "feature" => $feature,
             "featureid" => $featureid,
-            "userid" => "js||$('#" . $type . "_user_select').val()||js",
+            "userid" => "js@@$('#" . $type . "_user_select').val()@@js",
         ],
         "display" => $type . "_abilities_div",
     ]);
@@ -436,7 +436,7 @@ global $CFG, $USER;
         "data" => [
             "action" => "create_edit_group_form",
             "pageid" => $pageid,
-            "groupid" => "js||groupid||js",
+            "groupid" => "js@@groupid@@js",
             "feature" => $feature,
             "featureid" => $featureid,
         ],
@@ -468,7 +468,7 @@ function groups_list($pageid, $feature = false, $featureid = false, $action = tr
             "data" => [
                 "action" => "refresh_group_users",
                 "pageid" => $pageid,
-                "groupid" => "js||$('#$id').val()||js",
+                "groupid" => "js@@$('#$id').val()@@js",
                 "feature" => $feature,
                 "featureid" => $featureid,
             ],
@@ -483,7 +483,7 @@ function groups_list($pageid, $feature = false, $featureid = false, $action = tr
             "data" => [
                 "action" => "refresh_group_abilities",
                 "pageid" => $pageid,
-                "groupid" => "js||$('#$id').val()||js",
+                "groupid" => "js@@$('#$id').val()@@js",
                 "feature" => $feature,
                 "featureid" => $featureid,
             ],
@@ -563,9 +563,9 @@ global $CFG;
                 "pageid" => $pageid,
                 "feature" => $feature,
                 "featureid" => $featureid,
-                "groupid" => $groupid ? "js||$('#" . $type . "_group_select').val()||js" : "",
-                "roleid" => $roleid ? "js||$('#" . $type . "_role_select').val()||js" : "",
-                "userid" => $userid ? "js||$('#" . $type . "_user_select').val()||js" : "",
+                "groupid" => $groupid ? "js@@$('#" . $type . "_group_select').val()@@js" : "",
+                "roleid" => $roleid ? "js@@$('#" . $type . "_role_select').val()@@js" : "",
+                "userid" => $userid ? "js@@$('#" . $type . "_user_select').val()@@js" : "",
             ],
             "display" => $type . "_abilities_div",
             "event" => "none",

@@ -33,10 +33,10 @@ global $CFG, $USER, $ROLES;
             "url" => "/features/calendar/calendar_ajax.php",
             "data" => [
                 "action" => "print_calendar",
-                "userid" => "js||userid||js",
-                "pageid" => "js||pageid||js",
-                "month" => "js||month||js",
-                "year" => "js||year||js",
+                "userid" => "js@@userid@@js",
+                "pageid" => "js@@pageid@@js",
+                "month" => "js@@month@@js",
+                "year" => "js@@year@@js",
             ],
             "paramlist" => "month, year, pageid, userid",
             "display" => "calendar_div",
@@ -69,7 +69,7 @@ global $CFG;
     $extra_row = clean_param_opt($params, "extra_row", "int", "");
     $area = clean_param_opt($params, "area", "string", "side");
 
-    $no_site_events = get_db_field("setting", "settings", "type='calendar' AND pageid = ||pageid|| AND setting_name='dont_show_site_events' AND setting='1'", ["pageid" => $pageid]);
+    $no_site_events = get_db_field("setting", "settings", "type='calendar' AND pageid = @@pageid@@ AND setting_name='dont_show_site_events' AND setting='1'", ["pageid" => $pageid]);
     $show_site_events = ($pageid == $CFG->SITEID) || $no_site_events ? true : false;
     date_default_timezone_set($CFG->timezone);
     if (!$month) {

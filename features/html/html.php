@@ -53,7 +53,7 @@ function edithtml() {
     try {
         $SQL = 'SELECT *
                 FROM html
-                WHERE htmlid = ||htmlid||';
+                WHERE htmlid = @@htmlid@@';
         if (!$row = get_db_row($SQL, ['htmlid' => $htmlid])) {
             throw new Exception(getlang('no_html_found', "/features/html", ['htmlid' => $htmlid]));
         }
@@ -72,7 +72,7 @@ function edithtml() {
                 'data'   => [
                     'action' => 'edit_html',
                     'htmlid' => $htmlid,
-                    'html'   => 'js||encodeURIComponent(' . get_editor_value_javascript("edit_html_$htmlid") . ')||js',
+                    'html'   => 'js@@encodeURIComponent(' . get_editor_value_javascript("edit_html_$htmlid") . ')@@js',
                 ],
                 'event'  => 'submit',
                 'ondone' => '
@@ -205,7 +205,7 @@ function commentform() {
         "data" => [
             "action" => "comment",
             "htmlid" => $htmlid,
-            "comment" => "js||encodeURIComponent($('#comment').val())||js",
+            "comment" => "js@@encodeURIComponent($('#comment').val())@@js",
             "commentid" => $commentid,
             "replytoid" => $replytoid,
             "pageid" => $pageid,

@@ -114,9 +114,9 @@ if (!defined('COMLIB')) include_once($CFG->dirroot . '/lib/comlib.php');
             }
         }
 
-        $touser->fname = get_db_field("value", "events_registrations_values", "regid=||regid|| AND elementname='Camper_Name'", ["regid" => $regid]);
+        $touser->fname = get_db_field("value", "events_registrations_values", "regid=@@regid@@ AND elementname='Camper_Name'", ["regid" => $regid]);
         $touser->lname = "";
-        $touser->email = get_db_field("email", "events_registrations", "regid=||regid||", ["regid" => $regid]);
+        $touser->email = get_db_field("email", "events_registrations", "regid=@@regid@@", ["regid" => $regid]);
 
         $contact = get_event_contact($event["contact"]);
 

@@ -188,7 +188,7 @@ function create_category() {
     $error = "";
     try {
         start_db_transaction();
-        $pageid = get_db_field("pageid", "forum", "forumid = ||forumid||", ["forumid" => $forumid]);
+        $pageid = get_db_field("pageid", "forum", "forumid = @@forumid@@", ["forumid" => $forumid]);
         $sort = get_db_count(fetch_template("dbsql/forum.sql", "get_forum_categories", "forum"), ["forumid" => $forumid]) + 1;
         $params = ["forumid" => $forumid, "pageid" => $pageid, "title" => $title, "sort" => $sort, "shoutbox" => 0];
         $catid = execute_db_sql(fetch_template("dbsql/forum.sql", "insert_category", "forum"), $params);
@@ -288,12 +288,12 @@ function move_category() {
 global $CFG;
     $direction = clean_myvar_req("direction", "string");
     $catid = clean_myvar_req("catid", "int");
-    $forumid = get_db_field("forumid", "forum_categories", "catid = ||catid||", ["catid" => $catid]);
+    $forumid = get_db_field("forumid", "forum_categories", "catid = @@catid@@", ["catid" => $catid]);
 
     $returnme = $error = "";
     try {
         start_db_transaction();
-        $current_position = get_db_field("sort", "forum_categories", "catid = ||catid||", ["catid" => $catid]);
+        $current_position = get_db_field("sort", "forum_categories", "catid = @@catid@@", ["catid" => $catid]);
         if ($direction == 'up') {
             $up_position = $current_position - 1;
             execute_db_sql("UPDATE forum_categories SET sort='$current_position' WHERE forumid='$forumid' AND shoutbox=0 AND sort='$up_position'");
@@ -315,7 +315,7 @@ global $CFG;
 
 function delete_category() {
     $catid = clean_myvar_req("catid", "int");
-    $forumid = get_db_field("forumid", "forum_categories", "catid = ||catid||", ["catid" => $catid]);
+    $forumid = get_db_field("forumid", "forum_categories", "catid = @@catid@@", ["catid" => $catid]);
     $error = "";
     try {
         start_db_transaction();
@@ -347,7 +347,7 @@ function delete_discussion() {
 
     try {
         start_db_transaction();
-        $catid = get_db_field("catid", "forum_discussions", "discussionid = ||discussionid||", ["discussionid" => $discussionid]);
+        $catid = get_db_field("catid", "forum_discussions", "discussionid = @@discussionid@@", ["discussionid" => $discussionid]);
         $templates = [
             [
                 "feature" => "forum",
@@ -374,7 +374,7 @@ function delete_post() {
 
     $returnme = $error = "";
     try {
-        $discussionid = get_db_field("discussionid", "forum_posts", "postid = ||postid||", ["postid" => $postid]);
+        $discussionid = get_db_field("discussionid", "forum_posts", "postid = @@postid@@", ["postid" => $postid]);
         execute_db_sql(fetch_template("dbsql/forum.sql", "delete_post", "forum"), ["postid" => $postid]);
         $returnme = get_posts($discussionid, $pagenum);
     } catch (\Throwable $e) {
@@ -390,7 +390,7 @@ function pin_bulletin() {
         execute_db_sql(fetch_template("dbsql/forum.sql", "pin_discussion", "forum"), ["discussionid" => $discussionid]);
         get_forum_discussions();
 
-        $discussionid = get_db_field("discussionid", "forum_posts", "postid = ||postid||", ["postid" => $postid]);
+        $discussionid = get_db_field("discussionid", "forum_posts", "postid = @@postid@@", ["postid" => $postid]);
         execute_db_sql(fetch_template("dbsql/forum.sql", "delete_post", "forum"), ["postid" => $postid]);
         $returnme = get_posts($discussionid, $pagenum);
     } catch (\Throwable $e) {

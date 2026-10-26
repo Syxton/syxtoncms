@@ -1,112 +1,112 @@
-search_template||
-    <input type="hidden" id="searchwords" value="||searchwords||" />
-    ||resultsfound{{
+search_template@@
+    <input type="hidden" id="searchwords" value="@@searchwords@@" />
+    @@resultsfound{{
         <table style="width:100%;">
             <tr>
             <td style="width:25%;text-align:left;">
-                ||isprev{{
-                <button title="Previous Page" class="alike" onclick="search_navigate(||prev_pagenum||)">
-                    ||echo icon("circle-chevron-left", 2);::none||
+                @@isprev{{
+                <button title="Previous Page" class="alike" onclick="search_navigate(@@prev_pagenum@@)">
+                    @@echo icon("circle-chevron-left", 2);::none@@
                 </button>
-                }}isprev||
+                }}isprev@@
             </td>
             <td style="width:50%;text-align:center;color:green;">
-                Viewing ||viewing|| through ||amountshown|| out of ||total||
+                Viewing @@viewing@@ through @@amountshown@@ out of @@total@@
             </td>
             <td style="width:25%;text-align:right;">
-                ||isnext{{
-                <button title="Next Page" class="alike" onclick="search_navigate(||next_pagenum||)">
-                    ||echo icon("circle-chevron-right", 2);::none||
+                @@isnext{{
+                <button title="Next Page" class="alike" onclick="search_navigate(@@next_pagenum@@)">
+                    @@echo icon("circle-chevron-right", 2);::none@@
                 </button>
-                }}isnext||
+                }}isnext@@
             </td>
             </tr>
         </table>
         <br />
         <table class="searchresults">
-            ||searchresults||
+            @@searchresults@@
         </table>
-        //OR//
-        ||echo fill_template("tmp/pagelib.template", "centered_error", false, ["title" => getlang("no_matches")]);::none||
-    }}resultsfound||
-||search_template
+    //OR//
+        @@echo fill_template("tmp/pagelib.template", "centered_error", false, ["title" => getlang("no_matches")]);::none@@
+    }}resultsfound@@
+@@search_template
 
-search_row_template||
+search_row_template@@
     <tr>
         <td style="width:40%;padding:10px;">
-            ||col1||
+            @@col1@@
         </td>
         <td style="padding:10px;">
-            ||col2||
+            @@col2@@
         </td>
         <td style="width:50px;text-align:right;padding:10px;">
-            <span id="rowactions_||pageid||">
-                ||col3||
+            <span id="rowactions_@@pageid@@">
+                @@col3@@
             </span>
         </td>
     </tr>
-||search_row_template
+@@search_row_template
 
-search_pages_link_template||
-    ||linked{{
-        <a href="javascript: void(0);" onclick="self.parent.go_to_page('||pageid||');">
-            ||name||
+search_pages_link_template@@
+    @@linked{{
+        <a href="javascript: void(0);" onclick="self.parent.go_to_page('@@pageid@@');">
+            @@name@@
         </a>
     //OR//
-        ||name||
-    }}linked||
-||search_pages_link_template
+        @@name@@
+    }}linked@@
+@@search_pages_link_template
 
-search_pages_buttons_template||
-    ||*must_request{{
-        ||*alreadyrequested{{
-            <button class="alike" title="Remove Request" onclick="remove_request(||pageid||)">
-                ||echo icon("ban");::none||
+search_pages_buttons_template@@
+    @@*must_request{{
+        @@*alreadyrequested{{
+            <button class="alike" title="Remove Request" onclick="remove_request(@@pageid@@)">
+                @@echo icon("ban");::none@@
             </button>
         //OR//
-            <button class="alike" title="Send Request" onclick="add_request(||pageid||)">
-                ||echo icon("envelope");::none||
+            <button class="alike" title="Send Request" onclick="add_request(@@pageid@@)">
+                @@echo icon("envelope");::none@@
             </button>
-        }}alreadyrequested||
+        }}alreadyrequested@@
     //OR//
-        ||*can_add_remove{{
-            ||*isadd{{
-                <button class="alike" title="Add Page" onclick="change_subscription(true, ||pageid||, ||pagenum||);">
-                    ||echo icon("plus");::none||
+        @@*can_add_remove{{
+            @@*isadd{{
+                <button class="alike" title="Add Page" onclick="change_subscription(true, @@pageid@@, @@pagenum@@);">
+                    @@echo icon("plus");::none@@
                 </button>
             //OR//
-                <button class="alike" title="Remove Page" onclick="change_subscription(false, ||pageid||, ||pagenum||);">
-                    ||echo icon("subtract");::none||
+                <button class="alike" title="Remove Page" onclick="change_subscription(false, @@pageid@@, @@pagenum@@);">
+                    @@echo icon("subtract");::none@@
                 </button>
-            }}isadd||
-        }}can_add_remove||
-    }}must_request||
-    ||*admin{{
-        <button class="alike" title="Delete Page" onclick="delete_page(||pageid||, ||pagenum||)">
-            ||echo icon("trash");::none||
+            }}isadd@@
+        }}can_add_remove@@
+    }}must_request@@
+    @@*admin{{
+        <button class="alike" title="Delete Page" onclick="delete_page(@@pageid@@, @@pagenum@@)">
+            @@echo icon("trash");::none@@
         </button>
-    }}admin||
-||search_pages_buttons_template
+    }}admin@@
+@@search_pages_buttons_template
 
-search_pages_link_template||
-    ||linked{{
-        <button class="alike" onclick="self.parent.go_to_page('||pageid||');">
-            ||name||
+search_pages_link_template@@
+    @@linked{{
+        <button class="alike" onclick="self.parent.go_to_page('@@pageid@@');">
+            @@name@@
         </button>
     //OR//
-        ||name||
-    }}linked||
-||search_pages_link_template
+        @@name@@
+    }}linked@@
+@@search_pages_link_template
 
-search_users_buttons_template||
-    <span id="pagelist_||user[userid]||">
-        <button class="alike" title="Invite" onclick="get_inviteable_pages(||user[userid]||)">
-            ||echo icon("envelope");::none||
+search_users_buttons_template@@
+    <span id="pagelist_@@user[userid]@@">
+        <button class="alike" title="Invite" onclick="get_inviteable_pages(@@user[userid]@@)">
+            @@echo icon("envelope");::none@@
         </button>
     </span>
-||search_users_buttons_template
+@@search_users_buttons_template
 
-new_link_form_template||
+new_link_form_template@@
     <br />
     <table style="width:100%">
         <tr>
@@ -125,22 +125,22 @@ new_link_form_template||
             </td>
         </tr>
     </table>
-||new_link_form_template
+@@new_link_form_template
 
-search_linkpagesearch_buttons_template||
-    ||alreadylinked{{
-        <button class="alike" title="Add Page Link" onclick="make_page_link(||linkpageid||);">
-            ||echo icon("plus");::none||
+search_linkpagesearch_buttons_template@@
+    @@alreadylinked{{
+        <button class="alike" title="Add Page Link" onclick="make_page_link(@@linkpageid@@);">
+            @@echo icon("plus");::none@@
         </button>
-        //OR//
-        <button class="alike" title="Remove Page Link" onclick="unlink_page(||linkpageid||);">
-            ||echo icon("trash");::none||
+    //OR//
+        <button class="alike" title="Remove Page Link" onclick="unlink_page(@@linkpageid@@);">
+            @@echo icon("trash");::none@@
         </button>
-    }}alreadylinked||
-||search_linkpagesearch_buttons_template
+    }}alreadylinked@@
+@@search_linkpagesearch_buttons_template
 
-links_manager_template||
-  ||haslinks{{
+links_manager_template@@
+  @@haslinks{{
         <span style="overflow:auto;">
         Reorder the links how you would like them to be displayed in this page.<br />
         Change the link names and save them by selecting the "Save" button that appears beside it.<br />
@@ -150,37 +150,37 @@ links_manager_template||
         <br />
         <div style="margin:auto;">
             <div class="pagelinklist" style="padding: 5px;">
-                ||links||
+                @@links@@
             </div>
         </div>
     //OR//
         There are no links to manage on this page.
-  }}haslinks||
-||links_manager_template
+  }}haslinks@@
+@@links_manager_template
 
-sortable_links_template||
+sortable_links_template@@
     <div class="sortpagelinkitem">
         <span style="width: 78%">
             <span class="pagelink_count">
-                ||nextorder||
+                @@nextorder@@
             </span>
-            <input type="text" id="linkdisplay||linkid||" style="width: calc(100% - 130px);" value="||linkdisplay||" onkeyup="$('#linkdisplay||linkid||_save').hide(); if($('#linkdisplay||linkid||_hidden').val() != $('#linkdisplay||linkid||').val()) { $('#linkdisplay||linkid||_save').show(); }" />
-            <input type="hidden" id="linkdisplay||linkid||_hidden" value="||linkdisplay||" />
-            <span id="linkdisplay||linkid||_save" style="display:none;">
-                <input type="button" value="Save Name" style="font-size:.75em;display:inline;" onclick="rename_link(||linkid||)"/>
+            <input type="text" id="linkdisplay@@linkid@@" style="width: calc(100% - 130px);" value="@@linkdisplay@@" onkeyup="$('#linkdisplay@@linkid@@_save').hide(); if($('#linkdisplay@@linkid@@_hidden').val() != $('#linkdisplay@@linkid@@').val()) { $('#linkdisplay@@linkid@@_save').show(); }" />
+            <input type="hidden" id="linkdisplay@@linkid@@_hidden" value="@@linkdisplay@@" />
+            <span id="linkdisplay@@linkid@@_save" style="display:none;">
+                <input type="button" value="Save Name" style="font-size:.75em;display:inline;" onclick="rename_link(@@linkid@@)"/>
             </span>
         </span>
         <span style="width: 20%;text-align: center;">
-        ||notfirstrow{{
-            <button class="alike" title="Move Up" onclick="move_link(||linkid||, 'up')" style="margin: 0 15px;">
-                ||echo icon("circle-arrow-up", 2);::none||
+        @@notfirstrow{{
+            <button class="alike" title="Move Up" onclick="move_link(@@linkid@@, 'up')" style="margin: 0 15px;">
+                @@echo icon("circle-arrow-up", 2);::none@@
             </button>
-        }}notfirstrow||
-        ||notlastrow{{
-            <button class="alike" title="Move Down" onclick="move_link(||linkid||, 'down')" style="margin: 0 15px;">
-                ||echo icon("circle-arrow-down", 2);::none||
+        }}notfirstrow@@
+        @@notlastrow{{
+            <button class="alike" title="Move Down" onclick="move_link(@@linkid@@, 'down')" style="margin: 0 15px;">
+                @@echo icon("circle-arrow-down", 2);::none@@
             </button>
-        }}notlastrow||
+        }}notlastrow@@
         </span>
     </div>
-||sortable_links_template
+@@sortable_links_template

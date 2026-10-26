@@ -1,50 +1,50 @@
-authenticate||
+authenticate@@
 	SELECT *
 	FROM users
-	WHERE email = ||username||
-	AND password = ||password||
-||authenticate
+	WHERE email = @@username@@
+	AND password = @@password@@
+@@authenticate
 
-authenticate_alt||
+authenticate_alt@@
 	SELECT *
 	FROM users
-	WHERE email = ||username||
-	AND alternate = ||password||
-||authenticate_alt
+	WHERE email = @@username@@
+	AND alternate = @@password@@
+@@authenticate_alt
 
-authenticate_alt_userid||
+authenticate_alt_userid@@
 	SELECT *
 	FROM users
-	WHERE userid = ||userid||
-	AND alternate = ||password||
-||authenticate_alt_userid
+	WHERE userid = @@userid@@
+	AND alternate = @@password@@
+@@authenticate_alt_userid
 
-authenticate_key||
+authenticate_key@@
 	SELECT *
 	FROM users
-	WHERE userkey = ||key||
-||authenticate_key
+	WHERE userkey = @@key@@
+@@authenticate_key
 
-update_last_activity||
+update_last_activity@@
 	UPDATE users
-	SET ip = ||ip||,
-		last_activity = ||time||
-		||isfirst{{
-		, first_activity = ||time||
-		}}isfirst||
-		||clear_alt{{
+	SET ip = @@ip@@,
+		last_activity = @@time@@
+		@@isfirst{{
+		, first_activity = @@time@@
+		}}isfirst@@
+		@@clear_alt{{
 		, alternate = ''
-		}}clear_alt||
-	WHERE userid = ||userid||
-||update_last_activity
+		}}clear_alt@@
+	WHERE userid = @@userid@@
+@@update_last_activity
 
-activate_account||
+activate_account@@
 	UPDATE users
-	SET password = ||temp||, temp = ""
-	WHERE userid = ||userid||
-||activate_account
+	SET password = @@temp@@, temp = ""
+	WHERE userid = @@userid@@
+@@activate_account
 
-logsql||
+logsql@@
 	INSERT INTO logfile (userid, ip, pageid, timeline, feature, info, description, debug)
-	VALUES(||userid||, ||ip||, ||pageid||, ||time||, ||feature||, ||info||, ||desc||, ||debug||)
-||logsql
+	VALUES(@@userid@@, @@ip@@, @@pageid@@, @@time@@, @@feature@@, @@info@@, @@desc@@, @@debug@@)
+@@logsql

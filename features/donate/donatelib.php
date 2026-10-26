@@ -128,7 +128,7 @@ global $CFG;
     try {
         start_db_transaction();
         if ($featureid = execute_db_sql(fetch_template("dbsql/donate.sql", "insert_donate_instance", $type), ["campaign_id" => 0])) {
-            $area = get_db_field("default_area", "features", "feature = ||feature||", ["feature" => $type]);
+            $area = get_db_field("default_area", "features", "feature = @@feature@@", ["feature" => $type]);
             $sort = get_db_count(fetch_template("dbsql/features.sql", "get_features_by_page_area"), ["pageid" => $pageid, "area" => $area]) + 1;
             $params = [
                     "pageid" => $pageid,

@@ -49,7 +49,7 @@ return [
         'inputtype' => 'select',
         'extraforminfo' => 'SELECT setid AS selectvalue, setname AS selectname
                             FROM events_promo_set
-                            WHERE pageid=||pageid||',
+                            WHERE pageid=@@pageid@@',
         'extraforminfoparams' => ['pageid' => '$PAGE->id'],
         'defaultsetting' => '0',
         "validation" => null,

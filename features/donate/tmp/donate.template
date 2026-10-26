@@ -1,85 +1,85 @@
-add_edit_form||
+add_edit_form@@
     <div class="formDiv" id="new_campaign_div">
         <form id="campaign_form">
             <fieldset class="formContainer">
                 <div class="rowContainer">
                     <label class="rowTitle" for="title">Campaign Name</label>
-                    <input type="text" id="title" name="title" value="||title||" data-rule-required="true" data-msg-required="||echo getlang("input_required");::none||" />
-                    <div class="tooltipContainer info">||echo getlang("donate_title", "/features/donate");::none||</div><br />
+                    <input type="text" id="title" name="title" value="@@title@@" data-rule-required="true" data-msg-required="@@echo getlang("input_required");::none@@" />
+                    <div class="tooltipContainer info">@@echo getlang("donate_title", "/features/donate");::none@@</div><br />
                 </div>
                 <div class="rowContainer">
                     <label class="rowTitle" for="title">Goal Amount $</label>
-                    <input type="text" id="goal" name="goal" value="||goal||" data-rule-required="true" data-rule-number="true"  data-rule-min="0" data-msg-required="||echo getlang("input_required");::none||" />
-                    <div class="tooltipContainer info">||echo getlang("donate_goal", "/features/donate");::none||</div><br />
+                    <input type="text" id="goal" name="goal" value="@@goal@@" data-rule-required="true" data-rule-number="true"  data-rule-min="0" data-msg-required="@@echo getlang("input_required");::none@@" />
+                    <div class="tooltipContainer info">@@echo getlang("donate_goal", "/features/donate");::none@@</div><br />
                 </div>
                 <div class="rowContainer">
                     <label class="rowTitle" for="description">Goal Description</label>
-                    <textarea type="text" id="description" name="description" data-rule-required="true" data-msg-required="||echo getlang("input_required");::none||">||description||</textarea>
-                    <div class="tooltipContainer info">||echo getlang("donate_description", "/features/donate");::none||</div><br />
+                    <textarea type="text" id="description" name="description" data-rule-required="true" data-msg-required="@@echo getlang("input_required");::none@@">@@description@@</textarea>
+                    <div class="tooltipContainer info">@@echo getlang("donate_description", "/features/donate");::none@@</div><br />
                 </div>
                 <div class="rowContainer">
                     <label class="rowTitle" for="email">Paypal Email Address</label>
-                    <input type="text" id="email" name="email" value="||email||" data-rule-required="true" data-rule-email="true" data-msg-required="||echo getlang("input_required");::none||" data-msg-email="||echo getlang("invalid_email");::none||" />
-                    <div class="tooltipContainer info">||echo getlang("donate_paypal_email", "/features/donate");::none||</div><br />
+                    <input type="text" id="email" name="email" value="@@email@@" data-rule-required="true" data-rule-email="true" data-msg-required="@@echo getlang("input_required");::none@@" data-msg-email="@@echo getlang("invalid_email");::none@@" />
+                    <div class="tooltipContainer info">@@echo getlang("donate_paypal_email", "/features/donate");::none@@</div><br />
                 </div>
                 <div class="rowContainer">
                     <label class="rowTitle" for="email">Paypal PDT token</label>
-                    <input type="text" id="token" name="token" value="||token||" data-rule-required="true" data-msg-required="||echo getlang("input_required");::none||" />
-                    <div class="tooltipContainer info">||echo getlang("donate_token", "/features/donate");::none||</div><br />
+                    <input type="text" id="token" name="token" value="@@token@@" data-rule-required="true" data-msg-required="@@echo getlang("input_required");::none@@" />
+                    <div class="tooltipContainer info">@@echo getlang("donate_token", "/features/donate");::none@@</div><br />
                 </div>
                 <div class="rowContainer">
                     <label class="rowTitle" for="shared">Share Campaign</label>
                     <select id="shared" name="shared" data-rule-required="true">
                             <option value="">Select One...</option>
-                            <option value="0" ||noselected||>Not Shared</option>
-                            <option value="1" ||yesselected||>Shared</option>
+                            <option value="0" @@noselected@@>Not Shared</option>
+                            <option value="1" @@yesselected@@>Shared</option>
                     </select>
-                    <div class="tooltipContainer info">||echo getlang("donate_shared", "/features/donate");::none||</div><br />
+                    <div class="tooltipContainer info">@@echo getlang("donate_shared", "/features/donate");::none@@</div><br />
                 </div>
                     <br />
-                    <input class="submit" name="submit" type="submit" value="||button|| Campaign" style="margin: auto;display:block;clear:both;" />
+                    <input class="submit" name="submit" type="submit" value="@@button@@ Campaign" style="margin: auto;display:block;clear:both;" />
                     <div id="error_div"></div>
             </fieldset>
         </form>
     </div>
-    <div id="donation_script" style="display:none">||validationscript||</div>
-||add_edit_form
+    <div id="donation_script" style="display:none">@@validationscript@@</div>
+@@add_edit_form
 
-back_to_donate||
-    <button id="back_to_donate_||featureid||" style="position: absolute;">
+back_to_donate@@
+    <button id="back_to_donate_@@featureid@@" style="position: absolute;">
         Back
     </button>
-||back_to_donate
+@@back_to_donate
 
-join_campaign_form||
-    ||back||
+join_campaign_form@@
+    @@back@@
     <div style="text-align:center">
-        <h1>||heading||</h1>
+        <h1>@@heading@@</h1>
         <br />
-        ||content||
+        @@content@@
     </div>
-||join_campaign_form
+@@join_campaign_form
 
-join_campaign_form_select||
+join_campaign_form_select@@
     <div style="display: inline-flex;align-items: center;">
-        ||select||
-        <button id="join_campaign_||featureid||" style="margin-left: 5px;">
-            ||echo icon("magnifying-glass-dollar");::none||
+        @@select@@
+        <button id="join_campaign_@@featureid@@" style="margin-left: 5px;">
+            @@echo icon("magnifying-glass-dollar");::none@@
             <span>Join Campaign</span>
         </button>
     </div>
-||join_campaign_form_select
+@@join_campaign_form_select
 
-give_button||
-    <form style="margin: auto; text-align: center;" action="https://||paypal||/cgi-bin/webscr" method="post" target="_top">
+give_button@@
+    <form style="margin: auto; text-align: center;" action="https://@@paypal@@/cgi-bin/webscr" method="post" target="_top">
         <div style="width: 100%; text-align: center;">
         <input name="cmd" type="hidden" value="_donations">
         <input name="item_number" type="hidden" value="DONATE" />
-        <input name="item_name" type="hidden" value="||campaign["title"]||">
-        <input name="business" type="hidden" value="||campaign["paypal_email"]||">
-        <input name="custom" type="hidden" value="||campaign["campaign_id"]||" />
-        <input name="return" type="hidden" value="||wwwroot||/features/donate/donate.php?action=thankyou" />
-        <input name="notify_url" type="hidden" value="||wwwroot||/features/donate/ipn.php" />
+        <input name="item_name" type="hidden" value="@@campaign["title"]@@">
+        <input name="business" type="hidden" value="@@campaign["paypal_email"]@@">
+        <input name="custom" type="hidden" value="@@campaign["campaign_id"]@@" />
+        <input name="return" type="hidden" value="@@wwwroot@@/features/donate/donate.php?action=thankyou" />
+        <input name="notify_url" type="hidden" value="@@wwwroot@@/features/donate/ipn.php" />
         <input name="lc" type="hidden" value="US">
         <input name="tax" type="hidden" value="0" />
         <input name="rm" type="hidden" value="2" />
@@ -90,9 +90,9 @@ give_button||
         <img style="border: 0px; display: block; margin-left: auto; margin-right: auto; width: 80%;" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" alt="" width="1" height="1">
         </div>
     </form>
-||give_button
+@@give_button
 
-offline_donation_form||
+offline_donation_form@@
     <div class="formDiv" id="new_donation_div">
         <form id="donation_form">
             <fieldset class="formContainer">
@@ -100,16 +100,16 @@ offline_donation_form||
                     <label class="rowTitle" for="amount">
                         Donation Amount $
                     </label>
-                    <input type="text" id="amount" name="amount" value="0.00" data-rule-required="true" data-rule-number="true" data-rule-min="0.01" data-msg-required="||echo getlang("input_required");::none||" data-msg-min="||echo getlang("invalid_number");::none||" />
+                    <input type="text" id="amount" name="amount" value="0.00" data-rule-required="true" data-rule-number="true" data-rule-min="0.01" data-msg-required="@@echo getlang("input_required");::none@@" data-msg-min="@@echo getlang("invalid_number");::none@@" />
                     <div class="tooltipContainer info">
-                        ||echo getlang("donate_amount", "/features/donate");::none||
+                        @@echo getlang("donate_amount", "/features/donate");::none@@
                     </div>
                 </div>
                 <div class="rowContainer">
                     <label class="rowTitle" class="rowTitle" for="name">Name</label>
                     <input type="text" id="name" name="name" value="Anonymous" />
                     <div class="tooltipContainer info">
-                        ||echo getlang("donate_name", "/features/donate");::none||
+                        @@echo getlang("donate_name", "/features/donate");::none@@
                     </div>
                 </div>
                 <br />
@@ -119,11 +119,11 @@ offline_donation_form||
         </form>
     </div>
     <div id="donation_script" style="display:none">
-        ||validation||
+        @@validation@@
     </div>
-||offline_donation_form
+@@offline_donation_form
 
-donations_table||
+donations_table@@
     <table class="donation_table">
         <tr>
             <th style="width:55px">
@@ -145,41 +145,41 @@ donations_table||
             </th>
             <th style="width:20px"></th>
         </tr>
-        ||donations||
+        @@donations@@
     </table>
-||donations_table
+@@donations_table
 
-donation_row||
+donation_row@@
     <tr>
-        <td style="text-align:center">||type||</td>
-        <td>||name||</td>
-        <td>$||amount||</td>
-        <td style="text-align:center">||time||</td>
-        <td style="text-align:center">||tx||</td>
+        <td style="text-align:center">@@type@@</td>
+        <td>@@name@@</td>
+        <td>$@@amount@@</td>
+        <td style="text-align:center">@@time@@</td>
+        <td style="text-align:center">@@tx@@</td>
         <td>
-            <button title="Edit Donation" class="alike" onclick="edit_donation_form(||donationid||);">
-                ||echo icon("pencil");::none||
+            <button title="Edit Donation" class="alike" onclick="edit_donation_form(@@donationid@@);">
+                @@echo icon("pencil");::none@@
             </button>
         </td>
         <td>
-            <button title="Delete Donation" class="alike" onclick="delete_donation_form(||donationid||);">
-                ||echo icon("trash");::none||
+            <button title="Delete Donation" class="alike" onclick="delete_donation_form(@@donationid@@);">
+                @@echo icon("trash");::none@@
             </button>
         </td>
     </tr>
-||donation_row
+@@donation_row
 
-edit_donation_form||
+edit_donation_form@@
     <div class="formDiv" id="new_donation_div" style="max-width: 500px;margin: auto;">
         <form id="donation_form">
             <fieldset class="formContainer">
                 <div class="rowContainer">
                     <label class="rowTitle" for="campaign_id">Donated to:</label>
                     <select id="campaign_id" name="campaign_id" data-rule-required="true">
-                        ||options||
+                        @@options@@
                     </select>
                     <div class="tooltipContainer info">
-                        ||echo getlang("donate_campaign", "/features/donate");::none||
+                        @@echo getlang("donate_campaign", "/features/donate");::none@@
                     </div>
                     <br />
                 </div>
@@ -187,9 +187,9 @@ edit_donation_form||
                     <label class="rowTitle" for="amount">
                         Donation Amount $
                     </label>
-                    <input type="text" id="amount" name="amount" value="||amount||" data-rule-required="true" data-rule-number="true" data-rule-min="0.01" data-msg-required="||echo getlang("input_required");::none||" data-msg-min="||echo getlang("invalid_number");::none||" />
+                    <input type="text" id="amount" name="amount" value="@@amount@@" data-rule-required="true" data-rule-number="true" data-rule-min="0.01" data-msg-required="@@echo getlang("input_required");::none@@" data-msg-min="@@echo getlang("invalid_number");::none@@" />
                     <div class="tooltipContainer info">
-                        ||echo getlang("donate_amount", "/features/donate");::none||
+                        @@echo getlang("donate_amount", "/features/donate");::none@@
                     </div>
                     <br />
                 </div>
@@ -197,9 +197,9 @@ edit_donation_form||
                     <label class="rowTitle" for="name">
                         Name
                     </label>
-                    <input type="text" id="name" name="name" value="||name||" />
+                    <input type="text" id="name" name="name" value="@@name@@" />
                     <div class="tooltipContainer info">
-                        ||echo getlang("donate_name", "/features/donate");::none||
+                        @@echo getlang("donate_name", "/features/donate");::none@@
                     </div>
                     <br />
                 </div>
@@ -207,9 +207,9 @@ edit_donation_form||
                     <label class="rowTitle" for="paypal_TX">
                         Paypal TX
                     </label>
-                    <input type="text" id="paypal_TX" paypal_TX="name" value="||tx||" />
+                    <input type="text" id="paypal_TX" paypal_TX="name" value="@@tx@@" />
                     <div class="tooltipContainer info">
-                        ||echo getlang("donate_paypaltx", "/features/donate");::none||
+                        @@echo getlang("donate_paypaltx", "/features/donate");::none@@
                     </div>
                     <br />
                 </div>
@@ -219,29 +219,29 @@ edit_donation_form||
             </fieldset>
         </form>
     </div>
-||edit_donation_form
+@@edit_donation_form
 
-get_campaign_forms||
+get_campaign_forms@@
     <div style="text-align:center">
         <h1>Choose a Campaign</h1>
     </div>
     <div style="margin: 15px;">
-    ||campaign_id{{
-            ||isjoined{{
-                    You are currently joined to a campaign called: <strong>||name||</strong>
+    @@campaign_id{{
+            @@isjoined{{
+                    You are currently joined to a campaign called: <strong>@@name@@</strong>
                 //OR//
-                    You are involved in a campaign you started called: <strong>||name||</strong>
+                    You are involved in a campaign you started called: <strong>@@name@@</strong>
                     <br /><br />
                     Would you like to edit the current campaign?
                     <button id="new_campaign_form">
-                        ||echo icon("pencil");::none||
+                        @@echo icon("pencil");::none@@
                         <span>Edit Campaign</span>
                     </button>
                     <br />
-            }}isjoined||
+            }}isjoined@@
         //OR//
             You are not currently associated with an active campaign.
-    }}campaign_id||
+    }}campaign_id@@
     </div>
     <br />
     <div style="margin: 15px;">
@@ -249,24 +249,24 @@ get_campaign_forms||
     </div>
     <div style="margin: 15px;">
         <button id="new_campaign_form" style="margin: 15px;">
-            ||echo icon("sack-dollar");::none||
+            @@echo icon("sack-dollar");::none@@
             <span>Start New Campaign</span>
         </button>
         <button id="join_campaign_form">
-            ||echo icon("handshake");::none||
+            @@echo icon("handshake");::none@@
             <span>Join Existing Campaign</span>
         </button>
     </div>
-||get_campaign_forms
+@@get_campaign_forms
 
-add_or_manage_forms||
+add_or_manage_forms@@
     <div style="text-align:center">
         <h1>What would you like to do?</h1>
         <div style="margin: 15px;">
             Would you like to add offline donations to this campaign?
             <br />
             <button id="add_offline_donations_form">
-                ||echo icon("money-bill-1");::none||
+                @@echo icon("money-bill-1");::none@@
                 <span>Add Offline Donations</span>
             </button>
         </div>
@@ -275,65 +275,65 @@ add_or_manage_forms||
             Would you like to manage all donations made to this campaign?
             <br />
             <button id="manage_donations_form">
-                ||echo icon("wallet");::none||
+                @@echo icon("wallet");::none@@
                 <span>Manage Donations</span>
             </button>
         </div>
     </div>
-||add_or_manage_forms
+@@add_or_manage_forms
 
-verticalmeter||
+verticalmeter@@
     <div style="text-align: center">
-        <strong>||title||</strong>
+        <strong>@@title@@</strong>
     </div>
     <br />
     <div style="text-align:center;padding:4px;">
-        ||goal_description||
+        @@goal_description@@
         <br /><br />
         <div id="thermometer" class="thermometer">
         <div class="track">
             <div class="goal">
                 <div class="amount">
-                    ||goal_amount||
+                    @@goal_amount@@
                 </div>
             </div>
             <div class="progress">
                 <div class="amount">
-                    ||total||
+                    @@total@@
                 </div>
             </div>
         </div>
     </div>
     <div>
-        <strong>||perc||% complete</strong>
+        <strong>@@perc@@% complete</strong>
     </div>
     </div>
     <br />
-||verticalmeter
+@@verticalmeter
 
-horizontalmeter||
+horizontalmeter@@
     <div style="text-align: center">
-        <strong>||title||</strong>
+        <strong>@@title@@</strong>
     </div><br />
     <div style="text-align: center">
-        ||goal_description||
+        @@goal_description@@
     </div>
     <div id="thermometer" class="thermometer horizontal">
         <div class="track">
             <div class="goal">
                 <div class="amount">
-                    ||goal_amount||
+                    @@goal_amount@@
                 </div>
             </div>
             <div class="progress">
                 <div class="amount">
-                    ||total||
+                    @@total@@
                 </div>
             </div>
         </div>
     </div>
     <div style="text-align: center;">
-        <strong>||perc||% complete</strong>
+        <strong>@@perc@@% complete</strong>
     </div>
     <br />
-||horizontalmeter
+@@horizontalmeter

@@ -190,7 +190,7 @@ if (!$template = get_event_template_by_name($templatename)) {
     $thisversion = 2024072500;
     if ($version < $thisversion) {
         $settings = serialize($settings);
-        $SQL = "UPDATE events_templates SET settings = ||settings|| WHERE folder = ||folder||";
+        $SQL = "UPDATE events_templates SET settings = @@settings@@ WHERE folder = @@folder@@";
         if (execute_db_sql($SQL, ["settings" => $settings, "folder" => $templatefolder])) { // If successful upgrade.
             execute_db_sql(
                 fetch_template("dbsql/settings.sql", "update_setting_by_extra"),

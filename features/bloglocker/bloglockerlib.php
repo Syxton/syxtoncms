@@ -72,9 +72,9 @@ global $CFG, $USER, $ROLES;
                     "paramlist" => "pageid, featureid",
                     "data" => [
                         "action" => "change_locker_state",
-                        "pageid" => "js||pageid||js",
+                        "pageid" => "js@@pageid@@js",
                         "featuretype" => "html",
-                        "featureid" => "js||featureid||js",
+                        "featureid" => "js@@featureid@@js",
                         "direction" => "released",
                     ],
                     "event" => "none",

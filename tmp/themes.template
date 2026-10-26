@@ -1,31 +1,31 @@
-theme_manager_header_template||
-    ||echo get_js_tags(["jquery", "picker"]);::none||
-||theme_manager_header_template
+theme_manager_header_template@@
+    @@echo get_js_tags(["jquery", "picker"]);::none@@
+@@theme_manager_header_template
 
-change_theme_template||
+change_theme_template@@
     <div id="themes_page">
-        ||pane||
+        @@pane@@
     </div>
-||change_theme_template
+@@change_theme_template
 
-theme_selector_tabs_template||
-    <input onclick="show_themes_selector()" type="radio" name="group1" value="Theme Selector" ||checked1|| />
+theme_selector_tabs_template@@
+    <input onclick="show_themes_selector()" type="radio" name="group1" value="Theme Selector" @@checked1@@ />
     Theme Selector
     &nbsp;
-    <input onclick="show_custom_styles(||themeid||)" type="radio" name="group1" value="Page Styles" ||checked2|| />
+    <input onclick="show_custom_styles(@@themeid@@)" type="radio" name="group1" value="Page Styles" @@checked2@@ />
     Page Styles
     <br />
     <br />
-||theme_selector_tabs_template
+@@theme_selector_tabs_template
 
-theme_selector_left_template||
+theme_selector_left_template@@
     <div id="left_pane">
         <center>
             <strong>Select Theme</strong>
         </center>
         <div id="theme_select">
             <center>
-                ||menu||
+                @@menu@@
                 <br />
                 <br />
                 <button type="button" onclick="change_theme_save()">
@@ -34,22 +34,22 @@ theme_selector_left_template||
             </center>
         </div>
     </div>
-||theme_selector_left_template
+@@theme_selector_left_template
 
-theme_selector_right_template||
+theme_selector_right_template@@
     <div id="color_preview">
         <strong>
             Preview:
         </strong>
         <br />
         <br />
-        ||pagelist||
+        @@pagelist@@
         <div style="padding:3px;"></div>
-        ||block||
+        @@block@@
     </div>
-||theme_selector_right_template
+@@theme_selector_right_template
 
-customize_style_selector_template||
+customize_style_selector_template@@
     <center>
         <strong>
             Custom Colors
@@ -57,10 +57,10 @@ customize_style_selector_template||
     </center>
     <br />
     <form id="colors" name="colors">
-        <input type="hidden" id="themeid" name="themeid" value="||themeid||" />
-        ||style_inputs||
+        <input type="hidden" id="themeid" name="themeid" value="@@themeid@@" />
+        @@style_inputs@@
         <br />
-        ||is_custom{{
+        @@is_custom{{
             <div>
                 <table style="font-size:1em;">
                     <tbody><tr>
@@ -74,40 +74,40 @@ customize_style_selector_template||
                     </tr>
                 </tbody></table>
             </div>
-        }}is_custom||
+        }}is_custom@@
         <button type="button" id="save_theme_customizations">
             Save
         </button>
     </form>
-||customize_style_selector_template
+@@customize_style_selector_template
 
-style_inputs_template||
+style_inputs_template@@
     <div>
         <table style="font-size:1em;">
             <tr>
                 <td style="width:170px;vertical-align:middle;">
-                    ||title||
+                    @@title@@
                 </td>
                 <td>
-                    <input class="themeinput" onchange="update_theme_preview()" type="color" name="||attribute||" value="||value||" style="background-color:||value||;width:70px;" >
+                    <input class="themeinput" onchange="update_theme_preview()" type="color" name="@@attribute@@" value="@@value@@" style="background-color:@@value@@;width:70px;" >
                 </td>
             </tr>
         </table>
     </div>
-||style_inputs_template
+@@style_inputs_template
 
-make_template_selector_panes_template||
+make_template_selector_panes_template@@
     <div id="panes">
         <table style="font-size:1em;width:100%;">
             <tr>
                 <td style="vertical-align:top;">
-                    ||left||
+                    @@left@@
                 </td>
                 <td style="width:2%;"></td>
                 <td style="width: 250px;vertical-align:top;*padding-right:10px !important;">
-                    ||right||
+                    @@right@@
                 </td>
             </tr>
         </table>
     </div>
-||make_template_selector_panes_template
+@@make_template_selector_panes_template

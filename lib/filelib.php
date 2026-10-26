@@ -340,10 +340,10 @@ function fill_template($file, $subsection, $feature = false, $params = [], $allo
             $contents = $temp;
 
             // Look for template variables
-            $pattern = '/\|\|((?s).*?)\|\|/i'; //Look for stuff between ||
+            $pattern = '/@@((?s).*?)@@/i'; //Look for stuff between @@
             preg_match_all($pattern, $contents, $matches);
 
-            // Loop through each instance where the template variable bars are found. ie || xxx ||
+            // Loop through each instance where the template variable delimiters are found. ie @@ xxx @@
             foreach ($matches[1] as $match) {
                 $optional = "";
                 // Check for leading asterisks denoting optional variables.
@@ -361,11 +361,11 @@ function fill_template($file, $subsection, $feature = false, $params = [], $allo
                     $replacement = 'try { $t = error_reporting(); error_reporting(E_PARSE); ' . $replacement . ' } catch (\Throwable $e) { ob_get_clean(); error_reporting($t); throw new Exception($e->getMessage()); }';
                     ob_start(); // Capture output
                     eval($replacement);
-                    $contents = str_replace("||$optional$match||", ob_get_clean(), $contents);
+                    $contents = str_replace("@@$optional$match@@", ob_get_clean(), $contents);
                 } else {
                     // If the variable is not found, remove it from the template.
                     if (!$allowpartial) {
-                        $contents = str_replace("||$optional$match||", "", $contents);
+                        $contents = str_replace("@@$optional$match@@", "", $contents);
                     }
 
                     // If the variable is not optional and allowpartial is false, trigger a notice.
@@ -434,8 +434,8 @@ function fill_template_set($templates, $params = []) {
 function fill_in_blanks($content, $params) {
     // Loop through the parameters and replace placeholders in content.
     foreach ($params as $key => $value) {
-        // Replace "||$key||" with the value in the content.
-        $content = str_replace("||$key||", $value, $content);
+        // Replace "@@$key@@" with the value in the content.
+        $content = str_replace("@@$key@@", $value, $content);
     }
     // Return the content with placeholders replaced.
     return $content;
@@ -450,8 +450,8 @@ function fill_in_blanks($content, $params) {
  */
 function template_subsection($content, $subsection) {
     // Construct the start and end delimiters
-    $startDelimiter = $subsection . '||';
-    $endDelimiter = '||' . $subsection;
+    $startDelimiter = $subsection . '@@';
+    $endDelimiter = '@@' . $subsection;
 
     // Find the starting position of the content
     $startPos = false;
@@ -495,7 +495,7 @@ function template_subsection($content, $subsection) {
  */
 function templates_process_qualifiers($contents, $params) {
     // Define the pattern to match the qualifiers.
-    $pattern = '/(?<outer>\|\|(?<opt>\*?)(?<var>.*)\{\{(?<inner>(?s).*?)\}\}\k<var>\|\|)/i';
+    $pattern = '/(?<outer>@@(?<opt>\*?)(?<var>.*)\{\{(?<inner>(?s).*?)\}\}\k<var>@@)/i';
 
     // Find all the qualifiers in the content.
     preg_match_all($pattern, $contents, $qualifiers);

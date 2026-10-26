@@ -77,7 +77,7 @@ function register() {
             }
 
             $emailsubject = $event['name'] . " Registration";
-            execute_db_sql("UPDATE events_registrations SET verified = 1 WHERE regid = ||regid||", ["regid" => $regid]);
+            execute_db_sql("UPDATE events_registrations SET verified = 1 WHERE regid = @@regid@@", ["regid" => $regid]);
 
             if ($event['fee_full'] === 0) { // Free event.
 

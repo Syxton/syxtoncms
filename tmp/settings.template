@@ -1,61 +1,61 @@
-make_settings_page_template||
+make_settings_page_template@@
     <div id="settings_div">
         <h3>
-            ||title||
+            @@title@@
         </h3>
         <br />
         <br />
-        ||settingslist||
+        @@settingslist@@
         <br />
     </div>
-||make_settings_page_template
+@@make_settings_page_template
 
-make_setting_input_template||
+make_setting_input_template@@
     <div style="display: flex;padding: 5px;align-items: center;">
-        <div style="display:inline-block;width:30%;padding:0 10px;font-size:.9em;vertical-align:||valign||;">
-            ||title||
+        <div style="display:inline-block;width:30%;padding:0 10px;font-size:.9em;vertical-align:@@valign@@;">
+            @@title@@
         </div>
         <div style="display:inline-block;width:70%;padding:5px;">
-            ||istext{{
-                <input style="width: 100%" type="text" id="||name||" name="||name||" value="||setting||" />
-            }}istext||
+            @@istext{{
+                <input style="width: 100%" type="text" id="@@name@@" name="@@name@@" value="@@setting@@" />
+            }}istext@@
 
-            ||isyesno{{
-                <select style="width: 100%" name="||name||" id="||name||">
-                    <option value="1" ||yes||>Yes</option>
-                    <option value="0" ||no||>No</option>
+            @@isyesno{{
+                <select style="width: 100%" name="@@name@@" id="@@name@@">
+                    <option value="1" @@yes@@>Yes</option>
+                    <option value="0" @@no@@>No</option>
                 </select>
-            }}isyesno||
+            }}isyesno@@
 
-            ||isnoyes{{
-                <select style="width: 100%" name="||name||" id="||name||">
-                    <option value="0" ||no||>No</option>
-                    <option value="1" ||yes||>Yes</option>
+            @@isnoyes{{
+                <select style="width: 100%" name="@@name@@" id="@@name@@">
+                    <option value="0" @@no@@>No</option>
+                    <option value="1" @@yes@@>Yes</option>
                 </select>
-            }}isnoyes||
+            }}isnoyes@@
 
-            ||isselect{{
-                <select style="width: 100%" name="||name||" id="||name||">
-                    ||options||
+            @@isselect{{
+                <select style="width: 100%" name="@@name@@" id="@@name@@">
+                    @@options@@
                 </select>
-            }}isselect||
+            }}isselect@@
 
-            ||istextarea{{
-                <textarea style="width: 100%" id="||name||" wrap="off" rows="||extraforminfo||" >||setting||</textarea>
-            }}istextarea||
+            @@istextarea{{
+                <textarea style="width: 100%" id="@@name@@" wrap="off" rows="@@extraforminfo@@" >@@setting@@</textarea>
+            }}istextarea@@
         </div>
-        ||savebutton{{
-            <button onclick="||ifnumeric{{if (!IsNumeric($('#||name||').val())) {alert('Must be numeric!');} else { }}ifnumeric||
-                                ||ifvalidation{{if ($('#||name||').val() ||validation||) { alert('||warning||');} else { }}ifvalidation||
-                                save_single_setting('||name||', ||settingid||);
-                            ||ifvalidation{{ } }}ifvalidation||
-                            ||ifnumeric{{ } }}ifnumeric||">
-                ||echo icon("floppy-disk");::none||
+        @@savebutton{{
+            <button onclick="@@ifnumeric{{if (!IsNumeric($('#@@name@@').val())) {alert('Must be numeric!');} else { }}ifnumeric@@
+                                @@ifvalidation{{if ($('#@@name@@').val() @@validation@@) { alert('@@warning@@');} else { }}ifvalidation@@
+                                save_single_setting('@@name@@', @@settingid@@);
+                            @@ifvalidation{{ } }}ifvalidation@@
+                            @@ifnumeric{{ } }}ifnumeric@@">
+                @@echo icon("floppy-disk");::none@@
                 <span>
                     Save
                 </span>
             </button>
-        }}savebutton||
-        <div style="width:50px;text-align:center;" id="||name||_results" class="notification"></div>
+        }}savebutton@@
+        <div style="width:50px;text-align:center;" id="@@name@@_results" class="notification"></div>
     </div>
-||make_setting_input_template
+@@make_setting_input_template

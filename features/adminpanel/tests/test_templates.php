@@ -17,6 +17,16 @@ $tests = "";
 $result = fill_template("tmp/test.template", "fill_in_the_blank", false, ["variable" => "PASS"]);
 $tests .= testCheck("simple fill in blank", trim($result) == "This was a PASS." ? "PASS" : "FAIL", $passCounter, $totalCounter);
 
+// Regression test: JavaScript logical OR is preserved in template content
+$result = fill_template("tmp/test.template", "javascript_or_operator_preserved");
+$tests .= testCheck("JavaScript logical OR is preserved", strpos($result, "window.isEnabled || window.fallbackEnabled") !== false ? "PASS" : "FAIL", $passCounter, $totalCounter);
+
+// Regression tests: @@-delimited qualifiers select the expected branch
+$result = fill_template("tmp/test.template", "qualifier", false, ["enabled" => true]);
+$tests .= testCheck("template qualifier true branch", trim($result) === "Visible" ? "PASS" : "FAIL", $passCounter, $totalCounter);
+$result = fill_template("tmp/test.template", "qualifier", false, ["enabled" => false]);
+$tests .= testCheck("template qualifier false branch", trim($result) === "Hidden" ? "PASS" : "FAIL", $passCounter, $totalCounter);
+
 // Test 2: Fill-in with an array variable
 // This test checks if the template can handle array values and format them correctly.
 $result = fill_template("tmp/test.template", "a+b=c", false, ["variable" => [2, 3, 5]]);

@@ -349,12 +349,12 @@ function events_upgrade() {
                 while ($row = fetch_row($result)) {
                     $address = parseAddress($row["address"]);
                     $SQL2 = 'UPDATE events_staff
-                        SET address=||address||,
-                        address2=||address2||,
-                        city=||city||,
-                        state=||state||,
-                        zip=||zip||
-                        WHERE staffid=||staffid||';
+                        SET address=@@address@@,
+                        address2=@@address2@@,
+                        city=@@city@@,
+                        state=@@state@@,
+                        zip=@@zip@@
+                        WHERE staffid=@@staffid@@';
                     execute_db_sql($SQL2, [
                         "address" => $address["address"],
                         "address2" => $address["address2"],
@@ -371,12 +371,12 @@ function events_upgrade() {
                 while ($row = fetch_row($result)) {
                     $address = parseAddress($row["address"]);
                     $SQL2 = 'UPDATE events_staff_archive
-                        SET address=||address||,
-                        address2=||address2||,
-                        city=||city||,
-                        state=||state||,
-                        zip=||zip||
-                        WHERE staffid=||staffid||';
+                        SET address=@@address@@,
+                        address2=@@address2@@,
+                        city=@@city@@,
+                        state=@@state@@,
+                        zip=@@zip@@
+                        WHERE staffid=@@staffid@@';
                     execute_db_sql($SQL2, [
                         "address" => $address["address"],
                         "address2" => $address["address2"],
@@ -392,6 +392,69 @@ function events_upgrade() {
         }
 
         commit_db_transaction();
+
+        // Core form engine tables (form_fields / form_hook_bindings) + legacy rename
+        $thisversion = 20261009;
+        if ($version < $thisversion) {
+            global $CFG;
+            if (!defined('FORMENGINELIB')) {
+                include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
+            }
+            if (function_exists('form_engine_ensure_schema')) {
+                form_engine_ensure_schema();
+            }
+            if (function_exists('ensure_staff_form_tables')) {
+                include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
+                ensure_staff_form_tables();
+                seed_staff_form_fields(0);
+            }
+            if (function_exists('form_engine_seed_hooks')) {
+                form_engine_seed_hooks('staff_app', 0);
+            }
+            update_feature($thisversion, "events");
+        }
+
+        // Forward-fill blank bgcheckpassdate in archive from prior years
+        $thisversion = 20261015;
+        if ($version < $thisversion) {
+            start_db_transaction("Forward-fill archive bgcheckpassdate");
+
+            $SQL = "SELECT archiveid, staffid, pageid, year, bgcheckpassdate
+                    FROM events_staff_archive
+                    ORDER BY pageid, staffid, year ASC";
+            $result = get_db_result($SQL);
+
+            $last_by_staff = []; // key: "pageid:staffid" => last known bgcheckpassdate
+            $updated = 0;
+
+            if ($result) {
+                while ($row = fetch_row($result)) {
+                    $key = $row['pageid'] . ':' . $row['staffid'];
+                    $bg = (int)($row['bgcheckpassdate'] ?? 0);
+
+                    if ($bg > 0) {
+                        // New or updated check for this year — becomes the new baseline.
+                        $last_by_staff[$key] = $bg;
+                        continue;
+                    }
+
+                    // Blank this year: fill from last known if we have one.
+                    if (!empty($last_by_staff[$key])) {
+                        $fill = (int)$last_by_staff[$key];
+                        execute_db_sql(
+                            "UPDATE events_staff_archive
+                             SET bgcheckpassdate = @@bg@@
+                             WHERE archiveid = @@aid@@",
+                            ["bg" => $fill, "aid" => $row['archiveid']]
+                        );
+                        $updated++;
+                    }
+                    // else: never had a check yet — leave blank
+                }
+            }
+            update_feature($thisversion, "events");
+        }
+
         return upgrade_occured('Events feature', $version, $thisversion);
     } catch (\Throwable $e) {
         rollback_db_transaction($e->getMessage());
@@ -400,14 +463,27 @@ function events_upgrade() {
 
 
 function events_install() {
+    global $CFG;
     if (!get_db_row("SELECT * FROM features WHERE feature='events'")) {
-        $thisversion = 20260716;
+        $thisversion = 20261009;
         $SQL = fetch_template("dbsql/install.sql", "install", "events");
 
         if (execute_db_sql($SQL)) { // if successful install.
             try {
                 // Add all current event abilities.
                 add_event_abilities();
+                // Core form engine (neutral tables)
+                if (!defined('FORMENGINELIB')) {
+                    include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
+                }
+                if (function_exists('form_engine_ensure_schema')) {
+                    form_engine_ensure_schema();
+                }
+                if (function_exists('ensure_staff_form_tables')) {
+                    include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
+                    ensure_staff_form_tables();
+                    seed_staff_form_fields(0);
+                }
                 update_feature($thisversion, "events");
 
             } catch (\Throwable $e) {

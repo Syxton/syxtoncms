@@ -1,4 +1,4 @@
-install||
+install@@
 CREATE TABLE IF NOT EXISTS `events` (
     `eventid` int(11) NOT NULL AUTO_INCREMENT,
     `pageid` int(11) DEFAULT NULL,
@@ -100,49 +100,27 @@ CREATE TABLE IF NOT EXISTS `events_templates_forms` (
     KEY `template_id` (`template_id`)
     ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
 
+-- Staff applications: retained identity/consent/bgcheck columns + form_data JSON for answers.
+-- Dynamic questions are defined in form_fields core table (no classic answer columns).
 CREATE TABLE IF NOT EXISTS `events_staff` (
     `staffid` int(11) NOT NULL AUTO_INCREMENT,
     `pageid` int(11) NOT NULL DEFAULT '0',
     `userid` int(11) NOT NULL,
-    `name` varchar(200) NOT NULL,
-    `dateofbirth` int(11) NOT NULL,
-    `agerange` varchar(2) NOT NULL,
-    `phone` varchar(20) NOT NULL,
-    `address` varchar(200) NOT NULL,
-    `address2` varchar(200) NOT NULL,
-    `city` varchar(200) NOT NULL,
-    `state` varchar(2) NOT NULL,
-    `zip` varchar(10) NOT NULL,
-    `cocmember` varchar(2) NOT NULL,
-    `congregation` varchar(200) NOT NULL,
-    `priorwork` varchar(2) NOT NULL,
-    `q1_1` varchar(2) NOT NULL,
-    `q1_2` varchar(2) NOT NULL,
-    `q1_3` varchar(2) NOT NULL,
-    `q2_1` varchar(2) NOT NULL,
-    `q2_2` varchar(2) NOT NULL,
-    `q2_3` varchar(200) NOT NULL,
-    `parentalconsent` varchar(200) NOT NULL,
-    `parentalconsentsig` varchar(10) NOT NULL,
-    `workerconsent` varchar(200) NOT NULL,
-    `workerconsentsig` varchar(10) NOT NULL,
-    `workerconsentdate` int(11) NOT NULL,
-    `ref1name` varchar(200) NOT NULL,
-    `ref1relationship` varchar(200) NOT NULL,
-    `ref1phone` varchar(20) NOT NULL,
-    `ref2name` varchar(200) NOT NULL,
-    `ref2relationship` varchar(200) NOT NULL,
-    `ref2phone` varchar(20) NOT NULL,
-    `ref3name` varchar(200) NOT NULL,
-    `ref3relationship` varchar(200) NOT NULL,
-    `ref3phone` varchar(20) NOT NULL,
-    `bgcheckpass` varchar(2) NOT NULL,
-    `bgcheckpassdate` int(11) NOT NULL,
-        PRIMARY KEY (`staffid`),
+    `name` varchar(200) NOT NULL DEFAULT '',
+    `phone` varchar(20) NOT NULL DEFAULT '',
+    `dateofbirth` int(11) NOT NULL DEFAULT '0',
+    `parentalconsent` varchar(200) NOT NULL DEFAULT '',
+    `parentalconsentsig` varchar(10) NOT NULL DEFAULT '',
+    `workerconsent` varchar(200) NOT NULL DEFAULT '',
+    `workerconsentsig` varchar(10) NOT NULL DEFAULT '',
+    `workerconsentdate` int(11) NOT NULL DEFAULT '0',
+    `bgcheckpassdate` int(11) NOT NULL DEFAULT '0',
+    `form_data` longtext DEFAULT NULL,
+    PRIMARY KEY (`staffid`),
     KEY `userid` (`userid`),
-    KEY `dateofbirth` (`dateofbirth`),
-        KEY `priorwork` (`priorwork`)
-    ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
+    KEY `pageid` (`pageid`),
+    KEY `dateofbirth` (`dateofbirth`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
 
 CREATE TABLE IF NOT EXISTS `events_staff_archive` (
     `archiveid` int(11) NOT NULL AUTO_INCREMENT,
@@ -150,48 +128,26 @@ CREATE TABLE IF NOT EXISTS `events_staff_archive` (
     `userid` int(11) NOT NULL,
     `pageid` int(11) NOT NULL,
     `year` int(11) NOT NULL,
-    `name` varchar(200) NOT NULL,
-    `dateofbirth` int(11) NOT NULL,
-    `phone` varchar(20) NOT NULL,
-    `address` varchar(200) NOT NULL,
-    `address2` varchar(200) NOT NULL,
-    `city` varchar(200) NOT NULL,
-    `state` varchar(2) NOT NULL,
-    `zip` varchar(10) NOT NULL,
-    `agerange` varchar(2) NOT NULL,
-    `cocmember` varchar(2) NOT NULL,
-    `congregation` varchar(200) NOT NULL,
-    `priorwork` varchar(2) NOT NULL,
-    `q1_1` varchar(2) NOT NULL,
-    `q1_2` varchar(2) NOT NULL,
-    `q1_3` varchar(2) NOT NULL,
-    `q2_1` varchar(2) NOT NULL,
-    `q2_2` varchar(2) NOT NULL,
-    `q2_3` varchar(200) NOT NULL,
-    `parentalconsent` varchar(200) NOT NULL,
-    `parentalconsentsig` varchar(10) NOT NULL,
-    `workerconsent` varchar(200) NOT NULL,
-    `workerconsentsig` varchar(10) NOT NULL,
-    `workerconsentdate` int(11) NOT NULL,
-    `ref1name` varchar(200) NOT NULL,
-    `ref1relationship` varchar(200) NOT NULL,
-    `ref1phone` varchar(20) NOT NULL,
-    `ref2name` varchar(200) NOT NULL,
-    `ref2relationship` varchar(200) NOT NULL,
-    `ref2phone` varchar(20) NOT NULL,
-    `ref3name` varchar(200) NOT NULL,
-    `ref3relationship` varchar(200) NOT NULL,
-    `ref3phone` varchar(20) NOT NULL,
-    `bgcheckpass` varchar(2) NOT NULL,
-    `bgcheckpassdate` int(11) NOT NULL,
-        PRIMARY KEY (`archiveid`),
+    `name` varchar(200) NOT NULL DEFAULT '',
+    `phone` varchar(20) NOT NULL DEFAULT '',
+    `dateofbirth` int(11) NOT NULL DEFAULT '0',
+    `parentalconsent` varchar(200) NOT NULL DEFAULT '',
+    `parentalconsentsig` varchar(10) NOT NULL DEFAULT '',
+    `workerconsent` varchar(200) NOT NULL DEFAULT '',
+    `workerconsentsig` varchar(10) NOT NULL DEFAULT '',
+    `workerconsentdate` int(11) NOT NULL DEFAULT '0',
+    `bgcheckpassdate` int(11) NOT NULL DEFAULT '0',
+    `form_data` longtext DEFAULT NULL,
+    PRIMARY KEY (`archiveid`),
     KEY `staffid` (`staffid`),
     KEY `pageid` (`pageid`),
     KEY `userid` (`userid`),
-    KEY `dateofbirth` (`dateofbirth`),
-    KEY `priorwork` (`priorwork`)
-    ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
+    KEY `year` (`year`),
+    KEY `dateofbirth` (`dateofbirth`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
 
+-- events_staff_form_fields: now core lib/formengine (see lib/formengine/dbsql/formengine.sql)
+-- events_form_hooks: now core lib/formengine (see lib/formengine/dbsql/formengine.sql)
 CREATE TABLE IF NOT EXISTS `events_contacts` (
     `contactid` int(11) NOT NULL AUTO_INCREMENT,
     `name` varchar(200) NOT NULL,
@@ -201,4 +157,4 @@ CREATE TABLE IF NOT EXISTS `events_contacts` (
         PRIMARY KEY (`contactid`),
     KEY `pageid` (`pageid`)
     ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1;
-||install
+@@install

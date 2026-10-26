@@ -14,6 +14,11 @@ if (!isset($CFG) || !defined('LIBHEADER')) {
     include($sub . 'lib/header.php');
 }
 define('EVENTSLIB', true);
+
+// Dynamic staff application form library
+if (!defined('STAFFFORMLIB')) {
+    include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
+}
 if (!defined('SEARCH_PERPAGE')) { define('SEARCH_PERPAGE', 8); }
 
 function display_events($pageid, $area, $featureid) {
@@ -317,8 +322,8 @@ global $CFG, $USER;
                 "url" => "/features/events/events_ajax.php",
                 "data" => [
                     "action" => "export_registrations",
-                    "pagieid" => "js||pageid||js",
-                    "eventid" => "js||eventid||js",
+                    "pagieid" => "js@@pageid@@js",
+                    "eventid" => "js@@eventid@@js",
                 ],
                 "display" => "downloadframe",
                 "event" => "none",
@@ -385,7 +390,7 @@ global $CFG, $USER;
             "url" => "/features/events/events_ajax.php",
             "data" => [
                 "action" => "confirm_event_relay",
-                "confirm" => "js||confirm||js",
+                "confirm" => "js@@confirm@@js",
                 "pagieid" => $pageid,
                 "eventid" => $event['eventid'],
             ],
@@ -450,11 +455,11 @@ global $CFG, $USER;
             "url" => "/features/events/events_ajax.php",
             "data" => [
                 "action" => "confirm_event_relay",
-                "confirm" => "js||confirmed||js",
+                "confirm" => "js@@confirmed@@js",
                 "pagieid" => $pageid,
-                "eventid" => "js||eventid||js",
+                "eventid" => "js@@eventid@@js",
             ],
-            "display" => "confirm_js||eventid||js",
+            "display" => "confirm_js@@eventid@@js",
             "ondone" => "go_to_page('" . $pageid . "');",
             "event" => "none",
         ]);
@@ -507,7 +512,7 @@ function get_editable_events($pageid) {
             "url" => "/features/events/events_ajax.php",
             "data" => [
                 "action" => "delete_events_relay",
-                "eventid" => "js||eventid||js",
+                "eventid" => "js@@eventid@@js",
             ],
             "ondone" => "go_to_page('" . $pageid . "');",
             "event" => "none",
@@ -565,7 +570,7 @@ function get_open_enrollment_events($pageid) {
             "url" => "/features/events/events_ajax.php",
             "data" => [
                 "action" => "delete_events_relay",
-                "eventid" => "js||eventid||js",
+                "eventid" => "js@@eventid@@js",
             ],
             "ondone" => "go_to_page('" . $pageid . "');",
             "event" => "none",
@@ -577,8 +582,8 @@ function get_open_enrollment_events($pageid) {
             "url" => "/features/events/events_ajax.php",
             "data" => [
                 "action" => "export_registrations",
-                "pagieid" => "js||pageid||js",
-                "eventid" => "js||eventid||js",
+                "pagieid" => "js@@pageid@@js",
+                "eventid" => "js@@eventid@@js",
             ],
             "display" => "downloadframe",
             "event" => "none",
@@ -942,7 +947,7 @@ function events_approved_payment($cart, $tx) {
             $method = isset($tx->payment_source->venmo) ? "venmo" : $method;
 
             if (!empty($tx->id) &&
-                !get_db_row("SELECT * FROM logfile WHERE feature=||feature|| AND info=||info||", ["feature" => "events", "info" => $tx->id])) {
+                !get_db_row("SELECT * FROM logfile WHERE feature=@@feature@@ AND info=@@info@@", ["feature" => "events", "info" => $tx->id])) {
 
                 foreach ($cart as $item) {
                     $regid = $item->i;
@@ -951,19 +956,19 @@ function events_approved_payment($cart, $tx) {
                     $paid = (float) get_reg_paid($regid);
 
                     // Update total paid for this registration.
-                    $SQL = "UPDATE events_registrations_values SET value=||paid|| WHERE elementname LIKE '%paid%' AND regid=||regid||";
+                    $SQL = "UPDATE events_registrations_values SET value=@@paid@@ WHERE elementname LIKE '%paid%' AND regid=@@regid@@";
                     execute_db_sql($SQL, ["paid" => ((float) $paid + (float) $add), "regid" => $regid]);
 
                     // Update payment method for this registration.
-                    $currentmethod = get_db_field("value", "events_registrations_values", "elementname LIKE '%method%' AND regid=||regid||", ["regid" => $regid]);
+                    $currentmethod = get_db_field("value", "events_registrations_values", "elementname LIKE '%method%' AND regid=@@regid@@", ["regid" => $regid]);
 
                     if (empty($currentmethod)) {
-                        $SQL = "UPDATE events_registrations_values SET value=||method|| WHERE elementname LIKE '%method%' AND regid=||regid||";
+                        $SQL = "UPDATE events_registrations_values SET value=@@method@@ WHERE elementname LIKE '%method%' AND regid=@@regid@@";
                         execute_db_sql($SQL, ["method" => $method, "regid" => $regid]);
                     }
 
                     // If payment is made, it is now verified.
-                    $SQL = "UPDATE events_registrations SET verified=||verified|| WHERE regid=||regid||";
+                    $SQL = "UPDATE events_registrations SET verified=@@verified@@ WHERE regid=@@regid@@";
                     execute_db_sql($SQL, ["regid" => $regid, "verified" => "1"]);
 
                     // Make an entry for this transaction that links it to this registration.
@@ -981,12 +986,12 @@ function events_approved_payment($cart, $tx) {
                             "txid" => $tx->id,
                         ]),
                     ];
-                    $SQL = "INSERT INTO events_registrations_values (eventid, elementname, regid, value) VALUES(||eventid||, ||elementname||, ||regid||, ||logparams||)";
+                    $SQL = "INSERT INTO events_registrations_values (eventid, elementname, regid, value) VALUES(@@eventid@@, @@elementname@@, @@regid@@, @@logparams@@)";
                     execute_db_sql($SQL, $params);
 
                     // Send an updated email to the registration owner.
                     $touser = (object)[
-                        'email' => get_db_field("email", "events_registrations", "regid=||regid||", ["regid" => $regid]),
+                        'email' => get_db_field("email", "events_registrations", "regid=@@regid@@", ["regid" => $regid]),
                         'fname' => get_registrant_name($regid),
                         'lname' => "",
                     ];
@@ -1033,19 +1038,19 @@ function get_total_cart_owed() {
 }
 
 function get_reg_owed($regid) {
-    return get_db_field("value", "events_registrations_values", "regid=||regid|| AND elementname LIKE '%owed%'", ["regid" => $regid]);
+    return get_db_field("value", "events_registrations_values", "regid=@@regid@@ AND elementname LIKE '%owed%'", ["regid" => $regid]);
 }
 
 function get_reg_paid($regid) {
-    return get_db_field("value", "events_registrations_values", "regid=||regid|| AND elementname LIKE '%paid%'", ["regid" => $regid]);
+    return get_db_field("value", "events_registrations_values", "regid=@@regid@@ AND elementname LIKE '%paid%'", ["regid" => $regid]);
 }
 
 function get_reg_paymethod($regid) {
-    return get_db_field("value", "events_registrations_values", "regid=||regid|| AND elementname LIKE '%method%'", ["regid" => $regid]);
+    return get_db_field("value", "events_registrations_values", "regid=@@regid@@ AND elementname LIKE '%method%'", ["regid" => $regid]);
 }
 
 function get_reg_promo($regid) {
-    return get_db_field("value", "events_registrations_values", "regid=||regid|| AND elementname LIKE '%campership%'", ["regid" => $regid]);
+    return get_db_field("value", "events_registrations_values", "regid=@@regid@@ AND elementname LIKE '%campership%'", ["regid" => $regid]);
 }
 
 function update_total_cart_paid($paidcart) {
@@ -1195,7 +1200,7 @@ global $CFG, $why, $error;
                 if ($nolimit = hard_limits($regid, $event, $template)) {
                     if (!$nolimit = soft_limits($regid, $event, $template)) {
                         $error = "Because this event has $why, you have been placed in the waiting line for this event.";
-                        execute_db_sql("UPDATE events_registrations SET queue = 1 WHERE regid = ||regid||", ["regid" => $regid]);
+                        execute_db_sql("UPDATE events_registrations SET queue = 1 WHERE regid = @@regid@@", ["regid" => $regid]);
                     }
                 } else {
                     if (!$nolimit) {
@@ -1257,7 +1262,7 @@ global $CFG, $why, $error;
 }
 
 function get_promo_by_name($eventid, $promoname) {
-    $setid = get_db_field("setting", "settings", "type='events_template' AND extra = ||extra|| AND setting_name='template_setting_promocode_set'", ["extra" => $eventid]);
+    $setid = get_db_field("setting", "settings", "type='events_template' AND extra = @@extra@@ AND setting_name='template_setting_promocode_set'", ["extra" => $eventid]);
 
     if (!$promo_code_set = get_promocode_set_array($setid)) {
         return false;
@@ -1276,7 +1281,7 @@ function get_promo_by_name($eventid, $promoname) {
 }
 
 function get_promo_code_match($eventid, $code) {
-    $setid = get_db_field("setting", "settings", "type='events_template' AND extra = ||extra|| AND setting_name='template_setting_promocode_set'", ["extra" => $eventid]);
+    $setid = get_db_field("setting", "settings", "type='events_template' AND extra = @@extra@@ AND setting_name='template_setting_promocode_set'", ["extra" => $eventid]);
 
     if (!$promo_code_set = get_promocode_set_array($setid)) {
         return false;
@@ -1317,7 +1322,7 @@ function apply_promo($promo, $price) {
 
 function registration_email($regid, $touser, $pending = false, $fullypaid = false) {
 global $CFG;
-    $reg = get_db_row("SELECT * FROM events_registrations WHERE regid=||regid||", ["regid" => $regid]);
+    $reg = get_db_row("SELECT * FROM events_registrations WHERE regid=@@regid@@", ["regid" => $regid]);
     $event = get_event($reg["eventid"]);
     $template = get_event_template($event['template_id']);
 
@@ -1639,7 +1644,7 @@ global $CFG, $USER;
     $event = get_event($eventid);
     $confirm = $confirm ? 1 : 0;
 
-    $status = execute_db_sql("UPDATE events SET confirmed = ||confirmed|| WHERE eventid = ||eventid||", ["confirmed" => $confirm, "eventid" => $eventid]);
+    $status = execute_db_sql("UPDATE events SET confirmed = @@confirmed@@ WHERE eventid = @@eventid@@", ["confirmed" => $confirm, "eventid" => $eventid]);
 
     if (!$status) {
         return false;
@@ -1686,7 +1691,7 @@ function get_back_to_registrations_link($eventid) {
     <div class="dontprint" style="padding: 10px"></div>';
 }
 function get_event($id) {
-    return get_db_row("SELECT * FROM events WHERE eventid = ||eventid||", ["eventid" => $id]);
+    return get_db_row("SELECT * FROM events WHERE eventid = @@eventid@@", ["eventid" => $id]);
 }
 
 function get_event_from_regid($regid) {
@@ -1697,11 +1702,11 @@ function get_event_from_regid($regid) {
 }
 
 function get_event_template($id) {
-    return get_db_row("SELECT * FROM events_templates WHERE template_id = ||template_id||", ["template_id" => $id]);
+    return get_db_row("SELECT * FROM events_templates WHERE template_id = @@template_id@@", ["template_id" => $id]);
 }
 
 function get_event_template_by_name($name) {
-    return get_db_row("SELECT * FROM events_templates WHERE name = ||name||", ["name" => $name]);
+    return get_db_row("SELECT * FROM events_templates WHERE name = @@name@@", ["name" => $name]);
 }
 
 function get_event_length($event) {
@@ -1739,7 +1744,7 @@ global $CFG;
         "url" => "/features/events/events_ajax.php",
         "data" => [
             "action" => "show_template_settings",
-            "templateid" => "js||$('#template').val()||js",
+            "templateid" => "js@@$('#template').val()@@js",
             "eventid" => $eventid,
         ],
         "display" => "template_settings_div",
@@ -1974,11 +1979,76 @@ function get_my_category($selected = false) {
     return $returnme;
 }
 
-function staff_status($staff, $userid = true) {
+const APPSTATUS = [
+    "account" => [
+        "tag" => "Account",
+        "icon" => "user-xmark",
+        "full" => "No Account",
+    ],
+    "app" => [
+        "tag" => "Application",
+        "icon" => "file-lines",
+        "full" => "Application Incomplete",
+    ],
+    "nobg" => [
+        "tag" => "Background Check",
+        "icon" => "calendar",
+        "full" => "No Background Check",
+    ],
+    "oldbg" => [
+        "tag" => "Background Check",
+        "icon" => "calendar-check",
+        "full" => "Old Background Check",
+    ],
+    "flagged" => [
+        "tag" => "Flagged",
+        "icon" => "flag",
+        "full" => "Flagged for review!",
+    ],
+];
+
+/**
+ * Shared ajaxapi registration for staff application search.
+ */
+function get_staff_appsearch_js() {
+    ajaxapi([
+        "id" => "perform_appsearch",
+        "paramlist" => "pagenum = 0, searchwords = false",
+        "before" => "searchwords = searchwords ? searchwords : ($('#searchbox').length ? $('#searchbox').val() : $('#searchwords').val());",
+        "url" => "/features/events/events_ajax.php",
+        "data" => [
+            "action" => "appsearch",
+            "pagenum" => "js@@pagenum@@js",
+            "searchwords" => "js@@encodeURIComponent(searchwords)@@js",
+        ],
+        "display" => "searchcontainer",
+        "ondone" => "init_event_menu();",
+        "loading" => "loading_overlay",
+        "event" => "none",
+    ]);
+}
+
+/**
+ * Staff application status flags.
+ *
+ * @param array|false $staff Staff row (live or archive)
+ * @param bool $userid True if the person has a user account context
+ * @param int|null $as_of_year When set (e.g. archive export year), evaluate
+ *        consent expiry and bg-check age relative to that season year instead
+ *        of "right now". Prevents past-year exports from all showing Incomplete.
+ */
+function staff_status($staff, $userid = true, $as_of_year = null) {
     $status = [];
+    $as_of_year = $as_of_year !== null ? (int)$as_of_year : (int)date('Y');
 
     if ($userid) {
-        $pageid = $_SESSION["pageid"];
+        $pageid = 0;
+        if (is_array($staff) && !empty($staff['pageid'])) {
+            $pageid = (int)$staff['pageid'];
+        }
+        if (!$pageid) {
+            $pageid = (int)($_SESSION['pageid'] ?? 0);
+        }
         $featureid = "*";
         if (!$settings = fetch_settings("events", $featureid, $pageid)) {
             save_batch_settings(default_settings("events", $pageid, $featureid));
@@ -1987,52 +2057,114 @@ function staff_status($staff, $userid = true) {
 
         if (!$staff) { // User exists but no staff history.
             return [
-                [
-                    "tag" => "Application",
-                    "full" => "Application Incomplete",
-                ],
-                [
-                    "tag" => "Background Check",
-                    "full" => "Background Check Incomplete",
-                ],
+                APPSTATUS["app"],
+                APPSTATUS["nobg"],
             ];
         }
 
-        if ($staff["workerconsentdate"] < strtotime($settings->events->$featureid->staffapp_expires->setting . '/' . date('Y'))) {
-            $status[] = [
-                "tag" => "Application",
-                "full" => "Application Out of Date",
-            ];
+        // Prefer form_data for dynamic answers; keep column fallback for unmigrated rows
+        if (!defined('STAFFFORMLIB')) {
+            global $CFG;
+            include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
+        }
+        // Use raw column timestamps for comparisons (display formatting breaks numeric checks)
+        $vals_raw = is_array($staff) ? $staff : [];
+        if (!empty($staff['form_data'])) {
+            $json = is_string($staff['form_data']) ? json_decode($staff['form_data'], true) : $staff['form_data'];
+            if (is_array($json)) {
+                $vals_raw = array_merge($json, $vals_raw);
+            }
+        }
+        $vals = function_exists('get_staff_application_values') ? get_staff_application_values($staff) : $staff;
+        if (!defined('FORMENGINELIB')) {
+            global $CFG;
+            include_once($CFG->dirroot . '/lib/formengine/formenginelib.php');
+        }
+        $form_key = 'staff_app';
+
+        $workerconsentdate = $vals_raw['workerconsentdate'] ?? ($staff['workerconsentdate'] ?? 0);
+        if (function_exists('form_hook_value')) {
+            $hooked = form_hook_value($form_key, 'consent.worker_date', $vals);
+            if ($hooked !== null && $hooked !== '') {
+                $workerconsentdate = $hooked;
+            }
+        }
+        if (!is_numeric($workerconsentdate) && !empty($workerconsentdate)) {
+            $workerconsentdate = function_exists('staff_form_parse_date_only')
+                ? staff_form_parse_date_only($workerconsentdate)
+                : strtotime($workerconsentdate);
+        }
+        $workerconsentdate = (int)$workerconsentdate;
+
+        $dob = $vals_raw['dateofbirth'] ?? ($staff['dateofbirth'] ?? 0);
+        if (function_exists('form_hook_value')) {
+            $hooked = form_hook_value($form_key, 'identity.date_of_birth', $vals);
+            if ($hooked !== null && $hooked !== '') {
+                $dob = $hooked;
+            }
+        }
+        if (!is_numeric($dob) && !empty($dob)) {
+            $dob = function_exists('staff_form_parse_date_only')
+                ? staff_form_parse_date_only($dob)
+                : strtotime($dob);
+        }
+        $dob = (int)$dob;
+
+        // Consent must be on/after the season expiry cutoff for the evaluated year
+        $expires_setting = $settings->events->$featureid->staffapp_expires->setting ?? '1/1';
+        $season_cutoff = strtotime($expires_setting . '/' . $as_of_year);
+        if ($season_cutoff === false) {
+            $season_cutoff = strtotime($as_of_year . '-01-01');
+        }
+        if ($workerconsentdate < (int)$season_cutoff) {
+            $status[] = APPSTATUS["app"];
         }
 
-        $flag = $staff["q1_1"] + $staff["q1_2"] + $staff["q1_3"] + $staff["q2_1"] + $staff["q2_2"];
-        if (!empty($flag)) {
-            $status[] = [
-                "tag" => "Flagged",
-                "full" => "Flagged for review!",
-            ];
+        if (!function_exists('staff_app_is_flagged')) {
+            global $CFG;
+            $saf = $CFG->dirroot . '/features/events/formdefs/staff_app.php';
+            if (file_exists($saf)) {
+                include_once($saf);
+            }
+        }
+        $flagged = function_exists('form_hook_value')
+            ? form_hook_value($form_key, 'screening.flagged', $vals)
+            : null;
+        if (($flagged === null || $flagged === '') && function_exists('staff_app_is_flagged')) {
+            $flagged = staff_app_is_flagged($vals, $form_key) ? '1' : '0';
+        }
+        if ($flagged === '1' || $flagged === 1 || $flagged === true) {
+            $status[] = APPSTATUS["flagged"];
         }
 
-        $eighteen = 18 * 365 * 24 * 60 * 60; // 18 years in seconds
-        $expireyear = $settings->events->$featureid->bgcheck_years->setting * 365 * 24 * 60 * 60;
-        $time = get_timestamp();
-        if (($time - $staff["dateofbirth"]) > $eighteen ) {
-            if (empty($staff["bgcheckpass"])) {
-                $status[] =  [
-                    "tag" => "Background Check",
-                    "full" => "Background Check Incomplete",
-                ];
-            } else if (($time - $staff["bgcheckpassdate"]) > $expireyear) {
-                $status[] =  [
-                    "tag" => "Background Check",
-                    "full" => "Background Check Out of Date",
-                ];
+        $expire_secs = (float)($settings->events->$featureid->bgcheck_years->setting ?? 1) * 365 * 24 * 60 * 60;
+        // For archive years, treat "as of" end of that year so past seasons aren't all "old bg"
+        $as_of_ts = ($as_of_year < (int)date('Y'))
+            ? (int)strtotime($as_of_year . '-12-31 23:59:59')
+            : (int)get_timestamp();
+
+        $under18_hook = function_exists('form_hook_value')
+            ? form_hook_value($form_key, 'meta.under_18', $vals)
+            : null;
+        if ($under18_hook !== null && $under18_hook !== '') {
+            $under18 = ($under18_hook === '1' || $under18_hook === 1 || $under18_hook === true);
+        } elseif (function_exists('staff_app_is_under_18')) {
+            $under18 = staff_app_is_under_18($dob);
+        } else {
+            $under18 = ($dob > 0) && (($as_of_ts - $dob) < (18 * 365 * 24 * 60 * 60));
+        }
+        if (!$under18) {
+            $bgdate = (int)($staff["bgcheckpassdate"] ?? 0);
+            if ($bgdate <= 0) {
+                $status[] = APPSTATUS["nobg"];
+            } else if (($as_of_ts - $bgdate) > $expire_secs) {
+                $status[] = APPSTATUS["oldbg"];
             }
         }
     } else {
-        $status[] = ["tag" => "Account", "full" => "No account"];
-        $status[] = ["tag" => "Application", "full" => "Application Incomplete"];
-        $status[] = ["tag" => "Background Check", "full" => "Background Check Incomplete"];
+        $status[] = APPSTATUS["account"];
+        $status[] = APPSTATUS["app"];
+        $status[] = APPSTATUS["nobg"];
     }
 
     return $status;
@@ -2040,8 +2172,9 @@ function staff_status($staff, $userid = true) {
 
 function bgcheck_complete($status) {
     foreach ($status as $s) {
-        if ($s["tag"] == "Background Check") {
-            if ($s["full"] == "Background Check Incomplete" || $s["full"] == "Background Check Out of Date") {
+        if ($s["tag"] === APPSTATUS["nobg"]["tag"]) {
+            if ($s["full"] === APPSTATUS["nobg"]["full"] ||
+            $s["full"] === APPSTATUS["oldbg"]["full"]) {
                 return false;
             }
         }
@@ -2051,8 +2184,8 @@ function bgcheck_complete($status) {
 
 function app_complete($status) {
     foreach ($status as $s) {
-        if ($s["tag"] == "Application") {
-            if ($s["full"] == "Application Incomplete" || $s["full"] == "Application Out of Date") {
+        if ($s["tag"] === "Application") {
+            if ($s["full"] === APPSTATUS["app"]["full"]) {
                 return false;
             }
         }
@@ -2066,9 +2199,10 @@ global $CFG;
     $print = '';
     if (!empty($status)) {
         foreach ($status as $s) {
+            $icon = isset($s["icon"]) ? $s["icon"] : "circle-exclamation";
             $print .= '
                 <div class="staff_status_alert">
-                    ' . icon("circle-exclamation") . ' ' . $s["full"] . '
+                    ' . icon($icon) . ' ' . $s["full"] . '
                 </div>';
         }
     } else {
@@ -2081,568 +2215,13 @@ global $CFG;
 }
 
 function staff_application_form($row, $viewonly = false) {
-global $USER, $CFG, $MYVARS;
-    $v["staffid"] = empty($row) ? false : $row["staffid"];
-    $v["name"] = empty($row) ? $USER->fname . " " . $USER->lname : $row["name"];
-    $v["phone"] = empty($row) ? "" : $row["phone"];
-    $v["dateofbirth"] = empty($row) ? "" : (isset($row['dateofbirth']) ? date('m/d/Y', $row['dateofbirth']) : '');
-    $v["address"] = empty($row) ? "" : $row["address"];
-    $v["address2"] = empty($row) ? "" : $row["address2"];
-    $v["city"] = empty($row) ? "" : $row["city"];
-    $v["state"] = empty($row) ? "" : $row["state"];
-    $v["zip"] = empty($row) ? "" : $row["zip"];
-    $v["ar1selected"] = "";
-    $v["ar2selected"] = "";
-    $v["ar3selected"] = "";
-    if (!empty($row)) {
-        if ($viewonly || empty($v["dateofbirth"])) {
-            if ($row["agerange"] == "0") {
-                $v["ar1selected"] = "selected";
-            } elseif ($row["agerange"] == "1") {
-                $v["ar2selected"] = "selected";
-            } elseif ($row["agerange"] == "2") {
-                $v["ar3selected"] = "selected";
-            }
-        } else {
-            $time = get_timestamp();
-            if (($time - $row['dateofbirth']) < (18 * 365 * 24 * 60 * 60)) { // Under 18
-                $v["ar1selected"] = "selected";
-            } elseif ((($time - $row['dateofbirth']) < (25 * 365 * 24 * 60 * 60))) { // Over 18 under 25
-                $v["ar2selected"] = "selected";
-            } else {
-                $v["ar3selected"] = "selected";
-            }
-        }
+    // Dynamic form – definition lives in form_fields (or defaults).
+    // All existing columns + bgcheck metadata are still written for compatibility.
+    if (!defined('STAFFFORMLIB')) {
+        global $CFG;
+        include_once($CFG->dirroot . '/features/events/staffform/staffformlib.php');
     }
-    $v["cocmembernoselected"] = empty($row) ? "" : ($row["cocmember"] == "0" ? "selected" : "");
-    $v["cocmemberyesselected"] = empty($row) ? "" : ($row["cocmember"] == "1" ? "selected" : "");
-    $v["congregation"] = empty($row) ? "" : $row["congregation"];
-    $v["priorworknoselected"] = empty($row) ? "" : ($row["priorwork"] == "0" ? "selected" : "");
-    $v["priorworkyesselected"] = empty($row) ? "" : ($row["priorwork"] == "1" ? "selected" : "");
-    $v["q1_1noselected"] = empty($row) ? "" : ($row["q1_1"] == "0" ? "selected" : "");
-    $v["q1_1yesselected"] = empty($row) ? "" : ($row["q1_1"] == "1" ? "selected" : "");
-    $v["q1_2noselected"] = empty($row) ? "" : ($row["q1_2"] == "0" ? "selected" : "");
-    $v["q1_2yesselected"] = empty($row) ? "" : ($row["q1_2"] == "1" ? "selected" : "");
-    $v["q1_3noselected"] = empty($row) ? "" : ($row["q1_3"] == "0" ? "selected" : "");
-    $v["q1_3yesselected"] = empty($row) ? "" : ($row["q1_3"] == "1" ? "selected" : "");
-    $v["q2_1noselected"] = empty($row) ? "" : ($row["q2_1"] == "0" ? "selected" : "");
-    $v["q2_1yesselected"] = empty($row) ? "" : ($row["q2_1"] == "1" ? "selected" : "");
-    $v["q2_2noselected"] = empty($row) ? "" : ($row["q2_2"] == "0" ? "selected" : "");
-    $v["q2_2yesselected"] = empty($row) ? "" : ($row["q2_2"] == "1" ? "selected" : "");
-    $v["q2_3"] = empty($row) ? "" : $row["q2_3"];
-
-    $v["yestotal"] = empty($row) ? 0 : $row["q1_1"] + $row["q1_2"] + $row["q1_3"] + $row["q2_1"] + $row["q2_2"];
-
-    $v["parentalconsent"] = empty($row) ? "" : $row["parentalconsent"];
-    $v["parentalconsentsig"] = empty($row) ? "" : ($row["parentalconsentsig"] == "on" ? "checked" : "");
-
-    $v["sub18display"] = empty($v["ar1selected"]) ? "display:none" : "";
-    $v["workerconsent"] = empty($row) ? "" : $row["workerconsent"];
-    $v["workerconsentsig"] = empty($row) ? "" : ($row["workerconsentsig"] == "on" && $viewonly  ? "checked" : "");
-    $v["workerconsentdate"] = empty($row) ? date('m/d/Y') : (!empty($row['workerconsentdate']) && $viewonly ? date('m/d/Y', $row['workerconsentdate']) : date('m/d/Y'));
-
-    $v["ref1name"] = empty($row) ? "" : $row["ref1name"];
-    $v["ref1relationship"] = empty($row) ? "" : $row["ref1relationship"];
-    $v["ref1phone"] = empty($row) ? "" : $row["ref1phone"];
-
-    $v["ref2name"] = empty($row) ? "" : $row["ref2name"];
-    $v["ref2relationship"] = empty($row) ? "" : $row["ref2relationship"];
-    $v["ref2phone"] = empty($row) ? "" : $row["ref2phone"];
-
-    $v["ref3name"] = empty($row) ? "" : $row["ref3name"];
-    $v["ref3relationship"] = empty($row) ? "" : $row["ref3relationship"];
-    $v["ref3phone"] = empty($row) ? "" : $row["ref3phone"];
-
-    // Include formlib to use get_states_array function.
-    if (!defined('FORMLIB')) { include_once($CFG->dirroot . '/lib/formlib.php'); }
-
-    $v["states"] = make_select([
-        "properties" => [
-            "name" => 'state',
-            "id" => 'state',
-        ] + ($viewonly ? ['disabled' => 'disabled'] : []),
-        "values" => get_states_array(),
-        "selected" => $v["state"],
-        "firstoption" => "Select One...",
-    ]);
-    $vars = [
-        "viewonly" => $viewonly,
-        "yestotal" => empty($v["yestotal"]),
-        "ar1selected" => empty($v["ar1selected"]),
-        "formtitle" => (!$viewonly ? 'Staff Application' : $v["name"] . ' Application'),
-        "newapp" => (empty($v["staffid"]) ? true : false),
-        "v" => $v,
-    ];
-
-    return fill_template("tmp/events.template", "staffapplication_form", "events", $vars);
-
-    return '
-        <div class="formDiv" id="staffapplication_form_div">
-            <div style="text-align:center">
-                <h2>' . (!$viewonly ? 'Staff Application' : $v["name"] . ' Application') . '</h2>
-                <span style="font-weight:bold;font-size:.9em">
-                    If you are not ' . $v["name"] . ', please sign into your own account.
-                </span>
-            </div>
-            <br />
-            <form name="staffapplication_form" id="staffapplication_form">
-                ' . (empty($v["staffid"]) ? '' : '<input type="hidden" id="staffid" name="staffid" value="' . $v["staffid"] . '" />') . '
-                <fieldset class="formContainer" ' . ($viewonly ? '' : 'style="max-width: 420px;margin-left: auto;margin-right: auto;"') . '>
-                    <div class="rowContainer">
-                        <label class="rowTitle" for="name">Name</label>
-                        <input disabled="disabled" type="text" id="name" name="name" value="' . $v["name"] . '"
-                            data-rule-required="true"
-                            data-msg-required="' . getlang("input_required") . '"
-                        />
-                        <div class="tooltipContainer info">
-                            ' . getlang("input_full_name") . '
-                        </div>
-                        <div class="spacer" style="clear: both;"></div>
-                    </div>
-                    <div class="rowContainer">
-                        <label class="rowTitle" for="dateofbirth">Date of Birth</label>
-                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
-                            type="text"
-                            id="dateofbirth"
-                            name="dateofbirth"
-                            value="' . $v["dateofbirth"] . '"
-                            data-rule-required="true"
-                            data-rule-custom="^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$"
-                            data-msg-custom="' . getlang("input_default_date_slashes") . '"
-                            data-rule-date="true"
-                            onblur="
-                                var d = new Date($(this).val()).getTime() / 1000;
-                                if (' . time() . ' - d < 567648000) {
-                                    $(\'#agerange\').val(0);
-                                } else if (' . time() . ' - d < 788400000) {
-                                    $(\'#agerange\').val(1);
-                                } else {
-                                    $(\'#agerange\').val(2);
-                                }
-                                $(\'#agerange\').change();
-                            "
-                        />
-                        <div class="tooltipContainer info">
-                            ' . getlang("input_staff_dob", "/features/events") . '
-                        </div>
-                        <div class="spacer" style="clear: both;"></div>
-                    </div>
-                    <div class="rowContainer">
-                        <label class="rowTitle" for="phone">Phone</label>
-                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
-                            type="text" id="phone" name="phone" value="' . $v["phone"] . '"
-                            data-rule-required="true"
-                            data-rule-phone="true"
-                            data-msg-required="' . getlang("input_required") . '"
-                            data-msg-phone="' . getlang("invalid_phone") . '"
-                        />
-                        <div class="tooltipContainer info">
-                            ' . getlang("input_default_phone") . '
-                        </div>
-                        <div class="spacer" style="clear: both;"></div>
-                    </div>
-                    <div class="rowContainer">
-                        <label class="rowTitle" for="address">Address</label>
-                        <textarea ' . ($viewonly ? 'disabled="disabled"' : '') . '
-                            rows="3" id="address" name="address"
-                            data-rule-required="true"
-                        >' . $v["address"] . '</textarea>
-                        <div class="tooltipContainer info">
-                            ' . getlang("input_address") . '
-                        </div>
-                        <div class="spacer" style="clear: both;"></div>
-                    </div>
-                    <div class="rowContainer">
-                        <label class="rowTitle" for="agerange">Age Range</label>
-                        <select ' . ($viewonly ? 'disabled="disabled"' : '') . '
-                            id="agerange"
-                            name="agerange"
-                            data-rule-required="true"
-                            onchange="
-                                if ($(this).val() != 0) {
-                                    $(\'#sub18\').hide();
-                                    $(\'#parentalconsent\').val(\'\');
-                                    $(\'#parentalconsent\').removeData(\'rule-required\').removeAttr(\'data-rule-required\');
-                                    $(\'#parentalconsentsig\').prop(\'checked\', false);
-                                    $(\'#parentalconsentsig\').removeData(\'rule-required\').removeAttr(\'data-rule-required\');
-                                }
-                                if ($(this).val() == 0) {
-                                    $(\'#parentalconsent\').val(\'\');
-                                    $(\'#parentalconsentsig\').prop(\'checked\', false);
-                                    $(\'#parentalconsent\').removeData(\'rule-required\').attr(\'data-rule-required\',\'true\');
-                                    $(\'#sub18\').show();
-                                }"
-                        >
-                            <option>Please select</option>
-                            <option value="0" ' . $v["ar1selected"] . '>younger than 18</option>
-                            <option value="1" ' . $v["ar2selected"] . '>18-25</option>
-                            <option value="2" ' . $v["ar3selected"] . '>26 or older</option>
-                        </select>
-                        <div class="tooltipContainer info">
-                            ' . getlang("input_staff_agerange", "/features/events") . '
-                        </div>
-                        <br />
-                        <div class="spacer" style="clear: both;"></div>
-                    </div>
-                    <div class="rowContainer">
-                        <label class="rowTitle" for="cocmember">Are you a member of the church of Christ?</label>
-                        <select ' . ($viewonly ? 'disabled="disabled"' : '') . ' style="width:80px" id="cocmember" name="cocmember"
-                            data-rule-required="true"
-                        >
-                            <option value="0" ' . $v["cocmembernoselected"] . '>No</option>
-                            <option value="1" ' . $v["cocmemberyesselected"] . '>Yes</option>
-                        </select>
-                        <div class="tooltipContainer info">
-                            ' . getlang("select_yesno") . '
-                        </div>
-                        <div class="spacer" style="clear: both;"></div>
-                    </div>
-                    <div class="rowContainer">
-                          <label class="rowTitle" for="congregation">Congregation Name</label>
-                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . ' type="text" id="congregation" name="congregation" value="' . $v["congregation"] . '"
-                            data-rule-required="true"
-                        />
-                        <div class="tooltipContainer info">
-                            ' . getlang("input_staff_congregation", "/features/events") . '
-                        </div>
-                        <div class="spacer" style="clear: both;"></div>
-                    </div>
-                    <div class="rowContainer">
-                          <label class="rowTitle" for="priorwork">Have you worked at Camp Wabashi as a staff member before?</label>
-                        <select ' . ($viewonly ? 'disabled="disabled"' : '') . ' style="width:80px" id="priorwork" name="priorwork"
-                            data-rule-required="true"
-                        >
-                            <option value="0" ' . $v["priorworknoselected"] . '>No</option>
-                            <option value="1" ' . $v["priorworkyesselected"] . '>Yes</option>
-                        </select>
-                        <div class="tooltipContainer info">
-                            ' . getlang("select_yesno") . '
-                        </div>
-                        <div class="spacer" style="clear: both;"></div>
-                    </div>
-                    <br /><hr><br />
-                    <h3>Have you at any time ever:</h3>
-                    <div class="rowContainer">
-                        <label class="rowTitle" for="q1_1">Been arrested for any reason?</label>
-                        <select ' . ($viewonly ? 'disabled="disabled"' : '') . '
-                            onchange="
-                                if (($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0) {
-                                    $(\'#q2_3\').attr(\'data-rule-required\', \'true\');
-                                } else {
-                                    $(\'#q2_3\').removeData(\'rule-required\').removeAttr(\'data-rule-required\');
-                                }
-                            "
-                            style="width:80px" id="q1_1" name="q1_1"
-                            data-rule-required="true"
-                        >
-                            <option value="0" ' . $v["q1_1noselected"] . '>No</option>
-                            <option value="1" ' . $v["q1_1yesselected"] . '>Yes</option>
-                        </select>
-                        <div class="tooltipContainer info">
-                            ' . getlang("select_yesno") . '
-                        </div>
-                        <div class="spacer" style="clear: both;"></div>
-                    </div>
-                    <div class="rowContainer">
-                          <label class="rowTitle" for="q1_2">Been convicted of, or pleaded guilty or no contest to, any crime?</label>
-                        <select ' . ($viewonly ? 'disabled="disabled"' : '') . '
-                            onchange="
-                                if (($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0) {
-                                    $(\'#q2_3\').attr(\'data-rule-required\', \'true\');
-                                } else {
-                                    $(\'#q2_3\').removeData(\'rule-required\').removeAttr(\'data-rule-required\');
-                                }
-                            "
-                            style="width:80px" id="q1_2" name="q1_2"
-                            data-rule-required="true"
-                        >
-                            <option value="0" ' . $v["q1_2noselected"] . '>No</option>
-                            <option value="1" ' . $v["q1_2yesselected"] . '>Yes</option>
-                        </select>
-                        <div class="tooltipContainer info">
-                            ' . getlang("select_yesno") . '
-                        </div>
-                        <div class="spacer" style="clear: both;"></div>
-                    </div>
-                    <div class="rowContainer">
-                        <label class="rowTitle" for="q1_3">Engaged in, or been accused of, any child molestation, exploitation, or abuse?</label>
-                        <select ' . ($viewonly ? 'disabled="disabled"' : '') . '
-                            onchange="
-                                if (($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0) {
-                                    $(\'#q2_3\').attr(\'data-rule-required\', \'true\');
-                                } else {
-                                    $(\'#q2_3\').removeData(\'rule-required\').removeAttr(\'data-rule-required\');
-                                }"
-                            style="width:80px" id="q1_3" name="q1_3"
-                            data-rule-required="true"
-                        >
-                            <option value="0" ' . $v["q1_3noselected"] . '>No</option>
-                            <option value="1" ' . $v["q1_3yesselected"] . '>Yes</option>
-                        </select>
-                        <div class="tooltipContainer info">
-                            ' . getlang("select_yesno") . '
-                        </div>
-                        <div class="spacer" style="clear: both;"></div>
-                    </div>
-                    <br /><hr><br />
-                    <h3>Are you aware of:</h3>
-                    <div class="rowContainer">
-                        <label class="rowTitle" for="q2_1">Having any traits or tendencies that could pose any threat to children, youth, or others?</label>
-                        <select ' . ($viewonly ? 'disabled="disabled"' : '') . '
-                            onchange="
-                                if (($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0) {
-                                    $(\'#q2_3\').attr(\'data-rule-required\', \'true\');
-                                } else {
-                                    $(\'#q2_3\').removeData(\'rule-required\').removeAttr(\'data-rule-required\');
-                                }
-                            "
-                            style="width:80px" id="q2_1" name="q2_1"
-                            data-rule-required="true"
-                        >
-                            <option value="0" ' . $v["q2_1noselected"] . '>No</option>
-                            <option value="1" ' . $v["q2_1yesselected"] . '>Yes</option>
-                        </select>
-                        <div class="tooltipContainer info">
-                            ' . getlang("select_yesno") . '
-                        </div>
-                        <div class="spacer" style="clear: both;"></div>
-                    </div>
-                    <div class="rowContainer">
-                        <label class="rowTitle" for="q2_2">Any reason why you should not work with children, youth, or others?</label>
-                        <select ' . ($viewonly ? 'disabled="disabled"' : '') . '
-                            onchange="
-                                if (($(\'#q1_1\').val() + $(\'#q1_2\').val() + $(\'#q1_3\').val() + $(\'#q2_1\').val() + $(\'#q2_2\').val()) > 0) {
-                                    $(\'#q2_3\').attr(\'data-rule-required\', \'true\');
-                                } else {
-                                    $(\'#q2_3\').removeData(\'rule-required\').removeAttr(\'data-rule-required\');
-                                }
-                            "
-                            style="width:80px" id="q2_2" name="q2_2"
-                            data-rule-required="true"
-                        >
-                            <option value="0" ' . $v["q2_2noselected"] . '>No</option>
-                            <option value="1" ' . $v["q2_2yesselected"] . '>Yes</option>
-                        </select>
-                        <div class="tooltipContainer info">
-                            ' . getlang("select_yesno") . '
-                        </div>
-                        <div class="spacer" style="clear: both;"></div>
-                    </div>
-                    <div class="rowContainer">
-                        <label class="rowTitle" for="q2_3">If the answer to any of these questions is "Yes", please explain in detail</label>
-                        <textarea ' . ($viewonly ? 'disabled="disabled"' : '') . '
-                            rows="3" id="q2_3" name="q2_3"
-                            ' . (empty($v["yestotal"]) ? '' : 'data-rule-required="true"') . '
-                        >' . $v["q2_3"] . '</textarea>
-                        <div class="tooltipContainer info">
-                            ' . getlang("input_explain", "/features/events") . '
-                        </div>
-                        <div class="spacer" style="clear: both;"></div>
-                    </div>
-                    ' . ($viewonly ? '<div style="text-align:center"><h2>' . $v["name"] . ' References</h2></div>' : '<br /><hr><br />') . '
-                    <h3>References #1</h3><br />
-                          <br />
-                    <div class="rowContainer">
-                        <label class="rowTitle" for="ref1name">Name</label>
-                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
-                            type="text" id="ref1name" name="ref1name" value="' . $v["ref1name"] . '"
-                            data-rule-required="true"
-                        />
-                        <div class="tooltipContainer info">
-                            ' . getlang("input_staff_refname", "/features/events") . '
-                        </div>
-                        <div class="spacer" style="clear: both;"></div>
-                      </div>
-                    <div class="rowContainer">
-                        <label class="rowTitle" for="ref1relationship">Relationship</label>
-                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
-                            type="text" id="ref1relationship" name="ref1relationship" value="' . $v["ref1relationship"] . '"
-                            data-rule-required="true"
-                        />
-                        <div class="tooltipContainer info">
-                            ' . getlang("input_staff_refrelationship", "/features/events") . '
-                        </div>
-                        <div class="spacer" style="clear: both;"></div>
-                      </div>
-                    <div class="rowContainer">
-                        <label class="rowTitle" for="ref1phone">Phone</label>
-                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
-                            type="text" id="ref1phone" name="ref1phone" value="' . $v["ref1phone"] . '"
-                            data-rule-required="true"
-                            data-rule-phone="true"
-                            data-msg-required="' . getlang("input_required") . '"
-                            data-msg-phone="' . getlang("invalid_phone") . '"
-                        />
-                        <div class="tooltipContainer info">
-                            ' . getlang("input_default_phone") . '
-                        </div>
-                        <div class="spacer" style="clear: both;"></div>
-                    </div>
-                    <br /><hr><br />
-                    <h3>References #2</h3><br />
-                    <div class="rowContainer">
-                        <label class="rowTitle" for="ref2name">Name</label>
-                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
-                            type="text" id="ref2name" name="ref2name" value="' . $v["ref2name"] . '"
-                            data-rule-required="true"
-                        />
-                        <div class="tooltipContainer info">
-                            ' . getlang("input_staff_refname", "/features/events") . '
-                        </div>
-                        <div class="spacer" style="clear: both;"></div>
-                    </div>
-                    <div class="rowContainer">
-                        <label class="rowTitle" for="ref2relationship">Relationship</label>
-                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
-                            type="text" id="ref2relationship" name="ref2relationship" value="' . $v["ref2relationship"] . '"
-                            data-rule-required="true"
-                        />
-                        <div class="tooltipContainer info">
-                            ' . getlang("input_staff_refrelationship", "/features/events") . '
-                        </div>
-                        <div class="spacer" style="clear: both;"></div>
-                    </div>
-                    <div class="rowContainer">
-                        <label class="rowTitle" for="ref2phone">Phone</label>
-                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
-                            type="text" id="ref2phone" name="ref2phone" value="' . $v["ref2phone"] . '"
-                            data-rule-required="true"
-                            data-rule-phone="true"
-                            data-msg-required="' . getlang("input_required") . '"
-                            data-msg-phone="' . getlang("invalid_phone") . '"
-                        />
-                        <div class="tooltipContainer info">
-                            ' . getlang("input_default_phone") . '
-                        </div>
-                        <div class="spacer" style="clear: both;"></div>
-                    </div>
-                    <br /><hr><br />
-                    <h3>References #3</h3><br />
-                    <div class="rowContainer">
-                        <label class="rowTitle" for="ref3name">Name</label>
-                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
-                            type="text" id="ref3name" name="ref3name" value="' . $v["ref3name"] . '"
-                            data-rule-required="true"
-                        />
-                        <div class="tooltipContainer info">
-                            ' . getlang("input_staff_refname", "/features/events") . '
-                        </div>
-                        <div class="spacer" style="clear: both;"></div>
-                    </div>
-                    <div class="rowContainer">
-                          <label class="rowTitle" for="ref3relationship">Relationship</label>
-                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
-                            type="text" id="ref3relationship" name="ref3relationship" value="' . $v["ref3relationship"] . '"
-                            data-rule-required="true"
-                        />
-                        <div class="tooltipContainer info">
-                            ' . getlang("input_staff_refrelationship", "/features/events") . '
-                        </div>
-                        <div class="spacer" style="clear: both;"></div>
-                    </div>
-                    <div class="rowContainer">
-                        <label class="rowTitle" for="ref3phone">Phone</label>
-                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
-                            type="text" id="ref3phone" name="ref3phone" value="' . $v["ref3phone"] . '"
-                            data-rule-required="true"
-                            data-rule-phone="true"
-                            data-msg-required="' . getlang("input_required") . '"
-                            data-msg-phone="' . getlang("invalid_phone") . '"
-                        />
-                        <div class="tooltipContainer info">
-                            ' . getlang("input_default_phone") . '
-                        </div>
-                        <div class="spacer" style="clear: both;"></div>
-                    </div>
-                    <br /><hr><br />
-                    <h3>Worker Renewal Work Verification and Release</h3><br />
-                    <em>I recognize that Wabash Valley Christian Youth Camp is relying on the accuracy of the information I provide on the Worker Renewal Application form.   Accordingly, I attest and affirm that the information I have provided is absolutely true and correct.
-                    <br />
-                    I voluntarily release the organization and any such person or entity listed on the Worker Renewal Application form from liability involving the communication of information relating to my background or qualifications.   I further authorize the organization to conduct a criminal background investigation if such a check is deemed necessary.
-                    <br />
-                    I agree to abide by all policies and procedures of the organization and to protect the health and safety of the children or youth assigned to my care or supervision at all times.
-                    </em>
-                    <br /><br />
-                    <div class="rowContainer">
-                        <label class="rowTitle" for="workerconsent">Full Name</label>
-                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
-                            type="text" id="workerconsent" name="workerconsent" value="' . $v["workerconsent"] . '"
-                            data-rule-required="true"
-                        />
-                        <div class="tooltipContainer info">
-                            ' . getlang("input_staff_workerconsent", "/features/events") . '
-                        </div>
-                        <div class="spacer" style="clear: both;"></div>
-                    </div>
-                    <div class="rowContainer">
-                        <label class="rowTitle" for="workerconsentdate">Date</label>
-                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
-                            type="text" id="workerconsentdate" name="workerconsentdate" value="' . $v["workerconsentdate"] . '"
-                            data-rule-required="true"
-                            data-rule-custom="^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$"
-                            data-msg-custom="' . getlang("input_default_date_slashes") . '"
-                            data-rule-date="true"
-                            disabled="disabled"
-                        />
-                        <div class="tooltipContainer info">
-                            ' . getlang("input_staff_workerconsentdate", "/features/events") . '
-                        </div>
-                        <div class="spacer" style="clear: both;"></div>
-                    </div>
-                    <div>
-                        <strong>You should understand that the name field and signature field have the same legal effect and can be enforced in the same way as a written signature.</strong>
-                    </div>
-                    <br />
-                    <div class="rowContainer">
-                        <label class="rowTitle" for="workerconsentsig">Signature</label>
-                        <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
-                            type="checkbox" id="workerconsentsig" name="workerconsentsig" ' . $v["workerconsentsig"] . '
-                            data-rule-required="true"
-                        />
-                        <div class="tooltipContainer info">
-                            ' . getlang("input_staff_workerconsentsig", "/features/events") . '
-                        </div>
-                        <div class="spacer" style="clear: both;"></div>
-                    </div>
-                    <div id="sub18" style="' . $v["sub18display"] . '">
-                        <br /><hr><br />
-                        <div style="background:#FFED00;padding:5px;">
-                            <strong>If you are under 18, please have a parent or guardian affirm to the following:</strong><br />
-                            <em>I swear and affirm that I am not aware of any traits or tendencies of the applicant that could pose a threat to children, youth or others and that I am not aware of any reasons why the applicant should not work with children, youth, or others.</em>
-                                  <br /><br />
-                            <div class="rowContainer">
-                                  <label class="rowTitle" for="parentalconsent">Parent or Gurdian Full Name</label>
-                                <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
-                                    type="text" id="parentalconsent" name="parentalconsent" value="' . $v["parentalconsent"] . '"
-                                    ' . (empty($v["ar1selected"]) ? '' : 'data-rule-required="true"') . '
-                                />
-                                <div class="tooltipContainer info">
-                                    ' . getlang("input_staff_parentalconsent", "/features/events") . '
-                                </div>
-                            </div>
-                            <div>
-                                <strong>You should understand that the name field and signature field have the same legal effect and can be enforced in the same way as a written signature.</strong>
-                            </div>
-                            <br />
-                            <div class="rowContainer">
-                                <label class="rowTitle" for="parentalconsentsig">Parent or Guardian Signature</label>
-                                <input ' . ($viewonly ? 'disabled="disabled"' : '') . '
-                                    type="checkbox" id="parentalconsentsig" name="parentalconsentsig"
-                                    ' . $v["parentalconsentsig"] . '
-                                    ' . (empty($v["ar1selected"]) ? '' : 'data-rule-required="true"') . '
-                                />
-                                <div class="tooltipContainer info">
-                                    ' . getlang("input_staff_parentalconsentsig", "/features/events") . '
-                                </div>
-                                <div class="spacer" style="clear: both;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    ' . ($viewonly ? '' : '<input class="submit" name="submit" type="submit" onmouseover="this.focus();" value="Submit Application" />') . '
-                </fieldset>
-            </form>
-            ' . keepalive() . '
-        </div>';
+    return staff_application_form_dynamic($row, $viewonly);
 }
 
 function get_hint_box($string) {
@@ -2796,7 +2375,7 @@ function contact_list_form($eventid) {
 global $CFG;
     $contacts = get_db_result("SELECT *
                                 FROM events_contacts
-                                WHERE pageid = ||pageid||
+                                WHERE pageid = @@pageid@@
                                 ORDER BY name", ["pageid" => $CFG->SITEID]);
 
     if (!$contacts) {
@@ -2910,8 +2489,8 @@ function get_events_admin_contacts($eventid = false) {
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
     $selected = 0;
     if ($eventid) {
-        $contactid = get_db_field("contact", "events", "eventid = ||eventid||", ["eventid" => $eventid]);
-        $selected = get_db_field('CONCAT(contactid, ":", name, ":", email, ":", phone) as contactdata', "events_contacts", "contactid = ||contactid||", ["contactid" => $contactid]);
+        $contactid = get_db_field("contact", "events", "eventid = @@eventid@@", ["eventid" => $eventid]);
+        $selected = get_db_field('CONCAT(contactid, ":", name, ":", email, ":", phone) as contactdata', "events_contacts", "contactid = @@contactid@@", ["contactid" => $contactid]);
     }
 
     // Script for filling contact details on selecting from dropdown.
@@ -3006,7 +2585,7 @@ function get_promocode_manager($pageid) {
             "url" => "/features/events/events_ajax.php",
             "data" => [
                 "action" => "edit_promocode_set",
-                "setid" => "js||setid||js",
+                "setid" => "js@@setid@@js",
             ],
             "display" => "promocodemanager",
             "loading" => "loading_overlay",
@@ -3019,7 +2598,7 @@ function get_promocode_manager($pageid) {
             "url" => "/features/events/events_ajax.php",
             "data" => [
                 "action" => "edit_promoset_form",
-                "setid" => "js||setid||js",
+                "setid" => "js@@setid@@js",
                 "pageid" => $pageid,
             ],
             "display" => "promocodemanager",
@@ -3034,7 +2613,7 @@ function get_promocode_manager($pageid) {
             "url" => "/features/events/events_ajax.php",
             "data" => [
                 "action" => "delete_promoset",
-                "setid" => "js||setid||js",
+                "setid" => "js@@setid@@js",
                 "pageid" => $pageid,
             ],
             "display" => "promocodemanager",
@@ -3376,6 +2955,7 @@ function events_adminpanel($pageid) {
         ]);
     }
 
+
     return $content;
 }
 
@@ -3458,7 +3038,7 @@ function request_questions_form($reqid, $voteid, $featureid, $pageid) {
     // Print out previous questions and answers
     if ($results = get_db_result("SELECT *
                                     FROM events_requests_questions
-                                WHERE reqid = ||reqid||
+                                WHERE reqid = @@reqid@@
                                 ORDER BY question_time", ["reqid" => $reqid])) {
         while ($row = fetch_row($results)) {
             $question = strip_tags(trim($row['question'], " \n\r\t"),'<a><em><u><img><br>');
@@ -3525,7 +3105,7 @@ global $CFG;
         "reqid" => $reqid,
         "qid" => $qid,
     ];
-    $mod = "AND id <> ||qid||";
+    $mod = "AND id <> @@qid@@";
 
     $prev_questions = "";
     $SQL = fill_template("dbsql/events.sql", "get_events_requests_questions", "events", ["mod" => $mod], true);
@@ -3566,8 +3146,8 @@ global $CFG;
 
     $request_answer_form = "";
     if (!empty($qid)) {
-        $answer = get_db_field("answer", "events_requests_questions", "id = ||id||", ["id" => $qid]);
-        $question = get_db_field("question", "events_requests_questions", "id = ||id||", ["id" => $qid]);
+        $answer = get_db_field("answer", "events_requests_questions", "id = @@id@@", ["id" => $qid]);
+        $question = get_db_field("question", "events_requests_questions", "id = @@id@@", ["id" => $qid]);
         $question = strip_tags(trim($question, " \n\r\t"),'<a><em><u><img><br>');
         $request_answer_form = '
             <form id="request_answers_form" method="post" action="./events_ajax.php">
@@ -3603,8 +3183,8 @@ global $CFG;
 function request_has_already_voted($reqid, $voteid) {
     $SQL = 'SELECT *
             FROM events_requests
-            WHERE reqid = ||reqid||
-            AND voted LIKE ||voted||';
+            WHERE reqid = @@reqid@@
+            AND voted LIKE @@voted@@';
     return get_db_row($SQL, ["reqid" => $reqid, "voted" => "%:$voteid;%"]);
 }
 
@@ -3649,9 +3229,9 @@ global $CFG, $USER;
             "url" => "/features/events/events_ajax.php",
             "data" => [
                 "action" => "confirm_event_relay",
-                "confirm" => "js||confirm||js",
+                "confirm" => "js@@confirm@@js",
                 "pagieid" => $pageid,
-                "eventid" => "js||eventid||js",
+                "eventid" => "js@@eventid@@js",
             ],
             "event" => "none",
             "display" => "user_alerts_div",
@@ -3677,7 +3257,7 @@ function events_print_confirmation($cart, $data) {
 
 // Function that accepts a name, email, and phone number, searches the contacts table for a match and returns the contact id if found, or creates a new contact and returns that id if not found.
 function get_contact_id($name, $email, $phone) {
-    $contact = get_db_field("contactid", "events_contacts", "name = ||name||", ["name" => $name]);
+    $contact = get_db_field("contactid", "events_contacts", "name = @@name@@", ["name" => $name]);
 
     if (!$contact) { // No contact found, create a new one.
         $SQL = fetch_template("dbsql/events.sql", "add_contact", "events");
@@ -3693,12 +3273,12 @@ function get_contact_id($name, $email, $phone) {
 
 
 function get_event_contact($contactid) {
-    return get_db_row("SELECT * FROM events_contacts WHERE contactid = ||contactid||", ["contactid" => $contactid]);
+    return get_db_row("SELECT * FROM events_contacts WHERE contactid = @@contactid@@", ["contactid" => $contactid]);
 }
 
 function get_my_contacts_select($pageid, $selected = false) {
     $returnme = "";
-    $SQL = "SELECT * FROM events_contacts WHERE pageid = ||pageid|| ORDER BY name";
+    $SQL = "SELECT * FROM events_contacts WHERE pageid = @@pageid@@ ORDER BY name";
 
     if ($contacts = get_db_result($SQL, ["pageid" => $pageid])) {
         while ($contact = fetch_row($contacts)) {

@@ -31,6 +31,32 @@ function site_administration() {
     echo fill_template("tmp/main.template", "site_administration", "adminpanel");
 }
 
+
+/**
+ * Core Form Editor (System admin).
+ * Named form engine editor (lib/formengine). form_key selects a registered form definition.
+ */
+function form_editor() {
+    global $CFG, $USER;
+    if (!is_siteadmin($USER->userid ?? 0)) {
+        echo getlang("generic_permissions");
+        return;
+    }
+    if (!defined("FORMENGINELIB")) {
+        include_once($CFG->dirroot . "/lib/formengine/formenginelib.php");
+    }
+    if (!defined("FORMEDITORLIB")) {
+        include_once($CFG->dirroot . "/lib/formengine/formeditorlib.php");
+    }
+    $pageid = clean_myvar_opt("pageid", "int", get_pageid());
+    $form_key = clean_myvar_opt("form_key", "string", "");
+    if ($form_key === "") {
+        $form_key = form_engine_default_form_key();
+    }
+    form_editor_page($form_key, $pageid, true);
+}
+
+
 function site_admin_javascript() {
     ajaxapi([
         "id" => "user_admin",

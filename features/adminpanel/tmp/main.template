@@ -1,28 +1,28 @@
-header||
-    ||echo get_css_tags(["styles/vertmenu.css"]);::none||
-    ||echo get_js_tags(["features/events/events.js"]);::none||
-    ||echo get_js_tags(["scripts/vertmenu.js"]);::none||
-    ||echo get_js_tags(["scripts/frame_resize.js"]);::none||
-||header
+header@@
+    @@echo get_css_tags(["styles/vertmenu.css"]);::none@@
+    @@echo get_js_tags(["features/events/events.js"]);::none@@
+    @@echo get_js_tags(["scripts/vertmenu.js"]);::none@@
+    @@echo get_js_tags(["scripts/frame_resize.js"]);::none@@
+@@header
 
-pagination_bar||
+pagination_bar@@
     <br />
     <div style="display: flex;justify-content: space-between;align-items: center;">
-        <div>||prev||</div>
-        <div style="width:50%;text-align:center;color:green;white-space:nowrap;">||*info||</div>
-        <div>||next||</div>
+        <div>@@prev@@</div>
+        <div style="width:50%;text-align:center;color:green;white-space:nowrap;">@@*info@@</div>
+        <div>@@next@@</div>
     </div>
     <br />
-||pagination_bar
+@@pagination_bar
 
-userlog||
-    <iframe id="userlog_graph"  src="||url||" style="height: calc(100% - 10px);width:100%;border:none;"></iframe>
+userlog@@
+    <iframe id="userlog_graph"  src="@@url@@" style="height: calc(100% - 10px);width:100%;border:none;"></iframe>
     <div id="actions_div">
-        ||useractions||
+        @@useractions@@
     </div>
-||userlog
+@@userlog
 
-useractionstable||
+useractionstable@@
     <table class="datatable">
         <thead>
             <tr>
@@ -44,40 +44,40 @@ useractionstable||
             </tr>
         </thead>
         <tbody>
-            ||actions||
+            @@actions@@
         </tbody>
     </table>
-||useractionstable
+@@useractionstable
 
-useractionrow||
+useractionrow@@
     <tr>
         <td>
-            ||date||
+            @@date@@
         </td>
         <td>
-            ||page||
+            @@page@@
         </td>
         <td>
-            ||info||
+            @@info@@
         </td>
         <td>
-            ||action||
+            @@action@@
         </td>
         <td>
-            ||ip||
+            @@ip@@
         </td>
     </tr>
-||useractionrow
+@@useractionrow
 
-useractionemptyrow||
+useractionemptyrow@@
     <tr>
         <td colspan="4">
             No Usage
         </td>
     </tr>
-||useractionemptyrow
+@@useractionemptyrow
 
-members_search_page||
+members_search_page@@
     <style>
         .members {
             position: relative;
@@ -166,7 +166,7 @@ members_search_page||
             <div id="allfields">
                 <select onchange="if ($(this).val().length) { $('#searchbox').val($('#searchbox').val() + ' /f ' + $(this).val()); }" id="searchfield">
                     <option>Select Field</option>
-                    ||allfields||
+                    @@allfields@@
                 </select>
             </div>
             <div id="mem_searchbardiv">
@@ -188,13 +188,13 @@ members_search_page||
         <div id="mem_debug"></div>
         <div id="mem_resultsdiv"></div>
         <div id="loading_overlay" style="display:none;">
-            ||echo icon("spinner fa-spin-pulse");::none||
+            @@echo icon("spinner fa-spin-pulse");::none@@
         </div>
         <div id="mem_exportsdiv" style="display:none;"></div>
     </div>
-||members_search_page
+@@members_search_page
 
-site_administration||
+site_administration@@
     <div class="adminpaneldiv" style="display: flex;height: calc(100% - 10px);">
         <div style="min-height:300px;display:inline-block;vertical-align:top;border:2px solid silver;background-color:DarkSlateGray;">
             <ul class="vertmenu">
@@ -203,17 +203,17 @@ site_administration||
                     <ul class="acitem">
                         <li>
                             <a class="alike" id="user_admin">
-                                ||echo icon("user");::none|| User Admin
+                                @@echo icon("user");::none@@ User Admin
                             </a>
                         </li>
                         <li>
                             <a class="alike" id="camper_list">
-                                ||echo icon("users-rectangle");::none|| Camper Lists
+                                @@echo icon("users-rectangle");::none@@ Camper Lists
                             </a>
                         </li>
                         <li>
                             <a class="alike" id="admin_email_sender">
-                                ||echo icon("envelope-open-text");::none|| Mass Email Sender
+                                @@echo icon("envelope-open-text");::none@@ Mass Email Sender
                             </a>
                         </li>
                     </ul>
@@ -223,22 +223,22 @@ site_administration||
                     <ul class="acitem">
                         <li>
                             <a class="alike" id="get_phpinfo">
-                                ||echo icon("circle-info");::none|| PHP Info
+                                @@echo icon("circle-info");::none@@ PHP Info
                             </a>
                         </li>
                         <li>
                             <a class="alike" id="admin_email_tester">
-                                ||echo icon("envelope");::none|| Email Tester
+                                @@echo icon("envelope");::none@@ Email Tester
                             </a>
                         </li>
                         <li>
                             <a class="alike" id="site_versions">
-                                ||echo icon("code-branch");::none|| Version Checker
+                                @@echo icon("code-branch");::none@@ Version Checker
                             </a>
                         </li>
                         <li>
                             <a class="alike" id="unit_tests">
-                                ||echo icon("cube");::none|| Unit Tests
+                                @@echo icon("cube");::none@@ Unit Tests
                             </a>
                         </li>
                     </ul>
@@ -257,20 +257,20 @@ site_administration||
             $(".vertmenu li .active").click();
         });
     </script>
-||site_administration
+@@site_administration
 
-admin_iframe||
-    <iframe id="||id||" style="width:100%;border:none;padding: 15px;height: calc(100% - 10px);" src="||src||"></iframe>
-||admin_iframe
+admin_iframe@@
+    <iframe id="@@id@@" style="width:100%;border:none;padding: 15px;height: calc(100% - 10px);" src="@@src@@"></iframe>
+@@admin_iframe
 
-admin_versions||
+admin_versions@@
     <div style="display: flex;flex-wrap: nowrap;flex-direction: column;align-items: center;">
         <h3>Site Version</h3>
-        <span>||siteversion||</span>
+        <span>@@siteversion@@</span>
         <br /><br />
         <h3>Feature Versions</h3>
         <div style="display: flex;align-items: flex-end;flex-direction: column;">
-            ||foreach(featureversions as $f) {
+            @@foreach(featureversions as $f) {
                     echo '
                         <span style="display: flex;justify-content: center;align-items: center;">
                             <span style="padding: 4px;font-weight: bold">
@@ -280,87 +280,87 @@ admin_versions||
                                 ' . $f->version . '
                             </span>
                         </span>';
-            }::featureversions||
+            }::featureversions@@
         </div>
         <br /><br />
         <div>
-            <a href="||echo $CFG->wwwroot;::none||/upgrade.php">Check for Updates</a>
+            <a href="@@echo $CFG->wwwroot;::none@@/upgrade.php">Check for Updates</a>
         </div>
     </div>
-||admin_versions
+@@admin_versions
 
-members_search_row||
+members_search_row@@
     <tr style="font-size:.85em;">
         <td style="vertical-align:middle;overflow:hidden;">
-            <input type="hidden" class="user_id" id="user_id_||user["userid"]||" value="||user["userid"]||" />
-            <input type="hidden" class="user_name" value="||fullname||" />
-            ||fullname||
-            <div style="font-size: .9em;color:#999">||user["email"]||</div>
+            <input type="hidden" class="user_id" id="user_id_@@user["userid"]@@" value="@@user["userid"]@@" />
+            <input type="hidden" class="user_name" value="@@fullname@@" />
+            @@fullname@@
+            <div style="font-size: .9em;color:#999">@@user["email"]@@</div>
         </td>
         <td>
             <div class="dynamic-dropdown">
                 <div class="iconfield dynamic-dropdown-content">
-                    ||notadmin{{
-                        ||loginas{{
-                            <span id="loginas_||user["userid"]||">
-                                <button class="alike" title="Log in as ||fullname||" onclick=loginas(||user["userid"]||)>
-                                    ||echo icon("user-secret", 2);::none||
+                    @@notadmin{{
+                        @@loginas{{
+                            <span id="loginas_@@user["userid"]@@">
+                                <button class="alike" title="Log in as @@fullname@@" onclick=loginas(@@user["userid"]@@)>
+                                    @@echo icon("user-secret", 2);::none@@
                                 </button>
                             </span>
-                        }}loginas||
-                    }}notadmin||
+                        }}loginas@@
+                    }}notadmin@@
                     <span>
-                        <button class="alike" title="View ||fullname|| Logs" onclick="view_logfile(||user["userid"]||);">
-                            ||echo icon("chart-simple", 2, "", "green");::none||
+                        <button class="alike" title="View @@fullname@@ Logs" onclick="view_logfile(@@user["userid"]@@);">
+                            @@echo icon("chart-simple", 2, "", "green");::none@@
                         </button>
                     </span>
-                    ||notadmin{{
-                        <span id="reset_password_||user["userid"]||">
-                            <button class="alike" title="Reset ||fullname|| Password" onclick="members_reset_password(||user["userid"]||);">
-                                ||echo icon("retweet", 2, "", "orange");::none||
+                    @@notadmin{{
+                        <span id="reset_password_@@user["userid"]@@">
+                            <button class="alike" title="Reset @@fullname@@ Password" onclick="members_reset_password(@@user["userid"]@@);">
+                                @@echo icon("retweet", 2, "", "orange");::none@@
                             </button>
                         </span>
-                    }}notadmin||
-                    ||hasip{{
+                    }}notadmin@@
+                    @@hasip{{
                         <span>
-                            <button class="alike" title="IP Location" onclick="members_get_geodata('||user["ip"]||', 'display');">
-                                ||echo icon("compass", 2);::none||
+                            <button class="alike" title="IP Location" onclick="members_get_geodata('@@user["ip"]@@', 'display');">
+                                @@echo icon("compass", 2);::none@@
                             </button>
                         </span>
-                    }}hasip||
+                    }}hasip@@
                 </div>
             </div>
         </td>
         <td style="text-align:center;padding: 0 10px;">
-            ||joined||
+            @@joined@@
         </td>
         <td style="text-align:center;padding: 0 10px;">
-            ||active||
+            @@active@@
         </td>
         <td>
             <div class="iconfield">
-            ||notadmin{{
-                <button class="alike" title="Delete ||fullname||" onclick="members_delete_user(||user["userid"]||);">
-                    ||echo icon("trash", 2);::none||
+            @@notadmin{{
+                <button class="alike" title="Delete @@fullname@@" onclick="members_delete_user(@@user["userid"]@@);">
+                    @@echo icon("trash", 2);::none@@
                 </button>
-            }}notadmin||
+            }}notadmin@@
             </div>
         </td>
     </tr>
-||members_search_row
+@@members_search_row
 
-members_search_table||
-    ||results{{
+members_search_table@@
+    @@results{{
         <div style="font-size:.65em;padding:2px;">
-            <button class="alike" title="Export to CSV" onclick="export_search(`||searchwords||`, 1);" >
-                ||echo icon("file-csv", 2);::none||
+            <button class="alike" title="Export to CSV" onclick="export_search(`@@searchwords@@`, 1);" >
+                @@echo icon("file-csv", 2);::none@@
             </button>
-            <button class="alike" title="Export to Mailman" onclick="export_search(`||searchwords||`, 0, 1);" >
-                ||echo icon("paper-plane", 2);::none||
+            <button class="alike" title="Export to Mailman" onclick="export_search(`@@searchwords@@`, 0, 1);" >
+                @@echo icon("paper-plane", 2);::none@@
             </button>
         </div>
-    }}results||
-    <input type="hidden" id="searchwords" value="||searchwords||" />
+    }}results@@
+    <input type="hidden" id="searchwords" value="@@searchwords@@" />
     <table class="searchresults">
         <tr>
             <th style="text-align:left;">
@@ -377,19 +377,19 @@ members_search_table||
             <th style="text-align:center;">
             </th>
         </tr>
-        ||results{{
-            ||results||
+        @@results{{
+            @@results@@
             //OR//
             <tr>
                 <td colspan="5" style="font-size:.8em;text-align:center;">
-                    <strong>||echo getlang("no_matches");::none||</strong>
+                    <strong>@@echo getlang("no_matches");::none@@</strong>
                 </td>
             </tr>
-        }}results||
+        }}results@@
     </table>
-||members_search_table
+@@members_search_table
 
-camper_list||
+camper_list@@
     <h1 class="centered">Camper Lists</h1>
     <br />
     This download contains a list of names, ages, and addresses of all campers from previous seasons and for
@@ -399,14 +399,14 @@ camper_list||
         <label for="year">Year: </label>
         <select id="year">
             <option value="0">All</option>
-            <option value="||echo date("Y", strtotime("-2 year"));::none||">
-                ||echo date("Y", strtotime("-2 year"));::none||
+            <option value="@@echo date("Y", strtotime("-2 year"));::none@@">
+                @@echo date("Y", strtotime("-2 year"));::none@@
             </option>
-            <option value="||echo date("Y", strtotime("-1 year"));::none||">
-                ||echo date("Y", strtotime("-1 year"));::none||
+            <option value="@@echo date("Y", strtotime("-1 year"));::none@@">
+                @@echo date("Y", strtotime("-1 year"));::none@@
             </option>
-            <option value="||echo date("Y");::none||">
-                ||echo date("Y");::none||
+            <option value="@@echo date("Y");::none@@">
+                @@echo date("Y");::none@@
             </option>
         </select>
     </div>
@@ -437,4 +437,4 @@ camper_list||
         </button>
     </div>
     <div id="downloadfile" style="display: none"></div>
-||camper_list
+@@camper_list

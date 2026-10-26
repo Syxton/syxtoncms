@@ -35,7 +35,7 @@ function get_html($htmlid) {
 
 function get_html_feature($pageid, $featureid, $settings, $abilities, $area = false, $htmlonly = false) {
 global $CFG, $USER;
-    $SQL = "SELECT * FROM html WHERE htmlid = ||htmlid||";
+    $SQL = "SELECT * FROM html WHERE htmlid = @@htmlid@@";
     $returnme = $makecomment = $comments = $rss = "";
 
     if ($result = get_db_result($SQL, ['htmlid' => $featureid])) {
@@ -699,7 +699,7 @@ global $CFG;
     try {
         start_db_transaction();
         if ($featureid = execute_db_sql(fetch_template("dbsql/html.sql", "insert_html", "html"), ["pageid" => $pageid, "html" => "", "dateposted" => get_timestamp()])) {
-            $area = get_db_field("default_area", "features", "feature = ||feature||", ["feature" => $type]);
+            $area = get_db_field("default_area", "features", "feature = @@feature@@", ["feature" => $type]);
             $sort = get_db_count(fetch_template("dbsql/features.sql", "get_features_by_page_area"), ["pageid" => $pageid, "area" => $area]) + 1;
             $params = [
                 "pageid" => $pageid,
@@ -721,8 +721,8 @@ global $CFG;
 function gather_comments($htmlid, $pagenum, $perpage, $collection = [], $totalcount = 0, $parentid = 0) {
     $SQL = "SELECT *
             FROM html_comments
-            WHERE htmlid = ||htmlid||
-            AND parentid = ||parentid||
+            WHERE htmlid = @@htmlid@@
+            AND parentid = @@parentid@@
             ORDER BY created, commentid";
 
     if ($comments = get_db_result($SQL, ["htmlid" => $htmlid, "parentid" => $parentid])) {
@@ -753,9 +753,9 @@ function gather_comments($htmlid, $pagenum, $perpage, $collection = [], $totalco
 }
 
 function get_info_from_commentid($commentid) {
-    $comment = get_db_row("SELECT * FROM html_comments WHERE commentid = ||commentid||", ["commentid" => $commentid]);
+    $comment = get_db_row("SELECT * FROM html_comments WHERE commentid = @@commentid@@", ["commentid" => $commentid]);
     $htmlid = $comment["htmlid"];
-    $pageid = get_db_field("pageid", "html", "htmlid = ||htmlid||", ["htmlid" => $htmlid]);
+    $pageid = get_db_field("pageid", "html", "htmlid = @@htmlid@@", ["htmlid" => $htmlid]);
     $area = get_feature_area("html", $htmlid);
 
     if (!$settings = fetch_settings("html", $htmlid, $pageid)) {
@@ -779,7 +779,7 @@ global $CFG, $USER;
     $returnme = $commenttext = $prev = $info = $next = $header = $pagenav = $limit = "";
 
     $original = $pagenum ? false : true;
-    $total = get_db_count("SELECT * FROM html_comments WHERE htmlid = ||htmlid||", ["htmlid" => $htmlid]);
+    $total = get_db_count("SELECT * FROM html_comments WHERE htmlid = @@htmlid@@", ["htmlid" => $htmlid]);
     $perpage = $perpage ?: 0;
     $pagenum = $pagenum !== false ? $pagenum : floor($total / $perpage);
 
@@ -1048,9 +1048,9 @@ global $CFG, $USER;
             "paramlist" => "pageid, featureid",
             "data" => [
                 "action" => "change_locker_state",
-                "pageid" => "js||pageid||js",
+                "pageid" => "js@@pageid@@js",
                 "featuretype" => "html",
-                "featureid" => "js||featureid||js",
+                "featureid" => "js@@featureid@@js",
                 "direction" => "locker",
             ],
             "event" => "none",

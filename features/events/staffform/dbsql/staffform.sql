@@ -1,0 +1,4 @@
+-- Staff form field/hook tables moved to core:
+--   lib/formengine/dbsql/formengine.sql
+--   Tables: form_fields, form_hook_bindings
+-- Events only seeds staff_app defaults and declares required hooks in PHP.

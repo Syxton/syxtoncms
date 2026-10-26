@@ -1,13 +1,13 @@
-transaction_complete||
-	Your ||type|| has been completed, and a receipt for your ||type|| has been emailed to you.
+transaction_complete@@
+	Your @@type@@ has been completed, and a receipt for your @@type@@ has been emailed to you.
 	<br />
 	You may log into your account at <a href="https://www.paypal.com">www.paypal.com</a> to view details of this transaction.
 	<br />
-||transaction_complete
+@@transaction_complete
 
-print_cart_template||
-	<a href="||wwwroot||">
-	Go back to ||sitename||
+print_cart_template@@
+	<a href="@@wwwroot@@">
+	Go back to @@sitename@@
 	</a>
 	<br />
 	<br />
@@ -15,11 +15,11 @@ print_cart_template||
 		<tr>
 			<td colspan="2">
 				<strong>
-					What you have ||type||?:
+					What you have @@type@@?:
 				</strong>
 			</td>
 		</tr>
-		||cartitems||
+		@@cartitems@@
 		<tr>
 			<td style="text-align:right;">
 				<strong>
@@ -37,23 +37,23 @@ print_cart_template||
 				</strong>
 			</td>
 			<td style="text-align:left;padding:10px; font-size:.8em;">
-				$||items["payment_gross"]||
+				$@@items["payment_gross"]@@
 			</td>
 		</tr>
 	</table>
-||print_cart_template
+@@print_cart_template
 
-print_cart_row_template||
+print_cart_row_template@@
   <tr style="background-color:#FFF1FF;">
 	<td style="text-align:left; font-size:.8em;">
-		||itemname||
+		@@itemname@@
 	</td>
 	<td style="text-align:left; padding:10px; font-size:.8em;">
-		||itemprice||
+		@@itemprice@@
 	</td>
   </tr>
   <tr>
 	<td colspan="2">
 	</td>
   </tr>
-||print_cart_row_template
+@@print_cart_row_template

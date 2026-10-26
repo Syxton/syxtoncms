@@ -101,7 +101,7 @@ global $CFG, $USER;
     try {
         $userid = is_logged_in() ? $USER->userid : 0;
         $ip = get_ip_address();
-        $SQL = "INSERT INTO polls_response (pollid,ip,userid,answer) VALUES(||pollid||, ||ip||, ||userid||, ||answer||)";
+        $SQL = "INSERT INTO polls_response (pollid,ip,userid,answer) VALUES(@@pollid@@, @@ip@@, @@userid@@, @@answer@@)";
         execute_db_sql($SQL, ["pollid" => $pollid, "ip" => get_ip_address(), "userid" => $userid, "answer" => $answer]);
 
         $data = get_feature_data("polls", $pollid);
@@ -130,7 +130,7 @@ function change_poll_status() {
             $datetochange = "stopdate";
         }
 
-        $SQL = "UPDATE polls SET status = ||status||, $datetochange = ||now|| WHERE pollid = ||featureid||";
+        $SQL = "UPDATE polls SET status = @@status@@, $datetochange = @@now@@ WHERE pollid = @@featureid@@";
         execute_db_sql($SQL, ["status" => $status, "featureid" => $featureid, "now" => get_timestamp()]);
         $data = get_feature_data("polls", $featureid);
         $area = $data["area"];

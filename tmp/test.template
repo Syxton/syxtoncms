@@ -1,99 +1,109 @@
-fill_in_the_blank||
-	This was a ||variable||.
-||fill_in_the_blank
+fill_in_the_blank@@
+	This was a @@variable@@.
+@@fill_in_the_blank
 
-a+b=c||
-	||variable[0]|| + ||variable[1]|| = ||variable[2]||
-||a+b=c
+javascript_or_operator_preserved@@
+<script>
+    const isEnabled = window.isEnabled || window.fallbackEnabled;
+</script>
+@@javascript_or_operator_preserved
 
-list||
-	||variables->one||, ||variables->two||, ||variables->three||
-||list
+qualifier@@
+    @@enabled{{Visible//OR//Hidden}}enabled@@
+@@qualifier
 
-print_r123||
-  ||echo print_r([1, 2, 3], true);::none||
-||print_r123
+a+b=c@@
+	@@variable[0]@@ + @@variable[1]@@ = @@variable[2]@@
+@@a+b=c
 
-print_r||
-  ||echo print_r(variable, true);::variable||
-||print_r
+list@@
+	@@variables->one@@, @@variables->two@@, @@variables->three@@
+@@list
 
-get_max||
-  ||echo max(variables[0], variables[1], variables[2], variables[3], variables[4]);::variables||
-||get_max
+print_r123@@
+  @@echo print_r([1, 2, 3], true);::none@@
+@@print_r123
 
-min||
-  ||echo min(variables->one, variables->two, variables->three);::variables||
-||min
+print_r@@
+  @@echo print_r(variable, true);::variable@@
+@@print_r
 
-optional||
-  ||*one||||*two||||*three||||*four||
-||optional
+get_max@@
+  @@echo max(variables[0], variables[1], variables[2], variables[3], variables[4]);::variables@@
+@@get_max
 
-globalconfig1||
-	||echo $CFG->wwwroot;::none||
-||globalconfig1
+min@@
+  @@echo min(variables->one, variables->two, variables->three);::variables@@
+@@min
 
-globalconfig2||
-	||echo $CFG->docroot;::none||
-||globalconfig2
+optional@@
+  @@*one@@@@*two@@@@*three@@@@*four@@
+@@optional
 
-globalconfig3||
-	||variable|| ||echo $CFG->wwwroot;::none||
-||globalconfig3
+globalconfig1@@
+	@@echo $CFG->wwwroot;::none@@
+@@globalconfig1
 
-globalconfig4||
-	||variable|| ||echo $CFG->docroot;::none||
-||globalconfig4
+globalconfig2@@
+	@@echo $CFG->docroot;::none@@
+@@globalconfig2
 
-sql_template||
-	SELECT * FROM testing_table WHERE test_id = ||id||
-||sql_template
+globalconfig3@@
+	@@variable@@ @@echo $CFG->wwwroot;::none@@
+@@globalconfig3
 
-multiple_select_template1||
-	SELECT * FROM testing_table WHERE test_id > ||id|| LIMIT 1;
-||multiple_select_template1
+globalconfig4@@
+	@@variable@@ @@echo $CFG->docroot;::none@@
+@@globalconfig4
 
-multiple_select_template2||
-	SELECT * FROM testing_table WHERE test_id > ||id|| LIMIT 2;
-||multiple_select_template2
+sql_template@@
+	SELECT * FROM testing_table WHERE test_id = @@id@@
+@@sql_template
 
-multiple_select_template3||
-	SELECT * FROM testing_table WHERE test_id > ||id|| LIMIT 3;
-||multiple_select_template3
+multiple_select_template1@@
+	SELECT * FROM testing_table WHERE test_id > @@id@@ LIMIT 1;
+@@multiple_select_template1
 
-broken_update_templates1||
-	UPDATE testing_table SET test_field = ||value|| WHERE test_id > ||id||;
-||broken_update_templates1
+multiple_select_template2@@
+	SELECT * FROM testing_table WHERE test_id > @@id@@ LIMIT 2;
+@@multiple_select_template2
 
-broken_update_templates2||
-	UPDATE testing_table SET test_field = ||value|| WHERE test_id > ||id||;
-||broken_update_templates2
+multiple_select_template3@@
+	SELECT * FROM testing_table WHERE test_id > @@id@@ LIMIT 3;
+@@multiple_select_template3
 
-broken_update_templates3||
-	UPDATE testing_table SET test_field = ||value|| WHERE test_ids > ||id||;
-||broken_update_templates3
+broken_update_templates1@@
+	UPDATE testing_table SET test_field = @@value@@ WHERE test_id > @@id@@;
+@@broken_update_templates1
 
-working_update_templates1||
-	UPDATE testing_table SET test_field = ||value|| WHERE test_id = (||id|| + 1);
-||working_update_templates1
+broken_update_templates2@@
+	UPDATE testing_table SET test_field = @@value@@ WHERE test_id > @@id@@;
+@@broken_update_templates2
 
-working_update_templates2||
-	UPDATE testing_table SET test_field = ||value|| WHERE test_id = (||id|| + 1);
-||working_update_templates2
+broken_update_templates3@@
+	UPDATE testing_table SET test_field = @@value@@ WHERE test_ids > @@id@@;
+@@broken_update_templates3
 
-working_update_templates3||
-	UPDATE testing_table SET test_field = ||value|| WHERE test_id = (||id|| + 3);
-||working_update_templates3
+working_update_templates1@@
+	UPDATE testing_table SET test_field = @@value@@ WHERE test_id = (@@id@@ + 1);
+@@working_update_templates1
 
-insert_update_delete1||
-    INSERT INTO testing_table (test_field, test_string) VALUES (||test_field||, ||test_string||)
-||insert_update_delete1
+working_update_templates2@@
+	UPDATE testing_table SET test_field = @@value@@ WHERE test_id = (@@id@@ + 1);
+@@working_update_templates2
 
-insert_update_delete2||
-    UPDATE testing_table SET test_field = ||test_field|| WHERE test_id = ||test_id||;
-||insert_update_delete2
+working_update_templates3@@
+	UPDATE testing_table SET test_field = @@value@@ WHERE test_id = (@@id@@ + 3);
+@@working_update_templates3
 
-insert_update_delete3||
-    DELETE FROM testing_table WHERE test_id = ||test_id||
-||insert_update_delete3
+insert_update_delete1@@
+    INSERT INTO testing_table (test_field, test_string) VALUES (@@test_field@@, @@test_string@@)
+@@insert_update_delete1
+
+insert_update_delete2@@
+    UPDATE testing_table SET test_field = @@test_field@@ WHERE test_id = @@test_id@@;
+@@insert_update_delete2
+
+insert_update_delete3@@
+    DELETE FROM testing_table WHERE test_id = @@test_id@@
+@@insert_update_delete3

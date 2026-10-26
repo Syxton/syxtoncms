@@ -195,7 +195,7 @@ global $CFG;
 
         // If the admin request is valid, use the userid parameter to retrieve the email address from the database.
         if ($admin && $userid) {
-            $email = get_db_field("email", "users", "userid = ||userid||", ["userid" => $userid]);
+            $email = get_db_field("email", "users", "userid = @@userid@@", ["userid" => $userid]);
         }
 
         // Make sure we have an email address to work with.
@@ -480,7 +480,7 @@ function change_locker_state() {
             $area = $data["area"];
 
             // Every sql below uses the same where clause.
-            $where = "pageid = ||pageid|| AND feature = ||feature|| AND featureid = ||featureid||";
+            $where = "pageid = @@pageid@@ AND feature = @@feature@@ AND featureid = @@featureid@@";
             $params = ["pageid" => $pageid, "feature" => $feature, "featureid" => $featureid];
             if ($direction == 'released') {
                 execute_db_sql("UPDATE pages_features SET area = 'middle', sort = '9999' WHERE $where", $params);

@@ -1,35 +1,35 @@
-valid_login_check||
-    ||echo js_code_wrap("if (typeof getIntervals().logincheck === 'undefined') { makeInterval('logincheck', 'login_check();', " . timeout . "); }");::timeout||
-||valid_login_check
+valid_login_check@@
+    @@echo js_code_wrap("if (typeof getIntervals().logincheck === 'undefined') { makeInterval('logincheck', 'login_check();', " . timeout . "); }");::timeout@@
+@@valid_login_check
 
-mainlayout_template||
+mainlayout_template@@
     <div class="logo_nav">
-        ||mainmast||
+        @@mainmast@@
     </div>
     <div class="block_divider"></div>
     <div class="colmask rightmenu">
         <div class="colleft">
             <div class="col2 pagesort2 connectedSortable">
-                ||*sidemast||
-                ||*sidecontents||
+                @@*sidemast@@
+                @@*sidecontents@@
             </div>
             <div class="col1 pagesort1 connectedSortable">
                 <span id="column_width" style="width:100%;"></span>
-                ||middlecontents||
+                @@middlecontents@@
             </div>
         </div>
     </div>
-||mainlayout_template
+@@mainlayout_template
 
-simplelayout_template||
+simplelayout_template@@
     <div class="logo_nav">
-        ||mainmast||
+        @@mainmast@@
     </div>
     <div class="block_divider"></div>
     <div class="colmask rightmenu">
         <div style="margin: 5px auto;max-width: 75vw;">
             <span id="column_width" style="width:100%;"></span>
-            ||middlecontents||
+            @@middlecontents@@
         </div>
     </div>
-||simplelayout_template
+@@simplelayout_template

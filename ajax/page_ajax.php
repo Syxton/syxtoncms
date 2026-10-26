@@ -136,7 +136,7 @@ global $CFG, $USER;
     $words = explode(" ", $dbsearchwords);
     while (isset($words[$i])) {
         $searchparams["words$i"] = "%" . $words[$i] . "%";
-        $searchpart = "(p.name LIKE ||words$i|| OR p.keywords LIKE ||words$i|| OR p.description LIKE ||words$i||)";
+        $searchpart = "(p.name LIKE @@words$i@@ OR p.keywords LIKE @@words$i@@ OR p.description LIKE @@words$i@@)";
         $searchstring = $searchstring == '' ? $searchpart : $searchstring . " OR $searchpart";
         $i++;
     }
@@ -259,9 +259,9 @@ function page_search_actions() {
         "paramlist" => "pageid",
         "data" => [
             "action" => "remove_request",
-            "pageid" => "js||pageid||js",
+            "pageid" => "js@@pageid@@js",
         ],
-        "display" => "rowactions_js||pageid||js",
+        "display" => "rowactions_js@@pageid@@js",
         "event" => "none",
     ]);
     ajaxapi([
@@ -270,9 +270,9 @@ function page_search_actions() {
         "paramlist" => "pageid",
         "data" => [
             "action" => "add_request",
-            "pageid" => "js||pageid||js",
+            "pageid" => "js@@pageid@@js",
         ],
-        "display" => "rowactions_js||pageid||js",
+        "display" => "rowactions_js@@pageid@@js",
         "event" => "none",
     ]);
 
@@ -283,10 +283,10 @@ function page_search_actions() {
         "paramlist" => "added, pageid, pagenum",
         "data" => [
             "action" => "change_subscription",
-            "pageid" => "js||pageid||js",
-            "pagenum" => "js||pagenum||js",
+            "pageid" => "js@@pageid@@js",
+            "pagenum" => "js@@pagenum@@js",
         ],
-        "display" => "rowactions_js||pageid||js",
+        "display" => "rowactions_js@@pageid@@js",
         "ondone" => "pagesearch(pageid, pagenum);",
         "event" => "none",
     ]);
@@ -297,9 +297,9 @@ function page_search_actions() {
         "paramlist" => "pageid, pagenum",
         "data" => [
             "action" => "pagesearch",
-            "pageid" => "js||pageid||js",
-            "pagenum" => "js||pagenum||js",
-            "searchwords" => "js||encodeURIComponent($('#searchwords').val())||js",
+            "pageid" => "js@@pageid@@js",
+            "pagenum" => "js@@pagenum@@js",
+            "searchwords" => "js@@encodeURIComponent($('#searchwords').val())@@js",
         ],
         "display" => "searchcontainer_pagesearch",
         "event" => "none",
@@ -312,10 +312,10 @@ function page_search_actions() {
         "paramlist" => "pageid, pagenum",
         "data" => [
             "action" => "delete_page_ajax",
-            "pageid" => "js||pageid||js",
-            "pagenum" => "js||pagenum||js",
+            "pageid" => "js@@pageid@@js",
+            "pagenum" => "js@@pagenum@@js",
         ],
-        "display" => "rowactions_js||pageid||js",
+        "display" => "rowactions_js@@pageid@@js",
         "ondone" => "if (data.message === 'deleted') { $('#rowactions_' + pageid).closest('tr').remove(); }",
         "event" => "none",
     ]);
@@ -346,7 +346,7 @@ function usersearch() {
 
         $searchstring = ""; $params = [];
         foreach ($words as $key => $word) {
-            $searchpart = fill_template("dbsql/pages.sql", "user_search_part", false, ["part" => "||word_$key||"]);
+            $searchpart = fill_template("dbsql/pages.sql", "user_search_part", false, ["part" => "@@word_$key@@"]);
             $params["word_$key"] = '%' . $word . '%';
             $searchstring .= empty($searchstring) ? $searchpart : " OR $searchpart";
         }
@@ -383,9 +383,9 @@ function usersearch() {
                 "paramlist" => "invitee",
                 "data" => [
                     "action" => "get_inviteable_pages",
-                    "invitee" => "js||invitee||js",
+                    "invitee" => "js@@invitee@@js",
                 ],
-                "display" => "pagelist_js||invitee||js",
+                "display" => "pagelist_js@@invitee@@js",
                 "event" => "none",
             ]);
 
@@ -396,10 +396,10 @@ function usersearch() {
                 "paramlist" => "invitee",
                 "data" => [
                     "action" => "invite_user",
-                    "pageid" => "js||$('#page_invite_list').val()||js",
-                    "userid" => "js||invitee||js",
+                    "pageid" => "js@@$('#page_invite_list').val()@@js",
+                    "userid" => "js@@invitee@@js",
                 ],
-                "display" => "pagelist_js||invitee||js",
+                "display" => "pagelist_js@@invitee@@js",
                 "ondone" => "console.log($(this));",
                 "event" => "none",
             ]);
@@ -435,7 +435,7 @@ function get_new_link_form() {
         "data" => [
             "action" => "linkpagesearch",
             "pageid" => $pageid,
-            "searchwords" => "js||encodeURIComponent($('#searchbox').val())||js",
+            "searchwords" => "js@@encodeURIComponent($('#searchbox').val())@@js",
         ],
         "display" => "searchcontainer_linkpagesearch",
         "event" => "none",
@@ -464,9 +464,9 @@ global $CFG;
             "data" => [
                 "action" => "move_link",
                 "pageid" => $pageid,
-                "direction" => "js||direction||js",
-                "linkid" => "js||linkid||js",
-                "linkdisplay" => "js||encodeURIComponent($('#linkdisplay' + linkid).val())||js",
+                "direction" => "js@@direction@@js",
+                "linkid" => "js@@linkid@@js",
+                "linkdisplay" => "js@@encodeURIComponent($('#linkdisplay' + linkid).val())@@js",
             ],
             "ondone" => "get_link_manager(linkid);",
             "event" => "none",
@@ -479,7 +479,7 @@ global $CFG;
             "data" => [
                 "action" => "get_link_manager",
                 "pageid" => $pageid,
-                "linkid" => "js||linkid||js",
+                "linkid" => "js@@linkid@@js",
             ],
             "display" => "links_mode_span",
             "event" => "none",
@@ -491,8 +491,8 @@ global $CFG;
             "paramlist" => "linkid",
             "data" => [
                 "action" => "rename_link",
-                "linkid" => "js||linkid||js",
-                "linkdisplay" => "js||encodeURIComponent($('#linkdisplay' + linkid).val())||js",
+                "linkid" => "js@@linkid@@js",
+                "linkdisplay" => "js@@encodeURIComponent($('#linkdisplay' + linkid).val())@@js",
             ],
             "ondone" => "$('#linkdisplay' + linkid + '_hidden').val($('#linkdisplay' + linkid).val());",
             "event" => "none",
@@ -537,7 +537,7 @@ global $CFG, $USER;
 
     //Create the page limiter
     $firstonpage = SEARCH_PERPAGE * $pagenum;
-    $limit = " LIMIT ||first||, ||perpage||";
+    $limit = " LIMIT @@first@@, @@perpage@@";
 
     $params = [
         "pageid" => $pageid,
@@ -549,7 +549,7 @@ global $CFG, $USER;
     $searchstring = "";
     $words = explode(" ", $dbsearchwords);
     foreach ($words as $key => $word) {
-        $searchpart = fill_template("dbsql/pages.sql", "link_page_search_part", false, ["part" => "||word_$key||"]);
+        $searchpart = fill_template("dbsql/pages.sql", "link_page_search_part", false, ["part" => "@@word_$key@@"]);
         $params["word_$key"] = '%' . $word . '%';
         $searchstring .= empty($searchstring) ? $searchpart : " OR $searchpart";
     }
@@ -592,7 +592,7 @@ global $CFG, $USER;
             "url" => "/ajax/page_ajax.php",
             "data" => [
                 "action" => "make_page_link",
-                "linkpageid" => "js||linkpageid||js",
+                "linkpageid" => "js@@linkpageid@@js",
                 "pageid" => $pageid,
             ],
             "event" => "none",
@@ -606,7 +606,7 @@ global $CFG, $USER;
             "url" => "/ajax/page_ajax.php",
             "data" => [
                 "action" => "unlink_page",
-                "linkpageid" => "js||linkpageid||js",
+                "linkpageid" => "js@@linkpageid@@js",
                 "pageid" => $pageid,
             ],
             "event" => "none",
@@ -645,7 +645,7 @@ function make_page_link() {
             "pageid" => $pageid,
             "linkpageid" => $linkpageid,
             "sort" => $sort,
-            "linkdisplay" => get_db_field("name", "pages", "pageid = ||linkpageid||", [
+            "linkdisplay" => get_db_field("name", "pages", "pageid = @@linkpageid@@", [
                                 "linkpageid" => $linkpageid,
                             ]),
         ]);

@@ -43,7 +43,7 @@ global $CFG;
 
     $title = $goal = $description = $email = $token = $button = $yes_selected = $no_selected = "";
     if ($campaign_id) { // Editing a campaign.
-        if ($c = get_db_row("SELECT * FROM donate_campaign WHERE campaign_id = ||campaign_id||", ["campaign_id" => $campaign_id])) {
+        if ($c = get_db_row("SELECT * FROM donate_campaign WHERE campaign_id = @@campaign_id@@", ["campaign_id" => $campaign_id])) {
             $button = "Edit";
             $title = $c["title"];
             $goal = number_format($c["goal_amount"], 2, ".", "");
@@ -75,12 +75,12 @@ global $CFG;
             "action" => "add_new_campaign",
             "featureid" => $featureid,
             "campaign_id" => $campaign_id,
-            "email" => "js||encodeURIComponent($('#email').val())||js",
-            "token" => "js||encodeURIComponent($('#token').val())||js",
-            "title" => "js||encodeURIComponent($('#title').val())||js",
-            "goal" => "js||encodeURIComponent($('#goal').val())||js",
-            "description" => "js||encodeURIComponent($('#description').val())||js",
-            "shared" => "js||encodeURIComponent($('#shared').val())||js",
+            "email" => "js@@encodeURIComponent($('#email').val())@@js",
+            "token" => "js@@encodeURIComponent($('#token').val())@@js",
+            "title" => "js@@encodeURIComponent($('#title').val())@@js",
+            "goal" => "js@@encodeURIComponent($('#goal').val())@@js",
+            "description" => "js@@encodeURIComponent($('#description').val())@@js",
+            "shared" => "js@@encodeURIComponent($('#shared').val())@@js",
         ],
         "display" => "new_campaign_div",
         "event" => "none",
@@ -159,7 +159,7 @@ global $CFG, $MYVARS, $USER;
             "data" => [
                 "action" => "join_campaign",
                 "featureid" => $featureid,
-                "campaign_id" => "js||encodeURIComponent($('#campaign_id').val())||js",
+                "campaign_id" => "js@@encodeURIComponent($('#campaign_id').val())@@js",
             ],
             "display" => "donation_display",
             "event" => "none",
@@ -235,8 +235,8 @@ global $CFG;
         "data" => [
             "action" => "add_offline_donation",
             "featureid" => $featureid,
-            "amount" => "js||encodeURIComponent($('#amount').val())||js",
-            "name" => "js||encodeURIComponent($('#name').val())||js",
+            "amount" => "js@@encodeURIComponent($('#amount').val())@@js",
+            "name" => "js@@encodeURIComponent($('#name').val())@@js",
         ],
         "display" => "donation_display",
         "event" => "none",
@@ -248,7 +248,7 @@ global $CFG;
         "data" => [
             "action" => "add_or_manage_form",
             "featureid" => $featureid,
-            "campaign_id" => "js||encodeURIComponent($('#campaign_id').val())||js",
+            "campaign_id" => "js@@encodeURIComponent($('#campaign_id').val())@@js",
         ],
         "display" => "donation_display",
     ]);
@@ -304,7 +304,7 @@ global $CFG, $MYVARS, $USER;
             "data" => [
                 "action" => "edit_donation_form",
                 "featureid" => $featureid,
-                "donationid" => "js||donationid||js",
+                "donationid" => "js@@donationid@@js",
             ],
             "display" => "donation_display",
             "ondone" => "loaddynamicjs('donation_script');",
@@ -320,7 +320,7 @@ global $CFG, $MYVARS, $USER;
             "data" => [
                 "action" => "delete_donation",
                 "featureid" => $featureid,
-                "donationid" => "js||donationid||js",
+                "donationid" => "js@@donationid@@js",
             ],
             "display" => "donation_display",
             "event" => "none",
@@ -404,11 +404,11 @@ global $CFG, $USER;
                 "action" => "edit_donation_save",
                 "featureid" => $featureid,
                 "donationid" => $donationid,
-                "amount" => "js||encodeURIComponent($('#amount').val())||js",
-                "name" => "js||encodeURIComponent($('#name').val())||js",
-                "campaign_id" => "js||encodeURIComponent($('#campaign_id').val())||js",
-                "paypal_TX" => "js||encodeURIComponent($('#paypal_TX').val())||js",
-                "amount" => "js||encodeURIComponent($('#amount').val())||js",
+                "amount" => "js@@encodeURIComponent($('#amount').val())@@js",
+                "name" => "js@@encodeURIComponent($('#name').val())@@js",
+                "campaign_id" => "js@@encodeURIComponent($('#campaign_id').val())@@js",
+                "paypal_TX" => "js@@encodeURIComponent($('#paypal_TX').val())@@js",
+                "amount" => "js@@encodeURIComponent($('#amount').val())@@js",
             ],
             "display" => "donation_display",
             "event" => "none",

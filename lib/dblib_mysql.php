@@ -32,10 +32,10 @@ function fetch_row($result, $type = false) {
 
 function db_prepare_statement($SQL, $vars) {
 global $conn;
-    $pattern = '/([\'\"]?)(\|\|)((?s).*?)(\|\|)([\'\"]?)/i'; //Look for stuff like ||xxx|| or '||xxx||'
+    $pattern = '/([\'\"]?)(@@)((?s).*?)(@@)([\'\"]?)/i'; //Look for stuff like @@xxx@@ or '@@xxx@@'
     $variables = build_prepared_variables($SQL, $vars, $pattern);
 
-	$SQL = preg_replace($pattern, '?', $variables["sql"]); // Replace all ||xxx|| and '||xxx||' with ?
+	$SQL = preg_replace($pattern, '?', $variables["sql"]); // Replace all @@xxx@@ and '@@xxx@@' with ?
 	$statement = mysql_prepare($conn, $SQL);
 
 	if (!empty($variables["typestring"]) && !empty($variables["data"])) {

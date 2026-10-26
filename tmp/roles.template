@@ -1,31 +1,31 @@
-group_page_template||
+group_page_template@@
     <div style="display:flex;align-items:center;">
         <strong>Groups:</strong>
         <div id="group_list_div" style="padding: 0 10px">
-            ||groups_list||
+            @@groups_list@@
         </div>
-        ||canmanagegroups{{
+        @@canmanagegroups{{
             <button onclick="create_edit_group_form()" style="margin: 5px">
-                ||echo icon("plus");::none||&nbsp;Create New Group
+                @@echo icon("plus");::none@@&nbsp;Create New Group
             </button>
-        }}canmanagegroups||
+        }}canmanagegroups@@
     </div>
     <br />
     <div id="per_group_display_div"></div>
     <div id="per_group_saved_div1" style="width:100%;text-align:center;height: 2px;padding-bottom: 18px;padding-top: 10px;"></div>
     <div id="per_group_abilities_div" style="width:100%;"></div>
     <div id="per_group_saved_div2" style="width:100%;text-align:center;height: 2px;padding-bottom: 10px;padding-top: 10px;"></div>
-||group_page_template
+@@group_page_template
 
-groups_list_template||
-  <select style="width:||width||;" name="||name||" id="||id||">
+groups_list_template@@
+  <select style="width:@@width@@;" name="@@name@@" id="@@id@@">
     <option value="0">No group selected</option>
-    ||groups||
+    @@groups@@
   </select>
-||groups_list_template
+@@groups_list_template
 
-roles_header_script||
-    ||echo js_code_wrap('
+roles_header_script@@
+    @@echo js_code_wrap('
         function swap_highlights(option1,option2) {
             option1 = "#"+option1;
             option2 = "#"+option2;
@@ -57,10 +57,10 @@ roles_header_script||
             $(option2).css("background-color", "inherit");
             blur();
         }
-    ');::none||
-||roles_header_script
+    ');::none@@
+@@roles_header_script
 
-assign_roles_template||
+assign_roles_template@@
     <form id="per_page_name_search">
         User Search: <input type="text" id="per_page_search" size="18" />&nbsp;<input type="submit" value="Search" />
     </form>
@@ -68,37 +68,37 @@ assign_roles_template||
     <br />
     <div style="width:100%; text-align:center; vertical-align:top;" id="per_page_users_display_div">
         <select size="10" style="width: 100%; font-size:.85em;" name="userid" id="per_page_user_select">
-            ||issiteid{{
+            @@issiteid{{
                 <option value="0">Search results will be shown here.</option>
-            }}issiteid||
-            ||options||
+            }}issiteid@@
+            @@options@@
         </select>
     </div>
     <div id="per_page_roles_div" style="width:100%;"></div>
-||assign_roles_template
+@@assign_roles_template
 
-assign_roles_options_template||
-    <option value="||user[userid]||">||user[fname]|| ||user[lname]|| (||user[email]||)</option>
-||assign_roles_options_template
+assign_roles_options_template@@
+    <option value="@@user[userid]@@">@@user[fname]@@ @@user[lname]@@ (@@user[email]@@)</option>
+@@assign_roles_options_template
 
-role_specific_template||
+role_specific_template@@
     <form id="per_role_roles_form">
         <div style="width:100%; text-align:center">
             <select name="per_role_roleid" id="per_role_role_select">
-                ||options||
+                @@options@@
             </select>
             <div id="per_role_saved_div1" style="width:100%;text-align:center;height: 2px;padding-bottom: 20px;padding-top: 20px;"></div>
-            <div id="per_role_abilities_div" style="width:100%;">||abilities||</div>
+            <div id="per_role_abilities_div" style="width:100%;">@@abilities@@</div>
             <div id="per_role_saved_div2" style="width:100%;text-align:center;height: 2px;padding-bottom: 10px;padding-top: 10px;"></div>
         </div>
     </form>
-||role_specific_template
+@@role_specific_template
 
-role_specific_options_template||
-    <option value="||roles[roleid]||">||roles[display_name]||</option>
-||role_specific_options_template
+role_specific_options_template@@
+    <option value="@@roles[roleid]@@">@@roles[display_name]@@</option>
+@@role_specific_options_template
 
-user_specific_template||
+user_specific_template@@
     <form id="per_user_name_search">
         User Search: <input type="text" id="per_user_search" size="18" />&nbsp;<input type="submit" value="Search" />
     </form>
@@ -107,32 +107,32 @@ user_specific_template||
         <br />
         <div style="width:100%; text-align:center; vertical-align:top;" id="per_user_users_display_div">
             <select size="10" width="100%" style="width: 100%; font-size:.85em;" name="userid" id="per_user_user_select">
-                ||issiteid{{<option value="0">Search results will be shown here.</option>}}issiteid||
-                ||options||
+                @@issiteid{{<option value="0">Search results will be shown here.</option>}}issiteid@@
+                @@options@@
             </select>
         </div>
         <div id="per_user_saved_div1" style="width:100%;text-align:center;height: 2px;padding-bottom: 18px;padding-top: 10px;"></div>
         <div id="per_user_abilities_div" style="width:100%;"></div>
         <div id="per_user_saved_div2" style="width:100%;text-align:center;height: 2px;padding-bottom: 10px;padding-top: 10px;"></div>
     </form>
-||user_specific_template
+@@user_specific_template
 
-user_specific_options_template||
-    <option value="||user[userid]||">
-        ||user[fname]|| ||user["lname"]|| (||user["email"]||)
+user_specific_options_template@@
+    <option value="@@user[userid]@@">
+        @@user[fname]@@ @@user["lname"]@@ (@@user["email"]@@)
     </option>
-||user_specific_options_template
+@@user_specific_options_template
 
-group_specific_template||
+group_specific_template@@
     <div id="per_group_whole_page" style="width:100%;">
-        ||grouppage||
+        @@grouppage@@
     </div>
-||group_specific_template
+@@group_specific_template
 
-roles_manager_template||
-    ||echo get_js_tags(["ui"]);::none||
-    ||echo get_css_tags(["ui"]);::none||
-    ||echo js_code_wrap('
+roles_manager_template@@
+    @@echo get_js_tags(["ui"]);::none@@
+    @@echo get_css_tags(["ui"]);::none@@
+    @@echo js_code_wrap('
         $("#tabs").tabs({
             beforeLoad: function(event, ui) {
                 var d = new Date();
@@ -142,7 +142,7 @@ roles_manager_template||
                 });
             },
             load: function(event, ui) { activatejs(); resize_modal(); }
-        }); ', 'defer', true);::none||
+        }); ', 'defer', true);::none@@
 
     <div id="context" class="permissions_context">
             <span style="display:inline-block;float:left;">
@@ -150,33 +150,33 @@ roles_manager_template||
                 Page:
             </strong>&nbsp;
             <em>
-                ||pagename||
+                @@pagename@@
             </em>
-            ||featurecontext{{&nbsp;&nbsp;<strong>Specific for the ||feature|| feature:</strong> <em>||setting||</em>}}featurecontext||
+            @@featurecontext{{&nbsp;&nbsp;<strong>Specific for the @@feature@@ feature:</strong> <em>@@setting@@</em>}}featurecontext@@
             </span>
-            ||warning{{ <span style="background-color:red;padding:3px;float:right;border:5px solid black;">WARNING: Changes affect all pages.</span>}}warning||
+            @@warning{{ <span style="background-color:red;padding:3px;float:right;border:5px solid black;">WARNING: Changes affect all pages.</span>}}warning@@
     </div>
     <div id="tabs" style="font-size:.9em">
         <ul style="height:30px">
-            ||tab_assign_roles{{<li><a href="roles.php?action=assign_roles&pageid=||pageid||">Assign Roles</a></li>}}tab_assign_roles||
-            ||tab_modify_roles{{<li><a href="roles.php?action=role_specific&feature=||feature||&featureid=||featureid||&pageid=||pageid||">Modify Roles</a></li>}}tab_modify_roles||
-            ||tab_groups{{<li><a href="roles.php?action=group_specific&feature=||feature||&featureid=||featureid||&pageid=||pageid||">Group Abilities</a></li>}}tab_groups||
-            ||tab_user{{<li><a href="roles.php?action=user_specific&feature=||feature||&featureid=||featureid||&pageid=||pageid||">User Abilities</a></li>}}tab_user||
+            @@tab_assign_roles{{<li><a href="roles.php?action=assign_roles&pageid=@@pageid@@">Assign Roles</a></li>}}tab_assign_roles@@
+            @@tab_modify_roles{{<li><a href="roles.php?action=role_specific&feature=@@feature@@&featureid=@@featureid@@&pageid=@@pageid@@">Modify Roles</a></li>}}tab_modify_roles@@
+            @@tab_groups{{<li><a href="roles.php?action=group_specific&feature=@@feature@@&featureid=@@featureid@@&pageid=@@pageid@@">Group Abilities</a></li>}}tab_groups@@
+            @@tab_user{{<li><a href="roles.php?action=user_specific&feature=@@feature@@&featureid=@@featureid@@&pageid=@@pageid@@">User Abilities</a></li>}}tab_user@@
         </ul>
     </div>
-||roles_manager_template
+@@roles_manager_template
 
-print_abilities_save_button||
+print_abilities_save_button@@
     <div style="width:100%; text-align:center">
-        <button type="submit" id="||type||_save_abilities_button">
+        <button type="submit" id="@@type@@_save_abilities_button">
             Save
         </button>
     </div>
-||print_abilities_save_button
+@@print_abilities_save_button
 
-print_abilities||
+print_abilities@@
     <div style="width:100%; text-align:center">
-        ||save||
+        @@save@@
     </div>
     <table class="roles_table">
         <tr>
@@ -187,23 +187,23 @@ print_abilities||
                 <strong>Allow</strong>
             </td>
             <td style="max-width: 75px;text-align:center;" rowspan="2">
-                <strong>||default||</strong>
+                <strong>@@default@@</strong>
             </td>
             <td style="max-width: 75px;text-align:center;" rowspan="2">
                 <strong>Deny</strong>
             </td>
         </tr>
-        ||abilities||
+        @@abilities@@
     </table>
-    <input type="hidden" name="||type||_rightslist" value="||rightslist||" />
+    <input type="hidden" name="@@type@@_rightslist" value="@@rightslist@@" />
     <div style="width:100%; text-align:center">
         <br />
-        ||save||
+        @@save@@
     </div>
-||print_abilities
+@@print_abilities
 
-print_abilities_ability||
-  ||thissection{{
+print_abilities_ability@@
+  @@thissection{{
     <tr>
         <td colspan="4">
             <br />
@@ -212,31 +212,31 @@ print_abilities_ability||
     <tr class="roles_header">
         <td colspan="4">
             <strong>
-                ||ability[section_display]||
+                @@ability[section_display]@@
             </strong>
         </td>
     </tr>
-  }}thissection||
-    <tr ||currentstyle||>
+  }}thissection@@
+    <tr @@currentstyle@@>
         <td class="ability_name">
-            ||ability[ability_display]||
+            @@ability[ability_display]@@
         </td>
         <td>
-            <div class="ability_cell" style="||notify1{{ ||notify{{ background-color:yellow; }}notify|| }}notify1||" id="||type||abilty_||ability[abilityid]||_yes">
-                <input style="margin-right:0" onclick="||swap_function||('||type||abilty_||ability[abilityid]||_yes','||type||abilty_||ability[abilityid]||_no');" type="radio" name="||ability[ability]||" value="1" ||notify1{{ checked }}notify1|| />
+            <div class="ability_cell" style="@@notify1{{ @@notify{{ background-color:yellow; }}notify@@ }}notify1@@" id="@@type@@abilty_@@ability[abilityid]@@_yes">
+                <input style="margin-right:0" onclick="@@swap_function@@('@@type@@abilty_@@ability[abilityid]@@_yes','@@type@@abilty_@@ability[abilityid]@@_no');" type="radio" name="@@ability[ability]@@" value="1" @@notify1{{ checked }}notify1@@ />
             </div>
         </td>
         <td>
             <div class="ability_cell">
-                ||default_toggle{{
-                <input onclick="clear_highlights('||type||abilty_||ability[abilityid]||_no','||type||abilty_||ability[abilityid]||_yes');" type="radio" name="||ability[ability]||" style="margin-right: 0;" value="" ||default_checked{{ checked }}default_checked|| />
-                }}default_toggle||
+                @@default_toggle{{
+                <input onclick="clear_highlights('@@type@@abilty_@@ability[abilityid]@@_no','@@type@@abilty_@@ability[abilityid]@@_yes');" type="radio" name="@@ability[ability]@@" style="margin-right: 0;" value="" @@default_checked{{ checked }}default_checked@@ />
+                }}default_toggle@@
             </div>
         </td>
         <td>
-            <div class="ability_cell" style="||notify2{{||notify{{ background-color:yellow; }}notify|| }}notify2||" id="||type||abilty_||ability[abilityid]||_no">
-                <input style="margin-right:0"  onclick="||swap_function||('||type||abilty_||ability[abilityid]||_no','||type||abilty_||ability[abilityid]||_yes');" type="radio" name="||ability[ability]||" value="0" ||notify2{{ checked }}notify2|| />
+            <div class="ability_cell" style="@@notify2{{@@notify{{ background-color:yellow; }}notify@@ }}notify2@@" id="@@type@@abilty_@@ability[abilityid]@@_no">
+                <input style="margin-right:0"  onclick="@@swap_function@@('@@type@@abilty_@@ability[abilityid]@@_no','@@type@@abilty_@@ability[abilityid]@@_yes');" type="radio" name="@@ability[ability]@@" value="0" @@notify2{{ checked }}notify2@@ />
             </div>
         </td>
     </tr>
-||print_abilities_ability
+@@print_abilities_ability

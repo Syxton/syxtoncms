@@ -17,8 +17,8 @@ ajaxapi([
     "paramlist" => "search = '', pagenum = 0",
     "data" => [
         "action" => "members_search",
-        "pagenum" => "js||pagenum||js",
-        "search" => "js||encodeURIComponent(search)||js",
+        "pagenum" => "js@@pagenum@@js",
+        "search" => "js@@encodeURIComponent(search)@@js",
     ],
     "display" => "mem_resultsdiv",
     "loading" => "loading_overlay",
@@ -31,9 +31,9 @@ ajaxapi([
     "paramlist" => "search = '', csv = 0, mailman = 0",
     "data" => [
         "action" => "members_search",
-        "csv" => "js||csv||js",
-        "mailman" => "js||mailman||js",
-        "search" => "js||encodeURIComponent(search)||js",
+        "csv" => "js@@csv@@js",
+        "mailman" => "js@@mailman@@js",
+        "search" => "js@@encodeURIComponent(search)@@js",
     ],
     "display" => "mem_exportsdiv",
     "loading" => "loading_overlay",

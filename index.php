@@ -28,10 +28,30 @@ if (isset($CFG->downtime) && $CFG->downtime === true && !strstr($CFG->safeip, ',
     setcookie('directory', $directory, get_timestamp() + $CFG->cookietimeout, '/');
     $_SESSION['directory'] = $directory;
 
+    // index.php only — keep get_pageid() stock
     unset($_COOKIE["pageid"]);
-    unset($_SESSION['pageid']);
+    unset($_SESSION["pageid"]);
+    if (isset($MYVARS->pageid)) {
+        unset($MYVARS->pageid);
+    }
 
     $pageid = get_pageid();
+
+    if (!$currentpage = get_db_row(
+        "SELECT * FROM pages WHERE pageid = @@pageid@@",
+        ["pageid" => $pageid]
+    )) {
+        unset($_SESSION["pageid"], $_COOKIE["pageid"]);
+        if (isset($MYVARS->pageid)) {
+            unset($MYVARS->pageid);
+        }
+        if (!headers_sent()) {
+            setcookie("pageid", "", time() - 3600, "/");
+        }
+        $fallback = (int)($CFG->SITEID ?: 1);
+        header("Location: " . $CFG->wwwroot . "/index.php?pageid=" . $fallback);
+        die();
+    }
 
     // Get Page info
     if (!$currentpage = get_db_row("SELECT * FROM pages WHERE pageid='$pageid'")) {
