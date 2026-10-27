@@ -209,7 +209,8 @@ global $CFG, $USER;
 
 function change_theme_save() {
 global $CFG;
-    $themeid = clean_myvar_opt("themeid", "int", CUSTOMTHEME);
+    $themeid_value = clean_myvar_opt("themeid", "string", false);
+    $themeid = $themeid_value === false ? CUSTOMTHEME : clean_var_opt($themeid_value, "int", CUSTOMTHEME);
     $pageid = clean_myvar_opt("pageid", "int", get_pageid());
 
     // Get page styles.
@@ -217,7 +218,7 @@ global $CFG;
     $return = styles_array_to_css($styles);
 
     //Save selected Theme
-    if (!$themeid && $pageid !== $CFG->SITEID) {
+    if ($themeid_value === false && $pageid !== $CFG->SITEID) {
         execute_db_sql("DELETE FROM settings WHERE pageid = @@pageid@@ AND setting_name = 'themeid'", ["pageid" => $pageid]);
     } else {
         save_setting(false, ["type" => "page", "pageid" => $pageid, "setting_name" => "themeid"], $themeid);
